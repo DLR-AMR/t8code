@@ -281,14 +281,14 @@ t8_advect_adapt_init (t8_forest_t forest, t8_forest_t forest_from,
   return 0;
 #endif
 
-#if 1                           /* refinement every second element */
+#if 0                           /* refinement every second element */
   if (lelement_id % 2 == 0) {
     return 1;
   }
   return 0;
 #endif
 
-#if 0                           /* refinement all left elements */
+#if 1                           /* refinement all left elements */
   int                 coord[3] = { };
   ts->t8_element_anchor (elements[0], coord);
   int                 len = ts->t8_element_root_len (elements[0]);
@@ -713,27 +713,27 @@ t8_advect_advance_element (t8_advect_problem_t * problem,
   double              flux_sum = 0;
   int                 num_faces;
   double              phi;
-  t8_advect_element_data_t *elem;
+  t8_advect_element_data_t *elem_data;
 
   /* Get a pointer to the element */
-  elem = (t8_advect_element_data_t *)
+  elem_data = (t8_advect_element_data_t *)
     t8_sc_array_index_locidx (problem->element_data, lelement);
   /* Get the phi value of the element */
   phi = t8_advect_element_get_phi (problem, lelement);
-  num_faces = elem->num_faces;
+  num_faces = elem_data->num_faces;
   /* Sum all the fluxes */
   for (iface = 0; iface < num_faces; iface++) {
-    for (ineigh = 0; ineigh < SC_MAX (1, elem->num_neighbors[iface]);
+    for (ineigh = 0; ineigh < SC_MAX (1, elem_data->num_neighbors[iface]);
          ineigh++) {
-      flux_sum += elem->fluxes[iface][ineigh];
+      flux_sum += elem_data->fluxes[iface][ineigh];
     }
   }
   /* Phi^t = dt/dx * (f_(j-1/2) - f_(j+1/2)) + Phi^(t-1) */
-  elem->phi_new = (problem->delta_t / elem->vol) * flux_sum + phi;
+  elem_data->phi_new = (problem->delta_t / elem_data->vol) * flux_sum + phi;
 #if 1
   t8_debugf
     ("[advect] advance el with delta_t %f vol %f phi %f  flux %f to %f\n",
-     problem->delta_t, elem->vol, phi, flux_sum, elem->phi_new);
+     problem->delta_t, elem_data->vol, phi, flux_sum, elem_data->phi_new);
 #endif
 }
 
@@ -816,7 +816,7 @@ t8_advect_replace (t8_forest_t forest_old,
     t8_forest_get_element_in_tree (problem->forest_adapt, which_tree,
                                    first_incoming);
 
-#if 1                           /* for debugging */
+#if 0                           /* for debugging */
   t8_debugf ("first Element out:\n");
   ts->t8_element_print_element (first_outgoing_elem);
   t8_debugf ("first Element in:\n");
@@ -1180,9 +1180,11 @@ t8_advect_replace (t8_forest_t forest_old,
              coord_iterate_in++) {
           for (coord_iterate_out = 0; coord_iterate_out < 12;
                coord_iterate_out++) {
-            
-            T8_ASSERT (corner_coords_out_x[coord_iterate_out] >= 0 && corner_coords_out_y[coord_iterate_out] >= 0 &&
-                       corner_coords_in_x[coord_iterate_in] >= 0 && corner_coords_in_y[coord_iterate_in] >= 0);
+
+            T8_ASSERT (corner_coords_out_x[coord_iterate_out] >= 0
+                       && corner_coords_out_y[coord_iterate_out] >= 0
+                       && corner_coords_in_x[coord_iterate_in] >= 0
+                       && corner_coords_in_y[coord_iterate_in] >= 0);
 
             if (corner_coords_out_x[coord_iterate_out] ==
                 corner_coords_in_x[coord_iterate_in]
@@ -1221,8 +1223,7 @@ t8_advect_replace (t8_forest_t forest_old,
       t8_advect_element_set_phi_adapt (problem, first_incoming_data + i, phi);
 
       /* Set the neighbor entries to uninitialized */
-      elem_data_in[i].num_faces =
-        ts->t8_element_num_faces (elem_in_iterate);
+      elem_data_in[i].num_faces = ts->t8_element_num_faces (elem_in_iterate);
       for (iface = 0; iface < elem_data_in[i].num_faces; iface++) {
         elem_data_in[i].num_neighbors[iface] = 0;
         elem_data_in[i].flux_valid[iface] = -1;
@@ -1249,8 +1250,8 @@ t8_advect_replace (t8_forest_t forest_old,
       T8_ASSERT (ts->t8_element_test_if_subelement (elem_in_iterate));
 
       /* compute the vertices and quater face points of the recent outgoing element */
-        int                 corner_coords_in_x[12] = { };
-        int                 corner_coords_in_y[12] = { };
+      int                 corner_coords_in_x[12] = { };
+      int                 corner_coords_in_y[12] = { };
 
       int                 corner_iterate_in;
       for (corner_iterate_in = 0;
@@ -1290,7 +1291,7 @@ t8_advect_replace (t8_forest_t forest_old,
         corner_coords_in_y[3] / 2 + corner_coords_in_y[1] / 2;
 
       corner_coords_in_x[8] =
-        corner_coords_in_x[1] / 2+ corner_coords_in_x[4] / 2;
+        corner_coords_in_x[1] / 2 + corner_coords_in_x[4] / 2;
       corner_coords_in_y[8] =
         corner_coords_in_y[1] / 2 + corner_coords_in_y[4] / 2;
 
@@ -1321,8 +1322,10 @@ t8_advect_replace (t8_forest_t forest_old,
         ts->t8_element_print_element (elem_out_iterate);
 
         /* compute the vertices of the recent outgoing element */
-        int                 corner_coords_out_x[ts->t8_element_num_faces (elem_out_iterate)] = { };
-        int                 corner_coords_out_y[ts->t8_element_num_faces (elem_out_iterate)] = { };
+        int                 corner_coords_out_x[ts->t8_element_num_faces
+                                                (elem_out_iterate)] = { };
+        int                 corner_coords_out_y[ts->t8_element_num_faces
+                                                (elem_out_iterate)] = { };
 
         int                 corner_iterate_out;
         for (corner_iterate_out = 0; corner_iterate_out < ts->t8_element_num_faces (elem_out_iterate); corner_iterate_out++) {  /* iterate over the corners */
@@ -1337,11 +1340,15 @@ t8_advect_replace (t8_forest_t forest_old,
         int                 corner_check = 0;
         int                 coord_iterate_in, coord_iterate_out;
         for (coord_iterate_in = 0; coord_iterate_in < 12; coord_iterate_in++) {
-          for (coord_iterate_out = 0; coord_iterate_out < ts->t8_element_num_faces (elem_out_iterate);
+          for (coord_iterate_out = 0;
+               coord_iterate_out <
+               ts->t8_element_num_faces (elem_out_iterate);
                coord_iterate_out++) {
-            
-            T8_ASSERT (corner_coords_out_x[coord_iterate_out] >= 0 && corner_coords_out_y[coord_iterate_out] >= 0 &&
-                       corner_coords_in_x[coord_iterate_in] >= 0 && corner_coords_in_y[coord_iterate_in] >= 0);
+
+            T8_ASSERT (corner_coords_out_x[coord_iterate_out] >= 0
+                       && corner_coords_out_y[coord_iterate_out] >= 0
+                       && corner_coords_in_x[coord_iterate_in] >= 0
+                       && corner_coords_in_y[coord_iterate_in] >= 0);
 
             if (corner_coords_out_x[coord_iterate_out] ==
                 corner_coords_in_x[coord_iterate_in]
@@ -1366,23 +1373,29 @@ t8_advect_replace (t8_forest_t forest_old,
         if (cap[k] == 1) {
           /* get the recent outgoing element */
           elem_out_iterate =
-          t8_forest_get_element_in_tree (problem->forest, which_tree,
-                                         first_outgoing + k);
+            t8_forest_get_element_in_tree (problem->forest, which_tree,
+                                           first_outgoing + k);
           if (ts->t8_element_test_if_subelement (elem_out_iterate)) {
             /* get the phi value of the k-th outgoing element */
-            phi += t8_advect_element_get_phi (problem, first_outgoing_data + k) * elem_data_out[k].vol;
+            phi +=
+              t8_advect_element_get_phi (problem,
+                                         first_outgoing_data +
+                                         k) * elem_data_out[k].vol;
             total_volume += elem_data_out[k].vol;
           }
-          else { /* if the recent outgoing element is a quad, then half of it will intersect the incoming triangle */
+          else {                /* if the recent outgoing element is a quad, then half of it will intersect the incoming triangle */
             /* get the phi value of the k-th outgoing element */
-            phi += t8_advect_element_get_phi (problem, first_outgoing_data + k) * (elem_data_out[k].vol / 2);;
+            phi +=
+              t8_advect_element_get_phi (problem,
+                                         first_outgoing_data +
+                                         k) * (elem_data_out[k].vol / 2);;
             total_volume += elem_data_out[k].vol / 2;
           }
           cap_sum++;
         }
       }
 
-      T8_ASSERT (cap_sum > 0 && cap_sum <= 6); /* this is specific for quad subelements */
+      T8_ASSERT (cap_sum > 0 && cap_sum <= 6);  /* this is specific for quad subelements */
 
       phi /= total_volume;
 
@@ -1393,8 +1406,7 @@ t8_advect_replace (t8_forest_t forest_old,
       t8_advect_element_set_phi_adapt (problem, first_incoming_data + i, phi);
 
       /* Set the neighbor entries to uninitialized */
-      elem_data_in[i].num_faces =
-        ts->t8_element_num_faces (elem_in_iterate);
+      elem_data_in[i].num_faces = ts->t8_element_num_faces (elem_in_iterate);
       for (iface = 0; iface < elem_data_in[i].num_faces; iface++) {
         elem_data_in[i].num_neighbors[iface] = 0;
         elem_data_in[i].flux_valid[iface] = -1;
@@ -1990,6 +2002,11 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
       t8_advect_element_set_phi (problem, idata,
                                  problem->phi_0 (elem_data->midpoint, 0,
                                                  problem->udata_for_phi));
+
+      if (ielement == 8 || ielement == 9) {
+        ts->t8_element_print_element (element);
+        int a = 2;
+      }
       /* Set the level */
       elem_data->level = ts->t8_element_level (element);
       /* Set the faces */
@@ -2289,9 +2306,28 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
         /* Get a pointer to the element data */
         elem_data = (t8_advect_element_data_t *)
           t8_sc_array_index_locidx (problem->element_data, lelement);
+
+        /* TODO: the following if case is a hot fix for a bug where a new split subelement that comes from a non split subelement 
+         * did somehow had elem_data->num_faces = 0 at this point which results in a missing flux computation for its faces leading to
+         * the 'stripes' that could be observed in the solution. 
+         * It remains to check where this bug comes from. */
+        if (1) {
+          t8_eclass_scheme_c *ts;
+          t8_element_t *element_test;
+          element_test =
+            t8_forest_get_element_in_tree (problem->forest, 0,
+                                          lelement);
+          ts =
+              t8_forest_get_eclass_scheme (problem->forest,
+                                          t8_forest_get_tree_class (problem->forest, 0));
+          elem_data->num_faces = ts->t8_element_num_faces (element_test);
+          elem_data->level = ts->t8_element_level (element_test);
+        }
+
         elem =
           t8_forest_get_element_in_tree (problem->forest, itree, ielement);
         num_faces = elem_data->num_faces;
+
         /* Compute left and right flux */
         for (iface = 0; iface < num_faces; iface++) {   /* face loop */
           printf ("Face: %i\n", iface);
@@ -2347,6 +2383,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
             neigh_is_ghost = 0;
             /* Compute whether this is a hanging face
              * and whether the first neighbor is a ghost */
+
             if (elem_data->num_neighbors[iface] >= 1) {
 
               neigh_index = elem_data->neighs[iface][0];
@@ -2469,7 +2506,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
           problem->stats[ADVECT_DUMMY].count = 1;
         }
         /* Compute time step */
-        //      printf ("advance %i\n", ielement);
+        t8_debugf ("advance %i\n", ielement);
         t8_advect_advance_element (problem, lelement);
       }                         /* end element loop */
     }                           /* end tree loop */
@@ -2600,9 +2637,9 @@ main (int argc, char *argv[])
                       "\t\t4 - 2D rotation around (0.5,0.5).\n"
                       "\t\t5 - 2D flow around circle at (0.5,0.5)"
                       "with radius 0.15.\n)");
-  sc_options_add_int (opt, 'l', "level", &level, 2,
+  sc_options_add_int (opt, 'l', "level", &level, 4,
                       "The minimum refinement level of the mesh.");
-  sc_options_add_int (opt, 'r', "rlevel", &reflevel, 1,
+  sc_options_add_int (opt, 'r', "rlevel", &reflevel, 3,
                       "The number of adaptive refinement levels.");
   sc_options_add_int (opt, 'e', "elements", &eclass_int, T8_ECLASS_QUAD,
                       "If specified the coarse mesh is a hypercube\n\t\t\t\t     consisting of the"
@@ -2629,11 +2666,11 @@ main (int argc, char *argv[])
                          "Control the width of the refinement band around\n"
                          " the zero level-set. Default 1.");
 
-  sc_options_add_int (opt, 'a', "adapt-freq", &adapt_freq, 20,
+  sc_options_add_int (opt, 'a', "adapt-freq", &adapt_freq, 6,
                       "Controls how often the mesh is readapted. "
                       "A value of i means, every i-th time step.");
 
-  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 1,
+  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 2,
                       "How often the vtk output is produced "
                       "\n\t\t\t\t     (after how many time steps). "
                       "A value of 0 is equivalent to using -o.");
@@ -2647,7 +2684,7 @@ main (int argc, char *argv[])
                          "In each iteration, useless dummy operations\n "
                          "\t\t\t\t     are performed per element. Decreases the "
                          "performance!");
-  sc_options_add_double (opt, 'X', "Xcoord", &ls_data.M[0], 0.35,
+  sc_options_add_double (opt, 'X', "Xcoord", &ls_data.M[0], 0.5,
                          "The X-Coordinate of the middlepoint"
                          "of the sphere. Default is 0.6.");
   sc_options_add_double (opt, 'Y', "Ycoord", &ls_data.M[1], 0.5,
@@ -2656,7 +2693,7 @@ main (int argc, char *argv[])
   sc_options_add_double (opt, 'Z', "Zcoord", &ls_data.M[2], 0.5,
                          "The Z-Coordinate of the middlepoint"
                          "of the sphere. Default is 0.6.");
-  sc_options_add_double (opt, 'R', "Radius", &ls_data.radius, 0.15,
+  sc_options_add_double (opt, 'R', "Radius", &ls_data.radius, 0.2,
                          "The radius of the Sphere." "Default is 0.25.");
 
   sc_options_add_int (opt, 'V', "volume-refine", &volume_refine, -1,
