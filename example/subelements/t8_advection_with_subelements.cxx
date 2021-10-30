@@ -2003,10 +2003,6 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
                                  problem->phi_0 (elem_data->midpoint, 0,
                                                  problem->udata_for_phi));
 
-      if (ielement == 8 || ielement == 9) {
-        ts->t8_element_print_element (element);
-        int                 a = 2;
-      }
       /* Set the level */
       elem_data->level = ts->t8_element_level (element);
       /* Set the faces */
