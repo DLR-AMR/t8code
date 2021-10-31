@@ -30,7 +30,6 @@
  *           meshes with subelements, we need to turn of "if (!adapted_or_partitioned && !neigh_is_ghost && !hanging)". This shortcut wont work for 
  *           subelements because of different face numbers etc. All fluxes need to be computed in the case that subelements are in the mesh.
  *  3) The standard procedure will use a dynamic mesh that will adapt after each or several time steps. 
- *         - work in progress for subelements..
  */
 
 #include <sc_options.h>
