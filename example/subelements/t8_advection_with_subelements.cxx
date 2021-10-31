@@ -730,7 +730,7 @@ t8_advect_advance_element (t8_advect_problem_t * problem,
   }
   /* Phi^t = dt/dx * (f_(j-1/2) - f_(j+1/2)) + Phi^(t-1) */
   elem_data->phi_new = (problem->delta_t / elem_data->vol) * flux_sum + phi;
-#if 1
+#if 0
   t8_debugf
     ("[advect] advance el with delta_t %f vol %f phi %f  flux %f to %f\n",
      problem->delta_t, elem_data->vol, phi, flux_sum, elem_data->phi_new);
@@ -1454,10 +1454,10 @@ t8_advect_replace (t8_forest_t forest_old,
         elem_data_in[j].fluxes[iface] = NULL;
         elem_data_in[j].neighs[iface] = NULL;
       }
-      if (elem_data_out->level == elem_data_in->level) {
+      if (ts->t8_element_level (first_outgoing_elem) == ts->t8_element_level (first_incoming_elem)) {
         elem_data_in[j].level = elem_data_out->level;
       }
-      else if (elem_data_out->level < elem_data_in->level) {
+      else if (ts->t8_element_level (first_outgoing_elem) < ts->t8_element_level (first_incoming_elem)) {
         elem_data_in[j].level = elem_data_out->level + 1;
       }
       else {
@@ -2633,9 +2633,9 @@ main (int argc, char *argv[])
                       "\t\t4 - 2D rotation around (0.5,0.5).\n"
                       "\t\t5 - 2D flow around circle at (0.5,0.5)"
                       "with radius 0.15.\n)");
-  sc_options_add_int (opt, 'l', "level", &level, 4,
+  sc_options_add_int (opt, 'l', "level", &level, 3,
                       "The minimum refinement level of the mesh.");
-  sc_options_add_int (opt, 'r', "rlevel", &reflevel, 3,
+  sc_options_add_int (opt, 'r', "rlevel", &reflevel, 1,
                       "The number of adaptive refinement levels.");
   sc_options_add_int (opt, 'e', "elements", &eclass_int, T8_ECLASS_QUAD,
                       "If specified the coarse mesh is a hypercube\n\t\t\t\t     consisting of the"
@@ -2656,7 +2656,7 @@ main (int argc, char *argv[])
                          "The duration of the simulation. Default: 1");
 
   sc_options_add_double (opt, 'C', "CFL", &cfl,
-                         0.3, "The cfl number to use. Default: 1");
+                         0.05, "The cfl number to use. Default: 1");
   sc_options_add_double (opt, 'b', "band-width", &band_width,
                          1,
                          "Control the width of the refinement band around\n"
@@ -2666,7 +2666,7 @@ main (int argc, char *argv[])
                       "Controls how often the mesh is readapted. "
                       "A value of i means, every i-th time step.");
 
-  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 2,
+  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 6,
                       "How often the vtk output is produced "
                       "\n\t\t\t\t     (after how many time steps). "
                       "A value of 0 is equivalent to using -o.");
@@ -2686,10 +2686,10 @@ main (int argc, char *argv[])
   sc_options_add_double (opt, 'Y', "Ycoord", &ls_data.M[1], 0.5,
                          "The Y-Coordinate of the middlepoint"
                          "of the sphere. Default is 0.6.");
-  sc_options_add_double (opt, 'Z', "Zcoord", &ls_data.M[2], 0.5,
+  sc_options_add_double (opt, 'Z', "Zcoord", &ls_data.M[2], 0,
                          "The Z-Coordinate of the middlepoint"
                          "of the sphere. Default is 0.6.");
-  sc_options_add_double (opt, 'R', "Radius", &ls_data.radius, 0.2,
+  sc_options_add_double (opt, 'R', "Radius", &ls_data.radius, 0.25,
                          "The radius of the Sphere." "Default is 0.25.");
 
   sc_options_add_int (opt, 'V', "volume-refine", &volume_refine, -1,
