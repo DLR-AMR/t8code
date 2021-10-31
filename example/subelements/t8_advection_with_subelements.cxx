@@ -1454,10 +1454,12 @@ t8_advect_replace (t8_forest_t forest_old,
         elem_data_in[j].fluxes[iface] = NULL;
         elem_data_in[j].neighs[iface] = NULL;
       }
-      if (ts->t8_element_level (first_outgoing_elem) == ts->t8_element_level (first_incoming_elem)) {
+      if (ts->t8_element_level (first_outgoing_elem) ==
+          ts->t8_element_level (first_incoming_elem)) {
         elem_data_in[j].level = elem_data_out->level;
       }
-      else if (ts->t8_element_level (first_outgoing_elem) < ts->t8_element_level (first_incoming_elem)) {
+      else if (ts->t8_element_level (first_outgoing_elem) <
+               ts->t8_element_level (first_incoming_elem)) {
         elem_data_in[j].level = elem_data_out->level + 1;
       }
       else {
