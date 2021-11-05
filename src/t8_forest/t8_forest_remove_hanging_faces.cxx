@@ -134,7 +134,7 @@ t8_forest_remove_hanging_faces (t8_forest_t forest)
   t8_forest_copy_trees (forest, forest->set_from, 0);
   t8_forest_adapt (forest);
 
-  t8_global_productionf ("Done t8_forest_hanging_faces.\n");
+  t8_global_productionf ("Done t8_forest_remove_hanging_faces.\n");
 }
 
 /* Check whether subelements are used */
@@ -145,11 +145,14 @@ t8_forest_hanging_faces_removed (t8_forest_t forest)
   t8_eclass_t         eclass;
   const t8_element_t *current_element;
   t8_eclass_scheme_c *ts;
-  int                 ltree_id, lelement_id;
+  t8_tree_t           tree;
+  int                 ltree_id, lelement_id, num_elements_in_tree;
 
   for (ltree_id = 0; ltree_id < t8_forest_get_num_local_trees (forest);
        ltree_id++) {
-    for (lelement_id = 0; lelement_id < forest->global_num_elements;
+    tree = (t8_tree_t) t8_sc_array_index_locidx (forest->trees, ltree_id);
+    num_elements_in_tree = t8_forest_get_tree_element_count (tree);
+    for (lelement_id = 0; lelement_id < num_elements_in_tree;
          lelement_id++) {
       eclass = t8_forest_get_tree_class (forest, ltree_id);
       ts = t8_forest_get_eclass_scheme (forest, eclass);

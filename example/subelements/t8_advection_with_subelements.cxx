@@ -828,66 +828,65 @@ t8_advect_replace (t8_forest_t forest_old,
   int                 transition_refined = 0;
   int                 coarsened_to_transition = 0;
 
-  /* TODO: check whether the level of element outcoming is not too high. If so, then use just the "ELSE" interpolation */
+  /* TODO: the following cases might only qwork for elements with level <= maxleevel - 1. Check if this is right. */
+  if (ts->t8_element_level (first_outgoing_elem) <= problem->maxlevel - 2) {
+    /* We check the following cases for the quad scheme with subelements in order to improve the element interpolation. 
+    * Otherwise we will just use the standard interpolation. */
+    if (t8_forest_get_tree_class (problem->forest, which_tree) ==
+        T8_ECLASS_QUAD) {
+      /* check whether the old element stayed unchanged during the adapting process */
+      if (ts->t8_element_level (first_outgoing_elem) ==
+          ts->t8_element_level (first_incoming_elem)) {
 
-  /* We check the following cases for the quad scheme with subelements in order to improve the element interpolation. 
-   * Otherwise we will just use the standard interpolation. */
-  if (t8_forest_get_tree_class (problem->forest, which_tree) ==
-      T8_ECLASS_QUAD) {
-    /* check whether the old element stayed unchanged during the adapting process */
-    if (ts->t8_element_level (first_outgoing_elem) ==
-        ts->t8_element_level (first_incoming_elem)) {
+        if (ts->t8_element_test_if_subelement (first_outgoing_elem) &&
+            ts->t8_element_test_if_subelement (first_incoming_elem)) {
 
-      if (ts->t8_element_test_if_subelement (first_outgoing_elem) &&
-          ts->t8_element_test_if_subelement (first_incoming_elem)) {
-
-        if (ts->t8_element_get_subelement_type (first_outgoing_elem) ==
-            ts->t8_element_get_subelement_type (first_incoming_elem)) {
-          tranition_to_transition_same = 1;
+          if (ts->t8_element_get_subelement_type (first_outgoing_elem) ==
+              ts->t8_element_get_subelement_type (first_incoming_elem)) {
+            tranition_to_transition_same = 1;
+          }
+          else {
+            transition_to_transition_diff = 1;
+          }
         }
-        else {
-          transition_to_transition_diff = 1;
+
+        if (!ts->t8_element_test_if_subelement (first_outgoing_elem) &&
+            !ts->t8_element_test_if_subelement (first_incoming_elem)) {
+          elem_to_elem = 1;
         }
       }
+      /* check whether a transition cell is refined */
+      if (ts->t8_element_level (first_outgoing_elem) <
+          ts->t8_element_level (first_incoming_elem)) {
 
-      if (!ts->t8_element_test_if_subelement (first_outgoing_elem) &&
-          !ts->t8_element_test_if_subelement (first_incoming_elem)) {
-        elem_to_elem = 1;
+        T8_ASSERT (ts->t8_element_level (first_outgoing_elem) + 1 ==
+                  ts->t8_element_level (first_incoming_elem));
+
+        if (ts->t8_element_test_if_subelement (first_outgoing_elem)) {
+          transition_refined = 1;
+        }
+      }
+      /* check whether a set of elements is coarsened to a transition cell */
+      if (ts->t8_element_level (first_outgoing_elem) >
+          ts->t8_element_level (first_incoming_elem)) {
+
+        T8_ASSERT (ts->t8_element_level (first_outgoing_elem) ==
+                  ts->t8_element_level (first_incoming_elem) + 1);
+
+        if (ts->t8_element_test_if_subelement (first_incoming_elem)) {
+          coarsened_to_transition = 1;
+        }
       }
     }
-    /* check whether a transition cell is refined */
-    if (ts->t8_element_level (first_outgoing_elem) <
-        ts->t8_element_level (first_incoming_elem)) {
-
-      T8_ASSERT (ts->t8_element_level (first_outgoing_elem) + 1 ==
-                 ts->t8_element_level (first_incoming_elem));
-
-      if (ts->t8_element_test_if_subelement (first_outgoing_elem)) {
-        transition_refined = 1;
-      }
-    }
-#if 1
-    /* check whether a set of elements is coarsened to a transition cell */
-    if (ts->t8_element_level (first_outgoing_elem) >
-        ts->t8_element_level (first_incoming_elem)) {
-
-      T8_ASSERT (ts->t8_element_level (first_outgoing_elem) ==
-                 ts->t8_element_level (first_incoming_elem) + 1);
-
-      if (ts->t8_element_test_if_subelement (first_incoming_elem)) {
-        coarsened_to_transition = 1;
-      }
-    }
-#endif
   }
 
   /*
    *
-   * START OF THE INTERPOLATION SCHEME
+   * START OF THE INTERPOLATION
    *
    */
 
-  /* elem_old equals elem_new (either transition cell or standard element, same level) */
+  /* Case 1/5: elem_old equals elem_new (either transition cell or standard element, same level) */
   if (elem_to_elem || tranition_to_transition_same) {
     T8_ASSERT (num_outgoing == num_incoming);
     for (i = 0; i < num_incoming; i++) {
@@ -919,7 +918,7 @@ t8_advect_replace (t8_forest_t forest_old,
     }
   }
 
-  /* elem_old is a transition element and elem_new is a transition element of an ohter type (same level) */
+  /* Case 2/5: elem_old is a transition element and elem_new is a transition element of an ohter type (same level) */
   else if (transition_to_transition_diff) {
     int                 subelem_out_count = 0;
     int                 subelem_in_count = 0;
@@ -1042,7 +1041,8 @@ t8_advect_replace (t8_forest_t forest_old,
           t8_advect_element_get_phi (problem,
                                      first_outgoing_data + subelem_out_count);
         int                 k;
-        for (k = 0; k < 2; k++) {
+        int num_subelements_at_face = 2;
+        for (k = 0; k < num_subelements_at_face; k++) {
           element =
             t8_forest_get_element_in_tree (problem->forest_adapt, which_tree,
                                            first_incoming + subelem_in_count +
@@ -1076,7 +1076,7 @@ t8_advect_replace (t8_forest_t forest_old,
     }
   }
 
-  /* elem_old is transition cell and is refined */
+  /* Case 3/5: elem_old is transition cell and is refined */
   else if (transition_refined) {
     /* iterate through all new elements and set their new phi values */
     for (i = 0; i < num_incoming; i++) {
@@ -1234,7 +1234,7 @@ t8_advect_replace (t8_forest_t forest_old,
     }
   }
 
-  /* elem_old is a set of elements that is coarsened into a transition cell elem_new */
+  /* Case 4/5: elem_old is a set of elements that is coarsened into a transition cell elem_new */
   else if (coarsened_to_transition) {
     /* iterate through all new elements and set their phi values */
     for (i = 0; i < num_incoming; i++) {
@@ -1417,7 +1417,7 @@ t8_advect_replace (t8_forest_t forest_old,
     }
   }
 
-  /* In every other case we will eihter copy the old value to the new elements or compute the mean of old values and copy it to the new element(s).
+  /* Case 5/5: In every other case we will eihter copy the old value to the new elements or compute the mean of old values and copy it to the new element(s).
    * The other cases are:
    *   1) elem_old is a standard element and is refined into higher level elements
    *   2) elem_old is standard element and is refined to a transition cell of the same level
@@ -2634,7 +2634,7 @@ main (int argc, char *argv[])
                       "\t\t4 - 2D rotation around (0.5,0.5).\n"
                       "\t\t5 - 2D flow around circle at (0.5,0.5)"
                       "with radius 0.15.\n)");
-  sc_options_add_int (opt, 'l', "level", &level, 3,
+  sc_options_add_int (opt, 'l', "level", &level, 5,
                       "The minimum refinement level of the mesh.");
   sc_options_add_int (opt, 'r', "rlevel", &reflevel, 1,
                       "The number of adaptive refinement levels.");
@@ -2663,11 +2663,11 @@ main (int argc, char *argv[])
                          "Control the width of the refinement band around\n"
                          " the zero level-set. Default 1.");
 
-  sc_options_add_int (opt, 'a', "adapt-freq", &adapt_freq, 6,
+  sc_options_add_int (opt, 'a', "adapt-freq", &adapt_freq, 10,
                       "Controls how often the mesh is readapted. "
                       "A value of i means, every i-th time step.");
 
-  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 6,
+  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 10,
                       "How often the vtk output is produced "
                       "\n\t\t\t\t     (after how many time steps). "
                       "A value of 0 is equivalent to using -o.");
@@ -2690,7 +2690,7 @@ main (int argc, char *argv[])
   sc_options_add_double (opt, 'Z', "Zcoord", &ls_data.M[2], 0,
                          "The Z-Coordinate of the middlepoint"
                          "of the sphere. Default is 0.6.");
-  sc_options_add_double (opt, 'R', "Radius", &ls_data.radius, 0.25,
+  sc_options_add_double (opt, 'R', "Radius", &ls_data.radius, 0.1,
                          "The radius of the Sphere." "Default is 0.25.");
 
   sc_options_add_int (opt, 'V', "volume-refine", &volume_refine, -1,
