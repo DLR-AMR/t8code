@@ -89,6 +89,7 @@ t8_forest_remove_hanging_faces_adapt (t8_forest_t forest,
                                    &neighbor_leafs, iface, &dual_faces,
                                    &num_neighbors, &element_indices,
                                    &neigh_scheme, is_balanced);
+
     /* If the number of neighbours of a face is higher than 1, then we know that there must be a hanging node. */
 
     /* This procedure determines the decimal value of the binary representation of the neighbour structure. 
@@ -152,8 +153,7 @@ t8_forest_hanging_faces_removed (t8_forest_t forest)
        ltree_id++) {
     tree = (t8_tree_t) t8_sc_array_index_locidx (forest->trees, ltree_id);
     num_elements_in_tree = t8_forest_get_tree_element_count (tree);
-    for (lelement_id = 0; lelement_id < num_elements_in_tree;
-         lelement_id++) {
+    for (lelement_id = 0; lelement_id < num_elements_in_tree; lelement_id++) {
       eclass = t8_forest_get_tree_class (forest, ltree_id);
       ts = t8_forest_get_eclass_scheme (forest, eclass);
       current_element =

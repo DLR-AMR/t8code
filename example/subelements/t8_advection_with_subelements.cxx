@@ -604,7 +604,7 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
         /* We need to allocate the fluxes */
         neigh_data->fluxes[dual_face] = T8_ALLOC (double, 1);
       }
-      printf ("face %i neigh %i df %i, neigh_data->num_faces: %i\n", face,
+      t8_debugf ("face %i neigh %i df %i, neigh_data->num_faces: %i\n", face,
               neigh_id, dual_face, neigh_data->num_faces);
       SC_CHECK_ABORT (dual_face < neigh_data->num_faces, "num\n");
       // SC_CHECK_ABORT (neigh_data->num_neighbors[dual_face] == 1, "entry\n");
@@ -828,10 +828,11 @@ t8_advect_replace (t8_forest_t forest_old,
   int                 transition_refined = 0;
   int                 coarsened_to_transition = 0;
 
-  /* TODO: the following cases might only qwork for elements with level <= maxleevel - 1. Check if this is right. */
-  if (ts->t8_element_level (first_outgoing_elem) <= problem->maxlevel - 2) {
+  /* TODO: Check for the maxlevel macro */
+  int maxlevel = 20;
+  if (ts->t8_element_level (first_outgoing_elem) <= maxlevel - 2) {
     /* We check the following cases for the quad scheme with subelements in order to improve the element interpolation. 
-    * Otherwise we will just use the standard interpolation. */
+     * Otherwise we will just use the standard interpolation. */
     if (t8_forest_get_tree_class (problem->forest, which_tree) ==
         T8_ECLASS_QUAD) {
       /* check whether the old element stayed unchanged during the adapting process */
@@ -860,7 +861,7 @@ t8_advect_replace (t8_forest_t forest_old,
           ts->t8_element_level (first_incoming_elem)) {
 
         T8_ASSERT (ts->t8_element_level (first_outgoing_elem) + 1 ==
-                  ts->t8_element_level (first_incoming_elem));
+                   ts->t8_element_level (first_incoming_elem));
 
         if (ts->t8_element_test_if_subelement (first_outgoing_elem)) {
           transition_refined = 1;
@@ -871,7 +872,7 @@ t8_advect_replace (t8_forest_t forest_old,
           ts->t8_element_level (first_incoming_elem)) {
 
         T8_ASSERT (ts->t8_element_level (first_outgoing_elem) ==
-                  ts->t8_element_level (first_incoming_elem) + 1);
+                   ts->t8_element_level (first_incoming_elem) + 1);
 
         if (ts->t8_element_test_if_subelement (first_incoming_elem)) {
           coarsened_to_transition = 1;
@@ -1041,7 +1042,7 @@ t8_advect_replace (t8_forest_t forest_old,
           t8_advect_element_get_phi (problem,
                                      first_outgoing_data + subelem_out_count);
         int                 k;
-        int num_subelements_at_face = 2;
+        int                 num_subelements_at_face = 2;
         for (k = 0; k < num_subelements_at_face; k++) {
           element =
             t8_forest_get_element_in_tree (problem->forest_adapt, which_tree,
@@ -1243,7 +1244,7 @@ t8_advect_replace (t8_forest_t forest_old,
         t8_forest_get_element_in_tree (problem->forest_adapt, which_tree,
                                        first_incoming + i);
 
-      printf ("elem_in_itertate\n");
+      t8_debugf ("elem_in_itertate:\n");
       ts->t8_element_print_element (elem_in_iterate);
 
       T8_ASSERT (ts->t8_element_test_if_subelement (elem_in_iterate));
@@ -1317,7 +1318,7 @@ t8_advect_replace (t8_forest_t forest_old,
           t8_forest_get_element_in_tree (problem->forest, which_tree,
                                          first_outgoing + j);
 
-        printf ("elem_out_itertate\n");
+        t8_debugf ("elem_out_itertate\n");
         ts->t8_element_print_element (elem_out_iterate);
 
         /* compute the vertices of the recent outgoing element */
@@ -1816,7 +1817,16 @@ t8_advect_create_cmesh (sc_MPI_Comm comm, t8_eclass_t eclass,
       return t8_cmesh_new_hypercube_hybrid (3, comm, 0, 1);
     }
     else {
+      #if 1 /* create a forest with multiple hypercube trees */
+      p4est_connectivity_t *brick =
+      p4est_connectivity_new_brick (2, 1, 1, 1);
+      t8_cmesh_t cmesh = t8_cmesh_new_from_p4est (brick, comm, 0);
+      p4est_connectivity_destroy (brick);
+      return cmesh;
+      #endif
+      #if 0 /* create a hypercube forest with one tree */
       return t8_cmesh_new_hypercube (eclass, comm, 0, 0, 1);
+      #endif
     }
   }
 #if 0
@@ -2268,7 +2278,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   modulus = SC_MAX (1, time_steps / 10);
   for (problem->num_time_steps = 0;
        !done; problem->num_time_steps++, problem->t += problem->delta_t) {
-    printf ("Timestep: %i\n", problem->num_time_steps);
+    t8_debugf ("Timestep: %i\n", problem->num_time_steps);
     if (problem->num_time_steps % modulus == modulus - 1) {
       t8_global_essentialf ("[advect] Step %i  %li elems\n",
                             problem->num_time_steps + 1,
@@ -2298,7 +2308,8 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
            ielement < t8_forest_get_tree_num_elements (problem->forest,
                                                        itree);
            ielement++, lelement++) {
-        printf ("Element index: %i\n", ielement);
+        t8_debugf ("Element index in tree %i: %i\n", itree, ielement);
+        t8_debugf ("Global element index: %i\n", lelement);
         /* element loop */
         /* Get a pointer to the element data */
         elem_data = (t8_advect_element_data_t *)
@@ -2312,7 +2323,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
           t8_eclass_scheme_c *ts;
           t8_element_t       *element_test;
           element_test =
-            t8_forest_get_element_in_tree (problem->forest, 0, lelement);
+            t8_forest_get_element_in_tree (problem->forest, itree, ielement); 
           ts =
             t8_forest_get_eclass_scheme (problem->forest,
                                          t8_forest_get_tree_class
@@ -2327,7 +2338,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
 
         /* Compute left and right flux */
         for (iface = 0; iface < num_faces; iface++) {   /* face loop */
-          printf ("Face: %i\n", iface);
+          t8_debugf ("Face: %i\n", iface);
           if (elem_data->flux_valid[iface] <= 0 || adapted_or_partitioned) {
 
             /* Compute flux at this face */
@@ -2352,9 +2363,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                 elem_data->neigh_level[iface] =
                   neigh_scheme->t8_element_level (neighs[ineigh]);
               }
-
-
-
+               
               /* *INDENT-OFF* */
               neigh_scheme->t8_element_destroy (elem_data->num_neighbors[iface],
                                                 neighs);
@@ -2634,7 +2643,7 @@ main (int argc, char *argv[])
                       "\t\t4 - 2D rotation around (0.5,0.5).\n"
                       "\t\t5 - 2D flow around circle at (0.5,0.5)"
                       "with radius 0.15.\n)");
-  sc_options_add_int (opt, 'l', "level", &level, 5,
+  sc_options_add_int (opt, 'l', "level", &level, 2,
                       "The minimum refinement level of the mesh.");
   sc_options_add_int (opt, 'r', "rlevel", &reflevel, 1,
                       "The number of adaptive refinement levels.");
@@ -2657,17 +2666,17 @@ main (int argc, char *argv[])
                          "The duration of the simulation. Default: 1");
 
   sc_options_add_double (opt, 'C', "CFL", &cfl,
-                         0.05, "The cfl number to use. Default: 1");
+                         0.1, "The cfl number to use. Default: 1");
   sc_options_add_double (opt, 'b', "band-width", &band_width,
                          1,
                          "Control the width of the refinement band around\n"
                          " the zero level-set. Default 1.");
 
-  sc_options_add_int (opt, 'a', "adapt-freq", &adapt_freq, 10,
+  sc_options_add_int (opt, 'a', "adapt-freq", &adapt_freq, 4,
                       "Controls how often the mesh is readapted. "
                       "A value of i means, every i-th time step.");
 
-  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 10,
+  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 4,
                       "How often the vtk output is produced "
                       "\n\t\t\t\t     (after how many time steps). "
                       "A value of 0 is equivalent to using -o.");
@@ -2681,7 +2690,7 @@ main (int argc, char *argv[])
                          "In each iteration, useless dummy operations\n "
                          "\t\t\t\t     are performed per element. Decreases the "
                          "performance!");
-  sc_options_add_double (opt, 'X', "Xcoord", &ls_data.M[0], 0.5,
+  sc_options_add_double (opt, 'X', "Xcoord", &ls_data.M[0], 1,
                          "The X-Coordinate of the middlepoint"
                          "of the sphere. Default is 0.6.");
   sc_options_add_double (opt, 'Y', "Ycoord", &ls_data.M[1], 0.5,

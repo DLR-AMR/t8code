@@ -1813,7 +1813,8 @@ t8_forest_element_face_neighbor (t8_forest_t forest,
                                                 face_element,
                                                 ttf[tree_face] / F, sign,
                                                 is_smaller);
-    /* And now we extrude the face to the new neighbor element */
+    /* And now we extrude the face to the new neighbor element 
+     * and compute neigh */
     neighbor_scheme = forest->scheme_cxx->eclass_schemes[neigh_eclass];
     *neigh_face =
       neighbor_scheme->t8_element_extrude_face (face_element,
@@ -2127,11 +2128,13 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
            * Therefore, we need to find the right subelement within the family of subelements of ancestor. */
 
           /* we will call the current neighbor "pseudo_neighbor" here in order to stress that it might not be the real neighbor */
+          T8_ASSERT (element_index < forest->global_num_elements);
+          printf ("elem_index: %i\n", element_index);
           const t8_element_t *pseudo_neighbor;
           pseudo_neighbor =
             t8_forest_get_tree_element (t8_forest_get_tree
                                         (forest, lneigh_treeid),
-                                        element_index);
+                                        element_index - t8_forest_get_tree_element_offset (forest, lneigh_treeid));
 
           /* analogue, call its index "pseudo_neighbor_index" */
           t8_locidx_t         pseudo_neigh_index = element_index;
@@ -2156,7 +2159,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
           neighbor =
             t8_forest_get_tree_element (t8_forest_get_tree
                                         (forest, lneigh_treeid),
-                                        element_index);
+                                        element_index - t8_forest_get_tree_element_offset (forest, lneigh_treeid));
 
           /* free memory */
           neigh_scheme->t8_element_destroy (num_children_at_face - 1,

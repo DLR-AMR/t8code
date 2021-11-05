@@ -68,14 +68,14 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   char                filename[BUFSIZ];
 
   /* refinement settings */
-  int                 initlevel = 3;    /* initial uniform refinement level */
+  int                 initlevel = 4;    /* initial uniform refinement level */
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening */
-  int                 maxlevel = 4;     /* highest level allowed for refining */
+  int                 maxlevel = 5;     /* highest level allowed for refining */
 
-  /* cmesh settings */
-  int                 single_tree = 0; 
-  int                 multiple_tree = 1;
-  int                 num_x_trees = 5, num_y_trees = 1; /* if multiple_tree is active, then define the number of trees */
+  /* cmesh settings (only one of the following suggestions should be one, the others 0) */
+  int                 single_tree = 1;
+  int                 multiple_tree = 0, num_x_trees = 5, num_y_trees = 1;
+  int                 hybrid_cmesh = 0;
 
   /* adaptation setting */
   int                 do_balance = 0;
@@ -90,14 +90,19 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   t8_forest_init (&forest);
 
   /* building the cmesh, using the initlevel */
-  if (single_tree) { /* single quad cmesh */
+  if (single_tree) {            /* single quad cmesh */
     cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
-  } 
+  }
 
-  if (multiple_tree) { /* p4est_connectivity_new_brick (num_x_trees, num_y_trees, 0, 0) -> cmesh of (num_x_trees x num_y_trees) many quads */
-    p4est_connectivity_t *brick = p4est_connectivity_new_brick (num_x_trees, num_y_trees, 0, 0);
+  if (multiple_tree) {          /* p4est_connectivity_new_brick (num_x_trees, num_y_trees, 0, 0) -> cmesh of (num_x_trees x num_y_trees) many quads */
+    p4est_connectivity_t *brick =
+      p4est_connectivity_new_brick (num_x_trees, num_y_trees, 0, 0);
     cmesh = t8_cmesh_new_from_p4est (brick, sc_MPI_COMM_WORLD, 0);
     p4est_connectivity_destroy (brick);
+  }
+
+  if (hybrid_cmesh) { /* TODO: this does not work at the moment */
+    cmesh = t8_cmesh_new_hypercube_hybrid (2, sc_MPI_COMM_WORLD, 0, 0);
   }
 
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
@@ -116,7 +121,7 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   t8_basic_sphere_data_t sdata;
 
   /* midpoint and radius of a sphere */
-  sdata.mid_point[0] = 0.3;
+  sdata.mid_point[0] = 0.9;
   sdata.mid_point[1] = 0.5;
   sdata.mid_point[2] = 0;
   sdata.radius = 0.2;
