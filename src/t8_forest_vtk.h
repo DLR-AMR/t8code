@@ -81,6 +81,7 @@ int                 t8_forest_write_vtk_via_API (t8_forest_t forest,
  *                        must come first in the array.
  * \return  True if succesful, false if not (process local).
  */
+
 int                 t8_forest_vtk_write_file (t8_forest_t forest,
                                               const char *fileprefix,
                                               int write_treeid,
@@ -90,6 +91,31 @@ int                 t8_forest_vtk_write_file (t8_forest_t forest,
                                               int write_ghosts,
                                               int num_data,
                                               t8_vtk_data_field_t * data);
+
+int
+ 
+ 
+ 
+ 
+ 
+      t8_get_number_of_vtk_nodes (t8_element_shape_t eclass, int curved_flag);
+
+void
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ t8_curved_element_get_reference_node_coords (const t8_element_t *
+                                              elem,
+                                              t8_element_shape_t eclass,
+                                              t8_eclass_scheme_c * scheme,
+                                              int vertex, double *coords);
+
+const int           t8_curved_eclass_vtk_type[T8_ECLASS_COUNT] =
+  { 1, 21, 23, 22, 25, 24, 26, 27 };
 
 T8_EXTERN_C_END ();
 
