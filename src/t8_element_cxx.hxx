@@ -563,6 +563,8 @@ public:
   virtual void        t8_element_successor (const t8_element_t * t,
                                             t8_element_t * s, int level) = 0;
 
+/* TODO: Can we remove this function? We do not want to force an implementation
+ to use integers. */
   /** Compute the root length of a given element, that is the length of
    * its level 0 ancestor.
    * \param [in] elem     The element whose root length should be computed.
