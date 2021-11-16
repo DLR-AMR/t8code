@@ -56,7 +56,7 @@ t8_advect_adapt_tests (t8_forest_t forest,
 {
   /* Get the minimum and maximum x-coordinate from the user data pointer of forest */
   t8_example_level_set_struct_t *data;
-  int level;
+  int                 level;
   data = (t8_example_level_set_struct_t *) t8_forest_get_user_data (forest);
   level = ts->t8_element_level (elements[0]);
 
@@ -130,7 +130,7 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   /* refinement settings */
   int                 initlevel = 5;    /* initial uniform refinement level */
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening */
-  int                 maxlevel = 10;     /* highest level allowed for refining */
+  int                 maxlevel = 10;    /* highest level allowed for refining */
 
   int                 do_circular_refinement = 0;
   int                 do_test_refinement = 1;
@@ -220,7 +220,8 @@ t8_refine_with_subelements (t8_eclass_t eclass)
     /* Adapt the mesh according to the user data */
     t8_forest_set_user_data (forest_adapt, &ls_data);
     if (do_circular_refinement) {
-      t8_forest_set_adapt (forest_adapt, forest, t8_common_adapt_level_set, 1);
+      t8_forest_set_adapt (forest_adapt, forest, t8_common_adapt_level_set,
+                           1);
     }
     if (do_test_refinement) {
       t8_forest_set_adapt (forest_adapt, forest, t8_advect_adapt_tests, 1);
