@@ -202,7 +202,8 @@ t8_forest_adapt (t8_forest_t forest)
   int                 ci;
   unsigned int        subelement_type;
   unsigned int        num_subelements;
-  long long int       count_subelements = 0, count_subelements_former_tree = 0;
+  long long int       count_subelements = 0, count_subelements_former_tree =
+    0;
 #ifdef T8_ENABLE_DEBUG
   int                 is_family;
 #endif
@@ -521,9 +522,12 @@ t8_forest_adapt (t8_forest_t forest)
     forest->local_num_elements += el_inserted;
 
     /* Output for debugging and Results */
-    int num_subelements_in_tree = count_subelements - count_subelements_former_tree;
+    int                 num_subelements_in_tree =
+      count_subelements - count_subelements_former_tree;
     count_subelements_former_tree = count_subelements;
-    t8_productionf ("tree_id: %i num_elements in tree: %i num_subelements_in_tree: %i\n", ltree_id, el_inserted, num_subelements_in_tree);
+    t8_productionf
+      ("tree_id: %i num_elements in tree: %i num_subelements_in_tree: %i\n",
+       ltree_id, el_inserted, num_subelements_in_tree);
 
     /* Possibly shrink the telements array to the correct size */
     t8_element_array_resize (telements, el_inserted);

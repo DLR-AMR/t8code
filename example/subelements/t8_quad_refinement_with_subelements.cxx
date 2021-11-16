@@ -45,6 +45,63 @@ typedef struct
   double              radius;
 } t8_basic_sphere_data_t;
 
+/* Initial adapt scheme */
+static int
+t8_advect_adapt_tests (t8_forest_t forest,
+                       t8_forest_t forest_from,
+                       t8_locidx_t which_tree,
+                       t8_locidx_t lelement_id,
+                       t8_eclass_scheme_c * ts,
+                       int num_elements, t8_element_t * elements[])
+{
+  /* Get the minimum and maximum x-coordinate from the user data pointer of forest */
+  t8_example_level_set_struct_t *data;
+  int level;
+  data = (t8_example_level_set_struct_t *) t8_forest_get_user_data (forest);
+  level = ts->t8_element_level (elements[0]);
+
+#if 0                           /* refine all lower right elements */
+  int                 coord[3] = { };
+  ts->t8_element_anchor (elements[0], coord);
+
+  if (coord[0] > coord[1]) {
+    return 1;
+  }
+  return 0;
+#endif
+
+#if 1                           /* refinement diag */
+  int                 coord[3] = { };
+  ts->t8_element_anchor (elements[0], coord);
+
+  if (coord[0] == coord[1] && level < data->max_level) {
+    return 1;
+  }
+  return 0;
+#endif
+
+#if 0                           /* refinement every second element */
+  if (lelement_id % 2 == 0) {
+    return 1;
+  }
+  return 0;
+#endif
+
+#if 0                           /* refinement all left elements */
+  int                 coord[3] = { };
+  ts->t8_element_anchor (elements[0], coord);
+  int                 len = ts->t8_element_root_len (elements[0]);
+  if (coord[0] < len / 2) {
+    return 1;
+  }
+  return 0;
+#endif
+
+#if 0                           /* refinement all elements with subelement type 15 */
+  return 16;
+#endif
+}
+
 /* Compute the distance to a sphere around a mid_point with given radius. */
 static double
 t8_basic_level_set_sphere (const double x[3], double t, void *data)
@@ -71,18 +128,21 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   char                filename[BUFSIZ];
 
   /* refinement settings */
-  int                 initlevel = 2;    /* initial uniform refinement level */
+  int                 initlevel = 5;    /* initial uniform refinement level */
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening */
-  int                 maxlevel = 6;     /* highest level allowed for refining */
+  int                 maxlevel = 10;     /* highest level allowed for refining */
+
+  int                 do_circular_refinement = 0;
+  int                 do_test_refinement = 1;
 
   /* cmesh settings (only one of the following suggestions should be one, the others 0) */
-  int                 single_tree = 0;
-  int                 multiple_tree = 1, num_x_trees = 2, num_y_trees = 2;
+  int                 single_tree = 1;
+  int                 multiple_tree = 0, num_x_trees = 2, num_y_trees = 2;
   int                 hybrid_cmesh = 0;
 
   /* adaptation setting */
   int                 do_balance = 0;
-  int                 do_subelements = 1;
+  int                 do_transition = 1;
 
   /* timestep settings */
   int                 timesteps = 1;    /* Number of times, the mesh is refined */
@@ -115,8 +175,7 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   t8_forest_commit (forest);
 
   /* print cmesh file */
-  snprintf (filename, BUFSIZ, "forest_cmesh_%s",
-            t8_eclass_to_string[eclass]);
+  snprintf (filename, BUFSIZ, "forest_cmesh_%s", t8_eclass_to_string[eclass]);
   t8_cmesh_vtk_write_file (cmesh, filename, 1);
 
   /* print uniform mesh file */
@@ -131,10 +190,10 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   /* midpoint and radius of a sphere 
    * TODO: check if, for symmetry, the midpoint should be on an elements corner */
   /* shift the midpoiunt of the circle by (shift_x,shift_y) to ensure midpoints on corners of the uniform mesh */
-  int shift_x = 0; /* shift_x should be smaler than 2^minlevel / 2 such that midpoint stays in the quadrilateral tree */
-  int shift_y = 0; 
-  sdata.mid_point[0] = 0; //1.0 / 2.0 + shift_x * 1.0/(1 << (minlevel));
-  sdata.mid_point[1] = 0; //1.0 / 2.0 + shift_y * 1.0/(1 << (minlevel)); 
+  int                 shift_x = 0;      /* shift_x should be smaler than 2^minlevel / 2 such that midpoint stays in the quadrilateral tree */
+  int                 shift_y = 0;
+  sdata.mid_point[0] = 0;       //1.0 / 2.0 + shift_x * 1.0/(1 << (minlevel));
+  sdata.mid_point[1] = 0;       //1.0 / 2.0 + shift_y * 1.0/(1 << (minlevel)); 
   sdata.mid_point[2] = 0;
   sdata.radius = 1.2;
 
@@ -160,12 +219,17 @@ t8_refine_with_subelements (t8_eclass_t eclass)
 
     /* Adapt the mesh according to the user data */
     t8_forest_set_user_data (forest_adapt, &ls_data);
-    t8_forest_set_adapt (forest_adapt, forest, t8_common_adapt_level_set, 1);
+    if (do_circular_refinement) {
+      t8_forest_set_adapt (forest_adapt, forest, t8_common_adapt_level_set, 1);
+    }
+    if (do_test_refinement) {
+      t8_forest_set_adapt (forest_adapt, forest, t8_advect_adapt_tests, 1);
+    }
 
     if (do_balance) {
       t8_forest_set_balance (forest_adapt, forest, 0);
     }
-    if (do_subelements) {
+    if (do_transition) {
       /* Analogue to the other set-functions, this function adds subelements to the from_method. 
        * The forest will therefore use subelements while adapting in order to remove hanging faces from the mesh. */
       t8_forest_set_remove_hanging_faces (forest_adapt, NULL);
