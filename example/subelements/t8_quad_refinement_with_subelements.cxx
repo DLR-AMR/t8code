@@ -20,6 +20,9 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <t8_cmesh.h>
+#include <t8_cmesh_readmshfile.h>
+#include <t8_cmesh_vtk.h>
 #include <t8_schemes/t8_quads_w_rectangular_subelements/t8_subelements_cxx.hxx>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest.h>
@@ -68,13 +71,13 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   char                filename[BUFSIZ];
 
   /* refinement settings */
-  int                 initlevel = 4;    /* initial uniform refinement level */
+  int                 initlevel = 2;    /* initial uniform refinement level */
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening */
-  int                 maxlevel = 5;     /* highest level allowed for refining */
+  int                 maxlevel = 6;     /* highest level allowed for refining */
 
   /* cmesh settings (only one of the following suggestions should be one, the others 0) */
-  int                 single_tree = 1;
-  int                 multiple_tree = 0, num_x_trees = 5, num_y_trees = 1;
+  int                 single_tree = 0;
+  int                 multiple_tree = 1, num_x_trees = 2, num_y_trees = 2;
   int                 hybrid_cmesh = 0;
 
   /* adaptation setting */
@@ -101,7 +104,7 @@ t8_refine_with_subelements (t8_eclass_t eclass)
     p4est_connectivity_destroy (brick);
   }
 
-  if (hybrid_cmesh) { /* TODO: this does not work at the moment */
+  if (hybrid_cmesh) {           /* TODO: this does not work at the moment */
     cmesh = t8_cmesh_new_hypercube_hybrid (2, sc_MPI_COMM_WORLD, 0, 0);
   }
 
@@ -111,7 +114,12 @@ t8_refine_with_subelements (t8_eclass_t eclass)
 
   t8_forest_commit (forest);
 
-  /* print vtk file */
+  /* print cmesh file */
+  snprintf (filename, BUFSIZ, "forest_cmesh_%s",
+            t8_eclass_to_string[eclass]);
+  t8_cmesh_vtk_write_file (cmesh, filename, 1);
+
+  /* print uniform mesh file */
   snprintf (filename, BUFSIZ, "forest_uniform_%s",
             t8_eclass_to_string[eclass]);
   t8_forest_write_vtk (forest, filename);
@@ -120,14 +128,18 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   t8_example_level_set_struct_t ls_data;
   t8_basic_sphere_data_t sdata;
 
-  /* midpoint and radius of a sphere */
-  sdata.mid_point[0] = 0.9;
-  sdata.mid_point[1] = 0.5;
+  /* midpoint and radius of a sphere 
+   * TODO: check if, for symmetry, the midpoint should be on an elements corner */
+  /* shift the midpoiunt of the circle by (shift_x,shift_y) to ensure midpoints on corners of the uniform mesh */
+  int shift_x = 0; /* shift_x should be smaler than 2^minlevel / 2 such that midpoint stays in the quadrilateral tree */
+  int shift_y = 0; 
+  sdata.mid_point[0] = 0; //1.0 / 2.0 + shift_x * 1.0/(1 << (minlevel));
+  sdata.mid_point[1] = 0; //1.0 / 2.0 + shift_y * 1.0/(1 << (minlevel)); 
   sdata.mid_point[2] = 0;
-  sdata.radius = 0.2;
+  sdata.radius = 1.2;
 
   /* refinement parameter */
-  ls_data.band_width = 1.5;
+  ls_data.band_width = 1;
   ls_data.L = t8_basic_level_set_sphere;
   ls_data.min_level = minlevel;
   ls_data.max_level = maxlevel;

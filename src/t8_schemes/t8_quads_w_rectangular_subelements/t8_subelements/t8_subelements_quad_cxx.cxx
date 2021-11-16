@@ -927,7 +927,7 @@ t8_subelement_scheme_quad_c::t8_element_extrude_face (const t8_element_t *
   T8_ASSERT (face_scheme->t8_element_is_valid (elem));
   T8_ASSERT (0 <= root_face && root_face < P4EST_FACES);
 
-  /* TODO: check if this enumeration is right (maybe f_2 and f_3 switched) */
+  /* TODO: check if the enumeration in this graphic is right (maybe f_2 and f_3 switched) */
   /*
    * The faces of the root quadrant are enumerated like this:
    *

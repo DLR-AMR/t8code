@@ -287,7 +287,7 @@ t8_advect_adapt_init (t8_forest_t forest, t8_forest_t forest_from,
   return 0;
 #endif
 
-#if 1                           /* refinement all left elements */
+#if 0                           /* refinement all left elements */
   int                 coord[3] = { };
   ts->t8_element_anchor (elements[0], coord);
   int                 len = ts->t8_element_root_len (elements[0]);
@@ -297,7 +297,7 @@ t8_advect_adapt_init (t8_forest_t forest, t8_forest_t forest_from,
   return 0;
 #endif
 
-#if 0                           /* refinement all elements with subelement type 15 */
+#if 1                           /* refinement all elements with subelement type 15 */
   return 16;
 #endif
 }
@@ -605,7 +605,7 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
         neigh_data->fluxes[dual_face] = T8_ALLOC (double, 1);
       }
       t8_debugf ("face %i neigh %i df %i, neigh_data->num_faces: %i\n", face,
-              neigh_id, dual_face, neigh_data->num_faces);
+                 neigh_id, dual_face, neigh_data->num_faces);
       SC_CHECK_ABORT (dual_face < neigh_data->num_faces, "num\n");
       // SC_CHECK_ABORT (neigh_data->num_neighbors[dual_face] == 1, "entry\n");
       neigh_data->num_neighbors[dual_face] = 1;
@@ -829,7 +829,7 @@ t8_advect_replace (t8_forest_t forest_old,
   int                 coarsened_to_transition = 0;
 
   /* TODO: Check for the maxlevel macro */
-  int maxlevel = 20;
+  int                 maxlevel = 20;
   if (ts->t8_element_level (first_outgoing_elem) <= maxlevel - 2) {
     /* We check the following cases for the quad scheme with subelements in order to improve the element interpolation. 
      * Otherwise we will just use the standard interpolation. */
@@ -1817,16 +1817,15 @@ t8_advect_create_cmesh (sc_MPI_Comm comm, t8_eclass_t eclass,
       return t8_cmesh_new_hypercube_hybrid (3, comm, 0, 1);
     }
     else {
-      #if 1 /* create a forest with multiple hypercube trees */
-      p4est_connectivity_t *brick =
-      p4est_connectivity_new_brick (2, 1, 1, 1);
-      t8_cmesh_t cmesh = t8_cmesh_new_from_p4est (brick, comm, 0);
+#if 0                           /* create a forest with multiple hypercube trees */
+      p4est_connectivity_t *brick = p4est_connectivity_new_brick (2, 1, 1, 1);
+      t8_cmesh_t          cmesh = t8_cmesh_new_from_p4est (brick, comm, 0);
       p4est_connectivity_destroy (brick);
       return cmesh;
-      #endif
-      #if 0 /* create a hypercube forest with one tree */
+#endif
+#if 1                           /* create a hypercube forest with one tree */
       return t8_cmesh_new_hypercube (eclass, comm, 0, 0, 1);
-      #endif
+#endif
     }
   }
 #if 0
@@ -2323,7 +2322,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
           t8_eclass_scheme_c *ts;
           t8_element_t       *element_test;
           element_test =
-            t8_forest_get_element_in_tree (problem->forest, itree, ielement); 
+            t8_forest_get_element_in_tree (problem->forest, itree, ielement);
           ts =
             t8_forest_get_eclass_scheme (problem->forest,
                                          t8_forest_get_tree_class
@@ -2363,7 +2362,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                 elem_data->neigh_level[iface] =
                   neigh_scheme->t8_element_level (neighs[ineigh]);
               }
-               
+
               /* *INDENT-OFF* */
               neigh_scheme->t8_element_destroy (elem_data->num_neighbors[iface],
                                                 neighs);
@@ -2643,7 +2642,7 @@ main (int argc, char *argv[])
                       "\t\t4 - 2D rotation around (0.5,0.5).\n"
                       "\t\t5 - 2D flow around circle at (0.5,0.5)"
                       "with radius 0.15.\n)");
-  sc_options_add_int (opt, 'l', "level", &level, 2,
+  sc_options_add_int (opt, 'l', "level", &level, 4,
                       "The minimum refinement level of the mesh.");
   sc_options_add_int (opt, 'r', "rlevel", &reflevel, 1,
                       "The number of adaptive refinement levels.");
@@ -2672,11 +2671,11 @@ main (int argc, char *argv[])
                          "Control the width of the refinement band around\n"
                          " the zero level-set. Default 1.");
 
-  sc_options_add_int (opt, 'a', "adapt-freq", &adapt_freq, 4,
+  sc_options_add_int (opt, 'a', "adapt-freq", &adapt_freq, 10,
                       "Controls how often the mesh is readapted. "
                       "A value of i means, every i-th time step.");
 
-  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 4,
+  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 10,
                       "How often the vtk output is produced "
                       "\n\t\t\t\t     (after how many time steps). "
                       "A value of 0 is equivalent to using -o.");
@@ -2690,7 +2689,7 @@ main (int argc, char *argv[])
                          "In each iteration, useless dummy operations\n "
                          "\t\t\t\t     are performed per element. Decreases the "
                          "performance!");
-  sc_options_add_double (opt, 'X', "Xcoord", &ls_data.M[0], 1,
+  sc_options_add_double (opt, 'X', "Xcoord", &ls_data.M[0], 0.5,
                          "The X-Coordinate of the middlepoint"
                          "of the sphere. Default is 0.6.");
   sc_options_add_double (opt, 'Y', "Ycoord", &ls_data.M[1], 0.5,
@@ -2699,7 +2698,7 @@ main (int argc, char *argv[])
   sc_options_add_double (opt, 'Z', "Zcoord", &ls_data.M[2], 0,
                          "The Z-Coordinate of the middlepoint"
                          "of the sphere. Default is 0.6.");
-  sc_options_add_double (opt, 'R', "Radius", &ls_data.radius, 0.1,
+  sc_options_add_double (opt, 'R', "Radius", &ls_data.radius, 0.2,
                          "The radius of the Sphere." "Default is 0.25.");
 
   sc_options_add_int (opt, 'V', "volume-refine", &volume_refine, -1,

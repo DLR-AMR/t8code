@@ -2134,7 +2134,9 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
           pseudo_neighbor =
             t8_forest_get_tree_element (t8_forest_get_tree
                                         (forest, lneigh_treeid),
-                                        element_index - t8_forest_get_tree_element_offset (forest, lneigh_treeid));
+                                        element_index -
+                                        t8_forest_get_tree_element_offset
+                                        (forest, lneigh_treeid));
 
           /* analogue, call its index "pseudo_neighbor_index" */
           t8_locidx_t         pseudo_neigh_index = element_index;
@@ -2159,7 +2161,9 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
           neighbor =
             t8_forest_get_tree_element (t8_forest_get_tree
                                         (forest, lneigh_treeid),
-                                        element_index - t8_forest_get_tree_element_offset (forest, lneigh_treeid));
+                                        element_index -
+                                        t8_forest_get_tree_element_offset
+                                        (forest, lneigh_treeid));
 
           /* free memory */
           neigh_scheme->t8_element_destroy (num_children_at_face - 1,
