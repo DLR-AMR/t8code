@@ -46,12 +46,26 @@ typedef struct t8_shmem_array *t8_shmem_array_t;
 #define T8_SHMEM_BEST_TYPE SC_SHMEM_BASIC
 #endif
 #endif
-#if 0
-/* For testing we only use basic shmem type */
-#define T8_SHMEM_BEST_TYPE SC_SHMEM_BASIC
-#endif
 
 T8_EXTERN_C_BEGIN ();
+
+/** Initialize shared memory usage for a communicator.
+ *  This sets up the intra- and internode communicators.
+ * \param [in]          comm    The MPI Communicator.
+ * \note This function needs to be called to enable shared memory usage for a communicator.
+ * \note Calling this function multiple times with the same communicator is safe and does
+ *  not change the behaviour.
+ */
+void                t8_shmem_init (sc_MPI_Comm comm);
+
+/** Finalize shared memory usage for a communicator.
+ *  This destroys the intra- and internode communicators.
+ * \param [in]          comm    The MPI Communicator.
+ * \note This function needs to be called before t8code is finalized if \ref t8_shmem_init was called for a communicator. 
+ * \note Calling this function multiple times with the same communicator is safe and does
+ *  not change the behaviour.
+ */
+void                t8_shmem_finalize (sc_MPI_Comm comm);
 
 /** Try to set a shared memory type of a communicator.
  * If the type was set, returns true, otherwise false.

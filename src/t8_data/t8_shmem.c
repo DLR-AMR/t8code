@@ -40,6 +40,36 @@ typedef struct t8_shmem_array
 #endif
 } t8_shmem_array_struct_t;
 
+void
+t8_shmem_init (sc_MPI_Comm comm)
+{
+  /* Check whether intranode and internode comms are set
+   * for the current communicator. */
+  sc_MPI_Comm         intranode;
+  sc_MPI_Comm         internode;
+
+  sc_mpi_comm_get_node_comms (comm, &intranode, &internode);
+  if (intranode == sc_MPI_COMM_NULL || internode == sc_MPI_COMM_NULL) {
+    /* The inter/intra comms are not set. We need to set them to 
+     * initialize shared memory usage. */
+    sc_mpi_comm_get_and_attach (comm);
+  }
+}
+
+void
+t8_shmem_finalize (sc_MPI_Comm comm)
+{
+  /* Check whether intranode and internode comms are set
+   * for the current communicator. */
+  sc_MPI_Comm         intranode;
+  sc_MPI_Comm         internode;
+
+  sc_mpi_comm_get_node_comms (comm, &intranode, &internode);
+  if (intranode != sc_MPI_COMM_NULL || internode != sc_MPI_COMM_NULL) {
+    sc_mpi_comm_detach_node_comms (comm);
+  }
+}
+
 int
 t8_shmem_set_type (sc_MPI_Comm comm, sc_shmem_type_t type)
 {

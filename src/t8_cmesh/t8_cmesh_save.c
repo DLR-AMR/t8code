@@ -886,6 +886,7 @@ t8_cmesh_load_and_distribute (const char *fileprefix, int num_files,
   T8_ASSERT (mpisize >= num_files);
 
   /* Try to set the comm type */
+  t8_shmem_init (comm);
   t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
 
   /* Use cmesh_bcast, if only one process loads the cmesh: */
