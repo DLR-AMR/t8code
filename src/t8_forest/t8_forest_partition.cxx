@@ -104,6 +104,7 @@ t8_forest_partition_create_offsets (t8_forest_t forest)
   t8_debugf ("Building offsets for forest %p\n", (void *) forest);
   comm = forest->mpicomm;
   /* Set the shmem array type of comm */
+  t8_shmem_init (comm);
   t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
   /* Initialize the offset array as a shmem array
    * holding mpisize+1 many t8_gloidx_t */
@@ -176,6 +177,7 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
 
   if (forest->global_first_desc == NULL) {
     /* Set the shmem array type of comm */
+    t8_shmem_init (comm);
     t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
     /* Initialize the offset array as a shmem array
      * holding mpisize+1 many t8_linearidx_t to store the elements linear ids */
@@ -268,6 +270,7 @@ t8_forest_partition_create_tree_offsets (t8_forest_t forest)
   /* *INDENT-ON* */
   if (forest->tree_offsets == NULL) {
     /* Set the shmem array type of comm */
+    t8_shmem_init (comm);
     t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
     /* Only allocate the shmem array, if it is not already allocated */
     t8_shmem_array_init (&forest->tree_offsets, sizeof (t8_gloidx_t),
@@ -337,6 +340,7 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
 
   T8_ASSERT (forest->element_offsets == NULL);
   /* Set the shmem array type to comm */
+  t8_shmem_init (comm);
   t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
   /* Initialize the shmem array */
   t8_shmem_array_init (&forest->element_offsets, sizeof (t8_gloidx_t),
