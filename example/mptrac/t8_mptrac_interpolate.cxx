@@ -32,7 +32,8 @@ t8_mptrac_context_new (const int chunk_mode, const char *filename,
     (t8_mptrac_context_t *) T8_ALLOC (t8_mptrac_context_t, 1);
 
   T8_ASSERT (dimension == 2 || dimension == 3);
-
+  
+  t8_shmem_init (comm);
   if (sc_shmem_get_type (comm) == SC_SHMEM_NOT_SET) {
     /* Set the shmem type to the best availble. */
     //t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
@@ -166,42 +167,43 @@ t8_mptrac_read_nc (t8_mptrac_context_t * mptrac_context,
   const int           write_permission_to_ctl =
     sc_shmem_write_start (mptrac_context->mptrac_control, comm);
 
-  if (!write_permission_to_meteo1) {
-    /* This process does not have shared memory write permission.
-     * We immediately return. */
-    return;
-  }
-  SC_CHECK_ABORT (write_permission_to_meteo2 && write_permission_to_ctl,
-                  "Shared memory error. Process does not have write access to "
-                  "both meteo entries.\n");
+  if (write_permission_to_meteo1) {
+    /* This process has write permission and continues. */
 
-  t8_debugf ("I have %swrite permission to meteo1\n",
-             write_permission_to_meteo1 ? "" : "no");
-  t8_debugf ("I have %swrite permission to meteo2\n",
-             write_permission_to_meteo2 ? "" : "no");
-  t8_debugf ("I have %swrite permission to control\n",
-             write_permission_to_ctl ? "" : "no");
+    /* Double check that one process has write permission to all
+     * fields. */
+    SC_CHECK_ABORT (write_permission_to_meteo2 && write_permission_to_ctl,
+                    "Shared memory error. Process does not have write access to "
+                    "both meteo entries.\n");
 
-  if (read_ctl_parameters) {
-    /* Split command line argument string to be passed to mptrac routines. */
-    t8_mptrac_split_input_string (mptrac_context->mptrac_input, &output,
-                                  &num_arguments);
+    t8_debugf ("I have %swrite permission to meteo1\n",
+              write_permission_to_meteo1 ? "" : "no");
+    t8_debugf ("I have %swrite permission to meteo2\n",
+              write_permission_to_meteo2 ? "" : "no");
+    t8_debugf ("I have %swrite permission to control\n",
+              write_permission_to_ctl ? "" : "no");
 
-    T8_ASSERT (num_arguments > 0);
-    read_ctl ("-", num_arguments, output, mptrac_context->mptrac_control);
-    /* We need to set the start time by hand. */
-    mptrac_context->mptrac_control->t_start = seconds;
-    /* Clean up split string. */
-    for (int i = 0; i < num_arguments; ++i) {
-      T8_FREE (output[i]);
+    if (read_ctl_parameters) {
+      /* Split command line argument string to be passed to mptrac routines. */
+      t8_mptrac_split_input_string (mptrac_context->mptrac_input, &output,
+                                    &num_arguments);
+
+      T8_ASSERT (num_arguments > 0);
+      read_ctl ("-", num_arguments, output, mptrac_context->mptrac_control);
+      /* We need to set the start time by hand. */
+      mptrac_context->mptrac_control->t_start = seconds;
+      /* Clean up split string. */
+      for (int i = 0; i < num_arguments; ++i) {
+        T8_FREE (output[i]);
+      }
+      T8_FREE (output);
     }
-    T8_FREE (output);
-  }
 
-  /* Since we are using MPI shared memory, only one process per
-   * shared memory region reads the file. */
-  get_met (mptrac_context->mptrac_control, seconds,
-           &mptrac_context->mptrac_meteo1, &mptrac_context->mptrac_meteo2);
+    /* Since we are using MPI shared memory, only one process per
+    * shared memory region reads the file. */
+    get_met (mptrac_context->mptrac_control, seconds,
+            &mptrac_context->mptrac_meteo1, &mptrac_context->mptrac_meteo2);
+  }
 
   /* End writing to shared memory */
   sc_shmem_write_end (mptrac_context->mptrac_meteo1, comm);
