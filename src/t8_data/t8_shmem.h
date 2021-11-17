@@ -61,7 +61,8 @@ void                t8_shmem_init (sc_MPI_Comm comm);
 /** Finalize shared memory usage for a communicator.
  *  This destroys the intra- and internode communicators.
  * \param [in]          comm    The MPI Communicator.
- * \note This function needs to be called before t8code is finalized if \ref t8_shmem_init was called for a communicator. 
+ * \note Call this function if you initialized the communicator for shared memory usage
+ *  and you are sure that you will not use it for shared memory again.
  * \note Calling this function multiple times with the same communicator is safe and does
  *  not change the behaviour.
  */
