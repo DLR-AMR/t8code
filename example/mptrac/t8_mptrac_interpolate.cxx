@@ -177,11 +177,11 @@ t8_mptrac_read_nc (t8_mptrac_context_t * mptrac_context,
                     "both meteo entries.\n");
 
     t8_debugf ("I have %swrite permission to meteo1\n",
-              write_permission_to_meteo1 ? "" : "no");
+               write_permission_to_meteo1 ? "" : "no");
     t8_debugf ("I have %swrite permission to meteo2\n",
-              write_permission_to_meteo2 ? "" : "no");
+               write_permission_to_meteo2 ? "" : "no");
     t8_debugf ("I have %swrite permission to control\n",
-              write_permission_to_ctl ? "" : "no");
+               write_permission_to_ctl ? "" : "no");
 
     if (read_ctl_parameters) {
       /* Split command line argument string to be passed to mptrac routines. */
@@ -200,9 +200,9 @@ t8_mptrac_read_nc (t8_mptrac_context_t * mptrac_context,
     }
 
     /* Since we are using MPI shared memory, only one process per
-    * shared memory region reads the file. */
+     * shared memory region reads the file. */
     get_met (mptrac_context->mptrac_control, seconds,
-            &mptrac_context->mptrac_meteo1, &mptrac_context->mptrac_meteo2);
+             &mptrac_context->mptrac_meteo1, &mptrac_context->mptrac_meteo2);
   }
 
   /* End writing to shared memory */

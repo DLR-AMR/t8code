@@ -431,10 +431,10 @@ t8_mptrac_compute_example (const char *filename, const char *mptrac_input,
                            level_3d, comm);
   /* Compute start time */
   time2jsec (2011, 06, 05, start_six_hours, 00, 00, 00, &physical_time);
+
   /* Read NC files to context */
   t8_mptrac_read_nc (context, 1, physical_time, comm);
 
-  
   /* Build the forest */
   if (dimension == 2) {
     t8_mptrac_build_2d_forest (context);
