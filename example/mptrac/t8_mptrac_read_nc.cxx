@@ -415,7 +415,7 @@ t8_mptrac_refine_forest (const t8_mptrac_context_t * context, int z_level,
 void
 t8_mptrac_compute_example (const char *filename, const char *mptrac_input,
                            const double simulation_hours, const int dimension,
-                           const int level_3d)
+                           const int level_3d, sc_MPI_Comm comm)
 {
   t8_mptrac_context_t *context;
   double              hours;
@@ -428,11 +428,13 @@ t8_mptrac_compute_example (const char *filename, const char *mptrac_input,
   /* build context */
   context =
     t8_mptrac_context_new (chunk_mode, filename, mptrac_input, dimension,
-                           level_3d);
+                           level_3d, comm);
   /* Compute start time */
   time2jsec (2011, 06, 05, start_six_hours, 00, 00, 00, &physical_time);
   /* Read NC files to context */
-  t8_mptrac_read_nc (context, 1, physical_time);
+  t8_mptrac_read_nc (context, 1, physical_time, comm);
+
+  
   /* Build the forest */
   if (dimension == 2) {
     t8_mptrac_build_2d_forest (context);
@@ -453,7 +455,7 @@ t8_mptrac_compute_example (const char *filename, const char *mptrac_input,
       /* TODO: Can we call read_nc in every time step, but it wont do anything if no file update? */
       time_since_last_six_hours -= 6;
       six_hours_passed++;
-      t8_mptrac_read_nc (context, 0, physical_time);
+      t8_mptrac_read_nc (context, 0, physical_time, comm);
     }
     t8_global_productionf ("Interpolating time %f\n", hours);
     char                vtk_filename[BUFSIZ];
@@ -489,7 +491,7 @@ t8_mptrac_compute_example (const char *filename, const char *mptrac_input,
   }
 
   /* clean-up */
-  t8_mptrac_context_destroy (&context);
+  t8_mptrac_context_destroy (&context, comm);
 }
 
 int
@@ -550,7 +552,8 @@ main (int argc, char **argv)
     /* Read the netcdf file */
     t8_global_productionf ("Reading nc file %s.\n", netcdf_filename);
     t8_mptrac_compute_example (netcdf_filename, mptrac_input,
-                               simulation_hours, dimension, level_3d);
+                               simulation_hours, dimension, level_3d,
+                               sc_MPI_COMM_WORLD);
   }
   else {
     /* Error when parsing the arguments */

@@ -53,14 +53,15 @@ T8_EXTERN_C_BEGIN ();
 t8_mptrac_context_t *t8_mptrac_context_new (const int chunk_mode,
                                             const char *filename,
                                             const char *mptrac_input,
-                                            int dimension, int uniform_level);
+                                            int dimension, int uniform_level,
+                                            sc_MPI_Comm comm);
 
 void                t8_mptrac_context_destroy (t8_mptrac_context_t **
-                                               pcontext);
+                                               pcontext, sc_MPI_Comm comm);
 
 void                t8_mptrac_read_nc (t8_mptrac_context_t * mptrac_context,
                                        int read_ctl_parameters,
-                                       double seconds);
+                                       double seconds, sc_MPI_Comm comm);
 
 /* Convert 3D coordinates in [0,1]^3 to lat,lon,pressure coordinates. */
 void                t8_mptrac_coords_to_lonlatpressure (const
