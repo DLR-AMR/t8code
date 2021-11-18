@@ -73,6 +73,19 @@ t8_shmem_finalize (sc_MPI_Comm comm)
 int
 t8_shmem_set_type (sc_MPI_Comm comm, sc_shmem_type_t type)
 {
+  /* Check whether intranode and internode comms are set
+   * for the current communicator. */
+  sc_MPI_Comm         intranode;
+  sc_MPI_Comm         internode;
+
+  sc_mpi_comm_get_node_comms (comm, &intranode, &internode);
+  if (intranode == sc_MPI_COMM_NULL || internode == sc_MPI_COMM_NULL) {
+    t8_global_errorf
+      ("WARNING: Trying to used shared memory but intranode and internode"
+       " communicators are not set."
+       " You should call t8_shmem_init before setting the shmem type.\n");
+  }
+
   if (sc_shmem_get_type (comm) == SC_SHMEM_NOT_SET) {
     /* This communicator does not have a shmem type, so we set it */
     sc_shmem_set_type (comm, type);
@@ -89,6 +102,18 @@ t8_shmem_array_init (t8_shmem_array_t * parray, size_t elem_size,
                      size_t elem_count, sc_MPI_Comm comm)
 {
   t8_shmem_array_t    array;
+  /* Check whether intranode and internode comms are set
+   * for the current communicator. */
+  sc_MPI_Comm         intranode;
+  sc_MPI_Comm         internode;
+
+  sc_mpi_comm_get_node_comms (comm, &intranode, &internode);
+  if (intranode == sc_MPI_COMM_NULL || internode == sc_MPI_COMM_NULL) {
+    t8_global_errorf
+      ("WARNING: Trying to used shared memory but intranode and internode"
+       " communicators are not set."
+       " You should call t8_shmem_init before initializing a shared memory array.\n");
+  }
 
   T8_ASSERT (parray != NULL);
 
