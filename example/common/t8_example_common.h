@@ -148,6 +148,10 @@ typedef struct
 double              t8_levelset_sphere (const double x[3], double t,
                                         void *data);
 
+/** Returns constant one and uses the input of t8_levelset_sphere such that we can replace these functions easily for numerical tests */
+double              t8_constant (const double x[3], double t,
+                                 void *data);
+
 /** Returns always 1.
  * \return 1
  */

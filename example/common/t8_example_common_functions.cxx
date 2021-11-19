@@ -38,6 +38,12 @@ t8_levelset_sphere (const double x[3], double t, void *data)
 }
 
 double
+t8_constant (const double x[3], double t, void *data)
+{
+  return 1;
+}
+
+double
 t8_scalar3d_constant_one (const double x[3], double t)
 {
   return 1;

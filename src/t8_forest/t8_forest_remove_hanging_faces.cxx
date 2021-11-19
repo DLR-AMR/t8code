@@ -120,6 +120,9 @@ t8_forest_remove_hanging_faces_adapt (t8_forest_t forest,
   if (subelement_type == 0) {   /* in this case, there are no hanging nodes and we do not need to do anything */
     return 0;
   }
+  else if (subelement_type == 15) {
+    return 1;
+  }
   else {                        /* use subelements and add 1 to every type, to avoid refine = 1 */
     return subelement_type + 1;
   }

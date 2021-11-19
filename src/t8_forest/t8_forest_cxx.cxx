@@ -2103,6 +2103,11 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
         }
         else {
           /* The ancestor is the parent of the parent */
+          /* TODO: sometimes the below assertion is triggered and we need to understand why - might be a bug with type 15. Removed for now. */
+          if (neigh_scheme->t8_element_level (ancestor) != ts->t8_element_level (leaf) - 1) { 
+            neigh_scheme->t8_element_print_element (ancestor);
+            ts->t8_element_print_element (leaf);
+          }
           T8_ASSERT (neigh_scheme->t8_element_level (ancestor) ==
                      ts->t8_element_level (leaf) - 1);
 
