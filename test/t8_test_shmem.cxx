@@ -76,10 +76,9 @@ t8_test_shmem_array (sc_MPI_Comm comm)
 {
   t8_global_productionf ("Starting shmem array test.\n");
   const int           array_length = 100;
-  const int           element_size = sizeof (int);
+  const int           element_size = sizeof (t8_gloidx_t);
   int                 mpirank, mpisize;
   int                 mpiret;
-  sc_MPI_Comm         intranode, internode;
 
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
@@ -121,7 +120,37 @@ t8_test_shmem_array (sc_MPI_Comm comm)
     SC_CHECK_ABORT (check_size == element_size,
                     "shared memory array has wrong element size.\n");
 
+    /* Write into array */
+    /* In the first half we use the t8_shmem_array_set_gloidx function */
+    if (t8_shmem_array_start_writing (shmem_array)) {
+      t8_gloidx_t        *array =
+        t8_shmem_array_get_gloidx_array_for_writing (shmem_array);
+      for (int i = 0; i < array_length / 2; ++i) {
+        t8_shmem_array_set_gloidx (shmem_array, i, i);
+      }
+      for (int i = array_length / 2; i < array_length; ++i) {
+        array[i] = i;
+      }
+    }
+    t8_shmem_array_end_writing (shmem_array);
+
+    for (int i = 0; i < array_length; ++i) {
+      t8_gloidx_t         value = t8_shmem_array_get_gloidx (shmem_array, i);
+      SC_CHECK_ABORTF (value == i,
+                       "Value at position %i not correct (expected %i, got %li)\n",
+                       i, i, value);
+    }
+
+    /* Copy */
+    t8_shmem_array_t    copy_array;
+    t8_shmem_array_init (&copy_array, element_size, array_length, comm);
+    t8_debugf ("Copying array.\n");
+    t8_shmem_array_copy (copy_array, shmem_array);
+    SC_CHECK_ABORT (t8_shmem_array_is_equal (copy_array, shmem_array),
+                    "Array are not equal after copy.");
+
     t8_shmem_array_destroy (&shmem_array);
+    t8_shmem_array_destroy (&copy_array);
 
     t8_shmem_finalize (comm);
   }
