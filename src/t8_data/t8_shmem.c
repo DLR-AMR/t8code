@@ -70,7 +70,7 @@ t8_shmem_finalize (sc_MPI_Comm comm)
   }
 }
 
-int
+void
 t8_shmem_set_type (sc_MPI_Comm comm, sc_shmem_type_t type)
 {
   /* Check whether intranode and internode comms are set
@@ -86,15 +86,7 @@ t8_shmem_set_type (sc_MPI_Comm comm, sc_shmem_type_t type)
        " You should call t8_shmem_init before setting the shmem type.\n");
   }
 
-  if (sc_shmem_get_type (comm) == SC_SHMEM_NOT_SET) {
-    /* This communicator does not have a shmem type, so we set it */
-    sc_shmem_set_type (comm, type);
-    return 1;
-  }
-  else {
-    /* There was already a type set, we do not change it */
-    return 0;
-  }
+  sc_shmem_set_type (comm, type);
 }
 
 void

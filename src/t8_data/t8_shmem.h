@@ -68,15 +68,12 @@ void                t8_shmem_init (sc_MPI_Comm comm);
  */
 void                t8_shmem_finalize (sc_MPI_Comm comm);
 
-/** Try to set a shared memory type of a communicator.
- * If the type was set, returns true, otherwise false.
- * This will not set the type, if ther already was a type set
- * on this communicator. \see sc_shmem_set_type
+/** Set a shared memory type of a communicator.
+ * If the type was already set it is overwritten.
  * \param [in,out]      comm    The MPI Communicator
  * \param [in]          type    A shared memory type.
- * \return                      Non-zero if the type was set. Zero if it wasn't.
  */
-int                 t8_shmem_set_type (sc_MPI_Comm comm,
+void                t8_shmem_set_type (sc_MPI_Comm comm,
                                        sc_shmem_type_t type);
 
 /** Initialize and allocate a shared memory array structure.
