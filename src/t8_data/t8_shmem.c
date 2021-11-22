@@ -29,16 +29,36 @@
 
 /* TODO: Think about whether we include a reference counter */
 
+/** Shared memory array structure.
+ * The array uses sc_shmem shared memory.*/
 typedef struct t8_shmem_array
 {
-  void               *array;
-  size_t              elem_size;
-  size_t              elem_count;
-  sc_MPI_Comm         comm;
+  void               *array;    /*< Pointer to the actual memory. */
+  size_t              elem_size;        /*< Size of one entry in byte. */
+  size_t              elem_count;       /*< Total count of entries. */
+  sc_MPI_Comm         comm;     /*< MPI communicator. */
+  int                 writing_possible; /*< True if we can currently write into this array. False if not. */
+  int                 write_start_called;       /*< True if t8_shmem_array_start_writing was called and no call to t8_shmem_array_end_writing happened yet. */
 #ifdef T8_ENABLE_DEBUG
-  sc_shmem_type_t     shmem_type;
+  sc_shmem_type_t     shmem_type;       /*< Shared memory type of the communicator (at time of initializing the array). */
 #endif
 } t8_shmem_array_struct_t;
+
+static int
+t8_shmem_array_is_writing_possible (const t8_shmem_array_t array)
+{
+  return array->writing_possible;
+}
+
+/* Check whether a shared memory array is initialized. */
+static int
+t8_shmem_array_is_initialized (const t8_shmem_array_t array)
+{
+  return (array != NULL &&
+          array->elem_size > 0 &&
+          array->elem_count >= 0 &&
+          array->array != NULL && array->comm != sc_MPI_COMM_NULL);
+}
 
 void
 t8_shmem_init (sc_MPI_Comm comm)
@@ -47,6 +67,8 @@ t8_shmem_init (sc_MPI_Comm comm)
    * for the current communicator. */
   sc_MPI_Comm         intranode;
   sc_MPI_Comm         internode;
+  SC_CHECK_ABORT (comm != sc_MPI_COMM_NULL,
+                  "Trying to initialize shared memory for NULL communicator.");
 
   sc_mpi_comm_get_node_comms (comm, &intranode, &internode);
   if (intranode == sc_MPI_COMM_NULL || internode == sc_MPI_COMM_NULL) {
@@ -98,6 +120,8 @@ t8_shmem_array_init (t8_shmem_array_t * parray, size_t elem_size,
    * for the current communicator. */
   sc_MPI_Comm         intranode;
   sc_MPI_Comm         internode;
+  SC_CHECK_ABORT (comm != sc_MPI_COMM_NULL,
+                  "Trying to initialize shared memory array with NULL communicator.");
 
   sc_mpi_comm_get_node_comms (comm, &intranode, &internode);
   if (intranode == sc_MPI_COMM_NULL || internode == sc_MPI_COMM_NULL) {
@@ -119,15 +143,47 @@ t8_shmem_array_init (t8_shmem_array_t * parray, size_t elem_size,
   array->comm = comm;
   array->elem_count = elem_count;
   array->elem_size = elem_size;
+  array->writing_possible = 0;
+  array->write_start_called = 0;
 #ifdef T8_ENABLE_DEBUG
   array->shmem_type = T8_SHMEM_BEST_TYPE;
 #endif
+}
+
+int
+t8_shmem_array_start_writing (t8_shmem_array_t array)
+{
+  T8_ASSERT (t8_shmem_array_is_initialized (array));
+
+  if (sc_shmem_write_start (array->array, array->comm)) {
+    array->writing_possible = 1;
+  }
+  else {
+    array->writing_possible = 0;
+  }
+  array->write_start_called = 1;
+  return array->writing_possible;
+}
+
+void
+t8_shmem_array_end_writing (t8_shmem_array_t array)
+{
+  T8_ASSERT (t8_shmem_array_is_initialized (array));
+
+  SC_CHECK_ABORT (array->write_start_called,
+                  "End writing to shared array is only possible when t8_shmem_start_writing was called before.");
+  sc_shmem_write_end (array->array, array->comm);
+  array->write_start_called = 0;
+  array->writing_possible = 0;
 }
 
 void
 t8_shmem_array_copy (t8_shmem_array_t dest, t8_shmem_array_t source)
 {
   size_t              bytes;
+  T8_ASSERT (t8_shmem_array_is_initialized (dest));
+  T8_ASSERT (t8_shmem_array_is_initialized (source));
+  T8_ASSERT (!t8_shmem_array_is_writing_possible (dest));
   SC_CHECK_ABORT (t8_shmem_array_get_elem_size (dest) ==
                   t8_shmem_array_get_elem_size (source),
                   "Try to copy shared memory arrays of different element size.\n");
@@ -150,8 +206,8 @@ t8_shmem_array_allgather (const void *sendbuf, int sendcount,
                           t8_shmem_array_t recvarray, int recvcount,
                           sc_MPI_Datatype recvtype)
 {
-  T8_ASSERT (recvarray != NULL);
-  T8_ASSERT (recvarray->array != NULL);
+  T8_ASSERT (t8_shmem_array_is_initialized (recvarray));
+  T8_ASSERT (!t8_shmem_array_is_writing_possible (recvarray));
 
   sc_shmem_allgather ((void *) sendbuf, sendcount, sendtype, recvarray->array,
                       recvcount, recvtype, recvarray->comm);
@@ -160,37 +216,48 @@ t8_shmem_array_allgather (const void *sendbuf, int sendcount,
 sc_MPI_Comm
 t8_shmem_array_get_comm (t8_shmem_array_t array)
 {
-  T8_ASSERT (array != NULL);
+  T8_ASSERT (t8_shmem_array_is_initialized (array));
   return array->comm;
 }
 
 size_t
 t8_shmem_array_get_elem_size (t8_shmem_array_t array)
 {
-  T8_ASSERT (array != NULL);
+  T8_ASSERT (t8_shmem_array_is_initialized (array));
   return array->elem_size;
 }
 
 size_t
 t8_shmem_array_get_elem_count (t8_shmem_array_t array)
 {
-  T8_ASSERT (array != NULL);
+  T8_ASSERT (t8_shmem_array_is_initialized (array));
   return array->elem_count;
 }
 
 const t8_gloidx_t  *
 t8_shmem_array_get_gloidx_array (t8_shmem_array_t array)
 {
-  T8_ASSERT (array != NULL);
+  T8_ASSERT (t8_shmem_array_is_initialized (array));
   T8_ASSERT (array->elem_size == sizeof (t8_gloidx_t));
+  T8_ASSERT (!t8_shmem_array_is_writing_possible (array));
+  return (const t8_gloidx_t *) array->array;
+}
+
+t8_gloidx_t        *
+t8_shmem_array_get_gloidx_array_for_writing (t8_shmem_array_t array)
+{
+  T8_ASSERT (t8_shmem_array_is_initialized (array));
+  T8_ASSERT (array->elem_size == sizeof (t8_gloidx_t));
+  SC_CHECK_ABORT (t8_shmem_array_is_writing_possible (array),
+                  "Writing not enabled for shmem array.");
   return (t8_gloidx_t *) array->array;
 }
 
 t8_gloidx_t
 t8_shmem_array_get_gloidx (t8_shmem_array_t array, int index)
 {
-  T8_ASSERT (array != NULL);
-  T8_ASSERT (array->array != NULL);
+  T8_ASSERT (t8_shmem_array_is_initialized (array));
+  T8_ASSERT (!t8_shmem_array_is_writing_possible (array));
   T8_ASSERT (array->elem_size == sizeof (t8_gloidx_t));
   T8_ASSERT (0 <= index && (size_t) index < array->elem_count);
 
@@ -201,10 +268,11 @@ void
 t8_shmem_array_set_gloidx (t8_shmem_array_t array, int index,
                            t8_gloidx_t value)
 {
-  T8_ASSERT (array != NULL);
-  T8_ASSERT (array->array != NULL);
+  T8_ASSERT (t8_shmem_array_is_initialized (array));
   T8_ASSERT (array->elem_size == sizeof (t8_gloidx_t));
   T8_ASSERT (0 <= index && (size_t) index < array->elem_count);
+  SC_CHECK_ABORT (t8_shmem_array_is_writing_possible (array),
+                  "Unauthorized write in shmem array. See t8_shmem_array_start_writing.");
 
   ((t8_gloidx_t *) array->array)[index] = value;
 }
@@ -212,14 +280,16 @@ t8_shmem_array_set_gloidx (t8_shmem_array_t array, int index,
 const void         *
 t8_shmem_array_get_array (t8_shmem_array_t array)
 {
-  T8_ASSERT (array != NULL);
+  T8_ASSERT (t8_shmem_array_is_initialized (array));
+  T8_ASSERT (!t8_shmem_array_is_writing_possible (array));
   return array->array;
 }
 
 const void         *
 t8_shmem_array_index (t8_shmem_array_t array, size_t index)
 {
-  T8_ASSERT (array != NULL);
+  T8_ASSERT (t8_shmem_array_is_initialized (array));
+  T8_ASSERT (!t8_shmem_array_is_writing_possible (array));
   T8_ASSERT (0 <= index && index < array->elem_count);
 
   return ((char *) array->array) + index * array->elem_size;
@@ -230,6 +300,10 @@ int
 t8_shmem_array_is_equal (t8_shmem_array_t array_a, t8_shmem_array_t array_b)
 {
   int                 retval;
+  T8_ASSERT (t8_shmem_array_is_initialized (array_a));
+  T8_ASSERT (t8_shmem_array_is_initialized (array_b));
+  T8_ASSERT (!t8_shmem_array_is_writing_possible (array_a));
+  T8_ASSERT (!t8_shmem_array_is_writing_possible (array_b));
 
   /* check if direct equality holds */
   if (array_a == array_b) {
@@ -260,7 +334,10 @@ void
 t8_shmem_array_destroy (t8_shmem_array_t * parray)
 {
   t8_shmem_array_t    array;
-  T8_ASSERT (parray != NULL && *parray != NULL);
+  T8_ASSERT (parray != NULL);
+  T8_ASSERT (t8_shmem_array_is_initialized (*parray));
+  T8_ASSERT (!t8_shmem_array_is_writing_possible (*parray));
+
   array = *parray;
   sc_shmem_free (t8_get_package_id (), array->array, array->comm);
   T8_FREE (array);
