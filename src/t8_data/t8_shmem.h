@@ -82,8 +82,7 @@ void                t8_shmem_set_type (sc_MPI_Comm comm,
  * \param [in]          elem_size The size in bytes of an array element.
  * \param [in]          elem_count The total number of elements to allocate.
  * \param [in]          comm      The MPI communicator to be associated with the shmem_array.
- *                                The shared memory type must have been set. Best practice would be
- *                                calling \ref sc_shmem_set_type (comm, T8_SHMEM_BEST_TYPE).
+ *                                If not set, the shared memory type will be set to T8_SHMEM_BEST_TYPE.
  */
 void                t8_shmem_array_init (t8_shmem_array_t * parray,
                                          size_t elem_size,
