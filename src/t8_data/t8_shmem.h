@@ -117,7 +117,8 @@ void                t8_shmem_array_copy (t8_shmem_array_t dest,
  * \param[in] recvcount       the number of items to allgather
  * \param[in] recvtype        the type of items to allgather
  */
-void                t8_shmem_array_allgather (void *sendbuf, int sendcount,
+void                t8_shmem_array_allgather (const void *sendbuf,
+                                              int sendcount,
                                               sc_MPI_Datatype sendtype,
                                               t8_shmem_array_t recvarray,
                                               int recvcount,
@@ -146,7 +147,7 @@ size_t              t8_shmem_array_get_elem_count (t8_shmem_array_t array);
  * \param [in]          array   The t8_shmem_array
  * \return              The data of \a array as t8_gloidx_t pointer.
  */
-t8_gloidx_t        *t8_shmem_array_get_gloidx_array (t8_shmem_array_t array);
+const t8_gloidx_t  *t8_shmem_array_get_gloidx_array (t8_shmem_array_t array);
 
 /** Return an entry of a shared memory array that stores t8_gloidx_t.
  * \param [in]          array   The t8_shmem_array
@@ -160,14 +161,14 @@ t8_gloidx_t         t8_shmem_array_get_gloidx (t8_shmem_array_t array,
  * \param [in]          array The t8_shmem_array.
  * \return                    A pointer to the data array of \a array.
  */
-void               *t8_shmem_array_get_array (t8_shmem_array_t array);
+const void         *t8_shmem_array_get_array (t8_shmem_array_t array);
 
 /** Return a pointer to an element in a t8_shmem_array.
  * \param [in]          array The t8_shmem_array.
  * \param [in]          index The index of an element.
  * \return              A pointer to the element at \a index in \a array.
  */
-void               *t8_shmem_array_index (t8_shmem_array_t array,
+const void         *t8_shmem_array_index (t8_shmem_array_t array,
                                           size_t index);
 
 /* TODO: implement and comment */

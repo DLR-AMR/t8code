@@ -153,7 +153,7 @@ t8_shmem_array_copy (t8_shmem_array_t dest, t8_shmem_array_t source)
 }
 
 void
-t8_shmem_array_allgather (void *sendbuf, int sendcount,
+t8_shmem_array_allgather (const void *sendbuf, int sendcount,
                           sc_MPI_Datatype sendtype,
                           t8_shmem_array_t recvarray, int recvcount,
                           sc_MPI_Datatype recvtype)
@@ -161,7 +161,7 @@ t8_shmem_array_allgather (void *sendbuf, int sendcount,
   T8_ASSERT (recvarray != NULL);
   T8_ASSERT (recvarray->array != NULL);
 
-  sc_shmem_allgather (sendbuf, sendcount, sendtype, recvarray->array,
+  sc_shmem_allgather ((void *) sendbuf, sendcount, sendtype, recvarray->array,
                       recvcount, recvtype, recvarray->comm);
 }
 
@@ -186,7 +186,7 @@ t8_shmem_array_get_elem_count (t8_shmem_array_t array)
   return array->elem_count;
 }
 
-t8_gloidx_t        *
+const t8_gloidx_t  *
 t8_shmem_array_get_gloidx_array (t8_shmem_array_t array)
 {
   T8_ASSERT (array != NULL);
@@ -217,14 +217,14 @@ t8_shmem_array_set_gloidx (t8_shmem_array_t array, int index,
   ((t8_gloidx_t *) array->array)[index] = value;
 }
 
-void *
+const void         *
 t8_shmem_array_get_array (t8_shmem_array_t array)
 {
   T8_ASSERT (array != NULL);
   return array->array;
 }
 
-void *
+const void         *
 t8_shmem_array_index (t8_shmem_array_t array, size_t index)
 {
   T8_ASSERT (array != NULL);
