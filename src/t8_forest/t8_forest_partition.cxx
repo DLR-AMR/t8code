@@ -116,8 +116,11 @@ t8_forest_partition_create_offsets (t8_forest_t forest)
   /* Collect all first global indices in the array */
   t8_shmem_array_allgather (&first_local_element, 1, T8_MPI_GLOIDX,
                             forest->element_offsets, 1, T8_MPI_GLOIDX);
-  t8_shmem_array_set_gloidx (forest->element_offsets, forest->mpisize,
-                             forest->global_num_elements);
+  if (t8_shmem_array_start_writing (forest->element_offsets)) {
+    t8_shmem_array_set_gloidx (forest->element_offsets, forest->mpisize,
+                               forest->global_num_elements);
+  }
+  t8_shmem_array_end_writing (forest->element_offsets);
 }
 
 #ifdef T8_ENABLE_DEBUG
@@ -285,9 +288,13 @@ t8_forest_partition_create_tree_offsets (t8_forest_t forest)
   /* gather all tree offsets from all processes */
   t8_shmem_array_allgather (&tree_offset, 1, T8_MPI_GLOIDX,
                             forest->tree_offsets, 1, T8_MPI_GLOIDX);
+
   /* Store the global number of trees at the entry mpisize in the array */
-  t8_shmem_array_set_gloidx (forest->tree_offsets, forest->mpisize,
-                             forest->global_num_trees);
+  if (t8_shmem_array_start_writing (forest->tree_offsets)) {
+    t8_shmem_array_set_gloidx (forest->tree_offsets, forest->mpisize,
+                               forest->global_num_trees);
+  }
+  t8_shmem_array_end_writing (forest->tree_offsets);
 
   /* Communicate whether we have empty processes */
   sc_MPI_Allreduce (&is_empty, &has_empty, 1, sc_MPI_INT, sc_MPI_LOR,
@@ -346,19 +353,22 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
 
-  for (i = 0; i < mpisize; i++) {
-    /* Calculate the first element index for each process. We convert to doubles to
-     * prevent overflow */
-    new_first_element_id =
-      (((double) i *
-        (long double) forest_from->global_num_elements) / (double) mpisize);
-    T8_ASSERT (0 <= new_first_element_id &&
-               new_first_element_id < forest_from->global_num_elements);
-    t8_shmem_array_set_gloidx (forest->element_offsets, i,
-                               new_first_element_id);
+  if (t8_shmem_array_start_writing (forest->element_offsets)) {
+    t8_gloidx_t        *element_offsets =
+      t8_shmem_array_get_gloidx_array_for_writing (forest->element_offsets);
+    for (i = 0; i < mpisize; i++) {
+      /* Calculate the first element index for each process. We convert to doubles to
+       * prevent overflow */
+      new_first_element_id =
+        (((double) i *
+          (long double) forest_from->global_num_elements) / (double) mpisize);
+      T8_ASSERT (0 <= new_first_element_id &&
+                 new_first_element_id < forest_from->global_num_elements);
+      element_offsets[i] = new_first_element_id;
+    }
+    element_offsets[forest->mpisize] = forest->global_num_elements;
   }
-  t8_shmem_array_set_gloidx (forest->element_offsets, forest->mpisize,
-                             forest->global_num_elements);
+  t8_shmem_array_end_writing (forest->element_offsets);
 }
 
 /* Find the owner of a given element.
