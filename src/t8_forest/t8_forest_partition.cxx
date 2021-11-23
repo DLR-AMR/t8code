@@ -43,7 +43,7 @@ typedef struct
 /* Given the element offset array and a rank, return the first
  * local element id of this rank */
 static              t8_gloidx_t
-t8_forest_partition_first_element (t8_gloidx_t * offset, int rank)
+t8_forest_partition_first_element (const t8_gloidx_t * offset, int rank)
 {
   return offset[rank];
 }
@@ -51,7 +51,7 @@ t8_forest_partition_first_element (t8_gloidx_t * offset, int rank)
 /* Given the element offset array and a rank, return the last
  * local element id of this rank */
 static              t8_gloidx_t
-t8_forest_partition_last_element (t8_gloidx_t * offset, int rank)
+t8_forest_partition_last_element (const t8_gloidx_t * offset, int rank)
 {
   return offset[rank + 1] - 1;
 }
@@ -59,7 +59,7 @@ t8_forest_partition_last_element (t8_gloidx_t * offset, int rank)
 /* Query whether a given process is assigned no elements in
  * an offset array */
 static int
-t8_forest_partition_empty (t8_gloidx_t * offset, int rank)
+t8_forest_partition_empty (const t8_gloidx_t * offset, int rank)
 {
   if (t8_forest_partition_first_element (offset, rank) >=
       t8_forest_partition_first_element (offset, rank + 1)) {
@@ -116,8 +116,11 @@ t8_forest_partition_create_offsets (t8_forest_t forest)
   /* Collect all first global indices in the array */
   t8_shmem_array_allgather (&first_local_element, 1, T8_MPI_GLOIDX,
                             forest->element_offsets, 1, T8_MPI_GLOIDX);
-  t8_shmem_array_set_gloidx (forest->element_offsets, forest->mpisize,
-                             forest->global_num_elements);
+  if (t8_shmem_array_start_writing (forest->element_offsets)) {
+    t8_shmem_array_set_gloidx (forest->element_offsets, forest->mpisize,
+                               forest->global_num_elements);
+  }
+  t8_shmem_array_end_writing (forest->element_offsets);
 }
 
 #ifdef T8_ENABLE_DEBUG
@@ -285,9 +288,13 @@ t8_forest_partition_create_tree_offsets (t8_forest_t forest)
   /* gather all tree offsets from all processes */
   t8_shmem_array_allgather (&tree_offset, 1, T8_MPI_GLOIDX,
                             forest->tree_offsets, 1, T8_MPI_GLOIDX);
+
   /* Store the global number of trees at the entry mpisize in the array */
-  t8_shmem_array_set_gloidx (forest->tree_offsets, forest->mpisize,
-                             forest->global_num_trees);
+  if (t8_shmem_array_start_writing (forest->tree_offsets)) {
+    t8_shmem_array_set_gloidx (forest->tree_offsets, forest->mpisize,
+                               forest->global_num_trees);
+  }
+  t8_shmem_array_end_writing (forest->tree_offsets);
 
   /* Communicate whether we have empty processes */
   sc_MPI_Allreduce (&is_empty, &has_empty, 1, sc_MPI_INT, sc_MPI_LOR,
@@ -298,9 +305,7 @@ t8_forest_partition_create_tree_offsets (t8_forest_t forest)
     /* there exist empty ranks, we have to recalculate the offset.
      * Each empty rank stores the offset of the next nonempty rank */
     if (is_empty) {
-      t8_gloidx_t        *tree_offset_array;
-
-      tree_offset_array =
+      const t8_gloidx_t  *tree_offset_array =
         t8_shmem_array_get_gloidx_array (forest->tree_offsets);
       /* Find the next rank that is not empty */
       next_nonempty = forest->mpirank + 1;
@@ -348,26 +353,29 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
 
-  for (i = 0; i < mpisize; i++) {
-    /* Calculate the first element index for each process. We convert to doubles to
-     * prevent overflow */
-    new_first_element_id =
-      (((double) i *
-        (long double) forest_from->global_num_elements) / (double) mpisize);
-    T8_ASSERT (0 <= new_first_element_id &&
-               new_first_element_id < forest_from->global_num_elements);
-    t8_shmem_array_set_gloidx (forest->element_offsets, i,
-                               new_first_element_id);
+  if (t8_shmem_array_start_writing (forest->element_offsets)) {
+    t8_gloidx_t        *element_offsets =
+      t8_shmem_array_get_gloidx_array_for_writing (forest->element_offsets);
+    for (i = 0; i < mpisize; i++) {
+      /* Calculate the first element index for each process. We convert to doubles to
+       * prevent overflow */
+      new_first_element_id =
+        (((double) i *
+          (long double) forest_from->global_num_elements) / (double) mpisize);
+      T8_ASSERT (0 <= new_first_element_id &&
+                 new_first_element_id < forest_from->global_num_elements);
+      element_offsets[i] = new_first_element_id;
+    }
+    element_offsets[forest->mpisize] = forest->global_num_elements;
   }
-  t8_shmem_array_set_gloidx (forest->element_offsets, forest->mpisize,
-                             forest->global_num_elements);
+  t8_shmem_array_end_writing (forest->element_offsets);
 }
 
 /* Find the owner of a given element.
  */
 static int
 t8_forest_partition_owner_of_element (int mpisize, t8_gloidx_t gelement,
-                                      t8_gloidx_t * offset)
+                                      const t8_gloidx_t * offset)
 {
   /* Tree offsets are stored similar enough that we can exploit their function */
   /* In the element offset logic, an element cannot be owned by more than one
@@ -381,13 +389,13 @@ t8_forest_partition_recvrange (t8_forest_t forest, int *recv_first,
                                int *recv_last)
 {
   t8_gloidx_t         first_element, last_element;
-  t8_gloidx_t        *offset_old, *offset_new;
 
   /* Get the old element offset array */
-  offset_old =
+  const t8_gloidx_t  *offset_old =
     t8_shmem_array_get_gloidx_array (forest->set_from->element_offsets);
   /* Get the new element offset array */
-  offset_new = t8_shmem_array_get_gloidx_array (forest->element_offsets);
+  const t8_gloidx_t  *offset_new =
+    t8_shmem_array_get_gloidx_array (forest->element_offsets);
   /* Compute new first and last element on this process from offset array */
   first_element =
     t8_forest_partition_first_element (offset_new, forest->mpirank);
@@ -415,7 +423,6 @@ t8_forest_partition_sendrange (t8_forest_t forest, int *send_first,
                                int *send_last)
 {
   t8_gloidx_t         first_element, last_element;
-  t8_gloidx_t        *offset_old, *offset_new;
 
   t8_debugf ("Calculate sendrange\n");
   if (forest->set_from->local_num_elements == 0) {
@@ -425,12 +432,13 @@ t8_forest_partition_sendrange (t8_forest_t forest, int *send_first,
     return;
   }
   /* Get the old element offset array */
-  offset_old =
+  const t8_gloidx_t  *offset_old =
     t8_shmem_array_get_gloidx_array (forest->set_from->element_offsets);
   t8_debugf ("Partition forest from:\n");
   t8_offset_print (forest->set_from->element_offsets, forest->mpicomm);
   /* Get the new element offset array */
-  offset_new = t8_shmem_array_get_gloidx_array (forest->element_offsets);
+  const t8_gloidx_t  *offset_new =
+    t8_shmem_array_get_gloidx_array (forest->element_offsets);
   t8_debugf ("Partition forest to:\n");
   t8_offset_print (forest->element_offsets, forest->mpicomm);
   /* Compute old first and last element on this process from offset array */
@@ -661,7 +669,6 @@ t8_forest_partition_sendloop (t8_forest_t forest, const int send_first,
   t8_locidx_t         first_element_send, last_element_send;
   t8_locidx_t         current_tree;
   t8_locidx_t         num_elements_send;
-  t8_gloidx_t        *offset_to, *offset_from;
   t8_forest_t         forest_from;
   char              **buffer;
   int                 buffer_alloc;
@@ -698,8 +705,9 @@ t8_forest_partition_sendloop (t8_forest_t forest, const int send_first,
   *send_buffer = T8_ALLOC_ZERO (char *, send_last - send_first + 1);
 
   /* Get the new and old offset array */
-  offset_to = t8_shmem_array_get_gloidx_array (forest->element_offsets);
-  offset_from =
+  const t8_gloidx_t  *offset_to =
+    t8_shmem_array_get_gloidx_array (forest->element_offsets);
+  const t8_gloidx_t  *offset_from =
     t8_shmem_array_get_gloidx_array (forest_from->element_offsets);
 
   /* Compute the global id of the current first local element */
@@ -1054,7 +1062,6 @@ t8_forest_partition_recvloop (t8_forest_t forest, int recv_first,
   int                 iproc, num_receive, prev_recvd;
   t8_locidx_t         last_received_local_element = 0;
   t8_forest_t         forest_from;
-  t8_gloidx_t        *offset_from;
   int                 mpiret;
   sc_MPI_Comm         comm;
   sc_MPI_Status       status;
@@ -1066,7 +1073,7 @@ t8_forest_partition_recvloop (t8_forest_t forest, int recv_first,
              || data_out->elem_count == (size_t) forest->local_num_elements);
   forest_from = forest->set_from;
   T8_ASSERT (t8_forest_is_committed (forest_from));
-  offset_from =
+  const t8_gloidx_t  *offset_from =
     t8_shmem_array_get_gloidx_array (forest_from->element_offsets);
   comm = forest->mpicomm;
 

@@ -2082,7 +2082,6 @@ t8_forest_element_check_owner (t8_forest_t forest,
 {
   t8_element_t       *first_desc;
   t8_eclass_scheme_c *ts;
-  t8_gloidx_t        *first_global_trees;
   t8_linearidx_t      rfirst_desc_id, rnext_desc_id = -1, first_desc_id;
   int                 is_first, is_last, check_next;
   int                 next_nonempty;
@@ -2093,7 +2092,8 @@ t8_forest_element_check_owner (t8_forest_t forest,
              && gtreeid < t8_forest_get_num_global_trees (forest));
 
   /* Get a pointer to the first_global_trees array of forest */
-  first_global_trees = t8_shmem_array_get_gloidx_array (forest->tree_offsets);
+  const t8_gloidx_t  *first_global_trees =
+    t8_shmem_array_get_gloidx_array (forest->tree_offsets);
 
   if (t8_offset_in_range (gtreeid, rank, first_global_trees)) {
     /* The process has elements of that tree */
@@ -2220,7 +2220,6 @@ t8_forest_element_find_owner_ext (t8_forest_t forest,
 {
   t8_element_t       *first_desc;
   t8_eclass_scheme_c *ts;
-  t8_gloidx_t        *first_trees, *element_offsets;
   t8_gloidx_t         current_first_tree;
   t8_linearidx_t      current_id, element_desc_id;
   t8_linearidx_t     *first_descs;
@@ -2257,7 +2256,8 @@ t8_forest_element_find_owner_ext (t8_forest_t forest,
   T8_ASSERT (forest->global_first_desc != NULL);
 
   /* Get pointers to the arrays of first local trees and first local descendants */
-  first_trees = t8_shmem_array_get_gloidx_array (forest->tree_offsets);
+  const t8_gloidx_t  *first_trees =
+    t8_shmem_array_get_gloidx_array (forest->tree_offsets);
   first_descs =
     (t8_linearidx_t *) t8_shmem_array_get_array (forest->global_first_desc);
   /* Compute the linear id of the element's first descendant */
@@ -2265,7 +2265,8 @@ t8_forest_element_find_owner_ext (t8_forest_t forest,
     ts->t8_element_get_linear_id (first_desc,
                                   ts->t8_element_level (first_desc));
   /* Get a pointer to the element offset array */
-  element_offsets = t8_shmem_array_get_gloidx_array (forest->element_offsets);
+  const t8_gloidx_t  *element_offsets =
+    t8_shmem_array_get_gloidx_array (forest->element_offsets);
 
   /* binary search for the owner process using the first descendant and first tree array */
   while (!found) {
