@@ -125,15 +125,29 @@ t8_test_shmem_array (sc_MPI_Comm comm)
                     "shared memory array has wrong element size.\n");
 
     /* Write into array */
-    /* In the first half we use the t8_shmem_array_set_gloidx function */
+    /* In the first half we use the t8_shmem_array_set_gloidx function,
+     * we then use a standard store to write 
+     * and at the end we use t8_shmem_array_index_for_writing.
+     */
     if (t8_shmem_array_start_writing (shmem_array)) {
+      /* Double check that array_length is big enough so that each of the three cases
+       * is covered. */
+      SC_CHECK_ABORT (0 < array_length / 3
+                      && array_length / 3 < (int) (2. / 3 * array_length)
+                      && (int) (2. / 3 * array_length) < array_length,
+                      "Please choose a larger value for array_length.");
       t8_gloidx_t        *array =
         t8_shmem_array_get_gloidx_array_for_writing (shmem_array);
-      for (int i = 0; i < array_length / 2; ++i) {
+      for (int i = 0; i < array_length / 3; ++i) {
         t8_shmem_array_set_gloidx (shmem_array, i, i);
       }
-      for (int i = array_length / 2; i < array_length; ++i) {
+      for (int i = array_length / 3; i < 2. / 3 * array_length; ++i) {
         array[i] = i;
+      }
+      for (int i = 2. / 3 * array_length; i < array_length; ++i) {
+        t8_gloidx_t        *index =
+          (t8_gloidx_t *) t8_shmem_array_index_for_writing (shmem_array, i);
+        *index = i;
       }
     }
     t8_shmem_array_end_writing (shmem_array);

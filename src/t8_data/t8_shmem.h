@@ -200,7 +200,7 @@ t8_gloidx_t         t8_shmem_array_get_gloidx (t8_shmem_array_t array,
  */
 const void         *t8_shmem_array_get_array (t8_shmem_array_t array);
 
-/** Return a pointer to an element in a t8_shmem_array.
+/** Return a read-only pointer to an element in a t8_shmem_array.
  * \param [in]          array The t8_shmem_array.
  * \param [in]          index The index of an element.
  * \return              A pointer to the element at \a index in \a array.
@@ -209,6 +209,16 @@ const void         *t8_shmem_array_get_array (t8_shmem_array_t array);
  */
 const void         *t8_shmem_array_index (t8_shmem_array_t array,
                                           size_t index);
+
+/** Return a pointer to an element in a t8_shmem_array in writing mode.
+ * \param [in]          array The t8_shmem_array.
+ * \param [in]          index The index of an element.
+ * \return              A pointer to the element at \a index in \a array.
+ * \note You can modify the value before the next call to \ref t8_shmem_array_end_writing.
+ * \note Writing mode must be enabled for \a array.
+ */
+void               *t8_shmem_array_index_for_writing (t8_shmem_array_t array,
+                                                      size_t index);
 
 /* TODO: implement and comment */
 /* returns true if arrays are equal 
