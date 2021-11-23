@@ -37,11 +37,13 @@ t8_test_shmem_init_finalize (sc_MPI_Comm mpic)
   /* Get intranode and internode comm */
   sc_mpi_comm_get_node_comms (mpic, &intranode, &internode);
 
+#if T8_ENABLE_MPI
   /* Check that they are not NULL */
   SC_CHECK_ABORT (intranode != sc_MPI_COMM_NULL,
                   "intra node communicator not set.");
   SC_CHECK_ABORT (internode != sc_MPI_COMM_NULL,
                   "inter node communicator not set.");
+#endif
 
   /* Compute ranks and size and print them */
   mpiret = sc_MPI_Comm_size (intranode, &intrasize);
@@ -98,9 +100,11 @@ t8_test_shmem_array (sc_MPI_Comm comm)
     t8_shmem_init (comm);
     t8_shmem_set_type (comm, shmem_type);
 
+#if T8_ENABLE_MPI
     const sc_shmem_type_t control_shmem_type = sc_shmem_get_type (comm);
     SC_CHECK_ABORT (shmem_type == control_shmem_type,
                     "Setting shmem type not succesful.\n");
+#endif
 
     /* Allocate one integer */
     t8_shmem_array_t    shmem_array;
@@ -183,15 +187,19 @@ t8_test_sc_shmem_alloc (sc_MPI_Comm comm)
     t8_shmem_init (comm);
     t8_shmem_set_type (comm, shmem_type);
 
+#if T8_ENABLE_MPI
     const sc_shmem_type_t control_shmem_type = sc_shmem_get_type (comm);
     SC_CHECK_ABORT (shmem_type == control_shmem_type,
                     "Setting shmem type not succesful.\n");
+#endif
 
     sc_mpi_comm_get_node_comms (comm, &intranode, &internode);
+#if T8_ENABLE_MPI
     SC_CHECK_ABORT (intranode != sc_MPI_COMM_NULL,
                     "intra node communicator not set.");
     SC_CHECK_ABORT (internode != sc_MPI_COMM_NULL,
                     "inter node communicator not set.");
+#endif
 
     /* Get the size and rank on the shared memory region (intranode) */
     mpiret = sc_MPI_Comm_size (intranode, &intrasize);
