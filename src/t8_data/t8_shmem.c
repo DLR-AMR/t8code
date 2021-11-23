@@ -300,6 +300,16 @@ t8_shmem_array_index (t8_shmem_array_t array, size_t index)
   return ((char *) array->array) + index * array->elem_size;
 }
 
+void               *
+t8_shmem_array_index_for_writing (t8_shmem_array_t array, size_t index)
+{
+  T8_ASSERT (t8_shmem_array_is_initialized (array));
+  T8_ASSERT (t8_shmem_array_is_writing_possible (array));
+  T8_ASSERT (0 <= index && index < array->elem_count);
+
+  return ((char *) array->array) + index * array->elem_size;
+}
+
 /* TODO: implement */
 int
 t8_shmem_array_is_equal (t8_shmem_array_t array_a, t8_shmem_array_t array_b)
