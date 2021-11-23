@@ -124,11 +124,14 @@ t8_offset_next_nonempty_rank (int rank, int mpisize,
 /* Check whether a given offset array represents a valid
  * partition. */
 int
-t8_offset_consistent (int mpisize, const t8_gloidx_t * offset,
+t8_offset_consistent (int mpisize, const t8_shmem_array_t offset_shmem,
                       t8_gloidx_t num_trees)
 {
   int                 i, ret = 1;
   t8_gloidx_t         last_tree;
+  T8_ASSERT (t8_shmem_array_is_initialized (offset_shmem));
+
+  const t8_gloidx_t  *offset = t8_shmem_array_get_gloidx_array (offset_shmem);
 
   ret = offset[0] == 0;
   last_tree = t8_offset_last (0, offset);       /* stores the last tree of process i-1 */

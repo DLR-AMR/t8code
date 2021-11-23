@@ -113,7 +113,7 @@ int                 t8_offset_next_nonempty_rank (int rank, int mpisize,
  *                        0 if not.
  */
 int                 t8_offset_consistent (int mpisize,
-                                          const t8_gloidx_t * offset,
+                                          const t8_shmem_array_t offset_shmem,
                                           t8_gloidx_t num_trees);
 #endif
 

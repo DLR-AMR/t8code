@@ -58,6 +58,17 @@ T8_EXTERN_C_BEGIN ();
  */
 void                t8_shmem_init (sc_MPI_Comm comm);
 
+#if T8_ENABLE_DEBUG
+/* If you need this function outside of debugging mode, feel free
+ * to remove the macro protection. */
+/** Check whether a shared memory array was properly initialized.
+ * \param [in]          array   A shared memory array.
+ * \return non-zero if \a array is initialized correctly.
+ */
+int                 t8_shmem_array_is_initialized (const t8_shmem_array_t
+                                                   array);
+#endif
+
 /** Finalize shared memory usage for a communicator.
  *  This destroys the intra- and internode communicators.
  * \param [in]          comm    The MPI Communicator.

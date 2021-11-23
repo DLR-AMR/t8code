@@ -2666,9 +2666,7 @@ t8_cmesh_offset_print (t8_cmesh_t cmesh, sc_MPI_Comm comm)
       offset_isnew = 1;
     }
     t8_offset_print (cmesh->tree_offsets, comm);
-    T8_ASSERT (t8_offset_consistent (cmesh->mpisize,
-                                     t8_shmem_array_get_gloidx_array
-                                     (cmesh->tree_offsets),
+    T8_ASSERT (t8_offset_consistent (cmesh->mpisize, cmesh->tree_offsets,
                                      cmesh->num_trees));
     if (offset_isnew == 1) {
       t8_shmem_array_destroy (&cmesh->tree_offsets);
@@ -2721,7 +2719,7 @@ t8_cmesh_offset_concentrate (int proc, sc_MPI_Comm comm,
   }
   t8_shmem_array_end_writing (shmem_array);
 
-  T8_ASSERT (t8_offset_consistent (mpisize, offsets, num_trees));
+  T8_ASSERT (t8_offset_consistent (mpisize, shmem_array, num_trees));
   return shmem_array;
 }
 
@@ -2806,7 +2804,7 @@ t8_cmesh_offset_random (sc_MPI_Comm comm, t8_gloidx_t num_trees, int shared,
   }
   t8_shmem_array_end_writing (shmem_array);
 
-  T8_ASSERT (t8_offset_consistent (mpisize, offsets, num_trees));
+  T8_ASSERT (t8_offset_consistent (mpisize, shmem_array, num_trees));
   return shmem_array;
 }
 
@@ -2873,9 +2871,7 @@ t8_cmesh_offset_percent (t8_cmesh_t cmesh, sc_MPI_Comm comm, int percent)
      * again. */
     t8_shmem_array_destroy (&cmesh->tree_offsets);
   }
-  T8_ASSERT (t8_offset_consistent (mpisize,
-                                   t8_shmem_array_get_gloidx_array
-                                   (partition_array),
+  T8_ASSERT (t8_offset_consistent (mpisize, partition_array,
                                    t8_cmesh_get_num_trees (cmesh)));
   return partition_array;
 }

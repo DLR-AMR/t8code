@@ -50,8 +50,9 @@ t8_shmem_array_is_writing_possible (const t8_shmem_array_t array)
   return array->writing_possible;
 }
 
+#if T8_ENABLE_DEBUG
 /* Check whether a shared memory array is initialized. */
-static int
+int
 t8_shmem_array_is_initialized (const t8_shmem_array_t array)
 {
   return (array != NULL &&
@@ -59,6 +60,7 @@ t8_shmem_array_is_initialized (const t8_shmem_array_t array)
           array->elem_count >= 0 &&
           array->array != NULL && array->comm != sc_MPI_COMM_NULL);
 }
+#endif
 
 void
 t8_shmem_init (sc_MPI_Comm comm)
