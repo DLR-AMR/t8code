@@ -35,9 +35,8 @@ typedef struct
 {
   const char         *filename;
   const char         *mptrac_input;
-  ctl_t              *mptrac_control;
-  met_t              *mptrac_meteo1;
-  met_t              *mptrac_meteo2;
+  t8_shmem_array_t    mptrac_control;   /*< Contains one mptrac control entry for the meteo data. */
+  t8_shmem_array_t    mptrac_meteo;     /*< Contains the current and next meteo data entries. */
   int                 dimension;        /*< 2 or 3. The dimension of the created forest. */
   t8_forest_t         forest;
   int                 level;    /*< The initial uniform refinement level in \a forest. */

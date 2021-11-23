@@ -32,21 +32,13 @@ t8_mptrac_context_new (const int chunk_mode, const char *filename,
     (t8_mptrac_context_t *) T8_ALLOC (t8_mptrac_context_t, 1);
 
   T8_ASSERT (dimension == 2 || dimension == 3);
-  
-  t8_shmem_init (comm);
-  if (sc_shmem_get_type (comm) == SC_SHMEM_NOT_SET) {
-    /* Set the shmem type to the best availble. */
-    //t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
-    t8_shmem_set_type (comm, SC_SHMEM_WINDOW);
-  }
-  context->mptrac_meteo1 =
-    (met_t *) sc_shmem_malloc (t8_get_package_id (), sizeof (met_t), 1, comm);
-  context->mptrac_meteo2 =
-    (met_t *) sc_shmem_malloc (t8_get_package_id (), sizeof (met_t), 1, comm);
-  context->mptrac_control =
-    (ctl_t *) sc_shmem_malloc (t8_get_package_id (), sizeof (ctl_t), 1, comm);
-  context->mptrac_input = mptrac_input;
 
+  t8_shmem_init (comm);
+
+  t8_shmem_array_init (&context->mptrac_control, sizeof (ctl_t), 1, comm);
+  t8_shmem_array_init (&context->mptrac_meteo, sizeof (met_t), 2, comm);
+
+  context->mptrac_input = mptrac_input;
   /* Set filename */
   context->filename = filename;
   /* Set chunk_mode to 1 or 0 */
@@ -71,9 +63,9 @@ t8_mptrac_context_destroy (t8_mptrac_context_t ** pcontext, sc_MPI_Comm comm)
 
   t8_mptrac_context_t *context = *pcontext;
 
-  sc_shmem_free (t8_get_package_id (), context->mptrac_meteo1, comm);
-  sc_shmem_free (t8_get_package_id (), context->mptrac_meteo2, comm);
-  sc_shmem_free (t8_get_package_id (), context->mptrac_control, comm);
+  t8_shmem_array_destroy (&context->mptrac_control);
+  t8_shmem_array_destroy (&context->mptrac_meteo);
+
   if (!context->chunk_mode && context->data_array != NULL) {
     T8_FREE (context->data_array);
   }
@@ -160,38 +152,34 @@ t8_mptrac_read_nc (t8_mptrac_context_t * mptrac_context,
   /* Now read the NC files. Since we are using shared arrays, only the 
    * processes with write permission (thus, one per shared memory domain)
    * reads the file. */
-  const int           write_permission_to_meteo1 =
-    sc_shmem_write_start (mptrac_context->mptrac_meteo1, comm);
-  const int           write_permission_to_meteo2 =
-    sc_shmem_write_start (mptrac_context->mptrac_meteo2, comm);
-  const int           write_permission_to_ctl =
-    sc_shmem_write_start (mptrac_context->mptrac_control, comm);
-
-  if (write_permission_to_meteo1) {
+  int                 write_permission_to_ctl =
+    t8_shmem_array_start_writing (mptrac_context->mptrac_control);
+  if (t8_shmem_array_start_writing (mptrac_context->mptrac_meteo)) {
     /* This process has write permission and continues. */
 
     /* Double check that one process has write permission to all
      * fields. */
-    SC_CHECK_ABORT (write_permission_to_meteo2 && write_permission_to_ctl,
+    SC_CHECK_ABORT (write_permission_to_ctl,
                     "Shared memory error. Process does not have write access to "
-                    "both meteo entries.\n");
+                    "both control and meteo entries.\n");
 
-    t8_debugf ("I have %swrite permission to meteo1\n",
-               write_permission_to_meteo1 ? "" : "no");
-    t8_debugf ("I have %swrite permission to meteo2\n",
-               write_permission_to_meteo2 ? "" : "no");
-    t8_debugf ("I have %swrite permission to control\n",
-               write_permission_to_ctl ? "" : "no");
+    t8_debugf ("I have write permission to meteo and control.\n");
 
+    ctl_t              *control = (ctl_t *)
+      t8_shmem_array_index_for_writing (mptrac_context->mptrac_control, 0);
+    met_t              *meteo1 = (met_t *)
+      t8_shmem_array_index_for_writing (mptrac_context->mptrac_meteo, 0);
+    met_t              *meteo2 = (met_t *)
+      t8_shmem_array_index_for_writing (mptrac_context->mptrac_meteo, 1);
     if (read_ctl_parameters) {
       /* Split command line argument string to be passed to mptrac routines. */
       t8_mptrac_split_input_string (mptrac_context->mptrac_input, &output,
                                     &num_arguments);
 
       T8_ASSERT (num_arguments > 0);
-      read_ctl ("-", num_arguments, output, mptrac_context->mptrac_control);
+      read_ctl ("-", num_arguments, output, control);
       /* We need to set the start time by hand. */
-      mptrac_context->mptrac_control->t_start = seconds;
+      control->t_start = seconds;
       /* Clean up split string. */
       for (int i = 0; i < num_arguments; ++i) {
         T8_FREE (output[i]);
@@ -201,14 +189,12 @@ t8_mptrac_read_nc (t8_mptrac_context_t * mptrac_context,
 
     /* Since we are using MPI shared memory, only one process per
      * shared memory region reads the file. */
-    get_met (mptrac_context->mptrac_control, seconds,
-             &mptrac_context->mptrac_meteo1, &mptrac_context->mptrac_meteo2);
+    get_met (control, seconds, &meteo1, &meteo2);
   }
 
   /* End writing to shared memory */
-  sc_shmem_write_end (mptrac_context->mptrac_meteo1, comm);
-  sc_shmem_write_end (mptrac_context->mptrac_meteo2, comm);
-  sc_shmem_write_end (mptrac_context->mptrac_control, comm);
+  t8_shmem_array_end_writing (mptrac_context->mptrac_control);
+  t8_shmem_array_end_writing (mptrac_context->mptrac_meteo);
 }
 
 /* Interpolate between val1 and val2 at 0 <= interpol <= 1 */
@@ -225,22 +211,21 @@ t8_mptrac_coords_to_lonlatpressure (const t8_mptrac_context_t * context,
                                     const double point[3], double *lon,
                                     double *lat, double *pressure)
 {
+  const met_t        *meteo1 =
+    (const met_t *) t8_shmem_array_index (context->mptrac_meteo, 0);
   /* Interpolate lon coordinate */
-  const int           max_lon_idx = context->mptrac_meteo1->nx;
+  const int           max_lon_idx = meteo1->nx;
   T8_ASSERT (max_lon_idx >= 1);
-  t8_mptrac_interpol_helper (point[0], context->mptrac_meteo1->lon[0],
-                             context->mptrac_meteo1->lon[max_lon_idx - 1],
-                             lon);
+  t8_mptrac_interpol_helper (point[0], meteo1->lon[0],
+                             meteo1->lon[max_lon_idx - 1], lon);
   /* Interpolate lat coordinate */
-  const int           max_lat_idx = context->mptrac_meteo1->ny;
+  const int           max_lat_idx = meteo1->ny;
   T8_ASSERT (max_lat_idx >= 1);
-  t8_mptrac_interpol_helper (point[1], context->mptrac_meteo1->lat[0],
-                             context->mptrac_meteo1->lat[max_lat_idx - 1],
-                             lat);
+  t8_mptrac_interpol_helper (point[1], meteo1->lat[0],
+                             meteo1->lat[max_lat_idx - 1], lat);
   /* Interpolate pressure coordinate */
-  const int           max_p_idx = context->mptrac_meteo1->np;
+  const int           max_p_idx = meteo1->np;
   T8_ASSERT (max_p_idx >= 1);
-  t8_mptrac_interpol_helper (point[2], context->mptrac_meteo1->p[0],
-                             context->mptrac_meteo1->p[max_p_idx - 1],
-                             pressure);
+  t8_mptrac_interpol_helper (point[2], meteo1->p[0],
+                             meteo1->p[max_p_idx - 1], pressure);
 }

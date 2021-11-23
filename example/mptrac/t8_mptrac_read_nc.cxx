@@ -174,9 +174,12 @@ t8_mptrac_onlycopy_interpolate_callback (t8_forest_t forest_old, t8_forest_t for
 void
 t8_mptrac_build_2d_forest (t8_mptrac_context_t * mptrac_context)
 {
+  const met_t        *meteo1 =
+    (const met_t *) t8_shmem_array_index (mptrac_context->mptrac_meteo, 0);
+
   mptrac_context->forest =
-    t8_latlon_refine (mptrac_context->mptrac_meteo1->nx,
-                      mptrac_context->mptrac_meteo1->ny, T8_LATLON_REFINE, 1,
+    t8_latlon_refine (meteo1->nx,
+                      meteo1->ny, T8_LATLON_REFINE, 1,
                       &mptrac_context->level);
 
   T8_ASSERT (mptrac_context->forest != NULL);
@@ -208,12 +211,16 @@ t8_mptrac_build_latlon_data_for_u_original_coords (t8_mptrac_context_t *
   T8_ASSERT (context != NULL);
   T8_ASSERT (context->forest != NULL);
   const int           num_tracers = 1;
-  const int           nx = context->mptrac_meteo1->nx;
-  const int           ny = context->mptrac_meteo1->ny;
-  const int           np = context->mptrac_meteo1->np;
+  const met_t        *meteo1 =
+    (const met_t *) t8_shmem_array_index (context->mptrac_meteo, 0);
+  const met_t        *meteo2 =
+    (const met_t *) t8_shmem_array_index (context->mptrac_meteo, 1);
+  const int           nx = meteo1->nx;
+  const int           ny = meteo1->ny;
+  const int           np = meteo1->np;
   int                *shape = T8_ALLOC (int, 4);
-  shape[0] = context->mptrac_meteo1->nx;
-  shape[1] = context->mptrac_meteo1->ny;
+  shape[0] = meteo1->nx;
+  shape[1] = meteo1->ny;
   shape[2] = 1;                 /* Should this be z? */
   shape[3] = 1;                 /* Uncertain about meaning of [3], probably time. */
 
@@ -241,30 +248,32 @@ t8_mptrac_build_latlon_data_for_u_original_coords (t8_mptrac_context_t *
 
   /* Copy the data over to the chunk */
   for (int ix = 0; ix < nx; ++ix) {
-    const double        lon = context->mptrac_meteo1->lon[ix];
+    const double        lon = meteo1->lon[ix];
     for (int iy = 0; iy < ny; ++iy) {
-      const double        lat = context->mptrac_meteo1->lat[iy];
+      const double        lat = meteo1->lat[iy];
       for (int iz = 0; iz < np; ++iz) {
-        const double        pressure = context->mptrac_meteo1->p[iz];
+        const double        pressure = meteo1->p[iz];
 
         double              value;
         /* Compute interpolation of zonal wind. */
         int                 ci[3];
         double              cw[3];
-        intpol_met_time_3d (context->mptrac_meteo1, context->mptrac_meteo1->u,
-                            context->mptrac_meteo2, context->mptrac_meteo2->u,
+        /* intpol_met_time_3d does not modify meteo1 and meteo2, but also does
+         * not declare them const. Hence we need to cast away the constness manually. */
+        intpol_met_time_3d ((met_t *) meteo1, ((met_t *) meteo1)->u,
+                            (met_t *) meteo2, ((met_t *) meteo2)->u,
                             time, pressure, lon, lat, &value, ci, cw, 1);
 
         /* Copy zonal wind */
         chunk->data[(iy * nx + ix) * np + iz] = value;
 #if 0                           /* Old manual interpolation routine. */
-        (1 - time) * context->mptrac_meteo1->u[ix][iy][iz]
-          + time * context->mptrac_meteo2->u[ix][iy][iz];
+        (1 - time) * meteo1->u[ix][iy][iz]
+          + time * meteo2->u[ix][iy][iz];
 #endif
         if (ix == 10 && iy == 10 && iz == 10) {
           t8_global_productionf ("%f %f %f %f\n", time,
-                                 context->mptrac_meteo1->u[ix][iy][iz],
-                                 context->mptrac_meteo2->u[ix][iy][iz],
+                                 meteo1->u[ix][iy][iz],
+                                 meteo2->u[ix][iy][iz],
                                  chunk->data[(iy * nx + ix) * np + iz]);
         }
       }
@@ -292,6 +301,11 @@ t8_mptrac_build_latlon_data_for_uvw_3D (t8_mptrac_context_t * context,
   T8_ASSERT (!context->chunk_mode);
   T8_ASSERT (context->data == NULL);
 
+  const met_t        *meteo1 =
+    (const met_t *) t8_shmem_array_index (context->mptrac_meteo, 0);
+  const met_t        *meteo2 =
+    (const met_t *) t8_shmem_array_index (context->mptrac_meteo, 1);
+
   /* Assure that we have num_elements many entries in our data array */
   /* TODO: When we want ghosts, we need to add num ghosts here as well. */
   context->data_array =
@@ -312,16 +326,20 @@ t8_mptrac_build_latlon_data_for_uvw_3D (t8_mptrac_context_t * context,
       int                 ci[3];
       double              cw[3];
       /* Compute interpolation of u */
-      intpol_met_time_3d (context->mptrac_meteo1, context->mptrac_meteo1->u,
-                          context->mptrac_meteo2, context->mptrac_meteo2->u,
+      met_t              *non_const_meteo1 = (met_t *) meteo1;
+      met_t              *non_const_meteo2 = (met_t *) meteo2;
+      /* intpol_met_time_3d does not modify meteo1 and meteo2, but also does
+       * not declare them const. Hence we need to cast away the constness manually. */
+      intpol_met_time_3d (non_const_meteo1, non_const_meteo1->u,
+                          non_const_meteo2, non_const_meteo2->u,
                           time, pressure, lon, lat, &interpol_value, ci, cw,
                           1);
       context->data_array[data_index++] = interpol_value;
       /* Compute interpolation of v */
-      intpol_met_time_3d (context->mptrac_meteo1, context->mptrac_meteo1->v, context->mptrac_meteo2, context->mptrac_meteo2->v, time, pressure, lon, lat, &interpol_value, ci, cw, 0);  /* 0 here since we can reuse the interpolation weights */
+      intpol_met_time_3d (non_const_meteo1, non_const_meteo1->v, non_const_meteo2, non_const_meteo2->v, time, pressure, lon, lat, &interpol_value, ci, cw, 0);  /* 0 here since we can reuse the interpolation weights */
       context->data_array[data_index++] = interpol_value;
       /* Compute interpolation of w */
-      intpol_met_time_3d (context->mptrac_meteo1, context->mptrac_meteo1->w, context->mptrac_meteo2, context->mptrac_meteo2->w, time, pressure, lon, lat, &interpol_value, ci, cw, 0);  /* 0 here since we can reuse the interpolation weights */
+      intpol_met_time_3d (non_const_meteo1, non_const_meteo1->w, non_const_meteo2, non_const_meteo2->w, time, pressure, lon, lat, &interpol_value, ci, cw, 0);  /* 0 here since we can reuse the interpolation weights */
       context->data_array[data_index++] = interpol_value;
 
     }
