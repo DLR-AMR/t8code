@@ -225,8 +225,12 @@ t8_cmesh_gather_treecount_ext (t8_cmesh_t cmesh, sc_MPI_Comm comm,
     cmesh->tree_offsets = t8_cmesh_alloc_offsets (cmesh->mpisize, comm);
     t8_shmem_array_allgather (&tree_offset, 1, T8_MPI_GLOIDX,
                               cmesh->tree_offsets, 1, T8_MPI_GLOIDX);
-    t8_shmem_array_set_gloidx (cmesh->tree_offsets, cmesh->mpisize,
-                               cmesh->num_trees);
+    /* Set the last entry to the total number of trees. */
+    if (t8_shmem_array_start_writing (cmesh->tree_offsets)) {
+      t8_shmem_array_set_gloidx (cmesh->tree_offsets, cmesh->mpisize,
+                                 cmesh->num_trees);
+    }
+    t8_shmem_array_end_writing (cmesh->tree_offsets);
 
     if (cmesh->num_local_trees <= 0) {
       /* This process is empty */
@@ -2858,8 +2862,12 @@ t8_cmesh_offset_percent (t8_cmesh_t cmesh, sc_MPI_Comm comm, int percent)
   }
   t8_shmem_array_allgather (&new_first_tree, 1, T8_MPI_GLOIDX,
                             partition_array, 1, T8_MPI_GLOIDX);
-  t8_shmem_array_set_gloidx (partition_array, mpisize,
-                             t8_cmesh_get_num_trees (cmesh));
+  if (t8_shmem_array_start_writing (partition_array)) {
+    t8_shmem_array_set_gloidx (partition_array, mpisize,
+                               t8_cmesh_get_num_trees (cmesh));
+  }
+  t8_shmem_array_end_writing (partition_array);
+
   if (created) {
     /* We needed to create the old partition array and thus we clean it up
      * again. */
