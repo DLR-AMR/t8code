@@ -240,7 +240,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 #endif
 
   if (cmesh->tree_offsets != NULL) {
-    t8_gloidx_t        *tree_offsets = (t8_gloidx_t *)
+    const t8_gloidx_t  *tree_offsets = (t8_gloidx_t *)
       t8_shmem_array_get_gloidx_array (cmesh->tree_offsets);
     /* We partition using tree offsets */
     /* Get the first tree and whether it is shared */
