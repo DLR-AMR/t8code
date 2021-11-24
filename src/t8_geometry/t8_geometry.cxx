@@ -196,7 +196,7 @@ void
 t8_geom_handler_register_geometry (t8_geometry_handler_t * geom_handler,
                                    const t8_geometry_c * geometry)
 {
-  t8_debugf ("Registring geometry %s\n", geometry->t8_geom_get_name ());
+  t8_debugf ("Registering geometry %s\n", geometry->t8_geom_get_name ());
   T8_ASSERT (t8_geom_handler_is_initialized (geom_handler));
   /* Must not be committed */
   T8_ASSERT (!t8_geom_handler_is_committed (geom_handler));
