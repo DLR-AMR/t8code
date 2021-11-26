@@ -56,11 +56,9 @@ t8_forest_remove_hanging_faces_adapt (t8_forest_t forest,
   t8_locidx_t        *element_indices;
   t8_eclass_scheme_c *neigh_scheme;
 
-  /* In order to remove al hanging nodes, the forest must be balanced */
-  T8_ASSERT (t8_forest_is_balanced (forest_from));
-
   current_element =
     t8_forest_get_element_in_tree (forest_from, ltree_id, lelement_id);
+
   num_faces = ts->t8_element_num_faces (current_element);
 
   /* We use a binary encoding (depending on the face enumeration), to determine which subelement type to use. 
@@ -98,6 +96,7 @@ t8_forest_remove_hanging_faces_adapt (t8_forest_t forest,
      *    decimal:     1*2^3  +  0*2^2  +  0*2^1  +  1*2^0  =  9
      *  
      */
+
     int                 coefficient;
     if (num_neighbors == 0 || num_neighbors == 1) {
       coefficient = 0;
@@ -120,7 +119,7 @@ t8_forest_remove_hanging_faces_adapt (t8_forest_t forest,
   if (subelement_type == 0) {   /* in this case, there are no hanging nodes and we do not need to do anything */
     return 0;
   }
-  else if (subelement_type == 15) {
+  else if (subelement_type == 15) { /* there might be a neighbor bug for type 15, thus remove it for now */
     return 1;
   }
   else {                        /* use subelements and add 1 to every type, to avoid refine = 1 */
