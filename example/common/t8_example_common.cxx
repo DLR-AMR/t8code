@@ -130,6 +130,12 @@ t8_common_within_levelset (t8_forest_t forest, t8_locidx_t ltreeid,
   /* Compute L(X) */
   value = levelset (elem_midpoint, t, udata);
 
+#if 0                           /* activate the following case to refine the whole circular disk instead of its boundary */
+  if (value < 0) {
+    return 1;
+  }
+#endif
+
   if (fabs (value) < band_width * elem_diam) {
     /* The element is in the band that should be refined. */
     return 1;
