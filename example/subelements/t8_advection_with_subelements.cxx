@@ -176,6 +176,23 @@ t8_advect_element_get_phi (const t8_advect_problem_t * problem,
            t8_sc_array_index_locidx (problem->phi_values, ielement));
 }
 
+static int
+t8_advect_get_global_phi (const t8_advect_problem_t * problem,
+                          t8_locidx_t ielement)
+{
+  int                 scaled_phi_global = 0;
+  int                 ielem = 0;
+  int                 num_local_elements =
+    t8_forest_get_local_num_elements (problem->forest);
+
+  for (ielem = 0; ielem < num_local_elements; ielem++) {
+    scaled_phi_global +=
+      *((double *) t8_sc_array_index_locidx (problem->phi_values, ielement));
+  }
+
+  return scaled_phi_global;
+}
+
 /* Set the phi value of an element to a given entry */
 static void
 t8_advect_element_set_phi (const t8_advect_problem_t * problem,
@@ -210,12 +227,12 @@ t8_advect_adapt_random (t8_forest_t forest, t8_forest_t forest_from,
   /* Get the element's level */
   level = ts->t8_element_level (elements[0]);
 
-  int r = rand() % 99; /* random number between 0 and 99 */
+  int                 r = rand () % 99; /* random number between 0 and 99 */
 
   if (level < problem->maxlevel && r < 20) {
     return 1;
   }
-    else if (level > problem->level && num_elements > 1) {
+  else if (level > problem->level && num_elements > 1) {
     /* It is not possible to refine this level */
     return -1;
   }
@@ -1514,6 +1531,17 @@ t8_advect_problem_elements_destroy (t8_advect_problem_t * problem)
              (t8_locidx_t) problem->element_data->elem_count);
   /* destroy all elements */
   for (lelement = 0; lelement < num_local_elem; lelement++) {
+
+    t8_element_t       *element;
+    t8_eclass_scheme_c *ts;
+    ts =
+      t8_forest_get_eclass_scheme (problem->forest,
+                                   t8_forest_get_tree_class (problem->forest,
+                                                             0));
+    element = t8_forest_get_element_in_tree (problem->forest, 0, lelement);
+
+    ts->t8_element_print_element (element);
+
     elem_data = (t8_advect_element_data_t *)
       t8_sc_array_index_locidx (problem->element_data, lelement);
     for (iface = 0; iface < elem_data->num_faces; iface++) {
@@ -1551,13 +1579,13 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem, int measure_time)
   /* Set the user data pointer of the new forest */
   t8_forest_set_user_data (problem->forest_adapt, problem);
   /* Set the adapt function (it can be set to static via the argument adapt_freq, setting it to a higher number than timesteps) */
-  if(0) {
+  if (1) {
     t8_forest_set_adapt (problem->forest_adapt, problem->forest,
-                        t8_advect_adapt, 0);
+                         t8_advect_adapt, 0);
   }
-  else { /* randomly adapt the forest for numerical tests */
+  else {                        /* randomly adapt the forest for numerical tests */
     t8_forest_set_adapt (problem->forest_adapt, problem->forest,
-                       t8_advect_adapt_random, 0);
+                         t8_advect_adapt_random, 0);
   }
   if (problem->maxlevel - problem->level > 1) {
     /* We also want to balance the forest
@@ -1659,15 +1687,18 @@ t8_advect_problem_adapt_init (t8_advect_problem_t * problem, int measure_time)
   /* Set the user data pointer of the new forest */
   t8_forest_set_user_data (problem->forest_adapt, problem);
   /* Set the adapt function */
-#if 0                           /* initialize according to numerical values (standard) */
+#if 1
+  /* initialize according to numerical values (standard) */
   t8_forest_set_adapt (problem->forest_adapt, problem->forest,
                        t8_advect_adapt, 0);
 #endif
-#if 1 /* randomly adapt a uniform forest (if we choose this, then we should also use adapt_random while adapting) */
+#if 0
+  /* randomly adapt a uniform forest (if we choose this, then we should also use adapt_random for further adapting) */
   t8_forest_set_adapt (problem->forest_adapt, problem->forest,
                        t8_advect_adapt_random, 0);
-#endif 
-#if 0 /* initialize according to a simple geometric refinement scheme (when we choose this we might not want to adapt the forest furhter and set adapt frequency high enough) */
+#endif
+#if 0
+  /* initialize according to a simple geometric refinement scheme (when we choose this we might not want to adapt the forest furhter and set adapt frequency high enough) */
   t8_forest_set_adapt (problem->forest_adapt, problem->forest,
                        t8_advect_adapt_init, 0);
 #endif
@@ -2708,17 +2739,17 @@ main (int argc, char *argv[])
                          "The duration of the simulation. Default: 1");
 
   sc_options_add_double (opt, 'C', "CFL", &cfl,
-                         0.5, "The cfl number to use. Default: 1");
+                         0.1, "The cfl number to use. Default: 1");
   sc_options_add_double (opt, 'b', "band-width", &band_width,
                          1,
                          "Control the width of the refinement band around\n"
                          " the zero level-set. Default 1.");
 
-  sc_options_add_int (opt, 'a', "adapt-freq", &adapt_freq, 1,
+  sc_options_add_int (opt, 'a', "adapt-freq", &adapt_freq, 5,
                       "Controls how often the mesh is readapted. "
                       "A value of i means, every i-th time step.");
 
-  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 1,
+  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 5,
                       "How often the vtk output is produced "
                       "\n\t\t\t\t     (after how many time steps). "
                       "A value of 0 is equivalent to using -o.");
@@ -2792,21 +2823,21 @@ main (int argc, char *argv[])
       t8_cmesh_vtk_write_file (cmesh, "advection_cmesh", 1.0);
     }
     /* Computation */
-    if (0) { /* standard phi_0 */
+    if (1) {                    /* standard phi_0 */
       t8_advect_solve (cmesh, u,
-                      t8_levelset_sphere, &ls_data,
-                      level,
-                      level + reflevel, T, cfl, sc_MPI_COMM_WORLD, adapt_freq,
-                      no_vtk, vtk_freq, band_width, dim, dummy_op,
-                      volume_refine);
+                       t8_levelset_sphere, &ls_data,
+                       level,
+                       level + reflevel, T, cfl, sc_MPI_COMM_WORLD,
+                       adapt_freq, no_vtk, vtk_freq, band_width, dim,
+                       dummy_op, volume_refine);
     }
-    else { /* constant phi_0 */
+    else {                      /* constant phi_0 */
       t8_advect_solve (cmesh, u,
-                      t8_constant, &ls_data,
-                      level,
-                      level + reflevel, T, cfl, sc_MPI_COMM_WORLD, adapt_freq,
-                      no_vtk, vtk_freq, band_width, dim, dummy_op,
-                      volume_refine);
+                       t8_constant, &ls_data,
+                       level,
+                       level + reflevel, T, cfl, sc_MPI_COMM_WORLD,
+                       adapt_freq, no_vtk, vtk_freq, band_width, dim,
+                       dummy_op, volume_refine);
     }
   }
   else {
