@@ -28,6 +28,7 @@
 #include <t8_forest.h>
 #include <t8_vec.h>
 #include <example/common/t8_example_common.h>
+#include <time.h>
 
 /* In this example, subelements are used to remove hanging nodes from a refined 2D quad scheme. 
  * At first, a cmesh is adapted using the standard 2D refinement scheme AND balance (where balance is 
@@ -70,7 +71,7 @@ t8_advect_adapt_tests (t8_forest_t forest,
   return 0;
 #endif
 
-#if 1                           /* refinement diag */
+#if 0                           /* refinement diag */
   int                 coord[3] = { };
   ts->t8_element_anchor (elements[0], coord);
 
@@ -97,8 +98,32 @@ t8_advect_adapt_tests (t8_forest_t forest,
   return 0;
 #endif
 
+#if 0                           /* nested grid reifnement */
+  int                 coord[3] = { };
+  ts->t8_element_anchor (elements[0], coord);
+
+  if (((coord[0] == 1 << 29 && coord[1] == 1 << 29) ||
+       (coord[0] == 1 << 29 && coord[1] + (1 << (30 - level)) == 1 << 29) ||
+       (coord[0] + (1 << (30 - level)) == 1 << 29 && coord[1] == 1 << 29) ||
+       (coord[0] + (1 << (30 - level)) == 1 << 29
+        && coord[1] + (1 << (30 - level)) == 1 << 29))
+      && level < data->max_level) {
+    return 1;
+  }
+  return 0;
+#endif
+
 #if 0                           /* refinement all elements with subelement type 15 */
   return 16;
+#endif
+
+#if 1                           /* random refinement */
+  int                 r = rand () % 99; /* random number between 0 and 99 */
+
+  if (level < data->max_level && r < 50) {
+    return 1;
+  }
+  return 0;
 #endif
 }
 
@@ -128,12 +153,13 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   char                filename[BUFSIZ];
 
   /* refinement settings */
-  int                 initlevel = 5;    /* initial uniform refinement level */
+  int                 initlevel = 7;    /* initial uniform refinement level */
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening */
-  int                 maxlevel = 10;    /* highest level allowed for refining */
+  int                 adaptlevel = 1;
+  int                 maxlevel = initlevel + adaptlevel;        /* highest level allowed for refining */
 
-  int                 do_circular_refinement = 0;
-  int                 do_test_refinement = 1;
+  int                 refine_recursive = 1;
+  int                 do_exemplary_refinement = 1;
 
   /* cmesh settings (only one of the following suggestions should be one, the others 0) */
   int                 single_tree = 1;
@@ -145,6 +171,7 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   int                 do_transition = 1;
 
   /* timestep settings */
+  int                 do_different_refinements = 0;     /* to change the refinement during multiple s´timesteps */
   int                 timesteps = 1;    /* Number of times, the mesh is refined */
   double              delta = 0.3;      /* The value, the radius increases after each timestep */
   int                 i;
@@ -192,10 +219,10 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   /* shift the midpoiunt of the circle by (shift_x,shift_y) to ensure midpoints on corners of the uniform mesh */
   int                 shift_x = 0;      /* shift_x should be smaler than 2^minlevel / 2 such that midpoint stays in the quadrilateral tree */
   int                 shift_y = 0;
-  sdata.mid_point[0] = 0;       //1.0 / 2.0 + shift_x * 1.0/(1 << (minlevel));
-  sdata.mid_point[1] = 0;       //1.0 / 2.0 + shift_y * 1.0/(1 << (minlevel)); 
+  sdata.mid_point[0] = 0.5;     //1.0 / 2.0 + shift_x * 1.0/(1 << (minlevel));
+  sdata.mid_point[1] = 0.5;     //1.0 / 2.0 + shift_y * 1.0/(1 << (minlevel)); 
   sdata.mid_point[2] = 0;
-  sdata.radius = 1.2;
+  sdata.radius = 0.3;
 
   /* refinement parameter */
   ls_data.band_width = 1;
@@ -211,6 +238,14 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   /* Adapting the mesh for different timesteps */
   for (i = 0; i < timesteps; i++) {
 
+    /* change the refinement */
+    if (i == do_different_refinements - 1) {
+      do_transition = 1;
+      adaptlevel = 1;
+      maxlevel = initlevel + adaptlevel;
+      do_exemplary_refinement = 1;
+    }
+
     t8_productionf
       ("This is t8_refine_with_subelements. Into timestep %i of %i\n", i + 1,
        timesteps);
@@ -219,12 +254,16 @@ t8_refine_with_subelements (t8_eclass_t eclass)
 
     /* Adapt the mesh according to the user data */
     t8_forest_set_user_data (forest_adapt, &ls_data);
-    if (do_circular_refinement) {
-      t8_forest_set_adapt (forest_adapt, forest, t8_common_adapt_level_set,
-                           1);
+
+    if (do_exemplary_refinement) {
+      time_t              t;    /* we might use a random refinement and set the randomizer seed */
+      srand ((unsigned) time (&t));
+      t8_forest_set_adapt (forest_adapt, forest, t8_advect_adapt_tests,
+                           refine_recursive);
     }
-    if (do_test_refinement) {
-      t8_forest_set_adapt (forest_adapt, forest, t8_advect_adapt_tests, 1);
+    else {
+      t8_forest_set_adapt (forest_adapt, forest, t8_common_adapt_level_set,
+                           refine_recursive);
     }
 
     if (do_balance) {
