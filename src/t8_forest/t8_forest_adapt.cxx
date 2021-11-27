@@ -277,7 +277,6 @@ t8_forest_adapt (t8_forest_t forest)
       /* Will get set to 0 later if this is not a family */
       is_family = 1;
 #endif
-
       /* Load the current element and at most num_siblings-1 many others into
        * the elements_from buffer. Stop when we are certain that they cannot from
        * a family.
@@ -528,6 +527,9 @@ t8_forest_adapt (t8_forest_t forest)
     t8_productionf
       ("tree_id: %i num_elements in tree: %i num_subelements_in_tree: %i\n",
        ltree_id, el_inserted, num_subelements_in_tree);
+
+    float               relative_increase = (float) el_inserted / num_el_from;
+    t8_productionf ("relative increase: %f\n", relative_increase);
 
     /* Possibly shrink the telements array to the correct size */
     t8_element_array_resize (telements, el_inserted);
