@@ -228,9 +228,7 @@ t8_advect_adapt_random (t8_forest_t forest, t8_forest_t forest_from,
   level = ts->t8_element_level (elements[0]);
 
   static int          seed = 10000;
-
   srand (seed++);
-
   int                 r = rand () % 99; /* random number between 0 and 99 */
 
   if (level < problem->maxlevel && r < 20) {
@@ -770,9 +768,8 @@ t8_advect_advance_element (t8_advect_problem_t * problem,
     t8_sc_array_index_locidx (problem->element_data, lelement);
   /* Get the phi value of the element */
   phi = t8_advect_element_get_phi (problem, lelement);
-  num_faces = elem_data->num_faces;
   /* Sum all the fluxes */
-  for (iface = 0; iface < num_faces; iface++) {
+  for (iface = 0; iface < elem_data->num_faces; iface++) {
     for (ineigh = 0; ineigh < SC_MAX (1, elem_data->num_neighbors[iface]);
          ineigh++) {
       flux_sum += elem_data->fluxes[iface][ineigh];
@@ -1534,24 +1531,25 @@ t8_advect_problem_elements_destroy (t8_advect_problem_t * problem)
   /* destroy all elements */
   for (lelement = 0; lelement < num_local_elem; lelement++) {
 
-    /* For debugging */
-    t8_element_t       *element;
-    t8_eclass_scheme_c *ts;
-    ts =
-      t8_forest_get_eclass_scheme (problem->forest,
-                                   t8_forest_get_tree_class (problem->forest,
-                                                             0));
-    element = t8_forest_get_element_in_tree (problem->forest, 0, lelement);
-    ts->t8_element_print_element (element);
-
     /* Get element data */
     elem_data = (t8_advect_element_data_t *)
       t8_sc_array_index_locidx (problem->element_data, lelement);
 
-    T8_ASSERT (elem_data->num_faces == 3 || elem_data->num_faces == 4);
+    if (elem_data->num_faces != 3 && elem_data->num_faces != 4) {
+      /* For debugging */
+      t8_element_t       *element;
+      t8_eclass_scheme_c *ts;
+      ts =
+        t8_forest_get_eclass_scheme (problem->forest,
+                                    t8_forest_get_tree_class (problem->forest,
+                                                              0));
+      element = t8_forest_get_element_in_tree (problem->forest, 0, lelement);
+      ts->t8_element_print_element (element);
+      printf("elem_data->num_faces: %i element_num_faces: %i\n", elem_data->num_faces, ts->t8_element_num_faces (element));
+      T8_ASSERT (elem_data->num_faces == 3 || elem_data->num_faces == 4);
+    }
 
     for (iface = 0; iface < elem_data->num_faces; iface++) {
-      printf("iface: %i  elem_data->num_faces: %i\n", iface, elem_data->num_faces);
       /* TODO: make face number dim independent */
       if (elem_data->num_neighbors[iface] > 0) {
         T8_FREE (elem_data->neighs[iface]);
@@ -1899,7 +1897,7 @@ t8_advect_create_cmesh (sc_MPI_Comm comm, t8_eclass_t eclass,
     }
     else {
 #if 0                           /* create a forest with multiple hypercube trees */
-      p4est_connectivity_t *brick = p4est_connectivity_new_brick (2, 1, 1, 1);
+      p4est_connectivity_t *brick = p4est_connectivity_new_brick (1, 1, 1, 1);
       t8_cmesh_t          cmesh = t8_cmesh_new_from_p4est (brick, comm, 0);
       p4est_connectivity_destroy (brick);
       return cmesh;
@@ -2401,19 +2399,17 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
          * did somehow had elem_data->num_faces = 0 at this point which results in a missing flux computation for its faces leading to
          * the 'stripes' that could be observed in the solution.
          * It remains to check where this bug comes from. */
-        if (1) {
-          t8_eclass_scheme_c *ts;
-          t8_element_t       *element_test;
-          element_test =
-            t8_forest_get_element_in_tree (problem->forest, itree, lelement);
-          ts =
-            t8_forest_get_eclass_scheme (problem->forest,
-                                         t8_forest_get_tree_class
-                                         (problem->forest, 0));
-          elem_data->num_faces = ts->t8_element_num_faces (element_test);
-          T8_ASSERT (elem_data->num_faces == 3 || elem_data->num_faces == 4);
-          elem_data->level = ts->t8_element_level (element_test);
-        }
+        t8_eclass_scheme_c *ts;
+        t8_element_t       *element_test;
+        element_test =
+          t8_forest_get_element_in_tree (problem->forest, itree, lelement);
+        ts =
+          t8_forest_get_eclass_scheme (problem->forest,
+                                        t8_forest_get_tree_class
+                                        (problem->forest, 0));
+        elem_data->num_faces = ts->t8_element_num_faces (element_test);
+        T8_ASSERT (elem_data->num_faces == 3 || elem_data->num_faces == 4);
+        elem_data->level = ts->t8_element_level (element_test);
 
         elem =
           t8_forest_get_element_in_tree (problem->forest, itree, lelement);
@@ -2594,8 +2590,9 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
           sc_stats_accumulate (&problem->stats[ADVECT_DUMMY], dummy_time);
           problem->stats[ADVECT_DUMMY].count = 1;
         }
+
         /* Compute time step */
-        t8_debugf ("advance %i\n", ielement);
+        t8_debugf ("advance %i\n", lelement);
         t8_advect_advance_element (problem, lelement);
       }                         /* end element loop */
     }                           /* end tree loop */
@@ -2728,7 +2725,7 @@ main (int argc, char *argv[])
                       "with radius 0.15.\n)");
   sc_options_add_int (opt, 'l', "level", &level, 3,
                       "The minimum refinement level of the mesh.");
-  sc_options_add_int (opt, 'r', "rlevel", &reflevel, 3,
+  sc_options_add_int (opt, 'r', "rlevel", &reflevel, 1,
                       "The number of adaptive refinement levels.");
   sc_options_add_int (opt, 'e', "elements", &eclass_int, T8_ECLASS_QUAD,
                       "If specified the coarse mesh is a hypercube\n\t\t\t\t     consisting of the"
@@ -2749,7 +2746,7 @@ main (int argc, char *argv[])
                          "The duration of the simulation. Default: 1");
 
   sc_options_add_double (opt, 'C', "CFL", &cfl,
-                         0.1, "The cfl number to use. Default: 1");
+                         0.5, "The cfl number to use. Default: 1");
   sc_options_add_double (opt, 'b', "band-width", &band_width,
                          1,
                          "Control the width of the refinement band around\n"
@@ -2759,7 +2756,7 @@ main (int argc, char *argv[])
                       "Controls how often the mesh is readapted. "
                       "A value of i means, every i-th time step.");
 
-  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 5,
+  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 1,
                       "How often the vtk output is produced "
                       "\n\t\t\t\t     (after how many time steps). "
                       "A value of 0 is equivalent to using -o.");
