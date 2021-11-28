@@ -227,6 +227,10 @@ t8_advect_adapt_random (t8_forest_t forest, t8_forest_t forest_from,
   /* Get the element's level */
   level = ts->t8_element_level (elements[0]);
 
+  static int          seed = 10000;
+
+  srand (seed++);
+
   int                 r = rand () % 99; /* random number between 0 and 99 */
 
   if (level < problem->maxlevel && r < 20) {
@@ -257,9 +261,7 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
   t8_locidx_t         offset;
   double              phi;
   double              vol_thresh;
-  static int          seed = 10000;
-
-  srand (seed++);
+  
   /* Get a pointer to the problem from the user data pointer of forest */
   problem = (t8_advect_problem_t *) t8_forest_get_user_data (forest);
   /* Get the element's level */
@@ -1532,6 +1534,7 @@ t8_advect_problem_elements_destroy (t8_advect_problem_t * problem)
   /* destroy all elements */
   for (lelement = 0; lelement < num_local_elem; lelement++) {
 
+    /* For debugging */
     t8_element_t       *element;
     t8_eclass_scheme_c *ts;
     ts =
@@ -1539,12 +1542,16 @@ t8_advect_problem_elements_destroy (t8_advect_problem_t * problem)
                                    t8_forest_get_tree_class (problem->forest,
                                                              0));
     element = t8_forest_get_element_in_tree (problem->forest, 0, lelement);
-
     ts->t8_element_print_element (element);
 
+    /* Get element data */
     elem_data = (t8_advect_element_data_t *)
       t8_sc_array_index_locidx (problem->element_data, lelement);
+
+    T8_ASSERT (elem_data->num_faces == 3 || elem_data->num_faces == 4);
+
     for (iface = 0; iface < elem_data->num_faces; iface++) {
+      printf("iface: %i  elem_data->num_faces: %i\n", iface, elem_data->num_faces);
       /* TODO: make face number dim independent */
       if (elem_data->num_neighbors[iface] > 0) {
         T8_FREE (elem_data->neighs[iface]);
@@ -2091,6 +2098,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
       elem_data->level = ts->t8_element_level (element);
       /* Set the faces */
       elem_data->num_faces = ts->t8_element_num_faces (element);
+      T8_ASSERT (elem_data->num_faces == 3 || elem_data->num_faces == 4);
       for (iface = 0; iface < elem_data->num_faces; iface++) {
         /* Compute the indices of the face neighbors */
 #if 0
@@ -2112,6 +2120,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
         neigh_scheme->t8_element_print_element (neighbors[0]);
 #endif
 
+        T8_ASSERT (elem_data->num_neighbors[iface] <= 2);
         for (ineigh = 0; ineigh < elem_data->num_neighbors[iface]; ineigh++) {
           elem_data->neigh_level[iface] =
             neigh_scheme->t8_element_level (neighbors[ineigh]);
@@ -2388,30 +2397,30 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
         elem_data = (t8_advect_element_data_t *)
           t8_sc_array_index_locidx (problem->element_data, lelement);
 
-        /* TODO: the following if case is a hot fix for a bug where a new split subelement that comes from a non split subelement 
+        /* TODO: the following if case is a hot fix for a bug where a new split subelement that comes from a non split subelement
          * did somehow had elem_data->num_faces = 0 at this point which results in a missing flux computation for its faces leading to
-         * the 'stripes' that could be observed in the solution. 
+         * the 'stripes' that could be observed in the solution.
          * It remains to check where this bug comes from. */
         if (1) {
           t8_eclass_scheme_c *ts;
           t8_element_t       *element_test;
           element_test =
-            t8_forest_get_element_in_tree (problem->forest, itree, ielement);
+            t8_forest_get_element_in_tree (problem->forest, itree, lelement);
           ts =
             t8_forest_get_eclass_scheme (problem->forest,
                                          t8_forest_get_tree_class
                                          (problem->forest, 0));
           elem_data->num_faces = ts->t8_element_num_faces (element_test);
+          T8_ASSERT (elem_data->num_faces == 3 || elem_data->num_faces == 4);
           elem_data->level = ts->t8_element_level (element_test);
         }
 
         elem =
-          t8_forest_get_element_in_tree (problem->forest, itree, ielement);
-        num_faces = elem_data->num_faces;
+          t8_forest_get_element_in_tree (problem->forest, itree, lelement);
 
         /* Compute left and right flux */
-        for (iface = 0; iface < num_faces; iface++) {   /* face loop */
-          t8_debugf ("Face: %i\n", iface);
+        for (iface = 0; iface < elem_data->num_faces; iface++) {   /* face loop */
+          t8_debugf ("iface: %i  num_faces: %i\n", iface, elem_data->num_faces);
           if (elem_data->flux_valid[iface] <= 0 || adapted_or_partitioned) {
 
             /* Compute flux at this face */
@@ -2419,6 +2428,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
               /* We changed the mesh, so that we have to calculate the neighbor
                * indices again. */
               if (elem_data->num_neighbors[iface] > 0) {
+                T8_ASSERT (elem_data->num_neighbors[iface] <= 2);
                 T8_FREE (elem_data->neighs[iface]);
                 T8_FREE (elem_data->dual_faces[iface]);
                 elem_data->flux_valid[iface] = -1;
@@ -2718,7 +2728,7 @@ main (int argc, char *argv[])
                       "with radius 0.15.\n)");
   sc_options_add_int (opt, 'l', "level", &level, 3,
                       "The minimum refinement level of the mesh.");
-  sc_options_add_int (opt, 'r', "rlevel", &reflevel, 2,
+  sc_options_add_int (opt, 'r', "rlevel", &reflevel, 3,
                       "The number of adaptive refinement levels.");
   sc_options_add_int (opt, 'e', "elements", &eclass_int, T8_ECLASS_QUAD,
                       "If specified the coarse mesh is a hypercube\n\t\t\t\t     consisting of the"
