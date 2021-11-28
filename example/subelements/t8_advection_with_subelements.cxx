@@ -227,8 +227,6 @@ t8_advect_adapt_random (t8_forest_t forest, t8_forest_t forest_from,
   /* Get the element's level */
   level = ts->t8_element_level (elements[0]);
 
-  static int          seed = 10000;
-  srand (seed++);
   int                 r = rand () % 99; /* random number between 0 and 99 */
 
   if (level < problem->maxlevel && r < 20) {
@@ -259,7 +257,9 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
   t8_locidx_t         offset;
   double              phi;
   double              vol_thresh;
-  
+  static int          seed = 10000;
+
+  srand (seed++);
   /* Get a pointer to the problem from the user data pointer of forest */
   problem = (t8_advect_problem_t *) t8_forest_get_user_data (forest);
   /* Get the element's level */
@@ -759,7 +759,6 @@ t8_advect_advance_element (t8_advect_problem_t * problem,
 {
   int                 iface, ineigh;
   double              flux_sum = 0;
-  int                 num_faces;
   double              phi;
   t8_advect_element_data_t *elem_data;
 
@@ -768,6 +767,7 @@ t8_advect_advance_element (t8_advect_problem_t * problem,
     t8_sc_array_index_locidx (problem->element_data, lelement);
   /* Get the phi value of the element */
   phi = t8_advect_element_get_phi (problem, lelement);
+  T8_ASSERT (3 <= elem_data->num_faces && elem_data->num_faces <= 4);
   /* Sum all the fluxes */
   for (iface = 0; iface < elem_data->num_faces; iface++) {
     for (ineigh = 0; ineigh < SC_MAX (1, elem_data->num_neighbors[iface]);
@@ -863,11 +863,12 @@ t8_advect_replace (t8_forest_t forest_old,
     t8_forest_get_element_in_tree (problem->forest_adapt, which_tree,
                                    first_incoming);
 
-#if 0                           /* for debugging */
+#if 1                           /* for debugging */
   t8_debugf ("first Element out:\n");
   ts->t8_element_print_element (first_outgoing_elem);
   t8_debugf ("first Element in:\n");
   ts->t8_element_print_element (first_incoming_elem);
+  t8_debugf("num_outgoing: %i  num_incoming %i\n", num_outgoing, num_incoming);
 #endif
 
   int                 elem_to_elem = 0;
@@ -967,7 +968,7 @@ t8_advect_replace (t8_forest_t forest_old,
     }
   }
 
-  /* Case 2/5: elem_old is a transition element and elem_new is a transition element of an ohter type (same level) */
+  /* Case 2/5: elem_old is a transition cell and elem_new is a transition element of an ohter type (same level) */
   else if (transition_to_transition_diff) {
     int                 subelem_out_count = 0;
     int                 subelem_in_count = 0;
@@ -982,7 +983,7 @@ t8_advect_replace (t8_forest_t forest_old,
         t8_forest_get_element_in_tree (problem->forest_adapt, which_tree,
                                        first_incoming + subelem_in_count);
 
-#if 0                           /* for debugging */
+#if 1                           /* for debugging */
       t8_debugf ("Out count: %i, In count: %i\n", subelem_out_count,
                  subelem_in_count);
       t8_debugf ("Element out:\n");
@@ -1103,21 +1104,21 @@ t8_advect_replace (t8_forest_t forest_old,
           t8_advect_element_set_phi_adapt (problem,
                                            first_incoming_data +
                                            subelem_in_count + k, phi_old);
-        }
 
-        /* Set the neighbor entries to uninitialized */
-        elem_data_in[subelem_in_count].num_faces =
-          ts->t8_element_num_faces (first_incoming_elem);
-        for (iface = 0; iface < elem_data_in[subelem_in_count].num_faces;
-             iface++) {
-          elem_data_in[subelem_in_count].num_neighbors[iface] = 0;
-          elem_data_in[subelem_in_count].flux_valid[iface] = -1;
-          elem_data_in[subelem_in_count].dual_faces[iface] = NULL;
-          elem_data_in[subelem_in_count].fluxes[iface] = NULL;
-          elem_data_in[subelem_in_count].neighs[iface] = NULL;
+          /* Set the neighbor entries to uninitialized */
+          elem_data_in[subelem_in_count + k].num_faces =
+            ts->t8_element_num_faces (first_incoming_elem);
+          for (iface = 0; iface < elem_data_in[subelem_in_count + k].num_faces;
+              iface++) {
+            elem_data_in[subelem_in_count + k].num_neighbors[iface] = 0;
+            elem_data_in[subelem_in_count + k].flux_valid[iface] = -1;
+            elem_data_in[subelem_in_count + k].dual_faces[iface] = NULL;
+            elem_data_in[subelem_in_count + k].fluxes[iface] = NULL;
+            elem_data_in[subelem_in_count + k].neighs[iface] = NULL;
+          }
+          elem_data_in[subelem_in_count + k].level =
+            elem_data_out[subelem_in_count].level;
         }
-        elem_data_in[subelem_in_count].level =
-          elem_data_out[subelem_in_count].level;
 
         subelem_out_count++;
         subelem_in_count++;
@@ -1470,7 +1471,7 @@ t8_advect_replace (t8_forest_t forest_old,
    * The other cases are:
    *   1) elem_old is a standard element and is refined into higher level elements
    *   2) elem_old is standard element and is refined to a transition cell of the same level
-   *   3) elem_old is a set of elements that are coarsened to a standard element */
+   *   3) elem_old is a set of elements (family of children or transition cell) that are coarsened to a standard element */
   else {
     /* get the mean value of all subelements of the transition cell */
     double              phi = 0, total_volume = 0;
@@ -1515,6 +1516,13 @@ t8_advect_replace (t8_forest_t forest_old,
       }
     }
   }
+  int p;
+
+  for (p = 0; p < num_incoming; p++) {
+    t8_debugf ("incoming_id: %i\n", p);
+    t8_debugf ("num_faces: %i\n", elem_data_in[p].num_faces);
+    T8_ASSERT (3 <= elem_data_in[p].num_faces && elem_data_in[p].num_faces <= 4);
+  } 
 }
 
 static void
@@ -2395,24 +2403,22 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
         elem_data = (t8_advect_element_data_t *)
           t8_sc_array_index_locidx (problem->element_data, lelement);
 
-        /* TODO: the following if case is a hot fix for a bug where a new split subelement that comes from a non split subelement
-         * did somehow had elem_data->num_faces = 0 at this point which results in a missing flux computation for its faces leading to
-         * the 'stripes' that could be observed in the solution.
-         * It remains to check where this bug comes from. */
-        t8_eclass_scheme_c *ts;
-        t8_element_t       *element_test;
-        element_test =
+        /* get the element */
+        elem =
           t8_forest_get_element_in_tree (problem->forest, itree, lelement);
+
+        /* validate that the face numbers are valid */
+        t8_eclass_scheme_c *ts;
         ts =
           t8_forest_get_eclass_scheme (problem->forest,
                                         t8_forest_get_tree_class
                                         (problem->forest, 0));
-        elem_data->num_faces = ts->t8_element_num_faces (element_test);
-        T8_ASSERT (elem_data->num_faces == 3 || elem_data->num_faces == 4);
-        elem_data->level = ts->t8_element_level (element_test);
-
-        elem =
-          t8_forest_get_element_in_tree (problem->forest, itree, lelement);
+        if (ts->t8_element_test_if_subelement (elem)) {
+          T8_ASSERT (elem_data->num_faces == 3);
+        }
+        else {
+          T8_ASSERT (elem_data->num_faces == 4);
+        }
 
         /* Compute left and right flux */
         for (iface = 0; iface < elem_data->num_faces; iface++) {   /* face loop */
@@ -2723,9 +2729,9 @@ main (int argc, char *argv[])
                       "\t\t4 - 2D rotation around (0.5,0.5).\n"
                       "\t\t5 - 2D flow around circle at (0.5,0.5)"
                       "with radius 0.15.\n)");
-  sc_options_add_int (opt, 'l', "level", &level, 3,
+  sc_options_add_int (opt, 'l', "level", &level, 4,
                       "The minimum refinement level of the mesh.");
-  sc_options_add_int (opt, 'r', "rlevel", &reflevel, 1,
+  sc_options_add_int (opt, 'r', "rlevel", &reflevel, 2,
                       "The number of adaptive refinement levels.");
   sc_options_add_int (opt, 'e', "elements", &eclass_int, T8_ECLASS_QUAD,
                       "If specified the coarse mesh is a hypercube\n\t\t\t\t     consisting of the"
@@ -2742,11 +2748,11 @@ main (int argc, char *argv[])
   sc_options_add_int (opt, 'd', "dim", &dim, -1,
                       "In combination with -f: The dimension of the mesh. 1 <= d <= 3.");
 
-  sc_options_add_double (opt, 'T', "end-time", &T, 1,
+  sc_options_add_double (opt, 'T', "end-time", &T, 0.1,
                          "The duration of the simulation. Default: 1");
 
   sc_options_add_double (opt, 'C', "CFL", &cfl,
-                         0.5, "The cfl number to use. Default: 1");
+                         0.2, "The cfl number to use. Default: 1");
   sc_options_add_double (opt, 'b', "band-width", &band_width,
                          1,
                          "Control the width of the refinement band around\n"
