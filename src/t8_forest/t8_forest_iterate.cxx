@@ -450,12 +450,12 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
         int                 number_new_elements, number_old_elements;
         int                 element_count;
         family_size = ts->t8_element_num_children (elem_new);
-        for (element_count = 0; element_count < family_size; element_count++) {
+        for (element_count = 0; element_count < family_size; element_count++) { /* iterate through the children elements and check whether they are transition cells */
           t8_element_t       *elem_in_refinement;
           elem_in_refinement =
             t8_forest_get_element_in_tree (forest_new, itree,
                                            ielem_new + element_count);
-          if (ts->t8_element_test_if_subelement (elem_in_refinement)) {
+          if (ts->t8_element_test_if_subelement (elem_in_refinement)) { /* the element could aditionally be reifned into a transition cell */
             family_size +=
               ts->t8_element_num_siblings (elem_in_refinement) - 1;
             element_count +=
@@ -463,7 +463,7 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
           }
         }
         number_new_elements = family_size;
-        if (ts->t8_element_test_if_subelement (elem_old)) {
+        if (ts->t8_element_test_if_subelement (elem_old)) { /* check whether the old element is a transition cell */
           number_old_elements = ts->t8_element_num_siblings (elem_old);
         }
         else {
@@ -487,7 +487,7 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
         }
         int                 element_count;
         family_size = ts->t8_element_num_children (elem_old);
-        for (element_count = 0; element_count < family_size; element_count++) {
+        for (element_count = 0; element_count < family_size; element_count++) { /* again check if old elements are transition cells */
           t8_element_t       *elem_in_family;
           int                 subelement_number;
           elem_in_family =
