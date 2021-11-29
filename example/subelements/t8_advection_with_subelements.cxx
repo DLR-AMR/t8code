@@ -410,8 +410,12 @@ t8_advect_l_infty_rel (const t8_advect_problem_t * problem,
       t8_sc_array_index_locidx (problem->element_data, ielem);
 
     /* Compute the analytical solution */
+    double ana_sol_transported[3] = {};
+    ana_sol_transported[0] = elem_data->midpoint[0] - 0.05;
+    ana_sol_transported[1] = elem_data->midpoint[1] - 0.1;
+    ana_sol_transported[2] = elem_data->midpoint[2];
     ana_sol =
-      analytical_sol (elem_data->midpoint, problem->t,
+      analytical_sol (ana_sol_transported, problem->t,
                       problem->udata_for_phi);
 #if 1
     if (fabs (ana_sol) < distance)
@@ -451,9 +455,13 @@ t8_advect_l_2_rel (const t8_advect_problem_t * problem,
   for (ielem = 0; ielem < num_local_elements; ielem++) {
     elem_data = (t8_advect_element_data_t *)
       t8_sc_array_index_locidx (problem->element_data, ielem);
-    /* Compute the analytical solution */
+    /* Compute the analytical solution at time T (transported by (0.2,0.4)) */
+    double ana_sol_transported[3] = {};
+    ana_sol_transported[0] = elem_data->midpoint[0] - 0.05;
+    ana_sol_transported[1] = elem_data->midpoint[1] - 0.1;
+    ana_sol_transported[2] = elem_data->midpoint[2];
     ana_sol =
-      analytical_sol (elem_data->midpoint, problem->t,
+      analytical_sol (ana_sol_transported, problem->t,
                       problem->udata_for_phi);
 #if 1
     if (fabs (ana_sol) < distance)
@@ -829,8 +837,8 @@ t8_advect_global_conservation_check (double scaled_global_phi_beginning, double 
 {
   double diff_phi_global = scaled_global_phi_beginning - scaled_global_phi_end;
   double abs_diff_phi_global = ((diff_phi_global < 0) ? -diff_phi_global : diff_phi_global);
-  t8_debugf ("global_phi_beginning: %f global_phi_end: %f abs_diff_phi_global: %f, 1/2^30: %f\n", scaled_global_phi_beginning, scaled_global_phi_end, abs_diff_phi_global, 1.0/(1 << 30));
-  return ((abs_diff_phi_global < (1.0/(1 << 30))) ? 1 : 0);
+  t8_debugf ("global_phi_beginning: %f global_phi_end: %f abs_diff_phi_global: %f, 1/2^30: %f\n", scaled_global_phi_beginning, scaled_global_phi_end, abs_diff_phi_global, 1.0/(1 << 53));
+  return ((abs_diff_phi_global < (1.0/(1 << 53))) ? 1 : 0);
 }
 
 static int
@@ -838,8 +846,8 @@ t8_advect_conservation_check_phi (double outgoing_phi, double incoming_phi)
 {
   double diff_phi = outgoing_phi - incoming_phi;
   double abs_diff_phi = ((diff_phi < 0) ? -diff_phi : diff_phi);
-  t8_debugf ("outgoing_phi: %f incoming_phi: %f abs_diff_phi: %f, 1/2^30: %f\n", outgoing_phi, incoming_phi, abs_diff_phi, 1.0/(1 << 30));
-  return ((abs_diff_phi < (1.0/(1 << 30))) ? 1 : 0);
+  t8_debugf ("outgoing_phi: %f incoming_phi: %f abs_diff_phi: %f, 1/2^30: %f\n", outgoing_phi, incoming_phi, abs_diff_phi, 1.0/(1 << 53));
+  return ((abs_diff_phi < (1.0/(1 << 53))) ? 1 : 0);
 }
 
 static int
@@ -847,8 +855,8 @@ t8_advect_conservation_check_volume (double outgoing_volume, double incoming_vol
 {
   double diff_volume = outgoing_volume - incoming_volume;
   double abs_diff_volume = ((diff_volume < 0) ? -diff_volume : diff_volume);
-  t8_debugf ("outgoing_volume: %f incoming_volume: %f abs_diff_volume: %f, 1/2^30: %f\n", outgoing_volume, incoming_volume, abs_diff_volume, 1.0/(1 << 30));
-  return ((abs_diff_volume < (1.0/(1 << 30))) ? 1 : 0);
+  t8_debugf ("outgoing_volume: %f incoming_volume: %f abs_diff_volume: %f, 1/2^30: %f\n", outgoing_volume, incoming_volume, abs_diff_volume, 1.0/(1 << 53));
+  return ((abs_diff_volume < (1.0/(1 << 53))) ? 1 : 0);
 }
 
 /* Replace callback to decide how to interpolate a refined or coarsened element.
@@ -2746,8 +2754,8 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                  advect_stat_names[ADVECT_VOL_LOSS]);
 
   /* Compute l_infty error */
-  l_infty = t8_advect_l_infty_rel (problem, phi_0, 0.025);
-  L_2 = t8_advect_l_2_rel (problem, phi_0, 0.025);
+  l_infty = t8_advect_l_infty_rel (problem, phi_0, 0.1);
+  L_2 = t8_advect_l_2_rel (problem, phi_0, 0.1);
   t8_global_essentialf
     ("[advect] Done. t = %g \t l_infty error:\t%e\tL_2:\t%e\n", problem->t,
      l_infty, L_2);
@@ -2798,7 +2806,7 @@ main (int argc, char *argv[])
 
   sc_options_add_switch (opt, 'h', "help", &helpme,
                          "Display a short help message.");
-  sc_options_add_int (opt, 'u', "flow", &flow_arg, 1,
+  sc_options_add_int (opt, 'u', "flow", &flow_arg, 7,
                       "Choose the flow field u.\n"
                       "\t\t1 - Constant 1 in x-direction.\n"
                       "\t\t2 - Constant 1 in x,y, and z.\n"
@@ -2807,9 +2815,9 @@ main (int argc, char *argv[])
                       "\t\t4 - 2D rotation around (0.5,0.5).\n"
                       "\t\t5 - 2D flow around circle at (0.5,0.5)"
                       "with radius 0.15.\n)");
-  sc_options_add_int (opt, 'l', "level", &level, 4,
+  sc_options_add_int (opt, 'l', "level", &level, 3,
                       "The minimum refinement level of the mesh.");
-  sc_options_add_int (opt, 'r', "rlevel", &reflevel, 2,
+  sc_options_add_int (opt, 'r', "rlevel", &reflevel, 1,
                       "The number of adaptive refinement levels.");
   sc_options_add_int (opt, 'e', "elements", &eclass_int, T8_ECLASS_QUAD,
                       "If specified the coarse mesh is a hypercube\n\t\t\t\t     consisting of the"
@@ -2826,17 +2834,17 @@ main (int argc, char *argv[])
   sc_options_add_int (opt, 'd', "dim", &dim, -1,
                       "In combination with -f: The dimension of the mesh. 1 <= d <= 3.");
 
-  sc_options_add_double (opt, 'T', "end-time", &T, 0.1,
+  sc_options_add_double (opt, 'T', "end-time", &T, 0.111803,
                          "The duration of the simulation. Default: 1");
 
   sc_options_add_double (opt, 'C', "CFL", &cfl,
-                         0.2, "The cfl number to use. Default: 1");
+                         0.25, "The cfl number to use. Default: 1");
   sc_options_add_double (opt, 'b', "band-width", &band_width,
                          1,
                          "Control the width of the refinement band around\n"
                          " the zero level-set. Default 1.");
 
-  sc_options_add_int (opt, 'a', "adapt-freq", &adapt_freq, 5,
+  sc_options_add_int (opt, 'a', "adapt-freq", &adapt_freq, 1,
                       "Controls how often the mesh is readapted. "
                       "A value of i means, every i-th time step.");
 
@@ -2914,7 +2922,7 @@ main (int argc, char *argv[])
       t8_cmesh_vtk_write_file (cmesh, "advection_cmesh", 1.0);
     }
     /* Computation */
-    if (1) {                    /* standard phi_0 */
+    if (0) {                    /* Gauss-pulse phi_0 */
       t8_advect_solve (cmesh, u,
                        t8_levelset_sphere, &ls_data,
                        level,
@@ -2922,13 +2930,21 @@ main (int argc, char *argv[])
                        adapt_freq, no_vtk, vtk_freq, band_width, dim,
                        dummy_op, volume_refine);
     }
-    else {                      /* constant phi_0 */
+    else if (0){                      /* constant 1 phi_0 */
       t8_advect_solve (cmesh, u,
                        t8_constant, &ls_data,
                        level,
                        level + reflevel, T, cfl, sc_MPI_COMM_WORLD,
                        adapt_freq, no_vtk, vtk_freq, band_width, dim,
                        dummy_op, volume_refine);
+    }
+    else {              /* on [0,1]^2 periodic trigonometric phi_0 */
+        t8_advect_solve (cmesh, u,
+                        t8_periodic_sin_cos, &ls_data,
+                        level,
+                        level + reflevel, T, cfl, sc_MPI_COMM_WORLD,
+                        adapt_freq, no_vtk, vtk_freq, band_width, dim,
+                        dummy_op, volume_refine);
     }
   }
   else {
