@@ -510,7 +510,7 @@ t8_cmesh_set_attribute (t8_cmesh_t cmesh, t8_gloidx_t gtree_id,
   T8_ASSERT (!cmesh->committed);
 
   t8_stash_add_attribute (cmesh->stash, gtree_id, package_id, key, data_size,
-                          data, data_persists);
+                          data, !data_persists);
 }
 
 void
