@@ -991,14 +991,6 @@ t8_dpyramid_num_siblings (const t8_dpyramid_t * p)
   t8_dpyramid_t       parent;
   if (p->level == 0) {
     /* A level zero pyramid has only itself as sibling. */
-    
-    /* P has no parent. We deliberately set the level of the parent to -1,
-     * because a) parent should not be used and setting the level to an invalid
-     *            value improves chances of catching a non-allowed use of it in an assertion later.
-     *         b) t8_dpyramid_successor caused a compiler warning of parent.level may be used uninitialize
-     *            in a subsequent call to t8_dpyramid_shape. This case is actually never executed, but the
-     *            compiler doesn't know about it. To prevent this warning, we set the level here.
-     */
     return 1;
   }
   t8_dpyramid_parent (p, &parent);
