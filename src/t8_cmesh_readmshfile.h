@@ -69,6 +69,8 @@ typedef struct
   t8_locidx_t         index;
   double              coordinates[3];
   double              parameters[2];
+  int                 parametric;
+  int                 changed_parameters = 0;
   int                 entity_dim;
   t8_locidx_t         entity_tag;
 } t8_msh_file_node_parametric_t;
