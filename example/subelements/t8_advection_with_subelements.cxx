@@ -176,6 +176,14 @@ t8_advect_element_get_phi (const t8_advect_problem_t * problem,
            t8_sc_array_index_locidx (problem->phi_values, ielement));
 }
 
+static double
+t8_advect_element_get_phi_adapt (const t8_advect_problem_t * problem,
+                           t8_locidx_t ielement)
+{
+  return *((double *)
+           t8_sc_array_index_locidx (problem->phi_values_adapt, ielement));
+}
+
 static int
 t8_advect_get_global_phi (const t8_advect_problem_t * problem,
                           t8_locidx_t ielement)
@@ -810,6 +818,24 @@ t8_advect_compute_element_data (t8_advect_problem_t * problem,
                               tree_vertices);
 }
 
+static int
+t8_advect_conservation_check_phi (double outgoing_phi, double incoming_phi) 
+{
+  double diff_phi = outgoing_phi - incoming_phi;
+  double abs_diff_phi = ((diff_phi < 0) ? -diff_phi : diff_phi);
+  t8_debugf ("outgoing_phi: %f incoming_phi: %f abs_diff_phi: %f, 1/2^30: %f\n", outgoing_phi, incoming_phi, abs_diff_phi, 1.0/(1 << 30));
+  return ((abs_diff_phi < (1.0/(1 << 30))) ? 1 : 0);
+}
+
+static int
+t8_advect_conservation_check_volume (double outgoing_volume, double incoming_volume) 
+{
+  double diff_volume = outgoing_volume - incoming_volume;
+  double abs_diff_volume = ((diff_volume < 0) ? -diff_volume : diff_volume);
+  t8_debugf ("outgoing_volume: %f incoming_volume: %f abs_diff_volume: %f, 1/2^30: %f\n", outgoing_volume, incoming_volume, abs_diff_volume, 1.0/(1 << 30));
+  return ((abs_diff_volume < (1.0/(1 << 30))) ? 1 : 0);
+}
+
 /* Replace callback to decide how to interpolate a refined or coarsened element.
  * If an element is refined, each child gets the phi value of its parent.
  * If elements are coarsened, the parent gets the average phi value of the children.
@@ -870,6 +896,15 @@ t8_advect_replace (t8_forest_t forest_old,
   ts->t8_element_print_element (first_incoming_elem);
   t8_debugf("num_outgoing: %i  num_incoming %i\n", num_outgoing, num_incoming);
 #endif
+
+  int elem_out_count;
+  double outgoing_phi = 0, outgoing_volume = 0;
+  for (elem_out_count = 0; elem_out_count < num_outgoing; elem_out_count++) {
+    outgoing_phi +=
+      t8_advect_element_get_phi (problem, first_outgoing_data + elem_out_count) 
+        * elem_data_out[elem_out_count].vol;
+    outgoing_volume += elem_data_out[elem_out_count].vol;
+  }
 
   int                 elem_to_elem = 0;
   int                 tranition_to_transition_same = 0;
@@ -1516,13 +1551,24 @@ t8_advect_replace (t8_forest_t forest_old,
       }
     }
   }
-  int p;
+  
+  int elem_in_count;
+  double incoming_phi = 0, incoming_volume = 0;
+  for (elem_in_count = 0; elem_in_count < num_incoming; elem_in_count++) {
+    incoming_phi +=
+      t8_advect_element_get_phi_adapt (problem, first_incoming_data + elem_in_count) 
+        * elem_data_in[elem_in_count].vol;
+    incoming_volume += elem_data_in[elem_in_count].vol;
+  }
 
-  for (p = 0; p < num_incoming; p++) {
-    t8_debugf ("incoming_id: %i\n", p);
-    t8_debugf ("num_faces: %i\n", elem_data_in[p].num_faces);
-    T8_ASSERT (3 <= elem_data_in[p].num_faces && elem_data_in[p].num_faces <= 4);
-  } 
+  /* Check that conservation is fulfilled for each interpolation step. 
+   * We require, that: 
+   *    1) the volume difference of the sum of all incoming and outgoing elements is at most 2^-30
+   *    2) the volume scaled phi difference of the sum of all incoming and outgoing elements is at most 2^-30
+   */
+  T8_ASSERT (t8_advect_conservation_check_volume (outgoing_volume, incoming_volume));
+  T8_ASSERT (t8_advect_conservation_check_phi (outgoing_phi, incoming_phi));
+
 }
 
 static void
