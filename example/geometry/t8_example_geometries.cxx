@@ -41,6 +41,9 @@
 #include <TColgp_Array2OfPnt.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepPrimAPI_MakePrism.hxx>
+#include <BRepBuilderAPI_MakeFace.hxx>
+#include <BRepBuilderAPI_MakeEdge.hxx>
+#include <BRepAlgoAPI_Fuse.hxx>
 #include <TopoDS_Face.hxx>
 #include <TopoDS_Edge.hxx>
 #include <TopoDS.hxx>
@@ -548,15 +551,13 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     ("Creating uniform level %i forests with occ curve geometries.\n",
     level);
 
-    /* Create occ geometry. */
-    t8_geometry_occ *geometry_occ = new t8_geometry_occ (3, "occ curve dim=3");
-
     /* Create two occ bsplines which oscillate along the x-axis. 
      * For this we need to define two arrays from which we create the bsplines. */
     Handle_Geom_Curve       occ_curve0;
     Handle_Geom_Curve       occ_curve1;
     TColgp_Array1OfPnt      point_array0(1, 5);
     TColgp_Array1OfPnt      point_array1(1, 5);
+    TopoDS_Shape            shape;
 
     /* Define knots along the bsplines. */ 
     point_array0(1) = gp_Pnt(0, 0, 0);
@@ -575,17 +576,20 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     occ_curve0 = GeomAPI_PointsToBSpline(point_array0).Curve();
     occ_curve1 = GeomAPI_PointsToBSpline(point_array1).Curve();
 
+    /* Fill shape with bsplines so that we can create a geometry with this shape. */
+    shape = BRepBuilderAPI_MakeEdge(occ_curve0).Edge();
+    shape = BRepAlgoAPI_Fuse(shape, BRepBuilderAPI_MakeEdge(occ_curve1).Edge());
+    
+    /* Create an occ geometry. */
+    t8_geometry_occ *geometry_occ = new t8_geometry_occ (3, shape, "occ curve dim=3");
+
     /* The arrays indicate which face/edge carries a geometry. 
-     * -1 means no geometry and any other number indicates the position of the geometry 
+     * 0 means no geometry and any other number indicates the position of the geometry 
      * in the global geometry array. Here edge 0 carries occ_curve0 and edge 3 carries occ_curve1.
      * We add them in the next step. */
-    int faces[6] = {-1, -1, -1, -1, -1, -1};
-    int edges[24] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-                     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
-    
-    /* Add the curves to the geometry occ arrays */
-    edges[0] = geometry_occ->t8_geom_push_occ_curve(occ_curve0);
-    edges[3] = geometry_occ->t8_geom_push_occ_curve(occ_curve1);
+    int faces[6] = {0, 0, 0, 0, 0, 0};
+    int edges[24] = {1, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0,
+                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
       
     /* Create tree 0 */
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
@@ -630,12 +634,10 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     ("Creating uniform level %i forests with a occ surface geometry.\n",
     level);
 
-    /* Create occ geometry. */
-    t8_geometry_occ *geometry_occ = new t8_geometry_occ (3, "occ surface dim=3");
-
     /* Create a occ bspline surface with 2D array of knots */
     Handle_Geom_Surface       occ_surface;
     TColgp_Array2OfPnt        point_array(1, 5, 1, 3);
+    TopoDS_Shape              shape;
     
     /*  Filling the 2D surface array with knots. The resulting surface resembles a surface at the top (face 5) of the trees.
      *  Some of the knots have the same position as the vertices of the trees. These knots are marked with the tree id and vertex index. 
@@ -679,19 +681,21 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     point_array(4, 3) = gp_Pnt( 1.5,  1.0,  1.0);
     point_array(5, 3) = gp_Pnt( 2.2,  1.2,  1.2); // t1_v5
 
-    /* Generate bspline surface from array. */
+    /* Generate bspline surface from array and fill shape with it
+     * so that we can create a geometry with this shape. */
     occ_surface = GeomAPI_PointsToBSplineSurface(point_array).Surface();
+    shape = BRepBuilderAPI_MakeFace(occ_surface, 1e-6).Face();
 
     /* The arrays indicate which face/edge carries a geometry. 
-     * -1 means no geometry and any other number indicates the position of the geometry 
+     * 0 means no geometry and any other number indicates the position of the geometry 
      * in the global geometry array. Here face 5 carries the surface, we add it in the next step. 
-     * There are no geometries linked to the edges, hence all entries are -1. */
-    int faces[6] = {-1, -1, -1, -1, -1, -1};
-    int edges[24] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-                     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+     * There are no geometries linked to the edges, hence all entries are 0. */
+    int faces[6] = {0, 0, 0, 0, 0, 1};
+    int edges[24] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     
-    /* Add the surface to the geometry occ array */
-    faces[5] = geometry_occ->t8_geom_push_occ_surface(occ_surface);
+    /* Create occ geometry. */
+    t8_geometry_occ *geometry_occ = new t8_geometry_occ (3, shape, "occ surface dim=3");
       
     /* Create tree 0*/
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
@@ -772,9 +776,6 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     ("Creating uniform level %i forests with an occ cylinder geometry.\n",
      level);
 
-    /* Create occ geometry. */
-    t8_geometry_occ *geometry_occ = new t8_geometry_occ (3, "occ surface dim=3"); 
-
     /* Create occ cylinder surfaces. We use an outer radius of 0.5 to get a diameter of 1.*/
     double radius_inner = 0.25;
     double radius_outer = 0.5;
@@ -796,18 +797,21 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     TopoDS_Edge edge_inner = make_inner_edge.Edge();
     TopoDS_Face face_inner = TopoDS::Face(BRepPrimAPI_MakePrism(edge_inner, height));
     Handle_Geom_Surface cylinder_inner = BRep_Tool::Surface(face_inner);
+    TopoDS_Shape shape = BRepBuilderAPI_MakeFace(cylinder_outer, 1e-6).Face();
+    
+    /* Fill shape with mantles so that we can create a geometry with this shape. */
+    shape = BRepAlgoAPI_Fuse(shape, BRepBuilderAPI_MakeFace(cylinder_inner, 1e-6).Face());
 
     /* The arrays indicate which face/edge carries a geometry. 
-     * -1 means no geometry and any other number indicates the position of the geometry 
+     * 0 means no geometry and any other number indicates the position of the geometry 
      * in the global geometry array. Here face 0 carries the outer cylinder and face 1 carries the inner cylinder.
-     * We add them in the next step. The edges do not have any geometries, hence all entries are -1. */
-    int faces[6] = {-1, -1, -1, -1, -1, -1};
-    int edges[24] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-                     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
-    
-    /* Add the surfaces to the geometry occ array */
-    faces[0] = geometry_occ->t8_geom_push_occ_surface(cylinder_outer);
-    faces[1] = geometry_occ->t8_geom_push_occ_surface(cylinder_inner);
+     * We add them in the next step. The edges do not have any geometries, hence all entries are 0. */
+    int faces[6] = {1, 2, 0, 0, 0, 0};
+    int edges[24] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+    /* Create occ geometry. */
+    t8_geometry_occ *geometry_occ = new t8_geometry_occ (3, shape, "occ surface dim=3"); 
 
     /* Create corresponding trees and parameters. 
      * Here we create num trees by a coordinate transformation from cylinder to cartesian coordinates. */

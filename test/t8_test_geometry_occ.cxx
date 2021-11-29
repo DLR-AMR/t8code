@@ -26,10 +26,14 @@
 #if T8_WITH_OCC
 #include <GeomAPI_PointsToBSpline.hxx>
 #include <GeomAPI_PointsToBSplineSurface.hxx>
+#include <BRepBuilderAPI_MakeFace.hxx>
+#include <BRepBuilderAPI_MakeEdge.hxx>
 #include <TColgp_Array1OfPnt.hxx>
 #include <TColgp_Array2OfPnt.hxx>
 #include <Geom_BSplineCurve.hxx>
 #include <Geom_BSplineSurface.hxx>
+#include <TopoDS_Face.hxx>
+#include <TopoDS_Edge.hxx>
 #endif
 
 /** Euler rotation around intrinsic zxz. 
@@ -65,18 +69,17 @@ t8_euler_rotation (double *pos_vec,
   }
 }
 
-/** Constructs an occ surface for testing purpsoes. Surface is build between vertex 0, 1, 4 and 5 of a unit hexahedron.
- * Saves the surface in the geometry surface array.
- * \param [in] geometry               A geometry to save the occ surface in.
- * \return                            The index of the surface in the geometry.
+/** Constructs an occ surface for testing purposes. Surface is build between vertex 0, 1, 4 and 5 of a unit hexahedron.
+ * Saves the surface in the geometry shape.
+ * \return                            The geometry.
  */
-int
-t8_create_occ_surface (t8_geometry_occ *geometry)
+t8_geometry_occ *
+t8_create_occ_surface_geometry ()
 {
   #if T8_WITH_OCC
-  int surface_index;
   Handle_Geom_Surface surface;
-  TColgp_Array2OfPnt point_array(1, 3, 1, 3);
+  TopoDS_Shape        shape;
+  TColgp_Array2OfPnt  point_array(1, 3, 1, 3);
 
   point_array(1, 1) = gp_Pnt(0, 0, 0);
   point_array(2, 1) = gp_Pnt(-0.2, 0.2, 0.5);
@@ -89,28 +92,27 @@ t8_create_occ_surface (t8_geometry_occ *geometry)
   point_array(1, 3) = gp_Pnt(1, 0, 0);
   point_array(2, 3) = gp_Pnt(1.2, -0.2, 0.5);
   point_array(3, 3) = gp_Pnt(1, 0, 1);
-
+  
   surface = GeomAPI_PointsToBSplineSurface(point_array).Surface();
-  surface_index = geometry->t8_geom_push_occ_surface(surface);
-  return surface_index;
-
+  shape = BRepBuilderAPI_MakeFace(surface, 1e-6).Face();
+  t8_geometry_occ   *geometry = new t8_geometry_occ (3, shape, "occ dim=3");
+  return geometry;
   #else /* !T8_WITH_OCC */
   SC_ABORTF("OCC not linked");
   #endif /* T8_WITH_OCC */ 
 }
 
 /** Constructs an occ curve for testing purpsoes. Curve is build between vertex 0, 1, 4 and 5 of a unit hexahedron.
- * Saves the curve in the geometry curve array.
- * \param [in] geometry               A geometry to save the occ curve in.
- * \return                            The index of the curve in the geometry.
+ * Saves the curve in the geometry shape.
+ * \return                            The occ geometry.
  */
-int
-t8_create_occ_curve (t8_geometry_occ *geometry)
+t8_geometry_occ *
+t8_create_occ_curve_geometry ()
 {
   #if T8_WITH_OCC
-  int curve_index;
-  Handle_Geom_Curve curve;
-  TColgp_Array1OfPnt point_array(1, 5);
+  Handle_Geom_Curve   curve;
+  TopoDS_Shape        shape;
+  TColgp_Array1OfPnt  point_array(1, 5);
 
   point_array(1) = gp_Pnt(0.00, 0.00, 0.00);
   point_array(2) = gp_Pnt(0.24, 0.20, 0.20);
@@ -119,9 +121,9 @@ t8_create_occ_curve (t8_geometry_occ *geometry)
   point_array(5) = gp_Pnt(1.00, 0.00, 0.00);
 
   curve = GeomAPI_PointsToBSpline(point_array).Curve();
-  curve_index = geometry->t8_geom_push_occ_curve(curve);
-  return curve_index;
-
+  shape = BRepBuilderAPI_MakeEdge(curve).Edge();
+  t8_geometry_occ   *geometry = new t8_geometry_occ (3, shape, "occ dim=3");
+  return geometry;
   #else /* !T8_WITH_OCC */
   SC_ABORTF("OCC not linked");
   #endif /* T8_WITH_OCC */ 
@@ -149,8 +151,8 @@ t8_create_occ_hypercube (double *rot_vec,
   }
 
   t8_cmesh_t        cmesh;
+  t8_geometry_occ  *geometry;
   t8_cmesh_init     (&cmesh);
-  t8_geometry_occ   *geometry = new t8_geometry_occ (3, "occ dim=3");
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
   
   double rotated_vertices[24], vertices[24] = 
@@ -169,20 +171,22 @@ t8_create_occ_hypercube (double *rot_vec,
   t8_euler_rotation(vertices, rot_vec, rotated_vertices, rotation_origin, 8);
   t8_cmesh_set_tree_vertices (cmesh, 0, rotated_vertices, 24);
   
-  int faces[6] = {-1, -1, -1, -1, -1, -1};
+  int faces[6] = {0, 0, 0, 0, 0, 0};
   if (face >= 0)
   {
-    faces[face] = t8_create_occ_surface(geometry);
+    faces[face] = 1;
+    geometry = t8_create_occ_surface_geometry();
     t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), 
                             T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY + face, 
                             parameters, 8 * sizeof(double), 0);
   }
   
-  int edges[24] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-                   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+  int edges[24] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
   if (edge >= 0)
   {
-    edges[edge] = t8_create_occ_curve(geometry);
+    edges[edge] = 1;
+    geometry = t8_create_occ_curve_geometry();
     t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), 
                             T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + edge, 
                             parameters, 2 * sizeof(double), 0);

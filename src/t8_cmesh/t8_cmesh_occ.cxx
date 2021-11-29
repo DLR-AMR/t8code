@@ -33,7 +33,9 @@
 #if T8_WITH_OCC
 #include <gp_Pnt.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
+#include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepPrimAPI_MakePrism.hxx>
+#include <BRepAlgoAPI_Fuse.hxx>
 #include <TopoDS_Face.hxx>
 #include <TopoDS_Edge.hxx>
 #include <TopoDS.hxx>
@@ -53,9 +55,12 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_profiling(cmesh, 1);
-  t8_geometry_occ *geometry_occ = new t8_geometry_occ (3, "occ surface dim=3");
   t8_geometry_c *geometry_linear = t8_geometry_linear_new (3);
-  int cylinder_outer_index, cylinder_inner_index;
+  int cylinder_outer_index = 1, cylinder_inner_index = 2;
+  #if T8_WITH_OCC
+  TopoDS_Shape shape;
+  #endif /* T8_WITH_OCC */ 
+
   
   if (with_occ_geometry)
   {
@@ -77,13 +82,18 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
     const TopoDS_Edge edge_inner = make_inner_edge.Edge();
     const TopoDS_Face face_inner = TopoDS::Face(BRepPrimAPI_MakePrism(edge_inner, height));
     const Handle_Geom_Surface cylinder_inner = BRep_Tool::Surface(face_inner);
-    cylinder_outer_index = geometry_occ->t8_geom_push_occ_surface(cylinder_outer);
-    cylinder_inner_index = geometry_occ->t8_geom_push_occ_surface(cylinder_inner);
+
+    /* Fill shape with mantles so that we can create a geometry with this shape. */
+    shape = BRepBuilderAPI_MakeFace(cylinder_outer, 1e-6).Face();
+    shape = BRepAlgoAPI_Fuse(shape, BRepBuilderAPI_MakeFace(cylinder_inner, 1e-6).Face());
     #else /* !T8_WITH_OCC */
     SC_ABORTF("OCC not linked");
     #endif /* T8_WITH_OCC */ 
   }
-  
+  #if T8_WITH_OCC
+  t8_geometry_occ *geometry_occ = new t8_geometry_occ (3, shape, "occ surface dim=3");
+  #endif /* T8_WITH_OCC */ 
+
   double *vertices, *parameters;
   const double radius_outer = 0.5, radius_inner = 0.25;
   const double dr = (radius_outer - radius_inner) / num_radial_trees;
@@ -142,15 +152,15 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
             parameters[(i_tangential_trees * num_axial_trees + i_axial_trees) * 8 + 7] = 0.5 -(i_axial_trees + 1) * dh;
           }
 
-          int edges[24] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-                           -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+          int edges[24] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
           /* If geometry on both sides of cell */
           if (num_radial_trees == 1)
           {
             #if T8_WITH_OCC
             /* Assign occ geometries to the corresponding faces */
-            int faces[6] = {-1, -1, -1, -1, -1, -1};
+            int faces[6] = {0, 0, 0, 0, 0, 0};
             faces[0] = cylinder_outer_index;
             faces[1] = cylinder_inner_index;
             
@@ -175,7 +185,7 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
           {
             #if T8_WITH_OCC
             /* Assign occ geometries to the corresponding faces */
-            int faces[6] = {-1, -1, -1, -1, -1, -1};
+            int faces[6] = {0, 0, 0, 0, 0, 0};
             faces[1] = cylinder_inner_index;
 
             /* Assign attributes to cmesh cells */
@@ -195,7 +205,7 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
           {
             #if T8_WITH_OCC
             /* Assign occ geometries to the corresponding faces */
-            int faces[6] = {-1, -1, -1, -1, -1, -1};
+            int faces[6] = {0, 0, 0, 0, 0, 0};
             faces[0] = cylinder_outer_index;
 
             /* Assign attributes to cmesh cells */
@@ -215,7 +225,7 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
           {
             #if T8_WITH_OCC
             /* Assign occ geometries to the corresponding faces */
-            int faces[6] = {-1, -1, -1, -1, -1, -1};
+            int faces[6] = {0, 0, 0, 0, 0, 0};
 
             /* Assign attributes to cmesh cells */
             t8_cmesh_set_attribute (cmesh, (i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees, t8_get_package_id(), 

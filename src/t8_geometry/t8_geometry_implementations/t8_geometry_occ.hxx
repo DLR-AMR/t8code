@@ -36,14 +36,23 @@
 #include <t8_geometry/t8_geometry_base.hxx>
 #include <t8_cmesh/t8_cmesh_types.h>
 
+#include <TopoDS_Shape.hxx>
+#include <TopExp.hxx>
+#include <gp_Pnt.hxx>
 #include <Geom_Curve.hxx>
 #include <Geom_Surface.hxx>
 
-#include <vector>
-
-/* Gives the vertices of each edge of a hexahedron. Used in the occ geometry. */
+/* The vertices of each edge of a hexahedron. Used in the occ geometry. */
 extern const int
 t8_edge_vertex_to_tree_vertex[T8_ECLASS_MAX_EDGES][2];
+
+/* The faces connected to each edge. */
+extern const int
+t8_edge_to_face[T8_ECLASS_MAX_EDGES][2];
+
+/* The edges of a face to the edges of a tree */
+extern const int
+t8_face_edge_to_tree_edge[T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_EDGES];
 
 /**
  * Definition of an occ geometry function.
@@ -70,9 +79,18 @@ public:
   /**
    * Constructor of the occ geometry class.
    * \param [in] dimension  The dimension of this geometry.
+   * \param [in] fileprefix Prefix of a .brep file from which to extract an occ geometry.
    * \param [in] name       The name to give this geometry.
    */
-  t8_geometry_occ (int dimension, const char *name);
+  t8_geometry_occ (int dimension, const char *fileprefix, const char *name);
+
+  /**
+   * Constructor of the occ geometry class.
+   * \param [in] dimension  The dimension of this geometry.
+   * \param [in] occ_shape  Occ shape geometry.
+   * \param [in] name       The name to give this geometry.
+   */
+  t8_geometry_occ (int dimension, const TopoDS_Shape occ_shape, const char *name);
 
   /** The destructor. 
    * Clears the allocated memory.
@@ -89,10 +107,11 @@ public:
    * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
    */
-  virtual void        t8_geom_evaluate (t8_cmesh_t cmesh,
-                                        t8_gloidx_t gtreeid,
-                                        const double *ref_coords,
-                                        double out_coords[3]) const;
+  virtual void
+  t8_geom_evaluate (t8_cmesh_t cmesh,
+                    t8_gloidx_t gtreeid,
+                    const double *ref_coords,
+                    double out_coords[3]) const;
 
   /**
    * Not yet implemented.
@@ -107,10 +126,11 @@ public:
    * dim 1: J = (0)   dim 2: J = (0 1)  dim 3: J = (0 1 0)
    *            (0)              (0 0)             (0 0 1)
    */
-  virtual void        t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
-                                                t8_gloidx_t gtreeid,
-                                                const double *ref_coords,
-                                                double *jacobian) const;
+  virtual void
+  t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
+                            t8_gloidx_t gtreeid,
+                            const double *ref_coords,
+                            double *jacobian) const;
 
 
   /** Update a possible internal data buffer for per tree data.
@@ -120,29 +140,140 @@ public:
    * \param [in]  cmesh      The cmesh.
    * \param [in]  gtreeid    The global tree.
    */
-  virtual void        t8_geom_load_tree_data (t8_cmesh_t cmesh,
-                                              t8_gloidx_t gtreeid);
+  virtual void 
+  t8_geom_load_tree_data (t8_cmesh_t cmesh,
+                          t8_gloidx_t gtreeid);
 
-  /** Push a new occ curve into the occ_curves array. The position gets saved in index.
-   * \param [in]  curve      The occ curve.
-   * \param [out] index      The index of the curve in the occ_curves array.
+  /** Get an occ point from the occ_shape.
+   * \param [in] index      The index of the point in the occ_shape.
+   * \return                The occ point.
    */
-  int        t8_geom_push_occ_curve (Handle_Geom_Curve curve);
+  gp_Pnt
+  t8_geom_get_occ_point (int index);
+  
+  /** Get an occ curve from the occ_shape.
+   * \param [in] index      The index of the curve in the occ_shape.
+   * \return                The occ curve.
+   */
+  Handle_Geom_Curve
+  t8_geom_get_occ_curve (int index);
 
-  /** Push a new occ surface into the occ_surfaces array. The position gets saved in index.
-   * \param [in]  surface    The occ surface.
-   * \param [out] index      The index of the surface in the occ_surfaces array.
+  /** Get an occ surface from the occ_shape.
+   * \param [in] index      The index of the surface in the occ_shape.
+   * \return                The occ surface.
    */
-  int        t8_geom_push_occ_surface (Handle_Geom_Surface surface);
+  Handle_Geom_Surface
+  t8_geom_get_occ_surface (int index);
+
+  /** Get the occ_shape_vertex2edge_map.
+   * \return                The occ_shape_vertex_map.
+   */
+  TopTools_IndexedMapOfShape
+  t8_geom_get_occ_shape_vertex_map();
+
+  /** Get the occ_shape_edge2face_map.
+   * \return                The occ_shape_edge_map.
+   */
+  TopTools_IndexedMapOfShape
+  t8_geom_get_occ_shape_edge_map();
+
+  /** Get the occ_shape_face_map.
+   * \return                The occ_shape_face_map.
+   */
+  TopTools_IndexedMapOfShape
+  t8_geom_get_occ_shape_face_map();
+
+  /** Check if two occ points share a common occ edge.
+   * \param [in] vertex1_index  The index of the first occ point.
+   * \param [in] vertex2_index  The index of the second occ point.
+   * \return                    Index of the shared edge. 0 if there is no shared edge.
+   */
+  int
+  t8_geom_get_common_edge (int vertex1_index, int vertex2_index);
+
+  /** Check if two occ edges share a common occ face.
+   * \param [in] edge1_index    The index of the first occ edge.
+   * \param [in] edge2_index    The index of the second occ edge.
+   * \return                    Index of the shared face. 0 if there is no shared face.
+   */
+  int
+  t8_geom_get_common_face (int edge1_index, int edge2_index);
+
+  /** Check if a occ vertex lies on an occ edge.
+   * \param [in] vertex_index   The index of the occ vertex.
+   * \param [in] edge_index     The index of the occ edge.
+   * \return                    1 if vertex lies on edge, otherwise 0.
+   */
+  int
+  t8_geom_is_vertex_on_edge (int vertex_index, int edge_index);
+
+  /** Check if a occ vertex lies on an occ edge.
+   * \param [in] edge_index     The index of the occ vertex.
+   * \param [in] face_index     The index of the occ edge.
+   * \return                    1 if vertex lies on edge, otherwise 0.
+   */
+  int
+  t8_geom_is_edge_on_face (int edge_index, int face_index);
+
+  /** Check if a occ vertex lies on an occ face.
+   * \param [in] vertex_index   The index of the occ vertex.
+   * \param [in] face_index     The index of the occ face.
+   * \return                    1 if vertex lies on face, otherwise 0.
+   */
+  int
+  t8_geom_is_vertex_on_face (int vertex_index, int face_index);
+
+  /** Calculate the parameter of a point on an occ curve.
+   * \param [in]      curve_index   The index of the curve in the occ geometry.
+   * \param [in]      coords        The coordinates which the parameter should
+   *                                get calculated for. 
+   * \param [out]     param         The parameter gets saved here.
+   * \param [in]      tol           Maximum tolerance between the coords and the coordinates the 
+   *                                calculated parameter point to.
+   * \param [in]      near_param    The parameter of a known nearby point on the same curve.
+   *                                This helps getting the right parameter, if
+   *                                multiple parameters would be valid for the given coordinates.
+   *                                If not given the points get checked for ambiguity 
+   *                                and if there is none the right parameter gets returned.
+   * \return                        1 if a valid parameter was found. 0 if no valid parameters were found.
+   *                                -1 if there is an ambiguity.
+   */
+  int
+  t8_geom_get_occ_curve_parameter (int curve_index, 
+                                   double *coords,
+                                   double *param,
+                                   double tol,
+                                   double *near_param = nullptr);
+
+  /** Calculate the parameters of a point on an occ surface.
+   * \param [in]      surface_index The index of the surface in the occ geometry.
+   * \param [in]      coords        The coordinates which the parameters should
+   *                                get calculated for. 
+   * \param [out]     params        The parameters get saved here.
+   * \param [in]      tol           Maximum tolerance between the coords and the coordinates the 
+   *                                calculated parameters point to.
+   * \param [in]      near_params   The parameters of a known nearby point on the same surface.
+   *                                This helps getting the right parameters, if
+   *                                multiple parameters would be valid for the given coordinates.
+   *                                If not given the points get checked for ambiguity 
+   *                                and if there is none the right parameters get returned.
+   * \return                        1 if valid parameters were found. 0 if no valid parameters were found.
+   *                                -1 if there is an ambiguity.
+   */
+  int
+  t8_geom_get_occ_surface_parameters (int surface_index, 
+                                      double *coords,
+                                      double *params,
+                                      double tol,
+                                      double *near_params = nullptr);
 
 private:
-
-  const void                       *tree_data;        /** Tree data pointer that can be set in \a load_tree_data and 
-                                                        is passed onto \a analytical_function and \a jacobian. */
-
-  std::vector<Handle_Geom_Curve>    occ_curves;       /** Occ curve geometry pointer. Curves can be pushed with t8_push_occ_curve(). */
-
-  std::vector<Handle_Geom_Surface>  occ_surfaces;     /** Occ surface geometry pointer. Curves can be pushed with t8_push_occ_surface(). */
+  TopoDS_Shape                                occ_shape;                  /** Occ geometry */
+  TopTools_IndexedMapOfShape                  occ_shape_vertex_map;       /** Map of all TopoDS_Vertex in shape. */
+  TopTools_IndexedMapOfShape                  occ_shape_edge_map;         /** Map of all TopoDS_Edge in shape. */
+  TopTools_IndexedMapOfShape                  occ_shape_face_map;         /** Map of all TopoDS_Face in shape. */
+  TopTools_IndexedDataMapOfShapeListOfShape   occ_shape_vertex2edge_map;  /** Maps all TopoDS_Vertex of shape to all its connected TopoDS_Edge */
+  TopTools_IndexedDataMapOfShapeListOfShape   occ_shape_edge2face_map;    /** Maps all TopoDS_Edge of shape to all its connected TopoDS_Face */
 };
 
 #endif /* T8_WITH_OCC */
