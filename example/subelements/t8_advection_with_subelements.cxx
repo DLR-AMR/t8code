@@ -184,18 +184,24 @@ t8_advect_element_get_phi_adapt (const t8_advect_problem_t * problem,
            t8_sc_array_index_locidx (problem->phi_values_adapt, ielement));
 }
 
-static int
-t8_advect_get_global_phi (const t8_advect_problem_t * problem,
-                          t8_locidx_t ielement)
+static double
+t8_advect_get_global_phi (const t8_advect_problem_t * problem)
 {
-  int                 scaled_phi_global = 0;
-  int                 ielem = 0;
-  int                 num_local_elements =
-    t8_forest_get_local_num_elements (problem->forest);
+  t8_locidx_t         lelement, num_local_elem;
+  double scaled_phi_global = 0;
+  t8_advect_element_data_t *elem_data;
 
-  for (ielem = 0; ielem < num_local_elements; ielem++) {
-    scaled_phi_global +=
-      *((double *) t8_sc_array_index_locidx (problem->phi_values, ielement));
+  num_local_elem = t8_forest_get_local_num_elements (problem->forest);
+  T8_ASSERT (num_local_elem <=
+             (t8_locidx_t) problem->element_data->elem_count);
+  /* iterate over all all elements */
+  for (lelement = 0; lelement < num_local_elem; lelement++) {
+
+    /* Get element data */
+    elem_data = (t8_advect_element_data_t *)
+      t8_sc_array_index_locidx (problem->element_data, lelement);
+
+    scaled_phi_global += t8_advect_element_get_phi (problem, lelement) * elem_data->vol;
   }
 
   return scaled_phi_global;
@@ -816,6 +822,15 @@ t8_advect_compute_element_data (t8_advect_problem_t * problem,
   elem_data->vol =
     t8_forest_element_volume (problem->forest, ltreeid, element,
                               tree_vertices);
+}
+
+static int
+t8_advect_global_conservation_check (double scaled_global_phi_beginning, double scaled_global_phi_end)
+{
+  double diff_phi_global = scaled_global_phi_beginning - scaled_global_phi_end;
+  double abs_diff_phi_global = ((diff_phi_global < 0) ? -diff_phi_global : diff_phi_global);
+  t8_debugf ("global_phi_beginning: %f global_phi_end: %f abs_diff_phi_global: %f, 1/2^30: %f\n", scaled_global_phi_beginning, scaled_global_phi_end, abs_diff_phi_global, 1.0/(1 << 30));
+  return ((abs_diff_phi_global < (1.0/(1 << 30))) ? 1 : 0);
 }
 
 static int
@@ -2366,6 +2381,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   int                 hanging, neigh_is_ghost;
   t8_locidx_t         neigh_index = -1;
   double              phi_plus, phi_minus;
+  double              scaled_global_phi_beginning, scaled_global_phi_step, scaled_global_phi_end; /* for conservation test */
 
   /* Initialize problem */
   /* start timing */
@@ -2420,6 +2436,10 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                             (problem->forest));
     }
     /* Time loop */
+
+    if (problem->num_time_steps == 0) {
+      scaled_global_phi_beginning = t8_advect_get_global_phi (problem);
+    }
 
     /* Print vtk */
     if (!no_vtk && problem->num_time_steps % vtk_freq == 0) {
@@ -2689,13 +2709,26 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     if (problem->t >= problem->T) {
       done = 1;
     }
+
+    /* Global conservation check for the new timestep - global sum of scaled phi values should not change */
+    scaled_global_phi_step = t8_advect_get_global_phi (problem);
+    T8_ASSERT (t8_advect_global_conservation_check (scaled_global_phi_beginning, scaled_global_phi_step));
+
+    if (done == 1) {
+      scaled_global_phi_end = t8_advect_get_global_phi (problem);
+    }
   }                             /* End time loop */
+
   if (!no_vtk) {
     vtk_time -= sc_MPI_Wtime ();
     /* Print last time step vtk */
     t8_advect_write_vtk (problem);
     vtk_time += sc_MPI_Wtime ();
   }
+
+  /* Global conservation check for first and last forest - global sum of scaled phi values should not change */
+  T8_ASSERT (t8_advect_global_conservation_check (scaled_global_phi_beginning, scaled_global_phi_end));
+
   /* Compute runtime */
   total_time += sc_MPI_Wtime ();
   sc_stats_set1 (&problem->stats[ADVECT_TOTAL], total_time,
@@ -2705,7 +2738,6 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   sc_stats_set1 (&problem->stats[ADVECT_IO], vtk_time,
                  advect_stat_names[ADVECT_IO]);
   /* Compute volume loss */
-
   end_volume = t8_advect_level_set_volume (problem);
   t8_global_essentialf ("[advect] End volume %e\n", end_volume);
 
