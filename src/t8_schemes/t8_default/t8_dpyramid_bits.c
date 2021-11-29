@@ -999,7 +999,6 @@ t8_dpyramid_num_siblings (const t8_dpyramid_t * p)
      *            in a subsequent call to t8_dpyramid_shape. This case is actually never executed, but the
      *            compiler doesn't know about it. To prevent this warning, we set the level here.
      */
-    parent->level = -1;
     return 1;
   }
   t8_dpyramid_parent (p, &parent);
