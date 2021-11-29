@@ -30,62 +30,13 @@
 
 
 #include <fstream>
-#include <iostream>
 #include <vector>
-#include <array>
-#include <optional>
-#include <tuple>
 #include <algorithm>
 #include <utility>
 
 #include <TopoDS.hxx>
-#include <TopoDS_Shape.hxx>
-#include <BRepTools.hxx>
-#include <BRep_Builder.hxx>
-#include <gp_Pnt.hxx>
-#include <Geom_Curve.hxx>
-#include <Geom_Surface.hxx>
 #include <TopExp_Explorer.hxx>
-
-TopoDS_Shape
-t8_geometry_import_brep (std::string fileprefix)
-{
-  TopoDS_Shape        shape;
-  BRep_Builder        builder;
-
-  std::ifstream is(fileprefix + ".brep");
-  BRepTools::Read(shape, is, builder);
-  is.close();
-  if(shape.IsNull())
-  {
-    t8_global_errorf("WARNING: Could not read brep file or brep file contains no shape \n");
-  }
-  return shape;
-}
-
-void 
-t8_geometry_extract_brep(const TopoDS_Shape &shape, 
-                         std::vector<std::optional<Handle_Geom_Curve>> &edges,
-                         std::vector<Handle_Geom_Surface> &surfaces)
-{
-    TopExp_Explorer explorer;
-    for (explorer.Init(shape, TopAbs_EDGE); explorer.More(); explorer.Next())
-    {
-        Standard_Real first, last;
-        if(!BRep_Tool::Degenerated(TopoDS::Edge(explorer.Current())))
-        {
-            edges.push_back({BRep_Tool::Curve(TopoDS::Edge(explorer.Current()), first, last)});
-        }
-        else
-        {
-            edges.push_back({});
-        }
-    }
-    for (explorer.Init(shape, TopAbs_FACE); explorer.More(); explorer.Next())
-    {
-        surfaces.push_back(BRep_Tool::Surface(TopoDS::Face(explorer.Current())));
-    }
-}
+#include <BRep_Tool.hxx>
 
 template<typename input_iterator, typename lambda_funk>
 input_iterator
@@ -106,103 +57,188 @@ T8_EXTERN_C_BEGIN ();
 
 t8_geometry_occ_c* 
 t8_geometry_from_brep_file (const char *fileprefix, 
-                            sc_hash_t * node_table,
+                            sc_hash_t *node_table,
                             int dim,
+                            double tol,
                             int debugfile)
 {
-  int                                               recombined;
-  t8_msh_file_node_parametric_t                    *cur_node;
-  sc_list_t                                        *list;               
-  t8_geometry_occ                                  *geom = new t8_geometry_occ (dim, "occ brep derived geometry");
-  TopoDS_Shape                                      shape;
-  std::vector<std::optional<Handle_Geom_Curve>>     curves;
-  std::vector<Handle_Geom_Surface>                  surfaces; 
-  std::vector<t8_msh_file_node_parametric_t *>      to_edit;
-  std::vector<double>                               debug_recombined, debug_not_recombined;
-  std::vector<std::pair<std::optional<Handle_Geom_Curve>, int>>    curves_processed;
-  std::vector<std::pair<std::optional<Handle_Geom_Surface>, int>>  surfaces_processed;
+  int                               recombined;
+  Standard_Real                     first, last;
+  t8_msh_file_node_parametric_t    *cur_node;
+  sc_list_t                        *list;
+  std::string                       current_file(fileprefix);       
+  t8_geometry_occ                  *geom = new t8_geometry_occ (dim, fileprefix, "occ brep derived geometry");
+  TopTools_IndexedMapOfShape        occ_shape_vertex_map = geom->t8_geom_get_occ_shape_vertex_map();
+  TopTools_IndexedMapOfShape        occ_shape_edge_map = geom->t8_geom_get_occ_shape_edge_map();
+  TopTools_IndexedMapOfShape        occ_shape_face_map = geom->t8_geom_get_occ_shape_face_map();
+  std::vector<double>               debug_recombined, debug_not_recombined;
+  std::vector<std::pair<int, int>>  points_processed, curves_processed, surfaces_processed;
 
-  std::string current_file(fileprefix);
-  shape = t8_geometry_import_brep (current_file);
-  t8_geometry_extract_brep(shape, curves, surfaces);
-  t8_global_errorf("%s \n", current_file);
-  std::cout << current_file << " " << curves.size() << " " << surfaces.size() << std::endl;
-
+  /* To find the corresponding occ geometry for each parametric msh node 
+   * we check each node and insert its parameters into each occ geometry of the right dimension.
+   * If the coordinates of the node get returned we know it is the right occ geometry. We save the already found
+   * occ geometries so we don't have to process them twice. We also save the indices of each recombined
+   * node to change the entity_tag to the position of the corresponding occ geometry in the cmesh geometry. */
+  
+  /* Iterate over each cmesh node */
   for (size_t hval = 0; hval < node_table->slots->elem_count; ++hval)
   {
     list = (sc_list_t *) sc_array_index (node_table->slots, hval);
     if (list->elem_count > 0)
     {
       cur_node = (t8_msh_file_node_parametric_t *)list->first->data;
-      if (cur_node->entity_dim == 1 || cur_node->entity_dim == 2)
+      /* Check if node is parametric */
+      if (cur_node->parametric)
       {
-        if (cur_node->entity_dim == 1)
+        /* Skip node if the corresponding occ point was already found */
+        if (cur_node->entity_dim == 0)
         {
-          std::vector<std::pair<std::optional<Handle_Geom_Curve>, int>>::iterator 
-          it = t8_geometry_find(curves_processed.begin(), 
-                                curves_processed.end(),
-                                [&](std::pair<std::optional<Handle_Geom_Curve>, int> a){return (a).second == cur_node->entity_tag;});
-          if (it != curves_processed.end())
+          /* Search for entity_tag in the already processed points */
+          std::vector<std::pair<int, int>>::iterator 
+          it = t8_geometry_find(points_processed.begin(), 
+                                points_processed.end(),
+                                [&](std::pair<int, int> a){return (a).first == cur_node->entity_tag;});
+          if (it != points_processed.end())
           {
-            if (it->first)
+            /* If the entity_tag was already processed and the index of the corresponding point is not -1 we change the 
+             * entity_tag of the node to the index of the corresponding point. If the index is -1 we set the node to not parametric. */
+            if (it->second >= 0)
             {
+              cur_node->entity_tag = it->second;
               debug_recombined.insert(debug_recombined.end(),
                                       cur_node->coordinates,
                                       cur_node->coordinates + 3);
             }
             else
             {
+              cur_node->parametric = 0;
               debug_not_recombined.insert(debug_not_recombined.end(),
                                           cur_node->coordinates,
                                           cur_node->coordinates + 3);
               t8_global_errorf("WARNING: Failed to recombine node with index %i list\n", cur_node->index);
             }
+            /* Skip node */
             continue;
           }
         }
-        else
+        /* Skip node if the corresponding occ curve has already been found */
+        if (cur_node->entity_dim == 1)
         {
-          std::vector<std::pair<std::optional<Handle_Geom_Surface>, int>>::iterator 
-          it = t8_geometry_find(surfaces_processed.begin(), 
-                                surfaces_processed.end(), 
-                                [&](std::pair<std::optional<Handle_Geom_Surface>, int> a){return a.second == cur_node->entity_tag;});
-          if (it  != surfaces_processed.end())
+          /* Search for entity_tag in the already processed curves */
+          std::vector<std::pair<int, int>>::iterator 
+          it = t8_geometry_find(curves_processed.begin(), 
+                                curves_processed.end(),
+                                [&](std::pair<int, int> a){return (a).first == cur_node->entity_tag;});
+          if (it != curves_processed.end())
           {
-            if (it->first)
+            /* If the entity_tag was already processed and the index of the corresponding curve is not -1 we change the 
+             * entity_tag of the node to the index of the corresponding curve. If the index is -1 we set the node to not parametric. */
+            if (it->second >= 0)
             {
+              cur_node->entity_tag = it->second;
               debug_recombined.insert(debug_recombined.end(),
                                       cur_node->coordinates,
                                       cur_node->coordinates + 3);
             }
             else
             {
+              cur_node->parametric = 0;
               debug_not_recombined.insert(debug_not_recombined.end(),
                                           cur_node->coordinates,
                                           cur_node->coordinates + 3);
               t8_global_errorf("WARNING: Failed to recombine node with index %i list\n", cur_node->index);
             }
+            /* Skip node */
+            continue;
+          }
+        }
+        /* Skip node if the corresponding occ surface has already been found */
+        if (cur_node->entity_dim == 2)
+        {
+          /* Search for entity_tag in the already processed surfaces */
+          std::vector<std::pair<int, int>>::iterator 
+          it = t8_geometry_find(surfaces_processed.begin(), 
+                                surfaces_processed.end(),
+                                [&](std::pair<int, int> a){return (a).first == cur_node->entity_tag;});
+          if (it != surfaces_processed.end())
+          {
+            /* If the entity_tag was already processed and the index of the corresponding surface is not -1 we change the 
+             * entity_tag of the node to the index of the corresponding surface. If the index is -1 we set the node to not parametric. */
+            if (it->second >= 0)
+            {
+              cur_node->entity_tag = it->second;
+              debug_recombined.insert(debug_recombined.end(),
+                                      cur_node->coordinates,
+                                      cur_node->coordinates + 3);
+            }
+            else
+            {
+              cur_node->parametric = 0;
+              debug_not_recombined.insert(debug_not_recombined.end(),
+                                          cur_node->coordinates,
+                                          cur_node->coordinates + 3);
+              t8_global_errorf("WARNING: Failed to recombine node with index %i list\n", cur_node->index);
+            }
+            /* Skip node */
             continue;
           }
         }
         
+        /* If the entity_tag hasn't already been processed we search for the corresponding occ geometry */
         recombined = 0;
         gp_Pnt cur_pnt;
+        if (cur_node->entity_dim == 0)
+        {
+          /* Iterate over each occ point */
+          for (auto point = occ_shape_vertex_map.cbegin(); point != occ_shape_vertex_map.cend(); ++point)
+          {
+            /* Check if point and node have the same coordinates */
+            cur_pnt = BRep_Tool::Pnt(TopoDS::Vertex(*point));
+            if (tol > sqrt(pow(cur_pnt.X() - cur_node->coordinates[0], 2)
+                  + pow(cur_pnt.Y() - cur_node->coordinates[1], 2)
+                  + pow(cur_pnt.Z() - cur_node->coordinates[2], 2)))
+            {
+              /* Save recombined entity_tag and occ point index. */
+              points_processed.push_back(std::make_pair(cur_node->entity_tag, occ_shape_vertex_map.FindIndex(*point)));
+              debug_recombined.insert(debug_recombined.end(),
+                                      cur_node->coordinates,
+                                      cur_node->coordinates + 3);
+              cur_node->entity_tag = occ_shape_vertex_map.FindIndex(*point);
+              recombined = 1;
+              break;
+            }
+          }
+          if (!recombined)
+          {
+            /* Save entity_tag with -1 to mark, that no matching geometry was found.
+             * Save node as not parametric. */
+            points_processed.push_back(std::make_pair(cur_node->entity_tag, -1));
+            cur_node->parametric = 0;
+            debug_not_recombined.insert(debug_not_recombined.end(),
+                                        cur_node->coordinates,
+                                        cur_node->coordinates + 3);
+            t8_global_errorf("WARNING: Failed to recombine node with index %i \n", cur_node->index);
+          }
+        }
         if (cur_node->entity_dim == 1)
         {
-          for (std::vector<std::optional<Handle_Geom_Curve>>::iterator it = curves.begin(); it != curves.end(); ++it)
+          /* Iterate over each occ curve */
+          for (auto curve = occ_shape_edge_map.cbegin(); curve != occ_shape_edge_map.cend(); ++curve)
           {
-            if (*it)
+            /* Evaluate occ curve with the parameter of the node and check if the node coordinates get returned */
+            if(!BRep_Tool::Degenerated(TopoDS::Edge(*curve)))
             {
-              it->value()->D0(cur_node->parameters[0], cur_pnt);
-              if (1e-3 > abs(cur_pnt.X() - cur_node->coordinates[0]) &&
-                  1e-3 > abs(cur_pnt.Y() - cur_node->coordinates[1]) &&
-                  1e-3 > abs(cur_pnt.Z() - cur_node->coordinates[2]))
+              BRep_Tool::Curve(TopoDS::Edge(*curve), first, last)->D0(cur_node->parameters[0], cur_pnt);
+              if (tol > sqrt(pow(cur_pnt.X() - cur_node->coordinates[0], 2)
+                  + pow(cur_pnt.Y() - cur_node->coordinates[1], 2)
+                  + pow(cur_pnt.Z() - cur_node->coordinates[2], 2)))
               {
-                curves_processed.push_back(std::make_pair(std::optional<Handle_Geom_Curve>{*it}, cur_node->entity_tag));
-                curves.erase(it);
+                /* Save recombined entity_tag and occ curve index. */
+                curves_processed.push_back(std::make_pair(cur_node->entity_tag, occ_shape_edge_map.FindIndex(*curve)));
                 debug_recombined.insert(debug_recombined.end(),
                                         cur_node->coordinates,
                                         cur_node->coordinates + 3);
+                cur_node->entity_tag = occ_shape_edge_map.FindIndex(*curve);
                 recombined = 1;
                 break;
               }
@@ -210,78 +246,93 @@ t8_geometry_from_brep_file (const char *fileprefix,
           }
           if (!recombined)
           {
-            curves_processed.push_back(std::make_pair(std::optional<Handle_Geom_Curve>{}, cur_node->entity_tag));
+            /* Save entity_tag with -1 to mark that no matching geometry was found.
+             * Save node as not parametric. */
+            curves_processed.push_back(std::make_pair(cur_node->entity_tag, -1));
+            cur_node->parametric = 0;
             debug_not_recombined.insert(debug_not_recombined.end(),
                                         cur_node->coordinates,
                                         cur_node->coordinates + 3);
+            t8_global_errorf("WARNING: Failed to recombine node with index %i \n", cur_node->index);
           }
         }
         if (cur_node->entity_dim == 2)
         {
-          for (std::vector<Handle_Geom_Surface>::iterator it = surfaces.begin(); it != surfaces.end(); ++it)
+          /* Iterate over each occ surface */
+          for (auto surface = occ_shape_face_map.cbegin(); surface != occ_shape_face_map.cend(); ++surface)
           {
-            (*it)->D0(cur_node->parameters[0], cur_node->parameters[1], cur_pnt);
-            if (1e-3 > abs(cur_pnt.X() - cur_node->coordinates[0]) &&
-                1e-3 > abs(cur_pnt.Y() - cur_node->coordinates[1]) &&
-                1e-3 > abs(cur_pnt.Z() - cur_node->coordinates[2]))
+            /* Evaluate occ surface with the parameters of the node and check if the node coordinates get returned. */
+            BRep_Tool::Surface(TopoDS::Face(*surface))->D0(cur_node->parameters[0], cur_node->parameters[1], cur_pnt);
+            if (tol > sqrt(pow(cur_pnt.X() - cur_node->coordinates[0], 2)
+                + pow(cur_pnt.Y() - cur_node->coordinates[1], 2)
+                + pow(cur_pnt.Z() - cur_node->coordinates[2], 2)))
             {
-              surfaces_processed.push_back(std::make_pair(std::optional<Handle_Geom_Surface>{*it}, cur_node->entity_tag));
-              surfaces.erase(it);
+              /* Save recombined entity_tag and occ surface index. */
+              surfaces_processed.push_back(std::make_pair(cur_node->entity_tag, occ_shape_face_map.FindIndex(*surface)));
               debug_recombined.insert(debug_recombined.end(),
                                       cur_node->coordinates,
                                       cur_node->coordinates + 3);
+              cur_node->entity_tag = occ_shape_face_map.FindIndex(*surface);
               recombined = 1;
               break;
             }
           }
           if (!recombined)
           {
-            surfaces_processed.push_back(std::make_pair(std::optional<Handle_Geom_Surface>{}, cur_node->entity_tag));
+            /* Save entity_tag with -1 to mark, that no matching geometry was found.
+             * Save node as not parametric. */
+            surfaces_processed.push_back(std::make_pair(cur_node->entity_tag, -1));
+            cur_node->parametric = 0;
             debug_not_recombined.insert(debug_not_recombined.end(),
                                         cur_node->coordinates,
                                         cur_node->coordinates + 3);
+            t8_global_errorf("WARNING: Failed to recombine node with index %i \n", cur_node->index);
           }
-        }
-        if (!recombined)
-        {
-          t8_global_errorf("WARNING: Failed to recombine node with index %i \n", cur_node->index);
         }
       }
     }
   }
-
+  
+  /* Write out a .geo file which indicates which nodes were successfully recombined. 
+   * The file can be opened with gmsh. */
   std::ofstream geofile;
   int green = 0, red;
   geofile.open (current_file + ".geo");
-  for (std::vector<double>::iterator it = debug_recombined.begin(); it != debug_recombined.end(); ++it)
+  for (auto it = debug_recombined.begin(); it != debug_recombined.end(); ++it)
   {
     geofile << "Point(" << green << ") = {" << *it << ", " << *(++it) << ", " << *(++it) << "};" << std::endl;
     ++green;
   }
   red = green;
-  for (std::vector<double>::iterator it = debug_not_recombined.begin(); it != debug_not_recombined.end(); ++it)
+  for (auto it = debug_not_recombined.begin(); it != debug_not_recombined.end(); ++it)
   {
     geofile << "Point(" << red << ") = {" << *it << ", " << *(++it) << ", " << *(++it) << "};" << std::endl;
     ++red;
   }
-  geofile << "Color Green{Point{" << std::endl;
-  for (int i_green = 0; i_green != green; ++i_green)
+  if (debug_recombined.size())
   {
-    geofile << i_green; 
-    if (i_green != green - 1) geofile << ",";
-    geofile  << std::endl;
+    geofile << "Color Green{Point{" << std::endl;
+    for (int i_green = 0; i_green != green; ++i_green)
+    {
+      geofile << i_green; 
+      if (i_green != green - 1) geofile << ",";
+      geofile  << std::endl;
+    }
+    geofile << "};}" << std::endl;
   }
-  geofile << "};}" << std::endl;
-  geofile << "Color Red{Point{" << std::endl;
-  for (int i_red = green; i_red != red; ++i_red)
+  if (debug_not_recombined.size())
   {
-    geofile << i_red;
-    if (i_red != red - 1) geofile << ",";
-    geofile << std::endl;
+    geofile << "Color Red{Point{" << std::endl;
+    for (int i_red = green; i_red != red; ++i_red)
+    {
+      geofile << i_red;
+      if (i_red != red - 1) geofile << ",";
+      geofile << std::endl;
+    }
+    geofile << "};}" << std::endl;
   }
-  geofile << "};}" << std::endl;
   geofile.close();
-
+  
   return (t8_geometry_occ_c *) geom;
 }
 

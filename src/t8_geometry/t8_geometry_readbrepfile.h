@@ -39,14 +39,16 @@ T8_EXTERN_C_BEGIN ();
  *                                The entitytags of the nodes get altered, so that they 
  *                                correspond to the geometry order in the returned occ geometry.
  * \param [in]      dim           Dimension of the mesh.
+ * \param [in]      tol           Tolerance for recombining nodes.
  * \param [in]      debugfile     A .geo file is generated. 
  *                                It marks all failed recombinations red.
  * \return                        A occ geometry with the 
  */
 t8_geometry_occ_c* 
 t8_geometry_from_brep_file (const char *fileprefix, 
-                            sc_hash_t * node_table,
+                            sc_hash_t *node_table,
                             int dim,
+                            double tol,
                             int debugfile);
 
 T8_EXTERN_C_END ();
