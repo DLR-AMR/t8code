@@ -68,6 +68,8 @@ t8_eclass_t;
 #define T8_ECLASS_MAX_FACES 6
 /** The maximum number of boundary edges an element class can have. */
 #define T8_ECLASS_MAX_EDGES 12
+/** The maximum number of boundary edges an 2D element class can have. */
+#define T8_ECLASS_MAX_EDGES_2D 4
 /** The maximum number of cornes a 2-dimensional element class can have. */
 #define T8_ECLASS_MAX_CORNERS_2D 4
 /** The maximum number of cornes an element class can have. */
@@ -102,6 +104,9 @@ extern const int
 
 /** The number of vertices of an element class. */
 extern const int    t8_eclass_num_vertices[T8_ECLASS_COUNT];
+
+/** The number of edges of an element class. */
+extern const int    t8_eclass_num_edges[T8_ECLASS_COUNT];
 
 /** The vtk cell type for the eclass */
 extern const int    t8_eclass_vtk_type[T8_ECLASS_COUNT];
