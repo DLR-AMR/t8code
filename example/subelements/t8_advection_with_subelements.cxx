@@ -243,7 +243,7 @@ t8_advect_adapt_random (t8_forest_t forest, t8_forest_t forest_from,
 
   int                 r = rand () % 99; /* random number between 0 and 99 */
 
-  if (level < problem->maxlevel && r < 20) {
+  if (level < problem->maxlevel && r < 10) {
     return 1;
   }
   else if (level > problem->level && num_elements > 1) {
@@ -439,6 +439,56 @@ t8_advect_l_infty_rel (const t8_advect_problem_t * problem,
   return global_error[0] / global_error[1];
 }
 
+/* Compute the relative l_infty error of the stored phi values compared to a
+ * given analytical function at time problem->t */
+static double
+t8_advect_l_infty_abs (const t8_advect_problem_t * problem,
+                       t8_example_level_set_fn analytical_sol,
+                       double distance)
+{
+  t8_locidx_t         num_local_elements, ielem;
+  t8_advect_element_data_t *elem_data;
+  double              phi;
+  double              ana_sol;
+  double              error[2] = {
+    -1, 0
+  }, el_error, global_error[2];
+
+  num_local_elements = t8_forest_get_local_num_elements (problem->forest);
+  for (ielem = 0; ielem < num_local_elements; ielem++) {
+    elem_data = (t8_advect_element_data_t *)
+      t8_sc_array_index_locidx (problem->element_data, ielem);
+
+    /* Compute the analytical solution */
+    double ana_sol_transported[3] = {};
+    ana_sol_transported[0] = elem_data->midpoint[0] - 0.05;
+    ana_sol_transported[1] = elem_data->midpoint[1] - 0.1;
+    ana_sol_transported[2] = elem_data->midpoint[2];
+    ana_sol =
+      analytical_sol (ana_sol_transported, problem->t,
+                      problem->udata_for_phi);
+#if 1
+    if (fabs (ana_sol) < distance)
+#endif
+    {
+      /* Compute the error as the stored value at the midpoint of this element
+       * minus the solution at this midpoint */
+      phi = t8_advect_element_get_phi (problem, ielem);
+      el_error = fabs ((phi - ana_sol));
+      error[0] = SC_MAX (error[0], el_error);
+      /* Compute the l_infty norm of the analytical solution */
+      error[1] = SC_MAX (error[1], ana_sol);
+    }
+  }
+  /* Compute the maximum of the error among all processes */
+  sc_MPI_Allreduce (&error, &global_error, 2, sc_MPI_DOUBLE, sc_MPI_MAX,
+                    problem->comm);
+
+  /* Return the relative error, that is the l_infty error divided by
+   * the l_infty norm of the analytical solution */
+  return global_error[0];
+}
+
 static double
 t8_advect_l_2_rel (const t8_advect_problem_t * problem,
                    t8_example_level_set_fn analytical_sol, double distance)
@@ -486,6 +536,55 @@ t8_advect_l_2_rel (const t8_advect_problem_t * problem,
   /* Return the relative error, that is the l_infty error divided by
    * the l_infty norm of the analytical solution */
   return sqrt (global_error[0]) / sqrt (global_error[1]);
+}
+
+static double
+t8_advect_l_2_abs (const t8_advect_problem_t * problem,
+                   t8_example_level_set_fn analytical_sol, double distance)
+{
+  t8_locidx_t         num_local_elements, ielem, count = 0;
+  t8_advect_element_data_t *elem_data;
+  double              phi;
+  double              diff, ana_sol;
+  double              error[2] = {
+    0, 0
+  }, el_error, global_error[2];
+
+  num_local_elements = t8_forest_get_local_num_elements (problem->forest);
+  for (ielem = 0; ielem < num_local_elements; ielem++) {
+    elem_data = (t8_advect_element_data_t *)
+      t8_sc_array_index_locidx (problem->element_data, ielem);
+    /* Compute the analytical solution at time T (transported by (0.2,0.4)) */
+    double ana_sol_transported[3] = {};
+    ana_sol_transported[0] = elem_data->midpoint[0] - 0.05;
+    ana_sol_transported[1] = elem_data->midpoint[1] - 0.1;
+    ana_sol_transported[2] = elem_data->midpoint[2];
+    ana_sol =
+      analytical_sol (ana_sol_transported, problem->t,
+                      problem->udata_for_phi);
+#if 1
+    if (fabs (ana_sol) < distance)
+#endif
+    {
+      count++;
+      /* Compute the error as the stored value at the midpoint of this element
+       * minus the solution at this midpoint */
+      phi = t8_advect_element_get_phi (problem, ielem);
+      diff = fabs (phi - ana_sol);
+      el_error = diff * diff * elem_data->vol;
+      error[0] += el_error;
+      error[1] += ana_sol * ana_sol * elem_data->vol;
+    }
+  }
+  t8_debugf ("[advect] L_2 %e  %e\n", error[0], error[1]);
+  t8_debugf ("[advect] L_2 %i elems\n", count);
+  /* Compute the maximum of the error among all processes */
+  sc_MPI_Allreduce (&error, &global_error, 2, sc_MPI_DOUBLE, sc_MPI_SUM,
+                    problem->comm);
+
+  /* Return the relative error, that is the l_infty error divided by
+   * the l_infty norm of the analytical solution */
+  return sqrt (global_error[0]);
 }
 
 static double
@@ -1661,7 +1760,7 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem, int measure_time)
   /* Set the user data pointer of the new forest */
   t8_forest_set_user_data (problem->forest_adapt, problem);
   /* Set the adapt function (it can be set to static via the argument adapt_freq, setting it to a higher number than timesteps) */
-  if (1) {
+  if (0) {
     t8_forest_set_adapt (problem->forest_adapt, problem->forest,
                          t8_advect_adapt, 0);
   }
@@ -1769,12 +1868,12 @@ t8_advect_problem_adapt_init (t8_advect_problem_t * problem, int measure_time)
   /* Set the user data pointer of the new forest */
   t8_forest_set_user_data (problem->forest_adapt, problem);
   /* Set the adapt function */
-#if 1
+#if 0
   /* initialize according to numerical values (standard) */
   t8_forest_set_adapt (problem->forest_adapt, problem->forest,
                        t8_advect_adapt, 0);
 #endif
-#if 0
+#if 1
   /* randomly adapt a uniform forest (if we choose this, then we should also use adapt_random for further adapting) */
   t8_forest_set_adapt (problem->forest_adapt, problem->forest,
                        t8_advect_adapt_random, 0);
@@ -2753,11 +2852,18 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                  100 * (1 - end_volume / start_volume),
                  advect_stat_names[ADVECT_VOL_LOSS]);
 
-  /* Compute l_infty error */
-  l_infty = t8_advect_l_infty_rel (problem, phi_0, 0.1);
-  L_2 = t8_advect_l_2_rel (problem, phi_0, 0.1);
+  /* Compute abs l_infty and l_2 errors */
+  l_infty = t8_advect_l_infty_abs (problem, phi_0, 2);
+  L_2 = t8_advect_l_2_abs (problem, phi_0, 2);
   t8_global_essentialf
-    ("[advect] Done. t = %g \t l_infty error:\t%e\tL_2:\t%e\n", problem->t,
+    ("[advect] Done. t = %g \t l_infty_abs error:\t%e\tL_2_abs:\t%e\n", problem->t,
+     l_infty, L_2);
+
+  /* Compute rel l_infty and l_2 errors */
+  l_infty = t8_advect_l_infty_rel (problem, phi_0, 2);
+  L_2 = t8_advect_l_2_rel (problem, phi_0, 2);
+  t8_global_essentialf
+    ("[advect] l_infty_rel error:\t%e\tL_2_rel:\t%e\n",
      l_infty, L_2);
 
   sc_stats_set1 (&problem->stats[ADVECT_ERROR_INF], l_infty,
@@ -2817,7 +2923,7 @@ main (int argc, char *argv[])
                       "with radius 0.15.\n)");
   sc_options_add_int (opt, 'l', "level", &level, 3,
                       "The minimum refinement level of the mesh.");
-  sc_options_add_int (opt, 'r', "rlevel", &reflevel, 1,
+  sc_options_add_int (opt, 'r', "rlevel", &reflevel, 3,
                       "The number of adaptive refinement levels.");
   sc_options_add_int (opt, 'e', "elements", &eclass_int, T8_ECLASS_QUAD,
                       "If specified the coarse mesh is a hypercube\n\t\t\t\t     consisting of the"
@@ -2834,21 +2940,21 @@ main (int argc, char *argv[])
   sc_options_add_int (opt, 'd', "dim", &dim, -1,
                       "In combination with -f: The dimension of the mesh. 1 <= d <= 3.");
 
-  sc_options_add_double (opt, 'T', "end-time", &T, 0.111803,
+  sc_options_add_double (opt, 'T', "end-time", &T, 2,
                          "The duration of the simulation. Default: 1");
 
   sc_options_add_double (opt, 'C', "CFL", &cfl,
-                         0.25, "The cfl number to use. Default: 1");
+                         0.1, "The cfl number to use. Default: 1");
   sc_options_add_double (opt, 'b', "band-width", &band_width,
                          1,
                          "Control the width of the refinement band around\n"
                          " the zero level-set. Default 1.");
 
-  sc_options_add_int (opt, 'a', "adapt-freq", &adapt_freq, 1,
+  sc_options_add_int (opt, 'a', "adapt-freq", &adapt_freq, 10,
                       "Controls how often the mesh is readapted. "
                       "A value of i means, every i-th time step.");
 
-  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 1,
+  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 5,
                       "How often the vtk output is produced "
                       "\n\t\t\t\t     (after how many time steps). "
                       "A value of 0 is equivalent to using -o.");
