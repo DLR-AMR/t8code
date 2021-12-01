@@ -1135,28 +1135,48 @@ t8_subelement_scheme_quad_c::t8_element_boundary_face (const t8_element_t *
       int                 len =
         P4EST_QUADRANT_LEN (pquad_w_sub->p4q.level + 1);
       if (second) {             /* second subelement */
-        if (location[0] == 0 || location[0] == 1) {
+        if (location[0] == 0) { /* left face */
           l->x = q->y + len;
         }
-        if (location[0] == 2 || location[0] == 3) {
+        else if (location[0] == 1) { /* upper face */
           l->x = q->x + len;
+        }
+        else if (location[0] == 2) { /* right face */
+          l->x = q->y;
+        }
+        else { /* lower face */
+          l->x = q->x;
         }
       }
       else {                    /* first subelement */
-        if (location[0] == 0 || location[0] == 1) {
+        if (location[0] == 0) { /* left face */
           l->x = q->y;
         }
-        if (location[0] == 2 || location[0] == 3) {
+        else if (location[0] == 1) { /* upper face */
           l->x = q->x;
+        }
+        else if (location[0] == 2) { /* right face */
+          l->x = q->y + len;
+        }
+        else { /* lower face */
+          l->x = q->x + len;
         }
       }
     }
     else {                      /* if the subelement is not split */
       l->level = q->level;
-      /* we can determine the anchor node of the boundary via identifying the subelements location with the transition cells faces */
-      int                 face_adj = location[0];
-      l->x = ((face_adj >> 1 ? q->x : q->y) *
-              ((int64_t) T8_DLINE_ROOT_LEN) / P4EST_ROOT_LEN);
+      if (location[0] == 0) { /* left face */
+          l->x = q->y;
+        }
+        else if (location[0] == 1) { /* upper face */
+          l->x = q->x;
+        }
+        else if (location[0] == 2) { /* right face */
+          l->x = q->y;
+        }
+        else { /* lower face */
+          l->x = q->x;
+        }
     }
   }
 }
