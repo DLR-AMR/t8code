@@ -1747,6 +1747,11 @@ t8_forest_element_face_neighbor (t8_forest_t forest,
     /* Allocate the face element */
     boundary_scheme->t8_element_new (1, &face_element);
     /* Compute the face element. */
+    #if 0
+    t8_debugf ("face: %i\n", face);
+    t8_debugf ("current element:\n");
+    ts->t8_element_print_element (elem);
+    #endif
     ts->t8_element_boundary_face (elem, face, face_element, boundary_scheme);
     /* Get the coarse tree that contains elem.
      * Also get the face neighbor information of the coarse tree. */
@@ -1820,6 +1825,11 @@ t8_forest_element_face_neighbor (t8_forest_t forest,
       neighbor_scheme->t8_element_extrude_face (face_element,
                                                 boundary_scheme, neigh,
                                                 tree_neigh_face);
+
+    #if 0
+    t8_debugf ("neigh initialized:\n");
+    neighbor_scheme->t8_element_print_element (neigh);
+    #endif
 
     return global_neigh_id;
   }
@@ -1925,12 +1935,10 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
 
   /* TODO: implement is_leaf check to apply to leaf */
   T8_ASSERT (t8_forest_is_committed (forest));
+
+  /* TODO: check whether the forest is transitioned (this check is not valid yet) */
   hanging_faces_removed = t8_forest_hanging_faces_removed (forest);
-  /* TODO: the is_balanced check does not work for a mesh with subelements at this point. */
-  if (hanging_faces_removed != 1) {
-    /* TODO: why do we need the is_balance flag if we can check this property via the is_balanced function? */
-    //T8_ASSERT (!forest_is_balanced || t8_forest_is_balanced (forest));
-  }
+
   SC_CHECK_ABORT (forest_is_balanced, "leaf face neighbors is not implemented " "for unbalanced forests.\n");   /* TODO: write version for unbalanced forests */
   SC_CHECK_ABORT (forest->mpisize == 1 || forest->ghosts != NULL,
                   "Ghost structure is needed for t8_forest_leaf_face_neighbors "
@@ -2103,12 +2111,12 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
         }
         else {
           /* The ancestor is the parent of the parent */
-          /* TODO: sometimes the below assertion is triggered and we need to understand why - might be a bug with type 15. Removed for now. */
           if (neigh_scheme->t8_element_level (ancestor) !=
               ts->t8_element_level (leaf) - 1) {
             neigh_scheme->t8_element_print_element (ancestor);
             ts->t8_element_print_element (leaf);
           }
+          /* TODO: sometimes the below assertion is triggered and we need to understand why - might be a bug with type 15. */
           T8_ASSERT (neigh_scheme->t8_element_level (ancestor) ==
                      ts->t8_element_level (leaf) - 1);
 
