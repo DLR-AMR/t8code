@@ -260,6 +260,10 @@ t8_subelement_scheme_quad_c::t8_element_num_siblings (const t8_element_t *
     int                 num_siblings;
     int                 i;
 
+    if (type == 15) {
+      int a = 1;
+    }
+
     for (i = 0; i < P4EST_FACES; i++) { /* Count the number of ones of the binary subelement type */
       num_hanging_faces += (type & (1 << i)) >> i;
     }
