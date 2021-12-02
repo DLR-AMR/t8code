@@ -226,6 +226,13 @@ t8_mptrac_coords_to_lonlatpressure (const t8_mptrac_context_t * context,
   /* Interpolate pressure coordinate */
   const int           max_p_idx = meteo1->np;
   T8_ASSERT (max_p_idx >= 1);
-  t8_mptrac_interpol_helper (point[2], meteo1->p[0],
-                             meteo1->p[max_p_idx - 1], pressure);
+  /* Compute upper and lower bound in km */
+  const double        pressure_min_in_km = Z (meteo1->p[0]);
+  const double        pressure_max_in_km = Z (meteo1->p[max_p_idx - 1]);
+  double              pressure_in_km;
+  /* Interpolate pressure in km */
+  t8_mptrac_interpol_helper (point[2], pressure_min_in_km,
+                             pressure_max_in_km, &pressure_in_km);
+  /* Convert back to hpa */
+  *pressure = P (pressure_in_km);
 }
