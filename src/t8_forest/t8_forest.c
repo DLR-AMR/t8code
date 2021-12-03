@@ -602,6 +602,8 @@ t8_forest_commit (t8_forest_t forest)
     }
     if (forest->from_method & T8_FOREST_FROM_BALANCE) {
       forest->from_method -= T8_FOREST_FROM_BALANCE;
+      forest->time_balance = 0;
+      forest->time_balance -= sc_MPI_Wtime ();
       if (forest->from_method > 0) {
         /* in this case, we will use subelements after balancing */
         int                 flag_rep;
@@ -635,6 +637,7 @@ t8_forest_commit (t8_forest_t forest)
           t8_forest_balance (forest, 1);
         }
       }
+      forest->time_balance += sc_MPI_Wtime ();
     }
     if (forest->from_method & T8_FOREST_FROM_SUBELEMENTS) {
       forest->from_method -= T8_FOREST_FROM_SUBELEMENTS;
@@ -642,7 +645,10 @@ t8_forest_commit (t8_forest_t forest)
        * nothing should be left todo */
       T8_ASSERT (forest->from_method == 0);
       /* use subelements */
+      forest->time_transition = 0;
+      forest->time_transition -= sc_MPI_Wtime ();
       t8_forest_remove_hanging_faces (forest);
+      forest->time_transition += sc_MPI_Wtime ();
     }
 
     if (forest_from != forest->set_from) {
@@ -673,6 +679,12 @@ t8_forest_commit (t8_forest_t forest)
              (long long) forest->global_num_elements,
              (long long) forest->first_local_tree,
              (long long) forest->last_local_tree);
+
+  /* print runtime for balance and transition */
+  t8_productionf ("balance_time: %f\n", forest->time_balance);
+  t8_productionf ("transition_time: %f\n", forest->time_transition);
+  t8_productionf ("transition_callback_time: %f\n", forest->time_transition_callback);
+  t8_productionf ("time_leaf_face_neighbors in transition: %f\n", forest->time_leaf_neighbors);
 
 #if 0
   /* TODO: Do we keep the arrays or not? */

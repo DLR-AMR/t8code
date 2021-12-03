@@ -129,6 +129,8 @@ typedef struct t8_forest
   t8_gloidx_t         global_num_elements; /**< Number of elements on all processors. */
   t8_profile_t       *profile; /**< If not NULL, runtimes and statistics about forest_commit are stored here. */
 
+  double time_balance, time_transition, time_transition_callback, time_leaf_neighbors;
+
 }
 t8_forest_struct_t;
 

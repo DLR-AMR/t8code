@@ -46,6 +46,7 @@ t8_forest_remove_hanging_faces_adapt (t8_forest_t forest,
                                       int num_elements,
                                       t8_element_t * elements[])
 {
+  forest->time_transition_callback -= sc_MPI_Wtime ();
   /* this function determines whether a subelement (and which type) should be used for a specific 
    * element of the forest. The return value depends on the neighbor elements and their 
    * refinement level. */
@@ -83,10 +84,12 @@ t8_forest_remove_hanging_faces_adapt (t8_forest_t forest,
   int                 is_balanced = 1;
   for (iface = 0; iface < num_faces; iface++) {
     /* We are interested in the number of neighbours of a given element and a given face of the element. */
+    forest->time_leaf_neighbors -= sc_MPI_Wtime ();
     t8_forest_leaf_face_neighbors (forest_from, ltree_id, current_element,
                                    &neighbor_leafs, iface, &dual_faces,
                                    &num_neighbors, &element_indices,
                                    &neigh_scheme, is_balanced);
+    forest->time_leaf_neighbors += sc_MPI_Wtime ();
 
     /* If the number of neighbours of a face is higher than 1, then we know that there must be a hanging node. */
 
@@ -114,7 +117,8 @@ t8_forest_remove_hanging_faces_adapt (t8_forest_t forest,
       T8_FREE (dual_faces);
     }
   }
-
+  
+  forest->time_transition_callback += sc_MPI_Wtime ();
   /* returning the right subelement types */
   if (subelement_type == 0) {   /* in this case, there are no hanging nodes and we do not need to do anything */
     return 0;
@@ -132,6 +136,8 @@ t8_forest_remove_hanging_faces (t8_forest_t forest)
 {
   t8_global_productionf ("Into t8_forest_remove_hanging_faces.\n");
 
+  forest->time_leaf_neighbors = 0;
+  forest->time_transition_callback = 0;
   forest->set_adapt_fn = t8_forest_remove_hanging_faces_adapt;
   forest->set_adapt_recursive = 0;
   t8_forest_copy_trees (forest, forest->set_from, 0);

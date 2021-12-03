@@ -153,13 +153,13 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   char                filename[BUFSIZ];
 
   /* refinement settings */
-  int                 initlevel = 7;    /* initial uniform refinement level */
+  int                 initlevel = 4;    /* initial uniform refinement level */
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening */
-  int                 adaptlevel = 1;
+  int                 adaptlevel = 3;
   int                 maxlevel = initlevel + adaptlevel;        /* highest level allowed for refining */
 
   int                 refine_recursive = 1;
-  int                 do_exemplary_refinement = 1;
+  int                 do_exemplary_refinement = 0;
 
   /* cmesh settings (only one of the following suggestions should be one, the others 0) */
   int                 single_tree = 1;
@@ -275,7 +275,11 @@ t8_refine_with_subelements (t8_eclass_t eclass)
       t8_forest_set_remove_hanging_faces (forest_adapt, NULL);
     }
 
+    double adapt_time = 0;
+    adapt_time -= sc_MPI_Wtime (); 
     t8_forest_commit (forest_adapt);
+    adapt_time += sc_MPI_Wtime ();
+    t8_productionf ("Commit runtime: %f\n", adapt_time);
 
     /* print to vtk */
     snprintf (filename, BUFSIZ, "forest_adapt_no_hanging_nodes_timestep%i_%s",
