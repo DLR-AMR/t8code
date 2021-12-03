@@ -395,6 +395,12 @@ t8_forest_element_diam (t8_forest_t forest, t8_locidx_t ltreeid,
 
   num_corners = ts->t8_element_num_corners (element);
 
+  ts->t8_element_print_element (element);
+
+  if (ts->t8_element_test_if_subelement (element)) {
+    int a = 0;
+  }
+
   /* Compute the centroid */
   t8_forest_element_centroid (forest, ltreeid, element, vertices, centroid);
   dist = 0;

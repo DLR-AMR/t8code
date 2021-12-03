@@ -190,8 +190,8 @@ t8_flow_constant_one_x_vec (const double x[3], double t, double x_out[3])
 void
 t8_flow_constant_exemplary (const double x[3], double t, double x_out[3])
 {
-  x_out[0] = 1; /* 1*/
-  x_out[1] = x_out[2] = 2; /* 2 */
+  x_out[0] = 2; /* 2 */
+  x_out[1] = x_out[2] = 1; /* 1 */
 }
 
 void

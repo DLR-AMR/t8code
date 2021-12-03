@@ -243,12 +243,12 @@ t8_advect_adapt_random (t8_forest_t forest, t8_forest_t forest_from,
 
   int                 r = rand () % 99; /* random number between 0 and 99 */
 
-  if (level < problem->maxlevel && r < 10) {
-    return 1;
-  }
-  else if (level > problem->level && num_elements > 1) {
+  if (level > problem->level && num_elements > 1 && r < 100) {
     /* It is not possible to refine this level */
     return -1;
+  }
+  else if (level < problem->maxlevel && r < 20) {
+    return 1;
   }
   else {
     return 0;
@@ -295,6 +295,14 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
   offset = t8_forest_get_tree_element_offset (forest_from, ltree_id);
   phi = t8_advect_element_get_phi (problem, lelement_id + offset);
 
+  #if 0
+  if (-0.05 <= phi && phi <= 0.05 && level < problem->maxlevel) {
+    return 1;
+  }
+  if (level > problem->level && num_elements > 1) {
+    return -1;
+  }
+  #else
   /* Get a pointer to the element data */
   elem_data = (t8_advect_element_data_t *)
     t8_sc_array_index_locidx (problem->element_data, lelement_id + offset);
@@ -313,6 +321,7 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
     /* refine if level is not too large */
     return level < problem->maxlevel;
   }
+  #endif
   return 0;
 }
 
@@ -411,8 +420,8 @@ t8_advect_l_infty_rel (const t8_advect_problem_t * problem,
 
     /* Compute the analytical solution */
     double ana_sol_transported[3] = {};
-    ana_sol_transported[0] = elem_data->midpoint[0];
-    ana_sol_transported[1] = elem_data->midpoint[1];
+    ana_sol_transported[0] = elem_data->midpoint[0] - 1 * 2; /* T * u[0] */
+    ana_sol_transported[1] = elem_data->midpoint[1] - 1 * 1;
     ana_sol_transported[2] = elem_data->midpoint[2];
     ana_sol =
       analytical_sol (ana_sol_transported, problem->t,
@@ -461,8 +470,8 @@ t8_advect_l_infty_abs (const t8_advect_problem_t * problem,
 
     /* Compute the analytical solution */
     double ana_sol_transported[3] = {};
-    ana_sol_transported[0] = elem_data->midpoint[0];
-    ana_sol_transported[1] = elem_data->midpoint[1];
+    ana_sol_transported[0] = elem_data->midpoint[0] - 1 * 2; /* T * u[0] */
+    ana_sol_transported[1] = elem_data->midpoint[1] - 1 * 1;
     ana_sol_transported[2] = elem_data->midpoint[2];
     ana_sol =
       analytical_sol (ana_sol_transported, problem->t,
@@ -505,12 +514,10 @@ t8_advect_l_2_rel (const t8_advect_problem_t * problem,
   for (ielem = 0; ielem < num_local_elements; ielem++) {
     elem_data = (t8_advect_element_data_t *)
       t8_sc_array_index_locidx (problem->element_data, ielem);
-    /* Compute the analytical solution at time T
-     * T = sqrt(5)x <=> x = T/sqrt(5) 
-     * x = sqrt (a^2 + b^2) with b = 2a => a = T, b = 2T*/
+    /* Compute the analytical solution at time T */
     double ana_sol_transported[3] = {};
-    ana_sol_transported[0] = elem_data->midpoint[0];
-    ana_sol_transported[1] = elem_data->midpoint[1];
+    ana_sol_transported[0] = elem_data->midpoint[0] - 1 * 2; /* T * u[0] */
+    ana_sol_transported[1] = elem_data->midpoint[1] - 1 * 1;
     ana_sol_transported[2] = elem_data->midpoint[2];
     ana_sol =
       analytical_sol (ana_sol_transported, problem->t,
@@ -558,8 +565,8 @@ t8_advect_l_2_abs (const t8_advect_problem_t * problem,
       t8_sc_array_index_locidx (problem->element_data, ielem);
     /* Compute the analytical solution at time T (transported by (0.2,0.4)) */
     double ana_sol_transported[3] = {};
-    ana_sol_transported[0] = elem_data->midpoint[0];
-    ana_sol_transported[1] = elem_data->midpoint[1];
+    ana_sol_transported[0] = elem_data->midpoint[0] - 1 * 2; /* T * u[0] */
+    ana_sol_transported[1] = elem_data->midpoint[1] - 1 * 1;
     ana_sol_transported[2] = elem_data->midpoint[2];
     ana_sol =
       analytical_sol (ana_sol_transported, problem->t,
@@ -938,7 +945,7 @@ t8_advect_global_conservation_check (double scaled_global_phi_beginning, double 
 {
   double a = 1.0;
   long long int b = 1;
-  double small_epsilon = a/(b << 48);
+  double small_epsilon = a/(b << 45);
   double diff_phi_global = scaled_global_phi_beginning - scaled_global_phi_end;
   double abs_diff_phi_global = ((diff_phi_global < 0) ? -diff_phi_global : diff_phi_global);
   t8_debugf ("global_phi_beginning: %e global_phi_end: %e abs_diff_phi_global: %e, precision constant: %e\n", scaled_global_phi_beginning, scaled_global_phi_end, abs_diff_phi_global, small_epsilon);
@@ -950,10 +957,10 @@ t8_advect_conservation_check_phi (double outgoing_phi, double incoming_phi)
 {
   double a = 1.0;
   long long int b = 1;
-  double small_epsilon = a/(b << 48);
+  double small_epsilon = a/(b << 45);
   double diff_phi = outgoing_phi - incoming_phi;
   double abs_diff_phi = ((diff_phi < 0) ? -diff_phi : diff_phi);
-  t8_debugf ("outgoing_phi: %f incoming_phi: %f abs_diff_phi: %f, precision constant: %f\n", outgoing_phi, incoming_phi, abs_diff_phi, small_epsilon);
+  t8_debugf ("outgoing_phi: %e incoming_phi: %e abs_diff_phi: %e, precision constant: %e\n", outgoing_phi, incoming_phi, abs_diff_phi, small_epsilon);
   return ((abs_diff_phi < small_epsilon) ? 1 : 0);
 }
 
@@ -962,10 +969,10 @@ t8_advect_conservation_check_volume (double outgoing_volume, double incoming_vol
 {
   double a = 1.0;
   long long int b = 1;
-  double small_epsilon = a/(b << 48);
+  double small_epsilon = a/(b << 45);
   double diff_volume = outgoing_volume - incoming_volume;
   double abs_diff_volume = ((diff_volume < 0) ? -diff_volume : diff_volume);
-  t8_debugf ("outgoing_volume: %f incoming_volume: %f abs_diff_volume: %f, precision constant: %f\n", outgoing_volume, incoming_volume, abs_diff_volume, small_epsilon);
+  t8_debugf ("outgoing_volume: %e incoming_volume: %e abs_diff_volume: %e, precision constant: %e\n", outgoing_volume, incoming_volume, abs_diff_volume, small_epsilon);
   return ((abs_diff_volume < small_epsilon) ? 1 : 0);
 }
 
@@ -1771,7 +1778,7 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem, int measure_time)
   /* Set the user data pointer of the new forest */
   t8_forest_set_user_data (problem->forest_adapt, problem);
   /* Set the adapt function (it can be set to static via the argument adapt_freq, setting it to a higher number than timesteps) */
-  if (0) {
+  if (1) {
     t8_forest_set_adapt (problem->forest_adapt, problem->forest,
                          t8_advect_adapt, 0);
   }
@@ -1779,6 +1786,7 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem, int measure_time)
     t8_forest_set_adapt (problem->forest_adapt, problem->forest,
                          t8_advect_adapt_random, 0);
   }
+
   if (problem->maxlevel - problem->level > 1) {
     /* We also want to balance the forest
      * if the difference in refinement levels is
@@ -1879,12 +1887,12 @@ t8_advect_problem_adapt_init (t8_advect_problem_t * problem, int measure_time)
   /* Set the user data pointer of the new forest */
   t8_forest_set_user_data (problem->forest_adapt, problem);
   /* Set the adapt function */
-#if 0
+#if 1
   /* initialize according to numerical values (standard) */
   t8_forest_set_adapt (problem->forest_adapt, problem->forest,
                        t8_advect_adapt, 0);
 #endif
-#if 1
+#if 0
   /* randomly adapt a uniform forest (if we choose this, then we should also use adapt_random for further adapting) */
   t8_forest_set_adapt (problem->forest_adapt, problem->forest,
                        t8_advect_adapt_random, 0);
@@ -2502,6 +2510,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   double              phi_plus, phi_minus;
   double              scaled_global_phi_beginning, scaled_global_phi_step, scaled_global_phi_end; /* for conservation test */
   int number_elements_global = 0;
+  int count_time_steps = 0;
 
   /* Initialize problem */
   /* start timing */
@@ -2556,6 +2565,8 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                             (problem->forest));
     }
     /* Time loop */
+
+    count_time_steps++;
 
     if (problem->num_time_steps == 0) {
       scaled_global_phi_beginning = t8_advect_get_global_phi (problem);
@@ -2826,6 +2837,8 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     problem->stats[ADVECT_GHOST_WAIT].count = 1;
 
     T8_ASSERT(problem->delta_t > 0);
+
+    #if 1
     if (problem->t + problem->delta_t > problem->T) {
       /* Ensure that the last time step is always the given end time */
       problem->delta_t = problem->T - problem->t;
@@ -2834,6 +2847,12 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     if (problem->t >= problem->T) {
       done = 1;
     }
+    #else
+    /* Run simulation for a fixed number of time steps */
+    if (count_time_steps == 100) {
+      done = 1;
+    }
+    #endif
 
     /* Global conservation check for the new timestep - global sum of scaled phi values should not change */
     scaled_global_phi_step = t8_advect_get_global_phi (problem);
@@ -2944,7 +2963,7 @@ main (int argc, char *argv[])
                       "with radius 0.15.\n)");
   sc_options_add_int (opt, 'l', "level", &level, 3,
                       "The minimum refinement level of the mesh.");
-  sc_options_add_int (opt, 'r', "rlevel", &reflevel, 4,
+  sc_options_add_int (opt, 'r', "rlevel", &reflevel, 2,
                       "The number of adaptive refinement levels.");
   sc_options_add_int (opt, 'e', "elements", &eclass_int, T8_ECLASS_QUAD,
                       "If specified the coarse mesh is a hypercube\n\t\t\t\t     consisting of the"
@@ -2961,11 +2980,11 @@ main (int argc, char *argv[])
   sc_options_add_int (opt, 'd', "dim", &dim, -1,
                       "In combination with -f: The dimension of the mesh. 1 <= d <= 3.");
 
-  sc_options_add_double (opt, 'T', "end-time", &T, 0.1,
+  sc_options_add_double (opt, 'T', "end-time", &T, 1,
                          "The duration of the simulation. Default: 1");
 
   sc_options_add_double (opt, 'C', "CFL", &cfl,
-                         0.1, "The cfl number to use. Default: 1");
+                         0.2, "The cfl number to use. Default: 1");
   sc_options_add_double (opt, 'b', "band-width", &band_width,
                          3,
                          "Control the width of the refinement band around\n"
@@ -2975,7 +2994,7 @@ main (int argc, char *argv[])
                       "Controls how often the mesh is readapted. "
                       "A value of i means, every i-th time step.");
 
-  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 20,
+  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 5,
                       "How often the vtk output is produced "
                       "\n\t\t\t\t     (after how many time steps). "
                       "A value of 0 is equivalent to using -o.");
