@@ -683,8 +683,6 @@ t8_forest_commit (t8_forest_t forest)
   /* print runtime for balance and transition */
   t8_productionf ("balance_time: %f\n", forest->time_balance);
   t8_productionf ("transition_time: %f\n", forest->time_transition);
-  t8_productionf ("transition_callback_time: %f\n", forest->time_transition_callback);
-  t8_productionf ("time_leaf_face_neighbors in transition: %f\n", forest->time_leaf_neighbors);
 
 #if 0
   /* TODO: Do we keep the arrays or not? */
