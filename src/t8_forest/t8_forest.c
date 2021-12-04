@@ -640,13 +640,13 @@ t8_forest_commit (t8_forest_t forest)
       forest->time_balance += sc_MPI_Wtime ();
     }
     if (forest->from_method & T8_FOREST_FROM_SUBELEMENTS) {
+      forest->time_transition = 0;
+      forest->time_transition -= sc_MPI_Wtime ();
       forest->from_method -= T8_FOREST_FROM_SUBELEMENTS;
       /* this is the last from method that we execute,
        * nothing should be left todo */
       T8_ASSERT (forest->from_method == 0);
       /* use subelements */
-      forest->time_transition = 0;
-      forest->time_transition -= sc_MPI_Wtime ();
       t8_forest_remove_hanging_faces (forest);
       forest->time_transition += sc_MPI_Wtime ();
     }

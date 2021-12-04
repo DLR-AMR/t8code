@@ -229,8 +229,6 @@ t8_forest_remove_hanging_faces (t8_forest_t forest)
 {
   t8_global_productionf ("Into t8_forest_remove_hanging_faces.\n");
 
-  forest->time_leaf_neighbors = 0;
-  forest->time_transition_callback = 0;
   forest->set_adapt_fn = t8_forest_remove_hanging_faces_adapt;
   forest->set_adapt_recursive = 0;
   t8_forest_copy_trees (forest, forest->set_from, 0);
