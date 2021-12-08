@@ -1,8 +1,8 @@
-Describe your changes here:
+**_Describe your changes here:_**
 
 
 
-All these boxes must be checked by the reviewers before merging the pull request:
+**_All these boxes must be checked by the reviewers before merging the pull request:_**
 
 - [ ] The author added a BSD statement to `docs/` (or already has one)
 - [ ] The code compiles without warning in debugging and release mode, with and without MPI (this should be executed automatically in a github action)
