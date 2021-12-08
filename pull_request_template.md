@@ -4,7 +4,7 @@
 
 **_All these boxes must be checked by the reviewers before merging the pull request:_**
 
-- [ ] The author added a BSD statement to `docs/` (or already has one)
+- [ ] The author added a BSD statement to `doc/` (or already has one)
 - [ ] The code compiles without warning in debugging and release mode, with and without MPI (this should be executed automatically in a github action)
 
   If the Pull request indroduces code that is not covered by the github action (for example coupling with a new library):
