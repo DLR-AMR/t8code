@@ -6,8 +6,15 @@
 # The script then prints out all these comments together with file and line.
 
 PROJECT_DIR=".."
-SEARCH_PATH="$PROJECT_DIR/src/*.h $PROJECT_DIR/src/*.c \
-	     $PROJECT_DIR/src/*/*.h $PROJECT_DIR/src/*/*.c \
-	     $PROJECT_DIR/example/*/*.h $PROJECT_DIR/example/*/*.c \
-	     $PROJECT_DIR/test/*.h $PROJECT_DIR/test/*.c"
+for folder in src example test
+do
+  SEARCH_PATH="$SEARCH_PATH $PROJECT_DIR/$folder/*.h"
+  SEARCH_PATH="$SEARCH_PATH $PROJECT_DIR/$folder/*.c"
+  SEARCH_PATH="$SEARCH_PATH $PROJECT_DIR/$folder/*.hxx"
+  SEARCH_PATH="$SEARCH_PATH $PROJECT_DIR/$folder/*.cxx"
+  SEARCH_PATH="$SEARCH_PATH $PROJECT_DIR/$folder/*/*.h"
+  SEARCH_PATH="$SEARCH_PATH $PROJECT_DIR/$folder/*/*.c"
+  SEARCH_PATH="$SEARCH_PATH $PROJECT_DIR/$folder/*/*.hxx"
+  SEARCH_PATH="$SEARCH_PATH $PROJECT_DIR/$folder/*/*.cxx"
+done
 grep TODO $SEARCH_PATH -n -A20 | awk '/TODO/,/*\//'

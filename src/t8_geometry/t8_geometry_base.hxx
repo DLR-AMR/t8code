@@ -155,7 +155,7 @@ public:
    * In this implementation we use it to load the tree's vertex coordinates and class
    * to the internal member variables \a active_tree_class and \a active_tree_vertices.
    * \param [in]  cmesh      The cmesh.
-   * \param [in]  gtreeid    The glocal tree.
+   * \param [in]  gtreeid    The global tree.
    */
   virtual void        t8_geom_load_tree_data (t8_cmesh_t cmesh,
                                               t8_gloidx_t gtreeid);

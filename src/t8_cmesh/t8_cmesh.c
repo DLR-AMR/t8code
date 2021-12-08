@@ -510,7 +510,7 @@ t8_cmesh_set_attribute (t8_cmesh_t cmesh, t8_gloidx_t gtree_id,
   T8_ASSERT (!cmesh->committed);
 
   t8_stash_add_attribute (cmesh->stash, gtree_id, package_id, key, data_size,
-                          data, data_persists);
+                          data, !data_persists);
 }
 
 void
@@ -995,11 +995,12 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
   /* At first we broadcast all meta information. */
   if (mpirank == root) {
     /* Check whether geometries are set. If so, abort.
-     * We cannot broadcast he geometries, since they are pointers to derived 
+     * We cannot broadcast the geometries, since they are pointers to derived 
      * classes that we cannot know of on the receiving process.
      * Geometries must therefore be added after broadcasting. */
     SC_CHECK_ABORT (cmesh_in->geometry_handler == NULL,
-                    "Error: Broadcasting a cmesh with registerd geometries is not possible.\n");
+                    "Error: Broadcasting a cmesh with registerd geometries is not possible.\n"
+                     "We recommend to broadcast first and register the geometries after.\n");
     memcpy (&meta_info.cmesh, cmesh_in, sizeof (*cmesh_in));
     for (iclass = 0; iclass < T8_ECLASS_COUNT; iclass++) {
       meta_info.num_trees_per_eclass[iclass] =
@@ -2388,7 +2389,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
 
   /* Use linear geometry */
   /* We need to set the geometry after broadcasting, since we
-   * cannot bcast he geometries. */
+   * cannot bcast the geometries. */
   t8_cmesh_register_geometry (cmesh, linear_geom);
 
   if (do_partition) {
@@ -3081,9 +3082,12 @@ t8_cmesh_new_tet_orientation_test (sc_MPI_Comm comm)
   /* Set the coordinates. Each tet is just a translated version of
    * the root tet */
   for (i = 0; i < num_trees; i++) {
-    translate[0] = (i & 1) + 2 * ! !(i & 8);
-    translate[1] = ! !(i & 2) + 2 * ! !(i & 16);
-    translate[2] = ! !(i & 4) + 2 * ! !(i & 32);
+    /* *INDENT-OFF* */
+    /* Indent fails at '!!' */
+    translate[0] = (i & 1) + 2 * !!(i & 8);
+    translate[1] = !!(i & 2) + 2 * !!(i & 16);
+    translate[2] = !!(i & 4) + 2 * !!(i & 32);
+    /* *INDENT-ON* */
     t8_debugf ("%i  %.0f %.0f %.0f\n", i, translate[0], translate[1],
                translate[2]);
     t8_cmesh_translate_coordinates (vertices_coords, translated_coords, 4,

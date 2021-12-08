@@ -89,7 +89,7 @@ public:
    * It is specifically designed to work on two tree cmeshes and 
    * models the rectangle [0,2] x [0,1].
    * \param [in]  cmesh      The cmesh in which the point lies.
-   * \param [in]  gtreeid    The glocal tree (of the cmesh) in which the reference point is.
+   * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^2.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
    */
@@ -144,7 +144,7 @@ public:
   /**
    * Map a point in a point in [0,1]^2 to the moebius band.
    * \param [in]  cmesh      The cmesh in which the point lies.
-   * \param [in]  gtreeid    The glocal tree (of the cmesh) in which the reference point is.
+   * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^2.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
    */
@@ -338,21 +338,18 @@ public:
     /* Change gridlines by applying a 4th order polynomial mapping
      * [0,1]^2 -> [0,1]^2.
      * And then map this to [-0.5,-0.5]^2 */
-    //x = x*x*x*x - 3.5*x*x*x + 3.5 * x;
     int                 sign = x < 0 ? 1 : -1;
     double              rho = 0.5 - time / 10;
     /* *INDENT-OFF* */
     x = sign * (1 - exp (-fabs (-x) / rho)) / (2 * (1 - exp (-0.5 / rho)));
     sign = y < 0 ? 1 : -1;
     y = sign * (1 - exp (-fabs (-y) / rho)) / (2 * (1 - exp (-0.5 / rho)));
-    //y = y*y*y - 3.5*y*y + 2.5 * y - 0.5;
 
-    /* Rotate the x-y axis and add sincon in z axis. */
+    /* Rotate the x-y axis and add sincos in z axis. */
     out_coords[0] = x * (cos (phi)) - y * sin (phi);
     out_coords[1] = y * (cos (phi)) + x * sin (phi);
     out_coords[2] = 0;
     /* *INDENT-ON* */
-    //sin(2*M_PI * time) * 0.2 * sin (out_coords[0] * 2 * M_PI) * cos (out_coords[1] * 2 * M_PI);
   }
 
   /* Jacobian, not implemented. */
@@ -391,7 +388,7 @@ public:
   /**
    * Map a reference point in the unit cube to a cube distorted in the z axis.
    * \param [in]  cmesh      The cmesh in which the point lies.
-   * \param [in]  gtreeid    The glocal tree (of the cmesh) in which the reference point is.
+   * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^3.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
    */
@@ -925,13 +922,13 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
      * after each time step. */
     int                 timestep = 0;
     const int           num_timesteps = 100;
-    const int           end_time = 4;
+    const double        end_time = 4;
     char                vtuname_with_timestep[BUFSIZ];
 
     for (timestep = 0; timestep < num_timesteps; ++timestep) {
       /* Modify the time. Note that a pointer of our
        * geometry points to this entry, which changes the shape of the tree. */
-      time += ((double) end_time) / num_timesteps;
+      time += end_time / num_timesteps;
       /* At the time step to the output filename */
       sreturn =
         snprintf (vtuname_with_timestep, BUFSIZ, "%s_%04i", vtuname,

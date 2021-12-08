@@ -34,6 +34,7 @@
 #include <vtkDataSetMapper.h>
 #include <vtkNew.h>
 #include <vtkPointData.h>
+#include <vtkCellData.h>
 #include <vtkProperty.h>
 #include <vtkTetra.h>
 #include <vtkHexahedron.h>
@@ -48,6 +49,8 @@
 #include <vtkXMLPUnstructuredGridWriter.h>
 #include <vtkXMLUnstructuredGridWriter.h>
 #include <vtkUnsignedCharArray.h>
+#include <vtkDoubleArray.h>
+#include <vtkTypeInt64Array.h>
 #include <vtkSmartPointer.h>
 #if T8_ENABLE_MPI
 #include <vtkMPI.h>
@@ -125,8 +128,13 @@ typedef int         (*t8_forest_vtk_cell_data_kernel) (t8_forest_t forest,
                                                        T8_VTK_KERNEL_MODUS
                                                        modus);
 
-void
-t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
+int
+t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
+                             int write_treeid,
+                             int write_mpirank,
+                             int write_level,
+                             int write_element_id,
+                             int num_data, t8_vtk_data_field_t * data)
 {
 #if T8_WITH_VTK
   /*Check assertions: forest and fileprefix are not NULL and forest is commited */
@@ -140,6 +148,8 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
   t8_locidx_t         itree, ivertex;
   double              coordinates[3];
   int                 elem_id = 0;
+  t8_locidx_t         num_elements;
+  int                 freturn = 0;
 
 /* Since we want to use different element types and a points Array and cellArray 
  * we have to declare these vtk objects. The cellArray stores the Elements.
@@ -159,9 +169,28 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
   /* 
    * The cellTypes Array stores the element types as integers(see vtk doc).
    */
-  int                *cellTypes =
-    T8_ALLOC (int, t8_forest_get_local_num_elements (forest));
+  num_elements = t8_forest_get_local_num_elements (forest);
+  int                *cellTypes = T8_ALLOC (int, num_elements);
+  /*
+   * We have to define the vtkTypeInt64Array that hold 
+   * metadata if wanted. 
+   */
 
+  t8_vtk_gloidx_array_type_t *vtk_treeid = t8_vtk_gloidx_array_type_t::New ();
+  t8_vtk_gloidx_array_type_t *vtk_mpirank =
+    t8_vtk_gloidx_array_type_t::New ();
+  t8_vtk_gloidx_array_type_t *vtk_level = t8_vtk_gloidx_array_type_t::New ();
+  t8_vtk_gloidx_array_type_t *vtk_element_id =
+    t8_vtk_gloidx_array_type_t::New ();
+
+/*
+ * We need the dataArray for writing double valued user defined data in the vtu files.
+ * We want to write num_data many timesteps/arrays.
+ * We need num_data many vtkDoubleArrays, so we need to allocate storage.
+ * Later we call the constructor with: dataArrays[idata]=vtkDoubleArray::New()
+ */
+  vtkDoubleArray    **dataArrays;
+  dataArrays = T8_ALLOC (vtkDoubleArray *, num_data);
 /* We iterate over all local trees*/
   for (itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {
 /* 
@@ -175,7 +204,8 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
                                                                      itree));
     t8_locidx_t         elems_in_tree =
       t8_forest_get_tree_num_elements (forest, itree);
-
+    t8_locidx_t         offset =
+      t8_forest_get_tree_element_offset (forest, itree);
     /* We iterate over all elements in the tree */
     for (ielement = 0; ielement < elems_in_tree; ielement++) {
 
@@ -230,14 +260,39 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
                                  coordinates[2]);
         /* Set the point ids to the vtk cell */
         pvtkCell->GetPointIds ()->SetId (ivertex, point_id);
-      }
+      }                         /* end loop over all vertices of the element */
+
       /* We insert the next cell in the cell array */
       cellArray->InsertNextCell (pvtkCell);
+      /*
+       * Write current cell Type in the cell Types array at the elem_id index.
+       * Depending on the values of the binary inputs write_treeid, 
+       * write_mpirank and write_element_id we also fill the corresponding
+       * arrays with the data we want(treeid,mpirank,element_id).
+       * To get the element id, we have to add the local id in the tree 
+       * plus theo
+       */
 
+      /* *INDENT-OFF* */
       cellTypes[elem_id] = t8_eclass_vtk_type[element_shape];
-      elem_id++;
+      if (write_treeid == 1) {
+        vtk_treeid->InsertNextValue (itree);
+      }
+      if (write_mpirank == 1) {
+        vtk_mpirank->InsertNextValue (forest->mpirank);
+      }
+      if (write_level == 1) {
+        vtk_level->InsertNextValue (scheme->t8_element_level (element));
+      }
+      if (write_element_id == 1) {
+        vtk_element_id->InsertNextValue (elem_id + offset +
+                                         t8_forest_get_first_local_element_id
+                                         (forest));
+      /* *INDENT-ON* */
     }
-  }
+    elem_id++;
+  }                             /* end of loop over elements */
+}                               /* end of loop over local trees */
 
   /* 
    * Write file: First we construct the unstructured Grid 
@@ -246,20 +301,20 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
    * and the cells(cellTypes and which points belong to this cell) 
    */
 
-  vtkNew < vtkUnstructuredGrid > unstructuredGrid;
-  unstructuredGrid->SetPoints (points);
-  unstructuredGrid->SetCells (cellTypes, cellArray);
+vtkNew < vtkUnstructuredGrid > unstructuredGrid;
+unstructuredGrid->SetPoints (points);
+unstructuredGrid->SetCells (cellTypes, cellArray);
   /*
    * We define the filename used to write the pvtu and the vtu files.
    * The pwriterObj is of class XMLPUnstructuredGridWriter, the P in
    * XMLP is important: We want to write a vtu file for each process.
    * This class enables us to do exactly that. 
    */
-  char                mpifilename[BUFSIZ];
-  snprintf (mpifilename, BUFSIZ, "%s.pvtu", fileprefix);
+char                mpifilename[BUFSIZ];
+snprintf (mpifilename, BUFSIZ, "%s.pvtu", fileprefix);
 
-  vtkSmartPointer < vtkXMLPUnstructuredGridWriter > pwriterObj =
-    vtkSmartPointer < vtkXMLPUnstructuredGridWriter >::New ();
+vtkSmartPointer < vtkXMLPUnstructuredGridWriter > pwriterObj =
+  vtkSmartPointer < vtkXMLPUnstructuredGridWriter >::New ();
 /*
  * Get/Set whether the appended data section is base64 encoded. 
  * If encoded, reading and writing will be slower, but the file 
@@ -271,8 +326,8 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
  * We set the filename of the pvtu file. The filenames of the vtu files
  * are given based on the name of the pvtu file and the process number.
  */
-  pwriterObj->EncodeAppendedDataOff ();
-  pwriterObj->SetFileName (mpifilename);
+pwriterObj->EncodeAppendedDataOff ();
+pwriterObj->SetFileName (mpifilename);
 
 /*
  * Since we want to write multiple files, the processes 
@@ -282,16 +337,16 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
  * therefore we define the controller vtk_mpi_ctrl.
  */
 #if T8_ENABLE_MPI
-  vtkSmartPointer < vtkMPICommunicator > vtk_comm =
-    vtkSmartPointer < vtkMPICommunicator >::New ();
-  vtkMPICommunicatorOpaqueComm vtk_opaque_comm (&forest->mpicomm);
-  vtk_comm->InitializeExternal (&vtk_opaque_comm);
+vtkSmartPointer < vtkMPICommunicator > vtk_comm =
+  vtkSmartPointer < vtkMPICommunicator >::New ();
+vtkMPICommunicatorOpaqueComm vtk_opaque_comm (&forest->mpicomm);
+vtk_comm->InitializeExternal (&vtk_opaque_comm);
 
-  vtkSmartPointer < vtkMPIController > vtk_mpi_ctrl =
-    vtkSmartPointer < vtkMPIController >::New ();
-  vtk_mpi_ctrl->SetCommunicator (vtk_comm);
+vtkSmartPointer < vtkMPIController > vtk_mpi_ctrl =
+  vtkSmartPointer < vtkMPIController >::New ();
+vtk_mpi_ctrl->SetCommunicator (vtk_comm);
 
-  pwriterObj->SetController (vtk_mpi_ctrl);
+pwriterObj->SetController (vtk_mpi_ctrl);
 #endif
 /*
  * We set the number of pieces as the number of mpi processes,
@@ -303,19 +358,81 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
  * 
  * Note: We could write more than one file per process here, if desired.
  */
-  pwriterObj->SetNumberOfPieces (forest->mpisize);
-  pwriterObj->SetStartPiece (forest->mpirank);
-  pwriterObj->SetEndPiece (forest->mpirank);
-  pwriterObj->SetInputData (unstructuredGrid);
-  pwriterObj->Update ();
-  pwriterObj->Write ();
-/* We have to free the allocated memory for the cellTypes Array. */
-  T8_FREE (cellTypes);
+pwriterObj->SetNumberOfPieces (forest->mpisize);
+pwriterObj->SetStartPiece (forest->mpirank);
+pwriterObj->SetEndPiece (forest->mpirank);
+  /* *INDENT-OFF* */
+  if (write_treeid) {
+    vtk_treeid->SetName ("treeid");
+    unstructuredGrid->GetCellData()->AddArray(vtk_treeid);
+  }
+  if (write_mpirank) {
+    vtk_mpirank->SetName ("mpirank");
+    unstructuredGrid->GetCellData()->AddArray(vtk_mpirank);
+  }
+  if (write_level) {
+    vtk_level->SetName ("level");
+    unstructuredGrid->GetCellData()->AddArray(vtk_level);
+  }
+  if (write_element_id) {
+    vtk_element_id->SetName ("element_id");
+    unstructuredGrid->GetCellData()->AddArray(vtk_element_id);
+  }
+  /* *INDENT-ON* */
+
+/* Write the user defined data fields. 
+ * For that we iterate over the idata, set the name, the array
+ * and then give this data to the unstructured Grid Object.
+ * We differentiate between scalar and vector data.
+ */
+for (int idata = 0; idata < num_data; idata++) {
+  dataArrays[idata] = vtkDoubleArray::New ();
+  if (data[idata].type == T8_VTK_SCALAR) {
+    dataArrays[idata]->SetName (data[idata].description);       /* Set the name of the array */
+    dataArrays[idata]->SetVoidArray (data[idata].data, num_elements, 1);        /* We write the data in the array from the input array */
+    unstructuredGrid->GetCellData ()->AddArray (dataArrays[idata]);     /* We add the array to the cell data object */
+  }
+  else {
+    dataArrays[idata]->SetName (data[idata].description);       /* Set the name of the array */
+    dataArrays[idata]->SetNumberOfTuples (num_elements);        /* We want number of tuples=number of elements */
+    dataArrays[idata]->SetNumberOfComponents (3);       /* Each tuples has 3 values */
+    dataArrays[idata]->SetVoidArray (data[idata].data, num_elements * 3, 1);    /*  */
+    unstructuredGrid->GetCellData ()->SetVectors (dataArrays[idata]);   /*  */
+  }
+}
+
+/* We set the input data and write the vtu files. */
+pwriterObj->SetInputData (unstructuredGrid);
+pwriterObj->Update ();
+if (pwriterObj->Write ()) {
+  /* Writing failed */
+  freturn = 1;
+}
+else {
+  t8_errorf ("Error when writing vtk file.\n");
+}
+
+/* We have to free the allocated memory for the cellTypes Array and the other arrays we allocated memory for. */
+
+vtk_treeid->Delete ();
+vtk_mpirank->Delete ();
+vtk_level->Delete ();
+vtk_element_id->Delete ();
+for (int idata = 0; idata < num_data; idata++) {
+  dataArrays[idata]->Delete ();
+}
+
+T8_FREE (cellTypes);
+T8_FREE (dataArrays);
+/* Return whether writing was successful */
+return freturn;
+
 #else
   t8_global_errorf
     ("Warning: t8code is not linked against vtk library. Vtk output will not be generated.\n");
   t8_global_productionf
     ("Consider calling 't8_forest_write_vtk' or 't8_forest_vtk_write_file' instead.\n");
+  return 0;
 #endif
 }
 

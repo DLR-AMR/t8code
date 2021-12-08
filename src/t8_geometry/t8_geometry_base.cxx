@@ -20,35 +20,12 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* In this file we collect the implementations of the C interface 
- * to the geometry base class. */
+/* In this file we collect the implementations of the geometry base class
+ * and its C interface.
+ * */
 
 #include <t8_geometry/t8_geometry_base.hxx>
 #include <t8_geometry/t8_geometry_base.h>
-
-/** Get the dimension of a geometry.
- * \param [in]  geom  A geometry.
- * \return            The dimension of \a geom.
- */
-int
-t8_geom_get_dimension (const t8_geometry_c * geom)
-{
-  T8_ASSERT (geom != NULL);
-
-  return geom->t8_geom_get_dimension ();
-}
-
-/** Get the name of a geometry.
- * \param [in]  geom  A geometry.
- * \return            The name of \a geom.
- */
-const char         *
-t8_geom_get_name (const t8_geometry_c * geom)
-{
-  T8_ASSERT (geom != NULL);
-
-  return geom->t8_geom_get_name ();
-}
 
 /* Load the coordinates of the newly active tree to the active_tree_vertices
  * variable. */
@@ -73,4 +50,28 @@ t8_geometry_w_vertices::t8_geom_load_tree_data (t8_cmesh_t cmesh,
              || active_tree_class == T8_ECLASS_HEX
              || active_tree_class == T8_ECLASS_LINE
              || active_tree_class == T8_ECLASS_PRISM);
+}
+
+/** Get the dimension of a geometry.
+ * \param [in]  geom  A geometry.
+ * \return            The dimension of \a geom.
+ */
+int
+t8_geom_get_dimension (const t8_geometry_c * geom)
+{
+  T8_ASSERT (geom != NULL);
+
+  return geom->t8_geom_get_dimension ();
+}
+
+/** Get the name of a geometry.
+ * \param [in]  geom  A geometry.
+ * \return            The name of \a geom.
+ */
+const char         *
+t8_geom_get_name (const t8_geometry_c * geom)
+{
+  T8_ASSERT (geom != NULL);
+
+  return geom->t8_geom_get_name ();
 }

@@ -25,6 +25,7 @@ t8code_test_programs = \
 	test/t8_test_cmesh_readmshfile \
 	test/t8_test_netcdf_linkage \
 	test/t8_test_vtk_linkage \
+	test/t8_test_shmem \
 	test/t8_test_user_data
 
 test_t8_test_eclass_SOURCES = test/t8_test_eclass.c
@@ -43,12 +44,13 @@ test_t8_test_half_neighbors_SOURCES = test/t8_test_half_neighbors.cxx
 test_t8_test_element_count_leafs_SOURCES = test/t8_test_element_count_leafs.cxx
 test_t8_test_search_SOURCES = test/t8_test_search.cxx
 test_t8_test_point_inside_SOURCES = test/t8_test_point_inside.cxx
-test_t8_test_find_parent_SOURCES = test/t8_test_find_parent.cpp
+test_t8_test_find_parent_SOURCES = test/t8_test_find_parent.cxx
 test_t8_test_cmesh_face_is_boundary_SOURCES = test/t8_test_cmesh_face_is_boundary.cxx
 test_t8_test_element_general_function_SOURCES = test/t8_test_element_general_function.cxx
 test_t8_test_cmesh_readmshfile_SOURCES = test/t8_test_cmesh_readmshfile.c
 test_t8_test_netcdf_linkage_SOURCES = test/t8_test_netcdf_linkage.c
 test_t8_test_vtk_linkage_SOURCES = test/t8_test_vtk_linkage.cxx
+test_t8_test_shmem_SOURCES = test/t8_test_shmem.cxx
 test_t8_test_user_data_SOURCES = test/t8_test_user_data.cxx
 
 TESTS += $(t8code_test_programs)

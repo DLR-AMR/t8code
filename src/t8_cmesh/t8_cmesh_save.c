@@ -579,7 +579,7 @@ t8_cmesh_save (t8_cmesh_t cmesh, const char *fileprefix)
     t8_geometry_linear_destroy (&linear_geom);
   }
   if (!has_linear_geom) {
-    /* This cmesh does not have the linear geometry for all tree. */
+    /* This cmesh does not have the linear geometry for all trees. */
     t8_errorf
       ("Error when saving cmesh. Cmesh does not have linear geometry.\n");
     return 0;
@@ -886,6 +886,7 @@ t8_cmesh_load_and_distribute (const char *fileprefix, int num_files,
   T8_ASSERT (mpisize >= num_files);
 
   /* Try to set the comm type */
+  t8_shmem_init (comm);
   t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
 
   /* Use cmesh_bcast, if only one process loads the cmesh: */

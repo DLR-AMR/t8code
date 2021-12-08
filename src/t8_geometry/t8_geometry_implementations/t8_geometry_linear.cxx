@@ -43,7 +43,7 @@ t8_geometry_linear::~t8_geometry_linear ()
 /**
  * Map a point in the reference space $$[0,1]^dimension$$ to $$\mathbb R^3$$
  * \param [in]  cmesh      The cmesh in which the point lies.
- * \param [in]  gtreeid    The glocal tree (of the cmesh) in which the reference point is.
+ * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
  * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
  * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
  * \note Since this is the identity geometry, \a out_coords will be equal to \a ref_coords in
@@ -66,7 +66,7 @@ t8_geometry_linear::t8_geom_evaluate (t8_cmesh_t cmesh,
 /**
  * Compute the jacobian of the \a t8_geom_evaluate map at a point in the reference space $$[0,1]^dimension$$.
  * \param [in]  cmesh      The cmesh in which the point lies.
- * \param [in]  gtreeid    The glocal tree (of the cmesh) in which the reference point is.
+ * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
  * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
  * \param [out] jacobian    The jacobian at \a ref_coords. Array of size dimension x 3. Indices 3*i, 3*i+1, 3*i+2
  *                          correspond to the i-th column of the jacobian (Entry 3*i + j is del f_j/del x_i).
@@ -84,7 +84,6 @@ t8_geometry_linear::t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
   SC_ABORT ("Not implemented.");
 }
 
-/* This part should be callable from C */
 T8_EXTERN_C_BEGIN ();
 
 /* Satisfy the C interface from t8_geometry_linear.h.

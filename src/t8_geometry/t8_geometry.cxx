@@ -196,7 +196,7 @@ void
 t8_geom_handler_register_geometry (t8_geometry_handler_t * geom_handler,
                                    const t8_geometry_c * geometry)
 {
-  t8_debugf ("Registring geometry %s\n", geometry->t8_geom_get_name ());
+  t8_debugf ("Registering geometry %s\n", geometry->t8_geom_get_name ());
   T8_ASSERT (t8_geom_handler_is_initialized (geom_handler));
   /* Must not be committed */
   T8_ASSERT (!t8_geom_handler_is_committed (geom_handler));
@@ -216,7 +216,7 @@ t8_geom_handler_commit (t8_geometry_handler_t * geom_handler)
   /* Must not be committed */
   T8_ASSERT (!t8_geom_handler_is_committed (geom_handler));
   /* If we only have one geometry (which is a standard use case).
-   * We set this to be the active geometry and now that we will not
+   * We set this to be the active geometry and know that we will not
    * have to look for any other geometry in t8_geom_handler_update_tree.
    * If we have more than one geometry, we set the active geometry to
    * NULL, sort the geometries array and will search for a tree's geometry

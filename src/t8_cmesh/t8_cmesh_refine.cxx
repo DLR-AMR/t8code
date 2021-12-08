@@ -246,7 +246,7 @@ t8_cmesh_refine_outer_faces (t8_cmesh_t cmesh_from, t8_locidx_t parent_id,
     }
     else if (compute_ghost && old_neigh_ghost == global_parent_id) {
       /* We are local ghost and this side is a boundary,
-       * so we set our own glocal id as face neighbor */
+       * so we set our own global id as face neighbor */
       neighbor_out_ghost[iface] =
         t8_cmesh_refine_new_globalid (global_parent_id, child_id, factor);
     }
@@ -378,7 +378,7 @@ t8_cmesh_refine_new_neighbors (t8_cmesh_t cmesh_from, t8_locidx_t parent_id,
       }
       else if (compute_ghost && old_neigh_ghost == global_parent_id) {
         /* We are local ghost and this side is a boundary,
-         * so we set our own glocal id as face neighbor */
+         * so we set our own global id as face neighbor */
         neighbor_out_ghost[iface] =
           t8_cmesh_refine_new_globalid (global_parent_id, child_id, factor);
       }
@@ -485,7 +485,7 @@ t8_cmesh_refine_new_neighbors (t8_cmesh_t cmesh_from, t8_locidx_t parent_id,
         }
         else if (compute_ghost && old_neigh_ghost == global_parent_id) {
           /* We are local ghost and this side is a boundary,
-           * so we set our own glocal id as face neighbor */
+           * so we set our own global id as face neighbor */
           neighbor_out_ghost[iface] =
             t8_cmesh_refine_new_globalid (global_parent_id, child_id, factor);
         }
