@@ -143,7 +143,7 @@ public:
   virtual void 
   t8_geom_load_tree_data (t8_cmesh_t cmesh,
                           t8_gloidx_t gtreeid);
-
+  
   /** Get an occ point from the occ_shape.
    * \param [in] index      The index of the point in the occ_shape.
    * \return                The occ point.
@@ -268,6 +268,7 @@ public:
                                       double *near_params = nullptr);
 
 private:
+  double                                      tolerance;
   TopoDS_Shape                                occ_shape;                  /** Occ geometry */
   TopTools_IndexedMapOfShape                  occ_shape_vertex_map;       /** Map of all TopoDS_Vertex in shape. */
   TopTools_IndexedMapOfShape                  occ_shape_edge_map;         /** Map of all TopoDS_Edge in shape. */

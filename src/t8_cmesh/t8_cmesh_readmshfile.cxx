@@ -946,6 +946,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE * fp,
         /* Calculate the parametric geometries of the tree */
         if (occ_geometry != NULL)
         {
+          /* Check for right element class */
           if (eclass != T8_ECLASS_HEX)
           {
             t8_errorf("%s element detected. The occ geometry currently only supports hex elements.", t8_eclass_to_string[eclass]);
@@ -980,71 +981,9 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE * fp,
             {
               face_nodes[i_face_nodes] = tree_nodes[t8_face_vertex_to_tree_vertex[eclass][i_tree_faces][i_face_nodes]];
             }
-            /* For each edge of face */
-            for (int i_face_edges = 0; i_face_edges < t8_eclass_num_faces[t8_eclass_face_types[eclass][i_tree_faces]]; ++i_face_edges)
-            {
-              /* Save indices for better readability */
-              int node1 = t8_face_vertex_to_tree_vertex[t8_eclass_face_types[eclass][i_tree_faces]][i_tree_faces][0];
-              int node2 = t8_face_vertex_to_tree_vertex[t8_eclass_face_types[eclass][i_tree_faces]][i_tree_faces][1];
-
-              /* If both nodes are on a vertex we look if both vertices share an edge */
-              if (face_nodes[node1].entity_dim == 0 &&
-                  face_nodes[node2].entity_dim == 0)
-              {
-                int common_edge = occ_geometry->t8_geom_get_common_edge(face_nodes[node1].entity_tag,
-                                                                        face_nodes[node2].entity_tag);
-                if (common_edge > 0)
-                {
-                  /* Save shared edge */
-                  face_nodes[node1].entity_dim = 1;
-                  face_nodes[node2].entity_dim = 1;
-                  face_nodes[node1].entity_tag = common_edge;
-                  face_nodes[node2].entity_tag = common_edge;
-                  /* Save that the edge carries a geometry */
-                  edge_geometries[t8_face_edge_to_tree_edge[i_tree_faces][i_face_edges]] = common_edge;
-                  /* The parameters are now invalid, we have to calculate them again later */
-                  face_nodes[node1].changed_parameters = 1;
-                  face_nodes[node2].changed_parameters = 1;
-                }
-              }
-              /* If one node is on a vertex and the other on an edge we look if the vertex also lies on the edge */
-              if (face_nodes[node1].entity_dim == 0 && face_nodes[node2].entity_dim == 1)
-              {
-                if (occ_geometry->t8_geom_is_vertex_on_edge(face_nodes[node1].entity_tag, face_nodes[node2].entity_tag))
-                {
-                  /* Save edge in node */
-                  face_nodes[node1].entity_dim = 1;
-                  face_nodes[node1].entity_tag = face_nodes[node2].entity_tag;
-                  /* Save that the edge carries a geometry */
-                  edge_geometries[t8_face_edge_to_tree_edge[i_tree_faces][i_face_edges]] = face_nodes[node2].entity_tag;
-                  /* The parameters are now invalid, we have to calculate them again later */
-                  face_nodes[node1].changed_parameters = 1;
-                }
-              }
-              /* Same as before but the other way around */
-              if (face_nodes[node2].entity_dim == 0 && face_nodes[node1].entity_dim == 1)
-              {
-                if (occ_geometry->t8_geom_is_vertex_on_edge(face_nodes[node2].entity_tag, face_nodes[node1].entity_tag))
-                {
-                  /* Save edge in node */
-                  face_nodes[node2].entity_dim = 1;
-                  face_nodes[node2].entity_tag = face_nodes[node1].entity_tag;
-                  /* Save that the edge carries a geometry */
-                  edge_geometries[t8_face_edge_to_tree_edge[i_tree_faces][i_face_edges]] = face_nodes[node1].entity_tag;
-                  /* The parameters are now invalid, we have to calculate them again later */
-                  face_nodes[node2].changed_parameters = 1;
-                }
-              }
-              /* Save edge if both nodes are on the same edge */
-              if (face_nodes[node1].entity_dim == 1 && face_nodes[node2].entity_dim == 1 &&
-                  face_nodes[node1].entity_tag == face_nodes[node2].entity_tag)
-              {
-                edge_geometries[t8_face_edge_to_tree_edge[i_tree_faces][i_face_edges]] = face_nodes[node1].entity_tag;
-              }
-            }
             /* Now we can check if the face is connected to a surface */
             int surface_index = 0;
-            /* Check if a node is already on a surface */
+            /* If one node is already on a surface we can check if the rest lies also on the surface. */
             for (int i_face_nodes = 0; i_face_nodes < t8_eclass_num_vertices[t8_eclass_face_types[eclass][i_tree_faces]]; ++i_face_nodes)
             {
               if (face_nodes[i_face_nodes].parametric)
@@ -1056,12 +995,13 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE * fp,
                 }
               }
             }
-            /* If we have not already found a surface index, we check if two edges share the same surface */
+            /* If not we can take two curves and look if they share a surface and then use this surface */
             if (!surface_index)
             {
+              /* To do this we can look if there are two curves, otherwise we have to check which vertices share the same curve. */
               int edge1_index = 0;
               int edge2_index = 0;
-              /* We search for 2 different edges */
+              /* We search for 2 different curves */
               for (int i_face_nodes = 0; i_face_nodes < t8_eclass_num_vertices[t8_eclass_face_types[eclass][i_tree_faces]]; ++i_face_nodes)
               {
                 if (face_nodes[i_face_nodes].entity_dim == 1)
@@ -1077,18 +1017,48 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE * fp,
                   }
                 }
               }
-              /* If we have found 2 different edges we check if they share a surface */
+              /* If there are less than 2 curves we can look at the vertices and check, if two of them are on the same curve */
+              if (edge2_index == 0)
+              {
+                /* For each edge of face */
+                for (int i_face_edges = 0; i_face_edges < t8_eclass_num_faces[t8_eclass_face_types[eclass][i_tree_faces]]; ++i_face_edges)
+                {
+                  /* Save indices for better readability */
+                  int node1 = t8_face_vertex_to_tree_vertex[t8_eclass_face_types[eclass][i_tree_faces]][i_tree_faces][0];
+                  int node2 = t8_face_vertex_to_tree_vertex[t8_eclass_face_types[eclass][i_tree_faces]][i_tree_faces][1];
+
+                  /* If both nodes are on a vertex we look if both vertices share an edge */
+                  if (face_nodes[node1].entity_dim == 0 &&
+                      face_nodes[node2].entity_dim == 0)
+                  {
+                    int common_edge = occ_geometry->t8_geom_get_common_edge(face_nodes[node1].entity_tag,
+                                                                            face_nodes[node2].entity_tag);
+                    if (common_edge > 0)
+                    {
+                      if (edge1_index == 0)
+                      {
+                        edge1_index = common_edge;
+                      }
+                      else
+                      {
+                        edge2_index = common_edge;
+                      }
+                    }
+                  }
+                }
+              }
               if (edge2_index > 0)
               {
                 surface_index = occ_geometry->t8_geom_get_common_face(edge1_index, edge2_index);
               }
             }
             /* Now we can check if every node lies on the surface */
-            int all_nodes_on_surface = 1;
             int n_nodes_with_right_parameters;
             if (surface_index)
-            {
-              /* Maybe we have to do this multiple times, because we need to resolve parameter ambiguities due to periodic curves/surfaces. */
+            {              
+              /* Retrieve parameters of the nodes. Maybe we have to do this multiple times, 
+              because we need to resolve parameter ambiguities due to periodic curves/surfaces. */
+              int all_nodes_on_surface = 1;
               for (int i = 0; i < t8_eclass_num_vertices[t8_eclass_face_types[eclass][i_tree_faces]]; ++i)
               {
                 n_nodes_with_right_parameters = 0;
@@ -1099,18 +1069,11 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE * fp,
                   {
                     ++n_nodes_with_right_parameters;
                   }
-                  else if (face_nodes[i_face_nodes].entity_dim == 2 && face_nodes[i_face_nodes].entity_tag != surface_index)
-                  {
-                    all_nodes_on_surface = 0;
-                    break;
-                  }
-                  else if (face_nodes[i_face_nodes].entity_dim != 2 || face_nodes[i_face_nodes].changed_parameters)
+                  else
                   {
                     /* If not we retrieve the parameters */
-                    int previous_node = (i_face_nodes - 1) % t8_eclass_num_vertices[t8_eclass_face_types[eclass][i_tree_faces]];
-                    int previous_node_has_parameters = (face_nodes[previous_node].entity_dim == 2 && 
-                                                        face_nodes[previous_node].entity_tag == surface_index &&
-                                                        !face_nodes[previous_node].changed_parameters);
+                    int previous_node = (i_face_nodes - 1 == -1) ? t8_eclass_num_vertices[t8_eclass_face_types[eclass][i_tree_faces]] - 1 : i_face_nodes - 1;
+                    int previous_node_has_parameters = (face_nodes[previous_node].entity_dim == 2);
                     int retrieved_parameters_successufully = occ_geometry->t8_geom_get_occ_surface_parameters(surface_index, 
                                                                                                               face_nodes[i_face_nodes].coordinates, 
                                                                                                               face_nodes[i_face_nodes].parameters,
@@ -1120,9 +1083,9 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE * fp,
                     {
                       face_nodes[i_face_nodes].entity_dim = 2;
                       face_nodes[i_face_nodes].entity_tag = surface_index;
-                      face_nodes[i_face_nodes].changed_parameters = 0;
                       ++n_nodes_with_right_parameters;
                     }
+                    /* If the node has no parameters we know, that there is no surface and can abort */
                     else if (retrieved_parameters_successufully == 0)
                     {
                       all_nodes_on_surface = 0;
@@ -1136,47 +1099,48 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE * fp,
                   break;
                 }
               }
-              /* If we have not got all parameters but all nodes are on the surface something went wrong */
-              if (n_nodes_with_right_parameters != t8_eclass_num_vertices[t8_eclass_face_types[eclass][i_tree_faces]] && all_nodes_on_surface)
+              /* Abort if not all nodes are on the surface */
+              if (!all_nodes_on_surface)
               {
-                t8_errorf("Needed too many iterations to get the surface parameters of the nodes ");
+                continue;
+              }
+              /* If we haven't got all parameters but all nodes are on the surface something went wrong */
+              if (n_nodes_with_right_parameters != t8_eclass_num_vertices[t8_eclass_face_types[eclass][i_tree_faces]])
+              {
+                t8_global_errorf("Ambiguity while retriving parameters of the following nodes. Maybe a periodic surface was meshed with only one element. \n");
                 for (int i_face_nodes = 0; i_face_nodes < t8_eclass_num_vertices[t8_eclass_face_types[eclass][i_tree_faces]]; ++i_face_nodes)
                 {
-                  t8_errorf("%i ", face_nodes[i_face_nodes].index);
+                  t8_global_errorf("%i ", face_nodes[i_face_nodes].index);
                 }
-                t8_errorf("\n");
+                t8_global_errorf("\n");
                 goto die_ele;
               }
               /* If we have found a surface we link it to the face */
-              if (all_nodes_on_surface)
+              face_geometries[i_tree_faces] = surface_index;
+              for (int i_face_edges = 0; i_face_edges < t8_eclass_num_faces[t8_eclass_face_types[eclass][i_tree_faces]]; ++i_face_edges)
               {
-                face_geometries[i_tree_faces] = surface_index;
-                for (int i_face_edges = 0; i_face_edges < t8_eclass_num_faces[t8_eclass_face_types[eclass][i_tree_faces]]; ++i_face_edges)
-                {
-                  /* We lock the edges of the face, because there can only be one geometry linked to each edge */
-                  edge_geometries[t8_face_edge_to_tree_edge[i_tree_faces][i_face_edges]] = -1;
-                }
-                /* We retrieve the parameters of the nodes and give them to the tree */
-                for (int i_face_nodes = 0; i_face_nodes < t8_eclass_num_vertices[t8_eclass_face_types[eclass][i_tree_faces]]; ++i_face_nodes)
-                {
-                  parameters[i_face_nodes * 2] = face_nodes[i_face_nodes].parameters[0];
-                  parameters[i_face_nodes * 2 + 1] = face_nodes[i_face_nodes].parameters[1];
-                }
-                t8_cmesh_set_attribute (cmesh, 
-                                        tree_count, 
-                                        t8_get_package_id(), 
-                                        T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY + i_tree_faces, 
-                                        parameters,
-                                        t8_eclass_num_vertices[t8_eclass_face_types[eclass][i_tree_faces]] * 2 * sizeof(double), 
-                                        0);
+                /* We lock the edges of the face, because there can only be one geometry linked to each edge */
+                edge_geometries[t8_face_edge_to_tree_edge[i_tree_faces][i_face_edges]] = -1;
               }
+              /* We retrieve the parameters of the nodes and give them to the tree */
+              for (int i_face_nodes = 0; i_face_nodes < t8_eclass_num_vertices[t8_eclass_face_types[eclass][i_tree_faces]]; ++i_face_nodes)
+              {
+                parameters[i_face_nodes * 2] = face_nodes[i_face_nodes].parameters[0];
+                parameters[i_face_nodes * 2 + 1] = face_nodes[i_face_nodes].parameters[1];
+              }
+              t8_cmesh_set_attribute (cmesh, 
+                                      tree_count, 
+                                      t8_get_package_id(), 
+                                      T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY + i_tree_faces, 
+                                      parameters,
+                                      t8_eclass_num_vertices[t8_eclass_face_types[eclass][i_tree_faces]] * 2 * sizeof(double), 
+                                      0);
             }
-          }
+          }          
           /* Now we look for geometries linked to the edges */
           for (int i_tree_edges = 0; i_tree_edges < t8_eclass_num_edges[eclass]; ++i_tree_edges)
           {
-            /* We only look at edges where the connected faces carry no geometry. 
-            Moreover, both nodes of an edge have to be parametric to carry a geometry. */
+            /* We only look at edges where the connected faces carry no geometry. */
             if (edge_geometries[i_tree_edges] == -1)
             {
               edge_geometries[i_tree_edges] = 0;
@@ -1188,204 +1152,160 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE * fp,
             {
               edge_nodes[0] = tree_nodes[t8_edge_vertex_to_tree_vertex[i_tree_edges][0]];
               edge_nodes[1] = tree_nodes[t8_edge_vertex_to_tree_vertex[i_tree_edges][1]];
-              /* If both nodes are on a vertex we look if both vertices share an edge */
-              if (edge_nodes[0].entity_dim == 0 &&
-                  edge_nodes[1].entity_dim == 0)
+              /* An edge can be linked to a curve as well as a surface. Therefore we have to save the geometry dim and tag */
+              int edge_geometry_dim = 0;
+              int edge_geometry_tag = 0;
+              /* We check which is the highest dim a node geometry has and what is its tag */
+              if (edge_nodes[0].entity_dim > edge_nodes[1].entity_dim)
               {
-                int common_edge = occ_geometry->t8_geom_get_common_edge(face_nodes[0].entity_tag,
-                                                                        face_nodes[1].entity_tag);
-                if (common_edge > 0)
+                edge_geometry_dim = edge_nodes[0].entity_dim;
+                if (edge_nodes[0].entity_dim > 0)
                 {
-                  /* Save shared edge */
-                  edge_nodes[0].entity_dim = 1;
-                  edge_nodes[1].entity_dim = 1;
-                  edge_nodes[0].entity_tag = common_edge;
-                  edge_nodes[1].entity_tag = common_edge;
-                  /* The parameters are now invalid, we have to calculate them again later */
-                  edge_nodes[0].changed_parameters = 1;
-                  edge_nodes[1].changed_parameters = 1;
+                  edge_geometry_tag = edge_nodes[0].entity_tag;
                 }
               }
-              /* If one node is on a vertex and the other on a curve we look if the vertex also lies on the curve */
-              else if (edge_nodes[0].entity_dim == 0 && edge_nodes[1].entity_dim == 1)
+              else
               {
-                if (occ_geometry->t8_geom_is_vertex_on_edge(edge_nodes[0].entity_tag, edge_nodes[1].entity_tag))
+                edge_geometry_dim = edge_nodes[1].entity_dim;
+                if (edge_nodes[1].entity_dim > 0)
                 {
-                  /* Save curve in node */
-                  edge_nodes[0].entity_dim = 1;
-                  edge_nodes[0].entity_tag = edge_nodes[1].entity_tag;
-                  /* The parameters are now invalid, we have to calculate them again later */
-                  edge_nodes[0].changed_parameters = 1;
+                  edge_geometry_tag = edge_nodes[1].entity_tag;
                 }
               }
-              /* Same as before but the other way around */
-              else if (edge_nodes[1].entity_dim == 0 && edge_nodes[0].entity_dim == 1)
+              /* If both nodes are on a vertex we still got no edge. But we can look if both vertices share an edge and use this edge. 
+                 If not we can skip this edge. */
+              if (edge_geometry_dim == 0 && edge_geometry_tag == 0)
               {
-                if (occ_geometry->t8_geom_is_vertex_on_edge(edge_nodes[1].entity_tag, edge_nodes[0].entity_tag))
+                int common_curve = occ_geometry->t8_geom_get_common_edge(edge_nodes[0].entity_tag,
+                                                                         edge_nodes[1].entity_tag);
+                if (common_curve > 0)
                 {
-                  /* Save curve in node */
-                  edge_nodes[1].entity_dim = 1;
-                  edge_nodes[1].entity_tag = edge_nodes[0].entity_tag;
-                  /* The parameters are now invalid, we have to calculate them again later */
-                  edge_nodes[1].changed_parameters = 1;
+                  edge_geometry_tag = common_curve;
+                  edge_geometry_dim = 1;
+                }
+                else
+                {
+                  continue;
                 }
               }
-              /* Now we have to do the same thing as before, but with a curve or a vertex on a surface */
-              else if (edge_nodes[0].entity_dim < 2 && edge_nodes[1].entity_dim == 2)
+              /* If both nodes are on different edges we have to look if both edges share a surface. If not we can skip this edge */
+              if (edge_geometry_dim == 1 && edge_nodes[0].entity_tag != edge_nodes[1].entity_tag)
               {
-                int node_on_surface = 0;
-                if(edge_nodes[0].entity_dim == 0)
+                int common_surface = occ_geometry->t8_geom_get_common_face(edge_nodes[0].entity_tag,
+                                                                           edge_nodes[1].entity_tag);
+                if (common_surface > 0)
                 {
-                  if (occ_geometry->t8_geom_is_vertex_on_face(edge_nodes[0].entity_tag, edge_nodes[1].entity_tag))
-                  {
-                    node_on_surface = 1;
-                  }
+                  edge_geometry_tag = common_surface;
+                  edge_geometry_dim = 2;
                 }
-                else if (edge_nodes[0].entity_dim == 1)
+                else
                 {
-                  if (occ_geometry->t8_geom_is_edge_on_face(edge_nodes[0].entity_tag, edge_nodes[1].entity_tag))
-                  {
-                    node_on_surface = 1;
-                  }
-                }
-                if (node_on_surface)
-                {
-                  /* Save surface in node */
-                  edge_nodes[0].entity_dim = 2;
-                  edge_nodes[0].entity_tag = edge_nodes[1].entity_tag;
-                  /* The parameters are now invalid, we have to calculate them again later */
-                  edge_nodes[0].changed_parameters = 1;
+                  continue;
                 }
               }
-              /* Same as before but the other way around */
-              else if (edge_nodes[1].entity_dim < 2 && edge_nodes[0].entity_dim == 2)
+              /* If we have found a curve we can look for the parameters */
+              if (edge_geometry_dim == 1)
               {
-                int node_on_surface = 0;
-                if(edge_nodes[1].entity_dim == 0)
+                /* If the node lies on a geometry with a different dimension we try to retrieve the parameter */
+                if (edge_nodes[0].entity_dim != 1)
                 {
-                  if (occ_geometry->t8_geom_is_vertex_on_face(edge_nodes[1].entity_tag, edge_nodes[0].entity_tag))
+                  int retrieved_parameters_successfully = 
+                  occ_geometry->t8_geom_get_occ_curve_parameter(edge_geometry_tag,
+                                                                edge_nodes[0].coordinates,
+                                                                edge_nodes[0].parameters,
+                                                                tol,
+                                                                edge_nodes[1].entity_dim == 1 ? edge_nodes[1].parameters : nullptr);
+                  if (retrieved_parameters_successfully == 0)
                   {
-                    node_on_surface = 1;
+                    continue;
+                  }
+                  else if (retrieved_parameters_successfully == -1)
+                  {
+                    t8_global_errorf("Ambiguity while retriving parameters of node %i. Maybe a periodic curve was meshed with only one element. \n", edge_nodes[0].index);
+                    goto die_ele;
                   }
                 }
-                else if (edge_nodes[1].entity_dim == 1)
+                if (edge_nodes[0].entity_dim != 1)
                 {
-                  if (occ_geometry->t8_geom_is_edge_on_face(edge_nodes[1].entity_tag, edge_nodes[0].entity_tag))
+                  int retrieved_parameters_successfully = 
+                  occ_geometry->t8_geom_get_occ_curve_parameter(edge_geometry_tag,
+                                                                edge_nodes[1].coordinates,
+                                                                edge_nodes[1].parameters,
+                                                                tol,
+                                                                edge_nodes[0].entity_dim == 1 ? edge_nodes[0].parameters : nullptr);
+                  if (retrieved_parameters_successfully == 0)
                   {
-                    node_on_surface = 1;
+                    continue;
+                  }
+                  else if (retrieved_parameters_successfully == -1)
+                  {
+                    t8_global_errorf("Ambiguity while retriving parameters of node %i. Maybe a periodic curve was meshed with only one element. \n", edge_nodes[1].index);
+                    goto die_ele;
                   }
                 }
-                if (node_on_surface)
-                {
-                  /* Save surface in node */
-                  edge_nodes[1].entity_dim = 2;
-                  edge_nodes[1].entity_tag = edge_nodes[0].entity_tag;
-                  /* The parameters are now invalid, we have to calculate them again later */
-                  edge_nodes[1].changed_parameters = 1;
-                }
+                edge_geometries[i_tree_edges] = edge_geometry_tag;
+                parameters[0] = edge_nodes[0].parameters[0];
+                parameters[1] = edge_nodes[1].parameters[0];
+                t8_cmesh_set_attribute (cmesh, 
+                                        tree_count, 
+                                        t8_get_package_id(), 
+                                        T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_tree_edges, 
+                                        parameters,
+                                        2 * sizeof(double), 
+                                        0);
               }
-              /* Now we can get the parameters of both nodes and give them to the tree */
-              if (edge_nodes[0].entity_dim == edge_nodes[1].entity_dim &&
-                  edge_nodes[0].entity_tag == edge_nodes[1].entity_tag)
+              /* If we have found a surface we can look for the parameters */
+              else if (edge_geometry_dim == 2)
               {
-                if (edge_nodes[0].entity_dim == 1)
+                /* If the node lies on a geometry with a different dimension we try to retrieve the parameters */
+                if (edge_nodes[0].entity_dim != 2)
                 {
-                  int retrieved_parameters_successfully;
-                  if (edge_nodes[0].changed_parameters)
+                  int retrieved_parameters_successfully = 
+                  occ_geometry->t8_geom_get_occ_surface_parameters(edge_geometry_tag,
+                                                                   edge_nodes[0].coordinates,
+                                                                   edge_nodes[0].parameters,
+                                                                   tol,
+                                                                   edge_nodes[1].entity_dim == 2 ? edge_nodes[1].parameters : nullptr);
+                  if (retrieved_parameters_successfully == 0)
                   {
-                    retrieved_parameters_successfully = 
-                    occ_geometry->t8_geom_get_occ_curve_parameter(edge_nodes[0].entity_tag,
-                                                                  edge_nodes[0].coordinates,
-                                                                  edge_nodes[0].parameters,
-                                                                  tol,
-                                                                  edge_nodes[1].changed_parameters ? nullptr : edge_nodes[1].parameters);
-                    if (retrieved_parameters_successfully == 0)
-                    {
-                      continue;
-                    }
-                    else if (retrieved_parameters_successfully == -1)
-                    {
-                      t8_errorf("Ambiguity while retriving parameters of node %i. Maybe a periodic edge was meshed with only one element. \n", edge_nodes[0].index);
-                    }
+                    continue;
                   }
-                  if (edge_nodes[1].changed_parameters)
+                  else if (retrieved_parameters_successfully == -1)
                   {
-                    retrieved_parameters_successfully = 
-                    occ_geometry->t8_geom_get_occ_curve_parameter(edge_nodes[1].entity_tag,
-                                                                  edge_nodes[1].coordinates,
-                                                                  edge_nodes[1].parameters,
-                                                                  tol,
-                                                                  edge_nodes[0].changed_parameters ? nullptr : edge_nodes[0].parameters);
-                    if (retrieved_parameters_successfully == 0)
-                    {
-                      continue;
-                    }
-                    else if (retrieved_parameters_successfully == -1)
-                    {
-                      t8_errorf("Ambiguity while retriving parameters of node %i. Maybe a periodic edge was meshed with only one element. \n", edge_nodes[1].index);
-                    }
+                    t8_global_errorf("Ambiguity while retriving parameters of node %i. Maybe a periodic surface was meshed with only one element. \n", edge_nodes[0].index);
+                    goto die_ele;
                   }
-                  edge_geometries[i_tree_edges] = edge_nodes[0].entity_tag;
-                  parameters[0] = edge_nodes[0].parameters[0];
-                  parameters[1] = edge_nodes[1].parameters[0];
-                  t8_cmesh_set_attribute (cmesh, 
-                                          tree_count, 
-                                          t8_get_package_id(), 
-                                          T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_tree_edges, 
-                                          parameters,
-                                          2 * sizeof(double), 
-                                          0);
                 }
-                if (edge_nodes[0].entity_dim == 2)
+                if (edge_nodes[0].entity_dim != 2)
                 {
-                  int retrieved_parameters_successfully;
-                  if (edge_nodes[0].changed_parameters)
+                  int retrieved_parameters_successfully = 
+                  occ_geometry->t8_geom_get_occ_surface_parameters(edge_geometry_tag,
+                                                                   edge_nodes[1].coordinates,
+                                                                   edge_nodes[1].parameters,
+                                                                   tol,
+                                                                   edge_nodes[0].entity_dim == 2 ? edge_nodes[0].parameters : nullptr);
+                  if (retrieved_parameters_successfully == 0)
                   {
-                    retrieved_parameters_successfully = 
-                    occ_geometry->t8_geom_get_occ_surface_parameters(edge_nodes[0].entity_tag,
-                                                                     edge_nodes[0].coordinates,
-                                                                     edge_nodes[0].parameters,
-                                                                     tol,
-                                                                     edge_nodes[1].changed_parameters ? nullptr : edge_nodes[1].parameters);
-                    if (retrieved_parameters_successfully == 0)
-                    {
-                      continue;
-                    }
-                    else if (retrieved_parameters_successfully == -1)
-                    {
-                      t8_errorf("Ambiguity while retriving parameters of node %i. Maybe a periodic surface was meshed with only one element. \n", edge_nodes[0].index);
-                    }
+                    continue;
                   }
-                  if (edge_nodes[1].changed_parameters)
+                  else if (retrieved_parameters_successfully == -1)
                   {
-                    retrieved_parameters_successfully = 
-                    occ_geometry->t8_geom_get_occ_surface_parameters(edge_nodes[1].entity_tag,
-                                                                     edge_nodes[1].coordinates,
-                                                                     edge_nodes[1].parameters,
-                                                                     tol,
-                                                                     edge_nodes[0].changed_parameters ? nullptr : edge_nodes[0].parameters);
-                    if (retrieved_parameters_successfully == 0)
-                    {
-                      continue;
-                    }
-                    else if (retrieved_parameters_successfully == -1)
-                    {
-                      t8_errorf("Ambiguity while retriving parameters of node %i. Maybe a periodic surface was meshed with only one element. \n", edge_nodes[1].index);
-                    }
+                    t8_global_errorf("Ambiguity while retriving parameters of node %i. Maybe a periodic surface was meshed with only one element. \n", edge_nodes[1].index);
+                    goto die_ele;
                   }
-                  edge_geometries[i_tree_edges + t8_eclass_num_edges[eclass]] = edge_nodes[0].entity_tag;
-                  parameters[0] = edge_nodes[0].parameters[0];
-                  parameters[1] = edge_nodes[0].parameters[1];
-                  parameters[2] = edge_nodes[1].parameters[0];
-                  parameters[3] = edge_nodes[1].parameters[1];
-                  t8_cmesh_set_attribute (cmesh, 
-                                          tree_count, 
-                                          t8_get_package_id(), 
-                                          T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_tree_edges, 
-                                          parameters,
-                                          4 * sizeof(double), 
-                                          0);
                 }
+                edge_geometries[i_tree_edges + t8_eclass_num_edges[eclass]] = edge_geometry_tag;
+                parameters[0] = edge_nodes[0].parameters[0];
+                parameters[1] = edge_nodes[0].parameters[1];
+                parameters[2] = edge_nodes[1].parameters[0];
+                parameters[3] = edge_nodes[1].parameters[1];
+                t8_cmesh_set_attribute (cmesh, 
+                                        tree_count, 
+                                        t8_get_package_id(), 
+                                        T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_tree_edges, 
+                                        parameters,
+                                        4 * sizeof(double), 
+                                        0);
               }
             }
           }
@@ -1680,7 +1600,8 @@ T8_EXTERN_C_BEGIN ();
 
 t8_cmesh_t
 t8_cmesh_from_msh_file (const char *fileprefix, int partition,
-                        sc_MPI_Comm comm, int dim, int main_proc)
+                        sc_MPI_Comm comm, int dim, int main_proc,
+                        int use_occ_geometry, double occ_tol, int occ_debugfile)
 {
   int                 mpirank, mpisize, mpiret;
   t8_cmesh_t          cmesh;
@@ -1695,7 +1616,6 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
   t8_geometry        *geometry;
   int                 main_proc_read_successful = 0;
   int                 msh_version;
-  double              tol = 1e-9;
 
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
@@ -1751,6 +1671,10 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
     switch (msh_version)
     {
     case 2:
+      if (use_occ_geometry)
+      {
+        SC_ABORTF("The occ geometry is only supported for msh files of version 4");
+      }
       vertices = t8_msh_file_2_read_nodes (file, &num_vertices, &node_mempool);
       geometry = new t8_geometry_linear (dim);
       t8_cmesh_msh_file_2_read_eles (cmesh, file, vertices, &vertex_indices, dim);
@@ -1758,16 +1682,20 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
     
     case 4:
       vertices = t8_msh_file_4_read_nodes (file, &num_vertices, &node_mempool);
-      if (1)
+      if (use_occ_geometry)
       { 
-        t8_geometry_occ *geometry_occ = t8_geometry_from_brep_file (fileprefix, vertices, dim, tol, 1);
-        t8_cmesh_msh_file_4_read_eles (cmesh, file, vertices, &vertex_indices, dim, geometry_occ, tol);
+        #if T8_WITH_OCC
+        t8_geometry_occ *geometry_occ = t8_geometry_from_brep_file (fileprefix, vertices, dim, occ_tol, occ_debugfile);
+        t8_cmesh_msh_file_4_read_eles (cmesh, file, vertices, &vertex_indices, dim, geometry_occ, occ_tol);
         geometry = geometry_occ;
+        #else /* !T8_WITH_OCC */
+        SC_ABORTF("OCC not linked");
+        #endif /* T8_WITH_OCC */ 
       }
       else
       {
         geometry = new t8_geometry_linear (dim);
-        t8_cmesh_msh_file_4_read_eles (cmesh, file, vertices, &vertex_indices, dim, NULL, tol);
+        t8_cmesh_msh_file_4_read_eles (cmesh, file, vertices, &vertex_indices, dim, NULL, occ_tol);
       }
       break;
     

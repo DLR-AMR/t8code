@@ -62,6 +62,7 @@ t8_geometry_from_brep_file (const char *fileprefix,
                             double tol,
                             int debugfile)
 {
+  #if T8_WITH_OCC
   int                               recombined;
   Standard_Real                     first, last;
   t8_msh_file_node_parametric_t    *cur_node;
@@ -87,8 +88,8 @@ t8_geometry_from_brep_file (const char *fileprefix,
     if (list->elem_count > 0)
     {
       cur_node = (t8_msh_file_node_parametric_t *)list->first->data;
-      /* Check if node is parametric */
-      if (cur_node->parametric)
+      /* Check if node is parametric or on dim 0. Dim 0 nodes have no parameters and gmsh therefore labels them as not parametric. */
+      if (cur_node->parametric || cur_node->entity_dim == 0)
       {
         /* Skip node if the corresponding occ point was already found */
         if (cur_node->entity_dim == 0)
@@ -100,14 +101,15 @@ t8_geometry_from_brep_file (const char *fileprefix,
                                 [&](std::pair<int, int> a){return (a).first == cur_node->entity_tag;});
           if (it != points_processed.end())
           {
-            /* If the entity_tag was already processed and the index of the corresponding point is not -1 we change the 
-             * entity_tag of the node to the index of the corresponding point. If the index is -1 we set the node to not parametric. */
-            if (it->second >= 0)
+            /* If the entity_tag was already processed and the index of the corresponding point is not 0 we change the 
+             * entity_tag of the node to the index of the corresponding point. If the index is 0 we set the node to not parametric. */
+            if (it->second > 0)
             {
               cur_node->entity_tag = it->second;
               debug_recombined.insert(debug_recombined.end(),
                                       cur_node->coordinates,
                                       cur_node->coordinates + 3);
+              cur_node->parametric = 1;
             }
             else
             {
@@ -131,9 +133,9 @@ t8_geometry_from_brep_file (const char *fileprefix,
                                 [&](std::pair<int, int> a){return (a).first == cur_node->entity_tag;});
           if (it != curves_processed.end())
           {
-            /* If the entity_tag was already processed and the index of the corresponding curve is not -1 we change the 
-             * entity_tag of the node to the index of the corresponding curve. If the index is -1 we set the node to not parametric. */
-            if (it->second >= 0)
+            /* If the entity_tag was already processed and the index of the corresponding curve is not 0 we change the 
+             * entity_tag of the node to the index of the corresponding curve. If the index is 0 we set the node to not parametric. */
+            if (it->second > 0)
             {
               cur_node->entity_tag = it->second;
               debug_recombined.insert(debug_recombined.end(),
@@ -162,9 +164,9 @@ t8_geometry_from_brep_file (const char *fileprefix,
                                 [&](std::pair<int, int> a){return (a).first == cur_node->entity_tag;});
           if (it != surfaces_processed.end())
           {
-            /* If the entity_tag was already processed and the index of the corresponding surface is not -1 we change the 
-             * entity_tag of the node to the index of the corresponding surface. If the index is -1 we set the node to not parametric. */
-            if (it->second >= 0)
+            /* If the entity_tag was already processed and the index of the corresponding surface is not 0 we change the 
+             * entity_tag of the node to the index of the corresponding surface. If the index is 0 we set the node to not parametric. */
+            if (it->second > 0)
             {
               cur_node->entity_tag = it->second;
               debug_recombined.insert(debug_recombined.end(),
@@ -204,15 +206,16 @@ t8_geometry_from_brep_file (const char *fileprefix,
                                       cur_node->coordinates,
                                       cur_node->coordinates + 3);
               cur_node->entity_tag = occ_shape_vertex_map.FindIndex(*point);
+              cur_node->parametric = 1;
               recombined = 1;
               break;
             }
           }
           if (!recombined)
           {
-            /* Save entity_tag with -1 to mark, that no matching geometry was found.
+            /* Save entity_tag with 0 to mark, that no matching geometry was found.
              * Save node as not parametric. */
-            points_processed.push_back(std::make_pair(cur_node->entity_tag, -1));
+            points_processed.push_back(std::make_pair(cur_node->entity_tag, 0));
             cur_node->parametric = 0;
             debug_not_recombined.insert(debug_not_recombined.end(),
                                         cur_node->coordinates,
@@ -246,9 +249,9 @@ t8_geometry_from_brep_file (const char *fileprefix,
           }
           if (!recombined)
           {
-            /* Save entity_tag with -1 to mark that no matching geometry was found.
+            /* Save entity_tag with 0 to mark that no matching geometry was found.
              * Save node as not parametric. */
-            curves_processed.push_back(std::make_pair(cur_node->entity_tag, -1));
+            curves_processed.push_back(std::make_pair(cur_node->entity_tag, 0));
             cur_node->parametric = 0;
             debug_not_recombined.insert(debug_not_recombined.end(),
                                         cur_node->coordinates,
@@ -279,9 +282,9 @@ t8_geometry_from_brep_file (const char *fileprefix,
           }
           if (!recombined)
           {
-            /* Save entity_tag with -1 to mark, that no matching geometry was found.
+            /* Save entity_tag with 0 to mark, that no matching geometry was found.
              * Save node as not parametric. */
-            surfaces_processed.push_back(std::make_pair(cur_node->entity_tag, -1));
+            surfaces_processed.push_back(std::make_pair(cur_node->entity_tag, 0));
             cur_node->parametric = 0;
             debug_not_recombined.insert(debug_not_recombined.end(),
                                         cur_node->coordinates,
@@ -293,47 +296,56 @@ t8_geometry_from_brep_file (const char *fileprefix,
     }
   }
   
+  #ifdef T8_ENABLE_DEBUG
   /* Write out a .geo file which indicates which nodes were successfully recombined. 
    * The file can be opened with gmsh. */
-  std::ofstream geofile;
-  int green = 0, red;
-  geofile.open (current_file + ".geo");
-  for (auto it = debug_recombined.begin(); it != debug_recombined.end(); ++it)
+  if (debugfile)
   {
-    geofile << "Point(" << green << ") = {" << *it << ", " << *(++it) << ", " << *(++it) << "};" << std::endl;
-    ++green;
-  }
-  red = green;
-  for (auto it = debug_not_recombined.begin(); it != debug_not_recombined.end(); ++it)
-  {
-    geofile << "Point(" << red << ") = {" << *it << ", " << *(++it) << ", " << *(++it) << "};" << std::endl;
-    ++red;
-  }
-  if (debug_recombined.size())
-  {
-    geofile << "Color Green{Point{" << std::endl;
-    for (int i_green = 0; i_green != green; ++i_green)
+    std::ofstream geofile;
+    int green = 0, red;
+    geofile.open (current_file + ".geo");
+    for (auto it = debug_recombined.begin(); it != debug_recombined.end(); ++it)
     {
-      geofile << i_green; 
-      if (i_green != green - 1) geofile << ",";
-      geofile  << std::endl;
+      geofile << "Point(" << green << ") = {" << *it << ", " << *(++it) << ", " << *(++it) << "};" << std::endl;
+      ++green;
     }
-    geofile << "};}" << std::endl;
-  }
-  if (debug_not_recombined.size())
-  {
-    geofile << "Color Red{Point{" << std::endl;
-    for (int i_red = green; i_red != red; ++i_red)
+    red = green;
+    for (auto it = debug_not_recombined.begin(); it != debug_not_recombined.end(); ++it)
     {
-      geofile << i_red;
-      if (i_red != red - 1) geofile << ",";
-      geofile << std::endl;
+      geofile << "Point(" << red << ") = {" << *it << ", " << *(++it) << ", " << *(++it) << "};" << std::endl;
+      ++red;
     }
-    geofile << "};}" << std::endl;
+    if (debug_recombined.size())
+    {
+      geofile << "Color Green{Point{" << std::endl;
+      for (int i_green = 0; i_green != green; ++i_green)
+      {
+        geofile << i_green; 
+        if (i_green != green - 1) geofile << ",";
+        geofile  << std::endl;
+      }
+      geofile << "};}" << std::endl;
+    }
+    if (debug_not_recombined.size())
+    {
+      geofile << "Color Red{Point{" << std::endl;
+      for (int i_red = green; i_red != red; ++i_red)
+      {
+        geofile << i_red;
+        if (i_red != red - 1) geofile << ",";
+        geofile << std::endl;
+      }
+      geofile << "};}" << std::endl;
+    }
+    geofile.close();
   }
-  geofile.close();
-  
+  #endif /*T8_ENABLE_DEBUG*/
+
   return (t8_geometry_occ_c *) geom;
+  
+  #else /* !T8_WITH_OCC */
+  SC_ABORTF("OCC not linked");
+  #endif /* T8_WITH_OCC */
 }
 
 T8_EXTERN_C_END ();

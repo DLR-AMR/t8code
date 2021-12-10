@@ -32,6 +32,8 @@
 #include <TopoDS.hxx>
 #include <GeomAPI_ProjectPointOnSurf.hxx>
 #include <GeomAPI_ProjectPointOnCurve.hxx>
+#include <ShapeAnalysis_Surface.hxx>
+#include <ShapeAnalysis_Curve.hxx>
 
 #if T8_WITH_OCC
 
@@ -349,14 +351,14 @@ t8_geometry_occ::t8_geom_load_tree_data (t8_cmesh_t cmesh,
 gp_Pnt
 t8_geometry_occ::t8_geom_get_occ_point (int index)
 {
-  T8_ASSERT (index < occ_shape_vertex_map.Size());
+  T8_ASSERT (index <= occ_shape_vertex_map.Size());
   return BRep_Tool::Pnt(TopoDS::Vertex(occ_shape_vertex_map.FindKey(index)));
 }
 
 Handle_Geom_Curve
 t8_geometry_occ::t8_geom_get_occ_curve (int index)
 {
-  T8_ASSERT (index < occ_shape_edge_map.Size());
+  T8_ASSERT (index <= occ_shape_edge_map.Size());
   Standard_Real first, last;
   return BRep_Tool::Curve(TopoDS::Edge(occ_shape_edge_map.FindKey(index)), first, last);
 }
@@ -364,7 +366,7 @@ t8_geometry_occ::t8_geom_get_occ_curve (int index)
 Handle_Geom_Surface
 t8_geometry_occ::t8_geom_get_occ_surface (int index)
 {
-  T8_ASSERT (index < occ_shape_face_map.Size());
+  T8_ASSERT (index <= occ_shape_face_map.Size());
   return BRep_Tool::Surface(TopoDS::Face(occ_shape_face_map.FindKey(index)));
 }
 
@@ -460,167 +462,90 @@ t8_geometry_occ::t8_geom_get_occ_curve_parameter (int curve_index,
                                                   double tol,
                                                   double *near_param)
 {
-  /* Calculate nearest points on curve. */
+  const Handle_Geom_Curve curve = t8_geometry_occ::t8_geom_get_occ_curve(curve_index);
+  ShapeAnalysis_Curve curve_analyzer;
   const gp_Pnt pnt(coords[0], coords[1], coords[2]);
-  const GeomAPI_ProjectPointOnCurve proj_on_curve(pnt, t8_geometry_occ::t8_geom_get_occ_curve(curve_index));
-  
-  /* If near_param is given we iterate over each point and check if they are the same as pnt.
-   * If true, check which of them has the nearest parameter to near_param. 
-   * This is necessary, because we could for example check the seam point P1 on a circle,
-   * which has the parameter 0 and 2*M_PI. We want the parameter, which is nearest to the 
-   * parameter of the nearest known point P2 on the curve. In this case the right parameter is 0.
-   * If near_param is not given we save the parameter of the nearest point. If ambigous we return -1.
-   * 
-   *                 * * *
-   *             *          P2    Nearest known point with param M_PI/4
-   *           *               *
-   *          *     seam        *
-   *          *      of --------P1  Point with parameter to find;
-   *          *    circle       *   possible parameters are 0 and 2*M_PI
-   *           *               *
-   *             *           *
-   *                 * * * 
-   */
-  
-  int param_found = 0;
-  double buffer_param;
-  /* Check if any points were found */
+  gp_Pnt projection;
+  double buffer_param, distance;double u1, u2;
+  u1 = curve->FirstParameter();
+  u2 = curve->LastParameter();
+  /* Get parameters with ShapeAnalysis_Curve */
+  if (near_param == nullptr)
+  {
+    distance = curve_analyzer.NextProject(*near_param, curve, pnt, tol, projection, buffer_param, u1, u2);
+  }
+  else
+  {
+    distance = curve_analyzer.Project(curve, pnt, tol, projection, buffer_param, u1, u2);
+  }
+  /* Check the tolerance and if the parameter is inside the bounds */
+  if (distance <= tol &&
+      ((u1 <= buffer_param && buffer_param <= u2) || (u2 <= buffer_param && buffer_param <= u1)))
+  {
+    param[0] = buffer_param;
+    return 1;
+  }
+
+  /* If ShapeAnalysis_Curve fails we try the same with GeomAPI_ProjectPointOnCurve */
+  const GeomAPI_ProjectPointOnCurve proj_on_curve(pnt, curve);
   if (proj_on_curve.NbPoints() > 0)
   {
-    if (near_param == nullptr)
+    if (proj_on_curve.LowerDistance() <= tol)
     {
-      /* Check which points lie on the curve and abort if more than one point matches */
-      for (int pnt_index = 1; pnt_index < proj_on_curve.NbPoints(); ++pnt_index)
-      {
-        if (proj_on_curve.Point(pnt_index).IsEqual(pnt, tol))
-        {
-          if (!param_found)
-          {
-            proj_on_curve.Parameter(pnt_index, *param);
-            param_found = 1;
-          }
-          else
-          {
-            param_found = -1;
-            break;
-          }
-        }
-      }
-    }
-    else
-    {
-      /* Check which point has the closest parameter while lying on the curve */
-      for (int pnt_index = 1; pnt_index < proj_on_curve.NbPoints(); ++pnt_index)
-      {
-        if (!param_found)
-        {
-          if (proj_on_curve.Point(pnt_index).IsEqual(pnt, tol))
-          {
-            proj_on_curve.Parameter(pnt_index, *param);
-            param_found = 1;
-          }
-        }
-        else
-        {
-          if (proj_on_curve.Point(pnt_index).IsEqual(pnt, tol))
-          {
-            proj_on_curve.Parameter(pnt_index, buffer_param);
-            if (abs(*param - *near_param) > abs(buffer_param - *near_param))
-            {
-              *param = buffer_param;
-            }
-          }
-        }
-      }
+      param[0] = proj_on_curve.LowerDistanceParameter();
+      return 1;
     }
   }
-  return param_found;
+
+  /* Return 0 if no parameter was found */
+  return 0;
 }
 
-int
-t8_geometry_occ::t8_geom_get_occ_surface_parameters (int surface_index, 
-                                                     double *coords,
-                                                     double *params,
-                                                     double tol,
-                                                     double *near_params)
+int t8_geometry_occ::t8_geom_get_occ_surface_parameters (int surface_index, 
+                                                         double *coords,
+                                                         double *param,
+                                                         double tol,
+                                                         double *near_param)
 {
-  /* Calculate nearest points on surface. */
+  const Handle_Geom_Surface surface = t8_geometry_occ::t8_geom_get_occ_surface(surface_index);
+  ShapeAnalysis_Surface surface_analyzer(surface);
   const gp_Pnt pnt(coords[0], coords[1], coords[2]);
-  const GeomAPI_ProjectPointOnSurf proj_on_surf(pnt, t8_geometry_occ::t8_geom_get_occ_surface(surface_index), tol);
-  
-  /* If near_params is given we iterate over each point and check if they are the same as pnt.
-   * If true, check which of them has the nearest parameters to near_params. 
-   * This is necessary, because we could for example check the seam point P1 on a cylinder,
-   * which has the parameter (0, 0) and (0, 2*M_PI). We want the parameters, which are nearest to the 
-   * parameters of the nearest known point P2 on the surface. In this case the right parameter is (0, 0).
-   * If near_params is not given we save the parameters of the nearest point. If ambigous we return -1.
-   * 
-   *                 * * *
-   *             *          P2    Nearest known point with params (0, M_PI/4)
-   *           *               *
-   *          *     seam        *
-   *          *      of --------P1  Point with parameters to find;
-   *          *   cylinder      *   possible parameters are (0, 0) and (0, 2*M_PI)
-   *           *               *
-   *             *           *
-   *                 * * * 
-   */
-  
-  int params_found = 0;
-  double buffer_params[2];
-  /* Check if any points were found */
+  gp_Pnt2d uv;
+  /* Get parameters with ShapeAnalysis_Surface */
+  if (near_param == nullptr)
+  {
+    uv = surface_analyzer.ValueOfUV(pnt, tol);
+  }
+  else
+  {
+    gp_Pnt2d next_uv(near_param[0], near_param[1]);
+    uv = surface_analyzer.NextValueOfUV(next_uv, pnt, tol);
+  }
+  /* Check the tolerance and if the parameters are inside the bounds */
+  double u1, u2, v1, v2;
+  surface->Bounds(u1, u2, v1, v2);
+  if (surface_analyzer.Gap() <= tol &&
+      ((u1 <= uv.X() && uv.X() <= u2) || (u2 <= uv.X() && uv.X() <= u1)) &&
+      ((v1 <= uv.Y() && uv.Y() <= v2) || (v2 <= uv.Y() && uv.Y() <= v1)))
+  {
+    param[0] = uv.X();
+    param[1] = uv.Y();
+    return 1;
+  }
+
+  /* If ShapeAnalysis_Surface fails we try the same with GeomAPI_ProjectPointOnSurf */
+  const GeomAPI_ProjectPointOnSurf proj_on_surf(pnt, surface, tol);
   if (proj_on_surf.NbPoints() > 0)
   {
-    if (near_params == nullptr)
+    if (proj_on_surf.LowerDistance() <= tol)
     {
-      /* Check which points lie on the curve and abort if more than one point matches */
-      for (int pnt_index = 1; pnt_index < proj_on_surf.NbPoints(); ++pnt_index)
-      {
-        if (proj_on_surf.Point(pnt_index).IsEqual(pnt, tol))
-        {
-          if (!params_found)
-          {
-            proj_on_surf.Parameters(pnt_index, params[0], params[1]);
-            params_found = 1;
-          }
-          else
-          {
-            params_found = -1;
-            break;
-          }
-        }
-      }
-    }
-    else
-    {
-      /* Check which point has the closest parameters while lying on the surface */
-      for (int pnt_index = 1; pnt_index < proj_on_surf.NbPoints(); ++pnt_index)
-      {
-        if (!params_found)
-        {
-          if (proj_on_surf.Point(pnt_index).IsEqual(pnt, tol))
-          {
-            proj_on_surf.Parameters(pnt_index, params[0], params[1]);
-            params_found = 1;
-          }
-        }
-        else
-        {
-          if (proj_on_surf.Point(pnt_index).IsEqual(pnt, tol))
-          {
-            proj_on_surf.Parameters(pnt_index, buffer_params[0], buffer_params[1]);
-            if (sqrt(pow(params[0] - near_params[0], 2) + pow(params[1] - near_params[1], 2))
-                > sqrt(pow(buffer_params[0] - near_params[0], 2) + pow(buffer_params[1] - near_params[1], 2)))
-            {
-              params[0] = buffer_params[0];
-              params[1] = buffer_params[1];
-            }
-          }
-        }
-      }
+      proj_on_surf.LowerDistanceParameters(param[0], param[1]);
+      return 1;
     }
   }
-  return params_found;
+
+  /* Return 0 if no parameters were found */
+  return 0;
 }
 
 /* This part should be callable from C */
