@@ -165,6 +165,8 @@ typedef struct
   int8_t              neigh_level[MAX_FACES]; /**< The level of the face neighbors at this face. */
 } t8_advect_element_data_t;
 
+double time_interpolation = 0, time_adapt = 0, time_leaf_face_neighbors = 0;
+
 /* Return the phi value of a given local or ghost element.
  * 0 <= ielement < num_elements + num_ghosts
  */
@@ -994,6 +996,7 @@ t8_advect_replace (t8_forest_t forest_old,
                    t8_locidx_t first_outgoing,
                    int num_incoming, t8_locidx_t first_incoming)
 {
+  time_interpolation -= sc_MPI_Wtime ();
   t8_advect_problem_t *problem;
   t8_advect_element_data_t *elem_data_in, *elem_data_out, *elem_data_in_mem,
     *elem_data_out_mem;
@@ -1701,6 +1704,8 @@ t8_advect_replace (t8_forest_t forest_old,
     incoming_volume += elem_data_in[elem_in_count].vol;
   }
 
+  time_interpolation += sc_MPI_Wtime ();
+
   /* Check that conservation is fulfilled for each interpolation step. 
    * We require, that: 
    *    1) the volume difference of the sum of all incoming and outgoing elements is at most 2^-30
@@ -1795,7 +1800,7 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem, int measure_time)
     did_balance = 1;
   }
   /* either way we want to remove the hanging faces from the forest */
-  t8_forest_set_remove_hanging_faces (problem->forest_adapt, NULL);
+  // t8_forest_set_remove_hanging_faces (problem->forest_adapt, NULL);
   /* We also want ghost elements in the new forest */
   t8_forest_set_ghost (problem->forest_adapt, 1, T8_GHOST_FACES);
   /* Commit the forest, adaptation and balance happens here */
@@ -1910,7 +1915,7 @@ t8_advect_problem_adapt_init (t8_advect_problem_t * problem, int measure_time)
     did_balance = 1;
   }
   /* either way we want to remove the hanging faces from the forest */
-  t8_forest_set_remove_hanging_faces (problem->forest_adapt, NULL);
+  // t8_forest_set_remove_hanging_faces (problem->forest_adapt, NULL);
   /* We also want ghost elements in the new forest */
   t8_forest_set_ghost (problem->forest_adapt, 1, T8_GHOST_FACES);
   /* Commit the forest, adaptation and balance happens here */
@@ -2555,6 +2560,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   T8_ASSERT (time_steps > 0);
   /* Controls how often we print the time step to stdout */
   modulus = SC_MAX (1, time_steps / 10);
+
   for (problem->num_time_steps = 0;
        !done; problem->num_time_steps++, problem->t += problem->delta_t) {
     t8_debugf ("Timestep: %i\n", problem->num_time_steps);
@@ -2638,12 +2644,14 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
               }
               T8_FREE (elem_data->fluxes[iface]);
               neighbor_time = -sc_MPI_Wtime ();
+              time_leaf_face_neighbors -= sc_MPI_Wtime ();
               t8_forest_leaf_face_neighbors (problem->forest, itree, elem,
                                              &neighs, iface,
                                              &elem_data->dual_faces[iface],
                                              &elem_data->num_neighbors[iface],
                                              &elem_data->neighs[iface],
                                              &neigh_scheme, 1);
+              time_leaf_face_neighbors += sc_MPI_Wtime ();
               for (ineigh = 0; ineigh < elem_data->num_neighbors[iface];
                    ineigh++) {
                 elem_data->neigh_level[iface] =
@@ -2818,7 +2826,9 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
 #endif
       {
         adapted_or_partitioned = 1;
+        time_adapt -= sc_MPI_Wtime ();
         t8_advect_problem_adapt (problem, 1);
+        time_adapt += sc_MPI_Wtime ();
         t8_advect_problem_partition (problem, 1);
       }
     }
@@ -2990,11 +3000,11 @@ main (int argc, char *argv[])
                          "Control the width of the refinement band around\n"
                          " the zero level-set. Default 1.");
 
-  sc_options_add_int (opt, 'a', "adapt-freq", &adapt_freq, 10,
+  sc_options_add_int (opt, 'a', "adapt-freq", &adapt_freq, 5,
                       "Controls how often the mesh is readapted. "
                       "A value of i means, every i-th time step.");
 
-  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 5,
+  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 200,
                       "How often the vtk output is produced "
                       "\n\t\t\t\t     (after how many time steps). "
                       "A value of 0 is equivalent to using -o.");
@@ -3067,6 +3077,9 @@ main (int argc, char *argv[])
     if (!no_vtk) {
       t8_cmesh_vtk_write_file (cmesh, "advection_cmesh", 1.0);
     }
+
+    double adapt_time = 0;
+    adapt_time -= sc_MPI_Wtime ();
     /* Computation */
     if (0) {                    /* Gauss-pulse phi_0 */
       t8_advect_solve (cmesh, u,
@@ -3086,12 +3099,17 @@ main (int argc, char *argv[])
     }
     else {              /* on [0,1]^2 periodic trigonometric phi_0 */
         t8_advect_solve (cmesh, u,
-                        t8_periodic_sin_cos, &ls_data,
-                        level,
-                        level + reflevel, T, cfl, sc_MPI_COMM_WORLD,
-                        adapt_freq, no_vtk, vtk_freq, band_width, dim,
-                        dummy_op, volume_refine);
+                         t8_periodic_sin_cos, &ls_data,
+                         level,
+                         level + reflevel, T, cfl, sc_MPI_COMM_WORLD,
+                         adapt_freq, no_vtk, vtk_freq, band_width, dim,
+                         dummy_op, volume_refine);
     }
+    adapt_time += sc_MPI_Wtime ();
+    t8_global_essentialf ("Runtime advect: %f\n", adapt_time);
+    t8_global_essentialf ("Runtime interpolation: %f\n", time_interpolation);
+    t8_global_essentialf ("Runtime leaf_face_neighbors: %f\n", time_leaf_face_neighbors);
+    t8_global_essentialf ("Runtime adapt: %f\n", time_adapt);
   }
   else {
     /* wrong usage */
