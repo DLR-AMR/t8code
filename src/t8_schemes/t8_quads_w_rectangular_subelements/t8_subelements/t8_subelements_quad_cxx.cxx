@@ -1849,7 +1849,7 @@ int
 t8_subelement_scheme_quad_c::t8_element_get_subelement_id (const
                                                            t8_element * elem)
 {
-  t8_element_is_valid (elem);
+  T8_ASSERT (t8_element_is_valid (elem));
 
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) elem;
@@ -1897,8 +1897,8 @@ t8_subelement_scheme_quad_c::t8_element_find_neighbor_in_transition_cell
 {
   /* In this function, we assume pseudo_neigh to be a random subelement of a transition cell that includes
    * the real neighbor of elem at face elem_face. This function will output the subelement_id of the real neighbor of elem. */
-  t8_element_is_valid (elem);
-  t8_element_is_valid (pseudo_neigh);
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (t8_element_is_valid (pseudo_neigh));
 
   /* we expect neigh to be a element in a transition cell, thus to be a subelement */
   T8_ASSERT (t8_element_test_if_subelement (pseudo_neigh) ==
@@ -2288,8 +2288,8 @@ t8_subelement_scheme_quad_c::t8_element_init (int length, t8_element_t * elem,
       T8_QUAD_SET_TDIM (quad, 2);
       T8_ASSERT (p4est_quadrant_is_extended (quad));
     }
-  }
 #endif
+  }
 }
 
 void
