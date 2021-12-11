@@ -71,7 +71,7 @@ t8_advect_adapt_tests (t8_forest_t forest,
   return 0;
 #endif
 
-#if 0                           /* refinement diag */
+#if 1                           /* refinement diag */
   int                 coord[3] = { };
   ts->t8_element_anchor (elements[0], coord);
 
@@ -117,7 +117,7 @@ t8_advect_adapt_tests (t8_forest_t forest,
   return 16;
 #endif
 
-#if 1                           /* random refinement */
+#if 0                           /* random refinement */
   int                 r = rand () % 99; /* random number between 0 and 99 */
 
   if (level < data->max_level && r < 50) {
@@ -142,9 +142,10 @@ t8_basic_level_set_sphere (const double x[3], double t, void *data)
  *   minlevel = initlevel 
  *   maxlevel = 3
  *   do_subelements = 1 */
-static void
-t8_refine_with_subelements (t8_eclass_t eclass)
+static double
+t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
 {
+  double adapt_time = 0;
   t8_productionf ("Into the t8_refine_with_subelements function");
 
   t8_forest_t         forest;
@@ -153,9 +154,9 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   char                filename[BUFSIZ];
 
   /* refinement settings */
-  int                 initlevel = 5;    /* initial uniform refinement level */
+                      initlevel = 8;    /* initial uniform refinement level */
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening */
-  int                 adaptlevel = 4;
+                      adaptlevel = 5;
   int                 maxlevel = initlevel + adaptlevel;        /* highest level allowed for refining */
 
   int                 refine_recursive = 1;
@@ -168,13 +169,15 @@ t8_refine_with_subelements (t8_eclass_t eclass)
 
   /* adaptation setting */
   int                 do_balance = 0;
-  int                 do_transition = 1;
+  int                 do_transition = 0;
 
   /* timestep settings */
   int                 do_different_refinements = 0;     /* to change the refinement during multiple s´timesteps */
   int                 timesteps = 1;    /* Number of times, the mesh is refined */
   double              delta = 0.3;      /* The value, the radius increases after each timestep */
-  int                 i;
+  int                 i; /* timestep count */
+
+  int do_vtk = 1; /* print results */
 
   /* initializing the forest */
   t8_forest_init (&forest);
@@ -202,13 +205,15 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   t8_forest_commit (forest);
 
   /* print cmesh file */
-  snprintf (filename, BUFSIZ, "forest_cmesh_%s", t8_eclass_to_string[eclass]);
-  t8_cmesh_vtk_write_file (cmesh, filename, 1);
+  if (do_vtk) {
+    snprintf (filename, BUFSIZ, "forest_cmesh_%s", t8_eclass_to_string[eclass]);
+    t8_cmesh_vtk_write_file (cmesh, filename, 1);
 
-  /* print uniform mesh file */
-  snprintf (filename, BUFSIZ, "forest_uniform_%s",
-            t8_eclass_to_string[eclass]);
-  t8_forest_write_vtk (forest, filename);
+    /* print uniform mesh file */
+    snprintf (filename, BUFSIZ, "forest_uniform_%s",
+              t8_eclass_to_string[eclass]);
+    t8_forest_write_vtk (forest, filename);
+  }
 
   /* user-data */
   t8_example_level_set_struct_t ls_data;
@@ -275,16 +280,16 @@ t8_refine_with_subelements (t8_eclass_t eclass)
       t8_forest_set_remove_hanging_faces (forest_adapt, NULL);
     }
 
-    double adapt_time = 0;
     adapt_time -= sc_MPI_Wtime (); 
     t8_forest_commit (forest_adapt);
     adapt_time += sc_MPI_Wtime ();
     t8_productionf ("Commit runtime: %f\n", adapt_time);
 
-    /* print to vtk */
-    snprintf (filename, BUFSIZ, "forest_adapt_no_hanging_nodes_timestep%i_%s",
-              i, t8_eclass_to_string[eclass]);
-    t8_forest_write_vtk (forest_adapt, filename);
+    if (do_vtk) { /* print to vtk */
+      snprintf (filename, BUFSIZ, "forest_adapt_no_hanging_nodes_timestep%i_%s",
+                i, t8_eclass_to_string[eclass]);
+      t8_forest_write_vtk (forest_adapt, filename);
+    }
 
     /* Set forest to the partitioned forest, so it gets adapted
      * in the next timestep. */
@@ -298,26 +303,69 @@ t8_refine_with_subelements (t8_eclass_t eclass)
        timesteps);
   }                             /* end of time-loop */
   t8_forest_unref (&forest_adapt);
+
+  return adapt_time;
 }                               /* end of function */
 
 int
 main (int argc, char **argv)
 {
+  #if 1 /* standard: only one run */
   int                 mpiret;
-
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
 
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
-  /* At the moment, subelements are only implemented for the quad scheme */
-  t8_refine_with_subelements (T8_ECLASS_QUAD);
-
+  double commit_time = t8_refine_with_subelements (T8_ECLASS_QUAD, 0, 0);
   sc_finalize ();
 
   mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
 
+
+  #else /* can be used for multiple sessions for example for benchmarks */
+  int init_min = 9, init_max = 9, adapt_min = 2, adapt_max = 5;
+  int repeat, init_count, adapt_count, repitition = 5;
+  double commit_time[(adapt_max - adapt_min + 1) * (init_max - init_min + 1) * repitition] = {0};
+  int h = 0;
+
+  for (init_count = init_min; init_count <= init_max; init_count++) {
+    for (adapt_count = adapt_min; adapt_count <= adapt_max; adapt_count++) {
+      for (repeat = 0; repeat < repitition; repeat++) {
+        int                 mpiret;
+        mpiret = sc_MPI_Init (&argc, &argv);
+        SC_CHECK_MPI (mpiret);
+
+        sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
+        t8_init (SC_LP_DEFAULT);
+
+        /* At the moment, subelements are only implemented for the quad scheme */
+        t8_productionf ("init: %i, adapt: %i\n", init_count, adapt_count);
+        commit_time[h] = t8_refine_with_subelements (T8_ECLASS_QUAD, init_count, adapt_count);
+        h++;
+        sc_finalize ();
+
+        mpiret = sc_MPI_Finalize ();
+        SC_CHECK_MPI (mpiret);
+      }
+    }
+  }
+
+  int i,j;
+  int count = 0;
+  for (i = 0; i < (adapt_max - adapt_min + 1) * (init_max - init_min + 1); i++) {
+    double commit_time_sum = 0;
+    for (j = 0; j < repitition; j++) {
+      // t8_productionf ("commit time: %f\n", commit_time[count + j]);
+      commit_time_sum += commit_time[count + j];
+    }
+    count += repitition;
+    t8_productionf ("init: %i  time commit sum: %f  commit time mean: %f\n", i/(adapt_max - adapt_min + 1) + init_min, commit_time_sum, commit_time_sum/repitition);
+  }
+  #endif
+  
   return 0;
 }
+
