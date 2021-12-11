@@ -57,7 +57,7 @@ t8_refine_quad_to_subelements ()
   /* Allocate memory for a quad element and initialize it */
   class_scheme->t8_element_new (1, &element);
   class_scheme->t8_element_set_linear_id (element, 0, 0);
-  class_scheme->t8_element_is_valid (element);
+  T8_ASSERT (class_scheme->t8_element_is_valid (element));
 
   /* Allocate enough memory for subelements of the given type and initialize them */
   num_subelements =
