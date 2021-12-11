@@ -25,6 +25,7 @@
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest.h>
 #include <t8_vec.h>
+#include <example/common/t8_example_common.h>
 
 /* In this example, a simple refinement criteria is used to construct a single quad tree with 
  * subelements that remove hanging nodes. Afterwards, a element index (corresponding to the
@@ -38,12 +39,21 @@
  * of the choosen element and its neighbor. Furthermore, visualizing the mesh via the .vtk file in paraview can  
  * be used to validate the result of the neighbor function with subelements. */
 
-/* Define the data structure for the refinement criteria of this example (it just depends on minlevel and maxlevel). */
 typedef struct
 {
-  int                 min_level;
-  int                 max_level;
-} t8_level_struct;
+  double              mid_point[3];
+  double              radius;
+} t8_basic_sphere_data_t;
+
+/* Compute the distance to a sphere around a mid_point with given radius. */
+static double
+t8_basic_level_set_sphere (const double x[3], double t, void *data)
+{
+  t8_basic_sphere_data_t *sdata = (t8_basic_sphere_data_t *) data;
+  double             *M = sdata->mid_point;
+
+  return t8_vec_dist (M, x) - sdata->radius;
+}
 
 /* Print data of a given element */
 void
@@ -67,8 +77,7 @@ t8_print_element_data (const t8_element_t * element)
 
 /* determing neighbor elements of the element in forest_adapt with index element_index_in_tree at face face_id and printing the element data */
 void
-t8_test_neighbor_function (const t8_forest_t forest_adapt,
-                           t8_locidx_t element_index_in_tree, int face_id)
+t8_test_neighbor_function (const t8_forest_t forest_adapt)
 {
   /* Collecting data of the adapted forest */
   int                 global_num_elements =
@@ -81,52 +90,75 @@ t8_test_neighbor_function (const t8_forest_t forest_adapt,
   t8_element_t      **neighbor_leafs;
   t8_locidx_t        *element_indices;
   t8_eclass_scheme_c *neigh_scheme;
+  t8_eclass_t         eclass;
+  t8_eclass_scheme_c *ts;
+  double time_leaf_face_neighbor = 0;
+  int subelement_count = 0;
+  int leaf_face_neighbor_call_count = 0;
 
   /* we only allow one tree with id 0 and the current element must come from a valid index within the forest (as well as its face index) */
   T8_ASSERT (global_num_trees == 1);
   T8_ASSERT (ltree_id == 0);
-  T8_ASSERT (0 <= element_index_in_tree
-             && element_index_in_tree < global_num_elements);
-  T8_ASSERT (0 <= face_id && face_id < 4);
 
-  /* determing the current element according to the given tree id and element id within the tree */
-  current_element =
-    t8_forest_get_element_in_tree (forest_adapt, ltree_id,
-                                   element_index_in_tree);
-
-  /* print the current element */
-  t8_productionf ("\nCurrent element:\n");
-  t8_print_element_data (current_element);
-  t8_productionf ("    Element index in tree: %i \n", element_index_in_tree);
+  eclass = t8_forest_get_tree_class (forest_adapt, ltree_id);
+  ts = t8_forest_get_eclass_scheme (forest_adapt, eclass);
 
   /* the leaf_face_neighbor function determins neighbor elements of current_element at face face_id in a balanced forest forest_adapt */
-  t8_forest_leaf_face_neighbors (forest_adapt, ltree_id, current_element,
+  int element_index_in_tree, face_id, face_number;
+  for (element_index_in_tree = 0; element_index_in_tree < global_num_elements; element_index_in_tree++) {
+
+    /* determing the current element according to the given tree id and element id within the tree */
+    current_element =
+      t8_forest_get_element_in_tree (forest_adapt, ltree_id,
+                                    element_index_in_tree);
+
+    /* print the current element */
+    t8_productionf ("\nCurrent element:\n");
+    t8_print_element_data (current_element);
+    t8_productionf ("    Element index in tree: %i \n", element_index_in_tree);
+
+    if (ts->t8_element_test_if_subelement (current_element)) {
+      face_number = 3;
+      subelement_count++;
+    }
+    else {
+      face_number = 4;
+    }
+    for (face_id = 0; face_id < face_number; face_id++) {
+      leaf_face_neighbor_call_count++;
+      time_leaf_face_neighbor -= sc_MPI_Wtime ();
+      t8_forest_leaf_face_neighbors (forest_adapt, ltree_id, current_element,
                                  &neighbor_leafs, face_id, &dual_faces,
                                  &num_neighbors, &element_indices,
                                  &neigh_scheme, forest_is_balanced);
+      time_leaf_face_neighbor += sc_MPI_Wtime ();
 
-  /* note, that after using subelements, there will only be one neighbor for each element and each face */
-  int                 i;
-  for (i = 0; i < num_neighbors; i++) {
-    /* print the neighbor element */
-    t8_productionf ("\nNeighbor at face %i:\n", face_id);
-    t8_print_element_data (neighbor_leafs[i]);
-    t8_productionf ("    Element index in tree: %i \n", element_indices[i]);
-  }
+      /* note, that after using subelements, there will only be one neighbor for each element and each face */
+      int                 i;
+      for (i = 0; i < num_neighbors; i++) {
+        /* print the neighbor element */
+        t8_productionf ("\nNeighbor at face %i:\n", face_id);
+        t8_print_element_data (neighbor_leafs[i]);
+        t8_productionf ("    Element index in tree: %i \n", element_indices[i]);
+      }
 
-  /* free memory */
-  if (num_neighbors > 0) {
-    neigh_scheme->t8_element_destroy (num_neighbors, neighbor_leafs);
+      /* free memory */
+      if (num_neighbors > 0) {
+        neigh_scheme->t8_element_destroy (num_neighbors, neighbor_leafs);
 
-    T8_FREE (element_indices);
-    T8_FREE (neighbor_leafs);
-    T8_FREE (dual_faces);
+        T8_FREE (element_indices);
+        T8_FREE (neighbor_leafs);
+        T8_FREE (dual_faces);
+      }
+      else {
+        /* no neighbor in this case */
+        t8_productionf ("\nNeighbor at face %i:\n", face_id);
+        t8_productionf ("    There is no neighbor (edge of the tree/forest).\n");
+      }
+    }
   }
-  else {
-    /* no neighbor in this case */
-    t8_productionf ("\nNeighbor at face %i:\n", face_id);
-    t8_productionf ("    There is no neighbor (edge of the tree/forest).\n");
-  }
+  t8_productionf ("Leaf face neighbor runtime: %f\n", time_leaf_face_neighbor);
+  t8_productionf ("Number elements in total: %i  subelement_count: %i  leaf_face_neighbor call: %i\n", global_num_elements, subelement_count, leaf_face_neighbor_call_count);
 }
 
 /* A simple refinement criteria in which only the first element of a uniform refined forest is further refined up to maxlevel */
@@ -138,41 +170,7 @@ t8_simple_refinement_criteria (t8_forest_t forest,
                                t8_eclass_scheme_c * ts,
                                int num_elements, t8_element_t * elements[])
 {
-  t8_level_struct    *data;
-  int                 level;
-
-  T8_ASSERT (num_elements == 1 || num_elements ==
-             ts->t8_element_num_siblings (elements[0]));
-
-  /* Get the user data of the forest */
-  data = (t8_level_struct *) t8_forest_get_user_data (forest);
-
-  /* Get the level of the current element */
-  level = ts->t8_element_level (elements[0]);
-
-  /* If maxlevel is exceeded, coarsen or do not refine */
-  if (level > data->max_level && num_elements > 1) {
-    return -1;
-  }
-  /* Do not refine further if maxlevel is reached */
-  if (level >= data->max_level) {
-    return 0;
-  }
-  /* Refine at least until min level */
-  if (level < data->min_level) {
-    return 1;
-  }
-
-  /* Simple refinement scheme. 
-   * Note that this simple scheme can be used to refine specific elements of a mesh. 
-   * Via do_balance = 0 and do_subelements = 0 it is also possible to refine the uniform mesh with arbitrary subelements
-   * by returning values > 1. */
-  if (lelement_id == 0) {
-    return 1;
-  }
-  else {
-    return 0;
-  }
+  return 0;
 }
 
 /* Recommended settings for the refinement test with subelements: 
@@ -197,9 +195,10 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   char                filename[BUFSIZ];
 
   /* refinement setting */
-  int                 initlevel = 1;    /* initial uniform refinement level */
+  int                 initlevel = 8;    /* initial uniform refinement level */
+  int                 adaptlevel = 2;
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening (minlevel <= initlevel) */
-  int                 maxlevel = 3;     /* highest level allowed for refining */
+  int                 maxlevel = initlevel + adaptlevel;     /* highest level allowed for refining */
 
   /* adaptation setting */
   int                 do_balance = 0;
@@ -218,16 +217,30 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   t8_forest_commit (forest);
 
   /* user-data (minlevel, maxlevel) */
-  t8_level_struct     ls_data;
+  t8_example_level_set_struct_t     ls_data;
+  t8_basic_sphere_data_t sdata;
+
+  /* midpoint and radius of a sphere 
+   * TODO: check if, for symmetry, the midpoint should be on an elements corner */
+  /* shift the midpoiunt of the circle by (shift_x,shift_y) to ensure midpoints on corners of the uniform mesh */
+  int                 shift_x = 0;      /* shift_x should be smaler than 2^minlevel / 2 such that midpoint stays in the quadrilateral tree */
+  int                 shift_y = 0;
+  sdata.mid_point[0] = 0.5;     //1.0 / 2.0 + shift_x * 1.0/(1 << (minlevel));
+  sdata.mid_point[1] = 0.5;     //1.0 / 2.0 + shift_y * 1.0/(1 << (minlevel)); 
+  sdata.mid_point[2] = 0;
+  sdata.radius = 0.3;
 
   /* refinement parameter */
+  ls_data.band_width = 1;
+  ls_data.L = t8_basic_level_set_sphere;
   ls_data.min_level = minlevel;
   ls_data.max_level = maxlevel;
+  ls_data.udata = &sdata;
 
   /* Adapt the mesh according to the user data */
   t8_forest_set_user_data (forest_adapt, &ls_data);
-  t8_forest_set_adapt (forest_adapt, forest, t8_simple_refinement_criteria,
-                       1);
+  t8_forest_set_adapt (forest_adapt, forest, t8_common_adapt_level_set, 1);
+  // t8_forest_set_adapt (forest_adapt, forest, t8_simple_refinement_criteria, 1);
 
   if (do_balance) {
     t8_forest_set_balance (forest_adapt, forest, 0);
@@ -259,11 +272,11 @@ t8_refine_with_subelements (t8_eclass_t eclass)
    * Note, that for subelements we enumerate the faces starting from the center node (+) clockwise for every subelement. */
 
   /* Choose the current element and the face: */
-  t8_locidx_t         element_index_in_tree = 21;       /* index of the element in the forest */
-  int                 face_id = 1;      /* the face f_i, determing the direction in which we are looking for neighbors */
+  // t8_locidx_t         element_index_in_tree = 21;       /* index of the element in the forest */
+  // int                 face_id = 1;      /* the face f_i, determing the direction in which we are looking for neighbors */
 
   /* determine the neighbor element and printing the element data */
-  t8_test_neighbor_function (forest_adapt, element_index_in_tree, face_id);
+  t8_test_neighbor_function (forest_adapt);
 
   t8_forest_unref (&forest_adapt);
 }
