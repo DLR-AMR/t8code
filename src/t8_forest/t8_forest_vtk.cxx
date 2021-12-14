@@ -525,7 +525,7 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
                                                       vertex_coords);
         }
 
-        /* Evalute the geometry */
+        /* Evaluate the geometry */
         t8_geometry_evaluate (cmesh, gtreeid, vertex_coords, coordinates);
 
         /* Insert point in the points array */
