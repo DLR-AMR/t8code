@@ -30,7 +30,7 @@
  * count the number of particles it contains.
  * 
  * How you can experiment here:
- *    - Load the generate vtu files with paraview and add a threshhold to the 
+ *    - Load the generated vtu files with paraview and add a threshhold to the 
  *      "Number of particles" field to display the elements with 1 or more particles.
  *      This shows you the distribution of the particles in the domain and which elements
  *      contain particles.
