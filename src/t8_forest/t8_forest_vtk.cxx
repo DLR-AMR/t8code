@@ -130,19 +130,20 @@ typedef int         (*t8_forest_vtk_cell_data_kernel) (t8_forest_t forest,
                                                        void **data,
                                                        T8_VTK_KERNEL_MODUS
                                                        modus);
+                                                       
 /* lookup table for number of nodes for curved eclasses. */
 const int           t8_curved_eclass_num_nodes[T8_ECLASS_COUNT] =
   { 1, 3, 8, 6, 20, 10, 15, 13 };
 
-/* lookup table for number of vtk types of curved elements */
+/* lookup table for vtk types of curved elements */
 const int           t8_curved_eclass_vtk_type[T8_ECLASS_COUNT] =
   { 1, 21, 23, 22, 25, 24, 26, 27 };
 
 /* 
- * depending on wether we want to write curved or non-curved elements
+ * depending on whether we want to write curved or non-curved elements
  * we need the right number of points, so we choose the right lookup table
  */
-int
+static int
 t8_get_number_of_vtk_nodes (t8_element_shape_t eclass, int curved_flag)
 {
   /* use the lookup table of the eclasses. */
@@ -163,7 +164,7 @@ t8_get_number_of_vtk_nodes (t8_element_shape_t eclass, int curved_flag)
  * formulas. For more information look into the vtk documentation.
  * TODO: Add Pyramids when they are merged into the dev branch.
  * */
-void
+static void
 t8_curved_element_get_reference_node_coords (const t8_element_t *
                                              elem,
                                              t8_element_shape_t eclass,
@@ -478,7 +479,7 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
           SC_ABORT_NOT_REACHED ();
         }
       }
-      else {
+      else { /* curved_flag != 0 */
         switch (element_shape) {
         case T8_ECLASS_VERTEX:
           pvtkCell = vertex;
@@ -525,7 +526,7 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
                                                       vertex_coords);
         }
 
-        /* Evalute the geometry */
+        /* Evaluate the geometry */
         t8_geometry_evaluate (cmesh, gtreeid, vertex_coords, coordinates);
 
         /* Insert point in the points array */

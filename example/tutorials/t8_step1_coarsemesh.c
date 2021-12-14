@@ -43,7 +43,7 @@
  * \param [in] comm   MPI Communicator to use.
  * \return            The coarse mesh.
  */
-static              t8_cmesh_t
+static t8_cmesh_t
 t8_step1_build_tetcube_coarse_mesh (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
