@@ -478,7 +478,7 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
           SC_ABORT_NOT_REACHED ();
         }
       }
-      else {
+      else { /* curved_flag != 0 */
         switch (element_shape) {
         case T8_ECLASS_VERTEX:
           pvtkCell = vertex;
