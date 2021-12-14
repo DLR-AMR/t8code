@@ -43,7 +43,7 @@
  * \param [in] comm   MPI Communicator to use.
  * \return            The coarse mesh.
  */
-static t8_cmesh_t
+static              t8_cmesh_t
 t8_step1_build_tetcube_coarse_mesh (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
@@ -104,7 +104,7 @@ main (int argc, char **argv)
 
   /* Initialize the sc library, has to happen before we initialize t8code. */
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-  /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the leg levels. */
+  /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
   t8_init (SC_LP_PRODUCTION);
 
   /* Print a message on the root process. */

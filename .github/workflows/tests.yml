@@ -31,9 +31,6 @@ name: t8code tests
 #       SC_IGNORE_CACHE and P4EST_IGNORE_CACHE to 1 in the respective steps.
 
 
-# TODO
-# 1. activate -Werror
-
 on:
   push:
     branches:
@@ -45,12 +42,16 @@ on:
       - master
       - develop
   workflow_dispatch: # Be able to trigger this manually on github.com
+  # Run every night at 1:10
+  schedule:
+      - cron:  '10 1 * * *'
 
 jobs:
   build:
 
     runs-on: ubuntu-latest
     
+    timeout-minutes: 60
     steps:
 #
 # Setup and bootstrap
@@ -282,7 +283,7 @@ jobs:
 # configure and test with MPI (release mode)
     - name: Printing MPI compiler info
       run: mpicc --version && mpirun --version
-    - name: Priting GCC compiler info
+    - name: Printing GCC compiler info
       run: gcc --version && g++ --version
     - name: check release mode
       run: echo "Checking release mode (MPI)"

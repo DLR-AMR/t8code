@@ -134,7 +134,7 @@ typedef int         (*t8_forest_adapt_t) (t8_forest_t forest,
  * \param [in,out] pforest      On input, this pointer must be non-NULL.
  *                              On return, this pointer set to the new forest.
  */
-void                t8_forest_init (t8_forest_t *pforest);
+void                t8_forest_init (t8_forest_t * pforest);
 
 /** Check whether a forest is not NULL, initialized and not committed.
  * In addition, it asserts that the forest is consistent as much as possible.
@@ -877,6 +877,7 @@ void                t8_forest_element_centroid (t8_forest_t forest,
 
 /** Compute the diameter of an element if a geometry
  * for this tree is registered in the forest's cmesh.
+ * This is only an approximation.
  * \param [in]      forest     The forest.
  * \param [in]      ltree_id   The forest local id of the tree in which the element is.
  * \param [in]      element    The element.
@@ -906,6 +907,7 @@ double              t8_forest_element_volume (t8_forest_t forest,
 /** Compute the area of an element's face if a geometry
  * for this tree is registered in the forest's cmesh.
  * Currently implemented for 2D elements only.
+ * This is only an approximation.
  * \param [in]      forest     The forest.
  * \param [in]      ltree_id   The forest local id of the tree in which the element is.
  * \param [in]      element    The element.
@@ -1022,7 +1024,7 @@ void                t8_forest_ref (t8_forest_t forest);
  *                              Otherwise, the pointer is not changed and
  *                              the forest is not modified in other ways.
  */
-void                t8_forest_unref (t8_forest_t *pforest);
+void                t8_forest_unref (t8_forest_t * pforest);
 
 T8_EXTERN_C_END ();
 
