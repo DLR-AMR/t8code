@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* 
+/* See also: https://github.com/holke/t8code/wiki/Tutorial:-Search
  * In this tutorial we discuss t8code's search algorithm.
  * search is a powerful tool to identify leaf elements that match a given condition
  * and execute a function on them.
@@ -36,6 +36,7 @@
  *      contain particles.
  *    - Change the number of particles, the subdomain of the particles etc.
  *    - Try to find a different criterion to search for and implement it.
+ *    - Do not count particles in elements whose x-coordinates are all smaller than 0.5 .
  *    - Advanced: Use adapt to refine elements with more than 1 particle in them recursively until each
  *                element contains at most 1 particle.
  * 
@@ -71,9 +72,9 @@
  * |__|__|__|__|    *     |
  * |__|__|__|__|__________|
  * 
- * The '*' should mark particles that we want to find the elements containing them.
- * Thus, these are our queries. Let us enumerate them 0, 1, 2, 3, 4 from left to right.
- * The search should allways continue as long as we still may have particles to look for,
+ * The '*' should mark particles for which we want to find the elements containing them.
+ * These particles are our queries. Let us enumerate them 0, 1, 2, 3, 4 from left to right.
+ * The search should always continue for an element as long as we still may have particles to look for,
  * thus the search callback can always return true. The query-callback will return true if
  * and only if the current particle is contained inside the element.
  * We discuss the search process in the left tree.
@@ -85,10 +86,10 @@
  *  |__ __ __ __|                                       |__ __|__ __|
  * 
  *  At first, the tree element is considered            The children are created and the search is called 
- *  and all queries are active. The first 3 are         for each one of them. For the upper left queries 0 and 1
+ *  and all queries are active. The first 3 are         for each one of them. For the upper left, queries 0 and 1
  *  inside the element, the last 2 not. Thus the        will remain active. The upper right is the final forest leaf, so the search stops.
  *  search will continue, but only queries 0, 1, 2      For the bottom two children no queries will remain active 
- *  remain active.                                      and hence the search wont continue here.
+ *  remain active.                                      and hence the search won't continue here.
  * 
  *  __ __ 
  * |__|__|
@@ -97,8 +98,10 @@
  *  The search continues with the children of the upper left element.
  *  Those are all leafs in the forest and hence the search will stop after
  *  executing the query callback.
+ *  
+ *  Afterwards the search will continue simarly in the second tree.
  * 
- *  The performance of the search could be improved by using an approximative check
+ *  Note that the performance of the search could be improved by using an approximative check
  *  on all but the leaf elements.
  *  This check should return true whenenever a particle is inside an element, but may have false positives.
  * 
@@ -111,13 +114,13 @@
 #include <t8_vec.h>             /* Basic operations on 3D vectors. */
 #include <t8_forest/t8_forest_iterate.h>        /* For the search algorithm. */
 #include <t8_forest_vtk.h>      /* Additional vtk functions to output arbitrary user data. */
-#include <example/tutorials/t8_step3.h>
+#include <example/tutorials/t8_step3.h> /* Example forest adaptation from step 3 */
 
-/* Our search query, a particel together with a flag. */
+/* Our search query, a particle together with a flag. */
 typedef struct
 {
   double              coordinates[3];   /* The coordinates of our particle. */
-  int                 is_inside_partition;      /* Will be set to true if the particles lies inside this process' partition. */
+  int                 is_inside_partition;      /* Will be set to true if the particles lies inside this process' parallel partition. */
 } t8_tutorial_search_particle_t;
 
 /* Additional user data that we process during search.
@@ -167,9 +170,9 @@ t8_tutorial_search_callback (t8_forest_t forest,
  * The return value determines whether or not the query remains active for the children
  * of this element.
  * In our example this is the case if the particle is inside the element.
- * The additional parameter 'is_leaf' will be true if the given element is a leaf
+ * The additional input parameter 'is_leaf' will be true if the given element is a leaf
  * element (= an actual element in our forst, not a 'virtual' element in the hierarchy).
- * If the element is a leaf and the particle is contained in it, the we will increase
+ * If the element is a leaf and the particle is contained in it, then we will increase
  * a counter for this element by one.
  * These counters are provided in an sc_array as user data of the input forest.
  */
@@ -214,7 +217,7 @@ t8_tutorial_search_query_callback (t8_forest_t forest,
        * We mark the particle for being inside the partition and we increase
        * the particles_per_element counter of this element. */
       /* In order to find the index of the element inside the array, we compute the
-       * index of the first element of this tree plus the index of the element whithin
+       * index of the first element of this tree plus the index of the element within
        * the tree. */
       t8_locidx_t         element_index =
         t8_forest_get_tree_element_offset (forest, ltreeid) + tree_leaf_index;
@@ -252,7 +255,8 @@ t8_tutorial_search_vtk (t8_forest_t forest, sc_array * particles_per_element,
 }
 
 #if 0
-/* Currently deactivated output function that prints all particles. */
+/* Currently deactivated output function that prints all particles.
+ * Used for debugging. */
 static void
 t8_tutorial_search_print_particles (sc_array_t * particles)
 {
@@ -368,13 +372,15 @@ t8_tutorial_search_build_particles (size_t num_particles, unsigned int seed,
   particles = sc_array_new_count (sizeof (t8_tutorial_search_particle_t),
                                   num_particles);
 
+  /* We build the array on rank 0 and broadcast it to the other ranks.
+   * This ensures that all ranks have the same randomly generated particles. */
   if (mpirank == 0) {
     /* Rank 0 fills this array with random particles. */
     size_t              iparticle;
     srand (seed);
     for (iparticle = 0; iparticle < num_particles; ++iparticle) {
       int                 dim;
-      /* Get this particles pointer. */
+      /* Get this particle's pointer. */
       t8_tutorial_search_particle_t *particle =
         (t8_tutorial_search_particle_t *) sc_array_index_int (particles,
                                                               iparticle);
