@@ -134,7 +134,7 @@ typedef int         (*t8_forest_vtk_cell_data_kernel) (t8_forest_t forest,
 const int           t8_curved_eclass_num_nodes[T8_ECLASS_COUNT] =
   { 1, 3, 8, 6, 20, 10, 15, 13 };
 
-/* lookup table for number of vtk types of curved elements */
+/* lookup table for vtk types of curved elements */
 const int           t8_curved_eclass_vtk_type[T8_ECLASS_COUNT] =
   { 1, 21, 23, 22, 25, 24, 26, 27 };
 
