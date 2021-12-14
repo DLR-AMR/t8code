@@ -248,7 +248,7 @@ t8_geom_handler_commit (t8_geometry_handler_t * geom_handler)
   T8_ASSERT (t8_geom_handler_is_committed (geom_handler));
 }
 
-t8_geometry_c      *
+t8_geometry_c *
 t8_geom_handler_find_geometry (const t8_geometry_handler_t * geom_handler,
                                const char *name)
 {
