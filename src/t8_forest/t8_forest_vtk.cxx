@@ -163,7 +163,7 @@ t8_get_number_of_vtk_nodes (t8_element_shape_t eclass, int curved_flag)
  * formulas. For more information look into the vtk documentation.
  * TODO: Add Pyramids when they are merged into the dev branch.
  * */
-void
+static void
 t8_curved_element_get_reference_node_coords (const t8_element_t *
                                              elem,
                                              t8_element_shape_t eclass,
