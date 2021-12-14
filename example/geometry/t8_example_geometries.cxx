@@ -28,7 +28,6 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_helpers.h>
-#include <t8_forest_vtk.h>
 
 typedef enum
 {
