@@ -139,7 +139,7 @@ const int           t8_curved_eclass_vtk_type[T8_ECLASS_COUNT] =
   { 1, 21, 23, 22, 25, 24, 26, 27 };
 
 /* 
- * depending on wether we want to write curved or non-curved elements
+ * depending on whether we want to write curved or non-curved elements
  * we need the right number of points, so we choose the right lookup table
  */
 int
