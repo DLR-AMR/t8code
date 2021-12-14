@@ -130,7 +130,8 @@ typedef int         (*t8_forest_vtk_cell_data_kernel) (t8_forest_t forest,
                                                        void **data,
                                                        T8_VTK_KERNEL_MODUS
                                                        modus);
-                                                       
+
+#if T8_WITH_VTK
 /* lookup table for number of nodes for curved eclasses. */
 const int           t8_curved_eclass_num_nodes[T8_ECLASS_COUNT] =
   { 1, 3, 8, 6, 20, 10, 15, 13 };
@@ -138,11 +139,13 @@ const int           t8_curved_eclass_num_nodes[T8_ECLASS_COUNT] =
 /* lookup table for vtk types of curved elements */
 const int           t8_curved_eclass_vtk_type[T8_ECLASS_COUNT] =
   { 1, 21, 23, 22, 25, 24, 26, 27 };
+#endif
 
 /* 
  * depending on whether we want to write curved or non-curved elements
  * we need the right number of points, so we choose the right lookup table
  */
+#if T8_WITH_VTK
 static int
 t8_get_number_of_vtk_nodes (t8_element_shape_t eclass, int curved_flag)
 {
@@ -152,6 +155,7 @@ t8_get_number_of_vtk_nodes (t8_element_shape_t eclass, int curved_flag)
   }
   return t8_eclass_num_vertices[eclass];
 }
+#endif
 
 /* If we want to write curved elements, we need to calculate 
  * the reference coordinates. For the vertices(end points)
@@ -164,6 +168,7 @@ t8_get_number_of_vtk_nodes (t8_element_shape_t eclass, int curved_flag)
  * formulas. For more information look into the vtk documentation.
  * TODO: Add Pyramids when they are merged into the dev branch.
  * */
+#if T8_WITH_VTK
 static void
 t8_curved_element_get_reference_node_coords (const t8_element_t *
                                              elem,
@@ -335,6 +340,7 @@ t8_curved_element_get_reference_node_coords (const t8_element_t *
     break;
   }
 }
+#endif
 
 int
 t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
