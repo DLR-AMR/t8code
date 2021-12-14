@@ -77,7 +77,7 @@ t8_step2_build_prismcube_coarse_mesh (sc_MPI_Comm comm)
  * \return            A uniform forest with the given refinement level that is
  *                    partitioned across the processes in \a comm.
  */
-static              t8_forest_t
+static t8_forest_t
 t8_step2_build_uniform_forest (sc_MPI_Comm comm, t8_cmesh_t cmesh, int level)
 {
   t8_forest_t         forest;
