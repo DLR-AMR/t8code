@@ -192,9 +192,6 @@ t8_tutorial_search_query_callback (t8_forest_t forest,
   /* Cast the query pointer to a particle pointer. */
   t8_tutorial_search_particle_t *particle =
     (t8_tutorial_search_particle_t *) query;
-  /* Compute the vertex coordinates of this tree. */
-  const double       *tree_vertices =
-    t8_forest_get_tree_vertices (forest, ltreeid);
   /* Numerical tolerance for the is inside element check. */
   const double        tolerance = 1e-8;
   /* Get the user data pointer that stores the number of particles per element
@@ -209,7 +206,7 @@ t8_tutorial_search_query_callback (t8_forest_t forest,
 
   /* Test whether this particle is inside this element. */
   particle_is_inside_element =
-    t8_forest_element_point_inside (forest, ltreeid, element, tree_vertices,
+    t8_forest_element_point_inside (forest, ltreeid, element,
                                     particle->coordinates, tolerance);
   if (particle_is_inside_element) {
     if (is_leaf) {
@@ -281,7 +278,8 @@ static void
 t8_tutorial_search_for_particles (t8_forest_t forest, sc_array * particles)
 {
   sc_array            particles_per_element;
-  t8_locidx_t         num_local_elements = t8_forest_get_num_element (forest);
+  t8_locidx_t         num_local_elements =
+    t8_forest_get_local_num_elements (forest);
   t8_locidx_t         ielement;
   t8_locidx_t         global_num_searched_elements;
   t8_gloidx_t         global_num_elements;
@@ -454,7 +452,7 @@ main (int argc, char **argv)
    */
 
   /* Build a cube cmesh with tet, hex, and prism trees. */
-  cmesh = t8_cmesh_new_hypercube_hybrid (3, comm, 0, 0);
+  cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
   /* Build a uniform forest on it. */
   forest =
     t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0,
