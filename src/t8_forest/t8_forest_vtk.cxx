@@ -143,7 +143,7 @@ const int           t8_curved_eclass_vtk_type[T8_ECLASS_COUNT] =
  * depending on whether we want to write curved or non-curved elements
  * we need the right number of points, so we choose the right lookup table
  */
-int
+static int
 t8_get_number_of_vtk_nodes (t8_element_shape_t eclass, int curved_flag)
 {
   /* use the lookup table of the eclasses. */
