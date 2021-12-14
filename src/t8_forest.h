@@ -1024,7 +1024,7 @@ void                t8_forest_ref (t8_forest_t forest);
  *                              Otherwise, the pointer is not changed and
  *                              the forest is not modified in other ways.
  */
-void                t8_forest_unref (t8_forest_t * pforest);
+void                t8_forest_unref (t8_forest_t *pforest);
 
 T8_EXTERN_C_END ();
 
