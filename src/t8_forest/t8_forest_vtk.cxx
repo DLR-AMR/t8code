@@ -361,7 +361,7 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
   int                 freturn = 0;
   t8_gloidx_t         gtreeid;
   t8_cmesh_t          cmesh;
-  int                 num_corners;
+  int                 num_node;
 
 /* Since we want to use different element types and a points Array and cellArray 
  * we have to declare these vtk objects. The cellArray stores the Elements.
@@ -446,7 +446,7 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
       T8_ASSERT (element != NULL);
       vtkSmartPointer < vtkCell > pvtkCell = NULL;
       t8_element_shape_t  element_shape = scheme->t8_element_shape (element);
-      num_corners = t8_get_number_of_vtk_nodes (element_shape, curved_flag);
+      num_node = t8_get_number_of_vtk_nodes (element_shape, curved_flag);
       /* depending on the element type we choose the correct vtk cell to insert points to */
       if (curved_flag == 0) {
         switch (element_shape) {
@@ -510,7 +510,7 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
       }
 
       /* For each element we iterate over all points */
-      for (ivertex = 0; ivertex < num_corners; ivertex++, point_id++) {
+      for (ivertex = 0; ivertex < num_node; ivertex++, point_id++) {
         /* Compute the vertex coordinates inside [0,1]^dim reference cube. */
         if (curved_flag) {
           t8_curved_element_get_reference_node_coords (element, element_shape,
