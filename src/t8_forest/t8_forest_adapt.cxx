@@ -54,9 +54,9 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
 {
   t8_element_t       *element, *parent;
   t8_element_t      **fam;
-  t8_locidx_t         pos;
+  t8_locidx_t         pos, i;
   size_t              elements_in_array;
-  int                 num_children, i, isfamily;
+  int                 num_children, isfamily;
   int                 child_id;
   /* el_inserted is the index of the last element in telements plus one.
    * el_coarsen is the index of the first element which could possibly
@@ -83,15 +83,16 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
          == num_children - 1) {
     isfamily = 1;
     /* Get all elements at indices pos, pos + 1, ... ,pos + num_children - 1 */
-    for (i = 0; i < num_children; i++) {
+    for (i = 0; i < num_children && pos + i < (t8_locidx_t) elements_in_array;
+         i++) {
       fam[i] = t8_element_array_index_locidx (telements, pos + i);
-      if (ts->t8_element_child_id (fam[i]) != i) {
-        /* These elements cannot form a family. Stop coarsening. */
-        isfamily = 0;
-        break;
-      }
     }
-    T8_ASSERT (!isfamily || ts->t8_element_is_family (fam));
+    if (i == num_children) {
+      isfamily = ts->t8_element_is_family (fam);
+    }
+    else {
+      isfamily = 0;
+    }
     if (isfamily
         && forest->set_adapt_fn (forest, forest->set_from, ltreeid,
                                  lelement_id, ts, num_children, fam) < 0) {
@@ -269,8 +270,8 @@ t8_forest_adapt (t8_forest_t forest)
     while (el_considered < num_el_from) {
       int                 num_elements_to_adapt_fn;
 #ifdef T8_ENABLE_DEBUG
-      /* Will get set to 0 later if this is not a family */
-      is_family = 1;
+      /* Will get set to 1 later if this is a family */
+      is_family = 0;
 #endif
 
       /* Load the current element and at most num_children-1 many others into
@@ -310,15 +311,16 @@ t8_forest_adapt (t8_forest_t forest)
         /* We are certain that the elements do not form a family.
          * So we will only pass the first element to the adapt callback. */
         num_elements_to_adapt_fn = 1;
-#ifdef T8_ENABLE_DEBUG
-        is_family = 0;
-#endif
       }
       else {
         /* We will pass a family to the adapt callback */
         num_elements_to_adapt_fn = num_siblings;
+#ifdef T8_ENABLE_DEBUG
+        is_family = 1;
+#endif
       }
       T8_ASSERT (!is_family || tscheme->t8_element_is_family (elements_from));
+
       /* Pass the element, or the family to the adapt callback.
        * The output will be > 0 if the element should be refined
        *                    = 0 if the element should remain as is

@@ -112,8 +112,8 @@ t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from,
   base_level = adapt_data->base_level;
   max_level = adapt_data->max_level;
   /* Compute the coordinates of the anchor node. */
-  t8_common_midpoint (forest_from, which_tree, ts, elements[0],
-                      elem_midpoint);
+  t8_forest_element_centroid (forest_from, which_tree, elements[0],
+                              elem_midpoint);
 
   /* Calculate elem_midpoint - c_min n */
   t8_vec3_xmay (elem_midpoint, adapt_data->c_min, normal);

@@ -31,9 +31,6 @@ name: t8code tests
 #       SC_IGNORE_CACHE and P4EST_IGNORE_CACHE to 1 in the respective steps.
 
 
-# TODO
-# 1. activate -Werror
-
 on:
   push:
     branches:
@@ -46,6 +43,9 @@ on:
       - master
       - develop
   workflow_dispatch: # Be able to trigger this manually on github.com
+  # Run every night at 1:10
+  schedule:
+      - cron:  '10 1 * * *'
 
 jobs:
   build:

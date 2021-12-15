@@ -328,6 +328,16 @@ t8_default_scheme_pyramid_c::t8_element_vertex_coords (const t8_element_t * t,
   t8_dpyramid_compute_coords ((const t8_dpyramid_t *) t, vertex, coords);
 }
 
+void
+t8_default_scheme_pyramid_c::t8_element_vertex_reference_coords (const t8_element_t * elem,
+                                                    int vertex,
+                                                    double coords[])
+  {
+    t8_dpyramid_vertex_reference_coords ((const t8_dpyramid_t *) elem,
+                                                        vertex,
+                                                        coords);
+  }
+
 /* Constructor */
 t8_default_scheme_pyramid_c::t8_default_scheme_pyramid_c (void)
 {

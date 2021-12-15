@@ -384,10 +384,22 @@ t8_default_scheme_prism_c::t8_element_root_len (const t8_element_t * elem)
 }
 
 void
-t8_default_scheme_prism_c::t8_element_vertex_coords (const t8_element_t * t,
-                                                     int vertex, int coords[])
+t8_default_scheme_prism_c::t8_element_vertex_coords (const t8_element_t *
+                                                     elem, int vertex,
+                                                     int coords[])
 {
-  t8_dprism_vertex_coords ((const t8_dprism_t *) t, vertex, coords);
+  t8_dprism_vertex_coords ((const t8_dprism_t *) elem, vertex, coords);
+}
+
+void
+t8_default_scheme_prism_c::t8_element_vertex_reference_coords (const
+                                                               t8_element_t *
+                                                               elem,
+                                                               int vertex,
+                                                               double
+                                                               coords[])
+{
+  t8_dprism_vertex_ref_coords ((const t8_dprism_t *) elem, vertex, coords);
 }
 
 void

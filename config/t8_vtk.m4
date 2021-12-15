@@ -10,7 +10,7 @@ dnl   -lvtkIOXML-9.0 -lvtkCommonExecutionModel-9.0 -lvtkCommonDataModel-9.0
 dnl   -lvtkCommonCore-9.0 -lvtkzlib-9.0"
 dnl
 AC_DEFUN([T8_CHECK_VTK], [
-
+	AC_MSG_CHECKING([for VTK library])
 T8_ARG_WITH([vtk_version_number],
   [vtk library version number --with-vtk_version_number=<MAJOR.MINOR>, defaults to 9.0 if not provided],
   [VTK_VERSION_MANUALLY_PROVIDED])

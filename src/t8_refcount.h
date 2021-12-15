@@ -62,12 +62,15 @@ void                t8_refcount_destroy (t8_refcount_t * rc);
 #define t8_refcount_ref(rc) sc_refcount_ref(rc)
 
 /** Decrease the reference count by one.
- * The count must be greater zero on input.  If the reference count reaches
+ * The count must be greater zero on input. If the reference count reaches
  * zero, which is indicated by the return value, the counter may NOT be used
  * furter with \ref t8_refcount_ref or \see t8_refcount_unref.  It IS legal to
  * query it with \ref t8_refcount_is_active and \ref t8_refcount_is_last and to
  * repurpose it later by calling \ref t8_refcount_init.
- * It is not necessary to duplicate this functionality as a function. */
+ * It is not necessary to duplicate this functionality as a function.
+ * \param [in] rc Reference counter
+ * \return        true if and only if the refcount is 0 after the operation.
+ */
 #define t8_refcount_unref(rc) sc_refcount_unref(rc)
 
 /** Query wether a reference counter is has a positive value. */

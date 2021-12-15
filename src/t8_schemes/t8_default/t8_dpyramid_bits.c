@@ -598,7 +598,6 @@ int
 t8_dpyramid_face_parent_face (const t8_dpyramid_t * elem, const int face)
 {
   t8_dpyramid_t       parent;
-  parent.level = -1;
   int                 child_id;
   T8_ASSERT (0 <= elem->level && elem->level <= T8_DPYRAMID_MAXLEVEL);
   T8_ASSERT (0 <= face && face < T8_DPYRAMID_FACES);
@@ -1166,6 +1165,7 @@ t8_dpyramid_child_id_unknown_parent (const t8_dpyramid_t * p,
      *            compiler doesn't know about it. To prevent this warning, we set the type here.
      */
     parent->type = -1;
+    parent->level = -1;
     return 0;
   }
   t8_dpyramid_parent (p, parent);
@@ -1466,8 +1466,6 @@ t8_dpyramid_successor (const t8_dpyramid_t * elem, t8_dpyramid_t * succ,
                        const int level)
 {
   t8_dpyramid_t       parent;
-  /*Suppress Compilerwarnings by setting the level*/
-  parent.level = -1;
   t8_dpyramid_successor_recursion (elem, succ, &parent, level);
 }
 
@@ -1511,4 +1509,18 @@ t8_dpyramid_compute_coords (const t8_dpyramid_t * p, const int vertex,
     T8_ASSERT (0 <= vertex && vertex < T8_DTET_CORNERS);
     t8_dtet_compute_coords (p, vertex, coords);
   }
+}
+
+void
+t8_dpyramid_vertex_reference_coords (const t8_dpyramid_t * elem,
+                                                    int vertex,
+                                                    double coords[])
+{
+    int coords_int[3];
+    T8_ASSERT(0<= vertex && vertex < T8_DPYRAMID_CORNERS);
+    t8_dpyramid_compute_coords(elem, vertex, coords_int);
+    /*scale the coordinates onto the reference cube*/
+    coords[0] = coords_int[0] / (double)T8_DPYRAMID_ROOT_LEN;
+    coords[1] = coords_int[1] / (double)T8_DPYRAMID_ROOT_LEN;
+    coords[2] = coords_int[2] / (double)T8_DPYRAMID_ROOT_LEN;
 }

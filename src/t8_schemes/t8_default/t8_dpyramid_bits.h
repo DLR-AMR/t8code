@@ -353,6 +353,17 @@ void                t8_dpyramid_successor (const t8_dpyramid_t * elem,
                                            t8_dpyramid_t * s,
                                            const int level);
 
+/** Compute the reference coordinates of a vertex of a pyramid when the
+ * tree (level 0 triangle) is embedded in [0,1]^3.
+ * \param [in] elem    Input pyramid.
+ * \param [in] vertex The number of the vertex.
+ * \param [out] coordinates An array of 3 double that
+ * 		     will be filled with the reference coordinates of the vertex.
+ */
+void                t8_dpyramid_vertex_reference_coords (const t8_dpyramid_t * elem,
+                                                    int vertex,
+                                                    double coords[]);
+
 T8_EXTERN_C_END ();
 
 #endif /* T8_DPYRAMID_BITS_H */
