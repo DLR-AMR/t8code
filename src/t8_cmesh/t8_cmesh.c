@@ -3560,7 +3560,12 @@ t8_cmesh_new_full_hybrid (sc_MPI_Comm comm)
   double              vertices[24];
   int                 i;
 
+  t8_geometry_c     *linear_geom = t8_geometry_linear_new (3);
+
   t8_cmesh_init (&cmesh);
+
+  t8_cmesh_register_geometry (cmesh, linear_geom);
+
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
   t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_PYRAMID);
   t8_cmesh_set_tree_class (cmesh, 2, T8_ECLASS_TET);
@@ -3568,6 +3573,7 @@ t8_cmesh_new_full_hybrid (sc_MPI_Comm comm)
   t8_cmesh_set_join (cmesh, 0, 1, 5, 4, 0);
   t8_cmesh_set_join (cmesh, 1, 2, 0, 1, 0);
   t8_cmesh_set_join (cmesh, 1, 3, 3, 3, 0);
+
 
   /*Hex vertices */
   vertices[0] = 0;
@@ -3673,6 +3679,8 @@ t8_cmesh_new_pyramid_cake (sc_MPI_Comm comm, int num_of_pyra)
   double             *vertices = T8_ALLOC (double, num_of_pyra * 5 * 3);
   t8_cmesh_t          cmesh;
   double              degrees = 360. / num_of_pyra;
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
+
   if (vertices)
     T8_ASSERT (num_of_pyra > 2);
 
@@ -3698,7 +3706,10 @@ t8_cmesh_new_pyramid_cake (sc_MPI_Comm comm, int num_of_pyra)
       }
     }
   }
+
   t8_cmesh_init (&cmesh);
+  t8_cmesh_register_geometry (cmesh, linear_geom);
+
   for (i = 0; i < num_of_pyra; i++) {
     t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_PYRAMID);
   }
@@ -3733,8 +3744,12 @@ t8_cmesh_new_long_brick_pyramid (sc_MPI_Comm comm, int num_cubes)
   double              attr_vertices[15];
   int                 i, j;
   t8_cmesh_t          cmesh;
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
+
   T8_ASSERT (num_cubes > 0);
   t8_cmesh_init (&cmesh);
+  t8_cmesh_register_geometry (cmesh, linear_geom);
+
   for (i = 0; i < num_cubes; i++) {
     for (j = 0; j < 3; j++) {
       t8_cmesh_set_tree_class (cmesh, i * 3 + j, T8_ECLASS_PYRAMID);
