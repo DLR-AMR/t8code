@@ -44,8 +44,6 @@ char                t8_comm_string_list[T8_CMESH_TEST_NUM_COMMS][18] =
 /* TODO: - when disjoint bricks issues are done remove comment from t8_get_number_ of_all_testcases
  *       - when hypercube cmesh can be partitioned then remove comment from 
  *         t8_test_create_new_hypercube_cmesh (int cmesh_id)
- *       - when hypercube cmesh with pyramidal elements works with all tests remove if statement
- *         in t8_test_create_new_hypercube_cmesh (int cmesh_id) and remove comment
  *       - when empty cmesh works with all tests change the line with the comment to the comments 
  *         statement in t8_test_create_cmesh (int cmesh_id)
  * NOTE: "all tests" here mean the ones using this file. 
@@ -272,7 +270,7 @@ t8_test_create_comm_only_cmesh (int cmesh_id)
 }
 
 /** The function t8_test_create_new_hypercube_cmesh(int cmesh_id):
- * The comm is taken from the t8_comm_list. It avoids the case (eclass = pyramid & periodic=1) since this is not allowed. 
+ * The comm is taken from the t8_comm_list. It avoids the case periodic=1 since this is not allowed.
  * \param [in] cmesh_id The cmesh_id is used to create a unique new_hypercube cmesh.
  * \return a new hypercube cmesh with a unique input for every given id. 
  */
@@ -311,20 +309,15 @@ t8_test_create_new_hypercube_cmesh (int cmesh_id)
      t8_eclass_to_string[eclass], t8_comm_string_list[comm_num], do_bcast,
      do_partition, periodic);
 
-  if (eclass == T8_ECLASS_PYRAMID) {
-    t8_debugf
-      ("Pyramids are not implemented (in this branch), therefore the eclass is changed to T8_ECLASS_HEX");
-    return t8_cmesh_new_hypercube (T8_ECLASS_HEX, comm, do_bcast,
+  if (periodic == 1) {
+    return t8_cmesh_new_hypercube (eclass, comm, do_bcast,
                                    do_partition, 0);
   }
+  else{
+      return t8_cmesh_new_hypercube (eclass, comm, do_bcast, do_partition,
+                                     periodic);
+  }
 
-  /* change to  this when tests run with pyramidal elements: 
-     if ((int) eclass == 7 && periodic == 1) {
-     return t8_cmesh_new_hypercube (eclass, comm, do_bcast, do_partition, 0);
-     } */
-
-  return t8_cmesh_new_hypercube (eclass, comm, do_bcast, do_partition,
-                                 periodic);
 }
 
 /** The function t8_test_create_new_empty_cmesh(int cmesh_id):
