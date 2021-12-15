@@ -2143,7 +2143,6 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
 
           /* we will call the current neighbor "pseudo_neighbor" here in order to stress that it might not be the real neighbor */
           T8_ASSERT (element_index < forest->global_num_elements);
-          printf ("elem_index: %i\n", element_index);
           const t8_element_t *pseudo_neighbor;
           pseudo_neighbor =
             t8_forest_get_tree_element (t8_forest_get_tree
