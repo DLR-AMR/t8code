@@ -133,7 +133,7 @@ t8_face_check_easy ()
   ts->t8_element_new (1, &neigh);
 
   ts->t8_element_set_linear_id (element, 0, 0);
-  /*Do the neighbors of the element are realy outside? */
+  /*Are the neighbors of the element realy outside? */
   t8_check_not_inside_root (element, neigh, child, ts);
 
   ts->t8_element_child (element, 8, child);
@@ -189,9 +189,9 @@ main (int argc, char **argv)
 {
   int                 mpiret;
 #ifdef T8_ENABLE_DEBUG
-  const int           maxlvl = 7;
+  const int           maxlvl = 3;
 #else
-  const int           maxlvl = 8;
+  const int           maxlvl = 4;
 #endif
 
   mpiret = sc_MPI_Init (&argc, &argv);
