@@ -52,11 +52,11 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
                                    t8_locidx_t * el_inserted,
                                    t8_element_t ** el_buffer)
 {
-  t8_element_t       *element, *parent;
+  t8_element_t       *element;
   t8_element_t      **fam;
   t8_locidx_t         pos, i;
   size_t              elements_in_array;
-  int                 num_children, isfamily;
+  int                 num_siblings, isfamily;
   int                 child_id;
   /* el_inserted is the index of the last element in telements plus one.
    * el_coarsen is the index of the first element which could possibly
@@ -66,28 +66,25 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
   T8_ASSERT (*el_inserted == (t8_locidx_t) elements_in_array);
   T8_ASSERT (el_coarsen >= 0);
   element = t8_element_array_index_locidx (telements, *el_inserted - 1);
-  /* TODO: This assumes that the number of children is the same for each
-   *       element in that class. This may not be the case. */
-  ts->t8_element_new (1, &parent);
+
   T8_ASSERT (ts->t8_element_level (element) > 0);
-  ts->t8_element_parent (element, parent);
-  num_children = ts->t8_element_num_children (parent);
+
+  num_siblings = ts->t8_element_num_siblings(element);
   //T8_ASSERT (ts->t8_element_child_id (element) == num_children - 1);
-  ts->t8_element_destroy (1, &parent);
 
   fam = el_buffer;
-  pos = *el_inserted - num_children;
+  pos = *el_inserted - num_siblings;
   isfamily = 1;
   child_id = ts->t8_element_child_id (element);
   while (isfamily && pos >= el_coarsen && child_id > 0 && child_id
-         == num_children - 1) {
+         == num_siblings - 1) {
     isfamily = 1;
-    /* Get all elements at indices pos, pos + 1, ... ,pos + num_children - 1 */
-    for (i = 0; i < num_children && pos + i < (t8_locidx_t) elements_in_array;
+    /* Get all elements at indices pos, pos + 1, ... ,pos + num_siblings - 1 */
+    for (i = 0; i < num_siblings && pos + i < (t8_locidx_t) elements_in_array;
          i++) {
       fam[i] = t8_element_array_index_locidx (telements, pos + i);
     }
-    if (i == num_children) {
+    if (i == num_siblings) {
       isfamily = ts->t8_element_is_family (fam);
     }
     else {
@@ -95,15 +92,15 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
     }
     if (isfamily
         && forest->set_adapt_fn (forest, forest->set_from, ltreeid,
-                                 lelement_id, ts, num_children, fam) < 0) {
+                                 lelement_id, ts, num_siblings, fam) < 0) {
       /* Coarsen the element */
-      *el_inserted -= num_children - 1;
+      *el_inserted -= num_siblings - 1;
       /* remove num_children - 1 elements from the array */
       T8_ASSERT (elements_in_array == t8_element_array_get_count (telements));
       T8_ASSERT (ts->t8_element_level (element) > 0);
       ts->t8_element_parent (fam[0], fam[0]);
-      num_children = ts->t8_element_num_children (fam[0]);
-      elements_in_array -= num_children - 1;
+      num_siblings = ts->t8_element_num_children (fam[0]);
+      elements_in_array -= num_siblings - 1;
       t8_element_array_resize (telements, elements_in_array);
       /* Set element to the new constructed parent. Since resizing the array
        * may change the position in memory, we have to do it after resizing. */
@@ -114,7 +111,7 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
        * the family is not to be coarsened we abort the coarsening process */
       isfamily = 0;
     }
-    pos -= num_children - 1;
+    pos -= num_siblings - 1;
   };
 }
 
