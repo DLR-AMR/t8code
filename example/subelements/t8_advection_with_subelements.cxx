@@ -298,7 +298,7 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
   phi = t8_advect_element_get_phi (problem, lelement_id + offset);
 
   #if 0
-  if (-0.05 <= phi && phi <= 0.05 && level < problem->maxlevel) {
+  if (-0.5 <= phi && phi <= 0.5 && level < problem->maxlevel) {
     return 1;
   }
   if (level > problem->level && num_elements > 1) {
@@ -354,7 +354,7 @@ t8_advect_adapt_init (t8_forest_t forest, t8_forest_t forest_from,
   return 0;
 #endif
 
-#if 0                           /* refinement every second element */
+#if 1                           /* refinement every second element */
   if (lelement_id % 2 == 0) {
     return 1;
   }
@@ -371,7 +371,7 @@ t8_advect_adapt_init (t8_forest_t forest, t8_forest_t forest_from,
   return 0;
 #endif
 
-#if 1                           /* refinement all elements with subelement type 15 */
+#if 0                           /* refinement all elements with subelement type 15 */
   return 16;
 #endif
 }
@@ -2592,7 +2592,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     }
 
     /* Print vtk */
-    if (!no_vtk && problem->num_time_steps % vtk_freq == 0) {
+    if (!no_vtk && (problem->num_time_steps + 1) % vtk_freq == 0) {
       vtk_time -= sc_MPI_Wtime ();
       t8_advect_write_vtk (problem);
       vtk_time += sc_MPI_Wtime ();
@@ -3011,7 +3011,7 @@ main (int argc, char *argv[])
                          "The duration of the simulation. Default: 1");
 
   sc_options_add_double (opt, 'C', "CFL", &cfl,
-                         0.4, "The cfl number to use. Default: 1");
+                         0.2, "The cfl number to use. Default: 1");
   sc_options_add_double (opt, 'b', "band-width", &band_width,
                          3,
                          "Control the width of the refinement band around\n"
@@ -3021,7 +3021,7 @@ main (int argc, char *argv[])
                       "Controls how often the mesh is readapted. "
                       "A value of i means, every i-th time step.");
 
-  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 100,
+  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 5,
                       "How often the vtk output is produced "
                       "\n\t\t\t\t     (after how many time steps). "
                       "A value of 0 is equivalent to using -o.");

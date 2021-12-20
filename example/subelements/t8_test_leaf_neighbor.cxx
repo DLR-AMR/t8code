@@ -195,14 +195,14 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   char                filename[BUFSIZ];
 
   /* refinement setting */
-  int                 initlevel = 8;    /* initial uniform refinement level */
+  int                 initlevel = 3;    /* initial uniform refinement level */
   int                 adaptlevel = 2;
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening (minlevel <= initlevel) */
   int                 maxlevel = initlevel + adaptlevel;     /* highest level allowed for refining */
 
   /* adaptation setting */
-  int                 do_balance = 0;
-  int                 do_subelements = 1;
+  int                 do_balance = 1;
+  int                 do_subelements = 0;
 
   /* initializing the forests */
   t8_forest_init (&forest);

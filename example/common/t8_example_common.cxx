@@ -161,6 +161,7 @@ t8_common_adapt_level_set (t8_forest_t forest,
   int                 within_band;
   int                 level;
   double             *tree_vertices;
+  t8_element_t ** elem;
 
   T8_ASSERT (num_elements == 1 || num_elements ==
              ts->t8_element_num_siblings (elements[0]));
@@ -192,10 +193,26 @@ t8_common_adapt_level_set (t8_forest_t forest,
     return 1;
   }
 
-  within_band =
+  /* if we use multiple timesteps, we want the callback value to depend on the quadrilateral elements instead of the triangular subelements.
+   * Hence, if a subelement is given, we apply the callback function to its parent (removes artefacts in geometric adaptation with mutliple timesteps) */
+  if (ts->t8_element_test_if_subelement(elements[0])) {
+    elem = T8_ALLOC (t8_element_t *, 1);
+    ts->t8_element_new (1, elem);
+    ts->t8_element_parent (elements[0], elem[0]);
+    within_band =
+    t8_common_within_levelset (forest_from, which_tree, elem[0],
+                               ts, tree_vertices, data->L,
+                               data->band_width / 2, data->t, data->udata);
+    T8_FREE (elem);
+  }
+  else {
+    within_band =
     t8_common_within_levelset (forest_from, which_tree, elements[0],
                                ts, tree_vertices, data->L,
                                data->band_width / 2, data->t, data->udata);
+  }
+
+  
 
   if (within_band && level < data->max_level) {
     /* The element can be refined and lies inside the refinement region */

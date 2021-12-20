@@ -154,9 +154,9 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
   char                filename[BUFSIZ];
 
   /* refinement settings */
-                      initlevel = 8;    /* initial uniform refinement level */
+                      initlevel = 5;    /* initial uniform refinement level */
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening */
-                      adaptlevel = 5;
+                      adaptlevel = 3;
   int                 maxlevel = initlevel + adaptlevel;        /* highest level allowed for refining */
 
   int                 refine_recursive = 1;
@@ -169,12 +169,12 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
 
   /* adaptation setting */
   int                 do_balance = 0;
-  int                 do_transition = 0;
+  int                 do_transition = 1;
 
   /* timestep settings */
-  int                 do_different_refinements = 0;     /* to change the refinement during multiple s´timesteps */
+  int                 do_different_refinements = 0;     /* to change the refinement during multiple timesteps */
   int                 timesteps = 1;    /* Number of times, the mesh is refined */
-  double              delta = 0.3;      /* The value, the radius increases after each timestep */
+  double              delta = 0.01;      /* The value, the radius increases after each timestep */
   int                 i; /* timestep count */
 
   int do_vtk = 1; /* print results */
@@ -224,10 +224,10 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
   /* shift the midpoiunt of the circle by (shift_x,shift_y) to ensure midpoints on corners of the uniform mesh */
   int                 shift_x = 0;      /* shift_x should be smaler than 2^minlevel / 2 such that midpoint stays in the quadrilateral tree */
   int                 shift_y = 0;
-  sdata.mid_point[0] = 0.5;     //1.0 / 2.0 + shift_x * 1.0/(1 << (minlevel));
-  sdata.mid_point[1] = 0.5;     //1.0 / 2.0 + shift_y * 1.0/(1 << (minlevel)); 
+  sdata.mid_point[0] = 0.25;     //1.0 / 2.0 + shift_x * 1.0/(1 << (minlevel));
+  sdata.mid_point[1] = 0.25;     //1.0 / 2.0 + shift_y * 1.0/(1 << (minlevel)); 
   sdata.mid_point[2] = 0;
-  sdata.radius = 0.3;
+  sdata.radius = 0.1;
 
   /* refinement parameter */
   ls_data.band_width = 1;
