@@ -249,4 +249,28 @@ t8_mptrac_coords_to_lonlatpressure (const t8_mptrac_context_t * context,
              pressure_min_in_km, pressure_max_in_km);
   /* Convert back to hpa */
   *pressure = P (pressure_in_km);
+
+  t8_debugf ("Interpolated to (%f, %f, %f)\n", *lon, *lat, *pressure);
+}
+
+/* Return coordinate in [0,1] that will map to pressure (in hPa) under t8_mptrac_coords_to_lonlatpressure */
+void
+t8_mptrac_pressure_to_coord (const t8_mptrac_context_t * context,
+                             const double pressure, double *z)
+{
+  T8_ASSERT (context != NULL);
+  const met_t        *meteo1 =
+    (const met_t *) t8_shmem_array_index (context->mptrac_meteo, 0);
+
+  /* Convert pressure to km */
+  const int           max_p_idx = meteo1->np;
+  T8_ASSERT (max_p_idx >= 1);
+  const double        pressure_in_km = Z (pressure);
+  const double        pressure_min_in_km = Z (meteo1->p[0]);
+  const double        pressure_max_in_km = Z (meteo1->p[max_p_idx - 1]);
+
+  /* Map to [0,1] using x in [a,b] maps to (x-a)/(b-a) */
+  *z =
+    (pressure_in_km - pressure_min_in_km) / (pressure_max_in_km -
+                                             pressure_min_in_km);
 }

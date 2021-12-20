@@ -71,6 +71,12 @@ void                t8_mptrac_coords_to_lonlatpressure (const
                                                         double *lat,
                                                         double *pressure);
 
+/* Return coordinate in [0,1] that will map to pressure (in hPa) under t8_mptrac_coords_to_lonlatpressure */
+void                t8_mptrac_pressure_to_coord (const t8_mptrac_context_t *
+                                                 context,
+                                                 const double pressure,
+                                                 double *z);
+
 T8_EXTERN_C_END ();
 
 #endif /* T8_MPTRAC_INTERPOLATE_H */
