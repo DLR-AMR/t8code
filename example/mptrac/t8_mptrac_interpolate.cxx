@@ -211,6 +211,7 @@ t8_mptrac_coords_to_lonlatpressure (const t8_mptrac_context_t * context,
                                     const double point[3], double *lon,
                                     double *lat, double *pressure)
 {
+  T8_ASSERT (context != NULL);
   const met_t        *meteo1 =
     (const met_t *) t8_shmem_array_index (context->mptrac_meteo, 0);
   /* Interpolate lon coordinate */
