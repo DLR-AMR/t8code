@@ -1936,8 +1936,9 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
   /* TODO: implement is_leaf check to apply to leaf */
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  /* TODO: check whether the forest is transitioned (this check is not valid yet) */
-  hanging_faces_removed = t8_forest_hanging_faces_removed (forest);
+  /* TODO: check whether the forest is transitioned (this check is not valid and it is slow - use is_transitioned flag) */
+  // hanging_faces_removed = t8_forest_hanging_faces_removed (forest);
+  hanging_faces_removed = 1;
 
   SC_CHECK_ABORT (forest_is_balanced, "leaf face neighbors is not implemented " "for unbalanced forests.\n");   /* TODO: write version for unbalanced forests */
   SC_CHECK_ABORT (forest->mpisize == 1 || forest->ghosts != NULL,
