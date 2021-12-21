@@ -29,29 +29,25 @@
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include "t8_forest_types.h"
 #if T8_WITH_VTK
-#include <vtkActor.h>
 #include <vtkCellArray.h>
-#include <vtkDataSetMapper.h>
-#include <vtkNew.h>
-#include <vtkPointData.h>
 #include <vtkCellData.h>
-#include <vtkProperty.h>
 #include <vtkTetra.h>
 #include <vtkHexahedron.h>
 #include <vtkVertex.h>
 #include <vtkLine.h>
 #include <vtkQuad.h>
 #include <vtkTriangle.h>
-#include <vtkPyramid.h>
 #include <vtkWedge.h>
+#include <vtkQuadraticEdge.h>
+#include <vtkQuadraticTriangle.h>
+#include <vtkQuadraticQuad.h>
+#include <vtkQuadraticTetra.h>
+#include <vtkQuadraticHexahedron.h>
+#include <vtkQuadraticWedge.h>
 #include <vtkUnstructuredGrid.h>
-#include <vtkVertexGlyphFilter.h>
 #include <vtkXMLPUnstructuredGridWriter.h>
-#include <vtkXMLUnstructuredGridWriter.h>
-#include <vtkUnsignedCharArray.h>
 #include <vtkDoubleArray.h>
 #include <vtkTypeInt64Array.h>
-#include <vtkSmartPointer.h>
 #if T8_ENABLE_MPI
 #include <vtkMPI.h>
 #include <vtkMPICommunicator.h>
@@ -60,7 +56,6 @@
 #endif
 #include <t8.h>
 #include <t8_forest.h>
-#include <t8_schemes/t8_default_cxx.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -128,12 +123,224 @@ typedef int         (*t8_forest_vtk_cell_data_kernel) (t8_forest_t forest,
                                                        T8_VTK_KERNEL_MODUS
                                                        modus);
 
+#if T8_WITH_VTK
+/* lookup table for number of nodes for curved eclasses. */
+const int           t8_curved_eclass_num_nodes[T8_ECLASS_COUNT] =
+  { 1, 3, 8, 6, 20, 10, 15, 13 };
+
+/* lookup table for vtk types of curved elements */
+const int           t8_curved_eclass_vtk_type[T8_ECLASS_COUNT] =
+  { 1, 21, 23, 22, 25, 24, 26, 27 };
+#endif
+
+/* 
+ * depending on whether we want to write curved or non-curved elements
+ * we need the right number of points, so we choose the right lookup table
+ */
+#if T8_WITH_VTK
+static int
+t8_get_number_of_vtk_nodes (t8_element_shape_t eclass, int curved_flag)
+{
+  /* use the lookup table of the eclasses. */
+  if (curved_flag) {
+    return t8_curved_eclass_num_nodes[eclass];
+  }
+  return t8_eclass_num_vertices[eclass];
+}
+#endif
+
+/* If we want to write curved elements, we need to calculate 
+ * the reference coordinates. For the vertices(end points)
+ * of the elements, we can use t8_element_vertex_reference_coords 
+ * to get them. But for curved elements, we also need nodes at the 
+ * middle points of lines of elements. We get those coordinates by 
+ * adding the vertices and multiplying by 0.5. To get the 
+ * correct node, we use e.g. (vertex - 3) % 4, for each 
+ * element there is a correct order, therefore we have those
+ * formulas. For more information look into the vtk documentation.
+ * TODO: Add Pyramids when they are merged into the dev branch.
+ * */
+#if T8_WITH_VTK
+static void
+t8_curved_element_get_reference_node_coords (const t8_element_t *
+                                             elem,
+                                             t8_element_shape_t eclass,
+                                             t8_eclass_scheme_c * scheme,
+                                             int vertex, double *coords)
+{
+  double              vertex_coords[3] = { 0, 0, 0 };
+  int                 i;
+  int                 j;
+
+  switch (eclass) {
+  case T8_ECLASS_VERTEX:
+    scheme->t8_element_vertex_reference_coords (elem,
+                                                t8_eclass_vtk_corner_number
+                                                [eclass][vertex], coords);
+    break;
+  case T8_ECLASS_LINE:
+    if (vertex < 2) {
+      scheme->t8_element_vertex_reference_coords (elem,
+                                                  t8_eclass_vtk_corner_number
+                                                  [eclass][vertex], coords);
+    }
+    else {
+      scheme->t8_element_vertex_reference_coords (elem,
+                                                  t8_eclass_vtk_corner_number
+                                                  [eclass][vertex - 1],
+                                                  vertex_coords);
+      scheme->t8_element_vertex_reference_coords (elem,
+                                                  t8_eclass_vtk_corner_number
+                                                  [eclass][vertex - 2],
+                                                  coords);
+      /* Compute the average of those coordinates */
+      t8_vec_axpy (vertex_coords, coords, 1);
+      t8_vec_ax (coords, 0.5);
+    }
+    break;
+  case T8_ECLASS_QUAD:
+    if (vertex < 4) {
+      scheme->t8_element_vertex_reference_coords (elem,
+                                                  t8_eclass_vtk_corner_number
+                                                  [eclass][vertex], coords);
+    }
+    else {
+      i = t8_eclass_vtk_corner_number[eclass][(vertex - 4) % 4];
+      j = t8_eclass_vtk_corner_number[eclass][(vertex - 3) % 4];
+      scheme->t8_element_vertex_reference_coords (elem, i, vertex_coords);
+      scheme->t8_element_vertex_reference_coords (elem, j, coords);
+      /* Compute the average of those coordinates */
+      t8_vec_axpy (vertex_coords, coords, 1);
+      t8_vec_ax (coords, 0.5);
+    }
+
+    break;
+  case T8_ECLASS_TRIANGLE:
+    if (0 <= vertex && vertex <= 2) {
+      scheme->t8_element_vertex_reference_coords (elem,
+                                                  t8_eclass_vtk_corner_number
+                                                  [eclass][vertex], coords);
+    }
+    else {
+      i = (vertex - 3) % 3;
+      j = (vertex - 2) % 3;
+      scheme->t8_element_vertex_reference_coords (elem, i, vertex_coords);
+      scheme->t8_element_vertex_reference_coords (elem, j, coords);
+      /* Compute the average of those coordinates */
+      t8_vec_axpy (vertex_coords, coords, 1);
+      t8_vec_ax (coords, 0.5);
+    }
+    break;
+  case T8_ECLASS_HEX:
+    if (vertex < 8) {
+      scheme->t8_element_vertex_reference_coords (elem,
+                                                  t8_eclass_vtk_corner_number
+                                                  [eclass][vertex], coords);
+    }
+    else if (7 < vertex && vertex < 12) {
+      i = t8_eclass_vtk_corner_number[eclass][(vertex - 8) % 4];
+      j = t8_eclass_vtk_corner_number[eclass][(vertex - 7) % 4];
+      scheme->t8_element_vertex_reference_coords (elem, i, vertex_coords);
+      scheme->t8_element_vertex_reference_coords (elem, j, coords);
+      /* Compute the average of those coordinates */
+      t8_vec_axpy (vertex_coords, coords, 1);
+      t8_vec_ax (coords, 0.5);
+    }
+    else if (11 < vertex && vertex < 16) {
+      i = t8_eclass_vtk_corner_number[eclass][((vertex - 8) % 4) + 4];
+      j = t8_eclass_vtk_corner_number[eclass][((vertex - 7) % 4) + 4];
+      scheme->t8_element_vertex_reference_coords (elem, i, vertex_coords);
+      scheme->t8_element_vertex_reference_coords (elem, j, coords);
+      /* Compute the average of those coordinates */
+      t8_vec_axpy (vertex_coords, coords, 1);
+      t8_vec_ax (coords, 0.5);
+    }
+    else {
+      i = t8_eclass_vtk_corner_number[eclass][vertex % 16];
+      j = i + 4;
+      scheme->t8_element_vertex_reference_coords (elem, i, vertex_coords);
+      scheme->t8_element_vertex_reference_coords (elem, j, coords);
+      /* Compute the average of those coordinates */
+      t8_vec_axpy (vertex_coords, coords, 1);
+      t8_vec_ax (coords, 0.5);
+    }
+
+    break;
+  case T8_ECLASS_TET:
+    if (vertex < 4) {
+      scheme->t8_element_vertex_reference_coords (elem,
+                                                  t8_eclass_vtk_corner_number
+                                                  [eclass][vertex], coords);
+    }
+    else if (3 < vertex && vertex < 7) {
+      i = t8_eclass_vtk_corner_number[eclass][(vertex - 4) % 3];
+      j = t8_eclass_vtk_corner_number[eclass][(vertex - 3) % 3];
+      scheme->t8_element_vertex_reference_coords (elem, i, vertex_coords);
+      scheme->t8_element_vertex_reference_coords (elem, j, coords);
+      /* Compute the average of those coordinates */
+      t8_vec_axpy (vertex_coords, coords, 1);
+      t8_vec_ax (coords, 0.5);
+    }
+    else {
+      i = t8_eclass_vtk_corner_number[eclass][vertex % 7];
+      j = 3;
+      scheme->t8_element_vertex_reference_coords (elem, i, vertex_coords);
+      scheme->t8_element_vertex_reference_coords (elem, j, coords);
+      /* Compute the average of those coordinates */
+      t8_vec_axpy (vertex_coords, coords, 1);
+      t8_vec_ax (coords, 0.5);
+    }
+    break;
+  case T8_ECLASS_PRISM:
+    if (vertex < 6) {
+      scheme->t8_element_vertex_reference_coords (elem,
+                                                  t8_eclass_vtk_corner_number
+                                                  [eclass][vertex], coords);
+    }
+    else if (5 < vertex && vertex < 9) {
+      i = t8_eclass_vtk_corner_number[eclass][(vertex - 3) % 3];
+      j = t8_eclass_vtk_corner_number[eclass][(vertex - 2) % 3];
+      scheme->t8_element_vertex_reference_coords (elem, i, vertex_coords);
+      scheme->t8_element_vertex_reference_coords (elem, j, coords);
+      /* Compute the average of those coordinates */
+      t8_vec_axpy (vertex_coords, coords, 1);
+      t8_vec_ax (coords, 0.5);
+    }
+    else if (8 < vertex && vertex < 12) {
+      i = t8_eclass_vtk_corner_number[eclass][(vertex % 3) + 3];
+      j = t8_eclass_vtk_corner_number[eclass][((vertex + 1) % 3) + 3];
+      scheme->t8_element_vertex_reference_coords (elem, i, vertex_coords);
+      scheme->t8_element_vertex_reference_coords (elem, j, coords);
+      /* Compute the average of those coordinates */
+      t8_vec_axpy (vertex_coords, coords, 1);
+      t8_vec_ax (coords, 0.5);
+    }
+    else {
+      i = t8_eclass_vtk_corner_number[eclass][vertex % 12];
+      j = t8_eclass_vtk_corner_number[eclass][(vertex % 12) + 3];
+      scheme->t8_element_vertex_reference_coords (elem, i, vertex_coords);
+      scheme->t8_element_vertex_reference_coords (elem, j, coords);
+      /* Compute the average of those coordinates */
+      t8_vec_axpy (vertex_coords, coords, 1);
+      t8_vec_ax (coords, 0.5);
+    }
+    break;
+  default:
+    scheme->t8_element_vertex_reference_coords (elem,
+                                                t8_eclass_vtk_corner_number
+                                                [eclass][vertex], coords);
+    break;
+  }
+}
+#endif
+
 int
 t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
                              int write_treeid,
                              int write_mpirank,
                              int write_level,
                              int write_element_id,
+                             int curved_flag,
                              int num_data, t8_vtk_data_field_t * data)
 {
 #if T8_WITH_VTK
@@ -147,9 +354,13 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
   t8_locidx_t         ielement; /* The iterator over elements in a tree. */
   t8_locidx_t         itree, ivertex;
   double              coordinates[3];
+  double              vertex_coords[3] = { 0, 0, 0 };
   int                 elem_id = 0;
   t8_locidx_t         num_elements;
   int                 freturn = 0;
+  t8_gloidx_t         gtreeid;
+  t8_cmesh_t          cmesh;
+  int                 num_node;
 
 /* Since we want to use different element types and a points Array and cellArray 
  * we have to declare these vtk objects. The cellArray stores the Elements.
@@ -162,15 +373,32 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
   vtkNew < vtkLine > line;
   vtkNew < vtkQuad > quad;
   vtkNew < vtkTriangle > tri;
-  vtkNew < vtkPyramid > pyramid;
   vtkNew < vtkWedge > prism;
   vtkNew < vtkTetra > tet;
+
+  vtkNew < vtkQuadraticEdge > quadraticedge;
+  vtkNew < vtkQuadraticTriangle > quadratictri;
+  vtkNew < vtkQuadraticQuad > quadraticquad;
+  vtkNew < vtkQuadraticTetra > quadratictet;
+  vtkNew < vtkQuadraticHexahedron > quadratichexa;
+  vtkNew < vtkQuadraticWedge > quadraticprism;
 
   /* 
    * The cellTypes Array stores the element types as integers(see vtk doc).
    */
   num_elements = t8_forest_get_local_num_elements (forest);
   int                *cellTypes = T8_ALLOC (int, num_elements);
+
+  /*
+   * We need the vertex coords array to be of the 
+   * correct dim. Since it is always the same
+   * in one mesh, we take the dim of one element.
+   * We add 1 if we look at a vertext(dim=0) because 
+   * an array of size 0 is not allowed. 
+   * Then we allocate memory, because we do not know
+   * beforehand how many entries the array needs.
+   */
+
   /*
    * We have to define the vtkTypeInt64Array that hold 
    * metadata if wanted. 
@@ -191,6 +419,8 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
  */
   vtkDoubleArray    **dataArrays;
   dataArrays = T8_ALLOC (vtkDoubleArray *, num_data);
+
+  cmesh = t8_forest_get_cmesh (forest);
 /* We iterate over all local trees*/
   for (itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {
 /* 
@@ -207,53 +437,95 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
     t8_locidx_t         offset =
       t8_forest_get_tree_element_offset (forest, itree);
     /* We iterate over all elements in the tree */
+    /* Compute the global tree id */
+    gtreeid = t8_forest_global_tree_id (forest, itree);
     for (ielement = 0; ielement < elems_in_tree; ielement++) {
-
       t8_element_t       *element =
         t8_forest_get_element_in_tree (forest, itree, ielement);
       T8_ASSERT (element != NULL);
       vtkSmartPointer < vtkCell > pvtkCell = NULL;
       t8_element_shape_t  element_shape = scheme->t8_element_shape (element);
-      int                 num_corners =
-        scheme->t8_element_num_corners (element);
-
+      num_node = t8_get_number_of_vtk_nodes (element_shape, curved_flag);
       /* depending on the element type we choose the correct vtk cell to insert points to */
-      switch (element_shape) {
-      case T8_ECLASS_VERTEX:
-        pvtkCell = vertex;
-        break;
-      case T8_ECLASS_LINE:
-        pvtkCell = line;
-        break;
-      case T8_ECLASS_QUAD:
-        pvtkCell = quad;
-        break;
-      case T8_ECLASS_TRIANGLE:
-        pvtkCell = tri;
-        break;
-      case T8_ECLASS_HEX:
-        pvtkCell = hexa;
-        break;
-      case T8_ECLASS_TET:
-        pvtkCell = tet;
-        break;
-      case T8_ECLASS_PRISM:
-        pvtkCell = prism;
-        break;
-      case T8_ECLASS_PYRAMID:
-        pvtkCell = pyramid;
-        break;
-      default:
-        SC_ABORT_NOT_REACHED ();
+      if (curved_flag == 0) {
+        switch (element_shape) {
+        case T8_ECLASS_VERTEX:
+          pvtkCell = vertex;
+          break;
+        case T8_ECLASS_LINE:
+          pvtkCell = line;
+          break;
+        case T8_ECLASS_QUAD:
+          pvtkCell = quad;
+          break;
+        case T8_ECLASS_TRIANGLE:
+          pvtkCell = tri;
+          break;
+        case T8_ECLASS_HEX:
+          pvtkCell = hexa;
+          break;
+        case T8_ECLASS_TET:
+          pvtkCell = tet;
+          break;
+        case T8_ECLASS_PRISM:
+          pvtkCell = prism;
+          break;
+        case T8_ECLASS_PYRAMID:
+          SC_CHECK_ABORT (element_shape != T8_ECLASS_PYRAMID,
+                          "Pyramids are not supported in vtk output");
+        default:
+          SC_ABORT_NOT_REACHED ();
+        }
+      }
+      else {                    /* curved_flag != 0 */
+        switch (element_shape) {
+        case T8_ECLASS_VERTEX:
+          pvtkCell = vertex;
+          break;
+        case T8_ECLASS_LINE:
+          pvtkCell = quadraticedge;
+          break;
+        case T8_ECLASS_QUAD:
+          pvtkCell = quadraticquad;
+          break;
+        case T8_ECLASS_TRIANGLE:
+          pvtkCell = quadratictri;
+          break;
+        case T8_ECLASS_HEX:
+          pvtkCell = quadratichexa;
+          break;
+        case T8_ECLASS_TET:
+          pvtkCell = quadratictet;
+          break;
+        case T8_ECLASS_PRISM:
+          pvtkCell = quadraticprism;
+          break;
+        case T8_ECLASS_PYRAMID:
+          SC_CHECK_ABORT (element_shape != T8_ECLASS_PYRAMID,
+                          "Pyramids are not supported in vtk output");
+        default:
+          SC_ABORT_NOT_REACHED ();
+        }
       }
 
       /* For each element we iterate over all points */
-      for (ivertex = 0; ivertex < num_corners; ivertex++, point_id++) {
-        /* We take the element coordinates in vtk order */
-        t8_forest_element_coordinate (forest, itree, element,
-                                      t8_eclass_vtk_corner_number
-                                      [element_shape]
-                                      [ivertex], coordinates);
+      for (ivertex = 0; ivertex < num_node; ivertex++, point_id++) {
+        /* Compute the vertex coordinates inside [0,1]^dim reference cube. */
+        if (curved_flag) {
+          t8_curved_element_get_reference_node_coords (element, element_shape,
+                                                       scheme, ivertex,
+                                                       vertex_coords);
+        }
+        else {
+          scheme->t8_element_vertex_reference_coords (element,
+                                                      t8_eclass_vtk_corner_number
+                                                      [element_shape]
+                                                      [ivertex],
+                                                      vertex_coords);
+        }
+
+        /* Evaluate the geometry */
+        t8_geometry_evaluate (cmesh, gtreeid, vertex_coords, coordinates);
 
         /* Insert point in the points array */
         points->InsertNextPoint (coordinates[0], coordinates[1],
@@ -274,7 +546,12 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
        */
 
       /* *INDENT-OFF* */
-      cellTypes[elem_id] = t8_eclass_vtk_type[element_shape];
+      if(curved_flag==0){
+        cellTypes[elem_id] = t8_eclass_vtk_type[element_shape];
+      }
+      else{
+        cellTypes[elem_id] = t8_curved_eclass_vtk_type[element_shape];
+      }
       if (write_treeid == 1) {
         vtk_treeid->InsertNextValue (itree);
       }
