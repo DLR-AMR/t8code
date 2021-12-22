@@ -733,7 +733,6 @@ t8_advect_flux_upwind (const t8_advect_problem_t * problem,
  * neighs  el_hang
  *
  */
-int                 a = 0;
 static double
 t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
                                t8_locidx_t iel_hang,
@@ -812,7 +811,6 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
   ts->t8_element_destroy (num_face_children, face_children);
   T8_FREE (face_children);
 
-  a = 2;
   return flux;
 }
 
