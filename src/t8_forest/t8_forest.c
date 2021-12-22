@@ -556,6 +556,7 @@ t8_forest_commit (t8_forest_t forest)
         t8_forest_copy_trees (forest, forest->set_from, 0);
         t8_forest_adapt (forest);
       }
+      forest->is_transitioned = 0;
     }
     if (forest->from_method & T8_FOREST_FROM_PARTITION) {
       partitioned = 1;
@@ -637,6 +638,7 @@ t8_forest_commit (t8_forest_t forest)
           t8_forest_balance (forest, 1);
         }
       }
+      forest->is_transitioned = 0;
       forest->time_balance += sc_MPI_Wtime ();
     }
     if (forest->from_method & T8_FOREST_FROM_SUBELEMENTS) {
@@ -648,6 +650,7 @@ t8_forest_commit (t8_forest_t forest)
       T8_ASSERT (forest->from_method == 0);
       /* use subelements */
       t8_forest_remove_hanging_faces (forest);
+      forest->is_transitioned = 1;
       forest->time_transition += sc_MPI_Wtime ();
     }
 

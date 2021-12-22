@@ -152,7 +152,7 @@ double              t8_levelset_sphere (const double x[3], double t,
 double              t8_constant (const double x[3], double t, void *data);
 
 /** Periodic 2D function on [0,1]^2 */
-double              t8_periodic_sin_cos(const double x[3], double t, void *data);
+double              t8_periodic_2D_cos(const double x[3], double t, void *data);
 
 /** Returns always 1.
  * \return 1

@@ -28,16 +28,9 @@
 #include <example/common/t8_example_common.h>
 
 /* In this example, a simple refinement criteria is used to construct a single quad tree with 
- * subelements that remove hanging nodes. Afterwards, a element index (corresponding to the
- * index of an element in the array of the tree) can be chossen as well as a face number 
- * (0,1,2,3 for a quad element and 0,1,2 for a triangular subelement) in order to test the 
- * leaf_face_neighbor function that will determine the neighbor element of the choosen element
- * within the tree.
- * 
- * It is recommendet to choose refinement values that lead to a simple tree with a small number of elements 
- * in total (examplary values are given below). This example will give the user a lot of additional output (like anchor coordinates, level etc.)
- * of the choosen element and its neighbor. Furthermore, visualizing the mesh via the .vtk file in paraview can  
- * be used to validate the result of the neighbor function with subelements. */
+ * subelements that remove hanging nodes. Afterwards, we iterate through all elements and all faces
+ * of the adapted forest in order to test the leaf_face_neighbor function that will determine all
+ * neighbor elements. */
 
 typedef struct
 {
@@ -75,7 +68,7 @@ t8_print_element_data (const t8_element_t * element)
                   choosen_element->subelement_id);
 }
 
-/* determing neighbor elements of the element in forest_adapt with index element_index_in_tree at face face_id and printing the element data */
+/* Computing all neighbor elements in forest_adapt */
 void
 t8_test_neighbor_function (const t8_forest_t forest_adapt)
 {
@@ -173,17 +166,7 @@ t8_simple_refinement_criteria (t8_forest_t forest,
   return 0;
 }
 
-/* Recommended settings for the refinement test with subelements: 
- *   
- *   initlevel = 1
- *   minlevel = initlevel 
- *   maxlevel = 3
- *   do_subelements = 1
- * 
- *   refinement criteria: if (lelement_id == 0) {return 1} will refine the first element of the uniform mesh up to maxlevel
- *   and other elements will be adapted via subelements in order to remove hanging faces.
- * 
- * These settings will lead to a tree with 46 elements (element indices from 0 to 45), 26 of which are subelements. */
+/* Initializing and adapting a forest */
 static void
 t8_refine_with_subelements (t8_eclass_t eclass)
 {
@@ -201,8 +184,8 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   int                 maxlevel = initlevel + adaptlevel;     /* highest level allowed for refining */
 
   /* adaptation setting */
-  int                 do_balance = 1;
-  int                 do_subelements = 0;
+  int                 do_balance = 0;
+  int                 do_subelements = 1;
 
   /* initializing the forests */
   t8_forest_init (&forest);
@@ -220,8 +203,7 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   t8_example_level_set_struct_t     ls_data;
   t8_basic_sphere_data_t sdata;
 
-  /* midpoint and radius of a sphere 
-   * TODO: check if, for symmetry, the midpoint should be on an elements corner */
+  /* Midpoint and radius of a sphere */
   /* shift the midpoiunt of the circle by (shift_x,shift_y) to ensure midpoints on corners of the uniform mesh */
   int                 shift_x = 0;      /* shift_x should be smaler than 2^minlevel / 2 such that midpoint stays in the quadrilateral tree */
   int                 shift_y = 0;
@@ -255,25 +237,6 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   snprintf (filename, BUFSIZ, "forest_adapt_test_leaf_neighbor_%s",
             t8_eclass_to_string[eclass]);
   t8_forest_write_vtk (forest_adapt, filename);
-
-  /* Testing the leaf_face_neighbor function for a tree with subelements. The faces are enumerated as follows:
-   * 
-   *             f_3
-   *        x - - - - - x           x - - - x - - - x
-   *        |           |           | \     |     / |
-   *        |           |           |   \   |   /   |
-   *   f_0  |           | f_1       | f_2 \ | /     |
-   *        |           |           x - - - + - - - x
-   *        |           |           |     / | \     |
-   *        x - - - - - x       f_1 |   /   |   \   |
-   *             f_2                | /f_0  |     \ |
-   *                                x - - - x - - - x
-   *    
-   * Note, that for subelements we enumerate the faces starting from the center node (+) clockwise for every subelement. */
-
-  /* Choose the current element and the face: */
-  // t8_locidx_t         element_index_in_tree = 21;       /* index of the element in the forest */
-  // int                 face_id = 1;      /* the face f_i, determing the direction in which we are looking for neighbors */
 
   /* determine the neighbor element and printing the element data */
   t8_test_neighbor_function (forest_adapt);

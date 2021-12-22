@@ -1929,23 +1929,18 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
   t8_element_array_t *element_array;
   t8_element_t       *ancestor, **neighbor_leafs;
   t8_linearidx_t      neigh_id;
-  int                 hanging_faces_removed;
   int                 num_children_at_face, at_maxlevel;
   int                 ineigh, *owners, different_owners, have_ghosts;
 
   /* TODO: implement is_leaf check to apply to leaf */
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  /* TODO: check whether the forest is transitioned (this check is not valid and it is slow - use is_transitioned flag) */
-  // hanging_faces_removed = t8_forest_hanging_faces_removed (forest);
-  hanging_faces_removed = 1;
-
   SC_CHECK_ABORT (forest_is_balanced, "leaf face neighbors is not implemented " "for unbalanced forests.\n");   /* TODO: write version for unbalanced forests */
   SC_CHECK_ABORT (forest->mpisize == 1 || forest->ghosts != NULL,
                   "Ghost structure is needed for t8_forest_leaf_face_neighbors "
                   "but was not found in forest.\n");
 
-  if (forest_is_balanced || hanging_faces_removed) {
+  if (forest_is_balanced || forest->is_transitioned) {
     /* In a balanced forest, the leaf neighbor of a leaf is either the neighbor element itself,
      * its parent or its children at the face. If subelements are used, the neighbor might
      * also be a subelement whose level differs at most by +-1. */
@@ -1962,7 +1957,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
       ts->t8_element_level (leaf) == t8_forest_get_maxlevel (forest);
     /* If leaf has maxlevel or the forest has hanging faces removed
      * we know that the leaf element has at most one neighbor at each face */
-    if (at_maxlevel || hanging_faces_removed) {
+    if (at_maxlevel || forest->is_transitioned) {
       num_children_at_face = 1;
       neighbor_leafs = *pneighbor_leafs = T8_ALLOC (t8_element_t *, 1);
       *dual_faces = T8_ALLOC (int, 1);
@@ -2136,13 +2131,12 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
           }
         }
         /* At this point, the neighbor "ancestor" is found. */
-
         if (neigh_scheme->t8_element_test_if_subelement (ancestor)) {
           /* If ancestor is a subelement it is possible that it is not the real neighbor of leaf
-           * but rather a random subelement of the transition cell, the real neighbor lives in.
-           * Therefore, we need to find the right subelement within the family of subelements of ancestor. */
+           * but rather a random subelement in the transition cell.
+           * Therefore, we need to find the right subelement within the family of subelements of ancestor by using the subelement index. */
 
-          /* we will call the current neighbor "pseudo_neighbor" here in order to stress that it might not be the real neighbor */
+          /* We will call the current neighbor "pseudo_neighbor" here in order to stress that it might not be the real neighbor */
           T8_ASSERT (element_index < forest->global_num_elements);
           const t8_element_t *pseudo_neighbor;
           pseudo_neighbor =
@@ -2326,9 +2320,6 @@ t8_forest_print_all_leaf_neighbors (t8_forest_t forest)
     leaf = t8_forest_get_element (forest, ielem, &ltree);
     eclass = t8_forest_get_tree_class (forest, ltree);
     ts = t8_forest_get_eclass_scheme (forest, eclass);
-    /* TODO: the new "hanging_faces_removed" flag is set to 0 here. 
-     * It would make sense to run a is_balanced check and a hanging_faces_removed check on forest 
-     * in order to set these values. */
     t8_debugf
       ("This is t8_forest_print_all_leaf_neighbors. For the next step, we assume forest to not have any subelements.\n");
     /* Iterate over all faces */

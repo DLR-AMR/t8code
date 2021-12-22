@@ -46,7 +46,7 @@ typedef struct
   double              radius;
 } t8_basic_sphere_data_t;
 
-/* Initial adapt scheme */
+/* Exemplary geometric refinement criteria */
 static int
 t8_advect_adapt_tests (t8_forest_t forest,
                        t8_forest_t forest_from,
@@ -113,10 +113,6 @@ t8_advect_adapt_tests (t8_forest_t forest,
   return 0;
 #endif
 
-#if 0                           /* refinement all elements with subelement type 15 */
-  return 16;
-#endif
-
 #if 0                           /* random refinement */
   int                 r = rand () % 99; /* random number between 0 and 99 */
 
@@ -177,7 +173,7 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
   double              delta = 0.01;      /* The value, the radius increases after each timestep */
   int                 i; /* timestep count */
 
-  int do_vtk = 1; /* print results */
+  int                 do_vtk = 1; /* print results */
 
   /* initializing the forest */
   t8_forest_init (&forest);
@@ -219,8 +215,7 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
   t8_example_level_set_struct_t ls_data;
   t8_basic_sphere_data_t sdata;
 
-  /* midpoint and radius of a sphere 
-   * TODO: check if, for symmetry, the midpoint should be on an elements corner */
+  /* Midpoint and radius of a sphere */
   /* shift the midpoiunt of the circle by (shift_x,shift_y) to ensure midpoints on corners of the uniform mesh */
   int                 shift_x = 0;      /* shift_x should be smaler than 2^minlevel / 2 such that midpoint stays in the quadrilateral tree */
   int                 shift_y = 0;
@@ -325,7 +320,7 @@ main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
 
 
-  #else /* can be used for multiple sessions for example for benchmarks */
+  #else /* Can be used for benchmarks. Executes the adaptation several times and with possibly differing init and adapt levels and returns the mean runtime */
   int init_min = 9, init_max = 9, adapt_min = 2, adapt_max = 5;
   int repeat, init_count, adapt_count, repitition = 5;
   double commit_time[(adapt_max - adapt_min + 1) * (init_max - init_min + 1) * repitition] = {0};

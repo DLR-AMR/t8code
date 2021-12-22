@@ -44,7 +44,7 @@ t8_constant (const double x[3], double t, void *data)
 }
 
 double
-t8_periodic_sin_cos (const double x[3], double t, void *data)
+t8_periodic_2D_cos (const double x[3], double t, void *data)
 {
   return (cos (x[0] * 2 * M_PI) + cos (x[1] * 2 * M_PI));
 }

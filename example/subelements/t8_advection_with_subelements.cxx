@@ -146,6 +146,7 @@ typedef struct
   int                 dim; /**< The dimension of the mesh */
   int                 dummy_op; /**< If true, we carry out more (but useless) operations
                                      per element, in order to simulate more computation load */
+  int                 transition; /* Flag to decide whether the forest should be transitioned or not */
 } t8_advect_problem_t;
 
 /** The per element data */
@@ -327,7 +328,7 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
   return 0;
 }
 
-/* Initial adapt scheme */
+/* Initial geometric adapt scheme */
 static int
 t8_advect_adapt_init (t8_forest_t forest, t8_forest_t forest_from,
                       t8_locidx_t ltree_id, t8_locidx_t lelement_id,
@@ -370,10 +371,6 @@ t8_advect_adapt_init (t8_forest_t forest, t8_forest_t forest_from,
   }
   return 0;
 #endif
-
-#if 0                           /* refinement all elements with subelement type 15 */
-  return 16;
-#endif
 }
 
 /* Compute the total volume of the elements with negative phi value */
@@ -411,7 +408,7 @@ t8_advect_l_infty_rel (const t8_advect_problem_t * problem,
   t8_advect_element_data_t *elem_data;
   double              phi;
   double              ana_sol;
-  double              error[2] = {-2, 0}, el_error, diff;
+  double              error[2] = {-2, 0}, global_error[2], el_error, diff;
 
   num_local_elements = t8_forest_get_local_num_elements (problem->forest);
   for (ielem = 0; ielem < num_local_elements; ielem++) {
@@ -438,7 +435,7 @@ t8_advect_l_infty_rel (const t8_advect_problem_t * problem,
     error[1] = SC_MAX (error[1], (ana_sol > 0) ? ana_sol : -ana_sol);
   }
   /* Compute the maximum of the error among all processes */
-  // sc_MPI_Allreduce (&error, &global_error, 2, sc_MPI_DOUBLE, sc_MPI_MAX, problem->comm);
+  sc_MPI_Allreduce (&error, &global_error, 2, sc_MPI_DOUBLE, sc_MPI_MAX, problem->comm);
 
   /* Return the relative error, that is the l_infty error divided by
    * the l_infty norm of the analytical solution */
@@ -488,7 +485,7 @@ t8_advect_l_infty_abs (const t8_advect_problem_t * problem,
     }
   }
   /* Compute the maximum of the error among all processes */
-  // sc_MPI_Allreduce (&error, &global_error, 2, sc_MPI_DOUBLE, sc_MPI_MAX, problem->comm);
+  sc_MPI_Allreduce (&error, &global_error, 2, sc_MPI_DOUBLE, sc_MPI_MAX, problem->comm);
 
   /* Return the relative error, that is the l_infty error divided by
    * the l_infty norm of the analytical solution */
@@ -496,7 +493,7 @@ t8_advect_l_infty_abs (const t8_advect_problem_t * problem,
 }
 
 static double
-t8_advect_error_mean_difference (const t8_advect_problem_t * problem,
+t8_advect_l1_error_mean (const t8_advect_problem_t * problem,
                    t8_example_level_set_fn analytical_sol, double distance)
 {
   t8_locidx_t         num_local_elements, ielem;
@@ -522,7 +519,7 @@ t8_advect_error_mean_difference (const t8_advect_problem_t * problem,
       * minus the solution at this midpoint */
     phi = t8_advect_element_get_phi (problem, ielem);
     diff = phi - ana_sol;
-    error += (diff > 0) ? diff : -diff;
+    error += (diff > 0) ? diff : -diff; /* add absolute value */
   }
 
   return error / num_local_elements;
@@ -604,7 +601,7 @@ t8_advect_l_2_abs (const t8_advect_problem_t * problem,
   t8_debugf ("[advect] L_2 %e  %e\n", error[0], error[1]);
   t8_debugf ("[advect] L_2 %i elems\n", count);
   /* Compute the maximum of the error among all processes */
-  // sc_MPI_Allreduce (&error, &global_error, 2, sc_MPI_DOUBLE, sc_MPI_SUM, problem->comm);
+  sc_MPI_Allreduce (&error, &global_error, 2, sc_MPI_DOUBLE, sc_MPI_SUM, problem->comm);
 
   /* Return the relative error, that is the l_infty error divided by
    * the l_infty norm of the analytical solution */
@@ -991,15 +988,11 @@ t8_advect_conservation_check_volume (double outgoing_volume, double incoming_vol
   return ((abs_diff_volume < small_epsilon) ? 1 : 0);
 }
 
-/* Replace callback to decide how to interpolate a refined or coarsened element.
+/* Replace callback to interpolate a refined or coarsened element.
  * If an element is refined, each child gets the phi value of its parent.
  * If elements are coarsened, the parent gets the average phi value of the children.
  */
 /* outgoing are the old elements and incoming the new ones */
-/* TODO: If coarsening, weight the phi vaules by volume of the children:
- *       phi_E = sum (phi_Ei *vol(E_i)/vol(E))
- *       Similar formula for refining?
- */
 static void
 t8_advect_replace (t8_forest_t forest_old,
                    t8_forest_t forest_new,
@@ -1062,14 +1055,15 @@ t8_advect_replace (t8_forest_t forest_old,
     outgoing_volume += elem_data_out[elem_out_count].vol;
   }
 
+  /* In the following, we check the type of interpolation */
   int                 elem_to_elem = 0;
   int                 tranition_to_transition_same = 0;
   int                 transition_to_transition_diff = 0;
   int                 transition_refined = 0;
   int                 coarsened_to_transition = 0;
 
-  /* TODO: Check for the maxlevel macro */
-  int                 maxlevel = 20;
+  /* TODO: use the maxlevel macro */
+  int                 maxlevel = 28;
   if (ts->t8_element_level (first_outgoing_elem) <= maxlevel - 2) {
     /* We check the following cases for the quad scheme with subelements in order to improve the element interpolation. 
      * Otherwise we will just use the standard interpolation. */
@@ -1796,11 +1790,11 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem, int measure_time)
   /* Set the user data pointer of the new forest */
   t8_forest_set_user_data (problem->forest_adapt, problem);
   /* Set the adapt function (it can be set to static via the argument adapt_freq, setting it to a higher number than timesteps) */
-  if (0) {
+  if (1) {              /* numerical adaptation */
     t8_forest_set_adapt (problem->forest_adapt, problem->forest,
                          t8_advect_adapt, 0);
   }
-  else {                        /* randomly adapt the forest for numerical tests */
+  else {                /* random adaptation for validation tests */
     t8_forest_set_adapt (problem->forest_adapt, problem->forest,
                          t8_advect_adapt_random, 0);
   }
@@ -1812,8 +1806,9 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem, int measure_time)
     t8_forest_set_balance (problem->forest_adapt, NULL, 1);
     did_balance = 1;
   }
-  /* either way we want to remove the hanging faces from the forest */
-  t8_forest_set_remove_hanging_faces (problem->forest_adapt, NULL);
+  if (problem->transition) {
+    t8_forest_set_remove_hanging_faces (problem->forest_adapt, NULL);
+  }
   /* We also want ghost elements in the new forest */
   t8_forest_set_ghost (problem->forest_adapt, 1, T8_GHOST_FACES);
   /* Commit the forest, adaptation and balance happens here */
@@ -1905,21 +1900,19 @@ t8_advect_problem_adapt_init (t8_advect_problem_t * problem, int measure_time)
   /* Set the user data pointer of the new forest */
   t8_forest_set_user_data (problem->forest_adapt, problem);
   /* Set the adapt function */
-#if 0
-  /* initialize according to numerical values (standard) */
-  t8_forest_set_adapt (problem->forest_adapt, problem->forest,
-                       t8_advect_adapt, 0);
-#endif
-#if 1
-  /* randomly adapt a uniform forest (if we choose this, then we should also use adapt_random for further adapting) */
-  t8_forest_set_adapt (problem->forest_adapt, problem->forest,
-                       t8_advect_adapt_random, 0);
-#endif
-#if 0
-  /* initialize according to a simple geometric refinement scheme (when we choose this we might not want to adapt the forest furhter and set adapt frequency high enough) */
-  t8_forest_set_adapt (problem->forest_adapt, problem->forest,
-                       t8_advect_adapt_init, 0);
-#endif
+  if (1) {              /* initialize according to numerical values (standard) */
+    t8_forest_set_adapt (problem->forest_adapt, problem->forest,
+                         t8_advect_adapt, 0);
+  }
+  else if (0) {         /* initialize randomly (if we choose this, then we should also use adapt_random for further adaptation) */
+    t8_forest_set_adapt (problem->forest_adapt, problem->forest,
+                         t8_advect_adapt_random, 0);
+  }
+  else {                /* initialize according to a simple geometric refinement scheme (when we choose this we might not want to adapt the forest furhter and set adapt frequency high enough) */
+    t8_forest_set_adapt (problem->forest_adapt, problem->forest,
+                         t8_advect_adapt_init, 0);
+  }
+
   if (problem->maxlevel - problem->level > 1) {
     /* We also want to balance the forest
      * if the difference in refinement levels is
@@ -1927,8 +1920,9 @@ t8_advect_problem_adapt_init (t8_advect_problem_t * problem, int measure_time)
     t8_forest_set_balance (problem->forest_adapt, NULL, 1);
     did_balance = 1;
   }
-  /* either way we want to remove the hanging faces from the forest */
-  t8_forest_set_remove_hanging_faces (problem->forest_adapt, NULL);
+  if (problem->transition) {
+    t8_forest_set_remove_hanging_faces (problem->forest_adapt, NULL);
+  }
   /* We also want ghost elements in the new forest */
   t8_forest_set_ghost (problem->forest_adapt, 1, T8_GHOST_FACES);
   /* Commit the forest, adaptation and balance happens here */
@@ -2159,7 +2153,7 @@ t8_advect_problem_init (t8_cmesh_t cmesh,
                         int level, int maxlevel,
                         double T, double cfl, sc_MPI_Comm comm,
                         double band_width, int dim, int dummy_op,
-                        int volume_refine)
+                        int volume_refine, int do_transition)
 {
   t8_advect_problem_t *problem;
   t8_scheme_cxx_t    *default_scheme;
@@ -2190,6 +2184,7 @@ t8_advect_problem_init (t8_cmesh_t cmesh,
   problem->band_width = band_width;     /* width of the refinemen band around 0 level-set */
   problem->dim = dim;           /* dimension of the mesh */
   problem->dummy_op = dummy_op; /* If true, emulate more computational load per element */
+  problem->transition = do_transition;
 
   for (i = 0; i < ADVECT_NUM_STATS; i++) {
     sc_stats_init (&problem->stats[i], advect_stat_names[i]);
@@ -2324,7 +2319,6 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
                                        &elem_data->num_neighbors[iface],
                                        &elem_data->neighs[iface],
                                        &neigh_scheme, 1);
-
 #if 0
         /* for debugging */
         t8_debugf ("Neighbor at face %i:\n", iface);
@@ -2502,7 +2496,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                  const int level, const int maxlevel, double T, double cfl,
                  sc_MPI_Comm comm, int adapt_freq, int no_vtk,
                  int vtk_freq, double band_width, int dim, int dummy_op,
-                 int volume_refine)
+                 int volume_refine, int do_transition)
 {
   t8_advect_problem_t *problem;
   int                 iface, ineigh;
@@ -2527,8 +2521,8 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   t8_locidx_t         neigh_index = -1;
   double              phi_plus, phi_minus;
   double              scaled_global_phi_beginning, scaled_global_phi_step, scaled_global_phi_end; /* for conservation test */
-  int number_elements_global = 0;
-  int count_time_steps = 0;
+  int                 number_elements_global = 0;
+  int                 count_time_steps = 0;
 
   /* Initialize problem */
   /* start timing */
@@ -2536,17 +2530,19 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   problem =
     t8_advect_problem_init (cmesh, u, phi_0, ls_data, level, maxlevel, T,
                             cfl, comm, band_width, dim, dummy_op,
-                            volume_refine);
+                            volume_refine, do_transition);
   t8_advect_problem_init_elements (problem);
 
   if (maxlevel > level) {
     int                 ilevel;
 
     for (ilevel = problem->level; ilevel < problem->maxlevel; ilevel++) {
-      /* initialize according to some adapt_init scheme (for experimenting with different initial meshes) */
+      /* initialize according to some adapt_init scheme */
       t8_advect_problem_adapt_init (problem, 0);
-      /* repartition */
-      t8_advect_problem_partition (problem, 0);
+      if (!do_transition) {
+        /* repartition */
+        t8_advect_problem_partition (problem, 0);
+      }
       /* Re initialize the elements */
       t8_advect_problem_init_elements (problem);
     }
@@ -2753,7 +2749,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
 
                 /* NOTE: The following part saves computations but does not work for subelements 
                  * it relies on the fact that elem_data->dual_face and neigh_data->face 
-                 * are not changing which is not true for subelements with a differetn number of faces. */
+                 * are not changing which is not true for subelements with a different enumeration of faces. */
 #if 0
                 /* If this face is not hanging, we can set the
                  * flux of the neighbor element as well */
@@ -2842,7 +2838,9 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
         time_adapt -= sc_MPI_Wtime ();
         t8_advect_problem_adapt (problem, 1);
         time_adapt += sc_MPI_Wtime ();
-        t8_advect_problem_partition (problem, 1);
+        if (!do_transition) {
+          t8_advect_problem_partition (problem, 1);
+        }
       }
     }
 
@@ -2922,15 +2920,15 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   l_2_rel = t8_advect_l_2_rel (problem, phi_0, 20);
   #endif 
 
-  double mean_difference = t8_advect_error_mean_difference (problem, phi_0, 20);
+  double l1_mean = t8_advect_l1_error_mean (problem, phi_0, 20);
   /* Compute number time steps and mean number of elements in forests */
   int global_number_elements_mean = number_elements_global / problem->num_time_steps;
 
   /* Plot some results */
-  int a = t8_advect_global_conservation_check (scaled_global_phi_beginning, scaled_global_phi_end);
+  t8_advect_global_conservation_check (scaled_global_phi_beginning, scaled_global_phi_end);
   t8_global_essentialf ("[advect] Number time steps: %i\n", problem->num_time_steps);
   t8_global_essentialf ("[advect] Number elements mean: %i\n", global_number_elements_mean);
-  t8_global_essentialf ("[advect] mean difference: %e\n", mean_difference);
+  t8_global_essentialf ("[advect] mean difference: %e\n", l1_mean);
   // t8_global_essentialf ("[advect] l_2_rel: %e\tL_inf_rel: %e\n", l_2_rel, l_infty_rel);
 
   sc_stats_set1 (&problem->stats[ADVECT_ERROR_INF], l_infty_rel,
@@ -2954,6 +2952,7 @@ main (int argc, char *argv[])
   int                 level, reflevel, dim, eclass_int, dummy_op;
   int                 parsed, helpme, no_vtk, vtk_freq, adapt_freq;
   int                 volume_refine;
+  int                 do_transition;
   int                 flow_arg;
   double              T, cfl, band_width;
   t8_levelset_sphere_data_t ls_data;
@@ -2988,9 +2987,9 @@ main (int argc, char *argv[])
                       "\t\t4 - 2D rotation around (0.5,0.5).\n"
                       "\t\t5 - 2D flow around circle at (0.5,0.5)"
                       "with radius 0.15.\n)");
-  sc_options_add_int (opt, 'l', "level", &level, 5,
+  sc_options_add_int (opt, 'l', "level", &level, 4,
                       "The minimum refinement level of the mesh.");
-  sc_options_add_int (opt, 'r', "rlevel", &reflevel, 1,
+  sc_options_add_int (opt, 'r', "rlevel", &reflevel, 2,
                       "The number of adaptive refinement levels.");
   sc_options_add_int (opt, 'e', "elements", &eclass_int, T8_ECLASS_QUAD,
                       "If specified the coarse mesh is a hypercube\n\t\t\t\t     consisting of the"
@@ -3010,10 +3009,9 @@ main (int argc, char *argv[])
   sc_options_add_double (opt, 'T', "end-time", &T, 1,
                          "The duration of the simulation. Default: 1");
 
-  sc_options_add_double (opt, 'C', "CFL", &cfl,
-                         0.2, "The cfl number to use. Default: 1");
-  sc_options_add_double (opt, 'b', "band-width", &band_width,
-                         3,
+  sc_options_add_double (opt, 'C', "CFL", &cfl, 0.2,
+                         "The cfl number to use. Default: 1");
+  sc_options_add_double (opt, 'b', "band-width", &band_width, 3,
                          "Control the width of the refinement band around\n"
                          " the zero level-set. Default 1.");
 
@@ -3021,7 +3019,7 @@ main (int argc, char *argv[])
                       "Controls how often the mesh is readapted. "
                       "A value of i means, every i-th time step.");
 
-  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 5,
+  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 500,
                       "How often the vtk output is produced "
                       "\n\t\t\t\t     (after how many time steps). "
                       "A value of 0 is equivalent to using -o.");
@@ -3051,6 +3049,9 @@ main (int argc, char *argv[])
                       "Refine elements close to the 0 level-set only "
                       "if their volume is smaller than the l+V-times refined\n"
                       " smallest element int the mesh.");
+
+  sc_options_add_int (opt, 't', "transition", &do_transition, 1,
+                      "Transition the forest such that it is conformal.");
 
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
@@ -3097,30 +3098,30 @@ main (int argc, char *argv[])
 
     double adapt_time = 0;
     adapt_time -= sc_MPI_Wtime ();
-    /* Computation */
-    if (0) {                    /* Gauss-pulse phi_0 */
+    /* Computations, choose an initial function */
+    if (0) {          /* Gauss-pulse phi_0 */
       t8_advect_solve (cmesh, u,
                        t8_levelset_sphere, &ls_data,
                        level,
                        level + reflevel, T, cfl, sc_MPI_COMM_WORLD,
                        adapt_freq, no_vtk, vtk_freq, band_width, dim,
-                       dummy_op, volume_refine);
+                       dummy_op, volume_refine, do_transition);
     }
-    else if (0){                      /* constant 1 phi_0 */
+    else if (0){      /* constant 1 phi_0 */
       t8_advect_solve (cmesh, u,
                        t8_constant, &ls_data,
                        level,
                        level + reflevel, T, cfl, sc_MPI_COMM_WORLD,
                        adapt_freq, no_vtk, vtk_freq, band_width, dim,
-                       dummy_op, volume_refine);
+                       dummy_op, volume_refine, do_transition);
     }
-    else {              /* on [0,1]^2 periodic trigonometric phi_0 */
-        t8_advect_solve (cmesh, u,
-                         t8_periodic_sin_cos, &ls_data,
-                         level,
-                         level + reflevel, T, cfl, sc_MPI_COMM_WORLD,
-                         adapt_freq, no_vtk, vtk_freq, band_width, dim,
-                         dummy_op, volume_refine);
+    else {            /* on [0,1]^2 periodic trigonometric phi_0 */
+      t8_advect_solve (cmesh, u,
+                       t8_periodic_2D_cos, &ls_data,
+                       level,
+                       level + reflevel, T, cfl, sc_MPI_COMM_WORLD,
+                       adapt_freq, no_vtk, vtk_freq, band_width, dim,
+                       dummy_op, volume_refine, do_transition);
     }
     adapt_time += sc_MPI_Wtime ();
     t8_global_essentialf ("Runtime advect: %f\n", adapt_time);
