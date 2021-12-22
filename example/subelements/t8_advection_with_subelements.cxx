@@ -20,8 +20,8 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* In this example, we solve the linear advection equation for the 2D quad scheme with subelements. There are the following configurations that can 
- * be used to investigate the behavior of subelements in an examplary application. 
+/* In this example, we solve the linear advection equation for the 2D quad scheme with subelements (transitioning can be turned on and off).
+ * There are the following configurations that can be used to investigate the behavior of subelements in an examplary application. 
  * 
  *  1) Use an geometric initial refinement scheme: 
  *         - turn on "t8_advect_adapt_init" in "t8_advect_problem_adapt_init"
@@ -29,9 +29,8 @@
  *         - use the argument -adapt_freq = big_number such that the adapt function will not be called during computation. In order to work properly for 
  *           meshes with subelements, we need to turn of "if (!adapted_or_partitioned && !neigh_is_ghost && !hanging)". This shortcut wont work for 
  *           subelements because of different face numbers etc. All fluxes need to be computed in the case that subelements are in the mesh.
- *  3) The standard procedure will use a dynamic mesh that will adapt after each or several time steps. 
- * 
- * TODO: add options for different meshes - static, adaptive and numeric adaptive and random adapptive.
+ *  3) The standard procedure will use a dynamic mesh that will adapt after each or several time steps.
+ *  4) Additionally, one can freely set the CFL value, end time step T, init and adapt level, coarse mesh configuration etc..
  */
 
 #include <sc_options.h>

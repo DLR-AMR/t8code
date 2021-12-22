@@ -30,13 +30,12 @@
 #include <example/common/t8_example_common.h>
 #include <time.h>
 
-/* In this example, subelements are used to remove hanging nodes from a refined 2D quad scheme. 
- * At first, a cmesh is adapted using the standard 2D refinement scheme AND balance (where balance is 
- * automatically set in set_remove_hanging_faces if not done before). 
+/* In this example, subelements are used to remove hanging faces from a refined 2D quad scheme. 
+ * At first, a cmesh is created and a uniform version initialized. 
+ * Then, it is adapted using some geometric refinement criterion and balanced (balance is automatically set in set_remove_hanging_faces if not done before). 
  * In the following step, the new subelement functions are used to identify elements that have hanging faces, 
  * which are then adapted once more, using transition cells with subelements in order to remove the hanging faces. 
- * The integer value "timesteps" determines the number of times, the mesh is adapted. During this process, 
- * a circle spreads within the mesh and elements near this circle will be refined to a higher level. */
+ * The integer value "timesteps" determines the number of times, the mesh is adapted. During this process, the refinement criterion can be adjusted (for example an increasing radius) */
 
 /* Define the data structure for the refinement criteria of this example (a circle with some user given midpoint and radius).
  * Elements whose anchor node is closer to the circle will be refined to a higher level than elements whose anchor node is farther away. */

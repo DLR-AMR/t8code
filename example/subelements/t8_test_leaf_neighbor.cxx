@@ -27,10 +27,8 @@
 #include <t8_vec.h>
 #include <example/common/t8_example_common.h>
 
-/* In this example, a simple refinement criteria is used to construct a single quad tree with 
- * subelements that remove hanging nodes. Afterwards, we iterate through all elements and all faces
- * of the adapted forest in order to test the leaf_face_neighbor function that will determine all
- * neighbor elements. */
+/* In this example, a simple refinement criteria is used to construct an adapted and transitioned forest. 
+ * Afterwards, we iterate through all elements and all faces of the this forest in order to test the leaf_face_neighbor function that will determine all neighbor elements. */
 
 typedef struct
 {

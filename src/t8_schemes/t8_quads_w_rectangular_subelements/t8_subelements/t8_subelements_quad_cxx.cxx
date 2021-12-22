@@ -20,7 +20,8 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* This is the low-level structure for 2D quad elements with subelements that remove hanging faces in balanced forests */
+/* This is the low-level structure of 2D quadrilateral elements with subelements that remove hanging faces in balanced forests.
+ * It is a mixture of functions, specific for quads, triangular subelements. Some functions are extended for subelements and work for both element types. */
 
 #include <p4est_bits.h>
 #include <t8_schemes/t8_default/t8_dline_bits.h>

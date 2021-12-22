@@ -68,9 +68,9 @@
 typedef struct
 {
   p4est_quadrant_t    p4q;      /* p4est quadrant */
-  int                 dummy_is_subelement;      /* saves the information, whether an element is a subelement (1: is subelement, -1: is no subelement) */
-  int                 subelement_type;  /* saves the information, which type of transition cell a subelement is associated to */
-  int                 subelement_id;    /* saves the information, what children subelement the given element is */
+  int                 dummy_is_subelement;      /* saves the information, whether an element is a subelement (1: is subelement, 0: is no subelement) */
+  int                 subelement_type;  /* saves the information, which type of transition cell a subelement is associated to (default is 0) */
+  int                 subelement_id;    /* saves the information, what children subelement the given element is (default is 0) */
 } t8_quad_with_subelements;
 
 typedef t8_quad_with_subelements t8_pquad_t;
