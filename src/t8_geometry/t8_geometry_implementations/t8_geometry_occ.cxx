@@ -337,14 +337,14 @@ t8_geometry_occ::t8_geom_load_tree_data (t8_cmesh_t cmesh,
 }
 
 gp_Pnt
-t8_geometry_occ::t8_geom_get_occ_point (int index)
+t8_geometry_occ::t8_geom_get_occ_point (const int index) const
 {
   T8_ASSERT (index <= occ_shape_vertex_map.Size());
   return BRep_Tool::Pnt(TopoDS::Vertex(occ_shape_vertex_map.FindKey(index)));
 }
 
 Handle_Geom_Curve
-t8_geometry_occ::t8_geom_get_occ_curve (int index)
+t8_geometry_occ::t8_geom_get_occ_curve (const int index) const
 {
   T8_ASSERT (index <= occ_shape_edge_map.Size());
   Standard_Real first, last;
@@ -352,32 +352,32 @@ t8_geometry_occ::t8_geom_get_occ_curve (int index)
 }
 
 Handle_Geom_Surface
-t8_geometry_occ::t8_geom_get_occ_surface (int index)
+t8_geometry_occ::t8_geom_get_occ_surface (const int index) const
 {
   T8_ASSERT (index <= occ_shape_face_map.Size());
   return BRep_Tool::Surface(TopoDS::Face(occ_shape_face_map.FindKey(index)));
 }
 
 TopTools_IndexedMapOfShape 
-t8_geometry_occ::t8_geom_get_occ_shape_vertex_map()
+t8_geometry_occ::t8_geom_get_occ_shape_vertex_map() const
 {
   return occ_shape_vertex_map;
 }
 
 TopTools_IndexedMapOfShape 
-t8_geometry_occ::t8_geom_get_occ_shape_edge_map()
+t8_geometry_occ::t8_geom_get_occ_shape_edge_map() const
 {
   return occ_shape_edge_map;
 }
 
 TopTools_IndexedMapOfShape
-t8_geometry_occ::t8_geom_get_occ_shape_face_map()
+t8_geometry_occ::t8_geom_get_occ_shape_face_map() const
 {
   return occ_shape_face_map;
 }
 
 int
-t8_geometry_occ::t8_geom_get_common_edge (int vertex1_index, int vertex2_index)
+t8_geometry_occ::t8_geom_get_common_edge (const int vertex1_index, const int vertex2_index) const
 {
   auto collection1 = occ_shape_vertex2edge_map.FindFromIndex(vertex1_index);
   auto collection2 = occ_shape_vertex2edge_map.FindFromIndex(vertex2_index);
@@ -396,7 +396,7 @@ t8_geometry_occ::t8_geom_get_common_edge (int vertex1_index, int vertex2_index)
 }
 
 int
-t8_geometry_occ::t8_geom_get_common_face (int edge1_index, int edge2_index)
+t8_geometry_occ::t8_geom_get_common_face (const int edge1_index, const int edge2_index) const
 {
   auto collection1 = occ_shape_edge2face_map.FindFromIndex(edge1_index);
   auto collection2 = occ_shape_edge2face_map.FindFromIndex(edge2_index);
@@ -415,21 +415,21 @@ t8_geometry_occ::t8_geom_get_common_face (int edge1_index, int edge2_index)
 }
 
 int
-t8_geometry_occ::t8_geom_is_vertex_on_edge (int vertex_index, int edge_index)
+t8_geometry_occ::t8_geom_is_vertex_on_edge (const int vertex_index, const int edge_index) const
 {
   auto collection = occ_shape_vertex2edge_map.FindFromIndex(vertex_index);
   return collection.Contains(occ_shape_edge_map.FindKey(edge_index));
 }
 
 int
-t8_geometry_occ::t8_geom_is_edge_on_face (int edge_index, int face_index)
+t8_geometry_occ::t8_geom_is_edge_on_face (const int edge_index, const int face_index) const
 {
   auto collection = occ_shape_edge2face_map.FindFromIndex(edge_index);
   return collection.Contains(occ_shape_face_map.FindKey(face_index));
 }
 
 int
-t8_geometry_occ::t8_geom_is_vertex_on_face (int vertex_index, int face_index)
+t8_geometry_occ::t8_geom_is_vertex_on_face (const int vertex_index, const int face_index) const
 {
   auto edge_collection = occ_shape_vertex2edge_map.FindFromIndex(vertex_index);
   for (auto edge = edge_collection.begin(); edge != edge_collection.end(); ++edge)

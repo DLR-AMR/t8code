@@ -149,39 +149,39 @@ public:
    * \return                The occ point.
    */
   gp_Pnt
-  t8_geom_get_occ_point (int index);
+  t8_geom_get_occ_point (const int index) const;
   
   /** Get an occ curve from the occ_shape.
    * \param [in] index      The index of the curve in the occ_shape.
    * \return                The occ curve.
    */
   Handle_Geom_Curve
-  t8_geom_get_occ_curve (int index);
+  t8_geom_get_occ_curve (const int index) const;
 
   /** Get an occ surface from the occ_shape.
    * \param [in] index      The index of the surface in the occ_shape.
    * \return                The occ surface.
    */
   Handle_Geom_Surface
-  t8_geom_get_occ_surface (int index);
+  t8_geom_get_occ_surface (const int index) const;
 
   /** Get the occ_shape_vertex2edge_map.
    * \return                The occ_shape_vertex_map.
    */
   TopTools_IndexedMapOfShape
-  t8_geom_get_occ_shape_vertex_map();
+  t8_geom_get_occ_shape_vertex_map() const;
 
   /** Get the occ_shape_edge2face_map.
    * \return                The occ_shape_edge_map.
    */
   TopTools_IndexedMapOfShape
-  t8_geom_get_occ_shape_edge_map();
+  t8_geom_get_occ_shape_edge_map() const;
 
   /** Get the occ_shape_face_map.
    * \return                The occ_shape_face_map.
    */
   TopTools_IndexedMapOfShape
-  t8_geom_get_occ_shape_face_map();
+  t8_geom_get_occ_shape_face_map() const;
 
   /** Check if two occ points share a common occ edge.
    * \param [in]  vertex1_index  The index of the first occ point.
@@ -189,7 +189,7 @@ public:
    * \return                    Index of the shared edge. 0 if there is no shared edge.
    */
   int
-  t8_geom_get_common_edge (int vertex1_index, int vertex2_index);
+  t8_geom_get_common_edge (const int vertex1_index, const int vertex2_index) const;
 
   /** Check if two occ edges share a common occ face.
    * \param [in]  edge1_index    The index of the first occ edge.
@@ -197,7 +197,7 @@ public:
    * \return                    Index of the shared face. 0 if there is no shared face.
    */
   int
-  t8_geom_get_common_face (int edge1_index, int edge2_index);
+  t8_geom_get_common_face (const int edge1_index, const int edge2_index) const;
 
   /** Check if a occ vertex lies on an occ edge.
    * \param [in]  vertex_index   The index of the occ vertex.
@@ -205,7 +205,7 @@ public:
    * \return                    1 if vertex lies on edge, otherwise 0.
    */
   int
-  t8_geom_is_vertex_on_edge (int vertex_index, int edge_index);
+  t8_geom_is_vertex_on_edge (const int vertex_index, const int edge_index) const;
 
   /** Check if a occ vertex lies on an occ edge.
    * \param [in]  edge_index     The index of the occ vertex.
@@ -213,7 +213,7 @@ public:
    * \return                    1 if vertex lies on edge, otherwise 0.
    */
   int
-  t8_geom_is_edge_on_face (int edge_index, int face_index);
+  t8_geom_is_edge_on_face (const int edge_index, const int face_index) const;
 
   /** Check if a occ vertex lies on an occ face.
    * \param [in]  vertex_index   The index of the occ vertex.
@@ -221,6 +221,7 @@ public:
    * \return                    1 if vertex lies on face, otherwise 0.
    */
   int
+  t8_geom_is_vertex_on_face (const int vertex_index, const int face_index) const;
 
   /** Retrieves the parameter of an occ vertex on an occ edge.
    *  The vertex has to lie on the edge.
