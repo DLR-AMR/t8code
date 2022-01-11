@@ -184,40 +184,40 @@ public:
   t8_geom_get_occ_shape_face_map();
 
   /** Check if two occ points share a common occ edge.
-   * \param [in] vertex1_index  The index of the first occ point.
-   * \param [in] vertex2_index  The index of the second occ point.
+   * \param [in]  vertex1_index  The index of the first occ point.
+   * \param [in]  vertex2_index  The index of the second occ point.
    * \return                    Index of the shared edge. 0 if there is no shared edge.
    */
   int
   t8_geom_get_common_edge (int vertex1_index, int vertex2_index);
 
   /** Check if two occ edges share a common occ face.
-   * \param [in] edge1_index    The index of the first occ edge.
-   * \param [in] edge2_index    The index of the second occ edge.
+   * \param [in]  edge1_index    The index of the first occ edge.
+   * \param [in]  edge2_index    The index of the second occ edge.
    * \return                    Index of the shared face. 0 if there is no shared face.
    */
   int
   t8_geom_get_common_face (int edge1_index, int edge2_index);
 
   /** Check if a occ vertex lies on an occ edge.
-   * \param [in] vertex_index   The index of the occ vertex.
-   * \param [in] edge_index     The index of the occ edge.
+   * \param [in]  vertex_index   The index of the occ vertex.
+   * \param [in]  edge_index     The index of the occ edge.
    * \return                    1 if vertex lies on edge, otherwise 0.
    */
   int
   t8_geom_is_vertex_on_edge (int vertex_index, int edge_index);
 
   /** Check if a occ vertex lies on an occ edge.
-   * \param [in] edge_index     The index of the occ vertex.
-   * \param [in] face_index     The index of the occ edge.
+   * \param [in]  edge_index     The index of the occ vertex.
+   * \param [in]  face_index     The index of the occ edge.
    * \return                    1 if vertex lies on edge, otherwise 0.
    */
   int
   t8_geom_is_edge_on_face (int edge_index, int face_index);
 
   /** Check if a occ vertex lies on an occ face.
-   * \param [in] vertex_index   The index of the occ vertex.
-   * \param [in] face_index     The index of the occ face.
+   * \param [in]  vertex_index   The index of the occ vertex.
+   * \param [in]  face_index     The index of the occ face.
    * \return                    1 if vertex lies on face, otherwise 0.
    */
   int

@@ -111,11 +111,11 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
                                   double out_coords[3]) const
 {
   const int *edges = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
-                                                          T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY,
-                                                          gtreeid);
+                                                           T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY,
+                                                           gtreeid);
   const int *faces = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
-                                                          T8_CMESH_OCC_FACE_ATTRIBUTE_KEY,
-                                                          gtreeid);
+                                                           T8_CMESH_OCC_FACE_ATTRIBUTE_KEY,
+                                                           gtreeid);
   
   /* Compute coordinates via trilinear interpolation */
   t8_geom_compute_linear_geometry (active_tree_class,
@@ -128,7 +128,7 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
   Handle_Geom_Surface surface;
   Standard_Real first, last;
   
-  /* Check each edge for geometry. Currently, only hexes with 12 edges are supported. */
+  /* Check each edge for a geometry. Currently, only hexes with 12 edges are supported. */
   for (int i_edges = 0; i_edges < 12; ++i_edges)
   {
     /* We have to check for curves as well as surfaces. Linked curves are stored in the first half of the array, surfaces in the second. 
@@ -137,7 +137,7 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
     if ((edges[i_edges] > 0 && faces[t8_edge_to_face[i_edges][0]] == 0 && faces[t8_edge_to_face[i_edges][1]] == 0) || 
         edges[i_edges + 12] > 0)
     {
-      /* Check if only a surface or an edge is present. Abort if both is true. */ 
+      /* Check if only a surface or a curve is present. Abort if both is true. */ 
       T8_ASSERT(!(edges[i_edges] > 0) != !(edges[i_edges + 12] > 0));
 
       /* Interpolate coordinates between edge vertices. Due to the indices i_edges of the edges, the edges point in
@@ -331,7 +331,7 @@ t8_geometry_occ::t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
 
 inline void
 t8_geometry_occ::t8_geom_load_tree_data (t8_cmesh_t cmesh,
-                                        t8_gloidx_t gtreeid)
+                                         t8_gloidx_t gtreeid)
 {
   t8_geometry_w_vertices::t8_geom_load_tree_data(cmesh, gtreeid);
 }
