@@ -85,9 +85,9 @@ t8_geometry_from_brep_file (const char *fileprefix,
   for (size_t hval = 0; hval < node_table->slots->elem_count; ++hval)
   {
     list = (sc_list_t *) sc_array_index (node_table->slots, hval);
-    if (list->elem_count > 0)
+    for (sc_link_t *item = list->first; item != NULL; item = item->next)
     {
-      cur_node = (t8_msh_file_node_parametric_t *)list->first->data;
+      cur_node = (t8_msh_file_node_parametric_t *)item->data;
       /* Check if node is parametric or on dim 0. Dim 0 nodes have no parameters and gmsh therefore labels them as not parametric. */
       if (cur_node->parametric || cur_node->entity_dim == 0)
       {
@@ -117,7 +117,7 @@ t8_geometry_from_brep_file (const char *fileprefix,
               debug_not_recombined.insert(debug_not_recombined.end(),
                                           cur_node->coordinates,
                                           cur_node->coordinates + 3);
-              t8_global_errorf("WARNING: Failed to recombine node with index %i list\n", cur_node->index);
+              t8_global_errorf("WARNING: Failed to recombine node with index %i\n", cur_node->index);
             }
             /* Skip node */
             continue;
@@ -148,7 +148,7 @@ t8_geometry_from_brep_file (const char *fileprefix,
               debug_not_recombined.insert(debug_not_recombined.end(),
                                           cur_node->coordinates,
                                           cur_node->coordinates + 3);
-              t8_global_errorf("WARNING: Failed to recombine node with index %i list\n", cur_node->index);
+              t8_global_errorf("WARNING: Failed to recombine node with index %i\n", cur_node->index);
             }
             /* Skip node */
             continue;
@@ -179,7 +179,7 @@ t8_geometry_from_brep_file (const char *fileprefix,
               debug_not_recombined.insert(debug_not_recombined.end(),
                                           cur_node->coordinates,
                                           cur_node->coordinates + 3);
-              t8_global_errorf("WARNING: Failed to recombine node with index %i list\n", cur_node->index);
+              t8_global_errorf("WARNING: Failed to recombine node with index %i\n", cur_node->index);
             }
             /* Skip node */
             continue;
