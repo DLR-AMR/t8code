@@ -34,6 +34,9 @@
 #include <GeomAPI_ProjectPointOnCurve.hxx>
 #include <ShapeAnalysis_Surface.hxx>
 #include <ShapeAnalysis_Curve.hxx>
+#include <TopoDS_Vertex.hxx>
+#include <TopoDS_Edge.hxx>
+#include <TopoDS_Face.hxx>
 
 #if T8_WITH_OCC
 
@@ -128,12 +131,15 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
   /* Check each edge for geometry. Currently, only hexes with 12 edges are supported. */
   for (int i_edges = 0; i_edges < 12; ++i_edges)
   {
-    /* We have to check for curves as well as surfaces. Linked curves are stored in the first half of the array, surfaces in the second. */
-    if (edges[i_edges] > 0 || edges[i_edges + 12] > 0)
+    /* We have to check for curves as well as surfaces. Linked curves are stored in the first half of the array, surfaces in the second. 
+    *  If a curve is connected to this edge we have to also check, if a surface is connected to at least one of the two adjacent faces.
+    *  If there is a face present the edge is only used to get the right parameters while evaluating the surface and we can ignore it. */
+    if ((edges[i_edges] > 0 && faces[t8_edge_to_face[i_edges][0]] == 0 && faces[t8_edge_to_face[i_edges][1]] == 0) || 
+        edges[i_edges + 12] > 0)
     {
       /* Check if only a surface or an edge is present. Abort if both is true. */ 
       T8_ASSERT(!(edges[i_edges] > 0) != !(edges[i_edges + 12] > 0));
-      
+
       /* Interpolate coordinates between edge vertices. Due to the indices i_edges of the edges, the edges point in
       * direction of ref_coord i_edges / 4. Therefore, we can use ref_coords[i_edges / 4] for the interpolation.              
       *          6 -------E3------- 7
@@ -172,14 +178,8 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
         T8_ASSERT (edges[i_edges] <= occ_shape_edge_map.Size());
         curve = BRep_Tool::Curve(TopoDS::Edge(occ_shape_edge_map.FindKey(edges[i_edges])), first, last);
         
-        /* Check if calculated parameters are valid */
-        #ifdef T8_ENABLE_DEBUG
+        /* Check if curve are valid */
         T8_ASSERT(!curve.IsNull());
-        double u1, u2;
-        u1 = curve->FirstParameter();
-        u2 = curve->LastParameter();
-        T8_ASSERT((u1 <= param[0] && param[0] <= u2) || (u2 <= param[0] && param[0] <= u1));
-        #endif
 
         /* Calculate point on curve with interpolated parameters. */
         curve->D0(param[0], pnt);
@@ -195,14 +195,8 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
         T8_ASSERT (edges[i_edges + 12] <= occ_shape_face_map.Size());
         surface = BRep_Tool::Surface(TopoDS::Face(occ_shape_face_map.FindKey(edges[i_edges + 12])));
 
-        /* Check if calculated parameters are valid */
-        #ifdef T8_ENABLE_DEBUG
+        /* Check if surface is valid */
         T8_ASSERT(!surface.IsNull());
-        double u1, u2, v1, v2;
-        surface->Bounds(u1, u2, v1, v2);
-        T8_ASSERT(((u1 <= param[0] && param[0] <= u2) || (u2 <= param[0] && param[0] <= u1))
-                  && ((v1 <= param[1] && param[1] <= v2) || (v2 <= param[1] && param[1] <= v1)));
-        #endif
 
         /* Compute point on surface with interpolated parameters */
         surface->D0(param[0], param[1], pnt);
@@ -252,7 +246,7 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
   for (int i_faces = 0; i_faces < 6; ++i_faces)
   {
     if (faces[i_faces] > 0)
-    {      
+    {
       /* Interpolate coordinates between face vertices
       *   
       *               5 ---------------- 7
@@ -301,14 +295,8 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
       T8_ASSERT (faces[i_faces] <= occ_shape_face_map.Size());
       surface = BRep_Tool::Surface(TopoDS::Face(occ_shape_face_map.FindKey(faces[i_faces])));
       
-      /* Check if calculated parameters are valid */
-      #ifdef T8_ENABLE_DEBUG
+      /* Check if surface is valid */
       T8_ASSERT(!surface.IsNull());
-      double u1, u2, v1, v2;
-      surface->Bounds(u1, u2, v1, v2);
-      T8_ASSERT(((u1 <= param[0] && param[0] <= u2) || (u2 <= param[0] && param[0] <= u1))
-                && ((v1 <= param[1] && param[1] <= v2) || (v2 <= param[1] && param[1] <= v1)));
-      #endif
 
       /* Compute point on surface with interpolated parameters */
       surface->D0(param[0], param[1], pnt);
@@ -455,97 +443,43 @@ t8_geometry_occ::t8_geom_is_vertex_on_face (int vertex_index, int face_index)
   return 0;
 }
 
-int
-t8_geometry_occ::t8_geom_get_occ_curve_parameter (int curve_index, 
-                                                  double *coords,
-                                                  double *param,
-                                                  double tol,
-                                                  double *near_param)
+void t8_geometry_occ::t8_geom_get_parameter_of_vertex_on_edge(const int vertex_index, 
+                                                              const int edge_index, 
+                                                              double* edge_param) const
 {
-  const Handle_Geom_Curve curve = t8_geometry_occ::t8_geom_get_occ_curve(curve_index);
-  ShapeAnalysis_Curve curve_analyzer;
-  const gp_Pnt pnt(coords[0], coords[1], coords[2]);
-  gp_Pnt projection;
-  double buffer_param, distance;double u1, u2;
-  u1 = curve->FirstParameter();
-  u2 = curve->LastParameter();
-  /* Get parameters with ShapeAnalysis_Curve */
-  if (near_param == nullptr)
-  {
-    distance = curve_analyzer.NextProject(*near_param, curve, pnt, tol, projection, buffer_param, u1, u2);
-  }
-  else
-  {
-    distance = curve_analyzer.Project(curve, pnt, tol, projection, buffer_param, u1, u2);
-  }
-  /* Check the tolerance and if the parameter is inside the bounds */
-  if (distance <= tol &&
-      ((u1 <= buffer_param && buffer_param <= u2) || (u2 <= buffer_param && buffer_param <= u1)))
-  {
-    param[0] = buffer_param;
-    return 1;
-  }
-
-  /* If ShapeAnalysis_Curve fails we try the same with GeomAPI_ProjectPointOnCurve */
-  const GeomAPI_ProjectPointOnCurve proj_on_curve(pnt, curve);
-  if (proj_on_curve.NbPoints() > 0)
-  {
-    if (proj_on_curve.LowerDistance() <= tol)
-    {
-      param[0] = proj_on_curve.LowerDistanceParameter();
-      return 1;
-    }
-  }
-
-  /* Return 0 if no parameter was found */
-  return 0;
+  T8_ASSERT(t8_geometry_occ::t8_geom_is_vertex_on_edge(vertex_index, edge_index));
+  TopoDS_Vertex vertex = TopoDS::Vertex(occ_shape_vertex_map.FindKey(vertex_index));
+  TopoDS_Edge edge = TopoDS::Edge(occ_shape_edge_map.FindKey(edge_index));
+  *edge_param = BRep_Tool::Parameter(vertex, edge);
 }
 
-int t8_geometry_occ::t8_geom_get_occ_surface_parameters (int surface_index, 
-                                                         double *coords,
-                                                         double *param,
-                                                         double tol,
-                                                         double *near_param)
+void t8_geometry_occ::t8_geom_get_parameters_of_vertex_on_face(const int vertex_index, 
+                                                               const int face_index, 
+                                                               double* face_params) const
 {
-  const Handle_Geom_Surface surface = t8_geometry_occ::t8_geom_get_occ_surface(surface_index);
-  ShapeAnalysis_Surface surface_analyzer(surface);
-  const gp_Pnt pnt(coords[0], coords[1], coords[2]);
+  T8_ASSERT(t8_geometry_occ::t8_geom_is_vertex_on_face(vertex_index, face_index));
   gp_Pnt2d uv;
-  /* Get parameters with ShapeAnalysis_Surface */
-  if (near_param == nullptr)
-  {
-    uv = surface_analyzer.ValueOfUV(pnt, tol);
-  }
-  else
-  {
-    gp_Pnt2d next_uv(near_param[0], near_param[1]);
-    uv = surface_analyzer.NextValueOfUV(next_uv, pnt, tol);
-  }
-  /* Check the tolerance and if the parameters are inside the bounds */
-  double u1, u2, v1, v2;
-  surface->Bounds(u1, u2, v1, v2);
-  if (surface_analyzer.Gap() <= tol &&
-      ((u1 <= uv.X() && uv.X() <= u2) || (u2 <= uv.X() && uv.X() <= u1)) &&
-      ((v1 <= uv.Y() && uv.Y() <= v2) || (v2 <= uv.Y() && uv.Y() <= v1)))
-  {
-    param[0] = uv.X();
-    param[1] = uv.Y();
-    return 1;
-  }
+  TopoDS_Vertex vertex = TopoDS::Vertex(occ_shape_vertex_map.FindKey(vertex_index));
+  TopoDS_Face face = TopoDS::Face(occ_shape_face_map.FindKey(face_index));
+  uv = BRep_Tool::Parameters(vertex, face);
+  face_params[0] = uv.X();
+  face_params[1] = uv.Y();
+}
 
-  /* If ShapeAnalysis_Surface fails we try the same with GeomAPI_ProjectPointOnSurf */
-  const GeomAPI_ProjectPointOnSurf proj_on_surf(pnt, surface, tol);
-  if (proj_on_surf.NbPoints() > 0)
-  {
-    if (proj_on_surf.LowerDistance() <= tol)
-    {
-      proj_on_surf.LowerDistanceParameters(param[0], param[1]);
-      return 1;
-    }
-  }
-
-  /* Return 0 if no parameters were found */
-  return 0;
+void t8_geometry_occ::t8_geom_edge_parameter_to_face_parameters(const int edge_index, 
+                                                                const int face_index, 
+                                                                const double edge_param, 
+                                                                double* face_params) const
+{
+  T8_ASSERT(t8_geometry_occ::t8_geom_is_edge_on_face(edge_index, face_index));
+  Standard_Real first, last;
+  gp_Pnt2d uv;
+  TopoDS_Edge edge = TopoDS::Edge(occ_shape_edge_map.FindKey(edge_index));
+  TopoDS_Face face = TopoDS::Face(occ_shape_face_map.FindKey(face_index));
+  Handle_Geom2d_Curve curve_on_surface  = BRep_Tool::CurveOnSurface(edge, face, first, last);
+  curve_on_surface->D0(edge_param, uv);
+  face_params[0] = uv.X();
+  face_params[1] = uv.Y();
 }
 
 /* This part should be callable from C */

@@ -221,51 +221,41 @@ public:
    * \return                    1 if vertex lies on face, otherwise 0.
    */
   int
-  t8_geom_is_vertex_on_face (int vertex_index, int face_index);
 
-  /** Calculate the parameter of a point on an occ curve.
-   * \param [in]      curve_index   The index of the curve in the occ geometry.
-   * \param [in]      coords        The coordinates which the parameter should
-   *                                get calculated for. 
-   * \param [out]     param         The parameter gets saved here.
-   * \param [in]      tol           Maximum tolerance between the coords and the coordinates the 
-   *                                calculated parameter point to.
-   * \param [in]      near_param    The parameter of a known nearby point on the same curve.
-   *                                This helps getting the right parameter, if
-   *                                multiple parameters would be valid for the given coordinates.
-   *                                If not given the points get checked for ambiguity 
-   *                                and if there is none the right parameter gets returned.
-   * \return                        1 if a valid parameter was found. 0 if no valid parameters were found.
-   *                                -1 if there is an ambiguity.
+  /** Retrieves the parameter of an occ vertex on an occ edge.
+   *  The vertex has to lie on the edge.
+   * \param [in]  vertex_index   The index of the occ vertex.
+   * \param [in]  edge_index     The index of the occ edge.
+   * \param [out] edge_param     The parameter of the vertex on the edge.
    */
-  int
-  t8_geom_get_occ_curve_parameter (int curve_index, 
-                                   double *coords,
-                                   double *param,
-                                   double tol,
-                                   double *near_param = nullptr);
+  void
+  t8_geom_get_parameter_of_vertex_on_edge(const int vertex_index, 
+                                          const int edge_index, 
+                                          double* edge_param) const;
 
-  /** Calculate the parameters of a point on an occ surface.
-   * \param [in]      surface_index The index of the surface in the occ geometry.
-   * \param [in]      coords        The coordinates which the parameters should
-   *                                get calculated for. 
-   * \param [out]     params        The parameters get saved here.
-   * \param [in]      tol           Maximum tolerance between the coords and the coordinates the 
-   *                                calculated parameters point to.
-   * \param [in]      near_params   The parameters of a known nearby point on the same surface.
-   *                                This helps getting the right parameters, if
-   *                                multiple parameters would be valid for the given coordinates.
-   *                                If not given the points get checked for ambiguity 
-   *                                and if there is none the right parameters get returned.
-   * \return                        1 if valid parameters were found. 0 if no valid parameters were found.
-   *                                -1 if there is an ambiguity.
-   */
-  int
-  t8_geom_get_occ_surface_parameters (int surface_index, 
-                                      double *coords,
-                                      double *params,
-                                      double tol,
-                                      double *near_params = nullptr);
+  /** Retrieves the parameters of an occ vertex on a occ face.
+   *  The vertex has to lie on the face.
+   * \param [in]  vertex_index   The index of the occ vertex.
+   * \param [in]  face_index     The index of the occ face.
+   * \param [out] face_params    The parameters of the vertex on the face.
+   */                                   
+  void 
+  t8_geom_get_parameters_of_vertex_on_face(const int vertex_index, 
+                                           const int face_index, 
+                                           double* face_params) const;
+
+  /** Converts the parameter of an occ edge to the corresponding parameters on an occ face.
+   *  The edge has to lie on the face.
+   * \param [in]  edge_index     The index of the occ edge.
+   * \param [in]  face_index     The index of the occ face.
+   * \param [in]  edge_param     The parameter on the edge.
+   * \param [out] face_params    The corresponding parameters on the face.
+   */   
+  void
+  t8_geom_edge_parameter_to_face_parameters(const int edge_index, 
+                                            const int face_index, 
+                                            const double edge_param, 
+                                            double* face_params) const;
 
 private:
   double                                      tolerance;
