@@ -53,7 +53,7 @@ t8_edge_to_face[T8_ECLASS_MAX_EDGES][2] =
 };
 
 const int
-t8_face_edge_to_tree_edge[T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_EDGES]
+t8_face_edge_to_tree_edge[T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_EDGES_2D]
 {
   {8, 10, 4, 5}, {9, 11, 6, 7}, {8, 9, 0, 2}, {10, 11, 1, 3}, {4, 6, 0, 1}, {5, 7, 2, 3}
 };

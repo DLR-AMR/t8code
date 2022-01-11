@@ -52,7 +52,7 @@ t8_edge_to_face[T8_ECLASS_MAX_EDGES][2];
 
 /* The edges of a face to the edges of a tree */
 extern const int
-t8_face_edge_to_tree_edge[T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_EDGES];
+t8_face_edge_to_tree_edge[T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_EDGES_2D];
 
 /**
  * Definition of an occ geometry function.
