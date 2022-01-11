@@ -3,7 +3,11 @@
 # Included from toplevel directory
 
 bin_PROGRAMS += \
-	example/geometry/t8_example_geometries
+	example/geometry/t8_example_geometries \
+	example/geometry/t8_occ_naca
 
 example_geometry_t8_example_geometries_SOURCES = \
 	example/geometry/t8_example_geometries.cxx
+
+example_geometry_t8_occ_naca_SOURCES = \
+	example/geometry/t8_occ_naca.cxx
