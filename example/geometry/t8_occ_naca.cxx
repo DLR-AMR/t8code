@@ -93,44 +93,17 @@ t8_step3_adapt_callback (t8_forest_t forest,
 {
   for (int iface = 0; iface < 6; ++iface)
   {
-    if (ts->t8_element_is_root_boundary(lelement_id, iface))
+    if (ts->t8_element_is_root_boundary(elements[0], iface))
     {
-      int tree_face = ts->t8_element_tree_face(lelement_id, iface);
-      const int *faces = (const int *) t8_cmesh_get_attribute (ts->, t8_get_package_id (),
+      int tree_face = ts->t8_element_tree_face(elements[0], iface);
+      const int *faces = (const int *) t8_cmesh_get_attribute (t8_forest_get_cmesh(forest), t8_get_package_id (),
                                                                T8_CMESH_OCC_FACE_ATTRIBUTE_KEY,
                                                                which_tree);
-      if (faces[tree_face] == 8 || faces[tree_face] == 22) return 1;
+      if (faces[tree_face] == 2 || faces[tree_face] == 19) return 1;
     }
   }
   /* Do not change this element. */
   return 0;
-}
-
-/* Adapt a forest according to our t8_step3_adapt_callback function.
- * This will create a new forest and return it. */
-t8_forest_t
-t8_step3_adapt_forest (t8_forest_t forest)
-{
-  t8_forest_t         forest_adapt;
-
-  /* Check that forest is a committed, that is valid and usable, forest. */
-  T8_ASSERT (t8_forest_is_committed (forest));
-
-  /* Create a new forest that is adapted from \a forest with our adaptation callback.
-   * We provide the adapt_data as user data that is stored as the used_data pointer of the
-   * new forest (see also t8_forest_set_user_data).
-   * The 0, 0 arguments are flags that control
-   *   recursive  -    If non-zero adaptation is recursive, thus if an element is adapted the children
-   *                   or parents are plugged into the callback again recursively until the forest does not
-   *                   change any more. If you use this you should ensure that refinement will stop eventually.
-   *                   One way is to check the element's level against a given maximum level.
-   *   do_face_ghost - If non-zero additionally a layer of ghost elements is created for the forest.
-   *                   We will discuss ghost in later steps of the tutorial.
-   */
-  forest_adapt =
-    t8_forest_new_adapt (forest, t8_step3_adapt_callback, 0, 0, NULL);
-
-  return forest_adapt;
 }
 
 int
@@ -144,7 +117,7 @@ main (int argc, char **argv)
   const char         *prefix_uniform = "naca_uniform_forest";
   const char         *prefix_adapt = "naca_adapted_forest";
   /* The uniform refinement level of the forest. */
-  const int           level = 3;
+  const int           level = 0;
 
   /* Initialize MPI. This has to happen before we initialize sc or t8code. */
   mpiret = sc_MPI_Init (&argc, &argv);
@@ -159,13 +132,7 @@ main (int argc, char **argv)
   /* We will use MPI_COMM_WORLD as a communicator. */
   comm = sc_MPI_COMM_WORLD;
 
-  /*
-   * Setup.
-   * Build cmesh and uniform forest.
-   */
-
-  /* Build a cube cmesh with tet, hex, and prism trees. */
-  cmesh = t8_cmesh_from_msh_file ("naca5012_step3Hex", 0, sc_MPI_COMM_WORLD, 3, 0, 1);
+  cmesh = t8_cmesh_from_msh_file ("naca6412", 0, sc_MPI_COMM_WORLD, 3, 0, 1);
   forest =
     t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0,
                            comm);
@@ -178,7 +145,11 @@ main (int argc, char **argv)
   /* Adapt the forest. We can reuse the forest variable, since the new adapted
    * forest will take ownership of the old forest and destroy it.
    * Note that the adapted forest is a new forest, though. */
-  forest = t8_step3_adapt_forest (forest);
+  for (int ilevel = 0; ilevel < 5; ++ilevel)
+  {
+    T8_ASSERT (t8_forest_is_committed (forest));
+    forest = t8_forest_new_adapt (forest, t8_step3_adapt_callback, 0, 0, NULL);
+  }
 
   /* Write forest to vtu files. */
   t8_forest_write_vtk (forest, prefix_adapt);
