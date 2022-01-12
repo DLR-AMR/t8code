@@ -99,7 +99,7 @@ t8_step3_adapt_callback (t8_forest_t forest,
       const int *faces = (const int *) t8_cmesh_get_attribute (t8_forest_get_cmesh(forest), t8_get_package_id (),
                                                                T8_CMESH_OCC_FACE_ATTRIBUTE_KEY,
                                                                which_tree);
-      if (faces[tree_face] == 2 || faces[tree_face] == 19) return 1;
+      if (faces[tree_face] == 2 || faces[tree_face] == 7 || faces[tree_face] == 14 || faces[tree_face] == 22) return 1;
     }
   }
   /* Do not change this element. */
@@ -150,6 +150,11 @@ main (int argc, char **argv)
     T8_ASSERT (t8_forest_is_committed (forest));
     forest = t8_forest_new_adapt (forest, t8_step3_adapt_callback, 0, 0, NULL);
   }
+
+  //t8_forest_t balanced_forest;
+  //t8_forest_init (&balanced_forest);
+  //t8_forest_set_balance (balanced_forest, forest, 0);
+  //t8_forest_commit (balanced_forest);
 
   /* Write forest to vtu files. */
   t8_forest_write_vtk (forest, prefix_adapt);
