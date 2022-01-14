@@ -536,6 +536,41 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
 
       return volume;
     }
+  case T8_ECLASS_PYRAMID:
+    {
+      double volume, coordinates[4][3];
+      t8_eclass_t   shape;
+      ts = t8_forest_get_eclass_scheme (forest, T8_ECLASS_PYRAMID);
+      shape = ts->t8_element_shape(element);
+      if(shape == T8_ECLASS_TET)
+      {
+        return t8_forest_element_volume(forest, ltreeid, element);
+      }
+      else{
+        /* The first tetrahedron has pyra vertices 0, 1, 3 and 4*/
+        t8_forest_element_coordinate  (forest, ltreeid, element, 0,
+                                      coordinates[0]);
+        t8_forest_element_coordinate  (forest, ltreeid, element, 1,
+                                      coordinates[1]);
+        t8_forest_element_coordinate  (forest, ltreeid, element, 3,
+                                      coordinates[2]);
+        t8_forest_element_coordinate  (forest, ltreeid, element, 4,
+                                      coordinates[3]); 
+        volume = t8_forest_element_tet_volume(coordinates);
+
+        /*The second tetrahedron has pyra vertices 0, 3, 2 and 4*/
+        t8_forest_element_coordinate  (forest, ltreeid, element, 0,
+                                      coordinates[0]);
+        t8_forest_element_coordinate  (forest, ltreeid, element, 3,
+                                      coordinates[1]);
+        t8_forest_element_coordinate  (forest, ltreeid, element, 2,
+                                      coordinates[2]);
+        t8_forest_element_coordinate  (forest, ltreeid, element, 4,
+                                      coordinates[3]); 
+        volume += t8_forest_element_tet_volume(coordinates);
+        return volume;  
+      }                                                                                  
+    }
   default:
     SC_ABORT_NOT_REACHED ();
   }

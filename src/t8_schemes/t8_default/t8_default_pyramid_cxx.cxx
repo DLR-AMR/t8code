@@ -74,6 +74,13 @@ t8_default_scheme_pyramid_c::t8_element_num_children (const t8_element_t *
   return t8_dpyramid_num_children ((const t8_dpyramid_t *) elem);
 }
 
+int
+t8_default_scheme_pyramid_c::t8_element_num_corners(const t8_element_t *
+                                                      elem)
+{
+  return t8_dpyramid_num_vertices((const t8_dpyramid_t *) elem);
+}
+
 /* *INDENT-OFF* */
 /* Indent adds second const, so we need to disable indent. */
 int
