@@ -97,6 +97,15 @@ int                 t8_dpyramid_face_child_face (const t8_dpyramid_t * p,
                                                  const int face,
                                                  const int face_child);
 
+/** Given the facenumber of a pyramid, return the shape of the face
+ * \param[in] pyra       Input pyramid
+ * \paragraph face       The facenumber
+ * \return               the eclass of the face  
+*/
+
+t8_element_shape_t   t8_dpyramid_face_shape (const t8_dpyramid_t * pyra,
+                                            int face);
+
 /** Given a boundary element and a facenumber of this element, compute the boundary face
  * \param[in] p          Input pyramid
  * \param[in] face       The face number of an element

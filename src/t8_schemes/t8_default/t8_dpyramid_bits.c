@@ -1284,6 +1284,23 @@ t8_dpyramid_face_child_face (const t8_dpyramid_t * p, const int face,
   }
 }
 
+t8_element_shape_t                 
+t8_dpyramid_face_shape (const t8_dpyramid_t * pyra, int face)
+{
+  if(t8_dpyramid_shape(pyra) == T8_ECLASS_TET)
+  {
+    return (int) T8_ECLASS_TET;
+  }
+  else if(face != 4)
+  {
+    return (int) T8_ECLASS_TET;
+  }
+  else
+  {
+    return (int) T8_ECLASS_QUAD;
+  }
+}
+
 int
 t8_dpyramid_is_inside_pyra (const t8_dpyramid_t * p,
                             const t8_dpyramid_t * check)

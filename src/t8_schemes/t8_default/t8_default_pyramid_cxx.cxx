@@ -159,6 +159,13 @@ t8_default_scheme_pyramid_c::t8_element_face_child_face (const t8_element_t *
                                       face, face_child);
 }
 
+t8_element_shape_t
+t8_default_scheme_pyramid_c::t8_element_face_shape(const t8_element_t * elem,
+                                                    int face)
+{
+  return t8_dpyramid_face_shape((const t8_dpyramid_t *) elem, face);
+}
+
 int
 t8_default_scheme_pyramid_c::t8_element_child_id (const t8_element_t * p)
 {

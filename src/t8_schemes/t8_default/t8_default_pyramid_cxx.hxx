@@ -189,11 +189,7 @@ public:
 
 /** Return the shape of an element */
   virtual t8_element_shape_t t8_element_face_shape (const t8_element_t * elem,
-                                                    int face)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return T8_ECLASS_ZERO;
-  }
+                                                    int face);
 
 /** Calculate the linear id of an element */
   virtual t8_linearidx_t t8_element_get_linear_id (const
