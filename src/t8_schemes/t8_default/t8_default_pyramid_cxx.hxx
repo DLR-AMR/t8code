@@ -249,11 +249,7 @@ public:
 
   virtual int         t8_element_get_face_corner (const t8_element_t *
                                                   element, int face,
-                                                  int corner)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return T8_ECLASS_ZERO;      /* suppresses compiler warning */
-  }
+                                                  int corner);
 
   /** Calculate the last descendant of a given element e. That is, the
    *  last element in a uniform refinement of e of the maximal possible level.

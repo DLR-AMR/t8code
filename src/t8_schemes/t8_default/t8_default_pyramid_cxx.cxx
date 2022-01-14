@@ -214,6 +214,17 @@ t8_default_scheme_pyramid_c::t8_element_first_descendant_face (const
                                      (t8_dpyramid_t *) first_desc, level);
 }
 
+int         
+t8_default_scheme_pyramid_c::t8_element_get_face_corner (const 
+                                                        t8_element_t *
+                                                        element, 
+                                                        int face,
+                                                        int corner)
+{
+    return t8_dpyramid_get_face_corner((const t8_dpyramid_t *) element, 
+                                      face, corner);
+}
+
 int
 t8_default_scheme_pyramid_c::t8_element_level (const t8_element_t * elem)
 {

@@ -1287,6 +1287,7 @@ t8_dpyramid_face_child_face (const t8_dpyramid_t * p, const int face,
 t8_element_shape_t                 
 t8_dpyramid_face_shape (const t8_dpyramid_t * pyra, int face)
 {
+  T8_ASSERT(0 <= face && face <= T8_DPYRAMID_FACES);
   if(t8_dpyramid_shape(pyra) == T8_ECLASS_TET)
   {
     return (int) T8_ECLASS_TRIANGLE;
@@ -1298,6 +1299,22 @@ t8_dpyramid_face_shape (const t8_dpyramid_t * pyra, int face)
   else
   {
     return (int) T8_ECLASS_QUAD;
+  }
+}
+
+int                 
+t8_dpyramid_get_face_corner (const t8_dpyramid_t * pyra,
+                            int face, int corner)
+{
+  T8_ASSERT(0 <= face && face <= T8_DPYRAMID_FACES);
+  if(t8_dpyramid_shape(pyra) ==  T8_ECLASS_TET)
+  {
+    return t8_dtet_face_corner[face][corner];
+  }
+  else{
+    int corner_number = t8_dpyramid_face_corner[face][corner];
+    T8_ASSERT(0 <= corner_number && corner_number < T8_DPYRAMID_FACES);
+    return corner_number;
   }
 }
 
