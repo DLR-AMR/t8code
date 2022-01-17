@@ -1290,15 +1290,15 @@ t8_dpyramid_face_shape (const t8_dpyramid_t * pyra, int face)
   T8_ASSERT(0 <= face && face <= T8_DPYRAMID_FACES);
   if(t8_dpyramid_shape(pyra) == T8_ECLASS_TET)
   {
-    return (int) T8_ECLASS_TRIANGLE;
+    return T8_ECLASS_TRIANGLE;
   }
   else if(face != 4)
   {
-    return (int) T8_ECLASS_TRIANGLE;
+    return T8_ECLASS_TRIANGLE;
   }
   else
   {
-    return (int) T8_ECLASS_QUAD;
+    return T8_ECLASS_QUAD;
   }
 }
 
