@@ -1001,7 +1001,7 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
      * Geometries must therefore be added after broadcasting. */
     SC_CHECK_ABORT (cmesh_in->geometry_handler == NULL,
                     "Error: Broadcasting a cmesh with registerd geometries is not possible.\n"
-                     "We recommend to broadcast first and register the geometries after.\n");
+                    "We recommend to broadcast first and register the geometries after.\n");
     memcpy (&meta_info.cmesh, cmesh_in, sizeof (*cmesh_in));
     for (iclass = 0; iclass < T8_ECLASS_COUNT; iclass++) {
       meta_info.num_trees_per_eclass[iclass] =
