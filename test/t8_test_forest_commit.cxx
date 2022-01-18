@@ -127,7 +127,12 @@ t8_test_forest_commit (int cmesh_id)
   min_level = t8_forest_min_nonempty_level (cmesh, scheme);
   /* Use one level with empty processes */
   min_level = SC_MAX (min_level - 1, 0);
-  for (level = min_level; level < min_level + 3; level++) {
+#if 1
+  const int levelup = 2;
+#else
+  const int levelup = 3;
+#endif
+  for (level = min_level; level < min_level + levelup; level++) {
     t8_global_productionf ("Testing forest commit level %i\n", level);
     maxlevel = level + 3;
     /* ref the cmesh since we reuse it */
@@ -170,7 +175,7 @@ test_cmesh_forest_commit_all ()
   for (int cmesh_id = 0; cmesh_id < t8_get_number_of_all_testcases ();
        cmesh_id++) {
     /* This if statement is necessary to make the test work by avoiding specific cmeshes which do not work yet for this test.
-     * When the issues are gone, remove the if statement. */
+     * When the sissues are gone, remove the if statement. */
     if (cmesh_id != 6 && cmesh_id != 89 && (cmesh_id < 237 || cmesh_id > 256)) {
       t8_test_forest_commit (cmesh_id);
     }

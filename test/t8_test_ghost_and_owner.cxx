@@ -125,7 +125,12 @@ t8_test_ghost_owner (int cmesh_id)
   min_level = SC_MAX (0, min_level - 1);
   t8_global_productionf
     ("Testing ghost exchange with start level %i\n", min_level);
-  for (level = min_level; level < min_level + 3; level++) {
+#if 1
+  const int levelup = 2;
+#else
+  const int levelup = 3;
+#endif
+  for (level = min_level; level < min_level + levelup; level++) {
     /* ref the scheme since we reuse it */
     t8_scheme_cxx_ref (scheme);
     /* ref the cmesh since we reuse it */

@@ -186,7 +186,12 @@ t8_test_ghost_exchange (int cmesh_id)
   t8_global_productionf
     ("Testing ghost exchange start level %i. cmesh_id = %i\n", min_level,
      cmesh_id);
-  for (level = min_level; level < min_level + 3; level++) {
+#if 1
+  const int levelup = 2;
+#else
+  const int levelup = 3;
+#endif
+  for (level = min_level; level < min_level + levelup; level++) {
     /* ref the scheme since we reuse it */
     t8_scheme_cxx_ref (scheme);
     /* ref the cmesh since we reuse it */

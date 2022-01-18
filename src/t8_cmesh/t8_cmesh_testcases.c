@@ -28,6 +28,15 @@
 #include <t8_eclass.h>
 #include "t8_cmesh/t8_cmesh_testcases.h"
 
+#if 1
+#define T8_CMESH_TEST_NUM_COMMS 1
+#define T8_CMESH_BINARY 2
+#define T8_CMESH_DIM_RANGE 4    /* this is the dim range for hypercube hybrid and empty cmesh */
+#define T8_CMESH_MAX_TEST_DIMS 3
+#define T8_CMESH_MAX_NUM_OF_TREES 20
+#define T8_CMESH_MAX_NUM_OF_PRISMS 10
+#define T8_CMESH_MAX_NUM_XYZ_TREES 3
+#else
 #define T8_CMESH_TEST_NUM_COMMS 1
 #define T8_CMESH_BINARY 2
 #define T8_CMESH_DIM_RANGE 4    /* this is the dim range for hypercube hybrid and empty cmesh */
@@ -35,6 +44,7 @@
 #define T8_CMESH_MAX_NUM_OF_TREES 20
 #define T8_CMESH_MAX_NUM_OF_PRISMS 20
 #define T8_CMESH_MAX_NUM_XYZ_TREES 5
+#endif
 
 sc_MPI_Comm         t8_comm_list[T8_CMESH_TEST_NUM_COMMS] =
   { sc_MPI_COMM_WORLD };
