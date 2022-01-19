@@ -38,12 +38,14 @@ T8_EXTERN_C_BEGIN ();
  * process and a meta .pvtu file.
  * This function uses the vtk library. t8code must be configured with
  * "--with-vtk" in order to use it.
+ * Currently does not support pyramid elements.
  * \param [in]  forest    The forest.
  * \param [in]  fileprefix The prefix of the output files. The meta file will be named \a fileprefix.pvtu .
  * \param [in]  write_treeid If true, the global tree id is written for each element.
  * \param [in]  write_mpirank If true, the mpirank is written for each element .
  * \param [in]  write_level If true, the refinement level is written for each element.
  * \param [in]  write_element_id If true, the global element id is written for each element.
+ * \param [in]  curved_flag If true, write the elements as curved element types from vtk.
  * \param [in]  num_data  Number of user defined double valued data fields to write.
  * \param [in]  data      Array of t8_vtk_data_field_t of length \a num_data
  *                        providing the used defined per element data.
@@ -58,6 +60,7 @@ int                 t8_forest_write_vtk_via_API (t8_forest_t forest,
                                                  int write_mpirank,
                                                  int write_level,
                                                  int write_element_id,
+                                                 int curved_flag,
                                                  int num_data,
                                                  t8_vtk_data_field_t * data);
 
