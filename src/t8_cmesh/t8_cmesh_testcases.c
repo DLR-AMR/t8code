@@ -28,14 +28,14 @@
 #include <t8_eclass.h>
 #include "t8_cmesh/t8_cmesh_testcases.h"
 
-#if 1
+#ifdef T8_ENABLE_LESS_TESTS
 #define T8_CMESH_TEST_NUM_COMMS 1
 #define T8_CMESH_BINARY 2
-#define T8_CMESH_DIM_RANGE 4    /* this is the dim range for hypercube hybrid and empty cmesh */
+#define T8_CMESH_DIM_RANGE 4
 #define T8_CMESH_MAX_TEST_DIMS 3
 #define T8_CMESH_MAX_NUM_OF_TREES 20
-#define T8_CMESH_MAX_NUM_OF_PRISMS 10
-#define T8_CMESH_MAX_NUM_XYZ_TREES 3
+#define T8_CMESH_MAX_NUM_OF_PRISMS 20
+#define T8_CMESH_MAX_NUM_XYZ_TREES 5
 #else
 #define T8_CMESH_TEST_NUM_COMMS 1
 #define T8_CMESH_BINARY 2
@@ -173,6 +173,9 @@ int
 t8_get_number_of_all_testcases ()
 {
   /* The number of all tests for all cmesh types is the sum of all individual testcase numbers. When disjoint bricks issue is fixed, then remove comment */
+#ifdef T8_ENABLE_LESS_TESTS
+  t8_debugf("change macros when issue #171 is solved");
+#endif
   return (t8_get_number_of_comm_only_cmesh_testcases () +
           t8_get_number_of_new_hypercube_cmesh_testcases ()
           + t8_get_number_of_new_empty_cmesh_testcases () +

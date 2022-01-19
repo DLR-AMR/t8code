@@ -186,7 +186,7 @@ t8_test_ghost_exchange (int cmesh_id)
   t8_global_productionf
     ("Testing ghost exchange start level %i. cmesh_id = %i\n", min_level,
      cmesh_id);
-#if 1
+#ifdef T8_ENABLE_LESS_TESTS
   const int levelup = 2;
 #else
   const int levelup = 3;

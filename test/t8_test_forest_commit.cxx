@@ -127,7 +127,7 @@ t8_test_forest_commit (int cmesh_id)
   min_level = t8_forest_min_nonempty_level (cmesh, scheme);
   /* Use one level with empty processes */
   min_level = SC_MAX (min_level - 1, 0);
-#if 1
+#ifdef T8_ENABLE_LESS_TESTS
   const int levelup = 2;
 #else
   const int levelup = 3;
