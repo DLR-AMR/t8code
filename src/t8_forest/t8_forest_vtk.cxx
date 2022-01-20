@@ -38,6 +38,7 @@
 #include <vtkLine.h>
 #include <vtkQuad.h>
 #include <vtkTriangle.h>
+#include <vtkPyramid.h>
 #include <vtkWedge.h>
 #include <vtkQuadraticEdge.h>
 #include <vtkQuadraticTriangle.h>
@@ -376,6 +377,7 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
   vtkNew < vtkTriangle > tri;
   vtkNew < vtkWedge > prism;
   vtkNew < vtkTetra > tet;
+  vtkNew < vtkPyramid> pyra;
 
   vtkNew < vtkQuadraticEdge > quadraticedge;
   vtkNew < vtkQuadraticTriangle > quadratictri;
@@ -472,8 +474,8 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
           pvtkCell = prism;
           break;
         case T8_ECLASS_PYRAMID:
-          SC_CHECK_ABORT (element_shape != T8_ECLASS_PYRAMID,
-                          "Pyramids are not supported in vtk output");
+          pvtkCell =pyra;
+          break;
         default:
           SC_ABORT_NOT_REACHED ();
         }
@@ -503,7 +505,7 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
           break;
         case T8_ECLASS_PYRAMID:
           SC_CHECK_ABORT (element_shape != T8_ECLASS_PYRAMID,
-                          "Pyramids are not supported in vtk output");
+                          "Quadratic Pyramids are not supported in vtk output");
         default:
           SC_ABORT_NOT_REACHED ();
         }
