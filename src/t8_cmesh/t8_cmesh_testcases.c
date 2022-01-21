@@ -58,6 +58,7 @@ char                t8_comm_string_list[T8_CMESH_TEST_NUM_COMMS][18] =
  *         in t8_test_create_new_hypercube_cmesh (int cmesh_id) and remove comment
  *       - when empty cmesh works with all tests change the line with the comment to the comments 
  *         statement in t8_test_create_cmesh (int cmesh_id)
+ *       - change macros for LESS_TESTS when issue #171 is resolved
  * NOTE: "all tests" here mean the ones using this file. 
  */
 
@@ -173,9 +174,6 @@ int
 t8_get_number_of_all_testcases ()
 {
   /* The number of all tests for all cmesh types is the sum of all individual testcase numbers. When disjoint bricks issue is fixed, then remove comment */
-#ifdef T8_ENABLE_LESS_TESTS
-  t8_debugf("change macros when issue #171 is solved");
-#endif
   return (t8_get_number_of_comm_only_cmesh_testcases () +
           t8_get_number_of_new_hypercube_cmesh_testcases ()
           + t8_get_number_of_new_empty_cmesh_testcases () +
