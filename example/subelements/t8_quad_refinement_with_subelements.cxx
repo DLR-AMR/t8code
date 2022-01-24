@@ -35,7 +35,7 @@
  * Then, it is adapted using some geometric refinement criterion and balanced (balance is automatically set in set_remove_hanging_faces if not done before). 
  * In the following step, the new subelement functions are used to identify elements that have hanging faces, 
  * which are then adapted once more, using transition cells with subelements in order to remove the hanging faces. 
- * The integer value "timesteps" determines the number of times, the mesh is adapted. During this process, the refinement criterion can be adjusted (for example an increasing radius) */
+ * The integer value "num_timesteps" determines the number of times, the mesh is adapted. During this process, the refinement criterion can be adjusted (for example an increasing radius) */
 
 /* Define the data structure for the refinement criteria of this example (a circle with some user given midpoint and radius).
  * Elements whose anchor node is closer to the circle will be refined to a higher level than elements whose anchor node is farther away. */
@@ -167,8 +167,8 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
   int                 do_transition = 1;
 
   /* timestep settings */
-  int                 do_different_refinements = 0;     /* to change the refinement during multiple timesteps */
-  int                 timesteps = 1;    /* Number of times, the mesh is refined */
+  int                 do_different_refinements = 0;     /* to change the refinement during multiple num_timesteps */
+  int                 num_timesteps = 1;    /* Number of times, the mesh is refined */
   double              delta = 0.01;      /* The value, the radius increases after each timestep */
   int                 i; /* timestep count */
 
@@ -231,11 +231,11 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
   ls_data.udata = &sdata;
 
   /* TODO: the time_forest examples use several refine_rounds within each time-loop. 
-   * This might resolve the problem with appearing artifacts during adaptation with multiple timesteps.
+   * This might resolve the problem with appearing artifacts during adaptation with multiple num_timesteps.
    * This does not seem to be a problem of subelements but of the timestep scheme implemented in this example. */
 
-  /* Adapting the mesh for different timesteps */
-  for (i = 0; i < timesteps; i++) {
+  /* Adapting the mesh for different num_timesteps */
+  for (i = 0; i < num_timesteps; i++) {
 
     /* change the refinement */
     if (i == do_different_refinements - 1) {
@@ -247,7 +247,7 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
 
     t8_productionf
       ("This is t8_refine_with_subelements. Into timestep %i of %i\n", i + 1,
-       timesteps);
+       num_timesteps);
 
     t8_forest_init (&forest_adapt);
 
@@ -294,7 +294,7 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
 
     t8_productionf
       ("This is t8_refine_with_subelements. Done timestep %i of %i\n", i + 1,
-       timesteps);
+       num_timesteps);
   }                             /* end of time-loop */
   t8_forest_unref (&forest_adapt);
 
