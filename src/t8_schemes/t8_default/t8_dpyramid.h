@@ -52,9 +52,7 @@ typedef int32_t     t8_dpyramid_coord_t;
 /** The type of pyramid in 0, ...,7. The first 6 types describe tetrahedra*/
 typedef int8_t      t8_dpyramid_type_t;
 
-
 /** This data type stores a pyramid. */
-typedef t8_dtet_t t8_dpyramid_t;
-
+typedef t8_dtet_t   t8_dpyramid_t;
 
 #endif /* T8_DPYRAMID_H */

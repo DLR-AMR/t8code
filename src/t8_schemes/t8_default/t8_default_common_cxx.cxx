@@ -151,8 +151,8 @@ t8_default_scheme_common_c::t8_element_max_num_siblings (const t8_element_t * el
 /* *INDENT-ON* */
 {
   const int           dim = t8_eclass_to_dimension[eclass];
-  if(eclass == T8_ECLASS_PYRAMID){
-      return 10;
+  if (eclass == T8_ECLASS_PYRAMID) {
+    return 10;
   }
   return sc_intpow (2, dim);
 }
@@ -175,7 +175,7 @@ t8_gloidx_t
   t8_default_scheme_common_c::t8_element_count_leafs_from_root (int level)
 {
   if (eclass == T8_ECLASS_PYRAMID) {
-    return 2 * sc_intpow64u(8,level) -  sc_intpow64u(6, level);
+    return 2 * sc_intpow64u (8, level) - sc_intpow64u (6, level);
   }
   int                 dim = t8_eclass_to_dimension[eclass];
   return count_leafs_from_level (0, level, dim);

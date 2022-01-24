@@ -294,8 +294,7 @@ t8_linearidx_t      t8_dtri_linear_id (const t8_dtri_t * t, int level);
  * \note This id is not the Morton index.
  */
 t8_linearidx_t
-t8_dtri_linear_id_with_level (const t8_dtri_t * t, int level, int stop);
-
+     t8_dtri_linear_id_with_level (const t8_dtri_t * t, int level, int stop);
 
 /**
  * Same as init_linear_id, but we only consider the subtree. Used for computing the index of a
@@ -307,8 +306,17 @@ t8_dtri_linear_id_with_level (const t8_dtri_t * t, int level, int stop);
  * \param parenttype    The type of the parent.
  */
 void
-t8_dtri_init_linear_id_with_level(t8_dtri_t * t, t8_linearidx_t id, const int start_level,
-                                  const int end_level, t8_dtri_type_t parenttype);
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ t8_dtri_init_linear_id_with_level (t8_dtri_t * t, t8_linearidx_t id,
+                                    const int start_level,
+                                    const int end_level,
+                                    t8_dtri_type_t parenttype);
 
 /** Initialize a triangle as the triangle with a given global id in a uniform
  *  refinement of a given level. *

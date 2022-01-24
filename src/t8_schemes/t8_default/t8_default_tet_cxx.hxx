@@ -275,7 +275,7 @@ public:
   virtual void        t8_element_general_function (const t8_element_t * elem,
                                                    const void *indata,
                                                    void *outdata);
-                                                   
+
   /** Compute the coordinates of a given element vertex inside a reference tree
    *  that is embedded into [0,1]^d (d = dimension).
    *   \param [in] t      The element to be considered.

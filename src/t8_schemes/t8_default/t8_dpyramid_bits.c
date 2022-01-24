@@ -1284,36 +1284,31 @@ t8_dpyramid_face_child_face (const t8_dpyramid_t * p, const int face,
   }
 }
 
-t8_element_shape_t                 
+t8_element_shape_t
 t8_dpyramid_face_shape (const t8_dpyramid_t * pyra, int face)
 {
-  T8_ASSERT(0 <= face && face <= T8_DPYRAMID_FACES);
-  if(t8_dpyramid_shape(pyra) == T8_ECLASS_TET)
-  {
+  T8_ASSERT (0 <= face && face <= T8_DPYRAMID_FACES);
+  if (t8_dpyramid_shape (pyra) == T8_ECLASS_TET) {
     return T8_ECLASS_TRIANGLE;
   }
-  else if(face != 4)
-  {
+  else if (face != 4) {
     return T8_ECLASS_TRIANGLE;
   }
-  else
-  {
+  else {
     return T8_ECLASS_QUAD;
   }
 }
 
-int                 
-t8_dpyramid_get_face_corner (const t8_dpyramid_t * pyra,
-                            int face, int corner)
+int
+t8_dpyramid_get_face_corner (const t8_dpyramid_t * pyra, int face, int corner)
 {
-  T8_ASSERT(0 <= face && face <= T8_DPYRAMID_FACES);
-  if(t8_dpyramid_shape(pyra) ==  T8_ECLASS_TET)
-  {
+  T8_ASSERT (0 <= face && face <= T8_DPYRAMID_FACES);
+  if (t8_dpyramid_shape (pyra) == T8_ECLASS_TET) {
     return t8_dtet_face_corner[face][corner];
   }
-  else{
-    int corner_number = t8_dpyramid_face_corner[face][corner];
-    T8_ASSERT(0 <= corner_number && corner_number < T8_DPYRAMID_FACES);
+  else {
+    int                 corner_number = t8_dpyramid_face_corner[face][corner];
+    T8_ASSERT (0 <= corner_number && corner_number < T8_DPYRAMID_FACES);
     return corner_number;
   }
 }
@@ -1547,14 +1542,13 @@ t8_dpyramid_compute_coords (const t8_dpyramid_t * p, const int vertex,
 
 void
 t8_dpyramid_vertex_reference_coords (const t8_dpyramid_t * elem,
-                                                    int vertex,
-                                                    double coords[])
+                                     int vertex, double coords[])
 {
-    int coords_int[3];
-    T8_ASSERT(0<= vertex && vertex < T8_DPYRAMID_CORNERS);
-    t8_dpyramid_compute_coords(elem, vertex, coords_int);
-    /*scale the coordinates onto the reference cube*/
-    coords[0] = coords_int[0] / (double)T8_DPYRAMID_ROOT_LEN;
-    coords[1] = coords_int[1] / (double)T8_DPYRAMID_ROOT_LEN;
-    coords[2] = coords_int[2] / (double)T8_DPYRAMID_ROOT_LEN;
+  int                 coords_int[3];
+  T8_ASSERT (0 <= vertex && vertex < T8_DPYRAMID_CORNERS);
+  t8_dpyramid_compute_coords (elem, vertex, coords_int);
+  /*scale the coordinates onto the reference cube */
+  coords[0] = coords_int[0] / (double) T8_DPYRAMID_ROOT_LEN;
+  coords[1] = coords_int[1] / (double) T8_DPYRAMID_ROOT_LEN;
+  coords[2] = coords_int[2] / (double) T8_DPYRAMID_ROOT_LEN;
 }

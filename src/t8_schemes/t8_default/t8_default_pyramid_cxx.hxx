@@ -306,9 +306,9 @@ public:
    *   \param [out] coords An array of at least as many doubles as the element's dimension
    *                      whose entries will be filled with the coordinates of \a vertex.
    */
-  virtual void t8_element_vertex_reference_coords (const t8_element_t * elem,
-                                                    int vertex,
-                                                    double coords[]);
+  virtual void        t8_element_vertex_reference_coords (const t8_element_t *
+                                                          elem, int vertex,
+                                                          double coords[]);
 
 #ifdef T8_ENABLE_DEBUG
   /** Query whether an element is valid */

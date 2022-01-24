@@ -75,10 +75,10 @@ t8_default_scheme_pyramid_c::t8_element_num_children (const t8_element_t *
 }
 
 int
-t8_default_scheme_pyramid_c::t8_element_num_corners(const t8_element_t *
-                                                      elem)
+t8_default_scheme_pyramid_c::t8_element_num_corners (const t8_element_t *
+                                                     elem)
 {
-  return t8_dpyramid_num_vertices((const t8_dpyramid_t *) elem);
+  return t8_dpyramid_num_vertices ((const t8_dpyramid_t *) elem);
 }
 
 /* *INDENT-OFF* */
@@ -160,10 +160,10 @@ t8_default_scheme_pyramid_c::t8_element_face_child_face (const t8_element_t *
 }
 
 t8_element_shape_t
-t8_default_scheme_pyramid_c::t8_element_face_shape(const t8_element_t * elem,
-                                                    int face)
+  t8_default_scheme_pyramid_c::t8_element_face_shape (const t8_element_t *
+                                                      elem, int face)
 {
-  return t8_dpyramid_face_shape((const t8_dpyramid_t *) elem, face);
+  return t8_dpyramid_face_shape ((const t8_dpyramid_t *) elem, face);
 }
 
 int
@@ -214,14 +214,13 @@ t8_default_scheme_pyramid_c::t8_element_first_descendant_face (const
                                      (t8_dpyramid_t *) first_desc, level);
 }
 
-int         
-t8_default_scheme_pyramid_c::t8_element_get_face_corner (const 
-                                                        t8_element_t *
-                                                        element, 
-                                                        int face,
-                                                        int corner)
+int
+t8_default_scheme_pyramid_c::t8_element_get_face_corner (const
+                                                         t8_element_t *
+                                                         element,
+                                                         int face, int corner)
 {
-    return t8_dpyramid_get_face_corner((const t8_dpyramid_t *) element, 
+  return t8_dpyramid_get_face_corner ((const t8_dpyramid_t *) element,
                                       face, corner);
 }
 
@@ -354,14 +353,13 @@ t8_default_scheme_pyramid_c::t8_element_vertex_coords (const t8_element_t * t,
 }
 
 void
-t8_default_scheme_pyramid_c::t8_element_vertex_reference_coords (const t8_element_t * elem,
-                                                    int vertex,
-                                                    double coords[])
-  {
-    t8_dpyramid_vertex_reference_coords ((const t8_dpyramid_t *) elem,
-                                                        vertex,
-                                                        coords);
-  }
+t8_default_scheme_pyramid_c::
+t8_element_vertex_reference_coords (const t8_element_t * elem, int vertex,
+                                    double coords[])
+{
+  t8_dpyramid_vertex_reference_coords ((const t8_dpyramid_t *) elem,
+                                       vertex, coords);
+}
 
 /* Constructor */
 t8_default_scheme_pyramid_c::t8_default_scheme_pyramid_c (void)

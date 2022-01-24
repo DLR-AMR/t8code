@@ -284,8 +284,16 @@ t8_dtet_linear_id_with_level (const t8_dtet_t * t, int level, int stop);
  * \param parenttype    The type of the parent.
  */
 void
-t8_dtet_init_linear_id_with_level(t8_dtet_t * t, t8_linearidx_t id, int start_level,
-                                  int end_level, t8_dtet_type_t parenttype);
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ t8_dtet_init_linear_id_with_level (t8_dtet_t * t, t8_linearidx_t id,
+                                    int start_level, int end_level,
+                                    t8_dtet_type_t parenttype);
 
 /** Initialize a tetrahedron as the tetrahedron with a given global id in a uniform
  *  refinement of a given level. *

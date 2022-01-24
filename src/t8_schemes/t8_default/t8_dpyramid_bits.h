@@ -105,9 +105,17 @@ int                 t8_dpyramid_face_child_face (const t8_dpyramid_t * p,
 t8_element_shape_t  t8_dpyramid_face_shape (const t8_dpyramid_t * pyra,
                                             int face);
 
-int                 
+int
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 t8_dpyramid_get_face_corner (const t8_dpyramid_t * pyra,
-                            int face, int corner);
+                             int face, int corner);
 
 /** Given a boundary element and a facenumber of this element, compute the boundary face
  * \param[in] p          Input pyramid
@@ -372,9 +380,9 @@ void                t8_dpyramid_successor (const t8_dpyramid_t * elem,
  * \param [out] coordinates An array of 3 double that
  * 		     will be filled with the reference coordinates of the vertex.
  */
-void                t8_dpyramid_vertex_reference_coords (const t8_dpyramid_t * elem,
-                                                    int vertex,
-                                                    double coords[]);
+void                t8_dpyramid_vertex_reference_coords (const t8_dpyramid_t *
+                                                         elem, int vertex,
+                                                         double coords[]);
 
 T8_EXTERN_C_END ();
 
