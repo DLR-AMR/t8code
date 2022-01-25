@@ -31,7 +31,7 @@ main (int argc, char **argv)
   int                 mpiret;
   sc_MPI_Comm         comm;
   t8_forest_t         forest, adapt_arg;
-  mpiret =sc_MPI
-}
+  //mpiret = sc_MPI
 
-#endif /* !T8_STEP5_H */
+  return 0;
+}
