@@ -23,7 +23,8 @@
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest.h>
-#include <t8_data/t8_containers.h>
+#include <t8_data/t8_element_array.h>
+#include <t8_data/t8_locidx_list.h>
 #include <t8_element_cxx.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
@@ -73,6 +74,7 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
   T8_ASSERT (ts->t8_element_level (element) > 0);
 
   fam = el_buffer;
+  const t8_element_t **constfam = (const t8_element_t **) fam;
   pos = *el_inserted - num_children;
   isfamily = 1;
   child_id = ts->t8_element_child_id (element);
@@ -85,19 +87,20 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
       fam[i] = t8_element_array_index_locidx (telements, pos + i);
     }
     if (i == num_children) {
-      isfamily = ts->t8_element_is_family (fam);
+      isfamily = ts->t8_element_is_family (constfam);
     }
     else {
       isfamily = 0;
     }
     if (isfamily
         && forest->set_adapt_fn (forest, forest->set_from, ltreeid,
-                                 lelement_id, ts, num_children, fam) < 0) {
+                                 lelement_id, ts, num_children,
+                                 constfam) < 0) {
       /* Coarsen the element */
       *el_inserted -= num_children - 1;
       /* remove num_children - 1 elements from the array */
       T8_ASSERT (elements_in_array == t8_element_array_get_count (telements));
-      ts->t8_element_parent (fam[0], fam[0]);
+      ts->t8_element_parent (constfam[0], fam[0]);
       elements_in_array -= num_children - 1;
       t8_element_array_resize (telements, elements_in_array);
       /* Set element to the new constructed parent. Since resizing the array
@@ -152,7 +155,7 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
     el_buffer[0] = (t8_element_t *) sc_list_pop (elem_list);
     num_children = ts->t8_element_num_children (el_buffer[0]);
     if (forest->set_adapt_fn (forest, forest->set_from, ltreeid, lelement_id,
-                              ts, 1, el_buffer) > 0) {
+                              ts, 1, (const t8_element_t **) el_buffer) > 0) {
       /* The element should be refined */
       if (ts->t8_element_level (el_buffer[0]) < forest->maxlevel) {
         /* only refine, if we do not exceed the maximum allowed level */
@@ -201,7 +204,8 @@ t8_forest_adapt (t8_forest_t forest)
 
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->set_from != NULL);
-  T8_ASSERT (forest->set_adapt_recursive != -1);
+  T8_ASSERT (forest->set_adapt_recursive == 0
+             || forest->set_adapt_recursive == 1);
 
   /* if profiling is enabled, measure runtime */
   if (forest->profile != NULL) {
@@ -210,7 +214,7 @@ t8_forest_adapt (t8_forest_t forest)
      * even if you do not want this output. It fixes a bug that occured on JUQUEEN, where the
      * runtimes were computed to 0.
      * Only delete the line, if you know what you are doing. */
-    t8_global_productionf ("Start adadpt %f %f\n", sc_MPI_Wtime (),
+    t8_global_productionf ("Start adapt %f %f\n", sc_MPI_Wtime (),
                            forest->profile->adapt_runtime);
   }
 
@@ -273,7 +277,9 @@ t8_forest_adapt (t8_forest_t forest)
                                                            el_considered +
                                                            zz);
       }
-      if (zz == num_children && tscheme->t8_element_is_family (elements_from)) {
+      if (zz == num_children
+          && tscheme->t8_element_is_family ((const t8_element_t **)
+                                            elements_from)) {
 #ifdef T8_ENABLE_DEBUG
         is_family = 1;
 #endif
@@ -295,7 +301,7 @@ t8_forest_adapt (t8_forest_t forest)
       refine =
         forest->set_adapt_fn (forest, forest->set_from, ltree_id,
                               el_considered, tscheme, num_elements,
-                              elements_from);
+                              (const t8_element_t **) elements_from);
       T8_ASSERT (is_family || refine >= 0);
       if (refine > 0 && tscheme->t8_element_level (elements_from[0]) >=
           forest->maxlevel) {
@@ -416,9 +422,228 @@ t8_forest_adapt (t8_forest_t forest)
      * even if you do not want this output. It fixes a bug that occured on JUQUEEN, where the
      * runtimes were computed to 0.
      * Only delete the line, if you know what you are doing. */
-    t8_global_productionf ("End adadpt %f %f\n", sc_MPI_Wtime (),
+    t8_global_productionf ("End adapt %f %f\n", sc_MPI_Wtime (),
                            forest->profile->adapt_runtime);
   }
+}
+
+/* A refinement callback function that works with a marker array.
+ * We expect the forest user_data pointer to point to an sc_array of short ints.
+ * We expect one int per element, which is interpreted as follows:
+ *    0 - this element should neither be refined nor coarsened
+ *    1 - refine this element
+ *   -1 - coarsen this elements (must be set for the whole family)
+ * other values are invalid.
+ * The array may be longer (to include ghosts for example), but the additional
+ * entries are ignored.
+ */
+int
+t8_forest_adapt_marker_array_callback (t8_forest_t forest,
+                                       t8_forest_t forest_from,
+                                       t8_locidx_t which_tree,
+                                       t8_locidx_t lelement_id,
+                                       t8_eclass_scheme_c * ts,
+                                       int num_elements,
+                                       const t8_element_t * elements[])
+{
+  T8_ASSERT (t8_forest_is_committed (forest_from));
+  /* Get a pointer to the user data. */
+  sc_array_t         *markers =
+    (sc_array_t *) t8_forest_get_user_data (forest);
+  /* The element has to have (at least) as many entries as elements.
+   * We allow additional entries, since they may be used outside this 
+   * function. For example for marker values for the ghost elements.
+   */
+  T8_ASSERT ((t8_locidx_t) markers->elem_count >=
+             t8_forest_get_local_num_elements (forest_from));
+  T8_ASSERT (markers->elem_size == sizeof (short));
+
+  /* Get the (process local) index of the current element by adding the tree offset
+   * to the tree local index. */
+  t8_locidx_t         element_index =
+    t8_forest_get_tree_element_offset (forest_from, which_tree) + lelement_id;
+  /* Get the marker value for this element */
+  short               marker_value =
+    *(short *) (t8_sc_array_index_locidx (markers, element_index));
+  T8_ASSERT (marker_value == 0 || marker_value == 1 || marker_value == -1);
+
+#ifdef T8_ENABLE_DEBUG
+  /* In debugging mode we check that
+   * if one member of a family is marked -1, then all are
+   */
+  if (num_elements > 1) {
+    int                 ielem;
+    int                 oneisminusone = 0;
+    int                 oneisnotminusone = 0;
+    short               temp_marker_value;
+    /* Iterate over elements and store if any element is -1
+     * and if any element is not -1. */
+    for (ielem = 0; ielem < num_elements; ++ielem) {
+      temp_marker_value =
+        *(short *) (t8_sc_array_index_locidx (markers, element_index));
+      if (temp_marker_value == -1) {
+        oneisminusone = 1;
+      }
+      else {
+        oneisnotminusone = 1;
+      }
+    }
+    /* If any element is -1, then all elements must be -1, thus
+     * no element is allowed to be not -1. */
+    T8_ASSERT (!(oneisminusone && oneisnotminusone));
+  }
+#endif
+  /* Return the marker of this element */
+  return marker_value;
+}
+
+/* Given a forest that is to be adapted, we fill an array with refinement
+ * markers. Thus, for each element we store either 0, 1, or -1, depending
+ * on what will happen with the element during refinement.
+ *  0 - nothing
+ *  1 - refine this element
+ * -1 - coarsen this element and all its siblings.
+ * 
+ * Thus, the value of the markers corresponds to the difference in refinement
+ * levels.
+ */
+void
+t8_forest_adapt_build_marker_array (t8_forest_t forest, sc_array_t * markers,
+                                    t8_locidx_list_t *
+                                    elements_that_do_not_refine,
+                                    int maxlevel_existing, int *new_maxlevel)
+{
+  t8_forest_t         forest_from = forest->set_from;
+  T8_ASSERT (t8_forest_is_committed (forest_from));
+  T8_ASSERT (forest->set_adapt_fn != NULL);
+  T8_ASSERT (forest->set_adapt_recursive == 0);
+  T8_ASSERT (forest_from->maxlevel_existing == maxlevel_existing);
+  const t8_locidx_t   num_trees = t8_forest_get_num_local_trees (forest_from);
+  t8_locidx_t         ltreeid, ielement;
+  const t8_locidx_t   num_elements =
+    t8_forest_get_local_num_elements (forest_from);
+  /* Flags that we need to compute the new maxlevel in the forest. */
+  int                 have_element_at_maxlevelp1 = 0;
+  int                 have_element_at_maxlevel = 0;
+
+  /* check correct markers array size */
+  T8_ASSERT (markers != NULL);
+  T8_ASSERT ((t8_locidx_t) markers->elem_count >= num_elements);
+  T8_ASSERT (markers->elem_size == sizeof (short));
+  /* Check correct list size */
+  T8_ASSERT (t8_locidx_list_is_initialized (elements_that_do_not_refine));
+  T8_ASSERT (t8_locidx_list_count (elements_that_do_not_refine) == 0);
+
+  for (ltreeid = 0; ltreeid < num_trees; ltreeid++) {
+    /* Get the tree's class, number of elements and scheme */
+    const t8_eclass_t   tree_class =
+      t8_forest_get_tree_class (forest_from, ltreeid);
+    const t8_locidx_t   elements_in_tree =
+      t8_forest_get_tree_num_elements (forest_from, ltreeid);
+    const t8_eclass_scheme_c *ts =
+      t8_forest_get_eclass_scheme (forest_from, tree_class);
+    /* Iterate over all elements of this tree and call the refinement function */
+    for (ielement = 0; ielement < elements_in_tree; ++ielement) {
+      /* Get a pointer to the element */
+      const t8_element_t *element =
+        t8_forest_get_element_in_tree (forest_from, ltreeid, ielement);
+      t8_element_t      **siblings;
+      /* Compute the number of siblings */
+      const int           num_siblings =
+        ts->t8_element_num_siblings (element);
+      int                 isib;
+      int                 is_family = 0;
+      /* Compute whether this element and its next num_siblings followers are a family */
+      if (ielement + num_siblings <
+          elements_in_tree && ts->t8_element_child_id (element) == 0) {
+        siblings = T8_ALLOC (t8_element_t *, num_siblings);
+        /* Gather the siblings in an array */
+        for (isib = 0; isib < num_siblings; ++isib) {
+          siblings[isib] =
+            t8_forest_get_element_in_tree (forest_from, ltreeid,
+                                           ielement + isib);
+        }
+        is_family =
+          ts->t8_element_is_family ((const t8_element_t **) siblings);
+        T8_FREE (siblings);
+      }
+      /* If this is a family we pass the element and all siblings to the adapt_fn,
+       * otherwise only the element. */
+      const int           num_elements_to_adapt =
+        is_family ? num_siblings : 1;
+      const int           adapt_value =
+        forest->set_adapt_fn (forest, forest->set_from, ltreeid,
+                              ielement, (t8_eclass_scheme_c *) ts,
+                              num_elements_to_adapt, &element);
+      /* TODO: Use const in parameters of adapt_fn and get rid of the type casts here. */
+      const t8_locidx_t   element_index =
+        ielement + t8_forest_get_tree_element_offset (forest_from, ltreeid);
+      /* Set the marker to 1, 0, or -1 depending on whether adapt_value is >0, 0, <0 */
+      *(short *) t8_sc_array_index_locidx (markers, element_index) =
+        adapt_value > 0 ? 1 : adapt_value == 0 ? 0 : -1;
+      if (adapt_value <= 0) {
+        /* This element does not get refined, we add it to the list of unrefined element */
+        t8_locidx_list_append (elements_that_do_not_refine, element_index);
+      }
+      if (adapt_value < 0) {
+        /* This is a family that will get coarsened. At the marker value to all siblings.
+         * and add all siblings to the list of not refined elements. */
+
+        T8_ASSERT (is_family);
+        for (isib = 1; isib < num_siblings; ++isib) {
+          *(short *) t8_sc_array_index_locidx (markers,
+                                               element_index + isib) = -1;
+          t8_locidx_list_append (elements_that_do_not_refine,
+                                 element_index + isib);
+        }
+        /* We have to skip the siblings from the adapt check, since we know that they
+         * will be coarsened. However, calling the adapt function for them seperately
+         * will return 0 or 1 and result in false markers. */
+        ielement += num_siblings - 1;
+      }
+      {
+        /* Depending on the element's level and its adapt marker, we
+         * set the maxlevel flags in order to be able to compute the new maxlevel. */
+        /* TODO: Remove the cast as soon as t8_element_level is const */
+        int                 level =
+          ((t8_eclass_scheme_c *) ts)->t8_element_level (element);
+        if (level == maxlevel_existing) {
+          if (adapt_value > 0) {
+            have_element_at_maxlevelp1 = 1;
+          }
+          else if (adapt_value == 0) {
+            have_element_at_maxlevel;
+          }
+        }                       /* End if (level == maxlevel_existing) */
+        else if (level == maxlevel_existing - 1) {
+          if (adapt_value > 0) {
+            have_element_at_maxlevel = 1;
+          }
+        }                       /* End if (level == maxlevel_existing - 1) */
+      }
+    }                           /* End of element loop */
+  }                             /* End of tree loop */
+  if (have_element_at_maxlevelp1) {
+    /* We refined an element of the finest level.
+     * The new maxlevel is increased. */
+    *new_maxlevel = maxlevel_existing + 1;
+  }
+  else if (have_element_at_maxlevel) {
+    /* We did not refine any fine level element, but we keep
+     * (or refined a coarser element) at least one. */
+    *new_maxlevel = maxlevel_existing;
+  }
+  else {
+    /* We have no elements of level maxlevel_existing + 1or maxlevel_existing left.
+     * We thus know that the new maxlevel must be maxlevel_existing - 1.
+     * This local partition of the forest may have a lower maxlevel, but globally it
+     * cannot be smaller than maxlevel_existing - 1, since we only refine non-recursively.
+     */
+    *new_maxlevel = maxlevel_existing - 1;
+  }
+  /* We expect that no element was put twice into the list. */
+  T8_ASSERT (!t8_locidx_list_has_duplicate_entries
+             (elements_that_do_not_refine));
 }
 
 T8_EXTERN_C_END ();

@@ -28,7 +28,7 @@
 #include <t8_forest.h>
 #include <t8_cmesh/t8_cmesh_trees.h>
 #include <t8_element_cxx.hxx>
-#include <t8_data/t8_containers.h>
+#include <t8_data/t8_element_array.h>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();

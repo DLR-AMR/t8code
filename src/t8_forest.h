@@ -31,7 +31,7 @@
 
 #include <t8_cmesh.h>
 #include <t8_element.h>
-#include <t8_data/t8_containers.h>
+#include <t8_data/t8_element_array.h>
 
 /** Opaque pointer to a forest implementation. */
 typedef struct t8_forest *t8_forest_t;
@@ -121,7 +121,7 @@ typedef int         (*t8_forest_adapt_t) (t8_forest_t forest,
                                           t8_locidx_t lelement_id,
                                           t8_eclass_scheme_c * ts,
                                           int num_elements,
-                                          t8_element_t * elements[]);
+                                          const t8_element_t * elements[]);
 
   /** Create a new forest with reference count one.
  * This forest needs to be specialized with the t8_forest_set_* calls.
@@ -238,8 +238,9 @@ void                t8_forest_set_copy (t8_forest_t forest,
  * \param [in] adapt_fn     The adapt function used on commiting.
  * \param [in] replace_fn   The replace function to be used in \b adapt_fn.
  * \param [in] recursive    A flag specifying whether adaptation is to be done recursively
- *                          or not. If the value is zero, adaptation is not recursive
- *                          and it is recursive otherwise.
+ *                          or not. If the value is zero, adaptation is not recursive.
+ *                          If the value is greater than zero, adaptation is recursive.
+ *                          Negative values are not valid.
  * \note This setting can be combined with \ref t8_forest_set_partition and \ref
  * t8_forest_set_balance. The order in which these operations are executed is always
  * 1) Adapt 2) Balance 3) Partition
@@ -342,6 +343,22 @@ void                t8_forest_set_balance (t8_forest_t forest,
                                            const t8_forest_t set_from,
                                            int no_repartition);
 
+/** Like \ref t8_forest_set_balance but with the additional option to disable
+ * balancing and adapting in the same step. This is used for debugging and timing the algorithm.
+ * An application should always use \ref t8_forest_set_balance.
+ * \param [in]      no_balance_with_adapt If true (non-zero) then the balance and adapt steps
+ *                                        will be considered seperately. If false (zero) then
+ *                                        adaptation and balance may be performed simulataneously.
+ * \note Setting \a no_balance_with_adapt to 0 has the same effect as calling \ref t8_forest_set_balance.
+ * \note If \a no_balance_with_adapt is 0, adaptation and balance will only be performed
+ *  simultaneously if adaptation is not recursive and \a set_from is known to be balanced.
+ * \note See also \ref t8_forest_balance_and_adapt.
+ */
+void                t8_forest_set_balance_ext (t8_forest_t forest,
+                                               const t8_forest_t set_from,
+                                               int no_repartition,
+                                               int no_balance_with_adapt);
+
 /** Enable or disable the creation of a layer of ghost elements.
  * On default no ghosts are created.
  * \param [in]      forest    The forest.
@@ -355,7 +372,7 @@ void                t8_forest_set_ghost (t8_forest_t forest, int do_ghost,
 
 /** Like \ref t8_forest_set_ghost but with the additional options to change the
  * ghost algorithm. This is used for debugging and timing the algorithm.
- * An application should almost always use \ref t8_forest_set_ghost.
+ * An application should always use \ref t8_forest_set_ghost.
  * \param [in]      ghost_version If 1, the iterative ghost algorithm for balanced forests is used.
  *                                If 2, the iterativ algorithm for unbalanced forests.
  *                                If 3, the top-down search algorithm for unbalanced forests.
@@ -409,6 +426,16 @@ t8_locidx_t         t8_forest_get_local_num_elements (t8_forest_t forest);
  * \a forest must be committed before calling this function.
   */
 t8_gloidx_t         t8_forest_get_global_num_elements (t8_forest_t forest);
+
+/** Query which type of ghost elements a forest has
+ * \param [in] forest The forest. Must be committed.
+ * \return            One of the possible ghost types. \see t8_ghost_type_t
+ *                    T8_GHOST_NONE     No ghosts.
+ *                    T8_GHOST_FACES    Ghosts across faces (= edges in 2D, = vertices in 1D).
+ *                    T8_GHOST_EDGES    3D only. Ghosts across edges (Currently not supported).
+ *                    T8_GHOST_VERTICES 2D/3D only. Ghosts across vertices (Currently not supported).
+ */
+t8_ghost_type_t     t8_forest_get_ghost_type (const t8_forest_t forest);
 
 /** Return the number of ghost elements of a forest.
  * \param [in]      forest      The forest.

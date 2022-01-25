@@ -210,8 +210,9 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from,
 }
 
 void
-t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from,
-                       int no_repartition)
+t8_forest_set_balance_ext (t8_forest_t forest,
+                           const t8_forest_t set_from,
+                           int no_repartition, int no_balance_with_adapt)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
 
@@ -222,6 +223,15 @@ t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from,
   else {
     /* Repartition during balance */
     forest->set_balance = T8_FOREST_BALANCE_REPART;
+  }
+
+  if (no_balance_with_adapt) {
+    /* Never allow balance and adapt to be done simultaneously */
+    forest->set_balance_and_adapt = T8_FOREST_BALANCE_NO_ADAPT;
+  }
+  else {
+    /* Allow balance and adapt to be done simultaneously */
+    forest->set_balance_and_adapt = T8_FOREST_BALANCE_AND_ADAPT;
   }
 
   if (set_from != NULL) {
@@ -237,6 +247,14 @@ t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from,
   else {
     forest->from_method |= T8_FOREST_FROM_BALANCE;
   }
+}
+
+void
+t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from,
+                       int no_repartition)
+{
+  /* We call the extended set balance function with balance_and_adapt enabled. */
+  t8_forest_set_balance_ext (forest, set_from, no_repartition, 0);
 }
 
 void
@@ -283,9 +301,10 @@ t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from,
   T8_ASSERT (forest->scheme_cxx == NULL);
   T8_ASSERT (forest->set_adapt_fn == NULL);
   T8_ASSERT (forest->set_adapt_recursive == -1);
+  T8_ASSERT (adapt_fn != NULL);
 
   forest->set_adapt_fn = adapt_fn;
-  forest->set_adapt_recursive = recursive != 0;
+  forest->set_adapt_recursive = recursive != 0 ? 1 : 0;
 
   if (set_from != NULL) {
     /* If set_from = NULL, we assume a previous forest_from was set */
@@ -395,11 +414,12 @@ t8_forest_commit (t8_forest_t forest)
     /* populate a new forest with tree and quadrant objects */
     t8_forest_populate (forest);
     forest->global_num_trees = t8_cmesh_get_num_trees (forest->cmesh);
+    /* This forest is definitely balanced */
+    forest->is_balanced = 1;
   }
   else {                        /* set_from != NULL */
     t8_forest_t         forest_from = forest->set_from; /* temporarily store set_from, since we may overwrite it */
 
-    t8_debugf ("[h] from method %i\n", forest->from_method);
     T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
     T8_ASSERT (forest->cmesh == NULL);
     T8_ASSERT (forest->scheme_cxx == NULL);
@@ -440,17 +460,47 @@ t8_forest_commit (t8_forest_t forest)
       SC_CHECK_ABORT (forest->set_from != NULL,
                       "No forest to copy from was specified.");
       t8_forest_copy_trees (forest, forest->set_from, 1);
+      /* This forest is balanced if and only if the set_from is balanced */
+      forest->is_balanced = forest->set_from->is_balanced;
     }
     /* TODO: currently we can only handle copy, adapt, partition, and balance */
 
     /* T8_ASSERT (forest->from_method == T8_FOREST_FROM_COPY); */
     if (forest->from_method & T8_FOREST_FROM_ADAPT) {
+      /* The forest should be adapted */
+      int                 adapt_with_balance = 0, only_adapt = 0;
+      int                 only_adapt_with_balance = 0;
       SC_CHECK_ABORT (forest->set_adapt_fn != NULL,
                       "No adapt function specified");
+      /* If only adapt and balance are set and adapt is not recursive, 
+       * and the set_from forest is balanced, then we can continue below 
+       * with t8_forest_balance_and_adapt, 
+       * but not if the forest settings explicitely forbid it */
       forest->from_method -= T8_FOREST_FROM_ADAPT;
-      if (forest->from_method > 0) {
+      if (forest->from_method <= 0) {
+        /* If this is true, we only need to adapt the forest */
+        only_adapt = 1;
+      }
+      else if (forest->from_method & T8_FOREST_FROM_BALANCE
+               && forest->set_balance_and_adapt == T8_FOREST_BALANCE_AND_ADAPT
+               && forest->set_from->is_balanced
+               && forest->set_adapt_recursive == 0) {
+        /* If this is true, we can use the balance_and_adapt function */
+        adapt_with_balance = 1;
+        forest->from_method -= T8_FOREST_FROM_BALANCE;
+        if (forest->from_method == 0) {
+          /* We only need the balance_and_adapt function */
+          only_adapt_with_balance = 1;
+        }
+      }
+      if (!only_adapt && !only_adapt_with_balance) {
         /* The forest should also be partitioned/balanced.
-         * We first adapt the forest, then balance and then partition */
+         * We first adapt the forest, then balance and then partition.
+         * In the special case that the forest is balanced and it should
+         * be adapted non-recursively and balanced, we alse set it
+         * for balancing here and use the
+         * t8_forest_balance_and_adapt function below.
+         */
         t8_forest_t         forest_adapt;
 
         t8_forest_init (&forest_adapt);
@@ -463,6 +513,16 @@ t8_forest_commit (t8_forest_t forest)
         t8_forest_set_adapt (forest_adapt, forest->set_from,
                              forest->set_adapt_fn,
                              forest->set_adapt_recursive);
+        /* If the original forest was balanced, and the new forest should
+         * be balanced and adaptation is non-recursively, we additionally
+         * set the new forest for balance here. */
+        if (adapt_with_balance) {
+          const int           no_repartition =
+            (forest->set_balance == T8_FOREST_BALANCE_NO_REPART);
+          t8_forest_set_balance (forest_adapt, forest->set_from,
+                                 no_repartition);
+        }
+
         /* Set profiling if enabled */
         t8_forest_set_profiling (forest_adapt, forest->profile != NULL);
         t8_forest_commit (forest_adapt);
@@ -471,16 +531,34 @@ t8_forest_commit (t8_forest_t forest)
         /* Set the user data of forest_from to forest_adapt */
         t8_forest_set_user_data (forest_adapt,
                                  t8_forest_get_user_data (forest_from));
-        /* If profiling is enabled copy the runtime of adapt. */
+        /* If profiling is enabled copy the runtime of adapt and balance. */
         if (forest->profile != NULL) {
           forest->profile->adapt_runtime =
             forest_adapt->profile->adapt_runtime;
+          if (adapt_with_balance) {
+            forest->profile->balance_runtime =
+              forest_adapt->profile->balance_runtime;
+            forest->profile->balance_rounds =
+              forest_adapt->profile->balance_rounds;
+          }
         }
       }
+      else if (only_adapt_with_balance) {
+        t8_debugf ("[H] Adapt with balance\n");
+        /* This forest should only be adapted non-recursively and balanced */
+        t8_forest_copy_trees (forest, forest->set_from, 0);
+        t8_forest_balance_and_adapt (forest);
+        /* The forest is now definitely balanced */
+        forest->is_balanced = 1;
+      }
       else {
+        T8_ASSERT (only_adapt);
         /* This forest should only be adapted */
         t8_forest_copy_trees (forest, forest->set_from, 0);
         t8_forest_adapt (forest);
+        /* We cannot say whether the forest is now balanced.
+         * So we set the flag to 0 */
+        forest->is_balanced = 0;
       }
     }
     if (forest->from_method & T8_FOREST_FROM_PARTITION) {
@@ -524,6 +602,8 @@ t8_forest_commit (t8_forest_t forest)
         forest->trees = sc_array_new (sizeof (t8_tree_struct_t));
         /* partition the forest */
         t8_forest_partition (forest);
+        /* The new forest is balanced if and only if the old one is */
+        forest->is_balanced = forest->set_from->is_balanced;
       }
     }
     if (forest->from_method & T8_FOREST_FROM_BALANCE) {
@@ -542,6 +622,8 @@ t8_forest_commit (t8_forest_t forest)
         /* balance with repartition */
         t8_forest_balance (forest, 1);
       }
+      /* This forest is now definitely balanced */
+      forest->is_balanced = 1;
     }
 
     if (forest_from != forest->set_from) {
@@ -607,10 +689,11 @@ t8_forest_commit (t8_forest_t forest)
                                forest->profile != NULL);
   }
 
-  if (forest->mpisize > 1) {
-    /* Construct a ghost layer, if desired */
-    if (forest->do_ghost) {
-      /* TODO: ghost type */
+  /* Construct a ghost layer, if desired */
+  if (forest->do_ghost) {
+    if (forest->mpisize > 1) {
+      /* We currently only support face ghosts. */
+      T8_ASSERT (forest->ghost_type == T8_GHOST_FACES);
       switch (forest->ghost_algorithm) {
       case 1:
         t8_forest_ghost_create_balanced_only (forest);
@@ -625,8 +708,23 @@ t8_forest_commit (t8_forest_t forest)
         SC_ABORT ("Invalid choice of ghost algorithm");
       }
     }
-    forest->do_ghost = 0;
   }
+#ifdef T8_ENABLE_DEBUG
+  else {
+    /* Ensure that the ghost type is type NONE */
+    T8_ASSERT (forest->ghost_type == T8_GHOST_NONE);
+  }
+#endif
+  /* Set the do_ghost variable to 0, since the forest will now be committed.
+   * Thus, the precommit settings are invalid. */
+  forest->do_ghost = 0;
+
+  /* Double check that the forest is balanced, if we balanced it */
+#ifdef T8_ENABLE_DEBUG
+  if (forest->is_balanced) {
+    T8_ASSERT (t8_forest_is_balanced (forest));
+  }
+#endif
 }
 
 t8_locidx_t
@@ -643,6 +741,13 @@ t8_forest_get_global_num_elements (t8_forest_t forest)
   T8_ASSERT (t8_forest_is_committed (forest));
 
   return forest->global_num_elements;
+}
+
+t8_ghost_type_t
+t8_forest_get_ghost_type (const t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  return forest->ghost_type;
 }
 
 t8_locidx_t
@@ -942,6 +1047,8 @@ t8_locidx_t
 t8_forest_get_tree_element_offset (t8_forest_t forest, t8_locidx_t ltreeid)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (0 <= ltreeid
+             && ltreeid < t8_forest_get_num_local_trees (forest));
 
   return t8_forest_get_tree (forest, ltreeid)->elements_offset;
 }

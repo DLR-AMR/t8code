@@ -81,7 +81,7 @@ typedef p4est_locidx_t t8_topidx_t;
 /** Macro to get the absolute value of a t8_topidx_t */
 #define T8_TOPIDX_ABS(x) P4EST_LOCIDX_ABS(x)
 /** Comparison function for t8_topidx_t */
-#define t8_compare_topidx(v,w) p4est_locidx_compare(v,w)
+#define t8_compare_topidx p4est_locidx_compare
 
 /** A type for processor-local indexing. */
 typedef p4est_locidx_t t8_locidx_t;
@@ -92,7 +92,7 @@ typedef p4est_locidx_t t8_locidx_t;
 /** Maximum possible value of a t8_locidx_t */
 #define T8_LOCIDX_MAX P4EST_LOCIDX_MAX
 /** Comparison function for t8_locidx_t */
-#define t8_compare_locidx(v,w) p4est_locidx_compare(v,w)
+#define t8_compare_locidx p4est_locidx_compare
 
 /** A type for global indexing that holds really big numbers. */
 typedef p4est_gloidx_t t8_gloidx_t;
@@ -101,7 +101,7 @@ typedef p4est_gloidx_t t8_gloidx_t;
 /** Macro to get the absolute value of a t8_gloidx_t */
 #define T8_GLOIDX_ABS(x) P4EST_GLOIDX_ABS(x)
 /** Comparison function for t8_gloidx_t */
-#define t8_compare_gloidx(v,w) p4est_gloidx_compare(v,w)
+#define t8_compare_gloidx p4est_gloidx_compare
 
 /** A type for storing SFC indices */
 typedef uint64_t    t8_linearidx_t;
@@ -122,7 +122,7 @@ typedef enum
   T8_MPI_PARTITION_FOREST,  /**< Used for forest partitioning */
   T8_MPI_GHOST_FOREST,  /**< Used for for ghost layer creation */
   T8_MPI_GHOST_EXC_FOREST,  /**< Used for ghost data exchange */
-  T8_MPI_TAG_LAST
+  T8_MPI_TAG_LAST /**< First unused tag */
 }
 t8_MPI_tag_t;
 

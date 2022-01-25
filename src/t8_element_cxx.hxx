@@ -259,7 +259,8 @@ public:
    * \param [in] elem     This must be a valid element.
    * \return              The child id of elem.
    */
-  virtual int         t8_element_child_id (const t8_element_t * elem) = 0;
+  virtual int         t8_element_child_id (const t8_element_t * elem) const =
+    0;
 
   /** Compute the ancestor id of an element, that is the child id
    * at a given level.
@@ -275,7 +276,8 @@ public:
    *                      \b ts has children.
    * \return              Zero if \b fam is not a family, nonzero if it is.
    */
-  virtual int         t8_element_is_family (t8_element_t ** fam) = 0;
+  virtual int         t8_element_is_family (const t8_element_t ** fam) const =
+    0;
 
   /* TODO: This could be problematic for pyramids, since elem1 and elem2
    *       could be of different classes. Would need two eclass_schemes as input */
@@ -697,7 +699,7 @@ public:
   /** Deallocate an array of elements.
    * \param [in] length   The number of elements in the array.
    * \param [in,out] elems On input an array of \b length many allocated
-   *                      element pointers.
+   *                      element pointers. May be NULL if \a length is 0.
    *                      On output all these pointers will be freed.
    *                      \b elem itself will not be freed by this function.
    */

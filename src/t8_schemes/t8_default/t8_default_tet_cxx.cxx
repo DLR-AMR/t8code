@@ -151,8 +151,12 @@ t8_default_scheme_tet_c::t8_element_children (const t8_element_t * elem,
   t8_dtet_childrenpv ((const t8_dtet_t *) elem, (t8_dtet_t **) c);
 }
 
+/* *INDENT-OFF* */
+/* indent bug, indent adds a second "const" modifier */
 int
-t8_default_scheme_tet_c::t8_element_child_id (const t8_element_t * elem)
+t8_default_scheme_tet_c::t8_element_child_id (const t8_element_t * elem) const
+/* *INDENT-ON* */
+
 {
   T8_ASSERT (t8_element_is_valid (elem));
   return t8_dtet_child_id ((const t8_dtet_t *) elem);
@@ -165,8 +169,12 @@ t8_default_scheme_tet_c::t8_element_ancestor_id (const t8_element_t * elem,
   return t8_dtet_ancestor_id ((t8_dtet_t *) elem, level);
 }
 
+/* *INDENT-OFF* */
+/* indent bug, indent adds a second "const" modifier */
 int
-t8_default_scheme_tet_c::t8_element_is_family (t8_element_t ** fam)
+t8_default_scheme_tet_c::t8_element_is_family (const t8_element_t ** fam) const
+/* *INDENT-ON* */
+
 {
 #ifdef T8_ENABLE_DEBUG
   int                 i;
@@ -563,7 +571,6 @@ t8_default_scheme_tet_c::t8_element_vertex_reference_coords (const
 int
 t8_default_scheme_tet_c::t8_element_is_valid (const t8_element_t * t) const
 /* *INDENT-ON* */
-
 {
   return t8_dtet_is_valid ((const t8_dtet_t *) t);
 }

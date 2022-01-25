@@ -915,11 +915,8 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm,
     /* Get the number of bytes to receive */
     mpiret = sc_MPI_Get_count (status, sc_MPI_BYTE, &recv_bytes);
     SC_CHECK_MPI (mpiret);
-  }
-  t8_debugf ("Receiving message of %i bytes from process %i\n", recv_bytes,
-             proc);
-
-  if (proc != forest->mpirank) {
+    t8_debugf ("Receiving message of %i bytes from process %i\n", recv_bytes,
+               proc);
     /* allocate the receive buffer */
     recv_buffer = T8_ALLOC (char, recv_bytes);
     /* receive the message */
@@ -931,6 +928,8 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm,
   else {
     recv_buffer = sent_to_self;
     recv_bytes = byte_to_self;
+    t8_debugf ("Receiving message of %i bytes from process %i\n", recv_bytes,
+               proc);
   }
   /* Read the number of trees, it is the first locidx_t in recv_buffer */
   num_trees = *(t8_locidx_t *) recv_buffer;
