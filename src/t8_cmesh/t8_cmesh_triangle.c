@@ -46,7 +46,7 @@
  * \return                  The number of read arguments of the last line read.
  *                          negative on failure */
 static int
-t8_cmesh_triangle_read_next_line (char **line, size_t * n, FILE * fp)
+t8_cmesh_triangle_read_next_line (char **line, size_t *n, FILE * fp)
 {
   int                 retval;
 
