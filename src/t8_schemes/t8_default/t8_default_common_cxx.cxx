@@ -127,13 +127,12 @@ t8_gloidx_t
   t8_default_scheme_common_c::t8_element_count_leafs (const t8_element_t * t,
                                                       int level)
 {
-  int                 element_level = t8_element_level (t);
-  int                 dim = t8_eclass_to_dimension[eclass];
+#if T8_ENABLE_DEBUG
   if (eclass == T8_ECLASS_PYRAMID) {
-    int                 level_diff = level - element_level;
-    return element_level > level ? 0 :
-      2 * sc_intpow64 (8, level_diff) - sc_intpow64 (6, level_diff);
+    SC_ABORT
+      ("Cannot compute leaf count of pyramids via the default_common implementation");
   }
+#endif
   int                 element_level = t8_element_level (t);
   int                 dim = t8_eclass_to_dimension[eclass];
   return count_leafs_from_level (element_level, level, dim);
