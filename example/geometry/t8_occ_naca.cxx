@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* This is step3 of the t8code tutorials.
+/* In this example, we will generate a .brep geometry file of a NACA
  * After generating a coarse mesh (step1) and building a uniform forest
  * on it (step2), we will now adapt (= refine and coarsen) the forest
  * according to our own criterion.
@@ -83,23 +83,49 @@ T8_EXTERN_C_BEGIN ();
  * \param [in] num_elements The number of elements. If this is > 1 we know that we look at a family.
  * \param [in] elements The element or family of elements to consider for refinement/coarsening.
  */
+
+
+struct t8_naca_surface_adapt_data
+{
+  int                 n_surfaces; /* Amount of surfaces we want to refine */
+  int                *surfaces;   /* Array with surface indices */
+  int                *levels;     /* Array with refinement levels */
+};
+
 int
-t8_step3_adapt_callback (t8_forest_t forest,
+t8_naca_surface_adapt_callback (t8_forest_t forest,
                          t8_forest_t forest_from,
                          t8_locidx_t which_tree,
                          t8_locidx_t lelement_id,
                          t8_eclass_scheme_c * ts,
                          int num_elements, t8_element_t * elements[])
 {
+  /* We retrieve the adapt data */
+  const struct t8_naca_surface_adapt_data *adapt_data = (const struct t8_naca_surface_adapt_data *) t8_forest_get_user_data (forest);
+  T8_ASSERT (adapt_data != NULL);
+
+  
   for (int iface = 0; iface < 6; ++iface)
   {
+    /* We look if a face of the element lies on a face of the tree */
     if (ts->t8_element_is_root_boundary(elements[0], iface))
     {
+      /* We retrieve the face it lies on */
       int tree_face = ts->t8_element_tree_face(elements[0], iface);
+      /* We retrieve the geometry information of the tree */
       const int *faces = (const int *) t8_cmesh_get_attribute (t8_forest_get_cmesh(forest), t8_get_package_id (),
                                                                T8_CMESH_OCC_FACE_ATTRIBUTE_KEY,
                                                                which_tree);
-      if (faces[tree_face] == 2 || faces[tree_face] == 7 || faces[tree_face] == 14 || faces[tree_face] == 22) return 1;
+      /* If the tree face has a linked surface and it is in the list we reine it */
+      for (int isurface = 0; isurface < adapt_data->n_surfaces; ++isurface)
+      {
+        if (faces[tree_face] == adapt_data->surfaces[isurface] &&
+            ts->t8_element_level(elements[0]) < adapt_data->levels[isurface])
+        {
+          /* Refine this element */
+          return 1;
+        }
+      }
     }
   }
   /* Do not change this element. */
@@ -132,37 +158,50 @@ main (int argc, char **argv)
   /* We will use MPI_COMM_WORLD as a communicator. */
   comm = sc_MPI_COMM_WORLD;
 
-  cmesh = t8_cmesh_from_msh_file ("naca6412", 0, sc_MPI_COMM_WORLD, 3, 0, 1);
-  forest =
-    t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0,
-                           comm);
+  /* Read in the naca mesh from the msh file and the naca geometry from the brep file */
+  cmesh = t8_cmesh_from_msh_file ("source/naca6412", 0, sc_MPI_COMM_WORLD, 3, 0, 1);
+  /* Construct a forest from the cmesh */
+  forest = t8_forest_new_uniform (cmesh,
+                                  t8_scheme_new_default_cxx (),
+                                  level,
+                                  0,
+                                  comm);
 
   /* Write forest to vtu files. */
   t8_forest_write_vtk (forest, prefix_uniform);
   t8_global_productionf ("Wrote uniform forest to vtu files: %s*\n",
                          prefix_uniform);
 
+  /* Generate the adapt data. We refine the surfaces in the array surfaces[]
+   * to the levels specified in the array levels[]. The surface indices can be visualized by opening
+   * the brep file in the Gmsh GUI and turning on the visibility of surface tags 
+   * (Tools->Options->Geometry->Surface labels in Version 4.8.4) */
+  int surfaces[4] = {2, 8, 14, 19};
+  int levels[4] =   {1, 1,  1,  1};
+  struct t8_naca_surface_adapt_data adapt_data = {
+    4,              /* Amount of surfaces we want to refine */
+    surfaces,       /* Array with surface indices */
+    levels          /* Array with refinement levels */
+  };
   /* Adapt the forest. We can reuse the forest variable, since the new adapted
    * forest will take ownership of the old forest and destroy it.
    * Note that the adapted forest is a new forest, though. */
-  for (int ilevel = 0; ilevel < 5; ++ilevel)
-  {
-    T8_ASSERT (t8_forest_is_committed (forest));
-    forest = t8_forest_new_adapt (forest, t8_step3_adapt_callback, 0, 0, NULL);
-  }
+  T8_ASSERT (t8_forest_is_committed (forest));
+  forest = t8_forest_new_adapt (forest, t8_naca_surface_adapt_callback, 1, 0, &adapt_data);
 
-  //t8_forest_t balanced_forest;
-  //t8_forest_init (&balanced_forest);
-  //t8_forest_set_balance (balanced_forest, forest, 0);
-  //t8_forest_commit (balanced_forest);
+  /* Now we can balance the forest */
+  t8_forest_t balanced_forest;
+  t8_forest_init (&balanced_forest);
+  t8_forest_set_balance (balanced_forest, forest, 0);
+  t8_forest_commit (balanced_forest);
 
   /* Write forest to vtu files. */
-  t8_forest_write_vtk (forest, prefix_adapt);
+  t8_forest_write_vtk (balanced_forest, prefix_adapt);
   t8_global_productionf ("Wrote adapted forest to vtu files: %s*\n",
                          prefix_adapt);
 
   /* Destroy the forest. */
-  t8_forest_unref (&forest);
+  t8_forest_unref (&balanced_forest);
   t8_global_productionf ("Destroyed forest.\n");
 
   sc_finalize ();
