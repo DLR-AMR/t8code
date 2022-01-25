@@ -264,6 +264,32 @@ int                 t8_dtet_is_ancestor (const t8_dtet_t * t,
  */
 t8_linearidx_t      t8_dtet_linear_id (const t8_dtet_t * t, int level);
 
+
+/** Computes the linear position of a tetrahedron in a uniform grid up to a given level.
+ * \param [in] t  tetrahedron whose id will be computed.
+ * \param [in] level level of uniform grid to be considered.
+ * \param [in] stop  level, where the computation should stop.
+ * \return Returns the linear position of this tetrahedron on a grid of level \a level.
+ * \note This id is not the Morton index.
+ */
+t8_linearidx_t
+     t8_dtet_linear_id_with_level (const t8_dtet_t * t, int level, int stop);
+
+/**
+ * Same as init_linear_id, but we only consider the subtree. Used for computing the index of a
+ * tetrahedron lying in a pyramid
+ * \param [in, out] t   Existing triangle whose data will be filled
+ * \param id            Index to be considered
+ * \param start_level   The level of the root of the subtree
+ * \param end_level     Level of uniform grid to be considered
+ * \param parenttype    The type of the parent.
+ */
+void
+ t8_dtet_init_linear_id_with_level (t8_dtet_t * t, t8_linearidx_t id,
+                                    int start_level, int end_level,
+                                    t8_dtet_type_t parenttype);
+
+
 /** Initialize a tetrahedron as the tetrahedron with a given global id in a uniform
  *  refinement of a given level. *
  * \param [in,out] t  Existing tetrahedron whose data will be filled.
