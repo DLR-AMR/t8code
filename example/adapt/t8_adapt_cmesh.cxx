@@ -48,6 +48,33 @@ t8_adapt_cmesh_init_forest (sc_MPI_Comm comm, int level)
   return forest;
 }
 
+/*Idee: cmesh als user_data mitgeben. */
+typedef struct
+{
+  t8_cmesh_t          cmesh_to_adapt_from;
+} t8_adapt_cmesh_user_data_t;
+
+static int
+t8_adapt_cmesh_search_callback (t8_forest_t forest,
+                                t8_locidx_t ltreeid,
+                                const t8_element_t *
+                                element,
+                                const int is_leaf,
+                                t8_element_array_t *
+                                leaf_elements,
+                                t8_locidx_t
+                                tree_leaf_index, void *query,
+                                size_t query_index)
+{
+  /*Identifiziere Element in forest, die einen Mittelpunkt eines
+     Elements in  cmesh_to_adapt_from enthalten. 
+     Falls ja, verfeinere und suche weiter (bis maxlevel)
+     Falls nein -> fertig */
+  t8_adapt_cmesh_user_data_t *user_data =
+    (t8_adapt_cmesh_user_data_t *) t8_forest_get_user_data (forest);
+  t8_locidx_t         current_tree_id, num_trees;
+}
+
 int
 main (int argc, char **argv)
 {
@@ -91,13 +118,13 @@ main (int argc, char **argv)
   else if (parsed >= 0 /* TODO: Check correct arguments */ ) {
     t8_cmesh_t          cmesh_to_adapt_from =
       t8_adapt_cmesh_init_adapt_geometry (comm);
-
-    /* - cmesh initialisieren */
     t8_forest_t         forest = t8_adapt_cmesh_init_forest (comm, level);
-    /* - cmesh und forest initialisieren. */
 
     /* Identifiziere Element in forest, die einen Mittelpunkt eines
        Elements in  cmesh_to_adapt_from enthalten. */
+    /*[D] Wäre nicht besser: Identifiziere Elemente in forest, 
+       deren Mittelpunkt in einem Element des cmesh_to_adapt_from liegen? Im Grobgitter 
+       beschreibt, der Mittelpunkt das Element sehr schlecht. */
     /* Adaptiere forest, so dass alle identifizierten Elemente verfeienrt werden. */
     t8_cmesh_destroy (&cmesh_to_adapt_from);
     t8_forest_unref (&forest);
