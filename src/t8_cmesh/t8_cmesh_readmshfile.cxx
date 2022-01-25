@@ -1704,7 +1704,6 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
       { 
         #if T8_WITH_OCC
         t8_geometry_occ *geometry_occ = t8_geometry_occ_new(dim, fileprefix, "brep_geometry");
-        //t8_geometry_occ *geometry_occ = t8_geometry_from_brep_file (fileprefix, vertices, dim, occ_tol, occ_debugfile);
         t8_cmesh_msh_file_4_read_eles (cmesh, file, vertices, &vertex_indices, dim, geometry_occ, occ_tol);
         geometry = geometry_occ;
         #else /* !T8_WITH_OCC */
