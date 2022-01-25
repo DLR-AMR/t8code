@@ -150,9 +150,9 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
 
   /* refinement settings */
                       initlevel = 5;    /* initial uniform refinement level */
-  int                 minlevel = initlevel;     /* lowest level allowed for coarsening */
-                      adaptlevel = 3;
-  int                 maxlevel = initlevel + adaptlevel;        /* highest level allowed for refining */
+  int                 minlevel = initlevel;   /* lowest level allowed for coarsening */
+                      adaptlevel = 3;   /* number of allowed adapt levels */
+  int                 maxlevel = initlevel + adaptlevel;    /* highest level allowed for refining */
 
   int                 refine_recursive = 1;
   int                 do_exemplary_refinement = 0;
@@ -167,12 +167,12 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
   int                 do_transition = 1;
 
   /* timestep settings */
-  int                 do_different_refinements = 0;     /* to change the refinement during multiple num_timesteps */
+  int                 do_different_refinements = 0;   /* to change the refinement during multiple num_timesteps */
   int                 num_timesteps = 1;    /* Number of times, the mesh is refined */
-  double              delta = 0.01;      /* The value, the radius increases after each timestep */
-  int                 i; /* timestep count */
+  double              delta = 0.01;   /* The value, the radius increases after each timestep */
+  int                 i;  /* timestep count */
 
-  int                 do_vtk = 1; /* print results */
+  int                 do_vtk = 1;   /* print results */
 
   /* initializing the forest */
   t8_forest_init (&forest);
@@ -216,10 +216,10 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
 
   /* Midpoint and radius of a sphere */
   /* shift the midpoiunt of the circle by (shift_x,shift_y) to ensure midpoints on corners of the uniform mesh */
-  int                 shift_x = 0;      /* shift_x should be smaler than 2^minlevel / 2 such that midpoint stays in the quadrilateral tree */
-  int                 shift_y = 0;
-  sdata.mid_point[0] = 0.25;     //1.0 / 2.0 + shift_x * 1.0/(1 << (minlevel));
-  sdata.mid_point[1] = 0.25;     //1.0 / 2.0 + shift_y * 1.0/(1 << (minlevel)); 
+  int  shift_x = 0;      /* shift_x, shift_y should be smaler than 2^minlevel / 2 such that midpoint stays in the quadrilateral tree */
+  int  shift_y = 0;
+  sdata.mid_point[0] = 0.25;    // 1.0 / 2.0 + shift_x * 1.0/(1 << (minlevel));
+  sdata.mid_point[1] = 0.25;    // 1.0 / 2.0 + shift_y * 1.0/(1 << (minlevel)); 
   sdata.mid_point[2] = 0;
   sdata.radius = 0.1;
 
@@ -304,7 +304,7 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
 int
 main (int argc, char **argv)
 {
-  #if 1 /* standard: only one run */
+#if 1 /* standard: only one run */
   int                 mpiret;
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -319,7 +319,7 @@ main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
 
 
-  #else /* Can be used for benchmarks. Executes the adaptation several times and with possibly differing init and adapt levels and returns the mean runtime */
+#else /* Can be used for benchmarks. Executes the adaptation several times and with possibly differing init and adapt levels and returns the mean runtime */
   int init_min = 9, init_max = 9, adapt_min = 2, adapt_max = 5;
   int repeat, init_count, adapt_count, repitition = 5;
   double commit_time[(adapt_max - adapt_min + 1) * (init_max - init_min + 1) * repitition] = {0};
@@ -358,7 +358,7 @@ main (int argc, char **argv)
     count += repitition;
     t8_productionf ("init: %i  time commit sum: %f  commit time mean: %f\n", i/(adapt_max - adapt_min + 1) + init_min, commit_time_sum, commit_time_sum/repitition);
   }
-  #endif
+#endif
   
   return 0;
 }

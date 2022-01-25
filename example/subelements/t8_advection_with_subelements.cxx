@@ -396,104 +396,11 @@ t8_advect_level_set_volume (const t8_advect_problem_t * problem)
   return global_volume;
 }
 
-/* Compute the relative l_infty error of the stored phi values compared to a
+/* Compute the mean l_1 error of the stored phi values compared to a
  * given analytical function at time problem->t */
-static double
-t8_advect_l_infty_rel (const t8_advect_problem_t * problem,
-                       t8_example_level_set_fn analytical_sol,
-                       double distance)
-{
-  t8_locidx_t         num_local_elements, ielem;
-  t8_advect_element_data_t *elem_data;
-  double              phi;
-  double              ana_sol;
-  double              error[2] = {-2, 0}, global_error[2], el_error, diff;
-
-  num_local_elements = t8_forest_get_local_num_elements (problem->forest);
-  for (ielem = 0; ielem < num_local_elements; ielem++) {
-    elem_data = (t8_advect_element_data_t *)
-      t8_sc_array_index_locidx (problem->element_data, ielem);
-
-    /* Compute the analytical solution */
-    double ana_sol_transported[3] = {};
-    ana_sol_transported[0] = elem_data->midpoint[0] - 1 * 2; /* T * u[0] */
-    ana_sol_transported[1] = elem_data->midpoint[1] - 1 * 1;
-    ana_sol_transported[2] = elem_data->midpoint[2];
-    ana_sol =
-      analytical_sol (ana_sol_transported, problem->t,
-                      problem->udata_for_phi);
-
-    /* Compute the error as the stored value at the midpoint of this element
-      * minus the solution at this midpoint */
-    phi = t8_advect_element_get_phi (problem, ielem);
-    diff = phi - ana_sol;
-    el_error = (diff > 0) ? diff : -diff;
-    error[0] = SC_MAX (error[0], el_error);
-    /* Compute the l_infty norm of the analytical solution */
-
-    error[1] = SC_MAX (error[1], (ana_sol > 0) ? ana_sol : -ana_sol);
-  }
-  /* Compute the maximum of the error among all processes */
-  sc_MPI_Allreduce (&error, &global_error, 2, sc_MPI_DOUBLE, sc_MPI_MAX, problem->comm);
-
-  /* Return the relative error, that is the l_infty error divided by
-   * the l_infty norm of the analytical solution */
-  return error[0] / error[1];
-}
-
-/* Compute the relative l_infty error of the stored phi values compared to a
- * given analytical function at time problem->t */
-static double
-t8_advect_l_infty_abs (const t8_advect_problem_t * problem,
-                       t8_example_level_set_fn analytical_sol,
-                       double distance)
-{
-  t8_locidx_t         num_local_elements, ielem;
-  t8_advect_element_data_t *elem_data;
-  double              phi;
-  double              ana_sol;
-  double              error[2] = {
-    -1, 0
-  }, el_error, global_error[2], diff;
-
-  num_local_elements = t8_forest_get_local_num_elements (problem->forest);
-  for (ielem = 0; ielem < num_local_elements; ielem++) {
-    elem_data = (t8_advect_element_data_t *)
-      t8_sc_array_index_locidx (problem->element_data, ielem);
-
-    /* Compute the analytical solution */
-    double ana_sol_transported[3] = {};
-    ana_sol_transported[0] = elem_data->midpoint[0] - 1 * 2; /* T * u[0] */
-    ana_sol_transported[1] = elem_data->midpoint[1] - 1 * 1;
-    ana_sol_transported[2] = elem_data->midpoint[2];
-    ana_sol =
-      analytical_sol (ana_sol_transported, problem->t,
-                      problem->udata_for_phi);
-#if 1
-    if (fabs (ana_sol) < distance)
-#endif
-    {
-      /* Compute the error as the stored value at the midpoint of this element
-       * minus the solution at this midpoint */
-      phi = t8_advect_element_get_phi (problem, ielem);
-      diff = phi - ana_sol;
-      el_error = (diff > 0) ? diff : -diff;
-      error[0] = SC_MAX (error[0], el_error);
-      /* Compute the l_infty norm of the analytical solution */
-      // error[1] = SC_MAX (error[1], ana_sol);
-    }
-  }
-  /* Compute the maximum of the error among all processes */
-  sc_MPI_Allreduce (&error, &global_error, 2, sc_MPI_DOUBLE, sc_MPI_MAX, problem->comm);
-
-  /* Return the relative error, that is the l_infty error divided by
-   * the l_infty norm of the analytical solution */
-  return error[0];
-}
-
 static double
 t8_advect_l1_error_mean (const t8_advect_problem_t * problem,
-                   t8_example_level_set_fn analytical_sol, double distance)
+                         t8_example_level_set_fn analytical_sol)
 {
   t8_locidx_t         num_local_elements, ielem;
   t8_advect_element_data_t *elem_data;
@@ -505,62 +412,30 @@ t8_advect_l1_error_mean (const t8_advect_problem_t * problem,
   for (ielem = 0; ielem < num_local_elements; ielem++) {
     elem_data = (t8_advect_element_data_t *)
       t8_sc_array_index_locidx (problem->element_data, ielem);
-    /* Compute the analytical solution at time T */
+    /* Compute the analytical solution at time T.
+     * This does only work for a constant flow u. 
+     * Otherwise, make sure that u_0 = u_T, where u_0 is the initial solution and u_T the solution at time T. */
     double ana_sol_transported[3] = {};
     ana_sol_transported[0] = elem_data->midpoint[0] - 1 * 2; /* T * u[0] */
-    ana_sol_transported[1] = elem_data->midpoint[1] - 1 * 1;
+    ana_sol_transported[1] = elem_data->midpoint[1] - 1 * 1; /* T * u[1] */
     ana_sol_transported[2] = elem_data->midpoint[2];
     ana_sol =
       analytical_sol (ana_sol_transported, problem->t,
                       problem->udata_for_phi);
 
-    /* Compute the error as the stored value at the midpoint of this element
-      * minus the solution at this midpoint */
+    /* Compute the error as the stored value at the midpoint of this element minus the solution at this midpoint */
     phi = t8_advect_element_get_phi (problem, ielem);
     diff = phi - ana_sol;
-    error += (diff > 0) ? diff : -diff; /* add absolute value */
+    error += fabs (diff); /* add absolute difference */
   }
-
+  /* return mean l1 error */
   return error / num_local_elements;
 }
 
+/* Compute the relative l_2 error of the stored phi values compared to a
+ * given analytical function at time problem->t */
 static double
 t8_advect_l_2_rel (const t8_advect_problem_t * problem,
-                   t8_example_level_set_fn analytical_sol, double distance)
-{
-  t8_locidx_t         num_local_elements, ielem;
-  t8_advect_element_data_t *elem_data;
-  double              phi;
-  double              diff, ana_sol;
-  double              error[2] = {0, 0}, el_error;
-
-  num_local_elements = t8_forest_get_local_num_elements (problem->forest);
-  for (ielem = 0; ielem < num_local_elements; ielem++) {
-    elem_data = (t8_advect_element_data_t *)
-      t8_sc_array_index_locidx (problem->element_data, ielem);
-    /* Compute the analytical solution at time T */
-    double ana_sol_transported[3] = {};
-    ana_sol_transported[0] = elem_data->midpoint[0] - 1 * 2; /* T * u[0] */
-    ana_sol_transported[1] = elem_data->midpoint[1] - 1 * 1;
-    ana_sol_transported[2] = elem_data->midpoint[2];
-    ana_sol =
-      analytical_sol (ana_sol_transported, problem->t,
-                      problem->udata_for_phi);
-
-    /* Compute the error as the stored value at the midpoint of this element
-      * minus the solution at this midpoint */
-    phi = t8_advect_element_get_phi (problem, ielem);
-    diff = phi - ana_sol;
-    el_error = diff * diff;
-    error[0] += el_error;
-    error[1] += ana_sol * ana_sol;
-  }
-
-  return sqrt (error[0]) / sqrt (error[1]);
-}
-
-static double
-t8_advect_l_2_abs (const t8_advect_problem_t * problem,
                    t8_example_level_set_fn analytical_sol, double distance)
 {
   t8_locidx_t         num_local_elements, ielem, count = 0;
@@ -575,13 +450,9 @@ t8_advect_l_2_abs (const t8_advect_problem_t * problem,
   for (ielem = 0; ielem < num_local_elements; ielem++) {
     elem_data = (t8_advect_element_data_t *)
       t8_sc_array_index_locidx (problem->element_data, ielem);
-    /* Compute the analytical solution at time T (transported by (0.2,0.4)) */
-    double ana_sol_transported[3] = {};
-    ana_sol_transported[0] = elem_data->midpoint[0] - 1 * 2; /* T * u[0] */
-    ana_sol_transported[1] = elem_data->midpoint[1] - 1 * 1;
-    ana_sol_transported[2] = elem_data->midpoint[2];
+    /* Compute the analytical solution */
     ana_sol =
-      analytical_sol (ana_sol_transported, problem->t,
+      analytical_sol (elem_data->midpoint, problem->t,
                       problem->udata_for_phi);
 #if 1
     if (fabs (ana_sol) < distance)
@@ -600,11 +471,56 @@ t8_advect_l_2_abs (const t8_advect_problem_t * problem,
   t8_debugf ("[advect] L_2 %e  %e\n", error[0], error[1]);
   t8_debugf ("[advect] L_2 %i elems\n", count);
   /* Compute the maximum of the error among all processes */
-  sc_MPI_Allreduce (&error, &global_error, 2, sc_MPI_DOUBLE, sc_MPI_SUM, problem->comm);
+  sc_MPI_Allreduce (&error, &global_error, 2, sc_MPI_DOUBLE, sc_MPI_SUM,
+                    problem->comm);
 
   /* Return the relative error, that is the l_infty error divided by
    * the l_infty norm of the analytical solution */
-  return sqrt (error[0]);
+  return sqrt (global_error[0]) / sqrt (global_error[1]);
+}
+
+static double
+t8_advect_l_infty_rel (const t8_advect_problem_t * problem,
+                       t8_example_level_set_fn analytical_sol,
+                       double distance)
+{
+  t8_locidx_t         num_local_elements, ielem;
+  t8_advect_element_data_t *elem_data;
+  double              phi;
+  double              ana_sol;
+  double              error[2] = {
+    -1, 0
+  }, el_error, global_error[2];
+
+  num_local_elements = t8_forest_get_local_num_elements (problem->forest);
+  for (ielem = 0; ielem < num_local_elements; ielem++) {
+    elem_data = (t8_advect_element_data_t *)
+      t8_sc_array_index_locidx (problem->element_data, ielem);
+
+    /* Compute the analytical solution */
+    ana_sol =
+      analytical_sol (elem_data->midpoint, problem->t,
+                      problem->udata_for_phi);
+#if 1
+    if (fabs (ana_sol) < distance)
+#endif
+    {
+      /* Compute the error as the stored value at the midpoint of this element
+       * minus the solution at this midpoint */
+      phi = t8_advect_element_get_phi (problem, ielem);
+      el_error = fabs ((phi - ana_sol));
+      error[0] = SC_MAX (error[0], el_error);
+      /* Compute the l_infty norm of the analytical solution */
+      error[1] = SC_MAX (error[1], ana_sol);
+    }
+  }
+  /* Compute the maximum of the error among all processes */
+  sc_MPI_Allreduce (&error, &global_error, 2, sc_MPI_DOUBLE, sc_MPI_MAX,
+                    problem->comm);
+
+  /* Return the relative error, that is the l_infty error divided by
+   * the l_infty norm of the analytical solution */
+  return global_error[0] / global_error[1];
 }
 
 static double
@@ -2908,16 +2824,12 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                  advect_stat_names[ADVECT_VOL_LOSS]);
 
   #if 0
-  /* Compute abs l_infty and l_2 errors */
-  l_infty_abs = t8_advect_l_infty_abs (problem, phi_0, 20);
-  l_2_abs = t8_advect_l_2_abs (problem, phi_0, 20);
-  
   /* Compute rel l_infty and l_2 errors */
   l_infty_rel = t8_advect_l_infty_rel (problem, phi_0, 20);
   l_2_rel = t8_advect_l_2_rel (problem, phi_0, 20);
   #endif 
 
-  double l1_mean = t8_advect_l1_error_mean (problem, phi_0, 20);
+  double l1_mean = t8_advect_l1_error_mean (problem, phi_0);
   /* Compute number time steps and mean number of elements in forests */
   int global_number_elements_mean = number_elements_global / problem->num_time_steps;
 
@@ -2925,7 +2837,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   t8_advect_global_conservation_check (scaled_global_phi_beginning, scaled_global_phi_end);
   t8_global_essentialf ("[advect] Number time steps: %i\n", problem->num_time_steps);
   t8_global_essentialf ("[advect] Number elements mean: %i\n", global_number_elements_mean);
-  t8_global_essentialf ("[advect] mean difference: %e\n", l1_mean);
+  t8_global_essentialf ("[advect] mean l_1 error: %e\n", l1_mean);
   // t8_global_essentialf ("[advect] l_2_rel: %e\tL_inf_rel: %e\n", l_2_rel, l_infty_rel);
 
   sc_stats_set1 (&problem->stats[ADVECT_ERROR_INF], l_infty_rel,
@@ -3016,7 +2928,7 @@ main (int argc, char *argv[])
                       "Controls how often the mesh is readapted. "
                       "A value of i means, every i-th time step.");
 
-  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 500,
+  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 5000,
                       "How often the vtk output is produced "
                       "\n\t\t\t\t     (after how many time steps). "
                       "A value of 0 is equivalent to using -o.");

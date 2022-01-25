@@ -53,16 +53,16 @@ t8_print_element_data (const t8_element_t * element)
   t8_quad_with_subelements *choosen_element =
     (t8_quad_with_subelements *) element;
 
-  t8_productionf
+  t8_debugf
     ("    Coordinates of anchor: (%i,%i) \n", choosen_element->p4q.x,
      choosen_element->p4q.y);
-  t8_productionf ("    Level:                 %i \n",
+  t8_debugf ("    Level:                 %i \n",
                   choosen_element->p4q.level);
-  t8_productionf ("    Is subelement:         %i \n",
+  t8_debugf ("    Is subelement:         %i \n",
                   choosen_element->dummy_is_subelement);
-  t8_productionf ("    Subelement type:       %i \n",
+  t8_debugf ("    Subelement type:       %i \n",
                   choosen_element->subelement_type);
-  t8_productionf ("    Subelement id:         %i \n",
+  t8_debugf ("    Subelement id:         %i \n",
                   choosen_element->subelement_id);
 }
 
@@ -104,9 +104,9 @@ t8_test_neighbor_function (const t8_forest_t forest_adapt)
                                     element_index_in_tree);
 
     /* print the current element */
-    t8_productionf ("\nCurrent element:\n");
+    t8_debugf ("\nCurrent element:\n");
     t8_print_element_data (current_element);
-    t8_productionf ("    Element index in tree: %i \n", element_index_in_tree);
+    t8_debugf ("    Element index in tree: %i \n", element_index_in_tree);
 
     if (ts->t8_element_test_if_subelement (current_element)) {
       face_number = 3;
@@ -128,9 +128,9 @@ t8_test_neighbor_function (const t8_forest_t forest_adapt)
       int                 i;
       for (i = 0; i < num_neighbors; i++) {
         /* print the neighbor element */
-        t8_productionf ("\nNeighbor at face %i:\n", face_id);
+        t8_debugf ("\nNeighbor at face %i:\n", face_id);
         t8_print_element_data (neighbor_leafs[i]);
-        t8_productionf ("    Element index in tree: %i \n", element_indices[i]);
+        t8_debugf ("    Element index in tree: %i \n", element_indices[i]);
       }
 
       /* free memory */
@@ -143,25 +143,13 @@ t8_test_neighbor_function (const t8_forest_t forest_adapt)
       }
       else {
         /* no neighbor in this case */
-        t8_productionf ("\nNeighbor at face %i:\n", face_id);
-        t8_productionf ("    There is no neighbor (edge of the tree/forest).\n");
+        t8_debugf ("\nNeighbor at face %i:\n", face_id);
+        t8_debugf ("    There is no neighbor (edge of the tree/forest).\n");
       }
     }
   }
   t8_productionf ("Leaf face neighbor runtime: %f\n", time_leaf_face_neighbor);
   t8_productionf ("Number elements in total: %i  subelement_count: %i  leaf_face_neighbor call: %i\n", global_num_elements, subelement_count, leaf_face_neighbor_call_count);
-}
-
-/* A simple refinement criteria in which only the first element of a uniform refined forest is further refined up to maxlevel */
-int
-t8_simple_refinement_criteria (t8_forest_t forest,
-                               t8_forest_t forest_from,
-                               t8_locidx_t which_tree,
-                               t8_locidx_t lelement_id,
-                               t8_eclass_scheme_c * ts,
-                               int num_elements, t8_element_t * elements[])
-{
-  return 0;
 }
 
 /* Initializing and adapting a forest */
@@ -203,10 +191,10 @@ t8_refine_with_subelements (t8_eclass_t eclass)
 
   /* Midpoint and radius of a sphere */
   /* shift the midpoiunt of the circle by (shift_x,shift_y) to ensure midpoints on corners of the uniform mesh */
-  int                 shift_x = 0;      /* shift_x should be smaler than 2^minlevel / 2 such that midpoint stays in the quadrilateral tree */
-  int                 shift_y = 0;
-  sdata.mid_point[0] = 0.5;     //1.0 / 2.0 + shift_x * 1.0/(1 << (minlevel));
-  sdata.mid_point[1] = 0.5;     //1.0 / 2.0 + shift_y * 1.0/(1 << (minlevel)); 
+  int  shift_x = 0;  /* shift_x, shift_y should be smaler than 2^minlevel / 2 such that midpoint stays in the quadrilateral tree */
+  int  shift_y = 0;
+  sdata.mid_point[0] = 0.5;    // 1.0 / 2.0 + shift_x * 1.0/(1 << (minlevel));
+  sdata.mid_point[1] = 0.5;    // 1.0 / 2.0 + shift_y * 1.0/(1 << (minlevel)); 
   sdata.mid_point[2] = 0;
   sdata.radius = 0.3;
 
@@ -220,7 +208,6 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   /* Adapt the mesh according to the user data */
   t8_forest_set_user_data (forest_adapt, &ls_data);
   t8_forest_set_adapt (forest_adapt, forest, t8_common_adapt_level_set, 1);
-  // t8_forest_set_adapt (forest_adapt, forest, t8_simple_refinement_criteria, 1);
 
   if (do_balance) {
     t8_forest_set_balance (forest_adapt, forest, 0);

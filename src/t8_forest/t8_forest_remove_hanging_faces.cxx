@@ -118,10 +118,10 @@ t8_forest_remove_hanging_faces_adapt (t8_forest_t forest,
   if (subelement_type == 0) {   /* in this case, there are no hanging nodes and we do not need to do anything */
     return 0;
   }
-  else if (subelement_type == 15) {     /* there might be a neighbor bug for type 15, thus remove it for now */
+  else if (subelement_type == 15) {    /* hanging faces can, in this case, just be removed via the standard quad refinement */
     return 1;
   }
-  else {                        /* use subelements and add 1 to every type, to avoid refine = 1 */
+  else {    /* use subelements and add 1 to every type, to avoid refine = 1 */
     return subelement_type + 1;
   }
 }
@@ -139,7 +139,6 @@ t8_forest_remove_hanging_faces (t8_forest_t forest)
   t8_global_productionf ("Done t8_forest_remove_hanging_faces.\n");
 }
 
-/* Check whether subelements are used */
 /* TODO: it would be better to have a proper test if all hanging nodes are removed */
 int
 t8_forest_hanging_faces_removed (t8_forest_t forest)
@@ -150,6 +149,7 @@ t8_forest_hanging_faces_removed (t8_forest_t forest)
   t8_tree_t           tree;
   int                 ltree_id, lelement_id, num_elements_in_tree;
 
+  /* Iterate throuh the forest and check whether subelements are used */
   for (ltree_id = 0; ltree_id < t8_forest_get_num_local_trees (forest);
        ltree_id++) {
     tree = (t8_tree_t) t8_sc_array_index_locidx (forest->trees, ltree_id);

@@ -2232,6 +2232,7 @@ t8_subelement_scheme_quad_c::t8_element_get_face_number_of_hypotenuse (const
                                                                        * elem)
 {
   T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (t8_element_check_if_subelement (elem));
 
   int                 location[3] = { };
   t8_element_get_location_of_subelement (elem, location);
@@ -2239,11 +2240,11 @@ t8_subelement_scheme_quad_c::t8_element_get_face_number_of_hypotenuse (const
   int                 split = location[1];
   int                 second = location[2];
 
-  if (!split) {                 /* if the face is not split, then the hypotenuse is always face number one */
+  if (!split) {    /* if the face is not split, then the hypotenuse is always face number one */
     return 1;
   }
   else {
-    if (!second) {
+    if (!second) {    /* otherwise, the subelment is mirrored, depending on the value of 'second' */
       return 0;
     }
     else {
