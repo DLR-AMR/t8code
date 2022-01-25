@@ -184,7 +184,8 @@ t8_test_ghost_exchange (int cmesh_id)
   /* we start with an empty level */
   min_level = SC_MAX (min_level - 1, 0);
   t8_global_productionf
-    ("Testing ghost exchange start level %i\n", min_level);
+    ("Testing ghost exchange start level %i. cmesh_id = %i\n", min_level,
+     cmesh_id);
   for (level = min_level; level < min_level + 3; level++) {
     /* ref the scheme since we reuse it */
     t8_scheme_cxx_ref (scheme);
@@ -219,8 +220,7 @@ test_cmesh_ghost_exchange_all ()
        cmesh_id++) {
     /* This if statement is necessary to make the test work by avoiding specific cmeshes which do not work yet for this test.
      * When the issues are gone, remove the if statement. */
-    if (cmesh_id != 6 && cmesh_id != 89 && !(cmesh_id < 75 && cmesh_id > 63)
-        && !(cmesh_id < 266 && cmesh_id >= 245)) {
+    if (cmesh_id != 6 && cmesh_id != 89 && (cmesh_id < 237 || cmesh_id > 256)) {
       t8_test_ghost_exchange (cmesh_id);
     }
   }

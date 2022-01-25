@@ -74,6 +74,7 @@ include src/Makefile.am
 include src/t8_schemes/t8_default/Makefile.am
 include test/Makefile.am
 include example/basic/Makefile.am
+include example/geometry/Makefile.am
 include example/ghost/Makefile.am
 include example/timings/Makefile.am
 include example/triangle/Makefile.am
@@ -113,6 +114,12 @@ clean-local:
 
 maintainer-clean-local:
 	rm -rf doxygen
+
+# We are using a README.md and not a README file. However, autotools forces us
+# to use a README file. With this rule, we trick autotools in thinking that we
+# provide a README.
+README: README.md
+	pandoc -f markdown -t plain --wrap=none $< -o $@
 
 doxygen: Doxyfile
 	doxygen

@@ -164,7 +164,7 @@ t8_tree_struct_t;
  */
 
 /** The number of statistics collected by a profile struct. */
-#define T8_PROFILE_NUM_STATS 13
+#define T8_PROFILE_NUM_STATS 14
 typedef struct t8_profile
 {
   t8_locidx_t         partition_elements_shipped; /**< The number of elements this process has

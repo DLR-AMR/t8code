@@ -117,15 +117,8 @@ t8_step3_adapt_callback (t8_forest_t forest,
    */
   T8_ASSERT (adapt_data != NULL);
 
-  /* In order to compute the coordinates of the element, we first need to get the coordinates of
-   * the tree. t8code does not store the element's coordinates, since they can be interpolated from the
-   * tree's coordinates. */
-  const double       *tree_vertices =
-    t8_forest_get_tree_vertices (forest_from, which_tree);
-
   /* Compute the element's centroid coordinates. */
-  t8_forest_element_centroid (forest_from, which_tree, elements[0],
-                              tree_vertices, centroid);
+  t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
 
   /* Compute the distance to our sphere midpoint. */
   dist = t8_vec_dist (centroid, adapt_data->midpoint);
@@ -214,7 +207,7 @@ t8_step3_main (int argc, char **argv)
 
   /* Initialize the sc library, has to happen before we initialize t8code. */
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-  /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the leg levels. */
+  /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
   t8_init (SC_LP_PRODUCTION);
 
   /* Print a message on the root process. */
@@ -234,7 +227,7 @@ t8_step3_main (int argc, char **argv)
    */
 
   /* Build a cube cmesh with tet, hex, and prism trees. */
-  cmesh = t8_cmesh_new_hypercube_hybrid (3, comm, 0, 0);
+  cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
   t8_global_productionf (" [step3] Created coarse mesh.\n");
   forest =
     t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0,

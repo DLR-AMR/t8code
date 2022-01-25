@@ -349,6 +349,16 @@ t8_default_scheme_line_c::t8_element_vertex_coords (const t8_element_t * t,
   t8_dline_vertex_coords ((const t8_dline_t *) t, vertex, coords);
 }
 
+void
+t8_default_scheme_line_c::t8_element_vertex_reference_coords (const
+                                                              t8_element_t *
+                                                              t, int vertex,
+                                                              double coords[])
+{
+  T8_ASSERT (t8_element_is_valid (t));
+  t8_dline_vertex_ref_coords ((const t8_dline_t *) t, vertex, coords);
+}
+
 int
 t8_default_scheme_line_c::t8_element_root_len (const t8_element_t * elem)
 {

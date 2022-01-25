@@ -305,6 +305,17 @@ void                t8_dprism_corner_descendant (const t8_dprism_t * p,
 void                t8_dprism_vertex_coords (const t8_dprism_t * p,
                                              int vertex, int coords[]);
 
+/** Compute the reference coordinates of a vertex of a prism when the 
+ * tree (level 0 prism) is embedded in [0,1]^3.
+ * \param [in] p    Input prism.
+ * \param [in] vertex The number of the vertex.
+ * \param [out] coordinates An array of 3 double that
+ * 		     will be filled with the reference coordinates of the vertex.
+ */
+void                t8_dprism_vertex_ref_coords (const t8_dprism_t * p,
+                                                 int vertex,
+                                                 double coords[3]);
+
 /** Computes the linear position of a prism in an uniform grid.
  * \param [in] p  Prism whose id will be computed.
  * \return Returns the linear position of this prism on a grid.

@@ -56,7 +56,7 @@ public:
 
   /** The destructor. It does nothing but has to be defined since
    * we may want to delete an eclass_scheme that is actually inherited
-   * (for example t8_default_scheme_quad) and providing and implementation
+   * (for example t8_default_scheme_quad) and providing an implementation
    * for the destructor ensures that the
    * destructor of the child class will be executed. */
                       virtual ~ t8_eclass_scheme ()
@@ -565,26 +565,24 @@ public:
   virtual void        t8_element_successor (const t8_element_t * t,
                                             t8_element_t * s, int level) = 0;
 
-/** Get the integer coordinates of the anchor node of an element */
-  /* TODO: better document this */
-  virtual void        t8_element_anchor (const t8_element_t * elem,
-                                         int anchor[3]) = 0;
-
-  /** Compute the root lenght of a given element, that is the length of
+  /** Compute the root length of a given element, that is the length of
    * its level 0 ancestor.
    * \param [in] elem     The element whose root length should be computed.
    * \return              The root length of \a elem
    */
   virtual int         t8_element_root_len (const t8_element_t * elem) = 0;
 
-  /** Compute the integer coordinates of a given element vertex.
+  /** Compute the coordinates of a given element vertex inside a reference tree
+   *  that is embedded into [0,1]^d (d = dimension).
    *   \param [in] t      The element to be considered.
    *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
-   *   \param [out] coords An array of at least as many integers as the element's dimension
+   *   \param [out] coords An array of at least as many doubles as the element's dimension
    *                      whose entries will be filled with the coordinates of \a vertex.
    */
-  virtual void        t8_element_vertex_coords (const t8_element_t * t,
-                                                int vertex, int coords[]) = 0;
+  virtual void        t8_element_vertex_reference_coords (const t8_element_t *
+                                                          t, int vertex,
+                                                          double coords[]) =
+    0;
 
   /* TODO: deactivate */
   /** Return a pointer to a t8_element in an array indexed by a size_t.
