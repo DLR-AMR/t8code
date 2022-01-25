@@ -328,7 +328,7 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim,
       cmesh = t8_cmesh_new_periodic_hybrid (comm);
     }
     else if (eclass_int == 8) {
-      cmesh = t8_cmesh_new_hypercube_hybrid (3, comm, 0, 1);
+      cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 1);
     }
     else {
       cmesh =

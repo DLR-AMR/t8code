@@ -73,7 +73,7 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
   T8_ASSERT (ts->t8_element_child_id (element) == num_children - 1);
   T8_ASSERT (ts->t8_element_level (element) > 0);
 
-  t8_element_t      **fam = el_buffer;
+  fam = el_buffer;
   const t8_element_t **constfam = (const t8_element_t **) fam;
   pos = *el_inserted - num_children;
   isfamily = 1;
@@ -87,7 +87,7 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
       fam[i] = t8_element_array_index_locidx (telements, pos + i);
     }
     if (i == num_children) {
-      isfamily = ts->t8_element_is_family (fam);
+      isfamily = ts->t8_element_is_family (constfam);
     }
     else {
       isfamily = 0;
@@ -277,7 +277,9 @@ t8_forest_adapt (t8_forest_t forest)
                                                            el_considered +
                                                            zz);
       }
-      if (zz == num_children && tscheme->t8_element_is_family (elements_from)) {
+      if (zz == num_children
+          && tscheme->t8_element_is_family ((const t8_element_t **)
+                                            elements_from)) {
 #ifdef T8_ENABLE_DEBUG
         is_family = 1;
 #endif

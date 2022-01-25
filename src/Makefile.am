@@ -16,7 +16,8 @@ libt8_installed_headers = \
   src/t8_cmesh/t8_cmesh_save.h \
   src/t8_forest.h \
   src/t8_forest/t8_forest_adapt.h src/t8_forest_vtk.h \
-  src/t8_geometry.h src/t8_data/t8_face_neighbor_hash_table.h \
+  src/t8_geometry/t8_geometry.h \
+  src/t8_data/t8_face_neighbor_hash_table.h \
   src/t8_cmesh/t8_cmesh_geometry.h \
   src/t8_geometry/t8_geometry_base.hxx \
   src/t8_geometry/t8_geometry_base.h \
@@ -50,7 +51,6 @@ libt8_compiled_sources = \
   src/t8_data/t8_element_array.cxx \
   src/t8_data/t8_locidx_list.c \
   src/t8_cmesh/t8_cmesh_geometry.cxx \
-  src/t8_data/t8_containers.cxx \
   src/t8_cmesh/t8_cmesh_offset.c src/t8_cmesh/t8_cmesh_readmshfile.c \
   src/t8_forest/t8_forest.c src/t8_forest/t8_forest_adapt.cxx \
   src/t8_geometry/t8_geometry.cxx \
