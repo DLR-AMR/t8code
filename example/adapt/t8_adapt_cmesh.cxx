@@ -86,7 +86,7 @@ t8_adapt_cmesh_search (t8_forest_t forest, t8_forest_t forest_to_adapt_from,
 #endif
   /* Set the cmesh as forest user data */
   t8_adapt_cmesh_user_data_t search_user_data;
-  search_user_data.cmesh_to_adapt_from = cmesh;
+  search_user_data.forest_to_adapt_from = forest_to_adapt_from;
   t8_forest_set_user_data (forest, &search_user_data);
   /* Fill marker array.
    * elements that should be refined are set to 1. 0 for no refinemnet. -1 for coarsening. */
@@ -149,10 +149,11 @@ t8_adapt_cmesh_search_query_callback (t8_forest_t forest,
      Falls nein -> fertig */
   t8_adapt_cmesh_user_data_t *user_data =
     (t8_adapt_cmesh_user_data_t *) t8_forest_get_user_data (forest);
-  const t8_cmesh_t    cmesh = user_data->cmesh_to_adapt_from;
+  const t8_forest_t    forest_to_adapt_from = user_data->forest_to_adapt_from;
   t8_adapt_cmesh_search_query_t *search_query =
     (t8_adapt_cmesh_search_query_t *) query;
-  const t8_locidx_t   current_cmesh_tree_id = search_query->ctree_id;
+  const t8_locidx_t   current_forest_to_adapt_from_tree_id = 
+                      search_query->ctree_id;
 
   /* TODO: Get tree id and element id from query */
 
