@@ -32,6 +32,13 @@
 #include <t8_cmesh/t8_cmesh_save.h>
 #include <t8_element.h>
 
+/* Forward pointer reference to hidden cmesh implementation.
+ * This reference needs to be known by t8_geometry, hence we 
+ * put it before the include. */
+typedef struct t8_cmesh *t8_cmesh_t;
+
+#include <t8_geometry/t8_geometry.h>
+
 /* TODO: If including eclass were just for the cmesh_new routines, we should
  *       move them into a different file.
  *       However, when specifying the parent-child order in cmesh_reorder,
@@ -50,7 +57,8 @@
  *       edit: This should be achieved now.
  */
 
-typedef struct t8_cmesh *t8_cmesh_t;
+/* Forward pointer references to hidden implementations of
+ * tree and ghost tree. */
 typedef struct t8_ctree *t8_ctree_t;
 typedef struct t8_cghost *t8_cghost_t;
 
@@ -268,12 +276,9 @@ void                t8_cmesh_set_tree_class (t8_cmesh_t cmesh,
  *  associated to the tree.
  *  Each application can set multiple attributes and attributes are distinguished
  *  by an interger key, where each application can use any integer as key.
- *  TODO: What to do if attribute exists already?
- *        update: Just replace the existing attribute. Our philosophy is that
- *                it is legal to call set functions multiple times.
  *
  * \param [in, out] cmesh       The cmesh to be updated.
- * \param [in]      tree_id     The global id of the tree.
+ * \param [in]      gtree_id     The global id of the tree.
  * \param [in]      package_id  Unique identifier of a valid software package. \see sc_package_register
  * \param [in]      key         An integer key used to identify this attribute under all
  *                              attributes with the same package_id.
@@ -287,12 +292,29 @@ void                t8_cmesh_set_tree_class (t8_cmesh_t cmesh,
  *                              If the flag is false an internal copy of the data is created
  *                              immediately and this copy is used at commit.
  *                              In both cases a copy of the data is used by t8_code after t8_cmesh_commit.
+ * \note If an attribute with the given package_id and key already exists, then it will get overwritten.
  */
 void                t8_cmesh_set_attribute (t8_cmesh_t cmesh,
                                             t8_gloidx_t gtree_id,
                                             int package_id, int key,
                                             void *data, size_t data_size,
                                             int data_persists);
+
+/** Store a string as an attribute at a tree in a cmesh.
+ * \param [in, out] cmesh       The cmesh to be updated.
+ * \param [in]      gtree_id     The global id of the tree.
+ * \param [in]      package_id  Unique identifier of a valid software package. \see sc_package_register
+ * \param [in]      key         An integer key used to identify this attribute under all
+ *                              attributes with the same package_id.
+ *                              \a key must be a unique value for this tree and package_id.
+ * \param [in]      string      The string to store as attribute.
+ * \note You can also use \ref t8_cmesh_set_attribute, but we recommend using this
+ *       specialized function for strings.
+ */
+void                t8_cmesh_set_attribute_string (t8_cmesh_t cmesh,
+                                                   t8_gloidx_t gtree_id,
+                                                   int package_id, int key,
+                                                   const char *string);
 
 /** Insert a face-connection between two trees in a cmesh.
  * \param [in,out] cmesh        The cmesh to be updated.
@@ -337,6 +359,12 @@ void                t8_cmesh_set_profiling (t8_cmesh_t cmesh,
 int                 t8_cmesh_is_equal (t8_cmesh_t cmesh_a,
                                        t8_cmesh_t cmesh_b);
 
+/** Check whether a cmesh is empty on all processes.
+ * \param [in]  cmesh           A committed cmesh.
+ * \return                      True (non-zero) if and only if the cmesh has trees at all.
+ */
+int                 t8_cmesh_is_empty (t8_cmesh_t cmesh);
+
 /** Broadcast a cmesh structure that exists only on one process to all
  *  processes in the cmesh's communicator.
  *  TODO: Input structure must be replicated, not parallelized.
@@ -352,6 +380,8 @@ int                 t8_cmesh_is_equal (t8_cmesh_t cmesh_a,
  *                      Else, a pointer to a newly allocated cmesh
  *                      structure with the same values as \a conn_in on the
  *                      root process.
+ * \note It is illegal to broadcast a cmesh with a registered geometry (\ref t8_cmesh_register_geometry).
+ *       All geometries must be registered after the broadcast (You can set tree attributes before bcast, though).
  */
 t8_cmesh_t          t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root,
                                     sc_MPI_Comm comm);
@@ -364,6 +394,26 @@ void                t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 /* TODO: think about a sensible interface for a parmetis reordering. */
 #endif
 
+/* TODO: comment */
+/* If no geometry is registered and cmesh is modified from another cmesh then
+ * the other cmesh's geometries are used.
+ * \note If you need to use \ref t8_cmesh_bcast, then all geometries must be
+ *       registerd \a after the bcast operation, not before.
+ */
+void                t8_cmesh_register_geometry (t8_cmesh_t cmesh,
+                                                const t8_geometry_c *
+                                                geometry);
+
+/** Set the geometry for a tree, thus specify which geometry to use for this tree.
+ * \param [in] cmesh     A non-committed cmesh.
+ * \param [in] gtreeid   A global tree id in \a cmesh.
+ * \param [in] geom_name The name of the geometry to use for this tree.
+ * See also \ref t8_cmesh_get_tree_geometry
+ */
+void                t8_cmesh_set_tree_geometry (t8_cmesh_t cmesh,
+                                                t8_gloidx_t gtreeid,
+                                                const char *geom_name);
+
 /** After allocating and adding properties to a cmesh, finish its construction.
  * TODO: this function is MPI collective.
  * \param [in,out] cmesh        Must be created with \ref t8_cmesh_init
@@ -373,6 +423,7 @@ void                t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 void                t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 
 /* TODO: Document */
+/* Currently, it is only legal to save cmeshes that use the linear geometry. */
 int                 t8_cmesh_save (t8_cmesh_t cmesh, const char *fileprefix);
 
 /* TODO: Document */
@@ -437,6 +488,10 @@ t8_locidx_t         t8_cmesh_get_num_ghosts (t8_cmesh_t cmesh);
  * \a cmesh must be committed before calling this function.
  */
 t8_gloidx_t         t8_cmesh_get_first_treeid (t8_cmesh_t cmesh);
+
+/* TODO: Comment */
+const t8_geometry_c *t8_cmesh_get_tree_geometry (t8_cmesh_t cmesh,
+                                                 t8_gloidx_t gtreeid);
 
 /** Query whether a given t8_locidx_t belongs to a local tree of a cmesh.
  * \param [in] cmesh       The cmesh to be considered.
@@ -607,7 +662,7 @@ double             *t8_cmesh_get_tree_vertices (t8_cmesh_t cmesh,
  *                              attributes of this tree with the same \a package_id.
  * \param [in]     tree_id      The local number of the tree.
  * \param [out]    data_size    The size of the attribute in bytes.
- * \return         The attribute pointer of the tree \a tree_id.
+ * \return         The attribute pointer of the tree \a ltree_id or NULL if the attribute is not found.
  * \a cmesh must be committed before calling this function.
  * \see t8_cmesh_set_attribute
  */
@@ -713,9 +768,11 @@ t8_cmesh_t          t8_cmesh_new_from_p8est (p8est_connectivity_t * conn,
  * this function is merely for debugging and to show the possibility.
  * \param [in]      comm       mpi communicator to be used with the new cmesh.
  * \param [in]      do_partition Flag whether the cmesh should be partitioned or not.
+ * \param [in]      dimension  An empty cmesh requires a dimension nevertheless 0 <= \a dimension <= 4.
  * \return                     A committed t8_cmesh structure that has no trees.
  */
-t8_cmesh_t          t8_cmesh_new_empty (sc_MPI_Comm comm, int do_partition);
+t8_cmesh_t          t8_cmesh_new_empty (sc_MPI_Comm comm, int do_partition,
+                                        int dimension);
 
 /** Constructs a cmesh that consists only of one tree of a given element class.
  * \param [in]      eclass     The element class.
@@ -748,7 +805,7 @@ t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
 
 /** Hybercube with 6 Tets, 6 Prism, 4 Hex. */
 /* TODO: Document */
-t8_cmesh_t          t8_cmesh_new_hypercube_hybrid (int dim, sc_MPI_Comm comm,
+t8_cmesh_t          t8_cmesh_new_hypercube_hybrid (sc_MPI_Comm comm,
                                                    int do_partition,
                                                    int periodic);
 

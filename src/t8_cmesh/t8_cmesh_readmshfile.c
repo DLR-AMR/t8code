@@ -23,6 +23,7 @@
 #include <t8_eclass.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_cmesh_vtk.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include "t8_cmesh_types.h"
 #include "t8_cmesh_stash.h"
 
@@ -57,7 +58,7 @@ const int           t8_msh_tree_vertex_to_t8_vertex_num[T8_ECLASS_COUNT][8]
   {0, 1},                       /* LINE */
   {0, 1, 3, 2},                 /* QUAD */
   {0, 1, 2},                    /* TRIANGLE */
-  {0, 1, 5, 4, 2, 3, 7, 6},     /* HEX */
+  {0, 1, 3, 2, 4, 5, 7, 6},     /* HEX */
   {0, 1, 2, 3},                 /* TET */
   {0, 1, 2, 3, 4, 5, 6},        /* PRISM */
   {0, 1, 3, 2, 4}               /* PYRAMID */
@@ -72,7 +73,7 @@ const int           t8_vertex_to_msh_vertex_num[T8_ECLASS_COUNT][8]
   {0, 1},                       /* LINE */
   {0, 1, 3, 2},                 /* QUAD */
   {0, 1, 2},                    /* TRIANGLE */
-  {0, 1, 4, 5, 3, 2, 6, 7},     /* HEX */
+  {0, 1, 3, 2, 4, 5, 7, 6},     /* HEX */
   {0, 1, 2, 3},                 /* TET */
   {0, 1, 2, 3, 4, 5, 6},        /* PRISM */
   {0, 1, 3, 2, 4}               /* PYRAMID */
@@ -525,8 +526,8 @@ t8_cmesh_msh_file_read_eles (t8_cmesh_t cmesh, FILE * fp,
                    (eclass, tree_vertices, num_nodes));
       }                         /* End of negative volume handling */
       /* Set the vertices of this tree */
-      t8_cmesh_set_tree_vertices (cmesh, tree_count, t8_get_package_id (),
-                                  0, tree_vertices, num_nodes);
+      t8_cmesh_set_tree_vertices (cmesh, tree_count, tree_vertices,
+                                  num_nodes);
       /* If wished, we store the vertex indices of that tree. */
       if (vertex_indices != NULL) {
         /* Allocate memory for the inices */
@@ -823,6 +824,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
   char                current_file[BUFSIZ];
   FILE               *file;
   t8_gloidx_t         num_trees, first_tree, last_tree = -1;
+  t8_geometry_c      *geom_linear = t8_geometry_linear_new (dim);
   int                 main_proc_read_successful = 0;
 
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
@@ -837,6 +839,8 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
 
   /* initialize cmesh structure */
   t8_cmesh_init (&cmesh);
+  /* We will use linear geometry. */
+  t8_cmesh_register_geometry (cmesh, geom_linear);
   /* Setting the dimension by hand is neccessary for partitioned
    * commit, since there are process without any trees. So the cmesh would
    * not know its dimension on these processes. */

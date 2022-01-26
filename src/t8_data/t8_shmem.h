@@ -46,22 +46,45 @@ typedef struct t8_shmem_array *t8_shmem_array_t;
 #define T8_SHMEM_BEST_TYPE SC_SHMEM_BASIC
 #endif
 #endif
-#if 0
-/* For testing we only use basic shmem type */
-#define T8_SHMEM_BEST_TYPE SC_SHMEM_BASIC
-#endif
 
 T8_EXTERN_C_BEGIN ();
 
-/** Try to set a shared memory type of a communicator.
- * If the type was set, returns true, otherwise false.
- * This will not set the type, if ther already was a type set
- * on this communicator. \see sc_shmem_set_type
+/** Initialize shared memory usage for a communicator.
+ *  This sets up the intra- and internode communicators.
+ * \param [in]          comm    The MPI Communicator.
+ * \note This function needs to be called to enable shared memory usage for a communicator.
+ * \note Calling this function multiple times with the same communicator is safe and does
+ *  not change the behaviour.
+ */
+void                t8_shmem_init (sc_MPI_Comm comm);
+
+#if T8_ENABLE_DEBUG
+/* If you need this function outside of debugging mode, feel free
+ * to remove the macro protection. */
+/** Check whether a shared memory array was properly initialized.
+ * \param [in]          array   A shared memory array.
+ * \return non-zero if \a array is initialized correctly.
+ */
+int                 t8_shmem_array_is_initialized (const t8_shmem_array_t
+                                                   array);
+#endif
+
+/** Finalize shared memory usage for a communicator.
+ *  This destroys the intra- and internode communicators.
+ * \param [in]          comm    The MPI Communicator.
+ * \note Call this function if you initialized the communicator for shared memory usage
+ *  and you are sure that you will not use it for shared memory again.
+ * \note Calling this function multiple times with the same communicator is safe and does
+ *  not change the behaviour.
+ */
+void                t8_shmem_finalize (sc_MPI_Comm comm);
+
+/** Set a shared memory type of a communicator.
+ * If the type was already set it is overwritten.
  * \param [in,out]      comm    The MPI Communicator
  * \param [in]          type    A shared memory type.
- * \return                      Non-zero if the type was set. Zero if it wasn't.
  */
-int                 t8_shmem_set_type (sc_MPI_Comm comm,
+void                t8_shmem_set_type (sc_MPI_Comm comm,
                                        sc_shmem_type_t type);
 
 /** Initialize and allocate a shared memory array structure.
@@ -70,14 +93,29 @@ int                 t8_shmem_set_type (sc_MPI_Comm comm,
  * \param [in]          elem_size The size in bytes of an array element.
  * \param [in]          elem_count The total number of elements to allocate.
  * \param [in]          comm      The MPI communicator to be associated with the shmem_array.
- *                                The shared memory type must have been set. Best practice would be
- *                                calling \ref sc_shmem_set_type (comm, T8_SHMEM_BEST_TYPE).
+ *                                If not set, the shared memory type will be set to T8_SHMEM_BEST_TYPE.
  */
 void                t8_shmem_array_init (t8_shmem_array_t * parray,
                                          size_t elem_size,
                                          size_t elem_count, sc_MPI_Comm comm);
 
+/** Enable writing mode for a shmem array. Only some processes may be allowed
+ *  to write into the array, which is indicated by the return value being non-zero.
+ * \param [in,out]      array Initialized array. Writing will be enabled on certain processes.
+ * \return                    True if the calling process can write into the array.
+ * \note This function is MPI collective.
+ */
+int                 t8_shmem_array_start_writing (t8_shmem_array_t array);
+
+/** Disable writing mode for a shmem array.
+ * \param [in,out]      array Initialized with writing mode enabled.
+ * \see t8_shmem_array_start_writing.
+ * \note This function is MPI collective.
+ */
+void                t8_shmem_array_end_writing (t8_shmem_array_t array);
+
 /** Set an entry of a t8_shmem array that is used to store t8_gloidx_t.
+ * The array must have writing mode enabled \ref t8_shmem_array_start_writing.
  * \param [in,out]      array   The array to be mofified.
  * \param [in]          index   The array entry to be modified.
  * \param [in]          value   The new value to be set.
@@ -86,9 +124,10 @@ void                t8_shmem_array_set_gloidx (t8_shmem_array_t array,
                                                int index, t8_gloidx_t value);
 
 /** Copy the contents of one t8_shmem array into another.
- * \param [in,out]      dest    The array in which should be copied.
+ * \param [in,out]      dest    The array in which \a source should be copied.
  * \param [in]          source  The array to copy.
- * \note \a dest must match in element size and element count to \a source.
+ * \note \a dest must be initialized and match in element size and element count to \a source.
+ * \note \a dest must have writing mode disabled.
  */
 void                t8_shmem_array_copy (t8_shmem_array_t dest,
                                          t8_shmem_array_t source);
@@ -101,8 +140,10 @@ void                t8_shmem_array_copy (t8_shmem_array_t dest,
  * \param[in,out] recvbuf     the destination shmem array
  * \param[in] recvcount       the number of items to allgather
  * \param[in] recvtype        the type of items to allgather
+ * \note Writing mode must be disabled for \a recvarray.
  */
-void                t8_shmem_array_allgather (void *sendbuf, int sendcount,
+void                t8_shmem_array_allgather (const void *sendbuf,
+                                              int sendcount,
                                               sc_MPI_Datatype sendtype,
                                               t8_shmem_array_t recvarray,
                                               int recvcount,
@@ -126,17 +167,28 @@ size_t              t8_shmem_array_get_elem_size (t8_shmem_array_t array);
  */
 size_t              t8_shmem_array_get_elem_count (t8_shmem_array_t array);
 
-/** Return a pointer to the data of a shared memory array interpreted as
+/** Return a read-only pointer to the data of a shared memory array interpreted as
  * an t8_gloidx_t array.
  * \param [in]          array   The t8_shmem_array
  * \return              The data of \a array as t8_gloidx_t pointer.
+ * \note Writing mode must be disabled for \a array.
  */
-t8_gloidx_t        *t8_shmem_array_get_gloidx_array (t8_shmem_array_t array);
+const t8_gloidx_t  *t8_shmem_array_get_gloidx_array (t8_shmem_array_t array);
+
+/** Return a pointer to the data of a shared memory array interpreted as
+ * an t8_gloidx_t array. The array must have writing enabled \ref t8_shmem_array_start_writing
+ * and you should not write into the memory after \ref t8_shmem_array_end_writing was called.
+ * \param [in]          array   The t8_shmem_array
+ * \return              The data of \a array as t8_gloidx_t pointer.
+ */
+t8_gloidx_t
+  * t8_shmem_array_get_gloidx_array_for_writing (t8_shmem_array_t array);
 
 /** Return an entry of a shared memory array that stores t8_gloidx_t.
  * \param [in]          array   The t8_shmem_array
  * \param [in]          index   The index of the entry to be queried.
  * \return              The \a index-th entry of \a array as t8_gloidx_t.
+ * \note Writing mode must be disabled for \a array.
  */
 t8_gloidx_t         t8_shmem_array_get_gloidx (t8_shmem_array_t array,
                                                int index);
@@ -144,19 +196,34 @@ t8_gloidx_t         t8_shmem_array_get_gloidx (t8_shmem_array_t array,
 /** Return a pointer to the data array of a t8_shmem_array.
  * \param [in]          array The t8_shmem_array.
  * \return                    A pointer to the data array of \a array.
+ * \note Writing mode must be disabled for \a array.
  */
-void               *t8_shmem_array_get_array (t8_shmem_array_t array);
+const void         *t8_shmem_array_get_array (t8_shmem_array_t array);
 
-/** Return a pointer to an element in a t8_shmem_array.
+/** Return a read-only pointer to an element in a t8_shmem_array.
  * \param [in]          array The t8_shmem_array.
  * \param [in]          index The index of an element.
  * \return              A pointer to the element at \a index in \a array.
+ * \note You should not modify the value.
+ * \note Writing mode must be disabled for \a array.
  */
-void               *t8_shmem_array_index (t8_shmem_array_t array,
+const void         *t8_shmem_array_index (t8_shmem_array_t array,
                                           size_t index);
 
+/** Return a pointer to an element in a t8_shmem_array in writing mode.
+ * \param [in]          array The t8_shmem_array.
+ * \param [in]          index The index of an element.
+ * \return              A pointer to the element at \a index in \a array.
+ * \note You can modify the value before the next call to \ref t8_shmem_array_end_writing.
+ * \note Writing mode must be enabled for \a array.
+ */
+void               *t8_shmem_array_index_for_writing (t8_shmem_array_t array,
+                                                      size_t index);
+
 /* TODO: implement and comment */
-/* returns true if arrays are equal */
+/* returns true if arrays are equal 
+ * \note Writing mode must be disabled for \a array_a and \a array_b.
+ */
 int                 t8_shmem_array_is_equal (t8_shmem_array_t array_a,
                                              t8_shmem_array_t array_b);
 

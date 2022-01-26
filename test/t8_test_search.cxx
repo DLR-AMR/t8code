@@ -138,7 +138,7 @@ t8_test_search_one_query_matches_all (sc_MPI_Comm comm, t8_eclass_t eclass,
   sc_array_init_size (&queries, sizeof (int), 1);
   *(int *) sc_array_index (&queries, 0) = query;
 
-  num_elements = t8_forest_get_num_element (forest);
+  num_elements = t8_forest_get_local_num_elements (forest);
   /* set up an array in which we flag whether an element was matched in the
    * search */
   sc_array_init_size (&matched_leafs, sizeof (int), num_elements);

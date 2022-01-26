@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Remove duplicate const in a file.
+#
+#
+# It is bug of the indent script to duplicate some 'const' statements in .cxx files.
+# 
+# void foo () const
+# {
+# }
+# 
+# is indented to
+#
+# void foo () const const
+# {
+# }
+#
+# This script iterates over all given input files and changes
+#  ') const const' to ') const'
+#
+# Handle with care.
+
+file=$1
+
+if [ x$file = x ]
+then
+ echo No output file provided.
+ echo Usage $0 INPUTFILE
+ exit 1
+fi
+
+sed -i 's/) const const/) const/g' $file
