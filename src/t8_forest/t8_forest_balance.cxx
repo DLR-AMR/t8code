@@ -584,7 +584,13 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
             /* This is the first time that we visit this element. We compute its face
              * neighbors and store them in the hash table.
              * This will also set the face_neighbor_hash_entry to point to the inserted values. */
+#ifdef T8_ENABLE_DEBUG
+            /* Use return value in debugging mode to check correct insertion. */
             int                 retval =
+#else
+            /* Prevent compiler warning in non-debugging mode. */
+            (void)
+#endif
               t8_face_neighbor_hash_table_insert_element (face_neighbor_table,
                                                           current_tree,
                                                           element_index_in_tree,
