@@ -152,18 +152,29 @@ t8_adapt_cmesh_search_query_callback (t8_forest_t forest,
   const t8_forest_t    forest_to_adapt_from = user_data->forest_to_adapt_from;
   t8_adapt_cmesh_search_query_t *search_query =
     (t8_adapt_cmesh_search_query_t *) query;
-  const t8_locidx_t   current_forest_to_adapt_from_tree_id = 
-                      search_query->ctree_id;
+  const t8_locidx_t   forest_to_adapt_from_tree_id = search_query->ctree_id;
+  const t8_locidx_t   forest_to_adapt_from_element_id = search_query->element_id;
+
+  const double      tolerance = 0.2;
 
   /* TODO: Get tree id and element id from query */
+
 
   /* TODO: Compute midpoint of query. Return true only if midpoint is in current element. */
   /* Compute midpoint of tree */
   double              midpoint[3];
+  t8_element_t *      forest_to_adapt_from_element = t8_forest_get_element_in_tree(forest_to_adapt_from, 
+                                                    forest_to_adapt_from_tree_id,
+                                                    forest_to_adapt_from_element_id);
 
-  t8_forest_element_centroid ();
+  t8_forest_element_centroid (forest_to_adapt_from, 
+                              forest_to_adapt_from_tree_id,
+                              forest_to_adapt_from_element,
+                              midpoint);
 
   /* Check if midpoint is inside element */
+  return t8_forest_element_point_inside(forest, ltreeid, element, midpoint, tolerance);
+
 }
 
 int
