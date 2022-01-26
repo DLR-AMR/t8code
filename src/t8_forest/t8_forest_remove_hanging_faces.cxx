@@ -43,9 +43,9 @@ t8_forest_remove_hanging_faces_adapt (t8_forest_t forest,
                                       int num_elements,
                                       t8_element_t * elements[])
 {
-  int                iface, num_faces, num_half_neighbors, ineigh, neigh_face, subelement_type = 0;
-  t8_gloidx_t         neighbor_tree;
-  t8_eclass_t         neigh_class;
+  int                iface, num_faces, neigh_face, subelement_type = 0;
+  t8_gloidx_t        neighbor_tree;
+  t8_eclass_t        neigh_class;
   t8_eclass_scheme_c *neigh_scheme;
   t8_element_t       *element = elements[0], **face_neighbor;
 
@@ -79,6 +79,9 @@ t8_forest_remove_hanging_faces_adapt (t8_forest_t forest,
      * Within the element scheme of the given eclass, this binary code is used to construct the right subelement type,
      * in order to remove hanging nodes from the mesh. */
 
+    t8_debugf ("local element index: %i\n", lelement_id);
+    ts->t8_element_print_element (element);
+
     for (iface = 0; iface < num_faces; iface++) {
       /* Get the element class and scheme of the face neighbor */
       neigh_class = t8_forest_element_neighbor_eclass (forest_from,
@@ -88,12 +91,15 @@ t8_forest_remove_hanging_faces_adapt (t8_forest_t forest,
       /* Allocate memory for the number of half face neighbors */
       face_neighbor = T8_ALLOC (t8_element_t *, 1);
       neigh_scheme->t8_element_new (1, face_neighbor);
-      /* Compute the half face neighbors of element at this face */
+      /* Compute the face neighbors of element at this face */
       neighbor_tree = t8_forest_element_face_neighbor (forest_from, ltree_id,
                                                        element,
                                                        face_neighbor[0],
                                                        neigh_scheme,
                                                        iface, &neigh_face);
+
+      t8_debugf ("Face neighbor at face %i:\n", iface);
+      ts->t8_element_print_element (face_neighbor[0]);
 
       if (neighbor_tree >= 0) {
         if (t8_forest_element_has_leaf_desc (forest_from, neighbor_tree,

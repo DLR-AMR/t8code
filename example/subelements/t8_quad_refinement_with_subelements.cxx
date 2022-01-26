@@ -149,9 +149,9 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
   char                filename[BUFSIZ];
 
   /* refinement settings */
-                      initlevel = 5;    /* initial uniform refinement level */
+                      initlevel = 1;    /* initial uniform refinement level */
   int                 minlevel = initlevel;   /* lowest level allowed for coarsening */
-                      adaptlevel = 3;   /* number of allowed adapt levels */
+                      adaptlevel = 2;   /* number of allowed adapt levels */
   int                 maxlevel = initlevel + adaptlevel;    /* highest level allowed for refining */
 
   int                 refine_recursive = 1;
@@ -159,7 +159,7 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
 
   /* cmesh settings (only one of the following suggestions should be one, the others 0) */
   int                 single_tree = 1;
-  int                 multiple_tree = 0, num_x_trees = 2, num_y_trees = 2;
+  int                 multiple_tree = 0, num_x_trees = 2, num_y_trees = 1;
   int                 hybrid_cmesh = 0;
 
   /* adaptation setting */
@@ -221,7 +221,7 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
   sdata.mid_point[0] = 0.25;    // 1.0 / 2.0 + shift_x * 1.0/(1 << (minlevel));
   sdata.mid_point[1] = 0.25;    // 1.0 / 2.0 + shift_y * 1.0/(1 << (minlevel)); 
   sdata.mid_point[2] = 0;
-  sdata.radius = 0.1;
+  sdata.radius = 0.05;
 
   /* refinement parameter */
   ls_data.band_width = 1;
