@@ -191,8 +191,8 @@ t8_refine_with_subelements (t8_eclass_t eclass)
 
   /* Midpoint and radius of a sphere */
   /* shift the midpoiunt of the circle by (shift_x,shift_y) to ensure midpoints on corners of the uniform mesh */
-  int  shift_x = 0;  /* shift_x, shift_y should be smaler than 2^minlevel / 2 such that midpoint stays in the quadrilateral tree */
-  int  shift_y = 0;
+  // int  shift_x = 0;  /* shift_x, shift_y should be smaler than 2^minlevel / 2 such that midpoint stays in the quadrilateral tree */
+  // int  shift_y = 0;
   sdata.mid_point[0] = 0.5;    // 1.0 / 2.0 + shift_x * 1.0/(1 << (minlevel));
   sdata.mid_point[1] = 0.5;    // 1.0 / 2.0 + shift_y * 1.0/(1 << (minlevel)); 
   sdata.mid_point[2] = 0;

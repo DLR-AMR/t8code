@@ -406,7 +406,7 @@ t8_advect_l1_error_mean (const t8_advect_problem_t * problem,
   t8_advect_element_data_t *elem_data;
   double              phi;
   double              diff, ana_sol;
-  double              error = 0, el_error;
+  double              error = 0;
 
   num_local_elements = t8_forest_get_local_num_elements (problem->forest);
   for (ielem = 0; ielem < num_local_elements; ielem++) {
@@ -2416,13 +2416,11 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   t8_locidx_t         itree, ielement, lelement;
   t8_advect_element_data_t *elem_data, *neigh_data = NULL;
   double              flux;
-  double              l_infty_abs, l_2_abs, l_infty_rel, l_2_rel;
+  double              l_infty_rel, l_2_rel, l1_mean;
   double             *tree_vertices;
   int                 modulus, time_steps;
-  int                 num_faces;
   int                 done = 0;
   int                 adapted_or_partitioned = 0;
-  int                 dual_face;
   t8_element_t       *elem, **neighs;
   t8_eclass_scheme_c *neigh_scheme;
   double              total_time, solve_time = 0;
@@ -2430,7 +2428,9 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     flux_time;
   double              vtk_time = 0;
   double              start_volume, end_volume;
-  int                 hanging, neigh_is_ghost;
+  int                 neigh_is_ghost;
+  int                 hanging;
+  int                 dual_face;
   t8_locidx_t         neigh_index = -1;
   double              phi_plus, phi_minus;
   double              scaled_global_phi_beginning, scaled_global_phi_step, scaled_global_phi_end; /* for conservation test */
@@ -2663,23 +2663,23 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                 /* NOTE: The following part saves computations but does not work for subelements 
                  * it relies on the fact that elem_data->dual_face and neigh_data->face 
                  * are not changing which is not true for subelements with a different enumeration of faces. */
-#if 0
-                /* If this face is not hanging, we can set the
-                 * flux of the neighbor element as well */
-                if (!adapted_or_partitioned && !neigh_is_ghost && !hanging) {
-                  if (neigh_data->flux_valid[dual_face] < 0) {
-                    neigh_data->fluxes[dual_face] = T8_ALLOC (double, 1);
-                    neigh_data->dual_faces[dual_face] = T8_ALLOC (int, 1);
-                    neigh_data->neighs[dual_face] = T8_ALLOC (t8_locidx_t, 1);
+                if (!do_transition) {
+                  /* If this face is not hanging, we can set the
+                  * flux of the neighbor element as well */
+                  if (!adapted_or_partitioned && !neigh_is_ghost && !hanging) {
+                    if (neigh_data->flux_valid[dual_face] < 0) {
+                      neigh_data->fluxes[dual_face] = T8_ALLOC (double, 1);
+                      neigh_data->dual_faces[dual_face] = T8_ALLOC (int, 1);
+                      neigh_data->neighs[dual_face] = T8_ALLOC (t8_locidx_t, 1);
+                    }
+                    SC_CHECK_ABORT (dual_face < neigh_data->num_faces, "num\n");
+                    //         SC_CHECK_ABORT (neigh_data->num_neighbors[dual_face] == 1, "dual face\n");
+                    neigh_data->fluxes[dual_face][0] = -flux;
+                    neigh_data->dual_faces[dual_face][0] = iface;
+                    neigh_data->neighs[dual_face][0] = lelement;
+                    neigh_data->flux_valid[dual_face] = 1;
                   }
-                  SC_CHECK_ABORT (dual_face < neigh_data->num_faces, "num\n");
-                  //         SC_CHECK_ABORT (neigh_data->num_neighbors[dual_face] == 1, "dual face\n");
-                  neigh_data->fluxes[dual_face][0] = -flux;
-                  neigh_data->dual_faces[dual_face][0] = iface;
-                  neigh_data->neighs[dual_face][0] = lelement;
-                  neigh_data->flux_valid[dual_face] = 1;
                 }
-#endif
               }
               else if (elem_data->num_neighbors[iface] > 1) {
                 flux =
@@ -2823,13 +2823,11 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                  100 * (1 - end_volume / start_volume),
                  advect_stat_names[ADVECT_VOL_LOSS]);
 
-  #if 0
-  /* Compute rel l_infty and l_2 errors */
+  /* Compute rel l_infty, rel l_2 and mean l1 errors */
   l_infty_rel = t8_advect_l_infty_rel (problem, phi_0, 20);
   l_2_rel = t8_advect_l_2_rel (problem, phi_0, 20);
-  #endif 
+  l1_mean = t8_advect_l1_error_mean (problem, phi_0);
 
-  double l1_mean = t8_advect_l1_error_mean (problem, phi_0);
   /* Compute number time steps and mean number of elements in forests */
   int global_number_elements_mean = number_elements_global / problem->num_time_steps;
 

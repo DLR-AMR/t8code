@@ -2232,7 +2232,7 @@ t8_subelement_scheme_quad_c::t8_element_get_face_number_of_hypotenuse (const
                                                                        * elem)
 {
   T8_ASSERT (t8_element_is_valid (elem));
-  T8_ASSERT (t8_element_check_if_subelement (elem));
+  T8_ASSERT (t8_element_test_if_subelement (elem));
 
   int                 location[3] = { };
   t8_element_get_location_of_subelement (elem, location);
