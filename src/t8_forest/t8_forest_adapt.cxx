@@ -520,8 +520,10 @@ t8_forest_adapt_build_marker_array (t8_forest_t forest, sc_array_t * markers,
   T8_ASSERT (forest_from->maxlevel_existing == maxlevel_existing);
   const t8_locidx_t   num_trees = t8_forest_get_num_local_trees (forest_from);
   t8_locidx_t         ltreeid, ielement;
+#if T8_ENABLE_DEBUG
   const t8_locidx_t   num_elements =
     t8_forest_get_local_num_elements (forest_from);
+#endif
   /* Flags that we need to compute the new maxlevel in the forest. */
   int                 have_element_at_maxlevelp1 = 0;
   int                 have_element_at_maxlevel = 0;
