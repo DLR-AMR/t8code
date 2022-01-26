@@ -23,7 +23,7 @@
 /* In this example, we solve the linear advection equation for the 2D quad scheme with subelements (transitioning can be turned on and off).
  * There are the following configurations that can be used to investigate the behavior of subelements in an examplary application. 
  * 
- *  1) Use an geometric initial refinement scheme: 
+ *  1) Use an geometric initial refinement scheme:
  *         - turn on "t8_advect_adapt_init" in "t8_advect_problem_adapt_init"
  *  2) Use a static mesh that wont change during an application:
  *         - use the argument -adapt_freq = big_number such that the adapt function will not be called during computation. In order to work properly for 
