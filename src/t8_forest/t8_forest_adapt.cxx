@@ -609,10 +609,12 @@ t8_forest_adapt_build_marker_array (t8_forest_t forest, sc_array_t * markers,
           ((t8_eclass_scheme_c *) ts)->t8_element_level (element);
         if (level == maxlevel_existing) {
           if (adapt_value > 0) {
+            /* We have at least one new element of maxlevel_existing + 1 */
             have_element_at_maxlevelp1 = 1;
           }
           else if (adapt_value == 0) {
-            have_element_at_maxlevel;
+            /* We have at least one element at maxlevel_existing */
+            have_element_at_maxlevel = 1;
           }
         }                       /* End if (level == maxlevel_existing) */
         else if (level == maxlevel_existing - 1) {
