@@ -27,6 +27,7 @@
 #include <t8_forest_vtk.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_forest/t8_forest_adapt.h>
 
 /* Build a cmesh according to which a later forest shall be refined. */
 t8_forest_t
@@ -102,7 +103,7 @@ t8_adapt_cmesh_search_query_callback (t8_forest_t forest,
   const t8_forest_t    forest_to_adapt_from = user_data->forest_to_adapt_from;
   t8_adapt_cmesh_search_query_t *search_query =
     (t8_adapt_cmesh_search_query_t *) query;
-  const t8_locidx_t   forest_to_adapt_from_tree_id = search_query->ctree_id;
+  const t8_locidx_t   forest_to_adapt_from_tree_id = search_query->tree_id;
   const t8_locidx_t   forest_to_adapt_from_element_id = search_query->element_id;
 
   const double      tolerance = 0.2;
@@ -154,11 +155,11 @@ t8_adapt_cmesh_search (t8_forest_t forest, t8_forest_t forest_to_adapt_from,
   /* Fill marker array.
    * elements that should be refined are set to 1. 0 for no refinemnet. -1 for coarsening. */
   t8_forest_search (forest, t8_adapt_cmesh_search_element_callback,
-                    t8_adapt_cmesh_search_query_callback, search_queries);
+                    t8_adapt_cmesh_search_query_callback, &search_queries);
 }
 
 static              t8_forest_t
-t8_adapt_cmesh_adapt_forest (t8_forest_t forest, t8_cmesh_t cmesh)
+t8_adapt_cmesh_adapt_forest (t8_forest_t forest, t8_forest_t forest_to_adapt_from)
 {
   /* TODO ... */
 
@@ -169,12 +170,12 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest, t8_cmesh_t cmesh)
 
   sc_array_init_count (&marker_array, sizeof (short), num_local_elements);
 
-  t8_adapt_cmesh_search (forest, cmesh, &marker_array);
+  t8_adapt_cmesh_search (forest, forest_to_adapt_from, &marker_array);
 
   /* Adapt the forest according to the markers */
   t8_forest_t         forest_adapt =
     t8_forest_new_adapt (forest, t8_forest_adapt_marker_array_callback,
-                         0, 0, marker_array);
+                         0, 0, &marker_array);
 }
 
 
