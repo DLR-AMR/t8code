@@ -64,56 +64,6 @@ typedef struct
   t8_locidx_t         element_id;       /* Id of the current element. */
 } t8_adapt_cmesh_search_query_t;
 
-static void
-t8_adapt_cmesh_search (t8_forest_t forest, t8_forest_t forest_to_adapt_from,
-                       sc_array_t * markers)
-{
-  sc_array_t          search_queries;
-  const t8_locidx_t   num_elements =
-    t8_forest_get_local_num_elements (forest_to_adapt_from);
-  const t8_locidx_t   num_trees =
-    t8_forest_get_num_local_trees (forest_to_adapt_from);
-  /* Initialize the queries array */
-  sc_array_init_count (&search_queries,
-                       sizeof (t8_adapt_cmesh_search_query_t), num_elements);
-  /* Fill queries with correct ids. */
-
-#if 0
-  /* TODO Fill tree ids and element ids */
-  for (t8_locidx_t itree; itree < num_trees; ++itree) {
-    *(t8_sc_array_index_locidx (&search_queries, itree)) = itree;
-  }
-#endif
-  /* Set the cmesh as forest user data */
-  t8_adapt_cmesh_user_data_t search_user_data;
-  search_user_data.forest_to_adapt_from = forest_to_adapt_from;
-  t8_forest_set_user_data (forest, &search_user_data);
-  /* Fill marker array.
-   * elements that should be refined are set to 1. 0 for no refinemnet. -1 for coarsening. */
-  t8_forest_search (forest, t8_adapt_cmesh_search_element_callback,
-                    t8_adapt_cmesh_search_query_callback, search_queries);
-}
-
-static              t8_forest_t
-t8_adapt_cmesh_adapt_forest (t8_forest_t forest, t8_cmesh_t cmesh)
-{
-  /* TODO ... */
-
-  const t8_locidx_t   num_local_elements =
-    t8_forest_get_local_num_elements (forest);
-  /* Create marker array  to mark elements for refinement */
-  sc_array_t          marker_array;
-
-  sc_array_init_count (&marker_array, sizeof (short), num_local_elements);
-
-  t8_adapt_cmesh_search (forest, cmesh, &marker_array);
-
-  /* Adapt the forest according to the markers */
-  t8_forest_t         forest_adapt =
-    t8_forest_new_adapt (forest, t8_forest_adapt_marker_array_callback,
-                         0, 0, marker_array);
-}
-
 static int
 t8_adapt_cmesh_search_element_callback (t8_forest_t forest,
                                         t8_locidx_t ltreeid,
@@ -176,6 +126,58 @@ t8_adapt_cmesh_search_query_callback (t8_forest_t forest,
   return t8_forest_element_point_inside(forest, ltreeid, element, midpoint, tolerance);
 
 }
+
+static void
+t8_adapt_cmesh_search (t8_forest_t forest, t8_forest_t forest_to_adapt_from,
+                       sc_array_t * markers)
+{
+  sc_array_t          search_queries;
+  const t8_locidx_t   num_elements =
+    t8_forest_get_local_num_elements (forest_to_adapt_from);
+  const t8_locidx_t   num_trees =
+    t8_forest_get_num_local_trees (forest_to_adapt_from);
+  /* Initialize the queries array */
+  sc_array_init_count (&search_queries,
+                       sizeof (t8_adapt_cmesh_search_query_t), num_elements);
+  /* Fill queries with correct ids. */
+
+#if 0
+  /* TODO Fill tree ids and element ids */
+  for (t8_locidx_t itree; itree < num_trees; ++itree) {
+    *(t8_sc_array_index_locidx (&search_queries, itree)) = itree;
+  }
+#endif
+  /* Set the cmesh as forest user data */
+  t8_adapt_cmesh_user_data_t search_user_data;
+  search_user_data.forest_to_adapt_from = forest_to_adapt_from;
+  t8_forest_set_user_data (forest, &search_user_data);
+  /* Fill marker array.
+   * elements that should be refined are set to 1. 0 for no refinemnet. -1 for coarsening. */
+  t8_forest_search (forest, t8_adapt_cmesh_search_element_callback,
+                    t8_adapt_cmesh_search_query_callback, search_queries);
+}
+
+static              t8_forest_t
+t8_adapt_cmesh_adapt_forest (t8_forest_t forest, t8_cmesh_t cmesh)
+{
+  /* TODO ... */
+
+  const t8_locidx_t   num_local_elements =
+    t8_forest_get_local_num_elements (forest);
+  /* Create marker array  to mark elements for refinement */
+  sc_array_t          marker_array;
+
+  sc_array_init_count (&marker_array, sizeof (short), num_local_elements);
+
+  t8_adapt_cmesh_search (forest, cmesh, &marker_array);
+
+  /* Adapt the forest according to the markers */
+  t8_forest_t         forest_adapt =
+    t8_forest_new_adapt (forest, t8_forest_adapt_marker_array_callback,
+                         0, 0, marker_array);
+}
+
+
 
 int
 main (int argc, char **argv)
