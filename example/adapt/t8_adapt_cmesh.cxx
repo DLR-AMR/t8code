@@ -58,6 +58,7 @@ t8_adapt_cmesh_init_forest (sc_MPI_Comm comm, int level)
 typedef struct
 {
   t8_forest_t         forest_to_adapt_from;
+  sc_array_t         *refinement_markers;
 } t8_adapt_cmesh_user_data_t;
 typedef struct
 {
@@ -100,6 +101,7 @@ t8_adapt_cmesh_search_query_callback (t8_forest_t forest,
      Falls nein -> fertig */
   t8_adapt_cmesh_user_data_t *user_data =
     (t8_adapt_cmesh_user_data_t *) t8_forest_get_user_data (forest);
+  sc_array_t *refinement_markers = user_data->refinement_markers;
   const t8_forest_t    forest_to_adapt_from = user_data->forest_to_adapt_from;
   t8_adapt_cmesh_search_query_t *search_query =
     (t8_adapt_cmesh_search_query_t *) query;
@@ -124,8 +126,22 @@ t8_adapt_cmesh_search_query_callback (t8_forest_t forest,
                               midpoint);
 
   /* Check if midpoint is inside element */
-  return t8_forest_element_point_inside(forest, ltreeid, element, midpoint, tolerance);
+  const int midpoint_is_in_element = t8_forest_element_point_inside(forest, ltreeid, element, midpoint, tolerance);
 
+  if (!midpoint_is_in_element) {
+    /* Forest element's midpoint is not in the element. 
+     * remove query from search */
+    return 0;
+  }
+  if (is_leaf) {
+    /* This element is a leaf in the searched forest.
+     * Hence, we mark it for refinement. */
+
+
+    TODO: Set refinement marker
+  }
+  /* Keep this query in the search */
+  return 1;
 }
 
 static void
