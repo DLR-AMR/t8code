@@ -779,6 +779,11 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
              (long long) cmesh->num_trees, (long) cmesh->num_ghosts);
 
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
+
+  /* Extra check to abort when we have negative volumes. */
+  SC_CHECK_ABORT (t8_cmesh_no_negative_volume (cmesh),
+                  "Committed cmesh has at least one tree with negative volume.\n");
+
   /* If profiling is enabled, we measure the runtime of  commit. */
   if (cmesh->profile != NULL) {
     cmesh->profile->commit_runtime = sc_MPI_Wtime () -

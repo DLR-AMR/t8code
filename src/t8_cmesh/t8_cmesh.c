@@ -733,7 +733,6 @@ t8_cmesh_tree_vertices_negative_volume (t8_eclass_t eclass,
   return eclass == T8_ECLASS_TET ? sc_prod > 0 : sc_prod < 0;
 }
 
-#ifdef T8_ENABLE_DEBUG
 /* After a cmesh is committed, check whether all trees in a cmesh do have positive volume.
  * Returns true if all trees have positive volume.
  */
@@ -766,7 +765,6 @@ t8_cmesh_no_negative_volume (t8_cmesh_t cmesh)
   }
   return !res;
 }
-#endif
 
 void
 t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, t8_locidx_t ltree_id,
