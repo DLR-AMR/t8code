@@ -28,14 +28,21 @@
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_forest/t8_forest_adapt.h>
+#include <t8_cmesh_readmshfile.h>
 
 /* Build a cmesh according to which a later forest shall be refined. */
 t8_forest_t
-t8_adapt_forest_init_adapt_geometry (sc_MPI_Comm comm)
+t8_adapt_forest_init_adapt_geometry (sc_MPI_Comm comm, const char *meshfile,
+                                     const int dim, const int level)
 {
-  t8_cmesh_t          cmesh = t8_cmesh_new_from_class (T8_ECLASS_TET, comm);
+  t8_cmesh_t          cmesh;
+  if (meshfile != NULL) {
+    cmesh = t8_cmesh_from_msh_file (meshfile, 0, sc_MPI_COMM_SELF, dim, 0);
+  }
+  else {
+    cmesh = t8_cmesh_new_from_class (T8_ECLASS_PRISM, sc_MPI_COMM_SELF);
+  }
   t8_scheme_cxx_t    *scheme = t8_scheme_new_default_cxx ();
-  const int           level = 0;
   t8_forest_t         forest =
     t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_SELF);
   T8_ASSERT (!t8_cmesh_is_partitioned (cmesh));
@@ -43,10 +50,13 @@ t8_adapt_forest_init_adapt_geometry (sc_MPI_Comm comm)
 }
 
 t8_forest_t
-t8_adapt_cmesh_init_forest (sc_MPI_Comm comm, int level)
+t8_adapt_cmesh_init_forest (sc_MPI_Comm comm, const int level,
+                            const double scale[3],
+                            const double displacement[3])
 {
   t8_cmesh_t          cmesh =
-    t8_cmesh_new_hypercube (T8_ECLASS_HEX, comm, 0, 0, 0);
+    t8_cmesh_new_hypercube_ext (T8_ECLASS_HEX, comm, 0, 0, 0, scale,
+                                displacement);
   t8_scheme_cxx_t    *scheme = t8_scheme_new_default_cxx ();
   t8_forest_t         forest =
     t8_forest_new_uniform (cmesh, scheme, level, 0, comm);
@@ -109,7 +119,7 @@ t8_adapt_cmesh_search_query_callback (t8_forest_t forest,
   const t8_locidx_t   forest_to_adapt_from_element_id =
     search_query->element_id;
 
-  const double        tolerance = 0.2;
+  const double        tolerance = 1e-5;
 
   /* TODO: Get tree id and element id from query */
 
@@ -138,11 +148,10 @@ t8_adapt_cmesh_search_query_callback (t8_forest_t forest,
   if (is_leaf) {
     /* This element is a leaf in the searched forest.
      * Hence, we mark it for refinement. */
-    t8_locidx_t element_index = 
-      t8_forest_get_tree_element_offset(forest, ltreeid) + tree_leaf_index;
-    *(short *)t8_sc_array_index_locidx(refinement_markers, 
-                                       element_index) = midpoint_is_in_element;
-    
+    t8_locidx_t         element_index =
+      t8_forest_get_tree_element_offset (forest, ltreeid) + tree_leaf_index;
+    *(short *) t8_sc_array_index_locidx (refinement_markers,
+                                         element_index) = 1;
 
   }
   /* Keep this query in the search */
@@ -163,12 +172,19 @@ t8_adapt_cmesh_search (t8_forest_t forest, t8_forest_t forest_to_adapt_from,
                        sizeof (t8_adapt_cmesh_search_query_t), num_elements);
   /* Fill queries with correct ids. */
 
-#if 0
-  /* TODO Fill tree ids and element ids */
-  for (t8_locidx_t itree; itree < num_trees; ++itree) {
-    *(t8_sc_array_index_locidx (&search_queries, itree)) = itree;
+  for (t8_locidx_t itree = 0, iquery = 0; itree < num_trees; ++itree) {
+    const t8_locidx_t   num_elements_in_tree =
+      t8_forest_get_tree_num_elements (forest_to_adapt_from, itree);
+    for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree;
+         ++ielement, ++iquery) {
+      t8_adapt_cmesh_search_query_t *query = (t8_adapt_cmesh_search_query_t *)
+        t8_sc_array_index_locidx (&search_queries, iquery);
+      query->tree_id = itree;
+      query->element_id = ielement;
+    }
+
   }
-#endif
+
   /* Set the cmesh as forest user data */
   t8_adapt_cmesh_user_data_t search_user_data;
   search_user_data.forest_to_adapt_from = forest_to_adapt_from;
@@ -178,6 +194,8 @@ t8_adapt_cmesh_search (t8_forest_t forest, t8_forest_t forest_to_adapt_from,
    * elements that should be refined are set to 1. 0 for no refinemnet. -1 for coarsening. */
   t8_forest_search (forest, t8_adapt_cmesh_search_element_callback,
                     t8_adapt_cmesh_search_query_callback, &search_queries);
+
+  sc_array_reset (&search_queries);
 }
 
 static              t8_forest_t
@@ -192,8 +210,8 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
   sc_array_t          marker_array;
 
   sc_array_init_count (&marker_array, sizeof (short), num_local_elements);
-  for(ielement = 0; ielement < num_local_elements; ++ielement){
-    *(short *) t8_sc_array_index_locidx(&marker_array, ielement) = 0;
+  for (ielement = 0; ielement < num_local_elements; ++ielement) {
+    *(short *) t8_sc_array_index_locidx (&marker_array, ielement) = 0;
   }
 
   t8_adapt_cmesh_search (forest, forest_to_adapt_from, &marker_array);
@@ -202,7 +220,9 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
   t8_forest_t         forest_adapt =
     t8_forest_new_adapt (forest, t8_forest_adapt_marker_array_callback,
                          0, 0, &marker_array);
-  t8_forest_write_vtk(forest_adapt, "forest_adapt");
+
+  sc_array_reset (&marker_array);
+  return forest_adapt;
 }
 
 int
@@ -214,6 +234,12 @@ main (int argc, char **argv)
   int                 helpme;
   int                 parsed;
   int                 level;
+  int                 reflevel;
+  int                 template_level;
+  int                 dim;
+  double              scale[3];
+  double              displacement[3];
+  const char         *mshfile = NULL;
   const sc_MPI_Comm   comm = sc_MPI_COMM_WORLD;
 
   /* long help message */
@@ -226,7 +252,7 @@ main (int argc, char **argv)
 #ifdef T8_ENABLE_DEBUG
   t8_init (SC_LP_DEBUG);
 #else
-  t8_init (SC_LP_ESSENTIAL);
+  t8_init (SC_LP_DEFAULT);
 #endif
 
   /* initialize command line argument parser */
@@ -236,7 +262,34 @@ main (int argc, char **argv)
                          "Display a short help message.");
 
   sc_options_add_int (opt, 'l', "level", &level, 0,
-                      "The minimum refinement level of the forest.");
+                      "The minimum refinement level of the forest that will be refined.");
+
+  sc_options_add_int (opt, 'L', "template_level", &template_level, 0,
+                      "The uniform refinement level of the forest that provides the refinement template.");
+
+  sc_options_add_int (opt, 'r', "rlevel", &reflevel, 0,
+                      "The maximum refinement level of the forest that will be refined.");
+
+  sc_options_add_string (opt, 'f', "mshfile", &mshfile, NULL,
+                         "If specified, the forest to adapt from is constructed from a .msh file with "
+                         "the given prefix.\n\t\t\t\t     The files must end in .msh "
+                         "and be in ASCII format version 2. -d must be specified.");
+
+  sc_options_add_int (opt, 'd', "dim", &dim, -1,
+                      "In combination with -f: The dimension of the coarse mesh to read. 1 <= d <= 3.");
+
+  sc_options_add_double (opt, '\0', "S0", &scale[0], 1,
+                         "Scaling in x axis of the cube forest mesh.");
+  sc_options_add_double (opt, '\0', "S1", &scale[1], 1,
+                         "Scaling in y axis of the cube forest mesh.");
+  sc_options_add_double (opt, '\0', "S2", &scale[2], 1,
+                         "Scaling in z axis of the cube forest mesh.");
+  sc_options_add_double (opt, '\0', "D0", &displacement[0], 0,
+                         "Displacement in x axis of the cube forest mesh.");
+  sc_options_add_double (opt, '\0', "D1", &displacement[1], 0,
+                         "Displacement in y axis of the cube forest mesh.");
+  sc_options_add_double (opt, '\0', "D2", &displacement[2], 0,
+                         "Displacement in z axis of the cube forest mesh.");
 
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
@@ -245,19 +298,35 @@ main (int argc, char **argv)
     t8_global_essentialf ("%s\n", help);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-  else if (parsed >= 0 /* TODO: Check correct arguments */ ) {
+  else if (parsed >= 0 && level >= 0 && template_level >= 0 && reflevel >= 0 && ((dim >= 1 && dim <= 3) || mshfile == NULL)     /* If dim is provided, then mshfile must be provided as well. */
+           &&scale[0] != 0 && scale[1] != 0 && scale[2] != 0) {
     t8_forest_t         forest_to_adapt_from =
-      t8_adapt_forest_init_adapt_geometry (comm);
-    t8_forest_t         forest = t8_adapt_cmesh_init_forest (comm, level);
+      t8_adapt_forest_init_adapt_geometry (comm, mshfile, dim,
+                                           template_level);
+    t8_forest_t         forest =
+      t8_adapt_cmesh_init_forest (comm, level, scale, displacement);
 
+    /* Write forest to adapt from to vtk.
+     * Since this forest is not partitioned (using MPI_COMM_SELF),
+     * only one rank should write the files. */
+    int                 mpirank, mpiret;
+    mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+    SC_CHECK_MPI (mpiret);
+    if (mpirank == 0) {
+      t8_forest_write_vtk (forest_to_adapt_from, "forest_to_adapt_from");
+    }
     /* Identifiziere Element in forest, die einen Mittelpunkt eines
        Elements in  cmesh_to_adapt_from enthalten. */
     /*[D] Wäre nicht besser: Identifiziere Elemente in forest, 
        deren Mittelpunkt in einem Element des cmesh_to_adapt_from liegen? Im Grobgitter 
        beschreibt, der Mittelpunkt das Element sehr schlecht. */
     /* Adaptiere forest, so dass alle identifizierten Elemente verfeienrt werden. */
-    t8_adapt_cmesh_adapt_forest(forest, forest_to_adapt_from);
-    
+    for (int adapt_stages = level; adapt_stages < reflevel; ++adapt_stages) {
+      forest = t8_adapt_cmesh_adapt_forest (forest, forest_to_adapt_from);
+    }
+
+    t8_forest_write_vtk (forest, "forest_adapt");
+
     t8_forest_unref (&forest_to_adapt_from);
     t8_forest_unref (&forest);
   }
