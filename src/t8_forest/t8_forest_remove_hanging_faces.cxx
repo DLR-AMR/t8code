@@ -32,6 +32,35 @@
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
+/* TODO: this function is a duplicate from the function in forest_balance */ 
+static void
+t8_forest_compute_max_element_level (t8_forest_t forest)
+{
+  t8_locidx_t         ielement, elem_in_tree;
+  t8_locidx_t         itree, num_trees;
+  t8_element_t       *elem;
+  t8_eclass_scheme_c *scheme;
+  int                 local_max_level = 0, elem_level;
+
+  /* Iterate over all local trees and all local elements and comupte the maximum occurring level */
+  num_trees = t8_forest_get_num_local_trees (forest);
+  for (itree = 0; itree < num_trees; itree++) {
+    elem_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+    scheme =
+      t8_forest_get_eclass_scheme (forest,
+                                   t8_forest_get_tree_class (forest, itree));
+    for (ielement = 0; ielement < elem_in_tree; ielement++) {
+      /* Get the element and compute its level */
+      elem = t8_forest_get_element_in_tree (forest, itree, ielement);
+      elem_level = scheme->t8_element_level (elem);
+      local_max_level = SC_MAX (local_max_level, elem_level);
+    }
+  }
+  /* Communicate the local maximum levels */
+  sc_MPI_Allreduce (&local_max_level, &forest->maxlevel_existing, 1,
+                    sc_MPI_INT, sc_MPI_MAX, forest->mpicomm);
+}
+
 /* This is the adapt function, called for each element in a balanced forest during transition.
  * We refine an element into a suitable transition cell if it has at most one hanging face */
 int
@@ -49,14 +78,14 @@ t8_forest_remove_hanging_faces_adapt (t8_forest_t forest,
   t8_eclass_scheme_c *neigh_scheme;
   t8_element_t       *element = elements[0], **face_neighbor;
 
-  /* We only need to check an element, if its level is smaller then the maximum
-   * level in the forest minus 2.
-   * Otherwise there cannot exist neighbors of level greater than the element's level plus one.
-   * The variable maxlevel_existing is only set if we enter this function from t8_forest_balance.
-   * If we enter from the check function is_balanced, then it may not be set.
-   */
+  /* Compute the maximum occurring refinement level in the forest */
+  t8_forest_compute_max_element_level (forest->set_from);
+  t8_global_productionf ("Computed maximum occurring level:\t%i\n",
+                         forest->set_from->maxlevel_existing);
+
+  /* We only need to check an element, if its level is smaller then the maximum level in the forest. */
   if (forest_from->maxlevel_existing <= 0 ||
-      ts->t8_element_level (element) <= forest_from->maxlevel_existing - 2) {
+      ts->t8_element_level (element) < forest_from->maxlevel_existing) {
 
     num_faces = ts->t8_element_num_faces (element);
 
@@ -88,10 +117,10 @@ t8_forest_remove_hanging_faces_adapt (t8_forest_t forest,
                                                        ltree_id, element,
                                                        iface);
       neigh_scheme = t8_forest_get_eclass_scheme (forest_from, neigh_class);
-      /* Allocate memory for the number of half face neighbors */
+      /* Allocate memory for the virtual face neighbor */
       face_neighbor = T8_ALLOC (t8_element_t *, 1);
       neigh_scheme->t8_element_new (1, face_neighbor);
-      /* Compute the face neighbors of element at this face */
+      /* Compute the virtual face neighbor of element at this face */
       neighbor_tree = t8_forest_element_face_neighbor (forest_from, ltree_id,
                                                        element,
                                                        face_neighbor[0],
@@ -119,17 +148,18 @@ t8_forest_remove_hanging_faces_adapt (t8_forest_t forest,
       neigh_scheme->t8_element_destroy (1, face_neighbor);
       T8_FREE (face_neighbor);
     }
+    /* returning the right subelement types */
+    if (subelement_type == 0) {   /* in this case, there are no hanging nodes and we do not need to do anything */
+      return 0;
+    }
+    else if (subelement_type == 15) {    /* hanging faces can, in this case, just be removed via the standard quad refinement */
+      return 1;
+    }
+    else {    /* use subelements and add 1 to every type, to avoid refine = 1 */
+      return subelement_type + 1;
+    }
   }
-  /* returning the right subelement types */
-  if (subelement_type == 0) {   /* in this case, there are no hanging nodes and we do not need to do anything */
-    return 0;
-  }
-  else if (subelement_type == 15) {    /* hanging faces can, in this case, just be removed via the standard quad refinement */
-    return 1;
-  }
-  else {    /* use subelements and add 1 to every type, to avoid refine = 1 */
-    return subelement_type + 1;
-  }
+  return 0;  
 }
 
 void
