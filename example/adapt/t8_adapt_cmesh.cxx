@@ -101,32 +101,34 @@ t8_adapt_cmesh_search_query_callback (t8_forest_t forest,
      Falls nein -> fertig */
   t8_adapt_cmesh_user_data_t *user_data =
     (t8_adapt_cmesh_user_data_t *) t8_forest_get_user_data (forest);
-  sc_array_t *refinement_markers = user_data->refinement_markers;
-  const t8_forest_t    forest_to_adapt_from = user_data->forest_to_adapt_from;
+  sc_array_t         *refinement_markers = user_data->refinement_markers;
+  const t8_forest_t   forest_to_adapt_from = user_data->forest_to_adapt_from;
   t8_adapt_cmesh_search_query_t *search_query =
     (t8_adapt_cmesh_search_query_t *) query;
   const t8_locidx_t   forest_to_adapt_from_tree_id = search_query->tree_id;
-  const t8_locidx_t   forest_to_adapt_from_element_id = search_query->element_id;
+  const t8_locidx_t   forest_to_adapt_from_element_id =
+    search_query->element_id;
 
-  const double      tolerance = 0.2;
+  const double        tolerance = 0.2;
 
   /* TODO: Get tree id and element id from query */
-
 
   /* TODO: Compute midpoint of query. Return true only if midpoint is in current element. */
   /* Compute midpoint of tree */
   double              midpoint[3];
-  t8_element_t *      forest_to_adapt_from_element = t8_forest_get_element_in_tree(forest_to_adapt_from, 
-                                                    forest_to_adapt_from_tree_id,
-                                                    forest_to_adapt_from_element_id);
+  t8_element_t       *forest_to_adapt_from_element =
+    t8_forest_get_element_in_tree (forest_to_adapt_from,
+                                   forest_to_adapt_from_tree_id,
+                                   forest_to_adapt_from_element_id);
 
-  t8_forest_element_centroid (forest_to_adapt_from, 
+  t8_forest_element_centroid (forest_to_adapt_from,
                               forest_to_adapt_from_tree_id,
-                              forest_to_adapt_from_element,
-                              midpoint);
+                              forest_to_adapt_from_element, midpoint);
 
   /* Check if midpoint is inside element */
-  const int midpoint_is_in_element = t8_forest_element_point_inside(forest, ltreeid, element, midpoint, tolerance);
+  const int           midpoint_is_in_element =
+    t8_forest_element_point_inside (forest, ltreeid, element, midpoint,
+                                    tolerance);
 
   if (!midpoint_is_in_element) {
     /* Forest element's midpoint is not in the element. 
@@ -137,9 +139,7 @@ t8_adapt_cmesh_search_query_callback (t8_forest_t forest,
     /* This element is a leaf in the searched forest.
      * Hence, we mark it for refinement. */
 
-
-    TODO: Set refinement marker
-  }
+TODO:Set refinement marker}
   /* Keep this query in the search */
   return 1;
 }
@@ -175,7 +175,8 @@ t8_adapt_cmesh_search (t8_forest_t forest, t8_forest_t forest_to_adapt_from,
 }
 
 static              t8_forest_t
-t8_adapt_cmesh_adapt_forest (t8_forest_t forest, t8_forest_t forest_to_adapt_from)
+t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
+                             t8_forest_t forest_to_adapt_from)
 {
   /* TODO ... */
 
@@ -193,8 +194,6 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest, t8_forest_t forest_to_adapt_fro
     t8_forest_new_adapt (forest, t8_forest_adapt_marker_array_callback,
                          0, 0, &marker_array);
 }
-
-
 
 int
 main (int argc, char **argv)
