@@ -25,7 +25,7 @@
 #include <t8_cmesh.h>
 
 /* *INDENT-OFF* */
-class t8_gtest_bcast : public testing::TestWithParam<t8_eclass> {
+class cmesh_hypercube : public testing::TestWithParam<t8_eclass> {
 protected:
   void SetUp() override {
     eclass = GetParam();
@@ -41,9 +41,9 @@ protected:
   t8_eclass eclass;
 };
 
-TEST_P (t8_gtest_bcast, bcast_equal_no_bcast) {
+TEST_P (cmesh_hypercube, bcast_equal_no_bcast) {
   EXPECT_TRUE (t8_cmesh_is_equal (cmesh_bcast, cmesh_check));
 }
 
-INSTANTIATE_TEST_SUITE_P(does_this_work, t8_gtest_bcast, testing::Range(T8_ECLASS_ZERO, T8_ECLASS_COUNT));
+INSTANTIATE_TEST_SUITE_P(t8_gtest_bcast, cmesh_hypercube, testing::Range(T8_ECLASS_ZERO, T8_ECLASS_COUNT));
 /* *INDENT-ON* */
