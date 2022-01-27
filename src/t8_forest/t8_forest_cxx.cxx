@@ -1109,7 +1109,7 @@ t8_forest_line_cuts_rectangle (const double line_pointA[3],
   /* Determine the axis to which we are aligned */
   for (axis = 0; axis < 3; ++axis) {
     if (fabs (rectA[axis] - rectD[axis]) < tolerance) {
-      continue;
+      break;
     }
   }
   SC_CHECK_ABORT (axis < 3, "Rectangle not axis aligned.\n");
