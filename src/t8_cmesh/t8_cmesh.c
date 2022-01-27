@@ -2173,8 +2173,10 @@ t8_cmesh_new_hypercube_hybrid (sc_MPI_Comm comm, int do_partition,
  */
 /* TODO: upgrade with int x,y,z for periodic faces */
 t8_cmesh_t
-t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
-                        int do_partition, int periodic)
+t8_cmesh_new_hypercube_ext (t8_eclass_t eclass, sc_MPI_Comm comm,
+                            int do_bcast, int do_partition, int periodic,
+                            const double scale[3],
+                            const double displacement[3])
 {
   t8_cmesh_t          cmesh;
   int                 num_trees_for_hypercube[T8_ECLASS_COUNT] = {
@@ -2200,10 +2202,23 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
   SC_CHECK_ABORT (eclass != T8_ECLASS_PYRAMID || !periodic,
                   "The pyramid cube mesh cannot be periodic.\n");
 
+  SC_CHECK_ABORT (scale[0] != 0 && scale[1] != 0 && scale[2] != 0,
+                  "The provided scale must be non-zero in each direction.\n");
+
   if (do_partition) {
     t8_global_errorf
       ("WARNING: Partitioning the hypercube cmesh is currently not supported.\n"
        "Using this cmesh will crash when vertices are used. See also https://github.com/holke/t8code/issues/79\n");
+  }
+
+  /* Scale and displace the coordinates. */
+  for (int ivertex = 0; ivertex < 8; ++ivertex) {
+    vertices_coords[3 * ivertex] *= scale[0];
+    vertices_coords[3 * ivertex + 1] *= scale[1];
+    vertices_coords[3 * ivertex + 2] *= scale[2];
+    vertices_coords[3 * ivertex] += displacement[0];
+    vertices_coords[3 * ivertex + 1] += displacement[1];
+    vertices_coords[3 * ivertex + 2] += displacement[2];
   }
 
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
@@ -2407,6 +2422,16 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
 
   t8_cmesh_commit (cmesh, comm);
   return cmesh;
+}
+
+t8_cmesh_t
+t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
+                        int do_partition, int periodic)
+{
+  const double        scale[3] = { 1, 1, 1 };
+  const double        displ[3] = { 0, 0, 0 };
+  return t8_cmesh_new_hypercube_ext (eclass, comm, do_bcast, do_partition,
+                                     periodic, scale, displ);
 }
 
 t8_cmesh_t

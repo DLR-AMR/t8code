@@ -785,7 +785,7 @@ t8_cmesh_t          t8_cmesh_new_from_class (t8_eclass_t eclass,
 
 t8_cmesh_t          t8_cmesh_new_testhybrid (sc_MPI_Comm comm);
 
-/** Construct a hypercube forest from one primitive tree class.
+/** Construct a hypercube forest from one primitive tree class meshing the unit cube.
  * \param [in] eclass       This element class determines the dimension and
  *                          the number of trees needed to construct a cube.
  * \param [in] comm         The mpi communicator to be used.
@@ -802,6 +802,30 @@ t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
                                             sc_MPI_Comm comm,
                                             int do_bcast, int do_partition,
                                             int periodic);
+
+/** Construct a hypercube forest from one primitive tree class meshing a scaled and displaced unit cube.
+ * \param [in] eclass       This element class determines the dimension and
+ *                          the number of trees needed to construct a cube.
+ * \param [in] comm         The mpi communicator to be used.
+ * \param [in] do_bcast     If this flag is nonzero the cmesh is only constructed
+ *                          on processor 0 and then broadcasted to the other
+ *                          processors in \a comm.
+ *                          TODO: this parameter will be moved to internal.
+ * \param [in] do_partition Create a partitioned cmesh.
+ * \param [in] periodic     If true, the coarse mesh will be periodic in each direction.
+ *                          Not possible with \a eclass pyramid.
+ * \param [in] scale        For each coordinate a scaling factor.
+ * \param [in] displacement For each coordinate a displacement factor.
+ * This function extends \ref t8_cmesh_new_hypercube.
+ * The coordinates of the cube in axis i will be displacement[i], scale[i] + displacement[i]
+ */
+t8_cmesh_t          t8_cmesh_new_hypercube_ext (t8_eclass_t eclass,
+                                                sc_MPI_Comm comm,
+                                                int do_bcast,
+                                                int do_partition,
+                                                int periodic,
+                                                const double scale[3],
+                                                const double displacement[3]);
 
 /** Hybercube with 6 Tets, 6 Prism, 4 Hex. */
 /* TODO: Document */
