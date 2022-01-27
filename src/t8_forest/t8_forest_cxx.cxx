@@ -34,6 +34,7 @@
 #include <t8_cmesh/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_geometry/t8_geometry_base.hxx>
+#include <t8_schemes/t8_default_cxx.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -1084,6 +1085,148 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
       ("Point inside check not implemented for elements of shape %s.\n",
        t8_eclass_to_string[element_shape]);
   }
+}
+
+/**
+ * axis= 0 => x-axis
+ * axis= 1 => y-axis
+ * axis= 2 => z-axis
+ * 
+ *  C -------- D
+ *  |          |
+ *  |          |
+ *  |          |
+ *  A -------- B
+*/
+static int
+t8_forest_line_cuts_rectangle (const double line_pointA[3],
+                               const double line_pointB[3],
+                               const double rectA[3], const double rectB[3],
+                               const double rectC[3], const double rectD[3])
+{
+  int                 axis;
+  const double        tolerance = 1e-12;
+  /* Determine the axis to which we are aligned */
+  for (axis = 0; axis < 3; ++axis) {
+    if (fabs (rectA[axis] - rectD[axis]) < tolerance) {
+      continue;
+    }
+  }
+  SC_CHECK_ABORT (axis < 3, "Rectangle not axis aligned.\n");
+
+  const double        axis_coord = rectA[axis];
+#ifdef T8_ENABLE_DEBUG
+/* Check that input rectangle is axis aligned */
+  int                 is_axis_aligned = 0;
+  if (fabs (axis_coord - rectB[axis]) < tolerance
+      && fabs (axis_coord - rectC[axis]) < tolerance
+      && fabs (axis_coord - rectD[axis]) < tolerance) {
+    is_axis_aligned = 1;
+  }
+  T8_ASSERT (is_axis_aligned);
+#endif
+  /* The line is given by
+   * L(lambda) = PointA + lambda (PointB - PointA)
+   *
+   *  We need to solve for L(lambda)_axis = axis_coord
+   */
+  const double        lambda =
+    (axis_coord - line_pointA[axis]) / (line_pointB[axis] -
+                                        line_pointA[axis]);
+  if (0 > lambda || 1 < lambda) {
+    /* The computed point does not lie on the line. */
+    return 0;
+  }
+  /*Intersection with whole plane given by the rectangle */
+  double              possible_intersection[3];
+
+  for (int i = 0; i < 3; ++i) {
+    possible_intersection[i] =
+      line_pointA[i] + lambda * (line_pointB[i] - line_pointA[i]);
+  }
+
+  /* Get the indices of the other axis */
+  const int           axis_a = (axis + 1) % 3;
+  const int           axis_b = (axis + 2) % 3;
+
+  if (rectA[axis_a] <= possible_intersection[axis_a]
+      && possible_intersection[axis_a] <= rectB[axis_a]) {
+    if (rectA[axis_b] <= possible_intersection[axis_b]
+        && possible_intersection[axis_b] <= rectB[axis_b]) {
+      /* The possible intersection is an actual intersection. */
+      return 1;
+    }
+  }
+  return 0;
+}
+
+int
+t8_forest_line_cuts_aligned_hex (t8_forest_t forest_line,
+                                 const t8_locidx_t line_tree_id,
+                                 const t8_element_t * line,
+                                 t8_forest_t forest_hex,
+                                 const t8_locidx_t hex_tree_id,
+                                 const t8_element_t * hex)
+{
+  const t8_eclass_t   hex_tree_class =
+    t8_forest_get_tree_class (forest_hex, hex_tree_id);
+  t8_eclass_scheme_c *hex_scheme =
+    t8_forest_get_eclass_scheme (forest_hex, hex_tree_class);
+  const double        tolerance = 1e-12;
+  double              line_pointA[3];
+  double              line_pointB[3];
+  /* TODO: We currently rely on the enumeration of the face indices to match the input of
+   *       t8_forest_line_cuts_rectangle. Hence, this function only works with the default scheme. */
+  T8_ASSERT (t8_eclass_scheme_is_default (hex_scheme));
+#if T8_ENABLE_DEBUG
+  const t8_eclass_t   line_tree_class =
+    t8_forest_get_tree_class (forest_line, line_tree_id);
+  t8_eclass_scheme_c *line_scheme =
+    t8_forest_get_eclass_scheme (forest_line, line_tree_class);
+#endif
+  T8_ASSERT (line_scheme->t8_element_shape (line) == T8_ECLASS_LINE);
+  T8_ASSERT (hex_scheme->t8_element_shape (hex) == T8_ECLASS_HEX);
+
+  t8_forest_element_coordinate (forest_line, line_tree_id, line, 0,
+                                line_pointA);
+  t8_forest_element_coordinate (forest_line, line_tree_id, line, 1,
+                                line_pointB);
+
+  if (t8_forest_element_point_inside
+      (forest_hex, hex_tree_class, hex, line_pointA, tolerance)) {
+    /* One of the points of the line is inside the hex, so the line cuts the hex. */
+    return 1;
+  }
+  /* For each face, check whether the line cuts the rectangle */
+  for (int iface = 0; iface < 6; ++iface) {
+    double              cornerA[3];
+    double              cornerB[3];
+    double              cornerC[3];
+    double              cornerD[3];
+    int                 corner_number =
+      hex_scheme->t8_element_get_face_corner (hex, iface, 0);
+    t8_forest_element_coordinate (forest_hex, hex_tree_id, hex, corner_number,
+                                  cornerA);
+    corner_number = hex_scheme->t8_element_get_face_corner (hex, iface, 1);
+    t8_forest_element_coordinate (forest_hex, hex_tree_id, hex, corner_number,
+                                  cornerB);
+    corner_number = hex_scheme->t8_element_get_face_corner (hex, iface, 2);
+    t8_forest_element_coordinate (forest_hex, hex_tree_id, hex, corner_number,
+                                  cornerC);
+    corner_number = hex_scheme->t8_element_get_face_corner (hex, iface, 3);
+    t8_forest_element_coordinate (forest_hex, hex_tree_id, hex, corner_number,
+                                  cornerD);
+
+    const int           line_cuts_face =
+      t8_forest_line_cuts_rectangle (line_pointA, line_pointB, cornerA,
+                                     cornerB, cornerC, cornerD);
+    if (line_cuts_face) {
+      /* Te line cuts this face, so it cuts the hex. */
+      return 1;
+    }
+  }
+  /* The line cuts non of the faces, so it also does not cute the hex. */
+  return 0;
 }
 
 /* For each tree in a forest compute its first and last descendant */
