@@ -138,8 +138,13 @@ t8_adapt_cmesh_search_query_callback (t8_forest_t forest,
   if (is_leaf) {
     /* This element is a leaf in the searched forest.
      * Hence, we mark it for refinement. */
+    t8_locidx_t element_index = 
+      t8_forest_get_tree_element_offset(forest, ltreeid) + tree_leaf_index;
+    *(short *)t8_sc_array_index_locidx(refinement_markers, 
+                                       element_index) = midpoint_is_in_element;
+    
 
-TODO:Set refinement marker}
+  }
   /* Keep this query in the search */
   return 1;
 }
@@ -167,6 +172,7 @@ t8_adapt_cmesh_search (t8_forest_t forest, t8_forest_t forest_to_adapt_from,
   /* Set the cmesh as forest user data */
   t8_adapt_cmesh_user_data_t search_user_data;
   search_user_data.forest_to_adapt_from = forest_to_adapt_from;
+  search_user_data.refinement_markers = markers;
   t8_forest_set_user_data (forest, &search_user_data);
   /* Fill marker array.
    * elements that should be refined are set to 1. 0 for no refinemnet. -1 for coarsening. */
@@ -179,13 +185,16 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
                              t8_forest_t forest_to_adapt_from)
 {
   /* TODO ... */
-
+  t8_locidx_t         ielement;
   const t8_locidx_t   num_local_elements =
     t8_forest_get_local_num_elements (forest);
   /* Create marker array  to mark elements for refinement */
   sc_array_t          marker_array;
 
   sc_array_init_count (&marker_array, sizeof (short), num_local_elements);
+  for(ielement = 0; ielement < num_local_elements; ++ielement){
+    *(short *) t8_sc_array_index_locidx(&marker_array, ielement) = 0;
+  }
 
   t8_adapt_cmesh_search (forest, forest_to_adapt_from, &marker_array);
 
@@ -193,6 +202,7 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
   t8_forest_t         forest_adapt =
     t8_forest_new_adapt (forest, t8_forest_adapt_marker_array_callback,
                          0, 0, &marker_array);
+  t8_forest_write_vtk(forest_adapt, "forest_adapt");
 }
 
 int
@@ -246,6 +256,8 @@ main (int argc, char **argv)
        deren Mittelpunkt in einem Element des cmesh_to_adapt_from liegen? Im Grobgitter 
        beschreibt, der Mittelpunkt das Element sehr schlecht. */
     /* Adaptiere forest, so dass alle identifizierten Elemente verfeienrt werden. */
+    t8_adapt_cmesh_adapt_forest(forest, forest_to_adapt_from);
+    
     t8_forest_unref (&forest_to_adapt_from);
     t8_forest_unref (&forest);
   }
