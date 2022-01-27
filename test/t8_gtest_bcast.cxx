@@ -38,7 +38,7 @@ protected:
     t8_cmesh_unref (&cmesh_check);
   }
   t8_cmesh_t          cmesh_bcast, cmesh_check;
-  t8_eclass eclass;
+  t8_eclass           eclass;
 };
 
 TEST_P (cmesh_hypercube, bcast_equal_no_bcast) {
