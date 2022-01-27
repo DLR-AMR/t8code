@@ -172,7 +172,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
   t8_cmesh_t          cmesh_partition;
   char                forest_vtu[BUFSIZ], cmesh_vtu[BUFSIZ];
   adapt_data_t        adapt_data;
-  t8_forest_t         forest, forest_adapt, forest_partition;
+  t8_forest_t         forest, forest_adapt;
   double              t;
   int                 partition_cmesh, r;
   const int           refine_rounds = max_level - init_level;
