@@ -1193,7 +1193,7 @@ t8_forest_line_cuts_aligned_hex (t8_forest_t forest_line,
                                 line_pointB);
 
   if (t8_forest_element_point_inside
-      (forest_hex, hex_tree_class, hex, line_pointA, tolerance)) {
+      (forest_hex, hex_tree_id, hex, line_pointA, tolerance)) {
     /* One of the points of the line is inside the hex, so the line cuts the hex. */
     return 1;
   }
