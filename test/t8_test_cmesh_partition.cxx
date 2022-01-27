@@ -24,7 +24,6 @@
 #include <t8_schemes/t8_default_cxx.hxx>
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include "t8_cmesh/t8_cmesh_partition.h"
-#include "src/t8_refcount.h"
 #include "t8_cmesh/t8_cmesh_testcases.h"
 
 /* We create a cmesh, partition it and repartition it several times.
