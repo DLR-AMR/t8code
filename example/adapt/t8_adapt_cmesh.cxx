@@ -118,7 +118,7 @@ t8_adapt_cmesh_search_query_callback (t8_forest_t forest,
   const t8_locidx_t   forest_to_adapt_from_tree_id = search_query->tree_id;
   const t8_locidx_t   forest_to_adapt_from_element_id =
     search_query->element_id;
-
+  int                 query_is_in_element = 0;
   const double        tolerance = 1e-5;
 
   /* TODO: Get tree id and element id from query */
@@ -126,7 +126,7 @@ t8_adapt_cmesh_search_query_callback (t8_forest_t forest,
   /* TODO: Compute midpoint of query. Return true only if midpoint is in current element. */
   /* Compute midpoint of tree */
   double              midpoint[3];
-  t8_element_t       *forest_to_adapt_from_element =
+  const t8_element_t *forest_to_adapt_from_element =
     t8_forest_get_element_in_tree (forest_to_adapt_from,
                                    forest_to_adapt_from_tree_id,
                                    forest_to_adapt_from_element_id);
@@ -136,15 +136,42 @@ t8_adapt_cmesh_search_query_callback (t8_forest_t forest,
                               forest_to_adapt_from_element, midpoint);
 
   /* Check if midpoint is inside element */
-  const int           midpoint_is_in_element =
-    t8_forest_element_point_inside (forest, ltreeid, element, midpoint,
-                                    tolerance);
 
-  if (!midpoint_is_in_element) {
-    /* Forest element's midpoint is not in the element. 
+  const t8_eclass_t   adapt_from_eclass =
+    t8_forest_get_tree_class (forest_to_adapt_from,
+                              forest_to_adapt_from_tree_id);
+  t8_eclass_scheme_c *scheme_to_adapt_from =
+    t8_forest_get_eclass_scheme (forest_to_adapt_from, adapt_from_eclass);
+  const t8_element_shape_t shape_to_adapt_from =
+    scheme_to_adapt_from->t8_element_shape (element);
+
+  const t8_eclass_t   tree_class = t8_forest_get_tree_class (forest, ltreeid);
+  t8_eclass_scheme_c *scheme =
+    t8_forest_get_eclass_scheme (forest, tree_class);
+  const t8_element_shape_t shape = scheme->t8_element_shape (element);
+
+  if (shape_to_adapt_from == T8_ECLASS_LINE && shape == T8_ECLASS_HEX) {
+    /* The element class of the forest to adapt from is line and the element's class is a hex
+     * we check whether the line cuts our hex element. */
+    /* Note that this only works, if the hex is axis aligned. */
+    query_is_in_element =
+      t8_forest_line_cuts_aligned_hex (forest_to_adapt_from,
+                                       forest_to_adapt_from_tree_id,
+                                       forest_to_adapt_from_element, forest,
+                                       ltreeid, element);
+  }
+  else {
+    query_is_in_element =
+      t8_forest_element_point_inside (forest, ltreeid, element, midpoint,
+                                      tolerance);
+  }
+
+  if (!query_is_in_element) {
+    /* The query is not detected in the element. 
      * remove query from search */
     return 0;
   }
+
   if (is_leaf) {
     /* This element is a leaf in the searched forest.
      * Hence, we mark it for refinement. */
