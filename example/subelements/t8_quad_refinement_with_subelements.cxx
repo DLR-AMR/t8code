@@ -141,7 +141,7 @@ static double
 t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
 {
   double adapt_time = 0;
-  t8_productionf ("Into the t8_refine_with_subelements function");
+  t8_productionf ("Into the t8_refine_with_subelements function\n");
 
   t8_forest_t         forest;
   t8_forest_t         forest_adapt;
