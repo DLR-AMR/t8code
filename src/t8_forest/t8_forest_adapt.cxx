@@ -366,7 +366,7 @@ t8_forest_adapt (t8_forest_t forest)
 
       /* output for debugging */
       t8_debugf
-        ("el_considered: %i/%i  refine: %i  is_family: %i  num_siblings: %i\n",
+        ("el_considered: %i/%i  refine: %i  is_family: %i  num_siblings: %li\n",
          el_considered + 1, num_el_from, refine, is_family, num_siblings);
 #endif
 
