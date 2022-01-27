@@ -32,35 +32,6 @@
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
-/* TODO: this function is a duplicate from the function in forest_balance */ 
-static void
-t8_forest_compute_max_element_level (t8_forest_t forest)
-{
-  t8_locidx_t         ielement, elem_in_tree;
-  t8_locidx_t         itree, num_trees;
-  t8_element_t       *elem;
-  t8_eclass_scheme_c *scheme;
-  int                 local_max_level = 0, elem_level;
-
-  /* Iterate over all local trees and all local elements and comupte the maximum occurring level */
-  num_trees = t8_forest_get_num_local_trees (forest);
-  for (itree = 0; itree < num_trees; itree++) {
-    elem_in_tree = t8_forest_get_tree_num_elements (forest, itree);
-    scheme =
-      t8_forest_get_eclass_scheme (forest,
-                                   t8_forest_get_tree_class (forest, itree));
-    for (ielement = 0; ielement < elem_in_tree; ielement++) {
-      /* Get the element and compute its level */
-      elem = t8_forest_get_element_in_tree (forest, itree, ielement);
-      elem_level = scheme->t8_element_level (elem);
-      local_max_level = SC_MAX (local_max_level, elem_level);
-    }
-  }
-  /* Communicate the local maximum levels */
-  sc_MPI_Allreduce (&local_max_level, &forest->maxlevel_existing, 1,
-                    sc_MPI_INT, sc_MPI_MAX, forest->mpicomm);
-}
-
 /* This is the adapt function, called for each element in a balanced forest during transition.
  * We refine an element into a suitable transition cell if it has at most one hanging face */
 int
@@ -78,88 +49,77 @@ t8_forest_remove_hanging_faces_adapt (t8_forest_t forest,
   t8_eclass_scheme_c *neigh_scheme;
   t8_element_t       *element = elements[0], **face_neighbor;
 
-  /* Compute the maximum occurring refinement level in the forest */
-  t8_forest_compute_max_element_level (forest->set_from);
-  t8_global_productionf ("Computed maximum occurring level:\t%i\n",
-                         forest->set_from->maxlevel_existing);
+  num_faces = ts->t8_element_num_faces (element);
 
-  /* We only need to check an element, if its level is smaller then the maximum level in the forest. */
-  if (forest_from->maxlevel_existing <= 0 ||
-      ts->t8_element_level (element) < forest_from->maxlevel_existing) {
+  /* We use a binary encoding (depending on the face enumeration), to determine which subelement type to use. 
+    * Every face has a flag parameter, wich is set to 1, if there is a neighbor with a higher level 
+    * and to 0, if the level of the neighbor is at most the level of the element.   
+    *             
+    *              f0                         1
+    *        x - - x - - x              x - - x - - x       
+    *        |           |              | \   |   / |
+    *        |           |              |   \ | /   |                                                            | f3 | f2 | f1 | f0 |
+    *    f3  x           | f2   -->   1 x - - x     | 0   -->   binary code (according to the face enumeration): |  1 |  0 |  0 |  1 | = 9 in base 10  
+    *        |           |              |   /   \   |
+    *        | elem      |              | /       \ |
+    *        x - - - - - x              x - - - - - x
+    *              f1                         0 
+    *                      
+    * Note, that this procedure is independent of the eclass (we only show an example for the quad scheme). 
+    * Each neighbor-structure will lead to a unique binary code. 
+    * Within the element scheme of the given eclass, this binary code is used to construct the right subelement type,
+    * in order to remove hanging nodes from the mesh. */
 
-    num_faces = ts->t8_element_num_faces (element);
+  t8_debugf ("local element index: %i\n", lelement_id);
+  ts->t8_element_print_element (element);
 
-    /* We use a binary encoding (depending on the face enumeration), to determine which subelement type to use. 
-     * Every face has a flag parameter, wich is set to 1, if there is a neighbour with a higher level 
-     * and to 0, if the level of the neighbour is at most the level of the element.   
-     *             
-     *              f0                         1
-     *        x - - x - - x              x - - x - - x       
-     *        |           |              | \   |   / |
-     *        |           |              |   \ | /   |                                                            | f3 | f2 | f1 | f0 |
-     *    f3  x           | f2   -->   1 x - - x     | 0   -->   binary code (according to the face enumeration): |  1 |  0 |  0 |  1 | = 9 in base 10  
-     *        |           |              |   /   \   |
-     *        | elem      |              | /       \ |
-     *        x - - - - - x              x - - - - - x
-     *              f1                         0 
-     *                      
-     * Note, that this procedure is independent of the eclass (we only show an example for the quad scheme). 
-     * Each neighbour-structure will lead to a unique binary code. 
-     * Within the element scheme of the given eclass, this binary code is used to construct the right subelement type,
-     * in order to remove hanging nodes from the mesh. */
+  for (iface = 0; iface < num_faces; iface++) {
+    /* Get the element class and scheme of the face neighbor */
+    neigh_class = t8_forest_element_neighbor_eclass (forest_from,
+                                                      ltree_id, element,
+                                                      iface);
+    neigh_scheme = t8_forest_get_eclass_scheme (forest_from, neigh_class);
+    /* Allocate memory for the virtual face neighbor */
+    face_neighbor = T8_ALLOC (t8_element_t *, 1);
+    neigh_scheme->t8_element_new (1, face_neighbor);
+    /* Compute the virtual face neighbor of element at this face */
+    neighbor_tree = t8_forest_element_face_neighbor (forest_from, ltree_id,
+                                                      element,
+                                                      face_neighbor[0],
+                                                      neigh_scheme,
+                                                      iface, &neigh_face);
 
-    t8_debugf ("local element index: %i\n", lelement_id);
-    ts->t8_element_print_element (element);
+    t8_debugf ("Face neighbor at face %i:\n", iface);
+    ts->t8_element_print_element (face_neighbor[0]);
 
-    for (iface = 0; iface < num_faces; iface++) {
-      /* Get the element class and scheme of the face neighbor */
-      neigh_class = t8_forest_element_neighbor_eclass (forest_from,
-                                                       ltree_id, element,
-                                                       iface);
-      neigh_scheme = t8_forest_get_eclass_scheme (forest_from, neigh_class);
-      /* Allocate memory for the virtual face neighbor */
-      face_neighbor = T8_ALLOC (t8_element_t *, 1);
-      neigh_scheme->t8_element_new (1, face_neighbor);
-      /* Compute the virtual face neighbor of element at this face */
-      neighbor_tree = t8_forest_element_face_neighbor (forest_from, ltree_id,
-                                                       element,
-                                                       face_neighbor[0],
-                                                       neigh_scheme,
-                                                       iface, &neigh_face);
-
-      t8_debugf ("Face neighbor at face %i:\n", iface);
-      ts->t8_element_print_element (face_neighbor[0]);
-
-      if (neighbor_tree >= 0) {
-        if (t8_forest_element_has_leaf_desc (forest_from, neighbor_tree,
-                                             face_neighbor[0],
-                                             neigh_scheme)) {
-          /* If leaf descandant exists, then assign a 1 to the face in the binary encoding */
-          /* This procedure determines the decimal value of the binary representation of the neighbour structure. 
-           *     
-           *    binary:   |    1    |    0    |    0    |    1    |
-           *    decimal:     1*2^3  +  0*2^2  +  0*2^1  +  1*2^0  =  9
-           *  
-           */
-          subelement_type += 1 << ((num_faces - 1) - iface);
-        }
+    if (neighbor_tree >= 0) {
+      if (t8_forest_element_has_leaf_desc (forest_from, neighbor_tree,
+                                            face_neighbor[0],
+                                            neigh_scheme)) {
+        /* If leaf descandant exists, then assign a 1 to the face in the binary encoding */
+        /* This procedure determines the decimal value of the binary representation of the neighbor structure. 
+          *     
+          *    binary:   |    1    |    0    |    0    |    1    |
+          *    decimal:     1*2^3  +  0*2^2  +  0*2^1  +  1*2^0  =  9
+          *  
+          */
+        subelement_type += 1 << ((num_faces - 1) - iface);
       }
-      /* clean-up */
-      neigh_scheme->t8_element_destroy (1, face_neighbor);
-      T8_FREE (face_neighbor);
     }
-    /* returning the right subelement types */
-    if (subelement_type == 0) {   /* in this case, there are no hanging nodes and we do not need to do anything */
-      return 0;
-    }
-    else if (subelement_type == 15) {    /* hanging faces can, in this case, just be removed via the standard quad refinement */
-      return 1;
-    }
-    else {    /* use subelements and add 1 to every type, to avoid refine = 1 */
-      return subelement_type + 1;
-    }
+    /* clean-up */
+    neigh_scheme->t8_element_destroy (1, face_neighbor);
+    T8_FREE (face_neighbor);
   }
-  return 0;  
+  /* returning the right subelement types */
+  if (subelement_type == 0) {   /* in this case, there are no hanging nodes and we do not need to do anything */
+    return 0;
+  }
+  else if (subelement_type == 15) {    /* hanging faces can, in this case, just be removed via the standard quad refinement */
+    return 1;
+  }
+  else {    /* use subelements and add 1 to every type, to avoid refine = 1 */
+    return subelement_type + 1;
+  }
 }
 
 void
