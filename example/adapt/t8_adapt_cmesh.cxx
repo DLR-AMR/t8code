@@ -113,8 +113,8 @@ t8_adapt_cmesh_search_query_callback (t8_forest_t forest,
     (t8_adapt_cmesh_user_data_t *) t8_forest_get_user_data (forest);
   sc_array_t         *refinement_markers = user_data->refinement_markers;
   const t8_forest_t   forest_to_adapt_from = user_data->forest_to_adapt_from;
-  t8_adapt_cmesh_search_query_t *search_query =
-    (t8_adapt_cmesh_search_query_t *) query;
+  const t8_adapt_cmesh_search_query_t *search_query =
+    (const t8_adapt_cmesh_search_query_t *) query;
   const t8_locidx_t   forest_to_adapt_from_tree_id = search_query->tree_id;
   const t8_locidx_t   forest_to_adapt_from_element_id =
     search_query->element_id;
@@ -158,9 +158,25 @@ t8_adapt_cmesh_search_query_callback (t8_forest_t forest,
   return 1;
 }
 
+/* Set new size of markers array and set all markers to 0. */
 static void
-t8_adapt_cmesh_search (t8_forest_t forest, t8_forest_t forest_to_adapt_from,
-                       sc_array_t * markers)
+t8_adapt_template_update_markers (t8_forest_t forest, sc_array_t * markers)
+{
+  const t8_locidx_t   num_local_elements =
+    t8_forest_get_local_num_elements (forest);
+
+  T8_ASSERT (markers->elem_size == sizeof (short));
+
+  sc_array_resize (markers, num_local_elements);
+  for (t8_locidx_t ielement = 0; ielement < num_local_elements; ++ielement) {
+    *(short *) t8_sc_array_index_locidx (markers, ielement) = 0;
+  }
+}
+
+static              t8_forest_t
+t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
+                             t8_forest_t forest_to_adapt_from,
+                             int num_refinement_steps)
 {
   sc_array_t          search_queries;
   const t8_locidx_t   num_elements =
@@ -182,47 +198,35 @@ t8_adapt_cmesh_search (t8_forest_t forest, t8_forest_t forest_to_adapt_from,
       query->tree_id = itree;
       query->element_id = ielement;
     }
-
   }
 
   /* Set the cmesh as forest user data */
   t8_adapt_cmesh_user_data_t search_user_data;
   search_user_data.forest_to_adapt_from = forest_to_adapt_from;
-  search_user_data.refinement_markers = markers;
-  t8_forest_set_user_data (forest, &search_user_data);
-  /* Fill marker array.
-   * elements that should be refined are set to 1. 0 for no refinemnet. -1 for coarsening. */
-  t8_forest_search (forest, t8_adapt_cmesh_search_element_callback,
-                    t8_adapt_cmesh_search_query_callback, &search_queries);
 
-  sc_array_reset (&search_queries);
-}
+  sc_array_t          markers;
+  sc_array_init (&markers, sizeof (short));
 
-static              t8_forest_t
-t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
-                             t8_forest_t forest_to_adapt_from)
-{
-  /* TODO ... */
-  t8_locidx_t         ielement;
-  const t8_locidx_t   num_local_elements =
-    t8_forest_get_local_num_elements (forest);
-  /* Create marker array  to mark elements for refinement */
-  sc_array_t          marker_array;
+  for (int refinement_step = 0; refinement_step < num_refinement_steps;
+       ++refinement_step) {
+    t8_adapt_template_update_markers (forest, &markers);
+    search_user_data.refinement_markers = &markers;
+    t8_forest_set_user_data (forest, &search_user_data);
+    /* Fill marker array.
+     * elements that should be refined are set to 1. 0 for no refinemnet. -1 for coarsening. */
+    t8_forest_search (forest, t8_adapt_cmesh_search_element_callback,
+                      t8_adapt_cmesh_search_query_callback, &search_queries);
 
-  sc_array_init_count (&marker_array, sizeof (short), num_local_elements);
-  for (ielement = 0; ielement < num_local_elements; ++ielement) {
-    *(short *) t8_sc_array_index_locidx (&marker_array, ielement) = 0;
+    /* Adapt the forest according to the markers */
+    forest =
+      t8_forest_new_adapt (forest, t8_forest_adapt_marker_array_callback,
+                           0, 0, &markers);
   }
 
-  t8_adapt_cmesh_search (forest, forest_to_adapt_from, &marker_array);
+  sc_array_reset (&markers);
+  sc_array_reset (&search_queries);
 
-  /* Adapt the forest according to the markers */
-  t8_forest_t         forest_adapt =
-    t8_forest_new_adapt (forest, t8_forest_adapt_marker_array_callback,
-                         0, 0, &marker_array);
-
-  sc_array_reset (&marker_array);
-  return forest_adapt;
+  return forest;
 }
 
 int
@@ -315,15 +319,10 @@ main (int argc, char **argv)
     if (mpirank == 0) {
       t8_forest_write_vtk (forest_to_adapt_from, "forest_to_adapt_from");
     }
-    /* Identifiziere Element in forest, die einen Mittelpunkt eines
-       Elements in  cmesh_to_adapt_from enthalten. */
-    /*[D] Wäre nicht besser: Identifiziere Elemente in forest, 
-       deren Mittelpunkt in einem Element des cmesh_to_adapt_from liegen? Im Grobgitter 
-       beschreibt, der Mittelpunkt das Element sehr schlecht. */
-    /* Adaptiere forest, so dass alle identifizierten Elemente verfeienrt werden. */
-    for (int adapt_stages = level; adapt_stages < reflevel; ++adapt_stages) {
-      forest = t8_adapt_cmesh_adapt_forest (forest, forest_to_adapt_from);
-    }
+
+    forest =
+      t8_adapt_cmesh_adapt_forest (forest, forest_to_adapt_from,
+                                   reflevel - level);
 
     t8_forest_write_vtk (forest, "forest_adapt");
 
