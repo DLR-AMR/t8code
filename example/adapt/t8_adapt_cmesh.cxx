@@ -40,7 +40,8 @@ t8_adapt_forest_init_adapt_geometry (sc_MPI_Comm comm, const char *meshfile,
     cmesh = t8_cmesh_from_msh_file (meshfile, 0, sc_MPI_COMM_SELF, dim, 0);
   }
   else {
-    cmesh = t8_cmesh_new_from_class (T8_ECLASS_PRISM, sc_MPI_COMM_SELF);
+    //cmesh = t8_cmesh_new_from_class (T8_ECLASS_PRISM, sc_MPI_COMM_SELF);
+    cmesh = t8_cmesh_new_line_zigzag(sc_MPI_COMM_SELF);
   }
   t8_scheme_cxx_t    *scheme = t8_scheme_new_default_cxx ();
   t8_forest_t         forest =
@@ -55,7 +56,7 @@ t8_adapt_cmesh_init_forest (sc_MPI_Comm comm, const int level,
                             const double displacement[3])
 {
   t8_cmesh_t          cmesh =
-    t8_cmesh_new_hypercube_ext (T8_ECLASS_HEX, comm, 0, 0, 0, scale,
+    t8_cmesh_new_hypercube_ext (T8_ECLASS_PRISM, comm, 0, 0, 0, scale,
                                 displacement);
   t8_scheme_cxx_t    *scheme = t8_scheme_new_default_cxx ();
   t8_forest_t         forest =
