@@ -146,20 +146,18 @@ t8_adapt_cmesh_search_query_callback (t8_forest_t forest,
   const t8_element_shape_t shape_to_adapt_from =
     scheme_to_adapt_from->t8_element_shape (element);
 
-  const t8_eclass_t   tree_class = t8_forest_get_tree_class (forest, ltreeid);
-  t8_eclass_scheme_c *scheme =
-    t8_forest_get_eclass_scheme (forest, tree_class);
-  const t8_element_shape_t shape = scheme->t8_element_shape (element);
-
-  if (shape_to_adapt_from == T8_ECLASS_LINE && shape == T8_ECLASS_HEX) {
+  if (shape_to_adapt_from == T8_ECLASS_LINE) {
     /* The element class of the forest to adapt from is line and the element's class is a hex
      * we check whether the line cuts our hex element. */
     /* Note that this only works, if the hex is axis aligned. */
     query_is_in_element =
-      t8_forest_line_cuts_aligned_hex (forest_to_adapt_from,
+     /* t8_forest_line_cuts_aligned_hex (forest_to_adapt_from,
                                        forest_to_adapt_from_tree_id,
                                        forest_to_adapt_from_element, forest,
-                                       ltreeid, element);
+                                       ltreeid, element);*/
+        t8_forest_line_cuts(forest_to_adapt_from, forest_to_adapt_from_tree_id,
+                            forest_to_adapt_from_element, forest, 
+                            ltreeid, element);
   }
   else {
     query_is_in_element =

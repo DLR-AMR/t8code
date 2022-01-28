@@ -1021,6 +1021,14 @@ int                 t8_forest_line_cuts_aligned_hex (t8_forest_t forest_line,
                                                      const t8_element_t *
                                                      hex);
 
+/*Query wether a given line element cuts a three dimensional element*/
+int                   t8_forest_line_cuts (t8_forest_t forest_line,
+                                          const t8_locidx_t line_tree_id,
+                                          const t8_element_t * line,
+                                          t8_forest_t forest,
+                                          const t8_locidx_t tree_id,
+                                          const t8_element_t * element);                                                            
+
 /* TODO: if set level and partition/adapt/balance all give NULL, then
  * refine uniformly and partition/adapt/balance the unfiform forest. */
 /** Build a uniformly refined forest on a coarse mesh.
