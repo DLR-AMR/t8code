@@ -58,7 +58,7 @@ t8_adapt_cmesh_init_forest (sc_MPI_Comm comm, const int level,
 {
   t8_cmesh_t          cmesh;
   if (meshfile != NULL) {
-    cmesh = t8_cmesh_from_msh_file (meshfile, 1, comm, 3, 0);
+    cmesh = t8_cmesh_from_msh_file (meshfile, 0, comm, 3, 0);
   }
   else {
     cmesh =
