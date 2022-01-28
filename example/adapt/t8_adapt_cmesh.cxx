@@ -41,7 +41,7 @@ t8_adapt_forest_init_adapt_geometry (sc_MPI_Comm comm, const char *meshfile,
   }
   else {
     //cmesh = t8_cmesh_new_from_class (T8_ECLASS_PRISM, sc_MPI_COMM_SELF);
-    cmesh = t8_cmesh_new_line_zigzag(sc_MPI_COMM_SELF);
+    cmesh = t8_cmesh_new_line_zigzag (sc_MPI_COMM_SELF);
   }
   t8_scheme_cxx_t    *scheme = t8_scheme_new_default_cxx ();
   t8_forest_t         forest =
@@ -57,13 +57,13 @@ t8_adapt_cmesh_init_forest (sc_MPI_Comm comm, const int level,
                             const char *meshfile)
 {
   t8_cmesh_t          cmesh;
-  if (meshfile != NULL ) {
+  if (meshfile != NULL) {
     cmesh = t8_cmesh_from_msh_file (meshfile, 1, comm, 3, 0);
   }
   else {
     cmesh =
-    t8_cmesh_new_hypercube_ext (T8_ECLASS_PRISM, comm, 0, 0, 0, scale,
-                                displacement);
+      t8_cmesh_new_hypercube_ext (T8_ECLASS_PRISM, comm, 0, 0, 0, scale,
+                                  displacement);
   }
   t8_scheme_cxx_t    *scheme = t8_scheme_new_default_cxx ();
   t8_forest_t         forest =
@@ -158,13 +158,13 @@ t8_adapt_cmesh_search_query_callback (t8_forest_t forest,
      * we check whether the line cuts our hex element. */
     /* Note that this only works, if the hex is axis aligned. */
     query_is_in_element =
-     /* t8_forest_line_cuts_aligned_hex (forest_to_adapt_from,
-                                       forest_to_adapt_from_tree_id,
-                                       forest_to_adapt_from_element, forest,
-                                       ltreeid, element);*/
-        t8_forest_line_cuts(forest_to_adapt_from, forest_to_adapt_from_tree_id,
-                            forest_to_adapt_from_element, forest, 
-                            ltreeid, element);
+      /* t8_forest_line_cuts_aligned_hex (forest_to_adapt_from,
+         forest_to_adapt_from_tree_id,
+         forest_to_adapt_from_element, forest,
+         ltreeid, element); */
+      t8_forest_line_cuts (forest_to_adapt_from, forest_to_adapt_from_tree_id,
+                           forest_to_adapt_from_element, forest,
+                           ltreeid, element);
   }
   else {
     query_is_in_element =
@@ -321,7 +321,6 @@ main (int argc, char **argv)
 
   sc_options_add_int (opt, 'd', "dim", &dim, -1,
                       "In combination with -f: The dimension of the coarse mesh to read. 1 <= d <= 3.");
-
 
   sc_options_add_string (opt, 'm', "mshfile-forest", &mshfile_forest, NULL,
                          "If specified, the forest that is adapted is constructed from a .msh file with "
