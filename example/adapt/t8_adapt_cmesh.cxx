@@ -53,11 +53,18 @@ t8_adapt_forest_init_adapt_geometry (sc_MPI_Comm comm, const char *meshfile,
 t8_forest_t
 t8_adapt_cmesh_init_forest (sc_MPI_Comm comm, const int level,
                             const double scale[3],
-                            const double displacement[3])
+                            const double displacement[3],
+                            const char *meshfile)
 {
-  t8_cmesh_t          cmesh =
+  t8_cmesh_t          cmesh;
+  if (meshfile != NULL ) {
+    cmesh = t8_cmesh_from_msh_file (meshfile, 1, comm, 3, 0);
+  }
+  else {
+    cmesh =
     t8_cmesh_new_hypercube_ext (T8_ECLASS_PRISM, comm, 0, 0, 0, scale,
                                 displacement);
+  }
   t8_scheme_cxx_t    *scheme = t8_scheme_new_default_cxx ();
   t8_forest_t         forest =
     t8_forest_new_uniform (cmesh, scheme, level, 0, comm);
@@ -275,6 +282,7 @@ main (int argc, char **argv)
   double              scale[3];
   double              displacement[3];
   const char         *mshfile = NULL;
+  const char         *mshfile_forest = NULL;
   const sc_MPI_Comm   comm = sc_MPI_COMM_WORLD;
   int                 no_vtk = 0;
 
@@ -306,7 +314,7 @@ main (int argc, char **argv)
   sc_options_add_int (opt, 'r', "rlevel", &reflevel, 0,
                       "The maximum refinement level of the forest that will be refined.");
 
-  sc_options_add_string (opt, 'f', "mshfile", &mshfile, NULL,
+  sc_options_add_string (opt, 'f', "mshfile-template", &mshfile, NULL,
                          "If specified, the forest to adapt from is constructed from a .msh file with "
                          "the given prefix.\n\t\t\t\t     The files must end in .msh "
                          "and be in ASCII format version 2. -d must be specified.");
@@ -314,18 +322,24 @@ main (int argc, char **argv)
   sc_options_add_int (opt, 'd', "dim", &dim, -1,
                       "In combination with -f: The dimension of the coarse mesh to read. 1 <= d <= 3.");
 
+
+  sc_options_add_string (opt, 'm', "mshfile-forest", &mshfile_forest, NULL,
+                         "If specified, the forest that is adapted is constructed from a .msh file with "
+                         "the given prefix.\n\t\t\t\t     The files must end in .msh "
+                         "and be in ASCII format version 2. The dimension is expected to be 3.");
+
   sc_options_add_double (opt, '\0', "S0", &scale[0], 1,
-                         "Scaling in x axis of the cube forest mesh.");
+                         "Scaling in x axis of the cube forest mesh. Only if -m is not used.");
   sc_options_add_double (opt, '\0', "S1", &scale[1], 1,
-                         "Scaling in y axis of the cube forest mesh.");
+                         "Scaling in y axis of the cube forest mesh. Only if -m is not used.");
   sc_options_add_double (opt, '\0', "S2", &scale[2], 1,
-                         "Scaling in z axis of the cube forest mesh.");
+                         "Scaling in z axis of the cube forest mesh. Only if -m is not used.");
   sc_options_add_double (opt, '\0', "D0", &displacement[0], 0,
-                         "Displacement in x axis of the cube forest mesh.");
+                         "Displacement in x axis of the cube forest mesh. Only if -m is not used.");
   sc_options_add_double (opt, '\0', "D1", &displacement[1], 0,
-                         "Displacement in y axis of the cube forest mesh.");
+                         "Displacement in y axis of the cube forest mesh. Only if -m is not used.");
   sc_options_add_double (opt, '\0', "D2", &displacement[2], 0,
-                         "Displacement in z axis of the cube forest mesh.");
+                         "Displacement in z axis of the cube forest mesh. Only if -m is not used.");
 
   sc_options_add_switch (opt, 'o', "no-vtk", &no_vtk,
                          "Suppress vtk output. "
@@ -343,7 +357,8 @@ main (int argc, char **argv)
       t8_adapt_forest_init_adapt_geometry (comm, mshfile, dim,
                                            template_level);
     t8_forest_t         forest =
-      t8_adapt_cmesh_init_forest (comm, level, scale, displacement);
+      t8_adapt_cmesh_init_forest (comm, level, scale, displacement,
+                                  mshfile_forest);
 
     /* Write forest to adapt from to vtk.
      * Since this forest is not partitioned (using MPI_COMM_SELF),
