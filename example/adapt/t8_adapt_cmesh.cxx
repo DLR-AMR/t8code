@@ -245,9 +245,14 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
                       t8_adapt_cmesh_search_query_callback, &search_queries);
 
     /* Adapt the forest according to the markers */
-    forest =
-      t8_forest_new_adapt (forest, t8_forest_adapt_marker_array_callback,
-                           0, 0, &markers);
+    t8_forest_t         forest_adapt;
+    t8_forest_init (&forest_adapt);
+    t8_forest_set_user_data (forest_adapt, &markers);
+    t8_forest_set_adapt (forest_adapt, forest,
+                         t8_forest_adapt_marker_array_callback, 0);
+    t8_forest_set_partition (forest_adapt, NULL, 0);
+    t8_forest_commit (forest_adapt);
+    forest = forest_adapt;
   }
 
   sc_array_reset (&markers);
