@@ -999,29 +999,16 @@ int                 t8_forest_element_point_inside (t8_forest_t forest,
                                                     const double point[3],
                                                     const double tolerance);
 
-/** Query whether a given line element from forest A cuts a given hex element from forest B.
- *  The Hex element needs to be axis aligned.
+
+/*Query wether a given line element cuts a three dimensional element
  * \param [in]        forest_line The forest containing the line element.
  * \param [in]        line_tree_id The tree id of the tree in \a forest_line that contains the line.
  * \param [in]        line        The line element
- * \param [in]        forest_hex  The forest containing the hex element.
- * \param [in]        hex_tree_id The tree id of the tree in \a forest_hex that contains the hex.
- * \param [in]        hex         The hex element. Must be axis aligned.
- * \return                        True (non-zero) if and only if \a line cuts (or lies within) \a hex.
- * \note Currently this function only works if \a forest_hex uses the default scheme.
- */
-int                 t8_forest_line_cuts_aligned_hex (t8_forest_t forest_line,
-                                                     const t8_locidx_t
-                                                     line_tree_id,
-                                                     const t8_element_t *
-                                                     line,
-                                                     t8_forest_t forest_hex,
-                                                     const t8_locidx_t
-                                                     hex_tree_id,
-                                                     const t8_element_t *
-                                                     hex);
+ * \param [in]        forest      The forest containing the element with possible interesection.
+ * \param [in]        tree_id     The tree id of the tree in \a forest that contains the element.
+ * \param [in]        element         The  element.
+ * \return                        True (non-zero) if and only if \a line cuts (or lies within) \a element.*/
 
-/*Query wether a given line element cuts a three dimensional element*/
 int                   t8_forest_line_cuts (t8_forest_t forest_line,
                                           const t8_locidx_t line_tree_id,
                                           const t8_element_t * line,
