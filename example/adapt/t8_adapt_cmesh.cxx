@@ -277,6 +277,7 @@ main (int argc, char **argv)
   double              displacement[3];
   const char         *mshfile = NULL;
   const sc_MPI_Comm   comm = sc_MPI_COMM_WORLD;
+  int                 no_vtk = 0;
 
   /* long help message */
   snprintf (help, BUFSIZ,
@@ -327,6 +328,9 @@ main (int argc, char **argv)
   sc_options_add_double (opt, '\0', "D2", &displacement[2], 0,
                          "Displacement in z axis of the cube forest mesh.");
 
+  sc_options_add_switch (opt, 'o', "no-vtk", &no_vtk,
+                         "Suppress vtk output. "
+                         "Overwrites any -v setting.");
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (helpme) {
@@ -348,15 +352,16 @@ main (int argc, char **argv)
     int                 mpirank, mpiret;
     mpiret = sc_MPI_Comm_rank (comm, &mpirank);
     SC_CHECK_MPI (mpiret);
-    if (mpirank == 0) {
+    if (mpirank == 0 && !no_vtk) {
       t8_forest_write_vtk (forest_to_adapt_from, "forest_to_adapt_from");
     }
 
     forest =
       t8_adapt_cmesh_adapt_forest (forest, forest_to_adapt_from,
                                    reflevel - level);
-
-    t8_forest_write_vtk (forest, "forest_adapt");
+    if (!no_vtk) {
+      t8_forest_write_vtk (forest, "forest_adapt");
+    }
 
     t8_forest_unref (&forest_to_adapt_from);
     t8_forest_unref (&forest);
