@@ -49,7 +49,8 @@ t8_geometry_w_vertices::t8_geom_load_tree_data (t8_cmesh_t cmesh,
              || active_tree_class == T8_ECLASS_QUAD
              || active_tree_class == T8_ECLASS_HEX
              || active_tree_class == T8_ECLASS_LINE
-             || active_tree_class == T8_ECLASS_PRISM);
+             || active_tree_class == T8_ECLASS_PRISM
+             || active_tree_class == T8_ECLASS_PYRAMID);
 }
 
 /** Get the dimension of a geometry.

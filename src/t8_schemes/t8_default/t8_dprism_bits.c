@@ -81,7 +81,6 @@ t8_dprism_init_linear_id (t8_dprism_t * p, int level, uint64_t id)
 
   T8_ASSERT (0 <= level && level <= T8_DPRISM_MAXLEVEL);
   T8_ASSERT (id < sc_intpow64u (T8_DPRISM_CHILDREN, level));
-
   for (i = 0; i <= level; i++) {
     /*Get the number of the i-th prism and get the related triangle number
      * then multiplicate it by the number of triangles of level size.*/
@@ -472,6 +471,7 @@ t8_dprism_successor (const t8_dprism_t * p, t8_dprism_t * succ, int level)
   /*update the level */
   succ->line.level = level;
   succ->tri.level = level;
+  /*TODO: implement compute type */
   prism_child_id = t8_dprism_child_id (succ);
   T8_ASSERT (1 <= level && level <= T8_DPRISM_MAXLEVEL);
   T8_ASSERT (p->line.level == p->tri.level);

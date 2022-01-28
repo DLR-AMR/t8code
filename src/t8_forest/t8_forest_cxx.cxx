@@ -36,6 +36,8 @@
 #include <t8_geometry/t8_geometry_base.hxx>
 #include <t8_schemes/t8_default_cxx.hxx>
 
+//#include <t8_schemes/t8_default/t8_dpyramid.h>
+
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
@@ -216,7 +218,6 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
   /* Compute the vertex coordinates inside [0,1]^dim reference cube. */
   ts->t8_element_vertex_reference_coords (element, corner_number,
                                           vertex_coords);
-
   /* Compute the global tree id */
   gtreeid = t8_forest_global_tree_id (forest, ltree_id);
   /* Get the cmesh */
@@ -286,6 +287,9 @@ t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
   memset (coordinates, 0, 3 * sizeof (double));
   /* get the number of corners of element */
   num_corners = ts->t8_element_num_corners (element);
+  if(ts->t8_element_shape(element) == T8_ECLASS_TET){
+      num_corners = 4;
+  }
   for (icorner = 0; icorner < num_corners; icorner++) {
     /* For each corner, add its coordinates to the centroids coordinates. */
     t8_forest_element_coordinate (forest, ltreeid, element, icorner,
@@ -536,6 +540,41 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
       volume += t8_forest_element_tet_volume (coordinates);
 
       return volume;
+    }
+  case T8_ECLASS_PYRAMID:
+    {
+      double volume, coordinates[4][3];
+      t8_eclass_t   shape;
+      ts = t8_forest_get_eclass_scheme (forest, T8_ECLASS_PYRAMID);
+      shape = ts->t8_element_shape(element);
+      if(shape == T8_ECLASS_TET)
+      {
+        return t8_forest_element_volume(forest, ltreeid, element);
+      }
+      else{
+        /* The first tetrahedron has pyra vertices 0, 1, 3 and 4*/
+        t8_forest_element_coordinate  (forest, ltreeid, element, 0,
+                                      coordinates[0]);
+        t8_forest_element_coordinate  (forest, ltreeid, element, 1,
+                                      coordinates[1]);
+        t8_forest_element_coordinate  (forest, ltreeid, element, 3,
+                                      coordinates[2]);
+        t8_forest_element_coordinate  (forest, ltreeid, element, 4,
+                                      coordinates[3]); 
+        volume = t8_forest_element_tet_volume(coordinates);
+
+        /*The second tetrahedron has pyra vertices 0, 3, 2 and 4*/
+        t8_forest_element_coordinate  (forest, ltreeid, element, 0,
+                                      coordinates[0]);
+        t8_forest_element_coordinate  (forest, ltreeid, element, 3,
+                                      coordinates[1]);
+        t8_forest_element_coordinate  (forest, ltreeid, element, 2,
+                                      coordinates[2]);
+        t8_forest_element_coordinate  (forest, ltreeid, element, 4,
+                                      coordinates[3]); 
+        volume += t8_forest_element_tet_volume(coordinates);
+        return volume;  
+      }                                                                                  
     }
   default:
     SC_ABORT_NOT_REACHED ();
@@ -1413,7 +1452,6 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
   ts->t8_element_destroy (1, &desc);
   /* If the descendants are the same then ret is zero and we return false.
    * We return true otherwise */
-  t8_debugf ("[D] tree shared: %i\n", ret);
   return ret;
 }
 
@@ -2324,7 +2362,6 @@ t8_forest_element_find_owner_ext (t8_forest_t forest,
   if (upper_bound == lower_bound) {
     return upper_bound;
   }
-
   ts = t8_forest_get_eclass_scheme (forest, eclass);
   if (element_is_desc) {
     /* The element is already its own first_descendant */
@@ -2737,7 +2774,6 @@ t8_forest_element_owners_at_face (t8_forest_t forest, t8_gloidx_t gtreeid,
     upper_bound = forest->mpisize - 1;
   }
   T8_ASSERT (0 <= lower_bound && upper_bound < forest->mpisize);
-
   if (lower_bound == upper_bound) {
     /* There is no need to search, the owner is unique */
     T8_ASSERT (0 <= lower_bound && lower_bound < forest->mpisize);
@@ -2834,6 +2870,7 @@ t8_forest_element_owners_at_neigh_face (t8_forest_t forest,
    * the neighbor element */
   neigh_class =
     t8_forest_element_neighbor_eclass (forest, ltreeid, element, face);
+  T8_ASSERT(neigh_class>= T8_ECLASS_ZERO && neigh_class < T8_ECLASS_COUNT);
   neigh_scheme = t8_forest_get_eclass_scheme (forest, neigh_class);
   neigh_scheme->t8_element_new (1, &face_neighbor);
   neigh_tree =

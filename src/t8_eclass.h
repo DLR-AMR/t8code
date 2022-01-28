@@ -108,6 +108,10 @@ extern const int    t8_eclass_vtk_type[T8_ECLASS_COUNT];
 extern const int
      t8_eclass_vtk_corner_number[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS];
 
+/** The shape of an element according its eclass*/
+extern const t8_eclass_t
+    t8_eclass_shape[T8_ECLASS_COUNT];
+
 /** For each of the element classes, list the type of the faces. */
 extern const int
      t8_eclass_face_types[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES];

@@ -67,8 +67,9 @@ t8_compute_child_find_parent (const int maxlvl)
   int                 eclassi;
   t8_eclass_t         eclass;
   scheme = t8_scheme_new_default_cxx ();
-  for (eclassi = T8_ECLASS_ZERO; eclassi < T8_ECLASS_PYRAMID; eclassi++) {
-    /* TODO: Include pyramids as soon as they are supported. */
+  for (eclassi = T8_ECLASS_ZERO; eclassi < T8_ECLASS_COUNT; eclassi++) {
+    t8_productionf ("Testing child find parent for eclass %s\n",
+                    t8_eclass_to_string[eclassi]);
     eclass = (t8_eclass_t) eclassi;
     /* Get scheme for eclass */
     ts = scheme->eclass_schemes[eclass];
