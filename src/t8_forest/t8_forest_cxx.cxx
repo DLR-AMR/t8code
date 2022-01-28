@@ -1150,9 +1150,9 @@ t8_forest_line_cuts_rectangle (const double line_pointA[3],
   const int           axis_b = (axis + 2) % 3;
 
   if (rectA[axis_a] <= possible_intersection[axis_a]
-      && possible_intersection[axis_a] <= rectB[axis_a]) {
+      && possible_intersection[axis_a] <= rectD[axis_a]) {
     if (rectA[axis_b] <= possible_intersection[axis_b]
-        && possible_intersection[axis_b] <= rectB[axis_b]) {
+        && possible_intersection[axis_b] <= rectD[axis_b]) {
       /* The possible intersection is an actual intersection. */
       return 1;
     }
