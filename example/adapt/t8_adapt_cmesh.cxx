@@ -56,7 +56,7 @@ t8_adapt_cmesh_init_forest (sc_MPI_Comm comm, const int level,
                             const double displacement[3])
 {
   t8_cmesh_t          cmesh =
-    t8_cmesh_new_hypercube_ext (T8_ECLASS_PRISM, comm, 0, 0, 0, scale,
+    t8_cmesh_new_hypercube_ext (T8_ECLASS_PYRAMID, comm, 0, 0, 0, scale,
                                 displacement);
   t8_scheme_cxx_t    *scheme = t8_scheme_new_default_cxx ();
   t8_forest_t         forest =
