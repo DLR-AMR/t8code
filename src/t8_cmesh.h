@@ -711,7 +711,16 @@ void                t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
  * \param[in]     scale   A 3D vector, specifying the scaling vector in
  *                        every dimension.
  */
-void                t8_cmesh_scale(t8_cmesh_t cmesh, double scale[3]);
+void                t8_cmesh_scale(t8_cmesh_t cmesh, const double scale[3]);
+
+/**
+ * Translate all vertices of a cmesh by a vector 
+ * 
+ * \param[in]     cmesh   The cmesh to scale    
+ * \param[in]     scale   A 3D vector, specifying the translation.
+ */
+void             t8_cmesh_translate(t8_cmesh_t cmesh, const double translate[3]);
+
 
 /** Increase the reference counter of a cmesh.
  * \param [in,out] cmesh        On input, this cmesh must exist with positive

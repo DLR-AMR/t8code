@@ -60,6 +60,8 @@ t8_adapt_cmesh_init_forest (sc_MPI_Comm comm, const int level,
   t8_cmesh_t          cmesh;
   if (meshfile != NULL) {
     cmesh = t8_cmesh_from_msh_file (meshfile, 0, comm, 3, 0);
+    t8_cmesh_scale(cmesh, scale);
+    t8_cmesh_translate(cmesh, displacement);
   }
   else {
     cmesh =
@@ -329,17 +331,17 @@ main (int argc, char **argv)
                          "and be in ASCII format version 2. The dimension is expected to be 3.");
 
   sc_options_add_double (opt, '\0', "S0", &scale[0], 1,
-                         "Scaling in x axis of the cube forest mesh. Only if -m is not used.");
+                         "Scaling in x axis of the cube forest mesh.");
   sc_options_add_double (opt, '\0', "S1", &scale[1], 1,
-                         "Scaling in y axis of the cube forest mesh. Only if -m is not used.");
+                         "Scaling in y axis of the cube forest mesh.");
   sc_options_add_double (opt, '\0', "S2", &scale[2], 1,
-                         "Scaling in z axis of the cube forest mesh. Only if -m is not used.");
+                         "Scaling in z axis of the cube forest mesh.");
   sc_options_add_double (opt, '\0', "D0", &displacement[0], 0,
-                         "Displacement in x axis of the cube forest mesh. Only if -m is not used.");
+                         "Displacement in x axis of the cube forest mesh.");
   sc_options_add_double (opt, '\0', "D1", &displacement[1], 0,
-                         "Displacement in y axis of the cube forest mesh. Only if -m is not used.");
+                         "Displacement in y axis of the cube forest mesh.");
   sc_options_add_double (opt, '\0', "D2", &displacement[2], 0,
-                         "Displacement in z axis of the cube forest mesh. Only if -m is not used.");
+                         "Displacement in z axis of the cube forest mesh.");
 
   sc_options_add_switch (opt, 'o', "no-vtk", &no_vtk,
                          "Suppress vtk output. "
