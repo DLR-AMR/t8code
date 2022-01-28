@@ -704,6 +704,15 @@ void                t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
                                              t8_gloidx_t * child_in_tree_end,
                                              int8_t * first_tree_shared);
 
+/**
+ * Scale all vertices of a cmesh by a factor specified for each axis 
+ * 
+ * \param[in]     cmesh   The cmesh to scale    
+ * \param[in]     scale   A 3D vector, specifying the scaling vector in
+ *                        every dimension.
+ */
+void                t8_cmesh_scale(t8_cmesh_t cmesh, double scale[3]);
+
 /** Increase the reference counter of a cmesh.
  * \param [in,out] cmesh        On input, this cmesh must exist with positive
  *                              reference count.  It may be in any state.

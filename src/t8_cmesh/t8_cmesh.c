@@ -1674,6 +1674,26 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh)
 }
 
 void
+t8_cmesh_scale(t8_cmesh_t cmesh, double scale[3])
+{
+  const t8_gloidx_t   num_local_trees = t8_cmesh_get_num_local_trees(cmesh);
+  const t8_gloidx_t   first_tree_id = t8_cmesh_get_first_treeid(cmesh);
+  double              *vertices;
+  int                 num_vertices;
+  t8_eclass_t         tree_class;
+  for(t8_locidx_t current_tree = first_tree_id;
+    current_tree < first_tree_id + num_local_trees; current_tree++){
+    
+    vertices = t8_cmesh_get_tree_vertices(cmesh, current_tree);
+    tree_class = t8_cmesh_get_tree_class(cmesh, current_tree);
+    num_vertices = t8_eclass_num_vertices[tree_class];
+    for(int i = 0; i < num_vertices*3; ++i){
+      vertices[i] *= scale[i%3];
+    }
+  }
+}
+
+void
 t8_cmesh_ref (t8_cmesh_t cmesh)
 {
   T8_ASSERT (cmesh != NULL);
