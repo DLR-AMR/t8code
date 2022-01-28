@@ -64,6 +64,7 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from,
     pdone = (int *) forest->t8code_data;
 
     num_faces = ts->t8_element_num_faces (element);
+
     for (iface = 0; iface < num_faces; iface++) {
       /* Get the element class and scheme of the face neighbor */
       neigh_class = t8_forest_element_neighbor_eclass (forest_from,
@@ -88,6 +89,7 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from,
          * local or ghost leaf descendants in the forest.
          * If so, the element will be refined. */
         for (ineigh = 0; ineigh < num_half_neighbors; ineigh++) {
+
           if (t8_forest_element_has_leaf_desc (forest_from, neighbor_tree,
                                                half_neighbors[ineigh],
                                                neigh_scheme)) {
