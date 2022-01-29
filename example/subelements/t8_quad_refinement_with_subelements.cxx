@@ -149,7 +149,7 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
   char                filename[BUFSIZ];
 
   /* refinement settings */
-                      initlevel = 3;    /* initial uniform refinement level */
+                      initlevel = 5;    /* initial uniform refinement level */
   int                 minlevel = initlevel;   /* lowest level allowed for coarsening */
                       adaptlevel = 3;   /* number of allowed adapt levels */
   int                 maxlevel = initlevel + adaptlevel;    /* highest level allowed for refining */
@@ -159,7 +159,7 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
 
   /* cmesh settings (only one of the following suggestions should be one, the others 0) */
   int                 single_tree = 0;
-  int                 multiple_tree = 1, num_x_trees = 2, num_y_trees = 1;
+  int                 multiple_tree = 1, num_x_trees = 3, num_y_trees = 2;
   int                 hybrid_cmesh = 0;
 
   /* adaptation setting */
@@ -169,8 +169,7 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
   /* timestep settings */
   int                 do_different_refinements = 0;   /* to change the refinement during multiple num_timesteps */
   int                 num_timesteps = 1;    /* Number of times, the mesh is refined */
-  double              delta = 0.01;   /* The value, the radius increases after each timestep */
-  int                 i;  /* timestep count */
+  double              delta = 0.2;   /* The value, the radius increases after each timestep */
 
   int                 do_vtk = 1;   /* print results */
 
@@ -219,9 +218,9 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
   // int  shift_x = 0;      /* shift_x, shift_y should be smaler than 2^minlevel / 2 such that midpoint stays in the quadrilateral tree */
   // int  shift_y = 0;
   sdata.mid_point[0] = 1;    // 1.0 / 2.0 + shift_x * 1.0/(1 << (minlevel));
-  sdata.mid_point[1] = 0.5;    // 1.0 / 2.0 + shift_y * 1.0/(1 << (minlevel)); 
+  sdata.mid_point[1] = 1;    // 1.0 / 2.0 + shift_y * 1.0/(1 << (minlevel)); 
   sdata.mid_point[2] = 0;
-  sdata.radius = 0.2;
+  sdata.radius = 0.4;
 
   /* refinement parameter */
   ls_data.band_width = 1;
@@ -235,6 +234,7 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
    * This does not seem to be a problem of subelements but of the timestep scheme implemented in this example. */
 
   /* Adapting the mesh for different num_timesteps */
+  int i;
   for (i = 0; i < num_timesteps; i++) {
 
     /* change the refinement */

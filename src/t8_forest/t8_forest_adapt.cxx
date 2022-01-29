@@ -386,7 +386,7 @@ t8_forest_adapt (t8_forest_t forest)
         }
         if (forest->set_adapt_recursive) {
           /* Create the children of this element */
-          tscheme->t8_element_new (num_children, elements);     /*num_children or num_siblings? */
+          tscheme->t8_element_new (num_children, elements);
           tscheme->t8_element_children (elements_from[0], num_children,
                                         elements);
           for (ci = num_children - 1; ci >= 0; ci--) {
