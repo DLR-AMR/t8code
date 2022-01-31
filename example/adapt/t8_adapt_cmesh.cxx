@@ -29,6 +29,7 @@
 #include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_cmesh_readmshfile.h>
+#include <sc_statistics.h>
 
 /* Build a cmesh according to which a later forest shall be refined. */
 t8_forest_t
@@ -215,6 +216,11 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
                              int num_refinement_steps)
 {
   sc_array_t          search_queries;
+  sc_statinfo_t       total_times[2];
+  double              non_search_time_total = 0, search_time_total = 0;
+
+  sc_stats_init(&total_times[0], "non-search-total");
+  sc_stats_init(&total_times[1], "search-total");
   const t8_locidx_t   num_elements =
     t8_forest_get_local_num_elements (forest_to_adapt_from);
   const t8_locidx_t   num_trees =
@@ -223,6 +229,7 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
   sc_array_init_count (&search_queries,
                        sizeof (t8_adapt_cmesh_search_query_t), num_elements);
   /* Fill queries with correct ids. */
+  
 
   for (t8_locidx_t itree = 0, iquery = 0; itree < num_trees; ++itree) {
     const t8_locidx_t   num_elements_in_tree =
@@ -245,14 +252,23 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
 
   for (int refinement_step = 0; refinement_step < num_refinement_steps;
        ++refinement_step) {
+    sc_statinfo_t       times[2];
+    double              non_search_time, search_time;
+
+    sc_stats_init(&times[0], "non-search");
+    sc_stats_init(&times[1], "search");
+
     t8_adapt_template_update_markers (forest, &markers);
     search_user_data.refinement_markers = &markers;
     t8_forest_set_user_data (forest, &search_user_data);
     /* Fill marker array.
      * elements that should be refined are set to 1. 0 for no refinemnet. -1 for coarsening. */
+    search_time = -sc_MPI_Wtime ();
     t8_forest_search (forest, t8_adapt_cmesh_search_element_callback,
                       t8_adapt_cmesh_search_query_callback, &search_queries);
-
+    search_time += sc_MPI_Wtime();
+    sc_stats_set1(&times[1], search_time, "search");
+    
     /* Adapt the forest according to the markers */
     t8_forest_t         forest_adapt;
     t8_forest_init (&forest_adapt);
@@ -260,9 +276,26 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
     t8_forest_set_adapt (forest_adapt, forest,
                          t8_forest_adapt_marker_array_callback, 0);
     t8_forest_set_partition (forest_adapt, NULL, 0);
+    non_search_time = -sc_MPI_Wtime();
     t8_forest_commit (forest_adapt);
+    non_search_time += sc_MPI_Wtime();
     forest = forest_adapt;
+
+    search_time_total += search_time;
+    non_search_time_total += non_search_time;
+
+    sc_stats_accumulate (&times[0], non_search_time);
+    sc_stats_accumulate (&times[1], search_time);
+    sc_stats_compute(sc_MPI_COMM_WORLD, 2, times);
+    sc_stats_print(t8_get_package_id(), SC_LP_ESSENTIAL, 2, times, 1, 1);
   }
+
+  t8_global_productionf ("\n\tSummarize timings.\n\n");
+  sc_stats_accumulate (&total_times[0], non_search_time_total);
+  sc_stats_accumulate (&total_times[1], search_time_total);
+  sc_stats_compute(sc_MPI_COMM_WORLD, 2, total_times);
+  sc_stats_print(t8_get_package_id(), SC_LP_ESSENTIAL, 2, total_times, 1, 1);
+
 
   sc_array_reset (&markers);
   sc_array_reset (&search_queries);
