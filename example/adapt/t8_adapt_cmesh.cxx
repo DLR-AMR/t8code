@@ -303,6 +303,56 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
   return forest;
 }
 
+static void
+t8_adapt_cmesh_write_vtk (t8_forest_t forest,
+                          t8_forest_t forest_to_adapt_from,
+                          const char *vtu_prefix_path, sc_MPI_Comm comm)
+{
+  /* Write forest to adapt from to vtk.
+   * Since this forest is not partitioned (using MPI_COMM_SELF),
+   * only one rank should write the files. */
+  int                 mpirank, mpiret;
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  if (mpirank == 0) {
+    char                forest_output[BUFSIZ];
+    const int           retval =
+      snprintf (forest_output, BUFSIZ - 1, "%sforest_to_adapt_from",
+                vtu_prefix_path);
+    if (retval >= BUFSIZ - 1) {
+      t8_errorf ("Cannot write vtk output. File path too long.\n");
+    }
+    else {
+#if T8_WITH_VTK
+      /* Use VTK library for output if possible */
+      t8_forest_write_vtk_via_API (forest_to_adapt_from, forest_output, 1, 1,
+                                   1, 1, 0, 0, NULL);
+#else
+      /* Use standart ascii output if not linked against vtk. */
+      t8_forest_write_vtk (forest_to_adapt_from, forest_output);
+#endif
+    }
+  }
+
+  char                forest_output[BUFSIZ];
+  const int           retval =
+    snprintf (forest_output, BUFSIZ - 1, "%sforest_adapt",
+              vtu_prefix_path);
+  if (retval >= BUFSIZ - 1) {
+    t8_errorf ("Cannot write vtk output. File path too long.\n");
+  }
+  else {
+#if T8_WITH_VTK
+    /* Use VTK library for output if possible */
+    t8_forest_write_vtk_via_API (forest, forest_output, 1, 1, 1, 1, 0, 0,
+                                 NULL);
+#else
+    /* Use standart ascii output if not linked against vtk. */
+    t8_forest_write_vtk (forest, forest_output);
+#endif
+  }
+}
+
 int
 main (int argc, char **argv)
 {
@@ -399,39 +449,13 @@ main (int argc, char **argv)
       t8_adapt_cmesh_init_forest (comm, level, scale, displacement,
                                   mshfile_forest);
 
-    /* Write forest to adapt from to vtk.
-     * Since this forest is not partitioned (using MPI_COMM_SELF),
-     * only one rank should write the files. */
-    int                 mpirank, mpiret;
-    mpiret = sc_MPI_Comm_rank (comm, &mpirank);
-    SC_CHECK_MPI (mpiret);
-    if (mpirank == 0 && !no_vtk) {
-      char                forest_output[BUFSIZ];
-      const int           retval =
-        snprintf (forest_output, BUFSIZ - 1, "%sforest_to_adapt_from",
-                  vtu_prefix_path);
-      if (retval >= BUFSIZ - 1) {
-        t8_errorf ("Cannot write vtk output. File path too long.\n");
-      }
-      else {
-        t8_forest_write_vtk (forest_to_adapt_from, forest_output);
-      }
-    }
-
     forest =
       t8_adapt_cmesh_adapt_forest (forest, forest_to_adapt_from,
                                    reflevel - level);
+
     if (!no_vtk) {
-      char                forest_output[BUFSIZ];
-      const int           retval =
-        snprintf (forest_output, BUFSIZ - 1, "%sforest_adapt",
-                  vtu_prefix_path);
-      if (retval >= BUFSIZ - 1) {
-        t8_errorf ("Cannot write vtk output. File path too long.\n");
-      }
-      else {
-        t8_forest_write_vtk (forest, forest_output);
-      }
+      t8_adapt_cmesh_write_vtk (forest, forest_to_adapt_from, vtu_prefix_path,
+                                comm);
     }
 
     t8_forest_unref (&forest_to_adapt_from);
