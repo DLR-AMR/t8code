@@ -312,10 +312,7 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
     t8_forest_set_user_data (forest_adapt, &markers);
     t8_forest_set_adapt (forest_adapt, forest,
                          t8_forest_adapt_marker_array_callback, 0);
-    if (balance) {
-      t8_forest_set_balance_ext (forest_adapt, NULL, 0, 1);
-      t8_forest_set_ghost (forest_adapt, 1, T8_GHOST_FACES);
-    }
+
     t8_forest_set_partition (forest_adapt, NULL, 0);
     non_search_time = -sc_MPI_Wtime ();
     t8_forest_commit (forest_adapt);
@@ -329,6 +326,14 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
     sc_stats_accumulate (&times[1], search_time);
     sc_stats_compute (sc_MPI_COMM_WORLD, 2, times);
     sc_stats_print (t8_get_package_id (), SC_LP_ESSENTIAL, 2, times, 1, 1);
+  }
+
+  if (balance) {
+    t8_forest_t         forest_balance;
+    t8_forest_init (&forest_balance);
+    t8_forest_set_balance_ext (forest_balance, forest, 0, 1);
+    t8_forest_commit (forest_balance);
+    forest = forest_balance;
   }
 
   t8_adapt_cmesh_element_count (forest, element_of_class);
