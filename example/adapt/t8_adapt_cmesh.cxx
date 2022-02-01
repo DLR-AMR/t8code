@@ -242,7 +242,6 @@ t8_adapt_cmesh_element_count (t8_forest_t forest,
       }
     }
   }
-  return;
 }
 
 static              t8_forest_t
