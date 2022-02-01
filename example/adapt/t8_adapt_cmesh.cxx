@@ -210,27 +210,34 @@ t8_adapt_template_update_markers (t8_forest_t forest, sc_array_t * markers)
   }
 }
 
+/*Compute the number of elements according to their shape*/
 void
-t8_adapt_cmesh_element_count(t8_forest_t forest, t8_gloidx_t * element_of_class)
+t8_adapt_cmesh_element_count (t8_forest_t forest,
+                              t8_gloidx_t * element_of_class)
 {
-  const t8_locidx_t     num_local_trees = t8_forest_get_num_local_trees(forest);
-  const t8_locidx_t     last_local_tree = num_local_trees + t8_forest_get_first_local_tree_id(forest);
-  /*Iterate over all local trees*/
-  for(t8_locidx_t itree_id = t8_forest_get_first_local_tree_id(forest); 
-      itree_id < num_local_trees; ++itree_id){
-    const t8_eclass_t   tree_class = t8_forest_get_tree_class(forest, itree_id);
-    if(tree_class != T8_ECLASS_PYRAMID){
-      /*if the tree is not a pyramid, all elements have the same shape*/
-      element_of_class[tree_class] += t8_forest_get_tree_num_elements(forest, itree_id);
+  const t8_locidx_t   num_local_trees =
+    t8_forest_get_num_local_trees (forest);
+  /*Iterate over all local trees */
+  for (t8_locidx_t itree_id = 0; itree_id < num_local_trees; ++itree_id) {
+    const t8_eclass_t   tree_class =
+      t8_forest_get_tree_class (forest, itree_id);
+    if (tree_class != T8_ECLASS_PYRAMID) {
+      /*if the tree is not a pyramid, all elements have the same shape */
+      element_of_class[tree_class] +=
+        t8_forest_get_tree_num_elements (forest, itree_id);
     }
-    else{
-      t8_eclass_scheme_c *pyra_scheme = t8_forest_get_eclass_scheme (forest, tree_class);
-      t8_locidx_t       num_elems_in_tree = t8_forest_get_tree_num_elements(forest, itree_id);
+    else {
+      t8_eclass_scheme_c *pyra_scheme =
+        t8_forest_get_eclass_scheme (forest, tree_class);
+      t8_locidx_t         num_elems_in_tree =
+        t8_forest_get_tree_num_elements (forest, itree_id);
       /* Iterate over all elements and increase the counter according to the
        * shape of the element*/
-      for(t8_locidx_t ielem = 0; ielem < num_elems_in_tree; ++ielem){
-        t8_element_t *   element = t8_forest_get_element_in_tree(forest, itree_id, ielem);
-        t8_eclass_t     element_shape = pyra_scheme->t8_element_shape(element);
+      for (t8_locidx_t ielem = 0; ielem < num_elems_in_tree; ++ielem) {
+        t8_element_t       *element =
+          t8_forest_get_element_in_tree (forest, itree_id, ielem);
+        t8_eclass_t         element_shape =
+          pyra_scheme->t8_element_shape (element);
         element_of_class[element_shape]++;
       }
     }
@@ -246,11 +253,13 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
   sc_array_t          search_queries;
   sc_statinfo_t       total_times[2];
   double              non_search_time_total = 0, search_time_total = 0;
-  t8_gloidx_t         element_of_class[T8_ECLASS_COUNT] = {0, 0, 0, 0, 0, 0, 0, 0};
-  void *              recv_buff = T8_ALLOC(t8_gloidx_t, T8_ECLASS_COUNT);
-  
-  sc_stats_init(&total_times[0], "non-search-total");
-  sc_stats_init(&total_times[1], "search-total");
+  t8_gloidx_t         element_of_class[T8_ECLASS_COUNT] =
+    { 0, 0, 0, 0, 0, 0, 0, 0 };
+  t8_gloidx_t         recv_buff[T8_ECLASS_COUNT] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+  int                 mpiret, rank;
+
+  sc_stats_init (&total_times[0], "non-search-total");
+  sc_stats_init (&total_times[1], "search-total");
   const t8_locidx_t   num_elements =
     t8_forest_get_local_num_elements (forest_to_adapt_from);
   const t8_locidx_t   num_trees =
@@ -313,32 +322,28 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
     search_time_total += search_time;
     non_search_time_total += non_search_time;
 
-
     sc_stats_accumulate (&times[0], non_search_time);
     sc_stats_accumulate (&times[1], search_time);
     sc_stats_compute (sc_MPI_COMM_WORLD, 2, times);
     sc_stats_print (t8_get_package_id (), SC_LP_ESSENTIAL, 2, times, 1, 1);
   }
 
-  t8_adapt_cmesh_element_count(forest, element_of_class);
+  t8_adapt_cmesh_element_count (forest, element_of_class);
 
-  int rank;
-  sc_MPI_Comm_rank(sc_MPI_COMM_WORLD, &rank);
+  mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &rank);
+  SC_CHECK_MPI (mpiret);
 
-  sc_MPI_Reduce((void *) element_of_class, recv_buff, 
-      (int) T8_ECLASS_COUNT, T8_MPI_GLOIDX, sc_MPI_SUM, 0, 
-      sc_MPI_COMM_WORLD);
-  for(int i = 0; i < T8_ECLASS_COUNT; ++i){
-      t8_global_essentialf("%s %li\n", t8_eclass_to_string[i], element_of_class[i]);
-    }
+  mpiret = sc_MPI_Reduce ((void *) element_of_class, (void *) recv_buff,
+                          (int) T8_ECLASS_COUNT, T8_MPI_GLOIDX, sc_MPI_SUM, 0,
+                          sc_MPI_COMM_WORLD);
+  SC_CHECK_MPI (mpiret);
 
-  if(rank == 0){
-    for(int i = 0; i < T8_ECLASS_COUNT; ++i){
-      t8_global_essentialf("%s %li\n", t8_eclass_to_string[i], ((t8_gloidx_t *)recv_buff)[i]);
+  if (rank == 0) {
+    for (int i = 0; i < T8_ECLASS_COUNT; ++i) {
+      t8_global_essentialf ("%s %li\n", t8_eclass_to_string[i],
+                            ((t8_gloidx_t *) recv_buff)[i]);
     }
   }
-    
-
 
   t8_global_productionf ("\n\tSummarize timings.\n\n");
   sc_stats_accumulate (&total_times[0], non_search_time_total);
@@ -349,7 +354,6 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
 
   sc_array_reset (&markers);
   sc_array_reset (&search_queries);
-  T8_FREE(recv_buff);
 
   return forest;
 }
