@@ -331,9 +331,11 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
   if (balance) {
     t8_forest_t         forest_balance;
     t8_forest_init (&forest_balance);
+    t8_forest_set_profiling (forest_balance, 1);
     t8_forest_set_balance_ext (forest_balance, forest, 0, 1);
     t8_forest_commit (forest_balance);
     forest = forest_balance;
+    t8_forest_print_profile (forest_balance);
   }
 
   t8_adapt_cmesh_element_count (forest, element_of_class);
