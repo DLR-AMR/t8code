@@ -319,6 +319,7 @@ main (int argc, char **argv)
   double              displacement[3];
   const char         *mshfile = NULL;
   const char         *mshfile_forest = NULL;
+  const char         *vtu_prefix_path = NULL;
   const sc_MPI_Comm   comm = sc_MPI_COMM_WORLD;
   int                 no_vtk = 0;
 
@@ -378,7 +379,10 @@ main (int argc, char **argv)
 
   sc_options_add_switch (opt, 'o', "no-vtk", &no_vtk,
                          "Suppress vtk output. "
-                         "Overwrites any -v setting.");
+                         "Overwrites any -O setting.");
+  sc_options_add_string (opt, 'O', "output-prefix", &vtu_prefix_path, NULL,
+                         "Prefix of vtu output files. Example: \"/home/vtu/prefix_\" will result in the file name \"/home/vtu/prefix_forest_adapt\"\n"
+                         "Any folders must already exist.");
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (helpme) {
@@ -402,14 +406,32 @@ main (int argc, char **argv)
     mpiret = sc_MPI_Comm_rank (comm, &mpirank);
     SC_CHECK_MPI (mpiret);
     if (mpirank == 0 && !no_vtk) {
-      t8_forest_write_vtk (forest_to_adapt_from, "forest_to_adapt_from");
+      char                forest_output[BUFSIZ];
+      const int           retval =
+        snprintf (forest_output, BUFSIZ - 1, "%sforest_to_adapt_from",
+                  vtu_prefix_path);
+      if (retval >= BUFSIZ - 1) {
+        t8_errorf ("Cannot write vtk output. File path too long.\n");
+      }
+      else {
+        t8_forest_write_vtk (forest_to_adapt_from, forest_output);
+      }
     }
 
     forest =
       t8_adapt_cmesh_adapt_forest (forest, forest_to_adapt_from,
                                    reflevel - level);
     if (!no_vtk) {
-      t8_forest_write_vtk (forest, "forest_adapt");
+      char                forest_output[BUFSIZ];
+      const int           retval =
+        snprintf (forest_output, BUFSIZ - 1, "%sforest_adapt",
+                  vtu_prefix_path);
+      if (retval >= BUFSIZ - 1) {
+        t8_errorf ("Cannot write vtk output. File path too long.\n");
+      }
+      else {
+        t8_forest_write_vtk (forest, forest_output);
+      }
     }
 
     t8_forest_unref (&forest_to_adapt_from);
