@@ -71,7 +71,7 @@ t8_adapt_cmesh_init_forest (sc_MPI_Comm comm, const int level,
   }
   t8_scheme_cxx_t    *scheme = t8_scheme_new_default_cxx ();
   t8_forest_t         forest =
-    t8_forest_new_uniform (cmesh, scheme, level, 0, comm);
+    t8_forest_new_uniform (cmesh, scheme, level, 1, comm);
 
   return forest;
 }
@@ -247,7 +247,7 @@ t8_adapt_cmesh_element_count (t8_forest_t forest,
 static              t8_forest_t
 t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
                              t8_forest_t forest_to_adapt_from,
-                             int num_refinement_steps)
+                             int num_refinement_steps, int balance)
 {
   sc_array_t          search_queries;
   sc_statinfo_t       total_times[2];
@@ -312,6 +312,10 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
     t8_forest_set_user_data (forest_adapt, &markers);
     t8_forest_set_adapt (forest_adapt, forest,
                          t8_forest_adapt_marker_array_callback, 0);
+    if (balance) {
+      t8_forest_set_balance (forest_adapt, NULL, 0);
+      t8_forest_set_ghost (forest_adapt, 1, T8_GHOST_FACES);
+    }
     t8_forest_set_partition (forest_adapt, NULL, 0);
     non_search_time = -sc_MPI_Wtime ();
     t8_forest_commit (forest_adapt);
@@ -366,11 +370,16 @@ t8_adapt_cmesh_write_vtk (t8_forest_t forest,
    * Since this forest is not partitioned (using MPI_COMM_SELF),
    * only one rank should write the files. */
   int                 mpirank, mpiret;
+  char                forest_output[BUFSIZ];
+  int                 retval;
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
+
+  /*
+   * Forest to adapt from
+   */
   if (mpirank == 0) {
-    char                forest_output[BUFSIZ];
-    const int           retval =
+    retval =
       snprintf (forest_output, BUFSIZ - 1, "%sforest_to_adapt_from",
                 vtu_prefix_path);
     if (retval >= BUFSIZ - 1) {
@@ -388,10 +397,12 @@ t8_adapt_cmesh_write_vtk (t8_forest_t forest,
     }
   }
 
-  char                forest_output[BUFSIZ];
-  const int           retval =
-    snprintf (forest_output, BUFSIZ - 1, "%sforest_adapt",
-              vtu_prefix_path);
+  /*
+   * Forest
+   */
+
+  retval =
+    snprintf (forest_output, BUFSIZ - 1, "%sforest_adapt", vtu_prefix_path);
   if (retval >= BUFSIZ - 1) {
     t8_errorf ("Cannot write vtk output. File path too long.\n");
   }
@@ -405,6 +416,7 @@ t8_adapt_cmesh_write_vtk (t8_forest_t forest,
     t8_forest_write_vtk (forest, forest_output);
 #endif
   }
+
 }
 
 int
@@ -426,6 +438,7 @@ main (int argc, char **argv)
   const char         *vtu_prefix_path = NULL;
   const sc_MPI_Comm   comm = sc_MPI_COMM_WORLD;
   int                 no_vtk = 0;
+  int                 balance = 0;
 
   /* long help message */
   snprintf (help, BUFSIZ,
@@ -454,6 +467,9 @@ main (int argc, char **argv)
 
   sc_options_add_int (opt, 'r', "rlevel", &reflevel, 0,
                       "The maximum refinement level of the forest that will be refined.");
+
+  sc_options_add_switch (opt, 'b', "balance", &balance,
+                         "Balance the forest.");
 
   sc_options_add_string (opt, 'f', "mshfile-template", &mshfile, NULL,
                          "If specified, the forest to adapt from is constructed from a .msh file with "
@@ -505,7 +521,7 @@ main (int argc, char **argv)
 
     forest =
       t8_adapt_cmesh_adapt_forest (forest, forest_to_adapt_from,
-                                   reflevel - level);
+                                   reflevel - level, balance);
 
     if (!no_vtk) {
       t8_adapt_cmesh_write_vtk (forest, forest_to_adapt_from, vtu_prefix_path,
