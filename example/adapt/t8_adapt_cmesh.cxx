@@ -313,7 +313,7 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
     t8_forest_set_adapt (forest_adapt, forest,
                          t8_forest_adapt_marker_array_callback, 0);
     if (balance) {
-      t8_forest_set_balance (forest_adapt, NULL, 0);
+      t8_forest_set_balance_ext (forest_adapt, NULL, 0, 1);
       t8_forest_set_ghost (forest_adapt, 1, T8_GHOST_FACES);
     }
     t8_forest_set_partition (forest_adapt, NULL, 0);
