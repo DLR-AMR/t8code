@@ -69,9 +69,18 @@ t8_adapt_cmesh_init_forest (sc_MPI_Comm comm, const int level,
       t8_cmesh_new_hypercube_ext (T8_ECLASS_PRISM, comm, 0, 0, 0, scale,
                                   displacement);
   }
+
   t8_scheme_cxx_t    *scheme = t8_scheme_new_default_cxx ();
+
+  t8_cmesh_t          cmesh_partition;
+  t8_cmesh_init (&cmesh_partition);
+  t8_scheme_cxx_ref (scheme);
+  t8_cmesh_set_partition_uniform (cmesh_partition, level, scheme);
+  t8_cmesh_set_derive (cmesh_partition, cmesh);
+  t8_cmesh_commit (cmesh_partition, comm);
+
   t8_forest_t         forest =
-    t8_forest_new_uniform (cmesh, scheme, level, 1, comm);
+    t8_forest_new_uniform (cmesh_partition, scheme, level, 1, comm);
 
   return forest;
 }
