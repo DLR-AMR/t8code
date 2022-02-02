@@ -313,7 +313,6 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
     t8_forest_search (forest, t8_adapt_cmesh_search_element_callback,
                       t8_adapt_cmesh_search_query_callback, &search_queries);
     search_time += sc_MPI_Wtime ();
-    sc_stats_set1 (&times[1], search_time, "search");
 
     /* Adapt the forest according to the markers */
     t8_forest_t         forest_adapt;
