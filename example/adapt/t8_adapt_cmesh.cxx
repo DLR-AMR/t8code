@@ -322,10 +322,12 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
                          t8_forest_adapt_marker_array_callback, 0);
 
     t8_forest_set_partition (forest_adapt, NULL, 0);
+    t8_forest_set_profiling (forest_adapt, 1);
     non_search_time = -sc_MPI_Wtime ();
     t8_forest_commit (forest_adapt);
     non_search_time += sc_MPI_Wtime ();
     forest = forest_adapt;
+    t8_forest_print_profile (forest_adapt);
 
     search_time_total += search_time;
     non_search_time_total += non_search_time;
@@ -461,11 +463,11 @@ main (int argc, char **argv)
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
 
-  sc_init (comm, 1, 1, NULL, SC_LP_ESSENTIAL);
+  sc_init (comm, 1, 1, NULL, SC_LP_STATISTICS);
 #ifdef T8_ENABLE_DEBUG
   t8_init (SC_LP_DEBUG);
 #else
-  t8_init (SC_LP_DEFAULT);
+  t8_init (SC_LP_STATISTICS);
 #endif
 
   /* initialize command line argument parser */
