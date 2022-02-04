@@ -323,6 +323,9 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
 
     t8_forest_set_partition (forest_adapt, NULL, 0);
     t8_forest_set_profiling (forest_adapt, 1);
+    if (balance) {
+      t8_forest_set_balance_ext (forest_adapt, forest, 0, 1);
+    }
     non_search_time = -sc_MPI_Wtime ();
     t8_forest_commit (forest_adapt);
     non_search_time += sc_MPI_Wtime ();
@@ -338,6 +341,7 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
     sc_stats_print (t8_get_package_id (), SC_LP_ESSENTIAL, 2, times, 1, 1);
   }
 
+#if 0
   if (balance) {
     t8_forest_t         forest_balance;
     t8_forest_init (&forest_balance);
@@ -347,6 +351,7 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
     forest = forest_balance;
     t8_forest_print_profile (forest_balance);
   }
+#endif
 
   t8_adapt_cmesh_element_count (forest, element_of_class);
 
