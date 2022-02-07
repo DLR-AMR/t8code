@@ -2088,6 +2088,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
          * the indices. 
          * If subelements are used it is possible that leaf or ancestor are subelements. 
          * In both cases we might need to adjust ancestor. */
+
         /* We need to determine the dual face */
         if (neigh_scheme->t8_element_level (ancestor) ==
             ts->t8_element_level (leaf)) {
@@ -2136,7 +2137,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
            * but rather a random subelement in the transition cell.
            * Therefore, we need to find the right subelement within the family of subelements of ancestor by using the subelement index. */
 
-          /* We will call the current neighbor "pseudo_neighbor" here in order to stress that it might not be the real neighbor */
+          /* We will call the current neighbor "pseudo_neighbor" here to emphasize that it might not be the real neighbor */
           T8_ASSERT (element_index < forest->global_num_elements);
           const t8_element_t *pseudo_neighbor;
           pseudo_neighbor =
@@ -2160,7 +2161,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
                                                              pseudo_neighbor,
                                                              face);
 
-          /* adjust the index of the pseudo neighbo to equal the index of the real neighbor */
+          /* adjust the index of the pseudo neighbor to equal the index of the real neighbor */
           element_index =
             pseudo_neigh_index - pseudo_neighbor_sub_id + sub_id_of_neighbor;
 
