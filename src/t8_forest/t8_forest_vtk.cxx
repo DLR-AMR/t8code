@@ -364,6 +364,18 @@ t8_forest_num_points (t8_forest_t forest, int count_ghosts)
           num_points += t8_dpyramid_num_vertices (pyra);
         }
       }
+      else if (forest->is_transitioned) {
+        /* in transitioned forests, there might be different eclasses in the ghost struct => different element shapes => different # of vertices */
+        t8_eclass_scheme_c *ghost_scheme = t8_forest_get_eclass_scheme (forest, ghost_class);
+        ghost_elem = t8_forest_ghost_get_tree_elements (forest, itree);
+        num_elements = t8_forest_ghost_tree_num_elements (forest, itree);
+        for (ielem = 0; ielem < (t8_locidx_t) num_elements; ielem++) {
+          const t8_element_t *ghost_element =
+            t8_element_array_index_locidx (ghost_elem, ielem);
+          const t8_element_shape_t ghost_shape = ghost_scheme->t8_element_shape (ghost_element);
+          num_points += t8_eclass_num_vertices[ghost_shape];
+        }
+      }
       else {
         num_points += t8_eclass_num_vertices[ghost_class]
           * t8_forest_ghost_tree_num_elements (forest, itree);

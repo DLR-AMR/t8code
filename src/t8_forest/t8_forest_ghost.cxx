@@ -541,8 +541,8 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
    * Otherwise, we do nothing. */
   if (elem_copy == NULL ||
       level != copy_level ||
-      ts->t8_element_get_linear_id (elem_copy, copy_level) !=
-      ts->t8_element_get_linear_id (elem, level)) {
+      (ts->t8_element_get_linear_id (elem_copy, copy_level) != ts->t8_element_get_linear_id (elem, level) || 
+       ts->t8_element_get_subelement_id (elem_copy) != ts->t8_element_get_subelement_id (elem))) { /* for subelements, we need the extra subelement_id check here since their linear_id is equal */
     /* Add the element */
     elem_copy = t8_element_array_push (&remote_tree->elements);
     ts->t8_element_copy (elem, elem_copy);
@@ -1105,9 +1105,14 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
           t8_forest_element_neighbor_eclass (forest, itree, elem, iface);
         neigh_scheme = t8_forest_get_eclass_scheme (forest, neigh_class);
         if (ghost_method == 0) {
-          /* Use half neighbors */
+          /* Use half neighbors or face-neighbors in case of maxlevel or transitioned forests */
           /* Get the number of face children of the element at this face */
           num_face_children = ts->t8_element_num_face_children (elem, iface);
+
+          if (forest->is_transitioned) {
+            /* In transitioned forests, each element has exactly one neighbor at each face */
+            num_face_children = 1;
+          }
           /* regrow the half_neighbors array if neccessary.
            * We also need to reallocate it, if the element class of the neighbor
            * changes */
@@ -1126,7 +1131,7 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
             last_class = neigh_class;
             prev_neigh_scheme = neigh_scheme;
           }
-          if (!is_atom) {
+          if (!is_atom && forest->is_transitioned != 1) {
             /* Construct each half size neighbor */
             neighbor_tree =
               t8_forest_element_half_face_neighbors (forest, itree, elem,
@@ -1135,13 +1140,21 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
                                                      num_face_children, NULL);
           }
           else {
-            int                 dummy_neigh_face;
-            /* This element has maximum level, we only construct its neighbor */
-            neighbor_tree =
-              t8_forest_element_face_neighbor (forest, itree, elem,
-                                               half_neighbors[0],
-                                               neigh_scheme, iface,
-                                               &dummy_neigh_face);
+            /* The following if-statement is specific for subelements in the 2D quadrilateral refinement */ 
+            if (!ts->t8_element_test_if_subelement (elem) || 
+                (tree_class == T8_ECLASS_QUAD && ts->t8_element_test_if_subelement (elem) && iface == 1)) {
+              int                 dummy_neigh_face;
+              /* This element has maximum level or the forest is transitioned - we only construct its neighbor */
+              neighbor_tree =
+                t8_forest_element_face_neighbor (forest, itree, elem,
+                                                half_neighbors[0],
+                                                neigh_scheme, iface,
+                                                &dummy_neigh_face);
+            }
+            else {
+              /* For quadrilateral elements, faces 0 and 2 point to a sibling subelement that must be in the same mpi process */
+              neighbor_tree = -1; /* we pretend to be at a domain boundary */
+            }
           }
           if (neighbor_tree >= 0) {
             /* If there exist face neighbor elements (we are not at a domain boundary */
@@ -1163,7 +1176,7 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
         }                       /* end ghost_method 0 */
         else {
           size_t              iowner;
-          /* Construc the owners at the face of the neighbor element */
+          /* Construct the owners at the face of the neighbor element */
           t8_forest_element_owners_at_neigh_face (forest, itree, elem, iface,
                                                   &owners);
           T8_ASSERT (owners.elem_count >= 0);
@@ -1923,13 +1936,13 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
     /* Start sending the remote elements */
     send_info = t8_forest_ghost_send_start (forest, ghost, &requests);
 
-    /* Reveive the ghost elements from the remote processes */
+    /* Receive the ghost elements from the remote processes */
     t8_forest_ghost_receive (forest, ghost);
 
     /* End sending the remote elements */
     t8_forest_ghost_send_end (forest, ghost, send_info, requests);
 
-  }
+  } 
 
   if (create_element_array) {
     /* Free the offset memory, if created */
