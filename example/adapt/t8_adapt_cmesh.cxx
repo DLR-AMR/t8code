@@ -590,7 +590,7 @@ t8_adapt_cmesh_write_vtk (t8_forest_t forest,
   if (mpirank == 0) {
     retval =
       snprintf (forest_output, BUFSIZ - 1, "%sforest_to_adapt_from",
-                vtu_prefix_path);
+                vtu_prefix_path == NULL ? "" : vtu_prefix_path);
     if (retval >= BUFSIZ - 1) {
       t8_errorf ("Cannot write vtk output. File path too long.\n");
     }
@@ -611,7 +611,8 @@ t8_adapt_cmesh_write_vtk (t8_forest_t forest,
    */
 
   retval =
-    snprintf (forest_output, BUFSIZ - 1, "%sforest_adapt", vtu_prefix_path);
+    snprintf (forest_output, BUFSIZ - 1, "%sforest_adapt", 
+                vtu_prefix_path == NULL ? "" : vtu_prefix_path);
   if (retval >= BUFSIZ - 1) {
     t8_errorf ("Cannot write vtk output. File path too long.\n");
   }
