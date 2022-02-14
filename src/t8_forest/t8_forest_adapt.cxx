@@ -259,35 +259,33 @@ t8_forest_adapt (t8_forest_t forest)
     /* We now iterate over all elements in this tree and check them for refinement/coarsening. */
     while (el_considered < num_el_from) {
 #ifdef T8_ENABLE_DEBUG
-      /* Will get set to 0 later if this is not a family */
-      is_family = 1;
+      /* Will get set to 1 later if this is a family */
+      is_family = 0;
 #endif
       /* Load the current element and at most num_children-1 many others into
        * the elements_from buffer. Stop when we are certain that they cannot from
        * a family.
        * At the end is_family will be true, if these elements form a family.
        */
-      num_elements = num_children;
       for (zz = 0; zz < num_children &&
            el_considered + (t8_locidx_t) zz < num_el_from; zz++) {
         elements_from[zz] = t8_element_array_index_locidx (telements_from,
                                                            el_considered +
                                                            zz);
       }
-      if (zz == num_children) {
-        if (tscheme->t8_element_is_family (elements_from)) {
+      if (zz == num_children && tscheme->t8_element_is_family (elements_from)) {
 #ifdef T8_ENABLE_DEBUG
-          is_family = 1;
+        is_family = 1;
 #endif
-        }
-        else {
-          /* We are certain that the elements do not form a family.
-           * So we will only pass the first element to the adapt callback. */
+        num_elements = num_children;
+      }
+      else {
+        /* We are certain that the elements do not form a family.
+         * So we will only pass the first element to the adapt callback. */
 #ifdef T8_ENABLE_DEBUG
-          is_family = 0;
+        is_family = 0;
 #endif
-          num_elements = 1;
-        }
+        num_elements = 1;
       }
       /* Pass the element, or the family to the adapt callback.
        * The output will be > 0 if the element should be refined
