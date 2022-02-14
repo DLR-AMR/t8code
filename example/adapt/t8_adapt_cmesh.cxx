@@ -189,7 +189,8 @@ t8_adapt_cmesh_adapt_callback (t8_forest_t forest, t8_forest_t forest_from,
       t8_adapt_cmesh_search_query_t *copy_line =
         (t8_adapt_cmesh_search_query_t *)
         sc_array_push (&possible_cutting_lines_new);
-      *copy_line = *line;
+        copy_line->element_id = line->element_id;
+        copy_line->tree_id = line->tree_id;
     }
   }
 
