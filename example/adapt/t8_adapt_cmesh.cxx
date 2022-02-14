@@ -97,6 +97,111 @@ typedef struct
   t8_locidx_t         element_id;       /* Id of the current element. */
 } t8_adapt_cmesh_search_query_t;
 
+typedef struct
+{
+  sc_array_t          possible_cutting_lines;   /* For each element an array of t8_adapt_cmesh_search_query_t */
+  t8_forest_t         forest_to_adapt_from;
+} t8_adapt_cmesh_adapt_data_t;
+
+static void
+t8_adapt_cmesh_replace_callback (t8_forest_t forest_old,
+                                 t8_forest_t forest_new,
+                                 t8_locidx_t which_tree,
+                                 t8_eclass_scheme_c * ts,
+                                 int num_outgoing,
+                                 t8_locidx_t first_outgoing,
+                                 int num_incoming, t8_locidx_t first_incoming)
+{
+  /* Input: forest_old user data is t8_adapt_cmesh_adapt_data_t with one sc_array per old element
+     containing the lines that cut this element.
+     Output: forest_new user data is t8_adapt_cmesh_adapt_data_t with one sc_array per new element,
+     where each child will contain a copy of the parent's array from forest_old.
+   */
+  if (num_outgoing == 1) {
+    /* The element is either the same or refined. Copy all array content over. */
+    t8_adapt_cmesh_adapt_data_t *adapt_data_old =
+      (t8_adapt_cmesh_adapt_data_t *) t8_forest_get_user_data (forest_old);
+    t8_adapt_cmesh_adapt_data_t *adapt_data_new =
+      (t8_adapt_cmesh_adapt_data_t *) t8_forest_get_user_data (forest_new);
+    const t8_locidx_t   first_old =
+      t8_forest_get_tree_element_offset (forest_old,
+                                         which_tree) + first_outgoing;
+    const t8_locidx_t   first_new =
+      t8_forest_get_tree_element_offset (forest_new,
+                                         which_tree) + first_incoming;
+    sc_array_t         *possible_cutting_lines_old =
+      (sc_array_t *) sc_array_index (&adapt_data_old->possible_cutting_lines,
+                                     first_old);
+    for (int ielem_new = 0; ielem_new < num_incoming; ++ielem_new) {
+      sc_array_t         *possible_cutting_lines_new = (sc_array_t *)
+        sc_array_index (&adapt_data_new->possible_cutting_lines,
+                        first_new + ielem_new);
+      sc_array_init (possible_cutting_lines_new,
+                     sizeof (t8_adapt_cmesh_search_query_t));
+      sc_array_copy (possible_cutting_lines_new, possible_cutting_lines_old);
+    }
+  }
+}
+
+static int
+t8_adapt_cmesh_adapt_callback (t8_forest_t forest, t8_forest_t forest_from,
+                               t8_locidx_t ltree_id, t8_locidx_t lelement_id,
+                               t8_eclass_scheme_c * ts, int num_elements,
+                               const t8_element_t * elements[])
+{
+  t8_adapt_cmesh_adapt_data_t *adapt_data =
+    (t8_adapt_cmesh_adapt_data_t *) t8_forest_get_user_data (forest_from);
+
+  /* Input: For each element an array of possible lines that this element intersects with.
+     Check for each line if it does intersect the element.
+     Remove the lines that do not intersect.
+     If any intersects, refine the element. */
+  sc_array_t          possible_cutting_lines_new;
+  sc_array_init (&possible_cutting_lines_new,
+                 sizeof (t8_adapt_cmesh_search_query_t));
+  const t8_locidx_t   element_offset =
+    t8_forest_get_tree_element_offset (forest_from, ltree_id) + lelement_id;
+  sc_array_t         *possible_cutting_lines =
+    (sc_array_t *) sc_array_index (&adapt_data->possible_cutting_lines,
+                                   element_offset);
+  int                 one_line_cuts_the_element = 0;
+  size_t              num_lines = possible_cutting_lines->elem_count;
+
+  for (size_t iline = 0; iline < num_lines; ++iline) {
+    const t8_adapt_cmesh_search_query_t *line =
+      (const t8_adapt_cmesh_search_query_t *)
+      sc_array_index (possible_cutting_lines, iline);
+
+    const t8_locidx_t   forest_to_adapt_from_tree_id = line->tree_id;
+    const t8_locidx_t   forest_to_adapt_from_element_id = line->element_id;
+    t8_forest_t         forest_to_adapt_from =
+      adapt_data->forest_to_adapt_from;
+    const t8_element_t *forest_to_adapt_from_element =
+      t8_forest_get_element_in_tree (forest_to_adapt_from,
+                                     forest_to_adapt_from_tree_id,
+                                     forest_to_adapt_from_element_id);
+    if (t8_forest_line_cuts
+        (forest_to_adapt_from, forest_to_adapt_from_tree_id,
+         forest_to_adapt_from_element, forest_from, ltree_id, elements[0])) {
+      /* One line cuts the element. We will refine it later */
+      one_line_cuts_the_element = 1;
+      /* Add the line to the new array */
+      t8_adapt_cmesh_search_query_t *copy_line =
+        (t8_adapt_cmesh_search_query_t *)
+        sc_array_push (&possible_cutting_lines_new);
+      *copy_line = *line;
+    }
+  }
+
+  if (one_line_cuts_the_element) {
+    /* Overwrite old array with new lines. */
+    sc_array_copy (possible_cutting_lines, &possible_cutting_lines_new);
+    sc_array_reset (&possible_cutting_lines_new);
+    return 1;
+  }
+  return 0;
+}
+
 static int
 t8_adapt_cmesh_search_element_callback (t8_forest_t forest,
                                         t8_locidx_t ltreeid,
@@ -256,7 +361,8 @@ t8_adapt_cmesh_element_count (t8_forest_t forest,
 static              t8_forest_t
 t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
                              t8_forest_t forest_to_adapt_from,
-                             int num_refinement_steps, int balance)
+                             int num_refinement_steps, int balance,
+                             int use_search)
 {
   sc_array_t          search_queries;
   sc_statinfo_t       total_times[2];
@@ -272,6 +378,7 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
     t8_forest_get_local_num_elements (forest_to_adapt_from);
   const t8_locidx_t   num_trees =
     t8_forest_get_num_local_trees (forest_to_adapt_from);
+
   /* Initialize the queries array */
   sc_array_init_count (&search_queries,
                        sizeof (t8_adapt_cmesh_search_query_t), num_elements);
@@ -296,6 +403,24 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
   sc_array_t          markers;
   sc_array_init (&markers, sizeof (short));
 
+  /* Initialize user data for non search */
+  t8_locidx_t         forest_num_elements =
+    t8_forest_get_local_num_elements (forest);
+  t8_adapt_cmesh_adapt_data_t adapt_data;
+  if (!use_search) {
+    adapt_data.forest_to_adapt_from = forest_to_adapt_from;
+    /* For each element fill all lines into the element's array */
+    sc_array_init_size (&adapt_data.possible_cutting_lines,
+                        sizeof (sc_array_t), forest_num_elements);
+    for (t8_locidx_t ielement = 0; ielement < forest_num_elements; ++ielement) {
+      sc_array_t         *cutting_lines =
+        (sc_array_t *) sc_array_index (&adapt_data.possible_cutting_lines,
+                                       ielement);
+      sc_array_init (cutting_lines, sizeof (t8_adapt_cmesh_search_query_t));
+      sc_array_copy (cutting_lines, &search_queries);
+    }
+  }
+
   for (int refinement_step = 0; refinement_step < num_refinement_steps;
        ++refinement_step) {
     sc_statinfo_t       times[2];
@@ -304,30 +429,82 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
     sc_stats_init (&times[0], "non-search");
     sc_stats_init (&times[1], "search");
 
-    t8_adapt_template_update_markers (forest, &markers);
-    search_user_data.refinement_markers = &markers;
-    t8_forest_set_user_data (forest, &search_user_data);
-    /* Fill marker array.
-     * elements that should be refined are set to 1. 0 for no refinemnet. -1 for coarsening. */
     search_time = -sc_MPI_Wtime ();
-    t8_forest_search (forest, t8_adapt_cmesh_search_element_callback,
-                      t8_adapt_cmesh_search_query_callback, &search_queries);
+    if (use_search) {
+      t8_adapt_template_update_markers (forest, &markers);
+      search_user_data.refinement_markers = &markers;
+      t8_forest_set_user_data (forest, &search_user_data);
+      /* Fill marker array.
+       * elements that should be refined are set to 1. 0 for no refinemnet. -1 for coarsening. */
+
+      t8_forest_search (forest, t8_adapt_cmesh_search_element_callback,
+                        t8_adapt_cmesh_search_query_callback,
+                        &search_queries);
+    }
     search_time += sc_MPI_Wtime ();
 
     /* Adapt the forest according to the markers */
+    if (!use_search) {
+      t8_forest_ref (forest);
+    }
     t8_forest_t         forest_adapt;
     t8_forest_init (&forest_adapt);
-    t8_forest_set_user_data (forest_adapt, &markers);
-    t8_forest_set_adapt (forest_adapt, forest,
-                         t8_forest_adapt_marker_array_callback, 0);
-
-    t8_forest_set_partition (forest_adapt, NULL, 0);
+    if (use_search) {
+      t8_forest_set_user_data (forest_adapt, &markers);
+      t8_forest_set_adapt (forest_adapt, forest,
+                           t8_forest_adapt_marker_array_callback, 0);
+      t8_forest_set_partition (forest_adapt, NULL, 0);
+    }
+    else {
+      t8_forest_set_user_data (forest, &adapt_data);
+      t8_forest_set_adapt (forest_adapt, forest,
+                           t8_adapt_cmesh_adapt_callback, 0);
+    }
     t8_forest_set_profiling (forest_adapt, 1);
     if (balance) {
       t8_forest_set_balance_ext (forest_adapt, forest, 0, 1);
     }
     non_search_time = -sc_MPI_Wtime ();
     t8_forest_commit (forest_adapt);
+
+    if (!use_search) {
+      /* Now copy the possible cutting line info over from the old forest to
+       * the new one. */
+      const t8_locidx_t   forest_adapt_num_element =
+        t8_forest_get_local_num_elements (forest_adapt);
+      t8_adapt_cmesh_adapt_data_t data_new;
+      data_new.forest_to_adapt_from = forest_to_adapt_from;
+      /* For each element fill all lines into the element's array */
+      sc_array_init_size (&data_new.possible_cutting_lines,
+                          sizeof (sc_array_t), forest_adapt_num_element);
+      t8_forest_set_user_data (forest_adapt, &data_new);
+      t8_forest_iterate_replace (forest_adapt, forest,
+                                 t8_adapt_cmesh_replace_callback);
+      /* TODO: We actually do not need to copy here, but could also destroy the old data and use the new one. */
+
+      /* Delete new adapt_data */
+      const size_t        previous_num_entries =
+        adapt_data.possible_cutting_lines.elem_count;
+      sc_array_resize (&adapt_data.possible_cutting_lines,
+                       forest_adapt_num_element);
+      for (t8_locidx_t iarray = 0; iarray < forest_adapt_num_element;
+           ++iarray) {
+        sc_array_t         *array_new =
+          (sc_array_t *) sc_array_index (&data_new.possible_cutting_lines,
+                                         iarray);
+        sc_array_t         *array_old =
+          (sc_array_t *) sc_array_index (&adapt_data.possible_cutting_lines,
+                                         iarray);
+        if ((size_t) iarray >= previous_num_entries) {
+          sc_array_init (array_old, sizeof (t8_adapt_cmesh_search_query_t));
+        }
+        sc_array_copy (array_old, array_new);
+        sc_array_reset (array_new);
+      }
+      sc_array_reset (&data_new.possible_cutting_lines);
+      t8_forest_unref (&forest);
+    }
+
     non_search_time += sc_MPI_Wtime ();
     forest = forest_adapt;
     t8_forest_print_profile (forest_adapt);
@@ -379,7 +556,17 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
 
   sc_array_reset (&markers);
   sc_array_reset (&search_queries);
-
+  if (!use_search) {
+    const size_t        num_array =
+      adapt_data.possible_cutting_lines.elem_count;
+    for (size_t iarray = 0; iarray < num_array; ++iarray) {
+      sc_array_t         *array =
+        (sc_array_t *) sc_array_index (&adapt_data.possible_cutting_lines,
+                                       iarray);
+      sc_array_reset (array);
+    }
+    sc_array_reset (&adapt_data.possible_cutting_lines);
+  }
   return forest;
 }
 
@@ -461,6 +648,7 @@ main (int argc, char **argv)
   const sc_MPI_Comm   comm = sc_MPI_COMM_WORLD;
   int                 no_vtk = 0;
   int                 balance = 0;
+  int                 search = 0;
 
   /* long help message */
   snprintf (help, BUFSIZ,
@@ -492,6 +680,8 @@ main (int argc, char **argv)
 
   sc_options_add_switch (opt, 'b', "balance", &balance,
                          "Balance the forest.");
+  sc_options_add_switch (opt, 's', "search", &search,
+                         "Use search to find the elements.");
 
   sc_options_add_string (opt, 'f', "mshfile-template", &mshfile, NULL,
                          "If specified, the forest to adapt from is constructed from a .msh file with "
@@ -543,7 +733,7 @@ main (int argc, char **argv)
 
     forest =
       t8_adapt_cmesh_adapt_forest (forest, forest_to_adapt_from,
-                                   reflevel - level, balance);
+                                   reflevel - level, balance, search);
 
     if (!no_vtk) {
       t8_adapt_cmesh_write_vtk (forest, forest_to_adapt_from, vtu_prefix_path,
