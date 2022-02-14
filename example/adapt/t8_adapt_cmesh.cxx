@@ -428,6 +428,9 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
     sc_statinfo_t       times[2];
     double              non_search_time, search_time;
 
+    t8_global_essentialf ("Starting refinement level %i of %i\n",
+                          refinement_step + 1, num_refinement_steps);
+
     sc_stats_init (&times[0], "non-search");
     sc_stats_init (&times[1], "search");
 
