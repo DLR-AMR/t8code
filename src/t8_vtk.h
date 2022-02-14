@@ -56,10 +56,10 @@
 #define T8_VTK_FORMAT_STRING "binary"
 #endif
 
-/*#if T8_WITH_VTK*/
+#if T8_WITH_VTK
 #define t8_vtk_locidx_array_type_t vtkTypeInt32Array
 #define t8_vtk_gloidx_array_type_t vtkTypeInt64Array
-/*#endif*/
+#endif
 
 /* TODO: Add support for integer data type. */
 typedef enum

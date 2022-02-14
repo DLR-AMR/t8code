@@ -541,8 +541,8 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
   }
 
   /* Write to vtk */
-  /*t8_forest_write_vtk (forest, vtuname); */
-  t8_forest_write_vtk_via_API (forest, vtuname, 1, 1, 1, 1, 1, 0, NULL);
+  t8_forest_write_vtk (forest, vtuname);
+
   /* Output */
   t8_global_productionf ("Wrote forest to vtu files %s.*\n", vtuname);
   if (geom_type == T8_GEOM_CIRCLE) {
