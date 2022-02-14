@@ -189,8 +189,8 @@ t8_adapt_cmesh_adapt_callback (t8_forest_t forest, t8_forest_t forest_from,
       t8_adapt_cmesh_search_query_t *copy_line =
         (t8_adapt_cmesh_search_query_t *)
         sc_array_push (&possible_cutting_lines_new);
-        copy_line->element_id = line->element_id;
-        copy_line->tree_id = line->tree_id;
+      copy_line->element_id = line->element_id;
+      copy_line->tree_id = line->tree_id;
     }
   }
 
@@ -382,7 +382,8 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
 
   /* Initialize the queries array */
   sc_array_init_count (&search_queries,
-                       sizeof (t8_adapt_cmesh_search_query_t), num_elements_to_adapt_from);
+                       sizeof (t8_adapt_cmesh_search_query_t),
+                       num_elements_to_adapt_from);
   /* Fill queries with correct ids. */
 
   for (t8_locidx_t itree = 0, iquery = 0; itree < num_trees; ++itree) {
@@ -612,8 +613,8 @@ t8_adapt_cmesh_write_vtk (t8_forest_t forest,
    */
 
   retval =
-    snprintf (forest_output, BUFSIZ - 1, "%sforest_adapt", 
-                vtu_prefix_path == NULL ? "" : vtu_prefix_path);
+    snprintf (forest_output, BUFSIZ - 1, "%sforest_adapt",
+              vtu_prefix_path == NULL ? "" : vtu_prefix_path);
   if (retval >= BUFSIZ - 1) {
     t8_errorf ("Cannot write vtk output. File path too long.\n");
   }
