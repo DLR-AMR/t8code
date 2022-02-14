@@ -464,7 +464,10 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
     }
     t8_forest_set_profiling (forest_adapt, 1);
     if (balance) {
-      t8_forest_set_balance_ext (forest_adapt, forest, 0, 1);
+      /* If we use search, we can repartition during balance.
+       * If we do not use search we need to deactivate it. */
+      const int           no_repartition = !use_search;
+      t8_forest_set_balance_ext (forest_adapt, forest, no_repartition, 1);
     }
     non_search_time = -sc_MPI_Wtime ();
     t8_forest_commit (forest_adapt);
