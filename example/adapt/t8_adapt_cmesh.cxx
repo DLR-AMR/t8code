@@ -375,14 +375,14 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
 
   sc_stats_init (&total_times[0], "non-search-total");
   sc_stats_init (&total_times[1], "search-total");
-  const t8_locidx_t   num_elements =
+  const t8_locidx_t   num_elements_to_adapt_from =
     t8_forest_get_local_num_elements (forest_to_adapt_from);
   const t8_locidx_t   num_trees =
     t8_forest_get_num_local_trees (forest_to_adapt_from);
 
   /* Initialize the queries array */
   sc_array_init_count (&search_queries,
-                       sizeof (t8_adapt_cmesh_search_query_t), num_elements);
+                       sizeof (t8_adapt_cmesh_search_query_t), num_elements_to_adapt_from);
   /* Fill queries with correct ids. */
 
   for (t8_locidx_t itree = 0, iquery = 0; itree < num_trees; ++itree) {
