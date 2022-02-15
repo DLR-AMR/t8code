@@ -201,6 +201,10 @@ t8_adapt_cmesh_adapt_callback (t8_forest_t forest, t8_forest_t forest_from,
     sc_array_reset (&possible_cutting_lines_new);
     return 1;
   }
+  else {
+    /* delete complete array */
+    sc_array_resize (possible_cutting_lines, 0);
+  }
   return 0;
 }
 
