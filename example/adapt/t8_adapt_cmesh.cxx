@@ -694,6 +694,8 @@ t8_adapt_cmesh_write_vtk (t8_forest_t forest,
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
 
+  t8_global_essentialf ("Starting to write vtk to %s\n", vtu_prefix_path);
+
   /*
    * Forest to adapt from
    */
@@ -737,6 +739,7 @@ t8_adapt_cmesh_write_vtk (t8_forest_t forest,
 #endif
   }
 
+  t8_global_essentialf ("Done writing vtk.\n");
 }
 
 int
