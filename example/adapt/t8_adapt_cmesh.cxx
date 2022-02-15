@@ -28,6 +28,7 @@
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_forest/t8_forest_adapt.h>
+#include <t8_forest/t8_forest_partition.h>
 #include <t8_cmesh_readmshfile.h>
 #include <sc_statistics.h>
 
@@ -495,6 +496,7 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
         adapt_data.possible_cutting_lines.elem_count;
       sc_array_resize (&adapt_data.possible_cutting_lines,
                        forest_adapt_num_element);
+      size_t              max_num_lines = 0;
       for (t8_locidx_t iarray = 0; iarray < forest_adapt_num_element;
            ++iarray) {
         sc_array_t         *array_new =
@@ -506,11 +508,105 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
         if ((size_t) iarray >= previous_num_entries) {
           sc_array_init (array_old, sizeof (t8_adapt_cmesh_search_query_t));
         }
+        size_t              num_lines = array_old->elem_count;
+        max_num_lines = SC_MAX (max_num_lines, num_lines);
         sc_array_copy (array_old, array_new);
         sc_array_reset (array_new);
       }
       sc_array_reset (&data_new.possible_cutting_lines);
       t8_forest_unref (&forest);
+
+      if (!use_search) {
+        /* Partition */
+        /* In order to partition the data correctly, we need to construct
+         * an sc_array with the same number of bytes per element.
+         * max_num_lines stores the maximum number of lines an element has.
+         * We use this number. */
+        t8_forest_ref (forest_adapt);
+        t8_forest_t         forest_partition;
+        t8_forest_init (&forest_partition);
+        t8_forest_set_partition (forest_partition, forest_adapt, 0);
+        t8_forest_commit (forest_partition);
+        /* Now build up the partition arrays */
+        sc_array_t          partition_data_new;
+        sc_array_t          partition_data_adapt;
+        sc_array_t          line_count_adapt;
+        sc_array_t          line_count_new;
+        sc_array_init_count (&line_count_adapt, sizeof (size_t),
+                             forest_adapt_num_element);
+        sc_array_init_count (&partition_data_adapt,
+                             max_num_lines *
+                             sizeof (t8_adapt_cmesh_search_query_t),
+                             forest_adapt_num_element);
+        const t8_locidx_t   forest_partition_num_elements =
+          t8_forest_get_local_num_elements (forest_partition);
+        sc_array_init_count (&partition_data_new,
+                             max_num_lines *
+                             sizeof (t8_adapt_cmesh_search_query_t),
+                             forest_partition_num_elements);
+        sc_array_init_count (&line_count_new, sizeof (size_t),
+                             forest_partition_num_elements);
+        /* Fill the old array with the data. */
+        for (t8_locidx_t ielement = 0; ielement < forest_adapt_num_element;
+             ++ielement) {
+          sc_array_t         *lines_array =
+            (sc_array_t *) sc_array_index (&adapt_data.possible_cutting_lines,
+                                           ielement);
+          *(size_t *) sc_array_index (&line_count_adapt, ielement) =
+            lines_array->elem_count;
+          /* Initialize a view in the new data to be able to copy lines_array over */
+          t8_adapt_cmesh_search_query_t *view_in_new_lines =
+            (t8_adapt_cmesh_search_query_t *)
+            t8_sc_array_index_locidx (&partition_data_adapt, ielement);
+          memcpy (view_in_new_lines, lines_array->array,
+                  lines_array->elem_count * lines_array->elem_size);
+          t8_debugf ("Element %i, copying %i lines\n", ielement,
+                     lines_array->elem_count);
+          t8_debugf ("line 0: %i %i\n", view_in_new_lines[0].tree_id,
+                     view_in_new_lines[0].element_id);
+        }
+        /* Partition the data */
+        t8_forest_partition_data (forest_adapt, forest_partition,
+                                  &partition_data_adapt, &partition_data_new);
+        t8_forest_partition_data (forest_adapt, forest_partition,
+                                  &line_count_adapt, &line_count_new);
+
+        /* Now resize adapt_data and fill it with the new data. */
+        for (t8_locidx_t ielement = 0; ielement < forest_adapt_num_element;
+             ++ielement) {
+          sc_array_t         *array = (sc_array_t *)
+            t8_sc_array_index_locidx (&adapt_data.possible_cutting_lines,
+                                      ielement);
+          sc_array_reset (array);
+        }
+        sc_array_resize (&adapt_data.possible_cutting_lines,
+                         forest_partition_num_elements);
+        for (t8_locidx_t ielement = 0;
+             ielement < forest_partition_num_elements; ++ielement) {
+          sc_array_t         *array = (sc_array_t *)
+            t8_sc_array_index_locidx (&adapt_data.possible_cutting_lines,
+                                      ielement);
+          size_t              num_lines =
+            *(size_t *) t8_sc_array_index_locidx (&line_count_new, ielement);
+          t8_debugf ("Element %i, receiving %i lines\n", ielement, num_lines);
+          sc_array_init_count (array, sizeof (t8_adapt_cmesh_search_query_t),
+                               num_lines);
+          t8_adapt_cmesh_search_query_t *view_in_new_lines =
+            (t8_adapt_cmesh_search_query_t *)
+            t8_sc_array_index_locidx (&partition_data_new, ielement);
+          t8_debugf ("line 0: %i %i\n", view_in_new_lines[0].tree_id,
+                     view_in_new_lines[0].element_id);
+          memcpy (array->array, view_in_new_lines,
+                  array->elem_count * array->elem_size);
+        }
+        sc_array_reset (&line_count_new);
+        sc_array_reset (&line_count_adapt);
+        sc_array_reset (&partition_data_adapt);
+        sc_array_reset (&partition_data_new);
+
+        t8_forest_unref (&forest_adapt);
+        forest_adapt = forest_partition;
+      }
     }
 
     non_search_time += sc_MPI_Wtime ();
