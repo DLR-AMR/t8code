@@ -521,7 +521,7 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
       t8_forest_unref (&forest);
 
       t8_global_essentialf ("Max num lines = %zd\n", max_num_lines);
-      if (partition && max_num_lines < 4) {
+      if (partition && max_num_lines < 20) {
         /* Partition */
         /* In order to partition the data correctly, we need to construct
          * an sc_array with the same number of bytes per element.
