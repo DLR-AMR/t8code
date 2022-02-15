@@ -500,7 +500,10 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
         adapt_data.possible_cutting_lines.elem_count;
       sc_array_resize (&adapt_data.possible_cutting_lines,
                        forest_adapt_num_element);
-      size_t              max_num_lines = 0;
+
+      /* Compute the process local maximum number of lines */
+      int                 max_num_lines = 0;
+      int                 max_num_lines_local = 0;
       for (t8_locidx_t iarray = 0; iarray < forest_adapt_num_element;
            ++iarray) {
         sc_array_t         *array_new =
@@ -512,15 +515,20 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
         if ((size_t) iarray >= previous_num_entries) {
           sc_array_init (array_old, sizeof (t8_adapt_cmesh_search_query_t));
         }
-        size_t              num_lines = array_old->elem_count;
-        max_num_lines = SC_MAX (max_num_lines, num_lines);
+        int                 num_lines = array_old->elem_count;
+        max_num_lines_local = SC_MAX (max_num_lines_local, num_lines);
         sc_array_copy (array_old, array_new);
         sc_array_reset (array_new);
       }
       sc_array_reset (&data_new.possible_cutting_lines);
       t8_forest_unref (&forest);
 
-      t8_global_essentialf ("Max num lines = %zd\n", max_num_lines);
+      /* Compute the process global maximum number of lines */
+      sc_MPI_Comm         comm = t8_forest_get_mpicomm (forest_adapt);
+      sc_MPI_Allreduce (&max_num_lines_local, &max_num_lines, 1, sc_MPI_INT,
+                        sc_MPI_MAX, comm);
+
+      t8_global_essentialf ("Max num lines = %i\n", max_num_lines);
       if (partition && max_num_lines < 20) {
         /* Partition */
         /* In order to partition the data correctly, we need to construct
