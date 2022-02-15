@@ -364,7 +364,7 @@ static              t8_forest_t
 t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
                              t8_forest_t forest_to_adapt_from,
                              int num_refinement_steps, int balance,
-                             int use_search)
+                             int use_search, int partition)
 {
   sc_array_t          search_queries;
   sc_statinfo_t       total_times[2];
@@ -516,7 +516,7 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
       sc_array_reset (&data_new.possible_cutting_lines);
       t8_forest_unref (&forest);
 
-      if (!use_search) {
+      if (partition) {
         /* Partition */
         /* In order to partition the data correctly, we need to construct
          * an sc_array with the same number of bytes per element.
@@ -560,10 +560,6 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
             t8_sc_array_index_locidx (&partition_data_adapt, ielement);
           memcpy (view_in_new_lines, lines_array->array,
                   lines_array->elem_count * lines_array->elem_size);
-          t8_debugf ("Element %i, copying %i lines\n", ielement,
-                     lines_array->elem_count);
-          t8_debugf ("line 0: %i %i\n", view_in_new_lines[0].tree_id,
-                     view_in_new_lines[0].element_id);
         }
         /* Partition the data */
         t8_forest_partition_data (forest_adapt, forest_partition,
@@ -588,14 +584,11 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
                                       ielement);
           size_t              num_lines =
             *(size_t *) t8_sc_array_index_locidx (&line_count_new, ielement);
-          t8_debugf ("Element %i, receiving %i lines\n", ielement, num_lines);
           sc_array_init_count (array, sizeof (t8_adapt_cmesh_search_query_t),
                                num_lines);
           t8_adapt_cmesh_search_query_t *view_in_new_lines =
             (t8_adapt_cmesh_search_query_t *)
             t8_sc_array_index_locidx (&partition_data_new, ielement);
-          t8_debugf ("line 0: %i %i\n", view_in_new_lines[0].tree_id,
-                     view_in_new_lines[0].element_id);
           memcpy (array->array, view_in_new_lines,
                   array->elem_count * array->elem_size);
         }
@@ -754,6 +747,7 @@ main (int argc, char **argv)
   int                 no_vtk = 0;
   int                 balance = 0;
   int                 search = 0;
+  int                 partition = 0;
 
   /* long help message */
   snprintf (help, BUFSIZ,
@@ -785,6 +779,8 @@ main (int argc, char **argv)
 
   sc_options_add_switch (opt, 'b', "balance", &balance,
                          "Balance the forest.");
+  sc_options_add_switch (opt, 'p', "partition", &partition,
+                         "Repartition the forest after each refinement step.");
   sc_options_add_switch (opt, 's', "search", &search,
                          "Use search to find the elements.");
 
@@ -838,7 +834,8 @@ main (int argc, char **argv)
 
     forest =
       t8_adapt_cmesh_adapt_forest (forest, forest_to_adapt_from,
-                                   reflevel - level, balance, search);
+                                   reflevel - level, balance, search,
+                                   partition);
 
     if (!no_vtk) {
       t8_adapt_cmesh_write_vtk (forest, forest_to_adapt_from, vtu_prefix_path,
