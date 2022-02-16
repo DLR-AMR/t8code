@@ -49,11 +49,12 @@
  *     Do not refine an element if it has reached the maximum level. (Hint: ts->t8_element_level)
  */
 
-#include <t8.h>                 /* General t8code header, always include this. */
-#include <t8_cmesh.h>           /* cmesh definition and basic interface. */
-#include <t8_forest.h>          /* forest definition and basic interface. */
-#include <t8_schemes/t8_default_cxx.hxx>        /* default refinement scheme. */
-#include <t8_vec.h>             /* Basic operations on 3D vectors. */
+#include <t8.h>
+#include <sc_options.h>
+#include <t8_cmesh.h>
+#include <t8_forest.h>
+#include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_vec.h>
 #include <t8_forest_vtk.h>
 #include <t8_geometry/t8_geometry_base.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx>
@@ -135,15 +136,34 @@ t8_naca_surface_adapt_callback (t8_forest_t forest,
 int
 main (int argc, char **argv)
 {
+  sc_options_t       *opt;
+  char                usage[BUFSIZ];
+  char                help[BUFSIZ];
+  int                 helpme, parsed, sreturn;
   int                 mpiret;
   sc_MPI_Comm         comm;
   t8_cmesh_t          cmesh;
   t8_forest_t         forest;
-  /* The prefix for our output files. */
-  const char         *prefix_uniform = "naca_uniform_forest";
-  const char         *prefix_adapt = "naca_adapted_forest";
-  /* The uniform refinement level of the forest. */
-  const int           level = 0;
+  const char         *fileprefix = NULL;
+  int                 level, level_dorsal, level_ventral, occt;
+
+  /* brief help message */
+  snprintf (usage, BUFSIZ, "\t%s <OPTIONS>\n\t%s -h\t"
+            "for a brief overview of all options.",
+            basename (argv[0]), basename (argv[0]));
+
+  /* long help message */
+  sreturn = snprintf (help, BUFSIZ,
+                      "Demonstrates the some of the geometry capabitlities of t8code.\n"
+                      "You can read in a msh and brep file of a naca profile and refine elements touching certain surfaces.\n"
+                      "Usage: %s\n", usage);
+
+  if (sreturn >= BUFSIZ) {
+    /* The help message was truncated */
+    /* Note: gcc >= 7.1 prints a warning if we
+     * do not check the return value of snprintf. */
+    t8_debugf ("Warning: Truncated help message to '%s'\n", help);
+  }
 
   /* Initialize MPI. This has to happen before we initialize sc or t8code. */
   mpiret = sc_MPI_Init (&argc, &argv);
@@ -158,57 +178,77 @@ main (int argc, char **argv)
   /* We will use MPI_COMM_WORLD as a communicator. */
   comm = sc_MPI_COMM_WORLD;
 
-  /* Read in the naca mesh from the msh file and the naca geometry from the brep file */
-  cmesh = t8_cmesh_from_msh_file ("source/naca6412", 0, sc_MPI_COMM_WORLD, 3, 0, 1);
-  /* Construct a forest from the cmesh */
-  forest = t8_forest_new_uniform (cmesh,
-                                  t8_scheme_new_default_cxx (),
-                                  level,
-                                  0,
-                                  comm);
+  /* initialize command line argument parser */
+  opt = sc_options_new (argv[0]);
+  sc_options_add_switch (opt, 'h', "help", &helpme,
+                         "Display a short help message.");
+  sc_options_add_string (opt, 'f', "fileprefix", &fileprefix, NULL,
+                         "Fileprefix of the msh and brep files.");
+  sc_options_add_int (opt, 'l', "level", &level, 0,
+                      "The uniform refinement level of the mesh.");
+  sc_options_add_int (opt, 'd', "dorsal", &level_dorsal, 0,
+                      "The refinement level of the dorsal side of the naca profile.");
+  sc_options_add_int (opt, 'v', "ventral", &level_ventral, 0,
+                      "The refinement level of the ventral side of the naca profile.");
+  sc_options_add_switch (opt, 'o', "occt", &occt,
+                         "Use the occt geometry.");
+  parsed =
+    sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
+  if (helpme) {
+    /* display help message and usage */
+    t8_global_productionf ("%s\n", help);
+    sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
+  }
+  else if (parsed == 0 || fileprefix == NULL)
+  {
+    /* wrong usage */
+    t8_global_productionf ("\n\tERROR:Wrong usage.\n\n");
+    sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
+  }
+  else
+  {
+    /* Read in the naca mesh from the msh file and the naca geometry from the brep file */
+    cmesh = t8_cmesh_from_msh_file (fileprefix, 0, sc_MPI_COMM_WORLD, 3, 0, occt);
+    /* Construct a forest from the cmesh */
+    forest = t8_forest_new_uniform (cmesh,
+                                    t8_scheme_new_default_cxx (),
+                                    level,
+                                    0,
+                                    comm);
 
-  /* Write forest to vtu files. */
-  t8_forest_write_vtk (forest, prefix_uniform);
-  t8_global_productionf ("Wrote uniform forest to vtu files: %s*\n",
-                         prefix_uniform);
+    /* Generate the adapt data. We refine the surfaces in the array surfaces[]
+     * to the levels specified in the array levels[]. The surface indices can be visualized by opening
+     * the brep file in the Gmsh GUI and turning on the visibility of surface tags 
+     * (Tools->Options->Geometry->Surface labels in Version 4.8.4) */
+    int surfaces[4] = {2, 8, 14, 19};
+    int levels[4] =   {level_dorsal, level_dorsal,  level_ventral,  level_ventral};
+    struct t8_naca_surface_adapt_data adapt_data = {
+      4,              /* Amount of surfaces we want to refine */
+      surfaces,       /* Array with surface indices */
+      levels          /* Array with refinement levels */
+    };
+    /* Adapt the forest. We can reuse the forest variable, since the new adapted
+     * forest will take ownership of the old forest and destroy it.
+     * Note that the adapted forest is a new forest, though. */
+    T8_ASSERT (t8_forest_is_committed (forest));
+    forest = t8_forest_new_adapt (forest, t8_naca_surface_adapt_callback, 1, 0, &adapt_data);
 
-  /* Generate the adapt data. We refine the surfaces in the array surfaces[]
-   * to the levels specified in the array levels[]. The surface indices can be visualized by opening
-   * the brep file in the Gmsh GUI and turning on the visibility of surface tags 
-   * (Tools->Options->Geometry->Surface labels in Version 4.8.4) */
-  int surfaces[4] = {2, 8, 14, 19};
-  int levels[4] =   {1, 1,  1,  1};
-  struct t8_naca_surface_adapt_data adapt_data = {
-    4,              /* Amount of surfaces we want to refine */
-    surfaces,       /* Array with surface indices */
-    levels          /* Array with refinement levels */
-  };
-  /* Adapt the forest. We can reuse the forest variable, since the new adapted
-   * forest will take ownership of the old forest and destroy it.
-   * Note that the adapted forest is a new forest, though. */
-  T8_ASSERT (t8_forest_is_committed (forest));
-  forest = t8_forest_new_adapt (forest, t8_naca_surface_adapt_callback, 1, 0, &adapt_data);
+    t8_forest_t balanced_forest;
+    t8_forest_init (&balanced_forest);
+    t8_forest_set_balance (balanced_forest, forest, 0);
+    t8_forest_commit (balanced_forest);
 
-  /* Now we can balance the forest */
-  t8_forest_t balanced_forest;
-  t8_forest_init (&balanced_forest);
-  t8_forest_set_balance (balanced_forest, forest, 0);
-  t8_forest_commit (balanced_forest);
+    t8_forest_write_vtk (balanced_forest, "naca_adapted_forest");
+    t8_global_productionf ("Wrote adapted and balanced forest to vtu files: naca_adapted_forest*\n");
 
-  /* Write forest to vtu files. */
-  t8_forest_write_vtk (balanced_forest, prefix_adapt);
-  t8_global_productionf ("Wrote adapted forest to vtu files: %s*\n",
-                         prefix_adapt);
+    t8_forest_unref (&balanced_forest);
+    t8_global_productionf ("Destroyed forest.\n");
+  }
 
-  /* Destroy the forest. */
-  t8_forest_unref (&balanced_forest);
-  t8_global_productionf ("Destroyed forest.\n");
-
+  sc_options_destroy (opt);
   sc_finalize ();
-
   mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
-
   return 0;
 }
 
