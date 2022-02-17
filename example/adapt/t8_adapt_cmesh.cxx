@@ -471,7 +471,7 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
                            t8_adapt_cmesh_adapt_callback, 0);
     }
     t8_forest_set_profiling (forest_adapt, 1);
-    if (balance) {
+    if (balance && refinement_step < 6) {
       /* If we use search, we can repartition during balance.
        * If we do not use search we need to deactivate it. */
       const int           no_repartition = !use_search;
