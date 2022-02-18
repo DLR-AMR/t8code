@@ -417,4 +417,26 @@ t8_flow_stokes_flow_sphere_shell (const double x[3], double t, double x_out[])
   x_out[2] = vel_r * cos (theta) - vel_theta * cos (theta);
 }
 
+void
+t8_flow_potential_around_circle (const double x[3], double t, double x_out[])
+{  
+  double radius = 0.5;
+  // convert to cylinder coordinates
+  double r = sqrt(x[0] * x[0] + x[1] * x[1]);
+  double phi = atan2(x[1], x[0]);
+  if (r < radius)
+  {
+    x_out[0] = x_out[1] = x_out[2] = 0;
+    return;
+  }
+  // calculate potential flow
+  double v_r = (1 - (radius*radius) / (r*r)) * cos(phi);
+  double v_phi = -(1 + (radius*radius) / (r*r)) * sin(phi);
+
+  // convert back to cartesian
+  x_out[0] = cos(phi) * v_r - sin(phi) * v_phi;
+  x_out[1] = sin(phi) * v_r + cos(phi) * v_phi;
+  x_out[2] = 0;
+}
+
 T8_EXTERN_C_END ();
