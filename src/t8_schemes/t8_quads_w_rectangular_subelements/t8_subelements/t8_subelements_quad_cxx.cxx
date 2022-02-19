@@ -138,8 +138,16 @@ t8_subelement_scheme_quad_c::t8_element_compare (const t8_element_t * elem1,
   if (compare == 0) {
     if (t8_element_test_if_subelement (elem1)
         && t8_element_test_if_subelement (elem2)) {
-      SC_ABORT
-        ("Both elements are subelements. Specify what the compare function should do in this case");
+      t8_debugf ("Caution: The compare function is used for two subelements.");
+
+      if (pquad_w_sub_elem1->subelement_type == pquad_w_sub_elem2->subelement_type && 
+          pquad_w_sub_elem1->subelement_id == pquad_w_sub_elem2->subelement_id) {
+        /* both subelements are identical */
+        return 0;
+      }
+      /* return != 0 to avoid debug abortion in t8_ghost_add_remote */
+      t8_debugf ("Caution: The compare function is used for two different subelements - return != 0.");
+      return 1; 
     }
     else if (t8_element_test_if_subelement (elem1)) {
       return -1;                /* elem1 is subelement and therefore smaller */
@@ -286,11 +294,18 @@ t8_subelement_scheme_quad_c::t8_element_num_face_children (const t8_element_t
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) elem;
 
-  /* this function is not implemented for subelements */
-  T8_ASSERT (pquad_w_sub->dummy_is_subelement ==
-             T8_SUB_QUAD_IS_NO_SUBELEMENT);
-
   T8_ASSERT (t8_element_is_valid (elem));
+
+  /* Caution: 
+   *   This function works for quads and triangular subelements. 
+   *   We return 2 as the number of children at a face of a triangular. 
+   *   This might make sense for face id = 1 but not for face id 0 or 2 since those faces point towards a sibling subelement which can not be refined further.
+   *   One should take this into account for further computations. */
+
+  if (pquad_w_sub->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT) {
+    t8_debugf ("Caution: a subelement is called in t8_element_num_face_children.");
+  }
+  
   return 2;
 }
 
@@ -690,7 +705,8 @@ t8_subelement_scheme_quad_c::t8_element_children_at_face (const t8_element_t *
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) elem;
 
-  /* this function is not implemented for subelements */
+  /* TODO: check what to do here for subelements for ghosts. 
+   * If_subelement -> check face = 2? then ccheck if face is split, then compute quad children similar to whats done here now. */
   T8_ASSERT (pquad_w_sub->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
 
@@ -1868,11 +1884,11 @@ t8_element_shape_t
 
   T8_ASSERT (t8_element_is_valid (elem));
 
-  if (pquad_w_sub->dummy_is_subelement == T8_SUB_QUAD_IS_NO_SUBELEMENT) {
-    return T8_ECLASS_QUAD;
-  }
-  else {                        /* for quads, all subelements are triangles */
+  if (pquad_w_sub->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT) { /* for quads, all subelements are triangles */
     return T8_ECLASS_TRIANGLE;
+  }
+  else {                        
+    return T8_ECLASS_QUAD;
   }
 }
 
