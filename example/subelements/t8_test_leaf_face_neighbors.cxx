@@ -73,6 +73,8 @@ t8_test_leaf_face_neighbors (const t8_forest_t forest_adapt)
   /* Collecting data of the adapted forest */
   int                 global_num_elements =
     t8_forest_get_global_num_elements (forest_adapt);
+  int                 local_num_elements =
+    t8_forest_get_local_num_elements (forest_adapt);
   int                 global_num_trees =
     t8_forest_get_num_global_trees (forest_adapt);
   const t8_element_t *current_element;
@@ -87,7 +89,7 @@ t8_test_leaf_face_neighbors (const t8_forest_t forest_adapt)
   int subelement_count = 0;
   int leaf_face_neighbor_call_count = 0;
 
-  /* we only allow one tree with id 0 and the current element must come from a valid index within the forest (as well as its face index) */
+  /* we only allow one tree with id 0 in this testcase and the current element must come from a valid index within the forest (as well as its face index) */
   T8_ASSERT (global_num_trees == 1);
   T8_ASSERT (ltree_id == 0);
 
@@ -96,8 +98,9 @@ t8_test_leaf_face_neighbors (const t8_forest_t forest_adapt)
 
   /* the leaf_face_neighbor function determins neighbor elements of current_element at face face_id in a balanced forest forest_adapt */
   int element_index_in_tree, face_id;
-  for (element_index_in_tree = 0; element_index_in_tree < global_num_elements; element_index_in_tree++) {
-
+  for (element_index_in_tree = 0; element_index_in_tree < local_num_elements; element_index_in_tree++) {
+    printf("local_num_elements: %i\n", local_num_elements);
+    printf("element_index_in_tree: %i\n", element_index_in_tree);
     /* determing the current element according to the given tree id and element id within the tree */
     current_element =
       t8_forest_get_element_in_tree (forest_adapt, ltree_id,
@@ -107,6 +110,11 @@ t8_test_leaf_face_neighbors (const t8_forest_t forest_adapt)
     t8_debugf ("\nCurrent element (Test LFN):\n");
     t8_print_element_data (current_element);
     t8_debugf ("    Element index in tree: %i \n", element_index_in_tree);
+
+    if (ts->t8_element_test_if_subelement (current_element)) {
+      subelement_count++;
+      printf("subelement_count: %i\n",subelement_count);
+    }
 
     for (face_id = 0; face_id < ts->t8_element_num_faces(current_element); face_id++) {
       leaf_face_neighbor_call_count++;
@@ -149,7 +157,8 @@ t8_test_leaf_face_neighbors (const t8_forest_t forest_adapt)
     }
   }
   t8_productionf ("Leaf face neighbor runtime: %f\n", time_leaf_face_neighbor);
-  t8_productionf ("Number elements in total: %i  subelement_count: %i  leaf_face_neighbor call: %i\n", global_num_elements, subelement_count, leaf_face_neighbor_call_count);
+  t8_productionf ("Local #elements: %i  local #subelements: %i  local #leaf_face_neighbor call: %i\n", local_num_elements, subelement_count, leaf_face_neighbor_call_count);
+  t8_productionf ("Global #elements: %i\n", global_num_elements);
 }
 
 /* Initializing and adapting a forest */
@@ -164,8 +173,8 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   char                filename[BUFSIZ];
 
   /* refinement setting */
-  int                 initlevel = 1;    /* initial uniform refinement level */
-  int                 adaptlevel = 1;
+  int                 initlevel = 4;    /* initial uniform refinement level */
+  int                 adaptlevel = 3;
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening (minlevel <= initlevel) */
   int                 maxlevel = initlevel + adaptlevel;     /* highest level allowed for refining */
 
