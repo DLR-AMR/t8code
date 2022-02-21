@@ -149,7 +149,7 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
   char                filename[BUFSIZ];
 
   /* refinement settings */
-                      initlevel = 5;    /* initial uniform refinement level */
+                      initlevel = 3;    /* initial uniform refinement level */
   int                 minlevel = initlevel;   /* lowest level allowed for coarsening */
                       adaptlevel = 3;   /* number of allowed adapt levels */
   int                 maxlevel = initlevel + adaptlevel;    /* highest level allowed for refining */
@@ -158,20 +158,26 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
   int                 do_exemplary_refinement = 0;
 
   /* cmesh settings (only one of the following suggestions should be one, the others 0) */
-  int                 single_tree = 0;
-  int                 multiple_tree = 1, num_x_trees = 3, num_y_trees = 2;
+  int                 single_tree = 1;
+  int                 multiple_tree = 0, num_x_trees = 2, num_y_trees = 1;
   int                 hybrid_cmesh = 0;
 
   /* adaptation setting */
   int                 do_balance = 0;
   int                 do_transition = 1;
 
+  /* MPI settings */
+  int                 do_ghost = 1;
+  int                 ghost_version = 3;
+
   /* timestep settings */
   int                 do_different_refinements = 0;   /* to change the refinement during multiple num_timesteps */
   int                 num_timesteps = 1;    /* Number of times, the mesh is refined */
   double              delta = 0.2;   /* The value, the radius increases after each timestep */
 
+  /* VTK settings */
   int                 do_vtk = 1;   /* print results */
+  int                 do_vtk_cmesh = 0;
 
   /* initializing the forest */
   t8_forest_init (&forest);
@@ -199,7 +205,7 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
   t8_forest_commit (forest);
 
   /* print cmesh file */
-  if (do_vtk) {
+  if (do_vtk && do_vtk_cmesh) {
     snprintf (filename, BUFSIZ, "forest_cmesh_%s", t8_eclass_to_string[eclass]);
     t8_cmesh_vtk_write_file (cmesh, filename, 1);
 
@@ -217,8 +223,8 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
   /* shift the midpoiunt of the circle by (shift_x,shift_y) to ensure midpoints on corners of the uniform mesh */
   // int  shift_x = 0;      /* shift_x, shift_y should be smaler than 2^minlevel / 2 such that midpoint stays in the quadrilateral tree */
   // int  shift_y = 0;
-  sdata.mid_point[0] = 1;    // 1.0 / 2.0 + shift_x * 1.0/(1 << (minlevel));
-  sdata.mid_point[1] = 1;    // 1.0 / 2.0 + shift_y * 1.0/(1 << (minlevel)); 
+  sdata.mid_point[0] = 0;    // 1.0 / 2.0 + shift_x * 1.0/(1 << (minlevel));
+  sdata.mid_point[1] = 0;    // 1.0 / 2.0 + shift_y * 1.0/(1 << (minlevel)); 
   sdata.mid_point[2] = 0;
   sdata.radius = 0.4;
 
@@ -272,6 +278,12 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
       /* Analogue to the other set-functions, this function adds subelements to the from_method. 
        * The forest will therefore use subelements while adapting in order to remove hanging faces from the mesh. */
       t8_forest_set_remove_hanging_faces (forest_adapt, NULL);
+      ghost_version = 1;
+    }
+
+    if (do_ghost) {
+      /* set ghosts after adaptation/balancing/transitioning */
+      t8_forest_set_ghost_ext (forest_adapt, do_ghost, T8_GHOST_FACES, ghost_version);
     }
 
     adapt_time -= sc_MPI_Wtime (); 
