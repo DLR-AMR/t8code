@@ -127,6 +127,7 @@ t8_forest_remove_hanging_faces (t8_forest_t forest)
 {
   t8_global_productionf ("Into t8_forest_remove_hanging_faces.\n");
 
+  /* Set ghost layers of all processes in order to find hanging faces over process-boundaries */
   if (forest->set_from->ghosts == NULL) {
     forest->set_from->ghost_type = T8_GHOST_FACES;
     t8_forest_ghost_create_topdown (forest->set_from);
