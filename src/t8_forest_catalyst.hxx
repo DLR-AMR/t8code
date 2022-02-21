@@ -27,8 +27,6 @@
  * You can then write that vtkUnstructuredGrid with t8_write_vtk_only.
  */
 
-/* TODO: Document this file */
-
 #ifndef T8_FOREST_CATALYST_HXX
 #define T8_FOREST_CATALYST_HXX
 
@@ -58,6 +56,7 @@
  * \return  A vtkUnstrucuredGrid.
  * \note If t8code was not configured with vtk, use \ref t8_forest_vtk_write_file.
  */
+#if T8_WITH_VTK
 vtkSmartPointer < vtkUnstructuredGrid >
 t8_build_vtk_unstructured_grid (t8_forest_t forest, int write_treeid,
                                 int write_mpirank, int write_level,
@@ -73,6 +72,7 @@ t8_build_vtk_unstructured_grid (t8_forest_t forest, int write_treeid,
  * \return  True if successful, false if not (process local).
  * \note If t8code was not configured with vtk, use \ref t8_forest_vtk_write_file
  */
+
 int
  
  
@@ -84,5 +84,5 @@ int
  
 t8_write_vtk_only (vtkUnstructuredGrid * unstructuredGrid,
                    const char *fileprefix, t8_forest_t forest);
-
+#endif
 #endif /* !T8_FOREST_VTK_H */
