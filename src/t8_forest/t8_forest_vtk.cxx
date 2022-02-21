@@ -28,13 +28,6 @@
 #include <t8_vec.h>
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include "t8_forest_types.h"
-#include <t8_schemes/t8_default/t8_default_vertex_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_hex_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_line_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_quad_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_tri_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_tet_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_prism_cxx.hxx>
 #if T8_WITH_VTK
 #include <vtkCellArray.h>
 #include <vtkCellData.h>

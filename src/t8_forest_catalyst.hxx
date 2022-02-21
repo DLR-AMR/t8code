@@ -34,7 +34,9 @@
 
 #include <t8_vtk.h>
 #include <t8_forest.h>
+#if T8_WITH_VTK
 #include <vtkUnstructuredGrid.h>
+#endif
 
 /* function declarations */
 
