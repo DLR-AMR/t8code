@@ -138,7 +138,7 @@ t8_subelement_scheme_quad_c::t8_element_compare (const t8_element_t * elem1,
   if (compare == 0) {
     if (t8_element_test_if_subelement (elem1)
         && t8_element_test_if_subelement (elem2)) {
-      t8_debugf ("Caution: The compare function is used for two subelements.");
+      /* Caution: The compare function is used for two subelements. */
 
       if (pquad_w_sub_elem1->subelement_type == pquad_w_sub_elem2->subelement_type && 
           pquad_w_sub_elem1->subelement_id == pquad_w_sub_elem2->subelement_id) {
@@ -146,7 +146,6 @@ t8_subelement_scheme_quad_c::t8_element_compare (const t8_element_t * elem1,
         return 0;
       }
       /* return != 0 to avoid debug abortion in t8_ghost_add_remote */
-      t8_debugf ("Caution: The compare function is used for two different subelements - return != 0.");
       return 1; 
     }
     else if (t8_element_test_if_subelement (elem1)) {
@@ -299,13 +298,7 @@ t8_subelement_scheme_quad_c::t8_element_num_face_children (const t8_element_t
   /* Caution: 
    *   This function works for quads and triangular subelements. 
    *   We return 2 as the number of children at a face of a triangular. 
-   *   This might make sense for face id = 1 but not for face id 0 or 2 since those faces point towards a sibling subelement which can not be refined further.
-   *   One should take this into account for further computations. */
-
-  if (pquad_w_sub->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT) {
-    t8_debugf ("Caution: a subelement is called in t8_element_num_face_children.");
-  }
-  
+   *   This might make sense for face id = 1 but not for face id 0 or 2 since those faces point towards a sibling subelement which can not be refined further. */  
   return 2;
 }
 
