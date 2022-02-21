@@ -87,6 +87,7 @@ void                t8_cmesh_offset_print (t8_cmesh_t cmesh,
  * \param[in]        num_trees The number of global trees in the partition.
  * \return                   A valid partition table for a cmesh with \a num_trees trees
  *                           and communicator \a comm, where each tree is on process \a proc.
+ * \note This function is MPI collective.
  */
 t8_shmem_array_t    t8_cmesh_offset_concentrate (int proc, sc_MPI_Comm comm,
                                                  t8_gloidx_t num_trees);
@@ -101,6 +102,7 @@ t8_shmem_array_t    t8_cmesh_offset_concentrate (int proc, sc_MPI_Comm comm,
  * \return                   A valid partition table for a cmesh with \a num_trees trees
  *                           and communicator \a comm, where each processor gets a random number
  *                           of trees. The number of trees per processor is roughly uniformly distributed.
+ * \note This function is MPI collective. 
  */
 t8_shmem_array_t    t8_cmesh_offset_random (sc_MPI_Comm comm,
                                             t8_gloidx_t num_trees,
@@ -112,6 +114,7 @@ t8_shmem_array_t    t8_cmesh_offset_random (sc_MPI_Comm comm,
  * \param [in]      comm    A valid MPI communicator for cmesh.
  * \return                  A shared memory offset array storing the new offsets.
  *                          Its associated communicator is \a comm.
+ * \note This function is MPI collective.
  */
 t8_shmem_array_t    t8_cmesh_offset_half (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 
@@ -124,6 +127,7 @@ t8_shmem_array_t    t8_cmesh_offset_half (t8_cmesh_t cmesh, sc_MPI_Comm comm);
  *                          be the same on each process.
  * \return                  A shared memory offset array storing the new offsets.
  *                          Its associated communicator is \a comm.
+ * \note This function is MPI collective.
  */
 t8_shmem_array_t    t8_cmesh_offset_percent (t8_cmesh_t cmesh,
                                              sc_MPI_Comm comm, int percent);
