@@ -1709,9 +1709,20 @@ t8_forest_element_face_neighbor (t8_forest_t forest,
   tree = t8_forest_get_tree (forest, ltreeid);
   eclass = tree->eclass;
   ts = t8_forest_get_eclass_scheme (forest, eclass);
+
+  #if 0 /* print the general setting at the beginning */
+    t8_debugf ("face: %i\n", face);
+    t8_debugf ("current element:\n");
+    ts->t8_element_print_element (elem);
+  #endif
+  
   if (neigh_scheme == ts &&
       ts->t8_element_face_neighbor_inside (elem, neigh, face, neigh_face)) {
     /* The neighbor was constructed and is inside the current tree. */
+  #if 0 /* print the resulting neighbor */
+    t8_debugf ("neigh initialized:\n");
+    ts->t8_element_print_element (neigh);
+  #endif
     return ltreeid + t8_forest_get_first_local_tree_id (forest);
   }
   else {
@@ -1747,11 +1758,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest,
     /* Allocate the face element */
     boundary_scheme->t8_element_new (1, &face_element);
     /* Compute the face element. */
-    #if 0
-    t8_debugf ("face: %i\n", face);
-    t8_debugf ("current element:\n");
-    ts->t8_element_print_element (elem);
-    #endif
+
     ts->t8_element_boundary_face (elem, face, face_element, boundary_scheme);
     /* Get the coarse tree that contains elem.
      * Also get the face neighbor information of the coarse tree. */
@@ -1826,7 +1833,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest,
                                                 boundary_scheme, neigh,
                                                 tree_neigh_face);
 
-    #if 0
+    #if 0 /* print the resulting neighbor */
     t8_debugf ("neigh initialized:\n");
     neighbor_scheme->t8_element_print_element (neigh);
     #endif
