@@ -536,13 +536,26 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
                                      element_count - 1);
     copy_level = ts->t8_element_level (elem_copy);
   }
+  /* Test for subelement siblings first. We use t8_element_test_if_subelement to filter for subelements.
+   * Then, we can use t8_element_get_subelement_type and t8_element_get_subelement_id.
+   * Those functions are only implemented for schemes with subelements. */
+  int subelement_sibling = 0;
+  if (elem_copy != NULL) {
+    if (ts->t8_element_test_if_subelement (elem_copy) && ts->t8_element_test_if_subelement (elem)) { /* both elements are subelements */
+      if (ts->t8_element_get_linear_id (elem_copy, copy_level) == ts->t8_element_get_linear_id (elem, level)) { /* both elements are in the same transition cell */
+        T8_ASSERT (ts->t8_element_get_subelement_type (elem_copy) == ts->t8_element_get_subelement_type (elem));
+        if (ts->t8_element_get_subelement_id (elem_copy) != ts->t8_element_get_subelement_id (elem)) {
+          subelement_sibling = 1;
+        }
+      }
+    }
+  }
   /* Check if the element was not contained in the array.
    * If so, we add a copy of elem to the array.
    * Otherwise, we do nothing. */
   if (elem_copy == NULL ||
       level != copy_level ||
-      (ts->t8_element_get_linear_id (elem_copy, copy_level) != ts->t8_element_get_linear_id (elem, level) || 
-       ts->t8_element_get_subelement_id (elem_copy) != ts->t8_element_get_subelement_id (elem))) { /* for subelements, we need the extra subelement_id check here since their linear_id is equal */
+      (ts->t8_element_get_linear_id (elem_copy, copy_level) != ts->t8_element_get_linear_id (elem, level) || subelement_sibling)) { /* for subelements, we need the extra subelement_id check here since their linear_id is equal */
     /* Add the element */
     elem_copy = t8_element_array_push (&remote_tree->elements);
     ts->t8_element_copy (elem, elem_copy);
