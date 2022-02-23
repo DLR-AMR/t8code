@@ -17,3 +17,4 @@ config/ltversion.m4
 config/lt~obsolete.m4
 configure
 src/pre_config.h.in
+.vscode/c_cpp_properties.json
