@@ -1098,7 +1098,7 @@ t8_advect_create_cmesh (sc_MPI_Comm comm, int cube_type,
     t8_cmesh_t          cmesh, cmesh_partition;
     T8_ASSERT (mshfile != NULL);
 
-    cmesh = t8_cmesh_from_msh_file (mshfile, 0, comm, dim, 0, 1);
+    cmesh = t8_cmesh_from_msh_file (mshfile, 0, comm, dim, 0, 0);
     /* partition this cmesh according to the initial refinement level */
     //t8_cmesh_init (&cmesh_partition);
     //t8_cmesh_set_partition_uniform (cmesh_partition, level,
@@ -1143,7 +1143,7 @@ t8_advect_choose_flow (int flow_arg)
   case 6:
     return t8_flow_stokes_flow_sphere_shell;
   case 7:
-    return t8_flow_potential_around_circle;
+    return t8_flow_around_circle_with_angular_velocity;
   default:
     SC_ABORT ("Wrong argument for flow parameter.\n");
   }

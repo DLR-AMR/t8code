@@ -196,8 +196,8 @@ t8_flow_rotation_2d (const double x_in[3], double t, double x_out[3])
 {
   double              x = x_in[0], y = x_in[1];
 
-  x -= 0.5;
-  y -= 0.5;
+  //x -= 0.5;
+  //y -= 0.5;
 
   x_out[0] = y;
   x_out[1] = -x;
@@ -418,24 +418,25 @@ t8_flow_stokes_flow_sphere_shell (const double x[3], double t, double x_out[])
 }
 
 void
-t8_flow_potential_around_circle (const double x[3], double t, double x_out[])
+t8_flow_around_circle_with_angular_velocity (const double x[3], double t, double x_out[])
 {  
   double radius = 0.5;
-  // convert to cylinder coordinates
+  double omega = 1.5*M_PI;
+  // convert to polar coordinates
   double r = sqrt(x[0] * x[0] + x[1] * x[1]);
-  double phi = atan2(x[1], x[0]);
+  double theta = atan2(x[1], x[0]);
   if (r < radius)
   {
     x_out[0] = x_out[1] = x_out[2] = 0;
     return;
   }
-  // calculate potential flow
-  double v_r = (1 - (radius*radius) / (r*r)) * cos(phi);
-  double v_phi = -(1 + (radius*radius) / (r*r)) * sin(phi);
+  //calculate flow
+  double u_r = (1 - (radius*radius) / (r*r)) * cos(theta);
+  double u_theta = -(1 + (radius*radius) / (r*r)) * sin(theta) - omega / (2 * M_PI * r);
 
-  // convert back to cartesian
-  x_out[0] = cos(phi) * v_r - sin(phi) * v_phi;
-  x_out[1] = sin(phi) * v_r + cos(phi) * v_phi;
+  // convert back to Cartesian
+  x_out[0] = cos(theta) * u_r - sin(theta) * u_theta;
+  x_out[1] = sin(theta) * u_r + cos(theta) * u_theta;
   x_out[2] = 0;
 }
 

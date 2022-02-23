@@ -113,9 +113,9 @@ Save "channel.brep";
 Delete All;
 Merge "channel.brep";
 
-l_elems = 8;
-h_elems = 6;
-r2_elems = 6;
+l_elems = 10;
+h_elems = 7;
+r2_elems = 1;
 circle_elems = 2;
 b_elems = 1;
 
