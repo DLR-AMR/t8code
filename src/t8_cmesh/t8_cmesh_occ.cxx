@@ -86,13 +86,16 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
     /* Fill shape with mantles so that we can create a geometry with this shape. */
     shape = BRepBuilderAPI_MakeFace(cylinder_outer, 1e-6).Face();
     shape = BRepAlgoAPI_Fuse(shape, BRepBuilderAPI_MakeFace(cylinder_inner, 1e-6).Face());
+    t8_geometry_occ *geometry_occ = new t8_geometry_occ (3, shape, "occ surface dim=3");if (with_occ_geometry)
+    t8_cmesh_register_geometry (cmesh, geometry_occ);
     #else /* !T8_WITH_OCC */
     SC_ABORTF("OCC not linked");
     #endif /* T8_WITH_OCC */ 
   }
-  #if T8_WITH_OCC
-  t8_geometry_occ *geometry_occ = new t8_geometry_occ (3, shape, "occ surface dim=3");
-  #endif /* T8_WITH_OCC */ 
+  else
+  {
+    t8_cmesh_register_geometry (cmesh, geometry_linear);
+  }
 
   double *vertices, *parameters;
   const double radius_outer = 0.5, radius_inner = 0.25;
@@ -288,14 +291,6 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
     }
   }
   
-  if (with_occ_geometry)
-  {
-    t8_cmesh_register_geometry (cmesh, geometry_occ);
-  }
-  else
-  {
-    t8_cmesh_register_geometry (cmesh, geometry_linear);
-  }
   t8_cmesh_commit (cmesh, comm);
   T8_FREE(vertices);
   T8_FREE(parameters);
