@@ -22,7 +22,6 @@ t8_adapt_callback_refine (t8_forest_t forest,
                           t8_eclass_scheme_c * ts,
                           int num_elements, t8_element_t * elements[])
 {
-  
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
   
   double  centroid[3];
@@ -30,17 +29,13 @@ t8_adapt_callback_refine (t8_forest_t forest,
 
   T8_ASSERT (adapt_data != NULL);
 
-  /* Compute the element's centroid coordinates. */
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
-
-  // calculate dist
   dist = t8_vec_dist(adapt_data->midpoint, centroid);
   
   if (dist < adapt_data->radius + adapt_data->with_ring)
   {
     return 1;
   }
-
   return 0;
 }
 
@@ -53,7 +48,6 @@ t8_adapt_callback_remove (t8_forest_t forest,
                           t8_eclass_scheme_c * ts,
                           int num_elements, t8_element_t * elements[])
 {
-  
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
   
   double  centroid[3];
@@ -61,17 +55,13 @@ t8_adapt_callback_remove (t8_forest_t forest,
 
   T8_ASSERT (adapt_data != NULL);
 
-  /* Compute the element's centroid coordinates. */
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
-
-  // calculate dist
   dist = t8_vec_dist(adapt_data->midpoint, centroid);
   
   if (dist < adapt_data->radius)
   {
     return -2;
   }
-
   return 0;
 }
 
@@ -84,7 +74,7 @@ t8_adapt_callback_coarse (t8_forest_t forest,
                     t8_eclass_scheme_c * ts,
                     int num_elements, t8_element_t * elements[])
 {
-  // alles vergroebern was geht!
+  /* coarse every possible element */
   if (num_elements > 1)
   {
     return -1;
@@ -106,7 +96,7 @@ main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
 
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-  t8_init (SC_LP_PRODUCTION);
+  t8_init (SC_LP_DEFAULT);
 
   comm = sc_MPI_COMM_WORLD;
 
@@ -115,24 +105,19 @@ main (int argc, char **argv)
   forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0, comm);
   T8_ASSERT (t8_forest_is_committed (forest));
 
-
   struct t8_adapt_data adapt_data = { {0.5, 0.5, 0}, 0.3, 0.1 };
 
-
-  t8_global_productionf("### REFINE \n");
+  t8_debugf ("[IL] REFINE \n");
   forest = t8_forest_new_adapt (forest, t8_adapt_callback_refine, 0, 0, &adapt_data);
   t8_forest_write_vtk (forest, "t8_example_refine");
 
-  t8_global_productionf("### REMOVE \n");
-  //forest = t8_forest_new_adapt (forest, t8_adapt_callback_remove, 0, 0, &adapt_data);
+  t8_debugf ("[IL] REMOVE \n");
+  forest = t8_forest_new_adapt (forest, t8_adapt_callback_remove, 0, 0, &adapt_data);
   t8_forest_write_vtk (forest, "t8_example_remove");
 
-  t8_global_productionf("### COARSE \n");
-  //forest = t8_forest_new_adapt (forest, t8_adapt_callback_coarse, 0, 0, &adapt_data);  
+  t8_debugf ("[IL] COARSE \n");
+  forest = t8_forest_new_adapt (forest, t8_adapt_callback_coarse, 0, 0, &adapt_data);  
   t8_forest_write_vtk (forest, "t8_example_coarse");
-
-
-
 
   t8_forest_unref (&forest);
   sc_finalize ();

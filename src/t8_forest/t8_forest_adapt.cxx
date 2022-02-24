@@ -232,7 +232,6 @@ t8_forest_adapt (t8_forest_t forest)
   forest->local_num_elements = 0;
   el_offset = 0;
   num_trees = t8_forest_get_num_local_trees (forest);
-  //t8_global_productionf("### num_trees: %i \n", num_trees);
   /* Iterate over the trees and build the new element arrays for each one. */
   for (ltree_id = 0; ltree_id < num_trees; ltree_id++) {
     /* Get the new and old tree and the new and old element arrays */
@@ -267,9 +266,9 @@ t8_forest_adapt (t8_forest_t forest)
     tscheme->t8_element_new(1, &element_parent_current);
 
     /* We now iterate over all elements in this tree and check them for refinement/coarsening. */
-    t8_global_productionf("### num_el_from: %i \n", num_el_from);
+    t8_debugf ("[IL] num_el_from: %i \n", num_el_from);
     while (el_considered < num_el_from) {
-    t8_global_productionf("### el_considered: %i \n", el_considered);
+    t8_debugf ("[IL] el_considered: %i \n", el_considered);
 #ifdef T8_ENABLE_DEBUG
       /* Will get set to 1 later if this is a family */
       is_family = 0;
@@ -301,8 +300,8 @@ t8_forest_adapt (t8_forest_t forest)
 
         /* el_c is the Index of the el_considered in elements_from_copy */
         size_t el_c = num_children - zz;
-        t8_global_productionf("### zz  : %li \n", zz);
-        t8_global_productionf("### el_c: %li \n", el_c);
+        t8_debugf ("[IL] zz  : %li \n", zz);
+        t8_debugf ("[IL] el_c: %li \n", el_c);
 
         for (z = 0; z < num_children; z++) {
             elements_from_copy[z] = t8_element_array_index_locidx (telements_from, el_considered + z - el_c);
@@ -394,15 +393,15 @@ t8_forest_adapt (t8_forest_t forest)
                               el_considered, tscheme, num_elements,
                               elements_from);
       T8_ASSERT (is_family || refine >= 0);
-      t8_global_productionf("### finale_num_elements_real: %i \n", num_elements_real);
-      t8_global_productionf("### finale_num_elements     : %i \n", num_elements);
-      t8_global_productionf("### refine                  : %i \n", refine);
+      t8_debugf ("[IL] finale_num_elements_real: %i \n", num_elements_real);
+      t8_debugf ("[IL] finale_num_elements     : %i \n", num_elements);
+      t8_debugf ("[IL] refine                  : %i \n", refine);
       if (refine > 0 && tscheme->t8_element_level (elements_from[0]) >=
           forest->maxlevel) {
         /* Only refine an element if it does not exceed the maximum level */
         refine = 0;
       }
-      t8_global_productionf("### finale_refine           : %i \n", refine);
+      t8_debugf ("[IL] finale_refine           : %i \n", refine);
       if (refine == 1) {
         /* The first element is to be refined */
         if (forest->set_adapt_recursive) {
@@ -442,7 +441,6 @@ t8_forest_adapt (t8_forest_t forest)
       else if (refine == -1) {
         /* The elements form a family and are to be coarsened. */
         /* Make room for one more new element. */
-        //t8_global_productionf("### Vergroebert\n");
         elements[0] = t8_element_array_push (telements);
         /* Compute the parent of the current family.
          * This parent is now inserted in telements. */
@@ -534,11 +532,6 @@ t8_forest_adapt (t8_forest_t forest)
 }
 
 #endif
-
-
-
-
-
 
 
 
