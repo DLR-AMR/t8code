@@ -449,7 +449,6 @@ t8_forest_adapt (t8_forest_t forest)
          * This parent is now inserted in telements. */
         tscheme->t8_element_parent (elements_from[0], elements[0]);
         el_inserted++;
-        #if 0
         if (forest->set_adapt_recursive) {
           /* Adaptation is recursive.
            * We check whether the just generated parent is the last in its
@@ -464,8 +463,6 @@ t8_forest_adapt (t8_forest_t forest)
                                                &el_inserted, elements);
           }
         }
-        #endif
-          
         //t8_global_productionf("### num_children_real: %i \n", num_children_real);
         el_considered += num_elements_real; 
       }
