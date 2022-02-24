@@ -106,18 +106,20 @@ main (int argc, char **argv)
   T8_ASSERT (t8_forest_is_committed (forest));
 
   struct t8_adapt_data adapt_data = { {0.5, 0.5, 0}, 0.3, 0.1 };
+  
+  t8_forest_write_vtk (forest, "t8_example_0_base");
 
   t8_debugf ("[IL] REFINE \n");
   forest = t8_forest_new_adapt (forest, t8_adapt_callback_refine, 0, 0, &adapt_data);
-  t8_forest_write_vtk (forest, "t8_example_refine");
+  t8_forest_write_vtk (forest, "t8_example_1_refine");
 
   t8_debugf ("[IL] REMOVE \n");
   forest = t8_forest_new_adapt (forest, t8_adapt_callback_remove, 0, 0, &adapt_data);
-  t8_forest_write_vtk (forest, "t8_example_remove");
+  t8_forest_write_vtk (forest, "t8_example_2_remove");
 
   t8_debugf ("[IL] COARSE \n");
   forest = t8_forest_new_adapt (forest, t8_adapt_callback_coarse, 0, 0, &adapt_data);  
-  t8_forest_write_vtk (forest, "t8_example_coarse");
+  t8_forest_write_vtk (forest, "t8_example_3_coarse");
 
   t8_forest_unref (&forest);
   sc_finalize ();

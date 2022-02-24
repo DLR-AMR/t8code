@@ -268,7 +268,7 @@ t8_forest_adapt (t8_forest_t forest)
     /* We now iterate over all elements in this tree and check them for refinement/coarsening. */
     t8_debugf ("[IL] num_el_from: %i \n", num_el_from);
     while (el_considered < num_el_from) {
-    t8_debugf ("[IL] el_considered: %i \n", el_considered);
+    t8_debugf ("[IL] --------el_considered------------ %i \n", el_considered);  
 #ifdef T8_ENABLE_DEBUG
       /* Will get set to 1 later if this is a family */
       is_family = 0;
@@ -295,22 +295,24 @@ t8_forest_adapt (t8_forest_t forest)
       else {
         /* We are certain that the elements do not form a complete family.
          * So we have to check if elements where removed and we got an
-         * incomplete family */
+         * incomplete family 
+         * */
 
 
         /* el_c is the Index of the el_considered in elements_from_copy */
         size_t el_c = num_children - zz;
-        t8_debugf ("[IL] zz  : %li \n", zz);
-        t8_debugf ("[IL] el_c: %li \n", el_c);
+        t8_debugf ("[IL] zz                      : %li \n", zz);
+        t8_debugf ("[IL] el_c                    : %li \n", el_c);
 
+        /* If el_c == 0 then elements_from_copy is equal to elements_from */
         for (z = 0; z < num_children; z++) {
-            elements_from_copy[z] = t8_element_array_index_locidx (telements_from, el_considered + z - el_c);
+            elements_from_copy[z] = t8_element_array_index_locidx (telements_from,
+                                                                   el_considered + z - el_c);
         }
 
-
-
         /* Get number of elements to be coarsed, if we coarse.
-         * Fact: num_elements_real < num_elements */
+         * Fact: num_elements_real < num_elements 
+         * */
         num_elements_real = 0;
         tscheme->t8_element_parent (elements_from_copy[el_c], element_parent_current);
         for (z = 0; z < num_children; z++) {
@@ -321,16 +323,17 @@ t8_forest_adapt (t8_forest_t forest)
         }
         
         /* Check if elements in elements_from_copy get "eaten" by coarsing current element 
-         * Fact: only elements with higher level then level of current element, can get eaten */
+         * Fact: only elements with higher level then level of current element, can get eaten 
+         * */
         num_elements = num_children; 
-        int level, level_c;
-        level_c = tscheme->t8_element_level(elements_from_copy[el_c]);
+        int level, level_current;
+        level_current = tscheme->t8_element_level(elements_from_copy[el_c]);
         tscheme->t8_element_parent(elements_from_copy[el_c], element_parent_current);
         for (z = 0; z < num_children; z++) {
           level = tscheme->t8_element_level(elements_from_copy[z]);
-          if (level > level_c) {
+          if (level > level_current) {
             tscheme->t8_element_copy(elements_from_copy[z], element_parent_compare);
-            while(level > level_c-1) {
+            while(level > level_current-1) {
               tscheme->t8_element_parent (element_parent_compare, element_parent_compare);
               level = tscheme->t8_element_level(element_parent_compare);
             }
@@ -340,38 +343,35 @@ t8_forest_adapt (t8_forest_t forest)
           }
         }
 
-#if 0
-        /* Also check element befor current element, if they get eaten
+        /* Also check num_childrem elements before el_considered, if they got eaten.
          * Reason: current element could be on boarder
-         * Fact: if el_c > 0 then this is already done
+         * [IL] Question: Is this required if el_c > 0
          * */
-        if (el_c == 0 && el_considered > 0) {
-
-          element_parent_compare = t8_element_array_index_locidx (telements_from, el_considered - 1);
-
-          level = tscheme->t8_element_level(element_parent_compare);
-          
-          if (level > level_c) {
-
-            while(level > level_c-1) {
-              tscheme->t8_element_parent (element_parent_compare, element_parent_compare);
-              level = tscheme->t8_element_level(element_parent_compare);
-            }
-
-            if (tscheme->t8_element_compare(element_parent_compare, element_parent_current) == 0) {
-              num_elements = 1;
-            }
-
+        if (el_considered > (t8_locidx_t) num_children) {
+          for (z = 0; z < num_children; z++) {
+              elements_from_copy[z] = t8_element_array_index_locidx (telements_from,
+                                                                     el_considered + 
+                                                                     z - num_children);
           }
-          
+          for (z = 0; z < num_children; z++) {
+            level = tscheme->t8_element_level(elements_from_copy[z]);
+            if (level > level_current) {
+              tscheme->t8_element_copy(elements_from_copy[z], element_parent_compare);
+              while(level > level_current-1) {
+                tscheme->t8_element_parent (element_parent_compare, element_parent_compare);
+                level = tscheme->t8_element_level(element_parent_compare);
+              }
+              if (tscheme->t8_element_compare(element_parent_compare, element_parent_current) == 0) {
+                num_elements = 1;
+              }
+            }
+          } 
         }
-#endif
-
 
       }
 
-
-      if(false) {
+#if 0
+      else {
         /* We are certain that the elements do not form a family.
           * So we will only pass the first element to the adapt callback. */
 #ifdef T8_ENABLE_DEBUG
@@ -380,7 +380,7 @@ t8_forest_adapt (t8_forest_t forest)
         num_elements      = 1;
         num_elements_real = 1;
       }
-
+#endif
 
 
       /* Pass the element, or the family to the adapt callback.
@@ -388,13 +388,14 @@ t8_forest_adapt (t8_forest_t forest)
        *                    = 0 if the element should remain as is
        *                    < 0 if we passed a family and it should get coarsened.
        */
+
+      t8_debugf ("[IL] finale_num_elements_real: %i \n", num_elements_real);
+      t8_debugf ("[IL] finale_num_elements     : %i \n", num_elements);
       refine =
         forest->set_adapt_fn (forest, forest->set_from, ltree_id,
                               el_considered, tscheme, num_elements,
                               elements_from);
-      T8_ASSERT (is_family || refine >= 0);
-      t8_debugf ("[IL] finale_num_elements_real: %i \n", num_elements_real);
-      t8_debugf ("[IL] finale_num_elements     : %i \n", num_elements);
+      // T8_ASSERT (is_family || refine >= 0);
       t8_debugf ("[IL] refine                  : %i \n", refine);
       if (refine > 0 && tscheme->t8_element_level (elements_from[0]) >=
           forest->maxlevel) {
