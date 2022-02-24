@@ -261,11 +261,10 @@ t8_forest_adapt (t8_forest_t forest)
     elements      = T8_ALLOC (t8_element_t *, num_children);
     /* Buffer for a family of old elements */
     elements_from = T8_ALLOC (t8_element_t *, num_children);
+    
     elements_from_copy = T8_ALLOC (t8_element_t *, num_children);
-
-    /* [IL] TODO: This has to be changed in T8_ALLOC */
-    element_parent_compare  = (t8_element_t *)malloc(sizeof(t8_element_t *) * num_children);
-    element_parent_current  = (t8_element_t *)malloc(sizeof(t8_element_t *) * num_children);
+    tscheme->t8_element_new(1, &element_parent_compare);
+    tscheme->t8_element_new(1, &element_parent_current);
 
     /* We now iterate over all elements in this tree and check them for refinement/coarsening. */
     t8_global_productionf("### num_el_from: %i \n", num_el_from);
@@ -301,9 +300,9 @@ t8_forest_adapt (t8_forest_t forest)
 
 
         /* el_c is the Index of the el_considered in elements_from_copy */
-        int el_c = num_children - zz;
-        t8_global_productionf("### zz  : %i \n", zz);
-        t8_global_productionf("### el_c: %i \n", el_c);
+        size_t el_c = num_children - zz;
+        t8_global_productionf("### zz  : %li \n", zz);
+        t8_global_productionf("### el_c: %li \n", el_c);
 
         for (z = 0; z < num_children; z++) {
             elements_from_copy[z] = t8_element_array_index_locidx (telements_from, el_considered + z - el_c);
@@ -372,8 +371,8 @@ t8_forest_adapt (t8_forest_t forest)
 
       }
 
-#if 0
-      else {
+
+      if(false) {
         /* We are certain that the elements do not form a family.
           * So we will only pass the first element to the adapt callback. */
 #ifdef T8_ENABLE_DEBUG
@@ -382,7 +381,7 @@ t8_forest_adapt (t8_forest_t forest)
         num_elements      = 1;
         num_elements_real = 1;
       }
-#endif
+
 
 
       /* Pass the element, or the family to the adapt callback.
@@ -463,7 +462,6 @@ t8_forest_adapt (t8_forest_t forest)
                                                &el_inserted, elements);
           }
         }
-        //t8_global_productionf("### num_children_real: %i \n", num_children_real);
         el_considered += num_elements_real; 
       }
       else if (refine == 0) {
@@ -489,11 +487,9 @@ t8_forest_adapt (t8_forest_t forest)
       }
       else if (refine == -2) {
         /* The element is to be removed */
-        //elements[0] = t8_element_array_push (telements);
         el_considered++;
       }
-    
-    
+
     }
 
 
@@ -508,8 +504,8 @@ t8_forest_adapt (t8_forest_t forest)
     t8_element_array_resize (telements, el_inserted);
 
     /* clean up */
-    free (element_parent_current);
-    free (element_parent_compare);
+    tscheme->t8_element_destroy(1, &element_parent_current);
+    tscheme->t8_element_destroy(1, &element_parent_compare);
     T8_FREE (elements);
     T8_FREE (elements_from);
     T8_FREE (elements_from_copy);
