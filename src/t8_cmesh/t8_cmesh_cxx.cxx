@@ -61,7 +61,6 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
   t8_gloidx_t         child_in_tree_begin_temp;
   t8_gloidx_t         last_global_child;
   t8_gloidx_t         children_per_tree = 0;
-  t8_gloidx_t         first_class_children_per_tree = -1;
 #ifdef T8_ENABLE_DEBUG
   t8_gloidx_t         prev_last_tree = -1;
 #endif
@@ -74,21 +73,13 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
        ++tree_class) {
     /* We iterate over each element class and get the number of children for this
      * tree class.
-     * Currently we do not supported different numbers of children for different classes.
-     * Thus, if we encounter this situation, we abort with an error.
-     * Different numbers of children for different classes will be supported in the future.
      */
     if (cmesh->num_trees_per_eclass[tree_class] > 0) {
       tree_scheme = ts->eclass_schemes[tree_class];
       T8_ASSERT (tree_scheme != NULL);
       children_per_tree =
         tree_scheme->t8_element_count_leafs_from_root (level);
-      if (first_class_children_per_tree >= 0
-          && first_class_children_per_tree != children_per_tree) {
-        /*SC_ABORT
-           ("Currently t8code does not support different leaf counts per tree."); */
-      }
-      first_class_children_per_tree = children_per_tree;
+      T8_ASSERT (children_per_tree >= 0);
       global_num_children +=
         cmesh->num_trees_per_eclass[tree_class] * children_per_tree;
     }
@@ -175,15 +166,4 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
     *last_local_tree = *first_local_tree - 1;
   }
 
-#if 0
-  if (first_global_child >= last_global_child && cmesh->mpirank != 0) {
-    /* This process is empty */
-    *first_local_tree = prev_last_tree + 1;
-  }
-#endif
-  /*}
-     else {
-     SC_ABORT ("Partition with level > 0 "
-     "does not support pyramidal elements yet.");
-     } */
 }

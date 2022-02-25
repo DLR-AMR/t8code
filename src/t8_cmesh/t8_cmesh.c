@@ -28,7 +28,6 @@
 #include <t8_refcount.h>
 #include <t8_data/t8_shmem.h>
 #include <t8_vec.h>
-#include <sc_functions.h>
 #ifdef T8_WITH_METIS
 #include <metis.h>
 
@@ -1474,148 +1473,6 @@ t8_cmesh_print_profile (t8_cmesh_t cmesh)
   }
 }
 
-/*Can this be deleted?*/
-#if 0
-void
-t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
-                         t8_scheme_cxx_t * ts,
-                         t8_gloidx_t * first_local_tree,
-                         t8_gloidx_t * child_in_tree_begin,
-                         t8_gloidx_t * last_local_tree,
-                         t8_gloidx_t * child_in_tree_end,
-                         int8_t * first_tree_shared)
-{
-  int                 is_empty;
-
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (cmesh->committed);
-  T8_ASSERT (level >= 0);
-
-  *first_local_tree = 0;
-  if (child_in_tree_begin != NULL) {
-    *child_in_tree_begin = 0;
-  }
-  *last_local_tree = 0;
-  if (child_in_tree_end != NULL) {
-    *child_in_tree_end = 0;
-  }
-
-  //if (cmesh->num_trees_per_eclass[T8_ECLASS_PYRAMID] == 0 || level == 0) {
-  t8_gloidx_t         global_num_children;
-  t8_gloidx_t         first_global_child;
-  t8_gloidx_t         last_global_child;
-  t8_gloidx_t         children_per_tree;
-#ifdef T8_ENABLE_DEBUG
-  t8_gloidx_t         prev_last_tree = -1;
-#endif
-  const t8_linearidx_t one = 1;
-
-  if (cmesh->num_trees_per_eclass[T8_ECLASS_PYRAMID] != 0) {
-    if (cmesh->num_trees_per_eclass[T8_ECLASS_TET] != 0
-        || cmesh->num_trees_per_eclass[T8_ECLASS_HEX] != 0) {
-      SC_ABORT ("Different numbers of elements per tree not yet supported");
-    }
-    children_per_tree = 2 * (one << 3 * level) - sc_intpow64u (6, level);
-    global_num_children =
-      cmesh->num_trees_per_eclass[T8_ECLASS_PYRAMID] * children_per_tree;
-  }
-
-  else {
-    children_per_tree = one << cmesh->dimension * level;
-    global_num_children = cmesh->num_trees * children_per_tree;
-  }
-  if (cmesh->mpirank == 0) {
-    first_global_child = 0;
-    if (child_in_tree_begin != NULL) {
-      *child_in_tree_begin = 0;
-    }
-  }
-  else {
-    /* The first global child of processor p
-     * with P total processor is (the biggest int smaller than)
-     * (total_num_children * p) / P
-     * We cast to long double and double first to prevent integer overflow.
-     */
-    first_global_child =
-      ((long double) global_num_children *
-       cmesh->mpirank) / (double) cmesh->mpisize;
-  }
-  if (cmesh->mpirank != cmesh->mpisize - 1) {
-    last_global_child =
-      ((long double) global_num_children *
-       (cmesh->mpirank + 1)) / (double) cmesh->mpisize;
-  }
-  else {
-    last_global_child = global_num_children;
-  }
-  T8_ASSERT (0 <= first_global_child
-             && first_global_child <= global_num_children);
-  T8_ASSERT (0 <= last_global_child
-             && last_global_child <= global_num_children);
-  *first_local_tree = first_global_child / children_per_tree;
-  if (child_in_tree_begin != NULL) {
-    *child_in_tree_begin =
-      first_global_child - *first_local_tree * children_per_tree;
-  }
-
-  *last_local_tree = (last_global_child - 1) / children_per_tree;
-
-  is_empty = *first_local_tree >= *last_local_tree
-    && first_global_child >= last_global_child;
-  if (first_tree_shared != NULL) {
-#ifdef T8_ENABLE_DEBUG
-    prev_last_tree = (first_global_child - 1) / children_per_tree;
-    T8_ASSERT (cmesh->mpirank > 0 || prev_last_tree <= 0);
-#endif
-    if (!is_empty && cmesh->mpirank > 0 && first_global_child > 0) {
-      /* We exclude empty partitions here, by def their first_tree_shared flag is zero */
-      /* We also exclude that the previous partition was empty at the beginning of the
-       * partitions array */
-      /* We also exclude the case that we have the first global element but
-       * are not rank 0. */
-      *first_tree_shared = 1;
-    }
-    else {
-      *first_tree_shared = 0;
-    }
-  }
-  if (child_in_tree_end != NULL) {
-    if (*last_local_tree > 0) {
-      *child_in_tree_end =
-        last_global_child - *last_local_tree * children_per_tree;
-    }
-    else {
-      *child_in_tree_end = last_global_child;
-    }
-  }
-  if (is_empty) {
-    /* This process is empty */
-    /* We now set the first local tree to the first local tree on the
-     * next nonempty rank, and the last local tree to first - 1 */
-    *first_local_tree = last_global_child / children_per_tree;
-    if (first_global_child % children_per_tree != 0) {
-      /* The next nonempty process shares this tree. */
-      (*first_local_tree)++;
-    }
-
-    *last_local_tree = *first_local_tree - 1;
-  }
-
-#if 0
-  if (first_global_child >= last_global_child && cmesh->mpirank != 0) {
-    /* This process is empty */
-    *first_local_tree = prev_last_tree + 1;
-  }
-#endif
-  /* }
-
-     else {
-     SC_ABORT ("Partition with level > 0 "
-     "does not support pyramidal elements yet.");
-     } */
-}
-#endif
-
 static void
 t8_cmesh_reset (t8_cmesh_t * pcmesh)
 {
@@ -1956,8 +1813,6 @@ t8_cmesh_new_hex (sc_MPI_Comm comm)
   return cmesh;
 }
 
-/* TODO: This mesh is currently not used. Reactivate if it is used. */
-#if 0
 static              t8_cmesh_t
 t8_cmesh_new_pyramid_deformed (sc_MPI_Comm comm)
 {
@@ -1969,27 +1824,25 @@ t8_cmesh_new_pyramid_deformed (sc_MPI_Comm comm)
     2, 2, 0,
     3, 3, sqrt (3)
   };
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
+  t8_cmesh_register_geometry (cmesh, linear_geom);
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_PYRAMID);
-  t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0, vertices, 5);
+  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 15);
   t8_cmesh_commit (cmesh, comm);
   return cmesh;
 }
-#endif
 
 static              t8_cmesh_t
 t8_cmesh_new_pyramid (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   double              vertices[15] = {
-#if 0
-    -1, -1, 0,
-    1, -1, 0,
-    -1, 1, 0,
+    0, 0, 0,
+    1, 0, 0,
+    0, 1, 0,
     1, 1, 0,
-    1, 1, 2
-#endif
-    0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1
+    1, 1, 1
   };
   t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
 
@@ -3560,7 +3413,7 @@ t8_cmesh_new_full_hybrid (sc_MPI_Comm comm)
   double              vertices[24];
   int                 i;
 
-  t8_geometry_c     *linear_geom = t8_geometry_linear_new (3);
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
 
   t8_cmesh_init (&cmesh);
 
@@ -3573,7 +3426,6 @@ t8_cmesh_new_full_hybrid (sc_MPI_Comm comm)
   t8_cmesh_set_join (cmesh, 0, 1, 5, 4, 0);
   t8_cmesh_set_join (cmesh, 1, 2, 0, 1, 0);
   t8_cmesh_set_join (cmesh, 1, 3, 3, 3, 0);
-
 
   /*Hex vertices */
   vertices[0] = 0;
@@ -3672,37 +3524,45 @@ t8_cmesh_new_full_hybrid (sc_MPI_Comm comm)
 t8_cmesh_t
 t8_cmesh_new_pyramid_cake (sc_MPI_Comm comm, int num_of_pyra)
 {
-  /*num_of_pyra pyras a 5 vertices a 3 coords */
-  /* TODO: This seems too be a lot of memory, can we also get by with only
-     5 * 3 doubles? */
+  /* num_of_pyra pyras a 5 vertices a 3 coords */
   int                 i, j;
   double             *vertices = T8_ALLOC (double, num_of_pyra * 5 * 3);
   t8_cmesh_t          cmesh;
   double              degrees = 360. / num_of_pyra;
   t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
+  int                 tree_shift;
 
-  if (vertices)
+  if (vertices) {
     T8_ASSERT (num_of_pyra > 2);
-
+  }
+  /* Iterate over all pyramids */
   for (i = 0; i < num_of_pyra; i++) {
+    /* Iterate over all corners of a pyramid */
     for (j = 0; j < 5; j++) {
       /*Get the edges at the unit circle */
+      /* Each tree has 5*3 coordinates */
+      tree_shift = i * 15;
+      /* The top of each pyramid is always in the center */
       if (j == 4) {
-        vertices[i * 5 * 3 + j * 3] = 0;
-        vertices[i * 5 * 3 + j * 3 + 1] = 0;
-        vertices[i * 5 * 3 + j * 3 + 2] = 0;
+        vertices[tree_shift + j * 3] = 0;
+        vertices[tree_shift + j * 3 + 1] = 0;
+        vertices[tree_shift + j * 3 + 2] = 0;
       }
+      /*Set the bottom along the circle. The coordinates are always set
+       * after a shift of degrees degree*/
+      /* vertex 1 is always the lower one */
       else if (j == 1 || j == 3) {
-        vertices[i * 5 * 3 + j * 3] = cos (i * degrees * M_PI / 180);
-        vertices[i * 5 * 3 + j * 3 + 1] = sin (i * degrees * M_PI / 180);
-        vertices[i * 5 * 3 + j * 3 + 2] = (j == 3 ? 0.5 : -0.5);
+        vertices[tree_shift + j * 3] = cos (i * degrees * M_PI / 180);
+        vertices[tree_shift + j * 3 + 1] = sin (i * degrees * M_PI / 180);
+        vertices[tree_shift + j * 3 + 2] = (j == 3 ? 0.5 : -0.5);
       }
+      /* vertex 0 is always the lower one */
       else if (j == 0 || j == 2) {
-        vertices[i * 5 * 3 + j * 3] =
+        vertices[tree_shift + j * 3] =
           cos ((i * degrees + degrees) * M_PI / 180);
-        vertices[i * 5 * 3 + j * 3 + 1] =
+        vertices[tree_shift + j * 3 + 1] =
           sin ((i * degrees + degrees) * M_PI / 180);
-        vertices[i * 5 * 3 + j * 3 + 2] = (j == 2 ? 0.5 : -0.5);
+        vertices[tree_shift + j * 3 + 2] = (j == 2 ? 0.5 : -0.5);
       }
     }
   }
@@ -3754,7 +3614,7 @@ t8_cmesh_new_long_brick_pyramid (sc_MPI_Comm comm, int num_cubes)
     for (j = 0; j < 3; j++) {
       t8_cmesh_set_tree_class (cmesh, i * 3 + j, T8_ECLASS_PYRAMID);
     }
-    /*in-cube face connection */
+    /* in-cube face connection */
     if (i % 2 == 0) {
       t8_cmesh_set_join (cmesh, i * 3, i * 3 + 1, 3, 2, 0);
       t8_cmesh_set_join (cmesh, i * 3 + 1, i * 3 + 2, 0, 1, 0);

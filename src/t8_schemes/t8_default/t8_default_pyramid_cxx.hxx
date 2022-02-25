@@ -102,6 +102,7 @@ public:
   /** Return the number of children of an element when it is refined. */
   virtual int         t8_element_num_children (const t8_element_t * elem);
 
+   /** Return the number of corners of an element*/
   virtual int         t8_element_num_corners (const t8_element_t * elem);
 
 /** Compute the number of corners of a given element.
