@@ -1091,14 +1091,14 @@ t8_advect_problem_partition (t8_advect_problem_t * problem, int measure_time)
 
 static              t8_cmesh_t
 t8_advect_create_cmesh (sc_MPI_Comm comm, int cube_type,
-                        const char *mshfile, int level, int dim)
+                        const char *mshfile, int level, int dim, int use_occ_geometry)
 {
   if (mshfile != NULL) {
     /* Load from .msh file and partition */
     t8_cmesh_t          cmesh, cmesh_partition;
     T8_ASSERT (mshfile != NULL);
 
-    cmesh = t8_cmesh_from_msh_file (mshfile, 0, comm, dim, 0, 0);
+    cmesh = t8_cmesh_from_msh_file (mshfile, 0, comm, dim, 0, use_occ_geometry);
     /* partition this cmesh according to the initial refinement level */
     //t8_cmesh_init (&cmesh_partition);
     //t8_cmesh_set_partition_uniform (cmesh_partition, level,
@@ -1851,7 +1851,7 @@ main (int argc, char *argv[])
   int                 level, reflevel, dim, cube_type, dummy_op;
   int                 parsed, helpme, no_vtk, vtk_freq, adapt_freq;
   int                 volume_refine;
-  int                 flow_arg;
+  int                 flow_arg, use_occ_geometry;
   double              T, cfl, band_width;
   t8_levelset_sphere_data_t ls_data;
   /* brief help message */
@@ -1903,6 +1903,10 @@ main (int argc, char *argv[])
                          "and be in ASCII format version 2. -d must be specified.");
   sc_options_add_int (opt, 'd', "dim", &dim, -1,
                       "In combination with -f: The dimension of the mesh. 1 <= d <= 3.");
+
+  sc_options_add_switch (opt, 'O', "occ", &use_occ_geometry,
+                         "In combination with -f: Use the occ geometry, only viable if a "
+                         ".brep file of the same name is present.");
 
   sc_options_add_double (opt, 'T', "end-time", &T, 1,
                          "The duration of the simulation. Default: 1");
@@ -1989,7 +1993,7 @@ main (int argc, char *argv[])
 
     cmesh =
       t8_advect_create_cmesh (sc_MPI_COMM_WORLD, cube_type,
-                              mshfile, level, dim);
+                              mshfile, level, dim, use_occ_geometry);
     u = t8_advect_choose_flow (flow_arg);
     if (!no_vtk) {
       t8_cmesh_vtk_write_file (cmesh, "advection_cmesh", 1.0);
