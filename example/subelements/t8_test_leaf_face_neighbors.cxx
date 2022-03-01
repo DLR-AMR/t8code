@@ -173,8 +173,8 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   char                filename[BUFSIZ];
 
   /* refinement setting */
-  int                 initlevel = 4;    /* initial uniform refinement level */
-  int                 adaptlevel = 3;
+  int                 initlevel = 3;    /* initial uniform refinement level */
+  int                 adaptlevel = 2;
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening (minlevel <= initlevel) */
   int                 maxlevel = initlevel + adaptlevel;     /* highest level allowed for refining */
 
