@@ -184,9 +184,10 @@ main (int argc, char **argv)
   /* long help message */
   sreturn =
     snprintf (help, BUFSIZ,
-              "This program constructs a uniformly refined "
-              "cubical mesh.\nThe user can choose the dimension of the mesh"
-              "and whether it should be balanced or not\n\n%s\n", usage);
+              "This program constructs an up to level 2 uniformly refined "
+              "cubical mesh, which adaptivly refines up to level 5.\n"
+              "The user can choose the dimension of the mesh "
+              "and whether it should be balanced or not.\n\n%s\n", usage);
   if (sreturn >= BUFSIZ) {
     /* help message was truncated. */
     /* Note: gcc >= 7.1 prints a warning if we 
