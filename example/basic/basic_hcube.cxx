@@ -30,29 +30,34 @@
  * \param[in] dim           The dimension of the example
  * \param[in] do_partition  Option to partition the cmesh  */
 t8_cmesh_t
-t8_basic_create_cmesh(const int dim, const int do_partition){
+t8_basic_create_cmesh (const int dim, const int do_partition)
+{
   t8_cmesh_t          cmesh;
-  switch (dim)
-  {
+  switch (dim) {
   case 1:
     {
-      cmesh = t8_cmesh_new_hypercube(T8_ECLASS_LINE, sc_MPI_COMM_WORLD, 0, do_partition, 0);
+      cmesh =
+        t8_cmesh_new_hypercube (T8_ECLASS_LINE, sc_MPI_COMM_WORLD, 0,
+                                do_partition, 0);
       break;
     }
   case 2:
     {
-      cmesh = t8_cmesh_new_hypercube(T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, 0, do_partition, 0);
+      cmesh =
+        t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, 0,
+                                do_partition, 0);
       break;
     }
   case 3:
     {
-      cmesh = t8_cmesh_new_hypercube_hybrid(sc_MPI_COMM_WORLD, do_partition,0);
+      cmesh =
+        t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, do_partition, 0);
       break;
     }
-  
+
   default:
 
-    SC_ABORT_NOT_REACHED();
+    SC_ABORT_NOT_REACHED ();
   }
   return cmesh;
 }
@@ -60,29 +65,30 @@ t8_basic_create_cmesh(const int dim, const int do_partition){
 /* The adapt Callback used in this examples. Every element that has an uneven
  * x-coordinate wrt to its level is refeined up to the maximal refinement level*/
 static int
-t8_basic_adapt(t8_forest_t forest, t8_forest_t forest_from,
-                           t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                           t8_eclass_scheme_c * ts, int num_elements,
-                           t8_element_t * elements[]){
-  int       level, max_lvl, shift;       
-  double    coords[3] = {0,0,0};
-  int       scaled_x_coord;
-  const int rootlen = ts->t8_element_root_len(elements[0]);
-  level = ts->t8_element_level(elements[0]);
-  /* Check, if the element is not finer than the maximal refinement level*/
+t8_basic_adapt (t8_forest_t forest, t8_forest_t forest_from,
+                t8_locidx_t which_tree, t8_locidx_t lelement_id,
+                t8_eclass_scheme_c * ts, int num_elements,
+                t8_element_t * elements[])
+{
+  int                 level, max_lvl, shift;
+  double              coords[3] = { 0, 0, 0 };
+  int                 scaled_x_coord;
+  const int           rootlen = ts->t8_element_root_len (elements[0]);
+  level = ts->t8_element_level (elements[0]);
+  /* Check, if the element is not finer than the maximal refinement level */
   if (level >= *(int *) t8_forest_get_user_data (forest)) {
     return 0;
   }
-  /* Compute shift to take current level into account*/
-  max_lvl = ts->t8_element_maxlevel();
+  /* Compute shift to take current level into account */
+  max_lvl = ts->t8_element_maxlevel ();
   shift = max_lvl - level;
-  ts->t8_element_vertex_reference_coords(elements[0], 0, coords);
-  /* Scale x-Coord to integer coordinate*/
-  scaled_x_coord = coords[0]*rootlen;
-  if(( scaled_x_coord>>shift) % 2 == 1){
+  ts->t8_element_vertex_reference_coords (elements[0], 0, coords);
+  /* Scale x-Coord to integer coordinate */
+  scaled_x_coord = coords[0] * rootlen;
+  if ((scaled_x_coord >> shift) % 2 == 1) {
     return 1;
   }
-  else{
+  else {
     return 0;
   }
 }
@@ -101,61 +107,56 @@ t8_basic_hypercube (const int dim, const int do_balance)
   int                 mpirank, mpiret, adapt_level = 5;
   const int           uniform_lvl = 2;
 
-  t8_global_productionf ("Contructing %i dimensional hypercube mesh \n",
-                         dim);
+  t8_global_productionf ("Contructing %i dimensional hypercube mesh \n", dim);
   /* Create and save the cmesh */
-  cmesh = t8_basic_create_cmesh(dim, 0);
-  snprintf (cmesh_file, BUFSIZ, "cmesh_basic_%i_dim",
-            dim);
+  cmesh = t8_basic_create_cmesh (dim, 0);
+  snprintf (cmesh_file, BUFSIZ, "cmesh_basic_%i_dim", dim);
   t8_cmesh_save (cmesh, cmesh_file);
 
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
 
-  snprintf (vtuname, BUFSIZ, "cmesh_basic_%i__dim",
-            dim);
+  snprintf (vtuname, BUFSIZ, "cmesh_basic_%i__dim", dim);
   if (t8_cmesh_vtk_write_file (cmesh, vtuname, 1.0) == 0) {
     t8_debugf ("Output to %s\n", vtuname);
   }
   else {
     t8_debugf ("Error in output\n");
   }
-  /* Initialise the forest*/
+  /* Initialise the forest */
   t8_forest_init (&forest);
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
   t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
 
-  /* Set uniform refinement level*/
+  /* Set uniform refinement level */
   t8_forest_set_level (forest, uniform_lvl);
   t8_forest_commit (forest);
   t8_debugf ("Successfully committed forest.\n");
-  snprintf (vtuname, BUFSIZ, "forest_basic_%i_dim_uniform",
-            dim);
+  snprintf (vtuname, BUFSIZ, "forest_basic_%i_dim_uniform", dim);
   t8_forest_write_vtk (forest, vtuname);
   t8_debugf ("Output to %s\n", vtuname);
 
-  t8_forest_init(&forest_adapt);
-  /* Set maximum refinement level*/
-  t8_forest_set_user_data(forest_adapt, &adapt_level);
-  /* Construct forest_adapt from forest*/
-  t8_forest_set_adapt(forest_adapt, forest, t8_basic_adapt, 1);
+  t8_forest_init (&forest_adapt);
+  /* Set maximum refinement level */
+  t8_forest_set_user_data (forest_adapt, &adapt_level);
+  /* Construct forest_adapt from forest */
+  t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt, 1);
 
   forest_partition = forest_adapt;
-  /*Construct balanced and partitioned forest*/
-  t8_forest_set_partition(forest_partition, NULL, 0);
-  if(do_balance){
-    t8_forest_set_balance(forest_partition, NULL, 0);
+  /*Construct balanced and partitioned forest */
+  t8_forest_set_partition (forest_partition, NULL, 0);
+  if (do_balance) {
+    t8_forest_set_balance (forest_partition, NULL, 0);
   }
-  
-  t8_forest_set_profiling(forest_partition, 1);
-  t8_forest_commit(forest_partition);
-  t8_forest_print_profile(forest_partition);
 
-  snprintf (vtuname, BUFSIZ, "forest_hypercube_%i_dim_adapt",
-            dim);
+  t8_forest_set_profiling (forest_partition, 1);
+  t8_forest_commit (forest_partition);
+  t8_forest_print_profile (forest_partition);
+
+  snprintf (vtuname, BUFSIZ, "forest_hypercube_%i_dim_adapt", dim);
   t8_forest_write_vtk (forest_partition, vtuname);
   t8_debugf ("Output to %s\n", vtuname);
-  t8_forest_unref(&forest_partition);
+  t8_forest_unref (&forest_partition);
 }
 
 int
@@ -216,7 +217,7 @@ main (int argc, char **argv)
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else if (parsed >= 0 && 1 <= dim && dim <= 3) {
-    t8_basic_hypercube(dim, do_balance);
+    t8_basic_hypercube (dim, do_balance);
   }
   else {
     /* wrong usage */
