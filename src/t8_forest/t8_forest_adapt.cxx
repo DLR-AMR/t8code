@@ -79,6 +79,7 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
   pos = *el_inserted - num_children;
   isfamily = 1;
   child_id = ts->t8_element_child_id (element);
+  t8_debugf ("Pos: %i, el_inserted: %i, el_coarsen: %i\n", pos, *el_inserted, el_coarsen);
   while (isfamily && pos >= el_coarsen && child_id > 0 && child_id
          == num_children - 1) {
     isfamily = 1;
@@ -356,8 +357,8 @@ t8_forest_adapt (t8_forest_t forest)
        * Therefore, all subelements that "survive" the adaptation will be coarsened back to their parent quadrant. 
        * Note, that this is always valid for subelements in terms of the minimum level,
        * since subelements have the same level as their parent quadrant. */
-      if (tscheme->t8_element_test_if_subelement (elements_from[0])
-          && refine == 0) {
+      if (tscheme->t8_element_test_if_subelement (elements_from[0]) && refine == 0) {
+        /* TODO: maybe coarsen a family of subelements before computing the refine value such that recursive refinement is not impared */
         refine = -1;
       }
 
@@ -402,7 +403,17 @@ t8_forest_adapt (t8_forest_t forest)
           /* el_coarsen is the index of the first element in the new element
            * array which could be coarsened recursively.
            * We can set this here to the next element after the current family, since a family that emerges from a refinement will never be coarsened */
+          
+#if 0     
+          /* TODO: el_coarsen = el_inserted + num_children; -> reason for artefacts during multiple timestep-adaptation.
+           * Check if it works. 
+           * The reason for the artefacts: el_coarsen was too large such that the while loop in coarsen_recursive was not entered for the first time after recursive refinement, 
+           * where el_coarsen was adjusted (too large). (This fix does not work for multiple processes. TODO: undertsand why not). */
+          el_coarsen = el_inserted;
+#else     
           el_coarsen = el_inserted + num_children;
+#endif
+          
         }
         else {
           (void) t8_element_array_push_count (telements, num_children); /*num_children or num_siblings? */
@@ -455,7 +466,6 @@ t8_forest_adapt (t8_forest_t forest)
         count_subelements += num_subelements;
       }
       else if (refine == -1) {
-
         /* The elements form a family and are to be coarsened. */
         /* Make room for one more new element. */
         elements[0] = t8_element_array_push (telements);
@@ -484,7 +494,6 @@ t8_forest_adapt (t8_forest_t forest)
         el_considered += num_siblings;
       }
       else {
-
         /* The considered elements are neither to be coarsened nor is the first
          * one to be refined.
          * We copy the element to the new element array. */
