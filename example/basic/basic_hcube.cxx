@@ -29,32 +29,29 @@
 /** Construct the cmesh given the dimension of the examples. 
  * For 1D a line is constructed, for 2D a mesh consisting of 2 triangles
  * forming a quad and in 3D a cube made out of hexs, tets and prisms.
- * \param[in] dim           The dimension of the example. 1 <= \a dim <= 3. 
- * \param[in] do_partition  Option to partition the cmesh. If true (non-zero) the cmesh will be partitioned across the processes.  
+ * \param[in] dim           The dimension of the example. 1 <= \a dim <= 3.  
  * \return                  The cmesh that is specified by the parameters*/
-static t8_cmesh_t
-t8_basic_create_cmesh (const int dim, const int do_partition)
+static              t8_cmesh_t
+t8_basic_create_cmesh (const int dim)
 {
   t8_cmesh_t          cmesh;
   switch (dim) {
   case 1:
     {
       cmesh =
-        t8_cmesh_new_hypercube (T8_ECLASS_LINE, sc_MPI_COMM_WORLD, 0,
-                                do_partition, 0);
+        t8_cmesh_new_hypercube (T8_ECLASS_LINE, sc_MPI_COMM_WORLD, 0, 0, 0);
       break;
     }
   case 2:
     {
       cmesh =
-        t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, 0,
-                                do_partition, 0);
+        t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, 0, 0,
+                                0);
       break;
     }
   case 3:
     {
-      cmesh =
-        t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, do_partition, 0);
+      cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
       break;
     }
 
@@ -73,93 +70,98 @@ t8_basic_adapt (t8_forest_t forest, t8_forest_t forest_from,
                 t8_eclass_scheme_c * ts, int num_elements,
                 t8_element_t * elements[])
 {
-  int                 level, max_lvl, shift;
+  int                 level;
   double              coords[3] = { 0, 0, 0 };
-  int                 scaled_x_coord;
-  const int           rootlen = ts->t8_element_root_len (elements[0]);
+  const int           maxlevel = 5;
   level = ts->t8_element_level (elements[0]);
   /* Check, if the element is not finer than the maximal refinement level */
-  if (level >= *(int *) t8_forest_get_user_data (forest)) {
+  if (level >= maxlevel) {
+    /* We do not refine if the user maximum level is reached */
     return 0;
   }
-  /* Compute shift to take current level into account */
-  max_lvl = ts->t8_element_maxlevel ();
-  shift = max_lvl - level;
   ts->t8_element_vertex_reference_coords (elements[0], 0, coords);
-  /* Scale x-Coord to integer coordinate */
-  scaled_x_coord = coords[0] * rootlen;
-  if ((scaled_x_coord >> shift) % 2 == 1) {
+  /*If the x-coordinate lays between 0.25 and 0.75, we refine the element. */
+  if (0.25 <= coords[0] && coords[0] <= 0.75) {
     return 1;
   }
+  /* If the x-coordinate is smaller than 0.25 we coarsen the element. */
+  else if (coords[0] < 0.25) {
+    return -1;
+  }
+  /* Do not refine or coarsen the element. */
   else {
     return 0;
   }
 }
 
 /** This function creates, adaptivly refines, partitions and optionally balances a
- * forest of the hypercube-mesh. In 3D a hybrid hypercube is created.
+ * forest of the hypercube-mesh. For 1D a line is constructed, for 2D a mesh consisting of 2 triangles
+ * forming a quad and in 3D a hybrid hypercube is created.
  * \param[in] dim         The dimension of the example
- * \param[in] do_balacne  Option to balance the mesh
+ * \param[in] do_balance  Option to partition the cmesh. If true (non-zero) the cmesh will be partitioned across the processes.  
 */
 static void
 t8_basic_hypercube (const int dim, const int do_balance)
 {
-  t8_forest_t         forest, forest_adapt, forest_partition;
+  t8_forest_t         forest, forest_adapt;
   t8_cmesh_t          cmesh;
-  char                vtuname[BUFSIZ], cmesh_file[BUFSIZ];
-  int                 mpirank, mpiret, adapt_level = 5;
+  char                vtuname[BUFSIZ];
+  int                 mpirank, mpiret;
   const int           uniform_lvl = 2;
 
   t8_global_productionf ("Contructing %i dimensional hypercube mesh \n", dim);
   /* Create and save the cmesh */
-  cmesh = t8_basic_create_cmesh (dim, 0);
-  snprintf (cmesh_file, BUFSIZ, "cmesh_basic_%i_dim", dim);
-  t8_cmesh_save (cmesh, cmesh_file);
+  cmesh = t8_basic_create_cmesh (dim);
 
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
 
   snprintf (vtuname, BUFSIZ, "cmesh_basic_%i__dim", dim);
   if (t8_cmesh_vtk_write_file (cmesh, vtuname, 1.0) == 0) {
-    t8_debugf ("Output to %s\n", vtuname);
+    t8_global_productionf ("Output to %s\n", vtuname);
   }
   else {
-    t8_debugf ("Error in output\n");
+    t8_global_productionf ("Error when trying to write cmesh to %s.\n",
+                           vtuname);
   }
-  /* Initialise the forest */
+  /* Initialize the forest */
   t8_forest_init (&forest);
+  /* Initialize the cmesh of the forest */
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
+  /* Set the scheme of the forest. In this case, the default schemes are used */
   t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
 
   /* Set uniform refinement level */
   t8_forest_set_level (forest, uniform_lvl);
+  /* Generate the uniform refinement. */
   t8_forest_commit (forest);
-  t8_debugf ("Successfully committed forest.\n");
+  t8_global_productionf ("Successfully committed forest.\n");
+
+  /*  Write ouptut to a vtk file */
   snprintf (vtuname, BUFSIZ, "forest_basic_%i_dim_uniform", dim);
   t8_forest_write_vtk (forest, vtuname);
-  t8_debugf ("Output to %s\n", vtuname);
+  t8_global_productionf ("Output to %s\n", vtuname);
 
+  /* Initialize a second forest, that will be the adaptively refined forest */
   t8_forest_init (&forest_adapt);
-  /* Set maximum refinement level */
-  t8_forest_set_user_data (forest_adapt, &adapt_level);
   /* Construct forest_adapt from forest */
   t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt, 1);
-
-  forest_partition = forest_adapt;
-  /*Construct balanced and partitioned forest */
-  t8_forest_set_partition (forest_partition, NULL, 0);
+  /* Construct balanced and partitioned forest */
+  t8_forest_set_partition (forest_adapt, forest, 0);
   if (do_balance) {
-    t8_forest_set_balance (forest_partition, NULL, 0);
+    t8_forest_set_balance (forest_adapt, forest, 0);
   }
+  /* Generate the adapted, partitioned (and balanced) forest. */
+  t8_forest_commit (forest_adapt);
+  t8_global_productionf ("Successfully committed forest.\n");
 
-  t8_forest_set_profiling (forest_partition, 1);
-  t8_forest_commit (forest_partition);
-  t8_forest_print_profile (forest_partition);
-
+  /* Write output to a vtk file */
   snprintf (vtuname, BUFSIZ, "forest_hypercube_%i_dim_adapt", dim);
-  t8_forest_write_vtk (forest_partition, vtuname);
-  t8_debugf ("Output to %s\n", vtuname);
-  t8_forest_unref (&forest_partition);
+  t8_forest_write_vtk (forest_adapt, vtuname);
+  t8_global_productionf ("Output to %s\n", vtuname);
+
+  /* Destroy the forest */
+  t8_forest_unref (&forest_adapt);
 }
 
 int
@@ -187,8 +189,9 @@ main (int argc, char **argv)
   /* long help message */
   sreturn =
     snprintf (help, BUFSIZ,
-              "This program constructs an up to level 2 uniformly refined "
-              "cubical mesh, which adaptivly refines up to level 5.\n"
+              "This program constructs a level 2 uniformly refined "
+              "cubical mesh, which is then adaptively refines with "
+              "level 5 as the maximal level.\n"
               "The user can choose the dimension of the mesh "
               "and whether it should be balanced or not.\n\n%s\n", usage);
   if (sreturn >= BUFSIZ) {
@@ -209,9 +212,9 @@ main (int argc, char **argv)
   sc_options_add_switch (opt, 'h', "help", &helpme,
                          "Display a short help message.");
   sc_options_add_int (opt, 'd', "dimension", &dim, 1,
-                      "The dimension of the mesh.");
+                      "The dimension of the mesh. Choose 1 <= dim <= 3.");
   sc_options_add_switch (opt, 'b', "balance", &do_balance,
-                         "Additionally balance the forest.");
+                         "Additionally 2:1 balance the forest.");
 
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
