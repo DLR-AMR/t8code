@@ -90,7 +90,7 @@ t8_test_leaf_face_neighbors (const t8_forest_t forest_adapt)
   int leaf_face_neighbor_call_count = 0;
 
   /* we only allow one tree with id 0 in this testcase and the current element must come from a valid index within the forest (as well as its face index) */
-  T8_ASSERT (global_num_trees == 1);
+  T8_ASSERT (global_num_trees == 1); /* TODO: enable multiple trees for this example */
   T8_ASSERT (ltree_id == 0);
 
   eclass = t8_forest_get_tree_class (forest_adapt, ltree_id);
@@ -173,14 +173,19 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   char                filename[BUFSIZ];
 
   /* refinement setting */
-  int                 initlevel = 3;    /* initial uniform refinement level */
-  int                 adaptlevel = 2;
+  int                 initlevel = 1;    /* initial uniform refinement level */
+  int                 adaptlevel = 1;
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening (minlevel <= initlevel) */
   int                 maxlevel = initlevel + adaptlevel;     /* highest level allowed for refining */
 
   /* adaptation setting */
   int                 do_balance = 0;
   int                 do_transition = 1;
+
+  /* cmesh settings (only one of the following suggestions should be one, the others 0) */
+  int                 single_tree = 1;
+  int                 multiple_tree = 0, num_x_trees = 2, num_y_trees = 1;
+  int                 hybrid_cmesh = 0;
 
   /* ghost setting */
   int                 do_ghost = 1;
@@ -194,7 +199,23 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   t8_forest_init (&forest_adapt);
 
   /* building the cmesh, using the initlevel */
-  cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
+  if (single_tree) {            /* single quad cmesh */
+    cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
+  }
+  else if (multiple_tree) {          /* p4est_connectivity_new_brick (num_x_trees, num_y_trees, 0, 0) -> cmesh of (num_x_trees x num_y_trees) many quads */
+    p4est_connectivity_t *brick =
+      p4est_connectivity_new_brick (num_x_trees, num_y_trees, 0, 0);
+    cmesh = t8_cmesh_new_from_p4est (brick, sc_MPI_COMM_WORLD, 0);
+    p4est_connectivity_destroy (brick);
+  }
+  else if (hybrid_cmesh) {           /* TODO: this does not work at the moment */
+    cmesh = t8_cmesh_new_hypercube_hybrid (2, sc_MPI_COMM_WORLD, 0, 0);
+  }
+  else {
+    SC_ABORT ("Specify cmesh.");
+  }
+
+  /* building the cmesh, using the initlevel */
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
   t8_forest_set_scheme (forest, t8_scheme_new_subelement_cxx ());
   t8_forest_set_level (forest, initlevel);
@@ -212,7 +233,7 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   sdata.mid_point[0] = 0;    // 1.0 / 2.0 + shift_x * 1.0/(1 << (minlevel));
   sdata.mid_point[1] = 0;    // 1.0 / 2.0 + shift_y * 1.0/(1 << (minlevel)); 
   sdata.mid_point[2] = 0;
-  sdata.radius = 0.2;
+  sdata.radius = 0.6;
 
   /* refinement parameter */
   ls_data.band_width = 1;

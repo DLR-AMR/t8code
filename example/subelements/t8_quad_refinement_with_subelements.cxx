@@ -149,9 +149,9 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
   char                filename[BUFSIZ];
 
   /* refinement settings */
-                      initlevel = 3;    /* initial uniform refinement level */
+                      initlevel = 2;    /* initial uniform refinement level */
   int                 minlevel = initlevel;   /* lowest level allowed for coarsening */
-                      adaptlevel = 3;   /* number of allowed adapt levels */
+                      adaptlevel = 2;   /* number of additional adapt levels */
   int                 maxlevel = initlevel + adaptlevel;    /* highest level allowed for refining */
 
   int                 refine_recursive = 1;
@@ -159,21 +159,21 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
 
   /* cmesh settings (only one of the following suggestions should be one, the others 0) */
   int                 single_tree = 1;
-  int                 multiple_tree = 0, num_x_trees = 2, num_y_trees = 1;
+  int                 multiple_tree = 0, num_x_trees = 2, num_y_trees = 2;
   int                 hybrid_cmesh = 0;
 
   /* adaptation setting */
-  int                 do_balance = 0;
+  int                 do_balance = 1;
   int                 do_transition = 1;
 
-  /* MPI settings */
+  /* Ghost settings if MPI is enabled */
   int                 do_ghost = 1;
   int                 ghost_version = 3;
 
   /* timestep settings */
-  int                 do_different_refinements = 0;   /* to change the refinement during multiple num_timesteps */
-  int                 num_timesteps = 1;    /* Number of times, the mesh is refined */
+  int                 num_timesteps = 4;    /* Number of times, the mesh is refined */
   double              delta = 0.2;   /* The value, the radius increases after each timestep */
+  int                 do_different_refinements = 0;   /* change the refinement during multiple num_timesteps */
 
   /* VTK settings */
   int                 do_vtk = 1;   /* print results */
@@ -186,16 +186,17 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
   if (single_tree) {            /* single quad cmesh */
     cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
   }
-
-  if (multiple_tree) {          /* p4est_connectivity_new_brick (num_x_trees, num_y_trees, 0, 0) -> cmesh of (num_x_trees x num_y_trees) many quads */
+  else if (multiple_tree) {          /* p4est_connectivity_new_brick (num_x_trees, num_y_trees, 0, 0) -> cmesh of (num_x_trees x num_y_trees) many quads */
     p4est_connectivity_t *brick =
       p4est_connectivity_new_brick (num_x_trees, num_y_trees, 0, 0);
     cmesh = t8_cmesh_new_from_p4est (brick, sc_MPI_COMM_WORLD, 0);
     p4est_connectivity_destroy (brick);
   }
-
-  if (hybrid_cmesh) {           /* TODO: this does not work at the moment */
+  else if (hybrid_cmesh) {           /* TODO: this does not work at the moment */
     cmesh = t8_cmesh_new_hypercube_hybrid (2, sc_MPI_COMM_WORLD, 0, 0);
+  }
+  else {
+    SC_ABORT ("Specify cmesh.");
   }
 
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
@@ -223,10 +224,10 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
   /* shift the midpoiunt of the circle by (shift_x,shift_y) to ensure midpoints on corners of the uniform mesh */
   // int  shift_x = 0;      /* shift_x, shift_y should be smaler than 2^minlevel / 2 such that midpoint stays in the quadrilateral tree */
   // int  shift_y = 0;
-  sdata.mid_point[0] = 0;    // 1.0 / 2.0 + shift_x * 1.0/(1 << (minlevel));
-  sdata.mid_point[1] = 0;    // 1.0 / 2.0 + shift_y * 1.0/(1 << (minlevel)); 
+  sdata.mid_point[0] = 0.0;    // 1.0 / 2.0 + shift_x * 1.0/(1 << (minlevel));
+  sdata.mid_point[1] = 0.0;    // 1.0 / 2.0 + shift_y * 1.0/(1 << (minlevel)); 
   sdata.mid_point[2] = 0;
-  sdata.radius = 0.4;
+  sdata.radius = 0.35;
 
   /* refinement parameter */
   ls_data.band_width = 1;
@@ -241,7 +242,7 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
 
   /* Adapting the mesh for different num_timesteps */
   int i;
-  for (i = 0; i < num_timesteps; i++) {
+  for (i = 0; i <= num_timesteps; i++) {
 
     /* change the refinement */
     if (i == do_different_refinements - 1) {
@@ -305,7 +306,7 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
     sdata.radius += delta;
 
     t8_productionf
-      ("This is t8_refine_with_subelements. Done timestep %i of %i\n", i + 1,
+      ("This is t8_refine_with_subelements. Done timestep %i of %i\n", i,
        num_timesteps);
   }                             /* end of time-loop */
   t8_forest_unref (&forest_adapt);
