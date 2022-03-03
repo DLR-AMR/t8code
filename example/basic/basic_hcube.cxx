@@ -29,7 +29,7 @@
 /** Construct the cmesh given the dimension of the examples
  * \param[in] dim           The dimension of the example. 1 <= \a dim <= 3
  * \param[in] do_partition  Option to partition the cmesh  */
-t8_cmesh_t
+static t8_cmesh_t
 t8_basic_create_cmesh (const int dim, const int do_partition)
 {
   t8_cmesh_t          cmesh;
