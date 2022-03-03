@@ -63,7 +63,7 @@ t8_basic_create_cmesh (const int dim, const int do_partition)
 }
 
 /* The adapt Callback used in this examples. Every element that has an uneven
- * x-coordinate wrt to its level is refeined up to the maximal refinement level*/
+ * x-coordinate wrt to its level is refined up to the maximal refinement level */
 static int
 t8_basic_adapt (t8_forest_t forest, t8_forest_t forest_from,
                 t8_locidx_t which_tree, t8_locidx_t lelement_id,
