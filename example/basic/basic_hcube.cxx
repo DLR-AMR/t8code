@@ -26,9 +26,12 @@
 #include <t8_forest.h>
 #include <t8_cmesh_vtk.h>
 
-/** Construct the cmesh given the dimension of the examples
- * \param[in] dim           The dimension of the example. 1 <= \a dim <= 3
- * \param[in] do_partition  Option to partition the cmesh  */
+/** Construct the cmesh given the dimension of the examples. 
+ * For 1D a line is constructed, for 2D a mesh consisting of 2 triangles
+ * forming a quad and in 3D a cube made out of hexs, tets and prisms.
+ * \param[in] dim           The dimension of the example. 1 <= \a dim <= 3. 
+ * \param[in] do_partition  Option to partition the cmesh. If true (non-zero) the cmesh will be partitioned across the processes.  
+ * \return                  The cmesh that is specified by the parameters*/
 static t8_cmesh_t
 t8_basic_create_cmesh (const int dim, const int do_partition)
 {
@@ -62,8 +65,8 @@ t8_basic_create_cmesh (const int dim, const int do_partition)
   return cmesh;
 }
 
-/* The adapt Callback used in this examples. Every element that has an uneven
- * x-coordinate wrt to its level is refined up to the maximal refinement level */
+/* The adapt Callback used in this examples. Every element that has an odd
+ * x-coordinate (in its reference element) wrt to its level is refined up to the maximal refinement level */
 static int
 t8_basic_adapt (t8_forest_t forest, t8_forest_t forest_from,
                 t8_locidx_t which_tree, t8_locidx_t lelement_id,
