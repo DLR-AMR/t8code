@@ -37,12 +37,23 @@ T8_EXTERN_C_BEGIN ();
 
 /** Compute the coordinates of a vertex of a tetrahedron.
  * \param [in] t    Input tetrahedron.
- * \param [out] coordinates An array of 2 t8_dtet_coord_t that
- * 		     will be filled with the coordinates of the vertex.
  * \param [in] vertex The number of the vertex.
+ * \param [out] coordinates An array of 3 t8_dtet_coord_t that
+ * 		     will be filled with the coordinates of the vertex.
  */
 void                t8_dtet_compute_coords (const t8_dtet_t * t, int vertex,
                                             t8_dtet_coord_t coordinates[3]);
+
+/** Compute the coordinates of a vertex of a tetrahedron when the 
+ * tree (level 0 tetrahedron) is embedded in [0,1]^3.
+ * \param [in] t    Input tetrahedron.
+ * \param [in] vertex The number of the vertex.
+ * \param [out] coordinates An array of 3 double that
+ * 		     will be filled with the reference coordinates of the vertex.
+ */
+void                t8_dtet_compute_ref_coords (const t8_dtet_t * t,
+                                                int vertex,
+                                                double coordinates[3]);
 
 /** Compute the coordinates of the four vertices of a tetrahedron.
  * \param [in] t    Input tetrahedron.

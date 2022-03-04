@@ -76,21 +76,31 @@ T8_EXTERN_C_BEGIN ();
  * really large connectivities.
  */
 typedef p4est_locidx_t t8_topidx_t;
+/** The MPI Datatype of t8_topidx_t */
 #define T8_MPI_TOPIDX P4EST_MPI_LOCIDX
+/** Macro to get the absolute value of a t8_topidx_t */
 #define T8_TOPIDX_ABS(x) P4EST_LOCIDX_ABS(x)
+/** Comparison function for t8_topidx_t */
 #define t8_compare_topidx(v,w) p4est_locidx_compare(v,w)
 
 /** A type for processor-local indexing. */
 typedef p4est_locidx_t t8_locidx_t;
+/** The MPI Datatype of t8_locidx_t */
 #define T8_MPI_LOCIDX P4EST_MPI_LOCIDX
+/** Macro to get the absolute value of a t8_locidx_t */
 #define T8_LOCIDX_ABS(x) P4EST_LOCIDX_ABS(x)
+/** Maximum possible value of a t8_locidx_t */
 #define T8_LOCIDX_MAX P4EST_LOCIDX_MAX
+/** Comparison function for t8_locidx_t */
 #define t8_compare_locidx(v,w) p4est_locidx_compare(v,w)
 
 /** A type for global indexing that holds really big numbers. */
 typedef p4est_gloidx_t t8_gloidx_t;
+/** The MPI Datatype of t8_gloidx_t */
 #define T8_MPI_GLOIDX P4EST_MPI_GLOIDX
+/** Macro to get the absolute value of a t8_gloidx_t */
 #define T8_GLOIDX_ABS(x) P4EST_GLOIDX_ABS(x)
+/** Comparison function for t8_gloidx_t */
 #define t8_compare_gloidx(v,w) p4est_gloidx_compare(v,w)
 
 /** A type for storing SFC indices */
@@ -102,7 +112,7 @@ typedef uint64_t    t8_linearidx_t;
 /** Compute the number of bytes that have to be added to a given byte_count
  * such that it is a multiple of the padding size */
 #define T8_ADD_PADDING(_x) \
-  ((T8_PADDING_SIZE - ((_x) %  T8_PADDING_SIZE)) %  T8_PADDING_SIZE)
+  ((T8_PADDING_SIZE - ((_x) % T8_PADDING_SIZE)) % T8_PADDING_SIZE)
 
 /** Communication tags used internal to t8code. */
 typedef enum
@@ -191,6 +201,15 @@ void                t8_global_infof (const char *fmt, ...)
  * \param [in] fmt          Printf-style format string.
  */
 void                t8_infof (const char *fmt, ...)
+#ifndef T8_DOXYGEN
+  __attribute__ ((format (printf, 1, 2)))
+#endif
+  ;
+
+/** Log a message, no matter what rank, with priority SC_LP_PRODUCTION.
+ * \param [in] fmt          Printf-style format string.
+ */
+void                t8_productionf (const char *fmt, ...)
 #ifndef T8_DOXYGEN
   __attribute__ ((format (printf, 1, 2)))
 #endif

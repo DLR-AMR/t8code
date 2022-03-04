@@ -82,14 +82,22 @@ main (int argc, char *argv[])
   const char         *prefix;
   char                usage[BUFSIZ];
   char                help[BUFSIZ];
+  int                 sreturn;
 
   snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS> <ARGUMENTS>",
             basename (argv[0]));
-  snprintf (help, BUFSIZ,
-            "This program reads a collection of .node, .ele and "
-            ".neigh files created by the TRIANGLE program and constructs a "
-            "t8code coarse mesh from them.\nAll three files must have the same prefix.\n\n%s\n\nExample: %s -f A1\nTo open the files A1.node, A1.ele and "
-            "A1.neigh.\n", usage, basename (argv[0]));
+  sreturn = snprintf (help, BUFSIZ,
+                      "This program reads a collection of .node, .ele and "
+                      ".neigh files created by the TRIANGLE program and constructs a "
+                      "t8code coarse mesh from them.\nAll three files must have the same prefix.\n\n%s\n\nExample: %s -f A1\nTo open the files A1.node, A1.ele and "
+                      "A1.neigh.\n", usage, basename (argv[0]));
+
+  if (sreturn >= BUFSIZ) {
+    /* The help message was truncated */
+    /* Note: gcc >= 7.1 prints a warning if we 
+     * do not check the return value of snprintf. */
+    t8_debugf ("Warning: Truncated help message to '%s'\n", help);
+  }
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -100,13 +108,14 @@ main (int argc, char *argv[])
 
   opt = sc_options_new (argv[0]);
   sc_options_add_string (opt, 'f', "prefix", &prefix, "", "The prefix of the"
-                         "triangle files.");
+                         " triangle files.");
   sc_options_add_bool (opt, 'p', "Partition", &partition, 0, "If true"
-                       "the generated cmesh is partitioned.");
+                       " the generated cmesh is partitioned.");
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (parsed < 0 || strcmp (prefix, "") == 0) {
-    fprintf (stderr, "%s", help);
+    fprintf (stderr, "%s\n", help);
+    sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
     return 1;
   }
   else {

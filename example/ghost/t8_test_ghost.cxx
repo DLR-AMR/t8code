@@ -267,7 +267,7 @@ t8_test_ghost_hypercube (t8_eclass_t eclass, int level, sc_MPI_Comm comm,
   }
   else if (eclass == T8_ECLASS_COUNT) {
     // Build a 3D hybrid hypercube with tets, hexes and prisms
-    cmesh = t8_cmesh_new_hypercube_hybrid (3, comm, 0, 0);
+    cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
   }
 
   if (eclass != T8_ECLASS_VERTEX && eclass != T8_ECLASS_PYRAMID) {
@@ -325,9 +325,20 @@ main (int argc, char **argv)
   const char         *prefix;
   char                usage[BUFSIZ];
   char                help[BUFSIZ];
+  int                 sreturnA, sreturnB;
 
-  snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS>", basename (argv[0]));
-  snprintf (help, BUFSIZ, "help string\n%s\n", usage);
+  sreturnA =
+    snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS>", basename (argv[0]));
+  sreturnB = snprintf (help, BUFSIZ, "help string\n%s\n", usage);
+
+  if (sreturnA > BUFSIZ || sreturnB > BUFSIZ) {
+    /* The usage string or help message was truncated */
+    /* Note: gcc >= 7.1 prints a warning if we 
+     * do not check the return value of snprintf. */
+    t8_debugf
+      ("Warning: Truncated usage string and help message to '%s' and '%s'\n",
+       usage, help);
+  }
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
