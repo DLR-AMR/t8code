@@ -4,7 +4,7 @@ r1 = 0.5;
 r2 = 0.6;
 h = 2;
 l = 3;
-b = 9;
+b = 6;
 
 Point(1) = {0, 0, 0};
 
@@ -118,7 +118,7 @@ l_elems = 5;
 h_elems = 3;
 r2_elems = 1;
 circle_elems = 2;
-b_elems = 15;
+b_elems = 1;
 
 // After setting our geometries to transfinite we can mesh them
 Transfinite Curve {61, 62, 9, 10, 3, 4, 17, 18, 35, 36, 31, 30, 42, 41, 50, 49} = l_elems + 1 Using Progression 1;

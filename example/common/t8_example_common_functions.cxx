@@ -421,7 +421,7 @@ void
 t8_flow_around_circle_with_angular_velocity (const double x[3], double t, double x_out[])
 {  
   double radius = 0.5;
-  double omega = 1.5*M_PI;
+  double omega = 0.5*M_PI;
   // convert to polar coordinates
   double r = sqrt(x[0] * x[0] + x[1] * x[1]);
   double theta = atan2(x[1], x[0]);
@@ -437,7 +437,7 @@ t8_flow_around_circle_with_angular_velocity (const double x[3], double t, double
   // convert back to Cartesian
   x_out[0] = cos(theta) * u_r - sin(theta) * u_theta;
   x_out[1] = sin(theta) * u_r + cos(theta) * u_theta;
-  x_out[2] = 0;
+  x_out[2] = 1;
 }
 
 T8_EXTERN_C_END ();
