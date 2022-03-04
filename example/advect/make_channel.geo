@@ -2,9 +2,9 @@ SetFactory("OpenCASCADE");
 
 r1 = 0.5;
 r2 = 0.6;
-h = 4;
-l = 6;
-b = 0.2;
+h = 2;
+l = 3;
+b = 9;
 
 Point(1) = {0, 0, 0};
 
@@ -108,16 +108,17 @@ Plane Surface(12) = {16};
 Extrude {0, 0, b} {
   Surface{1}; Surface{2}; Surface{3}; Surface{4}; Surface{5}; Surface{6}; Surface{7}; Surface{8}; Surface{9}; Surface{10}; Surface{11}; Surface{12}; 
 }
+Coherence;
 
 Save "channel.brep";
 Delete All;
 Merge "channel.brep";
 
-l_elems = 10;
-h_elems = 7;
+l_elems = 5;
+h_elems = 3;
 r2_elems = 1;
 circle_elems = 2;
-b_elems = 1;
+b_elems = 15;
 
 // After setting our geometries to transfinite we can mesh them
 Transfinite Curve {61, 62, 9, 10, 3, 4, 17, 18, 35, 36, 31, 30, 42, 41, 50, 49} = l_elems + 1 Using Progression 1;
@@ -129,6 +130,7 @@ Transfinite Surface{:};
 Recombine Surface{:};
 Transfinite Volume{:};
 Mesh 3;
+Coherence Mesh;
 
 Mesh.MshFileVersion = 4.1;
 Mesh.SaveParametric = 1;
