@@ -24,30 +24,7 @@
  * After generating a coarse mesh (step1) and building a uniform forest
  * on it (step2), we will now adapt (= refine and coarsen) the forest
  * according to our own criterion.
- * 
- * The geometry (coarse mesh) is again a cube, this time modelled with
- * 6 tetrahedra, 6 prisms and 4 cubes.
- * We refine an element if its midpoint is whithin a sphere of given radius
- * around the point (0.5, 0.5, 1) and we coarsen outside of a given radius.
- * We will use non-recursive refinement, that means that the refinement level
- * of any element will change by at most +-1.
- * 
- * How you can experiment here:
- *   - Look at the paraview output files of the unifomr and the adapted forest.
- *     For the adapted forest you can apply a slice filter to look into the cube.
- *   - Run the program with different process numbers. You should see that refining is
- *     independent of the number of processes, but coarsening is not.
- *     This is due to the face that a family can only be coarsened if it is completely
- *     local to a single process and the distribution among the process may break this property.
- *   - Change the midpoint coordinates and the radii.
- *   - Change the adaptation criterion such that elements inside the sphere are coarsened
- *     and elements outside are refined.
- *   - Use t8_productionf to print the local number of elements on each process.
- *     Notice, that the uniform forest is evenly distributed, but that the adapted forest
- *     is not. This is due to the fact that we do not repartition our forest here.
- *   - Add a maximum refinement level to the adapt_data struct and use non-recursive refinement.
- *     Do not refine an element if it has reached the maximum level. (Hint: ts->t8_element_level)
- */
+*/
 
 #include <t8.h>
 #include <sc_options.h>
@@ -62,29 +39,6 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx>
 #include <t8_geometry/t8_geometry_helpers.h>
 #include <t8_cmesh_readmshfile.h>
-
-T8_EXTERN_C_BEGIN ();
-
-/* The adaptation callback function. This function will be called once for each element
- * and the return value decides whether this element should be refined or not.
- *   return > 0 -> This element should get refined.
- *   return = 0 -> This element should not get refined.
- * If the current element is the first element of a family (= all level l elements that arise from refining
- * the same level l-1 element) then this function is called with the whole family of elements
- * as input and the return value additionally decides whether the whole family should get coarsened.
- *   return > 0 -> The first element should get refined.
- *   return = 0 -> The first element should not get refined.
- *   return < 0 -> The whole family should get coarsened.
- *  
- * \param [in] forest  The current forest that is in construction.
- * \param [in] forest_from The forest from which we adapt the current forest (in our case, the uniform forest)
- * \param [in] which_tree The process local id of the current tree.
- * \param [in] lelement_id The tree local index of the current element (or the first of the family).
- * \param [in] ts      The refinement scheme for this tree's element class.
- * \param [in] num_elements The number of elements. If this is > 1 we know that we look at a family.
- * \param [in] elements The element or family of elements to consider for refinement/coarsening.
- */
-
 
 struct t8_naca_surface_adapt_data
 {
@@ -104,7 +58,6 @@ t8_naca_surface_adapt_callback (t8_forest_t forest,
   /* We retrieve the adapt data */
   const struct t8_naca_surface_adapt_data *adapt_data = (const struct t8_naca_surface_adapt_data *) t8_forest_get_user_data (forest);
   T8_ASSERT (adapt_data != NULL);
-
   
   for (int iface = 0; iface < 6; ++iface)
   {
@@ -133,6 +86,107 @@ t8_naca_surface_adapt_callback (t8_forest_t forest,
   return 0;
 }
 
+int 
+t8_naca_surface_refinement(t8_forest_t forest, int rlevel_dorsal, int rlevel_ventral)
+{
+  /* Generate the adapt data. We refine the surfaces in the array surfaces[]
+   * to the levels specified in the array levels[]. The surface indices can be visualized by opening
+   * the brep file in the Gmsh GUI and turning on the visibility of surface tags 
+   * (Tools->Options->Geometry->Surface labels in Version 4.8.4) */
+  int surfaces[4] = {2, 8, 14, 19};
+  int levels[4] =   {rlevel_dorsal, rlevel_dorsal,  rlevel_ventral,  rlevel_ventral};
+  t8_naca_surface_adapt_data adapt_data = {
+    4,              /* Amount of surfaces we want to refine */
+    surfaces,       /* Array with surface indices */
+    levels          /* Array with refinement levels */
+  };
+  /* Adapt the forest. We can reuse the forest variable, since the new adapted
+   * forest will take ownership of the old forest and destroy it.
+   * Note that the adapted forest is a new forest, though. */
+  forest = t8_forest_new_adapt (forest, t8_naca_surface_adapt_callback, 1, 0, &adapt_data);
+  t8_forest_t balanced_forest;
+  t8_forest_init (&balanced_forest);
+  t8_forest_set_balance (balanced_forest, forest, 0);
+  t8_forest_commit (balanced_forest);
+  t8_forest_write_vtk_via_API (balanced_forest, "naca_surface_adapted_forest", 1, 1, 1, 1, 1, 0, NULL);
+  t8_global_productionf ("Wrote adapted and balanced forest to vtu files: naca_surface_adapted_forest*\n");
+  t8_forest_unref (&balanced_forest);
+  t8_global_productionf ("Destroyed forest.\n");
+  
+  return 0;
+}
+
+struct t8_naca_plane_adapt_data
+{
+  int                 t;      /* The time step we are in */
+  int                 steps;  /* The amount of time steps */
+  double              x_min;  /* The minimum x-coordinate of the profile */
+  double              x_max;  /* The maximum x-coordinate of the profile */
+  double              dist;   /* The distance an element can have from the plane to still be refined */
+  int                 level;  /* The uniform refinement level */
+  int                 rlevel; /* The max refinement level */
+};
+
+int
+t8_naca_plane_adapt_callback (t8_forest_t forest,
+                              t8_forest_t forest_from,
+                              t8_locidx_t which_tree,
+                              t8_locidx_t lelement_id,
+                              t8_eclass_scheme_c * ts,
+                              int num_elements, t8_element_t * elements[])
+{
+  double              elem_midpoint[3], distance;
+  int                 elem_level;
+
+  elem_level = ts->t8_element_level (elements[0]);
+  /* We retrieve the adapt data */
+  const struct t8_naca_plane_adapt_data *adapt_data = (const struct t8_naca_plane_adapt_data *) t8_forest_get_user_data (forest);
+  T8_ASSERT (adapt_data != NULL);
+
+  double current_x_coordinate = adapt_data->x_min + (adapt_data->x_max - adapt_data->x_min) * adapt_data->t / (adapt_data->steps - 1);
+  t8_forest_element_centroid (forest_from, which_tree, elements[0], elem_midpoint);
+  distance = abs(current_x_coordinate - elem_midpoint[0]);
+  if (distance <= adapt_data->dist && elem_level < adapt_data->level + adapt_data->rlevel)
+  {
+    return 1;
+  }
+  if (distance > adapt_data->dist && elem_level > adapt_data->level && num_elements > 1)
+  {
+    return -1;
+  }
+  return 0;
+}
+
+int
+t8_naca_plane_refinement (t8_forest_t forest, int level, int rlevel, int steps, double dist)
+{
+  char                forest_vtu[BUFSIZ];
+
+  t8_naca_plane_adapt_data adapt_data = {
+    0,      /* The time step we are in */
+    steps,  /* The amount of time steps */
+    -0.2,   /* The minimum x-coordinate of the profile */
+    1.5,    /* The maximum x-coordinate of the profile */
+    dist,   /* The distance an element can have from the plane to still be refined */
+    level,  /* The uniform refinement level */
+    rlevel  /* The max refinement level */
+  };
+
+  while (adapt_data.t < steps)
+  {
+    forest = t8_forest_new_adapt (forest, t8_naca_plane_adapt_callback, 1, 0, &adapt_data);
+    t8_forest_t balanced_forest;
+    t8_forest_init (&balanced_forest);
+    t8_forest_set_balance (balanced_forest, forest, 0);
+    t8_forest_commit (balanced_forest);
+    forest = balanced_forest;
+    snprintf (forest_vtu, BUFSIZ, "naca_plane_adapted_forest%02d", adapt_data.t);
+    t8_forest_write_vtk_via_API (forest, forest_vtu, 1, 1, 1, 1, 1, 0, NULL);
+    ++adapt_data.t;
+  }
+  return 0;
+}
+
 int
 main (int argc, char **argv)
 {
@@ -145,7 +199,9 @@ main (int argc, char **argv)
   t8_cmesh_t          cmesh;
   t8_forest_t         forest;
   const char         *fileprefix = NULL;
-  int                 level, level_dorsal, level_ventral, occt;
+  int                 level, rlevel, rlevel_dorsal, rlevel_ventral;
+  int                 surface, plane, steps, occt;
+  double              dist;
 
   /* brief help message */
   snprintf (usage, BUFSIZ, "\t%s <OPTIONS>\n\t%s -h\t"
@@ -185,11 +241,21 @@ main (int argc, char **argv)
   sc_options_add_string (opt, 'f', "fileprefix", &fileprefix, NULL,
                          "Fileprefix of the msh and brep files.");
   sc_options_add_int (opt, 'l', "level", &level, 0,
-                      "The uniform refinement level of the mesh.");
-  sc_options_add_int (opt, 'd', "dorsal", &level_dorsal, 0,
-                      "The refinement level of the dorsal side of the naca profile.");
-  sc_options_add_int (opt, 'v', "ventral", &level_ventral, 0,
-                      "The refinement level of the ventral side of the naca profile.");
+                      "The uniform refinement level of the mesh. Default: 0");
+  sc_options_add_int (opt, 'r', "rlevel", &rlevel, 3,
+                      "The refinement level of the mesh. Default: 3");
+  sc_options_add_switch (opt, 's', "surface", &surface,
+                         "Refine the forest based on the surfaces the elements lie on. Only viable with -o");
+  sc_options_add_int (opt, 'd', "dorsal", &rlevel_dorsal, 3,
+                      "The refinement level of the dorsal side of the naca profile. Default: 3");
+  sc_options_add_int (opt, 'v', "ventral", &rlevel_ventral, 2,
+                      "The refinement level of the ventral side of the naca profile. Default: 2");
+  sc_options_add_switch (opt, 'p', "plane", &plane,
+                         "Move a plane through the forest and refine elements close to the plane.");
+  sc_options_add_double (opt, 'x', "distance", &dist, 0.1,
+                         "Maximum distance an element can have from the plane to still be refined. Default: 0.1");
+  sc_options_add_int (opt, 't', "timesteps", &steps, 10,
+                      "How many steps the plane takes to move through the airfoil. Default: 10");
   sc_options_add_switch (opt, 'o', "occt", &occt,
                          "Use the occt geometry.");
   parsed =
@@ -199,10 +265,12 @@ main (int argc, char **argv)
     t8_global_productionf ("%s\n", help);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-  else if (parsed == 0 || fileprefix == NULL)
+  else if (parsed == 0 || fileprefix == NULL || 
+           (!plane && !surface) || (plane && surface) ||
+           (surface && !occt))
   {
     /* wrong usage */
-    t8_global_productionf ("\n\tERROR:Wrong usage.\n\n");
+    t8_global_productionf ("\n\tERROR: Wrong usage.\n\n");
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else
@@ -215,41 +283,20 @@ main (int argc, char **argv)
                                     level,
                                     0,
                                     comm);
-
-    /* Generate the adapt data. We refine the surfaces in the array surfaces[]
-     * to the levels specified in the array levels[]. The surface indices can be visualized by opening
-     * the brep file in the Gmsh GUI and turning on the visibility of surface tags 
-     * (Tools->Options->Geometry->Surface labels in Version 4.8.4) */
-    int surfaces[4] = {2, 8, 14, 19};
-    int levels[4] =   {level_dorsal, level_dorsal,  level_ventral,  level_ventral};
-    struct t8_naca_surface_adapt_data adapt_data = {
-      4,              /* Amount of surfaces we want to refine */
-      surfaces,       /* Array with surface indices */
-      levels          /* Array with refinement levels */
-    };
-    /* Adapt the forest. We can reuse the forest variable, since the new adapted
-     * forest will take ownership of the old forest and destroy it.
-     * Note that the adapted forest is a new forest, though. */
     T8_ASSERT (t8_forest_is_committed (forest));
-    forest = t8_forest_new_adapt (forest, t8_naca_surface_adapt_callback, 1, 0, &adapt_data);
-
-    t8_forest_t balanced_forest;
-    t8_forest_init (&balanced_forest);
-    t8_forest_set_balance (balanced_forest, forest, 0);
-    t8_forest_commit (balanced_forest);
-
-    t8_forest_write_vtk (balanced_forest, "naca_adapted_forest");
-    t8_global_productionf ("Wrote adapted and balanced forest to vtu files: naca_adapted_forest*\n");
-
-    t8_forest_unref (&balanced_forest);
-    t8_global_productionf ("Destroyed forest.\n");
+    if (surface)
+    {
+      t8_naca_surface_refinement(forest, rlevel_dorsal, rlevel_ventral);
+    }
+    if (plane)
+    {
+      t8_naca_plane_refinement(forest, level, rlevel, steps, dist);
+    }
+    t8_forest_unref (&forest);
   }
-
   sc_options_destroy (opt);
   sc_finalize ();
   mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
   return 0;
 }
-
-T8_EXTERN_C_END ();
