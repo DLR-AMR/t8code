@@ -233,7 +233,7 @@ t8_forest_adapt (t8_forest_t forest)
   num_trees = t8_forest_get_num_local_trees (forest);
   /* Iterate over the trees and build the new element arrays for each one. */
   for (ltree_id = 0; ltree_id < num_trees; ltree_id++) {
-    t8_debugf ("[IL] ltree_id                    : %i \n", num_el_from);
+    t8_debugf ("[IL] ltree_id                : %i \n", ltree_id);
     /* Get the new and old tree and the new and old element arrays */
     tree = t8_forest_get_tree (forest, ltree_id);
     tree_from = t8_forest_get_tree (forest_from, ltree_id);
@@ -292,25 +292,34 @@ t8_forest_adapt (t8_forest_t forest)
         num_elements      = num_children;
         num_elements_real = num_children;
       }
-      else {
+      else if (0 < tscheme->t8_element_level(elements_from[0])) {
         /* We are certain that the elements do not form a complete family.
          * So we have to check if elements where removed and we got an
          * incomplete family. 
          * */
 
+        /* Assume family is complete */
+        num_elements = num_children;
+
         /* el_c is the Index of the el_considered in elements_from_copy */
-        el_c = num_children - zz;
+        if (num_el_from < num_children){
+          el_c = 0;
+        }
+        else {
+          el_c = num_children - zz;
+        }
         t8_debugf ("[IL] el_c                    : %li \n", el_c);
 
-        /* If el_c == 0 then elements_from_copy is equal to elements_from */
-        for (z = 0; z < num_children; z++) {
+        /* If el_c == 0 then elements_from_copy is equal to elements_from 
+         * Question [IL] is && el_considered + (t8_locidx_t) z - el_c < num_el_from required?
+         * */
+        for (z = 0; z < num_children &&
+                    el_considered + (t8_locidx_t) z - el_c < num_el_from; z++) {
             elements_from_copy[z] = t8_element_array_index_locidx (telements_from,
                                                                    el_considered + z - el_c);
         }
-
-        /* Get number of elements to be coarsed, if we coarse.
-         * Fact: num_elements_real < num_elements 
-         * */
+        
+        /* Get number of elements to be coarsed, if we coarse. */
         num_elements_real = 0;
         tscheme->t8_element_parent (elements_from_copy[el_c], element_parent_current);
         for (z = 0; z < num_children; z++) {
@@ -319,11 +328,27 @@ t8_forest_adapt (t8_forest_t forest)
             num_elements_real++;
           }
         }
+        T8_ASSERT (num_elements_real <= num_elements);
         
+        #if 1
+        /* Check if already considered elements of current family passed, so current considered
+         * element can not get coarsed any more.
+         * */
+        for (z = 1; z < num_children && 
+                    el_considered - (t8_locidx_t) z > -1; z++)
+        {
+          tscheme->t8_element_parent (t8_element_array_index_locidx (telements_from,
+                                                                     el_considered - z),
+                                      element_parent_compare);
+          if (tscheme->t8_element_compare(element_parent_current, element_parent_compare) == 0) {
+            num_elements = 1;
+          }
+        }
+        #endif
+
         /* Check if elements in elements_from_copy get "eaten" by coarsing current element 
          * Fact: only elements with higher level then level of current element, can get eaten 
          * */
-        num_elements = num_children; 
         int level, level_current;
         level_current = tscheme->t8_element_level(elements_from_copy[el_c]);
         tscheme->t8_element_parent(elements_from_copy[el_c], element_parent_current);
@@ -366,11 +391,7 @@ t8_forest_adapt (t8_forest_t forest)
             }
           } 
         }
-
       }
-
-      /* [IL] Working else-case if no elements are removed */
-#if 0
       else {
         /* We are certain that the elements do not form a family.
           * So we will only pass the first element to the adapt callback. */
@@ -380,7 +401,6 @@ t8_forest_adapt (t8_forest_t forest)
         num_elements      = 1;
         num_elements_real = 1;
       }
-#endif
 
       t8_debugf ("[IL] num_elements_real       : %i \n", num_elements_real);
       t8_debugf ("[IL] num_elements            : %i \n", num_elements);
