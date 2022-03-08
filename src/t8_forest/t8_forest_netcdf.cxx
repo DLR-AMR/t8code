@@ -38,7 +38,6 @@ These functions write a file in the NetCDF-format which represents the given 2D-
 #include <t8_forest.h>
 #include <t8_forest_netcdf.h>
 #include <t8_element_shape.h>
-//#include <t8_data/t8_containers.h>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -97,11 +96,13 @@ typedef struct
   const char         *att_elem_node;
 } t8_forest_netcdf_ugrid_namespace_t;
 
+/* The UGRID conventions are applied for dimension and variable descriptions */
 static void
 t8_forest_init_ugrid_namespace_context (t8_forest_netcdf_ugrid_namespace_t *
                                         namespace_conv, int dim)
 {
   if (dim == 2) {
+    /* UGRID 2D Grid name conventions */
     namespace_conv->mesh = "Mesh2";
     namespace_conv->dim_nMesh_node = "nMesh2_node";
     namespace_conv->dim_nMesh_elem = "nMesh2_face";
@@ -119,6 +120,7 @@ t8_forest_init_ugrid_namespace_context (t8_forest_netcdf_ugrid_namespace_t *
 
   }
   else if (dim == 3) {
+    /* UGRID 3D name conventions */
     namespace_conv->mesh = "Mesh3D";
     namespace_conv->dim_nMesh_node = "nMesh3D_node";
     namespace_conv->dim_nMesh_elem = "nMesh3D_vol";
@@ -427,7 +429,7 @@ t8_forest_write_netcdf_data (t8_forest_t forest,
   num_local_trees = t8_forest_get_num_local_trees (forest);
 
   /* Ger number of local elements */
-  num_local_elements = t8_forest_get_num_element (forest);
+  num_local_elements = t8_forest_get_local_num_elements (forest);
 
   /* Declare variables with their proper dimensions. */
   Mesh_elem_types = T8_ALLOC (int, num_local_elements);
@@ -498,7 +500,7 @@ t8_forest_write_netcdf_data (t8_forest_t forest,
 #endif
 }
 
-/* Define  NetCDF-coordinate-dimension */
+/* Define NetCDF-coordinate-dimension */
 static void
 t8_forest_write_netcdf_coordinate_dimension (t8_forest_netcdf_context_t *
                                              context,
@@ -801,7 +803,6 @@ t8_forest_write_netcdf_coordinate_data (t8_forest_t forest,
 {
 #if T8_WITH_NETCDF
   double             *vertex_coords = T8_ALLOC (double, 3);
-  double             *vertices;
   t8_eclass_t         tree_class;
   t8_locidx_t         num_local_trees;
   t8_locidx_t         ltree_id = 0;
@@ -840,7 +841,7 @@ t8_forest_write_netcdf_coordinate_data (t8_forest_t forest,
   num_local_trees = t8_forest_get_num_local_trees (forest);
 
   /* Ger number of local elements */
-  num_local_elements = t8_forest_get_num_element (forest);
+  num_local_elements = t8_forest_get_local_num_elements (forest);
 
   /* Allocate memory for node offsets */
   t8_gloidx_t        *node_offset[mpisize];
@@ -876,8 +877,7 @@ t8_forest_write_netcdf_coordinate_data (t8_forest_t forest,
     tree_class = t8_forest_get_tree_class (forest, ltree_id);
     /* Computing the local tree offest */
     local_tree_offset = t8_forest_get_tree_element_offset (forest, ltree_id);
-    /* Get the array of vertex coordiantes of the local tree */
-    vertices = t8_forest_get_tree_vertices (forest, ltree_id);
+
     for (local_elem_id = 0; local_elem_id < num_local_tree_elem;
          local_elem_id++) {
       /* Get the eclass scheme */
@@ -892,7 +892,7 @@ t8_forest_write_netcdf_coordinate_data (t8_forest_t forest,
       number_nodes = t8_element_shape_num_vertices (element_shape);
       i = 0;
       for (; i < number_nodes; i++) {
-        t8_forest_element_coordinate (forest, ltree_id, element, vertices,
+        t8_forest_element_coordinate (forest, ltree_id, element,
                                       t8_element_shape_vtk_corner_number ((int) element_shape, i), vertex_coords);
         /* Stores the x-, y- and z- coordinate of the nodes */
         Mesh_node_x[num_it] = vertex_coords[0];
@@ -905,10 +905,10 @@ t8_forest_write_netcdf_coordinate_data (t8_forest_t forest,
         num_it++;
       }
       for (; i < context->nMaxMesh_elem_nodes; i++) {
-        /* Pre-fills the the elements corresponding nodes, if it is an element having less than nMaxMesh_elem_nodes. */
+        /* Fill the elements corresponding nodes, which remain empty, if it is an element having less than nMaxMesh_elem_nodes. */
         Mesh_elem_nodes[(local_tree_offset +
                          local_elem_id) * (context->nMaxMesh_elem_nodes) +
-                        i] = -1;
+                        i] = context->fillvalue64;
       }
     }
   }
@@ -977,7 +977,7 @@ t8_forest_write_user_netcdf_data (t8_forest_t forest,
     int                 i;
 
     /* Number of local elements */
-    num_local_elements = t8_forest_get_num_element (forest);
+    num_local_elements = t8_forest_get_local_num_elements (forest);
 
     /* Counters which imply the position in the NetCDF-variable where the data will be written, */
     start_ptr = (size_t) t8_forest_get_first_local_element_id (forest);
@@ -1141,7 +1141,7 @@ t8_forest_write_netcdf_file (t8_forest_t forest,
 #endif
 }
 
-/* Function that gets called if a forest schould be written in NetCDF-Format */
+/* Function that gets called if a forest schould be written in NetCDF-Format. This function is somehow an extended version which allows the user to decide if contiguous or chunked storage should used and whether the MPI ranks write independetly or collectively. */
 void
 t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix,
                             const char *file_title, int dim,
@@ -1208,7 +1208,7 @@ t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix,
 #endif
 }
 
-/* Function calls the extended method with reasonable default values */
+/* Function which writes out the forest in the netCDF format, this function calls the extended method with given default values (e.g. NC_CONTIGUOUS and NC_INDEPENDENT) for storage and MPI access for variables */
 void
 t8_forest_write_netcdf (t8_forest_t forest, const char *file_prefix,
                         const char *file_title, int dim,

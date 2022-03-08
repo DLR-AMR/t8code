@@ -41,7 +41,7 @@
 #include <t8_netcdf.h>
 
 void
-t8_example_netcdf_write_cmesh (int mpirank)
+t8_example_netcdf_write_cmesh (sc_MPI_Comm comm)
 {
 #if T8_WITH_NETCDF
   t8_cmesh_t          cmesh;
@@ -51,10 +51,16 @@ t8_example_netcdf_write_cmesh (int mpirank)
   double             *random_values;
   t8_netcdf_variable_t *ext_var_mpirank;
   t8_netcdf_variable_t *ext_var_random_values;
+  int                 mpiret;
+  int                 mpirank;
   int                 j;
 
+  /* Receive the process-local MPI rank */
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+
   /* Construct a (partitioned) cmesh */
-  cmesh = t8_cmesh_new_hypercube (T8_ECLASS_TET, sc_MPI_COMM_WORLD, 0, 1, 0);
+  cmesh = t8_cmesh_new_hypercube (T8_ECLASS_TET, comm, 0, 1, 0);
 
   /* Number of process local elements */
   printf ("[t8] Number of local trees on process %d : %d\n", mpirank,
@@ -106,7 +112,7 @@ t8_example_netcdf_write_cmesh (int mpirank)
 
   /* Write the cmesh to NetCDF */
   t8_cmesh_write_netcdf (cmesh, mesh_name, "Example 3D parallel cmesh", 3, 2,
-                         ext_vars, sc_MPI_COMM_WORLD);
+                         ext_vars, comm);
 
   t8_global_productionf ("NetCDF output of the cmesh has been written.\n");
 
@@ -131,7 +137,7 @@ int
 main (int argc, char **argv)
 {
 #if T8_WITH_NETCDF
-  int                 mpiret, mpirank;
+  int                 mpiret;
 
   /* Initialize MPI */
   mpiret = sc_MPI_Init (&argc, &argv);
@@ -142,11 +148,8 @@ main (int argc, char **argv)
   /* Initialize t8code */
   t8_init (SC_LP_PRODUCTION);
 
-  mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
-  SC_CHECK_MPI (mpiret);
-
   /* An example function that outputs a cmesh in NetCDF-Format */
-  t8_example_netcdf_write_cmesh (mpirank);
+  t8_example_netcdf_write_cmesh (sc_MPI_COMM_WORLD);
 
   /* Finalize sc */
   sc_finalize ();
