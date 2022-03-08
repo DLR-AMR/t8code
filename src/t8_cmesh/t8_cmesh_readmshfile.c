@@ -677,8 +677,8 @@ t8_msh_file_face_orientation (t8_msh_file_face_t * Face_a,
   }
   else {
     /* both classes are the same, thus
-     * the face with the smaller tree id is the smaller one */
-    if (Face_a->ltree_id < Face_b->ltree_id) {
+     * the face with the smaller face id is the smaller one */
+    if (Face_a->face_number < Face_b->face_number) {
       smaller_Face = Face_a;
       bigger_Face = Face_b;
       bigger_class =
