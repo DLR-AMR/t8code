@@ -28,6 +28,15 @@
 #include <t8_eclass.h>
 #include "t8_cmesh/t8_cmesh_testcases.h"
 
+#ifdef T8_ENABLE_LESS_TESTS
+#define T8_CMESH_TEST_NUM_COMMS 1
+#define T8_CMESH_BINARY 2
+#define T8_CMESH_DIM_RANGE 4
+#define T8_CMESH_MAX_TEST_DIMS 3
+#define T8_CMESH_MAX_NUM_OF_TREES 20
+#define T8_CMESH_MAX_NUM_OF_PRISMS 20
+#define T8_CMESH_MAX_NUM_XYZ_TREES 5
+#else
 #define T8_CMESH_TEST_NUM_COMMS 1
 #define T8_CMESH_BINARY 2
 #define T8_CMESH_DIM_RANGE 4    /* this is the dim range for hypercube hybrid and empty cmesh */
@@ -35,6 +44,7 @@
 #define T8_CMESH_MAX_NUM_OF_TREES 20
 #define T8_CMESH_MAX_NUM_OF_PRISMS 20
 #define T8_CMESH_MAX_NUM_XYZ_TREES 5
+#endif
 
 sc_MPI_Comm         t8_comm_list[T8_CMESH_TEST_NUM_COMMS] =
   { sc_MPI_COMM_WORLD };
@@ -48,6 +58,7 @@ char                t8_comm_string_list[T8_CMESH_TEST_NUM_COMMS][18] =
  *         in t8_test_create_new_hypercube_cmesh (int cmesh_id) and remove comment
  *       - when empty cmesh works with all tests change the line with the comment to the comments 
  *         statement in t8_test_create_cmesh (int cmesh_id)
+ *       - change macros for LESS_TESTS when issue #171 is resolved
  * NOTE: "all tests" here mean the ones using this file. 
  */
 
