@@ -117,7 +117,7 @@ void                t8_stash_add_facejoin (t8_stash_t stash, t8_gloidx_t gid1,
                                            t8_gloidx_t gid2, int face1,
                                            int face2, int orientation);
 
-/** Sort then entries in the class array by the order given in
+/** Sort the entries in the class array by the order given in
  *  the enum definition of t8_eclass.
  *  \param [in,out] stash The stash whose class array is sorted.
  */

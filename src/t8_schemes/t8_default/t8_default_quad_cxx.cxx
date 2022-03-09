@@ -35,6 +35,9 @@ t8_linearidx_t      t8_element_get_linear_id (const t8_element_t * elem,
 
 #ifdef T8_ENABLE_DEBUG
 
+#if 0
+/* TODO: Used in one assertion in t8_element_nca, but wrongly triggers error there.
+         Investigate and decide whether we really need this. */
 static int
 t8_element_surround_matches (const p4est_quadrant_t * q,
                              const p4est_quadrant_t * r)
@@ -44,6 +47,7 @@ t8_element_surround_matches (const p4est_quadrant_t * q,
      (T8_QUAD_GET_TNORMAL (q) == T8_QUAD_GET_TNORMAL (r) &&
       T8_QUAD_GET_TCOORD (q) == T8_QUAD_GET_TCOORD (r)));
 }
+#endif
 
 #endif /* T8_ENABLE_DEBUG */
 
@@ -794,6 +798,24 @@ t8_default_scheme_quad_c::t8_element_vertex_coords (const t8_element_t * t,
    * vertex number */
   coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len;
   coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
+}
+
+void
+t8_default_scheme_quad_c::t8_element_vertex_reference_coords (const
+                                                              t8_element_t *
+                                                              t, int vertex,
+                                                              double coords[])
+{
+  T8_ASSERT (t8_element_is_valid (t));
+  T8_ASSERT (0 <= vertex && vertex < 4);
+
+  int                 coords_int[2];
+  t8_element_vertex_coords (t, vertex, coords_int);
+
+  /* We divide the integer coordinates by the root length of the quad
+   * to obtain the reference coordinates. */
+  coords[0] = coords_int[0] / (double) P4EST_ROOT_LEN;
+  coords[1] = coords_int[1] / (double) P4EST_ROOT_LEN;
 }
 
 void

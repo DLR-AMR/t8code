@@ -65,7 +65,7 @@ test_element_general_function (sc_MPI_Comm comm)
         t8_forest_new_uniform (t8_cmesh_new_from_class
                                ((t8_eclass_t) (eclass), comm), ts, level, 0,
                                comm);
-      for (ielement = 0; ielement < t8_forest_get_num_element (forest);
+      for (ielement = 0; ielement < t8_forest_get_local_num_elements (forest);
            ++ielement) {
         int8_t              outdata = -1;
         int8_t              should_be = -1;

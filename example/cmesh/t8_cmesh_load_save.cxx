@@ -118,16 +118,24 @@ main (int argc, char **argv)
   sc_options_t       *opt;
   char                usage[BUFSIZ];
   char                help[BUFSIZ];
+  int                 sreturn;
 
   snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS> <ARGUMENTS>\n\t%s -h\t"
             "for a brief overview of all options.",
             basename (argv[0]), basename (argv[0]));
-  snprintf (help, BUFSIZ,
-            "This program has two modes. With argument -f <file> -d <dim> it creates a cmesh, "
-            "from the file <file>.msh, saves it to a collection of files and loads it again.\n"
-            "If the -l <string> and -n <num> arguments are given, the cmesh stored "
-            "in the num files string_0000.cmesh,... ,string_num-1.cmesh are read on n processes "
-            "and distributed among all processes.\n\n%s\n", usage);
+  sreturn = snprintf (help, BUFSIZ,
+                      "This program has two modes. With argument -f <file> -d <dim> it creates a cmesh, "
+                      "from the file <file>.msh, saves it to a collection of files and loads it again.\n"
+                      "If the -l <string> and -n <num> arguments are given, the cmesh stored "
+                      "in the num files string_0000.cmesh,... ,string_num-1.cmesh are read on n processes "
+                      "and distributed among all processes.\n\n%s\n", usage);
+
+  if (sreturn >= BUFSIZ) {
+    /* The help message was truncated */
+    /* Note: gcc >= 7.1 prints a warning if we 
+     * do not check the return value of snprintf. */
+    t8_debugf ("Warning: Truncated help message to '%s'\n", help);
+  }
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);

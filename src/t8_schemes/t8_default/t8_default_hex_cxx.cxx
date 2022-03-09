@@ -678,6 +678,25 @@ t8_default_scheme_hex_c::t8_element_vertex_coords (const t8_element_t * t,
 }
 
 void
+t8_default_scheme_hex_c::t8_element_vertex_reference_coords (const
+                                                             t8_element_t * t,
+                                                             int vertex,
+                                                             double coords[])
+{
+  T8_ASSERT (t8_element_is_valid (t));
+  T8_ASSERT (0 <= vertex && vertex < 8);
+
+  int                 coords_int[3];
+  t8_element_vertex_coords (t, vertex, coords_int);
+
+  /* We divide the integer coordinates by the root length of the hex
+   * to obtain the reference coordinates. */
+  coords[0] = coords_int[0] / (double) P8EST_ROOT_LEN;
+  coords[1] = coords_int[1] / (double) P8EST_ROOT_LEN;
+  coords[2] = coords_int[2] / (double) P8EST_ROOT_LEN;
+}
+
+void
 t8_default_scheme_hex_c::t8_element_new (int length, t8_element_t ** elem)
 {
   /* allocate memory for a hex */

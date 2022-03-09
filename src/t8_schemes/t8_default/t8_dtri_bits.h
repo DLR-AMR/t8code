@@ -74,6 +74,17 @@ void                t8_dtri_ancestor (const t8_dtri_t * t, int level,
 void                t8_dtri_compute_coords (const t8_dtri_t * t, int vertex,
                                             t8_dtri_coord_t coordinates[2]);
 
+/** Compute the reference coordinates of a vertex of a triangle when the 
+ * tree (level 0 triangle) is embedded in [0,1]^2.
+ * \param [in] t    Input triangle.
+ * \param [in] vertex The number of the vertex.
+ * \param [out] coordinates An array of 2 double that
+ * 		     will be filled with the reference coordinates of the vertex.
+ */
+void                t8_dtri_compute_ref_coords (const t8_dtri_t * t,
+                                                int vertex,
+                                                double coordinates[2]);
+
 /** Compute the coordinates of the four vertices of a triangle.
  * \param [in] t    Input triangle.
  * \param [out] coordinates An array of 4x3 t8_dtri_coord_t that

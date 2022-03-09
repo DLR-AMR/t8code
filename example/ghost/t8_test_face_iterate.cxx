@@ -34,7 +34,6 @@
 
 typedef struct
 {
-  double             *tree_vertices;
   double              coords[3];
   t8_locidx_t         count;
 } t8_test_fiterate_udata_t;
@@ -46,13 +45,10 @@ t8_test_fiterate_callback (t8_forest_t forest,
                            int face, void *user_data, t8_locidx_t leaf_index)
 {
   double             *coords;
-  double             *tree_vertices;
 
   if (leaf_index >= 0) {
     coords = ((t8_test_fiterate_udata_t *) user_data)->coords;
-    tree_vertices = ((t8_test_fiterate_udata_t *) user_data)->tree_vertices;
-    t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
-                                  0, coords);
+    t8_forest_element_coordinate (forest, ltreeid, element, 0, coords);
     t8_debugf
       ("Leaf element in tree %i at face %i, tree local index %i has corner 0 coords %lf %lf %lf\n",
        ltreeid, face, (int) leaf_index, coords[0], coords[1], coords[2]);
@@ -102,11 +98,7 @@ t8_test_fiterate (t8_forest_t forest)
     ts->t8_element_new (1, &nca);
     ts->t8_element_nca (first_el, last_el, nca);
     leaf_elements = t8_forest_tree_get_leafs (forest, itree);
-    udata.tree_vertices =
-      (double *) t8_cmesh_get_attribute (t8_forest_get_cmesh (forest),
-                                         t8_get_package_id (), 0,
-                                         t8_forest_ltreeid_to_cmesh_ltreeid
-                                         (forest, itree));
+
     for (iface = 0; iface < ts->t8_element_num_faces (nca); iface++) {
       udata.count = 0;
       t8_forest_iterate_faces (forest, itree, nca, iface, leaf_elements,
@@ -236,9 +228,20 @@ main (int argc, char **argv)
   const char         *prefix;
   char                usage[BUFSIZ];
   char                help[BUFSIZ];
+  int                 sreturnA, sreturnB;
 
-  snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS>", basename (argv[0]));
-  snprintf (help, BUFSIZ, "help string\n%s\n", usage);
+  sreturnA =
+    snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS>", basename (argv[0]));
+  sreturnB = snprintf (help, BUFSIZ, "help string\n%s\n", usage);
+
+  if (sreturnA > BUFSIZ || sreturnB > BUFSIZ) {
+    /* The usage string or help message was truncated */
+    /* Note: gcc >= 7.1 prints a warning if we 
+     * do not check the return value of snprintf. */
+    t8_debugf
+      ("Warning: Truncated usage string and help message to '%s' and '%s'\n",
+       usage, help);
+  }
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);

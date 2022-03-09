@@ -4,7 +4,7 @@ dnl
 
 AC_INIT([t8],
         [m4_esyscmd([build-aux/git-version-gen .tarball-version])],
-        [burstedde@ins.uni-bonn.de, johannes.holke@dlr.de])
+        [johannes.holke@dlr.de, burstedde@ins.uni-bonn.de])
 AC_PREREQ(2.61)
 AC_CONFIG_HEADERS([src/pre_config.h])
 AC_CONFIG_SRCDIR([src/t8.h])
@@ -22,6 +22,9 @@ echo "o---------------------------------------"
 
 T8_ARG_ENABLE([debug], [enable debug mode (assertions and extra checks)],
                  [DEBUG])
+
+T8_ARG_ENABLE([less-tests], [uses a fraction of the test cases to speed up development (WARNING: use with care)],
+                 [LESS_TESTS])
 
 echo "o---------------------------------------"
 echo "| Checking MPI and related programs"
@@ -75,6 +78,7 @@ echo "o---------------------------------------"
 AC_CONFIG_LINKS([test/testfiles/test_msh_file_vers2_ascii.msh:test/testfiles/test_msh_file_vers2_ascii.msh])
 AC_CONFIG_LINKS([test/testfiles/test_msh_file_vers2_bin.msh:test/testfiles/test_msh_file_vers2_bin.msh])
 AC_CONFIG_LINKS([test/testfiles/test_msh_file_vers4_ascii.msh:test/testfiles/test_msh_file_vers4_ascii.msh])
+AC_CONFIG_LINKS([test/testfiles/test_msh_file_vers4_bin.msh:test/testfiles/test_msh_file_vers4_bin.msh])
 
 # Print summary.
 

@@ -1,0 +1,241 @@
+/* src/pre_config.h.in.  Generated from configure.ac by autoheader.  */
+
+/* C compiler */
+#undef CC
+
+/* C compiler flags */
+#undef CFLAGS
+
+/* C preprocessor */
+#undef CPP
+
+/* C preprocessor flags */
+#undef CPPFLAGS
+
+/* DEPRECATED (use T8_ENABLE_CPPSTD instead) */
+#undef CPPSTD
+
+/* Define to 1 if your C++ compiler doesn't accept -c and -o together. */
+#undef CXX_NO_MINUS_C_MINUS_O
+
+/* DEPRECATED (use P4EST_ENABLE_DEBUG instead) */
+#undef DEBUG
+
+/* Undefine if: c++ standard library (optionally use
+   --enable-cppstd=<CPP_LIBS>) */
+#undef ENABLE_CPPSTD
+
+/* enable debug mode (assertions and extra checks) */
+#undef ENABLE_DEBUG
+
+/* Undefine if: use aligned malloc (optionally use --enable-memalign=<bytes>)
+   */
+#undef ENABLE_MEMALIGN
+
+/* Define to 1 if we are using MPI */
+#undef ENABLE_MPI
+
+/* Define to 1 if we can use MPI_COMM_TYPE_SHARED */
+#undef ENABLE_MPICOMMSHARED
+
+/* Define to 1 if we are using MPI I/O */
+#undef ENABLE_MPIIO
+
+/* Define to 1 if we are using MPI_Init_thread */
+#undef ENABLE_MPITHREAD
+
+/* Define to 1 if we can use MPI_Win_allocate_shared */
+#undef ENABLE_MPIWINSHARED
+
+/* enable OpenMP (optionally use --enable-openmp=<OPENMP_CFLAGS>) */
+#undef ENABLE_OPENMP
+
+/* enable POSIX threads (optionally use --enable-pthread=<PTHREAD_CFLAGS>) */
+#undef ENABLE_PTHREAD
+
+/* Define to dummy `main' function (if any) required to link to the Fortran
+   libraries. */
+#undef F77_DUMMY_MAIN
+
+/* Define to a macro mangling the given C identifier (in lower and upper
+   case), which must not contain underscores, for linking with Fortran. */
+#undef F77_FUNC
+
+/* As F77_FUNC, but for C identifiers containing underscores. */
+#undef F77_FUNC_
+
+/* Define to 1 if your Fortran compiler doesn't accept -c and -o together. */
+#undef F77_NO_MINUS_C_MINUS_O
+
+/* Define to dummy `main' function (if any) required to link to the Fortran
+   libraries. */
+#undef FC_DUMMY_MAIN
+
+/* Define if F77 and FC dummy `main' functions are identical. */
+#undef FC_DUMMY_MAIN_EQ_F77
+
+/* Define to a macro mangling the given C identifier (in lower and upper
+   case), which must not contain underscores, for linking with Fortran. */
+#undef FC_FUNC
+
+/* As FC_FUNC, but for C identifiers containing underscores. */
+#undef FC_FUNC_
+
+/* Define to 1 if your Fortran compiler doesn't accept -c and -o together. */
+#undef FC_NO_MINUS_C_MINUS_O
+
+/* Define to 1 if you have the `aligned_alloc' function. */
+#undef HAVE_ALIGNED_ALLOC
+
+/* Have we found function new. */
+#undef HAVE_CPPSTD
+
+/* Define to 1 if you have the <dlfcn.h> header file. */
+#undef HAVE_DLFCN_H
+
+/* Define to 1 if you have the <inttypes.h> header file. */
+#undef HAVE_INTTYPES_H
+
+/* Have we found function pthread_create. */
+#undef HAVE_LPTHREAD
+
+/* Have we found function lua_createtable. */
+#undef HAVE_LUA
+
+/* Define to 1 if you have the <memory.h> header file. */
+#undef HAVE_MEMORY_H
+
+/* Have we found function omp_get_thread_num. */
+#undef HAVE_OPENMP
+
+/* Define to 1 if you have the `posix_memalign' function. */
+#undef HAVE_POSIX_MEMALIGN
+
+/* Define to 1 if you have the <stdint.h> header file. */
+#undef HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdlib.h> header file. */
+#undef HAVE_STDLIB_H
+
+/* Define to 1 if you have the <strings.h> header file. */
+#undef HAVE_STRINGS_H
+
+/* Define to 1 if you have the <string.h> header file. */
+#undef HAVE_STRING_H
+
+/* Define to 1 if you have the <sys/stat.h> header file. */
+#undef HAVE_SYS_STAT_H
+
+/* Define to 1 if you have the <sys/types.h> header file. */
+#undef HAVE_SYS_TYPES_H
+
+/* Define to 1 if you have the <unistd.h> header file. */
+#undef HAVE_UNISTD_H
+
+/* Have we found function adler32_combine. */
+#undef HAVE_ZLIB
+
+/* Linker flags */
+#undef LDFLAGS
+
+/* Libraries */
+#undef LIBS
+
+/* Define to the sub-directory where libtool stores uninstalled libraries. */
+#undef LT_OBJDIR
+
+/* DEPRECATED (use T8_ENABLE_MEMALIGN instead) */
+#undef MEMALIGN
+
+/* desired alignment of allocations in bytes */
+#undef MEMALIGN_BYTES
+
+/* DEPRECATED (use T8_WITH_METIS instead) */
+#undef METIS
+
+/* DEPRECATED (use T8_ENABLE_MPI instead) */
+#undef MPI
+
+/* DEPRECATED (use T8_ENABLE_MPIIO instead) */
+#undef MPIIO
+
+/* Define to 1 if your C compiler doesn't accept -c and -o together. */
+#undef NO_MINUS_C_MINUS_O
+
+/* DEPRECATED (use T8_ENABLE_OPENMP instead) */
+#undef OPENMP
+
+/* DEPRECATED (use T8_WITH_P4EST instead) */
+#undef P4EST
+
+/* Name of package */
+#undef PACKAGE
+
+/* Define to the address where bug reports for this package should be sent. */
+#undef PACKAGE_BUGREPORT
+
+/* Define to the full name of this package. */
+#undef PACKAGE_NAME
+
+/* Define to the full name and version of this package. */
+#undef PACKAGE_STRING
+
+/* Define to the one symbol short name of this package. */
+#undef PACKAGE_TARNAME
+
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
+
+/* Define to the version of this package. */
+#undef PACKAGE_VERSION
+
+/* DEPRECATED (use T8_WITH_PETSC instead) */
+#undef PETSC
+
+/* Use builtin getopt */
+#undef PROVIDE_GETOPT
+
+/* Use builtin obstack */
+#undef PROVIDE_OBSTACK
+
+/* DEPRECATED (use T8_ENABLE_PTHREAD instead) */
+#undef PTHREAD
+
+/* DEPRECATED (use T8_WITH_SC instead) */
+#undef SC
+
+/* The size of `void *', as computed by sizeof. */
+#undef SIZEOF_VOID_P
+
+/* Define to 1 if you have the ANSI C header files. */
+#undef STDC_HEADERS
+
+/* Version number of package */
+#undef VERSION
+
+/* Package major version */
+#undef VERSION_MAJOR
+
+/* Package minor version */
+#undef VERSION_MINOR
+
+/* Package point version */
+#undef VERSION_POINT
+
+/* Define to 1 if BLAS is used */
+#undef WITH_BLAS
+
+/* Define to 1 if LAPACK is used */
+#undef WITH_LAPACK
+
+/* enable metis-dependent code */
+#undef WITH_METIS
+
+/* path to installed package p4est (optional) */
+#undef WITH_P4EST
+
+/* enable PETSc-dependent code */
+#undef WITH_PETSC
+
+/* path to installed package sc (optional) */
+#undef WITH_SC
