@@ -252,7 +252,7 @@ t8_advect_gradient_phi (t8_advect_problem_t * problem,
 static int
 t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
                  t8_locidx_t ltree_id, t8_locidx_t lelement_id,
-                 t8_eclass_scheme_c * ts, int num_elements,
+                 t8_eclass_scheme_c * ts, int is_family, int num_elements,
                  t8_element_t * elements[])
 {
   t8_advect_problem_t *problem;
@@ -269,7 +269,7 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
   problem = (t8_advect_problem_t *) t8_forest_get_user_data (forest);
   /* Get the element's level */
   level = ts->t8_element_level (elements[0]);
-  if (level == problem->maxlevel && num_elements == 1) {
+  if (level == problem->maxlevel && is_family == 0) {
     /* It is not possible to refine this level */
     return 0;
   }
@@ -295,7 +295,7 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
   elem_diam = t8_forest_element_diam (forest_from, ltree_id, elements[0]);
   if (fabs (phi) > 2 * band_width * elem_diam) {
     /* coarsen if this is a family and level is not too small */
-    return -(num_elements > 1 && level > problem->level);
+    return -(is_family == 1 && level > problem->level);
   }
   else if (fabs (phi) < band_width * elem_diam && elem_data->vol > vol_thresh) {
     /* refine if level is not too large */
