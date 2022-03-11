@@ -76,7 +76,7 @@ t8_basic_adapt (t8_forest_t forest, t8_forest_t forest_from,
   level = ts->t8_element_level (elements[0]);
   /* Check, if the element is not finer than the maximal refinement level */
   if (level >= maxlevel) {
-    /* We do not refine if the user maximum level is reached */
+    /* We do not refine if the maximum level is reached */
     return 0;
   }
   ts->t8_element_vertex_reference_coords (elements[0], 0, coords);
