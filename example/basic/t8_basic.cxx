@@ -110,7 +110,7 @@ t8_basic_hypercube (const int dim, const int do_balance)
   const int           uniform_lvl = 2;
 
   t8_global_productionf ("Contructing %i dimensional hypercube mesh \n", dim);
-  /* Create and save the cmesh */
+  /* Create the cmesh */
   cmesh = t8_basic_create_cmesh (dim);
 
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
