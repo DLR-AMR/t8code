@@ -33,7 +33,7 @@ t8_adapt_callback_refine (t8_forest_t forest,
 
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
   
-  for (size_t i = 0; i < 6; i++) {
+  for (int i = 0; i < 6; i++) {
     dist = t8_vec_dist(adapt_data->midpoint[i], centroid);
     if (dist < adapt_data->radius + adapt_data->with_ring) {
       return 1;
@@ -41,7 +41,6 @@ t8_adapt_callback_refine (t8_forest_t forest,
   }
   return 0;
 }
-
 
 int
 t8_adapt_callback_remove (t8_forest_t forest,
@@ -62,7 +61,7 @@ t8_adapt_callback_remove (t8_forest_t forest,
 
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
   
-  for (size_t i = 0; i < 6; i++) {
+  for (int i = 0; i < 6; i++) {
     dist = t8_vec_dist(adapt_data->midpoint[i], centroid);
     if (dist < adapt_data->radius) {
       return -2;
@@ -71,6 +70,7 @@ t8_adapt_callback_remove (t8_forest_t forest,
   return 0;
 }
 
+/* Coarse if at least one element of a family is within a given radius. */
 int
 t8_adapt_callback_coarse (t8_forest_t forest,
                           t8_forest_t forest_from,
@@ -87,13 +87,18 @@ t8_adapt_callback_coarse (t8_forest_t forest,
   double  dist;
 
   T8_ASSERT (adapt_data != NULL);
-
-  t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
   
-  for (size_t i = 0; i < 6; i++) {
-    dist = t8_vec_dist(adapt_data->midpoint[i], centroid);
-    if (is_family == 1 && dist < adapt_data->radius + adapt_data->with_ring) {
-      return -1;
+  if (is_family == 1) {
+    /* all Balls */
+    for (int i = 0; i < 6; i++) {
+      /* all member of family */
+      for (int j = 0; j < num_elements; j++) {
+        t8_forest_element_centroid (forest_from, which_tree, elements[j], centroid);
+        dist = t8_vec_dist(adapt_data->midpoint[i], centroid);
+        if (dist < adapt_data->radius + adapt_data->with_ring) {
+          return -1;
+        }
+      }
     }
   }
   return 0;
@@ -135,8 +140,8 @@ main (int argc, char **argv)
 
   comm = sc_MPI_COMM_WORLD;
 
-  cmesh = t8_cmesh_new_hypercube (T8_ECLASS_QUAD, comm, 0, 0, 0);
-  //cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
+  //cmesh = t8_cmesh_new_hypercube (T8_ECLASS_HEX, comm, 0, 0, 0);
+  cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
   
   forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0, comm);
   T8_ASSERT (t8_forest_is_committed (forest));
@@ -151,7 +156,7 @@ main (int argc, char **argv)
 
   forest_1 = t8_forest_new_adapt (forest  , t8_adapt_callback_refine, 0, 0, &adapt_data);
   forest_1 = t8_forest_new_adapt (forest_1, t8_adapt_callback_remove, 0, 0, &adapt_data);
-  t8_forest_write_vtk (forest_1, "t8_example_1");
+  //t8_forest_write_vtk (forest_1, "t8_example_1");
 
   t8_forest_ref (forest_1);
   forest_2 = t8_forest_new_adapt (forest_1, t8_adapt_callback_coarse, 0, 0, &adapt_data);
@@ -159,15 +164,15 @@ main (int argc, char **argv)
   forest_2 = t8_forest_new_adapt (forest_2, t8_adapt_callback_refine, 0, 0, &adapt_data);
   t8_forest_write_vtk (forest_2, "t8_example_2_2");  
   forest_2 = t8_forest_new_adapt (forest_2, t8_adapt_callback_remove, 0, 0, &adapt_data);
-  t8_forest_write_vtk (forest_2, "t8_example_2_3");
+  //t8_forest_write_vtk (forest_2, "t8_example_2_3");
 
 
   t8_global_productionf("Test\n");
   if (t8_forest_is_equal (forest_1, forest_2)) {
-    t8_global_productionf("Alles cool");
+    t8_global_productionf("Alles cool\n");
   }
   else {
-    t8_global_productionf("Nichts cool");
+    t8_global_productionf("Nichts cool\n");
   }
 
   //t8_forest_unref (&forest);
