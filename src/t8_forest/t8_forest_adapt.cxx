@@ -293,7 +293,7 @@ t8_forest_adapt (t8_forest_t forest)
          * */
 
         /* Assume family is complete */
-        num_elements = num_children;
+        is_family = 1;
 
         /* el_c is the Index of the el_considered in elements_from_copy */
         if (num_el_from < num_children){
@@ -335,7 +335,7 @@ t8_forest_adapt (t8_forest_t forest)
                                                                      el_considered - z),
                                       element_parent_compare);
           if (tscheme->t8_element_compare(element_parent_current, element_parent_compare) == 0) {
-            num_elements = 1;
+            is_family = 0;
           }
         }
         #endif
@@ -355,7 +355,7 @@ t8_forest_adapt (t8_forest_t forest)
               level = tscheme->t8_element_level(element_parent_compare);
             }
             if (tscheme->t8_element_compare(element_parent_compare, element_parent_current) == 0) {
-              num_elements = 1;
+              is_family = 0;
             }
           }
         }
@@ -380,7 +380,7 @@ t8_forest_adapt (t8_forest_t forest)
                 level = tscheme->t8_element_level(element_parent_compare);
               }
               if (tscheme->t8_element_compare(element_parent_compare, element_parent_current) == 0) {
-                num_elements = 1;
+                is_family = 0;
               }
             }
           } 
@@ -388,7 +388,7 @@ t8_forest_adapt (t8_forest_t forest)
       }
       else {
         /* We are certain that the elements do not form a family.
-          * So we will only pass the first element to the adapt callback. */
+         * So we will only pass the first element to the adapt callback. */
         is_family = 0;
         num_elements      = 1;
         num_elements_real = 1;
@@ -405,7 +405,7 @@ t8_forest_adapt (t8_forest_t forest)
       refine =
         forest->set_adapt_fn (forest, forest->set_from, ltree_id,
                               el_considered, tscheme, is_family, 
-                              num_elements, elements_from);
+                              num_elements_real, elements_from);
       /* [IL] TODO: T8_ASSERT is no longer meaningful. */
       // T8_ASSERT (is_family || refine >= 0);
       if (refine > 0 && tscheme->t8_element_level (elements_from[0]) >=

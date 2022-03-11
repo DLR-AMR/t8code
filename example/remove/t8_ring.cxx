@@ -20,7 +20,9 @@ t8_adapt_callback_refine (t8_forest_t forest,
                           t8_locidx_t which_tree,
                           t8_locidx_t lelement_id,
                           t8_eclass_scheme_c * ts,
-                          int num_elements, t8_element_t * elements[])
+                          int is_family,
+                          int num_elements, 
+                          t8_element_t * elements[])
 {
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
   
@@ -46,7 +48,9 @@ t8_adapt_callback_remove (t8_forest_t forest,
                           t8_locidx_t which_tree,
                           t8_locidx_t lelement_id,
                           t8_eclass_scheme_c * ts,
-                          int num_elements, t8_element_t * elements[])
+                          int is_family,
+                          int num_elements, 
+                          t8_element_t * elements[])
 {
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
   
@@ -68,14 +72,16 @@ t8_adapt_callback_remove (t8_forest_t forest,
 
 int
 t8_adapt_callback_coarse (t8_forest_t forest,
-                    t8_forest_t forest_from,
-                    t8_locidx_t which_tree,
-                    t8_locidx_t lelement_id,
-                    t8_eclass_scheme_c * ts,
-                    int num_elements, t8_element_t * elements[])
+                          t8_forest_t forest_from,
+                          t8_locidx_t which_tree,
+                          t8_locidx_t lelement_id,
+                          t8_eclass_scheme_c * ts,
+                          int is_family,
+                          int num_elements, 
+                          t8_element_t * elements[])
 {
   /* coarse every possible element */
-  if (num_elements > 1)
+  if (is_family == 1)
   {
     return -1;
   }
