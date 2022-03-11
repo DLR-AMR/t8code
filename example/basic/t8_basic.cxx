@@ -190,7 +190,7 @@ main (int argc, char **argv)
   sreturn =
     snprintf (help, BUFSIZ,
               "This program constructs a level 2 uniformly refined "
-              "cubical mesh, which is then adaptively refines with "
+              "cubical mesh, which is then adaptively refined with "
               "level 5 as the maximal level.\n"
               "The user can choose the dimension of the mesh "
               "and whether it should be balanced or not.\n\n%s\n", usage);
