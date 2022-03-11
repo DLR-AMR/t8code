@@ -121,7 +121,7 @@ t8_basic_hypercube (const int dim, const int do_balance)
     t8_global_productionf ("Output to %s\n", vtuname);
   }
   else {
-    t8_global_productionf ("Error when trying to write cmesh to %s.\n",
+    t8_errorf ("Error when trying to write cmesh to %s.\n",
                            vtuname);
   }
   /* Initialize the forest */
