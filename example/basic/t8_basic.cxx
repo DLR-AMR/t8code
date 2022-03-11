@@ -62,7 +62,7 @@ t8_basic_create_cmesh (const int dim)
   return cmesh;
 }
 
-/* The adapt Callback used in this examples. Every element that has an odd
+/* The adapt Callback used in this example. Every element that has an odd
  * x-coordinate (in its reference element) wrt to its level is refined up to the maximal refinement level */
 static int
 t8_basic_adapt (t8_forest_t forest, t8_forest_t forest_from,
