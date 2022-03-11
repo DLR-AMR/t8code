@@ -193,7 +193,7 @@ main (int argc, char **argv)
               "cubical mesh, which is then adaptively refined with "
               "level 5 as the maximal level.\n"
               "The user can choose the dimension of the mesh "
-              "and whether it should be balanced or not.\n\n%s\n", usage);
+              "and whether it should be 2:1 balanced or not.\n\n%s\n", usage);
   if (sreturn >= BUFSIZ) {
     /* help message was truncated. */
     /* Note: gcc >= 7.1 prints a warning if we 
