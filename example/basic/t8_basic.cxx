@@ -94,7 +94,7 @@ t8_basic_adapt (t8_forest_t forest, t8_forest_t forest_from,
   }
 }
 
-/** This function creates, adaptivly refines, partitions and optionally balances a
+/** This function creates, adaptively refines, partitions and optionally balances a
  * forest of the hypercube-mesh. For 1D a line is constructed, for 2D a mesh consisting of 2 triangles
  * forming a quad and in 3D a hybrid hypercube is created.
  * \param[in] dim         The dimension of the example
