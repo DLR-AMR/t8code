@@ -156,7 +156,7 @@ t8_basic_hypercube (const int dim, const int do_balance)
   t8_global_productionf ("Successfully committed forest.\n");
 
   /* Write output to a vtk file */
-  snprintf (vtuname, BUFSIZ, "forest_hypercube_%i_dim_adapt", dim);
+  snprintf (vtuname, BUFSIZ, "forest_hypercube_%id_adapt", dim);
   t8_forest_write_vtk (forest_adapt, vtuname);
   t8_global_productionf ("Output to %s\n", vtuname);
 
