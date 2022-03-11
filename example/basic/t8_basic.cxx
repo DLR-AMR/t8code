@@ -212,7 +212,7 @@ main (int argc, char **argv)
   sc_options_add_switch (opt, 'h', "help", &helpme,
                          "Display a short help message.");
   sc_options_add_int (opt, 'd', "dimension", &dim, 1,
-                      "The dimension of the mesh. Choose 1 <= dim <= 3.");
+                      "The dimension of the mesh. Choose 1 <= dimension <= 3.");
   sc_options_add_switch (opt, 'b', "balance", &do_balance,
                          "Additionally 2:1 balance the forest.");
 
