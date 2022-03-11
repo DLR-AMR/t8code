@@ -92,7 +92,7 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
     }
     if (isfamily
         && forest->set_adapt_fn (forest, forest->set_from, ltreeid,
-                                 lelement_id, ts, num_children, fam) < 0) {
+                                 lelement_id, ts, 1, num_children, fam) < 0) {
       /* Coarsen the element */
       *el_inserted -= num_children - 1;
       /* remove num_children - 1 elements from the array */
@@ -152,7 +152,7 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
     el_buffer[0] = (t8_element_t *) sc_list_pop (elem_list);
     num_children = ts->t8_element_num_children (el_buffer[0]);
     if (forest->set_adapt_fn (forest, forest->set_from, ltreeid, lelement_id,
-                              ts, 1, el_buffer) > 0) {
+                              ts, 0, 1, el_buffer) > 0) {
       /* The element should be refined */
       if (ts->t8_element_level (el_buffer[0]) < forest->maxlevel) {
         /* only refine, if we do not exceed the maximum allowed level */
@@ -198,9 +198,7 @@ t8_forest_adapt (t8_forest_t forest)
   int                 refine;
   int                 ci;
   int                 num_elements, num_elements_real;
-#ifdef T8_ENABLE_DEBUG
   int                 is_family;
-#endif
 
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->set_from != NULL);
@@ -268,11 +266,9 @@ t8_forest_adapt (t8_forest_t forest)
     /* We now iterate over all elements in this tree and check them for refinement/coarsening. */
     t8_debugf ("[IL] num_el_from             : %i \n", num_el_from);
     while (el_considered < num_el_from) {
-    t8_debugf ("[IL] --------el_considered------------ %i \n", el_considered);  
-#ifdef T8_ENABLE_DEBUG
+      t8_debugf ("[IL] --------el_considered------------ %i \n", el_considered);  
       /* Will get set to 1 later if this is a family */
       is_family = 0;
-#endif
       /* Load the current element and at most num_children-1 many others into
        * the elements_from buffer. Stop when we are certain that they cannot from
        * a family.
@@ -286,9 +282,7 @@ t8_forest_adapt (t8_forest_t forest)
       }
 
       if (zz == num_children && tscheme->t8_element_is_family (elements_from)) {
-#ifdef T8_ENABLE_DEBUG
         is_family = 1;
-#endif
         num_elements      = num_children;
         num_elements_real = num_children;
       }
@@ -395,9 +389,7 @@ t8_forest_adapt (t8_forest_t forest)
       else {
         /* We are certain that the elements do not form a family.
           * So we will only pass the first element to the adapt callback. */
-#ifdef T8_ENABLE_DEBUG
         is_family = 0;
-#endif
         num_elements      = 1;
         num_elements_real = 1;
       }
@@ -412,8 +404,8 @@ t8_forest_adapt (t8_forest_t forest)
        */
       refine =
         forest->set_adapt_fn (forest, forest->set_from, ltree_id,
-                              el_considered, tscheme, num_elements,
-                              elements_from);
+                              el_considered, tscheme, is_family, 
+                              num_elements, elements_from);
       /* [IL] TODO: T8_ASSERT is no longer meaningful. */
       // T8_ASSERT (is_family || refine >= 0);
       if (refine > 0 && tscheme->t8_element_level (elements_from[0]) >=

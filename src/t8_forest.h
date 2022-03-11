@@ -95,20 +95,21 @@ typedef void        (*t8_forest_replace_t) (t8_forest_t forest_old,
                                             t8_locidx_t first_incoming);
 
 /** Callback function prototype to decide for refining and coarsening.
- * If the \a num_elements equals the number of children then the elements
+ * If \a is_family equals 1, the first \a num_elements in \a elements
  * form a family and we decide whether this family should be coarsened
  * or only the first element should be refined.
- * Otherwise \a num_elements must equal one and we consider the first entry
- * of the element array for refinement. In this case the other entries of
- * the element array are undefined.
- * \param [in] forest      the forest to which the new elements belong
- * \param [in] forest_from the forest that is adapted.
- * \param [in] which_tree  the local tree containing \a elements
- * \param [in] lelement_id the local element id in \a forest_old in the tree of the current element
- * \param [in] ts          the eclass scheme of the tree
- * \param [in] num_elements the number of entries in \a elements
- * \param [in] elements    Pointers to a family or, if second entry is NULL,
- *                         pointer to one element.
+ * Otherwise \a is_family must equal zero and we consider the first entry
+ * of the element array for refinement. 
+ * Entries of the element array beyond the first \a num_elements are undefined.
+ * \param [in] forest       the forest to which the new elements belong
+ * \param [in] forest_from  the forest that is adapted.
+ * \param [in] which_tree   the local tree containing \a elements
+ * \param [in] lelement_id  the local element id in \a forest_old in the tree of the current element
+ * \param [in] ts           the eclass scheme of the tree
+ * \param [in] is_family    if 1 considre family, if 0 do not.
+ * \param [in] num_elements the number of entries in \a elements that are defined
+ * \param [in] elements     Pointers to a family or, if \a is_family is zero,
+ *                          pointer to one element.
  * \return greater zero if the first entry in \a elements should be refined,
  *         smaller zero if the family \a elements shall be coarsened,
  *         zero else.
@@ -120,6 +121,7 @@ typedef int         (*t8_forest_adapt_t) (t8_forest_t forest,
                                           t8_locidx_t which_tree,
                                           t8_locidx_t lelement_id,
                                           t8_eclass_scheme_c * ts,
+                                          int is_family,
                                           int num_elements,
                                           t8_element_t * elements[]);
 
