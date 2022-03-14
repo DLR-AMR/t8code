@@ -316,7 +316,8 @@ t8_forest_adapt (t8_forest_t forest)
         /* Get number of elements to be coarsed, if we coarse. */
         num_elements_real = 0;
         tscheme->t8_element_parent (elements_from_copy[el_c], element_parent_current);
-        for (z = 0; z < num_children; z++) {
+        for (z = 0; z < num_children &&
+                    el_considered + (t8_locidx_t) z - el_c < num_el_from; z++) {
           tscheme->t8_element_parent (elements_from_copy[z], element_parent_compare);
           if (tscheme->t8_element_compare(element_parent_current, element_parent_compare) == 0) {
             num_elements_real++;
@@ -346,7 +347,8 @@ t8_forest_adapt (t8_forest_t forest)
         int level, level_current;
         level_current = tscheme->t8_element_level(elements_from_copy[el_c]);
         tscheme->t8_element_parent(elements_from_copy[el_c], element_parent_current);
-        for (z = 0; z < num_children; z++) {
+        for (z = 0; z < num_children &&
+                    el_considered + (t8_locidx_t) z - el_c < num_el_from; z++) {
           level = tscheme->t8_element_level(elements_from_copy[z]);
           if (level > level_current) {
             tscheme->t8_element_copy(elements_from_copy[z], element_parent_compare);
@@ -365,13 +367,15 @@ t8_forest_adapt (t8_forest_t forest)
          * [IL] Question: Is this required if el_c > 0
          * */
         if (el_considered > (t8_locidx_t) num_children) {
-          for (z = 0; z < num_children; z++) {
+          for (z = 0; z < num_children &&
+                      el_considered + (t8_locidx_t) z - el_c < num_el_from; z++) {
               elements_from_copy[z] = t8_element_array_index_locidx (telements_from,
                                                                      el_considered + 
                                                                      z - num_children);
           }
           /* From here, it is the same test as before. */
-          for (z = 0; z < num_children; z++) {
+          for (z = 0; z < num_children&&
+                      el_considered + (t8_locidx_t) z - el_c < num_el_from; z++) {
             level = tscheme->t8_element_level(elements_from_copy[z]);
             if (level > level_current) {
               tscheme->t8_element_copy(elements_from_copy[z], element_parent_compare);
