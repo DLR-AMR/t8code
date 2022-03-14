@@ -323,7 +323,7 @@ t8_forest_adapt (t8_forest_t forest)
             num_elements_real++;
           }
         }
-        T8_ASSERT (num_elements_real <= num_elements);
+        T8_ASSERT (num_elements_real <= num_children);
         
         #if 1
         /* Check if already considered elements of current family passed, so current considered
