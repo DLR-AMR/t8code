@@ -231,7 +231,7 @@ t8_forest_adapt (t8_forest_t forest)
   num_trees = t8_forest_get_num_local_trees (forest);
   /* Iterate over the trees and build the new element arrays for each one. */
   for (ltree_id = 0; ltree_id < num_trees; ltree_id++) {
-    t8_debugf ("[IL] ltree_id                : %i \n", ltree_id);
+    //t8_debugf ("[IL] ltree_id                : %i \n", ltree_id);
     /* Get the new and old tree and the new and old element arrays */
     tree = t8_forest_get_tree (forest, ltree_id);
     tree_from = t8_forest_get_tree (forest_from, ltree_id);
@@ -264,9 +264,9 @@ t8_forest_adapt (t8_forest_t forest)
     tscheme->t8_element_new(1, &element_parent_current);
 
     /* We now iterate over all elements in this tree and check them for refinement/coarsening. */
-    t8_debugf ("[IL] num_el_from             : %i \n", num_el_from);
+    //t8_debugf ("[IL] num_el_from             : %i \n", num_el_from);
     while (el_considered < num_el_from) {
-      t8_debugf ("[IL] --------el_considered------------ %i \n", el_considered);  
+      //t8_debugf ("[IL] --------el_considered------------ %i \n", el_considered);  
       /* Will get set to 1 later if this is a family */
       is_family = 0;
       /* Load the current element and at most num_children-1 many others into
@@ -302,7 +302,7 @@ t8_forest_adapt (t8_forest_t forest)
         else {
           el_c = num_children - zz;
         }
-        t8_debugf ("[IL] el_c                    : %li \n", el_c);
+        //t8_debugf ("[IL] el_c                    : %li \n", el_c);
 
         /* If el_c == 0 then elements_from_copy is equal to elements_from 
          * Question [IL] is && el_considered + (t8_locidx_t) z - el_c < num_el_from required?
@@ -394,8 +394,8 @@ t8_forest_adapt (t8_forest_t forest)
         num_elements_real = 1;
       }
 
-      t8_debugf ("[IL] num_elements_real       : %i \n", num_elements_real);
-      t8_debugf ("[IL] num_elements            : %i \n", num_elements);
+      //t8_debugf ("[IL] num_elements_real       : %i \n", num_elements_real);
+      //t8_debugf ("[IL] num_elements            : %i \n", num_elements);
       /* Pass the element, or the family to the adapt callback.
        * The output will be  1 if the element should be refined
        *                     0 if the element should remain as is
@@ -413,7 +413,7 @@ t8_forest_adapt (t8_forest_t forest)
         /* Only refine an element if it does not exceed the maximum level */
         refine = 0;
       }
-      t8_debugf ("[IL] refine                  : %i \n", refine);
+      //t8_debugf ("[IL] refine                  : %i \n", refine);
       if (refine == 1) {
         /* The first element is to be refined */
         if (forest->set_adapt_recursive) {
