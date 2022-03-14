@@ -62,15 +62,16 @@ t8_basic_create_cmesh (const int dim)
   return cmesh;
 }
 
-/* The adapt Callback used in this example. Every element that has an odd
- * x-coordinate (in its reference element) wrt to its level is refined up to the maximal refinement level */
+/* The adapt Callback used in this example. We compute the center of the first given element
+ * If the x-coordinate of the center lays between 0.25 and 0.75 we refine. If it is smaller than 0.25
+ * we coarsen the element. Otherwise, we do nothing. */
 static int
 t8_basic_adapt (t8_forest_t forest, t8_forest_t forest_from,
                 t8_locidx_t which_tree, t8_locidx_t lelement_id,
                 t8_eclass_scheme_c * ts, int num_elements,
                 t8_element_t * elements[])
 {
-  int                 level;
+  int                 level, i;
   double              coords[3] = { 0, 0, 0 };
   const int           maxlevel = 5;
   level = ts->t8_element_level (elements[0]);
@@ -79,14 +80,22 @@ t8_basic_adapt (t8_forest_t forest, t8_forest_t forest_from,
     /* We do not refine if the maximum level is reached */
     return 0;
   }
-  ts->t8_element_vertex_reference_coords (elements[0], 0, coords);
-  /*If the x-coordinate lays between 0.25 and 0.75, we refine the element. */
+  t8_forest_element_centroid (forest_from, which_tree, elements[0], coords);
+  /* If the x-coordinate lays between 0.25 and 0.75, we refine the element. */
   if (0.25 <= coords[0] && coords[0] <= 0.75) {
     return 1;
   }
   /* If the x-coordinate is smaller than 0.25 we coarsen the element. */
-  else if (coords[0] < 0.25) {
-    return -1;
+  else if (coords[0] < 0.25 && num_elements > 1) {
+    /* Check that every element of the family should be coarsen. */
+    for (i = 1; i < num_elements; i++) {
+      t8_forest_element_centroid (forest_from, which_tree, elements[i],
+                                  coords);
+      if (coords[0] < 0.25) {
+        return -1;
+      }
+    }
+    return 0;
   }
   /* Do not refine or coarsen the element. */
   else {
@@ -98,7 +107,7 @@ t8_basic_adapt (t8_forest_t forest, t8_forest_t forest_from,
  * forest of the hypercube-mesh. For 1D a line is constructed, for 2D a mesh consisting of 2 triangles
  * forming a quad and in 3D a hybrid hypercube is created.
  * \param[in] dim         The dimension of the example
- * \param[in] do_balance  Option to partition the cmesh. If true (non-zero) the cmesh will be partitioned across the processes.  
+ * \param[in] do_balance  Option to balance the cmesh. If true (non-zero) a 2:1 balance will be established.  
 */
 static void
 t8_basic_hypercube (const int dim, const int do_balance)
@@ -121,8 +130,7 @@ t8_basic_hypercube (const int dim, const int do_balance)
     t8_global_productionf ("Output to %s\n", vtuname);
   }
   else {
-    t8_errorf ("Error when trying to write cmesh to %s.\n",
-                           vtuname);
+    t8_errorf ("Error when trying to write cmesh to %s.\n", vtuname);
   }
   /* Initialize the forest */
   t8_forest_init (&forest);
@@ -145,7 +153,7 @@ t8_basic_hypercube (const int dim, const int do_balance)
   /* Initialize a second forest, that will be the adaptively refined forest */
   t8_forest_init (&forest_adapt);
   /* Construct forest_adapt from forest */
-  t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt, 1);
+  t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt, 0);
   /* Construct balanced and partitioned forest */
   t8_forest_set_partition (forest_adapt, forest, 0);
   if (do_balance) {
@@ -175,10 +183,17 @@ main (int argc, char **argv)
   int                 parsed, helpme;
   int                 sreturn;
 
+  mpiret = sc_MPI_Init (&argc, &argv);
+  SC_CHECK_MPI (mpiret);
+
+  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
+  t8_init (SC_LP_DEFAULT);
+
   /* brief help message */
   sreturn = snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS>\n\t%s -h\t"
                       "for a brief overview of all options.",
                       basename (argv[0]), basename (argv[0]));
+
   if (sreturn >= BUFSIZ) {
     /* Usage string was truncated. */
     /* Note: gcc >= 7.1 prints a warning if we 
@@ -200,12 +215,6 @@ main (int argc, char **argv)
      * do not check the return value of snprintf. */
     t8_debugf ("Warning: Truncated help message to '%s'\n", help);
   }
-
-  mpiret = sc_MPI_Init (&argc, &argv);
-  SC_CHECK_MPI (mpiret);
-
-  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-  t8_init (SC_LP_DEFAULT);
 
   /* initialize command line argument parser */
   opt = sc_options_new (argv[0]);
