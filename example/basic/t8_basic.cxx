@@ -227,6 +227,9 @@ main (int argc, char **argv)
 
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
+    
+    /* Print usage */
+    sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   if (helpme) {
     /* display help message and usage */
     t8_global_productionf ("%s\n", help);
