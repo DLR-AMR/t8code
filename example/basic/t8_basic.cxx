@@ -118,7 +118,8 @@ t8_basic_hypercube (const int dim, const int do_balance)
   int                 mpirank, mpiret;
   const int           uniform_lvl = 2;
 
-  t8_global_productionf ("Constructing %i dimensional hypercube mesh \n", dim);
+  t8_global_productionf ("Constructing %i dimensional hypercube mesh \n",
+                         dim);
   /* Create the cmesh */
   cmesh = t8_basic_create_cmesh (dim);
 
@@ -227,9 +228,9 @@ main (int argc, char **argv)
 
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
-    
-    /* Print usage */
-    sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
+
+  /* Print usage */
+  sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   if (helpme) {
     /* display help message and usage */
     t8_global_productionf ("%s\n", help);
