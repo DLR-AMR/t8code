@@ -233,7 +233,6 @@ main (int argc, char **argv)
   if (helpme) {
     /* display help message and usage */
     t8_global_productionf ("%s\n", help);
-    sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else if (parsed >= 0 && 1 <= dim && dim <= 3) {
     t8_basic_hypercube (dim, do_balance);
