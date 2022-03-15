@@ -33,7 +33,6 @@
 #include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_cmesh/t8_cmesh_trees.h>
 
-
 void
 t8_forest_init (t8_forest_t * pforest)
 {
