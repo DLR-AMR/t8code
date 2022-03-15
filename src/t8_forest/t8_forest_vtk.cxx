@@ -788,36 +788,11 @@ t8_forest_vtk_cells_vertices_kernel (t8_forest_t forest, t8_locidx_t ltree_id,
 #endif
   double              element_coordinates[3];
   int                 num_el_vertices, ivertex;
-
   int                 freturn;
 
   if (modus != T8_VTK_KERNEL_EXECUTE) {
     /* Nothing to do if we are in Init or clean up mode */
     return 1;
-  }
-  num_tree_vertices = t8_eclass_num_vertices[ts->eclass];
-  T8_ASSERT (modus == T8_VTK_KERNEL_EXECUTE);
-  vertex_data = (struct t8_forest_vtk_vertices_t *) *data;
-  if (ltree_id != vertex_data->ltreeid) {
-    t8_cmesh_t          cmesh;
-    t8_locidx_t         cmesh_local_id;
-    double             *temp_vertices;
-
-    /* The current tree is not the tree that we stored from
-     * the last call to this function */
-    vertex_data->ltreeid = ltree_id;
-    /* get the coarse mesh tree */
-    cmesh = t8_forest_get_cmesh (forest);
-    /* Comput the cmesh local id of the tree */
-    cmesh_local_id = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltree_id);
-    /* Get the vertex coordinates of this tree */
-    temp_vertices = ((double *) t8_cmesh_get_attribute (cmesh,
-                                                        t8_get_package_id (),
-                                                        0, cmesh_local_id));
-
-    /* Copy the tree's vertex coordinates into the struct of the data pointer */
-    memcpy (vertex_data->tree_vertices, temp_vertices, sizeof (*temp_vertices)
-            * num_tree_vertices * 3);
   }
 
   /* TODO: be careful with pyramid class here.
