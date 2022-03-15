@@ -118,7 +118,7 @@ t8_basic_hypercube (const int dim, const int do_balance)
   int                 mpirank, mpiret;
   const int           uniform_lvl = 2;
 
-  t8_global_productionf ("Contructing %i dimensional hypercube mesh \n", dim);
+  t8_global_productionf ("Constructing %i dimensional hypercube mesh \n", dim);
   /* Create the cmesh */
   cmesh = t8_basic_create_cmesh (dim);
 
