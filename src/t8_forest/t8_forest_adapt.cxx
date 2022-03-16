@@ -199,6 +199,7 @@ t8_forest_adapt (t8_forest_t forest)
   int                 ci;
   int                 num_elements;
   int                 is_family;
+  int                 element_id = 0;
 
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->set_from != NULL);
@@ -281,16 +282,19 @@ t8_forest_adapt (t8_forest_t forest)
                                                            zz);
       }
 
+#if 0
+      /* tscheme->t8_element_is_family(elements_from) considers only level and coordinates
+       * => t8_element_is_family is not valide any more!
+       **/
       if (zz == num_children && tscheme->t8_element_is_family (elements_from)) {
         is_family = 1;
         num_elements      = num_children;
       }
-      else if (0 < tscheme->t8_element_level(elements_from[0])) {
-        /* We are certain that the elements do not form a complete family.
-         * So we have to check if elements where removed and we got an
-         * incomplete family. 
-         * */
-
+#endif
+      /* We first assume that we have an (in)complete family. 
+       * In the following we try to disprove this.
+       * */
+      if (0 < tscheme->t8_element_level(elements_from[0])) {
         /* Assume family is complete */
         is_family = 1;
 
@@ -303,9 +307,7 @@ t8_forest_adapt (t8_forest_t forest)
         }
         //t8_debugf ("[IL] el_c                    : %li \n", el_c);
 
-        /* If el_c == 0 then elements_from_copy is equal to elements_from 
-         * Question [IL] is && el_considered + (t8_locidx_t) z - el_c < num_el_from required?
-         * */
+        /* If el_c == 0 then elements_from_copy is equal to elements_from */
         for (z = 0; z < num_children &&
                     el_considered + (t8_locidx_t) z - (t8_locidx_t) el_c < num_el_from; z++) {
             elements_from_copy[z] = t8_element_array_index_locidx (telements_from,
@@ -361,7 +363,7 @@ t8_forest_adapt (t8_forest_t forest)
           }
         }
 
-        /* Also check num_childrem elements before el_considered, if they will get eaten.
+        /* Check num_childrem elements before el_considered, if they will get eaten.
          * Reason: current element could be on boarder
          * [IL] Question: Is this required if el_c > 0
          * */
@@ -372,7 +374,8 @@ t8_forest_adapt (t8_forest_t forest)
                                                                      el_considered + 
                                                                      z - num_children);
           }
-          /* From here, it is the same test as before. */
+          /* From here, it is the same test as before. 
+           * [IL] Question: Ca we do it in one step?*/
           for (z = 0; z < num_children&&
                       el_considered + (t8_locidx_t) z - (t8_locidx_t) el_c < num_el_from; z++) {
             level = tscheme->t8_element_level(elements_from_copy[z]);
@@ -392,7 +395,7 @@ t8_forest_adapt (t8_forest_t forest)
       else {
         /* We are certain that the elements do not form a family.
          * So we will only pass the first element to the adapt callback. */
-        is_family = 0;
+        is_family         = 0;
         num_elements      = 1;
       }
 
@@ -450,6 +453,7 @@ t8_forest_adapt (t8_forest_t forest)
           el_inserted += num_children;
         }
         el_considered++;
+        element_id++;
       }
       else if (refine == -1) {
         /* The elements form a family and are to be coarsened. */
@@ -473,7 +477,8 @@ t8_forest_adapt (t8_forest_t forest)
                                                &el_inserted, elements);
           }
         }
-        el_considered += num_elements; 
+        el_considered += num_elements;
+        element_id    += num_elements; 
       }
       else if (refine == 0) {
         /* The considered elements are neither to be coarsened nor is the first
@@ -495,10 +500,12 @@ t8_forest_adapt (t8_forest_t forest)
                                              &el_inserted, elements);
         }
         el_considered++;
+        element_id++;
       }
       else if (refine == -2) {
         /* The element is to be removed */
         el_considered++;
+        element_id++;
       }
 
     }
