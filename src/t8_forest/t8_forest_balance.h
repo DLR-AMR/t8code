@@ -21,7 +21,7 @@
 */
 
 /** \file t8_forest_balance.h
- * We define the balance routine to establish a 1:2 balance among the elements
+ * We define the balance routine to establish a 2:1 balance among the elements
  * in a forest.
  */
 
@@ -36,8 +36,22 @@
 T8_EXTERN_C_BEGIN ();
 
 /* TODO: document
- * only temporary and will be replaced in future */
+ * only temporary and will be replaced in future 
+ * \param [in, out] forest  The forest to create. Its forest_from pointer must be a committed forest which will get balanced.
+ * \param [in]      repartition Flag to specify whether the forest should be additionally repartitioned after balance.
+ */
 void                t8_forest_balance (t8_forest_t forest, int repartition);
+
+/* Adapt and balance in the same step. Does not use recursive adapting,
+ * so all elements will change at most by one level (coarser or finer).
+ * This routine is more efficient than t8_forest_balance and is therefore preferred.
+ * (TODO: justify this with performance measurements)
+ * The initial forest (the forest_from pointer of the forest argument) must be already balanced.
+ * 
+ * \param [in, out] forest  The forest to create. Its forest_from pointer must be a committed forest which will get adapted and balanced.
+ * TODO: Will ghost values be created during the algorithm? If so, we must declare it here in the documentation.
+ */
+void                t8_forest_balance_and_adapt (t8_forest_t forest);
 
 /* Check whether the local elements of a forest are balanced. */
 int                 t8_forest_is_balanced (t8_forest_t forest);

@@ -100,7 +100,9 @@ t8_default_mempool_free (sc_mempool_t * ts_context, int length,
 
   T8_ASSERT (ts_context != NULL);
   T8_ASSERT (0 <= length);
-  T8_ASSERT (elem != NULL);
+  /* It is legal to call this function with elem = NULL and length = 0,
+   * but not legal to call it with elem = NULL and length > 0 */
+  T8_ASSERT (length == 0 || elem != NULL);
 
   for (i = 0; i < length; ++i) {
     sc_mempool_free (ts_context, elem[i]);

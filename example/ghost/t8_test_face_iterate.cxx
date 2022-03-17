@@ -20,6 +20,8 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/* TODO: Document what this example does */
+
 #include <t8_forest/t8_forest_iterate.h>
 #include <sc_options.h>
 #include <sc_refcount.h>
@@ -30,7 +32,7 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_cmesh_vtk.h>
-#include <t8_data/t8_containers.h>
+#include <t8_data/t8_element_array.h>
 
 typedef struct
 {
@@ -62,7 +64,7 @@ static int
 t8_basic_adapt (t8_forest_t forest, t8_forest_t forest_from,
                 t8_locidx_t which_tree, t8_locidx_t lelement_id,
                 t8_eclass_scheme_c * ts, int num_elements,
-                t8_element_t * elements[])
+                const t8_element_t * elements[])
 {
   int                 mpirank, mpiret;
   T8_ASSERT (num_elements == 1 || num_elements ==

@@ -127,6 +127,10 @@ t8_forest_min_nonempty_level (t8_cmesh_t cmesh, t8_scheme_cxx_t * scheme)
    * trees * min_num_child^l >= mpisize
    *  <=>  l >= log (mpisize/trees) / log (min_num_child)
    */
+  if (min_num_childs == 1) {
+    /* It may be impossible to reach a nonempty uniform refinement */
+    return -1;
+  }
   level =
     ceil (log (cmesh->mpisize / (double) cmesh->num_trees) /
           log (min_num_childs));
@@ -1729,7 +1733,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
     }
     if (gneigh_treeid < 0) {
       /* There exists no face neighbor across this face, we return with this info */
-      neigh_scheme->t8_element_destroy (1, neighbor_leafs);
+      neigh_scheme->t8_element_destroy (num_children_at_face, neighbor_leafs);
       T8_FREE (neighbor_leafs);
       T8_FREE (*dual_faces);
       *dual_faces = NULL;

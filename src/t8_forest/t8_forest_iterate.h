@@ -106,10 +106,10 @@ void                t8_forest_search (t8_forest_t forest,
                                       t8_forest_search_query_fn query_fn,
                                       sc_array_t * queries);
 
-/** Given two forest where the elemnts in one forest are either direct children or
- * parents of the elements in the other forest
+/** Given two forests - where the elements in one forest are either direct children or
+ * parents of the elements in the other forest -
  * compare the two forests and for each refined element or coarsened
- * family in the old one, call a callback function providing the local indices
+ * family in the old one execute a callback function providing the local indices
  * of the old and new elements.
  * \param [in]  forest_new  A forest, each element is a parent or child of an element in \a forest_old.
  * \param [in]  forest_old  The initial forest.
