@@ -196,8 +196,8 @@ t8_flow_rotation_2d (const double x_in[3], double t, double x_out[3])
 {
   double              x = x_in[0], y = x_in[1];
 
-  //x -= 0.5;
-  //y -= 0.5;
+  x -= 0.5;
+  y -= 0.5;
 
   x_out[0] = y;
   x_out[1] = -x;
@@ -425,11 +425,7 @@ t8_flow_around_circle_with_angular_velocity (const double x[3], double t, double
   // convert to polar coordinates
   double r = sqrt(x[0] * x[0] + x[1] * x[1]);
   double theta = atan2(x[1], x[0]);
-  if (r < radius)
-  {
-    x_out[0] = x_out[1] = x_out[2] = 0;
-    return;
-  }
+
   //calculate flow
   double u_r = (1 - (radius*radius) / (r*r)) * cos(theta);
   double u_theta = -(1 + (radius*radius) / (r*r)) * sin(theta) - omega / (2 * M_PI * r);
@@ -437,7 +433,7 @@ t8_flow_around_circle_with_angular_velocity (const double x[3], double t, double
   // convert back to Cartesian
   x_out[0] = cos(theta) * u_r - sin(theta) * u_theta;
   x_out[1] = sin(theta) * u_r + cos(theta) * u_theta;
-  x_out[2] = 1;
+  x_out[2] = 0;
 }
 
 T8_EXTERN_C_END ();
