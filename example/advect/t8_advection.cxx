@@ -1610,14 +1610,16 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                   neigh_scheme->t8_element_level (neighs[ineigh]);
               }
 
+              T8_ASSERT (neighs != NULL || elem_data->num_neighbors[iface] == 0);
+              if (neighs != NULL)
+              {
+                /* *INDENT-OFF* */
+                neigh_scheme->t8_element_destroy (elem_data->num_neighbors[iface],
+                                                  neighs);
+                /* *INDENT-ON* */
 
-
-              /* *INDENT-OFF* */
-              neigh_scheme->t8_element_destroy (elem_data->num_neighbors[iface],
-                                                neighs);
-              /* *INDENT-ON* */
-
-              T8_FREE (neighs);
+                T8_FREE (neighs);
+              }
 
               /* Allocate flux storage */
               elem_data->fluxes[iface] =
