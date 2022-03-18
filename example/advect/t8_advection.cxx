@@ -1886,7 +1886,10 @@ main (int argc, char *argv[])
                       "\t\t\tIt reverses direction at t = 0.5.\n"
                       "\t\t4 - 2D rotation around (0.5,0.5).\n"
                       "\t\t5 - 2D flow around circle at (0.5,0.5)"
-                      "with radius 0.15.\n)");
+                      "with radius 0.15.\n"
+                      "\t\t6 - A solution to the stokes equation on a spherical shell.\n"
+                      "\t\t7 - Flow past a rotating cylinder of radius of 0.5"
+                      " around the z-axis.\n");
   sc_options_add_int (opt, 'l', "level", &level, 0,
                       "The minimum refinement level of the mesh.");
   sc_options_add_int (opt, 'r', "rlevel", &reflevel, 0,
@@ -1898,7 +1901,7 @@ main (int argc, char *argv[])
                       "\t\t3 - triangle\n\t\t4 - hexahedron\n"
                       "\t\t5 - tetrahedron\n\t\t6 - prism\n"
                       "\t\t7 - triangle/quad (hybrid 2d).\n"
-                      "\t\t8 - tet/hex/prism (hybrid 3d).");
+                      "\t\t8 - tet/hex/prism (hybrid 3d).\n");
   sc_options_add_string (opt, 'f', "mshfile", &mshfile, NULL,
                          "If specified, the cmesh is constructed from a .msh file with "
                          "the given prefix.\n\t\t\t\t     The files must end in .msh "
@@ -1918,7 +1921,7 @@ main (int argc, char *argv[])
   sc_options_add_double (opt, 'b', "band-width", &band_width,
                          1,
                          "Control the width of the refinement band around\n"
-                         " the zero level-set. Default 1.");
+                         "\t\t\t\t     the zero level-set. Default 1.");
 
   sc_options_add_int (opt, 'a', "adapt-freq", &adapt_freq, 1,
                       "Controls how often the mesh is readapted. "
@@ -1953,7 +1956,7 @@ main (int argc, char *argv[])
   sc_options_add_int (opt, 'V', "volume-refine", &volume_refine, -1,
                       "Refine elements close to the 0 level-set only "
                       "if their volume is smaller than the l+V-times refined\n"
-                      " smallest element int the mesh.");
+                      "\t\t\t\t     smallest element int the mesh.");
 
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
