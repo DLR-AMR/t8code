@@ -190,14 +190,13 @@ t8_forest_adapt (t8_forest_t forest)
   t8_locidx_t         el_coarsen;
   t8_locidx_t         num_el_from;
   t8_locidx_t         el_offset;
-  size_t              num_children, zz, z, el_c;
+  size_t              num_children, num_elements, zz, z, el_c;
   t8_tree_t           tree, tree_from;
   t8_eclass_scheme_c *tscheme;
   t8_element_t      **elements, **elements_from, **elements_from_copy;
   t8_element_t       *element_parent_compare, *element_parent_current;
   int                 refine;
   int                 ci;
-  int                 num_elements;
   int                 is_family;
   int                 level, level_current;
 
@@ -284,8 +283,8 @@ t8_forest_adapt (t8_forest_t forest)
        * => t8_element_is_family is not valide any more!
        **/
       if (zz == num_children && tscheme->t8_element_is_family (elements_from)) {
-        is_family = 1;
-        num_elements      = num_children;
+        is_family    = 1;
+        num_elements = num_children;
       }
 #endif
       /* We first assume that we have an (in)complete family. 
@@ -396,7 +395,7 @@ t8_forest_adapt (t8_forest_t forest)
         is_family         = 0;
         num_elements      = 1;
       }
-      T8_ASSERT ((size_t) num_elements <= num_children);
+      T8_ASSERT (num_elements <= num_children);
 
       /* Pass the element, or the family to the adapt callback.
        * The output will be  1 if the element should be refined
