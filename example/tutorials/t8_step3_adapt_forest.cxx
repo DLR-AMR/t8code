@@ -89,7 +89,7 @@ struct t8_step3_adapt_data
  * \param [in] which_tree   The process local id of the current tree.
  * \param [in] lelement_id  The tree local index of the current element (or the first of the family).
  * \param [in] ts           The refinement scheme for this tree's element class.
- * \param [in] is_family    If 1 considre family, if 0 do not.
+ * \param [in] is_family    if 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
  * \param [in] num_elements The number of entries in \a elements elements that are defined.
  * \param [in] elements     The element or family of elements to consider for refinement/coarsening.
  */
