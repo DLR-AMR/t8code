@@ -68,8 +68,8 @@ t8_basic_create_cmesh (const int dim)
 static int
 t8_basic_adapt (t8_forest_t forest, t8_forest_t forest_from,
                 t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                t8_eclass_scheme_c * ts, int num_elements,
-                t8_element_t * elements[])
+                t8_eclass_scheme_c * ts, const int is_family, 
+                const int num_elements, t8_element_t * elements[])
 {
   int                 level, i;
   double              coords[3] = { 0, 0, 0 };
@@ -86,7 +86,7 @@ t8_basic_adapt (t8_forest_t forest, t8_forest_t forest_from,
     return 1;
   }
   /* If the x-coordinate is smaller than 0.25 we coarsen the element. */
-  else if (coords[0] < 0.25 && num_elements > 1) {
+  else if (coords[0] < 0.25 && is_family == 1) {
     /* Check that every element of the family should be coarsen. */
     for (i = 1; i < num_elements; i++) {
       t8_forest_element_centroid (forest_from, which_tree, elements[i],
