@@ -99,8 +99,8 @@ t8_step3_adapt_callback (t8_forest_t forest,
                          t8_locidx_t which_tree,
                          t8_locidx_t lelement_id,
                          t8_eclass_scheme_c * ts,
-                         int is_family,
-                         int num_elements,
+                         const int is_family,
+                         const int num_elements,
                          t8_element_t * elements[])
 {
   /* Our adaptation criterion is to look at the midpoint coordinates of the current element and if

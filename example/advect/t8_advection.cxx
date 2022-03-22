@@ -252,8 +252,8 @@ t8_advect_gradient_phi (t8_advect_problem_t * problem,
 static int
 t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
                  t8_locidx_t ltree_id, t8_locidx_t lelement_id,
-                 t8_eclass_scheme_c * ts, int is_family, int num_elements,
-                 t8_element_t * elements[])
+                 t8_eclass_scheme_c * ts, const int is_family,
+                 const int num_elements, t8_element_t * elements[])
 {
   t8_advect_problem_t *problem;
   t8_advect_element_data_t *elem_data;

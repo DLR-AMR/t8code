@@ -96,7 +96,8 @@ int                 t8_common_adapt_balance (t8_forest_t forest,
                                              t8_locidx_t which_tree,
                                              t8_locidx_t lelement_id,
                                              t8_eclass_scheme_c * ts,
-                                             int num_elements,
+                                             const int is_family,
+                                             const int num_elements,
                                              t8_element_t * elements[]);
 
 /** Adapt a forest along a given level-set function.
@@ -111,8 +112,8 @@ int                 t8_common_adapt_level_set (t8_forest_t forest,
                                                t8_locidx_t which_tree,
                                                t8_locidx_t lelement_id,
                                                t8_eclass_scheme_c * ts,
-                                               int is_family,
-                                               int num_elements,
+                                               const int is_family,
+                                               const int num_elements,
                                                t8_element_t * elements[]);
 
 /** Real valued functions defined in t8_example_common_functions.h */
