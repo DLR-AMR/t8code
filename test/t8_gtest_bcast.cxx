@@ -21,6 +21,12 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/*
+  This test checks that creating a hypercube coarse mesh on processor 0
+  and broadcasting it results in the same coarse mesh as creating it
+  on all processes directly
+*/
+
 #include <gtest/gtest.h>
 #include <t8_cmesh.h>
 
