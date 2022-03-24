@@ -46,31 +46,6 @@ typedef t8_eclass_t t8_element_shape_t;
 /** The maximum number of cornes a 3-dimensional element class can have. */
 #define T8_ELEMENT_SHAPE_MAX_CORNERS 8
 
-#if 0
-/** The number of codimension-one boundaries of an element class. */
-extern const int    t8_element_shape_num_faces[T8_ELEMENT_SHAPE_MAX_FACES] =
-  t8_eclass_num_faces;
-
-/** For each dimension the maximum possible number of faces of an element_shape of that dimension. */
-extern const int    t8_element_shape_max_num_faces[T8_ECLASS_MAX_DIM + 1] =
-  t8_eclass_max_num_faces;
-
-/** For each dimension the maximum possible number of corner nodes of an element shape of that dimension */
-extern const int    t8_element_shape_max_num_corners[T8_ECLASS_MAX_DIM + 1];
-
-/** The number of vertices of an element class. */
-extern const int    t8_element_shape_num_vertices[T8_ECLASS_COUNT] =
-  t8_eclass_num_vertices;
-
-/** The vtk cell type for the element_shape */
-extern const int    t8_element_shape_vtk_type[T8_ECLASS_COUNT] =
-  t8_eclass_vtk_type;
-
-/** For each element_shape, the name of this class as a string */
-extern const char  *t8_element_shape_to_string[T8_ECLASS_COUNT] =
-  t8_eclass_to_string;
-#endif
-
 /* Maximum possible number of corner nodes of an element in a specific dimension */
 extern const int    t8_element_shape_max_num_corner[T8_ECLASS_MAX_DIM + 1];
 
@@ -79,10 +54,7 @@ int                 t8_element_shape_num_faces (int element_shape);
 
 /** For each dimension the maximum possible number of faces of an element_shape of that dimension. */
 int                 t8_element_shape_max_num_faces (int element_shape);
-#if 0
-/* Maximum possible number of corner nodes per dimension */
-int                 t8_element_shape_max_num_corners (int element_shape);
-#endif
+
 /** The number of vertices of an element class. */
 int                 t8_element_shape_num_vertices (int element_shape);
 
@@ -94,7 +66,7 @@ int                 t8_element_shape_vtk_corner_number (int element_shape,
                                                         int index);
 
 /** For each element_shape, the name of this class as a string */
-char               *t8_element_shape_to_string (int element_shape);
+const char         *t8_element_shape_to_string (int element_shape);
 
 /** Compare two element_shapees of the same dimension
  *  as necessary for face neighbor orientation.

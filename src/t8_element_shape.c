@@ -39,14 +39,6 @@ t8_element_shape_max_num_faces (int element_shape)
   return t8_eclass_max_num_faces[element_shape];
 }
 
-#if 0
-/* Maximum possible number of corner nodes per dimension */
-int
-t8_element_shape_max_num_corners (int element_shape)
-{
-  return t8_element_shape_max_num_corner[element_shape];
-}
-#endif
 /** The number of vertices of an element class. */
 int
 t8_element_shape_num_vertices (int element_shape)
@@ -69,7 +61,7 @@ t8_element_shape_vtk_corner_number (int element_shape, int index)
 }
 
 /** For each element_shape, the name of this class as a string */
-char               *
+const char         *
 t8_element_shape_to_string (int element_shape)
 {
   return t8_eclass_to_string[element_shape];
