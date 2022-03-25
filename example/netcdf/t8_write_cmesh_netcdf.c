@@ -63,8 +63,8 @@ t8_example_netcdf_write_cmesh (sc_MPI_Comm comm)
   cmesh = t8_cmesh_new_hypercube (T8_ECLASS_TET, comm, 0, 1, 0);
 
   /* Number of process local elements */
-  printf ("[t8] Number of local trees on process %d : %d\n", mpirank,
-          t8_cmesh_get_num_local_trees (cmesh));
+  t8_global_productionf ("Number of local trees on process %d : %d\n",
+                         mpirank, t8_cmesh_get_num_local_trees (cmesh));
 
   /* *Example user-defined NetCDF variable, mpirank* */
   /* Allocate the data which lays on the several processes */
@@ -98,7 +98,7 @@ t8_example_netcdf_write_cmesh (sc_MPI_Comm comm)
     sc_array_new_data (random_values, sizeof (double),
                        t8_cmesh_get_num_local_trees (cmesh));
 
-  /* Create the integer NetCDF variable; parameters are (name of the variable, descriptive long name of the variable, description of the data's unit (i.e. degrees Celsius), pointer to sc_array_t which provides the data) */
+  /* Create the double NetCDF variable; parameters are (name of the variable, descriptive long name of the variable, description of the data's unit (i.e. degrees Celsius), pointer to sc_array_t which provides the data) */
   ext_var_random_values =
     t8_netcdf_create_double_var ("random values", "Random values in [0,10)",
                                  "double", var_random_values);
