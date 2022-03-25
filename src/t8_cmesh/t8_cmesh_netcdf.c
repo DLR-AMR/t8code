@@ -981,8 +981,9 @@ t8_cmesh_write_netcdf_file (t8_cmesh_t cmesh,
                             sc_MPI_Comm comm)
 {
 #if T8_WITH_NETCDF
-  t8_gloidx_t         num_global_trees;
   int                 retval;
+#endif
+  t8_gloidx_t         num_global_trees;
 
   /* Check if the cmesh was committed. */
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
@@ -995,11 +996,13 @@ t8_cmesh_write_netcdf_file (t8_cmesh_t cmesh,
 
   /* Create the NetCDF file, the NC_CLOBBER parameter tells netCDF to overwrite this file, if it already exists. Leaves the file in 'define-mode'. */
   /* Since NetCDF version 4.6.2 NC_MPIIO seems to be redundant/not necessary */
+#if T8_WITH_NETCDF
   if ((retval =
        nc_create_par (context->filename, NC_CLOBBER | NC_NETCDF4
                       | NC_MPIIO, comm, sc_MPI_INFO_NULL, &context->ncid))) {
     ERR (retval);
   }
+#endif
   t8_debugf ("NetCDf-file has been created.\n");
 
   /* Define the first NetCDF-dimensions (nMesh_node is not known yet) */
@@ -1009,6 +1012,7 @@ t8_cmesh_write_netcdf_file (t8_cmesh_t cmesh,
   t8_cmesh_write_netcdf_variables (context, namespace_context);
 
   /* Disable the default fill-value-mode. */
+#if T8_WITH_NETCDF
   if ((retval =
        nc_set_fill (context->ncid, NC_NOFILL, &context->old_fill_mode))) {
     ERR (retval);
@@ -1033,14 +1037,17 @@ t8_cmesh_write_netcdf_file (t8_cmesh_t cmesh,
   if ((retval = nc_enddef (context->ncid))) {
     ERR (retval);
   }
+#endif
 
   /* Fill the already defined NetCDF-variables and calculate the 'nMesh_node' (global number of nodes) -dimension */
   t8_cmesh_write_netcdf_data (cmesh, context, comm);
 
   /* Leave the NetCDF-data-mode and re-enter the define-mode. */
+#if T8_WITH_NETCDF
   if ((retval = nc_redef (context->ncid))) {
     ERR (retval);
   }
+#endif
 
   /* Define the NetCDF-dimension 'nMesh_node' */
   t8_cmesh_write_netcdf_coordinate_dimension (context, namespace_context);
@@ -1053,6 +1060,7 @@ t8_cmesh_write_netcdf_file (t8_cmesh_t cmesh,
                                    num_extern_netcdf_vars, ext_variables,
                                    comm);
 
+#if T8_WITH_NETCDF
   /* Disable the default fill-value-mode. */
   if ((retval =
        nc_set_fill (context->ncid, NC_NOFILL, &context->old_fill_mode))) {
@@ -1063,7 +1071,7 @@ t8_cmesh_write_netcdf_file (t8_cmesh_t cmesh,
   if ((retval = nc_enddef (context->ncid))) {
     ERR (retval);
   }
-
+#endif
   /* Write the NetCDF-coordinate variable data */
   t8_cmesh_write_netcdf_coordinate_data (cmesh, context, comm);
 
@@ -1072,12 +1080,14 @@ t8_cmesh_write_netcdf_file (t8_cmesh_t cmesh,
                                    ext_variables, comm);
 
   /* All data has been written to the NetCDF-file, therefore, close the file. */
+#if T8_WITH_NETCDF
   if ((retval = nc_close (context->ncid))) {
     ERR (retval);
   }
-
   t8_debugf ("The NetCDF-File has been written and closed.\n");
-
+#else
+  t8_global_errorf
+    ("This version of t8code is not compiled with netcdf support.\n");
 #endif
 }
 
@@ -1089,7 +1099,6 @@ t8_cmesh_write_netcdf (t8_cmesh_t cmesh, const char *file_prefix,
                        t8_netcdf_variable_t * ext_variables[],
                        sc_MPI_Comm comm)
 {
-#if T8_WITH_NETCDF
   t8_cmesh_netcdf_context_t context;
   /* Check whether pointers are not NULL */
   T8_ASSERT (file_title != NULL);
@@ -1106,8 +1115,10 @@ t8_cmesh_write_netcdf (t8_cmesh_t cmesh, const char *file_prefix,
   context.start_index = 0;
   context.convention = "UGRID v1.0";
   /* Set the netCDF per variable storage and mpi-access patterns */
+#if T8_WITH_NETCDF
   context.netcdf_var_storage_mode = NC_CONTIGUOUS;
   context.netcdf_mpi_access = NC_INDEPENDENT;
+#endif
   /* Get the max number of corners for elements in a specific dimension */
   context.nMaxMesh_elem_nodes = t8_element_shape_max_num_corner[dim];
   t8_cmesh_netcdf_ugrid_namespace_t namespace_context;
@@ -1132,9 +1143,4 @@ t8_cmesh_write_netcdf (t8_cmesh_t cmesh, const char *file_prefix,
       ("Only writing 2D and 3D NetCDF cmesh data is supported.\n");
     break;
   }
-
-#else
-  t8_global_errorf
-    ("This version of t8code is not compiled with netcdf support.\n");
-#endif
 }

@@ -24,6 +24,13 @@
 #if T8_WITH_NETCDF
 #include <netcdf.h>
 #include <netcdf_par.h>
+#else
+/* Normally defined in 'netcdf.h' */
+#define NC_CHUNKED 1
+#define NC_CONTIGUOUS 1
+/* Normally defined in 'netcdf_par.h' */
+#define NC_INDEPENDENT 0
+#define NC_COLLECTIVE 1
 #endif
 #include <t8_eclass.h>
 #include <t8_vec.h>
@@ -183,7 +190,6 @@ t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm,
                                                       int
                                                       with_additional_data)
 {
-#if T8_WITH_NETCDF
   t8_cmesh_t          cmesh;
   t8_forest_t         forest;
   t8_scheme_cxx_t    *default_scheme;
@@ -322,8 +328,6 @@ t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm,
 
   /* Destroy the forest */
   t8_forest_unref (&forest);
-
-#endif
 }
 
 /** An example functions that writes out a netCDF-4 File containing the information of the forest and some user-defined/random-value variables 
@@ -335,7 +339,6 @@ void
 t8_example_netcdf_write_forest (sc_MPI_Comm comm, int forest_refinement_level,
                                 int adapt_forest)
 {
-#if T8_WITH_NETCDF
   t8_cmesh_t          cmesh;
   t8_forest_t         forest;
   t8_scheme_cxx_t    *default_scheme;
@@ -425,7 +428,9 @@ t8_example_netcdf_write_forest (sc_MPI_Comm comm, int forest_refinement_level,
   t8_forest_write_netcdf (forest, "T8_Example_Netcdf_Forest_With_Add_Vars",
                           "Example Uniform Forest", 3, 2, ext_vars, comm);
 
+#if T8_WITH_NETCDF
   t8_global_productionf ("The forest has been written to a netCDF file\n");
+#endif
 
 #if 0
   /* Eventually write out the forest in a vtk file in order to display it in paraview */
@@ -451,13 +456,11 @@ t8_example_netcdf_write_forest (sc_MPI_Comm comm, int forest_refinement_level,
   T8_FREE (var_rank);
   T8_FREE (random_values);
 
-#endif
 }
 
 int
 main (int argc, char **argv)
 {
-#if T8_WITH_NETCDF
   int                 mpiret;
 
   /* The initial refinement level for the uniform forest which will be written out in a netCDF File */
@@ -496,7 +499,6 @@ main (int argc, char **argv)
   mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
 
-#endif
   return 0;
 }
 

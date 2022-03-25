@@ -1042,8 +1042,9 @@ t8_forest_write_netcdf_file (t8_forest_t forest,
                              sc_MPI_Comm comm)
 {
 #if T8_WITH_NETCDF
-  t8_gloidx_t         num_glo_elem;
   int                 retval;
+#endif
+  t8_gloidx_t         num_glo_elem;
 
   /* Check if the forest was committed. */
   T8_ASSERT (t8_forest_is_committed (forest));
@@ -1056,12 +1057,14 @@ t8_forest_write_netcdf_file (t8_forest_t forest,
 
   /* Create a parallel NetCDF-File (NetCDF-4/HDF5 file) */
   /* NC_MPIIO seems to be redundant since NetCDF version 4.6.2 */
+#if T8_WITH_NETCDF
   if ((retval =
        nc_create_par (context->filename, NC_CLOBBER | NC_NETCDF4
                       | NC_MPIIO, comm, sc_MPI_INFO_NULL, &context->ncid))) {
     ERR (retval);
   }
   t8_debugf ("NetCDf-file has been created.\n");
+#endif
 
   /* Define the first NetCDF-dimensions (nMesh_node is not known yet) */
   t8_forest_write_netcdf_dimensions (context, namespace_context);
@@ -1069,6 +1072,7 @@ t8_forest_write_netcdf_file (t8_forest_t forest,
   /* Define NetCDF-variables */
   t8_forest_write_netcdf_variables (context, namespace_context);
 
+#if T8_WITH_NETCDF
   /* Disable the default fill-value-mode. */
   if ((retval =
        nc_set_fill (context->ncid, NC_NOFILL, &context->old_fill_mode))) {
@@ -1094,14 +1098,17 @@ t8_forest_write_netcdf_file (t8_forest_t forest,
   if ((retval = nc_enddef (context->ncid))) {
     ERR (retval);
   }
+#endif
 
   /* Fill the already defined NetCDF-variables and calculate the 'nMesh_node' (global number of nodes) -dimension */
   t8_forest_write_netcdf_data (forest, context, comm);
 
   /* Leave the NetCDF-data-mode and re-enter the define-mode. */
+#if T8_WITH_NETCDF
   if ((retval = nc_redef (context->ncid))) {
     ERR (retval);
   }
+#endif
 
   /* Define the NetCDF-dimension 'nMesh_node' */
   t8_forest_write_netcdf_coordinate_dimension (context, namespace_context);
@@ -1114,6 +1121,7 @@ t8_forest_write_netcdf_file (t8_forest_t forest,
                                     num_extern_netcdf_vars, ext_variables,
                                     comm);
 
+#if T8_WITH_NETCDF
   /* Disable the default fill-value-mode. */
   if ((retval =
        nc_set_fill (context->ncid, NC_NOFILL, &context->old_fill_mode))) {
@@ -1124,6 +1132,7 @@ t8_forest_write_netcdf_file (t8_forest_t forest,
   if ((retval = nc_enddef (context->ncid))) {
     ERR (retval);
   }
+#endif
 
   /* Write the NetCDF-coordinate variable data */
   t8_forest_write_netcdf_coordinate_data (forest, context, comm);
@@ -1133,11 +1142,14 @@ t8_forest_write_netcdf_file (t8_forest_t forest,
                                     ext_variables, comm);
 
   /* All data has been written to the NetCDF-file, therefore, close the file. */
+#if T8_WITH_NETCDF
   if ((retval = nc_close (context->ncid))) {
     ERR (retval);
   }
-
   t8_debugf ("The NetCDF-File has been written and closed.\n");
+#else
+  t8_global_errorf
+    ("This version of t8code is not compiled with netcdf support.\n");
 #endif
 }
 
@@ -1150,7 +1162,6 @@ t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix,
                             sc_MPI_Comm comm, int netcdf_var_storage_mode,
                             int netcdf_mpi_access)
 {
-#if T8_WITH_NETCDF
   t8_forest_netcdf_context_t context;
   /* Check whether pointers are not NULL */
   T8_ASSERT (file_title != NULL);
@@ -1168,6 +1179,8 @@ t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix,
   context.fillvalue64 = -1;
   context.start_index = 0;
   context.convention = "UGRID v1.0";
+
+#if T8_WITH_NETCDF
   /* Check the given 'netcdf_storage_mode' and 'netcdf_mpi_access' */
   if ((netcdf_var_storage_mode != NC_CONTIGUOUS
        && netcdf_var_storage_mode != NC_CHUNKED)
@@ -1182,6 +1195,8 @@ t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix,
     context.netcdf_var_storage_mode = netcdf_var_storage_mode;
     context.netcdf_mpi_access = netcdf_mpi_access;
   }
+#endif
+
   /* Create and initialize the 'namespace_context' which holds the names of the variables, they vary depending on the given dimension */
   t8_forest_netcdf_ugrid_namespace_t namespace_context;
   t8_forest_init_ugrid_namespace_context (&namespace_context, dim);
@@ -1202,10 +1217,6 @@ t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix,
       ("Only writing 2D and 3D NetCDF forest data is supported.\n");
     break;
   }
-#else
-  t8_global_errorf
-    ("This version of t8code is not compiled with netcdf support.\n");
-#endif
 }
 
 /* Function which writes out the forest in the netCDF format, this function calls the extended method with given default values (e.g. NC_CONTIGUOUS and NC_INDEPENDENT) for storage and MPI access for variables */
@@ -1216,14 +1227,15 @@ t8_forest_write_netcdf (t8_forest_t forest, const char *file_prefix,
                         t8_netcdf_variable_t * ext_variables[],
                         sc_MPI_Comm comm)
 {
-#if T8_WITH_NETCDF
+  /* Choose NC_CONTIGUOUS as default storage pattern, this is equal to 1 (defined in 'netcdf.h') */
+  int                 netcdf_var_storage_mode = 1;
+
+  /* Choose NC_INDEPENDENT as default variable access, this is equal to 0 (defined in 'netcdf_par.h') */
+  int                 netcdf_mpi_access = 0;
+
   t8_forest_write_netcdf_ext (forest, file_prefix, file_title, dim,
                               num_extern_netcdf_vars, ext_variables, comm,
-                              NC_CONTIGUOUS, NC_INDEPENDENT);
-#else
-  t8_global_errorf
-    ("This version of t8code is not compiled with netcdf support.\n");
-#endif
+                              netcdf_var_storage_mode, netcdf_mpi_access);
 }
 
 T8_EXTERN_C_END ();
