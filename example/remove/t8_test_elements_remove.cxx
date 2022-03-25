@@ -77,18 +77,29 @@ t8_adapt_callback_remove (t8_forest_t forest,
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
   
   double  centroid[3];
+  double  corner[8][3] = {{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1},
+                                     {1, 1, 0}, {1, 0, 1}, {1, 1, 0}, {1, 1, 1}};
   double  dist;
+  int     i;
 
   T8_ASSERT (adapt_data != NULL);
 
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
   
-  for (int i = 0; i < 6; i++) {
+  for (i = 0; i < 6; i++) {
     dist = t8_vec_dist(adapt_data->midpoint[i], centroid);
     if (dist < adapt_data->radius) {
       return -2;
     }
   }
+  
+  for (i = 0; i < 8; i++) {
+    dist = t8_vec_dist(corner[i], centroid);
+    if (dist < 0.1) {
+      return -2;
+    }
+  }
+
   return 0;
 }
 
