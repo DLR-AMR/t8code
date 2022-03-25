@@ -4,7 +4,7 @@
 #include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_vec.h>
 #include <t8_forest_vtk.h>
-
+#include <ctime>
 T8_EXTERN_C_BEGIN ();
 
 
@@ -13,16 +13,16 @@ T8_EXTERN_C_BEGIN ();
  * Requires a full uniform grid
  *   Example for level 4 Quad
  *   
- *   X X   X |   X     |  X     |          
- *       X   | X   X X |    X   | X     X  
- *       X   | X   X X |    X   | X     X  
- *   X X   X |   X     |  X     |          
- *   ------------------|-------------------
- *       X   | X   X X |    X   | X     X  
- *   X X   X |   X     |  X     |          
- *   X X   X |   X     |  X     |         
- *       X   | X   X X |    X   | X     X  
- *   --------------------------------------
+ *   X X   X |   X     | X       |          
+ *       X   | X   X X |   X     | X     X  
+ *       X   | X   X X |   X     | X     X  
+ *   X X   X |   X     | X       |          
+ *   -------------------------------------
+ *       X   | X   X X |   X     | X     X  
+ *   X X   X |   X     | X       |          
+ *   X X   X |   X     | X       |         
+ *       X   | X   X X |   X     | X     X  
+ *   -------------------------------------
  *   X X X X | X X X X | X X X X | X X   X  
  *   X X X X | X X X X |   X X   | X   X X  
  *   X X X X | X X X X |   X X   | X   X X  
@@ -41,23 +41,20 @@ t8_test_adapt (t8_forest_t forest, t8_forest_t forest_from,
                int num_elements, t8_element_t * elements[])
 {
   int                 level;
-  int                 maxlevel, child_id, mod_id;
-  T8_ASSERT (is_family == 0 || (is_family == 1 && num_elements ==
-                                ts->t8_element_num_children (elements[0])));
 
   //t8_debugf("[IL] %i\n", lelement_id);
   level = ts->t8_element_level (elements[0]);
-  child_id = ts->t8_element_child_id (elements[0]);
-  mod_id = lelement_id % level;
-  for (size_t i = 1; i < level-1; i++)
-  {
-    mod_id = mod_id % (level-i);
-  }
+  
+  
+  //int                 child_id, mod_id;
+  //child_id = ts->t8_element_child_id (elements[0]); // 0 1 2 3
+  //mod_id = lelement_id % ts->t8_element_num_children (elements[0]); // 0 1 2 3
   
   
   //ts->t8_element_num_children (elements[0]);
-
-  if (level > 0 && child_id == mod_id) {
+  srand(time(0));
+  int r = rand() % 2;
+  if (level > 0 && r) {
     return -2;
   }
   return 0;
