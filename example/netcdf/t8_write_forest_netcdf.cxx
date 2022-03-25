@@ -36,7 +36,7 @@
 
 /* In this example is the use of the netcdf feature exemplary displayed
 * We show how to write out a forest in the netCDF format and how to create additional (integer/double) netCDF variables which hold element data.
-* There are mainly to funcitons implemented in 'src/t8_forest_netcdf.cxx' which allows the creation of netCDF file containing the data for a forest in the style of the URID conventions.
+* There are mainly two funcitons implemented in 'src/t8_forest_netcdf.cxx' which allow the creation of netCDF file containing the data for a forest in the style of the UGRID conventions.
 * The first function is: 't8_forest_write_netcdf_ext()'; it allows to choose which variable storage and access scheme should be used (e.g. {NC_CONTIGUOUS; NC_CHUNKED}x{NC_INDEPENDENT; NC_COLLECTIVE}).
 * The second function is: 't8_forest_write_netcdf()' uses default values (NC_CONTIGUOUS, NC_INDEPENDENT).
 * If the extended function is used and NC_CHUNKED is chosen: Curently, the chunksize which is chosen is the netCDF default (this means -> nc_def_var_chunking(..., NULL) receives a NULL-pointer as the 'size_t* chunksizesp' parameter)
