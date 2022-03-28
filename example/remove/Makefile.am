@@ -5,7 +5,6 @@
 bin_PROGRAMS += \
 	example/remove/t8_ring \
 	example/remove/t8_balls \
-	example/remove/t8_thin_out \
 	example/remove/t8_test_elements_remove
 
 example_remove_t8_ring_SOURCES = \
@@ -13,9 +12,6 @@ example_remove_t8_ring_SOURCES = \
 
 example_remove_t8_balls_SOURCES = \
 	example/remove/t8_balls.cxx
-
-example_remove_t8_thin_out_SOURCES = \
-	example/remove/t8_thin_out.cxx
 
 example_remove_t8_test_elements_remove_SOURCES = \
 	example/remove/t8_test_elements_remove.cxx
