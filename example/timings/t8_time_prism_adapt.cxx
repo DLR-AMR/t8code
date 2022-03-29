@@ -40,7 +40,7 @@ t8_basic_adapt_refine_type (t8_forest_t forest, t8_forest_t forest_from,
   int                 level;
   int                 type;
 
-  T8_ASSERT (is_family == 0 || num_elements ==
+  T8_ASSERT (!is_family || num_elements ==
              ts->t8_element_num_children (elements[0]));
 
   level = ts->t8_element_level (elements[0]);
@@ -65,7 +65,7 @@ t8_basic_adapt_refine_tet (t8_forest_t forest, t8_forest_t forest_from,
   int                 level;
   int                 type;
 
-  T8_ASSERT (is_family == 0 || num_elements ==
+  T8_ASSERT (!is_family || num_elements ==
              ts->t8_element_num_children (elements[0]));
 
   level = ts->t8_element_level (elements[0]);

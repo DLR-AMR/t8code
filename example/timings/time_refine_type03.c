@@ -44,7 +44,7 @@ t8_basic_adapt_refine_type (t8_forest_t forest, t8_locidx_t which_tree,
   int                 type;
   int                 dim;
 
-  T8_ASSERT (is_family == 0 || num_elements ==
+  T8_ASSERT (!is_family || num_elements ==
              t8_eclass_num_children[ts->eclass]);
 
   dim = t8_eclass_to_dimension[ts->eclass];

@@ -65,7 +65,7 @@ t8_basic_adapt (t8_forest_t forest, t8_forest_t forest_from,
                 const int num_elements, t8_element_t * elements[])
 {
   int                 mpirank, mpiret;
-  T8_ASSERT (is_family == 0 || num_elements ==
+  T8_ASSERT (!is_family || num_elements ==
              ts->t8_element_num_children (elements[0]));
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);

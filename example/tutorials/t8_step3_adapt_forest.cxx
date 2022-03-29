@@ -129,8 +129,8 @@ t8_step3_adapt_callback (t8_forest_t forest,
     /* Refine this element. */
     return 1;
   }
-  else if (is_family == 1 && dist > adapt_data->coarsen_if_outside_radius) {
-    /* Coarsen this family. Note that we check for is_family == 1 before, since returning < 0
+  else if (is_family && dist > adapt_data->coarsen_if_outside_radius) {
+    /* Coarsen this family. Note that we check for is_family before, since returning < 0
      * if we do not have a family as input is illegal. */
     return -1;
   }

@@ -104,7 +104,7 @@ t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from,
   double             *normal;
   adapt_data_t       *adapt_data;
 
-  T8_ASSERT (is_family == 0 || num_elements ==
+  T8_ASSERT (!is_family  || num_elements ==
              ts->t8_element_num_children (elements[0]));
   level = ts->t8_element_level (elements[0]);
   /* Get the minimum and maximum x-coordinate from the user data pointer of forest */
@@ -136,13 +136,13 @@ t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from,
         return 1;
       }
     }
-    else if (is_family == 1 && level > base_level) {
+    else if (is_family && level > base_level) {
       /* Otherwise, we coarse if we have a family and level is greater
        * than the base level. */
       return -1;
     }
   }
-  else if (is_family == 1 && level > base_level) {
+  else if (is_family && level > base_level) {
     /* If element lies out of the refinement region and a family was given
      * as argument, we coarsen to level base level */
     /* set elem_midpoint to the original midpoint - c_max*normal */

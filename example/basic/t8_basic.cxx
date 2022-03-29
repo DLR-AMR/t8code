@@ -86,7 +86,7 @@ t8_basic_adapt (t8_forest_t forest, t8_forest_t forest_from,
     return 1;
   }
   /* If the x-coordinate is smaller than 0.25 we coarsen the element. */
-  else if (coords[0] < 0.25 && is_family == 1) {
+  else if (coords[0] < 0.25 && is_family) {
     /* Check that every element of the family should be coarsen. */
     for (i = 1; i < num_elements; i++) {
       t8_forest_element_centroid (forest_from, which_tree, elements[i],
