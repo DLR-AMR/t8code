@@ -91,8 +91,8 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
       isfamily = 0;
     }
     if (isfamily
-        && forest->set_adapt_fn (forest, forest->set_from, ltreeid,
-                                 lelement_id, ts, 1, num_children, fam) < 0) {
+        && forest->set_adapt_fn (forest, forest->set_from, ltreeid, lelement_id,
+                                 ts, isfamily, num_children, fam) < 0) {
       /* Coarsen the element */
       *el_inserted -= num_children - 1;
       /* remove num_children - 1 elements from the array */

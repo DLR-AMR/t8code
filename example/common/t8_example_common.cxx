@@ -39,12 +39,12 @@ T8_EXTERN_C_BEGIN ();
 int
 t8_common_adapt_balance (t8_forest_t forest, t8_forest_t forest_from,
                          t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                         t8_eclass_scheme_c * ts, int num_elements,
-                         t8_element_t * elements[])
+                         t8_eclass_scheme_c * ts, const int is_family, 
+                         const int num_elements, t8_element_t * elements[])
 {
   int                 level;
   int                 maxlevel, child_id;
-  T8_ASSERT (num_elements == 1 || num_elements ==
+  T8_ASSERT (!is_family || num_elements ==
              ts->t8_element_num_children (elements[0]));
   level = ts->t8_element_level (elements[0]);
 
@@ -129,15 +129,15 @@ t8_common_adapt_level_set (t8_forest_t forest,
                            t8_locidx_t which_tree,
                            t8_locidx_t lelement_id,
                            t8_eclass_scheme_c * ts,
-                           int is_family,
-                           int num_elements,
+                           const int is_family,
+                           const int num_elements,
                            t8_element_t * elements[])
 {
   t8_example_level_set_struct_t *data;
   int                 within_band;
   int                 level;
 
-  T8_ASSERT (is_family == 0 || num_elements ==
+  T8_ASSERT (!is_family || num_elements ==
              ts->t8_element_num_children (elements[0]));
 
   data = (t8_example_level_set_struct_t *) t8_forest_get_user_data (forest);
@@ -147,7 +147,7 @@ t8_common_adapt_level_set (t8_forest_t forest,
   data = (t8_example_level_set_struct_t *) t8_forest_get_user_data (forest);
 
   /* If maxlevel is exceeded, coarsen or do not refine */
-  if (level > data->max_level && is_family == 1) {
+  if (level > data->max_level && is_family) {
     return -1;
   }
   if (level >= data->max_level) {
@@ -165,7 +165,7 @@ t8_common_adapt_level_set (t8_forest_t forest,
     /* The element can be refined and lies inside the refinement region */
     return 1;
   }
-  else if (is_family == 1 && level > data->min_level && !within_band) {
+  else if (is_family && level > data->min_level && !within_band) {
     /* If element lies out of the refinement region and a family was given
      * as argument, we coarsen to level base level */
     return -1;

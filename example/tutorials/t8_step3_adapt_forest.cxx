@@ -89,7 +89,7 @@ struct t8_step3_adapt_data
  * \param [in] which_tree   The process local id of the current tree.
  * \param [in] lelement_id  The tree local index of the current element (or the first of the family).
  * \param [in] ts           The refinement scheme for this tree's element class.
- * \param [in] is_family    If 1 considre family, if 0 do not.
+ * \param [in] is_family    if 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
  * \param [in] num_elements The number of entries in \a elements elements that are defined.
  * \param [in] elements     The element or family of elements to consider for refinement/coarsening.
  */
@@ -99,8 +99,8 @@ t8_step3_adapt_callback (t8_forest_t forest,
                          t8_locidx_t which_tree,
                          t8_locidx_t lelement_id,
                          t8_eclass_scheme_c * ts,
-                         int is_family,
-                         int num_elements,
+                         const int is_family,
+                         const int num_elements,
                          t8_element_t * elements[])
 {
   /* Our adaptation criterion is to look at the midpoint coordinates of the current element and if
@@ -129,8 +129,8 @@ t8_step3_adapt_callback (t8_forest_t forest,
     /* Refine this element. */
     return 1;
   }
-  else if (is_family == 1 && dist > adapt_data->coarsen_if_outside_radius) {
-    /* Coarsen this family. Note that we check for is_family == 1 before, since returning < 0
+  else if (is_family && dist > adapt_data->coarsen_if_outside_radius) {
+    /* Coarsen this family. Note that we check for is_family before, since returning < 0
      * if we do not have a family as input is illegal. */
     return -1;
   }

@@ -106,7 +106,7 @@ typedef void        (*t8_forest_replace_t) (t8_forest_t forest_old,
  * \param [in] which_tree   the local tree containing \a elements
  * \param [in] lelement_id  the local element id in \a forest_old in the tree of the current element
  * \param [in] ts           the eclass scheme of the tree
- * \param [in] is_family    if 1 considre family, if 0 do not.
+ * \param [in] is_family    if 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
  * \param [in] num_elements the number of entries in \a elements that are defined
  * \param [in] elements     Pointers to a family or, if \a is_family is zero,
  *                          pointer to one element.
@@ -121,8 +121,8 @@ typedef int         (*t8_forest_adapt_t) (t8_forest_t forest,
                                           t8_locidx_t which_tree,
                                           t8_locidx_t lelement_id,
                                           t8_eclass_scheme_c * ts,
-                                          int is_family,
-                                          int num_elements,
+                                          const int is_family,
+                                          const int num_elements,
                                           t8_element_t * elements[]);
 
   /** Create a new forest with reference count one.

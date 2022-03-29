@@ -44,11 +44,11 @@ typedef enum
 int
 t8_refine_p8est (t8_forest_t forest, t8_forest_t forest_from,
                  t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                 t8_eclass_scheme_c * ts, int is_family,
-                 int num_elements, t8_element_t * elements[])
+                 t8_eclass_scheme_c * ts, const int is_family,
+                 const int num_elements, t8_element_t * elements[])
 {
   int                 id;
-  T8_ASSERT (is_family == 0 || num_elements ==
+  T8_ASSERT (!is_family || num_elements ==
              ts->t8_element_num_children (elements[0]));
 
   id = ts->t8_element_child_id (elements[0]);
@@ -60,11 +60,11 @@ t8_refine_p8est (t8_forest_t forest, t8_forest_t forest_from,
 static int
 t8_basic_adapt (t8_forest_t forest, t8_forest_t forest_from,
                 t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                t8_eclass_scheme_c * ts, int is_family,
-                int num_elements, t8_element_t * elements[])
+                t8_eclass_scheme_c * ts, const int is_family,
+                const int num_elements, t8_element_t * elements[])
 {
   int                 level;
-  T8_ASSERT (is_family == 0 || num_elements ==
+  T8_ASSERT (!is_family || num_elements ==
              ts->t8_element_num_children (elements[0]));
   level = ts->t8_element_level (elements[0]);
   if (ts->t8_element_get_linear_id (elements[0], level) % 3 == 0) {
