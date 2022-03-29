@@ -581,8 +581,6 @@ t8_cmesh_trees_get_ghost_local_id (t8_cmesh_trees_t trees,
   hash_search.global_id = global_id;
   ret = sc_hash_lookup (trees->ghost_globalid_to_local_id, &hash_search,
                         (void ***) &phash_found);
-  t8_debugf ("[H] trees looked for local id to gid %li found %i\n",
-             global_id, ret);
   if (ret) {
     /* The entry was found */
     hash_found = *phash_found;
