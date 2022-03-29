@@ -66,12 +66,12 @@
 static int
 t8_ghost_fractal_adapt (t8_forest_t forest, t8_forest_t forest_from,
                         t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                        t8_eclass_scheme_c * ts, int num_elements,
-                        t8_element_t * elements[])
+                        t8_eclass_scheme_c * ts, const int is_family,
+                        const int num_elements, t8_element_t * elements[])
 {
   int                 level;
   int                 type, child_id;
-  T8_ASSERT (num_elements == 1 || num_elements ==
+  T8_ASSERT (!is_family || num_elements ==
              ts->t8_element_num_children (elements[0]));
   T8_ASSERT (t8_eclass_scheme_is_default (ts));
 
