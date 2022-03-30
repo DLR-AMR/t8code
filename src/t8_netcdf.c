@@ -23,22 +23,42 @@
 #include <t8.h>
 #include <t8_netcdf.h>
 
+/* Create an extern NetCDF variable */
+t8_netcdf_variable_t *
+t8_netcdf_create_var (t8_netcdf_variable_type_t var_type,
+                      const char *var_name, const char *var_long_name,
+                      const char *var_unit, sc_array_t * var_data)
+{
+#if T8_WITH_NETCDF
+  T8_ASSERT (0 <= var_type && var_type <= 2);
+  t8_netcdf_variable_t *netcdf_variable = T8_ALLOC (t8_netcdf_variable_t, 1);
+  netcdf_variable->datatype = var_type;
+  netcdf_variable->variable_name = var_name;
+  netcdf_variable->variable_long_name = var_long_name;
+  netcdf_variable->variable_units = var_unit;
+  netcdf_variable->var_user_data = var_data;
+  return netcdf_variable;
+#else
+  t8_global_errorf
+    ("This version of t8code is not compiled with netCDF support.\n");
+  return NULL;
+#endif
+}
+
 /* Create an extern NetCDF integer variable */
 t8_netcdf_variable_t *
 t8_netcdf_create_integer_var (const char *var_name, const char *var_long_name,
                               const char *var_unit, sc_array_t * var_data)
 {
 #if T8_WITH_NETCDF
-  t8_netcdf_variable_t *netcdf_variable = T8_ALLOC (t8_netcdf_variable_t, 1);
-  netcdf_variable->variable_name = var_name;
-  netcdf_variable->variable_long_name = var_long_name;
-  netcdf_variable->datatype = 0;
-  netcdf_variable->variable_units = var_unit;
-  netcdf_variable->var_user_data = var_data;
-  return netcdf_variable;
+  t8_netcdf_variable_type_t var_type;
+  /* Check wheter 32-bit (4-byte) integer or 64-bit integer data sholud be written */
+  var_type = (var_data->elem_size > 4) ? T8_NETCDF_INT64 : T8_NETCDF_INT;
+  return t8_netcdf_create_var (var_type, var_name, var_long_name, var_unit,
+                               var_data);
 #else
   t8_global_errorf
-    ("This version of t8code is not compiled with netcdf support.\n");
+    ("This version of t8code is not compiled with netCDF support.\n");
   return NULL;
 #endif
 }
@@ -49,16 +69,11 @@ t8_netcdf_create_double_var (const char *var_name, const char *var_long_name,
                              const char *var_unit, sc_array_t * var_data)
 {
 #if T8_WITH_NETCDF
-  t8_netcdf_variable_t *netcdf_variable = T8_ALLOC (t8_netcdf_variable_t, 1);
-  netcdf_variable->variable_name = var_name;
-  netcdf_variable->variable_long_name = var_long_name;
-  netcdf_variable->datatype = 1;
-  netcdf_variable->variable_units = var_unit;
-  netcdf_variable->var_user_data = var_data;
-  return netcdf_variable;
+  return t8_netcdf_create_var (T8_NETCDF_DOUBLE, var_name, var_long_name,
+                               var_unit, var_data);
 #else
   t8_global_errorf
-    ("This version of t8code is not compiled with netcdf support.\n");
+    ("This version of t8code is not compiled with netCDF support.\n");
   return NULL;
 #endif
 }

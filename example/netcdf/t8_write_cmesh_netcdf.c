@@ -79,6 +79,7 @@ t8_example_netcdf_write_cmesh (sc_MPI_Comm comm)
   var_ranks =
     sc_array_new_data (var_rank, sizeof (t8_nc_int32_t),
                        t8_cmesh_get_num_local_trees (cmesh));
+
   /* Create the integer NetCDF variable; parameters are (name of the variable, descriptive long name of the variable, description of the data's unit, pointer to sc_array_t which provides the data) */
   ext_var_mpirank =
     t8_netcdf_create_integer_var ("mpirank",
@@ -99,7 +100,7 @@ t8_example_netcdf_write_cmesh (sc_MPI_Comm comm)
 
   /* Create the double NetCDF variable; parameters are (name of the variable, descriptive long name of the variable, description of the data's unit (i.e. degrees Celsius), pointer to sc_array_t which provides the data) */
   ext_var_random_values =
-    t8_netcdf_create_double_var ("random values", "Random values in [0,10)",
+    t8_netcdf_create_double_var ("random_values", "Random values in [0,10)",
                                  "double", var_random_values);
 
   /* Create an array of pointers to extern NetCDF-variables, further extern NetCDF-Variables could be created and appended to the array */
@@ -107,7 +108,7 @@ t8_example_netcdf_write_cmesh (sc_MPI_Comm comm)
     { ext_var_mpirank, ext_var_random_values };
 
   /* Name of the NetCDF-File */
-  char               *mesh_name = "NewCmesh3DParallel";
+  char               *mesh_name = "T8_Example_NetCDF_Cmesh";
 
   /* Write the cmesh to NetCDF */
   t8_cmesh_write_netcdf (cmesh, mesh_name, "Example 3D parallel cmesh", 3, 2,

@@ -259,7 +259,7 @@ t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm,
 
     /* Create the double NetCDF variable; parameters are (name of the variable, descriptive long name of the variable, description of the data's unit (i.e. degrees Celsius), pointer to sc_array_t which provides the data) */
     ext_var_random_values =
-      t8_netcdf_create_double_var ("random values", "Random values in [0,10)",
+      t8_netcdf_create_double_var ("random_values", "Random values in [0,10)",
                                    "double", var_random_values);
 
     /* Safe the created netCDF variables within an array */
@@ -389,6 +389,7 @@ t8_example_netcdf_write_forest (sc_MPI_Comm comm, int forest_refinement_level,
   /* Allocate the data which lays on the several processes */
   /* Those user-defined variables are currently only meant to maintain a single value per (process-local) element */
   var_rank = T8_ALLOC (t8_nc_int32_t, num_elements);
+
   /* Write out the mpirank of each (process-local) element multiplied by the local element index */
   for (j = 0; j < num_elements; j++) {
     var_rank[j] = mpirank;
@@ -416,7 +417,7 @@ t8_example_netcdf_write_forest (sc_MPI_Comm comm, int forest_refinement_level,
 
   /* Create the double NetCDF variable; parameters are (name of the variable, descriptive long name of the variable, description of the data's unit (i.e. degrees Celsius), pointer to sc_array_t which provides the data) */
   ext_var_random_values =
-    t8_netcdf_create_double_var ("random values", "Random values in [0,10)",
+    t8_netcdf_create_double_var ("random_values", "Random values in [0,10)",
                                  "double", var_random_values);
 
   /* Create an array of pointers to extern NetCDF-variables, further extern NetCDF-Variables could be created and appended to the array */
@@ -425,7 +426,7 @@ t8_example_netcdf_write_forest (sc_MPI_Comm comm, int forest_refinement_level,
   ext_vars[1] = ext_var_random_values;
 
   /* Write the forest to NetCDF */
-  t8_forest_write_netcdf (forest, "T8_Example_Netcdf_Forest_With_Add_Vars",
+  t8_forest_write_netcdf (forest, "T8_Example_NetCDF_Forest_With_Add_Vars",
                           "Example Uniform Forest", 3, 2, ext_vars, comm);
 
 #if T8_WITH_NETCDF

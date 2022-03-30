@@ -95,6 +95,7 @@ typedef struct
   char               *att_elem_node;
 } t8_cmesh_netcdf_ugrid_namespace_t;
 
+/* The UGRID conventions are applied for dimension and variable descriptions */
 static void
 t8_cmesh_init_ugrid_namespace_context (t8_cmesh_netcdf_ugrid_namespace_t *
                                        namespace, int dim)
@@ -576,7 +577,7 @@ t8_cmesh_write_user_netcdf_vars (t8_cmesh_netcdf_context_t * context,
 #if T8_WITH_NETCDF
   /* Check whether user-defined variables should be written */
   if (num_extern_netcdf_vars > 0 && ext_variables != NULL) {
-    int                 retval, i, int_mode;
+    int                 retval, i;
     int                 mpirank, mpisize;
 
     retval = sc_MPI_Comm_size (comm, &mpisize);
@@ -586,80 +587,36 @@ t8_cmesh_write_user_netcdf_vars (t8_cmesh_netcdf_context_t * context,
 
     /* Iterate over the amount of user-defined variables */
     for (i = 0; i < num_extern_netcdf_vars; ++i) {
+      /* Check the variable data type */
       switch (ext_variables[i]->datatype) {
-      case 0:
-        /* A NetCDF Integer-Variable will be declared */
-        /* Check whether the data is corresponding to either a NC_INT variable (32bit) or a NC_INT64 variable (64bit) */
-        if (mpirank == 0) {
-          int_mode = (int) ext_variables[i]->var_user_data->elem_size;
-        }
-        retval = sc_MPI_Bcast (&int_mode, 1, sc_MPI_INT, 0, comm);
-        SC_CHECK_MPI (retval);
-        T8_ASSERT (int_mode ==
-                   (int) ext_variables[i]->var_user_data->elem_size);
-
-        if (int_mode == 4) {
-          /* In case it is a 32bit integer variable */
-          if ((retval =
-               nc_def_var (context->ncid, ext_variables[i]->variable_name,
-                           NC_INT, 1, &context->nMesh_elem_dimid,
-                           &(ext_variables[i]->var_user_dimid)))) {
-            ERR (retval);
-          }
-          /* Define whether contiguous or chunked storage is used for the variable */
-          if ((retval =
-               nc_def_var_chunking (context->ncid,
-                                    ext_variables[i]->var_user_dimid,
-                                    context->netcdf_var_storage_mode,
-                                    NULL))) {
-            ERR (retval);
-          }
-          /* Define whether an independent or collective variable access is used */
-          if ((retval =
-               nc_var_par_access (context->ncid,
-                                  ext_variables[i]->var_user_dimid,
-                                  context->netcdf_mpi_access))) {
-            ERR (retval);
-          }
-        }
-        else if (int_mode == 8) {
-          /* In case it is a 64bit integer variable */
-          if ((retval =
-               nc_def_var (context->ncid, ext_variables[i]->variable_name,
-                           NC_INT64, 1, &context->nMesh_elem_dimid,
-                           &(ext_variables[i]->var_user_dimid)))) {
-            ERR (retval);
-          }
-          /* Define whether contiguous or chunked storage is used for the variable */
-          if ((retval =
-               nc_def_var_chunking (context->ncid,
-                                    ext_variables[i]->var_user_dimid,
-                                    context->netcdf_var_storage_mode,
-                                    NULL))) {
-            ERR (retval);
-          }
-          /* Define whether an independent or collective variable access is used */
-          if ((retval =
-               nc_var_par_access (context->ncid,
-                                  ext_variables[i]->var_user_dimid,
-                                  context->netcdf_mpi_access))) {
-            ERR (retval);
-          }
-        }
-        else {
-          t8_errorf
-            ("The extern NetCDF integer variable %s does not solely contain 32bit or 64bit data which are represented by NC_INT or NC_INT64 variables.\n",
-             ext_variables[i]->variable_name);
+      case T8_NETCDF_INT:
+        /* A netCDF 32bit integer variable will be declared */
+        if ((retval =
+             nc_def_var (context->ncid, ext_variables[i]->variable_name,
+                         NC_INT, 1, &context->nMesh_elem_dimid,
+                         &(ext_variables[i]->var_user_dimid)))) {
+          ERR (retval);
         }
         break;
-      case 1:
-        /* A NetCDF Double-Variable will be declared */
+      case T8_NETCDF_INT64:
+        /* A netCDF 64bit integer variable will be declared */
+        if ((retval =
+             nc_def_var (context->ncid, ext_variables[i]->variable_name,
+                         NC_INT64, 1, &context->nMesh_elem_dimid,
+                         &(ext_variables[i]->var_user_dimid)))) {
+          ERR (retval);
+        }
+        break;
+      case T8_NETCDF_DOUBLE:
+        /* A netCDF Double-Variable will be declared */
         if ((retval =
              nc_def_var (context->ncid, ext_variables[i]->variable_name,
                          NC_DOUBLE, 1, &context->nMesh_elem_dimid,
                          &(ext_variables[i]->var_user_dimid)))) {
           ERR (retval);
+          break;
         }
+
         /* Define whether contiguous or chunked storage is used for the variable */
         if ((retval =
              nc_def_var_chunking (context->ncid,
@@ -674,10 +631,8 @@ t8_cmesh_write_user_netcdf_vars (t8_cmesh_netcdf_context_t * context,
                                 context->netcdf_mpi_access))) {
           ERR (retval);
         }
-        break;
-      default:
-        break;
       }
+
       /* Attach the user-defined 'long_name' attribute to the variable */
       if ((retval =
            nc_put_att_text (context->ncid, (ext_variables[i]->var_user_dimid),
@@ -795,21 +750,25 @@ t8_cmesh_write_netcdf_coordinate_data (t8_cmesh_t cmesh,
     ERR (retval);
   }
 
+  /* Counters which imply the position in the NetCDF-variable where the data will be written, */
   start_ptr = 0;
   for (j = 0; j < mpirank; ++j) {
     start_ptr += (size_t) node_offset[j];
   }
   count_ptr = (size_t) context->nMesh_local_node;
+  /* Write the x-coordinate data */
   if ((retval =
        nc_put_vara_double (context->ncid, context->var_node_x_id,
                            &start_ptr, &count_ptr, &Mesh_node_x[0]))) {
     ERR (retval);
   }
+  /* Write the y-coordinate data */
   if ((retval =
        nc_put_vara_double (context->ncid, context->var_node_y_id,
                            &start_ptr, &count_ptr, &Mesh_node_y[0]))) {
     ERR (retval);
   }
+  /* Write the z-coordinate data */
   if ((retval =
        nc_put_vara_double (context->ncid, context->var_node_z_id,
                            &start_ptr, &count_ptr, &Mesh_node_z[0]))) {
@@ -906,57 +865,43 @@ t8_cmesh_write_user_netcdf_data (t8_cmesh_t cmesh,
 {
 #if T8_WITH_NETCDF
   if (num_extern_netcdf_vars > 0 && ext_variables != NULL) {
-    t8_locidx_t         num_local_trees;
-    t8_locidx_t         local_tree_offset;
     int                 retval, i;
     size_t              start_ptr;
     size_t              count_ptr;
 
-    /* Number of process local trees */
-    num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
-
-    /* Get the local tree offset */
-    local_tree_offset = t8_cmesh_get_first_treeid (cmesh);
-
+    /* Counters which imply the position in the NetCDF-variable where the data will be written, */
+    start_ptr = (size_t) t8_cmesh_get_first_treeid (cmesh);
+    count_ptr = (size_t) t8_cmesh_get_num_local_trees (cmesh);
     /* Iterate over the amount of user-defined variables */
     for (i = 0; i < num_extern_netcdf_vars; ++i) {
-
       /* Check if exactly one value per element is given */
-      T8_ASSERT (num_local_trees ==
-                 ext_variables[i]->var_user_data->elem_count);
-
-      /* Counters which imply the position in the NetCDF-variable where the data will be written, */
-      start_ptr = local_tree_offset;
-      count_ptr = num_local_trees;
-
-      /* Fill the NetCDF-variable with the data */
-      if (ext_variables[i]->datatype == 0) {
-        /* If it is a Integer NetCDF-variable */
-        if ((int) ext_variables[i]->var_user_data->elem_size == 4) {
-          /* If it is a 32bit Integer variable */
-          if ((retval =
-               nc_put_vara_int (context->ncid,
-                                ext_variables[i]->var_user_dimid, &start_ptr,
-                                &count_ptr, (t8_nc_int32_t *)
-                                sc_array_index (ext_variables
-                                                [i]->var_user_data, 0)))) {
-            ERR (retval);
-          }
+      T8_ASSERT (count_ptr == ext_variables[i]->var_user_data->elem_count);
+      /* Check the variable data type */
+      switch (ext_variables[i]->datatype) {
+      case T8_NETCDF_INT:
+        /* NetCDF 32bit integer data will be written */
+        if ((retval =
+             nc_put_vara_int (context->ncid,
+                              ext_variables[i]->var_user_dimid, &start_ptr,
+                              &count_ptr, (t8_nc_int32_t *)
+                              sc_array_index (ext_variables
+                                              [i]->var_user_data, 0)))) {
+          ERR (retval);
         }
-        else if ((int) ext_variables[i]->var_user_data->elem_size == 8) {
-          /* If it is a 64bit Integer variable */
-          if ((retval =
-               nc_put_vara_long (context->ncid,
-                                 ext_variables[i]->var_user_dimid, &start_ptr,
-                                 &count_ptr, (t8_nc_int64_t *)
-                                 sc_array_index (ext_variables
-                                                 [i]->var_user_data, 0)))) {
-            ERR (retval);
-          }
+        break;
+      case T8_NETCDF_INT64:
+        /* NetCDF 64bit integer data will be written */
+        if ((retval =
+             nc_put_vara_long (context->ncid,
+                               ext_variables[i]->var_user_dimid, &start_ptr,
+                               &count_ptr, (t8_nc_int64_t *)
+                               sc_array_index (ext_variables
+                                               [i]->var_user_data, 0)))) {
+          ERR (retval);
         }
-      }
-      else if (ext_variables[i]->datatype == 1) {
-        /* If it is a Double NetCDF-variable */
+        break;
+      case T8_NETCDF_DOUBLE:
+        /* NetCDF double data will be written */
         if ((retval =
              nc_put_vara_double (context->ncid,
                                  ext_variables[i]->var_user_dimid, &start_ptr,
@@ -965,6 +910,7 @@ t8_cmesh_write_user_netcdf_data (t8_cmesh_t cmesh,
                                                  [i]->var_user_data, 0)))) {
           ERR (retval);
         }
+        break;
       }
     }
   }
