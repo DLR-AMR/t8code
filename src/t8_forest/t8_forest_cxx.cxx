@@ -1279,7 +1279,6 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
   ts->t8_element_destroy (1, &desc);
   /* If the descendants are the same then ret is zero and we return false.
    * We return true otherwise */
-  t8_debugf ("[D] tree shared: %i\n", ret);
   return ret;
 }
 
