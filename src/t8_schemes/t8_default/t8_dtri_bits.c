@@ -934,11 +934,6 @@ t8_dtri_transform_face (const t8_dtri_t * trianglein,
   t8_dtri_coord_t     h = T8_DTRI_LEN (trianglein->level);
   t8_dtri_coord_t     x = trianglein->x;
 
-#if 0
-  t8_debugf ("[H] in %i %i type %i. or = %i sign = %i smaller %i\n",
-             trianglein->x, trianglein->y, trianglein->type,
-             orientation, sign, is_smaller_face);
-#endif
   T8_ASSERT (0 <= orientation && orientation <= 2);
   triangle2->level = trianglein->level;
   triangle2->type = trianglein->type;
@@ -1008,11 +1003,6 @@ t8_dtri_transform_face (const t8_dtri_t * trianglein,
   default:
     SC_ABORT_NOT_REACHED ();
   }
-#if 0
-  t8_debugf ("[H] out %i %i type %i. or = %i sign = %i smaller %i\n",
-             triangle2->x, triangle2->y, triangle2->type,
-             orientation, sign, is_smaller_face);
-#endif
 }
 #endif
 
