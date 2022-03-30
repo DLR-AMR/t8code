@@ -69,7 +69,7 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
 
   T8_ASSERT (ts->t8_element_level (element) > 0);
 
-  num_siblings = ts->t8_element_num_siblings(element);
+  num_siblings = ts->t8_element_num_siblings (element);
   //T8_ASSERT (ts->t8_element_child_id (element) == num_children - 1);
 
   fam = el_buffer;
@@ -92,7 +92,8 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
     }
     if (isfamily
         && forest->set_adapt_fn (forest, forest->set_from, ltreeid,
-                                 lelement_id, ts, num_siblings, fam) < 0) {
+                                 lelement_id, ts, isfamily, num_siblings,
+                                 fam) < 0) {
       /* Coarsen the element */
       *el_inserted -= num_siblings - 1;
       /* remove num_children - 1 elements from the array */
@@ -155,7 +156,7 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
     el_buffer[0] = (t8_element_t *) sc_list_pop (elem_list);
     num_children = ts->t8_element_num_children (el_buffer[0]);
     if (forest->set_adapt_fn (forest, forest->set_from, ltreeid, lelement_id,
-                              ts, 1, el_buffer) > 0) {
+                              ts, 0, 1, el_buffer) > 0) {
       /* The element should be refined */
       if (ts->t8_element_level (el_buffer[0]) < forest->maxlevel) {
         /* only refine, if we do not exceed the maximum allowed level */
@@ -198,9 +199,7 @@ t8_forest_adapt (t8_forest_t forest)
   t8_element_t      **elements, **elements_from;
   int                 refine;
   int                 ci;
-#ifdef T8_ENABLE_DEBUG
   int                 is_family;
-#endif
 
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->set_from != NULL);
@@ -265,10 +264,9 @@ t8_forest_adapt (t8_forest_t forest)
     /* We now iterate over all elements in this tree and check them for refinement/coarsening. */
     while (el_considered < num_el_from) {
       int                 num_elements_to_adapt_fn;
-#ifdef T8_ENABLE_DEBUG
+
       /* Will get set to 1 later if this is a family */
       is_family = 0;
-#endif
 
       /* Load the current element and at most num_children-1 many others into
        * the elements_from buffer. Stop when we are certain that they cannot from
@@ -301,19 +299,17 @@ t8_forest_adapt (t8_forest_t forest)
           break;
         }
       }
-
       if (zz != num_siblings
           || !tscheme->t8_element_is_family (elements_from)) {
         /* We are certain that the elements do not form a family.
          * So we will only pass the first element to the adapt callback. */
+        is_family = 0;
         num_elements_to_adapt_fn = 1;
       }
       else {
         /* We will pass a family to the adapt callback */
-        num_elements_to_adapt_fn = num_siblings;
-#ifdef T8_ENABLE_DEBUG
         is_family = 1;
-#endif
+        num_elements_to_adapt_fn = num_siblings;
       }
       T8_ASSERT (!is_family || tscheme->t8_element_is_family (elements_from));
 
@@ -324,8 +320,9 @@ t8_forest_adapt (t8_forest_t forest)
        */
       refine =
         forest->set_adapt_fn (forest, forest->set_from, ltree_id,
-                              el_considered, tscheme,
+                              el_considered, tscheme, is_family,
                               num_elements_to_adapt_fn, elements_from);
+
       T8_ASSERT (is_family || refine >= 0);
       if (refine > 0 && tscheme->t8_element_level (elements_from[0]) >=
           forest->maxlevel) {
@@ -383,9 +380,9 @@ t8_forest_adapt (t8_forest_t forest)
         tscheme->t8_element_parent (elements_from[0], elements[0]);
         el_inserted++;
         num_siblings = tscheme->t8_element_num_children (elements[0]);
-        if(num_siblings > curr_size_elements){
-            elements = T8_REALLOC(elements, t8_element_t *, num_siblings);
-            curr_size_elements = num_siblings;
+        if (num_siblings > curr_size_elements) {
+          elements = T8_REALLOC (elements, t8_element_t *, num_siblings);
+          curr_size_elements = num_siblings;
         }
         if (forest->set_adapt_recursive) {
           /* Adaptation is recursive.
