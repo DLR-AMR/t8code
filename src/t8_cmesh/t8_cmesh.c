@@ -1813,7 +1813,7 @@ t8_cmesh_new_hex (sc_MPI_Comm comm)
   return cmesh;
 }
 
-static              t8_cmesh_t
+t8_cmesh_t
 t8_cmesh_new_pyramid_deformed (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
