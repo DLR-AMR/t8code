@@ -437,7 +437,6 @@ t8_forest_commit (t8_forest_t forest)
   else {                        /* set_from != NULL */
     t8_forest_t         forest_from = forest->set_from; /* temporarily store set_from, since we may overwrite it */
 
-    t8_debugf ("[h] from method %i\n", forest->from_method);
     T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
     T8_ASSERT (forest->cmesh == NULL);
     T8_ASSERT (forest->scheme_cxx == NULL);
