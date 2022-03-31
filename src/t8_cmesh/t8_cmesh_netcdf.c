@@ -44,7 +44,7 @@ These functions write a file in the NetCDF-format which represents the given 2D-
 typedef struct
 {
   char               *filename;
-  char               *filetitle;
+  const char         *filetitle;
   int                 dim;
   t8_gloidx_t         nMesh_elem;
   t8_gloidx_t         nMesh_node;
@@ -68,7 +68,7 @@ typedef struct
   t8_nc_int32_t       fillvalue32;
   t8_nc_int64_t       fillvalue64;
   t8_nc_int32_t       start_index;
-  char               *convention;
+  const char         *convention;
   int                 netcdf_var_storage_mode;
   int                 netcdf_mpi_access;
   /* Stores the old NetCDF-FillMode if it gets changed */
@@ -79,59 +79,60 @@ typedef struct
 /* Contains the Definitions for the NetCDF-dimensions/-variables/-attributes (vary whether a 2D or 3D Mesh will be outputted) */
 typedef struct
 {
-  char               *mesh;
-  char               *dim_nMesh_node;
-  char               *dim_nMesh_elem;
-  char               *dim_nMaxMesh_elem_nodes;
-  char               *var_Mesh_node_x;
-  char               *var_Mesh_node_y;
-  char               *var_Mesh_node_z;
-  char               *var_Mesh_elem_types;
-  char               *var_Mesh_elem_tree_id;
-  char               *var_Mesh_elem_node;
-  char               *att_elem_shape_type;
-  char               *att_elem_node_connectivity;
-  char               *att_elem_tree_id;
-  char               *att_elem_node;
+  const char         *mesh;
+  const char         *dim_nMesh_node;
+  const char         *dim_nMesh_elem;
+  const char         *dim_nMaxMesh_elem_nodes;
+  const char         *var_Mesh_node_x;
+  const char         *var_Mesh_node_y;
+  const char         *var_Mesh_node_z;
+  const char         *var_Mesh_elem_types;
+  const char         *var_Mesh_elem_tree_id;
+  const char         *var_Mesh_elem_node;
+  const char         *att_elem_shape_type;
+  const char         *att_elem_node_connectivity;
+  const char         *att_elem_tree_id;
+  const char         *att_elem_node;
 } t8_cmesh_netcdf_ugrid_namespace_t;
 
 /* The UGRID conventions are applied for dimension and variable descriptions */
 static void
 t8_cmesh_init_ugrid_namespace_context (t8_cmesh_netcdf_ugrid_namespace_t *
-                                       namespace, int dim)
+                                       namespace_conv, int dim)
 {
   if (dim == 2) {
-    namespace->mesh = "Mesh2";
-    namespace->dim_nMesh_node = "nMesh2_node";
-    namespace->dim_nMesh_elem = "nMesh2_face";
-    namespace->dim_nMaxMesh_elem_nodes = "nMaxMesh2_face_nodes";
-    namespace->var_Mesh_node_x = "Mesh2_node_x";
-    namespace->var_Mesh_node_y = "Mesh2_node_y";
-    namespace->var_Mesh_node_z = "Mesh2_node_z";
-    namespace->var_Mesh_elem_types = "Mesh2_face_types";
-    namespace->var_Mesh_elem_tree_id = "Mesh2_face_tree_id";
-    namespace->var_Mesh_elem_node = "Mesh2_face_nodes";
-    namespace->att_elem_shape_type = "face_shape_type";
-    namespace->att_elem_node_connectivity = "face_node_conectivity";
-    namespace->att_elem_tree_id = "face_tree_id";
-    namespace->att_elem_node = "Mesh2_node_x Mesh2_node_y Mesh2_node_z";
+    namespace_conv->mesh = "Mesh2";
+    namespace_conv->dim_nMesh_node = "nMesh2_node";
+    namespace_conv->dim_nMesh_elem = "nMesh2_face";
+    namespace_conv->dim_nMaxMesh_elem_nodes = "nMaxMesh2_face_nodes";
+    namespace_conv->var_Mesh_node_x = "Mesh2_node_x";
+    namespace_conv->var_Mesh_node_y = "Mesh2_node_y";
+    namespace_conv->var_Mesh_node_z = "Mesh2_node_z";
+    namespace_conv->var_Mesh_elem_types = "Mesh2_face_types";
+    namespace_conv->var_Mesh_elem_tree_id = "Mesh2_face_tree_id";
+    namespace_conv->var_Mesh_elem_node = "Mesh2_face_nodes";
+    namespace_conv->att_elem_shape_type = "face_shape_type";
+    namespace_conv->att_elem_node_connectivity = "face_node_conectivity";
+    namespace_conv->att_elem_tree_id = "face_tree_id";
+    namespace_conv->att_elem_node = "Mesh2_node_x Mesh2_node_y Mesh2_node_z";
 
   }
   else if (dim == 3) {
-    namespace->mesh = "Mesh3D";
-    namespace->dim_nMesh_node = "nMesh3D_node";
-    namespace->dim_nMesh_elem = "nMesh3D_vol";
-    namespace->dim_nMaxMesh_elem_nodes = "nMaxMesh3D_vol_nodes";
-    namespace->var_Mesh_node_x = "Mesh3D_node_x";
-    namespace->var_Mesh_node_y = "Mesh3D_node_y";
-    namespace->var_Mesh_node_z = "Mesh3D_node_z";
-    namespace->var_Mesh_elem_types = "Mesh3D_vol_types";
-    namespace->var_Mesh_elem_tree_id = "Mesh3D_vol_tree_id";
-    namespace->var_Mesh_elem_node = "Mesh3D_vol_nodes";
-    namespace->att_elem_shape_type = "volume_shape_type";
-    namespace->att_elem_node_connectivity = "volume_node_connectivity";
-    namespace->att_elem_tree_id = "volume_tree_id";
-    namespace->att_elem_node = "Mesh3D_node_x Mesh3D_node_y Mesh3D_node_z";
+    namespace_conv->mesh = "Mesh3D";
+    namespace_conv->dim_nMesh_node = "nMesh3D_node";
+    namespace_conv->dim_nMesh_elem = "nMesh3D_vol";
+    namespace_conv->dim_nMaxMesh_elem_nodes = "nMaxMesh3D_vol_nodes";
+    namespace_conv->var_Mesh_node_x = "Mesh3D_node_x";
+    namespace_conv->var_Mesh_node_y = "Mesh3D_node_y";
+    namespace_conv->var_Mesh_node_z = "Mesh3D_node_z";
+    namespace_conv->var_Mesh_elem_types = "Mesh3D_vol_types";
+    namespace_conv->var_Mesh_elem_tree_id = "Mesh3D_vol_tree_id";
+    namespace_conv->var_Mesh_elem_node = "Mesh3D_vol_nodes";
+    namespace_conv->att_elem_shape_type = "volume_shape_type";
+    namespace_conv->att_elem_node_connectivity = "volume_node_connectivity";
+    namespace_conv->att_elem_tree_id = "volume_tree_id";
+    namespace_conv->att_elem_node =
+      "Mesh3D_node_x Mesh3D_node_y Mesh3D_node_z";
   }
 }
 
@@ -1040,7 +1041,7 @@ t8_cmesh_write_netcdf_file (t8_cmesh_t cmesh,
 /* Function that gets called if a cmesh schould be written in NetCDF-Format */
 void
 t8_cmesh_write_netcdf (t8_cmesh_t cmesh, const char *file_prefix,
-                       char *file_title, int dim,
+                       const char *file_title, int dim,
                        int num_extern_netcdf_vars,
                        t8_netcdf_variable_t * ext_variables[],
                        sc_MPI_Comm comm)

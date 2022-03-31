@@ -43,7 +43,7 @@ T8_EXTERN_C_BEGIN ();
  */
 void                t8_cmesh_write_netcdf (t8_cmesh_t cmesh,
                                            const char *file_prefix,
-                                           char *file_title, int dim,
+                                           const char *file_title, int dim,
                                            int num_extern_netcdf_vars,
                                            t8_netcdf_variable_t *
                                            variables[], sc_MPI_Comm comm);
