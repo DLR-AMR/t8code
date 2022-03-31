@@ -70,7 +70,8 @@ t8_example_netcdf_adapt_fn (t8_forest_t forest,
                             t8_locidx_t which_tree,
                             t8_locidx_t lelement_id,
                             t8_eclass_scheme_c * ts,
-                            int num_elements, t8_element_t * elements[])
+                            const int is_family,
+                            const int num_elements, t8_element_t * elements[])
 {
   double              element_centroid[3];
   double              distance;
@@ -92,8 +93,7 @@ t8_example_netcdf_adapt_fn (t8_forest_t forest,
     /* positive return value means, that this element is going to be refined */
     return 1;
   }
-  else if (num_elements > 1
-           && distance > adapt_data->coarsen_if_outside_radius) {
+  else if (is_family && distance > adapt_data->coarsen_if_outside_radius) {
     /* The elements family is going to be coarsened (this is only possible if all elements of this family are process-local) */
     /* returning a negative value means coarsening */
     return -1;
