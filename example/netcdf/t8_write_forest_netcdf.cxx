@@ -364,7 +364,7 @@ t8_example_netcdf_write_forest (sc_MPI_Comm comm, int forest_refinement_level,
 
   /* Construct a cube coarse mesh */
   /* Construct a 3D hybrid hypercube as a cmesh */
-  cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
+  cmesh = t8_cmesh_new_hypercube_hybrid (comm, 1, 0);
 
   t8_global_productionf ("New cmesh was created\n");
 
@@ -392,7 +392,7 @@ t8_example_netcdf_write_forest (sc_MPI_Comm comm, int forest_refinement_level,
 
   /* Write out the mpirank of each (process-local) element multiplied by the local element index */
   for (j = 0; j < num_elements; j++) {
-    var_rank[j] = mpirank;
+    var_rank[j] = mpirank * j;
   }
   /* Create a new sc_array_t which provides the data for the NetCDF variables, in this case the mpirank each element lays on */
   var_ranks =
@@ -400,8 +400,8 @@ t8_example_netcdf_write_forest (sc_MPI_Comm comm, int forest_refinement_level,
 
   /* Create the integer NetCDF variable; parameters are (name of the variable, descriptive long name of the variable, description of the data's unit, pointer to sc_array_t which provides the data) */
   ext_var_mpirank =
-    t8_netcdf_create_integer_var ("mpirank",
-                                  "Mpirank which the element lays on",
+    t8_netcdf_create_integer_var ("mult_mpirank",
+                                  "Mpirank which the element lays on multiplied by its process-local id",
                                   "integer", var_ranks);
 
   /* *Example user-defined NetCDF variable, random values* */

@@ -58,10 +58,10 @@ t8_example_netcdf_write_cmesh (sc_MPI_Comm comm)
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
 
-  /* Construct a hybrid cmesh (not partiotioned) */
-  cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
+  /* Construct a hybrid cmesh (not partitioned) */
+  cmesh = t8_cmesh_new_hypercube_hybrid (comm, 1, 0);
 
-  /* Number of process local elements */
+  /* Number of process-local elements */
   t8_global_productionf ("Number of local trees on process %d : %d\n",
                          mpirank, t8_cmesh_get_num_local_trees (cmesh));
 
@@ -80,7 +80,7 @@ t8_example_netcdf_write_cmesh (sc_MPI_Comm comm)
     sc_array_new_data (var_rank, sizeof (t8_nc_int32_t),
                        t8_cmesh_get_num_local_trees (cmesh));
 
-  /* Create the integer NetCDF variable; parameters are (name of the variable, descriptive long name of the variable, description of the data's unit, pointer to sc_array_t which provides the data) */
+  /* Create an integer NetCDF variable; parameters are (name of the variable, descriptive long name of the variable, description of the data's unit, pointer to sc_array_t which provides the data) */
   ext_var_mpirank =
     t8_netcdf_create_integer_var ("mpirank",
                                   "Mpirank which the element lays on",
@@ -98,7 +98,7 @@ t8_example_netcdf_write_cmesh (sc_MPI_Comm comm)
     sc_array_new_data (random_values, sizeof (double),
                        t8_cmesh_get_num_local_trees (cmesh));
 
-  /* Create the double NetCDF variable; parameters are (name of the variable, descriptive long name of the variable, description of the data's unit (i.e. degrees Celsius), pointer to sc_array_t which provides the data) */
+  /* Create a double NetCDF variable; parameters are (name of the variable, descriptive long name of the variable, description of the data's unit (i.e. degrees Celsius), pointer to sc_array_t which provides the data) */
   ext_var_random_values =
     t8_netcdf_create_double_var ("random_values", "Random values in [0,10)",
                                  "double", var_random_values);
