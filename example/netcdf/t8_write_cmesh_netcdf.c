@@ -108,7 +108,7 @@ t8_example_netcdf_write_cmesh (sc_MPI_Comm comm)
     { ext_var_mpirank, ext_var_random_values };
 
   /* Name of the NetCDF-File */
-  char               *mesh_name = "T8_Example_NetCDF_Cmesh";
+  const char         *mesh_name = "T8_Example_NetCDF_Cmesh";
 
   /* Write the cmesh to NetCDF */
   t8_cmesh_write_netcdf (cmesh, mesh_name, "Example 3D parallel cmesh", 3, 2,
