@@ -23,5 +23,5 @@ jobs:
       with:
           username: t8y
           url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
-          text: Update in ${{ github.event.push.sha }}
+          text: Update in ${{ github.event.inputs.branch }}
 
