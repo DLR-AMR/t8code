@@ -70,7 +70,7 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
   T8_ASSERT (ts->t8_element_level (element) > 0);
 
   num_siblings = ts->t8_element_num_siblings (element);
-  T8_ASSERT (ts->t8_element_child_id (element) == num_siblings - 1);
+  // T8_ASSERT (ts->t8_element_child_id (element) == num_siblings - 1);
 
   fam = el_buffer;
   pos = *el_inserted - num_siblings;
