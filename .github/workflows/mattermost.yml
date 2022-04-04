@@ -19,26 +19,30 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - env:
-          PR_NUMBER: ${{ github.event.number }}
-          ACTOR: ${{ github.event.actor }}
-          BRANCH: ${{ github.event.inputs.branch }}
-          SIZE: ${{ github.event.size }}
-          REF: ${{ github.event.ref }}
-          URL: ${{ github.event.commits[0][url]
-    - uses: Mitigram/gh-action-mattermost@main
+    #- env:
+    #      PR_NUMBER: ${{ github.event.number }}
+    #      ACTOR: ${{ github.event.actor }}
+    #      BRANCH: ${{ github.event.inputs.branch }}
+    #      SIZE: ${{ github.event.size }}
+    #      REF: ${{ github.event.ref }}
+    #      URL: ${{ github.event.commits[0][url]
+    
     - name: pull request
+    - uses: Mitigram/gh-action-mattermost@main
       if: github.event.type == 'pull_request'
       with:
           username: t8y
           url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
-          text: ${{ env.ACTOR }} updated PULLREQUEST ${{ env.PR_NUMBER }}.
+         # text: ${{ env.ACTOR }} updated PULLREQUEST ${{ env.PR_NUMBER }}.
+          text: test pull request
     - name: push
+    - uses: Mitigram/gh-action-mattermost@main
       if: github.event.type == 'push'
       with:
           username: t8y
           url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
-          text: Successfully merged ${{ env.SIZE }} commits into  $${{ env.ref }}. See $${{ env.URL }}.
+          text: test push
+        #  text: Successfully merged ${{ env.SIZE }} commits into  $${{ env.ref }}. See $${{ env.URL }}.
 
         
       
