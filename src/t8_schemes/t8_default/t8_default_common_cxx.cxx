@@ -128,20 +128,17 @@ t8_gloidx_t
                                                       int level)
 {
 
-
-
   int                 element_level = t8_element_level (t);
   int                 dim = t8_eclass_to_dimension[eclass];
   if (eclass == T8_ECLASS_PYRAMID) {
-      int level_diff = level - element_level;
-      return element_level > level ? 0 :
-                                     2 * sc_intpow64(8,level_diff) -
-                                     sc_intpow64(6, level_diff);
+    int                 level_diff = level - element_level;
+    return element_level > level ? 0 :
+      2 * sc_intpow64 (8, level_diff) - sc_intpow64 (6, level_diff);
   }
   return count_leafs_from_level (element_level, level, dim);
 }
 
-/* Count the maximum number of siblings.
+/* Count the maximum number of siblings of the root element.
  * The number of children is 2^dim for each element, except for pyramids.
  */
 /* *INDENT-OFF* */
