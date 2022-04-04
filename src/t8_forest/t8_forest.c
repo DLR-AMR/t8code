@@ -352,6 +352,20 @@ t8_forest_comm_global_num_elements (t8_forest_t forest)
   forest->global_num_elements = global_num_el;
 }
 
+/** Adapt callback function to refine every element in the forest.
+ * It is merely used to build a new forest with pyramids. 
+ * 
+ * \param [in] forest       the forest to which the new elements belong
+ * \param [in] forest_from  the forest that is adapted.
+ * \param [in] which_tree   the local tree containing \a elements
+ * \param [in] lelement_id  the local element id in \a forest_old in the tree of the current element
+ * \param [in] ts           the eclass scheme of the tree
+ * \param [in] is_family    if 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
+ * \param [in] num_elements the number of entries in \a elements that are defined
+ * \param [in] elements     Pointers to a family or, if \a is_family is zero,
+ *                          pointer to one element.
+ * \return                  Always return 1, to refine every element
+ */
 static int
 t8_forest_refine_everything (t8_forest_t forest, t8_forest_t forest_from,
                              t8_locidx_t which_tree, t8_locidx_t lelement_id,
