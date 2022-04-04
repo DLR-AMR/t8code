@@ -113,7 +113,7 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
       isfamily = 0;
     }
     pos -= num_siblings - 1;
-  };
+  }
 }
 
 /* Check the lastly inserted element of an array for recursive refining.
