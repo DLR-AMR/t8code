@@ -26,5 +26,5 @@ jobs:
       with:
           username: t8y
           url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
-          text: Successfully merged Pullrequest $PR_NUMBER into $BRANCH
+          text: Successfully merged Pullrequest ${{ env.PR_NUMBER }} into ${{ env.BRANCH }}
 
