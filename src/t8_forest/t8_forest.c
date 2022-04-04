@@ -353,10 +353,11 @@ t8_forest_comm_global_num_elements (t8_forest_t forest)
 }
 
 static int
-t8_forest_new_refine (t8_forest_t forest, t8_forest_t forest_from,
-                      t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                      t8_eclass_scheme_c * ts, const int is_family,
-                      const int num_elements, t8_element_t * elements[])
+t8_forest_refine_everything (t8_forest_t forest, t8_forest_t forest_from,
+                             t8_locidx_t which_tree, t8_locidx_t lelement_id,
+                             t8_eclass_scheme_c * ts, const int is_family,
+                             const int num_elements,
+                             t8_element_t * elements[])
 {
 
   return 1;
@@ -419,8 +420,8 @@ t8_forest_commit (t8_forest_t forest)
       for (i = 1; i <= forest->set_level; i++) {
         t8_forest_init (&forest_tmp);
         t8_forest_set_level (forest_tmp, i);
-        t8_forest_set_adapt (forest_tmp, forest_zero, t8_forest_new_refine,
-                             0);
+        t8_forest_set_adapt (forest_tmp, forest_zero,
+                             t8_forest_refine_everything, 0);
         t8_forest_commit (forest_tmp);
         t8_forest_init (&forest_tmp_partition);
         t8_forest_set_partition (forest_tmp_partition, forest_tmp, 0);
