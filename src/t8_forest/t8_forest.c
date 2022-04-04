@@ -441,8 +441,6 @@ t8_forest_commit (t8_forest_t forest)
         t8_forest_set_partition (forest_tmp_partition, forest_tmp, 0);
         t8_forest_commit (forest_tmp_partition);
         forest_zero = forest_tmp_partition;
-        //t8_forest_ref(forest);
-        //t8_forest_copy_trees(forest_tmp, forest_zero,1);
       }
       t8_forest_copy_trees (forest, forest_tmp_partition, 1);
       t8_forest_unref (&forest_tmp_partition);
