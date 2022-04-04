@@ -268,7 +268,7 @@ t8_forest_adapt (t8_forest_t forest)
       /* Will get set to 1 later if this is a family */
       is_family = 0;
 
-      /* Load the current element and at most num_children-1 many others into
+      /* Load the current element and at most num_siblings-1 many others into
        * the elements_from buffer. Stop when we are certain that they cannot from
        * a family.
        * At the end is_family will be true, if these elements form a family.
@@ -283,7 +283,6 @@ t8_forest_adapt (t8_forest_t forest)
           T8_REALLOC (elements_from, t8_element_t *, num_siblings);
         curr_size_elements_from = num_siblings;
       }
-      /*change: num_children into num_siblings */
       for (zz = 0; zz < (unsigned int) num_siblings &&
            el_considered + (t8_locidx_t) zz < num_el_from; zz++) {
         elements_from[zz] = t8_element_array_index_locidx (telements_from,
@@ -338,7 +337,7 @@ t8_forest_adapt (t8_forest_t forest)
         }
         if (forest->set_adapt_recursive) {
           /* Create the children of this element */
-          tscheme->t8_element_new (num_children, elements);     /*num_children or num_siblings? */
+          tscheme->t8_element_new (num_children, elements);
           tscheme->t8_element_children (elements_from[0], num_children,
                                         elements);
           for (ci = num_children - 1; ci >= 0; ci--) {
@@ -357,7 +356,7 @@ t8_forest_adapt (t8_forest_t forest)
           el_coarsen = el_inserted + num_children;
         }
         else {
-          (void) t8_element_array_push_count (telements, num_children); /*num_children or num_siblings? */
+          (void) t8_element_array_push_count (telements, num_children);
           for (zz = 0; zz < num_children; zz++) {
             elements[zz] =
               t8_element_array_index_locidx (telements, el_inserted + zz);
@@ -370,7 +369,6 @@ t8_forest_adapt (t8_forest_t forest)
         el_considered++;
       }
       else if (refine < 0) {
-
         /* The elements form a family and are to be coarsened. */
         /* Make room for one more new element. */
         elements[0] = t8_element_array_push (telements);
