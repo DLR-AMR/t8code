@@ -20,8 +20,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: Mitigram/gh-action-mattermost@main
+      env:
+          PR_NUMBER: ${{ github.event.number }}
+          BRANCH: ${{ github.event.inputs.branch }}
       with:
           username: t8y
           url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
-          text: Update in ${{ github.event.inputs.branch }}
+          text: Successfully merged Pullrequest ${{ env.PR_NUMBER }} into ${{ env.BRANCH }}
 
