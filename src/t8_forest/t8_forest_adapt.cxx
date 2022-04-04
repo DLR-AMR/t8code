@@ -263,7 +263,7 @@ t8_forest_adapt (t8_forest_t forest)
     elements_from = T8_ALLOC (t8_element_t *, curr_size_elements_from);
     /* We now iterate over all elements in this tree and check them for refinement/coarsening. */
     while (el_considered < num_el_from) {
-      int                 num_elements_to_adapt_fn;
+      int                 num_elements_to_adapt_callback;
 
       /* Will get set to 1 later if this is a family */
       is_family = 0;
@@ -304,12 +304,12 @@ t8_forest_adapt (t8_forest_t forest)
         /* We are certain that the elements do not form a family.
          * So we will only pass the first element to the adapt callback. */
         is_family = 0;
-        num_elements_to_adapt_fn = 1;
+        num_elements_to_adapt_callback = 1;
       }
       else {
         /* We will pass a family to the adapt callback */
         is_family = 1;
-        num_elements_to_adapt_fn = num_siblings;
+        num_elements_to_adapt_callback = num_siblings;
       }
       T8_ASSERT (!is_family || tscheme->t8_element_is_family (elements_from));
 
@@ -321,7 +321,7 @@ t8_forest_adapt (t8_forest_t forest)
       refine =
         forest->set_adapt_fn (forest, forest->set_from, ltree_id,
                               el_considered, tscheme, is_family,
-                              num_elements_to_adapt_fn, elements_from);
+                              num_elements_to_adapt_callback, elements_from);
 
       T8_ASSERT (is_family || refine >= 0);
       if (refine > 0 && tscheme->t8_element_level (elements_from[0]) >=
