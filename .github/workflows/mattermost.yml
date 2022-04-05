@@ -12,13 +12,40 @@ on:
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+  
 jobs:
-  # This workflow contains a single job called "build"
-  build:
+  job1:
+    if: github.event.action == 'pull_request'
     runs-on: ubuntu-latest
     steps:
+    - name: pull request
+    - uses: Mitigram/gh-action-mattermost@main
+      with: 
+        username: t8y
+        url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
+        text: pull_request test
+        
+  job2:
+    if: github.event.action == 'push'
+    runs-on: ubuntu-latest
+    steps:
+    - name: push
+    - uses: Mitigram/gh-action-mattermost@main
+      with: 
+        username: t8y
+        url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
+        text: push test
+    
+  
+      
+  
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+#jobs:
+  # This workflow contains a single job called "build"
+#  build:
+#    runs-on: ubuntu-latest
+#    steps:
     #- env:
     #      PR_NUMBER: ${{ github.event.number }}
     #      ACTOR: ${{ github.event.actor }}
@@ -27,21 +54,21 @@ jobs:
     #      REF: ${{ github.event.ref }}
     #      URL: ${{ github.event.commits[0][url]
     
-    - name: pull request
-    - uses: Mitigram/gh-action-mattermost@main
-      if: github.event.type == 'pull_request'
-      with:
-          username: t8y
-          url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
+#    - name: pull request
+#    - uses: Mitigram/gh-action-mattermost@main
+#      if: github.event.type == 'pull_request'
+#      with:
+#          username: t8y
+#          url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
          # text: ${{ env.ACTOR }} updated PULLREQUEST ${{ env.PR_NUMBER }}.
-          text: test pull request
-    - name: push
-    - uses: Mitigram/gh-action-mattermost@main
-      if: github.event.type == 'push'
-      with:
-          username: t8y
-          url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
-          text: test push
+#          text: test pull request
+#    - name: push
+#    - uses: Mitigram/gh-action-mattermost@main
+#      if: github.event.type == 'push'
+#      with:
+#          username: t8y
+#          url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
+#          text: test push
         #  text: Successfully merged ${{ env.SIZE }} commits into  $${{ env.ref }}. See $${{ env.URL }}.
 
         
