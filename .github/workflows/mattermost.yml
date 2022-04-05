@@ -16,13 +16,23 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    if: github.event.action == 'pull_request'
+    
     steps:
       - uses: Mitigram/gh-action-mattermost@main
+      - name: push  
+        if: github.event.action == 'push'
         with: 
           username: t8y
           url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
-          text: pull_request test
+          text: push test
+      - name: pull_request
+        if: github.event.action == 'pull_request'
+        with:
+          username: t8y
+          url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
+          text: pull_request
+        
+
     
         
   #job2:
