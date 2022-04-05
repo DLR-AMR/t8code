@@ -24,7 +24,7 @@ jobs:
         with: 
           username: t8y
           url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
-          text: Pushed ${{ github.event.distinct_size }} commits into ${{ github.event.ref }}.
+          text: Pushed into ${{ github.event.ref }} by ${{ github.event.pusher.name }}. See ${{ github.event.compare }} for more details.
       - name: pull_request
         uses: Mitigram/gh-action-mattermost@main
         if: github.event_name == 'pull_request' && github.event.action != 'synchronize'
