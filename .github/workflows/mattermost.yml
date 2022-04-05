@@ -12,15 +12,30 @@ on:
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+  
+  
 jobs:
-  # This workflow contains a single job called "build"
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: Mitigram/gh-action-mattermost@main
-      with:
+      - name: push  
+        uses: Mitigram/gh-action-mattermost@main
+        if: github.event_name == 'push'
+        with: 
           username: t8y
           url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
-          text: Update in ${{ github.event.inputs.branch }}
+          text: ${{ github.event.pusher.name }} pushed into ${{ github.event.ref }}. See ${{ github.event.compare }} for more details.
+      - name: pull_request
+        uses: Mitigram/gh-action-mattermost@main
+        if: github.event_name == 'pull_request' && github.event.action != 'synchronize'
+        with:
+          username: t8y
+          url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
+          text: Pull request ${{ github.event.number }} has been ${{ github.event.action }}.
+      - name: synchronize
+        uses: Mitigram/gh-action-mattermost@main
+        if: github.event.action == 'synchronize'
+        with:
+          username: t8y
+          url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
+          text: Updated Pull-Request ${{ github.event.number }}.
