@@ -61,4 +61,4 @@ jobs:
         with:
           username: t8y
           url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
-          text: Updated Pull-Request ${{ github.event.number }}. See /${{ github.event.pull_request.html_url }} for more details.
+          text: Updated Pull-Request ${{ github.event.number }}. See ${{ github.event.pull_request.html_url }} for more details.
