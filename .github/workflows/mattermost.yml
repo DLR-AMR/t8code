@@ -19,14 +19,14 @@ jobs:
     steps:
       - name: push  
         uses: Mitigram/gh-action-mattermost@main
-        if: github.event.action == 'push'
+        if: github.event_name == 'push'
         with: 
           username: t8y
           url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
           text: push test
       - name: pull_request
         uses: Mitigram/gh-action-mattermost@main
-        if: github.event.action == 'pull_request'
+        if: github.event_name == 'pull_request'
         with:
           username: t8y
           url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
