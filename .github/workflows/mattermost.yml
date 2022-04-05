@@ -27,10 +27,17 @@ jobs:
           text: Pushed ${{ github.event.size }} commits into ${{ github.event.ref }}.
       - name: pull_request
         uses: Mitigram/gh-action-mattermost@main
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && github.event.action != 'synchronize'
         with:
           username: t8y
           url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
           text: Pull request ${{ github.event.number }} has been ${{ github.event.action }}
+      - name: synchronize
+        uses: Mitigram/gh-action-mattermost@main
+        if: github.event.action == 'synchronize'
+        with:
+          username: t8y
+          url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
+          text: Updated Pull-Request ${{ github.event.number }}.
 
 # This is a test comment 
