@@ -53,7 +53,7 @@ jobs:
         with:
           username: t8y
           url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
-          text: Pull request ${{ github.event.number }} has been ${{ github.event.action }}. See ${{ github.event.pull_request.url }} for more details.
+          text: Pull request ${{ github.event.number }} has been ${{ github.event.action }}. See https://github.com/holke/t8code/pull/${{ github.event.number }} for more details.
 # trigger this part of the workflow, when something new is pushed into a pull request.
       - name: synchronize
         uses: Mitigram/gh-action-mattermost@main
@@ -61,4 +61,4 @@ jobs:
         with:
           username: t8y
           url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
-          text: Updated Pull-Request ${{ github.event.number }}. See ${{ github.event.pull_request.url }} for more details.
+          text: Updated Pull-Request ${{ github.event.number }}. See https://github.com/holke/t8code/pull/${{ github.event.number }} for more details.
