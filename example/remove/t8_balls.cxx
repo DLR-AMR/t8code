@@ -19,8 +19,8 @@ t8_adapt_callback_init (t8_forest_t forest,
                         t8_locidx_t which_tree,
                         t8_locidx_t lelement_id,
                         t8_eclass_scheme_c * ts,
-                        int is_family,
-                        int num_elements, 
+                        const int is_family,
+                        const int num_elements,  
                         t8_element_t * elements[])
 {
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
@@ -60,8 +60,8 @@ t8_adapt_callback_remove (t8_forest_t forest,
                           t8_locidx_t which_tree,
                           t8_locidx_t lelement_id,
                           t8_eclass_scheme_c * ts,
-                          int is_family,
-                          int num_elements, 
+                          const int is_family,
+                          const int num_elements, 
                           t8_element_t * elements[])
 {
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
@@ -90,8 +90,8 @@ t8_adapt_callback_coarse (t8_forest_t forest,
                           t8_locidx_t which_tree,
                           t8_locidx_t lelement_id,
                           t8_eclass_scheme_c * ts,
-                          int is_family,
-                          int num_elements, 
+                          const int is_family,
+                          const int num_elements, 
                           t8_element_t * elements[])
 {
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
@@ -124,8 +124,8 @@ t8_adapt_callback_refine (t8_forest_t forest,
                           t8_locidx_t which_tree,
                           t8_locidx_t lelement_id,
                           t8_eclass_scheme_c * ts,
-                          int is_family,
-                          int num_elements, 
+                          const int is_family,
+                          const int num_elements, 
                           t8_element_t * elements[])
 {
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
@@ -154,8 +154,8 @@ t8_adapt_callback_coarse_all (t8_forest_t forest,
                               t8_locidx_t which_tree,
                               t8_locidx_t lelement_id,
                               t8_eclass_scheme_c * ts,
-                              int is_family,
-                              int num_elements, 
+                              const int is_family,
+                              const int num_elements, 
                               t8_element_t * elements[])
 {
   if(is_family) {

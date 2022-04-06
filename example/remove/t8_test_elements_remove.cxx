@@ -40,8 +40,8 @@ t8_adapt_callback_init (t8_forest_t forest,
                         t8_locidx_t which_tree,
                         t8_locidx_t lelement_id,
                         t8_eclass_scheme_c * ts,
-                        int is_family,
-                        int num_elements, 
+                        const int is_family,
+                        const int num_elements, 
                         t8_element_t * elements[])
 {
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
@@ -62,11 +62,11 @@ t8_adapt_callback_init (t8_forest_t forest,
 
   for (int i = 0; i < 6; i++) {
     dist = t8_vec_dist(adapt_data->midpoint[i], centroid);
-    /* remove core of every ball */
+    /* Remove core of every ball. */
     if (dist < 0.4) {
       return -2;
     }
-    /* refine shell of every ball */
+    /* Refine shell of every ball. */
     if (dist < 0.5) {
       return 1;
     }
@@ -81,8 +81,8 @@ t8_adapt_callback_remove (t8_forest_t forest,
                           t8_locidx_t which_tree,
                           t8_locidx_t lelement_id,
                           t8_eclass_scheme_c * ts,
-                          int is_family,
-                          int num_elements, 
+                          const int is_family,
+                          const int num_elements, 
                           t8_element_t * elements[])
 {
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
@@ -111,8 +111,8 @@ t8_adapt_callback_coarse (t8_forest_t forest,
                           t8_locidx_t which_tree,
                           t8_locidx_t lelement_id,
                           t8_eclass_scheme_c * ts,
-                          int is_family,
-                          int num_elements, 
+                          const int is_family,
+                          const int num_elements, 
                           t8_element_t * elements[])
 {
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
@@ -123,13 +123,14 @@ t8_adapt_callback_coarse (t8_forest_t forest,
   T8_ASSERT (adapt_data != NULL);
   
   if (is_family) {
-    /* all Balls */
+    /* Loop through all balls. */
     for (int i = 0; i < 6; i++) {
-      /* all member of family */
+      /* Loop through all member of family.
+       * If one family member satisfies the dist condition, coarse.
+       */
       for (int j = 0; j < num_elements; j++) {
         t8_forest_element_centroid (forest_from, which_tree, elements[j], centroid);
         dist = t8_vec_dist(adapt_data->midpoint[i], centroid);
-        /* if one family member satisfies the condition, coarse */
         if (dist < 0.5) {
           return -1;
         }
@@ -145,8 +146,8 @@ t8_adapt_callback_refine (t8_forest_t forest,
                           t8_locidx_t which_tree,
                           t8_locidx_t lelement_id,
                           t8_eclass_scheme_c * ts,
-                          int is_family,
-                          int num_elements, 
+                          const int is_family,
+                          const int num_elements, 
                           t8_element_t * elements[])
 {
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
@@ -158,7 +159,6 @@ t8_adapt_callback_refine (t8_forest_t forest,
 
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
   
-
   for (int i = 0; i < 6; i++) {
     dist = t8_vec_dist(adapt_data->midpoint[i], centroid);
     if (dist < 0.5) {
@@ -197,9 +197,7 @@ t8_test_emelemts_remove (int cmesh_id)
   for (level = min_level; level < max_level; level++) {
     t8_cmesh_ref (cmesh);
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
-    //t8_forest_write_vtk (forest, "t8_example_test");
-    T8_ASSERT (t8_forest_is_committed (forest));
-    //t8_global_productionf("### %i\n", cmesh_id);
+
     forest_1 = t8_forest_new_adapt (forest  , t8_adapt_callback_init  , 0, 0, &adapt_data);
     forest_1 = t8_forest_new_adapt (forest_1, t8_adapt_callback_remove, 0, 0, &adapt_data);
 
@@ -228,7 +226,9 @@ test_cmesh_emelemts_remove_all ()
     /* This if statement is necessary to make the test work by avoiding specific cmeshes which do not work yet for this test.
      * When the issues are gone, remove the if statement. */
     if (cmesh_id != 6 && cmesh_id != 89 && (cmesh_id < 237 || cmesh_id > 256)) {
-      /* Skip all t8_test_create_new_bigmesh_cmesh */
+      /* Skip all t8_test_create_new_bigmesh_cmesh 
+       * ToDo: Add geometrie to bigmeshs
+       */
       if (cmesh_id < 97 || cmesh_id > 256) {
         t8_test_emelemts_remove(cmesh_id);
       }
