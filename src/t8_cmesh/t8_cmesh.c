@@ -1689,7 +1689,7 @@ t8_cmesh_new_from_p8est (p8est_connectivity_t * conn,
   return t8_cmesh_new_from_p4est_ext (conn, 3, comm, do_partition, 0);
 }
 
-static void
+void
 t8_cmesh_translate_coordinates (const double *coords_in, double *coords_out,
                                 int num_vertices, double translate[3])
 {
@@ -1728,7 +1728,7 @@ t8_cmesh_new_translate_vertices_to_attributes (t8_topidx_t *
 
 /* Compute y = ax + b on an array of doubles, interpreting
  * each 3 as one vector x */
-static void
+void
 t8_cmesh_coords_axb (const double *coords_in, double *coords_out,
                      int num_vertices, double alpha, const double b[3])
 {

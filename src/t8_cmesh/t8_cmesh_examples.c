@@ -21,7 +21,10 @@
 */
 
 #include <t8_cmesh.h>
-#include <t8_cmesh_examples.h>
+#include <t8_cmesh/t8_cmesh_examples.h>
+#include <t8_cmesh/t8_cmesh_geometry.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
+#include <t8_cmesh_vtk.h>
 
 static              t8_cmesh_t
 t8_cmesh_new_vertex (sc_MPI_Comm comm)
