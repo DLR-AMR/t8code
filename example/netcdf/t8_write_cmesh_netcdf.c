@@ -19,12 +19,9 @@
   along with t8code; if not, write to the Free Software Foundation, Inc.,
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
-/* Copied from the linkage netcdf test. */
-/* In this test we create a netcdf in memory file and close it.
- * The purpose of this test is to check whether t8code successfully links
- * against netcdf.
- * If t8code was not configured with --with-netcdf then this test
- * does nothing and is always passed.
+/*
+  In this example, the use of functions in order to write out a cmesh in the netCDF format is exemplarily displayed.
+  Additionally to the UGRID representation of the cmesh, element-wise user-defined variables are created and also written to the netCDF file.
  */
 
 #include <t8.h>
@@ -58,7 +55,7 @@ t8_example_netcdf_write_cmesh (sc_MPI_Comm comm)
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
 
-  /* Construct a hybrid cmesh (not partitioned) */
+  /* Construct a hybrid cmesh */
   cmesh = t8_cmesh_new_hypercube_hybrid (comm, 1, 0);
 
   /* Number of process-local elements */

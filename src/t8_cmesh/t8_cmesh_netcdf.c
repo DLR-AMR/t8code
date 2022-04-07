@@ -22,19 +22,19 @@
 
 /*
 Description:
-These functions write a file in the NetCDF-format which represents the given 2D- or 3D-cmesh
+These functions write a file in the netCDF-format which represents the given 2D- or 3D-cmesh
 */
 
 #include <t8.h>
 #if T8_WITH_NETCDF
 #include <netcdf.h>
-/* do we need to question wheter this header is accessible? */
-#include <netcdf_par.h>
 /* Standard netcdf error function */
 #define ERRCODE 2
 #define ERR(e) {t8_global_productionf("Error: %s\n", nc_strerror(e)); exit(ERRCODE);}
 #endif
-//#include <t8_eclass.h>
+#if T8_WITH_NETCDF_PAR
+#include <netcdf_par.h>
+#endif
 #include <t8_element_shape.h>
 #include <t8_cmesh_netcdf.h>
 #include <t8_cmesh.h>
@@ -178,12 +178,14 @@ t8_cmesh_write_netcdf_coordinate_variables (t8_cmesh_netcdf_context_t *
     ERR (retval);
   }
   /* Define whether an independent or collective variable access is used */
+#if T8_WITH_NETCDF_PAR
   if ((retval =
        nc_var_par_access (context->ncid,
                           context->var_node_x_id,
                           context->netcdf_mpi_access))) {
     ERR (retval);
   }
+#endif
   /* Define standard_name attribute. */
   const char         *standard_node_x = "Longitude";
   if ((retval =
@@ -224,12 +226,14 @@ t8_cmesh_write_netcdf_coordinate_variables (t8_cmesh_netcdf_context_t *
     ERR (retval);
   }
   /* Define whether an independent or collective variable access is used */
+#if T8_WITH_NETCDF_PAR
   if ((retval =
        nc_var_par_access (context->ncid,
                           context->var_node_y_id,
                           context->netcdf_mpi_access))) {
     ERR (retval);
   }
+#endif
   /* Define standard_name attribute. */
   const char         *standard_node_y = "Latitude";
   if ((retval =
@@ -270,12 +274,14 @@ t8_cmesh_write_netcdf_coordinate_variables (t8_cmesh_netcdf_context_t *
     ERR (retval);
   }
   /* Define whether an independent or collective variable access is used */
+#if T8_WITH_NETCDF_PAR
   if ((retval =
        nc_var_par_access (context->ncid,
                           context->var_node_z_id,
                           context->netcdf_mpi_access))) {
     ERR (retval);
   }
+#endif
   /* Define standard_name attribute. */
   const char         *standard_node_z = "Height";
   if ((retval =
@@ -427,12 +433,14 @@ t8_cmesh_write_netcdf_variables (t8_cmesh_netcdf_context_t * context,
     ERR (retval);
   }
   /* Define whether an independent or collective variable access is used */
+#if T8_WITH_NETCDF_PAR
   if ((retval =
        nc_var_par_access (context->ncid,
                           context->var_elem_types_id,
                           context->netcdf_mpi_access))) {
     ERR (retval);
   }
+#endif
   /* Define cf_role attribute */
   if ((retval =
        nc_put_att_text (context->ncid, context->var_elem_types_id, "cf_role",
@@ -478,12 +486,14 @@ t8_cmesh_write_netcdf_variables (t8_cmesh_netcdf_context_t * context,
     ERR (retval);
   }
   /* Define whether an independent or collective variable access is used */
+#if T8_WITH_NETCDF_PAR
   if ((retval =
        nc_var_par_access (context->ncid,
                           context->var_elem_tree_id,
                           context->netcdf_mpi_access))) {
     ERR (retval);
   }
+#endif
   /* Define cf_role attribute */
   if ((retval =
        nc_put_att_text (context->ncid, context->var_elem_tree_id, "cf_role",
@@ -528,12 +538,14 @@ t8_cmesh_write_netcdf_variables (t8_cmesh_netcdf_context_t * context,
     ERR (retval);
   }
   /* Define whether an independent or collective variable access is used */
+#if T8_WITH_NETCDF_PAR
   if ((retval =
        nc_var_par_access (context->ncid,
                           context->var_elem_nodes_id,
                           context->netcdf_mpi_access))) {
     ERR (retval);
   }
+#endif
   /* Define cf_role attribute */
   if ((retval =
        nc_put_att_text (context->ncid, context->var_elem_nodes_id, "cf_role",
@@ -626,12 +638,14 @@ t8_cmesh_write_user_netcdf_vars (t8_cmesh_netcdf_context_t * context,
           ERR (retval);
         }
         /* Define whether an independent or collective variable access is used */
+#if T8_WITH_NETCDF_PAR
         if ((retval =
              nc_var_par_access (context->ncid,
                                 ext_variables[i]->var_user_dimid,
                                 context->netcdf_mpi_access))) {
           ERR (retval);
         }
+#endif
       }
 
       /* Attach the user-defined 'long_name' attribute to the variable */
@@ -943,10 +957,16 @@ t8_cmesh_write_netcdf_file (t8_cmesh_t cmesh,
 
   /* Create the NetCDF file, the NC_CLOBBER parameter tells netCDF to overwrite this file, if it already exists. Leaves the file in 'define-mode'. */
   /* Since NetCDF version 4.6.2 NC_MPIIO seems to be redundant/not necessary */
-#if T8_WITH_NETCDF
+#if T8_WITH_NETCDF_PAR
   if ((retval =
        nc_create_par (context->filename, NC_CLOBBER | NC_NETCDF4
                       | NC_MPIIO, comm, sc_MPI_INFO_NULL, &context->ncid))) {
+    ERR (retval);
+  }
+#elif T8_WITH_NETCDF
+  if ((retval =
+       nc_create (context->filename, NC_CLOBBER | NC_NETCDF4,
+                  &context->ncid))) {
     ERR (retval);
   }
 #endif
@@ -1051,8 +1071,26 @@ t8_cmesh_write_netcdf (t8_cmesh_t cmesh, const char *file_prefix,
   T8_ASSERT (file_title != NULL);
   T8_ASSERT (file_prefix != NULL);
   char                file_name[BUFSIZ];
-  /* Create the NetCDF-Filname */
-  snprintf (file_name, BUFSIZ, "%s.nc", file_prefix);
+  int                 retval;
+  int                 mpirank, mpisize;
+
+  /* Size of the communicator */
+  retval = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (retval);
+  /* Get the rank of the process */
+  retval = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (retval);
+
+  /* Prevent the single file to be overwritten if more proceses are involved */
+  if (mpisize > 1) {
+    /* Create the NetCDF-Filname for each process */
+    snprintf (file_name, BUFSIZ, "%s_rank_%d.nc", file_prefix, mpirank);
+  }
+  else {
+    /* Create the NetCDF-Filname */
+    snprintf (file_name, BUFSIZ, "%s.nc", file_prefix);
+  }
+
   /* Initialize first variables for NetCDF purposes. */
   context.filename = file_name;
   context.filetitle = file_title;
@@ -1061,8 +1099,8 @@ t8_cmesh_write_netcdf (t8_cmesh_t cmesh, const char *file_prefix,
   context.fillvalue64 = -1;
   context.start_index = 0;
   context.convention = "UGRID v1.0";
-  /* Set the netCDF per variable storage and mpi-access patterns */
-#if T8_WITH_NETCDF
+  /* Set the netCDF per variable storage and mpi-access patterns (only if parallel netCDF routines are accessible) */
+#if T8_WITH_NETCDF_PAR
   context.netcdf_var_storage_mode = NC_CONTIGUOUS;
   context.netcdf_mpi_access = NC_INDEPENDENT;
 #endif
