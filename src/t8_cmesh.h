@@ -738,29 +738,6 @@ void                t8_cmesh_destroy (t8_cmesh_t * pcmesh);
 
 /* Functions for construcing complete and committed cmeshes */
 
-/** Constructs a cmesh from a given p4est_connectivity structure.
- * \param[in]       conn       The p4est connectivity.
- * \param[in]       comm       mpi communicator to be used with the new cmesh.
- * \param[in]       do_partition Flag whether the cmesh should be partitioned or not.
- * \return          A t8_cmesh structure that holds the same connectivity information
- *                  as \a conn.
- */
-t8_cmesh_t          t8_cmesh_new_from_p4est (p4est_connectivity_t * conn,
-                                             sc_MPI_Comm comm,
-                                             int do_partition);
-
-/** Constructs a cmesh from a given p8est_connectivity structure.
- * \param[in]       conn       The p8est connectivity.
- * \param[in]       comm       mpi communicator to be used with the new cmesh.
- * \param[in]       do_dup     Flag whether the communicator shall be duplicated or not.
- * \param[in]       do_partition Flag whether the cmesh should be partitioned or not.
- * \return          A t8_cmesh structure that holds the same connectivity information
- *                  as \a conn.
- */
-t8_cmesh_t          t8_cmesh_new_from_p8est (p8est_connectivity_t * conn,
-                                             sc_MPI_Comm comm,
-                                             int do_partition);
-
 t8_cmesh_t          t8_cmesh_new_testhybrid (sc_MPI_Comm comm);
 
 /** Compute y = ax + b on an array of doubles, interpreting
@@ -770,16 +747,11 @@ t8_cmesh_t          t8_cmesh_new_testhybrid (sc_MPI_Comm comm);
  * \param[in]   num_vertices      The number of vertices/vectors
  * \param[in]   alpha             Scaling factor for the vectors
  * \param[in]   b                 Translation of the vectors.*/
-void
- 
- 
- 
- 
- 
- 
- 
- t8_cmesh_coords_axb (const double *coords_in, double *coords_out,
-                      int num_vertices, double alpha, const double b[3]);
+
+void                t8_cmesh_coords_axb (const double *coords_in,
+                                         double *coords_out,
+                                         int num_vertices,
+                                         double alpha, const double b[3]);
 
 /** Compute y = x + translate on an array of doubles, interpreting 
  * each 3 as one vector x
@@ -787,18 +759,22 @@ void
  * \param[out]  coords_out        The computed coordinates of the vectors
  * \param[in]   num_vertices      The number of vertices/vectors
  * \param[in]   translate         Translation of the vectors.
- * 
  */
-void
- 
- 
- 
- 
- 
- 
- 
- t8_cmesh_translate_coordinates (const double *coords_in, double *coords_out,
-                                 int num_vertices, double translate[3]);
+void                t8_cmesh_translate_coordinates (const double *coords_in,
+                                                    double *coords_out,
+                                                    int num_vertices,
+                                                    double translate[3]);
+
+/**TODO: Add proper documentation*/
+void                t8_cmesh_new_translate_vertices_to_attributes (t8_topidx_t
+                                                                   *
+                                                                   tvertices,
+                                                                   double
+                                                                   *vertices,
+                                                                   double
+                                                                   *attr_vertices,
+                                                                   int
+                                                                   num_vertices);
 
 T8_EXTERN_C_END ();
 

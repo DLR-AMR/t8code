@@ -27,9 +27,32 @@
 
 #ifndef T8_CMESH_EXAMPLES
 #define T8_CMESH_EXAMPLES
-#include<t8_cmesh.h>
+#include <t8_cmesh.h>
 
 T8_EXTERN_C_BEGIN ();
+
+/** Constructs a cmesh from a given p4est_connectivity structure.
+ * \param[in]       conn       The p4est connectivity.
+ * \param[in]       comm       mpi communicator to be used with the new cmesh.
+ * \param[in]       do_partition Flag whether the cmesh should be partitioned or not.
+ * \return          A t8_cmesh structure that holds the same connectivity information
+ *                  as \a conn.
+ */
+t8_cmesh_t          t8_cmesh_new_from_p4est (p4est_connectivity_t * conn,
+                                             sc_MPI_Comm comm,
+                                             int do_partition);
+
+/** Constructs a cmesh from a given p8est_connectivity structure.
+ * \param[in]       conn       The p8est connectivity.
+ * \param[in]       comm       mpi communicator to be used with the new cmesh.
+ * \param[in]       do_dup     Flag whether the communicator shall be duplicated or not.
+ * \param[in]       do_partition Flag whether the cmesh should be partitioned or not.
+ * \return          A t8_cmesh structure that holds the same connectivity information
+ *                  as \a conn.
+ */
+t8_cmesh_t          t8_cmesh_new_from_p8est (p8est_connectivity_t * conn,
+                                             sc_MPI_Comm comm,
+                                             int do_partition);
 
 /* TODO: it could possibly be a problem that we do not set the dimension of
  * the cmesh. This could i.e. be difficult when we combine an empty cmesh with
