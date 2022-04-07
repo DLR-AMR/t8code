@@ -5,6 +5,7 @@
 bin_PROGRAMS += \
 	example/remove/t8_ring \
 	example/remove/t8_balls \
+	example/remove/t8_example_recursive \
 	example/remove/t8_test_elements_remove
 
 example_remove_t8_ring_SOURCES = \
@@ -15,3 +16,6 @@ example_remove_t8_balls_SOURCES = \
 
 example_remove_t8_test_elements_remove_SOURCES = \
 	example/remove/t8_test_elements_remove.cxx
+
+example_remove_t8_example_recursive_SOURCES = \
+	example/remove/t8_example_recursive.cxx

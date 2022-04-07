@@ -200,6 +200,8 @@ t8_forest_adapt (t8_forest_t forest)
   int                 is_family;
   int                 level, level_current;
 
+  int counter = 0;
+
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->set_from != NULL);
   T8_ASSERT (forest->set_adapt_recursive != -1);
@@ -414,6 +416,7 @@ t8_forest_adapt (t8_forest_t forest)
         refine = 0;
       }
       if (refine == 1) {
+        counter ++;
         /* The first element is to be refined */
         if (forest->set_adapt_recursive) {
           /* Create the children of this element */
@@ -432,7 +435,8 @@ t8_forest_adapt (t8_forest_t forest)
                                             &el_inserted, elements);
           /* el_coarsen is the index of the first element in the new element
            * array which could be coarsened recursively.
-           * We can set this here to the next element after the current family, since a family that emerges from a refinement will never be coarsened */
+           * We can set this here to the next element after the current family, 
+           * since a family that emerges from a refinement will never be coarsened */
           el_coarsen = el_inserted + num_children;
         }
         else {
@@ -540,6 +544,8 @@ t8_forest_adapt (t8_forest_t forest)
     t8_global_productionf ("End adadpt %f %f\n", sc_MPI_Wtime (),
                            forest->profile->adapt_runtime);
   }
+
+  t8_global_productionf("[IL] counter: %i\n", counter);
 }
 
 T8_EXTERN_C_END ();
