@@ -50,14 +50,14 @@ jobs:
           text: Pull request ${{ github.event.number }} has been merged. See ${{ github.event.pull_request.html_url }} for more details.
       - name: push  
         uses: Mitigram/gh-action-mattermost@main
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && github.event.action != 'closed'
         with: 
           username: t8y
           url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
           text: ${{ github.event.pusher.name }} pushed into ${{ github.event.ref }}. See ${{ github.event.compare }} for more details.
       - name: pull_request
         uses: Mitigram/gh-action-mattermost@main
-        if: github.event_name == 'pull_request' && github.event.action != 'synchronize'
+        if: github.event_name == 'pull_request' && github.event.action != 'synchronize' && github.event.action != 'closed'
         with:
           username: t8y
           url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
