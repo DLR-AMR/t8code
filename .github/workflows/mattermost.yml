@@ -1,10 +1,32 @@
-# This is a basic workflow to help you get started with Actions
+#  This file is part of t8code.
+#  t8code is a C library to manage a collection (a forest) of multiple
+#  connected adaptive space-trees of general element types in parallel.
+#
+#  Copyright (C) 2015 the developers
+#
+#  t8code is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  t8code is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with t8code; if not, write to the Free Software Foundation, Inc.,
+#  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+
+# This is a workflow that posts messages in our Mattermost-Team concerning pull-requests and pushes
+# on the main, develop and feature-CI_mattermost_messages branch.
 
 name: Mattermost_message
 
 # Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the develop branch
+  # Triggers the workflow on push or pull request events on the feature-CI_mattermost_messages, develop or main branch
   push:
     branches: [ feature-CI_mattermost_messages, develop, main ]
   pull_request:
@@ -18,26 +40,32 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: merge
+        uses: Mitigram/gh-action-mattermost@main
+        if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
+        with: 
+          username: t8y
+          url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
+          text: Pull request ${{ github.event.number }} has been merged. See ${{ github.event.pull_request.html_url }} for more details.
       - name: push  
         uses: Mitigram/gh-action-mattermost@main
         if: github.event_name == 'push'
         with: 
           username: t8y
           url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
-          text: Pushed into ${{ github.event.ref }} by ${{ github.event.pusher.name }}. See ${{ github.event.compare }} for more details.
+          text: ${{ github.event.pusher.name }} pushed into ${{ github.event.ref }}. See ${{ github.event.compare }} for more details.
       - name: pull_request
         uses: Mitigram/gh-action-mattermost@main
         if: github.event_name == 'pull_request' && github.event.action != 'synchronize'
         with:
           username: t8y
           url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
-          text: Pull request ${{ github.event.number }} has been ${{ github.event.action }}
+          text: Pull request ${{ github.event.number }} has been ${{ github.event.action }}. See ${{ github.event.pull_request.html_url }} for more details.
+# trigger this part of the workflow, when something new is pushed into a pull request.
       - name: synchronize
         uses: Mitigram/gh-action-mattermost@main
         if: github.event.action == 'synchronize'
         with:
           username: t8y
           url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
-          text: Updated Pull-Request ${{ github.event.number }}.
-
-# This is a test comment 
+          text: Updated Pull-Request ${{ github.event.number }}. See ${{ github.event.pull_request.html_url }} for more details.
