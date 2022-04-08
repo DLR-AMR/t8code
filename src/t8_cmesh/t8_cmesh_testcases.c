@@ -27,6 +27,7 @@
 #include "t8_cmesh/t8_cmesh_partition.h"
 #include <t8_eclass.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
+#include <t8_cmesh/t8_cmesh_testcases.h>
 
 #ifdef T8_ENABLE_LESS_TESTS
 #define T8_CMESH_TEST_NUM_COMMS 1
