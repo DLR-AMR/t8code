@@ -31,6 +31,7 @@ on:
     branches: [ feature-CI_mattermost_messages, develop, main ]
   pull_request:
     branches: [ feature-CI_mattermost_messages, develop, main ]
+    types: [ opened, synchronize, reopened, closed]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -42,7 +43,7 @@ jobs:
     steps:
       - name: merge
         uses: Mitigram/gh-action-mattermost@main
-        if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
+        if: github.event.action == 'closed' && github.event.pull_request.merged == true
         with: 
           username: t8y
           url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
