@@ -27,6 +27,7 @@
 #include <t8_schemes/t8_default/t8_default_common_cxx.hxx>
 #include <t8_forest.h>
 #include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_examples.h>
 
 /* Construct a coarse mesh of two trees that are connected to each other.
  * Build a forest on top of it and perform some element_neighbor routines.

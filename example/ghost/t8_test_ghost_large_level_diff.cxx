@@ -38,6 +38,7 @@
 #include <sc_options.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_cmesh_vtk.h>
+#include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_schemes/t8_default/t8_dprism.h>
 #include <t8_schemes/t8_default/t8_dtet.h>
 #include <t8_forest/t8_forest_adapt.h>
