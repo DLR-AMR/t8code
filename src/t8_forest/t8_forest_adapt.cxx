@@ -376,7 +376,6 @@ t8_forest_adapt (t8_forest_t forest)
         T8_ASSERT (tscheme->t8_element_level (elements_from[0]) > 0);
         tscheme->t8_element_parent (elements_from[0], elements[0]);
         el_inserted++;
-        num_siblings = tscheme->t8_element_num_children (elements[0]);
         if (num_siblings > curr_size_elements) {
           elements = T8_REALLOC (elements, t8_element_t *, num_siblings);
           curr_size_elements = num_siblings;
