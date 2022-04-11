@@ -32,10 +32,6 @@ on:
   pull_request:
     branches: [ feature-CI_mattermost_messages, develop, main ]
     types: [ opened, synchronize, reopened, closed]
-  #To be able to get access to Webhook from a fork
-  pull_request_target:
-    branches: [ develop, main ]
-    types: [ opened, synchronize, reopened, closed]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
