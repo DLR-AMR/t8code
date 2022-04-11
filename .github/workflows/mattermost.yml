@@ -75,6 +75,7 @@ jobs:
       - name: workflow_dispatch
         uses: Mitigram/gh-action-mattermost@main
         with:
+          if: github.even.action == 'workflow_dispatch'
           username: t8y
           url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
           text: Manually triggered the Message-workflow
