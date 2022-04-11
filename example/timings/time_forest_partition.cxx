@@ -26,6 +26,7 @@
 #include <sc_options.h>
 #include <p4est_connectivity.h>
 #include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh_vtk.h>
 #include <t8_cmesh/t8_cmesh_partition.h>
 #include <t8_cmesh_readmshfile.h>

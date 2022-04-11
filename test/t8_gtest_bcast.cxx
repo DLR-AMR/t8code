@@ -29,6 +29,7 @@
 
 #include <gtest/gtest.h>
 #include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_examples.h>
 
 /* *INDENT-OFF* */
 class cmesh_hypercube : public testing::TestWithParam<t8_eclass> {

@@ -25,6 +25,7 @@
 #include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_forest.h>
 #include <t8_cmesh_vtk.h>
+#include <t8_cmesh/t8_cmesh_examples.h>
 
 /** Construct the cmesh given the dimension of the examples. 
  * For 1D a line is constructed, for 2D a mesh consisting of 2 triangles
@@ -51,7 +52,7 @@ t8_basic_create_cmesh (const int dim)
     }
   case 3:
     {
-      cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
+      cmesh = t8_cmesh_new_full_hybrid (sc_MPI_COMM_WORLD);
       break;
     }
 
