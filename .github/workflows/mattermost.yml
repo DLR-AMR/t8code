@@ -35,6 +35,10 @@ on:
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+    with: 
+      username: t8y
+      url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
+      text: Triggered via workflow dispatch
   
   
 jobs:
