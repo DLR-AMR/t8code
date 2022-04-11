@@ -35,6 +35,7 @@ on:
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+    uses: Mitigram/gh-action-mattermost@main
     with: 
       username: t8y
       url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
