@@ -404,7 +404,6 @@ t8_forest_adapt (t8_forest_t forest)
         T8_ASSERT (refine == 0);
         elements[0] = t8_element_array_push (telements);
         tscheme->t8_element_copy (elements_from[0], elements[0]);
-        num_siblings = tscheme->t8_element_num_siblings (elements[0]);
         el_inserted++;
         const int           child_id =
           tscheme->t8_element_child_id (elements[0]);
