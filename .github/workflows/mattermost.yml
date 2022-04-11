@@ -35,11 +35,6 @@ on:
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-    uses: Mitigram/gh-action-mattermost@main
-    with: 
-      username: t8y
-      url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
-      text: Triggered via workflow dispatch
   
   
 jobs:
@@ -75,3 +70,12 @@ jobs:
           username: t8y
           url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
           text: Updated Pull-Request ${{ github.event.number }}. See ${{ github.event.pull_request.html_url }} for more details.
+
+      #test-run when workflow_dispatch is triggered
+      - name: workflow_dispatch
+        uses: Mitigram/gh-action-mattermost@main
+        if: github.event.action == 'synchronize'
+        with:
+          username: t8y
+          url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
+          text: Manually triggered the Message-workflow
