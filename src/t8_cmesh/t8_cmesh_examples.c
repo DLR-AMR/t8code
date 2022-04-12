@@ -1326,10 +1326,10 @@ t8_cmesh_new_prism_geometry (sc_MPI_Comm comm)
   for (i = 0; i < 8; i++) {
     t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_PRISM);
   }
-  t8_cmesh_set_join (cmesh, 0, 1, 2, 0, 3);
+  t8_cmesh_set_join (cmesh, 0, 1, 2, 0, 0);
   t8_cmesh_set_join (cmesh, 1, 2, 1, 2, 0);
-  t8_cmesh_set_join (cmesh, 2, 3, 4, 3, 3);
-  t8_cmesh_set_join (cmesh, 3, 4, 2, 0, 3);
+  t8_cmesh_set_join (cmesh, 2, 3, 4, 3, 1);
+  t8_cmesh_set_join (cmesh, 3, 4, 2, 0, 0);
   t8_cmesh_set_join (cmesh, 4, 5, 2, 1, 0);
   t8_cmesh_set_join (cmesh, 5, 6, 2, 1, 0);
   t8_cmesh_set_join (cmesh, 6, 7, 0, 1, 0);
