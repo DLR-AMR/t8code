@@ -1557,14 +1557,47 @@ void
 t8_dpyramid_nca (const t8_dypramid_t * pyra1,
                  const t8_dypramid_t * pyra2, t8_dypramid_t * nca)
 {
-  int                 level;    /*the level of the nca */
+  int                 level, cube_level, real_level;    /*the level of the nca */
   t8_dpyramid_coord_t excl_or_x, excl_or_y, excl_or_z, maxclor;
-
+  t8_dpyramid_type_t  p1_type_at_level, p2_type_at_level;
   /*Compute the first level, at which the coordinates differ */
-  excl_or_x = pyra1->x ^ pyra2->x
-    excl_or_y = pyra1->y ^ pyra2->y
-    excl_or_z = pyra1->z ^ pyra2->z
-    maxclor = excl_or_x | excl_or_y | excl_or_z;
+  excl_or_x = pyra1->x ^ pyra2->x;
+  excl_or_y = pyra1->y ^ pyra2->y;
+  excl_or_z = pyra1->z ^ pyra2->z;
+  maxclor = excl_or_x | excl_or_y | excl_or_z;
 
   level = SC_LOG2_32 (maxclor) + 1 T8_ASSERT (level <= T8_DPYRAMID_MAXLEVEL);
+
+  /*both elements have the shape of a pyramid, hence the nca */
+  if (t8_dpyramid_shape (pyra1) == T8_ECLASS_PYRAMID &&
+      t8_dpyramid_shape (pyra2) == T8_ECLASS_PYRAMID);
+  {
+    cube_level = SC_MIN (T8_DPYRAMID_MAXLEVEL - level,
+                         (int) SC_MIN (pyra1->level, pyra2->level));
+    real_level = cube_level;
+    p1_type_at_level = compute_type (pyra1, cube_level);
+    p2_type_at_level = compute_type (pyra2, cube_level);
+    /*Compute the level at which pyra1 and pyra2 have a common type */
+    while (p1_type_at_level != p2_type_at_level) {
+      real_level--;
+      p1_type_at_level =
+        compute_type_ext (pyra1, real_level, p1_type_at_level,
+                          real_level + 1);
+      p2_type_at_level =
+        compute_type_ext (pyra2, real_level, p2_type_at_level,
+                          real_level + 1);
+    }
+    T8_ASSERT (real_level >= 0);
+    nca->level = real_level;
+
+    /*Compute the coordinates of the nca */
+    nca->x = pyra1->x & (T8_DPYRAMID_LEN (real_level) - 1);
+    nca->y = pyra1->y & (T8_DPYRAMID_LEN (real_level) - 1);
+    nca->z = pyra1->z & (T8_DPYRAMID_LEN (real_level) - 1);
+
+    nca->type = p1_type_at_level;
+  }
+  else {
+
+  }
 }
