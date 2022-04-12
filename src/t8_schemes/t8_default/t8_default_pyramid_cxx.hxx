@@ -244,7 +244,12 @@ public:
     SC_ABORT ("Not implemented.\n");
     return 0;                   /* prevents compiler warning */
   }
-
+/** Returns the corner number of an element given a face of the element and
+ *  a corner number regarding that face.
+ * \param [in]  element   Input element
+ * \param [in]  face      The facenumber of a face of \a element
+ * \param [in]  corner    The cornernumber of a corner of \a face
+ * \return                The cornernumber of \a element */
   virtual int         t8_element_get_face_corner (const t8_element_t *
                                                   element, int face,
                                                   int corner);

@@ -105,17 +105,14 @@ int                 t8_dpyramid_face_child_face (const t8_dpyramid_t * p,
 t8_element_shape_t  t8_dpyramid_face_shape (const t8_dpyramid_t * pyra,
                                             int face);
 
-int
- 
- 
- 
- 
- 
- 
- 
- 
-t8_dpyramid_get_face_corner (const t8_dpyramid_t * pyra,
-                             int face, int corner);
+/** Returns the corner number of a pyramid given a face of a pyramid and
+ *  a corner number regarding that face.
+ * \param [in]  pyra    Input pyramid
+ * \param [in]  face    The facenumber of a face of \a pyra
+ * \param [in]  corner  The cornernumber of a corner of \a face
+ * \return              The cornernumber of \a pyra */
+int                 t8_dpyramid_get_face_corner (const t8_dpyramid_t * pyra,
+                                                 int face, int corner);
 
 /** Given a boundary element and a facenumber of this element, compute the boundary face
  * \param[in] p          Input pyramid
