@@ -388,9 +388,10 @@ void                t8_dpyramid_vertex_reference_coords (const t8_dpyramid_t *
  * \param [in,out]  nca         Existing pyramid whose data will be filled with
  *                              the data of \a pyra1 and \a pyra2 nearest common ancestor.
  */
-void
-t8_dpyramid_nca (const t8_dypramid_t * pyra1,
-                 const t8_dypramid_t * pyra2, t8_dypramid_t * nca)
+void                t8_dpyramid_nca (const t8_dpyramid_t * pyra1,
+                                     const t8_dpyramid_t * pyra2,
+                                     t8_dpyramid_t * nca);
+
 T8_EXTERN_C_END ();
 
 #endif /* T8_DPYRAMID_BITS_H */

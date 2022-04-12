@@ -370,7 +370,7 @@ t8_default_scheme_pyramid_c::t8_element_nca (const t8_element_t * elem1,
                                              t8_element_t * nca)
 {
   t8_dpyramid_nca ((const t8_dpyramid_t *) elem1,
-                   (const t8_dpyrmaid_t *) elem2, (t8_pyramid_t *) nca);
+                   (const t8_dpyramid_t *) elem2, (t8_dpyramid_t *) nca);
 }
 
 /* Constructor */

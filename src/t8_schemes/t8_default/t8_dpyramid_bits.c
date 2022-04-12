@@ -1563,22 +1563,22 @@ t8_dpyramid_first_pyra_anc (const t8_dpyramid_t * tet,
   T8_ASSERT (1 <= tet->level && tet->level <= T8_DPYRAMID_MAXLEVEL);
   /*The NCA has to have the shape of a pyramid */
   t8_dpyramid_t       last_tet_anc;
-  t8_dpyramid_is_inside_tet (tet, tet->level, last_tet_anc);
+  t8_dpyramid_is_inside_tet (tet, tet->level, &last_tet_anc);
   /*The parent of last_tet_anc is a pyramid */
-  t8_dpyramid_tet_parent_type (&last_tet_anc, first_pyramid_anc);
+  t8_dpyramid_tetparent_type (&last_tet_anc, first_pyra_anc);
   T8_ASSERT (last_tet_anc.level >= 1);
   /*Update coordinates */
   t8_dpyramid_coord_t length = T8_DPYRAMID_LEN (last_tet_anc.level);
-  first_pyramid_anc->x = last_tet_anc.x & ~length;
-  first_pyramid_anc->y = last_tet_anc.y & ~length;
-  first_pyramid_anc->z = last_tet_anc.z & ~length;
+  first_pyra_anc->x = last_tet_anc.x & ~length;
+  first_pyra_anc->y = last_tet_anc.y & ~length;
+  first_pyra_anc->z = last_tet_anc.z & ~length;
   /*set the level */
-  first_pyramid_anc->level = last_tet_anc.level - 1;
+  first_pyra_anc->level = last_tet_anc.level - 1;
 }
 
 void
-t8_dpyramid_nca (const t8_dypramid_t * pyra1,
-                 const t8_dypramid_t * pyra2, t8_dypramid_t * nca)
+t8_dpyramid_nca (const t8_dpyramid_t * pyra1,
+                 const t8_dpyramid_t * pyra2, t8_dpyramid_t * nca)
 {
   int                 level, cube_level, real_level;    /*the level of the nca */
   t8_dpyramid_coord_t excl_or_x, excl_or_y, excl_or_z, maxclor;
@@ -1588,7 +1588,8 @@ t8_dpyramid_nca (const t8_dypramid_t * pyra1,
   excl_or_y = pyra1->y ^ pyra2->y;
   excl_or_z = pyra1->z ^ pyra2->z;
   maxclor = excl_or_x | excl_or_y | excl_or_z;
-  level = SC_LOG2_32 (maxclor) + 1 T8_ASSERT (level <= T8_DPYRAMID_MAXLEVEL);
+  level = SC_LOG2_32 (maxclor) + 1;
+  T8_ASSERT (level <= T8_DPYRAMID_MAXLEVEL);
 
   /*both elements have the shape of a pyramid, hence the nca */
   if (t8_dpyramid_shape (pyra1) == T8_ECLASS_PYRAMID &&
@@ -1636,7 +1637,7 @@ t8_dpyramid_nca (const t8_dypramid_t * pyra1,
     /*Both elements are a tet */
     T8_ASSERT (t8_dpyramid_shape (pyra1) == T8_ECLASS_TET);
     T8_ASSERT (t8_dpyramid_shape (pyra2) == T8_ECLASS_TET);
-    int                 pyra_anc_level1, pyra_anc_level2;
+    int                 pyra_anc_level1, pyra_anc_level2, min_tet_level;
     t8_dpyramid_t       last_tet1, last_tet2;
     pyra_anc_level1 =
       t8_dpyramid_is_inside_tet (pyra1, pyra1->level, &last_tet1);
@@ -1670,8 +1671,8 @@ t8_dpyramid_nca (const t8_dypramid_t * pyra1,
     else {
       /*One anc switches the shape, the nca is a pyra. */
       t8_dpyramid_t       first_pyra1, first_pyra2;
-      t8_dpyramid_tet_parent_type (&last_tet1, &first_pyra1);
-      t8_dpyramid_tet_parent_type (&last_tet2, &first_pyra2);
+      t8_dpyramid_tetparent_type (&last_tet1, &first_pyra1);
+      t8_dpyramid_tetparent_type (&last_tet2, &first_pyra2);
       pyramid_cut_coords (&first_pyra1,
                           T8_DPYRAMID_MAXLEVEL - pyra_anc_level1 + 1);
       pyramid_cut_coords (&first_pyra2,
