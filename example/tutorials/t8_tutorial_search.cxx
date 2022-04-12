@@ -113,7 +113,6 @@
 #include <t8_schemes/t8_default_cxx.hxx>        /* default refinement scheme. */
 #include <t8_vec.h>             /* Basic operations on 3D vectors. */
 #include <t8_forest/t8_forest_iterate.h>        /* For the search algorithm. */
-#include <t8_forest_vtk.h>      /* Additional vtk functions to output arbitrary user data. */
 #include <example/tutorials/t8_step3.h> /* Example forest adaptation from step 3 */
 
 /* Our search query, a particle together with a flag. */
@@ -246,7 +245,7 @@ t8_tutorial_search_vtk (t8_forest_t forest, sc_array * particles_per_element,
   strcpy (vtk_data.description, "Number of particles");
   vtk_data.type = T8_VTK_SCALAR;
   /* Write vtu files with our user define number of particles data. */
-  t8_forest_vtk_write_file (forest, prefix, 1, 1, 1, 1, 0, 1, &vtk_data);
+  t8_forest_write_vtk_ext (forest, prefix, 1, 1, 1, 1, 0, 0, 0, 1, &vtk_data);
 
   t8_global_productionf
     (" [search] Wrote forest and number of particles per element to %s*\n",
