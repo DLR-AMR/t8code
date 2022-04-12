@@ -4,46 +4,46 @@ r1 = 0.5;
 r2 = 0.6;
 h = 2;
 l = 3;
-b = 6;
+b = 3;
 
-Point(1) = {0, 0, 0};
+Point(1) = {0, 0, -b/2};
 
-Point(2) = {Sin(-Pi+Pi/4)*r2, Cos(-Pi+Pi/4)*r2, 0};
-Point(3) = {Sin(-Pi+Pi/4)*r1, Cos(-Pi+Pi/4)*r1, 0};
+Point(2) = {Sin(-Pi+Pi/4)*r2, Cos(-Pi+Pi/4)*r2, -b/2};
+Point(3) = {Sin(-Pi+Pi/4)*r1, Cos(-Pi+Pi/4)*r1, -b/2};
 
-Point(4) = {Sin(-Pi/4)*r2, Cos(-Pi/4)*r2, 0};
-Point(5) = {Sin(-Pi/4)*r1, Cos(-Pi/4)*r1, 0};
+Point(4) = {Sin(-Pi/4)*r2, Cos(-Pi/4)*r2, -b/2};
+Point(5) = {Sin(-Pi/4)*r1, Cos(-Pi/4)*r1, -b/2};
 
-Point(6) = {Sin(Pi/4)*r2, Cos(Pi/4)*r2, 0};
-Point(7) = {Sin(Pi/4)*r1, Cos(Pi/4)*r1, 0};
+Point(6) = {Sin(Pi/4)*r2, Cos(Pi/4)*r2, -b/2};
+Point(7) = {Sin(Pi/4)*r1, Cos(Pi/4)*r1, -b/2};
 
-Point(8) = {Sin(Pi-Pi/4)*r2, Cos(Pi-Pi/4)*r2, 0};
-Point(9) = {Sin(Pi-Pi/4)*r1, Cos(Pi-Pi/4)*r1, 0};
+Point(8) = {Sin(Pi-Pi/4)*r2, Cos(Pi-Pi/4)*r2, -b/2};
+Point(9) = {Sin(Pi-Pi/4)*r1, Cos(Pi-Pi/4)*r1, -b/2};
 
-Point(10) = {-l, h, 0};
-Point(11) = {-l, -h, 0};
-Point(12) = {l, h, 0};
-Point(13) = {l, -h, 0};
+Point(10) = {-l, h, -b/2};
+Point(11) = {-l, -h, -b/2};
+Point(12) = {l, h, -b/2};
+Point(13) = {l, -h, -b/2};
 
-Point(14) = {-l, Cos(-Pi+Pi/4)*r2, 0};
-Point(15) = {-l, Cos(-Pi/4)*r2, 0};
-Point(16) = {-l, Cos(Pi/4)*r2, 0};
-Point(17) = {-l, Cos(Pi-Pi/4)*r2, 0};
+Point(14) = {-l, Cos(-Pi+Pi/4)*r2, -b/2};
+Point(15) = {-l, Cos(-Pi/4)*r2, -b/2};
+Point(16) = {-l, Cos(Pi/4)*r2, -b/2};
+Point(17) = {-l, Cos(Pi-Pi/4)*r2, -b/2};
 
-Point(18) = {l, Cos(-Pi+Pi/4)*r2, 0};
-Point(19) = {l, Cos(-Pi/4)*r2, 0};
-Point(20) = {l, Cos(Pi/4)*r2, 0};
-Point(21) = {l, Cos(Pi-Pi/4)*r2, 0};
+Point(18) = {l, Cos(-Pi+Pi/4)*r2, -b/2};
+Point(19) = {l, Cos(-Pi/4)*r2, -b/2};
+Point(20) = {l, Cos(Pi/4)*r2, -b/2};
+Point(21) = {l, Cos(Pi-Pi/4)*r2, -b/2};
 
-Point(22) = {Sin(-Pi+Pi/4)*r2, h, 0};
-Point(23) = {Sin(-Pi/4)*r2, h, 0};
-Point(24) = {Sin(Pi/4)*r2, h, 0};
-Point(25) = {Sin(Pi-Pi/4)*r2, 0};
+Point(22) = {Sin(-Pi+Pi/4)*r2, h, -b/2};
+Point(23) = {Sin(-Pi/4)*r2, h, -b/2};
+Point(24) = {Sin(Pi/4)*r2, h, -b/2};
+Point(25) = {Sin(Pi-Pi/4)*r2, -b/2};
 
-Point(26) = {Sin(-Pi+Pi/4)*r2, -h, 0};
-Point(27) = {Sin(-Pi/4)*r2, -h, 0};
-Point(28) = {Sin(Pi/4)*r2, -h, 0};
-Point(29) = {Sin(Pi-Pi/4)*r2, -h, 0};
+Point(26) = {Sin(-Pi+Pi/4)*r2, -h, -b/2};
+Point(27) = {Sin(-Pi/4)*r2, -h, -b/2};
+Point(28) = {Sin(Pi/4)*r2, -h, -b/2};
+Point(29) = {Sin(Pi-Pi/4)*r2, -h, -b/2};
 
 Circle(1) = {6, 1, 8};
 Circle(2) = {7, 1, 9};
@@ -118,7 +118,7 @@ l_elems = 5;
 h_elems = 3;
 r2_elems = 1;
 circle_elems = 2;
-b_elems = 1;
+b_elems = 5;
 
 // After setting our geometries to transfinite we can mesh them
 Transfinite Curve {61, 62, 9, 10, 3, 4, 17, 18, 35, 36, 31, 30, 42, 41, 50, 49} = l_elems + 1 Using Progression 1;
