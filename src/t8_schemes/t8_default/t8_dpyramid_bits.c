@@ -1570,8 +1570,7 @@ t8_dpyramid_nca (const t8_dypramid_t * pyra1,
 
   /*both elements have the shape of a pyramid, hence the nca */
   if (t8_dpyramid_shape (pyra1) == T8_ECLASS_PYRAMID &&
-      t8_dpyramid_shape (pyra2) == T8_ECLASS_PYRAMID);
-  {
+      t8_dpyramid_shape (pyra2) == T8_ECLASS_PYRAMID) {
     cube_level = SC_MIN (T8_DPYRAMID_MAXLEVEL - level,
                          (int) SC_MIN (pyra1->level, pyra2->level));
     real_level = cube_level;
@@ -1597,7 +1596,32 @@ t8_dpyramid_nca (const t8_dypramid_t * pyra1,
 
     nca->type = p1_type_at_level;
   }
+  else if (t8_dpyramid_shape (pyra1) == T8_ECLASS_PYRAMID &&
+           t8_dpyramid_shape (pyra2) == T8_ECLASS_TET) {
+    /*The NCA has to have the shape of a pyramid */
+    t8_dpyramid_t       last_tet_anc, first_pyramid_anc;
+    t8_dpyramid_is_inside_tet (pyra2, pyra2->level, last_tet_anc);
+    /*The parent of last_tet_anc is a pyramid */
+    t8_dpyramid_tet_parent_type (&last_tet_anc, &first_pyramid_anc);
+    /*Update coordinates */
+    t8_dpyramid_coord_t length = T8_DPYRAMID_LEN (p->level);
+    first_pyramid_anc.x = last_tet_anc.x & ~length;
+    first_pyramid_anc.y = last_tet_anc.y & ~length;
+    first_pyramid_anc.z = last_tet_anc.z & ~length;
+    /*set the level */
+    first_pyramid_anc.level = last_tet_anc.level - 1;
+    /* pyra1 and first_pyramid_anc have the shape of a pyramid now, 
+     * we can call the nca again.
+     */
+    t8_dpyramid_nca (pyra1, &first_pyramid_anc, nca);
+  }
+  else if (t8_dpyramid_shape (pyra1) == T8_ECLASS_TET &&
+           t8_dpyramid_shape (pyra2) == T8_ECLASS_PYRAMID) {
+    /*if they have different types, we assume wlog that
+       pyra 1 has the shape of a pyramid */
+    t8_dpyramid_nca (pyra2, pyra1, nca);
+  }
   else {
-
+    /*Both elements are a tet */
   }
 }
