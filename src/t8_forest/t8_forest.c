@@ -1310,7 +1310,7 @@ t8_forest_write_vtk_ext (t8_forest_t forest,
   T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (forest->committed);
 
-  #if 1 //T8_WITH_VTK
+  #if T8_WITH_VTK
     if (!do_not_use_API)
     {
       if (write_ghosts)
