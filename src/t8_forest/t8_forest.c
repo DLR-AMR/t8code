@@ -29,7 +29,7 @@
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_balance.h>
-#include <t8_forest_vtk.h>
+#include <t8_forest/t8_forest_vtk.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_cmesh/t8_cmesh_trees.h>
 
@@ -1293,14 +1293,96 @@ t8_forest_compute_elements_offset (t8_forest_t forest)
   T8_ASSERT (current_offset == forest->local_num_elements);
 }
 
-void
-t8_forest_write_vtk (t8_forest_t forest, const char *filename)
+int
+t8_forest_write_vtk_ext (t8_forest_t forest,
+                         const char *fileprefix,
+                         int write_treeid,
+                         int write_mpirank,
+                         int write_level,
+                         int write_element_id,
+                         int write_ghosts,
+                         int curved_flag,
+                         int do_not_use_API,
+                         int num_data,
+                         t8_vtk_data_field_t * data)
 {
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (forest->committed);
 
-  t8_forest_vtk_write_file (forest, filename, 1, 1, 1, 1, 1, 0, NULL);
+  #if 1 //T8_WITH_VTK
+    if (!do_not_use_API)
+    {
+      if (write_ghosts)
+      {
+        t8_errorf("Export of ghosts not yet available with the vtk API. "
+                  "Please use the inbuild function instead.\n"
+                  "Did not write any vtk output.\n");
+        return 0;
+      }
+      else
+      {
+        return  t8_forest_vtk_write_file_via_API (forest,
+                                                  fileprefix,
+                                                  write_treeid,
+                                                  write_mpirank,
+                                                  write_level,
+                                                  write_element_id,
+                                                  curved_flag,
+                                                  num_data,
+                                                  data);
+      }
+    }
+    else
+    {
+      if (curved_flag)
+      {
+        t8_errorf("Export of ghosts not yet available with the inbuild function. "
+                  "Please use the vtk API instead.\n"
+                  "Did not write any vtk output.\n");
+        return 0;
+      }
+      else
+      {
+        return  t8_forest_vtk_write_file (forest,
+                                          fileprefix,
+                                          write_treeid,
+                                          write_mpirank,
+                                          write_level,
+                                          write_element_id,
+                                          write_ghosts,
+                                          num_data,
+                                          data);
+      }
+    }
+  #else
+    if (curved_flag)
+      {
+        t8_errorf("Export of ghosts not yet available with the inbuild function. "
+                  "Please link to vtk.\n"
+                  "Did not write any vtk output.\n");
+        return 0;
+      }
+      else
+      {
+        return  t8_forest_vtk_write_file (forest,
+                                          fileprefix,
+                                          write_treeid,
+                                          write_mpirank,
+                                          write_level,
+                                          write_element_id,
+                                          write_ghosts,
+                                          num_data,
+                                          data);
+      }
+  #endif
+}
+
+int
+t8_forest_write_vtk (t8_forest_t forest,
+                     const char *fileprefix)
+{
+  return t8_forest_write_vtk_ext (forest, fileprefix, 1, 1, 1, 1, 0, 0, 0, 0, NULL);
 }
 
 t8_forest_t

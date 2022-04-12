@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_forest_vtk.h>
+#include <t8_forest/t8_forest_vtk.h>
 #include <t8_vtk.h>
 #include <t8_cmesh.h>
 #include <t8_element_cxx.hxx>
@@ -335,13 +335,13 @@ t8_curved_element_get_reference_node_coords (const t8_element_t *
 #endif
 
 int
-t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
-                             int write_treeid,
-                             int write_mpirank,
-                             int write_level,
-                             int write_element_id,
-                             int curved_flag,
-                             int num_data, t8_vtk_data_field_t * data)
+t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix,
+                                  int write_treeid,
+                                  int write_mpirank,
+                                  int write_level,
+                                  int write_element_id,
+                                  int curved_flag,
+                                  int num_data, t8_vtk_data_field_t * data)
 {
 #if T8_WITH_VTK
   /*Check assertions: forest and fileprefix are not NULL and forest is commited */
