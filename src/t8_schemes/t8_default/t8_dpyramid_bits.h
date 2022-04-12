@@ -384,6 +384,16 @@ void                t8_dpyramid_vertex_reference_coords (const t8_dpyramid_t *
                                                          elem, int vertex,
                                                          double coords[]);
 
+/**
+ * Compute the nearest common ancestor of two elements
+ * \param [in]      pyra1       The first pyramid
+ * \param [in]      pyra2       The second pyramid
+ * \param [in,out]  nca         Existing pyramid whose data will be filled with
+ *                              the data of \a pyra1 and \a pyra2 nearest common ancestor.
+ */
+void
+t8_dpyramid_nca (const t8_dypramid_t * pyra1,
+                 const t8_dypramid_t * pyra2, t8_dypramid_t * nca)
 T8_EXTERN_C_END ();
 
 #endif /* T8_DPYRAMID_BITS_H */

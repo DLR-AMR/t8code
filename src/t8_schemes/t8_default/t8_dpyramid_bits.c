@@ -1552,3 +1552,19 @@ t8_dpyramid_vertex_reference_coords (const t8_dpyramid_t * elem,
   coords[1] = coords_int[1] / (double) T8_DPYRAMID_ROOT_LEN;
   coords[2] = coords_int[2] / (double) T8_DPYRAMID_ROOT_LEN;
 }
+
+void
+t8_dpyramid_nca (const t8_dypramid_t * pyra1,
+                 const t8_dypramid_t * pyra2, t8_dypramid_t * nca)
+{
+  int                 level;    /*the level of the nca */
+  t8_dpyramid_coord_t excl_or_x, excl_or_y, excl_or_z, maxclor;
+
+  /*Compute the first level, at which the coordinates differ */
+  excl_or_x = pyra1->x ^ pyra2->x
+    excl_or_y = pyra1->y ^ pyra2->y
+    excl_or_z = pyra1->z ^ pyra2->z
+    maxclor = excl_or_x | excl_or_y | excl_or_z;
+
+  level = SC_LOG2_32 (maxclor) + 1 T8_ASSERT (level <= T8_DPYRAMID_MAXLEVEL);
+}

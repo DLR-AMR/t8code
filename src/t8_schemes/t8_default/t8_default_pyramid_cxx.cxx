@@ -353,12 +353,24 @@ t8_default_scheme_pyramid_c::t8_element_vertex_coords (const t8_element_t * t,
 }
 
 void
-t8_default_scheme_pyramid_c::
-t8_element_vertex_reference_coords (const t8_element_t * elem, int vertex,
-                                    double coords[])
+t8_default_scheme_pyramid_c::t8_element_vertex_reference_coords (const
+                                                                 t8_element_t
+                                                                 * elem,
+                                                                 int vertex,
+                                                                 double
+                                                                 coords[])
 {
   t8_dpyramid_vertex_reference_coords ((const t8_dpyramid_t *) elem,
                                        vertex, coords);
+}
+
+void
+t8_default_scheme_pyramid_c::t8_element_nca (const t8_element_t * elem1,
+                                             const t8_element_t * elem2,
+                                             t8_element_t * nca)
+{
+  t8_dpyramid_nca ((const t8_dpyramid_t *) elem1,
+                   (const t8_dpyrmaid_t *) elem2, (t8_pyramid_t *) nca);
 }
 
 /* Constructor */

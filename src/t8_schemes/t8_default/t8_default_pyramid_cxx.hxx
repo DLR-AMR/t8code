@@ -149,10 +149,7 @@ public:
 /** Construct the nearest common ancestor of two elements in the same tree. */
   virtual void        t8_element_nca (const t8_element_t * elem1,
                                       const t8_element_t * elem2,
-                                      t8_element_t * nca)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                      t8_element_t * nca);
 
 /** Return the number of faces of a given element*/
   virtual int         t8_element_num_faces (const t8_element_t * elem);
