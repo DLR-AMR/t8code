@@ -20,10 +20,8 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* In this example, we will generate a .brep geometry file of a NACA
- * After generating a coarse mesh (step1) and building a uniform forest
- * on it (step2), we will now adapt (= refine and coarsen) the forest
- * according to our own criterion.
+/* In this example, we will generate a curved mesh from an .msh and .brep file.
+ * After reading in both files, we wil define examplatory refinement criteria.
 */
 
 #include <t8.h>
@@ -92,7 +90,7 @@ t8_naca_surface_refinement(t8_forest_t forest, int rlevel_dorsal, int rlevel_ven
   /* Generate the adapt data. We refine the surfaces in the array surfaces[]
    * to the levels specified in the array levels[]. The surface indices can be visualized by opening
    * the brep file in the Gmsh GUI and turning on the visibility of surface tags 
-   * (Tools->Options->Geometry->Surface labels in Version 4.8.4) */
+   * (Tools->Options->Geometry->Surface labels in version 4.8.4) */
   int surfaces[4] = {2, 8, 14, 19};
   int levels[4] =   {rlevel_dorsal, rlevel_dorsal,  rlevel_ventral,  rlevel_ventral};
   t8_naca_surface_adapt_data adapt_data = {
@@ -138,11 +136,13 @@ t8_naca_plane_adapt_callback (t8_forest_t forest,
   double              elem_midpoint[3], distance;
   int                 elem_level;
 
+  /* Get the level of the element */
   elem_level = ts->t8_element_level (elements[0]);
   /* We retrieve the adapt data */
   const struct t8_naca_plane_adapt_data *adapt_data = (const struct t8_naca_plane_adapt_data *) t8_forest_get_user_data (forest);
   T8_ASSERT (adapt_data != NULL);
-
+  
+  /* Calculate the distance of the element to the moving plane. Refine or coarsen if necessary. */
   double current_x_coordinate = adapt_data->x_min + (adapt_data->x_max - adapt_data->x_min) * adapt_data->t / (adapt_data->steps - 1);
   t8_forest_element_centroid (forest_from, which_tree, elements[0], elem_midpoint);
   distance = abs(current_x_coordinate - elem_midpoint[0]);
@@ -162,6 +162,7 @@ t8_naca_plane_refinement (t8_forest_t forest, int level, int rlevel, int steps, 
 {
   char                forest_vtu[BUFSIZ];
 
+  /* Define the adapt data */
   t8_naca_plane_adapt_data adapt_data = {
     0,      /* The time step we are in */
     steps,  /* The amount of time steps */
@@ -172,8 +173,10 @@ t8_naca_plane_refinement (t8_forest_t forest, int level, int rlevel, int steps, 
     rlevel  /* The max refinement level */
   };
 
+  /* Moving plane loop */
   while (adapt_data.t < steps)
   {
+    
     forest = t8_forest_new_adapt (forest, t8_naca_plane_adapt_callback, 1, 0, &adapt_data);
     t8_forest_t balanced_forest;
     t8_forest_init (&balanced_forest);
@@ -181,7 +184,11 @@ t8_naca_plane_refinement (t8_forest_t forest, int level, int rlevel, int steps, 
     t8_forest_commit (balanced_forest);
     forest = balanced_forest;
     snprintf (forest_vtu, BUFSIZ, "naca_plane_adapted_forest%02d", adapt_data.t);
+    #if T8_WITH_VTK
     t8_forest_write_vtk_via_API (forest, forest_vtu, 1, 1, 1, 1, 1, 0, NULL);
+    #else
+    t8_forest_vtk_write_file (forest, forest_vtu, 1, 1, 1, 1, 0, 0, NULL)
+    #endif
     ++adapt_data.t;
   }
   return 0;
@@ -211,7 +218,8 @@ main (int argc, char **argv)
   /* long help message */
   sreturn = snprintf (help, BUFSIZ,
                       "Demonstrates the some of the geometry capabitlities of t8code.\n"
-                      "You can read in a msh and brep file of a naca profile and refine elements touching certain surfaces.\n"
+                      "You can read in a msh and brep file of a naca profile and refine elements touching certain surfaces, \n"
+                      "or advance a refinement plane through that NACA profile mesh.\n"
                       "Usage: %s\n", usage);
 
   if (sreturn >= BUFSIZ) {
