@@ -30,7 +30,9 @@ t8_netcdf_create_var (t8_netcdf_variable_type_t var_type,
                       const char *var_unit, sc_array_t * var_data)
 {
 #if T8_WITH_NETCDF
-  T8_ASSERT (0 <= var_type && var_type <= 2);
+  T8_ASSERT ((var_type == T8_NETCDF_INT && var_data->elem_size == 4)
+             || (var_type == T8_NETCDF_INT64 && var_data->elem_size == 8)
+             || (var_type == T8_NETCDF_DOUBLE && var_data->elem_size == 8));
   t8_netcdf_variable_t *netcdf_variable = T8_ALLOC (t8_netcdf_variable_t, 1);
   netcdf_variable->datatype = var_type;
   netcdf_variable->variable_name = var_name;

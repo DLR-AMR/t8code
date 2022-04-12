@@ -788,6 +788,7 @@ t8_forest_write_netcdf_coordinate_data (t8_forest_t forest,
   double             *Mesh_node_x;
   double             *Mesh_node_y;
   double             *Mesh_node_z;
+  t8_gloidx_t        *node_offset;
   t8_gloidx_t         num_it = 0;
   int                 retval;
   int                 mpisize, mpirank;
@@ -812,7 +813,8 @@ t8_forest_write_netcdf_coordinate_data (t8_forest_t forest,
   num_local_elements = t8_forest_get_local_num_elements (forest);
 
   /* Allocate memory for node offsets */
-  t8_gloidx_t        *node_offset[mpisize];
+  node_offset = T8_ALLOC (t8_gloidx_t, mpisize);
+
   /* Get the number of all nodes local to each rank */
   retval =
     sc_MPI_Allgather (&context->nMesh_local_node, 1, T8_MPI_GLOIDX,
@@ -919,6 +921,7 @@ t8_forest_write_netcdf_coordinate_data (t8_forest_t forest,
   }
 
   /* Free the allocated memory */
+  T8_FREE (node_offset);
   T8_FREE (Mesh_node_x);
   T8_FREE (Mesh_node_y);
   T8_FREE (Mesh_node_z);

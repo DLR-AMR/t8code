@@ -32,6 +32,7 @@
 #define ERR(e) {t8_global_productionf("Error: %s\n", nc_strerror(e)); exit(ERRCODE);}
 #endif
 #include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh_netcdf.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_eclass.h>
