@@ -45,7 +45,7 @@
 #include <t8_forest_netcdf.h>
 #include <t8_netcdf.h>
 
-/* In this example is the use of the netcdf feature exemplary displayed
+/* In this example is the use of the netcdf feature exemplary displayed.
 * We show how to write out a forest in the netCDF format and how to create additional (integer/double) netCDF variables which hold element data.
 * There are mainly two funcitons implemented in 'src/t8_forest_netcdf.cxx' which allow the creation of netCDF file containing the data for a forest in the style of the UGRID conventions.
 * The first function is: 't8_forest_write_netcdf_ext()'; it allows to choose which variable storage and access scheme should be used (e.g. {NC_CONTIGUOUS; NC_CHUNKED}x{NC_INDEPENDENT; NC_COLLECTIVE}).
@@ -142,7 +142,7 @@ t8_example_netcdf_adapt (t8_forest_t forest)
 * \param [in] title Hold the title of the netCDF file which is stored inside the netCDF file as a global attribute.
 * \param [in] num_additonal_vars The number of additional user-variables to write out.
 * \param [in] ext_vars A pointer to an array which holds \a num_additional_vars which should be written out in addition to the 'forest NetCDF variables'
-* \note It is assumed that each user-variables in \a ext_vars holds one value for each element in the mesh/forest. If no additional variables should be written in the netCDF file, set \a num_additional_vars equal to zero and pass a NULL-pointer as \a ext_vars.
+* \note It is assumed that each user-variable in \a ext_vars holds one value for each element in the mesh/forest. If no additional variables should be written in the netCDF file, set \a num_additional_vars equal to zero and pass a NULL-pointer as \a ext_vars.
 */
 static void
 t8_example_time_netcdf_writing_operation (t8_forest_t forest,
@@ -229,13 +229,12 @@ t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm,
     forest = t8_example_netcdf_adapt (forest);
   }
   num_elements = t8_forest_get_local_num_elements (forest);
-  printf ("[rank %d] Num elements: %ld\n", mpirank, num_elements);
+  t8_productionf ("Number of process-local elements: %ld\n", num_elements);
 
   /* If additional data should be written to the netCDF file, the two variables are created in the following section */
   if (with_additional_data) {
     /* Get the number of process-local elements */
     num_elements = t8_forest_get_local_num_elements (forest);
-    printf ("[rank %d] Num elements: %ld\n", mpirank, num_elements);
     /** Create an integer netCDF variables **/
     /* Create an 64-bit Integer variable (j* MPI_Rank) which holds the rank each element lays on multiplied with j */
     var_rank = T8_ALLOC (t8_nc_int64_t, num_elements);
@@ -249,7 +248,7 @@ t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm,
     /* Create the 64-bit integer NetCDF variable; parameters are (name of the variable, descriptive long name of the variable, description of the data's unit, pointer to sc_array_t which provides the data) */
     ext_var_mpirank =
       t8_netcdf_create_integer_var ("mpirank",
-                                    "Mpirank which the element lays on",
+                                    "Mpirank which the element lays on multiplied by its process-local id",
                                     "integer", var_ranks);
 
     /** Create a double netCDF variable **/
