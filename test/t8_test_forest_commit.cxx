@@ -50,7 +50,7 @@ t8_test_adapt_balance (t8_forest_t forest, t8_forest_t forest_from,
   int                 level;
   int                 maxlevel, child_id;
   T8_ASSERT (!is_family || (is_family && num_elements ==
-                                ts->t8_element_num_children (elements[0])));
+                            ts->t8_element_num_children (elements[0])));
 
   level = ts->t8_element_level (elements[0]);
 
@@ -170,7 +170,7 @@ test_cmesh_forest_commit_all ()
        cmesh_id++) {
     /* This if statement is necessary to make the test work by avoiding specific cmeshes which do not work yet for this test.
      * When the issues are gone, remove the if statement. */
-    if (cmesh_id != 6 && cmesh_id != 89 && (cmesh_id < 237 || cmesh_id > 256)) {
+    if (cmesh_id != 89 && (cmesh_id < 237 || cmesh_id > 256)) {
       t8_test_forest_commit (cmesh_id);
     }
   }
