@@ -1326,14 +1326,14 @@ t8_cmesh_new_prism_geometry (sc_MPI_Comm comm)
   for (i = 0; i < 8; i++) {
     t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_PRISM);
   }
-  /*Ordianry join over quad-face */
+  /*Ordinary join over quad-face */
   t8_cmesh_set_join (cmesh, 0, 1, 2, 0, 0);
   /*Join over quad-face of rotated prisms, but orientation is the same */
   t8_cmesh_set_join (cmesh, 1, 2, 1, 2, 0);
   /*Join via top-triangle of prism 2 */
   t8_cmesh_set_join (cmesh, 2, 3, 4, 3, 1);
   /*Remaining joins are all via quad-faces */
-  /*prism 4 is rotated, therefore there is a differen orientation */
+  /*prism 4 is rotated, therefore there is a different orientation */
   t8_cmesh_set_join (cmesh, 3, 4, 2, 0, 1);
   /*No different orientation between these faces. */
   t8_cmesh_set_join (cmesh, 4, 5, 2, 1, 0);
