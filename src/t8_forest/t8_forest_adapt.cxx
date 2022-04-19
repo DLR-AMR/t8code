@@ -295,14 +295,14 @@ t8_forest_adapt (t8_forest_t forest)
         /* Assume we are looking at a family */
         is_family = 1;
 
-        /* el_c is the Index of the el_considered in elements_from_copy */
+        /* el_concidered_index is the local Index of the el_considered in elements_from_copy */
         if (num_el_from < (t8_locidx_t) num_children){
           el_concidered_index = 0;
         }
         else {
           el_concidered_index = num_children - zz;
         }
-        /* If el_c == 0 then elements_from_copy is equal to elements_from */
+        /* If el_concidered_index == 0 then elements_from_copy is equal to elements_from */
         for (zz = 0; zz < num_children && el_considered + (t8_locidx_t) zz 
                                           - (t8_locidx_t) el_concidered_index < num_el_from; zz++) {
             elements_from_copy[zz] = t8_element_array_index_locidx (telements_from,
@@ -347,7 +347,7 @@ t8_forest_adapt (t8_forest_t forest)
 
         /* Test 3: Check num_childrem elements before el_considered, if they will get eaten.
          * Reason: current element could be on boarder
-         * [IL] Question: Is this required if el_c > 0
+         * [IL] Question: Is this required if el_concidered_index > 0
          * */
         if (is_family && el_considered > (t8_locidx_t) num_children) {
           for (zz = 0; zz < num_children && el_considered + (t8_locidx_t) zz 
