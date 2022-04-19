@@ -52,13 +52,6 @@ t8_adapt_callback_init (t8_forest_t forest,
   T8_ASSERT (adapt_data != NULL);
 
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
-  
-  /* remove every element outside an central ball of radius 0.65 */
-  //double center[3] = {0.5, 0.5, 0.5};
-  //dist = t8_vec_dist(center, centroid);
-  //if (dist > 0.5) {
-  //  return -2;
-  //}
 
   for (int i = 0; i < 6; i++) {
     dist = t8_vec_dist(adapt_data->midpoint[i], centroid);
