@@ -290,7 +290,7 @@ t8_forest_adapt (t8_forest_t forest)
       }
 #endif
       /* We first assume that we have an (in)complete family. 
-       * In the following we try to disprove this by running 2 tests.
+       * In the following we try to disprove this by running 3 tests.
        * */
       if (0 < tscheme->t8_element_level(elements_from[0])) {
         /* Assume family we are looking a family */
