@@ -74,14 +74,13 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
   num_children = ts->t8_element_num_children (parent);
   //T8_ASSERT (ts->t8_element_child_id (element) == num_children - 1);
   ts->t8_element_destroy (1, &parent);
-
   fam = el_buffer;
   pos = *el_inserted - num_children;
   isfamily = 1;
   child_id = ts->t8_element_child_id (element);
+  t8_debugf ("################### Coarsen Recursive ###################\n");
   t8_debugf ("Pos: %i, el_inserted: %i, el_coarsen: %i\n", pos, *el_inserted, el_coarsen);
-  while (isfamily && pos >= el_coarsen && child_id > 0 && child_id
-         == num_children - 1) {
+  while (isfamily && pos >= el_coarsen && child_id > 0 && child_id == num_children - 1) {
     isfamily = 1;
     /* Get all elements at indices pos, pos + 1, ... ,pos + num_children - 1 */
     for (i = 0; i < num_children; i++) {
@@ -358,7 +357,6 @@ t8_forest_adapt (t8_forest_t forest)
        * Note, that this is always valid for subelements in terms of the minimum level,
        * since subelements have the same level as their parent quadrant. */
       if (tscheme->t8_element_test_if_subelement (elements_from[0]) && refine == 0) {
-        /* TODO: maybe coarsen a family of subelements before computing the refine value such that recursive refinement is not impared */
         refine = -1;
       }
 
@@ -400,9 +398,6 @@ t8_forest_adapt (t8_forest_t forest)
           t8_forest_adapt_refine_recursive (forest, ltree_id, el_considered,
                                             tscheme, refine_list, telements,
                                             &el_inserted, elements);
-          /* el_coarsen is the index of the first element in the new element
-           * array which could be coarsened recursively.
-           * We can set this here to the next element after the current family, since a family that emerges from a refinement will never be coarsened */
           
 #if 0     
           /* TODO: el_coarsen = el_inserted + num_children; -> reason for artefacts during multiple timestep-adaptation.
@@ -411,6 +406,9 @@ t8_forest_adapt (t8_forest_t forest)
            * where el_coarsen was adjusted (too large). (This fix does not work for multiple processes. TODO: undertsand why not). */
           el_coarsen = el_inserted;
 #else     
+          /* el_coarsen is the index of the first element in the new element
+           * array which could be coarsened recursively.
+           * We can set this here to the next element after the current family, since a family that emerges from a refinement will never be coarsened */
           el_coarsen = el_inserted + num_children;
 #endif
           
@@ -499,10 +497,6 @@ t8_forest_adapt (t8_forest_t forest)
          * We copy the element to the new element array. */
         T8_ASSERT (refine == 0);
         elements[0] = t8_element_array_push (telements);
-        /* Note that it should not be allowed to copy a subelement at this point. 
-         * Subelements should always be coarsened to their parent quadrant or their parent quadrant 
-         * should be refined such that no subelements are left after calling the adapt function. */
-        T8_ASSERT (!tscheme->t8_element_test_if_subelement (elements[0]));
         tscheme->t8_element_copy (elements_from[0], elements[0]);
         el_inserted++;
         const int           child_id =
