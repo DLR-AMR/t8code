@@ -545,7 +545,7 @@ t8_forest_adapt (t8_forest_t forest)
                            forest->profile->adapt_runtime);
   }
 
-  t8_global_productionf("[IL] counter: %i\n", counter);
+  t8_debugf("[IL] counter: %i\n", counter);
 }
 
 T8_EXTERN_C_END ();
