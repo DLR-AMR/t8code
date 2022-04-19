@@ -210,7 +210,7 @@ main (int argc, char **argv)
     t8_global_productionf("Forests are equal.\n");
   }
   else {
-    t8_global_productionf("Waelder sind NICHT gleich.\n");
+    t8_global_productionf("Forests are not equal.\n");
   }
   //for (int i = 0; i < level+1; i++)
   //{
