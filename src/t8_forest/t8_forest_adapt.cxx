@@ -176,7 +176,6 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
 }
 
 
-
 /* TODO: optimize this when we own forest_from */
 void
 t8_forest_adapt (t8_forest_t forest)
