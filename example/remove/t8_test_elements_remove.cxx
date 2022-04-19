@@ -34,15 +34,17 @@ struct t8_adapt_data
   double  midpoint[6][3];
 };
 
+/* Refine, if it is within a given radius of 0.5. 
+ * Remove, if it is within a given radius of 0.4. */
 int
-t8_adapt_callback_init (t8_forest_t forest,
-                        t8_forest_t forest_from,
-                        t8_locidx_t which_tree,
-                        t8_locidx_t lelement_id,
-                        t8_eclass_scheme_c * ts,
-                        const int is_family,
-                        const int num_elements, 
-                        t8_element_t * elements[])
+t8_adapt_callback_rr (t8_forest_t forest,
+                      t8_forest_t forest_from,
+                      t8_locidx_t which_tree,
+                      t8_locidx_t lelement_id,
+                      t8_eclass_scheme_c * ts,
+                      const int is_family,
+                      const int num_elements, 
+                      t8_element_t * elements[])
 {
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
   
@@ -191,7 +193,7 @@ t8_test_emelemts_remove (int cmesh_id)
     t8_cmesh_ref (cmesh);
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
 
-    forest_1 = t8_forest_new_adapt (forest  , t8_adapt_callback_init  , 0, 0, &adapt_data);
+    forest_1 = t8_forest_new_adapt (forest  , t8_adapt_callback_rr    , 0, 0, &adapt_data);
     forest_1 = t8_forest_new_adapt (forest_1, t8_adapt_callback_remove, 0, 0, &adapt_data);
 
     t8_forest_ref (forest_1);
