@@ -229,8 +229,7 @@ test_cmesh_emelemts_remove_all ()
      * When the issues are gone, remove the if statement. */
     if (cmesh_id != 6 && cmesh_id != 89 && (cmesh_id < 237 || cmesh_id > 256)) {
       /* Skip all t8_test_create_new_bigmesh_cmesh 
-       * ToDo: Add geometrie to bigmeshs
-       */
+       * When issue #213 is fixed, remove the if statement */
       if (cmesh_id < 97 || cmesh_id > 256) {
         t8_test_emelemts_remove(cmesh_id);
       }
