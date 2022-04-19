@@ -34,8 +34,8 @@ struct t8_adapt_data
   double  midpoint[6][3];
 };
 
-/* Refine, if it is within a given radius of 0.5. 
- * Remove, if it is within a given radius of 0.4. */
+/* Refine if it is within a given radius of 0.5. 
+ * Remove if it is within a given radius of 0.4. */
 int
 t8_adapt_callback_rr (t8_forest_t forest,
                       t8_forest_t forest_from,
@@ -55,13 +55,14 @@ t8_adapt_callback_rr (t8_forest_t forest,
 
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
 
+  /* Loop through all balls in adapt_data. */
   for (int i = 0; i < 6; i++) {
     dist = t8_vec_dist(adapt_data->midpoint[i], centroid);
-    /* Remove core of every ball. */
+    /* Remove core of ball. */
     if (dist < 0.4) {
       return -2;
     }
-    /* Refine shell of every ball. */
+    /* Refine shell of ball. */
     if (dist < 0.5) {
       return 1;
     }
@@ -70,6 +71,7 @@ t8_adapt_callback_rr (t8_forest_t forest,
   return 0;
 }
 
+/* Remove if the element is within a given radius of 0.45. */
 int
 t8_adapt_callback_remove (t8_forest_t forest,
                           t8_forest_t forest_from,
@@ -89,8 +91,10 @@ t8_adapt_callback_remove (t8_forest_t forest,
 
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
   
+  /* Loop through all balls in adapt_data. */
   for (int i = 0; i < 6; i++) {
     dist = t8_vec_dist(adapt_data->midpoint[i], centroid);
+    /* Remove core of ball. */
     if (dist < 0.45) {
       return -2;
     }
@@ -99,7 +103,7 @@ t8_adapt_callback_remove (t8_forest_t forest,
   return 0;
 }
 
-/* Coarse if at least one element of a family is within a given radius. */
+/* Coarse if at least one element of a family is within a given radius of 0.5. */
 int
 t8_adapt_callback_coarse (t8_forest_t forest,
                           t8_forest_t forest_from,
@@ -118,7 +122,7 @@ t8_adapt_callback_coarse (t8_forest_t forest,
   T8_ASSERT (adapt_data != NULL);
   
   if (is_family) {
-    /* Loop through all balls. */
+    /* Loop through all balls in adapt_data. */
     for (int i = 0; i < 6; i++) {
       /* Loop through all member of family.
        * If one family member satisfies the dist condition, coarse.
@@ -135,6 +139,7 @@ t8_adapt_callback_coarse (t8_forest_t forest,
   return 0;
 }
 
+/* Refine if the element is within a given radius of 0.5. */
 int
 t8_adapt_callback_refine (t8_forest_t forest,
                           t8_forest_t forest_from,
@@ -154,6 +159,7 @@ t8_adapt_callback_refine (t8_forest_t forest,
 
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
   
+  /* Loop through all balls in adapt_data. */
   for (int i = 0; i < 6; i++) {
     dist = t8_vec_dist(adapt_data->midpoint[i], centroid);
     if (dist < 0.5) {
@@ -173,6 +179,7 @@ t8_test_emelemts_remove (int cmesh_id)
   t8_forest_t         forest, forest_1, forest_2;
   t8_scheme_cxx_t    *scheme;
 
+  /* 6 balls on each side of a cube. */
   struct t8_adapt_data adapt_data = {{{1.0, 0.5, 0.5},
                                       {0.5, 1.0, 0.5},
                                       {0.5, 0.5, 1.0},
@@ -185,7 +192,7 @@ t8_test_emelemts_remove (int cmesh_id)
   cmesh = t8_test_create_cmesh (cmesh_id);
   /* Compute the first level, such that no process is empty */
   min_level = t8_forest_min_nonempty_level (cmesh, scheme);
-  /* Use one level with empty processes */
+
   min_level = SC_MAX (min_level, 3);
   max_level = min_level + 1;
   
