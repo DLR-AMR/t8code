@@ -32,11 +32,11 @@ T8_EXTERN_C_BEGIN ();
  * CAREFULL: This is in production and this header will probably change! Update
  * as the function progresses
  * 
- * \param[in] prefix        The prefix of the files 
+ * \param[in] filename      The name of the file 
  * \param[in] num_files     Number of files to read from
  * @return t8_cmesh_t       The cmesh described by the files
  */
-t8_cmesh_t          t8_cmesh_read_from_vtk (const char *prefix,
+t8_cmesh_t          t8_cmesh_read_from_vtk (const char *filename,
                                             const int num_files);
 
 T8_EXTERN_C_END ();

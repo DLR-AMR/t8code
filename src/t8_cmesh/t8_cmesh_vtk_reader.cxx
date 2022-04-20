@@ -24,36 +24,56 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_cmesh/t8_cmesh_vtk_reader.hxx>
 
 #if T8_WITH_VTK
-#include <vtkGenericDataObjectReader.h>
-#include <vtkPolyData.h>
+#include <vtkUnstructuredGrid.h>
+#include <vtkUnstructuredGridReader.h>
+#include <vtkXMLUnstructuredGridReader.h>
 #endif
 T8_EXTERN_C_BEGIN ();
 
 /*Construct a cmesh given a filename and a*/
 t8_cmesh_t
-t8_cmesh_read_from_vtk (const char *prefix, const int num_files)
+t8_cmesh_read_from_vtk (const char *filename, const int num_files)
 {
   t8_cmesh_t          cmesh;
-//#if T8_WITH_VTK
-  vtkSmartPointer < vtkGenericDataObjectReader > reader =
-    vtkSmartPointer < vtkGenericDataObjectReader >::New ();
-  reader->SetFileName (prefix);
-  reader->Update ();
+#if T8_WITH_VTK
+  /*The Incoming data must be an unstructured Grid */
+  vtkSmartPointer < vtkUnstructuredGrid > unstructuredGrid;
+  char               *tmp, *extension;
+  /*Get the file-extensioni to decide which reader to use */
+  tmp = T8_ALLOC (char, BUFSIZ);
+  strcpy (tmp, prefix);
+  extension = strtok (tmp, ".");
+  extension = strtok (NULL, ".");
+  T8_FREE (tmp);
+  T8_ASSERT (strcmp (extension, ""));
 
-  if (reader->IsFilePolyData ()) {
-    t8_debugf ("[D] reader got polyData\n");
-    vtkPolyData        *output = reader->GetPolyDataOutput ();
-    t8_debugf ("[D] reader has read %lli points",
-               output->GetNumberOfPoints ());
+  /*Read the file */
+  if (strcmp (extension, "vtu") == 0) {
+    t8_debugf ("[D] use xml unstructured\n");
+    vtkSmartPointer < vtkXMLUnstructuredGridReader > reader =
+      vtkSmartPointer < vtkXMLUnstructuredGridReader >::New ();
+    reader->SetFileName (prefix);
+    reader->Update ();
+    unstructuredGrid = reader->GetOutput ();
+  }
+  else if (strcmp (extension, "vtk") == 0) {
+    t8_debugf ("[D] use unstructured\n");
+    vtkSmartPointer < vtkUnstructuredGridReader > reader =
+      vtkSmartPointer < vtkUnstructuredGridReader >::New ();
+    reader->SetFileName (prefix);
+    reader->Update ();
+    unstructuredGrid = reader->GetOutput ();
   }
   else {
-    t8_global_errorf ("Data in file is not polydata");
+    t8_global_errorf ("Please use .vtk or .vtu file\n");
   }
-//#else
+  t8_debugf ("[D] num_cells: %lli\n", unstructuredGrid->GetNumberOfCells ());
+
+#else
   /*TODO: Proper return value to prevent compiler-errors */
   t8_global_errorf
-    ("WARNING: t8code is not linked againt the vtk library. Without proper linking t8code cannot use the vtk-reader\n");
-//#endif
+    ("WARNING: t8code is not linked against the vtk library. Without proper linking t8code cannot use the vtk-reader\n");
+#endif
   return cmesh;
 }
 
