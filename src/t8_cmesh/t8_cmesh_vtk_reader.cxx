@@ -42,10 +42,10 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files)
   vtkSmartPointer < vtkUnstructuredGrid > unstructuredGrid;
   vtkCellIterator    *cell_it;
   char               *tmp, *extension;
-  int                max_dim = 0;   /*max dimenstion of the cells for geometry*/
+  int                 max_dim = 0;      /*max dimenstion of the cells for geometry */
   int                 num_cell_points;
-  vtkSmartPointer < vtkPoints > vertices = 
-    vtkSmartPointer < vtkPoints >::New();
+  vtkSmartPointer < vtkPoints > vertices =
+    vtkSmartPointer < vtkPoints >::New ();
   /*Get the file-extensioni to decide which reader to use */
   tmp = T8_ALLOC (char, BUFSIZ);
   strcpy (tmp, filename);
@@ -78,18 +78,18 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files)
   t8_debugf ("[D] num_cells: %lli\n", unstructuredGrid->GetNumberOfCells ());
   /*New Iteratore to iterate over all cells in the grid */
   cell_it = unstructuredGrid->NewCellIterator ();
-  t8_gloidx_t tree_id = 0;
+  t8_gloidx_t         tree_id = 0;
   for (cell_it->InitTraversal (); !cell_it->IsDoneWithTraversal ();
        cell_it->GoToNextCell ()) {
-    /*Set the t8_eclass of the cell*/
+    /*Set the t8_eclass of the cell */
     cell_type = t8_cmesh_vtk_type_to_t8_type[cell_it->GetCellType ()];
     T8_ASSERT (cell_type != T8_ECLASS_ZERO);
     t8_debugf ("[D] cell has type %i\n", cell_type);
-    t8_cmesh_set_tree_class(cmesh, tree_id, cell_type);
+    t8_cmesh_set_tree_class (cmesh, tree_id, cell_type);
 
-    /*Set the vertices of the tree*/
-    num_cell_points = cell_it->GetNumberOfPoints();
-    t8_debugf("[D] cell has %i points\n", num_cell_points);
+    /*Set the vertices of the tree */
+    num_cell_points = cell_it->GetNumberOfPoints ();
+    t8_debugf ("[D] cell has %i points\n", num_cell_points);
 
     tree_id++;
   }
