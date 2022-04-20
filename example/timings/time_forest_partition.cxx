@@ -26,6 +26,7 @@
 #include <sc_options.h>
 #include <p4est_connectivity.h>
 #include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh_vtk.h>
 #include <t8_cmesh/t8_cmesh_partition.h>
 #include <t8_cmesh_readmshfile.h>
@@ -104,7 +105,7 @@ t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from,
   double             *normal;
   adapt_data_t       *adapt_data;
 
-  T8_ASSERT (!is_family  || num_elements ==
+  T8_ASSERT (!is_family || num_elements ==
              ts->t8_element_num_children (elements[0]));
   level = ts->t8_element_level (elements[0]);
   /* Get the minimum and maximum x-coordinate from the user data pointer of forest */

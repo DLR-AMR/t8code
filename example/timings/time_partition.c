@@ -29,6 +29,7 @@
 #include <t8_cmesh_vtk.h>
 #include <t8_cmesh/t8_cmesh_partition.h>
 #include "t8_cmesh/t8_cmesh_types.h"
+#include <t8_cmesh/t8_cmesh_examples.h>
 
 #if 0
 /* Repartition a partitioned cmesh by shipping half of the local trees

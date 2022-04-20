@@ -29,6 +29,7 @@
 
 #include <t8.h>                 /* General t8code header, always include this. */
 #include <t8_cmesh.h>           /* cmesh definition and basic interface. */
+#include <t8_cmesh/t8_cmesh_examples.h> /* A collection of exemplary cmeshes */
 #include <t8_forest.h>          /* forest definition and basic interface. */
 #include <t8_schemes/t8_default_cxx.hxx>        /* default refinement scheme. */
 #include <t8_forest_vtk.h>      /* Additional vtk functions to output arbitrary user data. */
@@ -44,7 +45,7 @@ struct t8_step5_data_per_element
   double              volume;
 };
 
-static t8_forest_t
+static              t8_forest_t
 t8_step5_build_forest (sc_MPI_Comm comm, int level)
 {
   t8_cmesh_t          cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);

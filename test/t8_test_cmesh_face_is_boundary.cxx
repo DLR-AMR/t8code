@@ -21,6 +21,7 @@
 */
 
 #include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_examples.h>
 
 /* Createsa coarse mesh with one tree for each eclass, where each
  * face is a boundary face. */

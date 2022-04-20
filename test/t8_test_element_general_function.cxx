@@ -25,6 +25,7 @@
 #include <t8_schemes/t8_default/t8_dtri.h>
 #include <t8_schemes/t8_default/t8_dtet.h>
 #include <t8_schemes/t8_default/t8_dprism.h>
+#include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest.h>
 
 /*

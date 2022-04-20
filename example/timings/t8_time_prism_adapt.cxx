@@ -30,6 +30,7 @@
 #include <sc_flops.h>
 #include <sc_statistics.h>
 #include <sc_options.h>
+#include <t8_cmesh/t8_cmesh_examples.h>
 
 static int
 t8_basic_adapt_refine_type (t8_forest_t forest, t8_forest_t forest_from,
