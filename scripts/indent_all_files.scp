@@ -1,0 +1,62 @@
+#!/bin/bash
+
+# This script indents all .c .h .cxx and .hxx
+# files in t8code.
+#
+# Returns 0 if yes and not 0 if not.
+#
+# Copyright Johannes Holke 2020
+
+#
+# This script must be executed from the scripts/ folder.
+#
+if [ `basename $PWD` != scripts ]
+then
+  echo ERROR: Must be executed from whitin the scripts/ subfolder.
+  exit 1
+fi
+
+# Find all files with the appropriate suffix.
+# Excluding the sc/ and p4est/ subfolders.
+files=`./find_all_source_files.scp`
+
+notallindented=0
+
+INDENT=./t8indent
+
+echo This script will change all source files found in 
+echo	$PWD/.. 
+echo "(except p4est/ sc/ folders)."
+echo
+read -p "Are you sure? ('Y' or 'y' to continue)" -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+  echo Indenting all files...
+  for file in $files
+  do
+    # Find also give as directories,
+    # so we ensure that $file is a proper
+    # file before checking for indentation.
+    if [ -f $file ]
+    then
+      $INDENT $file
+      status=$?
+      if test $status -ne 0 
+      then
+        echo "File $file is not indented."
+        notallindented=1
+      fi
+    fi
+  done
+  
+  if test $notallindented -eq 0
+  then
+    echo All files are indented.
+  fi
+  echo done.
+else
+  echo Aborted.
+fi
+
+exit $notallindented

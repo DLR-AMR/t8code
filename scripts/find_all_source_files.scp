@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# This script lists all .c .h .cxx and .hxx
+# files in t8code.
+#
+# Copyright Johannes Holke 2020
+
+#
+# This script must be executed from the scripts/ folder.
+#
+if [ `basename $PWD` != scripts ]
+then
+  echo ERROR: Must be executed from whitin the scripts/ subfolder.
+  exit 1
+fi
+
+# All valid file suffixes.
+# Seperated by '|' in order to be directly used
+# as a regex in the find command.
+
+suffixes="c|cxx|h|hxx"
+
+# Find all files with the appropriate suffix.
+# Excluding the sc/ and p4est/ subfolders.
+files=`find .. -regextype egrep -iregex ".*\.($suffixes)" -o -type d \( -path ../sc -o -path ../p4est \) -prune`
+
+echo $files
