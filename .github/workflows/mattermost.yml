@@ -37,7 +37,7 @@ on:
   
   
 jobs:
-  build:
+  send_mm_message:
     runs-on: ubuntu-latest
     steps:
       - name: push  
