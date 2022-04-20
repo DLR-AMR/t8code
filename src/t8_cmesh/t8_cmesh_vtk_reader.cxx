@@ -27,6 +27,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <vtkUnstructuredGrid.h>
 #include <vtkUnstructuredGridReader.h>
 #include <vtkXMLUnstructuredGridReader.h>
+#include <vtkCellIterator.h>
 #endif
 T8_EXTERN_C_BEGIN ();
 
@@ -37,11 +38,13 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files)
   t8_cmesh_t          cmesh;
 #if T8_WITH_VTK
   /*The Incoming data must be an unstructured Grid */
+  t8_eclass_t         cell_type;
   vtkSmartPointer < vtkUnstructuredGrid > unstructuredGrid;
+  vtkCellIterator    *cell_it;
   char               *tmp, *extension;
   /*Get the file-extensioni to decide which reader to use */
   tmp = T8_ALLOC (char, BUFSIZ);
-  strcpy (tmp, prefix);
+  strcpy (tmp, filename);
   extension = strtok (tmp, ".");
   extension = strtok (NULL, ".");
   T8_FREE (tmp);
@@ -52,7 +55,7 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files)
     t8_debugf ("[D] use xml unstructured\n");
     vtkSmartPointer < vtkXMLUnstructuredGridReader > reader =
       vtkSmartPointer < vtkXMLUnstructuredGridReader >::New ();
-    reader->SetFileName (prefix);
+    reader->SetFileName (filename);
     reader->Update ();
     unstructuredGrid = reader->GetOutput ();
   }
@@ -60,7 +63,7 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files)
     t8_debugf ("[D] use unstructured\n");
     vtkSmartPointer < vtkUnstructuredGridReader > reader =
       vtkSmartPointer < vtkUnstructuredGridReader >::New ();
-    reader->SetFileName (prefix);
+    reader->SetFileName (filename);
     reader->Update ();
     unstructuredGrid = reader->GetOutput ();
   }
@@ -68,7 +71,14 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files)
     t8_global_errorf ("Please use .vtk or .vtu file\n");
   }
   t8_debugf ("[D] num_cells: %lli\n", unstructuredGrid->GetNumberOfCells ());
-
+  /*New Iteratore to iterate over all cells in the grid */
+  cell_it = unstructuredGrid->NewCellIterator ();
+  for (cell_it->InitTraversal (); !cell_it->IsDoneWithTraversal ();
+       cell_it->GoToNextCell ()) {
+    cell_type = t8_cmesh_vtk_type_to_t8_type[cell_it->GetCellType ()];
+    T8_ASSERT (cell_type != T8_ECLASS_ZERO);
+    t8_debugf ("[D] cell has type %i\n", cell_type);
+  }
 #else
   /*TODO: Proper return value to prevent compiler-errors */
   t8_global_errorf
