@@ -33,7 +33,7 @@ T8_ARG_WITH([vtk],
     T8_VTK_LIBS="-lvtkIOXML-$t8_vtk_version -lvtkCommonExecutionModel-$t8_vtk_version \
 -lvtkCommonDataModel-$t8_vtk_version -lvtkIOXMLParser-$t8_vtk_version \
 -lvtkIOParallelXML-$t8_vtk_version -lvtkParallelMPI-$t8_vtk_version \
--lvtkCommonCore-$t8_vtk_version -lvtkzlib-$t8_vtk_version"
+-lvtkCommonCore-$t8_vtk_version -lvtkzlib-$t8_vtk_version -lvtkIOLegacy-$t8_vtk_version"
     if test "x$T8_WITH_VTK" != xyes ; then
       T8_VTK_LIBS="$T8_WITH_VTK"
       dnl AC_MSG_ERROR([Please provide --with-vtk without arguments])
