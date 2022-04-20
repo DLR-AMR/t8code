@@ -23,7 +23,7 @@
 #include <sc_refcount.h>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest.h>
-#include <t8_cmesh_vtk.h>
+#include <t8_cmesh_vtk_writer.h>
 #include <t8_cmesh/t8_cmesh_partition.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <p4est_connectivity.h>

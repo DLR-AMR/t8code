@@ -25,7 +25,7 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_partition.h>
 #include <t8_cmesh_tetgen.h>
-#include <t8_cmesh_vtk.h>
+#include <t8_cmesh_vtk_writer.h>
 
 void
 t8_read_tetgen_file_build_cmesh (const char *prefix, int do_dup,

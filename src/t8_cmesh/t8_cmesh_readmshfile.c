@@ -22,7 +22,7 @@
 
 #include <t8_eclass.h>
 #include <t8_cmesh_readmshfile.h>
-#include <t8_cmesh_vtk.h>
+#include <t8_cmesh_vtk_writer.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include "t8_cmesh_types.h"
 #include "t8_cmesh_stash.h"
@@ -98,7 +98,7 @@ const int           t8_vertex_to_msh_vertex_num[T8_ECLASS_COUNT][8]
  * \return                  The number of read arguments of the last line read.
  *                          negative on failure */
 static int
-t8_cmesh_msh_read_next_line (char **line, size_t * n, FILE * fp)
+t8_cmesh_msh_read_next_line (char **line, size_t *n, FILE * fp)
 {
   int                 retval;
 

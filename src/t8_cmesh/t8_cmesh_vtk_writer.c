@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_cmesh_vtk.h>
+#include <t8_cmesh_vtk_writer.h>
 #include <t8_vtk.h>
 #include "t8_cmesh_trees.h"
 #include "t8_cmesh_types.h"
@@ -31,7 +31,7 @@
  * \return                 The number of vertices associated to \a cmesh.
  * \a cmesh must be committed before calling this function.
  */
-static t8_gloidx_t
+static              t8_gloidx_t
 t8_cmesh_get_num_vertices (t8_cmesh_t cmesh, int count_ghosts)
 {
   int                 iclass;
