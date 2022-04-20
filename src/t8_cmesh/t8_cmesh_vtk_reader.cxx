@@ -44,8 +44,9 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files)
   char               *tmp, *extension;
   int                 max_dim = 0;      /*max dimenstion of the cells for geometry */
   int                 num_cell_points;
-  vtkSmartPointer < vtkPoints > vertices =
+  vtkSmartPointer < vtkPoints > points =
     vtkSmartPointer < vtkPoints >::New ();
+  double             *vertices;
   /*Get the file-extensioni to decide which reader to use */
   tmp = T8_ALLOC (char, BUFSIZ);
   strcpy (tmp, filename);
@@ -89,8 +90,10 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files)
 
     /*Set the vertices of the tree */
     num_cell_points = cell_it->GetNumberOfPoints ();
+    T8_REALLOC (vertices, double, 3 * num_cell_points);
     t8_debugf ("[D] cell has %i points\n", num_cell_points);
-
+    /*TODO: Get Points via ids */
+    t8_debugf ("[D] points: %f\n", cell_it->Points[0]);
     tree_id++;
   }
 #else
