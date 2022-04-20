@@ -563,6 +563,7 @@ public:
   virtual void        t8_element_successor (const t8_element_t * t,
                                             t8_element_t * s, int level) = 0;
 
+/* TODO: This function should be removed, since root length is not a general concept that exists for all possible elements. */
   /** Compute the root length of a given element, that is the length of
    * its level 0 ancestor.
    * \param [in] elem     The element whose root length should be computed.
