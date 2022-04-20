@@ -7,6 +7,8 @@ uint64_t
 size_t
 t8_cmesh_t
 t8_cmesh_trees_t
+t8_dprism_t
+t8_dpyramid_t
 t8_dtet_t
 t8_dtri_t
 t8_dvertex_t
@@ -23,8 +25,11 @@ t8_ghost_data_exchange_t
 t8_ghost_mpi_send_info_t
 t8_ghost_remote_tree_t
 t8_gloidx_t
+t8_dline_t
 t8_locidx_t
 t8_mesh_t
+t8_phex_t
+t8_pquad_t
 t8_refcount_t
 t8_scheme_cxx_t
 t8_shmem_array_t
