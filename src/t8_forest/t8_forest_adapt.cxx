@@ -347,16 +347,14 @@ t8_forest_adapt (t8_forest_t forest)
          * Reason: current element could be on boarder
          * */
         if (is_family && !el_concidered_index && el_considered > (t8_locidx_t) num_children) {
-          for (zz = 0; zz < num_children && el_considered + (t8_locidx_t) zz 
-                                            - (t8_locidx_t) el_concidered_index < num_el_from; zz++) {
+          for (zz = 0; zz < num_children && el_considered + (t8_locidx_t) zz < num_el_from; zz++) {
               elements_from_copy[zz] = t8_element_array_index_locidx (telements_from,
                                                                      el_considered + 
                                                                      zz - num_children);
           }
           /* From here, it is the same test as test 2. 
            * [IL] Question: Ca we do it in one step and is it wise? */
-          for (zz = 0; zz < num_children && el_considered + (t8_locidx_t) zz 
-                                            - (t8_locidx_t) el_concidered_index < num_el_from; zz++) {
+          for (zz = 0; zz < num_children && el_considered + (t8_locidx_t) zz < num_el_from; zz++) {
             level = tscheme->t8_element_level(elements_from_copy[zz]);
             if (level > level_current) {
               tscheme->t8_element_copy(elements_from_copy[zz], element_parent_compare);
