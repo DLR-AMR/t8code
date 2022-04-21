@@ -34,10 +34,25 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #endif
 T8_EXTERN_C_BEGIN ();
 
+#if T8_WITH_VTK
+/* Given the pointIds in vtk-Order of a cell, its eclass, and a number of face
+ * Compute for each point of that face the number of cells that touch this point
+ * (via unstructuredGrid->GetPointCells() ). Fill the ids into a vtkIdList and use
+ * IntersectWith(), to get the cell-id that touches all points of the face.
+ * This cell is unique (face-neighbors are unique). 
+ * 
+ * This Operation is probably very costly and should be optional.*/
+t8_gloidx_t
+t8_cmesh_neighbour_at_face (t8_eclass_t eclass, int t8_face_num)
+{
+
+}
+#endif
+
 /*Construct a cmesh given a filename and a*/
 t8_cmesh_t
 t8_cmesh_read_from_vtk (const char *filename, const int num_files,
-                        sc_MPI_Comm comm)
+                        const int compute_face_neigh, sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
 #if T8_WITH_VTK
@@ -112,9 +127,18 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files,
       t8_cmesh_correct_volume (vertices, cell_type);
     }
     t8_cmesh_set_tree_vertices (cmesh, tree_id, vertices, num_cell_points);
-    cell_id = cell_it->GetCellId ();
-    int                 num_faces = cell_it->GetNumberOfFaces ();
-    t8_debugf ("[D] numfaces %i\n", num_faces);
+    if (compute_face_neigh) {
+      unstructuredGrid->BuildLinks ();
+      cell_id = cell_it->GetCellId ();
+      int                 num_faces = cell_it->GetNumberOfFaces ();
+      vtkSmartPointer < vtkIdList > faces =
+        vtkSmartPointer < vtkIdList >::New ();
+      faces = cell_it->GetFaces ();
+      t8_debugf ("[D] numfaces %i\n", num_faces);
+      t8_debugf ("[D] numfaces %i\n",
+                 cell_it->GetFaces ()->GetNumberOfIds ());
+    }
+
     tree_id++;
   }
   t8_cmesh_commit (cmesh, comm);

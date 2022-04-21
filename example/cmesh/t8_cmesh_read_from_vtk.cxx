@@ -27,7 +27,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 void
 t8_cmesh_construct (const char *prefix, sc_MPI_Comm comm)
 {
-  t8_cmesh_t          cmesh = t8_cmesh_read_from_vtk (prefix, 1, comm);
+  t8_cmesh_t          cmesh = t8_cmesh_read_from_vtk (prefix, 1, 1, comm);
   t8_cmesh_destroy (&cmesh);
   return;
 }
