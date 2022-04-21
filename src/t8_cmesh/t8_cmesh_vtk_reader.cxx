@@ -106,6 +106,7 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files,
       t8_debugf ("[D] %i: %f %f %f\n", i, vertices[3 * i],
                  vertices[3 * i + 1], vertices[3 * i + 2]);
     }
+    /*The order of the vertices in vtk might give a tree with negative volume */
     if (t8_cmesh_tree_vertices_negative_volume
         (cell_type, vertices, num_cell_points)) {
       t8_cmesh_correct_volume (vertices, cell_type);

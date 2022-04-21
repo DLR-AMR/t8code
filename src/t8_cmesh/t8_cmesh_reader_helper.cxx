@@ -45,7 +45,7 @@ t8_cmesh_correct_volume (double *tree_vertices, t8_eclass_t eclass)
   int                 switch_indices[4] = { 0 };
   int                 iswitch;
   T8_ASSERT (t8_eclass_to_dimension[eclass] == 3);
-  t8_debugf ("Correcting negative volume ");
+  t8_debugf ("Correcting negative volume.\n");
   switch (eclass) {
   case T8_ECLASS_TET:
     /* We switch vertex 0 and vertex 3 */
