@@ -25,9 +25,10 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8.h>
 
 void
-t8_cmesh_construct (const char *prefix)
+t8_cmesh_construct (const char *prefix, sc_MPI_Comm comm)
 {
-  t8_cmesh_read_from_vtk (prefix, 1);
+  t8_cmesh_t          cmesh = t8_cmesh_read_from_vtk (prefix, 1, comm);
+  t8_cmesh_destroy (&cmesh);
   return;
 }
 
@@ -74,7 +75,7 @@ main (int argc, char **argv)
     return 1;
   }
   else {
-    t8_cmesh_construct (vtk_file);
+    t8_cmesh_construct (vtk_file, sc_MPI_COMM_WORLD);
 
   }
   sc_options_destroy (opt);

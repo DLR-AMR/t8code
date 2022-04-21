@@ -54,6 +54,7 @@ const t8_eclass_t   t8_cmesh_vtk_type_to_t8_type[82] = {
   T8_ECLASS_ZERO, T8_ECLASS_ZERO
 };
 #endif
+
 /**
  * Construct a cmesh given a filename and a number of files (for parallel reader)
  * CAREFULL: This is in production and this header will probably change! Update
@@ -64,7 +65,8 @@ const t8_eclass_t   t8_cmesh_vtk_type_to_t8_type[82] = {
  * @return t8_cmesh_t       The cmesh described by the files
  */
 t8_cmesh_t          t8_cmesh_read_from_vtk (const char *filename,
-                                            const int num_files);
+                                            const int num_files,
+                                            sc_MPI_Comm comm);
 
 T8_EXTERN_C_END ();
 

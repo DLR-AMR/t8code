@@ -21,6 +21,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 */
 
 #include <t8_cmesh.h>
+#include <t8_cmesh_vtk_writer.h>
 #include <t8_cmesh/t8_cmesh_vtk_reader.hxx>
 
 #if T8_WITH_VTK
@@ -33,7 +34,8 @@ T8_EXTERN_C_BEGIN ();
 
 /*Construct a cmesh given a filename and a*/
 t8_cmesh_t
-t8_cmesh_read_from_vtk (const char *filename, const int num_files)
+t8_cmesh_read_from_vtk (const char *filename, const int num_files,
+                        sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
 #if T8_WITH_VTK
@@ -43,7 +45,7 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files)
   vtkCellIterator    *cell_it;
   char               *tmp, *extension;
   int                 max_dim = 0;      /*max dimenstion of the cells for geometry */
-  int                 num_cell_points;
+  int                 num_cell_points, max_cell_points;
   vtkSmartPointer < vtkPoints > points =
     vtkSmartPointer < vtkPoints >::New ();
   double             *vertices;
@@ -75,10 +77,14 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files)
   else {
     t8_global_errorf ("Please use .vtk or .vtu file\n");
   }
+
   t8_cmesh_init (&cmesh);
+
   t8_debugf ("[D] num_cells: %lli\n", unstructuredGrid->GetNumberOfCells ());
   /*New Iteratore to iterate over all cells in the grid */
   cell_it = unstructuredGrid->NewCellIterator ();
+  max_cell_points = unstructuredGrid->GetMaxCellSize ();
+  vertices = T8_ALLOC (double, 3 * max_cell_points);
   t8_gloidx_t         tree_id = 0;
   for (cell_it->InitTraversal (); !cell_it->IsDoneWithTraversal ();
        cell_it->GoToNextCell ()) {
@@ -90,12 +96,18 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files)
 
     /*Set the vertices of the tree */
     num_cell_points = cell_it->GetNumberOfPoints ();
-    T8_REALLOC (vertices, double, 3 * num_cell_points);
     t8_debugf ("[D] cell has %i points\n", num_cell_points);
-    /*TODO: Get Points via ids */
-    t8_debugf ("[D] points: %f\n", cell_it->Points[0]);
+    points = cell_it->GetPoints ();
+    for (int i = 0; i < num_cell_points; i++) {
+      points->GetPoint (i, &vertices[3 * i]);
+      t8_debugf ("[D] %i: %f %f %f\n", i, vertices[3 * i],
+                 vertices[3 * i + 1], vertices[3 * i + 2]);
+    }
+    t8_cmesh_set_tree_vertices (cmesh, tree_id, vertices, num_cell_points);
+
     tree_id++;
   }
+  t8_cmesh_commit (cmesh, comm);
 #else
   /*TODO: Proper return value to prevent compiler-errors */
   t8_global_errorf
