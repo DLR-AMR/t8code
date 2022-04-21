@@ -113,6 +113,7 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files,
   t8_global_errorf
     ("WARNING: t8code is not linked against the vtk library. Without proper linking t8code cannot use the vtk-reader\n");
 #endif
+  T8_FREE (vertices);
   return cmesh;
 }
 
