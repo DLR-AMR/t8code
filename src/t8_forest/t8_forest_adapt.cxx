@@ -347,9 +347,8 @@ t8_forest_adapt (t8_forest_t forest)
 
         /* Test 3: Check num_childrem elements before el_considered, if they will get eaten.
          * Reason: current element could be on boarder
-         * [IL] Question: Is this required if el_concidered_index > 0
          * */
-        if (is_family && el_considered > (t8_locidx_t) num_children) {
+        if (is_family && !el_concidered_index && el_considered > (t8_locidx_t) num_children) {
           for (zz = 0; zz < num_children && el_considered + (t8_locidx_t) zz 
                                             - (t8_locidx_t) el_concidered_index < num_el_from; zz++) {
               elements_from_copy[zz] = t8_element_array_index_locidx (telements_from,
