@@ -23,6 +23,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_cmesh.h>
 #include <t8_cmesh_vtk_writer.h>
 #include <t8_cmesh/t8_cmesh_vtk_reader.hxx>
+#include <t8_cmesh/t8_cmesh_reader_helper.hxx>
 
 #if T8_WITH_VTK
 #include <vtkUnstructuredGrid.h>
@@ -104,6 +105,10 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files,
       points->GetPoint (i, &vertices[3 * i]);
       t8_debugf ("[D] %i: %f %f %f\n", i, vertices[3 * i],
                  vertices[3 * i + 1], vertices[3 * i + 2]);
+    }
+    if (t8_cmesh_tree_vertices_negative_volume
+        (cell_type, vertices, num_cell_points)) {
+      t8_cmesh_correct_volume (vertices, cell_type);
     }
     t8_cmesh_set_tree_vertices (cmesh, tree_id, vertices, num_cell_points);
     cell_id = cell_it->GetCellId ();

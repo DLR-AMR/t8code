@@ -22,6 +22,7 @@
 
 #include <t8_eclass.h>
 #include <t8_cmesh_readmshfile.h>
+#include <t8_cmesh/t8_cmesh_reader_helper.hxx>
 #include <t8_cmesh_vtk_writer.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include "t8_cmesh_types.h"
@@ -250,7 +251,7 @@ die_format:
 /* Read an open .msh file and parse the nodes into a hash table.
  */
 static sc_hash_t   *
-t8_msh_file_read_nodes (FILE * fp, t8_locidx_t * num_nodes,
+t8_msh_file_read_nodes (FILE * fp, t8_locidx_t *num_nodes,
                         sc_mempool_t ** node_mempool)
 {
   t8_msh_file_node_t *Node;
@@ -475,55 +476,8 @@ t8_cmesh_msh_file_read_eles (t8_cmesh_t cmesh, FILE * fp,
       /* Detect and correct negative volumes */
       if (t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices,
                                                   num_nodes)) {
-        /* The volume described is negative. We need to change vertices.
-         * For tets we switch 0 and 3.
-         * For prisms we switch 0 and 3, 1 and 4, 2 and 5.
-         * For hexahedra we switch 0 and 4, 1 and 5, 2 and 6, 3 and 7.
-         * For pyramids we switch 0 and 4 */
-        double              temp;
-        int                 num_switches = 0;
-        int                 switch_indices[4] = { 0 };
-        int                 iswitch;
-        T8_ASSERT (t8_eclass_to_dimension[eclass] == 3);
-        t8_debugf ("Correcting negative volume of tree %li\n", tree_count);
-        switch (eclass) {
-        case T8_ECLASS_TET:
-          /* We switch vertex 0 and vertex 3 */
-          num_switches = 1;
-          switch_indices[0] = 3;
-          break;
-        case T8_ECLASS_PRISM:
-          num_switches = 3;
-          switch_indices[0] = 3;
-          switch_indices[1] = 4;
-          switch_indices[2] = 5;
-          break;
-        case T8_ECLASS_HEX:
-          num_switches = 4;
-          switch_indices[0] = 4;
-          switch_indices[1] = 5;
-          switch_indices[2] = 6;
-          switch_indices[3] = 7;
-          break;
-        case T8_ECLASS_PYRAMID:
-          num_switches = 1;
-          switch_indices[0] = 4;
-          break;
-        default:
-          SC_ABORT_NOT_REACHED ();
-        }
+        t8_cmesh_correct_volume (tree_vertices, eclass);
 
-        for (iswitch = 0; iswitch < num_switches; ++iswitch) {
-          /* We switch vertex 0 + iswitch and vertex switch_indices[iswitch] */
-          for (i = 0; i < 3; i++) {
-            temp = tree_vertices[3 * iswitch + i];
-            tree_vertices[3 * iswitch + i] =
-              tree_vertices[3 * switch_indices[iswitch] + i];
-            tree_vertices[3 * switch_indices[iswitch] + i] = temp;
-          }
-        }
-        T8_ASSERT (!t8_cmesh_tree_vertices_negative_volume
-                   (eclass, tree_vertices, num_nodes));
       }                         /* End of negative volume handling */
       /* Set the vertices of this tree */
       t8_cmesh_set_tree_vertices (cmesh, tree_count, tree_vertices,

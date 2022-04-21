@@ -23,4 +23,16 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #ifndef T8_CMESH_READER_HELPER
 #define T8_CMESH_READER_HELPER
 
+T8_EXTERN_C_BEGIN ();
+/**
+ * This function corrects trees with negative volumes by reordering
+ * the vertices.
+ * 
+ * \param[in, out]  tree_vertices        vertices of the tree, which will be reordered.
+ * \param[in]       eclass               The eclass of the tree with \a tree_vertices as vertices.
+ */
+void                t8_cmesh_correct_volume (double *tree_vertices,
+                                             t8_eclass_t eclass);
+T8_EXTERN_C_END ();
+
 #endif /* T8_CMESH_READER_HELPER */
