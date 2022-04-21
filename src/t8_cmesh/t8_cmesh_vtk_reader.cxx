@@ -106,9 +106,9 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files,
                  vertices[3 * i + 1], vertices[3 * i + 2]);
     }
     t8_cmesh_set_tree_vertices (cmesh, tree_id, vertices, num_cell_points);
-    cell_id = cell_it->GetCellId();
-    int num_faces = cell_it->GetNumberOfFaces();
-    t8_debugf("[D] numfaces %i\n", num_faces);
+    cell_id = cell_it->GetCellId ();
+    int                 num_faces = cell_it->GetNumberOfFaces ();
+    t8_debugf ("[D] numfaces %i\n", num_faces);
     tree_id++;
   }
   t8_cmesh_commit (cmesh, comm);
