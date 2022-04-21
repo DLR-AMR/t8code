@@ -1,5 +1,26 @@
 #! /bin/bash
 
+# This file is part of t8code.
+# t8code is a C library to manage a collection (a forest) of multiple
+# connected adaptive space-trees of general element classes in parallel.
+#
+# Copyright (C) 2015 the developers
+#
+# t8code is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# t8code is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with t8code; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+
 # This is the GNU style for indent 2.2.9 (according to man page)
 #
 #"$INDENT" \
@@ -16,7 +37,32 @@
 # no tabs
 # put the return type of a function on a separate line
 # swallow optional blank lines
-INDENT_OPTIONS="-bap -bli0 -br -nut -psl -sob -di20"
+INDENT_BASE_OPTIONS="-bap -bli0 -br -nut -psl -sob -di20"
+
+# Indent has problems with user defined data types
+# and some other data types (i.e. size_t).
+# We can tell indent manually which datatypes we defined and use.
+# For t8code these datatypes are listed in scripts/t8indent_custom_datatypes.txt
+# If you encounter an indenting problem with a (user defined)
+# type, add it to the file.
+#
+# Example without -T t8_cmesh_t:
+#   static	t8_cmesh_t
+#   afunction (int aparameter) {
+#
+# Note the undesired whitespaces between 'static' and 't8_cmesh_t'.
+#
+# Example with -T t8_cmesh_t:
+#   static t8_cmesh_t
+#   afunction (int aparameter) {
+
+T8CODE_ADDITIONAL_DATATYPES=
+for x in `cat scripts/t8indent_custom_datatypes.txt`
+do
+  T8CODE_ADDITIONAL_DATATYPES="$T8CODE_ADDITIONAL_DATATYPES -T $x"
+done
+
+INDENT_OPTIONS="$INDENT_BASE_OPTIONS $T8CODE_ADDITIONAL_DATATYPES"
 
 INDENT=`which gnuindent 2> /dev/null`
 if test -z "$INDENT" ; then
