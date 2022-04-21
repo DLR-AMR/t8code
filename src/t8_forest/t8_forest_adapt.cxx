@@ -199,8 +199,6 @@ t8_forest_adapt (t8_forest_t forest)
   int                 is_family;
   int                 level, level_current;
 
-  int counter = 0;
-
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->set_from != NULL);
   T8_ASSERT (forest->set_adapt_recursive != -1);
@@ -414,7 +412,6 @@ t8_forest_adapt (t8_forest_t forest)
         refine = 0;
       }
       if (refine == 1) {
-        counter ++;
         /* The first element is to be refined */
         if (forest->set_adapt_recursive) {
           /* Create the children of this element */
@@ -543,7 +540,6 @@ t8_forest_adapt (t8_forest_t forest)
                            forest->profile->adapt_runtime);
   }
 
-  t8_debugf("[IL] counter: %i\n", counter);
 }
 
 T8_EXTERN_C_END ();
