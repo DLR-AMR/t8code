@@ -21,7 +21,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 */
 
 /**
- * \file This file provides helper-functions to use when we read a mesh
+ * \file t8_cmesh_reader_helper.cxx
+ * This file provides helper-functions to use when we read a mesh
  * comming from an external mesh-generator. 
  * 
  */

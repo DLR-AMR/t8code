@@ -20,6 +20,10 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_cmesh_vtk_reader.hxx
+* Header for the vtk-reader. 
+*/
+
 #ifndef T8_CMESH_VTK_READER
 #define T8_CMESH_VTK_READER
 

@@ -20,6 +20,11 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_cmesh_vtk_reader.cxx
+* Implementation of a Reader for vtk/vtu files using the vtk-library.
+* The functions can only be used when t8code is linked with the vtk-library.
+*/
+
 #include <t8_cmesh.h>
 #include <t8_cmesh_vtk_writer.h>
 #include <t8_cmesh/t8_cmesh_vtk_reader.hxx>

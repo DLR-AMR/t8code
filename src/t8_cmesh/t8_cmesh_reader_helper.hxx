@@ -20,6 +20,10 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_cmesh_reader_helper.hxx
+* Header for helper-functions for reader-algorithms
+*/
+
 #ifndef T8_CMESH_READER_HELPER
 #define T8_CMESH_READER_HELPER
 
