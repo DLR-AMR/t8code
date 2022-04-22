@@ -72,7 +72,7 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files,
   vtkSmartPointer < vtkPoints > points =
     vtkSmartPointer < vtkPoints >::New ();
   double             *vertices;
-  /*Get the file-extensioni to decide which reader to use */
+  /*Get the file-extension to decide which reader to use */
   tmp = T8_ALLOC (char, BUFSIZ);
   strcpy (tmp, filename);
   extension = strtok (tmp, ".");
@@ -104,10 +104,12 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files,
   t8_cmesh_init (&cmesh);
 
   t8_debugf ("[D] num_cells: %lli\n", unstructuredGrid->GetNumberOfCells ());
-  /*New Iteratore to iterate over all cells in the grid */
+  /*New Iterator to iterate over all cells in the grid */
   cell_it = unstructuredGrid->NewCellIterator ();
   max_cell_points = unstructuredGrid->GetMaxCellSize ();
+  /*Allocate maximal possible points to avoid reallocation in the loop */
   vertices = T8_ALLOC (double, 3 * max_cell_points);
+  /*Each cell in vtk will be a tree in the cmesh */
   t8_gloidx_t         tree_id = 0;
   for (cell_it->InitTraversal (); !cell_it->IsDoneWithTraversal ();
        cell_it->GoToNextCell ()) {
@@ -122,6 +124,7 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files,
     t8_debugf ("[D] cell has %i points\n", num_cell_points);
     points = cell_it->GetPoints ();
     for (int i = 0; i < num_cell_points; i++) {
+      /*Every Point has 3 coords */
       points->GetPoint (i, &vertices[3 * i]);
       t8_debugf ("[D] %i: %f %f %f\n", i, vertices[3 * i],
                  vertices[3 * i + 1], vertices[3 * i + 2]);
@@ -132,7 +135,11 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files,
       t8_cmesh_correct_volume (vertices, cell_type);
     }
     t8_cmesh_set_tree_vertices (cmesh, tree_id, vertices, num_cell_points);
+
+    /* We don't always need to know the connection of the cell. Therefore,
+     * this computation is optional.*/
     if (compute_face_neigh) {
+      /* WIP */
       unstructuredGrid->BuildLinks ();
       cell_id = cell_it->GetCellId ();
       int                 num_faces = cell_it->GetNumberOfFaces ();
