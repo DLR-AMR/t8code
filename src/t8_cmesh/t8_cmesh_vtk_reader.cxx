@@ -115,7 +115,9 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files,
        cell_it->GoToNextCell ()) {
     /*Set the t8_eclass of the cell */
     cell_type = t8_cmesh_vtk_type_to_t8_type[cell_it->GetCellType ()];
-    T8_ASSERT (cell_type != T8_ECLASS_ZERO);
+    SC_CHECK_ABORTF (cell_type != T8_ECLASS_ZERO,
+                     "vtk-cell-type %i not supported by t8code\n",
+                     cell_it->GetCellType ());
     t8_debugf ("[D] cell has type %i\n", cell_type);
     t8_cmesh_set_tree_class (cmesh, tree_id, cell_type);
 
