@@ -66,7 +66,7 @@ protected:
  */
 TEST_P (nca, nca_check_shallow) {
     int i, j;
-    int num_children = ts->t8_element_num_children (correct_nca);
+    const int num_children = ts->t8_element_num_children (correct_nca);
     /*Iterate over all combinations of two children from correct_nca */
     for (i = 0; i < num_children; i++) {
         ts->t8_element_child (correct_nca, i, desc_a);
@@ -79,6 +79,8 @@ TEST_P (nca, nca_check_shallow) {
         }
     }
 }
+
+
 
 /*
  * TODO: Change to:
