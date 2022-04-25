@@ -21,7 +21,7 @@
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 # This script lists all .c .h .cxx and .hxx
-# files in t8code.
+# files in t8code's src/ example/ and test/ subfolders.
 #
 
 #
@@ -39,8 +39,8 @@ fi
 
 suffixes="c|cxx|h|hxx"
 
-# Find all files with the appropriate suffix.
-# Excluding the sc/ and p4est/ subfolders.
-files=`find .. -regextype egrep -iregex ".*\.($suffixes)" -o -type d \( -path ../sc -o -path ../p4est \) -prune`
+# Find all files with the appropriate suffix in the src/ example/ and test/
+# subfolder.
+files=`find ../src ../example ../test -regextype egrep -iregex ".*\.($suffixes)"`
 
 echo $files
