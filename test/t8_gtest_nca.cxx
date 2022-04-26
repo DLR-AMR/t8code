@@ -107,40 +107,42 @@ TEST_P(nca, nca_check_deep){
     /* iterate over levels and children*/
     int             lvl, check_lvl, child_id;
     t8_element_t    *tmp;
-    if(eclass == T8_ECLASS_VERTEX){
-        /*TODO: Test fails currently for T8_ECLASS_VERTEX*/
-        GTEST_SKIP();
-    }
-    else{
-        ts->t8_element_new(1, &tmp);
-        ts->t8_element_copy(correct_nca, tmp);
-        for(lvl = 1; lvl <= max_lvl; lvl++){
-            num_children = ts->t8_element_num_children(correct_nca);
-            for(child_id = 0; child_id < num_children; child_id++){
-                ts->t8_element_child(tmp, child_id, correct_nca);
-                /* Compute first and last descendant at every level up to elem_max_lvl. 
-                 *They have the correct_nca as the nca*/
-                for(check_lvl = lvl + 1; check_lvl < elem_max_level; check_lvl++){
-                    ts->t8_element_first_descendant(correct_nca, desc_a, check_lvl);
-                    ts->t8_element_last_descendant(correct_nca, desc_b, check_lvl);
-                    /* Compute the nca of desc_a and desc_b*/
-                    ts->t8_element_nca(desc_a, desc_b, check);
-                    /* Expect equality of correct_nca and check */
+
+    ts->t8_element_new(1, &tmp);
+    ts->t8_element_copy(correct_nca, tmp);
+    for(lvl = 1; lvl <= max_lvl; lvl++){
+        num_children = ts->t8_element_num_children(correct_nca);
+        for(child_id = 0; child_id < num_children; child_id++){
+            ts->t8_element_child(tmp, child_id, correct_nca);
+            /* Compute first and last descendant at every level up to elem_max_lvl. 
+                *They have the correct_nca as the nca*/
+            for(check_lvl = lvl + 1; check_lvl < elem_max_level; check_lvl++){
+                ts->t8_element_first_descendant(correct_nca, desc_a, check_lvl);
+                ts->t8_element_last_descendant(correct_nca, desc_b, check_lvl);
+                /* Compute the nca of desc_a and desc_b*/
+                ts->t8_element_nca(desc_a, desc_b, check);
+                
+                if(eclass == T8_ECLASS_VERTEX){
+                    /* first- last-descendant logic does not hold for vertices.*/
+                    EXPECT_EQ(ts->t8_element_level(check), SC_MIN(ts->t8_element_level(desc_a), ts->t8_element_level(desc_b)));
+                }
+                else{
+                    /* Expect equality of correct_nca and check for every other class*/
                     EXPECT_TRUE ((ts->t8_element_compare (correct_nca, check) == 0));
                 }
             }
-            /*Determine next element*/
-            if(num_children != 1){
-                ts->t8_element_copy(tmp, correct_nca);
-                /*Continue in the middle*/
-                ts->t8_element_child(correct_nca, num_children/2, tmp);
-            }
-            else{
-                ts->t8_element_copy(correct_nca, tmp);
-            }
         }
-        ts->t8_element_destroy(1, &tmp);
+        /*Determine next element*/
+        if(num_children != 1){
+            ts->t8_element_copy(tmp, correct_nca);
+            /*Continue in the middle*/
+            ts->t8_element_child(correct_nca, num_children/2, tmp);
+        }
+        else{
+            ts->t8_element_copy(correct_nca, tmp);
+        }
     }
+    ts->t8_element_destroy(1, &tmp);
 }
 
 
