@@ -79,24 +79,19 @@ protected:
  */
 TEST_P (nca, nca_check_shallow) {
     int i, j;
-    /* TODO: Delete this part, as soon as nca is implemented for pyramids*/
-    if(eclass == T8_ECLASS_PYRAMID){
-        GTEST_SKIP();
-    }
-    else{
-        const int num_children = ts->t8_element_num_children (correct_nca);
-        /* Iterate over all combinations of two children from correct_nca*/
-        for (i = 0; i < num_children; i++) {
-            ts->t8_element_child (correct_nca, i, desc_a);
-            for (j = i + 1; j < num_children; j++) {
-                ts->t8_element_child (correct_nca, j, desc_b);
-                /*Compute the nca */
-                ts->t8_element_nca (desc_a, desc_b, check);
-                /*expect equality */
-                EXPECT_TRUE ((ts->t8_element_compare (correct_nca, check) == 0));
-            }
+    const int num_children = ts->t8_element_num_children (correct_nca);
+    /* Iterate over all combinations of two children from correct_nca*/
+    for (i = 0; i < num_children; i++) {
+        ts->t8_element_child (correct_nca, i, desc_a);
+        for (j = i + 1; j < num_children; j++) {
+            ts->t8_element_child (correct_nca, j, desc_b);
+            /*Compute the nca */
+            ts->t8_element_nca (desc_a, desc_b, check);
+            /*expect equality */
+            EXPECT_TRUE ((ts->t8_element_compare (correct_nca, check) == 0));
         }
     }
+
 }
 
 /**
@@ -112,7 +107,7 @@ TEST_P(nca, nca_check_deep){
     /* iterate over levels and children*/
     int             lvl, check_lvl, child_id;
     t8_element_t    *tmp;
-    if(eclass == T8_ECLASS_ZERO){
+    if(eclass == T8_ECLASS_VERTEX){
         /*TODO: Test fails currently for T8_ECLASS_VERTEX*/
         GTEST_SKIP();
     }
