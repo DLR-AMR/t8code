@@ -121,7 +121,6 @@ TEST_P(nca, nca_check_deep){
                 ts->t8_element_last_descendant(correct_nca, desc_b, check_lvl);
                 /* Compute the nca of desc_a and desc_b*/
                 ts->t8_element_nca(desc_a, desc_b, check);
-                
                 if(eclass == T8_ECLASS_VERTEX){
                     /* first- last-descendant logic does not hold for vertices.*/
                     EXPECT_EQ(ts->t8_element_level(check), SC_MIN(ts->t8_element_level(desc_a), ts->t8_element_level(desc_b)));
