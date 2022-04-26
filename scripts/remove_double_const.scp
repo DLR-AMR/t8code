@@ -24,7 +24,7 @@ file=$1
 
 if [ x$file = x ]
 then
- echo No output file provided.
+ echo No input file provided.
  echo Usage $0 INPUTFILE
  exit 1
 fi
