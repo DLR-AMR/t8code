@@ -293,6 +293,13 @@ t8_forest_adapt (t8_forest_t forest)
         /* Assume we are looking at a family */
         is_family = 1;
 
+#if 0
+        /* Test 0: Left process boundary */
+        if (ltree_id == 0 && el_considered == 0 && zz != num_children) {
+          is_family = 0;
+        }
+#endif
+
         /* el_concidered_index is the local Index of the el_considered in elements_from_copy */
         if (num_el_from < (t8_locidx_t) num_children){
           el_concidered_index = 0;
@@ -379,6 +386,14 @@ t8_forest_adapt (t8_forest_t forest)
               num_elements++;
             }
           }
+#if 0
+          /* Test 0: Right process boundary */
+          if (ltree_id == num_trees-1 && el_considered > num_el_from - 1 - num_elements 
+                                      && num_elements != num_children ) {
+            is_family    = 0;
+            num_elements = 1;
+          }
+#endif
         }
         else {
           num_elements = 1;
