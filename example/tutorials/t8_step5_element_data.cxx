@@ -21,10 +21,18 @@
 */
 
 /* This is step5 of the t8code tutorials.
- * 
- * TODO: This file still needs to be documented.
  * How you can experiment here:
- *   -
+ *   - Look at the paraview output files of the adapted forest.
+ *     You can apply a slice filter to look into the cube. Also you can apply (in addition) 
+ *     the threshold filter to display only elements with certain properties.
+ *     But at first you may just want to enter the tooltip selection mode 'Hover Cells On'
+ *     to display cell information.
+ *     
+ *   - Change the adaptation criterion as you wish to adapt elements or families as desired.
+ * 
+ *   - Store even more data per element, for instance the coordinates of its midpoint.
+ *     You can again apply the threshold filter to your new data. Don't forget to write the 
+ *     data into the output file.
  *  */
 
 #include <t8.h>                 /* General t8code header, always include this. */
