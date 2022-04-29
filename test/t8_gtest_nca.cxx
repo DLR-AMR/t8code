@@ -34,33 +34,21 @@ class nca:public testing::TestWithParam < t8_eclass > {
 protected:
     void SetUp () override {
         eclass = GetParam ();
-        if(eclass == T8_ECLASS_PYRAMID){
-            /* TODO: Delete this part, as soon as nca is implemented for pyramids*/
-            GTEST_SKIP();
-        }
-        else{
-            scheme = t8_scheme_new_default_cxx ();
-            ts = scheme->eclass_schemes[eclass];
-            ts->t8_element_new (1, &correct_nca);
-            ts->t8_element_new (1, &desc_a);
-            ts->t8_element_new (1, &desc_b);
-            ts->t8_element_new (1, &check);
-            ts->t8_element_set_linear_id (correct_nca, 0, 0);
-        }
+        scheme = t8_scheme_new_default_cxx ();
+        ts = scheme->eclass_schemes[eclass];
+        ts->t8_element_new (1, &correct_nca);
+        ts->t8_element_new (1, &desc_a);
+        ts->t8_element_new (1, &desc_b);
+        ts->t8_element_new (1, &check);
+        ts->t8_element_set_linear_id (correct_nca, 0, 0);
         
     }   
     void TearDown () override {
-        if(eclass == T8_ECLASS_PYRAMID){
-            /* TODO: Delete this part, as soon as nca is implemented for pyramids*/
-            GTEST_SKIP();
-        }
-        else{
-            ts->t8_element_destroy (1, &correct_nca);
-            ts->t8_element_destroy (1, &desc_a);
-            ts->t8_element_destroy (1, &desc_b);
-            ts->t8_element_destroy (1, &check);
-            t8_scheme_cxx_unref (&scheme);
-        }
+        ts->t8_element_destroy (1, &correct_nca);
+        ts->t8_element_destroy (1, &desc_a);
+        ts->t8_element_destroy (1, &desc_b);
+        ts->t8_element_destroy (1, &check);
+        t8_scheme_cxx_unref (&scheme);
     }
     /* correct_nca  -> the nearest common ancestor that we check for
     * desc_a       -> a descendant of correct_nca
