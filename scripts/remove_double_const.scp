@@ -3,7 +3,7 @@
 # Remove duplicate const in a file.
 #
 #
-# It is bug of the indent script to duplicate some 'const' statements in .cxx files.
+# It is a bug of the indent script to duplicate some 'const' statements in .cxx files.
 # 
 # void foo () const
 # {
