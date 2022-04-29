@@ -20,16 +20,23 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* This is step5 of the t8code tutorials.
+/* See also: LINK
+ *
+ * This is step5 of the t8code tutorials.
+ * In the following we will store data in the individual elements of our forest. 
+ * To do this, we will again create a uniform forest, which will get adapt as in step3. 
+ * In addition we partition, balance and create ghost elements all in the same step.
+ * After adapting the forest we will lear how to build a data array and gather data for 
+ * the local elements. Futher we exchange the data values of the ghost elements and
+ * output the volume data to vtu.
+ *
  * How you can experiment here:
  *   - Look at the paraview output files of the adapted forest.
  *     You can apply a slice filter to look into the cube. Also you can apply (in addition) 
  *     the threshold filter to display only elements with certain properties.
  *     But at first you may just want to enter the tooltip selection mode 'Hover Cells On'
- *     to display cell information.
- *     
+ *     to display cell information when hover over them.
  *   - Change the adaptation criterion as you wish to adapt elements or families as desired.
- * 
  *   - Store even more data per element, for instance the coordinates of its midpoint.
  *     You can again apply the threshold filter to your new data. Don't forget to write the 
  *     data into the output file.
@@ -274,6 +281,7 @@ t8_step5_main (int argc, char **argv)
   /*
    * Setup.
    * Build cmesh and uniform forest.
+   * Adapt forest similar to step 3 & 4.
    */
 
   t8_global_productionf (" [step5] \n");
