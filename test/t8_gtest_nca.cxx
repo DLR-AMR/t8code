@@ -72,6 +72,7 @@ TEST_P (nca, nca_check_shallow) {
     for (i = 0; i < num_children; i++) {
         ts->t8_element_child (correct_nca, i, desc_a);
         for (j = i + 1; j < num_children; j++) {
+            t8_debugf("[D] check child %i and %i\n", i,j);
             ts->t8_element_child (correct_nca, j, desc_b);
             /*Compute the nca */
             ts->t8_element_nca (desc_a, desc_b, check);
