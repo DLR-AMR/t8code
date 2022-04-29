@@ -10,7 +10,7 @@
 #
 
 # This is the indent script in the project's directory
-INDENT=./p4estindent
+INDENT=./scripts/t8indent
 # This is the script to remove duplicate const after indent (bug of indent)
 REMOVE_D_CONST=./scripts/remove_double_const.scp
 
