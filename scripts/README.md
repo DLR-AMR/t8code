@@ -39,6 +39,10 @@ One of the [Known issues with indent](https://github.com/holke/t8code/wiki/Known
 
 ## Others
 
-- su2_mesh_to_gmsh.py
+#### su2_mesh_to_gmsh.py
 
-- create_todo_list.sh
+Used to convert coarse meshes from an su2 format into msh format.
+
+#### create_todo_list.sh
+
+Parses through the code and collects comments containing the `TODO` keyword.
