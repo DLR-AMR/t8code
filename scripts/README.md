@@ -1,5 +1,7 @@
 # t8code scripts
 
+This folder contains several scripts that are useful for t8code users and developers.
+
 ## Indentation
 
 The purpose of the indentation scripts is to help t8code developers to indent their code according to the t8code [indentation guidelines](https://github.com/holke/t8code/wiki/Coding-Guideline#indentation). Please read these guidelines before using these scripts.
