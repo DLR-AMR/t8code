@@ -17,7 +17,7 @@ See also [Known issues with indent](https://github.com/holke/t8code/wiki/Known-i
 
 #### pre-commit
 
-This script should be copied to your `.git/hooks` folder. `git` the automatically checks the indentation of committed files and prevents you from committing wrongly indented files. See [Git indentation workflow](https://github.com/holke/t8code/wiki/Coding-Guideline#git-indentation-workflow).
+This script should be copied to your `.git/hooks` folder. `git` then automatically checks the indentation of committed files and prevents you from committing wrongly indented files. See [Git indentation workflow](https://github.com/holke/t8code/wiki/Coding-Guideline#git-indentation-workflow).
 
 #### check_if_file_indented.scp
 
@@ -29,7 +29,7 @@ Check whether all t8code source files are properly indented.
 
 #### indent_all_files.scp
 
-This script indents all t8code source files at once. This script should only be used by the core developers. Handle with care.
+This script indents all t8code source files at once. This script should only be used by the main developers of t8code. Handle with care.
 
 #### find_all_source_files.scp
 
@@ -37,7 +37,7 @@ List all source files of t8code in the `src/` `example/` and `test/` subfolders.
 
 #### remove_double_const.scp
 
-One of the [Known issues with indent](https://github.com/holke/t8code/wiki/Known-issues-with-the-indent-script) is that it duplicates the `const` keyword in `C++` files in some cases.
+One of the [Known issues with indent](https://github.com/holke/t8code/wiki/Known-issues-with-the-indent-script) is that it duplicates the `const` keyword in `C++` files in some cases. This script iterates over all `C++` files and tries to fix these duplicates. Handle with care.
 
 ## Others
 
