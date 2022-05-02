@@ -35,30 +35,30 @@ T8_EXTERN_C_BEGIN ();
  * \param [in] l    vertex whose level is computed.
  * \return          The level of \a l.
  */
-int                 t8_dvertex_get_level (const t8_dvertex_t * v);
+int                 t8_dvertex_get_level (const t8_dvertex_t *v);
 
 /** Copy all values from one vertex to another.
  * \param [in] l    The vertex to be copied.
  * \param [in,out] dest Existing vertex whose data will be filled with the data
  *                   of \a l.
  */
-void                t8_dvertex_copy (const t8_dvertex_t * v,
-                                     t8_dvertex_t * dest);
+void                t8_dvertex_copy (const t8_dvertex_t *v,
+                                     t8_dvertex_t *dest);
 
 /** Compare two elements. returns negativ if l1 < l2, zero if l1 equals l2
  *  and positiv if l1 > l2.
  *  If l2 is a copy of l1 then the elements are equal.
  */
-int                 t8_dvertex_compare (const t8_dvertex_t * l1,
-                                        const t8_dvertex_t * l2);
+int                 t8_dvertex_compare (const t8_dvertex_t *l1,
+                                        const t8_dvertex_t *l2);
 
 /** Compute the parent of a vertex.
  * \param [in]  l   The input vertex.
  * \param [in,out] parent Existing vertex whose data will be filled with the parent
  *                  data of \a l.
  */
-void                t8_dvertex_parent (const t8_dvertex_t * v,
-                                       t8_dvertex_t * parent);
+void                t8_dvertex_parent (const t8_dvertex_t *v,
+                                       t8_dvertex_t *parent);
 
 /** Compute the childid-th child in Morton order of a vertex.
  * \param [in] l    Input vertex.
@@ -66,8 +66,8 @@ void                t8_dvertex_parent (const t8_dvertex_t * v,
  * \param [in,out] child  Existing vertex whose data will be filled
  * 		    with the date of l's childid-th child.
  */
-void                t8_dvertex_child (const t8_dvertex_t * v,
-                                      t8_dvertex_t * child);
+void                t8_dvertex_child (const t8_dvertex_t *v,
+                                      t8_dvertex_t *child);
 
 /** Computes the nearest common ancestor of two vertexs in the same tree.
  * \param [in]     l1 First input vertex.
@@ -75,10 +75,10 @@ void                t8_dvertex_child (const t8_dvertex_t * v,
  * \param [in,out] r Existing vertex whose data will be filled.
  * \note \a l1, \a l2, \a r may point to the same vertex.
  */
-void                t8_dvertex_nearest_common_ancestor (const t8_dvertex_t *
-                                                        t1,
-                                                        const t8_dvertex_t *
-                                                        t2, t8_dvertex_t * r);
+void                t8_dvertex_nearest_common_ancestor (const t8_dvertex_t
+                                                        *t1,
+                                                        const t8_dvertex_t
+                                                        *t2, t8_dvertex_t *r);
 
 /** Compute the position of the ancestor of this child at level \a level within
  * its siblings.
@@ -86,44 +86,43 @@ void                t8_dvertex_nearest_common_ancestor (const t8_dvertex_t *
  * \param [in] level level to be considered.
  * \return Returns its child id 0 or 1.
  */
-int                 t8_dvertex_ancestor_id (const t8_dvertex_t * v,
-                                            int level);
+int                 t8_dvertex_ancestor_id (const t8_dvertex_t *v, int level);
 
 /** Compute the position of the ancestor of this child at level \a level within
  * its siblings.
  * \param [in] t  vertex to be considered.
  * \return Returns its child id in 0,1
  */
-int                 t8_dvertex_child_id (const t8_dvertex_t * t);
+int                 t8_dvertex_child_id (const t8_dvertex_t *t);
 
 /** Compute the sibling of a vertex.
  * \param [in] v  vertex to be considered.
  * \param [in] sibid The id of the sibling, must be 0.
  * \param [out] s  The sibling of \a v. For vertices \a s is just a copy of \a v.
  */
-void                t8_dvertex_sibling (const t8_dvertex_t * v, int sibid,
-                                        t8_dvertex_t * s);
+void                t8_dvertex_sibling (const t8_dvertex_t *v, int sibid,
+                                        t8_dvertex_t *s);
 
 /** Compute the 2 children of a vertex, array version.
  * \param [in]     t  Input vertex.
  * \param [in,out] c  Pointers to the 2 computed children in Morton order.
  *                    t may point to the same quadrant as c[0].
  */
-void                t8_dvertex_childrenpv (const t8_dvertex_t * t,
-                                           t8_dvertex_t * c[]);
+void                t8_dvertex_childrenpv (const t8_dvertex_t *t,
+                                           t8_dvertex_t *c[]);
 
 /** Check whether a collection of two vertexs is a family in Morton order.
  * \param [in]     f  An array of two vertexs.
  * \return            Nonzero if \a f is a family of vertexs.
  */
-int                 t8_dvertex_is_familypv (const t8_dvertex_t * f[]);
+int                 t8_dvertex_is_familypv (const t8_dvertex_t *f[]);
 
 /** Compute whether a given vertex shares a given face with its root tree.
  * \param [in] p        The input vertex.
  * \param [in] face     A face of \a p.
  * \return              True if \a face is a subface of the vertex's root element.
  */
-int                 t8_dvertex_is_root_boundary (const t8_dvertex_t * p,
+int                 t8_dvertex_is_root_boundary (const t8_dvertex_t *p,
                                                  int face);
 
 /** Test if a vertex lies inside of the root vertex,
@@ -131,7 +130,7 @@ int                 t8_dvertex_is_root_boundary (const t8_dvertex_t * p,
  *  \param [in]     l Input vertex.
  *  \return true    If \a l lies inside of the root vertex.
  */
-int                 t8_dvertex_is_inside_root (const t8_dvertex_t * v);
+int                 t8_dvertex_is_inside_root (const t8_dvertex_t *v);
 
 /** Initialize a vertex as the vertex with a given global id in a uniform
  *  refinement of a given level. *
@@ -139,7 +138,7 @@ int                 t8_dvertex_is_inside_root (const t8_dvertex_t * v);
  * \param [in] id     Index to be considered.
  * \param [in] level  level of uniform grid to be considered.
  */
-void                t8_dvertex_init_linear_id (t8_dvertex_t * v, int level,
+void                t8_dvertex_init_linear_id (t8_dvertex_t *v, int level,
                                                t8_linearidx_t id);
 
 /** Suppose we have two trees that share a common vertex face f.
@@ -152,8 +151,8 @@ void                t8_dvertex_init_linear_id (t8_dvertex_t * v, int level,
  *                        to the coordinate system of the other tree.
  * \note For vertices this function is equivalent to copy.
  */
-void                t8_dvertex_transform_face (const t8_dvertex_t * vertex1,
-                                               t8_dvertex_t * vertex2);
+void                t8_dvertex_transform_face (const t8_dvertex_t *vertex1,
+                                               t8_dvertex_t *vertex2);
 
 /** Compute the first descendant of a vertex at a given level. This is the descendant of
  * the vertex in a uniform level refinement that has the smallest id.
@@ -163,8 +162,8 @@ void                t8_dvertex_transform_face (const t8_dvertex_t * vertex1,
  * \param [in] level    The refinement level. Must be greater than \a l's refinement
  *                      level.
  */
-void                t8_dvertex_first_descendant (const t8_dvertex_t * v,
-                                                 t8_dvertex_t * s, int level);
+void                t8_dvertex_first_descendant (const t8_dvertex_t *v,
+                                                 t8_dvertex_t *s, int level);
 
 /** Compute the last descendant of a vertex at a given level. This is the descendant of
  * the vertex in a uniform level refinement that has the largest id.
@@ -174,15 +173,15 @@ void                t8_dvertex_first_descendant (const t8_dvertex_t * v,
  * \param [in] level    The refinement level. Must be greater than \a l's refinement
  *                      level.
  */
-void                t8_dvertex_last_descendant (const t8_dvertex_t * v,
-                                                t8_dvertex_t * s, int level);
+void                t8_dvertex_last_descendant (const t8_dvertex_t *v,
+                                                t8_dvertex_t *s, int level);
 
 /** Compute the coordinates of a vertex (always 0).
  * \param [in] elem     vertex whose vertex is computed.
  * \param [in] vertex   The number of the vertex of \a elem
  * \param [out] coords   The coordinates of the computed vertex
  */
-void                t8_dvertex_vertex_coords (const t8_dvertex_t * elem,
+void                t8_dvertex_vertex_coords (const t8_dvertex_t *elem,
                                               int vertex, int coords[]);
 
 /** Compute the coordinates of a vertex (always 0) inside the [0,1]^0 reference space.
@@ -190,7 +189,7 @@ void                t8_dvertex_vertex_coords (const t8_dvertex_t * elem,
  * \param [in] vertex   The number of the vertex of \a elem (must be 0).
  * \param [out] coords  The coordinates of the computed vertex, must have one entry (will be set to 0).
  */
-void                t8_dvertex_vertex_ref_coords (const t8_dvertex_t * elem,
+void                t8_dvertex_vertex_ref_coords (const t8_dvertex_t *elem,
                                                   int vertex,
                                                   double coords[]);
 
@@ -198,7 +197,7 @@ void                t8_dvertex_vertex_ref_coords (const t8_dvertex_t * elem,
  * \param [in] vertex  vertex whose id will be computed.
  * \return Returns the linear position of this vertex on a grid.
  */
-t8_linearidx_t      t8_dvertex_linear_id (const t8_dvertex_t * elem,
+t8_linearidx_t      t8_dvertex_linear_id (const t8_dvertex_t *elem,
                                           int level);
 
 /** Query whether all entries of a vertex are in valid ranges.
@@ -207,12 +206,17 @@ t8_linearidx_t      t8_dvertex_linear_id (const t8_dvertex_t * elem,
  *                function in this file on \a l.
  *                False otherwise.
  */
-int                 t8_dvertex_is_valid (const t8_dvertex_t * v);
+int                 t8_dvertex_is_valid (const t8_dvertex_t *v);
+
+/** Print a vertex
+ * \param [in] v  vertex to be considered.
+ */
+void                t8_dvertex_debug_print (const t8_dvertex_t *v);
 
 /** Set default values for a vertex, such that it passes \ref t8_dvertex_is_valid.
  * \param [in] l  vertex to be initialized
  */
-void                t8_dvertex_init (t8_dvertex_t * v);
+void                t8_dvertex_init (t8_dvertex_t *v);
 
 T8_EXTERN_C_END ();
 

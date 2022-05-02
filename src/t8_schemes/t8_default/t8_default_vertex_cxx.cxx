@@ -327,7 +327,7 @@ t8_default_scheme_vertex_c::t8_element_is_valid (const t8_element_t * elem) cons
 void
 t8_default_scheme_vertex_c::t8_element_debug_print (const t8_element_t *elem)
 {
-  SC_ABORTF ("Function not implemented yet");
+  t8_dvertex_debug_print ((const t8_dvertex_t *) elem);
 }
 #endif
 
