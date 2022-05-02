@@ -23,19 +23,19 @@
 #include "t8_dline_bits.h"
 
 int
-t8_dline_get_level (const t8_dline_t * l)
+t8_dline_get_level (const t8_dline_t *l)
 {
   return l->level;
 }
 
 void
-t8_dline_copy (const t8_dline_t * l, t8_dline_t * dest)
+t8_dline_copy (const t8_dline_t *l, t8_dline_t *dest)
 {
   memcpy (dest, l, sizeof (t8_dline_t));
 }
 
 int
-t8_dline_compare (const t8_dline_t * l1, const t8_dline_t * l2)
+t8_dline_compare (const t8_dline_t *l1, const t8_dline_t *l2)
 {
   t8_linearidx_t      id1, id2;
 
@@ -53,7 +53,7 @@ t8_dline_compare (const t8_dline_t * l1, const t8_dline_t * l2)
 }
 
 void
-t8_dline_parent (const t8_dline_t * l, t8_dline_t * parent)
+t8_dline_parent (const t8_dline_t *l, t8_dline_t *parent)
 {
   t8_dline_coord_t    h;
 
@@ -69,7 +69,7 @@ t8_dline_parent (const t8_dline_t * l, t8_dline_t * parent)
 }
 
 void
-t8_dline_ancestor (const t8_dline_t * l, int level, t8_dline_t * ancestor)
+t8_dline_ancestor (const t8_dline_t *l, int level, t8_dline_t *ancestor)
 {
   /* Compute the new x-coordinate by setting all bits in positions
    * greater than level to zero. */
@@ -79,7 +79,7 @@ t8_dline_ancestor (const t8_dline_t * l, int level, t8_dline_t * ancestor)
 }
 
 void
-t8_dline_child (const t8_dline_t * l, int childid, t8_dline_t * child)
+t8_dline_child (const t8_dline_t *l, int childid, t8_dline_t *child)
 {
   t8_dline_coord_t    h;
 
@@ -97,7 +97,7 @@ t8_dline_child (const t8_dline_t * l, int childid, t8_dline_t * child)
 }
 
 void
-t8_dline_face_neighbour (const t8_dline_t * l, t8_dline_t * neigh,
+t8_dline_face_neighbour (const t8_dline_t *l, t8_dline_t *neigh,
                          int face, int *dual_face)
 {
   T8_ASSERT (0 <= face && face < T8_DLINE_FACES);
@@ -118,8 +118,8 @@ t8_dline_face_neighbour (const t8_dline_t * l, t8_dline_t * neigh,
 }
 
 void
-t8_dline_nearest_common_ancestor (const t8_dline_t * t1,
-                                  const t8_dline_t * t2, t8_dline_t * r)
+t8_dline_nearest_common_ancestor (const t8_dline_t *t1,
+                                  const t8_dline_t *t2, t8_dline_t *r)
 {
   int                 level;
   t8_dline_coord_t    exclusive_or;
@@ -137,7 +137,7 @@ t8_dline_nearest_common_ancestor (const t8_dline_t * t1,
 }
 
 int
-t8_dline_ancestor_id (const t8_dline_t * l, int level)
+t8_dline_ancestor_id (const t8_dline_t *l, int level)
 {
   t8_dline_coord_t    h;
 
@@ -155,7 +155,7 @@ t8_dline_ancestor_id (const t8_dline_t * l, int level)
 }
 
 int
-t8_dline_face_parent_face (const t8_dline_t * l, int face)
+t8_dline_face_parent_face (const t8_dline_t *l, int face)
 {
   T8_ASSERT (0 <= face && face < T8_DLINE_FACES);
 
@@ -169,7 +169,7 @@ t8_dline_face_parent_face (const t8_dline_t * l, int face)
 }
 
 int
-t8_dline_child_id (const t8_dline_t * elem)
+t8_dline_child_id (const t8_dline_t *elem)
 {
   T8_ASSERT (elem->level < T8_DLINE_MAXLEVEL);
   /* bitshifting the Levelbit to first position & check if it is 1 or 0 */
@@ -177,8 +177,7 @@ t8_dline_child_id (const t8_dline_t * elem)
 }
 
 void
-t8_dline_childrenpv (const t8_dline_t * elem,
-                     t8_dline_t * c[T8_DLINE_CHILDREN])
+t8_dline_childrenpv (const t8_dline_t *elem, t8_dline_t *c[T8_DLINE_CHILDREN])
 {
   const int8_t        level = elem->level;
 
@@ -193,8 +192,8 @@ t8_dline_childrenpv (const t8_dline_t * elem,
 }
 
 int
-t8_dline_extrude_face (const t8_dvertex_t * face,
-                       int root_face, t8_dline_t * line)
+t8_dline_extrude_face (const t8_dvertex_t *face,
+                       int root_face, t8_dline_t *line)
 {
   T8_ASSERT (root_face == 0 || root_face == 1);
 
@@ -209,7 +208,7 @@ t8_dline_extrude_face (const t8_dvertex_t * face,
 }
 
 int
-t8_dline_is_familypv (const t8_dline_t * f[])
+t8_dline_is_familypv (const t8_dline_t *f[])
 {
   const int8_t        level = f[0]->level;
   t8_dline_coord_t    len = T8_DLINE_LEN (level);
@@ -228,7 +227,7 @@ t8_dline_is_familypv (const t8_dline_t * f[])
 }
 
 int
-t8_dline_is_root_boundary (const t8_dline_t * p, int face)
+t8_dline_is_root_boundary (const t8_dline_t *p, int face)
 {
   /* A line is at the boundary if and only if
    * face = 0 and x = 0
@@ -244,13 +243,13 @@ t8_dline_is_root_boundary (const t8_dline_t * p, int face)
 }
 
 int
-t8_dline_is_inside_root (const t8_dline_t * l)
+t8_dline_is_inside_root (const t8_dline_t *l)
 {
   return (l->x >= 0 && l->x < T8_DLINE_ROOT_LEN);
 }
 
 void
-t8_dline_init_linear_id (t8_dline_t * l, int level, t8_linearidx_t id)
+t8_dline_init_linear_id (t8_dline_t *l, int level, t8_linearidx_t id)
 {
   T8_ASSERT (0 <= level && level <= T8_DLINE_MAXLEVEL);
   T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << level);
@@ -262,7 +261,7 @@ t8_dline_init_linear_id (t8_dline_t * l, int level, t8_linearidx_t id)
 }
 
 void
-t8_dline_successor (const t8_dline_t * l, t8_dline_t * succ, int level)
+t8_dline_successor (const t8_dline_t *l, t8_dline_t *succ, int level)
 {
   t8_dline_coord_t    h = 0;
 
@@ -278,7 +277,7 @@ t8_dline_successor (const t8_dline_t * l, t8_dline_t * succ, int level)
 }
 
 void
-t8_dline_transform_face (const t8_dline_t * line1, t8_dline_t * line2,
+t8_dline_transform_face (const t8_dline_t *line1, t8_dline_t *line2,
                          int orientation)
 {
   T8_ASSERT (orientation == 0 || orientation == 1);
@@ -308,7 +307,7 @@ t8_dline_transform_face (const t8_dline_t * line1, t8_dline_t * line2,
 }
 
 void
-t8_dline_first_descendant (const t8_dline_t * l, t8_dline_t * s, int level)
+t8_dline_first_descendant (const t8_dline_t *l, t8_dline_t *s, int level)
 {
   T8_ASSERT (level >= l->level && level <= T8_DLINE_MAXLEVEL);
 
@@ -317,7 +316,7 @@ t8_dline_first_descendant (const t8_dline_t * l, t8_dline_t * s, int level)
 }
 
 void
-t8_dline_last_descendant (const t8_dline_t * l, t8_dline_t * s, int level)
+t8_dline_last_descendant (const t8_dline_t *l, t8_dline_t *s, int level)
 {
   T8_ASSERT (level >= l->level && level <= T8_DLINE_MAXLEVEL);
 
@@ -326,7 +325,7 @@ t8_dline_last_descendant (const t8_dline_t * l, t8_dline_t * s, int level)
 }
 
 void
-t8_dline_vertex_coords (const t8_dline_t * elem, int vertex, int coords[])
+t8_dline_vertex_coords (const t8_dline_t *elem, int vertex, int coords[])
 {
   T8_ASSERT (vertex == 0 || vertex == 1);
   if (vertex == 0) {
@@ -338,7 +337,7 @@ t8_dline_vertex_coords (const t8_dline_t * elem, int vertex, int coords[])
 }
 
 void
-t8_dline_vertex_ref_coords (const t8_dline_t * elem, int vertex,
+t8_dline_vertex_ref_coords (const t8_dline_t *elem, int vertex,
                             double coordinates[1])
 {
   /* we need to set and initial value to prevent compiler warning. */
@@ -351,7 +350,7 @@ t8_dline_vertex_ref_coords (const t8_dline_t * elem, int vertex,
 }
 
 t8_linearidx_t
-t8_dline_linear_id (const t8_dline_t * elem, int level)
+t8_dline_linear_id (const t8_dline_t *elem, int level)
 {
   t8_linearidx_t      id;
 
@@ -364,7 +363,7 @@ t8_dline_linear_id (const t8_dline_t * elem, int level)
 }
 
 int
-t8_dline_is_valid (const t8_dline_t * l)
+t8_dline_is_valid (const t8_dline_t *l)
 {
   t8_dline_coord_t    max_coord;
 
@@ -376,7 +375,13 @@ t8_dline_is_valid (const t8_dline_t * l)
 }
 
 void
-t8_dline_init (t8_dline_t * l)
+t8_dline_debug_print (const t8_dline_t *l)
+{
+  t8_debugf ("x: %i, level: %i\n", l->x, l->level);
+}
+
+void
+t8_dline_init (t8_dline_t *l)
 {
   l->level = l->x = 0;
 }
