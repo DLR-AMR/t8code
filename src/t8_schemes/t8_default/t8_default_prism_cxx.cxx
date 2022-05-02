@@ -133,6 +133,7 @@ t8_default_scheme_prism_c::t8_element_get_face_corner (const t8_element_t
 {
   T8_ASSERT (t8_element_is_valid (element));
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
+  T8_ASSERT (0 <= corner && corner < T8_DPRISM_CORNERS);
 
   return t8_dprism_get_face_corner ((const t8_dprism_t *) element, face,
                                     corner);
@@ -173,6 +174,7 @@ t8_default_scheme_prism_c::t8_element_children (const t8_element_t *elem,
                                                 int length, t8_element_t *c[])
 {
   T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (length == T8_DPRISM_CHILDREN);
   t8_dprism_childrenpv ((const t8_dprism_t *) elem, length,
                         (t8_dprism_t **) c);
 }
@@ -194,8 +196,11 @@ t8_default_scheme_prism_c::t8_element_children_at_face (const t8_element_t
                                                         int *child_indices)
 {
   T8_ASSERT (t8_element_is_valid (elem));
-  t8_dprism_children_at_face ((const t8_dprism_t *) elem,
-                              face, (t8_dprism_t **) children, num_children);
+  T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
+  T8_ASSERT (num_children ==
+             t8_dprism_num_face_children ((const t8_dprism_t *) elem, face));
+  t8_dprism_children_at_face ((const t8_dprism_t *) elem, face,
+                              (t8_dprism_t **) children, num_children);
   /* TODO: Properly implement child_indices */
   T8_ASSERT (child_indices == NULL);
 }
@@ -206,6 +211,9 @@ t8_default_scheme_prism_c::t8_element_face_child_face (const t8_element_t
                                                        int face_child)
 {
   T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
+  T8_ASSERT (face_child <
+             t8_dprism_num_face_children ((const t8_dprism_t *) elem, face));
   return t8_dprism_face_child_face ((const t8_dprism_t *) elem, face,
                                     face_child);
 }
@@ -224,6 +232,7 @@ t8_default_scheme_prism_c::t8_element_tree_face (const t8_element_t *elem,
                                                  int face)
 {
   T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
   return t8_dprism_tree_face ((const t8_dprism_t *) elem, face);
 }
 
@@ -235,6 +244,7 @@ t8_default_scheme_prism_c::t8_element_extrude_face (const t8_element_t *face,
                                                     int root_face)
 {
   T8_ASSERT (face_scheme->t8_element_is_valid (face));
+  T8_ASSERT (0 <= root_face && root_face < T8_DPRISM_FACES);
   t8_dprism_extrude_face (face, elem, root_face);
   /* TODO: Fix return value */
   return t8_dprism_root_face_to_face ((const t8_dprism_t *) elem, root_face);
@@ -276,6 +286,7 @@ t8_default_scheme_prism_c::t8_element_boundary_face (const t8_element_t *elem,
                                                      *boundary_scheme)
 {
   T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
   t8_dprism_boundary_face ((const t8_dprism_t *) elem, face, boundary);
 }
 
@@ -346,6 +357,7 @@ t8_default_scheme_prism_c::t8_element_face_neighbor_inside (const t8_element_t
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
   T8_ASSERT (neigh_face != NULL);
   T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (t8_element_is_valid (neigh));
 
   *neigh_face = t8_dprism_face_neighbour (p, face, n);
   /* return true if neigh is inside the root */
