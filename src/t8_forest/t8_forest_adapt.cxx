@@ -167,6 +167,11 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
         }
       }
     }
+    else if (refine == -2) {
+      /* This element should get removed,
+       * we just remove it from the buffer*/
+      ts->t8_element_destroy (1, el_buffer);
+    }
     else {
       /* This element should not get refined,
        * we remove it from the buffer and add it to the array of new elements. */
