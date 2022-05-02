@@ -138,6 +138,7 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
   t8_element_t       *insert_el;
   int                 num_children;
   int                 ci;
+  int                 refine;
 
   if (elem_list->elem_count <= 0) {
     return;
@@ -151,8 +152,10 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
      */
     el_buffer[0] = (t8_element_t *) sc_list_pop (elem_list);
     num_children = ts->t8_element_num_children (el_buffer[0]);
-    if (forest->set_adapt_fn (forest, forest->set_from, ltreeid, lelement_id,
-                              ts, 0, 1, el_buffer) > 0) {
+    refine = forest->set_adapt_fn (forest, forest->set_from, ltreeid, lelement_id,
+                                   ts, 0, 1, el_buffer);
+    T8_ASSERT(refine != -1);
+    if (refine == 1) {
       /* The element should be refined */
       if (ts->t8_element_level (el_buffer[0]) < forest->maxlevel) {
         /* only refine, if we do not exceed the maximum allowed level */
@@ -297,6 +300,7 @@ t8_forest_adapt (t8_forest_t forest)
         /* Test 0: Left process boundary */
         if (ltree_id == 0 && el_considered == 0 && zz != num_children) {
           is_family = 0;
+          num_elements = 1;
         }
 #endif
 
@@ -328,6 +332,7 @@ t8_forest_adapt (t8_forest_t forest)
                                       element_parent_compare);
           if (!tscheme->t8_element_compare(element_parent_current, element_parent_compare)) {
             is_family = 0;
+            num_elements = 1;
           }
         }
 
@@ -345,6 +350,7 @@ t8_forest_adapt (t8_forest_t forest)
               }
               if (!tscheme->t8_element_compare(element_parent_current, element_parent_compare)) {
                 is_family = 0;
+                num_elements = 1;
               }
             }
           }
@@ -371,6 +377,7 @@ t8_forest_adapt (t8_forest_t forest)
               }
               if (!tscheme->t8_element_compare(element_parent_current, element_parent_compare)) {
                 is_family = 0;
+                num_elements = 1;
               }
             }
           } 
@@ -395,10 +402,6 @@ t8_forest_adapt (t8_forest_t forest)
           }
 #endif
         }
-        else {
-          num_elements = 1;
-        }
-
       }
       else {
         /* Since the current element has level 0, it cannot be coarsened.
