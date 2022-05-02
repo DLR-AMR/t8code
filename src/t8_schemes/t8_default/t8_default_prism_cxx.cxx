@@ -430,7 +430,7 @@ t8_default_scheme_prism_c::t8_element_is_valid (const t8_element_t * elem) const
 /* *INDENT-ON* */
 
 void
-t8_default_scheme_prism_c::t8_element_print (const t8_element_t *elem)
+t8_default_scheme_prism_c::t8_element_debug_print (const t8_element_t *elem)
 {
   SC_ABORTF ("Function not implemented.\n");
 }
