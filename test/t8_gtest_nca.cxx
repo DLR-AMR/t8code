@@ -94,7 +94,7 @@ TEST_P(nca, nca_check_deep){
     /* num_children is not a const here, cause this can change for pyramids*/
     int             num_children;
     /* iterate over levels and children*/
-    int             lvl, check_lvl, child_id;
+    int             lvl, check_lvl_a, check_lvl_b, child_id;
     t8_element_t    *tmp;
 
     ts->t8_element_new(1, &tmp);
@@ -105,18 +105,20 @@ TEST_P(nca, nca_check_deep){
             ts->t8_element_child(tmp, child_id, correct_nca);
             /* Compute first and last descendant at every level up to elem_max_lvl. 
                 *They have the correct_nca as the nca*/
-            for(check_lvl = lvl + 1; check_lvl < elem_max_level; check_lvl++){
-                ts->t8_element_first_descendant(correct_nca, desc_a, check_lvl);
-                ts->t8_element_last_descendant(correct_nca, desc_b, check_lvl);
-                /* Compute the nca of desc_a and desc_b*/
-                ts->t8_element_nca(desc_a, desc_b, check);
-                if(eclass == T8_ECLASS_VERTEX){
-                    /* first- last-descendant logic does not hold for vertices.*/
-                    EXPECT_EQ(ts->t8_element_level(check), SC_MIN(ts->t8_element_level(desc_a), ts->t8_element_level(desc_b)));
-                }
-                else{
-                    /* Expect equality of correct_nca and check for every other class*/
-                    EXPECT_TRUE ((ts->t8_element_compare (correct_nca, check) == 0));
+            for(check_lvl_a = lvl + 1; check_lvl_a < elem_max_level; check_lvl_a++){
+                ts->t8_element_first_descendant(correct_nca, desc_a, check_lvl_a);
+                for(check_lvl_b = lvl + 1; check_lvl_b < elem_max_level; check_lvl_b++){
+                    ts->t8_element_last_descendant(correct_nca, desc_b, check_lvl_b);
+                    /* Compute the nca of desc_a and desc_b*/
+                    ts->t8_element_nca(desc_a, desc_b, check);
+                    if(eclass == T8_ECLASS_VERTEX){
+                        /* first- last-descendant logic does not hold for vertices.*/
+                        EXPECT_EQ(ts->t8_element_level(check), SC_MIN(ts->t8_element_level(desc_a), ts->t8_element_level(desc_b)));
+                    }
+                    else{
+                        /* Expect equality of correct_nca and check for every other class*/
+                        EXPECT_TRUE ((ts->t8_element_compare (correct_nca, check) == 0));
+                    }
                 }
             }
         }
