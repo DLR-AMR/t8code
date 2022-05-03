@@ -24,7 +24,7 @@
 #include "t8_dtri_bits.c"
 
 int
-t8_dtet_is_familypv (const t8_dtri_t * f[])
+t8_dtet_is_familypv (const t8_dtri_t *f[])
 {
   const int8_t        level = f[0]->level;
   t8_dtet_coord_t     coords0[T8_DTET_CHILDREN];
