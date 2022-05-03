@@ -14,26 +14,33 @@ struct t8_adapt_data
 };
 
 int
-t8_adapt_callback_refine (t8_forest_t forest,
-                          t8_forest_t forest_from,
-                          t8_locidx_t which_tree,
-                          t8_locidx_t lelement_id,
-                          t8_eclass_scheme_c * ts,
-                          const int is_family,
-                          const int num_elements,  
-                          t8_element_t * elements[])
+t8_adapt_callback (t8_forest_t forest,
+                   t8_forest_t forest_from,
+                   t8_locidx_t which_tree,
+                   t8_locidx_t lelement_id,
+                   t8_eclass_scheme_c * ts,
+                   const int is_family,
+                   const int num_elements,  
+                   t8_element_t * elements[])
 {
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
   
   double  centroid[3];
   double  dist;
+  int     level, level_max;
 
   T8_ASSERT (adapt_data != NULL);
 
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
   dist = t8_vec_dist(adapt_data->midpoint, centroid);
   
-  if (dist < adapt_data->radius)
+  level_max = 5;
+  level     = ts->t8_element_level (elements[0]);
+  
+  if (dist < adapt_data->radius - 0.1){
+    return -2;
+  }
+  if (dist < adapt_data->radius && level < level_max)
   {
     return 1;
   }
@@ -68,7 +75,7 @@ main (int argc, char **argv)
 
   struct t8_adapt_data adapt_data = { {0.5, 0.5, 0}, 0.3 };
 
-  forest = t8_forest_new_adapt (forest, t8_adapt_callback_refine, 0, 0, &adapt_data);
+  forest = t8_forest_new_adapt (forest, t8_adapt_callback, 1, 0, &adapt_data);
 
   t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_recursive_refine");
 
