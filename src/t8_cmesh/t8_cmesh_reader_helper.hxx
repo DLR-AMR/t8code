@@ -38,7 +38,12 @@ T8_EXTERN_C_BEGIN ();
 void                t8_cmesh_correct_volume (double *tree_vertices,
                                              t8_eclass_t eclass);
 
+/**
+ * Given the eclass of a cell, the number of the face we can iterate over the points
+ * defining the face.
+ */
 extern const int    t8_vtk_cell_face_to_vertex_num[T8_ECLASS_COUNT][6][4];
+
 T8_EXTERN_C_END ();
 
 #endif /* T8_CMESH_READER_HELPER */
