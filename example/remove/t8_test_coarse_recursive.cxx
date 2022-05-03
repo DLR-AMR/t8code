@@ -215,6 +215,11 @@ t8_test_emelemts_remove (int cmesh_id)
   
   for (level = min_level; level < max_level; level++) {
     t8_cmesh_ref (cmesh);
+    t8_scheme_cxx_ref (scheme);
+    /* Level 0 uniform forest for comparison */
+    forest_compare = t8_forest_new_uniform (cmesh, scheme, 0, 0, sc_MPI_COMM_WORLD);
+    
+    t8_cmesh_ref (cmesh);
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
 
     forest = t8_forest_new_adapt (forest, t8_adapt_callback_rr    , 0, 0, &adapt_data);
@@ -224,19 +229,21 @@ t8_test_emelemts_remove (int cmesh_id)
     forest = t8_forest_new_adapt (forest, t8_adapt_callback_refine, 0, 0, &adapt_data);
     forest = t8_forest_new_adapt (forest, t8_adapt_callback_remove, 0, 0, &adapt_data);
 
+    t8_global_productionf("[IL] DONE STEP 1!\n");
+
     /* coarsing until level 0 */
     // will get replaced by recursive coarseening
     // forest = t8_forest_new_adapt (forest, t8_adapt_callback_coarse_all, 1, 0, &adapt_data);
     for (int i = 0; i < 2*level; i++)
     {
       forest = t8_forest_new_adapt (forest, t8_adapt_callback_coarse_all, 0, 0, &adapt_data);
+      t8_global_productionf("[IL] DONE %i COARSENING!\n", i);
     }
     
-    t8_cmesh_ref (cmesh);
-    t8_scheme_cxx_ref (scheme);
-    /* Level 0 uniform forest for comparison */
-    forest_compare = t8_forest_new_uniform (cmesh, scheme, 0, 0, sc_MPI_COMM_WORLD);
-    
+    t8_global_productionf("[IL] DONE STEP 2!\n");
+    t8_forest_write_vtk (forest, "t8_test");
+
+
     SC_CHECK_ABORT (t8_forest_is_equal(forest, forest_compare),
                     "The forests are not equal");
 
