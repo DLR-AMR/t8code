@@ -29,6 +29,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_cmesh_vtk_writer.h>
 #include <t8_cmesh/t8_cmesh_vtk_reader.hxx>
 #include <t8_cmesh/t8_cmesh_reader_helper.hxx>
+#include <t8_eclass.h>
 
 #if T8_WITH_VTK
 #include <vtkUnstructuredGrid.h>
@@ -40,20 +41,49 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 T8_EXTERN_C_BEGIN ();
 
 #if T8_WITH_VTK
-/* Given the pointIds in vtk-Order of a cell, its eclass, and a number of face
- * Compute for each point of that face the number of cells that touch this point
- * (via unstructuredGrid->GetPointCells() ). Fill the ids into a vtkIdList and use
- * IntersectWith(), to get the cell-id that touches all points of the face.
- * This cell is unique (face-neighbors are unique). 
- * 
- * This Operation is probably very costly and should be optional.*/
+/* Given the point-Ids of the cell with id cell_id and a face-number of that 
+ * cell, we compute the neighbor of the cell along the face defined by the facenumber. .*/
 t8_gloidx_t
 t8_cmesh_neighbour_at_face (vtkSmartPointer < vtkUnstructuredGrid >
                             unstructuredGrid,
-                            vtkSmartPointer < vtkPoints > points,
-                            t8_eclass_t eclass, int t8_face_num)
+                            vtkSmartPointer < vtkIdList > pointIds,
+                            t8_eclass_t eclass, int face_num,
+                            vtkIdType cell_id)
 {
-
+  /* Points defining the face */
+  vtkIdType          *face_points;
+  /* cell_ids, will be filled by neighbor-computation */
+  vtkSmartPointer < vtkIdList > cell_ids =
+    vtkSmartPointer < vtkIdList >::New ();
+  /*Get the eclass of the face */
+  t8_eclass_t         face_eclass =
+    (t8_eclass_t) t8_eclass_face_types[eclass][face_num];
+  T8_ASSERT (face_eclass >= -1);
+  /*Look up how many vertices the face has */
+  vtkIdType           num_points = t8_eclass_num_vertices[face_eclass];
+  face_points = T8_ALLOC (vtkIdType, num_points);
+  /*Iterate over all corners of the face and store the pointid in face_points */
+  for (int fp = 0; fp < num_points; fp++) {
+    int                 face_corner =
+      t8_vtk_cell_face_to_vertex_num[eclass][face_num][fp];
+    T8_ASSERT (face_corner != -1);
+    face_points[fp] = pointIds->GetId (face_corner);
+  }
+  /* Compute all cells touching the the given points (without cell with id cell_id
+   * The computed id is unique, as only the face-neighbor is able to touch all points
+   * of the face.*/
+  unstructuredGrid->GetCellNeighbors (cell_id, num_points, face_points,
+                                      cell_ids);
+  T8_ASSERT (0 <= cell_ids->GetNumberOfIds ()
+             && cell_ids->GetNumberOfIds () <= 1);
+  T8_FREE (face_points);
+  /*There is no neighbore -> element is at the boundary of the mesh */
+  if (cell_ids->GetNumberOfIds () == 0) {
+    return -1;
+  }
+  else {
+    return cell_ids->GetId (0);
+  }
 }
 #endif
 
@@ -121,7 +151,7 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files,
     SC_CHECK_ABORTF (cell_type != T8_ECLASS_ZERO,
                      "vtk-cell-type %i not supported by t8code\n",
                      cell_it->GetCellType ());
-    t8_debugf ("[D] cell has type %i\n", cell_type);
+    t8_debugf ("[D] cell is a %s\n", t8_eclass_to_string[cell_type]);
     t8_cmesh_set_tree_class (cmesh, tree_id, cell_type);
 
     /*Set the vertices of the tree */
@@ -148,12 +178,23 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files,
       unstructuredGrid->BuildLinks ();
       cell_id = cell_it->GetCellId ();
       int                 num_faces = cell_it->GetNumberOfFaces ();
-      vtkSmartPointer < vtkIdList > faces =
+      vtkSmartPointer < vtkIdList > pointIds =
         vtkSmartPointer < vtkIdList >::New ();
-      vtkIndent           indent;
-      faces->PrintSelf (std::cout, indent);
+      pointIds = cell_it->GetPointIds ();
+      t8_debugf ("[D]");
+      for (int i = 0; i < pointIds->GetNumberOfIds (); i++) {
+        printf ("%i, ", pointIds->GetId (i));
+      }
+      t8_debugf ("\n");
+
       t8_debugf ("[D] numfaces %i\n", num_faces);
-      t8_debugf ("[D] numfaces %i\n", faces->GetNumberOfIds ());
+      t8_debugf ("[D] numpointids %lli\n", pointIds->GetNumberOfIds ());
+      for (int face = 0; face < t8_eclass_num_faces[cell_type]; face++) {
+        t8_gloidx_t         n =
+          t8_cmesh_neighbour_at_face (unstructuredGrid, pointIds, cell_type,
+                                      face, cell_id);
+        t8_debugf ("[D] neigh: %li\n", n);
+      }
     }
 
     tree_id++;
