@@ -177,18 +177,10 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files,
       /* WIP */
       unstructuredGrid->BuildLinks ();
       cell_id = cell_it->GetCellId ();
-      int                 num_faces = cell_it->GetNumberOfFaces ();
       vtkSmartPointer < vtkIdList > pointIds =
         vtkSmartPointer < vtkIdList >::New ();
       pointIds = cell_it->GetPointIds ();
-      t8_debugf ("[D]");
-      for (int i = 0; i < pointIds->GetNumberOfIds (); i++) {
-        printf ("%i, ", pointIds->GetId (i));
-      }
-      t8_debugf ("\n");
 
-      t8_debugf ("[D] numfaces %i\n", num_faces);
-      t8_debugf ("[D] numpointids %lli\n", pointIds->GetNumberOfIds ());
       for (int face = 0; face < t8_eclass_num_faces[cell_type]; face++) {
         t8_gloidx_t         n =
           t8_cmesh_neighbour_at_face (unstructuredGrid, pointIds, cell_type,
