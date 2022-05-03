@@ -48,7 +48,10 @@ T8_EXTERN_C_BEGIN ();
  * 
  * This Operation is probably very costly and should be optional.*/
 t8_gloidx_t
-t8_cmesh_neighbour_at_face (t8_eclass_t eclass, int t8_face_num)
+t8_cmesh_neighbour_at_face (vtkSmartPointer < vtkUnstructuredGrid >
+                            unstructuredGrid,
+                            vtkSmartPointer < vtkPoints > points,
+                            t8_eclass_t eclass, int t8_face_num)
 {
 
 }
@@ -147,10 +150,10 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files,
       int                 num_faces = cell_it->GetNumberOfFaces ();
       vtkSmartPointer < vtkIdList > faces =
         vtkSmartPointer < vtkIdList >::New ();
-      faces = cell_it->GetFaces ();
+      vtkIndent           indent;
+      faces->PrintSelf (std::cout, indent);
       t8_debugf ("[D] numfaces %i\n", num_faces);
-      t8_debugf ("[D] numfaces %i\n",
-                 cell_it->GetFaces ()->GetNumberOfIds ());
+      t8_debugf ("[D] numfaces %i\n", faces->GetNumberOfIds ());
     }
 
     tree_id++;

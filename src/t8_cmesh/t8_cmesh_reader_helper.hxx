@@ -37,6 +37,8 @@ T8_EXTERN_C_BEGIN ();
  */
 void                t8_cmesh_correct_volume (double *tree_vertices,
                                              t8_eclass_t eclass);
+
+extern const int    t8_vtk_cell_face_to_vertex_num[T8_ECLASS_COUNT][6][4];
 T8_EXTERN_C_END ();
 
 #endif /* T8_CMESH_READER_HELPER */
