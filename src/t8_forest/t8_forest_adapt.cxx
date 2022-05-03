@@ -301,9 +301,10 @@ t8_forest_adapt (t8_forest_t forest)
         /* Assume we are looking at a family */
         is_family = 1;
 
-#if 0
+#if 1
         /* Test 0: Left process boundary */
-        if (ltree_id == 0 && el_considered == 0 && zz != num_children) {
+        if (forest_from->mpirank > 0 && ltree_id == 0 && el_considered == 0 
+                                     && zz != num_children) {
           is_family = 0;
           num_elements = 1;
         }
@@ -329,18 +330,19 @@ t8_forest_adapt (t8_forest_t forest)
         /* Test 1: Check if already considered elements of current family passed,
          * so current considered element can not get coarsed any more.
          * */
-        for (zz = 1; zz < num_children && 
-                     el_considered - (t8_locidx_t) zz > -1; zz++)
-        {
-          tscheme->t8_element_parent (t8_element_array_index_locidx (telements_from,
-                                                                     el_considered - zz),
-                                      element_parent_compare);
-          if (!tscheme->t8_element_compare(element_parent_current, element_parent_compare)) {
-            is_family = 0;
-            num_elements = 1;
+        if (is_family) {
+          for (zz = 1; zz < num_children && 
+                      el_considered - (t8_locidx_t) zz > -1; zz++)
+          {
+            tscheme->t8_element_parent (t8_element_array_index_locidx (telements_from,
+                                                                      el_considered - zz),
+                                        element_parent_compare);
+            if (!tscheme->t8_element_compare(element_parent_current, element_parent_compare)) {
+              is_family = 0;
+              num_elements = 1;
+            }
           }
         }
-
         /* Test 2: Check if elements in elements_from_copy get "eaten" by coarsing current element */
         if (is_family) {
           for (zz = 0; zz < num_children && el_considered + (t8_locidx_t) zz 
@@ -398,10 +400,12 @@ t8_forest_adapt (t8_forest_t forest)
               num_elements++;
             }
           }
-#if 0
+#if 1
           /* Test 0: Right process boundary */
-          if (ltree_id == num_trees-1 && el_considered > num_el_from - 1 - num_elements 
-                                      && num_elements != num_children ) {
+          if (forest_from->mpirank < forest_from->mpisize-1 
+                && ltree_id == num_trees-1 
+                && el_considered > num_el_from - 1 - num_elements 
+                && num_elements != num_children ) {
             is_family    = 0;
             num_elements = 1;
           }
