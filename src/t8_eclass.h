@@ -56,7 +56,9 @@ typedef enum t8_eclass
   /** The pyramid has a quadrilateral as base and four triangles as sides. */
   T8_ECLASS_PYRAMID,
   /** This is no element class but can be used as the number of element classes. */
-  T8_ECLASS_COUNT
+  T8_ECLASS_COUNT,
+  /** This is no element class but can be used for the case a class of a third party library is not supported by t8code*/
+  T8_ECLASS_INVALID
 }
 t8_eclass_t;
 
