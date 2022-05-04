@@ -145,6 +145,13 @@ int                 t8_eclass_count_boundary (t8_eclass_t theclass,
 int                 t8_eclass_compare (t8_eclass_t eclass1,
                                        t8_eclass_t eclass2);
 
+/** Check, if a class is a valid class. Returns non-zero if it is a valid class,
+ *  returns zero, if the class is equal to T8_ECLASS_INVALID.
+ * 
+ * \param [in] eclass    The eclass to check.
+*/
+int                 t8_eclass_is_valid (t8_eclass_t eclass);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_ELEMENT_H */

@@ -158,3 +158,10 @@ t8_eclass_compare (t8_eclass_t eclass1, t8_eclass_t eclass2)
     }
   }
 }
+
+int
+t8_eclass_is_valid (t8_eclass_t eclass)
+{
+  /*every eclass but T8_ECLASS_INVALID is a valid class */
+  return eclass != T8_ECLASS_INVALID;
+}
