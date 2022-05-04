@@ -507,17 +507,6 @@ die_ele:
   return -1;
 }
 
-/* This struct stores all information associated to a tree's face.
- * We need it to find neighbor trees.
- */
-typedef struct
-{
-  t8_locidx_t         ltree_id; /* The local id of the tree this face belongs to */
-  int8_t              face_number;      /* The number of that face whitin the tree */
-  int                 num_vertices;     /* The number of vertices of this face. */
-  long               *vertices; /* The indices of these vertices. */
-} t8_msh_file_face_t;
-
 /* Hash a face. The hash value is the sum of its vertex indices */
 static unsigned
 t8_msh_file_face_hash (const void *face, const void *data)

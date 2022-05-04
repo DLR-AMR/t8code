@@ -28,6 +28,18 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #define T8_CMESH_READER_HELPER
 
 T8_EXTERN_C_BEGIN ();
+
+/* This struct stores all information associated to a tree's face.
+ * We need it to find neighbor trees.
+ */
+typedef struct
+{
+  t8_locidx_t         ltree_id; /* The local id of the tree this face belongs to */
+  int8_t              face_number;      /* The number of that face whitin the tree */
+  int                 num_vertices;     /* The number of vertices of this face. */
+  long               *vertices; /* The indices of these vertices. */
+} t8_msh_file_face_t;
+
 /**
  * This function corrects trees with negative volumes by reordering
  * the vertices.
