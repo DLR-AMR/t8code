@@ -58,15 +58,18 @@ t8_cmesh_neighbour_at_face (vtkSmartPointer < vtkUnstructuredGrid >
   /*Get the eclass of the face */
   t8_eclass_t         face_eclass =
     (t8_eclass_t) t8_eclass_face_types[eclass][face_num];
+  int                 face_corner, vtk_corner;
   T8_ASSERT (face_eclass >= -1);
   /*Look up how many vertices the face has */
   vtkIdType           num_points = t8_eclass_num_vertices[face_eclass];
   face_points = T8_ALLOC (vtkIdType, num_points);
   /*Iterate over all corners of the face and store the pointid in face_points */
   for (int fp = 0; fp < num_points; fp++) {
-    int                 face_corner =
-      t8_vtk_cell_face_to_vertex_num[eclass][face_num][fp];
+    /*tree-corners of the face (t8code-numeration of the faces) in t8code-order */
+    face_corner = t8_face_vertex_to_tree_vertex[eclass][face_num][fp];
     T8_ASSERT (face_corner != -1);
+    vtk_corner = t8_eclass_vtk_corner_number[eclass][face_corner];
+    T8_ASSERT (vtk_corner != -1);
     face_points[fp] = pointIds->GetId (face_corner);
   }
   /* Compute all cells touching the the given points (without cell with id cell_id
