@@ -46,6 +46,12 @@ t8_msh_file_face_orientation (t8_msh_file_face_t * Face_a,
   int                 compare, iv;
   t8_eclass_t         bigger_class;
   int                 orientation = -1;
+  for (int i = 0; i < Face_a->num_vertices; i++) {
+    t8_debugf ("[D] Fa[%i]: %li\n", i, Face_a->vertices[i]);
+  }
+  for (int i = 0; i < Face_a->num_vertices; i++) {
+    t8_debugf ("[D] Fb[%i]: %li\n", i, Face_b->vertices[i]);
+  }
 
   compare = t8_eclass_compare (tree_class_a, tree_class_b);
   if (compare > 0) {
@@ -79,8 +85,10 @@ t8_msh_file_face_orientation (t8_msh_file_face_t * Face_a,
     }
   }
   vertex_zero = smaller_Face->vertices[0];
+  t8_debugf ("[D] vertex_zero: %li\n", vertex_zero);
   /* Find which point in the bigger face is vertex_zero */
   for (iv = 0; iv < t8_eclass_num_vertices[bigger_class]; iv++) {
+    t8_debugf ("[D] current vertex: %li\n", bigger_Face->vertices[iv]);
     if (vertex_zero == bigger_Face->vertices[iv]) {
       /* We found the corresponding vertex */
       orientation = iv;
@@ -146,63 +154,38 @@ t8_cmesh_correct_volume (double *tree_vertices, t8_eclass_t eclass)
              (eclass, tree_vertices, t8_eclass_num_vertices[eclass]));
 }
 
-const int           t8_vtk_cell_face_to_vertex_num[T8_ECLASS_COUNT][6][4] = {
-  /*Vertex */
-  {{0, -1, -1, -1},
-   {-1, -1, -1, -1},
-   {-1, -1, -1, -1},
-   {-1, -1, -1, -1},
-   {-1, -1, -1, -1},
-   {-1, -1, -1, -1}},
-  /*line */
-  {{0, -1, -1, -1},
-   {0, -1, -1, -1},
-   {-1, -1, -1, -1},
-   {-1, -1, -1, -1},
-   {-1, -1, -1, -1},
-   {-1, -1, -1, -1}},
-  /*quad */
-  {{0, 1, -1, -1},
-   {1, 3, -1, -1},
-   {3, 2, -1, -1},
-   {2, 0, -1, -1},
-   {-1, -1, -1, -1},
-   {-1, -1, -1, -1}},
-  /*triangle */
-  {{0, 1, -1, -1},
-   {1, 2, -1, -1},
-   {2, 0, -1, -1},
-   {-1, -1, -1, -1},
-   {-1, -1, -1, -1},
-   {-1, -1, -1, -1}},
-  /*hex */
-  {{0, 1, 2, 3},
-   {0, 1, 5, 4},
-   {1, 3, 7, 5},
-   {3, 2, 6, 7},
-   {2, 0, 4, 6},
-   {4, 5, 6, 7}},
-  /*tetra */
-  {{0, 1, 2, -1},
-   {0, 1, 3, -1},
-   {1, 2, 3, -1},
-   {2, 0, 3, -1},
-   {-1, -1, -1, -1},
-   {-1, -1, -1, -1}},
-  /*prism/vedge */
-  {{0, 1, 3, 4},
-   {1, 2, 4, 5},
-   {0, 2, 3, 5},
-   {0, 1, 2, -1},
-   {3, 4, 5, -1},
-   {-1, -1, -1, -1}},
-  /*pyramid */
-  {{0, 1, 4, -1},
-   {1, 2, 4, -1},
-   {2, 3, 4, -1},
-   {3, 0, 4, -1},
-   {0, 1, 2, 3},
-   {-1, -1, -1, -1}},
-};
+void
+t8_cmesh_set_face_num (t8_msh_file_face_t * face, t8_eclass_t eclass)
+{
+  int                 face_class, face_check;
+  /*iterate over all faces of the class */
+  for (int faces = 0; faces < t8_eclass_num_faces[eclass]; faces++) {
+    t8_debugf ("[D] test face: %i\n", faces);
+    face_check = 0;
+    face_class = t8_eclass_face_types[eclass][faces];
+    T8_ASSERT (face_class != -1);
+    /*iterate over all tree-vertices of that class */
+    if (face->num_vertices == t8_eclass_num_vertices[face_class]) {
+      for (int i = 0; i < face->face_number; i++) {
+        t8_debugf ("[D] face->v[%i]: %i != face_v_to_tv %i\n",
+                   t8_face_vertex_to_tree_vertex[eclass][faces][i]);
+        /*check, if all indices of that face coincide with the ids given by vertex_ids */
+        if (face->vertices[i] !=
+            t8_face_vertex_to_tree_vertex[eclass][faces][i]) {
+          face_check = 1;
+        }
+      }
+      /*If all vertices coincide, the current face is the correct face_number */
+      if (face_check == 0) {
+        t8_debugf ("[D] neigh_face: %i\n", faces);
+        face->face_number = faces;
+        return;
+      }
+    }
+  }
+  /*Error, no face_number found */
+  SC_ABORT ("No matching face found");
+  return;
+}
 
 T8_EXTERN_C_END ();
