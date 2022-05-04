@@ -41,6 +41,21 @@ typedef struct
 } t8_msh_file_face_t;
 
 /**
+ * Given two faces and the classes of their volume trees,
+ * compute the orientation of the faces to each other 
+ * 
+ * \param Face_a            A face of an element
+ * \param Face_b            A face of another element, touching \a Face_a with this face
+ * \param tree_class_a      The eclass of the tree with \a Face_a
+ * \param tree_class_b      The eclass of the tree with \a Face_b
+ * \return The orientation of the faces
+ */
+int                 t8_msh_file_face_orientation (t8_msh_file_face_t * Face_a,
+                                                  t8_msh_file_face_t * Face_b,
+                                                  t8_eclass_t tree_class_a,
+                                                  t8_eclass_t tree_class_b);
+
+/**
  * This function corrects trees with negative volumes by reordering
  * the vertices.
  * 
