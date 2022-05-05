@@ -113,6 +113,51 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
   }
 }
 
+/* Return nonzero if the first \a num_elemets in \a elements are part of a family.
+ * \param [in] elements      The elements array.
+ * \param [in] num_elements  The first \a num_elements to be checked in \a elements.
+ * \param [in] tscheme       The element scheme for current local tree 
+ *                           where the elements are from.
+ */
+static int
+t8_is_family (t8_element_t **elements, int num_elements, t8_eclass_scheme_c *tscheme) {
+  T8_ASSERT (num_elements > 0 && 
+             num_elements <= tscheme->t8_element_num_children (elements[0]));
+  
+  int             zz;
+  int             level;
+  t8_element_t   *element_parent, *element_parent_compare;
+
+  if (num_elements == 1) {
+    return 1;
+  }
+
+  level = tscheme->t8_element_level(elements[0]);
+  if (level != 0) {
+    return 0;
+  }
+  for (zz = 1; zz < num_elements; zz++) {
+    if (level != tscheme->t8_element_level(elements[0])){
+      return 0;
+    }
+  }
+
+  tscheme->t8_element_new(1, &element_parent);
+  tscheme->t8_element_new(1, &element_parent_compare);
+  tscheme->t8_element_parent(elements[0], element_parent);
+  for (zz = 1; zz < num_elements; zz++)
+  {
+    tscheme->t8_element_parent (elements[zz], element_parent_compare);
+    if (!tscheme->t8_element_compare(element_parent, element_parent_compare)) {
+      return 0;
+    }
+  }
+  tscheme->t8_element_destroy(1, &element_parent);
+  tscheme->t8_element_destroy(1, &element_parent_compare);
+
+  return 1;
+}
+
 /* Check the lastly inserted element of an array for recursive refining.
  * \param [in] forest  The new forest currently in construction.
  * \param [in] ltreeid The current local tree.
@@ -301,15 +346,6 @@ t8_forest_adapt (t8_forest_t forest)
         /* Assume we are looking at a family */
         is_family = 1;
 
-#if 1
-        /* Test 0: Left process boundary */
-        if (forest_from->mpirank > 0 && ltree_id == 0 && el_considered == 0 
-                                     && zz != num_children) {
-          is_family = 0;
-          num_elements = 1;
-        }
-#endif
-
         /* el_concidered_index is the local Index of the el_considered in elements_from_copy */
         if (num_el_from < (t8_locidx_t) num_children){
           el_concidered_index = 0;
@@ -317,6 +353,21 @@ t8_forest_adapt (t8_forest_t forest)
         else {
           el_concidered_index = num_children - zz;
         }
+
+#if 1
+        /* Test 0: Left process boundary */
+        if (forest_from->mpirank > 0 && ltree_id == 0 && el_considered == 0) {
+          if (el_concidered_index != 0) {
+            is_family    = 0;
+            num_elements = 1;
+          }
+          else if (!t8_is_family (elements_from, num_children, tscheme)) {
+            is_family    = 0;
+            num_elements = 1;
+          }
+        }
+#endif
+
         /* If el_concidered_index == 0 then elements_from_copy is equal to elements_from */
         for (zz = 0; zz < num_children && el_considered + (t8_locidx_t) zz 
                                           - (t8_locidx_t) el_concidered_index < num_el_from; zz++) {
@@ -392,7 +443,7 @@ t8_forest_adapt (t8_forest_t forest)
 
         /* Get the number of elements to be considered */
         if (is_family) {
-        num_elements = 0;
+          num_elements = 0;
           for (zz = 0; zz < num_children &&
                        el_considered + (t8_locidx_t) zz < num_el_from; zz++) {
             tscheme->t8_element_parent (elements_from[zz], element_parent_compare);
@@ -403,11 +454,16 @@ t8_forest_adapt (t8_forest_t forest)
 #if 1
           /* Test 0: Right process boundary */
           if (forest_from->mpirank < forest_from->mpisize-1 
-                && ltree_id == num_trees-1 
-                && el_considered > num_el_from - 1 - num_elements 
-                && num_elements != num_children ) {
-            is_family    = 0;
-            num_elements = 1;
+                    && ltree_id == num_trees-1 
+                    && el_considered > num_el_from - 1 - (t8_locidx_t)num_elements) {
+            if (el_concidered_index != 0) {
+              is_family = 0;
+              num_elements = 1;
+            }
+            else if (!t8_is_family (elements_from, num_children, tscheme)) {
+              is_family = 0;
+              num_elements = 1;
+            }
           }
 #endif
         }
