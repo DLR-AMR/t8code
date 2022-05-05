@@ -20,8 +20,8 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include "t8_dtri_to_dtet.h"
-#include "t8_dtet_connectivity.h"
+#include <t8_schemes/t8_default/t8_default_tet/t8_dtri_to_dtet.h>
+#include <t8_schemes/t8_default/t8_default_tet/t8_dtet_connectivity.h>
 
 const int           t8_dtet_cid_type_to_parenttype[8][6] = {
   {0, 1, 2, 3, 4, 5},

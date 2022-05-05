@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include "t8_dvertex_bits.h"
+#include <t8_schemes/t8_default/t8_default_vertex/t8_dvertex_bits.h>
 
 int
 t8_dvertex_get_level (const t8_dvertex_t * v)

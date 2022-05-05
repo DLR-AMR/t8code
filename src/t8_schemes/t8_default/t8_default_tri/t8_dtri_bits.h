@@ -27,7 +27,7 @@
 #define T8_DTRI_BITS_H
 
 #include <t8_element.h>
-#include "t8_dtri.h"
+#include <t8_schemes/t8_default/t8_default_tri/t8_dtri.h>
 
 T8_EXTERN_C_BEGIN ();
 
