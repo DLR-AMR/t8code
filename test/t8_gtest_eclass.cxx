@@ -44,6 +44,7 @@ TEST (t8_gtest_eclass, valid_class)
   for (eclass = T8_ECLASS_ZERO; eclass <= T8_ECLASS_COUNT; ++eclass) {
     EXPECT_TRUE (t8_eclass_is_valid ((t8_eclass_t) eclass));
   }
+  EXPECT_FALSE (t8_eclass_is_valid (T8_ECLASS_INVALID));
 }
 
 TEST (t8_gtest_eclass, compare)
