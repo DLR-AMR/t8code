@@ -417,11 +417,18 @@ t8_forest_adapt (t8_forest_t forest)
         /* Test 3: Check num_childrem elements before el_considered, if they will get eaten.
          * Reason: current element could be on boarder
          * */
-        if (is_family && !el_concidered_index && el_considered > (t8_locidx_t) num_children) {
-          for (zz = 0; zz < num_children && el_considered + (t8_locidx_t) zz < num_el_from; zz++) {
+        if (is_family && !el_concidered_index) {
+          if (el_considered > (t8_locidx_t) num_children) {
+            for (zz = 0; zz < num_children && el_considered + (t8_locidx_t) zz 
+                                              - (t8_locidx_t) num_children < num_el_from ; zz++) {
               elements_from_copy[zz] = t8_element_array_index_locidx (telements_from,
-                                                                     el_considered + 
-                                                                     zz - num_children);
+                                                                      el_considered + zz - num_children);
+            }
+          }
+          else {
+            for (zz = 0; zz < num_children && (t8_locidx_t) zz < num_el_from; zz++) {
+              elements_from_copy[zz] = t8_element_array_index_locidx (telements_from, zz);
+            }
           }
           /* From here, it is the same test as test 2. 
            * [IL] Question: Ca we do it in one step and is it wise? */
