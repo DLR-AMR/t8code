@@ -20,9 +20,9 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include "t8_default_common_cxx.hxx"
-#include "t8_default_vertex_cxx.hxx"
-#include "t8_dvertex_bits.h"
+#include <t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_vertex/t8_default_vertex_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_vertex/t8_dvertex_bits.h>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();

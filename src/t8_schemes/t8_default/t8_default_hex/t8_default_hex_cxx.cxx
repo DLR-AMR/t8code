@@ -22,8 +22,8 @@
 
 #include <p8est_bits.h>
 #include <p4est_bits.h>
-#include "t8_default_common_cxx.hxx"
-#include "t8_default_hex_cxx.hxx"
+#include <t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_hex/t8_default_hex_cxx.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();

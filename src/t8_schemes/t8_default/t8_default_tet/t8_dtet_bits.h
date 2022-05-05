@@ -31,7 +31,7 @@
 #define T8_DTET_BITS_H
 
 #include <t8_element.h>
-#include "t8_dtet.h"
+#include <t8_schemes/t8_default/t8_default_tet/t8_dtet.h>
 
 T8_EXTERN_C_BEGIN ();
 

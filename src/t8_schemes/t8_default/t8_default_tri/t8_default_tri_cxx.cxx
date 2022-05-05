@@ -20,12 +20,12 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include "t8_default_common_cxx.hxx"
-#include "t8_default_tri_cxx.hxx"
-#include "t8_dtri_bits.h"
-#include "t8_dline_bits.h"
-#include "t8_dtet.h"
-#include "t8_dtri_connectivity.h"
+#include <t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_tri/t8_default_tri_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.h>
+#include <t8_schemes/t8_default/t8_default_line/t8_dline_bits.h>
+#include <t8_schemes/t8_default/t8_default_tet/t8_dtet.h>
+#include <t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.h>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();

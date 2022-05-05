@@ -20,36 +20,32 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_default_tet.h
- * The default implementation for tetrahedra.
+/** \file t8_default_vertex.h
+ * The default implementation for vertex.
  */
 
-#ifndef T8_DEFAULT_TET_CXX_H
-#define T8_DEFAULT_TET_CXX_H
+#ifndef T8_DEFAULT_VERTEX_CXX_H
+#define T8_DEFAULT_VERTEX_CXX_H
 
 #include <t8_element.h>
 #include <t8_element_cxx.hxx>
-#include "t8_default_tri_cxx.hxx"
-#include "t8_default_common_cxx.hxx"
+#include <t8_schemes/t8_default/t8_default_tri/t8_default_tri_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx>
 
-struct t8_default_scheme_tet_c:public t8_default_scheme_common_c
+struct t8_default_scheme_vertex_c:public t8_default_scheme_common_c
 {
 public:
 
   /** Constructor. */
-  t8_default_scheme_tet_c ();
+  t8_default_scheme_vertex_c ();
 
-  ~t8_default_scheme_tet_c ();
+  ~t8_default_scheme_vertex_c ();
 
 /** Return the maximum level allowed for this element class. */
   virtual int         t8_element_maxlevel (void);
 
 /** Return the type of each child in the ordering of the implementation. */
-  virtual t8_eclass_t t8_element_child_eclass (int childid)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return T8_ECLASS_ZERO;      /* suppresses compiler warning */
-  }
+  virtual t8_eclass_t t8_element_child_eclass (int childid);
 
   /** Allocate memory for a given number of elements.
    * In debugging mode, ensure that all elements are valid \ref t8_element_is_valid.
@@ -101,7 +97,11 @@ public:
 
   virtual int         t8_element_get_face_corner (const t8_element_t *
                                                   element, int face,
-                                                  int corner);
+                                                  int corner)
+  {
+    SC_ABORT_NOT_REACHED ();    /* it is impossible to have a face of a vertex */
+    return 0;                   /* prevents compiler warning */
+  }
 
   /** Return the face numbers of the faces sharing an element's corner. */
   virtual int         t8_element_get_corner_face (const t8_element_t *
@@ -137,7 +137,12 @@ public:
 
   /** Compute the element shape of the face of an element. */
   virtual t8_element_shape_t t8_element_face_shape (const t8_element_t * elem,
-                                                    int face);
+                                                    int face)
+  {
+    /* A vertex has no faces */
+    SC_ABORT ("This function is not implemented.\n");
+    return T8_ECLASS_COUNT;     /* Suppress compiler warning */
+  }
 
   /** Given an element and a face of the element, compute all children of
    * the element that touch the face. */
@@ -147,33 +152,49 @@ public:
                                                    int face,
                                                    t8_element_t * children[],
                                                    int num_children,
-                                                   int *child_indices);
+                                                   int *child_indices)
+  {
+    /* A vertex has no faces */
+    SC_ABORT ("This function is not implemented.\n");
+  }
 
   /** Given a face of an element and a child number (in Morton order)
    *  of a child of that face, return the face number
    * of the child of the element that matches the child face. */
   virtual int         t8_element_face_child_face (const t8_element_t * elem,
-                                                  int face, int face_child);
+                                                  int face, int face_child)
+  {
+    /* A vertex has no faces */
+    SC_ABORT ("This function is not implemented.\n");
+    return 0;                   /* Suppress compiler warning */
+  }
 
   /** Given a face of an element return the face number
    * of the parent of the element that matches the element's face. Or return -1 if
    * no face of the parent matches the face. */
   virtual int         t8_element_face_parent_face (const t8_element_t * elem,
-                                                   int face);
+                                                   int face)
+  {
+    /* A vertex has no faces */
+    SC_ABORT ("This function is not implemented.\n");
+    return 0;                   /* Suppress compiler warning */
+  }
 
   /** Return the tree face id given a boundary face. */
   virtual int         t8_element_tree_face (const t8_element_t * elem,
-                                            int face);
+                                            int face)
+  {
+    /* A vertex has no faces */
+    SC_ABORT ("This function is not implemented.\n");
+    return 0;                   /* Suppress compiler warning */
+  }
 
-  /** Transform the coordinates of a tetrahedron considered as boundary element
+  /** Transform the coordinates of a vertex considered as boundary element
    *  in a tree-tree connection. */
   virtual void        t8_element_transform_face (const t8_element_t * elem1,
                                                  t8_element_t * elem2,
                                                  int orientation, int sign,
-                                                 int is_smaller_face)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                                 int is_smaller_face);
 
   /** Given a boundary face inside a root tree's face construct
    *  the element inside the root tree that has the given face as a
@@ -182,32 +203,52 @@ public:
                                                const t8_eclass_scheme_c *
                                                face_scheme,
                                                t8_element_t * elem,
-                                               int root_face);
+                                               int root_face)
+  {
+    /* A vertex has no faces */
+    SC_ABORT ("This function is not implemented.\n");
+    return 0;                   /* Suppress compiler warning */
+  }
 
   /** Construct the first descendant of an element that touches a given face.   */
   virtual void        t8_element_first_descendant_face (const t8_element_t *
                                                         elem, int face,
                                                         t8_element_t *
-                                                        first_desc,
-                                                        int level);
+                                                        first_desc, int level)
+  {
+    /* A vertex has no faces */
+    SC_ABORT ("This function is not implemented.\n");
+  }
 
   /** Construct the last descendant of an element that touches a given face. */
   virtual void        t8_element_last_descendant_face (const t8_element_t *
                                                        elem, int face,
                                                        t8_element_t *
-                                                       last_desc, int level);
+                                                       last_desc, int level)
+  {
+    /* A vertex has no faces */
+    SC_ABORT ("This function is not implemented.\n");
+  }
 
   /** Construct the boundary element at a specific face. */
   virtual void        t8_element_boundary_face (const t8_element_t * elem,
                                                 int face,
                                                 t8_element_t * boundary,
                                                 const t8_eclass_scheme_c *
-                                                boundary_scheme);
+                                                boundary_scheme)
+  {
+    /* A vertex has no faces */
+    SC_ABORT ("This function is not implemented.\n");
+  }
 
 /** Construct all codimension-one boundary elements of a given element. */
   virtual void        t8_element_boundary (const t8_element_t * elem,
                                            int min_dim, int length,
-                                           t8_element_t ** boundary);
+                                           t8_element_t ** boundary)
+  {
+    /* A vertex has no faces */
+    SC_ABORT ("This function is not implemented.\n");
+  }
 
   /** Compute whether a given element shares a given face with its root tree.
    * \param [in] elem     The input element.
@@ -223,7 +264,12 @@ public:
                                                        elem,
                                                        t8_element_t * neigh,
                                                        int face,
-                                                       int *neigh_face);
+                                                       int *neigh_face)
+  {
+    /* A vertex has no faces */
+    SC_ABORT ("This function is not implemented.\n");
+    return 0;                   /* Suppress compiler warning */
+  }
 
 /** Initialize an element according to a given linear id */
   virtual void        t8_element_set_linear_id (t8_element_t * elem,
@@ -250,7 +296,11 @@ public:
 
 /** Compute s as a successor of t*/
   virtual void        t8_element_successor (const t8_element_t * t,
-                                            t8_element_t * s, int level);
+                                            t8_element_t * s, int level)
+  {
+    /* A vertex has no successor */
+    SC_ABORT ("This function is not implemented.\n");
+  }
 
 /** Get the integer coordinates of the anchor node of an element */
   virtual void        t8_element_anchor (const t8_element_t * elem,
@@ -265,26 +315,15 @@ public:
   virtual void        t8_element_vertex_coords (const t8_element_t * t,
                                                 int vertex, int coords[]);
 
-  /** The tetrahedron schemes uses the general function to return the type of
-   * a tetrahedron.
-   *  \param [in] elem An valid element
-   *  \param [in] indata Is ignored. Can be NULL.
-   *  \param [out] outdata Pointer to an int8_t. The type of \a elem will be stored here.
-   *  On output the type of the tetrahedron will be stored in \a outdata
-   */
-  virtual void        t8_element_general_function (const t8_element_t * elem,
-                                                   const void *indata,
-                                                   void *outdata);
-                                                   
   /** Compute the coordinates of a given element vertex inside a reference tree
    *  that is embedded into [0,1]^d (d = dimension).
-   *   \param [in] t      The element to be considered.
+   *   \param [in] elem   The element to be considered.
    *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
    *   \param [out] coords An array of at least as many doubles as the element's dimension
    *                      whose entries will be filled with the coordinates of \a vertex.
    */
   virtual void        t8_element_vertex_reference_coords (const t8_element_t *
-                                                          t, int vertex,
+                                                          elem, int vertex,
                                                           double coords[]);
 
 #ifdef T8_ENABLE_DEBUG
@@ -293,4 +332,4 @@ public:
 #endif
 };
 
-#endif /* !T8_DEFAULT_TET_H */
+#endif /* !T8_DEFAULT_VERTEX_H */

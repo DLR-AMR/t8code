@@ -20,30 +20,31 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_default_lines.h
- * The default implementation for lines.
+/** \file t8_default_hex.h
  */
 
-#ifndef T8_DEFAULT_LINE_CXX_HXX
-#define T8_DEFAULT_LINE_CXX_HXX
+#ifndef T8_DEFAULT_HEX_HXX
+#define T8_DEFAULT_HEX_HXX
 
-#include <t8_element.h>
+#include <p8est.h>
 #include <t8_element_cxx.hxx>
-#include "t8_default_common_cxx.hxx"
+#include <t8_schemes/t8_default/t8_default_quad/t8_default_quad_cxx.hxx>
 
-/** Provide an implementation for the line element class.
- * It is written as a self-contained library in the t8_dline_* files.
+/** The structure holding a hexahedral element in the default scheme.
+ * We make this definition public for interoperability of element classes.
+ * We might want to put this into a private, scheme-specific header file.
  */
+typedef p8est_quadrant_t t8_phex_t;
 
-struct t8_default_scheme_line_c:public t8_default_scheme_common_c
+struct t8_default_scheme_hex_c:public t8_default_scheme_common_c
 {
 public:
   /** The virtual table for a particular implementation of an element class. */
 
   /** Constructor. */
-  t8_default_scheme_line_c ();
+  t8_default_scheme_hex_c ();
 
-  ~t8_default_scheme_line_c ();
+  ~t8_default_scheme_hex_c ();
 
   /** Allocate memory for a given number of elements.
    * In debugging mode, ensure that all elements are valid \ref t8_element_is_valid.
@@ -58,11 +59,7 @@ public:
   virtual int         t8_element_maxlevel (void);
 
 /** Return the type of each child in the ordering of the implementation. */
-  virtual t8_eclass_t t8_element_child_eclass (int childid)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return T8_ECLASS_ZERO;      /* suppresses compiler warning */
-  }
+  virtual t8_eclass_t t8_element_child_eclass (int childid);
 
 /** Return the refinement level of an element. */
   virtual int         t8_element_level (const t8_element_t * elem);
@@ -84,10 +81,7 @@ public:
 
 /** Construct a same-size sibling of a given element. */
   virtual void        t8_element_sibling (const t8_element_t * elem,
-                                          int sibid, t8_element_t * sibling)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                          int sibid, t8_element_t * sibling);
 
   /** Compute the number of face of a given element. */
   virtual int         t8_element_num_faces (const t8_element_t * elem);
@@ -108,11 +102,7 @@ public:
 
   virtual int         t8_element_get_face_corner (const t8_element_t *
                                                   element, int face,
-                                                  int corner)
-  {
-    SC_ABORT ("Not implemented.\n");
-    return 0;                   /* prevents compiler warning */
-  }
+                                                  int corner);
 
   /** Return the face numbers of the faces sharing an element's corner. */
   virtual int         t8_element_get_corner_face (const t8_element_t *
@@ -138,7 +128,7 @@ public:
   virtual int         t8_element_ancestor_id (const t8_element_t * elem,
                                               int level);
 
-  /** Return nonzero if collection of elements is a family */
+/** Return nonzero if collection of elements is a family */
   virtual int         t8_element_is_family (t8_element_t ** fam);
 
 /** Construct the nearest common ancestor of two elements in the same tree. */
@@ -146,10 +136,12 @@ public:
                                       const t8_element_t * elem2,
                                       t8_element_t * nca);
 
-  /** Compute the element shape of the face of an element. */
+  /** Compute the elmement class of the face of an element. */
   virtual t8_element_shape_t t8_element_face_shape (const t8_element_t * elem,
                                                     int face);
 
+  /** Given an element and a face of the element, compute all children of
+   * the element that touch the face. */
   /** Given an element and a face of the element, compute all children of
    * the element that touch the face. */
   virtual void        t8_element_children_at_face (const t8_element_t * elem,
@@ -173,28 +165,25 @@ public:
   virtual int         t8_element_tree_face (const t8_element_t * elem,
                                             int face);
 
-  /** Transform the coordinates of a line considered as boundary element
+  /** Transform the coordinates of a hexahedron considered as boundary element
    *  in a tree-tree connection. */
   virtual void        t8_element_transform_face (const t8_element_t * elem1,
                                                  t8_element_t * elem2,
-                                                 int orientation, int sign,
-                                                 int is_smaller_face);
+                                                 int orientation,
+                                                 int sign,
+                                                 int is_smaller_face)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+  }
 
   /** Given a boundary face inside a root tree's face construct
    *  the element inside the root tree that has the given face as a
    *  face. */
   virtual int         t8_element_extrude_face (const t8_element_t * face,
-                                               const t8_eclass_scheme_c *
-                                               face_scheme,
+                                               const t8_eclass_scheme_c
+                                               * face_scheme,
                                                t8_element_t * elem,
                                                int root_face);
-
-  /** Construct the boundary element at a specific face. */
-  virtual void        t8_element_boundary_face (const t8_element_t * elem,
-                                                int face,
-                                                t8_element_t * boundary,
-                                                const t8_eclass_scheme_c *
-                                                boundary_scheme);
 
   /** Construct the first descendant of an element that touches a given face.   */
   virtual void        t8_element_first_descendant_face (const t8_element_t *
@@ -209,13 +198,17 @@ public:
                                                        t8_element_t *
                                                        last_desc, int level);
 
+  /** Construct the boundary element at a specific face. */
+  virtual void        t8_element_boundary_face (const t8_element_t * elem,
+                                                int face,
+                                                t8_element_t * boundary,
+                                                const t8_eclass_scheme_c *
+                                                boundary_scheme);
+
 /** Construct all codimension-one boundary elements of a given element. */
   virtual void        t8_element_boundary (const t8_element_t * elem,
                                            int min_dim, int length,
-                                           t8_element_t ** boundary)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                           t8_element_t ** boundary);
 
   /** Compute whether a given element shares a given face with its root tree.
    * \param [in] elem     The input element.
@@ -262,10 +255,7 @@ public:
 
 /** Get the integer coordinates of the anchor node of an element */
   virtual void        t8_element_anchor (const t8_element_t * elem,
-                                         int anchor[3])
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                         int anchor[3]);
 
 /** Get the integer root length of an element, that is the length of
  *  the level 0 ancestor.
@@ -293,4 +283,4 @@ public:
 #endif
 };
 
-#endif /* !T8_DEFAULT_LINE_CXX_HXX */
+#endif /* !T8_DEFAULT_HEX_HXX */

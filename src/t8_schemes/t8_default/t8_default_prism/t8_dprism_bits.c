@@ -22,9 +22,9 @@
 
 #include <p4est_bits.h>
 #include <sc_functions.h>
-#include "t8_dline_bits.h"
-#include "t8_dprism_bits.h"
-#include "t8_dtri_bits.h"
+#include <t8_schemes/t8_default/t8_default_line/t8_dline_bits.h>
+#include <t8_schemes/t8_default/t8_default_prism/t8_dprism_bits.h>
+#include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.h>
 
 int                 t8_dprism_face_corners[5][4] = {
   {1, 2, 4, 5},

@@ -20,10 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include "t8_default_common_cxx.hxx"
-#include "t8_default_prism_cxx.hxx"
-#include "t8_dprism_bits.h"
-#include "t8_dprism.h"
+#include <t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_prism/t8_default_prism_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_prism/t8_dprism_bits.h>
+#include <t8_schemes/t8_default/t8_default_prism/t8_dprism.h>
 
 typedef t8_dprism_t t8_default_prism_t;
 
