@@ -30,6 +30,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_cmesh/t8_cmesh_vtk_reader.hxx>
 #include <t8_cmesh/t8_cmesh_reader_helper.hxx>
 #include <t8_eclass.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 
 #if T8_WITH_VTK
 #include <vtkUnstructuredGrid.h>
@@ -85,6 +86,115 @@ t8_cmesh_neighbour_at_face (vtkSmartPointer < vtkUnstructuredGrid >
     return cell_ids->GetId (0);
   }
 }
+
+/**
+ * Given a list of corner-numbers and the eclass of the element with these corners
+ * compute the face-number of the face described by the corner-numbers.
+ * t8_face_vertex_to_tree_vertex stores the indices in increasing order, hence the incoming
+ * ids have to be in order.
+ * 
+ * \param[in] facePointIds  The corner-numbers of a face of an element in ascending order
+ * \param[in] eclass        The class of the element with face described by \a facePointIds
+ * \param[in] num_points    The number of corners of the face
+ * \return                  The number of the face in t8code-order.
+ */
+int
+t8_cmesh_set_face_num (vtkSmartPointer < vtkIdList > facePointIds,
+                       t8_eclass_t eclass, int num_points)
+{
+  int                 face_class, face_check;
+  /*iterate over all faces of the class */
+  for (int face_iter = 0; face_iter < t8_eclass_num_faces[eclass];
+       face_iter++) {
+    face_check = 0;
+    face_class = t8_eclass_face_types[eclass][face_iter];
+    T8_ASSERT (face_class != -1);
+    /*iterate over all tree-vertices of that class */
+    /*If the number of points does not match the number of points of the current face, we can skip the check */
+    if (num_points == t8_eclass_num_vertices[face_class]) {
+      for (int i = 0; i < num_points; i++) {
+        /*check, if all indices of that face coincide with the ids given by vertex_ids */
+        if (facePointIds->GetId (i) !=
+            t8_face_vertex_to_tree_vertex[eclass][face_iter][i]) {
+          face_check = 1;
+        }
+      }
+      /*If all vertices coincide, the current face is the correct face_number */
+      if (face_check == 0) {
+        t8_debugf ("[D] neigh_face: %i\n", face_iter);
+        return face_iter;
+      }
+    }
+  }
+  /*Error, no face_number found */
+  SC_ABORT ("No matching face found");
+  return -1;
+}
+
+/** Given the points of a vtk-cell and a set of corner-numbers of a face in
+ *  t8code order find the vtk-ids of the face and set the face-number
+ * 
+ * \param[in]       pointIds        The vtk-ids of the points of the Cell     
+ * \param[in, out]  facePointIds    Fill with the t8code-corner-numbers of the face given by \a face_points
+ * \param[in, out]  face            A face, set the the face_number
+ * \param[in]       cell_type       The eclass of the vtk-cell
+ * \param[in]       num_points      The number of points of the face
+ * \param[in]       face_points     The vtk-ids of a face of the Cell described by pointIds
+ */
+void
+vtk_face_to_t8_face (vtkSmartPointer < vtkIdList > pointIds,
+                     vtkSmartPointer < vtkIdList > facePointIds,
+                     t8_msh_file_face_t * face,
+                     t8_eclass_t cell_type, int num_face_points,
+                     vtkIdType * face_points)
+{
+  int                 vtk_corner, t8_corner;
+  /* Iterate over all points on that face */
+  for (int fp = 0; fp < num_face_points; fp++) {
+    /* Get the vtk-corner number of the face_point */
+    vtk_corner = pointIds->FindIdLocation (face_points[fp]);
+    /* From vtk-corner to t8code-corner */
+    t8_corner = t8_eclass_vtk_corner_number[cell_type][vtk_corner];
+    /*Fill the face */
+    facePointIds->SetId (fp, t8_corner);
+  }
+  /*t8_cmesh_set_face_num needs the ids in ascending order */
+  facePointIds->Sort ();
+  /*Set the face-number */
+  face->face_number =
+    t8_cmesh_set_face_num (facePointIds, cell_type, num_face_points);
+  T8_ASSERT (face->face_number >= 0);
+}
+
+/**
+ * Set the vertice-arrays of \a face_a and its neighbourface \a face_b. 
+ * 
+ * \param[in, out]  face_a            A face of an element, the vertices will be filled with the vtk-ids of the face , the vertices will be filled with the vtk-ids of the face
+ * \param[in, out]  face_b            The face of a neighbouring element, touching \a face_a , the vertices will be filled with the vtk-ids of the face , the vertices will be filled with the vtk-ids of the face
+ * \param[in]       face_points       The vtk-ids describing the face
+ * \param[in]       neighFacePointIds The t8code corners of the face of the neighbor
+ * \param[in]       neighPointIds     The vtk-ids describing the neighbor
+ * \param[in]       num_face_points   The number of points of the face
+ * \param[in]       neigh_type        The type of the neighbor
+ */
+void
+t8_set_face_and_neigh_face (t8_msh_file_face_t * face_a,
+                            t8_msh_file_face_t * face_b,
+                            vtkIdType * face_points,
+                            vtkSmartPointer < vtkIdList > neighFacePointIds,
+                            vtkSmartPointer < vtkIdList > neighPointIds,
+                            int num_face_points, t8_eclass_t neigh_type)
+{
+  int                 tree_corner, face_corner;
+  for (int fp = 0; fp < num_face_points; fp++) {
+    tree_corner =
+      t8_face_vertex_to_tree_vertex[neigh_type][face_b->face_number]
+      [neighFacePointIds->GetId (fp)];
+    face_corner = t8_eclass_vtk_corner_number[neigh_type][tree_corner];
+    face_a->vertices[fp] = face_points[fp];
+    face_b->vertices[fp] = neighPointIds->GetId (face_corner);
+  }
+}
 #endif
 
 /*Construct a cmesh given a filename and a*/
@@ -99,7 +209,7 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files,
   vtkSmartPointer < vtkUnstructuredGrid > unstructuredGrid;
   vtkCellIterator    *cell_it;
   char               *tmp, *extension;
-  int                 max_dim = 0;      /*max dimenstion of the cells for geometry */
+  int                 max_dim = -1;     /*max dimenstion of the cells for geometry */
   int                 num_face_points, num_cell_points, max_cell_points;
   t8_gloidx_t         cell_id, neigh_id;
   vtkSmartPointer < vtkPoints > points =
@@ -142,8 +252,6 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files,
   }
 
   t8_cmesh_init (&cmesh);
-
-  t8_debugf ("[D] num_cells: %lli\n", unstructuredGrid->GetNumberOfCells ());
   /*New Iterator to iterate over all cells in the grid */
   cell_it = unstructuredGrid->NewCellIterator ();
   max_cell_points = unstructuredGrid->GetMaxCellSize ();
@@ -155,21 +263,23 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files,
        cell_it->GoToNextCell ()) {
     /*Set the t8_eclass of the cell */
     cell_type = t8_cmesh_vtk_type_to_t8_type[cell_it->GetCellType ()];
+    /*Update dimension of the cmesh. */
+    if (max_dim < t8_eclass_to_dimension[cell_type]) {
+      max_dim = t8_eclass_to_dimension[cell_type];
+    }
     SC_CHECK_ABORTF (cell_type != T8_ECLASS_INVALID,
                      "vtk-cell-type %i not supported by t8code\n",
                      cell_it->GetCellType ());
-    t8_debugf ("[D] cell is a %s\n", t8_eclass_to_string[cell_type]);
     t8_cmesh_set_tree_class (cmesh, tree_id, (t8_eclass_t) cell_type);
 
     /*Set the vertices of the tree */
     num_cell_points = cell_it->GetNumberOfPoints ();
-    t8_debugf ("[D] cell has %i points\n", num_cell_points);
+    /*Get the actuall points of the cell */
     points = cell_it->GetPoints ();
+    /* For every corner of the cell the the points */
     for (int i = 0; i < num_cell_points; i++) {
       /*Every Point has 3 coords */
       points->GetPoint (i, &vertices[3 * i]);
-      t8_debugf ("[D] %i: %f %f %f\n", i, vertices[3 * i],
-                 vertices[3 * i + 1], vertices[3 * i + 2]);
     }
     /*The order of the vertices in vtk might give a tree with negative volume */
     if (t8_cmesh_tree_vertices_negative_volume
@@ -181,101 +291,96 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files,
     /* We don't always need to know the connection of the cell. Therefore,
      * this computation is optional.*/
     if (compute_face_neigh) {
-      /* WIP */
-      vtkSmartPointer < vtkGenericCell > neigh_cell =
-        vtkSmartPointer < vtkGenericCell >::New ();
-      unstructuredGrid->BuildLinks ();
-      cell_id = cell_it->GetCellId ();
+      /* The vtk-Ids of the points of the current cell */
       vtkSmartPointer < vtkIdList > pointIds =
         vtkSmartPointer < vtkIdList >::New ();
-      vtkSmartPointer < vtkIdList > neighIds =
+      /* The Ids of the points of the face */
+      vtkSmartPointer < vtkIdList > facePointIds =
         vtkSmartPointer < vtkIdList >::New ();
-      vtkSmartPointer < vtkIdList > cellpointIds =
+      /* The vtk-ids of the neighbor */
+      vtkSmartPointer < vtkIdList > neighPointIds =
         vtkSmartPointer < vtkIdList >::New ();
-      vtkSmartPointer < vtkIdList > neigh_point =
+      /* The Ids of the points of the face */
+      vtkSmartPointer < vtkIdList > neighFacePointIds =
         vtkSmartPointer < vtkIdList >::New ();
+
+      /* Build topological informations in vtk-mesh */
+      unstructuredGrid->BuildLinks ();
+      /* Get the vtk-ids of the points of the cell */
+      cell_id = cell_it->GetCellId ();
       pointIds = cell_it->GetPointIds ();
+
+      /* Tree id of the face is the current tree_id */
       face_a.ltree_id = tree_id;
+      /*Iterate over all faces and set the neighbor along the face */
       for (int face = 0; face < t8_eclass_num_faces[cell_type]; face++) {
+        /* Faces can have different types */
         face_type = t8_eclass_face_types[cell_type][face];
+        /* Number of points of the face */
         num_face_points = t8_eclass_num_vertices[face_type];
-        //face_a.face_number = face;
         face_a.num_vertices = num_face_points;
-        /* vtk_point_ids of the face in face_points */
+        /* Compute the cell_id of the neighbor along the face and the vtk-ids
+         * of the current face*/
         neigh_id =
           t8_cmesh_neighbour_at_face (unstructuredGrid, pointIds,
                                       (t8_eclass_t) cell_type, face, cell_id,
                                       face_points);
         if (neigh_id != -1) {
-          int                 orientation, vtk_corner, face_corner,
-            tree_corner;
+          /* The cell has  a neighbor along the face. We compute the orientation
+           * of the connection. We need to know, the order of the vertices of faces
+           * seen from the current cell and the neighboring cell and the number of these
+           * faces.*/
+          int                 orientation;
           /* Be carefull here with parallel reader or partitioned cmesh
            * This will probably not work for partitioned cmeshes.*/
+
+          /* Tree id of the neighbouring face is the neigh_id. 
+           * Be carefull when partitioning the cmesh, has neigh_id can be the vtk-id of the cell*/
           face_b.ltree_id = neigh_id;
-          face_b.num_vertices = num_face_points;
-          t8_debugf ("[D] neigh: %li of current tree: %i\n", neigh_id,
-                     cell_id);;
-          unstructuredGrid->GetCell (neigh_id, neigh_cell);
-          neigh_point = neigh_cell->GetPointIds ();
+
+          /* Get the points of the neighbor */
+          unstructuredGrid->GetCellPoints (neigh_id, neighPointIds);
+          /* Get the type of the neighbor */
           neigh_type =
-            t8_cmesh_vtk_type_to_t8_type[neigh_cell->GetCellType ()];
-          t8_debugf ("[D] neigh_type is: %i %s\n", neigh_type,
-                     t8_eclass_to_string[neigh_type]);
-          neighIds->SetNumberOfIds (num_face_points);
-          cellpointIds->SetNumberOfIds (num_face_points);
-          for (int fp = 0; fp < num_face_points; fp++) {
-            vtk_corner = pointIds->FindIdLocation (face_points[fp]);
-            face_corner = t8_eclass_vtk_corner_number[cell_type][vtk_corner];
-            cellpointIds->SetId (fp, face_corner);
-            //face_a.vertices[fp] = face_points[fp];
-            /*tree-corners of the face (t8code-numeration of the faces) in t8code-order */
-            T8_ASSERT (face_corner != -1);
-            /* vtk_point_ids in t8code-order of the face */
-            face_a.vertices[fp] = face_corner;
-            vtk_corner = neigh_point->FindIdLocation (face_points[fp]);
-            face_corner = t8_eclass_vtk_corner_number[neigh_type][vtk_corner];
-            face_b.vertices[fp] = face_corner;
-            neighIds->SetId (fp, face_corner);
-          }
-          neighIds->Sort ();
-          cellpointIds->Sort ();
-          for (int fp = 0; fp < num_face_points; fp++) {
-            face_b.vertices[fp] = neighIds->GetId (fp);
-            face_a.vertices[fp] = cellpointIds->GetId (fp);
-          }
-          t8_cmesh_set_face_num (&face_b, (t8_eclass_t) neigh_type);
-          t8_cmesh_set_face_num (&face_a, (t8_eclass_t) cell_type);
-          for (int fp = 0; fp < num_face_points; fp++) {
-            tree_corner =
-              t8_face_vertex_to_tree_vertex[neigh_type][face][neighIds->GetId
-                                                              (fp)];
-            face_corner =
-              t8_eclass_vtk_corner_number[neigh_type][tree_corner];
-            T8_ASSERT (face_corner != -1);
-            face_a.vertices[fp] = face_points[fp];
-            face_b.vertices[fp] = neigh_point->GetId (face_corner);
-            t8_debugf ("[D] face_b.v(%i): %i\n", fp, face_b.vertices[fp]);
-          }
+            t8_cmesh_vtk_type_to_t8_type[unstructuredGrid->GetCellType
+                                         (neigh_id)];
+          T8_ASSERT (neigh_type != T8_ECLASS_INVALID);
+
+          /*Set size of arrays */
+          neighFacePointIds->SetNumberOfIds (num_face_points);
+          facePointIds->SetNumberOfIds (num_face_points);
+
+          /* Set the face-numbers of the faces for the current cell and its neighbour
+           * and fill the ids*/
+          vtk_face_to_t8_face (pointIds, facePointIds, &face_a,
+                               (t8_eclass_t) cell_type, num_face_points,
+                               face_points);
+          vtk_face_to_t8_face (neighPointIds, neighFacePointIds, &face_b,
+                               (t8_eclass_t) neigh_type, num_face_points,
+                               face_points);
+
+          /* Set the vertice-arrays of the faces */
+          t8_set_face_and_neigh_face (&face_a, &face_b, face_points,
+                                      neighFacePointIds, neighPointIds,
+                                      num_face_points,
+                                      (t8_eclass_t) neigh_type);
+
+          /* Compute the orientation of the faces to each other */
           orientation =
             t8_msh_file_face_orientation (&face_a, &face_b,
                                           (t8_eclass_t) cell_type,
                                           (t8_eclass_t) neigh_type);
-          t8_debugf
-            ("[D] set face of tree %i, along face: %i to neigh: %i with face %i and orientation: %i\n",
-             tree_id, face_a.face_number, neigh_id, face_b.face_number,
-             orientation);
+
+          /* Glue the trees */
           t8_cmesh_set_join (cmesh, tree_id, neigh_id, face_a.face_number,
                              face_b.face_number, orientation);
         }
-        else {
-          t8_debugf ("[D] tree %i has no neighbor along vtk-face: %i\n",
-                     tree_id, face);
-        }
-
       }
     }
     tree_id++;
   }
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (max_dim);
+  t8_cmesh_register_geometry (cmesh, linear_geom);
   t8_cmesh_commit (cmesh, comm);
 #else
   /*TODO: Proper return value to prevent compiler-errors */

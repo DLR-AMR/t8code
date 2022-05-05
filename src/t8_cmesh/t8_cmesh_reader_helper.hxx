@@ -64,13 +64,6 @@ int                 t8_msh_file_face_orientation (t8_msh_file_face_t * Face_a,
  */
 void                t8_cmesh_correct_volume (double *tree_vertices,
                                              t8_eclass_t eclass);
-
-/** Given the ids of vertices on a face of an element compute the face-number of that face 
- * \param[in]   face            The face with vertices in t8code-order
- * \param[in]   eclass          The class of the element with the face described by \a vertex_ids
- */
-void                t8_cmesh_set_face_num (t8_msh_file_face_t * face,
-                                           t8_eclass_t eclass);
 T8_EXTERN_C_END ();
 
 #endif /* T8_CMESH_READER_HELPER */

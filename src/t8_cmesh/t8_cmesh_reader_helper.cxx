@@ -154,38 +154,4 @@ t8_cmesh_correct_volume (double *tree_vertices, t8_eclass_t eclass)
              (eclass, tree_vertices, t8_eclass_num_vertices[eclass]));
 }
 
-void
-t8_cmesh_set_face_num (t8_msh_file_face_t * face, t8_eclass_t eclass)
-{
-  int                 face_class, face_check;
-  /*iterate over all faces of the class */
-  for (int faces = 0; faces < t8_eclass_num_faces[eclass]; faces++) {
-    t8_debugf ("[D] test face: %i\n", faces);
-    face_check = 0;
-    face_class = t8_eclass_face_types[eclass][faces];
-    T8_ASSERT (face_class != -1);
-    /*iterate over all tree-vertices of that class */
-    if (face->num_vertices == t8_eclass_num_vertices[face_class]) {
-      for (int i = 0; i < face->face_number; i++) {
-        t8_debugf ("[D] face->v[%i]: %i != face_v_to_tv %i\n",
-                   t8_face_vertex_to_tree_vertex[eclass][faces][i]);
-        /*check, if all indices of that face coincide with the ids given by vertex_ids */
-        if (face->vertices[i] !=
-            t8_face_vertex_to_tree_vertex[eclass][faces][i]) {
-          face_check = 1;
-        }
-      }
-      /*If all vertices coincide, the current face is the correct face_number */
-      if (face_check == 0) {
-        t8_debugf ("[D] neigh_face: %i\n", faces);
-        face->face_number = faces;
-        return;
-      }
-    }
-  }
-  /*Error, no face_number found */
-  SC_ABORT ("No matching face found");
-  return;
-}
-
 T8_EXTERN_C_END ();
