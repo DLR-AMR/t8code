@@ -46,13 +46,6 @@ t8_msh_file_face_orientation (t8_msh_file_face_t * Face_a,
   int                 compare, iv;
   t8_eclass_t         bigger_class;
   int                 orientation = -1;
-  for (int i = 0; i < Face_a->num_vertices; i++) {
-    t8_debugf ("[D] Fa[%i]: %li\n", i, Face_a->vertices[i]);
-  }
-  for (int i = 0; i < Face_a->num_vertices; i++) {
-    t8_debugf ("[D] Fb[%i]: %li\n", i, Face_b->vertices[i]);
-  }
-
   compare = t8_eclass_compare (tree_class_a, tree_class_b);
   if (compare > 0) {
     /* tree_class_a is bigger than tree_class_b */
@@ -85,10 +78,8 @@ t8_msh_file_face_orientation (t8_msh_file_face_t * Face_a,
     }
   }
   vertex_zero = smaller_Face->vertices[0];
-  t8_debugf ("[D] vertex_zero: %li\n", vertex_zero);
   /* Find which point in the bigger face is vertex_zero */
   for (iv = 0; iv < t8_eclass_num_vertices[bigger_class]; iv++) {
-    t8_debugf ("[D] current vertex: %li\n", bigger_Face->vertices[iv]);
     if (vertex_zero == bigger_Face->vertices[iv]) {
       /* We found the corresponding vertex */
       orientation = iv;

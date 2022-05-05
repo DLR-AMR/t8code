@@ -186,12 +186,16 @@ t8_set_face_and_neigh_face (t8_msh_file_face_t * face_a,
                             int num_face_points, t8_eclass_t neigh_type)
 {
   int                 tree_corner, face_corner;
+  /* Iterate over all points of the face */
   for (int fp = 0; fp < num_face_points; fp++) {
+    /* get the t8code-id of the vertex */
     tree_corner =
       t8_face_vertex_to_tree_vertex[neigh_type][face_b->face_number]
       [neighFacePointIds->GetId (fp)];
+    /*transform to local vtk-id */
     face_corner = t8_eclass_vtk_corner_number[neigh_type][tree_corner];
     face_a->vertices[fp] = face_points[fp];
+    /*set the point-id according to the local vtk-id */
     face_b->vertices[fp] = neighPointIds->GetId (face_corner);
   }
 }
@@ -227,12 +231,10 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files,
   strcpy (tmp, filename);
   extension = strtok (tmp, ".");
   extension = strtok (NULL, ".");
-  T8_FREE (tmp);
   T8_ASSERT (strcmp (extension, ""));
 
   /*Read the file */
   if (strcmp (extension, "vtu") == 0) {
-    t8_debugf ("[D] use xml unstructured\n");
     vtkSmartPointer < vtkXMLUnstructuredGridReader > reader =
       vtkSmartPointer < vtkXMLUnstructuredGridReader >::New ();
     reader->SetFileName (filename);
@@ -240,7 +242,6 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files,
     unstructuredGrid = reader->GetOutput ();
   }
   else if (strcmp (extension, "vtk") == 0) {
-    t8_debugf ("[D] use unstructured\n");
     vtkSmartPointer < vtkUnstructuredGridReader > reader =
       vtkSmartPointer < vtkUnstructuredGridReader >::New ();
     reader->SetFileName (filename);
@@ -250,6 +251,7 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files,
   else {
     t8_global_errorf ("Please use .vtk or .vtu file\n");
   }
+  T8_FREE (tmp);
 
   t8_cmesh_init (&cmesh);
   /*New Iterator to iterate over all cells in the grid */
