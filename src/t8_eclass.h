@@ -149,6 +149,7 @@ int                 t8_eclass_compare (t8_eclass_t eclass1,
  *  returns zero, if the class is equal to T8_ECLASS_INVALID.
  * 
  * \param [in] eclass    The eclass to check.
+ * \return               Non-zero if \a eclass is valid, zero otherwise.
 */
 int                 t8_eclass_is_valid (t8_eclass_t eclass);
 
