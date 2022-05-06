@@ -76,6 +76,7 @@ src_libt8_la_SOURCES = \
 	$(libt8_compiled_sources)
 src_libt8_la_CPPFLAGS = $(AM_CPPFLAGS) $(T8_CPPFLAGS)
 src_libt8_la_LDFLAGS = -release $(VERSION)
+src_libt8_la_LIBADD = @T8_P4EST_LDADD@ @T8_SC_LDADD@
 LDADD += @top_builddir@/src/libt8.la \
         @T8_P4EST_LDADD@ @T8_SC_LDADD@
 EXTRA_src_libt8_la_DEPENDENCIES = @T8_P4EST_LDADD@ @T8_SC_LDADD@
