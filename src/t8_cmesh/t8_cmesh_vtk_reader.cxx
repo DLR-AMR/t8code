@@ -33,15 +33,47 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 
 #if T8_WITH_VTK
-#include <vtkUnstructuredGrid.h>
-#include <vtkUnstructuredGridReader.h>
-#include <vtkXMLUnstructuredGridReader.h>
 #include <vtkCellIterator.h>
 #include <vtkIdList.h>
 #include <vtkCellArray.h>
 #include <vtkCellData.h>
+#include <vtkUnstructuredGrid.h>
+#include <vtkUnstructuredGridReader.h>
+#include <vtkXMLUnstructuredGridReader.h>
 #endif
 T8_EXTERN_C_BEGIN ();
+
+void
+t8_read_unstructured (const char *filename, vtkUnstructuredGrid * grid)
+{
+  char               *tmp, *extension;
+  /*Get the file-extension to decide which reader to use */
+  tmp = T8_ALLOC (char, BUFSIZ);
+  strcpy (tmp, filename);
+  extension = strtok (tmp, ".");
+  extension = strtok (NULL, ".");
+  T8_ASSERT (strcmp (extension, ""));
+
+  /*Read the file */
+  if (strcmp (extension, "vtu") == 0) {
+    vtkSmartPointer < vtkXMLUnstructuredGridReader > reader =
+      vtkSmartPointer < vtkXMLUnstructuredGridReader >::New ();
+    reader->SetFileName (filename);
+    reader->Update ();
+    grid = reader->GetOutput ();
+  }
+  else if (strcmp (extension, "vtk") == 0) {
+    vtkSmartPointer < vtkUnstructuredGridReader > reader =
+      vtkSmartPointer < vtkUnstructuredGridReader >::New ();
+    reader->SetFileName (filename);
+    reader->Update ();
+    grid = reader->GetOutput ();
+  }
+  else {
+    t8_global_errorf ("Please use .vtk or .vtu file\n");
+  }
+  T8_FREE (tmp);
+}
 
 /*Construct a cmesh given a filename and a*/
 t8_cmesh_t
@@ -58,7 +90,6 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files,
   int                 num_data_arrays = 0;
   size_t             *data_size;
   double            **tuples;   /*vtk stores data as doubles */
-  char               *tmp, *extension;
   int                 max_dim = -1;     /*max dimenstion of the cells for geometry */
   int                 num_cell_points, max_cell_points;
   t8_gloidx_t         cell_id;
@@ -66,32 +97,8 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files,
     vtkSmartPointer < vtkPoints >::New ();
   double             *vertices;
 
-  /*Get the file-extension to decide which reader to use */
-  tmp = T8_ALLOC (char, BUFSIZ);
-  strcpy (tmp, filename);
-  extension = strtok (tmp, ".");
-  extension = strtok (NULL, ".");
-  T8_ASSERT (strcmp (extension, ""));
+  t8_read_unstructured (filename, unstructuredGrid);
 
-  /*Read the file */
-  if (strcmp (extension, "vtu") == 0) {
-    vtkSmartPointer < vtkXMLUnstructuredGridReader > reader =
-      vtkSmartPointer < vtkXMLUnstructuredGridReader >::New ();
-    reader->SetFileName (filename);
-    reader->Update ();
-    unstructuredGrid = reader->GetOutput ();
-  }
-  else if (strcmp (extension, "vtk") == 0) {
-    vtkSmartPointer < vtkUnstructuredGridReader > reader =
-      vtkSmartPointer < vtkUnstructuredGridReader >::New ();
-    reader->SetFileName (filename);
-    reader->Update ();
-    unstructuredGrid = reader->GetOutput ();
-  }
-  else {
-    t8_global_errorf ("Please use .vtk or .vtu file\n");
-  }
-  T8_FREE (tmp);
   t8_cmesh_init (&cmesh);
   /* New Iterator to iterate over all cells in the grid */
   cell_it = unstructuredGrid->NewCellIterator ();

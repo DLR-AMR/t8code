@@ -64,6 +64,7 @@ int                 t8_msh_file_face_orientation (t8_msh_file_face_t * Face_a,
  */
 void                t8_cmesh_correct_volume (double *tree_vertices,
                                              t8_eclass_t eclass);
+
 T8_EXTERN_C_END ();
 
 #endif /* T8_CMESH_READER_HELPER */
