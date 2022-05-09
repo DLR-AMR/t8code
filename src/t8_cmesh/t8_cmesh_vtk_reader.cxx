@@ -40,11 +40,18 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <vtkUnstructuredGrid.h>
 #include <vtkUnstructuredGridReader.h>
 #include <vtkXMLUnstructuredGridReader.h>
+#include <vtkPolyData.h>
+#include <vtkBYUReader.h>
+#include <vtkOBJReader.h>
+#include <vtkPLYReader.h>
+#include <vtkPolyDataReader.h>
+#include <vtkSTLReader.h>
+#include <vtkXMLPolyDataReader.h>
 #endif
 T8_EXTERN_C_BEGIN ();
 
-void
-t8_read_unstructured (const char *filename, vtkUnstructuredGrid * grid)
+vtkSmartPointer < vtkUnstructuredGrid >
+t8_read_unstructured (const char *filename)
 {
   char               *tmp, *extension;
   /*Get the file-extension to decide which reader to use */
@@ -60,14 +67,68 @@ t8_read_unstructured (const char *filename, vtkUnstructuredGrid * grid)
       vtkSmartPointer < vtkXMLUnstructuredGridReader >::New ();
     reader->SetFileName (filename);
     reader->Update ();
-    grid = reader->GetOutput ();
+    return reader->GetOutput ();
   }
   else if (strcmp (extension, "vtk") == 0) {
     vtkSmartPointer < vtkUnstructuredGridReader > reader =
       vtkSmartPointer < vtkUnstructuredGridReader >::New ();
     reader->SetFileName (filename);
     reader->Update ();
-    grid = reader->GetOutput ();
+    return reader->GetOutput ();
+  }
+  else {
+    t8_global_errorf ("Please use .vtk or .vtu file\n");
+    return NULL;
+  }
+  T8_FREE (tmp);
+}
+
+vtkSmartPointer < vtkPolyData > t8_read_poly (const char *filename)
+{
+  char               *tmp, *extension;
+  /*Get the file-extension to decide which reader to use */
+  tmp = T8_ALLOC (char, BUFSIZ);
+  strcpy (tmp, filename);
+  extension = strtok (tmp, ".");
+  extension = strtok (NULL, ".");
+  T8_ASSERT (strcmp (extension, ""));
+
+  /*Read the file */
+  if (strcmp (extension, ".ply") == 0) {
+    vtkNew < vtkPLYReader > reader;
+    reader->SetFileName (filename);
+    reader->Update ();
+    return reader->GetOutput ();
+  }
+  else if (strcmp (extension, ".vtp") == 0) {
+    vtkNew < vtkXMLPolyDataReader > reader;
+    reader->SetFileName (filename);
+    reader->Update ();
+    return reader->GetOutput ();
+  }
+  else if (strcmp (extension, ".obj") == 0) {
+    vtkNew < vtkOBJReader > reader;
+    reader->SetFileName (filename);
+    reader->Update ();
+    return reader->GetOutput ();
+  }
+  else if (strcmp (extension, ".stl") == 0) {
+    vtkNew < vtkSTLReader > reader;
+    reader->SetFileName (filename);
+    reader->Update ();
+    return reader->GetOutput ();
+  }
+  else if (strcmp (extension, ".vtk") == 0) {
+    vtkNew < vtkPolyDataReader > reader;
+    reader->SetFileName (filename);
+    reader->Update ();
+    return reader->GetOutput ();
+  }
+  else if (strcmp (extension, ".g") == 0) {
+    vtkNew < vtkBYUReader > reader;
+    reader->SetGeometryFileName (filename);
+    reader->Update ();
+    return reader->GetOutput ();
   }
   else {
     t8_global_errorf ("Please use .vtk or .vtu file\n");
@@ -77,8 +138,10 @@ t8_read_unstructured (const char *filename, vtkUnstructuredGrid * grid)
 
 /*Construct a cmesh given a filename and a*/
 t8_cmesh_t
-t8_cmesh_read_from_vtk (const char *filename, const int num_files,
-                        const int compute_face_neigh, sc_MPI_Comm comm)
+t8_cmesh_read_from_vtk_unstructured (const char *filename,
+                                     const int num_files,
+                                     const int compute_face_neigh,
+                                     sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
 #if T8_WITH_VTK
@@ -97,7 +160,7 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files,
     vtkSmartPointer < vtkPoints >::New ();
   double             *vertices;
 
-  t8_read_unstructured (filename, unstructuredGrid);
+  unstructuredGrid = t8_read_unstructured (filename);
 
   t8_cmesh_init (&cmesh);
   /* New Iterator to iterate over all cells in the grid */
@@ -183,6 +246,18 @@ t8_cmesh_read_from_vtk (const char *filename, const int num_files,
 #endif
   T8_FREE (vertices);
   return cmesh;
+}
+
+t8_cmesh_t
+t8_cmesh_read_from_vtk_poly (const char *filename, const int num_files,
+                             const int compute_face_neigh, sc_MPI_Comm comm)
+{
+  vtkSmartPointer < vtkPolyData > poly_data;
+  t8_cmesh_t          cmesh;
+  poly_data = t8_read_poly (filename);
+
+  t8_cmesh_init (&cmesh);
+
 }
 
 T8_EXTERN_C_END ();

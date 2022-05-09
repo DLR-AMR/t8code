@@ -70,10 +70,11 @@ const t8_eclass_t   t8_cmesh_vtk_type_to_t8_type[82] = {
  * \param[in] comm          The communicator used 
  * \return t8_cmesh_t       The cmesh described by the files
  */
-t8_cmesh_t          t8_cmesh_read_from_vtk (const char *filename,
-                                            const int num_files,
-                                            const int compute_face_neigh,
-                                            sc_MPI_Comm comm);
+t8_cmesh_t          t8_cmesh_read_from_vtk_unstructured (const char *filename,
+                                                         const int num_files,
+                                                         const int
+                                                         compute_face_neigh,
+                                                         sc_MPI_Comm comm);
 
 T8_EXTERN_C_END ();
 
