@@ -27,7 +27,6 @@
 TEST (t8_gtest_eclass, eclassCountIs8)
 {
   EXPECT_EQ (T8_ECLASS_COUNT, 8);
-  EXPECT_EQ (0, 1);
 }
 
 TEST (t8_gtest_eclass, dimension)
