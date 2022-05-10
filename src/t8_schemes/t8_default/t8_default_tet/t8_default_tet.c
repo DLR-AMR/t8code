@@ -28,10 +28,10 @@ typedef t8_dtet_t   t8_default_tet_t;
 
 /* This function is used by other element functions and we thus need to
  * declare it up here */
-static uint64_t     t8_default_tet_get_linear_id (const t8_element_t * elem,
+static uint64_t     t8_default_tet_get_linear_id (const t8_element_t *elem,
                                                   int level);
 
-static              size_t
+static size_t
 t8_default_tet_size (void)
 {
   return sizeof (t8_default_tet_t);
@@ -44,20 +44,19 @@ t8_default_tet_maxlevel (void)
 }
 
 static int
-t8_default_tet_level (const t8_element_t * elem)
+t8_default_tet_level (const t8_element_t *elem)
 {
   return t8_dtet_get_level ((t8_dtet_t *) elem);
 }
 
 static void
-t8_default_tet_copy (const t8_element_t * source, t8_element_t * dest)
+t8_default_tet_copy (const t8_element_t *source, t8_element_t *dest)
 {
   t8_dtet_copy ((const t8_dtet_t *) source, (t8_dtet_t *) dest);
 }
 
 static int
-t8_default_tet_compare (const t8_element_t * elem1,
-                        const t8_element_t * elem2)
+t8_default_tet_compare (const t8_element_t *elem1, const t8_element_t *elem2)
 {
   int                 maxlvl;
   u_int64_t           id1, id2;
@@ -73,7 +72,7 @@ t8_default_tet_compare (const t8_element_t * elem1,
 }
 
 static void
-t8_default_tet_parent (const t8_element_t * elem, t8_element_t * parent)
+t8_default_tet_parent (const t8_element_t *elem, t8_element_t *parent)
 {
   const t8_default_tet_t *t = (const t8_default_tet_t *) elem;
   t8_default_tet_t   *p = (t8_default_tet_t *) parent;
@@ -82,8 +81,8 @@ t8_default_tet_parent (const t8_element_t * elem, t8_element_t * parent)
 }
 
 static void
-t8_default_tet_sibling (const t8_element_t * elem,
-                        int sibid, t8_element_t * sibling)
+t8_default_tet_sibling (const t8_element_t *elem,
+                        int sibid, t8_element_t *sibling)
 {
   const t8_default_tet_t *t = (const t8_default_tet_t *) elem;
   t8_default_tet_t   *s = (t8_default_tet_t *) sibling;
@@ -92,8 +91,8 @@ t8_default_tet_sibling (const t8_element_t * elem,
 }
 
 static void
-t8_default_tet_child (const t8_element_t * elem,
-                      int childid, t8_element_t * child)
+t8_default_tet_child (const t8_element_t *elem,
+                      int childid, t8_element_t *child)
 {
   const t8_default_tet_t *t = (const t8_default_tet_t *) elem;
   t8_default_tet_t   *c = (t8_default_tet_t *) child;
@@ -102,8 +101,8 @@ t8_default_tet_child (const t8_element_t * elem,
 }
 
 static void
-t8_default_tet_children (const t8_element_t * elem,
-                         int length, t8_element_t * c[])
+t8_default_tet_children (const t8_element_t *elem,
+                         int length, t8_element_t *c[])
 {
   T8_ASSERT (length == T8_DTET_CHILDREN);
 
@@ -111,20 +110,20 @@ t8_default_tet_children (const t8_element_t * elem,
 }
 
 static int
-t8_default_tet_child_id (const t8_element_t * elem)
+t8_default_tet_child_id (const t8_element_t *elem)
 {
   return t8_dtet_child_id ((t8_dtet_t *) elem);
 }
 
 static int
-t8_default_tet_is_family (t8_element_t ** fam)
+t8_default_tet_is_family (t8_element_t **fam)
 {
   return t8_dtet_is_familypv ((const t8_dtet_t **) fam);
 }
 
 static void
-t8_default_tet_nca (const t8_element_t * elem1,
-                    const t8_element_t * elem2, t8_element_t * nca)
+t8_default_tet_nca (const t8_element_t *elem1,
+                    const t8_element_t *elem2, t8_element_t *nca)
 {
   const t8_default_tet_t *t1 = (const t8_default_tet_t *) elem1;
   const t8_default_tet_t *t2 = (const t8_default_tet_t *) elem2;
@@ -134,7 +133,7 @@ t8_default_tet_nca (const t8_element_t * elem1,
 }
 
 static void
-t8_default_tet_set_linear_id (t8_element_t * elem, int level, uint64_t id)
+t8_default_tet_set_linear_id (t8_element_t *elem, int level, uint64_t id)
 {
   T8_ASSERT (0 <= level && level <= T8_DTET_MAXLEVEL);
   T8_ASSERT (0 <= id && id < ((uint64_t) 1) << 3 * level);
@@ -142,8 +141,8 @@ t8_default_tet_set_linear_id (t8_element_t * elem, int level, uint64_t id)
   t8_dtet_init_linear_id ((t8_default_tet_t *) elem, id, level);
 }
 
-static              uint64_t
-t8_default_tet_get_linear_id (const t8_element_t * elem, int level)
+static uint64_t
+t8_default_tet_get_linear_id (const t8_element_t *elem, int level)
 {
   T8_ASSERT (0 <= level && level <= T8_DTET_MAXLEVEL);
 
@@ -151,8 +150,8 @@ t8_default_tet_get_linear_id (const t8_element_t * elem, int level)
 }
 
 static void
-t8_default_tet_successor (const t8_element_t * elem1,
-                          t8_element_t * elem2, int level)
+t8_default_tet_successor (const t8_element_t *elem1,
+                          t8_element_t *elem2, int level)
 {
   T8_ASSERT (0 <= level && level <= T8_DTET_MAXLEVEL);
 
@@ -161,21 +160,19 @@ t8_default_tet_successor (const t8_element_t * elem1,
 }
 
 static void
-t8_default_tet_first_descendant (const t8_element_t * elem,
-                                 t8_element_t * desc)
+t8_default_tet_first_descendant (const t8_element_t *elem, t8_element_t *desc)
 {
   t8_dtet_first_descendant ((t8_dtet_t *) elem, (t8_dtet_t *) desc);
 }
 
 static void
-t8_default_tet_last_descendant (const t8_element_t * elem,
-                                t8_element_t * desc)
+t8_default_tet_last_descendant (const t8_element_t *elem, t8_element_t *desc)
 {
   t8_dtet_last_descendant ((t8_dtet_t *) elem, (t8_dtet_t *) desc);
 }
 
 static void
-t8_default_tet_anchor (const t8_element_t * elem, int anchor[3])
+t8_default_tet_anchor (const t8_element_t *elem, int anchor[3])
 {
   t8_dtet_t          *tet = (t8_dtet_t *) elem;
 
@@ -185,7 +182,7 @@ t8_default_tet_anchor (const t8_element_t * elem, int anchor[3])
 }
 
 static int
-t8_default_tet_root_len (const t8_element_t * elem)
+t8_default_tet_root_len (const t8_element_t *elem)
 {
   return T8_DTET_ROOT_LEN;
 }
