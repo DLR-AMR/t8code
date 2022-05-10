@@ -76,7 +76,7 @@ t8_read_msh_partition (t8_cmesh_t cmesh, const char *prefix)
  *  master      If do_partition is true a valid MPI rank that will read the
  *              file alone. The other processes will not hold any trees then.
  */
-static              t8_cmesh_t
+static t8_cmesh_t
 t8_read_msh_file_build_cmesh (const char *prefix, int do_partition, int dim,
                               int master)
 {

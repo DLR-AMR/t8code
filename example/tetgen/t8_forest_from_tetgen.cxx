@@ -29,7 +29,7 @@
 #include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_forest.h>
 
-static              t8_cmesh_t
+static t8_cmesh_t
 t8_cmesh_from_tetgen (const char *prefix, int do_partition)
 {
   t8_cmesh_t          cmesh;
