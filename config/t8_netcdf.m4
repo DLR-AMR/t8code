@@ -31,6 +31,7 @@ if test "x$T8_WITH_NETCDF" != xno ; then
 ]],[[
   #include <netcdf.h>
 
+  this line will break the code
   int ncid;
   nc_open (NULL, NC_NOWRITE, &ncid);
 ]])],,
