@@ -55,13 +55,11 @@ T8_EXTERN_C_BEGIN ();
 vtkSmartPointer < vtkUnstructuredGrid >
 t8_read_unstructured (const char *filename)
 {
-  char               *tmp, *extension;
+  char                tmp[BUFSIZ], *extension;
   /*Get the file-extension to decide which reader to use */
-  tmp = T8_ALLOC (char, BUFSIZ);
   strcpy (tmp, filename);
   extension = strtok (tmp, ".");
   extension = strtok (NULL, ".");
-  T8_ASSERT (strcmp (extension, ""));
 
   /*Read the file */
   if (strcmp (extension, "vtu") == 0) {
@@ -82,14 +80,12 @@ t8_read_unstructured (const char *filename)
     t8_global_errorf ("Please use .vtk or .vtu file\n");
     return NULL;
   }
-  T8_FREE (tmp);
 }
 
 vtkSmartPointer < vtkPolyData > t8_read_poly (const char *filename)
 {
-  char               *tmp, *extension;
+  char                tmp[BUFSIZ], *extension;
   /*Get the file-extension to decide which reader to use */
-  tmp = T8_ALLOC (char, BUFSIZ);
   strcpy (tmp, filename);
   extension = strtok (tmp, ".");
   extension = strtok (NULL, ".");
@@ -137,7 +133,6 @@ vtkSmartPointer < vtkPolyData > t8_read_poly (const char *filename)
     return NULL;
   }
 
-  T8_FREE (tmp);
 }
 
 /*Construct a cmesh given a filename and a*/
@@ -150,8 +145,7 @@ t8_cmesh_read_from_vtk_unstructured (const char *filename,
 #if T8_WITH_VTK
   /*The Incoming data must be an unstructured Grid */
   vtkSmartPointer < vtkUnstructuredGrid > unstructuredGrid;
-  vtkCellData        *cellData;
-  int                 max_cell_points;
+  vtkSmartPointer < vtkCellData > cellData;
   /*Prepare grid for translation */
   unstructuredGrid = t8_read_unstructured (filename);
 
@@ -273,7 +267,6 @@ t8_cmesh_read_from_vtk_poly (const char *filename, const int num_files,
 {
 #if T8_WITH_VTK
   vtkSmartPointer < vtkPolyData > poly_data;
-  int                 max_cell_points;
   vtkSmartPointer < vtkCellArray > cells;
   vtkSmartPointer < vtkCellData > cell_data;
   vtkSmartPointer < vtkPolyData > triangulated;
