@@ -148,11 +148,9 @@ typedef struct
 static int
 t8_tutorial_search_callback (t8_forest_t forest,
                              t8_locidx_t ltreeid,
-                             const t8_element_t *
-                             element,
+                             const t8_element_t *element,
                              const int is_leaf,
-                             t8_element_array_t *
-                             leaf_elements,
+                             t8_element_array_t *leaf_elements,
                              t8_locidx_t
                              tree_leaf_index, void *query, size_t query_index)
 {
@@ -180,11 +178,9 @@ t8_tutorial_search_callback (t8_forest_t forest,
 static int
 t8_tutorial_search_query_callback (t8_forest_t forest,
                                    t8_locidx_t ltreeid,
-                                   const t8_element_t *
-                                   element,
+                                   const t8_element_t *element,
                                    const int is_leaf,
-                                   t8_element_array_t *
-                                   leaf_elements,
+                                   t8_element_array_t *leaf_elements,
                                    t8_locidx_t
                                    tree_leaf_index, void *query,
                                    size_t query_index)
@@ -258,7 +254,7 @@ t8_tutorial_search_vtk (t8_forest_t forest, sc_array * particles_per_element,
 /* Currently deactivated output function that prints all particles.
  * Used for debugging. */
 static void
-t8_tutorial_search_print_particles (sc_array_t * particles)
+t8_tutorial_search_print_particles (sc_array_t *particles)
 {
   int                 iparticle;
   size_t              num_particles = particles->elem_count;

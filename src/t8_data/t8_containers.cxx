@@ -33,7 +33,7 @@ T8_EXTERN_C_BEGIN ();
 #ifdef T8_ENABLE_DEBUG
 /* Query whether an element array is initialized properly. */
 static int
-t8_element_array_is_valid (t8_element_array_t * element_array)
+t8_element_array_is_valid (t8_element_array_t *element_array)
 {
   int                 is_valid;
 
@@ -55,7 +55,7 @@ t8_element_array_is_valid (t8_element_array_t * element_array)
 #endif
 
 t8_element_array_t *
-t8_element_array_new (t8_eclass_scheme_c * scheme)
+t8_element_array_new (t8_eclass_scheme_c *scheme)
 {
   t8_element_array_t *new_array;
 
@@ -69,7 +69,7 @@ t8_element_array_new (t8_eclass_scheme_c * scheme)
 }
 
 t8_element_array_t *
-t8_element_array_new_count (t8_eclass_scheme_c * scheme, size_t num_elements)
+t8_element_array_new_count (t8_eclass_scheme_c *scheme, size_t num_elements)
 {
   t8_element_array_t *new_array;
 
@@ -83,8 +83,8 @@ t8_element_array_new_count (t8_eclass_scheme_c * scheme, size_t num_elements)
 }
 
 void
-t8_element_array_init (t8_element_array_t * element_array,
-                       t8_eclass_scheme_c * scheme)
+t8_element_array_init (t8_element_array_t *element_array,
+                       t8_eclass_scheme_c *scheme)
 {
   size_t              elem_size;
 
@@ -99,8 +99,8 @@ t8_element_array_init (t8_element_array_t * element_array,
 }
 
 void
-t8_element_array_init_size (t8_element_array_t * element_array,
-                            t8_eclass_scheme_c * scheme, size_t num_elements)
+t8_element_array_init_size (t8_element_array_t *element_array,
+                            t8_eclass_scheme_c *scheme, size_t num_elements)
 {
   t8_element_t       *first_element;
   T8_ASSERT (element_array != NULL);
@@ -120,8 +120,8 @@ t8_element_array_init_size (t8_element_array_t * element_array,
 }
 
 void
-t8_element_array_init_view (t8_element_array_t * view,
-                            t8_element_array_t * array,
+t8_element_array_init_view (t8_element_array_t *view,
+                            t8_element_array_t *array,
                             size_t offset, size_t length)
 {
   T8_ASSERT (t8_element_array_is_valid (array));
@@ -134,8 +134,8 @@ t8_element_array_init_view (t8_element_array_t * view,
 }
 
 void
-t8_element_array_init_data (t8_element_array_t * view, t8_element_t * base,
-                            t8_eclass_scheme_c * scheme, size_t elem_count)
+t8_element_array_init_data (t8_element_array_t *view, t8_element_t *base,
+                            t8_eclass_scheme_c *scheme, size_t elem_count)
 {
   /* Initialize the element array */
   sc_array_init_data (&view->array, (void *) base, scheme->t8_element_size (),
@@ -146,9 +146,9 @@ t8_element_array_init_data (t8_element_array_t * view, t8_element_t * base,
 }
 
 void
-t8_element_array_init_copy (t8_element_array_t * element_array,
-                            t8_eclass_scheme_c * scheme,
-                            t8_element_t * data, size_t num_elements)
+t8_element_array_init_copy (t8_element_array_t *element_array,
+                            t8_eclass_scheme_c *scheme,
+                            t8_element_t *data, size_t num_elements)
 {
   sc_array_t         *array;
   T8_ASSERT (element_array != NULL);
@@ -179,7 +179,7 @@ t8_element_array_init_copy (t8_element_array_t * element_array,
 }
 
 void
-t8_element_array_resize (t8_element_array_t * element_array, size_t new_count)
+t8_element_array_resize (t8_element_array_t *element_array, size_t new_count)
 {
   size_t              old_count;
   T8_ASSERT (t8_element_array_is_valid (element_array));
@@ -200,7 +200,7 @@ t8_element_array_resize (t8_element_array_t * element_array, size_t new_count)
 }
 
 void
-t8_element_array_copy (t8_element_array_t * dest, t8_element_array_t * src)
+t8_element_array_copy (t8_element_array_t *dest, t8_element_array_t *src)
 {
   T8_ASSERT (t8_element_array_is_valid (dest));
   T8_ASSERT (t8_element_array_is_valid (src));
@@ -209,7 +209,7 @@ t8_element_array_copy (t8_element_array_t * dest, t8_element_array_t * src)
 }
 
 t8_element_t       *
-t8_element_array_push (t8_element_array_t * element_array)
+t8_element_array_push (t8_element_array_t *element_array)
 {
   t8_element_t       *new_element;
   T8_ASSERT (t8_element_array_is_valid (element_array));
@@ -232,17 +232,17 @@ t8_element_t
   return new_elements;
 }
 
-t8_element_t
-  * t8_element_array_index_locidx (t8_element_array_t * element_array,
-                                   t8_locidx_t index)
+t8_element_t       *
+t8_element_array_index_locidx (t8_element_array_t *element_array,
+                               t8_locidx_t index)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
   return (t8_element_t *)
     t8_sc_array_index_locidx (&element_array->array, index);
 }
 
-t8_element_t
-  * t8_element_array_index_int (t8_element_array_t * element_array, int index)
+t8_element_t       *
+t8_element_array_index_int (t8_element_array_t *element_array, int index)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
   return (t8_element_t *)
@@ -250,28 +250,28 @@ t8_element_t
 }
 
 t8_eclass_scheme_c *
-t8_element_array_get_scheme (t8_element_array_t * element_array)
+t8_element_array_get_scheme (t8_element_array_t *element_array)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
   return element_array->scheme;
 }
 
 size_t
-t8_element_array_get_count (t8_element_array_t * element_array)
+t8_element_array_get_count (t8_element_array_t *element_array)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
   return element_array->array.elem_count;
 }
 
 size_t
-t8_element_array_get_size (t8_element_array_t * element_array)
+t8_element_array_get_size (t8_element_array_t *element_array)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
   return element_array->scheme->t8_element_size ();
 }
 
 t8_element_t       *
-t8_element_array_get_data (t8_element_array_t * element_array)
+t8_element_array_get_data (t8_element_array_t *element_array)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
 
@@ -284,7 +284,7 @@ t8_element_array_get_data (t8_element_array_t * element_array)
 }
 
 sc_array_t         *
-t8_element_array_get_array (t8_element_array_t * element_array)
+t8_element_array_get_array (t8_element_array_t *element_array)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
 
@@ -292,14 +292,14 @@ t8_element_array_get_array (t8_element_array_t * element_array)
 }
 
 void
-t8_element_array_reset (t8_element_array_t * element_array)
+t8_element_array_reset (t8_element_array_t *element_array)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
   sc_array_reset (&element_array->array);
 }
 
 void
-t8_element_array_truncate (t8_element_array_t * element_array)
+t8_element_array_truncate (t8_element_array_t *element_array)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
   sc_array_truncate (&element_array->array);

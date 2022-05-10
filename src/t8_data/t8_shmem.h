@@ -95,7 +95,7 @@ void                t8_shmem_set_type (sc_MPI_Comm comm,
  * \param [in]          comm      The MPI communicator to be associated with the shmem_array.
  *                                If not set, the shared memory type will be set to T8_SHMEM_BEST_TYPE.
  */
-void                t8_shmem_array_init (t8_shmem_array_t * parray,
+void                t8_shmem_array_init (t8_shmem_array_t *parray,
                                          size_t elem_size,
                                          size_t elem_count, sc_MPI_Comm comm);
 
@@ -231,7 +231,7 @@ int                 t8_shmem_array_is_equal (t8_shmem_array_t array_a,
  * \param [in,out]      parray  On input a pointer to a valid t8_shmem_array.
  *                      This array is freed and \a parray is set to NULL on return.
  */
-void                t8_shmem_array_destroy (t8_shmem_array_t * parray);
+void                t8_shmem_array_destroy (t8_shmem_array_t *parray);
 
 T8_EXTERN_C_END ();
 

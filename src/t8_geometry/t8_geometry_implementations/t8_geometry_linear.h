@@ -42,7 +42,7 @@ t8_geometry_c      *t8_geometry_linear_new (int dimension);
 /** Destroy a linear geometry that was created with \ref t8_geometry_linear_new.
  * \param [in,out] geom A linear geometry. Set to NULL on output.
  */
-void                t8_geometry_linear_destroy (t8_geometry_c ** geom);
+void                t8_geometry_linear_destroy (t8_geometry_c **geom);
 
 T8_EXTERN_C_END ();
 
