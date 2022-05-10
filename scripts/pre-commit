@@ -30,7 +30,6 @@
 # exit with non-zero status after issuing an appropriate message if
 # it wants to stop the commit.
 #
-# Copyright Johannes Holke 2020
 
 # This is the indent script in the project's directory
 INDENT=./scripts/t8indent
