@@ -35,7 +35,7 @@ T8_EXTERN_C_BEGIN ();
  */
 static void         t8_default_mempool_alloc (sc_mempool_t * ts_context,
                                               int length,
-                                              t8_element_t ** elem);
+                                              t8_element_t **elem);
 
 /** This class independent function assumes an sc_mempool_t as context.
  * It is suitable as the elem_destroy callback in \ref t8_eclass_scheme_t.
@@ -45,8 +45,7 @@ static void         t8_default_mempool_alloc (sc_mempool_t * ts_context,
  * \param [in,out] elem         Array whose members are returned to the mempool.
  */
 static void         t8_default_mempool_free (sc_mempool_t * ts_context,
-                                             int length,
-                                             t8_element_t ** elem);
+                                             int length, t8_element_t **elem);
 
 /* Destructor */
 t8_default_scheme_common_c::~t8_default_scheme_common_c ()
@@ -57,7 +56,7 @@ t8_default_scheme_common_c::~t8_default_scheme_common_c ()
 
 /** Compute the number of corners of a given element. */
 int
-t8_default_scheme_common_c::t8_element_num_corners (const t8_element_t * elem)
+t8_default_scheme_common_c::t8_element_num_corners (const t8_element_t *elem)
 {
   /* use the lookup table of the eclasses.
    * Pyramids should implement their own version of this function. */
@@ -65,21 +64,21 @@ t8_default_scheme_common_c::t8_element_num_corners (const t8_element_t * elem)
 }
 
 void
-t8_default_scheme_common_c::t8_element_new (int length, t8_element_t ** elem)
+t8_default_scheme_common_c::t8_element_new (int length, t8_element_t **elem)
 {
   t8_default_mempool_alloc ((sc_mempool_t *) this->ts_context, length, elem);
 }
 
 void
 t8_default_scheme_common_c::t8_element_destroy (int length,
-                                                t8_element_t ** elem)
+                                                t8_element_t **elem)
 {
   t8_default_mempool_free ((sc_mempool_t *) this->ts_context, length, elem);
 }
 
 static void
 t8_default_mempool_alloc (sc_mempool_t * ts_context, int length,
-                          t8_element_t ** elem)
+                          t8_element_t **elem)
 {
   int                 i;
 
@@ -94,7 +93,7 @@ t8_default_mempool_alloc (sc_mempool_t * ts_context, int length,
 
 static void
 t8_default_mempool_free (sc_mempool_t * ts_context, int length,
-                         t8_element_t ** elem)
+                         t8_element_t **elem)
 {
   int                 i;
 
@@ -108,14 +107,14 @@ t8_default_mempool_free (sc_mempool_t * ts_context, int length,
 }
 
 t8_element_shape_t
-  t8_default_scheme_common_c::t8_element_shape (const t8_element_t * elem)
+t8_default_scheme_common_c::t8_element_shape (const t8_element_t *elem)
 {
   return eclass;
 }
 
 /* Given an element's level and dimension, return the number of leafs it
  * produces at a given uniform refinement level */
-static inline       t8_gloidx_t
+static inline t8_gloidx_t
 count_leafs_from_level (int element_level, int refinement_level,
                         int dimension)
 {
@@ -124,8 +123,8 @@ count_leafs_from_level (int element_level, int refinement_level,
 }
 
 t8_gloidx_t
-  t8_default_scheme_common_c::t8_element_count_leafs (const t8_element_t * t,
-                                                      int level)
+t8_default_scheme_common_c::t8_element_count_leafs (const t8_element_t *t,
+                                                    int level)
 {
 #if T8_ENABLE_DEBUG
   if (eclass == T8_ECLASS_PYRAMID) {
@@ -152,7 +151,7 @@ t8_default_scheme_common_c::t8_element_num_siblings (const t8_element_t * elem) 
 }
 
 t8_gloidx_t
-  t8_default_scheme_common_c::t8_element_count_leafs_from_root (int level)
+t8_default_scheme_common_c::t8_element_count_leafs_from_root (int level)
 {
 #if T8_ENABLE_DEBUG
   if (eclass == T8_ECLASS_PYRAMID) {
@@ -165,8 +164,8 @@ t8_gloidx_t
 }
 
 void
-t8_default_scheme_common_c::t8_element_general_function (const t8_element_t *
-                                                         elem,
+t8_default_scheme_common_c::t8_element_general_function (const t8_element_t
+                                                         *elem,
                                                          const void *indata,
                                                          void *outdata)
 {

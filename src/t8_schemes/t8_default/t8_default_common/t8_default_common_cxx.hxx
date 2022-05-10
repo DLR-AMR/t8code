@@ -41,16 +41,16 @@ public:
   virtual ~ t8_default_scheme_common_c ();
 
   /** Compute the number of corners of a given element. */
-  virtual int         t8_element_num_corners (const t8_element_t * elem);
+  virtual int         t8_element_num_corners (const t8_element_t *elem);
 
   /** Allocate space for a bunch of elements. */
-  virtual void        t8_element_new (int length, t8_element_t ** elem);
+  virtual void        t8_element_new (int length, t8_element_t **elem);
 
   /** Deallocate space for a bunch of elements. */
-  virtual void        t8_element_destroy (int length, t8_element_t ** elem);
+  virtual void        t8_element_destroy (int length, t8_element_t **elem);
 
   /** Return the shape of an element */
-  virtual t8_element_shape_t t8_element_shape (const t8_element_t * elem);
+  virtual t8_element_shape_t t8_element_shape (const t8_element_t *elem);
 
   /** Count how many leaf descendants of a given uniform level an element would produce.
    * \param [in] t     The element to be checked.
@@ -60,11 +60,11 @@ public:
    * Each default element (except pyramids) refines into 2^{dim * (level - level(t))}
    * children.
    */
-  virtual t8_gloidx_t t8_element_count_leafs (const t8_element_t * t,
+  virtual t8_gloidx_t t8_element_count_leafs (const t8_element_t *t,
                                               int level);
 
-  virtual int         t8_element_num_siblings (const t8_element_t *
-                                               elem) const;
+  virtual int         t8_element_num_siblings (const t8_element_t *elem)
+    const;
 
   /** Count how many leaf descendants of a given uniform level the root element will produce.
    * \param [in] level A refinement level.
@@ -83,7 +83,7 @@ public:
    * \note Calling this function has no effect. See the specialized implementations in
    * t8_default_tri_cxx.hxx, t8_default_tet_cxx.hxx and t8_default_prism_cxx.hxx.
    */
-  virtual void        t8_element_general_function (const t8_element_t * elem,
+  virtual void        t8_element_general_function (const t8_element_t *elem,
                                                    const void *indata,
                                                    void *outdata);
 
@@ -97,7 +97,7 @@ public:
    *   \param [out] coords An array of at least as many integers as the element's dimension
    *                      whose entries will be filled with the coordinates of \a vertex.
    */
-  virtual void        t8_element_vertex_coords (const t8_element_t * t,
+  virtual void        t8_element_vertex_coords (const t8_element_t *t,
                                                 int vertex, int coords[]) = 0;
 
   /** Get the integer coordinates of the anchor node of an element.
@@ -110,7 +110,7 @@ public:
    * \param [in] elem   The element.
    * \param [out] anchor The integer coordinates of the anchor node in the cube [0,1]^(dL)
    */
-  virtual void        t8_element_anchor (const t8_element_t * elem,
+  virtual void        t8_element_anchor (const t8_element_t *elem,
                                          int anchor[3]) = 0;
 };
 

@@ -47,11 +47,14 @@ t8_geometry_analytic::t8_geometry_analytic (int dim, const char *name_in,
  * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
  * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
  */
+/* *INDENT-OFF* */
+/* Indent has trouble with the const keyword at the end */
 void
 t8_geometry_analytic::t8_geom_evaluate (t8_cmesh_t cmesh,
                                         t8_gloidx_t gtreeid,
                                         const double *ref_coords,
                                         double out_coords[3]) const
+/* *INDENT-ON* */
 {
   T8_ASSERT (analytical_function != NULL);
   analytical_function (cmesh, gtreeid, ref_coords, out_coords,
@@ -65,12 +68,15 @@ t8_geometry_analytic::t8_geom_evaluate (t8_cmesh_t cmesh,
  * \param [out] jacobian    The jacobian at \a ref_coords. Array of size dimension x 3. Indices 3*i, 3*i+1, 3*i+2
  *                          correspond to the i-th column of the jacobian (Entry 3*i + j is del f_j/del x_i).
  */
+/* *INDENT-OFF* */
+/* Indent has trouble with the const keyword at the end */
 void
 t8_geometry_analytic::t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
                                                 t8_gloidx_t gtreeid,
                                                 const double
                                                 *ref_coords,
                                                 double *jacobian_out) const
+/* *INDENT-ON* */
 {
   T8_ASSERT (jacobian != NULL);
   jacobian (cmesh, gtreeid, ref_coords, jacobian_out, tree_data, user_data);

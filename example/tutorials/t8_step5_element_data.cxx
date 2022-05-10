@@ -45,7 +45,7 @@ struct t8_step5_data_per_element
   double              volume;
 };
 
-static              t8_forest_t
+static t8_forest_t
 t8_step5_build_forest (sc_MPI_Comm comm, int level)
 {
   t8_cmesh_t          cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);

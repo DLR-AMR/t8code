@@ -24,8 +24,9 @@
 #include <gtest/gtest.h>
 #include <t8_refcount.h>
 
-TEST (t8_gtest_refcount, Init) {
-  t8_refcount_t rc;
+TEST (t8_gtest_refcount, Init)
+{
+  t8_refcount_t       rc;
 
   t8_refcount_init (&rc);
 
@@ -36,8 +37,9 @@ TEST (t8_gtest_refcount, Init) {
   EXPECT_TRUE (t8_refcount_unref (&rc));
 }
 
-TEST (t8_gtest_refcount, New) {
-  t8_refcount_t *rc;
+TEST (t8_gtest_refcount, New)
+{
+  t8_refcount_t      *rc;
 
   rc = t8_refcount_new ();
 
@@ -49,8 +51,9 @@ TEST (t8_gtest_refcount, New) {
   t8_refcount_destroy (rc);
 }
 
-TEST (t8_gtest_refcount, IsActive) {
-  t8_refcount_t rc;
+TEST (t8_gtest_refcount, IsActive)
+{
+  t8_refcount_t       rc;
 
   t8_refcount_init (&rc);
   EXPECT_TRUE (t8_refcount_is_active (&rc));
@@ -60,9 +63,9 @@ TEST (t8_gtest_refcount, IsActive) {
   EXPECT_FALSE (t8_refcount_is_active (&rc));
 }
 
-
-TEST (t8_gtest_refcount, IsLast) {
-  t8_refcount_t rc;
+TEST (t8_gtest_refcount, IsLast)
+{
+  t8_refcount_t       rc;
 
   t8_refcount_init (&rc);
   EXPECT_TRUE (t8_refcount_is_last (&rc));
@@ -75,18 +78,19 @@ TEST (t8_gtest_refcount, IsLast) {
   EXPECT_TRUE (t8_refcount_unref (&rc));
 }
 
-TEST (t8_gtest_refcount, RefUnref) {
-  t8_refcount_t rc;
+TEST (t8_gtest_refcount, RefUnref)
+{
+  t8_refcount_t       rc;
 
   t8_refcount_init (&rc);
 
-  int value;
-  for (value = 1; value < 10;++value) {
+  int                 value;
+  for (value = 1; value < 10; ++value) {
     EXPECT_EQ (rc.refcount, value);
     t8_refcount_ref (&rc);
   }
 
-  for (--value;value > 0;--value) {
+  for (--value; value > 0; --value) {
     EXPECT_FALSE (t8_refcount_unref (&rc));
     EXPECT_EQ (rc.refcount, value);
   }
