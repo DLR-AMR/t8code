@@ -485,9 +485,7 @@ t8_offset_sendsto (int proca, int procb, const t8_gloidx_t *t8_offset_from,
       && proca_last >= procb_first      /* The last tree on a before is bigger than */
       + (keeps_first            /* the first on b after partitioning */
          && procb_first == t8_offset_first (procb, t8_offset_from))
-
     ) {
-
     return 1;
   }
   return 0;
