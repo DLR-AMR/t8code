@@ -26,6 +26,9 @@ name: t8code indentation check
 # repository are indented according to the indentation conventions.
 # It is triggered for pull requests into main and develop and will also run once a day
 # on main.
+#
+# The script runs the scripts/check_if_all_files_indented.scp script of t8code.
+# The output is uploaded as an artifact to the github page.
 
 on:
   push:
@@ -53,6 +56,8 @@ jobs:
     - name: Indentation check
       run: cd scripts/ && ./check_if_all_files_indented.scp > indent_script.out
     - name: Archive script output
+    # Do this regardess of the result of the previous step.
+    # We especially want to upload the result when the check fails.
       if: always()
       uses: actions/upload-artifact@v3
       with:
