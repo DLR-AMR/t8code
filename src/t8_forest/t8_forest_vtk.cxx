@@ -352,7 +352,7 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
 
   long int            point_id = 0;     /* The id of the point in the points Object. */
   t8_locidx_t         ielement; /* The iterator over elements in a tree. */
-  t8_locidx_t         itree, ivertex;
+  t8_gloidx_t         itree, ivertex;
   double              coordinates[3];
   double              vertex_coords[3] = { 0, 0, 0 };
   int                 elem_id = 0;
@@ -429,6 +429,7 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
  * the tree to get the coordinates of the elements later. We need
  * the number of elements in this tree to iterate over all of them.
  */
+
     t8_eclass_scheme_c *scheme =
       t8_forest_get_eclass_scheme (forest, t8_forest_get_tree_class (forest,
                                                                      itree));

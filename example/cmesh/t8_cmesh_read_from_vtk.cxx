@@ -33,14 +33,16 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 void
 t8_cmesh_construct (const char *prefix, sc_MPI_Comm comm, int num_cell_values)
 {
+  //t8_cmesh_t          cmesh =
+  //  t8_cmesh_read_from_vtk_unstructured (prefix, 1, 0, comm);
   t8_cmesh_t          cmesh =
-    t8_cmesh_read_from_vtk_unstructured (prefix, 1, 0, comm);
+    t8_cmesh_read_from_vtk_poly (prefix, 1, 0, comm);
   t8_forest_t         forest;
   int                 num_trees;
   t8_vtk_data_field_t *vtk_data;
   double            **cell_values;
   double             *tree_data;
-  t8_cmesh_vtk_write_file (cmesh, "test_cmesh", 1.0);
+  //t8_cmesh_vtk_write_file (cmesh, "test_cmesh", 1.0);
   /* Initialize the forest */
   t8_forest_init (&forest);
   /* Initialize the cmesh of the forest */
@@ -84,7 +86,6 @@ t8_cmesh_construct (const char *prefix, sc_MPI_Comm comm, int num_cell_values)
     T8_FREE (cell_values);
     T8_FREE (vtk_data);
   }
-
   t8_forest_unref (&forest);
   return;
 }

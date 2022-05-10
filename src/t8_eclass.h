@@ -61,7 +61,7 @@ typedef enum t8_eclass
   T8_ECLASS_INVALID
 #if T8_WITH_VTK
   /** This is no element class, but can be used to fetch Vtk triangle strips*/
-    , T8_TRIANGLE_STRIP
+    , T8_ECLASS_TRIANGLE_STRIP
 #endif
 }
 t8_eclass_t;

@@ -29,6 +29,12 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <t8_cmesh.h>
 
+#if T8_WITH_VTK
+#include <vtkSmartPointer.h>
+#include <vtkCellData.h>
+#include <vtkDataSet.h>
+#endif
+
 T8_EXTERN_C_BEGIN ();
 #if T8_WITH_VTK
 /* look_up Table to transform vtkCellType into T8_ECLASS
@@ -36,7 +42,8 @@ T8_EXTERN_C_BEGIN ();
    see https://vtk.org/doc/nightly/html/vtkCellType_8h.html to check.*/
 const t8_eclass_t   t8_cmesh_vtk_type_to_t8_type[82] = {
   T8_ECLASS_INVALID, T8_ECLASS_VERTEX, T8_ECLASS_INVALID, T8_ECLASS_LINE,
-  T8_ECLASS_INVALID, T8_ECLASS_TRIANGLE, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
+  T8_ECLASS_INVALID, T8_ECLASS_TRIANGLE, T8_ECLASS_TRIANGLE_STRIP,
+  T8_ECLASS_INVALID,
   T8_ECLASS_INVALID, T8_ECLASS_QUAD, T8_ECLASS_TET, T8_ECLASS_INVALID,
   T8_ECLASS_HEX, T8_ECLASS_PRISM, T8_ECLASS_PYRAMID, T8_ECLASS_INVALID,
   T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
@@ -59,8 +66,29 @@ const t8_eclass_t   t8_cmesh_vtk_type_to_t8_type[82] = {
 };
 #endif
 
+/** iterate over a vtkDataSet via a Celliterator and construct a tree
+ * for every cell. All trees are then commited in a cmesh. For each cell
+ * add the CellData that lays on the cell (if existent). 
+ * 
+ * TODO: Use parallel 
+ * 
+ * \param [in]      cells             The Input cells
+ * \param [in]      cell_data         Data lying on the cells
+ * \param [in]      comm              The communicator to use
+ * \return t8_cmesh_t                 The cmesh constructed using the \a cells.
+ */
+t8_cmesh_t
+ 
+ 
+ 
+ 
+ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > cells,
+                       vtkSmartPointer < vtkCellData > cell_data,
+                       sc_MPI_Comm comm);
+
 /**
- * Construct a cmesh given a filename and a number of files (for parallel reader)
+ * Construct a cmesh given a filename and a number of files (for parallel reader).
+ * The \a filename should point to file containing an unstructured Grid.
  * CAREFULL: This is in production and this header will probably change! Update
  * as the function progresses
  * 
@@ -75,6 +103,23 @@ t8_cmesh_t          t8_cmesh_read_from_vtk_unstructured (const char *filename,
                                                          const int
                                                          compute_face_neigh,
                                                          sc_MPI_Comm comm);
+
+/**
+ * Construct a cmesh given a filename and a number of files (for parallel reader).
+ * The \a filename should point to file containing vtkPolyData.
+ * CAREFULL: This is in production and this header will probably change! Update
+ * as the function progresses
+ * 
+ * \param[in] filename      The name of the file 
+ * \param[in] num_files     Number of files to read from
+ * \param[in] compute_face_neigh  if non-zero, the neighbors along the faces of each cell will be used to store the topology of in the cmesh.
+ * \param[in] comm          The communicator used 
+ * \return t8_cmesh_t       The cmesh described by the files
+ */
+t8_cmesh_t          t8_cmesh_read_from_vtk_poly (const char *filename,
+                                                 const int num_files,
+                                                 const int compute_face_neigh,
+                                                 sc_MPI_Comm comm);
 
 T8_EXTERN_C_END ();
 
