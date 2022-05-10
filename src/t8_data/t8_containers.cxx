@@ -219,9 +219,9 @@ t8_element_array_push (t8_element_array_t *element_array)
   return new_element;
 }
 
-t8_element_t
-  * t8_element_array_push_count
-  (t8_element_array_t * element_array, size_t count) {
+t8_element_t       *
+t8_element_array_push_count (t8_element_array_t *element_array, size_t count)
+{
   t8_element_t       *new_elements;
   T8_ASSERT (t8_element_array_is_valid (element_array));
   /* grow the array */

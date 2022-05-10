@@ -399,9 +399,9 @@ t8_forest_ghost_get_global_treeid (t8_forest_t forest,
 
 /* Given an index into the ghost_trees array and for that tree an element index,
  * return the corresponding element. */
-t8_element_t
-  * t8_forest_ghost_get_element (t8_forest_t forest, t8_locidx_t lghost_tree,
-                                 t8_locidx_t lelement)
+t8_element_t       *
+t8_forest_ghost_get_element (t8_forest_t forest, t8_locidx_t lghost_tree,
+                             t8_locidx_t lelement)
 {
   t8_ghost_tree_t    *ghost_tree;
 
