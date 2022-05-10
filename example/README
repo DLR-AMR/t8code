@@ -1,6 +1,7 @@
 The programs here are a collection of examples on the usage of t8code.
 A brief description of the folders and programs:
 
+ stepa  --  Step by step examples on how to build an application with t8code.
  basic  --  Programs generating and modifying a cube mesh.
             Call './t8_basic_hcube -h' for usage details.
  

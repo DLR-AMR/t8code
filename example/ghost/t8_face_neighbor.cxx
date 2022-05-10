@@ -24,8 +24,10 @@
 #include <t8_eclass.h>
 #include <t8_element_cxx.hxx>
 #include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx>
 #include <t8_forest.h>
 #include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_examples.h>
 
 /* Construct a coarse mesh of two trees that are connected to each other.
  * Build a forest on top of it and perform some element_neighbor routines.
@@ -38,6 +40,7 @@ t8_ghost_neighbor_test (t8_eclass_t eclass, sc_MPI_Comm comm, int hybrid)
   t8_element_t       *elem, *neigh;
   t8_scheme_cxx_t    *scheme;
   t8_eclass_scheme_c *elem_scheme, *neigh_scheme;
+  t8_default_scheme_common_c *common_scheme;
   int                 level = 1;
   t8_locidx_t         element_id = 0, treeid;
   t8_eclass_t         elem_eclass, neighbor_class;
@@ -84,13 +87,20 @@ t8_ghost_neighbor_test (t8_eclass_t eclass, sc_MPI_Comm comm, int hybrid)
                                                         i);
     /* Get the corresponding scheme and allocate the face neighbor */
     neigh_scheme = t8_forest_get_eclass_scheme (forest, neighbor_class);
+    /* We expect this scheme to be the default scheme. Since we want to use
+     * the anchor node information which is only implemented in that scheme,
+     * it is crucial that we do not use any other scheme. */
+    common_scheme =
+      static_cast < t8_default_scheme_common_c * >(neigh_scheme);
+    T8_ASSERT (common_scheme != NULL);
     neigh_scheme->t8_element_new (1, &neigh);
 
     ret =
       t8_forest_element_face_neighbor (forest, 0, elem, neigh, neigh_scheme,
                                        i, &face_neigh);
     if (ret != -1) {
-      neigh_scheme->t8_element_anchor (neigh, anchor_node);
+      /* Anchor is only implemented in the common scheme. */
+      common_scheme->t8_element_anchor (neigh, anchor_node);
       t8_debugf
         ("neighbor of %i across face %i (in tree %li): (%i,%i,%i,%i)\n",
          element_id, i,

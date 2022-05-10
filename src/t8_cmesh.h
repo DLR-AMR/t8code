@@ -32,6 +32,13 @@
 #include <t8_cmesh/t8_cmesh_save.h>
 #include <t8_element.h>
 
+/* Forward pointer reference to hidden cmesh implementation.
+ * This reference needs to be known by t8_geometry, hence we 
+ * put it before the include. */
+typedef struct t8_cmesh *t8_cmesh_t;
+
+#include <t8_geometry/t8_geometry.h>
+
 /* TODO: If including eclass were just for the cmesh_new routines, we should
  *       move them into a different file.
  *       However, when specifying the parent-child order in cmesh_reorder,
@@ -50,7 +57,8 @@
  *       edit: This should be achieved now.
  */
 
-typedef struct t8_cmesh *t8_cmesh_t;
+/* Forward pointer references to hidden implementations of
+ * tree and ghost tree. */
 typedef struct t8_ctree *t8_ctree_t;
 typedef struct t8_cghost *t8_cghost_t;
 
@@ -62,7 +70,7 @@ T8_EXTERN_C_BEGIN ();
  * \param [in,out] pcmesh       On input, this pointer must be non-NULL.
  *                              On return, this pointer set to the new cmesh.
  */
-void                t8_cmesh_init (t8_cmesh_t * pcmesh);
+void                t8_cmesh_init (t8_cmesh_t *pcmesh);
 
 /** Check whether a cmesh is not NULL, initialized and not committed.
  * In addition, it asserts that the cmesh is consistent as much as possible.
@@ -209,7 +217,7 @@ void                t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh,
  */
 void                t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh,
                                                     int element_level,
-                                                    t8_scheme_cxx_t * ts);
+                                                    t8_scheme_cxx_t *ts);
 
 /* TODO: This function is no longer needed.  Scavenge documentation if helpful. */
 #if 0
@@ -231,7 +239,7 @@ void                t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh,
  *                             TODO: document flag for shared trees.
  */
 void                t8_cmesh_set_partition_given (t8_cmesh_t cmesh,
-                                                  t8_gloidx_t * tree_offsets);
+                                                  t8_gloidx_t *tree_offsets);
 #endif
 
 /** Refine the cmesh to a given level.
@@ -239,7 +247,7 @@ void                t8_cmesh_set_partition_given (t8_cmesh_t cmesh,
  * TODO: implement */
 /* If level = 0  then no refinement is performed */
 void                t8_cmesh_set_refine (t8_cmesh_t cmesh, int level,
-                                         t8_scheme_cxx_t * scheme);
+                                         t8_scheme_cxx_t *scheme);
 
 /** Set the dimension of a cmesh. If any tree is inserted to the cmesh
  * via \a t8_cmesh_set_tree_class, then the dimension is set automatically
@@ -268,12 +276,9 @@ void                t8_cmesh_set_tree_class (t8_cmesh_t cmesh,
  *  associated to the tree.
  *  Each application can set multiple attributes and attributes are distinguished
  *  by an interger key, where each application can use any integer as key.
- *  TODO: What to do if attribute exists already?
- *        update: Just replace the existing attribute. Our philosophy is that
- *                it is legal to call set functions multiple times.
  *
  * \param [in, out] cmesh       The cmesh to be updated.
- * \param [in]      tree_id     The global id of the tree.
+ * \param [in]      gtree_id     The global id of the tree.
  * \param [in]      package_id  Unique identifier of a valid software package. \see sc_package_register
  * \param [in]      key         An integer key used to identify this attribute under all
  *                              attributes with the same package_id.
@@ -287,12 +292,29 @@ void                t8_cmesh_set_tree_class (t8_cmesh_t cmesh,
  *                              If the flag is false an internal copy of the data is created
  *                              immediately and this copy is used at commit.
  *                              In both cases a copy of the data is used by t8_code after t8_cmesh_commit.
+ * \note If an attribute with the given package_id and key already exists, then it will get overwritten.
  */
 void                t8_cmesh_set_attribute (t8_cmesh_t cmesh,
                                             t8_gloidx_t gtree_id,
                                             int package_id, int key,
                                             void *data, size_t data_size,
                                             int data_persists);
+
+/** Store a string as an attribute at a tree in a cmesh.
+ * \param [in, out] cmesh       The cmesh to be updated.
+ * \param [in]      gtree_id     The global id of the tree.
+ * \param [in]      package_id  Unique identifier of a valid software package. \see sc_package_register
+ * \param [in]      key         An integer key used to identify this attribute under all
+ *                              attributes with the same package_id.
+ *                              \a key must be a unique value for this tree and package_id.
+ * \param [in]      string      The string to store as attribute.
+ * \note You can also use \ref t8_cmesh_set_attribute, but we recommend using this
+ *       specialized function for strings.
+ */
+void                t8_cmesh_set_attribute_string (t8_cmesh_t cmesh,
+                                                   t8_gloidx_t gtree_id,
+                                                   int package_id, int key,
+                                                   const char *string);
 
 /** Insert a face-connection between two trees in a cmesh.
  * \param [in,out] cmesh        The cmesh to be updated.
@@ -358,6 +380,8 @@ int                 t8_cmesh_is_empty (t8_cmesh_t cmesh);
  *                      Else, a pointer to a newly allocated cmesh
  *                      structure with the same values as \a conn_in on the
  *                      root process.
+ * \note It is illegal to broadcast a cmesh with a registered geometry (\ref t8_cmesh_register_geometry).
+ *       All geometries must be registered after the broadcast (You can set tree attributes before bcast, though).
  */
 t8_cmesh_t          t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root,
                                     sc_MPI_Comm comm);
@@ -370,6 +394,26 @@ void                t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 /* TODO: think about a sensible interface for a parmetis reordering. */
 #endif
 
+/* TODO: comment */
+/* If no geometry is registered and cmesh is modified from another cmesh then
+ * the other cmesh's geometries are used.
+ * \note If you need to use \ref t8_cmesh_bcast, then all geometries must be
+ *       registerd \a after the bcast operation, not before.
+ */
+void                t8_cmesh_register_geometry (t8_cmesh_t cmesh,
+                                                const t8_geometry_c
+                                                *geometry);
+
+/** Set the geometry for a tree, thus specify which geometry to use for this tree.
+ * \param [in] cmesh     A non-committed cmesh.
+ * \param [in] gtreeid   A global tree id in \a cmesh.
+ * \param [in] geom_name The name of the geometry to use for this tree.
+ * See also \ref t8_cmesh_get_tree_geometry
+ */
+void                t8_cmesh_set_tree_geometry (t8_cmesh_t cmesh,
+                                                t8_gloidx_t gtreeid,
+                                                const char *geom_name);
+
 /** After allocating and adding properties to a cmesh, finish its construction.
  * TODO: this function is MPI collective.
  * \param [in,out] cmesh        Must be created with \ref t8_cmesh_init
@@ -379,6 +423,7 @@ void                t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 void                t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 
 /* TODO: Document */
+/* Currently, it is only legal to save cmeshes that use the linear geometry. */
 int                 t8_cmesh_save (t8_cmesh_t cmesh, const char *fileprefix);
 
 /* TODO: Document */
@@ -443,6 +488,10 @@ t8_locidx_t         t8_cmesh_get_num_ghosts (t8_cmesh_t cmesh);
  * \a cmesh must be committed before calling this function.
  */
 t8_gloidx_t         t8_cmesh_get_first_treeid (t8_cmesh_t cmesh);
+
+/* TODO: Comment */
+const t8_geometry_c *t8_cmesh_get_tree_geometry (t8_cmesh_t cmesh,
+                                                 t8_gloidx_t gtreeid);
 
 /** Query whether a given t8_locidx_t belongs to a local tree of a cmesh.
  * \param [in] cmesh       The cmesh to be considered.
@@ -613,7 +662,7 @@ double             *t8_cmesh_get_tree_vertices (t8_cmesh_t cmesh,
  *                              attributes of this tree with the same \a package_id.
  * \param [in]     tree_id      The local number of the tree.
  * \param [out]    data_size    The size of the attribute in bytes.
- * \return         The attribute pointer of the tree \a tree_id.
+ * \return         The attribute pointer of the tree \a ltree_id or NULL if the attribute is not found.
  * \a cmesh must be committed before calling this function.
  * \see t8_cmesh_set_attribute
  */
@@ -649,13 +698,12 @@ t8_shmem_array_t    t8_cmesh_get_partition_table (t8_cmesh_t cmesh);
  * \a cmesh must be committed before calling this function. *
  */
 void                t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
-                                             t8_scheme_cxx_t * ts,
-                                             t8_gloidx_t * first_local_tree,
-                                             t8_gloidx_t *
-                                             child_in_tree_begin,
-                                             t8_gloidx_t * last_local_tree,
-                                             t8_gloidx_t * child_in_tree_end,
-                                             int8_t * first_tree_shared);
+                                             t8_scheme_cxx_t *ts,
+                                             t8_gloidx_t *first_local_tree,
+                                             t8_gloidx_t *child_in_tree_begin,
+                                             t8_gloidx_t *last_local_tree,
+                                             t8_gloidx_t *child_in_tree_end,
+                                             int8_t *first_tree_shared);
 
 /** Increase the reference counter of a cmesh.
  * \param [in,out] cmesh        On input, this cmesh must exist with positive
@@ -675,7 +723,7 @@ void                t8_cmesh_ref (t8_cmesh_t cmesh);
  *                              Otherwise, the pointer is not changed and
  *                              the cmesh is not modified in other ways.
  */
-void                t8_cmesh_unref (t8_cmesh_t * pcmesh);
+void                t8_cmesh_unref (t8_cmesh_t *pcmesh);
 
 /** Verify that a coarse mesh has only one reference left and destroy it.
  * This function is preferred over \ref t8_cmesh_unref when it is known
@@ -685,202 +733,47 @@ void                t8_cmesh_unref (t8_cmesh_t * pcmesh);
  *                              Then it effectively calls \ref t8_cmesh_unref.
  * \param [in]      comm        A mpi communicator that is valid with \a cmesh.
  */
-void                t8_cmesh_destroy (t8_cmesh_t * pcmesh);
+void                t8_cmesh_destroy (t8_cmesh_t *pcmesh);
 
 /* Functions for construcing complete and committed cmeshes */
 
-/** Constructs a cmesh from a given p4est_connectivity structure.
- * \param[in]       conn       The p4est connectivity.
- * \param[in]       comm       mpi communicator to be used with the new cmesh.
- * \param[in]       do_partition Flag whether the cmesh should be partitioned or not.
- * \return          A t8_cmesh structure that holds the same connectivity information
- *                  as \a conn.
- */
-t8_cmesh_t          t8_cmesh_new_from_p4est (p4est_connectivity_t * conn,
-                                             sc_MPI_Comm comm,
-                                             int do_partition);
-
-/** Constructs a cmesh from a given p8est_connectivity structure.
- * \param[in]       conn       The p8est connectivity.
- * \param[in]       comm       mpi communicator to be used with the new cmesh.
- * \param[in]       do_dup     Flag whether the communicator shall be duplicated or not.
- * \param[in]       do_partition Flag whether the cmesh should be partitioned or not.
- * \return          A t8_cmesh structure that holds the same connectivity information
- *                  as \a conn.
- */
-t8_cmesh_t          t8_cmesh_new_from_p8est (p8est_connectivity_t * conn,
-                                             sc_MPI_Comm comm,
-                                             int do_partition);
-
-/* TODO: it could possibly be a problem that we do not set the dimension of
- * the cmesh. This could i.e. be difficult when we combine an empty cmesh with
- * a non-empty one. */
-/** Construct a cmesh that has no trees. We do not know a special use case,
- * this function is merely for debugging and to show the possibility.
- * \param [in]      comm       mpi communicator to be used with the new cmesh.
- * \param [in]      do_partition Flag whether the cmesh should be partitioned or not.
- * \param [in]      dimension  An empty cmesh requires a dimension nevertheless 0 <= \a dimension <= 4.
- * \return                     A committed t8_cmesh structure that has no trees.
- */
-t8_cmesh_t          t8_cmesh_new_empty (sc_MPI_Comm comm, int do_partition,
-                                        int dimension);
-
-/** Constructs a cmesh that consists only of one tree of a given element class.
- * \param [in]      eclass     The element class.
- * \param [in]      comm       mpi communicator to be used with the new cmesh.
- * \param [in]      do_dup     Flag whether the communicator shall be duplicated or not.
- * \return          A committed t8_cmesh structure with one tree of class \a eclass.
- */
-t8_cmesh_t          t8_cmesh_new_from_class (t8_eclass_t eclass,
-                                             sc_MPI_Comm comm);
-
 t8_cmesh_t          t8_cmesh_new_testhybrid (sc_MPI_Comm comm);
 
-/** Construct a hypercube forest from one primitive tree class.
- * \param [in] eclass       This element class determines the dimension and
- *                          the number of trees needed to construct a cube.
- * \param [in] comm         The mpi communicator to be used.
- * \param [in] do_bcast     If this flag is nonzero the cmesh is only constructed
- *                          on processor 0 and then broadcasted to the other
- *                          processors in \a comm.
- *                          TODO: this parameter will be moved to internal.
- * \param [in] do_partition Create a partitioned cmesh.
- * \param [in] periodic     If true, the coarse mesh will be periodic in each direction.
- *                          Not possible with \a eclass pyramid.
- * TODO: Add periodic flags for each dimension.
+/** Compute y = ax + b on an array of doubles, interpreting
+ * each 3 as one vector x 
+ * \param[in]   coords_in         The incoming coordinates of the vectors
+ * \param[out]  coords_out        The computed coordinates of the vectors
+ * \param[in]   num_vertices      The number of vertices/vectors
+ * \param[in]   alpha             Scaling factor for the vectors
+ * \param[in]   b                 Translation of the vectors.*/
+
+void                t8_cmesh_coords_axb (const double *coords_in,
+                                         double *coords_out,
+                                         int num_vertices,
+                                         double alpha, const double b[3]);
+
+/** Compute y = x + translate on an array of doubles, interpreting 
+ * each 3 as one vector x
+ * \param[in]   coords_in         The incoming coordinates of the vectors
+ * \param[out]  coords_out        The computed coordinates of the vectors
+ * \param[in]   num_vertices      The number of vertices/vectors
+ * \param[in]   translate         Translation of the vectors.
  */
-t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
-                                            sc_MPI_Comm comm,
-                                            int do_bcast, int do_partition,
-                                            int periodic);
+void                t8_cmesh_translate_coordinates (const double *coords_in,
+                                                    double *coords_out,
+                                                    int num_vertices,
+                                                    double translate[3]);
 
-/** Hybercube with 6 Tets, 6 Prism, 4 Hex. */
-/* TODO: Document */
-t8_cmesh_t          t8_cmesh_new_hypercube_hybrid (int dim, sc_MPI_Comm comm,
-                                                   int do_partition,
-                                                   int periodic);
-
-/** Construct a unit interval/square/cube coarse mesh that is periodic in each direction.
- * Element class?
- * Hypercube?
- * TODO: redundant, remove.
- * \param [in] comm         The mpi communicator to use.
- * \param [in] dim          The dimension of the forest, 1, 2 or 3.
- * \return                  A valid cmesh, as if _init and _commit had been called.
- */
-t8_cmesh_t          t8_cmesh_new_periodic (sc_MPI_Comm comm, int dim);
-
-/** Construct a unit square of two triangles that is periodic in x and y.
- * \param [in] comm         The mpi communicator to use.
- * \return                  A valid cmesh, as if _init and _commit had been called.
- */
-t8_cmesh_t          t8_cmesh_new_periodic_tri (sc_MPI_Comm comm);
-
-/** Construct a unit square of two quads and four triangles that is periodic in x and y.
- * \param [in] comm         The mpi communicator to use.
- * \return                  A valid cmesh, as if _init and _commit had been called.
- */
-t8_cmesh_t          t8_cmesh_new_periodic_hybrid (sc_MPI_Comm comm);
-
-/** Construct a unit interval coarse mesh that consists of 3 trees and is
- * periodic.
- * \param [in] comm         The mpi communicator to use.
- * \return                  A valid cmesh, as is _init and _commit had been called.
- */
-t8_cmesh_t          t8_cmesh_new_periodic_line_more_trees (sc_MPI_Comm comm);
-
-/** Construct a mesh consisting of a given number of same type trees.
- * \param [in] eclass       This element class determines the dimension and
- *                          the type trees used.
- * \param [in] num_trees    The number of trees to use.
- * \param [in] comm         The MPI_Communicator used to commit the cmesh.
- * \return                  A valid cmesh, as if _init and _commit had been called.
- */
-t8_cmesh_t          t8_cmesh_new_bigmesh (t8_eclass_t eclass, int num_trees,
-                                          sc_MPI_Comm comm);
-
-/** Construct a forest of three connected askew lines
-  * \param [in] comm         The mpi communicator to use.
-  * \return                  A valid cmesh, as if _init and _commit had been called.
-  */
-t8_cmesh_t          t8_cmesh_new_line_zigzag (sc_MPI_Comm comm);
-
-/** Construct a forest of num_of_prisms connected prism, all with one edge in 0,
-  * except for num_of_prisms = 2, then the return is the hypercube mesh
-  * \param [in] comm        The mpi communicator to use.
-  * \param [in] num_of_prisms The number of prisms to be used.
-  * \return                 A valid cmesh, as if _init and _commit had been called.
-  */
-t8_cmesh_t          t8_cmesh_new_prism_cake (sc_MPI_Comm comm,
-                                             int num_of_prisms);
-
-/** Construct a single deformed prism
-  * \param [in] comm        The mpi communicator to use.
-  * \return                 A valid cmesh; as if _init and _commit had been called.*/
-t8_cmesh_t          t8_cmesh_new_prism_deformed (sc_MPI_Comm comm);
-
-/** Construct a forest of six connected noncannoical oriented prisms
-  * \param [in] comm        The mpi communicator to use.
-  * \return                 A valid cmesh, as if _init and _commit had been called.
-  */
-t8_cmesh_t          t8_cmesh_new_prism_cake_funny_oriented (sc_MPI_Comm comm);
-
-/** Construct a forest of six connected noncannoical oriented prisms
-  * \param [in] comm        The mpi communicator to use.
-  * \return                 A valid cmesh, as if _init and _commit had been called.
-  */
-t8_cmesh_t          t8_cmesh_new_prism_geometry (sc_MPI_Comm comm);
-
-/** Create a partitoned cmesh of quads whose local trees are given by an
- * num_x by num_y brick connectivity from p4est
- * or a num_x by num_y by num_z brick connectivity from p8est.
- * num_x and num_y and num_z can be different for different MPI ranks.
- * \param [in] num_x       The number of trees in x direction for this rank. Must be >= 0.
- * \param [in] num_y       The number of trees in y direction for this rank. Must be >= 0.
- * \param [in] num_y       The number of trees in z direction for this rank. Must be >= 0.
- *                         If nonzero, the cmesh is 3 dimensional.
- * \param [in] x_periodic  If nonzero, the local brick connectivity is periodic in x direction.
- * \param [in] y_periodic  If nonzero, the local brick connectivity is periodic in y direction.
- * \param [in] y_periodic  If nonzero and \a num_z > 0, the local brick connectivity is periodic in z direction.
- * \param [in] comm        The MPI communicator used to commit the cmesh.
- * \return                 A committed and partitioned cmesh. The process local trees
- *                         form a \a num_x by \a num_y (by \a num_z) brick.
- * It is possible for num_x or num_y to be set to zero. In this case the local part
- * of the cmesh will be empty.
- * If num_z is set to zero, the cmesh is 2 dimensional.
- */
-t8_cmesh_t          t8_cmesh_new_disjoint_bricks (t8_gloidx_t num_x,
-                                                  t8_gloidx_t num_y,
-                                                  t8_gloidx_t num_z,
-                                                  int x_periodic,
-                                                  int y_periodic,
-                                                  int z_periodic,
-                                                  sc_MPI_Comm comm);
-
-/** Construct a tetrahedral cmesh that has all possible face to face
- * connections and orientations.
- * This cmesh is used for testing and debugging.
- * \param [in] comm        The MPI communicator used to commit the cmesh.
- * \return                 A committed and replicated cmesh of 24 tetrahedron trees
- *                         in which each (face -> face, orientation) face connection
- *                         is set at least once.
- *                         Note that most faces in this cmesh are boundary faces.
- */
-t8_cmesh_t          t8_cmesh_new_tet_orientation_test (sc_MPI_Comm comm);
-
-/** Construct a hybrid cmesh with 2 tets, 2 prism, 1 hex.
- * This cmesh is used for testing and debugging.
- * \param [in] comm        The MPI communicator used to commit the cmesh.
- * \return                 A committed and replicated hybrid cmesh of 5 trees.
- */
-t8_cmesh_t          t8_cmesh_new_hybrid_gate (sc_MPI_Comm comm);
-
-/** Construct a hybrid cmesh with 2 tets, 2 prism, 1 hex and all are deformed.
- * This cmesh is used for testing and debugging.
- * \param [in] comm        The MPI communicator used to commit the cmesh.
- * \return                 A committed and replicated hybrid cmesh of 5 trees.
- */
-t8_cmesh_t          t8_cmesh_new_hybrid_gate_deformed (sc_MPI_Comm comm);
+/**TODO: Add proper documentation*/
+void                t8_cmesh_new_translate_vertices_to_attributes (t8_topidx_t
+                                                                   *
+                                                                   tvertices,
+                                                                   double
+                                                                   *vertices,
+                                                                   double
+                                                                   *attr_vertices,
+                                                                   int
+                                                                   num_vertices);
 
 T8_EXTERN_C_END ();
 

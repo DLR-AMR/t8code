@@ -1,4 +1,26 @@
 #!/bin/sh
+
+#  This file is part of t8code.
+#  t8code is a C library to manage a collection (a forest) of multiple
+#  connected adaptive space-trees of general element classes in parallel.
+#
+#  Copyright (C) 2015 the developers
+#
+#  t8code is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  t8code is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with t8code; if not, write to the Free Software Foundation, Inc.,
+#  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+
 #
 # A hook script to verify what is about to be committed.
 # This hook checks whether the code is properly indented using
@@ -12,6 +34,8 @@
 
 # This is the indent script in the project's directory
 INDENT=./scripts/t8indent
+# This is the script to remove duplicate const after indent (bug of indent)
+REMOVE_D_CONST=./scripts/remove_double_const.scp
 
 if git rev-parse --verify HEAD >/dev/null 2>&1
 then
@@ -43,7 +67,13 @@ do
   if [ $FILE_ENDING = "c" -o $FILE_ENDING = "h" -o $FILE_ENDING = "cxx" -o $FILE_ENDING = "hxx" ]
   then
     echo "Checking file $file"
-    scripts/check_if_file_indented.scp $file $INDENT
+    # indent the source file and store temporarily
+    $INDENT -o $TMP_FILE $file 
+    # For .cxx files we need to correct a bug in indent
+    $REMOVE_D_CONST $TMP_FILE
+    # Check whether the indented file and the original differ
+    # We are only interested in the exit status of diff so we throw away its output.
+    diff -q $TMP_FILE $file > /dev/null
     status=$?
     if test $status -ne 0 
     then

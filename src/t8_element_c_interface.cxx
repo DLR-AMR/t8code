@@ -31,7 +31,7 @@
 #include <t8_element_c_interface.h>
 
 int
-t8_element_maxlevel (t8_eclass_scheme_c * ts)
+t8_element_maxlevel (t8_eclass_scheme_c *ts)
 {
   T8_ASSERT (ts != NULL);
 
@@ -39,7 +39,7 @@ t8_element_maxlevel (t8_eclass_scheme_c * ts)
 }
 
 t8_eclass_t
-t8_element_child_eclass (t8_eclass_scheme_c * ts, int childid)
+t8_element_child_eclass (t8_eclass_scheme_c *ts, int childid)
 {
   T8_ASSERT (ts != NULL);
 
@@ -47,7 +47,7 @@ t8_element_child_eclass (t8_eclass_scheme_c * ts, int childid)
 }
 
 int
-t8_element_level (t8_eclass_scheme_c * ts, const t8_element_t * elem)
+t8_element_level (t8_eclass_scheme_c *ts, const t8_element_t *elem)
 {
   T8_ASSERT (ts != NULL);
 
@@ -55,8 +55,8 @@ t8_element_level (t8_eclass_scheme_c * ts, const t8_element_t * elem)
 }
 
 void
-t8_element_copy (t8_eclass_scheme_c * ts, const t8_element_t * source,
-                 t8_element_t * dest)
+t8_element_copy (t8_eclass_scheme_c *ts, const t8_element_t *source,
+                 t8_element_t *dest)
 {
   T8_ASSERT (ts != NULL);
 
@@ -64,8 +64,8 @@ t8_element_copy (t8_eclass_scheme_c * ts, const t8_element_t * source,
 }
 
 int
-t8_element_compare (t8_eclass_scheme_c * ts, const t8_element_t * elem1,
-                    const t8_element_t * elem2)
+t8_element_compare (t8_eclass_scheme_c *ts, const t8_element_t *elem1,
+                    const t8_element_t *elem2)
 {
   T8_ASSERT (ts != NULL);
 
@@ -73,8 +73,8 @@ t8_element_compare (t8_eclass_scheme_c * ts, const t8_element_t * elem1,
 }
 
 void
-t8_element_parent (t8_eclass_scheme_c * ts,
-                   const t8_element_t * elem, t8_element_t * parent)
+t8_element_parent (t8_eclass_scheme_c *ts,
+                   const t8_element_t *elem, t8_element_t *parent)
 {
   T8_ASSERT (ts != NULL);
 
@@ -82,7 +82,7 @@ t8_element_parent (t8_eclass_scheme_c * ts,
 }
 
 int
-t8_element_num_siblings (t8_eclass_scheme_c * ts, const t8_element_t * elem)
+t8_element_num_siblings (t8_eclass_scheme_c *ts, const t8_element_t *elem)
 {
   T8_ASSERT (ts != NULL);
 
@@ -90,9 +90,9 @@ t8_element_num_siblings (t8_eclass_scheme_c * ts, const t8_element_t * elem)
 }
 
 void
-t8_element_sibling (t8_eclass_scheme_c * ts,
-                    const t8_element_t * elem, int sibid,
-                    t8_element_t * sibling)
+t8_element_sibling (t8_eclass_scheme_c *ts,
+                    const t8_element_t *elem, int sibid,
+                    t8_element_t *sibling)
 {
   T8_ASSERT (ts != NULL);
 
@@ -100,8 +100,8 @@ t8_element_sibling (t8_eclass_scheme_c * ts,
 }
 
 void
-t8_element_child (t8_eclass_scheme_c * ts, const t8_element_t * elem,
-                  int childid, t8_element_t * child)
+t8_element_child (t8_eclass_scheme_c *ts, const t8_element_t *elem,
+                  int childid, t8_element_t *child)
 {
   T8_ASSERT (ts != NULL);
 
@@ -109,8 +109,8 @@ t8_element_child (t8_eclass_scheme_c * ts, const t8_element_t * elem,
 }
 
 void
-t8_element_children (t8_eclass_scheme_c * ts, const t8_element_t * elem,
-                     int length, t8_element_t * c[])
+t8_element_children (t8_eclass_scheme_c *ts, const t8_element_t *elem,
+                     int length, t8_element_t *c[])
 {
   T8_ASSERT (ts != NULL);
 
@@ -118,7 +118,7 @@ t8_element_children (t8_eclass_scheme_c * ts, const t8_element_t * elem,
 }
 
 int
-t8_element_child_id (t8_eclass_scheme_c * ts, const t8_element_t * elem)
+t8_element_child_id (t8_eclass_scheme_c *ts, const t8_element_t *elem)
 {
   T8_ASSERT (ts != NULL);
 
@@ -126,7 +126,7 @@ t8_element_child_id (t8_eclass_scheme_c * ts, const t8_element_t * elem)
 }
 
 int
-t8_element_is_family (t8_eclass_scheme_c * ts, t8_element_t ** fam)
+t8_element_is_family (t8_eclass_scheme_c *ts, t8_element_t **fam)
 {
   T8_ASSERT (ts != NULL);
 
@@ -134,8 +134,8 @@ t8_element_is_family (t8_eclass_scheme_c * ts, t8_element_t ** fam)
 }
 
 void
-t8_element_nca (t8_eclass_scheme_c * ts, const t8_element_t * elem1,
-                const t8_element_t * elem2, t8_element_t * nca)
+t8_element_nca (t8_eclass_scheme_c *ts, const t8_element_t *elem1,
+                const t8_element_t *elem2, t8_element_t *nca)
 {
   T8_ASSERT (ts != NULL);
 
@@ -143,8 +143,8 @@ t8_element_nca (t8_eclass_scheme_c * ts, const t8_element_t * elem1,
 }
 
 void
-t8_element_set_linear_id (t8_eclass_scheme_c * ts,
-                          t8_element_t * elem, int level, t8_linearidx_t id)
+t8_element_set_linear_id (t8_eclass_scheme_c *ts,
+                          t8_element_t *elem, int level, t8_linearidx_t id)
 {
   T8_ASSERT (ts != NULL);
 
@@ -152,8 +152,8 @@ t8_element_set_linear_id (t8_eclass_scheme_c * ts,
 }
 
 t8_linearidx_t
-t8_element_get_linear_id (t8_eclass_scheme_c * ts,
-                          const t8_element_t * elem, int level)
+t8_element_get_linear_id (t8_eclass_scheme_c *ts,
+                          const t8_element_t *elem, int level)
 {
   T8_ASSERT (ts != NULL);
 
@@ -161,8 +161,8 @@ t8_element_get_linear_id (t8_eclass_scheme_c * ts,
 }
 
 void
-t8_element_first_descendant (t8_eclass_scheme_c * ts,
-                             const t8_element_t * elem, t8_element_t * desc,
+t8_element_first_descendant (t8_eclass_scheme_c *ts,
+                             const t8_element_t *elem, t8_element_t *desc,
                              int level)
 {
   T8_ASSERT (ts != NULL);
@@ -171,8 +171,8 @@ t8_element_first_descendant (t8_eclass_scheme_c * ts,
 }
 
 void
-t8_element_last_descendant (t8_eclass_scheme_c * ts,
-                            const t8_element_t * elem, t8_element_t * desc,
+t8_element_last_descendant (t8_eclass_scheme_c *ts,
+                            const t8_element_t *elem, t8_element_t *desc,
                             int level)
 {
   T8_ASSERT (ts != NULL);
@@ -181,8 +181,8 @@ t8_element_last_descendant (t8_eclass_scheme_c * ts,
 }
 
 void
-t8_element_successor (t8_eclass_scheme_c * ts, const t8_element_t * elem1,
-                      t8_element_t * elem2, int level)
+t8_element_successor (t8_eclass_scheme_c *ts, const t8_element_t *elem1,
+                      t8_element_t *elem2, int level)
 {
   T8_ASSERT (ts != NULL);
 
@@ -190,7 +190,7 @@ t8_element_successor (t8_eclass_scheme_c * ts, const t8_element_t * elem1,
 }
 
 int
-t8_element_root_len (t8_eclass_scheme_c * ts, const t8_element_t * elem)
+t8_element_root_len (t8_eclass_scheme_c *ts, const t8_element_t *elem)
 {
   T8_ASSERT (ts != NULL);
 
@@ -198,7 +198,7 @@ t8_element_root_len (t8_eclass_scheme_c * ts, const t8_element_t * elem)
 }
 
 void
-t8_element_new (t8_eclass_scheme_c * ts, int length, t8_element_t ** elems)
+t8_element_new (t8_eclass_scheme_c *ts, int length, t8_element_t **elems)
 {
   T8_ASSERT (ts != NULL);
 
@@ -206,8 +206,7 @@ t8_element_new (t8_eclass_scheme_c * ts, int length, t8_element_t ** elems)
 }
 
 void
-t8_element_destroy (t8_eclass_scheme_c * ts, int length,
-                    t8_element_t ** elems)
+t8_element_destroy (t8_eclass_scheme_c *ts, int length, t8_element_t **elems)
 {
   T8_ASSERT (ts != NULL);
 

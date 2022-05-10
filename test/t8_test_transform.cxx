@@ -29,6 +29,7 @@
 
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest.h>
 #include <t8_forest/t8_forest_cxx.h>
 #include <t8_forest/t8_forest_types.h>
@@ -37,7 +38,7 @@
 #include <t8_forest/t8_forest_private.h>
 
 static void
-t8_test_transform_element (t8_eclass_scheme_c * ts, const t8_element_t * elem,
+t8_test_transform_element (t8_eclass_scheme_c *ts, const t8_element_t *elem,
                            t8_eclass_t eclass)
 {
   t8_element_t       *transform;
@@ -173,7 +174,8 @@ t8_test_transform (sc_MPI_Comm comm)
       t8_forest_set_scheme (forest, default_scheme);
       t8_forest_commit (forest);
 
-      for (ielem = 0; ielem < t8_forest_get_num_element (forest); ielem++) {
+      for (ielem = 0; ielem < t8_forest_get_local_num_elements (forest);
+           ielem++) {
         /* Get a pointer to the element */
         element = t8_forest_get_element (forest, ielem, NULL);
         /* perform the transform test */

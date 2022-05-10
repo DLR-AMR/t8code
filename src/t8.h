@@ -112,7 +112,7 @@ typedef uint64_t    t8_linearidx_t;
 /** Compute the number of bytes that have to be added to a given byte_count
  * such that it is a multiple of the padding size */
 #define T8_ADD_PADDING(_x) \
-  ((T8_PADDING_SIZE - ((_x) %  T8_PADDING_SIZE)) %  T8_PADDING_SIZE)
+  ((T8_PADDING_SIZE - ((_x) % T8_PADDING_SIZE)) % T8_PADDING_SIZE)
 
 /** Communication tags used internal to t8code. */
 typedef enum
@@ -247,14 +247,14 @@ void                t8_init (int log_threshold);
  * \param [in] index needs to be in [0]..[elem_count-1].
  * \return           A void * pointing to entry \a it in \a array.
  */
-void               *t8_sc_array_index_topidx (sc_array_t * array,
+void               *t8_sc_array_index_topidx (sc_array_t *array,
                                               t8_topidx_t it);
 
 /** Return a pointer to an array element indexed by a t8_locidx_t.
  * \param [in] index needs to be in [0]..[elem_count-1].
  * \return           A void * pointing to entry \a it in \a array.
  */
-void               *t8_sc_array_index_locidx (sc_array_t * array,
+void               *t8_sc_array_index_locidx (sc_array_t *array,
                                               t8_locidx_t it);
 
 /* call this at the end of a header file to match T8_EXTERN_C_BEGIN (). */

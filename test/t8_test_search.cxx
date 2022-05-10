@@ -22,6 +22,7 @@
 
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_schemes/t8_default_cxx.hxx>
@@ -34,11 +35,9 @@
 static int
 t8_test_search_all_fn (t8_forest_t forest,
                        t8_locidx_t ltreeid,
-                       const t8_element_t *
-                       element,
+                       const t8_element_t *element,
                        const int is_leaf,
-                       t8_element_array_t *
-                       leaf_elements,
+                       t8_element_array_t *leaf_elements,
                        t8_locidx_t tree_leaf_index, void *query,
                        size_t query_index)
 {
@@ -74,11 +73,9 @@ t8_test_search_all_fn (t8_forest_t forest,
 static int
 t8_test_search_query_all_fn (t8_forest_t forest,
                              t8_locidx_t ltreeid,
-                             const t8_element_t *
-                             element,
+                             const t8_element_t *element,
                              const int is_leaf,
-                             t8_element_array_t *
-                             leaf_elements,
+                             t8_element_array_t *leaf_elements,
                              t8_locidx_t tree_leaf_index, void *query,
                              size_t query_index)
 {
@@ -138,7 +135,7 @@ t8_test_search_one_query_matches_all (sc_MPI_Comm comm, t8_eclass_t eclass,
   sc_array_init_size (&queries, sizeof (int), 1);
   *(int *) sc_array_index (&queries, 0) = query;
 
-  num_elements = t8_forest_get_num_element (forest);
+  num_elements = t8_forest_get_local_num_elements (forest);
   /* set up an array in which we flag whether an element was matched in the
    * search */
   sc_array_init_size (&matched_leafs, sizeof (int), num_elements);

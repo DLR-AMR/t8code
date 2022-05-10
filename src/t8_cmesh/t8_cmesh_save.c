@@ -33,6 +33,9 @@
 #include <t8_cmesh/t8_cmesh_save.h>
 #include <t8_cmesh/t8_cmesh_partition.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
+#include <t8_geometry/t8_geometry.h>
+#include <t8_geometry/t8_geometry_base.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 
 /* This macro is called to check a condition and if not fulfilled
  * close the file and exit the function */
@@ -43,7 +46,7 @@
 
 /* Write the neighbor data of all ghosts */
 static int
-t8_cmesh_save_ghost_neighbors (t8_cmesh_t cmesh, FILE * fp)
+t8_cmesh_save_ghost_neighbors (t8_cmesh_t cmesh, FILE *fp)
 {
   t8_locidx_t         ighost;
   t8_cghost_t         ghost;
@@ -74,7 +77,7 @@ t8_cmesh_save_ghost_neighbors (t8_cmesh_t cmesh, FILE * fp)
 }
 
 static int
-t8_cmesh_load_ghost_attributes (t8_cmesh_t cmesh, FILE * fp)
+t8_cmesh_load_ghost_attributes (t8_cmesh_t cmesh, FILE *fp)
 {
 
   t8_locidx_t         ighost;
@@ -105,7 +108,7 @@ t8_cmesh_load_ghost_attributes (t8_cmesh_t cmesh, FILE * fp)
 }
 
 static int
-t8_cmesh_save_ghosts (t8_cmesh_t cmesh, FILE * fp)
+t8_cmesh_save_ghosts (t8_cmesh_t cmesh, FILE *fp)
 {
   t8_locidx_t         ighost;
   t8_cghost_t         ghost;
@@ -125,7 +128,7 @@ t8_cmesh_save_ghosts (t8_cmesh_t cmesh, FILE * fp)
 }
 
 static int
-t8_cmesh_load_ghosts (t8_cmesh_t cmesh, FILE * fp)
+t8_cmesh_load_ghosts (t8_cmesh_t cmesh, FILE *fp)
 {
   t8_locidx_t         ighost;
   t8_cghost_t         ghost;
@@ -163,7 +166,7 @@ t8_cmesh_load_ghosts (t8_cmesh_t cmesh, FILE * fp)
 
 /* Load all attributes that were stored in a file */
 static int
-t8_cmesh_load_tree_attributes (t8_cmesh_t cmesh, FILE * fp)
+t8_cmesh_load_tree_attributes (t8_cmesh_t cmesh, FILE *fp)
 {
   double             *vertices = NULL;
   t8_locidx_t         itree;
@@ -243,7 +246,7 @@ t8_cmesh_load_tree_attributes (t8_cmesh_t cmesh, FILE * fp)
 }
 
 static int
-t8_cmesh_save_tree_attribute (t8_cmesh_t cmesh, FILE * fp)
+t8_cmesh_save_tree_attribute (t8_cmesh_t cmesh, FILE *fp)
 {
   double             *vertices;
   t8_locidx_t         itree;
@@ -314,7 +317,7 @@ t8_cmesh_save_tree_attribute (t8_cmesh_t cmesh, FILE * fp)
 }
 
 static int
-t8_cmesh_save_trees (t8_cmesh_t cmesh, FILE * fp)
+t8_cmesh_save_trees (t8_cmesh_t cmesh, FILE *fp)
 {
   t8_locidx_t         itree;
   t8_ctree_t          tree;
@@ -355,7 +358,7 @@ t8_cmesh_save_trees (t8_cmesh_t cmesh, FILE * fp)
 /* Load all tree data (eclasses, neighbors, vertex coordinates,...)
  * from a cmesh file into a cmesh */
 static int
-t8_cmesh_load_trees (t8_cmesh_t cmesh, FILE * fp)
+t8_cmesh_load_trees (t8_cmesh_t cmesh, FILE *fp)
 {
   size_t              bytes_for_trees, att_bytes;
   t8_locidx_t         itree;
@@ -401,7 +404,7 @@ t8_cmesh_load_trees (t8_cmesh_t cmesh, FILE * fp)
 }
 
 static int
-t8_cmesh_save_header (t8_cmesh_t cmesh, FILE * fp)
+t8_cmesh_save_header (t8_cmesh_t cmesh, FILE *fp)
 {
   int                 ret;
   int                 eclass;
@@ -462,7 +465,7 @@ t8_cmesh_save_header (t8_cmesh_t cmesh, FILE * fp)
 /* Read the number of trees, dimension, etc. from a saved cmesh file.
  * If anything goes wrong, the file is closed and 0 is returned */
 static int
-t8_cmesh_load_header (t8_cmesh_t cmesh, FILE * fp)
+t8_cmesh_load_header (t8_cmesh_t cmesh, FILE *fp)
 {
   int                 file_format, save_rank, save_mpisize;
   int                 ieclass;
@@ -552,11 +555,34 @@ t8_cmesh_save (t8_cmesh_t cmesh, const char *fileprefix)
 {
   FILE               *fp;
   char                filename[BUFSIZ];
+  int                 has_linear_geom = 0;
 
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   if (!cmesh->set_partition && cmesh->mpirank != 0) {
     /* If the cmesh is replicated, only rank 0 writes it */
     return 1;
+  }
+
+  /* Check that the only registered geometry is the linear geometry and
+   * that this geometry is used for all trees. */
+  if (t8_geom_handler_get_num_geometries (cmesh->geometry_handler) == 1) {
+    /* Get the stored geometry and the linear geometry and compare their names. */
+    const t8_geometry_c *geom =
+      t8_geom_handler_get_unique_geometry (cmesh->geometry_handler);
+    t8_geometry_c      *linear_geom =
+      t8_geometry_linear_new (cmesh->dimension);
+
+    if (!strcmp (t8_geom_get_name (geom), t8_geom_get_name (linear_geom))) {
+      /* The two geometries are equal. */
+      has_linear_geom = 1;
+    }
+    t8_geometry_linear_destroy (&linear_geom);
+  }
+  if (!has_linear_geom) {
+    /* This cmesh does not have the linear geometry for all trees. */
+    t8_errorf
+      ("Error when saving cmesh. Cmesh does not have linear geometry.\n");
+    return 0;
   }
 
   /* Create the output filename as fileprefix_RANK.cmesh,
@@ -860,6 +886,7 @@ t8_cmesh_load_and_distribute (const char *fileprefix, int num_files,
   T8_ASSERT (mpisize >= num_files);
 
   /* Try to set the comm type */
+  t8_shmem_init (comm);
   t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
 
   /* Use cmesh_bcast, if only one process loads the cmesh: */

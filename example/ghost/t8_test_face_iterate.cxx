@@ -30,11 +30,11 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_cmesh_vtk.h>
+#include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_data/t8_containers.h>
 
 typedef struct
 {
-  double             *tree_vertices;
   double              coords[3];
   t8_locidx_t         count;
 } t8_test_fiterate_udata_t;
@@ -42,17 +42,14 @@ typedef struct
 static int
 t8_test_fiterate_callback (t8_forest_t forest,
                            t8_locidx_t ltreeid,
-                           const t8_element_t * element,
+                           const t8_element_t *element,
                            int face, void *user_data, t8_locidx_t leaf_index)
 {
   double             *coords;
-  double             *tree_vertices;
 
   if (leaf_index >= 0) {
     coords = ((t8_test_fiterate_udata_t *) user_data)->coords;
-    tree_vertices = ((t8_test_fiterate_udata_t *) user_data)->tree_vertices;
-    t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
-                                  0, coords);
+    t8_forest_element_coordinate (forest, ltreeid, element, 0, coords);
     t8_debugf
       ("Leaf element in tree %i at face %i, tree local index %i has corner 0 coords %lf %lf %lf\n",
        ltreeid, face, (int) leaf_index, coords[0], coords[1], coords[2]);
@@ -65,11 +62,11 @@ t8_test_fiterate_callback (t8_forest_t forest,
 static int
 t8_basic_adapt (t8_forest_t forest, t8_forest_t forest_from,
                 t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                t8_eclass_scheme_c * ts, int num_elements,
-                t8_element_t * elements[])
+                t8_eclass_scheme_c *ts, const int is_family,
+                const int num_elements, t8_element_t *elements[])
 {
   int                 mpirank, mpiret;
-  T8_ASSERT (num_elements == 1 || num_elements ==
+  T8_ASSERT (!is_family || num_elements ==
              ts->t8_element_num_children (elements[0]));
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
@@ -102,11 +99,7 @@ t8_test_fiterate (t8_forest_t forest)
     ts->t8_element_new (1, &nca);
     ts->t8_element_nca (first_el, last_el, nca);
     leaf_elements = t8_forest_tree_get_leafs (forest, itree);
-    udata.tree_vertices =
-      (double *) t8_cmesh_get_attribute (t8_forest_get_cmesh (forest),
-                                         t8_get_package_id (), 0,
-                                         t8_forest_ltreeid_to_cmesh_ltreeid
-                                         (forest, itree));
+
     for (iface = 0; iface < ts->t8_element_num_faces (nca); iface++) {
       udata.count = 0;
       t8_forest_iterate_faces (forest, itree, nca, iface, leaf_elements,

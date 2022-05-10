@@ -23,6 +23,7 @@
 #include <t8_eclass.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_cmesh_vtk.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include "t8_cmesh_types.h"
 #include "t8_cmesh_stash.h"
 
@@ -57,7 +58,7 @@ const int           t8_msh_tree_vertex_to_t8_vertex_num[T8_ECLASS_COUNT][8]
   {0, 1},                       /* LINE */
   {0, 1, 3, 2},                 /* QUAD */
   {0, 1, 2},                    /* TRIANGLE */
-  {0, 1, 5, 4, 2, 3, 7, 6},     /* HEX */
+  {0, 1, 3, 2, 4, 5, 7, 6},     /* HEX */
   {0, 1, 2, 3},                 /* TET */
   {0, 1, 2, 3, 4, 5, 6},        /* PRISM */
   {0, 1, 3, 2, 4}               /* PYRAMID */
@@ -72,7 +73,7 @@ const int           t8_vertex_to_msh_vertex_num[T8_ECLASS_COUNT][8]
   {0, 1},                       /* LINE */
   {0, 1, 3, 2},                 /* QUAD */
   {0, 1, 2},                    /* TRIANGLE */
-  {0, 1, 4, 5, 3, 2, 6, 7},     /* HEX */
+  {0, 1, 3, 2, 4, 5, 7, 6},     /* HEX */
   {0, 1, 2, 3},                 /* TET */
   {0, 1, 2, 3, 4, 5, 6},        /* PRISM */
   {0, 1, 3, 2, 4}               /* PYRAMID */
@@ -97,7 +98,7 @@ const int           t8_vertex_to_msh_vertex_num[T8_ECLASS_COUNT][8]
  * \return                  The number of read arguments of the last line read.
  *                          negative on failure */
 static int
-t8_cmesh_msh_read_next_line (char **line, size_t * n, FILE * fp)
+t8_cmesh_msh_read_next_line (char **line, size_t *n, FILE *fp)
 {
   int                 retval;
 
@@ -175,7 +176,7 @@ t8_msh_file_node_compare (const void *node_a, const void *node_b,
 
 /* Reads an open msh-file and checks whether the MeshFormat-Version is supported by t8code or not. */
 static int
-t8_cmesh_check_version_of_msh_file (FILE * fp)
+t8_cmesh_check_version_of_msh_file (FILE *fp)
 {
   char               *line = (char *) malloc (1024);
   char                first_word[2048] = "\0";
@@ -249,7 +250,7 @@ die_format:
 /* Read an open .msh file and parse the nodes into a hash table.
  */
 static sc_hash_t   *
-t8_msh_file_read_nodes (FILE * fp, t8_locidx_t * num_nodes,
+t8_msh_file_read_nodes (FILE *fp, t8_locidx_t *num_nodes,
                         sc_mempool_t ** node_mempool)
 {
   t8_msh_file_node_t *Node;
@@ -355,9 +356,9 @@ die_node:
  * for each tree the indices of its vertices.
  * They are stored as arrays of long ints. */
 int
-t8_cmesh_msh_file_read_eles (t8_cmesh_t cmesh, FILE * fp,
+t8_cmesh_msh_file_read_eles (t8_cmesh_t cmesh, FILE *fp,
                              sc_hash_t * vertices,
-                             sc_array_t ** vertex_indices, int dim)
+                             sc_array_t **vertex_indices, int dim)
 {
   char               *line = (char *) malloc (1024), *line_modify;
   char                first_word[2048] = "\0";
@@ -525,8 +526,8 @@ t8_cmesh_msh_file_read_eles (t8_cmesh_t cmesh, FILE * fp,
                    (eclass, tree_vertices, num_nodes));
       }                         /* End of negative volume handling */
       /* Set the vertices of this tree */
-      t8_cmesh_set_tree_vertices (cmesh, tree_count, t8_get_package_id (),
-                                  0, tree_vertices, num_nodes);
+      t8_cmesh_set_tree_vertices (cmesh, tree_count, tree_vertices,
+                                  num_nodes);
       /* If wished, we store the vertex indices of that tree. */
       if (vertex_indices != NULL) {
         /* Allocate memory for the inices */
@@ -676,8 +677,8 @@ t8_msh_file_face_orientation (t8_msh_file_face_t * Face_a,
   }
   else {
     /* both classes are the same, thus
-     * the face with the smaller tree id is the smaller one */
-    if (Face_a->ltree_id < Face_b->ltree_id) {
+     * the face with the smaller face id is the smaller one */
+    if (Face_a->face_number < Face_b->face_number) {
       smaller_Face = Face_a;
       bigger_Face = Face_b;
       bigger_class =
@@ -710,7 +711,7 @@ t8_msh_file_face_orientation (t8_msh_file_face_t * Face_a,
  * Use with care if cmesh is partitioned. */
 static void
 t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh,
-                                  sc_array_t * vertex_indices)
+                                  sc_array_t *vertex_indices)
 {
   sc_hash_t          *faces;
   t8_msh_file_face_t *Face, **pNeighbor, *Neighbor;
@@ -823,6 +824,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
   char                current_file[BUFSIZ];
   FILE               *file;
   t8_gloidx_t         num_trees, first_tree, last_tree = -1;
+  t8_geometry_c      *geom_linear = t8_geometry_linear_new (dim);
   int                 main_proc_read_successful = 0;
 
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
@@ -837,6 +839,8 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
 
   /* initialize cmesh structure */
   t8_cmesh_init (&cmesh);
+  /* We will use linear geometry. */
+  t8_cmesh_register_geometry (cmesh, geom_linear);
   /* Setting the dimension by hand is neccessary for partitioned
    * commit, since there are process without any trees. So the cmesh would
    * not know its dimension on these processes. */

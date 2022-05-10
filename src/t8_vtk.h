@@ -56,6 +56,12 @@
 #define T8_VTK_FORMAT_STRING "binary"
 #endif
 
+#if T8_WITH_VTK
+#define t8_vtk_locidx_array_type_t vtkTypeInt32Array
+#define t8_vtk_gloidx_array_type_t vtkTypeInt64Array
+#endif
+
+/* TODO: Add support for integer data type. */
 typedef enum
 {
   T8_VTK_SCALAR,                /* One double value per element */
@@ -82,7 +88,7 @@ T8_EXTERN_C_BEGIN ();
 int                 t8_write_pvtu (const char *filename, int num_procs,
                                    int write_tree, int write_rank,
                                    int write_level, int write_id,
-                                   int num_data, t8_vtk_data_field_t * data);
+                                   int num_data, t8_vtk_data_field_t *data);
 
 T8_EXTERN_C_END ();
 

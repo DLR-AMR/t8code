@@ -22,9 +22,10 @@
 
 #include <t8.h>
 #include <t8_schemes/t8_default_cxx.hxx>
-#include <t8_schemes/t8_default/t8_dtri.h>
-#include <t8_schemes/t8_default/t8_dtet.h>
-#include <t8_schemes/t8_default/t8_dprism.h>
+#include <t8_schemes/t8_default/t8_default_tri/t8_dtri.h>
+#include <t8_schemes/t8_default/t8_default_tet/t8_dtet.h>
+#include <t8_schemes/t8_default/t8_default_prism/t8_dprism.h>
+#include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest.h>
 
 /*
@@ -65,7 +66,7 @@ test_element_general_function (sc_MPI_Comm comm)
         t8_forest_new_uniform (t8_cmesh_new_from_class
                                ((t8_eclass_t) (eclass), comm), ts, level, 0,
                                comm);
-      for (ielement = 0; ielement < t8_forest_get_num_element (forest);
+      for (ielement = 0; ielement < t8_forest_get_local_num_elements (forest);
            ++ielement) {
         int8_t              outdata = -1;
         int8_t              should_be = -1;
