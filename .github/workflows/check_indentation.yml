@@ -46,7 +46,7 @@ on:
       - cron:  '05 1 * * *'
 
 jobs:
-  build:
+  indent:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
