@@ -51,4 +51,10 @@ jobs:
     - name: Install indent
       run: sudo apt-get update && sudo apt-get install indent
     - name: Indentation check
-      run: cd scripts/ && ./check_if_all_files_indented.scp
+      run: cd scripts/ && ./check_if_all_files_indented.scp > indent_script.out
+    - name: Archive script output
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: t8code indentation report
+        path: scripts/indent_script.out
