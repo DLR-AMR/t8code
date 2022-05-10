@@ -62,7 +62,6 @@ INDENT_BASE_OPTIONS="-bap -bli0 -br -nut -psl -sob -di20"
 repo_main_dir=`git rev-parse --show-toplevel`
 additional_data_types_file="${repo_main_dir}/scripts/t8indent_custom_datatypes.txt"
 
-echo $additional_data_types_file
 
 if [ ! -f $additional_data_types_file ]
 then
