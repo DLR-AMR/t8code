@@ -55,7 +55,7 @@ t8_scheme_new_default_cxx (void)
 }
 
 int
-t8_eclass_scheme_is_default (t8_eclass_scheme_c * ts)
+t8_eclass_scheme_is_default (t8_eclass_scheme_c *ts)
 {
   switch (ts->eclass) {
   case T8_ECLASS_VERTEX:

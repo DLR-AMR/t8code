@@ -50,34 +50,34 @@ t8_mesh_t          *t8_mesh_new_unitcube (t8_eclass_t theclass);
 
 /***************************** setters **************************/
 
-void                t8_mesh_set_comm (t8_mesh_t * mesh, sc_MPI_Comm comm);
+void                t8_mesh_set_comm (t8_mesh_t *mesh, sc_MPI_Comm comm);
 
 /** Determine whether we partition in \ref t8_mesh_build.
  * Default true.
  */
-void                t8_mesh_set_partition (t8_mesh_t * mesh, int enable);
+void                t8_mesh_set_partition (t8_mesh_t *mesh, int enable);
 
-void                t8_mesh_set_element (t8_mesh_t * mesh,
+void                t8_mesh_set_element (t8_mesh_t *mesh,
                                          t8_eclass_t theclass,
                                          t8_gloidx_t gloid,
                                          t8_locidx_t locid);
 
-void                t8_mesh_set_local_to_global (t8_mesh_t * mesh,
+void                t8_mesh_set_local_to_global (t8_mesh_t *mesh,
                                                  t8_locidx_t ltog_length,
-                                                 const t8_gloidx_t * ltog);
+                                                 const t8_gloidx_t *ltog);
 
-void                t8_mesh_set_face (t8_mesh_t * mesh,
+void                t8_mesh_set_face (t8_mesh_t *mesh,
                                       t8_locidx_t locid1, int face1,
                                       t8_locidx_t locid2, int face2,
                                       int orientation);
 
-void                t8_mesh_set_element_vertices (t8_mesh_t * mesh,
+void                t8_mesh_set_element_vertices (t8_mesh_t *mesh,
                                                   t8_locidx_t locid,
                                                   t8_locidx_t vids_length,
-                                                  const t8_locidx_t * vids);
+                                                  const t8_locidx_t *vids);
 
 #if 0
-void                t8_mesh_set_element_scheme (t8_mesh_t * mesh,
+void                t8_mesh_set_element_scheme (t8_mesh_t *mesh,
                                                 t8_locidx_t locid,
                                                 t8_scheme_t * scheme);
 #endif
@@ -86,13 +86,13 @@ void                t8_mesh_set_element_scheme (t8_mesh_t * mesh,
 
 /** Setup a mesh and turn it into a usable object.
  */
-void                t8_mesh_build (t8_mesh_t * mesh);
+void                t8_mesh_build (t8_mesh_t *mesh);
 
 /****************************** queries *************************/
 
-sc_MPI_Comm         t8_mesh_get_comm (t8_mesh_t * mesh);
+sc_MPI_Comm         t8_mesh_get_comm (t8_mesh_t *mesh);
 
-t8_locidx_t         t8_mesh_get_element_count (t8_mesh_t * mesh,
+t8_locidx_t         t8_mesh_get_element_count (t8_mesh_t *mesh,
                                                t8_eclass_t theclass);
 
 /** 
@@ -102,38 +102,38 @@ t8_locidx_t         t8_mesh_get_element_count (t8_mesh_t * mesh,
  *                              element classes in \ref t8_eclass_t.  The local
  *                              index is cumulative in this order.
  */
-t8_locidx_t         t8_mesh_get_element_class (t8_mesh_t * mesh,
+t8_locidx_t         t8_mesh_get_element_class (t8_mesh_t *mesh,
                                                t8_locidx_t locid);
 
-t8_locidx_t         t8_mesh_get_element_locid (t8_mesh_t * mesh,
+t8_locidx_t         t8_mesh_get_element_locid (t8_mesh_t *mesh,
                                                t8_gloidx_t gloid);
 
-t8_gloidx_t         t8_mesh_get_element_gloid (t8_mesh_t * mesh,
+t8_gloidx_t         t8_mesh_get_element_gloid (t8_mesh_t *mesh,
                                                t8_locidx_t locid);
 
-t8_element_t        t8_mesh_get_element (t8_mesh_t * mesh, t8_locidx_t locid);
+t8_element_t        t8_mesh_get_element (t8_mesh_t *mesh, t8_locidx_t locid);
 
-void                t8_mesh_get_element_boundary (t8_mesh_t * mesh,
+void                t8_mesh_get_element_boundary (t8_mesh_t *mesh,
                                                   t8_locidx_t locid,
                                                   int length_boundary,
-                                                  t8_locidx_t * elemid,
+                                                  t8_locidx_t *elemid,
                                                   int *orientation);
 
 /** Return the maximum of the length of the support of any local element.
  */
-int                 t8_mesh_get_maximum_support (t8_mesh_t * mesh);
+int                 t8_mesh_get_maximum_support (t8_mesh_t *mesh);
 
 /**
  * \param [in,out] length_support
  */
-void                t8_mesh_get_element_support (t8_mesh_t * mesh,
+void                t8_mesh_get_element_support (t8_mesh_t *mesh,
                                                  t8_locidx_t locid,
                                                  int *length_support,
-                                                 t8_locidx_t * elemid,
+                                                 t8_locidx_t *elemid,
                                                  int *orientation);
 
 /***************************** destruct *************************/
 
-void                t8_mesh_destroy (t8_mesh_t * mesh);
+void                t8_mesh_destroy (t8_mesh_t *mesh);
 
 #endif /* !T8_MESH_H */

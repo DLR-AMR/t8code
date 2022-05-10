@@ -52,7 +52,7 @@ t8_read_msh_file_vtk (t8_cmesh_t cmesh, const char *prefix)
 /* Given a cmesh and a file prefix, partition the cmesh uniformly
  * and write vtk files for the partitioned mesh.
  * The original cmesh is unreffed in this function. */
-static              t8_cmesh_t
+static t8_cmesh_t
 t8_read_msh_partition (t8_cmesh_t cmesh, const char *prefix)
 {
   t8_cmesh_t          p_mesh;

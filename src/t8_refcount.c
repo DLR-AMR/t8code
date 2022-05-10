@@ -23,7 +23,7 @@
 #include <t8_refcount.h>
 
 void
-t8_refcount_init (t8_refcount_t * rc)
+t8_refcount_init (t8_refcount_t *rc)
 {
   sc_refcount_init (rc, t8_get_package_id ());
 }
@@ -40,7 +40,7 @@ t8_refcount_new (void)
 }
 
 void
-t8_refcount_destroy (t8_refcount_t * rc)
+t8_refcount_destroy (t8_refcount_t *rc)
 {
   T8_ASSERT (!sc_refcount_is_active (rc));
   T8_FREE (rc);
