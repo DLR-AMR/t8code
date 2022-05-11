@@ -24,7 +24,7 @@
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include "t8_cmesh/t8_cmesh_partition.h"
 #include <t8_eclass.h>
-#include "t8_cmesh/t8_cmesh_testcases.h"
+#include <t8_cmesh/t8_cmesh_testcases.h>
 
 /* Test if a cmesh is committed properly and perform the
  * face consistency check. */

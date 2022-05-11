@@ -24,31 +24,45 @@
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 
-TEST (t8_gtest_eclass, eclassCountIs8) {
+TEST (t8_gtest_eclass, eclassCountIs8)
+{
   EXPECT_EQ (T8_ECLASS_COUNT, 8);
 }
 
-TEST (t8_gtest_eclass, dimension) {
-  int eclass_dims[8] = {0, 1, 2, 2, 3, 3, 3, 3};
+TEST (t8_gtest_eclass, dimension)
+{
+  int                 eclass_dims[8] = { 0, 1, 2, 2, 3, 3, 3, 3 };
 
-  for (int eci = T8_ECLASS_ZERO;eci < T8_ECLASS_COUNT;++eci) {
+  for (int eci = T8_ECLASS_ZERO; eci < T8_ECLASS_COUNT; ++eci) {
     EXPECT_EQ (t8_eclass_to_dimension[eci], eclass_dims[eci]);
   }
+}
+
+TEST (t8_gtest_eclass, valid_class)
+{
+  int                 eclass;
+  for (eclass = T8_ECLASS_ZERO; eclass < T8_ECLASS_COUNT; ++eclass) {
+    EXPECT_TRUE (t8_eclass_is_valid ((t8_eclass_t) eclass));
+  }
+  for (eclass = T8_ECLASS_COUNT; eclass <= T8_ECLASS_INVALID; ++eclass) {
+    EXPECT_FALSE (t8_eclass_is_valid ((t8_eclass_t) eclass));
+  }
+
 }
 
 TEST (t8_gtest_eclass, compare)
 {
   int                 eci, ecj;
-
   for (eci = T8_ECLASS_ZERO; eci < T8_ECLASS_COUNT; ++eci) {
     for (ecj = T8_ECLASS_ZERO; ecj < T8_ECLASS_COUNT; ++ecj) {
       if (eci == ecj) {
-        EXPECT_FALSE (t8_eclass_compare ((t8_eclass_t) eci, (t8_eclass_t) ecj));
+        EXPECT_FALSE (t8_eclass_compare
+                      ((t8_eclass_t) eci, (t8_eclass_t) ecj));
       }
-      else if (t8_eclass_to_dimension[eci] == t8_eclass_to_dimension[ecj]){
-        EXPECT_TRUE (t8_eclass_compare ((t8_eclass_t) eci, (t8_eclass_t) ecj));
+      else if (t8_eclass_to_dimension[eci] == t8_eclass_to_dimension[ecj]) {
+        EXPECT_TRUE (t8_eclass_compare
+                     ((t8_eclass_t) eci, (t8_eclass_t) ecj));
       }
     }
   }
 }
-

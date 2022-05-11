@@ -32,6 +32,7 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_cmesh_vtk.h>
+#include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_vec.h>
 
 #define MAX_FACES 8             /* The maximum number of faces of an element */
@@ -252,8 +253,8 @@ t8_advect_gradient_phi (t8_advect_problem_t * problem,
 static int
 t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
                  t8_locidx_t ltree_id, t8_locidx_t lelement_id,
-                 t8_eclass_scheme_c * ts, const int is_family,
-                 const int num_elements, t8_element_t * elements[])
+                 t8_eclass_scheme_c *ts, const int is_family,
+                 const int num_elements, t8_element_t *elements[])
 {
   t8_advect_problem_t *problem;
   t8_advect_element_data_t *elem_data;
@@ -471,7 +472,7 @@ t8_advect_flux_upwind (const t8_advect_problem_t * problem,
                        double el_plus_phi,
                        double el_minus_phi,
                        t8_locidx_t ltreeid,
-                       const t8_element_t * element_plus, int face)
+                       const t8_element_t *element_plus, int face)
 {
   double              face_center[3];
   double              u_at_face_center[3];
@@ -548,7 +549,7 @@ static double
 t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
                                t8_locidx_t iel_hang,
                                t8_locidx_t ltreeid,
-                               t8_element_t * element_hang,
+                               t8_element_t *element_hang,
                                int face, int adapted_or_partitioned)
 {
   int                 i, num_face_children, child_face;
@@ -739,8 +740,8 @@ t8_advect_advance_element (t8_advect_problem_t * problem,
 static void
 t8_advect_compute_element_data (t8_advect_problem_t * problem,
                                 t8_advect_element_data_t * elem_data,
-                                t8_element_t * element,
-                                t8_locidx_t ltreeid, t8_eclass_scheme_c * ts)
+                                t8_element_t *element,
+                                t8_locidx_t ltreeid, t8_eclass_scheme_c *ts)
 {
   /* Compute the midpoint coordinates of element */
   t8_forest_element_centroid (problem->forest, ltreeid, element,
@@ -763,7 +764,7 @@ static void
 t8_advect_replace (t8_forest_t forest_old,
                    t8_forest_t forest_new,
                    t8_locidx_t which_tree,
-                   t8_eclass_scheme_c * ts,
+                   t8_eclass_scheme_c *ts,
                    int num_outgoing,
                    t8_locidx_t first_outgoing,
                    int num_incoming, t8_locidx_t first_incoming)
@@ -1089,7 +1090,7 @@ t8_advect_problem_partition (t8_advect_problem_t * problem, int measure_time)
   problem->phi_values = new_phi;
 }
 
-static              t8_cmesh_t
+static t8_cmesh_t
 t8_advect_create_cmesh (sc_MPI_Comm comm, int cube_type,
                         const char *mshfile, int level, int dim)
 {

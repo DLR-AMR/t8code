@@ -22,6 +22,7 @@
 
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_schemes/t8_default_cxx.hxx>
@@ -34,11 +35,9 @@
 static int
 t8_test_search_all_fn (t8_forest_t forest,
                        t8_locidx_t ltreeid,
-                       const t8_element_t *
-                       element,
+                       const t8_element_t *element,
                        const int is_leaf,
-                       t8_element_array_t *
-                       leaf_elements,
+                       t8_element_array_t *leaf_elements,
                        t8_locidx_t tree_leaf_index, void *query,
                        size_t query_index)
 {
@@ -74,11 +73,9 @@ t8_test_search_all_fn (t8_forest_t forest,
 static int
 t8_test_search_query_all_fn (t8_forest_t forest,
                              t8_locidx_t ltreeid,
-                             const t8_element_t *
-                             element,
+                             const t8_element_t *element,
                              const int is_leaf,
-                             t8_element_array_t *
-                             leaf_elements,
+                             t8_element_array_t *leaf_elements,
                              t8_locidx_t tree_leaf_index, void *query,
                              size_t query_index)
 {

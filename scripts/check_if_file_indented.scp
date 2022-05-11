@@ -1,0 +1,107 @@
+#!/bin/bash
+
+#  This file is part of t8code.
+#  t8code is a C library to manage a collection (a forest) of multiple
+#  connected adaptive space-trees of general element classes in parallel.
+#
+#  Copyright (C) 2015 the developers
+#
+#  t8code is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  t8code is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with t8code; if not, write to the Free Software Foundation, Inc.,
+#  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+# Given a filename as input this script checks
+# whether the file is correctly indented.
+# Optionally we can provide the indent script
+# as second argument.
+#
+# The return value of this script is 0 if the
+# file is properly indented and not 0 if it is not.
+#
+
+
+usage="$0 FILENAME [INDENT_SCRIPT]"
+
+#
+# This script must be executed from the scripts/ folder.
+#
+if [ `basename $PWD` != scripts ]
+then
+  echo ERROR: Must be executed from whitin the scripts/ subfolder. 2>&1
+  exit 1
+fi
+
+
+# Check if first argument given
+if [ x$1 = x ]
+then
+  echo ERROR: Need to provide a file as first argument. 2>&1
+  echo $usage
+  exit 1
+fi
+
+# Check if first argument is a file and store it in variable
+if [ -f $1 ]
+  then
+  file=$1
+else
+  echo ERROR: Non existing file.
+  echo $usage
+  exit 1
+fi
+
+# Check if second argument given and set indent script
+if [ x$2 = x ]
+then
+  # Set default indent script
+  INDENT=./t8indent
+else
+  # Set second argument as indent script
+  INDENT=$2
+fi
+
+if [ ! -x $INDENT ]
+then
+  echo ERROR: indent script \"$INDENT\" not found.
+  exit 1
+fi
+
+# Here is the actual checking part
+#
+# We only check files with .c, .h, .cxx, .hxx suffix
+FILE_SUFFIX="${file##*.}"
+if [ $FILE_SUFFIX = "c" -o $FILE_SUFFIX = "h" -o $FILE_SUFFIX = "cxx" -o $FILE_SUFFIX = "hxx" ]
+  then
+  # Create temp file
+  TMP_FILE=`mktemp`
+  # Create tmp file for diff output
+  TMP_FILE2=`mktemp`
+  # indent the source file and store temporarily
+  $INDENT -o $TMP_FILE $file
+  # Check whether the indented file and the original differ
+  # We are only interested in the exit status of diff so we throw away its output.
+  OLD_OPTION=--old-line-format=
+  NEW_OPTION=--new-line-format="%dn "
+  UNCHANGED_OPTION=--unchanged-line-format=
+  diff "$OLD_OPTION" "$NEW_OPTION" "$UNCHANGED_OPTION" $TMP_FILE $file > $TMP_FILE2
+  status=$?
+  if [ $status != 0 ]
+  then
+    echo $file is not indented. Unindented lines:
+    cat $TMP_FILE2
+    echo
+  fi
+  exit $status
+else
+  echo "ERROR: File does not have valid suffix (.c .h .cxx .hxx)."
+fi

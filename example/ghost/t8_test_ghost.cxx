@@ -29,6 +29,7 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_cmesh_vtk.h>
+#include <t8_cmesh/t8_cmesh_examples.h>
 #include <example/common/t8_example_common.h>
 
 typedef enum
@@ -44,8 +45,8 @@ typedef enum
 int
 t8_refine_p8est (t8_forest_t forest, t8_forest_t forest_from,
                  t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                 t8_eclass_scheme_c * ts, const int is_family,
-                 const int num_elements, t8_element_t * elements[])
+                 t8_eclass_scheme_c *ts, const int is_family,
+                 const int num_elements, t8_element_t *elements[])
 {
   int                 id;
   T8_ASSERT (!is_family || num_elements ==
@@ -60,8 +61,8 @@ t8_refine_p8est (t8_forest_t forest, t8_forest_t forest_from,
 static int
 t8_basic_adapt (t8_forest_t forest, t8_forest_t forest_from,
                 t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                t8_eclass_scheme_c * ts, const int is_family,
-                const int num_elements, t8_element_t * elements[])
+                t8_eclass_scheme_c *ts, const int is_family,
+                const int num_elements, t8_element_t *elements[])
 {
   int                 level;
   T8_ASSERT (!is_family || num_elements ==

@@ -98,7 +98,7 @@ const int           t8_vertex_to_msh_vertex_num[T8_ECLASS_COUNT][8]
  * \return                  The number of read arguments of the last line read.
  *                          negative on failure */
 static int
-t8_cmesh_msh_read_next_line (char **line, size_t * n, FILE * fp)
+t8_cmesh_msh_read_next_line (char **line, size_t *n, FILE *fp)
 {
   int                 retval;
 
@@ -176,7 +176,7 @@ t8_msh_file_node_compare (const void *node_a, const void *node_b,
 
 /* Reads an open msh-file and checks whether the MeshFormat-Version is supported by t8code or not. */
 static int
-t8_cmesh_check_version_of_msh_file (FILE * fp)
+t8_cmesh_check_version_of_msh_file (FILE *fp)
 {
   char               *line = (char *) malloc (1024);
   char                first_word[2048] = "\0";
@@ -250,7 +250,7 @@ die_format:
 /* Read an open .msh file and parse the nodes into a hash table.
  */
 static sc_hash_t   *
-t8_msh_file_read_nodes (FILE * fp, t8_locidx_t * num_nodes,
+t8_msh_file_read_nodes (FILE *fp, t8_locidx_t *num_nodes,
                         sc_mempool_t ** node_mempool)
 {
   t8_msh_file_node_t *Node;
@@ -356,9 +356,9 @@ die_node:
  * for each tree the indices of its vertices.
  * They are stored as arrays of long ints. */
 int
-t8_cmesh_msh_file_read_eles (t8_cmesh_t cmesh, FILE * fp,
+t8_cmesh_msh_file_read_eles (t8_cmesh_t cmesh, FILE *fp,
                              sc_hash_t * vertices,
-                             sc_array_t ** vertex_indices, int dim)
+                             sc_array_t **vertex_indices, int dim)
 {
   char               *line = (char *) malloc (1024), *line_modify;
   char                first_word[2048] = "\0";
@@ -711,7 +711,7 @@ t8_msh_file_face_orientation (t8_msh_file_face_t * Face_a,
  * Use with care if cmesh is partitioned. */
 static void
 t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh,
-                                  sc_array_t * vertex_indices)
+                                  sc_array_t *vertex_indices)
 {
   sc_hash_t          *faces;
   t8_msh_file_face_t *Face, **pNeighbor, *Neighbor;
