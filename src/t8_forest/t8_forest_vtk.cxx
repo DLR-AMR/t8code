@@ -774,6 +774,7 @@ t8_forest_vtk_cells_vertices_kernel (t8_forest_t forest, t8_locidx_t ltree_id,
   double              element_coordinates[3];
   int                 num_el_vertices, ivertex;
   int                 freturn;
+  t8_element_shape_t  element_shape;
 
   if (modus != T8_VTK_KERNEL_EXECUTE) {
     /* Nothing to do if we are in Init or clean up mode */
@@ -788,12 +789,11 @@ t8_forest_vtk_cells_vertices_kernel (t8_forest_t forest, t8_locidx_t ltree_id,
   /* if we eventually implement scaling the elements, activate this line */
   t8_forest_element_centroid (forest, ltree_id, element, midpoint);
 #endif
-
-  num_el_vertices = t8_eclass_num_vertices[ts->t8_element_shape (element)];
+  element_shape = ts->t8_element_shape (element);
+  num_el_vertices = t8_eclass_num_vertices[element_shape];
   for (ivertex = 0; ivertex < num_el_vertices; ivertex++) {
     t8_forest_element_coordinate (forest, ltree_id, element,
-                                  t8_eclass_vtk_corner_number
-                                  [ts->t8_element_shape (element)]
+                                  t8_eclass_vtk_corner_number[element_shape]
                                   [ivertex], element_coordinates);
 #if 0
     /* if we eventually implement scaling the elements, activate this line */
