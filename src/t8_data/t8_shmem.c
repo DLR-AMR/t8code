@@ -115,7 +115,7 @@ t8_shmem_set_type (sc_MPI_Comm comm, sc_shmem_type_t type)
 }
 
 void
-t8_shmem_array_init (t8_shmem_array_t * parray, size_t elem_size,
+t8_shmem_array_init (t8_shmem_array_t *parray, size_t elem_size,
                      size_t elem_count, sc_MPI_Comm comm)
 {
   t8_shmem_array_t    array;
@@ -346,7 +346,7 @@ t8_shmem_array_is_equal (t8_shmem_array_t array_a, t8_shmem_array_t array_b)
 }
 
 void
-t8_shmem_array_destroy (t8_shmem_array_t * parray)
+t8_shmem_array_destroy (t8_shmem_array_t *parray)
 {
   t8_shmem_array_t    array;
   T8_ASSERT (parray != NULL);

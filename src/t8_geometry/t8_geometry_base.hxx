@@ -161,7 +161,7 @@ public:
                                               t8_gloidx_t gtreeid);
 
 protected:
-  t8_gloidx_t active_tree;      /*< The tree of which currently vertices are loaded. */
+  t8_gloidx_t         active_tree;      /*< The tree of which currently vertices are loaded. */
   t8_eclass_t         active_tree_class;        /*< The class of the currently active tree. */
   const double       *active_tree_vertices;     /*< The vertices of the currently active tree. */
 };
