@@ -729,7 +729,6 @@ t8_forest_num_points (t8_forest_t forest, int count_ghosts)
   for (itree = 0; itree < (t8_locidx_t) forest->trees->elem_count; itree++) {
     /* Get the tree that stores the elements */
     tree = (t8_tree_t) t8_sc_array_index_topidx (forest->trees, itree);
-    /* TODO: This will cause problems when pyramids are introduced. */
     if (t8_forest_get_tree_class (forest, itree) == T8_ECLASS_PYRAMID) {
       num_elements = t8_element_array_get_count (&tree->elements);
       for (ielem = 0; ielem < (t8_locidx_t) num_elements; ielem++) {
