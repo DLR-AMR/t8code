@@ -722,25 +722,20 @@ t8_forest_num_points (t8_forest_t forest, int count_ghosts)
   t8_tree_t           tree;
   t8_eclass_t         ghost_class;
   size_t              num_elements;
-  t8_dpyramid_t      *pyra;
+  t8_element_t       *elem;
   t8_element_array_t *ghost_elem;
+  t8_eclass_scheme   *tscheme;
 
   num_points = 0;
   for (itree = 0; itree < (t8_locidx_t) forest->trees->elem_count; itree++) {
     /* Get the tree that stores the elements */
     tree = (t8_tree_t) t8_sc_array_index_topidx (forest->trees, itree);
-    if (t8_forest_get_tree_class (forest, itree) == T8_ECLASS_PYRAMID) {
-      num_elements = t8_element_array_get_count (&tree->elements);
-      for (ielem = 0; ielem < (t8_locidx_t) num_elements; ielem++) {
-        pyra =
-          (t8_dpyramid_t *) t8_element_array_index_locidx (&tree->elements,
-                                                           ielem);
-        num_points += t8_dpyramid_num_vertices (pyra);
-      }
-    }
-    else {
-      num_points += t8_eclass_num_vertices[tree->eclass] *
-        t8_element_array_get_count (&tree->elements);
+    /* Get the scheme of the current tree */
+    tscheme = t8_forest_get_eclass_scheme (forest, tree->eclass);
+    num_elements = t8_element_array_get_count (&tree->elements);
+    for (ielem = 0; ielem < (t8_locidx_t) num_elements; ielem++) {
+      elem = t8_element_array_index_locidx (&tree->elements, ielem);
+      num_points += tscheme->t8_element_num_corners (elem);
     }
 
   }
@@ -751,19 +746,12 @@ t8_forest_num_points (t8_forest_t forest, int count_ghosts)
     for (itree = 0; itree < num_ghosts; itree++) {
       /* Get the element class of the ghost */
       ghost_class = t8_forest_ghost_get_tree_class (forest, itree);
-      if (ghost_class == T8_ECLASS_PYRAMID) {
-        ghost_elem = t8_forest_ghost_get_tree_elements (forest, itree);
-        num_elements = t8_forest_ghost_tree_num_elements (forest, itree);
-        for (ielem = 0; ielem < (t8_locidx_t) num_elements; ielem++) {
-          pyra =
-            (t8_dpyramid_t *) t8_element_array_index_locidx (ghost_elem,
-                                                             ielem);
-          num_points += t8_dpyramid_num_vertices (pyra);
-        }
-      }
-      else {
-        num_points += t8_eclass_num_vertices[ghost_class]
-          * t8_forest_ghost_tree_num_elements (forest, itree);
+      ghost_elem = t8_forest_ghost_get_tree_elements (forest, itree);
+      num_elements = t8_forest_ghost_tree_num_elements (forest, itree);
+      tscheme = t8_forest_get_eclass_scheme (forest, ghost_class);
+      for (ielem = 0; ielem < (t8_locidx_t) num_elements; ielem++) {
+        elem = t8_element_array_index_locidx (ghost_elem, ielem);
+        num_points += tscheme->t8_element_num_corners (elem);
       }
     }
   }
