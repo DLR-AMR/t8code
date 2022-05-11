@@ -22,9 +22,9 @@
 
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_pyramid_cxx.hxx>
-#include <t8_schemes/t8_default/t8_dpyramid.h>
-#include <t8_schemes/t8_default/t8_dpyramid_connectivity.h>
+#include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h>
+#include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_connectivity.h>
 
 void
 t8_recursive_check_diff (t8_element_t *element, t8_element_t *child,

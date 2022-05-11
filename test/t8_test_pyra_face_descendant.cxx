@@ -23,10 +23,10 @@
 
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default_cxx.hxx>
-#include <t8_schemes/t8_default/t8_dpyramid.h>
-#include <t8_schemes/t8_default/t8_dtet.h>
-#include <t8_schemes/t8_default/t8_dtet_connectivity.h>
-#include <t8_schemes/t8_default/t8_dpyramid_connectivity.h>
+#include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h>
+#include <t8_schemes/t8_default/t8_default_tet/t8_dtet.h>
+#include <t8_schemes/t8_default/t8_default_tet/t8_dtet_connectivity.h>
+#include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_connectivity.h>
 
 void
 t8_linear_face_descendant (t8_element_t *elem, t8_element_t *tmp,
