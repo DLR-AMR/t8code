@@ -1000,9 +1000,6 @@ t8_forest_vtk_cells_offset_kernel (t8_forest_t forest, t8_locidx_t ltree_id,
 
   offset = (long long *) *data;
 
-  /* TODO: This will also break with pyramids! */
-  //SC_CHECK_ABORT (ts->eclass != T8_ECLASS_PYRAMID,
-  //                "Pyramids not supported in vtk");
   num_vertices = t8_eclass_num_vertices[ts->t8_element_shape (element)];
   *offset += num_vertices;
   freturn = fprintf (vtufile, " %lld", *offset);
