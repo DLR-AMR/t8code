@@ -23,6 +23,7 @@
 #include <t8.h>
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest.h>
 #include <t8_vec.h>
 #include <t8_schemes/t8_default_cxx.hxx>
