@@ -92,6 +92,7 @@ t8_default_scheme_prism_c::t8_element_copy (const t8_element_t *source,
 {
   T8_ASSERT (t8_element_is_valid (source));
   t8_dprism_copy ((const t8_dprism_t *) source, (t8_dprism_t *) dest);
+  T8_ASSERT (t8_element_is_valid (dest));
 }
 
 int
