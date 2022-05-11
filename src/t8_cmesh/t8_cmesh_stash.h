@@ -89,13 +89,13 @@ T8_EXTERN_C_BEGIN ();
 /** Initialize a stash data structure.
  * \param [in,out]  pstash  A pointer to the stash to be initialized.
  */
-void                t8_stash_init (t8_stash_t * pstash);
+void                t8_stash_init (t8_stash_t *pstash);
 
 /** Free all memory associated in a stash structure.
  * \param [in,out]  pstash  A pointer to the stash to be destroyed.
  *                  The pointer is set to NULL after the function call.
  */
-void                t8_stash_destroy (t8_stash_t * pstash);
+void                t8_stash_destroy (t8_stash_t *pstash);
 
 /** Set the eclass of a tree.
  * \param [in, out] stash The stash to be updated.

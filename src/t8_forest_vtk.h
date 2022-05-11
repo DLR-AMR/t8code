@@ -62,7 +62,7 @@ int                 t8_forest_write_vtk_via_API (t8_forest_t forest,
                                                  int write_element_id,
                                                  int curved_flag,
                                                  int num_data,
-                                                 t8_vtk_data_field_t * data);
+                                                 t8_vtk_data_field_t *data);
 
 /** Write the forest in .pvtu file format. Writes one .vtu file per
  * process and a meta .pvtu file.
@@ -89,7 +89,7 @@ int                 t8_forest_vtk_write_file (t8_forest_t forest,
                                               int write_element_id,
                                               int write_ghosts,
                                               int num_data,
-                                              t8_vtk_data_field_t * data);
+                                              t8_vtk_data_field_t *data);
 
 T8_EXTERN_C_END ();
 

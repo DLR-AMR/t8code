@@ -584,8 +584,7 @@ public:
    * We provide a default implementation of this routine that should suffice
    * for most use cases.
    */
-  virtual t8_element_t *t8_element_array_index (sc_array_t * array,
-                                                size_t it);
+  virtual t8_element_t *t8_element_array_index (sc_array_t *array, size_t it);
 
   /** Count how many leaf descendants of a given uniform level an element would produce.
    * \param [in] t     The element to be checked.
