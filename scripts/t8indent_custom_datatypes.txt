@@ -1,3 +1,4 @@
+FILE
 int8_t
 uint8_t
 int32_t
@@ -5,6 +6,7 @@ uint32_t
 int64_t
 uint64_t
 size_t
+sc_array_t
 t8_cmesh_t
 t8_cmesh_trees_t
 t8_dprism_t

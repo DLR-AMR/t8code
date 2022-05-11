@@ -119,7 +119,7 @@ T8_EXTERN_C_BEGIN ();
 /* In this function we create a new forest that repartitions a given forest
  * and has a layer of ghost elements. 
  */
-static              t8_forest_t
+static t8_forest_t
 t8_step4_partition_ghost (t8_forest_t forest)
 {
   t8_forest_t         new_forest;
@@ -158,7 +158,7 @@ t8_step4_partition_ghost (t8_forest_t forest)
 /* In this function we adapt a forest as in step3 and balance it. 
  * In our main program the input forest is already adapted and then the resulting twice adapted forest will be unbalanced.
  */
-static              t8_forest_t
+static t8_forest_t
 t8_step4_balance (t8_forest_t forest)
 {
   t8_forest_t         balanced_forest;
