@@ -157,7 +157,6 @@ t8_default_scheme_common_c::t8_element_max_num_siblings (const t8_element_t * el
 
 /* Count the number of siblings.
  * The number of children is 2^dim for each element, except for pyramids.
- * TODO: For pyramids we will have to implement a standalone version in the pyramid scheme. */
 /* *INDENT-OFF* */
 /* Indent bug: indent adds an additional const */
 int
