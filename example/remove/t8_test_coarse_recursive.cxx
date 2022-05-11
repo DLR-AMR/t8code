@@ -187,6 +187,22 @@ t8_adapt_callback_refine (t8_forest_t forest,
   return 0;
 }
 
+
+static t8_forest_t
+t8_coarse_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn,
+                  int recursive, void *adapt_data)
+{
+  t8_forest_t         forest_new;
+
+  t8_forest_init (&forest_new);
+  t8_forest_set_user_data (forest_new, &adapt_data);
+  t8_forest_set_adapt (forest_new, forest_from, adapt_fn, recursive);
+  t8_forest_set_partition (forest_new, NULL, 0);
+  t8_forest_commit (forest_new);
+
+  return forest_new;
+}
+
 void
 t8_test_emelemts_remove (int cmesh_id)
 {
@@ -206,11 +222,12 @@ t8_test_emelemts_remove (int cmesh_id)
   scheme = t8_scheme_new_default_cxx ();
   /* Construct a cmesh */
   //cmesh = t8_test_create_cmesh (cmesh_id);
-  cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 1, 0);
+  //cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 1, 0);
+  cmesh = t8_cmesh_new_hypercube (T8_ECLASS_HEX, sc_MPI_COMM_WORLD, 0, 0, 0);
   /* Compute the first level, such that no process is empty */
   min_level = t8_forest_min_nonempty_level (cmesh, scheme);
 
-  min_level = SC_MAX (min_level, 3);
+  min_level = SC_MAX (min_level, 2);
   max_level = min_level + 1;
   
   for (level = min_level; level < max_level; level++) {
@@ -222,30 +239,43 @@ t8_test_emelemts_remove (int cmesh_id)
     t8_cmesh_ref (cmesh);
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
 
-    forest = t8_forest_new_adapt (forest, t8_adapt_callback_rr    , 0, 0, &adapt_data);
+    forest = t8_forest_new_adapt (forest, t8_adapt_callback_refine, 0, 0, &adapt_data);
     forest = t8_forest_new_adapt (forest, t8_adapt_callback_remove, 0, 0, &adapt_data);
 
     forest = t8_forest_new_adapt (forest, t8_adapt_callback_coarse, 0, 0, &adapt_data);
     forest = t8_forest_new_adapt (forest, t8_adapt_callback_refine, 0, 0, &adapt_data);
     forest = t8_forest_new_adapt (forest, t8_adapt_callback_remove, 0, 0, &adapt_data);
 
-    t8_global_productionf("[IL] DONE STEP 1!\n");
+    t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_base");
 
     /* coarsing until level 0 */
     // will get replaced by recursive coarseening
     // forest = t8_forest_new_adapt (forest, t8_adapt_callback_coarse_all, 1, 0, &adapt_data);
-    for (int i = 0; i < 2*level; i++)
+    for (int i = 0; i < 2*level-1; i++)
     {
-      forest = t8_forest_new_adapt (forest, t8_adapt_callback_coarse_all, 0, 0, &adapt_data);
-      t8_global_productionf("[IL] DONE %i COARSENING!\n", i);
+      forest = t8_coarse_forest (forest, t8_adapt_callback_coarse_all, 0, &adapt_data);
+      if(i==0){
+        t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_test_0");
+      }
+      if(i==1){
+        t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_test_1");
+      }
+      if(i==2){
+        t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_test_2");
+      }
+      if(i==3){
+        t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_test_3");
+      }
+    //SC_CHECK_ABORT (t8_forest_no_overlap_process_boundary (forest),
+    //                "The forest has overlapping elements on process boundary");
     }
     
-    t8_global_productionf("[IL] DONE STEP 2!\n");
-    t8_forest_write_vtk (forest, "t8_test");
+    t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_test");
 
-
-    SC_CHECK_ABORT (t8_forest_is_equal(forest, forest_compare),
-                    "The forests are not equal");
+    //SC_CHECK_ABORT (t8_forest_no_overlap(forest),
+    //                "The forest has overlapping elements");
+    //SC_CHECK_ABORT (t8_forest_is_equal(forest, forest_compare),
+    //                "The forests are not equal");
 
     t8_scheme_cxx_ref (scheme);
     t8_forest_unref (&forest);
@@ -276,6 +306,9 @@ test_cmesh_emelemts_remove_all ()
 int
 main (int argc, char **argv)
 {
+  //int i = 0;
+  //while(i==0){ sleep(5); }
+
   int                 mpiret;
   sc_MPI_Comm         mpic;
 
