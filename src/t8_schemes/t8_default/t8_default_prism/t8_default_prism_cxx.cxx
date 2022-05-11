@@ -402,6 +402,7 @@ t8_default_scheme_prism_c::t8_element_first_descendant (const t8_element_t
   T8_ASSERT (t8_element_is_valid (elem));
   t8_dprism_first_descendant ((const t8_default_prism_t *) elem,
                               (t8_default_prism_t *) desc, level);
+  T8_ASSERT (t8_element_is_valid (desc));
 }
 
 void
@@ -414,6 +415,7 @@ t8_default_scheme_prism_c::t8_element_last_descendant (const t8_element_t
   T8_ASSERT (t8_element_is_valid (elem));
   t8_dprism_last_descendant ((const t8_default_prism_t *) elem,
                              (t8_default_prism_t *) desc, level);
+  T8_ASSERT (t8_element_is_valid (desc));
 }
 
 void
