@@ -30,8 +30,6 @@ echo "o---------------------------------------"
 echo "| Checking MPI and related programs"
 echo "o---------------------------------------"
 
-
-
 dnl A nonempty second/third argument causes to enable F77+F90/CXX, respectively.
 SC_MPI_CONFIG([T8], [], [yes])
 SC_MPI_ENGAGE([T8])
