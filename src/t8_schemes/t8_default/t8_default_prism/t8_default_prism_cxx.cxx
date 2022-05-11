@@ -278,7 +278,7 @@ t8_default_scheme_prism_c::t8_element_nca (const t8_element_t *elem1,
   t8_default_prism_t *c = (t8_default_prism_t *) nca;
 
   t8_dprism_nearest_common_ancestor (p1, p2, c);
-  T8_ASSERT (t8_element_is_valid (c));
+  T8_ASSERT (t8_dprism_is_valid (c));
 }
 
 void
