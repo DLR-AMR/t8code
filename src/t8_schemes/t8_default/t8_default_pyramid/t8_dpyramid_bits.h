@@ -377,6 +377,15 @@ void                t8_dpyramid_vertex_reference_coords (const t8_dpyramid_t
                                                          *elem, int vertex,
                                                          double coords[]);
 
+/** Query whether all entries of a pyramid are in valid ranges.
+ * A pyramid is valid if and only if its triangle and line member are valid.
+ * \param [in] p  pyramid to be considered.
+ * \return        True, if \a p is a valid pyramid and it is safe to call any
+ *                function in this file on \a p.
+ *                False otherwise.
+ */
+int                 t8_dpyramid_is_valid (const t8_dpyramid_t *p);
+
 T8_EXTERN_C_END ();
 
 #endif /* T8_DPYRAMID_BITS_H */

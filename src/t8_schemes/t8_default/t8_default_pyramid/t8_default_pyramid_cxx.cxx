@@ -356,6 +356,15 @@ t8_default_scheme_pyramid_c::t8_element_vertex_reference_coords (const
                                        vertex, coords);
 }
 
+#ifdef T8_ENABLE_DEBUG
+int
+t8_default_scheme_pyramid_c::t8_element_is_valid (const t8_element_t *elem) const
+{
+  T8_ASSERT (elem != NULL);
+  return t8_dpyramid_is_valid ((const t8_dpyramid_t *) elem);
+}
+#endif
+
 /* Constructor */
 t8_default_scheme_pyramid_c::t8_default_scheme_pyramid_c (void)
 {

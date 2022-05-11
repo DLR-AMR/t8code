@@ -1551,3 +1551,26 @@ t8_dpyramid_vertex_reference_coords (const t8_dpyramid_t *elem,
   coords[1] = coords_int[1] / (double) T8_DPYRAMID_ROOT_LEN;
   coords[2] = coords_int[2] / (double) T8_DPYRAMID_ROOT_LEN;
 }
+
+int
+t8_dpyramid_is_valid (const t8_dpyramid_t *p)
+{
+  int                 is_valid;
+  const t8_dpyramid_coord_t max_coord =
+    ((int64_t) 2 * T8_DPYRAMID_ROOT_LEN) - 1;
+  t8_element_shape_t  shape = t8_dpyramid_shape (p);
+  /*Check the level */
+  is_valid = 0 <= p->level && p->level <= T8_DPYRAMID_MAXLEVEL;
+  /*Check coordinates, we allow a boundary layer around the root-pyramid */
+  is_valid = is_valid && -T8_DPYRAMID_ROOT_LEN <= p->x && p->x <= max_coord;
+  is_valid = is_valid && -T8_DPYRAMID_ROOT_LEN <= p->y && p->y <= max_coord;
+  is_valid = is_valid && -T8_DPYRAMID_ROOT_LEN <= p->z && p->z <= max_coord;
+
+  /*The shape can be a pyramid or a tet */
+  is_valid = is_valid && (shape == T8_ECLASS_PYRAMID
+                          || shape == T8_ECLASS_TET);
+  /*Check the type */
+  is_valid = is_valid && 0 <= p->type && p->type < T8_DPYRAMID_NUM_TYPES;
+
+  return is_valid;
+}
