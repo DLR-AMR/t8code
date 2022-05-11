@@ -290,6 +290,7 @@ t8_default_scheme_prism_c::t8_element_boundary_face (const t8_element_t *elem,
 {
   T8_ASSERT (t8_element_is_valid (elem));
   t8_dprism_boundary_face ((const t8_dprism_t *) elem, face, boundary);
+  T8_ASSERT (t8_element_is_valid (boundary));
 }
 
 const int           t8_dprism_face_corner[5][4] = {
