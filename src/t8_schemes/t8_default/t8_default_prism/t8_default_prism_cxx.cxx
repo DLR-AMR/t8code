@@ -323,7 +323,7 @@ void
 t8_default_scheme_prism_c::t8_element_last_descendant_face (const t8_element_t
                                                             *elem, int face,
                                                             t8_element_t
-                                                            *first_desc,
+                                                            *last_desc,
                                                             int level)
 {
   int                 corner;
@@ -337,8 +337,8 @@ t8_default_scheme_prism_c::t8_element_last_descendant_face (const t8_element_t
     corner = t8_dprism_face_corner[face][2];
   }
   t8_dprism_corner_descendant ((const t8_dprism_t *) elem,
-                               (t8_dprism_t *) first_desc, corner, level);
-  T8_ASSERT (t8_element_is_valid (first_desc));
+                               (t8_dprism_t *) last_desc, corner, level);
+  T8_ASSERT (t8_element_is_valid (last_desc));
 }
 
 int
