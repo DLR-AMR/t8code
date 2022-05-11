@@ -316,6 +316,7 @@ t8_default_scheme_prism_c::t8_element_first_descendant_face (const
   corner = t8_dprism_face_corner[face][0];
   t8_dprism_corner_descendant ((const t8_dprism_t *) elem,
                                (t8_dprism_t *) first_desc, corner, level);
+  T8_ASSERT (t8_element_is_valid (first_desc));
 }
 
 void
