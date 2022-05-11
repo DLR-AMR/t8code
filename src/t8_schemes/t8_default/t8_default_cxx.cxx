@@ -31,6 +31,7 @@
 #include <t8_schemes/t8_default/t8_default_tri/t8_default_tri_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_tet/t8_default_tet_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_prism/t8_default_prism_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid_cxx.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
