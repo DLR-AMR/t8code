@@ -28,7 +28,7 @@
 #include <t8_vec.h>
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include "t8_forest_types.h"
-#include "t8_schemes/t8_default/t8_dpyramid_bits.h"
+#include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.h>
 #if T8_WITH_VTK
 #include <vtkCellArray.h>
 #include <vtkCellData.h>

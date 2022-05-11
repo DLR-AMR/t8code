@@ -6,7 +6,7 @@
  */
 
 #include <t8.h>
-#include "t8_dtet.h"
+#include <t8_schemes/t8_default/t8_default_tet/t8_dtet.h>
 
 /** The number of children that a pyramid is refined into. */
 #define T8_DPYRAMID_CHILDREN 10
