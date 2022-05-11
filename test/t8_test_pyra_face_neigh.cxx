@@ -27,8 +27,8 @@
 #include <t8_schemes/t8_default/t8_dpyramid_connectivity.h>
 
 void
-t8_recursive_check_diff (t8_element_t * element, t8_element_t * child,
-                         t8_element_t * neigh, t8_eclass_scheme_c * ts,
+t8_recursive_check_diff (t8_element_t *element, t8_element_t *child,
+                         t8_element_t *neigh, t8_eclass_scheme_c *ts,
                          int maxlvl, int level)
 {
   int                 i, j, num_face, num_children, face_num;
@@ -89,8 +89,8 @@ t8_face_check_diff (int level)
  * check, if the children have root contact, and if the neighbors are outside of the
  * root*/
 void
-t8_check_not_inside_root (t8_element_t * element, t8_element_t * neigh,
-                          t8_element_t * child, t8_eclass_scheme_c * ts)
+t8_check_not_inside_root (t8_element_t *element, t8_element_t *neigh,
+                          t8_element_t *child, t8_eclass_scheme_c *ts)
 {
   int                 i, j, face_num, face_contact;
   int                 inside, child_id;
