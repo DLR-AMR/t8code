@@ -62,15 +62,14 @@ T8_EXTERN_C_BEGIN ();
  * \param [in,out]  pgeom_handler On input a pointer to unallocated memory.
  *                                On output this will point to an initialized geometry handler.
  */
-void                t8_geom_handler_init (t8_geometry_handler_t **
-                                          pgeom_handler);
+void                t8_geom_handler_init (t8_geometry_handler_t
+                                          **pgeom_handler);
 
 /** 
  * Increase the reference counter of a geometry handler.
  * \param [in] geom_handler An initialized geometry handler.
  */
-void                t8_geom_handler_ref (t8_geometry_handler_t *
-                                         geom_handler);
+void                t8_geom_handler_ref (t8_geometry_handler_t *geom_handler);
 
 /**
  * Decrease the reference count of a geometry handler, if the refcount
@@ -78,8 +77,8 @@ void                t8_geom_handler_ref (t8_geometry_handler_t *
  * \param [in,out] pgeom_handler Pointer to an initialized geometry handler.
  *                               If the refcount reaches 0, will point to NULL afterwards.
  */
-void                t8_geom_handler_unref (t8_geometry_handler_t **
-                                           pgeom_handler);
+void                t8_geom_handler_unref (t8_geometry_handler_t
+                                           **pgeom_handler);
 
 /**
  * Destroy a geometry handler and free its memory. 
@@ -88,30 +87,30 @@ void                t8_geom_handler_unref (t8_geometry_handler_t **
  * \param [in,out] pgeom_handler Pointer to an initialized geometry handler.
  *                               Will point to NULL afterwards.
  */
-void                t8_geom_handler_destroy (t8_geometry_handler_t **
-                                             pgeom_handler);
+void                t8_geom_handler_destroy (t8_geometry_handler_t
+                                             **pgeom_handler);
 
 /**
  * Add a geometry to the geometry handler.
  * \param [in,out] geom_handler An initialized but not committed geometry handler.
  * \param [in]     geometry     The geometry to add.
  */
-void                t8_geom_handler_register_geometry (t8_geometry_handler_t *
-                                                       geom_handler,
-                                                       const t8_geometry_c *
-                                                       geometry);
+void                t8_geom_handler_register_geometry (t8_geometry_handler_t
+                                                       *geom_handler,
+                                                       const t8_geometry_c
+                                                       *geometry);
 
 /**
  * Commit a geometry handler. This specifies that no geometries will
  * be added to it and makes it ready to be used.
  * \param [in,out] geom_handler An initialized but not committed geometry handler.
  */
-void                t8_geom_handler_commit (t8_geometry_handler_t *
-                                            geom_handler);
+void                t8_geom_handler_commit (t8_geometry_handler_t
+                                            *geom_handler);
 
 /* Check if a geometry handler was committed. */
 int                 t8_geom_handler_is_committed (const t8_geometry_handler_t
-                                                  * geom_handler);
+                                                  *geom_handler);
 
 /** Return the number of registered geometries.
  * \param [in] geom_handler A geometry handler (must be initialized and may or may not be committed).
@@ -119,7 +118,7 @@ int                 t8_geom_handler_is_committed (const t8_geometry_handler_t
  */
 size_t              t8_geom_handler_get_num_geometries (const
                                                         t8_geometry_handler_t
-                                                        * geom_handler);
+                                                        *geom_handler);
 
 /** If a geometry handler only has one registered geometry, get a pointer to
  *  this geometry.
@@ -130,7 +129,7 @@ size_t              t8_geom_handler_get_num_geometries (const
  */
 const t8_geometry_c *t8_geom_handler_get_unique_geometry (const
                                                           t8_geometry_handler_t
-                                                          * geom_handler);
+                                                          *geom_handler);
 
 /**
  * Given a geometry's name find that geometry in the geometry handler
@@ -140,8 +139,8 @@ const t8_geometry_c *t8_geom_handler_get_unique_geometry (const
  * \return                  A pointer to the geomery or NULL if it was not found.
  */
 t8_geometry_c      *t8_geom_handler_find_geometry (const
-                                                   t8_geometry_handler_t *
-                                                   geom_handler,
+                                                   t8_geometry_handler_t
+                                                   *geom_handler,
                                                    const char *name);
 
 void                t8_geometry_evaluate (t8_cmesh_t cmesh,

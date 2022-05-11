@@ -56,8 +56,22 @@ INDENT_BASE_OPTIONS="-bap -bli0 -br -nut -psl -sob -di20"
 #   static t8_cmesh_t
 #   afunction (int aparameter) {
 
+# Get the path of the file t8indent_custom_datatypes.txt in the
+# /scripts subfolder of the repo.
+
+repo_main_dir=`git rev-parse --show-toplevel`
+additional_data_types_file="${repo_main_dir}/scripts/t8indent_custom_datatypes.txt"
+
+
+if [ ! -f $additional_data_types_file ]
+then
+  echo Error: File $additional_data_types_file does not exist. >&2
+  echo Exiting because of error.
+  exit 1
+fi
+
 T8CODE_ADDITIONAL_DATATYPES=
-for x in `cat scripts/t8indent_custom_datatypes.txt`
+for x in `cat ${additional_data_types_file}`
 do
   T8CODE_ADDITIONAL_DATATYPES="$T8CODE_ADDITIONAL_DATATYPES -T $x"
 done

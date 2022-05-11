@@ -34,7 +34,7 @@ t8_eclass_scheme_c::~t8_eclass_scheme_c ()
 /* This belongs here since it uses c++ function,
  * see t8_element.c/.h */
 void
-t8_scheme_cxx_destroy (t8_scheme_cxx_t * s)
+t8_scheme_cxx_destroy (t8_scheme_cxx_t *s)
 {
   int                 t;
 
@@ -60,7 +60,7 @@ t8_eclass_scheme::t8_element_size ()
 
 /* Default implementation for array_index */
 t8_element_t       *
-t8_eclass_scheme::t8_element_array_index (sc_array_t * array, size_t it)
+t8_eclass_scheme::t8_element_array_index (sc_array_t *array, size_t it)
 {
   T8_ASSERT (it < array->elem_count);
   T8_ASSERT (element_size == array->elem_size);
@@ -84,7 +84,7 @@ t8_eclass_scheme_destroy (t8_eclass_scheme_t * ts)
 
 void
 t8_eclass_boundary_alloc (t8_scheme_t * scheme, t8_eclass_t theclass,
-                          int min_dim, int length, t8_element_t ** boundary)
+                          int min_dim, int length, t8_element_t **boundary)
 {
   int                 t, offset, per;
 #ifdef T8_ENABLE_DEBUG
@@ -108,7 +108,7 @@ t8_eclass_boundary_alloc (t8_scheme_t * scheme, t8_eclass_t theclass,
 
 void
 t8_eclass_boundary_destroy (t8_scheme_t * scheme, t8_eclass_t theclass,
-                            int min_dim, int length, t8_element_t ** boundary)
+                            int min_dim, int length, t8_element_t **boundary)
 {
   int                 t, offset, per;
 #ifdef T8_ENABLE_DEBUG

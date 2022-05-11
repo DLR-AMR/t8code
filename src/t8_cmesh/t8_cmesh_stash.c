@@ -29,7 +29,7 @@
 #include "t8_cmesh_stash.h"
 
 void
-t8_stash_init (t8_stash_t * pstash)
+t8_stash_init (t8_stash_t *pstash)
 {
   t8_stash_t          stash;
   T8_ASSERT (pstash != NULL);
@@ -41,7 +41,7 @@ t8_stash_init (t8_stash_t * pstash)
 }
 
 void
-t8_stash_destroy (t8_stash_t * pstash)
+t8_stash_destroy (t8_stash_t *pstash)
 {
   t8_stash_t          stash;
   t8_stash_attribute_struct_t *attr;
@@ -246,8 +246,7 @@ t8_stash_attribute_sort (t8_stash_t stash)
 }
 
 static void
-t8_stash_bcast_attributes (sc_array_t * attributes, int root,
-                           sc_MPI_Comm comm)
+t8_stash_bcast_attributes (sc_array_t *attributes, int root, sc_MPI_Comm comm)
 {
   size_t              num_atts, iatt, att_size, copied_bytes;
   t8_stash_attribute_struct_t *att;
