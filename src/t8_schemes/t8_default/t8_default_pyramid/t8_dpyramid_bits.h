@@ -310,7 +310,7 @@ void                t8_dpyramid_parent (const t8_dpyramid_t *p,
  * \param [in] p    Input pyramid.
  * \return          The number of corners of p.
  */
-int                 t8_dpyramid_num_vertices (const t8_dpyramid_t *p);
+int                 t8_dpyramid_num_corners (const t8_dpyramid_t *p);
 
 /** Compute the number of children of p
  * \param [in] p    Input pyramid.

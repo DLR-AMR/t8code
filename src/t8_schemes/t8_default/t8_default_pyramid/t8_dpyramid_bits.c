@@ -959,7 +959,7 @@ t8_dpyramid_last_descendant_face (const t8_dpyramid_t *p,
 }
 
 int
-t8_dpyramid_num_vertices (const t8_dpyramid_t *p)
+t8_dpyramid_num_corners (const t8_dpyramid_t *p)
 {
   T8_ASSERT (0 <= p->level && p->level <= T8_DPYRAMID_MAXLEVEL);
   if (t8_dpyramid_shape (p) == T8_ECLASS_TET) {
