@@ -948,6 +948,7 @@ t8_forest_vtk_cells_connectivity_kernel (t8_forest_t forest,
   int                 ivertex, num_vertices;
   int                 freturn;
   t8_locidx_t        *count_vertices;
+  t8_element_shape_t  element_shape;
 
   if (modus == T8_VTK_KERNEL_INIT) {
     /* We use data to count the number of written vertices */
@@ -961,15 +962,15 @@ t8_forest_vtk_cells_connectivity_kernel (t8_forest_t forest,
   T8_ASSERT (modus == T8_VTK_KERNEL_EXECUTE);
 
   count_vertices = (t8_locidx_t *) *data;
-
-  num_vertices = t8_eclass_num_vertices[ts->t8_element_shape (elements)];
+  element_shape = ts->t8_element_shape (elements);
+  num_vertices = t8_eclass_num_vertices[element_shape];
   for (ivertex = 0; ivertex < num_vertices; ++ivertex, (*count_vertices)++) {
     freturn = fprintf (vtufile, " %ld", (long) *count_vertices);
     if (freturn <= 0) {
       return 0;
     }
   }
-  *columns += t8_eclass_num_vertices[ts->t8_element_shape (elements)];
+  *columns += t8_eclass_num_vertices[element_shape];
   return 1;
 }
 
