@@ -128,8 +128,10 @@ t8_default_scheme_common_c::t8_element_count_leafs (const t8_element_t *t,
 {
 
   int                 element_level = t8_element_level (t);
+  t8_element_shape_t  element_shape;
   int                 dim = t8_eclass_to_dimension[eclass];
-  if (eclass == T8_ECLASS_PYRAMID) {
+  element_shape = t8_element_shape (t);
+  if (element_shape == T8_ECLASS_PYRAMID) {
     int                 level_diff = level - element_level;
     return element_level > level ? 0 :
       2 * sc_intpow64 (8, level_diff) - sc_intpow64 (6, level_diff);
