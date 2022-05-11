@@ -380,7 +380,8 @@ void
 t8_forest_commit (t8_forest_t forest)
 {
   int                 mpiret;
-  int                 partitioned = 0, i;
+  int                 partitioned = 0;
+  int                 i;
   sc_MPI_Comm         comm_dup;
 
   T8_ASSERT (forest != NULL);

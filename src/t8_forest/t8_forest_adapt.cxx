@@ -70,7 +70,6 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
   T8_ASSERT (ts->t8_element_level (element) > 0);
 
   num_siblings = ts->t8_element_num_siblings (element);
-  // T8_ASSERT (ts->t8_element_child_id (element) == num_siblings - 1);
 
   fam = el_buffer;
   pos = *el_inserted - num_siblings;
@@ -279,6 +278,7 @@ t8_forest_adapt (t8_forest_t forest)
                                           (telements_from, el_considered));
 
       if (num_siblings > curr_size_elements_from) {
+        /* Enlarge the elements_from buffer if required */
         elements_from =
           T8_REALLOC (elements_from, t8_element_t *, num_siblings);
         curr_size_elements_from = num_siblings;
