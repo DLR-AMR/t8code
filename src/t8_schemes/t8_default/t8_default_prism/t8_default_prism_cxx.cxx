@@ -111,6 +111,7 @@ t8_default_scheme_prism_c::t8_element_parent (const t8_element_t *elem,
 {
   T8_ASSERT (t8_element_is_valid (elem));
   t8_dprism_parent ((const t8_dprism_t *) elem, (t8_dprism_t *) parent);
+  T8_ASSERT (t8_element_is_valid (parent));
 }
 
 int
