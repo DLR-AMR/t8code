@@ -389,6 +389,7 @@ t8_default_scheme_prism_c::t8_element_successor (const t8_element_t *elem,
 
   t8_dprism_successor ((const t8_default_prism_t *) elem,
                        (t8_default_prism_t *) s, level);
+  T8_ASSERT (t8_element_is_valid (s));
 }
 
 void
