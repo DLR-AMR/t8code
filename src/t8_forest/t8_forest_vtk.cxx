@@ -962,9 +962,6 @@ t8_forest_vtk_cells_connectivity_kernel (t8_forest_t forest,
 
   count_vertices = (t8_locidx_t *) *data;
 
-  /* TODO: This will definitely break with pyramids */
-  //SC_CHECK_ABORT (ts->eclass != T8_ECLASS_PYRAMID,
-  //                "No vtk support for pyramids.");
   num_vertices = t8_eclass_num_vertices[ts->t8_element_shape (elements)];
   for (ivertex = 0; ivertex < num_vertices; ++ivertex, (*count_vertices)++) {
     freturn = fprintf (vtufile, " %ld", (long) *count_vertices);
