@@ -177,8 +177,12 @@ t8_default_scheme_prism_c::t8_element_children (const t8_element_t *elem,
                                                 int length, t8_element_t *c[])
 {
   T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (length == T8_DPRISM_CHILDREN);
   t8_dprism_childrenpv ((const t8_dprism_t *) elem, length,
                         (t8_dprism_t **) c);
+  for (int i = 0; i < length; i++) {
+    T8_ASSERT (t8_element_is_valid (c[i]));
+  }
 }
 
 int
