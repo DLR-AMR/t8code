@@ -57,6 +57,7 @@ t8_default_scheme_prism_c::t8_element_init (int length, t8_element_t *elem,
     /* Set all values to 0 */
     for (i = 0; i < length; i++) {
       t8_dprism_init_linear_id (prism + i, 0, 0);
+      T8_ASSERT (t8_dprism_is_valid (prism + i));
     }
   }
 #endif
@@ -194,10 +195,15 @@ t8_default_scheme_prism_c::t8_element_children_at_face (const t8_element_t
                                                         int *child_indices)
 {
   T8_ASSERT (t8_element_is_valid (elem));
-  t8_dprism_children_at_face ((const t8_dprism_t *) elem,
-                              face, (t8_dprism_t **) children, num_children);
+  T8_ASSERT (num_children ==
+             t8_dprism_num_face_children ((const t8_dprism_t *) elem, face));
+  t8_dprism_children_at_face ((const t8_dprism_t *) elem, face,
+                              (t8_dprism_t **) children, num_children);
   /* TODO: Properly implement child_indices */
   T8_ASSERT (child_indices == NULL);
+  for (int i = 0; i < num_children; i++) {
+    T8_ASSERT (t8_element_is_valid (children[i]));
+  }
 }
 
 int
