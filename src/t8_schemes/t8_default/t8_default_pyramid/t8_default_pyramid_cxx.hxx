@@ -105,12 +105,6 @@ public:
    /** Return the number of corners of an element*/
   virtual int         t8_element_num_corners (const t8_element_t *elem);
 
-/** Compute the number of corners of a given element.
-* \param [in] elem The element.
-* \return          The number of corners of \a elem.
-*/
-  virtual int         t8_element_num_vertices (const t8_element_t *elem);
-
   /** Return the number of children of an element's face when the element is refined. */
   virtual int         t8_element_num_face_children (const t8_element_t *elem,
                                                     int face);
