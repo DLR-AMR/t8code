@@ -374,9 +374,10 @@ t8_default_scheme_prism_c::t8_element_set_linear_id (t8_element_t *elem,
 {
   T8_ASSERT (0 <= level && level <= T8_DPRISM_MAXLEVEL);
   T8_ASSERT (0 <= id && id < ((u_int64_t) 1) << 3 * level);
-  T8_ASSERT (t8_element_is_valid (elem));
 
   t8_dprism_init_linear_id ((t8_default_prism_t *) elem, level, id);
+
+  T8_ASSERT (t8_element_is_valid (elem));
 }
 
 void
