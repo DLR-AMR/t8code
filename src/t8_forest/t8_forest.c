@@ -376,12 +376,60 @@ t8_forest_refine_everything (t8_forest_t forest, t8_forest_t forest_from,
   return 1;
 }
 
+/**
+ * Check if any tree in a forest refines irregularly
+ * 
+ * \param[in] forest    The forest to check
+ * \return int          non-zero if any tree refines irregular
+ */
+static int
+t8_forest_refines_irregular (t8_forest_t forest)
+{
+  int                 irregular = 0;
+  t8_eclass_t         eclass;
+  for (eclass = T8_ECLASS_ZERO; eclass < T8_ECLASS_COUNT; eclass++) {
+    if (forest->cmesh->num_local_trees_per_eclass[eclass] > 0) {
+      irregular = irregular || t8_eclass_refines_irregular (eclass);
+    }
+  }
+  return irregular;
+}
+
+/**Algorithm to populate a forest, if any tree refines irregularly
+ * \param[in] forest  The forest to populate
+*/
+static void
+t8_forest_populate_irregular (t8_forest_t forest)
+{
+  t8_forest_t         forest_zero, forest_tmp, forest_tmp_partition;
+  t8_cmesh_ref (forest->cmesh);
+  t8_scheme_cxx_ref (forest->scheme_cxx);
+  t8_forest_init (&forest_zero);
+  t8_forest_set_level (forest_zero, 0);
+  t8_forest_set_cmesh (forest_zero, forest->cmesh, forest->mpicomm);
+  t8_forest_set_scheme (forest_zero, forest->scheme_cxx);
+  t8_forest_commit (forest_zero);
+
+  for (int i = 1; i <= forest->set_level; i++) {
+    t8_forest_init (&forest_tmp);
+    t8_forest_set_level (forest_tmp, i);
+    t8_forest_set_adapt (forest_tmp, forest_zero,
+                         t8_forest_refine_everything, 0);
+    t8_forest_commit (forest_tmp);
+    t8_forest_init (&forest_tmp_partition);
+    t8_forest_set_partition (forest_tmp_partition, forest_tmp, 0);
+    t8_forest_commit (forest_tmp_partition);
+    forest_zero = forest_tmp_partition;
+  }
+  t8_forest_copy_trees (forest, forest_zero, 1);
+  t8_forest_unref (&forest_tmp_partition);
+}
+
 void
 t8_forest_commit (t8_forest_t forest)
 {
   int                 mpiret;
   int                 partitioned = 0;
-  int                 i;
   sc_MPI_Comm         comm_dup;
 
   T8_ASSERT (forest != NULL);
@@ -417,33 +465,12 @@ t8_forest_commit (t8_forest_t forest)
     t8_forest_compute_maxlevel (forest);
     T8_ASSERT (forest->set_level <= forest->maxlevel);
     /* populate a new forest with tree and quadrant objects */
-    if (forest->set_level == 0) {
-      t8_forest_populate (forest);
+    if (t8_forest_refines_irregular (forest) && forest->set_level > 0) {
+      /* On root level we will also use the normal algorithm */
+      t8_forest_populate_irregular (forest);
     }
     else {
-      t8_forest_t         forest_zero, forest_tmp, forest_tmp_partition;
-
-      t8_cmesh_ref (forest->cmesh);
-      t8_scheme_cxx_ref (forest->scheme_cxx);
-      t8_forest_init (&forest_zero);
-      t8_forest_set_level (forest_zero, 0);
-      t8_forest_set_cmesh (forest_zero, forest->cmesh, forest->mpicomm);
-      t8_forest_set_scheme (forest_zero, forest->scheme_cxx);
-      t8_forest_commit (forest_zero);
-
-      for (i = 1; i <= forest->set_level; i++) {
-        t8_forest_init (&forest_tmp);
-        t8_forest_set_level (forest_tmp, i);
-        t8_forest_set_adapt (forest_tmp, forest_zero,
-                             t8_forest_refine_everything, 0);
-        t8_forest_commit (forest_tmp);
-        t8_forest_init (&forest_tmp_partition);
-        t8_forest_set_partition (forest_tmp_partition, forest_tmp, 0);
-        t8_forest_commit (forest_tmp_partition);
-        forest_zero = forest_tmp_partition;
-      }
-      t8_forest_copy_trees (forest, forest_tmp_partition, 1);
-      t8_forest_unref (&forest_tmp_partition);
+      t8_forest_populate (forest);
     }
     forest->global_num_trees = t8_cmesh_get_num_trees (forest->cmesh);
   }
