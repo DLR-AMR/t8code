@@ -743,9 +743,8 @@ t8_default_scheme_hex_c::t8_element_is_valid (const t8_element_t *elem) const
 void
 t8_default_scheme_hex_c::t8_element_debug_print (const t8_element_t *elem)
 {
-  p8est_quadrant_t   *quad = (p8est_quadrant_t *) elem;
-  t8_debugf ("x: %i, y: %i, z: %i, level: %i\n", quad->x, quad->y, quad->z,
-             quad->level);
+  p8est_quadrant_t   *hex = (p8est_quadrant_t *) elem;
+  p8est_quadrant_print (SC_LP_DEBUG, hex);
 }
 #endif
 
