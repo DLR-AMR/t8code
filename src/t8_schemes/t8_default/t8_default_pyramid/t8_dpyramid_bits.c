@@ -132,7 +132,7 @@ t8_dpyramid_is_family (const t8_dpyramid_t **fam)
     }
     /*The type of parent is the type of the first child in z-curve-order */
     type_of_first = fam[0]->type;
-    T8_ASSERT (type_of_first == 6 || type_of_first == 7);
+    T8_ASSERT (type_of_first == T8_DPYRAMID_FIRST_TYPE || type_of_first == 7);
     for (i = 1; i < T8_DPYRAMID_CHILDREN; i++) {
       /*All elements must have the same level to be a family */
       if (fam[i]->level != level) {
@@ -148,7 +148,7 @@ t8_dpyramid_is_family (const t8_dpyramid_t **fam)
     x_inc = fam[0]->x + inc;
     y_inc = fam[0]->y + inc;
     /*Check the coordinates of the anchor-coordinate */
-    if (type_of_first == 6) {
+    if (type_of_first == T8_DPYRAMID_FIRST_TYPE) {
       return fam[0]->z == fam[1]->z && fam[0]->z == fam[2]->z
         && fam[0]->z == fam[3]->z && fam[0]->z == fam[4]->z
         && fam[0]->z == fam[5]->z && fam[0]->z == fam[6]->z
@@ -206,7 +206,7 @@ t8_dpyramid_is_root_boundary (const t8_dpyramid_t *p, const int face)
     return 0;                   /*type 4 tets never touch a root boundary */
   case 5:
     return 0;                   /*type 5 tets never touch a root boundary */
-  case 6:
+  case T8_DPYRAMID_FIRST_TYPE:
     switch (face) {
     case 0:
       return p->x == p->z;
@@ -294,7 +294,8 @@ t8_dpyramid_update_index (t8_linearidx_t * id, const t8_dpyramid_type_t type,
     /* Iterate through the local-id. Get the current shift by the type of the
      * current element*/
     shift =
-      t8_dpyramid_parenttype_Iloc_to_type[type][remain + 1] >= 6 ? pyra : tet;
+      t8_dpyramid_parenttype_Iloc_to_type[type][remain + 1] >=
+      T8_DPYRAMID_FIRST_TYPE ? pyra : tet;
     /*Add the shift to test */
     test += shift;
     remain++;
@@ -325,7 +326,7 @@ t8_dpyramid_init_linear_id (t8_dpyramid_t *p, const int level,
   p->x = 0;
   p->y = 0;
   p->z = 0;
-  type = 6;                     /*This is the type of the root pyramid */
+  type = T8_DPYRAMID_ROOT_TPYE; /*This is the type of the root pyramid */
   for (i = 1; i <= level; i++) {
     offset_expo = T8_DPYRAMID_MAXLEVEL - i;
     p_sum1 >>= 3;
@@ -381,7 +382,9 @@ t8_dpyramid_set_type_at_level (const t8_dpyramid_t *p, const int level)
     /*all ancs are pyramids */
     for (level_iter = p->level; level_iter > level; level_iter--) {
       cube_id = compute_cubeid (p, level_iter);
-      type = t8_dpyramid_type_cid_to_parenttype[type - 6][cube_id];
+      type =
+        t8_dpyramid_type_cid_to_parenttype[type -
+                                           T8_DPYRAMID_FIRST_TYPE][cube_id];
     }
     return type;
   }
@@ -474,7 +477,8 @@ t8_dpyramid_linear_id (const t8_dpyramid_t *p, const int level)
       /* The number of pyramid-predecessors */
       num_pyra =
         t8_dpyramid_parenttype_iloc_pyra_w_lower_id[parent.type -
-                                                    6][local_id];
+                                                    T8_DPYRAMID_FIRST_TYPE]
+        [local_id];
     }
     /* The number of tets is the local-id minus the number of pyramid-predecessors */
     num_tet = local_id - num_pyra;
@@ -511,23 +515,25 @@ t8_dpyramid_face_neighbour (const t8_dpyramid_t *p, const int face,
     }
     else {
       /*face == 4 */
-      neigh->type = ((p->type == 6) ? 7 : 6);
+      neigh->type =
+        ((p->type == T8_DPYRAMID_FIRST_TYPE) ? 7 : T8_DPYRAMID_FIRST_TYPE);
     }
     /*Compute the coords of the neighbour */
     /*Do nothing for face == 0 || face == 2 */
     if (face == 1) {
-      neigh->x += ((p->type == 6) ? length : 0);
-      neigh->y += ((p->type == 6) ? 0 : -length);
+      neigh->x += ((p->type == T8_DPYRAMID_FIRST_TYPE) ? length : 0);
+      neigh->y += ((p->type == T8_DPYRAMID_FIRST_TYPE) ? 0 : -length);
     }
     else if (face == 3) {
-      neigh->x += ((p->type == 6) ? 0 : -length);
-      neigh->y += ((p->type == 6) ? length : 0);
+      neigh->x += ((p->type == T8_DPYRAMID_FIRST_TYPE) ? 0 : -length);
+      neigh->y += ((p->type == T8_DPYRAMID_FIRST_TYPE) ? length : 0);
     }
     else if (face == 4) {
-      neigh->z += ((p->type == 6) ? -length : length);
+      neigh->z += ((p->type == T8_DPYRAMID_FIRST_TYPE) ? -length : length);
     }
 
-    return t8_dpyramid_type_face_to_nface[p->type - 6][face];
+    return t8_dpyramid_type_face_to_nface[p->type -
+                                          T8_DPYRAMID_FIRST_TYPE][face];
   }
   else {
     /*Check if the neighbor is a tet, or a pyra */
@@ -547,11 +553,11 @@ t8_dpyramid_face_neighbour (const t8_dpyramid_t *p, const int face,
           neigh->type = 7;
           return 2;
         case 2:
-          neigh->type = 6;
+          neigh->type = T8_DPYRAMID_FIRST_TYPE;
           return 2;
         case 3:
           neigh->y -= length;
-          neigh->type = 6;
+          neigh->type = T8_DPYRAMID_FIRST_TYPE;
           return 3;
         default:
           SC_ABORT_NOT_REACHED ();
@@ -568,11 +574,11 @@ t8_dpyramid_face_neighbour (const t8_dpyramid_t *p, const int face,
           neigh->type = 7;
           return 0;
         case 2:
-          neigh->type = 6;
+          neigh->type = T8_DPYRAMID_FIRST_TYPE;
           return 0;
         case 3:
           neigh->x -= length;
-          neigh->type = 6;
+          neigh->type = T8_DPYRAMID_FIRST_TYPE;
           return 1;
         default:
           SC_ABORT_NOT_REACHED ();
@@ -600,7 +606,8 @@ t8_dpyramid_face_parent_face (const t8_dpyramid_t *elem, const int face)
     /*If the pyramid is one of the children in the array, its face-num and the face-num
      * of the parent are the same*/
     for (i = 0; i < 4; i++) {
-      if (t8_dpyramid_type_face_to_children_at_face[parent.type - 6][face][i]
+      if (t8_dpyramid_type_face_to_children_at_face
+          [parent.type - T8_DPYRAMID_FIRST_TYPE][face][i]
           == child_id) {
         return face;
       }
@@ -617,7 +624,7 @@ t8_dpyramid_face_parent_face (const t8_dpyramid_t *elem, const int face)
     /*tet with a pyramid-parent */
     else {
       /*Only tets of type 0 or 3 have a pyra-parent. Parent can have type 6 or 7 */
-      if (elem->type == 0 && parent.type == 6) {
+      if (elem->type == 0 && parent.type == T8_DPYRAMID_FIRST_TYPE) {
         if (child_id == 3 && face == 1) {
           return 0;
         }
@@ -627,7 +634,7 @@ t8_dpyramid_face_parent_face (const t8_dpyramid_t *elem, const int face)
         else
           return -1;
       }
-      else if (elem->type == 3 && parent.type == 6) {
+      else if (elem->type == 3 && parent.type == T8_DPYRAMID_FIRST_TYPE) {
         if (child_id == 1 && face == 1) {
           return 2;
         }
@@ -855,8 +862,9 @@ t8_dpyramid_first_descendant_face (const t8_dpyramid_t *p, const int face,
   }
   else {
     /*Shift the coordinate of p to compute the descendant */
-    if ((p->type == 6 && (face == 0 || face == 2 || face == 4)) ||
-        (p->type == 7 && face != 4)) {
+    if ((p->type == T8_DPYRAMID_FIRST_TYPE
+         && (face == 0 || face == 2 || face == 4)) || (p->type == 7
+                                                       && face != 4)) {
       /*No shifting is needed, fd is the first child with given level */
       t8_dpyramid_child (p, 0, first_desc);
       first_desc->level = level;
@@ -865,10 +873,10 @@ t8_dpyramid_first_descendant_face (const t8_dpyramid_t *p, const int face,
       /*shifting is needed, the fd does not have the same coord as p */
       t8_dpyramid_copy (p, first_desc);
       first_desc->level = level;
-      if (p->type == 6 && face == 1) {
+      if (p->type == T8_DPYRAMID_FIRST_TYPE && face == 1) {
         first_desc->x |= off_set;
       }
-      else if (p->type == 6 && face == 3) {
+      else if (p->type == T8_DPYRAMID_FIRST_TYPE && face == 3) {
         first_desc->y |= off_set;
       }
       else if (p->type == 7 && face == 4) {
@@ -930,7 +938,7 @@ t8_dpyramid_last_descendant_face (const t8_dpyramid_t *p,
   else {
     t8_dpyramid_copy (p, last_desc);
     last_desc->level = level;
-    if ((p->type == 6 && face != 4) ||
+    if ((p->type == T8_DPYRAMID_FIRST_TYPE && face != 4) ||
         (p->type == 7 && (face == 0 || face == 2 || face == 4))) {
       /*No shifting needed */
       t8_dpyramid_last_descendant (p, last_desc, level);
@@ -943,7 +951,7 @@ t8_dpyramid_last_descendant_face (const t8_dpyramid_t *p,
       last_desc->y |= off_set;
       last_desc->z |= off_set;
     }
-    else if (p->type == 6 && face == 4) {
+    else if (p->type == T8_DPYRAMID_FIRST_TYPE && face == 4) {
       last_desc->x |= off_set;
       last_desc->y |= off_set;
     }
@@ -1127,7 +1135,7 @@ t8_dpyramid_extrude_face (const t8_element_t *face, t8_dpyramid_t *p,
     /*Description of triangles extruding to a pyramid */
     if ((t->y == (t->x & t->y)) && t->type == 0) {
       /*type zero in a pyramid extend to a pyramid */
-      p->type = 6;
+      p->type = T8_DPYRAMID_FIRST_TYPE;
       extruded_face = root_face;
     }
     else {
@@ -1248,7 +1256,9 @@ t8_dpyramid_children_at_face (const t8_dpyramid_t *p, const int face,
     /*Fill the child ids with the child-ids at the face */
     for (i = 0; i < T8_DPYRAMID_FACE_CHILDREN; i++) {
       children_at_face_id[i] =
-        t8_dpyramid_type_face_to_children_at_face[p->type - 6][face][i];
+        t8_dpyramid_type_face_to_children_at_face[p->type -
+                                                  T8_DPYRAMID_FIRST_TYPE]
+        [face][i];
     }
     /*Compute the children */
     for (i = T8_DPYRAMID_FACE_CHILDREN - 1; i >= 0; i--) {
@@ -1269,7 +1279,9 @@ t8_dpyramid_face_child_face (const t8_dpyramid_t *p, const int face,
   }
   else {
     int                 child_face =
-      t8_dpyramid_type_face_to_child_face[p->type - 6][face][face_child];
+      t8_dpyramid_type_face_to_child_face[p->type -
+                                          T8_DPYRAMID_FIRST_TYPE][face]
+      [face_child];
     T8_ASSERT (child_face >= 0 && child_face <= T8_DPYRAMID_FACES);
     return child_face;
   }
@@ -1324,7 +1336,7 @@ t8_dpyramid_is_inside_pyra (const t8_dpyramid_t *p,
     }
     else {
       /*tet is inside pyra of type 6 */
-      return 6;
+      return T8_DPYRAMID_FIRST_TYPE;
     }
   }
   else if ((check->x <= p->x && p->x <= (check->x + diff)) &&
@@ -1386,7 +1398,7 @@ void
 t8_dpyramid_tetparent_type (const t8_dpyramid_t *p, t8_dpyramid_t *parent)
 {
   if ((p->z >> (T8_DPYRAMID_MAXLEVEL - p->level)) % 2 == 0) {
-    parent->type = 6;
+    parent->type = T8_DPYRAMID_FIRST_TYPE;
   }
   else {
     parent->type = 7;
@@ -1406,7 +1418,9 @@ t8_dpyramid_parent (const t8_dpyramid_t *p, t8_dpyramid_t *parent)
 
     t8_dpyramid_cube_id_t cube_id = compute_cubeid (p, p->level);
 
-    parent->type = t8_dpyramid_type_cid_to_parenttype[p->type - 6][cube_id];
+    parent->type =
+      t8_dpyramid_type_cid_to_parenttype[p->type -
+                                         T8_DPYRAMID_FIRST_TYPE][cube_id];
     parent->x = p->x & ~length;
     parent->y = p->y & ~length;
     parent->z = p->z & ~length;
@@ -1441,7 +1455,7 @@ t8_dpyramid_shape (const t8_dpyramid_t *p)
 {
   T8_ASSERT (0 <= p->level && p->level <= T8_DPYRAMID_MAXLEVEL);
   /*The pyramid has the shape of a tetrahedron */
-  if (p->type < 6) {
+  if (p->type < T8_DPYRAMID_FIRST_TYPE) {
     return T8_ECLASS_TET;
   }
   else {
@@ -1519,9 +1533,9 @@ t8_dpyramid_compute_coords (const t8_dpyramid_t *p, const int vertex,
       coords[2] += (p->type == 7) ? length : 0;
       break;
     case 4:
-      coords[0] += (p->type == 6) ? length : 0;
-      coords[1] += (p->type == 6) ? length : 0;
-      coords[2] += (p->type == 6) ? length : 0;
+      coords[0] += (p->type == T8_DPYRAMID_FIRST_TYPE) ? length : 0;
+      coords[1] += (p->type == T8_DPYRAMID_FIRST_TYPE) ? length : 0;
+      coords[2] += (p->type == T8_DPYRAMID_FIRST_TYPE) ? length : 0;
       break;
     }
   }
