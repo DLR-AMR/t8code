@@ -361,7 +361,7 @@ t8_dpyramid_init_linear_id (t8_dpyramid_t *p, const int level,
   p->type = type;
 }
 
-/* Compute the type of a pyramid at a given leven. Starting from its own level,
+/* Compute the type of a pyramid at a given level. Starting from its own level,
  * we iterate over the levels and compute the type of this level. If p is a tetrahedron,
  * we compute it in a tetrahedral fashion up unto the last level where p is a tet and
  * continue in a pyramidal fashion*/
