@@ -1444,7 +1444,7 @@ t8_dpyramid_parent (const t8_dpyramid_t *p, t8_dpyramid_t *parent)
   T8_ASSERT (parent->level >= 0);
 }
 
-t8_eclass_t
+t8_element_shape_t
 t8_dpyramid_shape (const t8_dpyramid_t *p)
 {
   T8_ASSERT (0 <= p->level && p->level <= T8_DPYRAMID_MAXLEVEL);

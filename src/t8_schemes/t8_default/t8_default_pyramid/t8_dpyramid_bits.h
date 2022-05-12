@@ -366,7 +366,7 @@ int                 t8_dpyramid_ancestor_id (const t8_dpyramid_t *p,
  * \param [in] p    Input pyramid.
  * \return          The eclass of the element
  */
-t8_eclass_t         t8_dpyramid_shape (const t8_dpyramid_t *p);
+t8_element_shape_t  t8_dpyramid_shape (const t8_dpyramid_t *p);
 
 /** Computes the successor of a pyramid in a uniform grid of level \a level.
  * \param [in] elem  pyramid whose id will be computed.
