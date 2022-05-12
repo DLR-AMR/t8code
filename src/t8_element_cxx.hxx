@@ -125,7 +125,6 @@ public:
   virtual void        t8_element_parent (const t8_element_t *elem,
                                          t8_element_t *parent) = 0;
 
-
   /** Compute the number of siblings of an element. That is the number of 
    * Children of its parent.
    * \param [in] elem The element.
