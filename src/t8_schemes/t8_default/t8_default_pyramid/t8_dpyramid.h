@@ -20,9 +20,6 @@
 /** The number of corners of a pyramid */
 #define T8_DPYRAMID_CORNERS 5
 
-/** The number of vertices of a pyramid*/
-#define T8_DPYRAMID_VERTICES 8
-
 /** The maximum refinement level allowed for a pyramid */
 /*The tetrahedral elements are linked with pyra-elements*/
 #define T8_DPYRAMID_MAXLEVEL 21
