@@ -81,7 +81,7 @@ public:
                                                t8_element_t *elem,
                                                int root_face);
 
-/** Compare two elements. returns negativ if elem1 < elem2, zero if elem1 equals elem2
+/** Compare two elements. returns negative if elem1 < elem2, zero if elem1 equals elem2
  *  and positiv if elem1 > elem2.
  *  If elem2 is a copy of elem1 then the elements are equal.
  */
@@ -180,7 +180,7 @@ public:
                                                 int level, uint64_t id);
 
 /** Return the shape of an element */
-  virtual t8_eclass_t t8_element_shape (const t8_element_t *elem);
+  virtual t8_element_shape_t t8_element_shape (const t8_element_t *elem);
 
 /** Return the shape of an element */
   virtual t8_element_shape_t t8_element_face_shape (const t8_element_t *elem,

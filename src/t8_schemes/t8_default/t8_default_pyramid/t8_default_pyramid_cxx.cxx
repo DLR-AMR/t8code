@@ -321,7 +321,7 @@ t8_default_scheme_pyramid_c::t8_element_extrude_face (const t8_element_t
   T8_ASSERT (t8_element_is_valid (elem));
 }
 
-t8_eclass_t
+t8_element_shape_t
 t8_default_scheme_pyramid_c::t8_element_shape (const t8_element_t *elem)
 {
   T8_ASSERT (t8_element_is_valid (elem));
