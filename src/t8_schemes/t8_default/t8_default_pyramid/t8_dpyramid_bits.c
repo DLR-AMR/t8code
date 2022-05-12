@@ -190,7 +190,6 @@ t8_dpyramid_is_root_boundary (const t8_dpyramid_t *p, const int face)
     return 0;
   }
   switch (p->type) {
-    /*Doublecheck the tet-part */
   case 0:
     return (face == 1 && p->x == p->z) ||
       (face == 0 && p->x == coord_touching_root);
