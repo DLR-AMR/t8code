@@ -386,10 +386,12 @@ static int
 t8_forest_refines_irregular (t8_forest_t forest)
 {
   int                 irregular = 0;
-  t8_eclass_t         eclass;
-  for (eclass = T8_ECLASS_ZERO; eclass < T8_ECLASS_COUNT; eclass++) {
-    if (forest->cmesh->num_local_trees_per_eclass[eclass] > 0) {
-      irregular = irregular || t8_eclass_refines_irregular (eclass);
+  int                 int_eclass;
+  for (int_eclass = (int) T8_ECLASS_ZERO; int_eclass < (int) T8_ECLASS_COUNT;
+       int_eclass++) {
+    if (forest->cmesh->num_local_trees_per_eclass[int_eclass] > 0) {
+      irregular = irregular
+        || t8_eclass_refines_irregular ((t8_eclass_t) int_eclass);
     }
   }
   return irregular;
