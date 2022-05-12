@@ -269,9 +269,21 @@ t8_dpyramid_get_level (const t8_dpyramid_t *p)
   return p->level;
 }
 
+/**
+ * Computes the local index of a pyramid and updates its current global index. 
+ * for further computation of init_linear_id. For each sibling that is a predecessor
+ * the number of pyramids or tets on the level used in init_linear_id is substracted from
+ * the id. 
+ * 
+ * \param[in, out] id       The current id that will be updated
+ * \param[in] type          The type of the current pyramid
+ * \param[in] pyra          Number of pyramids to shift 
+ * \param[in] tet           Number of tets to shift
+ * \return int              The local-id of the child
+ */
 static int
-t8_dpyramid_custom_mod (t8_linearidx_t * id, const t8_dpyramid_type_t type,
-                        const t8_linearidx_t pyra, const t8_linearidx_t tet)
+t8_dpyramid_update_index (t8_linearidx_t * id, const t8_dpyramid_type_t type,
+                          const t8_linearidx_t pyra, const t8_linearidx_t tet)
 {
   t8_linearidx_t      test = 0, shift;
   T8_ASSERT (id != NULL);
@@ -331,8 +343,8 @@ t8_dpyramid_init_linear_id (t8_dpyramid_t *p, const int level,
     /* The local index depends on the alternating number of predecessors
      * caused by switching between pyramids and tetrahedrons, which have
      * a different number of children.*/
-    local_index = t8_dpyramid_custom_mod (&id, type, 2 * p_sum1 - p_sum2,
-                                          p_sum1);
+    local_index = t8_dpyramid_update_index (&id, type, 2 * p_sum1 - p_sum2,
+                                            p_sum1);
     cube_id = t8_dpyramid_parenttype_Iloc_to_cid[type][local_index];
     T8_ASSERT (cube_id >= 0);
     /* Set the element in its cube */
