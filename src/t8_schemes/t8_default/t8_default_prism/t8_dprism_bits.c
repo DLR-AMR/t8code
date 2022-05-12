@@ -649,6 +649,6 @@ t8_dprism_is_valid (const t8_dprism_t *p)
 void
 t8_dprism_debug_print (const t8_dprism_t *p)
 {
-  t8_debugf ("x: %i, y: %i, z:%i, level: %i, type: %i\n", p->tri.x, p->tri.y,
-             p->line.x, p->line.level, p->tri.type);
+  t8_dtri_debug_print (&p->tri);
+  t8_dline_debug_print (&p->line);
 }

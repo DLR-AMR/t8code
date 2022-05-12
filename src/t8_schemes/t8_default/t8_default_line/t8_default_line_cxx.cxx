@@ -457,6 +457,7 @@ t8_default_scheme_line_c::t8_element_is_valid (const t8_element_t * elem) const
 void
 t8_default_scheme_line_c::t8_element_debug_print (const t8_element_t *elem) const
 {
+  T8_ASSERT (t8_element_is_valid (elem));
   t8_dline_debug_print ((const t8_dline_t *) elem);
 }
 #endif
