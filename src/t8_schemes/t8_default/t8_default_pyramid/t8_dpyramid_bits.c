@@ -285,7 +285,8 @@ static int
 t8_dpyramid_update_index (t8_linearidx_t * id, const t8_dpyramid_type_t type,
                           const t8_linearidx_t pyra, const t8_linearidx_t tet)
 {
-  t8_linearidx_t      test = 0, shift;
+  t8_linearidx_t      test = 0;
+  t8_linearidx_t      shift;
   T8_ASSERT (id != NULL);
   T8_ASSERT (*id >= 0);
   int                 remain = -1;
@@ -311,9 +312,9 @@ t8_dpyramid_init_linear_id (t8_dpyramid_t *p, const int level,
                             t8_linearidx_t id)
 {
   t8_dpyramid_type_t  type;
-  t8_linearidx_t      local_index,
-    p_sum1 = ((t8_linearidx_t) 1) << (3 * level),
-    p_sum2 = sc_intpow64u (6, level);
+  t8_linearidx_t      local_index;
+  t8_linearidx_t      p_sum1 = ((t8_linearidx_t) 1) << (3 * level);
+  t8_linearidx_t      p_sum2 = sc_intpow64u (6, level);
   t8_dpyramid_cube_id_t cube_id;
   int                 i, offset_expo;
 
