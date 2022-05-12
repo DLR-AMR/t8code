@@ -29,9 +29,9 @@
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.h>
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.h>
 
-typedef int8_t      t8_dpyramid_cube_id_t;
+typedef int8_t t8_dpyramid_cube_id_t;
 
-static              t8_dpyramid_cube_id_t
+static t8_dpyramid_cube_id_t
 compute_cubeid (const t8_dpyramid_t *p, const int level)
 {
   t8_dpyramid_cube_id_t cube_id = 0;
