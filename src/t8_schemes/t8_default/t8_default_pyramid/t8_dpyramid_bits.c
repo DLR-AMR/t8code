@@ -232,6 +232,7 @@ t8_dpyramid_is_root_boundary (const t8_dpyramid_t *p, const int face)
 void
 t8_dpyramid_copy (const t8_dpyramid_t *source, t8_dpyramid_t *dest)
 {
+  T8_ASSERT (source != NULL && dest != NULL);
   if (source == dest) {
     return;
   }
