@@ -390,7 +390,7 @@ t8_dpyramid_set_type_at_level (const t8_dpyramid_t *p, const int level)
     t8_dpyramid_t       helper;
     for (level_iter = p->level; level_iter > level && type != 0 && type != 3;
          level_iter--) {
-      /*all anc fullfilling the above cond are not pyramids */
+      /*all anc fulfilling the above condition are not pyramids */
       cube_id = compute_cubeid (p, level_iter);
       type = t8_dtet_cid_type_to_parenttype[cube_id][type];
     }
