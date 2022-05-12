@@ -307,6 +307,12 @@ t8_dpyramid_init_linear_id (t8_dpyramid_t *p, const int level,
     p_sum2 /= 6;
     // Thy types of the tetrahedron children of pyramid are always 0 or 3
     if (type == 0 || type == 3) {
+      /* Ensure that a valid tet is used in init_linear_id_with_level */
+      p->type = type;
+      p->level = i;
+#if T8_ENABLE_DEBUG
+      ((t8_dtet_t *) p)->eclass_int8 = T8_ECLASS_TET;
+#endif
       t8_dtet_init_linear_id_with_level (p, id, i, level, type);
       return;
     }
