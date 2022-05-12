@@ -1027,7 +1027,7 @@ void
 t8_dpyramid_boundary_face (const t8_dpyramid_t *p, const int face,
                            t8_element_t *boundary)
 {
-  /*face is face of of p */
+  /* face is face of of p */
   T8_ASSERT (0 <= face && face < T8_DPYRAMID_FACES);
   T8_ASSERT (0 <= p->level && p->level <= T8_DPYRAMID_MAXLEVEL);
   if (face == 4) {
