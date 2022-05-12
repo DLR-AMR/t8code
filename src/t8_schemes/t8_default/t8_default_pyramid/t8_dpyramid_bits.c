@@ -368,7 +368,9 @@ t8_dpyramid_init_linear_id (t8_dpyramid_t *p, const int level,
 int
 t8_dpyramid_set_type_at_level (const t8_dpyramid_t *p, const int level)
 {
-  int                 i, start, type = p->type;
+  int                 level_iter;
+  int                 start;
+  t8_dpyramid_type_t  type = p->type;
   t8_dpyramid_cube_id_t cube_id;
   T8_ASSERT (0 <= level && level <= T8_DPYRAMID_MAXLEVEL);
 
@@ -377,8 +379,8 @@ t8_dpyramid_set_type_at_level (const t8_dpyramid_t *p, const int level)
   }
   if (t8_dpyramid_shape (p) == T8_ECLASS_PYRAMID) {
     /*all ancs are pyramids */
-    for (i = p->level; i > level; i--) {
-      cube_id = compute_cubeid (p, i);
+    for (level_iter = p->level; level_iter > level; level_iter--) {
+      cube_id = compute_cubeid (p, level_iter);
       type = t8_dpyramid_type_cid_to_parenttype[type - 6][cube_id];
     }
     return type;
@@ -386,16 +388,17 @@ t8_dpyramid_set_type_at_level (const t8_dpyramid_t *p, const int level)
   else {
     int                 max_tet_lvl;
     t8_dpyramid_t       helper;
-    for (i = p->level; i > level && type != 0 && type != 3; i--) {
+    for (level_iter = p->level; level_iter > level && type != 0 && type != 3;
+         level_iter--) {
       /*all anc fullfilling the above cond are not pyramids */
-      cube_id = compute_cubeid (p, i);
+      cube_id = compute_cubeid (p, level_iter);
       type = t8_dtet_cid_type_to_parenttype[cube_id][type];
     }
-    if (i == level) {
+    if (level_iter == level) {
       return type;
     }
-    if (i != p->level) {
-      start = i;
+    if (level_iter != p->level) {
+      start = level_iter;
     }
     else {
       start = p->level;
@@ -406,9 +409,9 @@ t8_dpyramid_set_type_at_level (const t8_dpyramid_t *p, const int level)
     /*Compute the last tetrahedral level */
     max_tet_lvl = t8_dpyramid_is_inside_tet (&helper, helper.level, NULL);
     if (level >= max_tet_lvl && max_tet_lvl != 0) {
-      for (i = start; i > level; i--) {
+      for (level_iter = start; level_iter > level; level_iter--) {
         /*Up to this level all anc are tets */
-        cube_id = compute_cubeid (p, i);
+        cube_id = compute_cubeid (p, level_iter);
         type = t8_dtet_cid_type_to_parenttype[cube_id][type];
       }
     }
@@ -417,18 +420,18 @@ t8_dpyramid_set_type_at_level (const t8_dpyramid_t *p, const int level)
         /*parent is a pyra */
         max_tet_lvl = helper.level;
       }
-      for (i = helper.level; i > max_tet_lvl; i--) {
+      for (level_iter = helper.level; level_iter > max_tet_lvl; level_iter--) {
         /*from current level on until max-tet-lvl all ancs are tet */
-        cube_id = compute_cubeid (p, i);
+        cube_id = compute_cubeid (p, level_iter);
         type = t8_dtet_cid_type_to_parenttype[cube_id][type];
       }
       cube_id = compute_cubeid (p, max_tet_lvl);
       type = t8_dtet_type_cid_to_pyramid_parenttype[type][cube_id];
       /*compute type of pyramidal tet parent */
       T8_ASSERT (type == 6 || type == 7);
-      for (i = max_tet_lvl - 1; i > level; i--) {
+      for (level_iter = max_tet_lvl - 1; level_iter > level; level_iter--) {
         /*remaining ancs are pyramids */
-        cube_id = compute_cubeid (p, i);
+        cube_id = compute_cubeid (p, level_iter);
         type = t8_dpyramid_type_cid_to_parenttype[type - 6][cube_id];
       }
     }
