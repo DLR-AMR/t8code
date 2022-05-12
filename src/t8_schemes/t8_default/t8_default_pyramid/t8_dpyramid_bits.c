@@ -95,51 +95,6 @@ pyramid_cut_coords (t8_dpyramid_t *p, const int shift)
 int
 t8_dpyramid_ancestor_id (const t8_dpyramid_t *p, const int level)
 {
-#if 0
-  t8_dpyramid_t       helper;
-  int                 i, cid;
-  /*helper is the anc of p at level level. */
-  helper.x =
-    (p->x >> (T8_DPYRAMID_MAXLEVEL - level)) << (T8_DPYRAMID_MAXLEVEL -
-                                                 level);
-  helper.y =
-    (p->y >> (T8_DPYRAMID_MAXLEVEL - level)) << (T8_DPYRAMID_MAXLEVEL -
-                                                 level);
-  helper.z =
-    (p->z >> (T8_DPYRAMID_MAXLEVEL - level)) << (T8_DPYRAMID_MAXLEVEL -
-                                                 level);
-  helper.level = level;
-  helper.type = p->type;
-  if (t8_dpyramid_shape (p) == T8_ECLASS_PYRAMID) {
-
-    helper.type = p->type;
-    for (i = level; i > p->level; i--) {
-      /*compute anc type */
-      cid = compute_cubeid (p, i);
-      helper.type = t8_dpyramid_cid_type_to_parenttype[cid][helper.type];
-    }
-    return t8_dpyramid_child_id (&helper);
-  }
-  else {
-    int                 max_tet_lvl =
-      t8_dpyramid_is_inside_tet (p, p->level, NULL);
-    if (level < max_tet_lvl) {
-      /*all ancestor up to level are tetrahedra */
-      max_tet_lvl = level;
-    }
-    for (i = max_tet_lvl; i > p->level; i--) {
-      /*run through tetrahedra ancestor */
-      cid = compute_cubeid (p, i);
-      helper.type = t8_dtet_cid_type_to_parenttype[cid][helper.type];
-    }
-    for (i = level; i > max_tet_lvl; i--) {
-      /*run through pyra ancestor */
-      cid = compute_cubeid (p, i);
-      helper.type = t8_dpyramid_cid_type_to_parenttype[cid][helper.type];
-    }
-    return t8_dpyramid_child_id (&helper);
-  }
-#endif
   t8_linearidx_t      id;
   t8_dpyramid_t       helper;
   /*Compute the id of p at the given level */
