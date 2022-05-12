@@ -51,7 +51,17 @@ compute_cubeid (const t8_dpyramid_t *p, const int level)
   return cube_id;
 }
 
-t8_dpyramid_type_t
+/**
+ * Starting from a level where the type of \a p is known compute the type
+ * of \a p at level \a level
+ * 
+ * \param [in]  p           Input pyramid
+ * \param [in]  level       The level at which we want to know the type of \a p. Must be lower than the level of \a p
+ * \param [in]  known_type  The type of \a p at \a known_level
+ * \param [in]  known_level The level where we already know the type of \a p
+ * \return      t8_dpyramid_type_t The type of \a p at level \a level.
+ */
+static t8_dpyramid_type_t
 compute_type_ext (const t8_dpyramid_t *p, const int level,
                   const t8_dpyramid_type_t known_type, const int known_level)
 {
