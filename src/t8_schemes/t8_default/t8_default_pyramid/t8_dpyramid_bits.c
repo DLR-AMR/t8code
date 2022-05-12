@@ -269,7 +269,7 @@ t8_dpyramid_get_level (const t8_dpyramid_t *p)
   return p->level;
 }
 
-int
+static int
 t8_dpyramid_custom_mod (t8_linearidx_t * id, const t8_dpyramid_type_t type,
                         const t8_linearidx_t pyra, const t8_linearidx_t tet)
 {
