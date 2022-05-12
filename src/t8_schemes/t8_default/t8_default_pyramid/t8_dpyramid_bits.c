@@ -97,6 +97,7 @@ compute_type (const t8_dpyramid_t *p, const int level)
 static void
 pyramid_cut_coords (t8_dpyramid_t *p, const int shift)
 {
+  T8_ASSERT (0 <= shift && shift <= T8_DPYRAMID_MAXLEVEL);
   p->x = (p->x >> shift) << shift;
   p->y = (p->y >> shift) << shift;
   p->z = (p->z >> shift) << shift;
