@@ -502,7 +502,7 @@ t8_default_scheme_prism_c::t8_element_is_valid (const t8_element_t * elem) const
 /* *INDENT-ON* */
 
 void
-t8_default_scheme_prism_c::t8_element_debug_print (const t8_element_t *elem)
+t8_default_scheme_prism_c::t8_element_debug_print (const t8_element_t *elem) const
 {
   t8_dprism_debug_print ((const t8_dprism_t *) elem);
 }

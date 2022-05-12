@@ -652,7 +652,8 @@ public:
  * 
  * \param [in]        elem  The element to print
  */
-  virtual void        t8_element_debug_print (const t8_element_t *elem) = 0;
+  virtual void        t8_element_debug_print (const t8_element_t *elem) const
+    = 0;
 #endif
 
   /** Allocate memory for an array of elements of a given class and initialize them.

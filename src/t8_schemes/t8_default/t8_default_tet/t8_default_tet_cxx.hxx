@@ -290,7 +290,7 @@ public:
   virtual int         t8_element_is_valid (const t8_element_t *t) const;
 
   /** Print an element*/
-  virtual void        t8_element_debug_print (const t8_element_t *elem);
+  virtual void        t8_element_debug_print (const t8_element_t *elem) const;
 #endif
 };
 
