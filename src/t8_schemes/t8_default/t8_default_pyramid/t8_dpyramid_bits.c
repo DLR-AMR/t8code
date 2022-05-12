@@ -428,11 +428,14 @@ t8_dpyramid_set_type_at_level (const t8_dpyramid_t *p, const int level)
       cube_id = compute_cubeid (p, max_tet_lvl);
       type = t8_dtet_type_cid_to_pyramid_parenttype[type][cube_id];
       /*compute type of pyramidal tet parent */
-      T8_ASSERT (type == 6 || type == 7);
+      T8_ASSERT (type == T8_DPYRAMID_FIRST_TYPE
+                 || type == T8_DPYRAMID_SECOND_TYPE);
       for (level_iter = max_tet_lvl - 1; level_iter > level; level_iter--) {
         /*remaining ancs are pyramids */
         cube_id = compute_cubeid (p, level_iter);
-        type = t8_dpyramid_type_cid_to_parenttype[type - 6][cube_id];
+        type =
+          t8_dpyramid_type_cid_to_parenttype[type -
+                                             T8_DPYRAMID_FIRST_TYPE][cube_id];
       }
     }
     return type;
