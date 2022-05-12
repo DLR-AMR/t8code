@@ -263,16 +263,6 @@ int                 t8_dtet_is_ancestor (const t8_dtet_t *t,
  */
 t8_linearidx_t      t8_dtet_linear_id (const t8_dtet_t *t, int level);
 
-/** Computes the linear position of a tetrahedron in a uniform grid up to a given level.
- * \param [in] t  tetrahedron whose id will be computed.
- * \param [in] level level of uniform grid to be considered.
- * \param [in] stop  level, where the computation should stop.
- * \return Returns the linear position of this tetrahedron on a grid of level \a level.
- * \note This id is not the Morton index.
- */
-t8_linearidx_t
-     t8_dtet_linear_id_with_level (const t8_dtet_t *t, int level, int stop);
-
 /**
  * Same as init_linear_id, but we only consider the subtree. Used for computing the index of a
  * tetrahedron lying in a pyramid

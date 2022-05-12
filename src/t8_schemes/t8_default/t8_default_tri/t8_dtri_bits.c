@@ -1356,37 +1356,6 @@ t8_dtri_linear_id (const t8_dtri_t *t, int level)
   return id;
 }
 
-t8_linearidx_t
-t8_dtri_linear_id_with_level (const t8_dtri_t *t, int level, int stop)
-{
-  t8_linearidx_t      id = 0;
-  int8_t              type_temp = 0;
-  t8_dtri_cube_id_t   cid;
-  int                 i;
-  int                 exponent;
-  int                 my_level;
-
-  T8_ASSERT (0 <= level && level <= T8_DTRI_MAXLEVEL && level >= stop);
-  my_level = t->level;
-  exponent = 0;
-  /* If the given level is bigger than t's level
-   * we first fill up with the ids of t's descendants at t's
-   * origin with the same type as t */
-  if (level > my_level) {
-    exponent = (level - my_level) * T8_DTRI_DIM;
-  }
-  level = my_level;
-  type_temp = compute_type (t, level);
-  for (i = level; i > stop; i--) {
-    cid = compute_cubeid (t, i);
-    id |=
-      ((t8_linearidx_t) t8_dtri_type_cid_to_Iloc[type_temp][cid]) << exponent;
-    exponent += T8_DTRI_DIM;    /* multiply with 4 (2d) resp. 8  (3d) */
-    type_temp = t8_dtri_cid_type_to_parenttype[cid][type_temp];
-  }
-  return id;
-}
-
 void
 t8_dtri_init_linear_id_with_level (t8_dtri_t *t, t8_linearidx_t id,
                                    const int start_level, const int end_level,
