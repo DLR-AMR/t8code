@@ -99,8 +99,9 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
       T8_ASSERT (elements_in_array == t8_element_array_get_count (telements));
       T8_ASSERT (ts->t8_element_level (element) > 0);
       ts->t8_element_parent (fam[0], fam[0]);
-      num_siblings = ts->t8_element_num_children (fam[0]);
+      /*Shorten the array by the number of siblings of the fine element */
       elements_in_array -= num_siblings - 1;
+      num_siblings = ts->t8_element_num_children (fam[0]);
       t8_element_array_resize (telements, elements_in_array);
       /* Set element to the new constructed parent. Since resizing the array
        * may change the position in memory, we have to do it after resizing. */
