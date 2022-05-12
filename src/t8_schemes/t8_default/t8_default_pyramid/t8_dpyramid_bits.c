@@ -1165,7 +1165,7 @@ t8_dpyramid_child_id_unknown_parent (const t8_dpyramid_t *p,
      */
     parent->type = -1;
     parent->level = -1;
-    return 0;
+    return -1;
   }
   t8_dpyramid_parent (p, parent);
   return t8_dpyramid_child_id_known_parent (p, parent);
