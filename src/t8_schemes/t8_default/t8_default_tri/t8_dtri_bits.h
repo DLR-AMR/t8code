@@ -290,10 +290,10 @@ t8_linearidx_t      t8_dtri_linear_id (const t8_dtri_t *t, int level);
  * Same as init_linear_id, but we only consider the subtree. Used for computing the index of a
  * tetrahedron lying in a pyramid
  * \param [in, out] t   Existing triangle whose data will be filled
- * \param id            Index to be considered
- * \param start_level   The level of the root of the subtree
- * \param end_level     Level of uniform grid to be considered
- * \param parenttype    The type of the parent.
+ * \param [in] id            Index to be considered
+ * \param [in] start_level   The level of the root of the subtree
+ * \param [in] end_level     Level of uniform grid to be considered
+ * \param [in] parenttype    The type of the parent.
  */
 void                t8_dtri_init_linear_id_with_level (t8_dtri_t *t,
                                                        t8_linearidx_t id,
