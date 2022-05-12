@@ -237,6 +237,8 @@ t8_forest_adapt (t8_forest_t forest)
     tree_from = t8_forest_get_tree (forest_from, ltree_id);
     telements = &tree->elements;
     telements_from = &tree_from->elements;
+    const t8_element_t *first_element_from = t8_element_array_index_locidx
+      (telements_from, 0);
     /* Number of elements in the old tree */
     num_el_from = (t8_locidx_t) t8_element_array_get_count (telements_from);
     T8_ASSERT (num_el_from ==
@@ -250,13 +252,10 @@ t8_forest_adapt (t8_forest_t forest)
     /* el_coarsen is the index of the first element in the new element
      * array which could be coarsened recursively. */
     el_coarsen = 0;
-    num_children =
-      tscheme->t8_element_num_children (t8_element_array_index_locidx
-                                        (telements_from, 0));
+    num_children = tscheme->t8_element_num_children (first_element_from);
     curr_size_elements = num_children;
     curr_size_elements_from =
-      tscheme->t8_element_num_siblings (t8_element_array_index_locidx
-                                        (telements_from, 0));
+      tscheme->t8_element_num_siblings (first_element_from);
     /* Buffer for a family of new elements */
     elements = T8_ALLOC (t8_element_t *, num_children);
     /* Buffer for a family of old elements */
