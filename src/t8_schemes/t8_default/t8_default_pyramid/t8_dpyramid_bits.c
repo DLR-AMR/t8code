@@ -329,7 +329,7 @@ t8_dpyramid_init_linear_id (t8_dpyramid_t *p, const int level,
       return;
     }
     /* The local index depends on the alternating number of predecessors
-     * caused by switc behingtween pyramids and tetrahedrons, which have
+     * caused by switching between pyramids and tetrahedrons, which have
      * a different number of children.*/
     local_index = t8_dpyramid_custom_mod (&id, type, 2 * p_sum1 - p_sum2,
                                           p_sum1);
