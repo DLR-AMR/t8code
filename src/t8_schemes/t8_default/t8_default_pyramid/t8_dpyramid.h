@@ -36,6 +36,12 @@
 /** The type of the root pyramid*/
 #define T8_DPYRAMID_ROOT_TPYE 6
 
+/** The first type of pyramids in the shape of a pyramid*/
+#define T8_DPYRAMID_FIRST_TYPE 6
+
+/** The second type of pyramids in the shape of a pyramid*/
+#define T8_DPYRAMID_SECOND_TYPE 7
+
 /** The length of a triangle divided by the length of a pyramid.
  * This is useful to convert boundary coordinates from pyra to tri*/
 #define T8_DTRI_ROOT_BY_DPYRAMID_ROOT (1 <<(T8_DTRI_MAXLEVEL - T8_DPYRAMID_MAXLEVEL))
@@ -48,7 +54,7 @@ typedef int32_t     t8_dpyramid_coord_t;
  * type 7 is a downward facing pyramid
  */
 /** The type of pyramid in 0, ...,7. The first 6 types describe tetrahedra*/
-typedef int8_t      t8_dpyramid_type_t;
+typedef int8_t t8_dpyramid_type_t;
 
 /** This data type stores a pyramid. */
 typedef t8_dtet_t t8_dpyramid_t;
