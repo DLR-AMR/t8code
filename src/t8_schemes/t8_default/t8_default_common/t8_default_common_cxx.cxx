@@ -140,7 +140,7 @@ t8_default_scheme_common_c::t8_element_count_leafs (const t8_element_t *t,
 }
 
 /* Count the number of siblings.
- * The number of children is 2^dim for each element, except for pyramids.
+ * The number of children is 2^dim for each element, except for pyramids. */
 /* *INDENT-OFF* */
 /* Indent bug: indent adds an additional const */
 int
