@@ -84,7 +84,7 @@ compute_type (const t8_dpyramid_t *p, const int level)
 }
 
 /* sets the shift last bits of every coordinate to zero*/
-void
+static void
 pyramid_cut_coords (t8_dpyramid_t *p, const int shift)
 {
   p->x = (p->x >> shift) << shift;
