@@ -375,10 +375,13 @@ t8_forest_adapt (t8_forest_t forest)
          * This parent is now inserted in telements. */
         T8_ASSERT (tscheme->t8_element_level (elements_from[0]) > 0);
         tscheme->t8_element_parent (elements_from[0], elements[0]);
+        /*num_siblings is now equivalent to the number of children of elements[0],
+         * as num_siblings is always associated with elements_from*/
+        num_children = num_siblings;
         el_inserted++;
-        if (num_siblings > curr_size_elements) {
-          elements = T8_REALLOC (elements, t8_element_t *, num_siblings);
-          curr_size_elements = num_siblings;
+        if (num_children > curr_size_elements) {
+          elements = T8_REALLOC (elements, t8_element_t *, num_children);
+          curr_size_elements = num_children;
         }
         if (forest->set_adapt_recursive) {
           /* Adaptation is recursive.
