@@ -869,7 +869,7 @@ void
 t8_default_scheme_quad_c::t8_element_debug_print (const t8_element_t *elem)
 {
   p4est_quadrant_t   *quad = (p4est_quadrant_t *) elem;
-  t8_debugf ("x: %i, y: %i, level: %i\n", quad->x, quad->y, quad->level);
+  p4est_quadrant_print (SC_LP_DEBUG, quad);
 }
 #endif
 
