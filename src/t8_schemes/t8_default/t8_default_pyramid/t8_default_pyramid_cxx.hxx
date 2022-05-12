@@ -81,7 +81,7 @@ public:
                                                t8_element_t *elem,
                                                int root_face);
 
-/** Compare to elements. returns negativ if elem1 < elem2, zero if elem1 equals elem2
+/** Compare two elements. returns negativ if elem1 < elem2, zero if elem1 equals elem2
  *  and positiv if elem1 > elem2.
  *  If elem2 is a copy of elem1 then the elements are equal.
  */
