@@ -49,14 +49,12 @@ t8_scheme_cxx_destroy (t8_scheme_cxx_t *s)
   T8_FREE (s);
 }
 
-/* *INDENT-OFF* */
 /* Default implementation for the element size */
 size_t
 t8_eclass_scheme::t8_element_size ()
 {
   return element_size;
 }
-/* *INDENT-ON* */
 
 /* Default implementation for array_index */
 t8_element_t       *
