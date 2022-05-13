@@ -71,14 +71,15 @@ t8_get_version_patch ()
     strtol (version_point, &error_check_string, 10);
   /* strotl returns to error_check_string the first invalid character of versiont_point,
    * thus the first character that is not a number. */
-  /* The first invalid character must not be the first character of version_point */
 
-  if (*error_check_string != version_point[0]) {
+  /* The first invalid character must not be the first character of version_point */
+  if (*error_check_string == version_point[0]) {
     /* The string does not start with a number */
     t8_global_errorf
-      ("ERROR: Point version string does not begin with patch number.\n");
+      ("ERROR: Point version string '%s' does not begin with patch number.\n",
+       version_point);
     /* Abort in debugging mode, continue with -1 else. */
-    T8_ASSERT (*error_check_string != version_point[0]);
+    T8_ASSERT (*error_check_string == version_point[0]);
     return -1;
   }
 
