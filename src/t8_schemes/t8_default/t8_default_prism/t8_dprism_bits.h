@@ -329,6 +329,12 @@ uint64_t            t8_dprism_linear_id (const t8_dprism_t *p, int level);
  */
 int                 t8_dprism_is_valid (const t8_dprism_t *p);
 
+/**
+ * Print a the coordinates, the level and the type of a prism.
+ * \param [in] p  prism to be considered.
+ */
+void                t8_dprism_debug_print (const t8_dprism_t *p);
+
 T8_EXTERN_C_END ();
 
 #endif /* T8_DPRISM_BITS_H */
