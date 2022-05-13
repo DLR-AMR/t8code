@@ -243,10 +243,26 @@ void                t8_errorf (const char *fmt, ...)
  */
 void                t8_init (int log_threshold);
 
+/** Return the version string of t8code.
+ * This string has the format "t8 version_number".
+ * \return The version string of t8code.
+ */
+const char         *t8_get_version_string ();
+
 /** Return the version number of t8code as a string.
  * \return The version number of t8code as a string.
  */
-const char         *t8_get_version_string ();
+const char         *t8_get_version_number ();
+
+/** Return the major version number of t8code.
+ * \return The major version number of t8code.
+ */
+int                 t8_get_version_major ();
+
+/** Return the minor version number of t8code.
+ * \return The minor version number of t8code.
+ */
+int                 t8_get_version_minor ();
 
 /** Return a pointer to an array element indexed by a t8_topidx_t.
  * \param [in] index needs to be in [0]..[elem_count-1].

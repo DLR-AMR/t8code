@@ -179,3 +179,21 @@ t8_get_version_string ()
 {
   return T8_PACKAGE_STRING;
 }
+
+const char         *
+t8_get_version_number ()
+{
+  return T8_VERSION;
+}
+
+int
+t8_get_version_major ()
+{
+  return T8_VERSION_MAJOR;
+}
+
+int
+t8_get_version_minor ()
+{
+  return T8_VERSION_MINOR;
+}
