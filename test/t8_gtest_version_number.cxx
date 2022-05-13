@@ -29,7 +29,61 @@
  */
 TEST (t8_gtest_version_number, getter_function)
 {
-  const char         *version_number = t8_get_version_string ();
+  const char         *version_string = t8_get_version_string ();
 
-  EXPECT_EQ (0, strcmp (version_number, T8_PACKAGE_STRING));
+  EXPECT_STREQ (version_string, T8_PACKAGE_STRING);
+}
+
+/* The version_string must have the format
+ * "t8 version_number"
+ */
+TEST (t8_gtest_version_number, check_format_of_version_string)
+{
+  const char         *version_string = t8_get_version_string ();
+
+  /* Check that version_string is not NULL.
+   * This is an assertion since we cannot continue if it is NULL. */
+  ASSERT_NE (version_string, nullptr);
+
+  /* Copy it to a non-const char so that we can modify it by strtok */
+  char                version_string_copy[BUFSIZ];
+  strncpy (version_string_copy, version_string, BUFSIZ - 1);
+
+  /* Check that the first three chars are 't8 ' */
+  EXPECT_EQ (version_string_copy[0], 't');
+  EXPECT_EQ (version_string_copy[1], '8');
+  EXPECT_EQ (version_string_copy[2], ' ');
+
+  /* Check that version_string == "t8 version_number" */
+  const char         *version_number = t8_get_version_number ();
+  EXPECT_STREQ (version_string + 3, version_number);
+}
+
+/* The version number should be a string "X.Y.Something"
+ * with X being the major and Y being the minor number. */
+TEST (t8_gtest_version_number, check_version_number_has_major_minor)
+{
+  const char         *version_number = t8_get_version_number ();
+  const int           major = t8_get_version_major ();
+  const int           minor = t8_get_version_minor ();
+
+  /* Copy version_number to non-const so that we can modify it by strtok */
+  char                version_number_copy[BUFSIZ];
+  strncpy (version_number_copy, version_number, BUFSIZ - 1);
+
+  const char         *major_string = strtok (version_number_copy, ".");
+  const char         *minor_string = strtok (NULL, ".");
+
+  /* They should not be nullptr.
+   * If they are, version_number does not contain two '.' */
+  ASSERT_STRNE (major_string, nullptr);
+  ASSERT_STRNE (minor_string, nullptr);
+
+  /* Convert major and minor from string to int */
+  const int           major_string_to_int = atoi (major_string);
+  const int           minor_string_to_int = atoi (minor_string);
+
+  /* Check that these match the t8code major and minor version number. */
+  ASSERT_EQ (major_string_to_int, major);
+  ASSERT_EQ (minor_string_to_int, minor);
 }
