@@ -112,6 +112,7 @@ EXTRA_src_libt8_la_DEPENDENCIES = @T8_P4EST_LDADD@ @T8_SC_LDADD@
 nodist_include_HEADERS += $(libt8_generated_headers)
 dist_include_HEADERS = $(libt8_installed_headers)
 dist_cmeshinclude_HEADERS = $(libt8_installed_headers_cmesh)
+dist_datainclude_HEADERS = $(libt8_installed_headers_data)
 dist_forestinclude_HEADERS = $(libt8_installed_headers_forest)
 dist_geometryinclude_HEADERS = $(libt8_installed_headers_geometry)
 dist_geometryimplinclude_HEADERS = $(libt8_installed_headers_geometry_impl)
