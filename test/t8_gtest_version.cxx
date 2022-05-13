@@ -24,6 +24,13 @@
 #include <gtest/gtest.h>
 #include <t8_version.h>
 
+/* The following three tests check whether t8code computes the correct
+ * version.
+ * The current version of t8code is
+ *    0.9.0
+ * If you increase the version number, you need to adjust these tests and
+ * this comment. */
+
 TEST (t8_gtest_version, major_version)
 {
   /* Change this number when you increase the major version. */
