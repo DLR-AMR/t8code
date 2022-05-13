@@ -6,6 +6,7 @@ cmeshincludedir = $(includedir)/t8_cmesh
 dataincludedir = $(includedir)/t8_data
 forestincludedir = $(includedir)/t8_forest
 geometryincludedir = $(includedir)/t8_geometry
+geometryimplincludedir = $(geometryincludedir)/t8_geometry_implementations
 schemesdefaultincludedir = $(includedir)/t8_schemes/t8_default
 defaultcommonincludedir = $(schemesdefaultincludedir)/t8_default_common
 defaultvertexincludedir = $(schemesdefaultincludedir)/t8_default_vertex
@@ -41,8 +42,9 @@ libt8_installed_headers_geometry = \
   src/t8_geometry/t8_geometry.h \
   src/t8_geometry/t8_geometry_base.hxx \
   src/t8_geometry/t8_geometry_base.h \
+  src/t8_geometry/t8_geometry_helpers.h
+libt8_installed_headers_geometry_impl = \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.h \
-  src/t8_geometry/t8_geometry_helpers.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx
@@ -112,6 +114,7 @@ dist_include_HEADERS = $(libt8_installed_headers)
 dist_cmeshinclude_HEADERS = $(libt8_installed_headers_cmesh)
 dist_forestinclude_HEADERS = $(libt8_installed_headers_forest)
 dist_geometryinclude_HEADERS = $(libt8_installed_headers_geometry)
+dist_geometryimplinclude_HEADERS = $(libt8_installed_headers_geometry_impl)
 dist_schemesdefaultinclude_HEADERS = $(libt8_installed_headers_schemes_default)
 dist_defaultcommoninclude_HEADERS = $(libt8_installed_headers_default_common)
 dist_defaultvertexinclude_HEADERS = $(libt8_installed_headers_default_vertex)
