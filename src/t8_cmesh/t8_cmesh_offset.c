@@ -37,7 +37,7 @@ t8_glo_kl0 (t8_gloidx_t A)
 
 /* The first tree of a given process in a partition */
 t8_gloidx_t
-t8_offset_first (int proc, t8_gloidx_t * offset)
+t8_offset_first (int proc, const t8_gloidx_t *offset)
 {
   T8_ASSERT (proc >= 0);
   T8_ASSERT (offset != NULL);
@@ -57,7 +57,7 @@ t8_offset_first_tree_to_entry (t8_gloidx_t first_tree, int shared)
 
 /* The number of trees of a given process in a partition */
 t8_gloidx_t
-t8_offset_num_trees (int proc, t8_gloidx_t * offset)
+t8_offset_num_trees (int proc, const t8_gloidx_t *offset)
 {
   t8_gloidx_t         num_global_trees;
   T8_ASSERT (proc >= 0);
@@ -71,7 +71,7 @@ t8_offset_num_trees (int proc, t8_gloidx_t * offset)
 
 /* The last local tree of a given process in a partition */
 t8_gloidx_t
-t8_offset_last (int proc, t8_gloidx_t * offset)
+t8_offset_last (int proc, const t8_gloidx_t *offset)
 {
   T8_ASSERT (proc >= -1);
   T8_ASSERT (offset != NULL);
@@ -82,7 +82,8 @@ t8_offset_last (int proc, t8_gloidx_t * offset)
 #ifdef T8_ENABLE_DEBUG
 /* Query whether a given global tree is in a valid range of a partition */
 static int
-t8_offset_valid_tree (t8_gloidx_t gtree, int mpisize, t8_gloidx_t * offset)
+t8_offset_valid_tree (t8_gloidx_t gtree, int mpisize,
+                      const t8_gloidx_t *offset)
 {
   T8_ASSERT (offset != NULL);
 
@@ -93,7 +94,7 @@ t8_offset_valid_tree (t8_gloidx_t gtree, int mpisize, t8_gloidx_t * offset)
 /* Return 1 if the process has no trees in the partition.
  * Return 0 if the process has at least one tree */
 int
-t8_offset_empty (int proc, t8_gloidx_t * offset)
+t8_offset_empty (int proc, const t8_gloidx_t *offset)
 {
   /* TODO: Why dont we just compute the number of local trees? */
   T8_ASSERT (proc >= 0);
@@ -108,7 +109,8 @@ t8_offset_empty (int proc, t8_gloidx_t * offset)
 /* Find the next higher rank that is not empty.
  * returns mpisize if this rank does not exist. */
 int
-t8_offset_next_nonempty_rank (int rank, int mpisize, t8_gloidx_t * offset)
+t8_offset_next_nonempty_rank (int rank, int mpisize,
+                              const t8_gloidx_t *offset)
 {
   int                 next_nonempty = rank + 1;
 
@@ -122,11 +124,14 @@ t8_offset_next_nonempty_rank (int rank, int mpisize, t8_gloidx_t * offset)
 /* Check whether a given offset array represents a valid
  * partition. */
 int
-t8_offset_consistent (int mpisize, t8_gloidx_t * offset,
+t8_offset_consistent (int mpisize, const t8_shmem_array_t offset_shmem,
                       t8_gloidx_t num_trees)
 {
   int                 i, ret = 1;
   t8_gloidx_t         last_tree;
+  T8_ASSERT (t8_shmem_array_is_initialized (offset_shmem));
+
+  const t8_gloidx_t  *offset = t8_shmem_array_get_gloidx_array (offset_shmem);
 
   ret = offset[0] == 0;
   last_tree = t8_offset_last (0, offset);       /* stores the last tree of process i-1 */
@@ -158,7 +163,7 @@ t8_offset_consistent (int mpisize, t8_gloidx_t * offset,
 
 /* Determine whether a given global tree id is in the range of a given process */
 int
-t8_offset_in_range (t8_gloidx_t tree_id, int proc, t8_gloidx_t * offset)
+t8_offset_in_range (t8_gloidx_t tree_id, int proc, const t8_gloidx_t *offset)
 {
   return t8_offset_first (proc, offset) <= tree_id
     && tree_id <= t8_offset_last (proc, offset);
@@ -170,7 +175,7 @@ t8_offset_in_range (t8_gloidx_t tree_id, int proc, t8_gloidx_t * offset)
  */
 int
 t8_offset_any_owner_of_tree (int mpisize, t8_gloidx_t gtree,
-                             t8_gloidx_t * offset)
+                             const t8_gloidx_t *offset)
 {
   int                 proc, range[2], found;
 
@@ -199,7 +204,7 @@ t8_offset_any_owner_of_tree (int mpisize, t8_gloidx_t gtree,
  * already owns the tree. Otherwise (some_owner < 0), the function will compute one. */
 int
 t8_offset_first_owner_of_tree (int mpisize, t8_gloidx_t gtree,
-                               t8_gloidx_t * offset, int *some_owner)
+                               const t8_gloidx_t *offset, int *some_owner)
 {
   int                 proc, proc_temp;
 
@@ -240,8 +245,8 @@ t8_offset_first_owner_of_tree (int mpisize, t8_gloidx_t gtree,
 
 static int
 t8_offset_next_prev_owner_of_tree (int mpisize, t8_gloidx_t gtree,
-                                   t8_gloidx_t * offset, int current_owner,
-                                   int search_dir)
+                                   const t8_gloidx_t *offset,
+                                   int current_owner, int search_dir)
 {
   int                 proc;
 
@@ -268,7 +273,7 @@ t8_offset_next_prev_owner_of_tree (int mpisize, t8_gloidx_t gtree,
  */
 int
 t8_offset_next_owner_of_tree (int mpisize, t8_gloidx_t gtree,
-                              t8_gloidx_t * offset, int current_owner)
+                              const t8_gloidx_t *offset, int current_owner)
 {
   return t8_offset_next_prev_owner_of_tree (mpisize, gtree, offset,
                                             current_owner, +1);
@@ -280,7 +285,7 @@ t8_offset_next_owner_of_tree (int mpisize, t8_gloidx_t gtree,
  */
 int
 t8_offset_prev_owner_of_tree (int mpisize, t8_gloidx_t gtree,
-                              t8_gloidx_t * offset, int current_owner)
+                              const t8_gloidx_t *offset, int current_owner)
 {
   return t8_offset_next_prev_owner_of_tree (mpisize, gtree, offset,
                                             current_owner, -1);
@@ -291,7 +296,7 @@ t8_offset_prev_owner_of_tree (int mpisize, t8_gloidx_t gtree,
  * already owns the tree. Otherwise (some_owner < 0), the function will compute one. */
 int
 t8_offset_last_owner_of_tree (int mpisize, t8_gloidx_t gtree,
-                              t8_gloidx_t * offset, int *some_owner)
+                              const t8_gloidx_t *offset, int *some_owner)
 {
   int                 proc, proc_temp;
 
@@ -335,7 +340,7 @@ t8_offset_last_owner_of_tree (int mpisize, t8_gloidx_t gtree,
  * element count 0 */
 void
 t8_offset_all_owners_of_tree (int mpisize, t8_gloidx_t gtree,
-                              t8_gloidx_t * offset, sc_array_t * owners)
+                              const t8_gloidx_t *offset, sc_array_t *owners)
 {
   int                 proc;
   int                *entry;
@@ -367,8 +372,8 @@ t8_offset_all_owners_of_tree (int mpisize, t8_gloidx_t gtree,
 /* Return 1 if the process will not send any trees, that is if it is
  * empty or has only one shared tree. */
 int
-t8_offset_nosend (int proc, int mpisize, t8_gloidx_t * offset_from,
-                  t8_gloidx_t * offset_to)
+t8_offset_nosend (int proc, int mpisize, const t8_gloidx_t *offset_from,
+                  const t8_gloidx_t *offset_to)
 {
   t8_gloidx_t         num_trees;
 
@@ -440,8 +445,8 @@ t8_offset_nosend (int proc, int mpisize, t8_gloidx_t * offset_from,
 /* Return one if proca sends trees to procb when partitioning from
  * offset_from to offset_to */
 int
-t8_offset_sendsto (int proca, int procb, t8_gloidx_t * t8_offset_from,
-                   t8_gloidx_t * t8_offset_to)
+t8_offset_sendsto (int proca, int procb, const t8_gloidx_t *t8_offset_from,
+                   const t8_gloidx_t *t8_offset_to)
 {
   t8_gloidx_t         proca_first, proca_last;
   t8_gloidx_t         procb_first, procb_last;
@@ -480,9 +485,7 @@ t8_offset_sendsto (int proca, int procb, t8_gloidx_t * t8_offset_from,
       && proca_last >= procb_first      /* The last tree on a before is bigger than */
       + (keeps_first            /* the first on b after partitioning */
          && procb_first == t8_offset_first (procb, t8_offset_from))
-
     ) {
-
     return 1;
   }
   return 0;
@@ -492,7 +495,8 @@ t8_offset_sendsto (int proca, int procb, t8_gloidx_t * t8_offset_from,
  */
 int
 t8_offset_sendstree (int proc_send, int proc_to, t8_gloidx_t gtree,
-                     t8_gloidx_t * offset_from, t8_gloidx_t * offset_to)
+                     const t8_gloidx_t *offset_from,
+                     const t8_gloidx_t *offset_to)
 {
   /* If the tree is not the last tree on proc_send it is send if
    * first_tree <= tree <= last_tree on the new partition for process proc_to.
@@ -531,7 +535,8 @@ t8_offset_sendstree (int proc_send, int proc_to, t8_gloidx_t gtree,
  * A process counts as sending if it has at least one non-shared local tree */
 int
 t8_offset_range_send (int start, int end, int mpirank,
-                      t8_gloidx_t * offset_from, t8_gloidx_t * offset_to)
+                      const t8_gloidx_t *offset_from,
+                      const t8_gloidx_t *offset_to)
 {
   int                 count = 0, i;
 
@@ -571,7 +576,7 @@ t8_offset_print (t8_shmem_array_t offset, sc_MPI_Comm comm)
  * process without considering the first tree if it is shared */
 int
 t8_offset_in_range_wofirstshared (t8_gloidx_t tree_id, int proc,
-                                  t8_gloidx_t * offset)
+                                  t8_gloidx_t *offset)
 {
   return t8_offset_first (proc, offset) + (offset[proc] < 0) <= tree_id
     && tree_id <= t8_offset_last (proc, offset);

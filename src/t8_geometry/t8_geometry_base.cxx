@@ -57,7 +57,7 @@ t8_geometry_w_vertices::t8_geom_load_tree_data (t8_cmesh_t cmesh,
  * \return            The dimension of \a geom.
  */
 int
-t8_geom_get_dimension (const t8_geometry_c * geom)
+t8_geom_get_dimension (const t8_geometry_c *geom)
 {
   T8_ASSERT (geom != NULL);
 
@@ -69,7 +69,7 @@ t8_geom_get_dimension (const t8_geometry_c * geom)
  * \return            The name of \a geom.
  */
 const char         *
-t8_geom_get_name (const t8_geometry_c * geom)
+t8_geom_get_name (const t8_geometry_c *geom)
 {
   T8_ASSERT (geom != NULL);
 

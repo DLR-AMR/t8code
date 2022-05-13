@@ -28,9 +28,9 @@
  * reached.
  */
 static void
-t8_recursive_child_find_parent (t8_element_t * element, t8_element_t * child,
-                                t8_element_t * test_parent,
-                                t8_eclass_scheme_c * ts, int level,
+t8_recursive_child_find_parent (t8_element_t *element, t8_element_t *child,
+                                t8_element_t *test_parent,
+                                t8_eclass_scheme_c *ts, int level,
                                 const int maxlvl)
 {
   T8_ASSERT (level <= maxlvl && maxlvl <= ts->t8_element_maxlevel () - 1);
@@ -95,8 +95,8 @@ int
 main (int argc, char **argv)
 {
   int                 mpiret;
-#ifdef T8_ENABLE_DEBUG
-  const int           maxlvl = 8;
+#ifdef T8_ENABLE_LESS_TESTS
+  const int           maxlvl = 4;
 #else
   const int           maxlvl = 9;
 #endif

@@ -52,9 +52,10 @@ T8_EXTERN_C_BEGIN ();
  * \return                A ommited, replicated cmesh constructed from the info
  *                        in the TRIANGLE files.
  */
-t8_cmesh_t
-t8_cmesh_from_triangle_file (char *fileprefix, int partition,
-                             sc_MPI_Comm comm, int do_dup);
+t8_cmesh_t          t8_cmesh_from_triangle_file (char *fileprefix,
+                                                 int partition,
+                                                 sc_MPI_Comm comm,
+                                                 int do_dup);
 
 T8_EXTERN_C_END ();
 

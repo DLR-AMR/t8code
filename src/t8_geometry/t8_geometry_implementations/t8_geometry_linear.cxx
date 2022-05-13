@@ -96,7 +96,7 @@ t8_geometry_linear_new (int dimension)
 }
 
 void
-t8_geometry_linear_destroy (t8_geometry_c ** geom)
+t8_geometry_linear_destroy (t8_geometry_c **geom)
 {
 #ifdef T8_ENABLE_DEBUG
   t8_geometry_c      *pgeom = *geom;

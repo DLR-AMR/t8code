@@ -41,7 +41,7 @@ t8_geom_handler_compare_names (const void *pgeom_1, const void *pgeom_2)
 
 /* Check if a geometry handler was initialized. (may or may not be committed) */
 static int
-t8_geom_handler_is_initialized (const t8_geometry_handler_t * geom_handler)
+t8_geom_handler_is_initialized (const t8_geometry_handler_t *geom_handler)
 {
   if (geom_handler == NULL || !t8_refcount_is_active (&geom_handler->rc)        /* not  NULL and referenced */
       ||geom_handler->registered_geometries.elem_size != sizeof (t8_geometry_c *)       /* geometry array is initialized */
@@ -54,7 +54,7 @@ t8_geom_handler_is_initialized (const t8_geometry_handler_t * geom_handler)
 
 /* Check if a geometry handler was committed. */
 int
-t8_geom_handler_is_committed (const t8_geometry_handler_t * geom_handler)
+t8_geom_handler_is_committed (const t8_geometry_handler_t *geom_handler)
 {
   if (!t8_geom_handler_is_initialized (geom_handler)) {
     /* The geom handler isn't even initialized. */
@@ -71,7 +71,7 @@ t8_geom_handler_is_committed (const t8_geometry_handler_t * geom_handler)
 }
 
 void
-t8_geom_handler_init (t8_geometry_handler_t ** pgeom_handler)
+t8_geom_handler_init (t8_geometry_handler_t **pgeom_handler)
 {
   T8_ASSERT (pgeom_handler != NULL);
   t8_geometry_handler_t *geom_handler = T8_ALLOC (t8_geometry_handler_t, 1);
@@ -90,7 +90,7 @@ t8_geom_handler_init (t8_geometry_handler_t ** pgeom_handler)
 
 /* Free the memory of a reference handler. */
 static void
-t8_geom_handler_reset (t8_geometry_handler_t ** pgeom_handler)
+t8_geom_handler_reset (t8_geometry_handler_t **pgeom_handler)
 {
   T8_ASSERT (pgeom_handler != NULL);
   t8_geometry_handler_t *geom_handler = *pgeom_handler;
@@ -115,7 +115,7 @@ t8_geom_handler_reset (t8_geometry_handler_t ** pgeom_handler)
 
 /* Reference a geometry handler */
 void
-t8_geom_handler_ref (t8_geometry_handler_t * geom_handler)
+t8_geom_handler_ref (t8_geometry_handler_t *geom_handler)
 {
   T8_ASSERT (t8_geom_handler_is_initialized (geom_handler));
   t8_refcount_ref (&geom_handler->rc);
@@ -123,7 +123,7 @@ t8_geom_handler_ref (t8_geometry_handler_t * geom_handler)
 
 /* unref a geometry handler */
 void
-t8_geom_handler_unref (t8_geometry_handler_t ** pgeom_handler)
+t8_geom_handler_unref (t8_geometry_handler_t **pgeom_handler)
 {
   T8_ASSERT (pgeom_handler != NULL);
   T8_ASSERT (t8_geom_handler_is_initialized (*pgeom_handler));
@@ -136,7 +136,7 @@ t8_geom_handler_unref (t8_geometry_handler_t ** pgeom_handler)
 
 /* Destroy a geometry handler, only valid if it is only referenced once. */
 void
-t8_geom_handler_destroy (t8_geometry_handler_t ** pgeom_handler)
+t8_geom_handler_destroy (t8_geometry_handler_t **pgeom_handler)
 {
   T8_ASSERT (pgeom_handler != NULL);
   T8_ASSERT (t8_geom_handler_is_initialized (*pgeom_handler));
@@ -167,8 +167,8 @@ t8_geom_handler_compare_key (const void *name, const void *pgeom)
  * before the cmesh is committed in order to prevent multiple
  * registration of the same geometry. */
 static const t8_geometry_c *
-t8_geom_handler_find_geometry_non_sorted (t8_geometry_handler_t *
-                                          geom_handler, const char *name)
+t8_geom_handler_find_geometry_non_sorted (t8_geometry_handler_t *geom_handler,
+                                          const char *name)
 {
   size_t              found_index;
   T8_ASSERT (t8_geom_handler_is_initialized (geom_handler));
@@ -193,10 +193,10 @@ t8_geom_handler_find_geometry_non_sorted (t8_geometry_handler_t *
 #endif
 
 void
-t8_geom_handler_register_geometry (t8_geometry_handler_t * geom_handler,
-                                   const t8_geometry_c * geometry)
+t8_geom_handler_register_geometry (t8_geometry_handler_t *geom_handler,
+                                   const t8_geometry_c *geometry)
 {
-  t8_debugf ("Registring geometry %s\n", geometry->t8_geom_get_name ());
+  t8_debugf ("Registering geometry %s\n", geometry->t8_geom_get_name ());
   T8_ASSERT (t8_geom_handler_is_initialized (geom_handler));
   /* Must not be committed */
   T8_ASSERT (!t8_geom_handler_is_committed (geom_handler));
@@ -210,7 +210,7 @@ t8_geom_handler_register_geometry (t8_geometry_handler_t * geom_handler,
 }
 
 void
-t8_geom_handler_commit (t8_geometry_handler_t * geom_handler)
+t8_geom_handler_commit (t8_geometry_handler_t *geom_handler)
 {
   T8_ASSERT (t8_geom_handler_is_initialized (geom_handler));
   /* Must not be committed */
@@ -248,8 +248,8 @@ t8_geom_handler_commit (t8_geometry_handler_t * geom_handler)
   T8_ASSERT (t8_geom_handler_is_committed (geom_handler));
 }
 
-t8_geometry_c *
-t8_geom_handler_find_geometry (const t8_geometry_handler_t * geom_handler,
+t8_geometry_c      *
+t8_geom_handler_find_geometry (const t8_geometry_handler_t *geom_handler,
                                const char *name)
 {
   /* Must be committed */
@@ -269,16 +269,15 @@ t8_geom_handler_find_geometry (const t8_geometry_handler_t * geom_handler,
 }
 
 size_t
-t8_geom_handler_get_num_geometries (const t8_geometry_handler_t *
-                                    geom_handler)
+t8_geom_handler_get_num_geometries (const t8_geometry_handler_t *geom_handler)
 {
   T8_ASSERT (t8_geom_handler_is_initialized (geom_handler));
   return geom_handler->registered_geometries.elem_count;
 }
 
 const t8_geometry_c *
-t8_geom_handler_get_unique_geometry (const t8_geometry_handler_t *
-                                     geom_handler)
+t8_geom_handler_get_unique_geometry (const t8_geometry_handler_t
+                                     *geom_handler)
 {
   T8_ASSERT (t8_geom_handler_is_committed (geom_handler));
   T8_ASSERT (t8_geom_handler_get_num_geometries (geom_handler) == 1);
@@ -289,7 +288,7 @@ t8_geom_handler_get_unique_geometry (const t8_geometry_handler_t *
 }
 
 static inline void
-t8_geom_handler_update_tree (t8_geometry_handler_t * geom_handler,
+t8_geom_handler_update_tree (t8_geometry_handler_t *geom_handler,
                              t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 {
   /* Must be committed */

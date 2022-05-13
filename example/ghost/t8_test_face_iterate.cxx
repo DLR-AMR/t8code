@@ -30,6 +30,7 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_cmesh_vtk.h>
+#include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_data/t8_containers.h>
 
 typedef struct
@@ -41,7 +42,7 @@ typedef struct
 static int
 t8_test_fiterate_callback (t8_forest_t forest,
                            t8_locidx_t ltreeid,
-                           const t8_element_t * element,
+                           const t8_element_t *element,
                            int face, void *user_data, t8_locidx_t leaf_index)
 {
   double             *coords;
@@ -61,11 +62,11 @@ t8_test_fiterate_callback (t8_forest_t forest,
 static int
 t8_basic_adapt (t8_forest_t forest, t8_forest_t forest_from,
                 t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                t8_eclass_scheme_c * ts, int num_elements,
-                t8_element_t * elements[])
+                t8_eclass_scheme_c *ts, const int is_family,
+                const int num_elements, t8_element_t *elements[])
 {
   int                 mpirank, mpiret;
-  T8_ASSERT (num_elements == 1 || num_elements ==
+  T8_ASSERT (!is_family || num_elements ==
              ts->t8_element_num_children (elements[0]));
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
