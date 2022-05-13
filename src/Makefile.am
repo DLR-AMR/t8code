@@ -6,7 +6,16 @@ cmeshincludedir = $(includedir)/t8_cmesh
 dataincludedir = $(includedir)/t8_data
 forestincludedir = $(includedir)/t8_forest
 geometryincludedir = $(includedir)/t8_geometry
-schemesdefaultincludedir = $(includedir)/t8_schemes/default
+schemesdefaultincludedir = $(includedir)/t8_schemes/t8_default
+defaultcommonincludedir = $(schemesdefaultincludedir)/t8_default_common
+defaultvertexincludedir = $(schemesdefaultincludedir)/t8_default_vertex
+defaultlineincludedir = $(schemesdefaultincludedir)/t8_default_line
+defaultquadincludedir = $(schemesdefaultincludedir)/t8_default_quad
+defaulttriincludedir = $(schemesdefaultincludedir)/t8_default_tri
+defaulthexincludedir = $(schemesdefaultincludedir)/t8_default_hex
+defaulttetincludedir = $(schemesdefaultincludedir)/t8_default_tet
+defaultprismincludedir = $(schemesdefaultincludedir)/t8_default_prism
+defaultpyramidincludedir = $(schemesdefaultincludedir)/t8_default_pyramid
 
 libt8_generated_headers = src/t8_config.h
 libt8_installed_headers = \
@@ -38,6 +47,15 @@ libt8_installed_headers_geometry = \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx
 libt8_installed_headers_schemes_default =
+libt8_installed_headers_default_common =
+libt8_installed_headers_default_vertex =
+libt8_installed_headers_default_line =
+libt8_installed_headers_default_quad =
+libt8_installed_headers_default_tri =
+libt8_installed_headers_default_hex =
+libt8_installed_headers_default_tet =
+libt8_installed_headers_default_prism =
+libt8_installed_headers_default_pyramid =
 libt8_internal_headers = \
   src/t8_cmesh/t8_cmesh_stash.h src/t8_cmesh/t8_cmesh_trees.h \
   src/t8_cmesh/t8_cmesh_types.h src/t8_cmesh/t8_cmesh_partition.h \
@@ -95,6 +113,15 @@ dist_cmeshinclude_HEADERS = $(libt8_installed_headers_cmesh)
 dist_forestinclude_HEADERS = $(libt8_installed_headers_forest)
 dist_geometryinclude_HEADERS = $(libt8_installed_headers_geometry)
 dist_schemesdefaultinclude_HEADERS = $(libt8_installed_headers_schemes_default)
+dist_defaultcommoninclude_HEADERS = $(libt8_installed_headers_default_common)
+dist_defaultvertexinclude_HEADERS = $(libt8_installed_headers_default_vertex)
+dist_defaultlineinclude_HEADERS = $(libt8_installed_headers_default_line)
+dist_defaultquadinclude_HEADERS = $(libt8_installed_headers_default_quad)
+dist_defaulttriinclude_HEADERS = $(libt8_installed_headers_default_tri)
+dist_defaulthexinclude_HEADERS = $(libt8_installed_headers_default_hex)
+dist_defaulttetinclude_HEADERS = $(libt8_installed_headers_default_tet)
+dist_defaultprisminclude_HEADERS = $(libt8_installed_headers_default_prism)
+dist_defaultpyramidinclude_HEADERS = $(libt8_installed_headers_default_pyramid)
 
 AM_CPPFLAGS += -I@top_srcdir@/src \
         @T8_SC_CPPFLAGS@ @T8_P4EST_CPPFLAGS@
