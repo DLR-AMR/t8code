@@ -244,7 +244,7 @@ main (int argc, char **argv)
     t8_basic_hypercube (dim, do_balance);
   }
   else if (print_version) {
-    t8_global_productionf ("This is t8code version %s\n",
+    t8_global_productionf ("This is t8code version '%s'\n",
                            t8_get_version_string ());
   }
   else {
