@@ -76,14 +76,10 @@ TEST (t8_gtest_version, check_format_of_version_string)
    * This is an assertion since we cannot continue if it is NULL. */
   ASSERT_NE (version_string, nullptr);
 
-  /* Copy it to a non-const char so that we can modify it by strtok */
-  char                version_string_copy[BUFSIZ];
-  strncpy (version_string_copy, version_string, BUFSIZ - 1);
-
   /* Check that the first three chars are 't8 ' */
-  EXPECT_EQ (version_string_copy[0], 't');
-  EXPECT_EQ (version_string_copy[1], '8');
-  EXPECT_EQ (version_string_copy[2], ' ');
+  EXPECT_EQ (version_string[0], 't');
+  EXPECT_EQ (version_string[1], '8');
+  EXPECT_EQ (version_string[2], ' ');
 
   /* Check that version_string == "t8 version_number" */
   const char         *version_number = t8_get_version_number ();
