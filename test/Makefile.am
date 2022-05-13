@@ -56,7 +56,8 @@ test_t8_gtest_main_SOURCES = test/t8_gtest_main.cxx \
   test/t8_gtest_refcount.cxx \
   test/t8_gtest_bcast.cxx \
   test/t8_gtest_nca.cxx \
-  test/t8_gtest_version_number.cxx
+  test/t8_gtest_version_number.cxx \
+  test/t8_gtest_basics.cxx
 test_t8_gtest_main_LDADD = $(LDADD) test/libgtest.la
 test_t8_gtest_main_LDFLAGS = $(AM_LDFLAGS) -pthread
 test_t8_gtest_main_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)/thirdparty/googletest-mpi/ \
