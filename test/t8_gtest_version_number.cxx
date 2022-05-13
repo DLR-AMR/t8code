@@ -22,14 +22,14 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8.h>
+#include <t8_version.h>
 
-/* Test whether the return value of t8_get_version_string
+/* Test whether the return value of t8_get_package_string
  * matches T8_PACKAGE_STRING.
  */
 TEST (t8_gtest_version_number, getter_function)
 {
-  const char         *version_string = t8_get_version_string ();
+  const char         *version_string = t8_get_package_string ();
 
   EXPECT_STREQ (version_string, T8_PACKAGE_STRING);
 }
@@ -39,7 +39,7 @@ TEST (t8_gtest_version_number, getter_function)
  */
 TEST (t8_gtest_version_number, check_format_of_version_string)
 {
-  const char         *version_string = t8_get_version_string ();
+  const char         *version_string = t8_get_package_string ();
 
   /* Check that version_string is not NULL.
    * This is an assertion since we cannot continue if it is NULL. */
