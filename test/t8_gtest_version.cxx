@@ -105,7 +105,7 @@ TEST (t8_gtest_version, check_version_number_has_major_minor_patch)
 
   const char         *major_string = strtok (version_number_copy, ".");
   const char         *minor_string = strtok (NULL, ".");
-  char               *point_string = strtok (NULL, ".");
+  char               *point_string = version_number_copy;
 
   /* They should not be nullptr.
    * If they are, version_number does not contain two '.' */
