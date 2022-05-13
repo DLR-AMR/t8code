@@ -5,6 +5,7 @@
 cmeshincludedir = $(includedir)/t8_cmesh
 dataincludedir = $(includedir)/t8_data
 forestincludedir = $(includedir)/t8_forest
+geometryincludedir = $(includedir)/t8_geometry
 schemesdefaultincludedir = $(includedir)/t8_schemes/default
 
 libt8_generated_headers = src/t8_config.h
