@@ -8,8 +8,16 @@ It is licensed under the GNU General Public License 2.0 or later. Copyright (c) 
 
 t8code is intended to be used as a thirdparty library for numerical simulation codes or any other applications that require meshes.
 
-<img src="https://github.com/holke/t8code/blob/main/doc/pictures/cmesh_tet_holes.png?raw=true" height="170" /> <img src="https://github.com/holke/t8code/blob/main/doc/pictures/flow_around_circle_sim2.jpg?raw=true" height="150" />
-<img src="https://github.com/holke/t8code/blob/main/doc/pictures/mesh_3d_hybrid_cutout.jpg?raw=true" height="150" />
+<table>
+    <tr>
+        <td><img src="https://github.com/holke/t8code/blob/main/doc/pictures/cmesh_tet_holes.png?raw=true" height="200" /></td> 
+        <td><img src="https://github.com/holke/t8code/blob/main/doc/pictures/flow_around_circle_sim2.jpg?raw=true" height="181" /></td>
+    </tr>
+      <tr>
+        <td><img src="https://github.com/holke/t8code/blob/main/doc/pictures/mesh_3d_hybrid_cutout.jpg?raw=true" height="200" /></td>
+        <td><img src="https://github.com/holke/t8code/blob/main/doc/pictures/AirplaneWithTetMesh.png?raw=true" height="200" /></td>
+    </tr>
+</table>
 
 t8code, or T8 for short, supports the following element types (also different types in the same mesh):
 

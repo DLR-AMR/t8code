@@ -123,4 +123,16 @@ README: README.md
 doxygen: Doxyfile
 	doxygen
 
+gtest: 
+	-make check
+	@grep "gtest" test/t8_gtest_main.log
+	@echo -e "\e[32m============================================================================\e[0m"
+	@echo -e "\e[32mGoogleTest summary\e[0m"
+	@echo -e "\e[32m============================================================================\e[0m"
+	@echo "# Total:"; grep -c "RUN" test/t8_gtest_main.log
+	@echo -e "\e[32m# PASS:"
+	@grep -o -i OK test/t8_gtest_main.log | wc -l
+	@echo -e "\e[32m============================================================================\e[0m"	
+	
+
 .PHONY: doxygen
