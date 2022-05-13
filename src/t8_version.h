@@ -32,11 +32,12 @@
  * T8_PACKAGE_VERSION | The full version number X.Y.Z-HASH as string | "0.41.1-288be-dirty"
  * T8_VERSION_MAJOR | The major version number of t8code X as int | 0
  * T8_VERSION_MINOR | The minor version number of t8code Y as int | 42
- * T8_VERSION_POINT | The point version number of t8code Z-HASH as int | 1-288be-dirty
+ * T8_VERSION_POINT | The point version number of t8code Z-HASH as inst | 1-288be-dirty
+ * \ref T8_VERSION_POINT_STRING | The point version number of t8code Z-HASH as string | "1-288be-dirty"
  * 
- * Attention: By desing of git's version handling, T8_VERSION_POINT is not defined as a string.
- *            Since it does often contain chars, the recommended way to use it is to convert it
- *            to a string constant: "T8_VERSION_POINT"
+ * Attention: By design of git's version handling, T8_VERSION_POINT is not defined as a string.
+ *            Since it does often contain chars we additionally define the macro \ref T8_VERSION_POINT_STRING
+ *            in this header file.
  * 
  * The point version number consists of the the patch version number and the HASH part.
  * To get the patch version number Z alone use \ref t8_get_version_patch.
@@ -46,6 +47,15 @@
 #define T8_VERSION_H
 
 #include <t8.h>
+#include <t8_config.h>
+
+/* In order to convert a macro to a string, we
+ * need to pass it through these two helper macros. */
+#define T8_STRINGIFY(arg) #arg
+#define T8_STRINGIFY_MIDDLE(arg) T8_STRINGIFY(arg)
+
+/** The T8_VERSION_POINT macro as a string */
+#define T8_VERSION_POINT_STRING T8_STRINGIFY_MIDDLE(T8_VERSION_POINT)
 
 /* call this after including all headers */
 T8_EXTERN_C_BEGIN ();

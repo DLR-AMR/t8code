@@ -31,7 +31,7 @@ t8_get_package_string ()
 const char         *
 t8_get_version_point_string ()
 {
-  return "T8_VERSION_POINT";
+  return T8_VERSION_POINT_STRING;
 }
 
 const char         *
