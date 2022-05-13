@@ -184,6 +184,7 @@ main (int argc, char **argv)
   int                 dim, do_balance;
   int                 parsed, helpme;
   int                 sreturn;
+  int                 print_version = 0;
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -227,6 +228,9 @@ main (int argc, char **argv)
   sc_options_add_switch (opt, 'b', "balance", &do_balance,
                          "Additionally 2:1 balance the forest.");
 
+  sc_options_add_switch (opt, 'v', "version", &print_version,
+                         "Print the version number of t8code and exit.");
+
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
 
@@ -236,8 +240,12 @@ main (int argc, char **argv)
     /* display help message and usage */
     t8_global_productionf ("%s\n", help);
   }
-  else if (parsed >= 0 && 1 <= dim && dim <= 3) {
+  else if (!print_version && parsed >= 0 && 1 <= dim && dim <= 3) {
     t8_basic_hypercube (dim, do_balance);
+  }
+  else if (print_version) {
+    t8_global_productionf ("This is t8code version %s\n",
+                           t8_get_version_string ());
   }
   else {
     /* wrong usage */
