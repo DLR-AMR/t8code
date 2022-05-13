@@ -21,7 +21,7 @@
 */
 
 #include <t8_eclass.h>
-#include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
 /* Build every child for the parent element and check wether the computed parent is
  * again the input element. Then call this function for every child, until maxlevel is
