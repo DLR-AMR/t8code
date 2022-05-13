@@ -101,27 +101,12 @@ TEST (t8_gtest_version, check_version_number_has_major_minor_patch)
 
   const char         *major_string = strtok (version_number_copy, ".");
   const char         *minor_string = strtok (NULL, ".");
-  char               *point_string = version_number_copy;
+  char               *patch_string = strtok (NULL, ".");;
 
   /* They should not be nullptr.
    * If they are, version_number does not contain two '.' */
   ASSERT_STRNE (major_string, nullptr);
   ASSERT_STRNE (minor_string, nullptr);
-  ASSERT_STRNE (point_string, nullptr);
-
-  /* Point string should match t8_get_version_point */
-  const char         *point_string_check = t8_get_version_point_string ();
-  EXPECT_STREQ (point_string, point_string_check);
-
-  /* Extract patch number from point string.
-   * The point string is either
-   * "patch_number"
-   * or
-   * "patch_number-HASH"
-   */
-  const char         *patch_string = strtok (point_string, "-");
-
-  /* Should not be nullptr */
   ASSERT_STRNE (patch_string, nullptr);
 
   /* Convert major, minor  and patch  from string to int */
