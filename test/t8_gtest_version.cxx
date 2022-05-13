@@ -24,6 +24,30 @@
 #include <gtest/gtest.h>
 #include <t8_version.h>
 
+TEST (t8_gtest_version, major_version)
+{
+  /* Change this number when you increase the major version. */
+  const int           major_version = 0;
+
+  EXPECT_EQ (t8_get_version_major (), major_version);
+}
+
+TEST (t8_gtest_version, minor_version)
+{
+  /* Change this number when you increase the minor version. */
+  const int           minor_version = 9;
+
+  EXPECT_EQ (t8_get_version_minor (), minor_version);
+}
+
+TEST (t8_gtest_version, patch_version)
+{
+  /* Change this number when you increase the patch version. */
+  const int           patch_version = 0;
+
+  EXPECT_EQ (t8_get_version_patch (), patch_version);
+}
+
 /* Test whether the return value of t8_get_package_string
  * matches T8_PACKAGE_STRING.
  */
