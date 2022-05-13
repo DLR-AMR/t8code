@@ -27,7 +27,7 @@
 /* Test whether the return value of t8_get_package_string
  * matches T8_PACKAGE_STRING.
  */
-TEST (t8_gtest_version_number, getter_function)
+TEST (t8_gtest_version, getter_function)
 {
   const char         *version_string = t8_get_package_string ();
 
@@ -37,7 +37,7 @@ TEST (t8_gtest_version_number, getter_function)
 /* The version_string must have the format
  * "t8 version_number"
  */
-TEST (t8_gtest_version_number, check_format_of_version_string)
+TEST (t8_gtest_version, check_format_of_version_string)
 {
   const char         *version_string = t8_get_package_string ();
 
@@ -61,7 +61,7 @@ TEST (t8_gtest_version_number, check_format_of_version_string)
 
 /* The version number should be a string "X.Y.Z-Something"
  * with X being the major and Y being the minor number and Z being the patch number. */
-TEST (t8_gtest_version_number, check_version_number_has_major_minor_patch)
+TEST (t8_gtest_version, check_version_number_has_major_minor_patch)
 {
   const char         *version_number = t8_get_version_number ();
   const int           major = t8_get_version_major ();
