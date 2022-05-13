@@ -5,6 +5,7 @@
 cmeshincludedir = $(includedir)/t8_cmesh
 dataincludedir = $(includedir)/t8_data
 forestincludedir = $(includedir)/t8_forest
+geometryincludedir = $(includedir)/t8_geometry
 schemesdefaultincludedir = $(includedir)/t8_schemes/default
 
 libt8_generated_headers = src/t8_config.h
@@ -92,6 +93,7 @@ nodist_include_HEADERS += $(libt8_generated_headers)
 dist_include_HEADERS = $(libt8_installed_headers)
 dist_cmeshinclude_HEADERS = $(libt8_installed_headers_cmesh)
 dist_forestinclude_HEADERS = $(libt8_installed_headers_forest)
+dist_geometryinclude_HEADERS = $(libt8_installed_headers_geometry)
 dist_schemesdefaultinclude_HEADERS = $(libt8_installed_headers_schemes_default)
 
 AM_CPPFLAGS += -I@top_srcdir@/src \
