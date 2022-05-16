@@ -27,7 +27,8 @@ libt8_installed_headers += \
   src/t8_schemes/t8_default/t8_default_vertex/t8_dvertex_bits.h \
   src/t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h \
   src/t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid_cxx.hxx \
-  src/t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.h
+  src/t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.h \
+  src/t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_connectivity.h
 libt8_compiled_sources += \
   src/t8_schemes/t8_default/t8_default_cxx.cxx \
   src/t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.cxx \
@@ -46,4 +47,5 @@ libt8_compiled_sources += \
   src/t8_schemes/t8_default/t8_default_vertex/t8_default_vertex_cxx.cxx \
   src/t8_schemes/t8_default/t8_default_vertex/t8_dvertex_bits.c \
   src/t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid_cxx.cxx \
-  src/t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.c
+  src/t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.c \
+  src/t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_connectivity.c

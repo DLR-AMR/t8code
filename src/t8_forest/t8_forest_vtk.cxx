@@ -28,7 +28,6 @@
 #include <t8_vec.h>
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include "t8_forest_types.h"
-#include "t8_schemes/t8_default/t8_dpyramid_bits.h"
 #if T8_WITH_VTK
 #include <vtkCellArray.h>
 #include <vtkCellData.h>
@@ -722,26 +721,20 @@ t8_forest_num_points (t8_forest_t forest, int count_ghosts)
   t8_tree_t           tree;
   t8_eclass_t         ghost_class;
   size_t              num_elements;
-  t8_dpyramid_t      *pyra;
+  t8_element_t       *elem;
   t8_element_array_t *ghost_elem;
+  t8_eclass_scheme   *tscheme;
 
   num_points = 0;
   for (itree = 0; itree < (t8_locidx_t) forest->trees->elem_count; itree++) {
     /* Get the tree that stores the elements */
     tree = (t8_tree_t) t8_sc_array_index_topidx (forest->trees, itree);
-    /* TODO: This will cause problems when pyramids are introduced. */
-    if (t8_forest_get_tree_class (forest, itree) == T8_ECLASS_PYRAMID) {
-      num_elements = t8_element_array_get_count (&tree->elements);
-      for (ielem = 0; ielem < (t8_locidx_t) num_elements; ielem++) {
-        pyra =
-          (t8_dpyramid_t *) t8_element_array_index_locidx (&tree->elements,
-                                                           ielem);
-        num_points += t8_dpyramid_num_vertices (pyra);
-      }
-    }
-    else {
-      num_points += t8_eclass_num_vertices[tree->eclass] *
-        t8_element_array_get_count (&tree->elements);
+    /* Get the scheme of the current tree */
+    tscheme = t8_forest_get_eclass_scheme (forest, tree->eclass);
+    num_elements = t8_element_array_get_count (&tree->elements);
+    for (ielem = 0; ielem < (t8_locidx_t) num_elements; ielem++) {
+      elem = t8_element_array_index_locidx (&tree->elements, ielem);
+      num_points += tscheme->t8_element_num_corners (elem);
     }
 
   }
@@ -752,19 +745,12 @@ t8_forest_num_points (t8_forest_t forest, int count_ghosts)
     for (itree = 0; itree < num_ghosts; itree++) {
       /* Get the element class of the ghost */
       ghost_class = t8_forest_ghost_get_tree_class (forest, itree);
-      if (ghost_class == T8_ECLASS_PYRAMID) {
-        ghost_elem = t8_forest_ghost_get_tree_elements (forest, itree);
-        num_elements = t8_forest_ghost_tree_num_elements (forest, itree);
-        for (ielem = 0; ielem < (t8_locidx_t) num_elements; ielem++) {
-          pyra =
-            (t8_dpyramid_t *) t8_element_array_index_locidx (ghost_elem,
-                                                             ielem);
-          num_points += t8_dpyramid_num_vertices (pyra);
-        }
-      }
-      else {
-        num_points += t8_eclass_num_vertices[ghost_class]
-          * t8_forest_ghost_tree_num_elements (forest, itree);
+      ghost_elem = t8_forest_ghost_get_tree_elements (forest, itree);
+      num_elements = t8_forest_ghost_tree_num_elements (forest, itree);
+      tscheme = t8_forest_get_eclass_scheme (forest, ghost_class);
+      for (ielem = 0; ielem < (t8_locidx_t) num_elements; ielem++) {
+        elem = t8_element_array_index_locidx (ghost_elem, ielem);
+        num_points += tscheme->t8_element_num_corners (elem);
       }
     }
   }
@@ -788,6 +774,7 @@ t8_forest_vtk_cells_vertices_kernel (t8_forest_t forest, t8_locidx_t ltree_id,
   double              element_coordinates[3];
   int                 num_el_vertices, ivertex;
   int                 freturn;
+  t8_element_shape_t  element_shape;
 
   if (modus != T8_VTK_KERNEL_EXECUTE) {
     /* Nothing to do if we are in Init or clean up mode */
@@ -802,12 +789,11 @@ t8_forest_vtk_cells_vertices_kernel (t8_forest_t forest, t8_locidx_t ltree_id,
   /* if we eventually implement scaling the elements, activate this line */
   t8_forest_element_centroid (forest, ltree_id, element, midpoint);
 #endif
-
-  num_el_vertices = t8_eclass_num_vertices[ts->t8_element_shape (element)];
+  element_shape = ts->t8_element_shape (element);
+  num_el_vertices = t8_eclass_num_vertices[element_shape];
   for (ivertex = 0; ivertex < num_el_vertices; ivertex++) {
     t8_forest_element_coordinate (forest, ltree_id, element,
-                                  t8_eclass_vtk_corner_number
-                                  [ts->t8_element_shape (element)]
+                                  t8_eclass_vtk_corner_number[element_shape]
                                   [ivertex], element_coordinates);
 #if 0
     /* if we eventually implement scaling the elements, activate this line */
@@ -962,6 +948,7 @@ t8_forest_vtk_cells_connectivity_kernel (t8_forest_t forest,
   int                 ivertex, num_vertices;
   int                 freturn;
   t8_locidx_t        *count_vertices;
+  t8_element_shape_t  element_shape;
 
   if (modus == T8_VTK_KERNEL_INIT) {
     /* We use data to count the number of written vertices */
@@ -975,18 +962,15 @@ t8_forest_vtk_cells_connectivity_kernel (t8_forest_t forest,
   T8_ASSERT (modus == T8_VTK_KERNEL_EXECUTE);
 
   count_vertices = (t8_locidx_t *) *data;
-
-  /* TODO: This will definitely break with pyramids */
-  //SC_CHECK_ABORT (ts->eclass != T8_ECLASS_PYRAMID,
-  //                "No vtk support for pyramids.");
-  num_vertices = t8_eclass_num_vertices[ts->t8_element_shape (elements)];
+  element_shape = ts->t8_element_shape (elements);
+  num_vertices = t8_eclass_num_vertices[element_shape];
   for (ivertex = 0; ivertex < num_vertices; ++ivertex, (*count_vertices)++) {
     freturn = fprintf (vtufile, " %ld", (long) *count_vertices);
     if (freturn <= 0) {
       return 0;
     }
   }
-  *columns += t8_eclass_num_vertices[ts->t8_element_shape (elements)];
+  *columns += t8_eclass_num_vertices[element_shape];
   return 1;
 }
 
@@ -1016,9 +1000,6 @@ t8_forest_vtk_cells_offset_kernel (t8_forest_t forest, t8_locidx_t ltree_id,
 
   offset = (long long *) *data;
 
-  /* TODO: This will also break with pyramids! */
-  //SC_CHECK_ABORT (ts->eclass != T8_ECLASS_PYRAMID,
-  //                "Pyramids not supported in vtk");
   num_vertices = t8_eclass_num_vertices[ts->t8_element_shape (element)];
   *offset += num_vertices;
   freturn = fprintf (vtufile, " %lld", *offset);

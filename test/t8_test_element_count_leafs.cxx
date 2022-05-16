@@ -47,10 +47,6 @@ test_element_count_leafs_one_level ()
   /* We iterate over all classes and all refinement levels and compute the
    * leafs of this refinement level. */
   for (eclass = T8_ECLASS_ZERO; eclass < T8_ECLASS_COUNT; ++eclass) {
-    //if (eclass == T8_ECLASS_PYRAMID) {
-    /* TODO: Add pyramid test, as soon as pyramids are supported */
-    //  continue;
-    //}
     class_scheme = ts->eclass_schemes[eclass];
     int                 maxlevel = class_scheme->t8_element_maxlevel ();
     class_scheme->t8_element_new (1, &element);

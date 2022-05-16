@@ -28,7 +28,7 @@
 #define T8_DEFAULT_PYRAMID_CXX_HXX
 
 #include <t8_element_cxx.hxx>
-#include "t8_default_common_cxx.hxx"
+#include <t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx>
 
 /** Provide an implementation for the pyramid element class.
  * It is written as a self-contained library in the t8_dpyramid_* files.
@@ -81,7 +81,7 @@ public:
                                                t8_element_t *elem,
                                                int root_face);
 
-/** Compare to elements. returns negativ if elem1 < elem2, zero if elem1 equals elem2
+/** Compare two elements. returns negative if elem1 < elem2, zero if elem1 equals elem2
  *  and positiv if elem1 > elem2.
  *  If elem2 is a copy of elem1 then the elements are equal.
  */
@@ -104,12 +104,6 @@ public:
 
    /** Return the number of corners of an element*/
   virtual int         t8_element_num_corners (const t8_element_t *elem);
-
-/** Compute the number of corners of a given element.
-* \param [in] elem The element.
-* \return          The number of corners of \a elem.
-*/
-  virtual int         t8_element_num_vertices (const t8_element_t *elem);
 
   /** Return the number of children of an element's face when the element is refined. */
   virtual int         t8_element_num_face_children (const t8_element_t *elem,
@@ -183,7 +177,7 @@ public:
                                                 int level, uint64_t id);
 
 /** Return the shape of an element */
-  virtual t8_eclass_t t8_element_shape (const t8_element_t *elem);
+  virtual t8_element_shape_t t8_element_shape (const t8_element_t *elem);
 
 /** Return the shape of an element */
   virtual t8_element_shape_t t8_element_face_shape (const t8_element_t *elem,
@@ -313,11 +307,11 @@ public:
 
 #ifdef T8_ENABLE_DEBUG
   /** Query whether an element is valid */
-  virtual int         t8_element_is_valid (const t8_element_t *t) const
-  {
-    /* TODO: Correctly implement this function */
-    return 1;
-  }
+  virtual int         t8_element_is_valid (const t8_element_t *elem) const;
+
+    /** Print an element*/
+  virtual void        t8_element_debug_print (const t8_element_t *elem) const;
+
 #endif
 };
 

@@ -286,37 +286,21 @@ int                 t8_dtri_is_ancestor (const t8_dtri_t *t,
  */
 t8_linearidx_t      t8_dtri_linear_id (const t8_dtri_t *t, int level);
 
-/** Computes the linear position of a triangle in a uniform grid up to a given level.
- * \param [in] t  triangle whose id will be computed.
- * \param [in] level level of uniform grid to be considered.
- * \param [in] stop  level, where the computation should stop.
- * \return Returns the linear position of this triangle on a grid of level \a level.
- * \note This id is not the Morton index.
- */
-t8_linearidx_t
-     t8_dtri_linear_id_with_level (const t8_dtri_t *t, int level, int stop);
-
 /**
  * Same as init_linear_id, but we only consider the subtree. Used for computing the index of a
  * tetrahedron lying in a pyramid
  * \param [in, out] t   Existing triangle whose data will be filled
- * \param id            Index to be considered
- * \param start_level   The level of the root of the subtree
- * \param end_level     Level of uniform grid to be considered
- * \param parenttype    The type of the parent.
+ * \param [in] id            Index to be considered
+ * \param [in] start_level   The level of the root of the subtree
+ * \param [in] end_level     Level of uniform grid to be considered
+ * \param [in] parenttype    The type of the parent.
  */
-void
- 
- 
- 
- 
- 
- 
- 
- t8_dtri_init_linear_id_with_level (t8_dtri_t *t, t8_linearidx_t id,
-                                    const int start_level,
-                                    const int end_level,
-                                    t8_dtri_type_t parenttype);
+void                t8_dtri_init_linear_id_with_level (t8_dtri_t *t,
+                                                       t8_linearidx_t id,
+                                                       const int start_level,
+                                                       const int end_level,
+                                                       t8_dtri_type_t
+                                                       parenttype);
 
 /** Initialize a triangle as the triangle with a given global id in a uniform
  *  refinement of a given level. *

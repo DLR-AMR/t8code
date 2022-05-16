@@ -130,10 +130,7 @@ t8_geom_compute_linear_geometry (t8_eclass_t tree_class,
       /*coordinates = out_coords */
       /*vertex_coords = len * corner_coords = ref_coords */
 
-      /*for(i = 0; i<3; i++){
-         vertex_coords[i] =  len * corner_coords[i];
-         } */
-      /*In this case, thex vertex is the tip of the parentpyramid and we don't have to compute
+      /*In this case, the vertex is the tip of the parent pyramid and we don't have to compute
        * anything.*/
       if (ref_coords[0] == 1. && ref_coords[1] == 1. && ref_coords[2] == 1.) {
         for (i = 0; i < 3; i++) {
