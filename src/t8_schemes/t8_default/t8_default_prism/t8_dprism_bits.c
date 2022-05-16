@@ -644,3 +644,10 @@ t8_dprism_is_valid (const t8_dprism_t *p)
   const int           same_level = line->level == tri->level;
   return t8_dtri_is_valid (tri) && t8_dline_is_valid (line) && same_level;
 }
+
+void
+t8_dprism_debug_print (const t8_dprism_t *p)
+{
+  t8_dtri_debug_print (&p->tri);
+  t8_dline_debug_print (&p->line);
+}

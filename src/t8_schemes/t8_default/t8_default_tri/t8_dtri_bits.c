@@ -1628,6 +1628,18 @@ t8_dtri_is_valid (const t8_dtri_t *t)
 }
 
 void
+t8_dtri_debug_print (const t8_dtri_t *t)
+{
+#ifdef T8_DTRI_TO_DTET
+  t8_debugf ("x: %i, y: %i, z: %i, type: %i, level: %i\n", t->x, t->y, t->z,
+             t->type, t->level);
+#else
+  t8_debugf ("x: %i, y: %i, type: %i, level: %i\n", t->x, t->y, t->type,
+             t->level);
+#endif /* T8_DTRI_TO_DTET */
+}
+
+void
 t8_dtri_init (t8_dtri_t *t)
 {
   /* Set all values to zero */

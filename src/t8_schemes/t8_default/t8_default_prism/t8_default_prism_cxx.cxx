@@ -500,6 +500,13 @@ t8_default_scheme_prism_c::t8_element_is_valid (const t8_element_t * elem) const
   return t8_dprism_is_valid ((const t8_dprism_t *) elem);
 }
 /* *INDENT-ON* */
+
+void
+t8_default_scheme_prism_c::t8_element_debug_print (const t8_element_t *elem) const
+{
+  T8_ASSERT (t8_element_is_valid (elem));
+  t8_dprism_debug_print ((const t8_dprism_t *) elem);
+}
 #endif /* T8_ENABLE_DEBUG */
 
 /* Constructor */

@@ -395,6 +395,11 @@ int                 t8_dtri_get_level (const t8_dtri_t *t);
  */
 int                 t8_dtri_is_valid (const t8_dtri_t *t);
 
+/** Print a triangle
+ * \param [in] t  triangle to be considered.
+ */
+void                t8_dtri_debug_print (const t8_dtri_t *t);
+
 #ifdef T8_ENABLE_DEBUG
 /** Set sensible default values for a triangle.
  * \param [in,out] t A triangle.

@@ -426,6 +426,13 @@ t8_default_scheme_pyramid_c::t8_element_is_valid (const t8_element_t *elem) cons
   T8_ASSERT (elem != NULL);
   return t8_dpyramid_is_valid ((const t8_dpyramid_t *) elem);
 }
+
+void
+t8_default_scheme_pyramid_c::t8_element_debug_print (const t8_element_t *elem) const
+{
+  T8_ASSERT (t8_element_is_valid (elem));
+  t8_dpyramid_debug_print ((const t8_dpyramid_t *) elem);
+}
 #endif
 
 /* Constructor */

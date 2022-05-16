@@ -1584,3 +1584,10 @@ t8_dpyramid_is_valid (const t8_dpyramid_t *p)
 
   return is_valid;
 }
+
+void
+t8_dpyramid_debug_print (const t8_dpyramid_t *p)
+{
+  t8_debugf ("x: %i, y: %i, z: %i, type %i, level: %i\n", p->x, p->y, p->z,
+             p->type, p->level);
+}

@@ -563,6 +563,13 @@ t8_default_scheme_tet_c::t8_element_is_valid (const t8_element_t * t) const
 {
   return t8_dtet_is_valid ((const t8_dtet_t *) t);
 }
+
+void
+t8_default_scheme_tet_c::t8_element_debug_print (const t8_element_t *t) const
+{
+  T8_ASSERT (t8_element_is_valid (t));
+  t8_dtet_debug_print ((const t8_dtet_t *) t);
+}
 #endif
 
 void

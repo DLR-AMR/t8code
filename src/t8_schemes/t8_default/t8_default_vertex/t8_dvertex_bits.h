@@ -208,6 +208,11 @@ t8_linearidx_t      t8_dvertex_linear_id (const t8_dvertex_t *elem,
  */
 int                 t8_dvertex_is_valid (const t8_dvertex_t *v);
 
+/** Print a vertex
+ * \param [in] v  vertex to be considered.
+ */
+void                t8_dvertex_debug_print (const t8_dvertex_t *v);
+
 /** Set default values for a vertex, such that it passes \ref t8_dvertex_is_valid.
  * \param [in] l  vertex to be initialized
  */

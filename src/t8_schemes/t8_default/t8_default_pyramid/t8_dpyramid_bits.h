@@ -397,6 +397,13 @@ void                t8_dpyramid_vertex_reference_coords (const t8_dpyramid_t
  */
 int                 t8_dpyramid_is_valid (const t8_dpyramid_t *p);
 
+/**
+ * Print the coordinates, the level and the type of a pyramid
+ * \param[in] p        The pyramid to print
+ * 
+ */
+void                t8_dpyramid_debug_print (const t8_dpyramid_t *p);
+
 T8_EXTERN_C_END ();
 
 #endif /* T8_DPYRAMID_BITS_H */
