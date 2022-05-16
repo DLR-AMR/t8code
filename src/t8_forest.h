@@ -824,8 +824,9 @@ t8_gloidx_t         t8_forest_element_face_neighbor (t8_forest_t forest,
 /* TODO: implement */
 void                t8_forest_save (t8_forest_t forest);
 
-/** Write the forest in a parallel vtu format. There is one master
- * .pvtu file and each process writes in its own .vtu file.
+/** Write the forest in a parallel vtu format. Extended version.
+ * See \ref t8_forest_write_vtk for the standard version of this function.
+ * Writes one master .pvtu file and each process writes in its own .vtu file.
  * If linked and not otherwise specified, the VTK API is used.
  * Forest must be committed when calling this function.
  * This function is collective and must be called on each process.
