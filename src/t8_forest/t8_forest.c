@@ -1333,8 +1333,13 @@ t8_forest_write_vtk_ext (t8_forest_t forest,
                                                   data);
       }
     }
-    else
-    {
+#else
+  /* We are not linked against the VTK library, so
+   * we do not use the API by default.
+   */
+  do_not_use_API = 1;
+#endif
+  if (do_not_use_API)
       if (curved_flag)
       {
         t8_errorf("Export of ghosts not yet available with the inbuild function. "
@@ -1355,27 +1360,6 @@ t8_forest_write_vtk_ext (t8_forest_t forest,
                                           data);
       }
     }
-  #else
-    if (curved_flag)
-      {
-        t8_errorf("Export of ghosts not yet available with the inbuild function. "
-                  "Please link to vtk.\n"
-                  "Did not write any vtk output.\n");
-        return 0;
-      }
-      else
-      {
-        return  t8_forest_vtk_write_file (forest,
-                                          fileprefix,
-                                          write_treeid,
-                                          write_mpirank,
-                                          write_level,
-                                          write_element_id,
-                                          write_ghosts,
-                                          num_data,
-                                          data);
-      }
-  #endif
 }
 
 int
