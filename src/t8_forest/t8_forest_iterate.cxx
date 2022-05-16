@@ -38,8 +38,8 @@ typedef struct
 /* This is the function that we call in sc_split_array to determine for an
  * element E that is a descendant of an element e, of which of e's children,
  * E is a descendant. */
-static              size_t
-t8_forest_determine_child_type (sc_array_t * leaf_elements,
+static size_t
+t8_forest_determine_child_type (sc_array_t *leaf_elements,
                                 size_t index, void *data)
 {
   t8_forest_child_type_query_t *query_data =
@@ -56,8 +56,8 @@ t8_forest_determine_child_type (sc_array_t * leaf_elements,
 }
 
 void
-t8_forest_split_array (const t8_element_t * element,
-                       t8_element_array_t * leaf_elements, size_t * offsets)
+t8_forest_split_array (const t8_element_t *element,
+                       t8_element_array_t *leaf_elements, size_t *offsets)
 {
   sc_array_t          offset_view;
   sc_array_t         *element_array;
@@ -84,8 +84,8 @@ t8_forest_split_array (const t8_element_t * element,
 
 void
 t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid,
-                         const t8_element_t * element, int face,
-                         t8_element_array_t * leaf_elements, void *user_data,
+                         const t8_element_t *element, int face,
+                         t8_element_array_t *leaf_elements, void *user_data,
                          t8_locidx_t tree_lindex_of_first_leaf,
                          t8_forest_iterate_face_fn callback)
 {
@@ -190,13 +190,13 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid,
  */
 static void
 t8_forest_search_recursion (t8_forest_t forest, t8_locidx_t ltreeid,
-                            t8_eclass_t eclass, t8_element_t * element,
-                            t8_eclass_scheme_c * ts,
-                            t8_element_array_t * leaf_elements,
+                            t8_eclass_t eclass, t8_element_t *element,
+                            t8_eclass_scheme_c *ts,
+                            t8_element_array_t *leaf_elements,
                             t8_locidx_t tree_lindex_of_first_leaf,
                             t8_forest_search_query_fn search_fn,
                             t8_forest_search_query_fn query_fn,
-                            sc_array_t * queries, sc_array_t * active_queries)
+                            sc_array_t *queries, sc_array_t *active_queries)
 {
   t8_element_t       *leaf, **children;
   int                 num_children, ichild;
@@ -329,7 +329,7 @@ static void
 t8_forest_search_tree (t8_forest_t forest, t8_locidx_t ltreeid,
                        t8_forest_search_query_fn search_fn,
                        t8_forest_search_query_fn query_fn,
-                       sc_array_t * queries)
+                       sc_array_t *queries)
 {
   t8_eclass_t         eclass;
   t8_eclass_scheme_c *ts;
@@ -353,11 +353,11 @@ t8_forest_search_tree (t8_forest_t forest, t8_locidx_t ltreeid,
   /* Compute their nearest common ancestor */
   ts->t8_element_new (1, &nca);
   //ts->t8_element_nca (first_el, last_el, nca);
-  if(eclass == T8_ECLASS_PYRAMID){
-      ts->t8_element_set_linear_id(nca,0,0);
+  if (eclass == T8_ECLASS_PYRAMID) {
+    ts->t8_element_set_linear_id (nca, 0, 0);
   }
-  else{
-      ts->t8_element_nca(first_el, last_el, nca);
+  else {
+    ts->t8_element_nca (first_el, last_el, nca);
   }
 
   /* If we have queries build a list of all active queries,
@@ -385,7 +385,7 @@ t8_forest_search_tree (t8_forest_t forest, t8_locidx_t ltreeid,
 
 void
 t8_forest_search (t8_forest_t forest, t8_forest_search_query_fn search_fn,
-                  t8_forest_search_query_fn query_fn, sc_array_t * queries)
+                  t8_forest_search_query_fn query_fn, sc_array_t *queries)
 {
   t8_locidx_t         num_local_trees, itree;
 

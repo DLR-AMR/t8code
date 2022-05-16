@@ -35,7 +35,7 @@
 static int
 t8_basic_adapt_refine (t8_forest_t forest, t8_locidx_t which_tree,
                        t8_eclass_scheme_t * ts, const int is_family,
-                       const int num_elements, t8_element_t * elements[])
+                       const int num_elements, t8_element_t *elements[])
 {
 #if 0
   int                 level;
@@ -58,7 +58,7 @@ t8_basic_adapt_refine (t8_forest_t forest, t8_locidx_t which_tree,
 static int
 t8_basic_adapt_coarsen (t8_forest_t forest, t8_locidx_t which_tree,
                         t8_eclass_scheme_t * ts, const int is_family,
-                        int num_elements, t8_element_t * elements[])
+                        int num_elements, t8_element_t *elements[])
 {
   if (is_family) {
     return -1;

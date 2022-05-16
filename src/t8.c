@@ -149,7 +149,7 @@ t8_init (int log_threshold)
                                        "t8", "Adaptive discretizations");
 
   w = 24;
-  t8_global_essentialf ("This is %s\n", T8_PACKAGE_STRING);
+  t8_global_essentialf ("This is %s\n", t8_get_version_string ());
   t8_global_productionf ("%-*s %s\n", w, "CPP", T8_CPP);
   t8_global_productionf ("%-*s %s\n", w, "CPPFLAGS", T8_CPPFLAGS);
   t8_global_productionf ("%-*s %s\n", w, "CC", T8_CC);
@@ -159,7 +159,7 @@ t8_init (int log_threshold)
 }
 
 void               *
-t8_sc_array_index_topidx (sc_array_t * array, t8_topidx_t it)
+t8_sc_array_index_topidx (sc_array_t *array, t8_topidx_t it)
 {
   P4EST_ASSERT (it >= 0 && (size_t) it < array->elem_count);
 
@@ -167,9 +167,15 @@ t8_sc_array_index_topidx (sc_array_t * array, t8_topidx_t it)
 }
 
 void               *
-t8_sc_array_index_locidx (sc_array_t * array, t8_locidx_t it)
+t8_sc_array_index_locidx (sc_array_t *array, t8_locidx_t it)
 {
   P4EST_ASSERT (it >= 0 && (size_t) it < array->elem_count);
-  
+
   return array->array + array->elem_size * (size_t) it;
+}
+
+const char         *
+t8_get_version_string ()
+{
+  return T8_PACKAGE_STRING;
 }

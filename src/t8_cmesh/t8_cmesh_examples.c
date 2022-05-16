@@ -34,7 +34,7 @@
  * If offset is nonzero, then set_partition must be true and the cmesh is
  * partitioned and has all trees in conn as local trees.
  * The offsets on the different processes must add up! */
-static              t8_cmesh_t
+static t8_cmesh_t
 t8_cmesh_new_from_p4est_ext (void *conn, int dim,
                              sc_MPI_Comm comm, int set_partition,
                              t8_gloidx_t offset)
@@ -155,7 +155,7 @@ t8_cmesh_new_from_p8est (p8est_connectivity_t * conn,
   return t8_cmesh_new_from_p4est_ext (conn, 3, comm, do_partition, 0);
 }
 
-static              t8_cmesh_t
+static t8_cmesh_t
 t8_cmesh_new_vertex (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
@@ -173,7 +173,7 @@ t8_cmesh_new_vertex (sc_MPI_Comm comm)
   return cmesh;
 }
 
-static              t8_cmesh_t
+static t8_cmesh_t
 t8_cmesh_new_line (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
@@ -192,7 +192,7 @@ t8_cmesh_new_line (sc_MPI_Comm comm)
   return cmesh;
 }
 
-static              t8_cmesh_t
+static t8_cmesh_t
 t8_cmesh_new_tri (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
@@ -212,7 +212,7 @@ t8_cmesh_new_tri (sc_MPI_Comm comm)
   return cmesh;
 }
 
-static              t8_cmesh_t
+static t8_cmesh_t
 t8_cmesh_new_tet (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
@@ -233,7 +233,7 @@ t8_cmesh_new_tet (sc_MPI_Comm comm)
   return cmesh;
 }
 
-static              t8_cmesh_t
+static t8_cmesh_t
 t8_cmesh_new_quad (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
@@ -254,7 +254,7 @@ t8_cmesh_new_quad (sc_MPI_Comm comm)
   return cmesh;
 }
 
-static              t8_cmesh_t
+static t8_cmesh_t
 t8_cmesh_new_hex (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
@@ -279,7 +279,7 @@ t8_cmesh_new_hex (sc_MPI_Comm comm)
   return cmesh;
 }
 
-static              t8_cmesh_t
+static t8_cmesh_t
 t8_cmesh_new_pyramid (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
@@ -297,7 +297,7 @@ t8_cmesh_new_pyramid (sc_MPI_Comm comm)
   return cmesh;
 }
 
-static              t8_cmesh_t
+static t8_cmesh_t
 t8_cmesh_new_prism (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;

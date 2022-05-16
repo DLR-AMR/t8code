@@ -27,9 +27,9 @@
 
 /*recursively compute all elements and check their id*/
 static void
-t8_recursive_linear_id (t8_element_t * element, t8_element_t * child,
-                        t8_element_t * test, t8_eclass_scheme_c * ts,
-                        int maxlvl, uint64_t * id)
+t8_recursive_linear_id (t8_element_t *element, t8_element_t *child,
+                        t8_element_t *test, t8_eclass_scheme_c *ts,
+                        int maxlvl, uint64_t *id)
 {
   int                 level = ts->t8_element_level (element);
   int                 num_children, i;
@@ -56,8 +56,7 @@ t8_recursive_linear_id (t8_element_t * element, t8_element_t * child,
 }
 
 int
-t8_num_descendants (t8_element_t * element, int level,
-                    t8_eclass_scheme_c * ts)
+t8_num_descendants (t8_element_t *element, int level, t8_eclass_scheme_c *ts)
 {
   int                 level_diff = level - ts->t8_element_level (element);
   int                 shape = ts->t8_element_shape (element);
@@ -86,14 +85,14 @@ t8_num_descendants (t8_element_t * element, int level,
 /*Check, if all descendants of an element at level maxlvl have the same id on
  * the level of the input element as the input element*/
 static void
-t8_id_at_other_lvl_check (t8_element_t * element, t8_element * child,
-                          t8_eclass_scheme_c * ts, int maxlvl)
+t8_id_at_other_lvl_check (t8_element_t *element, t8_element * child,
+                          t8_eclass_scheme_c *ts, int maxlvl)
 {
   int                 level = ts->t8_element_level (element);
-  uint64_t            current_id = ts->t8_element_get_linear_id (element, level),
-                      num_descendants = t8_num_descendants (element, maxlvl, ts),
-                      id_at_lvl = ts->t8_element_get_linear_id (element, maxlvl),
-                      i, id;
+  uint64_t            current_id =
+    ts->t8_element_get_linear_id (element, level), num_descendants =
+    t8_num_descendants (element, maxlvl, ts), id_at_lvl =
+    ts->t8_element_get_linear_id (element, maxlvl), i, id;
 
   for (i = 0; i < num_descendants; i++) {
     ts->t8_element_set_linear_id (child, maxlvl, id_at_lvl + i);

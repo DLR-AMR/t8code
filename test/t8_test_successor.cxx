@@ -29,9 +29,9 @@
  * each child, the successor is checked.
  */
 static void
-t8_recursive_successor (t8_element_t * element, t8_element_t * successor,
-                        t8_element_t * child,
-                        t8_element_t * last, t8_eclass_scheme_c * ts,
+t8_recursive_successor (t8_element_t *element, t8_element_t *successor,
+                        t8_element_t *child,
+                        t8_element_t *last, t8_eclass_scheme_c *ts,
                         const int maxlvl)
 {
   int                 level = ts->t8_element_level (element);
@@ -79,8 +79,8 @@ t8_recursive_successor (t8_element_t * element, t8_element_t * successor,
  * maximum level are computed. The successor runs through all these children.
  */
 static void
-t8_deep_successor (t8_element_t * element, t8_element_t * successor,
-                   t8_element_t * child, t8_eclass_scheme_c * ts)
+t8_deep_successor (t8_element_t *element, t8_element_t *successor,
+                   t8_element_t *child, t8_eclass_scheme_c *ts)
 {
   int                 maxlvl = ts->t8_element_maxlevel ();
   int                 i, j, num_children, num_children_child;
@@ -130,7 +130,6 @@ t8_compute_successor (const int level)
     ts->t8_element_set_linear_id (element, ts->t8_element_maxlevel () - 2, 0);
     ts->t8_element_set_linear_id (successor, ts->t8_element_maxlevel (), 0);
     t8_deep_successor (element, successor, last, ts);
-
 
     ts->t8_element_destroy (1, &element);
     ts->t8_element_destroy (1, &successor);

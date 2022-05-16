@@ -48,7 +48,7 @@ test_element_count_leafs_one_level ()
    * leafs of this refinement level. */
   for (eclass = T8_ECLASS_ZERO; eclass < T8_ECLASS_COUNT; ++eclass) {
     //if (eclass == T8_ECLASS_PYRAMID) {
-      /* TODO: Add pyramid test, as soon as pyramids are supported */
+    /* TODO: Add pyramid test, as soon as pyramids are supported */
     //  continue;
     //}
     class_scheme = ts->eclass_schemes[eclass];
@@ -143,14 +143,13 @@ test_element_count_leafs_root ()
                        " (expecting %li)", leaf_count,
                        t8_eclass_to_string[eclass], level, compare_value);
       /* Multiply the compare_value with 2^dim (= number of children per element) */
-      if(eclass == T8_ECLASS_PYRAMID){
-         sum1 *= 8;
-         sum2 *= 6;
-         compare_value = 2*sum1 - sum2;
+      if (eclass == T8_ECLASS_PYRAMID) {
+        sum1 *= 8;
+        sum2 *= 6;
+        compare_value = 2 * sum1 - sum2;
       }
-      else
-      {
-          compare_value *= 1 << t8_eclass_to_dimension[eclass];
+      else {
+        compare_value *= 1 << t8_eclass_to_dimension[eclass];
 
       }
     }

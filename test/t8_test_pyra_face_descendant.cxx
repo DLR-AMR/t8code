@@ -29,13 +29,12 @@
 #include <t8_schemes/t8_default/t8_dpyramid_connectivity.h>
 
 void
-t8_linear_face_descendant (t8_element_t * elem, t8_element_t * tmp,
-                           t8_element_t * test, t8_eclass_scheme_c * ts,
+t8_linear_face_descendant (t8_element_t *elem, t8_element_t *tmp,
+                           t8_element_t *test, t8_eclass_scheme_c *ts,
                            int maxlvl)
 {
-  int                  level = ts->t8_element_level (elem),
-                       type = ((t8_dpyramid_t *) elem)->type,
-                       child_id,i, j, k, num_faces;
+  int                 level = ts->t8_element_level (elem),
+    type = ((t8_dpyramid_t *) elem)->type, child_id, i, j, k, num_faces;
   if (type < 6) {
     num_faces = T8_DTET_FACES;
   }
@@ -89,12 +88,12 @@ t8_linear_face_descendant (t8_element_t * elem, t8_element_t * tmp,
 
 /*Recursivly check the first and last descendant along a face*/
 void
-t8_recursive_face_desendant (t8_element_t * elem, t8_element_t * test,
-                             t8_element_t * tmp, t8_element_t * child,
-                             t8_eclass_scheme_c * ts, int maxlvl)
+t8_recursive_face_desendant (t8_element_t *elem, t8_element_t *test,
+                             t8_element_t *tmp, t8_element_t *child,
+                             t8_eclass_scheme_c *ts, int maxlvl)
 {
   int                 level = ts->t8_element_level (elem),
-                      i, j, k, child_id, type, num_faces, num_children;
+    i, j, k, child_id, type, num_faces, num_children;
   T8_ASSERT (level <= maxlvl && maxlvl <= ts->t8_element_maxlevel () - 1);
   if (level == maxlvl)
     return;
