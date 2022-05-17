@@ -35,9 +35,8 @@
 
 typedef int         (*t8_forest_iterate_face_fn) (t8_forest_t forest,
                                                   t8_locidx_t ltreeid,
-                                                  const t8_element_t *
-                                                  element, int face,
-                                                  void *user_data,
+                                                  const t8_element_t *element,
+                                                  int face, void *user_data,
                                                   t8_locidx_t
                                                   tree_leaf_index);
 
@@ -59,22 +58,20 @@ typedef int         (*t8_forest_iterate_face_fn) (t8_forest_t forest,
  */
 typedef int         (*t8_forest_search_query_fn) (t8_forest_t forest,
                                                   t8_locidx_t ltreeid,
-                                                  const t8_element_t *
-                                                  element,
+                                                  const t8_element_t *element,
                                                   const int is_leaf,
-                                                  t8_element_array_t *
-                                                  leaf_elements,
-                                                  t8_locidx_t
-                                                  tree_leaf_index,
+                                                  t8_element_array_t
+                                                  *leaf_elements,
+                                                  t8_locidx_t tree_leaf_index,
                                                   void *query,
                                                   size_t query_index);
 
 T8_EXTERN_C_BEGIN ();
 
 /* TODO: Document */
-void                t8_forest_split_array (const t8_element_t * element,
-                                           t8_element_array_t * leaf_elements,
-                                           size_t * offsets);
+void                t8_forest_split_array (const t8_element_t *element,
+                                           t8_element_array_t *leaf_elements,
+                                           size_t *offsets);
 
 /* TODO: comment */
 /* Iterate over all leafs of an element that touch a given face of the element */
@@ -86,10 +83,10 @@ void                t8_forest_split_array (const t8_element_t * element,
  * If it returns false, the current element is not traversed further */
 void                t8_forest_iterate_faces (t8_forest_t forest,
                                              t8_locidx_t ltreeid,
-                                             const t8_element_t * element,
+                                             const t8_element_t *element,
                                              int face,
-                                             t8_element_array_t *
-                                             leaf_elements, void *user_data,
+                                             t8_element_array_t
+                                             *leaf_elements, void *user_data,
                                              t8_locidx_t
                                              tree_lindex_of_first_leaf,
                                              t8_forest_iterate_face_fn
@@ -104,7 +101,7 @@ void                t8_forest_iterate_faces (t8_forest_t forest,
 void                t8_forest_search (t8_forest_t forest,
                                       t8_forest_search_query_fn search_fn,
                                       t8_forest_search_query_fn query_fn,
-                                      sc_array_t * queries);
+                                      sc_array_t *queries);
 
 /** Given two forest where the elemnts in one forest are either direct children or
  * parents of the elements in the other forest
