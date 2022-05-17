@@ -1343,7 +1343,7 @@ t8_forest_write_vtk_ext (t8_forest_t forest,
   {
     if (curved_flag)
     {
-      t8_errorf("Export of ghosts not yet available with the inbuild function. "
+      t8_errorf("Export of curved elements not yet available with the inbuild function. "
                 "Please use the vtk API instead.\n"
                 "Did not write any vtk output.\n");
       return 0;
