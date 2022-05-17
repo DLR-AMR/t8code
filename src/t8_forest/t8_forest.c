@@ -1340,26 +1340,28 @@ t8_forest_write_vtk_ext (t8_forest_t forest,
   do_not_use_API = 1;
 #endif
   if (do_not_use_API)
-      if (curved_flag)
-      {
-        t8_errorf("Export of ghosts not yet available with the inbuild function. "
-                  "Please use the vtk API instead.\n"
-                  "Did not write any vtk output.\n");
-        return 0;
-      }
-      else
-      {
-        return  t8_forest_vtk_write_file (forest,
-                                          fileprefix,
-                                          write_treeid,
-                                          write_mpirank,
-                                          write_level,
-                                          write_element_id,
-                                          write_ghosts,
-                                          num_data,
-                                          data);
-      }
+  {
+    if (curved_flag)
+    {
+      t8_errorf("Export of ghosts not yet available with the inbuild function. "
+                "Please use the vtk API instead.\n"
+                "Did not write any vtk output.\n");
+      return 0;
     }
+    else
+    {
+      return  t8_forest_vtk_write_file (forest,
+                                        fileprefix,
+                                        write_treeid,
+                                        write_mpirank,
+                                        write_level,
+                                        write_element_id,
+                                        write_ghosts,
+                                        num_data,
+                                        data);
+    }
+  }
+  return 0;
 }
 
 int
