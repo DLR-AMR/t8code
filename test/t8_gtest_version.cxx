@@ -28,7 +28,7 @@
  * version.
  * The current version of t8code is
  *    0.9.0
- * If you increase the version number, you need to adjust these tests and
+ * If you increase the major or minor version number, you need to adjust these tests and
  * this comment. */
 
 TEST (t8_gtest_version, major_version)
@@ -45,14 +45,6 @@ TEST (t8_gtest_version, minor_version)
   const int           minor_version = 9;
 
   EXPECT_EQ (t8_get_version_minor (), minor_version);
-}
-
-TEST (t8_gtest_version, patch_version)
-{
-  /* Change this number when you increase the patch version. */
-  const int           patch_version = 0;
-
-  EXPECT_EQ (t8_get_version_patch (), patch_version);
 }
 
 /* Test whether the return value of t8_get_package_string
