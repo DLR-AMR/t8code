@@ -77,6 +77,8 @@ typedef struct t8_forest
   int                 maxlevel_existing;/**< If >= 0, the maximum occurring refinemnent level of a forest element. */
   int                 do_dup;           /**< Communicator shall be duped. */
   int                 dimension;        /**< Dimension inferred from \b cmesh. */
+  int                 is_incomplete;    /**< Flag to decide whether the forest ist complete or not.
+                                             If 1, the forest is incomplete. If 0, it is complete.*/
 
   t8_forest_t         set_from;         /**< Temporarily store source forest. */
   t8_forest_from_t    from_method;      /**< Method to derive from \b set_from. */

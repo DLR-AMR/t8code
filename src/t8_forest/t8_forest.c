@@ -55,6 +55,8 @@ t8_forest_init (t8_forest_t *pforest)
   forest->set_adapt_recursive = -1;
   forest->set_balance = -1;
   forest->maxlevel_existing = -1;
+  /* TODO [IL] Set init to 0 if tests are done. */
+  forest->is_incomplete = 1;
 }
 
 int
