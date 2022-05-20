@@ -89,10 +89,14 @@ t8_id_at_other_lvl_check (t8_element_t *element, t8_element * child,
                           t8_eclass_scheme_c *ts, int maxlvl)
 {
   int                 level = ts->t8_element_level (element);
-  uint64_t            current_id =
-    ts->t8_element_get_linear_id (element, level), num_descendants =
-    t8_num_descendants (element, maxlvl, ts), id_at_lvl =
-    ts->t8_element_get_linear_id (element, maxlvl), i, id;
+  t8_linearidx_t      current_id =
+    ts->t8_element_get_linear_id (element, level);
+  t8_linearidx_t      num_descendants =
+    t8_num_descendants (element, maxlvl, ts);
+  t8_linearidx_t      id_at_lvl =
+    ts->t8_element_get_linear_id (element, maxlvl);
+  t8_linearidx_t      i;
+  t8_linearidx_t      id;
 
   for (i = 0; i < num_descendants; i++) {
     ts->t8_element_set_linear_id (child, maxlvl, id_at_lvl + i);
@@ -108,8 +112,12 @@ t8_check_linear_id (const int maxlvl)
   t8_element_t       *element, *child, *test;
   t8_scheme_cxx      *scheme;
   t8_eclass_scheme_c *ts;
-  int                 eclassi, level, num_desc, i, j;
-  uint64_t            id;
+  int                 eclassi;
+  int                 level;
+  int                 num_desc;
+  int                 i;
+  int                 j;
+  t8_linearidx_t      id;
   t8_eclass_t         eclass;
 
   scheme = t8_scheme_new_default_cxx ();
