@@ -378,7 +378,10 @@ t8_forest_refine_everything (t8_forest_t forest, t8_forest_t forest_from,
 }
 
 /**
- * Check if any tree in a forest refines irregularly
+ * Check if any tree in a forest refines irregularly.
+ * An irregular refining tree is a tree with an element that does not
+ * refine into 2^dim children. For example the default implementation
+ * of pyramids. 
  * 
  * \param[in] forest    The forest to check
  * \return int          non-zero if any tree refines irregular
