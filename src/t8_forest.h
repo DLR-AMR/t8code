@@ -863,7 +863,7 @@ int                 t8_forest_write_vtk_ext (t8_forest_t forest,
                                              int curved_flag,
                                              int do_not_use_API,
                                              int num_data,
-                                             t8_vtk_data_field_t * data);
+                                             t8_vtk_data_field_t *data);
 
 /** Write the forest in a parallel vtu format. Writes one master
  * .pvtu file and each process writes in its own .vtu file.

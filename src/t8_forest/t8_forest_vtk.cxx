@@ -340,7 +340,7 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix,
                                   int write_level,
                                   int write_element_id,
                                   int curved_flag,
-                                  int num_data, t8_vtk_data_field_t * data)
+                                  int num_data, t8_vtk_data_field_t *data)
 {
 #if T8_WITH_VTK
   /*Check assertions: forest and fileprefix are not NULL and forest is commited */
