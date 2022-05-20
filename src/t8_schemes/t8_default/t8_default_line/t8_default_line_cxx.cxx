@@ -445,7 +445,7 @@ t8_default_scheme_line_c::t8_element_is_family (t8_element_t **fam)
 }
 
 int
-t8_default_scheme_line_c::t8_element_refines_irregular ();
+t8_default_scheme_line_c::t8_element_refines_irregular ()
 {
   /*lines always refine regularly */
   return 0;

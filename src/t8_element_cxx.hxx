@@ -72,6 +72,11 @@ public:
    */
   virtual size_t      t8_element_size (void);
 
+  /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
+   * Returns false otherwise.
+   */
+  virtual int         t8_element_refines_irregular (void) = 0;
+
   /** Return the maximum allowed level for any element of a given class.
    * \return                      The maximum allowed level for elements of class \b ts.
    */
@@ -609,11 +614,6 @@ public:
    * \ref t8_element_count_leafs.
    */
   virtual t8_gloidx_t t8_element_count_leafs_from_root (int level) = 0;
-
-  /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
-   * Returns false otherwise.
-   */
-  virtual int         t8_element_refines_irregular (void) = 0;
 
   /** This function has no defined effect but each implementation is free to
    *  provide its own meaning of it. Thus this function can be used to compute or

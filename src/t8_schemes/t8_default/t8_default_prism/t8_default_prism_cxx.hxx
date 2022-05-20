@@ -294,7 +294,7 @@ public:
   /** Returns true, if an element does not refine into 2^dim children.
    * Returns false otherwise.
    */
-  virtual int         t8_eclass_refines_irregular (const t8_element_t *t);
+  virtual int         t8_element_refines_irregular ();
 
 #ifdef T8_ENABLE_DEBUG
   /** Query whether an element is valid */

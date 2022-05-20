@@ -32,6 +32,7 @@
 #include <t8_forest_vtk.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_cmesh/t8_cmesh_trees.h>
+#include<t8_element_c_interface.h>
 
 void
 t8_forest_init (t8_forest_t *pforest)
@@ -387,11 +388,14 @@ t8_forest_refines_irregular (t8_forest_t forest)
 {
   int                 irregular = 0;
   int                 int_eclass;
+  t8_eclass_scheme_c *tscheme;
   for (int_eclass = (int) T8_ECLASS_ZERO; int_eclass < (int) T8_ECLASS_COUNT;
        int_eclass++) {
     if (forest->cmesh->num_local_trees_per_eclass[int_eclass] > 0) {
-      irregular = irregular
-        || t8_eclass_refines_irregular ((t8_eclass_t) int_eclass);
+      tscheme =
+        t8_forest_get_eclass_scheme_before_commit (forest,
+                                                   (t8_eclass_t) int_eclass);
+      irregular = irregular || t8_element_refines_irregular (tscheme);
     }
   }
   return irregular;

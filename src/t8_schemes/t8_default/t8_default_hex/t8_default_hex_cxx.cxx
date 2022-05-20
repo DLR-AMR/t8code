@@ -695,7 +695,7 @@ t8_default_scheme_hex_c::t8_element_vertex_reference_coords (const
 int
 t8_default_scheme_hex_c::t8_element_refines_irregular ()
 {
-  /* Hex always refine refularly */
+  /* Hex always refine regularly */
   return 0;
 }
 
