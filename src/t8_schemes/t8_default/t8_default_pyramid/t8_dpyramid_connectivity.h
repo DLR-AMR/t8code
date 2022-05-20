@@ -46,13 +46,13 @@ extern const int    t8_dpyramid_type_cid_to_Iloc[8][8];
 extern const int    t8_dpyramid_cid_type_to_parenttype[8][8];
 
 /** The parenttype of a pyramid, computed by its own type and local ID
- * CAREFULL: The pyramid types 6 and 7 are encodes as 0 and 1! Can not be used for tets
+ * CAREFULL: The pyramid types 6 and 7 are encoded as 0 and 1! Can not be used for tets
  * parenttype = A(type, local_index)
 */
 extern const int    t8_dpyramid_type_Iloc_to_parenttype[2][10];
 
 /** The type of the parent of a pyramid, computed by its own type and cube-id
- * CAREFULL: The pyramid types 6 and 7 are encodes as 0 and 1! Can not be used for tets
+ * CAREFULL: The pyramid types 6 and 7 are encoded as 0 and 1! Can not be used for tets
  * type = A(cube_id, parent_type)
 */
 extern const int    t8_dpyramid_type_cid_to_parenttype[2][8];
@@ -60,13 +60,13 @@ extern const int    t8_dpyramid_type_cid_to_parenttype[2][8];
 /** The number of local pyramid-siblings with lower id. This is computed with
  * help of the type of the parent and its own local id. A tetrahedron has
  * no pyramid-children, therefore this makes sense only for pyramidparents
- * CAREFULL: The pyramid types 6 and 7 are encodes as 0 and 1! Can not be used for tets
+ * CAREFULL: The pyramid types 6 and 7 are encoded as 0 and 1! Can not be used for tets
  * num_siblings_with_lower_id = (parent_type, local_id)*/
 extern const int    t8_dpyramid_parenttype_iloc_pyra_w_lower_id[2][10];
 
 /** Returns the face number of the neighbour touching the current pyramid.
  * The facenumber depends on the type of the pyramid
- * CAREFULL: The pyramid types 6 and 7 are encodes as 0 and 1! Can not be used for tets 
+ * CAREFULL: The pyramid types 6 and 7 are encoded as 0 and 1! Can not be used for tets 
  * neigh_face_number = A(type, face)*/
 extern const int    t8_dpyramid_type_face_to_nface[2][5];
 
@@ -74,13 +74,13 @@ extern const int    t8_dpyramid_type_face_to_nface[2][5];
 extern const int    t8_dpyramid_face_childid_to_is_inside[4][8];
 
 /** The child ids of children touching a given face of a pyramid
- * CAREFULL: The pyramid types 6 and 7 are encodes as 0 and 1! Can not be used for tets
+ * CAREFULL: The pyramid types 6 and 7 are encoded as 0 and 1! Can not be used for tets
  * child_id = A(type, face_num, child_id_at_face)
 */
 extern const int    t8_dpyramid_type_face_to_children_at_face[2][5][4];
 
 /** Return the face-number of a children at a face of a pyramid
- * CAREFULL: The pyramid types 6 and 7 are encodes as 0 and 1! Can not be used for tets
+ * CAREFULL: The pyramid types 6 and 7 are encoded as 0 and 1! Can not be used for tets
  * face_number_of_child = A(type, face, child_id_at_face)
 */
 extern const int    t8_dpyramid_type_face_to_child_face[2][5][4];
