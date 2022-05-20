@@ -419,6 +419,13 @@ t8_default_scheme_pyramid_c::t8_element_vertex_reference_coords (const
                                        vertex, coords);
 }
 
+int
+t8_default_scheme_pyramid_c::t8_element_refines_irregular ()
+{
+  /*Pyramids do not refine regularly */
+  return 1;
+}
+
 #ifdef T8_ENABLE_DEBUG
 int
 t8_default_scheme_pyramid_c::t8_element_is_valid (const t8_element_t *elem) const

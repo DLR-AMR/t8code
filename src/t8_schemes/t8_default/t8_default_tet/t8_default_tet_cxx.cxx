@@ -553,6 +553,16 @@ t8_default_scheme_tet_c::t8_element_vertex_reference_coords (const
   t8_dtet_compute_ref_coords ((const t8_default_tet_t *) t, vertex, coords);
 }
 
+/** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
+ * Returns false otherwise.
+ */
+int
+t8_default_scheme_tet_c::t8_element_refines_irregular ()
+{
+  /*Tets refine regularly */
+  return 0;
+}
+
 #ifdef T8_ENABLE_DEBUG
 /* *INDENT-OFF* */
 /* indent bug, indent adds a second "const" modifier */

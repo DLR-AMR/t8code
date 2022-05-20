@@ -291,6 +291,11 @@ public:
                                                           *elem, int vertex,
                                                           double coords[]);
 
+  /** Returns true, if an element does not refine into 2^dim children.
+   * Returns false otherwise.
+   */
+  virtual int         t8_eclass_refines_irregular (const t8_element_t *t);
+
 #ifdef T8_ENABLE_DEBUG
   /** Query whether an element is valid */
   virtual int         t8_element_is_valid (const t8_element_t *elem) const;
