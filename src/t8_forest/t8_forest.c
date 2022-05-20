@@ -404,32 +404,41 @@ t8_forest_refines_irregular (t8_forest_t forest)
   return irregular;
 }
 
-/**Algorithm to populate a forest, if any tree refines irregularly
+/**Algorithm to populate a forest, if any tree refines irregularly.
+ * Create the elements on this process given a uniform partition
+ * of the coarse mesh. We can not use the function t8_forest_populate, because
+ * it assumes a regular refinement for all trees.
  * \param[in] forest  The forest to populate
 */
 static void
 t8_forest_populate_irregular (t8_forest_t forest)
 {
-  t8_forest_t         forest_zero, forest_tmp, forest_tmp_partition;
+  t8_forest_t         forest_zero;
+  t8_forest_t         forest_tmp;
+  t8_forest_t         forest_tmp_partition;
   t8_cmesh_ref (forest->cmesh);
   t8_scheme_cxx_ref (forest->scheme_cxx);
+  /* We start with a level 0 uniform refinement */
   t8_forest_init (&forest_zero);
   t8_forest_set_level (forest_zero, 0);
   t8_forest_set_cmesh (forest_zero, forest->cmesh, forest->mpicomm);
   t8_forest_set_scheme (forest_zero, forest->scheme_cxx);
   t8_forest_commit (forest_zero);
 
+  /* Up to the specified level we refine every element. */
   for (int i = 1; i <= forest->set_level; i++) {
     t8_forest_init (&forest_tmp);
     t8_forest_set_level (forest_tmp, i);
     t8_forest_set_adapt (forest_tmp, forest_zero,
                          t8_forest_refine_everything, 0);
     t8_forest_commit (forest_tmp);
+    /*Partition the forest to even the load */
     t8_forest_init (&forest_tmp_partition);
     t8_forest_set_partition (forest_tmp_partition, forest_tmp, 0);
     t8_forest_commit (forest_tmp_partition);
     forest_zero = forest_tmp_partition;
   }
+  /* Copy all elements over to the original forest. */
   t8_forest_copy_trees (forest, forest_zero, 1);
   t8_forest_unref (&forest_tmp_partition);
 }
