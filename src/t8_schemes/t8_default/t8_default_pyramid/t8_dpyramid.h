@@ -48,12 +48,11 @@
 
 /** The coordinates of a pyramid are integers relative to the maximum refinement. */
 typedef int32_t     t8_dpyramid_coord_t;
-/*
- * In this case type 0-5 are the six types of tets and
- * type 6 is an upward facing pyramid
- * type 7 is a downward facing pyramid
- */
-/** The type of pyramid in 0, ...,7. The first 6 types describe tetrahedra*/
+
+/** The type of pyramid in 0, ...,7. The first 6 types describe tetrahedra.
+ * Type 6 is an upward facing pyramid.
+ * Type 7 is a downward facing pyramid.
+*/
 typedef int8_t t8_dpyramid_type_t;
 
 /** This data type stores a pyramid. */
