@@ -1369,7 +1369,7 @@ t8_dtri_init_linear_id_with_level (t8_dtri_t *t, t8_linearidx_t id,
   t8_dtri_type_t      type;
   T8_ASSERT (0 <= id
              && id <= ((t8_linearidx_t) 1) << (T8_DTRI_DIM * end_level));
-  /*TODO: Ensure, that the function is called with a valid element */
+  /*Ensure, that the function is called with a valid element */
   T8_ASSERT (t->level == start_level);
   T8_ASSERT (t8_dtri_is_valid (t));
 
