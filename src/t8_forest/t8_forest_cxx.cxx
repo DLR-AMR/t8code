@@ -134,6 +134,46 @@ t8_forest_min_nonempty_level (t8_cmesh_t cmesh, t8_scheme_cxx_t *scheme)
 }
 
 int
+t8_forest_no_overlap (t8_forest_t forest) {
+  t8_locidx_t         num_local_trees;
+  t8_locidx_t         elems_in_tree;
+  t8_locidx_t         ielem, itree;
+  t8_tree_t           tree;
+  t8_element_t       *element_a, *element_b, *nca;
+  t8_element_array_t *telements;
+  t8_eclass_scheme_c *ts;
+
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  num_local_trees = t8_forest_get_num_local_trees (forest);
+  
+  for (itree = 0; itree < num_local_trees; itree++) {
+
+    tree          = t8_forest_get_tree (forest, itree);
+    telements     = &tree->elements;
+    ts            = t8_forest_get_eclass_scheme (forest, tree->eclass);
+    elems_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+    ts->t8_element_new(1, &nca);
+
+    for (ielem = 0; ielem < elems_in_tree-1; ielem++) {
+      element_a = t8_element_array_index_locidx (telements, ielem);
+      element_b = t8_element_array_index_locidx (telements, ielem+1);
+      T8_ASSERT (ts->t8_element_is_valid (element_a));
+      T8_ASSERT (ts->t8_element_is_valid (element_b));
+      
+      ts->t8_element_nca (element_a, element_b, nca);
+
+      if (ts->t8_element_level(element_a) == ts->t8_element_level(nca) ||
+          ts->t8_element_level(element_b) == ts->t8_element_level(nca)) {
+        t8_debugf("[IL] itree=%i, ielem=%i\n",itree, ielem);
+        return 0;
+      }
+    }
+  }
+  return 1;
+}
+
+int
 t8_forest_is_equal (t8_forest_t forest_a, t8_forest_t forest_b)
 {
   t8_locidx_t         num_local_trees_a, num_local_trees_b;
@@ -1231,55 +1271,99 @@ t8_forest_populate (t8_forest_t forest)
 static int
 t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
 {
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (first_or_last == 0 || first_or_last == 1);
+  T8_ASSERT (forest != NULL);
+
+#if T8_ENABLE_MPI
   t8_tree_t           tree;
   t8_element_t       *desc, *element, *tree_desc;
   t8_eclass_t         eclass;
   t8_eclass_scheme_c *ts;
+  t8_gloidx_t         global_neighbour_tree_idx;
   int                 ret;
 
-  T8_ASSERT (t8_forest_is_committed (forest));
-  T8_ASSERT (first_or_last == 0 || first_or_last == 1);
-  T8_ASSERT (forest != NULL);
   if (forest->local_num_elements <= 0 || forest->trees == NULL
       || forest->first_local_tree > forest->last_local_tree) {
     /* This forest is empty and therefore the first tree is not shared */
     return 0;
   }
-  if (first_or_last == 0) {
-    /* Get a pointer to the first tree */
-    tree = (t8_tree_t) sc_array_index (forest->trees, 0);
+  if (forest->is_incomplete) {
+    if (first_or_last == 0) {
+      if (forest->mpirank < forest->mpisize-1){
+        sc_MPI_Send(&forest->last_local_tree, 1, MPI_INT64_T,
+                    forest->mpirank+1, 0, forest->mpicomm);
+      }
+      if (forest->mpirank > 0) {
+        sc_MPI_Recv(&global_neighbour_tree_idx, 1, MPI_INT64_T,
+                    forest->mpirank-1, 0, forest->mpicomm, NULL);
+      }
+      else {
+        /* First prozess, nothing to to any more */
+        return 0;
+      }
+      T8_ASSERT(global_neighbour_tree_idx == forest->first_local_tree ||
+                global_neighbour_tree_idx == forest->first_local_tree - 1);
+    }
+    else {
+      if (forest->mpirank > 0) {
+        sc_MPI_Send(&forest->first_local_tree, 1, MPI_INT64_T, 
+                    forest->mpirank-1, 0, forest->mpicomm);
+      }
+      if (forest->mpirank < forest->mpisize-1){
+        sc_MPI_Recv(&global_neighbour_tree_idx, 1, MPI_INT64_T, 
+                    forest->mpirank+1, 0, forest->mpicomm, NULL);
+      }
+      else {
+        /* Last process, nothing to to any more  */
+        return 0;
+      }
+      T8_ASSERT(forest->last_local_tree == global_neighbour_tree_idx ||
+                forest->last_local_tree == global_neighbour_tree_idx - 1);
+    }
+    /* If global_neighbour_tree_idx == forest->first_local_tree tree is shared */
+    return global_neighbour_tree_idx == forest->first_local_tree;
   }
   else {
-    /* Get a pointer to the last tree */
-    tree = (t8_tree_t) sc_array_index (forest->trees,
-                                       forest->trees->elem_count - 1);
+    if (first_or_last == 0) {
+      /* Get a pointer to the first tree */
+      tree = (t8_tree_t) sc_array_index (forest->trees, 0);
+    }
+    else {
+      /* Get a pointer to the last tree */
+      tree = (t8_tree_t) sc_array_index (forest->trees,
+                                        forest->trees->elem_count - 1);
+    }
+    /* Get the eclass scheme of the first tree */
+    eclass = tree->eclass;
+    /* Get the eclass scheme of the first tree */
+    ts = t8_forest_get_eclass_scheme (forest, eclass);
+    /* Calculate the first/last possible descendant of the first/last tree */
+    /* we do this by first creating a level 0 child of the tree, then
+    * calculating its first/last descendant */
+    ts->t8_element_new (1, &element);
+    ts->t8_element_set_linear_id (element, 0, 0);
+    ts->t8_element_new (1, &desc);
+    if (first_or_last == 0) {
+      ts->t8_element_first_descendant (element, desc, forest->maxlevel);
+    }
+    else {
+      ts->t8_element_last_descendant (element, desc, forest->maxlevel);
+    }
+    /* We can now check whether the first/last possible descendant matches the
+    * first/last local descendant */
+    tree_desc = first_or_last == 0 ? tree->first_desc : tree->last_desc;
+    ret = ts->t8_element_compare (desc, tree_desc);
+    /* clean-up */
+    ts->t8_element_destroy (1, &element);
+    ts->t8_element_destroy (1, &desc);
+    /* If the descendants are the same then ret is zero and we return false.
+    * We return true otherwise */
+    return ret;
   }
-  /* Get the eclass scheme of the first tree */
-  eclass = tree->eclass;
-  /* Get the eclass scheme of the first tree */
-  ts = t8_forest_get_eclass_scheme (forest, eclass);
-  /* Calculate the first/last possible descendant of the first/last tree */
-  /* we do this by first creating a level 0 child of the tree, then
-   * calculating its first/last descendant */
-  ts->t8_element_new (1, &element);
-  ts->t8_element_set_linear_id (element, 0, 0);
-  ts->t8_element_new (1, &desc);
-  if (first_or_last == 0) {
-    ts->t8_element_first_descendant (element, desc, forest->maxlevel);
-  }
-  else {
-    ts->t8_element_last_descendant (element, desc, forest->maxlevel);
-  }
-  /* We can now check whether the first/last possible descendant matches the
-   * first/last local descendant */
-  tree_desc = first_or_last == 0 ? tree->first_desc : tree->last_desc;
-  ret = ts->t8_element_compare (desc, tree_desc);
-  /* clean-up */
-  ts->t8_element_destroy (1, &element);
-  ts->t8_element_destroy (1, &desc);
-  /* If the descendants are the same then ret is zero and we return false.
-   * We return true otherwise */
-  return ret;
+  SC_ABORT ("An error has occurred. It is unclear whether the tree is shared.");
+#endif
+  return 0;
 }
 
 int
