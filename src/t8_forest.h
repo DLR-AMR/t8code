@@ -158,6 +158,14 @@ int                 t8_forest_is_initialized (t8_forest_t forest);
  */
 int                 t8_forest_is_committed (t8_forest_t forest);
 
+/** Check whether the forest has overlapping elements.
+ * \param [in] forest_a The forest to consider.
+ * \return              True if \a forest has no elements which are inside each other.
+ * \note This function is not collective. It only returns the state on the current
+ * rank.
+ */
+int                 t8_forest_no_overlap (t8_forest_t forest);
+
 /** Check whether two committed forests have the same local elements.
  * \param [in] forest_a The first forest.
  * \param [in] forest_b The second forest.
