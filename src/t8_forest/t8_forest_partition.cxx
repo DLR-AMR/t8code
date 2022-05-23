@@ -163,6 +163,63 @@ t8_forest_partition_test_desc (t8_forest_t forest)
 }
 #endif
 
+#ifdef T8_ENABLE_DEBUG
+/* Test if last descendant of the last element of cuurent rank has
+ * a smaler linear id than the stored first descendant of rank+1. */
+void
+t8_forest_partition_test_boundery_element (t8_forest_t forest)
+{
+  t8_element_t       *element;
+  t8_eclass_scheme_c *ts;
+  t8_linearidx_t      first_desc_id, last_desc_id;
+  t8_locidx_t         num_local_trees;
+  t8_gloidx_t         glotreeidx;
+  t8_tree_t           tree;
+  int                 level;
+  
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (forest->global_first_desc != NULL);
+
+  num_local_trees = t8_forest_get_num_local_trees (forest);
+  if (num_local_trees == 0) {
+    /* This forest is empty, nothing to do */
+    return;
+  }
+  if(forest->mpirank == forest->mpisize-1) {
+    /* The last process has no uncheck boarder, nothing to do */
+    return;
+  }
+    
+  glotreeidx = t8_shmem_array_get_gloidx (forest->tree_offsets, forest->mpirank+1);
+  if (glotreeidx >= 0) {
+    /* The first tree on that process rank+1 is not shared with current rank,
+     * nothing to do */
+    return;
+  }
+
+  /* Get the first descendant id of rank+1 */
+  first_desc_id = *(t8_linearidx_t *) t8_shmem_array_index (forest->global_first_desc,
+                                                            forest->mpirank+1);
+
+  /* Get last element of current rank and its last descendant id*/
+  tree = t8_forest_get_tree (forest, num_local_trees-1);
+  ts = t8_forest_get_eclass_scheme (forest, tree->eclass);
+  ts->t8_element_new (1, &element);
+  element = t8_element_array_index_locidx (&tree->elements,
+                                     t8_forest_get_tree_element_count (tree)-1);
+  T8_ASSERT (ts->t8_element_is_valid (element));
+  ts->t8_element_last_descendant (element, element, forest->maxlevel);
+  level = ts->t8_element_level (element);
+  T8_ASSERT (level == ts->t8_element_level (element));
+  T8_ASSERT (level == forest->maxlevel);
+  last_desc_id = ts->t8_element_get_linear_id (element, level);
+
+  /* The following inequality must apply:
+   * last_desc_id of last element of rank < first_desc_id of first element of rank+1*/
+  T8_ASSERT (last_desc_id < first_desc_id);
+}
+#endif
+
 void
 t8_forest_partition_create_first_desc (t8_forest_t forest)
 {
