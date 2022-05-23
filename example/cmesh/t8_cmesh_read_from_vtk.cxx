@@ -28,7 +28,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_vtk.h>
 #include <t8_forest.h>
 #include <t8_schemes/t8_default_cxx.hxx>
-#include <t8_forest_vtk.h>
+#include <t8_forest.h>
 
 void
 t8_cmesh_construct (const char *prefix, sc_MPI_Comm comm, int num_cell_values)
@@ -76,8 +76,8 @@ t8_cmesh_construct (const char *prefix, sc_MPI_Comm comm, int num_cell_values)
     vtk_data = NULL;
   }
 
-  t8_forest_write_vtk_via_API (forest, "test", 1, 1, 1, 1, 0, num_cell_values,
-                               vtk_data);
+  t8_forest_write_vtk_ext (forest, "forest", 1, 1, 1, 1, 0, 0, 0,
+                           num_cell_values, vtk_data);
 
   if (num_cell_values > 0) {
     for (int i = num_cell_values - 1; i >= 0; i--) {
