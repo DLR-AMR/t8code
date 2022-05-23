@@ -27,7 +27,6 @@
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_ghost.h>
-#include <t8_forest_vtk.h>
 #include <example/common/t8_example_common.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh_readmshfile.h>
@@ -1399,8 +1398,8 @@ t8_advect_write_vtk (t8_advect_problem_t * problem)
   /* Write filename */
   snprintf (fileprefix, BUFSIZ, "advection_%03i", problem->vtk_count);
   /* Write vtk files */
-  if (t8_forest_vtk_write_file (problem->forest, fileprefix,
-                                1, 1, 1, 1, 0, 4, vtk_data)) {
+  if (t8_forest_write_vtk_ext (problem->forest, fileprefix,
+                               1, 1, 1, 1, 0, 0, 0, 4, vtk_data)) {
     t8_debugf ("[Advect] Wrote pvtu to files %s\n", fileprefix);
   }
   else {

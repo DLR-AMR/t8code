@@ -644,6 +644,16 @@ public:
    */
   virtual int         t8_element_is_valid (const t8_element_t *elem) const =
     0;
+
+/**
+ * Print a given element. For a example for a triangle print the coordinates
+ * and the level of the triangle. This function is only available in the
+ * debugging configuration. 
+ * 
+ * \param [in]        elem  The element to print
+ */
+  virtual void        t8_element_debug_print (const t8_element_t *elem) const
+    = 0;
 #endif
 
   /** Allocate memory for an array of elements of a given class and initialize them.
