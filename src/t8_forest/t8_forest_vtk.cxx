@@ -681,7 +681,7 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix,
   pwriterObj->SetInputData (unstructuredGrid);
   pwriterObj->Update ();
   if (pwriterObj->Write ()) {
-    /* Writing failed */
+    /* Writing was successful */
     freturn = 1;
   }
   else {
