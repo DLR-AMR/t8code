@@ -368,7 +368,9 @@ static              t8_forest_t
 t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
                              t8_forest_t forest_to_adapt_from,
                              int num_refinement_steps, int balance,
-                             int use_search, int partition)
+                             int use_search, int partition,
+                             const char *vtu_prefix_path,
+                             int write_every_level)
 {
   sc_array_t          search_queries;
   sc_statinfo_t       total_times[2];
@@ -377,6 +379,7 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
     { 0, 0, 0, 0, 0, 0, 0, 0 };
   t8_gloidx_t         recv_buff[T8_ECLASS_COUNT] = { 0, 0, 0, 0, 0, 0, 0, 0 };
   int                 mpiret, rank;
+  int                 retval = 0;
 
   sc_stats_init (&total_times[0], "non-search-total");
   sc_stats_init (&total_times[1], "search-total");
@@ -427,7 +430,7 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
       sc_array_copy (cutting_lines, &search_queries);
     }
   }
-
+  char                forest_output[BUFSIZ];
   for (int refinement_step = 0; refinement_step < num_refinement_steps;
        ++refinement_step) {
     sc_statinfo_t       times[2];
@@ -626,6 +629,27 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
     sc_stats_accumulate (&times[1], search_time);
     sc_stats_compute (sc_MPI_COMM_WORLD, 2, times);
     sc_stats_print (t8_get_package_id (), SC_LP_ESSENTIAL, 2, times, 1, 1);
+
+    if (write_every_level) {
+      snprintf (forest_output, BUFSIZ - 1, "%sforest_to_adapt_from_%i",
+                vtu_prefix_path == NULL ? "" : vtu_prefix_path,
+                refinement_step);
+      if (retval >= BUFSIZ - 1) {
+        t8_errorf ("Cannot write vtk output. File path too long.\n");
+      }
+      else {
+#if T8_WITH_VTK
+        /* Use VTK library for output if possible */
+        t8_forest_write_vtk_via_API (forest, forest_output, 1, 1, 1, 1, 0, 0,
+                                     NULL);
+#else
+        /* Use standart ascii output if not linked against vtk. */
+        t8_forest_write_vtk (forest, forest_output);
+#endif
+      }
+
+    }
+
   }
 
 #if 0
@@ -764,6 +788,7 @@ main (int argc, char **argv)
   int                 balance = 0;
   int                 search = 0;
   int                 partition = 0;
+  int                 write_every_step = 0;
 
   /* long help message */
   snprintf (help, BUFSIZ,
@@ -832,6 +857,10 @@ main (int argc, char **argv)
   sc_options_add_string (opt, 'O', "output-prefix", &vtu_prefix_path, NULL,
                          "Prefix of vtu output files. Example: \"/home/vtu/prefix_\" will result in the file name \"/home/vtu/prefix_forest_adapt\"\n"
                          "Any folders must already exist.");
+
+  sc_options_add_switch (opt, 'w', "write_every_step", &write_every_step,
+                         "Write a vtu file after ever refinement step");
+
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (helpme) {
@@ -851,7 +880,8 @@ main (int argc, char **argv)
     forest =
       t8_adapt_cmesh_adapt_forest (forest, forest_to_adapt_from,
                                    reflevel - level, balance, search,
-                                   partition);
+                                   partition, vtu_prefix_path,
+                                   write_every_step);
 
     if (!no_vtk) {
       t8_adapt_cmesh_write_vtk (forest, forest_to_adapt_from, vtu_prefix_path,
