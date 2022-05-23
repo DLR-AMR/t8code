@@ -48,7 +48,7 @@ T8_EXTERN_C_BEGIN ();
  * \param [in]  curved_flag If true, write the elements as curved element types from vtk.
  * \param [in]  num_data  Number of user defined double valued data fields to write.
  * \param [in]  data      Array of t8_vtk_data_field_t of length \a num_data
- *                        providing the used defined per element data.
+ *                        providing the user defined per element data.
  *                        If scalar and vector fields are used, all scalar fields
  *                        must come first in the array.
  * \return  True if successful, false if not (process local).
