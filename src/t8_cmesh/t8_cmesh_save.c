@@ -46,7 +46,7 @@
 
 /* Write the neighbor data of all ghosts */
 static int
-t8_cmesh_save_ghost_neighbors (t8_cmesh_t cmesh, FILE * fp)
+t8_cmesh_save_ghost_neighbors (t8_cmesh_t cmesh, FILE *fp)
 {
   t8_locidx_t         ighost;
   t8_cghost_t         ghost;
@@ -77,7 +77,7 @@ t8_cmesh_save_ghost_neighbors (t8_cmesh_t cmesh, FILE * fp)
 }
 
 static int
-t8_cmesh_load_ghost_attributes (t8_cmesh_t cmesh, FILE * fp)
+t8_cmesh_load_ghost_attributes (t8_cmesh_t cmesh, FILE *fp)
 {
 
   t8_locidx_t         ighost;
@@ -108,7 +108,7 @@ t8_cmesh_load_ghost_attributes (t8_cmesh_t cmesh, FILE * fp)
 }
 
 static int
-t8_cmesh_save_ghosts (t8_cmesh_t cmesh, FILE * fp)
+t8_cmesh_save_ghosts (t8_cmesh_t cmesh, FILE *fp)
 {
   t8_locidx_t         ighost;
   t8_cghost_t         ghost;
@@ -128,7 +128,7 @@ t8_cmesh_save_ghosts (t8_cmesh_t cmesh, FILE * fp)
 }
 
 static int
-t8_cmesh_load_ghosts (t8_cmesh_t cmesh, FILE * fp)
+t8_cmesh_load_ghosts (t8_cmesh_t cmesh, FILE *fp)
 {
   t8_locidx_t         ighost;
   t8_cghost_t         ghost;
@@ -166,7 +166,7 @@ t8_cmesh_load_ghosts (t8_cmesh_t cmesh, FILE * fp)
 
 /* Load all attributes that were stored in a file */
 static int
-t8_cmesh_load_tree_attributes (t8_cmesh_t cmesh, FILE * fp)
+t8_cmesh_load_tree_attributes (t8_cmesh_t cmesh, FILE *fp)
 {
   double             *vertices = NULL;
   t8_locidx_t         itree;
@@ -246,7 +246,7 @@ t8_cmesh_load_tree_attributes (t8_cmesh_t cmesh, FILE * fp)
 }
 
 static int
-t8_cmesh_save_tree_attribute (t8_cmesh_t cmesh, FILE * fp)
+t8_cmesh_save_tree_attribute (t8_cmesh_t cmesh, FILE *fp)
 {
   double             *vertices;
   t8_locidx_t         itree;
@@ -317,7 +317,7 @@ t8_cmesh_save_tree_attribute (t8_cmesh_t cmesh, FILE * fp)
 }
 
 static int
-t8_cmesh_save_trees (t8_cmesh_t cmesh, FILE * fp)
+t8_cmesh_save_trees (t8_cmesh_t cmesh, FILE *fp)
 {
   t8_locidx_t         itree;
   t8_ctree_t          tree;
@@ -358,7 +358,7 @@ t8_cmesh_save_trees (t8_cmesh_t cmesh, FILE * fp)
 /* Load all tree data (eclasses, neighbors, vertex coordinates,...)
  * from a cmesh file into a cmesh */
 static int
-t8_cmesh_load_trees (t8_cmesh_t cmesh, FILE * fp)
+t8_cmesh_load_trees (t8_cmesh_t cmesh, FILE *fp)
 {
   size_t              bytes_for_trees, att_bytes;
   t8_locidx_t         itree;
@@ -404,15 +404,15 @@ t8_cmesh_load_trees (t8_cmesh_t cmesh, FILE * fp)
 }
 
 static int
-t8_cmesh_save_header (t8_cmesh_t cmesh, FILE * fp)
+t8_cmesh_save_header (t8_cmesh_t cmesh, FILE *fp)
 {
   int                 ret;
   int                 eclass;
 
   T8_ASSERT (fp != NULL);
   ret =
-    fprintf (fp, "This is %s, file format version %u.\n\n", T8_PACKAGE_STRING,
-             T8_CMESH_FORMAT);
+    fprintf (fp, "This is %s, file format version %u.\n\n",
+             t8_get_version_string (), T8_CMESH_FORMAT);
   T8_SAVE_CHECK_CLOSE (ret > 0, fp);
 
   /* Write 0 for replicated and 1 for partitioned cmesh */
@@ -465,7 +465,7 @@ t8_cmesh_save_header (t8_cmesh_t cmesh, FILE * fp)
 /* Read the number of trees, dimension, etc. from a saved cmesh file.
  * If anything goes wrong, the file is closed and 0 is returned */
 static int
-t8_cmesh_load_header (t8_cmesh_t cmesh, FILE * fp)
+t8_cmesh_load_header (t8_cmesh_t cmesh, FILE *fp)
 {
   int                 file_format, save_rank, save_mpisize;
   int                 ieclass;

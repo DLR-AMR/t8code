@@ -56,7 +56,9 @@ typedef enum t8_eclass
   /** The pyramid has a quadrilateral as base and four triangles as sides. */
   T8_ECLASS_PYRAMID,
   /** This is no element class but can be used as the number of element classes. */
-  T8_ECLASS_COUNT
+  T8_ECLASS_COUNT,
+  /** This is no element class but can be used for the case a class of a third party library is not supported by t8code*/
+  T8_ECLASS_INVALID
 }
 t8_eclass_t;
 
@@ -149,6 +151,14 @@ int                 t8_eclass_count_boundary (t8_eclass_t theclass,
  */
 int                 t8_eclass_compare (t8_eclass_t eclass1,
                                        t8_eclass_t eclass2);
+
+/** Check whether a class is a valid class. Returns non-zero if it is a valid class,
+ *  returns zero, if the class is equal to T8_ECLASS_INVALID.
+ * 
+ * \param [in] eclass    The eclass to check.
+ * \return               Non-zero if \a eclass is valid, zero otherwise.
+*/
+int                 t8_eclass_is_valid (t8_eclass_t eclass);
 
 T8_EXTERN_C_END ();
 
