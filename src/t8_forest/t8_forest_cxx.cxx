@@ -165,6 +165,7 @@ t8_forest_no_overlap (t8_forest_t forest) {
 
       if (ts->t8_element_level(element_a) == ts->t8_element_level(nca) ||
           ts->t8_element_level(element_b) == ts->t8_element_level(nca)) {
+        t8_debugf("[IL] ### element %i tree %i \n", ielem, itree);
         return 0;
       }
     }
