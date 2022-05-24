@@ -114,51 +114,6 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
   }
 }
 
-/* Return nonzero if the first \a num_elemets in \a elements are part of a family.
- * \param [in] elements      The elements array.
- * \param [in] num_elements  The first \a num_elements to be checked in \a elements.
- * \param [in] tscheme       The element scheme for current local tree 
- *                           where the elements are from.
- */
-static int
-t8_is_family (t8_element_t **elements, int num_elements, t8_eclass_scheme_c *tscheme) {
-  T8_ASSERT (num_elements > 0 && 
-             num_elements <= tscheme->t8_element_num_children (elements[0]));
-  
-  int             zz;
-  int             level;
-  t8_element_t   *element_parent, *element_parent_compare;
-
-  if (num_elements == 1) {
-    return 1;
-  }
-
-  level = tscheme->t8_element_level(elements[0]);
-  if (level != 0) {
-    return 0;
-  }
-  for (zz = 1; zz < num_elements; zz++) {
-    if (level != tscheme->t8_element_level(elements[0])){
-      return 0;
-    }
-  }
-
-  tscheme->t8_element_new(1, &element_parent);
-  tscheme->t8_element_new(1, &element_parent_compare);
-  tscheme->t8_element_parent(elements[0], element_parent);
-  for (zz = 1; zz < num_elements; zz++)
-  {
-    tscheme->t8_element_parent (elements[zz], element_parent_compare);
-    if (!tscheme->t8_element_compare(element_parent, element_parent_compare)) {
-      return 0;
-    }
-  }
-  tscheme->t8_element_destroy(1, &element_parent);
-  tscheme->t8_element_destroy(1, &element_parent_compare);
-
-  return 1;
-}
-
 /* Check the lastly inserted element of an array for recursive refining.
  * \param [in] forest  The new forest currently in construction.
  * \param [in] ltreeid The current local tree.
@@ -229,6 +184,50 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
   }
 }
 
+/* Return nonzero if the first \a num_elemets in \a elements are part of a family.
+ * \param [in] elements      The elements array.
+ * \param [in] num_elements  The first \a num_elements to be checked in \a elements.
+ * \param [in] tscheme       The element scheme for current local tree 
+ *                           where the elements are from.
+ */
+static int
+t8_is_family (t8_element_t **elements, int num_elements, t8_eclass_scheme_c *tscheme) {
+  T8_ASSERT (num_elements > 0 && 
+             num_elements <= tscheme->t8_element_num_children (elements[0]));
+  
+  int             zz;
+  int             level;
+  t8_element_t   *element_parent, *element_parent_compare;
+
+  if (num_elements == 1) {
+    return 1;
+  }
+
+  level = tscheme->t8_element_level(elements[0]);
+  if (level != 0) {
+    return 0;
+  }
+  for (zz = 1; zz < num_elements; zz++) {
+    if (level != tscheme->t8_element_level(elements[0])){
+      return 0;
+    }
+  }
+
+  tscheme->t8_element_new(1, &element_parent);
+  tscheme->t8_element_new(1, &element_parent_compare);
+  tscheme->t8_element_parent(elements[0], element_parent);
+  for (zz = 1; zz < num_elements; zz++)
+  {
+    tscheme->t8_element_parent (elements[zz], element_parent_compare);
+    if (!tscheme->t8_element_compare(element_parent, element_parent_compare)) {
+      return 0;
+    }
+  }
+  tscheme->t8_element_destroy(1, &element_parent);
+  tscheme->t8_element_destroy(1, &element_parent_compare);
+
+  return 1;
+}
 
 /* TODO: optimize this when we own forest_from */
 void
@@ -247,7 +246,7 @@ t8_forest_adapt (t8_forest_t forest)
   t8_tree_t           tree, tree_from;
   t8_eclass_scheme_c *tscheme;
   t8_element_t      **elements, **elements_from, **elements_from_copy;
-  t8_element_t       *element_parent_compare, *element_parent_current;
+  t8_element_t       *element_parent_compare, *element_parent_current, *element_current;
   int                 refine;
   int                 ci;
   int                 is_family;
@@ -314,6 +313,7 @@ t8_forest_adapt (t8_forest_t forest)
     /* Buffer for parent elements */
     tscheme->t8_element_new(1, &element_parent_compare);
     tscheme->t8_element_new(1, &element_parent_current);
+    tscheme->t8_element_new(1, &element_current);
 
     /* We now iterate over all elements in this tree and check them for refinement/coarsening. */
     while (el_considered < num_el_from) { 
@@ -376,8 +376,9 @@ t8_forest_adapt (t8_forest_t forest)
                                           el_considered + zz - el_concidered_index);
         }
         
-        level_current = tscheme->t8_element_level(elements_from_copy[el_concidered_index]);
-        tscheme->t8_element_parent(elements_from_copy[el_concidered_index], element_parent_current);
+        tscheme->t8_element_copy(elements_from_copy[el_concidered_index], element_current);
+        level_current = tscheme->t8_element_level(element_current);
+        tscheme->t8_element_parent(element_current, element_parent_current);
 
         /* Test 1: Check if already considered elements of current family passed,
          * so current considered element can not get coarsed any more.
@@ -395,13 +396,25 @@ t8_forest_adapt (t8_forest_t forest)
             }
           }
         }
-        /* Test 2: Check if elements in elements_from_copy get "eaten" by coarsing current element */
+        /* Test 2: Check if elements in elements_from_copy get overlapped by coarsing current 
+         * element/family */
         if (is_family) {
           for (zz = 0; zz < num_children && el_considered + (t8_locidx_t) zz 
                                             - (t8_locidx_t) el_concidered_index < num_el_from; zz++) {
             level = tscheme->t8_element_level(elements_from_copy[zz]);
-            /* Only elements with higher level then level of current element, can get eaten. */
+            /* Only elements with higher level then level of current element, can get 
+             * potentially be overlapped. */
             if (level > level_current) {
+              #if 1
+              tscheme->t8_element_nca(element_current, elements_from_copy[zz], 
+                                      element_parent_compare);
+              level = tscheme->t8_element_level(element_parent_compare);
+              T8_ASSERT(level <= level_current-1);
+              if(level == level_current-1) {
+                is_family = 0;
+                num_elements = 1;
+              }
+              #else
               tscheme->t8_element_copy(elements_from_copy[zz], element_parent_compare);
               while(level > level_current-1) {
                 tscheme->t8_element_parent (element_parent_compare, element_parent_compare);
@@ -411,12 +424,13 @@ t8_forest_adapt (t8_forest_t forest)
                 is_family = 0;
                 num_elements = 1;
               }
+              #endif
             }
           }
         }
 
-        /* Test 3: Check num_childrem elements before el_considered, if they will get eaten.
-         * Reason: current element could be on boarder
+        /* Test 3: Check num_childrem elements before el_considered, if they will get overlapped.
+         * Reason: current element could be on boarder of geometrie
          * */
         if (is_family && !el_concidered_index) {
           if (el_considered > (t8_locidx_t) num_children) {
@@ -436,6 +450,16 @@ t8_forest_adapt (t8_forest_t forest)
           for (zz = 0; zz < num_children && el_considered + (t8_locidx_t) zz < num_el_from; zz++) {
             level = tscheme->t8_element_level(elements_from_copy[zz]);
             if (level > level_current) {
+              #if 1
+              tscheme->t8_element_nca(element_current, elements_from_copy[zz], 
+                                      element_parent_compare);
+              level = tscheme->t8_element_level(element_parent_compare);
+              T8_ASSERT(level <= level_current-1);
+              if(level == level_current-1) {
+                is_family = 0;
+                num_elements = 1;
+              }
+              #else
               tscheme->t8_element_copy(elements_from_copy[zz], element_parent_compare);
               while(level > level_current-1) {
                 tscheme->t8_element_parent (element_parent_compare, element_parent_compare);
@@ -445,6 +469,7 @@ t8_forest_adapt (t8_forest_t forest)
                 is_family = 0;
                 num_elements = 1;
               }
+              #endif
             }
           } 
         }
@@ -602,6 +627,7 @@ t8_forest_adapt (t8_forest_t forest)
 
     /* clean up */
     tscheme->t8_element_destroy(1, &element_parent_current);
+    tscheme->t8_element_destroy(1, &element_current);
     tscheme->t8_element_destroy(1, &element_parent_compare);
     T8_FREE (elements);
     T8_FREE (elements_from);
