@@ -20,7 +20,6 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-//#include<cstdlib>
 #include <iostream>
 #include <t8.h>
 #include <t8_eclass.h>
@@ -31,6 +30,8 @@
 #include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_forest/t8_forest_private.h>
 #include "t8_cmesh/t8_cmesh_testcases.h"
+
+#include <t8_forest/t8_forest_partition.h>
 
 
 static int
@@ -90,7 +91,7 @@ t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn,
 
   t8_forest_init (&forest_new);
   t8_forest_set_adapt (forest_new, forest_from, adapt_fn, recursive);
-  t8_forest_set_partition (forest_new, NULL, 0);
+  //t8_forest_set_partition (forest_new, NULL, 0);
   t8_forest_commit (forest_new);
 
   return forest_new;
@@ -108,39 +109,32 @@ t8_test_emelemts_remove (int cmesh_id)
 
   /* Construct a cmesh */
   //cmesh = t8_test_create_cmesh (cmesh_id);
-  cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 1, 0);
+  cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 1, 0); 
   //cmesh = t8_cmesh_new_hypercube (T8_ECLASS_HEX, sc_MPI_COMM_WORLD, 0, 0, 0);
 
   /* Compute the first level, such that no process is empty */
   min_level = t8_forest_min_nonempty_level (cmesh, scheme);
 
-  min_level = SC_MAX (min_level, 3);
-  max_level = min_level + 1;
+  min_level = SC_MAX (min_level, 2);
+  max_level = min_level + 3;
   
   for (level = min_level; level < max_level; level++) {
     t8_cmesh_ref (cmesh);
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
 
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 4; i++) {
         forest = t8_adapt_forest (forest, t8_adapt_callback_refine, 0);
         forest = t8_adapt_forest (forest, t8_adapt_callback_remove, 0);
     }
-    //t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_test_remove_rand_base");
 
-    /* coarsing until level 0 */
     // will get replaced by recursive coarseening
-    for (int i = 0; i < 1*level; i++)
+    for (int i = 0; i < 2*level; i++)
     {
       forest = t8_adapt_forest (forest, t8_adapt_callback_coarse, 0);
-      //forest = t8_forest_new_adapt (forest, t8_adapt_callback_coarse_all, 0, 0, &adapt_data);
     }
     
-    t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_test_remove_rand");
-    //SC_CHECK_ABORT (t8_forest_no_overlap(forest),
-    //            "The forest has overlapping elements");
-
-    //SC_CHECK_ABORT (t8_forest_no_overlap_process_boundary (forest),
-    //            "The forest has overlapping elements on process boundary");
+    SC_CHECK_ABORT (t8_forest_no_overlap(forest),
+                "The forest has overlapping elements");
 
     t8_scheme_cxx_ref (scheme);
     t8_forest_unref (&forest);
