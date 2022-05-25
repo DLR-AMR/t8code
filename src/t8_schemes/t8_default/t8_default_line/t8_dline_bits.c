@@ -375,6 +375,12 @@ t8_dline_is_valid (const t8_dline_t *l)
 }
 
 void
+t8_dline_debug_print (const t8_dline_t *l)
+{
+  t8_debugf ("x: %i, level: %i\n", l->x, l->level);
+}
+
+void
 t8_dline_init (t8_dline_t *l)
 {
   l->level = l->x = 0;

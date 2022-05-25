@@ -188,6 +188,12 @@ t8_dvertex_is_valid (const t8_dvertex_t *v)
 }
 
 void
+t8_dvertex_debug_print (const t8_dvertex_t *v)
+{
+  t8_debugf ("level: %i\n", v->level);
+}
+
+void
 t8_dvertex_init (t8_dvertex_t *v)
 {
   v->level = 0;

@@ -31,6 +31,7 @@
 
 #include <t8_cmesh.h>
 #include <t8_element.h>
+#include <t8_vtk.h>
 #include <t8_data/t8_containers.h>
 
 /** Opaque pointer to a forest implementation. */
@@ -824,22 +825,63 @@ t8_gloidx_t         t8_forest_element_face_neighbor (t8_forest_t forest,
 /* TODO: implement */
 void                t8_forest_save (t8_forest_t forest);
 
-/** Write the forest in a parallel vtu format. There is one master
- * .pvtu file and each process writes in its own .vtu file.
- * \param [in]      forest    The forest to write.
- * \param [in]      filename  The prefix of the files where the vtk will
- *                            be stored. The master file is then filename.pvtu
- *                            and the process with rank r writes in the file
- *                            filename_r.vtu.
- * With this function the level, mpirank, treeid and element_id of each element
- * are written. For better control of the output see \ref t8_forest_vtk.h.
+/** Write the forest in a parallel vtu format. Extended version.
+ * See \ref t8_forest_write_vtk for the standard version of this function.
+ * Writes one master .pvtu file and each process writes in its own .vtu file.
+ * If linked and not otherwise specified, the VTK API is used.
+ * If the VTK library is not linked, an ASCII file is written.
  * Forest must be committed when calling this function.
  * This function is collective and must be called on each process.
- * \note If you want to print additional scalar or vector valued data (such as
- * function values), please see the functions in \ref t8_forest_vtk.h.
+ * \param [in]      forest              The forest to write.
+ * \param [in]      fileprefix          The prefix of the files where the vtk will
+ *                                      be stored. The master file is then fileprefix.pvtu
+ *                                      and the process with rank r writes in the file
+ *                                      fileprefix_r.vtu.
+ * \param [in]      write_treeid        If true, the global tree id is written for each element.
+ * \param [in]      write_mpirank       If true, the mpirank is written for each element.
+ * \param [in]      write_level         If true, the refinement level is written for each element.
+ * \param [in]      write_element_id    If true, the global element id is written for each element.
+ * \param [in]      write_ghosts        If true, each process additionally writes its ghost elements.
+ *                                      For ghost element the treeid is -1.
+ * \param [in]      curved_flag         If true, write the elements as curved element types from vtk.
+ * \param [in]      do_not_use_API      Do not use the VTK API, even if linked and available.
+ * \param [in]      num_data            Number of user defined double valued data fields to write.
+ * \param [in]      data                Array of t8_vtk_data_field_t of length \a num_data
+ *                                      providing the user defined per element data.
+ *                                      If scalar and vector fields are used, all scalar fields
+ *                                      must come first in the array.
+ * \return  True if successful, false if not (process local).
+ * See also \ref t8_forest_write_vtk .
  */
-void                t8_forest_write_vtk (t8_forest_t forest,
-                                         const char *filename);
+int                 t8_forest_write_vtk_ext (t8_forest_t forest,
+                                             const char *fileprefix,
+                                             int write_treeid,
+                                             int write_mpirank,
+                                             int write_level,
+                                             int write_element_id,
+                                             int write_ghosts,
+                                             int curved_flag,
+                                             int do_not_use_API,
+                                             int num_data,
+                                             t8_vtk_data_field_t *data);
+
+/** Write the forest in a parallel vtu format. Writes one master
+ * .pvtu file and each process writes in its own .vtu file.
+ * If linked, the VTK API is used.
+ * If the VTK library is not linked, an ASCII file is written.
+ * This function writes the forest elements, the tree id, element level, mpirank and element id as data.
+ * Forest must be committed when calling this function.
+ * This function is collective and must be called on each process.
+ * For more options use \ref t8_forest_write_vtk_ext
+ * \param [in]      forest              The forest to write.
+ * \param [in]      fileprefix          The prefix of the files where the vtk will
+ *                                      be stored. The master file is then fileprefix.pvtu
+ *                                      and the process with rank r writes in the file
+ *                                      fileprefix_r.vtu.
+ * \return  True if successful, false if not (process local).
+ */
+int                 t8_forest_write_vtk (t8_forest_t forest,
+                                         const char *fileprefix);
 
 /* TODO: implement */
 void                t8_forest_iterate (t8_forest_t forest);

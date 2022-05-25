@@ -255,6 +255,11 @@ t8_linearidx_t      t8_dline_linear_id (const t8_dline_t *elem, int level);
  */
 int                 t8_dline_is_valid (const t8_dline_t *l);
 
+/** Print a line
+ * \param [in] l  line to be initialized 
+ */
+void                t8_dline_debug_print (const t8_dline_t *l);
+
 /** Set default values for a line, such that it passes \ref t8_dline_is_valid.
  * \param [in] l  line to be initialized
  */
