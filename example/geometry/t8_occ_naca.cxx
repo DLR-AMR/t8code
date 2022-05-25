@@ -30,7 +30,6 @@
 #include <t8_forest.h>
 #include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_vec.h>
-#include <t8_forest_vtk.h>
 #include <t8_geometry/t8_geometry_base.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
@@ -51,7 +50,8 @@ t8_naca_surface_adapt_callback (t8_forest_t forest,
                          t8_locidx_t which_tree,
                          t8_locidx_t lelement_id,
                          t8_eclass_scheme_c * ts,
-                         int num_elements, t8_element_t * elements[])
+                         const int is_family,
+                         const int num_elements, t8_element_t * elements[])
 {
   /* We retrieve the adapt data */
   const struct t8_naca_surface_adapt_data *adapt_data = (const struct t8_naca_surface_adapt_data *) t8_forest_get_user_data (forest);
@@ -106,7 +106,7 @@ t8_naca_surface_refinement(t8_forest_t forest, int rlevel_dorsal, int rlevel_ven
   t8_forest_init (&balanced_forest);
   t8_forest_set_balance (balanced_forest, forest, 0);
   t8_forest_commit (balanced_forest);
-  t8_forest_write_vtk_via_API (balanced_forest, "naca_surface_adapted_forest", 1, 1, 1, 1, 1, 0, NULL);
+  t8_forest_write_vtk_ext (balanced_forest, "naca_surface_adapted_forest", 1, 1, 1, 1, 0, 1, 0, 0, NULL);
   t8_global_productionf ("Wrote adapted and balanced forest to vtu files: naca_surface_adapted_forest*\n");
   t8_forest_unref (&balanced_forest);
   t8_global_productionf ("Destroyed forest.\n");
@@ -131,7 +131,8 @@ t8_naca_plane_adapt_callback (t8_forest_t forest,
                               t8_locidx_t which_tree,
                               t8_locidx_t lelement_id,
                               t8_eclass_scheme_c * ts,
-                              int num_elements, t8_element_t * elements[])
+                              const int is_family,
+                              const int num_elements, t8_element_t * elements[])
 {
   double              elem_midpoint[3], distance;
   int                 elem_level;
@@ -150,7 +151,7 @@ t8_naca_plane_adapt_callback (t8_forest_t forest,
   {
     return 1;
   }
-  if (distance > adapt_data->dist && elem_level > adapt_data->level && num_elements > 1)
+  if (is_family && distance > adapt_data->dist && elem_level > adapt_data->level && num_elements > 1)
   {
     return -1;
   }
@@ -184,11 +185,7 @@ t8_naca_plane_refinement (t8_forest_t forest, int level, int rlevel, int steps, 
     t8_forest_commit (balanced_forest);
     forest = balanced_forest;
     snprintf (forest_vtu, BUFSIZ, "naca_plane_adapted_forest%02d", adapt_data.t);
-    #if T8_WITH_VTK
-    t8_forest_write_vtk_via_API (forest, forest_vtu, 1, 1, 1, 1, 1, 0, NULL);
-    #else
-    t8_forest_vtk_write_file (forest, forest_vtu, 1, 1, 1, 1, 0, 0, NULL)
-    #endif
+    t8_forest_write_vtk_ext (forest, forest_vtu, 1, 1, 1, 1, 0, 1, 0, 0, NULL);
     ++adapt_data.t;
   }
   return 0;
