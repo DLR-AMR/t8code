@@ -249,6 +249,8 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
         }
       }
       t8_forest_commit (forest_partition);
+      /* Set forest to the partitioned forest, so it gets adapted
+       * in the next time step. */
       forest = forest_partition;
     }
 
@@ -268,9 +270,6 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
       t8_cmesh_print_profile (t8_forest_get_cmesh (forest_partition));
     }
     t8_forest_print_profile (forest_partition);
-    /* Set forest to the partitioned forest, so it gets adapted
-     * in the next time step. */
-    forest = forest_partition;
     /* TIME-LOOP ends here */
   }
   /* memory clean-up */
