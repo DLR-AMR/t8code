@@ -87,6 +87,7 @@ t8_naca_surface_adapt_callback (t8_forest_t forest,
 int 
 t8_naca_surface_refinement(t8_forest_t forest, int rlevel_dorsal, int rlevel_ventral)
 {
+  t8_forest_t forest_new;
   /* Generate the adapt data. We refine the surfaces in the array surfaces[]
    * to the levels specified in the array levels[]. The surface indices can be visualized by opening
    * the brep file in the Gmsh GUI and turning on the visibility of surface tags 
@@ -98,20 +99,21 @@ t8_naca_surface_refinement(t8_forest_t forest, int rlevel_dorsal, int rlevel_ven
     surfaces,       /* Array with surface indices */
     levels          /* Array with refinement levels */
   };
-  /* Adapt the forest. We can reuse the forest variable, since the new adapted
-   * forest will take ownership of the old forest and destroy it.
-   * Note that the adapted forest is a new forest, though. */
-  forest = t8_forest_new_adapt (forest, t8_naca_surface_adapt_callback, 1, 0, &adapt_data);
-  t8_forest_t balanced_forest;
-  t8_forest_init (&balanced_forest);
-  t8_forest_set_balance (balanced_forest, forest, 0);
-  t8_forest_commit (balanced_forest);
-  t8_forest_write_vtk_ext (balanced_forest, "naca_surface_adapted_forest", 1, 1, 1, 1, 0, 1, 0, 0, NULL);
+  /* Adapt and balance the forest. 
+   * Note, that we have to hand the adapt data to the forest before the commit. */
+  t8_forest_init (&forest_new);
+  t8_forest_set_adapt (forest_new, forest, t8_naca_surface_adapt_callback, 1);
+  t8_forest_set_user_data (forest_new, &adapt_data);
+  t8_forest_set_balance (forest_new, forest, 0);
+  t8_forest_commit (forest_new);
+
+  /* Write the forest into vtk files and destroy the forest afterwards. */
+  t8_forest_write_vtk_ext (forest_new, "naca_surface_adapted_forest", 1, 1, 1, 1, 0, 1, 0, 0, NULL);
   t8_global_productionf ("Wrote adapted and balanced forest to vtu files: naca_surface_adapted_forest*\n");
-  t8_forest_unref (&balanced_forest);
+  t8_forest_unref (&forest_new);
   t8_global_productionf ("Destroyed forest.\n");
   
-  return 0;
+  return 1;
 }
 
 struct t8_naca_plane_adapt_data
@@ -162,6 +164,7 @@ int
 t8_naca_plane_refinement (t8_forest_t forest, int level, int rlevel, int steps, double dist)
 {
   char                forest_vtu[BUFSIZ];
+  t8_forest_t         forest_new;
 
   /* Define the adapt data */
   t8_naca_plane_adapt_data adapt_data = {
@@ -177,18 +180,24 @@ t8_naca_plane_refinement (t8_forest_t forest, int level, int rlevel, int steps, 
   /* Moving plane loop */
   while (adapt_data.t < steps)
   {
+    /* Adapt and balance the forest. 
+     * Note, that we have to hand the adapt data to the forest before the commit. */
+    t8_forest_init (&forest_new);
+    t8_forest_set_adapt (forest_new, forest, t8_naca_plane_adapt_callback, 1);
+    t8_forest_set_user_data (forest_new, &adapt_data);
+    t8_forest_set_partition (forest_new, forest, 0);
+    t8_forest_set_balance (forest_new, forest, 0);
+    t8_forest_commit (forest_new);
     
-    forest = t8_forest_new_adapt (forest, t8_naca_plane_adapt_callback, 1, 0, &adapt_data);
-    t8_forest_t balanced_forest;
-    t8_forest_init (&balanced_forest);
-    t8_forest_set_balance (balanced_forest, forest, 0);
-    t8_forest_commit (balanced_forest);
-    forest = balanced_forest;
+    /* Write the forest into vtk files and move the new forest for the next iteration. */
     snprintf (forest_vtu, BUFSIZ, "naca_plane_adapted_forest%02d", adapt_data.t);
-    t8_forest_write_vtk_ext (forest, forest_vtu, 1, 1, 1, 1, 0, 1, 0, 0, NULL);
+    t8_forest_write_vtk_ext (forest_new, forest_vtu, 1, 1, 1, 1, 0, 1, 0, 0, NULL);
+    forest = forest_new;
     ++adapt_data.t;
   }
-  return 0;
+  /* Destroy the forest */
+  t8_forest_unref(&forest);
+  return 1;
 }
 
 int
@@ -297,7 +306,6 @@ main (int argc, char **argv)
     {
       t8_naca_plane_refinement(forest, level, rlevel, steps, dist);
     }
-    t8_forest_unref (&forest);
   }
   sc_options_destroy (opt);
   sc_finalize ();
