@@ -30,7 +30,9 @@
 #include <t8_cmesh.h>
 
 /** Construct a hollow cylinder out of hexes with an inner diameter of 0.5, 
- * an outer diameter of 1 and a height of 1. 
+ * an outer diameter of 1 and a height of 1. The number of cells use in each direction can be specified.
+ * A cylindrical occ surface can be linked to the inner and outer faces of the cylinder trees, to use the
+ * occ geometry.
  * \param [in] comm                   The mpi communicator to use.
  * \param [in] num_tangential_trees   Number of trees distributed around the cylinder.
  * \param [in] num_axial_trees        Number of trees distributed along the height of the cylinder.
@@ -38,8 +40,8 @@
  * \param [in] with_occ_geometry      Link the cylinder to a occ geometry, 0 or 1.
  * \return                            A valid cmesh, as if _init and _commit had been called.
  */
-t8_cmesh_t          t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, 
-                                                  int num_tangential_trees, 
+t8_cmesh_t          t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm,
+                                                  int num_tangential_trees,
                                                   int num_axial_trees,
                                                   int num_radial_trees,
                                                   int with_occ_geometry);
