@@ -57,7 +57,7 @@ t8_face_edge_to_tree_edge[T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_EDGES_2D];
 /**
  * Definition of an occ geometry function.
  * This function maps reference coordinates to physical
- * coordinates.
+ * coordinates regarding the occ geometries linked to the cells edges and faces.
  * \param [in]  cmesh       The cmesh.
  * \param [in]  gtreeid     The global tree (of the cmesh) in which the reference point is.
  * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
@@ -259,7 +259,8 @@ public:
                                             double* face_params) const;
 
 private:
-  double                                      tolerance;
+  const int                                  *edges;                      /** The linked edges of the currently active tree. */
+  const int                                  *faces;                      /** The linked faces of the currently active tree. */
   TopoDS_Shape                                occ_shape;                  /** Occ geometry */
   TopTools_IndexedMapOfShape                  occ_shape_vertex_map;       /** Map of all TopoDS_Vertex in shape. */
   TopTools_IndexedMapOfShape                  occ_shape_edge_map;         /** Map of all TopoDS_Edge in shape. */
