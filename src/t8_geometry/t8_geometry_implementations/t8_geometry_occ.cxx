@@ -110,13 +110,6 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
                                   const double *ref_coords,
                                   double out_coords[3]) const
 {
-  const int *edges = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
-                                                           T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY,
-                                                           gtreeid);
-  const int *faces = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
-                                                           T8_CMESH_OCC_FACE_ATTRIBUTE_KEY,
-                                                           gtreeid);
-  
   /* Compute coordinates via trilinear interpolation */
   t8_geom_compute_linear_geometry (active_tree_class,
                                    active_tree_vertices, ref_coords,
@@ -448,6 +441,12 @@ t8_geometry_occ::t8_geom_load_tree_data (t8_cmesh_t cmesh,
                                          t8_gloidx_t gtreeid)
 {
   t8_geometry_w_vertices::t8_geom_load_tree_data(cmesh, gtreeid);
+  edges = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
+                                                T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY,
+                                                gtreeid);
+  faces = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
+                                                T8_CMESH_OCC_FACE_ATTRIBUTE_KEY,
+                                                gtreeid);
 }
 
 gp_Pnt
