@@ -179,7 +179,8 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
   double              t;
   int                 partition_cmesh;
   int                 time_step;
-  const sc_statinfo_t *partition_stats, *adapt_stats, *balance_stats, *ghost_stats;
+  const sc_statinfo_t *partition_stats, *adapt_stats, *balance_stats,
+    *ghost_stats;
 
   t8_global_productionf ("Committed cmesh with"
                          " %lli global trees.\n",
@@ -199,7 +200,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
     /* The new cmesh is partitioned according to a uniform init_level refinement */
     t8_cmesh_set_partition_uniform (cmesh_partition, init_level,
                                     t8_scheme_new_default_cxx ());
-    t8_cmesh_set_profiling(cmesh_partition, 1);
+    t8_cmesh_set_profiling (cmesh_partition, 1);
     t8_cmesh_commit (cmesh_partition, comm);
   }
   else {
@@ -270,25 +271,11 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
                                cmesh_vtu, 1.0);
       t8_debugf ("Wrote partitioned forest and cmesh\n");
     }
-    /* Print runtimes and statistics of forest and cmesh partition */
-    t8_cmesh_print_profile (t8_forest_get_cmesh (forest_partition));
+    if (partition_cmesh) {
+      /* Print runtimes and statistics of forest and cmesh partition */
+      t8_cmesh_print_profile (t8_forest_get_cmesh (forest_partition));
+    }
     t8_forest_print_profile (forest_partition);
-    t8_forest_compute_profile (forest_partition);
-    partition_stats =
-      t8_forest_profile_get_partition_stats (forest_partition);
-    t8_global_productionf
-      ("[Sandro] Adapt runtime: %f  variance: %f max: %f\n",
-       adapt_stats->average, adapt_stats->standev_mean, adapt_stats->max);
-    t8_global_productionf
-      ("[Sandro] Partition runtime: %f  variance: %f max: %f\n",
-       partition_stats->average, partition_stats->standev_mean,
-       partition_stats->max);
-    t8_global_productionf
-      ("[Sandro] Balance runtime: %f  variance: %f max: %f\n",
-       balance_stats->average, balance_stats->standev_mean, balance_stats->max);
-    t8_global_productionf
-      ("[Sandro] Ghost runtime: %f  variance: %f max: %f\n",
-       ghost_stats->average, ghost_stats->standev_mean, ghost_stats->max);
     /* Set forest to the partitioned forest, so it gets adapted
      * in the next time step. */
     forest = forest_partition;
@@ -407,7 +394,8 @@ main (int argc, char *argv[])
                          "Use a cmesh that tests all tet face-to-face connections."
                          " If this option is used -o is enabled automatically."
                          " Not allowed with -f and -c.");
-  sc_options_add_switch (opt, 'L', "test-linear-cylinder", &test_linear_cylinder,
+  sc_options_add_switch (opt, 'L', "test-linear-cylinder",
+                         &test_linear_cylinder,
                          "Use a linear cmesh to compare linear and occ geometry performance."
                          " If this option is used -o is enabled automatically."
                          " Not allowed with -f and -c.");
@@ -453,9 +441,9 @@ main (int argc, char *argv[])
           && test_linear_cylinder == 0)
       || stride <= 0 || (num_files - 1) * stride >= mpisize || cfl < 0
       || test_tet + test_linear_cylinder + test_occ_cylinder > 1
-      || (cmesh_level >= 0 && (!test_linear_cylinder && !test_occ_cylinder)) ||
-      ((mshfileprefix != NULL || cmeshfileprefix != NULL) && (test_linear_cylinder 
-      || test_occ_cylinder || test_tet))) {
+      || (cmesh_level >= 0 && (!test_linear_cylinder && !test_occ_cylinder))
+      || ((mshfileprefix != NULL || cmeshfileprefix != NULL)
+          && (test_linear_cylinder || test_occ_cylinder || test_tet))) {
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
     return 1;
   }
@@ -488,9 +476,12 @@ main (int argc, char *argv[])
       }
       cmesh =
         t8_cmesh_new_hollow_cylinder (sc_MPI_COMM_WORLD,
-                                      4 * sc_intpow(2, cmesh_level), sc_intpow(2, cmesh_level),
-                                      sc_intpow(2, cmesh_level), test_occ_cylinder);
-      test_linear_cylinder ? vtu_prefix = "test_linear_cylinder" : vtu_prefix = "test_occ_cylinder";
+                                      4 * sc_intpow (2, cmesh_level),
+                                      sc_intpow (2, cmesh_level),
+                                      sc_intpow (2, cmesh_level),
+                                      test_occ_cylinder);
+      test_linear_cylinder ? vtu_prefix =
+        "test_linear_cylinder" : vtu_prefix = "test_occ_cylinder";
     }
     else {
       T8_ASSERT (cmeshfileprefix != NULL);
