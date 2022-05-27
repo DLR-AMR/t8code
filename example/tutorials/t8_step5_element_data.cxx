@@ -24,15 +24,15 @@
  *
  * This is step5 of the t8code tutorials.
  * In the following we will store data in the individual elements of our forest. 
- * To do this, we will again create a uniform forest, which will get adapt as in step3. 
- * In addition we partition, balance and create ghost elements all in the same step.
+ * To do this, we will again create a uniform forest, which will get adapt as in step4. 
+ * With the difference that we partition, balance and create ghost elements all in the same step.
  * After adapting the forest we will lear how to build a data array and gather data for 
- * the local elements. Futher we exchange the data values of the ghost elements and
+ * the local elements. Further we exchange the data values of the ghost elements and
  * output the volume data to vtu.
  *
  * How you can experiment here:
  *   - Look at the paraview output files of the adapted forest.
- *     You can apply a slice filter to look into the cube. Also you can apply (in addition) 
+ *     You can apply a clip filter to look into the cube. Also you can apply (in addition) 
  *     the threshold filter to display only elements with certain properties.
  *     But at first you may just want to enter the tooltip selection mode 'Hover Cells On'
  *     to display cell information when hover over them.
@@ -248,9 +248,9 @@ t8_step5_main (int argc, char **argv)
   sc_MPI_Comm         comm;
   t8_forest_t         forest;
   /* The prefix for our output files. */
-  const char         *prefix_forest = "t8_step5_forest";
+  const char         *prefix_forest = "/home/ioannis/VBshare/paraview_export/t8_step5_forest";
   const char         *prefix_forest_with_data =
-    "t8_step5_forest_with_volume_data";
+    "/home/ioannis/VBshare/paraview_export/t8_step5_forest_with_volume_data";
   /* The uniform refinement level of the forest. */
   const int           level = 3;
   /* The array that will hold our per element data. */
