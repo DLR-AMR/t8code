@@ -1,11 +1,38 @@
+//  This file is part of t8code.
+//  t8code is a C library to manage a collection (a forest) of multiple
+//  connected adaptive space-trees of general element types in parallel.
+//
+//  Copyright (C) 2015 the developers
+//
+//  t8code is free software; you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation; either version 2 of the License, or
+//  (at your option) any later version.
+//
+//  t8code is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with t8code; if not, write to the Free Software Foundation, Inc.,
+//  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+// This file will create a brep and msh file of a 
+// cuboidal flow channel with a cylindrical hole in the middle
+// when opened with Gmsh.
+
+// Use the OpenCASCADE geometry kernel to generate a brep file later on
 SetFactory("OpenCASCADE");
 
-r1 = 0.5;
-r2 = 0.6;
-h = 2;
-l = 3;
-b = 3;
+// Set the dimensions of the channel
+r1 = 0.5; // Radius of the hole
+r2 = 0.6; // Radius of the ring around the hole
+h = 2; // height/2 of the channel
+l = 3; // length/2 of the channel
+b = 3; // width of the channel
 
+// Definition all the points needed for construction
 Point(1) = {0, 0, -b/2};
 
 Point(2) = {Sin(-Pi+Pi/4)*r2, Cos(-Pi+Pi/4)*r2, -b/2};
@@ -45,6 +72,7 @@ Point(27) = {Sin(-Pi/4)*r2, -h, -b/2};
 Point(28) = {Sin(Pi/4)*r2, -h, -b/2};
 Point(29) = {Sin(Pi-Pi/4)*r2, -h, -b/2};
 
+// Definition all the one dimensional geometries
 Circle(1) = {6, 1, 8};
 Circle(2) = {7, 1, 9};
 Circle(3) = {8, 1, 2};
@@ -77,6 +105,8 @@ Line(29) = {2, 26};
 Line(30) = {2, 14};
 Line(31) = {15, 4};
 Line(32) = {4, 22};
+
+// Definition of the surfaces
 Curve Loop(1) = {31, -5, 30, 23};
 Curve Loop(2) = {31, -5, 30, 23};
 Plane Surface(1) = {2};
@@ -105,20 +135,28 @@ Curve Loop(15) = {2, 11, -1, -10};
 Plane Surface(11) = {15};
 Curve Loop(16) = {3, -12, -4, 11};
 Plane Surface(12) = {16};
+
+// Extrusion of the two dimensional surfaces
 Extrude {0, 0, b} {
   Surface{1}; Surface{2}; Surface{3}; Surface{4}; Surface{5}; Surface{6}; Surface{7}; Surface{8}; Surface{9}; Surface{10}; Surface{11}; Surface{12}; 
 }
+// Make sure, that no geometries are defined multiple times
 Coherence;
 
+// Save the channel geometry and reopen it. 
+// Gmsh has its own numbering of the geometries during the construction, 
+// but we need the numbering inside the generated brep file. 
+// Therefore, we delete everything and open the geometry inside the brep file.
 Save "channel.brep";
 Delete All;
 Merge "channel.brep";
 
-l_elems = 5;
-h_elems = 3;
-r2_elems = 1;
-circle_elems = 2;
-b_elems = 5;
+// Definition of the amount of elements in each direction
+l_elems = 5; // Amount of elements/2 along the length of the channel 
+h_elems = 3; // Amount of elements/2 along the height of the channel
+r2_elems = 1; // Amount of "boundary layer" elements around the hole
+circle_elems = 2; // Amount of elements/4 around the hole
+b_elems = 5; // Amount of elements along the width of the channel
 
 // After setting our geometries to transfinite we can mesh them
 Transfinite Curve {61, 62, 9, 10, 3, 4, 17, 18, 35, 36, 31, 30, 42, 41, 50, 49} = l_elems + 1 Using Progression 1;
@@ -132,7 +170,7 @@ Transfinite Volume{:};
 Mesh 3;
 Coherence Mesh;
 
+// Save the mesh
 Mesh.MshFileVersion = 4.1;
 Mesh.SaveParametric = 1;
 Save "channel.msh";
-
