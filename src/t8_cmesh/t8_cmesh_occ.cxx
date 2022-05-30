@@ -56,7 +56,6 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
   t8_cmesh_t          cmesh;
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_profiling (cmesh, 1);
-  t8_geometry_c      *geometry_linear = t8_geometry_linear_new (3);
 
   if (with_occ_geometry) {
 #if T8_WITH_OCC
@@ -91,15 +90,15 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
                                                  1e-6).Face ());
     t8_geometry_occ    *geometry_occ =
       new t8_geometry_occ (3, shape, "occ surface dim=3");
-    if (with_occ_geometry) {
-      t8_cmesh_register_geometry (cmesh, geometry_occ);
-    }
+    
+    t8_cmesh_register_geometry (cmesh, geometry_occ);
 
 #else /* !T8_WITH_OCC */
     SC_ABORTF ("OCC not linked");
 #endif /* T8_WITH_OCC */
   }
   else {
+    t8_geometry_c      *geometry_linear = t8_geometry_linear_new (3);
     t8_cmesh_register_geometry (cmesh, geometry_linear);
   }
 
