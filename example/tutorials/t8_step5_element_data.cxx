@@ -32,7 +32,6 @@
 #include <t8_cmesh/t8_cmesh_examples.h> /* A collection of exemplary cmeshes */
 #include <t8_forest.h>          /* forest definition and basic interface. */
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>     /* default refinement scheme. */
-#include <t8_forest_vtk.h>      /* Additional vtk functions to output arbitrary user data. */
 #include <example/tutorials/t8_step3.h>
 
 T8_EXTERN_C_BEGIN ();
@@ -220,9 +219,9 @@ t8_step5_output_data_to_vtu (t8_forest_t forest,
     int                 write_level = 1;
     int                 write_element_id = 1;
     int                 write_ghosts = 0;
-    t8_forest_vtk_write_file (forest, prefix, write_treeid, write_mpirank,
-                              write_level, write_element_id, write_ghosts,
-                              num_data, &vtk_data);
+    t8_forest_write_vtk_ext (forest, prefix, write_treeid, write_mpirank,
+                             write_level, write_element_id, write_ghosts,
+                             0, 0, num_data, &vtk_data);
   }
   T8_FREE (element_volumes);
 }

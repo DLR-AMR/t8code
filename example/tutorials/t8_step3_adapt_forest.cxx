@@ -56,7 +56,6 @@
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>     /* default refinement scheme. */
 #include <t8_vec.h>             /* Basic operations on 3D vectors. */
 #include <example/tutorials/t8_step3.h>
-#include <t8_forest_vtk.h>
 
 T8_EXTERN_C_BEGIN ();
 
