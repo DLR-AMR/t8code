@@ -93,18 +93,13 @@ T8_EXTERN_C_BEGIN ();
  *                                  read the file and store all the trees alone.
  * \param [in]    use_occ_geometry  Read the parameters of a parametric msh file and use the
  *                                  occ geometry.
- * \param [in]    occ_tol           The tolerance used to recombine mesh nodes with the occ geometries
- *                                  and used to retrieve missing parameters.
- * \param [in]    occ_debugfile     Generates a gmsh readable .geo file, which marks all recombined
- *                                  nodes green and all not recombined nodes red. Only available in
- *                                  debug mode.
  * \return        A committed cmesh holding the mesh of dimension \a dim in the
  *                specified .msh file.
  */
 t8_cmesh_t
 t8_cmesh_from_msh_file (const char *fileprefix, int partition,
                         sc_MPI_Comm comm, int dim, int master,
-                        int use_occ_geometry = 0, double occ_tol = 1e-9, int occ_debugfile = 0);
+                        int use_occ_geometry = 0);
 
 T8_EXTERN_C_END ();
 

@@ -732,8 +732,7 @@ int
 t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE * fp,
                              sc_hash_t * vertices,
                              sc_array_t ** vertex_indices, 
-                             int dim, t8_geometry_occ * occ_geometry, 
-                             double tol)
+                             int dim, t8_geometry_occ * occ_geometry)
 {
   char                         *line = (char *) malloc (1024), *line_modify;
   char                          first_word[2048] = "\0";
@@ -1619,7 +1618,7 @@ T8_EXTERN_C_BEGIN ();
 t8_cmesh_t
 t8_cmesh_from_msh_file (const char *fileprefix, int partition,
                         sc_MPI_Comm comm, int dim, int main_proc,
-                        int use_occ_geometry, double occ_tol, int occ_debugfile)
+                        int use_occ_geometry)
 {
   int                 mpirank, mpisize, mpiret;
   t8_cmesh_t          cmesh;
@@ -1704,7 +1703,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
       { 
         #if T8_WITH_OCC
         t8_geometry_occ *geometry_occ = t8_geometry_occ_new(dim, fileprefix, "brep_geometry");
-        t8_cmesh_msh_file_4_read_eles (cmesh, file, vertices, &vertex_indices, dim, geometry_occ, occ_tol);
+        t8_cmesh_msh_file_4_read_eles (cmesh, file, vertices, &vertex_indices, dim, geometry_occ);
         geometry = geometry_occ;
         #else /* !T8_WITH_OCC */
         SC_ABORTF("OCC not linked");
@@ -1713,7 +1712,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
       else
       {
         geometry = new t8_geometry_linear (dim);
-        t8_cmesh_msh_file_4_read_eles (cmesh, file, vertices, &vertex_indices, dim, NULL, occ_tol);
+        t8_cmesh_msh_file_4_read_eles (cmesh, file, vertices, &vertex_indices, dim, NULL);
       }
       break;
     
