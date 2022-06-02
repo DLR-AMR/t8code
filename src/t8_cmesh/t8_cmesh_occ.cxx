@@ -90,7 +90,7 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
                                                  1e-6).Face ());
     t8_geometry_occ    *geometry_occ =
       new t8_geometry_occ (3, shape, "occ surface dim=3");
-    
+
     t8_cmesh_register_geometry (cmesh, geometry_occ);
 
 #else /* !T8_WITH_OCC */
@@ -132,11 +132,12 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
          ++i_axial_trees) {
       for (int i_radial_trees = 0; i_radial_trees < num_radial_trees;
            ++i_radial_trees) {
-        /* *INDENT-OFF* */
         t8_cmesh_set_tree_class (cmesh,
                                  (i_tangential_trees * num_axial_trees +
                                   i_axial_trees) * num_radial_trees +
                                  i_radial_trees, T8_ECLASS_HEX);
+
+        /* *INDENT-OFF* */
         vertices[((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24 + 0] = cos ((i_tangential_trees + 1) * dphi) * (radius_inner + (i_radial_trees + 1) * dr);
         vertices[((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24 + 1] = sin ((i_tangential_trees + 1) * dphi) * (radius_inner + (i_radial_trees + 1) * dr);
         vertices[((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24 + 2] = -0.5 + i_axial_trees * dh;
@@ -162,6 +163,7 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
         vertices[((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24 + 22] = sin (i_tangential_trees * dphi) * (radius_inner + i_radial_trees * dr);
         vertices[((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24 + 23] = -0.5 + (i_axial_trees + 1) * dh;
         /* *INDENT-ON* */
+
         t8_cmesh_set_tree_vertices (cmesh,
                                     (i_tangential_trees * num_axial_trees +
                                      i_axial_trees) * num_radial_trees +
