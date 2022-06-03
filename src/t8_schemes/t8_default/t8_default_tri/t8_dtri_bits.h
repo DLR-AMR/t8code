@@ -108,7 +108,8 @@ void                t8_dtri_child (const t8_dtri_t *t,
  * \param [in,out] c  Pointers to the 4 computed children in Morton order.
  *                    t may point to the same quadrant as c[0].
  */
-void                t8_dtri_childrenpv (const t8_dtri_t *t, t8_dtri_t *c[]);
+void                t8_dtri_childrenpv (const t8_dtri_t *t,
+                                        t8_dtri_t *c[T8_DTRI_CHILDREN]);
 
 /** Check whether a collection of eight triangles is a family in Morton order.
  * \param [in]     f  An array of eight triangles.
