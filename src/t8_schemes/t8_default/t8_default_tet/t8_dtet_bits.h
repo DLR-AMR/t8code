@@ -112,7 +112,8 @@ void                t8_dtet_child (const t8_dtet_t *elem,
  * \param [in,out] c  Pointers to the 8 computed children in Morton order.
  *                    t may point to the same quadrant as c[0].
  */
-void                t8_dtet_childrenpv (const t8_dtet_t *t, t8_dtet_t *c[]);
+void                t8_dtet_childrenpv (const t8_dtet_t *t,
+                                        t8_dtet_t *c[T8_DTET_CHILDREN]);
 
 /** Check whether a collection of eight tetrahedra is a family in Morton order.
  * \param [in]     f  An array of eight tetrahedra.

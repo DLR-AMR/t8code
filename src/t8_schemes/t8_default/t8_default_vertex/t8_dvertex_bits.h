@@ -109,7 +109,8 @@ void                t8_dvertex_sibling (const t8_dvertex_t *v, int sibid,
  *                    t may point to the same quadrant as c[0].
  */
 void                t8_dvertex_childrenpv (const t8_dvertex_t *t,
-                                           t8_dvertex_t *c[]);
+                                           t8_dvertex_t
+                                           *c[T8_DVERTEX_CHILDREN]);
 
 /** Check whether a collection of two vertexs is a family in Morton order.
  * \param [in]     f  An array of two vertexs.

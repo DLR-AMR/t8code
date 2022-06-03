@@ -133,7 +133,7 @@ int                 t8_dline_child_id (const t8_dline_t *t);
  *                    t may point to the same quadrant as c[0].
  */
 void                t8_dline_childrenpv (const t8_dline_t *t,
-                                         t8_dline_t *c[]);
+                                         t8_dline_t *c[T8_DLINE_CHILDREN]);
 
 /** Check whether a collection of two lines is a family in Morton order.
  * \param [in]     f  An array of two lines.
