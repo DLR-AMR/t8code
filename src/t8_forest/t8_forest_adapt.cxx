@@ -523,16 +523,18 @@ t8_forest_adapt (t8_forest_t forest)
     /* Add to the new number of local elements. */
     forest->local_num_elements += el_inserted;
 
+#if T8_ENABLE_DEBUG
     /* Output for debugging and Results */
     int                 num_subelements_in_tree =
       count_subelements - count_subelements_former_tree;
     count_subelements_former_tree = count_subelements;
     t8_productionf
-      ("tree_id: %i num_elements in tree: %i num_subelements_in_tree: %i\n",
+      ("tree_id: %i; num_elements in tree: %i (%i subelements)\n",
        ltree_id, el_inserted, num_subelements_in_tree);
 
     float               relative_increase = (float) el_inserted / num_el_from;
-    t8_productionf ("relative increase: %f\n", relative_increase);
+    t8_productionf ("relative increase of elements from old to new (adapted) tree: %f\n", relative_increase);
+#endif
 
     /* Possibly shrink the telements array to the correct size */
     t8_element_array_resize (telements, el_inserted);
@@ -551,7 +553,7 @@ t8_forest_adapt (t8_forest_t forest)
   /* Compute the new global number of elements */
   t8_forest_comm_global_num_elements (forest);
   t8_global_productionf
-    ("Done t8_forest_adapt with %lld total elements, %lld of which are subelements.\n",
+    ("Done t8_forest_adapt with %lld total elements (%lld of which are subelements).\n",
      (long long) forest->global_num_elements, count_subelements);
 
   /* if profiling is enabled, measure runtime */
