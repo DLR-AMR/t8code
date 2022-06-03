@@ -2525,8 +2525,21 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
   t8_cmesh_partition_recvloop (cmesh, cmesh_from, tree_offset, my_buffer,
                                my_buffer_bytes, comm, fr, lr);
   if (num_send_mpi > 0) {
+    /* The newer GCC compiler warn when using specific
+     * MPI calls, this behavious is known by the MPI community
+     * and will get fixed in future versions: https://github.com/pmodels/mpich/issues/5687 
+     * It is safe to ignore the warning, and since our CI requires
+     * runs with -Werror to pass, we need to disable the warning
+     * temporarily. */
+#ifdef __GNUC__
+#ifndef __clang__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
     mpiret = sc_MPI_Waitall (num_request_alloc, requests,
                              sc_MPI_STATUSES_IGNORE);
+#pragma GCC diagnostic pop
+#endif
+#endif
     SC_CHECK_MPI (mpiret);
   }
 
