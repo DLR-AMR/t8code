@@ -2245,7 +2245,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
 
               i++;
 
-            } /* end while-loop to identify real ghost-subelement enighbor */
+            } /* end while-loop to identify real ghost-subelement neighbor */
 
           }
 
