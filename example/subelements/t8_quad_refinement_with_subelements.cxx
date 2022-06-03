@@ -158,21 +158,21 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
   int                 do_exemplary_refinement = 0;
 
   /* cmesh settings (only one of the following suggestions should be one, the others 0) */
-  int                 single_tree = 1;
-  int                 multiple_tree = 0, num_x_trees = 2, num_y_trees = 2;
+  int                 single_tree = 0;
+  int                 multiple_tree = 1, num_x_trees = 2, num_y_trees = 1;
   int                 hybrid_cmesh = 0;
 
   /* adaptation setting */
-  int                 do_balance = 1;
-  int                 do_transition = 0;
+  int                 do_balance = 0;
+  int                 do_transition = 1;
 
   /* Ghost settings if MPI is enabled */
   int                 do_ghost = 0;
   int                 ghost_version = 3;
 
   /* timestep settings */
-  int                 num_timesteps = 1;    /* Number of times, the mesh is refined */
-  double              radius_increase = 0.5;   /* The value, the radius increases after each timestep */
+  int                 num_timesteps = 6;    /* Number of times, the mesh is refined */
+  double              radius_increase = 0.2;   /* The value, the radius increases after each timestep */
   int                 do_different_refinements = 0;   /* change the refinement during multiple num_timesteps */
 
   /* VTK settings */
@@ -224,10 +224,10 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
   /* shift the midpoiunt of the circle by (shift_x,shift_y) to ensure midpoints on corners of the uniform mesh */
   // int  shift_x = 0;      /* shift_x, shift_y should be smaler than 2^minlevel / 2 such that midpoint stays in the quadrilateral tree */
   // int  shift_y = 0;
-  sdata.mid_point[0] = -10.0;    // 1.0 / 2.0 + shift_x * 1.0/(1 << (minlevel));
+  sdata.mid_point[0] = 0.0;    // 1.0 / 2.0 + shift_x * 1.0/(1 << (minlevel));
   sdata.mid_point[1] = 0.5;    // 1.0 / 2.0 + shift_y * 1.0/(1 << (minlevel)); 
   sdata.mid_point[2] = 0;
-  sdata.radius = 10.25;
+  sdata.radius = 0.25;
 
   /* refinement parameter */
   ls_data.band_width = 1;
