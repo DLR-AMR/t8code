@@ -2926,7 +2926,7 @@ main (int argc, char *argv[])
                       "Controls how often the mesh is readapted. "
                       "A value of i means, every i-th time step.");
 
-  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 5000,
+  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 50,
                       "How often the vtk output is produced "
                       "\n\t\t\t\t     (after how many time steps). "
                       "A value of 0 is equivalent to using -o.");
