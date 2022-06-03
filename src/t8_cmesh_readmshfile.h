@@ -37,11 +37,13 @@
  */
 #define T8_CMESH_N_SUPPORTED_MSH_FILE_VERSIONS 2
 
-const int 
-t8_cmesh_supported_msh_file_versions[T8_CMESH_N_SUPPORTED_MSH_FILE_VERSIONS] =
+/* *INDENT-OFF* */
+const int
+t8_cmesh_supported_msh_file_versions[T8_CMESH_N_SUPPORTED_MSH_FILE_VERSIONS] = 
 {
   2, 4
 };
+/* *INDENT-ON* */
 
 /* put typedefs here */
 
@@ -96,10 +98,12 @@ T8_EXTERN_C_BEGIN ();
  * \return        A committed cmesh holding the mesh of dimension \a dim in the
  *                specified .msh file.
  */
+/* *INDENT-OFF* */
 t8_cmesh_t
 t8_cmesh_from_msh_file (const char *fileprefix, int partition,
                         sc_MPI_Comm comm, int dim, int master,
                         int use_occ_geometry = 0);
+/* *INDENT-ON* */
 
 T8_EXTERN_C_END ();
 
