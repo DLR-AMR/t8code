@@ -257,6 +257,12 @@ jobs:
 #
 #
     # build config vars
+    # Note that we use '-Wno-stringop-overflow'. This is required since
+    # with Ubuntu 22.04 the new gcc causes an unnecessary warning in an MPI Waitall call.
+    # This behaviour is know and discussed by the MPI community: https://github.com/pmodels/mpich/issues/5687
+    # It does not work to disable the option temporarily only for the specific
+    # calls (using pragma GCC diagnostic). Hence, we disable it globally.
+    # Should this warning be fixed in the future, we should include stringop-overflow again.
     - name: build CFLAGS and CXXFLAGS variables
       run: echo CFLAGS_var="-Wall -pedantic -O3 -Wno-stringop-overflow" >> $GITHUB_ENV
         && echo CXXFLAGS_var="-Wall -pedantic -O3 -Wno-stringop-overflow" >> $GITHUB_ENV
