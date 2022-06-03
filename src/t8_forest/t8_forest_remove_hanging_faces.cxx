@@ -70,8 +70,10 @@ t8_forest_remove_hanging_faces_adapt (t8_forest_t forest,
     * Within the element scheme of the given eclass, this binary code is used to construct the right subelement type,
     * in order to remove hanging nodes from the mesh. */
 
-  t8_debugf ("local element index: %i\n", lelement_id);
+#if T8_ENABLE_DEBUG
+  t8_productionf ("local element index: %i\n", lelement_id);
   ts->t8_element_print_element (element);
+#endif
 
   for (iface = 0; iface < num_faces; iface++) {
     /* Get the element class and scheme of the face neighbor */
@@ -89,8 +91,10 @@ t8_forest_remove_hanging_faces_adapt (t8_forest_t forest,
                                                       neigh_scheme,
                                                       iface, &neigh_face);
 
-    t8_debugf ("Face neighbor at face %i:\n", iface);
+#if T8_ENABLE_DEBUG
+    t8_productionf ("Face neighbor at face %i:\n", iface);
     ts->t8_element_print_element (face_neighbor[0]);
+#endif
 
     if (neighbor_tree >= 0) {
       if (t8_forest_element_has_leaf_desc (forest_from, neighbor_tree,
