@@ -258,8 +258,8 @@ jobs:
 #
     # build config vars
     - name: build CFLAGS and CXXFLAGS variables
-      run: echo CFLAGS_var="-Wall -pedantic -O3" >> $GITHUB_ENV
-        && echo CXXFLAGS_var="-Wall -pedantic -O3" >> $GITHUB_ENV
+      run: echo CFLAGS_var="-Wall -pedantic -O3 -Wno-stringop-overflow" >> $GITHUB_ENV
+        && echo CXXFLAGS_var="-Wall -pedantic -O3 -Wno-stringop-overflow" >> $GITHUB_ENV
     # Note: We want to use '-Werror', but if we already provide it at the configure step
     #       we get errors in configure that we cannot remove (for example the autotools way
     #       of checking for libm results in a compiler warning).
