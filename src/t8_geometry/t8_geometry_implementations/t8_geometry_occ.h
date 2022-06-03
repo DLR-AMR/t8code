@@ -31,16 +31,13 @@
 #include <t8_geometry/t8_geometry.h>
 
 /* The vertices of each edge of a hexahedron. Used in the occ geometry. */
-extern const int
-t8_edge_vertex_to_tree_vertex[T8_ECLASS_MAX_EDGES][2];
+extern const int    t8_edge_vertex_to_tree_vertex[T8_ECLASS_MAX_EDGES][2];
 
 /* The faces connected to each edge. */
-extern const int
-t8_edge_to_face[T8_ECLASS_MAX_EDGES][2];
+extern const int    t8_edge_to_face[T8_ECLASS_MAX_EDGES][2];
 
 /* The edges connected to a face */
-extern const int
-t8_face_to_edge[T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_EDGES];
+extern const int    t8_face_to_edge[T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_EDGES];
 
 /** This typedef holds virtual functions for a particular geometry.
  * We need it so that we can use t8_geometry_occ_c pointers in .c files
@@ -58,7 +55,9 @@ T8_EXTERN_C_BEGIN ();
  *                        if the t8_geometry_occ (int dimension, const char *fileprefix, const char *name) 
  *                        constructor was called.
  */
-t8_geometry_occ_c  *t8_geometry_occ_new (int dimension, const char *fileprefix, const char *name_in);
+t8_geometry_occ_c  *t8_geometry_occ_new (int dimension,
+                                         const char *fileprefix,
+                                         const char *name_in);
 
 /** Destroy a occ geometry that was created with \ref t8_geometry_occ_new.
  * \param [in,out] geom A occ geometry. Set to NULL on output.

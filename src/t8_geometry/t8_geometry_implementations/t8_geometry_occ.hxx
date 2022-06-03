@@ -43,16 +43,14 @@
 #include <Geom_Surface.hxx>
 
 /* The vertices of each edge of a hexahedron. Used in the occ geometry. */
-extern const int
-t8_edge_vertex_to_tree_vertex[T8_ECLASS_MAX_EDGES][2];
+extern const int    t8_edge_vertex_to_tree_vertex[T8_ECLASS_MAX_EDGES][2];
 
 /* The faces connected to each edge. */
-extern const int
-t8_edge_to_face[T8_ECLASS_MAX_EDGES][2];
+extern const int    t8_edge_to_face[T8_ECLASS_MAX_EDGES][2];
 
 /* The edges of a face to the edges of a tree */
 extern const int
-t8_face_edge_to_tree_edge[T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_EDGES_2D];
+     t8_face_edge_to_tree_edge[T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_EDGES_2D];
 
 /**
  * Definition of an occ geometry function.
@@ -66,12 +64,13 @@ t8_face_edge_to_tree_edge[T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_EDGES_2D];
  * \param [in]  user_data   The user data pointer stored in the geometry.
  */
 typedef void        (*t8_geom_occ_fn) (t8_cmesh_t cmesh,
-                                      t8_gloidx_t gtreeid,
-                                      const double *ref_coords,
-                                      double out_coords[3],
-                                      const void *tree_data,
-                                      const void *user_data);
+                                       t8_gloidx_t gtreeid,
+                                       const double *ref_coords,
+                                       double out_coords[3],
+                                       const void *tree_data,
+                                       const void *user_data);
 
+/* *INDENT-OFF* */
 struct t8_geometry_occ:public t8_geometry_w_vertices
 {
 public:
@@ -90,12 +89,13 @@ public:
    * \param [in] occ_shape  Occ shape geometry.
    * \param [in] name       The name to give this geometry.
    */
-  t8_geometry_occ (int dimension, const TopoDS_Shape occ_shape, const char *name);
+  t8_geometry_occ (int dimension, const TopoDS_Shape occ_shape, 
+                   const char *name);
 
   /** The destructor. 
    * Clears the allocated memory.
    */
-                      virtual ~ t8_geometry_occ ()
+  virtual ~t8_geometry_occ ()
   {
     /* Nothing to do. */
   }
@@ -189,7 +189,8 @@ public:
    * \return                    Index of the shared edge. 0 if there is no shared edge.
    */
   int
-  t8_geom_get_common_edge (const int vertex1_index, const int vertex2_index) const;
+  t8_geom_get_common_edge (const int vertex1_index, 
+                           const int vertex2_index) const;
 
   /** Check if two occ edges share a common occ face.
    * \param [in]  edge1_index    The index of the first occ edge.
@@ -197,7 +198,8 @@ public:
    * \return                    Index of the shared face. 0 if there is no shared face.
    */
   int
-  t8_geom_get_common_face (const int edge1_index, const int edge2_index) const;
+  t8_geom_get_common_face (const int edge1_index, 
+                           const int edge2_index) const;
 
   /** Check if a occ vertex lies on an occ edge.
    * \param [in]  vertex_index   The index of the occ vertex.
@@ -205,7 +207,8 @@ public:
    * \return                    1 if vertex lies on edge, otherwise 0.
    */
   int
-  t8_geom_is_vertex_on_edge (const int vertex_index, const int edge_index) const;
+  t8_geom_is_vertex_on_edge (const int vertex_index, 
+                             const int edge_index) const;
 
   /** Check if a occ vertex lies on an occ edge.
    * \param [in]  edge_index     The index of the occ vertex.
@@ -213,7 +216,8 @@ public:
    * \return                    1 if vertex lies on edge, otherwise 0.
    */
   int
-  t8_geom_is_edge_on_face (const int edge_index, const int face_index) const;
+  t8_geom_is_edge_on_face (const int edge_index, 
+                           const int face_index) const;
 
   /** Check if a occ vertex lies on an occ face.
    * \param [in]  vertex_index   The index of the occ vertex.
@@ -221,7 +225,8 @@ public:
    * \return                    1 if vertex lies on face, otherwise 0.
    */
   int
-  t8_geom_is_vertex_on_face (const int vertex_index, const int face_index) const;
+  t8_geom_is_vertex_on_face (const int vertex_index, 
+                             const int face_index) const;
 
   /** Retrieves the parameter of an occ vertex on an occ edge.
    *  The vertex has to lie on the edge.
@@ -268,6 +273,7 @@ private:
   TopTools_IndexedDataMapOfShapeListOfShape   occ_shape_vertex2edge_map;  /** Maps all TopoDS_Vertex of shape to all its connected TopoDS_Edge */
   TopTools_IndexedDataMapOfShapeListOfShape   occ_shape_edge2face_map;    /** Maps all TopoDS_Edge of shape to all its connected TopoDS_Face */
 };
+/* *INDENT-ON* */
 
 #endif /* T8_WITH_OCC */
 

@@ -1091,19 +1091,20 @@ t8_advect_problem_partition (t8_advect_problem_t * problem, int measure_time)
 
 static t8_cmesh_t
 t8_advect_create_cmesh (sc_MPI_Comm comm, int cube_type,
-                        const char *mshfile, int level, int dim, int use_occ_geometry)
+                        const char *mshfile, int level, int dim,
+                        int use_occ_geometry)
 {
   if (mshfile != NULL) {
     /* Load from .msh file and partition */
     t8_cmesh_t          cmesh, cmesh_partition;
     T8_ASSERT (mshfile != NULL);
 
-    cmesh = t8_cmesh_from_msh_file (mshfile, 0, comm, dim, 0, use_occ_geometry);
+    cmesh =
+      t8_cmesh_from_msh_file (mshfile, 0, comm, dim, 0, use_occ_geometry);
     /* The partitioning of the occ geometry is not yet available */
-    if (use_occ_geometry)
-    {
-      t8_productionf("cmesh was not partitioned. Partitioning is not yet " 
-        "available with the curved geometry\n");
+    if (use_occ_geometry) {
+      t8_productionf ("cmesh was not partitioned. Partitioning is not yet "
+                      "available with the curved geometry\n");
       return cmesh;
     }
     /* partition this cmesh according to the initial refinement level */
@@ -1616,9 +1617,9 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                   neigh_scheme->t8_element_level (neighs[ineigh]);
               }
 
-              T8_ASSERT (neighs != NULL || elem_data->num_neighbors[iface] == 0);
-              if (neighs != NULL)
-              {
+              T8_ASSERT (neighs != NULL
+                         || elem_data->num_neighbors[iface] == 0);
+              if (neighs != NULL) {
                 /* *INDENT-OFF* */
                 neigh_scheme->t8_element_destroy (elem_data->num_neighbors[iface],
                                                   neighs);

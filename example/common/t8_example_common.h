@@ -246,9 +246,11 @@ void                t8_flow_stokes_flow_sphere_shell (const double x[3],
                                                       double t,
                                                       double x_out[3]);
 
-void                t8_flow_around_circle_with_angular_velocity (const double x[3], 
-                                                                 double t, 
-                                                                 double x_out[]);
+void                t8_flow_around_circle_with_angular_velocity (const double
+                                                                 x[3],
+                                                                 double t,
+                                                                 double
+                                                                 x_out[]);
 
 T8_EXTERN_C_END ();
 
