@@ -24,7 +24,6 @@ libt8_installed_headers = \
   src/t8_geometry/t8_geometry_base.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.h \
   src/t8_geometry/t8_geometry_helpers.h \
-  src/t8_geometry/t8_geometry_readbrepfile.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx \
@@ -59,7 +58,6 @@ libt8_compiled_sources = \
   src/t8_forest/t8_forest.c src/t8_forest/t8_forest_adapt.cxx \
   src/t8_geometry/t8_geometry.cxx \
   src/t8_geometry/t8_geometry_helpers.c \
-  src/t8_geometry/t8_geometry_readbrepfile.cxx \
   src/t8_geometry/t8_geometry_base.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_analytic.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_occ.cxx \
