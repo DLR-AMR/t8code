@@ -73,6 +73,7 @@ typedef struct
   const char         *convention;
   int                 netcdf_var_storage_mode;
   int                 netcdf_mpi_access;
+  int                 fill_mode;
   /* Stores the old NetCDF-FillMode if it gets changed */
   int                 old_fill_mode;
 
