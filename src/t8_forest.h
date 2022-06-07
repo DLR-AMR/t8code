@@ -832,7 +832,7 @@ void                t8_forest_save (t8_forest_t forest);
  * This may change in accordance with \a write_ghosts, \a write_curved and 
  * \a do_not_use_API, because the export of ghosts is not yet available with 
  * the VTK API and the export of curved elements is not available with the
- * inbuild function to write ASCII files. The function will for example
+ * inbuilt function to write ASCII files. The function will for example
  * still use the VTK API to satisfy \a write_curved, even if \a do_not_use_API 
  * is set to true.
  * Forest must be committed when calling this function.
