@@ -1023,9 +1023,9 @@ main (int argc, char **argv)
   opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'h', "help", &helpme,
                          "Display a short help message.");
-  sc_options_add_int (opt, 'l', "level", &level, 0,
-                      "The uniform refinement level of the mesh.");
-  sc_options_add_int (opt, 'g', "geometry", &geom_type, 0,
+  sc_options_add_int (opt, 'l', "level", &level, 2,
+                      "The uniform refinement level of the mesh. Default: 2");
+  sc_options_add_int (opt, 'g', "geometry", &geom_type, -1,
                       "Specify the geometry to use.\n"
                       "\t\t0 - The graph of sin(x) * cos (y) with two 2D quad trees.\n"
                       "\t\t1 - A cylinder with one 2D quad tree.\n"
