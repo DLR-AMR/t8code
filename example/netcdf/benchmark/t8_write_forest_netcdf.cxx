@@ -20,8 +20,6 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include "sc_mpi.h"
-#include <sc.h>
 #include <t8.h>
 #if T8_WITH_NETCDF
 	#include <netcdf.h>
@@ -48,7 +46,9 @@
 #include <t8_vec.h>
 
 #include <vector>
+#include <string>
 #include <string_view>
+#include <stdexcept>
 
 /* In this example is the use of the netcdf feature exemplary displayed.
  * We show how to write out a forest in the netCDF format and how to create
@@ -215,10 +215,28 @@ Config parse_args(int argc, char** argv) {
 	std::vector<std::string_view> args{argv+1, argv+argc};
 	Config result;
 
-	result.forest_refinement_level = 4;
-	result.netcdf_mpi_access = NC_INDEPENDENT;
-	result.netcdf_var_storage_mode = NC_CONTIGUOUS;
-	result.fill_mode = NC_NOFILL;
+	result.forest_refinement_level = std::stoi(std::string{args.at(0)});
+	if (args.at(1) == "NC_INDEPENDENT") {
+		result.netcdf_mpi_access = NC_INDEPENDENT;
+	} else if (args.at(1) == "NC_COLLECTIVE") {
+		result.netcdf_mpi_access = NC_COLLECTIVE;
+	} else {
+		throw std::runtime_error{"mpi access must be one of NC_COLLECTIVE and NC_INDEPENDENT"};
+	}
+	if (args.at(2) == "NC_FILL") {
+		result.fill_mode = NC_FILL;
+	} else if (args.at(2) == "NC_NOFILL") {
+		result.fill_mode = NC_NOFILL;
+	} else {
+		throw std::runtime_error{"fill must be one of NC_FILL and NC_NOFILL"};
+	}
+	if (args.at(3) == "NC_CONTIGUOUS") {
+		result.netcdf_var_storage_mode = NC_CONTIGUOUS;
+	} else if (args.at(3) == "NC_CHUNKED") {
+		result.netcdf_var_storage_mode = NC_CHUNKED;
+	} else {
+		throw std::runtime_error{"storage mode must be one of NC_CONTIGUOUS and NC_CHUNKED"};
+	}
 
 	return result;
 }
@@ -317,14 +335,10 @@ void execute_benchmark(
 		config.forest_refinement_level, t8_forest_get_global_num_elements(forest)
 	);
 
-	t8_global_productionf("The different netCDF variable storage patterns and "
-	                      "mpi variable access "
-	                      "patterns are getting tested/timed...\n");
 
-
-	t8_global_productionf(
-		"Variable-Storage: NC_CONTIGUOUS, Variable-Access: NC_INDEPENDENT:\n"
-	);
+	// t8_global_productionf(
+	// 	"Variable-Storage: NC_CONTIGUOUS, Variable-Access: NC_INDEPENDENT:\n"
+	// );
 	t8_example_time_netcdf_writing_operation(
 		forest, comm, config.netcdf_var_storage_mode, config.netcdf_mpi_access,
 		"T8_Example_NetCDF_Performance_Contiguous_Independent",
@@ -364,7 +378,11 @@ int main(int argc, char** argv) {
 	try {
 		config = parse_args(argc, argv);
 	} catch (const std::exception& e) {
-		t8_global_productionf("Could not parse arguments. Usage: <TODO>");
+		t8_global_productionf("Could not parse arguments. Reason:\n");
+		t8_global_productionf("%s\n", e.what());
+		t8_global_productionf(R"asdf(Usage: ./t8_write_forest_netcdf <mem_per_node (initial_refinement)> <mpi_access_mode> <fill> NC_CONTIGUOUS
+Usage: ./t8_write_forest_netcdf <mem_per_node (initial_refinement)> <mpi_access_mode> <fill> NC_CHUNKED <chunksize(s)>
+)asdf");
 		sc_finalize();
 		SC_CHECK_MPI(sc_MPI_Finalize());
 		return EXIT_FAILURE;
