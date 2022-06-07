@@ -1351,7 +1351,7 @@ t8_forest_write_vtk_ext (t8_forest_t forest,
   }
   do_not_use_API = 1;
 #endif
-  T8_ASSERT (!write_ghost);
+  T8_ASSERT (!write_ghosts);
   if (!do_not_use_API) {
     return t8_forest_vtk_write_file_via_API (forest,
                                              fileprefix,
