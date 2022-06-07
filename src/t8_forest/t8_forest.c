@@ -1310,12 +1310,12 @@ t8_forest_write_vtk_ext (t8_forest_t forest,
 
   if (write_ghosts && write_curved) {
     t8_errorf
-      ("Cannot export ghosts and curved elements at the same time. "
+      ("ERROR: Cannot export ghosts and curved elements at the same time. "
        "Please specify only one option.\n" "Did not write anything.\n");
 #if !T8_WITH_VTK
     if (write_curved) {
       t8_errorf
-        ("t8code is not linked against VTK. "
+        ("WARNING: t8code is not linked against VTK. "
          "Therefore, the export of curved elements is not possible anyway.\n");
     }
 #endif
@@ -1325,7 +1325,7 @@ t8_forest_write_vtk_ext (t8_forest_t forest,
 #if T8_WITH_VTK
   if (!do_not_use_API) {
     if (write_ghosts) {
-      t8_errorf ("Export of ghosts not yet available with the vtk API. "
+      t8_errorf ("WARNING: Export of ghosts not yet available with the vtk API. "
                  "Using the inbuild function instead.\n");
       do_not_use_API = 1;
     }
@@ -1333,7 +1333,7 @@ t8_forest_write_vtk_ext (t8_forest_t forest,
   else {
     if (write_curved) {
       t8_errorf
-        ("Export of curved elements not yet available with the inbuild function. "
+        ("WARNING: Export of curved elements not yet available with the inbuild function. "
          "Using the VTK API instead.\n");
       do_not_use_API = 0;
     }
@@ -1344,7 +1344,7 @@ t8_forest_write_vtk_ext (t8_forest_t forest,
    */
   if (write_curved) {
     t8_errorf
-      ("Export of curved elements not yet available with the inbuild function. "
+      ("WARNING: Export of curved elements not yet available with the inbuild function. "
        "Please link to VTK.\n"
        "Using the inbuild function to write out uncurved elements instead.\n");
   }
