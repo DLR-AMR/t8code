@@ -418,7 +418,7 @@ main (int argc, char *argv[])
                          "The maximum x coordinate " "in the mesh.");
   sc_options_add_double (opt, 'T', "time", &T, 1,
                          "The simulated time span."
-                         "We simulate the time from 0 to T");
+                         "We simulate the time from 0 to T. T has to be > 0.");
   sc_options_add_double (opt, 'D', "delta_t", &delta_t, 0.08,
                          "The time step in each simulation step. "
                          "Deprecated, use -C instead.");
@@ -440,7 +440,7 @@ main (int argc, char *argv[])
           && test_tet == 0 && test_occ_cylinder == 0
           && test_linear_cylinder == 0)
       || stride <= 0 || (num_files - 1) * stride >= mpisize || cfl < 0
-      || test_tet + test_linear_cylinder + test_occ_cylinder > 1
+      || T <= 0 || test_tet + test_linear_cylinder + test_occ_cylinder > 1
       || (cmesh_level >= 0 && (!test_linear_cylinder && !test_occ_cylinder))
       || ((mshfileprefix != NULL || cmeshfileprefix != NULL)
           && (test_linear_cylinder || test_occ_cylinder || test_tet))) {
