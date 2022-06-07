@@ -1325,8 +1325,9 @@ t8_forest_write_vtk_ext (t8_forest_t forest,
 #if T8_WITH_VTK
   if (!do_not_use_API) {
     if (write_ghosts) {
-      t8_errorf ("WARNING: Export of ghosts not yet available with the vtk API. "
-                 "Using the inbuild function instead.\n");
+      t8_errorf
+        ("WARNING: Export of ghosts not yet available with the vtk API. "
+         "Using the inbuild function instead.\n");
       do_not_use_API = 1;
     }
   }
