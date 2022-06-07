@@ -67,11 +67,13 @@ t8_naca_surface_adapt_callback (t8_forest_t forest,
       int                 tree_face =
         ts->t8_element_tree_face (elements[0], iface);
       /* We retrieve the geometry information of the tree */
+      int                 global_tree_id =
+        t8_forest_get_first_local_tree_id (forest) + which_tree;
       const int          *faces =
         (const int *) t8_cmesh_get_attribute (t8_forest_get_cmesh (forest),
                                               t8_get_package_id (),
                                               T8_CMESH_OCC_FACE_ATTRIBUTE_KEY,
-                                              which_tree);
+                                              global_tree_id);
       /* If the tree face has a linked surface and it is in the list we reine it */
       for (int isurface = 0; isurface < adapt_data->n_surfaces; ++isurface) {
         if (faces[tree_face] == adapt_data->surfaces[isurface] &&
