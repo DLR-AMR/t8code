@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* See also: LINK
+/* See also: https://github.com/holke/t8code/wiki/Step-5---Store-element-data
  *
  * This is step5 of the t8code tutorials.
  * In the following we will store data in the individual elements of our forest. 
@@ -248,9 +248,9 @@ t8_step5_main (int argc, char **argv)
   sc_MPI_Comm         comm;
   t8_forest_t         forest;
   /* The prefix for our output files. */
-  const char         *prefix_forest = "/home/ioannis/VBshare/paraview_export/t8_step5_forest";
+  const char         *prefix_forest = "t8_step5_forest";
   const char         *prefix_forest_with_data =
-    "/home/ioannis/VBshare/paraview_export/t8_step5_forest_with_volume_data";
+    "t8_step5_forest_with_volume_data";
   /* The uniform refinement level of the forest. */
   const int           level = 3;
   /* The array that will hold our per element data. */
