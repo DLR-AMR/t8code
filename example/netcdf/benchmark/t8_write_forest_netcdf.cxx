@@ -155,6 +155,14 @@ t8_forest_t t8_example_netcdf_adapt(t8_forest_t forest) {
 	return forest_adapt;
 }
 
+
+struct Config {
+	int forest_refinement_level;
+	int netcdf_var_storage_mode;
+	int netcdf_mpi_access;
+	int fill_mode;
+};
+
 /** Function that times the duration of writing out the netCDF File, given a
  * specific variable storage and access pattern \param [in] forest The forest to
  * save in a netCDF file (using UGRID conventions). \param [in] comm The MPI
@@ -173,8 +181,7 @@ t8_forest_t t8_example_netcdf_adapt(t8_forest_t forest) {
  * num_additional_vars equal to zero and pass a NULL-pointer as \a ext_vars.
  */
 static void t8_example_time_netcdf_writing_operation(
-	t8_forest_t forest, sc_MPI_Comm comm, int netcdf_var_storage_mode,
-	int netcdf_var_mpi_access, const char* title, int num_additional_vars,
+	t8_forest_t forest, sc_MPI_Comm comm, Config config, const char* title, int num_additional_vars,
 	t8_netcdf_variable_t* ext_vars[]
 ) {
 	sc_MPI_Barrier(comm);
@@ -184,8 +191,8 @@ static void t8_example_time_netcdf_writing_operation(
 	 * allows to set a specific variable storage and access pattern. */
 	t8_forest_write_netcdf_ext(
 		forest, title, "Performance Test: uniformly refined Forest", 3,
-		num_additional_vars, ext_vars, comm, netcdf_var_storage_mode,
-		netcdf_var_mpi_access
+		num_additional_vars, ext_vars, comm, config.netcdf_var_storage_mode,
+		config.netcdf_mpi_access, config.fill_mode
 	);
 
 	sc_MPI_Barrier(comm);
@@ -202,14 +209,6 @@ static void t8_example_time_netcdf_writing_operation(
 		"The time elapsed to write the netCDF-4 File is: %f\n\n", global
 	);
 }
-
-
-struct Config {
-	int forest_refinement_level;
-	int netcdf_var_storage_mode;
-	int netcdf_mpi_access;
-	int fill_mode;
-};
 
 Config parse_args(int argc, char** argv) {
 	std::vector<std::string_view> args{argv+1, argv+argc};
@@ -340,7 +339,7 @@ void execute_benchmark(
 	// 	"Variable-Storage: NC_CONTIGUOUS, Variable-Access: NC_INDEPENDENT:\n"
 	// );
 	t8_example_time_netcdf_writing_operation(
-		forest, comm, config.netcdf_var_storage_mode, config.netcdf_mpi_access,
+		forest, comm, config,
 		"T8_Example_NetCDF_Performance_Contiguous_Independent",
 		num_additional_vars, ext_vars
 	);

@@ -71,7 +71,8 @@ void                t8_forest_write_netcdf_ext (t8_forest_t forest,
                                                 ext_variables[],
                                                 sc_MPI_Comm comm,
                                                 int netcdf_var_storage_mode,
-                                                int netcdf_var_mpi_access);
+                                                int netcdf_var_mpi_access,
+                                                int fill_mode);
 
 T8_EXTERN_C_END ();
 

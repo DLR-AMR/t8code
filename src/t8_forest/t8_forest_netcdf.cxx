@@ -1048,7 +1048,7 @@ t8_forest_write_netcdf_file (t8_forest_t forest,
 #if T8_WITH_NETCDF
   /* Disable the default fill-value-mode. */
   if ((retval =
-       nc_set_fill (context->ncid, NC_NOFILL, &context->old_fill_mode))) {
+       nc_set_fill (context->ncid, context->fill_mode, &context->old_fill_mode))) {
     ERR (retval);
   }
 
@@ -1097,7 +1097,7 @@ t8_forest_write_netcdf_file (t8_forest_t forest,
 #if T8_WITH_NETCDF
   /* Disable the default fill-value-mode. */
   if ((retval =
-       nc_set_fill (context->ncid, NC_NOFILL, &context->old_fill_mode))) {
+       nc_set_fill (context->ncid, context->fill_mode, &context->old_fill_mode))) {
     ERR (retval);
   }
 
@@ -1133,7 +1133,7 @@ t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix,
                             int num_extern_netcdf_vars,
                             t8_netcdf_variable_t * ext_variables[],
                             sc_MPI_Comm comm, int netcdf_var_storage_mode,
-                            int netcdf_mpi_access)
+                            int netcdf_mpi_access, int fill_mode)
 {
   t8_forest_netcdf_context_t context;
   /* Check whether pointers are not NULL */
@@ -1183,6 +1183,12 @@ t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix,
   context.fillvalue64 = -1;
   context.start_index = 0;
   context.convention = "UGRID v1.0";
+
+  if (fill_mode != NC_FILL && fill_mode != NC_NOFILL) {
+    t8_global_productionf("Illegal fill-mode (must be NC_FILL or NC_NOFILL). Using NC_FILL.");
+    fill_mode = NC_FILL;
+  }
+  context.fill_mode = fill_mode;
 
 #if T8_WITH_NETCDF_PAR
   /* Check the given 'netcdf_storage_mode' and 'netcdf_mpi_access' */
@@ -1239,7 +1245,7 @@ t8_forest_write_netcdf (t8_forest_t forest, const char *file_prefix,
 
   t8_forest_write_netcdf_ext (forest, file_prefix, file_title, dim,
                               num_extern_netcdf_vars, ext_variables, comm,
-                              netcdf_var_storage_mode, netcdf_mpi_access);
+                              netcdf_var_storage_mode, netcdf_mpi_access, NC_NOFILL);
 }
 
 T8_EXTERN_C_END ();
