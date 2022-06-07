@@ -1300,7 +1300,7 @@ t8_forest_write_vtk_ext (t8_forest_t forest,
                          int write_level,
                          int write_element_id,
                          int write_ghosts,
-                         int curved_flag,
+                         int write_curved,
                          int do_not_use_API,
                          int num_data, t8_vtk_data_field_t *data)
 {
@@ -1308,12 +1308,12 @@ t8_forest_write_vtk_ext (t8_forest_t forest,
   T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (forest->committed);
 
-  if (write_ghosts && curved_flag) {
+  if (write_ghosts && write_curved) {
     t8_errorf
       ("Cannot export ghosts and curved elements at the same time. "
        "Please specify only one option.\n" "Did not write anything.\n");
 #if !T8_WITH_VTK
-    if (curved_flag) {
+    if (write_curved) {
       t8_errorf
         ("t8code is not linked against VTK. "
          "Therefore, the export of curved elements is not possible anyway.\n");
@@ -1331,7 +1331,7 @@ t8_forest_write_vtk_ext (t8_forest_t forest,
     }
   }
   else {
-    if (curved_flag) {
+    if (write_curved) {
       t8_errorf
         ("Export of curved elements not yet available with the inbuild function. "
          "Using the VTK API instead.\n");
@@ -1342,7 +1342,7 @@ t8_forest_write_vtk_ext (t8_forest_t forest,
   /* We are not linked against the VTK library, so
    * we do not use the API by default.
    */
-  if (curved_flag) {
+  if (write_curved) {
     t8_errorf
       ("Export of curved elements not yet available with the inbuild function. "
        "Please link to VTK.\n"
@@ -1357,7 +1357,7 @@ t8_forest_write_vtk_ext (t8_forest_t forest,
                                              write_mpirank,
                                              write_level,
                                              write_element_id,
-                                             curved_flag, num_data, data);
+                                             write_curved, num_data, data);
   }
   else {
     return t8_forest_vtk_write_file (forest,
