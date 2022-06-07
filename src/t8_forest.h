@@ -227,8 +227,8 @@ void                t8_forest_set_copy (t8_forest_t forest,
                                         const t8_forest_t from);
 
 /** Set a source forest with an adapt function to be adapted on commiting.
- * By default, the forest takes ownership of the source \b set_from such that it will
- * be destroyed on calling \ref t8_forest_commit. To keep ownership of \b
+ * By default, the forest takes ownership of the source \b set_from such that it
+ * will be destroyed on calling \ref t8_forest_commit. To keep ownership of \b
  * set_from, call \ref t8_forest_ref before passing it into this function.
  * This means that it is ILLEGAL to continue using \b set_from or dereferencing it
  * UNLESS it is referenced directly before passing it into this function.
@@ -239,7 +239,6 @@ void                t8_forest_set_copy (t8_forest_t forest,
  *                          If NULL, a previously (or later) set forest will
  *                          be taken (\ref t8_forest_set_partition, \ref t8_forest_set_balance).
  * \param [in] adapt_fn     The adapt function used on commiting.
- * \param [in] replace_fn   The replace function to be used in \b adapt_fn.
  * \param [in] recursive    A flag specifying whether adaptation is to be done recursively
  *                          or not. If the value is zero, adaptation is not recursive
  *                          and it is recursive otherwise.
