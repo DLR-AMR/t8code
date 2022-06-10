@@ -4,7 +4,6 @@
 #include <t8_forest.h>
 #include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_vec.h>
-#include <t8_forest_vtk.h>
 #include "t8_cmesh/t8_cmesh_testcases.h"
 
 T8_EXTERN_C_BEGIN ();
