@@ -48,7 +48,7 @@ do
   # file before checking for indentation.
   if [ -f $file ]
   then
-    ./check_if_file_indented.scp $file
+    ./check_if_file_indented.scp $file > /dev/null 2>&1
     status=$?
     if test $status -ne 0
     then

@@ -38,7 +38,7 @@
 /* TODO: This is not memory efficient. If we run out of memory, we can optimize here. */
 
 /* Enum for statistics. */
-typedef enum
+typedef enum //blabla
 {
   ADVECT_ADAPT = 0,             /* adapt runtime */
   ADVECT_PARTITION,             /* partition runtime */
