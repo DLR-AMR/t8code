@@ -581,6 +581,13 @@ t8_default_scheme_tri_c::t8_element_is_valid (const t8_element_t * t) const
 {
   return t8_dtri_is_valid ((const t8_dtri_t *) t);
 }
+
+void
+t8_default_scheme_tri_c::t8_element_debug_print (const t8_element_t *t) const
+{
+  T8_ASSERT (t8_element_is_valid (t));
+  t8_dtri_debug_print ((const t8_dtri_t *) t);
+}
 #endif
 
 void

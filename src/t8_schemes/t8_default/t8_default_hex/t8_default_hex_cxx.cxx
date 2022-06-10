@@ -739,6 +739,14 @@ t8_default_scheme_hex_c::t8_element_is_valid (const t8_element_t *elem) const
   return p8est_quadrant_is_extended ((const p8est_quadrant_t *) elem)
     && T8_QUAD_GET_TDIM ((const p8est_quadrant_t *) elem) == 3;
 }
+
+void
+t8_default_scheme_hex_c::t8_element_debug_print (const t8_element_t *elem) const
+{
+  T8_ASSERT (t8_element_is_valid (elem));
+  p8est_quadrant_t   *hex = (p8est_quadrant_t *) elem;
+  p8est_quadrant_print (SC_LP_DEBUG, hex);
+}
 #endif
 
 /* Constructor */

@@ -864,6 +864,14 @@ t8_default_scheme_quad_c::t8_element_is_valid (const t8_element_t * elem) const
    */
   return p4est_quadrant_is_extended ((const p4est_quadrant_t *) elem);
 }
+
+void
+t8_default_scheme_quad_c::t8_element_debug_print (const t8_element_t *elem) const
+{
+  T8_ASSERT (t8_element_is_valid (elem));
+  p4est_quadrant_t   *quad = (p4est_quadrant_t *) elem;
+  p4est_quadrant_print (SC_LP_DEBUG, quad);
+}
 #endif
 
 /* Constructor */

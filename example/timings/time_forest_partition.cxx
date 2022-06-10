@@ -249,6 +249,8 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
         }
       }
       t8_forest_commit (forest_partition);
+      /* Set forest to the partitioned forest, so it gets adapted
+       * in the next time step. */
       forest = forest_partition;
     }
 
@@ -268,9 +270,6 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
       t8_cmesh_print_profile (t8_forest_get_cmesh (forest_partition));
     }
     t8_forest_print_profile (forest_partition);
-    /* Set forest to the partitioned forest, so it gets adapted
-     * in the next time step. */
-    forest = forest_partition;
     /* TIME-LOOP ends here */
   }
   /* memory clean-up */
@@ -395,7 +394,7 @@ main (int argc, char *argv[])
                          "The maximum x coordinate " "in the mesh.");
   sc_options_add_double (opt, 'T', "time", &T, 1,
                          "The simulated time span."
-                         "We simulate the time from 0 to T");
+                         "We simulate the time from 0 to T. T has to be > 0.");
   sc_options_add_double (opt, 'D', "delta_t", &delta_t, 0.08,
                          "The time step in each simulation step. "
                          "Deprecated, use -C instead.");
@@ -415,7 +414,7 @@ main (int argc, char *argv[])
   if (first_argc < 0 || first_argc != argc || dim < 2 || dim > 3
       || (cmeshfileprefix == NULL && mshfileprefix == NULL
           && test_tet == 0) || stride <= 0
-      || (num_files - 1) * stride >= mpisize || cfl < 0) {
+      || (num_files - 1) * stride >= mpisize || cfl < 0 || T <= 0) {
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
     return 1;
   }

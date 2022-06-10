@@ -15,7 +15,8 @@ libt8_installed_headers = \
   src/t8_cmesh/t8_cmesh_save.h \
   src/t8_cmesh/t8_cmesh_examples.h \
   src/t8_forest.h \
-  src/t8_forest/t8_forest_adapt.h src/t8_forest_vtk.h \
+  src/t8_forest/t8_forest_adapt.h \
+  src/t8_forest/t8_forest_vtk.h \
   src/t8_cmesh/t8_cmesh_geometry.h \
   src/t8_geometry/t8_geometry.h \
   src/t8_geometry/t8_geometry_base.hxx \
