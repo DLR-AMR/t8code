@@ -93,7 +93,6 @@ int t8_example_netcdf_adapt_fn(
 	const int num_elements, t8_element_t* elements[]
 ) {
 	double element_centroid[3];
-	double distance;
 
 	/* Retrieve the adapt_data which holds the information regarding the
 	 * adaption process of a forest */
@@ -109,7 +108,7 @@ int t8_example_netcdf_adapt_fn(
 
 	/* Compute the distance from the element's midpoint to the midpoint of the
 	 * centered sphere inside the hypercube */
-	distance = t8_vec_dist(element_centroid, adapt_data->midpoint);
+	const auto distance = t8_vec_dist(element_centroid, adapt_data->midpoint);
 
 	/* Decide whether the element (or its family) has to be refined or coarsened
 	 */
@@ -143,8 +142,8 @@ t8_forest_t t8_example_netcdf_adapt(t8_forest_t forest) {
 	 * based on the given radii */
 	struct t8_example_netcdf_adapt_data adapt_data = {
 		{0.5, 0.5, 0.5}, /* Midpoints of the sphere. */
-		0.4,             /* Refine if inside this radius. */
-		0.6              /* Coarsen if outside this radius. */
+		0.0,             /* Refine if inside this radius. */
+		1e10              /* Coarsen if outside this radius. */
 	};
 
 	/* Create the adapted forest with the given adapt_function. */
@@ -334,13 +333,15 @@ void execute_benchmark(
 		config.forest_refinement_level, t8_forest_get_global_num_elements(forest)
 	);
 
-
-	// t8_global_productionf(
-	// 	"Variable-Storage: NC_CONTIGUOUS, Variable-Access: NC_INDEPENDENT:\n"
-	// );
-	t8_example_time_netcdf_writing_operation(
+        t8_global_productionf(
+            "Variable-Storage: %s, Variable-Access: %s:\n",
+            config.netcdf_var_storage_mode == NC_CHUNKED ? "NC_CHUNKED"
+                                                         : "NC_CONTIGUOUS",
+            config.netcdf_mpi_access == NC_COLLECTIVE ? "NC_COLLECTIVE"
+                                                      : "NC_INDEPENDENT");
+        t8_example_time_netcdf_writing_operation(
 		forest, comm, config,
-		"T8_Example_NetCDF_Performance_Contiguous_Independent",
+		"T8_Example_NetCDF_Performance",
 		num_additional_vars, ext_vars
 	);
 
