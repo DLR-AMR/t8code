@@ -8,7 +8,8 @@ bin_PROGRAMS += \
 	example/remove/t8_example_recursive \
 	example/remove/t8_test_elements_remove \
 	example/remove/t8_test_coarse_recursive \
-	example/remove/t8_test_remove_rand
+	example/remove/t8_test_remove_rand \
+	example/remove/t8_example_moving_circle
 
 example_remove_t8_ring_SOURCES = \
 	example/remove/t8_ring.cxx
@@ -27,3 +28,6 @@ example_remove_t8_test_coarse_recursive_SOURCES = \
 
 example_remove_t8_test_remove_rand_SOURCES = \
 	example/remove/t8_test_remove_rand.cxx
+
+example_remove_t8_example_moving_circle_SOURCES = \
+	example/remove/t8_example_moving_circle.cxx
