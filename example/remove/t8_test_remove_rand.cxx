@@ -91,7 +91,7 @@ t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn,
 
   t8_forest_init (&forest_new);
   t8_forest_set_adapt (forest_new, forest_from, adapt_fn, recursive);
-  //t8_forest_set_partition (forest_new, NULL, 0);
+  t8_forest_set_partition (forest_new, NULL, 0);
   t8_forest_commit (forest_new);
 
   return forest_new;
@@ -175,7 +175,15 @@ main (int argc, char **argv)
   p4est_init (NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
-  srand(time(0));
+  //unsigned int seed = time(0);
+  unsigned int seed = 1655212688;
+  /* [IL] TODO
+   * This seed results with 4 process in fail
+   * [libsc 2] Abort: Assertion 'it >= 0 && (size_t) it < array->elem_count'
+   * [libsc 2] Abort: ../t8code/src/t8.c:172
+   */
+  t8_global_productionf("Seed for test: %u \n", seed);
+  srand(seed);
   //test_cmesh_emelemts_remove_all ();
   t8_test_emelemts_remove(0);
   sc_finalize ();

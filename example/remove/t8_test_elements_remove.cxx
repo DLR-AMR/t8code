@@ -140,6 +140,22 @@ t8_adapt_callback_coarse (t8_forest_t forest,
   return 0;
 }
 
+static int
+t8_adapt_callback_coarse_all (t8_forest_t forest,
+                              t8_forest_t forest_from,
+                              t8_locidx_t which_tree,
+                              t8_locidx_t lelement_id,
+                              t8_eclass_scheme_c * ts,
+                              const int is_family,
+                              const int num_elements, 
+                              t8_element_t * elements[])
+{
+  if (is_family) {
+    return -1;
+  }
+  return 0;
+}
+
 /* Refine if the element is within a given radius of 0.5. */
 int
 t8_adapt_callback_refine (t8_forest_t forest,
@@ -171,6 +187,25 @@ t8_adapt_callback_refine (t8_forest_t forest,
   return 0;
 }
 
+static t8_forest_t
+t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn,
+                 int do_partition, int recursive, int do_face_ghost, void *user_data)
+{
+  t8_forest_t         forest_new;
+
+  t8_forest_init (&forest_new);
+  t8_forest_set_adapt (forest_new, forest_from, adapt_fn, recursive);
+  t8_forest_set_ghost (forest_new, do_face_ghost, T8_GHOST_FACES);
+  if (do_partition) {
+    t8_forest_set_partition (forest_new, NULL, 0);
+  }
+  if (user_data != NULL) {
+    t8_forest_set_user_data (forest_new, user_data);
+  }
+  t8_forest_commit (forest_new);
+
+  return forest_new;
+}
 
 void
 t8_test_emelemts_remove (int cmesh_id)
@@ -201,16 +236,27 @@ t8_test_emelemts_remove (int cmesh_id)
     t8_cmesh_ref (cmesh);
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
 
-    forest_1 = t8_forest_new_adapt (forest  , t8_adapt_callback_rr    , 0, 0, &adapt_data);
-    forest_1 = t8_forest_new_adapt (forest_1, t8_adapt_callback_remove, 0, 0, &adapt_data);
+    forest_1 = t8_adapt_forest (forest  , t8_adapt_callback_rr    , 0, 0, 0, &adapt_data);
+    forest_1 = t8_adapt_forest (forest_1, t8_adapt_callback_remove, 0, 0, 0, &adapt_data);
 
     t8_forest_ref (forest_1);
-    forest_2 = t8_forest_new_adapt (forest_1, t8_adapt_callback_coarse, 0, 0, &adapt_data);
-    forest_2 = t8_forest_new_adapt (forest_2, t8_adapt_callback_refine, 0, 0, &adapt_data);
-    forest_2 = t8_forest_new_adapt (forest_2, t8_adapt_callback_remove, 0, 0, &adapt_data);
+    forest_2 = t8_adapt_forest (forest_1, t8_adapt_callback_coarse, 0, 0, 0, &adapt_data);
+    forest_2 = t8_adapt_forest (forest_2, t8_adapt_callback_refine, 0, 0, 0, &adapt_data);
+    forest_2 = t8_adapt_forest (forest_2, t8_adapt_callback_remove, 0, 0, 0, &adapt_data);
 
+#if !T8_ENABLE_MPI
     SC_CHECK_ABORT (t8_forest_is_equal(forest_1, forest_2),
                     "The forests are not equal");
+#endif
+
+    // will get replaced by recursive coarseening
+    for (int i = 0; i < 3*level; i++)
+    {
+      forest_2 = t8_adapt_forest (forest_2, t8_adapt_callback_coarse_all, 0, 0, 0, &adapt_data);
+    }
+    
+    SC_CHECK_ABORT (t8_forest_no_overlap(forest_2),
+                "The forest has overlapping elements");
 
     t8_scheme_cxx_ref (scheme);
     t8_forest_unref (&forest_1);
@@ -229,8 +275,7 @@ test_cmesh_emelemts_remove_all ()
     /* This if statement is necessary to make the test work by avoiding specific cmeshes which do not work yet for this test.
      * When the issues are gone, remove the if statement. */
     if (cmesh_id != 6 && cmesh_id != 89 && (cmesh_id < 237 || cmesh_id > 256)) {
-      /* Skip all t8_test_create_new_bigmesh_cmesh 
-       * When issue #213 is fixed, remove the if statement */
+      /* Skip all t8_test_create_new_bigmesh_cmesh since bigmesh are without geometry */
       if (cmesh_id < 97 || cmesh_id > 256) {
         t8_test_emelemts_remove(cmesh_id);
       }
