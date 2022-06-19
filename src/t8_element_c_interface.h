@@ -39,7 +39,7 @@ T8_EXTERN_C_BEGIN ();
  * \param [in] ts             Implementation of a class scheme.
  * \return                      The maximum allowed level for elements of class \b ts.
  */
-int                 t8_element_maxlevel (t8_eclass_scheme_c * ts);
+int                 t8_element_maxlevel (t8_eclass_scheme_c *ts);
 
 /** Return the type of each child in the ordering of the implementation.
    * \param [in] ts             Implementation of a class scheme.
@@ -47,15 +47,15 @@ int                 t8_element_maxlevel (t8_eclass_scheme_c * ts);
  *                      The number of children is defined in \a t8_element_num_children.
  * \return              The type for the given child.
  */
-t8_eclass_t         t8_element_child_eclass (t8_eclass_scheme_c * ts,
+t8_eclass_t         t8_element_child_eclass (t8_eclass_scheme_c *ts,
                                              int childid);
 /** Return the level of a particular element.
  * \param [in] ts             Implementation of a class scheme.
  * \param [in] elem    The element whose level should be returned.
  * \return             The level of \b elem.
  */
-int                 t8_element_level (t8_eclass_scheme_c * ts,
-                                      const t8_element_t * elem);
+int                 t8_element_level (t8_eclass_scheme_c *ts,
+                                      const t8_element_t *elem);
 
 /** Copy all entries of \b source to \b dest. \b dest must be an existing
  *  element. No memory is allocated by this function.
@@ -65,9 +65,9 @@ int                 t8_element_level (t8_eclass_scheme_c * ts,
  *                    entries of \b source.
  * \note \a source and \a dest may point to the same element.
  */
-void                t8_element_copy (t8_eclass_scheme_c * ts,
-                                     const t8_element_t * source,
-                                     t8_element_t * dest);
+void                t8_element_copy (t8_eclass_scheme_c *ts,
+                                     const t8_element_t *source,
+                                     t8_element_t *dest);
 
 /** Compare two elements.
  * \param [in] ts             Implementation of a class scheme.
@@ -77,9 +77,9 @@ void                t8_element_copy (t8_eclass_scheme_c * ts,
  *               and positiv if elem1 > elem2.
  *  If elem2 is a copy of elem1 then the elements are equal.
  */
-int                 t8_element_compare (t8_eclass_scheme_c * ts,
-                                        const t8_element_t * elem1,
-                                        const t8_element_t * elem2);
+int                 t8_element_compare (t8_eclass_scheme_c *ts,
+                                        const t8_element_t *elem1,
+                                        const t8_element_t *elem2);
 
 /** Compute the parent of a given element \b elem and store it in \b parent.
  *  \b parent needs to be an existing element. No memory is allocated by this function.
@@ -94,9 +94,9 @@ int                 t8_element_compare (t8_eclass_scheme_c * ts,
  *                    For a pyramid, for example, it may be either a
  *                    tetrahedron or a pyramid depending on \b elem's childid.
  */
-void                t8_element_parent (t8_eclass_scheme_c * ts,
-                                       const t8_element_t * elem,
-                                       t8_element_t * parent);
+void                t8_element_parent (t8_eclass_scheme_c *ts,
+                                       const t8_element_t *elem,
+                                       t8_element_t *parent);
 
 /** Compute the number of siblings of an element. That is the number of 
  * Children of its parent.
@@ -105,8 +105,8 @@ void                t8_element_parent (t8_eclass_scheme_c * ts,
  * \return          The number of siblings of \a element.
  * Note that this number is >= 1, since we count the element itself as a sibling.
  */
-int                 t8_element_num_siblings (t8_eclass_scheme_c * ts,
-                                             const t8_element_t * elem);
+int                 t8_element_num_siblings (t8_eclass_scheme_c *ts,
+                                             const t8_element_t *elem);
 
 /** Compute a specific sibling of a given element \b elem and store it in \b sibling.
  *  \b sibling needs to be an existing element. No memory is allocated by this function.
@@ -122,9 +122,9 @@ int                 t8_element_num_siblings (t8_eclass_scheme_c * ts,
  *                    For a pyramid, for example, it may be either a
  *                    tetrahedron or a pyramid depending on \b sibid.
  */
-void                t8_element_sibling (t8_eclass_scheme_c * ts,
-                                        const t8_element_t * elem, int sibid,
-                                        t8_element_t * sibling);
+void                t8_element_sibling (t8_eclass_scheme_c *ts,
+                                        const t8_element_t *elem, int sibid,
+                                        t8_element_t *sibling);
 
 /** Construct the child element of a given number.
  * \param [in] ts             Implementation of a class scheme.
@@ -139,9 +139,9 @@ void                t8_element_sibling (t8_eclass_scheme_c * ts,
  * It is valid to call this function with elem = child.
  * \see t8_element_child_eclass
  */
-void                t8_element_child (t8_eclass_scheme_c * ts,
-                                      const t8_element_t * elem, int childid,
-                                      t8_element_t * child);
+void                t8_element_child (t8_eclass_scheme_c *ts,
+                                      const t8_element_t *elem, int childid,
+                                      t8_element_t *child);
 
 /** Construct all children of a given element.
  * \param [in] ts             Implementation of a class scheme.
@@ -155,17 +155,17 @@ void                t8_element_child (t8_eclass_scheme_c * ts,
  * \see t8_element_num_children
  * \see t8_element_child_eclass
  */
-void                t8_element_children (t8_eclass_scheme_c * ts,
-                                         const t8_element_t * elem,
-                                         int length, t8_element_t * c[]);
+void                t8_element_children (t8_eclass_scheme_c *ts,
+                                         const t8_element_t *elem,
+                                         int length, t8_element_t *c[]);
 
 /** Compute the child id of an element.
  * \param [in] ts             Implementation of a class scheme.
  * \param [in] elem     This must be a valid element.
  * \return              The child id of elem.
  */
-int                 t8_element_child_id (t8_eclass_scheme_c * ts,
-                                         const t8_element_t * elem);
+int                 t8_element_child_id (t8_eclass_scheme_c *ts,
+                                         const t8_element_t *elem);
 
 /** Query whether a given set of elements is a family or not.
  * \param [in] ts             Implementation of a class scheme.
@@ -173,8 +173,8 @@ int                 t8_element_child_id (t8_eclass_scheme_c * ts,
  *                      \b ts has children.
  * \return              Zero if \b fam is not a family, nonzero if it is.
  */
-int                 t8_element_is_family (t8_eclass_scheme_c * ts,
-                                          t8_element_t ** fam);
+int                 t8_element_is_family (t8_eclass_scheme_c *ts,
+                                          t8_element_t **fam);
 
 /** Compute the nearest common ancestor of two elements. That is,
  * the element with highest level that still has both given elements as
@@ -187,10 +187,10 @@ int                 t8_element_is_family (t8_eclass_scheme_c * ts,
  *                      On output the unique nearest common ancestor of
  *                      \b elem1 and \b elem2.
  */
-void                t8_element_nca (t8_eclass_scheme_c * ts,
-                                    const t8_element_t * elem1,
-                                    const t8_element_t * elem2,
-                                    t8_element_t * nca);
+void                t8_element_nca (t8_eclass_scheme_c *ts,
+                                    const t8_element_t *elem1,
+                                    const t8_element_t *elem2,
+                                    t8_element_t *nca);
 
 /** Initialize the entries of an allocated element according to a
  *  given linear id in a uniform refinement.
@@ -200,8 +200,8 @@ void                t8_element_nca (t8_eclass_scheme_c * ts,
  * \param [in] id       The linear id.
  *                      id must fulfil 0 <= id < 'number of leafs in the uniform refinement'
  */
-void                t8_element_set_linear_id (t8_eclass_scheme_c * ts,
-                                              t8_element_t * elem, int level,
+void                t8_element_set_linear_id (t8_eclass_scheme_c *ts,
+                                              t8_element_t *elem, int level,
                                               t8_linearidx_t id);
 
 /** Compute the linear id of a given element in a hypothetical uniform
@@ -211,8 +211,8 @@ void                t8_element_set_linear_id (t8_eclass_scheme_c * ts,
  * \param [in] level    The level of the uniform refinement to consider.
  * \return              The linear id of the element.
  */
-t8_linearidx_t      t8_element_get_linear_id (t8_eclass_scheme_c * ts,
-                                              const t8_element_t * elem,
+t8_linearidx_t      t8_element_get_linear_id (t8_eclass_scheme_c *ts,
+                                              const t8_element_t *elem,
                                               int level);
 
 /** Compute the first descendant of a given element.
@@ -221,9 +221,9 @@ t8_linearidx_t      t8_element_get_linear_id (t8_eclass_scheme_c * ts,
  * \param [out] desc    The first element in a uniform refinement of \a elem
  *                      of the maximum possible level.
  */
-void                t8_element_first_descendant (t8_eclass_scheme_c * ts,
-                                                 const t8_element_t * elem,
-                                                 t8_element_t * desc,
+void                t8_element_first_descendant (t8_eclass_scheme_c *ts,
+                                                 const t8_element_t *elem,
+                                                 t8_element_t *desc,
                                                  int level);
 
 /** Compute the last descendant of a given element.
@@ -232,9 +232,9 @@ void                t8_element_first_descendant (t8_eclass_scheme_c * ts,
  * \param [out] desc    The last element in a uniform refinement of \a elem
  *                      of the maximum possible level.
  */
-void                t8_element_last_descendant (t8_eclass_scheme_c * ts,
-                                                const t8_element_t * elem,
-                                                t8_element_t * desc,
+void                t8_element_last_descendant (t8_eclass_scheme_c *ts,
+                                                const t8_element_t *elem,
+                                                t8_element_t *desc,
                                                 int level);
 
 /** Construct the successor in a uniform refinement of a given element.
@@ -243,9 +243,9 @@ void                t8_element_last_descendant (t8_eclass_scheme_c * ts,
  * \param [in,out] elem2  The element whose entries will be set.
  * \param [in] level    The level of the uniform refinement to consider.
  */
-void                t8_element_successor (t8_eclass_scheme_c * ts,
-                                          const t8_element_t * elem1,
-                                          t8_element_t * elem2, int level);
+void                t8_element_successor (t8_eclass_scheme_c *ts,
+                                          const t8_element_t *elem1,
+                                          t8_element_t *elem2, int level);
 
 /** Compute the root lenght of a given element, that is the length of
  * its level 0 ancestor.
@@ -253,8 +253,8 @@ void                t8_element_successor (t8_eclass_scheme_c * ts,
  * \param [in] elem     The element whose root length should be computed.
  * \return              The root length of \a elem
  */
-int                 t8_element_root_len (t8_eclass_scheme_c * ts,
-                                         const t8_element_t * elem);
+int                 t8_element_root_len (t8_eclass_scheme_c *ts,
+                                         const t8_element_t *elem);
 
 /** Allocate memory for an array of elements of a given class and initialize them.
  * \param [in] ts             Implementation of a class scheme.
@@ -274,8 +274,8 @@ int                 t8_element_root_len (t8_eclass_scheme_c * ts,
  * \see t8_element_init
  * \see t8_element_is_valid
  */
-void                t8_element_new (t8_eclass_scheme_c * ts, int length,
-                                    t8_element_t ** elems);
+void                t8_element_new (t8_eclass_scheme_c *ts, int length,
+                                    t8_element_t **elems);
 
 /** Deallocate an array of elements.
  * \param [in] ts             Implementation of a class scheme.
@@ -285,8 +285,8 @@ void                t8_element_new (t8_eclass_scheme_c * ts, int length,
  *                      On output all these pointers will be freed.
  *                      \b elem itself will not be freed by this function.
  */
-void                t8_element_destroy (t8_eclass_scheme_c * ts, int length,
-                                        t8_element_t ** elems);
+void                t8_element_destroy (t8_eclass_scheme_c *ts, int length,
+                                        t8_element_t **elems);
 
 T8_EXTERN_C_END ();
 

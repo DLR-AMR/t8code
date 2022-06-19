@@ -15,7 +15,8 @@ libt8_installed_headers = \
   src/t8_cmesh/t8_cmesh_save.h \
   src/t8_cmesh/t8_cmesh_examples.h \
   src/t8_forest.h \
-  src/t8_forest/t8_forest_adapt.h src/t8_forest_vtk.h \
+  src/t8_forest/t8_forest_adapt.h \
+  src/t8_forest/t8_forest_vtk.h \
   src/t8_cmesh/t8_cmesh_geometry.h \
   src/t8_geometry/t8_geometry.h \
   src/t8_geometry/t8_geometry_base.hxx \
@@ -81,6 +82,7 @@ src_libt8_la_SOURCES = \
 	$(libt8_compiled_sources)
 src_libt8_la_CPPFLAGS = $(AM_CPPFLAGS) $(T8_CPPFLAGS)
 src_libt8_la_LDFLAGS = -release $(VERSION)
+src_libt8_la_LIBADD = @T8_P4EST_LDADD@ @T8_SC_LDADD@
 LDADD += @top_builddir@/src/libt8.la \
         @T8_P4EST_LDADD@ @T8_SC_LDADD@
 EXTRA_src_libt8_la_DEPENDENCIES = @T8_P4EST_LDADD@ @T8_SC_LDADD@

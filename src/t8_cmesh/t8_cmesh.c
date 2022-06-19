@@ -176,7 +176,7 @@ t8_cmesh_comm_is_valid (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 }
 
 void
-t8_cmesh_init (t8_cmesh_t * pcmesh)
+t8_cmesh_init (t8_cmesh_t *pcmesh)
 {
   t8_cmesh_t          cmesh;
   T8_ASSERT (pcmesh != NULL);
@@ -267,7 +267,7 @@ t8_cmesh_set_partition (t8_cmesh_t cmesh, int set_partition,
                         int set_face_knowledge,
                         t8_gloidx_t first_local_tree,
                         t8_gloidx_t last_local_tree,
-                        t8_gloidx_t * tree_offsets)
+                        t8_gloidx_t *tree_offsets)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   T8_ASSERT (0 <= set_face_knowledge && set_face_knowledge <= 3);
@@ -373,7 +373,7 @@ t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh,
 
 void
 t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, int element_level,
-                                t8_scheme_cxx_t * ts)
+                                t8_scheme_cxx_t *ts)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   T8_ASSERT (element_level >= -1);
@@ -397,7 +397,7 @@ t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, int element_level,
 /* No longer needed */
 void
 t8_cmesh_set_partition_from (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from,
-                             int level, t8_gloidx_t * tree_offsets)
+                             int level, t8_gloidx_t *tree_offsets)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   T8_ASSERT (t8_cmesh_is_committed (cmesh_from));
@@ -417,7 +417,7 @@ t8_cmesh_set_partition_from (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from,
 #endif
 
 void
-t8_cmesh_set_refine (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t * scheme)
+t8_cmesh_set_refine (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *scheme)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   T8_ASSERT (level >= 0);
@@ -592,7 +592,7 @@ t8_cmesh_tree_id_is_owned (t8_cmesh_t cmesh, t8_locidx_t tree_id)
 /* Given a tree_id return the index of the specified tree in
  * cmesh's tree array
  */
-static              t8_locidx_t
+static t8_locidx_t
 t8_cmesh_tree_index (t8_cmesh_t cmesh, t8_locidx_t tree_id)
 {
   return cmesh->set_partition ? tree_id - cmesh->first_tree : tree_id;
@@ -1474,7 +1474,7 @@ t8_cmesh_print_profile (t8_cmesh_t cmesh)
 }
 
 static void
-t8_cmesh_reset (t8_cmesh_t * pcmesh)
+t8_cmesh_reset (t8_cmesh_t *pcmesh)
 {
   t8_cmesh_t          cmesh;
 
@@ -1540,7 +1540,7 @@ t8_cmesh_ref (t8_cmesh_t cmesh)
 }
 
 void
-t8_cmesh_unref (t8_cmesh_t * pcmesh)
+t8_cmesh_unref (t8_cmesh_t *pcmesh)
 {
   t8_cmesh_t          cmesh;
   T8_ASSERT (pcmesh != NULL);
@@ -1552,7 +1552,7 @@ t8_cmesh_unref (t8_cmesh_t * pcmesh)
 }
 
 void
-t8_cmesh_destroy (t8_cmesh_t * pcmesh)
+t8_cmesh_destroy (t8_cmesh_t *pcmesh)
 {
   T8_ASSERT (pcmesh != NULL && *pcmesh != NULL &&
              t8_refcount_is_last (&(*pcmesh)->rc));

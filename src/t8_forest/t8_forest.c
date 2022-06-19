@@ -29,12 +29,12 @@
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_balance.h>
-#include <t8_forest_vtk.h>
+#include <t8_forest/t8_forest_vtk.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_cmesh/t8_cmesh_trees.h>
 
 void
-t8_forest_init (t8_forest_t * pforest)
+t8_forest_init (t8_forest_t *pforest)
 {
   t8_forest_t         forest;
 
@@ -131,7 +131,7 @@ t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh, sc_MPI_Comm comm)
 }
 
 void
-t8_forest_set_scheme (t8_forest_t forest, t8_scheme_cxx_t * scheme)
+t8_forest_set_scheme (t8_forest_t forest, t8_scheme_cxx_t *scheme)
 {
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->rc.refcount > 0);
@@ -675,7 +675,7 @@ t8_forest_get_first_element (t8_forest_t forest)
 /* Compute the offset array for a partition cmesh that should match the
  * forest's partition.
  */
-static              t8_shmem_array_t
+static t8_shmem_array_t
 t8_forest_compute_cmesh_offset (t8_forest_t forest, sc_MPI_Comm comm)
 {
   t8_shmem_array_t    offset;
@@ -812,8 +812,8 @@ t8_forest_get_tree_vertices (t8_forest_t forest, t8_locidx_t ltreeid)
                                      (forest, ltreeid));
 }
 
-t8_element_array_t
-  * t8_forest_tree_get_leafs (t8_forest_t forest, t8_locidx_t ltree_id)
+t8_element_array_t *
+t8_forest_tree_get_leafs (t8_forest_t forest, t8_locidx_t ltree_id)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (0 <= ltree_id
@@ -857,7 +857,7 @@ t8_forest_compare_elem_tree (const void *lelement_id, const void *ltree)
 
 t8_element_t       *
 t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id,
-                       t8_locidx_t * ltreeid)
+                       t8_locidx_t *ltreeid)
 {
   t8_tree_t           tree;
   t8_locidx_t         ltree;
@@ -924,9 +924,9 @@ t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id,
   return NULL;
 }
 
-t8_element_t
-  * t8_forest_get_element_in_tree (t8_forest_t forest, t8_locidx_t ltreeid,
-                                   t8_locidx_t leid_in_tree)
+t8_element_t       *
+t8_forest_get_element_in_tree (t8_forest_t forest, t8_locidx_t ltreeid,
+                               t8_locidx_t leid_in_tree)
 {
   t8_tree_t           tree;
   T8_ASSERT (t8_forest_is_committed (forest));
@@ -1047,7 +1047,7 @@ t8_forest_get_local_id (t8_forest_t forest, t8_gloidx_t gtreeid)
              && gtreeid < t8_forest_get_num_global_trees (forest));
 
   /* If the tree is local then its local id is the global id minus the
-   * first global tree id on this forest. If this number if not in the
+   * first global tree id on this forest. If this number is not in the
    * range of local tree ids then the tree is not local. */
   /* we use a gloidx for ltreeid to prevent overflow and false positives */
   ltreeid = gtreeid - t8_forest_get_first_local_tree_id (forest);
@@ -1117,7 +1117,7 @@ t8_forest_cmesh_ltreeid_to_ltreeid (t8_forest_t forest, t8_locidx_t lctreeid)
 t8_ctree_t
 t8_forest_get_coarse_tree_ext (t8_forest_t forest,
                                t8_locidx_t ltreeid,
-                               t8_locidx_t ** face_neigh, int8_t ** ttf)
+                               t8_locidx_t **face_neigh, int8_t **ttf)
 {
   t8_locidx_t         lctreeid;
 
@@ -1236,7 +1236,7 @@ t8_forest_profile_get_balance_time (t8_forest_t forest, int *balance_rounds)
 
 double
 t8_forest_profile_get_ghost_time (t8_forest_t forest,
-                                  t8_locidx_t * ghosts_sent)
+                                  t8_locidx_t *ghosts_sent)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   if (forest->profile != NULL) {
@@ -1292,18 +1292,96 @@ t8_forest_compute_elements_offset (t8_forest_t forest)
   T8_ASSERT (current_offset == forest->local_num_elements);
 }
 
-void
-t8_forest_write_vtk (t8_forest_t forest, const char *filename)
+int
+t8_forest_write_vtk_ext (t8_forest_t forest,
+                         const char *fileprefix,
+                         int write_treeid,
+                         int write_mpirank,
+                         int write_level,
+                         int write_element_id,
+                         int write_ghosts,
+                         int write_curved,
+                         int do_not_use_API,
+                         int num_data, t8_vtk_data_field_t *data)
 {
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (forest->committed);
 
-  t8_forest_vtk_write_file (forest, filename, 1, 1, 1, 1, 1, 0, NULL);
+  if (write_ghosts && write_curved) {
+    t8_errorf
+      ("ERROR: Cannot export ghosts and curved elements at the same time. "
+       "Please specify only one option.\n" "Did not write anything.\n");
+#if !T8_WITH_VTK
+    if (write_curved) {
+      t8_errorf
+        ("WARNING: t8code is not linked against VTK. "
+         "Therefore, the export of curved elements is not possible anyway.\n");
+    }
+#endif
+    return 0;
+  }
+
+#if T8_WITH_VTK
+  if (!do_not_use_API) {
+    if (write_ghosts) {
+      t8_errorf
+        ("WARNING: Export of ghosts not yet available with the vtk API. "
+         "Using the inbuild function instead.\n");
+      do_not_use_API = 1;
+    }
+  }
+  else {
+    if (write_curved) {
+      t8_errorf
+        ("WARNING: Export of curved elements not yet available with the inbuild function. "
+         "Using the VTK API instead.\n");
+      do_not_use_API = 0;
+    }
+  }
+#else
+  /* We are not linked against the VTK library, so
+   * we do not use the API by default.
+   */
+  if (write_curved) {
+    t8_errorf
+      ("WARNING: Export of curved elements not yet available with the inbuild function. "
+       "Please link to VTK.\n"
+       "Using the inbuild function to write out uncurved elements instead.\n");
+  }
+  do_not_use_API = 1;
+#endif
+  T8_ASSERT (!write_ghosts);
+  if (!do_not_use_API) {
+    return t8_forest_vtk_write_file_via_API (forest,
+                                             fileprefix,
+                                             write_treeid,
+                                             write_mpirank,
+                                             write_level,
+                                             write_element_id,
+                                             write_curved, num_data, data);
+  }
+  else {
+    T8_ASSERT (!write_curved);
+    return t8_forest_vtk_write_file (forest,
+                                     fileprefix,
+                                     write_treeid,
+                                     write_mpirank,
+                                     write_level,
+                                     write_element_id,
+                                     write_ghosts, num_data, data);
+  }
+}
+
+int
+t8_forest_write_vtk (t8_forest_t forest, const char *fileprefix)
+{
+  return t8_forest_write_vtk_ext (forest, fileprefix, 1, 1, 1, 1, 0, 0, 0, 0,
+                                  NULL);
 }
 
 t8_forest_t
-t8_forest_new_uniform (t8_cmesh_t cmesh, t8_scheme_cxx_t * scheme,
+t8_forest_new_uniform (t8_cmesh_t cmesh, t8_scheme_cxx_t *scheme,
                        int level, int do_face_ghost, sc_MPI_Comm comm)
 {
   t8_forest_t         forest;
@@ -1371,7 +1449,7 @@ t8_forest_free_trees (t8_forest_t forest)
  * forest has taken ownership on.
  */
 static void
-t8_forest_reset (t8_forest_t * pforest)
+t8_forest_reset (t8_forest_t *pforest)
 {
   int                 mpiret;
   t8_forest_t         forest;
@@ -1439,7 +1517,7 @@ t8_forest_ref (t8_forest_t forest)
 }
 
 void
-t8_forest_unref (t8_forest_t * pforest)
+t8_forest_unref (t8_forest_t *pforest)
 {
   t8_forest_t         forest;
 

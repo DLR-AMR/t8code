@@ -38,7 +38,7 @@ on:
   
   
 jobs:
-  build:
+  send_mm_message:
     runs-on: ubuntu-latest
     steps:
       - name: merge
@@ -63,10 +63,10 @@ jobs:
           url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
           text: Pull request ${{ github.event.number }} has been ${{ github.event.action }}. See ${{ github.event.pull_request.html_url }} for more details.
 # trigger this part of the workflow, when something new is pushed into a pull request.
-      - name: synchronize
-        uses: Mitigram/gh-action-mattermost@main
-        if: github.event.action == 'synchronize'
-        with:
-          username: t8y
-          url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
-          text: Updated Pull-Request ${{ github.event.number }}. See ${{ github.event.pull_request.html_url }} for more details.
+#      - name: synchronize
+#        uses: Mitigram/gh-action-mattermost@main
+#        if: github.event.action == 'synchronize'
+#        with:
+#          username: t8y
+#          url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
+#          text: Updated Pull-Request ${{ github.event.number }}. See ${{ github.event.pull_request.html_url }} for more details.

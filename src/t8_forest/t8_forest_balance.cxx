@@ -42,8 +42,8 @@ T8_EXTERN_C_BEGIN ();
 static int
 t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from,
                          t8_locidx_t ltree_id, t8_locidx_t lelement_id,
-                         t8_eclass_scheme_c * ts, const int is_family,
-                         const int num_elements, t8_element_t * elements[])
+                         t8_eclass_scheme_c *ts, const int is_family,
+                         const int num_elements, t8_element_t *elements[])
 {
   int                *pdone, iface, num_faces, num_half_neighbors, ineigh;
   t8_gloidx_t         neighbor_tree;

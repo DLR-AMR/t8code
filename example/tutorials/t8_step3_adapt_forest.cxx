@@ -56,7 +56,6 @@
 #include <t8_schemes/t8_default_cxx.hxx>        /* default refinement scheme. */
 #include <t8_vec.h>             /* Basic operations on 3D vectors. */
 #include <example/tutorials/t8_step3.h>
-#include <t8_forest_vtk.h>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -99,9 +98,9 @@ t8_step3_adapt_callback (t8_forest_t forest,
                          t8_forest_t forest_from,
                          t8_locidx_t which_tree,
                          t8_locidx_t lelement_id,
-                         t8_eclass_scheme_c * ts,
+                         t8_eclass_scheme_c *ts,
                          const int is_family,
-                         const int num_elements, t8_element_t * elements[])
+                         const int num_elements, t8_element_t *elements[])
 {
   /* Our adaptation criterion is to look at the midpoint coordinates of the current element and if
    * they are inside a sphere around a given midpoint we refine, if they are outside, we coarsen. */

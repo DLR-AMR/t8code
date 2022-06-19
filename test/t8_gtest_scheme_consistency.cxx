@@ -44,7 +44,6 @@
  *    TODO: continue this list
  */
 
-
 #if 0
 #include <gtest/gtest.h>
 

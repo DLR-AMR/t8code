@@ -38,7 +38,7 @@
 #include <t8_forest/t8_forest_private.h>
 
 static void
-t8_test_transform_element (t8_eclass_scheme_c * ts, const t8_element_t * elem,
+t8_test_transform_element (t8_eclass_scheme_c *ts, const t8_element_t *elem,
                            t8_eclass_t eclass)
 {
   t8_element_t       *transform;

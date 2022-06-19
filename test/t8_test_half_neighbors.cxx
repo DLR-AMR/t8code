@@ -38,7 +38,7 @@
  * i = 2: cmesh_new_bigmesh (100 trees)
  * else:  cmesh_new_class
  */
-static              t8_cmesh_t
+static t8_cmesh_t
 t8_test_create_cmesh (int i, t8_eclass_t eclass, sc_MPI_Comm comm)
 {
   switch (i) {
