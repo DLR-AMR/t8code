@@ -49,6 +49,7 @@
 #include <string>
 #include <string_view>
 #include <stdexcept>
+#include <cmath>
 
 /* In this example is the use of the netcdf feature exemplary displayed.
  * We show how to write out a forest in the netCDF format and how to create
@@ -92,15 +93,14 @@ int t8_example_netcdf_adapt_fn(
 	t8_locidx_t lelement_id, t8_eclass_scheme_c* ts, const int is_family,
 	const int num_elements, t8_element_t* elements[]
 ) {
-	double element_centroid[3];
 
 	/* Retrieve the adapt_data which holds the information regarding the
 	 * adaption process of a forest */
-	const struct t8_example_netcdf_adapt_data* adapt_data =
-		(const struct t8_example_netcdf_adapt_data*)t8_forest_get_user_data(
-			forest
-		);
+	const auto& adapt_data = *static_cast<t8_example_netcdf_adapt_data*>(
+		t8_forest_get_user_data(
+			forest));
 
+	double element_centroid[3];
 	/* Compute the element's centroid */
 	t8_forest_element_centroid(
 		forest_from, which_tree, elements[0], element_centroid
@@ -108,15 +108,15 @@ int t8_example_netcdf_adapt_fn(
 
 	/* Compute the distance from the element's midpoint to the midpoint of the
 	 * centered sphere inside the hypercube */
-	const auto distance = t8_vec_dist(element_centroid, adapt_data->midpoint);
+	const auto distance = t8_vec_dist(element_centroid, adapt_data.midpoint);
 
 	/* Decide whether the element (or its family) has to be refined or coarsened
 	 */
-	if (distance < adapt_data->refine_if_inside_radius) {
+	if (distance < adapt_data.refine_if_inside_radius) {
 		/* positive return value means, that this element is going to be refined
 		 */
 		return 1;
-	} else if (is_family && distance > adapt_data->coarsen_if_outside_radius) {
+	} else if (is_family && distance > adapt_data.coarsen_if_outside_radius) {
 		/* The elements family is going to be coarsened (this is only possible
 		 * if all elements of this family are process-local) */
 		/* returning a negative value means coarsening */
@@ -136,22 +136,18 @@ int t8_example_netcdf_adapt_fn(
  * 't8code/example/tutorials'.
  */
 t8_forest_t t8_example_netcdf_adapt(t8_forest_t forest) {
-	t8_forest_t forest_adapt;
-
 	/* The adapt data which controls which elements will be refined or corsened
 	 * based on the given radii */
-	struct t8_example_netcdf_adapt_data adapt_data = {
+	t8_example_netcdf_adapt_data adapt_data = {
 		{0.5, 0.5, 0.5}, /* Midpoints of the sphere. */
 		0.0,             /* Refine if inside this radius. */
 		1e10              /* Coarsen if outside this radius. */
 	};
 
 	/* Create the adapted forest with the given adapt_function. */
-	forest_adapt = t8_forest_new_adapt(
+	return t8_forest_new_adapt(
 		forest, t8_example_netcdf_adapt_fn, 0, 0, &adapt_data
 	);
-
-	return forest_adapt;
 }
 
 
@@ -209,11 +205,22 @@ static void t8_example_time_netcdf_writing_operation(
 	);
 }
 
+auto elements_needed_for_bytes(long bytes) {
+	return bytes / 284.0;
+}
+
+auto initial_refinement_for_bytes(long bytes) {
+	auto nMesh3D_vol = elements_needed_for_bytes(bytes);
+	return std::floor(std::log2(nMesh3D_vol) / 3/*log2(8)*/ - 4/3.0/*log8(16)*/);
+}
+
 Config parse_args(int argc, char** argv) {
 	std::vector<std::string_view> args{argv+1, argv+argc};
 	Config result;
 
-	result.forest_refinement_level = std::stoi(std::string{args.at(0)});
+	const auto total_bytes = std::stoi(std::string{args.at(0)});
+	result.forest_refinement_level = initial_refinement_for_bytes(total_bytes);
+
 	if (args.at(1) == "NC_INDEPENDENT") {
 		result.netcdf_mpi_access = NC_INDEPENDENT;
 	} else if (args.at(1) == "NC_COLLECTIVE") {
@@ -333,17 +340,15 @@ void execute_benchmark(
 		config.forest_refinement_level, t8_forest_get_global_num_elements(forest)
 	);
 
-        t8_global_productionf(
-            "Variable-Storage: %s, Variable-Access: %s:\n",
-            config.netcdf_var_storage_mode == NC_CHUNKED ? "NC_CHUNKED"
-                                                         : "NC_CONTIGUOUS",
-            config.netcdf_mpi_access == NC_COLLECTIVE ? "NC_COLLECTIVE"
-                                                      : "NC_INDEPENDENT");
-        t8_example_time_netcdf_writing_operation(
-		forest, comm, config,
-		"T8_Example_NetCDF_Performance",
-		num_additional_vars, ext_vars
-	);
+	t8_global_productionf(
+		"Variable-Storage: %s, Variable-Access: %s:\n",
+		config.netcdf_var_storage_mode == NC_CHUNKED ? "NC_CHUNKED"
+														: "NC_CONTIGUOUS",
+		config.netcdf_mpi_access == NC_COLLECTIVE ? "NC_COLLECTIVE"
+													: "NC_INDEPENDENT");
+	t8_example_time_netcdf_writing_operation(
+		forest, comm, config, "T8_Example_NetCDF_Performance",
+		num_additional_vars, ext_vars);
 
 	/* Free allocated memory */
 	if (with_additional_data) {
@@ -380,8 +385,8 @@ int main(int argc, char** argv) {
 	} catch (const std::exception& e) {
 		t8_global_productionf("Could not parse arguments. Reason:\n");
 		t8_global_productionf("%s\n", e.what());
-		t8_global_productionf(R"asdf(Usage: ./t8_write_forest_netcdf <mem_per_node (initial_refinement)> <mpi_access_mode> <fill> NC_CONTIGUOUS
-Usage: ./t8_write_forest_netcdf <mem_per_node (initial_refinement)> <mpi_access_mode> <fill> NC_CHUNKED <chunksize(s)>
+		t8_global_productionf(R"asdf(Usage: ./t8_write_forest_netcdf <total_bytes> <mpi_access_mode> <fill> NC_CONTIGUOUS
+Usage: ./t8_write_forest_netcdf <total_bytes> <mpi_access_mode> <fill> NC_CHUNKED <chunksize(s)>
 )asdf");
 		sc_finalize();
 		SC_CHECK_MPI(sc_MPI_Finalize());
