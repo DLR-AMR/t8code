@@ -431,6 +431,13 @@ t8_default_scheme_pyramid_c::t8_element_nca (const t8_element_t *elem1,
   T8_ASSERT (t8_element_is_valid (nca));
 }
 
+int
+t8_default_scheme_pyramid_c::t8_element_refines_irregular ()
+{
+  /*Pyramids do not refine regularly */
+  return 1;
+}
+
 #ifdef T8_ENABLE_DEBUG
 int
 t8_default_scheme_pyramid_c::t8_element_is_valid (const t8_element_t *elem) const

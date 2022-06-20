@@ -22,7 +22,7 @@
 */
 
 #include <t8_eclass.h>
-#include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
 /* Check the computation of the successor recursively. Iterate through the elements
  * via DFS. On the given maxlvl-1 the children are computeted iteratively. For

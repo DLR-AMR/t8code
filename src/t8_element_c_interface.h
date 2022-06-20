@@ -256,6 +256,11 @@ void                t8_element_successor (t8_eclass_scheme_c *ts,
 int                 t8_element_root_len (t8_eclass_scheme_c *ts,
                                          const t8_element_t *elem);
 
+   /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
+   * Returns false otherwise.
+   */
+int                 t8_element_refines_irregular (t8_eclass_scheme_c *ts);
+
 /** Allocate memory for an array of elements of a given class and initialize them.
  * \param [in] ts             Implementation of a class scheme.
  * \param [in] length   The number of elements to be allocated.

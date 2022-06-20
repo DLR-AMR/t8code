@@ -274,6 +274,8 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
         t8_forest_profile_get_ghost_time (forest_partition, &ghost_sent);
       balance_time +=
         t8_forest_profile_get_balance_time (forest_partition, &balance_round);
+      /* Set forest to the partitioned forest, so it gets adapted
+       * in the next time step. */
       forest = forest_partition;
     }
 
