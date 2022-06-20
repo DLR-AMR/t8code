@@ -45,6 +45,7 @@
 #include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_vec.h>
 
+// #include <algorithm>
 #include <vector>
 #include <string>
 #include <string_view>
@@ -211,7 +212,7 @@ auto elements_needed_for_bytes(long bytes) {
 
 auto initial_refinement_for_bytes(long bytes) {
 	auto nMesh3D_vol = elements_needed_for_bytes(bytes);
-	return std::floor(std::log2(nMesh3D_vol) / 3/*log2(8)*/ - 4/3.0/*log8(16)*/);
+	return std::max(std::floor(std::log2(nMesh3D_vol / 16)), 0.0);
 }
 
 Config parse_args(int argc, char** argv) {
