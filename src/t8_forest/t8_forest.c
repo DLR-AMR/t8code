@@ -384,7 +384,7 @@ t8_forest_refine_everything (t8_forest_t forest, t8_forest_t forest_from,
  * of pyramids. 
  * 
  * \param[in] forest    The forest to check
- * \return int          non-zero if any tree refines irregular
+ * \return          non-zero if any tree refines irregular
  */
 static int
 t8_forest_refines_irregular (t8_forest_t forest)
@@ -432,7 +432,7 @@ t8_forest_populate_irregular (t8_forest_t forest)
     t8_forest_set_adapt (forest_tmp, forest_zero,
                          t8_forest_refine_everything, 0);
     t8_forest_commit (forest_tmp);
-    /*Partition the forest to even the load */
+    /* Partition the forest to even the load */
     t8_forest_init (&forest_tmp_partition);
     t8_forest_set_partition (forest_tmp_partition, forest_tmp, 0);
     t8_forest_commit (forest_tmp_partition);
