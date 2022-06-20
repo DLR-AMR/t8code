@@ -27,7 +27,7 @@
  * To do this, we will again create a uniform forest, which will get adapted as in step4. 
  * With the difference that we partition, balance and create ghost elements all in the same step.
  * After adapting the forest we will learn how to build a data array and gather data for 
- * the local elements. Further we exchange the data values of the ghost elements and
+ * the local elements. Furthermore, we exchange the data values of the ghost elements and
  * output the volume data to vtu.
  *
  * How you can experiment here:
