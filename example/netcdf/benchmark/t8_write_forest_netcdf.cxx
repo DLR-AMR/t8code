@@ -51,6 +51,8 @@
 #include <string_view>
 #include <stdexcept>
 #include <cmath>
+#include <random>
+#include <tuple>
 
 /* In this example is the use of the netcdf feature exemplary displayed.
  * We show how to write out a forest in the netCDF format and how to create
@@ -68,92 +70,32 @@
  * chunksizesp' parameter)
  */
 
-/** An example struct which holds the information about the adaption process.
- * \note A detailed description of the adaption process is found in step 3 of
- * the tutorial located in 't8code/example/tutorials'.
- */
-struct t8_example_netcdf_adapt_data {
-	double midpoint[3];             /* Midpoint of a sphere */
-	double refine_if_inside_radius; /* refine all elements inside this radius
-	                                   from the sphere's midpoint */
-	double
-		coarsen_if_outside_radius; /* coarsen all element families outside of
-	                                  this radius from the sphere's midpoint */
+struct adapt_user_data {
+	double additionally_refined_ratio;
+	std::mt19937_64 rne;
 };
 
-/** This functions describe an adapt_function, an adapt_function describes tge
- * refinement/coarsening rules for a forest \note If an element is inside a
- * given radius from the midpoint of the hypercube, this element is refined. If
- * a family of elements is outside a given radius from the midpoint of the
- * hypercube, it is coarsened. \note A detailed description of the adaption
- * process is found in step 3 of the tutorial located in
- * 't8code/example/tutorials'.
- */
 int t8_example_netcdf_adapt_fn(
 	t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
 	t8_locidx_t lelement_id, t8_eclass_scheme_c* ts, const int is_family,
 	const int num_elements, t8_element_t* elements[]
 ) {
 
-	/* Retrieve the adapt_data which holds the information regarding the
-	 * adaption process of a forest */
-	const auto& adapt_data = *static_cast<t8_example_netcdf_adapt_data*>(
+	auto& adapt_data = *static_cast<adapt_user_data*>(
 		t8_forest_get_user_data(
 			forest));
 
-	double element_centroid[3];
-	/* Compute the element's centroid */
-	t8_forest_element_centroid(
-		forest_from, which_tree, elements[0], element_centroid
-	);
-
-	/* Compute the distance from the element's midpoint to the midpoint of the
-	 * centered sphere inside the hypercube */
-	const auto distance = t8_vec_dist(element_centroid, adapt_data.midpoint);
-
-	/* Decide whether the element (or its family) has to be refined or coarsened
-	 */
-	if (distance < adapt_data.refine_if_inside_radius) {
-		/* positive return value means, that this element is going to be refined
-		 */
-		return 1;
-	} else if (is_family && distance > adapt_data.coarsen_if_outside_radius) {
-		/* The elements family is going to be coarsened (this is only possible
-		 * if all elements of this family are process-local) */
-		/* returning a negative value means coarsening */
-		return -1;
-	} else {
-		/* In this case the element remains the same and is neither refined nor
-		 * coarsened */
-		/* This is implied by a return value of zero */
-		return 0;
-	}
+	std::bernoulli_distribution should_refine{adapt_data.additionally_refined_ratio};
+	return should_refine(adapt_data.rne) ? 1 : 0;
 }
 
-/** This functions performs the adaption process of a forest and returns the
- * adapted forest \param [in] forest The forest which ought to be adapted \param
- * [out] forest_adapt The adapted forest \note A detailed description of the
- * adaption process is found in step 3 of the tutorial located in
- * 't8code/example/tutorials'.
- */
-t8_forest_t t8_example_netcdf_adapt(t8_forest_t forest) {
-	/* The adapt data which controls which elements will be refined or corsened
-	 * based on the given radii */
-	t8_example_netcdf_adapt_data adapt_data = {
-		{0.5, 0.5, 0.5}, /* Midpoints of the sphere. */
-		0.0,             /* Refine if inside this radius. */
-		1e10              /* Coarsen if outside this radius. */
-	};
-
-	/* Create the adapted forest with the given adapt_function. */
-	return t8_forest_new_adapt(
-		forest, t8_example_netcdf_adapt_fn, 0, 0, &adapt_data
-	);
-}
-
+struct RefinementConfig {
+	double additionally_refined_ratio;
+	int initial;
+};
 
 struct Config {
-	int forest_refinement_level;
+	RefinementConfig refinement;
 	int netcdf_var_storage_mode;
 	int netcdf_mpi_access;
 	int fill_mode;
@@ -210,9 +152,12 @@ auto elements_needed_for_bytes(long bytes) {
 	return bytes / 284.0;
 }
 
-auto initial_refinement_for_bytes(long bytes) {
-	auto nMesh3D_vol = elements_needed_for_bytes(bytes);
-	return std::max(std::floor(std::log2(nMesh3D_vol / 16) / 3), 0.0);
+auto config_for_bytes(long bytes) {
+	const auto nMesh3D_vol = elements_needed_for_bytes(bytes);
+	RefinementConfig config;
+	config.initial = std::max(std::floor(std::log2(nMesh3D_vol / 16) / 3), 0.0);
+	config.additionally_refined_ratio = nMesh3D_vol / (7 * 16 * std::pow(8.0, config.initial)) - 1 / 7.0;
+	return config;
 }
 
 Config parse_args(int argc, char** argv) {
@@ -220,7 +165,7 @@ Config parse_args(int argc, char** argv) {
 	Config result;
 
 	const auto total_bytes = std::stoi(std::string{args.at(0)});
-	result.forest_refinement_level = initial_refinement_for_bytes(total_bytes);
+	result.refinement = config_for_bytes(total_bytes);
 
 	if (args.at(1) == "NC_INDEPENDENT") {
 		result.netcdf_mpi_access = NC_INDEPENDENT;
@@ -247,6 +192,13 @@ Config parse_args(int argc, char** argv) {
 	return result;
 }
 
+auto adapt_forest(t8_forest_t forest, double additionally_refined_ratio) {
+	adapt_user_data adapt_data{.additionally_refined_ratio = additionally_refined_ratio};
+	return t8_forest_new_adapt(
+		forest, t8_example_netcdf_adapt_fn, 0, 0, &adapt_data
+	);
+}
+
 void execute_benchmark(
 	sc_MPI_Comm comm, Config config
 ) {
@@ -271,10 +223,11 @@ void execute_benchmark(
 
 	/* Build a (partioined) uniform forest */
 	t8_forest_t forest = t8_forest_new_uniform(
-		cmesh, default_scheme, config.forest_refinement_level, 0, comm
+		cmesh, default_scheme, config.refinement.initial, 0, comm
 	);
 
-	forest = t8_example_netcdf_adapt(forest);
+	forest = adapt_forest(forest, config.refinement.additionally_refined_ratio);
+
 	t8_gloidx_t num_elements = t8_forest_get_local_num_elements(forest);
 	t8_productionf("Number of process-local elements: %ld\n", num_elements);
 
@@ -338,7 +291,7 @@ void execute_benchmark(
 	t8_global_productionf(
 		"The uniformly refined forest (refinement level = %d) "
 		"has %ld global elements.\n",
-		config.forest_refinement_level, t8_forest_get_global_num_elements(forest)
+		config.refinement.initial, t8_forest_get_global_num_elements(forest)
 	);
 
 	t8_global_productionf(
