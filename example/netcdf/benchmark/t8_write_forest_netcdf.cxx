@@ -212,7 +212,7 @@ auto elements_needed_for_bytes(long bytes) {
 
 auto initial_refinement_for_bytes(long bytes) {
 	auto nMesh3D_vol = elements_needed_for_bytes(bytes);
-	return std::max(std::floor(std::log2(nMesh3D_vol / 16)), 0.0);
+	return std::max(std::floor(std::log2(nMesh3D_vol / 16) / 3), 0.0);
 }
 
 Config parse_args(int argc, char** argv) {
