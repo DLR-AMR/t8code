@@ -24,8 +24,8 @@
  *
  * This is step5 of the t8code tutorials.
  * In the following we will store data in the individual elements of our forest. 
- * To do this, we will again create a uniform forest, which will get adapted as in step4. 
- * With the difference that we partition, balance and create ghost elements all in the same step.
+ * To do this, we will again create a uniform forest, which will get adapted as in step4, 
+ * with the difference that we partition, balance and create ghost elements all in the same step.
  * After adapting the forest we will learn how to build a data array and gather data for 
  * the local elements. Furthermore, we exchange the data values of the ghost elements and
  * output the volume data to vtu.
