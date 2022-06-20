@@ -22,7 +22,7 @@
 */
 
 #include <t8_eclass.h>
-#include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <sc_functions.h>
 
 /*recursively compute all elements and check their id*/

@@ -22,7 +22,7 @@
 */
 
 #include <t8_eclass.h>
-#include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
 /*This program tests the descendant function of an element.*/
 
