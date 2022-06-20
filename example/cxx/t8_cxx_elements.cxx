@@ -29,7 +29,7 @@
 #include <t8.h>
 #include <t8_element.h>
 #include <t8_element_cxx.hxx>
-#include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <sc_statistics.h>
 #include <sc_flops.h>
 
