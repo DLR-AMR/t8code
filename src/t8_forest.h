@@ -829,6 +829,12 @@ void                t8_forest_save (t8_forest_t forest);
  * Writes one master .pvtu file and each process writes in its own .vtu file.
  * If linked and not otherwise specified, the VTK API is used.
  * If the VTK library is not linked, an ASCII file is written.
+ * This may change in accordance with \a write_ghosts, \a write_curved and 
+ * \a do_not_use_API, because the export of ghosts is not yet available with 
+ * the VTK API and the export of curved elements is not available with the
+ * inbuilt function to write ASCII files. The function will for example
+ * still use the VTK API to satisfy \a write_curved, even if \a do_not_use_API 
+ * is set to true.
  * Forest must be committed when calling this function.
  * This function is collective and must be called on each process.
  * \param [in]      forest              The forest to write.
@@ -842,7 +848,7 @@ void                t8_forest_save (t8_forest_t forest);
  * \param [in]      write_element_id    If true, the global element id is written for each element.
  * \param [in]      write_ghosts        If true, each process additionally writes its ghost elements.
  *                                      For ghost element the treeid is -1.
- * \param [in]      curved_flag         If true, write the elements as curved element types from vtk.
+ * \param [in]      write_curved        If true, write the elements as curved element types from vtk.
  * \param [in]      do_not_use_API      Do not use the VTK API, even if linked and available.
  * \param [in]      num_data            Number of user defined double valued data fields to write.
  * \param [in]      data                Array of t8_vtk_data_field_t of length \a num_data
@@ -859,7 +865,7 @@ int                 t8_forest_write_vtk_ext (t8_forest_t forest,
                                              int write_level,
                                              int write_element_id,
                                              int write_ghosts,
-                                             int curved_flag,
+                                             int write_curved,
                                              int do_not_use_API,
                                              int num_data,
                                              t8_vtk_data_field_t *data);

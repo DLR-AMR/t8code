@@ -32,7 +32,7 @@
  * Together with the cmesh, we also need a refinement scheme. This scheme tells the
  * forest how elements of each shape (t8_eclass_t) are refined, what their neighbor
  * are etc.
- * The default scheme in t8_schemes/t8_default_cxx.hxx provides an implementation for
+ * The default scheme in t8_schemes/t8_default/t8_default_cxx.hxx provides an implementation for
  * all element shapes that t8code supports (with pyramids currently under construction).
  * 
  * How you can experiment here:
@@ -48,7 +48,7 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest.h>
-#include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8.h>
 
 /* Builds cmesh of 2 prisms that build up a unit cube. 
