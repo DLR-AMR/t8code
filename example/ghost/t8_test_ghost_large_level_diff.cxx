@@ -33,6 +33,7 @@
  * (This property is not tested).
  */
 
+#include <p4est.h>
 #include <sc_flops.h>
 #include <sc_statistics.h>
 #include <sc_options.h>

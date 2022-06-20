@@ -21,6 +21,7 @@
 */
 
 #include <sc_options.h>
+#include <p4est.h>
 #include <t8.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_partition.h>

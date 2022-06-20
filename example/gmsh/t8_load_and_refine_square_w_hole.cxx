@@ -26,6 +26,7 @@
  */
 
 #include <sc_refcount.h>
+#include <p4est.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh_vtk.h>
 #include <t8_cmesh/t8_cmesh_partition.h>
@@ -196,7 +197,7 @@ main (int argc, char *argv[])
   t8_init (SC_LP_DEBUG);
 
   cmesh =
-    t8_load_refine_load_cmesh ("../share/data/circlesquare_hybrid_hole",
+    t8_load_refine_load_cmesh ("circlesquare_hybrid_hole",
                                sc_MPI_COMM_WORLD, 2);
   t8_load_refine_build_forest (cmesh, sc_MPI_COMM_WORLD, 1);
 

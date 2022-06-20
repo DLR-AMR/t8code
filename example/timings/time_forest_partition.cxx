@@ -24,6 +24,7 @@
 #include <sc_flops.h>
 #include <sc_statistics.h>
 #include <sc_options.h>
+#include <p4est.h>
 #include <p4est_connectivity.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
