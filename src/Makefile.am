@@ -26,7 +26,7 @@ libt8_installed_headers = \
   src/t8_refcount.h src/t8_cmesh.h src/t8_cmesh_triangle.h \
   src/t8_cmesh_tetgen.h src/t8_cmesh_readmshfile.h \
   src/t8_cmesh_vtk_writer.h \
-  src/t8_cmesh/t8_cmesh_vtk_reader.hxx \
+  src/t8_cmesh_vtk_reader.hxx \
   src/t8_forest.h \
   src/t8_vec.h src/t8_vtk.h
 libt8_installed_headers_cmesh = \

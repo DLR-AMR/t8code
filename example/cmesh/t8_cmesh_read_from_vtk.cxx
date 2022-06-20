@@ -20,14 +20,14 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_cmesh/t8_cmesh_vtk_reader.hxx>
+#include <t8_cmesh_vtk_reader.hxx>
 #include <t8_cmesh_vtk_writer.h>
 #include <t8_cmesh.h>
 #include <sc_options.h>
 #include <t8.h>
 #include <t8_vtk.h>
 #include <t8_forest.h>
-#include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_forest.h>
 
 void
