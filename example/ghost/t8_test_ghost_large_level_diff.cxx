@@ -42,7 +42,7 @@
 #include <t8_schemes/t8_default/t8_default_prism/t8_dprism.h>
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtet.h>
 #include <t8_forest/t8_forest_adapt.h>
-#include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
 /* The refinement criterion
  * returns 1 if we refine the element, -1 if we coarsen,
@@ -62,7 +62,7 @@
  *  If the mesh is not 3D then no element is refined.
  *
  *  Warning: this refinement schemes only works with the default element
- *           scheme (see t8_scheme_new_default_cxx in t8_default_cxx.hxx).
+ *           scheme (see t8_scheme_new_default_cxx in t8_default/t8_default_cxx.hxx).
  */
 static int
 t8_ghost_fractal_adapt (t8_forest_t forest, t8_forest_t forest_from,
