@@ -390,6 +390,7 @@ static int
 t8_forest_refines_irregular (t8_forest_t forest)
 {
   int                 irregular = 0;
+  int                 irregular_all_procs = 0;  /* Result over all procs */
   int                 int_eclass;
   t8_eclass_scheme_c *tscheme;
   for (int_eclass = (int) T8_ECLASS_ZERO; int_eclass < (int) T8_ECLASS_COUNT;
@@ -401,7 +402,11 @@ t8_forest_refines_irregular (t8_forest_t forest)
       irregular = irregular || t8_element_refines_irregular (tscheme);
     }
   }
-  return irregular;
+  /* Combine the process-local results via a logic or and distribute the
+   * result over all procs (in the communicator).*/
+  sc_MPI_Allreduce (&irregular, &irregular_all_procs, 1, sc_MPI_INT,
+                    sc_MPI_LOR, forest->mpicomm);
+  return irregular_all_procs;
 }
 
 /**Algorithm to populate a forest, if any tree refines irregularly.
