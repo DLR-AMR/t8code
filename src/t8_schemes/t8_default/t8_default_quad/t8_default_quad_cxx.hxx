@@ -312,6 +312,7 @@ public:
 
   /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
    * Returns false otherwise.
+   * \return           0, because quads refine regularly
    */
   virtual int         t8_element_refines_irregular (void);
 

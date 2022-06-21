@@ -293,6 +293,7 @@ public:
 
   /** Returns true, if an element does not refine into 2^dim children.
    * Returns false otherwise.
+   * \return           0, because prisms refine regularly
    */
   virtual int         t8_element_refines_irregular ();
 
