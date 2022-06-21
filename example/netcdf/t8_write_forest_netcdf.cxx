@@ -166,7 +166,7 @@ t8_example_time_netcdf_writing_operation (t8_forest_t forest,
   t8_forest_write_netcdf_ext (forest, title,
                               "Performance Test: uniformly refined Forest", 3,
                               num_additional_vars, ext_vars, comm,
-                              netcdf_var_storage_mode, netcdf_var_mpi_access, fill_mode);
+                              netcdf_var_storage_mode, netcdf_var_mpi_access, fill_mode, false);
 
   /* End timing */
   sc_MPI_Barrier (comm);

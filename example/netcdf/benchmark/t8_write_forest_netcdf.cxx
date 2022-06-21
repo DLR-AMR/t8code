@@ -97,8 +97,9 @@ struct RefinementConfig {
 struct Config {
 	RefinementConfig refinement;
 	int netcdf_var_storage_mode;
-	int netcdf_mpi_access;
+	int netcdf_mpi_access = NC_COLLECTIVE;
 	int fill_mode;
+	bool multifile_mode = false;
 };
 
 /** Function that times the duration of writing out the netCDF File, given a
@@ -130,7 +131,7 @@ static void t8_example_time_netcdf_writing_operation(
 	t8_forest_write_netcdf_ext(
 		forest, title, "Performance Test: uniformly refined Forest", 3,
 		num_additional_vars, ext_vars, comm, config.netcdf_var_storage_mode,
-		config.netcdf_mpi_access, config.fill_mode
+		config.netcdf_mpi_access, config.fill_mode, config.multifile_mode
 	);
 
 	sc_MPI_Barrier(comm);
@@ -167,26 +168,28 @@ Config parse_args(int argc, char** argv) {
 	const auto total_bytes = std::stoi(std::string{args.at(0)});
 	result.refinement = config_for_bytes(total_bytes);
 
-	if (args.at(1) == "NC_INDEPENDENT") {
-		result.netcdf_mpi_access = NC_INDEPENDENT;
-	} else if (args.at(1) == "NC_COLLECTIVE") {
-		result.netcdf_mpi_access = NC_COLLECTIVE;
-	} else {
-		throw std::runtime_error{"mpi access must be one of NC_COLLECTIVE and NC_INDEPENDENT"};
-	}
-	if (args.at(2) == "NC_FILL") {
+	if (args.at(1) == "NC_FILL") {
 		result.fill_mode = NC_FILL;
-	} else if (args.at(2) == "NC_NOFILL") {
+	} else if (args.at(1) == "NC_NOFILL") {
 		result.fill_mode = NC_NOFILL;
 	} else {
 		throw std::runtime_error{"fill must be one of NC_FILL and NC_NOFILL"};
 	}
-	if (args.at(3) == "NC_CONTIGUOUS") {
+	if (args.at(2) == "NC_CONTIGUOUS") {
 		result.netcdf_var_storage_mode = NC_CONTIGUOUS;
-	} else if (args.at(3) == "NC_CHUNKED") {
+	} else if (args.at(2) == "NC_CHUNKED") {
 		result.netcdf_var_storage_mode = NC_CHUNKED;
 	} else {
 		throw std::runtime_error{"storage mode must be one of NC_CONTIGUOUS and NC_CHUNKED"};
+	}
+	if (args.at(3) == "NC_INDEPENDENT") {
+		result.netcdf_mpi_access = NC_INDEPENDENT;
+	} else if (args.at(3) == "NC_COLLECTIVE") {
+		result.netcdf_mpi_access = NC_COLLECTIVE;
+	} else if (args.at(3) == "--multifile") {
+		result.multifile_mode = true;
+	} else {
+		throw std::runtime_error{"this argument is either mpi access (NC_COLLECTIVE or NC_INDEPENDENT), or --multifile"};
 	}
 
 	return result;
@@ -339,8 +342,8 @@ int main(int argc, char** argv) {
 	} catch (const std::exception& e) {
 		t8_global_productionf("Could not parse arguments. Reason:\n");
 		t8_global_productionf("%s\n", e.what());
-		t8_global_productionf(R"asdf(Usage: ./t8_write_forest_netcdf <total_bytes> <mpi_access_mode> <fill> NC_CONTIGUOUS
-Usage: ./t8_write_forest_netcdf <total_bytes> <mpi_access_mode> <fill> NC_CHUNKED <chunksize(s)>
+		t8_global_productionf(R"asdf(Usage: ./t8_write_forest_netcdf <mem_per_node> <fill> <storage_mode> <mpi_access_mode>
+Usage: ./t8_write_forest_netcdf <mem_per_node> <fill> <storage_mode> --multifile
 )asdf");
 		sc_finalize();
 		SC_CHECK_MPI(sc_MPI_Finalize());
