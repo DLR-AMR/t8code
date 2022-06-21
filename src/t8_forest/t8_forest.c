@@ -382,6 +382,7 @@ t8_forest_refine_everything (t8_forest_t forest, t8_forest_t forest_from,
  * An irregular refining tree is a tree with an element that does not
  * refine into 2^dim children. For example the default implementation
  * of pyramids. 
+ * CAREFULL: This function is MPI collective
  * 
  * \param[in] forest    The forest to check
  * \return          non-zero if any tree refines irregular
