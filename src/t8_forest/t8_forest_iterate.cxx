@@ -434,7 +434,7 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
         T8_ASSERT (level_new == level_old + 1);
         /* elem_old was refined */
         family_size = ts->t8_element_num_children (elem_old);
-        replace_fn (forest_old, forest_new, itree, ts, 1, ielem_old,
+        replace_fn (forest_old, forest_new, itree, ts, 1, 1, ielem_old,
                     family_size, ielem_new);
         /* Advance to the next element */
         ielem_new += family_size;
@@ -444,7 +444,7 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
         T8_ASSERT (level_new == level_old - 1);
         /* elem_old was coarsened */
         family_size = ts->t8_element_num_children (elem_new);
-        replace_fn (forest_old, forest_new, itree, ts, family_size, ielem_old,
+        replace_fn (forest_old, forest_new, itree, ts, -1, family_size, ielem_old,
                     1, ielem_new);
         /* Advance to the next element */
         ielem_new++;
@@ -453,7 +453,7 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
       else {
         /* elem_new = elem_old */
         T8_ASSERT (!ts->t8_element_compare (elem_new, elem_old));
-        replace_fn (forest_old, forest_new, itree, ts, 1, ielem_old, 1,
+        replace_fn (forest_old, forest_new, itree, ts, 0, 1, ielem_old, 1,
                     ielem_new);
         /* Advance to the next element */
         ielem_new++;

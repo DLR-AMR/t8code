@@ -764,6 +764,7 @@ t8_advect_replace (t8_forest_t forest_old,
                    t8_forest_t forest_new,
                    t8_locidx_t which_tree,
                    t8_eclass_scheme_c *ts,
+                   int refine,
                    int num_outgoing,
                    t8_locidx_t first_outgoing,
                    int num_incoming, t8_locidx_t first_incoming)
@@ -795,7 +796,8 @@ t8_advect_replace (t8_forest_t forest_old,
 
   /* Get the old phi value (used in the cases with num_outgoing = 1) */
   phi_old = t8_advect_element_get_phi (problem, first_outgoing_data);
-  if (num_incoming == num_outgoing && num_incoming == 1) {
+  if (refine == 0) {
+    T8_ASSERT(num_incoming == num_outgoing && num_incoming == 1);
     /* The element is not changed, copy phi and vol */
     memcpy (elem_data_in, elem_data_out, sizeof (t8_advect_element_data_t));
     t8_advect_element_set_phi_adapt (problem, first_incoming_data, phi_old);
@@ -813,7 +815,8 @@ t8_advect_replace (t8_forest_t forest_old,
       elem_data_in->neighs[iface] = NULL;
     }
   }
-  else if (num_outgoing == 1) {
+  else if (refine == 1) {
+    T8_ASSERT (num_outgoing == 1);
     T8_ASSERT (num_incoming == 1 << problem->dim);
     /* The old element is refined, we copy the phi values and compute the new midpoints */
     for (i = 0; i < num_incoming; i++) {
@@ -843,6 +846,7 @@ t8_advect_replace (t8_forest_t forest_old,
   }
   else {
     double              phi = 0;
+    T8_ASSERT (refine = -1);
     T8_ASSERT (num_outgoing == 1 << problem->dim && num_incoming == 1);
     /* The old elements form a family which is coarsened. We compute the average
      * phi value and set it as the new phi value */
