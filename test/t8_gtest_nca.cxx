@@ -100,7 +100,7 @@ TEST_P(nca, nca_check_deep){
     ts->t8_element_new(1, &tmp);
     ts->t8_element_copy(correct_nca, tmp);
     for(lvl = 1; lvl <= max_lvl; lvl++){
-        num_children = ts->t8_element_num_children(correct_nca);
+        num_children = ts->t8_element_num_children(tmp);
         for(child_id = 0; child_id < num_children; child_id++){
             ts->t8_element_child(tmp, child_id, correct_nca);
             /* Compute first and last descendant at every level up to elem_max_lvl. 
