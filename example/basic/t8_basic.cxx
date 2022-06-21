@@ -53,7 +53,7 @@ t8_basic_create_cmesh (const int dim)
     }
   case 3:
     {
-      cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
+      cmesh = t8_cmesh_new_full_hybrid (sc_MPI_COMM_WORLD);
       break;
     }
 

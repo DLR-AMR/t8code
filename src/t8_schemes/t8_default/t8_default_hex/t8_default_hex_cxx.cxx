@@ -692,6 +692,13 @@ t8_default_scheme_hex_c::t8_element_vertex_reference_coords (const
   coords[2] = coords_int[2] / (double) P8EST_ROOT_LEN;
 }
 
+int
+t8_default_scheme_hex_c::t8_element_refines_irregular ()
+{
+  /* Hex always refine regularly */
+  return 0;
+}
+
 void
 t8_default_scheme_hex_c::t8_element_new (int length, t8_element_t **elem)
 {

@@ -490,6 +490,13 @@ u_int64_t
   return t8_dprism_linear_id ((const t8_dprism_t *) elem, level);
 }
 
+int
+t8_default_scheme_prism_c::t8_element_refines_irregular (void)
+{
+  /*prisms refine regularly */
+  return 0;
+}
+
 #ifdef T8_ENABLE_DEBUG
 /* *INDENT-OFF* */
 /* Indent bug, indent adds an additional const modifier at the end */

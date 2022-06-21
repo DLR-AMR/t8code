@@ -853,6 +853,16 @@ t8_default_scheme_quad_c::t8_element_init (int length, t8_element_t *elem,
 #endif
 }
 
+/** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
+ * Returns false otherwise.
+ */
+int
+t8_default_scheme_quad_c::t8_element_refines_irregular ()
+{
+  /*Quad refine regularly */
+  return 0;
+}
+
 #ifdef T8_ENABLE_DEBUG
 /* *INDENT-OFF* */
 /* indent bug, indent adds a second "const" modifier */
