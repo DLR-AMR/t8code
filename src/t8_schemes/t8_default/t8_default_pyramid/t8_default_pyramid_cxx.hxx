@@ -310,6 +310,7 @@ public:
 
   /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
    * Returns false otherwise.
+   * \return           1, because pyramids refine irregularly
    */
   virtual int         t8_element_refines_irregular (void);
 
