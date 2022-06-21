@@ -1602,6 +1602,15 @@ t8_dpyramid_nca (const t8_dpyramid_t *pyra1,
              pyra1->level, pyra1->type);
   t8_debugf ("[D] pyra2: %i %i %i l:%i t:%i\n", pyra2->x, pyra2->y, pyra2->z,
              pyra2->level, pyra2->type);
+  if (pyra1->level == 0 && pyra2->level == 0) {
+    /* Both pyramids are the root pyra, therefore the nca is the root-pyra */
+    nca->x = 0;
+    nca->y = 0;
+    nca->z = 0;
+    nca->type = T8_DPYRAMID_ROOT_TPYE;
+    nca->level = 0;
+    return;
+  }
   excl_or_x = pyra1->x ^ pyra2->x;
   excl_or_y = pyra1->y ^ pyra2->y;
   excl_or_z = pyra1->z ^ pyra2->z;
