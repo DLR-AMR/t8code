@@ -178,9 +178,8 @@ test_cmesh_forest_commit_all ()
        cmesh_id++) {
     /* This if statement is necessary to make the test work by avoiding specific cmeshes which do not work yet for this test.
      * When the issues are gone, remove the if statement. */
-    if (cmesh_id != 89 && (cmesh_id < 237 || cmesh_id > 256)) {
-      t8_test_forest_commit (cmesh_id);
-    }
+    t8_test_forest_commit (cmesh_id);
+
   }
 }
 
