@@ -26,15 +26,8 @@
 #ifndef T8_DEFAULT_HEX_HXX
 #define T8_DEFAULT_HEX_HXX
 
-#include <p8est.h>
 #include <t8_element_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_quad/t8_default_quad_cxx.hxx>
-
-/** The structure holding a hexahedral element in the default scheme.
- * We make this definition public for interoperability of element classes.
- * We might want to put this into a private, scheme-specific header file.
- */
-typedef p8est_quadrant_t t8_phex_t;
 
 struct t8_default_scheme_hex_c:public t8_default_scheme_common_c
 {

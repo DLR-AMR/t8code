@@ -80,6 +80,8 @@ T8_EXTERN_C_BEGIN ();
 #define T8_REALLOC(p,t,n) (t *) sc_realloc (t8_get_package_id(),   \
                                         (p), (n) * sizeof(t))
 
+typedef int32_t t8_qcoord_t;
+
 /** A type for counting coarse mesh related values (trees, tree vertices, ...).
  * The name topidx alludes to mesh topology as this is what cmesh defines.
  * We use the int32_t type here since t8code allows for creating

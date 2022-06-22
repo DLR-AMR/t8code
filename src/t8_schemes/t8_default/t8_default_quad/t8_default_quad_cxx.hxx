@@ -21,26 +21,19 @@
 */
 
 /** \file t8_default_quad.h
- * We use a p4est_quadrant_t object as storage for the T8 quadrant.
+ * We use a T8 quadrant object as basic storage unit per element.
  * To record if and if yes, how this quadrant is part of a 3D octant, we use
  * the member pad8 for the surrounding toplevel dimension (2 or 3), pad16 for
  * the direction of its normal relative to a toplevel octant (0, 1, or 2), and
- * p.user_long for the p4est_qcoord_t coordinate in the normal direction.
+ * p.user_long for the t8_qcoord_t coordinate in the normal direction.
  */
 
 #ifndef T8_DEFAULT_QUAD_CXX_HXX
 #define T8_DEFAULT_QUAD_CXX_HXX
 
-#include <p4est.h>
 #include <t8_element_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_line/t8_default_line_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx>
-
-/** The structure holding a quadrilateral element in the default scheme.
- * We make this definition public for interoperability of element classes.
- * We might want to put this into a private, scheme-specific header file.
- */
-typedef p4est_quadrant_t t8_pquad_t;
 
 /** Return the toplevel dimension. */
 #define T8_QUAD_GET_TDIM(quad) ((int) (quad)->pad8)

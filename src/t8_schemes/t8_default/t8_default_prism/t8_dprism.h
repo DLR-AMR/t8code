@@ -30,6 +30,7 @@
 #include <t8.h>
 #include <t8_schemes/t8_default/t8_default_line/t8_dline.h>
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri.h>
+#include <t8_schemes/t8_default/t8_default_quad/t8_dquad.h>
 
 /** The number of children that a prism is refined into. */
 #define T8_DPRISM_CHILDREN 8
@@ -51,7 +52,7 @@
 
 /** The length of a prism divided by the length of a Quad.
  *  This is useful to convert boundary coordinates from prism to quad. */
-#define T8_DPRISM_ROOT_BY_QUAD_ROOT (1 << (P4EST_QMAXLEVEL - T8_DPRISM_MAXLEVEL))
+#define T8_DPRISM_ROOT_BY_QUAD_ROOT (1 << (T8_QUAD_QMAXLEVEL - T8_DPRISM_MAXLEVEL))
 
 /** The length of a prism divided by the length of a triangle.
  *  This is useful to convert boundary coordinates from prism to triangle. */
