@@ -94,7 +94,7 @@ main (int argc, char **argv)
 
   comm = sc_MPI_COMM_WORLD;
   sc_init (comm, 1, 1, NULL, SC_LP_PRODUCTION);
-  p4est_init (NULL, SC_LP_ESSENTIAL);
+  
   t8_init (SC_LP_DEFAULT);
 
   t8_global_productionf ("Testing cmesh copy.\n");
