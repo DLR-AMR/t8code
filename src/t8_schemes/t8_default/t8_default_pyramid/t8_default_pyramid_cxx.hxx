@@ -308,6 +308,18 @@ public:
                                                           *elem, int vertex,
                                                           double coords[]);
 
+  /** The implementation of the general function for the default scheme for pyramids.
+   * Stores the type of the pyramid in \a outdata.
+   *  \param [in] elem A valid element
+   *  \param [in] indata Is ignored. Can be NULL.
+   *  \param [out] outdata The type of \a elem.
+   * \note Calling this function has no effect. See the specialized implementations in
+   * t8_default_tri_cxx.hxx, t8_default_tet_cxx.hxx and t8_default_prism_cxx.hxx.
+   */
+  virtual void        t8_element_general_function (const t8_element_t *elem,
+                                                   const void *indata,
+                                                   void *outdata);
+
   /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
    * Returns false otherwise.
    * \return           1, because pyramids refine irregularly
