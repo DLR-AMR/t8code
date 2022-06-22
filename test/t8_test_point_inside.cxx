@@ -262,7 +262,7 @@ main (int argc, char **argv)
     ("Testing one specific point with one specific triangle.\n");
   t8_test_point_inside_specific_triangle ();
   for (ieclass = T8_ECLASS_LINE; ieclass < T8_ECLASS_COUNT; ieclass++) {
-    if (ieclass != T8_ECLASS_PYRAMID && ieclass != T8_ECLASS_QUAD) {
+    if (ieclass != T8_ECLASS_QUAD) {
       /* TODO: - does not work with pyramids yet, since pyramid elements are not implemented.
        *         the point check should work with pyramids, once they are implemented.
        *       - point inside check does not work with quads yet. */
