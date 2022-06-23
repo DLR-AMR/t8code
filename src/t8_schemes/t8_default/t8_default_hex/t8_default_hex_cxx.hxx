@@ -48,31 +48,31 @@ public:
   virtual void        t8_element_init (int length, t8_element_t *elem,
                                        int called_new);
 
-/** Return the maximum level allowed for this element class. */
+  /** Return the maximum level allowed for this element class. */
   virtual int         t8_element_maxlevel (void);
 
-/** Return the type of each child in the ordering of the implementation. */
+  /** Return the type of each child in the ordering of the implementation. */
   virtual t8_eclass_t t8_element_child_eclass (int childid);
 
-/** Return the refinement level of an element. */
+  /** Return the refinement level of an element. */
   virtual int         t8_element_level (const t8_element_t *elem);
 
-/** Copy one element to another */
+  /** Copy one element to another */
   virtual void        t8_element_copy (const t8_element_t *source,
                                        t8_element_t *dest);
 
-/** Compare to elements. returns negativ if elem1 < elem2, zero if elem1 equals elem2
- *  and positiv if elem1 > elem2.
- *  If elem2 is a copy of elem1 then the elements are equal.
- */
+  /** Compare to elements. returns negativ if elem1 < elem2, zero if elem1 equals elem2
+   *  and positiv if elem1 > elem2.
+   *  If elem2 is a copy of elem1 then the elements are equal.
+   */
   virtual int         t8_element_compare (const t8_element_t *elem1,
                                           const t8_element_t *elem2);
 
-/** Construct the parent of a given element. */
+  /** Construct the parent of a given element. */
   virtual void        t8_element_parent (const t8_element_t *elem,
                                          t8_element_t *parent);
 
-/** Construct a same-size sibling of a given element. */
+  /** Construct a same-size sibling of a given element. */
   virtual void        t8_element_sibling (const t8_element_t *elem,
                                           int sibid, t8_element_t *sibling);
 
@@ -104,25 +104,25 @@ public:
     return 0;                   /* prevents compiler warning */
   }
 
-/** Construct the child element of a given number. */
+  /** Construct the child element of a given number. */
   virtual void        t8_element_child (const t8_element_t *elem,
                                         int childid, t8_element_t *child);
 
-/** Construct all children of a given element. */
+  /** Construct all children of a given element. */
   virtual void        t8_element_children (const t8_element_t *elem,
                                            int length, t8_element_t *c[]);
 
-/** Return the child id of an element */
+  /** Return the child id of an element */
   virtual int         t8_element_child_id (const t8_element_t *elem);
 
   /** Compute the ancestor id of an element */
   virtual int         t8_element_ancestor_id (const t8_element_t *elem,
                                               int level);
 
-/** Return nonzero if collection of elements is a family */
+  /** Return nonzero if collection of elements is a family */
   virtual int         t8_element_is_family (t8_element_t **fam);
 
-/** Construct the nearest common ancestor of two elements in the same tree. */
+  /** Construct the nearest common ancestor of two elements in the same tree. */
   virtual void        t8_element_nca (const t8_element_t *elem1,
                                       const t8_element_t *elem2,
                                       t8_element_t *nca);
@@ -196,7 +196,7 @@ public:
                                                 const t8_eclass_scheme_c
                                                 *boundary_scheme);
 
-/** Construct all codimension-one boundary elements of a given element. */
+  /** Construct all codimension-one boundary elements of a given element. */
   virtual void        t8_element_boundary (const t8_element_t *elem,
                                            int min_dim, int length,
                                            t8_element_t **boundary);
@@ -217,40 +217,40 @@ public:
                                                        int face,
                                                        int *neigh_face);
 
-/** Initialize an element according to a given linear id */
+  /** Initialize an element according to a given linear id */
   virtual void        t8_element_set_linear_id (t8_element_t *elem,
                                                 int level, t8_linearidx_t id);
 
-/** Calculate the linear id of an element */
+  /** Calculate the linear id of an element */
   virtual t8_linearidx_t t8_element_get_linear_id (const
                                                    t8_element_t *elem,
                                                    int level);
 
-/** Calculate the first descendant of a given element e. That is, the
- *  first element in a uniform refinement of e of the maximal possible level.
- */
+  /** Calculate the first descendant of a given element e. That is, the
+   *  first element in a uniform refinement of e of the maximal possible level.
+   */
   virtual void        t8_element_first_descendant (const t8_element_t *elem,
                                                    t8_element_t *desc,
                                                    int level);
 
-/** Calculate the last descendant of a given element e. That is, the
- *  last element in a uniform refinement of e of the maximal possible level.
- */
+  /** Calculate the last descendant of a given element e. That is, the
+   *  last element in a uniform refinement of e of the maximal possible level.
+   */
   virtual void        t8_element_last_descendant (const t8_element_t *elem,
                                                   t8_element_t *desc,
                                                   int level);
 
-/** Compute s as a successor of t*/
+  /** Compute s as a successor of t*/
   virtual void        t8_element_successor (const t8_element_t *t,
                                             t8_element_t *s, int level);
 
-/** Get the integer coordinates of the anchor node of an element */
+  /** Get the integer coordinates of the anchor node of an element */
   virtual void        t8_element_anchor (const t8_element_t *elem,
                                          int anchor[3]);
 
-/** Get the integer root length of an element, that is the length of
- *  the level 0 ancestor.
- */
+  /** Get the integer root length of an element, that is the length of
+   *  the level 0 ancestor.
+   */
   virtual int         t8_element_root_len (const t8_element_t *elem);
 
   /** Compute the integer coordinates of a given element vertex. */
