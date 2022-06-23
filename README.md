@@ -24,7 +24,7 @@ t8code, or T8 for short, supports the following element types (also different ty
 - 0D: vertices
 - 1D: lines
 - 2D: quadrilaterals and triangles
-- 3D: hexahedra, tetrahedra, prisms (pyramids currently in development).
+- 3D: hexahedra, tetrahedra, prisms and pyramids
 
 Among others, t8code offers the following functionalities:
 
@@ -45,6 +45,7 @@ Currently,
   - quadrilateral/hexahedral elements are inherited from the p4est submodule, using the Morton curve 1:4, 1:8 refinement; 
   - triangular/tetrahedral are implemented using the Tetrahedral Morton curve, 1:4, 1:8 refinement;
   - prisms are implemented using the triangular TM curve and a line curve, 1:8 refinement.
+  - pyramids are implemented using the Pyramidal Morton curve and the TM curve for its tetrahedral children, 1:10 (for pyramids) / 1:8 (for tetrahedra) refinement.
   - The code supports hybrid meshes including any of the above element types (of the same dimension).
 
 You find more information on t8code in the [t8code Wiki](https://github.com/holke/t8code/wiki).
