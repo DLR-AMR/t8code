@@ -313,8 +313,6 @@ public:
    *  \param [in] elem A valid element
    *  \param [in] indata Is ignored. Can be NULL.
    *  \param [out] outdata The type of \a elem.
-   * \note Calling this function has no effect. See the specialized implementations in
-   * t8_default_tri_cxx.hxx, t8_default_tet_cxx.hxx and t8_default_prism_cxx.hxx.
    */
   virtual void        t8_element_general_function (const t8_element_t *elem,
                                                    const void *indata,
