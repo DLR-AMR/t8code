@@ -28,6 +28,10 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_connectivity.h>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h>
 
+/**
+ * Check if the two possible ways to compute the type of a parent give the same result
+ * Only checks pyramids
+ */
 void
 t8_cid_type_to_parenttype_check ()
 {
@@ -35,7 +39,9 @@ t8_cid_type_to_parenttype_check ()
   t8_dpyramid_type_t  parent_type;
   t8_dpyramid_type_t  pyra_parent_type;
   t8_dpyramid_type_t  type;
+  /* iterate over all pyramid-types */
   for (type = T8_DPYRAMID_ROOT_TPYE; type <= T8_DPYRAMID_SECOND_TYPE; type++) {
+    /* iterate over all cube-ids */
     for (cid = 0; cid < 8; cid++) {
       pyra_parent_type =
         t8_dpyramid_type_cid_to_parenttype[type - T8_DPYRAMID_ROOT_TPYE][cid];
@@ -46,20 +52,55 @@ t8_cid_type_to_parenttype_check ()
   }
 }
 
+/**
+ * Given the type of a parent element, iterate over all local ids of the children
+ * and look-up their type and cube-id. Usings these compute the parent-type again
+ * and check if it is equal to the input.
+ * 
+ */
+void
+t8_check_cid_type_parenttype ()
+{
+  int                 cid;      /* The cube-ids of the children */
+  t8_dpyramid_type_t  type;     /* The types of the children */
+  t8_dpyramid_type_t  check_type;
+  t8_locidx_t         max_Iloc;
+
+  for (t8_dpyramid_type_t p_type = 0; p_type <= T8_DPYRAMID_SECOND_TYPE;
+       p_type++) {
+    /* Number of children depends on the parent-type */
+    max_Iloc =
+      type < T8_DPYRAMID_ROOT_TPYE ? T8_DTET_CHILDREN : T8_DPYRAMID_CHILDREN;
+    for (t8_locidx_t Iloc = 0; Iloc < max_Iloc; Iloc++) {
+      type = t8_dpyramid_parenttype_Iloc_to_type[p_type][Iloc];
+      cid = t8_dpyramid_parenttype_Iloc_to_cid[p_type][Iloc];
+      /*Look-up of parent-type depends on the parent-type and the type of the element itself */
+      if (p_type < T8_DPYRAMID_ROOT_TPYE) {
+        check_type = t8_dpyramid_cid_type_to_parenttype[cid][type];
+      }
+      else {
+        if (type < T8_DPYRAMID_ROOT_TPYE) {
+          check_type = t8_dtet_type_cid_to_pyramid_parenttype[type][cid];
+        }
+        else {
+          check_type =
+            t8_dpyramid_type_cid_to_parenttype[type -
+                                               T8_DPYRAMID_FIRST_TYPE][cid];
+        }
+      }
+      SC_CHECK_ABORTF (check_type == p_type, "Look-up tables are different");
+    }
+  }
+
+}
+
 int
 main (int argc, char **argv)
 {
-  int                 mpiret;
-
-  mpiret = sc_MPI_Init (&argc, &argv);
-  SC_CHECK_MPI (mpiret);
-  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
   t8_cid_type_to_parenttype_check ();
-  sc_finalize ();
+  t8_check_cid_type_parenttype ();
 
-  mpiret = sc_MPI_Finalize ();
-  SC_CHECK_MPI (mpiret);
   return 0;
 }
