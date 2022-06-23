@@ -182,15 +182,12 @@ main (int argc, char **argv)
   t8_init (SC_LP_DEFAULT);
 
   for (ieclass = T8_ECLASS_VERTEX; ieclass < T8_ECLASS_COUNT; ieclass++) {
-    if (ieclass != T8_ECLASS_PYRAMID) {
-      /* TODO: does not work with pyramids yet */
-      for (ilevel = 0; ilevel <= maxlevel; ++ilevel) {
-        t8_global_productionf
-          ("Testing search that matches all with eclass %s, level %i\n",
-           t8_eclass_to_string[ieclass], ilevel);
-        t8_test_search_one_query_matches_all (mpic, (t8_eclass_t) ieclass,
-                                              ilevel);
-      }
+    for (ilevel = 0; ilevel <= maxlevel; ++ilevel) {
+      t8_global_productionf
+        ("Testing search that matches all with eclass %s, level %i\n",
+         t8_eclass_to_string[ieclass], ilevel);
+      t8_test_search_one_query_matches_all (mpic, (t8_eclass_t) ieclass,
+                                            ilevel);
     }
   }
 
