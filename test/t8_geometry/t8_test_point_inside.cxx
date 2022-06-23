@@ -263,9 +263,7 @@ main (int argc, char **argv)
   t8_test_point_inside_specific_triangle ();
   for (ieclass = T8_ECLASS_LINE; ieclass < T8_ECLASS_COUNT; ieclass++) {
     if (ieclass != T8_ECLASS_QUAD) {
-      /* TODO: - does not work with pyramids yet, since pyramid elements are not implemented.
-       *         the point check should work with pyramids, once they are implemented.
-       *       - point inside check does not work with quads yet. */
+      /* TODO: - point inside check does not work with quads yet. */
       t8_global_productionf
         ("Testing point finding with eclass %s\n",
          t8_eclass_to_string[ieclass]);
