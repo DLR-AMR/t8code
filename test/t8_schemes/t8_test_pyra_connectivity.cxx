@@ -70,7 +70,8 @@ t8_check_cid_type_parenttype ()
        p_type++) {
     /* Number of children depends on the parent-type */
     max_Iloc =
-      type < T8_DPYRAMID_ROOT_TPYE ? T8_DTET_CHILDREN : T8_DPYRAMID_CHILDREN;
+      p_type <
+      T8_DPYRAMID_ROOT_TPYE ? T8_DTET_CHILDREN : T8_DPYRAMID_CHILDREN;
     for (t8_locidx_t Iloc = 0; Iloc < max_Iloc; Iloc++) {
       type = t8_dpyramid_parenttype_Iloc_to_type[p_type][Iloc];
       cid = t8_dpyramid_parenttype_Iloc_to_cid[p_type][Iloc];
