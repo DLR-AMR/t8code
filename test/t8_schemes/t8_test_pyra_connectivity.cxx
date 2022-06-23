@@ -40,9 +40,6 @@ t8_cid_type_to_parenttype_check ()
       pyra_parent_type =
         t8_dpyramid_type_cid_to_parenttype[type - T8_DPYRAMID_ROOT_TPYE][cid];
       parent_type = t8_dpyramid_cid_type_to_parenttype[cid][type];
-      t8_debugf
-        ("[D] type: %i, cid: %i, parent_type: %i, pyra_parent_type: %i\n",
-         type, cid, parent_type, pyra_parent_type);
       SC_CHECK_ABORTF (parent_type == pyra_parent_type,
                        "Look-up tables are different");
     }
