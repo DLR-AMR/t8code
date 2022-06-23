@@ -25,6 +25,20 @@
 #include <t8_schemes/t8_default/t8_default_quad/t8_default_quad_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_quad/t8_dquad_bits.h>
 
+static const int    t8_dquad_face_corners[4][2] = { {0, 2},
+{1, 3},
+{0, 1},
+{2, 3}
+};
+
+static const int    t8_dquad_face_dual[4] = { 1, 0, 3, 2 };
+
+static const int    t8_dquad_corner_faces[4][2] = { {0, 2},
+{1, 2},
+{0, 3},
+{1, 3}
+};
+
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
@@ -61,8 +75,8 @@ void
 t8_default_scheme_quad_c::t8_element_copy (const t8_element_t *source,
                                            t8_element_t *dest)
 {
-  const t8_dquad_t *q = (const t8_dquad_t *) source;
-  t8_dquad_t   *r = (t8_dquad_t *) dest;
+  const t8_dquad_t   *q = (const t8_dquad_t *) source;
+  t8_dquad_t         *r = (t8_dquad_t *) dest;
 
   T8_ASSERT (t8_element_is_valid (source));
   T8_ASSERT (t8_element_is_valid (dest));
@@ -81,15 +95,15 @@ t8_default_scheme_quad_c::t8_element_compare (const t8_element_t *elem1,
   T8_ASSERT (t8_element_is_valid (elem2));
 
   return t8_dquad_compare ((const t8_dquad_t *) elem1,
-                          (const t8_dquad_t *) elem2);
+                           (const t8_dquad_t *) elem2);
 }
 
 void
 t8_default_scheme_quad_c::t8_element_parent (const t8_element_t *elem,
                                              t8_element_t *parent)
 {
-  const t8_dquad_t *q = (const t8_dquad_t *) elem;
-  t8_dquad_t   *r = (t8_dquad_t *) parent;
+  const t8_dquad_t   *q = (const t8_dquad_t *) elem;
+  t8_dquad_t         *r = (t8_dquad_t *) parent;
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (parent));
@@ -101,8 +115,8 @@ t8_default_scheme_quad_c::t8_element_sibling (const t8_element_t *elem,
                                               int sibid,
                                               t8_element_t *sibling)
 {
-  const t8_dquad_t *q = (const t8_dquad_t *) elem;
-  t8_dquad_t   *r = (t8_dquad_t *) sibling;
+  const t8_dquad_t   *q = (const t8_dquad_t *) elem;
+  t8_dquad_t         *r = (t8_dquad_t *) sibling;
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (sibling));
@@ -172,9 +186,9 @@ void
 t8_default_scheme_quad_c::t8_element_child (const t8_element_t *elem,
                                             int childid, t8_element_t *child)
 {
-  const t8_dquad_t *q = (const t8_dquad_t *) elem;
-  const t8_qcoord_t shift = T8_DQUAD_LEN (q->level + 1);
-  t8_dquad_t   *r = (t8_dquad_t *) child;
+  const t8_dquad_t   *q = (const t8_dquad_t *) elem;
+  const t8_qcoord_t   shift = T8_DQUAD_LEN (q->level + 1);
+  t8_dquad_t         *r = (t8_dquad_t *) child;
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (child));
@@ -192,7 +206,7 @@ void
 t8_default_scheme_quad_c::t8_element_children (const t8_element_t *elem,
                                                int length, t8_element_t *c[])
 {
-  const t8_dquad_t *q = (const t8_dquad_t *) elem;
+  const t8_dquad_t   *q = (const t8_dquad_t *) elem;
   int                 i;
 
   T8_ASSERT (t8_element_is_valid (elem));
@@ -266,8 +280,7 @@ t8_default_scheme_quad_c::t8_element_first_descendant (const t8_element_t
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (desc));
   T8_ASSERT (0 <= level && level <= T8_DQUAD_QMAXLEVEL);
-  t8_dquad_first_descendant ((t8_dquad_t *) elem,
-                                   (t8_dquad_t *) desc, level);
+  t8_dquad_first_descendant ((t8_dquad_t *) elem, (t8_dquad_t *) desc, level);
 }
 
 void
@@ -279,8 +292,7 @@ t8_default_scheme_quad_c::t8_element_last_descendant (const t8_element_t
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (desc));
   T8_ASSERT (0 <= level && level <= T8_DQUAD_QMAXLEVEL);
-  t8_dquad_last_descendant ((t8_dquad_t *) elem,
-                                  (t8_dquad_t *) desc, level);
+  t8_dquad_last_descendant ((t8_dquad_t *) elem, (t8_dquad_t *) desc, level);
 }
 
 void
@@ -304,9 +316,9 @@ t8_default_scheme_quad_c::t8_element_nca (const t8_element_t *elem1,
                                           const t8_element_t *elem2,
                                           t8_element_t *nca)
 {
-  const t8_dquad_t *q1 = (const t8_dquad_t *) elem1;
-  const t8_dquad_t *q2 = (const t8_dquad_t *) elem2;
-  t8_dquad_t   *r = (t8_dquad_t *) nca;
+  const t8_dquad_t   *q1 = (const t8_dquad_t *) elem1;
+  const t8_dquad_t   *q2 = (const t8_dquad_t *) elem2;
+  t8_dquad_t         *r = (t8_dquad_t *) nca;
 
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
@@ -406,7 +418,7 @@ int
 t8_default_scheme_quad_c::t8_element_face_parent_face (const t8_element_t
                                                        *elem, int face)
 {
-  const t8_dquad_t *q = (const t8_dquad_t *) elem;
+  const t8_dquad_t   *q = (const t8_dquad_t *) elem;
   int                 child_id;
 
   T8_ASSERT (t8_element_is_valid (elem));
@@ -431,11 +443,11 @@ t8_default_scheme_quad_c::t8_element_transform_face (const t8_element_t
                                                      int sign,
                                                      int is_smaller_face)
 {
-  const t8_dquad_t *qin = (const t8_dquad_t *) elem1;
-  const t8_dquad_t *q;
-  t8_dquad_t   *p = (t8_dquad_t *) elem2;
-  t8_qcoord_t      h = T8_DQUAD_LEN (qin->level);
-  t8_qcoord_t      x = qin->x;       /* temp storage for x coordinate in case elem1 = elem 2 */
+  const t8_dquad_t   *qin = (const t8_dquad_t *) elem1;
+  const t8_dquad_t   *q;
+  t8_dquad_t         *p = (t8_dquad_t *) elem2;
+  t8_qcoord_t         h = T8_DQUAD_LEN (qin->level);
+  t8_qcoord_t         x = qin->x;       /* temp storage for x coordinate in case elem1 = elem 2 */
 
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
@@ -511,7 +523,7 @@ t8_default_scheme_quad_c::t8_element_extrude_face (const t8_element_t *face,
                                                    int root_face)
 {
   const t8_dline_t   *l = (const t8_dline_t *) face;
-  t8_dquad_t   *q = (t8_dquad_t *) elem;
+  t8_dquad_t         *q = (t8_dquad_t *) elem;
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (T8_COMMON_IS_TYPE
@@ -578,8 +590,8 @@ t8_default_scheme_quad_c::t8_element_first_descendant_face (const t8_element_t
                                                             *first_desc,
                                                             int level)
 {
-  const t8_dquad_t *q = (const t8_dquad_t *) elem;
-  t8_dquad_t   *desc = (t8_dquad_t *) first_desc;
+  const t8_dquad_t   *q = (const t8_dquad_t *) elem;
+  t8_dquad_t         *desc = (t8_dquad_t *) first_desc;
   int                 first_face_corner;
 
   T8_ASSERT (0 <= face && face < T8_DQUAD_FACES);
@@ -599,8 +611,8 @@ t8_default_scheme_quad_c::t8_element_last_descendant_face (const t8_element_t
                                                            *last_desc,
                                                            int level)
 {
-  const t8_dquad_t *q = (const t8_dquad_t *) elem;
-  t8_dquad_t   *desc = (t8_dquad_t *) last_desc;
+  const t8_dquad_t   *q = (const t8_dquad_t *) elem;
+  t8_dquad_t         *desc = (t8_dquad_t *) last_desc;
   int                 last_face_corner;
 
   T8_ASSERT (0 <= face && face < T8_DQUAD_FACES);
@@ -619,7 +631,7 @@ t8_default_scheme_quad_c::t8_element_boundary_face (const t8_element_t *elem,
                                                     const t8_eclass_scheme_c
                                                     *boundary_scheme)
 {
-  const t8_dquad_t *q = (const t8_dquad_t *) elem;
+  const t8_dquad_t   *q = (const t8_dquad_t *) elem;
   t8_dline_t         *l = (t8_dline_t *) boundary;
 
   T8_ASSERT (t8_element_is_valid (elem));
@@ -672,8 +684,8 @@ int
 t8_default_scheme_quad_c::t8_element_is_root_boundary (const t8_element_t
                                                        *elem, int face)
 {
-  const t8_dquad_t *q = (const t8_dquad_t *) elem;
-  t8_qcoord_t      coord;
+  const t8_dquad_t   *q = (const t8_dquad_t *) elem;
+  t8_qcoord_t         coord;
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= face && face < T8_DQUAD_FACES);
@@ -694,8 +706,8 @@ t8_default_scheme_quad_c::t8_element_face_neighbor_inside (const t8_element_t
                                                            *neigh, int face,
                                                            int *neigh_face)
 {
-  const t8_dquad_t *q = (const t8_dquad_t *) elem;
-  t8_dquad_t   *n = (t8_dquad_t *) neigh;
+  const t8_dquad_t   *q = (const t8_dquad_t *) elem;
+  t8_dquad_t         *n = (t8_dquad_t *) neigh;
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (neigh));
@@ -716,7 +728,7 @@ void
 t8_default_scheme_quad_c::t8_element_anchor (const t8_element_t *elem,
                                              int coord[3])
 {
-  t8_dquad_t   *q;
+  t8_dquad_t         *q;
 
   T8_ASSERT (t8_element_is_valid (elem));
   q = (t8_dquad_t *) elem;
@@ -735,7 +747,7 @@ void
 t8_default_scheme_quad_c::t8_element_vertex_coords (const t8_element_t *t,
                                                     int vertex, int coords[])
 {
-  const t8_dquad_t *q1 = (const t8_dquad_t *) t;
+  const t8_dquad_t   *q1 = (const t8_dquad_t *) t;
   int                 len;
 
   T8_ASSERT (t8_element_is_valid (t));
@@ -788,7 +800,7 @@ t8_default_scheme_quad_c::t8_element_init (int length, t8_element_t *elem,
 #ifdef T8_ENABLE_DEBUG
   if (!new_called) {
     int                 i;
-    t8_dquad_t   *quads = (t8_dquad_t *) elem;
+    t8_dquad_t         *quads = (t8_dquad_t *) elem;
     /* Set all values to 0 */
     for (i = 0; i < length; i++) {
       t8_dquad_set_morton (quads + i, 0, 0);
@@ -813,7 +825,7 @@ void
 t8_default_scheme_quad_c::t8_element_debug_print (const t8_element_t *elem) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
-  t8_dquad_t   *quad = (t8_dquad_t *) elem;
+  t8_dquad_t         *quad = (t8_dquad_t *) elem;
   t8_dquad_print (SC_LP_DEBUG, quad);
 }
 #endif

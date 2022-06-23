@@ -1,3 +1,25 @@
+/*
+  This file is part of t8code.
+  t8code is a C library to manage a collection (a forest) of multiple
+  connected adaptive space-trees of general element classes in parallel.
+
+  Copyright (C) 2015 the developers
+
+  t8code is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  t8code is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with t8code; if not, write to the Free Software Foundation, Inc.,
+  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+*/
+
 #ifdef T8_DQUAD_TO_DHEX
 #include <t8_schemes/t8_default/t8_default_hex/t8_dhex_bits.h>
 
@@ -23,7 +45,6 @@
 #define t8_dquad_is_extended t8_dhex_is_extended
 #define t8_dquad_is_family t8_dhex_is_family
 #define t8_dquad_is_familypv t8_dhex_is_familypv
-#define t8_dquad_is_inside_3x3 t8_dhex_is_inside_3x3
 #define t8_dquad_is_inside_root t8_dhex_is_inside_root
 #define t8_dquad_is_node t8_dhex_is_node
 #define t8_dquad_is_parent t8_dhex_is_parent
@@ -56,15 +77,14 @@ t8_dquad_parent (const t8_dquad_t * q, t8_dquad_t * r)
 }
 
 void
-t8_dquad_sibling (const t8_dquad_t * q, t8_dquad_t * r,
-                        int sibling_id)
+t8_dquad_sibling (const t8_dquad_t * q, t8_dquad_t * r, int sibling_id)
 {
-  const int addx = (sibling_id & 0x01);
-  const int addy = (sibling_id & 0x02) >> 1;
+  const int           addx = (sibling_id & 0x01);
+  const int           addy = (sibling_id & 0x02) >> 1;
 #ifdef T8_DQUAD_TO_DHEX
-  const int addz = (sibling_id & 0x04) >> 2;
+  const int           addz = (sibling_id & 0x04) >> 2;
 #endif
-  const t8_qcoord_t shift = T8_DQUAD_LEN (q->level);
+  const t8_qcoord_t   shift = T8_DQUAD_LEN (q->level);
 
   T8_ASSERT (t8_dquad_is_extended (q));
   T8_ASSERT (q->level > 0);
@@ -82,19 +102,17 @@ t8_dquad_sibling (const t8_dquad_t * q, t8_dquad_t * r,
 int
 t8_dquad_compare (const void *v1, const void *v2)
 {
-  const t8_dquad_t *q1 = (const t8_dquad_t *) v1;
-  const t8_dquad_t *q2 = (const t8_dquad_t *) v2;
+  const t8_dquad_t   *q1 = (const t8_dquad_t *) v1;
+  const t8_dquad_t   *q2 = (const t8_dquad_t *) v2;
 
-  uint32_t exclorx, exclory, exclorxy, exclor;
+  uint32_t            exclorx, exclory, exclorxy, exclor;
 #ifdef T8_DQUAD_TO_DHEX
-  uint32_t exclorz;
+  uint32_t            exclorz;
 #endif
-  int64_t p1, p2, diff;
+  int64_t             p1, p2, diff;
 
-  T8_ASSERT (t8_dquad_is_node (q1, 1) ||
-                t8_dquad_is_extended (q1));
-  T8_ASSERT (t8_dquad_is_node (q2, 1) ||
-                t8_dquad_is_extended (q2));
+  T8_ASSERT (t8_dquad_is_node (q1, 1) || t8_dquad_is_extended (q1));
+  T8_ASSERT (t8_dquad_is_node (q2, 1) || t8_dquad_is_extended (q2));
 
   /* these are unsigned variables that inherit the sign bits */
   exclorx = q1->x ^ q2->x;
@@ -113,8 +131,10 @@ t8_dquad_compare (const void *v1, const void *v2)
   /* if (exclor ^ exclorz) > exclorz, then exclorxy has a more significant bit
    * than exclorz; also exclor and (exclor ^ exclorz) cannot be equal */
   if (exclorz > (exclor ^ exclorz)) {
-    p1 = q1->z + ((q1->z >= 0) ? 0 : ((int64_t) 1 << (T8_DQUAD_MAXLEVEL + 2)));
-    p2 = q2->z + ((q2->z >= 0) ? 0 : ((int64_t) 1 << (T8_DQUAD_MAXLEVEL + 2)));
+    p1 =
+      q1->z + ((q1->z >= 0) ? 0 : ((int64_t) 1 << (T8_DQUAD_MAXLEVEL + 2)));
+    p2 =
+      q2->z + ((q2->z >= 0) ? 0 : ((int64_t) 1 << (T8_DQUAD_MAXLEVEL + 2)));
   }
   else
 #if 0
@@ -122,15 +142,34 @@ t8_dquad_compare (const void *v1, const void *v2)
 #endif
 #endif
   if (exclory > (exclorxy ^ exclory)) {
-    p1 = q1->y + ((q1->y >= 0) ? 0 : ((int64_t) 1 << (T8_DQUAD_MAXLEVEL + 2)));
-    p2 = q2->y + ((q2->y >= 0) ? 0 : ((int64_t) 1 << (T8_DQUAD_MAXLEVEL + 2)));
+    p1 =
+      q1->y + ((q1->y >= 0) ? 0 : ((int64_t) 1 << (T8_DQUAD_MAXLEVEL + 2)));
+    p2 =
+      q2->y + ((q2->y >= 0) ? 0 : ((int64_t) 1 << (T8_DQUAD_MAXLEVEL + 2)));
   }
   else {
-    p1 = q1->x + ((q1->x >= 0) ? 0 : ((int64_t) 1 << (T8_DQUAD_MAXLEVEL + 2)));
-    p2 = q2->x + ((q2->x >= 0) ? 0 : ((int64_t) 1 << (T8_DQUAD_MAXLEVEL + 2)));
+    p1 =
+      q1->x + ((q1->x >= 0) ? 0 : ((int64_t) 1 << (T8_DQUAD_MAXLEVEL + 2)));
+    p2 =
+      q2->x + ((q2->x >= 0) ? 0 : ((int64_t) 1 << (T8_DQUAD_MAXLEVEL + 2)));
   }
   diff = p1 - p2;
   return (diff == 0) ? 0 : ((diff < 0) ? -1 : 1);
+}
+
+static inline int
+_is_inside_3x3_box (const t8_dquad_t * q)
+{
+  return
+    (q->x >= -T8_DQUAD_ROOT_LEN &&
+     q->x <= T8_DQUAD_ROOT_LEN + (T8_DQUAD_ROOT_LEN - 1)) &&
+    (q->y >= -T8_DQUAD_ROOT_LEN &&
+     q->y <= T8_DQUAD_ROOT_LEN + (T8_DQUAD_ROOT_LEN - 1)) &&
+#ifdef T8_DQUAD_TO_DHEX
+    (q->z >= -T8_DQUAD_ROOT_LEN &&
+     q->z <= T8_DQUAD_ROOT_LEN + (T8_DQUAD_ROOT_LEN - 1)) &&
+#endif
+    1;
 }
 
 int
@@ -143,12 +182,11 @@ t8_dquad_is_extended (const t8_dquad_t * q)
 #ifdef T8_DQUAD_TO_DHEX
     ((q->z & (T8_DQUAD_LEN (q->level) - 1)) == 0) &&
 #endif
-    t8_dquad_is_inside_3x3 (q);
+    _is_inside_3x3_box (q);
 }
 
 int
-t8_dquad_is_parent (const t8_dquad_t * q,
-                          const t8_dquad_t * r)
+t8_dquad_is_parent (const t8_dquad_t * q, const t8_dquad_t * r)
 {
   T8_ASSERT (t8_dquad_is_extended (q));
   T8_ASSERT (t8_dquad_is_extended (r));
@@ -168,7 +206,7 @@ t8_dquad_childrenpv (const t8_dquad_t * q, t8_dquad_t * c[])
 {
   t8_dquad_children (q, c[0], c[1], c[2], c[3]
 #ifdef T8_DQUAD_TO_DHEX
-                           , c[4], c[5], c[6], c[7]
+                     , c[4], c[5], c[6], c[7]
 #endif
     );
 }
@@ -206,14 +244,13 @@ t8_dquad_is_familypv (t8_dquad_t * q[])
 {
   return t8_dquad_is_family (q[0], q[1], q[2], q[3]
 #ifdef T8_DQUAD_TO_DHEX
-                                   , q[4], q[5], q[6], q[7]
+                             , q[4], q[5], q[6], q[7]
 #endif
     );
 }
 
 void
-t8_dquad_set_morton (t8_dquad_t * quadrant,
-                           int level, uint64_t id)
+t8_dquad_set_morton (t8_dquad_t * q, int level, uint64_t id)
 {
   int                 i;
 
@@ -222,44 +259,44 @@ t8_dquad_set_morton (t8_dquad_t * quadrant,
     T8_ASSERT (id < ((uint64_t) 1 << T8_DQUAD_DIM * (level + 2)));
   }
 
-  quadrant->level = (int8_t) level;
-  quadrant->x = 0;
-  quadrant->y = 0;
+  q->level = (int8_t) level;
+  q->x = 0;
+  q->y = 0;
 #ifdef T8_DQUAD_TO_DHEX
-  quadrant->z = 0;
+  q->z = 0;
 #endif
 
   /* this may set the sign bit to create negative numbers */
   for (i = 0; i < level + 2; ++i) {
-    quadrant->x |= (t8_qcoord_t) ((id & (1ULL << (T8_DQUAD_DIM * i)))
-                                     >> ((T8_DQUAD_DIM - 1) * i));
-    quadrant->y |= (t8_qcoord_t) ((id & (1ULL << (T8_DQUAD_DIM * i + 1)))
-                                     >> ((T8_DQUAD_DIM - 1) * i + 1));
+    q->x |= (t8_qcoord_t) ((id & (1ULL << (T8_DQUAD_DIM * i)))
+                                  >> ((T8_DQUAD_DIM - 1) * i));
+    q->y |= (t8_qcoord_t) ((id & (1ULL << (T8_DQUAD_DIM * i + 1)))
+                                  >> ((T8_DQUAD_DIM - 1) * i + 1));
 #ifdef T8_DQUAD_TO_DHEX
-    quadrant->z |= (t8_qcoord_t) ((id & (1ULL << (T8_DQUAD_DIM * i + 2)))
-                                     >> ((T8_DQUAD_DIM - 1) * i + 2));
+    q->z |= (t8_qcoord_t) ((id & (1ULL << (T8_DQUAD_DIM * i + 2)))
+                                  >> ((T8_DQUAD_DIM - 1) * i + 2));
 #endif
   }
 
-  quadrant->x <<= (T8_DQUAD_MAXLEVEL - level);
-  quadrant->y <<= (T8_DQUAD_MAXLEVEL - level);
+  q->x <<= (T8_DQUAD_MAXLEVEL - level);
+  q->y <<= (T8_DQUAD_MAXLEVEL - level);
 #ifdef T8_DQUAD_TO_DHEX
-  quadrant->z <<= (T8_DQUAD_MAXLEVEL - level);
+  q->z <<= (T8_DQUAD_MAXLEVEL - level);
 
   /* this is needed whenever the number of bits is more than MAXLEVEL + 2 */
-  if (quadrant->x >= (t8_qcoord_t) 1 << (T8_DQUAD_MAXLEVEL + 1))
-    quadrant->x -= (t8_qcoord_t) 1 << (T8_DQUAD_MAXLEVEL + 2);
-  if (quadrant->y >= (t8_qcoord_t) 1 << (T8_DQUAD_MAXLEVEL + 1))
-    quadrant->y -= (t8_qcoord_t) 1 << (T8_DQUAD_MAXLEVEL + 2);
-  if (quadrant->z >= (t8_qcoord_t) 1 << (T8_DQUAD_MAXLEVEL + 1))
-    quadrant->z -= (t8_qcoord_t) 1 << (T8_DQUAD_MAXLEVEL + 2);
+  if (q->x >= (t8_qcoord_t) 1 << (T8_DQUAD_MAXLEVEL + 1))
+      q->x -= (t8_qcoord_t) 1 << (T8_DQUAD_MAXLEVEL + 2);
+  if (q->y >= (t8_qcoord_t) 1 << (T8_DQUAD_MAXLEVEL + 1))
+      q->y -= (t8_qcoord_t) 1 << (T8_DQUAD_MAXLEVEL + 2);
+  if (q->z >= (t8_qcoord_t) 1 << (T8_DQUAD_MAXLEVEL + 1))
+      q->z -= (t8_qcoord_t) 1 << (T8_DQUAD_MAXLEVEL + 2);
 #endif
 
-  T8_ASSERT (t8_dquad_is_extended (quadrant));
+  T8_ASSERT (t8_dquad_is_extended (q));
 }
 
 uint64_t
-t8_dquad_linear_id (const t8_dquad_t * quadrant, int level)
+t8_dquad_linear_id (const t8_dquad_t * q, int level)
 {
   int                 i;
   uint64_t            id;
@@ -268,14 +305,14 @@ t8_dquad_linear_id (const t8_dquad_t * quadrant, int level)
   uint64_t            z;
 #endif
 
-  T8_ASSERT (t8_dquad_is_extended (quadrant));
+  T8_ASSERT (t8_dquad_is_extended (q));
   T8_ASSERT (0 <= level && level <= T8_DQUAD_MAXLEVEL);
 
   /* this preserves the high bits from negative numbers */
-  x = quadrant->x >> (T8_DQUAD_MAXLEVEL - level);
-  y = quadrant->y >> (T8_DQUAD_MAXLEVEL - level);
+  x = q->x >> (T8_DQUAD_MAXLEVEL - level);
+  y = q->y >> (T8_DQUAD_MAXLEVEL - level);
 #ifdef T8_DQUAD_TO_DHEX
-  z = quadrant->z >> (T8_DQUAD_MAXLEVEL - level);
+  z = q->z >> (T8_DQUAD_MAXLEVEL - level);
 #endif
 
   id = 0;
@@ -291,8 +328,7 @@ t8_dquad_linear_id (const t8_dquad_t * quadrant, int level)
 }
 
 void
-t8_dquad_first_descendant (const t8_dquad_t * q,
-                                 t8_dquad_t * fd, int level)
+t8_dquad_first_descendant (const t8_dquad_t * q, t8_dquad_t * fd, int level)
 {
   T8_ASSERT (t8_dquad_is_extended (q));
   T8_ASSERT ((int) q->level <= level && level <= T8_DQUAD_QMAXLEVEL);
@@ -306,10 +342,9 @@ t8_dquad_first_descendant (const t8_dquad_t * q,
 }
 
 void
-t8_dquad_last_descendant (const t8_dquad_t * q,
-                                t8_dquad_t * ld, int level)
+t8_dquad_last_descendant (const t8_dquad_t * q, t8_dquad_t * ld, int level)
 {
-  t8_qcoord_t      shift;
+  t8_qcoord_t         shift;
 
   T8_ASSERT (t8_dquad_is_extended (q));
   T8_ASSERT ((int) q->level <= level && level <= T8_DQUAD_QMAXLEVEL);
@@ -326,8 +361,7 @@ t8_dquad_last_descendant (const t8_dquad_t * q,
 
 void
 t8_dquad_nearest_common_ancestor (const t8_dquad_t * q1,
-                               const t8_dquad_t * q2,
-                               t8_dquad_t * r)
+                                  const t8_dquad_t * q2, t8_dquad_t * r)
 {
   int                 maxlevel;
   uint32_t            exclorx, exclory;
@@ -365,10 +399,9 @@ t8_dquad_nearest_common_ancestor (const t8_dquad_t * q1,
 
 void
 t8_dquad_corner_descendant (const t8_dquad_t * q,
-                                  t8_dquad_t * r, int c, int level)
+                            t8_dquad_t * r, int c, int level)
 {
-  t8_qcoord_t      shift = T8_DQUAD_LEN (q->level) -
-    T8_DQUAD_LEN (level);
+  t8_qcoord_t         shift = T8_DQUAD_LEN (q->level) - T8_DQUAD_LEN (level);
   T8_ASSERT (level >= (int) q->level && level <= T8_DQUAD_QMAXLEVEL);
   r->x = q->x + ((c & 1) ? shift : 0);
   r->y = q->y + (((c >> 1) & 1) ? shift : 0);
@@ -379,10 +412,9 @@ t8_dquad_corner_descendant (const t8_dquad_t * q,
 }
 
 void
-t8_dquad_face_neighbor (const t8_dquad_t * q,
-                              int face, t8_dquad_t * r)
+t8_dquad_face_neighbor (const t8_dquad_t * q, int face, t8_dquad_t * r)
 {
-  const t8_qcoord_t qh = T8_DQUAD_LEN (q->level);
+  const t8_qcoord_t   qh = T8_DQUAD_LEN (q->level);
 
   T8_ASSERT (0 <= face && face < T8_DQUAD_FACES);
   T8_ASSERT (t8_dquad_is_valid (q));
@@ -412,7 +444,7 @@ void
 t8_dquad_print (int log_priority, const t8_dquad_t * q)
 {
   /*t8_debugf ("x 0x%x y 0x%x z 0x%x level %d\n",q->x, q->y, q->z, q->level); */
-  t8_debugf ("x 0x%x y 0x%x level %d\n",q->x, q->y, q->level);
+  t8_debugf ("x 0x%x y 0x%x level %d\n", q->x, q->y, q->level);
 }
 
 int
@@ -438,16 +470,16 @@ t8_dquad_is_node (const t8_dquad_t * q, int inside)
 
 void
 t8_dquad_children (const t8_dquad_t * q,
-                         t8_dquad_t * c0, t8_dquad_t * c1,
-                         t8_dquad_t * c2, t8_dquad_t * c3
+                   t8_dquad_t * c0, t8_dquad_t * c1,
+                   t8_dquad_t * c2, t8_dquad_t * c3
 #ifdef T8_DQUAD_TO_DHEX
-                         , t8_dquad_t * c4, t8_dquad_t * c5,
-                         t8_dquad_t * c6, t8_dquad_t * c7
+                   , t8_dquad_t * c4, t8_dquad_t * c5,
+                   t8_dquad_t * c6, t8_dquad_t * c7
 #endif
   )
 {
   const int8_t        level = (int8_t) (q->level + 1);
-  const t8_qcoord_t inc = T8_DQUAD_LEN (level);
+  const t8_qcoord_t   inc = T8_DQUAD_LEN (level);
 
   T8_ASSERT (t8_dquad_is_extended (q));
   T8_ASSERT (q->level < T8_DQUAD_QMAXLEVEL);
@@ -513,12 +545,11 @@ t8_dquad_children (const t8_dquad_t * q,
 #ifndef T8_DQUAD_TO_DHEX
 int
 t8_dquad_is_family (const t8_dquad_t * q0,
-                   const t8_dquad_t * q1,
-                   const t8_dquad_t * q2,
-                   const t8_dquad_t * q3)
+                    const t8_dquad_t * q1,
+                    const t8_dquad_t * q2, const t8_dquad_t * q3)
 {
-  const int8_t      level = q0->level;
-  t8_qcoord_t       inc;
+  const int8_t        level = q0->level;
+  t8_qcoord_t         inc;
 
   T8_ASSERT (t8_dquad_is_extended (q0));
   T8_ASSERT (t8_dquad_is_extended (q1));
@@ -538,16 +569,15 @@ t8_dquad_is_family (const t8_dquad_t * q0,
 #else
 int
 t8_dhex_is_family (const t8_dhex_t * q0,
-                          const t8_dhex_t * q1,
-                          const t8_dhex_t * q2,
-                          const t8_dhex_t * q3,
-                          const t8_dhex_t * q4,
-                          const t8_dhex_t * q5,
-                          const t8_dhex_t * q6,
-                          const t8_dhex_t * q7)
+                   const t8_dhex_t * q1,
+                   const t8_dhex_t * q2,
+                   const t8_dhex_t * q3,
+                   const t8_dhex_t * q4,
+                   const t8_dhex_t * q5,
+                   const t8_dhex_t * q6, const t8_dhex_t * q7)
 {
   const int8_t        level = q0->level;
-  t8_qcoord_t      inc;
+  t8_qcoord_t         inc;
 
   T8_ASSERT (t8_dhex_is_extended (q0));
   T8_ASSERT (t8_dhex_is_extended (q1));
@@ -587,19 +617,4 @@ t8_dquad_is_valid (const t8_dquad_t * q)
     ((q->z & (T8_DQUAD_LEN (q->level) - 1)) == 0) &&
 #endif
     t8_dquad_is_inside_root (q);
-}
-
-int
-t8_dquad_is_inside_3x3 (const t8_dquad_t * q)
-{
-  return
-    (q->x >= -T8_DQUAD_ROOT_LEN &&
-     q->x <= T8_DQUAD_ROOT_LEN + (T8_DQUAD_ROOT_LEN - 1)) &&
-    (q->y >= -T8_DQUAD_ROOT_LEN &&
-     q->y <= T8_DQUAD_ROOT_LEN + (T8_DQUAD_ROOT_LEN - 1)) &&
-#ifdef T8_DQUAD_TO_DHEX
-    (q->z >= -T8_DQUAD_ROOT_LEN &&
-     q->z <= T8_DQUAD_ROOT_LEN + (T8_DQUAD_ROOT_LEN - 1)) &&
-#endif
-    1;
 }

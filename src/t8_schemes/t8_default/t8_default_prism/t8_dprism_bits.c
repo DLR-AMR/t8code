@@ -203,7 +203,7 @@ t8_dprism_boundary_face (const t8_dprism_t *p, int face,
                          t8_element_t *boundary)
 {
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
-  t8_dquad_t   *q = (t8_dquad_t *) boundary;
+  t8_dquad_t         *q = (t8_dquad_t *) boundary;
   if (face >= 3) {
     t8_dtri_t          *t = (t8_dtri_t *) boundary;
     t8_dtri_copy (&p->tri, t);
@@ -415,7 +415,7 @@ t8_dprism_extrude_face (const t8_element_t *face,
 {
   t8_dprism_t        *p = (t8_dprism_t *) elem;
   const t8_dtri_t    *t = (const t8_dtri_t *) face;
-  const t8_dquad_t *q = (const t8_dquad_t *) face;
+  const t8_dquad_t   *q = (const t8_dquad_t *) face;
   T8_ASSERT (0 <= root_face && root_face < T8_DPRISM_FACES);
   switch (root_face) {
   case 0:
