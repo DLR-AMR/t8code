@@ -444,6 +444,13 @@ t8_default_scheme_line_c::t8_element_is_family (t8_element_t **fam)
   return t8_dline_is_familypv ((const t8_dline_t **) fam);
 }
 
+int
+t8_default_scheme_line_c::t8_element_refines_irregular ()
+{
+  /*lines always refine regularly */
+  return 0;
+}
+
 #ifdef T8_ENABLE_DEBUG
 /* *INDENT-OFF* */
 /* indent bug, indent adds a second "const" modifier */

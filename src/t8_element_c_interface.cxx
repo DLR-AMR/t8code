@@ -197,6 +197,13 @@ t8_element_root_len (t8_eclass_scheme_c *ts, const t8_element_t *elem)
   return ts->t8_element_root_len (elem);
 }
 
+int
+t8_element_refines_irregular (t8_eclass_scheme_c *ts)
+{
+  T8_ASSERT (ts != NULL);
+  return ts->t8_element_refines_irregular ();
+}
+
 void
 t8_element_new (t8_eclass_scheme_c *ts, int length, t8_element_t **elems)
 {

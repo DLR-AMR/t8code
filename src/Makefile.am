@@ -28,7 +28,9 @@ libt8_installed_headers = \
   src/t8_cmesh_vtk_writer.h \
   src/t8_cmesh_vtk_reader.hxx \
   src/t8_forest.h \
-  src/t8_vec.h src/t8_vtk.h
+  src/t8_vec.h \
+  src/t8_version.h \
+  src/t8_vtk.h
 libt8_installed_headers_cmesh = \
   src/t8_cmesh/t8_cmesh_testcases.h \
   src/t8_cmesh/t8_cmesh_save.h \
@@ -49,6 +51,7 @@ libt8_installed_headers_geometry_impl = \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx \
+  src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx
 libt8_installed_headers_schemes_default =
 libt8_installed_headers_default_common =
@@ -97,6 +100,7 @@ libt8_compiled_sources = \
   src/t8_forest/t8_forest_partition.cxx src/t8_forest/t8_forest_cxx.cxx \
   src/t8_forest/t8_forest_private.c src/t8_forest/t8_forest_vtk.cxx \
   src/t8_forest/t8_forest_ghost.cxx src/t8_forest/t8_forest_iterate.cxx \
+  src/t8_version.c \
   src/t8_vtk.c src/t8_forest/t8_forest_balance.cxx src/t8_vec.c \
   src/t8_cmesh/t8_cmesh_testcases.c 
 

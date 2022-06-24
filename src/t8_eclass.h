@@ -152,7 +152,6 @@ int                 t8_eclass_compare (t8_eclass_t eclass1,
  * \return               Non-zero if \a eclass is valid, zero otherwise.
 */
 int                 t8_eclass_is_valid (t8_eclass_t eclass);
-
 T8_EXTERN_C_END ();
 
 #endif /* !T8_ELEMENT_H */

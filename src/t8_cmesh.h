@@ -774,7 +774,6 @@ void                t8_cmesh_new_translate_vertices_to_attributes (t8_topidx_t
                                                                    *attr_vertices,
                                                                    int
                                                                    num_vertices);
-
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_H */

@@ -120,8 +120,53 @@ t8_geom_compute_linear_geometry (t8_eclass_t tree_class,
     t8_geom_bilinear_interpolation (ref_coords,
                                     tree_vertices, dimension, out_coords);
     break;
+  case T8_ECLASS_PYRAMID:
+    {
+      double              ray[3], lambda, quad_coords[3], length, length2;
+      length = 0;
+      length2 = 0;
+      quad_coords[2] = 0;
+      /*vertices = tree_vertices */
+      /*coordinates = out_coords */
+      /*vertex_coords = len * corner_coords = ref_coords */
+
+      /*In this case, the vertex is the tip of the parent pyramid and we don't have to compute
+       * anything.*/
+      if (ref_coords[0] == 1. && ref_coords[1] == 1. && ref_coords[2] == 1.) {
+        for (i = 0; i < 3; i++) {
+          out_coords[i] = tree_vertices[12 + i];
+        }
+        break;
+      }
+      /* Project vertex_coord onto x-y-plane */
+      for (i = 0; i < 3; i++) {
+        ray[i] = 1 - ref_coords[i];
+      }
+      lambda = ref_coords[2] / ray[2];
+      for (i = 0; i < 2; i++) {
+        /*Compute coords of vertex in the plane */
+        quad_coords[i] = ref_coords[i] - lambda * ray[i];
+        length += (1 - quad_coords[i]) * (1 - quad_coords[i]);
+      }
+      length += 1;
+      /*compute the ratio */
+      for (i = 0; i < 3; i++) {
+        length2 +=
+          (ref_coords[i] - quad_coords[i]) * (ref_coords[i] - quad_coords[i]);
+      }
+      lambda = sqrt (length2) / sqrt (length);
+
+      /*Interpolate on quad */
+      t8_geom_bilinear_interpolation ((const double *) quad_coords,
+                                      tree_vertices, 2, out_coords);
+      /*Project it back */
+      for (i = 0; i < 3; i++) {
+        out_coords[i] += (tree_vertices[12 + i] - out_coords[i]) * lambda;
+      }
+      break;
+    }
   default:
     SC_ABORT ("Linear geometry coordinate computation is supported only for "
-              "vertices/lines/triangles/tets/quads/prisms/hexes.");
+              "vertices/lines/triangles/tets/quads/prisms/hexes/pyramids.");
   }
 }
