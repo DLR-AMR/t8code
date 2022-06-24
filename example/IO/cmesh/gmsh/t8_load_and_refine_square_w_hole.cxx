@@ -196,7 +196,7 @@ main (int argc, char *argv[])
   t8_init (SC_LP_DEBUG);
 
   cmesh =
-    t8_load_refine_load_cmesh ("../share/data/circlesquare_hybrid_hole",
+    t8_load_refine_load_cmesh ("circlesquare_hybrid_hole",
                                sc_MPI_COMM_WORLD, 2);
   t8_load_refine_build_forest (cmesh, sc_MPI_COMM_WORLD, 1);
 
