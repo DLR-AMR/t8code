@@ -27,8 +27,6 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
-/* TODO: rename this file to t8_something */
-
 static void
 t8_cmesh_load_distribute (const char *fileprefix, int num_files, int no_vtk)
 {

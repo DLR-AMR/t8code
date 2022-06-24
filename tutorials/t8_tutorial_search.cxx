@@ -114,7 +114,7 @@
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>     /* default refinement scheme. */
 #include <t8_vec.h>             /* Basic operations on 3D vectors. */
 #include <t8_forest/t8_forest_iterate.h>        /* For the search algorithm. */
-#include <example/tutorials/t8_step3.h> /* Example forest adaptation from step 3 */
+#include <tutorials/t8_step3.h> /* Example forest adaptation from step 3 */
 
 /* Our search query, a particle together with a flag. */
 typedef struct

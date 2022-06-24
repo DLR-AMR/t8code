@@ -110,7 +110,7 @@ For a debugging mode with static linkage (makes using gdb and valgrind more comf
   
 ### Getting started
   
-  To get familiar with t8code and its algorithms and data structures we recommend executing the tutorial examples in `example/tutorials`
+  To get familiar with t8code and its algorithms and data structures we recommend executing the tutorial examples in `tutorials`
   and read the corresponding Wiki pages starting with [Step 0 - Helloworld](https://github.com/holke/t8code/wiki/Step-0---Hello-World).
   
   A sophisticated example of a complete numerical simulation is our finite volume solver of the advection equation in `example/advection`.

@@ -20,15 +20,15 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* This file is part of the step5 example of t8code.
- * Here, we only wrap the main function. See t8_step5_element_data.cxx for the documentation of
- * the step5 example.
+/* This file is part of the step3 example of t8code.
+ * Here, we only wrap the main function. See t8_step3_adapt_forest.cxx for the documentation of 
+ * the step3 example.
  */
 
-#include <example/tutorials/t8_step5.h>
+#include <tutorials/t8_step3.h>
 
 int
 main (int argc, char **argv)
 {
-  return t8_step5_main (argc, argv);
+  return t8_step3_main (argc, argv);
 }
