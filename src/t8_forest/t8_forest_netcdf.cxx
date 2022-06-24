@@ -31,9 +31,25 @@ These functions write a file in the NetCDF-format which represents the given 2D-
 /* Standard netcdf error function */
 #define ERRCODE 2
 #define ERR(e) {t8_global_productionf("Error: %s\n", nc_strerror(e)); exit(ERRCODE);}
+#else
+/* Macros usually defined in 'netcdf.h' */
+#ifndef NC_CHUNCKED
+#define NC_CHUNCKED 0
+#endif
+#endif
+#ifndef NC_CONTIGUOUS
+#define NC_CONTIGUOUS 1
 #endif
 #if T8_WITH_NETCDF_PAR
 #include <netcdf_par.h>
+#else
+/* Macros usually defined in 'netcdf_par.h' */
+#ifndef NC_INDEPENDENT
+#define NC_INDEPENDENT 0
+#endif
+#ifndef NC_COLLECTIVE
+#define NC_COLLECTIVE 1
+#endif
 #endif
 #include <t8_element_cxx.hxx>
 #include <t8_forest.h>
@@ -1144,6 +1160,7 @@ t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix,
   snprintf (file_name, BUFSIZ, "%s.nc", file_prefix);
 
 #if !T8_WITH_NETCDF_PAR
+  /* In case of a parallel configuration without parallel netCDF routines */ 
   int                 retval;
   int                 mpirank, mpisize;
   /* Size of the communicator */
@@ -1183,19 +1200,25 @@ t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix,
   context.start_index = 0;
   context.convention = "UGRID v1.0";
 
-#if T8_WITH_NETCDF_PAR
-  /* Check the given 'netcdf_storage_mode' and 'netcdf_mpi_access' */
-  if ((netcdf_var_storage_mode != NC_CONTIGUOUS
-       && netcdf_var_storage_mode != NC_CHUNKED)
-      || (netcdf_mpi_access != NC_INDEPENDENT
-          && netcdf_mpi_access != NC_COLLECTIVE)) {
+#if T8_WITH_NETCDF
+  /* Check the given 'netcdf_storage_mode' */
+  if (netcdf_var_storage_mode != NC_CONTIGUOUS
+      && netcdf_var_storage_mode != NC_CHUNKED) {
     t8_global_productionf
-      ("Illegal input parameters for either the storage-mode (NC_CONTIGUOUS or NC_CHUNKED) or the netcdf variable mpi-access (NC_INDEPENDENT or NC_COLLECTIVE) were given.\nTherefore, default values (NC_CONTIGUOUS, NC_INDEPENDENT) will be used.\n");
+      ("Illegal input parameter for the storage-mode (NC_CONTIGUOUS or NC_CHUNKED) was given.\nTherefore, NC_CONTIGUOUS will be used as the default value.\n");
     context.netcdf_var_storage_mode = NC_CONTIGUOUS;
-    context.netcdf_mpi_access = NC_INDEPENDENT;
-  }
-  else {
+  } else {
     context.netcdf_var_storage_mode = netcdf_var_storage_mode;
+  }
+#endif
+#if T8_WITH_NETCDF_PAR
+  /* Check the given 'netcdf_mpi_access' */
+  if (netcdf_mpi_access != NC_INDEPENDENT
+      && netcdf_mpi_access != NC_COLLECTIVE) {
+    t8_global_productionf
+      ("Illegal input parameter for the variable-mpi-access (NC_INDEPENDENT or NC_COLLECTIVE) was given.\nTherefore, NC_INDEPENDENT will be used as the default value.\n");
+    context.netcdf_mpi_access = NC_INDEPENDENT;
+  } else {
     context.netcdf_mpi_access = netcdf_mpi_access;
   }
 #endif
@@ -1203,22 +1226,16 @@ t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix,
   /* Create and initialize the 'namespace_context' which holds the names of the variables, they vary depending on the given dimension */
   t8_forest_netcdf_ugrid_namespace_t namespace_context;
   t8_forest_init_ugrid_namespace_context (&namespace_context, dim);
-  /* Check the dimension of the forest which is ought be written to a netCDF-File. */
-  switch (dim) {
-  case 2:
-    t8_debugf ("Writing 2D forest to NetCDF.\n");
-    t8_forest_write_netcdf_file (forest, &context, &namespace_context,
-                                 num_extern_netcdf_vars, ext_variables, comm);
-    break;
-  case 3:
-    t8_debugf ("Writing 3D forest to NetCDF.\n");
-    t8_forest_write_netcdf_file (forest, &context, &namespace_context,
-                                 num_extern_netcdf_vars, ext_variables, comm);
-    break;
-  default:
+
+  /* Check the dimension of the forest (only 2D and 3D are supported) */
+  if (dim < 2 || dim > 3)
+  {
     t8_global_errorf
-      ("Only writing 2D and 3D NetCDF forest data is supported.\n");
-    break;
+      ("Only writing 2D and 3D netCDF forest data is supported.\n");
+  } else {
+    t8_debugf ("Writing a %dD forest to netCDF.\n", dim);
+    t8_forest_write_netcdf_file (forest, &context, &namespace_context,
+                                 num_extern_netcdf_vars, ext_variables, comm);
   }
 }
 
@@ -1231,10 +1248,10 @@ t8_forest_write_netcdf (t8_forest_t forest, const char *file_prefix,
                         sc_MPI_Comm comm)
 {
   /* Choose NC_CONTIGUOUS as default storage pattern, this is equal to 1 (defined in 'netcdf.h') */
-  int                 netcdf_var_storage_mode = 1;
+  int                 netcdf_var_storage_mode = NC_CONTIGUOUS;
 
   /* Choose NC_INDEPENDENT as default variable access, this is equal to 0 (defined in 'netcdf_par.h') */
-  int                 netcdf_mpi_access = 0;
+  int                 netcdf_mpi_access = NC_INDEPENDENT;
 
   t8_forest_write_netcdf_ext (forest, file_prefix, file_title, dim,
                               num_extern_netcdf_vars, ext_variables, comm,
