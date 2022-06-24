@@ -30,6 +30,7 @@
 #include <t8_vec.h>
 #ifdef T8_WITH_METIS
 #include <metis.h>
+
 #endif
 #include "t8_cmesh_trees.h"
 
@@ -723,7 +724,6 @@ t8_cmesh_tree_vertices_negative_volume (t8_eclass_t eclass,
     v_2[i] = vertices[6 + i] - vertices[i];
     v_j[i] = vertices[3 * j + i] - vertices[i];
   }
-
   /* compute cross = v_1 x v_2 */
   t8_cmesh_tree_vertices_cross (v_1, v_2, cross);
   /* Compute sc_prod = <v_j, cross> */

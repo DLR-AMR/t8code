@@ -21,7 +21,7 @@
 */
 
 #include <t8_eclass.h>
-#include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
 /* Build every child for the parent element and check wether the computed parent is
  * again the input element. Then call this function for every child, until maxlevel is
@@ -67,8 +67,9 @@ t8_compute_child_find_parent (const int maxlvl)
   int                 eclassi;
   t8_eclass_t         eclass;
   scheme = t8_scheme_new_default_cxx ();
-  for (eclassi = T8_ECLASS_ZERO; eclassi < T8_ECLASS_PYRAMID; eclassi++) {
-    /* TODO: Include pyramids as soon as they are supported. */
+  for (eclassi = T8_ECLASS_ZERO; eclassi < T8_ECLASS_COUNT; eclassi++) {
+    t8_productionf ("Testing child find parent for eclass %s\n",
+                    t8_eclass_to_string[eclassi]);
     eclass = (t8_eclass_t) eclassi;
     /* Get scheme for eclass */
     ts = scheme->eclass_schemes[eclass];

@@ -21,10 +21,11 @@
 */
 
 #include <t8.h>
-#include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri.h>
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtet.h>
 #include <t8_schemes/t8_default/t8_default_prism/t8_dprism.h>
+#include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest.h>
 
@@ -55,10 +56,6 @@ test_element_general_function (sc_MPI_Comm comm)
    * forest and test for all elements whether the general_element_function correctly returns. */
   for (eclass = T8_ECLASS_ZERO; eclass < T8_ECLASS_COUNT; ++eclass) {
     t8_debugf ("Tesing eclass %s\n", t8_eclass_to_string[eclass]);
-    if (eclass == T8_ECLASS_PYRAMID) {
-      /* TODO: Add pyramid test, as soon as pyramids are supported */
-      continue;
-    }
     class_scheme = ts->eclass_schemes[eclass];
     for (level = 0; level < maxlevel; ++level) {
       t8_locidx_t         ielement;
@@ -75,7 +72,7 @@ test_element_general_function (sc_MPI_Comm comm)
         /* Call the general function */
         class_scheme->t8_element_general_function (element, NULL, &outdata);
         /* Check the value of outdata, depending on the eclass.
-         * For classes TRIANGLE, TET and PRISM outdata should be overwritten with
+         * For classes TRIANGLE, TET, PRISM and PYRAMID outdata should be overwritten with
          * the type of the element.
          * For the other classes outdata should not have changed.
          */
@@ -90,9 +87,7 @@ test_element_general_function (sc_MPI_Comm comm)
           should_be = ((t8_dprism_t *) element)->tri.type;
           break;
         case T8_ECLASS_PYRAMID:
-          /* TODO: Activate this code branch as soon as the general_element_function
-           *       is implemented for pyramids. */
-          SC_ABORT ("Not implemented\n");
+          should_be = ((t8_dpyramid_t *) element)->type;
           break;
         }
         SC_CHECK_ABORTF (outdata == should_be,

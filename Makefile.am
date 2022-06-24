@@ -24,7 +24,6 @@ check_PROGRAMS =
 include_HEADERS =
 lib_LTLIBRARIES =
 nodist_include_HEADERS =
-nobase_dist_include_HEADERS =
 noinst_HEADERS =
 noinst_PROGRAMS =
 t8sysconf_DATA =
@@ -86,6 +85,7 @@ include example/common/Makefile.am
 include example/advect/Makefile.am
 include example/netcdf/Makefile.am
 include example/tutorials/Makefile.am
+include example/version/Makefile.am
 #include example/cxx/Makefile.am
 #include example/ExtremeScaling/Makefile.am
 

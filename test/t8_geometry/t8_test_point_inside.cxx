@@ -28,7 +28,7 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest.h>
 #include <t8_forest/t8_forest_iterate.h>
-#include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_element_cxx.hxx>
 #include <t8_cmesh/t8_cmesh_geometry.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
@@ -262,10 +262,8 @@ main (int argc, char **argv)
     ("Testing one specific point with one specific triangle.\n");
   t8_test_point_inside_specific_triangle ();
   for (ieclass = T8_ECLASS_LINE; ieclass < T8_ECLASS_COUNT; ieclass++) {
-    if (ieclass != T8_ECLASS_PYRAMID && ieclass != T8_ECLASS_QUAD) {
-      /* TODO: - does not work with pyramids yet, since pyramid elements are not implemented.
-       *         the point check should work with pyramids, once they are implemented.
-       *       - point inside check does not work with quads yet. */
+    if (ieclass != T8_ECLASS_QUAD) {
+      /* TODO: - point inside check does not work with quads yet. */
       t8_global_productionf
         ("Testing point finding with eclass %s\n",
          t8_eclass_to_string[ieclass]);

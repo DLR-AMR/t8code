@@ -32,6 +32,7 @@
 #include <t8_forest/t8_forest_vtk.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_cmesh/t8_cmesh_trees.h>
+#include<t8_element_c_interface.h>
 
 void
 t8_forest_init (t8_forest_t *pforest)
@@ -352,6 +353,108 @@ t8_forest_comm_global_num_elements (t8_forest_t forest)
   forest->global_num_elements = global_num_el;
 }
 
+/** Adapt callback function to refine every element in the forest.
+ * It is merely used to build a new forest with pyramids. 
+ * 
+ * \param [in] forest       the forest to which the new elements belong
+ * \param [in] forest_from  the forest that is adapted.
+ * \param [in] which_tree   the local tree containing \a elements
+ * \param [in] lelement_id  the local element id in \a forest_old in the tree of the current element
+ * \param [in] ts           the eclass scheme of the tree
+ * \param [in] is_family    if 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
+ * \param [in] num_elements the number of entries in \a elements that are defined
+ * \param [in] elements     Pointers to a family or, if \a is_family is zero,
+ *                          pointer to one element.
+ * \return                  Always return 1, to refine every element
+ */
+static int
+t8_forest_refine_everything (t8_forest_t forest, t8_forest_t forest_from,
+                             t8_locidx_t which_tree, t8_locidx_t lelement_id,
+                             t8_eclass_scheme_c *ts, const int is_family,
+                             const int num_elements, t8_element_t *elements[])
+{
+
+  return 1;
+}
+
+/**
+ * Check if any tree in a forest refines irregularly.
+ * An irregular refining tree is a tree with an element that does not
+ * refine into 2^dim children. For example the default implementation
+ * of pyramids. 
+ * \note This function is MPI collective
+ * 
+ * \param[in] forest    The forest to check
+ * \return          non-zero if any tree refines irregular
+ */
+static int
+t8_forest_refines_irregular (t8_forest_t forest)
+{
+  int                 irregular = 0;
+  int                 irregular_all_procs = 0;  /* Result over all procs */
+  int                 int_eclass;
+  int                 mpiret;
+  t8_eclass_scheme_c *tscheme;
+  /* Iterate over all eclasses */
+  for (int_eclass = (int) T8_ECLASS_ZERO; int_eclass < (int) T8_ECLASS_COUNT;
+       int_eclass++) {
+    /* If the forest has trees of the current eclass, check if elements of this
+     * eclass refine irregular. */
+    if (forest->cmesh->num_local_trees_per_eclass[int_eclass] > 0) {
+      tscheme =
+        t8_forest_get_eclass_scheme_before_commit (forest,
+                                                   (t8_eclass_t) int_eclass);
+      irregular = irregular || t8_element_refines_irregular (tscheme);
+    }
+  }
+  /* Combine the process-local results via a logic or and distribute the
+   * result over all procs (in the communicator).*/
+  mpiret = sc_MPI_Allreduce (&irregular, &irregular_all_procs, 1, sc_MPI_INT,
+                             sc_MPI_LOR, forest->mpicomm);
+  SC_CHECK_MPI (mpiret);
+
+  return irregular_all_procs;
+}
+
+/**Algorithm to populate a forest, if any tree refines irregularly.
+ * Create the elements on this process given a uniform partition
+ * of the coarse mesh. We can not use the function t8_forest_populate, because
+ * it assumes a regular refinement for all trees.
+ * \param[in] forest  The forest to populate
+*/
+static void
+t8_forest_populate_irregular (t8_forest_t forest)
+{
+  t8_forest_t         forest_zero;
+  t8_forest_t         forest_tmp;
+  t8_forest_t         forest_tmp_partition;
+  t8_cmesh_ref (forest->cmesh);
+  t8_scheme_cxx_ref (forest->scheme_cxx);
+  /* We start with a level 0 uniform refinement */
+  t8_forest_init (&forest_zero);
+  t8_forest_set_level (forest_zero, 0);
+  t8_forest_set_cmesh (forest_zero, forest->cmesh, forest->mpicomm);
+  t8_forest_set_scheme (forest_zero, forest->scheme_cxx);
+  t8_forest_commit (forest_zero);
+
+  /* Up to the specified level we refine every element. */
+  for (int i = 1; i <= forest->set_level; i++) {
+    t8_forest_init (&forest_tmp);
+    t8_forest_set_level (forest_tmp, i);
+    t8_forest_set_adapt (forest_tmp, forest_zero,
+                         t8_forest_refine_everything, 0);
+    t8_forest_commit (forest_tmp);
+    /* Partition the forest to even the load */
+    t8_forest_init (&forest_tmp_partition);
+    t8_forest_set_partition (forest_tmp_partition, forest_tmp, 0);
+    t8_forest_commit (forest_tmp_partition);
+    forest_zero = forest_tmp_partition;
+  }
+  /* Copy all elements over to the original forest. */
+  t8_forest_copy_trees (forest, forest_zero, 1);
+  t8_forest_unref (&forest_tmp_partition);
+}
+
 void
 t8_forest_commit (t8_forest_t forest)
 {
@@ -362,7 +465,6 @@ t8_forest_commit (t8_forest_t forest)
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (!forest->committed);
-
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of commit */
     forest->profile->commit_runtime = sc_MPI_Wtime ();
@@ -393,7 +495,13 @@ t8_forest_commit (t8_forest_t forest)
     t8_forest_compute_maxlevel (forest);
     T8_ASSERT (forest->set_level <= forest->maxlevel);
     /* populate a new forest with tree and quadrant objects */
-    t8_forest_populate (forest);
+    if (t8_forest_refines_irregular (forest) && forest->set_level > 0) {
+      /* On root level we will also use the normal algorithm */
+      t8_forest_populate_irregular (forest);
+    }
+    else {
+      t8_forest_populate (forest);
+    }
     forest->global_num_trees = t8_cmesh_get_num_trees (forest->cmesh);
   }
   else {                        /* set_from != NULL */

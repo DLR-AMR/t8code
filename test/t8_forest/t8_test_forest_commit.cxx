@@ -23,7 +23,7 @@
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
 #include <t8_forest.h>
-#include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
 #include "t8_cmesh/t8_cmesh_testcases.h"
@@ -118,6 +118,14 @@ t8_test_forest_commit (int cmesh_id)
   t8_cmesh_t          cmesh;
   t8_forest_t         forest, forest_ada_bal_part, forest_abp_3part;
   t8_scheme_cxx_t    *scheme;
+#ifdef T8_ENABLE_DEBUG
+  int                 level_step = 2;
+#else
+  int                 level_step = 3;
+#endif
+
+  t8_global_productionf ("Testing forest commit with cmesh_id = %i\n",
+                         cmesh_id);
 
   scheme = t8_scheme_new_default_cxx ();
   /* Construct a cmesh */
@@ -126,9 +134,9 @@ t8_test_forest_commit (int cmesh_id)
   min_level = t8_forest_min_nonempty_level (cmesh, scheme);
   /* Use one level with empty processes */
   min_level = SC_MAX (min_level - 1, 0);
-  for (level = min_level; level < min_level + 3; level++) {
+  for (level = min_level; level < min_level + level_step; level++) {
     t8_global_productionf ("Testing forest commit level %i\n", level);
-    maxlevel = level + 3;
+    maxlevel = level + level_step;
     /* ref the cmesh since we reuse it */
     t8_cmesh_ref (cmesh);
     /* Create a uniformly refined forest */
@@ -170,9 +178,8 @@ test_cmesh_forest_commit_all ()
        cmesh_id++) {
     /* This if statement is necessary to make the test work by avoiding specific cmeshes which do not work yet for this test.
      * When the issues are gone, remove the if statement. */
-    if (cmesh_id != 89 && (cmesh_id < 237 || cmesh_id > 256)) {
-      t8_test_forest_commit (cmesh_id);
-    }
+    t8_test_forest_commit (cmesh_id);
+
   }
 }
 
