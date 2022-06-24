@@ -31,7 +31,7 @@
 #include <t8_cmesh/t8_cmesh_partition.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_forest.h>
-#include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <example/common/t8_example_common.h>
 
 /* This is the user defined data used to define the
@@ -69,7 +69,7 @@ t8_vec3_xmay (double *x, double alpha, double *y)
 /* TODO: deprecated. was replaced by t8_common_midpoint. */
 static void
 t8_anchor_element (t8_forest_t forest, t8_locidx_t which_tree,
-                   t8_eclass_scheme_c * ts, t8_element_t * element,
+                   t8_eclass_scheme_c *ts, t8_element_t *element,
                    double elem_anchor_f[3])
 {
   double             *tree_vertices;
@@ -97,8 +97,8 @@ t8_anchor_element (t8_forest_t forest, t8_locidx_t which_tree,
 static int
 t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from,
                t8_locidx_t which_tree, t8_locidx_t lelement_id,
-               t8_eclass_scheme_c * ts, const int is_family,
-               const int num_elements, t8_element_t * elements[])
+               t8_eclass_scheme_c *ts, const int is_family,
+               const int num_elements, t8_element_t *elements[])
 {
   int                 level, base_level, max_level;
   double              elem_midpoint[3];
@@ -177,7 +177,11 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
   double              t;
   int                 partition_cmesh, r;
   const int           refine_rounds = max_level - init_level;
-  int                 time_step;
+  int                 time_step, procs_sent, balance_round;
+  t8_locidx_t         ghost_sent;
+  double              adapt_time = 0, ghost_time = 0, partition_time =
+    0, new_time = 0, total_time = 0, balance_time = 0;
+  sc_statinfo_t       times[6];
 
   t8_global_productionf ("Committed cmesh with"
                          " %lli global trees.\n",
@@ -189,6 +193,14 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
    * cmesh in order to be able to construct the forest on it.
    * If on the other hand, the input cmesh was replicated, then we keep it
    * as replicated throughout. */
+  sc_stats_init (&times[0], "new");
+  sc_stats_init (&times[1], "adapt");
+  sc_stats_init (&times[2], "ghost");
+  sc_stats_init (&times[3], "partition");
+  sc_stats_init (&times[4], "balance");
+  sc_stats_init (&times[5], "total");
+  total_time -= sc_MPI_Wtime ();
+
   partition_cmesh = t8_cmesh_is_partitioned (cmesh);
   if (partition_cmesh) {
     /* Set up cmesh_partition to be a repartition of cmesh. */
@@ -203,6 +215,8 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
     /* Use cmesh_partition as the original replicated cmesh */
     cmesh_partition = cmesh;
   }
+
+  cmesh_partition = cmesh;
   /* Initialize forest and set cmesh */
   t8_forest_init (&forest);
   t8_forest_set_cmesh (forest, cmesh_partition, comm);
@@ -211,11 +225,14 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
   /* Set the initial refinement level */
   t8_forest_set_level (forest, init_level);
   /* Commit the forest */
+  new_time -= sc_MPI_Wtime ();
   t8_forest_commit (forest);
+  new_time += sc_MPI_Wtime ();
+  sc_stats_set1 (&times[0], new_time, "new");
   /* Set the permanent data for adapt. */
-  adapt_data.normal[0] = 1;
-  adapt_data.normal[1] = 1;
-  adapt_data.normal[2] = 0.5;
+  adapt_data.normal[0] = 0.8;
+  adapt_data.normal[1] = 0.3;
+  adapt_data.normal[2] = 0.0;
   t8_vec3_normalize (adapt_data.normal);
   adapt_data.base_level = init_level;
   adapt_data.max_level = max_level;
@@ -231,7 +248,9 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
       adapt_data.c_min = x_min_max[0] + t;
       adapt_data.c_max = x_min_max[1] + t;
       t8_forest_set_user_data (forest_adapt, (void *) &adapt_data);
+      adapt_time -= sc_MPI_Wtime ();
       t8_forest_commit (forest_adapt);
+      adapt_time += sc_MPI_Wtime ();
       /* partition the adapted forest */
       /* TODO: profiling */
       t8_forest_init (&forest_partition);
@@ -249,6 +268,14 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
         }
       }
       t8_forest_commit (forest_partition);
+      partition_time +=
+        t8_forest_profile_get_partition_time (forest_partition, &procs_sent);
+      ghost_time +=
+        t8_forest_profile_get_ghost_time (forest_partition, &ghost_sent);
+      balance_time +=
+        t8_forest_profile_get_balance_time (forest_partition, &balance_round);
+      /* Set forest to the partitioned forest, so it gets adapted
+       * in the next time step. */
       forest = forest_partition;
     }
 
@@ -268,12 +295,18 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
       t8_cmesh_print_profile (t8_forest_get_cmesh (forest_partition));
     }
     t8_forest_print_profile (forest_partition);
-    /* Set forest to the partitioned forest, so it gets adapted
-     * in the next time step. */
-    forest = forest_partition;
     /* TIME-LOOP ends here */
   }
   /* memory clean-up */
+  total_time += sc_MPI_Wtime ();
+  sc_stats_accumulate (&times[0], new_time);
+  sc_stats_accumulate (&times[1], adapt_time);
+  sc_stats_accumulate (&times[2], ghost_time);
+  sc_stats_accumulate (&times[3], partition_time);
+  sc_stats_accumulate (&times[4], balance_time);
+  sc_stats_accumulate (&times[5], total_time);
+  sc_stats_compute (comm, 6, times);
+  sc_stats_print (t8_get_package_id (), SC_LP_ESSENTIAL, 6, times, 1, 1);
   t8_forest_unref (&forest_partition);
 }
 
@@ -297,7 +330,7 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim,
 
   if (msh_file != NULL) {
     /* Create a cmesh from the given mesh files */
-    cmesh = t8_cmesh_from_msh_file ((char *) msh_file, 1, comm, mesh_dim, 0);
+    cmesh = t8_cmesh_from_msh_file ((char *) msh_file, 0, comm, mesh_dim, 0);
     partition = 1;
   }
   else {
@@ -395,7 +428,7 @@ main (int argc, char *argv[])
                          "The maximum x coordinate " "in the mesh.");
   sc_options_add_double (opt, 'T', "time", &T, 1,
                          "The simulated time span."
-                         "We simulate the time from 0 to T");
+                         "We simulate the time from 0 to T. T has to be > 0.");
   sc_options_add_double (opt, 'D', "delta_t", &delta_t, 0.08,
                          "The time step in each simulation step. "
                          "Deprecated, use -C instead.");
@@ -415,7 +448,7 @@ main (int argc, char *argv[])
   if (first_argc < 0 || first_argc != argc || dim < 2 || dim > 3
       || (cmeshfileprefix == NULL && mshfileprefix == NULL
           && test_tet == 0) || stride <= 0
-      || (num_files - 1) * stride >= mpisize || cfl < 0) {
+      || (num_files - 1) * stride >= mpisize || cfl < 0 || T <= 0) {
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
     return 1;
   }

@@ -20,19 +20,33 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* This is step5 of the t8code tutorials.
- * 
- * TODO: This file still needs to be documented.
+/* See also: https://github.com/holke/t8code/wiki/Step-5---Store-element-data
+ *
+ * This is step5 of the t8code tutorials.
+ * In the following we will store data in the individual elements of our forest. 
+ * To do this, we will again create a uniform forest, which will get adapted as in step4, 
+ * with the difference that we partition, balance and create ghost elements all in the same step.
+ * After adapting the forest we will learn how to build a data array and gather data for 
+ * the local elements. Furthermore, we exchange the data values of the ghost elements and
+ * output the volume data to vtu.
+ *
  * How you can experiment here:
- *   -
+ *   - Look at the paraview output files of the adapted forest.
+ *     You can apply a clip filter to look into the cube. Also you can apply (in addition) 
+ *     the threshold filter to display only elements with certain properties.
+ *     But at first you may just want to enter the tooltip selection mode 'Hover Cells On'
+ *     to display cell information when hover over them.
+ *   - Change the adaptation criterion as you wish to adapt elements or families as desired.
+ *   - Store even more data per element, for instance the coordinates of its midpoint.
+ *     You can again apply the threshold filter to your new data. Don't forget to write the 
+ *     data into the output file.
  *  */
 
 #include <t8.h>                 /* General t8code header, always include this. */
 #include <t8_cmesh.h>           /* cmesh definition and basic interface. */
 #include <t8_cmesh/t8_cmesh_examples.h> /* A collection of exemplary cmeshes */
 #include <t8_forest.h>          /* forest definition and basic interface. */
-#include <t8_schemes/t8_default_cxx.hxx>        /* default refinement scheme. */
-#include <t8_forest_vtk.h>      /* Additional vtk functions to output arbitrary user data. */
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>     /* default refinement scheme. */
 #include <example/tutorials/t8_step3.h>
 
 T8_EXTERN_C_BEGIN ();
@@ -45,7 +59,7 @@ struct t8_step5_data_per_element
   double              volume;
 };
 
-static              t8_forest_t
+static t8_forest_t
 t8_step5_build_forest (sc_MPI_Comm comm, int level)
 {
   t8_cmesh_t          cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
@@ -220,9 +234,9 @@ t8_step5_output_data_to_vtu (t8_forest_t forest,
     int                 write_level = 1;
     int                 write_element_id = 1;
     int                 write_ghosts = 0;
-    t8_forest_vtk_write_file (forest, prefix, write_treeid, write_mpirank,
-                              write_level, write_element_id, write_ghosts,
-                              num_data, &vtk_data);
+    t8_forest_write_vtk_ext (forest, prefix, write_treeid, write_mpirank,
+                             write_level, write_element_id, write_ghosts,
+                             0, 0, num_data, &vtk_data);
   }
   T8_FREE (element_volumes);
 }
@@ -266,6 +280,7 @@ t8_step5_main (int argc, char **argv)
   /*
    * Setup.
    * Build cmesh and uniform forest.
+   * Adapt forest similar to step 3 & 4.
    */
 
   t8_global_productionf (" [step5] \n");

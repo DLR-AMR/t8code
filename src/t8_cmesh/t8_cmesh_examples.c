@@ -34,7 +34,7 @@
  * If offset is nonzero, then set_partition must be true and the cmesh is
  * partitioned and has all trees in conn as local trees.
  * The offsets on the different processes must add up! */
-static              t8_cmesh_t
+static t8_cmesh_t
 t8_cmesh_new_from_p4est_ext (void *conn, int dim,
                              sc_MPI_Comm comm, int set_partition,
                              t8_gloidx_t offset)
@@ -155,7 +155,7 @@ t8_cmesh_new_from_p8est (p8est_connectivity_t * conn,
   return t8_cmesh_new_from_p4est_ext (conn, 3, comm, do_partition, 0);
 }
 
-static              t8_cmesh_t
+static t8_cmesh_t
 t8_cmesh_new_vertex (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
@@ -173,7 +173,7 @@ t8_cmesh_new_vertex (sc_MPI_Comm comm)
   return cmesh;
 }
 
-static              t8_cmesh_t
+static t8_cmesh_t
 t8_cmesh_new_line (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
@@ -192,7 +192,7 @@ t8_cmesh_new_line (sc_MPI_Comm comm)
   return cmesh;
 }
 
-static              t8_cmesh_t
+static t8_cmesh_t
 t8_cmesh_new_tri (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
@@ -212,7 +212,7 @@ t8_cmesh_new_tri (sc_MPI_Comm comm)
   return cmesh;
 }
 
-static              t8_cmesh_t
+static t8_cmesh_t
 t8_cmesh_new_tet (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
@@ -233,7 +233,7 @@ t8_cmesh_new_tet (sc_MPI_Comm comm)
   return cmesh;
 }
 
-static              t8_cmesh_t
+static t8_cmesh_t
 t8_cmesh_new_quad (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
@@ -254,7 +254,7 @@ t8_cmesh_new_quad (sc_MPI_Comm comm)
   return cmesh;
 }
 
-static              t8_cmesh_t
+static t8_cmesh_t
 t8_cmesh_new_hex (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
@@ -279,7 +279,7 @@ t8_cmesh_new_hex (sc_MPI_Comm comm)
   return cmesh;
 }
 
-static              t8_cmesh_t
+static t8_cmesh_t
 t8_cmesh_new_pyramid (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
@@ -297,7 +297,7 @@ t8_cmesh_new_pyramid (sc_MPI_Comm comm)
   return cmesh;
 }
 
-static              t8_cmesh_t
+static t8_cmesh_t
 t8_cmesh_new_prism (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
@@ -1326,10 +1326,16 @@ t8_cmesh_new_prism_geometry (sc_MPI_Comm comm)
   for (i = 0; i < 8; i++) {
     t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_PRISM);
   }
-  t8_cmesh_set_join (cmesh, 0, 1, 2, 0, 3);
+  /*Ordinary join over quad-face */
+  t8_cmesh_set_join (cmesh, 0, 1, 2, 0, 0);
+  /*Join over quad-face of rotated prisms, but orientation is the same */
   t8_cmesh_set_join (cmesh, 1, 2, 1, 2, 0);
-  t8_cmesh_set_join (cmesh, 2, 3, 4, 3, 3);
-  t8_cmesh_set_join (cmesh, 3, 4, 2, 0, 3);
+  /*Join via top-triangle of prism 2 */
+  t8_cmesh_set_join (cmesh, 2, 3, 4, 3, 1);
+  /*Remaining joins are all via quad-faces */
+  /*prism 4 is rotated, therefore there is a different orientation */
+  t8_cmesh_set_join (cmesh, 3, 4, 2, 0, 1);
+  /*No different orientation between these faces. */
   t8_cmesh_set_join (cmesh, 4, 5, 2, 1, 0);
   t8_cmesh_set_join (cmesh, 5, 6, 2, 1, 0);
   t8_cmesh_set_join (cmesh, 6, 7, 0, 1, 0);
@@ -1791,6 +1797,121 @@ t8_cmesh_new_hybrid_gate_deformed (sc_MPI_Comm comm)
   vertices[17] = 0.8;
 
   t8_cmesh_set_tree_vertices (cmesh, 4, vertices, 8);
+
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
+}
+
+t8_cmesh_t
+t8_cmesh_new_full_hybrid (sc_MPI_Comm comm)
+{
+  t8_cmesh_t          cmesh;
+  double              vertices[24];
+  int                 i;
+
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
+
+  t8_cmesh_init (&cmesh);
+
+  t8_cmesh_register_geometry (cmesh, linear_geom);
+
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
+  t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_PYRAMID);
+  t8_cmesh_set_tree_class (cmesh, 2, T8_ECLASS_TET);
+  t8_cmesh_set_tree_class (cmesh, 3, T8_ECLASS_PRISM);
+  t8_cmesh_set_join (cmesh, 0, 1, 5, 4, 0);
+  t8_cmesh_set_join (cmesh, 1, 2, 0, 1, 0);
+  t8_cmesh_set_join (cmesh, 1, 3, 3, 3, 0);
+
+  /*Hex vertices */
+  vertices[0] = 0;
+  vertices[1] = 0;
+  vertices[2] = 0;
+
+  vertices[3] = 1;
+  vertices[4] = 0;
+  vertices[5] = 0;
+
+  vertices[6] = 0;
+  vertices[7] = 1;
+  vertices[8] = 0;
+
+  vertices[9] = 1;
+  vertices[10] = 1;
+  vertices[11] = 0;
+
+  vertices[12] = 0;
+  vertices[13] = 0;
+  vertices[14] = 1;
+
+  vertices[15] = 1;
+  vertices[16] = 0;
+  vertices[17] = 1;
+
+  vertices[18] = 0;
+  vertices[19] = 1;
+  vertices[20] = 1;
+
+  vertices[21] = 1;
+  vertices[22] = 1;
+  vertices[23] = 1;
+  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 8);
+
+  /*pyra vertices */
+  for (i = 0; i < 4; i++) {
+    vertices[i * 3] = vertices[i * 3 + 12];
+    vertices[i * 3 + 1] = vertices[i * 3 + 12 + 1];
+    vertices[i * 3 + 2] = vertices[i * 3 + 12 + 2];
+  }
+  vertices[12] = 1;
+  vertices[13] = 1;
+  vertices[14] = 2;
+  t8_cmesh_set_tree_vertices (cmesh, 1, vertices, 5);
+
+  /*tet vertices */
+  vertices[0] = 0;
+  vertices[1] = 0;
+  vertices[2] = 1;
+
+  vertices[3] = 0;
+  vertices[4] = 1;
+  vertices[5] = 2;
+
+  vertices[6] = 0;
+  vertices[7] = 1;
+  vertices[8] = 1;
+
+  vertices[9] = 1;
+  vertices[10] = 1;
+  vertices[11] = 2;
+  t8_cmesh_set_tree_vertices (cmesh, 2, vertices, 4);
+
+  /*prism vertices */
+  vertices[0] = 1;
+  vertices[1] = 1;
+  vertices[2] = 1;
+
+  vertices[3] = 0;
+  vertices[4] = 1;
+  vertices[5] = 1;
+
+  vertices[6] = 1;
+  vertices[7] = 1;
+  vertices[8] = 2;
+
+  vertices[9] = 1;
+  vertices[10] = 2;
+  vertices[11] = 1;
+
+  vertices[12] = 0;
+  vertices[13] = 2;
+  vertices[14] = 1;
+
+  vertices[15] = 1;
+  vertices[16] = 2;
+  vertices[17] = 2;
+
+  t8_cmesh_set_tree_vertices (cmesh, 3, vertices, 6);
 
   t8_cmesh_commit (cmesh, comm);
   return cmesh;

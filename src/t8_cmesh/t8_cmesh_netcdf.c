@@ -1108,24 +1108,15 @@ t8_cmesh_write_netcdf (t8_cmesh_t cmesh, const char *file_prefix,
   context.nMaxMesh_elem_nodes = t8_element_shape_max_num_corner[dim];
   t8_cmesh_netcdf_ugrid_namespace_t namespace_context;
   t8_cmesh_init_ugrid_namespace_context (&namespace_context, dim);
-  /* Check which dimension of cmesh should be written. */
-  switch (dim) {
-  case 2:
-    /* change max corners to element-shape_max_corners */
-    t8_debugf ("Writing 2D cmesh to NetCDF.\n");
-    /* Actually writing the NetCDF dimensions, variables and data */
-    t8_cmesh_write_netcdf_file (cmesh, &context, &namespace_context,
-                                num_extern_netcdf_vars, ext_variables, comm);
-    break;
-  case 3:
-    t8_debugf ("Writing 3D cmesh to NetCDF.\n");
-    /* Actually writing the NetCDF dimensions, variables and data */
-    t8_cmesh_write_netcdf_file (cmesh, &context, &namespace_context,
-                                num_extern_netcdf_vars, ext_variables, comm);
-    break;
-  default:
+  /* Check the dimension of the cmesh (only 2D and 3D are supported) */
+  if (dim < 2 || dim > 3)
+  {
     t8_global_errorf
-      ("Only writing 2D and 3D NetCDF cmesh data is supported.\n");
-    break;
+      ("Only writing 2D and 3D netCDF cmesh data is supported.\n");
+  } else {
+    t8_debugf ("Writing a %dD cmesh to netCDF.\n", dim);
+    /* Actually writing the NetCDF dimensions, variables and data */
+    t8_cmesh_write_netcdf_file (cmesh, &context, &namespace_context,
+                                num_extern_netcdf_vars, ext_variables, comm);
   }
 }

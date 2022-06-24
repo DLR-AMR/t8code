@@ -22,17 +22,18 @@
 
 #include <sc_options.h>
 #include <sc_refcount.h>
-#include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_forest.h>
 #include <t8_cmesh_vtk.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
+#include <t8_version.h>
 
 /** Construct the cmesh given the dimension of the examples. 
  * For 1D a line is constructed, for 2D a mesh consisting of 2 triangles
  * forming a quad and in 3D a cube made out of hexs, tets and prisms.
  * \param[in] dim           The dimension of the example. 1 <= \a dim <= 3.  
  * \return                  The cmesh that is specified by the parameters*/
-static              t8_cmesh_t
+static t8_cmesh_t
 t8_basic_create_cmesh (const int dim)
 {
   t8_cmesh_t          cmesh;
@@ -52,7 +53,7 @@ t8_basic_create_cmesh (const int dim)
     }
   case 3:
     {
-      cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
+      cmesh = t8_cmesh_new_full_hybrid (sc_MPI_COMM_WORLD);
       break;
     }
 
@@ -69,8 +70,8 @@ t8_basic_create_cmesh (const int dim)
 static int
 t8_basic_adapt (t8_forest_t forest, t8_forest_t forest_from,
                 t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                t8_eclass_scheme_c * ts, const int is_family,
-                const int num_elements, t8_element_t * elements[])
+                t8_eclass_scheme_c *ts, const int is_family,
+                const int num_elements, t8_element_t *elements[])
 {
   int                 level, i;
   double              coords[3] = { 0, 0, 0 };
@@ -184,6 +185,7 @@ main (int argc, char **argv)
   int                 dim, do_balance;
   int                 parsed, helpme;
   int                 sreturn;
+  int                 print_version = 0;
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -227,6 +229,9 @@ main (int argc, char **argv)
   sc_options_add_switch (opt, 'b', "balance", &do_balance,
                          "Additionally 2:1 balance the forest.");
 
+  sc_options_add_switch (opt, 'v', "version", &print_version,
+                         "Print the version number of t8code and exit.");
+
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
 
@@ -236,8 +241,12 @@ main (int argc, char **argv)
     /* display help message and usage */
     t8_global_productionf ("%s\n", help);
   }
-  else if (parsed >= 0 && 1 <= dim && dim <= 3) {
+  else if (!print_version && parsed >= 0 && 1 <= dim && dim <= 3) {
     t8_basic_hypercube (dim, do_balance);
+  }
+  else if (print_version) {
+    t8_global_productionf ("This is t8code version '%s'\n",
+                           t8_get_package_string ());
   }
   else {
     /* wrong usage */

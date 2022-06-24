@@ -29,6 +29,7 @@
 #include <t8_cmesh/t8_cmesh_trees.h>
 #include <t8_element_cxx.hxx>
 #include <t8_data/t8_containers.h>
+#include <sc_statistics.h>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -197,7 +198,7 @@ typedef struct
 } t8_ghost_data_exchange_t;
 
 void
-t8_forest_ghost_init (t8_forest_ghost_t * pghost, t8_ghost_type_t ghost_type)
+t8_forest_ghost_init (t8_forest_ghost_t *pghost, t8_ghost_type_t ghost_type)
 {
   t8_forest_ghost_t   ghost;
 
@@ -399,9 +400,9 @@ t8_forest_ghost_get_global_treeid (t8_forest_t forest,
 
 /* Given an index into the ghost_trees array and for that tree an element index,
  * return the corresponding element. */
-t8_element_t
-  * t8_forest_ghost_get_element (t8_forest_t forest, t8_locidx_t lghost_tree,
-                                 t8_locidx_t lelement)
+t8_element_t       *
+t8_forest_ghost_get_element (t8_forest_t forest, t8_locidx_t lghost_tree,
+                             t8_locidx_t lelement)
 {
   t8_ghost_tree_t    *ghost_tree;
 
@@ -419,7 +420,7 @@ static void
 t8_ghost_init_remote_tree (t8_forest_t forest, t8_gloidx_t gtreeid,
                            int remote_rank,
                            t8_eclass_t eclass,
-                           t8_ghost_remote_tree_t * remote_tree)
+                           t8_ghost_remote_tree_t *remote_tree)
 {
   t8_eclass_scheme_c *ts;
   t8_locidx_t         local_treeid;
@@ -444,7 +445,7 @@ t8_ghost_init_remote_tree (t8_forest_t forest, t8_gloidx_t gtreeid,
 static void
 t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
                      int remote_rank, t8_locidx_t ltreeid,
-                     const t8_element_t * elem, t8_locidx_t element_index)
+                     const t8_element_t *elem, t8_locidx_t element_index)
 {
   t8_ghost_remote_t   remote_entry_lookup, *remote_entry;
   t8_ghost_remote_tree_t *remote_tree;
@@ -716,7 +717,7 @@ typedef struct
 static int
 t8_forest_ghost_iterate_face_add_remote (t8_forest_t forest,
                                          t8_locidx_t ltreeid,
-                                         const t8_element_t * element,
+                                         const t8_element_t *element,
                                          int face, void *user_data,
                                          t8_locidx_t leaf_index)
 {
@@ -836,9 +837,9 @@ typedef struct
 
 static int
 t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
-                                 const t8_element_t * element,
+                                 const t8_element_t *element,
                                  const int is_leaf,
-                                 t8_element_array_t * leafs,
+                                 t8_element_array_t *leafs,
                                  t8_locidx_t tree_leaf_index, void *query,
                                  size_t query_index)
 {
@@ -1066,7 +1067,6 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
 
   last_class = T8_ECLASS_COUNT;
   num_local_trees = t8_forest_get_num_local_trees (forest);
-
   if (ghost_method != 0) {
     sc_array_init (&owners, sizeof (int));
     sc_array_init (&tree_owners, sizeof (int));
@@ -1359,7 +1359,7 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost,
 
 static void
 t8_forest_ghost_send_end (t8_forest_t forest, t8_forest_ghost_t ghost,
-                          t8_ghost_mpi_send_info_t * send_info,
+                          t8_ghost_mpi_send_info_t *send_info,
                           sc_MPI_Request * requests)
 {
   int                 num_remotes;
@@ -1425,7 +1425,7 @@ t8_forest_ghost_receive_message (int recv_rank, sc_MPI_Comm comm,
 static void
 t8_forest_ghost_parse_received_message (t8_forest_t forest,
                                         t8_forest_ghost_t ghost,
-                                        t8_locidx_t * current_element_offset,
+                                        t8_locidx_t *current_element_offset,
                                         int recv_rank, char *recv_buffer,
                                         int recv_bytes)
 {
@@ -1866,6 +1866,7 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
   int                 create_element_array = 0;
 
   T8_ASSERT (t8_forest_is_committed (forest));
+
   t8_global_productionf ("Into t8_forest_ghost with %i local elements.\n",
                          t8_forest_get_local_num_elements (forest));
 
@@ -2055,10 +2056,10 @@ t8_forest_ghost_remote_first_elem (t8_forest_t forest, int remote)
 
 /* Fill the send buffer for a ghost data exchange for on remote rank.
  * returns the number of bytes in the buffer. */
-static              size_t
+static size_t
 t8_forest_ghost_exchange_fill_send_buffer (t8_forest_t forest, int remote,
                                            char **pbuffer,
-                                           sc_array_t * element_data)
+                                           sc_array_t *element_data)
 {
   char               *buffer;
   t8_ghost_remote_t   lookup_rank, *remote_entry;
@@ -2126,7 +2127,7 @@ t8_forest_ghost_exchange_fill_send_buffer (t8_forest_t forest, int remote,
 }
 
 static t8_ghost_data_exchange_t *
-t8_forest_ghost_exchange_begin (t8_forest_t forest, sc_array_t * element_data)
+t8_forest_ghost_exchange_begin (t8_forest_t forest, sc_array_t *element_data)
 {
   t8_ghost_data_exchange_t *data_exchange;
   t8_forest_ghost_t   ghost;
@@ -2264,7 +2265,7 @@ t8_forest_ghost_exchange_begin (t8_forest_t forest, sc_array_t * element_data)
 }
 
 static void
-t8_forest_ghost_exchange_end (t8_ghost_data_exchange_t * data_exchange)
+t8_forest_ghost_exchange_end (t8_ghost_data_exchange_t *data_exchange)
 {
   int                 iproc;
 
@@ -2287,7 +2288,7 @@ t8_forest_ghost_exchange_end (t8_ghost_data_exchange_t * data_exchange)
 }
 
 void
-t8_forest_ghost_exchange_data (t8_forest_t forest, sc_array_t * element_data)
+t8_forest_ghost_exchange_data (t8_forest_t forest, sc_array_t *element_data)
 {
   t8_ghost_data_exchange_t *data_exchange;
 
@@ -2392,7 +2393,7 @@ t8_forest_ghost_print (t8_forest_t forest)
 
 /* Completely destroy a ghost structure */
 static void
-t8_forest_ghost_reset (t8_forest_ghost_t * pghost)
+t8_forest_ghost_reset (t8_forest_ghost_t *pghost)
 {
   t8_forest_ghost_t   ghost;
   size_t              it, it_trees;
@@ -2451,7 +2452,7 @@ t8_forest_ghost_ref (t8_forest_ghost_t ghost)
 }
 
 void
-t8_forest_ghost_unref (t8_forest_ghost_t * pghost)
+t8_forest_ghost_unref (t8_forest_ghost_t *pghost)
 {
   t8_forest_ghost_t   ghost;
 
@@ -2465,7 +2466,7 @@ t8_forest_ghost_unref (t8_forest_ghost_t * pghost)
 }
 
 void
-t8_forest_ghost_destroy (t8_forest_ghost_t * pghost)
+t8_forest_ghost_destroy (t8_forest_ghost_t *pghost)
 {
   T8_ASSERT (pghost != NULL && *pghost != NULL &&
              t8_refcount_is_last (&(*pghost)->rc));
