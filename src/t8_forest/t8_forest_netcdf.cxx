@@ -515,16 +515,22 @@ t8_forest_write_netcdf_data (t8_forest_t forest,
   T8_FREE (Mesh_elem_types);
   T8_FREE (Mesh_elem_tree_id);
 
+  T8_ASSERT(false);
+
   /* Store the number of local nodes */
   context->nMesh_local_node = num_local_nodes;
-  /* Gather the number of all global nodes */
-  retval =
-    sc_MPI_Allreduce (&num_local_nodes, &num_nodes, 1, T8_MPI_GLOIDX,
-                      sc_MPI_SUM, comm);
-  SC_CHECK_MPI (retval);
+  if (context->multifile_mode) {
+    context->nMesh_node = num_local_nodes;
+  } else {
+    /* Gather the number of all global nodes */
+    retval =
+      sc_MPI_Allreduce (&num_local_nodes, &num_nodes, 1, T8_MPI_GLOIDX,
+                        sc_MPI_SUM, comm);
+    SC_CHECK_MPI (retval);
 
-  /* After counting the number of nodes, the  NetCDF-dimension 'nMesh_node' can be created => Store the 'nMesh_node' dimension */
-  context->nMesh_node = num_nodes;
+    /* After counting the number of nodes, the  NetCDF-dimension 'nMesh_node' can be created => Store the 'nMesh_node' dimension */
+    context->nMesh_node = num_nodes;
+  }
 
 #endif
 }
@@ -1048,16 +1054,15 @@ t8_forest_write_netcdf_file (t8_forest_t forest,
 #if T8_WITH_NETCDF
   int                 retval;
 #endif
-  t8_gloidx_t         num_glo_elem;
 
   /* Check if the forest was committed. */
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  /* Get the number of global elements in the forest. */
-  num_glo_elem = t8_forest_get_global_num_elements (forest);
+  /* in multifile mode we only want to make space for the local elements */
+  context->nMesh_elem = context->multifile_mode
+    ? t8_forest_get_local_num_elements(forest)
+    : t8_forest_get_global_num_elements(forest);
 
-  /* Assign global number of elements. */
-  context->nMesh_elem = num_glo_elem;
 
   if (context->multifile_mode) {
     int mpirank;
