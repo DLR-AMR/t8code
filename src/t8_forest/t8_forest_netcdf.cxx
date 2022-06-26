@@ -496,8 +496,10 @@ t8_forest_write_netcdf_data (t8_forest_t forest,
   }
   /* Write the data in the corresponding NetCDF-variable. */
   /* Fill the 'Mesh_elem_types'-variable. */
-  start_ptr = (size_t) first_local_elem_id;
-  count_ptr = (size_t) num_local_elements;
+  /* In multifile mode every rank has its own file so we don't want or need
+   * any offset and every process can start writing at 0 */
+  start_ptr = context->multifile_mode ? 0 : first_local_elem_id;
+  count_ptr = num_local_elements;
   if ((retval =
        nc_put_vara_int (context->ncid, context->var_elem_types_id, &start_ptr,
                         &count_ptr, &Mesh_elem_types[0]))) {
@@ -908,7 +910,12 @@ t8_forest_write_netcdf_coordinate_data (t8_forest_t forest,
   /* *Write the data into the NetCDF coordinate variables.* */
 
   /* Define a (2D) NetCDF-Hyperslab for filling the variable */
-  const size_t        start_ptr_var[2] = { (size_t) first_local_elem_id, 0 };
+  const size_t        start_ptr_var[2] = {
+    /* In multifile mode we want to write to the
+     * process local file with no offset */
+    context->multifile_mode ? 0 : static_cast<size_t>(first_local_elem_id),
+    0
+  };
   const size_t        count_ptr_var[2] =
     { num_elements, (size_t) context->nMaxMesh_elem_nodes };
   /* Fill the 'Mesh_elem_node'-variable. */
@@ -919,8 +926,16 @@ t8_forest_write_netcdf_coordinate_data (t8_forest_t forest,
     ERR (retval);
   }
 
+  
   /* Fill the space coordinate variables */
   count_ptr = (size_t) context->nMesh_local_node;
+
+  /* In multifile mode we want to write to the
+  * process local file with no offset */
+  if (context->multifile_mode) {
+    start_ptr = 0;
+  }
+
   /* Fill the 'Mesh_node_x'-variable. */
   if ((retval =
        nc_put_vara_double (context->ncid, context->var_node_x_id, &start_ptr,
@@ -966,9 +981,13 @@ t8_forest_write_user_netcdf_data (t8_forest_t forest,
     size_t              count_ptr;
     int                 i;
 
-    /* Counters which imply the position in the NetCDF-variable where the data will be written, */
-    start_ptr = (size_t) t8_forest_get_first_local_element_id (forest);
-    count_ptr = (size_t) t8_forest_get_local_num_elements (forest);;
+    /* Counters which imply the position in the NetCDF-variable where the data will be written.
+     * In multifile mode we want to write to the
+     * process local file with no offset */
+    start_ptr = context->multifile_mode
+      ? 0
+      : t8_forest_get_first_local_element_id(forest);
+    count_ptr = t8_forest_get_local_num_elements (forest);
 
     /* Iterate over the amount of user-defined variables */
     for (i = 0; i < num_extern_netcdf_vars; i++) {
@@ -1118,7 +1137,7 @@ t8_forest_write_netcdf_file (t8_forest_t forest,
   /* Define the NetCDF-coordinate variables */
   t8_forest_write_netcdf_coordinate_variables (context, namespace_context);
 
-  /* Eventuallay declare user-defined elementwise NetCDF-variables, if some were passed */
+  /* Eventually declare user-defined elementwise NetCDF-variables, if some were passed */
   t8_forest_write_user_netcdf_vars (context, namespace_context,
                                     num_extern_netcdf_vars, ext_variables,
                                     comm);

@@ -42,10 +42,10 @@
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_forest_netcdf.h>
 #include <t8_netcdf.h>
-#include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_vec.h>
 
-// #include <algorithm>
+
 #include <vector>
 #include <string>
 #include <string_view>
@@ -80,7 +80,6 @@ int t8_example_netcdf_adapt_fn(
 	t8_locidx_t lelement_id, t8_eclass_scheme_c* ts, const int is_family,
 	const int num_elements, t8_element_t* elements[]
 ) {
-
 	auto& adapt_data = *static_cast<adapt_user_data*>(
 		t8_forest_get_user_data(
 			forest));
@@ -137,7 +136,6 @@ static void t8_example_time_netcdf_writing_operation(
 	sc_MPI_Barrier(comm);
 	double end_time = sc_MPI_Wtime();
 	double duration = end_time - start_time;
-
 	double global;
 	auto retval = sc_MPI_Reduce(
 		&duration, &global, 1, sc_MPI_DOUBLE, sc_MPI_MAX, 0, comm
