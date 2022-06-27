@@ -352,7 +352,13 @@ t8_forest_search_tree (t8_forest_t forest, t8_locidx_t ltreeid,
                                    - 1);
   /* Compute their nearest common ancestor */
   ts->t8_element_new (1, &nca);
-  ts->t8_element_nca (first_el, last_el, nca);
+  //ts->t8_element_nca (first_el, last_el, nca);
+  if (eclass == T8_ECLASS_PYRAMID) {
+    ts->t8_element_set_linear_id (nca, 0, 0);
+  }
+  else {
+    ts->t8_element_nca (first_el, last_el, nca);
+  }
 
   /* If we have queries build a list of all active queries,
    * thus all queries in the array */

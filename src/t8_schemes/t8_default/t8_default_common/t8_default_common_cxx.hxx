@@ -63,6 +63,12 @@ public:
   virtual t8_gloidx_t t8_element_count_leafs (const t8_element_t *t,
                                               int level);
 
+  /** Compute the number of siblings of an element. That is the number of 
+   * Children of its parent.
+   * \param [in] elem The element.
+   * \return          The number of siblings of \a element.
+   * Note that this number is >= 1, since we count the element itself as a sibling.
+   */
   virtual int         t8_element_num_siblings (const t8_element_t *elem)
     const;
 

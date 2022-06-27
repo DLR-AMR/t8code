@@ -72,6 +72,12 @@ public:
    */
   virtual size_t      t8_element_size (void);
 
+  /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
+   * Returns false otherwise.
+   * \return                    non-zero if there is one element in the tree that does not refine into 2^dim children.
+   */
+  virtual int         t8_element_refines_irregular (void) = 0;
+
   /** Return the maximum allowed level for any element of a given class.
    * \return                      The maximum allowed level for elements of class \b ts.
    */
