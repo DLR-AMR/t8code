@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* In this example, we will generate a curved mesh from an .msh and .brep file.
+/* In this example, we will generate a curved mesh from a .msh and .brep file.
  * After reading in both files, we wil define examplatory refinement criteria.
 */
 
