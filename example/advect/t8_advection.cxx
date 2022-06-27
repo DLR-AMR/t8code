@@ -797,7 +797,7 @@ t8_advect_replace (t8_forest_t forest_old,
   /* Get the old phi value (used in the cases with num_outgoing = 1) */
   phi_old = t8_advect_element_get_phi (problem, first_outgoing_data);
   if (refine == 0) {
-    T8_ASSERT(num_incoming == num_outgoing && num_incoming == 1);
+    T8_ASSERT (num_incoming == num_outgoing && num_incoming == 1);
     /* The element is not changed, copy phi and vol */
     memcpy (elem_data_in, elem_data_out, sizeof (t8_advect_element_data_t));
     t8_advect_element_set_phi_adapt (problem, first_incoming_data, phi_old);
