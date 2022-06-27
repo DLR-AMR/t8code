@@ -30,7 +30,7 @@ These functions write a file in the NetCDF-format which represents the given 2D-
 #include <netcdf.h>
 /* Standard netcdf error function */
 #define ERRCODE 2
-#define ERR(e) {t8_global_productionf("Error: %s\n", nc_strerror(e)); exit(ERRCODE);}
+#define ERR(e) {t8_global_productionf("Error: %s\n%s:%d\n", nc_strerror(e), __FILE__, __LINE__); exit(ERRCODE);}
 #else
 /* Macros usually defined in 'netcdf.h' */
 #ifndef NC_CHUNCKED
@@ -92,6 +92,7 @@ typedef struct
   int                 netcdf_var_storage_mode;
   int                 netcdf_mpi_access;
   int                 fill_mode;
+  int                 cmode;
   /* Stores the old NetCDF-FillMode if it gets changed */
   int                 old_fill_mode;
   bool                multifile_mode;
@@ -282,7 +283,9 @@ t8_forest_write_netcdf_variables (t8_forest_netcdf_context_t * context,
   if ((retval =
        nc_def_var_chunking (context->ncid, context->var_elem_types_id,
                             context->netcdf_var_storage_mode, NULL))) {
-    ERR (retval);
+    if (retval != NC_ENOTNC4) {
+      ERR (retval);
+    }
   }
   /* Define whether an independent or collective variable access is used */
 #if T8_WITH_NETCDF_PAR
@@ -335,7 +338,9 @@ t8_forest_write_netcdf_variables (t8_forest_netcdf_context_t * context,
   if ((retval =
        nc_def_var_chunking (context->ncid, context->var_elem_tree_id,
                             context->netcdf_var_storage_mode, NULL))) {
-    ERR (retval);
+    if (retval != NC_ENOTNC4) {
+      ERR (retval);
+    }
   }
   /* Define whether an independent or collective variable access is used */
 #if T8_WITH_NETCDF_PAR
@@ -386,7 +391,9 @@ t8_forest_write_netcdf_variables (t8_forest_netcdf_context_t * context,
   if ((retval =
        nc_def_var_chunking (context->ncid, context->var_elem_nodes_id,
                             context->netcdf_var_storage_mode, NULL))) {
-    ERR (retval);
+    if (retval != NC_ENOTNC4) {
+      ERR (retval);
+    }
   }
   /* Define whether an independent or collective variable access is used */
 #if T8_WITH_NETCDF_PAR
@@ -578,7 +585,9 @@ t8_forest_write_netcdf_coordinate_variables (t8_forest_netcdf_context_t *
   if ((retval =
        nc_def_var_chunking (context->ncid, context->var_node_x_id,
                             context->netcdf_var_storage_mode, NULL))) {
-    ERR (retval);
+    if (retval != NC_ENOTNC4) {
+      ERR (retval);
+    }
   }
   /* Define whether an independent or collective variable access is used */
 #if T8_WITH_NETCDF_PAR
@@ -626,7 +635,9 @@ t8_forest_write_netcdf_coordinate_variables (t8_forest_netcdf_context_t *
   if ((retval =
        nc_def_var_chunking (context->ncid, context->var_node_y_id,
                             context->netcdf_var_storage_mode, NULL))) {
-    ERR (retval);
+    if (retval != NC_ENOTNC4) {
+      ERR (retval);
+    }
   }
   /* Define whether an independent or collective variable access is used */
 #if T8_WITH_NETCDF_PAR
@@ -673,7 +684,9 @@ t8_forest_write_netcdf_coordinate_variables (t8_forest_netcdf_context_t *
   if ((retval =
        nc_def_var_chunking (context->ncid, context->var_node_z_id,
                             context->netcdf_var_storage_mode, NULL))) {
-    ERR (retval);
+    if (retval != NC_ENOTNC4) {
+      ERR (retval);
+    }
   }
   /* Define whether an independent or collective variable access is used */
 #if T8_WITH_NETCDF_PAR
@@ -766,7 +779,9 @@ t8_forest_write_user_netcdf_vars (t8_forest_netcdf_context_t * context,
              nc_def_var_chunking (context->ncid,
                                   ext_variables[i]->var_user_dimid,
                                   context->netcdf_var_storage_mode, NULL))) {
-          ERR (retval);
+          if (retval != NC_ENOTNC4) {
+            ERR (retval);
+          }
         }
         /* Define whether an independent or collective variable access is used */
 #if T8_WITH_NETCDF_PAR
@@ -1074,27 +1089,26 @@ t8_forest_write_netcdf_file (t8_forest_t forest,
     : t8_forest_get_global_num_elements(forest);
 
 
+  const auto cmode = NC_CLOBBER | context->cmode;
   if (context->multifile_mode) {
     int mpirank;
     SC_CHECK_MPI (sc_MPI_Comm_rank (comm, &mpirank));
-    if (auto retval = nc_create ((context->filename + std::string{'_'} + std::to_string(mpirank) + ".nc").c_str(), NC_CLOBBER | NC_NETCDF4,
+    if (auto retval = nc_create ((context->filename + std::string{'_'} + std::to_string(mpirank) + ".nc").c_str(), cmode,
                     &context->ncid)) {
       ERR (retval);
     }
     t8_debugf ("A serial netCDf-file has been created for each mpi rank.\n");
   } else {
-    /* Create a parallel NetCDF-File (NetCDF-4/HDF5 file) */
-    /* NC_MPIIO seems to be redundant since NetCDF version 4.6.2 */
+    /* Create a parallel NetCDF-File */
 #if T8_WITH_NETCDF_PAR
     if ((retval =
-        nc_create_par (context->filename, NC_CLOBBER | NC_NETCDF4
-                        | NC_MPIIO, comm, sc_MPI_INFO_NULL, &context->ncid))) {
+        nc_create_par (context->filename, cmode, comm, sc_MPI_INFO_NULL, &context->ncid))) {
       ERR (retval);
     }
     t8_debugf ("A parallel netCDf-file has been created.\n");
 #elif T8_WITH_NETCDF
     if ((retval =
-        nc_create (context->filename, NC_CLOBBER | NC_NETCDF4,
+        nc_create (context->filename, cmode,
                     &context->ncid))) {
       ERR (retval);
     }
@@ -1213,7 +1227,8 @@ t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix,
                             int num_extern_netcdf_vars,
                             t8_netcdf_variable_t * ext_variables[],
                             sc_MPI_Comm comm, int netcdf_var_storage_mode,
-                            int netcdf_mpi_access, int fill_mode, bool multifile_mode)
+                            int netcdf_mpi_access, int fill_mode, int cmode,
+                            bool multifile_mode)
 {
   t8_forest_netcdf_context_t context;
   /* Check whether pointers are not NULL */
@@ -1265,6 +1280,7 @@ t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix,
   context.start_index = 0;
   context.convention = "UGRID v1.0";
   context.multifile_mode = multifile_mode;
+  context.cmode = cmode;
 
   if (fill_mode != NC_FILL && fill_mode != NC_NOFILL) {
     t8_global_productionf("Illegal fill-mode (must be NC_FILL or NC_NOFILL). Using NC_FILL.");
@@ -1327,7 +1343,7 @@ t8_forest_write_netcdf (t8_forest_t forest, const char *file_prefix,
 
   t8_forest_write_netcdf_ext (forest, file_prefix, file_title, dim,
                               num_extern_netcdf_vars, ext_variables, comm,
-                              netcdf_var_storage_mode, netcdf_mpi_access, NC_NOFILL, false);
+                              netcdf_var_storage_mode, netcdf_mpi_access, NC_NOFILL, NC_NETCDF4, false);
 }
 
 T8_EXTERN_C_END ();

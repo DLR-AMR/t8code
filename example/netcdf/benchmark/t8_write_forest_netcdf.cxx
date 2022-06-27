@@ -98,6 +98,7 @@ struct Config {
 	int netcdf_var_storage_mode;
 	int netcdf_mpi_access = NC_COLLECTIVE;
 	int fill_mode;
+	int cmode;
 	bool multifile_mode = false;
 };
 
@@ -130,7 +131,7 @@ static void t8_example_time_netcdf_writing_operation(
 	t8_forest_write_netcdf_ext(
 		forest, title, "Performance Test: uniformly refined Forest", 3,
 		num_additional_vars, ext_vars, comm, config.netcdf_var_storage_mode,
-		config.netcdf_mpi_access, config.fill_mode, config.multifile_mode
+		config.netcdf_mpi_access, config.fill_mode, config.cmode, config.multifile_mode
 	);
 
 	sc_MPI_Barrier(comm);
@@ -173,18 +174,25 @@ Config parse_args(int argc, char** argv) {
 	} else {
 		throw std::runtime_error{"fill must be one of NC_FILL and NC_NOFILL"};
 	}
-	if (args.at(2) == "NC_CONTIGUOUS") {
+	if (args.at(2) == "classic") {
+		result.cmode = NC_CLASSIC_MODEL | NC_64BIT_DATA;
+	} else if (args.at(2) == "netcdf4_hdf5") {
+		result.cmode = NC_NETCDF4;
+	} else {
+		throw std::runtime_error{"cmode must be one of \"classic\" and \"netcdf4_hdf5\""};
+	}
+	if (args.at(3) == "NC_CONTIGUOUS") {
 		result.netcdf_var_storage_mode = NC_CONTIGUOUS;
-	} else if (args.at(2) == "NC_CHUNKED") {
+	} else if (args.at(3) == "NC_CHUNKED") {
 		result.netcdf_var_storage_mode = NC_CHUNKED;
 	} else {
 		throw std::runtime_error{"storage mode must be one of NC_CONTIGUOUS and NC_CHUNKED"};
 	}
-	if (args.at(3) == "NC_INDEPENDENT") {
+	if (args.at(4) == "NC_INDEPENDENT") {
 		result.netcdf_mpi_access = NC_INDEPENDENT;
-	} else if (args.at(3) == "NC_COLLECTIVE") {
+	} else if (args.at(4) == "NC_COLLECTIVE") {
 		result.netcdf_mpi_access = NC_COLLECTIVE;
-	} else if (args.at(3) == "--multifile") {
+	} else if (args.at(4) == "--multifile") {
 		result.multifile_mode = true;
 	} else {
 		throw std::runtime_error{"this argument is either mpi access (NC_COLLECTIVE or NC_INDEPENDENT), or --multifile"};
