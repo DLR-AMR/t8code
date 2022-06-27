@@ -70,7 +70,7 @@ t8_eclass_t;
 #define T8_ECLASS_MAX_FACES 6
 /** The maximum number of boundary edges an element class can have. */
 #define T8_ECLASS_MAX_EDGES 12
-/** The maximum number of boundary edges an 2D element class can have. */
+/** The maximum number of boundary edges a 2D element class can have. */
 #define T8_ECLASS_MAX_EDGES_2D 4
 /** The maximum number of cornes a 2-dimensional element class can have. */
 #define T8_ECLASS_MAX_CORNERS_2D 4

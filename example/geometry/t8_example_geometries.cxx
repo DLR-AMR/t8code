@@ -611,7 +611,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
        * that parameter 0 and 1 resemble the two vertices of the connected edge. */
       double              parameters[2] = { 0, 1 };
 
-      /* Give tree information about its curves and the parameters of the vertices. 
+      /* Give the tree information about its curves and the parameters of the vertices. 
        * Each parameter set is given to the tree via its attribute key + the edge or face index it corresponds with. */
       t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (),
                               T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces,

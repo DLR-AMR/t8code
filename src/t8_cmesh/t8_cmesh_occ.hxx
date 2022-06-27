@@ -30,7 +30,7 @@
 #include <t8_cmesh.h>
 
 /** Construct a hollow cylinder out of hexes with an inner diameter of 0.5, 
- * an outer diameter of 1 and a height of 1. The number of cells use in each direction can be specified.
+ * an outer diameter of 1 and a height of 1. The number of cells used in each direction can be specified.
  * A cylindrical occ surface can be linked to the inner and outer faces of the cylinder trees, to use the
  * occ geometry.
  * \param [in] comm                   The mpi communicator to use.
