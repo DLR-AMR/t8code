@@ -286,10 +286,12 @@ t8_forest_write_netcdf_variables (t8_forest_netcdf_context_t * context,
   }
   /* Define whether an independent or collective variable access is used */
 #if T8_WITH_NETCDF_PAR
-  if (!context->multifile_mode && (retval =
-       nc_var_par_access (context->ncid, context->var_elem_types_id,
-                          context->netcdf_mpi_access))) {
-    ERR (retval);
+  if (!context->multifile_mode) {
+    if ((retval =
+        nc_var_par_access (context->ncid, context->var_elem_types_id,
+                            context->netcdf_mpi_access))) {
+      ERR (retval);
+    }
   }
 #endif
   /* Define cf_role attribute */
@@ -337,10 +339,11 @@ t8_forest_write_netcdf_variables (t8_forest_netcdf_context_t * context,
   }
   /* Define whether an independent or collective variable access is used */
 #if T8_WITH_NETCDF_PAR
-  if (!context->multifile_mode && (retval =
-       nc_var_par_access (context->ncid, context->var_elem_tree_id,
-                          context->netcdf_mpi_access))) {
-    ERR (retval);
+  if (!context->multifile_mode) {
+    if ((retval = nc_var_par_access (context->ncid, context->var_elem_tree_id,
+      context->netcdf_mpi_access))) {
+      ERR (retval);
+    }
   }
 #endif
   /* Define cf_role attribute */
@@ -387,10 +390,12 @@ t8_forest_write_netcdf_variables (t8_forest_netcdf_context_t * context,
   }
   /* Define whether an independent or collective variable access is used */
 #if T8_WITH_NETCDF_PAR
-  if (!context->multifile_mode && (retval =
-       nc_var_par_access (context->ncid, context->var_elem_nodes_id,
-                          context->netcdf_mpi_access))) {
-    ERR (retval);
+  if (!context->multifile_mode) {
+      if ((retval =
+        nc_var_par_access (context->ncid, context->var_elem_nodes_id,
+                            context->netcdf_mpi_access))) {
+      ERR (retval);
+    }
   }
 #endif
   /* Define cf_role attribute */
@@ -515,11 +520,11 @@ t8_forest_write_netcdf_data (t8_forest_t forest,
   T8_FREE (Mesh_elem_types);
   T8_FREE (Mesh_elem_tree_id);
 
-  T8_ASSERT(false);
-
   /* Store the number of local nodes */
   context->nMesh_local_node = num_local_nodes;
   if (context->multifile_mode) {
+    /* in multifile mode we set the number of nodes written to the process
+     * local file to only our local nodes */
     context->nMesh_node = num_local_nodes;
   } else {
     /* Gather the number of all global nodes */
@@ -577,10 +582,12 @@ t8_forest_write_netcdf_coordinate_variables (t8_forest_netcdf_context_t *
   }
   /* Define whether an independent or collective variable access is used */
 #if T8_WITH_NETCDF_PAR
-  if (!context->multifile_mode && (retval =
-       nc_var_par_access (context->ncid, context->var_node_x_id,
-                          context->netcdf_mpi_access))) {
-    ERR (retval);
+  if (!context->multifile_mode) {
+    if ((retval =
+        nc_var_par_access (context->ncid, context->var_node_x_id,
+                            context->netcdf_mpi_access))) {
+      ERR (retval);
+    }
   }
 #endif
   /* Define standard_name attribute. */
@@ -623,10 +630,11 @@ t8_forest_write_netcdf_coordinate_variables (t8_forest_netcdf_context_t *
   }
   /* Define whether an independent or collective variable access is used */
 #if T8_WITH_NETCDF_PAR
-  if (!context->multifile_mode && (retval =
-       nc_var_par_access (context->ncid, context->var_node_y_id,
-                          context->netcdf_mpi_access))) {
-    ERR (retval);
+  if (!context->multifile_mode) {
+    if ((retval = nc_var_par_access (context->ncid, context->var_node_y_id,
+      context->netcdf_mpi_access))) {
+      ERR (retval);
+    }
   }
 #endif
   /* Define standard_name attribute. */
@@ -669,10 +677,11 @@ t8_forest_write_netcdf_coordinate_variables (t8_forest_netcdf_context_t *
   }
   /* Define whether an independent or collective variable access is used */
 #if T8_WITH_NETCDF_PAR
-  if (!context->multifile_mode && (retval =
-       nc_var_par_access (context->ncid, context->var_node_z_id,
-                          context->netcdf_mpi_access))) {
-    ERR (retval);
+  if (!context->multifile_mode) {
+    if ((retval = nc_var_par_access(context->ncid, context->var_node_z_id,
+                                    context->netcdf_mpi_access))) {
+      ERR(retval);
+    }
   }
 #endif
   /* Define standard_name attribute. */
@@ -761,11 +770,12 @@ t8_forest_write_user_netcdf_vars (t8_forest_netcdf_context_t * context,
         }
         /* Define whether an independent or collective variable access is used */
 #if T8_WITH_NETCDF_PAR
-        if (!context->multifile_mode && (retval =
-             nc_var_par_access (context->ncid,
-                                ext_variables[i]->var_user_dimid,
-                                context->netcdf_mpi_access))) {
-          ERR (retval);
+        if (!context->multifile_mode) {
+          if ((retval = nc_var_par_access(context->ncid,
+                                          ext_variables[i]->var_user_dimid,
+                                          context->netcdf_mpi_access))) {
+            ERR(retval);
+          }
         }
 #endif
       }
@@ -848,7 +858,7 @@ t8_forest_write_netcdf_coordinate_data (t8_forest_t forest,
     sc_MPI_Allgather (&context->nMesh_local_node, 1, T8_MPI_GLOIDX,
                       node_offset, 1, T8_MPI_GLOIDX, comm);
   SC_CHECK_MPI (retval);
-  /*Calculate the global number of element nodes in the previous trees */
+  /* Calculate the global number of element nodes in the previous trees */
   for (int j = 0; j < mpirank; j++) {
     start_ptr += (size_t) node_offset[j];
   }
@@ -1118,6 +1128,23 @@ t8_forest_write_netcdf_file (t8_forest_t forest,
        nc_put_att_text (context->ncid, NC_GLOBAL, "convention",
                         strlen (context->convention), context->convention))) {
     ERR (retval);
+  }
+  if (context->multifile_mode) {
+    int mpirank, mpisize;
+    retval = sc_MPI_Comm_size(comm, &mpisize);
+    SC_CHECK_MPI(retval);
+    retval = sc_MPI_Comm_rank(comm, &mpirank);
+    SC_CHECK_MPI(retval);
+    /* Define part_index attribute */
+    if ((retval = nc_put_att_int(context->ncid, NC_GLOBAL, "part_index", NC_INT,
+                                 1, &mpirank))) {
+      ERR(retval);
+    }
+    /* Define part_count attribute */
+    if ((retval = nc_put_att_int(context->ncid, NC_GLOBAL, "part_count", NC_INT,
+                                 1, &mpisize))) {
+      ERR(retval);
+    }
   }
 
   /* End define-mode. NetCDF-file enters data-mode. */
