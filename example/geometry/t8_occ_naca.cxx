@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* In this example, we will generate a curved mesh from an .msh and .brep file.
+/* In this example, we will generate a curved mesh from a .msh and .brep file.
  * After reading in both files, we wil define examplatory refinement criteria.
 */
 
@@ -74,7 +74,7 @@ t8_naca_surface_adapt_callback (t8_forest_t forest,
                                               t8_get_package_id (),
                                               T8_CMESH_OCC_FACE_ATTRIBUTE_KEY,
                                               cmesh_ltreeid);
-      /* If the tree face has a linked surface and it is in the list we reine it */
+      /* If the tree face has a linked surface and it is in the list we refine it */
       for (int isurface = 0; isurface < adapt_data->n_surfaces; ++isurface) {
         if (faces[tree_face] == adapt_data->surfaces[isurface] &&
             ts->t8_element_level (elements[0]) < adapt_data->levels[isurface])
