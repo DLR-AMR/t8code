@@ -138,30 +138,31 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
                                  i_radial_trees, T8_ECLASS_HEX);
 
         /* *INDENT-OFF* */
-        vertices[((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24 + 0] = cos ((i_tangential_trees + 1) * dphi) * (radius_inner + (i_radial_trees + 1) * dr);
-        vertices[((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24 + 1] = sin ((i_tangential_trees + 1) * dphi) * (radius_inner + (i_radial_trees + 1) * dr);
-        vertices[((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24 + 2] = -0.5 + i_axial_trees * dh;
-        vertices[((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24 + 3] = cos ((i_tangential_trees + 1) * dphi) * (radius_inner + i_radial_trees * dr);
-        vertices[((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24 + 4] = sin ((i_tangential_trees + 1) * dphi) * (radius_inner + i_radial_trees * dr);
-        vertices[((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24 + 5] = -0.5 + i_axial_trees * dh;
-        vertices[((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24 + 6] = cos (i_tangential_trees * dphi) * (radius_inner + (i_radial_trees + 1) * dr);
-        vertices[((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24 + 7] = sin (i_tangential_trees * dphi) * (radius_inner + (i_radial_trees + 1) * dr);
-        vertices[((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24 + 8] = -0.5 + i_axial_trees * dh;
-        vertices[((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24 + 9] = cos (i_tangential_trees * dphi) * (radius_inner + i_radial_trees * dr);
-        vertices[((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24 + 10] = sin (i_tangential_trees * dphi) * (radius_inner + i_radial_trees * dr);
-        vertices[((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24 + 11] = -0.5 + i_axial_trees * dh;
-        vertices[((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24 + 12] = cos ((i_tangential_trees + 1) * dphi) * (radius_inner + (i_radial_trees + 1) * dr);
-        vertices[((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24 + 13] = sin ((i_tangential_trees + 1) * dphi) * (radius_inner + (i_radial_trees + 1) * dr);
-        vertices[((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24 + 14] = -0.5 + (i_axial_trees + 1) * dh;
-        vertices[((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24 + 15] = cos ((i_tangential_trees + 1) * dphi) * (radius_inner + i_radial_trees * dr);
-        vertices[((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24 + 16] = sin ((i_tangential_trees + 1) * dphi) * (radius_inner + i_radial_trees * dr);
-        vertices[((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24 + 17] = -0.5 + (i_axial_trees + 1) * dh;
-        vertices[((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24 + 18] = cos (i_tangential_trees * dphi) * (radius_inner + (i_radial_trees + 1) * dr);
-        vertices[((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24 + 19] = sin (i_tangential_trees * dphi) * (radius_inner + (i_radial_trees + 1) * dr);
-        vertices[((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24 + 20] = -0.5 + (i_axial_trees + 1) * dh;
-        vertices[((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24 + 21] = cos (i_tangential_trees * dphi) * (radius_inner + i_radial_trees * dr);
-        vertices[((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24 + 22] = sin (i_tangential_trees * dphi) * (radius_inner + i_radial_trees * dr);
-        vertices[((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24 + 23] = -0.5 + (i_axial_trees + 1) * dh;
+        const int current_tree_vertices = ((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24;
+        vertices[current_tree_vertices + 0] = cos ((i_tangential_trees + 1) * dphi) * (radius_inner + (i_radial_trees + 1) * dr);
+        vertices[current_tree_vertices + 1] = sin ((i_tangential_trees + 1) * dphi) * (radius_inner + (i_radial_trees + 1) * dr);
+        vertices[current_tree_vertices + 2] = -0.5 + i_axial_trees * dh;
+        vertices[current_tree_vertices + 3] = cos ((i_tangential_trees + 1) * dphi) * (radius_inner + i_radial_trees * dr);
+        vertices[current_tree_vertices + 4] = sin ((i_tangential_trees + 1) * dphi) * (radius_inner + i_radial_trees * dr);
+        vertices[current_tree_vertices + 5] = -0.5 + i_axial_trees * dh;
+        vertices[current_tree_vertices + 6] = cos (i_tangential_trees * dphi) * (radius_inner + (i_radial_trees + 1) * dr);
+        vertices[current_tree_vertices + 7] = sin (i_tangential_trees * dphi) * (radius_inner + (i_radial_trees + 1) * dr);
+        vertices[current_tree_vertices + 8] = -0.5 + i_axial_trees * dh;
+        vertices[current_tree_vertices + 9] = cos (i_tangential_trees * dphi) * (radius_inner + i_radial_trees * dr);
+        vertices[current_tree_vertices + 10] = sin (i_tangential_trees * dphi) * (radius_inner + i_radial_trees * dr);
+        vertices[current_tree_vertices + 11] = -0.5 + i_axial_trees * dh;
+        vertices[current_tree_vertices + 12] = cos ((i_tangential_trees + 1) * dphi) * (radius_inner + (i_radial_trees + 1) * dr);
+        vertices[current_tree_vertices + 13] = sin ((i_tangential_trees + 1) * dphi) * (radius_inner + (i_radial_trees + 1) * dr);
+        vertices[current_tree_vertices + 14] = -0.5 + (i_axial_trees + 1) * dh;
+        vertices[current_tree_vertices + 15] = cos ((i_tangential_trees + 1) * dphi) * (radius_inner + i_radial_trees * dr);
+        vertices[current_tree_vertices + 16] = sin ((i_tangential_trees + 1) * dphi) * (radius_inner + i_radial_trees * dr);
+        vertices[current_tree_vertices + 17] = -0.5 + (i_axial_trees + 1) * dh;
+        vertices[current_tree_vertices + 18] = cos (i_tangential_trees * dphi) * (radius_inner + (i_radial_trees + 1) * dr);
+        vertices[current_tree_vertices + 19] = sin (i_tangential_trees * dphi) * (radius_inner + (i_radial_trees + 1) * dr);
+        vertices[current_tree_vertices + 20] = -0.5 + (i_axial_trees + 1) * dh;
+        vertices[current_tree_vertices + 21] = cos (i_tangential_trees * dphi) * (radius_inner + i_radial_trees * dr);
+        vertices[current_tree_vertices + 22] = sin (i_tangential_trees * dphi) * (radius_inner + i_radial_trees * dr);
+        vertices[current_tree_vertices + 23] = -0.5 + (i_axial_trees + 1) * dh;
         /* *INDENT-ON* */
 
         t8_cmesh_set_tree_vertices (cmesh,
@@ -177,16 +178,18 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
 #if T8_WITH_OCC
         if (with_occ_geometry) {
           /* Calculate parameters if cell lies on boundary */
+          const int           current_tree_parameters =
+            (i_tangential_trees * num_axial_trees + i_axial_trees) * 8;
           if (i_radial_trees == 0 || i_radial_trees == num_radial_trees - 1) {
           /* *INDENT-OFF* */
-            parameters[(i_tangential_trees * num_axial_trees + i_axial_trees) * 8 + 0] = (i_tangential_trees + 1) * dphi;
-            parameters[(i_tangential_trees * num_axial_trees + i_axial_trees) * 8 + 1] = 0.5 - i_axial_trees * dh;
-            parameters[(i_tangential_trees * num_axial_trees + i_axial_trees) * 8 + 2] = i_tangential_trees * dphi;
-            parameters[(i_tangential_trees * num_axial_trees + i_axial_trees) * 8 + 3] = 0.5 - i_axial_trees * dh;
-            parameters[(i_tangential_trees * num_axial_trees + i_axial_trees) * 8 + 4] = (i_tangential_trees + 1) * dphi;
-            parameters[(i_tangential_trees * num_axial_trees + i_axial_trees) * 8 + 5] = 0.5 + -(i_axial_trees + 1) * dh;
-            parameters[(i_tangential_trees * num_axial_trees + i_axial_trees) * 8 + 6] = i_tangential_trees * dphi;
-            parameters[(i_tangential_trees * num_axial_trees + i_axial_trees) * 8 + 7] = 0.5 - (i_axial_trees + 1) * dh;
+            parameters[current_tree_parameters + 0] = (i_tangential_trees + 1) * dphi;
+            parameters[current_tree_parameters + 1] = 0.5 - i_axial_trees * dh;
+            parameters[current_tree_parameters + 2] = i_tangential_trees * dphi;
+            parameters[current_tree_parameters + 3] = 0.5 - i_axial_trees * dh;
+            parameters[current_tree_parameters + 4] = (i_tangential_trees + 1) * dphi;
+            parameters[current_tree_parameters + 5] = 0.5 + -(i_axial_trees + 1) * dh;
+            parameters[current_tree_parameters + 6] = i_tangential_trees * dphi;
+            parameters[current_tree_parameters + 7] = 0.5 - (i_axial_trees + 1) * dh;
           /* *INDENT-ON* */
           }
           int                 edges[24] =
@@ -194,6 +197,9 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
           };
 
+          const int           current_tree =
+            (i_tangential_trees * num_axial_trees +
+             i_axial_trees) * num_radial_trees + i_radial_trees;
           /* If geometry on both sides of cell */
           if (num_radial_trees == 1) {
             /* Assign occ geometries to the corresponding faces */
@@ -203,37 +209,24 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
 
             /* Assign attributes to cmesh cells */
             t8_cmesh_set_attribute (cmesh,
-                                    (i_tangential_trees * num_axial_trees +
-                                     i_axial_trees) * num_radial_trees +
-                                    i_radial_trees, t8_get_package_id (),
+                                    current_tree, t8_get_package_id (),
                                     T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces,
                                     6 * sizeof (int), 0);
             t8_cmesh_set_attribute (cmesh,
-                                    (i_tangential_trees * num_axial_trees +
-                                     i_axial_trees) * num_radial_trees +
-                                    i_radial_trees, t8_get_package_id (),
+                                    current_tree, t8_get_package_id (),
                                     T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges,
                                     24 * sizeof (int), 0);
             t8_cmesh_set_attribute (cmesh,
-                                    (i_tangential_trees * num_axial_trees +
-                                     i_axial_trees) * num_radial_trees +
-                                    i_radial_trees, t8_get_package_id (),
+                                    current_tree, t8_get_package_id (),
                                     T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY
                                     + 0,
                                     parameters +
-                                    (i_tangential_trees * num_axial_trees +
-                                     i_axial_trees) * 8, 8 * sizeof (double),
-                                    1);
-            t8_cmesh_set_attribute (cmesh,
-                                    (i_tangential_trees * num_axial_trees +
-                                     i_axial_trees) * num_radial_trees +
-                                    i_radial_trees, t8_get_package_id (),
+                                    current_tree_parameters,
+                                    8 * sizeof (double), 1);
+            t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (),
                                     T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY
-                                    + 1,
-                                    parameters +
-                                    (i_tangential_trees * num_axial_trees +
-                                     i_axial_trees) * 8, 8 * sizeof (double),
-                                    1);
+                                    + 1, parameters + current_tree_parameters,
+                                    8 * sizeof (double), 1);
           }
           /* If geometry only on face 1 */
           else if (i_radial_trees == 0) {
@@ -243,27 +236,20 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
 
             /* Assign attributes to cmesh cells */
             t8_cmesh_set_attribute (cmesh,
-                                    (i_tangential_trees * num_axial_trees +
-                                     i_axial_trees) * num_radial_trees +
-                                    i_radial_trees, t8_get_package_id (),
+                                    current_tree, t8_get_package_id (),
                                     T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces,
                                     6 * sizeof (int), 0);
             t8_cmesh_set_attribute (cmesh,
-                                    (i_tangential_trees * num_axial_trees +
-                                     i_axial_trees) * num_radial_trees +
-                                    i_radial_trees, t8_get_package_id (),
+                                    current_tree, t8_get_package_id (),
                                     T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges,
                                     24 * sizeof (int), 0);
             t8_cmesh_set_attribute (cmesh,
-                                    (i_tangential_trees * num_axial_trees +
-                                     i_axial_trees) * num_radial_trees +
-                                    i_radial_trees, t8_get_package_id (),
+                                    current_tree, t8_get_package_id (),
                                     T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY
                                     + 1,
                                     parameters +
-                                    (i_tangential_trees * num_axial_trees +
-                                     i_axial_trees) * 8, 8 * sizeof (double),
-                                    1);
+                                    current_tree_parameters,
+                                    8 * sizeof (double), 1);
           }
           /* If geometry only on face 0 */
           else if (i_radial_trees == num_radial_trees - 1) {
@@ -273,27 +259,20 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
 
             /* Assign attributes to cmesh cells */
             t8_cmesh_set_attribute (cmesh,
-                                    (i_tangential_trees * num_axial_trees +
-                                     i_axial_trees) * num_radial_trees +
-                                    i_radial_trees, t8_get_package_id (),
+                                    current_tree, t8_get_package_id (),
                                     T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces,
                                     6 * sizeof (int), 0);
             t8_cmesh_set_attribute (cmesh,
-                                    (i_tangential_trees * num_axial_trees +
-                                     i_axial_trees) * num_radial_trees +
-                                    i_radial_trees, t8_get_package_id (),
+                                    current_tree, t8_get_package_id (),
                                     T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges,
                                     24 * sizeof (int), 0);
             t8_cmesh_set_attribute (cmesh,
-                                    (i_tangential_trees * num_axial_trees +
-                                     i_axial_trees) * num_radial_trees +
-                                    i_radial_trees, t8_get_package_id (),
+                                    current_tree, t8_get_package_id (),
                                     T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY
                                     + 0,
                                     parameters +
-                                    (i_tangential_trees * num_axial_trees +
-                                     i_axial_trees) * 8, 8 * sizeof (double),
-                                    1);
+                                    current_tree_parameters,
+                                    8 * sizeof (double), 1);
           }
           /* If there is no geometry */
           else {
@@ -302,15 +281,11 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
 
             /* Assign attributes to cmesh cells */
             t8_cmesh_set_attribute (cmesh,
-                                    (i_tangential_trees * num_axial_trees +
-                                     i_axial_trees) * num_radial_trees +
-                                    i_radial_trees, t8_get_package_id (),
+                                    current_tree, t8_get_package_id (),
                                     T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces,
                                     6 * sizeof (int), 0);
             t8_cmesh_set_attribute (cmesh,
-                                    (i_tangential_trees * num_axial_trees +
-                                     i_axial_trees) * num_radial_trees +
-                                    i_radial_trees, t8_get_package_id (),
+                                    current_tree, t8_get_package_id (),
                                     T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges,
                                     24 * sizeof (int), 0);
           }
