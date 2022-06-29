@@ -340,7 +340,7 @@ t8_dtri_compute_ref_coords (const t8_dtri_t *t, int vertex,
                             double coordinates[T8_DTRI_DIM])
 {
   int                 coords_int[T8_DTRI_DIM];
-  T8_ASSERT (0 <= vertex && vertex <= T8_DTRI_CORNERS);
+  T8_ASSERT (0 <= vertex && vertex < T8_DTRI_CORNERS);
 
   t8_dtri_compute_coords (t, vertex, coords_int);
   /* Since the integer coordinates are coordinates w.r.t to
