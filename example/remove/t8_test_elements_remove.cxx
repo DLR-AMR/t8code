@@ -238,8 +238,8 @@ t8_test_emelemts_remove (int cmesh_id)
     t8_cmesh_ref (cmesh);
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
 
-    forest_1 = t8_adapt_forest (forest  , t8_adapt_callback_refine, 0, 0, 0, &adapt_data);
     t8_debugf("[IL] %i \n", cmesh_id);
+    forest_1 = t8_adapt_forest (forest  , t8_adapt_callback_refine, 0, 0, 0, &adapt_data);
     forest_1 = t8_adapt_forest (forest_1, t8_adapt_callback_remove, 0, 0, 0, &adapt_data);
 
     t8_forest_ref (forest_1);
@@ -276,11 +276,9 @@ test_cmesh_emelemts_remove_all ()
        cmesh_id++) {
     /* This if statement is necessary to make the test work by avoiding specific cmeshes which do not work yet for this test.
      * When the issues are gone, remove the if statement. */
-    if (cmesh_id != 6 && cmesh_id != 89 && (cmesh_id < 237 || cmesh_id > 256)) {
-      /* Skip all t8_test_create_new_bigmesh_cmesh since bigmesh are without geometry */
-      if (cmesh_id < 97 || cmesh_id > 256) {
-        t8_test_emelemts_remove(cmesh_id);
-      }
+    /* Skip all t8_test_create_new_bigmesh_cmesh since bigmesh are without geometry */
+    if (cmesh_id < 97 || cmesh_id > 256) {
+      t8_test_emelemts_remove(cmesh_id);
     }
   }
 }
