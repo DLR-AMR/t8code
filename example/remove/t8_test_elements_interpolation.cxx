@@ -5,7 +5,7 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest.h>
 #include <t8_vec.h>
-#include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include "t8_cmesh/t8_cmesh_testcases.h"

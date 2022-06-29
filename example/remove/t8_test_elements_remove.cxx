@@ -26,7 +26,7 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest.h>
 #include <t8_vec.h>
-#include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_forest/t8_forest_private.h>
 #include "t8_cmesh/t8_cmesh_testcases.h"
 
@@ -215,6 +215,8 @@ t8_test_emelemts_remove (int cmesh_id)
   t8_forest_t         forest, forest_1, forest_2;
   t8_scheme_cxx_t    *scheme;
 
+  t8_debugf("[IL] %i \n", cmesh_id);
+
   /* 6 balls on each side of a cube. */
   struct t8_adapt_data adapt_data = {{{1.0, 0.5, 0.5},
                                       {0.5, 1.0, 0.5},
@@ -236,7 +238,8 @@ t8_test_emelemts_remove (int cmesh_id)
     t8_cmesh_ref (cmesh);
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
 
-    forest_1 = t8_adapt_forest (forest  , t8_adapt_callback_rr    , 0, 0, 0, &adapt_data);
+    forest_1 = t8_adapt_forest (forest  , t8_adapt_callback_refine, 0, 0, 0, &adapt_data);
+    t8_debugf("[IL] %i \n", cmesh_id);
     forest_1 = t8_adapt_forest (forest_1, t8_adapt_callback_remove, 0, 0, 0, &adapt_data);
 
     t8_forest_ref (forest_1);
@@ -248,9 +251,8 @@ t8_test_emelemts_remove (int cmesh_id)
     SC_CHECK_ABORT (t8_forest_is_equal(forest_1, forest_2),
                     "The forests are not equal");
 #endif
-
     // will get replaced by recursive coarseening
-    for (int i = 0; i < 3*level; i++)
+    for (int i = 0; i < level+1; i++)
     {
       forest_2 = t8_adapt_forest (forest_2, t8_adapt_callback_coarse_all, 0, 0, 0, &adapt_data);
     }
