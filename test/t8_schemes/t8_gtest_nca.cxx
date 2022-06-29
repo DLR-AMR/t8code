@@ -146,6 +146,88 @@ TEST_P(nca, nca_check_deep){
     ts->t8_element_destroy(1, &tmp);
 }
 
+/**
+ * Recursively check the computation of the nca of all possible combination of descendants of the
+ * \a correct_nca that have \a correct_nca as the nca. 
+ * 
+ * \param[in] correct_nca       The correct nearest common ancestor
+ * \param[in] desc_a            Storage for the computation of a descendant of \correct_nca
+ * \param[in] desc_b            Storage for the computation of a descendant of \correct_nca
+ * \param[in] check             Storage for the computation of the nca of \a desc_a and \a desc_b
+ * \param[in] parent_a          An initialized element, descendant of \a correct_nca, not a descendant or ancestor of \a parent_b. \a desc_a will be a child of it
+ * \param[in] parent_b          An initialized element, descendant of \a correct_nca, not a descendant or ancestor of \a parent_a. \a desc_b will be a child of it
+ * \param[in] max_lvl           The maximal depth of the recursion
+ * \param[in] ts                the scheme to use
+ */
+static void
+t8_recursive_nca_check(t8_element_t *correct_nca, t8_element_t *desc_a,
+                        t8_element_t *desc_b, t8_element_t *check, t8_element_t* parent_a,
+                        t8_element_t * parent_b, const int max_lvl, t8_eclass_scheme_c *ts)
+{
+    T8_ASSERT(max_lvl <= ts->t8_element_maxlevel()-1);
+    /* compute the level of the parents */
+    int level_a = ts->t8_element_level(parent_a);
+    int level_b = ts->t8_element_level(parent_b);
+    int num_children_a, num_children_b;
+    int i, j;
+    /* If one parent has reached the maximal level, the test returns*/
+    if(level_a == max_lvl || level_b == max_lvl){
+        return;
+    }
+    //t8_debugf("[D] level_a: %i, level_b: %i\n", level_a, level_b);
+    num_children_a = ts->t8_element_num_children(parent_a);
+    num_children_b = ts->t8_element_num_children(parent_b);
+    /* Iterate over all children of parent_a */
+    for(i = 0; i < num_children_a; i++){
+        ts->t8_element_child(parent_a, i, desc_a);
+        /* Iterate over all children of parent_b*/
+        for(j = 0; j < num_children_b; j++){
+            ts->t8_element_child(parent_b, j, desc_b);
+
+            /*Compute the nca and check if it is equal to correct_nca */
+            ts->t8_element_nca(desc_a, desc_b, check);
+            SC_CHECK_ABORT (!ts->t8_element_compare(correct_nca, check),
+                            "Computed nca is not the correct nca!\n");
+            /* parent_a stays fixed, b-part goes one level deeper into the recursion*/
+            t8_recursive_nca_check(correct_nca, desc_a, parent_b, check, parent_a, desc_b, max_lvl, ts);
+            /* We reused parent_b, hence we have to recompute the correct parent*/
+            ts->t8_element_parent(desc_b, parent_b);
+        }
+        /* a-part goes one level deeper into the recursion*/
+        t8_recursive_nca_check(correct_nca, parent_a, desc_b, check, desc_a, parent_b, max_lvl, ts);
+        /* We reused parent_a, hence we have to recompute the correct parent*/
+        ts->t8_element_parent(desc_a, parent_a);
+    }
+}
+
+TEST_P(nca, recursive_check)
+{
+    const int recursion_depth = 4;
+    t8_element_t *parent_a, *parent_b;
+    int     num_children;
+    t8_debugf("[D] testing now %s\n", t8_eclass_to_string[eclass]);
+    num_children = ts->t8_element_num_children(correct_nca);
+    ts->t8_element_new (1, &parent_a);
+    ts->t8_element_new (1, &parent_b);
+    if(num_children > 1){
+        ts->t8_element_child(correct_nca, 0, parent_a);
+        ts->t8_element_child(correct_nca, 1, parent_b);
+        /* if you activate the following part, the testing takes around 30min per 3D class*/
+        /*int     i,j;
+        for(i = 0; i < num_children-1; i++){
+            ts->t8_element_child(correct_nca, i, parent_a);
+            for(j = i+1; j < num_children; j++){
+                ts->t8_element_child(correct_nca, j, parent_b);*/
+                t8_recursive_nca_check(correct_nca, desc_a, desc_b, check, parent_a, parent_b, recursion_depth, ts);
+        /*    }
+        }*/
+    }
+    else{
+        GTEST_SKIP();
+    }
+
+}
+
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_nca, nca,
                         testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT));
