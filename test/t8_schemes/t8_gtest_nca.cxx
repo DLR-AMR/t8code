@@ -242,16 +242,16 @@ TEST_P(nca, recursive_check)
 }
 
 
-/* Test the nca recursively for elements in the middle of the refinement tree. Be carefull when increasing
- * the recursion_depth, as it increases the number of test-cases exponentially. */
+/* Test the nca recursively for elements in the middle of the uniform refinement tree
+ * up to the maximal level. 
+ * Be carefull when increasing the recursion_depth, as it increases the number of test-cases exponentially. */
 TEST_P(nca, resursive_check_higher_level)
 {
-    const int recursion_depth = 4;
+    
 #ifdef T8_ENABLE_LESS_TESTS
-    const int num_rounds = 4;
+    const int recursion_depth = 3;
 #else
-    t8_debugf("[D] heavy testing\n");
-    const int num_rounds = 5;
+    const int recursion_depth = 4;
 #endif
     const int max_lvl = ts->t8_element_maxlevel();
     t8_element_t *parent_a;
@@ -266,10 +266,10 @@ TEST_P(nca, resursive_check_higher_level)
     ts->t8_element_new (1, &correct_nca_high_level);
     
     /* Test on different levels around the middle of the refinement tree */
-    for(i = 0; i < num_rounds; i++){
-        leafs_on_level = ts->t8_element_count_leafs(correct_nca, (max_lvl/2)+i-recursion_depth);
+    for(i = recursion_depth; i < max_lvl; i++){
+        leafs_on_level = ts->t8_element_count_leafs(correct_nca, i-recursion_depth);
         /* middle = leafs/2 */
-        ts->t8_element_set_linear_id(correct_nca_high_level, (max_lvl/2)+i-recursion_depth, leafs_on_level/2);
+        ts->t8_element_set_linear_id(correct_nca_high_level, i-recursion_depth, leafs_on_level/2);
 
         /* Initialization for recursive_nca_check */
         num_children = ts->t8_element_num_children(correct_nca_high_level);
@@ -278,7 +278,7 @@ TEST_P(nca, resursive_check_higher_level)
             ts->t8_element_child(correct_nca_high_level, 0, parent_a);
             ts->t8_element_child(correct_nca_high_level, num_children-1, parent_b); 
             t8_recursive_nca_check(correct_nca_high_level, desc_a, desc_b, check, parent_a, 
-            parent_b, (max_lvl/2)+i, ts);
+            parent_b, i, ts);
         }
         else{
             GTEST_SKIP();
