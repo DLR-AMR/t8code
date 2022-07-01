@@ -160,7 +160,7 @@ TEST_P(nca, nca_check_deep){
  * \param[in] ts                the scheme to use
  */
 static void
-t8_recursive_nca_check(t8_element_t *correct_nca, t8_element_t *desc_a,
+t8_recursive_nca_check(t8_element_t *check_nca, t8_element_t *desc_a,
                         t8_element_t *desc_b, t8_element_t *check, t8_element_t* parent_a,
                         t8_element_t * parent_b, const int max_lvl, t8_eclass_scheme_c *ts)
 {
@@ -185,7 +185,7 @@ t8_recursive_nca_check(t8_element_t *correct_nca, t8_element_t *desc_a,
 
             /*Compute the nca and check if it is equal to correct_nca */
             ts->t8_element_nca(desc_a, desc_b, check);
-            if(ts->t8_element_compare(correct_nca, check)){
+            if(ts->t8_element_compare(check_nca, check)){
                 /* Output the linear id of the descendants where the computation fails.
                  * This makes debugging a lot easier, as one can reconstruct the descendants
                  * via t8_element_set_linear_id and can directly test them instead of waiting
@@ -195,12 +195,10 @@ t8_recursive_nca_check(t8_element_t *correct_nca, t8_element_t *desc_a,
                 SC_ABORT("Computed nca is not the correct nca!\n");
             }
             /* parent_a stays fixed, b-part goes one level deeper into the recursion*/
-            t8_recursive_nca_check(correct_nca, desc_a, parent_b, check, parent_a, desc_b, max_lvl, ts);
+            t8_recursive_nca_check(check_nca, desc_a, parent_b, check, parent_a, desc_b, max_lvl, ts);
             /* We reused parent_b, hence we have to recompute the correct parent*/
             ts->t8_element_parent(desc_b, parent_b);
         }
-        /* a-part goes one level deeper into the recursion*/
-        t8_recursive_nca_check(correct_nca, parent_a, desc_b, check, desc_a, parent_b, max_lvl, ts);
         /* We reused parent_a, hence we have to recompute the correct parent*/
         ts->t8_element_parent(desc_a, parent_a);
     }
