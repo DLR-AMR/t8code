@@ -207,12 +207,13 @@ t8_recursive_nca_check(t8_element_t *check_nca, t8_element_t *desc_a,
 /* Recursively check the computation of the nca. recursion_depth defines up to which
  * level we compute descendants of correct_nca that should have correct_nca as the 
  * output of t8_element_nca.*/
+
 TEST_P(nca, recursive_check)
 {
 #ifdef T8_ENABLE_LESS_TESTS
-    const int recursion_depth = 3;
-#else
     const int recursion_depth = 4;
+#else
+    const int recursion_depth = 5;
 #endif
     t8_element_t *parent_a, *parent_b;
     int     num_children;
@@ -240,36 +241,53 @@ TEST_P(nca, recursive_check)
 
 }
 
-/* Test the nca recursively for all children of the root. Be carefull when increasing
+
+/* Test the nca recursively for elements in the middle of the refinement tree. Be carefull when increasing
  * the recursion_depth, as it increases the number of test-cases exponentially. */
-TEST_P(nca, resursive_check_lvl_1)
+TEST_P(nca, resursive_check_higher_level)
 {
     const int recursion_depth = 4;
-    t8_element_t *parent_a, *parent_b, *correct_nca_lvl_2;
-    int     num_children, num_children_lvl_2;
-    num_children = ts->t8_element_num_children(correct_nca);
+#ifdef T8_ENABLE_LESS_TESTS
+    const int num_rounds = 4;
+#else
+    t8_debugf("[D] heavy testing\n");
+    const int num_rounds = 5;
+#endif
+    const int max_lvl = ts->t8_element_maxlevel();
+    t8_element_t *parent_a;
+    t8_element_t *parent_b;
+    t8_element_t *correct_nca_high_level;
+    int     num_children;
+    int i;
+    t8_gloidx_t leafs_on_level;
+
     ts->t8_element_new (1, &parent_a);
     ts->t8_element_new (1, &parent_b);
-    ts->t8_element_new (1, &correct_nca_lvl_2);
-    int i;
-    for(i = 0; i < num_children; i++)
-    {
-        ts->t8_element_child(correct_nca, i, correct_nca_lvl_2);
-        num_children_lvl_2 = ts->t8_element_num_children(correct_nca_lvl_2);
-        if(num_children_lvl_2 > 1)
+    ts->t8_element_new (1, &correct_nca_high_level);
+    
+    /* Test on different levels around the middle of the refinement tree */
+    for(i = 0; i < num_rounds; i++){
+        leafs_on_level = ts->t8_element_count_leafs(correct_nca, (max_lvl/2)+i-recursion_depth);
+        /* middle = leafs/2 */
+        ts->t8_element_set_linear_id(correct_nca_high_level, (max_lvl/2)+i-recursion_depth, leafs_on_level/2);
+
+        /* Initialization for recursive_nca_check */
+        num_children = ts->t8_element_num_children(correct_nca_high_level);
+        if(num_children > 1)
         {
-            ts->t8_element_child(correct_nca_lvl_2, 0, parent_a);
-            ts->t8_element_child(correct_nca_lvl_2, num_children_lvl_2-1, parent_b); 
-            t8_recursive_nca_check(correct_nca_lvl_2, desc_a, desc_b, check, parent_a, 
-            parent_b, recursion_depth, ts);
+            ts->t8_element_child(correct_nca_high_level, 0, parent_a);
+            ts->t8_element_child(correct_nca_high_level, num_children-1, parent_b); 
+            t8_recursive_nca_check(correct_nca_high_level, desc_a, desc_b, check, parent_a, 
+            parent_b, (max_lvl/2)+i, ts);
         }
         else{
             GTEST_SKIP();
         }
     }
+    /* Clean-up */
     ts->t8_element_destroy(1, &parent_a);
     ts->t8_element_destroy(1, &parent_b);
-    ts->t8_element_destroy(1, &correct_nca_lvl_2);
+    ts->t8_element_destroy(1, &correct_nca_high_level);
 }
 
 
