@@ -90,6 +90,7 @@ typedef struct
   t8_nc_int32_t       start_index;
   const char         *convention;
   int                 netcdf_var_storage_mode;
+  const size_t       *coordinate_chunksize;
   int                 netcdf_mpi_access;
   int                 fill_mode;
   int                 cmode;
@@ -584,7 +585,7 @@ t8_forest_write_netcdf_coordinate_variables (t8_forest_netcdf_context_t *
   /* Define whether contiguous or chunked storage is used for the variable */
   if ((retval =
        nc_def_var_chunking (context->ncid, context->var_node_x_id,
-                            context->netcdf_var_storage_mode, NULL))) {
+                            context->netcdf_var_storage_mode, context->coordinate_chunksize))) {
     if (retval != NC_ENOTNC4) {
       ERR (retval);
     }
@@ -634,7 +635,7 @@ t8_forest_write_netcdf_coordinate_variables (t8_forest_netcdf_context_t *
   /* Define whether contiguous or chunked storage is used for the variable */
   if ((retval =
        nc_def_var_chunking (context->ncid, context->var_node_y_id,
-                            context->netcdf_var_storage_mode, NULL))) {
+                            context->netcdf_var_storage_mode, context->coordinate_chunksize))) {
     if (retval != NC_ENOTNC4) {
       ERR (retval);
     }
@@ -683,7 +684,7 @@ t8_forest_write_netcdf_coordinate_variables (t8_forest_netcdf_context_t *
   /* Define whether contiguous or chunked storage is used for the variable */
   if ((retval =
        nc_def_var_chunking (context->ncid, context->var_node_z_id,
-                            context->netcdf_var_storage_mode, NULL))) {
+                            context->netcdf_var_storage_mode, context->coordinate_chunksize))) {
     if (retval != NC_ENOTNC4) {
       ERR (retval);
     }
@@ -1221,15 +1222,13 @@ t8_forest_write_netcdf_file (t8_forest_t forest,
 }
 
 /* Function that gets called if a forest schould be written in NetCDF-Format. This function is somehow an extended version which allows the user to decide if contiguous or chunked storage should used and whether the MPI ranks write independetly or collectively. */
-void
-t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix,
-                            const char *file_title, int dim,
-                            int num_extern_netcdf_vars,
-                            t8_netcdf_variable_t * ext_variables[],
-                            sc_MPI_Comm comm, int netcdf_var_storage_mode,
-                            int netcdf_mpi_access, int fill_mode, int cmode,
-                            bool multifile_mode)
-{
+void t8_forest_write_netcdf_ext(t8_forest_t forest, const char *file_prefix,
+                                const char *file_title, int dim,
+                                int num_extern_netcdf_vars,
+                                t8_netcdf_variable_t *ext_variables[],
+                                sc_MPI_Comm comm, int netcdf_var_storage_mode,
+                                const size_t *coordinate_chunksize, int netcdf_mpi_access,
+                                int fill_mode, int cmode, bool multifile_mode) {
   t8_forest_netcdf_context_t context;
   /* Check whether pointers are not NULL */
   T8_ASSERT (file_title != NULL);
@@ -1281,6 +1280,7 @@ t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix,
   context.convention = "UGRID v1.0";
   context.multifile_mode = multifile_mode;
   context.cmode = cmode;
+  context.coordinate_chunksize = coordinate_chunksize;
 
   if (fill_mode != NC_FILL && fill_mode != NC_NOFILL) {
     t8_global_productionf("Illegal fill-mode (must be NC_FILL or NC_NOFILL). Using NC_FILL.");
@@ -1343,7 +1343,7 @@ t8_forest_write_netcdf (t8_forest_t forest, const char *file_prefix,
 
   t8_forest_write_netcdf_ext (forest, file_prefix, file_title, dim,
                               num_extern_netcdf_vars, ext_variables, comm,
-                              netcdf_var_storage_mode, netcdf_mpi_access, NC_NOFILL, NC_NETCDF4, false);
+                              netcdf_var_storage_mode, nullptr, netcdf_mpi_access, NC_NOFILL, NC_NETCDF4, false);
 }
 
 T8_EXTERN_C_END ();
