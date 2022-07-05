@@ -1,0 +1,1 @@
+I place my contributions to t8code from 04/01/2022 to 12/31/2023 under the FreeBSD license. Jakob Hördt (j.hoerdt@stud.uni-goettingen.de)
