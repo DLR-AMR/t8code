@@ -20,9 +20,9 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <t8.h>
 #if T8_WITH_NETCDF && T8_WITH_NETCDF_PAR
 
-#include <t8.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_eclass.h>
