@@ -57,12 +57,6 @@ typedef void        (*t8_generic_function_pointer) (void);
 
 T8_EXTERN_C_BEGIN ();
 
-/* TODO: if eclass is a vertex then num_outgoing/num_incoming are always
- *       1 and it is not possible to decide whether we are rfining or coarsening.
- *       Is this an issue? */
-/* TODO: We may also take the local element index within the tree as parameter.
- *       Otherwise we have to search for the elements if we want pointers to them.
- */
 /** Callback function prototype to replace one set of elements with another.
  *
  * This is used by the replace routine which can be called after adapt,
@@ -75,6 +69,9 @@ T8_EXTERN_C_BEGIN ();
  * \param [in] forest_new      The forest that is newly constructed from \a forest_old
  * \param [in] which_tree      The local tree containing \a outgoing and \a incoming
  * \param [in] ts              The eclass scheme of the tree
+ * \param [in] refine          -1 if family in \a forest_old got coarsened, 0 if element
+ *                             has not been touched, 1 if element got refined. 
+ *                             See return of t8_forest_adapt_t.
  * \param [in] num_outgoing    The number of outgoing elements.
  * \param [in] first_outgoing  The tree local index of the first outgoing element.
  *                             0 <= first_outgoing < which_tree->num_elements
@@ -82,14 +79,18 @@ T8_EXTERN_C_BEGIN ();
  * \param [in] first_incoming  The tree local index of the first incoming element.
  *                             0 <= first_incom < new_which_tree->num_elements
  *
- * If an element is being refined, num_outgoing will be 1 and num_incoming will
- * be the number of children, and vice versa if a family is being coarsened.
+ * If an element is being refined, \a refine and \a num_outgoing will be 1 and 
+ * \a num_incoming will be the number of children.
+ * If a family is being coarsened, \a refine will be -1, \a num_outgoing will be 
+ * the number of family members and \a num_incoming will be 1. Else \a refine will 
+ * be 0 and \a num_outgoing and \a num_incoming will both be 1.
  * \see t8_forest_iterate_replace
  */
 typedef void        (*t8_forest_replace_t) (t8_forest_t forest_old,
                                             t8_forest_t forest_new,
                                             t8_locidx_t which_tree,
                                             t8_eclass_scheme_c *ts,
+                                            int refine,
                                             int num_outgoing,
                                             t8_locidx_t first_outgoing,
                                             int num_incoming,
