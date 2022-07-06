@@ -581,21 +581,6 @@ public:
   virtual void        t8_element_vertex_coords (const t8_element_t *t,
                                                 int vertex, int coords[]);
 
-  /** The tetrahedron schemes uses the general function to return the type of
-   * a tetrahedron.
-   *  \param [in] elem An valid element
-   *  \param [in] indata Is ignored. Can be NULL.
-   *  \param [out] outdata Pointer to an int8_t. The type of \a elem will be stored here.
-   *  On output the type of the tetrahedron will be stored in \a outdata
-   */
-  virtual void        t8_element_general_function (const t8_element_t *elem,
-                                                   const void *indata,
-                                                   void *outdata)
-  {
-    SC_ABORT ("Not implemented.\n");
-    return;                     /* prevents compiler warning */
-  }
-
   /** Compute the coordinates of a given element vertex inside a reference tree
    *  that is embedded into [0,1]^d (d = dimension).
    *   \param [in] t      The element to be considered.
