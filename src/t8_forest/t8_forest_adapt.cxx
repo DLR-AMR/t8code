@@ -306,7 +306,8 @@ t8_forest_adapt (t8_forest_t forest)
         }
       }
       if (zz != num_siblings
-          || !tscheme->t8_element_is_family ((const t8_element_t **)elements_from)) {
+          || !tscheme->t8_element_is_family ((const t8_element_t **)
+                                             elements_from)) {
         /* We are certain that the elements do not form a family.
          * So we will only pass the first element to the adapt callback. */
         is_family = 0;
@@ -317,7 +318,9 @@ t8_forest_adapt (t8_forest_t forest)
         is_family = 1;
         num_elements_to_adapt_callback = num_siblings;
       }
-      T8_ASSERT (!is_family || tscheme->t8_element_is_family ((const t8_element_t **)elements_from));
+      T8_ASSERT (!is_family
+                 || tscheme->t8_element_is_family ((const t8_element_t **)
+                                                   elements_from));
 
       /* Pass the element, or the family to the adapt callback.
        * The output will be > 0 if the element should be refined
@@ -481,9 +484,9 @@ t8_forest_adapt_marker_array_callback (t8_forest_t forest,
                                        t8_forest_t forest_from,
                                        t8_locidx_t which_tree,
                                        t8_locidx_t lelement_id,
-                                       t8_eclass_scheme_c * ts,
+                                       t8_eclass_scheme_c *ts,
                                        int num_elements,
-                                       const t8_element_t * elements[])
+                                       const t8_element_t *elements[])
 {
   T8_ASSERT (t8_forest_is_committed (forest_from));
   /* Get a pointer to the user data. */
@@ -547,7 +550,7 @@ t8_forest_adapt_marker_array_callback (t8_forest_t forest,
  * levels.
  */
 void
-t8_forest_adapt_build_marker_array (t8_forest_t forest, sc_array_t * markers,
+t8_forest_adapt_build_marker_array (t8_forest_t forest, sc_array_t *markers,
                                     t8_locidx_list_t *
                                     elements_that_do_not_refine,
                                     int maxlevel_existing, int *new_maxlevel)

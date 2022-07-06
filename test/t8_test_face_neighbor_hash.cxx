@@ -29,7 +29,7 @@
  *   |_0|_1|
  * 
  */
-static              t8_forest_t
+static t8_forest_t
 test_build_quad_forest (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;

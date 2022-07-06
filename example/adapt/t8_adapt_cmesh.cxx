@@ -108,7 +108,7 @@ static void
 t8_adapt_cmesh_replace_callback (t8_forest_t forest_old,
                                  t8_forest_t forest_new,
                                  t8_locidx_t which_tree,
-                                 t8_eclass_scheme_c * ts,
+                                 t8_eclass_scheme_c *ts,
                                  int num_outgoing,
                                  t8_locidx_t first_outgoing,
                                  int num_incoming, t8_locidx_t first_incoming)
@@ -147,8 +147,8 @@ t8_adapt_cmesh_replace_callback (t8_forest_t forest_old,
 static int
 t8_adapt_cmesh_adapt_callback (t8_forest_t forest, t8_forest_t forest_from,
                                t8_locidx_t ltree_id, t8_locidx_t lelement_id,
-                               t8_eclass_scheme_c * ts, int num_elements,
-                               const t8_element_t * elements[])
+                               t8_eclass_scheme_c *ts, int num_elements,
+                               const t8_element_t *elements[])
 {
   t8_adapt_cmesh_adapt_data_t *adapt_data =
     (t8_adapt_cmesh_adapt_data_t *) t8_forest_get_user_data (forest_from);
@@ -211,11 +211,9 @@ t8_adapt_cmesh_adapt_callback (t8_forest_t forest, t8_forest_t forest_from,
 static int
 t8_adapt_cmesh_search_element_callback (t8_forest_t forest,
                                         t8_locidx_t ltreeid,
-                                        const t8_element_t *
-                                        element,
+                                        const t8_element_t *element,
                                         const int is_leaf,
-                                        t8_element_array_t *
-                                        leaf_elements,
+                                        t8_element_array_t *leaf_elements,
                                         t8_locidx_t
                                         tree_leaf_index, void *query,
                                         size_t query_index)
@@ -228,11 +226,9 @@ t8_adapt_cmesh_search_element_callback (t8_forest_t forest,
 static int
 t8_adapt_cmesh_search_query_callback (t8_forest_t forest,
                                       t8_locidx_t ltreeid,
-                                      const t8_element_t *
-                                      element,
+                                      const t8_element_t *element,
                                       const int is_leaf,
-                                      t8_element_array_t *
-                                      leaf_elements,
+                                      t8_element_array_t *leaf_elements,
                                       t8_locidx_t
                                       tree_leaf_index, void *query,
                                       size_t query_index)
@@ -317,7 +313,7 @@ t8_adapt_cmesh_search_query_callback (t8_forest_t forest,
 
 /* Set new size of markers array and set all markers to 0. */
 static void
-t8_adapt_template_update_markers (t8_forest_t forest, sc_array_t * markers)
+t8_adapt_template_update_markers (t8_forest_t forest, sc_array_t *markers)
 {
   const t8_locidx_t   num_local_elements =
     t8_forest_get_local_num_elements (forest);
@@ -333,7 +329,7 @@ t8_adapt_template_update_markers (t8_forest_t forest, sc_array_t * markers)
 /*Compute the number of elements according to their shape*/
 void
 t8_adapt_cmesh_element_count (t8_forest_t forest,
-                              t8_gloidx_t * element_of_class)
+                              t8_gloidx_t *element_of_class)
 {
   const t8_locidx_t   num_local_trees =
     t8_forest_get_num_local_trees (forest);
@@ -364,7 +360,7 @@ t8_adapt_cmesh_element_count (t8_forest_t forest,
   }
 }
 
-static              t8_forest_t
+static t8_forest_t
 t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
                              t8_forest_t forest_to_adapt_from,
                              int num_refinement_steps, int balance,

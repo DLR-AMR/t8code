@@ -50,7 +50,7 @@ T8_EXTERN_C_BEGIN ();
  * \param [in] scheme   The eclass scheme of which elements should be stored.
  * \return              Return an allocated array of zero length.
  */
-t8_element_array_t *t8_element_array_new (t8_eclass_scheme_c * scheme);
+t8_element_array_t *t8_element_array_new (t8_eclass_scheme_c *scheme);
 
 /** Creates a new array structure with a given length (number of elements)
  * and calls \ref t8_element_new for those elements.
@@ -60,15 +60,15 @@ t8_element_array_t *t8_element_array_new (t8_eclass_scheme_c * scheme);
  *                          with allocated and initialized elements for which \ref
  *                          t8_element_new was called.
  */
-t8_element_array_t *t8_element_array_new_count (t8_eclass_scheme_c * scheme,
+t8_element_array_t *t8_element_array_new_count (t8_eclass_scheme_c *scheme,
                                                 size_t num_elements);
 
 /** Initializes an already allocated (or static) array structure.
  * \param [in,out]  element_array  Array structure to be initialized.
  * \param [in]      scheme         The eclass scheme of which elements should be stored.
  */
-void                t8_element_array_init (t8_element_array_t * element_array,
-                                           t8_eclass_scheme_c * scheme);
+void                t8_element_array_init (t8_element_array_t *element_array,
+                                           t8_eclass_scheme_c *scheme);
 
 /** Initializes an already allocated (or static) array structure
  * and allocates a given number of elements and initializes them with \ref t8_element_init.
@@ -76,9 +76,9 @@ void                t8_element_array_init (t8_element_array_t * element_array,
  * \param [in] scheme         The eclass scheme of which elements should be stored.
  * \param [in] num_elements   Number of initial array elements.
  */
-void                t8_element_array_init_size (t8_element_array_t *
-                                                element_array,
-                                                t8_eclass_scheme_c * scheme,
+void                t8_element_array_init_size (t8_element_array_t
+                                                *element_array,
+                                                t8_eclass_scheme_c *scheme,
                                                 size_t num_elements);
 
 /** Initializes an already allocated (or static) view from existing t8_element_array.
@@ -91,8 +91,8 @@ void                t8_element_array_init_size (t8_element_array_t *
  *                       The view cannot be resized to exceed this length.
  *                       It is not necessary to call sc_array_reset later.
  */
-void                t8_element_array_init_view (t8_element_array_t * view,
-                                                t8_element_array_t * array,
+void                t8_element_array_init_view (t8_element_array_t *view,
+                                                t8_element_array_t *array,
                                                 size_t offset, size_t length);
 
 /** Initializes an already allocated (or static) view from given plain C data
@@ -106,9 +106,9 @@ void                t8_element_array_init_view (t8_element_array_t * view,
  *                          The view cannot be resized to exceed this length.
  *                          It is not necessary to call t8_element_array_reset later.
  */
-void                t8_element_array_init_data (t8_element_array_t * view,
-                                                t8_element_t * base,
-                                                t8_eclass_scheme_c * scheme,
+void                t8_element_array_init_data (t8_element_array_t *view,
+                                                t8_element_t *base,
+                                                t8_eclass_scheme_c *scheme,
                                                 size_t elem_count);
 
 /** Initializes an already allocated (or static) array structure
@@ -121,10 +121,10 @@ void                t8_element_array_init_data (t8_element_array_t * view,
  *                            \ref t8_element_new or \ref t8_element_init.
  * \param [in] num_elements   Number of elements in \a data to be copied.
  */
-void                t8_element_array_init_copy (t8_element_array_t *
-                                                element_array,
-                                                t8_eclass_scheme_c * scheme,
-                                                t8_element_t * data,
+void                t8_element_array_init_copy (t8_element_array_t
+                                                *element_array,
+                                                t8_eclass_scheme_c *scheme,
+                                                t8_element_t *data,
                                                 size_t num_elements);
 
 /** Change the number of elements stored in an element array.
@@ -134,24 +134,24 @@ void                t8_element_array_init_copy (t8_element_array_t *
  * \note If \a new_count is larger than the number of current elements on \a element_array,
  * then \ref t8_element_init is called for the new elements.
  */
-void                t8_element_array_resize (t8_element_array_t *
-                                             element_array, size_t new_count);
+void                t8_element_array_resize (t8_element_array_t
+                                             *element_array,
+                                             size_t new_count);
 
 /** Copy the contents of an array into another.
  * Both arrays must have the same eclass_scheme.
  * \param [in] dest Array will be resized and get new data.
  * \param [in] src  Array used as source of new data, will not be changed.
  */
-void                t8_element_array_copy (t8_element_array_t * dest,
-                                           t8_element_array_t * src);
+void                t8_element_array_copy (t8_element_array_t *dest,
+                                           t8_element_array_t *src);
 
 /** Enlarge an array by one element.
  * \param [in, ou] element_array Array structure to be modified.
  * \return Returns a pointer to a newly added element for which \ref t8_element_init
  *         was called.
  */
-t8_element_t       *t8_element_array_push (t8_element_array_t *
-                                           element_array);
+t8_element_t       *t8_element_array_push (t8_element_array_t *element_array);
 
 /** Enlarge an array by a number of elements.
  * \param [in, ou] element_array Array structure to be modified.
@@ -159,8 +159,9 @@ t8_element_t       *t8_element_array_push (t8_element_array_t *
  * \return Returns a pointer to the newly added elements for which \ref t8_element_init
  *                was called.
  */
-t8_element_t       *t8_element_array_push_count (t8_element_array_t *
-                                                 element_array, size_t count);
+t8_element_t       *t8_element_array_push_count (t8_element_array_t
+                                                 *element_array,
+                                                 size_t count);
 
 /** Return a given element in an array.
  * \param [in]  element_array Array of elements.
@@ -168,8 +169,8 @@ t8_element_t       *t8_element_array_push_count (t8_element_array_t *
  * \return            A pointer to the element stored at position \a index in
  *                    \a element_array.
  */
-t8_element_t       *t8_element_array_index_locidx (t8_element_array_t *
-                                                   element_array,
+t8_element_t       *t8_element_array_index_locidx (t8_element_array_t
+                                                   *element_array,
                                                    t8_locidx_t index);
 
 /** Return a given element in an array.
@@ -178,51 +179,51 @@ t8_element_t       *t8_element_array_index_locidx (t8_element_array_t *
  * \return            A pointer to the element stored at position \a index in
  *                    \a element_array.
  */
-t8_element_t       *t8_element_array_index_int (t8_element_array_t *
-                                                element_array, int index);
+t8_element_t       *t8_element_array_index_int (t8_element_array_t
+                                                *element_array, int index);
 
 /** Return the eclass scheme associated to a t8_element_array.
  * \param [in]  element_array Array of elements.
  * \return      The eclass scheme stored at \a element_array.
  */
-t8_eclass_scheme_c *t8_element_array_get_scheme (t8_element_array_t *
-                                                 element_array);
+t8_eclass_scheme_c *t8_element_array_get_scheme (t8_element_array_t
+                                                 *element_array);
 
 /** Return the number of elements stored in a t8_element_array_t.
  * \param [in]  element_array  Array structure.
  * \return                     The number of elements stored in \a element_array.
  */
-size_t              t8_element_array_get_count (t8_element_array_t *
-                                                element_array);
+size_t              t8_element_array_get_count (t8_element_array_t
+                                                *element_array);
 /** Return the data size of elements stored in a t8_element_array_t.
  * \param [in]  element_array  Array structure.
  * \return                     The size (in bytes) of a single element in \a element_array.
  */
-size_t              t8_element_array_get_size (t8_element_array_t *
-                                               element_array);
+size_t              t8_element_array_get_size (t8_element_array_t
+                                               *element_array);
 
 /** Return a pointer to the real data array stored in a t8_element_array.
  * \param [in]  element_array  Array structure.
  * \return                     A pointer to the stored data. If the number of stored
  *                             elements is 0, then NULL is returned.
  */
-t8_element_t       *t8_element_array_get_data (t8_element_array_t *
-                                               element_array);
+t8_element_t       *t8_element_array_get_data (t8_element_array_t
+                                               *element_array);
 
 /** Return a pointer to the sc_array stored in a t8_element_array.
  * \param [in]  element_array  Array structure.
  * \return                     A pointer to the sc_array storing the data.
  */
-sc_array_t         *t8_element_array_get_array (t8_element_array_t *
-                                                element_array);
+sc_array_t         *t8_element_array_get_array (t8_element_array_t
+                                                *element_array);
 
 /** Sets the array count to zero and frees all elements.
  * \param [in,out]  element_array  Array structure to be reset.
  * \note Calling t8_element_array_init, then any array operations,
  *       then t8_element_array_reset is memory neutral.
  */
-void                t8_element_array_reset (t8_element_array_t *
-                                            element_array);
+void                t8_element_array_reset (t8_element_array_t
+                                            *element_array);
 
 /** Sets the array count to zero, but does not free elements.
  * \param [in,out]  element_array  Element array structure to be truncated.
@@ -230,8 +231,8 @@ void                t8_element_array_reset (t8_element_array_t *
  * buffer, where the "high water mark" of the buffer is preserved, so that
  * O(log (max n)) reallocs occur over the life of the buffer.
  */
-void                t8_element_array_truncate (t8_element_array_t *
-                                               element_array);
+void                t8_element_array_truncate (t8_element_array_t
+                                               *element_array);
 
 T8_EXTERN_C_END ();
 

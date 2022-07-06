@@ -1115,130 +1115,145 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
  * https://stackoverflow.com/questions/42740765/intersection-between-line-and-triangle-in-3d
  * line_pointA is the origin of the line*/
 static int
-t8_forest_line_cuts_triangle(const double line_pointA[3],
-                             const double line_pointB[3],
-                             const double triA[3], const double triB[3],
-                             const double triC[3]){
-   const double   tolerance = 1e-7;
-   double         edge1[3], edge2[3], normal[3], triAlineA[3], DAO[3], ray[3];
-   /*u, v and 1-u-v are the barycentric coordinates of the intersection*/
-   double         det,invdet,u,v, lambda;
-   
-   /*Compute edges of the triangle*/
-   /* Edge1 = triB - triA */
-   t8_vec_axpyz (triA, triB, edge1, -1);
-   /* Edge2 = triC - triA */
-   t8_vec_axpyz (triA, triC, edge2, -1);
-   /* ray = line_pointB - line_pointA */
-   t8_vec_axpyz (line_pointA, line_pointB, ray, -1);
-   
+t8_forest_line_cuts_triangle (const double line_pointA[3],
+                              const double line_pointB[3],
+                              const double triA[3], const double triB[3],
+                              const double triC[3])
+{
+  const double        tolerance = 1e-7;
+  double              edge1[3], edge2[3], normal[3], triAlineA[3], DAO[3],
+    ray[3];
+  /*u, v and 1-u-v are the barycentric coordinates of the intersection */
+  double              det, invdet, u, v, lambda;
+
+  /*Compute edges of the triangle */
+  /* Edge1 = triB - triA */
+  t8_vec_axpyz (triA, triB, edge1, -1);
+  /* Edge2 = triC - triA */
+  t8_vec_axpyz (triA, triC, edge2, -1);
+  /* ray = line_pointB - line_pointA */
+  t8_vec_axpyz (line_pointA, line_pointB, ray, -1);
+
   /* normal of the triangle */
-   t8_vec_cross(edge1, edge2, normal);
+  t8_vec_cross (edge1, edge2, normal);
 
-   //t8_vec_cross(ray, edge2, h);
-   det = -t8_vec_dot(ray, normal);
-   invdet = 1. / det;
-  
-   /* triAlineA = line_pointA - triA */
+  //t8_vec_cross(ray, edge2, h);
+  det = -t8_vec_dot (ray, normal);
+  invdet = 1. / det;
 
-   t8_vec_axpyz (line_pointA, triA, triAlineA, -1);
+  /* triAlineA = line_pointA - triA */
 
-   t8_vec_cross(triAlineA, ray, DAO);
-   /* Note: The signs here differ from the original stackoverflow solution,
-    *       due to ray pointing in the other direction. */
-   u = -t8_vec_dot(edge2, DAO) * invdet;
-   v = t8_vec_dot(edge1, DAO) * invdet;
-   lambda = -t8_vec_dot(triAlineA, normal) * invdet;
-   if(fabs(det) >= tolerance && lambda >= 0 && lambda <= 1 && 
-      u >= 0 && v >= 0 && (u+v) <= 1){
-     return 1;
-   }
-   else{
-     return 0;
-   }
+  t8_vec_axpyz (line_pointA, triA, triAlineA, -1);
+
+  t8_vec_cross (triAlineA, ray, DAO);
+  /* Note: The signs here differ from the original stackoverflow solution,
+   *       due to ray pointing in the other direction. */
+  u = -t8_vec_dot (edge2, DAO) * invdet;
+  v = t8_vec_dot (edge1, DAO) * invdet;
+  lambda = -t8_vec_dot (triAlineA, normal) * invdet;
+  if (fabs (det) >= tolerance && lambda >= 0 && lambda <= 1 &&
+      u >= 0 && v >= 0 && (u + v) <= 1) {
+    return 1;
+  }
+  else {
+    return 0;
+  }
 }
 
 /**Computes if a line intersects with an element
 */
 int
 t8_forest_line_cuts (t8_forest_t forest_line,
-                    const t8_locidx_t line_tree_id,
-                    const t8_element_t * line,
-                    t8_forest_t forest,
-                    const t8_locidx_t tree_id,
-                    const t8_element_t * element){
-  const t8_eclass_t   element_class = 
-    t8_forest_get_tree_class(forest, tree_id);
-  t8_eclass_scheme_c  *element_scheme = 
-    t8_forest_get_eclass_scheme(forest, element_class);
+                     const t8_locidx_t line_tree_id,
+                     const t8_element_t *line,
+                     t8_forest_t forest,
+                     const t8_locidx_t tree_id, const t8_element_t *element)
+{
+  const t8_eclass_t   element_class =
+    t8_forest_get_tree_class (forest, tree_id);
+  t8_eclass_scheme_c *element_scheme =
+    t8_forest_get_eclass_scheme (forest, element_class);
   double              line_pointA[3];
   double              line_pointB[3];
   double              face_pointA[3], face_pointB[3];
   double              face_pointC[3], face_pointD[3];
-  t8_element_shape_t   face_shape; 
-  const int num_faces = element_scheme->t8_element_num_faces(element);
+  t8_element_shape_t  face_shape;
+  const int           num_faces =
+    element_scheme->t8_element_num_faces (element);
 
-  t8_forest_element_coordinate (forest_line, line_tree_id, line, 0, 
+  t8_forest_element_coordinate (forest_line, line_tree_id, line, 0,
                                 line_pointA);
-  t8_forest_element_coordinate(forest_line, line_tree_id, line, 1,
+  t8_forest_element_coordinate (forest_line, line_tree_id, line, 1,
                                 line_pointB);
 
-  if(t8_forest_element_point_inside(forest, tree_id, element,line_pointA, 1e-12)){
+  if (t8_forest_element_point_inside
+      (forest, tree_id, element, line_pointA, 1e-12)) {
     return 1;
   }
-  for(int i = 0; i < num_faces; ++i){
-    face_shape = element_scheme->t8_element_face_shape(element, i);
-    int corner_number;
-    switch (face_shape)
-    {
+  for (int i = 0; i < num_faces; ++i) {
+    face_shape = element_scheme->t8_element_face_shape (element, i);
+    int                 corner_number;
+    switch (face_shape) {
     case T8_ECLASS_TRIANGLE:{
-      corner_number = element_scheme->t8_element_get_face_corner(element,
-                                      i, 0);
-      t8_forest_element_coordinate(forest, tree_id, element, corner_number, face_pointA);
-      corner_number = element_scheme->t8_element_get_face_corner(element,
-                                      i, 1);
-      t8_forest_element_coordinate(forest, tree_id, element, corner_number, face_pointB);
-      corner_number = element_scheme->t8_element_get_face_corner(element,
-                                      i, 2);
-      t8_forest_element_coordinate(forest, tree_id, element, corner_number, face_pointC);
-      if(t8_forest_line_cuts_triangle(line_pointA, line_pointB, face_pointA,
-                                          face_pointB, face_pointC)){
-        return 1;
+        corner_number = element_scheme->t8_element_get_face_corner (element,
+                                                                    i, 0);
+        t8_forest_element_coordinate (forest, tree_id, element, corner_number,
+                                      face_pointA);
+        corner_number =
+          element_scheme->t8_element_get_face_corner (element, i, 1);
+        t8_forest_element_coordinate (forest, tree_id, element, corner_number,
+                                      face_pointB);
+        corner_number =
+          element_scheme->t8_element_get_face_corner (element, i, 2);
+        t8_forest_element_coordinate (forest, tree_id, element, corner_number,
+                                      face_pointC);
+        if (t8_forest_line_cuts_triangle
+            (line_pointA, line_pointB, face_pointA, face_pointB,
+             face_pointC)) {
+          return 1;
+        }
+        break;
       }
-      break;
-    }
     case T8_ECLASS_QUAD:{
-      int cut = 0;
-      corner_number = element_scheme->t8_element_get_face_corner(element,
-                                      i, 0);
-      t8_forest_element_coordinate(forest, tree_id, element, corner_number, face_pointA);
-      corner_number = element_scheme->t8_element_get_face_corner(element,
-                                      i, 1);
-      t8_forest_element_coordinate(forest, tree_id, element, corner_number, face_pointB);
-      corner_number = element_scheme->t8_element_get_face_corner(element,
-                                      i, 2);
-      t8_forest_element_coordinate(forest, tree_id, element, corner_number, face_pointC);
-      corner_number = element_scheme->t8_element_get_face_corner(element,
-                                      i, 3);
-      t8_forest_element_coordinate(forest, tree_id, element, corner_number, face_pointD);
-      
-      cut = t8_forest_line_cuts_triangle(line_pointA, line_pointB, face_pointA,
-                                          face_pointB, face_pointC);
-      if(cut || t8_forest_line_cuts_triangle(line_pointA, line_pointB, face_pointB,
-                                          face_pointC, face_pointD) ){
-        return 1;
+        int                 cut = 0;
+        corner_number = element_scheme->t8_element_get_face_corner (element,
+                                                                    i, 0);
+        t8_forest_element_coordinate (forest, tree_id, element, corner_number,
+                                      face_pointA);
+        corner_number =
+          element_scheme->t8_element_get_face_corner (element, i, 1);
+        t8_forest_element_coordinate (forest, tree_id, element, corner_number,
+                                      face_pointB);
+        corner_number =
+          element_scheme->t8_element_get_face_corner (element, i, 2);
+        t8_forest_element_coordinate (forest, tree_id, element, corner_number,
+                                      face_pointC);
+        corner_number =
+          element_scheme->t8_element_get_face_corner (element, i, 3);
+        t8_forest_element_coordinate (forest, tree_id, element, corner_number,
+                                      face_pointD);
+
+        cut =
+          t8_forest_line_cuts_triangle (line_pointA, line_pointB, face_pointA,
+                                        face_pointB, face_pointC);
+        if (cut
+            || t8_forest_line_cuts_triangle (line_pointA, line_pointB,
+                                             face_pointB, face_pointC,
+                                             face_pointD)) {
+          return 1;
+        }
+        break;
       }
-      break;
-    }
 
     default:
-      SC_ABORT ("Line intersection with shape different from quad or triangle not implemented.\n");
+      SC_ABORT
+        ("Line intersection with shape different from quad or triangle not implemented.\n");
       break;
     }
   }
 
-      return 0;         
-  }
+  return 0;
+}
 
 /* For each tree in a forest compute its first and last descendant */
 void

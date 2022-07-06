@@ -1047,7 +1047,6 @@ int                 t8_forest_element_point_inside (t8_forest_t forest,
                                                     const double point[3],
                                                     const double tolerance);
 
-
 /*Query wether a given line element cuts a three dimensional element
  * \param [in]        forest_line The forest containing the line element.
  * \param [in]        line_tree_id The tree id of the tree in \a forest_line that contains the line.
@@ -1057,12 +1056,12 @@ int                 t8_forest_element_point_inside (t8_forest_t forest,
  * \param [in]        element         The  element.
  * \return                        True (non-zero) if and only if \a line cuts (or lies within) \a element.*/
 
-int                   t8_forest_line_cuts (t8_forest_t forest_line,
-                                          const t8_locidx_t line_tree_id,
-                                          const t8_element_t * line,
-                                          t8_forest_t forest,
-                                          const t8_locidx_t tree_id,
-                                          const t8_element_t * element);                                                            
+int                 t8_forest_line_cuts (t8_forest_t forest_line,
+                                         const t8_locidx_t line_tree_id,
+                                         const t8_element_t *line,
+                                         t8_forest_t forest,
+                                         const t8_locidx_t tree_id,
+                                         const t8_element_t *element);
 
 /* TODO: if set level and partition/adapt/balance all give NULL, then
  * refine uniformly and partition/adapt/balance the unfiform forest. */

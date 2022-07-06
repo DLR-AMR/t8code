@@ -65,10 +65,10 @@ int                 t8_forest_adapt_marker_array_callback (t8_forest_t forest,
                                                            t8_locidx_t
                                                            lelement_id,
                                                            t8_eclass_scheme_c
-                                                           * ts,
+                                                           *ts,
                                                            int num_elements,
                                                            const t8_element_t
-                                                           * elements[]);
+                                                           *elements[]);
 
 /** Given a forest that is to be adapted non-recursively, we fill an array with refinement
  * markers. Thus, for each element we store either 0, 1, or -1, depending
@@ -93,7 +93,7 @@ int                 t8_forest_adapt_marker_array_callback (t8_forest_t forest,
  * \note \a forest must be set to adapt from another forest. Thus \ref t8_forest_set_adapt (or similar) must have been called.
  */
 void                t8_forest_adapt_build_marker_array (t8_forest_t forest,
-                                                        sc_array_t * markers,
+                                                        sc_array_t *markers,
                                                         t8_locidx_list_t *
                                                         elements_that_do_not_refine,
                                                         int maxlevel_existing,

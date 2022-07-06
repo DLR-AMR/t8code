@@ -502,15 +502,12 @@ t8_default_scheme_prism_c::t8_element_refines_irregular (void)
 }
 
 #ifdef T8_ENABLE_DEBUG
-/* *INDENT-OFF* */
-/* Indent bug, indent adds an additional const modifier at the end */
 int
 t8_default_scheme_prism_c::t8_element_is_valid (const t8_element_t * elem) const
 {
   T8_ASSERT (elem != NULL);
   return t8_dprism_is_valid ((const t8_dprism_t *) elem);
 }
-/* *INDENT-ON* */
 
 void
 t8_default_scheme_prism_c::t8_element_debug_print (const t8_element_t *elem) const

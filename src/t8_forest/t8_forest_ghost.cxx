@@ -31,7 +31,6 @@
 #include <t8_data/t8_element_array.h>
 #include <sc_statistics.h>
 
-
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 

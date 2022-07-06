@@ -91,7 +91,7 @@ t8_test_forest_commit_abp (t8_forest_t forest, int maxlevel)
 
 /* (nonrecursive) adapt, balance and partition a given forest in one step.
  * This tests the t8_forest_balance_and_adapt functionality */
-static              t8_forest_t
+static t8_forest_t
 t8_test_forest_commit_abp_nonrecursive (t8_forest_t forest, int maxlevel)
 {
   t8_forest_t         forest_ada_bal_par;
@@ -175,7 +175,8 @@ t8_test_forest_commit (int cmesh_id)
     /* We need to use forest three times, so we ref it twice */
     t8_forest_ref (forest);
     t8_forest_ref (forest);
-    forest_ada_bal_part_rec = t8_test_forest_commit_abp_recursive (forest, maxlevel);
+    forest_ada_bal_part_rec =
+      t8_test_forest_commit_abp_recursive (forest, maxlevel);
     forest_ada_bal_part_nonrec =
       t8_test_forest_commit_abp_nonrecursive (forest, maxlevel);
     /* Adapt, balance and partition the forest using three seperate steps */

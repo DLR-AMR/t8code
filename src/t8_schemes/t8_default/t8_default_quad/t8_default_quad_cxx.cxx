@@ -868,11 +868,8 @@ t8_default_scheme_quad_c::t8_element_refines_irregular ()
 }
 
 #ifdef T8_ENABLE_DEBUG
-/* *INDENT-OFF* */
-/* indent bug, indent adds a second "const" modifier */
 int
 t8_default_scheme_quad_c::t8_element_is_valid (const t8_element_t * elem) const
-/* *INDENT-ON* */
 {
   /* TODO: additional checks? do we set pad8 or similar?
    */
