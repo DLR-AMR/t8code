@@ -1408,18 +1408,6 @@ t8_dpyramid_tetparent_type (const t8_dpyramid_t *p, t8_dpyramid_t *parent)
   }
 }
 
-int
-t8_dpyramid_return_tetparent_type (const t8_dpyramid_t *p, const int level)
-{
-  T8_ASSERT (0 <= level && level <= p->level);
-  if ((p->z >> (T8_DPYRAMID_MAXLEVEL - level)) % 2 == 0) {
-    return T8_DPYRAMID_FIRST_TYPE;
-  }
-  else {
-    return T8_DPYRAMID_SECOND_TYPE;
-  }
-}
-
 void
 t8_dpyramid_parent (const t8_dpyramid_t *p, t8_dpyramid_t *parent)
 {
