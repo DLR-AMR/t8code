@@ -136,18 +136,6 @@ public:
    * \return          The number of siblings of \a element.
    * Note that this number is >= 1, since we count the element itself as a sibling.
    */
-  virtual int         t8_element_num_siblings (const t8_element_t *elem) const
-  {
-    SC_ABORT ("Not implemented.\n");
-    return 0;                   /* prevents compiler warning */
-  }
-
-  /** Compute the number of siblings of an element. That is the number of 
-   * Children of its parent.
-   * \param [in] elem The element.
-   * \return          The number of siblings of \a element.
-   * Note that this number is >= 1, since we count the element itself as a sibling.
-   */
   virtual void        t8_element_sibling (const t8_element_t *elem,
                                           int sibid, t8_element_t *sibling)
   {
@@ -189,16 +177,6 @@ public:
    */
   virtual int         t8_element_get_face_corner (const t8_element_t *element,
                                                   int face, int corner)
-  {
-    SC_ABORT ("Not implemented.\n");
-    return 0;                   /* prevents compiler warning */
-  }
-
-  /** Compute the number of corners of a given element.
-   * \param [in] elem The element.
-   * \return          The number of corners of \a elem.
-   */
-  virtual int         t8_element_num_corners (const t8_element_t *elem)
   {
     SC_ABORT ("Not implemented.\n");
     return 0;                   /* prevents compiler warning */
@@ -289,18 +267,6 @@ public:
   virtual void        t8_element_nca (const t8_element_t *elem1,
                                       const t8_element_t *elem2,
                                       t8_element_t *nca);
-
-   /** Return the shape of an allocated element according its type.
-    *  For example, a child of an element can be an element of a different shape
-    *  and has to be handled differently - according to its shape.
-    *  \param [in] elem     The element to be considered
-    *  \return              The shape of the element as an eclass
-   */
-  virtual t8_element_shape_t t8_element_shape (const t8_element_t *elem)
-  {
-    SC_ABORT ("Not implemented.\n");
-    return T8_ECLASS_ZERO;      /* prevents compiler warning */
-  }
 
   /** Compute the shape of the face of an element.
    * \param [in] elem     The element.
@@ -586,21 +552,6 @@ public:
    */
   virtual void        t8_element_vertex_coords (const t8_element_t *t,
                                                 int vertex, int coords[]);
-
-  /** The tetrahedron schemes uses the general function to return the type of
-   * a tetrahedron.
-   *  \param [in] elem An valid element
-   *  \param [in] indata Is ignored. Can be NULL.
-   *  \param [out] outdata Pointer to an int8_t. The type of \a elem will be stored here.
-   *  On output the type of the tetrahedron will be stored in \a outdata
-   */
-  virtual void        t8_element_general_function (const t8_element_t *elem,
-                                                   const void *indata,
-                                                   void *outdata)
-  {
-    SC_ABORT ("Not implemented.\n");
-    return;                     /* prevents compiler warning */
-  }
 
   /** Compute the coordinates of a given element vertex inside a reference tree
    *  that is embedded into [0,1]^d (d = dimension).
