@@ -26,7 +26,8 @@
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include "t8_cmesh/t8_cmesh_partition.h"
 #include <t8_eclass.h>
-#include "t8_cmesh/t8_cmesh_testcases.h"
+#include <t8_cmesh/t8_cmesh_examples.h>
+#include <t8_cmesh/t8_cmesh_testcases.h>
 
 #ifdef T8_ENABLE_LESS_TESTS
 #define T8_CMESH_TEST_NUM_COMMS 1
@@ -320,13 +321,12 @@ t8_test_create_new_hypercube_cmesh (int cmesh_id)
      t8_eclass_to_string[eclass], t8_comm_string_list[comm_num], do_bcast,
      do_partition, periodic);
 
-  if (periodic == 1) {
-    return t8_cmesh_new_hypercube (eclass, comm, do_bcast,
-                                   do_partition, 0);
+  if (eclass_int == (int) T8_ECLASS_PYRAMID) {
+    return t8_cmesh_new_hypercube (eclass, comm, do_bcast, do_partition, 0);
   }
-  else{
-      return t8_cmesh_new_hypercube (eclass, comm, do_bcast, do_partition,
-                                     periodic);
+  else {
+    return t8_cmesh_new_hypercube (eclass, comm, do_bcast, do_partition,
+                                   periodic);
   }
 
 }

@@ -28,7 +28,7 @@
 int
 t8_write_pvtu (const char *filename, int num_procs, int write_tree,
                int write_rank, int write_level, int write_id, int num_data,
-               t8_vtk_data_field_t * data)
+               t8_vtk_data_field_t *data)
 {
   char                pvtufilename[BUFSIZ], filename_cpy[BUFSIZ];
   FILE               *pvtufile;

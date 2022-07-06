@@ -42,7 +42,7 @@ typedef sc_refcount_t t8_refcount_t;
  * It is legal if its status prior to this call is undefined.
  * \param [out] rc          The reference counter is set to one by this call.
  */
-void                t8_refcount_init (t8_refcount_t * rc);
+void                t8_refcount_init (t8_refcount_t *rc);
 
 /** Create a new reference counter with count initialized to 1.
  * Equivalent to calling t8_refcount_init on a newly allocated refcount_t.
@@ -55,7 +55,7 @@ t8_refcount_t      *t8_refcount_new (void);
  * Its reference count must have decreased to zero.
  * \param [in,out] rc       Allocated, formerly valid reference counter.
  */
-void                t8_refcount_destroy (t8_refcount_t * rc);
+void                t8_refcount_destroy (t8_refcount_t *rc);
 
 /** Increase the reference count by one.
  * It is not necessary to duplicate this functionality as a function. */

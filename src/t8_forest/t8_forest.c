@@ -29,13 +29,13 @@
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_balance.h>
-#include <t8_forest_vtk.h>
+#include <t8_forest/t8_forest_vtk.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_cmesh/t8_cmesh_trees.h>
-
+#include<t8_element_c_interface.h>
 
 void
-t8_forest_init (t8_forest_t * pforest)
+t8_forest_init (t8_forest_t *pforest)
 {
   t8_forest_t         forest;
 
@@ -132,7 +132,7 @@ t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh, sc_MPI_Comm comm)
 }
 
 void
-t8_forest_set_scheme (t8_forest_t forest, t8_scheme_cxx_t * scheme)
+t8_forest_set_scheme (t8_forest_t forest, t8_scheme_cxx_t *scheme)
 {
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->rc.refcount > 0);
@@ -372,22 +372,113 @@ t8_forest_comm_global_num_elements (t8_forest_t forest)
   forest->global_num_elements = global_num_el;
 }
 
-
+/** Adapt callback function to refine every element in the forest.
+ * It is merely used to build a new forest with pyramids. 
+ * 
+ * \param [in] forest       the forest to which the new elements belong
+ * \param [in] forest_from  the forest that is adapted.
+ * \param [in] which_tree   the local tree containing \a elements
+ * \param [in] lelement_id  the local element id in \a forest_old in the tree of the current element
+ * \param [in] ts           the eclass scheme of the tree
+ * \param [in] is_family    if 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
+ * \param [in] num_elements the number of entries in \a elements that are defined
+ * \param [in] elements     Pointers to a family or, if \a is_family is zero,
+ *                          pointer to one element.
+ * \return                  Always return 1, to refine every element
+ */
 static int
-t8_forest_new_refine(t8_forest_t forest, t8_forest_t forest_from,
-                          t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                          t8_eclass_scheme_c * ts, int num_elements,
-                          const t8_element_t * elements[])
+t8_forest_refine_everything (t8_forest_t forest, t8_forest_t forest_from,
+                             t8_locidx_t which_tree, t8_locidx_t lelement_id,
+                             t8_eclass_scheme_c *ts, const int is_family,
+                             const int num_elements, t8_element_t *elements[])
 {
 
-    return 1;
+  return 1;
+}
+
+/**
+ * Check if any tree in a forest refines irregularly.
+ * An irregular refining tree is a tree with an element that does not
+ * refine into 2^dim children. For example the default implementation
+ * of pyramids. 
+ * \note This function is MPI collective
+ * 
+ * \param[in] forest    The forest to check
+ * \return          non-zero if any tree refines irregular
+ */
+static int
+t8_forest_refines_irregular (t8_forest_t forest)
+{
+  int                 irregular = 0;
+  int                 irregular_all_procs = 0;  /* Result over all procs */
+  int                 int_eclass;
+  int                 mpiret;
+  t8_eclass_scheme_c *tscheme;
+  /* Iterate over all eclasses */
+  for (int_eclass = (int) T8_ECLASS_ZERO; int_eclass < (int) T8_ECLASS_COUNT;
+       int_eclass++) {
+    /* If the forest has trees of the current eclass, check if elements of this
+     * eclass refine irregular. */
+    if (forest->cmesh->num_local_trees_per_eclass[int_eclass] > 0) {
+      tscheme =
+        t8_forest_get_eclass_scheme_before_commit (forest,
+                                                   (t8_eclass_t) int_eclass);
+      irregular = irregular || t8_element_refines_irregular (tscheme);
+    }
+  }
+  /* Combine the process-local results via a logic or and distribute the
+   * result over all procs (in the communicator).*/
+  mpiret = sc_MPI_Allreduce (&irregular, &irregular_all_procs, 1, sc_MPI_INT,
+                             sc_MPI_LOR, forest->mpicomm);
+  SC_CHECK_MPI (mpiret);
+
+  return irregular_all_procs;
+}
+
+/**Algorithm to populate a forest, if any tree refines irregularly.
+ * Create the elements on this process given a uniform partition
+ * of the coarse mesh. We can not use the function t8_forest_populate, because
+ * it assumes a regular refinement for all trees.
+ * \param[in] forest  The forest to populate
+*/
+static void
+t8_forest_populate_irregular (t8_forest_t forest)
+{
+  t8_forest_t         forest_zero;
+  t8_forest_t         forest_tmp;
+  t8_forest_t         forest_tmp_partition;
+  t8_cmesh_ref (forest->cmesh);
+  t8_scheme_cxx_ref (forest->scheme_cxx);
+  /* We start with a level 0 uniform refinement */
+  t8_forest_init (&forest_zero);
+  t8_forest_set_level (forest_zero, 0);
+  t8_forest_set_cmesh (forest_zero, forest->cmesh, forest->mpicomm);
+  t8_forest_set_scheme (forest_zero, forest->scheme_cxx);
+  t8_forest_commit (forest_zero);
+
+  /* Up to the specified level we refine every element. */
+  for (int i = 1; i <= forest->set_level; i++) {
+    t8_forest_init (&forest_tmp);
+    t8_forest_set_level (forest_tmp, i);
+    t8_forest_set_adapt (forest_tmp, forest_zero,
+                         t8_forest_refine_everything, 0);
+    t8_forest_commit (forest_tmp);
+    /* Partition the forest to even the load */
+    t8_forest_init (&forest_tmp_partition);
+    t8_forest_set_partition (forest_tmp_partition, forest_tmp, 0);
+    t8_forest_commit (forest_tmp_partition);
+    forest_zero = forest_tmp_partition;
+  }
+  /* Copy all elements over to the original forest. */
+  t8_forest_copy_trees (forest, forest_zero, 1);
+  t8_forest_unref (&forest_tmp_partition);
 }
 
 void
 t8_forest_commit (t8_forest_t forest)
 {
   int                 mpiret;
-  int                 partitioned = 0, i;
+  int                 partitioned = 0;
   sc_MPI_Comm         comm_dup;
 
   T8_ASSERT (forest != NULL);
@@ -423,34 +514,12 @@ t8_forest_commit (t8_forest_t forest)
     t8_forest_compute_maxlevel (forest);
     T8_ASSERT (forest->set_level <= forest->maxlevel);
     /* populate a new forest with tree and quadrant objects */
-    if(forest->set_level == 0){
-        t8_forest_populate (forest);
+    if (t8_forest_refines_irregular (forest) && forest->set_level > 0) {
+      /* On root level we will also use the normal algorithm */
+      t8_forest_populate_irregular (forest);
     }
-    else{
-        t8_forest_t     forest_zero, forest_tmp, forest_tmp_partition;
-
-        t8_cmesh_ref(forest->cmesh);
-        t8_scheme_cxx_ref(forest->scheme_cxx);
-        t8_forest_init(&forest_zero);
-        t8_forest_set_level(forest_zero, 0);
-        t8_forest_set_cmesh(forest_zero, forest->cmesh, forest->mpicomm);
-        t8_forest_set_scheme(forest_zero, forest->scheme_cxx);
-        t8_forest_commit(forest_zero);
-
-        for(i = 1; i<=forest->set_level; i++){
-            t8_forest_init(&forest_tmp);
-            t8_forest_set_level(forest_tmp, i);
-            t8_forest_set_adapt(forest_tmp, forest_zero, t8_forest_new_refine, 0);
-            t8_forest_commit(forest_tmp);
-            t8_forest_init(&forest_tmp_partition);
-            t8_forest_set_partition(forest_tmp_partition, forest_tmp, 0);
-            t8_forest_commit(forest_tmp_partition);
-            forest_zero = forest_tmp_partition;
-            //t8_forest_ref(forest);
-            //t8_forest_copy_trees(forest_tmp, forest_zero,1);
-        }
-        t8_forest_copy_trees(forest, forest_tmp_partition, 1);
-        t8_forest_unref(&forest_tmp_partition);
+    else {
+      t8_forest_populate (forest);
     }
     forest->global_num_trees = t8_cmesh_get_num_trees (forest->cmesh);
     /* This forest is definitely balanced */
@@ -820,7 +889,7 @@ t8_forest_get_first_element (t8_forest_t forest)
 /* Compute the offset array for a partition cmesh that should match the
  * forest's partition.
  */
-static              t8_shmem_array_t
+static t8_shmem_array_t
 t8_forest_compute_cmesh_offset (t8_forest_t forest, sc_MPI_Comm comm)
 {
   t8_shmem_array_t    offset;
@@ -957,8 +1026,8 @@ t8_forest_get_tree_vertices (t8_forest_t forest, t8_locidx_t ltreeid)
                                      (forest, ltreeid));
 }
 
-t8_element_array_t
-  * t8_forest_tree_get_leafs (t8_forest_t forest, t8_locidx_t ltree_id)
+t8_element_array_t *
+t8_forest_tree_get_leafs (t8_forest_t forest, t8_locidx_t ltree_id)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (0 <= ltree_id
@@ -1002,7 +1071,7 @@ t8_forest_compare_elem_tree (const void *lelement_id, const void *ltree)
 
 t8_element_t       *
 t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id,
-                       t8_locidx_t * ltreeid)
+                       t8_locidx_t *ltreeid)
 {
   t8_tree_t           tree;
   t8_locidx_t         ltree;
@@ -1069,9 +1138,9 @@ t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id,
   return NULL;
 }
 
-t8_element_t
-  * t8_forest_get_element_in_tree (t8_forest_t forest, t8_locidx_t ltreeid,
-                                   t8_locidx_t leid_in_tree)
+t8_element_t       *
+t8_forest_get_element_in_tree (t8_forest_t forest, t8_locidx_t ltreeid,
+                               t8_locidx_t leid_in_tree)
 {
   t8_tree_t           tree;
   T8_ASSERT (t8_forest_is_committed (forest));
@@ -1194,7 +1263,7 @@ t8_forest_get_local_id (t8_forest_t forest, t8_gloidx_t gtreeid)
              && gtreeid < t8_forest_get_num_global_trees (forest));
 
   /* If the tree is local then its local id is the global id minus the
-   * first global tree id on this forest. If this number if not in the
+   * first global tree id on this forest. If this number is not in the
    * range of local tree ids then the tree is not local. */
   /* we use a gloidx for ltreeid to prevent overflow and false positives */
   ltreeid = gtreeid - t8_forest_get_first_local_tree_id (forest);
@@ -1264,7 +1333,7 @@ t8_forest_cmesh_ltreeid_to_ltreeid (t8_forest_t forest, t8_locidx_t lctreeid)
 t8_ctree_t
 t8_forest_get_coarse_tree_ext (t8_forest_t forest,
                                t8_locidx_t ltreeid,
-                               t8_locidx_t ** face_neigh, int8_t ** ttf)
+                               t8_locidx_t **face_neigh, int8_t **ttf)
 {
   t8_locidx_t         lctreeid;
 
@@ -1383,7 +1452,7 @@ t8_forest_profile_get_balance_time (t8_forest_t forest, int *balance_rounds)
 
 double
 t8_forest_profile_get_ghost_time (t8_forest_t forest,
-                                  t8_locidx_t * ghosts_sent)
+                                  t8_locidx_t *ghosts_sent)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   if (forest->profile != NULL) {
@@ -1439,18 +1508,96 @@ t8_forest_compute_elements_offset (t8_forest_t forest)
   T8_ASSERT (current_offset == forest->local_num_elements);
 }
 
-void
-t8_forest_write_vtk (t8_forest_t forest, const char *filename)
+int
+t8_forest_write_vtk_ext (t8_forest_t forest,
+                         const char *fileprefix,
+                         int write_treeid,
+                         int write_mpirank,
+                         int write_level,
+                         int write_element_id,
+                         int write_ghosts,
+                         int write_curved,
+                         int do_not_use_API,
+                         int num_data, t8_vtk_data_field_t *data)
 {
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (forest->committed);
 
-  t8_forest_vtk_write_file (forest, filename, 1, 1, 1, 1, 1, 0, NULL);
+  if (write_ghosts && write_curved) {
+    t8_errorf
+      ("ERROR: Cannot export ghosts and curved elements at the same time. "
+       "Please specify only one option.\n" "Did not write anything.\n");
+#if !T8_WITH_VTK
+    if (write_curved) {
+      t8_errorf
+        ("WARNING: t8code is not linked against VTK. "
+         "Therefore, the export of curved elements is not possible anyway.\n");
+    }
+#endif
+    return 0;
+  }
+
+#if T8_WITH_VTK
+  if (!do_not_use_API) {
+    if (write_ghosts) {
+      t8_errorf
+        ("WARNING: Export of ghosts not yet available with the vtk API. "
+         "Using the inbuild function instead.\n");
+      do_not_use_API = 1;
+    }
+  }
+  else {
+    if (write_curved) {
+      t8_errorf
+        ("WARNING: Export of curved elements not yet available with the inbuild function. "
+         "Using the VTK API instead.\n");
+      do_not_use_API = 0;
+    }
+  }
+#else
+  /* We are not linked against the VTK library, so
+   * we do not use the API by default.
+   */
+  if (write_curved) {
+    t8_errorf
+      ("WARNING: Export of curved elements not yet available with the inbuild function. "
+       "Please link to VTK.\n"
+       "Using the inbuild function to write out uncurved elements instead.\n");
+  }
+  do_not_use_API = 1;
+#endif
+  T8_ASSERT (!write_ghosts);
+  if (!do_not_use_API) {
+    return t8_forest_vtk_write_file_via_API (forest,
+                                             fileprefix,
+                                             write_treeid,
+                                             write_mpirank,
+                                             write_level,
+                                             write_element_id,
+                                             write_curved, num_data, data);
+  }
+  else {
+    T8_ASSERT (!write_curved);
+    return t8_forest_vtk_write_file (forest,
+                                     fileprefix,
+                                     write_treeid,
+                                     write_mpirank,
+                                     write_level,
+                                     write_element_id,
+                                     write_ghosts, num_data, data);
+  }
+}
+
+int
+t8_forest_write_vtk (t8_forest_t forest, const char *fileprefix)
+{
+  return t8_forest_write_vtk_ext (forest, fileprefix, 1, 1, 1, 1, 0, 0, 0, 0,
+                                  NULL);
 }
 
 t8_forest_t
-t8_forest_new_uniform (t8_cmesh_t cmesh, t8_scheme_cxx_t * scheme,
+t8_forest_new_uniform (t8_cmesh_t cmesh, t8_scheme_cxx_t *scheme,
                        int level, int do_face_ghost, sc_MPI_Comm comm)
 {
   t8_forest_t         forest;
@@ -1518,7 +1665,7 @@ t8_forest_free_trees (t8_forest_t forest)
  * forest has taken ownership on.
  */
 static void
-t8_forest_reset (t8_forest_t * pforest)
+t8_forest_reset (t8_forest_t *pforest)
 {
   int                 mpiret;
   t8_forest_t         forest;
@@ -1586,7 +1733,7 @@ t8_forest_ref (t8_forest_t forest)
 }
 
 void
-t8_forest_unref (t8_forest_t * pforest)
+t8_forest_unref (t8_forest_t *pforest)
 {
   t8_forest_t         forest;
 
