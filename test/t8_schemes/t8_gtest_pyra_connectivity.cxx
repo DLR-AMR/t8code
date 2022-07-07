@@ -33,7 +33,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * Check if the two possible ways to compute the type of a parent give the same result
  * Only checks pyramids
  */
-TEST(pyramid_connectivity, cid_type_to_parenttype_check)
+TEST (pyramid_connectivity, cid_type_to_parenttype_check)
 {
   int                 cid = 0;
   t8_dpyramid_type_t  parent_type;
@@ -57,7 +57,7 @@ TEST(pyramid_connectivity, cid_type_to_parenttype_check)
  * and check if it is equal to the input.
  * 
  */
-TEST(pyramid_connectivity, cid_type_parenttype)
+TEST (pyramid_connectivity, cid_type_parenttype)
 {
   int                 cid;      /* The cube-ids of the children */
   t8_dpyramid_type_t  type;     /* The types of the children */
