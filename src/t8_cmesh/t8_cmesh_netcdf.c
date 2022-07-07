@@ -1109,11 +1109,11 @@ t8_cmesh_write_netcdf (t8_cmesh_t cmesh, const char *file_prefix,
   t8_cmesh_netcdf_ugrid_namespace_t namespace_context;
   t8_cmesh_init_ugrid_namespace_context (&namespace_context, dim);
   /* Check the dimension of the cmesh (only 2D and 3D are supported) */
-  if (dim < 2 || dim > 3)
-  {
+  if (dim < 2 || dim > 3) {
     t8_global_errorf
       ("Only writing 2D and 3D netCDF cmesh data is supported.\n");
-  } else {
+  }
+  else {
     t8_debugf ("Writing a %dD cmesh to netCDF.\n", dim);
     /* Actually writing the NetCDF dimensions, variables and data */
     t8_cmesh_write_netcdf_file (cmesh, &context, &namespace_context,

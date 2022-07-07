@@ -1160,7 +1160,7 @@ t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix,
   snprintf (file_name, BUFSIZ, "%s.nc", file_prefix);
 
 #if !T8_WITH_NETCDF_PAR
-  /* In case of a parallel configuration without parallel netCDF routines */ 
+  /* In case of a parallel configuration without parallel netCDF routines */
   int                 retval;
   int                 mpirank, mpisize;
   /* Size of the communicator */
@@ -1207,7 +1207,8 @@ t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix,
     t8_global_productionf
       ("Illegal input parameter for the storage-mode (NC_CONTIGUOUS or NC_CHUNKED) was given.\nTherefore, NC_CONTIGUOUS will be used as the default value.\n");
     context.netcdf_var_storage_mode = NC_CONTIGUOUS;
-  } else {
+  }
+  else {
     context.netcdf_var_storage_mode = netcdf_var_storage_mode;
   }
 #endif
@@ -1218,7 +1219,8 @@ t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix,
     t8_global_productionf
       ("Illegal input parameter for the variable-mpi-access (NC_INDEPENDENT or NC_COLLECTIVE) was given.\nTherefore, NC_INDEPENDENT will be used as the default value.\n");
     context.netcdf_mpi_access = NC_INDEPENDENT;
-  } else {
+  }
+  else {
     context.netcdf_mpi_access = netcdf_mpi_access;
   }
 #endif
@@ -1228,11 +1230,11 @@ t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix,
   t8_forest_init_ugrid_namespace_context (&namespace_context, dim);
 
   /* Check the dimension of the forest (only 2D and 3D are supported) */
-  if (dim < 2 || dim > 3)
-  {
+  if (dim < 2 || dim > 3) {
     t8_global_errorf
       ("Only writing 2D and 3D netCDF forest data is supported.\n");
-  } else {
+  }
+  else {
     t8_debugf ("Writing a %dD forest to netCDF.\n", dim);
     t8_forest_write_netcdf_file (forest, &context, &namespace_context,
                                  num_extern_netcdf_vars, ext_variables, comm);
