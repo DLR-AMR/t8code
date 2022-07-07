@@ -280,10 +280,7 @@ public:
 
 /** Get the integer coordinates of the anchor node of an element */
   virtual void        t8_element_anchor (const t8_element_t *elem,
-                                         int anchor[3])
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                         int anchor[3]);
 
 /** Get the integer root length of an element, that is the length of
  *  the level 0 ancestor.
