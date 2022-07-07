@@ -2,6 +2,7 @@
 # Non-recursive Makefile.am in example
 # Included from toplevel directory
 
+include example/adapt/Makefile.am
 include example/advect/Makefile.am
 
 include example/IO/Makefile.am

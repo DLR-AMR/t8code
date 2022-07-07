@@ -23,10 +23,11 @@
 #include <sc_options.h>
 #include <t8.h>
 #include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest.h>
-#include <t8_forest_vtk.h>
+#include <t8_forest/t8_forest_vtk.h>
 #include <t8_forest/t8_forest_iterate.h>
-#include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_cmesh_readmshfile.h>
@@ -109,6 +110,7 @@ t8_adapt_cmesh_replace_callback (t8_forest_t forest_old,
                                  t8_forest_t forest_new,
                                  t8_locidx_t which_tree,
                                  t8_eclass_scheme_c *ts,
+                                 int refine,
                                  int num_outgoing,
                                  t8_locidx_t first_outgoing,
                                  int num_incoming, t8_locidx_t first_incoming)
@@ -147,7 +149,8 @@ t8_adapt_cmesh_replace_callback (t8_forest_t forest_old,
 static int
 t8_adapt_cmesh_adapt_callback (t8_forest_t forest, t8_forest_t forest_from,
                                t8_locidx_t ltree_id, t8_locidx_t lelement_id,
-                               t8_eclass_scheme_c *ts, int num_elements,
+                               t8_eclass_scheme_c *ts, const int is_family,
+                               const int num_elements,
                                const t8_element_t *elements[])
 {
   t8_adapt_cmesh_adapt_data_t *adapt_data =
@@ -634,14 +637,8 @@ t8_adapt_cmesh_adapt_forest (t8_forest_t forest,
         t8_errorf ("Cannot write vtk output. File path too long.\n");
       }
       else {
-#if T8_WITH_VTK
-        /* Use VTK library for output if possible */
-        t8_forest_write_vtk_via_API (forest, forest_output, 1, 1, 1, 1, 0, 0,
-                                     NULL);
-#else
-        /* Use standart ascii output if not linked against vtk. */
         t8_forest_write_vtk (forest, forest_output);
-#endif
+
       }
 
     }
@@ -727,14 +724,8 @@ t8_adapt_cmesh_write_vtk (t8_forest_t forest,
       t8_errorf ("Cannot write vtk output. File path too long.\n");
     }
     else {
-#if T8_WITH_VTK
-      /* Use VTK library for output if possible */
-      t8_forest_write_vtk_via_API (forest_to_adapt_from, forest_output, 1, 1,
-                                   1, 1, 0, 0, NULL);
-#else
-      /* Use standart ascii output if not linked against vtk. */
       t8_forest_write_vtk (forest_to_adapt_from, forest_output);
-#endif
+
     }
   }
 
@@ -749,14 +740,7 @@ t8_adapt_cmesh_write_vtk (t8_forest_t forest,
     t8_errorf ("Cannot write vtk output. File path too long.\n");
   }
   else {
-#if T8_WITH_VTK
-    /* Use VTK library for output if possible */
-    t8_forest_write_vtk_via_API (forest, forest_output, 1, 1, 1, 1, 0, 0,
-                                 NULL);
-#else
-    /* Use standart ascii output if not linked against vtk. */
     t8_forest_write_vtk (forest, forest_output);
-#endif
   }
 
   t8_global_essentialf ("Done writing vtk.\n");

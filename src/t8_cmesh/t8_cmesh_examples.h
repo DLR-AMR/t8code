@@ -255,6 +255,32 @@ t8_cmesh_t          t8_cmesh_new_pyramid_cake (sc_MPI_Comm comm,
 t8_cmesh_t          t8_cmesh_new_long_brick_pyramid (sc_MPI_Comm comm,
                                                      int num_cubes);
 
+/**
+ * Construct a hypercube example as in t8_cmesh_new_hypercube
+ * and scale and translate the cmesh.
+ * \param [in] eclass       The class to use for the hypercube
+ * \param [in] comm     The Mpi communicator used to commit the cmesh
+ * \param [in] do_bcast     If this flag is nonzero the cmesh is only constructed
+ *                          on processor 0 and then broadcasted to the other
+ *                          processors in \a comm.
+ *                          TODO: this parameter will be moved to internal.
+ * \param [in] do_partition Create a partitioned cmesh.
+ * \param [in] periodic     If true, the coarse mesh will be periodic in each direction.
+ *                          Not possible with \a eclass pyramid.
+ * \param [in] scale        A 3D vector describing the scaling of each vertex along the axis
+ * \param [in] translation  A 3D vector describing the translation of the cmesh
+ * \return A translated and scaled version of the hypercube cmesh.
+ *  
+ * 
+ */
+t8_cmesh_t          t8_cmesh_new_hypercube_ext (t8_eclass_t eclass,
+                                                sc_MPI_Comm comm,
+                                                int do_bcast,
+                                                int do_partition,
+                                                int periodic,
+                                                const double *scale,
+                                                const double *translation);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_EXAMPLES */

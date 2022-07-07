@@ -1916,3 +1916,19 @@ t8_cmesh_new_full_hybrid (sc_MPI_Comm comm)
   t8_cmesh_commit (cmesh, comm);
   return cmesh;
 }
+
+t8_cmesh_t
+t8_cmesh_new_hypercube_ext (t8_eclass_t eclass,
+                            sc_MPI_Comm comm,
+                            int do_bcast,
+                            int do_partition,
+                            int periodic,
+                            const double *scale, const double *translation)
+{
+  t8_cmesh_t          cmesh;
+  cmesh =
+    t8_cmesh_new_hypercube (eclass, comm, do_bcast, do_partition, periodic);
+  t8_cmesh_scale (cmesh, scale);
+  t8_cmesh_translate (cmesh, translation);
+  return cmesh;
+}
