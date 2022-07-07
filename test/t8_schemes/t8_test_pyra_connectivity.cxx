@@ -54,7 +54,7 @@ t8_cid_type_to_parenttype_check ()
 
 /**
  * Given the type of a parent element, iterate over all local ids of the children
- * and look-up their type and cube-id. Usings these compute the parent-type again
+ * and look-up their type and cube-id. Using these to compute the parent-type again
  * and check if it is equal to the input.
  * 
  */
