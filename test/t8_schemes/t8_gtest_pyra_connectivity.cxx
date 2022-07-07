@@ -25,6 +25,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 * Test the connectivty look-up tables for pyramids.
 */
 
+#include <gtest/gtest.h>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_connectivity.h>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h>
 
@@ -32,8 +33,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * Check if the two possible ways to compute the type of a parent give the same result
  * Only checks pyramids
  */
-void
-t8_cid_type_to_parenttype_check ()
+TEST(pyramid_connectivity, cid_type_to_parenttype_check)
 {
   int                 cid = 0;
   t8_dpyramid_type_t  parent_type;
@@ -46,8 +46,7 @@ t8_cid_type_to_parenttype_check ()
       pyra_parent_type =
         t8_dpyramid_type_cid_to_parenttype[type - T8_DPYRAMID_ROOT_TPYE][cid];
       parent_type = t8_dpyramid_cid_type_to_parenttype[cid][type];
-      SC_CHECK_ABORTF (parent_type == pyra_parent_type,
-                       "Look-up tables are different");
+      EXPECT_EQ (parent_type, pyra_parent_type);
     }
   }
 }
@@ -58,8 +57,7 @@ t8_cid_type_to_parenttype_check ()
  * and check if it is equal to the input.
  * 
  */
-void
-t8_check_cid_type_parenttype ()
+TEST(pyramid_connectivity, cid_type_parenttype)
 {
   int                 cid;      /* The cube-ids of the children */
   t8_dpyramid_type_t  type;     /* The types of the children */
@@ -89,19 +87,8 @@ t8_check_cid_type_parenttype ()
                                                T8_DPYRAMID_FIRST_TYPE][cid];
         }
       }
-      SC_CHECK_ABORTF (check_type == p_type, "Look-up tables are different");
+      EXPECT_EQ (check_type, p_type);
     }
   }
 
-}
-
-int
-main (int argc, char **argv)
-{
-  t8_init (SC_LP_DEFAULT);
-
-  t8_cid_type_to_parenttype_check ();
-  t8_check_cid_type_parenttype ();
-
-  return 0;
 }
