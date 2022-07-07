@@ -54,8 +54,7 @@ libt8_installed_headers_geometry_impl = \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx \
-  src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx \
-  src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx
+  src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx 
 libt8_installed_headers_schemes_default =
 libt8_installed_headers_default_common =
 libt8_installed_headers_default_vertex =
