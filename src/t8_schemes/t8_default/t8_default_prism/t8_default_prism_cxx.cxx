@@ -270,7 +270,7 @@ t8_default_scheme_prism_c::t8_element_extrude_face (const t8_element_t *face,
 /* *INDENT-OFF* */
 /* indent bug, indent adds a second "const" modifier */
 int
-t8_default_scheme_prism_c::t8_element_is_family (t8_element_t **fam)
+t8_default_scheme_prism_c::t8_element_is_family (const t8_element_t **fam)
 {
 #ifdef T8_ENABLE_DEBUG
   int                 i;
@@ -278,7 +278,7 @@ t8_default_scheme_prism_c::t8_element_is_family (t8_element_t **fam)
     T8_ASSERT (t8_element_is_valid (fam[i]));
   }
 #endif
-  return t8_dprism_is_familypv ((t8_dprism_t **) fam);
+  return t8_dprism_is_familypv ((const t8_dprism_t **) fam);
 }
 
 void

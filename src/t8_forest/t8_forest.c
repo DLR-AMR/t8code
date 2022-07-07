@@ -390,7 +390,8 @@ static int
 t8_forest_refine_everything (t8_forest_t forest, t8_forest_t forest_from,
                              t8_locidx_t which_tree, t8_locidx_t lelement_id,
                              t8_eclass_scheme_c *ts, const int is_family,
-                             const int num_elements, t8_element_t *elements[])
+                             const int num_elements,
+                             const t8_element_t *elements[])
 {
 
   return 1;

@@ -102,7 +102,7 @@ int                 t8_dprism_child_id (const t8_dprism_t *p);
  * \param [in]     fam  An array of eight prism.
  * \return            Nonzero if \a fam is a family of prism.
  */
-int                 t8_dprism_is_familypv (t8_dprism_t **fam);
+int                 t8_dprism_is_familypv (const t8_dprism_t **fam);
 
 /** Computes the nearest common ancestor of two prisms in the same tree.
  * \param [in]     p1 First input tetrahedron.

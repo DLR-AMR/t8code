@@ -190,7 +190,7 @@ t8_default_scheme_hex_c::t8_element_ancestor_id (const t8_element_t *elem,
 /* *INDENT-OFF* */
 /* indent bug, indent adds a second "const" modifier */
 int
-t8_default_scheme_hex_c::t8_element_is_family (t8_element_t **fam)
+t8_default_scheme_hex_c::t8_element_is_family (const t8_element_t **fam)
 {
 #ifdef T8_ENABLE_DEBUG
   {

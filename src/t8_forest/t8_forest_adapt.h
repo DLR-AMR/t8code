@@ -66,7 +66,10 @@ int                 t8_forest_adapt_marker_array_callback (t8_forest_t forest,
                                                            lelement_id,
                                                            t8_eclass_scheme_c
                                                            *ts,
-                                                           int num_elements,
+                                                           const int
+                                                           is_family,
+                                                           const int
+                                                           num_elements,
                                                            const t8_element_t
                                                            *elements[]);
 

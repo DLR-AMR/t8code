@@ -57,7 +57,7 @@ t8_vec3_xmay (double *x, double alpha, double *y)
 static void
 t8_midpoint (t8_forest_t forest, t8_locidx_t which_tree,
              t8_eclass_scheme_c *ts,
-             t8_element_t *element, double elem_mid_point[3], double *h)
+             const t8_element_t *element, double elem_mid_point[3], double *h)
 {
   double             *corner[3];
   int                 i, j;
@@ -118,7 +118,7 @@ static int
 t8_load_refine_adapt (t8_forest_t forest, t8_forest_t forest_from,
                       t8_locidx_t which_tree, t8_locidx_t lelement_id,
                       t8_eclass_scheme_c *ts, const int is_family,
-                      const int num_elements, t8_element_t *elements[])
+                      const int num_elements, const t8_element_t *elements[])
 {
   int                 level;
   double              elem_midpoint[3];

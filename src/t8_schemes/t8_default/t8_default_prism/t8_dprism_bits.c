@@ -127,7 +127,7 @@ t8_dprism_child_id (const t8_dprism_t *p)
 }
 
 int
-t8_dprism_is_familypv (t8_dprism_t **fam)
+t8_dprism_is_familypv (const t8_dprism_t **fam)
 {
   int                 i, j;
   t8_dtri_t         **tri_fam = T8_ALLOC (t8_dtri_t *, T8_DTRI_CHILDREN);

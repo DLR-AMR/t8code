@@ -23,7 +23,7 @@
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest.h>
-#include <t8_data/t8_element_array.h>
+#include <t8_data/t8_containers.h>
 #include <t8_data/t8_locidx_list.h>
 #include <t8_element_cxx.hxx>
 
@@ -97,7 +97,7 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
     if (isfamily
         && forest->set_adapt_fn (forest, forest->set_from, ltreeid,
                                  lelement_id, ts, isfamily, num_siblings,
-                                 fam) < 0) {
+                                 constfam) < 0) {
       /* Coarsen the element */
       *el_inserted -= num_siblings - 1;
       /* remove num_children - 1 elements from the array */
@@ -162,7 +162,8 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
     el_buffer[0] = (t8_element_t *) sc_list_pop (elem_list);
     num_children = ts->t8_element_num_children (el_buffer[0]);
     if (forest->set_adapt_fn (forest, forest->set_from, ltreeid, lelement_id,
-                              ts, 0, 1, el_buffer) > 0) {
+                              ts, 0, 1,
+                              (const t8_element_t **) el_buffer) > 0) {
       /* The element should be refined */
       if (ts->t8_element_level (el_buffer[0]) < forest->maxlevel) {
         /* only refine, if we do not exceed the maximum allowed level */
@@ -330,7 +331,8 @@ t8_forest_adapt (t8_forest_t forest)
       refine =
         forest->set_adapt_fn (forest, forest->set_from, ltree_id,
                               el_considered, tscheme, is_family,
-                              num_elements_to_adapt_callback, elements_from);
+                              num_elements_to_adapt_callback,
+                              (const t8_element_t **) elements_from);
 
       T8_ASSERT (is_family || refine >= 0);
       if (refine > 0 && tscheme->t8_element_level (elements_from[0]) >=
@@ -485,7 +487,8 @@ t8_forest_adapt_marker_array_callback (t8_forest_t forest,
                                        t8_locidx_t which_tree,
                                        t8_locidx_t lelement_id,
                                        t8_eclass_scheme_c *ts,
-                                       int num_elements,
+                                       const int is_family,
+                                       const int num_elements,
                                        const t8_element_t *elements[])
 {
   T8_ASSERT (t8_forest_is_committed (forest_from));
@@ -584,7 +587,7 @@ t8_forest_adapt_build_marker_array (t8_forest_t forest, sc_array_t *markers,
       t8_forest_get_tree_class (forest_from, ltreeid);
     const t8_locidx_t   elements_in_tree =
       t8_forest_get_tree_num_elements (forest_from, ltreeid);
-    const t8_eclass_scheme_c *ts =
+    t8_eclass_scheme_c *ts =
       t8_forest_get_eclass_scheme (forest_from, tree_class);
     /* Iterate over all elements of this tree and call the refinement function */
     for (ielement = 0; ielement < elements_in_tree; ++ielement) {
@@ -617,8 +620,8 @@ t8_forest_adapt_build_marker_array (t8_forest_t forest, sc_array_t *markers,
         is_family ? num_siblings : 1;
       const int           adapt_value =
         forest->set_adapt_fn (forest, forest->set_from, ltreeid,
-                              ielement, (t8_eclass_scheme_c *) ts,
-                              num_elements_to_adapt, &element);
+                              ielement, (t8_eclass_scheme_c *) ts, is_family,
+                              num_elements_to_adapt, (&element));
       /* TODO: Use const in parameters of adapt_fn and get rid of the type casts here. */
       const t8_locidx_t   element_index =
         ielement + t8_forest_get_tree_element_offset (forest_from, ltreeid);

@@ -133,7 +133,7 @@ public:
                                        int called_new);
 
   /** Return nonzero if collection of elements is a family */
-  virtual int         t8_element_is_family (t8_element_t **fam);
+  virtual int         t8_element_is_family (const t8_element_t **fam);
 
   /** Compute whether a given element shares a given face of this element
    *  with its root tree. */
