@@ -99,21 +99,21 @@ t8_test_leaf_face_neighbors (const t8_forest_t forest_adapt)
   /* the leaf_face_neighbor function determins neighbor elements of current_element at face face_id in a balanced forest forest_adapt */
   int element_index_in_tree, face_id;
   for (element_index_in_tree = 0; element_index_in_tree < local_num_elements; element_index_in_tree++) {
-    printf("local_num_elements: %i\n", local_num_elements);
-    printf("element_index_in_tree: %i\n", element_index_in_tree);
+    t8_debugf("local_num_elements: %i\n", local_num_elements);
+    t8_debugf("element_index_in_tree: %i\n", element_index_in_tree);
     /* determing the current element according to the given tree id and element id within the tree */
     current_element =
       t8_forest_get_element_in_tree (forest_adapt, ltree_id,
                                     element_index_in_tree);
 
     /* print the current element */
-    t8_debugf ("\nCurrent element (Test LFN):\n");
+    t8_debugf("\nCurrent element (Test LFN):\n");
     t8_print_element_data (current_element);
-    t8_debugf ("    Element index in tree: %i \n", element_index_in_tree);
+    t8_debugf("    Element index in tree: %i \n", element_index_in_tree);
 
     if (ts->t8_element_test_if_subelement (current_element)) {
       subelement_count++;
-      printf("subelement_count: %i\n",subelement_count);
+      t8_debugf("subelement_count: %i\n",subelement_count);
     }
 
     for (face_id = 0; face_id < ts->t8_element_num_faces(current_element); face_id++) {
@@ -156,9 +156,12 @@ t8_test_leaf_face_neighbors (const t8_forest_t forest_adapt)
       }
     }
   }
-  t8_productionf ("Leaf face neighbor runtime: %f\n", time_leaf_face_neighbor);
-  t8_productionf ("Local #elements: %i  local #subelements: %i  local #leaf_face_neighbor call: %i\n", local_num_elements, subelement_count, leaf_face_neighbor_call_count);
+
   t8_productionf ("Global #elements: %i\n", global_num_elements);
+  t8_productionf ("Local #elements: %i  (#quads: %i, #subelements: %i)\n", local_num_elements, local_num_elements-subelement_count, subelement_count);
+  t8_productionf ("# LFN calls: %i\n", leaf_face_neighbor_call_count);
+  t8_productionf ("LFN runtime: %f\n", time_leaf_face_neighbor);
+  t8_productionf ("LFN runtime per call: %f\n", time_leaf_face_neighbor/(float) leaf_face_neighbor_call_count);
 }
 
 /* Initializing and adapting a forest */
@@ -173,26 +176,32 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   char                filename[BUFSIZ];
 
   /* refinement setting */
-  int                 initlevel = 1;    /* initial uniform refinement level */
-  int                 adaptlevel = 1;
+  int                 initlevel = 10;    /* initial uniform refinement level */
+  int                 adaptlevel = 6;
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening (minlevel <= initlevel) */
   int                 maxlevel = initlevel + adaptlevel;     /* highest level allowed for refining */
 
   /* adaptation setting */
-  int                 do_balance = 0;
-  int                 do_transition = 1;
+  int                 do_balance = 1;
+  int                 do_transition = 0;
 
   /* cmesh settings (only one of the following suggestions should be one, the others 0) */
   int                 single_tree = 1;
   int                 multiple_tree = 0, num_x_trees = 2, num_y_trees = 1;
   int                 hybrid_cmesh = 0;
 
+  /* partition setting */
+  int                 do_partition = 1;
+
   /* ghost setting */
   int                 do_ghost = 1;
   int                 ghost_version = 3;
 
   /* vtk setting */
-  int                 do_vtk = 1;
+  int                 do_vtk = 0;
+
+  /* LFN settings */
+  int                 do_LFN_test = 1;
 
   /* initializing the forests */
   t8_forest_init (&forest);
@@ -236,7 +245,7 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   sdata.radius = 0.6;
 
   /* refinement parameter */
-  ls_data.band_width = 1;
+  ls_data.band_width = 5;
   ls_data.L = t8_basic_level_set_sphere;
   ls_data.min_level = minlevel;
   ls_data.max_level = maxlevel;
@@ -254,6 +263,10 @@ t8_refine_with_subelements (t8_eclass_t eclass)
     ghost_version = 1;
   }
 
+  if (do_partition) {
+    t8_forest_set_partition (forest_adapt, forest, 0);
+  }
+
   if (do_ghost) {
     /* set ghosts after adaptation/balancing/transitioning */
     t8_forest_set_ghost_ext (forest_adapt, do_ghost, T8_GHOST_FACES, ghost_version);
@@ -268,8 +281,10 @@ t8_refine_with_subelements (t8_eclass_t eclass)
     t8_forest_write_vtk (forest_adapt, filename);
   }
 
-  /* determine the neighbor element and printing the element data */
-  t8_test_leaf_face_neighbors (forest_adapt);
+  if (do_LFN_test) {
+    /* determine the neighbor element and printing the element data */
+    t8_test_leaf_face_neighbors (forest_adapt);
+  }
 
   t8_forest_unref (&forest_adapt);
 }

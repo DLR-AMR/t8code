@@ -602,6 +602,7 @@ t8_forest_commit (t8_forest_t forest)
       }
     }
     if (forest->from_method & T8_FOREST_FROM_BALANCE) {
+      /* balance the forest */
       forest->from_method -= T8_FOREST_FROM_BALANCE;
       forest->time_balance = 0;
       forest->time_balance -= sc_MPI_Wtime ();
