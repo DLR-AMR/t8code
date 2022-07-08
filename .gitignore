@@ -33,6 +33,8 @@ src/pre_config.h.in
 *.dirstamp
 *.log
 *.trs
+*.vtu
+*.pvtu
 
 # ------------------------------------------------------------ #
 # Following list of files can be easily generated with:
@@ -94,6 +96,3 @@ test/t8_schemes/t8_test_pyra_face_neigh
 test/t8_schemes/t8_test_successor
 test/t8_test_netcdf_linkage
 test/t8_test_vtk_linkage
-test_owners_forest.pvtu
-test_owners_forest_0000.vtu
-test_owners_forest_0001.vtu
