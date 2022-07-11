@@ -1852,12 +1852,7 @@ t8_subelement_scheme_quad_c::t8_element_num_corners (const t8_element_t *
 
   T8_ASSERT (t8_element_is_valid (elem));
 
-  if (t8_element_is_subelement(elem)) {  /* elem is triangular subelement */
-    return T8_SUBELEMENT_FACES;
-  }
-  else {                        /* elem is quad */
-    return P4EST_FACES;
-  }
+  return (t8_element_is_subelement(elem) ? T8_SUBELEMENT_FACES : P4EST_FACES);
 }
 
 int
