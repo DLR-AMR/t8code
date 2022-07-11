@@ -1817,12 +1817,7 @@ t8_subelement_scheme_quad_c::t8_element_get_transition_type (const
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) elem;
 
-  if (!t8_element_is_subelement(elem)) {
-    return 0;
-  }
-  else {
-    return pquad_w_sub->transition_type;
-  }
+  return pquad_w_sub->transition_type;
 }
 
 int
