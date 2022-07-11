@@ -43,7 +43,7 @@ t8_forest_remove_hanging_faces_adapt (t8_forest_t forest,
                                       int num_elements,
                                       t8_element_t * elements[])
 {
-  int                iface, num_faces, neigh_face, subelement_type = 0;
+  int                iface, num_faces, neigh_face, transition_type = 0;
   t8_gloidx_t        neighbor_tree;
   t8_eclass_t        neigh_class;
   t8_eclass_scheme_c *neigh_scheme;
@@ -107,7 +107,7 @@ t8_forest_remove_hanging_faces_adapt (t8_forest_t forest,
           *    decimal:     1*2^3  +  0*2^2  +  0*2^1  +  1*2^0  =  9
           *  
           */
-        subelement_type += 1 << ((num_faces - 1) - iface);
+        transition_type += 1 << ((num_faces - 1) - iface);
       }
     }
     /* clean-up */
@@ -115,14 +115,14 @@ t8_forest_remove_hanging_faces_adapt (t8_forest_t forest,
     T8_FREE (face_neighbor);
   }
   /* returning the right subelement types */
-  if (subelement_type == 0) {   /* in this case, there are no hanging nodes and we do not need to do anything */
+  if (transition_type == 0) {   /* in this case, there are no hanging nodes and we do not need to do anything */
     return 0;
   }
-  else if (subelement_type == 15) {    /* hanging faces can, in this case, just be removed via the standard quad refinement */
+  else if (transition_type == 15) {    /* hanging faces can, in this case, just be removed via the standard quad refinement */
     return 1;
   }
   else {    /* use subelements and add 1 to every type, to avoid refine = 1 */
-    return subelement_type + 1;
+    return transition_type + 1;
   }
 }
 

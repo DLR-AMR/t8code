@@ -111,13 +111,13 @@ public:
 
   /** Determine the number of subelements, used to remove hanging nodes from a element of a given type */
   virtual int         t8_element_get_number_of_subelements (int
-                                                            subelement_type,
+                                                            transition_type,
                                                             const
                                                             t8_element_t *
                                                             elem);
 
   /* TODO: comment */
-  virtual int         t8_element_get_subelement_type (const
+  virtual int         t8_element_get_transition_type (const
                                                       t8_element * elem);
 
   /* TODO: comment */

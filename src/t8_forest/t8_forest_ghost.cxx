@@ -537,13 +537,13 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
     copy_level = ts->t8_element_level (elem_copy);
   }
   /* Test for subelement siblings first. We use t8_element_is_subelement to filter for subelements.
-   * Then, we can use t8_element_get_subelement_type and t8_element_get_subelement_id.
+   * Then, we can use t8_element_get_transition_type and t8_element_get_subelement_id.
    * Those functions are only implemented for schemes with subelements. */
   int subelement_sibling = 0;
   if (elem_copy != NULL) {
     if (ts->t8_element_is_subelement (elem_copy) && ts->t8_element_is_subelement (elem)) { /* both elements are subelements */
       if (ts->t8_element_get_linear_id (elem_copy, copy_level) == ts->t8_element_get_linear_id (elem, level)) { /* both elements are in the same transition cell */
-        T8_ASSERT (ts->t8_element_get_subelement_type (elem_copy) == ts->t8_element_get_subelement_type (elem));
+        T8_ASSERT (ts->t8_element_get_transition_type (elem_copy) == ts->t8_element_get_transition_type (elem));
         if (ts->t8_element_get_subelement_id (elem_copy) != ts->t8_element_get_subelement_id (elem)) {
           subelement_sibling = 1;
         }

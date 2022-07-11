@@ -224,7 +224,7 @@ t8_default_scheme_common_c::t8_element_get_face_number_of_hypotenuse (const
 
 int
 t8_default_scheme_common_c::t8_element_get_number_of_subelements (int
-                                                                  subelement_type,
+                                                                  transition_type,
                                                                   const
                                                                   t8_element *
                                                                   elem)
@@ -233,7 +233,7 @@ t8_default_scheme_common_c::t8_element_get_number_of_subelements (int
 }
 
 int
-t8_default_scheme_common_c::t8_element_get_subelement_type (const
+t8_default_scheme_common_c::t8_element_get_transition_type (const
                                                             t8_element * elem)
 {
   SC_ABORT ("This function is not implemented for the given scheme.\n");

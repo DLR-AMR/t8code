@@ -26,7 +26,7 @@
  * of some recursive quad refinement. This information is 
  * 
  *     dummy_is_subelement (is a given element a subelement?)
- *     subelement_type (what type of transition cell is used?)
+ *     transition_type (what type of transition cell is used?)
  *     subelement_id (what subelement of the transition cell is the given subelement?)
  * 
  * In order to refine a quad element using subelements, it is important to know these additional information. 
@@ -61,7 +61,7 @@
  * 
  * A p4est quadrant can be refined, using either the standard quad scheme, or a transition cell, consisting of different subelements. 
  * The quad refinement scheme is recursive, whereas a transition cell can only be used once, for example to remove hanging nodes, after the mesh has been adapted and balanced. 
- * There are different types of transition cells possible, which we will refer to as subelement_type. 
+ * There are different types of transition cells possible, which we will refer to as transition_type. 
  * Each transition cell consists of different subelements. The given example consists of 6 different subelements, whose ids range from 0 to 5.
  * A dummy variable will store the information, whether a given element is a subelement or a standard quad element. */
 
@@ -69,15 +69,15 @@ typedef struct
 {
   p4est_quadrant_t    p4q;      /* p4est quadrant */
   int                 dummy_is_subelement;      /* saves the information, whether an element is a subelement (1: is subelement, 0: is no subelement) */
-  int                 subelement_type;  /* saves the information, which type of transition cell a subelement is associated to (default is 0) */
+  int                 transition_type;  /* saves the information, which type of transition cell a subelement is associated to (default is 0) */
   int                 subelement_id;    /* saves the information, what children subelement the given element is (default is 0) */
 } t8_quad_with_subelements;
 
 typedef t8_quad_with_subelements t8_pquad_t;
 
 /** define some subelement related constants */
-#define T8_SUB_QUAD_MAX_SUBELEMENT_TYPE 15
-#define T8_SUB_QUAD_MIN_SUBELEMENT_TYPE 1
+#define T8_SUB_QUAD_MAX_transition_type 15
+#define T8_SUB_QUAD_MIN_transition_type 1
 #define T8_SUB_QUAD_MAX_SUBELEMENT_ID 7
 #define T8_SUB_QUAD_MIN_SUBELEMENT_ID 0
 #define T8_SUB_QUAD_IS_SUBELEMENT 1
@@ -353,7 +353,7 @@ public:
 
 /** Determine the number of sibling subelements, of a transition cell of a specific type */
   virtual int         t8_element_get_number_of_subelements (int
-                                                            subelement_type,
+                                                            transition_type,
                                                             const
                                                             t8_element *
                                                             elem);
@@ -362,7 +362,7 @@ public:
   virtual int         t8_element_is_subelement (const t8_element * elem);
 
 /** Get the subelement type of elem */
-  virtual int         t8_element_get_subelement_type (const
+  virtual int         t8_element_get_transition_type (const
                                                       t8_element * elem);
 
 /** Get the subelement id of elem */

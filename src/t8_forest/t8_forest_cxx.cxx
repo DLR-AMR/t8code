@@ -2226,7 +2226,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
               ts->t8_element_get_subelement_id (testneighbor);
 
               if (sub_id_of_testneighbor == sub_id_of_neighbor) { /* neighbor found */
-                T8_ASSERT (ts->t8_element_get_subelement_type (testneighbor) == ts->t8_element_get_subelement_type (ancestor)); /* both elements should be siblings or equal */
+                T8_ASSERT (ts->t8_element_get_transition_type (testneighbor) == ts->t8_element_get_transition_type (ancestor)); /* both elements should be siblings or equal */
                 element_index = element_index + sign * i; /* adjust element index */
                 neighbor_found = 1;
 

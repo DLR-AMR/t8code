@@ -105,8 +105,8 @@ t8_subelement_scheme_quad_c::t8_element_copy (const t8_element_t * source,
   if (q == r &&
       pquad_w_sub_source->dummy_is_subelement ==
       pquad_w_sub_dest->dummy_is_subelement
-      && pquad_w_sub_source->subelement_type ==
-      pquad_w_sub_dest->subelement_type
+      && pquad_w_sub_source->transition_type ==
+      pquad_w_sub_dest->transition_type
       && pquad_w_sub_source->subelement_id ==
       pquad_w_sub_dest->subelement_id) {
     /* Do nothing if they are already the same quadrant. */
@@ -140,7 +140,7 @@ t8_subelement_scheme_quad_c::t8_element_compare (const t8_element_t * elem1,
         && t8_element_is_subelement (elem2)) {
       /* Caution: The compare function is used for two subelements. */
 
-      if (pquad_w_sub_elem1->subelement_type == pquad_w_sub_elem2->subelement_type && 
+      if (pquad_w_sub_elem1->transition_type == pquad_w_sub_elem2->transition_type && 
           pquad_w_sub_elem1->subelement_id == pquad_w_sub_elem2->subelement_id) {
         /* both subelements are identical */
         return 0;
@@ -265,7 +265,7 @@ t8_subelement_scheme_quad_c::t8_element_num_siblings (const t8_element_t *
 
   /* TODO: use t8_element_get_number_of_subelements instead (problem with const) */
   if (pquad_w_sub->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT) {
-    int                 type = pquad_w_sub->subelement_type;
+    int                 type = pquad_w_sub->transition_type;
     int                 num_hanging_faces = 0;
     int                 num_siblings;
     int                 i;
@@ -1591,8 +1591,8 @@ t8_subelement_scheme_quad_c::t8_element_to_subelement (const t8_element_t *
   int                 num_subelements =
     t8_element_get_number_of_subelements (type, elem);
 
-  T8_ASSERT (type >= T8_SUB_QUAD_MIN_SUBELEMENT_TYPE
-             && type <= T8_SUB_QUAD_MAX_SUBELEMENT_TYPE);
+  T8_ASSERT (type >= T8_SUB_QUAD_MIN_transition_type
+             && type <= T8_SUB_QUAD_MAX_transition_type);
 
   T8_ASSERT (pquad_w_sub_elem->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
@@ -1634,7 +1634,7 @@ t8_subelement_scheme_quad_c::t8_element_to_subelement (const t8_element_t *
     pquad_w_sub_subelement[sub_id_counter]->p4q.level = level;
     pquad_w_sub_subelement[sub_id_counter]->dummy_is_subelement =
       T8_SUB_QUAD_IS_SUBELEMENT;
-    pquad_w_sub_subelement[sub_id_counter]->subelement_type = type;
+    pquad_w_sub_subelement[sub_id_counter]->transition_type = type;
     pquad_w_sub_subelement[sub_id_counter]->subelement_id = sub_id_counter;
   }
 
@@ -1647,21 +1647,21 @@ t8_subelement_scheme_quad_c::t8_element_to_subelement (const t8_element_t *
 
 int
 t8_subelement_scheme_quad_c::t8_element_get_number_of_subelements (int
-                                                                   subelement_type,
+                                                                   transition_type,
                                                                    const
                                                                    t8_element
                                                                    * elem)
 {
   T8_ASSERT (t8_element_is_valid (elem));
 
-  /* consider subelement_type 13 = 1101 in base two -> there are 4 + (1+1+0+1) = 7 subelements */
+  /* consider transition_type 13 = 1101 in base two -> there are 4 + (1+1+0+1) = 7 subelements */
   int                 num_subelements;
   int                 num_hanging_faces = 0;
 
   int                 i;
 
   for (i = 0; i < P4EST_FACES; i++) {   /* Count the number of ones of the binary subelement type. This number equals the number of hanging faces. */
-    num_hanging_faces += (subelement_type & (1 << i)) >> i;
+    num_hanging_faces += (transition_type & (1 << i)) >> i;
   }
 
   /* The number of subelements equals the number of neighbours: */
@@ -1710,7 +1710,7 @@ t8_subelement_scheme_quad_c::t8_element_get_location_of_subelement (const
    * The location array for the above example would be {1,1,1} (upper face, split = true, second subelement at the upper face). */
 
   /* 1) convert the subelement type from a decimal to a binary representation */
-  int                 type = pquad_w_sub->subelement_type;
+  int                 type = pquad_w_sub->transition_type;
   int                 binary_array[P4EST_FACES] = { };
 
   int                 i;
@@ -1738,7 +1738,7 @@ t8_subelement_scheme_quad_c::t8_element_get_location_of_subelement (const
   /*     3.2) location[1] -> if the face is split or not */
   /*     3.3) location[2] -> if the subelement is the first or second subelement of the face (always the first, if the face is not split) */
   int                 num_subelements =
-    t8_element_get_number_of_subelements (pquad_w_sub->subelement_type, elem);
+    t8_element_get_number_of_subelements (pquad_w_sub->transition_type, elem);
   T8_ASSERT (pquad_w_sub->subelement_id < num_subelements);
 
   int                 sub_id = pquad_w_sub->subelement_id;
@@ -1797,7 +1797,7 @@ t8_subelement_scheme_quad_c::t8_element_reset_subelement_values (t8_element *
   t8_quad_with_subelements *pquad_w_sub = (t8_quad_with_subelements *) elem;
 
   pquad_w_sub->dummy_is_subelement = T8_SUB_QUAD_IS_NO_SUBELEMENT;
-  pquad_w_sub->subelement_type = T8_SUB_QUAD_IS_NO_SUBELEMENT;
+  pquad_w_sub->transition_type = T8_SUB_QUAD_IS_NO_SUBELEMENT;
   pquad_w_sub->subelement_id = T8_SUB_QUAD_IS_NO_SUBELEMENT;
 }
 
@@ -1815,7 +1815,7 @@ t8_subelement_scheme_quad_c::t8_element_copy_subelement_values (const
 
   pquad_w_sub_dest->dummy_is_subelement =
     pquad_w_sub_source->dummy_is_subelement;
-  pquad_w_sub_dest->subelement_type = pquad_w_sub_source->subelement_type;
+  pquad_w_sub_dest->transition_type = pquad_w_sub_source->transition_type;
   pquad_w_sub_dest->subelement_id = pquad_w_sub_source->subelement_id;
 }
 
@@ -1835,7 +1835,7 @@ t8_subelement_scheme_quad_c::t8_element_is_subelement (const
 }
 
 int
-t8_subelement_scheme_quad_c::t8_element_get_subelement_type (const
+t8_subelement_scheme_quad_c::t8_element_get_transition_type (const
                                                              t8_element *
                                                              elem)
 {
@@ -1846,7 +1846,7 @@ t8_subelement_scheme_quad_c::t8_element_get_subelement_type (const
     return 0;
   }
   else {
-    return pquad_w_sub->subelement_type;
+    return pquad_w_sub->transition_type;
   }
 }
 
@@ -1941,7 +1941,7 @@ t8_subelement_scheme_quad_c::t8_element_find_neighbor_in_transition_cell
     }
     int
       num_subelements =
-      t8_element_get_number_of_subelements (pquad_w_sub_elem->subelement_type,
+      t8_element_get_number_of_subelements (pquad_w_sub_elem->transition_type,
                                             elem);
     return ((pquad_w_sub_elem->subelement_id + shift) + num_subelements) % num_subelements;     /* the neighbor is directly before or after elem modulo the number of subelements in the transition cell */
   }
@@ -2058,7 +2058,7 @@ t8_subelement_scheme_quad_c::t8_element_find_neighbor_in_transition_cell
     /* Depending on the location of elem, we have filled location_neigh with the data of the real neighbor.
      * This data will be used to determine the sub_id of the neighbor within the transition cell of pseudo_neigh. */
     return
-      t8_element_get_id_from_location (t8_element_get_subelement_type
+      t8_element_get_id_from_location (t8_element_get_transition_type
                                        (pseudo_neigh), location_neigh);
   }
   if (pquad_w_sub_elem->dummy_is_subelement == T8_SUB_QUAD_IS_NO_SUBELEMENT) {
@@ -2166,7 +2166,7 @@ t8_subelement_scheme_quad_c::t8_element_find_neighbor_in_transition_cell
     /* Depending on the location of elem, we have filled location_neigh with the data of the real neighbor.
      * This data will be used to determine the sub_id of the neighbor within the transition cell of pseudo_neigh. */
     return
-      t8_element_get_id_from_location (t8_element_get_subelement_type
+      t8_element_get_id_from_location (t8_element_get_transition_type
                                        (pseudo_neigh), location_neigh);
   }
   return -1;                    /* return negative if no neighbor element could be found */
@@ -2176,8 +2176,8 @@ int
 t8_subelement_scheme_quad_c::t8_element_get_id_from_location (int type,
                                                               int location[])
 {
-  T8_ASSERT (T8_SUB_QUAD_MIN_SUBELEMENT_TYPE <= type
-             && type <= T8_SUB_QUAD_MAX_SUBELEMENT_TYPE);
+  T8_ASSERT (T8_SUB_QUAD_MIN_transition_type <= type
+             && type <= T8_SUB_QUAD_MAX_transition_type);
 
   int                 sub_id, subelements_count = 0;
   int                 type_temp = type;
@@ -2282,7 +2282,7 @@ t8_subelement_scheme_quad_c::t8_element_init (int length, t8_element_t * elem,
   for (i = 0; i < length; i++) {
     /* initalize subelement parameters */
     pquad_w_sub[i].dummy_is_subelement = T8_SUB_QUAD_IS_NO_SUBELEMENT;
-    pquad_w_sub[i].subelement_type = T8_SUB_QUAD_IS_NO_SUBELEMENT;
+    pquad_w_sub[i].transition_type = T8_SUB_QUAD_IS_NO_SUBELEMENT;
     pquad_w_sub[i].subelement_id = T8_SUB_QUAD_IS_NO_SUBELEMENT;
 
 #ifdef T8_ENABLE_DEBUG
@@ -2306,7 +2306,7 @@ t8_subelement_scheme_quad_c::t8_element_print_element (const t8_element_t *
     (const t8_quad_with_subelements *) elem;
 
   t8_productionf ("Is subelement:   %i\n", pquad_w_sub->dummy_is_subelement);
-  t8_productionf ("Subelement Type: %i\n", pquad_w_sub->subelement_type);
+  t8_productionf ("Subelement Type: %i\n", pquad_w_sub->transition_type);
   t8_productionf ("Subelement ID:   %i\n", pquad_w_sub->subelement_id);
   t8_productionf ("Anchor:          (%i,%i)\n", pquad_w_sub->p4q.x,
                   pquad_w_sub->p4q.y);
@@ -2343,9 +2343,9 @@ t8_subelement_scheme_quad_c::t8_element_subelement_values_are_valid (const
 
   return (pquad_w_sub->dummy_is_subelement == T8_SUB_QUAD_IS_NO_SUBELEMENT
           || pquad_w_sub->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT) &&
-    ((pquad_w_sub->subelement_type >= T8_SUB_QUAD_MIN_SUBELEMENT_TYPE
-      && pquad_w_sub->subelement_type <= T8_SUB_QUAD_MAX_SUBELEMENT_TYPE)
-     || pquad_w_sub->subelement_type == T8_SUB_QUAD_IS_NO_SUBELEMENT) &&
+    ((pquad_w_sub->transition_type >= T8_SUB_QUAD_MIN_transition_type
+      && pquad_w_sub->transition_type <= T8_SUB_QUAD_MAX_transition_type)
+     || pquad_w_sub->transition_type == T8_SUB_QUAD_IS_NO_SUBELEMENT) &&
     ((pquad_w_sub->subelement_id >= T8_SUB_QUAD_MIN_SUBELEMENT_ID
       && pquad_w_sub->subelement_id <= T8_SUB_QUAD_MAX_SUBELEMENT_ID)
      || pquad_w_sub->subelement_id == T8_SUB_QUAD_IS_NO_SUBELEMENT);

@@ -200,7 +200,7 @@ t8_forest_adapt (t8_forest_t forest)
   t8_element_t      **elements, **elements_from, *parent;
   int                 refine;
   int                 ci;
-  unsigned int        subelement_type;
+  unsigned int        transition_type;
   unsigned int        num_subelements;
   long long int       count_subelements = 0, count_subelements_former_tree =
     0;
@@ -435,14 +435,14 @@ t8_forest_adapt (t8_forest_t forest)
         }
       }
       else if (refine > 1) {    /* use subelements in this case */
-        /* The subelement-callback function returns refine = subelement_type + 1 to avoid subelement_type = 1.
-         * We can now undo this to use the subelement_type-values that match the binary encoding of the neighbour structure
+        /* The subelement-callback function returns refine = transition_type + 1 to avoid transition_type = 1.
+         * We can now undo this to use the transition_type-values that match the binary encoding of the neighbour structure
          * (0001 should correspond to 1 and not to 2). */
-        subelement_type = refine - 1;
+        transition_type = refine - 1;
 
         /* determing the number of subelements of the given type for memory allocation */
         num_subelements =
-          tscheme->t8_element_get_number_of_subelements (subelement_type,
+          tscheme->t8_element_get_number_of_subelements (transition_type,
                                                          elements_from[0]);
         if (num_subelements > curr_num_children) {
           elements = T8_REALLOC (elements, t8_element_t *, num_subelements);
@@ -454,7 +454,7 @@ t8_forest_adapt (t8_forest_t forest)
           elements[zz] =
             t8_element_array_index_locidx (telements, el_inserted + zz);
         }
-        tscheme->t8_element_to_subelement (elements_from[0], subelement_type,
+        tscheme->t8_element_to_subelement (elements_from[0], transition_type,
                                            elements);
         el_inserted += num_subelements;
         el_considered++;

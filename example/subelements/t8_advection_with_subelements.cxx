@@ -989,8 +989,8 @@ t8_advect_replace (t8_forest_t forest_old,
         if (ts->t8_element_is_subelement (first_outgoing_elem) &&
             ts->t8_element_is_subelement (first_incoming_elem)) {
 
-          if (ts->t8_element_get_subelement_type (first_outgoing_elem) ==
-              ts->t8_element_get_subelement_type (first_incoming_elem)) {
+          if (ts->t8_element_get_transition_type (first_outgoing_elem) ==
+              ts->t8_element_get_transition_type (first_incoming_elem)) {
             tranition_to_transition_same = 1;
           }
           else {

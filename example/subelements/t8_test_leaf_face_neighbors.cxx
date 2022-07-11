@@ -61,7 +61,7 @@ t8_print_element_data (const t8_element_t * element)
   t8_debugf ("    Is subelement:         %i \n",
                   choosen_element->dummy_is_subelement);
   t8_debugf ("    Subelement type:       %i \n",
-                  choosen_element->subelement_type);
+                  choosen_element->transition_type);
   t8_debugf ("    Subelement id:         %i \n",
                   choosen_element->subelement_id);
 }
@@ -183,7 +183,7 @@ t8_refine_with_subelements (t8_eclass_t eclass)
 
   /* adaptation setting */
   int                 do_balance = 1;
-  int                 do_transition = 0;
+  int                 do_transition = 1;
 
   /* cmesh settings (only one of the following suggestions should be one, the others 0) */
   int                 single_tree = 1;

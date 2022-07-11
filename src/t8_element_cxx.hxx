@@ -661,18 +661,18 @@ public:
 
   /** This function will determine the number of children subelements, depending on the 
    *  subelement type. 
-   *  \param [in] subelement_type The subelement type as an integer
+   *  \param [in] transition_type The subelement type as an integer
    *  \param [in] element The current element. Subelements might vary for different element shapes etc.
    *  \return the number of subelements a parent element is split into
    */
   virtual int         t8_element_get_number_of_subelements (int
-                                                            subelement_type,
+                                                            transition_type,
                                                             const
                                                             t8_element_t *
                                                             elem) = 0;
 
   /* TODO: comment */
-  virtual int         t8_element_get_subelement_type (const
+  virtual int         t8_element_get_transition_type (const
                                                       t8_element * elem) = 0;
 
   /* TODO: comment */
