@@ -40,8 +40,7 @@ protected:
         ts->t8_element_new (1, &desc_a);
         ts->t8_element_new (1, &desc_b);
         ts->t8_element_new (1, &check);
-        ts->t8_element_set_linear_id (correct_nca, 0, 0);
-        
+        ts->t8_element_set_linear_id (correct_nca, 0, 0); 
     }   
     void TearDown () override {
         ts->t8_element_destroy (1, &correct_nca);
@@ -164,17 +163,30 @@ t8_recursive_nca_check(t8_element_t *check_nca, t8_element_t *desc_a,
     }
     num_children_a = ts->t8_element_num_children(parent_a);
     num_children_b = ts->t8_element_num_children(parent_b);
+    
     /* Iterate over all children of parent_a */
     for(i = 0; i < num_children_a; i++){
         ts->t8_element_child(parent_a, i, desc_a);
         /* Iterate over all children of parent_b */
         for(j = 0; j < num_children_b; j++){
             ts->t8_element_child(parent_b, j, desc_b);
+            
+            /*ts->t8_element_set_linear_id(desc_a, 1, 0);
+            ts->t8_element_set_linear_id(desc_b, 3, 12);
+            ts->t8_element_debug_print(desc_a);
+            ts->t8_element_debug_print(desc_b);
+            ts->t8_element_set_linear_id(check_nca, 1, 0);
+            t8_debugf("[D] correct_nca: \n");
+            ts->t8_element_debug_print(check_nca);*/
+
+
             ts->t8_element_nca(desc_a, desc_b, check);
             if(ts->t8_element_compare(check_nca, check)){
                 level_a = ts->t8_element_level(desc_a);
                 level_b = ts->t8_element_level(desc_b);
+                
                 int level_c = ts->t8_element_level(check_nca);
+                int level_nca = ts->t8_element_level(check);
                 /* Output the linear id of the descendants where the computation fails.
                  * This makes debugging a lot easier, as one can reconstruct the descendants
                  * via t8_element_set_linear_id and can directly test them instead of waiting
@@ -184,9 +196,10 @@ t8_recursive_nca_check(t8_element_t *check_nca, t8_element_t *desc_a,
                 t8_debugf("id of desc_b: %li, level: %i\n", 
                 ts->t8_element_get_linear_id(desc_b, level_b), level_b);
 
-                t8_debugf("[id of the correct nca: %li, level: %i\n", 
+                t8_debugf("id of the correct nca: %li, level: %i\n", 
                 ts->t8_element_get_linear_id(check_nca, level_c), level_c);
-
+                t8_debugf("id of the computed nca: %li, level: %i\n",
+                ts->t8_element_get_linear_id(check, level_nca), level_nca);
                 SC_ABORT("Computed nca is not the correct nca!\n");
             }
             /* parent_a stays fixed, b-part goes one level deeper into the recursion */

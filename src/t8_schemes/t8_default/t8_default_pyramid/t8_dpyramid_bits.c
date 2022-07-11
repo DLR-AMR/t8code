@@ -1582,13 +1582,9 @@ t8_dpyramid_first_pyra_anc (const t8_dpyramid_t *tet,
     }
     T8_ASSERT (level > 0);
     T8_ASSERT (type_at_level == 0 || type_at_level == 3);
-    t8_dpyramid_coord_t length = T8_DPYRAMID_LEN (level);
     t8_dpyramid_t       tmp_tet;
-    tmp_tet.x = tet->x & ~length;
-    tmp_tet.y = tet->y & ~length;
-    tmp_tet.z = tet->z & ~length;
-    tmp_tet.level = level;
-    tmp_tet.type = type_at_level;
+
+    t8_dtet_ancestor (tet, level, &tmp_tet);
     /* With this call tmp_tet has type 0 or type 3 and the first-pyra-anc
      * will be computed using one of the next cases. */
     t8_dpyramid_first_pyra_anc (&tmp_tet, first_pyra_anc);
@@ -1614,6 +1610,7 @@ t8_dpyramid_first_pyra_anc (const t8_dpyramid_t *tet,
     /* The parent of the tet is already a pyramid */
     t8_dpyramid_parent (tet, first_pyra_anc);
   }
+
 }
 
 void
@@ -1672,7 +1669,9 @@ t8_dpyramid_nca (const t8_dpyramid_t *pyra1,
   else if (t8_dpyramid_shape (pyra1) == T8_ECLASS_PYRAMID &&
            t8_dpyramid_shape (pyra2) == T8_ECLASS_TET) {
     t8_dpyramid_t       first_pyramid_anc;
+
     t8_dpyramid_first_pyra_anc (pyra2, &first_pyramid_anc);
+
     /* pyra1 and first_pyramid_anc have the shape of a pyramid now, 
      * we can call the nca again.
      */
