@@ -47,7 +47,7 @@ public:
   ~t8_default_scheme_hex_c ();
 
   /** Allocate memory for an array of hexaedra and initialize them.
-   * \param [in] length   The number of elements to be allocated.
+   * \param [in] length   The number of hex to be allocated.
    * \param [in,out] elems On input an array of \b length many unallocated
    *                      element pointers.
    *                      On output all these pointers will point to an allocated
@@ -65,8 +65,8 @@ public:
    */
   virtual void        t8_element_new (int length, t8_element_t **elem);
 
-  /** Initialize an array of allocated elements.
-   * \param [in] length   The number of elements to be allocated.
+  /** Initialize an array of allocated hexaedra.
+   * \param [in] length   The number of hex to be initialized.
    * \param [in,out] elems On input an array of \b length many allocated
    *                       elements.
    * \param [in] called_new True if the elements in \a elem were created by a call

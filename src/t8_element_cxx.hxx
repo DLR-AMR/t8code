@@ -687,7 +687,7 @@ public:
   virtual void        t8_element_new (int length, t8_element_t **elem) = 0;
 
  /** Initialize an array of allocated elements.
-   * \param [in] length   The number of elements to be allocated.
+   * \param [in] length   The number of elements to be initialized.
    * \param [in,out] elems On input an array of \b length many allocated
    *                       elements.
    * \param [in] called_new True if the elements in \a elem were created by a call
