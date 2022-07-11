@@ -1803,13 +1803,10 @@ t8_subelement_scheme_quad_c::t8_element_is_subelement (const
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) elem;
 
-  if (pquad_w_sub->transition_type == 0) {
-    // there are no transition cells of type 0 -> elem cannot be a subelement
-    return 0;
-  }
-  else {
-    return 1;
-  }
+  /* transition_type == 0 => elem is no subelement.
+   * transition_type != 0 => elem is subelement 
+   */
+  return (pquad_w_sub->transition_type == 0 ? 0 : 1);
 }
 
 int
