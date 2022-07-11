@@ -563,7 +563,7 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
       /* Compute the faces meeting at vertex 0 */
       ts = t8_forest_get_eclass_scheme (forest, T8_ECLASS_QUAD);
       int                 start_corner;
-      if (ts->t8_element_test_if_subelement (element)) {        /* adjust the starting corner */
+      if (ts->t8_element_is_subelement (element)) {        /* adjust the starting corner */
         int                 face_num_hypotenuse =
           ts->t8_element_get_face_number_of_hypotenuse (element);
         start_corner = face_num_hypotenuse + 2 % 3;
@@ -587,7 +587,7 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
       t8_forest_element_coordinate (forest, ltreeid, element, vertices,
                                     corner_b, coordinates[2]);
 
-      if (ts->t8_element_test_if_subelement (element)) {
+      if (ts->t8_element_is_subelement (element)) {
         return t8_forest_element_triangle_area (coordinates);
       }
       else {
@@ -976,7 +976,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
       t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
                                     corner_b, vertex_b);
 
-      if (ts->t8_element_test_if_subelement (element)) {        /* the recent element is a subelement and we need an adjustement of the construction of C */
+      if (ts->t8_element_is_subelement (element)) {        /* the recent element is a subelement and we need an adjustement of the construction of C */
         int                 long_face =
           ts->t8_element_get_face_number_of_hypotenuse (element);
 
@@ -2098,7 +2098,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
           t8_forest_get_tree_element_offset (forest, lneigh_treeid);
       }
       if ((neigh_scheme->t8_element_compare (ancestor, neighbor_leafs[0]) <
-           0) || ts->t8_element_test_if_subelement (leaf)) {
+           0) || ts->t8_element_is_subelement (leaf)) {
         /* ancestor is a real ancestor, and thus the neighbor is either the
          * parent or grandparent of the half neighbors. we can return it and
          * the indices. 
@@ -2148,7 +2148,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
           }
         }
         /* At this point, the neighbor "ancestor" is found. */
-        if (neigh_scheme->t8_element_test_if_subelement (ancestor)) {
+        if (neigh_scheme->t8_element_is_subelement (ancestor)) {
           /* If ancestor is a subelement it is possible that it is not the real neighbor of "leaf"
            * but rather a random subelement in the transition cell.
            * Therefore, we need to find the right subelement within the family of subelements of ancestor by using the subelement index. */

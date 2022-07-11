@@ -111,7 +111,7 @@ t8_test_leaf_face_neighbors (const t8_forest_t forest_adapt)
     t8_print_element_data (current_element);
     t8_debugf("    Element index in tree: %i \n", element_index_in_tree);
 
-    if (ts->t8_element_test_if_subelement (current_element)) {
+    if (ts->t8_element_is_subelement (current_element)) {
       subelement_count++;
       t8_debugf("subelement_count: %i\n",subelement_count);
     }

@@ -107,7 +107,7 @@ public:
                                                 int type, t8_element_t * c[]);
 
   /* TODO: comment */
-  virtual int         t8_element_test_if_subelement (const t8_element * elem);
+  virtual int         t8_element_is_subelement (const t8_element * elem);
 
   /** Determine the number of subelements, used to remove hanging nodes from a element of a given type */
   virtual int         t8_element_get_number_of_subelements (int

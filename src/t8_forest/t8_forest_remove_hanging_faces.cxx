@@ -165,7 +165,7 @@ t8_forest_hanging_faces_removed (t8_forest_t forest)
       ts = t8_forest_get_eclass_scheme (forest, eclass);
       current_element =
         t8_forest_get_element_in_tree (forest, ltree_id, lelement_id);
-      if (ts->t8_element_test_if_subelement (current_element)) {
+      if (ts->t8_element_is_subelement (current_element)) {
         return 1;
       }
     }

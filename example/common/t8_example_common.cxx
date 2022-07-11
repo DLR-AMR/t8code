@@ -195,7 +195,7 @@ t8_common_adapt_level_set (t8_forest_t forest,
 
   /* if we use multiple timesteps, we want the callback value to depend on the quadrilateral elements instead of the triangular subelements.
    * Hence, if a subelement is given, we apply the callback function to its parent (removes artefacts in geometric adaptation with mutliple timesteps) */
-  if (ts->t8_element_test_if_subelement(elements[0])) {
+  if (ts->t8_element_is_subelement(elements[0])) {
     elem = T8_ALLOC (t8_element_t *, 1);
     ts->t8_element_new (1, elem);
     ts->t8_element_parent (elements[0], elem[0]);

@@ -986,8 +986,8 @@ t8_advect_replace (t8_forest_t forest_old,
       if (ts->t8_element_level (first_outgoing_elem) ==
           ts->t8_element_level (first_incoming_elem)) {
 
-        if (ts->t8_element_test_if_subelement (first_outgoing_elem) &&
-            ts->t8_element_test_if_subelement (first_incoming_elem)) {
+        if (ts->t8_element_is_subelement (first_outgoing_elem) &&
+            ts->t8_element_is_subelement (first_incoming_elem)) {
 
           if (ts->t8_element_get_subelement_type (first_outgoing_elem) ==
               ts->t8_element_get_subelement_type (first_incoming_elem)) {
@@ -998,8 +998,8 @@ t8_advect_replace (t8_forest_t forest_old,
           }
         }
 
-        if (!ts->t8_element_test_if_subelement (first_outgoing_elem) &&
-            !ts->t8_element_test_if_subelement (first_incoming_elem)) {
+        if (!ts->t8_element_is_subelement (first_outgoing_elem) &&
+            !ts->t8_element_is_subelement (first_incoming_elem)) {
           elem_to_elem = 1;
         }
       }
@@ -1010,7 +1010,7 @@ t8_advect_replace (t8_forest_t forest_old,
         T8_ASSERT (ts->t8_element_level (first_outgoing_elem) + 1 ==
                    ts->t8_element_level (first_incoming_elem));
 
-        if (ts->t8_element_test_if_subelement (first_outgoing_elem)) {
+        if (ts->t8_element_is_subelement (first_outgoing_elem)) {
           transition_refined = 1;
         }
       }
@@ -1021,7 +1021,7 @@ t8_advect_replace (t8_forest_t forest_old,
         T8_ASSERT (ts->t8_element_level (first_outgoing_elem) ==
                    ts->t8_element_level (first_incoming_elem) + 1);
 
-        if (ts->t8_element_test_if_subelement (first_incoming_elem)) {
+        if (ts->t8_element_is_subelement (first_incoming_elem)) {
           coarsened_to_transition = 1;
         }
       }
@@ -1090,8 +1090,8 @@ t8_advect_replace (t8_forest_t forest_old,
       ts->t8_element_print_element (elem_in_iterate);
 #endif
 
-      T8_ASSERT (ts->t8_element_test_if_subelement (elem_out_iterate));
-      T8_ASSERT (ts->t8_element_test_if_subelement (elem_in_iterate));
+      T8_ASSERT (ts->t8_element_is_subelement (elem_out_iterate));
+      T8_ASSERT (ts->t8_element_is_subelement (elem_in_iterate));
 
       if (ts->t8_element_get_face_number_of_hypotenuse (elem_out_iterate) == ts->t8_element_get_face_number_of_hypotenuse (elem_in_iterate)) {  /* both subelements are identically */
 
@@ -1258,7 +1258,7 @@ t8_advect_replace (t8_forest_t forest_old,
           t8_forest_get_element_in_tree (problem->forest, which_tree,
                                          first_outgoing + j);
 
-        T8_ASSERT (ts->t8_element_test_if_subelement (elem_out_iterate));
+        T8_ASSERT (ts->t8_element_is_subelement (elem_out_iterate));
 
         /* compute the vertices and quater face points of the recent outgoing element */
         int                 corner_coords_out_x[12] = { };
@@ -1394,7 +1394,7 @@ t8_advect_replace (t8_forest_t forest_old,
       t8_debugf ("elem_in_itertate:\n");
       ts->t8_element_print_element (elem_in_iterate);
 
-      T8_ASSERT (ts->t8_element_test_if_subelement (elem_in_iterate));
+      T8_ASSERT (ts->t8_element_is_subelement (elem_in_iterate));
 
       /* compute the vertices and quater face points of the recent outgoing element */
       int                 corner_coords_in_x[12] = { };
@@ -1522,7 +1522,7 @@ t8_advect_replace (t8_forest_t forest_old,
           elem_out_iterate =
             t8_forest_get_element_in_tree (problem->forest, which_tree,
                                            first_outgoing + k);
-          if (ts->t8_element_test_if_subelement (elem_out_iterate)) {
+          if (ts->t8_element_is_subelement (elem_out_iterate)) {
             /* get the phi value of the k-th outgoing element */
             phi +=
               t8_advect_element_get_phi (problem,
@@ -2542,7 +2542,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
           t8_forest_get_eclass_scheme (problem->forest,
                                         t8_forest_get_tree_class
                                         (problem->forest, 0));
-        if (ts->t8_element_test_if_subelement (elem)) {
+        if (ts->t8_element_is_subelement (elem)) {
           T8_ASSERT (elem_data->num_faces == 3);
         }
         else {

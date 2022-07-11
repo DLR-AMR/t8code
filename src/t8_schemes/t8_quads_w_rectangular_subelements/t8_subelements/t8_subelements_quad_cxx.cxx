@@ -136,8 +136,8 @@ t8_subelement_scheme_quad_c::t8_element_compare (const t8_element_t * elem1,
   int                 compare = p4est_quadrant_compare (q, r);
 
   if (compare == 0) {
-    if (t8_element_test_if_subelement (elem1)
-        && t8_element_test_if_subelement (elem2)) {
+    if (t8_element_is_subelement (elem1)
+        && t8_element_is_subelement (elem2)) {
       /* Caution: The compare function is used for two subelements. */
 
       if (pquad_w_sub_elem1->subelement_type == pquad_w_sub_elem2->subelement_type && 
@@ -148,10 +148,10 @@ t8_subelement_scheme_quad_c::t8_element_compare (const t8_element_t * elem1,
       /* return != 0 to avoid debug abortion in t8_ghost_add_remote */
       return 1; 
     }
-    else if (t8_element_test_if_subelement (elem1)) {
+    else if (t8_element_is_subelement (elem1)) {
       return -1;                /* elem1 is subelement and therefore smaller */
     }
-    else if (t8_element_test_if_subelement (elem2)) {
+    else if (t8_element_is_subelement (elem2)) {
       return 1;                 /* elem2 is subelement and therefore smaller */
     }
   }
@@ -1272,7 +1272,7 @@ t8_subelement_scheme_quad_c::t8_element_face_neighbor_inside (const
   /* In case of a subelement one should construct the face neighbor of the face-corresponding child quadrant
    * of the subelements parent quadrant. Therefore we might want to adjust the level  and adapt the
    * anchor node. */
-  if (t8_element_test_if_subelement (elem) == T8_SUB_QUAD_IS_SUBELEMENT) {      /* if elem is a subelement */
+  if (t8_element_is_subelement (elem) == T8_SUB_QUAD_IS_SUBELEMENT) {      /* if elem is a subelement */
 
     T8_ASSERT (0 <= face && face < T8_SUBELEMENT_FACES);
 
@@ -1378,7 +1378,7 @@ t8_subelement_scheme_quad_c::t8_element_face_neighbor_inside (const
   T8_QUAD_SET_TDIM (n, 2);
 
   /* In the following we set the dual faces of our element at the given face. */
-  if (t8_element_test_if_subelement (elem) == T8_SUB_QUAD_IS_SUBELEMENT) {
+  if (t8_element_is_subelement (elem) == T8_SUB_QUAD_IS_SUBELEMENT) {
     if (face == 1) {
       int                 location[3] = { };
       t8_element_get_location_of_subelement (elem, location);
@@ -1820,7 +1820,7 @@ t8_subelement_scheme_quad_c::t8_element_copy_subelement_values (const
 }
 
 int
-t8_subelement_scheme_quad_c::t8_element_test_if_subelement (const
+t8_subelement_scheme_quad_c::t8_element_is_subelement (const
                                                             t8_element * elem)
 {
   const t8_quad_with_subelements *pquad_w_sub =
@@ -1906,7 +1906,7 @@ t8_subelement_scheme_quad_c::t8_element_find_neighbor_in_transition_cell
   T8_ASSERT (t8_element_is_valid (pseudo_neigh));
 
   /* we expect neigh to be a element in a transition cell, thus to be a subelement */
-  T8_ASSERT (t8_element_test_if_subelement (pseudo_neigh) ==
+  T8_ASSERT (t8_element_is_subelement (pseudo_neigh) ==
              T8_SUB_QUAD_IS_SUBELEMENT);
 
   const t8_quad_with_subelements *
@@ -2234,7 +2234,7 @@ t8_subelement_scheme_quad_c::t8_element_get_face_number_of_hypotenuse (const
                                                                        * elem)
 {
   T8_ASSERT (t8_element_is_valid (elem));
-  T8_ASSERT (t8_element_test_if_subelement (elem));
+  T8_ASSERT (t8_element_is_subelement (elem));
 
   int                 location[3] = { };
   t8_element_get_location_of_subelement (elem, location);

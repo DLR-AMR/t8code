@@ -359,7 +359,7 @@ public:
                                                             elem);
 
 /** Test wheter a given element is a subelement or not */
-  virtual int         t8_element_test_if_subelement (const t8_element * elem);
+  virtual int         t8_element_is_subelement (const t8_element * elem);
 
 /** Get the subelement type of elem */
   virtual int         t8_element_get_subelement_type (const

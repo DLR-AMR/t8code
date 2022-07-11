@@ -455,7 +455,7 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
           elem_in_refinement =
             t8_forest_get_element_in_tree (forest_new, itree,
                                            ielem_new + element_count);
-          if (ts->t8_element_test_if_subelement (elem_in_refinement)) { /* the element could aditionally be reifned into a transition cell */
+          if (ts->t8_element_is_subelement (elem_in_refinement)) { /* the element could aditionally be reifned into a transition cell */
             family_size +=
               ts->t8_element_num_siblings (elem_in_refinement) - 1;
             element_count +=
@@ -463,7 +463,7 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
           }
         }
         number_new_elements = family_size;
-        if (ts->t8_element_test_if_subelement (elem_old)) { /* check whether the old element is a transition cell */
+        if (ts->t8_element_is_subelement (elem_old)) { /* check whether the old element is a transition cell */
           number_old_elements = ts->t8_element_num_siblings (elem_old);
         }
         else {
@@ -479,7 +479,7 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
         T8_ASSERT (ts->t8_element_level (elem_old) ==
                    ts->t8_element_level (elem_new) + 1);
         int                 number_new_elements, number_old_elements = 0;
-        if (ts->t8_element_test_if_subelement (elem_new)) {
+        if (ts->t8_element_is_subelement (elem_new)) {
           number_new_elements = ts->t8_element_num_siblings (elem_new);
         }
         else {
@@ -493,7 +493,7 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
           elem_in_family =
             t8_forest_get_element_in_tree (forest_old, itree,
                                            ielem_old + element_count);
-          if (ts->t8_element_test_if_subelement (elem_in_family)) {
+          if (ts->t8_element_is_subelement (elem_in_family)) {
             element_count += ts->t8_element_num_siblings (elem_in_family) - 1;
             family_size += ts->t8_element_num_siblings (elem_in_family) - 1;
           }
@@ -509,13 +509,13 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
         T8_ASSERT (ts->t8_element_level (elem_old) ==
                    ts->t8_element_level (elem_new));
         int                 number_new_elements, number_old_elements;
-        if (ts->t8_element_test_if_subelement (elem_new)) {
+        if (ts->t8_element_is_subelement (elem_new)) {
           number_new_elements = ts->t8_element_num_siblings (elem_new);
         }
         else {
           number_new_elements = 1;
         }
-        if (ts->t8_element_test_if_subelement (elem_old)) {
+        if (ts->t8_element_is_subelement (elem_old)) {
           number_old_elements = ts->t8_element_num_siblings (elem_old);
         }
         else {

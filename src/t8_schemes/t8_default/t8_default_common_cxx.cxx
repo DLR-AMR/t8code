@@ -204,7 +204,7 @@ t8_default_scheme_common_c::t8_element_print_element (const t8_element_t *
 }
 
 int
-t8_default_scheme_common_c::t8_element_test_if_subelement (const
+t8_default_scheme_common_c::t8_element_is_subelement (const
                                                            t8_element * elem)
 {
   /* We implement this function since it is a "test" function and 
