@@ -41,7 +41,7 @@ public:
 
   ~t8_default_scheme_tri_c ();
 
-  /** Allocate memory for an array of elements of a given class and initialize them.
+  /** Allocate memory for an array of triangles and initialize them.
    * \param [in] length   The number of elements to be allocated.
    * \param [in,out] elems On input an array of \b length many unallocated
    *                      element pointers.
