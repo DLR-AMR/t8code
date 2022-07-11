@@ -30,16 +30,8 @@
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_forest/t8_forest_private.h>
 #include "t8_cmesh/t8_cmesh_testcases.h"
-
 #include <t8_forest/t8_forest_partition.h>
-
-
-
 #include <t8_forest/t8_forest_types.h>
-
-
-
-
 
 static int
 t8_adapt_callback_remove (t8_forest_t forest,
@@ -88,7 +80,6 @@ t8_adapt_callback_refine (t8_forest_t forest,
   }
   return 0;
 }
-
 
 static t8_forest_t
 t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn,
