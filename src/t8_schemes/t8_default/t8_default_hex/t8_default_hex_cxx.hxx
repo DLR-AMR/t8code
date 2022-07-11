@@ -46,7 +46,7 @@ public:
 
   ~t8_default_scheme_hex_c ();
 
-  /** Allocate memory for an array of elements of a given class and initialize them.
+  /** Allocate memory for an array of hexaedra and initialize them.
    * \param [in] length   The number of elements to be allocated.
    * \param [in,out] elems On input an array of \b length many unallocated
    *                      element pointers.
@@ -437,8 +437,8 @@ public:
   virtual int         t8_element_is_root_boundary (const t8_element_t *elem,
                                                    int face);
 
-    /** Construct the face neighbor of a given element if this face neighbor
-     * is inside the root tree. Return 0 otherwise.
+  /** Construct the face neighbor of a given element if this face neighbor
+   * is inside the root tree. Return 0 otherwise.
    * \param [in] elem The element to be considered.
    * \param [in,out] neigh If the face neighbor of \a elem along \a face is inside
    *                  the root tree, this element's data is filled with the

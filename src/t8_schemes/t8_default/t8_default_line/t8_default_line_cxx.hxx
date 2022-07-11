@@ -106,12 +106,12 @@ public:
                                        t8_element_t *dest);
 
   /** Compare two elements.
-    * \param [in] elem1  The first element.
-    * \param [in] elem2  The second element.
-    * \return       negativ if elem1 < elem2, zero if elem1 equals elem2
-    *               and positiv if elem1 > elem2.
-    *  If elem2 is a copy of elem1 then the elements are equal.
-    */
+   * \param [in] elem1  The first element.
+   * \param [in] elem2  The second element.
+   * \return       negativ if elem1 < elem2, zero if elem1 equals elem2
+   *               and positiv if elem1 > elem2.
+   *  If elem2 is a copy of elem1 then the elements are equal.
+   */
   virtual int         t8_element_compare (const t8_element_t *elem1,
                                           const t8_element_t *elem2);
 
@@ -448,8 +448,8 @@ public:
   virtual int         t8_element_is_root_boundary (const t8_element_t *elem,
                                                    int face);
 
-    /** Construct the face neighbor of a given element if this face neighbor
-     * is inside the root tree. Return 0 otherwise.
+  /** Construct the face neighbor of a given element if this face neighbor
+   * is inside the root tree. Return 0 otherwise.
    * \param [in] elem The element to be considered.
    * \param [in,out] neigh If the face neighbor of \a elem along \a face is inside
    *                  the root tree, this element's data is filled with the

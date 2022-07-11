@@ -487,8 +487,8 @@ public:
   virtual int         t8_element_is_root_boundary (const t8_element_t *elem,
                                                    int face) = 0;
 
-    /** Construct the face neighbor of a given element if this face neighbor
-     * is inside the root tree. Return 0 otherwise.
+  /** Construct the face neighbor of a given element if this face neighbor
+   * is inside the root tree. Return 0 otherwise.
    * \param [in] elem The element to be considered.
    * \param [in,out] neigh If the face neighbor of \a elem along \a face is inside
    *                  the root tree, this element's data is filled with the
