@@ -533,11 +533,8 @@ public:
    * \param [out] anchor The integer coordinates of the anchor node in the cube [0,1]^(dL)
    */
   virtual void        t8_element_anchor (const t8_element_t *elem,
-                                         int anchor[3])
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return;                     /* suppresses compiler warning */
-  }
+                                         int anchor[3]);
+
   /** Compute the root length of a given element, that is the length of
    * its level 0 ancestor.
    * \param [in] elem     The element whose root length should be computed.
