@@ -215,8 +215,6 @@ t8_test_emelemts_remove (int cmesh_id)
   t8_forest_t         forest, forest_1, forest_2;
   t8_scheme_cxx_t    *scheme;
 
-  t8_debugf("[IL] %i \n", cmesh_id);
-
   /* 6 balls on each side of a cube. */
   struct t8_adapt_data adapt_data = {{{1.0, 0.5, 0.5},
                                       {0.5, 1.0, 0.5},
@@ -231,14 +229,13 @@ t8_test_emelemts_remove (int cmesh_id)
   /* Compute the first level, such that no process is empty */
   min_level = t8_forest_min_nonempty_level (cmesh, scheme);
 
-  min_level = SC_MAX (min_level, 3);
-  max_level = min_level + 1;
+  min_level = SC_MAX (min_level, 1);
+  max_level = min_level + 4;
   
   for (level = min_level; level < max_level; level++) {
     t8_cmesh_ref (cmesh);
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
 
-    t8_debugf("[IL] %i \n", cmesh_id);
     forest_1 = t8_adapt_forest (forest  , t8_adapt_callback_refine, 0, 0, 0, &adapt_data);
     forest_1 = t8_adapt_forest (forest_1, t8_adapt_callback_remove, 0, 0, 0, &adapt_data);
 
@@ -246,17 +243,20 @@ t8_test_emelemts_remove (int cmesh_id)
     forest_2 = t8_adapt_forest (forest_1, t8_adapt_callback_coarse, 0, 0, 0, &adapt_data);
     forest_2 = t8_adapt_forest (forest_2, t8_adapt_callback_refine, 0, 0, 0, &adapt_data);
     forest_2 = t8_adapt_forest (forest_2, t8_adapt_callback_remove, 0, 0, 0, &adapt_data);
+    
+    SC_CHECK_ABORT (t8_forest_is_equal(forest_1, forest_2),
+                    "The forests are not equal");
 
 #if !T8_ENABLE_MPI
     SC_CHECK_ABORT (t8_forest_is_equal(forest_1, forest_2),
                     "The forests are not equal");
 #endif
+    
     // will get replaced by recursive coarseening
-    for (int i = 0; i < level+1; i++)
-    {
+    for (int i = 0; i < 2*level; i++) {
       forest_2 = t8_adapt_forest (forest_2, t8_adapt_callback_coarse_all, 0, 0, 0, &adapt_data);
     }
-    
+
     SC_CHECK_ABORT (t8_forest_no_overlap(forest_2),
                 "The forest has overlapping elements");
 
@@ -271,13 +271,19 @@ t8_test_emelemts_remove (int cmesh_id)
 void
 test_cmesh_emelemts_remove_all ()
 {
+  int bigmesh_id;
+  bigmesh_id = t8_get_number_of_comm_only_cmesh_testcases () +
+               t8_get_number_of_new_hypercube_cmesh_testcases () +
+               t8_get_number_of_new_empty_cmesh_testcases () +
+               t8_get_number_of_new_from_class_cmesh_testcases () +
+               t8_get_number_of_new_hypercube_hybrid_cmesh_testcases () +
+               t8_get_number_of_new_periodic_cmesh_testcases ();
   /* Test all cmeshes over all different inputs we get through their id */
   for (int cmesh_id = 0; cmesh_id < t8_get_number_of_all_testcases ();
        cmesh_id++) {
-    /* This if statement is necessary to make the test work by avoiding specific cmeshes which do not work yet for this test.
-     * When the issues are gone, remove the if statement. */
-    /* Skip all t8_test_create_new_bigmesh_cmesh since bigmesh are without geometry */
-    if (cmesh_id < 97 || cmesh_id > 256) {
+    /* Skip all t8_test_create_new_bigmesh_cmesh since they are without geometry */
+    if (cmesh_id < bigmesh_id || 
+        cmesh_id >= bigmesh_id + t8_get_number_of_new_bigmesh_cmesh_testcases () ) {
       t8_test_emelemts_remove(cmesh_id);
     }
   }

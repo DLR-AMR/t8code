@@ -34,6 +34,13 @@
 #include <t8_forest/t8_forest_partition.h>
 
 
+
+#include <t8_forest/t8_forest_types.h>
+
+
+
+
+
 static int
 t8_adapt_callback_remove (t8_forest_t forest,
                           t8_forest_t forest_from,
@@ -108,31 +115,40 @@ t8_test_emelemts_remove (int cmesh_id)
   scheme = t8_scheme_new_default_cxx ();
 
   /* Construct a cmesh */
-  //cmesh = t8_test_create_cmesh (cmesh_id);
-  cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 1, 0); 
+  cmesh = t8_test_create_cmesh (cmesh_id);
+  //cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 1, 0); 
   //cmesh = t8_cmesh_new_hypercube (T8_ECLASS_HEX, sc_MPI_COMM_WORLD, 0, 0, 0);
 
   /* Compute the first level, such that no process is empty */
   min_level = t8_forest_min_nonempty_level (cmesh, scheme);
 
-  min_level = SC_MAX (min_level, 2);
-  max_level = min_level + 3;
+  min_level = SC_MAX (min_level, 3);
+  max_level = min_level + 2;
   
   for (level = min_level; level < max_level; level++) {
+    t8_debugf("### [IL] ### cmesh_id %i \n", cmesh_id);
+    t8_debugf("### [IL] ### level    %i \n", level);
     t8_cmesh_ref (cmesh);
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
 
     for (int i = 0; i < 4; i++) {
         forest = t8_adapt_forest (forest, t8_adapt_callback_refine, 0);
+        forest = t8_adapt_forest (forest, t8_adapt_callback_refine, 0);
+        t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_test");
+        t8_debugf("### [IL] ### refine done \n");
         forest = t8_adapt_forest (forest, t8_adapt_callback_remove, 0);
+        t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_test");
+        t8_debugf("### [IL] ### remove done \n");
     }
-
+    t8_debugf("### [IL] ### rr done \n");
     // will get replaced by recursive coarseening
-    for (int i = 0; i < 2*level; i++)
+    for (int i = 0; i < 5*level; i++)
     {
       forest = t8_adapt_forest (forest, t8_adapt_callback_coarse, 0);
+      t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_test");
     }
-    
+    t8_debugf("### [IL] ### coarsening done \n");
+
     SC_CHECK_ABORT (t8_forest_no_overlap(forest),
                 "The forest has overlapping elements");
 
@@ -146,17 +162,20 @@ t8_test_emelemts_remove (int cmesh_id)
 void
 test_cmesh_emelemts_remove_all ()
 {
+  int bigmesh_id;
+  bigmesh_id = t8_get_number_of_comm_only_cmesh_testcases () +
+               t8_get_number_of_new_hypercube_cmesh_testcases () +
+               t8_get_number_of_new_empty_cmesh_testcases () +
+               t8_get_number_of_new_from_class_cmesh_testcases () +
+               t8_get_number_of_new_hypercube_hybrid_cmesh_testcases () +
+               t8_get_number_of_new_periodic_cmesh_testcases ();
   /* Test all cmeshes over all different inputs we get through their id */
   for (int cmesh_id = 0; cmesh_id < t8_get_number_of_all_testcases ();
        cmesh_id++) {
-    /* This if statement is necessary to make the test work by avoiding specific cmeshes which do not work yet for this test.
-     * When the issues are gone, remove the if statement. */
-    if (cmesh_id != 6 && cmesh_id != 89 && (cmesh_id < 237 || cmesh_id > 256)) {
-      /* Skip all t8_test_create_new_bigmesh_cmesh 
-       * When issue #213 is fixed, remove the if statement */
-      if (cmesh_id < 97 || cmesh_id > 256) {
-        t8_test_emelemts_remove(cmesh_id);
-      }
+    /* Skip all t8_test_create_new_bigmesh_cmesh since they are without geometry */
+    if (cmesh_id < bigmesh_id || 
+        cmesh_id >= bigmesh_id + t8_get_number_of_new_bigmesh_cmesh_testcases () ) {
+      t8_test_emelemts_remove(cmesh_id);
     }
   }
 }
@@ -176,16 +195,12 @@ main (int argc, char **argv)
   t8_init (SC_LP_DEFAULT);
 
   //unsigned int seed = time(0);
-  unsigned int seed = 1655212688;
-  /* [IL] TODO
-   * This seed results with 4 process in fail
-   * [libsc 2] Abort: Assertion 'it >= 0 && (size_t) it < array->elem_count'
-   * [libsc 2] Abort: ../t8code/src/t8.c:172
-   */
+  unsigned int seed = 1657295920;
+
   t8_global_productionf("Seed for test: %u \n", seed);
   srand(seed);
-  //test_cmesh_emelemts_remove_all ();
-  t8_test_emelemts_remove(0);
+  test_cmesh_emelemts_remove_all ();
+  //t8_test_emelemts_remove(0);
   sc_finalize ();
 
   mpiret = sc_MPI_Finalize ();
