@@ -67,21 +67,19 @@
 
 typedef struct
 {
-  p4est_quadrant_t    p4q;      /* p4est quadrant */
-  int                 dummy_is_subelement;      /* saves the information, whether an element is a subelement (1: is subelement, 0: is no subelement) */
-  int                 transition_type;  /* saves the information, which type of transition cell a subelement is associated to (default is 0) */
-  int                 subelement_id;    /* saves the information, what children subelement the given element is (default is 0) */
+  /* p4est quadrant */
+  p4est_quadrant_t    p4q;
+  /* stores transition cell information (default for non-subelements is 0 and for subelements it is != 0 - is therefore used as a is_subelement check) */
+  int                 transition_type;
+  /* stores subelement information (default for non-subelements is 0) */
+  int                 subelement_id;
 } t8_quad_with_subelements;
 
 typedef t8_quad_with_subelements t8_pquad_t;
 
 /** define some subelement related constants */
-#define T8_SUB_QUAD_MAX_transition_type 15
-#define T8_SUB_QUAD_MIN_transition_type 1
+#define T8_SUB_QUAD_MAX_TRANSITION_TYPE 15
 #define T8_SUB_QUAD_MAX_SUBELEMENT_ID 7
-#define T8_SUB_QUAD_MIN_SUBELEMENT_ID 0
-#define T8_SUB_QUAD_IS_SUBELEMENT 1
-#define T8_SUB_QUAD_IS_NO_SUBELEMENT 0
 #define T8_SUBELEMENT_FACES 3
 
 /** Return the toplevel dimension. */
@@ -182,7 +180,7 @@ public:
 
   /** Return the number of siblings of an element */
   virtual int         t8_element_num_siblings (const t8_element_t *
-                                               elem) const;
+                                               elem);
 
   /** Return the number of children of an element's face when the element is refined. */
   virtual int         t8_element_num_face_children (const t8_element_t *
