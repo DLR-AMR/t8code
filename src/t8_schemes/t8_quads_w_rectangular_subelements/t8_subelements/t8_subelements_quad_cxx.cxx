@@ -1840,12 +1840,7 @@ t8_element_shape_t
 
   T8_ASSERT (t8_element_is_valid (elem));
 
-  if (t8_element_is_subelement(elem)) { /* for quads, all subelements are triangles */
-    return T8_ECLASS_TRIANGLE;
-  }
-  else {                        
-    return T8_ECLASS_QUAD;
-  }
+  return (t8_element_is_subelement(elem) ? T8_ECLASS_TRIANGLE : T8_ECLASS_QUAD);
 }
 
 int
