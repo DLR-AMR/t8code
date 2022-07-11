@@ -465,7 +465,7 @@ public:
                                                        *last_desc,
                                                        int level) = 0;
 
-  /* TODO:  Do we need this functino at all?
+  /* TODO:  Do we need this function at all?
    *        If not remove it. If so, what to do with prisms and pyramids?
    *        Here the boundary elements are of different eclasses, so we cannot
    *        store them in an array...
