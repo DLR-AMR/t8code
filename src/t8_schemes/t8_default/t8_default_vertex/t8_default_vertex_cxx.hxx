@@ -454,7 +454,11 @@ public:
     return;                     /* prevents compiler warning */
   }
 
-  /** Construct all codimension-one boundary elements of a given element. */
+  /** Construct all codimension-one boundary elements of a given element.
+   * \param [in] elem     The input element.
+   * \param [in] face     A face of \a elem.
+   * \return              True if \a face is a subface of the element's root element.
+   */
   virtual void        t8_element_boundary (const t8_element_t *elem,
                                            int min_dim, int length,
                                            t8_element_t **boundary)
