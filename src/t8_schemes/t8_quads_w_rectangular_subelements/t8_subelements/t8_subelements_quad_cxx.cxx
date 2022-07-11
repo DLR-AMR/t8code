@@ -217,12 +217,7 @@ t8_subelement_scheme_quad_c::t8_element_num_faces (const t8_element_t * elem)
 
   T8_ASSERT (t8_element_is_valid (elem));
 
-  if (t8_element_is_subelement(elem)) {
-    return T8_SUBELEMENT_FACES;
-  }
-  else {
-    return P4EST_FACES;
-  }
+  return (t8_element_is_subelement(elem) ? T8_SUBELEMENT_FACES : P4EST_FACES);
 }
 
 int
@@ -260,22 +255,7 @@ t8_subelement_scheme_quad_c::t8_element_num_siblings (const t8_element_t *
     (const t8_quad_with_subelements *) elem;
 
   /* TODO: use t8_element_get_number_of_subelements instead (problem with const) */
-  if (t8_element_is_subelement(elem)) {
-    int                 type = pquad_w_sub->transition_type;
-    int                 num_hanging_faces = 0;
-    int                 num_siblings;
-    int                 i;
-
-    for (i = 0; i < P4EST_FACES; i++) { /* Count the number of ones of the binary subelement type */
-      num_hanging_faces += (type & (1 << i)) >> i;
-    }
-    /* The number of subelements equals the number of neighbours: */
-    num_siblings = P4EST_FACES + num_hanging_faces;
-    return num_siblings;
-  }
-  else {
-    return P4EST_CHILDREN;
-  }
+  return (t8_element_is_subelement(elem) ? t8_element_get_number_of_subelements(pquad_w_sub->transition_type, elem) : P4EST_CHILDREN);
 }
 
 int
@@ -444,14 +424,7 @@ t8_subelement_scheme_quad_c::t8_element_child_id (const t8_element_t * elem)
 
   T8_ASSERT (t8_element_is_valid (elem));
 
-  if (t8_element_is_subelement(elem)) {
-    /* the child_id of a subelement equals its subelement_id */
-    return pquad_w_sub->subelement_id;
-  }
-  else {
-    /* the child_id of a non-subelement element can be determined by its level and anchor node */
-    return p4est_quadrant_child_id (q);
-  }
+  return (t8_element_is_subelement(elem) ? pquad_w_sub->subelement_id : p4est_quadrant_child_id(q));
 }
 
 int
@@ -1194,7 +1167,7 @@ t8_subelement_scheme_quad_c::t8_element_boundary (const t8_element_t * elem,
 #endif
 }
 
-int
+int // TODO: return bool instead of int?
 t8_subelement_scheme_quad_c::t8_element_is_root_boundary (const t8_element_t *
                                                           elem, int face)
 {
