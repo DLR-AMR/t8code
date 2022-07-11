@@ -656,7 +656,7 @@ public:
                                                 subelements[]) = 0;
 
   /* TODO: comment */
-  virtual int         t8_element_is_subelement (const
+  virtual bool         t8_element_is_subelement (const
                                                      t8_element * elem) = 0;
 
   /** This function will determine the number of children subelements, depending on the 

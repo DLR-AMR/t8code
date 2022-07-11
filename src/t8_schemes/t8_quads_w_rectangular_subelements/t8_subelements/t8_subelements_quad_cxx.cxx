@@ -1819,18 +1819,19 @@ t8_subelement_scheme_quad_c::t8_element_copy_subelement_values (const
   pquad_w_sub_dest->subelement_id = pquad_w_sub_source->subelement_id;
 }
 
-int
+bool
 t8_subelement_scheme_quad_c::t8_element_is_subelement (const
                                                             t8_element * elem)
 {
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) elem;
 
-  if (pquad_w_sub->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT) {
-    return T8_SUB_QUAD_IS_SUBELEMENT;
+  if (pquad_w_sub->transition_type == 0) {
+    // there are no transition cells of type 0 -> elem cannot be a subelement
+    return 0;
   }
   else {
-    return T8_SUB_QUAD_IS_NO_SUBELEMENT;
+    return 1;
   }
 }
 

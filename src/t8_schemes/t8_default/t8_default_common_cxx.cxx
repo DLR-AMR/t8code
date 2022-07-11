@@ -203,7 +203,7 @@ t8_default_scheme_common_c::t8_element_print_element (const t8_element_t *
   SC_ABORT ("This function is not implemented for the given scheme.\n");
 }
 
-int
+bool
 t8_default_scheme_common_c::t8_element_is_subelement (const
                                                            t8_element * elem)
 {
