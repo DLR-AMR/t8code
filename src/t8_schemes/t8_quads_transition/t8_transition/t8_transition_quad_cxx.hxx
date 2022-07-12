@@ -375,7 +375,7 @@ public:
                                                                    int
                                                                    elem_face);
 
-/** TODO: write comment */
+/** Get the face-number of the hypotenuse of the triangular subelement */
   virtual int         t8_element_get_face_number_of_hypotenuse (const
                                                                 t8_element_t *
                                                                 elem);
@@ -383,7 +383,7 @@ public:
 /** Get the shape of a given element. Subelements are triangles */
   virtual t8_element_shape_t t8_element_shape (const t8_element_t * elem);
 
-/** TODO: comment */
+/** Return the number of vertices of an element */
   virtual int         t8_element_num_corners (const t8_element_t * elem);
 
 /** print element values for debugging */
@@ -428,7 +428,7 @@ protected:
                                                              elem,
                                                              int location[]);
 
-  /** TODO: comment */
+  /** This help function returns the subelement if of an element whose location and transition type is known. */
   int                 t8_element_get_id_from_location (int type,
                                                        int location[]);
 

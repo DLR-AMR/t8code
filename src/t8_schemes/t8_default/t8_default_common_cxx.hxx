@@ -102,33 +102,62 @@ public:
                                                    const void *indata,
                                                    void *outdata);
 
-  /** Construct a transition cell of type type. */
+  /** This function refines a parent element into subelements.
+   *  Depending on the subelement type, the number of subelements 
+   *  to fill the parent element, can differ.
+   *  \param [in] elem A valid element
+   *  \param [in] type The subelement type
+   *  \param [out] subelements An array of all subelements of the parent quad element elem
+   */
   virtual void        t8_element_to_transition_cell (const t8_element_t * elem,
                                                 int type, t8_element_t * c[]);
 
-  /* TODO: comment */
+  /** Check whether a given element is a subelement
+   *  \param [in] elem A valid element 
+   *  \return true if elem is a subelement 
+   */
   virtual bool         t8_element_is_subelement (const t8_element * elem);
 
-  /** Determine the number of subelements, used to remove hanging nodes from a element of a given type */
+  /** Return the number of subelements in a transition cell of type transition_type
+   *  \param [in] transition_type The subelement type as an integer
+   *  \return the number of subelements, this transition cell consists of
+   */
   virtual int         t8_element_get_number_of_subelements (int
                                                             transition_type);
 
-  /* TODO: comment */
+  /** Return the transition type of an element
+   *  \param [in] elem A valid element 
+   *  \return the transition type of elem (0 if elem is no subelement) 
+   */
   virtual int         t8_element_get_transition_type (const
                                                       t8_element * elem);
 
-  /* TODO: comment */
+  /** Return the face number of the hypotensue of a given subelement 
+   *  \param [in] elem A valid subelement
+   *  \return the subelement id of elem
+   */
   virtual int         t8_element_get_face_number_of_hypotenuse (const
                                                                 t8_element *
                                                                 elem);
 
-  /* TODO: comment */
+  /** Print the element data member.
+   *  \param [in] elem A valid element 
+   */
   virtual void        t8_element_print_element (const t8_element * elem);
 
-  /** TODO: comment */
+  /** Return the subelement id of a given element. 
+   *  \param [in] elem A valid element 
+   *  \return the subelement id of elem (0 if elem is no subelement)
+   */
   virtual int         t8_element_get_subelement_id (const t8_element * elem);
 
-  /** TODO: comment */
+  /** Return the subelement id of the neighbor subelement of elem at face elem_face
+  *   that is a sibling of the subelement neigh. 
+  *  \param [in] elem a given element (possibly subelement)
+  *  \param [in] neigh a random subelement (pseudoneighbor) in a transition cell from which we assume that it owns the real neighbor of elem
+  *  \param [in] elem_face a given face number of element elem
+  *  \return the subelement id of the real subelement neighbor of element elem, which is a sibling of neigh.
+  */
   virtual int         t8_element_find_neighbor_in_transition_cell (const
                                                                    t8_element_t
                                                                    * elem,
