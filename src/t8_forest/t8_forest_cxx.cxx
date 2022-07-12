@@ -30,7 +30,7 @@
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_balance.h>
-#include <t8_forest/t8_forest_remove_hanging_faces.h>
+#include <t8_forest/t8_forest_transition.h>
 #include <t8_element_cxx.hxx>
 #include <t8_cmesh/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_offset.h>

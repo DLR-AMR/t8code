@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_forest_remove_hanging_faces.h
+/** \file t8_forest_transition.h
  * We define the eliminate_hanging_nodes routine to transform a 2:1 balanced, nonconformal forest
  * into a conformal forest. The routine relies on a 2D quad-scheme that has been balanced, such that 
  * there is a 2:1 balance between all elements.
@@ -28,8 +28,8 @@
 
 /* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest_balance */
 
-#ifndef T8_FOREST_REMOVE_HANGING_FACES_H
-#define T8_FOREST_REMOVE_HANGING_FACES_H
+#ifndef t8_forest_transition_H
+#define t8_forest_transition_H
 
 #include <t8.h>
 #include <t8_forest/t8_forest_types.h>
@@ -54,7 +54,7 @@ T8_EXTERN_C_BEGIN ();
  * Each neighbour-structure will lead to a unique binary code. 
  * Within the element scheme of the given eclass, this binary code is used to construct the right subelement type,
  * in order to remove hanging nodes from the mesh. */
-int                 t8_forest_remove_hanging_faces_adapt (t8_forest_t forest,
+int                 t8_forest_transition_adapt (t8_forest_t forest,
                                                           t8_forest_t
                                                           forest_from,
                                                           t8_locidx_t
@@ -70,13 +70,13 @@ int                 t8_forest_remove_hanging_faces_adapt (t8_forest_t forest,
 /* This function is the point of entry for the hanging-faces-removing subelements. 
  * In this function, the corresponding callback function for the refine value in forest_adapt is set
  * and the forest is adapted. */
-void                t8_forest_remove_hanging_faces (t8_forest_t forest);
+void                t8_forest_transition (t8_forest_t forest);
 
 /* Check whether the forest has no hanging nodes left. 
  *
  * This function is not implemented yet. */
-int                 t8_forest_hanging_faces_removed (t8_forest_t forest);
+int                 t8_forest_is_conformal (t8_forest_t forest);
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_FOREST_REMOVE_HANGING_FACES_H! */
+#endif /* !t8_forest_transition_H! */

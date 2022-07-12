@@ -35,7 +35,7 @@ T8_EXTERN_C_BEGIN ();
 /* This is the adapt function, called for each element in a balanced forest during transition.
  * We refine an element into a suitable transition cell if it has at most one hanging face */
 int
-t8_forest_remove_hanging_faces_adapt (t8_forest_t forest,
+t8_forest_transition_adapt (t8_forest_t forest,
                                       t8_forest_t forest_from,
                                       t8_locidx_t ltree_id,
                                       t8_locidx_t lelement_id,
@@ -127,9 +127,9 @@ t8_forest_remove_hanging_faces_adapt (t8_forest_t forest,
 }
 
 void
-t8_forest_remove_hanging_faces (t8_forest_t forest)
+t8_forest_transition (t8_forest_t forest)
 {
-  t8_global_productionf ("Into t8_forest_remove_hanging_faces.\n");
+  t8_global_productionf ("Into t8_forest_transition.\n");
 
   /* Set ghost layers of all processes in order to find hanging faces over process-boundaries */
   if (forest->set_from->ghosts == NULL) {
@@ -137,39 +137,18 @@ t8_forest_remove_hanging_faces (t8_forest_t forest)
     t8_forest_ghost_create_topdown (forest->set_from);
   }
 
-  forest->set_adapt_fn = t8_forest_remove_hanging_faces_adapt;
+  forest->set_adapt_fn = t8_forest_transition_adapt;
   forest->set_adapt_recursive = 0;
   t8_forest_copy_trees (forest, forest->set_from, 0);
   t8_forest_adapt (forest);
 
-  t8_global_productionf ("Done t8_forest_remove_hanging_faces.\n");
+  t8_global_productionf ("Done t8_forest_transition.\n");
 }
 
 /* TODO: it would be better to have a proper test if all hanging nodes are removed */
 int
-t8_forest_hanging_faces_removed (t8_forest_t forest)
+t8_forest_is_conformal (t8_forest_t forest)
 {
-  t8_eclass_t         eclass;
-  const t8_element_t *current_element;
-  t8_eclass_scheme_c *ts;
-  t8_tree_t           tree;
-  int                 ltree_id, lelement_id, num_elements_in_tree;
-
-  /* Iterate throuh the forest and check whether subelements are used */
-  for (ltree_id = 0; ltree_id < t8_forest_get_num_local_trees (forest);
-       ltree_id++) {
-    tree = (t8_tree_t) t8_sc_array_index_locidx (forest->trees, ltree_id);
-    num_elements_in_tree = t8_forest_get_tree_element_count (tree);
-    for (lelement_id = 0; lelement_id < num_elements_in_tree; lelement_id++) {
-      eclass = t8_forest_get_tree_class (forest, ltree_id);
-      ts = t8_forest_get_eclass_scheme (forest, eclass);
-      current_element =
-        t8_forest_get_element_in_tree (forest, ltree_id, lelement_id);
-      if (ts->t8_element_is_subelement (current_element)) {
-        return 1;
-      }
-    }
-  }
   return 0;
 }
 
