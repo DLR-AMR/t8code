@@ -200,7 +200,6 @@ t8_forest_adapt (t8_forest_t forest)
   t8_element_t      **elements, **elements_from, *parent;
   int                 refine;
   int                 ci;
-  unsigned int        transition_type;
   unsigned int        num_subelements;
   long long int       count_subelements = 0, count_subelements_former_tree =
     0;
@@ -337,14 +336,10 @@ t8_forest_adapt (t8_forest_t forest)
        * 
        * Values above 1 will correspond to specific subelement types. 
        *  
-       * For example the refine values for the 2D Quad scheme will be between -1 and 16. The values -1, 0 and 1 are for the standard refinement
-       * and the values 2 to 16 correspond to the subelement types 1 to 15 (0001 to 1111 in base 2) and will be used by the element files of the quad 
-       * scheme in order to remove hanging nodes.
+       * For example the refine values for the 2D Quad scheme will be between -1 and 15. The values -1, 0 and 1 are for the standard refinement
+       * and the values 2 to 16 correspond to the subelement types 1 to 15 (0001 to 1111 in base 2) and will be used to insert transition cells.
        * 
-       * It is up to the developer to use a reasonable range of subelement types for their use case. 
-       * It is not allowed to use subelement types that intersect with already implemented ones.  
-       * For the quad scheme, it would be reasonable to use subelement types >= 17, since 2 to 16 are already occupied by the hanging-
-       * faces-removing ones. */
+       * It is up to the developer to use a reasonable range of subelement types for their use case. */
 
       refine = forest->set_adapt_fn (forest, forest->set_from, ltree_id,
                                      el_considered, tscheme,
@@ -352,8 +347,8 @@ t8_forest_adapt (t8_forest_t forest)
 
       /* We need to add a special condition for subelements that is independent of the refinement criteria:
        * After the adapt procedure, no subelements should be left in order to ensure that following modifications 
-       * such as balance or remove_hanigng_faces work properly. 
-       * Therefore, all subelements that "survive" the adaptation will be coarsened back to their parent quadrant. 
+       * such as balance or transition work properly. 
+       * Therefore, all transition cells that "survive" the adaptation will be coarsened back to their parent quadrant. 
        * Note, that this is always valid for subelements in terms of the minimum level,
        * since subelements have the same level as their parent quadrant. */
       if (tscheme->t8_element_is_subelement (elements_from[0]) && refine == 0) {
@@ -400,10 +395,9 @@ t8_forest_adapt (t8_forest_t forest)
                                             &el_inserted, elements);
           
 #if 0     
-          /* TODO: el_coarsen = el_inserted + num_children; -> reason for artefacts during multiple timestep-adaptation.
-           * Check if it works. 
-           * The reason for the artefacts: el_coarsen was too large such that the while loop in coarsen_recursive was not entered for the first time after recursive refinement, 
-           * where el_coarsen was adjusted (too large). (This fix does not work for multiple processes. TODO: undertsand why not). */
+          /* TODO: el_coarsen = el_inserted + num_children; -> reason for artefacts during multiple timestep-adaptation. Issue has been opened.
+           * Check if it works.
+           * This fix removes the artefacts and can be used for exemplary purposes but it does not work for multiple processes. */
           el_coarsen = el_inserted;
 #else     
           /* el_coarsen is the index of the first element in the new element
@@ -434,15 +428,10 @@ t8_forest_adapt (t8_forest_t forest)
           el_considered++;
         }
       }
-      else if (refine > 1) {    /* use subelements in this case */
-        /* The subelement-callback function returns refine = transition_type + 1 to avoid transition_type = 1.
-         * We can now undo this to use the transition_type-values that match the binary encoding of the neighbour structure
-         * (0001 should correspond to 1 and not to 2). */
-        transition_type = refine - 1;
-
+      else if (refine > 1) {    /* refine via a transition cell */
         /* determing the number of subelements of the given type for memory allocation */
         num_subelements =
-          tscheme->t8_element_get_number_of_subelements (transition_type,
+          tscheme->t8_element_get_number_of_subelements (refine - 1,
                                                          elements_from[0]);
         if (num_subelements > curr_num_children) {
           elements = T8_REALLOC (elements, t8_element_t *, num_subelements);
@@ -454,7 +443,7 @@ t8_forest_adapt (t8_forest_t forest)
           elements[zz] =
             t8_element_array_index_locidx (telements, el_inserted + zz);
         }
-        tscheme->t8_element_to_subelement (elements_from[0], transition_type,
+        tscheme->t8_element_to_subelement (elements_from[0], refine - 1,
                                            elements);
         el_inserted += num_subelements;
         el_considered++;
