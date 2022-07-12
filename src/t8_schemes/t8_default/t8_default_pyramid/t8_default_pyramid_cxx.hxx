@@ -140,7 +140,12 @@ public:
   virtual int         t8_element_is_root_boundary (const t8_element_t *elem,
                                                    int face);
 
-/** Construct the nearest common ancestor of two elements in the same tree. */
+/** Construct the nearest common ancestor of two elements in the same tree. 
+ * \param [in]      elem1       The first element
+ * \param [in]      elem2       The second element
+ * \param [in,out]  nca         Existing element whose data will be filled with
+ *                              the data of the nearest common ancestor of \a elem1 and \a elem2
+*/
   virtual void        t8_element_nca (const t8_element_t *elem1,
                                       const t8_element_t *elem2,
                                       t8_element_t *nca);
