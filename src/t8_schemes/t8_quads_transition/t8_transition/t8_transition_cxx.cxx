@@ -21,11 +21,10 @@
 */
 
 #include <new>
-#include <t8_schemes/t8_quads_w_rectangular_subelements/t8_subelements_cxx.hxx>
+#include <t8_schemes/t8_quads_transition/t8_transition_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_line_cxx.hxx>
 #include <t8_refcount.h>
-
-#include "t8_subelements_quad_cxx.hxx"
+#include "t8_transition_quad_cxx.hxx"
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();

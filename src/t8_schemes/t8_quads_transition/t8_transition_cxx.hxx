@@ -26,8 +26,8 @@
  * This scheme points to a consistent implementation of all element classes.
  */
 
-#ifndef T8_SUBELEMENTS_CXX_HXX
-#define T8_SUBELEMENTS_CXX_HXX
+#ifndef T8_TRANSITION_CXX_HXX
+#define T8_TRANSITION_CXX_HXX
 
 #include <t8_element_cxx.hxx>
 
@@ -45,4 +45,4 @@ int                 t8_eclass_scheme_is_sub (t8_eclass_scheme_c * ts);
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_SUBELEMENTS_H */
+#endif /* !T8_TRANSITION_CXX_HXX */

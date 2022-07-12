@@ -31,7 +31,7 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_cmesh_vtk.h>
-#include <t8_schemes/t8_quads_w_rectangular_subelements/t8_subelements_cxx.hxx>
+#include <t8_schemes/t8_quads_transition/t8_transition_cxx.hxx>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest.h>
 #include <t8_vec.h>

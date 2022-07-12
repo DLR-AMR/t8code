@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_subelements_quad_cxx.hxx
+/** \file t8_transition_quad_cxx.hxx
  * We use a p4est_quadrant_t object as storage for the T8 quadrant.
  * Additionally, we store some more information to use subelements on top 
  * of some recursive quad refinement. This information is 
@@ -33,8 +33,8 @@
  * We can use them for example to determine the coordinates of the subelement vertices, 
  * since they can differ for subelements of the same id but a different subelement type. */
 
-#ifndef T8_SUBELEMENTS_QUAD_CXX_HXX
-#define T8_SUBELEMENTS_QUAD_CXX_HXX
+#ifndef T8_TRANSITION_QUAD_CXX_HXX
+#define T8_TRANSITION_QUAD_CXX_HXX
 
 #include <p4est.h>
 #include <t8_element_cxx.hxx>
@@ -456,4 +456,4 @@ protected:
                                                               elem) const;
 };
 
-#endif /* !T8_SUBELEMENTS_QUAD_CXX_HXX */
+#endif /* !T8_TRANSITION_QUAD_CXX_HXX */
