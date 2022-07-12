@@ -1591,12 +1591,9 @@ t8_dpyramid_first_pyra_anc (const t8_dpyramid_t *tet,
   }
   else if (t8_dpyramid_is_inside_tet (tet, tet->level, &last_tet_anc) != 0) {
     /*The parent of last_tet_anc is a pyramid */
-    if (last_tet_anc.level == 1) {
-      first_pyra_anc->type = 6;
-    }
-    else {
-      t8_dpyramid_tetparent_type (&last_tet_anc, first_pyra_anc);
-    }
+
+    t8_dpyramid_tetparent_type (&last_tet_anc, first_pyra_anc);
+
     T8_ASSERT (last_tet_anc.level >= 1);
     /*Update coordinates */
     t8_dpyramid_coord_t length = T8_DPYRAMID_LEN (last_tet_anc.level);
