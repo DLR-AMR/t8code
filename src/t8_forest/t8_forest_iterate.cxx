@@ -407,7 +407,6 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
   t8_element_t       *elem_new, *elem_old;
   t8_eclass_scheme_c *ts;
   t8_eclass_t         eclass;
-  int                 level_new, level_old;
 
   t8_global_productionf ("Into t8_forest_iterate_replace\n");
   T8_ASSERT (t8_forest_is_committed (forest_old));
@@ -432,10 +431,6 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
       /* Get pointers to the elements */
       elem_new = t8_forest_get_element_in_tree (forest_new, itree, ielem_new);
       elem_old = t8_forest_get_element_in_tree (forest_old, itree, ielem_old);
-
-      /* Get the levels of these elements */
-      level_new = ts->t8_element_level (elem_new);
-      level_old = ts->t8_element_level (elem_old);
 
 #if 0                           /* output for debugging */
       t8_debugf ("Using the subelement iterate_replace scheme:\n");
@@ -489,7 +484,6 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
         family_size = ts->t8_element_num_children (elem_old);
         for (element_count = 0; element_count < family_size; element_count++) { /* again check if old elements are transition cells */
           t8_element_t       *elem_in_family;
-          int                 subelement_number;
           elem_in_family =
             t8_forest_get_element_in_tree (forest_old, itree,
                                            ielem_old + element_count);

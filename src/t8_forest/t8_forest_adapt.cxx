@@ -20,6 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include "t8.h"
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest.h>
@@ -345,14 +346,12 @@ t8_forest_adapt (t8_forest_t forest)
                                      el_considered, tscheme,
                                      num_elements_to_adapt_fn, elements_from);
 
-      /* We need to add a special condition for subelements that is independent of the refinement criteria:
-       * After the adapt procedure, no subelements should be left in order to ensure that following modifications 
-       * such as balance or transition work properly. 
-       * Therefore, all transition cells that "survive" the adaptation will be coarsened back to their parent quadrant. 
-       * Note, that this is always valid for subelements in terms of the minimum level,
-       * since subelements have the same level as their parent quadrant. */
-      if (tscheme->t8_element_is_subelement (elements_from[0]) && refine == 0) {
-        refine = -1;
+      /* Transition cells must be removed in adaptation. Therefore, we only allow refine == 1 or -1 */       
+      if (tscheme->t8_element_is_subelement (current_element)) {
+        T8_ASSERT(refine >= -1 && refine <= 1);
+        if (refine == 0) {
+          refine = -1;
+        }
       }
 
 #ifdef T8_ENABLE_DEBUG
@@ -362,6 +361,7 @@ t8_forest_adapt (t8_forest_t forest)
       t8_debugf
         ("el_considered: %i/%i  refine: %i  is_family: %i  num_siblings: %li\n",
          el_considered + 1, num_el_from, refine, is_family, num_siblings);
+      tscheme->t8_element_print_element(elements_from[0]);
 #endif
 
       T8_ASSERT (is_family || refine >= 0);
@@ -431,8 +431,8 @@ t8_forest_adapt (t8_forest_t forest)
       else if (refine > 1) {    /* refine via a transition cell */
         /* determing the number of subelements of the given type for memory allocation */
         num_subelements =
-          tscheme->t8_element_get_number_of_subelements (refine - 1,
-                                                         elements_from[0]);
+          tscheme->t8_element_get_number_of_subelements (refine-1);
+        
         if (num_subelements > curr_num_children) {
           elements = T8_REALLOC (elements, t8_element_t *, num_subelements);
           curr_num_children = num_subelements;
@@ -443,7 +443,7 @@ t8_forest_adapt (t8_forest_t forest)
           elements[zz] =
             t8_element_array_index_locidx (telements, el_inserted + zz);
         }
-        tscheme->t8_element_to_subelement (elements_from[0], refine - 1,
+        tscheme->t8_element_to_subelement (elements_from[0], refine-1,
                                            elements);
         el_inserted += num_subelements;
         el_considered++;

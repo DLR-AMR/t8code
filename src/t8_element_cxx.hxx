@@ -666,10 +666,7 @@ public:
    *  \return the number of subelements a parent element is split into
    */
   virtual int         t8_element_get_number_of_subelements (int
-                                                            transition_type,
-                                                            const
-                                                            t8_element_t *
-                                                            elem) = 0;
+                                                            transition_type) = 0;
 
   /* TODO: comment */
   virtual int         t8_element_get_transition_type (const

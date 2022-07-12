@@ -50,7 +50,7 @@ t8_forest_transition_adapt (t8_forest_t forest,
   t8_element_t       *element = elements[0], **face_neighbor;
 
   /* maxlevel elements will never have hanging faces */
-  if (ts->t8_element_level(element) == forest_from->maxlevel) return 0;
+  // if (ts->t8_element_level(element) == forest_from->maxlevel) return 0;
 
   num_faces = ts->t8_element_num_faces (element);
 

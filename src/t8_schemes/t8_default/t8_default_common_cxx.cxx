@@ -21,6 +21,7 @@
 */
 
 #include <sc_functions.h>
+#include "t8.h"
 #include "t8_default_common_cxx.hxx"
 
 /* We want to export the whole implementation to be callable from "C" */
@@ -211,6 +212,7 @@ t8_default_scheme_common_c::t8_element_is_subelement (const
    * should not abort the code even if no subelements are implemented in the given scheme. */
 
   /* No subelements are implemented and therefore we return -1 meaning "is no subelement". */
+  t8_debugf("This is the default_common implementation of the t8_element_is_subelement check.\n");
   return 0;
 }
 
@@ -224,10 +226,7 @@ t8_default_scheme_common_c::t8_element_get_face_number_of_hypotenuse (const
 
 int
 t8_default_scheme_common_c::t8_element_get_number_of_subelements (int
-                                                                  transition_type,
-                                                                  const
-                                                                  t8_element *
-                                                                  elem)
+                                                                  transition_type)
 {
   SC_ABORT ("This function is not implemented for the given scheme.\n");
 }

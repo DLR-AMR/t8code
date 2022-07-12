@@ -264,13 +264,13 @@ t8_refine_with_subelements (t8_eclass_t eclass)
     t8_productionf ("Ghost version written to %d\n", ghost_version);
   }
 
-  if (do_partition) {
-    t8_forest_set_partition (forest_adapt, forest, 0);
-  }
-
   if (do_ghost) {
     /* set ghosts after adaptation/balancing/transitioning */
     t8_forest_set_ghost_ext (forest_adapt, do_ghost, T8_GHOST_FACES, ghost_version);
+  }
+
+  if (do_partition) {
+    t8_forest_set_partition (forest_adapt, forest, 0);
   }
 
   t8_forest_commit (forest_adapt);

@@ -180,7 +180,7 @@ public:
 
   /** Return the number of siblings of an element */
   virtual int         t8_element_num_siblings (const t8_element_t *
-                                               elem);
+                                               elem) const;
 
   /** Return the number of children of an element's face when the element is refined. */
   virtual int         t8_element_num_face_children (const t8_element_t *
@@ -351,10 +351,7 @@ public:
 
 /** Determine the number of sibling subelements, of a transition cell of a specific type */
   virtual int         t8_element_get_number_of_subelements (int
-                                                            transition_type,
-                                                            const
-                                                            t8_element *
-                                                            elem);
+                                                            transition_type);
 
 /** Test wheter a given element is a subelement or not */
   virtual bool         t8_element_is_subelement (const t8_element * elem);

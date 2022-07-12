@@ -60,7 +60,7 @@ t8_refine_quad_to_subelements ()
 
   /* Allocate enough memory for subelements of the given type and initialize them */
   num_subelements =
-    class_scheme->t8_element_get_number_of_subelements (type, element);
+    class_scheme->t8_element_get_number_of_subelements (type);
   t8_element_t      **element_subelements =
     T8_ALLOC (t8_element_t *, num_subelements);
   class_scheme->t8_element_new (num_subelements, element_subelements);
