@@ -28,8 +28,8 @@
 
 /* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest_balance */
 
-#ifndef t8_forest_transition_H
-#define t8_forest_transition_H
+#ifndef T8_FOREST_TRANSITION_H
+#define T8_FOREST_TRANSITION_H
 
 #include <t8.h>
 #include <t8_forest/t8_forest_types.h>
@@ -79,4 +79,4 @@ int                 t8_forest_is_conformal (t8_forest_t forest);
 
 T8_EXTERN_C_END ();
 
-#endif /* !t8_forest_transition_H! */
+#endif /* !T8_FOREST_TRANSITION_H! */
