@@ -27,7 +27,7 @@
  * In order to do so, relevant subelement functions like 
  *
  *       i) t8_element_get_number_of_subelements
- *      ii) t8_element_to_subelement
+ *      ii) t8_element_to_transition_cell
  *     iii) t8_element_shape
  *      iv) t8_element_vertex_coords -> t8_element_vertex_coords_of_subelement
  * 
@@ -66,7 +66,7 @@ t8_refine_quad_to_subelements ()
   class_scheme->t8_element_new (num_subelements, element_subelements);
 
   /* Create all subelements for the given type from the initial quad element. */
-  class_scheme->t8_element_to_subelement (element, type, element_subelements);
+  class_scheme->t8_element_to_transition_cell (element, type, element_subelements);
   t8_productionf ("The given type is type %i.\n", type);
   t8_productionf
     ("The transition cell of type %i consists of %i subelements with ids ranging from 0 to %i.\n",

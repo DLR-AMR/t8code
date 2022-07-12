@@ -1512,7 +1512,7 @@ t8_subelement_scheme_quad_c::t8_element_vertex_coords_of_subelement (const
 }
 
 void
-t8_subelement_scheme_quad_c::t8_element_to_subelement (const t8_element_t *
+t8_subelement_scheme_quad_c::t8_element_to_transition_cell (const t8_element_t *
                                                        elem, int type,
                                                        t8_element_t * c[])
 {

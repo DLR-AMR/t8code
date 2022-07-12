@@ -345,8 +345,8 @@ public:
   virtual void        t8_element_vertex_coords (const t8_element_t * t,
                                                 int vertex, int coords[]);
 
-/** Construct a subelement */
-  virtual void        t8_element_to_subelement (const t8_element_t * elem,
+/** Construct a transition cell of type type */
+  virtual void        t8_element_to_transition_cell (const t8_element_t * elem,
                                                 int type, t8_element_t * c[]);
 
 /** Determine the number of sibling subelements, of a transition cell of a specific type */

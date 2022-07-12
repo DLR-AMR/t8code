@@ -650,7 +650,7 @@ public:
    *  \param [in] type The subelement type
    *  \param [out] subelements An array of all subelements of the parent quad element elem
    */
-  virtual void        t8_element_to_subelement (const t8_element_t * elem,
+  virtual void        t8_element_to_transition_cell (const t8_element_t * elem,
                                                 int type,
                                                 t8_element_t *
                                                 subelements[]) = 0;

@@ -189,7 +189,7 @@ t8_default_scheme_common_c::t8_element_general_function (const t8_element_t *
 }
 
 void
-t8_default_scheme_common_c::t8_element_to_subelement (const t8_element_t *
+t8_default_scheme_common_c::t8_element_to_transition_cell (const t8_element_t *
                                                       elem,
                                                       int type,
                                                       t8_element_t * c[])
