@@ -250,7 +250,7 @@ t8_forest_adapt (t8_forest_t forest)
   t8_tree_t           tree, tree_from;
   t8_eclass_scheme_c *tscheme;
   t8_element_t      **elements, **elements_from, **elements_from_copy;
-  t8_element_t       *element_parent_compare, *element_parent_current, *element_current;
+  t8_element_t       *element_parent_compare, *element_parent_current, *element_current, *element_debug;
   int                 refine;
   int                 ci;
   int                 is_family;
@@ -318,6 +318,7 @@ t8_forest_adapt (t8_forest_t forest)
     elements_from_copy = T8_ALLOC (t8_element_t *, curr_size_elements_from);
     /* Buffer for parent elements */
     tscheme->t8_element_new(1, &element_parent_compare);
+    tscheme->t8_element_new(1, &element_debug);
     tscheme->t8_element_new(1, &element_parent_current);
     tscheme->t8_element_new(1, &element_current);
     /* We now iterate over all elements in this tree and check them for refinement/coarsening. */
@@ -432,7 +433,8 @@ t8_forest_adapt (t8_forest_t forest)
             /* Only elements with higher level then level of current element, can get 
              * potentially be overlapped. */
             if (level > level_current) {
-              if (tree->eclass == T8_ECLASS_PYRAMID) {
+            
+              //if (tree->eclass == T8_ECLASS_PYRAMID) {
                 tscheme->t8_element_copy(elements_from_copy[zz], element_parent_compare);
                 /* level_current-1 is level of element_parent_current */
                 while(level > level_current-1) {
@@ -443,18 +445,31 @@ t8_forest_adapt (t8_forest_t forest)
                   is_family = 0;
                   num_elements_to_adapt_callback = 1;
                 }
-              }
-              else {
+                int level_element_parent_compare = level;
+              //}
+              //else {
                 tscheme->t8_element_nca(element_parent_current, elements_from_copy[zz], 
-                                        element_parent_compare);
-                level = tscheme->t8_element_level(element_parent_compare);
-                /* level_current-1 is level of element_parent_current */
+                                        element_debug);
+                level = tscheme->t8_element_level(element_debug);
                 T8_ASSERT(level <= level_current-1);
                 if(level == level_current-1) {
                   is_family = 0;
                   num_elements_to_adapt_callback = 1;
                 }
-              }
+                if (tscheme->t8_element_compare(element_debug, element_parent_compare) &&
+                    !tscheme->t8_element_compare(element_parent_current, element_parent_compare)) {                 
+                  int level_a = tscheme->t8_element_level(element_debug);
+                  int level_b = tscheme->t8_element_level(elements_from_copy[zz]);
+                  t8_debugf("[IL] id_a: %li, id_b: %li ,level_a: %i, level_b: %i \n",
+                    tscheme->t8_element_get_linear_id(element_debug, level_a),
+                    tscheme->t8_element_get_linear_id(elements_from_copy[zz],level_b),
+                    level_a, level_b);
+                  t8_debugf("[IL] id_element_parent_compare: %li level_element_parent_compare: %i \n", 
+                    tscheme->t8_element_get_linear_id(element_parent_compare, level_element_parent_compare), 
+                    level_element_parent_compare);
+                  SC_ABORTF("nein!\n");
+                }
+              //}
             }
           }
         }
@@ -697,6 +712,7 @@ t8_forest_adapt (t8_forest_t forest)
     tscheme->t8_element_destroy(1, &element_parent_current);
     tscheme->t8_element_destroy(1, &element_current);
     tscheme->t8_element_destroy(1, &element_parent_compare);
+    tscheme->t8_element_destroy(1, &element_debug);
     T8_FREE (elements);
     T8_FREE (elements_from);
     T8_FREE (elements_from_copy);
