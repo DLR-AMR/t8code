@@ -347,7 +347,7 @@ void                t8_forest_set_balance (t8_forest_t forest,
  * \param [in]      set_from A second forest that should use hanging-faces-removing subelements.
  * \note Currently, subelements that remove hanging faces from the forest are only implemented for the 2D quad scheme. 
  */
-void                t8_forest_set_remove_hanging_faces (t8_forest_t forest,
+void                t8_forest_set_transition (t8_forest_t forest,
                                                         const t8_forest_t
                                                         set_from);
 

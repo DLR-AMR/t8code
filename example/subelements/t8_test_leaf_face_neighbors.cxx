@@ -59,7 +59,7 @@ t8_print_element_data (const t8_element_t * element)
   t8_debugf ("    Level:                 %i \n",
                   choosen_element->p4q.level);
   t8_debugf ("    Is subelement:         %i \n",
-                  choosen_element->dummy_is_subelement);
+                  (choosen_element->transition_type == 0 ? 0 : 1));
   t8_debugf ("    Subelement type:       %i \n",
                   choosen_element->transition_type);
   t8_debugf ("    Subelement id:         %i \n",
@@ -176,7 +176,7 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   char                filename[BUFSIZ];
 
   /* refinement setting */
-  int                 initlevel = 10;    /* initial uniform refinement level */
+  int                 initlevel = 6;    /* initial uniform refinement level */
   int                 adaptlevel = 6;
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening (minlevel <= initlevel) */
   int                 maxlevel = initlevel + adaptlevel;     /* highest level allowed for refining */
@@ -198,7 +198,7 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   int                 ghost_version = 3;
 
   /* vtk setting */
-  int                 do_vtk = 0;
+  int                 do_vtk = 1;
 
   /* LFN settings */
   int                 do_LFN_test = 1;
@@ -259,8 +259,9 @@ t8_refine_with_subelements (t8_eclass_t eclass)
     t8_forest_set_balance (forest_adapt, forest, 0);
   }
   if (do_transition) {
-    t8_forest_set_remove_hanging_faces (forest_adapt, NULL);
+    t8_forest_set_transition (forest_adapt, NULL);
     ghost_version = 1;
+    t8_productionf ("Ghost version written to %d\n", ghost_version);
   }
 
   if (do_partition) {

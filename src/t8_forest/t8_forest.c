@@ -242,7 +242,7 @@ t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from,
 }
 
 void
-t8_forest_set_remove_hanging_faces (t8_forest_t forest,
+t8_forest_set_transition (t8_forest_t forest,
                                     const t8_forest_t set_from)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));

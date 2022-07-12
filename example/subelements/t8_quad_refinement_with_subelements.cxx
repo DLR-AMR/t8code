@@ -278,7 +278,7 @@ t8_refine_with_subelements (t8_eclass_t eclass, int initlevel, int adaptlevel)
     if (do_transition) {
       /* Analogue to the other set-functions, this function adds subelements to the from_method. 
        * The forest will therefore use subelements while adapting in order to remove hanging faces from the mesh. */
-      t8_forest_set_remove_hanging_faces (forest_adapt, NULL);
+      t8_forest_set_transition (forest_adapt, NULL);
       ghost_version = 1;
     }
 
