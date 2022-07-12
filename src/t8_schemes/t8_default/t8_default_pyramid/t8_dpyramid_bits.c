@@ -1701,6 +1701,7 @@ t8_dpyramid_nca (const t8_dpyramid_t *pyra1,
     //  return;
     //}
     /* Compute the levels of the last tet-anc */
+#if 0
     pyra_anc_level1 =
       t8_dpyramid_is_inside_tet (pyra1, pyra1->level, &last_tet1);
     pyra_anc_level2 =
@@ -1716,20 +1717,23 @@ t8_dpyramid_nca (const t8_dpyramid_t *pyra1,
       t8_dpyramid_nca (&last_tet2, pyra1, nca);
       return;
     }
+    min_tet_level = SC_MAX (pyra_anc_level1, pyra_anc_level2);
+#endif
 
     cube_level = SC_MIN (T8_DPYRAMID_MAXLEVEL - level,
                          (int) SC_MIN (pyra1->level, pyra2->level));
     real_level = cube_level;
     /* The minimal level, where the shape of both pyra1 and pyra2 is 
      * still a tet */
-    min_tet_level = SC_MAX (pyra_anc_level1, pyra_anc_level2);
 
     p1_type_at_level = compute_type (pyra1, cube_level);
     p2_type_at_level = compute_type (pyra2, cube_level);
 
     /* Check, if the nca is at a level before the ancestor of a tet switches
      * the shape*/
-    while (p1_type_at_level != p2_type_at_level && real_level > min_tet_level) {
+    while (p1_type_at_level != p2_type_at_level &&
+           p1_type_at_level < T8_DPYRAMID_FIRST_TYPE &&
+           p2_type_at_level < T8_DPYRAMID_FIRST_TYPE) {
       real_level--;
       p1_type_at_level =
         compute_type_ext (pyra1, real_level, p1_type_at_level,
@@ -1737,36 +1741,37 @@ t8_dpyramid_nca (const t8_dpyramid_t *pyra1,
       p2_type_at_level =
         compute_type_ext (pyra2, real_level, p2_type_at_level,
                           real_level + 1);
-
     }
-    if (real_level >= min_tet_level && p1_type_at_level == p2_type_at_level) {
-      /* No anc switches the shape, the nca is a tet */
-      t8_dtet_ancestor (pyra1, real_level, nca);
+    if (p1_type_at_level >= T8_DPYRAMID_FIRST_TYPE) {
+      t8_dpyramid_t       first_pyra1;
+      t8_dtet_ancestor (pyra1, real_level + 1, &last_tet1);
+      t8_dpyramid_coord_t length = T8_DPYRAMID_LEN (real_level);
+      first_pyra1.x = last_tet1.x & ~length;
+      first_pyra1.y = last_tet1.y & ~length;
+      first_pyra1.z = last_tet1.z & ~length;
+      t8_dpyramid_tetparent_type (&last_tet1, &first_pyra1);
+      first_pyra1.level = real_level;
+      t8_dpyramid_nca (&first_pyra1, pyra2, nca);
       return;
     }
-    else {
-      /* One anc switches the shape, the nca is a pyra. */
-      t8_dpyramid_t       first_pyra1, first_pyra2;
-      if (pyra_anc_level1 > pyra_anc_level2) {
-        t8_dpyramid_coord_t length = T8_DPYRAMID_LEN (last_tet1.level);
-        first_pyra1.x = last_tet1.x & ~length;
-        first_pyra1.y = last_tet1.y & ~length;
-        first_pyra1.z = last_tet1.z & ~length;
-        t8_dpyramid_tetparent_type (&last_tet1, &first_pyra1);
-        first_pyra1.level = last_tet1.level - 1;
-        t8_dpyramid_nca (&first_pyra1, &last_tet2, nca);
-        return;
-      }
-      else {
-        t8_dpyramid_coord_t length = T8_DPYRAMID_LEN (last_tet2.level);
-        first_pyra2.x = last_tet2.x & ~length;
-        first_pyra2.y = last_tet2.y & ~length;
-        first_pyra2.z = last_tet2.z & ~length;
-        t8_dpyramid_tetparent_type (&last_tet2, &first_pyra2);
-        first_pyra2.level = last_tet2.level - 1;
-        t8_dpyramid_nca (&first_pyra2, &last_tet1, nca);
-        return;
-      }
+    else if (p2_type_at_level >= T8_DPYRAMID_FIRST_TYPE) {
+      t8_dpyramid_t       first_pyra2;
+      t8_dtet_ancestor (pyra2, real_level + 1, &last_tet2);
+      t8_dpyramid_coord_t length = T8_DPYRAMID_LEN (real_level);
+      first_pyra2.x = last_tet2.x & ~length;
+      first_pyra2.y = last_tet2.y & ~length;
+      first_pyra2.z = last_tet2.z & ~length;
+      t8_dpyramid_tetparent_type (&last_tet2, &first_pyra2);
+      first_pyra2.level = real_level;
+      t8_dpyramid_nca (&first_pyra2, pyra1, nca);
+      return;
+    }
+    if (p1_type_at_level == p2_type_at_level) {
+      /* No anc switches the shape, the nca is a tet */
+      T8_ASSERT (p1_type_at_level < T8_DPYRAMID_FIRST_TYPE);
+      T8_ASSERT (p2_type_at_level < T8_DPYRAMID_FIRST_TYPE);
+      t8_dtet_ancestor (pyra1, real_level, nca);
+      return;
     }
   }
 }
