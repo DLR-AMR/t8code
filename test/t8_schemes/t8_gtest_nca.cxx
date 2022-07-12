@@ -40,7 +40,7 @@ protected:
         ts->t8_element_new (1, &desc_a);
         ts->t8_element_new (1, &desc_b);
         ts->t8_element_new (1, &check);
-        ts->t8_element_set_linear_id (correct_nca, 0, 0); 
+        ts->t8_element_set_linear_id (correct_nca, 0, 0);   
     }   
     void TearDown () override {
         ts->t8_element_destroy (1, &correct_nca);
@@ -171,11 +171,12 @@ t8_recursive_nca_check(t8_element_t *check_nca, t8_element_t *desc_a,
         for(j = 0; j < num_children_b; j++){
             ts->t8_element_child(parent_b, j, desc_b);
             
-            /*ts->t8_element_set_linear_id(desc_a, 1, 0);
-            ts->t8_element_set_linear_id(desc_b, 3, 12);
+            /*ts->t8_element_set_linear_id(desc_a, 2, 13);
+            ts->t8_element_set_linear_id(desc_b, 2, 33);
+            ts->t8_element_child(desc_b, 1, desc_b);
             ts->t8_element_debug_print(desc_a);
             ts->t8_element_debug_print(desc_b);
-            ts->t8_element_set_linear_id(check_nca, 1, 0);
+            ts->t8_element_set_linear_id(check_nca, 0, 0);
             t8_debugf("[D] correct_nca: \n");
             ts->t8_element_debug_print(check_nca);*/
 

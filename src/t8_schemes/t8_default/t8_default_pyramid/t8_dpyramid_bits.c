@@ -1591,9 +1591,12 @@ t8_dpyramid_first_pyra_anc (const t8_dpyramid_t *tet,
   }
   else if (t8_dpyramid_is_inside_tet (tet, tet->level, &last_tet_anc) != 0) {
     /*The parent of last_tet_anc is a pyramid */
-
-    t8_dpyramid_tetparent_type (&last_tet_anc, first_pyra_anc);
-
+    if (last_tet_anc.level == 1) {
+      first_pyra_anc->type = 6;
+    }
+    else {
+      t8_dpyramid_tetparent_type (&last_tet_anc, first_pyra_anc);
+    }
     T8_ASSERT (last_tet_anc.level >= 1);
     /*Update coordinates */
     t8_dpyramid_coord_t length = T8_DPYRAMID_LEN (last_tet_anc.level);
@@ -1691,12 +1694,12 @@ t8_dpyramid_nca (const t8_dpyramid_t *pyra1,
     int                 min_tet_level;
     t8_dpyramid_t       last_tet1;
     t8_dpyramid_t       last_tet2;
-    if ((pyra1->type != 0 && pyra1->type != 3) ||
-        (pyra2->type != 0 && pyra2->type != 3)) {
-      /* The nca is a tetrahedron */
-      t8_dtet_nearest_common_ancestor (pyra1, pyra2, nca);
-      return;
-    }
+    //if ((pyra1->type != 0 && pyra1->type != 3) ||
+    //    (pyra2->type != 0 && pyra2->type != 3)) {
+    /* Todo: Update comment */
+    //  t8_dtet_nearest_common_ancestor (pyra1, pyra2, nca);
+    //  return;
+    //}
     /* Compute the levels of the last tet-anc */
     pyra_anc_level1 =
       t8_dpyramid_is_inside_tet (pyra1, pyra1->level, &last_tet1);
@@ -1717,7 +1720,8 @@ t8_dpyramid_nca (const t8_dpyramid_t *pyra1,
     cube_level = SC_MIN (T8_DPYRAMID_MAXLEVEL - level,
                          (int) SC_MIN (pyra1->level, pyra2->level));
     real_level = cube_level;
-    /* The minimal level, where the shape of both pyra1 and pyra2 is still a tet */
+    /* The minimal level, where the shape of both pyra1 and pyra2 is 
+     * still a tet */
     min_tet_level = SC_MAX (pyra_anc_level1, pyra_anc_level2);
 
     p1_type_at_level = compute_type (pyra1, cube_level);
@@ -1764,7 +1768,6 @@ t8_dpyramid_nca (const t8_dpyramid_t *pyra1,
         return;
       }
     }
-
   }
 }
 
