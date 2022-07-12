@@ -148,9 +148,11 @@ t8_refine_transition (t8_eclass_t eclass, int initlevel, int adaptlevel)
   char                filename[BUFSIZ];
 
   /* refinement settings */
+#if 1 /* overwrite init and adapt level */
                       initlevel = 2;    /* initial uniform refinement level */
-  int                 minlevel = initlevel;   /* lowest level allowed for coarsening */
                       adaptlevel = 2;   /* number of additional adapt levels */
+#endif
+  int                 minlevel = initlevel;   /* lowest level allowed for coarsening */
   int                 maxlevel = initlevel + adaptlevel;    /* highest level allowed for refining */
 
   int                 refine_recursive = 1;
@@ -169,7 +171,7 @@ t8_refine_transition (t8_eclass_t eclass, int initlevel, int adaptlevel)
 
   /* Ghost settings if MPI is enabled */
   int                 do_ghost = 1;
-  int32_t             do_partition = 1;
+  int                 do_partition = 1;
   int                 ghost_version = 3;
 
   /* VTK settings */

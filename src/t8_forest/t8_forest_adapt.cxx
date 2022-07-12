@@ -396,8 +396,7 @@ t8_forest_adapt (t8_forest_t forest)
           
 #if 0     
           /* TODO: el_coarsen = el_inserted + num_children; -> reason for artefacts during multiple timestep-adaptation. Issue has been opened.
-           * Check if it works.
-           * This fix removes the artefacts and can be used for exemplary purposes but it does not work for multiple processes. */
+           * This fix removes the artefacts and can be used for exemplary purposes but it does not work when using multiple processes. */
           el_coarsen = el_inserted;
 #else     
           /* el_coarsen is the index of the first element in the new element
