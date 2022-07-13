@@ -211,7 +211,7 @@ int                 t8_dpyramid_is_inside_root (const t8_dpyramid_t *p);
 
 /** Check, if a given pyramid is inside another pyramid
  * \param[in] p     Pyramid to check
- * \param[in] check The outer pyramid in which \a p might lie*/
+ * \param[in] check The outer pyramid in which \a p might lay*/
 int                 t8_dpyramid_is_inside_pyra (const t8_dpyramid_t *p,
                                                 const t8_dpyramid_t *check);
 
@@ -361,6 +361,17 @@ int                 t8_dpyramid_face_parent_face (const t8_dpyramid_t *elem,
  * \return          The child-id of the ancestor*/
 int                 t8_dpyramid_ancestor_id (const t8_dpyramid_t *p,
                                              const int level);
+
+/**
+ * Compute the ancestor of \a pyra at a given level
+ * 
+ * \param[in] pyra      Input pyramid
+ * \param[in] level     Level of the ancestor to compute
+ * \param[in, out] anc  Allocated element that will be filled with the data of the ancestor.
+ */
+void                t8_dpyramid_ancestor (const t8_dpyramid_t *pyra,
+                                          const int level,
+                                          t8_dpyramid_t *anc);
 
 /** Returns the shape of the pyramid (pyramid or tetrahedron)
  * \param [in] p    Input pyramid.

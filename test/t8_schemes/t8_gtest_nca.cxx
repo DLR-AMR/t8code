@@ -60,6 +60,7 @@ protected:
     t8_eclass_t eclass;
 }; 
 
+
 /**
  * Test the nca for the children of the root-element
  * 
@@ -68,7 +69,7 @@ TEST_P (nca, nca_check_shallow) {
     int i, j;
     const int num_children = ts->t8_element_num_children (correct_nca);
     /* Iterate over all combinations of two children from correct_nca */
-    for (i = 0; i < num_children; i++) {
+    for (i = 0; i < num_children - 1; i++) {
         ts->t8_element_child (correct_nca, i, desc_a);
         for (j = i + 1; j < num_children; j++) {
             ts->t8_element_child (correct_nca, j, desc_b);
@@ -171,9 +172,8 @@ t8_recursive_nca_check(t8_element_t *check_nca, t8_element_t *desc_a,
         for(j = 0; j < num_children_b; j++){
             ts->t8_element_child(parent_b, j, desc_b);
             
-            /*ts->t8_element_set_linear_id(desc_a, 2, 13);
-            ts->t8_element_set_linear_id(desc_b, 2, 33);
-            ts->t8_element_child(desc_b, 1, desc_b);
+            /*ts->t8_element_set_linear_id(desc_a, 2, 11);
+            ts->t8_element_set_linear_id(desc_b, 4, 1586);
             ts->t8_element_debug_print(desc_a);
             ts->t8_element_debug_print(desc_b);
             ts->t8_element_set_linear_id(check_nca, 0, 0);
@@ -197,10 +197,19 @@ t8_recursive_nca_check(t8_element_t *check_nca, t8_element_t *desc_a,
                 t8_debugf("id of desc_b: %li, level: %i\n", 
                 ts->t8_element_get_linear_id(desc_b, level_b), level_b);
 
+                for(int k = SC_MAX(level_a, level_b); k >= 0; k--){
+                    t8_debugf("id of desc_a: %li, level: %i\n", 
+                    ts->t8_element_get_linear_id(desc_a, k), k);
+                    t8_debugf("id of desc_b: %li, level: %i\n", 
+                    ts->t8_element_get_linear_id(desc_b, k), k);
+                }
+
                 t8_debugf("id of the correct nca: %li, level: %i\n", 
                 ts->t8_element_get_linear_id(check_nca, level_c), level_c);
+
                 t8_debugf("id of the computed nca: %li, level: %i\n",
                 ts->t8_element_get_linear_id(check, level_nca), level_nca);
+
                 SC_ABORT("Computed nca is not the correct nca!\n");
             }
             /* parent_a stays fixed, b-part goes one level deeper into the recursion */
