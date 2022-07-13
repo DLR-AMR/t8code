@@ -40,7 +40,8 @@ protected:
         ts->t8_element_new (1, &desc_a);
         ts->t8_element_new (1, &desc_b);
         ts->t8_element_new (1, &check);
-        ts->t8_element_set_linear_id (correct_nca, 0, 0);   
+        ts->t8_element_set_linear_id (correct_nca, 0, 0); 
+          
     }   
     void TearDown () override {
         ts->t8_element_destroy (1, &correct_nca);
@@ -48,6 +49,7 @@ protected:
         ts->t8_element_destroy (1, &desc_b);
         ts->t8_element_destroy (1, &check);
         t8_scheme_cxx_unref (&scheme);
+  
     }
     /* correct_nca  -> the nearest common ancestor that we check for
     * desc_a       -> a descendant of correct_nca
@@ -134,6 +136,7 @@ TEST_P(nca, nca_check_deep){
     ts->t8_element_destroy(1, &tmp);
 }
 
+
 /**
  * Recursively check the computation of the nca of all possible combination of descendants of the
  * \a correct_nca that have \a correct_nca as the nca. 
@@ -172,11 +175,11 @@ t8_recursive_nca_check(t8_element_t *check_nca, t8_element_t *desc_a,
         for(j = 0; j < num_children_b; j++){
             ts->t8_element_child(parent_b, j, desc_b);
             
-            /*ts->t8_element_set_linear_id(desc_a, 2, 11);
-            ts->t8_element_set_linear_id(desc_b, 4, 1586);
+            /*ts->t8_element_set_linear_id(desc_a, 3, 413);
+            ts->t8_element_set_linear_id(desc_b, 4, 3578);
             ts->t8_element_debug_print(desc_a);
             ts->t8_element_debug_print(desc_b);
-            ts->t8_element_set_linear_id(check_nca, 0, 0);
+            ts->t8_element_set_linear_id(check_nca, 1, 5);
             t8_debugf("[D] correct_nca: \n");
             ts->t8_element_debug_print(check_nca);*/
 
@@ -278,7 +281,7 @@ TEST_P(nca, resursive_check_higher_level)
     t8_element_t *parent_b;
     t8_element_t *correct_nca_high_level;
     int     num_children;
-    int i;
+    int i, k, l;
     t8_gloidx_t leafs_on_level;
     EXPECT_TRUE(max_lvl-recursion_depth >= 0);
 
@@ -296,10 +299,15 @@ TEST_P(nca, resursive_check_higher_level)
         num_children = ts->t8_element_num_children(correct_nca_high_level);
         if(num_children > 1)
         {
-            ts->t8_element_child(correct_nca_high_level, 0, parent_a);
-            ts->t8_element_child(correct_nca_high_level, num_children-1, parent_b); 
-            t8_recursive_nca_check(correct_nca_high_level, desc_a, desc_b, check, parent_a, 
-            parent_b, i, ts);
+            for(k = 0; k < num_children - 1; k++){
+            ts->t8_element_child(correct_nca_high_level, k, parent_a);
+                for(l = k+1; l < num_children; l++){
+                    ts->t8_element_child(correct_nca_high_level, l, parent_b); 
+                    t8_recursive_nca_check(correct_nca_high_level, desc_a, desc_b, check, parent_a, 
+                                        parent_b, i, ts);
+
+                }
+            }
         }
         else{
             GTEST_SKIP();

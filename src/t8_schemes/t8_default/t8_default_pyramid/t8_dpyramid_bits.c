@@ -1725,10 +1725,12 @@ t8_dpyramid_ancestor (const t8_dpyramid_t *pyra, const int level,
        * then the parent is already a pyramid. */
       int                 last_tet_level =
         t8_dpyramid_is_inside_tet (&tmp_pyra, current_level, &last_tet);
-
       if (last_tet_level != 0) {
         /* last_tet was calculated by t8_dpyramid_is_inside_tet */
         current_level = SC_MAX (last_tet_level, level);
+        if (current_level > last_tet_level) {
+          t8_dtet_ancestor (pyra, current_level, &last_tet);
+        }
         type_at_level = last_tet.type;
       }
       else {
@@ -1753,6 +1755,7 @@ t8_dpyramid_ancestor (const t8_dpyramid_t *pyra, const int level,
       }
       T8_ASSERT (level == current_level);
       anc->type = type_at_level;
+
       return;
     }
   }
@@ -1857,7 +1860,6 @@ t8_dpyramid_nca (const t8_dpyramid_t *pyra1,
       t8_dpyramid_switches_type_at_level (pyra1);
     int                 level_switch_pyra2 =
       t8_dpyramid_switches_type_at_level (pyra2);
-
     t8_dpyramid_ancestor (pyra1, real_level, &pyra1_anc);
     t8_dpyramid_ancestor (pyra2, real_level, &pyra2_anc);
 
@@ -1936,6 +1938,10 @@ t8_dpyramid_is_valid (const t8_dpyramid_t *p)
                           || shape == T8_ECLASS_TET);
   /*Check the type */
   is_valid = is_valid && 0 <= p->type && p->type < T8_DPYRAMID_NUM_TYPES;
+
+  if (p->level == 0) {
+    is_valid = is_valid && (p->type == T8_DPYRAMID_ROOT_TPYE);
+  }
 
   return is_valid;
 }
