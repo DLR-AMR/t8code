@@ -364,7 +364,8 @@ t8_forest_adapt (t8_forest_t forest)
       tscheme->t8_element_print_element(elements_from[0]);
 #endif
 
-      T8_ASSERT (is_family || refine >= 0);
+      T8_ASSERT (is_family || refine >= 0 || (tscheme->t8_element_is_subelement (current_element) && refine == -1));
+
       if (refine > 0
           && tscheme->t8_element_level (elements_from[0]) >=
           forest->maxlevel) {
