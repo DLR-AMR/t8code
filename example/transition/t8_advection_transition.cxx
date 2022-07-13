@@ -20,7 +20,8 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* In this example, we solve the linear advection equation for the 2D quad scheme with subelements (transitioning can be turned on and off).
+/* Description:
+ * In this example, we solve the linear advection equation for the 2D quad scheme with subelements (transitioning can be turned on and off).
  * There are the following configurations that can be used to investigate the behavior of subelements in an examplary application. 
  * 
  *  1) Use an geometric initial refinement scheme:
@@ -1234,10 +1235,11 @@ t8_advect_replace (t8_forest_t forest_old,
                                        first_incoming + i);
 
       /* compute the vertices of the recent incoming element */
-      int                 corner_coords_in_x[ts->t8_element_num_faces
-                                             (elem_in_iterate)] = { };
-      int                 corner_coords_in_y[ts->t8_element_num_faces
-                                             (elem_in_iterate)] = { };
+      int elem_num_faces_in = ts->t8_element_num_faces (elem_in_iterate);
+      int                 corner_coords_in_x[elem_num_faces_in];
+      memset(corner_coords_in_x, 0, elem_num_faces_in*sizeof(int));
+      int                 corner_coords_in_y[elem_num_faces_in];
+      memset(corner_coords_in_y, 0, elem_num_faces_in*sizeof(int));
 
       int                 corner_iterate_in;
       for (corner_iterate_in = 0;
@@ -1250,7 +1252,8 @@ t8_advect_replace (t8_forest_t forest_old,
         corner_coords_in_y[corner_iterate_in] = corner_coords[1];
       }
 
-      int                 cap[num_outgoing] = { };
+      int                 cap[num_outgoing];
+      memset(cap, 0, num_outgoing*sizeof(int));
       for (j = 0; j < num_outgoing; j++) {
         cap[j] = 0;
         /* get the recent incoming element */
@@ -1457,7 +1460,8 @@ t8_advect_replace (t8_forest_t forest_old,
       corner_coords_in_y[11] =
         corner_coords_in_y[5] / 2 + corner_coords_in_y[0] / 2;
 
-      int                 cap[num_outgoing] = { };
+      int                 cap[num_outgoing];
+      memset(cap, 0, num_outgoing*sizeof(int));
       for (j = 0; j < num_outgoing; j++) {
         cap[j] = 0;
         /* get the recent outgoing element */
@@ -1469,10 +1473,11 @@ t8_advect_replace (t8_forest_t forest_old,
         ts->t8_element_print_element (elem_out_iterate);
 
         /* compute the vertices of the recent outgoing element */
-        int                 corner_coords_out_x[ts->t8_element_num_faces
-                                                (elem_out_iterate)] = { };
-        int                 corner_coords_out_y[ts->t8_element_num_faces
-                                                (elem_out_iterate)] = { };
+        int elem_num_faces_out = ts->t8_element_num_faces (elem_out_iterate);
+        int                 corner_coords_out_x[elem_num_faces_out];
+        memset(corner_coords_out_x, 0, elem_num_faces_out*sizeof(int));
+        int                 corner_coords_out_y[elem_num_faces_out];
+        memset(corner_coords_out_y, 0, elem_num_faces_out*sizeof(int));
 
         int                 corner_iterate_out;
         for (corner_iterate_out = 0; corner_iterate_out < ts->t8_element_num_faces (elem_out_iterate); corner_iterate_out++) {  /* iterate over the corners */
