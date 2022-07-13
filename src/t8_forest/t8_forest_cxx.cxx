@@ -2102,8 +2102,8 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
         /* ancestor is a real ancestor, and thus the neighbor is either the
          * parent or grandparent of the half neighbors. we can return it and
          * the indices. 
-         * If subelements are used it is possible that leaf or ancestor are subelements. 
-         * In both cases we might need to adjust ancestor. */
+         * If transition is used then it is possible that leaf or ancestor are subelements. 
+         * In both cases further adjustments are required. */
 
         /* We need to determine the dual face */
         if (neigh_scheme->t8_element_level (ancestor) ==
@@ -2124,11 +2124,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
         }
         else {
           /* The ancestor is the parent of the parent */
-          if (neigh_scheme->t8_element_level (ancestor) !=
-              ts->t8_element_level (leaf) - 1) {
-            neigh_scheme->t8_element_print_element (ancestor);
-            ts->t8_element_print_element (leaf);
-          }
+
           /* TODO: sometimes the below assertion is triggered and we need to understand why - might be a bug with type 15. */
           T8_ASSERT (neigh_scheme->t8_element_level (ancestor) ==
                      ts->t8_element_level (leaf) - 1);
@@ -2147,8 +2143,9 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
                                                          *dual_faces[0]);
           }
         }
-        /* At this point, the neighbor transition cell is found. "ancestor" is one of its subelements. */
+        
         if (neigh_scheme->t8_element_is_subelement (ancestor)) {
+          /* At this point, the neighbor transition cell is found. "ancestor" is one of its subelements. */
           /* We need to identify the right subelement within this transition cell by using the subelement index. */
 
           /* analogue, call its index "pseudo_neighbor_index" */
@@ -2205,13 +2202,15 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
               const t8_element_t *testneighbor;
               testneighbor =
                 t8_forest_ghost_get_element (forest, lghost_treeid, ghost_element_index + sign * i);
-              
-              int                 sub_id_of_testneighbor =
-              ts->t8_element_get_subelement_id (testneighbor);
 
-              if (sub_id_of_testneighbor == leaf_neighbor_sub_id) { /* neighbor found */
-                T8_ASSERT (ts->t8_element_get_transition_type (testneighbor) == ts->t8_element_get_transition_type (ancestor)); /* both elements should be siblings or equal */
-                element_index = element_index + sign * i; /* adjust element index */
+              if (ts->t8_element_get_subelement_id (testneighbor) == leaf_neighbor_sub_id) { /* neighbor found */
+
+                /* both elements should be siblings or equal */
+                T8_ASSERT (ts->t8_element_get_transition_type (testneighbor) == ts->t8_element_get_transition_type (ancestor));
+                
+                /* adjust element index */
+                element_index = element_index + sign * i;
+                
                 neighbor_found = 1;
 
                 /* free memory */
@@ -2241,6 +2240,19 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
           }                     /* end of if neighbor is ghost */
 
         }                       /* end of the if neighbor is subelement case */
+
+        /* free memory */
+        neigh_scheme->t8_element_destroy (num_children_at_face - 1,
+                                          neighbor_leafs + 1);
+        /* copy the ancestor */
+        neigh_scheme->t8_element_copy (ancestor, neighbor_leafs[0]);
+        /* set return values */
+        *num_neighbors = 1;
+        *pelement_indices = T8_ALLOC (t8_locidx_t, 1);
+        (*pelement_indices)[0] = element_index;
+
+        T8_FREE (owners);
+        return;
 
       }                         /* end of (t8_element_compare < 0) || leaf is subelement */
 
