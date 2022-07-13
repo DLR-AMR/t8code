@@ -20,10 +20,14 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/* Description:
+ * In this example, we construct an adaptive mesh that should either be balanced or transitioned.
+ * After that, we iterate through all elements and all faces of the mesh and call the LFN function to compute the neighbor elements.
+ * This way, balanced and transitioned meshes can be compared.
+ */
+
 #include <t8_schemes/t8_quads_transition/t8_transition/t8_transition_quad_cxx.hxx>
 #include <t8_schemes/t8_quads_transition/t8_transition_cxx.hxx>
-#include <t8_forest/t8_forest_adapt.h>
-#include <t8_forest.h>
 #include <t8_vec.h>
 #include <example/common/t8_example_common.h>
 
@@ -79,7 +83,8 @@ t8_test_leaf_face_neighbors (const t8_forest_t forest_adapt)
     t8_forest_get_num_global_trees (forest_adapt);
   const t8_element_t *current_element;
   t8_locidx_t         ltree_id = 0, forest_is_balanced = 1;
-  int                *dual_faces, num_neighbors;
+  int                *dual_faces;
+  int                 num_neighbors;
   t8_element_t      **neighbor_leafs;
   t8_locidx_t        *element_indices;
   t8_eclass_scheme_c *neigh_scheme;
@@ -97,7 +102,9 @@ t8_test_leaf_face_neighbors (const t8_forest_t forest_adapt)
   ts = t8_forest_get_eclass_scheme (forest_adapt, eclass);
 
   /* the leaf_face_neighbor function determins neighbor elements of current_element at face face_id in a balanced forest forest_adapt */
-  int element_index_in_tree, face_id;
+  int element_index_in_tree;
+  int face_id;
+  int neighbor_count;
   for (element_index_in_tree = 0; element_index_in_tree < local_num_elements; element_index_in_tree++) {
     t8_debugf("local_num_elements: %i\n", local_num_elements);
     t8_debugf("element_index_in_tree: %i\n", element_index_in_tree);
@@ -126,18 +133,17 @@ t8_test_leaf_face_neighbors (const t8_forest_t forest_adapt)
       time_leaf_face_neighbor += sc_MPI_Wtime ();
 
       /* note, that after using subelements, there will only be one neighbor for each element and each face */
-      int                 i;
-      for (i = 0; i < num_neighbors; i++) {
+      for (neighbor_count = 0; neighbor_count < num_neighbors; neighbor_count++) {
         /* print the neighbor element */
         if (num_neighbors > 1) {
-          t8_debugf ("\nNeighbor %i of %i at face %i (Test LFN):\n", i+1, num_neighbors, face_id);
-          t8_print_element_data (neighbor_leafs[i]);
-          t8_debugf ("    Element index in tree: %i \n", element_indices[i]);
+          t8_debugf ("\nNeighbor %i of %i at face %i (Test LFN):\n", neighbor_count+1, num_neighbors, face_id);
+          t8_print_element_data (neighbor_leafs[neighbor_count]);
+          t8_debugf ("    Element index in tree: %i \n", element_indices[neighbor_count]);
         }
         else {
           t8_debugf ("\nNeighbor at face %i (Test LFN):\n", face_id);
-          t8_print_element_data (neighbor_leafs[i]);
-          t8_debugf ("    Element index in tree: %i \n", element_indices[i]);
+          t8_print_element_data (neighbor_leafs[neighbor_count]);
+          t8_debugf ("    Element index in tree: %i \n", element_indices[neighbor_count]);
         }
       }
 
@@ -161,7 +167,7 @@ t8_test_leaf_face_neighbors (const t8_forest_t forest_adapt)
   t8_productionf ("Local #elements: %i  (#quads: %i, #subelements: %i)\n", local_num_elements, local_num_elements-subelement_count, subelement_count);
   t8_productionf ("# LFN calls: %i\n", leaf_face_neighbor_call_count);
   t8_productionf ("LFN runtime: %f\n", time_leaf_face_neighbor);
-  t8_productionf ("LFN runtime per call: %f\n", time_leaf_face_neighbor/(float) leaf_face_neighbor_call_count);
+  t8_productionf ("LFN runtime per call: %.9f\n", time_leaf_face_neighbor/(float) leaf_face_neighbor_call_count);
 }
 
 /* Initializing and adapting a forest */
@@ -176,14 +182,14 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   char                filename[BUFSIZ];
 
   /* refinement setting */
-  int                 initlevel = 6;    /* initial uniform refinement level */
+  int                 initlevel = 10;    /* initial uniform refinement level */
   int                 adaptlevel = 6;
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening (minlevel <= initlevel) */
   int                 maxlevel = initlevel + adaptlevel;     /* highest level allowed for refining */
 
   /* adaptation setting */
   int                 do_balance = 1;
-  int                 do_transition = 1;
+  int                 do_transition = 0;
 
   /* cmesh settings (only one of the following suggestions should be one, the others 0) */
   int                 single_tree = 1;
@@ -198,7 +204,7 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   int                 ghost_version = 3;
 
   /* vtk setting */
-  int                 do_vtk = 1;
+  int                 do_vtk = 0;
 
   /* LFN settings */
   int                 do_LFN_test = 1;
@@ -242,10 +248,10 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   sdata.mid_point[0] = 0;    // 1.0 / 2.0 + shift_x * 1.0/(1 << (minlevel));
   sdata.mid_point[1] = 0;    // 1.0 / 2.0 + shift_y * 1.0/(1 << (minlevel)); 
   sdata.mid_point[2] = 0;
-  sdata.radius = 0.6;
+  sdata.radius = 0.0;
 
   /* refinement parameter */
-  ls_data.band_width = 5;
+  ls_data.band_width = 1;
   ls_data.L = t8_basic_level_set_sphere;
   ls_data.min_level = minlevel;
   ls_data.max_level = maxlevel;

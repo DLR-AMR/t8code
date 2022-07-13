@@ -22,16 +22,13 @@
 
 /** \file t8_transition_quad_cxx.hxx
  * We use a p4est_quadrant_t object as storage for the T8 quadrant.
- * Additionally, we store some more information to use subelements on top 
- * of some recursive quad refinement. This information is 
+ * Additionally, we store information for transition cells of triangular subelements:
  * 
- *     dummy_is_subelement (is a given element a subelement?)
- *     transition_type (what type of transition cell is used?)
- *     subelement_id (what subelement of the transition cell is the given subelement?)
+ *     (i)  transition_type - type of the transition cell of the current element
+ *     (ii) subelement_id - subelement id of the current element
  * 
- * In order to refine a quad element using subelements, it is important to know these additional information. 
- * We can use them for example to determine the coordinates of the subelement vertices, 
- * since they can differ for subelements of the same id but a different subelement type. */
+ * In order to refine a quad element into a transition cell, it is important to know these additional parameter. 
+ */
 
 #ifndef T8_TRANSITION_QUAD_CXX_HXX
 #define T8_TRANSITION_QUAD_CXX_HXX

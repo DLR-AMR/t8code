@@ -20,20 +20,22 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_schemes/t8_quads_transition/t8_transition_cxx.hxx>
-#include <example/common/t8_example_common.h>
-
-/* In this test, a single quad element is refined into a transition cell of a specific type. 
+/* Description:
+ * In this test, a single quad element is refined into a transition cell of a specific type. 
  * In order to do so, relevant subelement functions like 
  *
- *       i) t8_element_get_number_of_subelements
- *      ii) t8_element_to_transition_cell
+ *     i)   t8_element_get_number_of_subelements
+ *     ii)  t8_element_to_transition_cell
  *     iii) t8_element_shape
- *      iv) t8_element_vertex_coords -> t8_element_vertex_coords_of_subelement
+ *     iv)  t8_element_vertex_coords -> t8_element_vertex_coords_of_subelement
  * 
  * are executed and can be validated easily. 
  * Additionally, the resulting coordinates of all subelements, are returned.
  * At the moment, subelements are only implemented for the quad scheme with valid subelement types from 1 to 15. */
+
+#include <t8_schemes/t8_quads_transition/t8_transition_cxx.hxx>
+#include <example/common/t8_example_common.h>
+
 static void
 t8_refine_quad_to_subelements ()
 {
@@ -43,11 +45,15 @@ t8_refine_quad_to_subelements ()
   t8_scheme_cxx_t    *ts = t8_scheme_new_subelement_cxx ();
   t8_eclass_scheme_c *class_scheme;
   t8_element_t       *element;
-  int                 eclass, subelement_id, vertex_id, coords[P4EST_DIM],
-    num_subelements, num_vertices;
+  int                 eclass;
+  int                 subelement_id;
+  int                 vertex_id;
+  int                 coords[P4EST_DIM];
+  int                 num_subelements;
+  int                 num_vertices;
 
   /* Chose a type between 1 and 15 */
-  int                 type = 15;
+  int                 type = 8;
 
   /* At the moment, subelements are only implemented for the quad scheme. */
   eclass = T8_ECLASS_QUAD;
@@ -105,13 +111,22 @@ int
 main (int argc, char **argv)
 {
   int                 mpiret;
+  
   mpiret = sc_MPI_Init (&argc, &argv);
+  
   SC_CHECK_MPI (mpiret);
+  
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
+  
   t8_init (SC_LP_DEFAULT);
+  
   t8_refine_quad_to_subelements ();
+  
   sc_finalize ();
+  
   mpiret = sc_MPI_Finalize ();
+  
   SC_CHECK_MPI (mpiret);
+  
   return 0;
 }

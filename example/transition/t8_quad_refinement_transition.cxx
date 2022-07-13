@@ -20,7 +20,8 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* Description: In this example we use the transition routine to remove hanging faces from an adaptive mesh. 
+/* Description: 
+ * In this example we use the transition routine to remove hanging faces from an adaptive mesh. 
  *     1) At first, a cmesh is created and a uniform version initialized. 
  *     2) Then, it is adapted using some geometric refinement criterion and balanced 
  *     3) Finally, the transition routine is used to remove hanging faces, 
@@ -149,16 +150,16 @@ t8_refine_transition (t8_eclass_t eclass, int initlevel, int adaptlevel)
 
   /* refinement settings */
 #if 1 /* overwrite init and adapt level */
-                      initlevel = 2;    /* initial uniform refinement level */
-                      adaptlevel = 2;   /* number of additional adapt levels */
+                      initlevel = 5;    /* initial uniform refinement level */
+                      adaptlevel = 4;   /* number of additional adapt levels */
 #endif
   int                 minlevel = initlevel;   /* lowest level allowed for coarsening */
   int                 maxlevel = initlevel + adaptlevel;    /* highest level allowed for refining */
 
   int                 refine_recursive = 1;
   int                 do_exemplary_refinement = 0;
-  int                 num_steps = 1;    /* Number of times, the mesh is refined */
-  double              radius_increase = 0.5;   /* The value, the radius increases after each timestep */ 
+  int                 num_steps = 3;    /* Number of times, the mesh is refined */
+  double              radius_increase = 0.15;   /* The value, the radius increases after each timestep */ 
 
   /* cmesh settings (only one of the following suggestions should be one, the others 0) */
   int                 single_tree = 1;
@@ -166,8 +167,8 @@ t8_refine_transition (t8_eclass_t eclass, int initlevel, int adaptlevel)
   int                 hybrid_cmesh = 0;
 
   /* adaptation setting */
-  int                 do_balance = 1;
-  int                 do_transition = 0; /* it is not necessary to set do_balance when using do_transition */
+  int                 do_balance = 0;
+  int                 do_transition = 1; /* it is not necessary to set do_balance when using do_transition */
 
   /* Ghost settings if MPI is enabled */
   int                 do_ghost = 1;
@@ -211,10 +212,10 @@ t8_refine_transition (t8_eclass_t eclass, int initlevel, int adaptlevel)
   /* shift the midpoiunt of the circle by (shift_x,shift_y) to ensure midpoints on corners of the uniform mesh */
   // int  shift_x = 0;      /* shift_x, shift_y should be smaler than 2^minlevel / 2 such that midpoint stays in the quadrilateral tree */
   // int  shift_y = 0;
-  sdata.mid_point[0] = -10.0;    // 1.0 / 2.0 + shift_x * 1.0/(1 << (minlevel));
-  sdata.mid_point[1] = 0.5;    // 1.0 / 2.0 + shift_y * 1.0/(1 << (minlevel)); 
+  sdata.mid_point[0] = 0.25;    // 1.0 / 2.0 + shift_x * 1.0/(1 << (minlevel));
+  sdata.mid_point[1] = 0.25;    // 1.0 / 2.0 + shift_y * 1.0/(1 << (minlevel)); 
   sdata.mid_point[2] = 0;
-  sdata.radius = 10.25;
+  sdata.radius = 0.1;
 
   /* refinement parameter */
   ls_data.band_width = 1.0;

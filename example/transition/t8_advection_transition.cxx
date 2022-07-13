@@ -873,7 +873,7 @@ t8_advect_compute_element_data (t8_advect_problem_t * problem,
                               tree_vertices);
 }
 
-static int
+bool
 t8_advect_global_conservation_check (double scaled_global_phi_beginning, double scaled_global_phi_end)
 {
   double a = 1.0;
@@ -882,10 +882,10 @@ t8_advect_global_conservation_check (double scaled_global_phi_beginning, double 
   double diff_phi_global = scaled_global_phi_beginning - scaled_global_phi_end;
   double abs_diff_phi_global = ((diff_phi_global < 0) ? -diff_phi_global : diff_phi_global);
   t8_global_essentialf ("global_phi_beginning: %e global_phi_end: %e abs_diff_phi_global: %e, precision constant: %e\n", scaled_global_phi_beginning, scaled_global_phi_end, abs_diff_phi_global, small_epsilon);
-  return ((abs_diff_phi_global < small_epsilon) ? 1 : 0);
+  return ((abs_diff_phi_global < small_epsilon) ? true : false);
 }
 
-static int
+bool
 t8_advect_conservation_check_phi (double outgoing_phi, double incoming_phi) 
 {
   double a = 1.0;
@@ -894,10 +894,10 @@ t8_advect_conservation_check_phi (double outgoing_phi, double incoming_phi)
   double diff_phi = outgoing_phi - incoming_phi;
   double abs_diff_phi = ((diff_phi < 0) ? -diff_phi : diff_phi);
   t8_debugf ("outgoing_phi: %e incoming_phi: %e abs_diff_phi: %e, precision constant: %e\n", outgoing_phi, incoming_phi, abs_diff_phi, small_epsilon);
-  return ((abs_diff_phi < small_epsilon) ? 1 : 0);
+  return ((abs_diff_phi < small_epsilon) ? true : false);
 }
 
-static int
+bool
 t8_advect_conservation_check_volume (double outgoing_volume, double incoming_volume) 
 {
   double a = 1.0;
@@ -906,7 +906,7 @@ t8_advect_conservation_check_volume (double outgoing_volume, double incoming_vol
   double diff_volume = outgoing_volume - incoming_volume;
   double abs_diff_volume = ((diff_volume < 0) ? -diff_volume : diff_volume);
   t8_debugf ("outgoing_volume: %e incoming_volume: %e abs_diff_volume: %e, precision constant: %e\n", outgoing_volume, incoming_volume, abs_diff_volume, small_epsilon);
-  return ((abs_diff_volume < small_epsilon) ? 1 : 0);
+  return ((abs_diff_volume < small_epsilon) ? true : false);
 }
 
 /* Replace callback to interpolate a refined or coarsened element.

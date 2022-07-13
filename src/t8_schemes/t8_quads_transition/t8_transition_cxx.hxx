@@ -20,9 +20,8 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_subelements_cxx.hxx
- * This file is the point of entry for our subelement implementation.
- *
+/** \file t8_transition_cxx.hxx
+ * This file is the point of entry for our transition implementation.
  * This scheme points to a consistent implementation of all element classes.
  */
 

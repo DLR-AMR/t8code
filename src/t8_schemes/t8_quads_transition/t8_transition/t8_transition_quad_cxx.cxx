@@ -20,12 +20,13 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* This is the low-level structure of 2D quadrilateral elements with subelements that remove hanging faces in balanced forests.
- * It is a mixture of functions, specific for quads, triangular subelements. Some functions are extended for subelements and work for both element types. */
+/* Description:
+ * This is the low-level structure of 2D quadrilateral elements with transition cells of triangular subelements. */
 
 #include <p4est_bits.h>
 #include <t8_schemes/t8_default/t8_dline_bits.h>
 #include <t8_schemes/t8_default/t8_default_common_cxx.hxx>
+#include "t8.h"
 #include "t8_transition_quad_cxx.hxx"
 
 /* *INDENT-OFF* */
@@ -132,6 +133,7 @@ t8_subelement_scheme_quad_c::t8_element_compare (const t8_element_t * elem1,
 
   int                 compare = p4est_quadrant_compare (q, r);
 
+  /* TODO: think about how this should be implemented for subelements */
   if (compare == 0) {
     if (t8_element_is_subelement (elem1)
         && t8_element_is_subelement (elem2)) {
@@ -263,11 +265,9 @@ t8_subelement_scheme_quad_c::t8_element_num_face_children (const t8_element_t
                                                            * elem, int face)
 {
   T8_ASSERT (t8_element_is_valid (elem));
+  /* this function is not implemented for subelements */
+  T8_ASSERT(!t8_element_is_subelement(elem));
 
-  /* Caution: 
-   *   This function works for quads and triangular subelements. 
-   *   We return 2 as the number of children at a face of a triangular. 
-   *   This might make sense for face id = 1 but not for face id 0 or 2 since those faces point towards a sibling subelement which can not be refined further. */  
   return 2;
 }
 
@@ -1749,10 +1749,12 @@ t8_subelement_scheme_quad_c::t8_element_is_subelement (const
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) elem;
 
+  T8_ASSERT(pquad_w_sub->transition_type >= 0);
+
   /* transition_type == 0 => elem is no subelement.
    * transition_type != 0 => elem is subelement 
    */
-  return (pquad_w_sub->transition_type == 0 ? 0 : 1);
+  return (pquad_w_sub->transition_type == 0 ? false : true);
 }
 
 int
