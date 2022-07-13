@@ -38,6 +38,113 @@
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
+int
+t8_forest_is_incomplete_family (t8_forest_t forest,
+                                t8_locidx_t ltree_id,
+                                t8_locidx_t lelement_id,
+                                t8_eclass_scheme_c *ts,
+                                t8_element_t **elements,
+                                int num_siblings)
+{
+  size_t              zz, num_elements, size_family;
+  int                 level_current, level_temp, child_id_current, child_id_temp;
+  t8_tree_t           tree;
+  t8_element_array_t *telements;
+
+  t8_element_t       *element_parent_compare, *element_parent_current, *element_temp;
+
+  ts->t8_element_new(1, &element_parent_compare);
+  ts->t8_element_new(1, &element_parent_current);
+  ts->t8_element_new(1, &element_temp);
+
+  size_family = num_siblings;
+  num_elements = t8_forest_get_tree_num_elements (forest, ltree_id);
+  
+  /* Get level and child id of first element in family */
+  child_id_current = ts->t8_element_child_id (elements[0]);
+  level_current = ts->t8_element_level(elements[0]);
+  
+  /* Test 1: Check if already considered elements of current family passed,
+    * so current considered element can not get coarsed any more.
+    * */
+  if (!child_id_current && lelement_id > 0) {
+    tree = t8_forest_get_tree (forest, ltree_id);
+    telements = &tree->elements;
+    element_temp = t8_element_array_index_locidx (telements, lelement_id - 1);
+    child_id_temp = ts->t8_element_child_id (element_temp);
+
+    if (child_id_temp < child_id_current) {
+      // koennten hier vorher noch die level vergleichen
+      ts->t8_element_parent(element_temp, element_parent_compare);
+      if (!ts->t8_element_compare(element_parent_current, element_parent_compare)) {
+        /* coarsening is not possible */
+        size_family = 0;
+      }
+    }
+  }
+
+  /* Test 2: Level */
+  if (size_family > 1) {
+    for (zz = 1; zz < (unsigned int) num_siblings &&
+            lelement_id + (t8_locidx_t) zz < num_elements; zz++) {
+      level_temp = ts->t8_element_level(elements[zz]);
+      if (level_temp != level_current) {
+        size_family = zz;
+        break;
+      }
+    }
+  }
+
+  /* Test 3: Parents */
+  if (size_family > 1) {
+    ts->t8_element_parent(elements[0], element_parent_current);
+    for (zz = 1; zz < size_family; zz++) {
+      ts->t8_element_parent(elements[zz], element_parent_compare);
+      if (0 != ts->t8_element_compare(element_parent_current,element_parent_compare)) {
+        size_family = zz;
+        break;
+      }
+    }
+  }
+
+  /* Test 4: right boarder */
+  if (size_family > 0) {
+    level_temp = ts->t8_element_level(elements[size_family]);
+    /* Only elements with higher level then level of current element, can get 
+     * potentially be overlapped. */
+    if (level_temp > level_current) {
+      if (tree->eclass == T8_ECLASS_PYRAMID) {
+        ts->t8_element_copy(elements[size_family], element_parent_compare);
+        /* level_current-1 is level of element_parent_current */
+        while(level_temp > level_current-1) {
+          ts->t8_element_parent (element_parent_compare, element_parent_compare);
+          level_temp = ts->t8_element_level(element_parent_compare);
+        }
+        if (!ts->t8_element_compare(element_parent_current, element_parent_compare)) {
+          size_family = 0;
+        }
+      }
+      else {
+        ts->t8_element_nca(element_parent_current, elements[size_family], 
+                                element_parent_compare);
+        level_temp = ts->t8_element_level(element_parent_compare);
+        /* level_current-1 is level of element_parent_current */
+        T8_ASSERT(level_temp <= level_current-1);
+        if(level_temp == level_current-1) {
+          size_family = 0;
+        }
+      }
+    }
+  }
+
+  /* clean up */
+  ts->t8_element_destroy(1, &element_parent_current);
+  ts->t8_element_destroy(1, &element_parent_compare);
+  ts->t8_element_destroy(1, &element_temp);
+
+  return size_family;
+}
+
 /* Compute the maximum possible refinement level in a forest. */
 void
 t8_forest_compute_maxlevel (t8_forest_t forest)
