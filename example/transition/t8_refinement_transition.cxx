@@ -21,9 +21,11 @@
 */
 
 /* Description:
- * In this example, we construct an adaptive mesh that should either be balanced or transitioned.
- * After that, we iterate through all elements and all faces of the mesh and call the LFN function to compute the neighbor elements.
- * This way, balanced and transitioned meshes can be compared.
+ * This is the example file for refinement with transitioning. In this testcase, we are able to
+ *     (i)   refine a mesh according to some refinement criterion and use transiton cells to make the mesh conformal
+ *     (ii)  use multiple adaptation steps in which the refinement criterion changes (e.g. the geometry)
+ *     (iii) decide, whether we want to check the LFN function for each mesh
+ *     (iv)  decide, whether we want to get statistics printed out, regarding # of elements in the meshes and runtime infos of the several functions or other debugging information
  */
 
 #include "t8.h"
