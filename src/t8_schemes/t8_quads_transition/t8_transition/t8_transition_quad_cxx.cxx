@@ -2203,11 +2203,14 @@ t8_subelement_scheme_quad_c::t8_element_print_element (const t8_element_t *
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) elem;
 
-  t8_productionf ("Transition Type: %i\n", pquad_w_sub->transition_type);
-  t8_productionf ("Subelement ID:   %i\n", pquad_w_sub->subelement_id);
-  t8_productionf ("Anchor:          (%i,%i)\n", pquad_w_sub->p4q.x,
-                  pquad_w_sub->p4q.y);
-  t8_productionf ("Level:           %i\n\n", pquad_w_sub->p4q.level);
+  t8_productionf ("\n");
+  t8_productionf ("|----- t8_element_print_element: -----|\n");
+  t8_productionf ("|    Transition Type: %i\n", pquad_w_sub->transition_type);
+  t8_productionf ("|    Subelement ID:   %i\n", pquad_w_sub->subelement_id);
+  t8_productionf ("|    Anchor:          (%i,%i)\n", pquad_w_sub->p4q.x, pquad_w_sub->p4q.y);
+  t8_productionf ("|    Level:           %i\n", pquad_w_sub->p4q.level);
+  t8_productionf ("|-------------------------------------|\n");
+  t8_productionf ("\n");
 }
 
 #ifdef T8_ENABLE_DEBUG
