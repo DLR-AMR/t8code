@@ -1735,7 +1735,8 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem, int measure_time)
     t8_forest_set_transition (problem->forest_adapt, NULL);
   }
   /* We also want ghost elements in the new forest */
-  t8_forest_set_ghost (problem->forest_adapt, 1, T8_GHOST_FACES);
+  t8_forest_set_ghost_ext (problem->forest_adapt, 1, T8_GHOST_FACES, 1); /* need ghost version 1 for transition cells */
+  // t8_forest_set_ghost (problem->forest_adapt, 1, T8_GHOST_FACES);
   /* Commit the forest, adaptation and balance happens here */
   t8_forest_commit (problem->forest_adapt);
 
@@ -1849,7 +1850,8 @@ t8_advect_problem_adapt_init (t8_advect_problem_t * problem, int measure_time)
     t8_forest_set_transition (problem->forest_adapt, NULL);
   }
   /* We also want ghost elements in the new forest */
-  t8_forest_set_ghost (problem->forest_adapt, 1, T8_GHOST_FACES);
+  t8_forest_set_ghost_ext (problem->forest_adapt, 1, T8_GHOST_FACES, 1); /* need ghost version 1 for transition cells */
+  // t8_forest_set_ghost (problem->forest_adapt, 1, T8_GHOST_FACES);
   /* Commit the forest, adaptation and balance happens here */
   t8_forest_commit (problem->forest_adapt);
 
@@ -1941,7 +1943,8 @@ t8_advect_problem_partition (t8_advect_problem_t * problem, int measure_time)
   t8_forest_set_profiling (forest_partition, 1);
   /* Partition the forest and create ghosts */
   t8_forest_set_partition (forest_partition, problem->forest, 0);
-  t8_forest_set_ghost (forest_partition, 1, T8_GHOST_FACES);
+  t8_forest_set_ghost_ext (forest_partition, 1, T8_GHOST_FACES, 1); /* need ghost version 1 for transition cells */
+  // t8_forest_set_ghost (forest_partition, 1, T8_GHOST_FACES);
   t8_forest_commit (forest_partition);
   /* Add runtimes to internal stats */
   if (measure_time) {
@@ -2978,7 +2981,7 @@ main (int argc, char *argv[])
                       "if their volume is smaller than the l+V-times refined\n"
                       " smallest element int the mesh.");
 
-  sc_options_add_int (opt, 't', "transition", &do_transition, 0,
+  sc_options_add_int (opt, 't', "transition", &do_transition, 1,
                       "Transition the forest such that it is conformal.");
 
   parsed =
