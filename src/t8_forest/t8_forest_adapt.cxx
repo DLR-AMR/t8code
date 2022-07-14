@@ -79,8 +79,6 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
   pos = *el_inserted - num_children;
   isfamily = 1;
   child_id = ts->t8_element_child_id (element);
-  t8_debugf ("################### Coarsen Recursive ###################\n");
-  t8_debugf ("Pos: %i, el_inserted: %i, el_coarsen: %i\n", pos, *el_inserted, el_coarsen);
   while (isfamily && pos >= el_coarsen && child_id > 0 && child_id == num_children - 1) {
     isfamily = 1;
     /* Get all elements at indices pos, pos + 1, ... ,pos + num_children - 1 */
