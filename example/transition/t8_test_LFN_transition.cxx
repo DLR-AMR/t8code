@@ -50,29 +50,21 @@ t8_basic_level_set_sphere (const double x[3], double t, void *data)
   return t8_vec_dist (M, x) - sdata->radius;
 }
 
-/* Print data of a given element */
 void
-t8_print_element_data (const t8_element_t * element)
+t8_print_stats(int global_num_elements, int local_num_elements, int num_quad_elems, int subelement_count, int LFN_call_count, float time_LFN, float time_LFN_per_call)
 {
-  t8_quad_with_subelements *choosen_element =
-    (t8_quad_with_subelements *) element;
-
-  t8_debugf
-    ("    Coordinates of anchor: (%i,%i) \n", choosen_element->p4q.x,
-     choosen_element->p4q.y);
-  t8_debugf ("    Level:                 %i \n",
-                  choosen_element->p4q.level);
-  t8_debugf ("    Is subelement:         %i \n",
-                  (choosen_element->transition_type == 0 ? 0 : 1));
-  t8_debugf ("    Subelement type:       %i \n",
-                  choosen_element->transition_type);
-  t8_debugf ("    Subelement id:         %i \n",
-                  choosen_element->subelement_id);
+  t8_productionf ("|+++++++++++++++++++++++++ final statistics +++++++++++++++++++++++++|\n");
+  t8_productionf ("|    Global #elements:     %i\n", global_num_elements);
+  t8_productionf ("|    Local #elements:      %i  (#quads: %i, #subelements: %i)\n", local_num_elements, num_quad_elems, subelement_count);
+  t8_productionf ("|    #LFN calls:           %i\n", LFN_call_count);
+  t8_productionf ("|    LFN runtime total:    %f\n", time_LFN);
+  t8_productionf ("|    LFN runtime per call: %.9f\n", time_LFN_per_call);
+  t8_productionf ("|++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|\n");
 }
 
 /* Computing all neighbor elements in forest_adapt */
 void
-t8_test_leaf_face_neighbors (const t8_forest_t forest_adapt)
+t8_test_LFN (const t8_forest_t forest_adapt)
 {
   /* Collecting data of the adapted forest */
   int                 global_num_elements =
@@ -90,9 +82,9 @@ t8_test_leaf_face_neighbors (const t8_forest_t forest_adapt)
   t8_eclass_scheme_c *neigh_scheme;
   t8_eclass_t         eclass;
   t8_eclass_scheme_c *ts;
-  double time_leaf_face_neighbor = 0;
+  double time_LFN = 0;
   int subelement_count = 0;
-  int leaf_face_neighbor_call_count = 0;
+  int LFN_call_count = 0;
 
   /* we only allow one tree with id 0 in this testcase and the current element must come from a valid index within the forest (as well as its face index) */
   T8_ASSERT (global_num_trees == 1); /* TODO: enable multiple trees for this example */
@@ -100,55 +92,48 @@ t8_test_leaf_face_neighbors (const t8_forest_t forest_adapt)
 
   eclass = t8_forest_get_tree_class (forest_adapt, ltree_id);
   ts = t8_forest_get_eclass_scheme (forest_adapt, eclass);
-
+  
+  t8_debugf("Into element loop with %i local elements\n", local_num_elements);
+  
   /* the leaf_face_neighbor function determins neighbor elements of current_element at face face_id in a balanced forest forest_adapt */
   int element_index_in_tree;
   int face_id;
   int neighbor_count;
-  for (element_index_in_tree = 0; element_index_in_tree < local_num_elements; element_index_in_tree++) {
-    t8_debugf("local_num_elements: %i\n", local_num_elements);
-    t8_debugf("element_index_in_tree: %i\n", element_index_in_tree);
+  for (element_index_in_tree = 0; element_index_in_tree < local_num_elements; ++element_index_in_tree) {
+
     /* determing the current element according to the given tree id and element id within the tree */
     current_element =
       t8_forest_get_element_in_tree (forest_adapt, ltree_id,
                                     element_index_in_tree);
 
-    /* print the current element */
-    t8_debugf("\nCurrent element (Test LFN):\n");
-    t8_print_element_data (current_element);
-    t8_debugf("    Element index in tree: %i \n", element_index_in_tree);
+    if (ts->t8_element_is_subelement (current_element)) subelement_count++;;
 
-    if (ts->t8_element_is_subelement (current_element)) {
-      subelement_count++;
-      t8_debugf("subelement_count: %i\n",subelement_count);
-    }
+#if T8_ENABLE_DEBUG /* print the current element */
+    t8_debugf("******************** Current element: ********************\n");
+    t8_debugf("Current element has local index %i of %i\n", element_index_in_tree, local_num_elements);
+    ts->t8_element_print_element(current_element);
+#endif
 
-    for (face_id = 0; face_id < ts->t8_element_num_faces(current_element); face_id++) {
-      leaf_face_neighbor_call_count++;
-      time_leaf_face_neighbor -= sc_MPI_Wtime ();
+    for (face_id = 0; face_id < ts->t8_element_num_faces(current_element); ++face_id) {
+      LFN_call_count++;
+      time_LFN -= sc_MPI_Wtime ();
       t8_forest_leaf_face_neighbors (forest_adapt, ltree_id, current_element,
                                  &neighbor_leafs, face_id, &dual_faces,
                                  &num_neighbors, &element_indices,
                                  &neigh_scheme, forest_is_balanced);
-      time_leaf_face_neighbor += sc_MPI_Wtime ();
-
-      /* note, that after using subelements, there will only be one neighbor for each element and each face */
-      for (neighbor_count = 0; neighbor_count < num_neighbors; neighbor_count++) {
-        /* print the neighbor element */
-        if (num_neighbors > 1) {
-          t8_debugf ("\nNeighbor %i of %i at face %i (Test LFN):\n", neighbor_count+1, num_neighbors, face_id);
-          t8_print_element_data (neighbor_leafs[neighbor_count]);
-          t8_debugf ("    Element index in tree: %i \n", element_indices[neighbor_count]);
-        }
-        else {
-          t8_debugf ("\nNeighbor at face %i (Test LFN):\n", face_id);
-          t8_print_element_data (neighbor_leafs[neighbor_count]);
-          t8_debugf ("    Element index in tree: %i \n", element_indices[neighbor_count]);
-        }
-      }
+      time_LFN += sc_MPI_Wtime ();
 
       /* free memory */
       if (num_neighbors > 0) {
+
+#if T8_ENABLE_DEBUG /* print all neighbor elements */
+        for (neighbor_count = 0; neighbor_count < num_neighbors; neighbor_count++) {
+          t8_debugf ("***** Neighbor %i of %i at face %i: *****\n", neighbor_count+1, num_neighbors, face_id);
+          t8_debugf ("Neighbor has local index %i of %i\n", element_indices[neighbor_count], local_num_elements);
+          ts->t8_element_print_element(neighbor_leafs[neighbor_count]);
+        }
+#endif
+
         neigh_scheme->t8_element_destroy (num_neighbors, neighbor_leafs);
 
         T8_FREE (element_indices);
@@ -156,58 +141,65 @@ t8_test_leaf_face_neighbors (const t8_forest_t forest_adapt)
         T8_FREE (dual_faces);
       }
       else {
-        /* no neighbor in this case */
-        t8_debugf ("\nNeighbor at face %i (Test LFN):\n", face_id);
-        t8_debugf ("    There is no neighbor (domain boundary).\n");
+#if T8_ENABLE_DEBUG /* no neighbor in this case */
+        t8_debugf ("***** Neighbor at face %i: *****\n", face_id);
+        t8_debugf ("There is no neighbor (domain boundary).\n");
+        t8_debugf("\n");
+#endif
       }
-    }
-  }
 
-  t8_productionf ("Global #elements: %i\n", global_num_elements);
-  t8_productionf ("Local #elements: %i  (#quads: %i, #subelements: %i)\n", local_num_elements, local_num_elements-subelement_count, subelement_count);
-  t8_productionf ("# LFN calls: %i\n", leaf_face_neighbor_call_count);
-  t8_productionf ("LFN runtime: %f\n", time_leaf_face_neighbor);
-  t8_productionf ("LFN runtime per call: %.9f\n", time_leaf_face_neighbor/(float) leaf_face_neighbor_call_count);
+    } /* end of face loop */
+
+  } /* end of element loop */
+
+  t8_print_stats(global_num_elements, local_num_elements, local_num_elements-subelement_count, subelement_count, LFN_call_count, time_LFN, time_LFN/(float) LFN_call_count);
 }
 
 /* Initializing and adapting a forest */
 static void
-t8_refine_with_subelements (t8_eclass_t eclass)
+t8_refine_transition (t8_eclass_t eclass)
 {
-  t8_productionf ("Into the t8_refine_with_subelements function");
+  t8_productionf ("Into the t8_refine_transition function");
 
   t8_forest_t         forest;
   t8_forest_t         forest_adapt;
   t8_cmesh_t          cmesh;
   char                filename[BUFSIZ];
 
-  /* refinement setting */
-  int                 initlevel = 10;    /* initial uniform refinement level */
-  int                 adaptlevel = 6;
-  int                 minlevel = initlevel;     /* lowest level allowed for coarsening (minlevel <= initlevel) */
-  int                 maxlevel = initlevel + adaptlevel;     /* highest level allowed for refining */
+  /* ************************************************* Case Settings ************************************************* */
 
-  /* adaptation setting */
-  int                 do_balance = 1;
-  int                 do_transition = 0;
+    /* refinement setting */
+    int                 initlevel = 3;    /* initial uniform refinement level */
+    int                 adaptlevel = 3;
+    int                 minlevel = initlevel;     /* lowest level allowed for coarsening (minlevel <= initlevel) */
+    int                 maxlevel = initlevel + adaptlevel;     /* highest level allowed for refining */
 
-  /* cmesh settings (only one of the following suggestions should be one, the others 0) */
-  int                 single_tree = 1;
-  int                 multiple_tree = 0, num_x_trees = 2, num_y_trees = 1;
-  int                 hybrid_cmesh = 0;
+    /* adaptation setting */
+    int                 do_balance = 0;
+    int                 do_transition = 1;
 
-  /* partition setting */
-  int                 do_partition = 1;
+    /* cmesh settings (only one of the following suggestions should be one, the others 0) */
+    int                 single_tree = 1;
+    int                 multiple_tree = 0, num_x_trees = 2, num_y_trees = 1;
+    int                 hybrid_cmesh = 0;
 
-  /* ghost setting */
-  int                 do_ghost = 1;
-  int                 ghost_version = 3;
+    /* partition setting */
+    int                 do_partition = 1;
 
-  /* vtk setting */
-  int                 do_vtk = 0;
+    /* ghost setting */
+    int                 do_ghost = 1;
+    int                 ghost_version = 3;
 
-  /* LFN settings */
-  int                 do_LFN_test = 1;
+    /* vtk setting */
+    int                 do_vtk = 1;
+
+    /* LFN settings */
+    int                 do_LFN_test = 1;
+    
+    /* Monitoring */
+    int                 do_LFN_runtime_stats;
+
+  /* *************************************************************************************************************** */
 
   /* initializing the forests */
   t8_forest_init (&forest);
@@ -243,12 +235,10 @@ t8_refine_with_subelements (t8_eclass_t eclass)
 
   /* Midpoint and radius of a sphere */
   /* shift the midpoiunt of the circle by (shift_x,shift_y) to ensure midpoints on corners of the uniform mesh */
-  // int  shift_x = 0;  /* shift_x, shift_y should be smaler than 2^minlevel / 2 such that midpoint stays in the quadrilateral tree */
-  // int  shift_y = 0;
   sdata.mid_point[0] = 0;    // 1.0 / 2.0 + shift_x * 1.0/(1 << (minlevel));
   sdata.mid_point[1] = 0;    // 1.0 / 2.0 + shift_y * 1.0/(1 << (minlevel)); 
   sdata.mid_point[2] = 0;
-  sdata.radius = 0.0;
+  sdata.radius = 0.6;
 
   /* refinement parameter */
   ls_data.band_width = 1;
@@ -264,6 +254,7 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   if (do_balance) {
     t8_forest_set_balance (forest_adapt, forest, 0);
   }
+  
   if (do_transition) {
     t8_forest_set_transition (forest_adapt, NULL);
     ghost_version = 1;
@@ -290,7 +281,7 @@ t8_refine_with_subelements (t8_eclass_t eclass)
 
   if (do_LFN_test) {
     /* determine the neighbor element and printing the element data */
-    t8_test_leaf_face_neighbors (forest_adapt);
+    t8_test_LFN (forest_adapt);
   }
 
   t8_forest_unref (&forest_adapt);
@@ -308,7 +299,7 @@ main (int argc, char **argv)
   t8_init (SC_LP_DEFAULT);
 
   /* At the moment, subelements are only implemented for T8_ECLASS_QUADS */
-  t8_refine_with_subelements (T8_ECLASS_QUAD);
+  t8_refine_transition (T8_ECLASS_QUAD);
 
   sc_finalize ();
 
