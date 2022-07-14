@@ -232,10 +232,10 @@ t8_recursive_nca_check(t8_element_t *check_nca, t8_element_t *desc_a,
 TEST_P(nca, recursive_check)
 {
 #ifdef T8_ENABLE_LESS_TESTS
-    const int recursion_depth = 4;
+    const int recursion_depth = 3;
 #else
 /* User lower recursion depth for pyramids, it takes to much time otherwise */
-    const int recursion_depth = (eclass == T8_ECLASS_PYRAMID) ? 4: 5;
+    const int recursion_depth = 4;
 #endif
     t8_element_t *parent_a, *parent_b;
     int     num_children;
