@@ -666,7 +666,8 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
                                const double *tree_vertices, int face,
                                int adapted_or_partitioned)
 {
-  int                 i, num_face_children, child_face;
+  int                 num_face_children;
+  int                 child_face;
   t8_eclass_scheme_c *ts;
   t8_eclass           eclass;
   t8_element_t      **face_children;
@@ -677,6 +678,7 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
   int                 neigh_is_ghost;
   t8_advect_element_data_t *el_hang;
   double              phi_plus, phi_minus;
+  int                 face_children_count;
 
   /* Get a pointer to the element */
   el_hang = (t8_advect_element_data_t *)
@@ -696,23 +698,21 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
   /* Store the phi value of el_hang. We use it as the phi value of the
    * children to compute the flux */
   phi_plus = t8_advect_element_get_phi (problem, iel_hang);
-
-  for (i = 0; i < num_face_children; i++) {
-    child_face = ts->t8_element_face_child_face (element_hang, face, i);
+  for (face_children_count = 0; face_children_count < num_face_children; face_children_count++) {
+    child_face = ts->t8_element_face_child_face (element_hang, face, face_children_count);
     /* Get a pointer to the neighbor's element data */
-    neigh_id = el_hang->neighs[face][i];
+    neigh_id = el_hang->neighs[face][face_children_count];
     neigh_data = (t8_advect_element_data_t *)
       t8_sc_array_index_locidx (problem->element_data, neigh_id);
     neigh_is_ghost =
       neigh_id >= t8_forest_get_local_num_elements (problem->forest);
     phi_minus = t8_advect_element_get_phi (problem, neigh_id);
     /* Compute the flux */
-    el_hang->fluxes[face][i] =
+    el_hang->fluxes[face][face_children_count] =
       t8_advect_flux_upwind (problem, phi_plus, phi_minus, ltreeid,
-                             face_children[i], tree_vertices, child_face);
-    // if (a == 1) printf  ("%i %i %f\n",face, i, el_hang->fluxes[face][i]);
+                             face_children[face_children_count], tree_vertices, child_face);
     /* Set the flux of the neighbor element */
-    dual_face = el_hang->dual_faces[face][i];
+    dual_face = el_hang->dual_faces[face][face_children_count];
     if (!adapted_or_partitioned && !neigh_is_ghost) {
 
       if (neigh_data->flux_valid[dual_face] < 0) {
@@ -724,11 +724,11 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
       SC_CHECK_ABORT (dual_face < neigh_data->num_faces, "num\n");
       // SC_CHECK_ABORT (neigh_data->num_neighbors[dual_face] == 1, "entry\n");
       neigh_data->num_neighbors[dual_face] = 1;
-      neigh_data->fluxes[dual_face][0] = -el_hang->fluxes[face][i];
+      neigh_data->fluxes[dual_face][0] = -el_hang->fluxes[face][face_children_count];
       neigh_data->flux_valid[dual_face] = 1;
     }
 
-    flux += el_hang->fluxes[face][i];
+    flux += el_hang->fluxes[face][face_children_count];
   }
 
   el_hang->flux_valid[face] = 1;
