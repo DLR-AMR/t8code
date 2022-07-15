@@ -28,6 +28,8 @@
 #ifndef T8_CMESH_EXAMPLES
 #define T8_CMESH_EXAMPLES
 #include <t8_cmesh.h>
+#include <p4est_connectivity.h>
+#include <p8est_connectivity.h>
 
 T8_EXTERN_C_BEGIN ();
 
