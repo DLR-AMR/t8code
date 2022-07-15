@@ -37,6 +37,9 @@
  *        1 - constant 1
  *        2 - periodic trigonometric with highest values in the center of the mesh 
  *        3 - periodic trigonometric off center (for example for a circular flow)
+ *
+ * Note that it is possible to print out additional information during the simulation by setting
+ * T8_GET_DEBUG_OUTPUT to 1.
  */
 
 #include "t8.h"
