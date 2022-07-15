@@ -37,6 +37,33 @@ T8_EXTERN_C_BEGIN ();
 
 /* TODO: document */
 
+/** Return nonzero if the first \a num_elemets in \a elements are part of a family.
+ * \param [in] elements      The elements array.
+ * \param [in] num_elements  The first \a num_elements to be checked in \a elements.
+ * \param [in] tscheme       The element scheme for current local tree 
+ *                           where the elements are from.
+ * \note If the first element has level 0, the return is 0.
+ */
+int                 t8_is_family (t8_element_t **elements, int num_elements, 
+                                  t8_eclass_scheme_c *tscheme);
+
+int                 t8_forest_is_incomplete_family_old (t8_forest_t forest,
+                                                        t8_forest_t forest_from,
+                                                        t8_locidx_t ltree_id,
+                                                        t8_locidx_t el_considered,
+                                                        t8_eclass_scheme_c *tscheme,
+                                                        t8_element_t **elements_from,
+                                                        size_t curr_size_elements_from,
+                                                        size_t zz,
+                                                        size_t num_siblings);
+
+int                 t8_forest_is_incomplete_family (t8_forest_t forest,
+                                                    t8_locidx_t ltree_id,
+                                                    t8_locidx_t el_considered,
+                                                    t8_eclass_scheme_c *tscheme,
+                                                    t8_element_t **elements,
+                                                    size_t size_elements);
+
 /* For each tree in a forest compute its first and last descendant */
 void                t8_forest_compute_desc (t8_forest_t forest);
 
