@@ -1670,7 +1670,7 @@ t8_subelement_scheme_quad_c::t8_element_get_location_of_subelement (const
 
   int                 sub_id = pquad_w_sub->subelement_id;
   int                 sub_face_id;
-  int                 face_number;
+  int                 face_number = -1;
   int                 split;
 
   int                 cum_neigh_array[P4EST_FACES] = { };
@@ -1694,6 +1694,9 @@ t8_subelement_scheme_quad_c::t8_element_get_location_of_subelement (const
       }
     }
   }
+
+  /* make sure that a face_number has been found */
+  T8_ASSERT (face_number >= 0);
 
   /* 3.2) determine, whether the face is split or not */
   if (binary_array[face_number] == 0) {
