@@ -445,6 +445,7 @@ protected:
   void                t8_element_reset_subelement_values (t8_element_t *
                                                           elem);
 
+#ifdef T8_ENABLE_DEBUG
   /** Query whether an elements subelement values are valid
    *  \param [in] source A element
    *  \return true, if the subelement values are valid
@@ -452,6 +453,7 @@ protected:
   int                 t8_element_subelement_values_are_valid (const
                                                               t8_element_t *
                                                               elem) const;
+#endif
 };
 
 #endif /* !T8_TRANSITION_QUAD_CXX_HXX */

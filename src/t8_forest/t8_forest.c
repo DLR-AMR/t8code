@@ -308,7 +308,7 @@ t8_forest_set_ghost (t8_forest_t forest, int do_ghost,
 }
 
 void
-t8_forest_set_adapt (t8_forest_t forest, t8_forest_t set_from,
+t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from,
                      t8_forest_adapt_t adapt_fn, int recursive)
 {
   T8_ASSERT (forest != NULL);
@@ -386,6 +386,20 @@ t8_forest_comm_global_num_elements (t8_forest_t forest)
                              T8_MPI_GLOIDX, sc_MPI_SUM, forest->mpicomm);
   SC_CHECK_MPI (mpiret);
   forest->global_num_elements = global_num_el;
+}
+
+void
+t8_forest_comm_global_num_subelements (t8_forest_t forest)
+{
+  int                 mpiret;
+  t8_gloidx_t         local_num_subel;
+  t8_gloidx_t         global_num_subel;
+
+  local_num_subel = (t8_gloidx_t) forest->local_num_subelements;
+  mpiret = sc_MPI_Allreduce (&local_num_subel, &global_num_subel, 1,
+                             T8_MPI_GLOIDX, sc_MPI_SUM, forest->mpicomm);
+  SC_CHECK_MPI (mpiret);
+  forest->global_num_subelements = global_num_subel;
 }
 
 static int

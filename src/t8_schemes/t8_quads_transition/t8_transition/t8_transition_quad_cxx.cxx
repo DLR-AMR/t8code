@@ -474,9 +474,9 @@ t8_subelement_scheme_quad_c::t8_element_is_family (t8_element_t ** fam)
     /* If all elements of fam are no subelements, then we can use the p4est check is_family */
     else {
       return p4est_quadrant_is_family (&pquad_w_sub_family[0]->p4q,
-                                       &pquad_w_sub_family[1]->p4q,
-                                       &pquad_w_sub_family[2]->p4q,
-                                       &pquad_w_sub_family[3]->p4q);
+                                     &pquad_w_sub_family[1]->p4q,
+                                     &pquad_w_sub_family[2]->p4q,
+                                     &pquad_w_sub_family[3]->p4q);
     }
   }
 }

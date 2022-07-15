@@ -109,9 +109,12 @@ typedef void        (*t8_forest_replace_t) (t8_forest_t forest_old,
  * \param [in] num_elements the number of entries in \a elements
  * \param [in] elements    Pointers to a family or, if second entry is NULL,
  *                         pointer to one element.
- * \return greater zero if the first entry in \a elements should be refined,
+ * \return 1 if the first entry in \a elements should be refined,
  *         smaller zero if the family \a elements shall be coarsened,
- *         zero else.
+ *         zero if the element should not change.
+ *         If the associated scheme supports subelements than any value greater 1 will
+ *         result in the element being split into subelements according to the scheme.
+ *         \ref t8_eclass_scheme::t8_element_children \ref t8_eclass_scheme::t8_element_to_subelement
  */
 /* TODO: Do we really need the forest argument? Since the forest is not committed yet it
  *       seems dangerous to expose to the user. */
@@ -248,7 +251,7 @@ void                t8_forest_set_copy (t8_forest_t forest,
  */
 /* TODO: make recursive flag to int specifying the number of recursions? */
 void                t8_forest_set_adapt (t8_forest_t forest,
-                                         t8_forest_t set_from,
+                                         const t8_forest_t set_from,
                                          t8_forest_adapt_t adapt_fn,
                                          int recursive);
 
@@ -384,6 +387,13 @@ void                t8_forest_set_load (t8_forest_t forest,
  *  \param [in] forest    The forest.
  */
 void                t8_forest_comm_global_num_elements (t8_forest_t forest);
+
+/** Compute the global number of subelements in a forest as the sum
+ *  of the local subelement counts.
+ *  \param [in] forest    The forest.
+ */
+void                t8_forest_comm_global_num_subelements (t8_forest_t
+                                                           forest);
 
 /** After allocating and adding properties to a forest, commit the changes.
  * This call sets up the internal state of the forest.
