@@ -232,7 +232,7 @@ t8_refine_transition (t8_eclass_t eclass)
     int                 ghost_version = 3;
 
     /* vtk setting */
-    int                 do_vtk = 0;
+    int                 do_vtk = 1;
 
     /* LFN settings */
     int                 do_LFN_test = 1;
