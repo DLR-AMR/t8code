@@ -226,19 +226,22 @@ t8_test_emelemts_remove (int cmesh_id)
   scheme = t8_scheme_new_default_cxx ();
   /* Construct a cmesh */
   cmesh = t8_test_create_cmesh (cmesh_id);
+  //cmesh = t8_cmesh_new_hypercube (T8_ECLASS_QUAD, sc_MPI_COMM_WORLD, 0, 0, 0);
+  //cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
   /* Compute the first level, such that no process is empty */
   min_level = t8_forest_min_nonempty_level (cmesh, scheme);
 
-  min_level = SC_MAX (min_level, 1);
-  max_level = min_level + 4;
-  
+  min_level = SC_MAX (min_level, 5);
+  max_level = min_level + 1;
+
   for (level = min_level; level < max_level; level++) {
+    t8_debugf(" ############################# cmesh_id: %i/%i \n", cmesh_id, t8_get_number_of_all_testcases ());
+    t8_debugf(" ############################# level:    %i \n\n", level);
     t8_cmesh_ref (cmesh);
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
 
     forest_1 = t8_adapt_forest (forest  , t8_adapt_callback_refine, 0, 0, 0, &adapt_data);
     forest_1 = t8_adapt_forest (forest_1, t8_adapt_callback_remove, 0, 0, 0, &adapt_data);
-
     t8_forest_ref (forest_1);
     forest_2 = t8_adapt_forest (forest_1, t8_adapt_callback_coarse, 0, 0, 0, &adapt_data);
     forest_2 = t8_adapt_forest (forest_2, t8_adapt_callback_refine, 0, 0, 0, &adapt_data);
@@ -255,10 +258,9 @@ t8_test_emelemts_remove (int cmesh_id)
     // will get replaced by recursive coarseening
     for (int i = 0; i < 2*level; i++) {
       forest_2 = t8_adapt_forest (forest_2, t8_adapt_callback_coarse_all, 0, 0, 0, &adapt_data);
+      SC_CHECK_ABORT (t8_forest_no_overlap(forest_2),
+                  "The forest has overlapping elements");
     }
-
-    SC_CHECK_ABORT (t8_forest_no_overlap(forest_2),
-                "The forest has overlapping elements");
 
     t8_scheme_cxx_ref (scheme);
     t8_forest_unref (&forest_1);
@@ -279,12 +281,14 @@ test_cmesh_emelemts_remove_all ()
                t8_get_number_of_new_hypercube_hybrid_cmesh_testcases () +
                t8_get_number_of_new_periodic_cmesh_testcases ();
   /* Test all cmeshes over all different inputs we get through their id */
-  for (int cmesh_id = 0; cmesh_id < t8_get_number_of_all_testcases ();
-       cmesh_id++) {
+  for (int cmesh_id = 0; cmesh_id < t8_get_number_of_all_testcases (); cmesh_id++) {
     /* Skip all t8_test_create_new_bigmesh_cmesh since they are without geometry */
     if (cmesh_id < bigmesh_id || 
-        cmesh_id >= bigmesh_id + t8_get_number_of_new_bigmesh_cmesh_testcases () ) {
-      t8_test_emelemts_remove(cmesh_id);
+        cmesh_id >= bigmesh_id + t8_get_number_of_new_bigmesh_cmesh_testcases ()) {
+        /* Skip Pyramids */
+        if (cmesh_id < 66) {
+          t8_test_emelemts_remove(cmesh_id);
+        }
     }
   }
 }
