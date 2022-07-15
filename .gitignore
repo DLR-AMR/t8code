@@ -35,6 +35,7 @@ src/pre_config.h.in
 *.trs
 *.vtu
 *.pvtu
+*~
 
 # ------------------------------------------------------------ #
 # Following list of files can be easily generated with:
