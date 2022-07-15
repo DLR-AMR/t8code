@@ -343,15 +343,16 @@ public:
                                                 int vertex, int coords[]);
 
 /** Construct a transition cell of type type */
-  virtual void        t8_element_to_transition_cell (const t8_element_t * elem,
-                                                int type, t8_element_t * c[]);
+  virtual void        t8_element_to_transition_cell (const t8_element_t *
+                                                     elem, int type,
+                                                     t8_element_t * c[]);
 
 /** Determine the number of sibling subelements, of a transition cell of a specific type */
   virtual int         t8_element_get_number_of_subelements (int
                                                             transition_type);
 
 /** Test wheter a given element is a subelement or not */
-  virtual bool         t8_element_is_subelement (const t8_element * elem);
+  virtual bool        t8_element_is_subelement (const t8_element * elem);
 
 /** Get the subelement type of elem */
   virtual int         t8_element_get_transition_type (const

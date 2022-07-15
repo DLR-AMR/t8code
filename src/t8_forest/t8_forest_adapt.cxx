@@ -79,7 +79,8 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
   pos = *el_inserted - num_children;
   isfamily = 1;
   child_id = ts->t8_element_child_id (element);
-  while (isfamily && pos >= el_coarsen && child_id > 0 && child_id == num_children - 1) {
+  while (isfamily && pos >= el_coarsen && child_id > 0
+         && child_id == num_children - 1) {
     isfamily = 1;
     /* Get all elements at indices pos, pos + 1, ... ,pos + num_children - 1 */
     for (i = 0; i < num_children; i++) {
@@ -344,9 +345,9 @@ t8_forest_adapt (t8_forest_t forest)
                                      el_considered, tscheme,
                                      num_elements_to_adapt_fn, elements_from);
 
-      /* Transition cells must be removed in adaptation. Therefore, we only allow refine == 1 or -1 */       
+      /* Transition cells must be removed in adaptation. Therefore, we only allow refine == 1 or -1 */
       if (tscheme->t8_element_is_subelement (current_element)) {
-        T8_ASSERT(refine >= -1 && refine <= 1);
+        T8_ASSERT (refine >= -1 && refine <= 1);
         if (refine == 0) {
           refine = -1;
         }
@@ -357,10 +358,12 @@ t8_forest_adapt (t8_forest_t forest)
         ("***** t8_forest_adapt | current element index: %i/%i  refine value: %i  is_family: %i  num_siblings: %li *****\n",
          el_considered + 1, num_el_from, refine, is_family, num_siblings);
       t8_debugf ("Current element is: \n");
-      tscheme->t8_element_print_element(elements_from[0]);
+      tscheme->t8_element_print_element (elements_from[0]);
 #endif
 
-      T8_ASSERT (is_family || refine >= 0 || (tscheme->t8_element_is_subelement (current_element) && refine == -1));
+      T8_ASSERT (is_family || refine >= 0
+                 || (tscheme->t8_element_is_subelement (current_element)
+                     && refine == -1));
 
       if (refine > 0
           && tscheme->t8_element_level (elements_from[0]) >=
@@ -390,18 +393,18 @@ t8_forest_adapt (t8_forest_t forest)
           t8_forest_adapt_refine_recursive (forest, ltree_id, el_considered,
                                             tscheme, refine_list, telements,
                                             &el_inserted, elements);
-          
-#if 0     
+
+#if 0
           /* TODO: el_coarsen = el_inserted + num_children; -> reason for artefacts during multiple timestep-adaptation. Issue has been opened.
            * This fix removes the artefacts and can be used for exemplary purposes but it does not work when using multiple processes. */
           el_coarsen = el_inserted;
-#else     
+#else
           /* el_coarsen is the index of the first element in the new element
            * array which could be coarsened recursively.
            * We can set this here to the next element after the current family, since a family that emerges from a refinement will never be coarsened */
           el_coarsen = el_inserted + num_children;
 #endif
-          
+
         }
         else {
           (void) t8_element_array_push_count (telements, num_children); /*num_children or num_siblings? */
@@ -427,8 +430,8 @@ t8_forest_adapt (t8_forest_t forest)
       else if (refine > 1) {    /* refine via a transition cell */
         /* determing the number of subelements of the given type for memory allocation */
         num_subelements =
-          tscheme->t8_element_get_number_of_subelements (refine-1);
-        
+          tscheme->t8_element_get_number_of_subelements (refine - 1);
+
         if (num_subelements > curr_num_children) {
           elements = T8_REALLOC (elements, t8_element_t *, num_subelements);
           curr_num_children = num_subelements;
@@ -439,8 +442,8 @@ t8_forest_adapt (t8_forest_t forest)
           elements[zz] =
             t8_element_array_index_locidx (telements, el_inserted + zz);
         }
-        tscheme->t8_element_to_transition_cell (elements_from[0], refine-1,
-                                           elements);
+        tscheme->t8_element_to_transition_cell (elements_from[0], refine - 1,
+                                                elements);
         el_inserted += num_subelements;
         el_considered++;
 
@@ -518,7 +521,9 @@ t8_forest_adapt (t8_forest_t forest)
        ltree_id, el_inserted, num_subelements_in_tree);
 
     float               relative_increase = (float) el_inserted / num_el_from;
-    t8_productionf ("relative increase of elements from old to new (adapted) tree: %f\n", relative_increase);
+    t8_productionf
+      ("relative increase of elements from old to new (adapted) tree: %f\n",
+       relative_increase);
 #endif
 
     /* Possibly shrink the telements array to the correct size */

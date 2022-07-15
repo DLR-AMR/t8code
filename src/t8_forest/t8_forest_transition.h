@@ -55,17 +55,16 @@ T8_EXTERN_C_BEGIN ();
  * Within the element scheme of the given eclass, this binary code is used to construct the right subelement type,
  * in order to remove hanging nodes from the mesh. */
 int                 t8_forest_transition_adapt (t8_forest_t forest,
-                                                          t8_forest_t
-                                                          forest_from,
-                                                          t8_locidx_t
-                                                          ltree_id,
-                                                          t8_locidx_t
-                                                          lelement_id,
-                                                          t8_eclass_scheme_c *
-                                                          ts,
-                                                          int num_elements,
-                                                          t8_element_t *
-                                                          elements[]);
+                                                t8_forest_t
+                                                forest_from,
+                                                t8_locidx_t
+                                                ltree_id,
+                                                t8_locidx_t
+                                                lelement_id,
+                                                t8_eclass_scheme_c *
+                                                ts,
+                                                int num_elements,
+                                                t8_element_t * elements[]);
 
 /* This function is the point of entry for the hanging-faces-removing subelements. 
  * In this function, the corresponding callback function for the refine value in forest_adapt is set

@@ -40,16 +40,15 @@ T8_EXTERN_C_BEGIN ();
  * We refine an element into a suitable transition cell if it has at most one hanging face */
 int
 t8_forest_transition_adapt (t8_forest_t forest,
-                                      t8_forest_t forest_from,
-                                      t8_locidx_t ltree_id,
-                                      t8_locidx_t lelement_id,
-                                      t8_eclass_scheme_c * ts,
-                                      int num_elements,
-                                      t8_element_t * elements[])
+                            t8_forest_t forest_from,
+                            t8_locidx_t ltree_id,
+                            t8_locidx_t lelement_id,
+                            t8_eclass_scheme_c * ts,
+                            int num_elements, t8_element_t * elements[])
 {
-  int                iface, num_faces, neigh_face, transition_type = 0;
-  t8_gloidx_t        neighbor_tree;
-  t8_eclass_t        neigh_class;
+  int                 iface, num_faces, neigh_face, transition_type = 0;
+  t8_gloidx_t         neighbor_tree;
+  t8_eclass_t         neigh_class;
   t8_eclass_scheme_c *neigh_scheme;
   t8_element_t       *element = elements[0], **face_neighbor;
 
@@ -60,29 +59,29 @@ t8_forest_transition_adapt (t8_forest_t forest,
     num_faces = ts->t8_element_num_faces (element);
 
     /* We use a binary encoding (depending on the face enumeration), to determine which subelement type to use. 
-      * Every face has a flag parameter, wich is set to 1, if there is a neighbor with a higher level 
-      * and to 0, if the level of the neighbor is at most the level of the element.   
-      *             
-      *              f0                         1
-      *        x - - x - - x              x - - x - - x       
-      *        |           |              | \   |   / |
-      *        |           |              |   \ | /   |                                                            | f3 | f2 | f1 | f0 |
-      *    f3  x           | f2   -->   1 x - - x     | 0   -->   binary code (according to the face enumeration): |  1 |  0 |  0 |  1 | = 9 in base 10  
-      *        |           |              |   /   \   |
-      *        | elem      |              | /       \ |
-      *        x - - - - - x              x - - - - - x
-      *              f1                         0 
-      *                      
-      * Note, that this procedure is independent of the eclass (we only show an example for the quad scheme). 
-      * Each neighbor-structure will lead to a unique binary code. 
-      * Within the element scheme of the given eclass, this binary code is used to construct the right subelement type,
-      * in order to remove hanging nodes from the mesh. */
+     * Every face has a flag parameter, wich is set to 1, if there is a neighbor with a higher level 
+     * and to 0, if the level of the neighbor is at most the level of the element.   
+     *             
+     *              f0                         1
+     *        x - - x - - x              x - - x - - x       
+     *        |           |              | \   |   / |
+     *        |           |              |   \ | /   |                                                            | f3 | f2 | f1 | f0 |
+     *    f3  x           | f2   -->   1 x - - x     | 0   -->   binary code (according to the face enumeration): |  1 |  0 |  0 |  1 | = 9 in base 10  
+     *        |           |              |   /   \   |
+     *        | elem      |              | /       \ |
+     *        x - - - - - x              x - - - - - x
+     *              f1                         0 
+     *                      
+     * Note, that this procedure is independent of the eclass (we only show an example for the quad scheme). 
+     * Each neighbor-structure will lead to a unique binary code. 
+     * Within the element scheme of the given eclass, this binary code is used to construct the right subelement type,
+     * in order to remove hanging nodes from the mesh. */
 
     for (iface = 0; iface < num_faces; iface++) {
       /* Get the element class and scheme of the face neighbor */
       neigh_class = t8_forest_element_neighbor_eclass (forest_from,
-                                                        ltree_id, element,
-                                                        iface);
+                                                       ltree_id, element,
+                                                       iface);
 
       neigh_scheme = t8_forest_get_eclass_scheme (forest_from, neigh_class);
 
@@ -93,15 +92,15 @@ t8_forest_transition_adapt (t8_forest_t forest,
 
       /* Compute the virtual face neighbor of element at this face */
       neighbor_tree = t8_forest_element_face_neighbor (forest_from, ltree_id,
-                                                        element,
-                                                        face_neighbor[0],
-                                                        neigh_scheme,
-                                                        iface, &neigh_face);
+                                                       element,
+                                                       face_neighbor[0],
+                                                       neigh_scheme,
+                                                       iface, &neigh_face);
 
       if (neighbor_tree >= 0) {
         if (t8_forest_element_has_leaf_desc (forest_from, neighbor_tree,
-                                              face_neighbor[0],
-                                              neigh_scheme)) {
+                                             face_neighbor[0],
+                                             neigh_scheme)) {
           /* Compute transition type as the decimal represenation of the binary concatenation */
           transition_type += 1 << ((num_faces - 1) - iface);
         }
@@ -112,17 +111,17 @@ t8_forest_transition_adapt (t8_forest_t forest,
     }
 
     /* returning the right subelement types */
-    if (transition_type == 0) {   /* no hanging faces in this case */
+    if (transition_type == 0) { /* no hanging faces in this case */
       return 0;
     }
-    else if (transition_type == 15) {    /* four hanging faces in this case */
+    else if (transition_type == 15) {   /* four hanging faces in this case */
       return 1;
     }
-    else {    /* use a transition cell of subelements and add 1 to every type, to avoid refine = 1 */
+    else {                      /* use a transition cell of subelements and add 1 to every type, to avoid refine = 1 */
       return transition_type + 1;
     }
   }
-  return 0; /* if elem has maxlevel then keep it unchanged since there will never be hanging faces */
+  return 0;                     /* if elem has maxlevel then keep it unchanged since there will never be hanging faces */
 }
 
 void

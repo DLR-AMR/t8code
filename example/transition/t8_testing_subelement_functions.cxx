@@ -65,14 +65,14 @@ t8_refine_quad_to_subelements ()
   T8_ASSERT (class_scheme->t8_element_is_valid (element));
 
   /* Allocate enough memory for subelements of the given type and initialize them */
-  num_subelements =
-    class_scheme->t8_element_get_number_of_subelements (type);
+  num_subelements = class_scheme->t8_element_get_number_of_subelements (type);
   t8_element_t      **element_subelements =
     T8_ALLOC (t8_element_t *, num_subelements);
   class_scheme->t8_element_new (num_subelements, element_subelements);
 
   /* Create all subelements for the given type from the initial quad element. */
-  class_scheme->t8_element_to_transition_cell (element, type, element_subelements);
+  class_scheme->t8_element_to_transition_cell (element, type,
+                                               element_subelements);
   t8_productionf ("The given type is type %i.\n", type);
   t8_productionf
     ("The transition cell of type %i consists of %i subelements with ids ranging from 0 to %i.\n",
@@ -111,22 +111,22 @@ int
 main (int argc, char **argv)
 {
   int                 mpiret;
-  
+
   mpiret = sc_MPI_Init (&argc, &argv);
-  
+
   SC_CHECK_MPI (mpiret);
-  
+
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-  
+
   t8_init (SC_LP_DEFAULT);
-  
+
   t8_refine_quad_to_subelements ();
-  
+
   sc_finalize ();
-  
+
   mpiret = sc_MPI_Finalize ();
-  
+
   SC_CHECK_MPI (mpiret);
-  
+
   return 0;
 }

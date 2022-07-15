@@ -109,14 +109,15 @@ public:
    *  \param [in] type The subelement type
    *  \param [out] subelements An array of all subelements of the parent quad element elem
    */
-  virtual void        t8_element_to_transition_cell (const t8_element_t * elem,
-                                                int type, t8_element_t * c[]);
+  virtual void        t8_element_to_transition_cell (const t8_element_t *
+                                                     elem, int type,
+                                                     t8_element_t * c[]);
 
   /** Check whether a given element is a subelement
    *  \param [in] elem A valid element 
    *  \return true if elem is a subelement 
    */
-  virtual bool         t8_element_is_subelement (const t8_element * elem);
+  virtual bool        t8_element_is_subelement (const t8_element * elem);
 
   /** Return the number of subelements in a transition cell of type transition_type
    *  \param [in] transition_type The subelement type as an integer

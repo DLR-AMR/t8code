@@ -189,10 +189,9 @@ t8_default_scheme_common_c::t8_element_general_function (const t8_element_t *
 }
 
 void
-t8_default_scheme_common_c::t8_element_to_transition_cell (const t8_element_t *
-                                                      elem,
-                                                      int type,
-                                                      t8_element_t * c[])
+t8_default_scheme_common_c::
+t8_element_to_transition_cell (const t8_element_t * elem, int type,
+                               t8_element_t * c[])
 {
   SC_ABORT ("This function is not implemented for the given scheme.\n");
 }
@@ -203,18 +202,19 @@ t8_default_scheme_common_c::t8_element_print_element (const t8_element_t *
 {
   /* We implement this function since it is a simple print function and 
    * should not abort the code even if it is not implemented in the given eclass. */
-  t8_productionf ("Warning: This function is not yet implemented for the given scheme.\n");
+  t8_productionf
+    ("Warning: This function is not yet implemented for the given scheme.\n");
 }
 
 bool
-t8_default_scheme_common_c::t8_element_is_subelement (const
-                                                           t8_element * elem)
+t8_default_scheme_common_c::t8_element_is_subelement (const t8_element * elem)
 {
   /* We implement this function since it is a "check" function and 
    * should not abort the code even if no subelements are implemented in the given eclass. */
 
   /* No subelements are implemented and therefore we return false meaning "is no subelement". */
-  t8_debugf("This is the default_common implementation of the t8_element_is_subelement check.\n");
+  t8_debugf
+    ("This is the default_common implementation of the t8_element_is_subelement check.\n");
   return false;
 }
 

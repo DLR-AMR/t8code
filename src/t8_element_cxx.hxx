@@ -47,7 +47,7 @@ struct t8_eclass_scheme
 {
   /** This scheme defines the operations for a particular element class. */
 protected:
-  size_t element_size;                          /**< The size in bytes of an element of class \a eclass */
+  size_t              element_size;             /**< The size in bytes of an element of class \a eclass */
   void               *ts_context;               /**< Anonymous implementation context. */
 
 public:
@@ -650,24 +650,24 @@ public:
    *  \param [in] type The subelement type
    *  \param [out] subelements An array of all subelements of the parent quad element elem
    */
-  virtual void        t8_element_to_transition_cell (const t8_element_t * elem,
-                                                int type,
-                                                t8_element_t *
-                                                subelements[]) = 0;
+  virtual void        t8_element_to_transition_cell (const t8_element_t *
+                                                     elem, int type,
+                                                     t8_element_t *
+                                                     subelements[]) = 0;
 
   /** Check whether a given element is a subelement
    *  \param [in] elem A valid element 
    *  \return true if elem is a subelement 
    */
-  virtual bool         t8_element_is_subelement (const
-                                                     t8_element * elem) = 0;
+  virtual bool        t8_element_is_subelement (const t8_element * elem) = 0;
 
   /** Return the number of subelements in a transition cell of type transition_type
    *  \param [in] transition_type The subelement type as an integer
    *  \return the number of subelements, this transition cell consists of
    */
   virtual int         t8_element_get_number_of_subelements (int
-                                                            transition_type) = 0;
+                                                            transition_type) =
+    0;
 
   /** Return the transition type of an element
    *  \param [in] elem A valid element 

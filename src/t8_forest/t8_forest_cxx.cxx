@@ -563,7 +563,7 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
       /* Compute the faces meeting at vertex 0 */
       ts = t8_forest_get_eclass_scheme (forest, T8_ECLASS_QUAD);
       int                 start_corner;
-      if (ts->t8_element_is_subelement (element)) {        /* adjust the starting corner */
+      if (ts->t8_element_is_subelement (element)) {     /* adjust the starting corner */
         int                 face_num_hypotenuse =
           ts->t8_element_get_face_number_of_hypotenuse (element);
         start_corner = face_num_hypotenuse + 2 % 3;
@@ -976,7 +976,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
       t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
                                     corner_b, vertex_b);
 
-      if (ts->t8_element_is_subelement (element)) {        /* the recent element is a subelement and we need an adjustement of the construction of C */
+      if (ts->t8_element_is_subelement (element)) {     /* the recent element is a subelement and we need an adjustement of the construction of C */
         int                 long_face =
           ts->t8_element_get_face_number_of_hypotenuse (element);
 
@@ -1276,7 +1276,7 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
   case T8_ECLASS_HEX:
   case T8_ECLASS_PRISM:
   case T8_ECLASS_PYRAMID:
-    { 
+    {
       /* For bilinearly interpolated volume elements, a point is inside an element
        * if and only if it lies on the inner side of each face.
        * The inner side is defined as the side where the outside normal vector does not
@@ -1326,8 +1326,7 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
   default:
     {
       /* This case should not happen */
-      SC_ABORTF
-        ("No valid element shape in point inside check");
+      SC_ABORTF ("No valid element shape in point inside check");
     }
   }
 }
@@ -1717,19 +1716,19 @@ t8_forest_element_face_neighbor (t8_forest_t forest,
   eclass = tree->eclass;
   ts = t8_forest_get_eclass_scheme (forest, eclass);
 
-  #if 0 /* print the general setting at the beginning */
-    t8_debugf ("face: %i\n", face);
-    t8_debugf ("current element:\n");
-    ts->t8_element_print_element (elem);
-  #endif
-  
+#if 0                           /* print the general setting at the beginning */
+  t8_debugf ("face: %i\n", face);
+  t8_debugf ("current element:\n");
+  ts->t8_element_print_element (elem);
+#endif
+
   if (neigh_scheme == ts &&
       ts->t8_element_face_neighbor_inside (elem, neigh, face, neigh_face)) {
     /* The neighbor was constructed and is inside the current tree. */
-  #if 0 /* print the resulting neighbor */
+#if 0                           /* print the resulting neighbor */
     t8_debugf ("neigh initialized:\n");
     ts->t8_element_print_element (neigh);
-  #endif
+#endif
     return ltreeid + t8_forest_get_first_local_tree_id (forest);
   }
   else {
@@ -1840,10 +1839,10 @@ t8_forest_element_face_neighbor (t8_forest_t forest,
                                                 boundary_scheme, neigh,
                                                 tree_neigh_face);
 
-    #if 0 /* print the resulting neighbor */
+#if 0                           /* print the resulting neighbor */
     t8_debugf ("neigh initialized:\n");
     neighbor_scheme->t8_element_print_element (neigh);
-    #endif
+#endif
 
     return global_neigh_id;
   }
@@ -1938,13 +1937,15 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
   t8_eclass_t         neigh_class, eclass;
   t8_gloidx_t         gneigh_treeid;
   t8_locidx_t         lneigh_treeid = -1;
-  t8_locidx_t         lghost_treeid = -1, *element_indices, element_index, ghost_element_index;
+  t8_locidx_t         lghost_treeid =
+    -1, *element_indices, element_index, ghost_element_index;
   t8_eclass_scheme_c *ts, *neigh_scheme;
   t8_element_array_t *element_array;
   t8_element_t       *ancestor, **neighbor_leafs;
   t8_linearidx_t      neigh_id;
   int                 num_children_at_face, at_maxlevel;
-  int                 ineigh, *owners, different_owners, have_ghosts, neighbor_is_ghost = 0;
+  int                 ineigh, *owners, different_owners, have_ghosts,
+    neighbor_is_ghost = 0;
 
   /* TODO: implement is_leaf check to apply to leaf */
   T8_ASSERT (t8_forest_is_committed (forest));
@@ -2143,7 +2144,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
                                                          *dual_faces[0]);
           }
         }
-        
+
         if (neigh_scheme->t8_element_is_subelement (ancestor)) {
           /* At this point, the neighbor transition cell is found. "ancestor" is one of its subelements. */
           /* We need to identify the right subelement within this transition cell by using the subelement index. */
@@ -2157,7 +2158,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
             ts->t8_element_get_subelement_id (ancestor);
 
           /* Get the subelement id of the real neighbor of leaf. 
-          * This function will determine the sub_id of the real neighbor, given leaf, face and the pseudo_neighbor. */
+           * This function will determine the sub_id of the real neighbor, given leaf, face and the pseudo_neighbor. */
           int                 leaf_neighbor_sub_id =
             ts->t8_element_find_neighbor_in_transition_cell (leaf,
                                                              ancestor,
@@ -2166,7 +2167,8 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
           if (!neighbor_is_ghost) {
             /* adjust the index of the pseudo neighbor to equal the index of the real neighbor */
             element_index =
-              pseudo_neigh_index - pseudo_neighbor_sub_id + leaf_neighbor_sub_id;
+              pseudo_neigh_index - pseudo_neighbor_sub_id +
+              leaf_neighbor_sub_id;
 
             /* get the real neighbor */
             const t8_element_t *neighbor;
@@ -2192,32 +2194,42 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
 
             return;
           }
-          else { /* neighbor subelement is ghost -> there might not be the whole family inside the ghost array */
-            int search_direction = (leaf_neighbor_sub_id > pseudo_neighbor_sub_id) ? 1 : -1;
-            int id_diff_abs = (leaf_neighbor_sub_id - pseudo_neighbor_sub_id) * search_direction;
+          else {                /* neighbor subelement is ghost -> there might not be the whole family inside the ghost array */
+            int                 search_direction =
+              (leaf_neighbor_sub_id > pseudo_neighbor_sub_id) ? 1 : -1;
+            int                 id_diff_abs =
+              (leaf_neighbor_sub_id -
+               pseudo_neighbor_sub_id) * search_direction;
 
-            bool neighbor_found = false;
-            int subelement_count = 0;
+            bool                neighbor_found = false;
+            int                 subelement_count = 0;
             while (!neighbor_found) {
               const t8_element_t *check_neighbor;
               check_neighbor =
-                t8_forest_ghost_get_element (forest, lghost_treeid, ghost_element_index + search_direction * subelement_count);
+                t8_forest_ghost_get_element (forest, lghost_treeid,
+                                             ghost_element_index +
+                                             search_direction *
+                                             subelement_count);
 
-              if (ts->t8_element_get_subelement_id (check_neighbor) == leaf_neighbor_sub_id) { /* neighbor found */
+              if (ts->t8_element_get_subelement_id (check_neighbor) == leaf_neighbor_sub_id) {  /* neighbor found */
 
                 neighbor_found = true;
 
                 /* both elements should be siblings or equal */
-                T8_ASSERT (ts->t8_element_get_transition_type (check_neighbor) == ts->t8_element_get_transition_type (ancestor));
-                
+                T8_ASSERT (ts->
+                           t8_element_get_transition_type (check_neighbor) ==
+                           ts->t8_element_get_transition_type (ancestor));
+
                 /* adjust element index */
-                element_index = element_index + search_direction * subelement_count;
+                element_index =
+                  element_index + search_direction * subelement_count;
 
                 /* free memory */
                 neigh_scheme->t8_element_destroy (num_children_at_face - 1,
                                                   neighbor_leafs + 1);
                 /* copy the ancestor */
-                neigh_scheme->t8_element_copy (check_neighbor, neighbor_leafs[0]);
+                neigh_scheme->t8_element_copy (check_neighbor,
+                                               neighbor_leafs[0]);
 
                 /* set return values */
                 *num_neighbors = 1;
@@ -2228,7 +2240,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
 
               }
 
-              if (subelement_count > id_diff_abs) { /* we assume that the real neighbor is a sibling subelement and hence we should find it here */
+              if (subelement_count > id_diff_abs) {     /* we assume that the real neighbor is a sibling subelement and hence we should find it here */
                 SC_ABORT ("Ghost subelement neighbor not found!\n");
               }
 
