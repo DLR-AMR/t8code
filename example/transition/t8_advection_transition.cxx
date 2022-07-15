@@ -2998,7 +2998,7 @@ main (int argc, char *argv[])
 
   sc_options_add_double (opt, 'C', "CFL", &cfl, 0.1,
                          "The cfl number to use. Default: 1");
-  sc_options_add_double (opt, 'b', "band-width", &band_width, 3,
+  sc_options_add_double (opt, 'b', "band-width", &band_width, 4,
                          "Control the width of the refinement band around\n"
                          " the zero level-set. Default 1.");
 
