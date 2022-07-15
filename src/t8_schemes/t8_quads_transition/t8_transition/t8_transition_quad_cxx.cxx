@@ -252,9 +252,9 @@ t8_subelement_scheme_quad_c::t8_element_num_siblings (const t8_element_t *
   if (pquad_w_sub->transition_type == 0) return P4EST_FACES;
 
   int                 num_hanging_faces = 0;
-  int                 i;
-  for (i = 0; i < P4EST_FACES; i++) {   /* Count the number of ones of the binary transition type. This number equals the number of hanging faces. */
-    num_hanging_faces += (pquad_w_sub->transition_type & (1 << i)) >> i;
+  int                 iface;
+  for (iface = 0; iface < P4EST_FACES; iface++) {   /* Count the number of ones of the binary transition type. This number equals the number of hanging faces. */
+    num_hanging_faces += (pquad_w_sub->transition_type & (1 << iface)) >> iface;
   }
 
   return P4EST_CHILDREN + num_hanging_faces;
@@ -384,18 +384,19 @@ t8_subelement_scheme_quad_c::t8_element_children (const t8_element_t * elem,
 
   const p4est_quadrant_t *q = &pquad_w_sub_elem->p4q;
 
-  int                 i;
+  int                 ichild;
 
   T8_ASSERT (t8_element_is_valid (elem));
-#ifdef T8_ENABLE_DEBUG
-  {
-    int                 j;
-    for (j = 0; j < P4EST_CHILDREN; j++) {
-      T8_ASSERT (t8_element_is_valid (c[j]));
-    }
-  }
-#endif
   T8_ASSERT (length == P4EST_CHILDREN);
+
+#ifdef T8_ENABLE_DEBUG
+{
+  int i;
+  for (i = 0; i < P4EST_CHILDREN; i++) {
+    T8_ASSERT (t8_element_is_valid (c[i]));
+  }
+}
+#endif
 
   /* set coordinates and levels of the children */
   p4est_quadrant_children (q, &pquad_w_sub_children[0]->p4q,
@@ -403,9 +404,9 @@ t8_subelement_scheme_quad_c::t8_element_children (const t8_element_t * elem,
                            &pquad_w_sub_children[2]->p4q,
                            &pquad_w_sub_children[3]->p4q);
 
-  for (i = 0; i < P4EST_CHILDREN; ++i) {
-    t8_element_reset_subelement_values (c[i]);
-    t8_element_copy_surround (q, &pquad_w_sub_children[i]->p4q);
+  for (ichild = 0; ichild < P4EST_CHILDREN; ++ichild) {
+    t8_element_reset_subelement_values (c[ichild]);
+    t8_element_copy_surround (q, &pquad_w_sub_children[ichild]->p4q);
   }
 }
 
@@ -442,11 +443,12 @@ t8_subelement_scheme_quad_c::t8_element_is_family (t8_element_t ** fam)
     (t8_quad_with_subelements **) fam;
 
 #ifdef T8_ENABLE_DEBUG
-  int                 i;
-
-  /* TODO: this loop goes from 0 to 3 but with subelements there can be more elements in fam */
-  for (i = 0; i < P4EST_CHILDREN; i++) {
-    T8_ASSERT (t8_element_is_valid (fam[i]));
+  {
+    /* TODO: this loop goes from 0 to 3 but with subelements there can be more elements in fam */
+    int                 i;
+    for (i = 0; i < P4EST_CHILDREN; i++) {
+      T8_ASSERT (t8_element_is_valid (fam[i]));
+    }
   }
 #endif
 
@@ -647,15 +649,16 @@ t8_subelement_scheme_quad_c::t8_element_children_at_face (const t8_element_t *
   /* this function is not implemented for subelements */
   T8_ASSERT (!t8_element_is_subelement(elem));
 
-  int                 first_child, second_child;
+  int                 first_child;
+  int                 second_child;
 
 #ifdef T8_ENABLE_DEBUG
-  {
-    int                 i;
-    for (i = 0; i < num_children; i++) {
-      T8_ASSERT (t8_element_is_valid (children[i]));
-    }
+{
+  int                 i;
+  for (i = 0; i < num_children; i++) {
+    T8_ASSERT (t8_element_is_valid (children[i]));
   }
+}
 #endif
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= face && face < P4EST_FACES);
@@ -1567,12 +1570,9 @@ t8_subelement_scheme_quad_c::t8_element_to_transition_cell (const t8_element_t *
 
     pquad_w_sub_subelement[sub_id_counter]->transition_type = type;
     pquad_w_sub_subelement[sub_id_counter]->subelement_id = sub_id_counter;
-  }
 
-  int                 i;
-  for (i = 0; i < num_subelements; ++i) {
-    T8_ASSERT (t8_element_is_valid (c[i]));
-    t8_element_copy_surround (q, &pquad_w_sub_subelement[i]->p4q);
+    T8_ASSERT (t8_element_is_valid (c[sub_id_counter]));
+    t8_element_copy_surround (q, &pquad_w_sub_subelement[sub_id_counter]->p4q);
   }
 }
 
@@ -1584,9 +1584,9 @@ t8_subelement_scheme_quad_c::t8_element_get_number_of_subelements (int
 
   /* consider transition_type 13 = 1101 in base two -> there are 4 + (1+1+0+1) = 7 subelements */
   int                 num_hanging_faces = 0;
-  int                 i;
-  for (i = 0; i < P4EST_FACES; i++) {   /* Count the number of ones of the binary transition type. This number equals the number of hanging faces. */
-    num_hanging_faces += (transition_type & (1 << i)) >> i;
+  int                 ichild;
+  for (ichild = 0; ichild < P4EST_FACES; ichild++) {   /* Count the number of ones of the binary transition type. This number equals the number of hanging faces. */
+    num_hanging_faces += (transition_type & (1 << ichild)) >> ichild;
   }
 
   /* The number of subelements equals the number of neighbours: */
@@ -1637,24 +1637,22 @@ t8_subelement_scheme_quad_c::t8_element_get_location_of_subelement (const
   int                 type = pquad_w_sub->transition_type;
   int                 binary_array[P4EST_FACES] = { };
 
-  int                 i;
+  int                 iface;
 
-  for (i = 0; i < P4EST_FACES; i++) {   /* need an array with 4 elements to store all subelement types of the quad scheme from 1 to 15 ({0,0,0,1} to {1,1,1,1}) */
-    binary_array[(P4EST_FACES - 1) - i] = (type & (1 << i)) >> i;
+  for (iface = 0; iface < P4EST_FACES; iface++) {   /* need an array with 4 elements to store all subelement types of the quad scheme from 1 to 15 ({0,0,0,1} to {1,1,1,1}) */
+    binary_array[(P4EST_FACES - 1) - iface] = (type & (1 << iface)) >> iface;
   }                             /* we now got a binary represenation of the transition type, bitwise stored in an array */
 
   /* 2) rearrange the binary representation to be in clockwise order */
   int                 binary_array_temp[P4EST_FACES] = { };
 
-  int                 j;
-
-  for (j = 0; j < P4EST_FACES; j++) {   /* copying the binary array */
-    binary_array_temp[j] = binary_array[j];
+  for (iface = 0; iface < P4EST_FACES; iface++) {   /* copying the binary array */
+    binary_array_temp[iface] = binary_array[iface];
   }
 
-  for (j = 0; j < P4EST_FACES; j++) {   /* bringing the entries of binary array into clockwise order */
-    binary_array[j] =
-      binary_array_temp[subelement_location_to_parent_face[j]];
+  for (iface = 0; iface < P4EST_FACES; iface++) {   /* bringing the entries of binary array into clockwise order */
+    binary_array[iface] =
+      binary_array_temp[subelement_location_to_parent_face[iface]];
   }
 
   /* 3) use the rearranged binary representation, and the sub_id to determine the location of the subelement and store these information in an array */
@@ -1670,8 +1668,6 @@ t8_subelement_scheme_quad_c::t8_element_get_location_of_subelement (const
   int                 face_number;
   int                 split;
 
-  int                 k;
-
   int                 cum_neigh_array[P4EST_FACES] = { };
 
   /* construct a cumulative array of the number of neighbors from face 0 to face 3 */
@@ -1685,9 +1681,9 @@ t8_subelement_scheme_quad_c::t8_element_get_location_of_subelement (const
     face_number = 0;
   }
   else {
-    for (k = 0; k < P4EST_FACES - 1; ++k) {
-      if (sub_id >= cum_neigh_array[k] && sub_id < cum_neigh_array[k + 1]) {
-        face_number = k + 1;
+    for (iface = 0; iface < P4EST_FACES - 1; ++iface) {
+      if (sub_id >= cum_neigh_array[iface] && sub_id < cum_neigh_array[iface + 1]) {
+        face_number = iface + 1;
         break;
       }
     }
@@ -2084,26 +2080,26 @@ t8_subelement_scheme_quad_c::t8_element_get_id_from_location (int type,
   int                 binary_type_clockwise[4] = { };
 
   /* get the type as a binary array */
-  int                 i;
-  for (i = 0; i < P4EST_FACES; i++) {
-    if (type_temp >= pow (2, 4 - (i + 1))) {
-      binary_type[i] = 1;
-      type_temp -= pow (2, 4 - (i + 1));
+  int                 iface;
+  for (iface = 0; iface < P4EST_FACES; iface++) {
+    if (type_temp >= pow (2, 4 - (iface + 1))) {
+      binary_type[iface] = 1;
+      type_temp -= pow (2, 4 - (iface + 1));
     }
     else {
-      binary_type[i] = 0;
+      binary_type[iface] = 0;
     }
   }
 
-  int                 j;
-  for (j = 0; j < P4EST_FACES; j++) {   /* rearrange the binary type to be in clockwise order of the faces, starting with the left face */
-    binary_type_clockwise[j] =
-      binary_type[subelement_location_to_parent_face[j]];
+  for (iface = 0; iface < P4EST_FACES; iface++) {   /* rearrange the binary type to be in clockwise order of the faces, starting with the left face */
+    binary_type_clockwise[iface] =
+      binary_type[subelement_location_to_parent_face[iface]];
   }
 
   /* count the number of elements up to the given location */
-  for (i = 0; i <= location[0]; i++) {
-    if (i == location[0]) {
+  int element_count;
+  for (element_count = 0; element_count <= location[0]; element_count++) {
+    if (element_count == location[0]) {
       if (location[1] == 0) {
         subelements_count += 1;
       }
@@ -2117,7 +2113,7 @@ t8_subelement_scheme_quad_c::t8_element_get_id_from_location (int type,
       }
     }
     else {
-      subelements_count += binary_type_clockwise[i] + 1;
+      subelements_count += binary_type_clockwise[element_count] + 1;
     }
   }
 
@@ -2157,14 +2153,14 @@ t8_subelement_scheme_quad_c::t8_element_get_face_number_of_hypotenuse (const
 void
 t8_subelement_scheme_quad_c::t8_element_new (int length, t8_element_t ** elem)
 {
-  /* allocate memory for a quad with subelements */
+  /* allocate memory for a transiton cell */
   t8_default_scheme_common_c::t8_element_new (length, elem);
 
-  int                 i;
-  for (i = 0; i < length; i++) {
+  int                 elem_count;
+  for (elem_count = 0; elem_count < length; elem_count++) {
     t8_quad_with_subelements *pquad_w_sub =
-      (t8_quad_with_subelements *) elem[i];
-    t8_element_init (1, elem[i], 0);
+      (t8_quad_with_subelements *) elem[elem_count];
+    t8_element_init (1, elem[elem_count], 0);
     /* set dimension of quad to 2 */
     T8_QUAD_SET_TDIM ((p4est_quadrant_t *) & pquad_w_sub->p4q, 2);
   }
@@ -2176,18 +2172,18 @@ t8_subelement_scheme_quad_c::t8_element_init (int length, t8_element_t * elem,
 {
   t8_quad_with_subelements *pquad_w_sub = (t8_quad_with_subelements *) elem;
 
-  int                 i;
+  int                 elem_count;
 
-  for (i = 0; i < length; i++) {
+  for (elem_count = 0; elem_count < length; elem_count++) {
     /* initalize subelement parameters */
-    pquad_w_sub[i].transition_type = 0;
-    pquad_w_sub[i].subelement_id = 0;
+    pquad_w_sub[elem_count].transition_type = 0;
+    pquad_w_sub[elem_count].subelement_id = 0;
 
 #ifdef T8_ENABLE_DEBUG
     /* In debugging mode we iterate over all length many elements and 
      * set their quad to the level 0 quad with ID 0. */
     if (!new_called) {
-      p4est_quadrant_t   *quad = &pquad_w_sub[i].p4q;
+      p4est_quadrant_t   *quad = &pquad_w_sub[elem_count].p4q;
       p4est_quadrant_set_morton (quad, 0, 0);
       T8_QUAD_SET_TDIM (quad, 2);
       T8_ASSERT (p4est_quadrant_is_extended (quad));
