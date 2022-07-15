@@ -17,6 +17,7 @@ As a reviewer please read through all the code lines and make sure that the code
 - [ ] New source/header files are properly added to the Makefiles
 - [ ] The reviewer executed the new code features at least once and checked the results manually
 - [ ] The code is covered in an existing or new test case
+- [ ] New tests use the Google Test framework
 - [ ] The code follows the [t8code coding guidelines](https://github.com/holke/t8code/wiki/Coding-Guideline)
 - [ ] The code is well documented
 - [ ] All function declarations, structs/classes and their members have a proper doxygen documentation
