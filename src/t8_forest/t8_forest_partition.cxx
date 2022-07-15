@@ -168,7 +168,7 @@ t8_forest_partition_test_desc (t8_forest_t forest)
 void
 t8_forest_partition_test_boundery_element (t8_forest_t forest)
 {
-  t8_element_t       *element;
+  t8_element_t       *element_last, *element_last_desc;
   t8_eclass_scheme_c *ts;
   t8_linearidx_t      first_desc_id, last_desc_id;
   t8_locidx_t         num_local_trees;
@@ -203,19 +203,22 @@ t8_forest_partition_test_boundery_element (t8_forest_t forest)
   /* Get last element of current rank and its last descendant id*/
   tree = t8_forest_get_tree (forest, num_local_trees-1);
   ts = t8_forest_get_eclass_scheme (forest, tree->eclass);
-  ts->t8_element_new (1, &element);
-  element = t8_element_array_index_locidx (&tree->elements,
+  ts->t8_element_new (1, &element_last_desc);
+  element_last = t8_element_array_index_locidx (&tree->elements,
                                      t8_forest_get_tree_element_count (tree)-1);
-  T8_ASSERT (ts->t8_element_is_valid (element));
-  ts->t8_element_last_descendant (element, element, forest->maxlevel);
-  level = ts->t8_element_level (element);
-  T8_ASSERT (level == ts->t8_element_level (element));
+  T8_ASSERT (ts->t8_element_is_valid (element_last));
+  ts->t8_element_last_descendant (element_last, element_last_desc, forest->maxlevel);
+  T8_ASSERT (ts->t8_element_is_valid (element_last_desc));
+  level = ts->t8_element_level (element_last_desc);
+  T8_ASSERT (level == ts->t8_element_level (element_last_desc));
   T8_ASSERT (level == forest->maxlevel);
-  last_desc_id = ts->t8_element_get_linear_id (element, level);
+  last_desc_id = ts->t8_element_get_linear_id (element_last_desc, level);
 
   /* The following inequality must apply:
    * last_desc_id of last element of rank < first_desc_id of first element of rank+1*/
   T8_ASSERT (last_desc_id < first_desc_id);
+  /* clean up */
+  ts->t8_element_destroy(1, &element_last_desc);
 }
 #endif
 
