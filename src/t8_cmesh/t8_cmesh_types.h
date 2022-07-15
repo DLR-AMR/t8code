@@ -26,6 +26,7 @@
 #include <t8.h>
 #include <t8_refcount.h>
 #include <t8_data/t8_shmem.h>
+#include <t8_geometry/t8_geometry.h>
 #include "t8_cmesh_stash.h"
 #include "t8_element.h"
 
@@ -57,6 +58,11 @@ typedef enum t8_cmesh_from
 }
 t8_cmesh_from_t;
 #endif
+
+/* Definitions for attribute identifiers that are reserved 
+ * for a special purpose. */
+#define T8_CMESH_VERTICES_ATTRIBUTE_KEY 0       /* Used to store vertex coordinates. */
+#define T8_CMESH_GEOMETRY_ATTRIBUTE_KEY 1       /* Used to store the name of a tree's geometry. */
 
 /** This structure holds the connectivity data of the coarse mesh.
  *  It can either be replicated, then each process stores a copy of the whole
@@ -134,6 +140,9 @@ typedef struct t8_cmesh
                                         or -(first local tree) - 1
                                         if the first tree on that process is shared.
                                         Since this is very memory consuming we only fill it when needed. */
+
+  t8_geometry_handler_t *geometry_handler;  /**< Handles all geometries that are used by trees in this cmesh. */
+
 #ifdef T8_ENABLE_DEBUG
   t8_locidx_t         inserted_trees; /**< Count the number of inserted trees to
                                            check at commit if it equals the total number. */
@@ -274,12 +283,14 @@ typedef struct t8_cprofile
   int                 partition_procs_sent; /**< The number of different processes this process has send
                                            local trees or ghosts to in the last partition call. */
   int                 first_tree_shared; /**< 1 if this processes' first tree is shared. 0 if not. */
-  double              partition_runtime;/**< The runtime of  the last call to \a t8_cmesh_partition. */
-  double              commit_runtime;/**< The runtim of the last call to \a t8_cmesh_commit. */
+  double              partition_runtime; /**< The runtime of  the last call to \a t8_cmesh_partition. */
+  double              commit_runtime; /**< The runtime of the last call to \a t8_cmesh_commit. */
+  double              geometry_evaluate_num_calls; /**< The number of calls to \a t8_geometry_evaluate. */
+  double              geometry_evaluate_runtime; /**< The accumulated runtime of calls to \a t8_geometry_evaluate. */
 }
 t8_cprofile_struct_t;
 
 /** The number of entries in a cprofile struct */
-#define T8_CPROFILE_NUM_STATS 9
+#define T8_CPROFILE_NUM_STATS 11
 
 #endif /* !T8_CMESH_TYPES_H */

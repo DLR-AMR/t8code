@@ -75,8 +75,8 @@ void                t8_forest_partition_create_tree_offsets (t8_forest_t
  */
 void                t8_forest_partition_data (t8_forest_t forest_from,
                                               t8_forest_t forest_to,
-                                              const sc_array_t * data_in,
-                                              sc_array_t * data_out);
+                                              const sc_array_t *data_in,
+                                              sc_array_t *data_out);
 
 T8_EXTERN_C_END ();
 

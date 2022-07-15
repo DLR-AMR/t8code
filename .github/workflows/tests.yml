@@ -34,12 +34,12 @@ name: t8code tests
 on:
   push:
     branches:
-      - master
+      - main
       - develop
       - feature-*CI* # for testing this script, all feature branches with "CI" in their name
   pull_request:
     branches:
-      - master
+      - main
       - develop
   workflow_dispatch: # Be able to trigger this manually on github.com
   # Run every night at 1:10
@@ -291,70 +291,125 @@ jobs:
       run: echo configure $CONFIG_RELEASE
     - name: configure
       run: mkdir build_release && cd build_release && ../configure $CONFIG_RELEASE CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
-    - name: OnFailPrintLog
+    - name: OnFailUploadLog
       if: failure()
-      run: cat build_release/config.log
+      uses: actions/upload-artifact@v1
+      with:
+        name: config_release_MPI.log
+        path: build_release/config.log
     - name: make
       run: cd build_release && make -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
     - name: make check
       run: cd build_release && make check -j4 V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v1
+      with:
+        name: test-suite_release_MPI.log
+        path: build_release/test-suite.log
 # configure and test with MPI (debug mode)
     - name: check debugging mode
       run: echo "Checking debug mode"
     - name: configure
       run: mkdir build_debug && cd build_debug && ../configure $CONFIG_DEBUG CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
-    - name: OnFailPrintLog
+    - name: OnFailUploadLog
       if: failure()
-      run: cat config.log
+      uses: actions/upload-artifact@v1
+      with:
+        name: config_debug_MPI.log
+        path: build_debug/config.log
     - name: make
       run: cd build_debug && make -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
     - name: make check
+
       run: cd build_debug && make check -j4 V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v1
+      with:
+        name: test-suite_debug_MPI.log
+        path: build_debug/test-suite.log
 # configure and test with MPI (C++ compiler only, release mode)
     - name: check C++ compiler
       run: echo "Checking C++, release mode (MPI)"
     - name: configure
       run: mkdir build_release_cpp &&cd build_release_cpp && ../configure CC=mpicxx CXX=mpicxx $CONFIG_RELEASE CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
-    - name: OnFailPrintLog
+    - name: OnFailUploadLog
       if: failure()
-      run: cat build_release_cpp/config.log
+      uses: actions/upload-artifact@v1
+      with:
+        name: config_release_MPI_CXX.log
+        path: build_release_cpp/config.log
     - name: make
       run: cd build_release_cpp && make -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
     - name: make check
       run: cd build_release_cpp && make check -j4 V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v1
+      with:
+        name: test-suite_release_MPI_cxx.log
+        path: build_release_cpp/test-suite.log
 # configure and test serial (release mode)
     - name: check serial
       run: echo "Checking serial release mode"
     - name: configure
       run: mkdir build_serial_release && cd build_serial_release && ../configure $CONFIG_SERIAL_RELEASE CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
-    - name: OnFailPrintLog
+    - name: OnFailUploadLog
       if: failure()
-      run: cat build_serial_release/config.log
+      uses: actions/upload-artifact@v1
+      with:
+        name: config_release_serial.log
+        path: build_serial_release/config.log
     - name: make
       run: cd build_serial_release && make -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
     - name: make check
       run: cd build_serial_release && make check -j4 V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v1
+      with:
+        name: test-suite_release_serial.log
+        path: build_serial_release/test-suite.log
 # configure and test serial (debug mode)
     - name: check serial
       run: echo "Checking debugging mode"
     - name: configure
       run: mkdir build_serial_debug && cd build_serial_debug && ../configure $CONFIG_SERIAL_DEBUG CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
-    - name: OnFailPrintLog
+    - name: OnFailUploadLog
       if: failure()
-      run: cat build_serial_release/config.log
+      uses: actions/upload-artifact@v1
+      with:
+        name: config_debug_serial.log
+        path: build_serial_debug/config.log
     - name: make
       run: cd build_serial_release && make -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
     - name: make check
       run: cd build_serial_release && make check -j4 V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v1
+      with:
+        name: test-suite_release_serial.log
+        path: build_serial_release/test-suite.log
 # configure and test with MPI and netcdf
     - name: Install netcdf
       run: sudo apt-get install libnetcdf-dev
     - name: configure
       run: mkdir build_netcdf && cd build_netcdf && ../configure $CONFIG_RELEASE --with-netcdf CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
-    - name: OnFailPrintLog
+    - name: OnFailUploadLog
       if: failure()
-      run: cat build_netcdf/config.log
+      uses: actions/upload-artifact@v1
+      with:
+        name: config_debug_serial.log
+        path: build_netcdf/config.log
     - name: make
       run: cd build_netcdf && make -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
     - name: make check
       run: cd build_netcdf && make check -j4 V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v1
+      with:
+        name: test-suite_netcdf.log
+        path: build_netcdf/test-suite.log

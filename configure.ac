@@ -23,6 +23,9 @@ echo "o---------------------------------------"
 T8_ARG_ENABLE([debug], [enable debug mode (assertions and extra checks)],
                  [DEBUG])
 
+T8_ARG_ENABLE([less-tests], [uses a fraction of the test cases to speed up development (WARNING: use with care)],
+                 [LESS_TESTS])
+
 echo "o---------------------------------------"
 echo "| Checking MPI and related programs"
 echo "o---------------------------------------"
@@ -76,6 +79,7 @@ AC_CONFIG_LINKS([test/testfiles/test_msh_file_vers2_ascii.msh:test/testfiles/tes
 AC_CONFIG_LINKS([test/testfiles/test_msh_file_vers2_bin.msh:test/testfiles/test_msh_file_vers2_bin.msh])
 AC_CONFIG_LINKS([test/testfiles/test_msh_file_vers4_ascii.msh:test/testfiles/test_msh_file_vers4_ascii.msh])
 AC_CONFIG_LINKS([test/testfiles/test_msh_file_vers4_bin.msh:test/testfiles/test_msh_file_vers4_bin.msh])
+AC_CONFIG_LINKS([example/IO/cmesh/gmsh/circlesquare_hybrid_hole.msh:example/IO/cmesh/gmsh/circlesquare_hybrid_hole.msh])
 
 # Print summary.
 

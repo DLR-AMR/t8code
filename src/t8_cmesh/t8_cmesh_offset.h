@@ -43,7 +43,7 @@ T8_EXTERN_C_BEGIN ();
  * \return              The global id of the first local tree
  *                      of \a proc in the partition \a offset.
  */
-t8_gloidx_t         t8_offset_first (int proc, t8_gloidx_t * offset);
+t8_gloidx_t         t8_offset_first (int proc, const t8_gloidx_t *offset);
 
 /** Given the global tree id of the first local tree of a process and
  * the flag whether it is shared or not, compute the entry in the offset array.
@@ -65,7 +65,7 @@ t8_gloidx_t
  * \return              The number of local trees of \a proc
  *                      in the partition \a offset.
  */
-t8_gloidx_t         t8_offset_num_trees (int proc, t8_gloidx_t * offset);
+t8_gloidx_t         t8_offset_num_trees (int proc, const t8_gloidx_t *offset);
 
 /** Return the last local tree of a given process in a partition.
  * \param [in] proc     A mpi rank.
@@ -73,7 +73,7 @@ t8_gloidx_t         t8_offset_num_trees (int proc, t8_gloidx_t * offset);
  * \return              The global tree id of the last local tree of
  *                      \a proc in \a offset.
  */
-t8_gloidx_t         t8_offset_last (int proc, t8_gloidx_t * offset);
+t8_gloidx_t         t8_offset_last (int proc, const t8_gloidx_t *offset);
 
 /** Check whether a given process has no local trees in a given partition.
  * \param [in] proc     A mpi rank.
@@ -81,7 +81,7 @@ t8_gloidx_t         t8_offset_last (int proc, t8_gloidx_t * offset);
  * \return              nonzero if \a proc does not have local trees in \a offset.
  *                      0 otherwise.
  */
-int                 t8_offset_empty (int proc, t8_gloidx_t * offset);
+int                 t8_offset_empty (int proc, const t8_gloidx_t *offset);
 
 /** Find the next higher rank that is not empty.
  * returns mpisize if this rank does not exist.
@@ -95,7 +95,7 @@ int                 t8_offset_empty (int proc, t8_gloidx_t * offset);
  *                      If no such \a q exists, \a mpisize is returned.
  */
 int                 t8_offset_next_nonempty_rank (int rank, int mpisize,
-                                                  t8_gloidx_t * offset);
+                                                  const t8_gloidx_t *offset);
 
 #if T8_ENABLE_DEBUG
 /** Check whether a given offset array represents a valid
@@ -111,7 +111,8 @@ int                 t8_offset_next_nonempty_rank (int rank, int mpisize,
  * \return                nonzero if the partition is valid,
  *                        0 if not.
  */
-int                 t8_offset_consistent (int mpisize, t8_gloidx_t * offset,
+int                 t8_offset_consistent (int mpisize,
+                                          const t8_shmem_array_t offset_shmem,
                                           t8_gloidx_t num_trees);
 #endif
 
@@ -124,7 +125,7 @@ int                 t8_offset_consistent (int mpisize, t8_gloidx_t * offset,
  *                      0 if it is not.
  */
 int                 t8_offset_in_range (t8_gloidx_t tree_id, int proc,
-                                        t8_gloidx_t * offset);
+                                        const t8_gloidx_t *offset);
 
 /** Find any process that has a given tree as local tree.
  * \param [in] mpisize    The number of MPI ranks, also the number of entries in \a offset minus 1.
@@ -134,7 +135,7 @@ int                 t8_offset_in_range (t8_gloidx_t tree_id, int proc,
  */
 int                 t8_offset_any_owner_of_tree (int mpisize,
                                                  t8_gloidx_t gtree,
-                                                 t8_gloidx_t * offset);
+                                                 const t8_gloidx_t *offset);
 
 /** Find the smallest process that has a given tree as local tree.
  * To increase the runtime, an arbitrary process having this tree as local tree
@@ -151,7 +152,7 @@ int                 t8_offset_any_owner_of_tree (int mpisize,
  */
 int                 t8_offset_first_owner_of_tree (int mpisize,
                                                    t8_gloidx_t gtree,
-                                                   t8_gloidx_t * offset,
+                                                   const t8_gloidx_t *offset,
                                                    int *some_owner);
 
 /** Find the biggest process that has a given tree as local tree.
@@ -169,7 +170,7 @@ int                 t8_offset_first_owner_of_tree (int mpisize,
  */
 int                 t8_offset_last_owner_of_tree (int mpisize,
                                                   t8_gloidx_t gtree,
-                                                  t8_gloidx_t * offset,
+                                                  const t8_gloidx_t *offset,
                                                   int *some_owner);
 
 /** Given a process current_owner that has the tree gtree as local tree,
@@ -184,7 +185,7 @@ int                 t8_offset_last_owner_of_tree (int mpisize,
  */
 int                 t8_offset_next_owner_of_tree (int mpisize,
                                                   t8_gloidx_t gtree,
-                                                  t8_gloidx_t * offset,
+                                                  const t8_gloidx_t *offset,
                                                   int current_owner);
 
 /** Given a process current_owner that has the tree gtree as local tree,
@@ -199,7 +200,7 @@ int                 t8_offset_next_owner_of_tree (int mpisize,
  */
 int                 t8_offset_prev_owner_of_tree (int mpisize,
                                                   t8_gloidx_t gtree,
-                                                  t8_gloidx_t * offset,
+                                                  const t8_gloidx_t *offset,
                                                   int current_owner);
 
 /** Compute a list of all processes that own a specific tree.n \a offset minus 1.
@@ -212,8 +213,8 @@ int                 t8_offset_prev_owner_of_tree (int mpisize,
  */
 void                t8_offset_all_owners_of_tree (int mpisize,
                                                   t8_gloidx_t gtree,
-                                                  t8_gloidx_t * offset,
-                                                  sc_array_t * owners);
+                                                  const t8_gloidx_t *offset,
+                                                  sc_array_t *owners);
 
 /** Query whether in a repartition setting a given process
  *  does send any of its local trees to any other process (including itself)
@@ -226,8 +227,8 @@ void                t8_offset_all_owners_of_tree (int mpisize,
  *                      0 if it does send local trees.
  */
 int                 t8_offset_nosend (int proc, int mpisize,
-                                      t8_gloidx_t * offset_from,
-                                      t8_gloidx_t * offset_to);
+                                      const t8_gloidx_t *offset_from,
+                                      const t8_gloidx_t *offset_to);
 
 /** Query whether in a repartitioning setting, a given process sends local trees (and then possibly ghosts) to a
  * given other process.
@@ -240,8 +241,8 @@ int                 t8_offset_nosend (int proc, int mpisize,
  *                      0 else.
  */
 int                 t8_offset_sendsto (int proca, int procb,
-                                       t8_gloidx_t * t8_offset_from,
-                                       t8_gloidx_t * t8_offset_to);
+                                       const t8_gloidx_t *t8_offset_from,
+                                       const t8_gloidx_t *t8_offset_to);
 
 /** Query whether in a repartitioning setting, a given process sends a given
  * tree to a second process.
@@ -258,8 +259,8 @@ int                 t8_offset_sendsto (int proca, int procb,
  */
 int                 t8_offset_sendstree (int proc_send, int proc_to,
                                          t8_gloidx_t gtree,
-                                         t8_gloidx_t * offset_from,
-                                         t8_gloidx_t * offset_to);
+                                         const t8_gloidx_t *offset_from,
+                                         const t8_gloidx_t *offset_to);
 
 /** Count the number of processes in a given range [a,b] that send to
  * a given other process in a repartitioning setting.
@@ -273,8 +274,8 @@ int                 t8_offset_sendstree (int proc_send, int proc_to,
  *                      to \a mpirank.
  */
 int                 t8_offset_range_send (int start, int end, int mpirank,
-                                          t8_gloidx_t * offset_from,
-                                          t8_gloidx_t * offset_to);
+                                          const t8_gloidx_t *offset_from,
+                                          const t8_gloidx_t *offset_to);
 
 /** Print an offset array. Useful for debugging.
  * \param [in] offset    The offset to print

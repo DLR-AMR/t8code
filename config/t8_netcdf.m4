@@ -8,7 +8,7 @@ dnl
 dnl Using --with-netcdf without any argument defaults to -lnetcdf.
 dnl
 AC_DEFUN([T8_CHECK_NETCDF], [
-
+	AC_MSG_CHECKING([for netcdf library])
 dnl This link test changes the LIBS variable in place for posterity
 dnl SAVE_LIBS="$LIBS"
 dnl T8_CHECK_LIB([netcdf], [nc_open], [NETCDF])
