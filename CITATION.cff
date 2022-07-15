@@ -1,6 +1,6 @@
 title: t8code
-version: 1.0.0
-#date-released: "YYYY-MM-DD"
+version: 0.10.0
+date-released: "2022-07-15"
 repository-code: "https://github.com/holke/t8code" #maybe change to organization
 #url: "https://www.website-to-t8code"
 #doi: "10.1000/xyz123"
