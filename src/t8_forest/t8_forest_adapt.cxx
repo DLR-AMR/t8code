@@ -414,10 +414,7 @@ t8_forest_adapt (t8_forest_t forest)
                                                &el_inserted, elements);
           }
         }
-        el_considered += num_elements_to_adapt_callback;
-        /* TODO [IL]
-         * el_considered += num_siblings;
-         */       
+        el_considered += num_elements_to_adapt_callback;    
       }
       else if (refine == 0) {
         /* The considered elements are neither to be coarsened nor is the first
@@ -447,8 +444,8 @@ t8_forest_adapt (t8_forest_t forest)
 
     /* Check that if we had recursive adaptation, the refine list is now empty. */
     T8_ASSERT (!forest->set_adapt_recursive || refine_list->elem_count == 0);
+#if 0
     /* Set the new element offset of this tree */
-#if 1
     /* Empty trees, even subtrees on processes, lead to problems. 
      * When all elements have been removed from new tree, insert the last 
      * element from old tree (tree_from). */
@@ -472,9 +469,11 @@ t8_forest_adapt (t8_forest_t forest)
     if (!el_inserted) {
       T8_ASSERT (refine == -2);
       T8_ASSERT(!(t8_locidx_t) t8_element_array_get_count (telements));
+      t8_debugf("##### [IL] #####  Tree is going to be deleted\n");
       t8_forest_remove_tree (forest, ltree_id);
       num_trees--;
-      t8_debugf("##### [IL] #####  Tree deleted\n");
+      ltree_id--;
+      t8_debugf("##### [IL] #####  Tree got deleted\n");
     }
     else {
       tree->elements_offset = el_offset;
@@ -498,6 +497,7 @@ t8_forest_adapt (t8_forest_t forest)
   /* We now adapted all local trees */
   /* Compute the new global number of elements */
   t8_forest_comm_global_num_elements (forest);
+  SC_CHECK_ABORT (forest->global_num_elements > 0, "Forest is empty.");
   t8_global_productionf ("Done t8_forest_adapt with %lld total elements\n",
                          (long long) forest->global_num_elements);
 
