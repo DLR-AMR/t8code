@@ -63,8 +63,12 @@ T8_EXTERN_C_BEGIN ();
 /** Portable way to use the const keyword determined by configure. */
 #define t8_restrict _sc_restrict
 
-/** Allocate a \a t-array with \a n elements. */
+/** Widely used assertion. Only active in debug-mode. */
+#ifdef T8_ENABLE_DEBUG
 #define T8_ASSERT(c) SC_CHECK_ABORT ((c), "Assertion '" #c "'")
+#else
+#define T8_ASSERT(c) SC_NOOP ()
+#endif
 
 /** Allocate a \a t-array with \a n elements. */
 #define T8_ALLOC(t,n) (t *) sc_malloc (t8_get_package_id(),    \
