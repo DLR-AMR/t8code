@@ -134,6 +134,9 @@ void                t8_forest_copy_trees (t8_forest_t forest,
                                           t8_forest_t from,
                                           int copy_elements);
 
+void                t8_forest_remove_tree (t8_forest_t forest,
+                                           t8_locidx_t ltree_id);
+
 /** Given the local id of a tree in a forest, return the coarse tree of the
  * cmesh that corresponds to this tree, also return the neighbor information of
  * the tree.

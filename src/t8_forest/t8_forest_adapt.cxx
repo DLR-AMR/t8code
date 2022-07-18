@@ -423,7 +423,6 @@ t8_forest_adapt (t8_forest_t forest)
         /* The considered elements are neither to be coarsened nor is the first
          * one to be refined.
          * We copy the element to the new element array. */
-        T8_ASSERT (refine == 0);
         elements[0] = t8_element_array_push (telements);
         tscheme->t8_element_copy (elements_from[0], elements[0]);
         el_inserted++;
@@ -444,27 +443,58 @@ t8_forest_adapt (t8_forest_t forest)
         /* The element is to be removed */
         el_considered++;
       }
-    }
+    } /* End element loop */
 
     /* Check that if we had recursive adaptation, the refine list is now empty. */
     T8_ASSERT (!forest->set_adapt_recursive || refine_list->elem_count == 0);
     /* Set the new element offset of this tree */
+#if 1
+    /* Empty trees, even subtrees on processes, lead to problems. 
+     * When all elements have been removed from new tree, insert the last 
+     * element from old tree (tree_from). */
+    if (!el_inserted) {
+      T8_ASSERT (refine == -2);
+      T8_ASSERT (!(t8_locidx_t) t8_element_array_get_count (telements));
+      /* We copy the element to the new element array. */
+      elements[0] = t8_element_array_push (telements);
+      tscheme->t8_element_copy (elements_from[0], elements[0]);
+      el_inserted++;
+    }
     tree->elements_offset = el_offset;
     el_offset += el_inserted;
     /* Add to the new number of local elements. */
     forest->local_num_elements += el_inserted;
     /* Possibly shrink the telements array to the correct size */
     t8_element_array_resize (telements, el_inserted);
+#else
+    /* Empty trees lead to problems. When all elements have been removed from 
+     * new tree, remove this tree. */
+    if (!el_inserted) {
+      T8_ASSERT (refine == -2);
+      T8_ASSERT(!(t8_locidx_t) t8_element_array_get_count (telements));
+      t8_forest_remove_tree (forest, ltree_id);
+      num_trees--;
+      t8_debugf("##### [IL] #####  Tree deleted\n");
+    }
+    else {
+      tree->elements_offset = el_offset;
+      el_offset += el_inserted;
+      /* Add to the new number of local elements. */
+      forest->local_num_elements += el_inserted;
+      /* Possibly shrink the telements array to the correct size */
+      t8_element_array_resize (telements, el_inserted);
+    }
+#endif
 
     /* clean up */
     T8_FREE (elements);
     T8_FREE (elements_from);
-  }
+  } /* End tree loop */
   if (forest->set_adapt_recursive) {
     /* clean up */
     sc_list_destroy (refine_list);
   }
-
+  
   /* We now adapted all local trees */
   /* Compute the new global number of elements */
   t8_forest_comm_global_num_elements (forest);

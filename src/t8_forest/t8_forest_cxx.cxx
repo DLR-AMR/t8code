@@ -323,6 +323,15 @@ t8_forest_is_incomplete_family (t8_forest_t forest,
   size_t              zz, size_family;
   int                 child_id_current, level, level_current;
 
+  T8_ASSERT (forest != NULL);
+  T8_ASSERT (ltree_id >= 0);
+  T8_ASSERT (ltree_id < t8_forest_get_num_local_trees (forest->set_from));
+  T8_ASSERT (el_considered >= 0);
+  T8_ASSERT (el_considered < t8_forest_get_tree_num_elements(forest, ltree_id));
+  T8_ASSERT (tscheme != NULL);
+  T8_ASSERT (elements != NULL);
+  T8_ASSERT (size_elements > 0);
+
   /* If current considered element has level 0 there is no coarsening possible */
   if (0 == tscheme->t8_element_level(elements[0])) {
     return 0;
@@ -409,7 +418,7 @@ t8_forest_is_incomplete_family (t8_forest_t forest,
 
 #if T8_ENABLE_MPI
   int num_siblings = tscheme->t8_element_num_siblings (elements[0]);
-  T8_ASSERT(size_family <= num_siblings);
+  T8_ASSERT(size_family <= (size_t)num_siblings);
   if (el_considered == 0 && child_id_current > 0 && 
       ltree_id == 0 && forest->mpirank > 0) {
     size_family = 0;
@@ -1848,7 +1857,90 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
   }
 }
 
-/* Search for a linear element id (at forest->maxlevel) in a sorted array of
+void                t8_forest_remove_tree (t8_forest_t forest,
+                                           t8_locidx_t ltree_id) {
+  t8_tree_t           tree, tree_from;
+  t8_gloidx_t         num_tree_elements;
+  t8_locidx_t         jt, number_of_trees_from;
+  t8_eclass_scheme_c *eclass_scheme;
+  sc_array_t         *trees_from;
+
+  T8_ASSERT (forest != NULL);
+  T8_ASSERT (!forest->committed);
+  T8_ASSERT (ltree_id >= 0);
+
+  number_of_trees_from = forest->trees->elem_count;
+  T8_ASSERT (ltree_id < number_of_trees_from);
+
+  /* Make copy of all trees */
+  trees_from =
+    sc_array_new_size (sizeof (t8_tree_struct_t), number_of_trees_from);
+  sc_array_copy (trees_from, forest->trees);
+  /* destroy trees in forest */
+  sc_array_destroy (forest->trees);
+  /* Create new array for trees */
+  forest->trees =
+    sc_array_new_size (sizeof (t8_tree_struct_t), number_of_trees_from-1);
+  
+  for (jt = 0; jt < number_of_trees_from; jt++) {
+    if (jt != ltree_id) {
+      if (jt < ltree_id) {
+        tree = (t8_tree_t) t8_sc_array_index_locidx (forest->trees, jt);
+        tree_from = (t8_tree_t) t8_sc_array_index_locidx (trees_from, jt);
+      }
+      else {
+        tree = (t8_tree_t) t8_sc_array_index_locidx (forest->trees, jt-1);
+        tree_from = (t8_tree_t) t8_sc_array_index_locidx (trees_from, jt);
+      }
+      
+      tree->eclass = tree_from->eclass;
+      eclass_scheme = forest->scheme_cxx->eclass_schemes[tree->eclass];
+      num_tree_elements = t8_element_array_get_count (&tree_from->elements);
+      t8_element_array_init_size (&tree->elements, eclass_scheme,
+                                  num_tree_elements);
+      /* TODO: replace with t8_elem_copy (not existing yet), in order to
+      * eventually copy additional pointer data stored in the elements?
+      * -> i.m.o. we should not allow such pointer data at the elements */
+      {
+        t8_element_array_copy (&tree->elements, &tree_from->elements);
+        tree->elements_offset = tree_from->elements_offset;
+        /* Copy the first and last descendant */
+        eclass_scheme->t8_element_new (1, &tree->first_desc);
+        eclass_scheme->t8_element_copy (tree_from->first_desc, tree->first_desc);
+        eclass_scheme->t8_element_new (1, &tree->last_desc);
+        eclass_scheme->t8_element_copy (tree_from->last_desc, tree->last_desc);
+      }
+    }
+  }
+  /* TODOs in forest    -->  + Done - Todo
+   * + first_local_tree
+   * + last_local_tree
+   * - global_num_trees
+   * - tree_offsets
+   */
+  if (!ltree_id) {
+    forest->first_local_tree = forest->set_from->first_local_tree+1;
+    forest->last_local_tree = forest->set_from->last_local_tree;
+  }
+  else {
+    forest->first_local_tree = forest->set_from->first_local_tree;
+    forest->last_local_tree = forest->set_from->last_local_tree-1;
+  }
+  if(ltree_id) {
+    forest->global_num_trees = forest->global_num_trees-1;
+
+  }
+  else {
+
+  }
+  
+  SC_CHECK_ABORT (forest->global_num_trees > 0, "Forest is empty.");
+
+  /* clean up */
+  sc_array_destroy (trees_from);
+}
+
+/* Search for a lineasr element id (at forest->maxlevel) in a sorted array of
  * elements. If the element does not exist, return the largest index i
  * such that the element at position i has a smaller id than the given one.
  * If no such i exists, return -1.
