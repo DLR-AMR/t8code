@@ -71,7 +71,7 @@ t8_read_tetgen_file_build_cmesh (const char *prefix, int do_dup,
   fflush (stdout);
 
   sc_stats_compute (sc_MPI_COMM_WORLD, 1, stats);
-  sc_stats_print (t8_get_package_id(), SC_LP_STATISTICS, 1, stats, 1, 1);
+  sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, 1, stats, 1, 1);
 }
 
 int

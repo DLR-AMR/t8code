@@ -89,7 +89,7 @@ T8_EXTERN_C_BEGIN ();
  * The name topidx alludes to mesh topology as this is what cmesh defines.
  * We use the int32_t type here since t8code allows for creating
  * really large connectivities. */
-typedef int32_t t8_topidx_t;
+typedef int32_t     t8_topidx_t;
 /** The MPI Datatype of t8_topidx_t */
 #define T8_MPI_TOPIDX sc_MPI_INT
 /** Macro to get the absolute value of a t8_topidx_t */
@@ -118,7 +118,7 @@ typedef int64_t t8_gloidx_t;
 #define t8_compare_gloidx(v,w) sc_int64_compare(v,w)
 
 /** A type for storing SFC indices */
-typedef uint64_t t8_linearidx_t;
+typedef uint64_t    t8_linearidx_t;
 /** The MPI datatype of t8_linearidx_t */
 #define T8_MPI_LINEARIDX sc_MPI_UNSIGNED_LONG_LONG
 
