@@ -319,6 +319,7 @@ t8_forest_is_incomplete_family (t8_forest_t forest,
                                 t8_element_t **elements,
                                 size_t size_elements)
 {
+  t8_tree_t           tree;
   t8_element_t       *element_parent_current, *element_compare, *element_temp;            
   size_t              zz, size_family;
   int                 child_id_current, level, level_current;
@@ -326,8 +327,12 @@ t8_forest_is_incomplete_family (t8_forest_t forest,
   T8_ASSERT (forest != NULL);
   T8_ASSERT (ltree_id >= 0);
   T8_ASSERT (ltree_id < t8_forest_get_num_local_trees (forest));
+
+  tree = t8_forest_get_tree (forest, ltree_id);
+
+  T8_ASSERT (tree != NULL);
   T8_ASSERT (el_considered >= 0);
-  T8_ASSERT (el_considered < t8_forest_get_tree_num_elements (forest, ltree_id));
+  T8_ASSERT (el_considered < t8_forest_get_tree_element_count(tree));
   T8_ASSERT (tscheme != NULL);
   T8_ASSERT (elements != NULL);
   T8_ASSERT (size_elements > 0);
@@ -356,7 +361,8 @@ t8_forest_is_incomplete_family (t8_forest_t forest,
    * that would be overlapped after coarsening.
    * */
   if (child_id_current > 0 && el_considered > 0) {
-    element_temp = t8_forest_get_element_in_tree (forest, ltree_id, el_considered-1);
+    element_temp = t8_forest_get_tree_element (tree, el_considered-1);
+    //element_temp = t8_forest_get_element_in_tree (forest, ltree_id, el_considered-1);
     level = tscheme->t8_element_level (element_temp);
     /* Only elements with higher or equal level then level of current consideret 
      * element, can get potentially be overlapped. */
@@ -427,7 +433,7 @@ t8_forest_is_incomplete_family (t8_forest_t forest,
       ltree_id == 0 && forest->mpirank > 0) {
     size_family = 0;
   }
-  else if (el_considered > t8_forest_get_tree_num_elements (forest, ltree_id) 
+  else if (el_considered > t8_forest_get_tree_element_count (tree) 
                             - (t8_locidx_t)num_siblings &&
            ltree_id == t8_forest_get_num_local_trees (forest)-1 && 
            forest->mpirank < forest->mpisize-1 ) {
