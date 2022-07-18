@@ -57,7 +57,7 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
   t8_element_t      **fam;
   t8_locidx_t         pos, i;
   size_t              elements_in_array;
-  int                 num_siblings, isfamily;
+  int                 num_siblings, is_family, num_elements_to_adapt_callback;
   int                 child_id;
   /* el_inserted is the index of the last element in telements plus one.
    * el_coarsen is the index of the first element which could possibly
@@ -74,34 +74,51 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
 
   fam = el_buffer;
   pos = *el_inserted - num_siblings;
-  isfamily = 1;
+  is_family = 1;
   child_id = ts->t8_element_child_id (element);
-  while (isfamily && pos >= el_coarsen && child_id > 0 && child_id
+  t8_debugf("###[IL]### recursive call bovore while loop.");
+  while (is_family && pos >= el_coarsen && child_id > 0 && child_id
          == num_siblings - 1) {
-    isfamily = 1;
     /* Get all elements at indices pos, pos + 1, ... ,pos + num_siblings - 1 */
     for (i = 0; i < num_siblings && pos + i < (t8_locidx_t) elements_in_array;
          i++) {
       fam[i] = t8_element_array_index_locidx (telements, pos + i);
     }
-    if (i == num_siblings) {
-      isfamily = ts->t8_element_is_family (fam);
+
+    /* We assume that the elements do not form a family.
+     * So we will only pass the first element to the adapt callback. */
+    is_family = 0;
+    num_elements_to_adapt_callback = 1;
+    if (forest->is_incomplete) {
+      t8_debugf("###[IL]### recursive call with size elements %i \n",i);
+      is_family =  t8_forest_is_incomplete_family (forest, ltreeid, pos,
+                                                   ts, fam, i);
+      if (is_family > 0) {
+        /* We will pass a (in)complete family to the adapt callback */
+        num_elements_to_adapt_callback = is_family;
+        is_family = 1;
+      }
     }
-    else {
-      isfamily = 0;
+    else if (i == num_siblings && ts->t8_element_is_family (fam)) {
+      /* We will pass a full family to the adapt callback */
+      is_family = 1;
+      num_elements_to_adapt_callback = num_siblings;
     }
-    if (isfamily
+    T8_ASSERT (num_elements_to_adapt_callback <= num_siblings);
+
+
+    if (is_family
         && forest->set_adapt_fn (forest, forest->set_from, ltreeid,
-                                 lelement_id, ts, isfamily, num_siblings,
-                                 fam) < 0) {
+                                 lelement_id, ts, is_family, 
+                                 num_elements_to_adapt_callback, fam) == -1) {
       /* Coarsen the element */
-      *el_inserted -= num_siblings - 1;
+      *el_inserted -= num_elements_to_adapt_callback - 1;
       /* remove num_children - 1 elements from the array */
       T8_ASSERT (elements_in_array == t8_element_array_get_count (telements));
       T8_ASSERT (ts->t8_element_level (element) > 0);
       ts->t8_element_parent (fam[0], fam[0]);
       /*Shorten the array by the number of siblings of the fine element */
-      elements_in_array -= num_siblings - 1;
+      elements_in_array -= num_elements_to_adapt_callback - 1;
       num_siblings = ts->t8_element_num_siblings (fam[0]);
       t8_element_array_resize (telements, elements_in_array);
       /* Set element to the new constructed parent. Since resizing the array
@@ -111,10 +128,10 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
     else {
       /* If the elements are no family or
        * the family is not to be coarsened we abort the coarsening process */
-      isfamily = 0;
+      is_family = 0;
     }
     pos -= num_siblings - 1;
-  }
+  } /* End while loop */
 }
 
 /* Check the lastly inserted element of an array for recursive refining.
@@ -178,6 +195,7 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
       ts->t8_element_destroy (1, el_buffer);
     }
     else {
+      T8_ASSERT(refine == 0);
       /* This element should not get refined,
        * we remove it from the buffer and add it to the array of new elements. */
       insert_el = t8_element_array_push (telements);
@@ -185,7 +203,7 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
       ts->t8_element_destroy (1, el_buffer);
       (*num_inserted)++;
     }
-  }
+  } /* End while loop */
 }
 
 /* TODO: optimize this when we own forest_from */
@@ -444,7 +462,7 @@ t8_forest_adapt (t8_forest_t forest)
 
     /* Check that if we had recursive adaptation, the refine list is now empty. */
     T8_ASSERT (!forest->set_adapt_recursive || refine_list->elem_count == 0);
-#if 0
+#if 1
     /* Set the new element offset of this tree */
     /* Empty trees, even subtrees on processes, lead to problems. 
      * When all elements have been removed from new tree, insert the last 
