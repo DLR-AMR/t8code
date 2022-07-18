@@ -43,7 +43,7 @@ t8_adapt_callback_remove (t8_forest_t forest,
                           const int num_elements, 
                           t8_element_t * elements[])
 {
-  if (!(rand()%2)) {
+  if ((rand()%4)) {
       return -2;
   }
   return 0;
@@ -114,16 +114,18 @@ t8_test_emelemts_remove (int cmesh_id)
   min_level = t8_forest_min_nonempty_level (cmesh, scheme);
 
   min_level = SC_MAX (min_level, 1);
-  max_level = min_level + 1;
+  max_level = min_level + 4;
   
   for (level = min_level; level < max_level; level++) {
-    t8_debugf("### [IL] ### cmesh_id %i \n\n", cmesh_id);
+    t8_debugf("### [IL] ### cmesh_id %i, level %i \n\n", cmesh_id, level);
     t8_cmesh_ref (cmesh);
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
+    //t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_test_base");
     forest = t8_adapt_forest (forest, t8_adapt_callback_refine, 0);
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 5; i++) {
         forest = t8_adapt_forest (forest, t8_adapt_callback_refine, 0);
         forest = t8_adapt_forest (forest, t8_adapt_callback_remove, 0);
+        //t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_test_remove");
     }
     for (int i = 0; i < 20; i++) {
       forest = t8_adapt_forest (forest, t8_adapt_callback_coarse, 0);
@@ -153,10 +155,7 @@ test_cmesh_emelemts_remove_all ()
     if (cmesh_id < bigmesh_id || 
         cmesh_id >= bigmesh_id + t8_get_number_of_new_bigmesh_cmesh_testcases ()) {
         if (cmesh_id < 66) {
-          if ( cmesh_id > 25) {
             t8_test_emelemts_remove(cmesh_id);
-
-          }
         }
     }
   }
@@ -176,13 +175,14 @@ main (int argc, char **argv)
   p4est_init (NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
-  unsigned int seed = time(0);
-  //unsigned int seed = 1657295920;
+  unsigned int seed;
+  seed = time(0);
+  //seed = 1657994976;
 
   t8_global_productionf("Seed for test: %u \n", seed);
   srand(seed);
-  test_cmesh_emelemts_remove_all ();
-  //t8_test_emelemts_remove(0);
+  //test_cmesh_emelemts_remove_all ();
+  t8_test_emelemts_remove(10);
   sc_finalize ();
 
   mpiret = sc_MPI_Finalize ();
