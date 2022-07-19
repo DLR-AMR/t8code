@@ -174,17 +174,8 @@ t8_recursive_nca_check(t8_element_t *check_nca, t8_element_t *desc_a,
         /* Iterate over all children of parent_b */
         for(j = 0; j < num_children_b; j++){
             ts->t8_element_child(parent_b, j, desc_b);
-            
-            /*ts->t8_element_set_linear_id(desc_a, 3, 413);
-            ts->t8_element_set_linear_id(desc_b, 4, 3578);
-            ts->t8_element_debug_print(desc_a);
-            ts->t8_element_debug_print(desc_b);
-            ts->t8_element_set_linear_id(check_nca, 1, 5);
-            t8_debugf("[D] correct_nca: \n");
-            ts->t8_element_debug_print(check_nca);*/
-
-
             ts->t8_element_nca(desc_a, desc_b, check);
+            
             if(ts->t8_element_compare(check_nca, check)){
                 level_a = ts->t8_element_level(desc_a);
                 level_b = ts->t8_element_level(desc_b);
