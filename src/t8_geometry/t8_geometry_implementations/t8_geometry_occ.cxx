@@ -119,8 +119,8 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
                                    active_tree_vertices, ref_coords,
                                    out_coords);
 
-  int                 num_edges = t8_eclass_num_edges[active_tree_class];
-  int                 num_faces = t8_eclass_num_faces[active_tree_class];
+  const int           num_edges = t8_eclass_num_edges[active_tree_class];
+  const int           num_faces = t8_eclass_num_faces[active_tree_class];
   double              interpolated_coords[3], curve_param, surface_params[2],
     cur_delta[3];
   gp_Pnt              pnt;
