@@ -1326,10 +1326,10 @@ t8_dpyramid_get_face_corner (const t8_dpyramid_t *pyra, int face, int corner)
 }
 
 /**
- * TODO: Write  documentation
+ * Compute if the pyramid \a check lays inside pyramid \a p
  * 
- * @\param p 
- * @\param check 
+ * \param p       
+ * \param check 
  * @return int 
  */
 int
@@ -1381,30 +1381,29 @@ t8_dpyramid_is_inside_pyra (const t8_dpyramid_t *p,
  * for p.
  * We can store the last tetrahedra ancestor in anc.*/
 int
-t8_dpyramid_is_inside_tet (const t8_dpyramid_t *p, const int level,
+t8_dpyramid_is_inside_tet (const t8_dpyramid_t *tet, const int level,
                            t8_dpyramid_t *anc)
 {
-  T8_ASSERT (t8_dpyramid_shape (p) == T8_ECLASS_TET);
-  T8_ASSERT (p->type == 0 || p->type == 3);
+  T8_ASSERT (t8_dpyramid_shape (tet) == T8_ECLASS_TET);
+  T8_ASSERT (tet->type == 0 || tet->type == 3);
   int                 i;
   t8_dpyramid_coord_t coord_at_level;
-  /* TODO: This actually is not a tet */
   /*the tet is initialized, the ancestor will be computed */
-  t8_dtet_t           tet;
-  tet.x = 0;
-  tet.y = 0;
-  tet.z = 0;
+  t8_dpyramid_t       pyra_at_level;    /* Candidate pyramid, where the tet could lay in. */
+  pyra_at_level.x = 0;
+  pyra_at_level.y = 0;
+  pyra_at_level.z = 0;
   for (i = 1; i < level; i++) {
     /*Update the coordinate of tet to i first bits */
     coord_at_level = (1 << (T8_DPYRAMID_MAXLEVEL - i));
-    tet.x = tet.x | (p->x & coord_at_level);
-    tet.y = tet.y | (p->y & coord_at_level);
-    tet.z = tet.z | (p->z & coord_at_level);
-    tet.level = i;
-    if (t8_dpyramid_is_inside_pyra (p, &tet) == 0) {
+    pyra_at_level.x = pyra_at_level.x | (tet->x & coord_at_level);
+    pyra_at_level.y = pyra_at_level.y | (tet->y & coord_at_level);
+    pyra_at_level.z = pyra_at_level.z | (tet->z & coord_at_level);
+    pyra_at_level.level = i;
+    if (t8_dpyramid_is_inside_pyra (tet, &pyra_at_level) == 0) {
       /*p is inside a tet */
       if (anc != NULL) {
-        t8_dtet_ancestor (p, i, anc);
+        t8_dtet_ancestor (tet, i, anc);
       }
       return i;
     }
