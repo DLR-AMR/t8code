@@ -1577,7 +1577,7 @@ t8_dpyramid_vertex_reference_coords (const t8_dpyramid_t *elem,
 }
 
 /*Compute the first ancestor in the shape of a pyramid for a tet*/
-void
+static void
 t8_dpyramid_first_pyra_anc (const t8_dpyramid_t *tet,
                             t8_dpyramid_t *first_pyra_anc)
 {
