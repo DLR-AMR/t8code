@@ -1326,28 +1326,29 @@ t8_dpyramid_get_face_corner (const t8_dpyramid_t *pyra, int face, int corner)
 }
 
 /**
- * Compute if the pyramid \a check lays inside pyramid \a p
+ * Compute if the tetrahedron \a tet lays inside a pyramid  with coordinates given by \a check.
+ * Both pyramids of type 6 and 7 are tested, hence the type of \a check does not have to be set.
  * 
- * \param p       
- * \param check 
- * @return int 
+ * \param tet     Input pyramid in the shape of a tetrahedron 
+ * \param check   Input pyramid, candidate where \a tet could lay in.
+ * \return int    the type of the pyramid where tet is inside, or 0 if it does not lay in a pyramid given by the coordinates of \a check.
  */
 int
-t8_dpyramid_is_inside_pyra (const t8_dpyramid_t *p,
+t8_dpyramid_is_inside_pyra (const t8_dpyramid_t *tet,
                             const t8_dpyramid_t *check)
 {
   t8_dpyramid_coord_t length = T8_DPYRAMID_LEN (check->level);
-  t8_dpyramid_coord_t diff = p->z - check->z;
-  T8_ASSERT (t8_dpyramid_shape (p) == T8_ECLASS_TET);
+  t8_dpyramid_coord_t diff = tet->z - check->z;
+  T8_ASSERT (t8_dpyramid_shape (tet) == T8_ECLASS_TET);
 
-  T8_ASSERT (0 <= p->level && p->level <= T8_DPYRAMID_MAXLEVEL);
+  T8_ASSERT (0 <= tet->level && tet->level <= T8_DPYRAMID_MAXLEVEL);
 
   /* test if p is inside check, if check is of type 6 */
-  if (((check->x + diff) <= p->x && p->x < (check->x + length)) &&
-      ((check->y + diff) <= p->y && p->y < (check->y + length)) &&
-      (check->z <= p->z && p->z < (check->z + length))) {
-    if ((check->x + diff == p->x && (p->type == 3 || p->type == 1)) ||
-        (check->y + diff == p->y && (p->type == 0 || p->type == 2))) {
+  if (((check->x + diff) <= tet->x && tet->x < (check->x + length)) &&
+      ((check->y + diff) <= tet->y && tet->y < (check->y + length)) &&
+      (check->z <= tet->z && tet->z < (check->z + length))) {
+    if ((check->x + diff == tet->x && (tet->type == 3 || tet->type == 1)) ||
+        (check->y + diff == tet->y && (tet->type == 0 || tet->type == 2))) {
       /*tet touches face of pyra but is outside of pyra */
       return 0;
     }
@@ -1357,11 +1358,11 @@ t8_dpyramid_is_inside_pyra (const t8_dpyramid_t *p,
     }
   }
   /* test if p is inside check, if check is of type 7 */
-  else if ((check->x <= p->x && p->x <= (check->x + diff)) &&
-           (check->y <= p->y && p->y <= (check->y + diff)) &&
-           (check->z <= p->z && p->z < (check->z + length))) {
-    if ((check->x + diff == p->x && (p->type == 0 || p->type == 2)) ||
-        (check->y + diff == p->y && (p->type == 3 || p->type == 1))) {
+  else if ((check->x <= tet->x && tet->x <= (check->x + diff)) &&
+           (check->y <= tet->y && tet->y <= (check->y + diff)) &&
+           (check->z <= tet->z && tet->z < (check->z + length))) {
+    if ((check->x + diff == tet->x && (tet->type == 0 || tet->type == 2)) ||
+        (check->y + diff == tet->y && (tet->type == 3 || tet->type == 1))) {
       /*tet touches face of pyra, but is outside of pyra */
       return 0;
     }
