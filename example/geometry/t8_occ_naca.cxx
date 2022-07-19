@@ -44,6 +44,31 @@ struct t8_naca_surface_adapt_data
   int                *levels;   /* Array with refinement levels */
 };
 
+/** 
+ * The adaptation callback function. This function will be called once for each element
+ * and the return value decides whether this element should be refined or not.
+ *   return > 0 -> This element should get refined.
+ *   return = 0 -> This element should not get refined.
+ * If the current element is the first element of a family (= all level l elements that arise from refining
+ * the same level l-1 element) then this function is called with the whole family of elements
+ * as input and the return value additionally decides whether the whole family should get coarsened.
+ *   return > 0 -> The first element should get refined.
+ *   return = 0 -> The first element should not get refined.
+ *   return < 0 -> The whole family should get coarsened.
+ * 
+ * In this case, the function retrieves the geometry information of the tree, the element belongs to.
+ * Based on that, the function looks, if the tree is linked to a specific surface 
+ * and if this cell touches this surface. If true, it returns 1. Otherwise it returns 0.
+ *  
+ * \param [in] forest       The current forest that is in construction.
+ * \param [in] forest_from  The forest from which we adapt the current forest (in our case, the uniform forest)
+ * \param [in] which_tree   The process local id of the current tree.
+ * \param [in] lelement_id  The tree local index of the current element (or the first of the family).
+ * \param [in] ts           The refinement scheme for this tree's element class.
+ * \param [in] is_family    if 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
+ * \param [in] num_elements The number of entries in \a elements elements that are defined.
+ * \param [in] elements     The element or family of elements to consider for refinement/coarsening.
+ */   
 int
 t8_naca_surface_adapt_callback (t8_forest_t forest,
                                 t8_forest_t forest_from,
@@ -89,6 +114,13 @@ t8_naca_surface_adapt_callback (t8_forest_t forest,
   return 0;
 }
 
+/** 
+ * The surface refinement function. Here, we refine all elements, which touch certain surfaces.
+ *  
+ * \param [in] forest           The forest that has to be refined
+ * \param [in] rlevel_dorsal    The refinement level of the elements touching the dorsal side of the wing
+ * \param [in] rlevel_ventral   The refinement level of the elements touching the ventral side of the wing
+ */   
 int
 t8_naca_surface_refinement (t8_forest_t forest, int rlevel_dorsal,
                             int rlevel_ventral)
@@ -136,6 +168,33 @@ struct t8_naca_plane_adapt_data
   int                 rlevel;   /* The max refinement level */
 };
 
+
+/** 
+ * The adaptation callback function. This function will be called once for each element
+ * and the return value decides whether this element should be refined or not.
+ *   return > 0 -> This element should get refined.
+ *   return = 0 -> This element should not get refined.
+ * If the current element is the first element of a family (= all level l elements that arise from refining
+ * the same level l-1 element) then this function is called with the whole family of elements
+ * as input and the return value additionally decides whether the whole family should get coarsened.
+ *   return > 0 -> The first element should get refined.
+ *   return = 0 -> The first element should not get refined.
+ *   return < 0 -> The whole family should get coarsened.
+ * 
+ * In this case, the function checks, if the element or family is in a certain proximity to a refinement plane.
+ * If true and the element does not have a max level, 1 is returned. If a family of elements
+ * is too far away and the level is not below or equal the min level threshold -1 is returned. 
+ * Otherwise 0 is returned.
+ *  
+ * \param [in] forest       The current forest that is in construction.
+ * \param [in] forest_from  The forest from which we adapt the current forest (in our case, the uniform forest)
+ * \param [in] which_tree   The process local id of the current tree.
+ * \param [in] lelement_id  The tree local index of the current element (or the first of the family).
+ * \param [in] ts           The refinement scheme for this tree's element class.
+ * \param [in] is_family    if 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
+ * \param [in] num_elements The number of entries in \a elements elements that are defined.
+ * \param [in] elements     The element or family of elements to consider for refinement/coarsening.
+ */   
 int
 t8_naca_plane_adapt_callback (t8_forest_t forest,
                               t8_forest_t forest_from,
@@ -176,6 +235,16 @@ t8_naca_plane_adapt_callback (t8_forest_t forest,
   return 0;
 }
 
+/** 
+ * The plane refinement function. Here we create a refinement loop, which moves a plane
+ * through the mesh and refines it near the plane.
+ *  
+ * \param [in] forest           The forest which has to be refined.
+ * \param [in] level            The base level of the mesh.
+ * \param [in] rlevel           The max level the elements get refined to.
+ * \param [in] steps            The amount of time steps the plane makes.
+ * \param [in] dist             The distance an element must not exceed from the plane, to get refined.
+ */  
 int
 t8_naca_plane_refinement (t8_forest_t forest, int level, int rlevel,
                           int steps, double dist)
