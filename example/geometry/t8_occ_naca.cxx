@@ -31,7 +31,6 @@
 #include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_vec.h>
 #include <t8_geometry/t8_geometry_base.hxx>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx>
 #include <t8_geometry/t8_geometry_helpers.h>
@@ -85,7 +84,7 @@ t8_naca_surface_adapt_callback (t8_forest_t forest,
     t8_forest_get_user_data (forest);
   T8_ASSERT (adapt_data != NULL);
 
-  for (int iface = 0; iface < 6; ++iface) {
+  for (int iface = 0; iface < ts->t8_element_num_faces(elements[0]); ++iface) {
     /* We look if a face of the element lies on a face of the tree */
     if (ts->t8_element_is_root_boundary (elements[0], iface)) {
       /* We retrieve the face it lies on */
