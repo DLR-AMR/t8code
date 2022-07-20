@@ -174,7 +174,7 @@ public:
   virtual int         t8_element_get_face_corner (const t8_element_t *element,
                                                   int face, int corner)
   {
-    SC_ABORT ("Not implemented.\n");
+    SC_ABORT_NOT_REACHED ();    /* it is impossible to have a face of a vertex */
     return 0;                   /* prevents compiler warning */
   }
 
