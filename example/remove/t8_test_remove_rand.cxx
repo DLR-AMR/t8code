@@ -114,20 +114,20 @@ t8_test_emelemts_remove (int cmesh_id)
   min_level = t8_forest_min_nonempty_level (cmesh, scheme);
 
   min_level = SC_MAX (min_level, 1);
-  max_level = min_level + 4;
+  max_level = min_level + 1;
   
   for (level = min_level; level < max_level; level++) {
     t8_debugf("### [IL] ### cmesh_id %i, level %i \n\n", cmesh_id, level);
     t8_cmesh_ref (cmesh);
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
     //t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_test_base");
-    forest = t8_adapt_forest (forest, t8_adapt_callback_refine, 0);
+    //forest = t8_adapt_forest (forest, t8_adapt_callback_refine, 0);
     for (int i = 0; i < 5; i++) {
         forest = t8_adapt_forest (forest, t8_adapt_callback_refine, 0);
         forest = t8_adapt_forest (forest, t8_adapt_callback_remove, 0);
         //t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_test_remove");
     }
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < 15; i++) {
       forest = t8_adapt_forest (forest, t8_adapt_callback_coarse, 0);
       SC_CHECK_ABORT (t8_forest_no_overlap(forest),
                   "The forest has overlapping elements");
@@ -177,7 +177,7 @@ main (int argc, char **argv)
 
   unsigned int seed;
   seed = time(0);
-  //seed = 1657994976;
+  //seed = 1658235940;
 
   t8_global_productionf("Seed for test: %u \n", seed);
   srand(seed);

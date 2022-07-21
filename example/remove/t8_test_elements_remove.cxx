@@ -90,6 +90,10 @@ t8_adapt_callback_remove (t8_forest_t forest,
   
   T8_ASSERT (adapt_data != NULL);
 
+  if (which_tree == 1) {
+    return -2;
+  }
+
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
   
   /* Loop through all balls in adapt_data. */
@@ -225,34 +229,29 @@ t8_test_emelemts_remove (int cmesh_id)
 
   scheme = t8_scheme_new_default_cxx ();
   /* Construct a cmesh */
-  cmesh = t8_test_create_cmesh (cmesh_id);
+  //cmesh = t8_test_create_cmesh (cmesh_id);
   //cmesh = t8_cmesh_new_hypercube (T8_ECLASS_QUAD, sc_MPI_COMM_WORLD, 0, 0, 0);
-  //cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
+  cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
   /* Compute the first level, such that no process is empty */
   min_level = t8_forest_min_nonempty_level (cmesh, scheme);
 
-  min_level = SC_MAX (min_level, 1);
-  max_level = min_level + 4;
+  min_level = SC_MAX (min_level, 3);
+  max_level = min_level + 1;
 
   for (level = min_level; level < max_level; level++) {
-    t8_debugf(" ############################# cmesh_id: %i/%i level: %i\n", 
+    t8_debugf(" ###[IL]### cmesh_id: %i/%i level: %i\n", 
               cmesh_id, t8_get_number_of_all_testcases (), level);
     t8_cmesh_ref (cmesh);
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
 
-    t8_debugf("\n\n##############STEP1###############\n\n");
-    //t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_mpi_test_before");
-    forest_1 = t8_adapt_forest (forest  , t8_adapt_callback_refine, 1, 0, 0, &adapt_data);
-    //SC_ABORT ("TEST ENDE\n");
-    //t8_forest_write_vtk (forest_1, "/home/ioannis/VBshare/paraview_export/t8_mpi_test_after");
-    t8_debugf("\n\n##############STEP2###############\n\n");
-    forest_1 = t8_adapt_forest (forest_1, t8_adapt_callback_remove, 1, 0, 0, &adapt_data);
-    t8_debugf("\n\n##############STEP3###############\n\n");
+    forest_1 = t8_adapt_forest (forest  , t8_adapt_callback_refine, 0, 0, 0, &adapt_data);
+    forest_1 = t8_adapt_forest (forest_1, t8_adapt_callback_remove, 0, 0, 0, &adapt_data);
+    t8_forest_write_vtk (forest_1, "/home/ioannis/VBshare/paraview_export/t8_cube_1");
     t8_forest_ref (forest_1);
-    forest_2 = t8_adapt_forest (forest_1, t8_adapt_callback_coarse, 1, 0, 0, &adapt_data);
-    forest_2 = t8_adapt_forest (forest_2, t8_adapt_callback_refine, 1, 0, 0, &adapt_data);
-    forest_2 = t8_adapt_forest (forest_2, t8_adapt_callback_remove, 1, 0, 0, &adapt_data);
-    t8_debugf("\n\n##############STEP4###############\n\n");
+    forest_2 = t8_adapt_forest (forest_1, t8_adapt_callback_coarse, 0, 0, 0, &adapt_data);
+    forest_2 = t8_adapt_forest (forest_2, t8_adapt_callback_refine, 0, 0, 0, &adapt_data);
+    forest_2 = t8_adapt_forest (forest_2, t8_adapt_callback_remove, 0, 0, 0, &adapt_data);
+    t8_forest_write_vtk (forest_2, "/home/ioannis/VBshare/paraview_export/t8_cube_2");
 
 #if T8_ENABLE_MPI
   SC_CHECK_ABORT (t8_forest_no_overlap(forest_1),
@@ -264,8 +263,8 @@ t8_test_emelemts_remove (int cmesh_id)
                     "The forests are not equal");
 #endif
     // will get replaced by recursive coarseening
-    for (int i = 0; i < 10*level; i++) {
-      forest_2 = t8_adapt_forest (forest_2, t8_adapt_callback_coarse_all, 1, 0, 0, &adapt_data);
+    for (int i = 0; i < 5*level; i++) {
+      forest_2 = t8_adapt_forest (forest_2, t8_adapt_callback_coarse_all, 0, 0, 0, &adapt_data);
       SC_CHECK_ABORT (t8_forest_no_overlap(forest_2),
                   "The forest has overlapping elements");
     }
