@@ -470,7 +470,7 @@ t8_forest_adapt (t8_forest_t forest)
     if (!el_inserted) {
       T8_ASSERT (refine == -2);
       T8_ASSERT (!(t8_locidx_t) t8_element_array_get_count (telements));
-      /* We copy the element to the new element array. */
+      /* We copy the last element to the new element array. */
       elements[0] = t8_element_array_push (telements);
       tscheme->t8_element_copy (elements_from[0], elements[0]);
       el_inserted++;
@@ -481,10 +481,12 @@ t8_forest_adapt (t8_forest_t forest)
     forest->local_num_elements += el_inserted;
     /* Possibly shrink the telements array to the correct size */
     t8_element_array_resize (telements, el_inserted);
-#else
+#endif
+#if 0
     /* Empty trees lead to problems. When all elements have been removed from 
      * new tree, remove this tree. */
     if (!el_inserted) {
+      /* We need extra variable num_trees_removed */
       T8_ASSERT (refine == -2);
       T8_ASSERT(!(t8_locidx_t) t8_element_array_get_count (telements));
       t8_debugf("##### [IL] #####  Tree is going to be deleted\n");
@@ -502,6 +504,14 @@ t8_forest_adapt (t8_forest_t forest)
       t8_element_array_resize (telements, el_inserted);
     }
 #endif
+#if 0
+    tree->elements_offset = el_offset;
+    el_offset += el_inserted;
+    /* Add to the new number of local elements. */
+    forest->local_num_elements += el_inserted;
+    /* Possibly shrink the telements array to the correct size */
+    t8_element_array_resize (telements, el_inserted);
+#endif
 
     /* clean up */
     T8_FREE (elements);
@@ -511,13 +521,27 @@ t8_forest_adapt (t8_forest_t forest)
     /* clean up */
     sc_list_destroy (refine_list);
   }
+
+#if 0
+  /* Empty trees lead to problems. When all elements have been removed from 
+   * new tree, remove this tree. */
+  for (ltree_id = 0; ltree_id < num_trees; ltree_id++) {
+    tree = t8_forest_get_tree (forest, ltree_id);
+    if (!(t8_locidx_t) t8_element_array_get_count (&tree->elements)) {
+      t8_forest_remove_tree (forest, ltree_id);
+      num_trees--;
+      ltree_id--;
+    }
+  }
+#endif
   
   /* We now adapted all local trees */
   /* Compute the new global number of elements */
   t8_forest_comm_global_num_elements (forest);
-  SC_CHECK_ABORT (forest->global_num_elements > 0, "Forest is empty.");
   t8_global_productionf ("Done t8_forest_adapt with %lld total elements\n",
                          (long long) forest->global_num_elements);
+  
+  SC_CHECK_ABORT (forest->global_num_elements > 0, "Forest is empty.");
 
   /* if profiling is enabled, measure runtime */
   if (forest->profile != NULL) {
