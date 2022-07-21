@@ -1728,6 +1728,7 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
       }
       else {
         /* First prozess, nothing to to any more */
+        T8_ASSERT (!forest->mpirank);
         return 0;
       }
       T8_ASSERT(global_neighbour_tree_idx == forest->first_local_tree ||
@@ -1744,6 +1745,7 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
       }
       else {
         /* Last process, nothing to to any more  */
+        T8_ASSERT (forest->mpirank == forest->mpisize-1);
         return 0;
       }
       T8_ASSERT(forest->last_local_tree == global_neighbour_tree_idx ||
