@@ -44,14 +44,14 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim,
             : ((p8est_connectivity_t *) conn)->_ENTRY)
   t8_cmesh_t          cmesh;
   t8_gloidx_t         ltree;
-  p4est_topidx_t      treevertex;
+  p4est_locidx_t      treevertex;
   double              vertices[24];     /* Only 4 * 3 = 12 used in 2d */
   int                 num_tvertices;
   int                 num_faces;
   int                 ivertex, iface;
   int                 use_offset;
   int8_t              ttf;
-  p4est_topidx_t      ttt;
+  p4est_locidx_t      ttt;
   t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
 
   T8_ASSERT (dim == 2 || dim == 3);
@@ -372,7 +372,7 @@ t8_cmesh_new_hypercube_hybrid (sc_MPI_Comm comm, int do_partition,
 {
   int                 i;
   t8_cmesh_t          cmesh;
-  t8_topidx_t         vertices[8];
+  t8_locidx_t         vertices[8];
   double              vertices_coords_temp[24];
   double              attr_vertices[24];
   double              null_vec[3] = { 0, 0, 0 };
@@ -610,7 +610,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
     1, 1, 1, 2, 1, 6, 2, 3
   };
   int                 i;
-  t8_topidx_t         vertices[8];
+  t8_locidx_t         vertices[8];
   double              attr_vertices[24];
   int                 mpirank, mpiret;
   double              vertices_coords[24] = {

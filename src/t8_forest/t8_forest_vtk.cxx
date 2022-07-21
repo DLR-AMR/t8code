@@ -728,7 +728,7 @@ t8_forest_num_points (t8_forest_t forest, int count_ghosts)
   num_points = 0;
   for (itree = 0; itree < (t8_locidx_t) forest->trees->elem_count; itree++) {
     /* Get the tree that stores the elements */
-    tree = (t8_tree_t) t8_sc_array_index_topidx (forest->trees, itree);
+    tree = (t8_tree_t) t8_sc_array_index_locidx (forest->trees, itree);
     /* Get the scheme of the current tree */
     tscheme = t8_forest_get_eclass_scheme (forest, tree->eclass);
     num_elements = t8_element_array_get_count (&tree->elements);

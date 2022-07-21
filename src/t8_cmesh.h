@@ -765,7 +765,7 @@ void                t8_cmesh_translate_coordinates (const double *coords_in,
                                                     double translate[3]);
 
 /**TODO: Add proper documentation*/
-void                t8_cmesh_new_translate_vertices_to_attributes (t8_topidx_t
+void                t8_cmesh_new_translate_vertices_to_attributes (t8_locidx_t
                                                                    *
                                                                    tvertices,
                                                                    double

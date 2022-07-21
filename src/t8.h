@@ -70,19 +70,6 @@ T8_EXTERN_C_BEGIN ();
 #define T8_FREE P4EST_FREE              /**< TODO: write proper function. */
 #define T8_REALLOC P4EST_REALLOC        /**< TODO: write proper function. */
 
-/** A type for counting coarse mesh related values (trees, tree vertices, ...).
- * The name topidx alludes to mesh topology as this is what cmesh defines.
- * We use the p4est_locidx_t type here since t8code allows for creating
- * really large connectivities.
- */
-typedef p4est_locidx_t t8_topidx_t;
-/** The MPI Datatype of t8_topidx_t */
-#define T8_MPI_TOPIDX P4EST_MPI_LOCIDX
-/** Macro to get the absolute value of a t8_topidx_t */
-#define T8_TOPIDX_ABS(x) P4EST_LOCIDX_ABS(x)
-/** Comparison function for t8_topidx_t */
-#define t8_compare_topidx(v,w) p4est_locidx_compare(v,w)
-
 /** A type for processor-local indexing. */
 typedef p4est_locidx_t t8_locidx_t;
 /** The MPI Datatype of t8_locidx_t */
@@ -242,13 +229,6 @@ void                t8_errorf (const char *fmt, ...)
  *                           You can also choose from log levels SC_LP_*.
  */
 void                t8_init (int log_threshold);
-
-/** Return a pointer to an array element indexed by a t8_topidx_t.
- * \param [in] index needs to be in [0]..[elem_count-1].
- * \return           A void * pointing to entry \a it in \a array.
- */
-void               *t8_sc_array_index_topidx (sc_array_t *array,
-                                              t8_topidx_t it);
 
 /** Return a pointer to an array element indexed by a t8_locidx_t.
  * \param [in] index needs to be in [0]..[elem_count-1].

@@ -251,7 +251,7 @@ t8_cmesh_trees_struct_t;
 typedef struct t8_part_tree
 {
   char               *first_tree;       /* Stores the trees, the ghosts and the attributes.
-                                           The last 2*sizeof(t8_topidx) bytes store num_trees and num_ghosts */
+                                           The last 2*sizeof(t8_locidx) bytes store num_trees and num_ghosts */
   t8_locidx_t         first_tree_id;    /* local tree_id of the first tree. -1 if num_trees = 0 */
   t8_locidx_t         first_ghost_id;   /* TODO: document. -1 if num_ghost=0, 0 for the first part, (not num_local_trees!)
                                            0 <= first_ghost_id < num_ghosts */
