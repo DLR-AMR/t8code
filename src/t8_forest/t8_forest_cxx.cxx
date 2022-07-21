@@ -1716,11 +1716,6 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
   t8_gloidx_t         global_neighbour_tree_idx;
   int                 ret;
 
-  if (forest->local_num_elements <= 0 || forest->trees == NULL
-      || forest->first_local_tree > forest->last_local_tree) {
-    /* This forest is empty and therefore the first tree is not shared */
-    return 0;
-  }
   if (forest->is_incomplete) {
     if (first_or_last == 0) {
       if (forest->mpirank < forest->mpisize-1){
@@ -1758,6 +1753,11 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
     return global_neighbour_tree_idx == forest->first_local_tree;
   }
   else {
+    if (forest->local_num_elements <= 0 || forest->trees == NULL
+        || forest->first_local_tree > forest->last_local_tree) {
+      /* This forest is empty and therefore the first tree is not shared */
+      return 0;
+    }
     if (first_or_last == 0) {
       /* Get a pointer to the first tree */
       tree = (t8_tree_t) sc_array_index (forest->trees, 0);
