@@ -66,7 +66,7 @@ T8_EXTERN_C_BEGIN ();
 /** Widely used assertion. Only active in debug-mode. */
 /* Note that we use the same definition as in sc.h. We are deliberately not using
  * #define T8_ASSERT SC_ASSERT
- * since then the assertion would not trigger if sc is not configure in debugging mode.
+ * since then the assertion would not trigger if sc is not configured in debugging mode.
  * However, we want it to trigger anytime t8code is in debugging mode, independent of sc.
  */
 #ifdef T8_ENABLE_DEBUG
