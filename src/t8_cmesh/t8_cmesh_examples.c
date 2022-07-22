@@ -376,7 +376,7 @@ t8_cmesh_new_hypercube_hybrid (sc_MPI_Comm comm, int do_partition,
 {
   int                 i;
   t8_cmesh_t          cmesh;
-  t8_topidx_t         vertices[8];
+  t8_locidx_t         vertices[8];
   double              vertices_coords_temp[24];
   double              attr_vertices[24];
   double              null_vec[3] = { 0, 0, 0 };
@@ -614,7 +614,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
     1, 1, 1, 2, 1, 6, 2, 3
   };
   int                 i;
-  t8_topidx_t         vertices[8];
+  t8_locidx_t         vertices[8];
   double              attr_vertices[24];
   int                 mpirank, mpiret;
   double              vertices_coords[24] = {

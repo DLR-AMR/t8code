@@ -952,9 +952,8 @@ t8_cmesh_trees_print (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
 static int
 t8_cmesh_face_n_is_equal (t8_ctree_t tree_a, t8_ctree_t tree_b, int num_neigh)
 {
-  /* TODO: is topidx_t still used here? */
   return memcmp (T8_TREE_FACE (tree_a), T8_TREE_FACE (tree_b),
-                 num_neigh * sizeof (t8_topidx_t)) ||
+                 num_neigh * sizeof (t8_locidx_t)) ||
     memcmp (T8_TREE_TTF (tree_a), T8_TREE_TTF (tree_b),
             num_neigh * sizeof (int8_t)) ? 0 : 1;
 }
