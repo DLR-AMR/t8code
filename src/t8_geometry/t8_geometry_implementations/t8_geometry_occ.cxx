@@ -510,12 +510,8 @@ t8_geometry_occ::t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
   double              in1[3], in2[3];
   double              out1[3], out2[3];
   for (int dim = 0; dim < 3; ++dim) {
-    in1[0] = ref_coords[dim];
-    in1[1] = ref_coords[dim];
-    in1[2] = ref_coords[dim];
-    in2[0] = ref_coords[dim];
-    in2[1] = ref_coords[dim];
-    in2[2] = ref_coords[dim];
+    memcpy(in1, ref_coords, sizeof(double) * 3);
+    memcpy(in2, ref_coords, sizeof(double) * 3);
 
     if (ref_coords[dim] < h) {
       in2[dim] += ref_coords[dim] + h;
