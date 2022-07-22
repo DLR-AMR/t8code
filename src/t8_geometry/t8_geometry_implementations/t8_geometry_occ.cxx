@@ -102,12 +102,6 @@ t8_geometry_occ::t8_geometry_occ (int dim, const TopoDS_Shape occ_shape,
                                        occ_shape_edge2face_map);
 }
 
-/**
- * Map a point in the reference space $$[0,1]^dimension$$ to $$\mathbb R^3$$
- * \param [in]  gtreeid     The global tree (of the cmesh) in which the reference point is.
- * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
- * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
- */
 void
 t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
                                    t8_gloidx_t gtreeid,
