@@ -118,10 +118,6 @@ public:
    * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
    * \param [out] jacobian    The jacobian at \a ref_coords. Array of size dimension x 3. Indices 3*i, 3*i+1, 3*i+2
    *                          correspond to the i-th column of the jacobian (Entry 3*i + j is del f_j/del x_i).
-   * \note The jacobian will be
-   *            (1)              (1 0)             (1 0 0)
-   * dim 1: J = (0)   dim 2: J = (0 1)  dim 3: J = (0 1 0)
-   *            (0)              (0 0)             (0 0 1)
    */
   virtual void
   t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
