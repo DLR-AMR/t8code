@@ -44,7 +44,7 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim,
             : ((p8est_connectivity_t *) conn)->_ENTRY)
   t8_cmesh_t          cmesh;
   t8_gloidx_t         ltree;
-  p4est_locidx_t      treevertex;
+  p4est_topidx_t      treevertex;
   double              vertices[24];     /* Only 4 * 3 = 12 used in 2d */
   int                 num_tvertices;
   int                 num_faces;
