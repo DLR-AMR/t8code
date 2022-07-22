@@ -112,7 +112,6 @@ public:
                     double out_coords[3]) const;
 
   /**
-   * Not yet implemented.
    * Compute the jacobian of the \a t8_geom_evaluate map at a point in the reference space $$[0,1]^dimension$$.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
