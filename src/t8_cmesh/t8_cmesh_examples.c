@@ -54,6 +54,10 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim,
   p4est_topidx_t      ttt;
   t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
 
+  /* Make sure that p4est is properly initialized. If not, do it here. */
+  if (!sc_package_is_registered (p4est_package_id))
+    p4est_init (NULL, SC_LP_ESSENTIAL);
+
   T8_ASSERT (dim == 2 || dim == 3);
   T8_ASSERT (dim == 3
              ||
