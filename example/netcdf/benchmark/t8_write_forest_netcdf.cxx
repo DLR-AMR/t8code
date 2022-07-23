@@ -44,35 +44,16 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 
 namespace {
-struct adapt_user_data
-{
-	/* *INDENT-OFF* */
-	double additionally_refined_ratio;
-	std::mt19937_64 rne;
-	/* *INDENT-ON* */
-};
-
-int
-t8_example_netcdf_adapt_fn (t8_forest_t forest, t8_forest_t forest_from,
-                            t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                            t8_eclass_scheme_c *ts, const int is_family,
-                            const int num_elements, t8_element_t *elements[]
-  )
-{
-  adapt_user_data &adapt_data =
-    *static_cast<adapt_user_data *>(t8_forest_get_user_data(forest));
-
-  std::bernoulli_distribution should_refine {
-    adapt_data.additionally_refined_ratio};
-  return should_refine (adapt_data.rne) ? 1 : 0;
-}
-
+/** This struct contains the refinement information needed to produce a forest of a desired storage size
+*/
 struct RefinementConfig
 {
   double              additionally_refined_ratio;
   int                 initial;
 };
 
+/** Contains all NetCDF writing parameters as well as the RefinementConfig required to create the forest of the desired size.
+*/
 struct Config
 {
   RefinementConfig    refinement;
@@ -83,17 +64,21 @@ struct Config
   bool                multifile_mode = false;
 };
 
+/** executes and times only the writing operation of the given forest.
+* \param [in] forest the already adapted forest to be written out
+* \param [in] comm the MPI communicator
+* \param [in] config the netcdf writing parameters
+*/
 void
 t8_example_time_netcdf_writing_operation (t8_forest_t forest,
-                                          sc_MPI_Comm comm, Config config,
-                                          const char *title)
+                                          sc_MPI_Comm comm, Config config)
 {
   sc_MPI_Barrier (comm);
   double              start_time = sc_MPI_Wtime ();
 
   /* Write out the forest in netCDF format using the extended function which
    * allows to set a specific variable storage and access pattern. */
-  t8_forest_write_netcdf_ext (forest, title,
+  t8_forest_write_netcdf_ext (forest, "T8_Example_NetCDF_Performance",
                               "Performance Test: uniformly refined Forest", 3,
                               0, nullptr, comm,
                               config.netcdf_var_storage_mode, nullptr,
@@ -112,16 +97,45 @@ t8_example_time_netcdf_writing_operation (t8_forest_t forest,
     ("The time elapsed to write the netCDF-4 File is: %f\n\n", global);
 }
 
+/** calculates the minimum count of elements needed to consume bytes bytes
+* \param [in] bytes the requested storage
+*/
 double
 elements_needed_for_bytes (long long bytes)
 {
+  /* the total forest storage is derived from the ugrid conventions:
+  nMaxMesh3D_vol_nodes = 8
+  nMesh3D_node <= nMesh3D_vol * nMaxMesh3D_vol_nodes
+  `storage = Mesh3D_vol_types + Mesh3D_vol_tree_id + Mesh3D_vol_nodes + Mesh3D_node_x + Mesh3D_node_y + Mesh3D_node_z`
+  `storage = nMesh3D_vol * 4 + nMesh3D_vol * 8 + nMesh3D_vol * nMaxMesh3D_vol_nodes * 8 + 3 * (nMesh3D_node * 8)`
+  we don't know the node count of each volume.
+  `storage <= nMesh3D_vol * (4 + 8 + 64 + 192)`
+  `nMesh3D_vol >= storage / 268`
+  */
   return bytes / 268.0;
 }
 
+/** calculates refinement parameters that you can use to build a forest with roughly the given size in bytes. In practice, the consumed storage will be lower, because not every element/volume has the maximum of 8 nodes that need coordinate storage.
+* \param [in] bytes the desired total storage size of a forest created with the returned RefinementConfig
+*/
 RefinementConfig
 config_for_bytes (long long bytes)
 {
+  /* calculate how many volumes/elements we need: */
   const double nMesh3D_vol = elements_needed_for_bytes(bytes);
+
+  /* calculate config to get that many elements. Derivation:
+  i = initial_refinement; a = ratio of further refined
+  nMesh3D_vol $= \left(1-a\right)16\cdot8^{i}+a\cdot16\cdot8^{\left(i+1\right)}$
+  -> `nMesh3D_vol = ((1-a)+a*8)*16*8**i`
+
+  i = $\lfloor\log_{8}(\text{nMesh3D_vol})-\log_{8}16\rfloor$
+  i = $\lfloor\log_{8}(\text{nMesh3D_vol}/16)\rfloor$
+
+  $$a = \frac{\text{nMesh3D_vol} - 16\cdot8^i}{7\cdot16\cdot8^i}$$
+  $$a = \frac{\text{nMesh3D_vol}}{7\cdot16\cdot8^i}-\frac{1}{7}$$
+  `a = nMesh3D_vol / (7*16*8**i) - 1/7`
+  */
   RefinementConfig    config;
   config.initial =
     std::max (std::floor (std::log2 (nMesh3D_vol / 16) / 3), 0.0);
@@ -130,6 +144,10 @@ config_for_bytes (long long bytes)
   return config;
 }
 
+/** parses the CLI args and returns a Config containing all benchmark parameters
+* \param [in] argc argc after MPI_Init
+* \param [in] argv argv after MPI_Init
+*/
 Config
 parse_args (int argc, char **argv)
 {
@@ -179,6 +197,38 @@ parse_args (int argc, char **argv)
   return result;
 }
 
+/** forest user data used to adapt the forest to consume more storage
+* contains the ratio of how many elements need to be refined as well as a pseudorandom number generator to decide which elements are refined.
+*/
+struct adapt_user_data
+{
+	/* *INDENT-OFF* */
+	double additionally_refined_ratio;
+	std::mt19937_64 rne;
+	/* *INDENT-ON* */
+};
+
+/** models t8_forest_adapt_t. Pseudorandomly refines elements according to the given ratio.
+*/
+int
+t8_example_netcdf_adapt_fn (t8_forest_t forest, t8_forest_t forest_from,
+                            t8_locidx_t which_tree, t8_locidx_t lelement_id,
+                            t8_eclass_scheme_c *ts, const int is_family,
+                            const int num_elements, t8_element_t *elements[]
+  )
+{
+  adapt_user_data &adapt_data =
+    *static_cast<adapt_user_data *>(t8_forest_get_user_data(forest));
+
+  std::bernoulli_distribution should_refine {
+    adapt_data.additionally_refined_ratio};
+  return should_refine (adapt_data.rne) ? 1 : 0;
+}
+
+/** refines the fraction additionally_refined_ratio of the elements to increase the size of the forest
+* \param [in] forest the forest to adapt
+* \param [in] additionally_refined_ratio the fraction of the forest that is refined further.
+*/
 t8_forest_t
 adapt_forest (t8_forest_t forest, double additionally_refined_ratio)
 {
@@ -189,19 +239,21 @@ adapt_forest (t8_forest_t forest, double additionally_refined_ratio)
                               &adapt_data);
 }
 
+
+/** executes the benchmark with the given benchmark parameters
+* \param [in] comm the MPI communicator
+* \param [in] config the benchmark parameters
+*/
 void
 execute_benchmark (sc_MPI_Comm comm, Config config)
 {
   int                 mpirank;
-  {
-    int                 retval = sc_MPI_Comm_rank (comm, &mpirank);
-    SC_CHECK_MPI (retval);
-  }
+  SC_CHECK_MPI (sc_MPI_Comm_rank (comm, &mpirank));
 
   /* Construct a 3D hybrid hypercube as a cmesh */
   t8_cmesh_t          cmesh = t8_cmesh_new_hypercube_hybrid (comm, 1, 0);
 
-  /* Build a (partioined) uniform forest */
+  /* Build a (partitioned) uniform forest */
   t8_forest_t         forest =
     t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (),
                            config.refinement.initial, 0, comm);
@@ -222,15 +274,16 @@ execute_benchmark (sc_MPI_Comm comm, Config config)
   t8_global_productionf ("Variable-Storage: %s, Variable-Access: %s:\n",
                          config.netcdf_var_storage_mode ==
                          NC_CHUNKED ? "NC_CHUNKED" : "NC_CONTIGUOUS",
+                         config.multifile_mode ? "--multifile" : (
                          config.netcdf_mpi_access ==
-                         NC_COLLECTIVE ? "NC_COLLECTIVE" : "NC_INDEPENDENT");
-  t8_example_time_netcdf_writing_operation (forest, comm, config,
-                                            "T8_Example_NetCDF_Performance");
+                         NC_COLLECTIVE ? "NC_COLLECTIVE" : "NC_INDEPENDENT"));
+  t8_example_time_netcdf_writing_operation (forest, comm, config);
 
   /* Destroy the forest */
   t8_forest_unref (&forest);
 }
 } /* namespace */
+
 int
 main (int argc, char **argv)
 {
@@ -245,13 +298,13 @@ main (int argc, char **argv)
   {
     t8_global_productionf ("Could not parse arguments. Reason:\n");
     t8_global_productionf ("%s\n", e.what ());
-		/* *INDENT-OFF* */
-		t8_global_productionf(
-			R"asdf(Usage: ./t8_write_forest_netcdf <mem_per_node> <fill> <cmode> <storage_mode> <mpi_access_mode>
+    /* *INDENT-OFF* */
+    t8_global_productionf(
+      R"asdf(Usage: ./t8_write_forest_netcdf <mem_per_node> <fill> <cmode> <storage_mode> <mpi_access_mode>
 Usage: ./t8_write_forest_netcdf <mem_per_node> <fill> <cmode> <storage_mode> --multifile
 )asdf"
-		);
-		/* *INDENT-ON* */
+    );
+    /* *INDENT-ON* */
     sc_finalize ();
     SC_CHECK_MPI (sc_MPI_Finalize ());
     return EXIT_FAILURE;
