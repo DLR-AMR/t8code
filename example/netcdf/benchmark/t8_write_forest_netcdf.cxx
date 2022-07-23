@@ -21,6 +21,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 */
 
 #include <t8.h>
+/* this benchmark does not make sense without parallel netcdf */
 #if T8_WITH_NETCDF && T8_WITH_NETCDF_PAR
 
 #include <t8_cmesh.h>
@@ -39,9 +40,10 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <cmath>
 #include <random>
 #include <stdexcept>
-#include <string_view>
 #include <vector>
 
+
+namespace {
 struct adapt_user_data
 {
 	/* *INDENT-OFF* */
@@ -57,11 +59,11 @@ t8_example_netcdf_adapt_fn (t8_forest_t forest, t8_forest_t forest_from,
                             const int num_elements, t8_element_t *elements[]
   )
 {
-  auto & adapt_data =
-    *static_cast < adapt_user_data * >(t8_forest_get_user_data (forest));
+  adapt_user_data &adapt_data =
+    *static_cast<adapt_user_data *>(t8_forest_get_user_data(forest));
 
   std::bernoulli_distribution should_refine {
-  adapt_data.additionally_refined_ratio};
+    adapt_data.additionally_refined_ratio};
   return should_refine (adapt_data.rne) ? 1 : 0;
 }
 
@@ -81,7 +83,7 @@ struct Config
   bool                multifile_mode = false;
 };
 
-static void
+void
 t8_example_time_netcdf_writing_operation (t8_forest_t forest,
                                           sc_MPI_Comm comm, Config config,
                                           const char *title)
@@ -102,7 +104,7 @@ t8_example_time_netcdf_writing_operation (t8_forest_t forest,
   double              end_time = sc_MPI_Wtime ();
   double              duration = end_time - start_time;
   double global;
-  auto                retval =
+  int                retval =
     sc_MPI_Reduce (&duration, &global, 1, sc_MPI_DOUBLE, sc_MPI_MAX, 0, comm);
   SC_CHECK_MPI (retval);
 
@@ -110,16 +112,16 @@ t8_example_time_netcdf_writing_operation (t8_forest_t forest,
     ("The time elapsed to write the netCDF-4 File is: %f\n\n", global);
 }
 
-auto
+double
 elements_needed_for_bytes (long long bytes)
 {
   return bytes / 268.0;
 }
 
-auto
+RefinementConfig
 config_for_bytes (long long bytes)
 {
-  const auto          nMesh3D_vol = elements_needed_for_bytes (bytes);
+  const double nMesh3D_vol = elements_needed_for_bytes(bytes);
   RefinementConfig    config;
   config.initial =
     std::max (std::floor (std::log2 (nMesh3D_vol / 16) / 3), 0.0);
@@ -135,7 +137,7 @@ parse_args (int argc, char **argv)
 	std::vector<std::string_view> args{argv + 1, argv + argc};
 	Config result;
 
-	const auto total_bytes = std::stoll(std::string{args.at(0)});
+	const long long total_bytes = std::stoll(std::string{args.at(0)});
 	result.refinement = config_for_bytes(total_bytes);
 
 	if (args.at(1) == "NC_FILL") {
@@ -177,7 +179,7 @@ parse_args (int argc, char **argv)
   return result;
 }
 
-auto
+t8_forest_t
 adapt_forest (t8_forest_t forest, double additionally_refined_ratio)
 {
   adapt_user_data     adapt_data
@@ -228,7 +230,7 @@ execute_benchmark (sc_MPI_Comm comm, Config config)
   /* Destroy the forest */
   t8_forest_unref (&forest);
 }
-
+} /* namespace */
 int
 main (int argc, char **argv)
 {

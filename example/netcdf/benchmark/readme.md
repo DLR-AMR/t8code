@@ -17,7 +17,7 @@ srun ./t8_write_forest_netcdf 1000000000 NC_NOFILL netcdf4_hdf5 NC_CONTIGUOUS NC
 creates a ~1GB NetCDF file.
 
 ## multifile:
-In this form, each MPI rank writes only its local data to its own file, which eliminates most synchronisation overhead but naturally leaves you with your data split accross many files. In this mode all common parameters are required, as well a literal `--multifile` flag instead of an `<mpi_access_mode>` like in singlefile mode. `<mpi_access_mode>` is not relevant for multifile mode and must not appear. The `--multifile` flag tells the program to use the multifile mode.
+In this form, each MPI rank writes only its local data to its own file, which eliminates most synchronisation overhead but naturally leaves you with your data split accross many files. In this mode all common parameters are required, as well as a literal `--multifile` flag instead of an `<mpi_access_mode>` like in singlefile mode. `<mpi_access_mode>` is not relevant for multifile mode and must not appear. The `--multifile` flag tells the program to use the multifile mode.
 ```
 Usage: ./t8_write_forest_netcdf <mem_per_node> <fill> <cmode> <storage_mode> --multifile
 ```

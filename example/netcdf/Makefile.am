@@ -17,7 +17,7 @@ example_netcdf_t8_write_forest_netcdf_SOURCES = \
 example_netcdf_benchmark_t8_write_forest_netcdf_SOURCES = \
        example/netcdf/benchmark/t8_write_forest_netcdf.cxx
 
-example_netcdf_benchmark_t8_write_forest_netcdf_CPPFLAGS = $(AM_CPPFLAGS) -std=c++17
+example_netcdf_benchmark_t8_write_forest_netcdf_CPPFLAGS = $(AM_CPPFLAGS) -std=c++14
 
 example_netcdf_t8_write_cmesh_netcdf_SOURCES = \
        example/netcdf/t8_write_cmesh_netcdf.c
