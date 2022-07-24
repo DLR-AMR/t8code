@@ -284,6 +284,7 @@ t8_forest_write_netcdf_variables (t8_forest_netcdf_context_t * context,
   if ((retval =
        nc_def_var_chunking (context->ncid, context->var_elem_types_id,
                             context->netcdf_var_storage_mode, NULL))) {
+    /* we ignore NC_ENOTNC4, as this function may be used for non netcdf4 files. */
     if (retval != NC_ENOTNC4) {
       ERR (retval);
     }
@@ -339,6 +340,7 @@ t8_forest_write_netcdf_variables (t8_forest_netcdf_context_t * context,
   if ((retval =
        nc_def_var_chunking (context->ncid, context->var_elem_tree_id,
                             context->netcdf_var_storage_mode, NULL))) {
+    /* we ignore NC_ENOTNC4, as this function may be used for non netcdf4 files. */
     if (retval != NC_ENOTNC4) {
       ERR (retval);
     }
@@ -392,6 +394,7 @@ t8_forest_write_netcdf_variables (t8_forest_netcdf_context_t * context,
   if ((retval =
        nc_def_var_chunking (context->ncid, context->var_elem_nodes_id,
                             context->netcdf_var_storage_mode, NULL))) {
+    /* we ignore NC_ENOTNC4, as this function may be used for non netcdf4 files. */
     if (retval != NC_ENOTNC4) {
       ERR (retval);
     }
@@ -510,7 +513,7 @@ t8_forest_write_netcdf_data (t8_forest_t forest,
   /* Write the data in the corresponding NetCDF-variable. */
   /* Fill the 'Mesh_elem_types'-variable. */
   /* In multifile mode every rank has its own file so we don't want or need
-   * any offset and every process can start writing at 0 */
+   any offset and every process can start writing at 0 */
   start_ptr = context->multifile_mode ? 0 : first_local_elem_id;
   count_ptr = num_local_elements;
   if ((retval =
@@ -588,6 +591,7 @@ t8_forest_write_netcdf_coordinate_variables (t8_forest_netcdf_context_t *
        nc_def_var_chunking (context->ncid, context->var_node_x_id,
                             context->netcdf_var_storage_mode,
                             context->coordinate_chunksize))) {
+    /* we ignore NC_ENOTNC4, as this function may be used for non netcdf4 files. */
     if (retval != NC_ENOTNC4) {
       ERR (retval);
     }
@@ -639,6 +643,7 @@ t8_forest_write_netcdf_coordinate_variables (t8_forest_netcdf_context_t *
        nc_def_var_chunking (context->ncid, context->var_node_y_id,
                             context->netcdf_var_storage_mode,
                             context->coordinate_chunksize))) {
+    /* we ignore NC_ENOTNC4, as this function may be used for non netcdf4 files. */
     if (retval != NC_ENOTNC4) {
       ERR (retval);
     }
@@ -689,6 +694,7 @@ t8_forest_write_netcdf_coordinate_variables (t8_forest_netcdf_context_t *
        nc_def_var_chunking (context->ncid, context->var_node_z_id,
                             context->netcdf_var_storage_mode,
                             context->coordinate_chunksize))) {
+    /* we ignore NC_ENOTNC4, as this function may be used for non netcdf4 files. */
     if (retval != NC_ENOTNC4) {
       ERR (retval);
     }
@@ -784,6 +790,7 @@ t8_forest_write_user_netcdf_vars (t8_forest_netcdf_context_t * context,
              nc_def_var_chunking (context->ncid,
                                   ext_variables[i]->var_user_dimid,
                                   context->netcdf_var_storage_mode, NULL))) {
+          /* we ignore NC_ENOTNC4, as this function may be used for non netcdf4 files. */
           if (retval != NC_ENOTNC4) {
             ERR (retval);
           }
@@ -1091,11 +1098,11 @@ t8_forest_write_netcdf_file (t8_forest_t forest,
     ? t8_forest_get_local_num_elements (forest)
     : t8_forest_get_global_num_elements (forest);
 
-  const auto          cmode = NC_CLOBBER | context->cmode;
+  const int          cmode = NC_CLOBBER | context->cmode;
   if (context->multifile_mode) {
     int                 mpirank;
     SC_CHECK_MPI (sc_MPI_Comm_rank (comm, &mpirank));
-    if (auto retval = nc_create ((context->filename + std::string {
+    if (const int retval = nc_create ((context->filename + std::string {
                                   '_'}
                                   +std::to_string (mpirank) + ".nc").c_str (),
                                  cmode, &context->ncid)) {
@@ -1148,6 +1155,11 @@ t8_forest_write_netcdf_file (t8_forest_t forest,
                         strlen (context->convention), context->convention))) {
     ERR (retval);
   }
+
+  /* in multifile mode each file gets global attributes part_index and
+  part_count, which is enough information to reconstruct the whole file. 
+  Each variable would have to be concatenated in the given order and the 
+  dimensions would need to be adapted */
   if (context->multifile_mode) {
     int                 mpirank, mpisize;
     retval = sc_MPI_Comm_size (comm, &mpisize);
@@ -1196,7 +1208,7 @@ t8_forest_write_netcdf_file (t8_forest_t forest,
                                     comm);
 
 #if T8_WITH_NETCDF
-  /* Disable the default fill-value-mode. */
+  /* set default fillmode to the given one */
   if ((retval =
        nc_set_fill (context->ncid, context->fill_mode,
                     &context->old_fill_mode))) {

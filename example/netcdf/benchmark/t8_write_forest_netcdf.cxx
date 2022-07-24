@@ -42,7 +42,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <stdexcept>
 #include <vector>
 
-
 namespace {
 /** This struct contains the refinement information needed to produce a forest of a desired storage size
 */
@@ -79,8 +78,8 @@ t8_example_time_netcdf_writing_operation (t8_forest_t forest,
   /* Write out the forest in netCDF format using the extended function which
    * allows to set a specific variable storage and access pattern. */
   t8_forest_write_netcdf_ext (forest, "T8_Example_NetCDF_Performance",
-                              "Performance Test: uniformly refined Forest", 3,
-                              0, nullptr, comm,
+                              "Performance Test: uniformly refined Forest",
+                              3, 0, nullptr, comm,
                               config.netcdf_var_storage_mode, nullptr,
                               config.netcdf_mpi_access, config.fill_mode,
                               config.cmode, config.multifile_mode);
@@ -89,8 +88,9 @@ t8_example_time_netcdf_writing_operation (t8_forest_t forest,
   double              end_time = sc_MPI_Wtime ();
   double              duration = end_time - start_time;
   double global;
-  int                retval =
-    sc_MPI_Reduce (&duration, &global, 1, sc_MPI_DOUBLE, sc_MPI_MAX, 0, comm);
+  int                 retval =
+    sc_MPI_Reduce (&duration, &global, 1, sc_MPI_DOUBLE, sc_MPI_MAX, 0,
+                   comm);
   SC_CHECK_MPI (retval);
 
   t8_global_productionf
@@ -104,14 +104,14 @@ double
 elements_needed_for_bytes (long long bytes)
 {
   /* the total forest storage is derived from the ugrid conventions:
-  nMaxMesh3D_vol_nodes = 8
-  nMesh3D_node <= nMesh3D_vol * nMaxMesh3D_vol_nodes
-  `storage = Mesh3D_vol_types + Mesh3D_vol_tree_id + Mesh3D_vol_nodes + Mesh3D_node_x + Mesh3D_node_y + Mesh3D_node_z`
-  `storage = nMesh3D_vol * 4 + nMesh3D_vol * 8 + nMesh3D_vol * nMaxMesh3D_vol_nodes * 8 + 3 * (nMesh3D_node * 8)`
-  we don't know the node count of each volume.
-  `storage <= nMesh3D_vol * (4 + 8 + 64 + 192)`
-  `nMesh3D_vol >= storage / 268`
-  */
+     nMaxMesh3D_vol_nodes = 8
+     nMesh3D_node <= nMesh3D_vol * nMaxMesh3D_vol_nodes
+     `storage = Mesh3D_vol_types + Mesh3D_vol_tree_id + Mesh3D_vol_nodes + Mesh3D_node_x + Mesh3D_node_y + Mesh3D_node_z`
+     `storage = nMesh3D_vol * 4 + nMesh3D_vol * 8 + nMesh3D_vol * nMaxMesh3D_vol_nodes * 8 + 3 * (nMesh3D_node * 8)`
+     we don't know the node count of each volume.
+     `storage <= nMesh3D_vol * (4 + 8 + 64 + 192)`
+     `nMesh3D_vol >= storage / 268`
+   */
   return bytes / 268.0;
 }
 
@@ -122,20 +122,20 @@ RefinementConfig
 config_for_bytes (long long bytes)
 {
   /* calculate how many volumes/elements we need: */
-  const double nMesh3D_vol = elements_needed_for_bytes(bytes);
+  const double        nMesh3D_vol = elements_needed_for_bytes (bytes);
 
   /* calculate config to get that many elements. Derivation:
-  i = initial_refinement; a = ratio of further refined
-  nMesh3D_vol $= \left(1-a\right)16\cdot8^{i}+a\cdot16\cdot8^{\left(i+1\right)}$
-  -> `nMesh3D_vol = ((1-a)+a*8)*16*8**i`
+     i = initial_refinement; a = ratio of further refined
+     nMesh3D_vol $= \left(1-a\right)16\cdot8^{i}+a\cdot16\cdot8^{\left(i+1\right)}$
+     -> `nMesh3D_vol = ((1-a)+a*8)*16*8**i`
 
-  i = $\lfloor\log_{8}(\text{nMesh3D_vol})-\log_{8}16\rfloor$
-  i = $\lfloor\log_{8}(\text{nMesh3D_vol}/16)\rfloor$
+     i = $\lfloor\log_{8}(\text{nMesh3D_vol})-\log_{8}16\rfloor$
+     i = $\lfloor\log_{8}(\text{nMesh3D_vol}/16)\rfloor$
 
-  $$a = \frac{\text{nMesh3D_vol} - 16\cdot8^i}{7\cdot16\cdot8^i}$$
-  $$a = \frac{\text{nMesh3D_vol}}{7\cdot16\cdot8^i}-\frac{1}{7}$$
-  `a = nMesh3D_vol / (7*16*8**i) - 1/7`
-  */
+     $$a = \frac{\text{nMesh3D_vol} - 16\cdot8^i}{7\cdot16\cdot8^i}$$
+     $$a = \frac{\text{nMesh3D_vol}}{7\cdot16\cdot8^i}-\frac{1}{7}$$
+     `a = nMesh3D_vol / (7*16*8**i) - 1/7`
+   */
   RefinementConfig    config;
   config.initial =
     std::max (std::floor (std::log2 (nMesh3D_vol / 16) / 3), 0.0);
@@ -212,16 +212,17 @@ struct adapt_user_data
 */
 int
 t8_example_netcdf_adapt_fn (t8_forest_t forest, t8_forest_t forest_from,
-                            t8_locidx_t which_tree, t8_locidx_t lelement_id,
+                            t8_locidx_t which_tree,
+                            t8_locidx_t lelement_id,
                             t8_eclass_scheme_c *ts, const int is_family,
                             const int num_elements, t8_element_t *elements[]
   )
 {
-  adapt_user_data &adapt_data =
-    *static_cast<adapt_user_data *>(t8_forest_get_user_data(forest));
+  adapt_user_data & adapt_data =
+    *static_cast < adapt_user_data * >(t8_forest_get_user_data (forest));
 
   std::bernoulli_distribution should_refine {
-    adapt_data.additionally_refined_ratio};
+  adapt_data.additionally_refined_ratio};
   return should_refine (adapt_data.rne) ? 1 : 0;
 }
 
@@ -238,7 +239,6 @@ adapt_forest (t8_forest_t forest, double additionally_refined_ratio)
   return t8_forest_new_adapt (forest, t8_example_netcdf_adapt_fn, 0, 0,
                               &adapt_data);
 }
-
 
 /** executes the benchmark with the given benchmark parameters
 * \param [in] comm the MPI communicator
@@ -274,14 +274,17 @@ execute_benchmark (sc_MPI_Comm comm, Config config)
   t8_global_productionf ("Variable-Storage: %s, Variable-Access: %s:\n",
                          config.netcdf_var_storage_mode ==
                          NC_CHUNKED ? "NC_CHUNKED" : "NC_CONTIGUOUS",
-                         config.multifile_mode ? "--multifile" : (
-                         config.netcdf_mpi_access ==
-                         NC_COLLECTIVE ? "NC_COLLECTIVE" : "NC_INDEPENDENT"));
+                         config.
+                         multifile_mode ? "--multifile"
+                         : (config.netcdf_mpi_access ==
+                            NC_COLLECTIVE ? "NC_COLLECTIVE" :
+                            "NC_INDEPENDENT"));
   t8_example_time_netcdf_writing_operation (forest, comm, config);
 
   /* Destroy the forest */
   t8_forest_unref (&forest);
 }
+
 } /* namespace */
 
 int
@@ -316,12 +319,13 @@ Usage: ./t8_write_forest_netcdf <mem_per_node> <fill> <cmode> <storage_mode> --m
   SC_CHECK_MPI (sc_MPI_Finalize ());
 }
 
-
 #else
 #include <cstdio>
 #include <cstdlib>
-int main() {
-  std::puts("not compiled with parallel netcdf");
+int
+main ()
+{
+  std::puts ("not compiled with parallel netcdf");
   return EXIT_FAILURE;
 }
 #endif
