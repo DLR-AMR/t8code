@@ -29,7 +29,6 @@
 #ifndef T8_GEOMETRY_OCC_HXX
 #define T8_GEOMETRY_OCC_HXX
 
-#define T8_WITH_OCC 1
 #if T8_WITH_OCC
 
 #include <t8.h>
