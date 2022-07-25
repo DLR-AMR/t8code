@@ -21,6 +21,9 @@
 */
 
 #include <t8_cmesh/t8_cmesh.c>
+#include <t8_forest.h>
+#include <t8_vtk.h>
+#include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx>
 
 #if T8_WITH_OCC
@@ -36,6 +39,7 @@
 #include <TopoDS_Edge.hxx>
 #endif
 
+#if T8_WITH_OCC
 /** Euler rotation around intrinsic zxz. 
  * \param [in] pos_vec                Position vector of three dimensional points to rotate.
  * \param [in] rot_vec                Three dimensional rotation vector around z, x and z in rad.
@@ -94,7 +98,6 @@ t8_euler_rotation (double *pos_vec,
 t8_geometry_occ    *
 t8_create_occ_surface_geometry ()
 {
-#if T8_WITH_OCC
   Handle_Geom_Surface surface;
   TopoDS_Shape        shape;
   TColgp_Array2OfPnt  point_array (1, 3, 1, 3);
@@ -115,9 +118,6 @@ t8_create_occ_surface_geometry ()
   shape = BRepBuilderAPI_MakeFace (surface, 1e-6).Face ();
   t8_geometry_occ    *geometry = new t8_geometry_occ (3, shape, "occ dim=3");
   return geometry;
-#else /* !T8_WITH_OCC */
-  SC_ABORTF ("OCC not linked");
-#endif /* T8_WITH_OCC */
 }
 
 /** Constructs an occ curve for testing purpsoes. Curve is build between vertex 0, 1, 4 and 5 of a unit hexahedron.
@@ -127,7 +127,6 @@ t8_create_occ_surface_geometry ()
 t8_geometry_occ    *
 t8_create_occ_curve_geometry ()
 {
-#if T8_WITH_OCC
   Handle_Geom_Curve   curve;
   TopoDS_Shape        shape;
   TColgp_Array1OfPnt  point_array (1, 5);
@@ -142,10 +141,8 @@ t8_create_occ_curve_geometry ()
   shape = BRepBuilderAPI_MakeEdge (curve).Edge ();
   t8_geometry_occ    *geometry = new t8_geometry_occ (3, shape, "occ dim=3");
   return geometry;
-#else /* !T8_WITH_OCC */
-  SC_ABORTF ("OCC not linked");
-#endif /* T8_WITH_OCC */
 }
+#endif /* T8_WITH_OCC */
 
 /** Constructs a cmesh with an occ geometry linked hypercube.
  * \param [in] rot_vec                The rotation vector to rotate the cube before linking a geometry to it.

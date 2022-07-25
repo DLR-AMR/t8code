@@ -744,8 +744,11 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
   t8_gloidx_t         tree_count;
   t8_eclass_t         eclass;
   t8_msh_file_node_parametric_t Node, **found_node,
-    tree_nodes[T8_ECLASS_MAX_CORNERS], face_nodes[T8_ECLASS_MAX_CORNERS_2D],
+    tree_nodes[T8_ECLASS_MAX_CORNERS];
+#if T8_WITH_OCC
+  t8_msh_file_node_parametric_t face_nodes[T8_ECLASS_MAX_CORNERS_2D],
     edge_nodes[2];
+#endif /* T8_WITH_OCC */ 
   long                lnum_trees, lnum_blocks, entity_tag;
   int                 retval, i;
   int                 ele_type;
@@ -953,6 +956,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
         /* Calculate the parametric geometries of the tree */
         if (occ_geometry != NULL)
         {
+#if T8_WITH_OCC
           /* Check for right element class */
           if (eclass != T8_ECLASS_HEX)
           {
@@ -1390,6 +1394,9 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                                   edge_geometries, 
                                   24 * sizeof(int), 
                                   0);
+#else /* !T8_WITH_OCC */
+          SC_ABORTF ("OCC not linked");
+#endif /* T8_WITH_OCC */
         }
         /* advance the tree counter */
         tree_count++;

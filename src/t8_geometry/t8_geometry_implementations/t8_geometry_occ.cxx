@@ -26,6 +26,8 @@
 #include <t8_eclass.h>
 #include <t8_geometry/t8_geometry_helpers.h>
 
+#if T8_WITH_OCC
+
 #include <BRep_Builder.hxx>
 #include <BRep_Tool.hxx>
 #include <BRepTools.hxx>
@@ -38,7 +40,7 @@
 #include <TopoDS_Edge.hxx>
 #include <TopoDS_Face.hxx>
 
-#if T8_WITH_OCC
+#endif /* T8_WITH_OCC */
 
 /* *INDENT-OFF* */
 const int           t8_edge_vertex_to_tree_vertex[T8_ECLASS_MAX_EDGES][2] = {
@@ -57,6 +59,8 @@ t8_face_edge_to_tree_edge[T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_EDGES_2D] = {
   {10, 11, 1, 3}, {4, 6, 0, 1}, {5, 7, 2, 3}        /* hex */
 };
 /* *INDENT-ON* */
+
+#if T8_WITH_OCC
 
 t8_geometry_occ::t8_geometry_occ (int dim, const char *fileprefix,
                                   const char *name_in)

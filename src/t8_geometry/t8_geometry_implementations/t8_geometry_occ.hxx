@@ -29,17 +29,19 @@
 #ifndef T8_GEOMETRY_OCC_HXX
 #define T8_GEOMETRY_OCC_HXX
 
-#if T8_WITH_OCC
-
 #include <t8.h>
 #include <t8_geometry/t8_geometry_base.hxx>
 #include <t8_cmesh/t8_cmesh_types.h>
+
+#if T8_WITH_OCC
 
 #include <TopoDS_Shape.hxx>
 #include <TopExp.hxx>
 #include <gp_Pnt.hxx>
 #include <Geom_Curve.hxx>
 #include <Geom_Surface.hxx>
+
+#endif /* T8_WITH_OCC */
 
 /* The vertices of each edge of a hexahedron. Used in the occ geometry. */
 extern const int    t8_edge_vertex_to_tree_vertex[T8_ECLASS_MAX_EDGES][2];
@@ -50,6 +52,8 @@ extern const int    t8_edge_to_face[T8_ECLASS_MAX_EDGES][2];
 /* The edges of a face to the edges of a tree */
 extern const int
      t8_face_edge_to_tree_edge[T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_EDGES_2D];
+
+#if T8_WITH_OCC
 
 /**
  * Definition of an occ geometry function.
