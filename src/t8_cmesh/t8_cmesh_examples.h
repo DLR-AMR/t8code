@@ -87,15 +87,20 @@ t8_cmesh_t          t8_cmesh_new_from_class (t8_eclass_t eclass,
  * \param [in] do_partition Create a partitioned cmesh.
  * \param [in] periodic     If true, the coarse mesh will be periodic in each direction.
  *                          Not possible with \a eclass pyramid.
- * TODO: Add periodic flags for each dimension.
  */
 t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
                                             sc_MPI_Comm comm,
                                             int do_bcast, int do_partition,
                                             int periodic);
 
-/** Hybercube with 6 Tets, 6 Prism, 4 Hex. */
-/* TODO: Document */
+/** Hybercube with 6 Tets, 6 Prism, 4 Hex. 
+ * \param [in]  comm            The mpi communicator to be used.
+ * \param [in]  do_partition    If non-zero create a partitioned cmesh.
+ * \param [in]  periodic        If non-zero create a periodic cmesh in each direction
+ * \return                      A comitted cmesh consisting of 6 Tets, 6 prism and 4 hex. 
+ *                              Together, they form a cube.
+*/
+
 t8_cmesh_t          t8_cmesh_new_hypercube_hybrid (sc_MPI_Comm comm,
                                                    int do_partition,
                                                    int periodic);

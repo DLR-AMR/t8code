@@ -58,12 +58,6 @@ typedef void        (*t8_generic_function_pointer) (void);
 
 T8_EXTERN_C_BEGIN ();
 
-/* TODO: if eclass is a vertex then num_outgoing/num_incoming are always
- *       1 and it is not possible to decide whether we are rfining or coarsening.
- *       Is this an issue? */
-/* TODO: We may also take the local element index within the tree as parameter.
- *       Otherwise we have to search for the elements if we want pointers to them.
- */
 /** Callback function prototype to replace one set of elements with another.
  *
  * This is used by the replace routine which can be called after adapt,
@@ -76,6 +70,9 @@ T8_EXTERN_C_BEGIN ();
  * \param [in] forest_new      The forest that is newly constructed from \a forest_old
  * \param [in] which_tree      The local tree containing \a outgoing and \a incoming
  * \param [in] ts              The eclass scheme of the tree
+ * \param [in] refine          -1 if family in \a forest_old got coarsened, 0 if element
+ *                             has not been touched, 1 if element got refined. 
+ *                             See return of t8_forest_adapt_t.
  * \param [in] num_outgoing    The number of outgoing elements.
  * \param [in] first_outgoing  The tree local index of the first outgoing element.
  *                             0 <= first_outgoing < which_tree->num_elements
@@ -83,14 +80,18 @@ T8_EXTERN_C_BEGIN ();
  * \param [in] first_incoming  The tree local index of the first incoming element.
  *                             0 <= first_incom < new_which_tree->num_elements
  *
- * If an element is being refined, num_outgoing will be 1 and num_incoming will
- * be the number of children, and vice versa if a family is being coarsened.
+ * If an element is being refined, \a refine and \a num_outgoing will be 1 and 
+ * \a num_incoming will be the number of children.
+ * If a family is being coarsened, \a refine will be -1, \a num_outgoing will be 
+ * the number of family members and \a num_incoming will be 1. Else \a refine will 
+ * be 0 and \a num_outgoing and \a num_incoming will both be 1.
  * \see t8_forest_iterate_replace
  */
 typedef void        (*t8_forest_replace_t) (t8_forest_t forest_old,
                                             t8_forest_t forest_new,
                                             t8_locidx_t which_tree,
                                             t8_eclass_scheme_c *ts,
+                                            int refine,
                                             int num_outgoing,
                                             t8_locidx_t first_outgoing,
                                             int num_incoming,
@@ -847,6 +848,12 @@ void                t8_forest_save (t8_forest_t forest);
  * Writes one master .pvtu file and each process writes in its own .vtu file.
  * If linked and not otherwise specified, the VTK API is used.
  * If the VTK library is not linked, an ASCII file is written.
+ * This may change in accordance with \a write_ghosts, \a write_curved and 
+ * \a do_not_use_API, because the export of ghosts is not yet available with 
+ * the VTK API and the export of curved elements is not available with the
+ * inbuilt function to write ASCII files. The function will for example
+ * still use the VTK API to satisfy \a write_curved, even if \a do_not_use_API 
+ * is set to true.
  * Forest must be committed when calling this function.
  * This function is collective and must be called on each process.
  * \param [in]      forest              The forest to write.
@@ -860,7 +867,7 @@ void                t8_forest_save (t8_forest_t forest);
  * \param [in]      write_element_id    If true, the global element id is written for each element.
  * \param [in]      write_ghosts        If true, each process additionally writes its ghost elements.
  *                                      For ghost element the treeid is -1.
- * \param [in]      curved_flag         If true, write the elements as curved element types from vtk.
+ * \param [in]      write_curved        If true, write the elements as curved element types from vtk.
  * \param [in]      do_not_use_API      Do not use the VTK API, even if linked and available.
  * \param [in]      num_data            Number of user defined double valued data fields to write.
  * \param [in]      data                Array of t8_vtk_data_field_t of length \a num_data
@@ -877,7 +884,7 @@ int                 t8_forest_write_vtk_ext (t8_forest_t forest,
                                              int write_level,
                                              int write_element_id,
                                              int write_ghosts,
-                                             int curved_flag,
+                                             int write_curved,
                                              int do_not_use_API,
                                              int num_data,
                                              t8_vtk_data_field_t *data);

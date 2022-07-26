@@ -91,8 +91,6 @@ int                 t8_element_compare (t8_eclass_scheme_c *ts,
  *                    of \b elem's parent.
  *                    The storage for this element must exist
  *                    and match the element class of the parent.
- *                    For a pyramid, for example, it may be either a
- *                    tetrahedron or a pyramid depending on \b elem's childid.
  */
 void                t8_element_parent (t8_eclass_scheme_c *ts,
                                        const t8_element_t *elem,
@@ -113,14 +111,12 @@ int                 t8_element_num_siblings (t8_eclass_scheme_c *ts,
  *  \b elem and \b sibling can point to the same element, then the entries of
  *  \b elem are overwritten by the ones of its i-th sibling.
  * \param [in] ts             Implementation of a class scheme.
- * \param [in] elem   The element whose parent will be computed.
+ * \param [in] elem   The element whose sibling will be computed.
  * \param [in] sibid  The id of the sibling computed.
  * \param [in,out] sibling This element's entries will be overwritten by those
  *                    of \b elem's sibid-th sibling.
  *                    The storage for this element must exist
  *                    and match the element class of the sibling.
- *                    For a pyramid, for example, it may be either a
- *                    tetrahedron or a pyramid depending on \b sibid.
  */
 void                t8_element_sibling (t8_eclass_scheme_c *ts,
                                         const t8_element_t *elem, int sibid,
@@ -255,6 +251,11 @@ void                t8_element_successor (t8_eclass_scheme_c *ts,
  */
 int                 t8_element_root_len (t8_eclass_scheme_c *ts,
                                          const t8_element_t *elem);
+
+   /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
+   * Returns false otherwise.
+   */
+int                 t8_element_refines_irregular (t8_eclass_scheme_c *ts);
 
 /** Allocate memory for an array of elements of a given class and initialize them.
  * \param [in] ts             Implementation of a class scheme.

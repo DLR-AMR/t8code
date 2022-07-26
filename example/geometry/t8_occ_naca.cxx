@@ -28,7 +28,7 @@
 #include <sc_options.h>
 #include <t8_cmesh.h>
 #include <t8_forest.h>
-#include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_vec.h>
 #include <t8_geometry/t8_geometry_base.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
@@ -299,7 +299,7 @@ main (int argc, char **argv)
   t8_forest_t         forest;
   const char         *fileprefix = NULL;
   int                 level, rlevel, rlevel_dorsal, rlevel_ventral;
-  int                 surface, plane, steps, occt;
+  int                 surface, plane, steps, occ;
   double              dist;
 
   /* brief help message */
@@ -356,7 +356,7 @@ main (int argc, char **argv)
                          "Maximum distance an element can have from the plane to still be refined. Default: 0.1");
   sc_options_add_int (opt, 't', "timesteps", &steps, 10,
                       "How many steps the plane takes to move through the airfoil. Default: 10");
-  sc_options_add_switch (opt, 'o', "occt", &occt, "Use the occt geometry.");
+  sc_options_add_switch (opt, 'o', "occ", &occ, "Use the occ geometry.");
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (helpme) {
@@ -365,7 +365,7 @@ main (int argc, char **argv)
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else if (parsed == 0 || fileprefix == NULL ||
-           (!plane && !surface) || (plane && surface) || (surface && !occt)) {
+           (!plane && !surface) || (plane && surface) || (surface && !occ)) {
     /* wrong usage */
     t8_global_productionf ("\n\tERROR: Wrong usage.\n\n");
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
@@ -373,7 +373,7 @@ main (int argc, char **argv)
   else {
     /* Read in the naca mesh from the msh file and the naca geometry from the brep file */
     cmesh =
-      t8_cmesh_from_msh_file (fileprefix, 0, sc_MPI_COMM_WORLD, 3, 0, occt);
+      t8_cmesh_from_msh_file (fileprefix, 0, sc_MPI_COMM_WORLD, 3, 0, occ);
     /* Construct a forest from the cmesh */
     forest = t8_forest_new_uniform (cmesh,
                                     t8_scheme_new_default_cxx (),

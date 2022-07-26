@@ -57,7 +57,7 @@
  *  This is useful to convert boundary coordinates from prism to triangle. */
 #define T8_DPRISM_ROOT_BY_DTRI_ROOT (1 << (T8_DTRI_MAXLEVEL - T8_DPRISM_MAXLEVEL))
 
-/** The length of a prism divided by the length of a triangle.
+/** The length of a prism divided by the length of a line.
  *  This is useful to convert boundary coordinates from prism to triangle. */
 #define T8_DPRISM_ROOT_BY_DLINE_ROOT (1 << (T8_DLINE_MAXLEVEL - T8_DPRISM_MAXLEVEL))
 

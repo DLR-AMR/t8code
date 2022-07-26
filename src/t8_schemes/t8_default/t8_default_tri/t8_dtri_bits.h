@@ -108,7 +108,8 @@ void                t8_dtri_child (const t8_dtri_t *t,
  * \param [in,out] c  Pointers to the 4 computed children in Morton order.
  *                    t may point to the same quadrant as c[0].
  */
-void                t8_dtri_childrenpv (const t8_dtri_t *t, t8_dtri_t *c[]);
+void                t8_dtri_childrenpv (const t8_dtri_t *t,
+                                        t8_dtri_t *c[T8_DTRI_CHILDREN]);
 
 /** Check whether a collection of eight triangles is a family in Morton order.
  * \param [in]     f  An array of eight triangles.
@@ -285,6 +286,22 @@ int                 t8_dtri_is_ancestor (const t8_dtri_t *t,
  * \note This id is not the Morton index.
  */
 t8_linearidx_t      t8_dtri_linear_id (const t8_dtri_t *t, int level);
+
+/**
+ * Same as init_linear_id, but we only consider the subtree. Used for computing the index of a
+ * tetrahedron lying in a pyramid
+ * \param [in, out] t   Existing triangle whose data will be filled
+ * \param [in] id            Index to be considered
+ * \param [in] start_level   The level of the root of the subtree
+ * \param [in] end_level     Level of uniform grid to be considered
+ * \param [in] parenttype    The type of the parent.
+ */
+void                t8_dtri_init_linear_id_with_level (t8_dtri_t *t,
+                                                       t8_linearidx_t id,
+                                                       const int start_level,
+                                                       const int end_level,
+                                                       t8_dtri_type_t
+                                                       parenttype);
 
 /** Initialize a triangle as the triangle with a given global id in a uniform
  *  refinement of a given level. *

@@ -332,6 +332,13 @@ t8_default_scheme_vertex_c::t8_element_debug_print (const t8_element_t *elem) co
 }
 #endif
 
+int
+t8_default_scheme_vertex_c::t8_element_refines_irregular ()
+{
+  /*vertices refine regularly */
+  return 0;
+}
+
 void
 t8_default_scheme_vertex_c::t8_element_new (int length, t8_element_t **elem)
 {

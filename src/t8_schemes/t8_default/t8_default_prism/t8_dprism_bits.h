@@ -181,8 +181,8 @@ int                 t8_dprism_get_face_corner (const t8_dprism_t *p,
 
 /** Compute the 8 children of a prism, array version.
  * \param [in]     p  Input prism.
- * \param [in,out] c  Pointers to the 2 computed children in Morton order.
- *                    t may point to the same quadrant as c[0].
+ * \param [in,out] c  Pointers to the 8 computed children in Morton order.
+ *
  */
 void                t8_dprism_childrenpv (const t8_dprism_t *p,
                                           int length, t8_dprism_t *c[]);
@@ -296,12 +296,12 @@ void                t8_dprism_corner_descendant (const t8_dprism_t *p,
 
 /** Compute the coordinates of a vertex of a prism.
  * \param [in] p    Input prism.
- * \param [out] coordinates An array of 2 t8_dprism_coord_t that
- * 		     will be filled with the coordinates of the vertex.
  * \param [in] vertex The number of the vertex.
+ * \param [out] coordinates An array of 3 t8_dprism_coord_t that
+ * 		     will be filled with the coordinates of the vertex.
  */
 void                t8_dprism_vertex_coords (const t8_dprism_t *p,
-                                             int vertex, int coords[]);
+                                             int vertex, int coords[3]);
 
 /** Compute the reference coordinates of a vertex of a prism when the 
  * tree (level 0 prism) is embedded in [0,1]^3.
@@ -330,7 +330,7 @@ uint64_t            t8_dprism_linear_id (const t8_dprism_t *p, int level);
 int                 t8_dprism_is_valid (const t8_dprism_t *p);
 
 /**
- * Print a the coordinates, the level and the type of a prism.
+ * Print the coordinates, the level and the type of a prism.
  * \param [in] p  prism to be considered.
  */
 void                t8_dprism_debug_print (const t8_dprism_t *p);

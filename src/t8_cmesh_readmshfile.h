@@ -102,7 +102,7 @@ T8_EXTERN_C_BEGIN ();
 t8_cmesh_t
 t8_cmesh_from_msh_file (const char *fileprefix, int partition,
                         sc_MPI_Comm comm, int dim, int master,
-                        int use_occ_geometry = 0);
+                        int use_occ_geometry);
 /* *INDENT-ON* */
 
 T8_EXTERN_C_END ();

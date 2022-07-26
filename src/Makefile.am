@@ -2,34 +2,71 @@
 # Non-recursive Makefile.am in src
 # Included from toplevel directory
 
+cmeshincludedir = $(includedir)/t8_cmesh
+dataincludedir = $(includedir)/t8_data
+forestincludedir = $(includedir)/t8_forest
+geometryincludedir = $(includedir)/t8_geometry
+geometryimplincludedir = $(geometryincludedir)/t8_geometry_implementations
+schemesdefaultincludedir = $(includedir)/t8_schemes/t8_default
+defaultcommonincludedir = $(schemesdefaultincludedir)/t8_default_common
+defaultvertexincludedir = $(schemesdefaultincludedir)/t8_default_vertex
+defaultlineincludedir = $(schemesdefaultincludedir)/t8_default_line
+defaultquadincludedir = $(schemesdefaultincludedir)/t8_default_quad
+defaulttriincludedir = $(schemesdefaultincludedir)/t8_default_tri
+defaulthexincludedir = $(schemesdefaultincludedir)/t8_default_hex
+defaulttetincludedir = $(schemesdefaultincludedir)/t8_default_tet
+defaultprismincludedir = $(schemesdefaultincludedir)/t8_default_prism
+defaultpyramidincludedir = $(schemesdefaultincludedir)/t8_default_pyramid
+
 libt8_generated_headers = src/t8_config.h
 libt8_installed_headers = \
   src/t8.h src/t8_eclass.h src/t8_mesh.h \
   src/t8_element_cxx.hxx src/t8_element.h \
-  src/t8_cmesh/t8_cmesh_testcases.h \
   src/t8_element_c_interface.h \
   src/t8_refcount.h src/t8_cmesh.h src/t8_cmesh_triangle.h \
   src/t8_cmesh/t8_cmesh_occ.hxx \
-  src/t8_data/t8_shmem.h src/t8_data/t8_containers.h \
   src/t8_cmesh_tetgen.h src/t8_cmesh_readmshfile.h \
   src/t8_cmesh_vtk.h \
+  src/t8_forest.h \
+  src/t8_vec.h \
+  src/t8_version.h \
+  src/t8_vtk.h \
+  src/t8_cmesh_netcdf.h \
+  src/t8_forest_netcdf.h \
+  src/t8_element_shape.h \
+  src/t8_netcdf.h
+libt8_installed_headers_cmesh = \
+  src/t8_cmesh/t8_cmesh_testcases.h \
   src/t8_cmesh/t8_cmesh_save.h \
   src/t8_cmesh/t8_cmesh_examples.h \
-  src/t8_forest.h \
+  src/t8_cmesh/t8_cmesh_geometry.h
+libt8_installed_headers_data = \
+  src/t8_data/t8_shmem.h src/t8_data/t8_containers.h
+libt8_installed_headers_forest = \
   src/t8_forest/t8_forest_adapt.h \
   src/t8_forest/t8_forest_vtk.h \
-  src/t8_cmesh/t8_cmesh_geometry.h \
+  src/t8_forest/t8_forest_iterate.h src/t8_forest/t8_forest_partition.h
+libt8_installed_headers_geometry = \
   src/t8_geometry/t8_geometry.h \
   src/t8_geometry/t8_geometry_base.hxx \
   src/t8_geometry/t8_geometry_base.h \
+  src/t8_geometry/t8_geometry_helpers.h
+libt8_installed_headers_geometry_impl = \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.h \
-  src/t8_geometry/t8_geometry_helpers.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx \
-  src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx \
-  src/t8_vec.h src/t8_vtk.h \
-  src/t8_forest/t8_forest_iterate.h src/t8_forest/t8_forest_partition.h
+  src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx 
+libt8_installed_headers_schemes_default =
+libt8_installed_headers_default_common =
+libt8_installed_headers_default_vertex =
+libt8_installed_headers_default_line =
+libt8_installed_headers_default_quad =
+libt8_installed_headers_default_tri =
+libt8_installed_headers_default_hex =
+libt8_installed_headers_default_tet =
+libt8_installed_headers_default_prism =
+libt8_installed_headers_default_pyramid =
 libt8_internal_headers = \
   src/t8_cmesh/t8_cmesh_stash.h src/t8_cmesh/t8_cmesh_trees.h \
   src/t8_cmesh/t8_cmesh_types.h src/t8_cmesh/t8_cmesh_partition.h \
@@ -48,6 +85,7 @@ libt8_compiled_sources = \
   src/t8_cmesh/t8_cmesh_cxx.cxx src/t8_cmesh/t8_cmesh_triangle.c \
   src/t8_cmesh/t8_cmesh_vtk.c src/t8_cmesh/t8_cmesh_stash.c \
   src/t8_cmesh/t8_cmesh_save.c \
+  src/t8_cmesh/t8_cmesh_netcdf.c \
   src/t8_cmesh/t8_cmesh_trees.c src/t8_cmesh/t8_cmesh_commit.c \
   src/t8_cmesh/t8_cmesh_partition.c src/t8_cmesh/t8_cmesh_refine.cxx \
   src/t8_cmesh/t8_cmesh_copy.c src/t8_data/t8_shmem.c \
@@ -66,7 +104,11 @@ libt8_compiled_sources = \
   src/t8_forest/t8_forest_partition.cxx src/t8_forest/t8_forest_cxx.cxx \
   src/t8_forest/t8_forest_private.c src/t8_forest/t8_forest_vtk.cxx \
   src/t8_forest/t8_forest_ghost.cxx src/t8_forest/t8_forest_iterate.cxx \
+  src/t8_version.c \
   src/t8_vtk.c src/t8_forest/t8_forest_balance.cxx src/t8_vec.c \
+  src/t8_forest/t8_forest_netcdf.cxx \
+  src/t8_element_shape.c \
+  src/t8_netcdf.c \
   src/t8_cmesh/t8_cmesh_testcases.c 
 
 # this variable is used for headers that are not publicly installed
@@ -84,7 +126,22 @@ LDADD += @top_builddir@/src/libt8.la \
 EXTRA_src_libt8_la_DEPENDENCIES = @T8_P4EST_LDADD@ @T8_SC_LDADD@
 
 nodist_include_HEADERS += $(libt8_generated_headers)
-nobase_dist_include_HEADERS += $(libt8_installed_headers)
+dist_include_HEADERS = $(libt8_installed_headers)
+dist_cmeshinclude_HEADERS = $(libt8_installed_headers_cmesh)
+dist_datainclude_HEADERS = $(libt8_installed_headers_data)
+dist_forestinclude_HEADERS = $(libt8_installed_headers_forest)
+dist_geometryinclude_HEADERS = $(libt8_installed_headers_geometry)
+dist_geometryimplinclude_HEADERS = $(libt8_installed_headers_geometry_impl)
+dist_schemesdefaultinclude_HEADERS = $(libt8_installed_headers_schemes_default)
+dist_defaultcommoninclude_HEADERS = $(libt8_installed_headers_default_common)
+dist_defaultvertexinclude_HEADERS = $(libt8_installed_headers_default_vertex)
+dist_defaultlineinclude_HEADERS = $(libt8_installed_headers_default_line)
+dist_defaultquadinclude_HEADERS = $(libt8_installed_headers_default_quad)
+dist_defaulttriinclude_HEADERS = $(libt8_installed_headers_default_tri)
+dist_defaulthexinclude_HEADERS = $(libt8_installed_headers_default_hex)
+dist_defaulttetinclude_HEADERS = $(libt8_installed_headers_default_tet)
+dist_defaultprisminclude_HEADERS = $(libt8_installed_headers_default_prism)
+dist_defaultpyramidinclude_HEADERS = $(libt8_installed_headers_default_pyramid)
 
 AM_CPPFLAGS += -I@top_srcdir@/src \
         @T8_SC_CPPFLAGS@ @T8_P4EST_CPPFLAGS@
