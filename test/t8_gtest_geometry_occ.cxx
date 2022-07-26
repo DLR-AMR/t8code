@@ -20,6 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <gtest/gtest.h>
 #include <t8_cmesh/t8_cmesh.c>
 #include <t8_forest.h>
 #include <t8_vtk.h>
@@ -149,13 +150,12 @@ t8_create_occ_curve_geometry ()
  * \param [in] face                   The index of the face to link a surface to. -1 for no face.
  * \param [in] edge                   The index of the edge to link a curve to. -1 for no edge.
  * \param [in] parameters             Parameters of the curve/surface.
- * \param [in] mpic                   The mpi communicator to use.
  * \return                            A valid cmesh, as if _init and _commit had been called.
  */
 t8_cmesh_t
 t8_create_occ_hypercube (double *rot_vec,
                          int face,
-                         int edge, double *parameters, sc_MPI_Comm mpic)
+                         int edge, double *parameters)
 {
 #if T8_WITH_OCC
   if (edge >= 0 && face >= 0) {
@@ -208,7 +208,7 @@ t8_create_occ_hypercube (double *rot_vec,
                           T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges,
                           24 * sizeof (int), 0);
   t8_cmesh_register_geometry (cmesh, geometry);
-  t8_cmesh_commit (cmesh, mpic);
+  t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   return cmesh;
 
 #else /* !T8_WITH_OCC */
@@ -226,13 +226,13 @@ t8_create_occ_hypercube (double *rot_vec,
  * \param [in] comm                   The mpi communicator to use.
  * \return                            Returns 1 if passed, 0 if failed.
  */
-int
+void
 t8_test_geometry_occ (double *rot_vec,
                       int face,
                       int edge,
                       double *parameters,
                       double *test_ref_coords,
-                      double *test_return_coords, sc_MPI_Comm mpic)
+                      double *test_return_coords)
 {
 #if T8_WITH_OCC
   double              out_coords[3];
@@ -241,7 +241,7 @@ t8_test_geometry_occ (double *rot_vec,
   double              inversed_rot_vec[3];
   double              tol = DBL_EPSILON > 1e-10 ? DBL_EPSILON : 1e-10;
   t8_cmesh_t          cmesh =
-    t8_create_occ_hypercube (rot_vec, face, edge, parameters, mpic);
+    t8_create_occ_hypercube (rot_vec, face, edge, parameters);
 
   for (int i_coord = 0; i_coord < 3; ++i_coord) {
     inversed_rot_vec[2 - i_coord] = -rot_vec[i_coord];
@@ -251,35 +251,20 @@ t8_test_geometry_occ (double *rot_vec,
   for (int i_coord = 0; i_coord < 8; ++i_coord) {
     t8_geometry_evaluate (cmesh, 0, rotated_test_ref_coords + i_coord * 3,
                           out_coords);
-    if (tol < abs (out_coords[0] - test_return_coords[0 + i_coord * 3])
-        || tol < abs (out_coords[1] - test_return_coords[1 + i_coord * 3])
-        || tol < abs (out_coords[2] - test_return_coords[2 + i_coord * 3])) {
-      t8_cmesh_destroy (&cmesh);
-      return 0;
-    }
+    EXPECT_NEAR(out_coords[0], test_return_coords[0 + i_coord * 3], tol);
+    EXPECT_NEAR(out_coords[1], test_return_coords[1 + i_coord * 3], tol);
+    EXPECT_NEAR(out_coords[2], test_return_coords[2 + i_coord * 3], tol);
   }
   t8_cmesh_destroy (&cmesh);
-  return 1;
 
 #else /* !T8_WITH_OCC */
   SC_ABORTF ("OCC not linked");
 #endif /* T8_WITH_OCC */
 }
 
-int
-main (int argc, char **argv)
-{
 #if T8_WITH_OCC
-  int                 mpiret;
-  sc_MPI_Comm         mpic;
-
-  mpiret = sc_MPI_Init (&argc, &argv);
-  SC_CHECK_MPI (mpiret);
-
-  mpic = sc_MPI_COMM_WORLD;
-  sc_init (mpic, 1, 1, NULL, SC_LP_PRODUCTION);
-  p4est_init (NULL, SC_LP_ESSENTIAL);
-  t8_init (SC_LP_DEFAULT);
+TEST(t8_gtest_geometry_occ, linked_faces)
+{
   double              test_ref_coords[24] = {
     0.1, 0.1, 0.1,
     0.8, 0.1, 0.1,
@@ -300,6 +285,44 @@ main (int argc, char **argv)
     0.0932920308, 0.9000000000, 0.9067079692,
     0.9673042609, 0.8312979801, 0.8063743210
   };
+  double              surface_rot_vecs[18] = {
+    M_PI / 2, 0, 0,             // Face 0
+    M_PI * 3 / 2, 0, 0,         // Face 1
+    0, 0, 0,                    // Face 2
+    M_PI, 0, 0,                 // Face 3
+    0, M_PI * 3 / 2, 0,         // Face 4
+    0, M_PI / 2, 0              // Face 5
+  };
+  double              surface_parameters[48] = {
+    0, 1, 0, 0, 1, 1, 1, 0,     // Face 0
+    0, 0, 0, 1, 1, 0, 1, 1,     // Face 1
+    0, 0, 0, 1, 1, 0, 1, 1,     // Face 2
+    0, 1, 0, 0, 1, 1, 1, 0,     // Face 3
+    1, 0, 1, 1, 0, 0, 0, 1,     // Face 4
+    0, 0, 0, 1, 1, 0, 1, 1      // Face 5
+  };
+  for (int i_faces = 0; i_faces < 6; ++i_faces) {
+    t8_test_geometry_occ (surface_rot_vecs + i_faces * 3,
+                          i_faces,
+                          -1,
+                          surface_parameters + i_faces * 8,
+                          test_ref_coords,
+                          surface_test_return_coords);
+  }
+}
+
+TEST(t8_gtest_geometry_occ, linked_edges)
+{
+  double              test_ref_coords[24] = {
+    0.1, 0.1, 0.1,
+    0.8, 0.1, 0.1,
+    0.15, 0.9, 0.1,
+    0.9, 0.9, 0.3,
+    0.3, 0.1, 0.7,
+    0.9, 0.25, 0.95,
+    0.1, 0.9, 0.9,
+    0.95, 0.85, 0.8
+  };
   double              curve_test_return_coords[24] = {
     0.0955204602, 0.2235162028, 0.1217553783,
     0.7995278713, -0.0659838746, 0.2083328730,
@@ -310,14 +333,7 @@ main (int argc, char **argv)
     0.0999446970, 0.9015248914, 0.9002685849,
     0.9499697383, 0.8472575225, 0.7998496263
   };
-  double              surface_rot_vecs[18] = {
-    M_PI / 2, 0, 0,             // Face 0
-    M_PI * 3 / 2, 0, 0,         // Face 1
-    0, 0, 0,                    // Face 2
-    M_PI, 0, 0,                 // Face 3
-    0, M_PI * 3 / 2, 0,         // Face 4
-    0, M_PI / 2, 0              // Face 5
-  };
+  
   double              curve_rot_vecs[36] = {
     0, 0, 0,                    // Edge 0
     0, -M_PI / 2, 0,            // Edge 1
@@ -331,14 +347,6 @@ main (int argc, char **argv)
     M_PI / 2, M_PI / 2, -M_PI / 2,      // Edge 9
     M_PI / 2, -M_PI / 2, 0,     // Edge 10
     -M_PI / 2, -M_PI / 2, 0,    // Edge 11
-  };
-  double              surface_parameters[48] = {
-    0, 1, 0, 0, 1, 1, 1, 0,     // Face 0
-    0, 0, 0, 1, 1, 0, 1, 1,     // Face 1
-    0, 0, 0, 1, 1, 0, 1, 1,     // Face 2
-    0, 1, 0, 0, 1, 1, 1, 0,     // Face 3
-    1, 0, 1, 1, 0, 0, 0, 1,     // Face 4
-    0, 0, 0, 1, 1, 0, 1, 1      // Face 5
   };
   double              curve_parameters[24] = {
     0, 1,                       // Edge 0
@@ -354,33 +362,13 @@ main (int argc, char **argv)
     1, 0,                       // Edge 10
     0, 1                        // Edge 11
   };
-
-  for (int i_faces = 0; i_faces < 6; ++i_faces) {
-    SC_CHECK_ABORTF (t8_test_geometry_occ (surface_rot_vecs + i_faces * 3,
-                                           i_faces,
-                                           -1,
-                                           surface_parameters + i_faces * 8,
-                                           test_ref_coords,
-                                           surface_test_return_coords,
-                                           mpic),
-                     "Failed check for face %i.", i_faces);
-  }
-
   for (int i_edges = 0; i_edges < 12; ++i_edges) {
-    SC_CHECK_ABORTF (t8_test_geometry_occ (curve_rot_vecs + i_edges * 3,
-                                           -1,
-                                           i_edges,
-                                           curve_parameters + i_edges * 2,
-                                           test_ref_coords,
-                                           curve_test_return_coords,
-                                           mpic),
-                     "Failed check for edge %i.", i_edges);
+    t8_test_geometry_occ (curve_rot_vecs + i_edges * 3,
+                          -1,
+                          i_edges,
+                          curve_parameters + i_edges * 2,
+                          test_ref_coords,
+                          curve_test_return_coords);
   }
-  sc_finalize ();
-
-  mpiret = sc_MPI_Finalize ();
-  SC_CHECK_MPI (mpiret);
-
-#endif /* T8_WITH_OCC */
-  return 0;
 }
+#endif /* T8_WITH_OCC */

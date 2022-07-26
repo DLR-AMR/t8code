@@ -8,7 +8,6 @@ t8code_test_programs = \
         test/t8_test_cmesh_partition \
         test/t8_test_find_owner \
 	test/t8_test_geometry \
-	test/t8_test_geometry_occ \
         test/t8_test_ghost_exchange \
         test/t8_test_ghost_and_owner \
 	test/t8_test_forest_commit \
@@ -23,8 +22,7 @@ t8code_test_programs = \
 	test/t8_test_netcdf_linkage \
 	test/t8_test_vtk_linkage \
 	test/t8_test_shmem \
-	test/t8_test_user_data \
-	test/t8_test_geometry_occ
+	test/t8_test_user_data
 
 test_t8_test_hypercube_SOURCES = test/t8_test_hypercube.c
 test_t8_test_cmesh_copy_SOURCES = test/t8_test_cmesh_copy.c
@@ -47,7 +45,6 @@ test_t8_test_netcdf_linkage_SOURCES = test/t8_test_netcdf_linkage.c
 test_t8_test_vtk_linkage_SOURCES = test/t8_test_vtk_linkage.cxx
 test_t8_test_shmem_SOURCES = test/t8_test_shmem.cxx
 test_t8_test_user_data_SOURCES = test/t8_test_user_data.cxx
-test_t8_test_geometry_occ_SOURCES = test/t8_test_geometry_occ.cxx
 
 t8code_googletest_programs = \
   test/t8_gtest_main
@@ -57,7 +54,8 @@ test_t8_gtest_main_SOURCES = test/t8_gtest_main.cxx \
   test/t8_gtest_vec.cxx \
   test/t8_gtest_refcount.cxx \
   test/t8_gtest_bcast.cxx \
-  test/t8_gtest_nca.cxx
+  test/t8_gtest_nca.cxx \
+	test/t8_gtest_geometry_occ.cxx
 test_t8_gtest_main_LDADD = $(LDADD) test/libgtest.la
 test_t8_gtest_main_LDFLAGS = $(AM_LDFLAGS) -pthread
 test_t8_gtest_main_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)/thirdparty/googletest-mpi/ \
