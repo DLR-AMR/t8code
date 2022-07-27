@@ -1708,7 +1708,7 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
 
   if (forest->is_incomplete) {
     if (first_or_last == 0) {
-      if (forest->mpirank < forest->mpisize-1){
+      if (forest->mpirank < forest->mpisize-1) {
         sc_MPI_Send(&forest->last_local_tree, 1, T8_MPI_GLOIDX,
                     forest->mpirank+1, 0, forest->mpicomm);
       }
@@ -1717,7 +1717,7 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
                     forest->mpirank-1, 0, forest->mpicomm, NULL);
       }
       else {
-        /* First prozess, nothing to to any more */
+        /* First process, nothing to do any more */
         T8_ASSERT (!forest->mpirank);
         return 0;
       }
@@ -1729,12 +1729,12 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
         sc_MPI_Send(&forest->first_local_tree, 1, T8_MPI_GLOIDX, 
                     forest->mpirank-1, 0, forest->mpicomm);
       }
-      if (forest->mpirank < forest->mpisize-1){
+      if (forest->mpirank < forest->mpisize-1) {
         sc_MPI_Recv(&global_neighbour_tree_idx, 1, T8_MPI_GLOIDX, 
                     forest->mpirank+1, 0, forest->mpicomm, NULL);
       }
       else {
-        /* Last process, nothing to to any more  */
+        /* Last process, nothing to do any more  */
         T8_ASSERT (forest->mpirank == forest->mpisize-1);
         return 0;
       }
