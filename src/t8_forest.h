@@ -162,6 +162,7 @@ int                 t8_forest_is_initialized (t8_forest_t forest);
  */
 int                 t8_forest_is_committed (t8_forest_t forest);
 
+#if T8_ENABLE_DEBUG
 /** Check whether the forest has overlapping elements.
  * \param [in] forest_a The forest to consider.
  * \return              True if \a forest has no elements which are inside each other.
@@ -169,6 +170,7 @@ int                 t8_forest_is_committed (t8_forest_t forest);
  * rank.
  */
 int                 t8_forest_no_overlap (t8_forest_t forest);
+#endif
 
 /** Check whether two committed forests have the same local elements.
  * \param [in] forest_a The first forest.

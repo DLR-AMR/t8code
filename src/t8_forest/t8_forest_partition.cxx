@@ -162,10 +162,10 @@ t8_forest_partition_test_desc (t8_forest_t forest)
 }
 #endif
 
-#ifdef T8_ENABLE_DEBUG
 void
 t8_forest_partition_test_boundery_element (t8_forest_t forest)
 {
+#ifdef T8_ENABLE_DEBUG
   t8_element_t       *element_last;
   t8_element_t       *element_last_desc;
   t8_eclass_scheme_c *ts;
@@ -220,8 +220,8 @@ t8_forest_partition_test_boundery_element (t8_forest_t forest)
   T8_ASSERT (last_desc_id < first_desc_id);
   /* clean up */
   ts->t8_element_destroy(1, &element_last_desc);
-}
 #endif
+}
 
 void
 t8_forest_partition_create_first_desc (t8_forest_t forest)

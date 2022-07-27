@@ -548,6 +548,7 @@ t8_forest_min_nonempty_level (t8_cmesh_t cmesh, t8_scheme_cxx_t *scheme)
 
 int
 t8_forest_no_overlap (t8_forest_t forest) {
+#if T8_ENABLE_DEBUG
   t8_locidx_t         num_local_trees;
   t8_locidx_t         elems_in_tree;
   t8_locidx_t         ielem, itree;
@@ -577,6 +578,7 @@ t8_forest_no_overlap (t8_forest_t forest) {
     }
     ts->t8_element_destroy (1, &nca);
   }
+#endif
   return 1;
 }
 
