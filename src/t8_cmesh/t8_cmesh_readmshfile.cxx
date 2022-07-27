@@ -1692,6 +1692,9 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
   t8_geometry        *geometry = NULL;
   int                 main_proc_read_successful = 0;
   int                 msh_version;
+  #if T8_WITH_OCC
+    t8_geometry_occ    *geometry_occ;
+  #endif /* T8_WITH_OCC */
 
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
@@ -1709,6 +1712,27 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
    * commit, since there are process without any trees. So the cmesh would
    * not know its dimension on these processes. */
   t8_cmesh_set_dimension (cmesh, dim);
+
+  if (use_occ_geometry && msh_version == 4) {
+#if T8_WITH_OCC
+    geometry_occ =
+      t8_geometry_occ_new (dim, fileprefix, "brep_geometry");
+    geometry = geometry_occ;
+#else /* !T8_WITH_OCC */
+    SC_ABORTF ("OCC not linked");
+#endif /* T8_WITH_OCC */
+  }
+  else if (use_occ_geometry && msh_version == 2) {
+    SC_ABORTF ("The occ geometry is only supported for msh files of "
+               "version 4");
+  }
+  else {
+      geometry = new t8_geometry_linear (dim);
+  }
+  
+  /* Register geometry */
+  t8_cmesh_register_geometry (cmesh, geometry);
+
   if (!partition || mpirank == main_proc) {
     snprintf (current_file, BUFSIZ, "%s.msh", fileprefix);
     /* Open the file */
@@ -1747,12 +1771,21 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
     switch (msh_version) {
     case 2:
       if (use_occ_geometry) {
-        SC_ABORTF ("The occ geometry is only supported for msh files of "
-                   "version 4");
+        fclose (file);
+        t8_debugf
+          ("The occ geometry is only supported for msh files of "
+                   "version 4\n");
+        t8_cmesh_destroy (&cmesh);
+        if (partition) {
+          /* Communicate to the other processes that reading failed. */
+          main_proc_read_successful = 0;
+          sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc,
+                        comm);
+        }
+        return NULL;
       }
       vertices =
         t8_msh_file_2_read_nodes (file, &num_vertices, &node_mempool);
-      geometry = new t8_geometry_linear (dim);
       t8_cmesh_msh_file_2_read_eles (cmesh, file, vertices, &vertex_indices,
                                      dim);
       break;
@@ -1762,17 +1795,23 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
         t8_msh_file_4_read_nodes (file, &num_vertices, &node_mempool);
       if (use_occ_geometry) {
 #if T8_WITH_OCC
-        t8_geometry_occ    *geometry_occ =
-          t8_geometry_occ_new (dim, fileprefix, "brep_geometry");
         t8_cmesh_msh_file_4_read_eles (cmesh, file, vertices, &vertex_indices,
                                        dim, geometry_occ);
-        geometry = geometry_occ;
 #else /* !T8_WITH_OCC */
-        SC_ABORTF ("OCC not linked");
+        fclose (file);
+        t8_debugf
+          ("Occ is not linked. Cannot use occ geometry.\n");
+        t8_cmesh_destroy (&cmesh);
+        if (partition) {
+          /* Communicate to the other processes that reading failed. */
+          main_proc_read_successful = 0;
+          sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc,
+                        comm);
+        }
+        return NULL;
 #endif /* T8_WITH_OCC */
       }
       else {
-        geometry = new t8_geometry_linear (dim);
         t8_cmesh_msh_file_4_read_eles (cmesh, file, vertices, &vertex_indices,
                                        dim, NULL);
       }
@@ -1831,8 +1870,6 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
     }
     t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
   }
-  /* Register geometry */
-  t8_cmesh_register_geometry (cmesh, geometry);
 
   /* Commit the cmesh */
   T8_ASSERT (cmesh != NULL);
