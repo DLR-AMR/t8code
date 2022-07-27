@@ -166,11 +166,13 @@ t8_forest_partition_test_desc (t8_forest_t forest)
 void
 t8_forest_partition_test_boundery_element (t8_forest_t forest)
 {
-  t8_element_t       *element_last, *element_last_desc;
+  t8_element_t       *element_last;
+  t8_element_t       *element_last_desc;
   t8_eclass_scheme_c *ts;
-  t8_linearidx_t      first_desc_id, last_desc_id;
+  t8_linearidx_t      first_desc_id;
+  t8_linearidx_t      last_desc_id;
   t8_locidx_t         num_local_trees;
-  t8_gloidx_t         glotreeidx;
+  t8_gloidx_t         global_tree_id;
   t8_tree_t           tree;
   int                 level;
   
@@ -188,8 +190,8 @@ t8_forest_partition_test_boundery_element (t8_forest_t forest)
     return;
   }
     
-  glotreeidx = t8_shmem_array_get_gloidx (forest->tree_offsets, forest->mpirank+1);
-  if (glotreeidx >= 0) {
+  global_tree_id = t8_shmem_array_get_gloidx (forest->tree_offsets, forest->mpirank+1);
+  if (global_tree_id >= 0) {
     /* The first tree on that process rank+1 is not shared with current rank,
      * nothing to do */
     return;
