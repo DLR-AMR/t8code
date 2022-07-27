@@ -79,8 +79,8 @@ void                t8_forest_partition_data (t8_forest_t forest_from,
                                               sc_array_t *data_out);
 
 #ifdef T8_ENABLE_DEBUG
-/* Test if last descendant of the last element of cuurent rank has
- * a smaler linear id than the stored first descendant of rank+1. */
+/* Test if last descendant of the last element of current rank has
+ * a smaller linear id than the stored first descendant of rank+1. */
 void
 t8_forest_partition_test_boundery_element (t8_forest_t forest);
 #endif
