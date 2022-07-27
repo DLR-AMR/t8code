@@ -57,7 +57,8 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim,
   /* Make sure that p4est is properly initialized. If not, do it here
    * and raise a warning. */
   if (!sc_package_is_registered (p4est_package_id)) {
-    t8_global_errorf ("WARNING: p4est is not yet initialized. Doing it now for you.");
+    t8_global_errorf
+      ("WARNING: p4est is not yet initialized. Doing it now for you.");
     p4est_init (NULL, SC_LP_ESSENTIAL);
   }
 
