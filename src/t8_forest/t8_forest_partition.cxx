@@ -203,7 +203,7 @@ t8_forest_partition_test_boundery_element (t8_forest_t forest)
   tree = t8_forest_get_tree (forest, num_local_trees-1);
   ts = t8_forest_get_eclass_scheme (forest, tree->eclass);
   ts->t8_element_new (1, &element_last_desc);
-  element_last = t8_element_array_index_locidx (&tree->elements,
+  element_last = t8_forest_get_element_in_tree (forest, num_local_trees-1,
                                      t8_forest_get_tree_element_count (tree)-1);
   T8_ASSERT (ts->t8_element_is_valid (element_last));
   ts->t8_element_last_descendant (element_last, element_last_desc, forest->maxlevel);
