@@ -546,36 +546,25 @@ t8_forest_no_overlap (t8_forest_t forest) {
   t8_locidx_t         ielem, itree;
   t8_tree_t           tree;
   t8_element_t       *element_a, *element_b, *nca;
-  t8_element_array_t *telements;
   t8_eclass_scheme_c *ts;
 
   T8_ASSERT (t8_forest_is_committed (forest));
-
+  
   num_local_trees = t8_forest_get_num_local_trees (forest);
   
   for (itree = 0; itree < num_local_trees; itree++) {
-
     tree          = t8_forest_get_tree (forest, itree);
-    telements     = &tree->elements;
     ts            = t8_forest_get_eclass_scheme (forest, tree->eclass);
     elems_in_tree = t8_forest_get_tree_num_elements (forest, itree);
     ts->t8_element_new(1, &nca);
-
     for (ielem = 0; ielem < elems_in_tree-1; ielem++) {
-      element_a = t8_element_array_index_locidx (telements, ielem);
-      element_b = t8_element_array_index_locidx (telements, ielem+1);
+      element_a = t8_forest_get_element_in_tree (forest, itree, ielem);
+      element_b = t8_forest_get_element_in_tree (forest, itree, ielem+1);
       T8_ASSERT (ts->t8_element_is_valid (element_a));
       T8_ASSERT (ts->t8_element_is_valid (element_b));
-      
       ts->t8_element_nca (element_a, element_b, nca);
-
       if (ts->t8_element_level(element_a) == ts->t8_element_level(nca) ||
           ts->t8_element_level(element_b) == ts->t8_element_level(nca)) {
-        t8_debugf("[IL] ### level a %i b %i nca %i \n", 
-                  ts->t8_element_level(element_a),
-                  ts->t8_element_level(element_b),
-                  ts->t8_element_level(nca));
-        t8_debugf("[IL] ### element %i tree %i \n", ielem, itree);
         return 0;
       }
     }
