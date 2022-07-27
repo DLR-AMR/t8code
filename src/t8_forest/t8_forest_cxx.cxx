@@ -568,6 +568,7 @@ t8_forest_no_overlap (t8_forest_t forest) {
         return 0;
       }
     }
+    ts->t8_element_destroy (1, &nca);
   }
   return 1;
 }
