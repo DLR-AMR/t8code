@@ -79,8 +79,12 @@ void                t8_forest_partition_data (t8_forest_t forest_from,
                                               sc_array_t *data_out);
 
 #ifdef T8_ENABLE_DEBUG
-/* Test if last descendant of the last element of current rank has
- * a smaller linear id than the stored first descendant of rank+1. */
+/** Test if last descendant of the last element of current rank has
+ * a smaller linear id than the stored first descendant of rank+1.
+ * If this is not the case, elements overlap.
+ * \param [in,out]  forest  The forest.
+ * \a forest must be committed before calling this function.
+ */
 void
 t8_forest_partition_test_boundery_element (t8_forest_t forest);
 #endif

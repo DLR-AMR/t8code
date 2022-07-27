@@ -163,8 +163,6 @@ t8_forest_partition_test_desc (t8_forest_t forest)
 #endif
 
 #ifdef T8_ENABLE_DEBUG
-/* Test if last descendant of the last element of cuurent rank has
- * a smaler linear id than the stored first descendant of rank+1. */
 void
 t8_forest_partition_test_boundery_element (t8_forest_t forest)
 {
@@ -185,7 +183,8 @@ t8_forest_partition_test_boundery_element (t8_forest_t forest)
     return;
   }
   if(forest->mpirank == forest->mpisize-1) {
-    /* The last process has no uncheck boarder, nothing to do */
+    /* The last process can only share a tree with process rank-1. 
+     * However, this is already tested by process rank-1. */
     return;
   }
     
@@ -200,7 +199,7 @@ t8_forest_partition_test_boundery_element (t8_forest_t forest)
   first_desc_id = *(t8_linearidx_t *) t8_shmem_array_index (forest->global_first_desc,
                                                             forest->mpirank+1);
 
-  /* Get last element of current rank and its last descendant id*/
+  /* Get last element of current rank and its last descendant id */
   tree = t8_forest_get_tree (forest, num_local_trees-1);
   ts = t8_forest_get_eclass_scheme (forest, tree->eclass);
   ts->t8_element_new (1, &element_last_desc);
@@ -215,7 +214,7 @@ t8_forest_partition_test_boundery_element (t8_forest_t forest)
   last_desc_id = ts->t8_element_get_linear_id (element_last_desc, level);
 
   /* The following inequality must apply:
-   * last_desc_id of last element of rank < first_desc_id of first element of rank+1*/
+   * last_desc_id of last element of rank < first_desc_id of first element of rank+1 */
   T8_ASSERT (last_desc_id < first_desc_id);
   /* clean up */
   ts->t8_element_destroy(1, &element_last_desc);
