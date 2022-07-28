@@ -178,7 +178,7 @@ t8_recursive_nca_check (t8_element_t *check_nca, t8_element_t *desc_a,
       ts->t8_element_child (parent_b, j, desc_b);
       ts->t8_element_nca (desc_a, desc_b, check);
 
-      if (ts->t8_element_compare (check_nca, check)) {
+      if (ts->t8_element_compare (check_nca, check) != 0) {
         level_a = ts->t8_element_level (desc_a);
         level_b = ts->t8_element_level (desc_b);
 
