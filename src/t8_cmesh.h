@@ -48,10 +48,6 @@ typedef struct t8_cmesh *t8_cmesh_t;
  */
 #include <t8_eclass.h>
 
-/* TODO: See above comment, when moving cmesh_new these get moved too. */
-#include <p4est_connectivity.h>
-#include <p8est_connectivity.h>
-
 /* TODO: make it legal to call cmesh_set functions multiple times,
  *       just overwrite the previous setting if no inconsistency can occur.
  *       edit: This should be achieved now.
@@ -765,9 +761,8 @@ void                t8_cmesh_translate_coordinates (const double *coords_in,
                                                     double translate[3]);
 
 /**TODO: Add proper documentation*/
-void                t8_cmesh_new_translate_vertices_to_attributes (t8_topidx_t
-                                                                   *
-                                                                   tvertices,
+void                t8_cmesh_new_translate_vertices_to_attributes (t8_locidx_t
+                                                                   *tvertices,
                                                                    double
                                                                    *vertices,
                                                                    double
