@@ -443,12 +443,12 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
           surface_parameter_displacement_from_edges[dim];
       }
 
+      /* *INDENT-OFF* */
       /* Retrieve the surface of the edge */
       T8_ASSERT (faces[i_faces] <= occ_shape_face_map.Size ());
       surface =
-        BRep_Tool::Surface (TopoDS::
-                            Face (occ_shape_face_map.
-                                  FindKey (faces[i_faces])));
+        BRep_Tool::Surface (TopoDS::Face (occ_shape_face_map.FindKey (faces[i_faces])));
+      /* *INDENT-ON* */
 
       /* Check if surface is valid */
       T8_ASSERT (!surface.IsNull ());
