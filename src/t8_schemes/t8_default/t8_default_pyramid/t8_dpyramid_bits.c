@@ -1343,7 +1343,7 @@ t8_dpyramid_is_inside_pyra (const t8_dpyramid_t *tet,
 
   T8_ASSERT (0 <= tet->level && tet->level <= T8_DPYRAMID_MAXLEVEL);
 
-  /* test if p is inside check, if check is of type 6 */
+  /* test if tet is inside the pyramids with coordinates given by check and type 6 */
   if (((check->x + diff) <= tet->x && tet->x < (check->x + length)) &&
       ((check->y + diff) <= tet->y && tet->y < (check->y + length)) &&
       (check->z <= tet->z && tet->z < (check->z + length))) {
@@ -1357,7 +1357,7 @@ t8_dpyramid_is_inside_pyra (const t8_dpyramid_t *tet,
       return T8_DPYRAMID_FIRST_TYPE;
     }
   }
-  /* test if p is inside check, if check is of type 7 */
+  /* test if tet is inside the pyramids with coordinates given by check and type 7 */
   else if ((check->x <= tet->x && tet->x <= (check->x + diff)) &&
            (check->y <= tet->y && tet->y <= (check->y + diff)) &&
            (check->z <= tet->z && tet->z < (check->z + length))) {
