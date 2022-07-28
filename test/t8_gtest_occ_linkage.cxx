@@ -37,7 +37,12 @@
 TEST (t8_test_occ_linkage, test_gp_Pnt)
 {
 #if T8_WITH_OCC
-  EXPECT_NO_THROW (gp_Pnt pnt = gp_Pnt (); pnt.SetX (1););
+
+  /* *INDENT-OFF* */
+  EXPECT_NO_THROW (gp_Pnt pnt = gp_Pnt ();
+                   pnt.SetX (1);
+    );
+  /* *INDENT-ON* */
 
   t8_global_productionf ("Successfully created occ gp_Pnt object.\n");
 #else
