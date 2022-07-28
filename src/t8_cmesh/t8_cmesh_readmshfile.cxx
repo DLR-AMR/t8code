@@ -1713,26 +1713,6 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
    * not know its dimension on these processes. */
   t8_cmesh_set_dimension (cmesh, dim);
 
-  if (use_occ_geometry && msh_version == 4) {
-#if T8_WITH_OCC
-    geometry_occ =
-      t8_geometry_occ_new (dim, fileprefix, "brep_geometry");
-    geometry = geometry_occ;
-#else /* !T8_WITH_OCC */
-    SC_ABORTF ("OCC not linked");
-#endif /* T8_WITH_OCC */
-  }
-  else if (use_occ_geometry && msh_version == 2) {
-    SC_ABORTF ("The occ geometry is only supported for msh files of "
-               "version 4");
-  }
-  else {
-      geometry = new t8_geometry_linear (dim);
-  }
-  
-  /* Register geometry */
-  t8_cmesh_register_geometry (cmesh, geometry);
-
   if (!partition || mpirank == main_proc) {
     snprintf (current_file, BUFSIZ, "%s.msh", fileprefix);
     /* Open the file */
@@ -1786,6 +1766,9 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
       }
       vertices =
         t8_msh_file_2_read_nodes (file, &num_vertices, &node_mempool);
+      geometry = new t8_geometry_linear (dim);
+      /* Register geometry */
+      t8_cmesh_register_geometry (cmesh, geometry);
       t8_cmesh_msh_file_2_read_eles (cmesh, file, vertices, &vertex_indices,
                                      dim);
       break;
@@ -1795,6 +1778,11 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
         t8_msh_file_4_read_nodes (file, &num_vertices, &node_mempool);
       if (use_occ_geometry) {
 #if T8_WITH_OCC
+        geometry_occ =
+        t8_geometry_occ_new (dim, fileprefix, "brep_geometry");
+        geometry = geometry_occ;
+        /* Register geometry */
+        t8_cmesh_register_geometry (cmesh, geometry);
         t8_cmesh_msh_file_4_read_eles (cmesh, file, vertices, &vertex_indices,
                                        dim, geometry_occ);
 #else /* !T8_WITH_OCC */
@@ -1812,6 +1800,9 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
 #endif /* T8_WITH_OCC */
       }
       else {
+        geometry = new t8_geometry_linear (dim);
+        /* Register geometry */
+        t8_cmesh_register_geometry (cmesh, geometry);
         t8_cmesh_msh_file_4_read_eles (cmesh, file, vertices, &vertex_indices,
                                        dim, NULL);
       }
