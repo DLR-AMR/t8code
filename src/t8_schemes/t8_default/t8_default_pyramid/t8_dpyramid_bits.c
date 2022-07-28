@@ -1632,7 +1632,7 @@ t8_dpyramid_first_pyra_anc (const t8_dpyramid_t *tet,
 }
 
 /**
- * Smallest level, at which an anc of \a tet has the shape of a tetrahedron
+ * Smallest level at which an anc of \a tet has the shape of a tetrahedron
  * 
  * \param[in] tet The input element
  * \return The level of the last ancestor with the shape of a tetrahedron  
@@ -1696,8 +1696,9 @@ t8_dpyramid_ancestor (const t8_dpyramid_t *pyra, const int level,
 }
 
 void
-t8_dpyramid_nca (const t8_dpyramid_t *pyra1,
-                 const t8_dpyramid_t *pyra2, t8_dpyramid_t *nca)
+t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t *pyra1,
+                                     const t8_dpyramid_t *pyra2,
+                                     t8_dpyramid_t *nca)
 {
   int                 level;
   int                 cube_level;
@@ -1762,14 +1763,14 @@ t8_dpyramid_nca (const t8_dpyramid_t *pyra1,
     /* pyra1 and first_pyramid_anc have the shape of a pyramid now, 
      * we can call the nca again.
      */
-    t8_dpyramid_nca (pyra1, &first_pyramid_anc, nca);
+    t8_dpyramid_nearest_common_ancestor (pyra1, &first_pyramid_anc, nca);
     return;
   }
   else if (t8_dpyramid_shape (pyra1) == T8_ECLASS_TET &&
            t8_dpyramid_shape (pyra2) == T8_ECLASS_PYRAMID) {
     /* if they have different types, we switch pyra1 and pyra2 and
      * call the nca again */
-    t8_dpyramid_nca (pyra2, pyra1, nca);
+    t8_dpyramid_nearest_common_ancestor (pyra2, pyra1, nca);
     return;
   }
   else {
@@ -1826,7 +1827,7 @@ t8_dpyramid_nca (const t8_dpyramid_t *pyra1,
       first_pyra1.z = last_tet1.z & ~length;
       t8_dpyramid_tetparent_type (&last_tet1, &first_pyra1);
       first_pyra1.level = real_level;
-      t8_dpyramid_nca (&first_pyra1, pyra2, nca);
+      t8_dpyramid_nearest_common_ancestor (&first_pyra1, pyra2, nca);
       return;
     }
     else if (real_level < level_switch_pyra2) {
@@ -1840,7 +1841,7 @@ t8_dpyramid_nca (const t8_dpyramid_t *pyra1,
       first_pyra2.z = last_tet2.z & ~length;
       t8_dpyramid_tetparent_type (&last_tet2, &first_pyra2);
       first_pyra2.level = real_level;
-      t8_dpyramid_nca (&first_pyra2, pyra1, nca);
+      t8_dpyramid_nearest_common_ancestor (&first_pyra2, pyra1, nca);
       return;
     }
     else {
