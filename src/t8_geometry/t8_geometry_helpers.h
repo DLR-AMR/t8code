@@ -47,7 +47,7 @@ void                t8_geom_compute_linear_geometry (t8_eclass_t tree_class,
  * \param [out]   evaluated_function  An array of size \a corner_value_dim, on output the result of the interpolation.
  */
 void                t8_geom_linear_interpolation (const double *coefficients,
-                                                  const double *corner_values, 
+                                                  const double *corner_values,
                                                   int corner_value_dim,
                                                   int interpolation_dim,
                                                   double *evaluated_function);
@@ -59,11 +59,9 @@ void                t8_geom_linear_interpolation (const double *coefficients,
  * \param [in]    dim            The dimension of the face vertices.
  * \param [out]   face_vertices  Coordinates of the face vertices in zorder.
  */
-void
-                    t8_geom_get_face_vertices (t8_eclass_t tree_class,
+void                t8_geom_get_face_vertices (t8_eclass_t tree_class,
                                                const double *tree_vertices,
-                                               int face_index,
-                                               int dim,
+                                               int face_index, int dim,
                                                double *face_vertices);
 
 /** Copies the vertex coordinates of a tree edge in zorder into a separate array.
@@ -73,11 +71,9 @@ void
  * \param [in]    dim            The dimension of the edge vertices.
  * \param [out]   edge_vertices  Coordinates of the edge vertices in zorder.
  */
-void
-                    t8_geom_get_edge_vertices (t8_eclass_t tree_class,
+void                t8_geom_get_edge_vertices (t8_eclass_t tree_class,
                                                const double *tree_vertices,
-                                               int edge_index,
-                                               int dim,
+                                               int edge_index, int dim,
                                                double *edge_vertices);
 
 T8_EXTERN_C_END ();

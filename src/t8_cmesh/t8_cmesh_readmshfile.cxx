@@ -748,7 +748,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
 #if T8_WITH_OCC
   t8_msh_file_node_parametric_t face_nodes[T8_ECLASS_MAX_CORNERS_2D],
     edge_nodes[2];
-#endif /* T8_WITH_OCC */ 
+#endif /* T8_WITH_OCC */
   long                lnum_trees, lnum_blocks, entity_tag;
   int                 retval, i;
   int                 ele_type;
@@ -1692,9 +1692,9 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
   t8_geometry        *geometry = NULL;
   int                 main_proc_read_successful = 0;
   int                 msh_version;
-  #if T8_WITH_OCC
-    t8_geometry_occ    *geometry_occ;
-  #endif /* T8_WITH_OCC */
+#if T8_WITH_OCC
+  t8_geometry_occ    *geometry_occ;
+#endif /* T8_WITH_OCC */
 
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
@@ -1754,7 +1754,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
         fclose (file);
         t8_debugf
           ("The occ geometry is only supported for msh files of "
-                   "version 4\n");
+           "version 4\n");
         t8_cmesh_destroy (&cmesh);
         if (partition) {
           /* Communicate to the other processes that reading failed. */
@@ -1778,8 +1778,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
         t8_msh_file_4_read_nodes (file, &num_vertices, &node_mempool);
       if (use_occ_geometry) {
 #if T8_WITH_OCC
-        geometry_occ =
-        t8_geometry_occ_new (dim, fileprefix, "brep_geometry");
+        geometry_occ = t8_geometry_occ_new (dim, fileprefix, "brep_geometry");
         geometry = geometry_occ;
         /* Register geometry */
         t8_cmesh_register_geometry (cmesh, geometry);
@@ -1787,8 +1786,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
                                        dim, geometry_occ);
 #else /* !T8_WITH_OCC */
         fclose (file);
-        t8_debugf
-          ("Occ is not linked. Cannot use occ geometry.\n");
+        t8_debugf ("Occ is not linked. Cannot use occ geometry.\n");
         t8_cmesh_destroy (&cmesh);
         if (partition) {
           /* Communicate to the other processes that reading failed. */

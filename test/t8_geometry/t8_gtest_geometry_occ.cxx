@@ -154,8 +154,7 @@ t8_create_occ_curve_geometry ()
  */
 t8_cmesh_t
 t8_create_occ_hypercube (double *rot_vec,
-                         int face,
-                         int edge, double *parameters)
+                         int face, int edge, double *parameters)
 {
 #if T8_WITH_OCC
   if (edge >= 0 && face >= 0) {
@@ -231,8 +230,7 @@ t8_test_geometry_occ (double *rot_vec,
                       int face,
                       int edge,
                       double *parameters,
-                      double *test_ref_coords,
-                      double *test_return_coords)
+                      double *test_ref_coords, double *test_return_coords)
 {
 #if T8_WITH_OCC
   double              out_coords[3];
@@ -251,9 +249,9 @@ t8_test_geometry_occ (double *rot_vec,
   for (int i_coord = 0; i_coord < 8; ++i_coord) {
     t8_geometry_evaluate (cmesh, 0, rotated_test_ref_coords + i_coord * 3,
                           out_coords);
-    EXPECT_NEAR(out_coords[0], test_return_coords[0 + i_coord * 3], tol);
-    EXPECT_NEAR(out_coords[1], test_return_coords[1 + i_coord * 3], tol);
-    EXPECT_NEAR(out_coords[2], test_return_coords[2 + i_coord * 3], tol);
+    EXPECT_NEAR (out_coords[0], test_return_coords[0 + i_coord * 3], tol);
+    EXPECT_NEAR (out_coords[1], test_return_coords[1 + i_coord * 3], tol);
+    EXPECT_NEAR (out_coords[2], test_return_coords[2 + i_coord * 3], tol);
   }
   t8_cmesh_destroy (&cmesh);
 
@@ -263,7 +261,7 @@ t8_test_geometry_occ (double *rot_vec,
 }
 
 #if T8_WITH_OCC
-TEST(t8_gtest_geometry_occ, linked_faces)
+TEST (t8_gtest_geometry_occ, linked_faces)
 {
   double              test_ref_coords[24] = {
     0.1, 0.1, 0.1,
@@ -306,12 +304,11 @@ TEST(t8_gtest_geometry_occ, linked_faces)
                           i_faces,
                           -1,
                           surface_parameters + i_faces * 8,
-                          test_ref_coords,
-                          surface_test_return_coords);
+                          test_ref_coords, surface_test_return_coords);
   }
 }
 
-TEST(t8_gtest_geometry_occ, linked_edges)
+TEST (t8_gtest_geometry_occ, linked_edges)
 {
   double              test_ref_coords[24] = {
     0.1, 0.1, 0.1,
@@ -333,7 +330,7 @@ TEST(t8_gtest_geometry_occ, linked_edges)
     0.0999446970, 0.9015248914, 0.9002685849,
     0.9499697383, 0.8472575225, 0.7998496263
   };
-  
+
   double              curve_rot_vecs[36] = {
     0, 0, 0,                    // Edge 0
     0, -M_PI / 2, 0,            // Edge 1
@@ -367,8 +364,7 @@ TEST(t8_gtest_geometry_occ, linked_edges)
                           -1,
                           i_edges,
                           curve_parameters + i_edges * 2,
-                          test_ref_coords,
-                          curve_test_return_coords);
+                          test_ref_coords, curve_test_return_coords);
   }
 }
 #endif /* T8_WITH_OCC */

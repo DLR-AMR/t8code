@@ -26,26 +26,26 @@
 
 void
 t8_geom_linear_interpolation (const double *coefficients,
-                              const double *corner_values, 
+                              const double *corner_values,
                               int corner_value_dim,
                               int interpolation_dim,
                               double *evaluated_function)
 {
   double              temp[3] = { 0 };
   for (int i = 0; i < corner_value_dim; i++) {
-    temp[i] = corner_values[0 * corner_value_dim + i] * (1 - coefficients[0]) /* x=0 y=0 z=0 */
-            + corner_values[1 * corner_value_dim + i] * coefficients[0];      /* x=1 y=0 z=0 */
+    temp[i] = corner_values[0 * corner_value_dim + i] * (1 - coefficients[0])   /* x=0 y=0 z=0 */
+      +corner_values[1 * corner_value_dim + i] * coefficients[0];       /* x=1 y=0 z=0 */
     if (interpolation_dim > 1) {
       temp[i] *= (1 - coefficients[1]);
-      temp[i] += (corner_values[2 * corner_value_dim + i] * (1 - coefficients[0]) /* x=0 y=1 z=0 */
-                  + corner_values[3 * corner_value_dim + i] * coefficients[0])    /* x=1 y=1 z=0 */
-                 * coefficients[1];
+      temp[i] += (corner_values[2 * corner_value_dim + i] * (1 - coefficients[0])       /* x=0 y=1 z=0 */
+                  +corner_values[3 * corner_value_dim + i] * coefficients[0])   /* x=1 y=1 z=0 */
+        *coefficients[1];
       if (interpolation_dim == 3) {
         temp[i] *= (1 - coefficients[2]);
-        temp[i] += (corner_values[4 * corner_value_dim + i] * (1 - coefficients[0]) * (1 - coefficients[1])  /* x=0 y=0 z=1 */
-                    +corner_values[5 * corner_value_dim + i] * coefficients[0] * (1 - coefficients[1])       /* x=1 y=0 z=1 */
-                    +corner_values[6 * corner_value_dim + i] * (1 - coefficients[0]) * coefficients[1]       /* x=0 y=1 z=1 */
-                    +corner_values[7 * corner_value_dim + i] * coefficients[0] * coefficients[1])    /* x=1 y=1 z=1 */
+        temp[i] += (corner_values[4 * corner_value_dim + i] * (1 - coefficients[0]) * (1 - coefficients[1])     /* x=0 y=0 z=1 */
+                    +corner_values[5 * corner_value_dim + i] * coefficients[0] * (1 - coefficients[1])  /* x=1 y=0 z=1 */
+                    +corner_values[6 * corner_value_dim + i] * (1 - coefficients[0]) * coefficients[1]  /* x=0 y=1 z=1 */
+                    +corner_values[7 * corner_value_dim + i] * coefficients[0] * coefficients[1])       /* x=1 y=1 z=1 */
           *coefficients[2];
       }
     }
@@ -115,10 +115,7 @@ t8_geom_compute_linear_geometry (t8_eclass_t tree_class,
   case T8_ECLASS_QUAD:
   case T8_ECLASS_HEX:
     t8_geom_linear_interpolation (ref_coords,
-                                  tree_vertices,
-                                  3, 
-                                  dimension, 
-                                  out_coords);
+                                  tree_vertices, 3, dimension, out_coords);
     break;
   case T8_ECLASS_PYRAMID:
     {
@@ -174,17 +171,17 @@ t8_geom_compute_linear_geometry (t8_eclass_t tree_class,
 void
 t8_geom_get_face_vertices (const t8_eclass_t tree_class,
                            const double *tree_vertices,
-                           int face_index,
-                           int dim,
-                           double *face_vertices)
+                           int face_index, int dim, double *face_vertices)
 {
-  const t8_eclass_t face_class = t8_eclass_face_types[tree_class][face_index];
-  for (int i_face_vertex = 0; i_face_vertex < t8_eclass_num_vertices[face_class]; ++i_face_vertex)
-  {
-    for (int i_dim = 0; i_dim < dim; ++i_dim)
-    {
-      const int i_tree_vertex = t8_face_vertex_to_tree_vertex[tree_class][face_index][i_face_vertex];
-      face_vertices[i_face_vertex * dim + i_dim] = tree_vertices[i_tree_vertex * dim + i_dim];
+  const t8_eclass_t   face_class =
+    t8_eclass_face_types[tree_class][face_index];
+  for (int i_face_vertex = 0;
+       i_face_vertex < t8_eclass_num_vertices[face_class]; ++i_face_vertex) {
+    for (int i_dim = 0; i_dim < dim; ++i_dim) {
+      const int           i_tree_vertex =
+        t8_face_vertex_to_tree_vertex[tree_class][face_index][i_face_vertex];
+      face_vertices[i_face_vertex * dim + i_dim] =
+        tree_vertices[i_tree_vertex * dim + i_dim];
     }
   }
 }
@@ -192,17 +189,15 @@ t8_geom_get_face_vertices (const t8_eclass_t tree_class,
 void
 t8_geom_get_edge_vertices (const t8_eclass_t tree_class,
                            const double *tree_vertices,
-                           int edge_index,
-                           int dim,
-                           double *edge_vertices)
+                           int edge_index, int dim, double *edge_vertices)
 {
-  T8_ASSERT(t8_eclass_to_dimension[tree_class] == 3);
-  for (int i_edge_vertex = 0; i_edge_vertex < 2; ++i_edge_vertex)
-  {
-    for (int i_dim = 0; i_dim < dim; ++i_dim)
-    {
-      const int i_tree_vertex = t8_edge_vertex_to_tree_vertex[edge_index][i_edge_vertex];
-      edge_vertices[i_edge_vertex * dim + i_dim] = tree_vertices[i_tree_vertex * dim + i_dim];
+  T8_ASSERT (t8_eclass_to_dimension[tree_class] == 3);
+  for (int i_edge_vertex = 0; i_edge_vertex < 2; ++i_edge_vertex) {
+    for (int i_dim = 0; i_dim < dim; ++i_dim) {
+      const int           i_tree_vertex =
+        t8_edge_vertex_to_tree_vertex[edge_index][i_edge_vertex];
+      edge_vertices[i_edge_vertex * dim + i_dim] =
+        tree_vertices[i_tree_vertex * dim + i_dim];
     }
   }
 }

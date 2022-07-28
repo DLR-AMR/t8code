@@ -34,16 +34,12 @@
 #endif
 
 /* Check whether we can successfully execute VTK code */
-TEST(t8_test_occ_linkage, test_gp_Pnt)
+TEST (t8_test_occ_linkage, test_gp_Pnt)
 {
 #if T8_WITH_OCC
-  EXPECT_NO_THROW(
-    gp_Pnt pnt = gp_Pnt();
-    pnt.SetX(1);
-  );
+  EXPECT_NO_THROW (gp_Pnt pnt = gp_Pnt (); pnt.SetX (1););
 
-  t8_global_productionf
-    ("Successfully created occ gp_Pnt object.\n");
+  t8_global_productionf ("Successfully created occ gp_Pnt object.\n");
 #else
   t8_global_productionf
     ("This version of t8code is not compiled with occ support.\n");

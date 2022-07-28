@@ -67,7 +67,7 @@ struct t8_naca_surface_adapt_data
  * \param [in] is_family    if 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
  * \param [in] num_elements The number of entries in \a elements elements that are defined.
  * \param [in] elements     The element or family of elements to consider for refinement/coarsening.
- */   
+ */
 int
 t8_naca_surface_adapt_callback (t8_forest_t forest,
                                 t8_forest_t forest_from,
@@ -84,7 +84,7 @@ t8_naca_surface_adapt_callback (t8_forest_t forest,
     t8_forest_get_user_data (forest);
   T8_ASSERT (adapt_data != NULL);
 
-  for (int iface = 0; iface < ts->t8_element_num_faces(elements[0]); ++iface) {
+  for (int iface = 0; iface < ts->t8_element_num_faces (elements[0]); ++iface) {
     /* We look if a face of the element lies on a face of the tree */
     if (ts->t8_element_is_root_boundary (elements[0], iface)) {
       /* We retrieve the face it lies on */
@@ -119,7 +119,7 @@ t8_naca_surface_adapt_callback (t8_forest_t forest,
  * \param [in] forest           The forest that has to be refined
  * \param [in] rlevel_dorsal    The refinement level of the elements touching the dorsal side of the wing
  * \param [in] rlevel_ventral   The refinement level of the elements touching the ventral side of the wing
- */   
+ */
 int
 t8_naca_surface_refinement (t8_forest_t forest, int rlevel_dorsal,
                             int rlevel_ventral)
@@ -167,7 +167,6 @@ struct t8_naca_plane_adapt_data
   int                 rlevel;   /* The max refinement level */
 };
 
-
 /** 
  * The adaptation callback function. This function will be called once for each element
  * and the return value decides whether this element should be refined or not.
@@ -193,7 +192,7 @@ struct t8_naca_plane_adapt_data
  * \param [in] is_family    if 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
  * \param [in] num_elements The number of entries in \a elements elements that are defined.
  * \param [in] elements     The element or family of elements to consider for refinement/coarsening.
- */   
+ */
 int
 t8_naca_plane_adapt_callback (t8_forest_t forest,
                               t8_forest_t forest_from,
@@ -243,7 +242,7 @@ t8_naca_plane_adapt_callback (t8_forest_t forest,
  * \param [in] rlevel           The max level the elements get refined to.
  * \param [in] steps            The amount of time steps the plane makes.
  * \param [in] dist             The distance an element must not exceed from the plane, to get refined.
- */  
+ */
 int
 t8_naca_plane_refinement (t8_forest_t forest, int level, int rlevel,
                           int steps, double dist)
