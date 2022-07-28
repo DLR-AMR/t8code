@@ -136,6 +136,7 @@ TEST_P(nca, nca_check_deep){
     ts->t8_element_destroy(1, &tmp);
 }
 
+/* *INDENT-ON* */
 
 /**
  * Recursively check the computation of the nca of all possible combination of descendants of the
@@ -151,70 +152,76 @@ TEST_P(nca, nca_check_deep){
  * \param[in] ts                the scheme to use
  */
 static void
-t8_recursive_nca_check(t8_element_t *check_nca, t8_element_t *desc_a,
-                        t8_element_t *desc_b, t8_element_t *check, t8_element_t* parent_a,
-                        t8_element_t * parent_b, const int max_lvl, t8_eclass_scheme_c *ts)
+t8_recursive_nca_check (t8_element_t *check_nca, t8_element_t *desc_a,
+                        t8_element_t *desc_b, t8_element_t *check,
+                        t8_element_t *parent_a, t8_element_t *parent_b,
+                        const int max_lvl, t8_eclass_scheme_c *ts)
 {
-    T8_ASSERT(max_lvl <= ts->t8_element_maxlevel()-1);
-    /* compute the level of the parents */
-    int level_a = ts->t8_element_level(parent_a);
-    int level_b = ts->t8_element_level(parent_b);
-    int num_children_a, num_children_b;
-    int i, j;
-    /* If one parent has reached the maximal level, the test returns */
-    if(level_a == max_lvl || level_b == max_lvl){
-        return;
-    }
-    num_children_a = ts->t8_element_num_children(parent_a);
-    num_children_b = ts->t8_element_num_children(parent_b);
-    
-    /* Iterate over all children of parent_a */
-    for(i = 0; i < num_children_a; i++){
-        ts->t8_element_child(parent_a, i, desc_a);
-        /* Iterate over all children of parent_b */
-        for(j = 0; j < num_children_b; j++){
-            ts->t8_element_child(parent_b, j, desc_b);
-            ts->t8_element_nca(desc_a, desc_b, check);
-            
-            if(ts->t8_element_compare(check_nca, check)){
-                level_a = ts->t8_element_level(desc_a);
-                level_b = ts->t8_element_level(desc_b);
-                
-                int level_c = ts->t8_element_level(check_nca);
-                int level_nca = ts->t8_element_level(check);
-                /* Output the linear id of the descendants where the computation fails.
-                 * This makes debugging a lot easier, as one can reconstruct the descendants
-                 * via t8_element_set_linear_id and can directly test them instead of waiting
-                 * until the recursion reaches the faulty computation. */
-                t8_debugf("id of desc_a: %li, level: %i\n", 
-                ts->t8_element_get_linear_id(desc_a, level_a), level_a);
-                t8_debugf("id of desc_b: %li, level: %i\n", 
-                ts->t8_element_get_linear_id(desc_b, level_b), level_b);
+  T8_ASSERT (max_lvl <= ts->t8_element_maxlevel () - 1);
+  /* compute the level of the parents */
+  int                 level_a = ts->t8_element_level (parent_a);
+  int                 level_b = ts->t8_element_level (parent_b);
+  int                 num_children_a, num_children_b;
+  int                 i, j;
+  /* If one parent has reached the maximal level, the test returns */
+  if (level_a == max_lvl || level_b == max_lvl) {
+    return;
+  }
+  num_children_a = ts->t8_element_num_children (parent_a);
+  num_children_b = ts->t8_element_num_children (parent_b);
 
-                for(int k = SC_MAX(level_a, level_b); k >= 0; k--){
-                    t8_debugf("id of desc_a: %li, level: %i\n", 
-                    ts->t8_element_get_linear_id(desc_a, k), k);
-                    t8_debugf("id of desc_b: %li, level: %i\n", 
-                    ts->t8_element_get_linear_id(desc_b, k), k);
-                }
+  /* Iterate over all children of parent_a */
+  for (i = 0; i < num_children_a; i++) {
+    ts->t8_element_child (parent_a, i, desc_a);
+    /* Iterate over all children of parent_b */
+    for (j = 0; j < num_children_b; j++) {
+      ts->t8_element_child (parent_b, j, desc_b);
+      ts->t8_element_nca (desc_a, desc_b, check);
 
-                t8_debugf("id of the correct nca: %li, level: %i\n", 
-                ts->t8_element_get_linear_id(check_nca, level_c), level_c);
+      if (ts->t8_element_compare (check_nca, check)) {
+        level_a = ts->t8_element_level (desc_a);
+        level_b = ts->t8_element_level (desc_b);
 
-                t8_debugf("id of the computed nca: %li, level: %i\n",
-                ts->t8_element_get_linear_id(check, level_nca), level_nca);
+        int                 level_c = ts->t8_element_level (check_nca);
+        int                 level_nca = ts->t8_element_level (check);
+        /* Output the linear id of the descendants where the computation fails.
+         * This makes debugging a lot easier, as one can reconstruct the descendants
+         * via t8_element_set_linear_id and can directly test them instead of waiting
+         * until the recursion reaches the faulty computation. */
+        t8_debugf ("id of desc_a: %li, level: %i\n",
+                   ts->t8_element_get_linear_id (desc_a, level_a), level_a);
+        t8_debugf ("id of desc_b: %li, level: %i\n",
+                   ts->t8_element_get_linear_id (desc_b, level_b), level_b);
 
-                SC_ABORT("Computed nca is not the correct nca!\n");
-            }
-            /* parent_a stays fixed, b-part goes one level deeper into the recursion */
-            t8_recursive_nca_check(check_nca, desc_a, parent_b, check, parent_a, desc_b, max_lvl, ts);
-            /* We reused parent_b, hence we have to recompute the correct parent */
-            ts->t8_element_parent(desc_b, parent_b);
+        for (int k = SC_MAX (level_a, level_b); k >= 0; k--) {
+          t8_debugf ("id of desc_a: %li, level: %i\n",
+                     ts->t8_element_get_linear_id (desc_a, k), k);
+          t8_debugf ("id of desc_b: %li, level: %i\n",
+                     ts->t8_element_get_linear_id (desc_b, k), k);
         }
-        /* We reused parent_a, hence we have to recompute the correct parent */
-        ts->t8_element_parent(desc_a, parent_a);
+
+        t8_debugf ("id of the correct nca: %li, level: %i\n",
+                   ts->t8_element_get_linear_id (check_nca, level_c),
+                   level_c);
+
+        t8_debugf ("id of the computed nca: %li, level: %i\n",
+                   ts->t8_element_get_linear_id (check, level_nca),
+                   level_nca);
+
+        SC_ABORT ("Computed nca is not the correct nca!\n");
+      }
+      /* parent_a stays fixed, b-part goes one level deeper into the recursion */
+      t8_recursive_nca_check (check_nca, desc_a, parent_b, check, parent_a,
+                              desc_b, max_lvl, ts);
+      /* We reused parent_b, hence we have to recompute the correct parent */
+      ts->t8_element_parent (desc_b, parent_b);
     }
+    /* We reused parent_a, hence we have to recompute the correct parent */
+    ts->t8_element_parent (desc_a, parent_a);
+  }
 }
+
+/* *INDENT-OFF* */
 
 
 /* Recursively check the computation of the nca. recursion_depth defines up to which
