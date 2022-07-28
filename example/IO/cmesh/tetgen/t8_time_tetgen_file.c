@@ -71,7 +71,7 @@ t8_read_tetgen_file_build_cmesh (const char *prefix, int do_dup,
   fflush (stdout);
 
   sc_stats_compute (sc_MPI_COMM_WORLD, 1, stats);
-  sc_stats_print (p4est_package_id, SC_LP_STATISTICS, 1, stats, 1, 1);
+  sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, 1, stats, 1, 1);
 }
 
 int
@@ -103,7 +103,6 @@ main (int argc, char *argv[])
   SC_CHECK_MPI (mpiret);
 
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-  p4est_init (NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
   opt = sc_options_new (argv[0]);

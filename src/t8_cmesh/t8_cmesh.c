@@ -1581,8 +1581,7 @@ t8_cmesh_translate_coordinates (const double *coords_in, double *coords_out,
  *       It would be nice to eventually rewrite these functions correctly.
  */
 void
-t8_cmesh_new_translate_vertices_to_attributes (t8_topidx_t *
-                                               tvertices,
+t8_cmesh_new_translate_vertices_to_attributes (t8_locidx_t *tvertices,
                                                double
                                                *vertices,
                                                double

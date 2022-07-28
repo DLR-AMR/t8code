@@ -31,3 +31,9 @@ tutorials_t8_step5_element_data_SOURCES = \
 tutorials_t8_tutorial_search_SOURCES = \
 	tutorials/t8_tutorial_search.cxx \
 	tutorials/t8_step3_adapt_forest.cxx
+
+libt8_installed_headers += \
+        tutorials/t8_step3.h \
+        tutorials/t8_step4.h \
+        tutorials/t8_step5.h
+
