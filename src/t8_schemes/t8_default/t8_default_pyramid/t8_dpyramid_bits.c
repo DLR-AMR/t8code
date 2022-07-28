@@ -1768,9 +1768,13 @@ t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t *pyra1,
   }
   else if (t8_dpyramid_shape (pyra1) == T8_ECLASS_TET &&
            t8_dpyramid_shape (pyra2) == T8_ECLASS_PYRAMID) {
-    /* if they have different types, we switch pyra1 and pyra2 and
-     * call the nca again */
-    t8_dpyramid_nearest_common_ancestor (pyra2, pyra1, nca);
+    t8_dpyramid_t       first_pyramid_anc;
+
+    t8_dpyramid_first_pyra_anc (pyra1, &first_pyramid_anc);
+    /* pyra2 and first_pyramid_anc have the shape of a pyramid now, 
+     * we can call the nca again.
+     */
+    t8_dpyramid_nearest_common_ancestor (&first_pyramid_anc, pyra2, nca);
     return;
   }
   else {
