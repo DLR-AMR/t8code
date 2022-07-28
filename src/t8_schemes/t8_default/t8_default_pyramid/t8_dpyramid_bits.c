@@ -1326,12 +1326,12 @@ t8_dpyramid_get_face_corner (const t8_dpyramid_t *pyra, int face, int corner)
 }
 
 /**
- * Compute if the tetrahedron \a tet lays inside a pyramid  with coordinates given by \a check.
+ * Compute if the tetrahedron \a tet lies inside a pyramid  with coordinates given by \a check.
  * Both pyramids of type 6 and 7 are tested, hence the type of \a check does not have to be set.
  * 
  * \param tet     Input pyramid in the shape of a tetrahedron 
- * \param check   Input pyramid, candidate where \a tet could lay in.
- * \return int    the type of the pyramid where tet is inside, or 0 if it does not lay in a pyramid given by the coordinates of \a check.
+ * \param check   Input pyramid, candidate where \a tet could lie in.
+ * \return int    the type of the pyramid where tet is inside, or 0 if it does not lie in a pyramid given by the coordinates of \a check.
  */
 int
 t8_dpyramid_is_inside_pyra (const t8_dpyramid_t *tet,
@@ -1390,7 +1390,7 @@ t8_dpyramid_is_inside_tet (const t8_dpyramid_t *tet, const int level,
   int                 i;
   t8_dpyramid_coord_t coord_at_level;
   /*the tet is initialized, the ancestor will be computed */
-  t8_dpyramid_t       pyra_at_level;    /* Candidate pyramid, where the tet could lay in. */
+  t8_dpyramid_t       pyra_at_level;    /* Candidate pyramid, where the tet could lie in. */
   pyra_at_level.x = 0;
   pyra_at_level.y = 0;
   pyra_at_level.z = 0;
