@@ -62,25 +62,28 @@ protected:
     t8_eclass_t eclass;
 }; 
 
+/* *INDENT-ON* */
 
 /**
  * Test the nca for the children of the root-element
  * 
  */
-TEST_P (nca, nca_check_shallow) {
-    int i, j;
-    const int num_children = ts->t8_element_num_children (correct_nca);
-    /* Iterate over all combinations of two children from correct_nca */
-    for (i = 0; i < num_children - 1; i++) {
-        ts->t8_element_child (correct_nca, i, desc_a);
-        for (j = i + 1; j < num_children; j++) {
-            ts->t8_element_child (correct_nca, j, desc_b);
-            /*Compute the nca */
-            ts->t8_element_nca (desc_a, desc_b, check);
-            /*expect equality */
-            EXPECT_TRUE ((ts->t8_element_compare (correct_nca, check) == 0));
-        }
+TEST_P (nca, nca_check_shallow)
+{
+  int                 i, j;
+  const int           num_children =
+    ts->t8_element_num_children (correct_nca);
+  /* Iterate over all combinations of two children from correct_nca */
+  for (i = 0; i < num_children - 1; i++) {
+    ts->t8_element_child (correct_nca, i, desc_a);
+    for (j = i + 1; j < num_children; j++) {
+      ts->t8_element_child (correct_nca, j, desc_b);
+      /*Compute the nca */
+      ts->t8_element_nca (desc_a, desc_b, check);
+      /*expect equality */
+      EXPECT_TRUE ((ts->t8_element_compare (correct_nca, check) == 0));
     }
+  }
 
 }
 
@@ -89,54 +92,56 @@ TEST_P (nca, nca_check_shallow) {
  * We iteratively compute an element that is the correct nca up to level 10.
  * The first and the last descendant of this element at the maximal level are
  */
-TEST_P(nca, nca_check_deep){
-    const int       max_lvl = 10;
-    const int       elem_max_level = ts->t8_element_maxlevel();
-    /* num_children is not a const here, cause this can change for pyramids */
-    int             num_children;
-    /* iterate over levels and children */
-    int             lvl, check_lvl_a, check_lvl_b, child_id;
-    t8_element_t    *tmp;
+TEST_P (nca, nca_check_deep)
+{
+  const int           max_lvl = 10;
+  const int           elem_max_level = ts->t8_element_maxlevel ();
+  /* num_children is not a const here, cause this can change for pyramids */
+  int                 num_children;
+  /* iterate over levels and children */
+  int                 lvl, check_lvl_a, check_lvl_b, child_id;
+  t8_element_t       *tmp;
 
-    ts->t8_element_new(1, &tmp);
-    ts->t8_element_copy(correct_nca, tmp);
-    for(lvl = 1; lvl <= max_lvl; lvl++){
-        num_children = ts->t8_element_num_children(tmp);
-        for(child_id = 0; child_id < num_children; child_id++){
-            ts->t8_element_child(tmp, child_id, correct_nca);
-            /* Compute first and last descendant at every level up to elem_max_lvl. 
-             * They have the correct_nca as the nca */
-            for(check_lvl_a = lvl + 1; check_lvl_a < elem_max_level; check_lvl_a++){
-                ts->t8_element_first_descendant(correct_nca, desc_a, check_lvl_a);
-                for(check_lvl_b = lvl + 1; check_lvl_b < elem_max_level; check_lvl_b++){
-                    ts->t8_element_last_descendant(correct_nca, desc_b, check_lvl_b);
-                    /* Compute the nca of desc_a and desc_b */
-                    ts->t8_element_nca(desc_a, desc_b, check);
-                    if(eclass == T8_ECLASS_VERTEX){
-                        /* first- last-descendant logic does not hold for vertices.*/
-                        EXPECT_EQ(ts->t8_element_level(check), SC_MIN(ts->t8_element_level(desc_a), ts->t8_element_level(desc_b)));
-                    }
-                    else{
-                        /* Expect equality of correct_nca and check for every other class */
-                        EXPECT_TRUE ((ts->t8_element_compare (correct_nca, check) == 0));
-                    }
-                }
-            }
+  ts->t8_element_new (1, &tmp);
+  ts->t8_element_copy (correct_nca, tmp);
+  for (lvl = 1; lvl <= max_lvl; lvl++) {
+    num_children = ts->t8_element_num_children (tmp);
+    for (child_id = 0; child_id < num_children; child_id++) {
+      ts->t8_element_child (tmp, child_id, correct_nca);
+      /* Compute first and last descendant at every level up to elem_max_lvl. 
+       * They have the correct_nca as the nca */
+      for (check_lvl_a = lvl + 1; check_lvl_a < elem_max_level; check_lvl_a++) {
+        ts->t8_element_first_descendant (correct_nca, desc_a, check_lvl_a);
+        for (check_lvl_b = lvl + 1; check_lvl_b < elem_max_level;
+             check_lvl_b++) {
+          ts->t8_element_last_descendant (correct_nca, desc_b, check_lvl_b);
+          /* Compute the nca of desc_a and desc_b */
+          ts->t8_element_nca (desc_a, desc_b, check);
+          if (eclass == T8_ECLASS_VERTEX) {
+            /* first- last-descendant logic does not hold for vertices. */
+            EXPECT_EQ (ts->t8_element_level (check),
+                       SC_MIN (ts->t8_element_level (desc_a),
+                               ts->t8_element_level (desc_b)));
+          }
+          else {
+            /* Expect equality of correct_nca and check for every other class */
+            EXPECT_TRUE ((ts->t8_element_compare (correct_nca, check) == 0));
+          }
         }
-        /* Determine next element */
-        if(num_children != 1){
-            ts->t8_element_copy(tmp, correct_nca);
-            /* Continue in the middle */
-            ts->t8_element_child(correct_nca, num_children/2, tmp);
-        }
-        else{
-            ts->t8_element_copy(correct_nca, tmp);
-        }
+      }
     }
-    ts->t8_element_destroy(1, &tmp);
+    /* Determine next element */
+    if (num_children != 1) {
+      ts->t8_element_copy (tmp, correct_nca);
+      /* Continue in the middle */
+      ts->t8_element_child (correct_nca, num_children / 2, tmp);
+    }
+    else {
+      ts->t8_element_copy (correct_nca, tmp);
+    }
+  }
+  ts->t8_element_destroy (1, &tmp);
 }
-
-/* *INDENT-ON* */
 
 /**
  * Recursively check the computation of the nca of all possible combination of descendants of the
@@ -221,102 +226,100 @@ t8_recursive_nca_check (t8_element_t *check_nca, t8_element_t *desc_a,
   }
 }
 
-/* *INDENT-OFF* */
-
-
 /* Recursively check the computation of the nca. recursion_depth defines up to which
  * level we compute descendants of correct_nca that should have correct_nca as the 
  * output of t8_element_nca.*/
-TEST_P(nca, recursive_check)
+TEST_P (nca, recursive_check)
 {
 #ifdef T8_ENABLE_LESS_TESTS
-    const int recursion_depth = 3;
+  const int           recursion_depth = 3;
 #else
 /* User lower recursion depth for pyramids, it takes to much time otherwise */
-    const int recursion_depth = 4;
+  const int           recursion_depth = 4;
 #endif
-    t8_element_t *parent_a, *parent_b;
-    int     num_children;
-    num_children = ts->t8_element_num_children(correct_nca);
-    ts->t8_element_new (1, &parent_a);
-    ts->t8_element_new (1, &parent_b);
-    if(num_children > 1){
-        ts->t8_element_child(correct_nca, 0, parent_a);
-        ts->t8_element_child(correct_nca, 1, parent_b);
-        /* if you activate the following part, the testing takes around 30min per 3D class */
-        int     i,j;
-        for(i = 0; i < num_children-1; i++){
-            ts->t8_element_child(correct_nca, i, parent_a);
-            for(j = i+1; j < num_children; j++){
-                ts->t8_element_child(correct_nca, j, parent_b);
-                t8_recursive_nca_check(correct_nca, desc_a, desc_b, check, parent_a, parent_b, recursion_depth, ts);
-            }
-        }
+  t8_element_t       *parent_a, *parent_b;
+  int                 num_children;
+  num_children = ts->t8_element_num_children (correct_nca);
+  int                 i, j;
+  ts->t8_element_new (1, &parent_a);
+  ts->t8_element_new (1, &parent_b);
+  if (num_children > 1) {
+    ts->t8_element_child (correct_nca, 0, parent_a);
+    ts->t8_element_child (correct_nca, 1, parent_b);
+    for (i = 0; i < num_children - 1; i++) {
+      ts->t8_element_child (correct_nca, i, parent_a);
+      for (j = i + 1; j < num_children; j++) {
+        ts->t8_element_child (correct_nca, j, parent_b);
+        t8_recursive_nca_check (correct_nca, desc_a, desc_b, check, parent_a,
+                                parent_b, recursion_depth, ts);
+      }
     }
-    else{
-        GTEST_SKIP();
-    }
-    ts->t8_element_destroy(1, &parent_a);
-    ts->t8_element_destroy(1, &parent_b);
+  }
+  else {
+    GTEST_SKIP ();
+  }
+  ts->t8_element_destroy (1, &parent_a);
+  ts->t8_element_destroy (1, &parent_b);
 
 }
-
-
 
 /* Test the nca recursively for elements in the middle of the uniform refinement tree
  * up to the maximal level. 
  * Be carefull when increasing the recursion_depth, as it increases the number of test-cases exponentially. */
-TEST_P(nca, resursive_check_higher_level)
+TEST_P (nca, resursive_check_higher_level)
 {
 
 #ifdef T8_ENABLE_LESS_TESTS
-    const int recursion_depth = 3;
+  const int           recursion_depth = 3;
 #else
-    const int recursion_depth = 4;
+  const int           recursion_depth = 4;
 #endif
-    const int max_lvl = ts->t8_element_maxlevel();
-    t8_element_t *parent_a;
-    t8_element_t *parent_b;
-    t8_element_t *correct_nca_high_level;
-    int     num_children;
-    int i, k, l;
-    t8_gloidx_t leafs_on_level;
-    EXPECT_TRUE(max_lvl-recursion_depth >= 0);
+  const int           max_lvl = ts->t8_element_maxlevel ();
+  t8_element_t       *parent_a;
+  t8_element_t       *parent_b;
+  t8_element_t       *correct_nca_high_level;
+  int                 num_children;
+  int                 i, k, l;
+  t8_gloidx_t         leafs_on_level;
+  EXPECT_TRUE (max_lvl - recursion_depth >= 0);
 
-    ts->t8_element_new (1, &parent_a);
-    ts->t8_element_new (1, &parent_b);
-    ts->t8_element_new (1, &correct_nca_high_level);
+  ts->t8_element_new (1, &parent_a);
+  ts->t8_element_new (1, &parent_b);
+  ts->t8_element_new (1, &correct_nca_high_level);
 
-    /* Test on different levels around the middle of the refinement tree */
-    for(i = recursion_depth; i < max_lvl; i++){
-        leafs_on_level = ts->t8_element_count_leafs(correct_nca, i-recursion_depth);
-        /* middle = leafs/2 */
-        ts->t8_element_set_linear_id(correct_nca_high_level, i-recursion_depth, leafs_on_level/2);
+  /* Test on different levels around the middle of the refinement tree */
+  for (i = recursion_depth; i < max_lvl; i++) {
+    leafs_on_level =
+      ts->t8_element_count_leafs (correct_nca, i - recursion_depth);
+    /* middle = leafs/2 */
+    ts->t8_element_set_linear_id (correct_nca_high_level, i - recursion_depth,
+                                  leafs_on_level / 2);
 
-        /* Initialization for recursive_nca_check */
-        num_children = ts->t8_element_num_children(correct_nca_high_level);
-        if(num_children > 1)
-        {
-            for(k = 0; k < num_children - 1; k++){
-            ts->t8_element_child(correct_nca_high_level, k, parent_a);
-                for(l = k+1; l < num_children; l++){
-                    ts->t8_element_child(correct_nca_high_level, l, parent_b); 
-                    t8_recursive_nca_check(correct_nca_high_level, desc_a, desc_b, check, parent_a, 
-                                        parent_b, i, ts);
-
-                }
-            }
+    /* Initialization for recursive_nca_check */
+    num_children = ts->t8_element_num_children (correct_nca_high_level);
+    if (num_children > 1) {
+      /* Compute children on to different branches in the tree an test them. 
+       * This ensures, that the nca of all their descendants has to be correct_nca_high_level*/
+      for (k = 0; k < num_children - 1; k++) {
+        ts->t8_element_child (correct_nca_high_level, k, parent_a);
+        for (l = k + 1; l < num_children; l++) {
+          ts->t8_element_child (correct_nca_high_level, l, parent_b);
+          t8_recursive_nca_check (correct_nca_high_level, desc_a, desc_b,
+                                  check, parent_b, parent_a, i, ts);
+          t8_recursive_nca_check (correct_nca_high_level, desc_a, desc_b,
+                                  check, parent_a, parent_b, i, ts);
         }
-        else{
-            GTEST_SKIP();
-        }
+      }
     }
-    /* Clean-up */
-    ts->t8_element_destroy(1, &parent_a);
-    ts->t8_element_destroy(1, &parent_b);
-    ts->t8_element_destroy(1, &correct_nca_high_level);
+    else {
+      GTEST_SKIP ();
+    }
+  }
+  /* Clean-up */
+  ts->t8_element_destroy (1, &parent_a);
+  ts->t8_element_destroy (1, &parent_b);
+  ts->t8_element_destroy (1, &correct_nca_high_level);
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_nca, nca,
-                        testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT));
-/* *INDENT-ON* */
+                          testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT));
