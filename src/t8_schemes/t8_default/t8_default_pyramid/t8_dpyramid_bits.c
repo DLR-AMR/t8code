@@ -1405,7 +1405,7 @@ t8_dpyramid_is_inside_tet (const t8_dpyramid_t *tet, const int level,
     pyra_at_level.z = pyra_at_level.z | (tet->z & coord_at_level);
     pyra_at_level.level = i;
     if (t8_dpyramid_is_inside_pyra (tet, &pyra_at_level) == 0) {
-      /*p is inside a tet */
+      /*tet is inside a tet */
       if (anc != NULL) {
         t8_dtet_ancestor (tet, i, anc);
       }
