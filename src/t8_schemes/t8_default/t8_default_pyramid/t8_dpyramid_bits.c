@@ -1824,27 +1824,28 @@ t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t *pyra1,
       /* The first element switches the shape. The type is computed using 
        * assuming a pyramid-parent.*/
       t8_dpyramid_t       first_pyra1;
-      t8_dtet_ancestor (pyra1, real_level + 1, &last_tet1);
-      t8_dpyramid_coord_t length = T8_DPYRAMID_LEN (real_level);
+      t8_dtet_ancestor (pyra1, level_switch_pyra1, &last_tet1);
+      t8_dpyramid_coord_t length = T8_DPYRAMID_LEN (level_switch_pyra1);
       first_pyra1.x = last_tet1.x & ~length;
       first_pyra1.y = last_tet1.y & ~length;
       first_pyra1.z = last_tet1.z & ~length;
       t8_dpyramid_tetparent_type (&last_tet1, &first_pyra1);
-      first_pyra1.level = real_level;
+      first_pyra1.level = level_switch_pyra1 - 1;
       t8_dpyramid_nearest_common_ancestor (&first_pyra1, pyra2, nca);
       return;
     }
     else if (real_level < level_switch_pyra2) {
+
       /* The second element switches the shape. The type is computed using 
        * assuming a pyramid-parent.*/
       t8_dpyramid_t       first_pyra2;
-      t8_dtet_ancestor (pyra2, real_level + 1, &last_tet2);
-      t8_dpyramid_coord_t length = T8_DPYRAMID_LEN (real_level);
+      t8_dtet_ancestor (pyra2, level_switch_pyra2, &last_tet2);
+      t8_dpyramid_coord_t length = T8_DPYRAMID_LEN (level_switch_pyra2);
       first_pyra2.x = last_tet2.x & ~length;
       first_pyra2.y = last_tet2.y & ~length;
       first_pyra2.z = last_tet2.z & ~length;
       t8_dpyramid_tetparent_type (&last_tet2, &first_pyra2);
-      first_pyra2.level = real_level;
+      first_pyra2.level = level_switch_pyra2 - 1;
       t8_dpyramid_nearest_common_ancestor (&first_pyra2, pyra1, nca);
       return;
     }
