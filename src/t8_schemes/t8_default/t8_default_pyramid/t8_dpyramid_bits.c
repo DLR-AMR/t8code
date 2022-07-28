@@ -1627,7 +1627,6 @@ t8_dpyramid_first_pyra_anc (const t8_dpyramid_t *tet,
   }
   else {
     /* The parent of the tet is already a pyramid */
-    /* TODO: This is not necessary. */
     t8_dpyramid_parent (tet, first_pyra_anc);
   }
 }
