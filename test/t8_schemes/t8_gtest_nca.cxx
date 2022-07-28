@@ -269,11 +269,7 @@ TEST_P (nca, recursive_check)
 TEST_P (nca, resursive_check_higher_level)
 {
 
-#ifdef T8_ENABLE_LESS_TESTS
   const int           recursion_depth = 3;
-#else
-  const int           recursion_depth = 4;
-#endif
   const int           max_lvl = ts->t8_element_maxlevel ();
   t8_element_t       *parent_a;
   t8_element_t       *parent_b;
