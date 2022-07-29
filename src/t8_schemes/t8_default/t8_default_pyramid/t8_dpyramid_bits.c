@@ -1722,8 +1722,31 @@ t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t *pyra1,
    * have already computed the level at which they have the same
    * coordinate, but the type could be different. */
 
-  /* both elements have the shape of a pyramid, hence the nca */
   if (t8_dpyramid_shape (pyra1) == T8_ECLASS_PYRAMID &&
+           t8_dpyramid_shape (pyra2) == T8_ECLASS_TET) {
+    t8_dpyramid_t       first_pyramid_anc;
+
+    t8_dpyramid_first_pyra_anc (pyra2, &first_pyramid_anc);
+
+    /* pyra1 and first_pyramid_anc have the shape of a pyramid now, 
+     * we can call the nca again.
+     */
+    t8_dpyramid_nearest_common_ancestor (pyra1, &first_pyramid_anc, nca);
+    return;
+  }
+  else if (t8_dpyramid_shape (pyra1) == T8_ECLASS_TET &&
+           t8_dpyramid_shape (pyra2) == T8_ECLASS_PYRAMID) {
+    t8_dpyramid_t       first_pyramid_anc;
+
+    t8_dpyramid_first_pyra_anc (pyra1, &first_pyramid_anc);
+    /* pyra2 and first_pyramid_anc have the shape of a pyramid now, 
+     * we can call the nca again.
+     */
+    t8_dpyramid_nearest_common_ancestor (&first_pyramid_anc, pyra2, nca);
+    return;
+  }
+  /* both elements have the shape of a pyramid, hence the nca */
+  else if (t8_dpyramid_shape (pyra1) == T8_ECLASS_PYRAMID &&
       t8_dpyramid_shape (pyra2) == T8_ECLASS_PYRAMID) {
 
     /* This is the highest possible level. The coordinates are the same,
@@ -1752,29 +1775,6 @@ t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t *pyra1,
     pyramid_cut_coords (nca, T8_DPYRAMID_MAXLEVEL - real_level);
     /* Set the computed type */
     nca->type = p1_type_at_level;
-    return;
-  }
-  else if (t8_dpyramid_shape (pyra1) == T8_ECLASS_PYRAMID &&
-           t8_dpyramid_shape (pyra2) == T8_ECLASS_TET) {
-    t8_dpyramid_t       first_pyramid_anc;
-
-    t8_dpyramid_first_pyra_anc (pyra2, &first_pyramid_anc);
-
-    /* pyra1 and first_pyramid_anc have the shape of a pyramid now, 
-     * we can call the nca again.
-     */
-    t8_dpyramid_nearest_common_ancestor (pyra1, &first_pyramid_anc, nca);
-    return;
-  }
-  else if (t8_dpyramid_shape (pyra1) == T8_ECLASS_TET &&
-           t8_dpyramid_shape (pyra2) == T8_ECLASS_PYRAMID) {
-    t8_dpyramid_t       first_pyramid_anc;
-
-    t8_dpyramid_first_pyra_anc (pyra1, &first_pyramid_anc);
-    /* pyra2 and first_pyramid_anc have the shape of a pyramid now, 
-     * we can call the nca again.
-     */
-    t8_dpyramid_nearest_common_ancestor (&first_pyramid_anc, pyra2, nca);
     return;
   }
   else {
