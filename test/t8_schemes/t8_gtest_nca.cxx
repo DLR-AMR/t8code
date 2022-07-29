@@ -298,12 +298,18 @@ TEST_P (nca, resursive_check_higher_level)
        * This ensures, that the nca of all their descendants has to be correct_nca_high_level*/
       for (k = 0; k < num_children - 1; k++) {
         ts->t8_element_child (correct_nca_high_level, k, parent_a);
-        for (l = k + 1; l < num_children; l++) {
+        for (l = 0; l < num_children; l++) {
           ts->t8_element_child (correct_nca_high_level, l, parent_b);
-          t8_recursive_nca_check (correct_nca_high_level, desc_a, desc_b,
-                                  check, parent_b, parent_a, i, ts);
-          t8_recursive_nca_check (correct_nca_high_level, desc_a, desc_b,
-                                  check, parent_a, parent_b, i, ts);
+          if (k != l) {
+            t8_recursive_nca_check (correct_nca_high_level, desc_a, desc_b,
+                                    check, parent_a, parent_b, i, ts);
+          }
+          else {
+            ts->t8_element_nca (parent_a, parent_b, check);
+            EXPECT_TRUE ((ts->t8_element_compare (parent_a, check) == 0));
+            EXPECT_TRUE ((ts->t8_element_compare (parent_b, check) == 0));
+          }
+
         }
       }
     }
