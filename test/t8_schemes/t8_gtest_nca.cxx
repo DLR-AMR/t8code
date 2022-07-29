@@ -296,7 +296,7 @@ TEST_P (nca, resursive_check_higher_level)
     if (num_children > 1) {
       /* Compute children on to different branches in the tree an test them. 
        * This ensures, that the nca of all their descendants has to be correct_nca_high_level*/
-      for (k = 0; k < num_children - 1; k++) {
+      for (k = 0; k < num_children; k++) {
         ts->t8_element_child (correct_nca_high_level, k, parent_a);
         for (l = 0; l < num_children; l++) {
           ts->t8_element_child (correct_nca_high_level, l, parent_b);
