@@ -1700,11 +1700,8 @@ t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t *pyra1,
                                      const t8_dpyramid_t *pyra2,
                                      t8_dpyramid_t *nca)
 {
-  /* The following computations are necessary to find the 
-   * first ancestors of pyra1 and pyra2 with the same type. We 
-   * have already computed the level at which they have the same
-   * coordinate, but the type could be different. */
-
+  /* If the input elements have different shapes, the nca has to have the
+   * shape of a pyramid. The element in the shape of a tet switches the shape. */
   if (t8_dpyramid_shape (pyra1) == T8_ECLASS_PYRAMID &&
       t8_dpyramid_shape (pyra2) == T8_ECLASS_TET) {
     t8_dpyramid_t       first_pyramid_anc;
@@ -1731,6 +1728,10 @@ t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t *pyra1,
   /* both elements have the shape of a pyramid, hence the nca */
   else if (t8_dpyramid_shape (pyra1) == T8_ECLASS_PYRAMID &&
            t8_dpyramid_shape (pyra2) == T8_ECLASS_PYRAMID) {
+    /* The following computations are necessary to find the 
+     * first ancestors of pyra1 and pyra2 with the same type. We 
+     * have already computed the level at which they have the same
+     * coordinate, but the type could be different. */
     int                 level;  /* To iterate over level */
     int                 cube_level;     /* the level of the cube where pyra1 and pyra2 have the same coords */
     int                 real_level;     /* the level of the nca */
