@@ -54,6 +54,14 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim,
   p4est_topidx_t      ttt;
   t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
 
+  /* Make sure that p4est is properly initialized. If not, do it here
+   * and raise a warning. */
+  if (!sc_package_is_registered (p4est_package_id)) {
+    t8_global_errorf
+      ("WARNING: p4est is not yet initialized. Doing it now for you.");
+    p4est_init (NULL, SC_LP_ESSENTIAL);
+  }
+
   T8_ASSERT (dim == 2 || dim == 3);
   T8_ASSERT (dim == 3
              ||
@@ -372,7 +380,7 @@ t8_cmesh_new_hypercube_hybrid (sc_MPI_Comm comm, int do_partition,
 {
   int                 i;
   t8_cmesh_t          cmesh;
-  t8_topidx_t         vertices[8];
+  t8_locidx_t         vertices[8];
   double              vertices_coords_temp[24];
   double              attr_vertices[24];
   double              null_vec[3] = { 0, 0, 0 };
@@ -610,7 +618,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
     1, 1, 1, 2, 1, 6, 2, 3
   };
   int                 i;
-  t8_topidx_t         vertices[8];
+  t8_locidx_t         vertices[8];
   double              attr_vertices[24];
   int                 mpirank, mpiret;
   double              vertices_coords[24] = {

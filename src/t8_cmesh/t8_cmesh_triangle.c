@@ -78,9 +78,9 @@ t8_cmesh_triangle_read_nodes (t8_cmesh_t cmesh, char *filename,
   FILE               *fp;
   char               *line = (char *) malloc (1024);
   size_t              linen = 1024;
-  t8_topidx_t         cit;
+  t8_locidx_t         cit;
   long                corner;
-  t8_topidx_t         corner_offset = 0;
+  t8_locidx_t         corner_offset = 0;
   double              x, y, z;
 #if 0                           /* used for currently disabeld code */
   int                 i, bdy_marker;

@@ -143,15 +143,13 @@ public:
   /** Compute a specific sibling of a given element \b elem and store it in \b sibling.
    *  \b sibling needs to be an existing element. No memory is allocated by this function.
    *  \b elem and \b sibling can point to the same element, then the entries of
-   *  \b elem are overwritten by the ones of its i-th sibling.
-   * \param [in] elem   The element whose parent will be computed.
+   *  \b elem are overwritten by the ones of its sibid-th sibling.
+   * \param [in] elem   The element whose sibling will be computed.
    * \param [in] sibid  The id of the sibling computed.
    * \param [in,out] sibling This element's entries will be overwritten by those
    *                    of \b elem's sibid-th sibling.
    *                    The storage for this element must exist
    *                    and match the element class of the sibling.
-   *                    For a pyramid, for example, it may be either a
-   *                    tetrahedron or a pyramid depending on \b sibid.
    */
   virtual void        t8_element_sibling (const t8_element_t *elem,
                                           int sibid,
@@ -405,6 +403,7 @@ public:
    *  the element inside the root tree that has the given face as a
    *  face.
    * \param [in] face     A face element.
+   * \param [in] face_scheme The scheme for the face element.
    * \param [in,out] elem An allocated element. The entries will be filled with
    *                      the data of the element that has \a face as a face and
    *                      lies within the root tree.
@@ -413,7 +412,6 @@ public:
    * \return              The face number of the face of \a elem that coincides
    *                      with \a face.
    */
-  /* TODO: update documentation with face_scheme */
   virtual int         t8_element_extrude_face (const t8_element_t *face,
                                                const t8_eclass_scheme_c
                                                *face_scheme,
@@ -427,52 +425,54 @@ public:
    * \param [in,out] boundary An allocated element of dimension of \a element
    *                      minus 1. The entries will be filled with the entries
    *                      of the face of \a element.
+   * \param [in] boundary_scheme The scheme for the eclass of the boundary face.
    * If \a elem is of class T8_ECLASS_VERTEX, then \a boundary must be NULL
    * and will not be modified.
    */
-  /* TODO: update documentation with boundary_scheme */
   virtual void        t8_element_boundary_face (const t8_element_t *elem,
                                                 int face,
                                                 t8_element_t *boundary,
                                                 const t8_eclass_scheme_c
                                                 *boundary_scheme) = 0;
 
-  /** Construct the first descendant of an element that touches a given face.
+  /** Construct the first descendant of an element at a given level that touches a given face.
    * \param [in] elem      The input element.
    * \param [in] face      A face of \a elem.
    * \param [in, out] first_desc An allocated element. This element's data will be
    *                       filled with the data of the first descendant of \a elem
    *                       that shares a face with \a face.
+   * \param [in] level     The level, at which the first descendant is constructed
    */
-  /* TODO: Add a level and call with forest->maxlevel */
   virtual void        t8_element_first_descendant_face (const t8_element_t
                                                         *elem, int face,
                                                         t8_element_t
                                                         *first_desc,
                                                         int level) = 0;
 
-  /** Construct the last descendant of an element that touches a given face.
+  /** Construct the last descendant of an element at a given level that touches a given face.
    * \param [in] elem      The input element.
    * \param [in] face      A face of \a elem.
    * \param [in, out] last_desc An allocated element. This element's data will be
    *                       filled with the data of the last descendant of \a elem
    *                       that shares a face with \a face.
+   * \param [in] level     The level, at which the last descendant is constructed
    */
-  /* TODO: Add a level and call with forest->maxlevel */
   virtual void        t8_element_last_descendant_face (const t8_element_t
                                                        *elem, int face,
                                                        t8_element_t
                                                        *last_desc,
                                                        int level) = 0;
 
-  /* TODO: document better */
-  /* TODO: document better.
-   *        Do we need this functino at all?
+  /* TODO:  Do we need this function at all?
    *        If not remove it. If so, what to do with prisms and pyramids?
    *        Here the boundary elements are of different eclasses, so we cannot
    *        store them in an array...
    */
-/** Construct all codimension-one boundary elements of a given element. */
+  /** Construct all codimension-one boundary elements of a given element.
+   * \param [in] elem     The input element.
+   * \param [in] face     A face of \a elem.
+   * \return              True if \a face is a subface of the element's root element.
+   */
   virtual void        t8_element_boundary (const t8_element_t *elem,
                                            int min_dim, int length,
                                            t8_element_t **boundary) = 0;
@@ -485,8 +485,8 @@ public:
   virtual int         t8_element_is_root_boundary (const t8_element_t *elem,
                                                    int face) = 0;
 
-    /** Construct the face neighbor of a given element if this face neighbor
-     * is inside the root tree. Return 0 otherwise.
+  /** Construct the face neighbor of a given element if this face neighbor
+   * is inside the root tree. Return 0 otherwise.
    * \param [in] elem The element to be considered.
    * \param [in,out] neigh If the face neighbor of \a elem along \a face is inside
    *                  the root tree, this element's data is filled with the
@@ -538,9 +538,9 @@ public:
   /** Compute the first descendant of a given element.
    * \param [in] elem     The element whose descendant is computed.
    * \param [out] desc    The first element in a uniform refinement of \a elem
-   *                      of the maximum possible level.
+   *                      of the given level.
+   * \param [in] level    The level, at which the descendant is computed.
    */
-  /* TODO: Add a level and call with forest->maxlevel */
   virtual void        t8_element_first_descendant (const t8_element_t *elem,
                                                    t8_element_t *desc,
                                                    int level) = 0;
@@ -548,7 +548,8 @@ public:
   /** Compute the last descendant of a given element.
    * \param [in] elem     The element whose descendant is computed.
    * \param [out] desc    The last element in a uniform refinement of \a elem
-   *                      of the maximum possible level.
+   *                      of the given level.
+   * \param [in] level    The level, at which the descendant is computed.
    */
   virtual void        t8_element_last_descendant (const t8_element_t *elem,
                                                   t8_element_t *desc,
@@ -684,7 +685,7 @@ public:
   virtual void        t8_element_new (int length, t8_element_t **elem) = 0;
 
  /** Initialize an array of allocated elements.
-   * \param [in] length   The number of elements to be allocated.
+   * \param [in] length   The number of elements to be initialized.
    * \param [in,out] elems On input an array of \b length many allocated
    *                       elements.
    * \param [in] called_new True if the elements in \a elem were created by a call
@@ -714,16 +715,14 @@ public:
                                           t8_element_t **elem) = 0;
 };
 
-/* TODO: document */
+/** Destroy an implementation of a particular element class. 
+  * param [in] scheme           Defines the implementation of the element class. */
 void                t8_scheme_cxx_destroy (t8_scheme_cxx_t *s);
 
-/* TODO: Copy the doxygen comments to the class definition above,
- * then delete all the functions below */
 #if 0
-/** Destroy an implementation of a particular element class. */
-void                t8_eclass_scheme_destroy (t8_eclass_scheme_t * ts);
+/* TODO: These functions defined for the deprecated t8_scheme_t and t8_eclass_t
+ * do not yet exist for t8_eclass_scheme_c class */
 
-/* TODO: This function does not exist yet in the eclass_scheme class */
 /** Allocate a set of elements suitable for the boundary of a given class.
  * \param [in] scheme           Defines the implementation of the element class.
  * \param [in] theclass         The element class whose boundary we want.
@@ -738,7 +737,6 @@ void                t8_eclass_boundary_new (t8_scheme_t * scheme,
                                             int length,
                                             t8_element_t **boundary);
 
-/* TODO: This function does not exist yet in the eclass_scheme class */
 /** Destroy a set of elements suitable for the boundary of a given class.
  * \param [in] scheme           Defines the implementation of the element class.
  * \param [in] theclass         The element class whose boundary we have.

@@ -187,12 +187,11 @@ main (int argc, char *argv[])
   t8_cmesh_t          cmesh;
   int                 mpiret;
 
-  /* Initialize MPI, sc, p4est and t8code */
+  /* Initialize MPI, sc and t8code */
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
 
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-  p4est_init (NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEBUG);
 
   cmesh =
