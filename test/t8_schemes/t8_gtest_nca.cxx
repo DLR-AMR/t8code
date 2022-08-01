@@ -91,6 +91,7 @@ TEST_P (nca, nca_check_shallow)
  * Check the nca for elements on the maximal level.
  * We iteratively compute an element that is the correct nca up to level 10.
  * The first and the last descendant of this element at the maximal level are
+ * computed and used as an input for t8_element_nca.
  */
 TEST_P (nca, nca_check_deep)
 {
