@@ -32,6 +32,11 @@
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
 
+/* The maximum supported .msh file version.
+ * Currently, we support gmsh's file version 2 in ASCII format.
+ */
+#define T8_CMESH_SUPPORTED_FILE_VERSION 2
+
 /* put typedefs here */
 
 T8_EXTERN_C_BEGIN ();
@@ -54,9 +59,9 @@ T8_EXTERN_C_BEGIN ();
  * \return        A committed cmesh holding the mesh of dimension \a dim in the
  *                specified .msh file.
  */
-t8_cmesh_t
-t8_cmesh_from_msh_file (const char *fileprefix, int partition,
-                        sc_MPI_Comm comm, int dim, int master);
+t8_cmesh_t          t8_cmesh_from_msh_file (const char *fileprefix,
+                                            int partition, sc_MPI_Comm comm,
+                                            int dim, int master);
 
 T8_EXTERN_C_END ();
 

@@ -20,10 +20,11 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** file t8_vtk.h
- * This header file collects macros that are needed for
- * the forest and cmesh vtk routines.
- * \see t8_forest_vtk.h \see t8_cmesh_vtk.h
+/** file t8_example_common.h
+ * This header declares datatypes and functions that are used by multiple
+ * examples of t8code. This includes adaptation function to adapt at a zero
+ * level-set of a level-set function and various 2 and 3 dimensional vector
+ * fields that can serve as fluid velocities.
  */
 
 #ifndef T8_EXAMPLE_COMMON_H
@@ -67,7 +68,6 @@ T8_EXTERN_C_BEGIN ();
  * \param [in]      ltreeid     A local tree in \a forest.
  * \param [in]      element     An element of tree \a ltreeid in \a forest.
  * \param [in]      ts          The scheme for \a element.
- * \param [in]      tree_vertices Array of vertex coordinates for the tree.
  * \param [in]      levelset    The level-set function.
  * \param [in]      band_width  Check whether the element is within a band of
  *                              \a band_width many elements of its size.
@@ -81,9 +81,8 @@ T8_EXTERN_C_BEGIN ();
  */
 int                 t8_common_within_levelset (t8_forest_t forest,
                                                t8_locidx_t ltreeid,
-                                               t8_element_t * element,
-                                               t8_eclass_scheme_c * ts,
-                                               const double *tree_vertices,
+                                               t8_element_t *element,
+                                               t8_eclass_scheme_c *ts,
                                                t8_example_level_set_fn
                                                levelset, double band_width,
                                                double t, void *udata);
@@ -96,9 +95,10 @@ int                 t8_common_adapt_balance (t8_forest_t forest,
                                              t8_forest_t forest_from,
                                              t8_locidx_t which_tree,
                                              t8_locidx_t lelement_id,
-                                             t8_eclass_scheme_c * ts,
-                                             int num_elements,
-                                             t8_element_t * elements[]);
+                                             t8_eclass_scheme_c *ts,
+                                             const int is_family,
+                                             const int num_elements,
+                                             t8_element_t *elements[]);
 
 /** Adapt a forest along a given level-set function.
  * The user data of forest must be a pointer to a \a t8_example_level_set_struct_t.
@@ -111,24 +111,10 @@ int                 t8_common_adapt_level_set (t8_forest_t forest,
                                                t8_forest_t forest_from,
                                                t8_locidx_t which_tree,
                                                t8_locidx_t lelement_id,
-                                               t8_eclass_scheme_c * ts,
-                                               int num_elements,
-                                               t8_element_t * elements[]);
-
-/** Compute the coordinates of the midpoint of an element.
- * \param [in]  forest  The forest in which the element is in (must be committed).
- * \param [in]  which_tree The local tree id of tree in which the element is in.
- * \param [in]  ts      The eclass scheme associated to the element.
- * \param [in]  element The element.
- * \param [in,out] elem_midpoint_f An array of 3 doubles. On output the coordinates
- *              of the midpoint of \a element are stored.
- * \note \a forest must be committed before calling this function.
- */
-void                t8_common_midpoint (t8_forest_t forest,
-                                        t8_locidx_t which_tree,
-                                        t8_eclass_scheme_c * ts,
-                                        t8_element_t * element,
-                                        double elem_midpoint_f[3]);
+                                               t8_eclass_scheme_c *ts,
+                                               const int is_family,
+                                               const int num_elements,
+                                               t8_element_t *elements[]);
 
 /** Real valued functions defined in t8_example_common_functions.h */
 

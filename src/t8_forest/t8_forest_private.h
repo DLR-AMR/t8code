@@ -75,7 +75,7 @@ void                t8_forest_compute_maxlevel (t8_forest_t forest);
  * \see t8_forest_new_uniform.
  */
 int                 t8_forest_min_nonempty_level (t8_cmesh_t cmesh,
-                                                  t8_scheme_cxx_t * scheme);
+                                                  t8_scheme_cxx_t *scheme);
 
 /** return nonzero if the first tree of a forest is shared with a smaller
  * process.
@@ -122,8 +122,8 @@ void                t8_forest_copy_trees (t8_forest_t forest,
  */
 t8_ctree_t          t8_forest_get_coarse_tree_ext (t8_forest_t forest,
                                                    t8_locidx_t ltreeid,
-                                                   t8_locidx_t ** face_neigh,
-                                                   int8_t ** ttf);
+                                                   t8_locidx_t **face_neigh,
+                                                   int8_t **ttf);
 
 /** Given a forest whose trees are already filled with elements compute
  * the element offset of each local tree.
@@ -178,10 +178,10 @@ t8_element_array_t *t8_forest_get_tree_element_array (t8_forest_t forest,
  */
 int                 t8_forest_element_find_owner_old (t8_forest_t forest,
                                                       t8_gloidx_t gtreeid,
-                                                      t8_element_t * element,
+                                                      t8_element_t *element,
                                                       t8_eclass_t eclass,
-                                                      sc_array_t *
-                                                      all_owners_of_tree);
+                                                      sc_array_t
+                                                      *all_owners_of_tree);
 
 /** Find the owner process of a given element.
  * \param [in]    forest  The forest.
@@ -198,7 +198,7 @@ int                 t8_forest_element_find_owner_old (t8_forest_t forest,
  */
 int                 t8_forest_element_find_owner (t8_forest_t forest,
                                                   t8_gloidx_t gtreeid,
-                                                  t8_element_t * element,
+                                                  t8_element_t *element,
                                                   t8_eclass_t eclass);
 
 /** Find the owner process of a given element, if bounds for the owner process are known.
@@ -223,7 +223,7 @@ int                 t8_forest_element_find_owner (t8_forest_t forest,
  */
 int                 t8_forest_element_find_owner_ext (t8_forest_t forest,
                                                       t8_gloidx_t gtreeid,
-                                                      t8_element_t * element,
+                                                      t8_element_t *element,
                                                       t8_eclass_t eclass,
                                                       int lower_bound,
                                                       int upper_bound,
@@ -243,7 +243,7 @@ int                 t8_forest_element_find_owner_ext (t8_forest_t forest,
  * \return      True if and only if \a rank is the (first) owner process of \a element.
  */
 int                 t8_forest_element_check_owner (t8_forest_t forest,
-                                                   t8_element_t * element,
+                                                   t8_element_t *element,
                                                    t8_gloidx_t gtreeid,
                                                    t8_eclass_t eclass,
                                                    int rank,
@@ -265,11 +265,11 @@ int                 t8_forest_element_check_owner (t8_forest_t forest,
  */
 void                t8_forest_element_owners_at_face (t8_forest_t forest,
                                                       t8_gloidx_t gtreeid,
-                                                      const t8_element_t *
-                                                      element,
+                                                      const t8_element_t
+                                                      *element,
                                                       t8_eclass_t eclass,
                                                       int face,
-                                                      sc_array_t * owners);
+                                                      sc_array_t *owners);
 
 /** Constant time algorithm to compute lower and upper bounds for the owner
  * processes of a given element.
@@ -290,8 +290,8 @@ void                t8_forest_element_owners_at_face (t8_forest_t forest,
  */
 void                t8_forest_element_owners_bounds (t8_forest_t forest,
                                                      t8_gloidx_t gtreeid,
-                                                     const t8_element_t *
-                                                     element,
+                                                     const t8_element_t
+                                                     *element,
                                                      t8_eclass_t eclass,
                                                      int *lower, int *upper);
 
@@ -316,8 +316,8 @@ void                t8_forest_element_owners_at_face_bounds (t8_forest_t
                                                              t8_gloidx_t
                                                              gtreeid,
                                                              const
-                                                             t8_element_t *
-                                                             element,
+                                                             t8_element_t
+                                                             *element,
                                                              t8_eclass_t
                                                              eclass, int face,
                                                              int *lower,
@@ -345,10 +345,10 @@ void                t8_forest_element_owners_at_neigh_face (t8_forest_t
                                                             t8_locidx_t
                                                             ltreeid,
                                                             const t8_element_t
-                                                            * element,
+                                                            *element,
                                                             int face,
-                                                            sc_array_t *
-                                                            owners);
+                                                            sc_array_t
+                                                            *owners);
 
 /** Constant time algorithm to find bounds for the owner processes
  *  that own descendant of a face neighbor of a
@@ -374,7 +374,7 @@ void                t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t
                                                                    ltreeid,
                                                                    const
                                                                    t8_element_t
-                                                                   * element,
+                                                                   *element,
                                                                    int face,
                                                                    int *lower,
                                                                    int
@@ -399,50 +399,14 @@ t8_gloidx_t         t8_forest_element_half_face_neighbors (t8_forest_t forest,
                                                            t8_locidx_t
                                                            ltreeid,
                                                            const t8_element_t
-                                                           * elem,
-                                                           t8_element_t *
-                                                           neighs[],
+                                                           *elem,
+                                                           t8_element_t
+                                                           *neighs[],
                                                            t8_eclass_scheme_c
-                                                           * neigh_scheme,
+                                                           *neigh_scheme,
                                                            int face,
                                                            int num_neighs,
                                                            int dual_faces[]);
-
-/** Compute the leaf face neighbors of a forest.
- * \param [in]    forest  The forest. Must have a valid ghost layer.
- * \param [in]    ltreeid A local tree id.
- * \param [in]    leaf    A leaf in tree \a ltreeid of \a forest.
- * \param [out]   neighbor_leafs Unallocated on input. On output the neighbor
- *                        leafs are stored here.
- * \param [in]    face    The index of the face across which the face neighbors
- *                        are searched.
- * \param [out]   dual_face On output the face id's of the neighboring elements' faces.
- * \param [out]   num_neighbors On output the number of neighbor leafs.
- * \param [out]   pelement_indices Unallocated on input. On output the element indices
- *                        of the neighbor leafs are stored here.
- *                        0, 1, ... num_local_el - 1 for local leafs and
- *                        num_local_el , ... , num_local_el + num_ghosts - 1 for ghosts.
- * \param [out]   pneigh_scheme On output the eclass scheme of the neighbor elements.
- * \param [in]    forest_is_balanced True if we know that \a forest is balanced, false
- *                        otherwise.
- * \note If there are no face neighbors, then *neighbor_leafs = NULL, num_neighbors = 0,
- * and *pelement_indices = NULL on output.
- * \note Currently \a forest must be balanced.
- * \note \a forest must be committed before calling this function.
- */
-void                t8_forest_leaf_face_neighbors (t8_forest_t forest,
-                                                   t8_locidx_t ltreeid,
-                                                   const t8_element_t * leaf,
-                                                   t8_element_t **
-                                                   pneighbor_leafs[],
-                                                   int face,
-                                                   int *dual_faces[],
-                                                   int *num_neighbors,
-                                                   t8_locidx_t **
-                                                   pelement_indices,
-                                                   t8_eclass_scheme_c **
-                                                   pneigh_scheme,
-                                                   int forest_is_balanced);
 
 /** Iterate over all leafs of a forest and for each face compute the face neighbor
  * leafs with \ref t8_forest_leaf_face_neighbors and print their local element ids.
@@ -466,9 +430,9 @@ void                t8_forest_print_all_leaf_neighbors (t8_forest_t forest);
  */
 int                 t8_forest_element_has_leaf_desc (t8_forest_t forest,
                                                      t8_gloidx_t gtreeid,
-                                                     const t8_element_t *
-                                                     element,
-                                                     t8_eclass_scheme_c * ts);
+                                                     const t8_element_t
+                                                     *element,
+                                                     t8_eclass_scheme_c *ts);
 
 T8_EXTERN_C_END ();
 

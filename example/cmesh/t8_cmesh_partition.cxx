@@ -25,12 +25,11 @@
 #include <t8_forest.h>
 #include <t8_cmesh_vtk.h>
 #include <t8_cmesh/t8_cmesh_partition.h>
+#include <t8_cmesh/t8_cmesh_examples.h>
 #include <p4est_connectivity.h>
 #include <p8est_connectivity.h>
 #include <sc_shmem.h>
-#include <t8_schemes/t8_default_cxx.hxx>
-
-/* TODO: rename this file to t8_something */
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
 static void
 t8_random_partition (int level)
@@ -176,7 +175,6 @@ test_ghost_send ()
                           &dummy_arg, sizeof (dummy_arg), 1);
   t8_cmesh_set_attribute (cmesh, 2, t8_get_package_id (), 0,
                           &dummy_arg, sizeof (dummy_arg), 1);
-  sc_shmem_set_type (sc_MPI_COMM_WORLD, T8_SHMEM_BEST_TYPE);
   switch (mpirank) {
   case 0:
     t8_cmesh_set_partition_range (cmesh, 3, 0, -1);

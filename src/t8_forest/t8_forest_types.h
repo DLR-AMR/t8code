@@ -98,6 +98,7 @@ typedef struct t8_forest
   int                 ghost_algorithm;  /**< Controls the algorithm used for ghost. 1 = balanced only. 2 = also unbalanced
                                              3 = top-down search and unbalanced. */
   void               *user_data;        /**< Pointer for arbitrary user data. \see t8_forest_set_user_data. */
+  void                (*user_function) ();/**< Pointer for arbitrary user function. \see t8_forest_set_user_function. */
   void               *t8code_data;      /**< Pointer for arbitrary data that is used internally. */
   int                 committed;        /**< \ref t8_forest_commit called? */
   int                 mpisize;          /**< Number of MPI processes. */
@@ -150,7 +151,7 @@ t8_tree_struct_t;
  */
 
 /** The number of statistics collected by a profile struct. */
-#define T8_PROFILE_NUM_STATS 13
+#define T8_PROFILE_NUM_STATS 14
 typedef struct t8_profile
 {
   t8_locidx_t         partition_elements_shipped; /**< The number of elements this process has

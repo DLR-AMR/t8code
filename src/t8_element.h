@@ -32,6 +32,7 @@
 
 #include <sc_refcount.h>
 #include <t8_eclass.h>
+#include <t8_element_shape.h>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -44,11 +45,6 @@ typedef struct t8_element t8_element_t;
 typedef struct t8_eclass_scheme t8_eclass_scheme_c;
 
 typedef struct t8_scheme_cxx t8_scheme_cxx_t;
-
-/** Type definition for the geometric shape of an element.
- * Currently the possible shapes are the same as the possible element classes.
- * I.e. T8_ECLASS_VERTEX, T8_ECLASS_TET, etc... */
-typedef t8_eclass_t t8_element_shape_t;
 
 /** The scheme holds implementations for one or more element classes. */
 struct t8_scheme_cxx
@@ -64,7 +60,7 @@ struct t8_scheme_cxx
  * \param [in,out] scheme       On input, this scheme must be alive, that is,
  *                              exist with positive reference count.
  */
-void                t8_scheme_cxx_ref (t8_scheme_cxx_t * scheme);
+void                t8_scheme_cxx_ref (t8_scheme_cxx_t *scheme);
 
 /** Decrease the reference counter of a scheme.
  * If the counter reaches zero, this scheme is destroyed.
@@ -75,10 +71,10 @@ void                t8_scheme_cxx_ref (t8_scheme_cxx_t * scheme);
  *                              Otherwise, the pointer is not changed and
  *                              the scheme is not modified in other ways.
  */
-void                t8_scheme_cxx_unref (t8_scheme_cxx_t ** pscheme);
+void                t8_scheme_cxx_unref (t8_scheme_cxx_t **pscheme);
 
 /* TODO: document, see t8_element_cxx.hxx */
-extern void         t8_scheme_cxx_destroy (t8_scheme_cxx_t * s);
+extern void         t8_scheme_cxx_destroy (t8_scheme_cxx_t *s);
 
 T8_EXTERN_C_END ();
 

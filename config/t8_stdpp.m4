@@ -36,7 +36,7 @@ if test "x$T8_ENABLE_CPPSTD" != xno ; then
 ]])],,
                  [AC_MSG_ERROR([Unable to link with c++ standard library])])
 dnl Keep the variables changed as done above
-dnl LIBS="$PRE_CPLUSPLUS_LIBS"
+dnl LIBS="$PRE_CPPSTD_LIBS"
 
   AC_MSG_RESULT([successful])
 else

@@ -48,7 +48,7 @@ T8_EXTERN_C_BEGIN ();
  */
 
 /* TODO: comment */
-void                t8_forest_ghost_init (t8_forest_ghost_t * pghost,
+void                t8_forest_ghost_init (t8_forest_ghost_t *pghost,
                                           t8_ghost_type_t ghost_type);
 
 /* TODO: document */
@@ -130,13 +130,6 @@ t8_locidx_t         t8_forest_ghost_remote_first_tree (t8_forest_t forest,
 t8_locidx_t         t8_forest_ghost_remote_first_elem (t8_forest_t forest,
                                                        int remote);
 
-/* TODO: - document
- *       - make accesible to forest API
- *       - make a begin and end version
- */
-void                t8_forest_ghost_exchange_data (t8_forest_t forest,
-                                                   sc_array_t * element_data);
-
 /** Increase the reference count of a ghost structure.
  * \param [in,out]  ghost     On input, this ghost structure must exist with
  *                            positive reference count.
@@ -154,7 +147,7 @@ void                t8_forest_ghost_ref (t8_forest_ghost_t ghost);
  *                              to NULL.
  *                              Otherwise, the pointer is not changed.
  */
-void                t8_forest_ghost_unref (t8_forest_ghost_t * pghost);
+void                t8_forest_ghost_unref (t8_forest_ghost_t *pghost);
 
 /** Verify that a ghost structure has only one reference left and destroy it.
  * This function is preferred over \ref t8_ghost_unref when it is known
@@ -163,7 +156,7 @@ void                t8_forest_ghost_unref (t8_forest_ghost_t * pghost);
  *                             It can be in any state (committed or not).
  *                             Then it effectively calls \ref t8_forest_ghost_unref.
  */
-void                t8_forest_ghost_destroy (t8_forest_ghost_t * pghost);
+void                t8_forest_ghost_destroy (t8_forest_ghost_t *pghost);
 
 /** Create one layer of ghost elements for a forest.
  * \see t8_forest_set_ghost
