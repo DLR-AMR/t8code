@@ -50,11 +50,25 @@ t8_recursive_linear_id (t8_element_t *element, t8_element_t *child,
   }
 }
 
+static int
+t8_test_init_linear_id_refine_everything (t8_forest_t forest,
+                                          t8_forest_t forest_from,
+                                          t8_locidx_t which_tree,
+                                          t8_locidx_t lelement_id,
+                                          t8_eclass_scheme_c *ts,
+                                          const int is_family,
+                                          const int num_elements,
+                                          t8_element_t *elements[])
+{
+
+  return 1;
+}
+
 static void
 t8_check_uniform_forest (t8_eclass_scheme_c *ts, t8_scheme_cxx_t *scheme,
                          sc_MPI_Comm comm, int maxlvl)
 {
-  t8_forest_t         forest;
+  t8_forest_t         forest, forest_adapt;
   t8_cmesh_t          cmesh;
   t8_locidx_t         first_id, last_id, j, id;
   t8_locidx_t         first_tid, last_tid, tree_id;
@@ -63,12 +77,10 @@ t8_check_uniform_forest (t8_eclass_scheme_c *ts, t8_scheme_cxx_t *scheme,
 
   cmesh = t8_cmesh_new_from_class (ts->eclass, comm);
   t8_cmesh_ref (cmesh);
+  forest = t8_forest_new_uniform (cmesh, scheme, 0, 0, comm);
+  t8_scheme_cxx_ref (scheme);
   for (i = 0; i < maxlvl; i++) {
-    forest = t8_forest_new_uniform (cmesh, scheme, i, 0, comm);
-    t8_debugf ("new forest\n");
-    /*Reuse the forest */
-    t8_forest_ref (forest);
-    t8_debugf ("ref\n");
+
     /*Get the id of the first and last tree on this process */
     first_tid = t8_forest_get_first_local_tree_id (forest);
     last_tid = first_tid + t8_forest_get_num_local_trees (forest);
@@ -86,11 +98,17 @@ t8_check_uniform_forest (t8_eclass_scheme_c *ts, t8_scheme_cxx_t *scheme,
         SC_CHECK_ABORT (id == j, "Wrong ID\n");
       }
     }
-    t8_forest_unref (&forest);
+    t8_forest_init (&forest_adapt);
+    t8_forest_set_level (forest_adapt, i + 1);
+    t8_forest_set_adapt (forest_adapt, forest,
+                         t8_test_init_linear_id_refine_everything, 0);
+    t8_forest_commit (forest_adapt);
+    forest = forest_adapt;
     t8_debugf ("Done with eclass %s at level %i\n",
                t8_eclass_to_string[ts->eclass], i);
   }
-  t8_cmesh_destroy (&cmesh);
+  t8_cmesh_unref (&cmesh);
+  t8_forest_unref (&forest_adapt);
   t8_debugf ("Done uniform forest\n");
 }
 
@@ -167,9 +185,7 @@ t8_check_linear_id (const int maxlvl)
     eclass = (t8_eclass_t) eclassi;
     /* Get scheme for eclass */
     ts = scheme->eclass_schemes[eclass];
-    /*TODO: Debug this */
-    //t8_check_uniform_forest(ts, scheme, sc_MPI_COMM_WORLD, maxlvl);
-
+    t8_check_uniform_forest (ts, scheme, sc_MPI_COMM_WORLD, maxlvl);
     /* Get element and initialize it */
     ts->t8_element_new (1, &element);
     ts->t8_element_new (1, &child);

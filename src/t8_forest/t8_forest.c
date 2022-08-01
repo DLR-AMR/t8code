@@ -1638,5 +1638,7 @@ t8_forest_unref (t8_forest_t *pforest)
   if (t8_refcount_unref (&forest->rc)) {
     t8_forest_reset (pforest);
   }
-  t8_debugf ("[D] End forest refcount: %i\n", forest->rc.refcount);
+  else {
+    t8_debugf ("[D] End forest refcount: %i\n", forest->rc.refcount);
+  }
 }
