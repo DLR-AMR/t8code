@@ -17,6 +17,7 @@ defaulthexincludedir = $(schemesdefaultincludedir)/t8_default_hex
 defaulttetincludedir = $(schemesdefaultincludedir)/t8_default_tet
 defaultprismincludedir = $(schemesdefaultincludedir)/t8_default_prism
 defaultpyramidincludedir = $(schemesdefaultincludedir)/t8_default_pyramid
+cadincludedir = $(includedir)/t8_cad
 
 libt8_generated_headers = src/t8_config.h
 libt8_installed_headers = \
@@ -68,6 +69,8 @@ libt8_installed_headers_default_hex =
 libt8_installed_headers_default_tet =
 libt8_installed_headers_default_prism =
 libt8_installed_headers_default_pyramid =
+libt8_installed_headers_cad =
+  src/t8_cad/t8_cad.h
 libt8_internal_headers = \
   src/t8_cmesh/t8_cmesh_stash.h src/t8_cmesh/t8_cmesh_trees.h \
   src/t8_cmesh/t8_cmesh_types.h src/t8_cmesh/t8_cmesh_partition.h \
@@ -110,7 +113,8 @@ libt8_compiled_sources = \
   src/t8_forest/t8_forest_netcdf.cxx \
   src/t8_element_shape.c \
   src/t8_netcdf.c \
-  src/t8_cmesh/t8_cmesh_testcases.c 
+  src/t8_cmesh/t8_cmesh_testcases.c \
+  src/t8_cad/t8_cad.cxx
 
 # this variable is used for headers that are not publicly installed
 T8_CPPFLAGS =
@@ -143,6 +147,7 @@ dist_defaulthexinclude_HEADERS = $(libt8_installed_headers_default_hex)
 dist_defaulttetinclude_HEADERS = $(libt8_installed_headers_default_tet)
 dist_defaultprisminclude_HEADERS = $(libt8_installed_headers_default_prism)
 dist_defaultpyramidinclude_HEADERS = $(libt8_installed_headers_default_pyramid)
+dist_cadinclude_HEADERS = $(libt8_installed_headers_cad)
 
 AM_CPPFLAGS += -I@top_srcdir@/src \
         @T8_SC_CPPFLAGS@ @T8_P4EST_CPPFLAGS@
