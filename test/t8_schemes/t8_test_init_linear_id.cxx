@@ -112,33 +112,6 @@ t8_check_uniform_forest (t8_eclass_scheme_c *ts, t8_scheme_cxx_t *scheme,
   t8_debugf ("Done uniform forest\n");
 }
 
-int
-t8_num_descendants (t8_element_t *element, int level, t8_eclass_scheme_c *ts)
-{
-  int                 level_diff = level - ts->t8_element_level (element);
-  int                 shape = ts->t8_element_shape (element);
-  switch (shape) {
-  case T8_ECLASS_VERTEX:
-    return 1;
-  case T8_ECLASS_LINE:
-    return sc_intpow (2, level_diff);
-  case T8_ECLASS_QUAD:
-    return sc_intpow (4, level_diff);
-  case T8_ECLASS_TRIANGLE:
-    return sc_intpow (4, level_diff);
-  case T8_ECLASS_HEX:
-    return sc_intpow (8, level_diff);
-  case T8_ECLASS_TET:
-    return sc_intpow (8, level_diff);
-  case T8_ECLASS_PRISM:
-    return sc_intpow (8, level_diff);
-  case T8_ECLASS_PYRAMID:
-    return 2 * sc_intpow (8, level_diff) - sc_intpow (6, level_diff);
-  default:
-    SC_ABORT ("Class Non-existent");
-  }
-}
-
 /*Check, if all descendants of an element at level maxlvl have the same id on
  * the level of the input element as the input element*/
 static void
@@ -149,7 +122,7 @@ t8_id_at_other_lvl_check (t8_element_t *element, t8_element * child,
   t8_linearidx_t      current_id =
     ts->t8_element_get_linear_id (element, level);
   t8_linearidx_t      num_descendants =
-    t8_num_descendants (element, maxlvl, ts);
+    ts->t8_element_count_leafs (element, level);
   t8_linearidx_t      id_at_lvl =
     ts->t8_element_get_linear_id (element, maxlvl);
   t8_linearidx_t      i;
