@@ -262,11 +262,7 @@ public:
    */
   virtual void        t8_element_nca (const t8_element_t *elem1,
                                       const t8_element_t *elem2,
-                                      t8_element_t *nca)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return;                     /* suppresses compiler warning */
-  }
+                                      t8_element_t *nca);
 
    /** Return the shape of an allocated element according its type.
     *  For example, a child of an element can be an element of a different shape
