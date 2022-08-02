@@ -109,6 +109,41 @@ TEST_P (linear_id, uniform_forest) {
   t8_forest_unref (&forest_adapt);
 }
 
+TEST_P(linear_id, id_at_other_level)
+{
+  #ifdef T8_ENABLE_LESS_TESTS
+  const int maxlvl = 3;
+  const int add_lvl = 3;
+#else
+  const int maxlvl = 3;
+  const int add_lvl = 3;
+#endif
+  int level;
+  t8_linearidx_t  num_desc;
+  t8_linearidx_t  child_desc;
+  t8_linearidx_t  id;
+  t8_linearidx_t  leaf_id;
+  t8_linearidx_t  id_at_lvl;
+  t8_linearidx_t  test_id;
+  for (level = 0; level < maxlvl; level++) {
+    num_desc = ts->t8_element_count_leafs_from_root (level);
+    //t8_debugf("[D] level %i\n", level);
+    for (id = 0; id < num_desc; id++) {
+      ts->t8_element_set_linear_id(child, level, id);
+      id_at_lvl = ts->t8_element_get_linear_id(child, level+add_lvl);
+      //t8_debugf("test_id: %li, id: %li\n", id_at_lvl, id);
+      child_desc = ts->t8_element_count_leafs(child, level + add_lvl);
+      for(leaf_id = 0; leaf_id < child_desc; leaf_id++){
+        //t8_debugf("[D] total_id: %li, id: %li, leaf_id: %li\n", id + leaf_id, id, leaf_id);
+        ts->t8_element_set_linear_id(test, level + add_lvl, id_at_lvl + leaf_id);
+        test_id = ts->t8_element_get_linear_id(test, level);
+        EXPECT_EQ(id, test_id);
+      }
+    }
+  }
+     
+}
+
 /* *INDENT-ON* */
 
 #if 0
