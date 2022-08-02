@@ -1622,7 +1622,6 @@ t8_forest_ref (t8_forest_t forest)
 {
   T8_ASSERT (forest != NULL);
   t8_refcount_ref (&forest->rc);
-  t8_debugf ("[D] forest refcount: %i\n", forest->rc.refcount);
 }
 
 void
@@ -1634,11 +1633,7 @@ t8_forest_unref (t8_forest_t *pforest)
   forest = *pforest;
   T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (forest != NULL);
-  t8_debugf ("[D] forest refcount: %i\n", forest->rc.refcount - 1);
   if (t8_refcount_unref (&forest->rc)) {
     t8_forest_reset (pforest);
-  }
-  else {
-    t8_debugf ("[D] End forest refcount: %i\n", forest->rc.refcount);
   }
 }

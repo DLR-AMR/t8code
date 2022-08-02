@@ -1537,7 +1537,6 @@ t8_cmesh_ref (t8_cmesh_t cmesh)
 {
   T8_ASSERT (cmesh != NULL);
   t8_refcount_ref (&cmesh->rc);
-  t8_debugf ("[D] Cmesh Refcounter: %i\n", cmesh->rc.refcount);
 }
 
 void
@@ -1547,7 +1546,6 @@ t8_cmesh_unref (t8_cmesh_t *pcmesh)
   T8_ASSERT (pcmesh != NULL);
   cmesh = *pcmesh;
   T8_ASSERT (cmesh != NULL);
-  t8_debugf ("[D] Cmesh un-Refcounter: %i\n", cmesh->rc.refcount - 1);
   if (t8_refcount_unref (&cmesh->rc)) {
     t8_cmesh_reset (pcmesh);
   }
