@@ -173,7 +173,7 @@ t8_geom_get_face_vertices (const t8_eclass_t tree_class,
                            const double *tree_vertices,
                            int face_index, int dim, double *face_vertices)
 {
-  const t8_eclass_t   face_class =
+  const int           face_class =
     t8_eclass_face_types[tree_class][face_index];
   for (int i_face_vertex = 0;
        i_face_vertex < t8_eclass_num_vertices[face_class]; ++i_face_vertex) {
