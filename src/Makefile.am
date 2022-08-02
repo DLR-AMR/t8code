@@ -24,7 +24,6 @@ libt8_installed_headers = \
   src/t8_element_cxx.hxx src/t8_element.h \
   src/t8_element_c_interface.h \
   src/t8_refcount.h src/t8_cmesh.h src/t8_cmesh_triangle.h \
-  src/t8_cmesh/t8_cmesh_occ.hxx \
   src/t8_cmesh_tetgen.h src/t8_cmesh_readmshfile.h \
   src/t8_cmesh_vtk.h \
   src/t8_forest.h \
@@ -39,7 +38,8 @@ libt8_installed_headers_cmesh = \
   src/t8_cmesh/t8_cmesh_testcases.h \
   src/t8_cmesh/t8_cmesh_save.h \
   src/t8_cmesh/t8_cmesh_examples.h \
-  src/t8_cmesh/t8_cmesh_geometry.h
+  src/t8_cmesh/t8_cmesh_geometry.h \
+  src/t8_cmesh/t8_cmesh_occ.hxx
 libt8_installed_headers_data = \
   src/t8_data/t8_shmem.h src/t8_data/t8_containers.h
 libt8_installed_headers_forest = \
@@ -54,6 +54,7 @@ libt8_installed_headers_geometry = \
 libt8_installed_headers_geometry_impl = \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx \
+  src/t8_geometry/t8_geometry_implementations/t8_geometry_occ.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx 
