@@ -65,6 +65,7 @@ t8_test_init_linear_id_refine_everything (t8_forest_t forest,
 }
 
 /* *INDENT-OFF* */
+/* Iterate over the leafs of a uniformly refined forest and check the id*/
 TEST_P (linear_id, uniform_forest) {
   t8_forest_t forest, forest_adapt;
   t8_cmesh_t cmesh;
@@ -76,6 +77,7 @@ TEST_P (linear_id, uniform_forest) {
 #else
   const int maxlvl = 6;
 #endif
+  /* Construct a forest with a single element of the current class*/
   cmesh = t8_cmesh_new_from_class (ts->eclass, comm);
   t8_cmesh_ref (cmesh);
   forest = t8_forest_new_uniform (cmesh, scheme, 0, 0, comm);
@@ -98,6 +100,7 @@ TEST_P (linear_id, uniform_forest) {
         EXPECT_EQ (id, j);
       }
     }
+    /* Construct the uniformly refined forest of the next level */
     t8_forest_init (&forest_adapt);
     t8_forest_set_level (forest_adapt, i + 1);
     t8_forest_set_adapt (forest_adapt, forest,
@@ -109,34 +112,42 @@ TEST_P (linear_id, uniform_forest) {
   t8_forest_unref (&forest_adapt);
 }
 
+/* Test, if the linear_id of descendants of an element is same as the id of element 
+ * (on the level defined by the element */
 TEST_P(linear_id, id_at_other_level)
 {
-  #ifdef T8_ENABLE_LESS_TESTS
-  const int maxlvl = 3;
-  const int add_lvl = 3;
+#ifdef T8_ENABLE_LESS_TESTS
+  const int max_lvl = 3; /* Maximal level to compute elements on */
+  const int add_lvl = 3; /* maxlvl + add_lvl is the level of the descendants*/
 #else
-  const int maxlvl = 3;
+  const int max_lvl = 4;
   const int add_lvl = 3;
 #endif
   int level;
-  t8_linearidx_t  num_desc;
-  t8_linearidx_t  child_desc;
-  t8_linearidx_t  id;
-  t8_linearidx_t  leaf_id;
-  t8_linearidx_t  id_at_lvl;
-  t8_linearidx_t  test_id;
-  for (level = 0; level < maxlvl; level++) {
+  t8_linearidx_t  num_desc;   /* number of descendants from the root (number of elements to check) */
+  t8_linearidx_t  child_desc; /* Number of descendants of the current element */
+  t8_linearidx_t  id;         /* id of the element at level */
+  t8_linearidx_t  leaf_id;    /* current leaf_id, relative to the current element */
+  t8_linearidx_t  id_at_lvl;  /* The id of the element at level level+add_lvl */
+  t8_linearidx_t  test_id;    /* The computed id at level level of the descendant */
+  for (level = 0; level < max_lvl; level++) {
+    /* Compute the number of elements at the current level */
     num_desc = ts->t8_element_count_leafs_from_root (level);
-    //t8_debugf("[D] level %i\n", level);
     for (id = 0; id < num_desc; id++) {
-      ts->t8_element_set_linear_id(child, level, id);
+      /* Set the child at the current level */
+      ts->t8_element_set_linear_id(child, level, id); 
+      /* Compute the id of child at a higher level. */
       id_at_lvl = ts->t8_element_get_linear_id(child, level+add_lvl);
-      //t8_debugf("test_id: %li, id: %li\n", id_at_lvl, id);
+      /* Compute how many leafs/descendants child has at level level+add_lvl */
       child_desc = ts->t8_element_count_leafs(child, level + add_lvl);
+      /* Iterate over all descendants */
       for(leaf_id = 0; leaf_id < child_desc; leaf_id++){
-        //t8_debugf("[D] total_id: %li, id: %li, leaf_id: %li\n", id + leaf_id, id, leaf_id);
+        /* Set the descendant (test) at level of the descendants and shift the 
+         * leaf_id into the region of the descendants of child*/
         ts->t8_element_set_linear_id(test, level + add_lvl, id_at_lvl + leaf_id);
+        /* Compute the id of the descendant (test) at the current level */
         test_id = ts->t8_element_get_linear_id(test, level);
+        /* test_id and id should be equal. */
         EXPECT_EQ(id, test_id);
       }
     }
@@ -146,92 +157,5 @@ TEST_P(linear_id, id_at_other_level)
 
 /* *INDENT-ON* */
 
-#if 0
-/*Check, if all descendants of an element at level maxlvl have the same id on
- * the level of the input element as the input element*/
-static void
-t8_id_at_other_lvl_check (t8_element_t *element,
-                          t8_element * child,
-                          t8_eclass_scheme_c *ts, int maxlvl)
-{
-  int                 level = ts->t8_element_level (element);
-  t8_linearidx_t      current_id =
-    ts->t8_element_get_linear_id (element, level);
-  t8_linearidx_t      num_descendants =
-    ts->t8_element_count_leafs (element, level);
-  t8_linearidx_t      id_at_lvl =
-    ts->t8_element_get_linear_id (element, maxlvl);
-  t8_linearidx_t      i;
-  t8_linearidx_t      id;
-  for (i = 0; i < num_descendants; i++) {
-    ts->t8_element_set_linear_id (child, maxlvl, id_at_lvl + i);
-    id = ts->t8_element_get_linear_id (child, level);
-    SC_CHECK_ABORT (id == current_id, "Wrong id");
-  }
-}
-
-static void
-t8_check_linear_id (const int maxlvl)
-{
-  t8_element_t       *element, *child, *test;
-  t8_scheme_cxx_t    *scheme;
-  t8_eclass_scheme_c *ts;
-  int                 eclassi;
-  int                 level;
-  t8_linearidx_t      num_desc;
-  t8_linearidx_t      id;
-  t8_eclass_t         eclass;
-  scheme = t8_scheme_new_default_cxx ();
-  for (eclassi = T8_ECLASS_ZERO; eclassi < T8_ECLASS_COUNT; eclassi++) {
-    t8_productionf ("Testing linear_id for eclass %s\n",
-                    t8_eclass_to_string[eclassi]);
-    eclass = (t8_eclass_t) eclassi;
-    /* Get scheme for eclass */
-    ts = scheme->eclass_schemes[eclass];
-    t8_check_uniform_forest (ts, scheme, sc_MPI_COMM_WORLD, maxlvl);
-    /* Get element and initialize it */
-    ts->t8_element_new (1, &element);
-    ts->t8_element_new (1, &child);
-    ts->t8_element_new (1, &test);
-    ts->t8_element_set_linear_id (element, 0, 0);
-    for (level = 0; level < maxlvl; level++) {
-      num_desc = ts->t8_element_count_leafs_from_root (level);
-      for (id = 0; id < num_desc; id++) {
-        ts->t8_element_set_linear_id (child, level, id);
-        t8_id_at_other_lvl_check (child, test, ts, maxlvl);
-      }
-    }
-    /* Destroy element */
-    ts->t8_element_destroy (1, &element);
-    ts->t8_element_destroy (1, &child);
-    ts->t8_element_destroy (1, &test);
-  }
-
-  /* Destroy scheme */
-  t8_scheme_cxx_unref (&scheme);
-}
-#endif
-
 INSTANTIATE_TEST_SUITE_P (t8_test_init_linear_id, linear_id,
                           testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT));
-#if 0
-int
-main (int argc, char **argv)
-{
-  int                 mpiret;
-#ifdef T8_ENABLE_DEBUG
-  const int           maxlvl = 3;
-#else
-  const int           maxlvl = 4;
-#endif
-  mpiret = sc_MPI_Init (&argc, &argv);
-  SC_CHECK_MPI (mpiret);
-  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-  t8_init (SC_LP_DEFAULT);
-  t8_check_linear_id (maxlvl);
-  sc_finalize ();
-  mpiret = sc_MPI_Finalize ();
-  SC_CHECK_MPI (mpiret);
-  return 0;
-}
-#endif
