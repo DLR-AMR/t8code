@@ -58,7 +58,8 @@ void                t8_forest_write_netcdf (t8_forest_t forest,
  * \param [in]  num_extern_netcdf_vars    The number of extern user-defined variables which hold elementwise data (if none, set it to 0).
  * \param [in]  ext_variables An array of pointers of the herein before mentioned user-defined variables (if none, set it to NULL).
  * \param [in]  comm The sc_MPI_Communicator to use.
- * \param [in]  netcdf_var_storage_mode This defines whether the variables in the netCDF-4 File are stored contiguously (NC_CONTIGUOUS) or in chunks (NC_CHUNKED (in this case netCDF's defNC_NETCDF4 single size_t indicating the chunksize used only for the coordinate variables. May be nullptr indicating the netcdf default
+ * \param [in]  netcdf_var_storage_mode This defines whether the variables in the netCDF-4 File are stored contiguously (NC_CONTIGUOUS) or in chunks (NC_CHUNKED).
+ * \param [in]  coordinate_chunksize a pointer to a single size_t indicating the chunksize used only for the coordinate variables. Ignored if netcdf_var_storage_mode is not NC_CHUNKED. May be nullptr indicating the netcdf default
  * \param [in]  netcdf_var_mpi_access This defines whether the mpi processes are writing the variables' data collectively or independently.
  * \param [in]  fill_mode the fillmode used for the netcdf file. Must be either NC_NOFILL or NC_FILL
  * \param [in]  cmode the given flags are potentially combined with other flags (eg. NC_CLOBBER) and given to nc_create[_par]. Supported modes are NC_NETCDF4 and NC_CLASSIC_MODEL | NC_64BIT_DATA.
