@@ -9,7 +9,7 @@ As a reviewer please read through all the code lines and make sure that the code
 - [ ] The author added a BSD statement to `doc/` (or already has one)
 - [ ] The code compiles without warning in debugging and release mode, with and without MPI (this should be executed automatically in a github action)
 
-  If the Pull request indroduces code that is not covered by the github action (for example coupling with a new library):
+  If the Pull request introduces code that is not covered by the github action (for example coupling with a new library):
   - [ ] Should this use case be added to the github action?
   - [ ] If not, does the specific use case compile and all tests pass (check manually)
 
