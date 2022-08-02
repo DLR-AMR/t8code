@@ -70,7 +70,7 @@ libt8_installed_headers_default_tet =
 libt8_installed_headers_default_prism =
 libt8_installed_headers_default_pyramid =
 libt8_installed_headers_cad =
-  src/t8_cad/t8_cad.h
+  src/t8_cad/t8_cad.hxx
 libt8_internal_headers = \
   src/t8_cmesh/t8_cmesh_stash.h src/t8_cmesh/t8_cmesh_trees.h \
   src/t8_cmesh/t8_cmesh_types.h src/t8_cmesh/t8_cmesh_partition.h \

@@ -26,7 +26,6 @@
 
 #ifndef T8_CAD_HXX
 #define T8_CAD_HXX
-#define T8_WITH_OCC 1
 
 #include <t8.h>
 
