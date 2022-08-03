@@ -84,10 +84,10 @@ t8_forest_pos (t8_forest_t forest,
     }
   }
 
-  if (i < num_siblings) {
+  if (i < num_siblings && i < elements_in_array) {
     level_compare = ts->t8_element_level (element_compare);
     /* Only elements with higher level then level of current element, can get 
-    * potentially be overlapped. */
+     * potentially be overlapped. */
     if (level_compare > level_current) {
       /* Compare ancestors */
       ts->t8_element_nca (element, element_compare, element_parent_compare);
@@ -102,6 +102,17 @@ t8_forest_pos (t8_forest_t forest,
 
   ts->t8_element_destroy (1, &element_parent);
   ts->t8_element_destroy (1, &element_parent_compare);
+
+// MPI Grenzen!!! Da mussss child_id von elemet pos 0 sein ausser beim ersten ersten Prozess!!!
+#if T8_ENABLE_MPI
+  if (pos == 0 && forest->mpirank > 0) {
+    element = t8_element_array_index_locidx (telements, pos);
+    child_id = ts->t8_element_child_id (element);
+    if (child_id > 0) {
+      return INT32_MIN;
+    }
+  }
+#endif
 
   return pos;
 }
@@ -121,7 +132,8 @@ t8_forest_pos (t8_forest_t forest,
  * \param [in] el_buffer Buffer space to store a family of elements.
  */
 static void
-t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
+t8_forest_adapt_coarsen_recursive (t8_forest_t forest,
+                                   t8_locidx_t ltreeid,
                                    t8_locidx_t lelement_id,
                                    t8_eclass_scheme_c *ts,
                                    t8_element_array_t *telements,
@@ -154,26 +166,24 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
     /* Get all elements at indices pos, pos + 1, ... ,pos + num_siblings - 1 */
     for (i = 0; i < num_siblings && pos + i < elements_in_array; i++) {
       fam[i] = t8_element_array_index_locidx (telements, pos + i);
+      //t8_debugf ("[IL] pos = %i, i = %i, level = %i\n", pos, i, ts->t8_element_level(fam[i]));
     }
-    /* We assume that the elements do not form a family.
-     * So we will only pass the first element to the adapt callback. */
-    is_family = 0;
-    num_elements_to_adapt_callback = 1;
+
     if (forest->is_incomplete) {
-      is_family =  t8_forest_is_incomplete_family (forest, ltreeid, pos,
-                                                   ts, fam, i);
-      if (is_family > 0) {
-        /* We will pass a (in)complete family to the adapt callback */
-        num_elements_to_adapt_callback = is_family;
-        is_family = 1;
-      }
+      /* We will pass a (in)complete family to the adapt callback */
+      num_elements_to_adapt_callback = *el_inserted - pos;
+      T8_ASSERT (0 < num_elements_to_adapt_callback);
+      T8_ASSERT (num_elements_to_adapt_callback <= num_siblings);
     }
     else if (i == num_siblings && ts->t8_element_is_family (fam)) {
       /* We will pass a full family to the adapt callback */
-      is_family = 1;
       num_elements_to_adapt_callback = num_siblings;
     }
-    T8_ASSERT (num_elements_to_adapt_callback <= num_siblings);
+    else {
+      is_family = 0;
+      num_elements_to_adapt_callback = 1;
+    }
+
     if (is_family
         && forest->set_adapt_fn (forest, forest->set_from, ltreeid,
                                  lelement_id, ts, is_family, 
@@ -192,13 +202,15 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
       /* Set element to the new constructed parent. Since resizing the array
        * may change the position in memory, we have to do it after resizing. */
       //element = t8_element_array_index_locidx (telements, pos);
+      //t8_debugf ("[IL] t8_forest_pos el_inserted = %i, pos = %i\n", *el_inserted, pos);
+      T8_ASSERT (*el_inserted-1 == pos);
+      pos = t8_forest_pos (forest, ts, telements, pos);
     }
     else {
       /* If the elements are no family or
        * the family is not to be coarsened we abort the coarsening process */
       is_family = 0;
     }
-    pos = t8_forest_pos (forest, ts, telements, pos);
   } /* End while loop */
 }
 
@@ -236,9 +248,10 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
   while (elem_list->elem_count > 0) {
     /* Until the list is empty we
      * - remove the first element from the list.
-     * - Check whether it should get refined
-     * - If yes, we add all its children to the list
-     * - If no, we add the element to the array of new elements
+     * - Check whether it should get refined or removed
+     * - If refined, we add all its children to the list
+     * - If removed, we just remove it from the list
+     * - Otherwise, we add the element to the array of new elements
      */
     el_buffer[0] = (t8_element_t *) sc_list_pop (elem_list);
     num_children = ts->t8_element_num_children (el_buffer[0]);
@@ -523,7 +536,8 @@ t8_forest_adapt (t8_forest_t forest)
         } 
         el_considered++;
       }
-      else if (refine == -2) {
+      else {
+        T8_ASSERT (refine == -2);
         /* Remove the element */
         el_considered++;
       }
@@ -536,7 +550,7 @@ t8_forest_adapt (t8_forest_t forest)
      * When all elements have been removed from new tree, insert the last 
      * element from old tree (tree_from). */
     if (!el_inserted) {
-      T8_ASSERT (refine == -2);
+      T8_ASSERT (refine == -2 || (refine == 1 && forest->set_adapt_recursive));
       T8_ASSERT (!(t8_locidx_t) t8_element_array_get_count (telements));
       /* We copy the last element to the new element array. */
       elements[0] = t8_element_array_push (telements);
@@ -554,15 +568,15 @@ t8_forest_adapt (t8_forest_t forest)
     /* Empty trees lead to problems. When all elements have been removed from 
      * new tree, remove this tree. */
     if (!el_inserted) {
+      T8_ASSERT (refine == -2 || (refine == 1 && forest->set_adapt_recursive));
+      T8_ASSERT(!(t8_locidx_t) t8_element_array_get_count (telements));
+      /* remove empty tree from forests */
+      t8_forest_remove_tree (forest, ltree_id);
       /* TODO: We need extra variable num_trees_removed otherwise the tree loop 
        * is lost in ballance. */
-      T8_ASSERT (refine == -2);
-      T8_ASSERT(!(t8_locidx_t) t8_element_array_get_count (telements));
-      t8_debugf("##### [IL] #####  Tree is going to be deleted\n");
-      t8_forest_remove_tree (forest, ltree_id);
+      num_trees_removed++;
       num_trees--;
       ltree_id--;
-      t8_debugf("##### [IL] #####  Tree got deleted\n");
     }
     else {
       /* Set the new element offset of this tree */
