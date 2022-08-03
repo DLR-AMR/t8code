@@ -59,6 +59,25 @@ t8_adapt_callback_coarse (t8_forest_t forest,
                           const int num_elements, 
                           t8_element_t * elements[])
 {
+#if T8_ENABLE_DEBUG
+  if (is_family) {
+    t8_element_t       *element_parent;
+    t8_element_t       *element_parent_compare;
+    int                 iter;
+    for (iter = 0; iter < num_elements; iter++) {
+      T8_ASSERT (ts->t8_element_is_valid (elements[iter]));
+    }
+    ts->t8_element_new (1, &element_parent_compare);
+    ts->t8_element_new (1, &element_parent);
+    ts->t8_element_parent (elements[0], element_parent);
+    for (iter = 0; iter < num_elements; iter++) {
+      ts->t8_element_parent (elements[iter], element_parent_compare);
+      T8_ASSERT (!ts->t8_element_compare (element_parent, element_parent_compare));
+    }
+    ts->t8_element_destroy (1, &element_parent);
+    ts->t8_element_destroy (1, &element_parent_compare);
+  }
+#endif
   if (is_family && rand()%10) {
     return -1;
   }
@@ -75,8 +94,14 @@ t8_adapt_callback_refine (t8_forest_t forest,
                           const int num_elements, 
                           t8_element_t * elements[])
 {
-  if (rand()%4) {
-      return 1;
+  int level = ts->t8_element_level (elements[0]);
+  int level_max = ts->t8_element_maxlevel();
+
+  if (rand()%4 > 0 && level < (int) (0.5*level_max)  ) {
+    return 1;
+  }
+  if (rand()%4 == 0) {
+    return -2;
   }
   return 0;
 }
@@ -89,14 +114,14 @@ t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn,
 
   t8_forest_init (&forest_new);
   t8_forest_set_adapt (forest_new, forest_from, adapt_fn, recursive);
-  //t8_forest_set_partition (forest_new, NULL, 0);
+  t8_forest_set_partition (forest_new, NULL, 0);
   t8_forest_commit (forest_new);
 
   return forest_new;
 }
 
 void
-t8_test_emelemts_remove (int cmesh_id)
+t8_test_elements_remove (int cmesh_id)
 {
   int                 level, min_level, max_level;
   t8_cmesh_t          cmesh;
@@ -108,27 +133,36 @@ t8_test_emelemts_remove (int cmesh_id)
   /* Construct a cmesh */
   cmesh = t8_test_create_cmesh (cmesh_id);
   //cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 1, 0); 
-  //cmesh = t8_cmesh_new_hypercube (T8_ECLASS_HEX, sc_MPI_COMM_WORLD, 0, 0, 0);
+  //cmesh = t8_cmesh_new_hypercube (T8_ECLASS_QUAD, sc_MPI_COMM_WORLD, 0, 0, 0);
 
   /* Compute the first level, such that no process is empty */
   min_level = t8_forest_min_nonempty_level (cmesh, scheme);
 
   min_level = SC_MAX (min_level, 1);
-  max_level = min_level + 1;
+  max_level = min_level + 4;
   
   for (level = min_level; level < max_level; level++) {
     t8_debugf("### [IL] ### cmesh_id %i, level %i \n\n", cmesh_id, level);
     t8_cmesh_ref (cmesh);
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
-    //t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_test_base");
-    //forest = t8_adapt_forest (forest, t8_adapt_callback_refine, 0);
-    for (int i = 0; i < 5; i++) {
+
+    //t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_test_rec_refine_remove");
+
+    for (int i = 0; i < 4; i++) {
         forest = t8_adapt_forest (forest, t8_adapt_callback_refine, 0);
         forest = t8_adapt_forest (forest, t8_adapt_callback_remove, 0);
         //t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_test_remove");
     }
+
+    forest = t8_adapt_forest (forest, t8_adapt_callback_refine, 1);
+    
     for (int i = 0; i < 15; i++) {
+        //t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_test_rec_before");
       forest = t8_adapt_forest (forest, t8_adapt_callback_coarse, 0);
+      SC_CHECK_ABORT (t8_forest_no_overlap(forest),
+                  "The forest has overlapping elements");
+        //t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_test_rec_after");
+      forest = t8_adapt_forest (forest, t8_adapt_callback_coarse, 1);
       SC_CHECK_ABORT (t8_forest_no_overlap(forest),
                   "The forest has overlapping elements");
     }
@@ -140,7 +174,7 @@ t8_test_emelemts_remove (int cmesh_id)
 }
 
 void
-test_cmesh_emelemts_remove_all ()
+t8_test_cmesh_elements_remove_all ()
 {
   int bigmesh_id;
   bigmesh_id = t8_get_number_of_comm_only_cmesh_testcases () +
@@ -155,7 +189,7 @@ test_cmesh_emelemts_remove_all ()
     if (cmesh_id < bigmesh_id || 
         cmesh_id >= bigmesh_id + t8_get_number_of_new_bigmesh_cmesh_testcases ()) {
         if (cmesh_id < 66) {
-            t8_test_emelemts_remove(cmesh_id);
+            t8_test_elements_remove (cmesh_id);
         }
     }
   }
@@ -172,17 +206,19 @@ main (int argc, char **argv)
 
   mpic = sc_MPI_COMM_WORLD;
   sc_init (mpic, 1, 1, NULL, SC_LP_PRODUCTION);
-  p4est_init (NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
   unsigned int seed;
   seed = time(0);
-  //seed = 1658235940;
+  srand(seed);
 
   t8_global_productionf("Seed for test: %u \n", seed);
-  srand(seed);
-  //test_cmesh_emelemts_remove_all ();
-  t8_test_emelemts_remove(10);
+
+  for (size_t i = 0; i < 100; i++) {
+    t8_test_cmesh_elements_remove_all ();
+  }
+  
+  
   sc_finalize ();
 
   mpiret = sc_MPI_Finalize ();

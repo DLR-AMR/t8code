@@ -212,7 +212,7 @@ t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn,
 }
 
 void
-t8_test_emelemts_remove (int cmesh_id)
+t8_test_elements_remove (int cmesh_id)
 {
   int                 level, min_level, max_level;
   t8_cmesh_t          cmesh;
@@ -278,7 +278,7 @@ t8_test_emelemts_remove (int cmesh_id)
 }
 
 void
-test_cmesh_emelemts_remove_all ()
+t8_test_cmesh_elements_remove_all ()
 {
   int bigmesh_id;
   bigmesh_id = t8_get_number_of_comm_only_cmesh_testcases () +
@@ -294,7 +294,7 @@ test_cmesh_emelemts_remove_all ()
         cmesh_id >= bigmesh_id + t8_get_number_of_new_bigmesh_cmesh_testcases ()) {
         /* Skip Pyramids */
         if (cmesh_id < 66) {
-          t8_test_emelemts_remove(cmesh_id);
+          t8_test_elements_remove(cmesh_id);
         }
     }
   }
@@ -311,11 +311,10 @@ main (int argc, char **argv)
 
   mpic = sc_MPI_COMM_WORLD;
   sc_init (mpic, 1, 1, NULL, SC_LP_PRODUCTION);
-  p4est_init (NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
-  //test_cmesh_emelemts_remove_all ();
-  t8_test_emelemts_remove (5);
+  t8_test_cmesh_elements_remove_all ();
+
   sc_finalize ();
 
   mpiret = sc_MPI_Finalize ();

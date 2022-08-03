@@ -43,13 +43,10 @@ t8_adapt_callback_remove (t8_forest_t forest,
                           const int num_elements, 
                           t8_element_t * elements[])
 {
-  int                 num_children, child_id;
-
+  int                 num_children;
+  int                 child_id;
   num_children = ts->t8_element_num_children (elements[0]);
-  child_id = ts->t8_element_child_id (elements[0]);
-  //if (rand()%2 && num_children > 1) {
-  //    return -2;
-  //}
+  child_id     = ts->t8_element_child_id (elements[0]);
   if (num_children-1 != child_id) {
     return -2;
   }
@@ -108,11 +105,12 @@ t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn,
 }
 
 void
-t8_test_emelemts_remove (int cmesh_id)
+t8_test_elements_remove (int cmesh_id)
 {
   int                 min_level;
   t8_cmesh_t          cmesh;
-  t8_forest_t         forest, forest_base;
+  t8_forest_t         forest;
+  t8_forest_t         forest_base;
   t8_scheme_cxx_t    *scheme;
 
   scheme = t8_scheme_new_default_cxx ();
@@ -128,14 +126,16 @@ t8_test_emelemts_remove (int cmesh_id)
 
   t8_debugf("[IL] start refine\n");
   forest = t8_adapt_forest (forest, t8_adapt_callback_refine, 1);
+  t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_test_rec_refine");
 
   t8_debugf("[IL] start remove\n"); 
   forest = t8_adapt_forest (forest, t8_adapt_callback_remove, 0);
-  //t8_forest_write_vtk (forest, "t8_example_recursive");
+  t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_test_rec_remove");
 
   t8_debugf("[IL] start coarse\n");
   forest = t8_adapt_forest (forest, t8_adapt_callback_coarse, 1);
-  //t8_forest_write_vtk (forest, "t8_example_recursive_coarse");
+  t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_test_rec_coarse");
+
 
   t8_debugf("[IL] Recursive done\n");
 
@@ -144,19 +144,16 @@ t8_test_emelemts_remove (int cmesh_id)
 
   t8_cmesh_ref (cmesh);
   t8_scheme_cxx_ref (scheme);
-
   forest_base = t8_forest_new_uniform (cmesh, scheme, min_level, 0, sc_MPI_COMM_WORLD);
   SC_CHECK_ABORT (t8_forest_is_equal (forest, forest_base),
             "The forest are not equal.");
   
   t8_forest_unref (&forest);
   t8_forest_unref (&forest_base);
-  t8_cmesh_destroy (&cmesh);
-  t8_scheme_cxx_unref (&scheme);
 }
 
 void
-test_cmesh_emelemts_remove_all ()
+t8_test_cmesh_elements_remove_all ()
 {
   int bigmesh_id;
   bigmesh_id = t8_get_number_of_comm_only_cmesh_testcases () +
@@ -171,7 +168,7 @@ test_cmesh_emelemts_remove_all ()
     if (cmesh_id < bigmesh_id || 
         cmesh_id >= bigmesh_id + t8_get_number_of_new_bigmesh_cmesh_testcases ()) {
         if (cmesh_id < 66) {
-            t8_test_emelemts_remove(cmesh_id);
+            t8_test_elements_remove (cmesh_id);
         }
     }
   }
@@ -188,17 +185,11 @@ main (int argc, char **argv)
 
   mpic = sc_MPI_COMM_WORLD;
   sc_init (mpic, 1, 1, NULL, SC_LP_PRODUCTION);
-  p4est_init (NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
-  unsigned int seed;
-  seed = time(0);
-  seed = 1658153135;
-
-  t8_global_productionf("Seed for test: %u \n", seed);
-  srand(seed);
-  //test_cmesh_emelemts_remove_all ();
-  t8_test_emelemts_remove(0);
+  //t8_test_cmesh_elements_remove_all ();
+  t8_test_elements_remove (0);
+  
   sc_finalize ();
 
   mpiret = sc_MPI_Finalize ();

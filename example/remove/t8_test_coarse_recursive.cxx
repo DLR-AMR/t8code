@@ -206,11 +206,11 @@ t8_coarse_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn,
 }
 
 void
-t8_test_emelemts_remove (int cmesh_id)
+t8_test_elements_remove (int cmesh_id)
 {
   int                 level, min_level, max_level;
   t8_cmesh_t          cmesh;
-  t8_forest_t         forest, forest_compare;
+  t8_forest_t         forest;
   t8_scheme_cxx_t    *scheme;
 
   /* 6 balls on each side of a cube. */
@@ -235,8 +235,6 @@ t8_test_emelemts_remove (int cmesh_id)
   for (level = min_level; level < max_level; level++) {
     t8_cmesh_ref (cmesh);
     t8_scheme_cxx_ref (scheme);
-    /* Level 0 uniform forest for comparison */
-    forest_compare = t8_forest_new_uniform (cmesh, scheme, 0, 0, sc_MPI_COMM_WORLD);
     
     t8_cmesh_ref (cmesh);
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
@@ -248,7 +246,7 @@ t8_test_emelemts_remove (int cmesh_id)
     forest = t8_forest_new_adapt (forest, t8_adapt_callback_refine, 0, 0, &adapt_data);
     forest = t8_forest_new_adapt (forest, t8_adapt_callback_remove, 0, 0, &adapt_data);
 
-    // will get replaced by recursive coarseening
+    //TODO: replace by recursive coarseening
     for (int i = 0; i < 2*level; i++)
     {
       forest = t8_coarse_forest (forest, t8_adapt_callback_coarse_all, 0, &adapt_data);
@@ -259,14 +257,13 @@ t8_test_emelemts_remove (int cmesh_id)
 
     t8_scheme_cxx_ref (scheme);
     t8_forest_unref (&forest);
-    t8_forest_unref (&forest_compare);
   }
   t8_scheme_cxx_unref (&scheme);
   t8_cmesh_destroy (&cmesh);
 }
 
 void
-test_cmesh_emelemts_remove_all ()
+t8_test_cmesh_elements_remove_all ()
 {
   /* Test all cmeshes over all different inputs we get through their id */
   for (int cmesh_id = 0; cmesh_id < t8_get_number_of_all_testcases ();
@@ -277,7 +274,7 @@ test_cmesh_emelemts_remove_all ()
       /* Skip all t8_test_create_new_bigmesh_cmesh 
        * When issue #213 is fixed, remove the if statement */
       if (cmesh_id < 97 || cmesh_id > 256) {
-        t8_test_emelemts_remove(cmesh_id);
+        t8_test_elements_remove(cmesh_id);
       }
     }
   }
@@ -286,9 +283,6 @@ test_cmesh_emelemts_remove_all ()
 int
 main (int argc, char **argv)
 {
-  //int i = 0;
-  //while(i==0){ sleep(5); }
-
   int                 mpiret;
   sc_MPI_Comm         mpic;
 
@@ -297,11 +291,10 @@ main (int argc, char **argv)
 
   mpic = sc_MPI_COMM_WORLD;
   sc_init (mpic, 1, 1, NULL, SC_LP_PRODUCTION);
-  p4est_init (NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
-  //test_cmesh_emelemts_remove_all ();
-  t8_test_emelemts_remove(0);
+  t8_test_cmesh_elements_remove_all ();
+
   sc_finalize ();
 
   mpiret = sc_MPI_Finalize ();
