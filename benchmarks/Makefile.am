@@ -5,7 +5,10 @@
 bin_PROGRAMS += \
   benchmarks/t8_time_partition \
   benchmarks/t8_time_forest_partition \
-  benchmarks/t8_time_prism_adapt
+  benchmarks/t8_time_prism_adapt \
+  benchmarks/t8_time_sierpinski_triangle \
+  benchmarks/t8_time_sierpinski_tetrahedron \
+  benchmarks/t8_time_menger
 #  benchmarks/t8_time_new_refine \
 #  benchmarks/t8_time_refine_type03 
 
@@ -14,5 +17,8 @@ bin_PROGRAMS += \
 benchmarks_t8_time_partition_SOURCES = benchmarks/time_partition.c
 benchmarks_t8_time_forest_partition_SOURCES = benchmarks/time_forest_partition.cxx
 benchmarks_t8_time_prism_adapt_SOURCES = benchmarks/t8_time_prism_adapt.cxx
+benchmarks_t8_time_sierpinski_triangle_SOURCES = benchmarks/t8_time_sierpinski_triangle.cxx
+benchmarks_t8_time_sierpinski_tetrahedron_SOURCES = benchmarks/t8_time_sierpinski_tetrahedron.cxx
+benchmarks_t8_time_menger_SOURCES = benchmarks/t8_time_menger.cxx
 
 include benchmarks/ExtremeScaling/Makefile.am
