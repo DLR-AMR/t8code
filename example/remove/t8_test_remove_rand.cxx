@@ -188,9 +188,7 @@ t8_test_cmesh_elements_remove_all ()
     /* Skip all t8_test_create_new_bigmesh_cmesh since they are without geometry */
     if (cmesh_id < bigmesh_id || 
         cmesh_id >= bigmesh_id + t8_get_number_of_new_bigmesh_cmesh_testcases ()) {
-        if (cmesh_id < 66) {
-            t8_test_elements_remove (cmesh_id);
-        }
+          t8_test_elements_remove (cmesh_id);
     }
   }
 }
