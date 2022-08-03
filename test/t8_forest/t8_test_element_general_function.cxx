@@ -112,7 +112,6 @@ main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
 
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_PRODUCTION);
-  p4est_init (NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
   t8_global_productionf ("Testing element_general_function.\n");

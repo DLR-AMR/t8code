@@ -398,12 +398,37 @@ t8_default_scheme_pyramid_c::t8_element_successor (const t8_element_t *elem,
 }
 
 void
+t8_default_scheme_pyramid_c::t8_element_anchor (const t8_element_t *elem,
+                                                int anchor[3])
+{
+  t8_dpyramid_t      *pyra = (t8_dpyramid_t *) elem;
+
+  T8_ASSERT (t8_element_is_valid (elem));
+  anchor[0] = pyra->x;
+  anchor[1] = pyra->y;
+  anchor[2] = pyra->z;
+}
+
+void
 t8_default_scheme_pyramid_c::t8_element_vertex_coords (const t8_element_t *t,
                                                        int vertex,
                                                        int coords[])
 {
   T8_ASSERT (t8_element_is_valid (t));
   t8_dpyramid_compute_coords ((const t8_dpyramid_t *) t, vertex, coords);
+}
+
+void
+t8_default_scheme_pyramid_c::t8_element_nca (const t8_element_t *elem1,
+                                             const t8_element_t *elem2,
+                                             t8_element_t *nca)
+{
+  T8_ASSERT (t8_element_is_valid (elem1));
+  T8_ASSERT (t8_element_is_valid (elem2));
+  t8_dpyramid_nearest_common_ancestor ((const t8_dpyramid_t *) elem1,
+                                       (const t8_dpyramid_t *) elem2,
+                                       (t8_dpyramid_t *) nca);
+  T8_ASSERT (t8_element_is_valid (nca));
 }
 
 void
@@ -417,18 +442,6 @@ t8_default_scheme_pyramid_c::t8_element_vertex_reference_coords (const
   T8_ASSERT (t8_element_is_valid (elem));
   t8_dpyramid_vertex_reference_coords ((const t8_dpyramid_t *) elem,
                                        vertex, coords);
-}
-
-void
-t8_default_scheme_pyramid_c::t8_element_nca (const t8_element_t *elem1,
-                                             const t8_element_t *elem2,
-                                             t8_element_t *nca)
-{
-  T8_ASSERT (t8_element_is_valid (elem1));
-  T8_ASSERT (t8_element_is_valid (elem2));
-  t8_dpyramid_nca ((const t8_dpyramid_t *) elem1,
-                   (const t8_dpyramid_t *) elem2, (t8_dpyramid_t *) nca);
-  T8_ASSERT (t8_element_is_valid (nca));
 }
 
 int

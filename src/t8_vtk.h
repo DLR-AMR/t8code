@@ -33,8 +33,6 @@
 
 /* typedef and macros */
 
-/* TODO: TOPIDX is deprecated, remove it */
-#define T8_VTK_TOPIDX "Int32"
 #define T8_VTK_LOCIDX "Int32"
 /* TODO: Paraview has troubles with Int64, so we switch to Int32 and be careful.
  *       Investigate this further. See also vtk makro VTK_USE_64BIT_IDS */
