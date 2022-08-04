@@ -394,14 +394,21 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
                            t8_forest_t forest_old,
                            t8_forest_replace_t replace_fn)
 {
-  t8_locidx_t         ielem, ielem_new, ielem_old, elems_per_tree_old,
-    elems_per_tree_new;
-  t8_locidx_t         itree, num_local_trees;
+  t8_locidx_t         ielem;
+  t8_locidx_t         ielem_new;
+  t8_locidx_t         ielem_old;
+  t8_locidx_t         elems_per_tree_old;
+  t8_locidx_t         elems_per_tree_new;
+  t8_locidx_t         itree;
+  t8_locidx_t         num_local_trees;
   t8_locidx_t         family_size;
-  t8_element_t       *elem_new, *elem_old, *elem_parent;
+  t8_element_t       *elem_new;
+  t8_element_t       *elem_old;
+  t8_element_t       *elem_parent;
   t8_eclass_scheme_c *ts;
   t8_eclass_t         eclass;
-  int                 level_new, level_old;
+  int                 level_new;
+  int                 level_old;
   int                 refine;
 
   t8_global_productionf ("Into t8_forest_iterate_replace\n");

@@ -43,9 +43,11 @@ t8_forest_is_subfamily (t8_element_t **elements, int num_elements, t8_eclass_sch
   T8_ASSERT (num_elements > 0 && 
              num_elements <= tscheme->t8_element_num_siblings (elements[0]));
   
-  int             zz;
-  int             level, is_family;
-  t8_element_t   *element_parent, *element_parent_compare;
+  int             ielem;
+  int             level;
+  int             is_family;
+  t8_element_t   *element_parent;
+  t8_element_t   *element_parent_compare;
 
   level = tscheme->t8_element_level(elements[0]);
   if (level == 0) {
@@ -54,8 +56,8 @@ t8_forest_is_subfamily (t8_element_t **elements, int num_elements, t8_eclass_sch
   if (num_elements == 1) {
     return 1;
   }
-  for (zz = 1; zz < num_elements; zz++) {
-    if (level != tscheme->t8_element_level(elements[zz])){
+  for (ielem = 1; ielem < num_elements; ielem++) {
+    if (level != tscheme->t8_element_level(elements[ielem])){
       return 0;
     }
   }
@@ -63,8 +65,8 @@ t8_forest_is_subfamily (t8_element_t **elements, int num_elements, t8_eclass_sch
   tscheme->t8_element_new(1, &element_parent);
   tscheme->t8_element_new(1, &element_parent_compare);
   tscheme->t8_element_parent(elements[0], element_parent);
-  for (zz = 1; zz < num_elements; zz++) {
-    tscheme->t8_element_parent (elements[zz], element_parent_compare);
+  for (ielem = 1; ielem < num_elements; ielem++) {
+    tscheme->t8_element_parent (elements[ielem], element_parent_compare);
     if (0 != tscheme->t8_element_compare(element_parent, element_parent_compare)) {
       is_family = 0;
       break;
@@ -314,9 +316,12 @@ t8_forest_no_overlap (t8_forest_t forest) {
 #if T8_ENABLE_DEBUG
   t8_locidx_t         num_local_trees;
   t8_locidx_t         elems_in_tree;
-  t8_locidx_t         ielem, itree;
+  t8_locidx_t         ielem;
+  t8_locidx_t         itree;
   t8_tree_t           tree;
-  t8_element_t       *element_a, *element_b, *nca;
+  t8_element_t       *element_a;
+  t8_element_t       *element_b;
+  t8_element_t       *element_nca;
   t8_eclass_scheme_c *ts;
 
   T8_ASSERT (t8_forest_is_committed (forest));
@@ -327,19 +332,19 @@ t8_forest_no_overlap (t8_forest_t forest) {
     tree          = t8_forest_get_tree (forest, itree);
     ts            = t8_forest_get_eclass_scheme (forest, tree->eclass);
     elems_in_tree = t8_forest_get_tree_num_elements (forest, itree);
-    ts->t8_element_new(1, &nca);
+    ts->t8_element_new(1, &element_nca);
     for (ielem = 0; ielem < elems_in_tree-1; ielem++) {
       element_a = t8_forest_get_element_in_tree (forest, itree, ielem);
       element_b = t8_forest_get_element_in_tree (forest, itree, ielem+1);
       T8_ASSERT (ts->t8_element_is_valid (element_a));
       T8_ASSERT (ts->t8_element_is_valid (element_b));
-      ts->t8_element_nca (element_a, element_b, nca);
-      if (ts->t8_element_level(element_a) == ts->t8_element_level(nca) ||
-          ts->t8_element_level(element_b) == ts->t8_element_level(nca)) {
+      ts->t8_element_nca (element_a, element_b, element_nca);
+      if (ts->t8_element_level(element_a) == ts->t8_element_level(element_nca) ||
+          ts->t8_element_level(element_b) == ts->t8_element_level(element_nca)) {
         return 0;
       }
     }
-    ts->t8_element_destroy (1, &nca);
+    ts->t8_element_destroy (1, &element_nca);
   }
 #endif
   return 1;
@@ -1472,7 +1477,9 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
 
 #if T8_ENABLE_MPI
   t8_tree_t           tree;
-  t8_element_t       *desc, *element, *tree_desc;
+  t8_element_t       *desc;
+  t8_element_t       *element;
+  t8_element_t       *tree_desc;
   t8_eclass_t         eclass;
   t8_eclass_scheme_c *ts;
   t8_gloidx_t         global_neighbour_tree_idx;
@@ -1637,11 +1644,13 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
 /* TODO: Extend to nonempty trees. */
 void                t8_forest_remove_tree (t8_forest_t forest,
                                            t8_locidx_t ltree_id) {
-  t8_tree_t           tree, tree_from;
-  t8_gloidx_t         num_tree_elements;
-  t8_locidx_t         jt, number_of_trees_from;
+  t8_tree_t           tree;
+  t8_tree_t           tree_from;
   t8_eclass_scheme_c *eclass_scheme;
   sc_array_t         *trees_from;
+  t8_locidx_t         itree_from;
+  t8_locidx_t         number_of_trees_from;
+  t8_gloidx_t         num_tree_elements;
 
   /* TODO: remove this line if methode works in parallel */
   T8_ASSERT (forest->mpisize == 1);
@@ -1665,15 +1674,15 @@ void                t8_forest_remove_tree (t8_forest_t forest,
   forest->trees =
     sc_array_new_size (sizeof (t8_tree_struct_t), number_of_trees_from-1);
   
-  for (jt = 0; jt < number_of_trees_from; jt++) {
-    if (jt != ltree_id) {
-      if (jt < ltree_id) {
-        tree = (t8_tree_t) t8_sc_array_index_locidx (forest->trees, jt);
-        tree_from = (t8_tree_t) t8_sc_array_index_locidx (trees_from, jt);
+  for (itree_from = 0; itree_from < number_of_trees_from; itree_from++) {
+    if (itree_from != ltree_id) {
+      if (itree_from < ltree_id) {
+        tree = (t8_tree_t) t8_sc_array_index_locidx (forest->trees, itree_from);
+        tree_from = (t8_tree_t) t8_sc_array_index_locidx (trees_from, itree_from);
       }
       else {
-        tree = (t8_tree_t) t8_sc_array_index_locidx (forest->trees, jt-1);
-        tree_from = (t8_tree_t) t8_sc_array_index_locidx (trees_from, jt);
+        tree = (t8_tree_t) t8_sc_array_index_locidx (forest->trees, itree_from-1);
+        tree_from = (t8_tree_t) t8_sc_array_index_locidx (trees_from, itree_from);
       }
       
       tree->eclass = tree_from->eclass;

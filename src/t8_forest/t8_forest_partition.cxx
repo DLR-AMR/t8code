@@ -166,6 +166,7 @@ void
 t8_forest_partition_test_boundery_element (t8_forest_t forest)
 {
 #ifdef T8_ENABLE_DEBUG
+  t8_tree_t           tree;
   t8_element_t       *element_last;
   t8_element_t       *element_last_desc;
   t8_eclass_scheme_c *ts;
@@ -173,7 +174,6 @@ t8_forest_partition_test_boundery_element (t8_forest_t forest)
   t8_linearidx_t      last_desc_id;
   t8_locidx_t         num_local_trees;
   t8_gloidx_t         global_tree_id;
-  t8_tree_t           tree;
   int                 level;
   
   T8_ASSERT (t8_forest_is_committed (forest));
