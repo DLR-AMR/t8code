@@ -1474,6 +1474,11 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (first_or_last == 0 || first_or_last == 1);
   T8_ASSERT (forest != NULL);
+  T8_ASSERT (forest->first_local_tree > -1);
+  T8_ASSERT (forest->first_local_tree < forest->global_num_trees);  
+  T8_ASSERT ((forest->first_local_tree == 0 && forest->last_local_tree == -1) ?
+             forest->last_local_tree < 0 : forest->last_local_tree > -1); 
+  T8_ASSERT (forest->last_local_tree < forest->global_num_trees);
 
 #if T8_ENABLE_MPI
   t8_tree_t           tree;
@@ -1488,40 +1493,54 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
   if (forest->is_incomplete) {
     if (first_or_last == 0) {
       if (forest->mpirank < forest->mpisize-1) {
-        sc_MPI_Send(&forest->last_local_tree, 1, T8_MPI_GLOIDX,
+        sc_MPI_Send (&forest->last_local_tree, 1, T8_MPI_GLOIDX,
                     forest->mpirank+1, 0, forest->mpicomm);
       }
       if (forest->mpirank > 0) {
-        sc_MPI_Recv(&global_neighbour_tree_idx, 1, T8_MPI_GLOIDX,
+        sc_MPI_Recv (&global_neighbour_tree_idx, 1, T8_MPI_GLOIDX,
                     forest->mpirank-1, 0, forest->mpicomm, NULL);
       }
       else {
-        /* First process, nothing to do any more */
+        /* First process, nothing to receive and do any more */
         T8_ASSERT (!forest->mpirank);
         return 0;
       }
-      T8_ASSERT(global_neighbour_tree_idx == forest->first_local_tree ||
-                global_neighbour_tree_idx == forest->first_local_tree - 1);
+      T8_ASSERT (global_neighbour_tree_idx < forest->global_num_trees); 
+      T8_ASSERT (global_neighbour_tree_idx > -1 ?
+                  ((global_neighbour_tree_idx == forest->first_local_tree ||
+                    global_neighbour_tree_idx == forest->first_local_tree - 1) ? 
+                   true : forest->last_local_tree == -1) :
+                  global_neighbour_tree_idx == -1);
     }
     else {
+      SC_ABORT ("Method t8_forest_last_tree_shared is not fully implemented.\n");
+      /* TODO: If last_local_tree is 0 of the current process and it gets 0 as the 
+       * first_local_tree of the bigger process, then it cannot be said whether 
+       * the tree with id 0 is shared or not, since the bigger process could also 
+       * carry an empty forest. */
       if (forest->mpirank > 0) {
-        sc_MPI_Send(&forest->first_local_tree, 1, T8_MPI_GLOIDX, 
-                    forest->mpirank-1, 0, forest->mpicomm);
+        sc_MPI_Send (&forest->first_local_tree, 1, T8_MPI_GLOIDX, 
+                     forest->mpirank-1, 0, forest->mpicomm);
       }
       if (forest->mpirank < forest->mpisize-1) {
-        sc_MPI_Recv(&global_neighbour_tree_idx, 1, T8_MPI_GLOIDX, 
-                    forest->mpirank+1, 0, forest->mpicomm, NULL);
+        sc_MPI_Recv (&global_neighbour_tree_idx, 1, T8_MPI_GLOIDX, 
+                     forest->mpirank+1, 0, forest->mpicomm, NULL);
       }
       else {
-        /* Last process, nothing to do any more  */
+        /* Last process, nothing to receive and do any more  */
         T8_ASSERT (forest->mpirank == forest->mpisize-1);
         return 0;
       }
-      T8_ASSERT(forest->last_local_tree == global_neighbour_tree_idx ||
-                forest->last_local_tree == global_neighbour_tree_idx - 1);
+      T8_ASSERT (global_neighbour_tree_idx < forest->global_num_trees); 
+      T8_ASSERT (global_neighbour_tree_idx > 0 ?
+                  ((global_neighbour_tree_idx == forest->first_local_tree ||
+                    global_neighbour_tree_idx == forest->first_local_tree + 1) ? 
+                    true : forest->last_local_tree == -1) :
+                  global_neighbour_tree_idx == 0);
     }
     /* If global_neighbour_tree_idx == forest->first_local_tree tree is shared */
-    return global_neighbour_tree_idx == forest->first_local_tree;
+    return global_neighbour_tree_idx == forest->first_local_tree 
+            && forest->last_local_tree != -1;
   }
   else {
     if (forest->local_num_elements <= 0 || forest->trees == NULL
