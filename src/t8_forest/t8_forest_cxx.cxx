@@ -39,7 +39,7 @@
 T8_EXTERN_C_BEGIN ();
 
 int
-t8_element_is_subfamily (t8_element_t **elements, int num_elements, t8_eclass_scheme_c *tscheme) {
+t8_forest_is_subfamily (t8_element_t **elements, int num_elements, t8_eclass_scheme_c *tscheme) {
   T8_ASSERT (num_elements > 0 && 
              num_elements <= tscheme->t8_element_num_siblings (elements[0]));
   

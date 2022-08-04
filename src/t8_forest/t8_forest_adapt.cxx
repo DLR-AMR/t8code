@@ -424,7 +424,7 @@ t8_forest_adapt (t8_forest_t forest)
         num_elements_to_adapt_callback = num_siblings;
       }
       T8_ASSERT (num_elements_to_adapt_callback <= num_siblings);
-      T8_ASSERT (!is_family || t8_element_is_subfamily (elements_from, 
+      T8_ASSERT (!is_family || t8_forest_is_subfamily (elements_from, 
                                   num_elements_to_adapt_callback, tscheme));
       /* Pass the element, or the family to the adapt callback.
        * The output will be  1 if the element should be refined

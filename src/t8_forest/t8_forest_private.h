@@ -44,7 +44,7 @@ T8_EXTERN_C_BEGIN ();
  *                           where the elements are from.
  * \note If the first element has level 0, the return is 0.
  */
-int                 t8_element_is_subfamily (t8_element_t **elements,
+int                 t8_forest_is_subfamily (t8_element_t **elements,
                                             int num_elements, 
                                             t8_eclass_scheme_c *tscheme);
 
