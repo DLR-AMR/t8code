@@ -675,7 +675,7 @@ t8_forest_commit (t8_forest_t forest)
   forest->set_from = NULL;
   forest->committed = 1;
   t8_debugf ("Committed forest with %li local elements and %lli "
-             "global elements.\n\tTree range ist from %lli to %lli.\n",
+             "global elements.\n\tTree range is from %lli to %lli.\n",
              (long) forest->local_num_elements,
              (long long) forest->global_num_elements,
              (long long) forest->first_local_tree,
