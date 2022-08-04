@@ -97,7 +97,7 @@ t8_adapt_callback_refine (t8_forest_t forest,
   int level = ts->t8_element_level (elements[0]);
   int level_max = ts->t8_element_maxlevel();
 
-  if (rand()%4 > 0 && level < (int) (0.5*level_max)  ) {
+  if (rand()%4 > 0 && level < (int) (0.4*level_max)  ) {
     return 1;
   }
   if (rand()%4 == 0) {
@@ -138,8 +138,8 @@ t8_test_elements_remove (int cmesh_id)
   /* Compute the first level, such that no process is empty */
   min_level = t8_forest_min_nonempty_level (cmesh, scheme);
 
-  min_level = SC_MAX (min_level, 1);
-  max_level = min_level + 4;
+  min_level = SC_MAX (min_level, 0);
+  max_level = min_level + 3;
   
   for (level = min_level; level < max_level; level++) {
     t8_debugf("### [IL] ### cmesh_id %i, level %i \n\n", cmesh_id, level);
@@ -148,16 +148,23 @@ t8_test_elements_remove (int cmesh_id)
 
     //t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_test_rec_refine_remove");
 
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 3; i++) {
         forest = t8_adapt_forest (forest, t8_adapt_callback_refine, 0);
         forest = t8_adapt_forest (forest, t8_adapt_callback_remove, 0);
         //t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_test_remove");
     }
 
     forest = t8_adapt_forest (forest, t8_adapt_callback_refine, 1);
+
+    forest = t8_adapt_forest (forest, t8_adapt_callback_coarse, 1);
+      SC_CHECK_ABORT (t8_forest_no_overlap(forest),
+                  "The forest has overlapping elements");
     
-    for (int i = 0; i < 15; i++) {
+    for (int i = 0; i < 7; i++) {
         //t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_test_rec_before");
+      forest = t8_adapt_forest (forest, t8_adapt_callback_coarse, 0);
+      SC_CHECK_ABORT (t8_forest_no_overlap(forest),
+                  "The forest has overlapping elements");
       forest = t8_adapt_forest (forest, t8_adapt_callback_coarse, 0);
       SC_CHECK_ABORT (t8_forest_no_overlap(forest),
                   "The forest has overlapping elements");
@@ -176,20 +183,11 @@ t8_test_elements_remove (int cmesh_id)
 void
 t8_test_cmesh_elements_remove_all ()
 {
-  int bigmesh_id;
-  bigmesh_id = t8_get_number_of_comm_only_cmesh_testcases () +
-               t8_get_number_of_new_hypercube_cmesh_testcases () +
-               t8_get_number_of_new_empty_cmesh_testcases () +
-               t8_get_number_of_new_from_class_cmesh_testcases () +
-               t8_get_number_of_new_hypercube_hybrid_cmesh_testcases () +
-               t8_get_number_of_new_periodic_cmesh_testcases ();
   /* Test all cmeshes over all different inputs we get through their id */
   for (int cmesh_id = 0; cmesh_id < t8_get_number_of_all_testcases (); cmesh_id++) {
     /* Skip all t8_test_create_new_bigmesh_cmesh since they are without geometry */
-    if (cmesh_id < bigmesh_id || 
-        cmesh_id >= bigmesh_id + t8_get_number_of_new_bigmesh_cmesh_testcases ()) {
-          t8_test_elements_remove (cmesh_id);
-    }
+    t8_debugf("\n\n\n###### [IL] ###### cmesh_id %i \n\n\n", cmesh_id);
+    t8_test_elements_remove (cmesh_id);
   }
 }
 
@@ -212,7 +210,7 @@ main (int argc, char **argv)
 
   t8_global_productionf("Seed for test: %u \n", seed);
 
-  for (size_t i = 0; i < 100; i++) {
+  for (size_t i = 0; i < 1; i++) {
     t8_test_cmesh_elements_remove_all ();
   }
   
