@@ -9,6 +9,7 @@ bin_PROGRAMS += \
 	tutorials/t8_step3_adapt_forest \
 	tutorials/t8_step4_partition_balance_ghost \
 	tutorials/t8_step5_element_data \
+	tutorials/t8_step5_element_data_c_interface \
 	tutorials/t8_tutorial_search
 
 tutorials_t8_step0_helloworld_SOURCES = \
@@ -27,6 +28,10 @@ tutorials_t8_step4_partition_balance_ghost_SOURCES = \
 tutorials_t8_step5_element_data_SOURCES = \
 	tutorials/t8_step3_adapt_forest.cxx \
 	tutorials/t8_step5_element_data.cxx \
+	tutorials/t8_step5_main.cxx
+tutorials_t8_step5_element_data_c_interface_SOURCES = \
+	tutorials/t8_step3_adapt_forest.cxx \
+	tutorials/t8_step5_element_data_c_interface.c \
 	tutorials/t8_step5_main.cxx
 tutorials_t8_tutorial_search_SOURCES = \
 	tutorials/t8_tutorial_search.cxx \
