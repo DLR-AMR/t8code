@@ -161,7 +161,8 @@ t8_step5_create_element_data (t8_forest_t forest)
          * via the eclass_scheme and the forest_element interface. */
     
 
-        element_data[current_index].level = level;
+        element_data[current_index].level =
+            t8_element_level(eclass_scheme, element);
         element_data[current_index].volume = volume;
       }
     }
