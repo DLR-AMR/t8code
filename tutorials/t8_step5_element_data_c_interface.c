@@ -163,7 +163,8 @@ t8_step5_create_element_data (t8_forest_t forest)
 
         element_data[current_index].level =
             t8_element_level(eclass_scheme, element);
-        element_data[current_index].volume = volume;
+        element_data[current_index].volume = 
+          t8_forest_element_volume (forest, itree, element);
       }
     }
   }
