@@ -20,7 +20,6 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8.h>
 #include <t8_cad/t8_cad.hxx>
 #include <t8_cad/t8_cad.h>
 
@@ -29,6 +28,11 @@
 #include <BRep_Builder.hxx>
 #include <TopExp.hxx>
 #include <BRepTools.hxx>
+#include <TopoDS.hxx>
+#include <TopoDS_Edge.hxx>
+#include <TopoDS_Face.hxx>
+#include <BRepClass3d_SolidClassifier.hxx>
+#include <BRepBndLib.hxx>
 
 /* *INDENT-OFF* */
 t8_cad::t8_cad (const char *fileprefix)
@@ -48,10 +52,10 @@ t8_cad::t8_cad (const char *fileprefix)
                                        occ_shape_vertex2edge_map);
   TopExp::MapShapesAndUniqueAncestors (occ_shape, TopAbs_EDGE, TopAbs_FACE,
                                        occ_shape_edge2face_map);
+  BRepBndLib::AddOBB (occ_shape, oriented_bounding_box);
 }
 
-t8_cad::t8_cad (int dim, const TopoDS_Shape occ_shape,
-                                  const char *name_in)
+t8_cad::t8_cad (const TopoDS_Shape occ_shape)
 {
   if (occ_shape.IsNull ()) {
     SC_ABORTF ("Shape is null. \n");
@@ -63,6 +67,7 @@ t8_cad::t8_cad (int dim, const TopoDS_Shape occ_shape,
                                        occ_shape_vertex2edge_map);
   TopExp::MapShapesAndUniqueAncestors (occ_shape, TopAbs_EDGE, TopAbs_FACE,
                                        occ_shape_edge2face_map);
+  BRepBndLib::AddOBB (occ_shape, oriented_bounding_box);
 }
 
 gp_Pnt
@@ -220,6 +225,29 @@ t8_cad::t8_cad_edge_parameter_to_face_parameters(const int edge_index,
   curve_on_surface->D0(edge_param, uv);
   face_params[0] = uv.X();
   face_params[1] = uv.Y();
+}
+
+int
+t8_cad::t8_cad_is_element_inside_shape(t8_forest forest,
+                                       t8_locidx_t ltreeid, 
+                                       const t8_element_t *element) const
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+#define T8_ENABLE_DEBUG 1
+#if T8_ENABLE_DEBUG
+  t8_eclass_t         tree_class;
+  t8_eclass_scheme_c *ts;
+  tree_class = t8_forest_get_tree_class (forest, ltreeid);
+  ts = t8_forest_get_eclass_scheme (forest, tree_class);
+  T8_ASSERT (ts->t8_element_is_valid (element));
+  // check if element is hex and axis oriented
+#endif /* T8_ENABLE_DEBUG */
+}
+
+int
+t8_cad::t8_cad_is_point_inside_shape (const double *coords)
+{
+  return 1;
 }
 /* *INDENT-ON* */
 
