@@ -39,46 +39,6 @@
 T8_EXTERN_C_BEGIN ();
 
 int
-t8_forest_is_subfamily (t8_element_t **elements, int num_elements, t8_eclass_scheme_c *tscheme) {
-  T8_ASSERT (num_elements > 0 && 
-             num_elements <= tscheme->t8_element_num_siblings (elements[0]));
-  
-  int             ielem;
-  int             level;
-  int             is_family;
-  t8_element_t   *element_parent;
-  t8_element_t   *element_parent_compare;
-
-  level = tscheme->t8_element_level(elements[0]);
-  if (level == 0) {
-    return 0;
-  }
-  if (num_elements == 1) {
-    return 1;
-  }
-  for (ielem = 1; ielem < num_elements; ielem++) {
-    if (level != tscheme->t8_element_level(elements[ielem])){
-      return 0;
-    }
-  }
-  is_family = 1;
-  tscheme->t8_element_new(1, &element_parent);
-  tscheme->t8_element_new(1, &element_parent_compare);
-  tscheme->t8_element_parent(elements[0], element_parent);
-  for (ielem = 1; ielem < num_elements; ielem++) {
-    tscheme->t8_element_parent (elements[ielem], element_parent_compare);
-    if (0 != tscheme->t8_element_compare(element_parent, element_parent_compare)) {
-      is_family = 0;
-      break;
-    }
-  }
-  tscheme->t8_element_destroy(1, &element_parent);
-  tscheme->t8_element_destroy(1, &element_parent_compare);
-
-  return is_family;
-}
-
-int
 t8_forest_is_incomplete_family (t8_forest_t forest,
                                 t8_locidx_t ltree_id,
                                 t8_locidx_t el_considered,

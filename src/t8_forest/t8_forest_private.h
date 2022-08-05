@@ -36,18 +36,6 @@
 T8_EXTERN_C_BEGIN ();
 
 /* TODO: document */
-
-/** Return nonzero if the first \a num_elemets in \a elements are part of a family.
- * \param [in] elements      The elements array.
- * \param [in] num_elements  The first \a num_elements to be checked in \a elements.
- * \param [in] tscheme       The element scheme for current local tree 
- *                           where the elements are from.
- * \note If the first element has level 0, the return is 0.
- */
-int                 t8_forest_is_subfamily (t8_element_t **elements,
-                                            int num_elements, 
-                                            t8_eclass_scheme_c *tscheme);
-
 int                 t8_forest_is_incomplete_family (t8_forest_t forest,
                                                     t8_locidx_t ltree_id,
                                                     t8_locidx_t el_considered,
