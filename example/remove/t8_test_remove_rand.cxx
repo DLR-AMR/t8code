@@ -38,12 +38,12 @@ t8_adapt_callback_remove (t8_forest_t forest,
                           t8_forest_t forest_from,
                           t8_locidx_t which_tree,
                           t8_locidx_t lelement_id,
-                          t8_eclass_scheme_c * ts,
+                          t8_eclass_scheme_c *ts,
                           const int is_family,
                           const int num_elements, 
-                          t8_element_t * elements[])
+                          t8_element_t *elements[])
 {
-  if ((rand()%4)) {
+  if (rand()%4) {
       return -2;
   }
   return 0;
@@ -54,30 +54,11 @@ t8_adapt_callback_coarse (t8_forest_t forest,
                           t8_forest_t forest_from,
                           t8_locidx_t which_tree,
                           t8_locidx_t lelement_id,
-                          t8_eclass_scheme_c * ts,
+                          t8_eclass_scheme_c *ts,
                           const int is_family,
                           const int num_elements, 
-                          t8_element_t * elements[])
+                          t8_element_t *elements[])
 {
-#if T8_ENABLE_DEBUG
-  if (is_family) {
-    t8_element_t       *element_parent;
-    t8_element_t       *element_parent_compare;
-    int                 iter;
-    for (iter = 0; iter < num_elements; iter++) {
-      T8_ASSERT (ts->t8_element_is_valid (elements[iter]));
-    }
-    ts->t8_element_new (1, &element_parent_compare);
-    ts->t8_element_new (1, &element_parent);
-    ts->t8_element_parent (elements[0], element_parent);
-    for (iter = 0; iter < num_elements; iter++) {
-      ts->t8_element_parent (elements[iter], element_parent_compare);
-      T8_ASSERT (!ts->t8_element_compare (element_parent, element_parent_compare));
-    }
-    ts->t8_element_destroy (1, &element_parent);
-    ts->t8_element_destroy (1, &element_parent_compare);
-  }
-#endif
   if (is_family && rand()%10) {
     return -1;
   }
@@ -89,15 +70,15 @@ t8_adapt_callback_refine (t8_forest_t forest,
                           t8_forest_t forest_from,
                           t8_locidx_t which_tree,
                           t8_locidx_t lelement_id,
-                          t8_eclass_scheme_c * ts,
+                          t8_eclass_scheme_c *ts,
                           const int is_family,
                           const int num_elements, 
-                          t8_element_t * elements[])
+                          t8_element_t *elements[])
 {
   int level = ts->t8_element_level (elements[0]);
   int level_max = ts->t8_element_maxlevel();
 
-  if (rand()%4 > 0 && level < (int) (0.4*level_max)  ) {
+  if (rand()%4 > 0 && level < (int)(0.5*level_max)) {
     return 1;
   }
   if (rand()%4 == 0) {
@@ -107,7 +88,8 @@ t8_adapt_callback_refine (t8_forest_t forest,
 }
 
 static t8_forest_t
-t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn,
+t8_adapt_forest (t8_forest_t forest_from,
+                t8_forest_adapt_t adapt_fn,
                  int recursive)
 {
   t8_forest_t         forest_new;
@@ -123,7 +105,9 @@ t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn,
 void
 t8_test_elements_remove (int cmesh_id)
 {
-  int                 level, min_level, max_level;
+  int                 level;
+  int                 min_level;
+  int                 max_level;
   t8_cmesh_t          cmesh;
   t8_forest_t         forest;
   t8_scheme_cxx_t    *scheme;
@@ -132,46 +116,28 @@ t8_test_elements_remove (int cmesh_id)
 
   /* Construct a cmesh */
   cmesh = t8_test_create_cmesh (cmesh_id);
-  //cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 1, 0); 
-  //cmesh = t8_cmesh_new_hypercube (T8_ECLASS_QUAD, sc_MPI_COMM_WORLD, 0, 0, 0);
 
   /* Compute the first level, such that no process is empty */
   min_level = t8_forest_min_nonempty_level (cmesh, scheme);
-
   min_level = SC_MAX (min_level, 0);
   max_level = min_level + 3;
   
   for (level = min_level; level < max_level; level++) {
-    t8_debugf("### [IL] ### cmesh_id %i, level %i \n\n", cmesh_id, level);
     t8_cmesh_ref (cmesh);
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
-
-    //t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_test_rec_refine_remove");
-
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < level + 1; i++) {
         forest = t8_adapt_forest (forest, t8_adapt_callback_refine, 0);
         forest = t8_adapt_forest (forest, t8_adapt_callback_remove, 0);
-        //t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_test_remove");
     }
-
     forest = t8_adapt_forest (forest, t8_adapt_callback_refine, 1);
-
-    forest = t8_adapt_forest (forest, t8_adapt_callback_coarse, 1);
-      SC_CHECK_ABORT (t8_forest_no_overlap(forest),
-                  "The forest has overlapping elements");
-    
-    for (int i = 0; i < 7; i++) {
-        //t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_test_rec_before");
+    for (int i = 0; i < 2*max_level + 1; i++) {
       forest = t8_adapt_forest (forest, t8_adapt_callback_coarse, 0);
-      SC_CHECK_ABORT (t8_forest_no_overlap(forest),
-                  "The forest has overlapping elements");
       forest = t8_adapt_forest (forest, t8_adapt_callback_coarse, 0);
-      SC_CHECK_ABORT (t8_forest_no_overlap(forest),
-                  "The forest has overlapping elements");
-        //t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_test_rec_after");
+      SC_CHECK_ABORT (t8_forest_no_overlap (forest),
+          "The local forest has overlapping elements.");
       forest = t8_adapt_forest (forest, t8_adapt_callback_coarse, 1);
-      SC_CHECK_ABORT (t8_forest_no_overlap(forest),
-                  "The forest has overlapping elements");
+      SC_CHECK_ABORT (t8_forest_no_overlap (forest),
+          "The local forest has overlapping elements.");
     }
     t8_scheme_cxx_ref (scheme);
     t8_forest_unref (&forest);
@@ -185,8 +151,6 @@ t8_test_cmesh_elements_remove_all ()
 {
   /* Test all cmeshes over all different inputs we get through their id */
   for (int cmesh_id = 0; cmesh_id < t8_get_number_of_all_testcases (); cmesh_id++) {
-    /* Skip all t8_test_create_new_bigmesh_cmesh since they are without geometry */
-    t8_debugf("\n\n\n###### [IL] ###### cmesh_id %i \n\n\n", cmesh_id);
     t8_test_elements_remove (cmesh_id);
   }
 }
@@ -207,14 +171,10 @@ main (int argc, char **argv)
   unsigned int seed;
   seed = time(0);
   srand(seed);
+  t8_global_productionf("Seed: %u \n", seed);
 
-  t8_global_productionf("Seed for test: %u \n", seed);
+  t8_test_cmesh_elements_remove_all ();
 
-  for (size_t i = 0; i < 1; i++) {
-    t8_test_cmesh_elements_remove_all ();
-  }
-  
-  
   sc_finalize ();
 
   mpiret = sc_MPI_Finalize ();
