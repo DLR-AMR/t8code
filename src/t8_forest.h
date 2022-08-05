@@ -114,9 +114,10 @@ typedef void        (*t8_forest_replace_t) (t8_forest_t forest_old,
  * \param [in] num_elements the number of entries in \a elements that are defined
  * \param [in] elements     Pointers to a family or, if \a is_family is zero,
  *                          pointer to one element.
- * \return greater zero if the first entry in \a elements should be refined,
- *         smaller zero if the family \a elements shall be coarsened,
- *         zero else.
+ * \return 1 if the first entry in \a elements should be refined,
+ *         -1 if the family \a elements shall be coarsened,
+ *         -2 if the first entry in \a elements should be removed,
+ *         0 else.
  */
 /* TODO: Do we really need the forest argument? Since the forest is not committed yet it
  *       seems dangerous to expose to the user. */
