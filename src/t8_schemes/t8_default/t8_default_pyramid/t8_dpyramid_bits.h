@@ -211,7 +211,7 @@ int                 t8_dpyramid_is_inside_root (const t8_dpyramid_t *p);
 
 /** Check, if a given pyramid is inside another pyramid
  * \param[in] p     Pyramid to check
- * \param[in] check The outer pyramid in which \a p might lie*/
+ * \param[in] check The outer pyramid in which \a p might lay*/
 int                 t8_dpyramid_is_inside_pyra (const t8_dpyramid_t *p,
                                                 const t8_dpyramid_t *check);
 
@@ -362,6 +362,17 @@ int                 t8_dpyramid_face_parent_face (const t8_dpyramid_t *elem,
 int                 t8_dpyramid_ancestor_id (const t8_dpyramid_t *p,
                                              const int level);
 
+/**
+ * Compute the ancestor of \a pyra at a given level
+ * 
+ * \param[in] pyra      Input pyramid
+ * \param[in] level     Level of the ancestor to compute
+ * \param[in, out] anc  Allocated element that will be filled with the data of the ancestor.
+ */
+void                t8_dpyramid_ancestor (const t8_dpyramid_t *pyra,
+                                          const int level,
+                                          t8_dpyramid_t *anc);
+
 /** Returns the shape of the pyramid (pyramid or tetrahedron)
  * \param [in] p    Input pyramid.
  * \return          The eclass of the element
@@ -387,6 +398,19 @@ void                t8_dpyramid_successor (const t8_dpyramid_t *elem,
 void                t8_dpyramid_vertex_reference_coords (const t8_dpyramid_t
                                                          *elem, int vertex,
                                                          double coords[]);
+
+/**
+ * Compute the nearest common ancestor of two elements
+ * \param [in]      pyra1       The first pyramid
+ * \param [in]      pyra2       The second pyramid
+ * \param [in,out]  nca         Existing pyramid whose data will be filled with
+ *                              the data of \a pyra1 and \a pyra2 nearest common ancestor.
+ */
+void                t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t
+                                                         *pyra1,
+                                                         const t8_dpyramid_t
+                                                         *pyra2,
+                                                         t8_dpyramid_t *nca);
 
 /** Query whether all entries of a pyramid are in valid ranges.
  * A pyramid is valid if and only if its triangle and line member are valid.

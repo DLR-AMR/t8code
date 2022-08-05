@@ -30,6 +30,22 @@
 #include <t8_element_cxx.hxx>
 #include <t8_element_c_interface.h>
 
+size_t
+t8_element_size (t8_eclass_scheme_c *ts)
+{
+  T8_ASSERT (ts != NULL);
+
+  return ts->t8_element_size ();
+}
+
+int
+t8_element_refines_irregular (t8_eclass_scheme_c *ts)
+{
+  T8_ASSERT (ts != NULL);
+
+  return ts->t8_element_refines_irregular ();
+}
+
 int
 t8_element_maxlevel (t8_eclass_scheme_c *ts)
 {
@@ -99,6 +115,65 @@ t8_element_sibling (t8_eclass_scheme_c *ts,
   ts->t8_element_sibling (elem, sibid, sibling);
 }
 
+int
+t8_element_num_corners (t8_eclass_scheme_c *ts, const t8_element_t *elem)
+{
+  T8_ASSERT (ts != NULL);
+
+  return ts->t8_element_num_corners (elem);
+}
+
+int
+t8_element_num_faces (t8_eclass_scheme_c *ts, const t8_element_t *elem)
+{
+  T8_ASSERT (ts != NULL);
+
+  return ts->t8_element_num_faces (elem);
+}
+
+int
+t8_element_max_num_faces (t8_eclass_scheme_c *ts, const t8_element_t *elem)
+{
+  T8_ASSERT (ts != NULL);
+
+  return ts->t8_element_max_num_faces (elem);
+}
+
+int
+t8_element_num_children (t8_eclass_scheme_c *ts, const t8_element_t *elem)
+{
+  T8_ASSERT (ts != NULL);
+
+  return ts->t8_element_num_children (elem);
+}
+
+int
+t8_element_num_face_children (t8_eclass_scheme_c *ts,
+                              const t8_element_t *elem, int face)
+{
+  T8_ASSERT (ts != NULL);
+
+  return ts->t8_element_num_face_children (elem, face);
+}
+
+int
+t8_element_get_face_corner (t8_eclass_scheme_c *ts,
+                            const t8_element_t *elem, int face, int corner)
+{
+  T8_ASSERT (ts != NULL);
+
+  return ts->t8_element_get_face_corner (elem, face, corner);
+}
+
+int
+t8_element_get_corner_face (t8_eclass_scheme_c *ts, const t8_element_t *elem,
+                            int corner, int face)
+{
+  T8_ASSERT (ts != NULL);
+
+  return ts->t8_element_get_corner_face (elem, corner, face);
+}
+
 void
 t8_element_child (t8_eclass_scheme_c *ts, const t8_element_t *elem,
                   int childid, t8_element_t *child)
@@ -126,6 +201,15 @@ t8_element_child_id (t8_eclass_scheme_c *ts, const t8_element_t *elem)
 }
 
 int
+t8_element_ancestor_id (t8_eclass_scheme_c *ts, const t8_element_t *elem,
+                        int level)
+{
+  T8_ASSERT (ts != NULL);
+
+  return ts->t8_element_ancestor_id (elem, level);
+}
+
+int
 t8_element_is_family (t8_eclass_scheme_c *ts, t8_element_t **fam)
 {
   T8_ASSERT (ts != NULL);
@@ -142,6 +226,104 @@ t8_element_nca (t8_eclass_scheme_c *ts, const t8_element_t *elem1,
   ts->t8_element_nca (elem1, elem2, nca);
 }
 
+t8_element_shape_t
+t8_element_face_shape (t8_eclass_scheme_c *ts, const t8_element_t *elem,
+                       int face)
+{
+  T8_ASSERT (ts != NULL);
+
+  return ts->t8_element_face_shape (elem, face);
+}
+
+void
+t8_element_children_at_face (t8_eclass_scheme_c *ts, const t8_element_t *elem,
+                             int face, t8_element_t *children[],
+                             int num_children, int *child_indices)
+{
+  T8_ASSERT (ts != NULL);
+
+  ts->t8_element_children_at_face (elem, face, children, num_children,
+                                   child_indices);
+}
+
+int
+t8_element_face_child_face (t8_eclass_scheme_c *ts, const t8_element_t *elem,
+                            int face, int face_child)
+{
+  T8_ASSERT (ts != NULL);
+
+  return ts->t8_element_face_child_face (elem, face, face_child);
+}
+
+int
+t8_element_face_parent_face (t8_eclass_scheme_c *ts, const t8_element_t *elem,
+                             int face)
+{
+  T8_ASSERT (ts != NULL);
+
+  return ts->t8_element_face_parent_face (elem, face);
+}
+
+int
+t8_element_tree_face (t8_eclass_scheme_c *ts, const t8_element_t *elem,
+                      int face)
+{
+  T8_ASSERT (ts != NULL);
+
+  return ts->t8_element_tree_face (elem, face);
+}
+
+void
+t8_element_transform_face (t8_eclass_scheme_c *ts, const t8_element_t *elem1,
+                           t8_element_t *elem2, int orientation, int sign,
+                           int is_smaller_face)
+{
+  T8_ASSERT (ts != NULL);
+
+  ts->t8_element_transform_face (elem1, elem2, orientation, sign,
+                                 is_smaller_face);
+}
+
+int
+t8_element_extrude_face (t8_eclass_scheme_c *ts, const t8_element_t *face,
+                         const t8_eclass_scheme_c *face_scheme,
+                         t8_element_t *elem, int root_face)
+{
+  T8_ASSERT (ts != NULL);
+
+  return ts->t8_element_extrude_face (face, face_scheme, elem, root_face);
+}
+
+void
+t8_element_boundary_face (t8_eclass_scheme_c *ts, const t8_element_t *elem,
+                          int face, t8_element_t *boundary,
+                          const t8_eclass_scheme_c *boundary_scheme)
+{
+  T8_ASSERT (ts != NULL);
+
+  ts->t8_element_boundary_face (elem, face, boundary, boundary_scheme);
+}
+
+void
+t8_element_first_descendant_face (t8_eclass_scheme_c *ts,
+                                  const t8_element_t *elem, int face,
+                                  t8_element_t *first_desc, int level)
+{
+  T8_ASSERT (ts != NULL);
+
+  ts->t8_element_first_descendant_face (elem, face, first_desc, level);
+}
+
+void
+t8_element_last_descendant_face (t8_eclass_scheme_c *ts,
+                                 const t8_element_t *elem, int face,
+                                 t8_element_t *last_desc, int level)
+{
+  T8_ASSERT (ts != NULL);
+
+  ts->t8_element_last_descendant_face (elem, face, last_desc, level);
+}
+
 void
 t8_element_set_linear_id (t8_eclass_scheme_c *ts,
                           t8_element_t *elem, int level, t8_linearidx_t id)
@@ -149,6 +331,34 @@ t8_element_set_linear_id (t8_eclass_scheme_c *ts,
   T8_ASSERT (ts != NULL);
 
   ts->t8_element_set_linear_id (elem, level, id);
+}
+
+int
+t8_element_is_root_boundary (t8_eclass_scheme_c *ts, const t8_element_t *elem,
+                             int face)
+{
+  T8_ASSERT (ts != NULL);
+
+  return ts->t8_element_is_root_boundary (elem, face);
+}
+
+int
+t8_element_face_neighbor_inside (t8_eclass_scheme_c *ts,
+                                 const t8_element_t *elem,
+                                 t8_element_t *neigh, int face,
+                                 int *neigh_face)
+{
+  T8_ASSERT (ts != NULL);
+
+  return ts->t8_element_face_neighbor_inside (elem, neigh, face, neigh_face);
+}
+
+t8_element_shape_t
+t8_element_shape (t8_eclass_scheme_c *ts, const t8_element_t *elem)
+{
+  T8_ASSERT (ts != NULL);
+
+  return ts->t8_element_shape (elem);
 }
 
 t8_linearidx_t
@@ -197,12 +407,59 @@ t8_element_root_len (t8_eclass_scheme_c *ts, const t8_element_t *elem)
   return ts->t8_element_root_len (elem);
 }
 
-int
-t8_element_refines_irregular (t8_eclass_scheme_c *ts)
+void
+t8_element_vertex_reference_coords (t8_eclass_scheme_c *ts,
+                                    const t8_element_t *t, int vertex,
+                                    double coords[])
 {
   T8_ASSERT (ts != NULL);
-  return ts->t8_element_refines_irregular ();
+
+  ts->t8_element_vertex_reference_coords (t, vertex, coords);
 }
+
+t8_gloidx_t
+t8_element_count_leafs (t8_eclass_scheme_c *ts, const t8_element_t *t,
+                        int level)
+{
+  T8_ASSERT (ts != NULL);
+
+  return ts->t8_element_count_leafs (t, level);
+}
+
+t8_gloidx_t
+t8_element_count_leafs_from_root (t8_eclass_scheme_c *ts, int level)
+{
+  T8_ASSERT (ts != NULL);
+
+  return ts->t8_element_count_leafs_from_root (level);
+}
+
+void
+t8_element_general_function (t8_eclass_scheme_c *ts, const t8_element_t *elem,
+                             const void *indata, void *outdata)
+{
+  T8_ASSERT (ts != NULL);
+
+  ts->t8_element_general_function (elem, indata, outdata);
+}
+
+#ifdef T8_ENABLE_DEBUG
+int
+t8_element_is_valid (t8_eclass_scheme_c *ts, const t8_element_t *elem)
+{
+  T8_ASSERT (ts != NULL);
+
+  return ts->t8_element_is_valid (elem);
+}
+
+void
+t8_element_debug_print (t8_eclass_scheme_c *ts, const t8_element_t *elem)
+{
+  T8_ASSERT (ts != NULL);
+
+  return ts->t8_element_debug_print (elem);
+}
+#endif
 
 void
 t8_element_new (t8_eclass_scheme_c *ts, int length, t8_element_t **elems)
