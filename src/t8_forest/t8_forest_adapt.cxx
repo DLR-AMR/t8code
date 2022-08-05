@@ -30,6 +30,67 @@
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
+#if T8_ENABLE_DEBUG
+/** Return nonzero if the first \a num_elemets in \a elements are part of a family.
+ * \param [in] tscheme       The element scheme for current local tree 
+ *                           where the elements are from.
+ * \param [in] elements      The elements array.
+ * \param [in] num_elements  The first \a num_elements to be checked in \a elements.
+ * \note If the first element has level 0, the return is 0.
+ */
+static int
+t8_forest_is_family_callback (t8_eclass_scheme_c *ts,
+                              const int num_elements, 
+                              t8_element_t **elements) {
+  t8_element_t       *element_parent;
+  t8_element_t       *element_parent_compare;
+  int                 iter;
+  int                 num_siblings;
+  int                 level;
+
+  for (iter = 0; iter < num_elements; iter++) {
+    T8_ASSERT (ts->t8_element_is_valid (elements[iter]));
+  }
+
+  level = ts->t8_element_level(elements[0]);
+  if (level == 0) {
+    return 0;
+  }
+
+  ts->t8_element_new (1, &element_parent_compare);
+  ts->t8_element_new (1, &element_parent);
+  ts->t8_element_parent (elements[0], element_parent);
+  num_siblings = ts->t8_element_num_siblings (elements[0]);
+
+  for (iter = 0; iter < num_elements; iter++) {
+    ts->t8_element_parent (elements[iter], element_parent_compare);
+    if (ts->t8_element_compare (element_parent, element_parent_compare)) {
+      ts->t8_element_destroy (1, &element_parent);
+      ts->t8_element_destroy (1, &element_parent_compare);
+      return 0;
+    }
+  }
+
+  if (num_elements < num_siblings) {
+    for (iter = num_elements; iter < num_elements; iter++) {
+      if (elements[iter] != NULL) {
+        T8_ASSERT (ts->t8_element_is_valid (elements[iter]));
+        ts->t8_element_parent (elements[iter], element_parent_compare);
+        if (!ts->t8_element_compare (element_parent, element_parent_compare)) {
+          ts->t8_element_destroy (1, &element_parent);
+          ts->t8_element_destroy (1, &element_parent_compare);
+          return 0;
+        }
+      }
+    }
+  }
+
+  ts->t8_element_destroy (1, &element_parent);
+  ts->t8_element_destroy (1, &element_parent_compare);
+  return 1;
+}
+#endif
+
 static t8_locidx_t
 t8_forest_pos (t8_forest_t forest,
                t8_eclass_scheme_c *ts,
@@ -164,9 +225,13 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest,
 
   while (is_family && pos >= el_coarsen && pos < elements_in_array) {
     /* Get all elements at indices pos, pos + 1, ... ,pos + num_siblings - 1 */
+#if T8_ENABLE_DEBUG
+    for (i = 0; i < num_siblings; i++) {
+      fam[i] = NULL;
+    }
+#endif
     for (i = 0; i < num_siblings && pos + i < elements_in_array; i++) {
       fam[i] = t8_element_array_index_locidx (telements, pos + i);
-      //t8_debugf ("[IL] pos = %i, i = %i, level = %i\n", pos, i, ts->t8_element_level(fam[i]));
     }
 
     if (forest->is_incomplete) {
@@ -183,7 +248,9 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest,
       is_family = 0;
       num_elements_to_adapt_callback = 1;
     }
-
+    T8_ASSERT (forest->is_incomplete ? (!is_family || t8_forest_is_family_callback 
+                                         (ts, num_elements_to_adapt_callback, fam))
+              : (!is_family || ts->t8_element_is_family (fam)));
     if (is_family
         && forest->set_adapt_fn (forest, forest->set_from, ltreeid,
                                  lelement_id, ts, is_family, 
@@ -201,8 +268,6 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest,
       t8_element_array_resize (telements, elements_in_array);
       /* Set element to the new constructed parent. Since resizing the array
        * may change the position in memory, we have to do it after resizing. */
-      //element = t8_element_array_index_locidx (telements, pos);
-      //t8_debugf ("[IL] t8_forest_pos el_inserted = %i, pos = %i\n", *el_inserted, pos);
       T8_ASSERT (*el_inserted-1 == pos);
       pos = t8_forest_pos (forest, ts, telements, pos);
     }
@@ -257,7 +322,7 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
     num_children = ts->t8_element_num_children (el_buffer[0]);
     refine = forest->set_adapt_fn (forest, forest->set_from, ltreeid, lelement_id,
                                    ts, 0, 1, el_buffer);
-    T8_ASSERT(refine != -1);
+    T8_ASSERT (refine != -1);
     if (refine == 1) {
       /* The element should be refined */
       if (ts->t8_element_level (el_buffer[0]) < forest->maxlevel) {
@@ -276,7 +341,7 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
       ts->t8_element_destroy (1, el_buffer);
     }
     else {
-      T8_ASSERT(refine == 0);
+      T8_ASSERT (refine == 0);
       /* This element should not get refined,
        * we remove it from the buffer and add it to the array of new elements. */
       insert_el = t8_element_array_push (telements);
@@ -394,6 +459,11 @@ t8_forest_adapt (t8_forest_t forest)
           T8_REALLOC (elements_from, t8_element_t *, num_siblings);
         curr_size_elements_from = num_siblings;
       }
+#if T8_ENABLE_DEBUG
+      for (zz = 0; zz < (unsigned int) num_siblings; zz++) {
+        elements_from[zz] = NULL;
+      }
+#endif
       for (zz = 0; zz < (unsigned int) num_siblings &&
            el_considered + (t8_locidx_t) zz < num_el_from; zz++) {
         elements_from[zz] = t8_element_array_index_locidx (telements_from,
@@ -432,8 +502,9 @@ t8_forest_adapt (t8_forest_t forest)
         num_elements_to_adapt_callback = num_siblings;
       }
       T8_ASSERT (num_elements_to_adapt_callback <= num_siblings);
-      T8_ASSERT (!is_family || t8_forest_is_subfamily (elements_from, 
-                                  num_elements_to_adapt_callback, tscheme));
+      T8_ASSERT (forest_from->is_incomplete ? (!is_family || t8_forest_is_family_callback 
+                                (tscheme, num_elements_to_adapt_callback, elements_from))
+                : (!is_family || tscheme->t8_element_is_family (elements_from)));
       /* Pass the element, or the family to the adapt callback.
        * The output will be  1 if the element should be refined
        *                     0 if the element should remain as is
