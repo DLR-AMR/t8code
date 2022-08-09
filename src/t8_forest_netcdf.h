@@ -62,7 +62,7 @@ void                t8_forest_write_netcdf (t8_forest_t forest,
  * \param [in]  coordinate_chunksize a pointer to a single size_t indicating the chunksize used only for the coordinate variables. Ignored if netcdf_var_storage_mode is not NC_CHUNKED. May be nullptr indicating the netcdf default
  * \param [in]  netcdf_var_mpi_access This defines whether the mpi processes are writing the variables' data collectively or independently.
  * \param [in]  fill_mode the fillmode used for the netcdf file. Must be either NC_NOFILL or NC_FILL
- * \param [in]  cmode the given flags are potentially combined with other flags (eg. NC_CLOBBER) and given to nc_create[_par]. Supported modes are NC_NETCDF4 and NC_CLASSIC_MODEL | NC_64BIT_DATA.
+ * \param [in]  cmode the given flags are potentially combined with other flags (eg. NC_CLOBBER) and given to nc_create[_par]. Supported modes are NC_NETCDF4 aka netCDF4/HDF5 and NC_64BIT_DATA aka CDF-5.
  * \param [in]  multifile_mode if true, every MPI rank writes its local data to its own file, which can have performance benefits but leaves you with many files. In this mode, netcdf_var_mpi_access is irrelevant and ignored.
  * \note Only use this extended version of \ref t8_forest_write_netcdf if you know exactly what you are doing. In all other cases, we recommend using \ref t8_forest_write_netcdf instead.
  */

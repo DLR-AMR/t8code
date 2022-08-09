@@ -40,6 +40,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <cmath>
 #include <random>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 namespace {
@@ -152,7 +153,7 @@ Config
 parse_args (int argc, char **argv)
 {
 	/* *INDENT-OFF* */
-	std::vector<std::string_view> args{argv + 1, argv + argc};
+	std::vector<std::string> args{argv + 1, argv + argc};
 	Config result;
 
 	const long long total_bytes = std::stoll(std::string{args.at(0)});
@@ -166,7 +167,7 @@ parse_args (int argc, char **argv)
 		throw std::runtime_error{"fill must be one of NC_FILL and NC_NOFILL"};
 	}
 	if (args.at(2) == "classic") {
-		result.cmode = NC_CLASSIC_MODEL | NC_64BIT_DATA;
+		result.cmode = NC_64BIT_DATA;
 	} else if (args.at(2) == "netcdf4_hdf5") {
 		result.cmode = NC_NETCDF4;
 	} else {
