@@ -9,6 +9,7 @@ include example/IO/Makefile.am
 include example/forest/Makefile.am
 include example/cmesh/Makefile.am
 include example/geometry/Makefile.am
+include example/cad/Makefile.am
 
 include example/common/Makefile.am
 include example/version/Makefile.am
