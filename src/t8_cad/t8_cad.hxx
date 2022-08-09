@@ -217,17 +217,18 @@ public:
    *                             2: Element is fully inside the shape.
    */
   int
-  t8_cad_is_element_inside_shape (t8_forest forest,
+  t8_cad_is_element_inside_shape (t8_forest_t forest,
                                   t8_locidx_t ltreeid, 
                                   const t8_element_t *element) const;
   
   /**
    * Checks if a point is inside the occ shape.
    * \param [in] coords          The coordinates of the point.
+   * \param [in] tol             The tolerance.
    * \return                     True if point is inside the shape.
    */
   int
-  t8_cad_is_point_inside_shape (const double *coords) const;
+  t8_cad_is_point_inside_shape (const double *coords, double tol) const;
 
 private:
   TopoDS_Shape                                occ_shape;                  /** Occ geometry */
@@ -236,7 +237,7 @@ private:
   TopTools_IndexedMapOfShape                  occ_shape_face_map;         /** Map of all TopoDS_Face in shape. */
   TopTools_IndexedDataMapOfShapeListOfShape   occ_shape_vertex2edge_map;  /** Maps all TopoDS_Vertex of shape to all its connected TopoDS_Edge */
   TopTools_IndexedDataMapOfShapeListOfShape   occ_shape_edge2face_map;    /** Maps all TopoDS_Edge of shape to all its connected TopoDS_Face */
-  Bnd_OBB                                     oriented_bounding_box;      /** Oriented bounding box of the shape */
+  Bnd_OBB                                     occ_shape_bounding_box;     /** Oriented bounding box of the shape */
 };
 
 #endif /* T8_WITH_OCC */
