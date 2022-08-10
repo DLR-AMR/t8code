@@ -156,7 +156,7 @@ parse_args (int argc, char **argv)
 	std::vector<std::string> args{argv + 1, argv + argc};
 	Config result;
 
-	const long long total_bytes = std::stoll(std::string{args.at(0)});
+	const long long total_bytes = std::stoll(args.at(0));
 	result.refinement = config_for_bytes(total_bytes);
 
 	if (args.at(1) == "NC_FILL") {
@@ -232,13 +232,25 @@ t8_example_netcdf_adapt_fn (t8_forest_t forest, t8_forest_t forest_from,
 * \param [in] additionally_refined_ratio the fraction of the forest that is refined further.
 */
 t8_forest_t
-adapt_forest (t8_forest_t forest, double additionally_refined_ratio)
+make_forest (sc_MPI_Comm comm, int initial_refinement, double additionally_refined_ratio)
 {
+  /* Build a (partitioned) uniform forest */
+  t8_forest_t uniform = t8_forest_new_uniform(
+    /* Construct a 3D hybrid hypercube as a cmesh */
+    t8_cmesh_new_hypercube_hybrid(comm, 1, 0), t8_scheme_new_default_cxx(),
+    initial_refinement, false, comm);
+
   adapt_user_data     adapt_data
   {
   .additionally_refined_ratio = additionally_refined_ratio};
-  return t8_forest_new_adapt (forest, t8_example_netcdf_adapt_fn, 0, 0,
-                              &adapt_data);
+  t8_forest_t result;
+  t8_forest_init(&result);
+  t8_forest_set_user_data(result, &adapt_data);
+  t8_forest_set_adapt(result, uniform, t8_example_netcdf_adapt_fn, false);
+  t8_forest_set_partition(result, nullptr, false);
+  t8_forest_commit(result);
+  // uniform is owned by result and does not need to be unref'd
+  return result;
 }
 
 /** executes the benchmark with the given benchmark parameters
@@ -248,29 +260,17 @@ adapt_forest (t8_forest_t forest, double additionally_refined_ratio)
 void
 execute_benchmark (sc_MPI_Comm comm, Config config)
 {
-  int                 mpirank;
-  SC_CHECK_MPI (sc_MPI_Comm_rank (comm, &mpirank));
-
-  /* Construct a 3D hybrid hypercube as a cmesh */
-  t8_cmesh_t          cmesh = t8_cmesh_new_hypercube_hybrid (comm, 1, 0);
-
-  /* Build a (partitioned) uniform forest */
-  t8_forest_t         forest =
-    t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (),
-                           config.refinement.initial, 0, comm);
-
-  forest =
-    adapt_forest (forest, config.refinement.additionally_refined_ratio);
+  t8_forest_t forest = make_forest(comm, config.refinement.initial,
+                       config.refinement.additionally_refined_ratio);
 
   t8_productionf ("Number of process-local elements: %d\n",
                   t8_forest_get_local_num_elements (forest)
     );
 
-  t8_global_productionf
-    ("The uniformly refined forest (refinement level = %d) "
-     "has %ld global elements.\n", config.refinement.initial,
-     t8_forest_get_global_num_elements (forest)
-    );
+  t8_global_productionf("The adapted forest (initial refinement level = %d) "
+                        "has %ld global elements.\n",
+                        config.refinement.initial,
+                        t8_forest_get_global_num_elements(forest));
 
   t8_global_productionf ("Variable-Storage: %s, Variable-Access: %s:\n",
                          config.netcdf_var_storage_mode ==
