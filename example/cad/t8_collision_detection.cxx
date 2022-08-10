@@ -31,7 +31,7 @@
 #include <t8_cmesh_vtk.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
-#include <t8_cad/t8_cad.hxx>
+#include <t8_cad/t8_cad_collision.hxx>
 
 
 /** 
@@ -68,9 +68,9 @@ t8_collision_detection_centroid_adapt_callback (t8_forest_t forest,
                                                 const int num_elements,
                                                 t8_element_t *elements[])
 {
-  const t8_cad *cad;
+  const t8_cad_collision *cad;
   double centroid[3] = {0};
-  cad = (const t8_cad *) t8_forest_get_user_data (forest);
+  cad = (const t8_cad_collision *) t8_forest_get_user_data (forest);
   t8_forest_element_centroid(forest_from, which_tree, elements[0], centroid);
   return cad->t8_cad_is_point_inside_shape(centroid, 1e-3);
 }
@@ -148,7 +148,7 @@ main (int argc, char **argv)
   }
   else {
     t8_geometry        *geometry;
-    t8_cad             *cad;
+    t8_cad_collision   *cad;
     char                forest_vtu[BUFSIZ];
     t8_forest_t         forest_new;
   
@@ -174,11 +174,8 @@ main (int argc, char **argv)
                                     t8_scheme_new_default_cxx (),
                                     level, 0, comm);
     T8_ASSERT (t8_forest_is_committed (forest));
-    cad = new t8_cad(fileprefix);
-    double point[3] = {0.497299, 0.623481, -0.121019};
-    t8_productionf("inside? %i\n", cad->t8_cad_is_point_inside_shape(point, 1e-3));
-    for (int r = 0; r < rlevel; ++r)
-    {
+    cad = new t8_cad_collision(fileprefix);
+    for (int r = 0; r < rlevel; ++r) {
       t8_forest_init (&forest_new);
       t8_forest_set_adapt (forest_new, forest, t8_collision_detection_centroid_adapt_callback, 0);
       t8_forest_set_user_data (forest_new, cad);

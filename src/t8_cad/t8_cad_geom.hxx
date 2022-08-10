@@ -20,58 +20,58 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cad.h
+/** \file t8_cad_geom.hxx
  * Intgrates many CAD and CAM functionalities.
  */
 
-#ifndef T8_CAD_HXX
-#define T8_CAD_HXX
+#ifndef T8_CAD_GEOM_HXX
+#define T8_CAD_GEOM_HXX
 
 #include <t8.h>
 #include <t8_forest.h>
-
-#include <t8.h>
+#include <t8_cad/t8_cad_base.hxx>
 
 #if T8_WITH_OCC
-
-#include <TopoDS_Shape.hxx>
 #include <gp_Pnt.hxx>
 #include <Geom_Curve.hxx>
 #include <Geom_Surface.hxx>
 #include <TopTools_IndexedMapOfShape.hxx>
 #include <NCollection_IndexedDataMap.hxx>
 #include <TopTools_IndexedDataMapOfShapeListOfShape.hxx>
-#include <Bnd_OBB.hxx>
-
 #endif /* T8_WITH_OCC */
 
 T8_EXTERN_C_BEGIN ();
 
 #if T8_WITH_OCC
 
-struct t8_cad
+struct t8_cad_geom:public t8_cad_base
 {
+  using t8_cad_base::t8_cad_base;
+
 public:
   /**
-   * Constructor of the cad class.
+   * Constructor of the cad collsion class. Fills the internal shape with the content of a brep file.
    * \param [in] fileprefix Prefix of a .brep file from which to extract an occ geometry.
    */
-  t8_cad (const char *fileprefix);
+  t8_cad_geom (const char *fileprefix);
 
   /**
-   * Constructor of the cad class.
+   * Constructor of the cad class. Fills the internal shape with the given shape.
    * \param [in] occ_shape Occ shape geometry.
    */
-  t8_cad (const TopoDS_Shape occ_shape);
+  t8_cad_geom (const TopoDS_Shape occ_shape);
+  
+  /**
+   * Read a brep file and fill internal shape with it.
+   */
+  void 
+  t8_cad_init (const char *fileprefix);
 
-  /** 
-   * The destructor. It does nothing but has to be defined since
-   * we may want to delete cad that is actually inherited
-   * and providing an implementation
-   * for the destructor ensures that the
-   * destructor of the child class will be executed. */
-  virtual ~ t8_cad () {
-  }
+  /**
+   * Fill the internal shape with the given shape.
+   */
+  void 
+  t8_cad_init (const TopoDS_Shape shape);
 
   /** 
    * Get an occ point from the occ_shape.
@@ -205,43 +205,23 @@ public:
                                            const int face_index, 
                                            const double edge_param, 
                                            double* face_params) const;
-  
-  /**
-   * Checks if an element is inside the occ shape. Only viable with 
-   * axis-oriented hex elements.
-   * \param [in] forest          The forest.
-   * \param [in] ltreeid         The local tree id of the element.
-   * \param [in] element         The element.
-   * \return                     0: Element is fully outside of the shape.
-   *                             1: Element is partially inside the shape.
-   *                             2: Element is fully inside the shape.
-   */
-  int
-  t8_cad_is_element_inside_shape (t8_forest_t forest,
-                                  t8_locidx_t ltreeid, 
-                                  const t8_element_t *element) const;
-  
-  /**
-   * Checks if a point is inside the occ shape.
-   * \param [in] coords          The coordinates of the point.
-   * \param [in] tol             The tolerance.
-   * \return                     True if point is inside the shape.
-   */
-  int
-  t8_cad_is_point_inside_shape (const double *coords, double tol) const;
 
-private:
-  TopoDS_Shape                                occ_shape;                  /** Occ geometry */
+protected:
+  /**
+   * Initializes the internal data structures.
+   */
+  void
+  t8_cad_init_internal_data ();
+
   TopTools_IndexedMapOfShape                  occ_shape_vertex_map;       /** Map of all TopoDS_Vertex in shape. */
   TopTools_IndexedMapOfShape                  occ_shape_edge_map;         /** Map of all TopoDS_Edge in shape. */
   TopTools_IndexedMapOfShape                  occ_shape_face_map;         /** Map of all TopoDS_Face in shape. */
   TopTools_IndexedDataMapOfShapeListOfShape   occ_shape_vertex2edge_map;  /** Maps all TopoDS_Vertex of shape to all its connected TopoDS_Edge */
   TopTools_IndexedDataMapOfShapeListOfShape   occ_shape_edge2face_map;    /** Maps all TopoDS_Edge of shape to all its connected TopoDS_Face */
-  Bnd_OBB                                     occ_shape_bounding_box;     /** Oriented bounding box of the shape */
 };
 
 #endif /* T8_WITH_OCC */
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_CAD_HXX */
+#endif /* !T8_CAD_GEOM_HXX */
