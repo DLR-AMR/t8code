@@ -31,12 +31,15 @@
 T8_EXTERN_C_BEGIN ();
 
 #if T8_ENABLE_DEBUG
-/** Return nonzero if the first \a num_elemets in \a elements are part of a family.
+/** Return zero if the first \a num_elemets in \a elements are not a (sub)family.
  * \param [in] tscheme       The element scheme for current local tree 
  *                           where the elements are from.
  * \param [in] elements      The elements array.
  * \param [in] num_elements  The first \a num_elements to be checked in \a elements.
  * \note If the first element has level 0, the return is 0.
+ * \note This test does not compare with the elements before and after the elements
+ *       given by \a elements in the current forest. A non-zero return is therefore
+ *       not valid. 
  */
 static int
 t8_forest_is_family_callback (t8_eclass_scheme_c *ts,
@@ -91,13 +94,26 @@ t8_forest_is_family_callback (t8_eclass_scheme_c *ts,
 }
 #endif
 
+/** Return the index of the first family member of a given family in an array of elements.
+ * \param [in] forest        The forest
+ * \param [in] ts            The element scheme for elements in \a telements.
+ * \param [in] telements     The array of newly created (adapted) elements.
+ * \param [in] telements_pos The index of an element in \a telement
+ *                           array which could be coarsened recursively.
+ * \return                   The index of the first family member whose family is
+ *                           defined by \a telements_pos in \a telement.                    
+ * \note The element with index \a telements_pos must be the last child in its family.
+ *       \see t8_forest_adapt_coarsen_recursive.
+ * \note If the element with index \a telements_pos in \a telement can not be coarsened
+ *       recursively, return INT32_MIN.
+ */
 static t8_locidx_t
 t8_forest_pos (t8_forest_t forest,
                t8_eclass_scheme_c *ts,
                t8_element_array_t *telements,
                t8_locidx_t telements_pos)
 {
-  t8_element_t       *element;
+  t8_element_t       *element; /* element with index telements_pos */
   t8_element_t       *element_compare;
   t8_element_t       *element_parent;
   t8_element_t       *element_parent_compare;
@@ -105,21 +121,28 @@ t8_forest_pos (t8_forest_t forest,
   int                 level_compare;
   t8_locidx_t         child_id;
   t8_locidx_t         pos;
-  t8_locidx_t         i; /* Loop running variable */
+  t8_locidx_t         el_iter; /* Loop running variable */
   t8_locidx_t         elements_in_array;
   t8_locidx_t         num_siblings;
 
   pos = telements_pos;
   elements_in_array = t8_element_array_get_count (telements);
+  T8_ASSERT (0 <= pos && pos < elements_in_array);
   element = t8_element_array_index_locidx (telements, pos);
   element_compare = t8_element_array_index_locidx (telements, pos);
   level_current = ts->t8_element_level (element);
   num_siblings = ts->t8_element_num_siblings (element);
   child_id = ts->t8_element_child_id (element);
   
+  /* Elements whose family consist of exactly one element do not 
+   * get coarsened recursively.
+   * If child_id is not last, elements cannot be coarsened recursively.
+   * Elements with level 0 cannot be further coarsened. */
   if (!(child_id > 0 && child_id == num_siblings - 1) || level_current == 0) {
     return INT32_MIN;
   }
+  /* If the forest is complete, the family is also complete. 
+   * Thus, the index of the first member can be determined. */
   if (!forest->is_incomplete) {
     return pos - num_siblings - 1;
   }
@@ -129,12 +152,18 @@ t8_forest_pos (t8_forest_t forest,
 
   ts->t8_element_new (1, &element_parent_compare);
   ts->t8_element_new (1, &element_parent);
+  /* Get parent of a family member by coarsening last member. */
   ts->t8_element_parent (element, element_parent);
 
-  for (i = 1; i < num_siblings && i < elements_in_array; i++) {
-    pos = telements_pos - i;
+  /* Loop backward over all possible familie members until we hit an 
+   * element that is not part of the family or we have reached the 
+   * maximum number of member. */
+  for (el_iter = 1; el_iter < num_siblings 
+                    && el_iter < elements_in_array; el_iter++) {
+    pos = telements_pos - el_iter;
     T8_ASSERT (0 <= pos && pos < elements_in_array);
     element_compare = t8_element_array_index_locidx (telements, pos);
+    /* Quick check by level. Not mandatory. */
     level_compare = ts->t8_element_level (element_compare);
     if (level_current != level_compare) {
       break;
@@ -145,9 +174,12 @@ t8_forest_pos (t8_forest_t forest,
     }
   }
 
-  if (i < num_siblings && i < elements_in_array) {
+  /* If the current family is smaller than possible, check that the first 
+   * element along the space-filling-curve next to the family is overlapped 
+   * when family is coarsened. */
+  if (el_iter < num_siblings && el_iter < elements_in_array) {
     level_compare = ts->t8_element_level (element_compare);
-    /* Only elements with higher level then level of current element, can get 
+    /* Only elements with higher level then level of elements in family, can get 
      * potentially be overlapped. */
     if (level_compare > level_current) {
       /* Compare ancestors */
@@ -161,11 +193,13 @@ t8_forest_pos (t8_forest_t forest,
     pos++;
   }     
 
+  /* clean up */
   ts->t8_element_destroy (1, &element_parent);
   ts->t8_element_destroy (1, &element_parent_compare);
 
-// MPI Grenzen!!! Da mussss child_id von elemet pos 0 sein ausser beim ersten ersten Prozess!!!
 #if T8_ENABLE_MPI
+  /* The first element on process rank must have child_id 0, otherwise other 
+   * family members could be on process rank-1. */
   if (pos == 0 && forest->mpirank > 0) {
     element = t8_element_array_index_locidx (telements, pos);
     child_id = ts->t8_element_child_id (element);
@@ -178,7 +212,7 @@ t8_forest_pos (t8_forest_t forest,
   return pos;
 }
 
-/* Check the lastly inserted elements of an array for recursive coarsening.
+/** Check the lastly inserted elements of an array for recursive coarsening.
  * The last inserted element must be the last element of a family.
  * \param [in] forest  The new forest currently in construction.
  * \param [in] ltreeid The current local tree.
@@ -279,7 +313,7 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest,
   } /* End while loop */
 }
 
-/* Check the lastly inserted element of an array for recursive refining.
+/** Check the lastly inserted element of an array for recursive refining.
  * \param [in] forest  The new forest currently in construction.
  * \param [in] ltreeid The current local tree.
  * \param [in] lelement_id The id of the currently coarsened element in the tree of the original forest.

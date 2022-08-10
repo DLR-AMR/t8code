@@ -114,18 +114,16 @@ t8_forest_is_incomplete_family (t8_forest_t forest,
   if (family_size > 1) {
     for (family_iter = 1; family_iter < family_size ; family_iter++) {
       level = tscheme->t8_element_level (elements[family_iter]);
-      /* Level */
+      /* Quick check by level. Not mandatory. */
       if (level != level_current) {
         family_size = family_iter;
         break;
       }
-      else {
-        tscheme->t8_element_parent (elements[family_iter], element_compare);
-        /* If the levels are equal, check if the parents are too. */
-        if (0 != tscheme->t8_element_compare (element_parent_current, element_compare)) {
-          family_size = family_iter;
-          break;
-        }
+      tscheme->t8_element_parent (elements[family_iter], element_compare);
+      /* If the levels are equal, check if the parents are too. */
+      if (0 != tscheme->t8_element_compare (element_parent_current, element_compare)) {
+        family_size = family_iter;
+        break;
       }
     }
     T8_ASSERT (family_size > 0);
@@ -285,15 +283,17 @@ t8_forest_no_overlap (t8_forest_t forest) {
   t8_eclass_scheme_c *ts;
 
   T8_ASSERT (t8_forest_is_committed (forest));
-  
   num_local_trees = t8_forest_get_num_local_trees (forest);
-  
+  /* Iterate over all local trees */
   for (itree = 0; itree < num_local_trees; itree++) {
     tree          = t8_forest_get_tree (forest, itree);
     ts            = t8_forest_get_eclass_scheme (forest, tree->eclass);
     elems_in_tree = t8_forest_get_tree_num_elements (forest, itree);
     ts->t8_element_new(1, &element_nca);
+    /* Iterate over all elements in current tree */
     for (ielem = 0; ielem < elems_in_tree-1; ielem++) {
+      /* Compare each two consecutive elements. If one element is
+       * the nearest common ancestor of the other, they overlap. */
       element_a = t8_forest_get_element_in_tree (forest, itree, ielem);
       element_b = t8_forest_get_element_in_tree (forest, itree, ielem+1);
       T8_ASSERT (ts->t8_element_is_valid (element_a));
@@ -301,9 +301,11 @@ t8_forest_no_overlap (t8_forest_t forest) {
       ts->t8_element_nca (element_a, element_b, element_nca);
       if (ts->t8_element_level(element_a) == ts->t8_element_level(element_nca) ||
           ts->t8_element_level(element_b) == ts->t8_element_level(element_nca)) {
+        ts->t8_element_destroy (1, &element_nca);
         return 0;
       }
     }
+    /* clean up, as each tree can have a different scheme */
     ts->t8_element_destroy (1, &element_nca);
   }
 #endif
@@ -1630,6 +1632,8 @@ void                t8_forest_remove_tree (t8_forest_t forest,
   t8_locidx_t         itree_from;
   t8_locidx_t         number_of_trees_from;
   t8_gloidx_t         num_tree_elements;
+
+  SC_ABORT ("t8_forest_remove_tree is not functional yet.s");
 
   /* TODO: remove this line if methode works in parallel */
   T8_ASSERT (forest->mpisize == 1);

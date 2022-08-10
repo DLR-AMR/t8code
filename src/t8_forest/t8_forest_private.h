@@ -36,6 +36,25 @@
 T8_EXTERN_C_BEGIN ();
 
 /* TODO: document */
+
+/** Check whether or not \a elements contains a (in)complete family and 
+ *  return the size of it or zero if no family is considered.
+ * \param [in]      forest          The forest.
+ * \param [in]      ltree_id        The index of considered local tree.
+ * \param [in]      el_considered   The local id of the first element in 
+ *                                  \a elements in the local tree of the forest.
+ * \param [in]      tscheme         The scheme for the local tree.
+ * \param [in]      elements        Array of elements to consider.
+ * \param [in]      elements_size   Number of elements in \a elements.
+ * \return          Size of family or zero, if \a elements does not contain a
+ *                  family. 
+ * \note            The check works for complete and incomplete forests.
+ *                  In the case of complete forests, the scheme based element 
+ *                  funktion \see t8_element_is_family is recommended.
+ * \note            If the element with id \a el_considered is not the first
+ *                  family member, return 0. Therefore, if \return is x > 0, 
+ *                  the first x elements in \a elements form a family.
+ */
 int                 t8_forest_is_incomplete_family (t8_forest_t forest,
                                                     t8_locidx_t ltree_id,
                                                     t8_locidx_t el_considered,
@@ -113,8 +132,7 @@ void                t8_forest_copy_trees (t8_forest_t forest,
                                           t8_forest_t from,
                                           int copy_elements);
 
-/** Delete a local empty tree from a forest and update the related variables
- * in the forest. 
+/** Delete a local empty tree from a forest.
  * \param [in]  forest    The forest.
  * \param [in]  ltree_id  The local id of the tree in \a forest to be deleted.
  */
