@@ -35,53 +35,16 @@ struct t8_adapt_data
   double  midpoint[6][3];
 };
 
-/* Refine if it is within a given radius of 0.5. 
- * Remove if it is within a given radius of 0.4. */
-int
-t8_adapt_callback_rr (t8_forest_t forest,
-                      t8_forest_t forest_from,
-                      t8_locidx_t which_tree,
-                      t8_locidx_t lelement_id,
-                      t8_eclass_scheme_c * ts,
-                      const int is_family,
-                      const int num_elements, 
-                      t8_element_t * elements[])
-{
-  const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
-  
-  double  centroid[3];
-  double  dist;
-
-  T8_ASSERT (adapt_data != NULL);
-
-  t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
-
-  /* Loop through all balls in adapt_data. */
-  for (int i = 0; i < 6; i++) {
-    dist = t8_vec_dist(adapt_data->midpoint[i], centroid);
-    /* Remove core of ball. */
-    if (dist < 0.4) {
-      return -2;
-    }
-    /* Refine shell of ball. */
-    if (dist < 0.5) {
-      return 1;
-    }
-  }
-
-  return 0;
-}
-
 /* Remove if the element is within a given radius of 0.45. */
 int
 t8_adapt_callback_remove (t8_forest_t forest,
                           t8_forest_t forest_from,
                           t8_locidx_t which_tree,
                           t8_locidx_t lelement_id,
-                          t8_eclass_scheme_c * ts,
+                          t8_eclass_scheme_c *ts,
                           const int is_family,
                           const int num_elements, 
-                          t8_element_t * elements[])
+                          t8_element_t *elements[])
 {
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
   
@@ -90,21 +53,16 @@ t8_adapt_callback_remove (t8_forest_t forest,
   
   T8_ASSERT (adapt_data != NULL);
 
-  if (which_tree == 1) {
-    return -2;
-  }
-
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
   
   /* Loop through all balls in adapt_data. */
   for (int i = 0; i < 6; i++) {
-    dist = t8_vec_dist(adapt_data->midpoint[i], centroid);
+    dist = t8_vec_dist (adapt_data->midpoint[i], centroid);
     /* Remove core of ball. */
     if (dist < 0.45) {
       return -2;
     }
   }
-
   return 0;
 }
 
@@ -114,10 +72,10 @@ t8_adapt_callback_coarse (t8_forest_t forest,
                           t8_forest_t forest_from,
                           t8_locidx_t which_tree,
                           t8_locidx_t lelement_id,
-                          t8_eclass_scheme_c * ts,
+                          t8_eclass_scheme_c *ts,
                           const int is_family,
                           const int num_elements, 
-                          t8_element_t * elements[])
+                          t8_element_t *elements[])
 {
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
   
@@ -134,7 +92,7 @@ t8_adapt_callback_coarse (t8_forest_t forest,
        */
       for (int j = 0; j < num_elements; j++) {
         t8_forest_element_centroid (forest_from, which_tree, elements[j], centroid);
-        dist = t8_vec_dist(adapt_data->midpoint[i], centroid);
+        dist = t8_vec_dist (adapt_data->midpoint[i], centroid);
         if (dist < 0.5) {
           return -1;
         }
@@ -149,10 +107,10 @@ t8_adapt_callback_coarse_all (t8_forest_t forest,
                               t8_forest_t forest_from,
                               t8_locidx_t which_tree,
                               t8_locidx_t lelement_id,
-                              t8_eclass_scheme_c * ts,
+                              t8_eclass_scheme_c *ts,
                               const int is_family,
                               const int num_elements, 
-                              t8_element_t * elements[])
+                              t8_element_t *elements[])
 {
   if (is_family) {
     return -1;
@@ -166,10 +124,10 @@ t8_adapt_callback_refine (t8_forest_t forest,
                           t8_forest_t forest_from,
                           t8_locidx_t which_tree,
                           t8_locidx_t lelement_id,
-                          t8_eclass_scheme_c * ts,
+                          t8_eclass_scheme_c *ts,
                           const int is_family,
                           const int num_elements, 
-                          t8_element_t * elements[])
+                          t8_element_t *elements[])
 {
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
   
@@ -187,13 +145,16 @@ t8_adapt_callback_refine (t8_forest_t forest,
       return 1;
     }
   }
-
   return 0;
 }
 
 static t8_forest_t
-t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn,
-                 int do_partition, int recursive, int do_face_ghost, void *user_data)
+t8_adapt_forest (t8_forest_t forest_from,
+                 t8_forest_adapt_t adapt_fn,
+                 int do_partition,
+                 int recursive,
+                 int do_face_ghost,
+                 void *user_data)
 {
   t8_forest_t         forest_new;
 
@@ -214,10 +175,17 @@ t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn,
 void
 t8_test_elements_remove (int cmesh_id)
 {
-  int                 level, min_level, max_level;
+  int                 level; 
+  int                 level_min;
+  int                 level_max;
+  int                 mpi_size;
   t8_cmesh_t          cmesh;
-  t8_forest_t         forest, forest_1, forest_2;
+  t8_forest_t         forest;
+  t8_forest_t         forest_1;
+  t8_forest_t         forest_2;
   t8_scheme_cxx_t    *scheme;
+
+  sc_MPI_Comm_size(sc_MPI_COMM_WORLD, &mpi_size);
 
   /* 6 balls on each side of a cube. */
   struct t8_adapt_data adapt_data = {{{1.0, 0.5, 0.5},
@@ -229,45 +197,45 @@ t8_test_elements_remove (int cmesh_id)
 
   scheme = t8_scheme_new_default_cxx ();
   /* Construct a cmesh */
-  //cmesh = t8_test_create_cmesh (cmesh_id);
-  //cmesh = t8_cmesh_new_hypercube (T8_ECLASS_QUAD, sc_MPI_COMM_WORLD, 0, 0, 0);
-  cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
+  cmesh = t8_test_create_cmesh (cmesh_id);
   /* Compute the first level, such that no process is empty */
-  min_level = t8_forest_min_nonempty_level (cmesh, scheme);
+  level_min = t8_forest_min_nonempty_level (cmesh, scheme);
 
-  min_level = SC_MAX (min_level, 3);
-  max_level = min_level + 1;
+#if T8_ENABLE_LESS_TESTS
+  level_min = SC_MAX (level_min, 3);
+  level_max = level_min + 1;
+#else
+  level_min = SC_MAX (level_min, 1);
+  level_max = level_min + 4;
+#endif
 
-  for (level = min_level; level < max_level; level++) {
-    t8_debugf(" ###[IL]### cmesh_id: %i/%i level: %i\n", 
-              cmesh_id, t8_get_number_of_all_testcases (), level);
+  for (level = level_min; level < level_max; level++) {
     t8_cmesh_ref (cmesh);
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
 
-    forest_1 = t8_adapt_forest (forest  , t8_adapt_callback_refine, 0, 0, 0, &adapt_data);
-    forest_1 = t8_adapt_forest (forest_1, t8_adapt_callback_remove, 0, 0, 0, &adapt_data);
-    t8_forest_write_vtk (forest_1, "/home/ioannis/VBshare/paraview_export/t8_cube_1");
+    forest_1 = t8_adapt_forest (forest  , t8_adapt_callback_refine, 1, 0, 0, &adapt_data);
+    forest_1 = t8_adapt_forest (forest_1, t8_adapt_callback_remove, 1, 0, 0, &adapt_data);
     t8_forest_ref (forest_1);
-    forest_2 = t8_adapt_forest (forest_1, t8_adapt_callback_coarse, 0, 0, 0, &adapt_data);
-    forest_2 = t8_adapt_forest (forest_2, t8_adapt_callback_refine, 0, 0, 0, &adapt_data);
-    forest_2 = t8_adapt_forest (forest_2, t8_adapt_callback_remove, 0, 0, 0, &adapt_data);
-    t8_forest_write_vtk (forest_2, "/home/ioannis/VBshare/paraview_export/t8_cube_2");
+    forest_2 = t8_adapt_forest (forest_1, t8_adapt_callback_coarse, 1, 0, 0, &adapt_data);
+    forest_2 = t8_adapt_forest (forest_2, t8_adapt_callback_refine, 1, 0, 0, &adapt_data);
+    forest_2 = t8_adapt_forest (forest_2, t8_adapt_callback_remove, 1, 0, 0, &adapt_data);
 
-#if T8_ENABLE_MPI
-  SC_CHECK_ABORT (t8_forest_no_overlap(forest_1),
-            "forest_1 has overlapping elements");
-  SC_CHECK_ABORT (t8_forest_no_overlap(forest_2),
-            "forest_2 has overlapping elements");
-#else
-  SC_CHECK_ABORT (t8_forest_is_equal(forest_1, forest_2),
-                    "The forests are not equal");
-#endif
-    // will get replaced by recursive coarseening
-    for (int i = 0; i < 5*level; i++) {
-      forest_2 = t8_adapt_forest (forest_2, t8_adapt_callback_coarse_all, 0, 0, 0, &adapt_data);
-      SC_CHECK_ABORT (t8_forest_no_overlap(forest_2),
-                  "The forest has overlapping elements");
+    if (mpi_size == 1) {
+      SC_CHECK_ABORT (t8_forest_no_overlap(forest_1),
+                "forest_1 has overlapping elements");
+      SC_CHECK_ABORT (t8_forest_is_equal(forest_1, forest_2),
+                        "The forests are not equal");
     }
+    else {
+      SC_CHECK_ABORT (t8_forest_no_overlap(forest_1),
+                "forest_1 has overlapping elements");
+      SC_CHECK_ABORT (t8_forest_no_overlap(forest_2),
+                "forest_2 has overlapping elements");
+    }
+
+    forest_2 = t8_adapt_forest (forest_2, t8_adapt_callback_coarse_all, 1, 1, 0, NULL);
+    SC_CHECK_ABORT (t8_forest_no_overlap(forest_2),
+                "The forest has overlapping elements");
 
     t8_scheme_cxx_ref (scheme);
     t8_forest_unref (&forest_1);
@@ -292,10 +260,7 @@ t8_test_cmesh_elements_remove_all ()
     /* Skip all t8_test_create_new_bigmesh_cmesh since they are without geometry */
     if (cmesh_id < bigmesh_id || 
         cmesh_id >= bigmesh_id + t8_get_number_of_new_bigmesh_cmesh_testcases ()) {
-        /* Skip Pyramids */
-        if (cmesh_id < 66) {
-          t8_test_elements_remove(cmesh_id);
-        }
+      t8_test_elements_remove (cmesh_id);
     }
   }
 }

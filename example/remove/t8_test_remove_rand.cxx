@@ -26,7 +26,6 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest.h>
-#include <t8_vec.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_forest/t8_forest_private.h>
 #include "t8_cmesh/t8_cmesh_testcases.h"
@@ -75,10 +74,17 @@ t8_adapt_callback_refine (t8_forest_t forest,
                           const int num_elements, 
                           t8_element_t *elements[])
 {
+  int level_cut;
   int level = ts->t8_element_level (elements[0]);
   int level_max = ts->t8_element_maxlevel();
+  
+#if T8_ENABLE_LESS_TESTS
+  level_cut = (int)(0.2*level_max);
+#else
+  level_cut = (int)(0.3*level_max);
+#endif
 
-  if (rand()%4 > 0 && level < (int)(0.5*level_max)) {
+  if (rand()%4 > 0 && level < level_cut) {
     return 1;
   }
   if (rand()%4 == 0) {
@@ -89,14 +95,19 @@ t8_adapt_callback_refine (t8_forest_t forest,
 
 static t8_forest_t
 t8_adapt_forest (t8_forest_t forest_from,
-                t8_forest_adapt_t adapt_fn,
-                 int recursive)
+                 t8_forest_adapt_t adapt_fn,
+                 int do_partition,
+                 int recursive,
+                 int do_face_ghost)
 {
   t8_forest_t         forest_new;
 
   t8_forest_init (&forest_new);
   t8_forest_set_adapt (forest_new, forest_from, adapt_fn, recursive);
-  t8_forest_set_partition (forest_new, NULL, 0);
+  t8_forest_set_ghost (forest_new, do_face_ghost, T8_GHOST_FACES);
+  if (do_partition) {
+    t8_forest_set_partition (forest_new, NULL, 0);
+  }
   t8_forest_commit (forest_new);
 
   return forest_new;
@@ -106,36 +117,40 @@ void
 t8_test_elements_remove (int cmesh_id)
 {
   int                 level;
-  int                 min_level;
-  int                 max_level;
+  int                 level_min;
+  int                 level_max;
   t8_cmesh_t          cmesh;
   t8_forest_t         forest;
   t8_scheme_cxx_t    *scheme;
 
   scheme = t8_scheme_new_default_cxx ();
-
   /* Construct a cmesh */
   cmesh = t8_test_create_cmesh (cmesh_id);
-
   /* Compute the first level, such that no process is empty */
-  min_level = t8_forest_min_nonempty_level (cmesh, scheme);
-  min_level = SC_MAX (min_level, 0);
-  max_level = min_level + 3;
-  
-  for (level = min_level; level < max_level; level++) {
+  level_min = t8_forest_min_nonempty_level (cmesh, scheme);
+
+#if T8_ENABLE_LESS_TESTS
+  level_min = SC_MAX (level_min, 0);
+  level_max = level_min + 1;
+#else
+  level_min = SC_MAX (level_min, 0);
+  level_max = level_min + 2;
+#endif
+
+  for (level = level_min; level < level_max; level++) {
     t8_cmesh_ref (cmesh);
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
     for (int i = 0; i < level + 1; i++) {
-        forest = t8_adapt_forest (forest, t8_adapt_callback_refine, 0);
-        forest = t8_adapt_forest (forest, t8_adapt_callback_remove, 0);
+        forest = t8_adapt_forest (forest, t8_adapt_callback_refine, 0, 0, 0);
+        forest = t8_adapt_forest (forest, t8_adapt_callback_remove, 0, 0, 0);
     }
-    forest = t8_adapt_forest (forest, t8_adapt_callback_refine, 1);
-    for (int i = 0; i < 2*max_level + 1; i++) {
-      forest = t8_adapt_forest (forest, t8_adapt_callback_coarse, 0);
-      forest = t8_adapt_forest (forest, t8_adapt_callback_coarse, 0);
+    forest = t8_adapt_forest (forest, t8_adapt_callback_refine, 0, 1, 0);
+    for (int i = 0; i < 2*level_max; i++) {
+      forest = t8_adapt_forest (forest, t8_adapt_callback_coarse, 0, 0, 0);
+      forest = t8_adapt_forest (forest, t8_adapt_callback_coarse, 0, 0, 0);
       SC_CHECK_ABORT (t8_forest_no_overlap (forest),
           "The local forest has overlapping elements.");
-      forest = t8_adapt_forest (forest, t8_adapt_callback_coarse, 1);
+      forest = t8_adapt_forest (forest, t8_adapt_callback_coarse, 0, 1, 0);
       SC_CHECK_ABORT (t8_forest_no_overlap (forest),
           "The local forest has overlapping elements.");
     }
