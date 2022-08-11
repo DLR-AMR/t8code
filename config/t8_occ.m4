@@ -1,5 +1,5 @@
 dnl T8_CHECK_OCC
-dnl Check for occ support and link a test program
+dnl Check for OpenCASCADE support and link a test program
 dnl
 dnl This macro tries to link to the occ library.
 dnl Use the LIBS variable on the configure line to specify a different library
@@ -10,10 +10,10 @@ dnl   -lTKTopAlgo -lTKGeomAlgo -lTKBRep -lTKMath
 dnl   -lTKernel -lTKPrim -lTKBO
 dnl
 AC_DEFUN([T8_CHECK_OCC], [
-	AC_MSG_CHECKING([for occ library])
+	AC_MSG_CHECKING([for OpenCASCADE library])
 
 T8_ARG_WITH([occ],
-  [occ library (optionally use --with-occ=<OCC_LIBS>)],
+  [OpenCASCADE library (optionally use --with-occ=<OCC_LIBS>)],
   [OCC])
   if test "x$T8_WITH_OCC" != xno ; then
     T8_OCC_LIBS="-lTKTopAlgo -lTKGeomAlgo -lTKBRep -lTKMath \
