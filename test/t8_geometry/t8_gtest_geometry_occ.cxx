@@ -40,6 +40,18 @@
 #include <TopoDS_Edge.hxx>
 #endif
 
+/* In this file we collect tests for t8code's OpenCASCADE geometry module.
+ * These tests are
+ *  - linked_edges: Checks if the geometry mapping works. 
+ *                  We define an OpenCASCADE curve and link it to an edge of a hexahedron. 
+ *                  After that we probe whether the correct coordinates inside the hexahedron are returned.
+ *                  We repeat this check for all 12 edges.
+ *  - linked_faces: Checks if the geometry mapping works. 
+ *                  We define an OpenCASCADE surface and link it to a face of a hexahedron. 
+ *                  After that we probe whether the correct coordinates inside the hexahedron are returned.
+ *                  We repeat this check for all 6 faces.
+ */
+
 #if T8_WITH_OCC
 /** Euler rotation around intrinsic zxz. 
  * \param [in] pos_vec                Position vector of three dimensional points to rotate.
