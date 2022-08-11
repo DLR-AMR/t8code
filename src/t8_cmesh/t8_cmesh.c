@@ -261,48 +261,6 @@ t8_cmesh_set_derive (t8_cmesh_t cmesh, t8_cmesh_t set_from)
   }
 }
 
-#if 0
-/* TODO: deprecated, remove */
-void
-t8_cmesh_set_partition (t8_cmesh_t cmesh, int set_partition,
-                        int set_face_knowledge,
-                        t8_gloidx_t first_local_tree,
-                        t8_gloidx_t last_local_tree,
-                        t8_gloidx_t *tree_offsets)
-{
-  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
-  T8_ASSERT (0 <= set_face_knowledge && set_face_knowledge <= 3);
-  /* TODO: allow -1 for set_face_knowledge to keep it unchanged?
-   *      update: unchanged from what? face_knowledge is only important for the
-   * information on the stash. When the cmesh is derived there is no
-   * stash. A committed cmesh has always face_knowledge 3. */
-
-  /* TODO: Careful with tese assumptions; allow the user maximum flexibility */
-#if 0
-  T8_ASSERT (cmesh->num_trees == 0);
-  T8_ASSERT (cmesh->num_local_trees == 0);
-  T8_ASSERT (cmesh->first_tree == 0);
-#endif
-
-  /* set cmesh->set_partition to 0 or 1 (no; we always treat nonzero as true) */
-  cmesh->set_partition = set_partition;
-  /* TODO: this is how to query boolean variables */
-  if (set_partition) {
-    cmesh->first_tree = first_local_tree;
-    cmesh->num_local_trees = last_local_tree - first_local_tree + 1;
-    /* Since num_local_trees is a locidx we have to check whether we did create an
-     * overflow in the previous computation */
-    T8_ASSERT (cmesh->num_local_trees ==
-               last_local_tree - first_local_tree + 1);
-    cmesh->face_knowledge = set_face_knowledge;
-    /* Right now no other face_knowledge is supported */
-    SC_CHECK_ABORTF (set_face_knowledge == 3, "Level %i of face knowledge"
-                     "is not supported.\n", set_face_knowledge);
-    cmesh->tree_offsets = tree_offsets;
-  }
-}
-#endif
-
 t8_shmem_array_t
 t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm)
 {
