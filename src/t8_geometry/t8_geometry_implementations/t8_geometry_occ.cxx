@@ -177,6 +177,7 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
                                            T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY
                                            + i_edges,
                                            gtreeid);
+      T8_ASSERT(parameters != NULL);
       /* Edges have only one parameter u, surfaces have two, u and v.
        * Therefore, we have to distinguish if the edge has a curve or surface linked to it. */
       if (edges[i_edges] > 0) {
@@ -279,6 +280,7 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
                                            T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY
                                            + i_faces,
                                            gtreeid);
+      T8_ASSERT(surface_parameters != NULL);
       /* Iterate over each edge of face */
       for (int i_face_edge = 0; i_face_edge < 4; ++i_face_edge) {
         /* Check if curve is present */
@@ -307,6 +309,7 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
                                                t8_face_edge_to_tree_edge
                                                [i_faces][i_face_edge],
                                                gtreeid);
+          T8_ASSERT(curve_parameters != NULL);
           /* Interpolate linearly between the parameters of the two nodes on the curve */
           t8_geom_linear_interpolation (&ref_coords[edge_direction],
                                         curve_parameters, 1, 1,
@@ -530,6 +533,8 @@ t8_geometry_occ::t8_geom_load_tree_data (t8_cmesh_t cmesh,
   faces = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
                                                 T8_CMESH_OCC_FACE_ATTRIBUTE_KEY,
                                                 gtreeid);
+  T8_ASSERT(edges != NULL);
+  T8_ASSERT(faces != NULL);
 }
 
 gp_Pnt
