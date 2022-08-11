@@ -35,14 +35,26 @@
 
 T8_EXTERN_C_BEGIN ();
 
+/** Return the size of any element of a given class.
+ * \return                      The size of an element of class \b ts.
+ * We provide a default implementation of this routine that should suffice
+ * for most use cases.
+ */
+size_t              t8_element_size (t8_eclass_scheme_c *ts);
+
+ /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
+ * Returns false otherwise.
+ */
+int                 t8_element_refines_irregular (t8_eclass_scheme_c *ts);
+
 /** Return the maximum allowed level for any element of a given class.
- * \param [in] ts             Implementation of a class scheme.
- * \return                      The maximum allowed level for elements of class \b ts.
+ * \param [in] ts     Implementation of a class scheme.
+ * \return            The maximum allowed level for elements of class \b ts.
  */
 int                 t8_element_maxlevel (t8_eclass_scheme_c *ts);
 
 /** Return the type of each child in the ordering of the implementation.
-   * \param [in] ts             Implementation of a class scheme.
+ * \param [in] ts       Implementation of a class scheme.
  * \param [in] childid  Must be between 0 and the number of children (exclusive).
  *                      The number of children is defined in \a t8_element_num_children.
  * \return              The type for the given child.
@@ -50,7 +62,7 @@ int                 t8_element_maxlevel (t8_eclass_scheme_c *ts);
 t8_eclass_t         t8_element_child_eclass (t8_eclass_scheme_c *ts,
                                              int childid);
 /** Return the level of a particular element.
- * \param [in] ts             Implementation of a class scheme.
+ * \param [in] ts      Implementation of a class scheme.
  * \param [in] elem    The element whose level should be returned.
  * \return             The level of \b elem.
  */
@@ -59,10 +71,10 @@ int                 t8_element_level (t8_eclass_scheme_c *ts,
 
 /** Copy all entries of \b source to \b dest. \b dest must be an existing
  *  element. No memory is allocated by this function.
-* \param [in] ts             Implementation of a class scheme.
- * \param [in] source The element whose entries will be copied to \b dest.
- * \param [in,out] dest This element's entries will be overwritted with the
- *                    entries of \b source.
+* \param [in] ts          Implementation of a class scheme.
+ * \param [in] source     The element whose entries will be copied to \b dest.
+ * \param [in,out] dest   This element's entries will be overwritted with the
+ *                        entries of \b source.
  * \note \a source and \a dest may point to the same element.
  */
 void                t8_element_copy (t8_eclass_scheme_c *ts,
@@ -70,7 +82,7 @@ void                t8_element_copy (t8_eclass_scheme_c *ts,
                                      t8_element_t *dest);
 
 /** Compare two elements.
- * \param [in] ts             Implementation of a class scheme.
+ * \param [in] ts     Implementation of a class scheme.
  * \param [in] elem1  The first element.
  * \param [in] elem2  The second element.
  * \return       negativ if elem1 < elem2, zero if elem1 equals elem2
@@ -85,7 +97,7 @@ int                 t8_element_compare (t8_eclass_scheme_c *ts,
  *  \b parent needs to be an existing element. No memory is allocated by this function.
  *  \b elem and \b parent can point to the same element, then the entries of
  *  \b elem are overwritten by the ones of its parent.
- * \param [in] ts             Implementation of a class scheme.
+ * \param [in] ts     Implementation of a class scheme.
  * \param [in] elem   The element whose parent will be computed.
  * \param [in,out] parent This element's entries will be overwritten by those
  *                    of \b elem's parent.
@@ -98,9 +110,9 @@ void                t8_element_parent (t8_eclass_scheme_c *ts,
 
 /** Compute the number of siblings of an element. That is the number of 
  * Children of its parent.
- * \param [in] ts             Implementation of a class scheme.
- * \param [in] elem The element.
- * \return          The number of siblings of \a element.
+ * \param [in] ts     Implementation of a class scheme.
+ * \param [in] elem   The element.
+ * \return            The number of siblings of \a element.
  * Note that this number is >= 1, since we count the element itself as a sibling.
  */
 int                 t8_element_num_siblings (t8_eclass_scheme_c *ts,
@@ -110,7 +122,7 @@ int                 t8_element_num_siblings (t8_eclass_scheme_c *ts,
  *  \b sibling needs to be an existing element. No memory is allocated by this function.
  *  \b elem and \b sibling can point to the same element, then the entries of
  *  \b elem are overwritten by the ones of its i-th sibling.
- * \param [in] ts             Implementation of a class scheme.
+ * \param [in] ts     Implementation of a class scheme.
  * \param [in] elem   The element whose sibling will be computed.
  * \param [in] sibid  The id of the sibling computed.
  * \param [in,out] sibling This element's entries will be overwritten by those
@@ -121,6 +133,89 @@ int                 t8_element_num_siblings (t8_eclass_scheme_c *ts,
 void                t8_element_sibling (t8_eclass_scheme_c *ts,
                                         const t8_element_t *elem, int sibid,
                                         t8_element_t *sibling);
+
+/** Compute the number of corners of an element.
+ * \param [in] ts     Implementation of a class scheme.
+ * \param [in] elem   The element.
+ * \return            The number of corners of \a element.
+ */
+int                 t8_element_num_corners (t8_eclass_scheme_c *ts,
+                                            const t8_element_t *elem);
+
+/** Compute the number of faces of an element.
+ * \param [in] ts     Implementation of a class scheme.
+ * \param [in] elem   The element.
+ * \return            The number of faces of \a element.
+ */
+int                 t8_element_num_faces (t8_eclass_scheme_c *ts,
+                                          const t8_element_t *elem);
+
+/** Compute the maximum number of faces of a given element and all of its
+ *  descendants.
+ * \param [in] ts     Implementation of a class scheme.
+ * \param [in] elem   The element.
+ * \return            The number of faces of \a element.
+ */
+int                 t8_element_max_num_faces (t8_eclass_scheme_c *ts,
+                                              const t8_element_t *elem);
+
+/** Compute the number of children of an element when it is refined.
+ * \param [in] ts     Implementation of a class scheme.
+ * \param [in] elem   The element.
+ * \return            The number of children of \a element.
+ */
+int                 t8_element_num_children (t8_eclass_scheme_c *ts,
+                                             const t8_element_t *elem);
+
+/** Compute the number of children of an element's face when the element is refined.
+ * \param [in] ts     Implementation of a class scheme.
+ * \param [in] elem   The element.
+ * \param [in] face   A face of \a elem.
+ * \return            The number of children of \a face if \a elem is to be refined.
+ */
+int                 t8_element_num_face_children (t8_eclass_scheme_c *ts,
+                                                  const t8_element_t *elem,
+                                                  int face);
+
+/** Return the corner number of an element's face corner.
+ * Example quad: 2 x --- x 3
+ *                 |     |
+ *                 |     |   face 1
+ *               0 x --- x 1
+ *      Thus for face = 1 the output is: corner=0 : 1, corner=1: 3
+ *
+ * \param [in] ts       Implementation of a class scheme.
+ * \param [in] element  The element.
+ * \param [in] face     A face index for \a element.
+ * \param [in] corner   A corner index for the face 0 <= \a corner < num_face_corners.
+ * \return              The corner number of the \a corner-th vertex of \a face.
+ *
+ * The order in which the corners must be given is determined by the eclass of \a element:
+ * LINE/QUAD/TRIANGLE:  No specific order.
+ * HEX               :  In Z-order of the face starting with the lowest corner number.
+ * TET               :  Starting with the lowest corner number counterclockwise as seen from
+ *                      'outside' of the element.
+ */
+int                 t8_element_get_face_corner (t8_eclass_scheme_c *ts,
+                                                const t8_element_t *elem,
+                                                int face, int corner);
+
+/** Compute the face numbers of the faces sharing an element's corner.
+ * Example quad: 2 x --- x 3
+ *                 |     |
+ *                 |     |   face 1
+ *               0 x --- x 1
+ *                  face 2
+ *      Thus for corner = 1 the output is: face=0 : 2, face=1: 1
+ * \param [in] ts       Implementation of a class scheme.
+ * \param [in] element  The element.
+ * \param [in] corner   A corner index for the face.
+ * \param [in] face     A face index for \a corner.
+ * \return              The face number of the \a face-th face at \a corner.
+ */
+int                 t8_element_get_corner_face (t8_eclass_scheme_c *ts,
+                                                const t8_element_t *elem,
+                                                int corner, int face);
 
 /** Construct the child element of a given number.
  * \param [in] ts             Implementation of a class scheme.
@@ -140,7 +235,7 @@ void                t8_element_child (t8_eclass_scheme_c *ts,
                                       t8_element_t *child);
 
 /** Construct all children of a given element.
- * \param [in] ts             Implementation of a class scheme.
+ * \param [in] ts       Implementation of a class scheme.
  * \param [in] elem     This must be a valid element, bigger than maxlevel.
  * \param [in] length   The length of the output array \a c must match
  *                      the number of children.
@@ -156,15 +251,26 @@ void                t8_element_children (t8_eclass_scheme_c *ts,
                                          int length, t8_element_t *c[]);
 
 /** Compute the child id of an element.
- * \param [in] ts             Implementation of a class scheme.
+ * \param [in] ts       Implementation of a class scheme.
  * \param [in] elem     This must be a valid element.
  * \return              The child id of elem.
  */
 int                 t8_element_child_id (t8_eclass_scheme_c *ts,
                                          const t8_element_t *elem);
 
+/** Compute the ancestor id of an element, that is the child id
+ * at a given level.
+ * \param [in] ts       Implementation of a class scheme.
+ * \param [in] elem     This must be a valid element.
+ * \param [in] level    A refinement level. Must satisfy \a level < elem.level
+ * \return              The child_id of \a elem in regard to its \a level ancestor.
+ */
+int                 t8_element_ancestor_id (t8_eclass_scheme_c *ts,
+                                            const t8_element_t *elem,
+                                            int level);
+
 /** Query whether a given set of elements is a family or not.
- * \param [in] ts             Implementation of a class scheme.
+ * \param [in] ts       Implementation of a class scheme.
  * \param [in] fam      An array of as many elements as an element of class
  *                      \b ts has children.
  * \return              Zero if \b fam is not a family, nonzero if it is.
@@ -175,7 +281,7 @@ int                 t8_element_is_family (t8_eclass_scheme_c *ts,
 /** Compute the nearest common ancestor of two elements. That is,
  * the element with highest level that still has both given elements as
  * descendants.
- * \param [in] ts             Implementation of a class scheme.
+ * \param [in] ts       Implementation of a class scheme.
  * \param [in] elem1    The first of the two input elements.
  * \param [in] elem2    The second of the two input elements.
  * \param [in,out] nca  The storage for this element must exist
@@ -187,6 +293,252 @@ void                t8_element_nca (t8_eclass_scheme_c *ts,
                                     const t8_element_t *elem1,
                                     const t8_element_t *elem2,
                                     t8_element_t *nca);
+
+/** Compute the shape of the face of an element.
+ * \param [in] ts       Implementation of a class scheme.
+ * \param [in] elem     The element.
+ * \param [in] face     A face of \a elem.
+ * \return              The element shape of the face.
+ * I.e. T8_ECLASS_LINE for quads, T8_ECLASS_TRIANGLE for tets
+ *      and depending on the face number either T8_ECLASS_QUAD or
+ *      T8_ECLASS_TRIANGLE for prisms.
+ */
+t8_element_shape_t  t8_element_face_shape (t8_eclass_scheme_c *ts,
+                                           const t8_element_t *elem,
+                                           int face);
+
+/** Given an element and a face of the element, compute all children of
+ * the element that touch the face.
+ * \param [in] ts       Implementation of a class scheme.
+ * \param [in] elem     The element.
+ * \param [in] face     A face of \a elem.
+ * \param [in,out] children Allocated elements, in which the children of \a elem
+ *                      that share a face with \a face are stored.
+ *                      They will be stored in order of their linear id.
+ * \param [in] num_children The number of elements in \a children. Must match
+ *                      the number of children that touch \a face.
+ *                      \ref t8_element_num_face_children
+ * \param [in,out] child_indices If not NULL, an array of num_children integers must be given,
+ *                      on output its i-th entry is the child_id of the i-th face_child.
+ * It is valid to call this function with elem = children[0].
+ */
+void                t8_element_children_at_face (t8_eclass_scheme_c *ts,
+                                                 const t8_element_t *elem,
+                                                 int face,
+                                                 t8_element_t *children[],
+                                                 int num_children,
+                                                 int *child_indices);
+
+/** Given a face of an element and a child number of a child of that face, return the face number
+ * of the child of the element that matches the child face.
+ * \verbatim
+ *  x ---- x   x      x           x ---- x
+ *  |      |   |      |           |   |  | <-- f
+ *  |      |   |      x           |   x--x
+ *  |      |   |                  |      |
+ *  x ---- x   x                  x ---- x
+ *   elem    face  face_child    Returns the face number f
+ * \endverbatim
+ *
+ * \param [in] ts         Implementation of a class scheme.
+ * \param [in] elem       The element.
+ * \param [in] face       Then number of the face.
+ * \param [in] face_child A number 0 <= \a face_child < num_face_children,
+ *                        specifying a child of \a elem that shares a face with \a face.
+ *                        These children are counted in linear order. This coincides with
+ *                        the order of children from a call to \ref t8_element_children_at_face.
+ * \return                The face number of the face of a child of \a elem
+ *                        that conincides with \a face_child.
+ */
+int                 t8_element_face_child_face (t8_eclass_scheme_c *ts,
+                                                const t8_element_t *elem,
+                                                int face, int face_child);
+
+/** Given a face of an element return the face number
+ * of the parent of the element that matches the element's face. Or return -1 if
+ * no face of the parent matches the face.
+ *
+ * \param [in] ts     Implementation of a class scheme.
+ * \param [in] elem   The element.
+ * \param [in] face   Then number of the face.
+ * \return            If \a face of \a elem is also a face of \a elem's parent,
+ *                    the face number of this face. Otherwise -1.
+ * \note For the root element this function always returns \a face.
+ */
+int                 t8_element_face_parent_face (t8_eclass_scheme_c *ts,
+                                                 const t8_element_t *elem,
+                                                 int face);
+
+/** Given an element and a face of this element. If the face lies on the
+ *  tree boundary, return the face number of the tree face.
+ *  If not the return value is arbitrary.
+ * \param [in] ts       Implementation of a class scheme.
+ * \param [in] elem     The element.
+ * \param [in] face     The index of a face of \a elem.
+ * \return The index of the tree face that \a face is a subface of, if
+ *         \a face is on a tree boundary.
+ *         Any arbitrary integer if \a is not at a tree boundary.
+ */
+int                 t8_element_tree_face (t8_eclass_scheme_c *ts,
+                                          const t8_element_t *elem, int face);
+
+/** Suppose we have two trees that share a common face f.
+ *  Given an element e that is a subface of f in one of the trees
+ *  and given the orientation of the tree connection, construct the face
+ *  element of the respective tree neighbor that logically coincides with e
+ *  but lies in the coordinate system of the neighbor tree.
+ * \param [in] ts        Implementation of a class scheme.
+ * \param [in] elem1     The face element.
+ * \param [in,out] elem2 On return the face elment \a elem1 with respective
+ *                       to the coordinate system of the other tree.
+ * \param [in] orientation The orientation of the tree-tree connection.
+ *                       \see t8_cmesh_set_join
+ * \param [in] sign      Depending on the topological orientation of the two tree faces,
+ *                       either 0 (both faces have opposite orientation)
+ *                       or 1 (both faces have the same top. orientattion).
+ *                       \ref t8_eclass_face_orientation
+ * \param [in] is_smaller_face Flag to declare whether \a elem1 belongs to
+ *                       the smaller face. A face f of tree T is smaller than
+ *                       f' of T' if either the eclass of T is smaller or if
+ *                       the classes are equal and f<f'. The orientation is
+ *                       defined in relation to the smaller face.
+ * \note \a elem1 and \a elem2 may point to the same element.
+ */
+void                t8_element_transform_face (t8_eclass_scheme_c *ts,
+                                               const t8_element_t *elem1,
+                                               t8_element_t *elem2,
+                                               int orientation,
+                                               int sign, int is_smaller_face);
+
+/** Given a boundary face inside a root tree's face construct
+ *  the element inside the root tree that has the given face as a
+ *  face.
+ * \param [in] ts       Implementation of a class scheme.
+ * \param [in] face     A face element.
+ * \param [in] face_scheme The scheme for the face element.
+ * \param [in,out] elem An allocated element. The entries will be filled with
+ *                      the data of the element that has \a face as a face and
+ *                      lies within the root tree.
+ * \param [in] root_face The index of the face of the root tree in which \a face
+ *                      lies.
+ * \return              The face number of the face of \a elem that coincides
+ *                      with \a face.
+ */
+int                 t8_element_extrude_face (t8_eclass_scheme_c *ts,
+                                             const t8_element_t *face,
+                                             const t8_eclass_scheme_c
+                                             *face_scheme,
+                                             t8_element_t *elem,
+                                             int root_face);
+
+/** Construct the boundary element at a specific face.
+ * \param [in] ts       Implementation of a class scheme.
+ * \param [in] elem     The input element.
+ * \param [in] face     The index of the face of which to construct the
+ *                      boundary element.
+ * \param [in,out] boundary An allocated element of dimension of \a element
+ *                      minus 1. The entries will be filled with the entries
+ *                      of the face of \a element.
+ * \param [in] boundary_scheme The scheme for the eclass of the boundary face.
+ * If \a elem is of class T8_ECLASS_VERTEX, then \a boundary must be NULL
+ * and will not be modified.
+ */
+void                t8_element_boundary_face (t8_eclass_scheme_c *ts,
+                                              const t8_element_t *elem,
+                                              int face,
+                                              t8_element_t *boundary,
+                                              const t8_eclass_scheme_c
+                                              *boundary_scheme);
+
+/** Construct the first descendant of an element at a given level that touches a given face.
+ * \param [in] ts        Implementation of a class scheme.
+ * \param [in] elem      The input element.
+ * \param [in] face      A face of \a elem.
+ * \param [in, out] first_desc An allocated element. This element's data will be
+ *                       filled with the data of the first descendant of \a elem
+ *                       that shares a face with \a face.
+ * \param [in] level     The level, at which the first descendant is constructed
+ */
+void                t8_element_first_descendant_face (t8_eclass_scheme_c *ts,
+                                                      const t8_element_t
+                                                      *elem, int face,
+                                                      t8_element_t
+                                                      *first_desc, int level);
+
+/** Construct the last descendant of an element at a given level that touches a given face.
+ * \param [in] ts        Implementation of a class scheme.
+ * \param [in] elem      The input element.
+ * \param [in] face      A face of \a elem.
+ * \param [in, out] last_desc An allocated element. This element's data will be
+ *                       filled with the data of the last descendant of \a elem
+ *                       that shares a face with \a face.
+ * \param [in] level     The level, at which the last descendant is constructed
+ */
+void                t8_element_last_descendant_face (t8_eclass_scheme_c *ts,
+                                                     const t8_element_t
+                                                     *elem, int face,
+                                                     t8_element_t
+                                                     *last_desc, int level);
+
+/* TODO:  Do we need this function at all?
+ *        If not remove it. If so, what to do with prisms and pyramids?
+ *        Here the boundary elements are of different eclasses, so we cannot
+ *        store them in an array...
+ */
+/** Construct all codimension-one boundary elements of a given element.
+ * \param [in] ts       Implementation of a class scheme.
+ * \param [in] elem     The input element.
+ * \param [in] face     A face of \a elem.
+ * \return              True if \a face is a subface of the element's root element.
+ */
+/* void        t8_element_boundary (t8_eclass_scheme_c *ts,
+ *                                  const t8_element_t *elem,
+ *                                  int min_dim,
+ *                                  int length,
+ *                                  t8_element_t **boundary) = 0;
+ */
+
+/** Compute whether a given element shares a given face with its root tree.
+ * \param [in] ts       Implementation of a class scheme.
+ * \param [in] elem     The input element.
+ * \param [in] face     A face of \a elem.
+ * \return              True if \a face is a subface of the element's root element.
+ */
+int                 t8_element_is_root_boundary (t8_eclass_scheme_c *ts,
+                                                 const t8_element_t *elem,
+                                                 int face);
+
+/** Construct the face neighbor of a given element if this face neighbor
+ * is inside the root tree. Return 0 otherwise.
+ * \param [in] ts     Implementation of a class scheme.
+ * \param [in] elem  The element to be considered.
+ * \param [in,out] neigh If the face neighbor of \a elem along \a face is inside
+ *                  the root tree, this element's data is filled with the
+ *                  data of the face neighbor. Otherwise the data can be modified
+ *                  arbitrarily.
+ * \param [in] face The number of the face along which the neighbor should be
+ *                  constructed.
+ * \param [out] neigh_face The number of \a face as viewed from \a neigh.
+ *                  An arbitrary value, if the neighbor is not inside the root tree.
+ * \return          True if \a neigh is inside the root tree.
+ *                  False if not. In this case \a neigh's data can be arbitrary
+ *                  on output.
+ */
+int                 t8_element_face_neighbor_inside (t8_eclass_scheme_c *ts,
+                                                     const t8_element_t *elem,
+                                                     t8_element_t *neigh,
+                                                     int face,
+                                                     int *neigh_face);
+
+/** Return the shape of an allocated element according its type.
+*  For example, a child of an element can be an element of a different shape
+*  and has to be handled differently - according to its shape.
+ * \param [in] ts     Implementation of a class scheme.
+*  \param [in] elem   The element to be considered
+*  \return            The shape of the element as an eclass
+*/
+t8_element_shape_t  t8_element_shape (t8_eclass_scheme_c *ts,
+                                      const t8_element_t *elem);
 
 /** Initialize the entries of an allocated element according to a
  *  given linear id in a uniform refinement.
@@ -252,10 +604,106 @@ void                t8_element_successor (t8_eclass_scheme_c *ts,
 int                 t8_element_root_len (t8_eclass_scheme_c *ts,
                                          const t8_element_t *elem);
 
-   /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
-   * Returns false otherwise.
+/** Compute the coordinates of a given element vertex inside a reference tree
+ *  that is embedded into [0,1]^d (d = dimension).
+ * \param [in] ts     Implementation of a class scheme.
+ * \param [in] t      The element to be considered.
+ * \param [in] vertex The id of the vertex whose coordinates shall be computed.
+ * \param [out] coords An array of at least as many doubles as the element's dimension
+ *                      whose entries will be filled with the coordinates of \a vertex.
+ */
+void                t8_element_vertex_reference_coords (t8_eclass_scheme_c
+                                                        *ts,
+                                                        const t8_element_t *t,
+                                                        int vertex,
+                                                        double coords[]);
+
+/* TODO: deactivate */
+/** Return a pointer to a t8_element in an array indexed by a size_t.
+ * \param [in] array    The \ref sc_array storing \t t8_element_t pointers.
+ * \param [in] it       The index of the element that should be returned.
+ * \return              A pointer to the it-th element in \b array.
+ * We provide a default implementation of this routine that should suffice
+ * for most use cases.
+ */
+/* t8_element_t *t8_element_array_index (sc_array_t *array, size_t it); */
+
+/** Count how many leaf descendants of a given uniform level an element would produce.
+ * \param [in] ts     Implementation of a class scheme.
+ * \param [in] t      The element to be checked.
+ * \param [in] level  A refinement level.
+ * \return Suppose \a t is uniformly refined up to level \a level. The return value
+ * is the resulting number of elements (of the given level).
+ * If \a level < t8_element_level(t), the return value should be 0.
+ *
+ * Example: If \a t is a line element that refines into 2 line elements on each level,
+ *  then the return value is max(0, 2^{\a level - level(\a t)}).
+ *  Thus, if \a t's level is 0, and \a level = 3, the return value is 2^3 = 8.
+ */
+t8_gloidx_t         t8_element_count_leafs (t8_eclass_scheme_c *ts,
+                                            const t8_element_t *t, int level);
+
+/** Count how many leaf descendants of a given uniform level the root element will produce.
+ * \param [in] ts    Implementation of a class scheme.
+ * \param [in] level A refinement level.
+ * \return The value of \ref t8_element_count_leafs if the input element
+ *      is the root (level 0) element.
+ *
+ * This is a convenience function, and can be implemented via
+ * \ref t8_element_count_leafs.
+ */
+t8_gloidx_t         t8_element_count_leafs_from_root (t8_eclass_scheme_c *ts,
+                                                      int level);
+
+/** This function has no defined effect but each implementation is free to
+ *  provide its own meaning of it. Thus this function can be used to compute or
+ *  lookup very scheme implementation specific data.
+ *  \param [in] ts      Implementation of a class scheme.
+ *  \param [in] elem    An valid element
+ *  \param [in] indata  Pointer to input data
+ *  \param [out] outdata Pointer to output data.
+ *  For the correct usage of \a indata and \a outdata see the specific implementations
+ *  of the scheme.
+ *  For example the default scheme triangle and tetrahedron implementations use 
+ *  this function to return the type of a tri/tet to the caller.
+ */
+void                t8_element_general_function (t8_eclass_scheme_c *ts,
+                                                 const t8_element_t *elem,
+                                                 const void *indata,
+                                                 void *outdata);
+
+#ifdef T8_ENABLE_DEBUG
+  /** Query whether a given element can be considered as 'valid' and it is
+   *  safe to perform any of the above algorithms on it.
+   *  For example this could mean that all coordinates are in valid ranges
+   *  and other membervariables do have meaningful values.
+   * \param [in] ts   Implementation of a class scheme.
+   * \param [in]      elem  The element to be checked.
+   * \return          True if \a elem is safe to use. False otherwise.
+   * \note            An element that is constructed with \ref t8_element_new
+   *                  must pass this test.
+   * \note            An element for which \ref t8_element_init was called must pass
+   *                  this test.
+   * \note            This function is used for debugging to catch certain errors.
+   *                  These can for example occur when an element points to a region
+   *                  of memory which should not be interpreted as an element.
+   * \note            We recommend to use the assertion T8_ASSERT (t8_element_is_valid (elem))
+   *                  in the implementation of each of the functions in this file.
    */
-int                 t8_element_refines_irregular (t8_eclass_scheme_c *ts);
+int                 t8_element_is_valid (t8_eclass_scheme_c *ts,
+                                         const t8_element_t *elem);
+
+/**
+ * Print a given element. For a example for a triangle print the coordinates
+ * and the level of the triangle. This function is only available in the
+ * debugging configuration. 
+ * 
+ * \param [in] ts     Implementation of a class scheme.
+ * \param [in] elem   The element to print
+ */
+void                t8_element_debug_print (t8_eclass_scheme_c *ts,
+                                            const t8_element_t *elem);
+#endif
 
 /** Allocate memory for an array of elements of a given class and initialize them.
  * \param [in] ts             Implementation of a class scheme.
