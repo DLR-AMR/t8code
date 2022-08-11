@@ -39,9 +39,10 @@ T8_EXTERN_C_BEGIN ();
 
 #if T8_WITH_OCC
 
+/* *INDENT-OFF* */
 struct t8_cad_collision:public t8_cad_base
 {
-  using t8_cad_base::t8_cad_base;
+  using               t8_cad_base::t8_cad_base;
 
 public:
   /**
@@ -60,14 +61,14 @@ public:
    * Read a brep file and fill internal shape with it.
    * \param [in] fileprefix Prefix of a .brep file from which to extract an occ geometry.
    */
-  void 
+  void
   t8_cad_init (const char *fileprefix);
 
   /**
    * Fill the internal shape with the given shape.
    * \param [in] occ_shape Occ shape geometry.
    */
-  void 
+  void
   t8_cad_init (TopoDS_Shape occ_shape);
 
   /**
@@ -82,9 +83,9 @@ public:
    */
   int
   t8_cad_is_element_inside_shape (t8_forest_t forest,
-                                  t8_locidx_t ltreeid, 
+                                  t8_locidx_t ltreeid,
                                   const t8_element_t *element) const;
-  
+
   /**
    * Checks if a point is inside the occ shape.
    * \param [in] coords          The coordinates of the point.
@@ -98,11 +99,11 @@ protected:
   /**
    * Initializes the internal data structures.
    */
-  void
-  t8_cad_init_internal_data ();
+  void                t8_cad_init_internal_data ();
 
-  Bnd_OBB                                     occ_shape_bounding_box;     /** Oriented bounding box of the shape */
+  Bnd_OBB             occ_shape_bounding_box;                             /**< Oriented bounding box of the shape */
 };
+/* *INDENT-ON* */
 
 #endif /* T8_WITH_OCC */
 

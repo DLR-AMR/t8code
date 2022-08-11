@@ -44,7 +44,9 @@ public:
   /**
    * Empty constructor.
    */
-  t8_cad_base () {}
+  t8_cad_base ()
+  {
+  }
 
   /** 
    * The destructor. It does nothing but has to be defined since
@@ -52,20 +54,22 @@ public:
    * and providing an implementation
    * for the destructor ensures that the
    * destructor of the child class will be executed. */
-  virtual ~ t8_cad_base () {}
+  virtual ~           t8_cad_base ()
+  {
+  }
 
   /**
    * Read a brep file and fill internal shape with it.
    */
-  virtual void t8_cad_init (const char *fileprefix) = 0;
+  virtual void        t8_cad_init (const char *fileprefix) = 0;
 
   /**
    * Fill the internal shape with the given shape.
    */
-  virtual void t8_cad_init (const TopoDS_Shape occ_shape) = 0;
+  virtual void        t8_cad_init (const TopoDS_Shape occ_shape) = 0;
 
 protected:
-  TopoDS_Shape                                occ_shape;                  /** Occ geometry */
+  TopoDS_Shape occ_shape;                                                 /**< Occ geometry */
 };
 
 #endif /* T8_WITH_OCC */

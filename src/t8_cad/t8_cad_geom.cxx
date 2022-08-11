@@ -87,14 +87,14 @@ t8_cad_geom::t8_cad_init_internal_data ()
                                        occ_shape_edge2face_map);
 }
 
-gp_Pnt
+const gp_Pnt
 t8_cad_geom::t8_cad_get_occ_point (const int index) const
 {
   T8_ASSERT (index <= occ_shape_vertex_map.Size());
   return BRep_Tool::Pnt(TopoDS::Vertex(occ_shape_vertex_map.FindKey(index)));
 }
 
-Handle_Geom_Curve
+const Handle_Geom_Curve
 t8_cad_geom::t8_cad_get_occ_curve (const int index) const
 {
   T8_ASSERT (index <= occ_shape_edge_map.Size());
@@ -103,26 +103,26 @@ t8_cad_geom::t8_cad_get_occ_curve (const int index) const
                           first, last);
 }
 
-Handle_Geom_Surface
+const Handle_Geom_Surface
 t8_cad_geom::t8_cad_get_occ_surface (const int index) const
 {
   T8_ASSERT (index <= occ_shape_face_map.Size());
   return BRep_Tool::Surface(TopoDS::Face(occ_shape_face_map.FindKey(index)));
 }
 
-TopTools_IndexedMapOfShape 
+const TopTools_IndexedMapOfShape 
 t8_cad_geom::t8_cad_get_occ_shape_vertex_map() const
 {
   return occ_shape_vertex_map;
 }
 
-TopTools_IndexedMapOfShape 
+const TopTools_IndexedMapOfShape 
 t8_cad_geom::t8_cad_get_occ_shape_edge_map() const
 {
   return occ_shape_edge_map;
 }
 
-TopTools_IndexedMapOfShape
+const TopTools_IndexedMapOfShape
 t8_cad_geom::t8_cad_get_occ_shape_face_map() const
 {
   return occ_shape_face_map;
@@ -205,7 +205,7 @@ t8_cad_geom::t8_cad_get_parameter_of_vertex_on_edge(const int vertex_index,
                                                          const int edge_index, 
                                                          double* edge_param) const
 {
-  T8_ASSERT(t8_cad::t8_cad_is_vertex_on_edge(vertex_index, edge_index));
+  T8_ASSERT(t8_cad_geom::t8_cad_is_vertex_on_edge(vertex_index, edge_index));
   TopoDS_Vertex vertex = TopoDS::Vertex(occ_shape_vertex_map.FindKey(vertex_index));
   TopoDS_Edge edge = TopoDS::Edge(occ_shape_edge_map.FindKey(edge_index));
   *edge_param = BRep_Tool::Parameter(vertex, edge);
@@ -216,7 +216,7 @@ t8_cad_geom::t8_cad_get_parameters_of_vertex_on_face(const int vertex_index,
                                                           const int face_index, 
                                                           double* face_params) const
 {
-  T8_ASSERT(t8_cad::t8_cad_is_vertex_on_face(vertex_index, 
+  T8_ASSERT(t8_cad_geom::t8_cad_is_vertex_on_face(vertex_index, 
                                                        face_index));
   gp_Pnt2d uv;
   TopoDS_Vertex vertex = TopoDS::Vertex(occ_shape_vertex_map.FindKey(vertex_index));
@@ -232,7 +232,7 @@ t8_cad_geom::t8_cad_edge_parameter_to_face_parameters(const int edge_index,
                                                            const double edge_param, 
                                                            double* face_params) const
 {
-  T8_ASSERT(t8_cad::t8_cad_is_edge_on_face(edge_index, face_index));
+  T8_ASSERT(t8_cad_geom::t8_cad_is_edge_on_face(edge_index, face_index));
   Standard_Real first, last;
   gp_Pnt2d uv;
   TopoDS_Edge edge = TopoDS::Edge(occ_shape_edge_map.FindKey(edge_index));

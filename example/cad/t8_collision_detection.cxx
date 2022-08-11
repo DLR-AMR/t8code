@@ -33,7 +33,6 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_cad/t8_cad_collision.hxx>
 
-
 /** 
  * The adaptation callback function. This function will be called once for each element
  * and the return value decides whether this element should be refined or not.
@@ -69,10 +68,10 @@ t8_collision_detection_centroid_adapt_callback (t8_forest_t forest,
                                                 t8_element_t *elements[])
 {
   const t8_cad_collision *cad;
-  double centroid[3] = {0};
+  double              centroid[3] = { 0 };
   cad = (const t8_cad_collision *) t8_forest_get_user_data (forest);
-  t8_forest_element_centroid(forest_from, which_tree, elements[0], centroid);
-  return cad->t8_cad_is_point_inside_shape(centroid, 1e-3);
+  t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
+  return cad->t8_cad_is_point_inside_shape (centroid, 1e-3);
 }
 
 int
@@ -151,13 +150,13 @@ main (int argc, char **argv)
     t8_cad_collision   *cad;
     char                forest_vtu[BUFSIZ];
     t8_forest_t         forest_new;
-  
+
     t8_cmesh_init (&cmesh);
     t8_cmesh_set_dimension (cmesh, 3);
     geometry = new t8_geometry_linear (3);
     t8_cmesh_register_geometry (cmesh, geometry);
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
-    double  vertices[24] = {
+    double              vertices[24] = {
       -1, -1, -1,
       2, -1, -1,
       -1, 2, -1,
@@ -174,19 +173,20 @@ main (int argc, char **argv)
                                     t8_scheme_new_default_cxx (),
                                     level, 0, comm);
     T8_ASSERT (t8_forest_is_committed (forest));
-    cad = new t8_cad_collision(fileprefix);
+    cad = new t8_cad_collision (fileprefix);
     for (int r = 0; r < rlevel; ++r) {
       t8_forest_init (&forest_new);
-      t8_forest_set_adapt (forest_new, forest, t8_collision_detection_centroid_adapt_callback, 0);
+      t8_forest_set_adapt (forest_new, forest,
+                           t8_collision_detection_centroid_adapt_callback, 0);
       t8_forest_set_user_data (forest_new, cad);
       t8_forest_set_partition (forest_new, forest, 0);
       t8_forest_commit (forest_new);
       forest = forest_new;
     }
     /* Write the forest into vtk files and move the new forest for the next iteration. */
-    snprintf (forest_vtu, BUFSIZ, "collision_detection_forest_level_%i_rlevel_%i",
-              level, rlevel);
-    t8_forest_write_vtk(forest, forest_vtu);
+    snprintf (forest_vtu, BUFSIZ,
+              "collision_detection_forest_level_%i_rlevel_%i", level, rlevel);
+    t8_forest_write_vtk (forest, forest_vtu);
     t8_forest_unref (&forest);
   }
   sc_options_destroy (opt);

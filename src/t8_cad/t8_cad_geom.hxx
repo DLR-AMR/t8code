@@ -44,9 +44,10 @@ T8_EXTERN_C_BEGIN ();
 
 #if T8_WITH_OCC
 
-struct t8_cad_geom:public t8_cad_base
+/* *INDENT-OFF* */
+struct t8_cad_geom: public t8_cad_base
 {
-  using t8_cad_base::t8_cad_base;
+  using               t8_cad_base::t8_cad_base;
 
 public:
   /**
@@ -60,65 +61,64 @@ public:
    * \param [in] occ_shape Occ shape geometry.
    */
   t8_cad_geom (const TopoDS_Shape occ_shape);
-  
+
   /**
    * Read a brep file and fill internal shape with it.
    */
-  void 
+  void
   t8_cad_init (const char *fileprefix);
 
   /**
    * Fill the internal shape with the given shape.
    */
-  void 
+  void
   t8_cad_init (const TopoDS_Shape shape);
 
-  /** 
+  /**
    * Get an occ point from the occ_shape.
    * \param [in] index      The index of the point in the occ_shape.
    * \return                The occ point.
    */
-  gp_Pnt
+  const gp_Pnt
   t8_cad_get_occ_point (const int index) const;
   
-  /** 
+  /**
    * Get an occ curve from the occ_shape.
    * \param [in] index      The index of the curve in the occ_shape.
    * \return                The occ curve.
    */
-  Handle_Geom_Curve
+  const Handle_Geom_Curve
   t8_cad_get_occ_curve (const int index) const;
 
-  /** 
+  /**
    * Get an occ surface from the occ_shape.
    * \param [in] index      The index of the surface in the occ_shape.
    * \return                The occ surface.
    */
-  Handle_Geom_Surface
+  const Handle_Geom_Surface
   t8_cad_get_occ_surface (const int index) const;
 
-  /** 
+  /**
    * Get the occ_shape_vertex2edge_map.
    * \return                The occ_shape_vertex_map.
    */
-  TopTools_IndexedMapOfShape
+  const TopTools_IndexedMapOfShape
   t8_cad_get_occ_shape_vertex_map() const;
 
-  /** 
+  /**
    * Get the occ_shape_edge2face_map.
    * \return                The occ_shape_edge_map.
    */
-  TopTools_IndexedMapOfShape
+  const TopTools_IndexedMapOfShape
   t8_cad_get_occ_shape_edge_map() const;
 
-  /** 
-   * Get the occ_shape_face_map.
+  /** Get the occ_shape_face_map.
    * \return                The occ_shape_face_map.
    */
-  TopTools_IndexedMapOfShape
+  const TopTools_IndexedMapOfShape
   t8_cad_get_occ_shape_face_map() const;
 
-  /** 
+  /**
    * Check if two occ points share a common occ edge.
    * \param [in]  vertex1_index  The index of the first occ point.
    * \param [in]  vertex2_index  The index of the second occ point.
@@ -128,7 +128,7 @@ public:
   t8_cad_get_common_edge (const int vertex1_index, 
                           const int vertex2_index) const;
 
-  /** 
+  /**
    * Check if two occ edges share a common occ face.
    * \param [in]  edge1_index    The index of the first occ edge.
    * \param [in]  edge2_index    The index of the second occ edge.
@@ -138,37 +138,37 @@ public:
   t8_cad_get_common_face (const int edge1_index, 
                           const int edge2_index) const;
 
-  /** 
+  /**
    * Check if a occ vertex lies on an occ edge.
    * \param [in]  vertex_index   The index of the occ vertex.
    * \param [in]  edge_index     The index of the occ edge.
-   * \return                     1 if vertex lies on edge, otherwise 0.
+   * \return                    1 if vertex lies on edge, otherwise 0.
    */
   int
   t8_cad_is_vertex_on_edge (const int vertex_index, 
                             const int edge_index) const;
 
-  /** 
+  /**
    * Check if a occ vertex lies on an occ edge.
    * \param [in]  edge_index     The index of the occ vertex.
    * \param [in]  face_index     The index of the occ edge.
-   * \return                     1 if vertex lies on edge, otherwise 0.
+   * \return                    1 if vertex lies on edge, otherwise 0.
    */
   int
   t8_cad_is_edge_on_face (const int edge_index, 
                           const int face_index) const;
 
-  /** 
+  /**
    * Check if a occ vertex lies on an occ face.
    * \param [in]  vertex_index   The index of the occ vertex.
    * \param [in]  face_index     The index of the occ face.
-   * \return                     1 if vertex lies on face, otherwise 0.
+   * \return                    1 if vertex lies on face, otherwise 0.
    */
   int
   t8_cad_is_vertex_on_face (const int vertex_index, 
                             const int face_index) const;
 
-  /** 
+  /**
    * Retrieves the parameter of an occ vertex on an occ edge.
    * The vertex has to lie on the edge.
    * \param [in]  vertex_index   The index of the occ vertex.
@@ -176,11 +176,11 @@ public:
    * \param [out] edge_param     The parameter of the vertex on the edge.
    */
   void
-  t8_cad_get_parameter_of_vertex_on_edge(const int vertex_index, 
-                                         const int edge_index, 
-                                         double* edge_param) const;
+  t8_cad_get_parameter_of_vertex_on_edge (const int vertex_index, 
+                                          const int edge_index, 
+                                          double* edge_param) const;
 
-  /** 
+  /**
    * Retrieves the parameters of an occ vertex on a occ face.
    * The vertex has to lie on the face.
    * \param [in]  vertex_index   The index of the occ vertex.
@@ -188,11 +188,11 @@ public:
    * \param [out] face_params    The parameters of the vertex on the face.
    */                                   
   void 
-  t8_cad_get_parameters_of_vertex_on_face(const int vertex_index, 
-                                          const int face_index, 
-                                          double* face_params) const;
+  t8_cad_get_parameters_of_vertex_on_face (const int vertex_index, 
+                                           const int face_index, 
+                                           double* face_params) const;
 
-  /** 
+  /**
    * Converts the parameter of an occ edge to the corresponding parameters on an occ face.
    * The edge has to lie on the face.
    * \param [in]  edge_index     The index of the occ edge.
@@ -201,24 +201,24 @@ public:
    * \param [out] face_params    The corresponding parameters on the face.
    */   
   void
-  t8_cad_edge_parameter_to_face_parameters(const int edge_index, 
-                                           const int face_index, 
-                                           const double edge_param, 
-                                           double* face_params) const;
+  t8_cad_edge_parameter_to_face_parameters (const int edge_index, 
+                                            const int face_index, 
+                                            const double edge_param, 
+                                            double* face_params) const;
 
 protected:
   /**
    * Initializes the internal data structures.
    */
-  void
-  t8_cad_init_internal_data ();
+  void                t8_cad_init_internal_data ();
 
-  TopTools_IndexedMapOfShape                  occ_shape_vertex_map;       /** Map of all TopoDS_Vertex in shape. */
-  TopTools_IndexedMapOfShape                  occ_shape_edge_map;         /** Map of all TopoDS_Edge in shape. */
-  TopTools_IndexedMapOfShape                  occ_shape_face_map;         /** Map of all TopoDS_Face in shape. */
-  TopTools_IndexedDataMapOfShapeListOfShape   occ_shape_vertex2edge_map;  /** Maps all TopoDS_Vertex of shape to all its connected TopoDS_Edge */
-  TopTools_IndexedDataMapOfShapeListOfShape   occ_shape_edge2face_map;    /** Maps all TopoDS_Edge of shape to all its connected TopoDS_Face */
+  TopTools_IndexedMapOfShape occ_shape_vertex_map;                        /**< Map of all TopoDS_Vertex in shape. */
+  TopTools_IndexedMapOfShape occ_shape_edge_map;                          /**< Map of all TopoDS_Edge in shape. */
+  TopTools_IndexedMapOfShape occ_shape_face_map;                          /**< Map of all TopoDS_Face in shape. */
+  TopTools_IndexedDataMapOfShapeListOfShape occ_shape_vertex2edge_map;    /**< Maps all TopoDS_Vertex of shape to all its connected TopoDS_Edge */
+  TopTools_IndexedDataMapOfShapeListOfShape occ_shape_edge2face_map;      /**< Maps all TopoDS_Edge of shape to all its connected TopoDS_Face */
 };
+/* *INDENT-ON* */
 
 #endif /* T8_WITH_OCC */
 
