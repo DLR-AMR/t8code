@@ -144,39 +144,39 @@ public:
    * \param [in] index      The index of the point in the occ_shape.
    * \return                The occ point.
    */
-  gp_Pnt
+  const gp_Pnt
   t8_geom_get_occ_point (const int index) const;
   
   /** Get an occ curve from the occ_shape.
    * \param [in] index      The index of the curve in the occ_shape.
    * \return                The occ curve.
    */
-  Handle_Geom_Curve
+  const Handle_Geom_Curve
   t8_geom_get_occ_curve (const int index) const;
 
   /** Get an occ surface from the occ_shape.
    * \param [in] index      The index of the surface in the occ_shape.
    * \return                The occ surface.
    */
-  Handle_Geom_Surface
+  const Handle_Geom_Surface
   t8_geom_get_occ_surface (const int index) const;
 
   /** Get the occ_shape_vertex2edge_map.
    * \return                The occ_shape_vertex_map.
    */
-  TopTools_IndexedMapOfShape
+  const TopTools_IndexedMapOfShape
   t8_geom_get_occ_shape_vertex_map() const;
 
   /** Get the occ_shape_edge2face_map.
    * \return                The occ_shape_edge_map.
    */
-  TopTools_IndexedMapOfShape
+  const TopTools_IndexedMapOfShape
   t8_geom_get_occ_shape_edge_map() const;
 
   /** Get the occ_shape_face_map.
    * \return                The occ_shape_face_map.
    */
-  TopTools_IndexedMapOfShape
+  const TopTools_IndexedMapOfShape
   t8_geom_get_occ_shape_face_map() const;
 
   /** Check if two occ points share a common occ edge.
