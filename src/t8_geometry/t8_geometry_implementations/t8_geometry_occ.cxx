@@ -537,14 +537,14 @@ t8_geometry_occ::t8_geom_load_tree_data (t8_cmesh_t cmesh,
   T8_ASSERT(faces != NULL);
 }
 
-gp_Pnt
+const gp_Pnt
 t8_geometry_occ::t8_geom_get_occ_point (const int index) const
 {
   T8_ASSERT (index <= occ_shape_vertex_map.Size());
   return BRep_Tool::Pnt(TopoDS::Vertex(occ_shape_vertex_map.FindKey(index)));
 }
 
-Handle_Geom_Curve
+const Handle_Geom_Curve
 t8_geometry_occ::t8_geom_get_occ_curve (const int index) const
 {
   T8_ASSERT (index <= occ_shape_edge_map.Size());
@@ -553,26 +553,26 @@ t8_geometry_occ::t8_geom_get_occ_curve (const int index) const
                           first, last);
 }
 
-Handle_Geom_Surface
+const Handle_Geom_Surface
 t8_geometry_occ::t8_geom_get_occ_surface (const int index) const
 {
   T8_ASSERT (index <= occ_shape_face_map.Size());
   return BRep_Tool::Surface(TopoDS::Face(occ_shape_face_map.FindKey(index)));
 }
 
-TopTools_IndexedMapOfShape 
+const TopTools_IndexedMapOfShape 
 t8_geometry_occ::t8_geom_get_occ_shape_vertex_map() const
 {
   return occ_shape_vertex_map;
 }
 
-TopTools_IndexedMapOfShape 
+const TopTools_IndexedMapOfShape 
 t8_geometry_occ::t8_geom_get_occ_shape_edge_map() const
 {
   return occ_shape_edge_map;
 }
 
-TopTools_IndexedMapOfShape
+const TopTools_IndexedMapOfShape
 t8_geometry_occ::t8_geom_get_occ_shape_face_map() const
 {
   return occ_shape_face_map;
