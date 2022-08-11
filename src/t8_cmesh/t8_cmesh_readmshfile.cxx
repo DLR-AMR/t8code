@@ -1752,8 +1752,8 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
     case 2:
       if (use_occ_geometry) {
         fclose (file);
-        t8_debugf
-          ("The occ geometry is only supported for msh files of "
+        t8_errorf
+          ("WARNING: The occ geometry is only supported for msh files of "
            "version 4\n");
         t8_cmesh_destroy (&cmesh);
         if (partition) {
