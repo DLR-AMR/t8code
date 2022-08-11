@@ -55,8 +55,8 @@ struct t8_naca_surface_adapt_data
  *   return = 0 -> The first element should not get refined.
  *   return < 0 -> The whole family should get coarsened.
  * 
- * In this case, the function retrieves the geometry information of the tree, the element belongs to.
- * Based on that, the function looks, if the tree is linked to a specific surface 
+ * In this case, the function retrieves the geometry information of the tree the element belongs to.
+ * Based on that the function looks whether the tree is linked to a specific surface 
  * and if this cell touches this surface. If true, it returns 1. Otherwise it returns 0.
  *  
  * \param [in] forest       The current forest that is in construction.
@@ -84,7 +84,8 @@ t8_naca_surface_adapt_callback (t8_forest_t forest,
     t8_forest_get_user_data (forest);
   T8_ASSERT (adapt_data != NULL);
 
-  for (int iface = 0; iface < ts->t8_element_num_faces (elements[0]); ++iface) {
+  const int num_faces = ts->t8_element_num_faces (elements[0]);
+  for (int iface = 0; iface < num_faces; ++iface) {
     /* We look if a face of the element lies on a face of the tree */
     if (ts->t8_element_is_root_boundary (elements[0], iface)) {
       /* We retrieve the face it lies on */
@@ -179,7 +180,7 @@ struct t8_naca_plane_adapt_data
  *   return = 0 -> The first element should not get refined.
  *   return < 0 -> The whole family should get coarsened.
  * 
- * In this case, the function checks, if the element or family is in a certain proximity to a refinement plane.
+ * In this case the function checks whether the element or family is in a certain proximity to a refinement plane.
  * If true and the element does not have a max level, 1 is returned. If a family of elements
  * is too far away and the level is not below or equal the min level threshold -1 is returned. 
  * Otherwise 0 is returned.

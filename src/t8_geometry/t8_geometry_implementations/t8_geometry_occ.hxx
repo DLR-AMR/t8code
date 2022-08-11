@@ -21,9 +21,9 @@
 */
 
 /** \file t8_geometry_occ.hxx
- * This gometry implements OpenCASCADE geometries. It enables the option to link different 
+ * This geometry implements OpenCASCADE geometries. It enables the option to link different 
  * 1 and 2 dimensional occ geometries to the edges and faces of refinement trees. 
- * The geometry of the refinement tree gets bent accordingly.
+ * The geometry of the refinement tree is extended into the volume accordingly.
  */
 
 #ifndef T8_GEOMETRY_OCC_HXX
@@ -43,13 +43,13 @@
 
 #endif /* T8_WITH_OCC */
 
-/* The vertices of each edge of a hexahedron. Used in the occ geometry. */
+/** The vertices of each edge of a hexahedron. Used in the occ geometry. */
 extern const int    t8_edge_vertex_to_tree_vertex[T8_ECLASS_MAX_EDGES][2];
 
-/* The faces connected to each edge. */
+/** The faces connected to each edge. */
 extern const int    t8_edge_to_face[T8_ECLASS_MAX_EDGES][2];
 
-/* The edges of a face to the edges of a tree */
+/** The edges of a face to the edges of a tree */
 extern const int
      t8_face_edge_to_tree_edge[T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_EDGES_2D];
 
