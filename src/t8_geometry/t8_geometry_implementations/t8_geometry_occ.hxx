@@ -260,14 +260,14 @@ public:
                                             double* face_params) const;
 
 private:
-  const int                                  *edges;                      /** The linked edges of the currently active tree. */
-  const int                                  *faces;                      /** The linked faces of the currently active tree. */
-  TopoDS_Shape                                occ_shape;                  /** Occ geometry */
-  TopTools_IndexedMapOfShape                  occ_shape_vertex_map;       /** Map of all TopoDS_Vertex in shape. */
-  TopTools_IndexedMapOfShape                  occ_shape_edge_map;         /** Map of all TopoDS_Edge in shape. */
-  TopTools_IndexedMapOfShape                  occ_shape_face_map;         /** Map of all TopoDS_Face in shape. */
-  TopTools_IndexedDataMapOfShapeListOfShape   occ_shape_vertex2edge_map;  /** Maps all TopoDS_Vertex of shape to all its connected TopoDS_Edge */
-  TopTools_IndexedDataMapOfShapeListOfShape   occ_shape_edge2face_map;    /** Maps all TopoDS_Edge of shape to all its connected TopoDS_Face */
+  const int                                  *edges;                      /**< The linked edges of the currently active tree. */
+  const int                                  *faces;                      /**< The linked faces of the currently active tree. */
+  TopoDS_Shape                                occ_shape;                  /**< Occ geometry */
+  TopTools_IndexedMapOfShape                  occ_shape_vertex_map;       /**< Map of all TopoDS_Vertex in shape. */
+  TopTools_IndexedMapOfShape                  occ_shape_edge_map;         /**< Map of all TopoDS_Edge in shape. */
+  TopTools_IndexedMapOfShape                  occ_shape_face_map;         /**< Map of all TopoDS_Face in shape. */
+  TopTools_IndexedDataMapOfShapeListOfShape   occ_shape_vertex2edge_map;  /**< Maps all TopoDS_Vertex of shape to all its connected TopoDS_Edge */
+  TopTools_IndexedDataMapOfShapeListOfShape   occ_shape_edge2face_map;    /**< Maps all TopoDS_Edge of shape to all its connected TopoDS_Face */
 };
 /* *INDENT-ON* */
 
