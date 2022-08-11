@@ -84,7 +84,7 @@ t8_naca_surface_adapt_callback (t8_forest_t forest,
     t8_forest_get_user_data (forest);
   T8_ASSERT (adapt_data != NULL);
 
-  const int num_faces = ts->t8_element_num_faces (elements[0]);
+  const int           num_faces = ts->t8_element_num_faces (elements[0]);
   for (int iface = 0; iface < num_faces; ++iface) {
     /* We look if a face of the element lies on a face of the tree */
     if (ts->t8_element_is_root_boundary (elements[0], iface)) {
