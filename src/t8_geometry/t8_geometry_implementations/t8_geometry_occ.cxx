@@ -515,7 +515,7 @@ t8_geometry_occ::t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
     t8_geometry_occ::t8_geom_evaluate (cmesh, gtreeid, in1, out1);
     t8_geometry_occ::t8_geom_evaluate (cmesh, gtreeid, in2, out2);
     for (int dim2 = 0; dim2 < 3; ++dim2) {
-      jacobian_out[dim * 3 + dim2] = out1[dim2] - out2[dim2];
+      jacobian_out[dim * 3 + dim2] = (out1[dim2] - out2[dim2]) / h;
     }
   }
 }
