@@ -50,6 +50,7 @@
  *                  We define an OpenCASCADE surface and link it to a face of a hexahedron. 
  *                  After that we probe whether the correct coordinates inside the hexahedron are returned.
  *                  We repeat this check for all 6 faces.
+ *  - jacobian:     Checks the resulting jacobian of an identity.
  */
 
 #if T8_WITH_OCC
@@ -194,6 +195,10 @@ t8_create_occ_hypercube (double *rot_vec,
   t8_cmesh_set_tree_vertices (cmesh, 0, rotated_vertices, 24);
 
   int                 faces[6] = { 0, 0, 0, 0, 0, 0 };
+  int                 edges[24] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+  };
+  T8_ASSERT (face < 0 || edge < 0);
   if (face >= 0) {
     faces[face] = 1;
     geometry = t8_create_occ_surface_geometry ();
@@ -201,16 +206,19 @@ t8_create_occ_hypercube (double *rot_vec,
                             T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY + face,
                             parameters, 8 * sizeof (double), 0);
   }
-
-  int                 edges[24] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-  };
-  if (edge >= 0) {
+  else if (edge >= 0) {
     edges[edge] = 1;
     geometry = t8_create_occ_curve_geometry ();
     t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (),
                             T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + edge,
                             parameters, 2 * sizeof (double), 0);
+  }
+  else {
+    /* Even if we do not want to link any geometry to the edges or faces, 
+     * we have to create a geometry. Hence an occ geometry can only be created
+     * with an actual shape, we just create a geometry with a curve and do not
+     * link the curve to any edge. */
+    geometry = t8_create_occ_curve_geometry ();
   }
   t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (),
                           T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces,
@@ -249,7 +257,7 @@ t8_test_geometry_occ (double *rot_vec,
   double              rotated_test_ref_coords[24];
   double              rotation_origin[3] = { 0.5, 0.5, 0.5 };
   double              inversed_rot_vec[3];
-  double              tol = DBL_EPSILON > 1e-10 ? DBL_EPSILON : 1e-10;
+  double              tol = FLT_EPSILON > 1e-10 ? FLT_EPSILON : 1e-10;
   t8_cmesh_t          cmesh =
     t8_create_occ_hypercube (rot_vec, face, edge, parameters);
 
@@ -378,5 +386,25 @@ TEST (t8_gtest_geometry_occ, linked_edges)
                           curve_parameters + i_edges * 2,
                           test_ref_coords, curve_test_return_coords);
   }
+}
+#endif /* T8_WITH_OCC */
+
+#if T8_WITH_OCC
+TEST (t8_gtest_geometry_occ, jacobian)
+{
+  t8_cmesh_t          cmesh;
+  double              jacobian[9], rot_vec[3] = { 0, 0, 0 }, ref_coords[3] =
+    { 0.5, 0.5, 0.5 };
+  double              jacobian_expect[9] = {
+    1, 0, 0,
+    0, 1, 0,
+    0, 0, 1
+  };
+  cmesh = t8_create_occ_hypercube (rot_vec, -1, -1, NULL);
+  t8_geometry_jacobian (cmesh, 0, ref_coords, jacobian);
+  for (int i = 0; i < 9; ++i) {
+    EXPECT_FLOAT_EQ (jacobian[i], jacobian_expect[i]);
+  }
+  t8_cmesh_destroy (&cmesh);
 }
 #endif /* T8_WITH_OCC */
