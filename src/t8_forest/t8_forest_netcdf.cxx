@@ -1098,32 +1098,29 @@ t8_forest_write_netcdf_file (t8_forest_t forest,
     ? t8_forest_get_local_num_elements (forest)
     : t8_forest_get_global_num_elements (forest);
 
+
   const int          cmode = NC_CLOBBER | context->cmode;
   if (context->multifile_mode) {
     int                 mpirank;
     SC_CHECK_MPI (sc_MPI_Comm_rank (comm, &mpirank));
-    if (const int retval = nc_create ((context->filename + std::string {
-                                  '_'}
-                                  +std::to_string (mpirank) + ".nc").c_str (),
-                                 cmode, &context->ncid)) {
-      ERR (retval);
+    char filename[BUFSIZ];
+    std::snprintf(filename, BUFSIZ, "%s_%d.nc", context->filename, mpirank);
+    if (const int retval = nc_create(filename, cmode, &context->ncid)) {
+      ERR(retval);
     }
     t8_debugf ("A serial netCDf-file has been created for each mpi rank.\n");
   }
   else {
     /* Create a parallel NetCDF-File */
 #if T8_WITH_NETCDF_PAR
+    char filename[BUFSIZ];
+    std::snprintf(filename, BUFSIZ, "%s.nc", context->filename);
     if ((retval =
-         nc_create_par (context->filename, cmode, comm, sc_MPI_INFO_NULL,
+         nc_create_par (filename, cmode, comm, sc_MPI_INFO_NULL,
                         &context->ncid))) {
       ERR (retval);
     }
     t8_debugf ("A parallel netCDf-file has been created.\n");
-#elif T8_WITH_NETCDF
-    if ((retval = nc_create (context->filename, cmode, &context->ncid))) {
-      ERR (retval);
-    }
-    t8_debugf ("A serial netCDf-file has been created.\n");
 #endif
   }
 
@@ -1255,44 +1252,10 @@ t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix,
   /* Check whether pointers are not NULL */
   T8_ASSERT (file_title != NULL);
   T8_ASSERT (file_prefix != NULL);
-  char                file_name[BUFSIZ];
-
-  /* Create the NetCDF-Filname */
-  snprintf (file_name, BUFSIZ, "%s.nc", file_prefix);
-
-#if !T8_WITH_NETCDF_PAR
-  /* In case of a parallel configuration without parallel netCDF routines */
-  int                 retval;
-  int                 mpirank, mpisize;
-  /* Size of the communicator */
-  retval = sc_MPI_Comm_size (comm, &mpisize);
-  SC_CHECK_MPI (retval);
-  /* Get the rank of the process */
-  retval = sc_MPI_Comm_rank (comm, &mpirank);
-  SC_CHECK_MPI (retval);
-
-  /** \note This prevents the single file to be overwritten if more proceses are involved,
-   * in a configuration which does not feature parallel netCDF routines!
-   * Otherwise, if several processes try to write in the same file,
-   * the result will be an HDF-5 error. Now, each process will create its own
-   * file. Each of these files will be as big as if all processes would have written into the same file,
-   * but in each file is only the process-local data defined.
-   * (-> storage requirement is the #ranks-fold storage requirement of a serial or parallel netCDF run)
-   *
-   * \note Therefore, it is advisable to either run the whole program with only one MPI rank or
-   * make use of a parallel netCDF/HDF-5 configuration
-   */
-  if (mpisize > 1) {
-    /* Create the NetCDF-Filname for each process */
-    snprintf (file_name, BUFSIZ, "%s_rank_%d.nc", file_prefix, mpirank);
-    t8_global_productionf
-      ("Note: The program is executed in parallel, but the netCDF Usage is serial.\nThis is not advisable, you may want to either execute the program with only one MPI rank or use a parallel netCDF/HDF-5 configuration\n");
-  }
-#endif
 
   /* Initialize first variables for netCDF purposes. */
   /* Therefore, create a 'context' and initialize it with given properties */
-  context.filename = file_name;
+  context.filename = file_prefix;
   context.filetitle = file_title;
   context.dim = dim;
   context.nMaxMesh_elem_nodes = t8_element_shape_max_num_corner[dim];
@@ -1300,7 +1263,12 @@ t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix,
   context.fillvalue64 = -1;
   context.start_index = 0;
   context.convention = "UGRID v1.0";
-  context.multifile_mode = multifile_mode;
+  if (!(T8_WITH_NETCDF_PAR) && !multifile_mode) {
+    t8_global_productionf("Not compiled with parallel netCDF support. Using file-per-process mode.");
+    context.multifile_mode = true;
+  } else {
+    context.multifile_mode = multifile_mode;
+  }
   context.cmode = cmode;
   context.coordinate_chunksize = coordinate_chunksize;
 
