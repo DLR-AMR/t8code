@@ -1,5 +1,5 @@
 # Manual for the t8_write_forest_netcdf benchmark CLI
-The usage in general has two forms explained below. All parameters are identified by their location. It is not possible to change the order or leave out parameters.
+The usage in general has two kinds explained below. All parameters are identified by their location. It is not possible to change the order or leave out parameters.
 ## common parameters:
 - `<mem_per_node>` is a hint for the written storage in bytes. It is an upper bound for the actually written data. In practice, disk usage will be about 20% smaller than the hint. The apparent filesize may be larger than this (https://unix.stackexchange.com/a/510476).
 - `<fill>` is either `NC_FILL` or `NC_NOFILL`. NC_FILL is used for netcdf debugging AFAICT and for benchmarking you should probably use `NC_NOFILL`.
@@ -16,14 +16,14 @@ srun ./t8_write_forest_netcdf 1000000000 NC_NOFILL netcdf4_hdf5 NC_CONTIGUOUS NC
 ```
 creates a ~1GB NetCDF file.
 
-## multifile:
-In this form, each MPI rank writes only its local data to its own file, which eliminates most synchronisation overhead but naturally leaves you with your data split accross many files. In this mode all common parameters are required, as well as a literal `--multifile` flag instead of an `<mpi_access_mode>` like in singlefile mode. `<mpi_access_mode>` is not relevant for multifile mode and must not appear. The `--multifile` flag tells the program to use the multifile mode.
+## file-per-process:
+In this form, each MPI rank writes only its local data to its own file, which eliminates most synchronisation overhead but naturally leaves you with your data split accross many files. In this mode all common parameters are required, as well as a literal `file_per_process` flag instead of an `<mpi_access_mode>` like in singlefile mode. `<mpi_access_mode>` is not relevant for file-per-process mode and must not appear. The `file_per_process` flag tells the program to use the file-per-process mode.
 ```
-Usage: ./t8_write_forest_netcdf <mem_per_node> <fill> <cmode> <storage_mode> --multifile
+Usage: ./t8_write_forest_netcdf <mem_per_node> <fill> <cmode> <storage_mode> file_per_process
 ```
 
 ### example:
 ```
-srun ./t8_write_forest_netcdf 1000000000 NC_NOFILL netcdf4_hdf5 NC_CONTIGUOUS --multifile
+srun ./t8_write_forest_netcdf 1000000000 NC_NOFILL netcdf4_hdf5 NC_CONTIGUOUS file_per_process
 ```
 creates N NetCDF files, each roughly 1/N GB in size, where N is the number of MPI ranks

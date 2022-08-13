@@ -96,7 +96,7 @@ typedef struct
   int                 cmode;
   /* Stores the old NetCDF-FillMode if it gets changed */
   int                 old_fill_mode;
-  bool                multifile_mode;
+  bool                file_per_process_mode;
 
 } t8_forest_netcdf_context_t;
 
@@ -291,7 +291,7 @@ t8_forest_write_netcdf_variables (t8_forest_netcdf_context_t * context,
   }
   /* Define whether an independent or collective variable access is used */
 #if T8_WITH_NETCDF_PAR
-  if (!context->multifile_mode) {
+  if (!context->file_per_process_mode) {
     if ((retval =
          nc_var_par_access (context->ncid, context->var_elem_types_id,
                             context->netcdf_mpi_access))) {
@@ -347,7 +347,7 @@ t8_forest_write_netcdf_variables (t8_forest_netcdf_context_t * context,
   }
   /* Define whether an independent or collective variable access is used */
 #if T8_WITH_NETCDF_PAR
-  if (!context->multifile_mode) {
+  if (!context->file_per_process_mode) {
     if ((retval = nc_var_par_access (context->ncid, context->var_elem_tree_id,
                                      context->netcdf_mpi_access))) {
       ERR (retval);
@@ -401,7 +401,7 @@ t8_forest_write_netcdf_variables (t8_forest_netcdf_context_t * context,
   }
   /* Define whether an independent or collective variable access is used */
 #if T8_WITH_NETCDF_PAR
-  if (!context->multifile_mode) {
+  if (!context->file_per_process_mode) {
     if ((retval =
          nc_var_par_access (context->ncid, context->var_elem_nodes_id,
                             context->netcdf_mpi_access))) {
@@ -512,9 +512,9 @@ t8_forest_write_netcdf_data (t8_forest_t forest,
   }
   /* Write the data in the corresponding NetCDF-variable. */
   /* Fill the 'Mesh_elem_types'-variable. */
-  /* In multifile mode every rank has its own file so we don't want or need
+  /* In file-per-process mode every rank has its own file so we don't want or need
    any offset and every process can start writing at 0 */
-  start_ptr = context->multifile_mode ? 0 : first_local_elem_id;
+  start_ptr = context->file_per_process_mode ? 0 : first_local_elem_id;
   count_ptr = num_local_elements;
   if ((retval =
        nc_put_vara_int (context->ncid, context->var_elem_types_id, &start_ptr,
@@ -533,8 +533,8 @@ t8_forest_write_netcdf_data (t8_forest_t forest,
 
   /* Store the number of local nodes */
   context->nMesh_local_node = num_local_nodes;
-  if (context->multifile_mode) {
-    /* in multifile mode we set the number of nodes written to the process
+  if (context->file_per_process_mode) {
+    /* in file-per-process mode we set the number of nodes written to the process
      * local file to only our local nodes */
     context->nMesh_node = num_local_nodes;
   }
@@ -598,7 +598,7 @@ t8_forest_write_netcdf_coordinate_variables (t8_forest_netcdf_context_t *
   }
   /* Define whether an independent or collective variable access is used */
 #if T8_WITH_NETCDF_PAR
-  if (!context->multifile_mode) {
+  if (!context->file_per_process_mode) {
     if ((retval =
          nc_var_par_access (context->ncid, context->var_node_x_id,
                             context->netcdf_mpi_access))) {
@@ -650,7 +650,7 @@ t8_forest_write_netcdf_coordinate_variables (t8_forest_netcdf_context_t *
   }
   /* Define whether an independent or collective variable access is used */
 #if T8_WITH_NETCDF_PAR
-  if (!context->multifile_mode) {
+  if (!context->file_per_process_mode) {
     if ((retval = nc_var_par_access (context->ncid, context->var_node_y_id,
                                      context->netcdf_mpi_access))) {
       ERR (retval);
@@ -701,7 +701,7 @@ t8_forest_write_netcdf_coordinate_variables (t8_forest_netcdf_context_t *
   }
   /* Define whether an independent or collective variable access is used */
 #if T8_WITH_NETCDF_PAR
-  if (!context->multifile_mode) {
+  if (!context->file_per_process_mode) {
     if ((retval = nc_var_par_access (context->ncid, context->var_node_z_id,
                                      context->netcdf_mpi_access))) {
       ERR (retval);
@@ -798,7 +798,7 @@ t8_forest_write_user_netcdf_vars (t8_forest_netcdf_context_t * context,
       }
       /* Define whether an independent or collective variable access is used */
 #if T8_WITH_NETCDF_PAR
-      if (!context->multifile_mode) {
+      if (!context->file_per_process_mode) {
         if ((retval = nc_var_par_access (context->ncid,
                                           ext_variables[i]->var_user_dimid,
                                           context->netcdf_mpi_access))) {
@@ -954,9 +954,9 @@ t8_forest_write_netcdf_coordinate_data (t8_forest_t forest,
 
   /* Define a (2D) NetCDF-Hyperslab for filling the variable */
   const size_t        start_ptr_var[2] = {
-    /* In multifile mode we want to write to the
+    /* In file-per-process mode we want to write to the
      * process local file with no offset */
-    context->multifile_mode ? 0 : static_cast < size_t >(first_local_elem_id),
+    context->file_per_process_mode ? 0 : static_cast < size_t >(first_local_elem_id),
     0
   };
   const size_t        count_ptr_var[2] =
@@ -972,9 +972,9 @@ t8_forest_write_netcdf_coordinate_data (t8_forest_t forest,
   /* Fill the space coordinate variables */
   count_ptr = (size_t) context->nMesh_local_node;
 
-  /* In multifile mode we want to write to the
+  /* In file-per-process mode we want to write to the
    * process local file with no offset */
-  if (context->multifile_mode) {
+  if (context->file_per_process_mode) {
     start_ptr = 0;
   }
 
@@ -1024,9 +1024,9 @@ t8_forest_write_user_netcdf_data (t8_forest_t forest,
     int                 i;
 
     /* Counters which imply the position in the NetCDF-variable where the data will be written.
-     * In multifile mode we want to write to the
+     * In file-per-process mode we want to write to the
      * process local file with no offset */
-    start_ptr = context->multifile_mode
+    start_ptr = context->file_per_process_mode
       ? 0 : t8_forest_get_first_local_element_id (forest);
     count_ptr = t8_forest_get_local_num_elements (forest);
 
@@ -1093,14 +1093,14 @@ t8_forest_write_netcdf_file (t8_forest_t forest,
   /* Check if the forest was committed. */
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  /* in multifile mode we only want to make space for the local elements */
-  context->nMesh_elem = context->multifile_mode
+  /* in file-per-process mode we only want to make space for the local elements */
+  context->nMesh_elem = context->file_per_process_mode
     ? t8_forest_get_local_num_elements (forest)
     : t8_forest_get_global_num_elements (forest);
 
 
   const int          cmode = NC_CLOBBER | context->cmode;
-  if (context->multifile_mode) {
+  if (context->file_per_process_mode) {
     int                 mpirank;
     SC_CHECK_MPI (sc_MPI_Comm_rank (comm, &mpirank));
     char filename[BUFSIZ];
@@ -1153,11 +1153,11 @@ t8_forest_write_netcdf_file (t8_forest_t forest,
     ERR (retval);
   }
 
-  /* in multifile mode each file gets global attributes part_index and
+  /* in file-per-process mode each file gets global attributes part_index and
   part_count, which is enough information to reconstruct the whole file. 
   Each variable would have to be concatenated in the given order and the 
   dimensions would need to be adapted */
-  if (context->multifile_mode) {
+  if (context->file_per_process_mode) {
     int                 mpirank, mpisize;
     retval = sc_MPI_Comm_size (comm, &mpisize);
     SC_CHECK_MPI (retval);
@@ -1246,7 +1246,7 @@ t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix,
                             sc_MPI_Comm comm, int netcdf_var_storage_mode,
                             const size_t *coordinate_chunksize,
                             int netcdf_mpi_access, int fill_mode, int cmode,
-                            bool multifile_mode)
+                            bool file_per_process_mode)
 {
   t8_forest_netcdf_context_t context;
   /* Check whether pointers are not NULL */
@@ -1263,11 +1263,11 @@ t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix,
   context.fillvalue64 = -1;
   context.start_index = 0;
   context.convention = "UGRID v1.0";
-  if (!(T8_WITH_NETCDF_PAR) && !multifile_mode) {
+  if (!(T8_WITH_NETCDF_PAR) && !file_per_process_mode) {
     t8_global_productionf("Not compiled with parallel netCDF support. Using file-per-process mode.");
-    context.multifile_mode = true;
+    context.file_per_process_mode = true;
   } else {
-    context.multifile_mode = multifile_mode;
+    context.file_per_process_mode = file_per_process_mode;
   }
   context.cmode = cmode;
   context.coordinate_chunksize = coordinate_chunksize;

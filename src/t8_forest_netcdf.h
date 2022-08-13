@@ -33,7 +33,7 @@
 T8_EXTERN_C_BEGIN ();
 
 /** Creates a netCDF-4 file containing the (geometrical) information about the given forest mesh and additional elementwise data variables
- * This functions calls 't8_forest_write_netcdf_ext()' with default values for 'netcdf_var_storage_mode' (NC_CONTIGUOUS), 'netcdf_var_mpi_access' (NC_INDEPENDENT), 'coordinate_chunksize' (nullptr), fill_mode (NC_NOFILL), cmode (NC_NETCDF4), and multifile_mode (false).
+ * This functions calls 't8_forest_write_netcdf_ext()' with default values for 'netcdf_var_storage_mode' (NC_CONTIGUOUS), 'netcdf_var_mpi_access' (NC_INDEPENDENT), 'coordinate_chunksize' (nullptr), fill_mode (NC_NOFILL), cmode (NC_NETCDF4), and file_per_process_mode (false).
  * \param [in]  forest    A forest.
  * \param [in]  file_prefix    A string which holds the file's name (output file will be 'file_prefix.nc').
  * \param [in]  file_title    A string to caption the NetCDF-File.
@@ -63,7 +63,7 @@ void                t8_forest_write_netcdf (t8_forest_t forest,
  * \param [in]  netcdf_var_mpi_access This defines whether the mpi processes are writing the variables' data collectively or independently.
  * \param [in]  fill_mode the fillmode used for the netcdf file. Must be either NC_NOFILL or NC_FILL
  * \param [in]  cmode the given flags are potentially combined with other flags (eg. NC_CLOBBER) and given to nc_create[_par]. Supported modes are NC_NETCDF4 aka netCDF4/HDF5 and NC_64BIT_DATA aka CDF-5.
- * \param [in]  multifile_mode if true, every MPI rank writes its local data to its own file, which can have performance benefits but leaves you with many files. In this mode, netcdf_var_mpi_access is irrelevant and ignored.
+ * \param [in]  file_per_process_mode if true, every MPI rank writes its local data to its own file, which can have performance benefits but leaves you with many files. In this mode, netcdf_var_mpi_access is irrelevant and ignored.
  * \note Only use this extended version of \ref t8_forest_write_netcdf if you know exactly what you are doing. In all other cases, we recommend using \ref t8_forest_write_netcdf instead.
  */
 void                t8_forest_write_netcdf_ext (t8_forest_t forest,
@@ -79,7 +79,7 @@ void                t8_forest_write_netcdf_ext (t8_forest_t forest,
                                                 *coordinate_chunksize,
                                                 int netcdf_var_mpi_access,
                                                 int fill_mode, int cmode,
-                                                bool multifile_mode);
+                                                bool file_per_process_mode);
 
 T8_EXTERN_C_END ();
 

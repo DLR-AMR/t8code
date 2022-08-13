@@ -61,7 +61,7 @@ struct Config
   int                 netcdf_mpi_access = NC_COLLECTIVE;
   int                 fill_mode;
   int                 cmode;
-  bool                multifile_mode = false;
+  bool                file_per_process_mode = false;
 };
 
 /** executes and times only the writing operation of the given forest.
@@ -83,7 +83,7 @@ t8_example_time_netcdf_writing_operation (t8_forest_t forest,
                               3, 0, nullptr, comm,
                               config.netcdf_var_storage_mode, nullptr,
                               config.netcdf_mpi_access, config.fill_mode,
-                              config.cmode, config.multifile_mode);
+                              config.cmode, config.file_per_process_mode);
 
   sc_MPI_Barrier (comm);
   double              end_time = sc_MPI_Wtime ();
@@ -186,12 +186,12 @@ parse_args (int argc, char **argv)
 		result.netcdf_mpi_access = NC_INDEPENDENT;
 	} else if (args.at(4) == "NC_COLLECTIVE") {
 		result.netcdf_mpi_access = NC_COLLECTIVE;
-	} else if (args.at(4) == "--multifile") {
-		result.multifile_mode = true;
+	} else if (args.at(4) == "file_per_process") {
+		result.file_per_process_mode = true;
 	} else {
 		throw std::runtime_error{"this argument is either mpi access "
 		                         "(NC_COLLECTIVE or NC_INDEPENDENT), "
-		                         "or --multifile"};
+		                         "or file_per_process"};
 	}
 
 	/* *INDENT-ON* */
@@ -276,7 +276,7 @@ execute_benchmark (sc_MPI_Comm comm, Config config)
                          config.netcdf_var_storage_mode ==
                          NC_CHUNKED ? "NC_CHUNKED" : "NC_CONTIGUOUS",
                          config.
-                         multifile_mode ? "--multifile"
+                         file_per_process_mode ? "file_per_process"
                          : (config.netcdf_mpi_access ==
                             NC_COLLECTIVE ? "NC_COLLECTIVE" :
                             "NC_INDEPENDENT"));
@@ -305,7 +305,7 @@ main (int argc, char **argv)
     /* *INDENT-OFF* */
     t8_global_productionf(
       R"asdf(Usage: ./t8_write_forest_netcdf <mem_per_node> <fill> <cmode> <storage_mode> <mpi_access_mode>
-Usage: ./t8_write_forest_netcdf <mem_per_node> <fill> <cmode> <storage_mode> --multifile
+Usage: ./t8_write_forest_netcdf <mem_per_node> <fill> <cmode> <storage_mode> file_per_process
 )asdf"
     );
     /* *INDENT-ON* */
