@@ -745,7 +745,7 @@ t8_forest_write_user_netcdf_vars (t8_forest_netcdf_context_t * context,
 #if T8_WITH_NETCDF
 /* Check wheter user-defined variables should be written */
   if (num_extern_netcdf_vars > 0 && ext_variables != NULL) {
-    int                 retval, i;
+    int                 retval;
     int                 mpirank, mpisize;
 
     retval = sc_MPI_Comm_size (comm, &mpisize);
@@ -754,7 +754,7 @@ t8_forest_write_user_netcdf_vars (t8_forest_netcdf_context_t * context,
     SC_CHECK_MPI (retval);
 
     /* Iterate over the amount of user-defined variables */
-    for (i = 0; i < num_extern_netcdf_vars; i++) {
+    for (int i = 0; i < num_extern_netcdf_vars; i++) {
       /* Check the variable data type */
       switch (ext_variables[i]->datatype) {
       case T8_NETCDF_INT:
@@ -782,30 +782,30 @@ t8_forest_write_user_netcdf_vars (t8_forest_netcdf_context_t * context,
                          NC_DOUBLE, 1, &context->nMesh_elem_dimid,
                          &(ext_variables[i]->var_user_dimid)))) {
           ERR (retval);
-          break;
         }
-
-        /* Define whether contiguous or chunked storage is used for the variable */
-        if ((retval =
-             nc_def_var_chunking (context->ncid,
-                                  ext_variables[i]->var_user_dimid,
-                                  context->netcdf_var_storage_mode, NULL))) {
-          /* we ignore NC_ENOTNC4, as this function may be used for non netcdf4 files. */
-          if (retval != NC_ENOTNC4) {
-            ERR (retval);
-          }
-        }
-        /* Define whether an independent or collective variable access is used */
-#if T8_WITH_NETCDF_PAR
-        if (!context->multifile_mode) {
-          if ((retval = nc_var_par_access (context->ncid,
-                                           ext_variables[i]->var_user_dimid,
-                                           context->netcdf_mpi_access))) {
-            ERR (retval);
-          }
-        }
-#endif
+        break;
       }
+
+      /* Define whether contiguous or chunked storage is used for the variable */
+      if ((retval =
+            nc_def_var_chunking (context->ncid,
+                                ext_variables[i]->var_user_dimid,
+                                context->netcdf_var_storage_mode, NULL))) {
+        /* we ignore NC_ENOTNC4, as this function may be used for non netcdf4 files. */
+        if (retval != NC_ENOTNC4) {
+          ERR (retval);
+        }
+      }
+      /* Define whether an independent or collective variable access is used */
+#if T8_WITH_NETCDF_PAR
+      if (!context->multifile_mode) {
+        if ((retval = nc_var_par_access (context->ncid,
+                                          ext_variables[i]->var_user_dimid,
+                                          context->netcdf_mpi_access))) {
+          ERR (retval);
+        }
+      }
+#endif
       /* Attach the user-defined 'long_name' attribute to the variable */
       if ((retval =
            nc_put_att_text (context->ncid, (ext_variables[i]->var_user_dimid),
