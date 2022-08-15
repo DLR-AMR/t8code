@@ -67,8 +67,9 @@ compute_cubeid (const t8_dpyramid_t *p, const int level)
  *          and \a level. 
  */
 static t8_dpyramid_type_t
-compute_type_ext (const t8_dpyramid_t *p, const int level,
-                  const t8_dpyramid_type_t known_type, const int known_level)
+compute_type_same_shape_ext (const t8_dpyramid_t *p, const int level,
+                             const t8_dpyramid_type_t known_type,
+                             const int known_level)
 {
   t8_dpyramid_cube_id_t cube_id;
   t8_dpyramid_type_t  type = known_type;
@@ -91,12 +92,23 @@ compute_type_ext (const t8_dpyramid_t *p, const int level,
   return type;
 }
 
-/* TODO: Comment*/
+/**
+ * Compute the type of a pyramid at \a level.
+ * Pay attention, this function assumes that the shape of the element does not switch. 
+ * 
+ * 
+ * \param         p 
+ * \param         level 
+ * \return        The type of \a p at \a level
+ * 
+ * CAREFUL: This computation assumes that the shape of the element does not switch between \a known_level
+ *          and \a level.
+ */
 t8_dpyramid_type_t
-compute_type (const t8_dpyramid_t *p, const int level)
+compute_type_same_shape (const t8_dpyramid_t *p, const int level)
 {
   T8_ASSERT (0 <= p->level && p->level <= T8_DPYRAMID_MAXLEVEL);
-  return compute_type_ext (p, level, p->type, p->level);
+  return compute_type_same_shape_ext (p, level, p->type, p->level);
 }
 
 /**
@@ -385,8 +397,8 @@ t8_dpyramid_type_at_level (const t8_dpyramid_t *p, const int level)
     return p->type;
   }
   if (t8_dpyramid_shape (p) == T8_ECLASS_PYRAMID) {
-    /* The shape does not switch, we can use the compute_type function */
-    return compute_type (p, level);
+    /* The shape does not switch, we can use the compute_type_same_shape function */
+    return compute_type_same_shape (p, level);
   }
   else {
     /* The shape may switch */
@@ -395,10 +407,11 @@ t8_dpyramid_type_at_level (const t8_dpyramid_t *p, const int level)
     int                 type_at_level = p->type;
     /* The shape can not switch for tets that do not have type 0/3 */
     while (type_at_level != 0 && type_at_level != 3 && current_level > level) {
-      /* The shape does not switch, we can use compute_type_ext */
+      /* The shape does not switch, we can use compute_type_same_shape_ext */
       current_level--;
       type_at_level =
-        compute_type_ext (p, current_level, type_at_level, current_level + 1);
+        compute_type_same_shape_ext (p, current_level, type_at_level,
+                                     current_level + 1);
     }
     if (level == current_level) {
       /* We have already reached the desired level and can return. */
@@ -442,8 +455,9 @@ t8_dpyramid_type_at_level (const t8_dpyramid_t *p, const int level)
         T8_ASSERT (type_at_level == T8_DPYRAMID_FIRST_TYPE ||
                    type_at_level == T8_DPYRAMID_SECOND_TYPE);
         current_level--;
-        type_at_level = compute_type_ext (p, current_level, type_at_level,
-                                          current_level + 1);
+        type_at_level =
+          compute_type_same_shape_ext (p, current_level, type_at_level,
+                                       current_level + 1);
       }
       T8_ASSERT (level == current_level);
       return type_at_level;
@@ -1616,7 +1630,8 @@ t8_dpyramid_first_pyra_anc (const t8_dpyramid_t *tet,
     int                 level = tet->level;
     while (type_at_level != 0 && type_at_level != 3) {
       level--;
-      type_at_level = compute_type_ext (tet, level, type_at_level, level + 1);
+      type_at_level =
+        compute_type_same_shape_ext (tet, level, type_at_level, level + 1);
     }
     T8_ASSERT (level > 0);
     T8_ASSERT (type_at_level == 0 || type_at_level == 3);
@@ -1669,7 +1684,8 @@ t8_dpyramid_switches_type_at_level (const t8_dpyramid_t *tet)
    * the tetrahedral children of a pyramid only have type 0 or type 3.*/
   while (type_at_level != 0 && type_at_level != 3) {
     level--;
-    type_at_level = compute_type_ext (tet, level, type_at_level, level + 1);
+    type_at_level =
+      compute_type_same_shape_ext (tet, level, type_at_level, level + 1);
   }
   T8_ASSERT (type_at_level == 0 || type_at_level == 3);
   t8_dpyramid_copy (tet, &tmp_tet);
@@ -1769,18 +1785,18 @@ t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t *pyra1,
     cube_level = SC_MIN (T8_DPYRAMID_MAXLEVEL - level,
                          (int) SC_MIN (pyra1->level, pyra2->level));
     real_level = cube_level;
-    p1_type_at_level = compute_type (pyra1, cube_level);
-    p2_type_at_level = compute_type (pyra2, cube_level);
+    p1_type_at_level = compute_type_same_shape (pyra1, cube_level);
+    p2_type_at_level = compute_type_same_shape (pyra2, cube_level);
     /* Iterate over the levels and compute both types at that level.
      * If they are the same, we know the level of the nearest common ancestor. */
     while (p1_type_at_level != p2_type_at_level) {
       real_level--;
       p1_type_at_level =
-        compute_type_ext (pyra1, real_level, p1_type_at_level,
-                          real_level + 1);
+        compute_type_same_shape_ext (pyra1, real_level, p1_type_at_level,
+                                     real_level + 1);
       p2_type_at_level =
-        compute_type_ext (pyra2, real_level, p2_type_at_level,
-                          real_level + 1);
+        compute_type_same_shape_ext (pyra2, real_level, p2_type_at_level,
+                                     real_level + 1);
     }
     T8_ASSERT (real_level >= 0);
     /* Fill the nca */
@@ -1841,11 +1857,11 @@ t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t *pyra1,
            real_level >= level_switch_pyra2) {
       real_level--;
       p1_type_at_level =
-        compute_type_ext (pyra1, real_level, p1_type_at_level,
-                          real_level + 1);
+        compute_type_same_shape_ext (pyra1, real_level, p1_type_at_level,
+                                     real_level + 1);
       p2_type_at_level =
-        compute_type_ext (pyra2, real_level, p2_type_at_level,
-                          real_level + 1);
+        compute_type_same_shape_ext (pyra2, real_level, p2_type_at_level,
+                                     real_level + 1);
     }
     if (real_level < level_switch_pyra1) {
       /* The first element switches the shape. The type is computed using 
