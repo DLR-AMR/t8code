@@ -112,10 +112,10 @@ compute_type_same_shape (const t8_dpyramid_t *p, const int level)
 }
 
 /**
- * sets the shift last bits of every coordinate to zero 
+ * Set the \a shift last bits of every coordinate to zero. 
  * 
  * \param[in, out]  p     Input pyramid
- * \param[in]       shift number of bits to set to zero
+ * \param[in]       shift Number of bits to set to zero
  */
 static void
 t8_dpyramid_cut_coordinates (t8_dpyramid_t *p, const int shift)
@@ -848,13 +848,13 @@ t8_dpyramid_first_descendant (const t8_dpyramid_t *p, t8_dpyramid_t *desc,
   T8_ASSERT (p->x <= desc->x && p->y <= desc->y && p->z <= desc->z);
 }
 
-/** compute the descendant at a corner of a tet up to a given level
+/** Compute the descendant at a corner of a tet up to a given level.
  *  You can not use the tetrahedron algorithm here, because it depends on the linear-id
- *  computation of tet, which if different to the linear id for pyras. 
- *  \param[in] p    Input pyramd
- *  \param[in, out] d Allocated element to fill with the data of element laying in the corner \a corner of \a p
- *  \param[in] corner  A corner of \a p
- *  \param[in] level  The level to compute the corner-descendant at. 
+ *  computation of a tet, which is different to the linear id for pyramids. 
+ *  \param[in] p        Input pyramd
+ *  \param[in, out] d   Allocated element to fill with the data of element laying in the corner \a corner of \a p
+ *  \param[in] corner   A corner of \a p
+ *  \param[in] level    The level to compute the corner-descendant at. 
  */
 static void
 t8_dpyramid_corner_descendant (const t8_dpyramid_t *p, t8_dpyramid_t *d,
