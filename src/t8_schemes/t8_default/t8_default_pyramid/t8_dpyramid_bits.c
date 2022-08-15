@@ -1477,7 +1477,6 @@ t8_dpyramid_parent (const t8_dpyramid_t *p, t8_dpyramid_t *parent)
     /* The direct tet-child of a pyra has type 0 or type 3, therefore
      * in this case the parent is a tetrahedron*/
     t8_dtet_parent (p, parent);
-
   }
   else if (t8_dpyramid_is_inside_tet (p, p->level, NULL) != 0) {
     /*Pyramid- / tetparent detection */
@@ -1662,7 +1661,7 @@ t8_dpyramid_first_pyra_anc (const t8_dpyramid_t *tet,
  * \param[in] tet The input element
  * \return The level of the last ancestor with the shape of a tetrahedron  
  */
-int
+static int
 t8_dpyramid_switches_type_at_level (const t8_dpyramid_t *tet)
 {
   T8_ASSERT (t8_dpyramid_shape (tet) == T8_ECLASS_TET);
