@@ -117,13 +117,9 @@ t8_dpyramid_cut_coordinates (t8_dpyramid_t *p, const int shift)
 int
 t8_dpyramid_ancestor_id (const t8_dpyramid_t *p, const int level)
 {
-  t8_linearidx_t      id;
   t8_dpyramid_t       helper;
   T8_ASSERT (0 <= p->level && p->level <= T8_DPYRAMID_MAXLEVEL);
-  /*Compute the id of p at the given level */
-  id = t8_dpyramid_linear_id (p, level);
-  /*Compute the child id of the ancestor of p at the given level */
-  t8_dpyramid_init_linear_id (&helper, level, id);
+  t8_dpyramid_ancestor (p, level, &helper);
   return t8_dpyramid_child_id (&helper);
 }
 
