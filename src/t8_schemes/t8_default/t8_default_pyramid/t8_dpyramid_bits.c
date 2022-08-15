@@ -263,11 +263,17 @@ t8_dpyramid_compare (const t8_dpyramid_t *p1, const t8_dpyramid_t *p2)
   if (id1 == id2) {
     /* The linear ids are the same, the pyramid with the smaller level
      * is considered smaller */
-    return p1->level - p2->level;
+    if (p1->level == p2->level) {
+      T8_ASSERT (p1->type == p2->type);
+      return 0;
+    }
+    else {
+      return p1->level - p2->level;
+    }
   }
   /* return negative if id1 < id2, zero if id1 = id2, positive if id1 >
      id2 */
-  return id1 < id2 ? -1 : id1 != id2;
+  return id1 < id2 ? -1 : 1;
 }
 
 int
