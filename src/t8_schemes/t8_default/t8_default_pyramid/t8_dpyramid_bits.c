@@ -689,7 +689,14 @@ t8_dpyramid_face_parent_face (const t8_dpyramid_t *elem, const int face)
   }
 }
 
-int
+/**
+ *  Check if anc-face is connecting to a tet or to a pyra 
+ * 
+ * \param[in] p       Input pyramid
+ * \param[in] face    Face of an ancestor of \a p
+ * \return            return non-zero if anc-face is connecting to a tet
+ */
+static int
 t8_dpyramid_tet_pyra_face_connection (const t8_dpyramid_t *p, const int face)
 {
   T8_ASSERT (p->type == 0 || p->type == 3);
