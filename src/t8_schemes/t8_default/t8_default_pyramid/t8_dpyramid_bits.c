@@ -503,7 +503,15 @@ t8_dpyramid_linear_id (const t8_dpyramid_t *p, const int level)
   return id;
 }
 
-int
+/**
+ * Compute the face-neighbor of p. This function does not allocate memory for the neighbor.
+ * 
+ * \param[in] p               Input element
+ * \param[in] face            A face of \a p
+ * \param[in, out] neigh      Allocated memory, will be filled with the data of the neighbor of \a p along the given \a face.
+ * \return int                The face of \a neigh that touches \a p
+ */
+static int
 t8_dpyramid_face_neighbour (const t8_dpyramid_t *p, const int face,
                             t8_dpyramid_t *neigh)
 {
