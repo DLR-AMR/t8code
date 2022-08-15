@@ -99,10 +99,14 @@ compute_type (const t8_dpyramid_t *p, const int level)
   return compute_type_ext (p, level, p->type, p->level);
 }
 
-/* sets the shift last bits of every coordinate to zero*/
-/* TODO: Doxygen*/
+/**
+ * sets the shift last bits of every coordinate to zero 
+ * 
+ * \param[in, out]  p     Input pyramid
+ * \param[in]       shift number of bits to set to zero
+ */
 static void
-pyramid_cut_coords (t8_dpyramid_t *p, const int shift)
+t8_dpyramid_cut_coordinates (t8_dpyramid_t *p, const int shift)
 {
   T8_ASSERT (0 <= shift && shift <= T8_DPYRAMID_MAXLEVEL);
   p->x = (p->x >> shift) << shift;
@@ -376,12 +380,8 @@ t8_dpyramid_init_linear_id (t8_dpyramid_t *p, const int level,
   p->type = type;
 }
 
-/* Compute the type of a pyramid at a given level. Starting from its own level,
- * we iterate over the levels and compute the type of this level. If p is a tetrahedron,
- * we compute it in a tetrahedral fashion up unto the last level where p is a tet and
- * continue in a pyramidal fashion */
 int
-t8_dpyramid_set_type_at_level (const t8_dpyramid_t *p, const int level)
+t8_dpyramid_type_at_level (const t8_dpyramid_t *p, const int level)
 {
   T8_ASSERT (0 <= level && level <= T8_DPYRAMID_MAXLEVEL);
 
@@ -464,9 +464,9 @@ t8_dpyramid_linear_id (const t8_dpyramid_t *p, const int level)
   int                 i, num_pyra, num_tet;
 
   t8_dpyramid_copy (p, &copy);
-  copy.type = t8_dpyramid_set_type_at_level (p, level);
+  copy.type = t8_dpyramid_type_at_level (p, level);
   copy.level = level;
-  pyramid_cut_coords (&copy, T8_DPYRAMID_MAXLEVEL - level);
+  t8_dpyramid_cut_coordinates (&copy, T8_DPYRAMID_MAXLEVEL - level);
 
   for (i = level; i > 0; i--) {
     /* Compute the number of pyramids with level maxlvl that are in a pyramid
@@ -1531,7 +1531,7 @@ t8_dpyramid_successor_recursion (const t8_dpyramid_t *elem,
     t8_dpyramid_successor_recursion (succ, succ, parent, level - 1);
     succ->level = level;
     /* bits auf level auf child 0 setzen */
-    pyramid_cut_coords (succ, shift);
+    t8_dpyramid_cut_coordinates (succ, shift);
   }
   else {
     /* Not the last element. Compute child with local ID child_id+1 */
@@ -1714,9 +1714,9 @@ t8_dpyramid_ancestor (const t8_dpyramid_t *pyra, const int level,
     return;
   }
   /* The coordinates of the anc are defined by the level. */
-  pyramid_cut_coords (anc, T8_DPYRAMID_MAXLEVEL - level);
+  t8_dpyramid_cut_coordinates (anc, T8_DPYRAMID_MAXLEVEL - level);
   anc->level = level;
-  anc->type = t8_dpyramid_set_type_at_level (pyra, level);
+  anc->type = t8_dpyramid_type_at_level (pyra, level);
 }
 
 void
@@ -1791,7 +1791,7 @@ t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t *pyra1,
     t8_dpyramid_copy (pyra1, nca);
     nca->level = real_level;
     /* Correct the coordinates of the nca */
-    pyramid_cut_coords (nca, T8_DPYRAMID_MAXLEVEL - real_level);
+    t8_dpyramid_cut_coordinates (nca, T8_DPYRAMID_MAXLEVEL - real_level);
     /* Set the computed type */
     nca->type = p1_type_at_level;
     return;
