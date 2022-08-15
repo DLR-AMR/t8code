@@ -91,6 +91,7 @@ compute_type_ext (const t8_dpyramid_t *p, const int level,
   return type;
 }
 
+/* TODO: Comment*/
 t8_dpyramid_type_t
 compute_type (const t8_dpyramid_t *p, const int level)
 {
@@ -99,6 +100,7 @@ compute_type (const t8_dpyramid_t *p, const int level)
 }
 
 /* sets the shift last bits of every coordinate to zero*/
+/* TODO: Doxygen*/
 static void
 pyramid_cut_coords (t8_dpyramid_t *p, const int shift)
 {
