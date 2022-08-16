@@ -373,6 +373,16 @@ void                t8_dpyramid_ancestor (const t8_dpyramid_t *pyra,
                                           const int level,
                                           t8_dpyramid_t *anc);
 
+/** Compute the type of a pyramid at a given level. Starting from its own level,
+ * we iterate over the levels and compute the type of this level. If p is a tetrahedron,
+ * we compute it in a tetrahedral fashion up unto the last level where p is a tet and
+ * continue in a pyramidal fashion 
+ * \param [in] p      Input pyramid
+ * \param [in] level  The level at which the type is computed
+ * \return            The type of \a p at level \a level. */
+int                 t8_dpyramid_type_at_level (const t8_dpyramid_t *p,
+                                               const int level);
+
 /** Returns the shape of the pyramid (pyramid or tetrahedron)
  * \param [in] p    Input pyramid.
  * \return          The eclass of the element
