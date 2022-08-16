@@ -444,6 +444,7 @@ t8_subelement_scheme_quad_c::t8_element_ancestor_id (const t8_element_t *
 int
 t8_subelement_scheme_quad_c::t8_element_is_family (t8_element_t ** fam)
 {
+  /* Note that this test is very rudimentary, especially when there subelements are in fam */
   t8_quad_with_subelements **pquad_w_sub_family =
     (t8_quad_with_subelements **) fam;
 
@@ -458,9 +459,9 @@ t8_subelement_scheme_quad_c::t8_element_is_family (t8_element_t ** fam)
 #endif
 
   /* Subelements can not be refined into other elements of a higher level. 
-   * So, if the first element of fam is a subelement, we assume that the following num_siblings 
+   * So if the first element of fam is a subelement, we assume that the following num_siblings 
    * many elements are its siblings and therefore form a family. */
-  if (pquad_w_sub_family[0]->transition_type == 0) {
+  if (pquad_w_sub_family[0]->transition_type != 0) {
     return 1;
   }
   /* If the first element of fam is no subelement we check the following elements of fam */
