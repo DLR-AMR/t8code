@@ -43,9 +43,27 @@ public:
   t8_default_scheme_pyramid_c (void);
 
                      ~t8_default_scheme_pyramid_c ();
+  /** Allocate memory for an array of pyramids and initialize them.
+   * \param [in] length   The number of pyramid elements to be allocated.
+   * \param [in,out] elems On input an array of \b length many unallocated
+   *                      element pointers.
+   *                      On output all these pointers will point to an allocated
+   *                      and initialized element.
+   * \note Not every element that is created in t8code will be created by a call
+   * to this function. However, if an element is not created using \ref t8_element_new,
+   * then it is guaranteed that \ref t8_element_init is called on it.
+   * \note In debugging mode, an element that was created with \ref t8_element_new
+   * must pass \ref t8_element_is_valid.
+   * \note If an element was created by \ref t8_element_new then \ref t8_element_init
+   * may not be called for it. Thus, \ref t8_element_new should initialize an element
+   * in the same way as a call to \ref t8_element_init would.
+   * \see t8_element_init
+   * \see t8_element_is_valid
+   */
+  virtual void        t8_element_new (int length, t8_element_t **elem);
 
   /** Initialize an array of allocated elements.
-   * \param [in] length   The number of prism elements to be allocated.
+   * \param [in] length   The number of pyramid elements to be allocated.
    * \param [in,out] elems On input an array of \b length many allocated
    *                       elements.
    * \param [in] called_new True if the elements in \a elem were created by a call
