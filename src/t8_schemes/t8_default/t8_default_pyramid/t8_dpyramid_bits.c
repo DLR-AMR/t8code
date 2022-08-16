@@ -1676,21 +1676,7 @@ t8_dpyramid_parent (const t8_dpyramid_t *p, t8_dpyramid_t *parent)
     parent->pyramid.level = p->pyramid.level - 1;
     parent->switch_shape_at_level = -1;
   }
-  else if (p->pyramid.type != 0 && p->pyramid.type != 3) {
-    /* The direct tet-child of a pyra has type 0 or type 3, therefore
-     * in this case the parent is a tetrahedron*/
-
-    t8_dtet_parent (&(p->pyramid), &(parent->pyramid));
-    parent->switch_shape_at_level = p->switch_shape_at_level;
-  }
-  else if (t8_dpyramid_is_inside_tet (p, p->pyramid.level, NULL) != 0) {
-    /*Pyramid- / tetparent detection */
-    /*If a tetrahedron does not reach a "significant point" its parent is a tet */
-    /*Tetcase */ ;
-    t8_dtet_parent (&(p->pyramid), &(parent->pyramid));
-    parent->switch_shape_at_level = p->switch_shape_at_level;
-  }
-  else {
+  else if (p->switch_shape_at_level == p->pyramid.level) {
     /*p does not lie in larger tet => parent is pyra */
     parent->pyramid.type = t8_dpyramid_tetparent_type (p);
     parent->pyramid.x = p->pyramid.x & ~length;
@@ -1698,6 +1684,12 @@ t8_dpyramid_parent (const t8_dpyramid_t *p, t8_dpyramid_t *parent)
     parent->pyramid.z = p->pyramid.z & ~length;
     parent->pyramid.level = p->pyramid.level - 1;
     parent->switch_shape_at_level = -1;
+  }
+  else {
+    /* The direct tet-child of a pyra has type 0 or type 3, therefore
+     * in this case the parent is a tetrahedron*/
+    t8_dtet_parent (&(p->pyramid), &(parent->pyramid));
+    parent->switch_shape_at_level = p->switch_shape_at_level;
   }
   T8_ASSERT (parent->pyramid.level >= 0);
 }
