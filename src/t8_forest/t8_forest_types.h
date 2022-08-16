@@ -133,7 +133,7 @@ typedef struct t8_forest
 
   int                 is_transitioned;
 
-  double time_adapt, time_balance, time_transition;
+  double              time_adapt, time_balance, time_transition;
 
 }
 t8_forest_struct_t;

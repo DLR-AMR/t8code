@@ -423,8 +423,8 @@ t8_subelement_scheme_quad_c::t8_element_child_id (const t8_element_t * elem)
 
   T8_ASSERT (t8_element_is_valid (elem));
 
-  return (t8_element_is_subelement (elem) ? pquad_w_sub->
-          subelement_id : p4est_quadrant_child_id (q));
+  return (t8_element_is_subelement (elem) ? pquad_w_sub->subelement_id :
+          p4est_quadrant_child_id (q));
 }
 
 int
@@ -475,9 +475,9 @@ t8_subelement_scheme_quad_c::t8_element_is_family (t8_element_t ** fam)
     /* If all elements of fam are no subelements, then we can use the p4est check is_family */
     else {
       return p4est_quadrant_is_family (&pquad_w_sub_family[0]->p4q,
-                                     &pquad_w_sub_family[1]->p4q,
-                                     &pquad_w_sub_family[2]->p4q,
-                                     &pquad_w_sub_family[3]->p4q);
+                                       &pquad_w_sub_family[1]->p4q,
+                                       &pquad_w_sub_family[2]->p4q,
+                                       &pquad_w_sub_family[3]->p4q);
     }
   }
 }
@@ -1519,9 +1519,10 @@ t8_subelement_scheme_quad_c::t8_element_vertex_coords_of_subelement (const
 }
 
 void
-t8_subelement_scheme_quad_c::
-t8_element_to_transition_cell (const t8_element_t * elem, int type,
-                               t8_element_t * c[])
+t8_subelement_scheme_quad_c::t8_element_to_transition_cell (const t8_element_t
+                                                            * elem, int type,
+                                                            t8_element_t *
+                                                            c[])
 {
   const t8_quad_with_subelements *pquad_w_sub_elem =
     (const t8_quad_with_subelements *) elem;
@@ -1849,8 +1850,8 @@ t8_subelement_scheme_quad_c::t8_element_find_neighbor_in_transition_cell
     }
     int
       num_subelements =
-      t8_element_get_number_of_subelements (pquad_w_sub_elem->
-                                            transition_type);
+      t8_element_get_number_of_subelements
+      (pquad_w_sub_elem->transition_type);
     return ((pquad_w_sub_elem->subelement_id + shift) + num_subelements) % num_subelements;     /* the neighbor is directly before or after elem modulo the number of subelements in the transition cell */
   }
   /* Below are the cases in which the neighbor can not be identified as simple as above. 

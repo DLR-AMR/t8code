@@ -351,8 +351,7 @@ void                t8_forest_set_balance (t8_forest_t forest,
  * \note Currently, subelements that remove hanging faces from the forest are only implemented for the 2D quad scheme. 
  */
 void                t8_forest_set_transition (t8_forest_t forest,
-                                                        const t8_forest_t
-                                                        set_from);
+                                              const t8_forest_t set_from);
 
 /** Enable or disable the creation of a layer of ghost elements.
  * On default no ghosts are created.
