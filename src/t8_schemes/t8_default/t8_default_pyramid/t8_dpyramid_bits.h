@@ -189,32 +189,12 @@ int                 t8_dpyramid_face_neighbor_inside (const t8_dpyramid_t *p,
                                                       const int face,
                                                       int *neigh_face);
 
-/** Compute the child_id of a pyramid with an unknown parent. Returns -1 if
- * p->level == 0.
- * \param[in] p     Input pyramid
- * \param[in, out] parent An uninitialized but allocated pyramid to compute the
- *                   parent of p
- * \return          The child-id of p */
-int                 t8_dpyramid_child_id_unknown_parent (const t8_dpyramid_t
-                                                         *p,
-                                                         t8_dpyramid_t
-                                                         *parent);
-
 /** Compute the position of the ancestor of this child at level \a level within
  * its siblings.
  * \param [in] p  pyramid to be considered.
  * \return Returns its child id in 0..9
  */
 int                 t8_dpyramid_child_id (const t8_dpyramid_t *p);
-
-/** Compute the position of the ancestor of this child at level \a level within
- * its siblings. The parent of p is known.
- * \param [in] p  pyramid to be considered.
- * \param [in] parent The parent of \a p.
- * \return Returns its child id in 0..9
- */
-int                 t8_dpyramid_child_id_known_parent (const t8_dpyramid_t *p,
-                                                       t8_dpyramid_t *parent);
 
 /** Returns zero if p is not inside root, 1 ow
  \param[in] p       Pyramid to check
