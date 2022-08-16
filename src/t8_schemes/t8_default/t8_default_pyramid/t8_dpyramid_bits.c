@@ -1736,51 +1736,6 @@ t8_dpyramid_vertex_reference_coords (const t8_dpyramid_t *elem,
   coords[2] = coords_int[2] / (double) T8_DPYRAMID_ROOT_LEN;
 }
 
-/** Compute the level of the last ancestor in the shape of a tetrahedron for a tet.
- * \param[in] tet   Input pyramid in the shape of a tetrahedron
- * \return          The ancestor with the lowest level that has the shape of a tet.
-*/
-static int
-t8_dpyramid_last_tet_ancestor_level (const t8_dpyramid_t *tet)
-{
-  T8_ASSERT (t8_dpyramid_shape (tet) == T8_ECLASS_TET);
-  /*There are no tets on level 0 */
-  T8_ASSERT (1 <= tet->pyramid.level
-             && tet->pyramid.level <= T8_DPYRAMID_MAXLEVEL);
-  /*The ancestor has to have the shape of a pyramid */
-  t8_dpyramid_t       last_tet_anc;
-  /* t8_dpyramid_is_inside_tet works only for tets of type 0 or type 3 */
-  if (tet->pyramid.type != 0 && tet->pyramid.type != 3) {
-    /*Find the first tet-anc of type 0 or type 3 */
-    t8_dpyramid_type_t  type_at_level = tet->pyramid.type;
-    int                 level = tet->pyramid.level;
-    while (type_at_level != 0 && type_at_level != 3) {
-      level--;
-      type_at_level =
-        compute_type_same_shape_ext (tet, level, type_at_level, level + 1);
-    }
-    T8_ASSERT (level > 0);
-    T8_ASSERT (type_at_level == 0 || type_at_level == 3);
-    t8_dpyramid_t       tmp_tet;
-    t8_dpyramid_copy (tet, &tmp_tet);
-    t8_dpyramid_cut_coordinates (&tmp_tet, T8_DPYRAMID_MAXLEVEL - level);
-    tmp_tet.pyramid.type = type_at_level;
-    tmp_tet.pyramid.level = level;
-    T8_ASSERT (tmp_tet.pyramid.type == 0 || tmp_tet.pyramid.type == 3);
-    /* With this call tmp_tet has type 0 or type 3 and the first-pyra-anc
-     * will be computed using one of the next cases. */
-    return t8_dpyramid_last_tet_ancestor_level (&tmp_tet);
-  }
-  else if (t8_dpyramid_is_inside_tet (tet, tet->pyramid.level, &last_tet_anc)
-           != 0) {
-    return last_tet_anc.pyramid.level;
-  }
-  else {
-    /* The parent of the tet is already a pyramid */
-    return tet->pyramid.level;
-  }
-}
-
 /**
  * Smallest level at which an anc of \a tet has the shape of a tetrahedron
  * 
@@ -1858,7 +1813,7 @@ t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t *pyra1,
     t8_dpyramid_t       first_pyramid_anc;
     int                 level;
 
-    level = t8_dpyramid_last_tet_ancestor_level (pyra2);
+    level = t8_dpyramid_switches_type_at_level (pyra2);
     t8_dtet_ancestor (&(pyra2->pyramid), level, &(first_pyramid_anc.pyramid));
     first_pyramid_anc.pyramid.type =
       t8_dpyramid_tetparent_type (&(first_pyramid_anc));
@@ -1877,7 +1832,7 @@ t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t *pyra1,
     t8_dpyramid_t       first_pyramid_anc;
     int                 level;
 
-    level = t8_dpyramid_last_tet_ancestor_level (pyra1);
+    level = t8_dpyramid_switches_type_at_level (pyra1);
     t8_dtet_ancestor (&(pyra1->pyramid), level, &(first_pyramid_anc.pyramid));
     first_pyramid_anc.pyramid.type =
       t8_dpyramid_tetparent_type (&first_pyramid_anc);
