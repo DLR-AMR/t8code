@@ -86,6 +86,9 @@ t8_refine_quad_to_subelements ()
   /* Iterate through all subelements and determine their vertex coordinates */
   for (subelement_id = 0; subelement_id < num_subelements; ++subelement_id) {
 
+    /* Print the current subelement */
+    class_scheme->t8_element_print_element(element_subelements [subelement_id]);
+
     /* determine the shape of the subelement and use it to determine the number of vertices it has (triangle -> 3 vertices) */
     const t8_element_shape_t shape =
       class_scheme->t8_element_shape (element_subelements[subelement_id]);
@@ -96,8 +99,8 @@ t8_refine_quad_to_subelements ()
       class_scheme->t8_element_vertex_coords (element_subelements
                                               [subelement_id], vertex_id,
                                               coords);
-      t8_productionf ("Sub_id = %i; Vertex = %i; Coordinates = (%i,%i)\n",
-                      subelement_id, vertex_id, coords[0], coords[1]);
+      t8_productionf ("Vertex = %i; Coordinates = (%i,%i)\n",
+                      vertex_id, coords[0], coords[1]);
     }
   }
 
