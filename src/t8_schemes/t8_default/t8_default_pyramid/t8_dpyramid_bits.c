@@ -588,7 +588,7 @@ t8_dpyramid_linear_id (const t8_dpyramid_t *p, const int level)
 
     /*Compute the parent and the local id of the current element */
     t8_dpyramid_parent (&copy, &parent);
-    local_id = t8_dpyramid_child_id_known_parent (&copy, &parent);
+    local_id = t8_dpyramid_child_id (&copy);
 
     /* Compute the number of predecessors within the parent that have the
      * shape of a pyramid or a tet*/
@@ -739,8 +739,13 @@ t8_dpyramid_face_parent_face (const t8_dpyramid_t *elem, const int face)
              && elem->pyramid.level <= T8_DPYRAMID_MAXLEVEL);
   T8_ASSERT (0 <= face && face < T8_DPYRAMID_FACES);
   /*parent is a pyramid */
+  if (elem->pyramid.level == 0) {
+    return face;
+  }
   if (t8_dpyramid_shape (elem) == T8_ECLASS_PYRAMID) {
-    child_id = t8_dpyramid_child_id_unknown_parent (elem, &parent);
+    child_id = t8_dpyramid_child_id (elem);
+    t8_dpyramid_parent (elem, &parent);
+
     int                 i;
     /*If the pyramid is one of the children in the array, its face-num and the face-num
      * of the parent are the same*/
@@ -755,7 +760,8 @@ t8_dpyramid_face_parent_face (const t8_dpyramid_t *elem, const int face)
     return -1;
   }
   else {
-    child_id = t8_dpyramid_child_id_unknown_parent (elem, &parent);
+    child_id = t8_dpyramid_child_id (elem);
+    t8_dpyramid_parent (elem, &parent);
     /*Parent is also a tet, we can call the tet-routine */
     if (t8_dpyramid_shape (&parent) == T8_ECLASS_TET) {
       return t8_dtet_face_parent_face (&(elem->pyramid), face);
@@ -1346,49 +1352,28 @@ t8_dpyramid_extrude_face (const t8_element_t *face, t8_dpyramid_t *p,
 }
 
 int
-t8_dpyramid_child_id_unknown_parent (const t8_dpyramid_t *p,
-                                     t8_dpyramid_t *parent)
+t8_dpyramid_child_id (const t8_dpyramid_t *p)
 {
+
   T8_ASSERT (p->pyramid.level >= 0);
-  if (p->pyramid.level == 0) {
-    /* P has no parent.pyramid. We deliberately set the type of the parent to -1,
-     * because a) parent should not be used and setting the type to an invalid
-     *            value improves chances of catching a non-allowed use of it in an assertion later.
-     *         b) t8_dpyramid_successor caused a compiler warning of parent.pyramid.type may be used uninitialize
-     *            in a subsequent call to t8_dpyramid_shape. This case is actually never executed, but the
-     *            compiler doesn't know about it. To prevent this warning, we set the type here.
-     */
-    parent->pyramid.type = -1;
-    parent->pyramid.level = -1;
-    return -1;
+  if (t8_dpyramid_shape (p) == T8_ECLASS_TET) {
+    T8_ASSERT (p->switch_shape_at_level ==
+               t8_dpyramid_compute_switch_shape_at_level (p));
+
   }
-  t8_dpyramid_parent (p, parent);
-  return t8_dpyramid_child_id_known_parent (p, parent);
+  if (t8_dpyramid_shape (p) == T8_ECLASS_PYRAMID ||
+      p->switch_shape_at_level == p->pyramid.level) {
+    if (p->pyramid.level == 0) {
+      return -1;
+    }
 
-}
-
-int
-t8_dpyramid_child_id_known_parent (const t8_dpyramid_t *p,
-                                   t8_dpyramid_t *parent)
-{
-  t8_dpyramid_cube_id_t cube_id = compute_cubeid (p, p->pyramid.level);
-  if (t8_dpyramid_shape (parent) == T8_ECLASS_PYRAMID) {
+    t8_dpyramid_cube_id_t cube_id = compute_cubeid (p, p->pyramid.level);
     T8_ASSERT (t8_dpyramid_type_cid_to_Iloc[p->pyramid.type][cube_id] >= 0);
     return t8_dpyramid_type_cid_to_Iloc[p->pyramid.type][cube_id];
   }
   else {
     return t8_dtet_child_id (&(p->pyramid));
   }
-}
-
-int
-t8_dpyramid_child_id (const t8_dpyramid_t *p)
-{
-  T8_ASSERT (p->pyramid.level >= 0);
-  t8_dpyramid_t       parent;
-  if (p->pyramid.level == 0)
-    return -1;
-  return t8_dpyramid_child_id_unknown_parent (p, &parent);
 }
 
 void
@@ -1720,7 +1705,8 @@ t8_dpyramid_successor_recursion (const t8_dpyramid_t *elem,
   T8_ASSERT (1 <= level && level <= T8_DPYRAMID_MAXLEVEL);
   succ->pyramid.level = level;
   T8_ASSERT (succ->pyramid.type >= 0);
-  child_id = t8_dpyramid_child_id_unknown_parent (elem, parent);
+  child_id = t8_dpyramid_child_id (elem);
+  t8_dpyramid_parent (elem, parent);
   /*Compute number of children */
   num_children = t8_dpyramid_num_children (parent);
   T8_ASSERT (0 <= child_id && child_id < num_children);
@@ -2004,6 +1990,7 @@ t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t *pyra1,
       first_pyra1.pyramid.level = pyra1->switch_shape_at_level - 1;
       first_pyra1.switch_shape_at_level = -1;
       t8_dpyramid_nearest_common_ancestor (&first_pyra1, pyra2, nca);
+      T8_ASSERT (nca->switch_shape_at_level < 0);
       return;
     }
     else if (real_level < pyra2->switch_shape_at_level) {
@@ -2022,6 +2009,7 @@ t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t *pyra1,
       first_pyra2.pyramid.level = pyra2->switch_shape_at_level - 1;
       first_pyra2.switch_shape_at_level = -1;
       t8_dpyramid_nearest_common_ancestor (&first_pyra2, pyra1, nca);
+      T8_ASSERT (nca->switch_shape_at_level < 0);
       return;
     }
     else {
@@ -2032,6 +2020,8 @@ t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t *pyra1,
       T8_ASSERT (pyra1->switch_shape_at_level ==
                  pyra2->switch_shape_at_level);
       nca->switch_shape_at_level = pyra1->switch_shape_at_level;
+      T8_ASSERT (nca->switch_shape_at_level ==
+                 t8_dpyramid_compute_switch_shape_at_level (nca));
       return;
     }
   }
@@ -2068,6 +2058,7 @@ t8_dpyramid_is_valid (const t8_dpyramid_t *p)
   if (t8_dpyramid_shape (p) == T8_ECLASS_TET) {
     is_valid = is_valid && (p->switch_shape_at_level > 0);
     is_valid = is_valid && (p->switch_shape_at_level <= T8_DPYRAMID_MAXLEVEL);
+    is_valid = is_valid && (p->switch_shape_at_level <= p->pyramid.level);
   }
   else {
     is_valid = is_valid && (p->switch_shape_at_level < 0);
