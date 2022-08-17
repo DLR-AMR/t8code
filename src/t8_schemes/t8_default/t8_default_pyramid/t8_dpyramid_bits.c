@@ -855,15 +855,16 @@ t8_dpyramid_tet_boundary (const t8_dpyramid_t *p, const int face)
 {
   T8_ASSERT (0 <= p->pyramid.level
              && p->pyramid.level <= T8_DPYRAMID_MAXLEVEL);
+  T8_ASSERT (t8_dpyramid_shape (p) == T8_ECLASS_TET);
+  T8_ASSERT (p->pyramid.type == 0 || p->pyramid.type == 3);
   t8_dpyramid_t       anc;
-  const int           level =
-    t8_dpyramid_is_inside_tet (p, p->pyramid.level, &anc);
   int                 bey_id, i, type_temp, valid_touch;
   t8_dpyramid_cube_id_t cube_id;
-  if (level == 0) {
+  if (p->pyramid.level == p->switch_shape_at_level) {
     /*Check if the face is connecting to a tet or to a pyra */
     return t8_dpyramid_tet_pyra_face_connection (p, face);
   }
+  t8_dpyramid_ancestor (p, p->switch_shape_at_level, &anc);
   /*Check if anc-face is connecting to a tet or to a pyra */
   valid_touch = t8_dpyramid_tet_pyra_face_connection (&anc, face);
   if (valid_touch) {
