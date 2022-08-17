@@ -56,7 +56,8 @@ These functions write a file in the NetCDF-format which represents the given 2D-
 #include <t8_forest_netcdf.h>
 #include <t8_element_shape.h>
 
-#include <string>
+#include <vector>
+#include <cstdio>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -1103,9 +1104,11 @@ t8_forest_write_netcdf_file (t8_forest_t forest,
   if (context->file_per_process_mode) {
     int                 mpirank;
     SC_CHECK_MPI (sc_MPI_Comm_rank (comm, &mpirank));
-    char filename[BUFSIZ];
-    std::snprintf(filename, BUFSIZ, "%s_%d.nc", context->filename, mpirank);
-    if (const int retval = nc_create(filename, cmode, &context->ncid)) {
+    const char* fmt = "%s_%d.nc";
+    const int size = std::snprintf(nullptr, 0, fmt, context->filename, mpirank);
+    std::vector<char> filename(size + 1); /* +1 for '\0' */
+    std::sprintf(filename.data(), fmt, context->filename, mpirank);
+    if (const int retval = nc_create(filename.data(), cmode, &context->ncid)) {
       ERR(retval);
     }
     t8_debugf ("A serial netCDf-file has been created for each mpi rank.\n");
@@ -1113,10 +1116,12 @@ t8_forest_write_netcdf_file (t8_forest_t forest,
   else {
     /* Create a parallel NetCDF-File */
 #if T8_WITH_NETCDF_PAR
-    char filename[BUFSIZ];
-    std::snprintf(filename, BUFSIZ, "%s.nc", context->filename);
+    const char* fmt = "%s.nc";
+    const int size = std::snprintf(nullptr, 0, fmt, context->filename);
+    std::vector<char> filename(size + 1); /* +1 for '\0' */
+    std::sprintf(filename.data(), fmt, context->filename);
     if ((retval =
-         nc_create_par (filename, cmode, comm, sc_MPI_INFO_NULL,
+         nc_create_par (filename.data(), cmode, comm, sc_MPI_INFO_NULL,
                         &context->ncid))) {
       ERR (retval);
     }
