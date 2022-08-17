@@ -1171,13 +1171,14 @@ t8_dpyramid_num_siblings (const t8_dpyramid_t *p)
 {
   T8_ASSERT (0 <= p->pyramid.level
              && p->pyramid.level <= T8_DPYRAMID_MAXLEVEL);
-  t8_dpyramid_t       parent;
-  if (p->pyramid.level == 0) {
-    /* A level zero pyramid has only itself as sibling. */
-    return 1;
+  if (t8_dpyramid_shape (p) == T8_ECLASS_PYRAMID ||
+      p->switch_shape_at_level == p->pyramid.level) {
+    /* The parent is a pyramid. */
+    return T8_DPYRAMID_CHILDREN;
   }
-  t8_dpyramid_parent (p, &parent);
-  return t8_dpyramid_num_children (&parent);
+  else {
+    return T8_DTET_CHILDREN;
+  }
 }
 
 int
