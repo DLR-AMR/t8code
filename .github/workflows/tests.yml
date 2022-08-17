@@ -417,7 +417,7 @@ jobs:
     - name: Install OpenCASCADE
       run: sudo apt-get install libocct-foundation-dev libocct-modeling-algorithms-dev libocct-modeling-data-dev
     - name: configure
-      run: mkdir build_occ && cd build_occ && ../configure $CONFIG_RELEASE --with-occ CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
+      run: mkdir build_occ && cd build_occ && ../configure $CONFIG_RELEASE --with-occ CFLAGS="$CFLAGS_var -I/usr/include/opencascade" CXXFLAGS="$CXXFLAGS_var -I/usr/include/opencascade"
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v1
@@ -425,9 +425,9 @@ jobs:
         name: config_occ_release_MPI.log
         path: build_occ/config.log
     - name: make
-      run: cd build_occ && make -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
+      run: cd build_occ && make -j V=0 CFLAGS="$CFLAGS_var -Werror -I/usr/include/opencascade" CXXFLAGS="$CXXFLAGS_var -Werror -I/usr/include/opencascade"
     - name: make check
-      run: cd build_occ && make check -j4 V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
+      run: cd build_occ && make check -j4 V=0 CFLAGS="$CFLAGS_var -Werror -I/usr/include/opencascade" CXXFLAGS="$CXXFLAGS_var -Werror -I/usr/include/opencascade"
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v1
