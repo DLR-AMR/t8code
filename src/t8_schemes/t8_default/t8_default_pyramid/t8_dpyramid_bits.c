@@ -1387,9 +1387,7 @@ t8_dpyramid_child (const t8_dpyramid_t *elem, const int child_id,
   T8_ASSERT (0 <= child_id && child_id < T8_DPYRAMID_CHILDREN);
   T8_ASSERT (0 <= elem->pyramid.level
              && elem->pyramid.level <= T8_DPYRAMID_MAXLEVEL);
-
   if (t8_dpyramid_shape (elem) == T8_ECLASS_TET) {
-    /*Todo: Set switch_shape_at_level */
     t8_dtet_child (&(elem->pyramid), child_id, &(child->pyramid));
     child->switch_shape_at_level = elem->switch_shape_at_level;
   }
@@ -1405,7 +1403,9 @@ t8_dpyramid_child (const t8_dpyramid_t *elem, const int child_id,
     child->pyramid.type =
       t8_dpyramid_parenttype_Iloc_to_type[elem->pyramid.type][child_id];
     if (t8_dpyramid_shape (child) == T8_ECLASS_TET) {
-      child->switch_shape_at_level = elem->pyramid.level + 1;
+      /* Use the level to set switch_shape_at_level, because the function has to be callable
+       * wich elem = child */
+      child->switch_shape_at_level = child->pyramid.level;
     }
     else {
       child->switch_shape_at_level = -1;
@@ -1697,32 +1697,34 @@ t8_dpyramid_shape (const t8_dpyramid_t *p)
 
 static void
 t8_dpyramid_successor_recursion (const t8_dpyramid_t *elem,
-                                 t8_dpyramid_t *succ, t8_dpyramid_t *parent,
-                                 const int level)
+                                 t8_dpyramid_t *succ, const int level)
 {
-  int                 child_id, num_children;
+  int                 child_id, num_siblings;
   t8_dpyramid_copy (elem, succ);
 
   T8_ASSERT (1 <= level && level <= T8_DPYRAMID_MAXLEVEL);
   succ->pyramid.level = level;
+  if (level < succ->switch_shape_at_level) {
+    succ->switch_shape_at_level = -1;
+  }
   T8_ASSERT (succ->pyramid.type >= 0);
   child_id = t8_dpyramid_child_id (elem);
-  t8_dpyramid_parent (elem, parent);
   /*Compute number of children */
-  num_children = t8_dpyramid_num_children (parent);
-  T8_ASSERT (0 <= child_id && child_id < num_children);
-  if (child_id == num_children - 1) {
+  num_siblings = t8_dpyramid_num_siblings (elem);
+  T8_ASSERT (0 <= child_id && child_id < num_siblings);
+  if (child_id == num_siblings - 1) {
     int                 shift = T8_DPYRAMID_MAXLEVEL - level + 1;
     /* Last-child-case. The successor is the successor of the parent element,
      * but with the given level */
-    t8_dpyramid_successor_recursion (succ, succ, parent, level - 1);
+    t8_dpyramid_successor_recursion (succ, succ, level - 1);
     succ->pyramid.level = level;
     /* bits auf level auf child 0 setzen */
     t8_dpyramid_cut_coordinates (succ, shift);
   }
   else {
     /* Not the last element. Compute child with local ID child_id+1 */
-    t8_dpyramid_child (parent, child_id + 1, succ);
+    t8_dpyramid_parent (succ, succ);
+    t8_dpyramid_child (succ, child_id + 1, succ);
     succ->pyramid.level = level;
   }
 }
@@ -1731,8 +1733,16 @@ void
 t8_dpyramid_successor (const t8_dpyramid_t *elem, t8_dpyramid_t *succ,
                        const int level)
 {
-  t8_dpyramid_t       parent;
-  t8_dpyramid_successor_recursion (elem, succ, &parent, level);
+  t8_dpyramid_successor_recursion (elem, succ, level);
+#ifdef T8_ENABLE_DEBUG
+  if (t8_dpyramid_shape (succ) == T8_ECLASS_PYRAMID) {
+    T8_ASSERT (succ->switch_shape_at_level < 0);
+  }
+  else {
+    T8_ASSERT (succ->switch_shape_at_level =
+               t8_dpyramid_compute_switch_shape_at_level (succ));
+  }
+#endif
 }
 
 void
