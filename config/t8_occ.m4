@@ -1,7 +1,7 @@
 dnl T8_CHECK_OCC
 dnl Check for OpenCASCADE support and link a test program
 dnl
-dnl This macro tries to link to the occ library.
+dnl This macro tries to link to the OpenCASCADE library.
 dnl Use the LIBS variable on the configure line to specify a different library
 dnl or use --with-occ=<LIBRARY>
 dnl
@@ -26,7 +26,7 @@ T8_ARG_WITH([occ],
     LIBS="$LIBS $T8_OCC_LIBS"
 
 
-  dnl occ is a C++ library, so we need to ensure the test is
+  dnl OpenCASCADE is a C++ library, so we need to ensure the test is
   dnl compiled with C++
   AC_LANG_PUSH([C++])
   AC_LINK_IFELSE([AC_LANG_PROGRAM(
@@ -35,7 +35,7 @@ T8_ARG_WITH([occ],
 ]],[[
    gp_Pnt pnt = gp_Pnt();
 ]])],,
-                 [AC_MSG_ERROR([Unable to link with occ library])])
+                 [AC_MSG_ERROR([Unable to link with OpenCASCADE library])])
   dnl Disable default C++ compilation again
   AC_LANG_POP([C++])
 dnl Keep the variables changed as done above
