@@ -422,7 +422,7 @@ jobs:
       if: failure()
       uses: actions/upload-artifact@v1
       with:
-        name: config_debug_serial.log
+        name: config_occ_release_MPI.log
         path: build_occ/config.log
     - name: make
       run: cd build_occ && make -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
