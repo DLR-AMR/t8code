@@ -99,7 +99,7 @@ main (int argc, char **argv)
 #ifdef T8_ENABLE_LESS_TESTS
   const int           maxlvl = 4;
 #else
-  const int           maxlvl = 9;
+  const int           maxlvl = 6;
 #endif
 
   mpiret = sc_MPI_Init (&argc, &argv);
