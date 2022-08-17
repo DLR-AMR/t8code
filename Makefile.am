@@ -43,7 +43,8 @@ t8aclocaldir = $(datadir)/aclocal
 dist_t8aclocal_DATA = config/t8_include.m4 \
                       config/t8_stdpp.m4 \
                       config/t8_netcdf.m4 \
-                      config/t8_vtk.m4
+                      config/t8_vtk.m4 \
+                      config/t8_occ.m4
 
 # install t8 data in the correct directory
 t8datadir = $(datadir)/t8code/data

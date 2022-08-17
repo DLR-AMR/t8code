@@ -292,7 +292,7 @@ t8_test_ghost_msh_file (const char *fileprefix, int level, int dim,
 {
   t8_cmesh_t          cmesh;
 
-  cmesh = t8_cmesh_from_msh_file (fileprefix, 0, comm, dim, 0);
+  cmesh = t8_cmesh_from_msh_file (fileprefix, 0, comm, dim, 0, 0);
   t8_test_ghost_refine_and_partition (cmesh, level, comm, 1, ghost_version,
                                       max_level, no_vtk, refine_method);
 }

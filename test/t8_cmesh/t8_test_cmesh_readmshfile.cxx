@@ -28,9 +28,9 @@
 #include "t8_cmesh/t8_cmesh_trees.h"
 
 /* In this file we test the msh file (gmsh) reader of the cmesh.
- * Currently, we support version 2 ascii.
+ * Currently, we support version 2 and 4 ascii.
  * We read a mesh file and check whether the constructed cmesh is correct.
- * We also try to read version 2 binary, version 4 ascii and version 4 binary
+ * We also try to read version 2 binary and version 4 binary
  * formats. All are not supported and we expect the reader to catch this.
  */
 
@@ -151,7 +151,7 @@ t8_test_cmesh_readmshfile_version2_ascii ()
                    filename);
 
   /* Try to read cmesh */
-  cmesh = t8_cmesh_from_msh_file (fileprefix, 1, sc_MPI_COMM_WORLD, 2, 0);
+  cmesh = t8_cmesh_from_msh_file (fileprefix, 1, sc_MPI_COMM_WORLD, 2, 0, 0);
   SC_CHECK_ABORT (cmesh != NULL,
                   "Could not read cmesh from ascii version 2, but should be able to.");
   retval = t8_test_supported_msh_file (cmesh);
@@ -182,7 +182,7 @@ t8_test_cmesh_readmshfile_version2_bin ()
                    filename);
 
   /* Try to read cmesh */
-  cmesh = t8_cmesh_from_msh_file (fileprefix, 1, sc_MPI_COMM_WORLD, 2, 0);
+  cmesh = t8_cmesh_from_msh_file (fileprefix, 1, sc_MPI_COMM_WORLD, 2, 0, 0);
   SC_CHECK_ABORT (cmesh == NULL,
                   "Expected fail of reading binary msh file v.2, but did not fail.");
   retval = t8_test_supported_msh_file (cmesh);
@@ -192,7 +192,7 @@ t8_test_cmesh_readmshfile_version2_bin ()
   t8_global_productionf ("Error handling successfull.\n");
 }
 
-/* Read version 4 ascii file. We expect this to fail. */
+/* Read version 4 ascii file. We expect this to work. */
 static void
 t8_test_cmesh_readmshfile_version4_ascii ()
 {
@@ -211,13 +211,16 @@ t8_test_cmesh_readmshfile_version4_ascii ()
                    filename);
 
   /* Try to read cmesh */
-  cmesh = t8_cmesh_from_msh_file (fileprefix, 1, sc_MPI_COMM_WORLD, 2, 0);
-  SC_CHECK_ABORT (cmesh == NULL,
-                  "Expected fail of reading ascii msh file v4, but did not fail.");
+  cmesh = t8_cmesh_from_msh_file (fileprefix, 1, sc_MPI_COMM_WORLD, 2, 0, 0);
+  SC_CHECK_ABORT (cmesh != NULL,
+                  "Could not read cmesh from ascii version 4, but should be able to.");
   retval = t8_test_supported_msh_file (cmesh);
-  SC_CHECK_ABORT (retval == 0,
-                  "Unexpected return from t8_test_supported_msh_file.");
-  t8_global_productionf ("Error handling successfull.\n");
+  SC_CHECK_ABORT (retval == 1, "Cmesh incorrectly read from file.");
+
+  /* The cmesh was read sucessfully and we need to destroy it. */
+  t8_cmesh_destroy (&cmesh);
+
+  t8_global_productionf ("Could successfully read.\n");
 }
 
 /* Read version 4 bin file. We expect this to fail. */
@@ -239,7 +242,7 @@ t8_test_cmesh_readmshfile_version4_bin ()
                    filename);
 
   /* Try to read cmesh */
-  cmesh = t8_cmesh_from_msh_file (fileprefix, 1, sc_MPI_COMM_WORLD, 2, 0);
+  cmesh = t8_cmesh_from_msh_file (fileprefix, 1, sc_MPI_COMM_WORLD, 2, 0, 0);
   SC_CHECK_ABORT (cmesh == NULL,
                   "Expected fail of reading binary msh file v4, but did not fail.");
   retval = t8_test_supported_msh_file (cmesh);
