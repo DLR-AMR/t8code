@@ -1795,15 +1795,8 @@ t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t *pyra1,
       t8_dpyramid_shape (pyra2) == T8_ECLASS_TET) {
     t8_dpyramid_t       first_pyramid_anc;
 
-    t8_dtet_ancestor (&(pyra2->pyramid), pyra2->switch_shape_at_level,
-                      &(first_pyramid_anc.pyramid));
-    first_pyramid_anc.pyramid.type =
-      t8_dpyramid_tetparent_type (&(first_pyramid_anc));
-    t8_dpyramid_cut_coordinates (&first_pyramid_anc,
-                                 T8_DPYRAMID_MAXLEVEL -
-                                 (pyra2->switch_shape_at_level - 1));
-    first_pyramid_anc.pyramid.level = pyra2->switch_shape_at_level - 1;
-    first_pyramid_anc.switch_shape_at_level = -1;
+    t8_dpyramid_ancestor (pyra2, pyra2->switch_shape_at_level - 1,
+                          &first_pyramid_anc);
 
     /* pyra1 and first_pyramid_anc have the shape of a pyramid now, 
      * we can call the nca again.
@@ -1815,15 +1808,9 @@ t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t *pyra1,
            t8_dpyramid_shape (pyra2) == T8_ECLASS_PYRAMID) {
     t8_dpyramid_t       first_pyramid_anc;
 
-    t8_dtet_ancestor (&(pyra1->pyramid), pyra1->switch_shape_at_level,
-                      &(first_pyramid_anc.pyramid));
-    first_pyramid_anc.pyramid.type =
-      t8_dpyramid_tetparent_type (&first_pyramid_anc);
-    t8_dpyramid_cut_coordinates (&first_pyramid_anc,
-                                 T8_DPYRAMID_MAXLEVEL -
-                                 (pyra1->switch_shape_at_level - 1));
-    first_pyramid_anc.pyramid.level = pyra1->switch_shape_at_level - 1;
-    first_pyramid_anc.switch_shape_at_level = -1;
+    t8_dpyramid_ancestor (pyra1, pyra1->switch_shape_at_level - 1,
+                          &first_pyramid_anc);
+
     /* pyra2 and first_pyramid_anc have the shape of a pyramid now, 
      * we can call the nca again.
      */
@@ -1898,8 +1885,6 @@ t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t *pyra1,
     T8_ASSERT (level <= T8_DPYRAMID_MAXLEVEL);
     t8_dpyramid_t       pyra1_anc;
     t8_dpyramid_t       pyra2_anc;
-    t8_dpyramid_t       last_tet1;
-    t8_dpyramid_t       last_tet2;
 
     /* Cube level is the highest possible level where the nca can be. the coordinates
      * match at the level, but the type can be different.*/
@@ -1936,55 +1921,21 @@ t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t *pyra1,
         compute_type_same_shape_ext (pyra2, real_level, p2_type_at_level,
                                      real_level + 1);
     }
-    if (real_level < pyra1->switch_shape_at_level) {
-      /* The first element switches the shape. The type is computed using 
-       * assuming a pyramid-parent.pyramid.*/
-      t8_dpyramid_t       first_pyra1;
-      t8_dtet_ancestor (&(pyra1->pyramid), pyra1->switch_shape_at_level,
-                        &(last_tet1.pyramid));
-      t8_dpyramid_coord_t length =
-        T8_DPYRAMID_LEN (pyra1->switch_shape_at_level);
-      first_pyra1.pyramid.x = last_tet1.pyramid.x & ~length;
-      first_pyra1.pyramid.y = last_tet1.pyramid.y & ~length;
-      first_pyra1.pyramid.z = last_tet1.pyramid.z & ~length;
-      first_pyra1.pyramid.type = t8_dpyramid_tetparent_type (&last_tet1);
-      first_pyra1.pyramid.level = pyra1->switch_shape_at_level - 1;
-      first_pyra1.switch_shape_at_level = -1;
-      t8_dpyramid_nearest_common_ancestor (&first_pyra1, pyra2, nca);
-      T8_ASSERT (nca->switch_shape_at_level < 0);
-      return;
-    }
-    else if (real_level < pyra2->switch_shape_at_level) {
-
-      /* The second element switches the shape. The type is computed using 
-       * assuming a pyramid-parent.pyramid.*/
-      t8_dpyramid_t       first_pyra2;
-      t8_dtet_ancestor (&(pyra2->pyramid), pyra2->switch_shape_at_level,
-                        &(last_tet2.pyramid));
-      t8_dpyramid_coord_t length =
-        T8_DPYRAMID_LEN (pyra2->switch_shape_at_level);
-      first_pyra2.pyramid.x = last_tet2.pyramid.x & ~length;
-      first_pyra2.pyramid.y = last_tet2.pyramid.y & ~length;
-      first_pyra2.pyramid.z = last_tet2.pyramid.z & ~length;
-      first_pyra2.pyramid.type = t8_dpyramid_tetparent_type (&last_tet2);
-      first_pyra2.pyramid.level = pyra2->switch_shape_at_level - 1;
-      first_pyra2.switch_shape_at_level = -1;
-      t8_dpyramid_nearest_common_ancestor (&first_pyra2, pyra1, nca);
-      T8_ASSERT (nca->switch_shape_at_level < 0);
-      return;
+    if (real_level < pyra1->switch_shape_at_level ||
+        real_level < pyra2->switch_shape_at_level) {
+      t8_dpyramid_ancestor (pyra1, pyra1->switch_shape_at_level - 1,
+                            &pyra1_anc);
+      t8_dpyramid_ancestor (pyra2, pyra2->switch_shape_at_level - 1,
+                            &pyra2_anc);
+      t8_dpyramid_nearest_common_ancestor (&pyra1_anc, &pyra2_anc, nca);
     }
     else {
-      /* No anc switches the shape, the nca is a tet */
       T8_ASSERT (p1_type_at_level == p2_type_at_level);
-      T8_ASSERT (p1_type_at_level < T8_DPYRAMID_FIRST_TYPE);
+      /* The nearest common ancestor is a tetrahedron. */
       t8_dtet_ancestor (&(pyra1->pyramid), real_level, &(nca->pyramid));
-      T8_ASSERT (pyra1->switch_shape_at_level ==
-                 pyra2->switch_shape_at_level);
       nca->switch_shape_at_level = pyra1->switch_shape_at_level;
-      T8_ASSERT (nca->switch_shape_at_level ==
-                 t8_dpyramid_compute_switch_shape_at_level (nca));
-      return;
     }
+
   }
 }
 
