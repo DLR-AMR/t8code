@@ -496,72 +496,23 @@ t8_dpyramid_type_at_level (const t8_dpyramid_t *p, const int level)
   if (level >= p->pyramid.level) {
     return p->pyramid.type;
   }
-  if (t8_dpyramid_shape (p) == T8_ECLASS_PYRAMID) {
+  if (t8_dpyramid_shape (p) == T8_ECLASS_PYRAMID ||
+      level >= p->switch_shape_at_level) {
     /* The shape does not switch, we can use the compute_type_same_shape function */
     return compute_type_same_shape (p, level);
   }
   else {
-    /* The shape may switch */
+    /* The shape switches */
     T8_ASSERT (t8_dpyramid_shape (p) == T8_ECLASS_TET);
-    int                 current_level = p->pyramid.level;
-    int                 type_at_level = p->pyramid.type;
-    /* The shape can not switch for tets that do not have type 0/3 */
-    while (type_at_level != 0 && type_at_level != 3 && current_level > level) {
-      /* The shape does not switch, we can use compute_type_same_shape_ext */
-      current_level--;
-      type_at_level =
-        compute_type_same_shape_ext (p, current_level, type_at_level,
-                                     current_level + 1);
-    }
-    if (level == current_level) {
+    t8_dpyramid_t       anc;
+    t8_dpyramid_ancestor (p, p->switch_shape_at_level, &anc);
+    t8_dpyramid_parent (&anc, &anc);
+    if (level == anc.pyramid.level) {
       /* We have already reached the desired level and can return. */
-      return type_at_level;
+      return anc.pyramid.type;
     }
     else {
-      /* The shape may switch, we can use t8_dpyramid_is_inside_tet, to find out when. */
-      T8_ASSERT (type_at_level == 0 || type_at_level == 3);
-      T8_ASSERT (current_level > level);
-      t8_dpyramid_t       last_tet;
-      t8_dpyramid_t       first_pyra;
-      t8_dpyramid_t       tmp_pyra;
-      t8_dpyramid_copy (p, &tmp_pyra);
-      tmp_pyra.pyramid.type = type_at_level;
-      tmp_pyra.pyramid.level = current_level;
-      /* Compute the last level where the shape is a tetrahedron. If last_tet_level == 0
-       * then the parent is already a pyramid. */
-      int                 last_tet_level =
-        t8_dpyramid_is_inside_tet (&tmp_pyra, current_level, &last_tet);
-      if (last_tet_level != 0) {
-        /* last_tet was calculated by t8_dpyramid_is_inside_tet */
-        current_level = SC_MAX (last_tet_level, level);
-        if (current_level > last_tet_level) {
-          t8_dtet_ancestor (&(p->pyramid), current_level,
-                            &(last_tet.pyramid));
-        }
-        type_at_level = last_tet.pyramid.type;
-      }
-      else {
-        /* last_tet_level is the current_level */
-        t8_dtet_ancestor (&(p->pyramid), current_level, &(last_tet.pyramid));
-        type_at_level = last_tet.pyramid.type;
-      }
-      /* At this point the shape switches. */
-      if (current_level > level) {
-        current_level--;
-        first_pyra.pyramid.type = t8_dpyramid_tetparent_type (&last_tet);
-        type_at_level = first_pyra.pyramid.type;
-      }
-      /* The shape is now a pyramid, and won't switch anymore. */
-      while (current_level > level) {
-        T8_ASSERT (type_at_level == T8_DPYRAMID_FIRST_TYPE ||
-                   type_at_level == T8_DPYRAMID_SECOND_TYPE);
-        current_level--;
-        type_at_level =
-          compute_type_same_shape_ext (p, current_level, type_at_level,
-                                       current_level + 1);
-      }
-      T8_ASSERT (level == current_level);
-      return type_at_level;
+      return compute_type_same_shape (&anc, level);
     }
   }
 }
