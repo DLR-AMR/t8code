@@ -55,9 +55,8 @@ void                t8_dpyramid_copy (const t8_dpyramid_t *source,
  * Sets the field switch_shape_at_level for \a p. \a p has to have the shape
  * of a tetrahedron. 
  * switch_shape_at_level is set to the lowest level at which the ancestor of \a p
- * still has the shape of a tetrahedron. switch_shape_at_level is undefined for an
- * element in the shape of a pyramid and therefore this function should not be called
- * for a pyramidal shaped element.
+ * still has the shape of a tetrahedron. switch_shape_at_level is set to -1 for
+ * pyramidal shaped elements.
  * 
  * \param p       Input element, whose switch_shape_at_level will be set.
  */
