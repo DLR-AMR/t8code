@@ -441,6 +441,7 @@ t8_default_scheme_pyramid_c::t8_element_nca (const t8_element_t *elem1,
 {
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
+
   t8_dpyramid_nearest_common_ancestor ((const t8_dpyramid_t *) elem1,
                                        (const t8_dpyramid_t *) elem2,
                                        (t8_dpyramid_t *) nca);
