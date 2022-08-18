@@ -22,35 +22,32 @@
 
 #include <t8_eclass.h>
 #include <t8_geometry/t8_geometry_helpers.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.h>
 
-/* Given function values at the four edge points of a unit square and
- * a point within that square, interpolate the function value at this point.
- * \param [in]    vertex  An array of size at least dim giving the coordinates of the vertex to interpolate
- * \param [in]    corner_values An array of size 2^dim * 3, giving for each corner (in zorder) of
- *                        the unit square/cube its function values in 3D space.
- * \param [out]   evaluated_function An array of size 3, on output the function values
- *                        at \a vertex are stored here.
- */
 void
-t8_geom_bilinear_interpolation (const double *vertex,
-                                const double *corner_values,
-                                int dim, double *evaluated_function)
+t8_geom_linear_interpolation (const double *coefficients,
+                              const double *corner_values,
+                              int corner_value_dim,
+                              int interpolation_dim,
+                              double *evaluated_function)
 {
-  int                 i;
   double              temp[3] = { 0 };
-
-  for (i = 0; i < 3; i++) {
-    temp[i] = corner_values[0 * 3 + i] * (1 - vertex[0]) * (1 - vertex[1])      /* x=0 y=0 */
-      +corner_values[1 * 3 + i] * vertex[0] * (1 - vertex[1])   /* x=1 y=0 */
-      +corner_values[2 * 3 + i] * (1 - vertex[0]) * vertex[1]   /* x=0 y=1 */
-      +corner_values[3 * 3 + i] * vertex[0] * vertex[1];        /* x=1 y=1 */
-    if (dim == 3) {
-      temp[i] *= (1 - vertex[2]);
-      temp[i] += (corner_values[4 * 3 + i] * (1 - vertex[0]) * (1 - vertex[1])  /* x=0 y=0 z=1 */
-                  +corner_values[5 * 3 + i] * vertex[0] * (1 - vertex[1])       /* x=1 y=0 z=1 */
-                  +corner_values[6 * 3 + i] * (1 - vertex[0]) * vertex[1]       /* x=0 y=1 z=1 */
-                  +corner_values[7 * 3 + i] * vertex[0] * vertex[1])    /* x=1 y=1 z=1 */
-        *vertex[2];
+  for (int i = 0; i < corner_value_dim; i++) {
+    temp[i] = corner_values[0 * corner_value_dim + i] * (1 - coefficients[0])   /* x=0 y=0 z=0 */
+      +corner_values[1 * corner_value_dim + i] * coefficients[0];       /* x=1 y=0 z=0 */
+    if (interpolation_dim > 1) {
+      temp[i] *= (1 - coefficients[1]);
+      temp[i] += (corner_values[2 * corner_value_dim + i] * (1 - coefficients[0])       /* x=0 y=1 z=0 */
+                  +corner_values[3 * corner_value_dim + i] * coefficients[0])   /* x=1 y=1 z=0 */
+        *coefficients[1];
+      if (interpolation_dim == 3) {
+        temp[i] *= (1 - coefficients[2]);
+        temp[i] += (corner_values[4 * corner_value_dim + i] * (1 - coefficients[0]) * (1 - coefficients[1])     /* x=0 y=0 z=1 */
+                    +corner_values[5 * corner_value_dim + i] * coefficients[0] * (1 - coefficients[1])  /* x=1 y=0 z=1 */
+                    +corner_values[6 * corner_value_dim + i] * (1 - coefficients[0]) * coefficients[1]  /* x=0 y=1 z=1 */
+                    +corner_values[7 * corner_value_dim + i] * coefficients[0] * coefficients[1])       /* x=1 y=1 z=1 */
+          *coefficients[2];
+      }
     }
     evaluated_function[i] = temp[i];
   }
@@ -117,8 +114,8 @@ t8_geom_compute_linear_geometry (t8_eclass_t tree_class,
     break;
   case T8_ECLASS_QUAD:
   case T8_ECLASS_HEX:
-    t8_geom_bilinear_interpolation (ref_coords,
-                                    tree_vertices, dimension, out_coords);
+    t8_geom_linear_interpolation (ref_coords,
+                                  tree_vertices, 3, dimension, out_coords);
     break;
   case T8_ECLASS_PYRAMID:
     {
@@ -157,8 +154,8 @@ t8_geom_compute_linear_geometry (t8_eclass_t tree_class,
       lambda = sqrt (length2) / sqrt (length);
 
       /*Interpolate on quad */
-      t8_geom_bilinear_interpolation ((const double *) quad_coords,
-                                      tree_vertices, 2, out_coords);
+      t8_geom_linear_interpolation ((const double *) quad_coords,
+                                    tree_vertices, 3, 2, out_coords);
       /*Project it back */
       for (i = 0; i < 3; i++) {
         out_coords[i] += (tree_vertices[12 + i] - out_coords[i]) * lambda;
@@ -168,5 +165,39 @@ t8_geom_compute_linear_geometry (t8_eclass_t tree_class,
   default:
     SC_ABORT ("Linear geometry coordinate computation is supported only for "
               "vertices/lines/triangles/tets/quads/prisms/hexes/pyramids.");
+  }
+}
+
+void
+t8_geom_get_face_vertices (const t8_eclass_t tree_class,
+                           const double *tree_vertices,
+                           int face_index, int dim, double *face_vertices)
+{
+  const int           face_class =
+    t8_eclass_face_types[tree_class][face_index];
+  for (int i_face_vertex = 0;
+       i_face_vertex < t8_eclass_num_vertices[face_class]; ++i_face_vertex) {
+    for (int i_dim = 0; i_dim < dim; ++i_dim) {
+      const int           i_tree_vertex =
+        t8_face_vertex_to_tree_vertex[tree_class][face_index][i_face_vertex];
+      face_vertices[i_face_vertex * dim + i_dim] =
+        tree_vertices[i_tree_vertex * dim + i_dim];
+    }
+  }
+}
+
+void
+t8_geom_get_edge_vertices (const t8_eclass_t tree_class,
+                           const double *tree_vertices,
+                           int edge_index, int dim, double *edge_vertices)
+{
+  T8_ASSERT (t8_eclass_to_dimension[tree_class] == 3);
+  for (int i_edge_vertex = 0; i_edge_vertex < 2; ++i_edge_vertex) {
+    for (int i_dim = 0; i_dim < dim; ++i_dim) {
+      const int           i_tree_vertex =
+        t8_edge_vertex_to_tree_vertex[edge_index][i_edge_vertex];
+      edge_vertices[i_edge_vertex * dim + i_dim] =
+        tree_vertices[i_tree_vertex * dim + i_dim];
+    }
   }
 }

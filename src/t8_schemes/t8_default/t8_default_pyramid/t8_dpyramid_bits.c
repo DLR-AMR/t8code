@@ -497,6 +497,7 @@ t8_dpyramid_type_at_level (const t8_dpyramid_t *p, const int level)
   }
   if (t8_dpyramid_shape (p) == T8_ECLASS_PYRAMID ||
       level >= p->switch_shape_at_level) {
+
     /* The shape does not switch, we can use the compute_type_same_shape function */
     return compute_type_same_shape (p, level);
   }
@@ -1583,6 +1584,7 @@ t8_dpyramid_tetparent_type (const t8_dpyramid_t *p)
   T8_ASSERT (t8_dpyramid_shape (p) == T8_ECLASS_TET);
   if ((p->pyramid.z >> (T8_DPYRAMID_MAXLEVEL - p->pyramid.level)) % 2 == 0) {
     return T8_DPYRAMID_FIRST_TYPE;
+
   }
   else {
     return T8_DPYRAMID_SECOND_TYPE;
