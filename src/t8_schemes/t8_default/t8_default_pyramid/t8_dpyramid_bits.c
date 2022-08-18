@@ -711,16 +711,15 @@ t8_dpyramid_face_parent_face (const t8_dpyramid_t *elem, const int face)
   }
   else {
     child_id = t8_dpyramid_child_id (elem);
-    t8_dpyramid_parent (elem, &parent);
     /*Parent is also a tet, we can call the tet-routine */
-    if (t8_dpyramid_shape (&parent) == T8_ECLASS_TET) {
+    if (elem->pyramid.level > elem->switch_shape_at_level) {
       return t8_dtet_face_parent_face (&(elem->pyramid), face);
     }
     /*tet with a pyramid-parent */
     else {
+      t8_dpyramid_type_t  parent_type = t8_dpyramid_tetparent_type (elem);
       /*Only tets of type 0 or 3 have a pyra-parent.pyramid. Parent can have type 6 or 7 */
-      if (elem->pyramid.type == 0
-          && parent.pyramid.type == T8_DPYRAMID_FIRST_TYPE) {
+      if (elem->pyramid.type == 0 && parent_type == T8_DPYRAMID_FIRST_TYPE) {
         if (child_id == 3 && face == 1) {
           return 0;
         }
@@ -731,7 +730,7 @@ t8_dpyramid_face_parent_face (const t8_dpyramid_t *elem, const int face)
           return -1;
       }
       else if (elem->pyramid.type == 3
-               && parent.pyramid.type == T8_DPYRAMID_FIRST_TYPE) {
+               && parent_type == T8_DPYRAMID_FIRST_TYPE) {
         if (child_id == 1 && face == 1) {
           return 2;
         }
@@ -742,7 +741,7 @@ t8_dpyramid_face_parent_face (const t8_dpyramid_t *elem, const int face)
           return -1;
       }
       else if (elem->pyramid.type == 0
-               && parent.pyramid.type == T8_DPYRAMID_SECOND_TYPE) {
+               && parent_type == T8_DPYRAMID_SECOND_TYPE) {
         if (child_id == 1 && face == 3) {
           return 1;
         }
@@ -753,7 +752,7 @@ t8_dpyramid_face_parent_face (const t8_dpyramid_t *elem, const int face)
           return -1;
       }
       else if (elem->pyramid.type == 3
-               && parent.pyramid.type == T8_DPYRAMID_SECOND_TYPE) {
+               && parent_type == T8_DPYRAMID_SECOND_TYPE) {
         if (child_id == 2 && face == 3) {
           return 3;
         }
