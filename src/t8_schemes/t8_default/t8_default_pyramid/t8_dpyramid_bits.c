@@ -2019,7 +2019,9 @@ t8_dpyramid_is_valid (const t8_dpyramid_t *p)
   if (t8_dpyramid_shape (p) == T8_ECLASS_TET) {
     is_valid = is_valid && (p->switch_shape_at_level > 0);
     is_valid = is_valid && (p->switch_shape_at_level <= T8_DPYRAMID_MAXLEVEL);
-    is_valid = is_valid && (p->switch_shape_at_level <= p->pyramid.level);
+    is_valid = is_valid
+      && (p->switch_shape_at_level ==
+          t8_dpyramid_compute_switch_shape_at_level (p));
   }
   else {
     is_valid = is_valid && (p->switch_shape_at_level < 0);
