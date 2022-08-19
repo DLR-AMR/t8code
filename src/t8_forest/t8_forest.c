@@ -251,8 +251,8 @@ t8_forest_set_transition (t8_forest_t forest, const t8_forest_t set_from)
    * forest->from_method is unequal to one. If so, set balanced is not set yet. */
   if ((forest->from_method & (1 << 2)) >> 2 != 1) {
     t8_productionf
-      ("This is forest_set_remove_hanging_faces.\n"
-       "The forest might not be balanced and set_balance is not set yet. The set_remove_hanging_faces function will set balance with repartition now.\n");
+      ("This is forest_set_transition.\n"
+       "The forest might not be balanced and set_balance is not set yet. The set_transition function will set_balance with repartition now.\n");
     /* balance with repartition */
     t8_forest_set_balance (forest, NULL, 0);
   }
