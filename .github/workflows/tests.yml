@@ -264,8 +264,12 @@ jobs:
     #       we get errors in configure that we cannot remove (for example the autotools way
     #       of checking for libm results in a compiler warning).
     #       Thus, we add '-Werror' later at the make step.
+    - name: less-test-option
+      if: github.event_name == 'pull_request'
+      run: export LESS_TEST_OPTION="--enable-less-tests"
+           && echo LESS_TEST_OPTION="$LESS_TEST_OPTION" >> $GITHUB_ENV
     - name: build config variables
-      run: export CONFIG_OPTIONS="--without-blas"
+      run: export CONFIG_OPTIONS="--without-blas ${LESS_TEST_OPTION}"
            && export CONFIG_DEBUG="$CONFIG_OPTIONS --enable-debug --enable-mpi --with-sc=$SC_DEBUG/install --with-p4est=$P4EST_DEBUG/install"
            && export CONFIG_SERIAL_DEBUG="$CONFIG_OPTIONS --enable-debug --with-sc=$SC_SERIAL_DEBUG/install --with-p4est=$P4EST_SERIAL_DEBUG/install"
            && export CONFIG_RELEASE="$CONFIG_OPTIONS --enable-mpi --with-sc=$SC_RELEASE/install --with-p4est=$P4EST_RELEASE/install"
@@ -413,3 +417,24 @@ jobs:
       with:
         name: test-suite_netcdf.log
         path: build_netcdf/test-suite.log
+# configure and test with MPI and OpenCASCADE
+    - name: Install OpenCASCADE
+      run: sudo apt-get install libocct-foundation-dev libocct-modeling-algorithms-dev libocct-modeling-data-dev
+    - name: configure
+      run: mkdir build_occ && cd build_occ && ../configure $CONFIG_RELEASE --with-occ CFLAGS="$CFLAGS_var -I/usr/include/opencascade" CXXFLAGS="$CXXFLAGS_var -I/usr/include/opencascade"
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v1
+      with:
+        name: config_occ_release_MPI.log
+        path: build_occ/config.log
+    - name: make
+      run: cd build_occ && make -j V=0 CFLAGS="$CFLAGS_var -Werror -I/usr/include/opencascade" CXXFLAGS="$CXXFLAGS_var -Werror -I/usr/include/opencascade"
+    - name: make check
+      run: cd build_occ && make check -j4 V=0 CFLAGS="$CFLAGS_var -Werror -I/usr/include/opencascade" CXXFLAGS="$CXXFLAGS_var -Werror -I/usr/include/opencascade"
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v1
+      with:
+        name: test-suite_occ.log
+        path: build_occ/test-suite.log

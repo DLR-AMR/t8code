@@ -30,6 +30,40 @@ typedef t8_dpyramid_t t8_default_pyramid_t;
 
 T8_EXTERN_C_BEGIN ();
 
+void
+t8_default_scheme_pyramid_c::t8_element_new (int length, t8_element_t **elem)
+{
+  /* allocate memory for a tet */
+  t8_default_scheme_common_c::t8_element_new (length, elem);
+
+  /* in debug mode, set sensible default values. */
+#ifdef T8_ENABLE_DEBUG
+  {
+    int                 i;
+    for (i = 0; i < length; i++) {
+      t8_element_init (1, elem[i], 0);
+    }
+  }
+#endif
+}
+
+void
+t8_default_scheme_pyramid_c::t8_element_init (int length, t8_element_t *elem,
+                                              int called_new)
+{
+#ifdef T8_ENABLE_DEBUG
+  if (!called_new) {
+    int                 i;
+    t8_dpyramid_t      *pyramid = (t8_dpyramid_t *) elem;
+    /* Set all values to 0 */
+    for (i = 0; i < length; i++) {
+      t8_dpyramid_init_linear_id (pyramid + i, 0, 0);
+      T8_ASSERT (t8_dpyramid_is_valid (pyramid + i));
+    }
+  }
+#endif
+}
+
 int
 t8_default_scheme_pyramid_c::t8_element_maxlevel (void)
 {
@@ -51,24 +85,6 @@ t8_default_scheme_pyramid_c::t8_element_ancestor_id (const t8_element_t *elem,
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= T8_DPYRAMID_MAXLEVEL);
   return t8_dpyramid_ancestor_id ((const t8_dpyramid_t *) elem, level);
-}
-
-void
-t8_default_scheme_pyramid_c::t8_element_init (int length, t8_element_t *elem,
-                                              int called_new)
-{
-#ifdef T8_ENABLE_DEBUG
-  if (!called_new) {
-    int                 i;
-    t8_dpyramid_t      *pyramid = (t8_dpyramid_t *) elem;
-    /* Set all values to 0 */
-    for (i = 0; i < length; i++) {
-      t8_dpyramid_init_linear_id (pyramid + i, 0, 0);
-      T8_ASSERT (t8_dpyramid_is_valid (pyramid + i));
-    }
-    pyramid->type = 6;
-  }
-#endif
 }
 
 int

@@ -34,7 +34,7 @@ test_t8_cmesh_t8_test_hypercube_SOURCES = test/t8_cmesh/t8_test_hypercube.c
 test_t8_cmesh_t8_test_cmesh_copy_SOURCES = test/t8_cmesh/t8_test_cmesh_copy.c
 test_t8_cmesh_t8_test_cmesh_partition_SOURCES = test/t8_cmesh/t8_test_cmesh_partition.cxx
 test_t8_cmesh_t8_test_cmesh_face_is_boundary_SOURCES = test/t8_cmesh/t8_test_cmesh_face_is_boundary.cxx
-test_t8_cmesh_t8_test_cmesh_readmshfile_SOURCES = test/t8_cmesh/t8_test_cmesh_readmshfile.c
+test_t8_cmesh_t8_test_cmesh_readmshfile_SOURCES = test/t8_cmesh/t8_test_cmesh_readmshfile.cxx
 
 test_t8_forest_t8_test_find_owner_SOURCES = test/t8_forest/t8_test_find_owner.cxx
 test_t8_forest_t8_test_ghost_exchange_SOURCES = test/t8_forest/t8_test_ghost_exchange.cxx
@@ -69,9 +69,11 @@ test_t8_gtest_main_SOURCES = test/t8_gtest_main.cxx \
   test/t8_cmesh/t8_gtest_bcast.cxx \
   test/t8_schemes/t8_gtest_nca.cxx \
   test/t8_schemes/t8_gtest_pyra_connectivity.cxx \
+  test/t8_geometry/t8_gtest_geometry_occ.cxx \
   test/t8_gtest_eclass.cxx \
   test/t8_gtest_vec.cxx \
   test/t8_gtest_refcount.cxx \
+  test/t8_gtest_occ_linkage.cxx \
   test/t8_gtest_version.cxx \
   test/t8_gtest_basics.cxx \
   test/t8_schemes/t8_gtest_ancestor.cxx

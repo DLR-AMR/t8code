@@ -39,7 +39,8 @@ libt8_installed_headers_cmesh = \
   src/t8_cmesh/t8_cmesh_testcases.h \
   src/t8_cmesh/t8_cmesh_save.h \
   src/t8_cmesh/t8_cmesh_examples.h \
-  src/t8_cmesh/t8_cmesh_geometry.h
+  src/t8_cmesh/t8_cmesh_geometry.h \
+  src/t8_cmesh/t8_cmesh_occ.hxx
 libt8_installed_headers_data = \
   src/t8_data/t8_shmem.h src/t8_data/t8_containers.h
 libt8_installed_headers_forest = \
@@ -54,6 +55,8 @@ libt8_installed_headers_geometry = \
 libt8_installed_headers_geometry_impl = \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx \
+  src/t8_geometry/t8_geometry_implementations/t8_geometry_occ.h \
+  src/t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx 
 libt8_installed_headers_schemes_default =
@@ -80,6 +83,7 @@ libt8_compiled_sources = \
   src/t8_element.c src/t8_element_cxx.cxx \
   src/t8_element_c_interface.cxx \
   src/t8_refcount.c src/t8_cmesh/t8_cmesh.c \
+  src/t8_cmesh/t8_cmesh_occ.cxx \
   src/t8_cmesh/t8_cmesh_cxx.cxx src/t8_cmesh/t8_cmesh_triangle.c \
   src/t8_cmesh/t8_cmesh_vtk_writer.c src/t8_cmesh/t8_cmesh_vtk_reader.cxx \
   src/t8_cmesh/t8_cmesh_stash.c \
@@ -93,12 +97,13 @@ libt8_compiled_sources = \
   src/t8_cmesh/t8_cmesh_reader_helper.cxx \
   src/t8_cmesh/t8_cmesh_vtk_helper.cxx \
   src/t8_data/t8_containers.cxx \
-  src/t8_cmesh/t8_cmesh_offset.c src/t8_cmesh/t8_cmesh_readmshfile.c \
+  src/t8_cmesh/t8_cmesh_offset.c src/t8_cmesh/t8_cmesh_readmshfile.cxx \
   src/t8_forest/t8_forest.c src/t8_forest/t8_forest_adapt.cxx \
   src/t8_geometry/t8_geometry.cxx \
   src/t8_geometry/t8_geometry_helpers.c \
   src/t8_geometry/t8_geometry_base.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_analytic.cxx \
+  src/t8_geometry/t8_geometry_implementations/t8_geometry_occ.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.cxx \
   src/t8_forest/t8_forest_partition.cxx src/t8_forest/t8_forest_cxx.cxx \
