@@ -336,7 +336,7 @@ t8_forest_adapt (t8_forest_t forest)
        * 
        * Values above 1 will correspond to specific subelement types. 
        *  
-       * For example the refine values for the 2D Quad scheme will be between -1 and 15. The values -1, 0 and 1 are for the standard refinement
+       * For example the refine values for the 2D Quad scheme will be between -1 and 16. The values -1, 0 and 1 are for the standard refinement
        * and the values 2 to 16 correspond to the subelement types 1 to 15 (0001 to 1111 in base 2) and will be used to insert transition cells.
        * 
        * It is up to the developer to use a reasonable range of subelement types for their use case. */
