@@ -27,7 +27,7 @@
 t8_netcdf_variable_t *
 t8_netcdf_create_var (t8_netcdf_variable_type_t var_type,
                       const char *var_name, const char *var_long_name,
-                      const char *var_unit, sc_array_t * var_data)
+                      const char *var_unit, sc_array_t *var_data)
 {
 #if T8_WITH_NETCDF
   T8_ASSERT ((var_type == T8_NETCDF_INT && var_data->elem_size == 4)
@@ -50,7 +50,7 @@ t8_netcdf_create_var (t8_netcdf_variable_type_t var_type,
 /* Create an extern NetCDF integer variable */
 t8_netcdf_variable_t *
 t8_netcdf_create_integer_var (const char *var_name, const char *var_long_name,
-                              const char *var_unit, sc_array_t * var_data)
+                              const char *var_unit, sc_array_t *var_data)
 {
 #if T8_WITH_NETCDF
   t8_netcdf_variable_type_t var_type;
@@ -68,7 +68,7 @@ t8_netcdf_create_integer_var (const char *var_name, const char *var_long_name,
 /* Create an extern NetCDF double variable */
 t8_netcdf_variable_t *
 t8_netcdf_create_double_var (const char *var_name, const char *var_long_name,
-                             const char *var_unit, sc_array_t * var_data)
+                             const char *var_unit, sc_array_t *var_data)
 {
 #if T8_WITH_NETCDF
   return t8_netcdf_create_var (T8_NETCDF_DOUBLE, var_name, var_long_name,

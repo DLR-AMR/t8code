@@ -398,6 +398,18 @@ t8_default_scheme_pyramid_c::t8_element_successor (const t8_element_t *elem,
 }
 
 void
+t8_default_scheme_pyramid_c::t8_element_anchor (const t8_element_t *elem,
+                                                int anchor[3])
+{
+  t8_dpyramid_t      *pyra = (t8_dpyramid_t *) elem;
+
+  T8_ASSERT (t8_element_is_valid (elem));
+  anchor[0] = pyra->x;
+  anchor[1] = pyra->y;
+  anchor[2] = pyra->z;
+}
+
+void
 t8_default_scheme_pyramid_c::t8_element_vertex_coords (const t8_element_t *t,
                                                        int vertex,
                                                        int coords[])

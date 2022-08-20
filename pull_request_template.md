@@ -4,6 +4,8 @@
 
 **_All these boxes must be checked by the reviewers before merging the pull request:_**
 
+As a reviewer please read through all the code lines and make sure that the code is fully understood, bug free, well-documented and well-structured.
+
 - [ ] The author added a BSD statement to `doc/` (or already has one)
 - [ ] The code compiles without warning in debugging and release mode, with and without MPI (this should be executed automatically in a github action)
 
