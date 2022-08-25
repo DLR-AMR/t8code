@@ -1,4 +1,4 @@
-[![t8code tests](https://github.com/DLR-AMR/t8code/t8code/actions/workflows/tests.yml/badge.svg)](https://github.com/DLR-AMR/t8code/actions/workflows/tests.yml)
+[![t8code tests](https://github.com/DLR-AMR/t8code/actions/workflows/tests.yml/badge.svg)](https://github.com/DLR-AMR/t8code/actions/workflows/tests.yml)
 
 ### Introduction
 
