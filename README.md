@@ -1,4 +1,4 @@
-[![t8code tests](https://github.com/holke/t8code/actions/workflows/tests.yml/badge.svg)](https://github.com/holke/t8code/actions/workflows/tests.yml)
+[![t8code tests](https://github.com/DLR-AMR/t8code/t8code/actions/workflows/tests.yml/badge.svg)](https://github.com/DLR-AMR/t8code/actions/workflows/tests.yml)
 
 ### Introduction
 
@@ -10,12 +10,12 @@ t8code is intended to be used as a thirdparty library for numerical simulation c
 
 <table>
     <tr>
-        <td><img src="https://github.com/holke/t8code/blob/main/doc/pictures/cmesh_tet_holes.png?raw=true" height="200" /></td> 
-        <td><img src="https://github.com/holke/t8code/blob/main/doc/pictures/flow_around_circle_sim2.jpg?raw=true" height="181" /></td>
+        <td><img src="https://github.com/DLR-AMR/t8code/blob/main/doc/pictures/cmesh_tet_holes.png?raw=true" height="200" /></td> 
+        <td><img src="https://github.com/DLR-AMR/t8code/blob/main/doc/pictures/flow_around_circle_sim2.jpg?raw=true" height="181" /></td>
     </tr>
       <tr>
-        <td><img src="https://github.com/holke/t8code/blob/main/doc/pictures/mesh_3d_hybrid_cutout.jpg?raw=true" height="200" /></td>
-        <td><img src="https://github.com/holke/t8code/blob/main/doc/pictures/AirplaneWithTetMesh.png?raw=true" height="200" /></td>
+        <td><img src="https://github.com/DLR-AMR/t8code/blob/main/doc/pictures/mesh_3d_hybrid_cutout.jpg?raw=true" height="200" /></td>
+        <td><img src="https://github.com/DLR-AMR/t8code/blob/main/doc/pictures/AirplaneWithTetMesh.png?raw=true" height="200" /></td>
     </tr>
 </table>
 
@@ -48,13 +48,13 @@ Currently,
   - pyramids are implemented using the Pyramidal Morton curve and the TM curve for its tetrahedral children, 1:10 (for pyramids) / 1:8 (for tetrahedra) refinement.
   - The code supports hybrid meshes including any of the above element types (of the same dimension).
 
-You find more information on t8code in the [t8code Wiki](https://github.com/holke/t8code/wiki).
+You find more information on t8code in the [t8code Wiki](https://github.com/DLR-AMR/t8code/wiki).
 
 ### Setup
 
 We provide a short guide to install t8code. 
 
-For a more detailed description, please see the [Installation guide](https://github.com/holke/t8code/wiki/Installation) in our Wiki.
+For a more detailed description, please see the [Installation guide](https://github.com/DLR-AMR/t8code/wiki/Installation) in our Wiki.
 
 #### Requirements
 
@@ -89,7 +89,7 @@ To see a list of possible configure options, call
  
  ./configure -h
 
-or visit [the Wiki](https://github.com/holke/t8code/wiki/Configure-Options).
+or visit [the Wiki](https://github.com/DLR-AMR/t8code/wiki/Configure-Options).
 
 Most commonly used for t8code are
 
@@ -131,7 +131,7 @@ For a debugging mode with static linkage (makes using gdb and valgrind more comf
   
   ### Citing t8code
   
-  If you use t8code in any of your publications, please cite the [github repository](https://github.com/holke/t8code) and [1]. For publications specifically related to 
+  If you use t8code in any of your publications, please cite the [github repository](https://github.com/DLR-AMR/t8code) and [1]. For publications specifically related to 
 - the TM index, please cite [2].
 - coarse mesh partitioning, please cite [3].
 - construction and handling of the ghost layer, please cite [4].
