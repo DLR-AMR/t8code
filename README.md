@@ -127,7 +127,7 @@ For a debugging mode with static linkage (makes using gdb and valgrind more comf
   
   [3] Carsten Burstedde and Johannes Holke, Coarse mesh partitioning for tree-based AMR, SIAM Journal on Scientific Computing, 2017, [10.1137/16M1103518](https://epubs.siam.org/doi/10.1137/16M1103518)
   
-  [4] Johannes Holke and David Knapp and Carsten Burstedde, An Optimized, Parallel Computation of the Ghost Layer for Adaptive Hybrid Forest Meshes, SIAM Journal on Scientific Computing, 2021, [10.1137/20M1383033](https://epubs.siam.org/doi/abs/10.1137/20M1383033) 2019
+  [4] Johannes Holke and David Knapp and Carsten Burstedde, An Optimized, Parallel Computation of the Ghost Layer for Adaptive Hybrid Forest Meshes, SIAM Journal on Scientific Computing, 2021, [10.1137/20M1383033](https://epubs.siam.org/doi/abs/10.1137/20M1383033)
   
   ### Citing t8code
   
