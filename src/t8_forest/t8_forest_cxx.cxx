@@ -1515,6 +1515,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest,
      * boundary element. */
     /* Compute the face of elem_tree at which the face connection is. */
     tree_face = ts->t8_element_tree_face (elem, face);
+
     /* compute coarse tree id */
     lctree_id = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
     if (t8_cmesh_tree_face_is_boundary (cmesh, lctree_id, tree_face)) {
@@ -1651,6 +1652,8 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest,
    */
   ts->t8_element_children_at_face (elem, face, children_at_face,
                                    num_children_at_face, NULL);
+
+
   /* For each face_child build its neighbor */
   for (child_it = 0; child_it < num_children_at_face; child_it++) {
     /* The face number of the face of the child that coincides with face
@@ -1658,6 +1661,7 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest,
      * We thus have to compute the face number of the child first.
      */
     child_face = ts->t8_element_face_child_face (elem, face, child_it);
+
     neighbor_tree = t8_forest_element_face_neighbor (forest, ltreeid,
                                                      children_at_face
                                                      [child_it],
@@ -1723,6 +1727,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
     /* If we are at the maximum refinement level, we compute the neighbor instead */
     at_maxlevel =
       ts->t8_element_level (leaf) == t8_forest_get_maxlevel (forest);
+
     if (at_maxlevel) {
       num_children_at_face = 1;
       neighbor_leafs = *pneighbor_leafs = T8_ALLOC (t8_element_t *, 1);
@@ -1748,6 +1753,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
                                                neigh_scheme, face,
                                                num_children_at_face,
                                                *dual_faces);
+
     }
     if (gneigh_treeid < 0) {
       /* There exists no face neighbor across this face, we return with this info */

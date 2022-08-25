@@ -1613,6 +1613,11 @@ t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh,
     /* Get the vertices of that tree */
     tree_vertices = *(long **) t8_sc_array_index_locidx (vertex_indices,
                                                          gtree_it);
+
+    t8_debugf ("# itree = %d\n",gtree_it);
+    t8_debugf ("# verts = %ld %ld %ld %ld\n",tree_vertices[0],tree_vertices[1],tree_vertices[2],tree_vertices[3]);
+    t8_debugf ("\n");
+
     /* loop over all faces of the tree */
     for (face_it = 0; face_it < t8_eclass_num_faces[eclass]; face_it++) {
       /* Create the Face struct */
@@ -1632,6 +1637,12 @@ t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh,
       }
       /* Try to insert the face into the hash */
       retval = sc_hash_insert_unique (faces, Face, (void ***) &pNeighbor);
+
+      t8_debugf ("itree = %d\n",gtree_it);
+      t8_debugf ("iface = %d\n",face_it);
+      t8_debugf ("verts = %ld %ld\n",Face->vertices[0],Face->vertices[1]);
+      t8_debugf ("\n");
+
       if (!retval) {
         /* The face was already in the hash */
         Neighbor = *pNeighbor;
