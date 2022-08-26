@@ -1342,9 +1342,12 @@ t8_dtri_linear_id (const t8_dtri_t *t, int level)
    * origin with the same type as t */
   if (level > my_level) {
     exponent = (level - my_level) * T8_DTRI_DIM;
+    type_temp = t->type;
+    level = my_level;
   }
-  level = my_level;
-  type_temp = compute_type (t, level);
+  else {
+    type_temp = compute_type (t, level);
+  }
   for (i = level; i > 0; i--) {
     cid = compute_cubeid (t, i);
     id |=
