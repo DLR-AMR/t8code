@@ -28,6 +28,9 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.h>
 #include "t8_cmesh_types.h"
 #include "t8_cmesh_stash.h"
+#include <list>         // std::list
+#include <tuple>        // std::tuple
+#include <vector>       // std::vector
 
 /* The supported number of gmesh tree classes.
  * Currently, we only support first order trees.
@@ -525,6 +528,17 @@ die_node:
   return NULL;
 }
 
+static bool
+compare_by_morton_ordering(const std::tuple<long,std::vector<double>> &a, const std::tuple<long,std::vector<double>> &b)
+{
+  /* Extract vectors from tuple arguments. */
+  const std::vector<double> v = std::get<1>(a);
+  const std::vector<double> w = std::get<1>(b);
+
+  /* Z-ordering: first sorts y-components, then y-components and then x-components. */
+  return v[2] < w[2] || (v[2] == w[2] && (v[1] < w[1] || (v[1] == w[1] && v[0] < w[0])));
+}
+
 /* fp should be set after the Nodes section, right before the tree section.
  * If vertex_indices is not NULL, it is allocated and will store
  * for each tree the indices of its vertices.
@@ -635,82 +649,59 @@ t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp,
         /* move line_modify to the next word in the line */
         (void) strsep (&line_modify, " ");
       }
-      /* Now the nodes are read and we get their coordinates from
-       * the stored nodes */
+
+      /* List of tree vertices containing tuples of a node index and
+       * its associated vector of tree vertex. */
+      std::list<std::tuple<long,std::vector<double>>> list_of_tree_vertices;
+
       for (i = 0; i < num_nodes; i++) {
         Node.index = node_indices[i];
         sc_hash_lookup (vertices, (void *) &Node, (void ***) &found_node);
-        /* Add node coordinates to the tree vertices */
-        t8_vertex_num = t8_msh_tree_vertex_to_t8_vertex_num[eclass][i];
-        tree_vertices[3 * t8_vertex_num] = (*found_node)->coordinates[0];
-        tree_vertices[3 * t8_vertex_num + 1] = (*found_node)->coordinates[1];
-        tree_vertices[3 * t8_vertex_num + 2] = (*found_node)->coordinates[2];
-      }
-      /* Detect and correct negative volumes */
-      if (t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices,
-                                                  num_nodes)) {
-        /* The volume described is negative. We need to change vertices.
-         * For tets we switch 0 and 3.
-         * For prisms we switch 0 and 3, 1 and 4, 2 and 5.
-         * For hexahedra we switch 0 and 4, 1 and 5, 2 and 6, 3 and 7.
-         * For pyramids we switch 0 and 4 */
-        double              temp;
-        int                 num_switches = 0;
-        int                 switch_indices[4] = { 0 };
-        int                 iswitch;
-        T8_ASSERT (t8_eclass_to_dimension[eclass] == 3);
-        t8_debugf ("Correcting negative volume of tree %li\n", tree_count);
-        switch (eclass) {
-        case T8_ECLASS_TET:
-          /* We switch vertex 0 and vertex 3 */
-          num_switches = 1;
-          switch_indices[0] = 3;
-          break;
-        case T8_ECLASS_PRISM:
-          num_switches = 3;
-          switch_indices[0] = 3;
-          switch_indices[1] = 4;
-          switch_indices[2] = 5;
-          break;
-        case T8_ECLASS_HEX:
-          num_switches = 4;
-          switch_indices[0] = 4;
-          switch_indices[1] = 5;
-          switch_indices[2] = 6;
-          switch_indices[3] = 7;
-          break;
-        case T8_ECLASS_PYRAMID:
-          num_switches = 1;
-          switch_indices[0] = 4;
-          break;
-        default:
-          SC_ABORT_NOT_REACHED ();
-        }
 
-        for (iswitch = 0; iswitch < num_switches; ++iswitch) {
-          /* We switch vertex 0 + iswitch and vertex switch_indices[iswitch] */
-          for (i = 0; i < 3; i++) {
-            temp = tree_vertices[3 * iswitch + i];
-            tree_vertices[3 * iswitch + i] =
-              tree_vertices[3 * switch_indices[iswitch] + i];
-            tree_vertices[3 * switch_indices[iswitch] + i] = temp;
-          }
-        }
-        T8_ASSERT (!t8_cmesh_tree_vertices_negative_volume
-                   (eclass, tree_vertices, num_nodes));
-      }                         /* End of negative volume handling */
+        std::vector<double> vert = {
+          (*found_node)->coordinates[0],
+          (*found_node)->coordinates[1],
+          (*found_node)->coordinates[2]};
+
+        list_of_tree_vertices.push_back (std::make_tuple (node_indices[i],vert));
+      }
+
+      /* We sort the list of tree vertices according to morton ordering. */
+      list_of_tree_vertices.sort(compare_by_morton_ordering);
+
+      /* Copy (sorted) vertices back to their conventional C arrays. */
+      i = 0;
+      for (auto t : list_of_tree_vertices) {
+        node_indices[i] = std::get<0>(t);
+
+        tree_vertices[3 * i + 0] = std::get<1>(t)[0];
+        tree_vertices[3 * i + 1] = std::get<1>(t)[1];
+        tree_vertices[3 * i + 2] = std::get<1>(t)[2];
+
+        i++;
+      }
+
       /* Set the vertices of this tree */
       t8_cmesh_set_tree_vertices (cmesh, tree_count, tree_vertices,
                                   num_nodes);
+
       /* If wished, we store the vertex indices of that tree. */
       if (vertex_indices != NULL) {
         /* Allocate memory for the inices */
         stored_indices = T8_ALLOC (long, t8_eclass_num_vertices[eclass]);
         for (i = 0; i < t8_eclass_num_vertices[eclass]; i++) {
-          /* Get the i-th node index in t8code order and store it. */
-          stored_indices[i] =
-            node_indices[t8_vertex_to_msh_vertex_num[eclass][i]];
+          stored_indices[i] = node_indices[i];
         }
+
+        // Gonna be deleted later.
+        // t8_debugf ("Node indices:  %d %d %d %d\n", node_indices[0], node_indices[1], node_indices[2], node_indices[3]);
+        // t8_debugf ("Tree vertices: %5.1f,%5.1f | %5.1f,%5.1f | %5.1f,%5.1f | %5.1f,%5.1f\n",
+        //                                                        tree_vertices[3*0+0], tree_vertices[3*0+1],
+        //                                                        tree_vertices[3*1+0], tree_vertices[3*1+1],
+        //                                                        tree_vertices[3*2+0], tree_vertices[3*2+1],
+        //                                                        tree_vertices[3*3+0], tree_vertices[3*3+1]);
+        // t8_debugf ("\n");
+
         /* Set the index array as a new entry in the array */
         *(long **) sc_array_push (*vertex_indices) = stored_indices;
       }
