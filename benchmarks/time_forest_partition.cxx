@@ -326,7 +326,8 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim,
 
   if (msh_file != NULL) {
     /* Create a cmesh from the given mesh files */
-    cmesh = t8_cmesh_from_msh_file ((char *) msh_file, 0, comm, mesh_dim, 0, 0);
+    cmesh =
+      t8_cmesh_from_msh_file ((char *) msh_file, 0, comm, mesh_dim, 0, 0);
     partition = 1;
   }
   else {
@@ -428,7 +429,7 @@ main (int argc, char *argv[])
   sc_options_add_int (opt, 'r', "rlevel", &level_diff, 1,
                       "The number of levels that the forest is refined "
                       "from the initial level.");
-  sc_options_add_int (opt, 'C', "cmesh-level", &cmesh_level, -1,
+  sc_options_add_int (opt, '\0', "cmesh-level", &cmesh_level, -1,
                       "Starting level of the linear or occ cmesh, default is 0."
                       " Only viable with -L or -O.");
   sc_options_add_double (opt, 'x', "xmin", x_min_max, 0,
