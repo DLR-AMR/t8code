@@ -1,4 +1,4 @@
-[![t8code tests](https://github.com/holke/t8code/actions/workflows/tests.yml/badge.svg)](https://github.com/holke/t8code/actions/workflows/tests.yml)
+[![t8code tests](https://github.com/DLR-AMR/t8code/actions/workflows/tests.yml/badge.svg)](https://github.com/DLR-AMR/t8code/actions/workflows/tests.yml)
 
 ### Introduction
 
@@ -10,12 +10,12 @@ t8code is intended to be used as a thirdparty library for numerical simulation c
 
 <table>
     <tr>
-        <td><img src="https://github.com/holke/t8code/blob/main/doc/pictures/cmesh_tet_holes.png?raw=true" height="200" /></td> 
-        <td><img src="https://github.com/holke/t8code/blob/main/doc/pictures/flow_around_circle_sim2.jpg?raw=true" height="181" /></td>
+        <td><img src="https://github.com/DLR-AMR/t8code/blob/main/doc/pictures/cmesh_tet_holes.png?raw=true" height="200" /></td> 
+        <td><img src="https://github.com/DLR-AMR/t8code/blob/main/doc/pictures/flow_around_circle_sim2.jpg?raw=true" height="181" /></td>
     </tr>
       <tr>
-        <td><img src="https://github.com/holke/t8code/blob/main/doc/pictures/mesh_3d_hybrid_cutout.jpg?raw=true" height="200" /></td>
-        <td><img src="https://github.com/holke/t8code/blob/main/doc/pictures/AirplaneWithTetMesh.png?raw=true" height="200" /></td>
+        <td><img src="https://github.com/DLR-AMR/t8code/blob/main/doc/pictures/mesh_3d_hybrid_cutout.jpg?raw=true" height="200" /></td>
+        <td><img src="https://github.com/DLR-AMR/t8code/blob/main/doc/pictures/AirplaneWithTetMesh.png?raw=true" height="200" /></td>
     </tr>
 </table>
 
@@ -48,13 +48,13 @@ Currently,
   - pyramids are implemented using the Pyramidal Morton curve and the TM curve for its tetrahedral children, 1:10 (for pyramids) / 1:8 (for tetrahedra) refinement.
   - The code supports hybrid meshes including any of the above element types (of the same dimension).
 
-You find more information on t8code in the [t8code Wiki](https://github.com/holke/t8code/wiki).
+You find more information on t8code in the [t8code Wiki](https://github.com/DLR-AMR/t8code/wiki).
 
 ### Setup
 
 We provide a short guide to install t8code. 
 
-For a more detailed description, please see the [Installation guide](https://github.com/holke/t8code/wiki/Installation) in our Wiki.
+For a more detailed description, please see the [Installation guide](https://github.com/DLR-AMR/t8code/wiki/Installation) in our Wiki.
 
 #### Requirements
 
@@ -89,7 +89,7 @@ To see a list of possible configure options, call
  
  ./configure -h
 
-or visit [the Wiki](https://github.com/holke/t8code/wiki/Configure-Options).
+or visit [the Wiki](https://github.com/DLR-AMR/t8code/wiki/Configure-Options).
 
 Most commonly used for t8code are
 
@@ -123,15 +123,15 @@ For a debugging mode with static linkage (makes using gdb and valgrind more comf
   [1] Johannes Holke, Scalable algorithms for parallel tree-based adaptive mesh refinement with general element types, PhD thesis at University of Bonn, 2018,
       [Full text available](https://bonndoc.ulb.uni-bonn.de/xmlui/handle/20.500.11811/7661)
       
-  [2] Carsten Burstedde and Johannes Holke, A Tetrahedral Space-Filling Curve for Nonconforming Adaptive Meshes, SIAM Journal on Scientific Computing, 2016, 10.1137/15M1040049
+  [2] Carsten Burstedde and Johannes Holke, A Tetrahedral Space-Filling Curve for Nonconforming Adaptive Meshes, SIAM Journal on Scientific Computing, 2016, [10.1137/15M1040049](https://epubs.siam.org/doi/10.1137/15M1040049)
   
-  [3] Carsten Burstedde and Johannes Holke, Coarse mesh partitioning for tree-based AMR, SIAM Journal on Scientific Computing, 2017, 10.1137/16M1103518
+  [3] Carsten Burstedde and Johannes Holke, Coarse mesh partitioning for tree-based AMR, SIAM Journal on Scientific Computing, 2017, [10.1137/16M1103518](https://epubs.siam.org/doi/10.1137/16M1103518)
   
-  [4] Johannes Holke and David Knapp and Carsten Burstedde, An Optimized, Parallel Computation of the Ghost Layer for Adaptive Hybrid Forest Meshes, Submitted to SIAM Journal on Scientific Computing, [Preprint available](https://arxiv.org/abs/1910.10641) 2019
+  [4] Johannes Holke and David Knapp and Carsten Burstedde, An Optimized, Parallel Computation of the Ghost Layer for Adaptive Hybrid Forest Meshes, SIAM Journal on Scientific Computing, 2021, [10.1137/20M1383033](https://epubs.siam.org/doi/abs/10.1137/20M1383033)
   
   ### Citing t8code
   
-  If you use t8code in any of your publications, please cite the [github repository](https://github.com/holke/t8code) and [1]. For publications specifically related to 
+  If you use t8code in any of your publications, please cite the [github repository](https://github.com/DLR-AMR/t8code) and [1]. For publications specifically related to 
 - the TM index, please cite [2].
 - coarse mesh partitioning, please cite [3].
 - construction and handling of the ghost layer, please cite [4].

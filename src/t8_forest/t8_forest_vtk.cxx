@@ -555,7 +555,7 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix,
         cellTypes[elem_id] = t8_curved_eclass_vtk_type[element_shape];
       }
       if (write_treeid == 1) {
-        vtk_treeid->InsertNextValue (itree);
+        vtk_treeid->InsertNextValue (gtreeid);
       }
       if (write_mpirank == 1) {
         vtk_mpirank->InsertNextValue (forest->mpirank);

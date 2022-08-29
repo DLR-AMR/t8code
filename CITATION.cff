@@ -1,7 +1,7 @@
 title: t8code
-version: 0.10.0
-date-released: "2022-07-15"
-repository-code: "https://github.com/holke/t8code" #maybe change to organization
+version: 0.12.0
+date-released: "2022-08-23"
+repository-code: "https://github.com/dlr-amr/t8code"
 #url: "https://www.website-to-t8code"
 #doi: "10.1000/xyz123"
 license: GPL-2.0
