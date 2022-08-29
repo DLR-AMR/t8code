@@ -669,8 +669,8 @@ t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp,
           (*found_node)->coordinates[2]
         };
 
-        list_of_tree_vertices.
-          push_back (std::make_tuple (node_indices[i], vert));
+        list_of_tree_vertices.push_back (std::
+                                         make_tuple (node_indices[i], vert));
       }
 
       /* We sort the list of tree vertices according to morton ordering. */
