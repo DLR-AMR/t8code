@@ -28,9 +28,9 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.h>
 #include "t8_cmesh_types.h"
 #include "t8_cmesh_stash.h"
-#include <list>         // std::list
-#include <tuple>        // std::tuple
-#include <vector>       // std::vector
+#include <list>                 // std::list
+#include <tuple>                // std::tuple
+#include <vector>               // std::vector
 
 /* The supported number of gmesh tree classes.
  * Currently, we only support first order trees.
@@ -529,14 +529,18 @@ die_node:
 }
 
 static bool
-compare_by_morton_ordering(const std::tuple<long,std::vector<double>> &a, const std::tuple<long,std::vector<double>> &b)
+compare_by_morton_ordering (const std::tuple < long,
+                            std::vector < double >>&a,
+                            const std::tuple < long,
+                            std::vector < double >>&b)
 {
   /* Extract vectors from tuple arguments. */
-  const std::vector<double> v = std::get<1>(a);
-  const std::vector<double> w = std::get<1>(b);
+  const               std::vector < double >v = std::get < 1 > (a);
+  const               std::vector < double >w = std::get < 1 > (b);
 
   /* Z-ordering: first sorts y-components, then y-components and then x-components. */
-  return v[2] < w[2] || (v[2] == w[2] && (v[1] < w[1] || (v[1] == w[1] && v[0] < w[0])));
+  return v[2] < w[2] || (v[2] == w[2]
+                         && (v[1] < w[1] || (v[1] == w[1] && v[0] < w[0])));
 }
 
 /* fp should be set after the Nodes section, right before the tree section.
@@ -652,31 +656,34 @@ t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp,
 
       /* List of tree vertices containing tuples of a node index and
        * its associated vector of tree vertex. */
-      std::list<std::tuple<long,std::vector<double>>> list_of_tree_vertices;
+      std::list < std::tuple < long,
+        std::vector < double >>>list_of_tree_vertices;
 
       for (i = 0; i < num_nodes; i++) {
         Node.index = node_indices[i];
         sc_hash_lookup (vertices, (void *) &Node, (void ***) &found_node);
 
-        std::vector<double> vert = {
+        std::vector < double >vert = {
           (*found_node)->coordinates[0],
           (*found_node)->coordinates[1],
-          (*found_node)->coordinates[2]};
+          (*found_node)->coordinates[2]
+        };
 
-        list_of_tree_vertices.push_back (std::make_tuple (node_indices[i],vert));
+        list_of_tree_vertices.
+          push_back (std::make_tuple (node_indices[i], vert));
       }
 
       /* We sort the list of tree vertices according to morton ordering. */
-      list_of_tree_vertices.sort(compare_by_morton_ordering);
+      list_of_tree_vertices.sort (compare_by_morton_ordering);
 
       /* Copy (sorted) vertices back to their conventional C arrays. */
       i = 0;
-      for (auto t : list_of_tree_vertices) {
-        node_indices[i] = std::get<0>(t);
+    for (auto t:list_of_tree_vertices) {
+        node_indices[i] = std::get < 0 > (t);
 
-        tree_vertices[3 * i + 0] = std::get<1>(t)[0];
-        tree_vertices[3 * i + 1] = std::get<1>(t)[1];
-        tree_vertices[3 * i + 2] = std::get<1>(t)[2];
+        tree_vertices[3 * i + 0] = std::get < 1 > (t)[0];
+        tree_vertices[3 * i + 1] = std::get < 1 > (t)[1];
+        tree_vertices[3 * i + 2] = std::get < 1 > (t)[2];
 
         i++;
       }
