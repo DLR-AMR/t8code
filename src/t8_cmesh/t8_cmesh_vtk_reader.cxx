@@ -43,10 +43,7 @@ T8_EXTERN_C_BEGIN ();
 
 /*Construct a cmesh given a filename and a*/
 t8_cmesh_t
-t8_cmesh_read_from_vtk_unstructured (const char *filename,
-                                     const int num_files,
-                                     const int compute_face_neigh,
-                                     sc_MPI_Comm comm)
+t8_cmesh_read_from_vtk_unstructured (const char *filename, sc_MPI_Comm comm)
 {
 #if T8_WITH_VTK
   /*The Incoming data must be an unstructured Grid */
@@ -70,8 +67,7 @@ t8_cmesh_read_from_vtk_unstructured (const char *filename,
 }
 
 t8_cmesh_t
-t8_cmesh_read_from_vtk_poly (const char *filename, const int num_files,
-                             const int compute_face_neigh, sc_MPI_Comm comm)
+t8_cmesh_read_from_vtk_poly (const char *filename, sc_MPI_Comm comm)
 {
 #if T8_WITH_VTK
   vtkSmartPointer < vtkPolyData > poly_data;
