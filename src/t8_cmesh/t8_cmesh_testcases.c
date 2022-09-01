@@ -26,8 +26,18 @@
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include "t8_cmesh/t8_cmesh_partition.h"
 #include <t8_eclass.h>
-#include "t8_cmesh/t8_cmesh_testcases.h"
+#include <t8_cmesh/t8_cmesh_examples.h>
+#include <t8_cmesh/t8_cmesh_testcases.h>
 
+#ifdef T8_ENABLE_LESS_TESTS
+#define T8_CMESH_TEST_NUM_COMMS 1
+#define T8_CMESH_BINARY 2
+#define T8_CMESH_DIM_RANGE 4
+#define T8_CMESH_MAX_TEST_DIMS 3
+#define T8_CMESH_MAX_NUM_OF_TREES 20
+#define T8_CMESH_MAX_NUM_OF_PRISMS 20
+#define T8_CMESH_MAX_NUM_XYZ_TREES 5
+#else
 #define T8_CMESH_TEST_NUM_COMMS 1
 #define T8_CMESH_BINARY 2
 #define T8_CMESH_DIM_RANGE 4    /* this is the dim range for hypercube hybrid and empty cmesh */
@@ -35,6 +45,7 @@
 #define T8_CMESH_MAX_NUM_OF_TREES 10
 #define T8_CMESH_MAX_NUM_OF_PRISMS 10
 #define T8_CMESH_MAX_NUM_XYZ_TREES 5
+#endif
 
 sc_MPI_Comm         t8_comm_list[T8_CMESH_TEST_NUM_COMMS] =
   { sc_MPI_COMM_WORLD };
@@ -44,10 +55,9 @@ char                t8_comm_string_list[T8_CMESH_TEST_NUM_COMMS][18] =
 /* TODO: - when disjoint bricks issues are done remove comment from t8_get_number_ of_all_testcases
  *       - when hypercube cmesh can be partitioned then remove comment from 
  *         t8_test_create_new_hypercube_cmesh (int cmesh_id)
- *       - when hypercube cmesh with pyramidal elements works with all tests remove if statement
- *         in t8_test_create_new_hypercube_cmesh (int cmesh_id) and remove comment
  *       - when empty cmesh works with all tests change the line with the comment to the comments 
  *         statement in t8_test_create_cmesh (int cmesh_id)
+ *       - change macros for LESS_TESTS when issue #171 is resolved
  * NOTE: "all tests" here mean the ones using this file. 
  */
 
@@ -111,9 +121,8 @@ t8_get_number_of_new_from_class_cmesh_testcases ()
 int
 t8_get_number_of_new_hypercube_hybrid_cmesh_testcases ()
 {
-  /* Number of testcases = possible dim * number of comm*2 binary variables(do_partition,periodic) */
-  return T8_CMESH_MAX_TEST_DIMS * T8_CMESH_TEST_NUM_COMMS * T8_CMESH_BINARY *
-    T8_CMESH_BINARY;
+  /* Number of testcases = number of comm*2 binary variables(do_partition,periodic) */
+  return T8_CMESH_TEST_NUM_COMMS * T8_CMESH_BINARY * T8_CMESH_BINARY;
 }
 
 /** The function t8_get_new_periodic_cmesh_testcases() 
@@ -273,7 +282,7 @@ t8_test_create_comm_only_cmesh (int cmesh_id)
 }
 
 /** The function t8_test_create_new_hypercube_cmesh(int cmesh_id):
- * The comm is taken from the t8_comm_list. It avoids the case (eclass = pyramid & periodic=1) since this is not allowed. 
+ * The comm is taken from the t8_comm_list. It avoids the case periodic=1 since this is not allowed.
  * \param [in] cmesh_id The cmesh_id is used to create a unique new_hypercube cmesh.
  * \return a new hypercube cmesh with a unique input for every given id. 
  */
@@ -312,20 +321,14 @@ t8_test_create_new_hypercube_cmesh (int cmesh_id)
      t8_eclass_to_string[eclass], t8_comm_string_list[comm_num], do_bcast,
      do_partition, periodic);
 
-  if (eclass == T8_ECLASS_PYRAMID) {
-    t8_debugf
-      ("Pyramids are not implemented (in this branch), therefore the eclass is changed to T8_ECLASS_HEX");
-    return t8_cmesh_new_hypercube (T8_ECLASS_HEX, comm, do_bcast,
-                                   do_partition, 0);
+  if (eclass_int == (int) T8_ECLASS_PYRAMID) {
+    return t8_cmesh_new_hypercube (eclass, comm, do_bcast, do_partition, 0);
+  }
+  else {
+    return t8_cmesh_new_hypercube (eclass, comm, do_bcast, do_partition,
+                                   periodic);
   }
 
-  /* change to  this when tests run with pyramidal elements: 
-     if ((int) eclass == 7 && periodic == 1) {
-     return t8_cmesh_new_hypercube (eclass, comm, do_bcast, do_partition, 0);
-     } */
-
-  return t8_cmesh_new_hypercube (eclass, comm, do_bcast, do_partition,
-                                 periodic);
 }
 
 /** The function t8_test_create_new_empty_cmesh(int cmesh_id):
@@ -434,37 +437,32 @@ t8_test_create_new_hypercube_hybrid_cmesh (int cmesh_id)
    * every 8 steps, because then comm_num looped once through all its values,so we divide by 4 
    * For it to be in range of T8_CMESH_DIM_RANGE, we take modulo T8_CMESH_DIM_RANGE.
    * This way we get a unique input for every cmesh_id.
-   *    dim     |     comm    | do_partition | periodic
-   *     0      |       0     |       0      |     0
-   *     0      |       0     |       0      |     1
-   *     0      |       0     |       1      |     0
-   *     0      |       0     |       1      |     1
-   *     0      |       1     |       0      |     0
-   *     0      |       1     |       0      |     1
-   *     0      |       1     |       1      |     0
-   *     0      |       1     |       1      |     1
-   *     1      |       0     |       0      |     0
-   *    ...     |      ...    |      ...     |    ...     
-   *     3      |       1     |       1      |     1     
+   *        comm    | do_partition | periodic
+   *          0     |       0      |     0
+   *          0     |       0      |     1
+   *          0     |       1      |     0
+   *          0     |       1      |     1
+   *          1     |       0      |     0
+   *          1     |       0      |     1
+   *          1     |       1      |     0
+   *          1     |       1      |     1
+   *          0     |       0      |     0
+   *         ...    |      ...     |    ...     
+   *          1     |       1      |     1     
    */
   const int           comm_num = (cmesh_id
                                   / (T8_CMESH_BINARY * T8_CMESH_BINARY))
     % T8_CMESH_TEST_NUM_COMMS;
-  const int           dim = (cmesh_id
-                             / (T8_CMESH_BINARY * T8_CMESH_BINARY *
-                                T8_CMESH_TEST_NUM_COMMS))
-    % (T8_CMESH_BINARY * T8_CMESH_BINARY * T8_CMESH_TEST_NUM_COMMS)
-    % (T8_CMESH_DIM_RANGE);
   const sc_MPI_Comm   comm = t8_comm_list[comm_num];
   const int           do_partition =
     (cmesh_id / T8_CMESH_BINARY) % T8_CMESH_BINARY;
   const int           periodic = cmesh_id % T8_CMESH_BINARY;
 
   t8_debugf
-    ("Creating new hypercube hybrid cmesh. dim=%i, comm=%s , do_partition=%i, periodic=%i \n",
-     dim, t8_comm_string_list[comm_num], do_partition, periodic);
+    ("Creating new hypercube hybrid cmesh. comm=%s , do_partition=%i, periodic=%i \n",
+     t8_comm_string_list[comm_num], do_partition, periodic);
 
-  return t8_cmesh_new_hypercube_hybrid (dim, comm, do_partition, periodic);
+  return t8_cmesh_new_hypercube_hybrid (comm, do_partition, periodic);
 }
 
 /** The function t8_test_create_new_periodic_cmesh(int cmesh_id):  

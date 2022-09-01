@@ -22,7 +22,7 @@
 
 #include <new>
 #include <t8_schemes/t8_quads_transition/t8_transition_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_line_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_line/t8_default_line_cxx.hxx>
 #include <t8_refcount.h>
 #include "t8_transition_quad_cxx.hxx"
 

@@ -26,6 +26,7 @@
 #include <t8.h>
 #include <t8_refcount.h>
 #include <t8_data/t8_shmem.h>
+#include <t8_geometry/t8_geometry.h>
 #include "t8_cmesh_stash.h"
 #include "t8_element.h"
 
@@ -57,6 +58,16 @@ typedef enum t8_cmesh_from
 }
 t8_cmesh_from_t;
 #endif
+
+/* Definitions for attribute identifiers that are reserved for a special purpose. 
+ * T8_CMESH_NEXT_POSSIBLE_KEY is the first unused key, hence it can be repurposed for different attributes.*/
+#define T8_CMESH_VERTICES_ATTRIBUTE_KEY   0     /* Used to store vertex coordinates. */
+#define T8_CMESH_GEOMETRY_ATTRIBUTE_KEY   1     /* Used to store the name of a tree's geometry. */
+#define T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY    2    /* Used to store which edge is linked to which geometry */
+#define T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY    3 /* Used to store edge parameters */
+#define T8_CMESH_OCC_FACE_ATTRIBUTE_KEY T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + T8_ECLASS_MAX_EDGES        /* Used to store wich face is linked to which surface */
+#define T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY T8_CMESH_OCC_FACE_ATTRIBUTE_KEY + 1  /* Used to store face parameters */
+#define T8_CMESH_NEXT_POSSIBLE_KEY T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY + T8_ECLASS_MAX_FACES     /* The next free value for a t8code attribute key */
 
 /** This structure holds the connectivity data of the coarse mesh.
  *  It can either be replicated, then each process stores a copy of the whole
@@ -134,6 +145,9 @@ typedef struct t8_cmesh
                                         or -(first local tree) - 1
                                         if the first tree on that process is shared.
                                         Since this is very memory consuming we only fill it when needed. */
+
+  t8_geometry_handler_t *geometry_handler;  /**< Handles all geometries that are used by trees in this cmesh. */
+
 #ifdef T8_ENABLE_DEBUG
   t8_locidx_t         inserted_trees; /**< Count the number of inserted trees to
                                            check at commit if it equals the total number. */
@@ -242,7 +256,7 @@ t8_cmesh_trees_struct_t;
 typedef struct t8_part_tree
 {
   char               *first_tree;       /* Stores the trees, the ghosts and the attributes.
-                                           The last 2*sizeof(t8_topidx) bytes store num_trees and num_ghosts */
+                                           The last 2*sizeof(t8_locidx) bytes store num_trees and num_ghosts */
   t8_locidx_t         first_tree_id;    /* local tree_id of the first tree. -1 if num_trees = 0 */
   t8_locidx_t         first_ghost_id;   /* TODO: document. -1 if num_ghost=0, 0 for the first part, (not num_local_trees!)
                                            0 <= first_ghost_id < num_ghosts */
@@ -274,12 +288,14 @@ typedef struct t8_cprofile
   int                 partition_procs_sent; /**< The number of different processes this process has send
                                            local trees or ghosts to in the last partition call. */
   int                 first_tree_shared; /**< 1 if this processes' first tree is shared. 0 if not. */
-  double              partition_runtime;/**< The runtime of  the last call to \a t8_cmesh_partition. */
-  double              commit_runtime;/**< The runtim of the last call to \a t8_cmesh_commit. */
+  double              partition_runtime; /**< The runtime of  the last call to \a t8_cmesh_partition. */
+  double              commit_runtime; /**< The runtime of the last call to \a t8_cmesh_commit. */
+  double              geometry_evaluate_num_calls; /**< The number of calls to \a t8_geometry_evaluate. */
+  double              geometry_evaluate_runtime; /**< The accumulated runtime of calls to \a t8_geometry_evaluate. */
 }
 t8_cprofile_struct_t;
 
 /** The number of entries in a cprofile struct */
-#define T8_CPROFILE_NUM_STATS 9
+#define T8_CPROFILE_NUM_STATS 11
 
 #endif /* !T8_CMESH_TYPES_H */

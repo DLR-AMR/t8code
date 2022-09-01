@@ -35,7 +35,7 @@
 
 #if 0
 /* Return the minimum of two t8_gloidx_t's */
-static              t8_gloidx_t
+static t8_gloidx_t
 t8_glo_min (t8_gloidx_t A, t8_gloidx_t B)
 {
   return A < B ? A : B;
@@ -49,12 +49,11 @@ t8_glo_min (t8_gloidx_t A, t8_gloidx_t B)
 static void
 t8_cmesh_partition_send_change_neighbor (t8_cmesh_t cmesh,
                                          t8_cmesh_t cmesh_from,
-                                         t8_locidx_t * neighbor, int to_proc)
+                                         t8_locidx_t *neighbor, int to_proc)
 {
   t8_gloidx_t         temp;
-  t8_gloidx_t        *tree_offset;
-
-  tree_offset = t8_shmem_array_get_gloidx_array (cmesh->tree_offsets);
+  const t8_gloidx_t  *tree_offset =
+    t8_shmem_array_get_gloidx_array (cmesh->tree_offsets);
   if (0 <= *neighbor && *neighbor < cmesh_from->num_local_trees) {
     /* Neighbor is a local tree in cmesh */
     temp = cmesh_from->first_tree - t8_offset_first (to_proc, tree_offset);
@@ -210,7 +209,6 @@ t8_cmesh_gather_treecount_ext (t8_cmesh_t cmesh, sc_MPI_Comm comm,
                                int check_commit)
 {
   t8_gloidx_t         tree_offset;
-  t8_gloidx_t        *tree_offset_array;
   int                 is_empty, has_empty;
 
   if (check_commit) {
@@ -221,13 +219,18 @@ t8_cmesh_gather_treecount_ext (t8_cmesh_t cmesh, sc_MPI_Comm comm,
   tree_offset = cmesh->first_tree_shared ? -cmesh->first_tree - 1 :
     cmesh->first_tree;
   if (cmesh->tree_offsets == NULL) {
+    t8_shmem_init (comm);
     t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
     /* Only allocate the shmem array, if it is not already allocated */
     cmesh->tree_offsets = t8_cmesh_alloc_offsets (cmesh->mpisize, comm);
     t8_shmem_array_allgather (&tree_offset, 1, T8_MPI_GLOIDX,
                               cmesh->tree_offsets, 1, T8_MPI_GLOIDX);
-    t8_shmem_array_set_gloidx (cmesh->tree_offsets, cmesh->mpisize,
-                               cmesh->num_trees);
+    /* Set the last entry to the total number of trees. */
+    if (t8_shmem_array_start_writing (cmesh->tree_offsets)) {
+      t8_shmem_array_set_gloidx (cmesh->tree_offsets, cmesh->mpisize,
+                                 cmesh->num_trees);
+    }
+    t8_shmem_array_end_writing (cmesh->tree_offsets);
 
     if (cmesh->num_local_trees <= 0) {
       /* This process is empty */
@@ -241,7 +244,7 @@ t8_cmesh_gather_treecount_ext (t8_cmesh_t cmesh, sc_MPI_Comm comm,
     if (has_empty) {
       int                 next_nonempty;
 
-      tree_offset_array =
+      const t8_gloidx_t  *tree_offset_array =
         t8_shmem_array_get_gloidx_array (cmesh->tree_offsets);
       /* there exist empty ranks, we have to recalculate the offset.
        * Each empty rank stores the offset of the next nonempty rank */
@@ -385,8 +388,8 @@ t8_cmesh_partition_create_offsets (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 /* Return a process that a given process definitely sends to/receives from */
 static int
 t8_cmesh_partition_send_any (int proc, t8_cmesh_t cmesh_from,
-                             t8_gloidx_t * offset_from,
-                             t8_gloidx_t * offset_to, int receive)
+                             t8_gloidx_t *offset_from,
+                             t8_gloidx_t *offset_to, int receive)
 {
   int                 lookhere, range[2], *sender, *receiver;
   int                 search_dir;
@@ -526,7 +529,7 @@ t8_cmesh_partition_send_any (int proc, t8_cmesh_t cmesh_from,
 #if 0
 /* Compute first and last process to which we will send data */
 /* Returns the local tree_id of last local tree on send_first. */
-static              t8_locidx_t
+static t8_locidx_t
 t8_cmesh_partition_sendrange (t8_cmesh_t cmesh_to, t8_cmesh_t cmesh_from,
                               int *send_first, int *send_last, int receive)
 {
@@ -696,9 +699,9 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh_to, t8_cmesh_t cmesh_from,
 #if 0
 /* Compute first and last process to which we will send data */
 /* Returns the local tree_id of last local tree on send_first. */
-static              t8_locidx_t
+static t8_locidx_t
 t8_cmesh_partition_sendrange_old (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
-                                  t8_gloidx_t * tree_offsets,
+                                  t8_gloidx_t *tree_offsets,
                                   int *send_first, int *send_last,
                                   int receive)
 {
@@ -941,7 +944,7 @@ t8_cmesh_partition_recvrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
 #endif
 
 /* A much faster version to compute the sendrange */
-static              t8_locidx_t
+static t8_locidx_t
 t8_cmesh_partition_alternative_sendrange (t8_cmesh_t cmesh,
                                           t8_cmesh_t cmesh_from,
                                           int *send_first, int *send_last)
@@ -949,13 +952,12 @@ t8_cmesh_partition_alternative_sendrange (t8_cmesh_t cmesh,
   t8_gloidx_t         first_tree = t8_cmesh_get_first_treeid (cmesh_from),
     last_tree;
   t8_gloidx_t         ret;
-  t8_gloidx_t        *offset_to;
-  t8_gloidx_t        *offset_from;
   int                 alternative_sendfirst, alternative_sendlast = -2;
   int                 flag, count;
   int                 some_owner = -1;  /* Passes as argument to first/last owner functions */
 
-  offset_to = t8_shmem_array_get_gloidx_array (cmesh->tree_offsets);
+  const t8_gloidx_t  *offset_to =
+    t8_shmem_array_get_gloidx_array (cmesh->tree_offsets);
   if (!cmesh_from->set_partition) {
     /* If cmesh_from is not partitioned we can send/recv all information
      * to/from ourself */
@@ -964,7 +966,8 @@ t8_cmesh_partition_alternative_sendrange (t8_cmesh_t cmesh,
     return t8_offset_last (cmesh_from->mpirank, offset_to);
   }
 
-  offset_from = t8_shmem_array_get_gloidx_array (cmesh_from->tree_offsets);
+  const t8_gloidx_t  *offset_from =
+    t8_shmem_array_get_gloidx_array (cmesh_from->tree_offsets);
 
   /* TODO: try to work around calling this function, since it has log(P) runtime */
   if (t8_offset_nosend (cmesh->mpirank, cmesh->mpisize,
@@ -1133,8 +1136,8 @@ t8_cmesh_partition_alternative_recvrange (t8_cmesh_t cmesh,
                                           int *recv_first, int *recv_last)
 {
   t8_gloidx_t         first_tree, last_tree;
-  t8_gloidx_t        *offset_to;
-  t8_gloidx_t        *offset_from;
+  const t8_gloidx_t  *offset_to;
+  const t8_gloidx_t  *offset_from;
   int                 alternative_recvfirst, alternative_recvlast;
   int                 some_owner = -1;  /* Passes as argument to first/last owner functions */
 
@@ -1194,8 +1197,8 @@ t8_cmesh_partition_alternative_recvrange (t8_cmesh_t cmesh,
 
 /* Compute the number of bytes that need to be allocated in the send buffer
  * for the neighbor entries of ghost */
-static              size_t
-t8_partition_compute_gnb (t8_cmesh_t cmesh_from, sc_array_t * send_as_ghost)
+static size_t
+t8_partition_compute_gnb (t8_cmesh_t cmesh_from, sc_array_t *send_as_ghost)
 {
   size_t              ghost_neighbor_bytes = 0, ighost;
   t8_locidx_t         ghost_id;
@@ -1224,8 +1227,8 @@ t8_partition_compute_gnb (t8_cmesh_t cmesh_from, sc_array_t * send_as_ghost)
 /* Compute the number of bytes that need to be allocated in the send buffer
  * for the attribute entries of all ghosts. */
 static size_t
-t8_partition_compute_gab (t8_cmesh_t cmesh_from, sc_array_t * send_as_ghost,
-                          size_t * attr_info_bytes)
+t8_partition_compute_gab (t8_cmesh_t cmesh_from, sc_array_t *send_as_ghost,
+                          size_t *attr_info_bytes)
 {
   size_t              ghost_attribute_bytes = 0, ighost;
   t8_locidx_t         ghost_id, ghost_id_min_offset;
@@ -1275,7 +1278,7 @@ t8_cmesh_send_ghost (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
                      int p, t8_locidx_t tree)
 {
   t8_gloidx_t         tree_id, *ghost_neighbors, neighbor;
-  t8_gloidx_t        *from_offsets;
+  const t8_gloidx_t  *from_offsets;
   t8_locidx_t        *tree_neighbors;
   t8_cghost_t         ghost = NULL;
   t8_ctree_t          ctree = NULL;
@@ -1283,7 +1286,7 @@ t8_cmesh_send_ghost (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
   int                 proc, iface;
   size_t              left = 0, right = cmesh->mpirank;
   int                 found = 0;
-  t8_gloidx_t        *offset_to;
+  const t8_gloidx_t  *offset_to;
 
   offset_to = t8_shmem_array_get_gloidx_array (cmesh->tree_offsets);
 
@@ -1407,7 +1410,7 @@ t8_cmesh_partition_copy_data (char *send_buffer, t8_cmesh_t cmesh,
                               size_t ghost_neighbor_bytes,
                               size_t tree_neighbor_bytes,
                               size_t tree_attribute_bytes,
-                              sc_array_t * send_as_ghost,
+                              sc_array_t *send_as_ghost,
                               t8_locidx_t send_first, t8_locidx_t send_last,
                               size_t total_alloc, int to_proc)
 {
@@ -1706,19 +1709,18 @@ t8_cmesh_partition_sendtreeloop (t8_cmesh_t cmesh,
                                  const struct t8_cmesh *cmesh_from,
                                  t8_locidx_t range_start,
                                  t8_locidx_t range_end,
-                                 size_t * tree_neighbor_bytes,
-                                 size_t * attr_bytes,
-                                 size_t * attr_info_bytes,
-                                 int8_t * ghost_flag_send,
-                                 t8_gloidx_t * tree_offset, int iproc,
-                                 sc_array_t * send_as_ghost)
+                                 size_t *tree_neighbor_bytes,
+                                 size_t *attr_bytes,
+                                 size_t *attr_info_bytes,
+                                 int8_t *ghost_flag_send,
+                                 int iproc, sc_array_t *send_as_ghost)
 {
   t8_ctree_t          tree;
   t8_locidx_t         neighbor, *face_neighbor, itree;
   int8_t             *ttf;
   int                 iface;
 #ifdef T8_ENABLE_DEBUG
-  t8_gloidx_t        *offset_from, *offset_to;
+  const t8_gloidx_t  *offset_from, *offset_to;
 
   if (cmesh_from->set_partition) {
     offset_from = t8_shmem_array_get_gloidx_array (cmesh_from->tree_offsets);
@@ -1781,7 +1783,7 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
                              int *num_request_alloc, int *send_first,
                              int *send_last,
                              char ***send_buffer, char **my_buffer,
-                             size_t * my_buffer_bytes,
+                             size_t *my_buffer_bytes,
                              sc_MPI_Request ** requests, sc_MPI_Comm comm)
 {
   size_t              attr_bytes = 0, tree_neighbor_bytes,
@@ -1794,7 +1796,7 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
   t8_locidx_t         num_trees, num_ghost_send, range_start, range_end;
   sc_array_t          send_as_ghost;    /* Stores local id's of trees and ghosts that will be send as ghosts */
   int8_t             *ghost_flag_send;  /* For each local tree and ghost set to 1 if it is in send_as_ghost */
-  t8_gloidx_t        *offset_from, *offset_to;
+  const t8_gloidx_t  *offset_from, *offset_to;
 
   T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
   /* We use two different flag arrays here, since ghost_flag_send needs to
@@ -1874,7 +1876,7 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
                                      range_end, &tree_neighbor_bytes,
                                      &attr_bytes,
                                      &attr_info_bytes, ghost_flag_send,
-                                     offset_to, iproc, &send_as_ghost);
+                                     iproc, &send_as_ghost);
     /* loop over trees ends here */
     /* Calculate and allocate memory for send buffer */
       /**********************************************************/
@@ -2064,7 +2066,7 @@ void
 t8_cmesh_partition_receive_message (t8_cmesh_t cmesh, sc_MPI_Comm comm,
                                     int proc_recv, sc_MPI_Status * status,
                                     int *local_procid, int recv_first,
-                                    t8_locidx_t * num_ghosts)
+                                    t8_locidx_t *num_ghosts)
 {
   int                 mpiret;
   int                 recv_bytes;
@@ -2122,7 +2124,7 @@ t8_cmesh_partition_receive_message (t8_cmesh_t cmesh, sc_MPI_Comm comm,
 static void
 t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
                              const struct t8_cmesh *cmesh_from,
-                             t8_gloidx_t * tree_offset,
+                             const t8_gloidx_t *tree_offset,
                              char *my_buffer, size_t my_buffer_bytes,
                              sc_MPI_Comm comm, int fr, int lr)
 {
@@ -2131,7 +2133,7 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
   int                 recv_first, recv_last;    /* ranks of the processor from which we will receive */
   int                 num_parts, myrank_part;
   t8_locidx_t         num_trees, num_ghosts;
-  t8_gloidx_t        *from_offsets;
+  const t8_gloidx_t  *from_offsets;
   t8_part_tree_t      recv_part;
   sc_MPI_Status       status;
 #if 0
@@ -2419,7 +2421,7 @@ t8_cmesh_partition_debug_listprocs (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
 {
   int                 mpiret, mpisize, mpirank, p;
   char                out[BUFSIZ] = "";
-  t8_gloidx_t        *from, *to;
+  const t8_gloidx_t  *from, *to;
 
   if (cmesh_from->set_partition) {
     from = t8_shmem_array_get_gloidx_array (cmesh_from->tree_offsets);
@@ -2467,7 +2469,7 @@ t8_cmesh_partition_debug_listprocs (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
 /* TODO: remove const */
 static void
 t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
-                          t8_gloidx_t * tree_offset, sc_MPI_Comm comm)
+                          const t8_gloidx_t *tree_offset, sc_MPI_Comm comm)
 {
   int                 send_first, send_last, num_request_alloc; /* ranks of the processor to which we will send */
   int                 iproc, num_send_mpi, mpiret;
@@ -2582,7 +2584,8 @@ void
 t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh_from;
-  t8_gloidx_t         last_tree, *tree_offsets;
+  t8_gloidx_t         last_tree;
+  const t8_gloidx_t  *tree_offsets;
   t8_scheme_cxx_t    *ts;
 
   T8_ASSERT (t8_cmesh_is_committed (cmesh->set_from));
@@ -2663,9 +2666,7 @@ t8_cmesh_offset_print (t8_cmesh_t cmesh, sc_MPI_Comm comm)
       offset_isnew = 1;
     }
     t8_offset_print (cmesh->tree_offsets, comm);
-    T8_ASSERT (t8_offset_consistent (cmesh->mpisize,
-                                     t8_shmem_array_get_gloidx_array
-                                     (cmesh->tree_offsets),
+    T8_ASSERT (t8_offset_consistent (cmesh->mpisize, cmesh->tree_offsets,
                                      cmesh->num_trees));
     if (offset_isnew == 1) {
       t8_shmem_array_destroy (&cmesh->tree_offsets);
@@ -2697,25 +2698,28 @@ t8_cmesh_offset_concentrate (int proc, sc_MPI_Comm comm,
   SC_CHECK_MPI (mpiret);
 
   shmem_array = t8_cmesh_alloc_offsets (mpisize, comm);
-  offsets = t8_shmem_array_get_gloidx_array (shmem_array);
-  offsets[0] = 0;
-  for (iproc = 1; iproc <= mpisize; iproc++) {
-    if (iproc == proc + 1) {
-      offsets[iproc] = num_trees;
-    }
-    else {
-      offsets[iproc] = offsets[iproc - 1];
+  if (t8_shmem_array_start_writing (shmem_array)) {
+    offsets = t8_shmem_array_get_gloidx_array_for_writing (shmem_array);
+    offsets[0] = 0;
+    for (iproc = 1; iproc <= mpisize; iproc++) {
+      if (iproc == proc + 1) {
+        offsets[iproc] = num_trees;
+      }
+      else {
+        offsets[iproc] = offsets[iproc - 1];
+      }
+#ifdef T8_ENABLE_DEBUG
+      snprintf (out + strlen (out), BUFSIZ - strlen (out), "%li,",
+                offsets[iproc]);
+#endif
     }
 #ifdef T8_ENABLE_DEBUG
-    snprintf (out + strlen (out), BUFSIZ - strlen (out), "%li,",
-              offsets[iproc]);
+    t8_debugf ("Partition with offsets:0,%s\n", out);
 #endif
   }
-#ifdef T8_ENABLE_DEBUG
-  t8_debugf ("Partition with offsets:0,%s\n", out);
-#endif
+  t8_shmem_array_end_writing (shmem_array);
 
-  T8_ASSERT (t8_offset_consistent (mpisize, offsets, num_trees));
+  T8_ASSERT (t8_offset_consistent (mpisize, shmem_array, num_trees));
   return shmem_array;
 }
 
@@ -2740,8 +2744,6 @@ t8_cmesh_offset_random (sc_MPI_Comm comm, t8_gloidx_t num_trees, int shared,
 
   shmem_array = t8_cmesh_alloc_offsets (mpisize, comm);
 
-  offsets = t8_shmem_array_get_gloidx_array (shmem_array);
-
   if (seed == 0) {
     u_seed = sc_MPI_Wtime () * 10000;
   }
@@ -2756,48 +2758,53 @@ t8_cmesh_offset_random (sc_MPI_Comm comm, t8_gloidx_t num_trees, int shared,
   SC_CHECK_MPI (mpiret);
   srand (u_seed);
 
-  offsets[0] = 0;
-  first_shared = 0;
-  for (iproc = 1; iproc < mpisize; iproc++) {
-    offsets[iproc] = 0;
-    /* Create a random number between 0 and 200% of an ideal partition */
-    /* This is the number of trees on process iproc-1. */
-    if ((int) (num_trees * 2. / mpisize) == 0) {
-      /* This case prevents division by 0 */
-      random_number = 1;
-    }
-    else {
-      random_number = rand () % (int) (num_trees * 2. / mpisize);
-    }
+  if (t8_shmem_array_start_writing (shmem_array)) {
+    offsets = t8_shmem_array_get_gloidx_array_for_writing (shmem_array);
 
-    if (random_number == 0 && first_shared) {
-      /* The previous proc is empty but set its first tree to be shared. */
-      /* We have to manually reset the shared flag. */
-      offsets[iproc - 1] = -offsets[iproc - 1] - 1;
-      first_shared = 0;
-    }
-    random_number += first_shared;
-    /* If we would exceed the number of trees we cut the random number */
-    new_first = t8_offset_first (iproc - 1, offsets) + random_number;
-    if (new_first > num_trees) {
-      random_number = num_trees - t8_offset_first (iproc - 1, offsets);
-      new_first = num_trees;
-    }
-    if (shared && new_first < num_trees) {      /* new first is num_trees, this process must be empty */
-      first_shared = rand () % 2;
-    }
-    else {
-      first_shared = 0;
-    }
+    offsets[0] = 0;
+    first_shared = 0;
+    for (iproc = 1; iproc < mpisize; iproc++) {
+      offsets[iproc] = 0;
+      /* Create a random number between 0 and 200% of an ideal partition */
+      /* This is the number of trees on process iproc-1. */
+      if ((int) (num_trees * 2. / mpisize) == 0) {
+        /* This case prevents division by 0 */
+        random_number = 1;
+      }
+      else {
+        random_number = rand () % (int) (num_trees * 2. / mpisize);
+      }
 
-    offsets[iproc] = random_number + t8_offset_first (iproc - 1, offsets);
-    if (first_shared && offsets[iproc] != num_trees) {
-      offsets[iproc] = -offsets[iproc] - 1;
+      if (random_number == 0 && first_shared) {
+        /* The previous proc is empty but set its first tree to be shared. */
+        /* We have to manually reset the shared flag. */
+        offsets[iproc - 1] = -offsets[iproc - 1] - 1;
+        first_shared = 0;
+      }
+      random_number += first_shared;
+      /* If we would exceed the number of trees we cut the random number */
+      new_first = t8_offset_first (iproc - 1, offsets) + random_number;
+      if (new_first > num_trees) {
+        random_number = num_trees - t8_offset_first (iproc - 1, offsets);
+        new_first = num_trees;
+      }
+      if (shared && new_first < num_trees) {    /* new first is num_trees, this process must be empty */
+        first_shared = rand () % 2;
+      }
+      else {
+        first_shared = 0;
+      }
+
+      offsets[iproc] = random_number + t8_offset_first (iproc - 1, offsets);
+      if (first_shared && offsets[iproc] != num_trees) {
+        offsets[iproc] = -offsets[iproc] - 1;
+      }
     }
+    offsets[mpisize] = num_trees;
   }
-  offsets[mpisize] = num_trees;
+  t8_shmem_array_end_writing (shmem_array);
 
-  T8_ASSERT (t8_offset_consistent (mpisize, offsets, num_trees));
+  T8_ASSERT (t8_offset_consistent (mpisize, shmem_array, num_trees));
   return shmem_array;
 }
 
@@ -2808,7 +2815,7 @@ t8_cmesh_offset_percent (t8_cmesh_t cmesh, sc_MPI_Comm comm, int percent)
   t8_gloidx_t         new_first_tree, old_first_tree;
   t8_locidx_t         old_num_trees_pm1;
   t8_shmem_array_t    partition_array;
-  t8_gloidx_t        *old_partition;
+  const t8_gloidx_t  *old_partition;
   int                 mpirank, mpisize, mpiret;
   int                 created = 0;
 
@@ -2853,16 +2860,18 @@ t8_cmesh_offset_percent (t8_cmesh_t cmesh, sc_MPI_Comm comm, int percent)
   }
   t8_shmem_array_allgather (&new_first_tree, 1, T8_MPI_GLOIDX,
                             partition_array, 1, T8_MPI_GLOIDX);
-  t8_shmem_array_set_gloidx (partition_array, mpisize,
-                             t8_cmesh_get_num_trees (cmesh));
+  if (t8_shmem_array_start_writing (partition_array)) {
+    t8_shmem_array_set_gloidx (partition_array, mpisize,
+                               t8_cmesh_get_num_trees (cmesh));
+  }
+  t8_shmem_array_end_writing (partition_array);
+
   if (created) {
     /* We needed to create the old partition array and thus we clean it up
      * again. */
     t8_shmem_array_destroy (&cmesh->tree_offsets);
   }
-  T8_ASSERT (t8_offset_consistent (mpisize,
-                                   t8_shmem_array_get_gloidx_array
-                                   (partition_array),
+  T8_ASSERT (t8_offset_consistent (mpisize, partition_array,
                                    t8_cmesh_get_num_trees (cmesh)));
   return partition_array;
 }

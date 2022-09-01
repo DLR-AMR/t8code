@@ -28,12 +28,18 @@
  *     (iv)  decide, whether we want to get statistics printed out, regarding # of elements in the meshes and runtime infos of the several functions or other debugging information
  */
 
-#include "t8.h"
+#include <t8.h>
 #include <cstring>
+// #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_schemes/t8_quads_transition/t8_transition/t8_transition_quad_cxx.hxx>
 #include <t8_schemes/t8_quads_transition/t8_transition_cxx.hxx>
 #include <t8_vec.h>
 #include <example/common/t8_example_common.h>
+
+#include <t8.h>
+#include <t8_cmesh.h>
+#include <t8_cmesh_vtk.h>
+#include <t8_cmesh/t8_cmesh_examples.h>
 
 /* In this example, a simple refinement criteria is used to construct an adapted and transitioned forest. 
  * Afterwards, we iterate through all elements and all faces of the this forest in order to test the leaf_face_neighbor function that will determine all neighbor elements. */
@@ -154,6 +160,7 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
   T8_ASSERT (global_num_trees == 1);    /* TODO: enable multiple trees for this example */
   T8_ASSERT (ltree_id == 0);
 
+  /* Flo1314_TODO: implement a tree loop to allow LFN tests for multiple-trees forests */
   eclass = t8_forest_get_tree_class (forest_adapt, ltree_id);
   ts = t8_forest_get_eclass_scheme (forest_adapt, eclass);
 
@@ -255,12 +262,14 @@ t8_refine_transition (t8_eclass_t eclass)
   int                 do_transition = 1;
 
   /* Adaptation with multiple steps */
-  int                 num_adaptations = 4;
-  float               radius_increase = 0.1;
+  int                 num_adaptations = 3;
+  float               radius_increase = 0.4;
 
-  /* cmesh settings (only one of the following suggestions should be one) */
+  /* cmesh settings */
   int                 single_tree = 1;
+  /* Flo1314_TODO: there is a problem with sc_finalize() at the end when using multiple trees (computations work properly) */
   int                 multiple_tree = 0, num_x_trees = 2, num_y_trees = 1;
+  /* Flo1314_TODO: Implement this case */
   int                 hybrid_cmesh = 0;
 
   /* partition setting */
@@ -282,36 +291,52 @@ t8_refine_transition (t8_eclass_t eclass)
   int                 get_commit_stats = 1;
   int                 get_general_stats = 1;
 
+  /* check settings */
+  T8_ASSERT(do_balance + do_transition == 1);
+  T8_ASSERT(single_tree + multiple_tree + hybrid_cmesh == 1);
+
   /* *************************************************************************************************************** */
 
   /* ********************************************* Initializing cmesh ********************************************** */
 
   /* initialization */
-  t8_forest_init (&forest);
-
+  // t8_cmesh_init (&cmesh);
   /* building the cmesh, using the initlevel */
-  if (single_tree) {            /* single quad cmesh */
+  if (single_tree) {
+    /* single quad cmesh */
+    // cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
     cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
+    // t8_cmesh_set_tree_class (cmesh, 0, eclass);
+    // t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   }
-  else if (multiple_tree) {     /* p4est_connectivity_new_brick (num_x_trees, num_y_trees, 0, 0) -> cmesh of (num_x_trees x num_y_trees) many quads */
+  else if (multiple_tree) {
+    /* p4est_connectivity_new_brick (num_x_trees, num_y_trees, 0, 0) -> cmesh of (num_x_trees x num_y_trees) many quads */
     p4est_connectivity_t *brick =
       p4est_connectivity_new_brick (num_x_trees, num_y_trees, 0, 0);
     cmesh = t8_cmesh_new_from_p4est (brick, sc_MPI_COMM_WORLD, 0);
     p4est_connectivity_destroy (brick);
+    do_LFN_test = 0;
+      t8_debugf ("Using multiple trees: do_LFN set to zero since it is only available for single tree forests. \n");
   }
-  else if (hybrid_cmesh) {      /* TODO: this does not work at the moment */
-    cmesh = t8_cmesh_new_hypercube_hybrid (2, sc_MPI_COMM_WORLD, 0, 0);
+  else if (hybrid_cmesh) {
+    /* Flo1314_TODO: this does not work at the moment */
+    cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
   }
   else {
     SC_ABORT ("Specify cmesh.");
   }
 
-  /* building the cmesh, using the initlevel */
+  /* initialize a forest */
+  t8_forest_init (&forest);
+  
+  /* set forest parameter and cmesh */
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
-  t8_forest_set_scheme (forest, t8_scheme_new_subelement_cxx ());
   t8_forest_set_level (forest, initlevel);
+  t8_forest_set_scheme (forest, t8_scheme_new_subelement_cxx ());
 
+  /* commit the forest */
   t8_forest_commit (forest);
+
   t8_debugf ("~~~~~~~~~~ cmesh has been build ~~~~~~~~~~\n");
 
   /* ************************************** Initializing refinement criterion ************************************** */
@@ -325,7 +350,7 @@ t8_refine_transition (t8_eclass_t eclass)
   sdata.mid_point[0] = 0;       // 1.0 / 2.0 + shift_x * 1.0/(1 << (minlevel));
   sdata.mid_point[1] = 0;       // 1.0 / 2.0 + shift_y * 1.0/(1 << (minlevel)); 
   sdata.mid_point[2] = 0;
-  sdata.radius = 0.6;
+  sdata.radius = 0.25;
 
   /* refinement parameter */
   ls_data.band_width = 1;
@@ -388,8 +413,18 @@ t8_refine_transition (t8_eclass_t eclass)
     t8_debugf ("~~~~~~~~~~ forest has been adapted ~~~~~~~~~~\n");
 
     if (do_vtk) {
-      snprintf (filename, BUFSIZ, "forest_adapt_transition_TS%i_%s",
+      if (do_transition) {
+        snprintf (filename, BUFSIZ, "forest_transitioned_TS%i_%s",
                 adaptation_count, t8_eclass_to_string[eclass]);
+      }
+      else if (do_balance) {
+        snprintf (filename, BUFSIZ, "forest_balanced_TS%i_%s",
+                adaptation_count, t8_eclass_to_string[eclass]);
+      }
+      else {
+        snprintf (filename, BUFSIZ, "forest_adapted_TS%i_%s",
+                adaptation_count, t8_eclass_to_string[eclass]);
+      }
       t8_forest_write_vtk (forest_adapt, filename);
       t8_debugf ("~~~~~~~~~~ vtk has been constructed ~~~~~~~~~~\n");
     }

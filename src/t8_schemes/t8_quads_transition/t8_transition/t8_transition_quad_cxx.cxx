@@ -24,8 +24,8 @@
  * This is the low-level structure of 2D quadrilateral elements with transition cells of triangular subelements. */
 
 #include <p4est_bits.h>
-#include <t8_schemes/t8_default/t8_dline_bits.h>
-#include <t8_schemes/t8_default/t8_default_common_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_line/t8_dline_bits.h>
+#include <t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx>
 #include "t8.h"
 #include "t8_transition_quad_cxx.hxx"
 
@@ -132,7 +132,7 @@ t8_subelement_scheme_quad_c::t8_element_compare (const t8_element_t * elem1,
 
   int                 compare = p4est_quadrant_compare (q, r);
 
-  /* TODO: think about how this should be implemented for subelements */
+  /* Flo1314_TODO: think about how this should be implemented for subelements */
   if (compare == 0) {
     if (t8_element_is_subelement (elem1)
         && t8_element_is_subelement (elem2)) {
@@ -283,7 +283,7 @@ t8_subelement_scheme_quad_c::t8_element_get_face_corner (const t8_element_t *
   T8_ASSERT (t8_element_is_valid (elem));
 
   if (!t8_element_is_subelement (elem)) {
-    /* TODO: check whether this enumeration of the faces is right. It might be f_3 and f_2 switched */
+    /* Flo1314_TODO: check whether this enumeration of the faces is right. It might be f_3 and f_2 switched */
     /*
      *   2    f_3    3
      *     x -->-- x
@@ -450,7 +450,7 @@ t8_subelement_scheme_quad_c::t8_element_is_family (t8_element_t ** fam)
 
 #ifdef T8_ENABLE_DEBUG
   {
-    /* TODO: this loop goes from 0 to 3 but with subelements there can be more elements in fam */
+    /* Flo1314_TODO: this loop goes from 0 to 3 but with subelements there can be more elements in fam */
     int                 i;
     for (i = 0; i < P4EST_CHILDREN; i++) {
       T8_ASSERT (t8_element_is_valid (fam[i]));
@@ -624,7 +624,7 @@ t8_subelement_scheme_quad_c::t8_element_nca (const t8_element_t * elem1,
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
 #if 0
-  /* TODO: This assertions throws an error since it expects a 3D hex.
+  /* Flo1314_TODO: This assertions throws an error since it expects a 3D hex.
    *       this does not make sense. investigate. */
   T8_ASSERT (t8_element_surround_matches (q1, q2));
 #endif
@@ -887,7 +887,7 @@ t8_subelement_scheme_quad_c::t8_element_extrude_face (const t8_element_t *
   T8_ASSERT (face_scheme->t8_element_is_valid (elem));
   T8_ASSERT (0 <= root_face && root_face < P4EST_FACES);
 
-  /* TODO: check if the enumeration in this graphic is right (maybe f_2 and f_3 switched) */
+  /* Flo1314_TODO: check if the enumeration in this graphic is right (maybe f_2 and f_3 switched) */
   /*
    * The faces of the root quadrant are enumerated like this:
    *
@@ -1155,7 +1155,7 @@ t8_subelement_scheme_quad_c::t8_element_boundary (const t8_element_t * elem,
 #endif
 }
 
-int                             // TODO: return bool instead of int?
+int                             // Flo1314_TODO: return bool instead of int?
 t8_subelement_scheme_quad_c::t8_element_is_root_boundary (const t8_element_t *
                                                           elem, int face)
 {
@@ -1371,6 +1371,27 @@ int
 t8_subelement_scheme_quad_c::t8_element_root_len (const t8_element_t * elem)
 {
   return P4EST_ROOT_LEN;
+}
+
+int
+t8_subelement_scheme_quad_c::t8_element_refines_irregular ()
+{
+  /* In general, subelements do not refine regularly */
+  return 1;
+}
+
+void
+t8_subelement_scheme_quad_c::t8_element_vertex_reference_coords (const t8_element_t
+                                                          *t, int vertex,
+                                                          double coords[])
+{
+  int coords_int[2] = {};
+  t8_element_vertex_coords(t, vertex, coords_int);
+
+  /* We divide the integer coordinates by the root length of the quad
+   * to obtain the reference coordinates. */
+  coords[0] = (double) coords_int[0] / (double) P4EST_ROOT_LEN;
+  coords[1] = (double) coords_int[1] / (double) P4EST_ROOT_LEN;
 }
 
 void
@@ -2204,6 +2225,25 @@ t8_subelement_scheme_quad_c::t8_element_init (int length, t8_element_t * elem,
   }
 }
 
+#ifdef T8_ENABLE_DEBUG
+/* Flo1314_TODO: remove element_print_element and just use debug_print */
+void
+t8_subelement_scheme_quad_c::t8_element_debug_print (const t8_element_t *
+                                                       elem) const
+{
+  const t8_quad_with_subelements *pquad_w_sub =
+    (const t8_quad_with_subelements *) elem;
+
+  t8_productionf ("\n");
+  t8_productionf ("|----- t8_element_debug_print: -----|\n");
+  t8_productionf ("|    Transition Type: %i\n", pquad_w_sub->transition_type);
+  t8_productionf ("|    Subelement ID:   %i\n", pquad_w_sub->subelement_id);
+  t8_productionf ("|    Anchor:          (%i,%i)\n", pquad_w_sub->p4q.x, pquad_w_sub->p4q.y);
+  t8_productionf ("|    Level:           %i\n", pquad_w_sub->p4q.level);
+  t8_productionf ("|-------------------------------------|\n");
+  t8_productionf ("\n");
+}
+
 void
 t8_subelement_scheme_quad_c::t8_element_print_element (const t8_element_t *
                                                        elem)
@@ -2211,18 +2251,20 @@ t8_subelement_scheme_quad_c::t8_element_print_element (const t8_element_t *
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) elem;
 
+  double double_coords[2] = {};
+  t8_element_vertex_reference_coords(elem, 1, double_coords);
+
   t8_productionf ("\n");
   t8_productionf ("|----- t8_element_print_element: -----|\n");
-  t8_productionf ("|    Transition Type: %i\n", pquad_w_sub->transition_type);
-  t8_productionf ("|    Subelement ID:   %i\n", pquad_w_sub->subelement_id);
-  t8_productionf ("|    Anchor:          (%i,%i)\n", pquad_w_sub->p4q.x,
-                  pquad_w_sub->p4q.y);
-  t8_productionf ("|    Level:           %i\n", pquad_w_sub->p4q.level);
+  t8_productionf ("|    Transition Type:  %i\n", pquad_w_sub->transition_type);
+  t8_productionf ("|    Subelement ID:    %i\n", pquad_w_sub->subelement_id);
+  t8_productionf ("|    Anchor:           (%i,%i)\n", pquad_w_sub->p4q.x, pquad_w_sub->p4q.y);
+  t8_productionf ("|    First ref vertex coords: (%lf,%lf)\n", double_coords[0],double_coords[1]);
+  t8_productionf ("|    Level:            %i\n", pquad_w_sub->p4q.level);
   t8_productionf ("|-------------------------------------|\n");
   t8_productionf ("\n");
 }
 
-#ifdef T8_ENABLE_DEBUG
 /* *INDENT-OFF* */
 /* indent bug, indent adds a second "const" modifier */
 int

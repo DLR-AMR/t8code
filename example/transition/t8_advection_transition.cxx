@@ -41,7 +41,7 @@
  * Note that it is possible to print out additional information during the simulation by setting
  * T8_GET_DEBUG_OUTPUT to 1.
  */
-
+ 
 #include "t8.h"
 #include <cstdint>
 #include <sc_options.h>
@@ -51,12 +51,13 @@
 #include <t8_forest.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_forest/t8_forest_partition.h>
-#include <t8_forest_vtk.h>
+#include <t8_forest/t8_forest_vtk.h>
 #include <example/common/t8_example_common.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_cmesh_vtk.h>
 #include <t8_vec.h>
+#include <t8_cmesh/t8_cmesh_examples.h> // this is for t8_cmesh functions
 
 #define T8_GET_DEBUG_OUTPUT 0
 
@@ -246,7 +247,7 @@ t8_advect_element_set_phi_adapt (const t8_advect_problem_t * problem,
 static int
 t8_advect_adapt_random (t8_forest_t forest, t8_forest_t forest_from,
                         t8_locidx_t ltree_id, t8_locidx_t lelement_id,
-                        t8_eclass_scheme_c * ts, int num_elements,
+                        t8_eclass_scheme_c * ts, int isfamily, int num_elements,
                         t8_element_t * elements[])
 {
   t8_advect_problem_t *problem;
@@ -277,7 +278,7 @@ t8_advect_adapt_random (t8_forest_t forest, t8_forest_t forest_from,
 static int
 t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
                  t8_locidx_t ltree_id, t8_locidx_t lelement_id,
-                 t8_eclass_scheme_c * ts, int num_elements,
+                 t8_eclass_scheme_c * ts, int isfamily, int num_elements,
                  t8_element_t * elements[])
 {
   t8_advect_problem_t *problem;
@@ -328,8 +329,7 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
   band_width = problem->band_width;
   tree_vertices = t8_forest_get_tree_vertices (forest_from, ltree_id);
   elem_diam =
-    t8_forest_element_diam (forest_from, ltree_id, elements[0],
-                            tree_vertices);
+    t8_forest_element_diam (forest_from, ltree_id, elements[0]);
   if (fabs (phi) > 2 * band_width * elem_diam) {
     /* coarsen if this is a family and level is not too small */
     return -(num_elements > 1 && level > problem->level);
@@ -346,7 +346,7 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
 static int
 t8_advect_adapt_init (t8_forest_t forest, t8_forest_t forest_from,
                       t8_locidx_t ltree_id, t8_locidx_t lelement_id,
-                      t8_eclass_scheme_c * ts, int num_elements,
+                      t8_eclass_scheme_c * ts, int isfamily, int num_elements,
                       t8_element_t * elements[])
 {
 #if 0                           /* refine all lower right elements */
@@ -606,16 +606,16 @@ t8_advect_flux_upwind (const t8_advect_problem_t * problem,
 
   /* Compute the center coordinate of the face */
   t8_forest_element_face_centroid (problem->forest, ltreeid, element_plus,
-                                   face, tree_vertices, face_center);
+                                   face, face_center);
   /* Compute u at the face center. */
   problem->u (face_center, problem->t, u_at_face_center);
   /* Compute the normal of the element at this face */
   t8_forest_element_face_normal (problem->forest, ltreeid, element_plus,
-                                 face, tree_vertices, normal);
+                                 face, normal);
   /* Compute the area of the face */
   area =
     t8_forest_element_face_area (problem->forest, ltreeid, element_plus,
-                                 face, tree_vertices);
+                                 face);
 
   /* Compute the dot-product of u and the normal vector */
   normal_times_u = t8_vec_dot (normal, u_at_face_center);
@@ -878,12 +878,10 @@ t8_advect_compute_element_data (t8_advect_problem_t * problem,
                                   (problem->forest, ltreeid));
   }
   /* Compute the midpoint coordinates of element */
-  t8_forest_element_centroid (problem->forest, ltreeid, element,
-                              tree_vertices, elem_data->midpoint);
+  t8_forest_element_centroid (problem->forest, ltreeid, element, elem_data->midpoint);
   /* Compute the volume (length in case of line) of this element */
   elem_data->vol =
-    t8_forest_element_volume (problem->forest, ltreeid, element,
-                              tree_vertices);
+    t8_forest_element_volume (problem->forest, ltreeid, element);
 }
 
 bool
@@ -944,6 +942,7 @@ t8_advect_replace (t8_forest_t forest_old,
                    t8_forest_t forest_new,
                    t8_locidx_t which_tree,
                    t8_eclass_scheme_c * ts,
+                   int isfamily,
                    int num_outgoing,
                    t8_locidx_t first_outgoing,
                    int num_incoming, t8_locidx_t first_incoming)
@@ -2139,7 +2138,7 @@ t8_advect_create_cmesh (sc_MPI_Comm comm, t8_eclass_t eclass,
     t8_cmesh_t          cmesh, cmesh_partition;
     T8_ASSERT (mshfile != NULL);
 
-    cmesh = t8_cmesh_from_msh_file (mshfile, 1, comm, dim, 0);
+    cmesh = t8_cmesh_from_msh_file (mshfile, 1, comm, dim, 0, 0);
     /* partition this cmesh according to the initial refinement level */
     t8_cmesh_init (&cmesh_partition);
     t8_cmesh_set_partition_uniform (cmesh_partition, level,
@@ -2153,7 +2152,7 @@ t8_advect_create_cmesh (sc_MPI_Comm comm, t8_eclass_t eclass,
       return t8_cmesh_new_periodic_hybrid (comm);
     }
     else if (eclass == 8) {
-      return t8_cmesh_new_hypercube_hybrid (3, comm, 0, 1);
+      return t8_cmesh_new_hypercube_hybrid (comm, 0, 1);
     }
     else {
 #if 0                           /* create a forest with multiple hypercube trees */
@@ -2329,8 +2328,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
                                       ts, tree_vertices);
       /* Compute the minimum diameter */
       diam =
-        t8_forest_element_diam (problem->forest, itree, element,
-                                tree_vertices);
+        t8_forest_element_diam (problem->forest, itree, element);
       T8_ASSERT (diam > 0);
       min_diam = min_diam < 0 ? diam : SC_MIN (min_diam, diam);
       /* Compute the maximum velocity */

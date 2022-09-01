@@ -41,21 +41,19 @@ int                 t8_cmesh_vtk_write_file (t8_cmesh_t cmesh,
 
 /* TODO: Should this function be part of the interface?
  * Not for now: Move to _vtk.h but mark as DEPRECATED */
-/** Set the vertices of a tree in the cmesh.
- * This is currently really inefficient, since the vertices are duplicated for each
+/** Set the vertex coordinates of a tree in the cmesh.
+ * This is currently inefficient, since the vertices are duplicated for each
  * tree. Eventually this function will be replaced by a more efficient one.
  * It is not allowed to call this function after \ref t8_cmesh_commit.
  * The eclass of the tree has to be set before calling this function.
  * \param [in,out] cmesh        The cmesh to be updated.
- * \param [in]     tree_id      The global number of the tree.
- * \param [in]     vertices     An array of as many vertex indices as the tree
- *                              has corners.
+ * \param [in]     ltree_id     The local number of the tree.
+ * \param [in]     vertices     An array of 3 doubles per tree vertex.
  * \param [in]     num_vertices The number of verticess in \a vertices. Must
  *                              match the number of corners of the tree.
  */
 void                t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh,
                                                 t8_locidx_t ltree_id,
-                                                int package_id, int key,
                                                 double *vertices,
                                                 int num_vertices);
 

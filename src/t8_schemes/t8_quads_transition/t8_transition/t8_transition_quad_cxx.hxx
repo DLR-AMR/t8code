@@ -36,8 +36,8 @@
 #include <p4est.h>
 #include <t8_element_cxx.hxx>
 
-#include "t8_schemes/t8_default/t8_default_line_cxx.hxx"
-#include "t8_schemes/t8_default/t8_default_common_cxx.hxx"
+#include "t8_schemes/t8_default/t8_default_line/t8_default_line_cxx.hxx"
+#include "t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx"
 
 /** The structure holding a quadrilateral element in the default scheme.
  * We make this definition public for interoperability of element classes.
@@ -378,17 +378,37 @@ public:
                                                                 t8_element_t *
                                                                 elem);
 
+/** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
+   * Returns false otherwise.
+   * \return                    non-zero if there is one element in the tree that does not refine into 2^dim children.
+   */
+  virtual int         t8_element_refines_irregular (void);
+
 /** Get the shape of a given element. Subelements are triangles */
   virtual t8_element_shape_t t8_element_shape (const t8_element_t * elem);
 
 /** Return the number of vertices of an element */
   virtual int         t8_element_num_corners (const t8_element_t * elem);
 
+/** Compute the coordinates of a given element vertex inside a reference tree
+   *  that is embedded into [0,1]^d (d = dimension).
+   *   \param [in] t      The element to be considered.
+   *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
+   *   \param [out] coords An array of at least as many doubles as the element's dimension
+   *                      whose entries will be filled with the coordinates of \a vertex.
+   */
+  virtual void        t8_element_vertex_reference_coords (const t8_element_t
+                                                          *t, int vertex,
+                                                          double coords[]);
+
+#ifdef T8_ENABLE_DEBUG
+/** TODO: this should be the new element_print_element funciton */
+  virtual void        t8_element_debug_print (const t8_element_t * elem) const;
+
 /** print element values for debugging */
   virtual void        t8_element_print_element (const t8_element_t * elem);
 
-#ifdef T8_ENABLE_DEBUG
-  /** Query whether an element is valid */
+/** Query whether an element is valid */
   virtual int         t8_element_is_valid (const t8_element_t * t) const;
 #endif
 

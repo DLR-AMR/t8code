@@ -48,7 +48,7 @@ t8_refine_quad_to_subelements ()
   int                 eclass;
   int                 subelement_id;
   int                 vertex_id;
-  int                 coords[P4EST_DIM];
+  double              coords[2];
   int                 num_subelements;
   int                 num_vertices;
 
@@ -75,7 +75,7 @@ t8_refine_quad_to_subelements ()
                                                element_subelements);
   t8_productionf ("The given type is type %i.\n", type);
   t8_productionf
-    ("The transition cell of type %i consists of %i subelements with ids ranging from 0 to %i.\n",
+    ("The transition cell of type %i consists of %i subelements, whose IDs range from 0 to %i.\n",
      type, num_subelements, num_subelements - 1);
   t8_productionf ("The coordinates of these subelements are:\n");
 
@@ -96,10 +96,11 @@ t8_refine_quad_to_subelements ()
 
     /* Iterate over all vertices of the subelement and determine their coordinates and print them */
     for (vertex_id = 0; vertex_id < num_vertices; ++vertex_id) {
-      class_scheme->t8_element_vertex_coords (element_subelements
+      class_scheme->t8_element_vertex_reference_coords (element_subelements
                                               [subelement_id], vertex_id,
                                               coords);
-      t8_productionf ("Vertex = %i; Coordinates = (%i,%i)\n",
+      t8_productionf ("Subelement ID: %i; Vertex: %i; Reference coordinates in [0,1]^2: (%lf,%lf)\n",
+                      class_scheme->t8_element_get_subelement_id(element_subelements[subelement_id]),
                       vertex_id, coords[0], coords[1]);
     }
   }

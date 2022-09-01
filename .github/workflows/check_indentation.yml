@@ -1,0 +1,66 @@
+name: t8code indentation check
+
+
+#  This file is part of t8code.
+#  t8code is a C library to manage a collection (a forest) of multiple
+#  connected adaptive space-trees of general element types in parallel.
+#
+#  Copyright (C) 2015 the developers
+#
+#  t8code is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  t8code is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with t8code; if not, write to the Free Software Foundation, Inc.,
+#  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+#
+# This github CI script checks whether all code files in the t8code 
+# repository are indented according to the indentation conventions.
+# It is triggered for pull requests into main and develop and will also run once a day
+# on main.
+#
+# The script runs the scripts/check_if_all_files_indented.scp script of t8code.
+# The output is uploaded as an artifact to the github page.
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - feature-*CI* # for testing this script, all feature branches with "CI" in their name
+  pull_request:
+    branches:
+      - main
+      - develop
+  workflow_dispatch: # Be able to trigger this manually on github.com
+  # Run every night at 1:05
+  schedule:
+      - cron:  '05 1 * * *'
+
+jobs:
+  indent:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install indent
+      run: sudo apt-get update && sudo apt-get install indent
+    - name: Indentation check
+      run: cd scripts/ && ./check_if_all_files_indented.scp > indent_script.out
+    - name: Archive script output
+    # Do this regardess of the result of the previous step.
+    # We especially want to upload the result when the check fails.
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: t8code indentation report
+        path: scripts/indent_script.out
+        
