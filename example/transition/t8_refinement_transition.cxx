@@ -152,8 +152,8 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
   int                 LFN_call_count = 0;
   int                 tree_count;
   int                 elem_count;
-  
   int                 neighbor_count;
+
   double              time_LFN = 0;
 
   for (tree_count = 0; tree_count < global_num_trees; ++tree_count) {
@@ -179,7 +179,7 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
           ("******************** Current element: ********************\n");
         t8_productionf ("Current element has local index %i of %i\n",
                         elem_count, local_num_elements);
-        ts->t8_element_print_element (current_element);
+        ts->t8_element_print_element (current_element, "t8_LFN_test_iterate: print current_element");
       }
 
       for (face_id = 0; face_id < ts->t8_element_num_faces (current_element); ++face_id) {
@@ -199,10 +199,7 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
                 neighbor_count++) {
               t8_productionf ("***** Neighbor %i of %i at face %i: *****\n",
                               neighbor_count + 1, num_neighbors, face_id);
-              t8_productionf ("Neighbor has local index %i of %i\n",
-                              element_indices[neighbor_count],
-                              local_num_elements);
-              ts->t8_element_print_element (neighbor_leafs[neighbor_count]);
+              ts->t8_element_print_element (neighbor_leafs[neighbor_count], "t8_LFN_test_iterate: print neighbor_leaf");
             }
           }
 
@@ -246,7 +243,7 @@ t8_refine_transition (t8_eclass_t eclass)
   /* ************************************************* Case Settings ************************************************* */
 
   /* refinement setting */
-  int                 initlevel = 5;    /* initial uniform refinement level */
+  int                 initlevel = 2;    /* initial uniform refinement level */
   int                 adaptlevel = 3;
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening (minlevel <= initlevel) */
   int                 maxlevel = initlevel + adaptlevel;        /* highest level allowed for refining */
@@ -281,7 +278,7 @@ t8_refine_transition (t8_eclass_t eclass)
 
   /* Monitoring */
   int                 get_LFN_stats = 1;
-  int                 get_LFN_elem_info = 0;
+  int                 get_LFN_elem_info = 1;
   int                 get_commit_stats = 1;
   int                 get_general_stats = 1;
 

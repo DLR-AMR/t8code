@@ -359,7 +359,7 @@ t8_forest_adapt (t8_forest_t forest)
         ("***** t8_forest_adapt | current element index: %i/%i  refine value: %i  is_family: %i  num_siblings: %li, num_children: %li *****\n",
          el_considered + 1, num_el_from, refine, is_family, num_siblings, num_children);
       t8_debugf ("Current element is: \n");
-      tscheme->t8_element_print_element (elements_from[0]);
+      tscheme->t8_element_print_element (elements_from[0], "t8_forest_adapt");
 #endif
 
       T8_ASSERT (is_family || refine >= 0

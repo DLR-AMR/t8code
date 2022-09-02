@@ -144,7 +144,7 @@ public:
   /** Print the element data member.
    *  \param [in] elem A valid element 
    */
-  virtual void        t8_element_print_element (const t8_element * elem);
+  virtual void        t8_element_print_element (const t8_element * elem, const char called_from[]) const;
 
   /** Return the subelement id of a given element. 
    *  \param [in] elem A valid element 

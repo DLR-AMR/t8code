@@ -710,7 +710,7 @@ public:
   /** Print the element data member.
    *  \param [in] elem A valid element 
    */
-  virtual void        t8_element_print_element (const t8_element_t * elem) =
+  virtual void        t8_element_print_element (const t8_element_t * elem, const char called_from[]) const =
     0;
 
 #ifdef T8_ENABLE_DEBUG

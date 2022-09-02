@@ -218,8 +218,6 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
   /* Get the cmesh */
   cmesh = t8_forest_get_cmesh (forest);
 
-  ts->t8_element_print_element(element);
-
   /* Evalute the geometry */
   /* Flo1314_TODO: solve the following issue - here we compute "coordinates" based on the reference coordinates "vertex_coords". */
   t8_geometry_evaluate (cmesh, gtreeid, vertex_coords, coordinates);
@@ -835,10 +833,6 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
        *   with corner vectoy V_a and V_b, and shift it by -V_a.
        */
       /* Compute the two endnotes of the face line */
-
-#if 0
-      ts->t8_element_print_element (element);
-#endif
 
       corner_a = ts->t8_element_get_face_corner (element, face, 0);
       corner_b = ts->t8_element_get_face_corner (element, face, 1);
@@ -1582,7 +1576,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest,
 #if 0                           /* print the general setting at the beginning */
   t8_debugf ("face: %i\n", face);
   t8_debugf ("current element:\n");
-  ts->t8_element_print_element (elem);
+  ts->t8_element_print_element (elem, "t8_forest_element_face_neighbor");
 #endif
 
   if (neigh_scheme == ts &&
@@ -1590,7 +1584,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest,
     /* The neighbor was constructed and is inside the current tree. */
 #if 0                           /* print the resulting neighbor */
     t8_debugf ("neigh initialized:\n");
-    ts->t8_element_print_element (neigh);
+    ts->t8_element_print_element (neigh, "t8_forest_element_face_neighbor");
 #endif
     return ltreeid + t8_forest_get_first_local_tree_id (forest);
   }
@@ -1704,7 +1698,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest,
 
 #if 0                           /* print the resulting neighbor */
     t8_debugf ("neigh initialized:\n");
-    neighbor_scheme->t8_element_print_element (neigh);
+    neighbor_scheme->t8_element_print_element (neigh, "t8_forest_element_face_neighbor");
 #endif
 
     return global_neigh_id;
