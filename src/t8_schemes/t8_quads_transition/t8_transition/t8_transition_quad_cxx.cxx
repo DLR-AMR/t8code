@@ -1687,9 +1687,7 @@ t8_subelement_scheme_quad_c::t8_element_get_location_of_subelement (const
   /*     3.1) location[0] -> the face_number, the subelement is adjacent to */
   /*     3.2) location[1] -> if the face is split or not */
   /*     3.3) location[2] -> if the subelement is the first or second subelement of the face (always the first, if the face is not split) */
-  int                 num_subelements =
-    t8_element_get_number_of_subelements (pquad_w_sub->transition_type);
-  T8_ASSERT (pquad_w_sub->subelement_id < num_subelements);
+  T8_ASSERT (pquad_w_sub->subelement_id < t8_element_get_number_of_subelements (pquad_w_sub->transition_type));
 
   int                 sub_id = pquad_w_sub->subelement_id;
   int                 sub_face_id;

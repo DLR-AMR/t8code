@@ -278,7 +278,7 @@ t8_refine_transition (t8_eclass_t eclass)
 
   /* Monitoring */
   int                 get_LFN_stats = 1;
-  int                 get_LFN_elem_info = 1;
+  int                 get_LFN_elem_info = 0;
   int                 get_commit_stats = 1;
   int                 get_general_stats = 1;
 
