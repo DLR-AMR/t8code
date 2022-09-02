@@ -41,7 +41,7 @@ t8_geometry_w_vertices::t8_geom_load_tree_data (t8_cmesh_t cmesh,
   active_tree_vertices = t8_cmesh_get_tree_vertices (cmesh, ltreeid);
 
   /* Flo1314_TODO: there is a problem here because "dimension" is three for whatever reason, but quad_w_sub is 2D */
-  // T8_ASSERT (t8_eclass_to_dimension[active_tree_class] == dimension);
+  T8_ASSERT (t8_eclass_to_dimension[active_tree_class] == dimension);
 
   /* Check whether we support this class */
   T8_ASSERT (active_tree_class == T8_ECLASS_VERTEX

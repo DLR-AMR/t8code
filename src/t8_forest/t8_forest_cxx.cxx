@@ -219,12 +219,7 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
   cmesh = t8_forest_get_cmesh (forest);
 
   /* Evalute the geometry */
-  /* Flo1314_TODO: solve the following issue - here we compute "coordinates" based on the reference coordinates "vertex_coords". */
   t8_geometry_evaluate (cmesh, gtreeid, vertex_coords, coordinates);
-  /* workaround since t8_geometry_evaluate is not working at the moment -> we can now plot meshes in the reference space [0,1]^2 */
-  //coordinates[0] = vertex_coords[0];
-  //coordinates[1] = vertex_coords[1];
-  //coordinates[2] = vertex_coords[2];
 }
 
 /* Compute the diameter of an element. */
