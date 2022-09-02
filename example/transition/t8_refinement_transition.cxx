@@ -243,33 +243,31 @@ t8_refine_transition (t8_eclass_t eclass)
   /* ************************************************* Case Settings ************************************************* */
 
   /* refinement setting */
-  int                 initlevel = 2;    /* initial uniform refinement level */
+  int                 initlevel = 5;    /* initial uniform refinement level */
   int                 adaptlevel = 3;
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening (minlevel <= initlevel) */
   int                 maxlevel = initlevel + adaptlevel;        /* highest level allowed for refining */
   
-  /* refinement criterium settings */
+  /* refinement/adaptation criteria settings */
   double              circ_midpoint_x = 0.0;
   double              circ_midpoint_y = 0.0;
   double              circ_midpoint_z = 0.0;
   double              start_radius = 0.25;
   double              band_width = 1.0;
+  int                 num_adaptations = 3;
+  double              radius_increase = 0.4;
 
   /* adaptation setting */
   int                 do_balance = 0;
   int                 do_transition = 1;
 
-  /* Adaptation with multiple steps */
-  int                 num_adaptations = 3;
-  float               radius_increase = 0.4;
-
   /* cmesh settings */
   int                 single_tree = 0;
-  int                 multiple_tree = 1, num_x_trees = 2, num_y_trees = 1; /* Flo1314_TODO: sc_finalize() bug when using multiple trees */
+  int                 multiple_tree = 1, num_x_trees = 4, num_y_trees = 1; /* Flo1314_TODO: sc_finalize() bug when using multiple trees */
   int                 hybrid_cmesh = 0; /* Flo1314_TODO: Implement this case */
 
   /* partition setting */
-  int                 do_partition = 1;
+  int                 do_partition = 0;
 
   /* ghost setting */
   int                 do_ghost = 1;
@@ -308,6 +306,7 @@ t8_refine_transition (t8_eclass_t eclass)
   }
   else if (hybrid_cmesh) {
     /* Flo1314_TODO: implement this case */
+    SC_ABORT ("Hybrid cmesh not implemented yet.");
     // cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
   }
   else {
@@ -317,7 +316,7 @@ t8_refine_transition (t8_eclass_t eclass)
   /* initialize a forest */
   t8_forest_init (&forest);
   
-  /* set forest parameter and cmesh */
+  /* set forest parameter via cmesh */
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
   t8_forest_set_level (forest, initlevel);
   t8_forest_set_scheme (forest, t8_scheme_new_subelement_cxx ());
@@ -371,19 +370,16 @@ t8_refine_transition (t8_eclass_t eclass)
     if (do_balance) {
       t8_forest_set_balance (forest_adapt, forest, 0);
     }
-
     if (do_transition) {
-      t8_forest_set_transition (forest_adapt, NULL);
+      t8_forest_set_transition (forest_adapt, forest);
       ghost_version = 1;
       t8_debugf ("Using transition: ghost version written to %d\n",
                  ghost_version);
     }
-
     if (do_ghost) {
       t8_forest_set_ghost_ext (forest_adapt, do_ghost, T8_GHOST_FACES,
                                ghost_version);
     }
-
     if (do_partition) {
       t8_forest_set_partition (forest_adapt, forest, 0);
     }
@@ -392,12 +388,16 @@ t8_refine_transition (t8_eclass_t eclass)
     double              commit_time = 0;
     commit_time_accum -= sc_MPI_Wtime ();
     commit_time -= sc_MPI_Wtime ();
+
     t8_forest_commit (forest_adapt); /* adapt the forest */
+
     commit_time_accum += sc_MPI_Wtime ();
     commit_time += sc_MPI_Wtime ();
-    if (get_commit_stats)
+
+    if (get_commit_stats) {
       t8_print_commit_stats (commit_time, num_adaptations, adaptation_count);
     t8_debugf ("~~~~~~~~~~ forest has been adapted ~~~~~~~~~~\n");
+    }
 
     if (do_vtk) {
       if (do_transition) {
@@ -435,15 +435,16 @@ t8_refine_transition (t8_eclass_t eclass)
     global_num_elements_accum +=
       t8_forest_get_global_num_elements (forest_adapt);
 
-  }                             /* end of step loop */
+  }                             /* end of adaptation loop */
   total_time += sc_MPI_Wtime ();
 
-  t8_forest_unref (&forest_adapt);
+  t8_forest_unref (&forest);
 
-  if (get_general_stats)
+  if (get_general_stats) {
     t8_print_general_stats (commit_time_accum, num_adaptations,
                             global_num_elements_accum, total_time,
                             LFN_time_accum);
+  }
 
 }                               /* end of t8_refine_transition */
 

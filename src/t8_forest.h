@@ -349,10 +349,10 @@ void                t8_forest_set_balance (t8_forest_t forest,
                                            const t8_forest_t set_from,
                                            int no_repartition);
 
-/* Set a source forest to use subelements during commit, that will remove hanging faces from the adapted mesh.
+/** Set a source forest to use subelements during commit, that will remove hanging faces from the adapted mesh.
  * \param [in, out] forest  The forest.
- * \param [in]      set_from A second forest that should use hanging-faces-removing subelements.
- * \note Currently, subelements that remove hanging faces from the forest are only implemented for the 2D quad scheme. 
+ * \param [in]      set_from A second forest that should be transitioned.
+ * \note This feature is currently only available for the 2D quad scheme. 
  */
 void                t8_forest_set_transition (t8_forest_t forest,
                                               const t8_forest_t set_from);

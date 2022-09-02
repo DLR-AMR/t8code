@@ -256,7 +256,7 @@ t8_forest_set_transition (t8_forest_t forest, const t8_forest_t set_from)
       ("This is forest_set_transition.\n"
        "The forest might not be balanced and set_balance is not set yet. The set_transition function will set_balance with repartition now.\n");
     /* balance with repartition */
-    t8_forest_set_balance (forest, NULL, 0);
+    t8_forest_set_balance (forest, set_from, 0);
   }
 
   if (set_from != NULL) {
