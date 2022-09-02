@@ -252,18 +252,19 @@ t8_refine_transition (t8_eclass_t eclass)
   double              circ_midpoint_x = 0.0;
   double              circ_midpoint_y = 0.0;
   double              circ_midpoint_z = 0.0;
-  double              start_radius = 0.25;
+  double              start_radius = 0.2;
   double              band_width = 1.0;
-  int                 num_adaptations = 3;
-  double              radius_increase = 0.4;
+
+  int                 num_adaptations = 4;
+  double              radius_increase = 0.3;
 
   /* adaptation setting */
   int                 do_balance = 0;
   int                 do_transition = 1;
 
   /* cmesh settings */
-  int                 single_tree = 0;
-  int                 multiple_tree = 1, num_x_trees = 4, num_y_trees = 1; /* Flo1314_TODO: sc_finalize() bug when using multiple trees */
+  int                 single_tree = 1;
+  int                 multiple_tree = 0, num_x_trees = 4, num_y_trees = 1; /* Flo1314_TODO: abort because of dimension, or sc_finalize() when dimension is uncommented */
   int                 hybrid_cmesh = 0; /* Flo1314_TODO: Implement this case */
 
   /* partition setting */
