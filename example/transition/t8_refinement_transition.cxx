@@ -47,7 +47,7 @@ typedef struct
 
 /* Compute the distance to a sphere around a mid_point with given radius. */
 static double
-t8_basic_level_set_sphere (const double x[3], double t, void *data)
+t8_distance_to_sphere (const double x[3], double t, void *data)
 {
   t8_basic_sphere_data_t *sdata = (t8_basic_sphere_data_t *) data;
   double             *M = sdata->mid_point;
@@ -247,6 +247,13 @@ t8_refine_transition (t8_eclass_t eclass)
   int                 adaptlevel = 3;
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening (minlevel <= initlevel) */
   int                 maxlevel = initlevel + adaptlevel;        /* highest level allowed for refining */
+  
+  /* refinement criterium settings */
+  double              circ_midpoint_x = 0.0;
+  double              circ_midpoint_y = 0.0;
+  double              circ_midpoint_z = 0.0;
+  double              start_radius = 0.25;
+  double              band_width = 1.0;
 
   /* adaptation setting */
   int                 do_balance = 0;
@@ -258,10 +265,8 @@ t8_refine_transition (t8_eclass_t eclass)
 
   /* cmesh settings */
   int                 single_tree = 0;
-  /* Flo1314_TODO: there is a problem with sc_finalize() at the end when using multiple trees (computations work properly) */
-  int                 multiple_tree = 1, num_x_trees = 2, num_y_trees = 1;
-  /* Flo1314_TODO: Implement this case */
-  int                 hybrid_cmesh = 0;
+  int                 multiple_tree = 1, num_x_trees = 2, num_y_trees = 1; /* Flo1314_TODO: sc_finalize() bug when using multiple trees */
+  int                 hybrid_cmesh = 0; /* Flo1314_TODO: Implement this case */
 
   /* partition setting */
   int                 do_partition = 1;
@@ -290,31 +295,23 @@ t8_refine_transition (t8_eclass_t eclass)
 
   /* ********************************************* Initializing cmesh ********************************************** */
 
-  /* initialization */
-  // t8_cmesh_init (&cmesh);
   /* building the cmesh, using the initlevel */
   if (single_tree) {
     /* single quad cmesh */
-    // cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
     cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
-    // t8_cmesh_set_tree_class (cmesh, 0, eclass);
-    // t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   }
   else if (multiple_tree) {
-    /* p4est_connectivity_new_brick (num_x_trees, num_y_trees, 0, 0) -> cmesh of (num_x_trees x num_y_trees) many quads */
     p4est_connectivity_t *brick =
       p4est_connectivity_new_brick (num_x_trees, num_y_trees, 0, 0);
     cmesh = t8_cmesh_new_from_p4est (brick, sc_MPI_COMM_WORLD, 0);
     p4est_connectivity_destroy (brick);
-    // do_LFN_test = 0;
-      t8_debugf ("Using multiple trees: do_LFN set to zero since it is only available for single tree forests. \n");
   }
   else if (hybrid_cmesh) {
-    /* Flo1314_TODO: this does not work at the moment */
-    cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
+    /* Flo1314_TODO: implement this case */
+    // cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
   }
   else {
-    SC_ABORT ("Specify cmesh.");
+    SC_ABORT ("Specify cmesh geometry.");
   }
 
   /* initialize a forest */
@@ -337,15 +334,14 @@ t8_refine_transition (t8_eclass_t eclass)
   t8_basic_sphere_data_t sdata;
 
   /* Midpoint and radius of a sphere */
-  /* shift the midpoiunt of the circle by (shift_x,shift_y) to ensure midpoints on corners of the uniform mesh */
-  sdata.mid_point[0] = 0;       // 1.0 / 2.0 + shift_x * 1.0/(1 << (minlevel));
-  sdata.mid_point[1] = 0;       // 1.0 / 2.0 + shift_y * 1.0/(1 << (minlevel)); 
-  sdata.mid_point[2] = 0;
-  sdata.radius = 0.25;
+  sdata.mid_point[0] = circ_midpoint_x;
+  sdata.mid_point[1] = circ_midpoint_y;
+  sdata.mid_point[2] = circ_midpoint_z;
+  sdata.radius = start_radius;
 
   /* refinement parameter */
-  ls_data.band_width = 1;
-  ls_data.L = t8_basic_level_set_sphere;
+  ls_data.band_width = band_width;
+  ls_data.L = t8_distance_to_sphere;
   ls_data.min_level = minlevel;
   ls_data.max_level = maxlevel;
   ls_data.udata = &sdata;
@@ -396,7 +392,7 @@ t8_refine_transition (t8_eclass_t eclass)
     double              commit_time = 0;
     commit_time_accum -= sc_MPI_Wtime ();
     commit_time -= sc_MPI_Wtime ();
-    t8_forest_commit (forest_adapt);
+    t8_forest_commit (forest_adapt); /* adapt the forest */
     commit_time_accum += sc_MPI_Wtime ();
     commit_time += sc_MPI_Wtime ();
     if (get_commit_stats)
