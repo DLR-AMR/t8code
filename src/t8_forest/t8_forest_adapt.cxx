@@ -340,7 +340,7 @@ t8_forest_adapt (t8_forest_t forest)
        * Note that in case of subelements, it is often reasonable to apply the refine callback function to its non-subelement parent,
        * but this decision is up to the developer and the usecase of the refine callback function.
        * 
-       * It is up to the developer to use a reasonable range of subelement types for their use case. */
+       * It is also up to the developer to use a reasonable range of subelement types for their use case. */
 
       refine = forest->set_adapt_fn (forest, forest->set_from, ltree_id,
                                      el_considered, tscheme, is_family,
@@ -366,10 +366,7 @@ t8_forest_adapt (t8_forest_t forest)
                  || (tscheme->t8_element_is_subelement (current_element)
                      && refine == -1));
 
-      if (refine > 0
-          && tscheme->t8_element_level (elements_from[0]) >=
-
-          forest->maxlevel) {
+      if (refine > 0 && tscheme->t8_element_level (elements_from[0]) >= forest->maxlevel) {
         /* Only refine an element if it does not exceed the maximum level */
         refine = 0;
       }
@@ -428,7 +425,9 @@ t8_forest_adapt (t8_forest_t forest)
           el_considered++;
         }
       }
-      else if (refine > 1) {    /* refine via a transition cell */
+      else if (refine > 1) {
+        /* refinement into transition cell */
+
         /* determing the number of subelements of the given type for memory allocation */
         num_subelements =
           tscheme->t8_element_get_number_of_subelements (refine - 1);
@@ -452,6 +451,7 @@ t8_forest_adapt (t8_forest_t forest)
       }
       else if (refine == -1) {
         /* The elements form a family and are to be coarsened. */
+        
         /* Make room for one more new element. */
         elements[0] = t8_element_array_push (telements);
         /* Compute the parent of the current family.
