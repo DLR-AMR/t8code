@@ -348,8 +348,12 @@ t8_forest_adapt (t8_forest_t forest)
       /* Existing transition cells must be removed during adaptation.
        * We establish the rule to coarsen a transition cell back to its parent in case of refine = 0. */
       if (tscheme->t8_element_is_subelement (current_element) && refine == 0) {
-        /* It should never be the case that a transitioned forest is direclty adapted into another transitioned forest - therefore refine <= 1!  */
+        /* current_element is the first subelement in the transition cell (subelement_id = 0). We coarsen it back to its parent quad
+         * and skip all of its following sibling subelements. 
+         */
         T8_ASSERT (refine >= -1 && refine <= 1);
+        T8_ASSERT (tscheme->t8_element_get_subelement_id (current_element) == 0);
+        /* It should never be the case that a transitioned forest is direclty adapted into another transitioned forest - therefore refine <= 1!  */
         refine = -1;
       }
 
