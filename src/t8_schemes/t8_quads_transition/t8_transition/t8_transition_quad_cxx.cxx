@@ -35,12 +35,21 @@
  *     f_1 <-> f_1 (assuming a neighboring transition cell)
  *     f_2 <-> f_0 */
 const int           subelement_face_dual[3] = { 2, 1, 0};
+
 /* Connectivity of a subelements location within a transition cell 
  * and the parent quads faces:
- *     location[0] = 0 -> parents face = 0
- *     location[0] = 1 -> parents face = 3
- *     location[0] = 2 -> parents face = 1
- *     location[0] = 3 -> parents face = 2 */
+ *     location[0] = 0 -> parents face = 1
+ *     location[0] = 1 -> parents face = 2
+ *     location[0] = 2 -> parents face = 0
+ *     location[0] = 3 -> parents face = 3 */
+const int           subelement_location_to_parent_dual_face[4] = {1, 2, 0, 3};
+
+/* Connectivity of a subelements location within a transition cell 
+ * and the parent quads faces:
+ *     location[0] = 0 (clockwise) -> parents face = 0
+ *     location[0] = 1 (clockwise) -> parents face = 3
+ *     location[0] = 2 (clockwise) -> parents face = 1
+ *     location[0] = 3 (clockwise) -> parents face = 2 */
 const int           subelement_location_to_parent_face[4] = {0, 3, 1, 2};
 /* *INDENT-ON* */
 
@@ -736,12 +745,18 @@ t8_subelement_scheme_quad_c::t8_element_face_parent_face (const t8_element_t *
                                                           elem, int face)
 {
   T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (face >= -1 && face <= P4EST_FACES);
 
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) elem;
   const p4est_quadrant_t *q = &pquad_w_sub->p4q;
 
   int                 child_id;
+
+  if (face == -1)
+  {
+    return -1;
+  }
 
   /* For subelements we need to adjust the output of this function.
    * A subelements face is a subface of the parent quadrant (the transition cell) if and only if the face number is 1. */
@@ -1323,23 +1338,27 @@ t8_subelement_scheme_quad_c::t8_element_face_neighbor_inside (const
   /* In the following we set the dual faces of our element at the given face. */
   if (t8_element_is_subelement (elem)) {
     if (face == 1) {
+      /* return dual face with respect to neighboring quad element */
       int                 location[3] = { };
       t8_element_get_location_of_subelement (elem, location);
-      /* if the face is pointing outwards, then we set the face equal to the transition cell face and determine its dual face */
-      int                 face_adj = location[0];
-      *neigh_face = subelement_face_dual[face_adj];
+      /* if the face is pointing outwards, then we set the face equal to the transition cell face and determine its dual face.
+       * Compute the face number as seen from q.
+       *  0 -> 1    1 -> 2    2 -> 0    3 -> 3
+       */
+      *neigh_face = subelement_location_to_parent_dual_face[location[0]];
     }
     else {
+      T8_ASSERT (face == 0 || face == 2);
+      /* return dual face with resprect to neighboring sibling subelement (note that the constructed neigh is NOT a subelement but the parent quad) */
       /* Compute the face number as seen from q.
-       *  0 -> 2    2 -> 0    1 -> 1
+       *  0 -> 2    2 -> 0
        */
       *neigh_face = subelement_face_dual[face];
     }
   }
   else {
     /* Compute the face number as seen from q.
-     *  0 -> 1    2 -> 3
-     *  1 -> 0    3 -> 2
+     *  0 -> 1    1 -> 0    2 -> 3    3 -> 2
      */
     T8_ASSERT (neigh_face != NULL);
     *neigh_face = p4est_face_dual[face];
