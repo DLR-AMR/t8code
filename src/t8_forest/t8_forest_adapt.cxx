@@ -20,7 +20,6 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include "t8.h"
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest.h>
@@ -221,7 +220,7 @@ t8_forest_adapt (t8_forest_t forest)
   }
 
   forest_from = forest->set_from;
-  t8_global_productionf ("Into t8_forest_adapt from %li total elements\n",
+  t8_global_productionf ("Into t8_forest_adapt from %lli total elements\n",
                          forest_from->global_num_elements);
 
   /* TODO: Allocate memory for the trees of forest.
@@ -356,7 +355,7 @@ t8_forest_adapt (t8_forest_t forest)
 
 #ifdef T8_ENABLE_DEBUG
       t8_debugf
-        ("***** t8_forest_adapt | current element index: %i/%i  refine value: %i  is_family: %i  num_siblings: %li, num_children: %li *****\n",
+        ("***** t8_forest_adapt | current element index: %i/%i  refine value: %i  is_family: %i  num_siblings: %lu, num_children: %lu *****\n",
          el_considered + 1, num_el_from, refine, is_family, num_siblings, num_children);
       t8_debugf ("Current element is: \n");
       tscheme->t8_element_print_element (elements_from[0], "t8_forest_adapt");
@@ -537,11 +536,11 @@ t8_forest_adapt (t8_forest_t forest)
   /* If any subelement is constructed, give output this number as an additional information. */
   if (forest->global_num_subelements > 0) {
     t8_global_productionf
-      ("Done t8_forest_adapt with %li total elements, %li of which are subelements.\n",
+      ("Done t8_forest_adapt with %lli total elements, %lli of which are subelements.\n",
        forest->global_num_elements, forest->global_num_subelements);
   }
   else {
-    t8_global_productionf ("Done t8_forest_adapt with %li total elements.\n",
+    t8_global_productionf ("Done t8_forest_adapt with %lli total elements.\n",
                            forest->global_num_elements);
   }
 

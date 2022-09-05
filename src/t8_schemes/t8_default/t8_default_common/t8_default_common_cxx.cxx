@@ -21,7 +21,6 @@
 */
 
 #include <sc_functions.h>
-#include "t8.h"
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */

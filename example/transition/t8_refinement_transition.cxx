@@ -28,7 +28,6 @@
  *     (iv)  decide, whether we want to get statistics printed out, regarding # of elements in the meshes and runtime infos of the several functions or other debugging information
  */
 
-#include <t8.h>
 #include <cstring>
 #include <t8_schemes/t8_quads_transition/t8_transition/t8_transition_quad_cxx.hxx>
 #include <t8_schemes/t8_quads_transition/t8_transition_cxx.hxx>
@@ -402,15 +401,15 @@ t8_refine_transition (t8_eclass_t eclass)
 
     if (do_vtk) {
       if (do_transition) {
-        snprintf (filename, BUFSIZ, "forest_transitioned_TS%i_%s",
+        snprintf (filename, BUFSIZ, "forest_transitioned_%i_%s",
                 adaptation_count, t8_eclass_to_string[eclass]);
       }
       else if (do_balance) {
-        snprintf (filename, BUFSIZ, "forest_balanced_TS%i_%s",
+        snprintf (filename, BUFSIZ, "forest_balanced_%i_%s",
                 adaptation_count, t8_eclass_to_string[eclass]);
       }
       else {
-        snprintf (filename, BUFSIZ, "forest_adapted_TS%i_%s",
+        snprintf (filename, BUFSIZ, "forest_adapted_%i_%s",
                 adaptation_count, t8_eclass_to_string[eclass]);
       }
       t8_forest_write_vtk (forest_adapt, filename);
