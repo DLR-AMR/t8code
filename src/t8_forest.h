@@ -113,12 +113,10 @@ typedef void        (*t8_forest_replace_t) (t8_forest_t forest_old,
  * \param [in] num_elements the number of entries in \a elements that are defined
  * \param [in] elements     Pointers to a family or, if \a is_family is zero,
  *                          pointer to one element.
- * \return greater one if the first entry in \a elements should be refined,
+ * \return greater zero if the first entry in \a elements should be refined,
  *         smaller zero if the family \a elements shall be coarsened,
- *         zero if the element should not change.
- *         If the associated scheme supports subelements than any value greater one will
- *         result in the element being split into subelements according to the scheme.
- *         \ref t8_eclass_scheme::t8_element_children \ref t8_eclass_scheme::t8_element_to_subelement
+ *         zero if the element should not change,
+ *         greater one if the element should be refined into a transition cell of subelements \ref t8_eclass_scheme::t8_element_to_transition_cell
  */
 /* TODO: Do we really need the forest argument? Since the forest is not committed yet it
  *       seems dangerous to expose to the user. */
