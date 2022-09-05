@@ -2639,7 +2639,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
        !done; problem->num_time_steps++, problem->t += problem->delta_t) {
     t8_debugf ("Timestep: %i\n", problem->num_time_steps);
     if (problem->num_time_steps % modulus == modulus - 1) {
-      t8_global_essentialf ("[advect] Step %i  %lli elems\n",
+      t8_global_essentialf ("[advect] Step %i  %li elems\n",
                             problem->num_time_steps + 1,
                             t8_forest_get_global_num_elements
                             (problem->forest));
