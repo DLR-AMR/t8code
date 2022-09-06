@@ -138,15 +138,17 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
   t8_eclass_scheme_c *neigh_scheme;
   t8_eclass_t         eclass;
   t8_eclass_scheme_c *ts;
-  
+
   int                *dual_faces;
   int                 num_neighbors;
-  
+
   int                 face_id;
-  int                 global_num_elements = t8_forest_get_global_num_elements (forest_adapt);
-  int                 global_num_trees = t8_forest_get_num_global_trees (forest_adapt);
+  int                 global_num_elements =
+    t8_forest_get_global_num_elements (forest_adapt);
+  int                 global_num_trees =
+    t8_forest_get_num_global_trees (forest_adapt);
   int                 local_num_elements;
-  
+
   int                 subelement_count = 0;
   int                 LFN_call_count = 0;
   int                 tree_count;
@@ -158,7 +160,7 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
   for (tree_count = 0; tree_count < global_num_trees; ++tree_count) {
     eclass = t8_forest_get_tree_class (forest_adapt, tree_count);
     ts = t8_forest_get_eclass_scheme (forest_adapt, eclass);
-    
+
     /* get the number of elements in the current tree */
     current_tree = t8_forest_get_tree (forest_adapt, tree_count);
     local_num_elements = t8_forest_get_tree_element_count (current_tree);
@@ -167,27 +169,29 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
 
       /* determing the current element according to the given tree id and element id within the tree */
       current_element =
-        t8_forest_get_element_in_tree (forest_adapt, tree_count,
-                                      elem_count);
+        t8_forest_get_element_in_tree (forest_adapt, tree_count, elem_count);
 
       if (ts->t8_element_is_subelement (current_element))
         subelement_count++;;
 
-      if (get_LFN_elem_info) {    /* print current element */
+      if (get_LFN_elem_info) {  /* print current element */
         t8_productionf
           ("******************** Current element: ********************\n");
         t8_productionf ("Current element has local index %i of %i\n",
                         elem_count, local_num_elements);
-        ts->t8_element_print_element (current_element, "t8_LFN_test_iterate: print current_element");
+        ts->t8_element_print_element (current_element,
+                                      "t8_LFN_test_iterate: print current_element");
       }
 
-      for (face_id = 0; face_id < ts->t8_element_num_faces (current_element); ++face_id) {
+      for (face_id = 0; face_id < ts->t8_element_num_faces (current_element);
+           ++face_id) {
         LFN_call_count++;
         time_LFN -= sc_MPI_Wtime ();
-        t8_forest_leaf_face_neighbors (forest_adapt, tree_count, current_element,
-                                      &neighbor_leafs, face_id, &dual_faces,
-                                      &num_neighbors, &element_indices,
-                                      &neigh_scheme, forest_is_balanced);
+        t8_forest_leaf_face_neighbors (forest_adapt, tree_count,
+                                       current_element, &neighbor_leafs,
+                                       face_id, &dual_faces, &num_neighbors,
+                                       &element_indices, &neigh_scheme,
+                                       forest_is_balanced);
         time_LFN += sc_MPI_Wtime ();
 
         /* free memory */
@@ -195,10 +199,11 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
           if (get_LFN_elem_info) {
             /* print all neighbor elements */
             for (neighbor_count = 0; neighbor_count < num_neighbors;
-                neighbor_count++) {
+                 neighbor_count++) {
               t8_productionf ("***** Neighbor %i of %i at face %i: *****\n",
                               neighbor_count + 1, num_neighbors, face_id);
-              ts->t8_element_print_element (neighbor_leafs[neighbor_count], "t8_LFN_test_iterate: print neighbor_leaf");
+              ts->t8_element_print_element (neighbor_leafs[neighbor_count],
+                                            "t8_LFN_test_iterate: print neighbor_leaf");
             }
           }
 
@@ -216,9 +221,9 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
             t8_productionf ("\n");
           }
         }
-      }                           /* end of face loop */
-    }                             /* end of element loop */
-  }                               /* end of tree loop */
+      }                         /* end of face loop */
+    }                           /* end of element loop */
+  }                             /* end of tree loop */
 
   if (get_LFN_stats)
     t8_print_LFN_stats (global_num_elements,
@@ -246,7 +251,7 @@ t8_refine_transition (t8_eclass_t eclass)
   int                 adaptlevel = 3;
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening (minlevel <= initlevel) */
   int                 maxlevel = initlevel + adaptlevel;        /* highest level allowed for refining */
-  
+
   /* refinement/adaptation criteria settings */
   double              circ_midpoint_x = 0.0;
   double              circ_midpoint_y = 0.0;
@@ -263,7 +268,7 @@ t8_refine_transition (t8_eclass_t eclass)
 
   /* cmesh settings */
   int                 single_tree = 1;
-  int                 multiple_tree = 0, num_x_trees = 4, num_y_trees = 1; /* Flo1314_TODO: abort because of dimension, or sc_finalize() when dimension is uncommented */
+  int                 multiple_tree = 0, num_x_trees = 4, num_y_trees = 1;      /* Flo1314_TODO: abort because of dimension, or sc_finalize() when dimension is uncommented */
   int                 hybrid_cmesh = 0; /* Flo1314_TODO: Implement this case */
 
   /* partition setting */
@@ -286,8 +291,8 @@ t8_refine_transition (t8_eclass_t eclass)
   int                 get_general_stats = 1;
 
   /* check settings */
-  T8_ASSERT(do_balance + do_transition == 1);
-  T8_ASSERT(single_tree + multiple_tree + hybrid_cmesh == 1);
+  T8_ASSERT (do_balance + do_transition == 1);
+  T8_ASSERT (single_tree + multiple_tree + hybrid_cmesh == 1);
 
   /* *************************************************************************************************************** */
 
@@ -315,7 +320,7 @@ t8_refine_transition (t8_eclass_t eclass)
 
   /* initialize a forest */
   t8_forest_init (&forest);
-  
+
   /* set forest parameter via cmesh */
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
   t8_forest_set_level (forest, initlevel);
@@ -389,28 +394,28 @@ t8_refine_transition (t8_eclass_t eclass)
     commit_time_accum -= sc_MPI_Wtime ();
     commit_time -= sc_MPI_Wtime ();
 
-    t8_forest_commit (forest_adapt); /* adapt the forest */
+    t8_forest_commit (forest_adapt);    /* adapt the forest */
 
     commit_time_accum += sc_MPI_Wtime ();
     commit_time += sc_MPI_Wtime ();
 
     if (get_commit_stats) {
       t8_print_commit_stats (commit_time, num_adaptations, adaptation_count);
-    t8_debugf ("~~~~~~~~~~ forest has been adapted ~~~~~~~~~~\n");
+      t8_debugf ("~~~~~~~~~~ forest has been adapted ~~~~~~~~~~\n");
     }
 
     if (do_vtk) {
       if (do_transition) {
         snprintf (filename, BUFSIZ, "forest_transitioned_%i_%s",
-                adaptation_count, t8_eclass_to_string[eclass]);
+                  adaptation_count, t8_eclass_to_string[eclass]);
       }
       else if (do_balance) {
         snprintf (filename, BUFSIZ, "forest_balanced_%i_%s",
-                adaptation_count, t8_eclass_to_string[eclass]);
+                  adaptation_count, t8_eclass_to_string[eclass]);
       }
       else {
         snprintf (filename, BUFSIZ, "forest_adapted_%i_%s",
-                adaptation_count, t8_eclass_to_string[eclass]);
+                  adaptation_count, t8_eclass_to_string[eclass]);
       }
       t8_forest_write_vtk (forest_adapt, filename);
       t8_debugf ("~~~~~~~~~~ vtk has been constructed ~~~~~~~~~~\n");

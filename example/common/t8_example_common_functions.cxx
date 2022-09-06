@@ -52,7 +52,8 @@ t8_periodic_2D_cos (const double x[3], double t, void *data)
 double
 t8_periodic_2D_cos_off_center (const double x[3], double t, void *data)
 {
-  return (cos (x[0] * 2 * M_PI + M_PI/2.0) + cos (x[1] * 2 * M_PI + M_PI/2.0));
+  return (cos (x[0] * 2 * M_PI + M_PI / 2.0) +
+          cos (x[1] * 2 * M_PI + M_PI / 2.0));
 }
 
 double
@@ -196,8 +197,8 @@ t8_flow_constant_one_x_vec (const double x[3], double t, double x_out[3])
 void
 t8_flow_constant_2D_2to1 (const double x[3], double t, double x_out[3])
 {
-  x_out[0] = 2; /* 2 */
-  x_out[1] = x_out[2] = 1; /* 1 */
+  x_out[0] = 2;                 /* 2 */
+  x_out[1] = x_out[2] = 1;      /* 1 */
 }
 
 void

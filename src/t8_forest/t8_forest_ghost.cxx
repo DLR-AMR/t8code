@@ -539,12 +539,14 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
   /* Test for subelement siblings first. We use t8_element_is_subelement to filter for subelements.
    * Then, we can use t8_element_get_transition_type and t8_element_get_subelement_id.
    * Those functions are only implemented for schemes with subelements. */
-  int subelement_sibling = 0;
+  int                 subelement_sibling = 0;
   if (elem_copy != NULL) {
-    if (ts->t8_element_is_subelement (elem_copy) && ts->t8_element_is_subelement (elem)) { /* both elements are subelements */
+    if (ts->t8_element_is_subelement (elem_copy) && ts->t8_element_is_subelement (elem)) {      /* both elements are subelements */
       if (ts->t8_element_get_linear_id (elem_copy, copy_level) == ts->t8_element_get_linear_id (elem, level)) { /* both elements are in the same transition cell */
-        T8_ASSERT (ts->t8_element_get_transition_type (elem_copy) == ts->t8_element_get_transition_type (elem));
-        if (ts->t8_element_get_subelement_id (elem_copy) != ts->t8_element_get_subelement_id (elem)) {
+        T8_ASSERT (ts->t8_element_get_transition_type (elem_copy) ==
+                   ts->t8_element_get_transition_type (elem));
+        if (ts->t8_element_get_subelement_id (elem_copy) !=
+            ts->t8_element_get_subelement_id (elem)) {
           subelement_sibling = 1;
         }
       }
@@ -553,9 +555,7 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
   /* Check if the element was not contained in the array.
    * If so, we add a copy of elem to the array.
    * Otherwise, we do nothing. */
-  if (elem_copy == NULL ||
-      level != copy_level ||
-      (ts->t8_element_get_linear_id (elem_copy, copy_level) != ts->t8_element_get_linear_id (elem, level) || subelement_sibling)) { /* for subelements, we need the extra subelement_id check here since their linear_id is equal */
+  if (elem_copy == NULL || level != copy_level || (ts->t8_element_get_linear_id (elem_copy, copy_level) != ts->t8_element_get_linear_id (elem, level) || subelement_sibling)) { /* for subelements, we need the extra subelement_id check here since their linear_id is equal */
     /* Add the element */
     elem_copy = t8_element_array_push (&remote_tree->elements);
     ts->t8_element_copy (elem, elem_copy);
@@ -1153,20 +1153,21 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
                                                      num_face_children, NULL);
           }
           else {
-            /* The following if-statement is specific for subelements in the 2D quadrilateral refinement */ 
-            if (!ts->t8_element_is_subelement (elem) || 
-                (tree_class == T8_ECLASS_QUAD && ts->t8_element_is_subelement (elem) && iface == 1)) {
+            /* The following if-statement is specific for subelements in the 2D quadrilateral refinement */
+            if (!ts->t8_element_is_subelement (elem) ||
+                (tree_class == T8_ECLASS_QUAD
+                 && ts->t8_element_is_subelement (elem) && iface == 1)) {
               int                 dummy_neigh_face;
               /* This element has maximum level or the forest is transitioned - we only construct its neighbor */
               neighbor_tree =
                 t8_forest_element_face_neighbor (forest, itree, elem,
-                                                half_neighbors[0],
-                                                neigh_scheme, iface,
-                                                &dummy_neigh_face);
+                                                 half_neighbors[0],
+                                                 neigh_scheme, iface,
+                                                 &dummy_neigh_face);
             }
             else {
               /* For quadrilateral elements, faces 0 and 2 point to a sibling subelement that must be in the same mpi process */
-              neighbor_tree = -1; /* we pretend to be at a domain boundary */
+              neighbor_tree = -1;       /* we pretend to be at a domain boundary */
             }
           }
           if (neighbor_tree >= 0) {
@@ -1953,7 +1954,7 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
     /* End sending the remote elements */
     t8_forest_ghost_send_end (forest, ghost, send_info, requests);
 
-  } 
+  }
 
   if (create_element_array) {
     /* Free the offset memory, if created */

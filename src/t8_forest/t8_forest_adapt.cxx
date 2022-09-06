@@ -343,7 +343,8 @@ t8_forest_adapt (t8_forest_t forest)
 
       refine = forest->set_adapt_fn (forest, forest->set_from, ltree_id,
                                      el_considered, tscheme, is_family,
-                                     num_elements_to_adapt_callback, elements_from);
+                                     num_elements_to_adapt_callback,
+                                     elements_from);
 
       /* Existing transition cells must be removed during adaptation.
        * We establish the rule to coarsen a transition cell back to its parent in case of refine = 0. */
@@ -352,7 +353,8 @@ t8_forest_adapt (t8_forest_t forest)
          * and skip all of its following sibling subelements. 
          */
         T8_ASSERT (refine >= -1 && refine <= 1);
-        T8_ASSERT (tscheme->t8_element_get_subelement_id (current_element) == 0);
+        T8_ASSERT (tscheme->t8_element_get_subelement_id (current_element) ==
+                   0);
         /* It should never be the case that a transitioned forest is direclty adapted into another transitioned forest - therefore refine <= 1!  */
         refine = -1;
       }
@@ -360,7 +362,8 @@ t8_forest_adapt (t8_forest_t forest)
 #ifdef T8_ENABLE_DEBUG
       t8_debugf
         ("***** t8_forest_adapt | current element index: %i/%i  refine value: %i  is_family: %i  num_siblings: %lu, num_children: %lu *****\n",
-         el_considered + 1, num_el_from, refine, is_family, num_siblings, num_children);
+         el_considered + 1, num_el_from, refine, is_family, num_siblings,
+         num_children);
       t8_debugf ("Current element is: \n");
       tscheme->t8_element_print_element (elements_from[0], "t8_forest_adapt");
 #endif
@@ -369,7 +372,9 @@ t8_forest_adapt (t8_forest_t forest)
                  || (tscheme->t8_element_is_subelement (current_element)
                      && refine == -1));
 
-      if (refine > 0 && tscheme->t8_element_level (elements_from[0]) >= forest->maxlevel) {
+      if (refine > 0
+          && tscheme->t8_element_level (elements_from[0]) >=
+          forest->maxlevel) {
         /* Only refine an element if it does not exceed the maximum level */
         refine = 0;
       }
@@ -437,7 +442,7 @@ t8_forest_adapt (t8_forest_t forest)
 
         /* We need to reallocate memory for the transition cell */
         elements = T8_REALLOC (elements, t8_element_t *, num_subelements);
-        
+
         (void) t8_element_array_push_count (telements, num_subelements);
         for (zz = 0; zz < num_subelements; zz++) {
           elements[zz] =
@@ -454,14 +459,14 @@ t8_forest_adapt (t8_forest_t forest)
       }
       else if (refine == -1) {
         /* The elements form a family and are to be coarsened. */
-        
+
         /* Make room for one more new element. */
         elements[0] = t8_element_array_push (telements);
         /* Compute the parent of the current family.
          * This parent is now inserted in telements. */
         T8_ASSERT (tscheme->t8_element_level (elements_from[0]) > 0);
         tscheme->t8_element_parent (elements_from[0], elements[0]);
-        
+
         if (forest_from->is_transitioned == 0) {
           /*num_siblings is now equivalent to the number of children of elements[0],
            * as num_siblings is always associated with elements_from (this is not true for transitioned forests) */

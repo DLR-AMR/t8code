@@ -135,9 +135,9 @@ typedef struct t8_forest
   t8_gloidx_t         global_num_subelements; /**< Number of subelements on all processors. */
   t8_profile_t       *profile; /**< If not NULL, runtimes and statistics about forest_commit are stored here. */
 
-  int                 is_transitioned; /* Flag parameter that states whether the forest is transitioned or not */
+  int                 is_transitioned;  /* Flag parameter that states whether the forest is transitioned or not */
 
-  double              time_adapt, time_balance, time_transition; /* TODO: remove these later */
+  double              time_adapt, time_balance, time_transition;        /* TODO: remove these later */
 
   sc_statinfo_t       stats[T8_PROFILE_NUM_STATS];
   int                 stats_computed;

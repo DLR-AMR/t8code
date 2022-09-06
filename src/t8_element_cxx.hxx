@@ -649,10 +649,10 @@ public:
    *  \param [in] type The subelement type
    *  \param [out] subelements An array of all subelements of the parent quad element elem
    */
-  virtual void        t8_element_to_transition_cell (const t8_element_t *
-                                                     elem, int type,
-                                                     t8_element_t *
-                                                     subelements[]) = 0;
+  virtual void        t8_element_to_transition_cell (const t8_element_t *elem,
+                                                     int type,
+                                                     t8_element_t
+                                                     *subelements[]) = 0;
 
   /** Check whether a given element is a subelement
    *  \param [in] elem A valid element 
@@ -691,10 +691,10 @@ public:
   */
   virtual int         t8_element_find_neighbor_in_transition_cell (const
                                                                    t8_element_t
-                                                                   * elem,
+                                                                   *elem,
                                                                    const
                                                                    t8_element_t
-                                                                   * neigh,
+                                                                   *neigh,
                                                                    int
                                                                    elem_face)
     = 0;
@@ -704,14 +704,15 @@ public:
    *  \return the subelement id of elem
    */
   virtual int         t8_element_get_face_number_of_hypotenuse (const
-                                                                t8_element_t *
-                                                                elem) = 0;
+                                                                t8_element_t
+                                                                *elem) = 0;
 
   /** Print the element data member.
    *  \param [in] elem A valid element 
    */
-  virtual void        t8_element_print_element (const t8_element_t * elem, const char called_from[]) const =
-    0;
+  virtual void        t8_element_print_element (const t8_element_t *elem,
+                                                const char called_from[])
+    const = 0;
 
 #ifdef T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is

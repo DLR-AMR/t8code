@@ -69,8 +69,8 @@ public:
    * \return          The maximum number of siblings of \a element.
    * Note that this number is >= 1, since we count the element itself as a sibling.
    */
-  virtual int         t8_element_max_num_siblings (const t8_element_t *
-                                                   elem) const;
+  virtual int         t8_element_max_num_siblings (const t8_element_t *elem)
+    const;
 
   /** Compute the number of siblings of an element. That is the number of 
    * Children of its parent.
@@ -109,9 +109,9 @@ public:
    *  \param [in] type The subelement type
    *  \param [out] subelements An array of all subelements of the parent quad element elem
    */
-  virtual void        t8_element_to_transition_cell (const t8_element_t *
-                                                     elem, int type,
-                                                     t8_element_t * c[]);
+  virtual void        t8_element_to_transition_cell (const t8_element_t *elem,
+                                                     int type,
+                                                     t8_element_t *c[]);
 
   /** Check whether a given element is a subelement
    *  \param [in] elem A valid element 
@@ -144,7 +144,9 @@ public:
   /** Print the element data member.
    *  \param [in] elem A valid element 
    */
-  virtual void        t8_element_print_element (const t8_element * elem, const char called_from[]) const;
+  virtual void        t8_element_print_element (const t8_element * elem,
+                                                const char called_from[])
+    const;
 
   /** Return the subelement id of a given element. 
    *  \param [in] elem A valid element 
@@ -161,10 +163,10 @@ public:
   */
   virtual int         t8_element_find_neighbor_in_transition_cell (const
                                                                    t8_element_t
-                                                                   * elem,
+                                                                   *elem,
                                                                    const
                                                                    t8_element_t
-                                                                   * neigh,
+                                                                   *neigh,
                                                                    int
                                                                    elem_face);
 

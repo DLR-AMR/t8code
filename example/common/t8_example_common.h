@@ -137,10 +137,12 @@ double              t8_levelset_sphere (const double x[3], double t,
 double              t8_constant (const double x[3], double t, void *data);
 
 /** Periodic 2D function on [0,1]^2 */
-double              t8_periodic_2D_cos(const double x[3], double t, void *data);
+double              t8_periodic_2D_cos (const double x[3], double t,
+                                        void *data);
 
 /** Periodic 2D function on [0,1]^2 */
-double              t8_periodic_2D_cos_off_center(const double x[3], double t, void *data);
+double              t8_periodic_2D_cos_off_center (const double x[3],
+                                                   double t, void *data);
 
 /** Returns always 1.
  * \return 1
@@ -228,7 +230,7 @@ void                t8_flow_constant_one_x_vec (const double x[3], double t,
 
 /** Sets the coordinates to exemplary constant values. */
 void                t8_flow_constant_2D_2to1 (const double x[3], double t,
-                                                double x_out[3]);
+                                              double x_out[3]);
 
 /** Sets the first and second coordinate to 1, the third to 0. */
 void                t8_flow_constant_one_xy_vec (const double x[3], double t,

@@ -188,24 +188,26 @@ t8_default_scheme_common_c::t8_element_general_function (const t8_element_t
 }
 
 void
-t8_default_scheme_common_c::
-t8_element_to_transition_cell (const t8_element_t * elem, int type,
-                               t8_element_t * c[])
+t8_default_scheme_common_c::t8_element_to_transition_cell (const t8_element_t
+                                                           *elem, int type,
+                                                           t8_element_t *c[])
 {
   SC_ABORT ("This function is not implemented for the given scheme.\n");
 }
 
 void
-t8_default_scheme_common_c::
-t8_element_vertex_coords (const t8_element_t *t, int vertex, int coords[])
+t8_default_scheme_common_c::t8_element_vertex_coords (const t8_element_t *t,
+                                                      int vertex,
+                                                      int coords[])
 {
   SC_ABORT ("This function is not implemented for the given scheme.\n");
 }
 
 /* Flo1314_TODO: remove all element_print_element functions and exchange them with element_debug_print */
 void
-t8_default_scheme_common_c::t8_element_print_element (const t8_element_t *
-                                                      elem, const char called_from[]) const
+t8_default_scheme_common_c::
+t8_element_print_element (const t8_element_t *elem,
+                          const char called_from[]) const
 {
   /* We implement this function since it is a simple print function and 
    * should not abort the code even if it is not implemented in the given eclass. */
@@ -257,12 +259,10 @@ t8_default_scheme_common_c::t8_element_get_subelement_id (const
 int
 t8_default_scheme_common_c::t8_element_find_neighbor_in_transition_cell (const
                                                                          t8_element_t
-                                                                         *
-                                                                         elem,
+                                                                         *elem,
                                                                          const
                                                                          t8_element_t
-                                                                         *
-                                                                         neigh,
+                                                                         *neigh,
                                                                          int
                                                                          elem_face)
 {

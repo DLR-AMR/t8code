@@ -858,11 +858,9 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
             ts->t8_element_get_face_corner (element, long_face, 1);
           /* Compute the coordinates of the endnotes */
           t8_forest_element_coordinate (forest, ltreeid, element,
-                                        corner_a_long,
-                                        vertex_a_long);
+                                        corner_a_long, vertex_a_long);
           t8_forest_element_coordinate (forest, ltreeid, element,
-                                        corner_b_long,
-                                        vertex_b_long);
+                                        corner_b_long, vertex_b_long);
 
           /* Compute the average of those coordinates */
           t8_vec_axpy (vertex_a_long, vertex_b_long, 1);
@@ -1693,7 +1691,8 @@ t8_forest_element_face_neighbor (t8_forest_t forest,
 
 #if 0                           /* print the resulting neighbor */
     t8_debugf ("neigh initialized:\n");
-    neighbor_scheme->t8_element_print_element (neigh, "t8_forest_element_face_neighbor");
+    neighbor_scheme->t8_element_print_element (neigh,
+                                               "t8_forest_element_face_neighbor");
 #endif
 
     return global_neigh_id;
@@ -1777,14 +1776,18 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest,
 }
 
 void
-t8_forest_subelement_face_neighbor (t8_forest_t forest, t8_element_t *pseudo_neighbor, 
-                                    const t8_element_t *leaf, t8_locidx_t element_index, 
-                                    int face, t8_locidx_t lneigh_treeid, 
-                                    t8_element_t **neighbor_leafs, 
+t8_forest_subelement_face_neighbor (t8_forest_t forest,
+                                    t8_element_t *pseudo_neighbor,
+                                    const t8_element_t *leaf,
+                                    t8_locidx_t element_index, int face,
+                                    t8_locidx_t lneigh_treeid,
+                                    t8_element_t **neighbor_leafs,
                                     t8_locidx_t **pelement_indices,
                                     int neighbor_is_ghost, int *owners,
-                                    t8_locidx_t lghost_treeid, t8_locidx_t ghost_element_index,
-                                    t8_eclass_scheme_c *ts, t8_eclass_scheme_c *neigh_scheme)
+                                    t8_locidx_t lghost_treeid,
+                                    t8_locidx_t ghost_element_index,
+                                    t8_eclass_scheme_c *ts,
+                                    t8_eclass_scheme_c *neigh_scheme)
 {
   /* Given that the transition cell of the subelement "pseudo_neighbor" contains the real subelement leaf_face_neighbor of "leaf",
    * this function is used to identify even this leaf_face_neighbor subelement. */
@@ -1794,18 +1797,18 @@ t8_forest_subelement_face_neighbor (t8_forest_t forest, t8_element_t *pseudo_nei
 
   /* get the subelement id of the pseudo neighbor */
   int                 pseudo_neighbor_sub_id =
-  ts->t8_element_get_subelement_id (pseudo_neighbor);
+    ts->t8_element_get_subelement_id (pseudo_neighbor);
 
   /* Get the subelement id of the real neighbor of leaf. 
    * This function will determine the sub_id of the real neighbor, given leaf, face and the pseudo_neighbor. */
   int                 leaf_neighbor_sub_id =
-  ts->t8_element_find_neighbor_in_transition_cell (leaf, pseudo_neighbor, face);
+    ts->t8_element_find_neighbor_in_transition_cell (leaf, pseudo_neighbor,
+                                                     face);
 
   if (!neighbor_is_ghost) {
     /* adjust the index of the pseudo neighbor to equal the index of the real neighbor */
     element_index =
-    pseudo_neigh_index - pseudo_neighbor_sub_id +
-    leaf_neighbor_sub_id;
+      pseudo_neigh_index - pseudo_neighbor_sub_id + leaf_neighbor_sub_id;
 
     /* get the real neighbor */
     const t8_element_t *neighbor;
@@ -1819,7 +1822,7 @@ t8_forest_subelement_face_neighbor (t8_forest_t forest, t8_element_t *pseudo_nei
     neigh_scheme->t8_element_destroy (0, neighbor_leafs + 1);
     /* copy the neighbor */
     neigh_scheme->t8_element_copy (neighbor, neighbor_leafs[0]);
- 
+
     /* set return values */
     *pelement_indices = T8_ALLOC (t8_locidx_t, 1);
     (*pelement_indices)[0] = element_index;
@@ -1830,25 +1833,31 @@ t8_forest_subelement_face_neighbor (t8_forest_t forest, t8_element_t *pseudo_nei
   }
   else {
     /* the neighbor subelement is a ghost (there might not be the whole family part of subelements the ghost array) */
-    int                 search_direction = (leaf_neighbor_sub_id > pseudo_neighbor_sub_id) ? 1 : -1;
-    int                 id_diff_abs = (leaf_neighbor_sub_id - pseudo_neighbor_sub_id) * search_direction;
+    int                 search_direction =
+      (leaf_neighbor_sub_id > pseudo_neighbor_sub_id) ? 1 : -1;
+    int                 id_diff_abs =
+      (leaf_neighbor_sub_id - pseudo_neighbor_sub_id) * search_direction;
 
     bool                neighbor_found = false;
     int                 subelement_count = 0;
-    
+
     while (!neighbor_found) {
-      T8_ASSERT (ghost_element_index >= 0); /* check, that ghost_element_index has been set in LFN before */
+      T8_ASSERT (ghost_element_index >= 0);     /* check, that ghost_element_index has been set in LFN before */
 
       const t8_element_t *check_neighbor;
-      check_neighbor = t8_forest_ghost_get_element (forest, lghost_treeid, ghost_element_index +
-                                                    search_direction * subelement_count);
+      check_neighbor =
+        t8_forest_ghost_get_element (forest, lghost_treeid,
+                                     ghost_element_index +
+                                     search_direction * subelement_count);
 
-      if (ts->t8_element_get_subelement_id (check_neighbor) == leaf_neighbor_sub_id) { 
+      if (ts->t8_element_get_subelement_id (check_neighbor) ==
+          leaf_neighbor_sub_id) {
         /* neighbor found */
         neighbor_found = true;
 
         /* both elements should be siblings or equal */
-        T8_ASSERT (ts->t8_element_get_transition_type (check_neighbor) == ts->t8_element_get_transition_type (pseudo_neighbor));
+        T8_ASSERT (ts->t8_element_get_transition_type (check_neighbor) ==
+                   ts->t8_element_get_transition_type (pseudo_neighbor));
 
         /* adjust element index */
         element_index = element_index + search_direction * subelement_count;
@@ -1864,17 +1873,17 @@ t8_forest_subelement_face_neighbor (t8_forest_t forest, t8_element_t *pseudo_nei
 
         T8_FREE (owners);
       }
-      
+
       if (subelement_count > id_diff_abs) {     /* we assume that the real neighbor is a sibling subelement and hence we should find it here */
         SC_ABORT ("Ghost subelement neighbor not found!\n");
       }
-      
+
       subelement_count++;
-    }                   /* end while-loop to identify real ghost-subelement neighbor */
-    
+    }                           /* end while-loop to identify real ghost-subelement neighbor */
+
     return;
-  }                     /* end of if neighbor is ghost */
-  
+  }                             /* end of if neighbor is ghost */
+
   /* this should not happen */
   SC_ABORT ("No subelement neighbor found!\n");
 }
@@ -2103,9 +2112,14 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
         if (neigh_scheme->t8_element_is_subelement (ancestor)) {
           /* At this point, "ancestor" is a random subelement of the neighboring transition cell of leaf. */
           /* We need to identify the real subelement neighbor within this transition cell. */
-          t8_forest_subelement_face_neighbor (forest, ancestor, leaf, element_index, face, lneigh_treeid, 
-                                              neighbor_leafs, pelement_indices, neighbor_is_ghost, owners,
-                                              lghost_treeid, ghost_element_index, ts, neigh_scheme);
+          t8_forest_subelement_face_neighbor (forest, ancestor, leaf,
+                                              element_index, face,
+                                              lneigh_treeid, neighbor_leafs,
+                                              pelement_indices,
+                                              neighbor_is_ghost, owners,
+                                              lghost_treeid,
+                                              ghost_element_index, ts,
+                                              neigh_scheme);
           *num_neighbors = 1;
           return;
         }
