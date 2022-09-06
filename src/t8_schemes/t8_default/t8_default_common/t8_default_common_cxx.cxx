@@ -205,9 +205,10 @@ t8_default_scheme_common_c::t8_element_vertex_coords (const t8_element_t *t,
 
 /* Flo1314_TODO: remove all element_print_element functions and exchange them with element_debug_print */
 void
-t8_default_scheme_common_c::
-t8_element_print_element (const t8_element_t *elem,
-                          const char called_from[]) const
+t8_default_scheme_common_c::t8_element_print_element (const t8_element_t
+                                                      *elem,
+                                                      const char
+                                                      called_from[]) const
 {
   /* We implement this function since it is a simple print function and 
    * should not abort the code even if it is not implemented in the given eclass. */
