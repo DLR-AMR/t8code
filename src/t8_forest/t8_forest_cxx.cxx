@@ -34,6 +34,9 @@
 #include <t8_cmesh/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_geometry/t8_geometry_base.hxx>
+#if T8_ENABLE_DEBUG
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
+#endif
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -913,6 +916,17 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
   double              face_normal[3];
   double              dot_product;
   double              point_on_face[3];
+
+#if T8_ENABLE_DEBUG
+  /* Check whether the provided geometry is linear */
+  const t8_cmesh_t    cmesh = t8_forest_get_cmesh (forest);
+  const t8_locidx_t   cltreeid =
+    t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
+  const t8_gloidx_t   cgtreeid = t8_cmesh_get_global_id (cmesh, cltreeid);
+  const t8_geometry_c *geometry =
+    t8_cmesh_get_tree_geometry (cmesh, cgtreeid);
+  T8_ASSERT (t8_geom_is_linear (geometry));
+#endif
 
   switch (element_shape) {
   case T8_ECLASS_VERTEX:
