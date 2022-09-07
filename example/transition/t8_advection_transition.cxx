@@ -888,7 +888,7 @@ t8_advect_global_conservation_check (double scaled_global_phi_beginning,
 {
   double              a = 1.0;
   long long int       b = 1;
-  double              small_epsilon = a / (b << 45);
+  double              small_epsilon = a / (double) (b << 45);
   double              diff_phi_global =
     scaled_global_phi_beginning - scaled_global_phi_end;
   double              abs_diff_phi_global =
@@ -905,7 +905,7 @@ t8_advect_conservation_check_phi (double outgoing_phi, double incoming_phi)
 {
   double              a = 1.0;
   long long int       b = 1;
-  double              small_epsilon = a / (b << 45);
+  double              small_epsilon = a / (double) (b << 45);
   double              diff_phi = outgoing_phi - incoming_phi;
   double              abs_diff_phi = ((diff_phi < 0) ? -diff_phi : diff_phi);
   t8_debugf
@@ -920,7 +920,7 @@ t8_advect_conservation_check_volume (double outgoing_volume,
 {
   double              a = 1.0;
   long long int       b = 1;
-  double              small_epsilon = a / (b << 45);
+  double              small_epsilon = a / (double) (b << 45);
   double              diff_volume = outgoing_volume - incoming_volume;
   double              abs_diff_volume =
     ((diff_volume < 0) ? -diff_volume : diff_volume);
@@ -1319,12 +1319,10 @@ t8_advect_replace (t8_forest_t forest_old,
         ts->t8_element_num_faces (elem_in_iterate);
 
       /* initialization */
-      int                *corner_coords_in_x;
-      corner_coords_in_x = new int[elem_num_faces_in];
-      int                *corner_coords_in_y;
-      corner_coords_in_y = new int[elem_num_faces_in];
-      int                *cap;
-      cap = new int[num_outgoing];
+      int                *corner_coords_in_x, *corner_coords_in_y, *cap;
+      corner_coords_in_x = T8_ALLOC (int, elem_num_faces_in);
+      corner_coords_in_y = T8_ALLOC (int, elem_num_faces_in);
+      cap = T8_ALLOC (int, num_outgoing);
 
       int                 corner_iterate_in;
       for (corner_iterate_in = 0;
@@ -1478,11 +1476,11 @@ t8_advect_replace (t8_forest_t forest_old,
       }                         /* end of face loop */
 
       elem_data_in[incoming_count].level =
-        elem_data_out[outgoing_count].level + 1;
+        elem_data_out[0].level + 1;
 
-      delete              corner_coords_in_x;
-      delete              corner_coords_in_y;
-      delete              cap;
+      T8_FREE (corner_coords_in_x);
+      T8_FREE (corner_coords_in_y);
+      T8_FREE (cap);
 
     }                           /* end of incoming loop */
 
@@ -1565,7 +1563,7 @@ t8_advect_replace (t8_forest_t forest_old,
 
       /* initialization */
       int                *cap;
-      cap = new int[num_outgoing];
+      cap = T8_ALLOC (int, num_outgoing);
       for (outgoing_count = 0; outgoing_count < num_outgoing;
            outgoing_count++) {
         cap[outgoing_count] = 0;
@@ -1582,10 +1580,9 @@ t8_advect_replace (t8_forest_t forest_old,
           ts->t8_element_num_faces (elem_out_iterate);
 
         /* initialization */
-        int                *corner_coords_out_x;
-        corner_coords_out_x = new int[elem_num_faces_out];
-        int                *corner_coords_out_y;
-        corner_coords_out_y = new int[elem_num_faces_out];
+        int                *corner_coords_out_x, *corner_coords_out_y;
+        corner_coords_out_x = T8_ALLOC (int, elem_num_faces_out);
+        corner_coords_out_y = T8_ALLOC (int, elem_num_faces_out);
 
         int                 corner_iterate_out;
         for (corner_iterate_out = 0; corner_iterate_out < ts->t8_element_num_faces (elem_out_iterate); corner_iterate_out++) {  /* iterate over the corners */
@@ -1626,8 +1623,8 @@ t8_advect_replace (t8_forest_t forest_old,
           cap[outgoing_count] = 1;
         }
 
-        delete              corner_coords_out_x;
-        delete              corner_coords_out_y;
+        T8_FREE (corner_coords_out_x);
+        T8_FREE (corner_coords_out_y);
 
       }                         /* end of loop over outcoming subelements */
 
@@ -1687,9 +1684,9 @@ t8_advect_replace (t8_forest_t forest_old,
       }
 
       elem_data_in[incoming_count].level =
-        elem_data_out[outgoing_count].level - 1;
+        elem_data_out[0].level - 1;
 
-      delete              cap;
+      T8_FREE (cap);
 
     }                           /* end of incoming loop */
 
@@ -3066,9 +3063,9 @@ main (int argc, char *argv[])
                       "\t\t4 - 2D rotation around (0.5,0.5).\n"
                       "\t\t5 - 2D flow around circle at (0.5,0.5)"
                       "with radius 0.15.\n)");
-  sc_options_add_int (opt, 'l', "level", &level, 3,
+  sc_options_add_int (opt, 'l', "level", &level, 2,
                       "The minimum refinement level of the mesh.");
-  sc_options_add_int (opt, 'r', "rlevel", &reflevel, 3,
+  sc_options_add_int (opt, 'r', "rlevel", &reflevel, 1,
                       "The number of adaptive refinement levels.");
   sc_options_add_int (opt, 'e', "elements", &eclass_int, T8_ECLASS_QUAD,
                       "If specified the coarse mesh is a hypercube\n\t\t\t\t     consisting of the"
@@ -3085,7 +3082,7 @@ main (int argc, char *argv[])
   sc_options_add_int (opt, 'd', "dim", &dim, -1,
                       "In combination with -f: The dimension of the mesh. 1 <= d <= 3.");
 
-  sc_options_add_double (opt, 'T', "end-time", &T, 1,
+  sc_options_add_double (opt, 'T', "end-time", &T, 0.1,
                          "The duration of the simulation. Default: 1");
 
   sc_options_add_double (opt, 'C', "CFL", &cfl, 0.1,
