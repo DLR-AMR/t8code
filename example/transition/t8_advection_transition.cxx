@@ -1475,8 +1475,7 @@ t8_advect_replace (t8_forest_t forest_old,
         elem_data_in[incoming_count].neighs[iface] = NULL;
       }                         /* end of face loop */
 
-      elem_data_in[incoming_count].level =
-        elem_data_out[0].level + 1;
+      elem_data_in[incoming_count].level = elem_data_out[0].level + 1;
 
       T8_FREE (corner_coords_in_x);
       T8_FREE (corner_coords_in_y);
@@ -1683,8 +1682,7 @@ t8_advect_replace (t8_forest_t forest_old,
         elem_data_in[incoming_count].neighs[iface] = NULL;
       }
 
-      elem_data_in[incoming_count].level =
-        elem_data_out[0].level - 1;
+      elem_data_in[incoming_count].level = elem_data_out[0].level - 1;
 
       T8_FREE (cap);
 
