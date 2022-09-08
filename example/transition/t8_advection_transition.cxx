@@ -349,7 +349,7 @@ t8_advect_adapt_init (t8_forest_t forest, t8_forest_t forest_from,
                       t8_eclass_scheme_c *ts, int isfamily, int num_elements,
                       t8_element_t *elements[])
 {
-#if 1 /* do nothing */
+#if 1                           /* do nothing */
   return 0;
 #endif
 
@@ -2646,7 +2646,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                             t8_forest_get_global_num_elements
                             (problem->forest));
     }
-    
+
     /* Time loop */
     count_time_steps++;
     if (problem->num_time_steps == 0) {
@@ -3014,8 +3014,8 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   sc_stats_print (t8_get_package_id (), SC_LP_ESSENTIAL, ADVECT_NUM_STATS,
                   problem->stats, 1, 1);
 
-  t8_debugf("Num Timesteps: %i\n", problem->num_time_steps - 1);
-  
+  t8_debugf ("Num Timesteps: %i\n", problem->num_time_steps - 1);
+
   /* clean-up */
   t8_advect_problem_destroy (&problem);
 }

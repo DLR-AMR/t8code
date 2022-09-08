@@ -808,7 +808,8 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
   case T8_ECLASS_LINE:
     {
       int                 corner_a = 0, corner_b = 0;
-      double              vertex_a[3] = { 0 }, vertex_b[3]  = { 0 }, center[3] = { 0 };
+      double              vertex_a[3] = { 0 }, vertex_b[3] =
+        { 0 }, center[3] = { 0 };
       double              vb_vb = 0, c_vb = 0, c_n = 0;
       double              norm = 0;
 
@@ -870,7 +871,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
           center[0] = vertex_b_long[0];
           center[1] = vertex_b_long[1];
         }
-      } /* end of is_subelement */
+      }                         /* end of is_subelement */
       else {                    /* the recent element is no subelement */
         /* Compute the center */
         t8_forest_element_centroid (forest, ltreeid, element, center);

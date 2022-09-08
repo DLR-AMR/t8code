@@ -53,7 +53,7 @@ t8_forest_transition_adapt (t8_forest_t forest,
   t8_eclass_scheme_c *neigh_scheme;
   t8_element_t       *element = elements[0], **face_neighbor;
 
-# if 0 /* use this to refine all elements of the mesh via transition type 16 for tests */
+#if 0                           /* use this to refine all elements of the mesh via transition type 16 for tests */
   return 16;
 #endif
 
