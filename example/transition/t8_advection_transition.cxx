@@ -38,8 +38,11 @@
  *        2 - periodic trigonometric with highest values in the center of the mesh 
  *        3 - periodic trigonometric off center (for example for a circular flow)
  *
- * Note that it is possible to print out additional information during the simulation by setting
+ * Note 1: that it is possible to print out additional information during the simulation by setting
  * T8_GET_DEBUG_OUTPUT to 1.
+ * 
+ * Note 2: For subelement validation it is possible to use the static refinement (return 0; case) and then set the refine_transition function to return 16;
+ * This way, we compute on a uniform, completely transitioned mesh and can compare it with the uniform non transitioned mesh.
  */
 
 #include "t8.h"
@@ -346,6 +349,10 @@ t8_advect_adapt_init (t8_forest_t forest, t8_forest_t forest_from,
                       t8_eclass_scheme_c *ts, int isfamily, int num_elements,
                       t8_element_t *elements[])
 {
+#if 1 /* do nothing */
+  return 0;
+#endif
+
 #if 0                           /* refine all lower right elements */
   int                 coord[3] = { };
   ts->t8_element_anchor (elements[0], coord);
@@ -366,7 +373,7 @@ t8_advect_adapt_init (t8_forest_t forest, t8_forest_t forest_from,
   return 0;
 #endif
 
-#if 1                           /* refinement every second element */
+#if 0                           /* refinement every second element */
   if (lelement_id % 2 == 0) {
     return 1;
   }
@@ -424,12 +431,10 @@ t8_advect_l1_error_mean (const t8_advect_problem_t * problem,
   for (ielem = 0; ielem < num_local_elements; ielem++) {
     elem_data = (t8_advect_element_data_t *)
       t8_sc_array_index_locidx (problem->element_data, ielem);
-    /* Compute the analytical solution at time T.
-     * This does only work for a constant flow u. 
-     * Otherwise, make sure that u_0 = u_T, where u_0 is the initial solution and u_T the solution at time T. */
+    /* Compute the analytical solution: assume the analytical solution at time T equals the initial condition */
     double              ana_sol_transported[3] = { };
-    ana_sol_transported[0] = elem_data->midpoint[0] - 1 * 2;    /* T * u[0] */
-    ana_sol_transported[1] = elem_data->midpoint[1] - 1 * 1;    /* T * u[1] */
+    ana_sol_transported[0] = elem_data->midpoint[0];
+    ana_sol_transported[1] = elem_data->midpoint[1];
     ana_sol_transported[2] = elem_data->midpoint[2];
     ana_sol =
       analytical_sol (ana_sol_transported, problem->t,
@@ -2641,10 +2646,9 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                             t8_forest_get_global_num_elements
                             (problem->forest));
     }
+    
     /* Time loop */
-
     count_time_steps++;
-
     if (problem->num_time_steps == 0) {
       scaled_global_phi_beginning = t8_advect_get_global_phi (problem);
     }
@@ -2913,7 +2917,6 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
 
         }
       }
-
     }
 
     /* Exchange ghost values */
@@ -3001,7 +3004,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   t8_global_essentialf ("[advect] Number elements mean: %i\n",
                         global_number_elements_mean);
   t8_global_essentialf ("[advect] mean l_1 error: %e\n", l1_mean);
-  // t8_global_essentialf ("[advect] l_2_rel: %e\tL_inf_rel: %e\n", l_2_rel, l_infty_rel);
+  /* t8_global_essentialf ("[advect] l_2_rel: %e\tL_inf_rel: %e\n", l_2_rel, l_infty_rel); */
 
   sc_stats_set1 (&problem->stats[ADVECT_ERROR_INF], l_infty_rel,
                  advect_stat_names[ADVECT_ERROR_INF]);
@@ -3010,6 +3013,9 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   sc_stats_compute (problem->comm, ADVECT_NUM_STATS, problem->stats);
   sc_stats_print (t8_get_package_id (), SC_LP_ESSENTIAL, ADVECT_NUM_STATS,
                   problem->stats, 1, 1);
+
+  t8_debugf("Num Timesteps: %i\n", problem->num_time_steps - 1);
+  
   /* clean-up */
   t8_advect_problem_destroy (&problem);
 }
@@ -3060,10 +3066,12 @@ main (int argc, char *argv[])
                       "\t\t\tIt reverses direction at t = 0.5.\n"
                       "\t\t4 - 2D rotation around (0.5,0.5).\n"
                       "\t\t5 - 2D flow around circle at (0.5,0.5)"
-                      "with radius 0.15.\n)");
-  sc_options_add_int (opt, 'l', "level", &level, 2,
+                      "with radius 0.15.\n)"
+                      "\t\t6 - stokes_flow_sphere_shell"
+                      "\t\t7 - flow_constant_2D_2to1");
+  sc_options_add_int (opt, 'l', "level", &level, 5,
                       "The minimum refinement level of the mesh.");
-  sc_options_add_int (opt, 'r', "rlevel", &reflevel, 1,
+  sc_options_add_int (opt, 'r', "rlevel", &reflevel, 2,
                       "The number of adaptive refinement levels.");
   sc_options_add_int (opt, 'e', "elements", &eclass_int, T8_ECLASS_QUAD,
                       "If specified the coarse mesh is a hypercube\n\t\t\t\t     consisting of the"
@@ -3080,7 +3088,7 @@ main (int argc, char *argv[])
   sc_options_add_int (opt, 'd', "dim", &dim, -1,
                       "In combination with -f: The dimension of the mesh. 1 <= d <= 3.");
 
-  sc_options_add_double (opt, 'T', "end-time", &T, 0.1,
+  sc_options_add_double (opt, 'T', "end-time", &T, 1,
                          "The duration of the simulation. Default: 1");
 
   sc_options_add_double (opt, 'C', "CFL", &cfl, 0.1,
@@ -3089,11 +3097,11 @@ main (int argc, char *argv[])
                          "Control the width of the refinement band around\n"
                          " the zero level-set. Default 1.");
 
-  sc_options_add_int (opt, 'a', "adapt-freq", &adapt_freq, 1,
+  sc_options_add_int (opt, 'a', "adapt-freq", &adapt_freq, 40,
                       "Controls how often the mesh is readapted. "
                       "A value of i means, every i-th time step.");
 
-  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 50,
+  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 4,
                       "How often the vtk output is produced "
                       "\n\t\t\t\t     (after how many time steps). "
                       "A value of 0 is equivalent to using -o.");
