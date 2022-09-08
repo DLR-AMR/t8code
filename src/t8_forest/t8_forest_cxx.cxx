@@ -807,10 +807,10 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
     return;
   case T8_ECLASS_LINE:
     {
-      int                 corner_a, corner_b;
-      double              vertex_a[3], vertex_b[3], center[3];
-      double              vb_vb, c_vb, c_n;
-      double              norm;
+      int                 corner_a = 0, corner_b = 0;
+      double              vertex_a[3] = { 0 }, vertex_b[3]  = { 0 }, center[3] = { 0 };
+      double              vb_vb = 0, c_vb = 0, c_n = 0;
+      double              norm = 0;
 
       /* This construction does not work for subelements */
       /* We approximate the normal vector via this geometric construction:
@@ -837,6 +837,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
       t8_forest_element_coordinate (forest, ltreeid, element,
                                     corner_b, vertex_b);
 
+      /* Note: the following implementation is specific for 2D Quad remove hanging nodes subelements */
       if (ts->t8_element_is_subelement (element)) {     /* the recent element is a subelement and we need an adjustement of the construction of C */
         int                 long_face =
           ts->t8_element_get_face_number_of_hypotenuse (element);
@@ -869,7 +870,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
           center[0] = vertex_b_long[0];
           center[1] = vertex_b_long[1];
         }
-      }
+      } /* end of is_subelement */
       else {                    /* the recent element is no subelement */
         /* Compute the center */
         t8_forest_element_centroid (forest, ltreeid, element, center);
