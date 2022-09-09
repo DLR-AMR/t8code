@@ -31,7 +31,7 @@
 #include <t8_cmesh_vtk.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
-#include <t8_cad/t8_cad_collision.hxx>
+#include <t8_cad/t8_cad_shape_proximity.hxx>
 
 /** 
  * The adaptation callback function. This function will be called once for each element
@@ -58,18 +58,18 @@
  * \param [in] elements     The element or family of elements to consider for refinement/coarsening.
  */
 int
-t8_collision_detection_centroid_adapt_callback (t8_forest_t forest,
-                                                t8_forest_t forest_from,
-                                                t8_locidx_t which_tree,
-                                                t8_locidx_t lelement_id,
-                                                t8_eclass_scheme_c *ts,
-                                                const int is_family,
-                                                const int num_elements,
-                                                t8_element_t *elements[])
+t8_shape_proximity_centroid_adapt_callback (t8_forest_t forest,
+                                            t8_forest_t forest_from,
+                                            t8_locidx_t which_tree,
+                                            t8_locidx_t lelement_id,
+                                            t8_eclass_scheme_c *ts,
+                                            const int is_family,
+                                            const int num_elements,
+                                            t8_element_t *elements[])
 {
-  const t8_cad_collision *cad;
+  const t8_cad_shape_proximity *cad;
   double              centroid[3] = { 0 };
-  cad = (const t8_cad_collision *) t8_forest_get_user_data (forest);
+  cad = (const t8_cad_shape_proximity *) t8_forest_get_user_data (forest);
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
   return cad->t8_cad_is_point_inside_shape (centroid, 1e-3);
 }
@@ -99,17 +99,17 @@ t8_collision_detection_centroid_adapt_callback (t8_forest_t forest,
  * \param [in] elements     The element or family of elements to consider for refinement/coarsening.
  */
 int
-t8_collision_detection_element_adapt_callback (t8_forest_t forest,
-                                               t8_forest_t forest_from,
-                                               t8_locidx_t which_tree,
-                                               t8_locidx_t lelement_id,
-                                               t8_eclass_scheme_c *ts,
-                                               const int is_family,
-                                               const int num_elements,
-                                               t8_element_t *elements[])
+t8_shape_proximity_element_adapt_callback (t8_forest_t forest,
+                                           t8_forest_t forest_from,
+                                           t8_locidx_t which_tree,
+                                           t8_locidx_t lelement_id,
+                                           t8_eclass_scheme_c *ts,
+                                           const int is_family,
+                                           const int num_elements,
+                                           t8_element_t *elements[])
 {
-  const t8_cad_collision *cad;
-  cad = (const t8_cad_collision *) t8_forest_get_user_data (forest);
+  const t8_cad_shape_proximity *cad;
+  cad = (const t8_cad_shape_proximity *) t8_forest_get_user_data (forest);
   return cad->t8_cad_is_element_inside_shape (forest_from, which_tree,
                                               elements[0]);
 }
@@ -134,7 +134,7 @@ t8_refine_forest_with_cad (const char *fileprefix,
   t8_cmesh_t          cmesh;
   t8_forest_t         forest;
   t8_geometry        *geometry;
-  t8_cad_collision   *cad;
+  t8_cad_shape_proximity *cad;
   char                forest_vtu[BUFSIZ];
   t8_forest_t         forest_new;
   t8_cmesh_init (&cmesh);
@@ -159,16 +159,16 @@ t8_refine_forest_with_cad (const char *fileprefix,
                                   t8_scheme_new_default_cxx (),
                                   level, 0, comm);
   T8_ASSERT (t8_forest_is_committed (forest));
-  cad = new t8_cad_collision (fileprefix);
+  cad = new t8_cad_shape_proximity (fileprefix);
   for (int r = 0; r < rlevel; ++r) {
     t8_forest_init (&forest_new);
     if (centroid) {
       t8_forest_set_adapt (forest_new, forest,
-                           t8_collision_detection_centroid_adapt_callback, 0);
+                           t8_shape_proximity_centroid_adapt_callback, 0);
     }
     else {
       t8_forest_set_adapt (forest_new, forest,
-                           t8_collision_detection_element_adapt_callback, 0);
+                           t8_shape_proximity_element_adapt_callback, 0);
     }
     t8_forest_set_user_data (forest_new, cad);
     t8_forest_set_partition (forest_new, forest, 0);
@@ -177,7 +177,7 @@ t8_refine_forest_with_cad (const char *fileprefix,
   }
   /* Write the forest into vtk files and move the new forest for the next iteration. */
   snprintf (forest_vtu, BUFSIZ,
-            "collision_detection_forest_level_%i_rlevel_%i", level, rlevel);
+            "shape_proximity_forest_level_%i_rlevel_%i", level, rlevel);
   t8_forest_write_vtk (forest, forest_vtu);
   t8_forest_unref (&forest);
   return 1;

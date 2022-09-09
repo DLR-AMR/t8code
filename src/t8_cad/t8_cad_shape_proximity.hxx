@@ -20,12 +20,12 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cad_collision.hxx
+/** \file t8_cad_shape_proximity.hxx
  * Intgrates many CAD and CAM functionalities.
  */
 
-#ifndef T8_CAD_COLLISION_HXX
-#define T8_CAD_COLLISION_HXX
+#ifndef T8_CAD_SHAPE_PROXIMITY_HXX
+#define T8_CAD_SHAPE_PROXIMITY_HXX
 
 #include <t8.h>
 #include <t8_forest.h>
@@ -40,7 +40,7 @@ T8_EXTERN_C_BEGIN ();
 #if T8_WITH_OCC
 
 /* *INDENT-OFF* */
-struct t8_cad_collision:public t8_cad_base
+struct t8_cad_shape_proximity:public t8_cad_base
 {
   using               t8_cad_base::t8_cad_base;
 
@@ -49,13 +49,13 @@ public:
    * Constructor of the cad collsion class. Fills the internal shape with the content of a brep file.
    * \param [in] fileprefix Prefix of a .brep file from which to extract an occ geometry.
    */
-  t8_cad_collision (const char *fileprefix);
+  t8_cad_shape_proximity (const char *fileprefix);
 
   /**
    * Constructor of the cad class. Fills the internal shape with the given shape.
    * \param [in] shape Occ shape geometry.
    */
-  t8_cad_collision (const TopoDS_Shape shape);
+  t8_cad_shape_proximity (const TopoDS_Shape shape);
 
   /**
    * Read a brep file and fill internal shape with it.
@@ -109,4 +109,4 @@ protected:
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_CAD_COLLISION_HXX */
+#endif /* !T8_CAD_shape_proximity_HXX */

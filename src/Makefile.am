@@ -71,7 +71,7 @@ libt8_installed_headers_default_prism =
 libt8_installed_headers_default_pyramid =
 libt8_installed_headers_cad = \
   src/t8_cad/t8_cad_base.hxx \
-  src/t8_cad/t8_cad_collision.hxx \
+  src/t8_cad/t8_cad_shape_proximity.hxx \
   src/t8_cad/t8_cad_geom.hxx
 libt8_internal_headers = \
   src/t8_cmesh/t8_cmesh_stash.h src/t8_cmesh/t8_cmesh_trees.h \
@@ -116,7 +116,7 @@ libt8_compiled_sources = \
   src/t8_element_shape.c \
   src/t8_netcdf.c \
   src/t8_cmesh/t8_cmesh_testcases.c \
-  src/t8_cad/t8_cad_collision.cxx \
+  src/t8_cad/t8_cad_shape_proximity.cxx \
   src/t8_cad/t8_cad_geom.cxx
 
 # this variable is used for headers that are not publicly installed

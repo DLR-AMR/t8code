@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_cad/t8_cad_collision.hxx>
+#include <t8_cad/t8_cad_shape_proximity.hxx>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 /* TODO: Remove t8_geometry_occ.hxx as soon as edge connectivity is defined in t8_eclass.h */
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx>
@@ -36,7 +36,7 @@
 #include <BRepExtrema_DistShapeShape.hxx>
 
 /* *INDENT-OFF* */
-t8_cad_collision::t8_cad_collision (const char *fileprefix)
+t8_cad_shape_proximity::t8_cad_shape_proximity (const char *fileprefix)
 {
   BRep_Builder        builder;
   std::string current_file (fileprefix);
@@ -46,17 +46,17 @@ t8_cad_collision::t8_cad_collision (const char *fileprefix)
   if (occ_shape.IsNull ()) {
     SC_ABORTF ("Could not read brep file or brep file contains no shape \n");
   }
-  t8_cad_collision::t8_cad_init_internal_data ();
+  t8_cad_shape_proximity::t8_cad_init_internal_data ();
 }
 
-t8_cad_collision::t8_cad_collision (const TopoDS_Shape shape)
+t8_cad_shape_proximity::t8_cad_shape_proximity (const TopoDS_Shape shape)
 {
   occ_shape = shape;
-  t8_cad_collision::t8_cad_init_internal_data ();
+  t8_cad_shape_proximity::t8_cad_init_internal_data ();
 }
 
 void
-t8_cad_collision::t8_cad_init (const char *fileprefix)
+t8_cad_shape_proximity::t8_cad_init (const char *fileprefix)
 {
   BRep_Builder        builder;
   std::string current_file (fileprefix);
@@ -66,18 +66,18 @@ t8_cad_collision::t8_cad_init (const char *fileprefix)
   if (occ_shape.IsNull ()) {
     SC_ABORTF ("Could not read brep file or brep file contains no shape \n");
   }
-  t8_cad_collision::t8_cad_init_internal_data ();
+  t8_cad_shape_proximity::t8_cad_init_internal_data ();
 }
 
 void
-t8_cad_collision::t8_cad_init (const TopoDS_Shape shape)
+t8_cad_shape_proximity::t8_cad_init (const TopoDS_Shape shape)
 {
   occ_shape = shape;
-  t8_cad_collision::t8_cad_init_internal_data ();
+  t8_cad_shape_proximity::t8_cad_init_internal_data ();
 }
 
 void
-t8_cad_collision::t8_cad_init_internal_data ()
+t8_cad_shape_proximity::t8_cad_init_internal_data ()
 {
   if (occ_shape.IsNull ()) {
     SC_ABORTF ("Shape is null. \n");
@@ -86,7 +86,7 @@ t8_cad_collision::t8_cad_init_internal_data ()
 }
 
 int
-t8_cad_collision::t8_cad_is_element_inside_shape(t8_forest_t forest,
+t8_cad_shape_proximity::t8_cad_is_element_inside_shape(t8_forest_t forest,
                                                  t8_locidx_t ltreeid, 
                                                  const t8_element_t *element) const
 {
@@ -159,7 +159,7 @@ t8_cad_collision::t8_cad_is_element_inside_shape(t8_forest_t forest,
    * This is still faster than checking if the Element intersects the shape. */
   double              centroid[3] = { 0 };
   t8_forest_element_centroid (forest, ltreeid, element, centroid);
-  if (t8_cad_collision::t8_cad_is_point_inside_shape (centroid, 1e-3))
+  if (t8_cad_shape_proximity::t8_cad_is_point_inside_shape (centroid, 1e-3))
   {
     return 1;
   }
@@ -177,7 +177,7 @@ t8_cad_collision::t8_cad_is_element_inside_shape(t8_forest_t forest,
 }
 
 int
-t8_cad_collision::t8_cad_is_point_inside_shape (const double *coords, double tol) const
+t8_cad_shape_proximity::t8_cad_is_point_inside_shape (const double *coords, double tol) const
 {
   gp_Pnt pnt = gp_Pnt(coords[0], coords[1], coords[2]);
   if (occ_shape_bounding_box.IsOut(pnt)) {
