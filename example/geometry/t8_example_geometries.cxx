@@ -834,7 +834,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
       int                 edges[24] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
       };
-
+      T8_ASSERT (!shape.IsNull ());
       /* Create occ geometry. */
       t8_geometry_occ    *geometry_occ =
         new t8_geometry_occ (3, shape, "occ surface dim=3");

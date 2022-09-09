@@ -1056,7 +1056,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                   if (face_nodes[node1].entity_dim == 0 &&
                       face_nodes[node2].entity_dim == 0)
                   {
-                    int common_edge = occ_geometry->t8_geom_get_common_edge(face_nodes[node1].entity_tag,
+                    int common_edge = occ_geometry->t8_cad_get_common_edge(face_nodes[node1].entity_tag,
                                                                             face_nodes[node2].entity_tag);
                     if (common_edge > 0)
                     {
@@ -1075,7 +1075,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
               }
               if (edge2_index > 0)
               {
-                surface_index = occ_geometry->t8_geom_get_common_face(edge1_index, edge2_index);
+                surface_index = occ_geometry->t8_cad_get_common_face(edge1_index, edge2_index);
               }
               else
               {
@@ -1105,9 +1105,9 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                   /* If it is on another geometry we retrieve its parameters */
                   if (face_nodes[i_face_nodes].entity_dim == 0)
                   {
-                    if (occ_geometry->t8_geom_is_vertex_on_face(face_nodes[i_face_nodes].entity_tag, surface_index))
+                    if (occ_geometry->t8_cad_is_vertex_on_face(face_nodes[i_face_nodes].entity_tag, surface_index))
                     {
-                      occ_geometry->t8_geom_get_parameters_of_vertex_on_face(face_nodes[i_face_nodes].entity_tag,
+                      occ_geometry->t8_cad_get_parameters_of_vertex_on_face(face_nodes[i_face_nodes].entity_tag,
                                                                              surface_index,
                                                                              face_nodes[i_face_nodes].parameters);
                       face_nodes[i_face_nodes].entity_dim = 2;
@@ -1120,9 +1120,9 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                   }
                   if (face_nodes[i_face_nodes].entity_dim == 1)
                   {
-                    if (occ_geometry->t8_geom_is_edge_on_face(face_nodes[i_face_nodes].entity_tag, surface_index))
+                    if (occ_geometry->t8_cad_is_edge_on_face(face_nodes[i_face_nodes].entity_tag, surface_index))
                     {
-                      occ_geometry->t8_geom_edge_parameter_to_face_parameters(face_nodes[i_face_nodes].entity_tag,
+                      occ_geometry->t8_cad_edge_parameter_to_face_parameters(face_nodes[i_face_nodes].entity_tag,
                                                                               surface_index,
                                                                               face_nodes[i_face_nodes].parameters[0],
                                                                               face_nodes[i_face_nodes].parameters);
@@ -1215,7 +1215,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
              * If not we can skip this edge. */
             if (edge_geometry_dim == 0 && edge_geometry_tag == 0)
             {
-              int common_curve = occ_geometry->t8_geom_get_common_edge(edge_nodes[0].entity_tag,
+              int common_curve = occ_geometry->t8_cad_get_common_edge(edge_nodes[0].entity_tag,
                                                                        edge_nodes[1].entity_tag);
               if (common_curve > 0)
               {
@@ -1232,7 +1232,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
             if (edge_nodes[0].entity_dim == 1 && edge_nodes[1].entity_dim == 1 
                 && edge_nodes[0].entity_tag != edge_nodes[1].entity_tag)
             {
-              int common_surface = occ_geometry->t8_geom_get_common_face(edge_nodes[0].entity_tag,
+              int common_surface = occ_geometry->t8_cad_get_common_face(edge_nodes[0].entity_tag,
                                                                          edge_nodes[1].entity_tag);
               if (common_surface > 0)
               {
@@ -1252,7 +1252,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
               {
                 if (face_geometries[t8_edge_to_face[i_tree_edges][i_adjacent_face]] > 0)
                 {
-                  if (!occ_geometry->t8_geom_is_edge_on_face(edge_geometry_tag, 
+                  if (!occ_geometry->t8_cad_is_edge_on_face(edge_geometry_tag, 
                                                              face_geometries[t8_edge_to_face[i_tree_edges]
                                                                                             [i_adjacent_face]]))
                   {
@@ -1279,7 +1279,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                 }
                 if (edge_nodes[i_edge_node].entity_dim == 0)
                 {
-                  if (!occ_geometry->t8_geom_is_vertex_on_edge(edge_nodes[i_edge_node].entity_tag, edge_geometry_tag))
+                  if (!occ_geometry->t8_cad_is_vertex_on_edge(edge_nodes[i_edge_node].entity_tag, edge_geometry_tag))
                   {
                     t8_global_errorf("Internal error: Node %i should lie on a vertex which lies on an edge, "
                                      "but the vertex does not lie on that edge.\n", edge_nodes[i_edge_node].index);
@@ -1290,7 +1290,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                 /* If the node lies on a vertex we retrieve its parameter on the curve */
                 if (edge_nodes[i_edge_node].entity_dim == 0)
                 {
-                  occ_geometry->t8_geom_get_parameter_of_vertex_on_edge(edge_nodes[i_edge_node].entity_tag,
+                  occ_geometry->t8_cad_get_parameter_of_vertex_on_edge(edge_nodes[i_edge_node].entity_tag,
                                                                         edge_geometry_tag,
                                                                         edge_nodes[i_edge_node].parameters);
                   edge_nodes[i_edge_node].entity_dim = 1;
@@ -1323,7 +1323,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                 }
                 if (edge_nodes[i_edge_node].entity_dim == 0)
                 {
-                  if (!occ_geometry->t8_geom_is_vertex_on_face(edge_nodes[i_edge_node].entity_tag, edge_geometry_tag))
+                  if (!occ_geometry->t8_cad_is_vertex_on_face(edge_nodes[i_edge_node].entity_tag, edge_geometry_tag))
                   {
                     t8_global_errorf("Internal error: Node %i should lie on a vertex which lies on a face, "
                                      "but the vertex does not lie on that face.\n", edge_nodes[i_edge_node].index);
@@ -1332,7 +1332,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                 }
                 if (edge_nodes[i_edge_node].entity_dim == 1)
                 {
-                  if (!occ_geometry->t8_geom_is_edge_on_face(edge_nodes[i_edge_node].entity_tag, edge_geometry_tag))
+                  if (!occ_geometry->t8_cad_is_edge_on_face(edge_nodes[i_edge_node].entity_tag, edge_geometry_tag))
                   {
                     t8_global_errorf("Internal error: Node %i should lie on an edge which lies on a face, "
                                      "but the edge does not lie on that face.\n", edge_nodes[i_edge_node].index);
@@ -1343,7 +1343,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                 /* If the node lies on a vertex we retrieve its parameters on the surface */
                 if (edge_nodes[i_edge_node].entity_dim == 0)
                 {
-                  occ_geometry->t8_geom_get_parameters_of_vertex_on_face(edge_nodes[i_edge_node].entity_tag,
+                  occ_geometry->t8_cad_get_parameters_of_vertex_on_face(edge_nodes[i_edge_node].entity_tag,
                                                                          edge_geometry_tag,
                                                                          edge_nodes[i_edge_node].parameters);
                   edge_nodes[i_edge_node].entity_dim = 2;
@@ -1351,7 +1351,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                 /* If the node lies on an edge we have to do the same */
                 if (edge_nodes[i_edge_node].entity_dim == 1)
                 {
-                  occ_geometry->t8_geom_edge_parameter_to_face_parameters(edge_nodes[i_edge_node].entity_tag,
+                  occ_geometry->t8_cad_edge_parameter_to_face_parameters(edge_nodes[i_edge_node].entity_tag,
                                                                           edge_geometry_tag,
                                                                           edge_nodes[i_edge_node].parameters[0],
                                                                           edge_nodes[i_edge_node].parameters);

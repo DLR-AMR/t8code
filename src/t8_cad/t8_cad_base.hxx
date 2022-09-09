@@ -38,7 +38,7 @@ T8_EXTERN_C_BEGIN ();
 
 #if T8_WITH_OCC
 
-struct t8_cad_base
+class               t8_cad_base
 {
 public:
   /**

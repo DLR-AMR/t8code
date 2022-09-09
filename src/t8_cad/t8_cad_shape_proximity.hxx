@@ -40,7 +40,7 @@ T8_EXTERN_C_BEGIN ();
 #if T8_WITH_OCC
 
 /* *INDENT-OFF* */
-struct t8_cad_shape_proximity:public t8_cad_base
+class t8_cad_shape_proximity:public t8_cad_base
 {
   using               t8_cad_base::t8_cad_base;
 
