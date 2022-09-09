@@ -53,9 +53,9 @@ public:
 
   /**
    * Constructor of the cad class. Fills the internal shape with the given shape.
-   * \param [in] occ_shape Occ shape geometry.
+   * \param [in] shape Occ shape geometry.
    */
-  t8_cad_collision (const TopoDS_Shape occ_shape);
+  t8_cad_collision (const TopoDS_Shape shape);
 
   /**
    * Read a brep file and fill internal shape with it.
@@ -66,10 +66,10 @@ public:
 
   /**
    * Fill the internal shape with the given shape.
-   * \param [in] occ_shape Occ shape geometry.
+   * \param [in] shape Occ shape geometry.
    */
   void
-  t8_cad_init (TopoDS_Shape occ_shape);
+  t8_cad_init (TopoDS_Shape shape);
 
   /**
    * Checks if an element is inside the occ shape. Only viable with 

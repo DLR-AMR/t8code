@@ -31,6 +31,9 @@
 #include <BRepClass3d_SolidClassifier.hxx>
 #include <BRepBndLib.hxx>
 #include <Bnd_Box.hxx>
+#include <TopoDS_Solid.hxx>
+#include <BRepPrimAPI_MakeBox.hxx>
+#include <BRepExtrema_DistShapeShape.hxx>
 
 /* *INDENT-OFF* */
 t8_cad_collision::t8_cad_collision (const char *fileprefix)
@@ -46,8 +49,9 @@ t8_cad_collision::t8_cad_collision (const char *fileprefix)
   t8_cad_collision::t8_cad_init_internal_data ();
 }
 
-t8_cad_collision::t8_cad_collision (const TopoDS_Shape occ_shape)
+t8_cad_collision::t8_cad_collision (const TopoDS_Shape shape)
 {
+  occ_shape = shape;
   t8_cad_collision::t8_cad_init_internal_data ();
 }
 
@@ -66,8 +70,9 @@ t8_cad_collision::t8_cad_init (const char *fileprefix)
 }
 
 void
-t8_cad_collision::t8_cad_init (const TopoDS_Shape occ_shape)
+t8_cad_collision::t8_cad_init (const TopoDS_Shape shape)
 {
+  occ_shape = shape;
   t8_cad_collision::t8_cad_init_internal_data ();
 }
 
@@ -82,12 +87,14 @@ t8_cad_collision::t8_cad_init_internal_data ()
 
 int
 t8_cad_collision::t8_cad_is_element_inside_shape(t8_forest_t forest,
-                                       t8_locidx_t ltreeid, 
-                                       const t8_element_t *element) const
+                                                 t8_locidx_t ltreeid, 
+                                                 const t8_element_t *element) const
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   t8_eclass_t         tree_class, element_class;
   t8_eclass_scheme_c *ts;
+  t8_cmesh_t          cmesh = t8_forest_get_cmesh(forest);
+  t8_gloidx_t         gtreeid = t8_forest_ltreeid_to_cmesh_ltreeid(forest, ltreeid);
   tree_class = t8_forest_get_tree_class (forest, ltreeid);
   ts = t8_forest_get_eclass_scheme (forest, tree_class);
   /* Check if element is valid */
@@ -129,25 +136,44 @@ t8_cad_collision::t8_cad_is_element_inside_shape(t8_forest_t forest,
   }
 #endif /* T8_ENABLE_DEBUG */
   /* Compute bounding box of element */
-  double corner_coords[3];
-  const int max_corner_number = t8_eclass_num_vertices[element_class];
-  ts->t8_element_vertex_reference_coords(element, 0, corner_coords);
+  double corner_ref_coords[3], corner_coords[3];
+  const int max_corner_number = t8_eclass_num_vertices[element_class] - 1;
+  ts->t8_element_vertex_reference_coords(element, 0, corner_ref_coords);
+  t8_geometry_evaluate (cmesh, gtreeid, corner_ref_coords, corner_coords);
   gp_Pnt box_min = gp_Pnt(corner_coords[0], corner_coords[1], corner_coords[2]);
   ts->t8_element_vertex_reference_coords(element, max_corner_number, 
-                                         corner_coords);
+                                         corner_ref_coords);
+  t8_geometry_evaluate (cmesh, gtreeid, corner_ref_coords, corner_coords);
   gp_Pnt box_max = gp_Pnt(corner_coords[0], corner_coords[1], corner_coords[2]);
   Bnd_Box unoriented_bounding_box = Bnd_Box(box_min, box_max);
   Bnd_OBB element_bounding_box = Bnd_OBB(unoriented_bounding_box);
   element_bounding_box.SetAABox(1);
   
-  /* Check if element bounding box is outside of shape bounding box. 
+  /* Check if element bounding box is outside of shape bounding box (fast). 
    * If true, element is completely outside of the shape. */
   if (occ_shape_bounding_box.IsOut(element_bounding_box)) {
     return 0;
   }
 
-  return 1;
+  /* Check if element centroid is inside shape (slow). 
+   * This is still faster than checking if the Element intersects the shape. */
+  double              centroid[3] = { 0 };
+  t8_forest_element_centroid (forest, ltreeid, element, centroid);
+  if (t8_cad_collision::t8_cad_is_point_inside_shape (centroid, 1e-3))
+  {
+    return 1;
+  }
 
+  /* Check for intersection of element and shape (very slow). */
+  TopoDS_Solid element_shape = BRepPrimAPI_MakeBox(box_min, box_max);
+  BRepExtrema_DistShapeShape dist_shape_shape;
+  dist_shape_shape.LoadS1(element_shape);
+  dist_shape_shape.LoadS2(occ_shape);
+  dist_shape_shape.Perform();
+  if(!dist_shape_shape.IsDone()){
+    SC_ABORTF("Failed to calculate distance between element and shape");
+  }
+  return dist_shape_shape.InnerSolution();
 }
 
 int
@@ -159,7 +185,7 @@ t8_cad_collision::t8_cad_is_point_inside_shape (const double *coords, double tol
   }
   BRepClass3d_SolidClassifier classifier = BRepClass3d_SolidClassifier(occ_shape);
   classifier.Perform(pnt, tol);
-  return classifier.State() ? 0 : 1;
+  return !classifier.State();
 }
 /* *INDENT-ON* */
 
