@@ -110,9 +110,9 @@ t8_collision_detection_element_adapt_callback (t8_forest_t forest,
 {
   const t8_cad_collision *cad;
   cad = (const t8_cad_collision *) t8_forest_get_user_data (forest);
-  return cad->t8_cad_is_element_inside_shape(forest_from, which_tree, elements[0]);
+  return cad->t8_cad_is_element_inside_shape (forest_from, which_tree,
+                                              elements[0]);
 }
-
 
 /**
  * Builds a forest with one tree and refines it based on the location of the elements relative
@@ -125,13 +125,12 @@ t8_collision_detection_element_adapt_callback (t8_forest_t forest,
  *                          False: The elements get refined if the whole element is (partially) inside the geometry.
  * \return True if successful.
  */
-int t8_refine_forest_with_cad (const char *fileprefix,
-                               const double *corners,
-                               int level, int rlevel,
-                               int centroid,
-                               sc_MPI_Comm comm)
+int
+t8_refine_forest_with_cad (const char *fileprefix,
+                           const double *corners,
+                           int level, int rlevel,
+                           int centroid, sc_MPI_Comm comm)
 {
-  
   t8_cmesh_t          cmesh;
   t8_forest_t         forest;
   t8_geometry        *geometry;
@@ -266,7 +265,8 @@ main (int argc, char **argv)
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else {
-    t8_refine_forest_with_cad(fileprefix, corners, level, rlevel, centroid, comm);
+    t8_refine_forest_with_cad (fileprefix, corners, level, rlevel, centroid,
+                               comm);
   }
   sc_options_destroy (opt);
   sc_finalize ();
