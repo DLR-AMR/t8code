@@ -208,7 +208,7 @@ t8_step3_main (int argc, char **argv)
   t8_forest_t         forest;
   /* The prefix for our output files. */
   const char         *prefix_uniform = "t8_step3_1_uniform_forest";
-        char         *prefix_adapt = "t8_step3_1_adapted_forest";
+        //char         *prefix_adapt = "t8_step3_1_adapted_forest";
   /* The uniform refinement level of the forest. */
   const int           level = 3;
 
@@ -272,28 +272,26 @@ t8_step3_main (int argc, char **argv)
   {    
 
 	// Adapting the forest, beginning with a uniform cube for each timestep          
-  	forest = t8_step3_adapt_forest (t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0,comm));
+  	forest = t8_step3_adapt_forest (forest);
 
 	  /*
 	   *  Output.
 	   */
 
 	  // A quick way of naming the output files done as char array with the counter in it
-	  char array[20];
-          sprintf(array, "%f", counter);
+	  char filename[20];
+          sprintf(filename, "%f", counter);
 
 	  /* char         *prefix_adapt = "t8_step3_1_adapted_forest"; */
-	  
-	  char         *prefix_adapt = array;
-	   
+	  	     
 	 	  	  /* Print information of our new forest. */
 	  t8_global_productionf (" [step3] Adapted forest.\n");
 	  t8_step3_print_forest_information (forest);
 
 	  /* Write forest to vtu files. */
-	  t8_forest_write_vtk (forest, prefix_adapt);
+	  t8_forest_write_vtk (forest, filename);
 	  t8_global_productionf (" [step3] Wrote adapted forest to vtu files: %s*\n",
-	                         prefix_adapt);
+	                         filename);
   }
   /* End of alteration. 
    * 
