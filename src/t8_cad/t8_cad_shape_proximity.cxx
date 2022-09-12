@@ -136,18 +136,16 @@ t8_cad_shape_proximity::t8_cad_is_element_inside_shape(t8_forest_t forest,
   }
 #endif /* T8_ENABLE_DEBUG */
   /* Compute bounding box of element */
-  double corner_ref_coords[3], corner_coords[3];
+  double corner_ref_coords[3], corner_coords[6];
   const int max_corner_number = t8_eclass_num_vertices[element_class] - 1;
   ts->t8_element_vertex_reference_coords(element, 0, corner_ref_coords);
   t8_geometry_evaluate (cmesh, gtreeid, corner_ref_coords, corner_coords);
-  gp_Pnt box_min = gp_Pnt(corner_coords[0], corner_coords[1], corner_coords[2]);
   ts->t8_element_vertex_reference_coords(element, max_corner_number, 
                                          corner_ref_coords);
-  t8_geometry_evaluate (cmesh, gtreeid, corner_ref_coords, corner_coords);
-  gp_Pnt box_max = gp_Pnt(corner_coords[0], corner_coords[1], corner_coords[2]);
-  Bnd_Box unoriented_bounding_box = Bnd_Box(box_min, box_max);
-  Bnd_OBB element_bounding_box = Bnd_OBB(unoriented_bounding_box);
-  element_bounding_box.SetAABox(1);
+  t8_geometry_evaluate (cmesh, gtreeid, corner_ref_coords, corner_coords + 3);
+  Bnd_Box element_bounding_box = Bnd_Box();
+  element_bounding_box.Update(corner_coords[0], corner_coords[1], corner_coords[3],
+                              corner_coords[3], corner_coords[4], corner_coords[5]);
   
   /* Check if element bounding box is outside of shape bounding box (fast). 
    * If true, element is completely outside of the shape. */
@@ -165,6 +163,8 @@ t8_cad_shape_proximity::t8_cad_is_element_inside_shape(t8_forest_t forest,
   }
 
   /* Check for intersection of element and shape (very slow). */
+  gp_Pnt box_min = gp_Pnt(corner_coords[0], corner_coords[1], corner_coords[2]);
+  gp_Pnt box_max = gp_Pnt(corner_coords[3], corner_coords[4], corner_coords[5]);
   TopoDS_Solid element_shape = BRepPrimAPI_MakeBox(box_min, box_max);
   BRepExtrema_DistShapeShape dist_shape_shape;
   dist_shape_shape.LoadS1(element_shape);
