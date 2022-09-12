@@ -67,11 +67,15 @@ t8_shape_proximity_centroid_adapt_callback (t8_forest_t forest,
                                             const int num_elements,
                                             t8_element_t *elements[])
 {
+#if T8_WITH_OCC
   const t8_cad_shape_proximity *cad;
   double              centroid[3] = { 0 };
   cad = (const t8_cad_shape_proximity *) t8_forest_get_user_data (forest);
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
   return cad->t8_cad_is_point_inside_shape (centroid, 1e-3);
+#else /* !T8_WITH_OCC */
+  SC_ABORTF ("OpenCASCADE is not linked");
+#endif /* !T8_WITH_OCC */
 }
 
 /** 
@@ -108,10 +112,14 @@ t8_shape_proximity_element_adapt_callback (t8_forest_t forest,
                                            const int num_elements,
                                            t8_element_t *elements[])
 {
+#if T8_WITH_OCC
   const t8_cad_shape_proximity *cad;
   cad = (const t8_cad_shape_proximity *) t8_forest_get_user_data (forest);
   return cad->t8_cad_is_element_inside_shape (forest_from, which_tree,
                                               elements[0]);
+#else /* !T8_WITH_OCC */
+  SC_ABORTF ("OpenCASCADE is not linked");
+#endif /* !T8_WITH_OCC */
 }
 
 /**
@@ -131,6 +139,7 @@ t8_refine_forest_with_cad (const char *fileprefix,
                            int level, int rlevel,
                            int centroid, sc_MPI_Comm comm)
 {
+#if T8_WITH_OCC
   t8_cmesh_t          cmesh;
   t8_forest_t         forest;
   t8_geometry        *geometry;
@@ -180,6 +189,9 @@ t8_refine_forest_with_cad (const char *fileprefix,
             "shape_proximity_forest_level_%i_rlevel_%i", level, rlevel);
   t8_forest_write_vtk (forest, forest_vtu);
   t8_forest_unref (&forest);
+#else /* !T8_WITH_OCC */
+  SC_ABORTF ("OpenCASCADE is not linked");
+#endif /* !T8_WITH_OCC */
   return 1;
 }
 
