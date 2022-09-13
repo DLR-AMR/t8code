@@ -366,6 +366,9 @@ main (int argc, char **argv)
   t8_global_productionf
     ("Testing one specific point with one specific triangle.\n");
   t8_test_point_inside_specific_triangle ();
+  t8_global_productionf
+    ("Testing one specific point with one specific quad.\n");
+  t8_test_point_inside_specific_quad ();
   for (ieclass = T8_ECLASS_LINE; ieclass < T8_ECLASS_COUNT; ieclass++) {
     t8_global_productionf
       ("Testing point finding with eclass %s\n",
