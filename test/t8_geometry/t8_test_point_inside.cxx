@@ -33,20 +33,19 @@
 #include <t8_cmesh/t8_cmesh_geometry.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 
-/* This function creates a single element of the specified element class.
- * It then creates a bunch of points, some of which lie whithin the element, some
+/* This function creates uniform forests of the specified element class.
+ * It then iterates over the forest's elements and 
+ * creates a bunch of points, some of which lie whithin the element, some
  * not. For each point we call t8_forest_element_point_inside and check whether
- * it gives the correct result. */
-/*
- * TODO: - Use more than one refinement level.
- *       - Does the new barycentric coordinate test work with HEX and PRISM?
+ * it gives the correct result.
+ * 
+ * \param [in] comm     MPI communicator
+ * \param [in] eclass   Element class to check
+ * \param [in] maxlevel Up to this level uniform forests are created.
  */
 static void
 t8_test_point_inside (sc_MPI_Comm comm, t8_eclass_t eclass, int maxlevel)
 {
-  t8_cmesh_t          cmesh;
-  t8_forest_t         forest;
-  t8_scheme_cxx_t    *default_scheme;
   double              test_point[3];
   int                 ipoint, icoord;   /* loop variables */
   int                 point_is_recognized_as_inside;
@@ -62,17 +61,40 @@ t8_test_point_inside (sc_MPI_Comm comm, t8_eclass_t eclass, int maxlevel)
   int                 num_points_to_generate = 100;     /* Desired number of test points per element. 
                                                          * The actual number is computed to be close to this. */
 
-  default_scheme = t8_scheme_new_default_cxx ();
 
-  for (int level = 0; level < maxlevel; ++level) {
+  t8_log_indent_push();
+  for (int level = 0; level <= maxlevel; ++level) {
+    t8_debugf ("Testing eclass %s, uniform level %i with approx. %i points per element.\n",
+    t8_eclass_to_string[eclass], level, num_points_to_generate);
+    t8_scheme_cxx_t    * default_scheme = t8_scheme_new_default_cxx ();
     /* Construct a cube coarse mesh */
-    cmesh = t8_cmesh_new_from_class (eclass, comm);
+    t8_cmesh_t cmesh = t8_cmesh_new_from_class (eclass, comm);
+
+    /* We translate the coordinates of the cmesh to create a non-standard case.
+     * In particular, we want the 1D and 2D elements to move outside of axis
+     * perpendicular planes. We do this to detect possible errors in the point
+     * finding function that may be biased towards certrain coordinate axis.
+     */
+    double * const tree_vertices = t8_cmesh_get_tree_vertices (cmesh, 0);
+    const int num_vertices = t8_eclass_num_vertices[eclass];
+    /* Translate all points by the same vector to move the element a bit. */
+    double translate_all_points[3] = {-0.1, 0.3, 0.15};
+    t8_cmesh_translate_coordinates (tree_vertices, tree_vertices, num_vertices, translate_all_points);
+    /* Translate points 0 and 1 (if it exists) extra in order to move the 2D elements
+     * and 3D faces outside of axis perpendiculat planes. */
+    double translate_points_0_1[3] = {0.1, -0.1, 0.3};
+    t8_cmesh_translate_coordinates (tree_vertices, tree_vertices, 1, translate_points_0_1);
+    if (num_vertices > 2) {
+      t8_cmesh_translate_coordinates (tree_vertices + 3, tree_vertices + 3, 1, translate_points_0_1);
+    }
+    
     /* Build a uniform forest */
-    forest = t8_forest_new_uniform (cmesh, default_scheme, 1, level, comm);
+    t8_forest_t forest = t8_forest_new_uniform (cmesh, default_scheme, level, 1, comm);
 
     const t8_locidx_t   num_trees = t8_forest_get_num_local_trees (forest);
 
     for (t8_locidx_t itree = 0; itree < num_trees; ++itree) {
+      t8_log_indent_push ();
       const t8_locidx_t   num_elements =
         t8_forest_get_tree_num_elements (forest, itree);
       /* Get the associated eclass scheme */
@@ -198,16 +220,16 @@ t8_test_point_inside (sc_MPI_Comm comm, t8_eclass_t eclass, int maxlevel)
                            point_is_inside ? "" : "not",
                            t8_eclass_to_string[eclass]);
 
-        }
+        } /* End loop over points. */
         t8_debugf ("%i (%.2f%%) test points are inside the element\n", num_in,
                    (100.0 * num_in) / num_points);
         T8_FREE (barycentric_coordinates);
-      }
-
-    }                           /* Skip empty forest if */
-
+      } /* End loop over elements */   
+    } /* End loop over trees */
     t8_forest_unref (&forest);
-  }
+    t8_log_indent_pop();
+  } /* End loop over levels */
+  t8_log_indent_pop();
 }
 
 /* In this test we define a triangle in the x-y plane
