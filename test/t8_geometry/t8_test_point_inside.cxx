@@ -285,6 +285,60 @@ t8_test_point_inside_specific_triangle ()
   t8_forest_unref (&forest);
 }
 
+/* In this test we define a quad in the x-y plane
+ * and a point that lies in a quad that is parallel
+ * to this triangle on the z-axis.
+ * The point must be correctly identified as lying outside
+ * of the quad.
+ */
+static void
+t8_test_point_inside_specific_quad ()
+{
+  t8_cmesh_t          cmesh;
+  t8_forest_t         forest;
+  t8_element_t       *element;
+  double              vertices[12] = {
+    0., 0., 0.,
+    1., 0., 0.,
+    0., 1., 0.,
+    1., 1., 0.
+  };
+  double              test_point[3] = {
+    0.3, 0.3, 1
+  };
+  int                 point_is_inside;
+  const double        tolerance = 1e-12;        /* Numerical tolerance that we allow for the point inside check */
+  t8_geometry_c      *linear_geom = new t8_geometry_linear (2);
+
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
+  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 4);
+  /* We use standard linear geometry */
+  t8_cmesh_register_geometry (cmesh, linear_geom);
+
+  t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
+  forest =
+    t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 0, 0,
+                           sc_MPI_COMM_WORLD);
+
+  if (t8_forest_get_local_num_elements (forest) <= 0) {
+    /* Skip empty forests (can occur when executed in parallel) */
+    t8_forest_unref (&forest);
+    return;
+  }
+
+  element = t8_forest_get_element (forest, 0, NULL);
+
+  point_is_inside =
+    t8_forest_element_point_inside (forest, 0,
+                                    element, test_point, tolerance);
+
+  SC_CHECK_ABORT (!point_is_inside,
+                  "The point is wrongly detected as inside the triangle.");
+
+  t8_forest_unref (&forest);
+}
+
 int
 main (int argc, char **argv)
 {
