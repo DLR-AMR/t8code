@@ -351,9 +351,9 @@ main (int argc, char **argv)
   sc_MPI_Comm         mpic;
   int                 ieclass;
 #if T8_ENABLE_LESS_TESTS
-  const int           maxlevel = 7;
+  const int           maxlevel = 4;
 #else
-  const int           maxlevel = 9;
+  const int           maxlevel = 6;
 #endif
 
   mpiret = sc_MPI_Init (&argc, &argv);
