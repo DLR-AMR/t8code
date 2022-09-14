@@ -157,6 +157,9 @@ t8_shape_proximity_refine_forest_with_cad (const char *fileprefix,
   t8_cad_shape_proximity *cad;
   char                forest_vtu[BUFSIZ];
   t8_forest_t         forest_new;
+  t8_locidx_t         num_local_elements;
+  double             *inside_shape;
+
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_dimension (cmesh, 3);
   geometry = new t8_geometry_linear (3);
@@ -195,11 +198,53 @@ t8_shape_proximity_refine_forest_with_cad (const char *fileprefix,
     t8_forest_commit (forest_new);
     forest = forest_new;
   }
+  /* Generate element data. */
+  num_local_elements = t8_forest_get_local_num_elements (forest);
+  inside_shape = T8_ALLOC (double, num_local_elements);
+  const t8_element_t *element;
+
+  /* Get the number of trees that have elements of this process. */
+  const t8_locidx_t   num_local_trees =
+    t8_forest_get_num_local_trees (forest);
+  for (t8_locidx_t itree = 0, current_index = 0; itree < num_local_trees;
+       ++itree) {
+    /* Get the number of elements of this tree. */
+    const t8_locidx_t   num_elements_in_tree =
+      t8_forest_get_tree_num_elements (forest, itree);
+    for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree;
+         ++ielement, ++current_index) {
+      /* This loop iterates through all the local elements of the forest in the current tree. */
+      element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      /* Save if element or midpoint is inside the shape. */
+      if (centroid) {
+        double              centroid[3] = { 0 };
+        t8_forest_element_centroid (forest, itree, element, centroid);
+        inside_shape[current_index] =
+          cad->t8_cad_is_point_inside_shape (centroid, 1e-3);
+      }
+      else {
+        inside_shape[current_index] =
+          cad->t8_cad_is_element_inside_shape (forest, itree, element);
+      }
+    }
+  }
+
   /* Write the forest into vtk files and move the new forest for the next iteration. */
+  t8_vtk_data_field_t vtk_data;
+  vtk_data.type = T8_VTK_SCALAR;
+  if (centroid) {
+    strcpy (vtk_data.description, "Element centroid inside cad shape");
+  }
+  else {
+    strcpy (vtk_data.description, "Element inside cad shape");
+  }
+  vtk_data.data = inside_shape;
   snprintf (forest_vtu, BUFSIZ,
             "shape_proximity_forest_level_%i_rlevel_%i", level, rlevel);
-  t8_forest_write_vtk (forest, forest_vtu);
+  t8_forest_write_vtk_ext (forest, forest_vtu, 1, 1, 1, 1, 0, 0, 0, 1,
+                           &vtk_data);
   t8_forest_unref (&forest);
+  T8_FREE (inside_shape);
 #else /* !T8_WITH_OCC */
   SC_ABORTF ("OpenCASCADE is not linked");
 #endif /* T8_WITH_OCC */
@@ -213,22 +258,26 @@ t8_shape_proximity_generate_geometries ()
   gp_Ax2              axis;
 
   /* Generate a pyramid */
+  t8_productionf ("Generating pyramid cad shape.\n");
   axis = gp_Ax2 (gp_Pnt (0.1, 0.1, 0.1), gp_Dir (0, 0, 1));
   BRepPrimAPI_MakeWedge mkwedge =
     BRepPrimAPI_MakeWedge (axis, 0.8, 0.8, 0.8, 0.4, 0.4, 0.4, 0.4);
   BRepTools::Write (mkwedge.Shape (), "pyramid.brep");
 
   /* Generate a cone */
+  t8_productionf ("Generating cone cad shape.\n");
   axis = gp_Ax2 (gp_Pnt (0.5, 0.5, 0.1), gp_Dir (0, 0, 1));
   BRepPrimAPI_MakeCone mkcone = BRepPrimAPI_MakeCone (axis, 0, 0.4, 0.8);
   BRepTools::Write (mkcone.Shape (), "cone.brep");
 
   /* Generate a sphere */
+  t8_productionf ("Generating sphere cad shape.\n");
   axis = gp_Ax2 (gp_Pnt (0.5, 0.5, 0.5), gp_Dir (0, 0, 1));
   BRepPrimAPI_MakeSphere mksphere = BRepPrimAPI_MakeSphere (axis, 0.4);
   BRepTools::Write (mksphere.Shape (), "sphere.brep");
 
   /* Generate a torus */
+  t8_productionf ("Generating torus cad shape.\n");
   axis = gp_Ax2 (gp_Pnt (0.5, 0.5, 0.5), gp_Dir (0, 0, 1));
   BRepPrimAPI_MakeTorus mktorus = BRepPrimAPI_MakeTorus (axis, 0.3, 0.1);
   BRepTools::Write (mksphere.Shape (), "torus.brep");
@@ -289,7 +338,7 @@ main (int argc, char **argv)
   sc_options_add_string (opt, 'f', "fileprefix", &fileprefix, NULL,
                          "Fileprefix of the brep file.");
   sc_options_add_int (opt, 'l', "level", &level, 3,
-                      "The uniform refinement level of the mesh. Default: 0");
+                      "The uniform refinement level of the mesh. Default: 3");
   sc_options_add_int (opt, 'r', "rlevel", &rlevel, 3,
                       "The refinement level of the mesh. Default: 3");
   sc_options_add_switch (opt, 'c', "centroid", &centroid,
