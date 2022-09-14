@@ -93,7 +93,7 @@ TEST_P (linear_id, uniform_forest) {
       /*Iterate over elements */
       for (t8_locidx_t id_iter = 0; id_iter < num_elements_in_tree; id_iter++) {
         /*Get the current element*/
-        element = t8_forest_get_element_in_tree(forest, tree_id, id_iter);
+        const t8_element_t *element = t8_forest_get_element_in_tree(forest, tree_id, id_iter);
         /*Get the ID of the element at current level */
         const t8_locidx_t id = ts->t8_element_get_linear_id (element, level);
         /* Check the computed id*/
