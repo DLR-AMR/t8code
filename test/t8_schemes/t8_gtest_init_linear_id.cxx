@@ -89,7 +89,7 @@ TEST_P (linear_id, uniform_forest) {
       /*Manually compute the id of the first element*/
       const t8_eclass_t tree_class = t8_forest_get_tree_class(forest, tree_id);
       const t8_eclass_scheme_c *tc_scheme = t8_forest_get_eclass_scheme(forest, tree_class);
-      shift = tc_scheme->t8_element_count_leafs_from_root(level) - num_elements_in_tree;
+      const t8_locidx_t shift = tc_scheme->t8_element_count_leafs_from_root(level) - num_elements_in_tree;
       /*Iterate over elements */
       for (t8_locidx_t id_iter = 0; id_iter < num_elements_in_tree; id_iter++) {
         /*Get the current element*/
