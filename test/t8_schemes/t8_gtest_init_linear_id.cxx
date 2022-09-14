@@ -69,7 +69,6 @@ t8_test_init_linear_id_refine_everything (t8_forest_t forest,
 TEST_P (linear_id, uniform_forest) {
   t8_forest_t forest, forest_adapt;
   t8_cmesh_t cmesh;
-  t8_locidx_t shift;
 #ifdef T8_ENABLE_LESS_TESTS
   const int maxlvl = 5;
 #else
