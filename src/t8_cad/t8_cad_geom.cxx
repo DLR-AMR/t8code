@@ -47,8 +47,9 @@ t8_cad_geom::t8_cad_geom (const char *fileprefix)
   t8_cad_geom::t8_cad_init_internal_data ();
 }
 
-t8_cad_geom::t8_cad_geom (const TopoDS_Shape occ_shape)
+t8_cad_geom::t8_cad_geom (const TopoDS_Shape shape)
 {
+  occ_shape = shape;
   t8_cad_geom::t8_cad_init_internal_data ();
 }
 

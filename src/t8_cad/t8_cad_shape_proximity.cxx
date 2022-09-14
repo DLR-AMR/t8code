@@ -183,7 +183,8 @@ t8_cad_shape_proximity::t8_cad_is_point_inside_shape (const double *coords, doub
   if (occ_shape_bounding_box.IsOut(pnt)) {
     return 0;
   }
-  BRepClass3d_SolidClassifier classifier = BRepClass3d_SolidClassifier(occ_shape);
+  BRepClass3d_SolidClassifier classifier = BRepClass3d_SolidClassifier();
+  classifier.Load(occ_shape);
   classifier.Perform(pnt, tol);
   return !classifier.State();
 }
