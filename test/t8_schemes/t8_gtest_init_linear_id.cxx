@@ -71,9 +71,6 @@ TEST_P (linear_id, uniform_forest) {
   t8_cmesh_t cmesh;
   t8_locidx_t num_elements_in_tree, id;
   t8_locidx_t shift;
-  t8_element_t *element;
-  t8_eclass_t   tree_class;
-  t8_eclass_scheme_c *tc_scheme;
 #ifdef T8_ENABLE_LESS_TESTS
   const int maxlvl = 5;
 #else
