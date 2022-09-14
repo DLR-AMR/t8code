@@ -33,6 +33,18 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_cad/t8_cad_shape_proximity.hxx>
 
+#if T8_WITH_OCC
+#include <TopoDS_Shape.hxx>
+#include <gp_Pnt.hxx>
+#include <gp_Dir.hxx>
+#include <gp_Ax2.hxx>
+#include <BRepPrimAPI_MakeWedge.hxx>
+#include <BRepPrimAPI_MakeCone.hxx>
+#include <BRepPrimAPI_MakeSphere.hxx>
+#include <BRepPrimAPI_MakeTorus.hxx>
+#include <BRepTools.hxx>
+#endif /* T8_WITH_OCC */
+
 /** 
  * The adaptation callback function. This function will be called once for each element
  * and the return value decides whether this element should be refined or not.
@@ -75,7 +87,7 @@ t8_shape_proximity_centroid_adapt_callback (t8_forest_t forest,
   return cad->t8_cad_is_point_inside_shape (centroid, 1e-3);
 #else /* !T8_WITH_OCC */
   SC_ABORTF ("OpenCASCADE is not linked");
-#endif /* !T8_WITH_OCC */
+#endif /* T8_WITH_OCC */
 }
 
 /** 
@@ -119,7 +131,7 @@ t8_shape_proximity_element_adapt_callback (t8_forest_t forest,
                                               elements[0]);
 #else /* !T8_WITH_OCC */
   SC_ABORTF ("OpenCASCADE is not linked");
-#endif /* !T8_WITH_OCC */
+#endif /* T8_WITH_OCC */
 }
 
 /**
@@ -131,13 +143,12 @@ t8_shape_proximity_element_adapt_callback (t8_forest_t forest,
  * \param [in] rlevel       Refinement level of the mesh.
  * \param [in] centroid     True:  The elements get refined if their central point is inside the geometry.
  *                          False: The elements get refined if the whole element is (partially) inside the geometry.
- * \return True if successful.
  */
-int
-t8_refine_forest_with_cad (const char *fileprefix,
-                           const double *corners,
-                           int level, int rlevel,
-                           int centroid, sc_MPI_Comm comm)
+void
+t8_shape_proximity_refine_forest_with_cad (const char *fileprefix,
+                                           const double *corners,
+                                           int level, int rlevel,
+                                           int centroid, sc_MPI_Comm comm)
 {
 #if T8_WITH_OCC
   t8_cmesh_t          cmesh;
@@ -191,8 +202,39 @@ t8_refine_forest_with_cad (const char *fileprefix,
   t8_forest_unref (&forest);
 #else /* !T8_WITH_OCC */
   SC_ABORTF ("OpenCASCADE is not linked");
-#endif /* !T8_WITH_OCC */
-  return 1;
+#endif /* T8_WITH_OCC */
+}
+
+void
+t8_shape_proximity_generate_geometries ()
+{
+#if T8_WITH_OCC
+  TopoDS_Shape shape;
+  gp_Ax2 axis;
+
+  /* Generate a pyramid */
+  axis = gp_Ax2(gp_Pnt(0.1, 0.1, 0.1), gp_Dir(0, 0, 1));
+  BRepPrimAPI_MakeWedge mkwedge = BRepPrimAPI_MakeWedge(axis, 0.8, 0.8, 0.8, 0.4, 0.4, 0.4, 0.4);
+  BRepTools::Write(mkwedge.Shape(), "pyramid.brep");
+
+  /* Generate a cone */
+  axis = gp_Ax2(gp_Pnt(0.5, 0.5, 0.1), gp_Dir(0, 0, 1));
+  BRepPrimAPI_MakeCone mkcone = BRepPrimAPI_MakeCone(axis, 0, 0.4, 0.8);
+  BRepTools::Write(mkcone.Shape(), "cone.brep");
+
+  /* Generate a sphere */
+  axis = gp_Ax2(gp_Pnt(0.5, 0.5, 0.5), gp_Dir(0, 0, 1));
+  BRepPrimAPI_MakeSphere mksphere = BRepPrimAPI_MakeSphere(axis, 0.4);
+  BRepTools::Write(mksphere.Shape(), "sphere.brep");
+
+  /* Generate a torus */
+  axis = gp_Ax2(gp_Pnt(0.5, 0.5, 0.5), gp_Dir(0, 0, 1));
+  BRepPrimAPI_MakeTorus mktorus = BRepPrimAPI_MakeTorus(axis, 0.3, 0.1);
+  BRepTools::Write(mksphere.Shape(), "torus.brep");
+
+#else /* !T8_WITH_OCC */
+  SC_ABORTF ("OpenCASCADE is not linked");
+#endif /* T8_WITH_OCC */
 }
 
 int
@@ -205,7 +247,7 @@ main (int argc, char **argv)
   int                 mpiret;
   sc_MPI_Comm         comm;
   const char         *fileprefix = NULL;
-  int                 level, rlevel, centroid;
+  int                 level, rlevel, centroid, generate;
   double              corners[6];
 
   /* brief help message */
@@ -252,6 +294,8 @@ main (int argc, char **argv)
   sc_options_add_switch (opt, 'c', "centroid", &centroid,
                          "Classify an element based on its central point.\n "
                          "Otherwise it is checked, if the whole element is outside of the cad geometry.");
+  sc_options_add_switch (opt, 'g', "generate", &generate,
+                         "Generate some examplatory geometry files. Overrides all other options.");
   sc_options_add_double (opt, 'x', "x-coord", corners + 0, 0,
                          "Min x coordinate of the axis-oriented mesh. Default: 0");
   sc_options_add_double (opt, 'y', "y-coord", corners + 1, 0,
@@ -271,14 +315,19 @@ main (int argc, char **argv)
     t8_global_productionf ("%s\n", help);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-  else if (parsed == 0 || fileprefix == NULL) {
+  else if (parsed == 0 || (fileprefix == NULL && !generate)) {
     /* wrong usage */
     t8_global_productionf ("\n\tERROR: Wrong usage.\n\n");
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-  else {
-    t8_refine_forest_with_cad (fileprefix, corners, level, rlevel, centroid,
-                               comm);
+  else if (generate)
+  {
+    t8_shape_proximity_generate_geometries();
+  }
+  else
+  {
+    t8_shape_proximity_refine_forest_with_cad (fileprefix, corners, level, 
+                                               rlevel, centroid, comm);
   }
   sc_options_destroy (opt);
   sc_finalize ();
