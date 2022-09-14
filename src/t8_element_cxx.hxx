@@ -159,7 +159,8 @@ public:
    * \param [in] elem The element.
    * \return          The number of corners of \a elem.
    */
-  virtual int         t8_element_num_corners (const t8_element_t *elem) = 0;
+  virtual int         t8_element_num_corners (const t8_element_t *elem) const
+    = 0;
 
   /** Compute the number of faces of a given element.
    * \param [in] elem The element.
@@ -505,6 +506,13 @@ public:
                                                        t8_element_t *neigh,
                                                        int face,
                                                        int *neigh_face) = 0;
+   /** Return the shape of an allocated element according its type.
+    *  For example, a child of an element can be an element of a different shape
+    *  and has to be handled differently - according to its shape.
+    *  \param [in] elem     The element to be considered
+    *  \return              The shape of the element as an eclass
+   */
+  virtual t8_element_shape_t t8_element_shape (const t8_element_t *elem) = 0;
 
   /** Initialize the entries of an allocated element according to a
    *  given linear id in a uniform refinement.
@@ -516,14 +524,6 @@ public:
   virtual void        t8_element_set_linear_id (t8_element_t *elem,
                                                 int level,
                                                 t8_linearidx_t id) = 0;
-
-   /** Return the shape of an allocated element according its type.
-    *  For example, a child of an element can be an element of a different shape
-    *  and has to be handled differently - according to its shape.
-    *  \param [in] elem     The element to be considered
-    *  \return              The shape of the element as an eclass
-   */
-  virtual t8_element_shape_t t8_element_shape (const t8_element_t *elem) = 0;
 
   /** Compute the linear id of a given element in a hypothetical uniform
    * refinement of a given level.
