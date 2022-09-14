@@ -71,7 +71,10 @@ TEST_P (linear_id, uniform_forest) {
   t8_cmesh_t cmesh;
   t8_locidx_t num_elements_in_tree, id;
   t8_locidx_t num_local_trees; 
+  t8_locidx_t shift;
   t8_element_t *element;
+  t8_eclass_t   tree_class;
+  t8_eclass_scheme_c *tc_scheme;
 #ifdef T8_ENABLE_LESS_TESTS
   const int maxlvl = 5;
 #else
@@ -89,13 +92,18 @@ TEST_P (linear_id, uniform_forest) {
     for (t8_locidx_t tree_id = 0; tree_id < num_local_trees; tree_id++) {
       /*Get the number of elements in the tree*/
       num_elements_in_tree =  t8_forest_get_tree_num_elements(forest, tree_id);
+      /*Manually compute the id of the first element*/
+      tree_class = t8_forest_get_tree_class(forest, tree_id);
+      tc_scheme = t8_forest_get_eclass_scheme(forest, tree_class);
+      shift = tc_scheme->t8_element_count_leafs_from_root(level) - num_elements_in_tree;
       /*Iterate over elements */
       for (t8_locidx_t id_iter = 0; id_iter < num_elements_in_tree; id_iter++) {
-        /*Get the j-th element and check the computed linear id */
+        /*Get the current element*/
         element = t8_forest_get_element_in_tree(forest, tree_id, id_iter);
         /*Get the ID of the element at current level */
         id = ts->t8_element_get_linear_id (element, level);
-        EXPECT_EQ (id, id_iter);
+        /* Check the computed id*/
+        EXPECT_EQ (id, id_iter + shift);
       }
     }
     /* Construct the uniformly refined forest of the next level */
