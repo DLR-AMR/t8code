@@ -209,28 +209,29 @@ void
 t8_shape_proximity_generate_geometries ()
 {
 #if T8_WITH_OCC
-  TopoDS_Shape shape;
-  gp_Ax2 axis;
+  TopoDS_Shape        shape;
+  gp_Ax2              axis;
 
   /* Generate a pyramid */
-  axis = gp_Ax2(gp_Pnt(0.1, 0.1, 0.1), gp_Dir(0, 0, 1));
-  BRepPrimAPI_MakeWedge mkwedge = BRepPrimAPI_MakeWedge(axis, 0.8, 0.8, 0.8, 0.4, 0.4, 0.4, 0.4);
-  BRepTools::Write(mkwedge.Shape(), "pyramid.brep");
+  axis = gp_Ax2 (gp_Pnt (0.1, 0.1, 0.1), gp_Dir (0, 0, 1));
+  BRepPrimAPI_MakeWedge mkwedge =
+    BRepPrimAPI_MakeWedge (axis, 0.8, 0.8, 0.8, 0.4, 0.4, 0.4, 0.4);
+  BRepTools::Write (mkwedge.Shape (), "pyramid.brep");
 
   /* Generate a cone */
-  axis = gp_Ax2(gp_Pnt(0.5, 0.5, 0.1), gp_Dir(0, 0, 1));
-  BRepPrimAPI_MakeCone mkcone = BRepPrimAPI_MakeCone(axis, 0, 0.4, 0.8);
-  BRepTools::Write(mkcone.Shape(), "cone.brep");
+  axis = gp_Ax2 (gp_Pnt (0.5, 0.5, 0.1), gp_Dir (0, 0, 1));
+  BRepPrimAPI_MakeCone mkcone = BRepPrimAPI_MakeCone (axis, 0, 0.4, 0.8);
+  BRepTools::Write (mkcone.Shape (), "cone.brep");
 
   /* Generate a sphere */
-  axis = gp_Ax2(gp_Pnt(0.5, 0.5, 0.5), gp_Dir(0, 0, 1));
-  BRepPrimAPI_MakeSphere mksphere = BRepPrimAPI_MakeSphere(axis, 0.4);
-  BRepTools::Write(mksphere.Shape(), "sphere.brep");
+  axis = gp_Ax2 (gp_Pnt (0.5, 0.5, 0.5), gp_Dir (0, 0, 1));
+  BRepPrimAPI_MakeSphere mksphere = BRepPrimAPI_MakeSphere (axis, 0.4);
+  BRepTools::Write (mksphere.Shape (), "sphere.brep");
 
   /* Generate a torus */
-  axis = gp_Ax2(gp_Pnt(0.5, 0.5, 0.5), gp_Dir(0, 0, 1));
-  BRepPrimAPI_MakeTorus mktorus = BRepPrimAPI_MakeTorus(axis, 0.3, 0.1);
-  BRepTools::Write(mksphere.Shape(), "torus.brep");
+  axis = gp_Ax2 (gp_Pnt (0.5, 0.5, 0.5), gp_Dir (0, 0, 1));
+  BRepPrimAPI_MakeTorus mktorus = BRepPrimAPI_MakeTorus (axis, 0.3, 0.1);
+  BRepTools::Write (mksphere.Shape (), "torus.brep");
 
 #else /* !T8_WITH_OCC */
   SC_ABORTF ("OpenCASCADE is not linked");
@@ -320,13 +321,11 @@ main (int argc, char **argv)
     t8_global_productionf ("\n\tERROR: Wrong usage.\n\n");
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-  else if (generate)
-  {
-    t8_shape_proximity_generate_geometries();
+  else if (generate) {
+    t8_shape_proximity_generate_geometries ();
   }
-  else
-  {
-    t8_shape_proximity_refine_forest_with_cad (fileprefix, corners, level, 
+  else {
+    t8_shape_proximity_refine_forest_with_cad (fileprefix, corners, level,
                                                rlevel, centroid, comm);
   }
   sc_options_destroy (opt);
