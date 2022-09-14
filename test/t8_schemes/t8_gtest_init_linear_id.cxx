@@ -87,7 +87,7 @@ TEST_P (linear_id, uniform_forest) {
   t8_scheme_cxx_ref (scheme);
   for (int level = 0; level < maxlvl; level++) {
     /*Get the number of local trees*/
-    num_local_trees = t8_forest_get_num_local_trees (forest);
+    const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
     /*Iterate over trees */
     for (t8_locidx_t tree_id = 0; tree_id < num_local_trees; tree_id++) {
       /*Get the number of elements in the tree*/
