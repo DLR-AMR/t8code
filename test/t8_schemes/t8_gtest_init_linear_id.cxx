@@ -39,7 +39,7 @@ protected:
     ts->t8_element_new (1, &test);
     ts->t8_element_set_linear_id (element, 0, 0);
   }
-  void TearDown ()override {
+  void TearDown () override {
     ts->t8_element_destroy (1, &element);
     ts->t8_element_destroy (1, &child);
     ts->t8_element_destroy (1, &test);
@@ -69,9 +69,9 @@ t8_test_init_linear_id_refine_everything (t8_forest_t forest,
 TEST_P (linear_id, uniform_forest) {
   t8_forest_t forest, forest_adapt;
   t8_cmesh_t cmesh;
-  t8_locidx_t first_id, last_id, j, id;
-  t8_locidx_t first_tid, last_tid, tree_id; t8_element_t *element;
-  int i;
+  t8_locidx_t num_elements_in_tree, id;
+  t8_locidx_t num_local_trees; 
+  t8_element_t *element;
 #ifdef T8_ENABLE_LESS_TESTS
   const int maxlvl = 5;
 #else
@@ -82,38 +82,37 @@ TEST_P (linear_id, uniform_forest) {
   t8_cmesh_ref (cmesh);
   forest = t8_forest_new_uniform (cmesh, scheme, 0, 0, comm);
   t8_scheme_cxx_ref (scheme);
-  for (i = 0; i < maxlvl; i++) {
-    /*Get the id of the first and last tree on this process */
-    first_tid = t8_forest_get_first_local_tree_id (forest);
-    last_tid = first_tid + t8_forest_get_num_local_trees (forest);
+  for (int level = 0; level < maxlvl; level++) {
+    /*Get the number of local trees*/
+    num_local_trees = t8_forest_get_num_local_trees (forest);
     /*Iterate over trees */
-    for (tree_id = first_id; tree_id < last_tid; tree_id++) {
-      /*Get id of the first and last element on this tree */
-      first_id = t8_forest_get_first_local_element_id (forest);
-      last_id = first_id + t8_forest_get_local_num_elements (forest);
+    for (t8_locidx_t tree_id = 0; tree_id < num_local_trees; tree_id++) {
+      /*Get the number of elements in the tree*/
+      num_elements_in_tree =  t8_forest_get_tree_num_elements(forest, tree_id);
       /*Iterate over elements */
-      for (j = first_id; j < last_id; j++) {
+      for (t8_locidx_t id_iter = 0; id_iter < num_elements_in_tree; id_iter++) {
         /*Get the j-th element and check the computed linear id */
-        element = t8_forest_get_element (forest, j, &tree_id);
+        element = t8_forest_get_element_in_tree(forest, tree_id, id_iter);
         /*Get the ID of the element at current level */
-        id = ts->t8_element_get_linear_id (element, i);
-        EXPECT_EQ (id, j);
+        id = ts->t8_element_get_linear_id (element, level);
+        EXPECT_EQ (id, id_iter);
       }
     }
     /* Construct the uniformly refined forest of the next level */
     t8_forest_init (&forest_adapt);
-    t8_forest_set_level (forest_adapt, i + 1);
+    t8_forest_set_level (forest_adapt, level + 1);
     t8_forest_set_adapt (forest_adapt, forest,
                           t8_test_init_linear_id_refine_everything,
-                          0); t8_forest_commit (forest_adapt);
+                          0); 
+    t8_forest_commit (forest_adapt);
     forest = forest_adapt;
   }
   t8_cmesh_unref (&cmesh); 
   t8_forest_unref (&forest_adapt);
 }
 
-/* Test, if the linear_id of descendants of an element is same as the id of element 
- * (on the level defined by the element */
+/* Test, if the linear_id of descendants of an element is the same as the id of element 
+ * (on the level defined by the element) */
 TEST_P(linear_id, id_at_other_level)
 {
 #ifdef T8_ENABLE_LESS_TESTS
