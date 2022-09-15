@@ -40,12 +40,13 @@ T8_EXTERN_C_BEGIN ();
  * We refine an element into a suitable transition cell if it has at most one hanging face */
 int
 t8_forest_subelement_adapt_remove_hanging_faces (t8_forest_t forest,
-                            t8_forest_t forest_from,
-                            t8_locidx_t ltree_id,
-                            t8_locidx_t lelement_id,
-                            t8_eclass_scheme_c *ts,
-                            const int is_family,
-                            int num_elements, t8_element_t *elements[])
+                                                 t8_forest_t forest_from,
+                                                 t8_locidx_t ltree_id,
+                                                 t8_locidx_t lelement_id,
+                                                 t8_eclass_scheme_c *ts,
+                                                 const int is_family,
+                                                 int num_elements,
+                                                 t8_element_t *elements[])
 {
   int                 iface, num_faces, neigh_face, transition_type = 0;
   t8_gloidx_t         neighbor_tree;
