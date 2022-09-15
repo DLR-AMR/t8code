@@ -64,7 +64,7 @@ struct t8_example_netcdf_adapt_data
   double              coarsen_if_outside_radius;        /* coarsen all element families outside of this radius from the sphere's midpoint */
 };
 
-/** This functions describe an adapt_function, an adapt_function describes tge refinement/coarsening rules for a forest
+/** This functions describe an adapt_function, an adapt_function describes the refinement/coarsening rules for a forest
 * \note If an element is inside a given radius from the midpoint of the hypercube, this element is refined. If a family of elements is outiside a given radius from the midpoint of the hypercube, it is coarsened. 
 * \note A detailed description of the adaption process is found in step 3 of the tutorial located in 't8code/example/tutorials'.
 */
@@ -149,6 +149,7 @@ t8_example_time_netcdf_writing_operation (t8_forest_t forest,
                                           sc_MPI_Comm comm,
                                           int netcdf_var_storage_mode,
                                           int netcdf_var_mpi_access,
+                                          int fill_mode,
                                           const char *title,
                                           int num_additional_vars,
                                           t8_netcdf_variable_t * ext_vars[])
@@ -165,7 +166,7 @@ t8_example_time_netcdf_writing_operation (t8_forest_t forest,
   t8_forest_write_netcdf_ext (forest, title,
                               "Performance Test: uniformly refined Forest", 3,
                               num_additional_vars, ext_vars, comm,
-                              netcdf_var_storage_mode, netcdf_var_mpi_access);
+                              netcdf_var_storage_mode, nullptr, netcdf_var_mpi_access, fill_mode, NC_NETCDF4, false);
 
   /* End timing */
   sc_MPI_Barrier (comm);
@@ -287,7 +288,7 @@ t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm,
     ("Variable-Storage: NC_CHUNKED, Variable-Access: NC_COLLECTIVE:\n");
 #endif
   t8_example_time_netcdf_writing_operation (forest, comm, NC_CHUNKED,
-                                            NC_COLLECTIVE,
+                                            NC_COLLECTIVE, NC_NOFILL,
                                             "T8_Example_NetCDF_Performance_Chunked_Collective",
                                             num_additional_vars, ext_vars);
 
@@ -297,7 +298,7 @@ t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm,
     ("Variable-Storage: NC_CHUNKED, Variable-Access: NC_INDEPENDENT:\n");
 #endif
   t8_example_time_netcdf_writing_operation (forest, comm, NC_CHUNKED,
-                                            NC_INDEPENDENT,
+                                            NC_INDEPENDENT, NC_NOFILL,
                                             "T8_Example_NetCDF_Performance_Chunked_Independent",
                                             num_additional_vars, ext_vars);
 
@@ -307,7 +308,7 @@ t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm,
     ("Variable-Storage: NC_CONTIGUOUS, Variable-Access: NC_COLLECTIVE:\n");
 #endif
   t8_example_time_netcdf_writing_operation (forest, comm, NC_CONTIGUOUS,
-                                            NC_COLLECTIVE,
+                                            NC_COLLECTIVE, NC_NOFILL,
                                             "T8_Example_NetCDF_Performance_Contiguous_Collective",
                                             num_additional_vars, ext_vars);
 
@@ -317,7 +318,7 @@ t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm,
     ("Variable-Storage: NC_CONTIGUOUS, Variable-Access: NC_INDEPENDENT:\n");
 #endif
   t8_example_time_netcdf_writing_operation (forest, comm, NC_CONTIGUOUS,
-                                            NC_INDEPENDENT,
+                                            NC_INDEPENDENT, NC_NOFILL,
                                             "T8_Example_NetCDF_Performance_Contiguous_Independent",
                                             num_additional_vars, ext_vars);
 
