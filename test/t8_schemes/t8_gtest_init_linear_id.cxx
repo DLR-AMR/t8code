@@ -124,30 +124,23 @@ TEST_P(linear_id, id_at_other_level)
   const int max_lvl = 4;
   const int add_lvl = 3;
 #endif
-  int level;
-  t8_linearidx_t  num_desc;   /* number of descendants from the root (number of elements to check) */
-  t8_linearidx_t  child_desc; /* Number of descendants of the current element */
-  t8_linearidx_t  id;         /* id of the element at level */
-  t8_linearidx_t  leaf_id;    /* current leaf_id, relative to the current element */
-  t8_linearidx_t  id_at_lvl;  /* The id of the element at level level+add_lvl */
-  t8_linearidx_t  test_id;    /* The computed id at level level of the descendant */
-  for (level = 0; level < max_lvl; level++) {
+  for (int level = 0; level < max_lvl; level++) {
     /* Compute the number of elements at the current level */
-    num_desc = ts->t8_element_count_leafs_from_root (level);
-    for (id = 0; id < num_desc; id++) {
+    const t8_linearidx_t num_desc = ts->t8_element_count_leafs_from_root (level);
+    for (t8_linearidx_t id = 0; id < num_desc; id++) {
       /* Set the child at the current level */
       ts->t8_element_set_linear_id(child, level, id); 
       /* Compute the id of child at a higher level. */
-      id_at_lvl = ts->t8_element_get_linear_id(child, level+add_lvl);
+      const t8_linearidx_t id_at_lvl = ts->t8_element_get_linear_id(child, level+add_lvl);
       /* Compute how many leafs/descendants child has at level level+add_lvl */
-      child_desc = ts->t8_element_count_leafs(child, level + add_lvl);
+      const t8_linearidx_t child_desc = ts->t8_element_count_leafs(child, level + add_lvl);
       /* Iterate over all descendants */
-      for(leaf_id = 0; leaf_id < child_desc; leaf_id++){
+      for(t8_linearidx_t leaf_id = 0; leaf_id < child_desc; leaf_id++){
         /* Set the descendant (test) at level of the descendants and shift the 
          * leaf_id into the region of the descendants of child*/
         ts->t8_element_set_linear_id(test, level + add_lvl, id_at_lvl + leaf_id);
         /* Compute the id of the descendant (test) at the current level */
-        test_id = ts->t8_element_get_linear_id(test, level);
+        const t8_linearidx_t test_id = ts->t8_element_get_linear_id(test, level);
         /* test_id and id should be equal. */
         EXPECT_EQ(id, test_id);
       }
