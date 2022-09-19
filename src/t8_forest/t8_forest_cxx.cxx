@@ -954,7 +954,7 @@ t8_triangle_point_inside (const double p_0[3], const double p_1[3],
   /* The solution may be admissible, but we have to
    * check whether the result of
    *  (p_1 - p_0)x + (p_2 - p_0)y ( = vx + wy)
-   * id actually p - p_0.
+   * is actually p - p_0.
    * Since the system of equations is overrepresented (3 equations, 2 variables)
    * this may actually break.
    * If it breaks, it will break in the z coordinate of the result.
