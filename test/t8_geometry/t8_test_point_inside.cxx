@@ -83,7 +83,7 @@ t8_test_point_inside (sc_MPI_Comm comm, t8_eclass_t eclass, int maxlevel)
     t8_cmesh_translate_coordinates (tree_vertices, tree_vertices,
                                     num_vertices, translate_all_points);
     /* Translate points 0 and 1 (if it exists) extra in order to move the 2D elements
-     * and 3D faces outside of axis perpendiculat planes. */
+     * and 3D faces outside of axis perpendicular planes. */
     double              translate_points_0_1[3] = { 0.1, -0.1, 0.3 };
     t8_cmesh_translate_coordinates (tree_vertices, tree_vertices, 1,
                                     translate_points_0_1);
