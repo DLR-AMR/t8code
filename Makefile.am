@@ -27,11 +27,12 @@ nodist_include_HEADERS =
 nobase_dist_include_HEADERS =
 noinst_HEADERS =
 noinst_PROGRAMS =
-sysconf_DATA =
+t8sysconf_DATA =
 dist_t8data_DATA =
 
 # use this if you want to link in T8 without autotools
-sysconf_DATA += Makefile.t8.mk
+t8sysconfdir = $(sysconfdir)/t8code
+t8sysconf_DATA += Makefile.t8.mk
 CLEANFILES += Makefile.t8.mk
 Makefile.t8.mk : Makefile.t8.pre
 	cat $< | \
@@ -46,7 +47,7 @@ dist_t8aclocal_DATA = config/t8_include.m4 \
                       config/t8_vtk.m4
 
 # install t8 data in the correct directory
-t8datadir = $(datadir)/data
+t8datadir = $(datadir)/t8code/data
 
 # setup test environment
 if T8_MPIRUN
@@ -85,6 +86,7 @@ include example/common/Makefile.am
 include example/advect/Makefile.am
 include example/netcdf/Makefile.am
 include example/tutorials/Makefile.am
+include example/conduit/Makefile.am
 #include example/cxx/Makefile.am
 #include example/ExtremeScaling/Makefile.am
 
@@ -132,7 +134,7 @@ gtest:
 	@echo -e "\e[32m============================================================================\e[0m"
 	@echo "# Total:"; grep -c "RUN" test/t8_gtest_main.log
 	@echo -e "\e[32m# PASS:"
-	@grep -c "OK" test/t8_gtest_main.log
+	@grep -o -i OK test/t8_gtest_main.log | wc -l
 	@echo -e "\e[32m============================================================================\e[0m"	
 	
 

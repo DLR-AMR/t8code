@@ -62,7 +62,7 @@ int                 t8_forest_write_vtk_via_API (t8_forest_t forest,
                                                  int write_element_id,
                                                  int curved_flag,
                                                  int num_data,
-                                                 t8_vtk_data_field_t * data);
+                                                 t8_vtk_data_field_t *data);
 
 /** Write the forest in .pvtu file format. Writes one .vtu file per
  * process and a meta .pvtu file.
@@ -90,7 +90,7 @@ int                 t8_forest_vtk_write_file (t8_forest_t forest,
                                               int write_element_id,
                                               int write_ghosts,
                                               int num_data,
-                                              t8_vtk_data_field_t * data);
+                                              t8_vtk_data_field_t *data);
 
 int
  
@@ -120,10 +120,9 @@ void
  
  
  
- t8_curved_element_get_reference_node_coords (const t8_element_t *
-                                              elem,
+ t8_curved_element_get_reference_node_coords (const t8_element_t *elem,
                                               t8_element_shape_t eclass,
-                                              t8_eclass_scheme_c * scheme,
+                                              t8_eclass_scheme_c *scheme,
                                               int vertex, double *coords);
 
 #if T8_WITH_VTK

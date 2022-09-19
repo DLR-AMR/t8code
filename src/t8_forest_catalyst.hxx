@@ -61,7 +61,7 @@ vtkSmartPointer < vtkUnstructuredGrid >
 t8_build_vtk_unstructured_grid (t8_forest_t forest, int write_treeid,
                                 int write_mpirank, int write_level,
                                 int write_element_id, int curved_flag,
-                                int num_data, t8_vtk_data_field_t * data);
+                                int num_data, t8_vtk_data_field_t *data);
 
 /** Writes the vtu file from vtkUnstrucuredGrid with specified fileprefix.
  * This function uses the vtk library. t8code must be configured with

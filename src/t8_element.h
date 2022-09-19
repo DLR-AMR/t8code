@@ -64,7 +64,7 @@ struct t8_scheme_cxx
  * \param [in,out] scheme       On input, this scheme must be alive, that is,
  *                              exist with positive reference count.
  */
-void                t8_scheme_cxx_ref (t8_scheme_cxx_t * scheme);
+void                t8_scheme_cxx_ref (t8_scheme_cxx_t *scheme);
 
 /** Decrease the reference counter of a scheme.
  * If the counter reaches zero, this scheme is destroyed.
@@ -75,10 +75,10 @@ void                t8_scheme_cxx_ref (t8_scheme_cxx_t * scheme);
  *                              Otherwise, the pointer is not changed and
  *                              the scheme is not modified in other ways.
  */
-void                t8_scheme_cxx_unref (t8_scheme_cxx_t ** pscheme);
+void                t8_scheme_cxx_unref (t8_scheme_cxx_t **pscheme);
 
 /* TODO: document, see t8_element_cxx.hxx */
-extern void         t8_scheme_cxx_destroy (t8_scheme_cxx_t * s);
+extern void         t8_scheme_cxx_destroy (t8_scheme_cxx_t *s);
 
 T8_EXTERN_C_END ();
 

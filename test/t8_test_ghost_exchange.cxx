@@ -44,8 +44,8 @@
 static int
 t8_test_exchange_adapt (t8_forest_t forest, t8_forest_t forest_from,
                         t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                        t8_eclass_scheme_c * ts,
-                        int num_elements, t8_element_t * elements[])
+                        t8_eclass_scheme_c *ts, const int is_family,
+                        const int num_elements, t8_element_t *elements[])
 {
   t8_linearidx_t      eid;
   int                 level, maxlevel;
@@ -220,7 +220,7 @@ test_cmesh_ghost_exchange_all ()
        cmesh_id++) {
     /* This if statement is necessary to make the test work by avoiding specific cmeshes which do not work yet for this test.
      * When the issues are gone, remove the if statement. */
-    if (cmesh_id != 6 && cmesh_id != 89 && (cmesh_id < 237 || cmesh_id > 256)) {
+    if (cmesh_id != 89 && (cmesh_id < 237 || cmesh_id > 256)) {
       t8_test_ghost_exchange (cmesh_id);
     }
   }

@@ -22,6 +22,7 @@
 
 #include <t8_cmesh.h>
 #include "t8_cmesh/t8_cmesh_trees.h"
+#include <t8_cmesh/t8_cmesh_examples.h>
 
 static void
 test_hypercube (sc_MPI_Comm mpic)

@@ -21,6 +21,7 @@
 */
 
 #include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_examples.h>
 
 /* Createsa coarse mesh with one tree for each eclass, where each
  * face is a boundary face. */
@@ -53,8 +54,8 @@ t8_test_face_is_boundary_one_tree (sc_MPI_Comm comm)
  * If we have more than 1 process, the first half of process (rank < size/2)
  * gets tree 0, the other half gets tree 1. */
 static void
-t8_test_compute_parallel_bounds (sc_MPI_Comm comm, t8_gloidx_t * first_tree,
-                                 t8_gloidx_t * last_tree)
+t8_test_compute_parallel_bounds (sc_MPI_Comm comm, t8_gloidx_t *first_tree,
+                                 t8_gloidx_t *last_tree)
 {
   int                 mpirank, mpisize, mpiret;
   int                 first_tree_shared = 0;
