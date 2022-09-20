@@ -133,14 +133,14 @@ main (int argc, char **argv)
   sc_options_add_string (opt, 'f', "vtk-file", &vtk_file, "",
                          "The prefix of the .vtk file.");
   sc_options_add_int (opt, 'c', "num_cell_values", &num_keys, 0,
-                      "Number of values per cell");
+                      "Number of values per cell the vtk-file stores per cell.");
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
 
   if (helpme) {
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-  else if (parsed < 0 || (strcmp (vtk_file, "") == 0)) {
+  else if (parsed < 0 || (strcmp (vtk_file, "") == 0) || num_keys < 0) {
     fprintf (stderr, "%s", help);
     return 1;
   }
