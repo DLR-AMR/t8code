@@ -65,20 +65,21 @@ t8_cmesh_construct (const char *prefix, sc_MPI_Comm comm,
   if (num_cell_values > 0) {
     vtk_data = T8_ALLOC (t8_vtk_data_field_t, num_cell_values);
     cell_values = T8_ALLOC (double *, num_cell_values);
-    for (int i = 0; i < num_cell_values; i++) {
-      cell_values[i] = T8_ALLOC (double, num_trees);
-      vtk_data[i].data = cell_values[i];
+    for (int ivalues = 0; ivalues < num_cell_values; ivalues++) {
+      cell_values[ivalues] = T8_ALLOC (double, num_trees);
+      vtk_data[ivalues].data = cell_values[ivalues];
       /*TODO: Arbitrary type of data */
-      vtk_data[i].type = T8_VTK_SCALAR;
-      snprintf (vtk_data[i].description, BUFSIZ, "cell_data_%i", i);
+      vtk_data[ivalues].type = T8_VTK_SCALAR;
+      snprintf (vtk_data[ivalues].description, BUFSIZ, "cell_data_%i",
+                ivalues);
     }
 
-    for (int i = 0; i < num_trees; i++) {
-      for (int j = 1; j <= num_cell_values; j++) {
+    for (int itree = 0; itree < num_trees; itree++) {
+      for (int ivalues = 1; ivalues <= num_cell_values; ivalues++) {
         tree_data =
-          (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), j,
-                                             i);
-        cell_values[j - 1][i] = tree_data[0];
+          (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
+                                             ivalues, itree);
+        cell_values[ivalues - 1][itree] = tree_data[0];
       }
     }
   }
@@ -91,7 +92,7 @@ t8_cmesh_construct (const char *prefix, sc_MPI_Comm comm,
 
   /* Free the cell-data */
   if (num_cell_values > 0) {
-    for (int i = num_cell_values - 1; i >= 0; i--) {
+    for (int ivalues = num_cell_values - 1; ivalues >= 0; ivalues--) {
       T8_FREE (cell_values[i]);
     }
     T8_FREE (cell_values);
