@@ -49,7 +49,6 @@ t8_cmesh_construct (const char *prefix, sc_MPI_Comm comm,
   t8_vtk_data_field_t *vtk_data;
   double            **cell_values;
   double             *tree_data;
-  //t8_cmesh_vtk_write_file (cmesh, "test_cmesh", 1.0);
   /* Initialize the forest */
   t8_forest_init (&forest);
   /* Initialize the cmesh of the forest */
