@@ -43,6 +43,9 @@ void
 t8_cmesh_construct (const char *prefix, sc_MPI_Comm comm,
                     const int num_cell_values)
 {
+  /* Read a .ply-data file and construct a cmesh representing the mesh. If 
+   * there is any cell-data, it will be read too. Triangle-strips and polygons will
+   * be broken down to multiple triangles. */
   t8_cmesh_t          cmesh = t8_cmesh_read_from_vtk_poly (prefix, comm);
   t8_forest_t         forest;
   int                 num_trees;
