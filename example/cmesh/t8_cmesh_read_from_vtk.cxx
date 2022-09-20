@@ -30,11 +30,18 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_forest.h>
 
+/**
+ * Construct a cmesh read from a VTK-file type supported by our vtk-reader.
+ * Given the number of cell-values in the file we read the data again from the forest
+ * and write it into the file forest.(p)vtu . 
+ * 
+ * \param[in] prefix  The prefix of the file to read the mesh from
+ * \param[in] comm    The communicator used in this example
+ * \param[in] num_cell_values   The number of cell-values in the mesh.
+ */
 void
 t8_cmesh_construct (const char *prefix, sc_MPI_Comm comm, int num_cell_values)
 {
-  //t8_cmesh_t          cmesh =
-  //  t8_cmesh_read_from_vtk_unstructured (prefix, comm);
   t8_cmesh_t          cmesh = t8_cmesh_read_from_vtk_poly (prefix, comm);
   t8_forest_t         forest;
   int                 num_trees;
@@ -51,6 +58,7 @@ t8_cmesh_construct (const char *prefix, sc_MPI_Comm comm, int num_cell_values)
   num_trees = t8_cmesh_get_num_trees (cmesh);
   t8_forest_commit (forest);
 
+  /* Read the cell-data if there is any */
   if (num_cell_values > 0) {
     vtk_data = T8_ALLOC (t8_vtk_data_field_t, num_cell_values);
     cell_values = T8_ALLOC (double *, num_cell_values);
@@ -74,10 +82,11 @@ t8_cmesh_construct (const char *prefix, sc_MPI_Comm comm, int num_cell_values)
   else {
     vtk_data = NULL;
   }
-
+  /* Write the forest */
   t8_forest_write_vtk_ext (forest, "forest", 1, 1, 1, 1, 0, 0, 0,
                            num_cell_values, vtk_data);
 
+  /* Free the cell-data */
   if (num_cell_values > 0) {
     for (int i = num_cell_values - 1; i >= 0; i--) {
       T8_FREE (cell_values[i]);
