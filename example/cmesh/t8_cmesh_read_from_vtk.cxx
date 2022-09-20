@@ -40,15 +40,14 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * \param[in] num_cell_values   The number of cell-values in the mesh.
  */
 void
-t8_cmesh_construct (const char *prefix, sc_MPI_Comm comm,
-                    const int num_cell_values)
+t8_forest_construct_from_vtk (const char *prefix, sc_MPI_Comm comm,
+                              const int num_cell_values)
 {
   /* Read a .ply-data file and construct a cmesh representing the mesh. If 
    * there is any cell-data, it will be read too. Triangle-strips and polygons will
    * be broken down to multiple triangles. */
   t8_cmesh_t          cmesh = t8_cmesh_read_from_vtk_poly (prefix, comm);
   t8_forest_t         forest;
-  int                 num_trees;
   t8_vtk_data_field_t *vtk_data;
   double            **cell_values;
   double             *tree_data;
@@ -58,7 +57,7 @@ t8_cmesh_construct (const char *prefix, sc_MPI_Comm comm,
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
   /* Set the scheme of the forest. In this case, the default schemes are used */
   t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
-  num_trees = t8_cmesh_get_num_trees (cmesh);
+  const t8_locidx_t   num_trees = t8_cmesh_get_num_trees (cmesh);
   t8_forest_commit (forest);
 
   /* Read the cell-data if there is any */
@@ -74,7 +73,7 @@ t8_cmesh_construct (const char *prefix, sc_MPI_Comm comm,
                 ivalues);
     }
 
-    for (int itree = 0; itree < num_trees; itree++) {
+    for (t8_locidx_t itree = 0; itree < num_trees; itree++) {
       for (int ivalues = 1; ivalues <= num_cell_values; ivalues++) {
         tree_data =
           (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
@@ -99,7 +98,6 @@ t8_cmesh_construct (const char *prefix, sc_MPI_Comm comm,
     T8_FREE (vtk_data);
   }
   t8_forest_unref (&forest);
-  return;
 }
 
 int
@@ -147,7 +145,7 @@ main (int argc, char **argv)
     return 1;
   }
   else {
-    t8_cmesh_construct (vtk_file, sc_MPI_COMM_WORLD, num_keys);
+    t8_forest_construct_from_vtk (vtk_file, sc_MPI_COMM_WORLD, num_keys);
 
   }
   sc_options_destroy (opt);
