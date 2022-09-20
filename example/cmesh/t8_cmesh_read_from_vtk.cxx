@@ -92,7 +92,7 @@ t8_forest_construct_from_vtk (const char *prefix, sc_MPI_Comm comm,
   /* Free the cell-data */
   if (num_cell_values > 0) {
     for (int ivalues = num_cell_values - 1; ivalues >= 0; ivalues--) {
-      T8_FREE (cell_values[i]);
+      T8_FREE (cell_values[ivalues]);
     }
     T8_FREE (cell_values);
     T8_FREE (vtk_data);
