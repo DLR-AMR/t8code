@@ -36,10 +36,11 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #endif
 
 T8_EXTERN_C_BEGIN ();
+
 /**
  * Construct a cmesh given a filename and a number of files (for parallel reader).
  * The \a filename should point to file containing an unstructured Grid.
- * CAREFULL: This is in production and this header will probably change! Update
+ * \warning: This is in production and this header will probably change! Update
  * as the function progresses
  * 
  * \param[in] filename      The name of the file 
@@ -54,7 +55,7 @@ t8_cmesh_t          t8_cmesh_read_from_vtk_unstructured (const char *filename,
 /**
  * Construct a cmesh given a filename and a number of files (for parallel reader).
  * The \a filename should point to file containing vtkPolyData.
- * CAREFULL: This is in production and this header will probably change! Update
+ * \warning: This is in production and this header will probably change! Update
  * as the function progresses
  * 
  * \param[in] filename      The name of the file 
