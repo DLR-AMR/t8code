@@ -40,7 +40,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * \param[in] num_cell_values   The number of cell-values in the mesh.
  */
 void
-t8_cmesh_construct (const char *prefix, sc_MPI_Comm comm, int num_cell_values)
+t8_cmesh_construct (const char *prefix, sc_MPI_Comm comm,
+                    const int num_cell_values)
 {
   t8_cmesh_t          cmesh = t8_cmesh_read_from_vtk_poly (prefix, comm);
   t8_forest_t         forest;
