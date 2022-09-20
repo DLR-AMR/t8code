@@ -56,7 +56,7 @@ t8_default_scheme_common_c::~t8_default_scheme_common_c ()
 
 /** Compute the number of corners of a given element. */
 int
-t8_default_scheme_common_c::t8_element_num_corners (const t8_element_t *elem)
+t8_default_scheme_common_c::t8_element_num_corners (const t8_element_t *elem) const
 {
   /* use the lookup table of the eclasses.
    * Pyramids should implement their own version of this function. */

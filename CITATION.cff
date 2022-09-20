@@ -1,9 +1,9 @@
 title: t8code
-version: 0.12.0
-date-released: "2022-08-23"
+version: 0.13.0
+date-released: "2022-08-30"
 repository-code: "https://github.com/dlr-amr/t8code"
-#url: "https://www.website-to-t8code"
-#doi: "10.1000/xyz123"
+url: "https://dlr-amr.github.io/t8code/"
+doi: "10.5281/zenodo.7034838"
 license: GPL-2.0
 type: software
 authors:
@@ -18,7 +18,6 @@ authors:
     email: burstedde@ins.uni-bonn.de
     affiliation: "University of Bonn"
     orcid: "https://orcid.org/0000-0001-9843-1041"
-  #Contributors
   - given-names: David
     family-names: Knapp
     email: David.Knapp@dlr.de
@@ -51,6 +50,7 @@ authors:
     family-names: Boeing
     email: Niklas.Boeing@dlr.de
     affiliation: "German Aerospace Center (DLR)"
+#Contributors
 cff-version: 1.2.0
 message: >-
   If you use this software, please cite it using the

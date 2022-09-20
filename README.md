@@ -1,3 +1,8 @@
+
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7034838.svg)](https://doi.org/10.5281/zenodo.7034838)
+
+
 [![t8code tests](https://github.com/DLR-AMR/t8code/actions/workflows/tests.yml/badge.svg)](https://github.com/DLR-AMR/t8code/actions/workflows/tests.yml)
 
 ### Introduction
@@ -131,7 +136,7 @@ For a debugging mode with static linkage (makes using gdb and valgrind more comf
   
   ### Citing t8code
   
-  If you use t8code in any of your publications, please cite the [github repository](https://github.com/DLR-AMR/t8code) and [1]. For publications specifically related to 
+  If you use t8code in any of your publications, please cite the [github repository](https://doi.org/10.5281/zenodo.7034838) and [1]. For publications specifically related to 
 - the TM index, please cite [2].
 - coarse mesh partitioning, please cite [3].
 - construction and handling of the ghost layer, please cite [4].

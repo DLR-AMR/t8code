@@ -194,7 +194,7 @@ public:
    * \param [in] elem The element.
    * \return          The number of corners of \a elem.
    */
-  virtual int         t8_element_num_corners (const t8_element_t *elem);
+  virtual int         t8_element_num_corners (const t8_element_t *elem) const;
 
   /** Return the face numbers of the faces sharing an element's corner.
    * \param [in] element  The element.
