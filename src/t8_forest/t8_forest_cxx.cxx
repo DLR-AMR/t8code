@@ -738,6 +738,53 @@ t8_forest_element_face_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
   }
 }
 
+#if T8_ENABLE_DEBUG
+/* Test whether four given points in 3D are coplanar up to a given tolerance.
+ */
+static int
+t8_four_points_coplanar (const double p_0[3], const double p_1[3],
+                         const double p_2[3], const double p_3[3],
+                         const double tolerance)
+{
+  /* Let p0, p1, p2, p3 be the four points.
+   * The four points are coplanar if the normal vectors to the triangles
+   * p0, p1, p2 and p0, p2, p3 are pointing in the same direction.
+   *
+   * We build the vectors A = p1 - p0, B = p2 - p0 and C = p3 - p0.
+   * The normal vectors to the triangles are n1 = A x B and n2 = A x C.
+   * These are pointing in the same direction if their cross product is 0.
+   * Hence we check if || n1 x n2 || < tolerance. */
+
+  /* A = p1 - p0 */
+  double              A[3];
+  t8_vec_axpyz (p_0, p_1, A, -1);
+
+  /* B = p2 - p0 */
+  double              B[3];
+  t8_vec_axpyz (p_0, p_2, B, -1);
+
+  /* C = p3 - p0 */
+  double              C[3];
+  t8_vec_axpyz (p_0, p_3, C, -1);
+
+  /* n1 = A x B */
+  double              A_cross_B[3];
+  t8_vec_cross (A, B, A_cross_B);
+
+  /* n2 = A x C */
+  double              A_cross_C[3];
+  t8_vec_cross (A, C, A_cross_C);
+
+  /* n1 x n2 */
+  double              n1_cross_n2[3];
+  t8_vec_cross (A_cross_B, A_cross_C, n1_cross_n2);
+
+  /* || n1 x n2 || */
+  const double        norm = t8_vec_norm (n1_cross_n2);
+  return norm < tolerance;
+}
+#endif
+
 void
 t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
                                const t8_element_t *element, int face,
@@ -859,6 +906,22 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
      * We approximate the normal of the quad face as the normal of
      * the triangle spanned by the corners 0, 1, and 2.
      */
+
+#if T8_ENABLE_DEBUG
+    /* Issue a warning if the points of the quad do not lie in the same plane */
+    {
+      double              p_0[3], p_1[3], p_2[3], p_3[3];
+      /* Compute the vertex coordinates of the quad */
+      t8_forest_element_coordinate (forest, ltreeid, element, 0, p_0);
+      t8_forest_element_coordinate (forest, ltreeid, element, 1, p_1);
+      t8_forest_element_coordinate (forest, ltreeid, element, 2, p_2);
+      t8_forest_element_coordinate (forest, ltreeid, element, 3, p_3);
+      if (!t8_four_points_coplanar (p_0, p_1, p_2, p_3, 1e-16)) {
+        t8_debugf
+          ("WARNING: Computing normal to a quad that is not coplanar. This computation will be inaccurate.\n");
+      }
+    }
+#endif
   case T8_ECLASS_TRIANGLE:
     {
       /* We construct the normal as the cross product of two spanning
@@ -1078,6 +1141,13 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
       t8_forest_element_coordinate (forest, ltreeid, element, 2, p_2);
       t8_forest_element_coordinate (forest, ltreeid, element, 3, p_3);
 
+#if T8_ENABLE_DEBUG
+      /* Issue a warning if the points of the quad do not lie in the same plane */
+      if (!t8_four_points_coplanar (p_0, p_1, p_2, p_3, tolerance)) {
+        t8_debugf
+          ("WARNING: Testing if point is inside a quad that is not coplanar. This test will be inaccurate.\n");
+      }
+#endif
       /* Check whether the point is inside the first triangle. */
       point_inside =
         t8_triangle_point_inside (p_0, p_1, p_2, point, tolerance);
