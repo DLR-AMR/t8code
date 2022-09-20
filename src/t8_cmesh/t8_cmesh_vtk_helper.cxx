@@ -133,25 +133,21 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > cells,
 {
   vtkCellIterator    *cell_it;
   vtkSmartPointer < vtkPoints > points;
-  t8_gloidx_t         cell_id;
   double             *vertices;
-  int                 cell_type;
-  int                 num_data_arrays, num_points;
   double            **tuples;
   size_t             *data_size;
   t8_gloidx_t         tree_id = 0;
   int                 max_dim = -1;
   t8_cmesh_t          cmesh;
-  int                 max_cell_points = -1;
 
-  max_cell_points = cells->GetMaxCellSize ();
+  const int           max_cell_points = cells->GetMaxCellSize ();
   T8_ASSERT (max_cell_points > 0);
   t8_cmesh_init (&cmesh);
   vertices = T8_ALLOC (double, 3 * max_cell_points);
   /*Get cell iterator */
   cell_it = cells->NewCellIterator ();
   /* get the number of data-arrays per cell */
-  num_data_arrays = cell_data->GetNumberOfArrays ();
+  const int           num_data_arrays = cell_data->GetNumberOfArrays ();
   T8_ASSERT (num_data_arrays >= 0);
   t8_debugf ("[D] read %i data-arrays\n", num_data_arrays);
   /*Prepare attributes */
@@ -159,12 +155,12 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > cells,
     int                 tuple_size;
     tuples = T8_ALLOC (double *, num_data_arrays);
     data_size = T8_ALLOC (size_t, num_data_arrays);
-    for (int i = 0; i < num_data_arrays; i++) {
-      vtkDataArray       *data = cell_data->GetArray (i);
+    for (int idata = 0; idata < num_data_arrays; idata++) {
+      vtkDataArray       *data = cell_data->GetArray (idata);
       tuple_size = data->GetNumberOfComponents ();
-      data_size[i] = sizeof (double) * tuple_size;
+      data_size[idata] = sizeof (double) * tuple_size;
       /*Allocate memory for a tuple in array i */
-      tuples[i] = T8_ALLOC (double, tuple_size);
+      tuples[idata] = T8_ALLOC (double, tuple_size);
     }
   }
 
@@ -173,27 +169,28 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > cells,
        cell_it->GoToNextCell ()) {
 
     /*Set the t8_eclass of the cell */
-    cell_type = t8_cmesh_vtk_type_to_t8_type[cell_it->GetCellType ()];
-    SC_CHECK_ABORTF (t8_eclass_is_valid ((t8_eclass_t) cell_type),
+    const t8_eclass_t   cell_type =
+      t8_cmesh_vtk_type_to_t8_type[cell_it->GetCellType ()];
+    SC_CHECK_ABORTF (t8_eclass_is_valid (cell_type),
                      "vtk-cell-type %i not supported by t8code\n", cell_type);
-    t8_cmesh_set_tree_class (cmesh, tree_id, (t8_eclass_t) cell_type);
+    t8_cmesh_set_tree_class (cmesh, tree_id, cell_type);
     /*Get the points of the cell */
-    num_points = cell_it->GetNumberOfPoints ();
+    const int           num_points = cell_it->GetNumberOfPoints ();
     T8_ASSERT (num_points > 0);
     points = cell_it->GetPoints ();
-    for (int i = 0; i < num_points; i++) {
-      points->GetPoint (i, &vertices[3 * i]);
+    for (int ipoint = 0; ipoint < num_points; ipoint++) {
+      points->GetPoint (ipoint, &vertices[3 * ipoint]);
     }
     /*The order of the vertices in vtk might give a tree with negative volume */
     if (t8_cmesh_tree_vertices_negative_volume
-        ((t8_eclass_t) cell_type, vertices, num_points)) {
-      t8_cmesh_correct_volume (vertices, (t8_eclass_t) cell_type);
+        (cell_type, vertices, num_points)) {
+      t8_cmesh_correct_volume (vertices, cell_type);
     }
     t8_cmesh_set_tree_vertices (cmesh, tree_id, vertices, num_points);
 
     /*Get and set the data of each cell */
     for (int dtype = 0; dtype < num_data_arrays; dtype++) {
-      cell_id = cell_it->GetCellId ();
+      const t8_gloidx_t   cell_id = cell_it->GetCellId ();
       vtkDataArray       *data = cell_data->GetArray (dtype);
       data->GetTuple (cell_id, tuples[dtype]);
       t8_cmesh_set_attribute (cmesh, cell_id, t8_get_package_id (), dtype + 1,
@@ -215,8 +212,8 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > cells,
   cell_it->Delete ();
   if (num_data_arrays > 0) {
     T8_FREE (data_size);
-    for (int i = num_data_arrays - 1; i >= 0; i--) {
-      T8_FREE (tuples[i]);
+    for (int idata = num_data_arrays - 1; idata >= 0; idata--) {
+      T8_FREE (tuples[idata]);
     }
     T8_FREE (tuples);
   }
