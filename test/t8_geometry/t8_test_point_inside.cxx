@@ -292,7 +292,7 @@ t8_test_point_inside_specific_triangle ()
 
 /* In this test we define a quad in the x-y plane
  * and a point that lies in a quad that is parallel
- * to this triangle on the z-axis.
+ * to the first quad on the z-axis.
  * The point must be correctly identified as lying outside
  * of the quad.
  */
