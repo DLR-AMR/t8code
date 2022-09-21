@@ -133,7 +133,7 @@ main (int argc, char **argv)
   sc_options_add_string (opt, 'f', "vtk-file", &vtk_file, "",
                          "The prefix of the .vtk file.");
   sc_options_add_int (opt, 'c', "num_cell_values", &num_keys, 0,
-                      "Number of values per cell the vtk-file stores per cell.");
+                      "Number of values per cell stored in the vtk-file.");
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
 
