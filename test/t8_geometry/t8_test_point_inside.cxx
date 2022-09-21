@@ -58,8 +58,9 @@ t8_test_point_inside (sc_MPI_Comm comm, t8_eclass_t eclass, int maxlevel)
   double              step;
   /* Numerical tolerance that we allow in the point inside check */
   const double        tolerance = 1e-12;
-  int                 num_points_to_generate = 100;     /* Desired number of test points per element. 
-                                                         * The actual number is computed to be close to this. */
+  int                 num_points_to_generate = 64;      /* Desired number of test points per element. 
+                                                         * The actual number is computed to be close to this and
+                                                         * will always be >= 2^num_corners (thus >= 128 for hex). */
 
   t8_log_indent_push ();
   for (int level = 0; level <= maxlevel; ++level) {
