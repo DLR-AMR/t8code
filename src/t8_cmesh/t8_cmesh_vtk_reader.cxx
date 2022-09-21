@@ -41,7 +41,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #endif
 T8_EXTERN_C_BEGIN ();
 
-/*Construct a cmesh given a filename*/
+/*Construct a cmesh given a filename a communicator*/
 t8_cmesh_t
 t8_cmesh_read_from_vtk_unstructured (const char *filename, sc_MPI_Comm comm)
 {
