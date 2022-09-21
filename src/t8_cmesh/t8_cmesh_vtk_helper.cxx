@@ -27,6 +27,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_cmesh_vtk_writer.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_cmesh/t8_cmesh_reader_helper.hxx>
+#include <t8_element_shape.h>
 
 #if T8_WITH_VTK
 #include <vtkCellIterator.h>
@@ -179,7 +180,8 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > cells,
     T8_ASSERT (num_points > 0);
     points = cell_it->GetPoints ();
     for (int ipoint = 0; ipoint < num_points; ipoint++) {
-      points->GetPoint (ipoint, &vertices[3 * ipoint]);
+      points->GetPoint (t8_element_shape_vtk_corner_number
+                        (cell_type, ipoint), &vertices[3 * ipoint]);
     }
     /*The order of the vertices in vtk might give a tree with negative volume */
     if (t8_cmesh_tree_vertices_negative_volume
