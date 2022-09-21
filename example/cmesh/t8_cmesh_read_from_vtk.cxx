@@ -37,11 +37,11 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * 
  * \param[in] prefix  The prefix of the file to read the mesh from
  * \param[in] comm    The communicator used in this example
- * \param[in] num_cell_values   The number of cell-values in the mesh.
+ * \param[in] values_per_cell   The number of values per cell in the mesh.
  */
 void
 t8_forest_construct_from_vtk (const char *prefix, sc_MPI_Comm comm,
-                              const int num_cell_values)
+                              const int values_per_cell)
 {
   /* Read a .ply-data file and construct a cmesh representing the mesh. If 
    * there is any cell-data, it will be read too. Triangle-strips and polygons will
@@ -61,10 +61,10 @@ t8_forest_construct_from_vtk (const char *prefix, sc_MPI_Comm comm,
   t8_forest_commit (forest);
 
   /* Read the cell-data if there is any */
-  if (num_cell_values > 0) {
-    vtk_data = T8_ALLOC (t8_vtk_data_field_t, num_cell_values);
-    cell_values = T8_ALLOC (double *, num_cell_values);
-    for (int ivalues = 0; ivalues < num_cell_values; ivalues++) {
+  if (values_per_cell > 0) {
+    vtk_data = T8_ALLOC (t8_vtk_data_field_t, values_per_cell);
+    cell_values = T8_ALLOC (double *, values_per_cell);
+    for (int ivalues = 0; ivalues < values_per_cell; ivalues++) {
       cell_values[ivalues] = T8_ALLOC (double, num_trees);
       vtk_data[ivalues].data = cell_values[ivalues];
       /*TODO: Arbitrary type of data */
@@ -74,7 +74,7 @@ t8_forest_construct_from_vtk (const char *prefix, sc_MPI_Comm comm,
     }
 
     for (t8_locidx_t itree = 0; itree < num_trees; itree++) {
-      for (int ivalues = 1; ivalues <= num_cell_values; ivalues++) {
+      for (int ivalues = 1; ivalues <= values_per_cell; ivalues++) {
         tree_data =
           (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
                                              ivalues, itree);
@@ -87,11 +87,11 @@ t8_forest_construct_from_vtk (const char *prefix, sc_MPI_Comm comm,
   }
   /* Write the forest */
   t8_forest_write_vtk_ext (forest, "forest", 1, 1, 1, 1, 0, 0, 0,
-                           num_cell_values, vtk_data);
+                           values_per_cell, vtk_data);
 
   /* Free the cell-data */
-  if (num_cell_values > 0) {
-    for (int ivalues = num_cell_values - 1; ivalues >= 0; ivalues--) {
+  if (values_per_cell > 0) {
+    for (int ivalues = values_per_cell - 1; ivalues >= 0; ivalues--) {
       T8_FREE (cell_values[ivalues]);
     }
     T8_FREE (cell_values);
