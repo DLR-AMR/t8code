@@ -60,10 +60,10 @@ t8_cmesh_read_from_vtk_unstructured (const char *filename, sc_MPI_Comm comm)
   return t8_vtk_iterate_cells (unstructuredGrid, cellData, comm);
 
 #else
-  /* Return empty cmesh if not linked against vtk */
+  /* Return NULL if not linked against vtk */
   t8_global_errorf
     ("WARNING: t8code is not linked against the vtk library. Without proper linking t8code cannot use the vtk-reader\n");
-  return t8_cmesh_new_empty (comm, 0, 0);
+  return NULL;
 #endif
 }
 
@@ -95,7 +95,7 @@ t8_cmesh_read_from_vtk_poly (const char *filename, sc_MPI_Comm comm)
 #else
   t8_global_errorf
     ("WARNING: t8code is not linked against the vtk library. Without proper linking t8code cannot use the vtk-reader\n");
-  return t8_cmesh_new_empty (comm, 0, 0);
+  return NULL;
 #endif
 }
 
