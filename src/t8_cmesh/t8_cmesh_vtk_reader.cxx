@@ -39,27 +39,28 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <vtkPolyData.h>
 #include <vtkTriangleFilter.h>
 #endif
+
 T8_EXTERN_C_BEGIN ();
 
-/*Construct a cmesh given a filename a communicator*/
+/* Construct a cmesh given a filename a communicator */
 t8_cmesh_t
 t8_cmesh_read_from_vtk_unstructured (const char *filename, sc_MPI_Comm comm)
 {
 #if T8_WITH_VTK
-  /*The Incoming data must be an unstructured Grid */
+  /* The Incoming data must be an unstructured Grid */
   vtkSmartPointer < vtkUnstructuredGrid > unstructuredGrid;
   vtkSmartPointer < vtkCellData > cellData;
-  /*Prepare grid for translation */
+  /* Prepare grid for translation */
   unstructuredGrid = t8_read_unstructured (filename);
 
   /* Get the Data of the all cells */
   cellData = unstructuredGrid->GetCellData ();
 
-  /*Actual translation */
+  /* Actual translation */
   return t8_vtk_iterate_cells (unstructuredGrid, cellData, comm);
 
 #else
-  /*Return empty cmesh if not linked against vtk */
+  /* Return empty cmesh if not linked against vtk */
   t8_global_errorf
     ("WARNING: t8code is not linked against the vtk library. Without proper linking t8code cannot use the vtk-reader\n");
   return t8_cmesh_new_empty (comm, 0, 0);
@@ -81,9 +82,9 @@ t8_cmesh_read_from_vtk_poly (const char *filename, sc_MPI_Comm comm)
    * triangles, vertices and lines. */
   poly_data = t8_read_poly (filename);
   tri_filter->SetInputData (poly_data);
-  /*PolyVertex to vertex */
+  /* PolyVertex to vertex */
   tri_filter->PassVertsOn ();
-  /*PolyLines to lines */
+  /* PolyLines to lines */
   tri_filter->PassLinesOn ();
   tri_filter->Update ();
   triangulated = tri_filter->GetOutput ();
