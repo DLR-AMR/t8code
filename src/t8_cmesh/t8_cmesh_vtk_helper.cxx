@@ -83,6 +83,10 @@ t8_read_unstructured (const char *filename)
   if (strcmp (extension, "vtu") == 0) {
     vtkSmartPointer < vtkXMLUnstructuredGridReader > reader =
       vtkSmartPointer < vtkXMLUnstructuredGridReader >::New ();
+    if (!reader->CanReadFile (filename)) {
+      t8_errorf ("Unable to read file.\n");
+      return NULL;
+    }
     reader->SetFileName (filename);
     reader->Update ();
     return reader->GetOutput ();
@@ -92,6 +96,9 @@ t8_read_unstructured (const char *filename)
       vtkSmartPointer < vtkUnstructuredGridReader >::New ();
     reader->SetFileName (filename);
     reader->Update ();
+    if (!reader->IsFileUnstructuredGrid ()) {
+      t8_errorf ("File-content is not an unstructured Grid. ");
+    }
     return reader->GetOutput ();
   }
   else {
@@ -120,6 +127,10 @@ vtkSmartPointer < vtkPolyData > t8_read_poly (const char *filename)
   else if (strcmp (extension, "vtp") == 0) {
     vtkNew < vtkXMLPolyDataReader > reader;
     reader->SetFileName (filename);
+    if (!reader->CanReadFile (filename)) {
+      t8_errorf ("Unable to read file.\n");
+      return NULL;
+    }
     reader->Update ();
     return reader->GetOutput ();
   }
@@ -139,6 +150,10 @@ vtkSmartPointer < vtkPolyData > t8_read_poly (const char *filename)
     vtkNew < vtkPolyDataReader > reader;
     reader->SetFileName (filename);
     reader->Update ();
+    if (!reader->IsFilePolyData ()) {
+      t8_errorf ("File-content is not polydata.");
+      return NULL;
+    }
     return reader->GetOutput ();
   }
   else if (strcmp (extension, "g") == 0) {
