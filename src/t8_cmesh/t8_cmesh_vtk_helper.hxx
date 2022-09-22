@@ -38,30 +38,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * if a the vtkCellType is not supported by t8code. It is the inverse to
  * t8_eclass_vtk_type.
  * see https://vtk.org/doc/nightly/html/vtkCellType_8h.html to check.*/
-const t8_eclass_t   t8_cmesh_vtk_type_to_t8_type[82] = {
-  T8_ECLASS_INVALID, T8_ECLASS_VERTEX, T8_ECLASS_INVALID, T8_ECLASS_LINE,
-  T8_ECLASS_INVALID, T8_ECLASS_TRIANGLE, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_QUAD, T8_ECLASS_QUAD, T8_ECLASS_TET,
-  T8_ECLASS_HEX, T8_ECLASS_HEX, T8_ECLASS_PRISM, T8_ECLASS_PYRAMID,
-  T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID
-};
+extern const t8_eclass_t t8_cmesh_vtk_type_to_t8_type[82];
 
 /** iterate over a vtkDataSet via a Celliterator and construct a tree
  * for every cell. All trees are then commited in a cmesh. For each cell
@@ -82,14 +59,16 @@ t8_cmesh_t          t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet >
 /**
  * Read the Poly-data of a file containing vtkPolyData.
  * \param [in]      filename            The file containing the Data
- * \returns         vtkSmartPointer<vtkPolyData>    A pointer to vtkPolyData
+ * \returns         vtkSmartPointer<vtkPolyData>    A pointer to vtkPolyData,
+ *                  or NULL if an error occurs during reading.
  */
 vtkSmartPointer < vtkPolyData > t8_read_poly (const char *filename);
 
 /**
  * Read the unstructured grid of a file containing vtkPolyData
- * \param [in]      filename            The file containing the Data
- * \returns         vtkSmartPointer<vtkUnstructuredGrid>    A pointer to vtkPolyData
+ * \param [in]      filename            The file containing the Data,
+ * \returns         vtkSmartPointer<vtkUnstructuredGrid>    A pointer to vtkPolyData,
+ *                  or NULL if an error occurs during reading.
  */
 vtkSmartPointer < vtkUnstructuredGrid >
 t8_read_unstructured (const char *filename);
