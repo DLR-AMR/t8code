@@ -79,7 +79,7 @@ t8_read_unstructured (const char *filename)
 vtkSmartPointer < vtkPolyData > t8_read_poly (const char *filename)
 {
   char                tmp[BUFSIZ], *extension;
-  /* Get the file-extension to decide which reader to use */
+  /* Get the file-extension to decide which reader to use. */
   strcpy (tmp, filename);
   extension = strtok (tmp, ".");
   extension = strtok (NULL, ".");

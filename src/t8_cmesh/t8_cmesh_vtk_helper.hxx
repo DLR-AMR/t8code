@@ -1,4 +1,4 @@
-/*
+/* 
 This file is part of t8code.
 t8code is a C library to manage a collection (a forest) of multiple
 connected adaptive space-trees of general element classes in parallel.
@@ -78,7 +78,7 @@ t8_cmesh_t          t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet >
                                           cell_data, sc_MPI_Comm comm);
 
 /**
- * Read the Poly-data of a file containing vtkPolyData
+ * Read the Poly-data of a file containing vtkPolyData.
  * \param [in]      filename            The file containing the Data
  * \returns         vtkSmartPointer<vtkPolyData>    A pointer to vtkPolyData
  */
