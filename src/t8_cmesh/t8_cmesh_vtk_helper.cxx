@@ -20,7 +20,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** This file provied helper functions for vtk-reader
+/** This file provides helper functions for the cmesh vtk reader
 */
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
