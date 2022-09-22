@@ -36,10 +36,9 @@ T8_EXTERN_C_BEGIN ();
 /* Given two faces and the classes of their volume trees,
  * compute the orientation of the faces to each other */
 int
-t8_msh_file_face_orientation (t8_tree_face_t * Face_a,
-                              t8_tree_face_t * Face_b,
-                              t8_eclass_t tree_class_a,
-                              t8_eclass_t tree_class_b)
+t8_tree_face_orientation (t8_tree_face_t * Face_a,
+                          t8_tree_face_t * Face_b,
+                          t8_eclass_t tree_class_a, t8_eclass_t tree_class_b)
 {
   long                vertex_zero;      /* The number of the first vertex of the smaller face */
   t8_tree_face_t     *smaller_Face, *bigger_Face;

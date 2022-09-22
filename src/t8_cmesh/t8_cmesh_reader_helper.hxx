@@ -50,10 +50,10 @@ typedef struct
  * \param tree_class_b      The eclass of the tree with \a Face_b
  * \return The orientation of the faces
  */
-int                 t8_msh_file_face_orientation (t8_tree_face_t * Face_a,
-                                                  t8_tree_face_t * Face_b,
-                                                  t8_eclass_t tree_class_a,
-                                                  t8_eclass_t tree_class_b);
+int                 t8_tree_face_orientation (t8_tree_face_t * Face_a,
+                                              t8_tree_face_t * Face_b,
+                                              t8_eclass_t tree_class_a,
+                                              t8_eclass_t tree_class_b);
 
 /**
  * This function corrects trees with negative volumes by reordering
