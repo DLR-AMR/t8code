@@ -27,7 +27,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #define T8_CMESH_VTK_HELPER
 
 #if T8_WITH_VTK
-#include<vtkSmartPointer.h>
+#include <vtkSmartPointer.h>
 #include <vtkPolyData.h>
 #include <vtkUnstructuredGrid.h>
 #include <vtkCellData.h>
