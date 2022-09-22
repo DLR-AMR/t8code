@@ -1018,6 +1018,9 @@ void                t8_forest_element_face_normal (t8_forest_t forest,
                                                    double normal[3]);
 
 /** Query whether a given point lies inside an element or not. For bilinearly interpolated elements.
+ * \note For 2D quadrilateral elements this function is only an approximation. It is correct
+ *  if the four vertices lie in the same plane, but it may produce only approximate results if 
+ *  the vertices do not lie in the same plane.
  * \param [in]      forest     The forest.
  * \param [in]      ltree_id   The forest local id of the tree in which the element is.
  * \param [in]      element    The element.
