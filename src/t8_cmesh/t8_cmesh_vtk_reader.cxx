@@ -1,4 +1,4 @@
-/*
+/* 
 This file is part of t8code.
 t8code is a C library to manage a collection (a forest) of multiple
 connected adaptive space-trees of general element classes in parallel.
@@ -52,9 +52,16 @@ t8_cmesh_read_from_vtk_unstructured (const char *filename, sc_MPI_Comm comm)
   vtkSmartPointer < vtkCellData > cellData;
   /* Prepare grid for translation */
   unstructuredGrid = t8_read_unstructured (filename);
+  if (unstructuredGrid == NULL) {
+    t8_errorf ("Could not read file.\n");
+    return NULL;
+  }
 
   /* Get the Data of the all cells */
   cellData = unstructuredGrid->GetCellData ();
+  if (cellData == NULL) {
+    t8_productionf ("No cellData found.\n");
+  }
 
   /* Actual translation */
   return t8_vtk_iterate_cells (unstructuredGrid, cellData, comm);
@@ -81,6 +88,10 @@ t8_cmesh_read_from_vtk_poly (const char *filename, sc_MPI_Comm comm)
    * We split all polygons (which are not supported by t8code) to
    * triangles, vertices and lines. */
   poly_data = t8_read_poly (filename);
+  if (poly_data == NULL) {
+    t8_errorf ("Could not read file.\n");
+    return NULL;
+  }
   tri_filter->SetInputData (poly_data);
   /* PolyVertex to vertex */
   tri_filter->PassVertsOn ();
@@ -88,8 +99,14 @@ t8_cmesh_read_from_vtk_poly (const char *filename, sc_MPI_Comm comm)
   tri_filter->PassLinesOn ();
   tri_filter->Update ();
   triangulated = tri_filter->GetOutput ();
+  if (triangulated == NULL) {
+    t8_errorf ("Unable to triangulate mesh.\n");
+  }
 
   cell_data = triangulated->GetCellData ();
+  if (cellData == NULL) {
+    t8_productionf ("No cellData found.\n");
+  }
 
   return t8_vtk_iterate_cells (triangulated, cell_data, comm);
 #else
