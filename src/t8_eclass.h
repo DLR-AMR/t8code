@@ -1,4 +1,4 @@
-/*
+/* 
   This file is part of t8code.
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
@@ -110,10 +110,13 @@ extern const int    t8_eclass_num_vertices[T8_ECLASS_COUNT];
 /** The number of edges of an element class. */
 extern const int    t8_eclass_num_edges[T8_ECLASS_COUNT];
 
-/** The vtk cell type for the eclass */
+/** The vtk cell type for the eclass 
+ *  It is the inverse of t8_cmesh_vtk_type_to_t8_type.
+*/
 extern const int    t8_eclass_vtk_type[T8_ECLASS_COUNT];
 
-/** Map the t8code corner number to the vtk corner number */
+/** Map the t8code corner number to the vtk corner number.
+ */
 extern const int
      t8_eclass_vtk_corner_number[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS];
 

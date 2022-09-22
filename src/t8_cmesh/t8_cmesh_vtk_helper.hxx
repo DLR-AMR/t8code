@@ -33,9 +33,11 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <vtkCellData.h>
 #include <vtkDataSet.h>
 
-/* look_up Table to transform vtkCellType into T8_ECLASS
-   T8_ECLASS_INVALID, if a the vtkCellType is not supported by t8code.
-   see https://vtk.org/doc/nightly/html/vtkCellType_8h.html to check.*/
+/** 
+ * look_up Table to transform vtkCellType into T8_ECLASS, T8_ECLASS_INVALID, 
+ * if a the vtkCellType is not supported by t8code. It is the inverse to
+ * t8_eclass_vtk_type.
+ * see https://vtk.org/doc/nightly/html/vtkCellType_8h.html to check.*/
 const t8_eclass_t   t8_cmesh_vtk_type_to_t8_type[82] = {
   T8_ECLASS_INVALID, T8_ECLASS_VERTEX, T8_ECLASS_INVALID, T8_ECLASS_LINE,
   T8_ECLASS_INVALID, T8_ECLASS_TRIANGLE, T8_ECLASS_INVALID,
