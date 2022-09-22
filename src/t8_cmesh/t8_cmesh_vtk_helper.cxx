@@ -70,6 +70,7 @@ t8_read_unstructured (const char *filename)
     return reader->GetOutput ();
   }
   else {
+    /* Return NULL if the reader is not used correctly. */
     t8_global_errorf ("Please use .vtk or .vtu file\n");
     return NULL;
   }
@@ -122,6 +123,7 @@ vtkSmartPointer < vtkPolyData > t8_read_poly (const char *filename)
     return reader->GetOutput ();
   }
   else {
+    /* Return NULL if the reader is not used correctly. */
     t8_global_errorf ("Please use .ply, .vtp, .obj, .stl, .vtk or .g file\n");
     return NULL;
   }
