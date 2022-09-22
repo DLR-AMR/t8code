@@ -1,4 +1,4 @@
-/*
+/* 
 This file is part of t8code.
 t8code is a C library to manage a collection (a forest) of multiple
 connected adaptive space-trees of general element classes in parallel.
@@ -36,13 +36,13 @@ T8_EXTERN_C_BEGIN ();
 /* Given two faces and the classes of their volume trees,
  * compute the orientation of the faces to each other */
 int
-t8_msh_file_face_orientation (t8_msh_file_face_t * Face_a,
-                              t8_msh_file_face_t * Face_b,
+t8_msh_file_face_orientation (t8_tree_face_t * Face_a,
+                              t8_tree_face_t * Face_b,
                               t8_eclass_t tree_class_a,
                               t8_eclass_t tree_class_b)
 {
   long                vertex_zero;      /* The number of the first vertex of the smaller face */
-  t8_msh_file_face_t *smaller_Face, *bigger_Face;
+  t8_tree_face_t     *smaller_Face, *bigger_Face;
   int                 compare, iv;
   t8_eclass_t         bigger_class;
   int                 orientation = -1;

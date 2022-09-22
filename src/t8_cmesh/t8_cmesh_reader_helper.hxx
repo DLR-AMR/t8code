@@ -1,4 +1,4 @@
-/*
+/* 
 This file is part of t8code.
 t8code is a C library to manage a collection (a forest) of multiple
 connected adaptive space-trees of general element classes in parallel.
@@ -38,7 +38,7 @@ typedef struct
   int8_t              face_number;      /* The number of that face whitin the tree */
   int                 num_vertices;     /* The number of vertices of this face. */
   long               *vertices; /* The indices of these vertices. */
-} t8_msh_file_face_t;
+} t8_tree_face_t;
 
 /**
  * Given two faces and the classes of their volume trees,
@@ -50,8 +50,8 @@ typedef struct
  * \param tree_class_b      The eclass of the tree with \a Face_b
  * \return The orientation of the faces
  */
-int                 t8_msh_file_face_orientation (t8_msh_file_face_t * Face_a,
-                                                  t8_msh_file_face_t * Face_b,
+int                 t8_msh_file_face_orientation (t8_tree_face_t * Face_a,
+                                                  t8_tree_face_t * Face_b,
                                                   t8_eclass_t tree_class_a,
                                                   t8_eclass_t tree_class_b);
 

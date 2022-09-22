@@ -104,7 +104,7 @@ t8_cmesh_read_from_vtk_poly (const char *filename, sc_MPI_Comm comm)
   }
 
   cell_data = triangulated->GetCellData ();
-  if (cellData == NULL) {
+  if (cell_data == NULL) {
     t8_productionf ("No cellData found.\n");
   }
 
