@@ -52,7 +52,8 @@ t8_cmesh_t          t8_cmesh_read_from_vtk_unstructured (const char *filename,
 
 /**
  * Construct a cmesh given a filename.
- * The \a filename should point to file containing vtkPolyData.
+ * The \a filename should point to file containing vtkPolyData. As polyData can consist of
+ * polyhedra, the vtkTriangleFilter is used to break the cells down into triangles.
  * \warning: This is in production and this header will probably change! Update
  * as the function progresses
  * 
