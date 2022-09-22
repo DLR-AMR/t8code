@@ -45,7 +45,7 @@ T8_EXTERN_C_BEGIN ();
  * 
  * \param[in] filename      The name of the file 
  * \param[in] comm          The communicator used 
- * \return t8_cmesh_t       The cmesh described by the files or NULL, if t8code is not linked against vtk
+ * \return t8_cmesh_t       The cmesh described by the files or NULL if the cmesh could not be read.
  */
 t8_cmesh_t          t8_cmesh_read_from_vtk_unstructured (const char *filename,
                                                          sc_MPI_Comm comm);
