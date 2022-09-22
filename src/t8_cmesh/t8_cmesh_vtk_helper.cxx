@@ -1,4 +1,4 @@
-/*
+/* 
 This file is part of t8code.
 t8code is a C library to manage a collection (a forest) of multiple
 connected adaptive space-trees of general element classes in parallel.
@@ -49,12 +49,12 @@ vtkSmartPointer < vtkUnstructuredGrid >
 t8_read_unstructured (const char *filename)
 {
   char                tmp[BUFSIZ], *extension;
-  /*Get the file-extension to decide which reader to use */
+  /* Get the file-extension to decide which reader to use */
   strcpy (tmp, filename);
   extension = strtok (tmp, ".");
   extension = strtok (NULL, ".");
 
-  /*Read the file */
+  /* Read the file */
   if (strcmp (extension, "vtu") == 0) {
     vtkSmartPointer < vtkXMLUnstructuredGridReader > reader =
       vtkSmartPointer < vtkXMLUnstructuredGridReader >::New ();
@@ -70,7 +70,7 @@ t8_read_unstructured (const char *filename)
     return reader->GetOutput ();
   }
   else {
-    /* Return NULL if the reader is not used correctly. */
+    /* Return NULL if the reader is not used correctly */
     t8_global_errorf ("Please use .vtk or .vtu file\n");
     return NULL;
   }
@@ -79,13 +79,13 @@ t8_read_unstructured (const char *filename)
 vtkSmartPointer < vtkPolyData > t8_read_poly (const char *filename)
 {
   char                tmp[BUFSIZ], *extension;
-  /*Get the file-extension to decide which reader to use */
+  /* Get the file-extension to decide which reader to use */
   strcpy (tmp, filename);
   extension = strtok (tmp, ".");
   extension = strtok (NULL, ".");
   T8_ASSERT (strcmp (extension, ""));
   t8_debugf ("[D] %s\n", extension);
-  /*Read the file depending on the extension */
+  /* Read the file depending on the extension */
   if (strcmp (extension, "ply") == 0) {
     vtkNew < vtkPLYReader > reader;
     reader->SetFileName (filename);
@@ -147,13 +147,13 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > cells,
   T8_ASSERT (max_cell_points > 0);
   t8_cmesh_init (&cmesh);
   vertices = T8_ALLOC (double, 3 * max_cell_points);
-  /*Get cell iterator */
+  /* Get cell iterator */
   cell_it = cells->NewCellIterator ();
   /* get the number of data-arrays per cell */
   const int           num_data_arrays = cell_data->GetNumberOfArrays ();
   T8_ASSERT (num_data_arrays >= 0);
   t8_debugf ("[D] read %i data-arrays\n", num_data_arrays);
-  /*Prepare attributes */
+  /* Prepare attributes */
   if (num_data_arrays > 0) {
     int                 tuple_size;
     tuples = T8_ALLOC (double *, num_data_arrays);
@@ -162,22 +162,22 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > cells,
       vtkDataArray       *data = cell_data->GetArray (idata);
       tuple_size = data->GetNumberOfComponents ();
       data_size[idata] = sizeof (double) * tuple_size;
-      /*Allocate memory for a tuple in array i */
+      /* Allocate memory for a tuple in array i */
       tuples[idata] = T8_ALLOC (double, tuple_size);
     }
   }
 
-  /*Iterate over all cells */
+  /* Iterate over all cells */
   for (cell_it->InitTraversal (); !cell_it->IsDoneWithTraversal ();
        cell_it->GoToNextCell ()) {
 
-    /*Set the t8_eclass of the cell */
+    /* Set the t8_eclass of the cell */
     const t8_eclass_t   cell_type =
       t8_cmesh_vtk_type_to_t8_type[cell_it->GetCellType ()];
     SC_CHECK_ABORTF (t8_eclass_is_valid (cell_type),
                      "vtk-cell-type %i not supported by t8code\n", cell_type);
     t8_cmesh_set_tree_class (cmesh, tree_id, cell_type);
-    /*Get the points of the cell */
+    /* Get the points of the cell */
     const int           num_points = cell_it->GetNumberOfPoints ();
     T8_ASSERT (num_points > 0);
     points = cell_it->GetPoints ();
@@ -185,14 +185,14 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > cells,
       points->GetPoint (t8_element_shape_vtk_corner_number
                         (cell_type, ipoint), &vertices[3 * ipoint]);
     }
-    /*The order of the vertices in vtk might give a tree with negative volume */
+    /* The order of the vertices in vtk might give a tree with negative volume */
     if (t8_cmesh_tree_vertices_negative_volume
         (cell_type, vertices, num_points)) {
       t8_cmesh_correct_volume (vertices, cell_type);
     }
     t8_cmesh_set_tree_vertices (cmesh, tree_id, vertices, num_points);
 
-    /*Get and set the data of each cell */
+    /* Get and set the data of each cell */
     for (int dtype = 0; dtype < num_data_arrays; dtype++) {
       const t8_gloidx_t   cell_id = cell_it->GetCellId ();
       vtkDataArray       *data = cell_data->GetArray (dtype);
@@ -200,19 +200,19 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > cells,
       t8_cmesh_set_attribute (cmesh, cell_id, t8_get_package_id (), dtype + 1,
                               tuples[dtype], data_size[dtype], 0);
     }
-    /*Check geometry-dimension */
+    /* Check geometry-dimension */
     if (max_dim < cell_it->GetCellDimension ()) {
       max_dim = cell_it->GetCellDimension ();
     }
     tree_id++;
   }
   t8_debugf ("[D] read %li trees\n", tree_id++);
-  /*Set the geometry */
+  /* Set the geometry */
   t8_geometry_c      *linear_geom = t8_geometry_linear_new (max_dim);
   t8_cmesh_register_geometry (cmesh, linear_geom);
   t8_cmesh_commit (cmesh, comm);
 
-  /*Clean-up */
+  /* Clean-up */
   cell_it->Delete ();
   if (num_data_arrays > 0) {
     T8_FREE (data_size);
