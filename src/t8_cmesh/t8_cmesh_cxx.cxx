@@ -322,8 +322,7 @@ t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh, int level,
                                 t8_gloidx_t * child_in_tree_end,
                                 int8_t * first_tree_shared, sc_MPI_Comm comm)
 {
-  t8_gloidx_t         cmesh_first_tree, local_num_children = 0,
-    elem_in_tree, first_child, last_child, *elem_index_pointer, igtree;
+  t8_gloidx_t         local_num_children = 0, first_child, last_child, *elem_index_pointer, igtree;
   int                 send_first, send_last, send_first_nonempty,
     num_procs_we_send_to = 0;
   t8_cmesh_partition_query_t data;
@@ -421,7 +420,7 @@ t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh, int level,
       /* TODO: We can optimize by buffering the elem_in_tree value. Thus, if 
          the computation is expensive (may be for non-morton-type schemes),
          we do it only once. */
-      elem_in_tree = tree_scheme->t8_element_count_leafs_from_root (level);
+      const t8_gloidx_t elem_in_tree = tree_scheme->t8_element_count_leafs_from_root (level);
       /* Check if the first element is on the current tree */
       if (current_tree_element_offset <= first_child &&
           first_child < current_tree_element_offset + elem_in_tree) {
@@ -516,7 +515,7 @@ t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh, int level,
     *elem_index_pointer =
       t8_shmem_array_get_gloidx (offset_array, cmesh->mpirank);
 
-    cmesh_first_tree = t8_cmesh_get_first_treeid (cmesh);
+    const t8_gloidx_t cmesh_first_tree = t8_cmesh_get_first_treeid (cmesh);
     tree_id = t8_cmesh_get_local_id (cmesh, cmesh_first_tree);
     ieclass = t8_cmesh_get_tree_class (cmesh, tree_id);
 
