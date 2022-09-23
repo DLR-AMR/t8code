@@ -701,6 +701,31 @@ void                t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
                                              t8_gloidx_t *child_in_tree_end,
                                              int8_t *first_tree_shared);
 
+/**
+ * Calculate the section of a uniform hybrid forest for the current rank
+ * 
+ * \param [in] cmesh        The cmesh to be considered.
+ * \param [in] level        The uniform refinement level to be created.
+ * \param [in] scheme       The element scheme for which to compute the bounds.
+ * \param [out]   first_local_tree  The first tree that contains elements belonging to the calling processor.
+ * \param [out]   child_in_tree_begin The global index of the first element belonging to the calling processor. Not computed if NULL.
+ * \param [out]   last_local_tree  The last tree that contains elements belonging to the calling processor.
+ * \param [out]   child_in_tree_end The global index of the first element that does not belonging to
+ *                                  the calling processor anymore. Not computed if NULL.
+ * \param [out]   first_tree_shared If not NULL, 1 or 0 is stored here depending on whether \a first_local_tree is the
+ *                                 same as \a last_local_tree on the next process.
+ * \param [in] comm         The communicator 
+ */
+*/
+void                t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh, 
+                                int level,
+                                t8_scheme_cxx_t * scheme,
+                                t8_gloidx_t * first_local_tree,
+                                t8_gloidx_t * child_in_tree_begin,
+                                t8_gloidx_t * last_local_tree,
+                                t8_gloidx_t * child_in_tree_end,
+                                int8_t * first_tree_shared, sc_MPI_Comm comm)
+
 /** Increase the reference counter of a cmesh.
  * \param [in,out] cmesh        On input, this cmesh must exist with positive
  *                              reference count.  It may be in any state.
