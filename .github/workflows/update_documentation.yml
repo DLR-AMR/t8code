@@ -1,0 +1,90 @@
+name: "Upload documentation to website"
+
+description: "This action updates the documentation on the t8code website"
+
+on:
+  push:
+    branches:
+      - main
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    
+    timeout-minutes: 90
+    steps:
+#
+# Setup and bootstrap
+#
+    - uses: actions/checkout@v1
+    - name: Install mpich
+      run: sudo apt-get update && sudo apt-get install libmpich-dev
+    - name: Install zlib
+      run: sudo apt-get install libz-dev
+    - name: init submodules
+      run: git submodule init
+    - name: update submodules
+      run: git submodule update
+    - name: bootstrap
+      run: ./bootstrap
+
+    # build config vars
+    - name: build CFLAGS and CXXFLAGS variables
+      run: echo CFLAGS_var="-Wall -pedantic -O3" >> $GITHUB_ENV
+        && echo CXXFLAGS_var="-Wall -pedantic -O3" >> $GITHUB_ENV
+    # Note: We want to use '-Werror', but if we already provide it at the configure step
+    #       we get errors in configure that we cannot remove (for example the autotools way
+    #       of checking for libm results in a compiler warning).
+    #       Thus, we add '-Werror' later at the make step.
+    - name: build config variables
+      run: export CONFIG_OPTIONS="--without-blas ${LESS_TEST_OPTION}"
+           && export CONFIG_SERIAL_DEBUG="$CONFIG_OPTIONS --enable-debug --with-sc=$SC_SERIAL_DEBUG/install --with-p4est=$P4EST_SERIAL_DEBUG/install"
+           && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
+           && echo CONFIG_SERIAL_DEBUG="$CONFIG_SERIAL_DEBUG" >> $GITHUB_ENV
+    - name: Check vars
+      run: echo "[$CONFIG_SERIAL_DEBUG]"
+# configure and generate doxygen
+    - name: check debugging mode
+      run: echo "Checking debug mode"
+    - name: configure
+      run: mkdir build_debug && cd build_debug && ../configure $CONFIG_DEBUG CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v1
+      with:
+        name: config_debug_MPI.log
+        path: build_debug/config.log
+    - name: make
+      run: cd build_debug && make -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
+    - name: make check
+
+      run: cd build_debug && make doxygen
+
+# upload documentation
+    - name: Checkout t8code-website repo
+      uses: actions/checkout@v2
+      with:
+        repository: DLR-AMR/t8code-website
+        path: t8code-website
+    - name: Add documentation to website
+      run: |
+        cd t8code-website/content
+        rm -rf doc/dev/*
+        mkdir -p doc/dev
+        cp -r ../../html-documentation/* doc/dev/
+    - name: Commit files
+      run: |
+        git config --local user.email "t8ddy.bot@gmail.com"
+        git config --local user.name "t8ddy"
+        git commit -m "Add newest documentation" -a
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.T8DDY_TOKEN }}
+        force_with_lease: true
+        repository: DLR-AMR/t8code-website
+        branch: test_documentation_CI
