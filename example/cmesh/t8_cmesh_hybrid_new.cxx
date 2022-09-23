@@ -307,7 +307,7 @@ main (int argc, char **argv)
                      "\n\t\t5 - a single element of class -e");
   sc_options_add_int(opt, 'n', "num_elements", &elements, 3, "The number of elements to use"
                      " if a m0 or m4 is build. Has to be larger than 2.");
-  sc_options_add_string(opt, 'p', "mshfile", &file, "NULL", "Prefix of the msh-file.");
+  sc_options_add_string(opt, 'g', "mshfile", &file, "NULL", "Prefix of the msh-file.");
 
   parsed = sc_options_parse(t8_get_package_id(), SC_LP_DEFAULT, opt, argc, argv);
   if (helpme) {
