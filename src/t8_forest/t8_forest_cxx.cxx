@@ -1259,6 +1259,45 @@ t8_forest_compute_desc (t8_forest_t forest)
   }
 }
 
+/**
+ * Check if any tree in a forest refines irregularly.
+ * An irregular refining tree is a tree with an element that does not
+ * refine into 2^dim children. For example the default implementation
+ * of pyramids. 
+ * \note This function is MPI collective
+ * 
+ * \param[in] forest    The forest to check
+ * \return          non-zero if any tree refines irregular
+ */
+static int
+t8_forest_refines_irregular (t8_forest_t forest)
+{
+  int                 irregular = 0;
+  int                 irregular_all_procs = 0;  /* Result over all procs */
+  int                 int_eclass;
+  int                 mpiret;
+  t8_eclass_scheme_c *tscheme;
+  /* Iterate over all eclasses */
+  for (int_eclass = (int) T8_ECLASS_ZERO; int_eclass < (int) T8_ECLASS_COUNT;
+       int_eclass++) {
+    /* If the forest has trees of the current eclass, check if elements of this
+     * eclass refine irregular. */
+    if (forest->cmesh->num_local_trees_per_eclass[int_eclass] > 0) {
+      tscheme =
+        t8_forest_get_eclass_scheme_before_commit (forest,
+                                                   (t8_eclass_t) int_eclass);
+      irregular = irregular || tscheme->t8_element_refines_irregular();
+    }
+  }
+  /* Combine the process-local results via a logic or and distribute the
+   * result over all procs (in the communicator).*/
+  mpiret = sc_MPI_Allreduce (&irregular, &irregular_all_procs, 1, sc_MPI_INT,
+                             sc_MPI_LOR, forest->mpicomm);
+  SC_CHECK_MPI (mpiret);
+
+  return irregular_all_procs;
+}
+
 /* Create the elements on this process given a uniform partition
  * of the coarse mesh. */
 void
@@ -1282,11 +1321,20 @@ t8_forest_populate (t8_forest_t forest)
   SC_CHECK_ABORT (forest->set_level <= forest->maxlevel,
                   "Given refinement level exceeds the maximum.\n");
   /* TODO: create trees and quadrants according to uniform refinement */
-  t8_cmesh_uniform_bounds_hybrid (forest->cmesh, forest->set_level,
+  if(t8_forest_refines_irregular(forest)){
+    t8_cmesh_uniform_bounds_hybrid (forest->cmesh, forest->set_level,
                            forest->scheme_cxx,
                            &forest->first_local_tree,
                            &child_in_tree_begin, &forest->last_local_tree,
                            &child_in_tree_end, NULL, forest->mpicomm);
+  }
+  else{
+    t8_cmesh_uniform_bounds (forest->cmesh, forest->set_level,
+                           forest->scheme_cxx,
+                           &forest->first_local_tree,
+                           &child_in_tree_begin, &forest->last_local_tree,
+                           &child_in_tree_end, NULL);
+  }
 
   /* True if the forest has no elements */
   is_empty = forest->first_local_tree > forest->last_local_tree

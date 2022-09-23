@@ -378,44 +378,7 @@ t8_forest_refine_everything (t8_forest_t forest, t8_forest_t forest_from,
   return 1;
 }
 
-/**
- * Check if any tree in a forest refines irregularly.
- * An irregular refining tree is a tree with an element that does not
- * refine into 2^dim children. For example the default implementation
- * of pyramids. 
- * \note This function is MPI collective
- * 
- * \param[in] forest    The forest to check
- * \return          non-zero if any tree refines irregular
- */
-static int
-t8_forest_refines_irregular (t8_forest_t forest)
-{
-  int                 irregular = 0;
-  int                 irregular_all_procs = 0;  /* Result over all procs */
-  int                 int_eclass;
-  int                 mpiret;
-  t8_eclass_scheme_c *tscheme;
-  /* Iterate over all eclasses */
-  for (int_eclass = (int) T8_ECLASS_ZERO; int_eclass < (int) T8_ECLASS_COUNT;
-       int_eclass++) {
-    /* If the forest has trees of the current eclass, check if elements of this
-     * eclass refine irregular. */
-    if (forest->cmesh->num_local_trees_per_eclass[int_eclass] > 0) {
-      tscheme =
-        t8_forest_get_eclass_scheme_before_commit (forest,
-                                                   (t8_eclass_t) int_eclass);
-      irregular = irregular || t8_element_refines_irregular (tscheme);
-    }
-  }
-  /* Combine the process-local results via a logic or and distribute the
-   * result over all procs (in the communicator).*/
-  mpiret = sc_MPI_Allreduce (&irregular, &irregular_all_procs, 1, sc_MPI_INT,
-                             sc_MPI_LOR, forest->mpicomm);
-  SC_CHECK_MPI (mpiret);
 
-  return irregular_all_procs;
-}
 
 /**Algorithm to populate a forest, if any tree refines irregularly.
  * Create the elements on this process given a uniform partition
