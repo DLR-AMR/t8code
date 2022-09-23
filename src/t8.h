@@ -107,6 +107,8 @@ typedef int64_t t8_gloidx_t;
 #define T8_MPI_GLOIDX sc_MPI_LONG_LONG_INT
 /** Macro to get the absolute value of a t8_gloidx_t */
 #define T8_GLOIDX_ABS(x) ((t8_gloidx_t) llabs ((long long) (x)))
+/** Maximum possible value of a t8_gloidx_t*/
+#define T8_GLOIDX_MAX INT64_MAX
 /** Comparison function for t8_gloidx_t */
 #define t8_compare_gloidx(v,w) sc_int64_compare(v,w)
 
@@ -129,6 +131,8 @@ typedef enum
   T8_MPI_PARTITION_FOREST,  /**< Used for forest partitioning */
   T8_MPI_GHOST_FOREST,  /**< Used for for ghost layer creation */
   T8_MPI_GHOST_EXC_FOREST,  /**< Used for ghost data exchange */
+  T8_MPI_CMESH_UNIFORM_BOUNDS_START, /**< Used for cmesh uniform bounds computation. */
+  T8_MPI_CMESH_UNIFORM_BOUNDS_END, /**< Used for cmesh uniform bounds computation. */
   T8_MPI_TAG_LAST
 }
 t8_MPI_tag_t;
@@ -256,6 +260,13 @@ void                t8_init (int log_threshold);
  */
 void               *t8_sc_array_index_locidx (sc_array_t *array,
                                               t8_locidx_t it);
+
+/** Return a pointer to an array element indexed by a t8_gloidx_t.
+ * \param [in] index needs to be in [0]..[elem_count-1].
+ * \return           A void * pointing to entry \a it in \a array.
+ */
+void               *t8_sc_array_index_gloidx (sc_array_t * array,
+                                              t8_gloidx_t it);
 
 /* call this at the end of a header file to match T8_EXTERN_C_BEGIN (). */
 T8_EXTERN_C_END ();

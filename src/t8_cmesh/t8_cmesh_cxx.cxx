@@ -23,6 +23,7 @@
 #include <t8_cmesh.h>
 #include <t8_element_cxx.hxx>
 #include "t8_cmesh_types.h"
+#include <t8_data/t8_shmem.h>
 
 /** \file t8_cmesh_cxx.cxx
  *  This file collects all general cmesh routines that need c++ compilation.
@@ -30,6 +31,83 @@
  *
  * TODO: document this file
  */
+
+/* This struct is used to temporarily store some context values
+ * when we determine the partition bounds of processes in
+ * t8_cmesh_determine_partition. */
+typedef struct
+{
+  int                 num_procs;        /* Number of MPI processes. */
+  int                 process_offset;   /* The first process that this process sends to. */
+  t8_gloidx_t         global_num_elements;      /* The global number of elements. */
+} t8_cmesh_partition_query_t;
+
+/* Helper function to set the correct return value in the case that 
+ * the uniform partition is empty.
+ * We set all values to -1 and first_tree_shared to 0. */
+static void
+t8_cmesh_uniform_set_return_parameters_to_empty (t8_gloidx_t *
+                                                 first_local_tree,
+                                                 t8_gloidx_t *
+                                                 child_in_tree_begin,
+                                                 t8_gloidx_t *
+                                                 last_local_tree,
+                                                 t8_gloidx_t *
+                                                 child_in_tree_end,
+                                                 int8_t * first_tree_shared)
+{
+  *first_local_tree = *last_local_tree = -1;
+  if (child_in_tree_begin != NULL) {
+    *child_in_tree_begin = -1;
+  }
+  if (child_in_tree_end != NULL) {
+    *child_in_tree_end = -1;
+  }
+  if (first_tree_shared != NULL) {
+    *first_tree_shared = 0;
+  }
+}
+
+/* Helper function to compute (A*B)/C for large integers, when A*B might not fit in a
+ * 64-bit int anymore. Uses floor(floor(A/C)*B + ((A%C)/C)*B) instead. */
+static inline t8_gloidx_t
+t8_A_times_B_over_C_gloidx (t8_gloidx_t A, t8_gloidx_t B, t8_gloidx_t C)
+{
+#ifdef T8_ENABLE_DEBUG
+  {
+    /* We check wether computing A/C * B will cause an overflow.
+     * This can be achieved by checking if dividing the result by B
+     * yields A/C again. */
+    const t8_gloidx_t   a_over_c = A / C;
+    const t8_gloidx_t   a_o_c_times_b = a_over_c * B;
+    T8_ASSERT (a_over_c == 0 || a_o_c_times_b / a_over_c == B);
+  }
+#endif
+  return (t8_gloidx_t) ((A / C) * B + (((long double) (A % C)) / C) * B);
+}
+
+/* Version of t8_A_times_B_over_C where A is an integer.
+ * We reuse the gloidx version but check before whether an int fits into
+ * a t8_gloidx_t.
+ * This function can also be used if B or C are ints. */
+static inline t8_gloidx_t
+t8_A_times_B_over_C_intA (int A, t8_gloidx_t B, t8_gloidx_t C)
+{
+  T8_ASSERT (sizeof (int) <= sizeof (t8_gloidx_t));
+  return t8_A_times_B_over_C_gloidx (A, B, C);
+}
+
+/* Compute and return the first global element index of a process in the 
+ * uniform partition.
+ * The first index of a process 0 <= p < P among E elements is
+ * floor ((p * E) / P)
+ */
+static inline t8_gloidx_t
+t8_cmesh_get_first_element_of_process (int process, int mpisize,
+                                       t8_gloidx_t global_num_elements)
+{
+  return t8_A_times_B_over_C_intA (process, global_num_elements, mpisize);
+}
 
 void
 t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
@@ -168,6 +246,70 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
 
 }
 
+/* Given an array (partition) storing the global index of the 
+ * first element of each (pure) local tree and
+ * a (pure) local tree index, return the first process that
+ * will have elements of this tree in a uniform partition. 
+ * The data pointer must point to a valid t8_cmesh_partition_query_t,
+ * storing the number of processe and the global number of elements. 
+ * 
+ * This function is used standalone and as callback of sc_array_split. */
+static              size_t
+t8_cmesh_determine_partition (sc_array_t * first_element_tree,
+                              size_t pure_local_tree, void *data)
+{
+  T8_ASSERT (data != NULL);
+  T8_ASSERT (first_element_tree != NULL);
+
+  const t8_cmesh_partition_query_t *query_data =
+    (const t8_cmesh_partition_query_t *) data;
+  size_t              first_proc_adjusted;
+  const t8_gloidx_t   element_index =
+    *(t8_gloidx_t *) sc_array_index (first_element_tree, pure_local_tree);
+  const t8_gloidx_t   mirror_element_index =
+    query_data->global_num_elements - element_index - 1;
+  int                 first_proc_rank;
+
+  t8_debugf ("[H] tree %li el %li mirror %li\n", pure_local_tree,
+             element_index, mirror_element_index);
+  if (element_index == query_data->global_num_elements) {
+    return query_data->num_procs - query_data->process_offset;
+  }
+  else {
+    first_proc_rank =
+      query_data->num_procs - 1 -
+      t8_A_times_B_over_C_intA (query_data->num_procs, mirror_element_index,
+                                query_data->global_num_elements);
+
+    //       (int)(((long double)mirror_element_index/query_data->global_num_elements)*query_data->num_procs);
+
+    /* If this is called by array split, we need to adjust for relative processes starting
+     * add the first process. */
+    first_proc_adjusted = first_proc_rank - query_data->process_offset;
+  }
+  t8_debugf ("[H] ptree %zd, first element %li, on proc %zd\n",
+             pure_local_tree, element_index, first_proc_adjusted);
+
+  /* Safety checks */
+  T8_ASSERT (0 <= first_proc_rank
+             && (int) first_proc_rank < query_data->num_procs);
+  T8_ASSERT (0 <= first_proc_adjusted);
+  /* Check that the element lies in the partition of the computed proc. */
+  T8_ASSERT (t8_cmesh_get_first_element_of_process
+             (first_proc_rank, query_data->num_procs,
+              query_data->global_num_elements) <= element_index);
+#ifdef T8_ENABLE_DEBUG
+  if ((int) first_proc_rank != query_data->num_procs - 1) {
+    T8_ASSERT (t8_cmesh_get_first_element_of_process
+               (first_proc_rank + 1, query_data->num_procs,
+                query_data->global_num_elements) > element_index);
+  }
+  if (element_index == query_data->global_num_elements) {
+    T8_ASSERT ((int) first_proc_rank == query_data->num_procs);
+  }
+#endif
+  return first_proc_adjusted;
+}
 
 /* TODO: Empty processes, shared trees, binary search in offset-array to avoid recv_any,
  * use partition_given to partition the cmesh*/

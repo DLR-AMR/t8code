@@ -1282,11 +1282,11 @@ t8_forest_populate (t8_forest_t forest)
   SC_CHECK_ABORT (forest->set_level <= forest->maxlevel,
                   "Given refinement level exceeds the maximum.\n");
   /* TODO: create trees and quadrants according to uniform refinement */
-  t8_cmesh_uniform_bounds (forest->cmesh, forest->set_level,
+  t8_cmesh_uniform_bounds_hybrid (forest->cmesh, forest->set_level,
                            forest->scheme_cxx,
                            &forest->first_local_tree,
                            &child_in_tree_begin, &forest->last_local_tree,
-                           &child_in_tree_end, NULL);
+                           &child_in_tree_end, NULL, forest->mpicomm);
 
   /* True if the forest has no elements */
   is_empty = forest->first_local_tree > forest->last_local_tree

@@ -691,7 +691,7 @@ t8_shmem_array_t    t8_cmesh_get_partition_table (t8_cmesh_t cmesh);
  *                                  the calling processor anymore. Not computed if NULL.
  * \param [out]   first_tree_shared If not NULL, 1 or 0 is stored here depending on whether \a first_local_tree is the
  *                                 same as \a last_local_tree on the next process.
- * \a cmesh must be committed before calling this function. *
+ * \a cmesh must be committed before calling this function. 
  */
 void                t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
                                              t8_scheme_cxx_t *ts,
@@ -716,7 +716,6 @@ void                t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
  *                                 same as \a last_local_tree on the next process.
  * \param [in] comm         The communicator 
  */
-*/
 void                t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh, 
                                 int level,
                                 t8_scheme_cxx_t * scheme,
@@ -724,7 +723,7 @@ void                t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh,
                                 t8_gloidx_t * child_in_tree_begin,
                                 t8_gloidx_t * last_local_tree,
                                 t8_gloidx_t * child_in_tree_end,
-                                int8_t * first_tree_shared, sc_MPI_Comm comm)
+                                int8_t * first_tree_shared, sc_MPI_Comm comm);
 
 /** Increase the reference counter of a cmesh.
  * \param [in,out] cmesh        On input, this cmesh must exist with positive
