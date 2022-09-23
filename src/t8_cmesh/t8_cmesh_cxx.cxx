@@ -322,16 +322,13 @@ t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh, int level,
                                 t8_gloidx_t * child_in_tree_end,
                                 int8_t * first_tree_shared, sc_MPI_Comm comm)
 {
-  t8_gloidx_t         cmesh_first_tree, local_num_children = 0,
-    elem_in_tree, first_child, last_child, *elem_index_pointer, igtree;
+  t8_gloidx_t         local_num_children = 0;
+  t8_gloidx_t         *elem_index_pointer;
   int                 send_first, send_last, send_first_nonempty,
     num_procs_we_send_to = 0;
   t8_cmesh_partition_query_t data;
-  t8_locidx_t         tree_id, itree, pure_local_trees;
   t8_shmem_array_t    offset_array;
   sc_array_t          offset_partition, first_element_tree;
-  int                 ieclass;
-  int                 iproc;
   int                 mpiret, num_messages_sent = 0;
   int                 expect_start_message = 1;
   int                 expect_end_message = 1;
@@ -373,7 +370,7 @@ t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh, int level,
   }
 #endif
   /*Compute number of local elements. Ignore shared trees */
-  for (ieclass = T8_ECLASS_ZERO; ieclass < T8_ECLASS_COUNT; ieclass++) {
+  for (int ieclass = T8_ECLASS_ZERO; ieclass < T8_ECLASS_COUNT; ieclass++) {
     tree_scheme = scheme->eclass_schemes[ieclass];
     local_num_children += cmesh->num_local_trees_per_eclass[ieclass] *
       tree_scheme->t8_element_count_leafs_from_root (level);
@@ -381,7 +378,7 @@ t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh, int level,
 
   /* Do not consider shared trees */
   if (cmesh->first_tree_shared && cmesh->set_partition) {
-    ieclass = t8_cmesh_get_tree_class (cmesh, 0);
+    const int ieclass = t8_cmesh_get_tree_class (cmesh, 0);
     tree_scheme = scheme->eclass_schemes[ieclass];
     local_num_children -=
       tree_scheme->t8_element_count_leafs_from_root (level);
@@ -401,10 +398,10 @@ t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh, int level,
     /* Compute the first and last element of this process. Then loop over
      * all trees to find the trees in which these are contained.
      * We cast to long double and double to prevent overflow. */
-    first_child =
+    const t8_gloidx_t first_child =
       t8_cmesh_get_first_element_of_process (cmesh->mpirank, cmesh->mpisize,
                                              local_num_children);
-    last_child =
+    const t8_gloidx_t last_child =
       t8_cmesh_get_first_element_of_process (cmesh->mpirank + 1,
                                              cmesh->mpisize,
                                              local_num_children) - 1;
@@ -415,13 +412,13 @@ t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh, int level,
      *    for each tree.
      */
     current_tree_element_offset = 0;
-    for (igtree = 0; igtree < num_trees; ++igtree) {
-      ieclass = t8_cmesh_get_tree_class (cmesh, (t8_locidx_t) igtree);
+    for (t8_gloidx_t igtree = 0; igtree < num_trees; ++igtree) {
+      const int ieclass = t8_cmesh_get_tree_class (cmesh, (t8_locidx_t) igtree);
       tree_scheme = scheme->eclass_schemes[ieclass];
       /* TODO: We can optimize by buffering the elem_in_tree value. Thus, if 
          the computation is expensive (may be for non-morton-type schemes),
          we do it only once. */
-      elem_in_tree = tree_scheme->t8_element_count_leafs_from_root (level);
+      const t8_gloidx_t elem_in_tree = tree_scheme->t8_element_count_leafs_from_root (level);
       /* Check if the first element is on the current tree */
       if (current_tree_element_offset <= first_child &&
           first_child < current_tree_element_offset + elem_in_tree) {
@@ -499,12 +496,12 @@ t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh, int level,
   t8_debugf ("[H] global num %li\n", data.global_num_elements);
 
   /*Compute number of non-shared-trees and the local index of the first non-shared-tree */
-  pure_local_trees = cmesh->num_local_trees - first_tree_shared_shift;
+  const t8_locidx_t pure_local_trees = cmesh->num_local_trees - first_tree_shared_shift;
 
   if (pure_local_trees > 0) {
     /* Compute which trees and elements to send to which process.
      * We skip empty processes. */
-    igtree = first_tree_shared_shift;
+    t8_locidx_t igtree = first_tree_shared_shift;
 
     sc_array_init_size (&first_element_tree, sizeof (t8_gloidx_t),
                         pure_local_trees + 1);
@@ -516,19 +513,15 @@ t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh, int level,
     *elem_index_pointer =
       t8_shmem_array_get_gloidx (offset_array, cmesh->mpirank);
 
-    cmesh_first_tree = t8_cmesh_get_first_treeid (cmesh);
-    tree_id = t8_cmesh_get_local_id (cmesh, cmesh_first_tree);
-    ieclass = t8_cmesh_get_tree_class (cmesh, tree_id);
-
     /* Compute the first element in every pure local tree.
      * This array stores for each tree the global element index offset. 
      * Example: 2 local trees, each has 8 Elements. First element index 12: | 12 | 20 | 28 | */
-    for (itree = 0; itree < pure_local_trees; ++itree, ++igtree) {
+    for (t8_locidx_t itree = 0; itree < pure_local_trees; ++itree, ++igtree) {
       const t8_gloidx_t  *first_element_of_tree =
         (const t8_gloidx_t *) sc_array_index_int (&first_element_tree, itree);
       t8_gloidx_t        *first_element_of_next_tree =
         (t8_gloidx_t *) sc_array_index_int (&first_element_tree, itree + 1);
-      ieclass = t8_cmesh_get_tree_class (cmesh, (t8_locidx_t) igtree);
+      const int ieclass = t8_cmesh_get_tree_class (cmesh, igtree);
       tree_scheme = scheme->eclass_schemes[ieclass];
       /* Set the first element of the next tree by adding the number of element of the current tree. */
       *first_element_of_next_tree =
@@ -640,7 +633,7 @@ t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh, int level,
     const t8_gloidx_t   last_el_index_of_last_tree =
       *(t8_gloidx_t *) t8_sc_array_index_gloidx (&first_element_tree,
                                                  pure_local_trees) - 1;
-    for (iproc = send_first; iproc <= send_last; iproc++) {
+    for (int iproc = send_first; iproc <= send_last; iproc++) {
 
       const t8_gloidx_t   first_element_index_of_current_proc =
         t8_cmesh_get_first_element_of_process (iproc, data.num_procs,
