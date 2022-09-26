@@ -47,13 +47,9 @@ t8forest_to_conduit_mesh (t8_forest_t forest, int write_treeid,
   T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (forest->committed);
 
-  long int            point_id = 0;     /* The id of the point in the points Object. */
-  t8_locidx_t         ielement; /* The iterator over elements in a tree. */
-  t8_locidx_t         itree, ivertex;
   double              coordinates[3];
   double              vertex_coords[3] = { 0, 0, 0 };
   int                 elem_id = 0;
-  t8_locidx_t         num_elements;
   t8_gloidx_t         gtreeid;
   t8_cmesh_t          cmesh;
   int                 num_corners;
@@ -68,12 +64,12 @@ t8forest_to_conduit_mesh (t8_forest_t forest, int write_treeid,
   mesh["topologies/mesh/type"] = "unstructured";
   mesh["topologies/mesh/coordset"] = "coords";
   mesh["topologies/mesh/elements/shape"] = "mixed";
-  mesh["topologies/mesh/elements/shape_map/point"] = 1;
-  mesh["topologies/mesh/elements/shape_map/line"] = 3;
-  mesh["topologies/mesh/elements/shape_map/tri"] = 5;
-  mesh["topologies/mesh/elements/shape_map/quad"] = 9;
-  mesh["topologies/mesh/elements/shape_map/tet"] = 10;
-  mesh["topologies/mesh/elements/shape_map/hex"] = 12;
+  mesh["topologies/mesh/elements/shape_map/point"] = T8_ECLASS_VERTEX;
+  mesh["topologies/mesh/elements/shape_map/line"] = T8_ECLASS_LINE;
+  mesh["topologies/mesh/elements/shape_map/tri"] = T8_ECLASS_TRIANGLE;
+  mesh["topologies/mesh/elements/shape_map/quad"] = T8_ECLASS_QUAD;
+  mesh["topologies/mesh/elements/shape_map/tet"] = T8_ECLASS_TET;
+  mesh["topologies/mesh/elements/shape_map/hex"] = T8_ECLASS_HEX;
 
   /* 
    * Furthermore, we need
@@ -88,8 +84,8 @@ t8forest_to_conduit_mesh (t8_forest_t forest, int write_treeid,
    * We need to allocate a num points long array for all but the connectivity array.
    * Thus we first calculate the number of points.
    */
-
-  num_elements = t8_forest_get_local_num_elements (forest);
+  const t8_locidx_t   num_elements =
+    t8_forest_get_local_num_elements (forest);
   int                 connec_iter = 0;
 
   /* 
@@ -98,7 +94,8 @@ t8forest_to_conduit_mesh (t8_forest_t forest, int write_treeid,
    * the connec_iter. May need a better name. 
    */
 
-  for (itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {
+  for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest);
+       itree++) {
 /* 
  * We get the current tree, the scheme for this tree
  * and the number of elements in this tree. We need the vertices of
@@ -108,16 +105,17 @@ t8forest_to_conduit_mesh (t8_forest_t forest, int write_treeid,
     t8_eclass_scheme_c *scheme =
       t8_forest_get_eclass_scheme (forest, t8_forest_get_tree_class (forest,
                                                                      itree));
-    t8_locidx_t         elems_in_tree =
+    const t8_locidx_t   elems_in_tree =
       t8_forest_get_tree_num_elements (forest, itree);
     /* We iterate over all elements in the tree */
     /* Compute the global tree id */
     gtreeid = t8_forest_global_tree_id (forest, itree);
-    for (ielement = 0; ielement < elems_in_tree; ielement++) {
+    for (t8_locidx_t ielement = 0; ielement < elems_in_tree; ielement++) {
       t8_element_t       *element =
         t8_forest_get_element_in_tree (forest, itree, ielement);
       T8_ASSERT (element != NULL);
-      t8_element_shape_t  element_shape = scheme->t8_element_shape (element);
+      const t8_element_shape_t element_shape =
+        scheme->t8_element_shape (element);
       if (element_shape == T8_ECLASS_PRISM) {
         SC_CHECK_ABORT (element_shape != T8_ECLASS_PRISM,
                         "Prisms are not supported in conduit output, might be added later");
@@ -126,13 +124,12 @@ t8forest_to_conduit_mesh (t8_forest_t forest, int write_treeid,
         SC_CHECK_ABORT (element_shape != T8_ECLASS_PYRAMID,
                         "Pyramids are not supported in conduit output");
       }
-      num_corners = t8_get_number_of_vtk_nodes (element_shape, curved_flag);
-      connec_iter += num_corners;
+      connec_iter += t8_get_number_of_vtk_nodes (element_shape, curved_flag);
     }
   }
   /* We allocate the memory for the arrays we need */
   int                *cellTypes = T8_ALLOC (int, num_elements);
-  int                *sizes = T8_ALLOC (int, num_elements);
+  int                *num_corners_of_elem = T8_ALLOC (int, num_elements);
   int                *connectivity = T8_ALLOC (int, connec_iter);
   int                *offsets = T8_ALLOC (int, num_elements);
 
@@ -140,33 +137,25 @@ t8forest_to_conduit_mesh (t8_forest_t forest, int write_treeid,
   double             *y_coords = T8_ALLOC (double, connec_iter);
   double             *z_coords = T8_ALLOC (double, connec_iter);
 
-  /* Alloc nicht in if statements, richtig? */
   int                *vtk_treeid = T8_ALLOC (int, num_elements);
-
   int                *vtk_mpirank = T8_ALLOC (int, num_elements);
   int                *vtk_level = T8_ALLOC (int, num_elements);
   int                *vtk_element_id = T8_ALLOC (int, num_elements);
   /*
-   * We need the vertex coords array to be of the 
-   * correct dim. Since it is always the same
-   * in one mesh, we take the dim of one element.
-   * We add 1 if we look at a vertex (dim=0) because 
-   * an array of size 0 is not allowed. 
-   * Then we allocate memory, because we do not know
-   * beforehand how many entries the array needs.
+   * We fill the connectivity array with consecutive numbers 0 to connec_iter-1
+   * because the elements points are inserted consecutively.
    */
 
-  //double    **dataArrays;
-  //dataArrays = T8_ALLOC (double *, num_data);
-  for (int i = 0; i < connec_iter; i++) {
-    connectivity[i] = i;
-    std::cout << connectivity[i];
+  for (int ifill_connec = 0; ifill_connec < connec_iter; ifill_connec++) {
+    connectivity[ifill_connec] = ifill_connec;
   }
+
   cmesh = t8_forest_get_cmesh (forest);
   /* We iterate over all local trees */
   int                 sizes_iter = 0;
   int                 offsets_iter = 0;
-  for (itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {
+  for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest);
+       itree++) {
 /* 
  * We get the current tree, the scheme for this tree
  * and the number of elements in this tree. We need the vertices of
@@ -183,7 +172,7 @@ t8forest_to_conduit_mesh (t8_forest_t forest, int write_treeid,
     /* We iterate over all elements in the tree */
     /* Compute the global tree id */
     gtreeid = t8_forest_global_tree_id (forest, itree);
-    for (ielement = 0; ielement < elems_in_tree; ielement++) {
+    for (t8_locidx_t ielement = 0; ielement < elems_in_tree; ielement++) {
       t8_element_t       *element =
         t8_forest_get_element_in_tree (forest, itree, ielement);
       T8_ASSERT (element != NULL);
@@ -197,12 +186,12 @@ t8forest_to_conduit_mesh (t8_forest_t forest, int write_treeid,
                         "Pyramids are not supported in conduit output");
       }
       num_corners = t8_get_number_of_vtk_nodes (element_shape, curved_flag);
-      sizes[sizes_iter] = num_corners;
+      num_corners_of_elem[sizes_iter] = num_corners;
       offsets[sizes_iter] = offsets_iter + num_corners;
       sizes_iter += 1;
 
       /* For each element we iterate over all points */
-      for (ivertex = 0; ivertex < num_corners; ivertex++, point_id++) {
+      for (t8_locidx_t ivertex = 0; ivertex < num_corners; ivertex++) {
         /* Compute the vertex coordinates inside [0,1]^dim reference cube. */
         if (curved_flag) {
           t8_curved_element_get_reference_node_coords (element, element_shape,
@@ -269,7 +258,8 @@ t8forest_to_conduit_mesh (t8_forest_t forest, int write_treeid,
                                                      connec_iter);
   mesh["topologies/mesh/elements/shapes"].set (cellTypes, num_elements);
   mesh["topologies/mesh/elements/offsets"].set (offsets, num_elements);
-  mesh["topologies/mesh/elements/sizes"].set (sizes, num_elements);
+  mesh["topologies/mesh/elements/sizes"].set (num_corners_of_elem,
+                                              num_elements);
 
   /*
    * To write the fields, we need an association: either with points or elements,
@@ -333,7 +323,7 @@ t8forest_to_conduit_mesh (t8_forest_t forest, int write_treeid,
 /* We have to free the allocated memory for the cellTypes Array and the other arrays we allocated memory for. */
 
   T8_FREE (cellTypes);
-  T8_FREE (sizes);
+  T8_FREE (num_corners_of_elem);
   T8_FREE (connectivity);
   T8_FREE (offsets);
   T8_FREE (x_coords);
@@ -396,12 +386,12 @@ main (int argc, char **argv)
   t8_init (SC_LP_PRODUCTION);
 
   /* Print a message on the root process. */
-  t8_global_productionf (" [step2] \n");
+  t8_global_productionf (" [conduit] \n");
   t8_global_productionf
-    (" [step2] Hello, this is the step2 example of t8code.\n");
+    (" [conduit] Hello, this is the step2 example of t8code.\n");
   t8_global_productionf
-    (" [step2] In this example we build our first uniform forest and output it to vtu files.\n");
-  t8_global_productionf (" [step2] \n");
+    (" [conduit] In this example we build our first uniform forest and output it to vtu files.\n");
+  t8_global_productionf (" [conduit] \n");
 
   /* We will use MPI_COMM_WORLD as a communicator. */
   comm = sc_MPI_COMM_WORLD;
@@ -418,7 +408,7 @@ main (int argc, char **argv)
 
   /* Destroy the forest. */
   t8_forest_unref (&forest);
-  t8_global_productionf (" [step2] Destroyed forest.\n");
+  t8_global_productionf (" [conduit] Destroyed forest.\n");
 
   sc_finalize ();
 
