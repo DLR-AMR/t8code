@@ -74,17 +74,6 @@ DISTCLEANFILES += \
 include src/Makefile.am
 include src/t8_schemes/t8_default/Makefile.am
 include test/Makefile.am
-include example/geometry/Makefile.am
-include example/ghost/Makefile.am
-include example/timings/Makefile.am
-include example/triangle/Makefile.am
-include example/tetgen/Makefile.am
-include example/gmsh/Makefile.am
-include example/cmesh/Makefile.am
-include example/common/Makefile.am
-include example/advect/Makefile.am
-include example/netcdf/Makefile.am
-include example/tutorials/Makefile.am
 include example/conduit/Makefile.am
 #include example/cxx/Makefile.am
 #include example/ExtremeScaling/Makefile.am
