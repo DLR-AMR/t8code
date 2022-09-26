@@ -24,7 +24,6 @@ check_PROGRAMS =
 include_HEADERS =
 lib_LTLIBRARIES =
 nodist_include_HEADERS =
-nobase_dist_include_HEADERS =
 noinst_HEADERS =
 noinst_PROGRAMS =
 t8sysconf_DATA =
@@ -44,7 +43,8 @@ t8aclocaldir = $(datadir)/aclocal
 dist_t8aclocal_DATA = config/t8_include.m4 \
                       config/t8_stdpp.m4 \
                       config/t8_netcdf.m4 \
-                      config/t8_vtk.m4
+                      config/t8_vtk.m4 \
+                      config/t8_occ.m4
 
 # install t8 data in the correct directory
 t8datadir = $(datadir)/t8code/data
@@ -74,6 +74,7 @@ DISTCLEANFILES += \
 include src/Makefile.am
 include src/t8_schemes/t8_default/Makefile.am
 include test/Makefile.am
+<<<<<<< HEAD
 include example/basic/Makefile.am
 include example/geometry/Makefile.am
 include example/ghost/Makefile.am
@@ -89,6 +90,9 @@ include example/tutorials/Makefile.am
 include example/conduit/Makefile.am
 #include example/cxx/Makefile.am
 #include example/ExtremeScaling/Makefile.am
+include example/Makefile.am
+include tutorials/Makefile.am
+include benchmarks/Makefile.am
 
 # revision control and ChangeLog
 ChangeLog:

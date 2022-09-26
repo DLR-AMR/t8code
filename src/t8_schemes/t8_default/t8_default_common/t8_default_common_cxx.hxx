@@ -41,7 +41,7 @@ public:
   virtual ~ t8_default_scheme_common_c ();
 
   /** Compute the number of corners of a given element. */
-  virtual int         t8_element_num_corners (const t8_element_t *elem);
+  virtual int         t8_element_num_corners (const t8_element_t *elem) const;
 
   /** Allocate space for a bunch of elements. */
   virtual void        t8_element_new (int length, t8_element_t **elem);
@@ -63,6 +63,12 @@ public:
   virtual t8_gloidx_t t8_element_count_leafs (const t8_element_t *t,
                                               int level);
 
+  /** Compute the number of siblings of an element. That is the number of 
+   * Children of its parent.
+   * \param [in] elem The element.
+   * \return          The number of siblings of \a element.
+   * Note that this number is >= 1, since we count the element itself as a sibling.
+   */
   virtual int         t8_element_num_siblings (const t8_element_t *elem)
     const;
 

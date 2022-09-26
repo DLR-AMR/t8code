@@ -28,6 +28,7 @@
 # The script then prints out all these comments together with file and line.
 
 PROJECT_DIR=".."
+
 for folder in src example test
 do
   SEARCH_PATH="$SEARCH_PATH $PROJECT_DIR/$folder/*.h"

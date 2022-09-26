@@ -28,6 +28,8 @@
 #ifndef T8_CMESH_EXAMPLES
 #define T8_CMESH_EXAMPLES
 #include <t8_cmesh.h>
+#include <p4est_connectivity.h>
+#include <p8est_connectivity.h>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -37,6 +39,9 @@ T8_EXTERN_C_BEGIN ();
  * \param[in]       do_partition Flag whether the cmesh should be partitioned or not.
  * \return          A t8_cmesh structure that holds the same connectivity information
  *                  as \a conn.
+ * \note This function requires that p4est is initialized. Make sure to call
+ * \ref p4est_init before using this routine. If this is not the case, a
+ * warning is issued and \ref p4est_init is called from within this function.
  */
 t8_cmesh_t          t8_cmesh_new_from_p4est (p4est_connectivity_t * conn,
                                              sc_MPI_Comm comm,
@@ -49,6 +54,9 @@ t8_cmesh_t          t8_cmesh_new_from_p4est (p4est_connectivity_t * conn,
  * \param[in]       do_partition Flag whether the cmesh should be partitioned or not.
  * \return          A t8_cmesh structure that holds the same connectivity information
  *                  as \a conn.
+ * \note This function requires that p4est is initialized. Make sure to call
+ * \ref p4est_init before using this routine. If this is not the case, a
+ * warning is issued and \ref p4est_init is called from within this function.
  */
 t8_cmesh_t          t8_cmesh_new_from_p8est (p8est_connectivity_t * conn,
                                              sc_MPI_Comm comm,
@@ -87,15 +95,20 @@ t8_cmesh_t          t8_cmesh_new_from_class (t8_eclass_t eclass,
  * \param [in] do_partition Create a partitioned cmesh.
  * \param [in] periodic     If true, the coarse mesh will be periodic in each direction.
  *                          Not possible with \a eclass pyramid.
- * TODO: Add periodic flags for each dimension.
  */
 t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
                                             sc_MPI_Comm comm,
                                             int do_bcast, int do_partition,
                                             int periodic);
 
-/** Hybercube with 6 Tets, 6 Prism, 4 Hex. */
-/* TODO: Document */
+/** Hybercube with 6 Tets, 6 Prism, 4 Hex. 
+ * \param [in]  comm            The mpi communicator to be used.
+ * \param [in]  do_partition    If non-zero create a partitioned cmesh.
+ * \param [in]  periodic        If non-zero create a periodic cmesh in each direction
+ * \return                      A comitted cmesh consisting of 6 Tets, 6 prism and 4 hex. 
+ *                              Together, they form a cube.
+*/
+
 t8_cmesh_t          t8_cmesh_new_hypercube_hybrid (sc_MPI_Comm comm,
                                                    int do_partition,
                                                    int periodic);

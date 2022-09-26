@@ -22,12 +22,11 @@
 
 #include <sc_options.h>
 #include <sc_statistics.h>
-#include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_forest.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_ghost.h>
-#include <t8_forest_vtk.h>
 #include <example/common/t8_example_common.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh_readmshfile.h>
@@ -765,6 +764,7 @@ t8_advect_replace (t8_forest_t forest_old,
                    t8_forest_t forest_new,
                    t8_locidx_t which_tree,
                    t8_eclass_scheme_c *ts,
+                   int refine,
                    int num_outgoing,
                    t8_locidx_t first_outgoing,
                    int num_incoming, t8_locidx_t first_incoming)
@@ -796,7 +796,8 @@ t8_advect_replace (t8_forest_t forest_old,
 
   /* Get the old phi value (used in the cases with num_outgoing = 1) */
   phi_old = t8_advect_element_get_phi (problem, first_outgoing_data);
-  if (num_incoming == num_outgoing && num_incoming == 1) {
+  if (refine == 0) {
+    T8_ASSERT (num_incoming == num_outgoing && num_incoming == 1);
     /* The element is not changed, copy phi and vol */
     memcpy (elem_data_in, elem_data_out, sizeof (t8_advect_element_data_t));
     t8_advect_element_set_phi_adapt (problem, first_incoming_data, phi_old);
@@ -814,7 +815,8 @@ t8_advect_replace (t8_forest_t forest_old,
       elem_data_in->neighs[iface] = NULL;
     }
   }
-  else if (num_outgoing == 1) {
+  else if (refine == 1) {
+    T8_ASSERT (num_outgoing == 1);
     T8_ASSERT (num_incoming == 1 << problem->dim);
     /* The old element is refined, we copy the phi values and compute the new midpoints */
     for (i = 0; i < num_incoming; i++) {
@@ -844,6 +846,7 @@ t8_advect_replace (t8_forest_t forest_old,
   }
   else {
     double              phi = 0;
+    T8_ASSERT (refine = -1);
     T8_ASSERT (num_outgoing == 1 << problem->dim && num_incoming == 1);
     /* The old elements form a family which is coarsened. We compute the average
      * phi value and set it as the new phi value */
@@ -1092,14 +1095,22 @@ t8_advect_problem_partition (t8_advect_problem_t * problem, int measure_time)
 
 static t8_cmesh_t
 t8_advect_create_cmesh (sc_MPI_Comm comm, int cube_type,
-                        const char *mshfile, int level, int dim)
+                        const char *mshfile, int level, int dim,
+                        int use_occ_geometry)
 {
   if (mshfile != NULL) {
     /* Load from .msh file and partition */
     t8_cmesh_t          cmesh, cmesh_partition;
     T8_ASSERT (mshfile != NULL);
 
-    cmesh = t8_cmesh_from_msh_file (mshfile, 1, comm, dim, 0);
+    cmesh =
+      t8_cmesh_from_msh_file (mshfile, 0, comm, dim, 0, use_occ_geometry);
+    /* The partitioning of the occ geometry is not yet available */
+    if (use_occ_geometry) {
+      t8_productionf ("cmesh was not partitioned. Partitioning is not yet "
+                      "available with the curved geometry\n");
+      return cmesh;
+    }
     /* partition this cmesh according to the initial refinement level */
     t8_cmesh_init (&cmesh_partition);
     t8_cmesh_set_partition_uniform (cmesh_partition, level,
@@ -1142,6 +1153,8 @@ t8_advect_choose_flow (int flow_arg)
     return t8_flow_around_circle;
   case 6:
     return t8_flow_stokes_flow_sphere_shell;
+  case 7:
+    return t8_flow_around_circle_with_angular_velocity;
   default:
     SC_ABORT ("Wrong argument for flow parameter.\n");
   }
@@ -1399,8 +1412,8 @@ t8_advect_write_vtk (t8_advect_problem_t * problem)
   /* Write filename */
   snprintf (fileprefix, BUFSIZ, "advection_%03i", problem->vtk_count);
   /* Write vtk files */
-  if (t8_forest_vtk_write_file (problem->forest, fileprefix,
-                                1, 1, 1, 1, 0, 4, vtk_data)) {
+  if (t8_forest_write_vtk_ext (problem->forest, fileprefix,
+                               1, 1, 1, 1, 0, 0, 0, 4, vtk_data)) {
     t8_debugf ("[Advect] Wrote pvtu to files %s\n", fileprefix);
   }
   else {
@@ -1608,14 +1621,16 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                   neigh_scheme->t8_element_level (neighs[ineigh]);
               }
 
+              T8_ASSERT (neighs != NULL
+                         || elem_data->num_neighbors[iface] == 0);
+              if (neighs != NULL) {
+                /* *INDENT-OFF* */
+                neigh_scheme->t8_element_destroy (elem_data->num_neighbors[iface],
+                                                  neighs);
+                /* *INDENT-ON* */
 
-
-              /* *INDENT-OFF* */
-              neigh_scheme->t8_element_destroy (elem_data->num_neighbors[iface],
-                                                neighs);
-              /* *INDENT-ON* */
-
-              T8_FREE (neighs);
+                T8_FREE (neighs);
+              }
 
               /* Allocate flux storage */
               elem_data->fluxes[iface] =
@@ -1849,7 +1864,7 @@ main (int argc, char *argv[])
   int                 level, reflevel, dim, cube_type, dummy_op;
   int                 parsed, helpme, no_vtk, vtk_freq, adapt_freq;
   int                 volume_refine;
-  int                 flow_arg;
+  int                 flow_arg, use_occ_geometry;
   double              T, cfl, band_width;
   t8_levelset_sphere_data_t ls_data;
   /* brief help message */
@@ -1882,7 +1897,10 @@ main (int argc, char *argv[])
                       "\t\t\tIt reverses direction at t = 0.5.\n"
                       "\t\t4 - 2D rotation around (0.5,0.5).\n"
                       "\t\t5 - 2D flow around circle at (0.5,0.5)"
-                      "with radius 0.15.\n)");
+                      "with radius 0.15.\n"
+                      "\t\t6 - A solution to the stokes equation on a spherical shell.\n"
+                      "\t\t7 - Flow past a rotating cylinder of radius of 0.5"
+                      " around the z-axis.\n");
   sc_options_add_int (opt, 'l', "level", &level, 0,
                       "The minimum refinement level of the mesh.");
   sc_options_add_int (opt, 'r', "rlevel", &reflevel, 0,
@@ -1894,13 +1912,17 @@ main (int argc, char *argv[])
                       "\t\t3 - triangle\n\t\t4 - hexahedron\n"
                       "\t\t5 - tetrahedron\n\t\t6 - prism\n"
                       "\t\t7 - triangle/quad (hybrid 2d).\n"
-                      "\t\t8 - tet/hex/prism (hybrid 3d).");
+                      "\t\t8 - tet/hex/prism (hybrid 3d).\n");
   sc_options_add_string (opt, 'f', "mshfile", &mshfile, NULL,
                          "If specified, the cmesh is constructed from a .msh file with "
                          "the given prefix.\n\t\t\t\t     The files must end in .msh "
                          "and be in ASCII format version 2. -d must be specified.");
   sc_options_add_int (opt, 'd', "dim", &dim, -1,
                       "In combination with -f: The dimension of the mesh. 1 <= d <= 3.");
+
+  sc_options_add_switch (opt, 'O', "occ", &use_occ_geometry,
+                         "In combination with -f: Use the occ geometry, only viable if a "
+                         ".brep file of the same name is present.");
 
   sc_options_add_double (opt, 'T', "end-time", &T, 1,
                          "The duration of the simulation. Default: 1");
@@ -1910,7 +1932,7 @@ main (int argc, char *argv[])
   sc_options_add_double (opt, 'b', "band-width", &band_width,
                          1,
                          "Control the width of the refinement band around\n"
-                         " the zero level-set. Default 1.");
+                         "\t\t\t\t     the zero level-set. Default 1.");
 
   sc_options_add_int (opt, 'a', "adapt-freq", &adapt_freq, 1,
                       "Controls how often the mesh is readapted. "
@@ -1945,7 +1967,7 @@ main (int argc, char *argv[])
   sc_options_add_int (opt, 'V', "volume-refine", &volume_refine, -1,
                       "Refine elements close to the 0 level-set only "
                       "if their volume is smaller than the l+V-times refined\n"
-                      " smallest element int the mesh.");
+                      "\t\t\t\t     smallest element int the mesh.");
 
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
@@ -1954,7 +1976,7 @@ main (int argc, char *argv[])
     t8_global_essentialf ("%s\n", help);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-  else if (parsed >= 0 && 1 <= flow_arg && flow_arg <= 6 && 0 <= level
+  else if (parsed >= 0 && 1 <= flow_arg && flow_arg <= 7 && 0 <= level
            && 0 <= reflevel && 0 <= vtk_freq
            && ((mshfile != NULL && 0 < dim && dim <= 3)
                || (1 <= cube_type && cube_type <= 8)) && band_width >= 0) {
@@ -1987,7 +2009,7 @@ main (int argc, char *argv[])
 
     cmesh =
       t8_advect_create_cmesh (sc_MPI_COMM_WORLD, cube_type,
-                              mshfile, level, dim);
+                              mshfile, level, dim, use_occ_geometry);
     u = t8_advect_choose_flow (flow_arg);
     if (!no_vtk) {
       t8_cmesh_vtk_write_file (cmesh, "advection_cmesh", 1.0);

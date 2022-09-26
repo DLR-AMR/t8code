@@ -1,0 +1,150 @@
+title: t8code
+version: 1.0.0
+date-released: "2022-09-21"
+repository-code: "https://github.com/dlr-amr/t8code"
+url: "https://dlr-amr.github.io/t8code/"
+doi: "10.5281/zenodo.7034838"
+license: GPL-2.0
+type: software
+authors:
+  #Authors
+  - given-names: Johannes
+    family-names: Holke
+    email: Johannes.Holke@dlr.de
+    affiliation: "German Aerospace Center (DLR)"
+    orcid: "https://orcid.org/0000-0002-2783-3286"
+  - given-names: Carsten
+    family-names: Burstedde
+    email: burstedde@ins.uni-bonn.de
+    affiliation: "University of Bonn"
+    orcid: "https://orcid.org/0000-0001-9843-1041"
+  - given-names: David
+    family-names: Knapp
+    email: David.Knapp@dlr.de
+    affiliation: "German Aerospace Center (DLR)"
+    orcid: "https://orcid.org/0000-0002-6305-1572"
+  - given-names: Lukas
+    family-names: Dreyer
+    email: Lukas.Dreyer@dlr.de
+    affiliation: "German Aerospace Center (DLR)"
+    orcid: "https://orcid.org/0000-0001-7484-3674"
+  - given-names: Sandro
+    family-names: Elsweijer
+    email: Sandro.Elsweijer@dlr.de
+    affiliation: "German Aerospace Center (DLR)"
+    orcid: "https://orcid.org/0000-0002-2753-3873"
+  - given-names: Veli
+    family-names: Uenlue
+    email: Veli.Uenlue@dlr.de
+    affiliation: "German Aerospace Center (DLR)"
+  - given-names: Johannes
+    family-names: Markert
+    email: Johannes.Markert@dlr.de
+    affiliation: "German Aerospace Center (DLR)"
+    orcid: "https://orcid.org/0000-0001-6297-9494"
+  - given-names: Ioannis
+    family-names: Lilikakis
+    email: Ioannis.Lilikakis@dlr.de
+    affiliation: "German Aerospace Center (DLR)"
+  - given-names: Niklas
+    family-names: Boeing
+    email: Niklas.Boeing@dlr.de
+    affiliation: "German Aerospace Center (DLR)"
+#Contributors
+cff-version: 1.2.0
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+keywords:
+  - Adaptive-Mesh-Refinement
+  - High-Peformance-Computing
+  - Parallel-Computing
+abstract: >-
+  t8code is a C/C++ library to
+  manage parallel adaptive meshes with various
+  element types. t8code uses a collection (a forest)
+  of multiple connected adaptive space-trees in
+  parallel and scales to at least one million MPI
+  ranks and over 1 Trillion mesh elements. t8code
+  uses space-filling curves (SFCs) to manage the
+  adaptive refinement and efficiently store the mesh
+  elements and associated data.
+contact:
+  - affiliation: "German Aerospace Center (DLR)"
+    email: Johannes.Holke@dlr.de
+    family-names: Holke
+    given-names: Johannes
+references:
+  - title: "Scalable Algorithms for Parallel Tree-based Adaptive Mesh Refinement with General Element Types"
+    authors:
+      - family-names: Holke
+        given-names: Johannes
+    type: thesis
+    url: "https://hdl.handle.net/20.500.11811/7661"
+  - title: "SC Library"
+    authors:
+      - family-names: Burstedde
+        given-names: Carsten
+      - family-names: Wilcox
+        given-names: "Lucas C."
+      - family-names: Isaac
+        given-names: Tobin
+    type: software
+    url: "https://github.com/cburstedde/libsc"
+  - title: p4est
+    authors:
+      - family-names: Burstedde
+        given-names: Carsten
+      - family-names: Wilcox
+        given-names: "Lucas C."
+      - family-names: Isaac
+        given-names: Tobin
+    type: software
+    url: "https://github.com/cburstedde/p4est"
+  - title: "A Tetrahedral Space-Filling Curve for Nonconforming Adaptive Meshes"
+    authors:
+      - family-names: Burstedde
+        given-names: Carsten
+      - family-names: Holke
+        given-names: Johannes
+    type: article
+    doi: "10.1137/15M1040049"
+  - title: "Coarse Mesh Partitioning for Tree-Based AMR"
+    authors:
+      - family-names: Burstedde
+        given-names: Carsten
+      - family-names: Holke
+        given-names: Johannes
+    type: article
+    doi: "10.1137/16M1103518"
+  - title: "On the Number of Face-Connected Components of Morton-Type Space-Filling Curves"
+    authors:
+      - family-names: Burstedde
+        given-names: Carsten
+      - family-names: Holke
+        given-names: Johannes
+      - family-names: Isaac
+        given-names: Tobin
+    type: article
+    doi: "10.1007/s10208-018-9400-5"
+  - title: "An Optimized, Parallel Computation of the Ghost Layer for Adaptive Hybrid Forest Meshes"
+    authors:
+      - family-names: Holke
+        given-names: Johannes
+      - family-names: Knapp
+        given-names: David
+      - family-names: Burstedde
+        given-names: Carsten
+    type: article
+    doi: "10.1137/20M1383033"
+  - title: "A space-filling curve for pyramidal adaptive mesh refinement"
+    authors:
+      - family-names: Knapp
+        given-names: David
+    type: thesis
+    url: "https://elib.dlr.de/139134/"
+  - title: "Adaptive Verfeinerung von Prismen"
+    authors:
+      - family-names: Knapp
+        given-names: David
+    type: thesis

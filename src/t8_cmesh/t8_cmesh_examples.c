@@ -54,6 +54,14 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim,
   p4est_topidx_t      ttt;
   t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
 
+  /* Make sure that p4est is properly initialized. If not, do it here
+   * and raise a warning. */
+  if (!sc_package_is_registered (p4est_package_id)) {
+    t8_global_errorf
+      ("WARNING: p4est is not yet initialized. Doing it now for you.");
+    p4est_init (NULL, SC_LP_ESSENTIAL);
+  }
+
   T8_ASSERT (dim == 2 || dim == 3);
   T8_ASSERT (dim == 3
              ||
@@ -372,7 +380,7 @@ t8_cmesh_new_hypercube_hybrid (sc_MPI_Comm comm, int do_partition,
 {
   int                 i;
   t8_cmesh_t          cmesh;
-  t8_topidx_t         vertices[8];
+  t8_locidx_t         vertices[8];
   double              vertices_coords_temp[24];
   double              attr_vertices[24];
   double              null_vec[3] = { 0, 0, 0 };
@@ -610,7 +618,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
     1, 1, 1, 2, 1, 6, 2, 3
   };
   int                 i;
-  t8_topidx_t         vertices[8];
+  t8_locidx_t         vertices[8];
   double              attr_vertices[24];
   int                 mpirank, mpiret;
   double              vertices_coords[24] = {
@@ -1797,6 +1805,121 @@ t8_cmesh_new_hybrid_gate_deformed (sc_MPI_Comm comm)
   vertices[17] = 0.8;
 
   t8_cmesh_set_tree_vertices (cmesh, 4, vertices, 8);
+
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
+}
+
+t8_cmesh_t
+t8_cmesh_new_full_hybrid (sc_MPI_Comm comm)
+{
+  t8_cmesh_t          cmesh;
+  double              vertices[24];
+  int                 i;
+
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
+
+  t8_cmesh_init (&cmesh);
+
+  t8_cmesh_register_geometry (cmesh, linear_geom);
+
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
+  t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_PYRAMID);
+  t8_cmesh_set_tree_class (cmesh, 2, T8_ECLASS_TET);
+  t8_cmesh_set_tree_class (cmesh, 3, T8_ECLASS_PRISM);
+  t8_cmesh_set_join (cmesh, 0, 1, 5, 4, 0);
+  t8_cmesh_set_join (cmesh, 1, 2, 0, 1, 0);
+  t8_cmesh_set_join (cmesh, 1, 3, 3, 3, 0);
+
+  /*Hex vertices */
+  vertices[0] = 0;
+  vertices[1] = 0;
+  vertices[2] = 0;
+
+  vertices[3] = 1;
+  vertices[4] = 0;
+  vertices[5] = 0;
+
+  vertices[6] = 0;
+  vertices[7] = 1;
+  vertices[8] = 0;
+
+  vertices[9] = 1;
+  vertices[10] = 1;
+  vertices[11] = 0;
+
+  vertices[12] = 0;
+  vertices[13] = 0;
+  vertices[14] = 1;
+
+  vertices[15] = 1;
+  vertices[16] = 0;
+  vertices[17] = 1;
+
+  vertices[18] = 0;
+  vertices[19] = 1;
+  vertices[20] = 1;
+
+  vertices[21] = 1;
+  vertices[22] = 1;
+  vertices[23] = 1;
+  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 8);
+
+  /*pyra vertices */
+  for (i = 0; i < 4; i++) {
+    vertices[i * 3] = vertices[i * 3 + 12];
+    vertices[i * 3 + 1] = vertices[i * 3 + 12 + 1];
+    vertices[i * 3 + 2] = vertices[i * 3 + 12 + 2];
+  }
+  vertices[12] = 1;
+  vertices[13] = 1;
+  vertices[14] = 2;
+  t8_cmesh_set_tree_vertices (cmesh, 1, vertices, 5);
+
+  /*tet vertices */
+  vertices[0] = 0;
+  vertices[1] = 0;
+  vertices[2] = 1;
+
+  vertices[3] = 0;
+  vertices[4] = 1;
+  vertices[5] = 2;
+
+  vertices[6] = 0;
+  vertices[7] = 1;
+  vertices[8] = 1;
+
+  vertices[9] = 1;
+  vertices[10] = 1;
+  vertices[11] = 2;
+  t8_cmesh_set_tree_vertices (cmesh, 2, vertices, 4);
+
+  /*prism vertices */
+  vertices[0] = 1;
+  vertices[1] = 1;
+  vertices[2] = 1;
+
+  vertices[3] = 0;
+  vertices[4] = 1;
+  vertices[5] = 1;
+
+  vertices[6] = 1;
+  vertices[7] = 1;
+  vertices[8] = 2;
+
+  vertices[9] = 1;
+  vertices[10] = 2;
+  vertices[11] = 1;
+
+  vertices[12] = 0;
+  vertices[13] = 2;
+  vertices[14] = 1;
+
+  vertices[15] = 1;
+  vertices[16] = 2;
+  vertices[17] = 2;
+
+  t8_cmesh_set_tree_vertices (cmesh, 3, vertices, 6);
 
   t8_cmesh_commit (cmesh, comm);
   return cmesh;

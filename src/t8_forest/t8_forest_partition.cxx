@@ -156,7 +156,6 @@ t8_forest_partition_test_desc (t8_forest_t forest)
     level = ts->t8_element_level (elem_desc);
     T8_ASSERT (level == ts->t8_element_level (elem_desc));
     T8_ASSERT (level == forest->maxlevel);
-
     T8_ASSERT (ts->t8_element_get_linear_id (elem_desc, level) >=
                first_desc_id);
   }
@@ -547,9 +546,6 @@ t8_forest_partition_fill_buffer (t8_forest_t forest_from,
                                               *current_tree,
                                               &first_tree_element,
                                               &last_tree_element);
-    SC_CHECK_ABORT (tree->eclass != T8_ECLASS_PYRAMID,
-                    "Forest partition"
-                    " is not implement for pyramidal elements.");
     /* We now know how many elements this tree will send */
     num_elements_send = last_tree_element - first_tree_element + 1;
     T8_ASSERT (num_elements_send > 0);
@@ -915,6 +911,9 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm,
     /* Get the number of bytes to receive */
     mpiret = sc_MPI_Get_count (status, sc_MPI_BYTE, &recv_bytes);
     SC_CHECK_MPI (mpiret);
+  }
+  else {
+    recv_bytes = byte_to_self;
   }
   t8_debugf ("Receiving message of %i bytes from process %i\n", recv_bytes,
              proc);

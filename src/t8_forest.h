@@ -29,8 +29,10 @@
 #ifndef T8_FOREST_H
 #define T8_FOREST_H
 
+#include <sc_statistics.h>
 #include <t8_cmesh.h>
 #include <t8_element.h>
+#include <t8_vtk.h>
 #include <t8_data/t8_containers.h>
 
 /** Opaque pointer to a forest implementation. */
@@ -56,12 +58,6 @@ typedef void        (*t8_generic_function_pointer) (void);
 
 T8_EXTERN_C_BEGIN ();
 
-/* TODO: if eclass is a vertex then num_outgoing/num_incoming are always
- *       1 and it is not possible to decide whether we are rfining or coarsening.
- *       Is this an issue? */
-/* TODO: We may also take the local element index within the tree as parameter.
- *       Otherwise we have to search for the elements if we want pointers to them.
- */
 /** Callback function prototype to replace one set of elements with another.
  *
  * This is used by the replace routine which can be called after adapt,
@@ -74,6 +70,9 @@ T8_EXTERN_C_BEGIN ();
  * \param [in] forest_new      The forest that is newly constructed from \a forest_old
  * \param [in] which_tree      The local tree containing \a outgoing and \a incoming
  * \param [in] ts              The eclass scheme of the tree
+ * \param [in] refine          -1 if family in \a forest_old got coarsened, 0 if element
+ *                             has not been touched, 1 if element got refined. 
+ *                             See return of t8_forest_adapt_t.
  * \param [in] num_outgoing    The number of outgoing elements.
  * \param [in] first_outgoing  The tree local index of the first outgoing element.
  *                             0 <= first_outgoing < which_tree->num_elements
@@ -81,14 +80,18 @@ T8_EXTERN_C_BEGIN ();
  * \param [in] first_incoming  The tree local index of the first incoming element.
  *                             0 <= first_incom < new_which_tree->num_elements
  *
- * If an element is being refined, num_outgoing will be 1 and num_incoming will
- * be the number of children, and vice versa if a family is being coarsened.
+ * If an element is being refined, \a refine and \a num_outgoing will be 1 and 
+ * \a num_incoming will be the number of children.
+ * If a family is being coarsened, \a refine will be -1, \a num_outgoing will be 
+ * the number of family members and \a num_incoming will be 1. Else \a refine will 
+ * be 0 and \a num_outgoing and \a num_incoming will both be 1.
  * \see t8_forest_iterate_replace
  */
 typedef void        (*t8_forest_replace_t) (t8_forest_t forest_old,
                                             t8_forest_t forest_new,
                                             t8_locidx_t which_tree,
                                             t8_eclass_scheme_c *ts,
+                                            int refine,
                                             int num_outgoing,
                                             t8_locidx_t first_outgoing,
                                             int num_incoming,
@@ -226,8 +229,8 @@ void                t8_forest_set_copy (t8_forest_t forest,
                                         const t8_forest_t from);
 
 /** Set a source forest with an adapt function to be adapted on commiting.
- * By default, the forest takes ownership of the source \b set_from such that it will
- * be destroyed on calling \ref t8_forest_commit. To keep ownership of \b
+ * By default, the forest takes ownership of the source \b set_from such that it
+ * will be destroyed on calling \ref t8_forest_commit. To keep ownership of \b
  * set_from, call \ref t8_forest_ref before passing it into this function.
  * This means that it is ILLEGAL to continue using \b set_from or dereferencing it
  * UNLESS it is referenced directly before passing it into this function.
@@ -238,7 +241,6 @@ void                t8_forest_set_copy (t8_forest_t forest,
  *                          If NULL, a previously (or later) set forest will
  *                          be taken (\ref t8_forest_set_partition, \ref t8_forest_set_balance).
  * \param [in] adapt_fn     The adapt function used on commiting.
- * \param [in] replace_fn   The replace function to be used in \b adapt_fn.
  * \param [in] recursive    A flag specifying whether adaptation is to be done recursively
  *                          or not. If the value is zero, adaptation is not recursive
  *                          and it is recursive otherwise.
@@ -538,6 +540,23 @@ void                t8_forest_ghost_exchange_data (t8_forest_t forest,
 void                t8_forest_set_profiling (t8_forest_t forest,
                                              int set_profiling);
 
+/* TODO: document */
+void                t8_forest_compute_profile (t8_forest_t forest);
+
+const sc_statinfo_t *t8_forest_profile_get_adapt_stats (t8_forest_t forest);
+
+const sc_statinfo_t *t8_forest_profile_get_ghost_stats (t8_forest_t forest);
+
+const sc_statinfo_t *t8_forest_profile_get_partition_stats (t8_forest_t
+                                                            forest);
+
+const sc_statinfo_t *t8_forest_profile_get_commit_stats (t8_forest_t forest);
+
+const sc_statinfo_t *t8_forest_profile_get_balance_stats (t8_forest_t forest);
+
+const sc_statinfo_t *t8_forest_profile_get_balance_rounds_stats (t8_forest_t
+                                                                 forest);
+
 /** Print the collected statistics from a forest profile.
  * \param [in]    forest        The forest.
  *
@@ -824,22 +843,69 @@ t8_gloidx_t         t8_forest_element_face_neighbor (t8_forest_t forest,
 /* TODO: implement */
 void                t8_forest_save (t8_forest_t forest);
 
-/** Write the forest in a parallel vtu format. There is one master
- * .pvtu file and each process writes in its own .vtu file.
- * \param [in]      forest    The forest to write.
- * \param [in]      filename  The prefix of the files where the vtk will
- *                            be stored. The master file is then filename.pvtu
- *                            and the process with rank r writes in the file
- *                            filename_r.vtu.
- * With this function the level, mpirank, treeid and element_id of each element
- * are written. For better control of the output see \ref t8_forest_vtk.h.
+/** Write the forest in a parallel vtu format. Extended version.
+ * See \ref t8_forest_write_vtk for the standard version of this function.
+ * Writes one master .pvtu file and each process writes in its own .vtu file.
+ * If linked and not otherwise specified, the VTK API is used.
+ * If the VTK library is not linked, an ASCII file is written.
+ * This may change in accordance with \a write_ghosts, \a write_curved and 
+ * \a do_not_use_API, because the export of ghosts is not yet available with 
+ * the VTK API and the export of curved elements is not available with the
+ * inbuilt function to write ASCII files. The function will for example
+ * still use the VTK API to satisfy \a write_curved, even if \a do_not_use_API 
+ * is set to true.
  * Forest must be committed when calling this function.
  * This function is collective and must be called on each process.
- * \note If you want to print additional scalar or vector valued data (such as
- * function values), please see the functions in \ref t8_forest_vtk.h.
+ * \param [in]      forest              The forest to write.
+ * \param [in]      fileprefix          The prefix of the files where the vtk will
+ *                                      be stored. The master file is then fileprefix.pvtu
+ *                                      and the process with rank r writes in the file
+ *                                      fileprefix_r.vtu.
+ * \param [in]      write_treeid        If true, the global tree id is written for each element.
+ * \param [in]      write_mpirank       If true, the mpirank is written for each element.
+ * \param [in]      write_level         If true, the refinement level is written for each element.
+ * \param [in]      write_element_id    If true, the global element id is written for each element.
+ * \param [in]      write_ghosts        If true, each process additionally writes its ghost elements.
+ *                                      For ghost element the treeid is -1.
+ * \param [in]      write_curved        If true, write the elements as curved element types from vtk.
+ * \param [in]      do_not_use_API      Do not use the VTK API, even if linked and available.
+ * \param [in]      num_data            Number of user defined double valued data fields to write.
+ * \param [in]      data                Array of t8_vtk_data_field_t of length \a num_data
+ *                                      providing the user defined per element data.
+ *                                      If scalar and vector fields are used, all scalar fields
+ *                                      must come first in the array.
+ * \return  True if successful, false if not (process local).
+ * See also \ref t8_forest_write_vtk .
  */
-void                t8_forest_write_vtk (t8_forest_t forest,
-                                         const char *filename);
+int                 t8_forest_write_vtk_ext (t8_forest_t forest,
+                                             const char *fileprefix,
+                                             int write_treeid,
+                                             int write_mpirank,
+                                             int write_level,
+                                             int write_element_id,
+                                             int write_ghosts,
+                                             int write_curved,
+                                             int do_not_use_API,
+                                             int num_data,
+                                             t8_vtk_data_field_t *data);
+
+/** Write the forest in a parallel vtu format. Writes one master
+ * .pvtu file and each process writes in its own .vtu file.
+ * If linked, the VTK API is used.
+ * If the VTK library is not linked, an ASCII file is written.
+ * This function writes the forest elements, the tree id, element level, mpirank and element id as data.
+ * Forest must be committed when calling this function.
+ * This function is collective and must be called on each process.
+ * For more options use \ref t8_forest_write_vtk_ext
+ * \param [in]      forest              The forest to write.
+ * \param [in]      fileprefix          The prefix of the files where the vtk will
+ *                                      be stored. The master file is then fileprefix.pvtu
+ *                                      and the process with rank r writes in the file
+ *                                      fileprefix_r.vtu.
+ * \return  True if successful, false if not (process local).
+ */
+int                 t8_forest_write_vtk (t8_forest_t forest,
+                                         const char *fileprefix);
 
 /* TODO: implement */
 void                t8_forest_iterate (t8_forest_t forest);
@@ -952,6 +1018,9 @@ void                t8_forest_element_face_normal (t8_forest_t forest,
                                                    double normal[3]);
 
 /** Query whether a given point lies inside an element or not. For bilinearly interpolated elements.
+ * \note For 2D quadrilateral elements this function is only an approximation. It is correct
+ *  if the four vertices lie in the same plane, but it may produce only approximate results if 
+ *  the vertices do not lie in the same plane.
  * \param [in]      forest     The forest.
  * \param [in]      ltree_id   The forest local id of the tree in which the element is.
  * \param [in]      element    The element.

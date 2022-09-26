@@ -79,7 +79,7 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix,
   if (cmesh->mpirank == 0 || cmesh->set_partition) {
     char                vtufilename[BUFSIZ];
     FILE               *vtufile;
-    t8_topidx_t         num_vertices, ivertex;
+    t8_locidx_t         num_vertices, ivertex;
     t8_locidx_t         num_trees;
     t8_ctree_t          tree;
     double              x, y, z;
@@ -183,7 +183,7 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix,
 
     /* write connectivity data */
     fprintf (vtufile, "        <DataArray type=\"%s\" Name=\"connectivity\""
-             " format=\"%s\">\n", T8_VTK_TOPIDX, T8_VTK_FORMAT_STRING);
+             " format=\"%s\">\n", T8_VTK_LOCIDX, T8_VTK_FORMAT_STRING);
 #ifdef T8_VTK_ASCII
     for (tree = t8_cmesh_get_first_tree (cmesh), count_vertices = 0;
          tree != NULL; tree = t8_cmesh_get_next_tree (cmesh, tree)) {
@@ -212,7 +212,7 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix,
 
     /* write offset data */
     fprintf (vtufile, "        <DataArray type=\"%s\" Name=\"offsets\""
-             " format=\"%s\">\n", T8_VTK_TOPIDX, T8_VTK_FORMAT_STRING);
+             " format=\"%s\">\n", T8_VTK_LOCIDX, T8_VTK_FORMAT_STRING);
 #ifdef T8_VTK_ASCII
     fprintf (vtufile, "         ");
     for (tree = t8_cmesh_get_first_tree (cmesh), sk = 1, offset = 0;

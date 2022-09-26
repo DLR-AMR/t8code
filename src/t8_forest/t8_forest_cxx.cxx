@@ -34,6 +34,9 @@
 #include <t8_cmesh/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_geometry/t8_geometry_base.hxx>
+#if T8_ENABLE_DEBUG
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
+#endif
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -211,7 +214,6 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
   /* Compute the vertex coordinates inside [0,1]^dim reference cube. */
   ts->t8_element_vertex_reference_coords (element, corner_number,
                                           vertex_coords);
-
   /* Compute the global tree id */
   gtreeid = t8_forest_global_tree_id (forest, ltree_id);
   /* Get the cmesh */
@@ -532,6 +534,30 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
 
       return volume;
     }
+  case T8_ECLASS_PYRAMID:
+    {
+      double              volume, coordinates[4][3];
+      /* The first tetrahedron has pyra vertices 0, 1, 3 and 4 */
+      t8_forest_element_coordinate (forest, ltreeid, element, 0,
+                                    coordinates[0]);
+      t8_forest_element_coordinate (forest, ltreeid, element, 1,
+                                    coordinates[1]);
+      t8_forest_element_coordinate (forest, ltreeid, element, 3,
+                                    coordinates[2]);
+      t8_forest_element_coordinate (forest, ltreeid, element, 4,
+                                    coordinates[3]);
+      volume = t8_forest_element_tet_volume (coordinates);
+
+      /*The second tetrahedron has pyra vertices 0, 3, 2 and 4 */
+      /*vertex 3 has already been computed and stored in coordinates[2] */
+      coordinates[1][0] = coordinates[2][0];
+      coordinates[1][1] = coordinates[2][1];
+      coordinates[1][2] = coordinates[2][2];
+      t8_forest_element_coordinate (forest, ltreeid, element, 2,
+                                    coordinates[2]);
+      volume += t8_forest_element_tet_volume (coordinates);
+      return volume;
+    }
   default:
     SC_ABORT_NOT_REACHED ();
   }
@@ -712,6 +738,53 @@ t8_forest_element_face_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
   }
 }
 
+#if T8_ENABLE_DEBUG
+/* Test whether four given points in 3D are coplanar up to a given tolerance.
+ */
+static int
+t8_four_points_coplanar (const double p_0[3], const double p_1[3],
+                         const double p_2[3], const double p_3[3],
+                         const double tolerance)
+{
+  /* Let p0, p1, p2, p3 be the four points.
+   * The four points are coplanar if the normal vectors to the triangles
+   * p0, p1, p2 and p0, p2, p3 are pointing in the same direction.
+   *
+   * We build the vectors A = p1 - p0, B = p2 - p0 and C = p3 - p0.
+   * The normal vectors to the triangles are n1 = A x B and n2 = A x C.
+   * These are pointing in the same direction if their cross product is 0.
+   * Hence we check if || n1 x n2 || < tolerance. */
+
+  /* A = p1 - p0 */
+  double              A[3];
+  t8_vec_axpyz (p_0, p_1, A, -1);
+
+  /* B = p2 - p0 */
+  double              B[3];
+  t8_vec_axpyz (p_0, p_2, B, -1);
+
+  /* C = p3 - p0 */
+  double              C[3];
+  t8_vec_axpyz (p_0, p_3, C, -1);
+
+  /* n1 = A x B */
+  double              A_cross_B[3];
+  t8_vec_cross (A, B, A_cross_B);
+
+  /* n2 = A x C */
+  double              A_cross_C[3];
+  t8_vec_cross (A, C, A_cross_C);
+
+  /* n1 x n2 */
+  double              n1_cross_n2[3];
+  t8_vec_cross (A_cross_B, A_cross_C, n1_cross_n2);
+
+  /* || n1 x n2 || */
+  const double        norm = t8_vec_norm (n1_cross_n2);
+  return norm < tolerance;
+}
+#endif
+
 void
 t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
                                const t8_element_t *element, int face,
@@ -833,6 +906,22 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
      * We approximate the normal of the quad face as the normal of
      * the triangle spanned by the corners 0, 1, and 2.
      */
+
+#if T8_ENABLE_DEBUG
+    /* Issue a warning if the points of the quad do not lie in the same plane */
+    {
+      double              p_0[3], p_1[3], p_2[3], p_3[3];
+      /* Compute the vertex coordinates of the quad */
+      t8_forest_element_coordinate (forest, ltreeid, element, 0, p_0);
+      t8_forest_element_coordinate (forest, ltreeid, element, 1, p_1);
+      t8_forest_element_coordinate (forest, ltreeid, element, 2, p_2);
+      t8_forest_element_coordinate (forest, ltreeid, element, 3, p_3);
+      if (!t8_four_points_coplanar (p_0, p_1, p_2, p_3, 1e-16)) {
+        t8_debugf
+          ("WARNING: Computing normal to a quad that is not coplanar. This computation will be inaccurate.\n");
+      }
+    }
+#endif
   case T8_ECLASS_TRIANGLE:
     {
       /* We construct the normal as the cross product of two spanning
@@ -876,6 +965,73 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
   }
 }
 
+/* Query whether a point lies inside a linear triangle defined by the tree 
+ * vertices p_0, p_1, p_2.
+ */
+static int
+t8_triangle_point_inside (const double p_0[3], const double p_1[3],
+                          const double p_2[3], const double point[3],
+                          const double tolerance)
+{
+
+  /* A point p is inside the triangle that is spanned
+   * by the vectors p_0 p_1 p_2 if and only if the linear system
+   * (p_1 - p_0)x + (p_2 - p_0)y = p - p_0
+   * has a solution with 0 <= x,y and x + y <= 1.
+   *
+   * We check whether such a solution exists by computing
+   * certain determinants of 2x2 submatrizes of the 3x3 matrix
+   *
+   *  | v w e_3 | with v = p_1 - p_0, w = p_2 - p_0, and e_3 = (0 0 1)^t (third unit vector)
+   */
+  T8_ASSERT (tolerance > 0);    /* negative values and zero are not allowed */
+
+  double              b[3], v[3], w[3];
+  double              x, y, z;
+
+  /* v = v - p_0 = p_1 - p_0 */
+  t8_vec_axpyz (p_0, p_1, v, -1);
+  /* w = w - p_0 = p_2 - p_0 */
+  t8_vec_axpyz (p_0, p_2, w, -1);
+  /* b = p - p_0 */
+  t8_vec_axpyz (p_0, point, b, -1);
+
+  /* Let d = det (v w e_3) */
+  const double        det_vwe3 = v[0] * w[1] - v[1] * w[0];
+
+  /* The system has a solution, we need to compute it and
+   * check whether 0 <= x,y and x + y <= 1 */
+  /* x = det (b w e_3) / d
+   * y = det (v b e_3) / d
+   */
+  x = b[0] * w[1] - b[1] * w[0];
+  x /= det_vwe3;
+  y = v[0] * b[1] - v[1] * b[0];
+  y /= det_vwe3;
+
+  if (x < -tolerance || y < -tolerance || x + y > 1 + tolerance) {
+    /* The solution is not admissible.
+     * x < 0 or y < 0 or x + y > 1 */
+    return 0;
+  }
+  /* The solution may be admissible, but we have to
+   * check whether the result of
+   *  (p_1 - p_0)x + (p_2 - p_0)y ( = vx + wy)
+   * is actually p - p_0.
+   * Since the system of equations is overrepresented (3 equations, 2 variables)
+   * this may actually break.
+   * If it breaks, it will break in the z coordinate of the result.
+   */
+  z = v[2] * x + w[2] * y;
+  /* Must match the last coordinate of b = p - p_0 */
+  if (fabs (z - b[2]) > tolerance) {
+    /* Does not match. Point lies outside. */
+    return 0;
+  }
+  /* All checks passed. Point lies inside. */
+  return 1;
+}
+
 int
 t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
                                 const t8_element_t *element,
@@ -890,6 +1046,17 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
   double              face_normal[3];
   double              dot_product;
   double              point_on_face[3];
+
+#if T8_ENABLE_DEBUG
+  /* Check whether the provided geometry is linear */
+  const t8_cmesh_t    cmesh = t8_forest_get_cmesh (forest);
+  const t8_locidx_t   cltreeid =
+    t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
+  const t8_gloidx_t   cgtreeid = t8_cmesh_get_global_id (cmesh, cltreeid);
+  const t8_geometry_c *geometry =
+    t8_cmesh_get_tree_geometry (cmesh, cgtreeid);
+  T8_ASSERT (t8_geom_is_linear (geometry));
+#endif
 
   switch (element_shape) {
   case T8_ECLASS_VERTEX:
@@ -963,72 +1130,48 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
       /* The point is on the line. */
       return 1;
     }
+  case T8_ECLASS_QUAD:
+    {
+      /* We divide the quad in two triangles and use the triangle check. */
+      double              p_0[3], p_1[3], p_2[3], p_3[3];
+      int                 point_inside = 0;
+      /* Compute the vertex coordinates of the quad */
+      t8_forest_element_coordinate (forest, ltreeid, element, 0, p_0);
+      t8_forest_element_coordinate (forest, ltreeid, element, 1, p_1);
+      t8_forest_element_coordinate (forest, ltreeid, element, 2, p_2);
+      t8_forest_element_coordinate (forest, ltreeid, element, 3, p_3);
+
+#if T8_ENABLE_DEBUG
+      /* Issue a warning if the points of the quad do not lie in the same plane */
+      if (!t8_four_points_coplanar (p_0, p_1, p_2, p_3, tolerance)) {
+        t8_debugf
+          ("WARNING: Testing if point is inside a quad that is not coplanar. This test will be inaccurate.\n");
+      }
+#endif
+      /* Check whether the point is inside the first triangle. */
+      point_inside =
+        t8_triangle_point_inside (p_0, p_1, p_2, point, tolerance);
+
+      if (!point_inside) {
+        /* If not, check whether the point is inside the second triangle. */
+        point_inside =
+          t8_triangle_point_inside (p_1, p_2, p_3, point, tolerance);
+      }
+      /* point_inside is true if the point was inside the first or second triangle.
+       * Otherwise it is false. */
+      return point_inside;
+    }
   case T8_ECLASS_TRIANGLE:
     {
-      /* A point p is inside the triangle that is spanned
-       * by the vectors p_0 p_1 p_2 if and only if the linear system
-       * (p_1 - p_0)x + (p_2 - p_0)y = p - p_0
-       * has a solution with 0 <= x,y and x + y <= 1.
-       *
-       * We check whether such a solution exists by computing
-       * certain determinants of 2x2 submatrizes of the 3x3 matrix
-       *
-       *  | v w e_3 | with v = p_1 - p_0, w = p_2 - p_0, and e_3 = (0 0 1)^t (third unit vector)
-       */
-      double              p_0[3], v[3], w[3], b[3];
-      double              det_vwe3;
-      double              x, y, z;
-      T8_ASSERT (tolerance > 0);        /* negative values and zero are not allowed */
+      double              p_0[3], p_1[3], p_2[3];
 
       /* Compute the vertex coordinates of the triangle */
       t8_forest_element_coordinate (forest, ltreeid, element, 0, p_0);
-      /* v = p_1 */
-      t8_forest_element_coordinate (forest, ltreeid, element, 1, v);
-      /* w = p_2 */
-      t8_forest_element_coordinate (forest, ltreeid, element, 2, w);
-      /* v = v - p_0 = p_1 - p_0 */
-      t8_vec_axpy (p_0, v, -1);
-      /* w = w - p_0 = p_2 - p_0 */
-      t8_vec_axpy (p_0, w, -1);
-      /* b = p - p_0 */
-      t8_vec_axpyz (p_0, point, b, -1);
+      t8_forest_element_coordinate (forest, ltreeid, element, 1, p_1);
+      t8_forest_element_coordinate (forest, ltreeid, element, 2, p_2);
 
-      /* Let d = det (v w e_3) */
-      det_vwe3 = v[0] * w[1] - v[1] * w[0];
-
-      /* The system has a solution, we need to compute it and
-       * check whether 0 <= x,y and x + y <= 1 */
-      /* x = det (b w e_3) / d
-       * y = det (v b e_3) / d
-       */
-      x = b[0] * w[1] - b[1] * w[0];
-      x /= det_vwe3;
-      y = v[0] * b[1] - v[1] * b[0];
-      y /= det_vwe3;
-
-      if (x < -tolerance || y < -tolerance || x + y > 1 + tolerance) {
-        /* The solution is not admissible.
-         * x < 0 or y < 0 or x + y > 1 */
-        return 0;
-      }
-      /* The solution may be admissible, but we have to
-       * check whether the result of
-       *  (p_1 - p_0)x + (p_2 - p_0)y ( = vx + wy)
-       * id actually p - p_0.
-       * Since the system of equations is overrepresented (3 equations, 2 variables)
-       * this may actually break.
-       * If it breaks, it will break in the z coordinate of the result.
-       */
-      z = v[2] * x + w[2] * y;
-      /* Must match the last coordinate of b = p - p_0 */
-      if (fabs (z - b[2]) > tolerance) {
-        /* Does not match. Point lies outside. */
-        return 0;
-      }
-      /* All checks passed. Point lies inside. */
-      return 1;
+      return t8_triangle_point_inside (p_0, p_1, p_2, point, tolerance);
     }
-    break;
   case T8_ECLASS_TET:
   case T8_ECLASS_HEX:
   case T8_ECLASS_PRISM:
@@ -1070,8 +1213,6 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
     /* For all faces the dot product with the outer normal is <= 0.
      * The point is inside the element. */
     return 1;
-  case T8_ECLASS_QUAD:         /* TODO: implement. If implemented activate the test
-                                   in test/t8_test_point_inside.cxx. */
   default:
     /* Point inside element check is currently not implemented for
      *  - T8_ECLASS_QUAD
@@ -2189,7 +2330,6 @@ t8_forest_element_find_owner_ext (t8_forest_t forest,
   if (upper_bound == lower_bound) {
     return upper_bound;
   }
-
   ts = t8_forest_get_eclass_scheme (forest, eclass);
   if (element_is_desc) {
     /* The element is already its own first_descendant */
@@ -2602,7 +2742,6 @@ t8_forest_element_owners_at_face (t8_forest_t forest, t8_gloidx_t gtreeid,
     upper_bound = forest->mpisize - 1;
   }
   T8_ASSERT (0 <= lower_bound && upper_bound < forest->mpisize);
-
   if (lower_bound == upper_bound) {
     /* There is no need to search, the owner is unique */
     T8_ASSERT (0 <= lower_bound && lower_bound < forest->mpisize);
@@ -2699,6 +2838,7 @@ t8_forest_element_owners_at_neigh_face (t8_forest_t forest,
    * the neighbor element */
   neigh_class =
     t8_forest_element_neighbor_eclass (forest, ltreeid, element, face);
+  T8_ASSERT (T8_ECLASS_ZERO <= neigh_class && neigh_class < T8_ECLASS_COUNT);
   neigh_scheme = t8_forest_get_eclass_scheme (forest, neigh_class);
   neigh_scheme->t8_element_new (1, &face_neighbor);
   neigh_tree =

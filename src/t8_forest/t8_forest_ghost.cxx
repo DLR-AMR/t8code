@@ -29,6 +29,7 @@
 #include <t8_cmesh/t8_cmesh_trees.h>
 #include <t8_element_cxx.hxx>
 #include <t8_data/t8_containers.h>
+#include <sc_statistics.h>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -1066,7 +1067,6 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
 
   last_class = T8_ECLASS_COUNT;
   num_local_trees = t8_forest_get_num_local_trees (forest);
-
   if (ghost_method != 0) {
     sc_array_init (&owners, sizeof (int));
     sc_array_init (&tree_owners, sizeof (int));
@@ -1866,6 +1866,7 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
   int                 create_element_array = 0;
 
   T8_ASSERT (t8_forest_is_committed (forest));
+
   t8_global_productionf ("Into t8_forest_ghost with %i local elements.\n",
                          t8_forest_get_local_num_elements (forest));
 
