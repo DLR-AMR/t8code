@@ -74,8 +74,6 @@ DISTCLEANFILES += \
 include src/Makefile.am
 include src/t8_schemes/t8_default/Makefile.am
 include test/Makefile.am
-<<<<<<< HEAD
-include example/basic/Makefile.am
 include example/geometry/Makefile.am
 include example/ghost/Makefile.am
 include example/timings/Makefile.am
