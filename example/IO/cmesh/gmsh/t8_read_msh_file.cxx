@@ -109,6 +109,7 @@ int
 main (int argc, char *argv[])
 {
   int                 mpiret, parsed, partition, dim, master, mpisize;
+  int                 helpme;
   sc_options_t       *opt;
   const char         *prefix;
   char                usage[BUFSIZ];
@@ -144,19 +145,28 @@ main (int argc, char *argv[])
   SC_CHECK_MPI (mpiret);
 
   opt = sc_options_new (argv[0]);
+  sc_options_add_switch (opt, 'h', "help", &helpme,
+                         "Display a short help message.");
   sc_options_add_string (opt, 'f', "prefix", &prefix, "", "The prefix of the"
                          "tetgen files.");
-  sc_options_add_bool (opt, 'p', "Partition", &partition, 0, "If true "
-                       "the generated cmesh is repartitioned uniformly.");
+  sc_options_add_switch (opt, 'p', "partition", &partition, "If true "
+                         "the generated cmesh is repartitioned uniformly.");
   sc_options_add_int (opt, 'd', "dim", &dim, 2, "The dimension of the mesh");
   sc_options_add_int (opt, 'm', "master", &master, -1, "If specified, the "
                       "mesh is partitioned and all elements reside on process with "
                       "rank master.");
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
-  if (parsed < 0 || strcmp (prefix, "") == 0 || 0 > dim || dim > 3
-      || master < -1 || master >= mpisize) {
-    t8_global_errorf ("%s", help);
+  if (helpme) {
+    /* display help message and usage */
+    t8_global_productionf ("%s\n", help);
+    sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
+  }
+  else if (parsed < 0 || strcmp (prefix, "") == 0 || 0 > dim || dim > 3
+           || master < -1 || master >= mpisize) {
+    /* wrong usage */
+    t8_global_productionf ("\n\t ERROR: Wrong usage.\n\n");
+    sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
     return 1;
   }
   else {
