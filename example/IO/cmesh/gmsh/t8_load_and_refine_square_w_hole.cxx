@@ -170,8 +170,6 @@ t8_load_refine_build_forest (t8_cmesh_t cmesh, sc_MPI_Comm comm, int level)
   t8_forest_commit (forest_adapt);
   t8_forest_write_vtk (forest_adapt, "adapted_forest");
   t8_forest_unref (&forest_adapt);
-  t8_cmesh_unref (&cmesh_partition);
-  t8_cmesh_unref (&cmesh);
 }
 
 t8_cmesh_t
