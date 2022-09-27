@@ -69,22 +69,25 @@ const t8_eclass_t   t8_cmesh_vtk_type_to_t8_type[82] = {
   T8_ECLASS_INVALID, T8_ECLASS_INVALID
 };
 
-int t8_get_dimension(vtkSmartPointer < vtkUnstructuredGrid > grid)
+int
+t8_get_dimension (vtkSmartPointer < vtkUnstructuredGrid > grid)
 {
-  /* Get the array of cell types*/
-  vtkSmartPointer < vtkUnsignedCharArray > cell_types = grid->GetCellTypesArray();
-  int max_cell_type = -1;
-  const vtkIdType num_types = cell_types->GetNumberOfTuples();
-  for(vtkIdType cell_types_it = 0; cell_types_it < num_types; cell_types_it++ ){
-    const vtkIdType type = cell_types->GetValue(cell_types_it);
-    if(type > max_cell_type){
+  /* Get the array of cell types */
+  vtkSmartPointer < vtkUnsignedCharArray > cell_types =
+    grid->GetCellTypesArray ();
+  int                 max_cell_type = -1;
+  const vtkIdType     num_types = cell_types->GetNumberOfTuples ();
+  for (vtkIdType cell_types_it = 0; cell_types_it < num_types;
+       cell_types_it++) {
+    const vtkIdType     type = cell_types->GetValue (cell_types_it);
+    if (type > max_cell_type) {
       max_cell_type = type;
     }
   }
-  T8_ASSERT(0 <= max_cell_type && max_cell_type < 82);
-  const int ieclass = t8_cmesh_vtk_type_to_t8_type[max_cell_type];
-  T8_ASSERT(ieclass != T8_ECLASS_INVALID);
-  t8_debugf("[D] dim: %i\n", t8_eclass_to_dimension[ieclass]);
+  T8_ASSERT (0 <= max_cell_type && max_cell_type < 82);
+  const int           ieclass = t8_cmesh_vtk_type_to_t8_type[max_cell_type];
+  T8_ASSERT (ieclass != T8_ECLASS_INVALID);
+  t8_debugf ("[D] dim: %i\n", t8_eclass_to_dimension[ieclass]);
 
   return t8_eclass_to_dimension[ieclass];
 }

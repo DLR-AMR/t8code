@@ -32,7 +32,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_cmesh/t8_cmesh_vtk_helper.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 
-
 #if T8_WITH_VTK
 #include <vtkUnstructuredGrid.h>
 #include <vtkAbstractArray.h>
@@ -46,26 +45,28 @@ T8_EXTERN_C_BEGIN ();
 
 /* Construct a cmesh given a filename a communicator */
 t8_cmesh_t
-t8_cmesh_read_from_vtk_unstructured (const char *filename, const int partition, const int main_proc, sc_MPI_Comm comm)
+t8_cmesh_read_from_vtk_unstructured (const char *filename,
+                                     const int partition, const int main_proc,
+                                     sc_MPI_Comm comm)
 {
-  int mpirank;
-  int mpisize;
-  int mpiret;
-  int dim;
-  t8_cmesh_t cmesh;
-  mpiret = sc_MPI_Comm_rank(comm, &mpirank);
-  SC_CHECK_MPI(mpiret);
-  mpiret = sc_MPI_Comm_size(comm, &mpisize);
-  SC_CHECK_MPI(mpiret);
-  int main_proc_read_successful = 0;
-  t8_gloidx_t num_trees;
-  
-  T8_ASSERT(partition == 0 || (main_proc >= 0 && main_proc < mpisize));
+  int                 mpirank;
+  int                 mpisize;
+  int                 mpiret;
+  int                 dim;
+  t8_cmesh_t          cmesh;
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  int                 main_proc_read_successful = 0;
+  t8_gloidx_t         num_trees;
+
+  T8_ASSERT (partition == 0 || (main_proc >= 0 && main_proc < mpisize));
 
   t8_cmesh_init (&cmesh);
-  
+
 #if T8_WITH_VTK
-  if(!partition || mpirank == main_proc){
+  if (!partition || mpirank == main_proc) {
     /* The Incoming data must be an unstructured Grid */
     vtkSmartPointer < vtkUnstructuredGrid > unstructuredGrid;
     vtkSmartPointer < vtkCellData > cellData;
@@ -76,7 +77,8 @@ t8_cmesh_read_from_vtk_unstructured (const char *filename, const int partition, 
       if (partition) {
         main_proc_read_successful = 0;
         /* Reading failed, communicate to other processes */
-        sc_MPI_Bcast(&main_proc_read_successful, 1, sc_MPI_INT, main_proc, comm);
+        sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc,
+                      comm);
       }
       return NULL;
     }
@@ -88,28 +90,30 @@ t8_cmesh_read_from_vtk_unstructured (const char *filename, const int partition, 
     }
 
     /* Actual translation */
-    num_trees = t8_vtk_iterate_cells (unstructuredGrid, cellData, cmesh, comm);
-    dim = t8_get_dimension(unstructuredGrid);
+    num_trees =
+      t8_vtk_iterate_cells (unstructuredGrid, cellData, cmesh, comm);
+    dim = t8_get_dimension (unstructuredGrid);
     t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim);
     t8_cmesh_register_geometry (cmesh, linear_geom);
     main_proc_read_successful = 1;
   }
-  if(partition) {
-    t8_gloidx_t first_tree;
-    t8_gloidx_t last_tree;
+  if (partition) {
+    t8_gloidx_t         first_tree;
+    t8_gloidx_t         last_tree;
+
     sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc, comm);
-    if (!main_proc_read_successful){
-      t8_debugf("Main process did not read the file successfully.\n");
-      t8_cmesh_destroy(&cmesh);
+    if (!main_proc_read_successful) {
+      t8_debugf ("Main process did not read the file successfully.\n");
+      t8_cmesh_destroy (&cmesh);
       return NULL;
     }
-    if(mpirank == main_proc) {
+    if (mpirank == main_proc) {
       first_tree = 0;
       last_tree = num_trees - 1;
     }
     sc_MPI_Bcast (&dim, 1, sc_MPI_INT, main_proc, comm);
     sc_MPI_Bcast (&num_trees, 1, T8_MPI_GLOIDX, main_proc, comm);
-    t8_cmesh_set_dimension(cmesh, dim);
+    t8_cmesh_set_dimension (cmesh, dim);
 
     if (mpirank < main_proc) {
       first_tree = 0;
@@ -117,13 +121,13 @@ t8_cmesh_read_from_vtk_unstructured (const char *filename, const int partition, 
       t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim);
       t8_cmesh_register_geometry (cmesh, linear_geom);
     }
-    else if(mpirank > main_proc) {
+    else if (mpirank > main_proc) {
       first_tree = num_trees;
-      last_tree = num_trees-1;
+      last_tree = num_trees - 1;
       t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim);
       t8_cmesh_register_geometry (cmesh, linear_geom);
     }
-    t8_cmesh_set_partition_range(cmesh, 3, first_tree, last_tree);
+    t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
   }
   T8_ASSERT (cmesh != NULL);
   if (cmesh != NULL) {
@@ -147,8 +151,8 @@ t8_cmesh_read_from_vtk_poly (const char *filename, sc_MPI_Comm comm)
   vtkSmartPointer < vtkCellData > cell_data;
   vtkSmartPointer < vtkPolyData > triangulated;
   vtkNew < vtkTriangleFilter > tri_filter;
-  t8_cmesh_t        cmesh;
-  t8_cmesh_init(&cmesh);
+  t8_cmesh_t          cmesh;
+  t8_cmesh_init (&cmesh);
 
   /* Prepare the poly-data for the translation from vtk to t8code.
    * We split all polygons (which are not supported by t8code) to

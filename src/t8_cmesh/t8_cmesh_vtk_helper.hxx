@@ -46,7 +46,8 @@ extern const t8_eclass_t t8_cmesh_vtk_type_to_t8_type[82];
  * \param[in] grid  Input grid
  * \return int      The maximal dimension of a cell in \a grid
  */
-int t8_get_dimension(vtkSmartPointer < vtkUnstructuredGrid >grid );
+int                 t8_get_dimension (vtkSmartPointer < vtkUnstructuredGrid >
+                                      grid);
 
 /** iterate over a vtkDataSet via a Celliterator and construct a tree
  * for every cell. All trees are then commited in a cmesh. For each cell
@@ -59,10 +60,10 @@ int t8_get_dimension(vtkSmartPointer < vtkUnstructuredGrid >grid );
  * \param [in]      comm              The communicator to use
  * \return t8_cmesh_t                 The cmesh constructed using the \a cells.
  */
-t8_gloidx_t          t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > cells,
+t8_gloidx_t         t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet >
+                                          cells,
                                           vtkSmartPointer < vtkCellData >
-                                          cell_data, 
-                                          t8_cmesh_t cmesh,
+                                          cell_data, t8_cmesh_t cmesh,
                                           sc_MPI_Comm comm);
 
 /**
