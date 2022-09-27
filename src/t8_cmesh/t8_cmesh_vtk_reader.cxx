@@ -49,23 +49,22 @@ t8_cmesh_read_from_vtk_unstructured (const char *filename,
                                      const int partition, const int main_proc,
                                      sc_MPI_Comm comm)
 {
+#if T8_WITH_VTK
   int                 mpirank;
   int                 mpisize;
   int                 mpiret;
-  int                 dim;
   t8_cmesh_t          cmesh;
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
   int                 main_proc_read_successful = 0;
+  int                 dim;
   t8_gloidx_t         num_trees;
 
   T8_ASSERT (partition == 0 || (main_proc >= 0 && main_proc < mpisize));
 
   t8_cmesh_init (&cmesh);
-
-#if T8_WITH_VTK
   if (!partition || mpirank == main_proc) {
     /* The Incoming data must be an unstructured Grid */
     vtkSmartPointer < vtkUnstructuredGrid > unstructuredGrid;
