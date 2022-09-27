@@ -98,4 +98,3 @@ jobs:
         git add content/doc/dev/
         git commit -m "Add newest documentation"
         git push --force-with-lease
- 
