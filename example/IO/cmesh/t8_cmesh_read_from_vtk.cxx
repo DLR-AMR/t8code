@@ -53,6 +53,7 @@ t8_forest_construct_from_vtk (const char *prefix, sc_MPI_Comm comm,
   double            **cell_values;
   double             *tree_data;
   t8_cmesh_t          cmesh;
+  t8_cmesh_vtk_write_file (cmesh_in, "t8_cmesh_in", 1.0);
   if (partition) {
     t8_cmesh_init (&cmesh);
     t8_cmesh_set_derive (cmesh, cmesh_in);
@@ -62,6 +63,8 @@ t8_forest_construct_from_vtk (const char *prefix, sc_MPI_Comm comm,
   else {
     cmesh = cmesh_in;
   }
+  t8_cmesh_vtk_write_file (cmesh, "t8_cmesh_", 1.0);
+
   /* Initialize the forest */
   t8_forest_init (&forest);
   /* Initialize the cmesh of the forest */

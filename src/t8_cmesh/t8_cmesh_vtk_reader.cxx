@@ -93,6 +93,7 @@ t8_cmesh_read_from_vtk_unstructured (const char *filename,
     num_trees =
       t8_vtk_iterate_cells (unstructuredGrid, cellData, cmesh, comm);
     dim = t8_get_dimension (unstructuredGrid);
+    t8_cmesh_set_dimension (cmesh, dim);
     t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim);
     t8_cmesh_register_geometry (cmesh, linear_geom);
     main_proc_read_successful = 1;
@@ -112,6 +113,7 @@ t8_cmesh_read_from_vtk_unstructured (const char *filename,
       last_tree = num_trees - 1;
     }
     sc_MPI_Bcast (&dim, 1, sc_MPI_INT, main_proc, comm);
+    t8_debugf ("[D] dim: %i\n", dim);
     sc_MPI_Bcast (&num_trees, 1, T8_MPI_GLOIDX, main_proc, comm);
     t8_cmesh_set_dimension (cmesh, dim);
 
