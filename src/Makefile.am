@@ -27,7 +27,7 @@ libt8_installed_headers = \
   src/t8_cmesh_tetgen.h src/t8_cmesh_readmshfile.h \
   src/t8_cmesh_vtk_writer.h \
   src/t8_cmesh_vtk_reader.hxx \
-  src/t8_cmesh/t8_cmesh_reader_helper.hxx \
+  src/t8_cmesh/t8_cmesh_vtk_helper.hxx \
   src/t8_forest.h \
   src/t8_vec.h \
   src/t8_version.h \
@@ -74,8 +74,8 @@ libt8_internal_headers = \
   src/t8_cmesh/t8_cmesh_stash.h src/t8_cmesh/t8_cmesh_trees.h \
   src/t8_cmesh/t8_cmesh_types.h src/t8_cmesh/t8_cmesh_partition.h \
   src/t8_cmesh/t8_cmesh_refine.h src/t8_cmesh/t8_cmesh_copy.h \
-  src/t8_cmesh/t8_cmesh_offset.h \
-  src/t8_cmesh/t8_cmesh_vtk_helper.hxx src/t8_forest/t8_forest_cxx.h  \
+  src/t8_cmesh/t8_cmesh_offset.h src/t8_cmesh/t8_cmesh_reader_helper.hxx \
+  src/t8_forest/t8_forest_cxx.h  \
   src/t8_forest/t8_forest_ghost.h \
   src/t8_forest/t8_forest_balance.h src/t8_forest/t8_forest_types.h \
   src/t8_forest/t8_forest_private.h 
