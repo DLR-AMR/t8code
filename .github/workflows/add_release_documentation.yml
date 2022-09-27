@@ -1,0 +1,121 @@
+name: "Upload release documentation to website"
+
+#description: "This action updates the documentation on the t8code website"
+
+on:
+  release:
+    types:
+      - created
+    branches:
+      - main
+
+jobs:
+  add_release_doc:
+
+    runs-on: ubuntu-latest
+    
+    timeout-minutes: 10
+    steps:
+# check if release is at least a minor release
+    - name: check-tag
+      run: |
+        if [[ $GITHUB_REF_NAME =~ ^v[0-9]+\.[0-9]+\.0$ ]]; then
+          echo "MINOR_RELEASE=true" >> $GITHUB_ENV
+        else
+          echo "MINOR_RELEASE=false" >> $GITHUB_ENV
+        fi
+#
+# Setup and bootstrap
+#
+    - name: checkout
+      if: ${{ env.MINOR_RELEASE == 'true' }}
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ github.head_ref }}
+        fetch-depth: 0
+        repository: DLR-AMR/t8code
+        path: t8code
+
+    - name: Install dependencies
+      if: ${{ env.MINOR_RELEASE == 'true' }}
+      run: sudo apt-get install libz-dev doxygen
+    - name: init submodules
+      if: ${{ env.MINOR_RELEASE == 'true' }}
+      run: |
+        cd t8code
+        git submodule init
+    - name: update submodules
+      if: ${{ env.MINOR_RELEASE == 'true' }}
+      run: |
+        cd t8code
+        git submodule update
+    - name: bootstrap
+      if: ${{ env.MINOR_RELEASE == 'true' }}
+      run: |
+        cd t8code
+        ./bootstrap
+
+    # build config vars
+    - name: build CFLAGS and CXXFLAGS variables
+      if: ${{ env.MINOR_RELEASE == 'true' }}
+      run: echo CFLAGS_var="-Wall -pedantic -O3" >> $GITHUB_ENV
+        && echo CXXFLAGS_var="-Wall -pedantic -O3" >> $GITHUB_ENV
+    - name: build config variables
+      if: ${{ env.MINOR_RELEASE == 'true' }}
+      run: export CONFIG_OPTIONS="--without-blas ${LESS_TEST_OPTION}"
+           && export CONFIG_SERIAL_DEBUG="$CONFIG_OPTIONS --enable-debug --with-sc=$SC_SERIAL_DEBUG/install --with-p4est=$P4EST_SERIAL_DEBUG/install"
+           && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
+           && echo CONFIG_SERIAL_DEBUG="$CONFIG_SERIAL_DEBUG" >> $GITHUB_ENV
+    - name: Check vars
+      if: ${{ env.MINOR_RELEASE == 'true' }}
+      run: echo "[$CONFIG_SERIAL_DEBUG]"
+# configure and generate doxygen
+    - name: check debugging mode
+      if: ${{ env.MINOR_RELEASE == 'true' }}
+      run: echo "Checking debug mode"
+    - name: configure
+      if: ${{ env.MINOR_RELEASE == 'true' }}
+      run: |
+        cd t8code
+        mkdir build_debug && cd build_debug && ../configure $CONFIG_DEBUG CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
+    - name: make doxygen
+      if: ${{ env.MINOR_RELEASE == 'true' }}
+      run: |
+        cd t8code/build_debug
+        make doxygen
+
+# upload documentation
+    - name: Checkout t8code-website repo
+      if: ${{ env.MINOR_RELEASE == 'true' }}
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ github.head_ref }}
+        fetch-depth: 0
+        repository: DLR-AMR/t8code-website
+        path: t8code-website
+        token: ${{ secrets.T8DDY_TOKEN }}
+    - name: Add documentation to website
+      if: ${{ env.MINOR_RELEASE == 'true' }}
+      run: |
+        cd t8code-website/content
+        mkdir -p doc/$GITHUB_REF_NAME
+        cp -r ../../t8code/build_debug/doxygen/html/* doc/$GITHUB_REF_NAME/
+        cd pages
+        today=`date +'%Y-%m-%d %H:%M'`
+        sed -i s/"^Date:.*"/"Date: $today"/g 4_Documentation.md
+        csplit -z 4_Documentation.md /"t8code dev"/+1
+        mv xx00 4_Documentation.md
+        echo " - [t8code $GITHUB_REF_NAME](../doc/$GITHUB_REF_NAME/index.html)" >> 4_Documentation.md
+        cat xx01 >> 4_Documentation.md
+        rm xx01
+    - name: Create Pull Request at DLR-AMR/t8code-website
+      if: ${{ env.MINOR_RELEASE == 'true' }}
+      uses: peter-evans/create-pull-request@v3
+      with:
+        path: t8code-website
+        title: Add documentation for t8code ${{ github.ref_name }}
+        body: There has been a new release over at DLR-AMR/t8code. We should add the latest documentation to our website.
+        branch: add-t8code-${{ github.ref_name }}-documentation
+        commit-message: add documentation for t8code ${{ github.ref_name }}
+        token: ${{ secrets.T8DDY_TOKEN }}
+ 
