@@ -25,7 +25,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh_vtk_writer.h>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_cmesh/t8_cmesh_reader_helper.hxx>
 #include <t8_element_shape.h>
 
@@ -69,6 +68,26 @@ const t8_eclass_t   t8_cmesh_vtk_type_to_t8_type[82] = {
   T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
   T8_ECLASS_INVALID, T8_ECLASS_INVALID
 };
+
+int t8_get_dimension(vtkSmartPointer < vtkUnstructuredGrid > grid)
+{
+  /* Get the array of cell types*/
+  vtkSmartPointer < vtkUnsignedCharArray > cell_types = grid->GetCellTypesArray();
+  int max_cell_type = -1;
+  const vtkIdType num_types = cell_types->GetNumberOfTuples();
+  for(vtkIdType cell_types_it = 0; cell_types_it < num_types; cell_types_it++ ){
+    const vtkIdType type = cell_types->GetValue(cell_types_it);
+    if(type > max_cell_type){
+      max_cell_type = type;
+    }
+  }
+  T8_ASSERT(0 <= max_cell_type && max_cell_type < 82);
+  const int ieclass = t8_cmesh_vtk_type_to_t8_type[max_cell_type];
+  T8_ASSERT(ieclass != T8_ECLASS_INVALID);
+  t8_debugf("[D] dim: %i\n", t8_eclass_to_dimension[ieclass]);
+
+  return t8_eclass_to_dimension[ieclass];
+}
 
 vtkSmartPointer < vtkUnstructuredGrid >
 t8_read_unstructured (const char *filename)
@@ -169,10 +188,10 @@ vtkSmartPointer < vtkPolyData > t8_read_poly (const char *filename)
   }
 }
 
-t8_cmesh_t
+t8_gloidx_t
 t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > cells,
                       vtkSmartPointer < vtkCellData > cell_data,
-                      sc_MPI_Comm comm)
+                      t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
   vtkCellIterator    *cell_it;
   vtkSmartPointer < vtkPoints > points;
@@ -181,11 +200,8 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > cells,
   size_t             *data_size;
   t8_gloidx_t         tree_id = 0;
   int                 max_dim = -1;
-  t8_cmesh_t          cmesh;
-
   const int           max_cell_points = cells->GetMaxCellSize ();
   T8_ASSERT (max_cell_points > 0);
-  t8_cmesh_init (&cmesh);
   vertices = T8_ALLOC (double, 3 * max_cell_points);
   /* Get cell iterator */
   cell_it = cells->NewCellIterator ();
@@ -246,11 +262,7 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > cells,
     }
     tree_id++;
   }
-  t8_debugf ("[D] read %li trees\n", tree_id++);
-  /* Set the geometry */
-  t8_geometry_c      *linear_geom = t8_geometry_linear_new (max_dim);
-  t8_cmesh_register_geometry (cmesh, linear_geom);
-  t8_cmesh_commit (cmesh, comm);
+  t8_debugf ("[D] read %li trees\n", tree_id);
 
   /* Clean-up */
   cell_it->Delete ();
@@ -262,7 +274,7 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > cells,
     T8_FREE (tuples);
   }
   T8_FREE (vertices);
-  return cmesh;
+  return tree_id;
 }
 
 #endif

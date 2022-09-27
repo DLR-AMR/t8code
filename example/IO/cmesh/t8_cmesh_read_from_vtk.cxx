@@ -41,16 +41,26 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  */
 void
 t8_forest_construct_from_vtk (const char *prefix, sc_MPI_Comm comm,
-                              const int values_per_cell)
+                              const int values_per_cell, const int partition)
 {
   /* Read a poly-data file (.ply, .vtp, .obj, .stl, .vtk, .g) and construct a cmesh 
    * representing the mesh. If  there is any cell-data, it will be read too. 
    * Triangle-strips and polygons will be broken down to multiple triangles. */
-  t8_cmesh_t          cmesh = t8_cmesh_read_from_vtk_poly (prefix, comm);
+  t8_cmesh_t          cmesh_in = t8_cmesh_read_from_vtk_unstructured(prefix, partition, 0, comm);
   t8_forest_t         forest;
   t8_vtk_data_field_t *vtk_data;
   double            **cell_values;
   double             *tree_data;
+  t8_cmesh_t          cmesh;
+  if(partition){
+    t8_cmesh_init(&cmesh);
+    t8_cmesh_set_derive(cmesh, cmesh_in);
+    t8_cmesh_set_partition_uniform(cmesh, 0, t8_scheme_new_default_cxx());
+    t8_cmesh_commit(cmesh, comm);
+  }
+  else{
+    cmesh = cmesh_in;
+  }
   /* Initialize the forest */
   t8_forest_init (&forest);
   /* Initialize the cmesh of the forest */
@@ -108,6 +118,7 @@ main (int argc, char **argv)
   sc_options_t       *opt;
   char                usage[BUFSIZ], help[BUFSIZ];
   int                 sreturn;
+  int                 partition;
 
   snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS> <ARGUMENTS>\n\t%s -h\t"
             "for a brief overview of all options.",
@@ -134,6 +145,8 @@ main (int argc, char **argv)
                          "The prefix of the .vtk file.");
   sc_options_add_int (opt, 'c', "num_cell_values", &num_keys, 0,
                       "Number of values per cell stored in the vtk-file.");
+  sc_options_add_bool (opt, 'p', "partition", &partition, 0, 
+                      "If set, partition the cmesh uniformly.\n");
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
 
@@ -145,7 +158,7 @@ main (int argc, char **argv)
     return 1;
   }
   else {
-    t8_forest_construct_from_vtk (vtk_file, sc_MPI_COMM_WORLD, num_keys);
+    t8_forest_construct_from_vtk (vtk_file, sc_MPI_COMM_WORLD, num_keys, partition);
 
   }
   sc_options_destroy (opt);

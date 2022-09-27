@@ -3,10 +3,12 @@
 # Included from toplevel directory
 
 bin_PROGRAMS += \
-  example/IO/cmesh/t8_cmesh_load_save
+  example/IO/cmesh/t8_cmesh_load_save \
+  example/IO/cmesh/t8_cmesh_read_from_vtk
 
 
 example_IO_cmesh_t8_cmesh_load_save_SOURCES = example/IO/cmesh/t8_cmesh_load_save.cxx
+example_IO_cmesh_t8_cmesh_read_from_vtk_SOURCES = example/IO/cmesh/t8_cmesh_read_from_vtk.cxx
 
 include example/IO/cmesh/gmsh/Makefile.am
 include example/IO/cmesh/tetgen/Makefile.am

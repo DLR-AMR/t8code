@@ -51,6 +51,8 @@ T8_EXTERN_C_BEGIN ();
  * \return t8_cmesh_t       The cmesh described by the files or NULL if the cmesh could not be read.
  */
 t8_cmesh_t          t8_cmesh_read_from_vtk_unstructured (const char *filename,
+                                                         const int partition,
+                                                         const int main_proc,
                                                          sc_MPI_Comm comm);
 
 /**
