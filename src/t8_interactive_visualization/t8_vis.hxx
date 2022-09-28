@@ -19,6 +19,8 @@
   along with t8code; if not, write to the Free Software Foundation, Inc.,
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
+#ifndef T8_VIS_H
+#define T8_VIS_H
 
 #include <t8_cmesh_vtk_reader.hxx>
 #include <t8_cmesh.h>
@@ -28,6 +30,8 @@
 #include <vtkMultiProcessController.h>
 #include <vtkUnstructuredGrid.h>
 #endif
+
+T8_EXTERN_C_BEGIN ();
 
 typedef struct t8_interactive_vis
 {
@@ -93,3 +97,7 @@ void                t8_interactive_vis_update_vtkGrid (t8_interactive_vis *
  */
 void                t8_interactive_vis_destroy (t8_interactive_vis_t **
                                                 pvis_handler);
+
+T8_EXTERN_C_END ();
+
+#endif /* !T8_VIS_H */
