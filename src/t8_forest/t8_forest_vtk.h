@@ -30,44 +30,9 @@
 
 #include <t8_vtk.h>
 #include <t8_forest.h>
-#if T8_WITH_VTK
-#include <vtkUnstructuredGrid.h>
-#endif /* T8_WITH_VTK */
 
 T8_EXTERN_C_BEGIN ();
 /* function declarations */
-
-/**
- * Write a vtkUnstructuredGrid representing the forest. Each process writes the
- * chunk of the forest it posesses. Only available if configured with --with-vtk. 
- * Currently does not support quadratic pyramid elements.
- * \param [in]  forest    The forest.
- * \param [in, out]  vtkGrid Pointer to a vtkGrid, which is filled with Data via this routine.
- * \param [in]  write_treeid If true, the global tree id is written for each element.
- * \param [in]  write_mpirank If true, the mpirank is written for each element.
- * \param [in]  write_level If true, the refinement level is written for each element.
- * \param [in]  write_element_id If true, the global element id is written for each element.
- * \param [in]  curved_flag If true, write the elements as curved element types from vtk.
- * \param [in]  num_data  Number of user defined double valued data fields to write.
- * \param [in]  data      Array of t8_vtk_data_field_t of length \a num_data
- *                        providing the user defined per element data.
- *                        If scalar and vector fields are used, all scalar fields
- *                        must come first in the array.
- */
-#if T8_WITH_VTK
-void                t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
-                                                      vtkSmartPointer <
-                                                      vtkUnstructuredGrid >
-                                                      vtkGrid,
-                                                      int write_treeid,
-                                                      int write_mpirank,
-                                                      int write_level,
-                                                      int write_element_id,
-                                                      int curved_flag,
-                                                      int num_data,
-                                                      t8_vtk_data_field_t
-                                                      *data);
-#endif /* T8_WITH_VTK */
 
 /** Write the forest in .pvtu file format. Writes one .vtu file per
  * process and a meta .pvtu file.
