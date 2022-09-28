@@ -29,7 +29,6 @@
 #if T8_WITH_VTK
 #include <vtkMultiProcessController.h>
 #include <vtkUnstructuredGrid.h>
-#endif
 
 T8_EXTERN_C_BEGIN ();
 
@@ -99,5 +98,7 @@ void                t8_interactive_vis_destroy (t8_interactive_vis_t **
                                                 pvis_handler);
 
 T8_EXTERN_C_END ();
+
+#endif /* T8_WITH_VTK */
 
 #endif /* !T8_VIS_H */

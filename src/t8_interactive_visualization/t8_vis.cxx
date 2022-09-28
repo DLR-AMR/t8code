@@ -27,7 +27,6 @@
 #include <vtkMultiProcessController.h>
 #include <vtkMPICommunicator.h>
 #include <vtkMPI.h>
-#endif
 
 void
 t8_interactive_vis_init (t8_interactive_vis_t ** pvis_handler)
@@ -81,3 +80,4 @@ t8_interactive_vis_destroy (t8_interactive_vis_t ** pvis_handler)
   /* Set the pointer to NULL */
   *pvis_handler = NULL;
 }
+#endif

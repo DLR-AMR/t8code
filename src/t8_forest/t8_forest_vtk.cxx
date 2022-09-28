@@ -646,9 +646,10 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix,
   /* Construct the vtkUnstructuredGrid */
   vtkSmartPointer < vtkUnstructuredGrid > unstructuredGrid =
     vtkSmartPointer < vtkUnstructuredGrid >::New ();
-  t8_forest_to_vtkUnstructured (forest, unstructuredGrid, write_treeid,
-                                write_mpirank, write_level, write_element_id,
-                                curved_flag, num_data, data);
+  t8_forest_to_vtkUnstructuredGrid (forest, unstructuredGrid, write_treeid,
+                                    write_mpirank, write_level,
+                                    write_element_id, curved_flag, num_data,
+                                    data);
 
   /*
    * We define the filename used to write the pvtu and the vtu files.
