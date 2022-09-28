@@ -80,8 +80,9 @@ vtkSmartPointer < vtkPolyData > t8_read_poly (const char *filename);
  * \returns         vtkSmartPointer<vtkUnstructuredGrid>    A pointer to vtkPolyData,
  *                  or NULL if an error occurs during reading.
  */
-vtkSmartPointer < vtkUnstructuredGrid >
-t8_read_unstructured (const char *filename);
+void                t8_read_unstructured (const char *filename,
+                                          vtkSmartPointer <
+                                          vtkUnstructuredGrid > grid);
 #endif
 
 #endif /* T8_CMESH_VTK_HELPER */

@@ -67,10 +67,11 @@ t8_cmesh_read_from_vtk_unstructured (const char *filename,
   t8_cmesh_init (&cmesh);
   if (!partition || mpirank == main_proc) {
     /* The Incoming data must be an unstructured Grid */
-    vtkSmartPointer < vtkUnstructuredGrid > unstructuredGrid;
+    vtkSmartPointer < vtkUnstructuredGrid > unstructuredGrid =
+      vtkSmartPointer < vtkUnstructuredGrid >::New ();
     vtkSmartPointer < vtkCellData > cellData;
     /* Prepare grid for translation */
-    unstructuredGrid = t8_read_unstructured (filename);
+    t8_read_unstructured (filename, unstructuredGrid);
     if (unstructuredGrid == NULL) {
       t8_errorf ("Could not read file.\n");
       if (partition) {

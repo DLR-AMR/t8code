@@ -27,6 +27,7 @@ libt8_installed_headers = \
   src/t8_cmesh_tetgen.h src/t8_cmesh_readmshfile.h \
   src/t8_cmesh_vtk_writer.h \
   src/t8_cmesh_vtk_reader.hxx \
+  src/t8_interactive_visualization/t8_vis.hxx \
   src/t8_cmesh/t8_cmesh_vtk_helper.hxx \
   src/t8_forest.h \
   src/t8_vec.h \
@@ -115,7 +116,8 @@ libt8_compiled_sources = \
   src/t8_forest/t8_forest_netcdf.cxx \
   src/t8_element_shape.c \
   src/t8_netcdf.c \
-  src/t8_cmesh/t8_cmesh_testcases.c 
+  src/t8_cmesh/t8_cmesh_testcases.c \
+  src/t8_interactive_visualization/t8_vis.cxx
 
 # this variable is used for headers that are not publicly installed
 T8_CPPFLAGS =

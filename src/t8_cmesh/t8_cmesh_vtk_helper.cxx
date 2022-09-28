@@ -92,8 +92,9 @@ t8_get_dimension (vtkSmartPointer < vtkUnstructuredGrid > grid)
   return t8_eclass_to_dimension[ieclass];
 }
 
-vtkSmartPointer < vtkUnstructuredGrid >
-t8_read_unstructured (const char *filename)
+void
+t8_read_unstructured (const char *filename,
+                      vtkSmartPointer < vtkUnstructuredGrid > grid)
 {
   char                tmp[BUFSIZ], *extension;
   /* Get the file-extension to decide which reader to use */
@@ -107,11 +108,13 @@ t8_read_unstructured (const char *filename)
       vtkSmartPointer < vtkXMLUnstructuredGridReader >::New ();
     if (!reader->CanReadFile (filename)) {
       t8_errorf ("Unable to read file.\n");
-      return NULL;
+      return;
     }
     reader->SetFileName (filename);
     reader->Update ();
-    return reader->GetOutput ();
+    grid->ShallowCopy (reader->GetOutput ());
+    t8_debugf ("Finished reading of file.\n");
+    return;
   }
   else if (strcmp (extension, "vtk") == 0) {
     vtkSmartPointer < vtkUnstructuredGridReader > reader =
@@ -121,12 +124,15 @@ t8_read_unstructured (const char *filename)
     if (!reader->IsFileUnstructuredGrid ()) {
       t8_errorf ("File-content is not an unstructured Grid. ");
     }
-    return reader->GetOutput ();
+    grid->ShallowCopy (reader->GetOutput ());
+    t8_debugf ("Finished reading of file.\n");
+
+    return;
   }
   else {
     /* Return NULL if the reader is not used correctly */
     t8_global_errorf ("Please use .vtk or .vtu file\n");
-    return NULL;
+    return;
   }
 }
 
