@@ -906,7 +906,6 @@ void
 t8_dpyramid_first_descendant (const t8_dpyramid_t *p, t8_dpyramid_t *desc,
                               const int level)
 {
-  t8_linearidx_t      id;
   T8_ASSERT (level >= p->pyramid.level);
   T8_ASSERT (0 <= level && level <= T8_DPYRAMID_MAXLEVEL);
   if (t8_dpyramid_shape (p) == T8_ECLASS_PYRAMID) {
@@ -916,7 +915,7 @@ t8_dpyramid_first_descendant (const t8_dpyramid_t *p, t8_dpyramid_t *desc,
     desc->switch_shape_at_level = -1;
   }
   else {
-    id = t8_dpyramid_linear_id (p, level);
+    t8_linearidx_t      id = t8_dpyramid_linear_id (p, level);
     t8_dpyramid_init_linear_id (desc, level, id);
   }
   T8_ASSERT (p->pyramid.x <= desc->pyramid.x
