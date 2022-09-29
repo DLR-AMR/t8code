@@ -513,26 +513,26 @@ t8_dpyramid_linear_id (const t8_dpyramid_t *p, const int level)
 {
   T8_ASSERT (0 <= p->pyramid.level
              && p->pyramid.level <= T8_DPYRAMID_MAXLEVEL);
-  t8_linearidx_t      id = 0, pyra_shift, sum_1 = 1, sum_2 = 1, local_id;
+  t8_linearidx_t      id = 0, sum_1 = 1, sum_2 = 1;
   t8_dpyramid_t       parent, copy;
-  int                 i, num_pyra, num_tet;
 
   t8_dpyramid_copy (p, &copy);
   copy.pyramid.type = t8_dpyramid_type_at_level (p, level);
   copy.pyramid.level = level;
   t8_dpyramid_cut_coordinates (&copy, T8_DPYRAMID_MAXLEVEL - level);
 
-  for (i = level; i > 0; i--) {
+  for (int i = level; i > 0; i--) {
     /* Compute the number of pyramids with level maxlvl that are in a pyramid
      * of level i*/
-    pyra_shift = (sum_1 << 1) - sum_2;
+    const t8_linearidx_t pyra_shift = (sum_1 << 1) - sum_2;
 
     /*Compute the parent and the local id of the current element */
     t8_dpyramid_parent (&copy, &parent);
-    local_id = t8_dpyramid_child_id (&copy);
+    const t8_linearidx_t local_id = t8_dpyramid_child_id (&copy);
 
     /* Compute the number of predecessors within the parent that have the
      * shape of a pyramid or a tet*/
+    int                 num_pyra;
     if (t8_dpyramid_shape (&parent) == T8_ECLASS_TET) {
       /* If the parent is a tet, no predecessors are pyramids */
       num_pyra = 0;
@@ -545,7 +545,7 @@ t8_dpyramid_linear_id (const t8_dpyramid_t *p, const int level)
         [local_id];
     }
     /* The number of tets is the local-id minus the number of pyramid-predecessors */
-    num_tet = local_id - num_pyra;
+    const int           num_tet = local_id - num_pyra;
     /* The Id shifts by the number of predecessor elements */
     id += num_pyra * pyra_shift + num_tet * sum_1;
     t8_dpyramid_copy (&parent, &copy);
