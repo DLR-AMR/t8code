@@ -796,22 +796,22 @@ t8_dpyramid_tet_boundary (const t8_dpyramid_t *p, const int face)
   T8_ASSERT (t8_dpyramid_shape (p) == T8_ECLASS_TET);
   T8_ASSERT (p->pyramid.type == 0 || p->pyramid.type == 3);
   t8_dpyramid_t       anc;
-  int                 bey_id, i, type_temp, valid_touch;
-  t8_dpyramid_cube_id_t cube_id;
   if (p->pyramid.level == p->switch_shape_at_level) {
     /*Check if the face is connecting to a tet or to a pyra */
     return t8_dpyramid_tet_pyra_face_connection (p, face);
   }
   t8_dpyramid_ancestor (p, p->switch_shape_at_level, &anc);
   /*Check if anc-face is connecting to a tet or to a pyra */
-  valid_touch = t8_dpyramid_tet_pyra_face_connection (&anc, face);
+  int                 valid_touch =
+    t8_dpyramid_tet_pyra_face_connection (&anc, face);
   if (valid_touch) {
-    type_temp = p->pyramid.type;
+    t8_dpyramid_type_t  type_temp = p->pyramid.type;
     /* If so, check if the tet always lies in the corner of of its parent at this face.
      * Otherwise, the neighbor is a tet*/
-    for (i = p->pyramid.level; i > anc.pyramid.level; i--) {
-      cube_id = compute_cubeid (p, i);
-      bey_id = t8_dtet_type_cid_to_beyid[type_temp][cube_id];
+    for (int i = p->pyramid.level; i > anc.pyramid.level; i--) {
+      const t8_dpyramid_cube_id_t cube_id = compute_cubeid (p, i);
+      const int           bey_id =
+        t8_dtet_type_cid_to_beyid[type_temp][cube_id];
       if (t8_dpyramid_face_childid_to_is_inside[face][bey_id] == -1) {
         return 0;
       }
