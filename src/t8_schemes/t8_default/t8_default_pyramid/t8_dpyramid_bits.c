@@ -675,7 +675,6 @@ int
 t8_dpyramid_face_parent_face (const t8_dpyramid_t *elem, const int face)
 {
   t8_dpyramid_t       parent;
-  int                 child_id;
   T8_ASSERT (0 <= elem->pyramid.level
              && elem->pyramid.level <= T8_DPYRAMID_MAXLEVEL);
   T8_ASSERT (0 <= face && face < T8_DPYRAMID_FACES);
@@ -684,13 +683,11 @@ t8_dpyramid_face_parent_face (const t8_dpyramid_t *elem, const int face)
     return face;
   }
   if (t8_dpyramid_shape (elem) == T8_ECLASS_PYRAMID) {
-    child_id = t8_dpyramid_child_id (elem);
+    const int           child_id = t8_dpyramid_child_id (elem);
     t8_dpyramid_parent (elem, &parent);
-
-    int                 i;
     /*If the pyramid is one of the children in the array, its face-num and the face-num
      * of the parent are the same*/
-    for (i = 0; i < 4; i++) {
+    for (int i = 0; i < 4; i++) {
       if (t8_dpyramid_type_face_to_children_at_face
           [parent.pyramid.type - T8_DPYRAMID_FIRST_TYPE][face][i]
           == child_id) {
@@ -701,7 +698,7 @@ t8_dpyramid_face_parent_face (const t8_dpyramid_t *elem, const int face)
     return -1;
   }
   else {
-    child_id = t8_dpyramid_child_id (elem);
+    const int           child_id = t8_dpyramid_child_id (elem);
     /*Parent is also a tet, we can call the tet-routine */
     if (elem->pyramid.level > elem->switch_shape_at_level) {
       return t8_dtet_face_parent_face (&(elem->pyramid), face);
