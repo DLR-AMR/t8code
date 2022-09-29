@@ -892,11 +892,10 @@ t8_dpyramid_face_neighbor_inside (const t8_dpyramid_t *p,
 {
   T8_ASSERT (0 <= p->pyramid.level
              && p->pyramid.level <= T8_DPYRAMID_MAXLEVEL);
-  int                 is_inside;
   /*Compute the face-neighbor, then check if it is inside root */
   *neigh_face = t8_dpyramid_face_neighbour (p, face, neigh);
 
-  is_inside = t8_dpyramid_is_inside_root (neigh);
+  int                 is_inside = t8_dpyramid_is_inside_root (neigh);
   if (is_inside) {
     t8_dpyramid_set_switch_shape_at_level (neigh);
   }
