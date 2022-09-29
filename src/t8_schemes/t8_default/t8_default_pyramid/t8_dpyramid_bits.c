@@ -1573,12 +1573,13 @@ t8_dpyramid_parent (const t8_dpyramid_t *p, t8_dpyramid_t *parent)
 {
   T8_ASSERT (p->pyramid.level > 0);
   T8_ASSERT (T8_DPYRAMID_MAXLEVEL == T8_DTET_MAXLEVEL);
-  t8_dpyramid_coord_t length = T8_DPYRAMID_LEN (p->pyramid.level);
+  const t8_dpyramid_coord_t length = T8_DPYRAMID_LEN (p->pyramid.level);
 
   if (t8_dpyramid_shape (p) == T8_ECLASS_PYRAMID) {
     /*The parent of a pyramid is a pyramid, maybe of different type */
 
-    t8_dpyramid_cube_id_t cube_id = compute_cubeid (p, p->pyramid.level);
+    const t8_dpyramid_cube_id_t cube_id =
+      compute_cubeid (p, p->pyramid.level);
 
     parent->pyramid.type =
       t8_dpyramid_type_cid_to_parenttype[p->pyramid.type -
