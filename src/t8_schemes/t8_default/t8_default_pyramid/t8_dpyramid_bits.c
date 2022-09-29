@@ -1527,17 +1527,16 @@ t8_dpyramid_is_inside_tet (const t8_dpyramid_t *tet, const int level,
                            t8_dpyramid_t *anc)
 {
   T8_ASSERT (t8_dpyramid_shape (tet) == T8_ECLASS_TET);
-  T8_ASSERT (tet->pyramid.type == 0 || tet->pyramid.type == 3);
-  int                 i;
-  t8_dpyramid_coord_t coord_at_level;
+  T8_ASSERT (tet->pyramid.type == 0 || tet->pyramid.type == 3);;
   /*the tet is initialized, the ancestor will be computed */
   t8_dpyramid_t       pyra_at_level;    /* Candidate pyramid, where the tet could lie in. */
   pyra_at_level.pyramid.x = 0;
   pyra_at_level.pyramid.y = 0;
   pyra_at_level.pyramid.z = 0;
-  for (i = 1; i < level; i++) {
+  for (int i = 1; i < level; i++) {
     /*Update the coordinate of tet to i first bits */
-    coord_at_level = (1 << (T8_DPYRAMID_MAXLEVEL - i));
+    const t8_dpyramid_coord_t coord_at_level =
+      (1 << (T8_DPYRAMID_MAXLEVEL - i));
     pyra_at_level.pyramid.x =
       pyra_at_level.pyramid.x | (tet->pyramid.x & coord_at_level);
     pyra_at_level.pyramid.y =
