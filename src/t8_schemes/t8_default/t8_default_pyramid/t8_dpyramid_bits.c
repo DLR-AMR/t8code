@@ -1630,18 +1630,16 @@ static void
 t8_dpyramid_successor_recursion (const t8_dpyramid_t *elem,
                                  t8_dpyramid_t *succ, const int level)
 {
-  int                 child_id, num_siblings;
-  t8_dpyramid_copy (elem, succ);
-
   T8_ASSERT (1 <= level && level <= T8_DPYRAMID_MAXLEVEL);
+  t8_dpyramid_copy (elem, succ);
   succ->pyramid.level = level;
   if (level < succ->switch_shape_at_level) {
     succ->switch_shape_at_level = -1;
   }
   T8_ASSERT (succ->pyramid.type >= 0);
-  child_id = t8_dpyramid_child_id (elem);
+  const int           child_id = t8_dpyramid_child_id (elem);
   /*Compute number of children */
-  num_siblings = t8_dpyramid_num_siblings (elem);
+  const int           num_siblings = t8_dpyramid_num_siblings (elem);
   T8_ASSERT (0 <= child_id && child_id < num_siblings);
   if (child_id == num_siblings - 1) {
     int                 shift = T8_DPYRAMID_MAXLEVEL - level + 1;
