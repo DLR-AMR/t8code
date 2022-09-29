@@ -24,6 +24,7 @@
 
 #include <t8_cmesh_vtk_reader.hxx>
 #include <t8_cmesh.h>
+#include <t8_forest.h>
 #include <t8.h>
 
 #if T8_WITH_VTK
@@ -38,8 +39,11 @@ typedef struct t8_interactive_vis
    * non-zero, if the data has been read */
   int                 data_has_been_read;
 
+  /* The refinement level of the forest. */
+  int                 refinement_lvl;
+
   /* cmesh representing the data */
-  t8_cmesh_t          cmesh;
+  t8_forest_t         forest;
 
   /* Name of the file to read. */
   char                filepath[BUFSIZ];
@@ -69,6 +73,16 @@ void                t8_interactive_vis_init (t8_interactive_vis_t **
 void                t8_interactive_vis_set_filename (t8_interactive_vis_t *
                                                      vis_handler,
                                                      char *filepath);
+
+/**
+ * Set a uniform refinment of the forest.  
+ * 
+ * \param[in] vis_hanlder       An initialized vis_handler.
+ * \param[in] level             The level we want to refine the forest to.
+ */
+void                t8_interactive_vis_set_refinement (t8_interactive_vis_t *
+                                                       vis_hanlder,
+                                                       const int level);
 
 /**
  * Set the MPI communicator to use
