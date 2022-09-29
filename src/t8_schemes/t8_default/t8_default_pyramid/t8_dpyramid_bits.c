@@ -770,7 +770,7 @@ t8_dpyramid_tet_pyra_face_connection (const t8_dpyramid_t *p, const int face)
              && p->pyramid.level <= T8_DPYRAMID_MAXLEVEL);
   /* Depending on its cube-id at its level and its type,
    * 3 faces of a tet connect to a pyramid, one is connecting to a tet*/
-  t8_dpyramid_cube_id_t cube_id = compute_cubeid (p, p->pyramid.level);
+  const t8_dpyramid_cube_id_t cube_id = compute_cubeid (p, p->pyramid.level);
   if ((cube_id == 2 && face != 1) || (cube_id == 6 && face != 2)) {
     return p->pyramid.type == 0;
   }
