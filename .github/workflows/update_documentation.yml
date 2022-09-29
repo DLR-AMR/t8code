@@ -56,22 +56,20 @@ jobs:
     - name: bootstrap
       run: ./bootstrap
 
-    # build config vars
+# build config vars
     - name: build CFLAGS and CXXFLAGS variables
       run: echo CFLAGS_var="-Wall -pedantic -O3" >> $GITHUB_ENV
         && echo CXXFLAGS_var="-Wall -pedantic -O3" >> $GITHUB_ENV
     - name: build config variables
       run: export CONFIG_OPTIONS="--without-blas ${LESS_TEST_OPTION}"
            && export CONFIG_SERIAL_DEBUG="$CONFIG_OPTIONS --enable-debug --with-sc=$SC_SERIAL_DEBUG/install --with-p4est=$P4EST_SERIAL_DEBUG/install"
-           && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
-           && echo CONFIG_SERIAL_DEBUG="$CONFIG_SERIAL_DEBUG" >> $GITHUB_ENV
     - name: Check vars
       run: echo "[$CONFIG_SERIAL_DEBUG]"
 # configure and generate doxygen
     - name: check debugging mode
       run: echo "Checking debug mode"
     - name: configure
-      run: mkdir build_debug && cd build_debug && ../configure $CONFIG_DEBUG CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
+      run: mkdir build_debug && cd build_debug && ../configure $CONFIG_SERIAL_DEBUG CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
     - name: make doxygen
       run: cd build_debug && make doxygen
 

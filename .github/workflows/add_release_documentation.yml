@@ -92,8 +92,6 @@ jobs:
       if: ${{ env.MINOR_RELEASE == 'true' }}
       run: export CONFIG_OPTIONS="--without-blas ${LESS_TEST_OPTION}"
            && export CONFIG_SERIAL_DEBUG="$CONFIG_OPTIONS --enable-debug --with-sc=$SC_SERIAL_DEBUG/install --with-p4est=$P4EST_SERIAL_DEBUG/install"
-           && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
-           && echo CONFIG_SERIAL_DEBUG="$CONFIG_SERIAL_DEBUG" >> $GITHUB_ENV
     - name: Check vars
       if: ${{ env.MINOR_RELEASE == 'true' }}
       run: echo "[$CONFIG_SERIAL_DEBUG]"
@@ -105,7 +103,7 @@ jobs:
       if: ${{ env.MINOR_RELEASE == 'true' }}
       run: |
         cd t8code
-        mkdir build_debug && cd build_debug && ../configure $CONFIG_DEBUG CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
+        mkdir build_debug && cd build_debug && ../configure $CONFIG_SERIAL_DEBUG CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
     - name: make doxygen
       if: ${{ env.MINOR_RELEASE == 'true' }}
       run: |
