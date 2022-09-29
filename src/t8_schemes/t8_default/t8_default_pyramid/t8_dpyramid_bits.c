@@ -1007,8 +1007,7 @@ void
 t8_dpyramid_last_descendant (const t8_dpyramid_t *p, t8_dpyramid_t *desc,
                              const int level)
 {
-  t8_linearidx_t      id = 0, t_id;
-  int                 exponent;
+  t8_linearidx_t      id = 0;
   T8_ASSERT (level >= p->pyramid.level);
   if (t8_dpyramid_shape (p) == T8_ECLASS_PYRAMID) {
     t8_dpyramid_copy (p, desc);
@@ -1024,8 +1023,8 @@ t8_dpyramid_last_descendant (const t8_dpyramid_t *p, t8_dpyramid_t *desc,
   else {
     /* Compute current id, shift it to the id of the last desendant and compute it
      * via its id*/
-    t_id = t8_dpyramid_linear_id (p, level);
-    exponent = level - p->pyramid.level;
+    const t8_linearidx_t t_id = t8_dpyramid_linear_id (p, level);
+    const int           exponent = level - p->pyramid.level;
     id = (((t8_linearidx_t) 1) << 3 * exponent) - 1;
     id += t_id;
     t8_dpyramid_init_linear_id (desc, level, id);
