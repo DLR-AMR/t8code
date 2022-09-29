@@ -1923,7 +1923,7 @@ t8_dpyramid_is_valid (const t8_dpyramid_t *p)
   int                 is_valid;
   const t8_dpyramid_coord_t max_coord =
     ((int64_t) 2 * T8_DPYRAMID_ROOT_LEN) - 1;
-  t8_element_shape_t  shape = t8_dpyramid_shape (p);
+  const t8_element_shape_t shape = t8_dpyramid_shape (p);
   /*Check the level */
   is_valid = 0 <= p->pyramid.level
     && p->pyramid.level <= T8_DPYRAMID_MAXLEVEL;
