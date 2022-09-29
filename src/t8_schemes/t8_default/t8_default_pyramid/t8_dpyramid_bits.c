@@ -1802,9 +1802,6 @@ t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t *pyra1,
      * first ancestors of pyra1 and pyra2 with the same type. We 
      * have already computed the level at which they have the same
      * coordinate, but the type could be different. */
-    int                 level;  /* To iterate over level */
-    int                 cube_level;     /* the level of the cube where pyra1 and pyra2 have the same coords */
-    int                 real_level;     /* the level of the nca */
     t8_dpyramid_coord_t maxclor;
     t8_dpyramid_type_t  p1_type_at_level;       /* type of pyra1 at level */
     t8_dpyramid_type_t  p2_type_at_level;       /* type of pyra2 at level */
@@ -1812,14 +1809,18 @@ t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t *pyra1,
     maxclor = pyra1->pyramid.x ^ pyra2->pyramid.x;
     maxclor |= pyra1->pyramid.y ^ pyra2->pyramid.y;
     maxclor |= pyra1->pyramid.z ^ pyra2->pyramid.z;
-    level = SC_LOG2_32 (maxclor) + 1;
+    const int           level = SC_LOG2_32 (maxclor) + 1;
     T8_ASSERT (level <= T8_DPYRAMID_MAXLEVEL);
     /* This is the highest possible level. The coordinates are the same,
      * but the types can be different.*/
-    cube_level = SC_MIN (T8_DPYRAMID_MAXLEVEL - level,
-                         (int) SC_MIN (pyra1->pyramid.level,
-                                       pyra2->pyramid.level));
-    real_level = cube_level;
+    /* the level of the cube where pyra1 and pyra2 have the same coords */
+    /* *INDENT-OFF* */
+    const int           cube_level = SC_MIN (T8_DPYRAMID_MAXLEVEL - level,
+                                             (int) SC_MIN (pyra1->pyramid.level,
+                                                           pyra2->pyramid.level));
+    /* *INDENT-ON* */
+    /* the level of the nca */
+    int                 real_level = cube_level;
     p1_type_at_level = compute_type_same_shape (pyra1, cube_level);
     p2_type_at_level = compute_type_same_shape (pyra2, cube_level);
     /* Iterate over the levels and compute both types at that level.
@@ -1849,9 +1850,6 @@ t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t *pyra1,
      * the shape, both tets have to switch the shape. */
     T8_ASSERT (t8_dpyramid_shape (pyra1) == T8_ECLASS_TET);
     T8_ASSERT (t8_dpyramid_shape (pyra2) == T8_ECLASS_TET);
-    int                 level;  /* To iterate over level */
-    int                 cube_level;     /* the level of the cube where pyra1 and pyra2 have the same coords */
-    int                 real_level;     /* the level of the nca */
     t8_dpyramid_coord_t maxclor;
     t8_dpyramid_type_t  p1_type_at_level;       /* type of pyra1 at level */
     t8_dpyramid_type_t  p2_type_at_level;       /* type of pyra2 at level */
@@ -1859,17 +1857,20 @@ t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t *pyra1,
     maxclor = pyra1->pyramid.x ^ pyra2->pyramid.x;
     maxclor |= pyra1->pyramid.y ^ pyra2->pyramid.y;
     maxclor |= pyra1->pyramid.z ^ pyra2->pyramid.z;
-    level = SC_LOG2_32 (maxclor) + 1;
+    const int           level = SC_LOG2_32 (maxclor) + 1;
     T8_ASSERT (level <= T8_DPYRAMID_MAXLEVEL);
     t8_dpyramid_t       pyra1_anc;
     t8_dpyramid_t       pyra2_anc;
 
     /* Cube level is the highest possible level where the nca can be. the coordinates
      * match at the level, but the type can be different.*/
-    cube_level = SC_MIN (T8_DPYRAMID_MAXLEVEL - level,
-                         (int) SC_MIN (pyra1->pyramid.level,
-                                       pyra2->pyramid.level));
-    real_level = cube_level;
+    /* the level of the cube where pyra1 and pyra2 have the same coords */
+    /* *INDENT-OFF* */
+    const int           cube_level = SC_MIN (T8_DPYRAMID_MAXLEVEL - level,
+                                             (int) SC_MIN (pyra1->pyramid.level,
+                                                           pyra2->pyramid.level));
+    /* *INDENT-ON* */
+    int                 real_level = cube_level;        /* the level of the nca */
     t8_dpyramid_ancestor (pyra1, real_level, &pyra1_anc);
     t8_dpyramid_ancestor (pyra2, real_level, &pyra2_anc);
 
