@@ -1678,11 +1678,10 @@ void
 t8_dpyramid_compute_coords (const t8_dpyramid_t *p, const int vertex,
                             int coords[])
 {
-  t8_dpyramid_coord_t length;
   T8_ASSERT (0 <= vertex && vertex < T8_DPYRAMID_CORNERS);
 
   if (t8_dpyramid_shape (p) == T8_ECLASS_PYRAMID) {
-    length = T8_DPYRAMID_LEN (p->pyramid.level);
+    const t8_dpyramid_coord_t length = T8_DPYRAMID_LEN (p->pyramid.level);
     coords[0] = p->pyramid.x;
     coords[1] = p->pyramid.y;
     coords[2] = p->pyramid.z;
