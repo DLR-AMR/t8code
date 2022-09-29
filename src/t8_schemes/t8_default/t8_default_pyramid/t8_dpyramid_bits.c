@@ -572,7 +572,7 @@ t8_dpyramid_face_neighbour (const t8_dpyramid_t *p, const int face,
   T8_ASSERT (0 <= face && face < T8_DPYRAMID_FACES);
   T8_ASSERT (0 <= p->pyramid.level
              && p->pyramid.level <= T8_DPYRAMID_MAXLEVEL);
-  t8_dpyramid_coord_t length = T8_DPYRAMID_LEN (p->pyramid.level);
+  const t8_dpyramid_coord_t length = T8_DPYRAMID_LEN (p->pyramid.level);
   neigh->pyramid.x = p->pyramid.x;
   neigh->pyramid.y = p->pyramid.y;
   neigh->pyramid.z = p->pyramid.z;
