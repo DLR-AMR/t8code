@@ -966,10 +966,6 @@ t8_dpyramid_first_descendant_face (const t8_dpyramid_t *p, const int face,
   T8_ASSERT (0 <= face && face < T8_DPYRAMID_FACES);
   T8_ASSERT (0 <= level && level <= T8_DPYRAMID_MAXLEVEL);
   T8_ASSERT (p->pyramid.level <= level);
-
-  const t8_dpyramid_coord_t off_set = T8_DPYRAMID_LEN (p->pyramid.level) -
-    T8_DPYRAMID_LEN (level);
-
   if (t8_dpyramid_shape (p) == T8_ECLASS_TET) {
     const int           corner = t8_dtet_face_corner[face][0];
     t8_dpyramid_corner_descendant (p, first_desc, corner, level);
@@ -989,6 +985,8 @@ t8_dpyramid_first_descendant_face (const t8_dpyramid_t *p, const int face,
     else {
       /*shifting is needed, the fd does not have the same coord as p */
       t8_dpyramid_copy (p, first_desc);
+      const t8_dpyramid_coord_t off_set = T8_DPYRAMID_LEN (p->pyramid.level) -
+        T8_DPYRAMID_LEN (level);
       first_desc->pyramid.level = level;
       if (p->pyramid.type == T8_DPYRAMID_FIRST_TYPE && face == 1) {
         first_desc->pyramid.x |= off_set;
@@ -1037,21 +1035,19 @@ t8_dpyramid_last_descendant_face (const t8_dpyramid_t *p,
                                   const int level)
 {
   /*Computation is similar to first-descendant-face */
-  int                 corner;
-  t8_dpyramid_coord_t off_set =
-    T8_DPYRAMID_LEN (p->pyramid.level) - T8_DPYRAMID_LEN (level);
-
   T8_ASSERT (0 <= face && face < T8_DPYRAMID_FACES);
   T8_ASSERT (0 <= level && level <= T8_DPYRAMID_MAXLEVEL);
   T8_ASSERT (p->pyramid.level <= level);
 
   if (t8_dpyramid_shape (p) == T8_ECLASS_TET) {
     T8_ASSERT (0 <= face && face < T8_DTET_FACES);
-    corner =
+    const int           corner =
       SC_MAX (t8_dtet_face_corner[face][1], t8_dtet_face_corner[face][2]);
     t8_dpyramid_corner_descendant (p, last_desc, corner, level);
   }
   else {
+    const t8_dpyramid_coord_t off_set =
+      T8_DPYRAMID_LEN (p->pyramid.level) - T8_DPYRAMID_LEN (level);
     t8_dpyramid_copy (p, last_desc);
     last_desc->pyramid.level = level;
     if ((p->pyramid.type == T8_DPYRAMID_FIRST_TYPE && face != 4) ||
