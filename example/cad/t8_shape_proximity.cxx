@@ -280,7 +280,7 @@ t8_shape_proximity_generate_geometries ()
   t8_productionf ("Generating torus cad shape.\n");
   axis = gp_Ax2 (gp_Pnt (0.5, 0.5, 0.5), gp_Dir (0, 0, 1));
   BRepPrimAPI_MakeTorus mktorus = BRepPrimAPI_MakeTorus (axis, 0.3, 0.1);
-  BRepTools::Write (mksphere.Shape (), "torus.brep");
+  BRepTools::Write (mktorus.Shape (), "torus.brep");
 
 #else /* !T8_WITH_OCC */
   SC_ABORTF ("OpenCASCADE is not linked");
