@@ -1464,8 +1464,8 @@ int
 t8_dpyramid_is_inside_pyra (const t8_dpyramid_t *tet,
                             const t8_dpyramid_t *check)
 {
-  t8_dpyramid_coord_t length = T8_DPYRAMID_LEN (check->pyramid.level);
-  t8_dpyramid_coord_t diff = tet->pyramid.z - check->pyramid.z;
+  const t8_dpyramid_coord_t length = T8_DPYRAMID_LEN (check->pyramid.level);
+  const t8_dpyramid_coord_t diff = tet->pyramid.z - check->pyramid.z;
   T8_ASSERT (t8_dpyramid_shape (tet) == T8_ECLASS_TET);
 
   T8_ASSERT (0 <= tet->pyramid.level
