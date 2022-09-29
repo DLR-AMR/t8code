@@ -429,7 +429,7 @@ main (int argc, char *argv[])
   sc_options_add_int (opt, 'r', "rlevel", &level_diff, 1,
                       "The number of levels that the forest is refined "
                       "from the initial level.");
-  sc_options_add_int (opt, 'C', "cmesh-level", &cmesh_level, -1,
+  sc_options_add_int (opt, '\0', "cmesh-level", &cmesh_level, -1,
                       "Starting level of the linear or occ cmesh, default is 0."
                       " Only viable with -L or -O.");
   sc_options_add_double (opt, 'x', "xmin", x_min_max, 0,

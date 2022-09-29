@@ -96,7 +96,7 @@ t8_default_scheme_pyramid_c::t8_element_num_children (const t8_element_t
 }
 
 int
-t8_default_scheme_pyramid_c::t8_element_num_corners (const t8_element_t *elem)
+t8_default_scheme_pyramid_c::t8_element_num_corners (const t8_element_t *elem) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   return t8_dpyramid_num_corners ((const t8_dpyramid_t *) elem);

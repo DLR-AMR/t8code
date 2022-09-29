@@ -1700,7 +1700,6 @@ t8_forest_unref (t8_forest_t *pforest)
   forest = *pforest;
   T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (forest != NULL);
-
   if (t8_refcount_unref (&forest->rc)) {
     t8_forest_reset (pforest);
   }
