@@ -1350,9 +1350,8 @@ t8_dpyramid_children (const t8_dpyramid_t *p, t8_dpyramid_t **c)
 {
   T8_ASSERT (0 <= p->pyramid.level
              && p->pyramid.level <= T8_DPYRAMID_MAXLEVEL);
-  int                 i, num_children;
-  num_children = t8_dpyramid_num_children (p);
-  for (i = num_children - 1; i >= 0; i--) {
+  const int           num_children = t8_dpyramid_num_children (p);
+  for (int i = num_children - 1; i >= 0; i--) {
     t8_dpyramid_child (p, i, c[i]);
   }
 }
