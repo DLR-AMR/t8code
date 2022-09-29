@@ -964,15 +964,15 @@ void
 t8_dpyramid_first_descendant_face (const t8_dpyramid_t *p, const int face,
                                    t8_dpyramid_t *first_desc, const int level)
 {
-  int                 corner;
-  t8_dpyramid_coord_t off_set = T8_DPYRAMID_LEN (p->pyramid.level) -
-    T8_DPYRAMID_LEN (level);
   T8_ASSERT (0 <= face && face < T8_DPYRAMID_FACES);
   T8_ASSERT (0 <= level && level <= T8_DPYRAMID_MAXLEVEL);
   T8_ASSERT (p->pyramid.level <= level);
 
+  const t8_dpyramid_coord_t off_set = T8_DPYRAMID_LEN (p->pyramid.level) -
+    T8_DPYRAMID_LEN (level);
+
   if (t8_dpyramid_shape (p) == T8_ECLASS_TET) {
-    corner = t8_dtet_face_corner[face][0];
+    const int           corner = t8_dtet_face_corner[face][0];
     t8_dpyramid_corner_descendant (p, first_desc, corner, level);
   }
   else if (p->pyramid.level == T8_DPYRAMID_MAXLEVEL) {
