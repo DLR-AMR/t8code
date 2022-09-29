@@ -1300,7 +1300,8 @@ t8_dpyramid_child_id (const t8_dpyramid_t *p)
       return -1;
     }
 
-    t8_dpyramid_cube_id_t cube_id = compute_cubeid (p, p->pyramid.level);
+    const t8_dpyramid_cube_id_t cube_id =
+      compute_cubeid (p, p->pyramid.level);
     T8_ASSERT (t8_dpyramid_type_cid_to_Iloc[p->pyramid.type][cube_id] >= 0);
     return t8_dpyramid_type_cid_to_Iloc[p->pyramid.type][cube_id];
   }
