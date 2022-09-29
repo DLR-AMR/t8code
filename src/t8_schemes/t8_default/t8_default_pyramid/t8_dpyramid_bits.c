@@ -34,11 +34,10 @@ static t8_dpyramid_cube_id_t
 compute_cubeid (const t8_dpyramid_t *p, const int level)
 {
   t8_dpyramid_cube_id_t cube_id = 0;
-  t8_dpyramid_coord_t h;
 
   T8_ASSERT (0 <= p->pyramid.level
              && p->pyramid.level <= T8_DPYRAMID_MAXLEVEL);
-  h = T8_DPYRAMID_LEN (level);
+  const t8_dpyramid_coord_t h = T8_DPYRAMID_LEN (level);
 
   if (level == 0) {
     return 0;
