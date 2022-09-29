@@ -936,7 +936,6 @@ static void
 t8_dpyramid_corner_descendant (const t8_dpyramid_t *p, t8_dpyramid_t *d,
                                const int corner, const int level)
 {
-  int                 child_id, i;
   T8_ASSERT (p->pyramid.level <= level && level <= T8_DPYRAMID_MAXLEVEL);
   T8_ASSERT (t8_dpyramid_shape (p) == T8_ECLASS_TET);
   T8_ASSERT (0 <= corner && corner < T8_DTET_CORNERS);
@@ -946,10 +945,11 @@ t8_dpyramid_corner_descendant (const t8_dpyramid_t *p, t8_dpyramid_t *d,
   else if (corner == 1 || corner == 2) {
     /*The child at this corner is iterativle the child at child-id up to the
        given level */
-    child_id = t8_dtet_parenttype_beyid_to_Iloc[p->pyramid.type][corner];
+    const int           child_id =
+      t8_dtet_parenttype_beyid_to_Iloc[p->pyramid.type][corner];
     t8_dpyramid_t       tmp;
     t8_dpyramid_copy (p, &tmp);
-    for (i = p->pyramid.level; i < level; i++) {
+    for (int i = p->pyramid.level; i < level; i++) {
       t8_dpyramid_child (&tmp, child_id, d);
       t8_dpyramid_copy (d, &tmp);
     }
