@@ -28,7 +28,9 @@
 #include <t8.h>
 
 #if T8_WITH_VTK
+#if T8_ENABLE_MPI
 #include <vtkMultiProcessController.h>
+#endif
 #include <vtkUnstructuredGrid.h>
 
 T8_EXTERN_C_BEGIN ();
@@ -46,11 +48,9 @@ typedef struct t8_interactive_vis
   t8_forest_t         forest;
 
   /* Name of the file to read. */
-  char                filepath[BUFSIZ];
+  char               *filepath;
 
-#if T8_WITH_VTK
-                      vtkSmartPointer < vtkUnstructuredGrid > vtkGrid;
-#endif
+  vtkUnstructuredGrid *vtkGrid;
   /* The communicator used. */
   sc_MPI_Comm         comm;
 } t8_interactive_vis_t;
@@ -66,18 +66,36 @@ void                t8_interactive_vis_init (t8_interactive_vis_t **
 /**
  * Set the the filepath to the file to read the data from.
  * 
- * \param[in] vis_handler An initialized vis_handler.
+ * \param[in, out] vis_handler An initialized vis_handler.
  * \param[in] filepath    Path to the file.
  * \return int 
  */
-void                t8_interactive_vis_set_filename (t8_interactive_vis_t *
+void                t8_interactive_vis_set_filepath (t8_interactive_vis_t *
                                                      vis_handler,
-                                                     char *filepath);
+                                                     const char *filepath);
+
+/**
+ * Set the pointer to the unstructured Grid 
+ * 
+ * \param[in, out] vis_handler An initialized vis_handler.
+ * \param[in] grid             A vtkSmartPointer to an unstructuredGrid. 
+ */
+void
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ t8_interactive_vis_set_vtkGrid (t8_interactive_vis_t * vis_handler,
+                                 vtkSmartPointer < vtkUnstructuredGrid >
+                                 grid);
 
 /**
  * Set a uniform refinment of the forest.  
  * 
- * \param[in] vis_hanlder       An initialized vis_handler.
+ * \param[in, out] vis_hanlder       An initialized vis_handler.
  * \param[in] level             The level we want to refine the forest to.
  */
 void                t8_interactive_vis_set_refinement (t8_interactive_vis_t *

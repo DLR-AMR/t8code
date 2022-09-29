@@ -4,12 +4,13 @@
 
 bin_PROGRAMS += \
   example/IO/cmesh/t8_cmesh_load_save \
-  example/IO/cmesh/t8_cmesh_read_from_vtk
+  example/IO/cmesh/t8_cmesh_read_from_vtk \
+  example/IO/cmesh/t8_vis_example
 
 
 example_IO_cmesh_t8_cmesh_load_save_SOURCES = example/IO/cmesh/t8_cmesh_load_save.cxx
 example_IO_cmesh_t8_cmesh_read_from_vtk_SOURCES = example/IO/cmesh/t8_cmesh_read_from_vtk.cxx
-
+example_IO_cmesh_t8_vis_example_SOURCES = example/IO/cmesh/t8_vis_example.cxx
 include example/IO/cmesh/gmsh/Makefile.am
 include example/IO/cmesh/tetgen/Makefile.am
 include example/IO/cmesh/triangle/Makefile.am
