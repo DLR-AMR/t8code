@@ -1314,9 +1314,6 @@ void
 t8_dpyramid_child (const t8_dpyramid_t *elem, const int child_id,
                    t8_dpyramid_t *child)
 {
-
-  t8_dpyramid_cube_id_t cube_id;
-  t8_dpyramid_coord_t length = T8_DPYRAMID_LEN (elem->pyramid.level + 1);
   T8_ASSERT (0 <= child_id && child_id < T8_DPYRAMID_CHILDREN);
   T8_ASSERT (0 <= elem->pyramid.level
              && elem->pyramid.level <= T8_DPYRAMID_MAXLEVEL);
@@ -1326,8 +1323,10 @@ t8_dpyramid_child (const t8_dpyramid_t *elem, const int child_id,
   }
   else {
     /* Compute the cube id and shift the coordinates accordingly */
-    cube_id =
+    const t8_dpyramid_cube_id_t cube_id =
       t8_dpyramid_parenttype_Iloc_to_cid[elem->pyramid.type][child_id];
+    const t8_dpyramid_coord_t length =
+      T8_DPYRAMID_LEN (elem->pyramid.level + 1);
     T8_ASSERT (cube_id >= 0);
     child->pyramid.level = elem->pyramid.level + 1;
     child->pyramid.x = elem->pyramid.x + ((cube_id & 0x01) ? length : 0);
