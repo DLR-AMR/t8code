@@ -92,9 +92,9 @@ t8_get_dimension (vtkSmartPointer < vtkUnstructuredGrid > grid)
   return t8_eclass_to_dimension[ieclass];
 }
 
-void
-t8_read_unstructured (const char *filename,
-                      vtkSmartPointer < vtkUnstructuredGrid > grid)
+static void
+t8_read_unstructured_ext (const char *filename,
+                          vtkSmartPointer < vtkUnstructuredGrid > grid)
 {
   char                tmp[BUFSIZ], *extension;
   /* Get the file-extension to decide which reader to use */
@@ -134,6 +134,29 @@ t8_read_unstructured (const char *filename,
     t8_global_errorf ("Please use .vtk or .vtu file\n");
     return;
   }
+}
+
+int
+t8_read_unstructured (const char *filename,
+                      vtkSmartPointer < vtkUnstructuredGrid > vtkGrid,
+                      const int partition, const int main_proc)
+{
+  int                 main_proc_read_successful = 0;
+  if (!partition || mpirank == main_proc) {
+    t8_read_unstructured (filename, vtkGrid);
+    if (vtkGrid == NULL) {
+      t8_errorf ("Could not read file\n");
+      if (partition) {
+        sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc,
+                      comm);
+      }
+    }
+    main_proc_read_successful = 1;
+  }
+  if (partition) {
+    sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc, comm);
+  }
+  return main_proc_read_successful;
 }
 
 vtkSmartPointer < vtkPolyData > t8_read_poly (const char *filename)
