@@ -69,9 +69,7 @@ compute_type_same_shape_ext (const t8_dpyramid_t *p, const int level,
                              const t8_dpyramid_type_t known_type,
                              const int known_level)
 {
-  t8_dpyramid_cube_id_t cube_id;
   t8_dpyramid_type_t  type = known_type;
-  int                 i;
 
   T8_ASSERT (0 <= level && level <= known_level);
   T8_ASSERT (0 <= p->pyramid.level
@@ -84,8 +82,8 @@ compute_type_same_shape_ext (const t8_dpyramid_t *p, const int level,
     /*Type of the root pyra */
     return T8_DPYRAMID_ROOT_TPYE;
   }
-  for (i = known_level; i > level; i--) {
-    cube_id = compute_cubeid (p, i);
+  for (int i = known_level; i > level; i--) {
+    const t8_dpyramid_cube_id_t cube_id = compute_cubeid (p, i);
     type = t8_dpyramid_cid_type_to_parenttype[cube_id][type];
   }
   return type;
