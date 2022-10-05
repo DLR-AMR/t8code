@@ -30,10 +30,12 @@
 #include <BRepTools.hxx>
 #include <BRepClass3d_SolidClassifier.hxx>
 #include <BRepBndLib.hxx>
-#include <Bnd_Box.hxx>
 #include <TopoDS_Solid.hxx>
 #include <BRepPrimAPI_MakeBox.hxx>
 #include <BRepExtrema_DistShapeShape.hxx>
+#include <BRepMesh_IncrementalMesh.hxx>
+#include <Bnd_BoundSortBox.hxx>
+#include <TopExp.hxx>
 
 /* *INDENT-OFF* */
 t8_cad_shape_proximity::t8_cad_shape_proximity (const char *fileprefix)
@@ -82,13 +84,22 @@ t8_cad_shape_proximity::t8_cad_init_internal_data ()
   if (occ_shape.IsNull ()) {
     SC_ABORTF ("Shape is null. \n");
   }
-  BRepBndLib::AddOBB (occ_shape, occ_shape_bounding_box);
+  
+  TopTools_IndexedMapOfShape solid_map;
+  TopExp::MapShapes (occ_shape, TopAbs_SOLID, solid_map);
+  Bnd_Box               current_box;
+  BRepBndLib::AddOptimal (occ_shape, occ_shape_bounding_box);
+  occ_shape_individual_bounding_boxes.Initialize(occ_shape_bounding_box, solid_map.Size());
+  for (auto it = solid_map.cbegin(); it != solid_map.cend(); ++it) {
+    BRepBndLib::AddOptimal(*it, current_box);
+    occ_shape_individual_bounding_boxes.Add(current_box, solid_map.FindIndex(*it));
+  }
 }
 
 int
-t8_cad_shape_proximity::t8_cad_is_element_inside_shape(t8_forest_t forest,
-                                                 t8_locidx_t ltreeid, 
-                                                 const t8_element_t *element) const
+t8_cad_shape_proximity::t8_cad_is_element_inside_shape (t8_forest_t forest,
+                                                        t8_locidx_t ltreeid,
+                                                        const t8_element_t *element)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   t8_eclass_t         tree_class, element_class;
@@ -143,13 +154,14 @@ t8_cad_shape_proximity::t8_cad_is_element_inside_shape(t8_forest_t forest,
   ts->t8_element_vertex_reference_coords(element, max_corner_number, 
                                          corner_ref_coords);
   t8_geometry_evaluate (cmesh, gtreeid, corner_ref_coords, corner_coords + 3);
-  Bnd_Box element_bounding_box = Bnd_Box();
-  element_bounding_box.Update(corner_coords[0], corner_coords[1], corner_coords[3],
-                              corner_coords[3], corner_coords[4], corner_coords[5]);
-  
+
   /* Check if element bounding box is outside of shape bounding box (fast). 
    * If true, element is completely outside of the shape. */
-  if (occ_shape_bounding_box.IsOut(element_bounding_box)) {
+  Bnd_Box element_bounding_box = Bnd_Box();
+  element_bounding_box.Update(corner_coords[0], corner_coords[1], corner_coords[2],
+                              corner_coords[3], corner_coords[4], corner_coords[5]);
+  const TColStd_ListOfInteger intersection_list = occ_shape_individual_bounding_boxes.Compare (element_bounding_box);
+  if (intersection_list.IsEmpty()) {
     return 0;
   }
 
@@ -173,7 +185,7 @@ t8_cad_shape_proximity::t8_cad_is_element_inside_shape(t8_forest_t forest,
   if(!dist_shape_shape.IsDone()){
     SC_ABORTF("Failed to calculate distance between element and shape");
   }
-  return dist_shape_shape.InnerSolution();
+  return dist_shape_shape.Value() <= 0;
 }
 
 int

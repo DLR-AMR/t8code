@@ -80,9 +80,9 @@ t8_shape_proximity_centroid_adapt_callback (t8_forest_t forest,
                                             t8_element_t *elements[])
 {
 #if T8_WITH_OCC
-  const t8_cad_shape_proximity *cad;
+  t8_cad_shape_proximity *cad;
   double              centroid[3] = { 0 };
-  cad = (const t8_cad_shape_proximity *) t8_forest_get_user_data (forest);
+  cad = (t8_cad_shape_proximity *) t8_forest_get_user_data (forest);
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
   return cad->t8_cad_is_point_inside_shape (centroid, 1e-3);
 #else /* !T8_WITH_OCC */
@@ -125,8 +125,8 @@ t8_shape_proximity_element_adapt_callback (t8_forest_t forest,
                                            t8_element_t *elements[])
 {
 #if T8_WITH_OCC
-  const t8_cad_shape_proximity *cad;
-  cad = (const t8_cad_shape_proximity *) t8_forest_get_user_data (forest);
+  t8_cad_shape_proximity *cad;
+  cad = (t8_cad_shape_proximity *) t8_forest_get_user_data (forest);
   return cad->t8_cad_is_element_inside_shape (forest_from, which_tree,
                                               elements[0]);
 #else /* !T8_WITH_OCC */

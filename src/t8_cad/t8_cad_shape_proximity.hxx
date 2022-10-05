@@ -32,7 +32,8 @@
 #include <t8_cad/t8_cad_base.hxx>
 
 #if T8_WITH_OCC
-#include <Bnd_OBB.hxx>
+#include <Bnd_BoundSortBox.hxx>
+
 #endif /* T8_WITH_OCC */
 
 T8_EXTERN_C_BEGIN ();
@@ -84,7 +85,7 @@ public:
   int
   t8_cad_is_element_inside_shape (t8_forest_t forest,
                                   t8_locidx_t ltreeid,
-                                  const t8_element_t *element) const;
+                                  const t8_element_t *element);
 
   /**
    * Checks if a point is inside the occ shape.
@@ -101,7 +102,8 @@ protected:
    */
   void                t8_cad_init_internal_data ();
 
-  Bnd_OBB             occ_shape_bounding_box;                             /**< Oriented bounding box of the shape */
+  Bnd_Box             occ_shape_bounding_box;                             /**< Bounding boxes of the shape */
+  Bnd_BoundSortBox    occ_shape_individual_bounding_boxes;
 };
 /* *INDENT-ON* */
 
