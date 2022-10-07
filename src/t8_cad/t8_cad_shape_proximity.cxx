@@ -87,11 +87,11 @@ t8_cad_shape_proximity::t8_cad_init_internal_data (int use_individual_bbs)
   
   TopTools_IndexedMapOfShape solid_map;
   TopExp::MapShapes (occ_shape, TopAbs_SOLID, solid_map);
-  Bnd_OBB               current_box;
   BRepBndLib::AddOBB (occ_shape, occ_shape_bounding_box);
   if (use_individual_bbs) {
     occ_shape_individual_bounding_boxes = new Bnd_HArray1OfBndOBB(1, solid_map.Size());
     for (auto it = solid_map.cbegin(); it != solid_map.cend(); ++it) {
+      Bnd_OBB current_box;
       BRepBndLib::AddOBB(*it, current_box);
       occ_shape_individual_bounding_boxes->SetValue (solid_map.FindIndex(*it), current_box);
     }
