@@ -89,7 +89,7 @@ public:
   int
   t8_cad_is_element_inside_shape (t8_forest_t forest,
                                   t8_locidx_t ltreeid,
-                                  const t8_element_t *element) const;
+                                  const t8_element_t *element);
 
   /**
    * Checks if a point is inside the occ shape.
@@ -99,6 +99,8 @@ public:
    */
   int
   t8_cad_is_point_inside_shape (const double *coords, double tol) const;
+  
+  long counter[5] = {0};
 
 protected:
   /**
