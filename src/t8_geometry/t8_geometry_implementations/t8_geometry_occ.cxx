@@ -63,21 +63,23 @@ t8_face_edge_to_tree_edge[T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_EDGES_2D] = {
 #if T8_WITH_OCC
 
 t8_geometry_occ::t8_geometry_occ (int dim, const char *fileprefix,
-                                  const char *name_in)
+                                  const char *name_in):
+t8_cad_geom (fileprefix)
 {
   T8_ASSERT (0 <= dim && dim <= 3);
   name = name_in;
   dimension = dim;
-  t8_cad_geom::t8_cad_init (fileprefix);
+  t8_cad_geom::t8_cad_init_internal_data ();
 }
 
 t8_geometry_occ::t8_geometry_occ (int dim, const TopoDS_Shape shape,
-                                  const char *name_in)
+                                  const char *name_in):
+t8_cad_geom (shape)
 {
   T8_ASSERT (0 <= dim && dim <= 3);
   name = name_in;
   dimension = dim;
-  t8_cad_geom::t8_cad_init (shape);
+  t8_cad_geom::t8_cad_init_internal_data ();
 }
 
 void

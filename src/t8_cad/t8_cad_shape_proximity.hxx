@@ -29,48 +29,52 @@
 
 #include <t8.h>
 #include <t8_forest.h>
-#include <t8_cad/t8_cad_base.hxx>
 
 #if T8_WITH_OCC
-#include <Bnd_BoundSortBox.hxx>
+#include <TopoDS_Shape.hxx>
+#include <Bnd_OBB.hxx>
+#include <NCollection_DefineHArray1.hxx>
 
-#endif /* T8_WITH_OCC */
+/* *INDENT-OFF* */
 
 T8_EXTERN_C_BEGIN ();
 
-#if T8_WITH_OCC
+typedef NCollection_Array1<Bnd_OBB> Bnd_Array1OfBndOBB; /**< Array to handle oriented bounding boxes (Bnd_OBB) */
+DEFINE_HARRAY1(Bnd_HArray1OfBndOBB, Bnd_Array1OfBndOBB) /**< OpenCASCADE memory management */
 
-/* *INDENT-OFF* */
-class t8_cad_shape_proximity:public t8_cad_base
+class t8_cad_shape_proximity
 {
-  using               t8_cad_base::t8_cad_base;
-
 public:
   /**
    * Constructor of the cad collsion class. Fills the internal shape with the content of a brep file.
    * \param [in] fileprefix Prefix of a .brep file from which to extract an occ geometry.
    */
-  t8_cad_shape_proximity (const char *fileprefix);
+  t8_cad_shape_proximity (const char *fileprefix, int use_individual_bbs);
 
   /**
    * Constructor of the cad class. Fills the internal shape with the given shape.
    * \param [in] shape Occ shape geometry.
    */
-  t8_cad_shape_proximity (const TopoDS_Shape shape);
+  t8_cad_shape_proximity (const TopoDS_Shape shape, int use_individual_bbs);
+
+  /**
+   * The destructor
+   */
+  ~ t8_cad_shape_proximity () {}
 
   /**
    * Read a brep file and fill internal shape with it.
    * \param [in] fileprefix Prefix of a .brep file from which to extract an occ geometry.
    */
   void
-  t8_cad_init (const char *fileprefix);
+  t8_cad_init (const char *fileprefix, int use_individual_bbs);
 
   /**
    * Fill the internal shape with the given shape.
    * \param [in] shape Occ shape geometry.
    */
   void
-  t8_cad_init (TopoDS_Shape shape);
+  t8_cad_init (TopoDS_Shape shape, int use_individual_bbs);
 
   /**
    * Checks if an element is inside the occ shape. Only viable with 
@@ -85,7 +89,7 @@ public:
   int
   t8_cad_is_element_inside_shape (t8_forest_t forest,
                                   t8_locidx_t ltreeid,
-                                  const t8_element_t *element);
+                                  const t8_element_t *element) const;
 
   /**
    * Checks if a point is inside the occ shape.
@@ -100,15 +104,17 @@ protected:
   /**
    * Initializes the internal data structures.
    */
-  void                t8_cad_init_internal_data ();
+  void                  t8_cad_init_internal_data (const int use_individual_bbs);
 
-  Bnd_Box             occ_shape_bounding_box;                             /**< Bounding boxes of the shape */
-  Bnd_BoundSortBox    occ_shape_individual_bounding_boxes;
+  TopoDS_Shape          occ_shape;                                    /**< The OpenCASCADE shape */
+  Bnd_OBB               occ_shape_bounding_box;                       /**< Bounding box of the shape */
+  Bnd_HArray1OfBndOBB  *occ_shape_individual_bounding_boxes;          /**< Bounding boxes of the subshapes */ 
 };
+
+T8_EXTERN_C_END ();
+
 /* *INDENT-ON* */
 
 #endif /* T8_WITH_OCC */
-
-T8_EXTERN_C_END ();
 
 #endif /* !T8_CAD_shape_proximity_HXX */

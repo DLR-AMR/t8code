@@ -43,6 +43,7 @@
 #include <BRepPrimAPI_MakeSphere.hxx>
 #include <BRepPrimAPI_MakeTorus.hxx>
 #include <BRepTools.hxx>
+#include <ctime>
 #endif /* T8_WITH_OCC */
 
 /** 
@@ -148,9 +149,12 @@ void
 t8_shape_proximity_refine_forest_with_cad (const char *fileprefix,
                                            const double *corners,
                                            int level, int rlevel,
-                                           int centroid, sc_MPI_Comm comm)
+                                           int centroid,
+                                           int use_individual_bbs,
+                                           sc_MPI_Comm comm)
 {
 #if T8_WITH_OCC
+  clock_t             begin = std::clock ();
   t8_cmesh_t          cmesh;
   t8_forest_t         forest;
   t8_geometry        *geometry;
@@ -182,7 +186,7 @@ t8_shape_proximity_refine_forest_with_cad (const char *fileprefix,
                                   t8_scheme_new_default_cxx (),
                                   level, 0, comm);
   T8_ASSERT (t8_forest_is_committed (forest));
-  cad = new t8_cad_shape_proximity (fileprefix);
+  cad = new t8_cad_shape_proximity (fileprefix, use_individual_bbs);
   for (int r = 0; r < rlevel; ++r) {
     t8_forest_init (&forest_new);
     if (centroid) {
@@ -239,6 +243,9 @@ t8_shape_proximity_refine_forest_with_cad (const char *fileprefix,
     strcpy (vtk_data.description, "Element inside cad shape");
   }
   vtk_data.data = inside_shape;
+  clock_t             end = std::clock ();
+  double              elapsed_secs = double (end - begin) / CLOCKS_PER_SEC;
+  printf ("elapsed time: %f\n", elapsed_secs);
   snprintf (forest_vtu, BUFSIZ,
             "shape_proximity_forest_level_%i_rlevel_%i", level, rlevel);
   t8_forest_write_vtk_ext (forest, forest_vtu, 1, 1, 1, 1, 0, 0, 0, 1,
@@ -297,7 +304,7 @@ main (int argc, char **argv)
   int                 mpiret;
   sc_MPI_Comm         comm;
   const char         *fileprefix = NULL;
-  int                 level, rlevel, centroid, generate;
+  int                 level, rlevel, centroid, generate, use_individual_bbs;
   double              corners[6];
 
   /* brief help message */
@@ -344,6 +351,9 @@ main (int argc, char **argv)
   sc_options_add_switch (opt, 'c', "centroid", &centroid,
                          "Classify an element based on its central point.\n "
                          "Otherwise it is checked, if the whole element is outside of the cad geometry.");
+  sc_options_add_switch (opt, 'i', "individual-bbs", &use_individual_bbs,
+                         "Generates a bounding box for each subshape.\n "
+                         "Accelerates geometry operations if your geometry consists of multiple subshapes.");
   sc_options_add_switch (opt, 'g', "generate", &generate,
                          "Generate some examplatory geometry files. Overrides all other options.");
   sc_options_add_double (opt, 'x', "x-coord", corners + 0, 0,
@@ -375,7 +385,8 @@ main (int argc, char **argv)
   }
   else {
     t8_shape_proximity_refine_forest_with_cad (fileprefix, corners, level,
-                                               rlevel, centroid, comm);
+                                               rlevel, centroid,
+                                               use_individual_bbs, comm);
   }
   sc_options_destroy (opt);
   sc_finalize ();

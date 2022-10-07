@@ -79,20 +79,19 @@ public:
 
   /**
    * Constructor of the occ geometry class.
-   * \param [in] dimension  The dimension of this geometry.
+   * \param [in] dim        The dimension of this geometry.
    * \param [in] fileprefix Prefix of a .brep file from which to extract an occ geometry.
-   * \param [in] name       The name to give this geometry.
+   * \param [in] name_in    The name to give this geometry.
    */
-  t8_geometry_occ (int dimension, const char *fileprefix, const char *name);
+  t8_geometry_occ (int dim, const char *fileprefix, const char *name_in);
 
   /**
    * Constructor of the occ geometry class.
-   * \param [in] dimension  The dimension of this geometry.
+   * \param [in] dim        The dimension of this geometry.
    * \param [in] shape      Occ shape geometry.
-   * \param [in] name       The name to give this geometry.
+   * \param [in] name_in    The name to give this geometry.
    */
-  t8_geometry_occ (int dimension, const TopoDS_Shape shape, 
-                   const char *name);
+  t8_geometry_occ (int dim, const TopoDS_Shape shape, const char *name_in);
 
   /** The destructor. 
    * Clears the allocated memory.

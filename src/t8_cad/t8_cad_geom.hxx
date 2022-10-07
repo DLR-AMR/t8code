@@ -29,7 +29,6 @@
 
 #include <t8.h>
 #include <t8_forest.h>
-#include <t8_cad/t8_cad_base.hxx>
 
 #if T8_WITH_OCC
 #include <gp_Pnt.hxx>
@@ -45,10 +44,8 @@ T8_EXTERN_C_BEGIN ();
 #if T8_WITH_OCC
 
 /* *INDENT-OFF* */
-class t8_cad_geom: public t8_cad_base
+class t8_cad_geom
 {
-  using               t8_cad_base::t8_cad_base;
-
 public:
   /**
    * Constructor of the cad collsion class. Fills the internal shape with the content of a brep file.
@@ -61,6 +58,11 @@ public:
    * \param [in] occ_shape Occ shape geometry.
    */
   t8_cad_geom (const TopoDS_Shape occ_shape);
+
+  /**
+   * The destructor
+   */
+  ~ t8_cad_geom () {}
 
   /**
    * Read a brep file and fill internal shape with it.
@@ -212,6 +214,7 @@ protected:
    */
   void                t8_cad_init_internal_data ();
 
+  TopoDS_Shape occ_shape;                                                 /**< The OpenCASCADE shape */
   TopTools_IndexedMapOfShape occ_shape_vertex_map;                        /**< Map of all TopoDS_Vertex in shape. */
   TopTools_IndexedMapOfShape occ_shape_edge_map;                          /**< Map of all TopoDS_Edge in shape. */
   TopTools_IndexedMapOfShape occ_shape_face_map;                          /**< Map of all TopoDS_Face in shape. */

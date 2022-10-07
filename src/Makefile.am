@@ -70,7 +70,6 @@ libt8_installed_headers_default_tet =
 libt8_installed_headers_default_prism =
 libt8_installed_headers_default_pyramid =
 libt8_installed_headers_cad = \
-  src/t8_cad/t8_cad_base.hxx \
   src/t8_cad/t8_cad_shape_proximity.hxx \
   src/t8_cad/t8_cad_geom.hxx
 libt8_internal_headers = \

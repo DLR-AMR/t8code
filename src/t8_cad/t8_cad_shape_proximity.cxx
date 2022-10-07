@@ -38,7 +38,7 @@
 #include <TopExp.hxx>
 
 /* *INDENT-OFF* */
-t8_cad_shape_proximity::t8_cad_shape_proximity (const char *fileprefix)
+t8_cad_shape_proximity::t8_cad_shape_proximity (const char *fileprefix, const int use_individual_bbs)
 {
   BRep_Builder        builder;
   std::string current_file (fileprefix);
@@ -48,17 +48,17 @@ t8_cad_shape_proximity::t8_cad_shape_proximity (const char *fileprefix)
   if (occ_shape.IsNull ()) {
     SC_ABORTF ("Could not read brep file or brep file contains no shape \n");
   }
-  t8_cad_shape_proximity::t8_cad_init_internal_data ();
+  t8_cad_shape_proximity::t8_cad_init_internal_data (use_individual_bbs);
 }
 
-t8_cad_shape_proximity::t8_cad_shape_proximity (const TopoDS_Shape shape)
+t8_cad_shape_proximity::t8_cad_shape_proximity (const TopoDS_Shape shape, int use_individual_bbs)
 {
   occ_shape = shape;
-  t8_cad_shape_proximity::t8_cad_init_internal_data ();
+  t8_cad_shape_proximity::t8_cad_init_internal_data (use_individual_bbs);
 }
 
 void
-t8_cad_shape_proximity::t8_cad_init (const char *fileprefix)
+t8_cad_shape_proximity::t8_cad_init (const char *fileprefix, int use_individual_bbs)
 {
   BRep_Builder        builder;
   std::string current_file (fileprefix);
@@ -68,18 +68,18 @@ t8_cad_shape_proximity::t8_cad_init (const char *fileprefix)
   if (occ_shape.IsNull ()) {
     SC_ABORTF ("Could not read brep file or brep file contains no shape \n");
   }
-  t8_cad_shape_proximity::t8_cad_init_internal_data ();
+  t8_cad_shape_proximity::t8_cad_init_internal_data (use_individual_bbs);
 }
 
 void
-t8_cad_shape_proximity::t8_cad_init (const TopoDS_Shape shape)
+t8_cad_shape_proximity::t8_cad_init (const TopoDS_Shape shape, int use_individual_bbs)
 {
   occ_shape = shape;
-  t8_cad_shape_proximity::t8_cad_init_internal_data ();
+  t8_cad_shape_proximity::t8_cad_init_internal_data (use_individual_bbs);
 }
 
 void
-t8_cad_shape_proximity::t8_cad_init_internal_data ()
+t8_cad_shape_proximity::t8_cad_init_internal_data (int use_individual_bbs)
 {
   if (occ_shape.IsNull ()) {
     SC_ABORTF ("Shape is null. \n");
@@ -87,19 +87,25 @@ t8_cad_shape_proximity::t8_cad_init_internal_data ()
   
   TopTools_IndexedMapOfShape solid_map;
   TopExp::MapShapes (occ_shape, TopAbs_SOLID, solid_map);
-  Bnd_Box               current_box;
-  BRepBndLib::AddOptimal (occ_shape, occ_shape_bounding_box);
-  occ_shape_individual_bounding_boxes.Initialize(occ_shape_bounding_box, solid_map.Size());
-  for (auto it = solid_map.cbegin(); it != solid_map.cend(); ++it) {
-    BRepBndLib::AddOptimal(*it, current_box);
-    occ_shape_individual_bounding_boxes.Add(current_box, solid_map.FindIndex(*it));
+  Bnd_OBB               current_box;
+  BRepBndLib::AddOBB (occ_shape, occ_shape_bounding_box);
+  if (use_individual_bbs) {
+    occ_shape_individual_bounding_boxes = new Bnd_HArray1OfBndOBB(1, solid_map.Size());
+    for (auto it = solid_map.cbegin(); it != solid_map.cend(); ++it) {
+      BRepBndLib::AddOBB(*it, current_box);
+      occ_shape_individual_bounding_boxes->SetValue (solid_map.FindIndex(*it), current_box);
+    }
+  }
+  else
+  {
+    occ_shape_individual_bounding_boxes = new Bnd_HArray1OfBndOBB(1, 1);
   }
 }
 
 int
 t8_cad_shape_proximity::t8_cad_is_element_inside_shape (t8_forest_t forest,
                                                         t8_locidx_t ltreeid,
-                                                        const t8_element_t *element)
+                                                        const t8_element_t *element) const
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   t8_eclass_t         tree_class, element_class;
@@ -155,14 +161,38 @@ t8_cad_shape_proximity::t8_cad_is_element_inside_shape (t8_forest_t forest,
                                          corner_ref_coords);
   t8_geometry_evaluate (cmesh, gtreeid, corner_ref_coords, corner_coords + 3);
 
-  /* Check if element bounding box is outside of shape bounding box (fast). 
+  /* Check if element bounding box is outside of shape bounding box (very fast). 
    * If true, element is completely outside of the shape. */
   Bnd_Box element_bounding_box = Bnd_Box();
   element_bounding_box.Update(corner_coords[0], corner_coords[1], corner_coords[2],
                               corner_coords[3], corner_coords[4], corner_coords[5]);
-  const TColStd_ListOfInteger intersection_list = occ_shape_individual_bounding_boxes.Compare (element_bounding_box);
-  if (intersection_list.IsEmpty()) {
+  Bnd_OBB element_obb = Bnd_OBB (element_bounding_box);
+  if (occ_shape_bounding_box.IsOut (element_obb)) {
     return 0;
+  }
+
+  /* Check if element bounding box is outside of all other bounding boxes of the shape (fast). 
+   * If true, element is completely outside of the shape. */
+  if (occ_shape_individual_bounding_boxes->Size() > 0) {  
+    int match = 0;
+    for (auto it = occ_shape_individual_bounding_boxes->begin(); 
+         it != occ_shape_individual_bounding_boxes->end(); ++it)
+    {
+      if (!it->IsOut (element_obb))
+      {
+        if (it != occ_shape_individual_bounding_boxes->begin())
+        {
+          const Bnd_OBB buffer_obb = *occ_shape_individual_bounding_boxes->begin();
+          occ_shape_individual_bounding_boxes->ChangeFirst() = *it;
+          *it = buffer_obb;
+        }
+        match = 1;
+        break;
+      }
+    }
+    if (!match) {
+      return 0;
+    }
   }
 
   /* Check if element centroid is inside shape (slow). 
