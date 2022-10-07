@@ -243,6 +243,26 @@ t8_shape_proximity_refine_forest_with_cad (const char *fileprefix,
             "shape_proximity_forest_level_%i_rlevel_%i", level, rlevel);
   t8_forest_write_vtk_ext (forest, forest_vtu, 1, 1, 1, 1, 0, 0, 0, 1,
                            &vtk_data);
+  int                 mpirank;
+  int                 mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  long                counter[5];
+  sc_MPI_Reduce (&cad->counter, counter, 5, sc_MPI_LONG, sc_MPI_SUM, 0, comm);
+  if (mpirank == 0) {
+    t8_productionf ("bb checks:                      %li\n", counter[0]);
+    t8_productionf ("bbs checks:                     %li\n", counter[1]);
+    t8_productionf ("point inside checks:            %li\n", counter[2]);
+    t8_productionf ("element inside checks:          %li\n", counter[3]);
+    t8_productionf ("positive element inside checks: %li\n", counter[4]);
+    t8_productionf ("percent bbs checks:                     %f\n",
+                    100.0 * ((double) counter[1] / (double) counter[0]));
+    t8_productionf ("percent point inside checks:            %f\n",
+                    100.0 * ((double) counter[2] / (double) counter[0]));
+    t8_productionf ("percent element inside checks:          %f\n",
+                    100.0 * ((double) counter[3] / (double) counter[0]));
+    t8_productionf ("percent positive element inside checks: %f\n",
+                    100.0 * ((double) counter[4] / (double) counter[0]));
+  }
   t8_forest_unref (&forest);
   T8_FREE (inside_shape);
 #else /* !T8_WITH_OCC */

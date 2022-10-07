@@ -96,6 +96,7 @@ public:
   int
   t8_cad_is_point_inside_shape (const double *coords, double tol) const;
 
+  long counter[5] = {0};
 protected:
   /**
    * Initializes the internal data structures.

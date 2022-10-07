@@ -157,9 +157,12 @@ t8_cad_shape_proximity::t8_cad_is_element_inside_shape (t8_forest_t forest,
 
   /* Check if element bounding box is outside of shape bounding box (fast). 
    * If true, element is completely outside of the shape. */
+  ++counter[0];
   Bnd_Box element_bounding_box = Bnd_Box();
   element_bounding_box.Update(corner_coords[0], corner_coords[1], corner_coords[2],
                               corner_coords[3], corner_coords[4], corner_coords[5]);
+  if (occ_shape_bounding_box.IsOut (element_bounding_box)) return 0;
+  ++counter[1];
   const TColStd_ListOfInteger intersection_list = occ_shape_individual_bounding_boxes.Compare (element_bounding_box);
   if (intersection_list.IsEmpty()) {
     return 0;
@@ -168,6 +171,7 @@ t8_cad_shape_proximity::t8_cad_is_element_inside_shape (t8_forest_t forest,
   /* Check if element centroid is inside shape (slow). 
    * This is still faster than checking if the Element intersects the shape. */
   double              centroid[3] = { 0 };
+  ++counter[2];
   t8_forest_element_centroid (forest, ltreeid, element, centroid);
   if (t8_cad_shape_proximity::t8_cad_is_point_inside_shape (centroid, 1e-3))
   {
@@ -182,9 +186,11 @@ t8_cad_shape_proximity::t8_cad_is_element_inside_shape (t8_forest_t forest,
   dist_shape_shape.LoadS1(element_shape);
   dist_shape_shape.LoadS2(occ_shape);
   dist_shape_shape.Perform();
+  ++counter[3];
   if(!dist_shape_shape.IsDone()){
     SC_ABORTF("Failed to calculate distance between element and shape");
   }
+  if (dist_shape_shape.Value() <= 0) ++counter[4];
   return dist_shape_shape.Value() <= 0;
 }
 
