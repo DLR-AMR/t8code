@@ -77,12 +77,29 @@ vtkSmartPointer < vtkPolyData > t8_read_poly (const char *filename);
 /**
  * Read the unstructured grid of a file containing vtkPolyData
  * \param [in]      filename            The file containing the Data,
- * \returns         vtkSmartPointer<vtkUnstructuredGrid>    A pointer to vtkPolyData,
- *                  or NULL if an error occurs during reading.
+ * \returns         1, if the read is successful, 0 if not. 
  */
-void                t8_read_unstructured (const char *filename,
+int                 t8_read_unstructured (const char *filename,
                                           vtkSmartPointer <
-                                          vtkUnstructuredGrid > grid);
+                                          vtkUnstructuredGrid > vtkGrid,
+                                          const int partition,
+                                          const int main_proc,
+                                          sc_MPI_Comm comm);
+
+/**
+ * @brief 
+ * 
+ * \param[in] vtkGrid 
+ * \param[in] partition 
+ * \param[in] main_proc 
+ * \param[in, out] cmesh 
+ */
+void                t8_unstructured_to_cmesh (vtkSmartPointer <
+                                              vtkUnstructuredGrid > vtkGrid,
+                                              const int partition,
+                                              const int main_proc,
+                                              t8_cmesh_t cmesh,
+                                              sc_MPI_Comm comm);
 #endif
 
 #endif /* T8_CMESH_VTK_HELPER */

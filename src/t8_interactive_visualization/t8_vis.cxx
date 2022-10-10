@@ -102,10 +102,26 @@ t8_interactive_vis_update_vtkGrid (t8_interactive_vis_t * vis_handler)
 {
   if (!vis_handler->data_has_been_read) {
     /* TODO: Currently done twice, extrad t8_read_unstructured from t8_cmesh_read */
-    t8_read_unstructured (vis_handler->filepath, vis_handler->vtkGrid);
-    t8_cmesh_t          cmesh =
-      t8_cmesh_read_from_vtk_unstructured (vis_handler->filepath, 0, 0,
-                                           vis_handler->comm);
+    const int           successful_read =
+      t8_read_unstructured (vis_handler->filepath, vis_handler->vtkGrid, 1, 0,
+                            vis_handler->comm);
+    t8_cmesh_t          cmesh;
+    t8_cmesh_t          cmesh_in;
+    t8_cmesh_init (&cmesh_in);
+    t8_cmesh_init (&cmesh);
+    if (successful_read) {
+      t8_unstructured_to_cmesh (vis_handler->vtkGrid, 1, 0, cmesh_in,
+                                vis_handler->comm);
+      t8_cmesh_commit (cmesh_in, vis_handler->comm);
+      t8_cmesh_set_derive (cmesh, cmesh_in);
+      t8_cmesh_set_partition_uniform (cmesh, 0, t8_scheme_new_default_cxx ());
+    }
+    if (cmesh != NULL) {
+      t8_cmesh_commit (cmesh, vis_handler->comm);
+    }
+    else {
+      t8_global_errorf ("Could not commit cmesh.\n");
+    }
     t8_forest_init (&vis_handler->forest);
     t8_forest_set_cmesh (vis_handler->forest, cmesh, vis_handler->comm);
     t8_forest_set_scheme (vis_handler->forest, t8_scheme_new_default_cxx ());
@@ -119,7 +135,7 @@ t8_interactive_vis_update_vtkGrid (t8_interactive_vis_t * vis_handler)
   /* TODO: Currently no data-writing. Enable writing of data. */
   t8_forest_to_vtkUnstructuredGrid (vis_handler->forest, vis_handler->vtkGrid,
                                     1, 1, 1, 1, 0, 0, NULL);
-
+  t8_forest_write_vtk (vis_handler->forest, "vis_handler_");
 }
 
 void

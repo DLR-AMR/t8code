@@ -80,17 +80,11 @@ void                t8_interactive_vis_set_filepath (t8_interactive_vis_t *
  * \param[in, out] vis_handler An initialized vis_handler.
  * \param[in] grid             A vtkSmartPointer to an unstructuredGrid. 
  */
-void
- 
- 
- 
- 
- 
- 
- 
- t8_interactive_vis_set_vtkGrid (t8_interactive_vis_t * vis_handler,
-                                 vtkSmartPointer < vtkUnstructuredGrid >
-                                 grid);
+void                t8_interactive_vis_set_vtkGrid (t8_interactive_vis_t *
+                                                    vis_handler,
+                                                    vtkSmartPointer <
+                                                    vtkUnstructuredGrid >
+                                                    grid);
 
 /**
  * Set a uniform refinment of the forest.  

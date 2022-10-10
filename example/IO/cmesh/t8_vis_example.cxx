@@ -36,11 +36,11 @@ t8_forest_use_vis_handler (const char *vtk_file, sc_MPI_Comm comm,
   t8_interactive_vis_init (&vis_pipeline);
   t8_interactive_vis_set_filepath (vis_pipeline, vtk_file);
   t8_interactive_vis_set_MPI_comm (vis_pipeline, comm);
-  t8_interactive_vis_set_vtkGrid (vis_pipeline, grid.GetPointer ());
+  t8_interactive_vis_set_vtkGrid (vis_pipeline, grid);
   t8_interactive_vis_update_vtkGrid (vis_pipeline);
-  t8_debugf ("[D] have read: %li cells\n",
-             vis_pipeline->vtkGrid->GetNumberOfCells ())
-    t8_interactive_vis_destroy (&vis_pipeline);
+  t8_debugf ("[D] have read: %lli cells\n",
+             vis_pipeline->vtkGrid->GetNumberOfCells ());
+  t8_interactive_vis_destroy (&vis_pipeline);
 #else
   t8_global_errorf
     ("Warning: t8code is not linked againt vtk library. Link t8code with the vtk library to enable this example.\n");
@@ -101,6 +101,8 @@ main (int argc, char **argv)
   }
   sc_options_destroy (opt);
   sc_finalize ();
+  mpiret = sc_MPI_Finalize ();
+  SC_CHECK_MPI (mpiret);
 
   return 0;
 

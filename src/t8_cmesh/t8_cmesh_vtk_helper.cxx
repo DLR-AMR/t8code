@@ -27,6 +27,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_cmesh_vtk_writer.h>
 #include <t8_cmesh/t8_cmesh_reader_helper.hxx>
 #include <t8_element_shape.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 
 #if T8_WITH_VTK
 #include <vtkCellIterator.h>
@@ -139,11 +140,16 @@ t8_read_unstructured_ext (const char *filename,
 int
 t8_read_unstructured (const char *filename,
                       vtkSmartPointer < vtkUnstructuredGrid > vtkGrid,
-                      const int partition, const int main_proc)
+                      const int partition, const int main_proc,
+                      sc_MPI_Comm comm)
 {
   int                 main_proc_read_successful = 0;
+  int                 mpirank;
+  int                 mpiret;
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
   if (!partition || mpirank == main_proc) {
-    t8_read_unstructured (filename, vtkGrid);
+    t8_read_unstructured_ext (filename, vtkGrid);
     if (vtkGrid == NULL) {
       t8_errorf ("Could not read file\n");
       if (partition) {
@@ -157,6 +163,63 @@ t8_read_unstructured (const char *filename,
     sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc, comm);
   }
   return main_proc_read_successful;
+}
+
+void
+t8_unstructured_to_cmesh (vtkSmartPointer < vtkUnstructuredGrid > vtkGrid,
+                          const int partition, const int main_proc,
+                          t8_cmesh_t cmesh, sc_MPI_Comm comm)
+{
+  int                 mpirank;
+  int                 mpisize;
+  int                 mpiret;
+  int                 dim;
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_size (comm, &mpisize);
+  t8_gloidx_t         num_trees;
+  vtkSmartPointer < vtkCellData > cellData;
+
+  if (!partition || mpirank == main_proc) {
+    /* Get the Data of the all cells */
+    cellData = vtkGrid->GetCellData ();
+    if (cellData == NULL) {
+      t8_productionf ("No cellData found.\n");
+    }
+
+    /* Actual translation */
+    num_trees = t8_vtk_iterate_cells (vtkGrid, cellData, cmesh, comm);
+    dim = t8_get_dimension (vtkGrid);
+    t8_cmesh_set_dimension (cmesh, dim);
+    t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim);
+    t8_cmesh_register_geometry (cmesh, linear_geom);
+  }
+  if (partition) {
+    t8_gloidx_t         first_tree;
+    t8_gloidx_t         last_tree;
+    if (mpirank == main_proc) {
+      first_tree = 0;
+      last_tree = num_trees - 1;
+    }
+    sc_MPI_Bcast (&dim, 1, sc_MPI_INT, main_proc, comm);
+    t8_debugf ("[D] dim: %i\n", dim);
+    sc_MPI_Bcast (&num_trees, 1, T8_MPI_GLOIDX, main_proc, comm);
+    t8_cmesh_set_dimension (cmesh, dim);
+
+    if (mpirank < main_proc) {
+      first_tree = 0;
+      last_tree = -1;
+      t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim);
+      t8_cmesh_register_geometry (cmesh, linear_geom);
+    }
+    else if (mpirank > main_proc) {
+      first_tree = num_trees;
+      last_tree = num_trees - 1;
+      t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim);
+      t8_cmesh_register_geometry (cmesh, linear_geom);
+    }
+    t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
+  }
 }
 
 vtkSmartPointer < vtkPolyData > t8_read_poly (const char *filename)

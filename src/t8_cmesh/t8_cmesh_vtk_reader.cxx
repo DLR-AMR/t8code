@@ -59,77 +59,23 @@ t8_cmesh_read_from_vtk_unstructured (const char *filename,
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
   int                 main_proc_read_successful = 0;
-  int                 dim;
-  t8_gloidx_t         num_trees;
+  vtkSmartPointer < vtkUnstructuredGrid > vtkGrid =
+    vtkSmartPointer < vtkUnstructuredGrid >::New ();
 
   T8_ASSERT (partition == 0 || (main_proc >= 0 && main_proc < mpisize));
 
   t8_cmesh_init (&cmesh);
-  if (!partition || mpirank == main_proc) {
-    /* The Incoming data must be an unstructured Grid */
-    vtkSmartPointer < vtkUnstructuredGrid > unstructuredGrid =
-      vtkSmartPointer < vtkUnstructuredGrid >::New ();
-    vtkSmartPointer < vtkCellData > cellData;
-    /* Prepare grid for translation */
-    t8_read_unstructured (filename, unstructuredGrid);
-    if (unstructuredGrid == NULL) {
-      t8_errorf ("Could not read file.\n");
-      if (partition) {
-        main_proc_read_successful = 0;
-        /* Reading failed, communicate to other processes */
-        sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc,
-                      comm);
-      }
-      return NULL;
-    }
-
-    /* Get the Data of the all cells */
-    cellData = unstructuredGrid->GetCellData ();
-    if (cellData == NULL) {
-      t8_productionf ("No cellData found.\n");
-    }
-
-    /* Actual translation */
-    num_trees =
-      t8_vtk_iterate_cells (unstructuredGrid, cellData, cmesh, comm);
-    dim = t8_get_dimension (unstructuredGrid);
-    t8_cmesh_set_dimension (cmesh, dim);
-    t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim);
-    t8_cmesh_register_geometry (cmesh, linear_geom);
-    main_proc_read_successful = 1;
+  main_proc_read_successful =
+    t8_read_unstructured (filename, vtkGrid, partition, main_proc, comm);
+  if (!main_proc_read_successful) {
+    t8_global_errorf
+      ("Main process (Rank %i) did not read the file successfully.\n",
+       main_proc);
+    t8_cmesh_destroy (&cmesh);
+    return NULL;
   }
-  if (partition) {
-    t8_gloidx_t         first_tree;
-    t8_gloidx_t         last_tree;
-
-    sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc, comm);
-    if (!main_proc_read_successful) {
-      t8_debugf ("Main process did not read the file successfully.\n");
-      t8_cmesh_destroy (&cmesh);
-      return NULL;
-    }
-    if (mpirank == main_proc) {
-      first_tree = 0;
-      last_tree = num_trees - 1;
-    }
-    sc_MPI_Bcast (&dim, 1, sc_MPI_INT, main_proc, comm);
-    t8_debugf ("[D] dim: %i\n", dim);
-    sc_MPI_Bcast (&num_trees, 1, T8_MPI_GLOIDX, main_proc, comm);
-    t8_cmesh_set_dimension (cmesh, dim);
-
-    if (mpirank < main_proc) {
-      first_tree = 0;
-      last_tree = -1;
-      t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim);
-      t8_cmesh_register_geometry (cmesh, linear_geom);
-    }
-    else if (mpirank > main_proc) {
-      first_tree = num_trees;
-      last_tree = num_trees - 1;
-      t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim);
-      t8_cmesh_register_geometry (cmesh, linear_geom);
-    }
-    t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
+  else {
+    t8_unstructured_to_cmesh (vtkGrid, partition, main_proc, cmesh, comm);
   }
   T8_ASSERT (cmesh != NULL);
   if (cmesh != NULL) {
