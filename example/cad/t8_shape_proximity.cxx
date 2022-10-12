@@ -43,6 +43,9 @@
 #include <BRepPrimAPI_MakeSphere.hxx>
 #include <BRepPrimAPI_MakeTorus.hxx>
 #include <BRepTools.hxx>
+#include <gp_Trsf.hxx>
+#include <BRepBuilderAPI_Transform.hxx>
+#include <BRepAlgoAPI_Fuse.hxx>
 #include <ctime>
 #endif /* T8_WITH_OCC */
 
@@ -281,7 +284,7 @@ void
 t8_shape_proximity_generate_geometries ()
 {
 #if T8_WITH_OCC
-  TopoDS_Shape        shape;
+  TopoDS_Shape        shape, shape2;
   gp_Ax2              axis;
 
   /* Generate a pyramid */
@@ -308,6 +311,30 @@ t8_shape_proximity_generate_geometries ()
   axis = gp_Ax2 (gp_Pnt (0.5, 0.5, 0.5), gp_Dir (0, 0, 1));
   BRepPrimAPI_MakeTorus mktorus = BRepPrimAPI_MakeTorus (axis, 0.3, 0.1);
   BRepTools::Write (mktorus.Shape (), "torus.brep");
+
+  /* Generate a mix of all */
+  shape = mkwedge.Shape ();
+  gp_Trsf             transformation;
+  gp_Vec              vector (1, 0, 0);
+  transformation.SetTranslation (vector);
+  shape2 = BRepBuilderAPI_Transform (mkcone.Shape (), transformation);
+  shape = BRepAlgoAPI_Fuse (shape, shape2);
+
+  vector = gp_Vec (0, 1, 0);
+  transformation.SetTranslation (vector);
+  shape2 = BRepBuilderAPI_Transform (mksphere.Shape (), transformation);
+  shape = BRepAlgoAPI_Fuse (shape, shape2);
+
+  vector = gp_Vec (1, 1, 0);
+  transformation.SetTranslation (vector);
+  shape2 = BRepBuilderAPI_Transform (mktorus.Shape (), transformation);
+  shape = BRepAlgoAPI_Fuse (shape, shape2);
+
+  transformation = gp_Trsf ();
+  transformation.SetScaleFactor (0.5);
+  shape = BRepBuilderAPI_Transform (shape, transformation);
+
+  BRepTools::Write (shape, "mix.brep");
 
 #else /* !T8_WITH_OCC */
   SC_ABORTF ("OpenCASCADE is not linked");
