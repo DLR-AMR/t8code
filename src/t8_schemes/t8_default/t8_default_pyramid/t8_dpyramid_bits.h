@@ -155,7 +155,7 @@ int                 t8_dpyramid_compare (const t8_dpyramid_t *p1,
  * \param [in]  fam A collection of pyramids
  * \return      Nonzero if \a fam is a family of pyramids
  */
-int                 t8_dpyramid_is_family (t8_dpyramid_t **fam);
+int                 t8_dpyramid_is_family (const t8_dpyramid_t **fam);
 
 /** Compute whether a given pyramid shares a given face with its root tree.
  * \param [in]  p       The input pyramid
