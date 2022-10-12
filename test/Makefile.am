@@ -23,7 +23,6 @@ t8code_test_programs = \
     test/t8_schemes/t8_test_find_parent \
     test/t8_schemes/t8_test_successor \
     test/t8_schemes/t8_test_descendant \
-    test/t8_schemes/t8_test_init_linear_id \
     test/t8_schemes/t8_test_pyra_face_neigh \
     test/t8_schemes/t8_test_pyra_face_descendant \
     test/t8_data/t8_test_shmem \
@@ -50,7 +49,6 @@ test_t8_schemes_t8_test_pyra_face_neigh_SOURCES = test/t8_schemes/t8_test_pyra_f
 test_t8_schemes_t8_test_pyra_face_descendant_SOURCES = test/t8_schemes/t8_test_pyra_face_descendant.cxx
 test_t8_schemes_t8_test_find_parent_SOURCES = test/t8_schemes/t8_test_find_parent.cxx
 test_t8_schemes_t8_test_successor_SOURCES = test/t8_schemes/t8_test_successor.cxx
-test_t8_schemes_t8_test_init_linear_id_SOURCES = test/t8_schemes/t8_test_init_linear_id.cxx
 test_t8_schemes_t8_test_descendant_SOURCES = test/t8_schemes/t8_test_descendant.cxx
 test_t8_schemes_t8_test_element_count_leafs_SOURCES = test/t8_schemes/t8_test_element_count_leafs.cxx
 
@@ -75,8 +73,10 @@ test_t8_gtest_main_SOURCES = test/t8_gtest_main.cxx \
   test/t8_gtest_refcount.cxx \
   test/t8_gtest_occ_linkage.cxx \
   test/t8_gtest_version.cxx \
+  test/t8_schemes/t8_gtest_init_linear_id.cxx \
   test/t8_gtest_basics.cxx \
   test/t8_schemes/t8_gtest_ancestor.cxx
+
 test_t8_gtest_main_LDADD = $(LDADD) test/libgtest.la
 test_t8_gtest_main_LDFLAGS = $(AM_LDFLAGS) -pthread
 test_t8_gtest_main_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)/thirdparty/googletest-mpi/ \
