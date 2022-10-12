@@ -88,7 +88,7 @@ t8_shape_proximity_centroid_adapt_callback (t8_forest_t forest,
   double              centroid[3] = { 0 };
   cad = (t8_cad_shape_proximity *) t8_forest_get_user_data (forest);
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
-  return cad->t8_cad_is_point_inside_shape (centroid, 1e-3);
+  return cad->t8_cad_is_point_inside_shape (centroid, 1e-3, 1);
 #else /* !T8_WITH_OCC */
   SC_ABORTF ("OpenCASCADE is not linked");
 #endif /* T8_WITH_OCC */
@@ -132,7 +132,7 @@ t8_shape_proximity_element_adapt_callback (t8_forest_t forest,
   t8_cad_shape_proximity *cad;
   cad = (t8_cad_shape_proximity *) t8_forest_get_user_data (forest);
   return cad->t8_cad_is_element_inside_shape (forest_from, which_tree,
-                                              elements[0]);
+                                              elements[0], 1);
 #else /* !T8_WITH_OCC */
   SC_ABORTF ("OpenCASCADE is not linked");
 #endif /* T8_WITH_OCC */
@@ -227,11 +227,11 @@ t8_shape_proximity_refine_forest_with_cad (const char *fileprefix,
         double              centroid[3] = { 0 };
         t8_forest_element_centroid (forest, itree, element, centroid);
         inside_shape[current_index] =
-          cad->t8_cad_is_point_inside_shape (centroid, 1e-3);
+          cad->t8_cad_is_point_inside_shape (centroid, 1e-3, 1);
       }
       else {
         inside_shape[current_index] =
-          cad->t8_cad_is_element_inside_shape (forest, itree, element);
+          cad->t8_cad_is_element_inside_shape (forest, itree, element, 1);
       }
     }
   }
@@ -253,26 +253,6 @@ t8_shape_proximity_refine_forest_with_cad (const char *fileprefix,
             "shape_proximity_forest_level_%i_rlevel_%i", level, rlevel);
   t8_forest_write_vtk_ext (forest, forest_vtu, 1, 1, 1, 1, 0, 0, 0, 1,
                            &vtk_data);
-  int                 mpirank;
-  int                 mpiret = sc_MPI_Comm_rank (comm, &mpirank);
-  SC_CHECK_MPI (mpiret);
-  long                counter[5];
-  sc_MPI_Reduce (&cad->counter, counter, 5, sc_MPI_LONG, sc_MPI_SUM, 0, comm);
-  if (mpirank == 0) {
-    t8_productionf ("bb checks:                      %li\n", counter[0]);
-    t8_productionf ("bbs checks:                     %li\n", counter[1]);
-    t8_productionf ("point inside checks:            %li\n", counter[2]);
-    t8_productionf ("element inside checks:          %li\n", counter[3]);
-    t8_productionf ("positive element inside checks: %li\n", counter[4]);
-    t8_productionf ("percent bbs checks:                     %f\n",
-                    100.0 * ((double) counter[1] / (double) counter[0]));
-    t8_productionf ("percent point inside checks:            %f\n",
-                    100.0 * ((double) counter[2] / (double) counter[0]));
-    t8_productionf ("percent element inside checks:          %f\n",
-                    100.0 * ((double) counter[3] / (double) counter[0]));
-    t8_productionf ("percent positive element inside checks: %f\n",
-                    100.0 * ((double) counter[4] / (double) counter[0]));
-  }
   t8_forest_unref (&forest);
   T8_FREE (inside_shape);
 #else /* !T8_WITH_OCC */

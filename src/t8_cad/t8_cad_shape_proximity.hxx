@@ -46,10 +46,10 @@ class t8_cad_shape_proximity
 {
 public:
   /**
-   * Constructor of the cad collsion class. Fills the internal shape with the content of a brep file.
-   * \param [in] fileprefix Prefix of a .brep file from which to extract an occ geometry.
+   * Constructor of the cad collsion class. Fills the internal shape with the content of a CAD file.
+   * \param [in] filename Path to a CAD file in the .brep or .step format.
    */
-  t8_cad_shape_proximity (const char *fileprefix, int use_individual_bbs);
+  t8_cad_shape_proximity (const char *filename, int use_individual_bbs);
 
   /**
    * Constructor of the cad class. Fills the internal shape with the given shape.
@@ -89,7 +89,8 @@ public:
   int
   t8_cad_is_element_inside_shape (t8_forest_t forest,
                                   t8_locidx_t ltreeid,
-                                  const t8_element_t *element);
+                                  const t8_element_t *element,
+                                  int optimize);
 
   /**
    * Checks if a point is inside the occ shape.
@@ -98,9 +99,7 @@ public:
    * \return                     True if point is inside the shape.
    */
   int
-  t8_cad_is_point_inside_shape (const double *coords, double tol) const;
-  
-  long counter[5] = {0};
+  t8_cad_is_point_inside_shape (const double *coords, double tol, int optimize) const;
 
 protected:
   /**
