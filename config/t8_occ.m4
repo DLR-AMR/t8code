@@ -17,7 +17,7 @@ T8_ARG_WITH([occ],
   [OCC])
   if test "x$T8_WITH_OCC" != xno ; then
     T8_OCC_LIBS="-lTKernel -lTKMath -lTKG3d -lTKGeomAlgo -lTKTopAlgo -lTKBRep \
-     -lTKPrim -lTKBO"
+     -lTKPrim -lTKBO -lTKSTEP -lTKSTEP209 -lTKSTEPAttr -lTKSTEPBase -lTKIGES -lTKXSBase"
     if test "x$T8_WITH_OCC" != xyes ; then
       T8_OCC_LIBS="$T8_WITH_OCC"
       dnl AC_MSG_ERROR([Please provide --with-occ without arguments])

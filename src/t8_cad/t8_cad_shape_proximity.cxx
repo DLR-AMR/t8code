@@ -36,6 +36,8 @@
 #include <BRepMesh_IncrementalMesh.hxx>
 #include <Bnd_BoundSortBox.hxx>
 #include <TopExp.hxx>
+#include <STEPControl_Reader.hxx>
+#include <IGESControl_Reader.hxx>
 
 /* *INDENT-OFF* */
 t8_cad_shape_proximity::t8_cad_shape_proximity (const char *filename, const int use_individual_bbs)
@@ -43,30 +45,57 @@ t8_cad_shape_proximity::t8_cad_shape_proximity (const char *filename, const int 
   std::string format;
   const std::string name = filename;
   const int idot = name.find_last_of(".");
-  if (idot != (int)std::string::npos && idot < (name.length() - 1)) {
+  if (idot != (int)std::string::npos && idot < (int)(name.length() - 1)) {
     format = name.substr(idot);
   }
   else {
-    SC_ABORTF ("Unable to parse CAD file format of %s \n", filename);
+    SC_ABORTF ("Unable to parse CAD file format of %s", filename);
   }
 
   if (format == ".brep" || format == ".BREP") {
-    t8_productionf ("Reading in brep file %s", filename);
+    t8_productionf ("Reading in brep file %s \n", filename);
     BRep_Builder        builder;
     std::ifstream is (name);
     BRepTools::Read (occ_shape, is, builder);
     is.close ();
     if (occ_shape.IsNull ()) {
-      SC_ABORTF ("Could not read brep file or brep file contains no shape \n");
+      SC_ABORTF ("Could not read brep file or brep file contains no shape.");
     }
   }
   else if (format == ".step" || format == ".STEP"
            || format == ".stp" || format == ".STP") {
-    //t8_productionf ("Reading in step file %s", filename);
-    SC_ABORTF ("Step files are yet not supported. \n");
+    t8_productionf ("Reading in step file %s \n", filename);
+    STEPControl_Reader reader;
+    if (reader.ReadFile(filename) != IFSelect_RetDone) {
+      SC_ABORTF ("Could not read step file %s", filename);
+    }
+#if T8_ENABLE_DEBUG
+    reader.PrintCheckLoad(0, IFSelect_ItemsByEntity);
+#else
+    reader.PrintCheckLoad(1, IFSelect_ItemsByEntity);
+#endif
+    reader.NbRootsForTransfer();
+    reader.TransferRoots();
+    occ_shape = reader.OneShape();
+  }
+  else if (format == ".iges" || format == ".IGES"
+           || format == ".igs" || format == ".IGS") {
+    t8_productionf ("Reading in iges file %s \n", filename);
+    IGESControl_Reader reader;
+    if (reader.ReadFile(filename) != IFSelect_RetDone) {
+      SC_ABORTF ("Could not read iges file %s", filename);
+    }
+#if T8_ENABLE_DEBUG
+    reader.PrintCheckLoad(0, IFSelect_ItemsByEntity);
+#else
+    reader.PrintCheckLoad(1, IFSelect_ItemsByEntity);
+#endif
+    reader.NbRootsForTransfer();
+    reader.TransferRoots();
+    occ_shape = reader.OneShape();
   }
   else {
-    SC_ABORTF ("Unknown CAD file format: \n", format.c_str());
+    SC_ABORTF ("Unknown CAD file format: %s", format.c_str());
   }
   t8_cad_shape_proximity::t8_cad_init_internal_data (use_individual_bbs);
 }
@@ -104,7 +133,7 @@ t8_cad_shape_proximity::t8_cad_init_internal_data (int use_individual_bbs)
   if (occ_shape.IsNull ()) {
     SC_ABORTF ("Shape is null. \n");
   }
-  
+  BRepTools::Clean (occ_shape);
   TopTools_IndexedMapOfShape solid_map;
   TopExp::MapShapes (occ_shape, TopAbs_SOLID, solid_map);
   BRepBndLib::AddOBB (occ_shape, occ_shape_bounding_box);
