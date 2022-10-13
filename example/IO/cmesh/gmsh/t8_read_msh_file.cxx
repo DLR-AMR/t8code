@@ -122,7 +122,7 @@ main (int argc, char *argv[])
   sreturn = snprintf (help, BUFSIZ,
                       "This program reads a .msh file "
                       "created by the GMSH program and constructs a "
-                      "t8code coarse mesh from them.\n\n%s\n\nExample: %s -f A1\nTo open the file A1.ms."
+                      "t8code coarse mesh from them.\n\n%s\n\nExample: %s -f A1\nTo open the file A1.msh."
                       "\n\nThe default dimension of the mesh to read is 2. Since the "
                       ".msh format stores elements of all (lower) dimensions "
                       "the user must provide the argument for a different dimension by hand, if "
