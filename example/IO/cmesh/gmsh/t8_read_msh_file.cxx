@@ -90,9 +90,11 @@ t8_read_msh_file_build_cmesh (const char *prefix, int do_partition, int dim,
     t8_cmesh_from_msh_file ((char *) prefix, partitioned_read,
                             sc_MPI_COMM_WORLD, dim, master, 0);
   if (cmesh != NULL) {
-    t8_debugf ("Succesfully constructed cmesh from %s.msh file.\n", prefix);
-    t8_debugf ("cmesh is of dimension %i and has %lli elements.\n",
-               dim, (long long) t8_cmesh_get_num_trees (cmesh));
+    t8_global_productionf
+      ("Succesfully constructed cmesh from %s.msh file.\n", prefix);
+    t8_global_productionf
+      ("cmesh is of dimension %i and has %lli elements.\n", dim,
+       (long long) t8_cmesh_get_num_trees (cmesh));
     t8_read_msh_file_vtk (cmesh, prefix);
     if (do_partition) {
       cmesh = t8_read_msh_partition (cmesh, prefix);
@@ -100,7 +102,8 @@ t8_read_msh_file_build_cmesh (const char *prefix, int do_partition, int dim,
     return cmesh;
   }
   else {
-    t8_debugf ("An error occured while reading %s.msh file.\n", prefix);
+    t8_global_productionf ("An error occured while reading %s.msh file.\n",
+                           prefix);
     return NULL;
   }
 }
@@ -175,7 +178,6 @@ main (int argc, char *argv[])
     if (cmesh != NULL) {
       t8_cmesh_destroy (&cmesh);
     }
-    sc_options_print_summary (t8_get_package_id (), SC_LP_PRODUCTION, opt);
   }
 
   sc_options_destroy (opt);
