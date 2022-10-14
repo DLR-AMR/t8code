@@ -273,7 +273,7 @@ t8_cad_shape_proximity::t8_cad_is_point_inside_shape (const double *coords, doub
   }
 
   /* Check if point is inside shape (slow) */
-  BRepClass3d_SolidClassifier classifier();
+  BRepClass3d_SolidClassifier classifier;
   classifier.Load(occ_shape);
   classifier.Perform(pnt, tol);
   return !classifier.State();
