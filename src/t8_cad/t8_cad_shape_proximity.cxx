@@ -78,11 +78,12 @@ t8_cad_shape_proximity::t8_cad_init_internal_data (int use_individual_bbs)
   TopExp::MapShapes (occ_shape, TopAbs_SOLID, solid_map);
   BRepBndLib::AddOBB (occ_shape, occ_shape_bounding_box);
   if (solid_map.Size() == 0) {
-    t8_global_productionf ("Warning: Shape contains no solid. The results may not be right.");
+    t8_global_productionf ("Warning: Shape contains no solid. The results may not be right.\n");
   }
   if (use_individual_bbs) {
     if (solid_map.Size() == 0) {
-      t8_global_productionf ("Warning: Cannot create individual bounding boxes, because the shape contains no solid. \n");
+      t8_global_productionf ("Warning: Cannot create individual bounding boxes, because the shape contains no solid.\n");
+      occ_shape_individual_bounding_boxes = new Bnd_HArray1OfBndOBB(1, 1);
     }
     else {
       occ_shape_individual_bounding_boxes = new Bnd_HArray1OfBndOBB(1, solid_map.Size());
