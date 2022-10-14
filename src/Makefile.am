@@ -70,6 +70,7 @@ libt8_installed_headers_default_tet =
 libt8_installed_headers_default_prism =
 libt8_installed_headers_default_pyramid =
 libt8_installed_headers_cad = \
+  src/t8_cad/t8_cad_utils.hxx \
   src/t8_cad/t8_cad_shape_proximity.hxx \
   src/t8_cad/t8_cad_geom.hxx
 libt8_internal_headers = \
@@ -115,6 +116,7 @@ libt8_compiled_sources = \
   src/t8_element_shape.c \
   src/t8_netcdf.c \
   src/t8_cmesh/t8_cmesh_testcases.c \
+  src/t8_cad/t8_cad_utils.cxx \
   src/t8_cad/t8_cad_shape_proximity.cxx \
   src/t8_cad/t8_cad_geom.cxx
 
