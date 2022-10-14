@@ -77,9 +77,11 @@ t8_cad_shape_proximity::t8_cad_init_internal_data (int use_individual_bbs)
   TopTools_IndexedMapOfShape solid_map;
   TopExp::MapShapes (occ_shape, TopAbs_SOLID, solid_map);
   BRepBndLib::AddOBB (occ_shape, occ_shape_bounding_box);
+#if T8_ENABLE_DEBUG
   if (solid_map.Size() == 0) {
     t8_global_productionf ("Warning: Shape contains no solid. The results may not be right.\n");
   }
+#endif /* T8_ENABLE_DEBUG */
   if (use_individual_bbs) {
     if (solid_map.Size() == 0) {
       t8_global_productionf ("Warning: Cannot create individual bounding boxes, because the shape contains no solid.\n");
