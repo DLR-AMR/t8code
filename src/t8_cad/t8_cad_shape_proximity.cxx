@@ -40,7 +40,8 @@
 #include <IGESControl_Reader.hxx>
 
 /* *INDENT-OFF* */
-t8_cad_shape_proximity::t8_cad_shape_proximity (const char *filename, const int use_individual_bbs)
+t8_cad_shape_proximity::t8_cad_shape_proximity (const char *filename,
+                                                int use_individual_bbs)
 {
   std::string format;
   const std::string name = filename;
@@ -100,14 +101,16 @@ t8_cad_shape_proximity::t8_cad_shape_proximity (const char *filename, const int 
   t8_cad_shape_proximity::t8_cad_init_internal_data (use_individual_bbs);
 }
 
-t8_cad_shape_proximity::t8_cad_shape_proximity (const TopoDS_Shape shape, int use_individual_bbs)
+t8_cad_shape_proximity::t8_cad_shape_proximity (const TopoDS_Shape shape,
+                                                int use_individual_bbs)
 {
   occ_shape = shape;
   t8_cad_shape_proximity::t8_cad_init_internal_data (use_individual_bbs);
 }
 
 void
-t8_cad_shape_proximity::t8_cad_init (const char *fileprefix, int use_individual_bbs)
+t8_cad_shape_proximity::t8_cad_init (const char *fileprefix,
+                                     int use_individual_bbs)
 {
   BRep_Builder        builder;
   std::string current_file (fileprefix);
@@ -121,7 +124,8 @@ t8_cad_shape_proximity::t8_cad_init (const char *fileprefix, int use_individual_
 }
 
 void
-t8_cad_shape_proximity::t8_cad_init (const TopoDS_Shape shape, int use_individual_bbs)
+t8_cad_shape_proximity::t8_cad_init (const TopoDS_Shape shape,
+                                     int use_individual_bbs)
 {
   occ_shape = shape;
   t8_cad_shape_proximity::t8_cad_init_internal_data (use_individual_bbs);
@@ -155,6 +159,7 @@ int
 t8_cad_shape_proximity::t8_cad_is_element_inside_shape (t8_forest_t forest,
                                                         t8_locidx_t ltreeid,
                                                         const t8_element_t *element,
+                                                        int boundary,
                                                         int optimize)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
@@ -247,13 +252,18 @@ t8_cad_shape_proximity::t8_cad_is_element_inside_shape (t8_forest_t forest,
       }
     }
 
-    /* Check if element centroid is inside shape (slow).
-     * This is still faster than checking if the Element intersects the shape. */
-    double              centroid[3] = { 0 };
-    t8_forest_element_centroid (forest, ltreeid, element, centroid);
-    if (t8_cad_shape_proximity::t8_cad_is_point_inside_shape (centroid, 1e-3, 0))
+    if (!boundary)
     {
-      return 1;
+      /* Check if element centroid is inside shape (slow).
+       * This is still faster than checking if the element intersects the shape. 
+       * Only check this if boundary is false, because it would return true 
+       * for elements inside the shape. */
+      double              centroid[3] = { 0 };
+      t8_forest_element_centroid (forest, ltreeid, element, centroid);
+      if (t8_cad_shape_proximity::t8_cad_is_point_inside_shape (centroid, 1e-3, 0))
+      {
+        return 1;
+      }
     }
   }
 
@@ -268,7 +278,15 @@ t8_cad_shape_proximity::t8_cad_is_element_inside_shape (t8_forest_t forest,
   if(!dist_shape_shape.IsDone()){
     SC_ABORTF("Failed to calculate distance between element and shape");
   }
-  return dist_shape_shape.Value () <= 0;
+  
+  /* Normally we would check if the distance is <= 0, but he have to use some tolerance,
+   * because otherwise OCC sorts out too many valid results. */
+  if (boundary){
+    return dist_shape_shape.Value () <= Precision::Intersection();
+  }
+  else {
+    return dist_shape_shape.Value () <= Precision::Intersection() || dist_shape_shape.InnerSolution();
+  }
 }
 
 int

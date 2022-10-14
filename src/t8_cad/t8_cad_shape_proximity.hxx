@@ -46,14 +46,26 @@ class t8_cad_shape_proximity
 {
 public:
   /**
-   * Constructor of the cad collsion class. Fills the internal shape with the content of a CAD file.
-   * \param [in] filename Path to a CAD file in the .brep or .step format.
+   * Constructor of the cad collsion class. Reads a CAD file and fills the
+   * internal shape with it.
+   * \param [in] filename            Path to a CAD file in the BRep, STEP or 
+   *                                 IGES format.
+   * \param [in] use_individual_bbs  Flag if individual oriented bounding
+   *                                 boxes should be created to speed up the
+   *                                 functions of the class. Recommented,
+   *                                 if shape contains multiple solids in
+   *                                 different regions.
    */
   t8_cad_shape_proximity (const char *filename, int use_individual_bbs);
 
   /**
    * Constructor of the cad class. Fills the internal shape with the given shape.
-   * \param [in] shape Occ shape geometry.
+   * \param [in] shape               Occ shape geometry.
+   * \param [in] use_individual_bbs  Flag if individual oriented bounding
+   *                                 boxes should be created to speed up the
+   *                                 functions of the class. Recommented,
+   *                                 if shape contains multiple solids in
+   *                                 different regions.
    */
   t8_cad_shape_proximity (const TopoDS_Shape shape, int use_individual_bbs);
 
@@ -63,40 +75,65 @@ public:
   ~ t8_cad_shape_proximity () {}
 
   /**
-   * Read a brep file and fill internal shape with it.
-   * \param [in] fileprefix Prefix of a .brep file from which to extract an occ geometry.
+   * Reads a CAD file and fills the internal shape with it.
+   * \param [in] filename            Path to a CAD file in the BRep, STEP or 
+   *                                 IGES format.
+   * \param [in] use_individual_bbs  Flag if individual oriented bounding
+   *                                 boxes should be created to speed up the
+   *                                 functions of the class. Recommented,
+   *                                 if shape contains multiple solids in
+   *                                 different regions.
    */
   void
   t8_cad_init (const char *fileprefix, int use_individual_bbs);
 
   /**
    * Fill the internal shape with the given shape.
-   * \param [in] shape Occ shape geometry.
+   * \param [in] shape               Occ shape geometry.
+   * \param [in] use_individual_bbs  Flag if individual oriented bounding
+   *                                 boxes should be created to speed up the
+   *                                 functions of the class. Recommented,
+   *                                 if shape contains multiple solids in
+   *                                 different regions.
    */
   void
   t8_cad_init (TopoDS_Shape shape, int use_individual_bbs);
 
   /**
    * Checks if an element is inside the occ shape. Only viable with 
-   * axis-oriented hex elements.
-   * \param [in] forest          The forest.
-   * \param [in] ltreeid         The local tree id of the element.
-   * \param [in] element         The element.
-   * \return                     0: Element is fully outside of the shape.
-   *                             1: Element is partially inside the shape.
-   *                             2: Element is fully inside the shape.
+   * axis-oriented hex elements. Uses different optimization algorithms
+   * (oriented bounding boxes and midpoint inside checks).
+   * \param [in] forest    The forest.
+   * \param [in] ltreeid   The local tree id of the element.
+   * \param [in] element   The element.
+   * \param [in] boundary  Returns true only if element intersects 
+   *                       the boundary of the shape.
+   * \param [in] optimize  Uses different algorithms to speed up
+   *                       the classification. Enabling recommented, except
+   *                       the optimization is taken care of elsewhere or the
+   *                       optimization breaks the results.
+   * \return               0: Element is fully outside of the shape.
+   *                       1: If boundary:  Element intersects the shapes boundary.
+   *                          If !boundary: Element intersects the shape.
    */
   int
   t8_cad_is_element_inside_shape (t8_forest_t forest,
                                   t8_locidx_t ltreeid,
                                   const t8_element_t *element,
+                                  int boundary,
                                   int optimize);
 
   /**
-   * Checks if a point is inside the occ shape.
-   * \param [in] coords          The coordinates of the point.
-   * \param [in] tol             The tolerance.
-   * \return                     True if point is inside the shape.
+   * Checks if a point is inside the occ shape. Uses oriented bounding boxes for
+   * speedup.
+   * \param [in] coords    The coordinates of the point.
+   * \param [in] tol       The tolerance.
+   * \param [in] optimize  Uses oriented bounding boxes to speed up
+   *                       the classification. Enabling recommented, except
+   *                       the optimization is taken care of elsewhere or the
+   *                       optimization breaks the results.
+   * \return               0: Point is outside of the shape. 
+   *                       1: Point is inside the shape.
    */
   int
   t8_cad_is_point_inside_shape (const double *coords, double tol, int optimize) const;

@@ -61,8 +61,8 @@
  *   return = 0 -> The first element should not get refined.
  *   return < 0 -> The whole family should get coarsened.
  * 
- * In this case, the function computes the centroid of the element and computes, 
- * if that centroid is inside the cad geometry. If true, the element should get refined.
+ * In this case, the function computes if the element is inside the cad geometry.
+ * If true, the element should get refined.
  *  
  * \param [in] forest       The current forest that is in construction.
  * \param [in] forest_from  The forest from which we adapt the current forest (in our case, the uniform forest)
@@ -74,21 +74,20 @@
  * \param [in] elements     The element or family of elements to consider for refinement/coarsening.
  */
 int
-t8_shape_proximity_centroid_adapt_callback (t8_forest_t forest,
-                                            t8_forest_t forest_from,
-                                            t8_locidx_t which_tree,
-                                            t8_locidx_t lelement_id,
-                                            t8_eclass_scheme_c *ts,
-                                            const int is_family,
-                                            const int num_elements,
-                                            t8_element_t *elements[])
+t8_shape_proximity_element_inside_adapt_callback (t8_forest_t forest,
+                                                  t8_forest_t forest_from,
+                                                  t8_locidx_t which_tree,
+                                                  t8_locidx_t lelement_id,
+                                                  t8_eclass_scheme_c *ts,
+                                                  const int is_family,
+                                                  const int num_elements,
+                                                  t8_element_t *elements[])
 {
 #if T8_WITH_OCC
   t8_cad_shape_proximity *cad;
-  double              centroid[3] = { 0 };
   cad = (t8_cad_shape_proximity *) t8_forest_get_user_data (forest);
-  t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
-  return cad->t8_cad_is_point_inside_shape (centroid, 1e-3, 1);
+  return cad->t8_cad_is_element_inside_shape (forest_from, which_tree,
+                                              elements[0], 0, 1);
 #else /* !T8_WITH_OCC */
   SC_ABORTF ("OpenCASCADE is not linked");
 #endif /* T8_WITH_OCC */
@@ -106,7 +105,7 @@ t8_shape_proximity_centroid_adapt_callback (t8_forest_t forest,
  *   return = 0 -> The first element should not get refined.
  *   return < 0 -> The whole family should get coarsened.
  * 
- * In this case, the function computes if the element is inside the cad geometry.
+ * In this case, the function computes if the element intersects the boundary of the cad shape.
  * If true, the element should get refined.
  *  
  * \param [in] forest       The current forest that is in construction.
@@ -119,20 +118,20 @@ t8_shape_proximity_centroid_adapt_callback (t8_forest_t forest,
  * \param [in] elements     The element or family of elements to consider for refinement/coarsening.
  */
 int
-t8_shape_proximity_element_adapt_callback (t8_forest_t forest,
-                                           t8_forest_t forest_from,
-                                           t8_locidx_t which_tree,
-                                           t8_locidx_t lelement_id,
-                                           t8_eclass_scheme_c *ts,
-                                           const int is_family,
-                                           const int num_elements,
-                                           t8_element_t *elements[])
+t8_shape_proximity_element_boundary_adapt_callback (t8_forest_t forest,
+                                                    t8_forest_t forest_from,
+                                                    t8_locidx_t which_tree,
+                                                    t8_locidx_t lelement_id,
+                                                    t8_eclass_scheme_c *ts,
+                                                    const int is_family,
+                                                    const int num_elements,
+                                                    t8_element_t *elements[])
 {
 #if T8_WITH_OCC
   t8_cad_shape_proximity *cad;
   cad = (t8_cad_shape_proximity *) t8_forest_get_user_data (forest);
   return cad->t8_cad_is_element_inside_shape (forest_from, which_tree,
-                                              elements[0], 1);
+                                              elements[0], 1, 1);
 #else /* !T8_WITH_OCC */
   SC_ABORTF ("OpenCASCADE is not linked");
 #endif /* T8_WITH_OCC */
@@ -141,20 +140,25 @@ t8_shape_proximity_element_adapt_callback (t8_forest_t forest,
 /**
  * Builds a forest with one tree and refines it based on the location of the elements relative
  * to the input geometry.
- * \param [in] fileprefix   The fileprefix to the geometry file.
- * \param [in] corners      The min and max corner of the resulting, oriented mesh.
- * \param [in] level        Base level of the mesh.
- * \param [in] rlevel       Refinement level of the mesh.
- * \param [in] centroid     True:  The elements get refined if their central point is inside the geometry.
- *                          False: The elements get refined if the whole element is (partially) inside the geometry.
+ * \param [in] filename            The filename to the geometry file.
+ * \param [in] corners             The min and max corner of the resulting, oriented mesh.
+ * \param [in] level               Base level of the mesh.
+ * \param [in] rlevel              Refinement level of the mesh.
+ * \param [in] centroid            True:  The elements get refined if their central point is inside the geometry.
+ *                                 False: The elements get refined if the whole element is (partially) inside the geometry.
+ * \param [in] use_individual_bbs  Uses individual bounding boxes for subshapes. Can speed up the calculations if
+ *                                 shape consists of multiple parts.
+ * \param [in] boundary            Refines elements only when they intersect the shapes boundary.
+ *                                 Has no effect if centroid is enabled.
+ * \param [in] comm                The MPI communicator.
  */
 void
-t8_shape_proximity_refine_forest_with_cad (const char *fileprefix,
+t8_shape_proximity_refine_forest_with_cad (const char *filename,
                                            const double *corners,
                                            int level, int rlevel,
                                            int centroid,
                                            int use_individual_bbs,
-                                           sc_MPI_Comm comm)
+                                           int boundary, sc_MPI_Comm comm)
 {
 #if T8_WITH_OCC
   clock_t             begin = std::clock ();
@@ -189,16 +193,27 @@ t8_shape_proximity_refine_forest_with_cad (const char *fileprefix,
                                   t8_scheme_new_default_cxx (),
                                   level, 0, comm);
   T8_ASSERT (t8_forest_is_committed (forest));
-  cad = new t8_cad_shape_proximity (fileprefix, use_individual_bbs);
+  cad = new t8_cad_shape_proximity (filename, use_individual_bbs);
   for (int r = 0; r < rlevel; ++r) {
     t8_forest_init (&forest_new);
-    if (centroid) {
+    /* Note, that we do not use the centroid inside check as refinement criterion.
+     * It makes no sense to use it as one, because elements would not get refined
+     * if their centroid is outside of the shape, but thex still intersect the shape.
+     * Imagine an element, which intersects the shape, but whose centroid is outside
+     * of the shape. If we use the position of the centroid as refinement criterion,
+     * the element would not get refined. Even though the centroid of one or more of
+     * its children would be inside of the shape. Therefore, we use the element inside
+     * check as refinement criterion and later on we check, if the centroids of the
+     * final refinement are inside the shape. */
+    if (boundary) {
       t8_forest_set_adapt (forest_new, forest,
-                           t8_shape_proximity_centroid_adapt_callback, 0);
+                           t8_shape_proximity_element_boundary_adapt_callback,
+                           0);
     }
     else {
       t8_forest_set_adapt (forest_new, forest,
-                           t8_shape_proximity_element_adapt_callback, 0);
+                           t8_shape_proximity_element_inside_adapt_callback,
+                           0);
     }
     t8_forest_set_user_data (forest_new, cad);
     t8_forest_set_partition (forest_new, forest, 0);
@@ -227,11 +242,13 @@ t8_shape_proximity_refine_forest_with_cad (const char *fileprefix,
         double              centroid[3] = { 0 };
         t8_forest_element_centroid (forest, itree, element, centroid);
         inside_shape[current_index] =
-          cad->t8_cad_is_point_inside_shape (centroid, 1e-3, 1);
+          cad->t8_cad_is_point_inside_shape (centroid,
+                                             Precision::Confusion (), 1);
       }
       else {
         inside_shape[current_index] =
-          cad->t8_cad_is_element_inside_shape (forest, itree, element, 1);
+          cad->t8_cad_is_element_inside_shape (forest, itree, element,
+                                               boundary, 1);
       }
     }
   }
@@ -239,18 +256,14 @@ t8_shape_proximity_refine_forest_with_cad (const char *fileprefix,
   /* Write the forest into vtk files and move the new forest for the next iteration. */
   t8_vtk_data_field_t vtk_data;
   vtk_data.type = T8_VTK_SCALAR;
-  if (centroid) {
-    strcpy (vtk_data.description, "Element centroid inside cad shape");
-  }
-  else {
-    strcpy (vtk_data.description, "Element inside cad shape");
-  }
+  strcpy (vtk_data.description, "Element inside cad shape");
   vtk_data.data = inside_shape;
   clock_t             end = std::clock ();
   double              elapsed_secs = double (end - begin) / CLOCKS_PER_SEC;
-  printf ("elapsed time: %f\n", elapsed_secs);
+  t8_productionf ("elapsed time: %f\n", elapsed_secs);
   snprintf (forest_vtu, BUFSIZ,
             "shape_proximity_forest_level_%i_rlevel_%i", level, rlevel);
+  t8_global_productionf ("Writing vtk to %s\n", forest_vtu);
   t8_forest_write_vtk_ext (forest, forest_vtu, 1, 1, 1, 1, 0, 0, 0, 1,
                            &vtk_data);
   t8_forest_unref (&forest);
@@ -330,8 +343,9 @@ main (int argc, char **argv)
   int                 helpme, parsed, sreturn;
   int                 mpiret;
   sc_MPI_Comm         comm;
-  const char         *fileprefix = NULL;
-  int                 level, rlevel, centroid, generate, use_individual_bbs;
+  const char         *filename = NULL;
+  int                 level, rlevel, centroid, generate,
+    use_individual_bbs, boundary;
   double              corners[6];
 
   /* brief help message */
@@ -369,18 +383,21 @@ main (int argc, char **argv)
   opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'h', "help", &helpme,
                          "Display a short help message.");
-  sc_options_add_string (opt, 'f', "fileprefix", &fileprefix, NULL,
-                         "Fileprefix of the brep file.");
+  sc_options_add_string (opt, 'f', "filename", &filename, NULL,
+                         "Filename of the CAD file (BRep, STEP, or IGES).");
   sc_options_add_int (opt, 'l', "level", &level, 3,
                       "The uniform refinement level of the mesh. Default: 3");
   sc_options_add_int (opt, 'r', "rlevel", &rlevel, 3,
                       "The refinement level of the mesh. Default: 3");
   sc_options_add_switch (opt, 'c', "centroid", &centroid,
                          "Classify an element based on its central point.\n "
-                         "Otherwise it is checked, if the whole element is outside of the cad geometry.");
+                         "Otherwise it is checked, if the whole element is outside of the cad geometry.\n");
   sc_options_add_switch (opt, 'i', "individual-bbs", &use_individual_bbs,
                          "Generates a bounding box for each subshape.\n "
                          "Accelerates geometry operations if your geometry consists of multiple subshapes.");
+  sc_options_add_switch (opt, 'b', "boundary", &boundary,
+                         "Only refines elements which intersect the shapes boundary.\n "
+                         "Not viable with -c/--centroid.");
   sc_options_add_switch (opt, 'g', "generate", &generate,
                          "Generate some examplatory geometry files. Overrides all other options.");
   sc_options_add_double (opt, 'x', "x-coord", corners + 0, 0,
@@ -402,7 +419,8 @@ main (int argc, char **argv)
     t8_global_productionf ("%s\n", help);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-  else if (parsed == 0 || (fileprefix == NULL && !generate)) {
+  else if (parsed == 0 || (filename == NULL && !generate)
+           || (boundary && centroid)) {
     /* wrong usage */
     t8_global_productionf ("\n\tERROR: Wrong usage.\n\n");
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
@@ -411,9 +429,10 @@ main (int argc, char **argv)
     t8_shape_proximity_generate_geometries ();
   }
   else {
-    t8_shape_proximity_refine_forest_with_cad (fileprefix, corners, level,
+    t8_shape_proximity_refine_forest_with_cad (filename, corners, level,
                                                rlevel, centroid,
-                                               use_individual_bbs, comm);
+                                               use_individual_bbs,
+                                               boundary, comm);
   }
   sc_options_destroy (opt);
   sc_finalize ();
