@@ -295,6 +295,8 @@ jobs:
       with:
         name: config_occ_release_MPI.log
         path: build_occ/config.log
+    - name: cat file
+      run: cat /usr/include/opencascade/BRepClass3d_SolidClassifier.hxx
     - name: make
       run: cd build_occ && make -j V=0 CFLAGS="$CFLAGS_var -Werror -I/usr/include/opencascade" CXXFLAGS="$CXXFLAGS_var -Werror -I/usr/include/opencascade"
     - name: make check
