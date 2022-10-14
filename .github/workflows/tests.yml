@@ -419,7 +419,7 @@ jobs:
         path: build_netcdf/test-suite.log
 # configure and test with MPI and OpenCASCADE
     - name: Install OpenCASCADE
-      run: sudo apt-get install libocct-foundation-dev libocct-modeling-algorithms-dev libocct-modeling-data-dev
+      run: sudo apt-get install libocct-foundation-dev libocct-modeling-algorithms-dev libocct-modeling-data-dev libocct-data-exchange-dev
     - name: configure
       run: mkdir build_occ && cd build_occ && ../configure $CONFIG_RELEASE --with-occ CFLAGS="$CFLAGS_var -I/usr/include/opencascade" CXXFLAGS="$CXXFLAGS_var -I/usr/include/opencascade"
     - name: OnFailUploadLog
