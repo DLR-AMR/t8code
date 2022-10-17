@@ -213,6 +213,8 @@ t8_cad_shape_proximity::t8_cad_is_element_inside_shape (t8_forest_t forest,
       }
     }
   }
+  /* TODO: Check if decomposition into solids and faces and bb checking for
+   * each individual brings a speedup */
 
   /* Check for intersection of element and shape (very slow). */
   gp_Pnt box_min(corner_coords[0], corner_coords[1], corner_coords[2]);
