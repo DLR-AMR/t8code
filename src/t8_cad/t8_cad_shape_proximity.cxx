@@ -167,7 +167,7 @@ t8_cad_shape_proximity::t8_cad_is_element_inside_shape (t8_forest_t forest,
   {
     /* Check if element bounding box is outside of shape bounding box (very fast).
      * If true, element is completely outside of the shape. */
-    Bnd_Box element_bounding_box = Bnd_Box();
+    Bnd_Box element_bounding_box;
     element_bounding_box.Update(corner_coords[0], corner_coords[1], corner_coords[2],
                                 corner_coords[3], corner_coords[4], corner_coords[5]);
     Bnd_OBB element_obb = Bnd_OBB (element_bounding_box);
@@ -215,8 +215,8 @@ t8_cad_shape_proximity::t8_cad_is_element_inside_shape (t8_forest_t forest,
   }
 
   /* Check for intersection of element and shape (very slow). */
-  gp_Pnt box_min = gp_Pnt(corner_coords[0], corner_coords[1], corner_coords[2]);
-  gp_Pnt box_max = gp_Pnt(corner_coords[3], corner_coords[4], corner_coords[5]);
+  gp_Pnt box_min(corner_coords[0], corner_coords[1], corner_coords[2]);
+  gp_Pnt box_max(corner_coords[3], corner_coords[4], corner_coords[5]);
   TopoDS_Solid element_shape = BRepPrimAPI_MakeBox(box_min, box_max);
   BRepExtrema_DistShapeShape dist_shape_shape;
   dist_shape_shape.LoadS1(element_shape);
