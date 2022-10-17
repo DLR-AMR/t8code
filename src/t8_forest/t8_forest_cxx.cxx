@@ -1451,19 +1451,43 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
   t8_eclass_scheme_c *ts;
   t8_gloidx_t         global_neighbour_tree_idx;
   int                 ret;
+  int                 mpiret;
+  int                 mpirank_from;
+  int                 mpirank_to;
+  sc_MPI_Request      request;
+  sc_MPI_Status       status;
 
+  if (forest->mpisize == 1) {
+    /* Nothing to share */
+    return 0;
+  }
   if (forest->is_incomplete) {
     if (first_or_last == 0) {
-      if (forest->mpirank < forest->mpisize-1) {
-        sc_MPI_Send (&forest->last_local_tree, 1, T8_MPI_GLOIDX,
-                    forest->mpirank+1, 0, forest->mpicomm);
+      T8_ASSERT (forest->mpisize > 1);
+      if (forest->mpirank == 0) {
+        mpirank_from = forest->mpisize-1;
+        mpirank_to = forest->mpirank+1;
       }
-      if (forest->mpirank > 0) {
-        sc_MPI_Recv (&global_neighbour_tree_idx, 1, T8_MPI_GLOIDX,
-                    forest->mpirank-1, 0, forest->mpicomm, NULL);
+      else if (forest->mpirank == forest->mpisize-1) {
+        T8_ASSERT (forest->mpirank > 0);
+        mpirank_from = forest->mpirank-1;
+        mpirank_to = 0;
       }
       else {
-        /* First process, nothing to receive and do any more */
+        T8_ASSERT (forest->mpirank > 0 && forest->mpirank < forest->mpisize-1);
+        mpirank_from = forest->mpirank-1;
+        mpirank_to = forest->mpirank+1;
+      }
+      mpiret = sc_MPI_Irecv (&global_neighbour_tree_idx, 1, T8_MPI_GLOIDX,
+                             mpirank_from, 0, forest->mpicomm, &request);
+      SC_CHECK_MPI (mpiret);
+      mpiret = sc_MPI_Send (&forest->last_local_tree, 1, T8_MPI_GLOIDX,
+                            mpirank_to, 0, forest->mpicomm);
+      SC_CHECK_MPI (mpiret);
+      mpiret = sc_MPI_Wait (&request, &status);
+      SC_CHECK_MPI (mpiret);
+      if (!forest->mpirank) {
+        /* First process has nothing to do any more */
         T8_ASSERT (!forest->mpirank);
         return 0;
       }
@@ -1475,30 +1499,11 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
                   global_neighbour_tree_idx == -1);
     }
     else {
-      SC_ABORT ("Method t8_forest_last_tree_shared is not fully implemented.\n");
+      SC_ABORT ("Method t8_forest_last_tree_shared is not implemented.\n");
       /* TODO: If last_local_tree is 0 of the current process and it gets 0 as the 
        * first_local_tree of the bigger process, then it cannot be said whether 
        * the tree with id 0 is shared or not, since the bigger process could also 
        * carry an empty forest. */
-      if (forest->mpirank > 0) {
-        sc_MPI_Send (&forest->first_local_tree, 1, T8_MPI_GLOIDX, 
-                     forest->mpirank-1, 0, forest->mpicomm);
-      }
-      if (forest->mpirank < forest->mpisize-1) {
-        sc_MPI_Recv (&global_neighbour_tree_idx, 1, T8_MPI_GLOIDX, 
-                     forest->mpirank+1, 0, forest->mpicomm, NULL);
-      }
-      else {
-        /* Last process, nothing to receive and do any more  */
-        T8_ASSERT (forest->mpirank == forest->mpisize-1);
-        return 0;
-      }
-      T8_ASSERT (global_neighbour_tree_idx < forest->global_num_trees); 
-      T8_ASSERT (global_neighbour_tree_idx > 0 ?
-                  ((global_neighbour_tree_idx == forest->first_local_tree ||
-                    global_neighbour_tree_idx == forest->first_local_tree + 1) ? 
-                    true : forest->last_local_tree == -1) :
-                  global_neighbour_tree_idx == 0);
     }
     /* If global_neighbour_tree_idx == forest->first_local_tree tree is shared */
     return global_neighbour_tree_idx == forest->first_local_tree 
