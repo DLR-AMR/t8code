@@ -3,7 +3,7 @@
 # Included from toplevel directory
 
 bin_PROGRAMS += \
-	example/figure_thesis/t8_is_family_fail
+	example/figure_thesis/t8_ring
 
-example_figure_thesis_t8_is_family_fail_SOURCES = \
-	example/figure_thesis/t8_is_family_fail.cxx
+example_figure_thesis_t8_ring_SOURCES = \
+	example/figure_thesis/t8_ring.cxx

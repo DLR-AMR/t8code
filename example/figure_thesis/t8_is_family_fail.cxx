@@ -83,16 +83,18 @@ main (int argc, char **argv)
   forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0, comm);
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  struct t8_adapt_data adapt_data = { {0.5, 0, 0}, 0.3 };
+  struct t8_adapt_data adapt_data = { {0.5, 0.5, 0}, 0.3 };
   
-  t8_forest_write_vtk (forest, "t8_example_2_base");
+  t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_family_fail_base");
 
   forest = t8_forest_new_adapt (forest, t8_adapt_callback_remove, 0, 0, &adapt_data);
-  t8_forest_write_vtk (forest, "t8_example_2_remove");
+  t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_family_fail_remove");
 
-  /* remember to set forest->is_incomplete = 0; in t8_forest.c and remove line 512ff in t8_forest_adapt.cxx */
+  /* remember to 
+   * set forest->is_incomplete = 0; in t8_forest.c and 
+   * remove line 512ff in t8_forest_adapt.cxx */
   forest = t8_forest_new_adapt (forest, t8_adapt_callback_coarse, 0, 0, &adapt_data);
-  t8_forest_write_vtk (forest, "t8_example_2_coarse");
+  t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_family_fail_coare");
 
 
   t8_forest_unref (&forest);
