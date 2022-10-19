@@ -285,6 +285,10 @@ t8_cad_shape_proximity::t8_cad_is_point_inside_shape (const double *coords, int 
   BRepClass3d_SolidClassifier classifier;
   classifier.Load(occ_shape);
   classifier.Perform(pnt, Precision::Confusion());
+#if T8_ENABLE_DEBUG
+  if (classifier.State() == TopAbs_UNKNOWN)
+    t8_debugf ("Warning: Could not classify point.\n");
+#endif /* T8_ENABLE_DEBUG */
   return (classifier.State() == TopAbs_IN ||
           classifier.State() == TopAbs_ON);
 }
