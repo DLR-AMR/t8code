@@ -132,9 +132,12 @@ t8_cad_shape_proximity::t8_cad_is_element_inside_shape (t8_forest_t forest,
   double corner_values[24];
   int num_equal_coordinates;
   for (int corner = 0; corner < t8_eclass_num_vertices[element_class]; ++corner) {
+    double ref_coords[3] = { 0 };
     ts->t8_element_vertex_reference_coords(element, 
                                            corner, 
-                                           corner_values + corner * 3);
+                                           ref_coords);
+    t8_geometry_evaluate (cmesh, gtreeid, ref_coords,
+                          corner_values + corner * 3);
   }
   /* An element is axis oriented if all edges align to at least one axis */
   for (int edge = 0; edge < t8_eclass_num_edges[element_class]; ++edge) {
