@@ -127,7 +127,6 @@ public:
    * Checks if a point is inside the occ shape. Uses oriented bounding boxes for
    * speedup.
    * \param [in] coords    The coordinates of the point.
-   * \param [in] tol       The tolerance.
    * \param [in] optimize  Uses oriented bounding boxes to speed up
    *                       the classification. Enabling recommented, except
    *                       the optimization is taken care of elsewhere or the
@@ -136,7 +135,7 @@ public:
    *                       1: Point is inside the shape.
    */
   int
-  t8_cad_is_point_inside_shape (const double *coords, double tol, int optimize) const;
+  t8_cad_is_point_inside_shape (const double *coords, int optimize) const;
 
 protected:
   /**

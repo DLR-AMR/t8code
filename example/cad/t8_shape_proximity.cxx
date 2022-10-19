@@ -242,8 +242,7 @@ t8_shape_proximity_refine_forest_with_cad (const char *filename,
         double              centroid[3] = { 0 };
         t8_forest_element_centroid (forest, itree, element, centroid);
         inside_shape[current_index] =
-          cad->t8_cad_is_point_inside_shape (centroid,
-                                             Precision::Confusion (), 1);
+          cad->t8_cad_is_point_inside_shape (centroid, 1);
       }
       else {
         inside_shape[current_index] =

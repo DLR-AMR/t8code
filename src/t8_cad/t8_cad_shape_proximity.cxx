@@ -214,7 +214,7 @@ t8_cad_shape_proximity::t8_cad_is_element_inside_shape (t8_forest_t forest,
        * for elements inside the shape. */
       double              centroid[3] = { 0 };
       t8_forest_element_centroid (forest, ltreeid, element, centroid);
-      if (t8_cad_shape_proximity::t8_cad_is_point_inside_shape (centroid, 1e-3, 0))
+      if (t8_cad_shape_proximity::t8_cad_is_point_inside_shape (centroid, 0))
       {
         return 1;
       }
@@ -238,15 +238,15 @@ t8_cad_shape_proximity::t8_cad_is_element_inside_shape (t8_forest_t forest,
   /* Normally we would check if the distance is <= 0, but he have to use some tolerance,
    * because otherwise OCC sorts out too many valid results. */
   if (boundary){
-    return dist_shape_shape.Value () <= Precision::Intersection();
+    return dist_shape_shape.Value () <= Precision::Confusion();
   }
   else {
-    return dist_shape_shape.Value () <= Precision::Intersection() || dist_shape_shape.InnerSolution();
+    return dist_shape_shape.Value () <= Precision::Confusion() || dist_shape_shape.InnerSolution();
   }
 }
 
 int
-t8_cad_shape_proximity::t8_cad_is_point_inside_shape (const double *coords, double tol, int optimize) const
+t8_cad_shape_proximity::t8_cad_is_point_inside_shape (const double *coords, int optimize) const
 {
   gp_Pnt pnt = gp_Pnt(coords[0], coords[1], coords[2]);
 
