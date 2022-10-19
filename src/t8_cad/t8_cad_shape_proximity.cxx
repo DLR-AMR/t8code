@@ -23,6 +23,7 @@
 #include <t8_cad/t8_cad_shape_proximity.hxx>
 #include <t8_cad/t8_cad_utils.hxx>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 /* TODO: Remove t8_geometry_occ.hxx as soon as edge connectivity is defined in t8_eclass.h */
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx>
 
@@ -124,6 +125,9 @@ t8_cad_shape_proximity::t8_cad_is_element_inside_shape (t8_forest_t forest,
   T8_ASSERT (element_class == T8_ECLASS_HEX || element_class == T8_ECLASS_QUAD);
   
 #if T8_ENABLE_DEBUG
+  /* Check if geometry is linear */
+  const t8_geometry_c *geom = t8_cmesh_get_tree_geometry (cmesh, gtreeid);
+  T8_ASSERT (t8_geom_is_linear (geom));
   /* Check if element is axis oriented */
   double corner_values[24];
   int num_equal_coordinates;
