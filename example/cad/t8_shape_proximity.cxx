@@ -280,60 +280,66 @@ t8_shape_proximity_refine_forest_with_cad (const char *filename,
 }
 
 void
-t8_shape_proximity_generate_geometries ()
+t8_shape_proximity_generate_geometries (sc_MPI_Comm comm)
 {
 #if T8_WITH_OCC
-  TopoDS_Shape        shape, shape2;
-  gp_Ax2              axis;
+  int                 mpirank, mpiret;
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  if (mpirank == 0) {
+    TopoDS_Shape        shape, shape2;
+    gp_Ax2              axis;
 
-  /* Generate a pyramid */
-  t8_productionf ("Generating pyramid cad shape.\n");
-  axis = gp_Ax2 (gp_Pnt (0.1, 0.1, 0.1), gp_Dir (0, 0, 1));
-  BRepPrimAPI_MakeWedge mkwedge =
-    BRepPrimAPI_MakeWedge (axis, 0.8, 0.8, 0.8, 0.4, 0.4, 0.4, 0.4);
-  BRepTools::Write (mkwedge.Shape (), "pyramid.brep");
+    /* Generate a pyramid */
+    t8_global_productionf ("Generating pyramid cad shape.\n");
+    axis = gp_Ax2 (gp_Pnt (0.1, 0.1, 0.1), gp_Dir (0, 0, 1));
+    BRepPrimAPI_MakeWedge mkwedge =
+      BRepPrimAPI_MakeWedge (axis, 0.8, 0.8, 0.8, 0.4, 0.4, 0.4, 0.4);
+    BRepTools::Write (mkwedge.Shape (), "pyramid.brep");
 
-  /* Generate a cone */
-  t8_productionf ("Generating cone cad shape.\n");
-  axis = gp_Ax2 (gp_Pnt (0.5, 0.5, 0.1), gp_Dir (0, 0, 1));
-  BRepPrimAPI_MakeCone mkcone = BRepPrimAPI_MakeCone (axis, 0, 0.4, 0.8);
-  BRepTools::Write (mkcone.Shape (), "cone.brep");
+    /* Generate a cone */
+    t8_global_productionf ("Generating cone cad shape.\n");
+    axis = gp_Ax2 (gp_Pnt (0.5, 0.5, 0.1), gp_Dir (0, 0, 1));
+    BRepPrimAPI_MakeCone mkcone = BRepPrimAPI_MakeCone (axis, 0, 0.4, 0.8);
+    BRepTools::Write (mkcone.Shape (), "cone.brep");
 
-  /* Generate a sphere */
-  t8_productionf ("Generating sphere cad shape.\n");
-  axis = gp_Ax2 (gp_Pnt (0.5, 0.5, 0.5), gp_Dir (0, 0, 1));
-  BRepPrimAPI_MakeSphere mksphere = BRepPrimAPI_MakeSphere (axis, 0.4);
-  BRepTools::Write (mksphere.Shape (), "sphere.brep");
+    /* Generate a sphere */
+    t8_global_productionf ("Generating sphere cad shape.\n");
+    axis = gp_Ax2 (gp_Pnt (0.5, 0.5, 0.5), gp_Dir (0, 0, 1));
+    BRepPrimAPI_MakeSphere mksphere = BRepPrimAPI_MakeSphere (axis, 0.4);
+    BRepTools::Write (mksphere.Shape (), "sphere.brep");
 
-  /* Generate a torus */
-  t8_productionf ("Generating torus cad shape.\n");
-  axis = gp_Ax2 (gp_Pnt (0.5, 0.5, 0.5), gp_Dir (0, 0, 1));
-  BRepPrimAPI_MakeTorus mktorus = BRepPrimAPI_MakeTorus (axis, 0.3, 0.1);
-  BRepTools::Write (mktorus.Shape (), "torus.brep");
+    /* Generate a torus */
+    t8_global_productionf ("Generating torus cad shape.\n");
+    axis = gp_Ax2 (gp_Pnt (0.5, 0.5, 0.5), gp_Dir (0, 0, 1));
+    BRepPrimAPI_MakeTorus mktorus = BRepPrimAPI_MakeTorus (axis, 0.3, 0.1);
+    BRepTools::Write (mktorus.Shape (), "torus.brep");
 
-  /* Generate a mix of all */
-  shape = mkwedge.Shape ();
-  gp_Trsf             transformation;
-  gp_Vec              vector (1, 0, 0);
-  transformation.SetTranslation (vector);
-  shape2 = BRepBuilderAPI_Transform (mkcone.Shape (), transformation);
-  shape = BRepAlgoAPI_Fuse (shape, shape2);
+    /* Generate a mix of all */
+    t8_global_productionf ("Generating mixed cad shape.\n");
+    shape = mkwedge.Shape ();
+    gp_Trsf             transformation;
+    gp_Vec              vector (1, 0, 0);
+    transformation.SetTranslation (vector);
+    shape2 = BRepBuilderAPI_Transform (mkcone.Shape (), transformation);
+    shape = BRepAlgoAPI_Fuse (shape, shape2);
 
-  vector = gp_Vec (0, 1, 0);
-  transformation.SetTranslation (vector);
-  shape2 = BRepBuilderAPI_Transform (mksphere.Shape (), transformation);
-  shape = BRepAlgoAPI_Fuse (shape, shape2);
+    vector = gp_Vec (0, 1, 0);
+    transformation.SetTranslation (vector);
+    shape2 = BRepBuilderAPI_Transform (mksphere.Shape (), transformation);
+    shape = BRepAlgoAPI_Fuse (shape, shape2);
 
-  vector = gp_Vec (1, 1, 0);
-  transformation.SetTranslation (vector);
-  shape2 = BRepBuilderAPI_Transform (mktorus.Shape (), transformation);
-  shape = BRepAlgoAPI_Fuse (shape, shape2);
+    vector = gp_Vec (1, 1, 0);
+    transformation.SetTranslation (vector);
+    shape2 = BRepBuilderAPI_Transform (mktorus.Shape (), transformation);
+    shape = BRepAlgoAPI_Fuse (shape, shape2);
 
-  transformation = gp_Trsf ();
-  transformation.SetScaleFactor (0.5);
-  shape = BRepBuilderAPI_Transform (shape, transformation);
+    transformation = gp_Trsf ();
+    transformation.SetScaleFactor (0.5);
+    shape = BRepBuilderAPI_Transform (shape, transformation);
 
-  BRepTools::Write (shape, "mix.brep");
+    BRepTools::Write (shape, "mix.brep");
+  }
 
 #else /* !T8_WITH_OCC */
   SC_ABORTF ("OpenCASCADE is not linked");
@@ -432,7 +438,7 @@ main (int argc, char **argv)
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else if (generate) {
-    t8_shape_proximity_generate_geometries ();
+    t8_shape_proximity_generate_geometries (comm);
   }
   else {
     t8_shape_proximity_refine_forest_with_cad (filename, corners, level,
