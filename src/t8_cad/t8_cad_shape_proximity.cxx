@@ -238,10 +238,16 @@ t8_cad_shape_proximity::t8_cad_is_element_inside_shape (t8_forest_t forest,
   /* Normally we would check if the distance is <= 0, but he have to use some tolerance,
    * because otherwise OCC sorts out too many valid results. */
   if (boundary){
-    return dist_shape_shape.Value () <= Precision::Confusion();
+    if (dist_shape_shape.Value () <= Precision::Confusion())
+      return 2;
+    else if (dist_shape_shape.InnerSolution())
+      return 1;
+    else
+      return 0;
   }
   else {
-    return dist_shape_shape.Value () <= Precision::Confusion() || dist_shape_shape.InnerSolution();
+    return (dist_shape_shape.InnerSolution() ||
+            dist_shape_shape.Value () <= Precision::Confusion());
   }
 }
 
@@ -289,8 +295,12 @@ t8_cad_shape_proximity::t8_cad_is_point_inside_shape (const double *coords, int 
   if (classifier.State() == TopAbs_UNKNOWN)
     t8_debugf ("Warning: Could not classify point.\n");
 #endif /* T8_ENABLE_DEBUG */
-  return (classifier.State() == TopAbs_IN ||
-          classifier.State() == TopAbs_ON);
+  if (classifier.State() == TopAbs_ON)
+    return 2;
+  else if (classifier.State() == TopAbs_IN)
+    return 1;
+  else
+    return 0;
 }
 /* *INDENT-ON* */
 

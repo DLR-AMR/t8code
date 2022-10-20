@@ -106,15 +106,17 @@ public:
    * \param [in] forest    The forest.
    * \param [in] ltreeid   The local tree id of the element.
    * \param [in] element   The element.
-   * \param [in] boundary  Returns true only if element intersects 
-   *                       the boundary of the shape.
+   * \param [in] boundary  Deactivates some of the optimizations to be able to
+   *                       differentiate between elements intersecting the
+   *                       boundary and elements completely inside the shape.
    * \param [in] optimize  Uses different algorithms to speed up
    *                       the classification. Enabling recommented, except
    *                       the optimization is taken care of elsewhere or the
    *                       optimization breaks the results.
    * \return               0: Element is fully outside of the shape.
-   *                       1: If boundary:  Element intersects the shapes boundary.
-   *                          If !boundary: Element intersects the shape.
+   *                       1: Element is inside the shape.
+   *                       2: Only with \a boundary activated: Element
+   *                          intersects the boundary of the shape.
    */
   int
   t8_cad_is_element_inside_shape (t8_forest_t forest,
@@ -133,6 +135,7 @@ public:
    *                       optimization breaks the results.
    * \return               0: Point is outside of the shape. 
    *                       1: Point is inside the shape.
+   *                       2: Point intersects the bounday of the shape.
    */
   int
   t8_cad_is_point_inside_shape (const double *coords, int optimize) const;
