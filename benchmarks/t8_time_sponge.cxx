@@ -211,7 +211,7 @@ t8_construct_sponge (int end_level, t8_eclass_t eclass, int output, int coarse)
   T8_ASSERT (eclass == T8_ECLASS_HEX || eclass == T8_ECLASS_TET
              || eclass == T8_ECLASS_PRISM || eclass == T8_ECLASS_PYRAMID);
   t8_forest_init (&forest);
-  cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 1, 0);
+  cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
   t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
   t8_forest_set_level (forest, start_level);
@@ -293,7 +293,6 @@ main (int argc, char **argv)
   sc_options_t       *opt;
   char                usage[BUFSIZ];
   char                help[BUFSIZ];
-  int                 create_forest;
   int                 end_level = 4;
   int                 output = 0;
   int                 coarse = 0;

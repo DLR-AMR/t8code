@@ -62,14 +62,14 @@ t8_adapt_carve_and_refine (t8_forest_t forest,
   for (int i = 0; i < 6; i++) {
     dist = t8_vec_dist(adapt_data->midpoint[i], centroid);
     /* remove core of every ball */
-    if (dist < 0.4) {
+    if (dist < 0.39) {
       return -2;
     }
   }
   for (int i = 0; i < 6; i++) {
     dist = t8_vec_dist(adapt_data->midpoint[i], centroid);
     /* refine shell of every ball */
-    if (dist < 0.49) {
+    if (dist < 0.425) {
       return 1;
     }
   }
@@ -99,26 +99,38 @@ t8_carve_balls (int start_level, int end_level, int output, int coarse)
   t8_forest_t         forest_adapt;
   t8_forest_t         forest_partition;
   t8_cmesh_t          cmesh;
+  double              init_time = 0;
   double              adapt_time = 0;
   double              partition_time = 0;
   double              adapt_coarse_time = 0;
   double              partition_coarse_time = 0;
-  sc_statinfo_t       times[4];
+  sc_statinfo_t       times[5];
   char                vtuname[BUFSIZ];
   int                 level;
   int                 procs_sent;
+  int64_t             num_elements = INT64_MAX;
 
-  sc_stats_init (&times[0], "carve");
-  sc_stats_init (&times[1], "carve_partition");
-  sc_stats_init (&times[2], "coarse");
-  sc_stats_init (&times[3], "coarse_partition");
+  sc_stats_init (&times[0], "init");
+  sc_stats_init (&times[1], "carve");
+  sc_stats_init (&times[2], "carve_partition");
+  sc_stats_init (&times[3], "coarse");
+  sc_stats_init (&times[4], "coarse_partition");
+
+  if (start_level >= end_level) {
+    end_level = start_level + 1;
+  }
+  if (coarse == -1) {
+    coarse = INT_MAX;
+  }
 
   t8_forest_init (&forest);
-  cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 1, 0);
+  cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
   t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
   t8_forest_set_level (forest, start_level);
+  init_time = sc_MPI_Wtime ();
   t8_forest_commit (forest);
+  init_time = sc_MPI_Wtime () - init_time;
 
   struct t8_adapt_data adapt_data = {{{1.0, 0.5, 0.5},
                                       {0.5, 1.0, 0.5},
@@ -127,7 +139,7 @@ t8_carve_balls (int start_level, int end_level, int output, int coarse)
                                       {0.5, 0.0, 0.5},
                                       {0.5, 0.5, 0.0}}};
 
-  for (level = start_level; level <= end_level; level++) {
+  for (level = start_level; level < end_level; level++) {
     /* Adapt - refine, remove */
     t8_forest_init (&forest_adapt);
     t8_forest_set_profiling (forest_adapt, 1);
@@ -154,6 +166,13 @@ t8_carve_balls (int start_level, int end_level, int output, int coarse)
     t8_forest_commit (forest_adapt);
     adapt_coarse_time += t8_forest_profile_get_adapt_time(forest_adapt);
 
+    if (num_elements > t8_forest_get_global_num_elements(forest_adapt)) {
+      num_elements = t8_forest_get_global_num_elements(forest_adapt);
+    }
+    else {
+      coarse = 0;
+    }
+
     /* Partition the adapted forest */
     t8_forest_init (&forest_partition);
     t8_forest_set_profiling (forest_partition, 1);
@@ -172,12 +191,13 @@ t8_carve_balls (int start_level, int end_level, int output, int coarse)
       t8_debugf ("Output to %s\n", vtuname);
   }
 
-  sc_stats_accumulate (&times[0], adapt_time);
-  sc_stats_accumulate (&times[1], partition_time);
-  sc_stats_accumulate (&times[2], adapt_coarse_time);
-  sc_stats_accumulate (&times[3], partition_coarse_time);
-  sc_stats_compute (sc_MPI_COMM_WORLD, 4, times);
-  sc_stats_print (t8_get_package_id (), SC_LP_ESSENTIAL, 4, times, 1, 1);
+  sc_stats_accumulate (&times[0], init_time);
+  sc_stats_accumulate (&times[1], adapt_time);
+  sc_stats_accumulate (&times[2], partition_time);
+  sc_stats_accumulate (&times[3], adapt_coarse_time);
+  sc_stats_accumulate (&times[4], partition_coarse_time);
+  sc_stats_compute (sc_MPI_COMM_WORLD, 5, times);
+  sc_stats_print (t8_get_package_id (), SC_LP_ESSENTIAL, 5, times, 1, 1);
 
   t8_forest_unref (&forest);
 }
@@ -190,9 +210,8 @@ main (int argc, char **argv)
   sc_options_t       *opt;
   char                usage[BUFSIZ];
   char                help[BUFSIZ];
-  int                 create_forest;
   int                 start_level = 0;
-  int                 end_level = 1;
+  int                 end_level = 0;
   int                 output = 0;
   int                 coarse = 0;
   int                 parsed;
@@ -232,12 +251,11 @@ main (int argc, char **argv)
   sc_options_add_int (opt, 's', "slevel", &start_level, 0,
                       "Start refine level: greater to 0");
   sc_options_add_int (opt, 'f', "flevel", &end_level, 1,
-                      "Final refine level: greater or equal to start level");
+                      "Final refine level: greater to start level");
   sc_options_add_int (opt, 'o', "output", &output, 0,
                       "output = 1 -> visual output.");                    
   sc_options_add_int (opt, 'c', "coarse", &coarse, 0,
                       "number of times to coarse all elements, if possible"); 
-
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (helpme) {
@@ -245,8 +263,13 @@ main (int argc, char **argv)
     t8_global_productionf ("%s\n", help);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-  else {
+  else if (parsed >= 0) {
     t8_carve_balls (start_level, end_level, output, coarse);
+  }
+  else {
+    /* wrong usage */
+    t8_global_productionf ("\n\t ERROR: Wrong usage.\n\n");
+    sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
 
   sc_options_destroy (opt);
