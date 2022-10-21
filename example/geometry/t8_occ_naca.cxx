@@ -20,27 +20,37 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* In this example, we will generate a curved mesh from a .msh and .brep file.
- * After reading in both files, we wil define examplatory refinement criteria.
-*/
+/* See also: https://github.com/DLR-AMR/t8code/wiki/Feature---Curved-meshes
+ *
+ * This is a feature tutorial about curved meshes.
+ * In the following we will generate an input mesh and input geometry in Gmsh. 
+ * Furthermore, we will read those files in and build a curved forest with them.
+ * As refinement criterion we will define a wall which is moving through the mesh
+ * and we will refine elements based on their neighboring geometrical surfaces.
+ * Lastly, we will output the curved meshes as vtk.
+ *
+ * How you can experiment here:
+ *   - Change the meshsize of the input mesh to take a look at is influence
+ *     on the resulting forest.
+ *   - Refine the mesh at different surfaces of the geometry.
+ *  */
 
-#include <t8.h>
-#include <sc_options.h>
-#include <t8_cmesh.h>
-#include <t8_forest.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
-#include <t8_vec.h>
-#include <t8_geometry/t8_geometry_base.hxx>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx>
-#include <t8_geometry/t8_geometry_helpers.h>
-#include <t8_cmesh_readmshfile.h>
+#include <t8.h>                       /* General t8code header, always include this. */
+#include <sc_options.h>               /* CLI parser */
+#include <t8_cmesh.h>                 /* cmesh definition and basic interface. */
+#include <t8_forest.h>                /* forest definition and basic interface. */
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>  /* default refinement scheme. */
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx> /* Linear geometry calculation of trees */
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx> /* Curved geometry calculation of trees */
+#include <t8_cmesh_readmshfile.h>     /* msh file reader */
 
+/* We use this data to control to which level the elements at which 
+ * surface get refined. */
 struct t8_naca_surface_adapt_data
 {
-  int                 n_surfaces;       /* Amount of surfaces we want to refine */
-  int                *surfaces; /* Array with surface indices */
-  int                *levels;   /* Array with refinement levels */
+  int                 n_surfaces;   /* Amount of surfaces we want to refine */
+  int                *surfaces;     /* Array with surface indices */
+  int                *levels;       /* Array with refinement levels */
 };
 
 /** 
@@ -82,8 +92,10 @@ t8_naca_surface_adapt_callback (t8_forest_t forest,
   const struct t8_naca_surface_adapt_data *adapt_data =
     (const struct t8_naca_surface_adapt_data *)
     t8_forest_get_user_data (forest);
+  /* And check if it was retrieved successfully. */
   T8_ASSERT (adapt_data != NULL);
 
+  /* We retrieve the number of faces of this element. */
   const int           num_faces = ts->t8_element_num_faces (elements[0]);
   for (int iface = 0; iface < num_faces; ++iface) {
     /* We look if a face of the element lies on a face of the tree */
@@ -129,7 +141,8 @@ t8_naca_surface_refinement (t8_forest_t forest, int rlevel_dorsal,
   /* Generate the adapt data. We refine the surfaces in the array surfaces[]
    * to the levels specified in the array levels[]. The surface indices can be visualized by opening
    * the brep file in the Gmsh GUI and turning on the visibility of surface tags 
-   * (Tools->Options->Geometry->Surface labels in version 4.8.4) */
+   * (Tools->Options->Geometry->Surface labels in version 4.8.4). In this case we choose the two
+   * dorsal and ventral surfaces of the NACA profile. */
   int                 surfaces[4] = { 2, 8, 14, 19 };
   int                 levels[4] =
     { rlevel_dorsal, rlevel_dorsal, rlevel_ventral, rlevel_ventral };
@@ -146,7 +159,9 @@ t8_naca_surface_refinement (t8_forest_t forest, int rlevel_dorsal,
   t8_forest_set_balance (forest_new, forest, 0);
   t8_forest_commit (forest_new);
 
-  /* Write the forest into vtk files and destroy the forest afterwards. */
+  /* Write the forest into vtk files and destroy the forest afterwards.
+   * We use the curved output of VTK as well, because aur forest has curved
+   * elements. */
   t8_forest_write_vtk_ext (forest_new, "naca_surface_adapted_forest", 1, 1, 1,
                            1, 0, 1, 0, 0, NULL);
   t8_global_productionf
@@ -204,7 +219,7 @@ t8_naca_plane_adapt_callback (t8_forest_t forest,
                               const int num_elements,
                               t8_element_t *elements[])
 {
-  double              elem_midpoint[3], distance;
+  double              elem_midpoint[3];
   int                 elem_level;
 
   /* Get the level of the element */
@@ -213,20 +228,25 @@ t8_naca_plane_adapt_callback (t8_forest_t forest,
   const struct t8_naca_plane_adapt_data *adapt_data =
     (const struct t8_naca_plane_adapt_data *)
     t8_forest_get_user_data (forest);
+  /* And check if it was retrieved successfully. */
   T8_ASSERT (adapt_data != NULL);
 
   /* Calculate the distance of the element to the moving plane. Refine or coarsen if necessary. */
-  double              current_x_coordinate =
+  const double current_x_coordinate =
     adapt_data->x_min + (adapt_data->x_max -
                          adapt_data->x_min) * adapt_data->t /
     (adapt_data->steps - 1);
   t8_forest_element_centroid (forest_from, which_tree, elements[0],
                               elem_midpoint);
-  distance = abs (current_x_coordinate - elem_midpoint[0]);
+  const double distance = abs (current_x_coordinate - elem_midpoint[0]);
+  /* If the element level is below the threshold and its distance to the plane small enough,
+   * it should be refined. */
   if (distance <= adapt_data->dist
       && elem_level < adapt_data->level + adapt_data->rlevel) {
     return 1;
   }
+  /* If the distance is bigger and the elements level therefore to high, it should
+   * be coarsened. Note, that only an entire family can be coarsened. */
   if (is_family && distance > adapt_data->dist
       && elem_level > adapt_data->level && num_elements > 1) {
     return -1;
@@ -273,7 +293,8 @@ t8_naca_plane_refinement (t8_forest_t forest, int level, int rlevel,
     t8_forest_set_balance (forest_new, forest, 0);
     t8_forest_commit (forest_new);
 
-    /* Write the forest into vtk files and move the new forest for the next iteration. */
+    /* Write the forest into vtk files and move the new forest for the next iteration.
+     * Note that we use the curved vtk output, hence our mesh is curved. */
     snprintf (forest_vtu, BUFSIZ, "naca_plane_adapted_forest%02d",
               adapt_data.t);
     t8_forest_write_vtk_ext (forest_new, forest_vtu, 1, 1, 1, 1, 0, 1, 0, 0,
