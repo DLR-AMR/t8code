@@ -35,22 +35,22 @@
  *   - Refine the mesh at different surfaces of the geometry.
  *  */
 
-#include <t8.h>                       /* General t8code header, always include this. */
-#include <sc_options.h>               /* CLI parser */
-#include <t8_cmesh.h>                 /* cmesh definition and basic interface. */
-#include <t8_forest.h>                /* forest definition and basic interface. */
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>  /* default refinement scheme. */
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx> /* Linear geometry calculation of trees */
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx> /* Curved geometry calculation of trees */
-#include <t8_cmesh_readmshfile.h>     /* msh file reader */
+#include <t8.h>                 /* General t8code header, always include this. */
+#include <sc_options.h>         /* CLI parser */
+#include <t8_cmesh.h>           /* cmesh definition and basic interface. */
+#include <t8_forest.h>          /* forest definition and basic interface. */
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>     /* default refinement scheme. */
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>       /* Linear geometry calculation of trees */
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx>  /* Curved geometry calculation of trees */
+#include <t8_cmesh_readmshfile.h>       /* msh file reader */
 
 /* We use this data to control to which level the elements at which 
  * surface get refined. */
 struct t8_naca_surface_adapt_data
 {
-  int                 n_surfaces;   /* Amount of surfaces we want to refine */
-  int                *surfaces;     /* Array with surface indices */
-  int                *levels;       /* Array with refinement levels */
+  int                 n_surfaces;       /* Amount of surfaces we want to refine */
+  int                *surfaces; /* Array with surface indices */
+  int                *levels;   /* Array with refinement levels */
 };
 
 /** 
@@ -232,13 +232,14 @@ t8_naca_plane_adapt_callback (t8_forest_t forest,
   T8_ASSERT (adapt_data != NULL);
 
   /* Calculate the distance of the element to the moving plane. Refine or coarsen if necessary. */
-  const double current_x_coordinate =
+  const double        current_x_coordinate =
     adapt_data->x_min + (adapt_data->x_max -
                          adapt_data->x_min) * adapt_data->t /
     (adapt_data->steps - 1);
   t8_forest_element_centroid (forest_from, which_tree, elements[0],
                               elem_midpoint);
-  const double distance = abs (current_x_coordinate - elem_midpoint[0]);
+  const double        distance =
+    abs (current_x_coordinate - elem_midpoint[0]);
   /* If the element level is below the threshold and its distance to the plane small enough,
    * it should be refined. */
   if (distance <= adapt_data->dist
