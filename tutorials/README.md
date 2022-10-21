@@ -1,6 +1,6 @@
 # Tutorials
 
-There are two kind of tutorials for `t8code`: The general tutorials, which lead you step by step and show the basic usage of `t8code`.  
+There are two kinds of tutorials for `t8code`: The general tutorials, which lead you step by step and show the basic usage of `t8code`.  
 Furthermore, there are feature tutorials, which detail on more advanced or additional features of `t8code`. 
 
 For all tutorials we have a corresponding article in the [Wiki](https://github.com/DLR-AMR/t8code/wiki/Tutorial---Overview). The article can be used as a step-by-step guide for each tutorial.
