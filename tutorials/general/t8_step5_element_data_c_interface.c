@@ -50,7 +50,7 @@
 #include <t8_forest.h>          /* forest definition and basic interface. */
 #include <t8_schemes/t8_default/t8_default_c_interface.h>     /* default refinement scheme. */
 #include <t8_element_c_interface.h>     /* default refinement scheme. */
-#include <tutorials/t8_step3.h>
+#include <tutorials/general/t8_step3.h>
 
 T8_EXTERN_C_BEGIN ();
 
