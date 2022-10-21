@@ -93,13 +93,14 @@ t8_adapt_coarse_all (t8_forest_t forest,
 }
 
 static void
-t8_carve_balls (int start_level, int end_level, int output, int coarse)
+t8_carve_balls (int start_level, int end_level, int eclass_int, int output, int coarse)
 {
   t8_forest_t         forest;
   t8_forest_t         forest_adapt;
   t8_forest_t         forest_partition;
   t8_cmesh_t          cmesh;
   double              init_time = 0;
+  double              init_time_s;
   double              adapt_time = 0;
   double              partition_time = 0;
   double              adapt_coarse_time = 0;
@@ -107,6 +108,7 @@ t8_carve_balls (int start_level, int end_level, int output, int coarse)
   sc_statinfo_t       times[5];
   char                vtuname[BUFSIZ];
   int                 level;
+  int                 runs = 10;
   int                 procs_sent;
   int64_t             num_elements = INT64_MAX;
 
@@ -123,66 +125,85 @@ t8_carve_balls (int start_level, int end_level, int output, int coarse)
     coarse = INT_MAX;
   }
 
-  t8_forest_init (&forest);
-  cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
-  t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
-  t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
-  t8_forest_set_level (forest, start_level);
-  init_time = sc_MPI_Wtime ();
-  t8_forest_commit (forest);
-  init_time = sc_MPI_Wtime () - init_time;
+  for (int run = 0; run < runs; run++) {
 
-  struct t8_adapt_data adapt_data = {{{1.0, 0.5, 0.5},
-                                      {0.5, 1.0, 0.5},
-                                      {0.5, 0.5, 1.0},
-                                      {0.0, 0.5, 0.5},
-                                      {0.5, 0.0, 0.5},
-                                      {0.5, 0.5, 0.0}}};
-
-  for (level = start_level; level < end_level; level++) {
-    /* Adapt - refine, remove */
-    t8_forest_init (&forest_adapt);
-    t8_forest_set_profiling (forest_adapt, 1);
-    t8_forest_set_user_data (forest_adapt, &adapt_data);
-    t8_forest_set_adapt (forest_adapt, forest, t8_adapt_carve_and_refine, 0);
-    t8_forest_commit (forest_adapt);
-    adapt_time += t8_forest_profile_get_adapt_time(forest_adapt);
-
-    /* Partition the adapted forest */
-    t8_forest_init (&forest_partition);
-    t8_forest_set_profiling (forest_partition, 1);
-    t8_forest_set_partition (forest_partition, forest_adapt, 0);
-    t8_forest_commit (forest_partition);
-    partition_time += t8_forest_profile_get_partition_time (forest_partition, &procs_sent);
-
-    forest = forest_partition;
-  } 
-    
-  for (level = 0; level < coarse; level++) {
-    /* Adapt - coarse */
-    t8_forest_init (&forest_adapt);
-    t8_forest_set_profiling (forest_adapt, 1);
-    t8_forest_set_adapt (forest_adapt, forest, t8_adapt_coarse_all, 0);
-    t8_forest_commit (forest_adapt);
-    adapt_coarse_time += t8_forest_profile_get_adapt_time(forest_adapt);
-
-    if (num_elements > t8_forest_get_global_num_elements(forest_adapt)) {
-      num_elements = t8_forest_get_global_num_elements(forest_adapt);
+    t8_forest_init (&forest);
+    if (eclass_int == 0){
+      cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
     }
     else {
-      coarse = 0;
+      cmesh = t8_cmesh_new_hypercube ((t8_eclass_t) eclass_int, sc_MPI_COMM_WORLD, 0, 0, 0);
     }
 
-    /* Partition the adapted forest */
-    t8_forest_init (&forest_partition);
-    t8_forest_set_profiling (forest_partition, 1);
-    t8_forest_set_partition (forest_partition, forest_adapt, 0);
-    t8_forest_commit (forest_partition);
-    partition_coarse_time += t8_forest_profile_get_partition_time (forest_partition, &procs_sent);
+    t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
+    t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
+    t8_forest_set_level (forest, start_level);
+    init_time_s = sc_MPI_Wtime ();
+    t8_forest_commit (forest);
+    init_time += sc_MPI_Wtime () - init_time_s;
 
-    forest = forest_partition;
+    struct t8_adapt_data adapt_data = {{{1.0, 0.5, 0.5},
+                                        {0.5, 1.0, 0.5},
+                                        {0.5, 0.5, 1.0},
+                                        {0.0, 0.5, 0.5},
+                                        {0.5, 0.0, 0.5},
+                                        {0.5, 0.5, 0.0}}};
+
+    for (level = start_level; level < end_level; level++) {
+      /* Adapt - refine, remove */
+      t8_forest_init (&forest_adapt);
+      t8_forest_set_profiling (forest_adapt, 1);
+      t8_forest_set_user_data (forest_adapt, &adapt_data);
+      t8_forest_set_adapt (forest_adapt, forest, t8_adapt_carve_and_refine, 0);
+      t8_forest_commit (forest_adapt);
+      adapt_time += t8_forest_profile_get_adapt_time(forest_adapt);
+
+      /* Partition the adapted forest */
+      t8_forest_init (&forest_partition);
+      t8_forest_set_profiling (forest_partition, 1);
+      t8_forest_set_partition (forest_partition, forest_adapt, 0);
+      t8_forest_commit (forest_partition);
+      partition_time += t8_forest_profile_get_partition_time (forest_partition, &procs_sent);
+
+      forest = forest_partition;
+    } 
+      
+    for (level = 0; level < coarse; level++) {
+      /* Adapt - coarse */
+      t8_forest_init (&forest_adapt);
+      t8_forest_set_profiling (forest_adapt, 1);
+      t8_forest_set_adapt (forest_adapt, forest, t8_adapt_coarse_all, 0);
+      t8_forest_commit (forest_adapt);
+      adapt_coarse_time += t8_forest_profile_get_adapt_time(forest_adapt);
+
+      if (num_elements > t8_forest_get_global_num_elements(forest_adapt)) {
+        num_elements = t8_forest_get_global_num_elements(forest_adapt);
+      }
+      else {
+        coarse = 0;
+      }
+
+      /* Partition the adapted forest */
+      t8_forest_init (&forest_partition);
+      t8_forest_set_profiling (forest_partition, 1);
+      t8_forest_set_partition (forest_partition, forest_adapt, 0);
+      t8_forest_commit (forest_partition);
+      partition_coarse_time += t8_forest_profile_get_partition_time (forest_partition, &procs_sent);
+
+      forest = forest_partition;
+    }
+
+    if (run < runs-1) {
+      t8_forest_unref (&forest);
+    }
+
   }
-
+  
+  init_time = init_time * (1/(double) runs);
+  adapt_time = adapt_time * (1/(double) runs);
+  partition_time = partition_time * (1/(double) runs);
+  adapt_coarse_time = adapt_coarse_time * (1/(double) runs);
+  partition_coarse_time = partition_coarse_time * (1/(double) runs);
 
   /* vtu output */
   if (output) {
@@ -214,6 +235,7 @@ main (int argc, char **argv)
   int                 end_level = 0;
   int                 output = 0;
   int                 coarse = 0;
+  int                 eclass_int;
   int                 parsed;
   int                 helpme;
   int                 sreturnA;
@@ -250,8 +272,15 @@ main (int argc, char **argv)
                          "Display a short help message.");
   sc_options_add_int (opt, 's', "slevel", &start_level, 0,
                       "Start refine level: greater to 0");
-  sc_options_add_int (opt, 'f', "flevel", &end_level, 1,
+  sc_options_add_int (opt, 'f', "flevel", &end_level, 0,
                       "Final refine level: greater to start level");
+  sc_options_add_int (opt, 'e', "elements", &eclass_int, 0,
+                      "This option specifies the type of elements to use.\n"
+                      "\t\t0 - hybrid\n"
+                      "\t\t4 - hexahedron\n"
+                      "\t\t5 - tetrahedron\n"
+                      "\t\t6 - prism\n"
+                      "\t\t7 - pyramid");
   sc_options_add_int (opt, 'o', "output", &output, 0,
                       "output = 1 -> visual output.");                    
   sc_options_add_int (opt, 'c', "coarse", &coarse, 0,
@@ -264,7 +293,7 @@ main (int argc, char **argv)
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else if (parsed >= 0) {
-    t8_carve_balls (start_level, end_level, output, coarse);
+    t8_carve_balls (start_level, end_level, eclass_int, output, coarse);
   }
   else {
     /* wrong usage */
