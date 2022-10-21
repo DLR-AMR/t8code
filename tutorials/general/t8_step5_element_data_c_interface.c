@@ -43,12 +43,12 @@
  *  */
 
 // #include <sc.h>                 /* sc library. */
-#include <sc_containers.h>                 /* sc library. */
+#include <sc_containers.h>      /* sc library. */
 #include <t8.h>                 /* General t8code header, always include this. */
 #include <t8_cmesh.h>           /* cmesh definition and basic interface. */
 #include <t8_cmesh/t8_cmesh_examples.h> /* A collection of exemplary cmeshes */
 #include <t8_forest.h>          /* forest definition and basic interface. */
-#include <t8_schemes/t8_default/t8_default_c_interface.h>     /* default refinement scheme. */
+#include <t8_schemes/t8_default/t8_default_c_interface.h>       /* default refinement scheme. */
 #include <t8_element_c_interface.h>     /* default refinement scheme. */
 #include <tutorials/general/t8_step3.h>
 
@@ -159,11 +159,10 @@ t8_step5_create_element_data (t8_forest_t forest)
         element = t8_forest_get_element_in_tree (forest, itree, ielement);
         /* We want to store the elements level and its volume as data. We compute these
          * via the eclass_scheme and the forest_element interface. */
-    
 
         element_data[current_index].level =
-            t8_element_level(eclass_scheme, element);
-        element_data[current_index].volume = 
+          t8_element_level (eclass_scheme, element);
+        element_data[current_index].volume =
           t8_forest_element_volume (forest, itree, element);
       }
     }
@@ -179,7 +178,7 @@ static void
 t8_step5_exchange_ghost_data (t8_forest_t forest,
                               struct t8_step5_data_per_element *data)
 {
-  sc_array_t          *sc_array_wrapper;
+  sc_array_t         *sc_array_wrapper;
   t8_locidx_t         num_elements =
     t8_forest_get_local_num_elements (forest);
   t8_locidx_t         num_ghosts = t8_forest_get_num_ghosts (forest);
