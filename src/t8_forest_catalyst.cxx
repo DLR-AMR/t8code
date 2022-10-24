@@ -99,6 +99,7 @@ t8_write_vtk_only (vtkUnstructuredGrid * unstructuredGrid,
   pwriterObj->EncodeAppendedDataOff ();
   pwriterObj->SetFileName (mpifilename);
 
+#if T8_ENABLE_MPI
 /*
  * Since we want to write multiple files, the processes 
  * have to communicate. Therefore, we define the communicator
@@ -106,7 +107,6 @@ t8_write_vtk_only (vtkUnstructuredGrid * unstructuredGrid,
  * We have to set a controller for the pwriterObj, 
  * therefore we define the controller vtk_mpi_ctrl.
  */
-#if T8_ENABLE_MPI
   vtkSmartPointer < vtkMPICommunicator > vtk_comm =
     vtkSmartPointer < vtkMPICommunicator >::New ();
   vtkMPICommunicatorOpaqueComm vtk_opaque_comm (&forest->mpicomm);
@@ -132,12 +132,6 @@ t8_write_vtk_only (vtkUnstructuredGrid * unstructuredGrid,
   pwriterObj->SetStartPiece (forest->mpirank);
   pwriterObj->SetEndPiece (forest->mpirank);
 
-/* Write the user defined data fields. 
- * For that we iterate over the idata, set the name, the array
- * and then give this data to the unstructured Grid Object.
- * We differentiate between scalar and vector data.
- */
-
 /* We set the input data and write the vtu files. */
   pwriterObj->SetInputData (unstructuredGrid);
   pwriterObj->Update ();
@@ -148,17 +142,15 @@ t8_write_vtk_only (vtkUnstructuredGrid * unstructuredGrid,
   else {
     t8_errorf ("Error when writing vtk file.\n");
   }
-
-/* We have to free the allocated memory for the cellTypes Array and the other arrays we allocated memory for. */
 /* Return whether writing was successful */
   return freturn;
 }
-/* *INDENT-OFF* */
+
 vtkSmartPointer < vtkUnstructuredGrid >
 t8_build_vtk_unstructured_grid (t8_forest_t forest, int write_treeid,
                                 int write_mpirank, int write_level,
                                 int write_element_id, int curved_flag,
-                                int num_data, t8_vtk_data_field_t * data)
+                                int num_data, t8_vtk_data_field_t *data)
 {
 
   /*Check assertions: forest and fileprefix are not NULL and forest is commited */
@@ -205,30 +197,34 @@ t8_build_vtk_unstructured_grid (t8_forest_t forest, int write_treeid,
   int                *cellTypes = T8_ALLOC (int, num_elements);
 
   /*
-   * We need the vertex coords array to be of the 
-   * correct dim. Since it is always the same
-   * in one mesh, we take the dim of one element.
-   * We add 1 if we look at a vertext(dim=0) because 
-   * an array of size 0 is not allowed. 
-   * Then we allocate memory, because we do not know
-   * beforehand how many entries the array needs.
-   */
-
-  /*
-   * We have to define the vtkTypeInt64Array that hold 
+   * We have to define the t8_vtk_gloidx_array_type_t that hold 
    * metadata if wanted. 
    */
 
-  t8_vtk_gloidx_array_type_t *vtk_treeid = t8_vtk_gloidx_array_type_t::New ();
-  t8_vtk_gloidx_array_type_t *vtk_mpirank =
-    t8_vtk_gloidx_array_type_t::New ();
-  t8_vtk_gloidx_array_type_t *vtk_level = t8_vtk_gloidx_array_type_t::New ();
-  t8_vtk_gloidx_array_type_t *vtk_element_id =
-    t8_vtk_gloidx_array_type_t::New ();
+  int                 write_treeid,
+    int write_mpirank, int write_level,
+    int write_element_id, int curved_flag,
+    int num_data, t8_vtk_data_field_t *data if (write_treeid)
+  {
+    t8_vtk_gloidx_array_type_t *vtk_treeid =
+      t8_vtk_gloidx_array_type_t::New ();
+  }
+  if (write_mpirank) {
+    t8_vtk_gloidx_array_type_t *vtk_mpirank =
+      t8_vtk_gloidx_array_type_t::New ();
+  }
+  if (write_level) {
+    t8_vtk_gloidx_array_type_t *vtk_level =
+      t8_vtk_gloidx_array_type_t::New ();
+  }
+  if (write_element_id) {
+    t8_vtk_gloidx_array_type_t *vtk_element_id =
+      t8_vtk_gloidx_array_type_t::New ();
+  }
 
 /*
  * We need the dataArray for writing double valued user defined data in the vtu files.
- * We want to write num_data many timesteps/arrays.
+ * We want to write num_data many arrays.
  * We need num_data many vtkDoubleArrays, so we need to allocate storage.
  * Later we call the constructor with: dataArrays[idata]=vtkDoubleArray::New()
  */
@@ -236,7 +232,9 @@ t8_build_vtk_unstructured_grid (t8_forest_t forest, int write_treeid,
   dataArrays = T8_ALLOC (vtkDoubleArray *, num_data);
 
   cmesh = t8_forest_get_cmesh (forest);
-  /* We iterate over all local trees*/
+  /* We iterate over all local trees */
+  t8_element_t        element;
+  vtkSmartPointer < vtkCell > pvtkCell;
   for (itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {
 /* 
  * We get the current tree, the scheme for this tree
@@ -246,7 +244,7 @@ t8_build_vtk_unstructured_grid (t8_forest_t forest, int write_treeid,
  */
     t8_eclass_scheme_c *scheme =
       t8_forest_get_eclass_scheme (forest, t8_forest_get_tree_class (forest,
-                                                                  itree));
+                                                                     itree));
     t8_locidx_t         elems_in_tree =
       t8_forest_get_tree_num_elements (forest, itree);
     t8_locidx_t         offset =
@@ -255,10 +253,9 @@ t8_build_vtk_unstructured_grid (t8_forest_t forest, int write_treeid,
     /* Compute the global tree id */
     gtreeid = t8_forest_global_tree_id (forest, itree);
     for (ielement = 0; ielement < elems_in_tree; ielement++) {
-      t8_element_t       *element =
-        t8_forest_get_element_in_tree (forest, itree, ielement);
+      *element = t8_forest_get_element_in_tree (forest, itree, ielement);
       T8_ASSERT (element != NULL);
-      vtkSmartPointer < vtkCell > pvtkCell = NULL;
+      pvtkCell = NULL;
       t8_element_shape_t  element_shape = scheme->t8_element_shape (element);
       num_corners = t8_get_number_of_vtk_nodes (element_shape, curved_flag);
       /* depending on the element type we choose the correct vtk cell to insert points to */
@@ -360,11 +357,10 @@ t8_build_vtk_unstructured_grid (t8_forest_t forest, int write_treeid,
        * plus theo
        */
 
-
-      if(curved_flag==0){
+      if (curved_flag == 0) {
         cellTypes[elem_id] = t8_eclass_vtk_type[element_shape];
       }
-      else{
+      else {
         cellTypes[elem_id] = t8_curved_eclass_vtk_type[element_shape];
       }
       if (write_treeid == 1) {
@@ -380,11 +376,10 @@ t8_build_vtk_unstructured_grid (t8_forest_t forest, int write_treeid,
         vtk_element_id->InsertNextValue (elem_id + offset +
                                          t8_forest_get_first_local_element_id
                                          (forest));
-
       }
-    elem_id++;
-    }                             /* end of loop over elements */
-  }                               /* end of loop over local trees */
+      elem_id++;
+    }                           /* end of loop over elements */
+  }                             /* end of loop over local trees */
 
   /* 
    * Write file: First we construct the unstructured Grid 
@@ -413,28 +408,28 @@ t8_build_vtk_unstructured_grid (t8_forest_t forest, int write_treeid,
     vtk_element_id->SetName ("element_id");
     unstructuredGrid->GetCellData ()->AddArray (vtk_element_id);
   }
-                  /* Write the user defined data fields. 
-                  * For that we iterate over the idata, set the name, the array
-                  * and then give this data to the unstructured Grid Object.
-                  * We differentiate between scalar and vector data.
-                  */
+  /* Write the user defined data fields. 
+   * For that we iterate over the idata, set the name, the array
+   * and then give this data to the unstructured Grid Object.
+   * We differentiate between scalar and vector data.
+   */
   for (int idata = 0; idata < num_data; idata++) {
     dataArrays[idata] = vtkDoubleArray::New ();
     if (data[idata].type == T8_VTK_SCALAR) {
-      dataArrays[idata]->SetName (data[idata].description);       /* Set the name of the array */
-      dataArrays[idata]->SetVoidArray (data[idata].data, num_elements, 1);        /* We write the data in the array from the input array */
-      unstructuredGrid->GetCellData ()->AddArray (dataArrays[idata]);     /* We add the array to the cell data object */
+      dataArrays[idata]->SetName (data[idata].description);     /* Set the name of the array */
+      dataArrays[idata]->SetVoidArray (data[idata].data, num_elements, 1);      /* We write the data in the array from the input array */
+      unstructuredGrid->GetCellData ()->AddArray (dataArrays[idata]);   /* We add the array to the cell data object */
     }
     else {
-      dataArrays[idata]->SetName (data[idata].description);       /* Set the name of the array */
-      dataArrays[idata]->SetNumberOfTuples (num_elements);        /* We want number of tuples=number of elements */
-      dataArrays[idata]->SetNumberOfComponents (3);       /* Each tuples has 3 values */
+      dataArrays[idata]->SetName (data[idata].description);     /* Set the name of the array */
+      dataArrays[idata]->SetNumberOfTuples (num_elements);      /* We want number of tuples=number of elements */
+      dataArrays[idata]->SetNumberOfComponents (3);     /* Each tuples has 3 values */
       dataArrays[idata]->SetVoidArray (data[idata].data, num_elements * 3, 1);
       unstructuredGrid->GetCellData ()->SetVectors (dataArrays[idata]);
     }
   }
 
-                  /* We have to free the allocated memory for the cellTypes Array and the other arrays we allocated memory for. */
+  /* We have to free the allocated memory for the cellTypes Array and the other arrays we allocated memory for. */
 
   vtk_treeid->Delete ();
   vtk_mpirank->Delete ();
@@ -446,10 +441,9 @@ t8_build_vtk_unstructured_grid (t8_forest_t forest, int write_treeid,
 
   T8_FREE (cellTypes);
   T8_FREE (dataArrays);
-                  /* Return whether writing was successful */
+  /* Return whether writing was successful */
   return unstructuredGrid;
 }
 #endif
-/* *INDENT-ON* */
 
 /*T8_EXTERN_C_END ();*/

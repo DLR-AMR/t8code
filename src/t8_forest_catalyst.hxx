@@ -36,9 +36,10 @@
 #include <vtkUnstructuredGrid.h>
 #endif
 
+#if T8_WITH_VTK
 /* function declarations */
 
-/** Builds a vtkUnstrucuredGrid from a forest.
+/* Builds a vtkUnstrucuredGrid from a forest.
  * This function uses the vtk library. t8code must be configured with
  * "--with-vtk" in order to use it.
  * Currently does not support pyramid elements.
@@ -56,14 +57,13 @@
  * \return  A vtkUnstrucuredGrid.
  * \note If t8code was not configured with vtk, use \ref t8_forest_vtk_write_file.
  */
-#if T8_WITH_VTK
 vtkSmartPointer < vtkUnstructuredGrid >
 t8_build_vtk_unstructured_grid (t8_forest_t forest, int write_treeid,
                                 int write_mpirank, int write_level,
                                 int write_element_id, int curved_flag,
                                 int num_data, t8_vtk_data_field_t *data);
 
-/** Writes the vtu file from vtkUnstrucuredGrid with specified fileprefix.
+/* Writes the vtu file from vtkUnstrucuredGrid with specified fileprefix.
  * This function uses the vtk library. t8code must be configured with
  * "--with-vtk" in order to use it.
  * Currently does not support pyramid elements.
@@ -73,16 +73,8 @@ t8_build_vtk_unstructured_grid (t8_forest_t forest, int write_treeid,
  * \note If t8code was not configured with vtk, use \ref t8_forest_vtk_write_file
  */
 
-int
- 
- 
- 
- 
- 
- 
- 
- 
-t8_write_vtk_only (vtkUnstructuredGrid * unstructuredGrid,
-                   const char *fileprefix, t8_forest_t forest);
+int                 t8_write_vtk_only (vtkUnstructuredGrid * unstructuredGrid,
+                                       const char *fileprefix,
+                                       t8_forest_t forest);
 #endif
 #endif /* !T8_FOREST_VTK_H */

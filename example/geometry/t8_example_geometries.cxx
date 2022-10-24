@@ -55,6 +55,7 @@
 #include <gp_Vec.hxx>
 #include <BRep_Tool.hxx>
 #endif
+
 typedef enum
 {
   T8_GEOM_ZERO = 0,

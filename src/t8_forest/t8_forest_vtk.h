@@ -96,13 +96,8 @@ int                 t8_forest_vtk_write_file (t8_forest_t forest,
                                               int num_data,
                                               t8_vtk_data_field_t *data);
 
-int
- 
- 
- 
- 
- 
-      t8_get_number_of_vtk_nodes (t8_element_shape_t eclass, int curved_flag);
+int                 t8_get_number_of_vtk_nodes (t8_element_shape_t eclass,
+                                                int curved_flag);
 
 /* If we want to write curved elements, we need to calculate 
  * the reference coordinates. For the vertices(end points)
@@ -116,20 +111,17 @@ int
  * \param [in]  vertex  The vertex number. 
  * \param [in]  coords  The array containing the coordinates of the reference node.
  */
-void
- 
- 
- 
- 
- 
- 
- 
- t8_curved_element_get_reference_node_coords (const t8_element_t *elem,
-                                              t8_element_shape_t eclass,
-                                              t8_eclass_scheme_c *scheme,
-                                              int vertex, double *coords);
+void                t8_curved_element_get_reference_node_coords (const
+                                                                 t8_element_t
+                                                                 *elem,
+                                                                 t8_element_shape_t
+                                                                 eclass,
+                                                                 t8_eclass_scheme_c
+                                                                 *scheme,
+                                                                 int vertex,
+                                                                 double
+                                                                 *coords);
 
-#if T8_WITH_VTK
 /* lookup table for number of nodes for curved eclasses. */
 const int           t8_curved_eclass_num_nodes[T8_ECLASS_COUNT] =
   { 1, 3, 8, 6, 20, 10, 15, 13 };
@@ -137,7 +129,6 @@ const int           t8_curved_eclass_num_nodes[T8_ECLASS_COUNT] =
 /* lookup table for vtk types of curved elements */
 const int           t8_curved_eclass_vtk_type[T8_ECLASS_COUNT] =
   { 1, 21, 23, 22, 25, 24, 26, 27 };
-#endif
 
 T8_EXTERN_C_END ();
 

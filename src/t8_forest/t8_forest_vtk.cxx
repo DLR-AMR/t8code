@@ -128,7 +128,6 @@ typedef int         (*t8_forest_vtk_cell_data_kernel) (t8_forest_t forest,
  * depending on whether we want to write curved or non-curved elements
  * we need the right number of points, so we choose the right lookup table
  */
-#if T8_WITH_VTK
 int
 t8_get_number_of_vtk_nodes (t8_element_shape_t eclass, int curved_flag)
 {
@@ -138,7 +137,6 @@ t8_get_number_of_vtk_nodes (t8_element_shape_t eclass, int curved_flag)
   }
   return t8_eclass_num_vertices[eclass];
 }
-#endif
 
 /* If we want to write curved elements, we need to calculate 
  * the reference coordinates. For the vertices(end points)
