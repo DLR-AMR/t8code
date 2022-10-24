@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_forest_vtk.h>
+#include <t8_forest/t8_forest_vtk.h>
 #include <t8_forest_catalyst.hxx>
 #include <t8_vtk.h>
 #include <t8_cmesh.h>
@@ -56,7 +56,7 @@
 #endif
 #include <t8.h>
 #include <t8_forest.h>
-#include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
 /*T8_EXTERN_C_BEGIN ();*/
