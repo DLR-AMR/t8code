@@ -49,14 +49,17 @@ T8_EXTERN_C_BEGIN ();
  * \return  True if successful, false if not (process local).
  * \note If t8code was not configured with vtk, use \ref t8_forest_vtk_write_file
  */
-int                 t8_forest_vtk_write_file_via_API (t8_forest_t forest,
+int                 t8_forest_vtk_write_file_via_API (const t8_forest_t
+                                                      forest,
                                                       const char *fileprefix,
-                                                      int write_treeid,
-                                                      int write_mpirank,
-                                                      int write_level,
-                                                      int write_element_id,
-                                                      int curved_flag,
-                                                      int num_data,
+                                                      const int write_treeid,
+                                                      const int write_mpirank,
+                                                      const int write_level,
+                                                      const int
+                                                      write_element_id,
+                                                      const int curved_flag,
+                                                      const int num_data,
+                                                      const
                                                       t8_vtk_data_field_t
                                                       *data);
 
@@ -81,15 +84,16 @@ int                 t8_forest_vtk_write_file_via_API (t8_forest_t forest,
  * \return  True if succesful, false if not (process local).
  */
 
-int                 t8_forest_vtk_write_file (t8_forest_t forest,
+int                 t8_forest_vtk_write_file (const t8_forest_t forest,
                                               const char *fileprefix,
-                                              int write_treeid,
-                                              int write_mpirank,
-                                              int write_level,
-                                              int write_element_id,
-                                              int write_ghosts,
-                                              int num_data,
-                                              t8_vtk_data_field_t *data);
+                                              const int write_treeid,
+                                              const int write_mpirank,
+                                              const int write_level,
+                                              const int write_element_id,
+                                              const int write_ghosts,
+                                              const int num_data,
+                                              const t8_vtk_data_field_t
+                                              *data);
 
 int                 t8_get_number_of_vtk_nodes (t8_element_shape_t eclass,
                                                 int curved_flag);
@@ -112,9 +116,11 @@ void                t8_curved_element_get_reference_node_coords (const
                                                                  const
                                                                  t8_element_shape_t
                                                                  eclass,
+                                                                 const
                                                                  t8_eclass_scheme_c
                                                                  *scheme,
-                                                                 int vertex,
+                                                                 const int
+                                                                 vertex,
                                                                  double
                                                                  *coords);
 
