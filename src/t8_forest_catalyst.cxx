@@ -77,7 +77,7 @@
 #if T8_WITH_VTK
 int
 t8_write_vtk_only (vtkUnstructuredGrid * unstructuredGrid,
-                   const char *fileprefix, t8_forest_t forest)
+                   const char *fileprefix, const t8_forest_t forest)
 {
   int                 freturn = 0;
   char                mpifilename[BUFSIZ];
@@ -100,8 +100,7 @@ t8_write_vtk_only (vtkUnstructuredGrid * unstructuredGrid,
   pwriterObj->SetFileName (mpifilename);
 
 #if T8_ENABLE_MPI
-/*
- * Since we want to write multiple files, the processes 
+/* Since we want to write multiple files, the processes 
  * have to communicate. Therefore, we define the communicator
  * vtk_comm and set it as the communicator. 
  * We have to set a controller for the pwriterObj, 
@@ -147,10 +146,13 @@ t8_write_vtk_only (vtkUnstructuredGrid * unstructuredGrid,
 }
 
 vtkSmartPointer < vtkUnstructuredGrid >
-t8_build_vtk_unstructured_grid (t8_forest_t forest, int write_treeid,
-                                int write_mpirank, int write_level,
-                                int write_element_id, int curved_flag,
-                                int num_data, t8_vtk_data_field_t *data)
+t8_build_vtk_unstructured_grid (const t8_forest_t forest,
+                                const int write_treeid,
+                                const int write_mpirank,
+                                const int write_level,
+                                const int write_element_id,
+                                const int curved_flag, const int num_data,
+                                const t8_vtk_data_field_t *data)
 {
 
   /*Check assertions: forest and fileprefix are not NULL and forest is commited */
@@ -159,14 +161,10 @@ t8_build_vtk_unstructured_grid (t8_forest_t forest, int write_treeid,
   T8_ASSERT (forest->committed);
 
   long int            point_id = 0;     /* The id of the point in the points Object. */
-  t8_locidx_t         ielement; /* The iterator over elements in a tree. */
-  t8_locidx_t         itree, ivertex;
   double              coordinates[3];
   double              vertex_coords[3] = { 0, 0, 0 };
   int                 elem_id = 0;
-  t8_locidx_t         num_elements;
   t8_gloidx_t         gtreeid;
-  t8_cmesh_t          cmesh;
   int                 num_corners;
 
 /* Since we want to use different element types and a points Array and cellArray 
@@ -193,7 +191,8 @@ t8_build_vtk_unstructured_grid (t8_forest_t forest, int write_treeid,
   /* 
    * The cellTypes Array stores the element types as integers(see vtk doc).
    */
-  num_elements = t8_forest_get_local_num_elements (forest);
+  const t8_locidx_t   num_elements =
+    t8_forest_get_local_num_elements (forest);
   int                *cellTypes = T8_ALLOC (int, num_elements);
 
   /*
@@ -201,11 +200,7 @@ t8_build_vtk_unstructured_grid (t8_forest_t forest, int write_treeid,
    * metadata if wanted. 
    */
 
-  int                 write_treeid,
-    int write_mpirank, int write_level,
-    int write_element_id, int curved_flag,
-    int num_data, t8_vtk_data_field_t *data if (write_treeid)
-  {
+  if (write_treeid) {
     t8_vtk_gloidx_array_type_t *vtk_treeid =
       t8_vtk_gloidx_array_type_t::New ();
   }
@@ -231,11 +226,12 @@ t8_build_vtk_unstructured_grid (t8_forest_t forest, int write_treeid,
   vtkDoubleArray    **dataArrays;
   dataArrays = T8_ALLOC (vtkDoubleArray *, num_data);
 
-  cmesh = t8_forest_get_cmesh (forest);
+  const t8_cmesh_t    cmesh = t8_forest_get_cmesh (forest);
   /* We iterate over all local trees */
   t8_element_t        element;
   vtkSmartPointer < vtkCell > pvtkCell;
-  for (itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {
+  for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest);
+       itree++) {
 /* 
  * We get the current tree, the scheme for this tree
  * and the number of elements in this tree. We need the vertices of
@@ -252,7 +248,7 @@ t8_build_vtk_unstructured_grid (t8_forest_t forest, int write_treeid,
     /* We iterate over all elements in the tree */
     /* Compute the global tree id */
     gtreeid = t8_forest_global_tree_id (forest, itree);
-    for (ielement = 0; ielement < elems_in_tree; ielement++) {
+    for (t8_locidx_t ielement = 0; ielement < elems_in_tree; ielement++) {
       *element = t8_forest_get_element_in_tree (forest, itree, ielement);
       T8_ASSERT (element != NULL);
       pvtkCell = NULL;
@@ -321,7 +317,8 @@ t8_build_vtk_unstructured_grid (t8_forest_t forest, int write_treeid,
       }
 
       /* For each element we iterate over all points */
-      for (ivertex = 0; ivertex < num_corners; ivertex++, point_id++) {
+      for (t8_locidx_t ivertex = 0; ivertex < num_corners;
+           ivertex++, point_id++) {
         /* Compute the vertex coordinates inside [0,1]^dim reference cube. */
         if (curved_flag) {
           t8_curved_element_get_reference_node_coords (element, element_shape,
@@ -354,7 +351,7 @@ t8_build_vtk_unstructured_grid (t8_forest_t forest, int write_treeid,
        * write_mpirank and write_element_id we also fill the corresponding
        * arrays with the data we want(treeid,mpirank,element_id).
        * To get the element id, we have to add the local id in the tree 
-       * plus theo
+       * plus the offset plus first local element id
        */
 
       if (curved_flag == 0) {

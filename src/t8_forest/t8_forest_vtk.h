@@ -20,11 +20,6 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** file t8_forest_vtk.h
- */
-
-/* TODO: Document this file */
-
 #ifndef T8_FOREST_VTK_H
 #define T8_FOREST_VTK_H
 
@@ -34,7 +29,7 @@
 T8_EXTERN_C_BEGIN ();
 /* function declarations */
 
-/** Write the forest in .pvtu file format. Writes one .vtu file per
+/* Write the forest in .pvtu file format. Writes one .vtu file per
  * process and a meta .pvtu file.
  * This function uses the vtk library. t8code must be configured with
  * "--with-vtk" in order to use it.
@@ -65,7 +60,7 @@ int                 t8_forest_vtk_write_file_via_API (t8_forest_t forest,
                                                       t8_vtk_data_field_t
                                                       *data);
 
-/** Write the forest in .pvtu file format. Writes one .vtu file per
+/* Write the forest in .pvtu file format. Writes one .vtu file per
  * process and a meta .pvtu file.
  * This function writes ASCII files and can be used when
  * t8code is not configure with "--with-vtk" and
@@ -114,6 +109,7 @@ int                 t8_get_number_of_vtk_nodes (t8_element_shape_t eclass,
 void                t8_curved_element_get_reference_node_coords (const
                                                                  t8_element_t
                                                                  *elem,
+                                                                 const
                                                                  t8_element_shape_t
                                                                  eclass,
                                                                  t8_eclass_scheme_c
