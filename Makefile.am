@@ -24,14 +24,14 @@ check_PROGRAMS =
 include_HEADERS =
 lib_LTLIBRARIES =
 nodist_include_HEADERS =
-nobase_dist_include_HEADERS =
 noinst_HEADERS =
 noinst_PROGRAMS =
-sysconf_DATA =
+t8sysconf_DATA =
 dist_t8data_DATA =
 
 # use this if you want to link in T8 without autotools
-sysconf_DATA += Makefile.t8.mk
+t8sysconfdir = $(sysconfdir)/t8code
+t8sysconf_DATA += Makefile.t8.mk
 CLEANFILES += Makefile.t8.mk
 Makefile.t8.mk : Makefile.t8.pre
 	cat $< | \
@@ -43,10 +43,11 @@ t8aclocaldir = $(datadir)/aclocal
 dist_t8aclocal_DATA = config/t8_include.m4 \
                       config/t8_stdpp.m4 \
                       config/t8_netcdf.m4 \
-                      config/t8_vtk.m4
+                      config/t8_vtk.m4 \
+                      config/t8_occ.m4
 
 # install t8 data in the correct directory
-t8datadir = $(datadir)/data
+t8datadir = $(datadir)/t8code/data
 
 # setup test environment
 if T8_MPIRUN
@@ -73,20 +74,9 @@ DISTCLEANFILES += \
 include src/Makefile.am
 include src/t8_schemes/t8_default/Makefile.am
 include test/Makefile.am
-include example/basic/Makefile.am
-include example/geometry/Makefile.am
-include example/ghost/Makefile.am
-include example/timings/Makefile.am
-include example/triangle/Makefile.am
-include example/tetgen/Makefile.am
-include example/gmsh/Makefile.am
-include example/cmesh/Makefile.am
-include example/common/Makefile.am
-include example/advect/Makefile.am
-include example/netcdf/Makefile.am
-include example/tutorials/Makefile.am
-#include example/cxx/Makefile.am
-#include example/ExtremeScaling/Makefile.am
+include example/Makefile.am
+include tutorials/Makefile.am
+include benchmarks/Makefile.am
 
 # revision control and ChangeLog
 ChangeLog:
@@ -132,7 +122,7 @@ gtest:
 	@echo -e "\e[32m============================================================================\e[0m"
 	@echo "# Total:"; grep -c "RUN" test/t8_gtest_main.log
 	@echo -e "\e[32m# PASS:"
-	@grep -c "OK" test/t8_gtest_main.log
+	@grep -o -i OK test/t8_gtest_main.log | wc -l
 	@echo -e "\e[32m============================================================================\e[0m"	
 	
 

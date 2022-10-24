@@ -81,8 +81,8 @@ T8_EXTERN_C_BEGIN ();
  */
 int                 t8_common_within_levelset (t8_forest_t forest,
                                                t8_locidx_t ltreeid,
-                                               t8_element_t * element,
-                                               t8_eclass_scheme_c * ts,
+                                               t8_element_t *element,
+                                               t8_eclass_scheme_c *ts,
                                                t8_example_level_set_fn
                                                levelset, double band_width,
                                                double t, void *udata);
@@ -95,9 +95,10 @@ int                 t8_common_adapt_balance (t8_forest_t forest,
                                              t8_forest_t forest_from,
                                              t8_locidx_t which_tree,
                                              t8_locidx_t lelement_id,
-                                             t8_eclass_scheme_c * ts,
-                                             int num_elements,
-                                             t8_element_t * elements[]);
+                                             t8_eclass_scheme_c *ts,
+                                             const int is_family,
+                                             const int num_elements,
+                                             t8_element_t *elements[]);
 
 /** Adapt a forest along a given level-set function.
  * The user data of forest must be a pointer to a \a t8_example_level_set_struct_t.
@@ -110,9 +111,10 @@ int                 t8_common_adapt_level_set (t8_forest_t forest,
                                                t8_forest_t forest_from,
                                                t8_locidx_t which_tree,
                                                t8_locidx_t lelement_id,
-                                               t8_eclass_scheme_c * ts,
-                                               int num_elements,
-                                               t8_element_t * elements[]);
+                                               t8_eclass_scheme_c *ts,
+                                               const int is_family,
+                                               const int num_elements,
+                                               t8_element_t *elements[]);
 
 /** Real valued functions defined in t8_example_common_functions.h */
 
@@ -236,13 +238,20 @@ void                t8_flow_incomp_cube_flow (const double x[3], double t,
                                               double x_out[3]);
 
 /** 2d flow around a circle with radius R = 1 and
- * constant inflow with x-speed U = 1. */
+ * constant inflow with x-speed U = 1. 
+ * See https://doi.org/10.13140/RG.2.2.34714.11203 */
 void                t8_flow_around_circle (const double x[3], double t,
                                            double x_out[3]);
 
 void                t8_flow_stokes_flow_sphere_shell (const double x[3],
                                                       double t,
                                                       double x_out[3]);
+
+void                t8_flow_around_circle_with_angular_velocity (const double
+                                                                 x[3],
+                                                                 double t,
+                                                                 double
+                                                                 x_out[]);
 
 T8_EXTERN_C_END ();
 

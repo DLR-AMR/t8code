@@ -24,7 +24,7 @@
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest.h>
 
-t8_element_t *
+t8_element_t       *
 t8_forest_get_tree_element (t8_tree_t tree, t8_locidx_t elem_in_tree)
 {
   T8_ASSERT (tree != NULL);

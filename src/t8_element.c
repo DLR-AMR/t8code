@@ -23,7 +23,7 @@
 #include <t8_element.h>
 
 void
-t8_scheme_cxx_ref (t8_scheme_cxx_t * scheme)
+t8_scheme_cxx_ref (t8_scheme_cxx_t *scheme)
 {
   T8_ASSERT (scheme != NULL);
 
@@ -31,7 +31,7 @@ t8_scheme_cxx_ref (t8_scheme_cxx_t * scheme)
 }
 
 void
-t8_scheme_cxx_unref (t8_scheme_cxx_t ** pscheme)
+t8_scheme_cxx_unref (t8_scheme_cxx_t **pscheme)
 {
   t8_scheme_cxx_t    *scheme;
 

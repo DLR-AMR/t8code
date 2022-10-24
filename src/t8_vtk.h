@@ -33,8 +33,6 @@
 
 /* typedef and macros */
 
-/* TODO: TOPIDX is deprecated, remove it */
-#define T8_VTK_TOPIDX "Int32"
 #define T8_VTK_LOCIDX "Int32"
 /* TODO: Paraview has troubles with Int64, so we switch to Int32 and be careful.
  *       Investigate this further. See also vtk makro VTK_USE_64BIT_IDS */
@@ -88,7 +86,7 @@ T8_EXTERN_C_BEGIN ();
 int                 t8_write_pvtu (const char *filename, int num_procs,
                                    int write_tree, int write_rank,
                                    int write_level, int write_id,
-                                   int num_data, t8_vtk_data_field_t * data);
+                                   int num_data, t8_vtk_data_field_t *data);
 
 T8_EXTERN_C_END ();
 
