@@ -20,11 +20,6 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** file t8_forest_vtk.h
- */
-
-/* TODO: Document this file */
-
 #ifndef T8_FOREST_VTK_H
 #define T8_FOREST_VTK_H
 
@@ -34,7 +29,7 @@
 T8_EXTERN_C_BEGIN ();
 /* function declarations */
 
-/** Write the forest in .pvtu file format. Writes one .vtu file per
+/* Write the forest in .pvtu file format. Writes one .vtu file per
  * process and a meta .pvtu file.
  * This function uses the vtk library. t8code must be configured with
  * "--with-vtk" in order to use it.
@@ -54,18 +49,21 @@ T8_EXTERN_C_BEGIN ();
  * \return  True if successful, false if not (process local).
  * \note If t8code was not configured with vtk, use \ref t8_forest_vtk_write_file
  */
-int                 t8_forest_vtk_write_file_via_API (t8_forest_t forest,
+int                 t8_forest_vtk_write_file_via_API (const t8_forest_t
+                                                      forest,
                                                       const char *fileprefix,
-                                                      int write_treeid,
-                                                      int write_mpirank,
-                                                      int write_level,
-                                                      int write_element_id,
-                                                      int curved_flag,
-                                                      int num_data,
+                                                      const int write_treeid,
+                                                      const int write_mpirank,
+                                                      const int write_level,
+                                                      const int
+                                                      write_element_id,
+                                                      const int curved_flag,
+                                                      const int num_data,
+                                                      const
                                                       t8_vtk_data_field_t
                                                       *data);
 
-/** Write the forest in .pvtu file format. Writes one .vtu file per
+/* Write the forest in .pvtu file format. Writes one .vtu file per
  * process and a meta .pvtu file.
  * This function writes ASCII files and can be used when
  * t8code is not configure with "--with-vtk" and
@@ -85,15 +83,54 @@ int                 t8_forest_vtk_write_file_via_API (t8_forest_t forest,
  *                        must come first in the array.
  * \return  True if succesful, false if not (process local).
  */
-int                 t8_forest_vtk_write_file (t8_forest_t forest,
+
+int                 t8_forest_vtk_write_file (const t8_forest_t forest,
                                               const char *fileprefix,
-                                              int write_treeid,
-                                              int write_mpirank,
-                                              int write_level,
-                                              int write_element_id,
-                                              int write_ghosts,
-                                              int num_data,
-                                              t8_vtk_data_field_t *data);
+                                              const int write_treeid,
+                                              const int write_mpirank,
+                                              const int write_level,
+                                              const int write_element_id,
+                                              const int write_ghosts,
+                                              const int num_data,
+                                              const t8_vtk_data_field_t
+                                              *data);
+
+int                 t8_get_number_of_vtk_nodes (t8_element_shape_t eclass,
+                                                int curved_flag);
+
+/* If we want to write curved elements, we need to calculate 
+ * the reference coordinates. For the vertices(end points)
+ * of the elements, we can use t8_element_vertex_reference_coords 
+ * to get them. But for curved elements, we also need nodes at the 
+ * middle points of lines of elements. We get those coordinates by 
+ * adding the vertices and multiplying by 0.5.
+ * \param [in]  elem    The element.
+ * \param [in]  eclass  The element shape.
+ * \param [in]  scheme  The element class scheme.
+ * \param [in]  vertex  The vertex number. 
+ * \param [in]  coords  The array containing the coordinates of the reference node.
+ */
+void                t8_curved_element_get_reference_node_coords (const
+                                                                 t8_element_t
+                                                                 *elem,
+                                                                 const
+                                                                 t8_element_shape_t
+                                                                 eclass,
+                                                                 const
+                                                                 t8_eclass_scheme_c
+                                                                 *scheme,
+                                                                 const int
+                                                                 vertex,
+                                                                 double
+                                                                 *coords);
+
+/* lookup table for number of nodes for curved eclasses. */
+const int           t8_curved_eclass_num_nodes[T8_ECLASS_COUNT] =
+  { 1, 3, 8, 6, 20, 10, 15, 13 };
+
+/* lookup table for vtk types of curved elements */
+const int           t8_curved_eclass_vtk_type[T8_ECLASS_COUNT] =
+  { 1, 21, 23, 22, 25, 24, 26, 27 };
 
 T8_EXTERN_C_END ();
 

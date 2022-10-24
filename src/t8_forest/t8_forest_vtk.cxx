@@ -124,23 +124,13 @@ typedef int         (*t8_forest_vtk_cell_data_kernel) (t8_forest_t forest,
                                                        T8_VTK_KERNEL_MODUS
                                                        modus);
 
-#if T8_WITH_VTK
-/* lookup table for number of nodes for curved eclasses. */
-const int           t8_curved_eclass_num_nodes[T8_ECLASS_COUNT] =
-  { 1, 3, 8, 6, 20, 10, 15, 13 };
-
-/* lookup table for vtk types of curved elements */
-const int           t8_curved_eclass_vtk_type[T8_ECLASS_COUNT] =
-  { 1, 21, 23, 22, 25, 24, 26, 27 };
-#endif
-
 /* 
  * depending on whether we want to write curved or non-curved elements
  * we need the right number of points, so we choose the right lookup table
  */
-#if T8_WITH_VTK
-static int
-t8_get_number_of_vtk_nodes (t8_element_shape_t eclass, int curved_flag)
+int
+t8_get_number_of_vtk_nodes (const t8_element_shape_t eclass,
+                            const int curved_flag)
 {
   /* use the lookup table of the eclasses. */
   if (curved_flag) {
@@ -148,7 +138,6 @@ t8_get_number_of_vtk_nodes (t8_element_shape_t eclass, int curved_flag)
   }
   return t8_eclass_num_vertices[eclass];
 }
-#endif
 
 /* If we want to write curved elements, we need to calculate 
  * the reference coordinates. For the vertices(end points)
@@ -162,11 +151,11 @@ t8_get_number_of_vtk_nodes (t8_element_shape_t eclass, int curved_flag)
  * TODO: Add Pyramids when they are merged into the dev branch.
  * */
 #if T8_WITH_VTK
-static void
+void
 t8_curved_element_get_reference_node_coords (const t8_element_t *elem,
-                                             t8_element_shape_t eclass,
-                                             t8_eclass_scheme_c *scheme,
-                                             int vertex, double *coords)
+                                             const t8_element_shape_t eclass,
+                                             const t8_eclass_scheme_c *scheme,
+                                             const int vertex, double *coords)
 {
   double              vertex_coords[3] = { 0, 0, 0 };
   int                 i;
@@ -335,13 +324,14 @@ t8_curved_element_get_reference_node_coords (const t8_element_t *elem,
 #endif
 
 int
-t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix,
-                                  int write_treeid,
-                                  int write_mpirank,
-                                  int write_level,
-                                  int write_element_id,
-                                  int curved_flag,
-                                  int num_data, t8_vtk_data_field_t *data)
+t8_forest_vtk_write_file_via_API (const t8_forest_t forest,
+                                  const char *fileprefix,
+                                  const int write_treeid,
+                                  const int write_mpirank,
+                                  const int write_level,
+                                  const int write_element_id,
+                                  const int curved_flag, const int num_data,
+                                  const t8_vtk_data_field_t *data)
 {
 #if T8_WITH_VTK
   /*Check assertions: forest and fileprefix are not NULL and forest is commited */
@@ -351,16 +341,12 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix,
   T8_ASSERT (fileprefix != NULL);
 
   long int            point_id = 0;     /* The id of the point in the points Object. */
-  t8_locidx_t         ielement; /* The iterator over elements in a tree. */
-  t8_locidx_t         itree, ivertex;
   double              coordinates[3];
   double              vertex_coords[3] = { 0, 0, 0 };
   int                 elem_id = 0;
-  t8_locidx_t         num_elements;
   int                 freturn = 0;
   t8_gloidx_t         gtreeid;
-  t8_cmesh_t          cmesh;
-  int                 num_node;
+  int                 num_corners;
 
 /* Since we want to use different element types and a points Array and cellArray 
  * we have to declare these vtk objects. The cellArray stores the Elements.
@@ -387,30 +373,31 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix,
   /* 
    * The cellTypes Array stores the element types as integers(see vtk doc).
    */
-  num_elements = t8_forest_get_local_num_elements (forest);
+  const t8_locidx_t   num_elements =
+    t8_forest_get_local_num_elements (forest);
   int                *cellTypes = T8_ALLOC (int, num_elements);
 
   /*
-   * We need the vertex coords array to be of the 
-   * correct dim. Since it is always the same
-   * in one mesh, we take the dim of one element.
-   * We add 1 if we look at a vertext(dim=0) because 
-   * an array of size 0 is not allowed. 
-   * Then we allocate memory, because we do not know
-   * beforehand how many entries the array needs.
-   */
-
-  /*
-   * We have to define the vtkTypeInt64Array that hold 
+   * We have to define the t8_vtk_gloidx_array_type_t that hold 
    * metadata if wanted. 
    */
 
-  t8_vtk_gloidx_array_type_t *vtk_treeid = t8_vtk_gloidx_array_type_t::New ();
-  t8_vtk_gloidx_array_type_t *vtk_mpirank =
-    t8_vtk_gloidx_array_type_t::New ();
-  t8_vtk_gloidx_array_type_t *vtk_level = t8_vtk_gloidx_array_type_t::New ();
-  t8_vtk_gloidx_array_type_t *vtk_element_id =
-    t8_vtk_gloidx_array_type_t::New ();
+  if (write_treeid) {
+    t8_vtk_gloidx_array_type_t *vtk_treeid =
+      t8_vtk_gloidx_array_type_t::New ();
+  }
+  if (write_mpirank) {
+    t8_vtk_gloidx_array_type_t *vtk_mpirank =
+      t8_vtk_gloidx_array_type_t::New ();
+  }
+  if (write_level) {
+    t8_vtk_gloidx_array_type_t *vtk_level =
+      t8_vtk_gloidx_array_type_t::New ();
+  }
+  if (write_element_id) {
+    t8_vtk_gloidx_array_type_t *vtk_element_id =
+      t8_vtk_gloidx_array_type_t::New ();
+  }
 
 /*
  * We need the dataArray for writing double valued user defined data in the vtu files.
@@ -421,9 +408,12 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix,
   vtkDoubleArray    **dataArrays;
   dataArrays = T8_ALLOC (vtkDoubleArray *, num_data);
 
-  cmesh = t8_forest_get_cmesh (forest);
+  const t8_cmesh_t    cmesh = t8_forest_get_cmesh (forest);
 /* We iterate over all local trees*/
-  for (itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {
+  t8_element_t        element;
+  vtkSmartPointer < vtkCell > pvtkCell;
+  for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest);
+       itree++) {
 /* 
  * We get the current tree, the scheme for this tree
  * and the number of elements in this tree. We need the vertices of
@@ -440,13 +430,13 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix,
     /* We iterate over all elements in the tree */
     /* Compute the global tree id */
     gtreeid = t8_forest_global_tree_id (forest, itree);
-    for (ielement = 0; ielement < elems_in_tree; ielement++) {
-      t8_element_t       *element =
-        t8_forest_get_element_in_tree (forest, itree, ielement);
+    for (t8_locidx_t ielement = 0; ielement < elems_in_tree; ielement++) {
+      *element = t8_forest_get_element_in_tree (forest, itree, ielement);
       T8_ASSERT (element != NULL);
-      vtkSmartPointer < vtkCell > pvtkCell = NULL;
+      pvtkCell = NULL;
       t8_element_shape_t  element_shape = scheme->t8_element_shape (element);
-      num_node = t8_get_number_of_vtk_nodes (element_shape, curved_flag);
+      num_corners = t8_get_number_of_vtk_nodes (element_shape, curved_flag);
+
       /* depending on the element type we choose the correct vtk cell to insert points to */
       if (curved_flag == 0) {
         switch (element_shape) {
@@ -478,7 +468,9 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix,
           SC_ABORT_NOT_REACHED ();
         }
       }
-      else {                    /* curved_flag != 0 */
+
+      else {
+
         switch (element_shape) {
         case T8_ECLASS_VERTEX:
           pvtkCell = vertex;
@@ -510,7 +502,8 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix,
       }
 
       /* For each element we iterate over all points */
-      for (ivertex = 0; ivertex < num_node; ivertex++, point_id++) {
+      for (t8_locidx_t ivertex = 0; ivertex < num_corners;
+           ivertex++, point_id++) {
         /* Compute the vertex coordinates inside [0,1]^dim reference cube. */
         if (curved_flag) {
           t8_curved_element_get_reference_node_coords (element, element_shape,
@@ -543,7 +536,7 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix,
        * write_mpirank and write_element_id we also fill the corresponding
        * arrays with the data we want(treeid,mpirank,element_id).
        * To get the element id, we have to add the local id in the tree 
-       * plus theo
+       * plus the offset and the first local element id
        */
 
       /* *INDENT-OFF* */
@@ -593,28 +586,27 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix,
 
   vtkSmartPointer < vtkXMLPUnstructuredGridWriter > pwriterObj =
     vtkSmartPointer < vtkXMLPUnstructuredGridWriter >::New ();
-/*
- * Get/Set whether the appended data section is base64 encoded. 
- * If encoded, reading and writing will be slower, but the file 
- * will be fully valid XML and text-only. 
- * If not encoded, the XML specification will be violated, 
- * but reading and writing will be fast. The default is to do the encoding.
- * Documentation: https://vtk.org/doc/release/5.0/html/a02260.html#z3560_2
- * 
- * We set the filename of the pvtu file. The filenames of the vtu files
- * are given based on the name of the pvtu file and the process number.
- */
+  /*
+   * Get/Set whether the appended data section is base64 encoded. 
+   * If encoded, reading and writing will be slower, but the file 
+   * will be fully valid XML and text-only. 
+   * If not encoded, the XML specification will be violated, 
+   * but reading and writing will be fast. The default is to do the encoding.
+   * Documentation: https://vtk.org/doc/release/5.0/html/a02260.html#z3560_2
+   * 
+   * We set the filename of the pvtu file. The filenames of the vtu files
+   * are given based on the name of the pvtu file and the process number.
+   */
   pwriterObj->EncodeAppendedDataOff ();
   pwriterObj->SetFileName (mpifilename);
 
-/*
- * Since we want to write multiple files, the processes 
- * have to communicate. Therefore, we define the communicator
- * vtk_comm and set it as the communicator. 
- * We have to set a controller for the pwriterObj, 
- * therefore we define the controller vtk_mpi_ctrl.
- */
 #if T8_ENABLE_MPI
+  /* Since we want to write multiple files, the processes 
+   * have to communicate. Therefore, we define the communicator
+   * vtk_comm and set it as the communicator. 
+   * We have to set a controller for the pwriterObj, 
+   * therefore we define the controller vtk_mpi_ctrl.
+   */
   vtkSmartPointer < vtkMPICommunicator > vtk_comm =
     vtkSmartPointer < vtkMPICommunicator >::New ();
   vtkMPICommunicatorOpaqueComm vtk_opaque_comm (&forest->mpicomm);
@@ -626,16 +618,16 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix,
 
   pwriterObj->SetController (vtk_mpi_ctrl);
 #endif
-/*
- * We set the number of pieces as the number of mpi processes,
- * since we want to write a file for each process. We also
- * need to define a Start and EndPiece for the current
- * process. Then we can set the inputData for the writer:
- * We want to write the unstructured Grid, update the writer
- * and then write.
- * 
- * Note: We could write more than one file per process here, if desired.
- */
+  /*
+   * We set the number of pieces as the number of mpi processes,
+   * since we want to write a file for each process. We also
+   * need to define a Start and EndPiece for the current
+   * process. Then we can set the inputData for the writer:
+   * We want to write the unstructured Grid, update the writer
+   * and then write.
+   * 
+   * Note: We could write more than one file per process here, if desired.
+   */
   pwriterObj->SetNumberOfPieces (forest->mpisize);
   pwriterObj->SetStartPiece (forest->mpirank);
   pwriterObj->SetEndPiece (forest->mpirank);
@@ -674,8 +666,8 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix,
       dataArrays[idata]->SetName (data[idata].description);     /* Set the name of the array */
       dataArrays[idata]->SetNumberOfTuples (num_elements);      /* We want number of tuples=number of elements */
       dataArrays[idata]->SetNumberOfComponents (3);     /* Each tuples has 3 values */
-      dataArrays[idata]->SetVoidArray (data[idata].data, num_elements * 3, 1);  /*  */
-      unstructuredGrid->GetCellData ()->SetVectors (dataArrays[idata]); /*  */
+      dataArrays[idata]->SetVoidArray (data[idata].data, num_elements * 3, 1);
+      unstructuredGrid->GetCellData ()->SetVectors (dataArrays[idata]);
     }
   }
 
