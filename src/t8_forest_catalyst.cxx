@@ -56,7 +56,7 @@
 #endif
 #include <t8.h>
 #include <t8_forest.h>
-#include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
 /*T8_EXTERN_C_BEGIN ();*/
