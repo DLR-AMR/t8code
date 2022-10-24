@@ -615,7 +615,7 @@ int                 t8_element_root_len (t8_eclass_scheme_c *ts,
 void                t8_element_vertex_reference_coords (t8_eclass_scheme_c
                                                         *ts,
                                                         const t8_element_t *t,
-                                                        int vertex,
+                                                        const int vertex,
                                                         double coords[]);
 
 /* TODO: deactivate */

@@ -579,7 +579,8 @@ public:
    *                      whose entries will be filled with the coordinates of \a vertex.
    */
   virtual void        t8_element_vertex_reference_coords (const t8_element_t
-                                                          *t, int vertex,
+                                                          *t,
+                                                          const int vertex,
                                                           double coords[]);
 
   /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
