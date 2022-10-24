@@ -288,7 +288,7 @@ t8_dtri_ancestor (const t8_dtri_t *t, int level, t8_dtri_t *ancestor)
 
 /* Compute the coordinates of a given vertex of a triangle/tet */
 void
-t8_dtri_compute_coords (const t8_dtri_t *t, int vertex,
+t8_dtri_compute_coords (const t8_dtri_t *t, const int vertex,
                         t8_dtri_coord_t coordinates[T8_DTRI_DIM])
 {
   t8_dtri_type_t      type;
@@ -336,7 +336,7 @@ t8_dtri_compute_coords (const t8_dtri_t *t, int vertex,
 }
 
 void
-t8_dtri_compute_ref_coords (const t8_dtri_t *t, int vertex,
+t8_dtri_compute_ref_coords (const t8_dtri_t *t, const int vertex,
                             double coordinates[T8_DTRI_DIM])
 {
   int                 coords_int[T8_DTRI_DIM];

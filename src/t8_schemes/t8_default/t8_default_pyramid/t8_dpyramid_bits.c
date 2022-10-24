@@ -1718,7 +1718,7 @@ t8_dpyramid_compute_coords (const t8_dpyramid_t *p, const int vertex,
 
 void
 t8_dpyramid_vertex_reference_coords (const t8_dpyramid_t *elem,
-                                     int vertex, double coords[])
+                                     const int vertex, double coords[])
 {
   int                 coords_int[3];
   T8_ASSERT (0 <= vertex && vertex < T8_DPYRAMID_CORNERS);
