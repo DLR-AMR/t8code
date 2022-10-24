@@ -30,7 +30,7 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx>
 #include <t8_geometry/t8_geometry_helpers.h>
-#include <t8_forest_vtk.h>
+#include <t8_forest/t8_forest_vtk.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 
 #if T8_WITH_OCC
