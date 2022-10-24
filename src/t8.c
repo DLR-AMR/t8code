@@ -166,3 +166,9 @@ t8_sc_array_index_locidx (sc_array_t *array, t8_locidx_t it)
 
   return array->array + array->elem_size * (size_t) it;
 }
+
+const char         *
+t8_get_version_string ()
+{
+  return T8_PACKAGE_STRING;
+}

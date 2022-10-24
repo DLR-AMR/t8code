@@ -413,6 +413,7 @@ public:
    * \return              The face number of the face of \a elem that coincides
    *                      with \a face.
    */
+
   virtual int         t8_element_extrude_face (const t8_element_t *face,
                                                const t8_eclass_scheme_c
                                                *face_scheme,
@@ -430,6 +431,7 @@ public:
    * If \a elem is of class T8_ECLASS_VERTEX, then \a boundary must be NULL
    * and will not be modified.
    */
+
   virtual void        t8_element_boundary_face (const t8_element_t *elem,
                                                 int face,
                                                 t8_element_t *boundary,
@@ -444,6 +446,7 @@ public:
    *                       that shares a face with \a face.
    * \param [in] level     The level, at which the first descendant is constructed
    */
+
   virtual void        t8_element_first_descendant_face (const t8_element_t
                                                         *elem, int face,
                                                         t8_element_t
@@ -458,6 +461,7 @@ public:
    *                       that shares a face with \a face.
    * \param [in] level     The level, at which the last descendant is constructed
    */
+
   virtual void        t8_element_last_descendant_face (const t8_element_t
                                                        *elem, int face,
                                                        t8_element_t
@@ -469,11 +473,13 @@ public:
    *        Here the boundary elements are of different eclasses, so we cannot
    *        store them in an array...
    */
+
   /** Construct all codimension-one boundary elements of a given element.
    * \param [in] elem     The input element.
    * \param [in] face     A face of \a elem.
    * \return              True if \a face is a subface of the element's root element.
    */
+
   virtual void        t8_element_boundary (const t8_element_t *elem,
                                            int min_dim, int length,
                                            t8_element_t **boundary) = 0;
@@ -541,6 +547,7 @@ public:
    *                      of the given level.
    * \param [in] level    The level, at which the descendant is computed.
    */
+
   virtual void        t8_element_first_descendant (const t8_element_t *elem,
                                                    t8_element_t *desc,
                                                    int level) = 0;

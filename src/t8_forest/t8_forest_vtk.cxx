@@ -124,22 +124,12 @@ typedef int         (*t8_forest_vtk_cell_data_kernel) (t8_forest_t forest,
                                                        T8_VTK_KERNEL_MODUS
                                                        modus);
 
-#if T8_WITH_VTK
-/* lookup table for number of nodes for curved eclasses. */
-const int           t8_curved_eclass_num_nodes[T8_ECLASS_COUNT] =
-  { 1, 3, 8, 6, 20, 10, 15, 13 };
-
-/* lookup table for vtk types of curved elements */
-const int           t8_curved_eclass_vtk_type[T8_ECLASS_COUNT] =
-  { 1, 21, 23, 22, 25, 24, 26, 27 };
-#endif
-
 /* 
  * depending on whether we want to write curved or non-curved elements
  * we need the right number of points, so we choose the right lookup table
  */
 #if T8_WITH_VTK
-static int
+int
 t8_get_number_of_vtk_nodes (t8_element_shape_t eclass, int curved_flag)
 {
   /* use the lookup table of the eclasses. */
@@ -161,6 +151,7 @@ t8_get_number_of_vtk_nodes (t8_element_shape_t eclass, int curved_flag)
  * formulas. For more information look into the vtk documentation.
  * TODO: Add Pyramids when they are merged into the dev branch.
  * */
+
 #if T8_WITH_VTK
 static void
 t8_curved_element_get_reference_node_coords (const t8_element_t *elem,
@@ -360,7 +351,7 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix,
   int                 freturn = 0;
   t8_gloidx_t         gtreeid;
   t8_cmesh_t          cmesh;
-  int                 num_node;
+  int                 num_corners;
 
 /* Since we want to use different element types and a points Array and cellArray 
  * we have to declare these vtk objects. The cellArray stores the Elements.
@@ -446,7 +437,8 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix,
       T8_ASSERT (element != NULL);
       vtkSmartPointer < vtkCell > pvtkCell = NULL;
       t8_element_shape_t  element_shape = scheme->t8_element_shape (element);
-      num_node = t8_get_number_of_vtk_nodes (element_shape, curved_flag);
+      num_corners = t8_get_number_of_vtk_nodes (element_shape, curved_flag);
+
       /* depending on the element type we choose the correct vtk cell to insert points to */
       if (curved_flag == 0) {
         switch (element_shape) {
@@ -478,7 +470,9 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix,
           SC_ABORT_NOT_REACHED ();
         }
       }
-      else {                    /* curved_flag != 0 */
+
+      else {
+
         switch (element_shape) {
         case T8_ECLASS_VERTEX:
           pvtkCell = vertex;
@@ -510,7 +504,7 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix,
       }
 
       /* For each element we iterate over all points */
-      for (ivertex = 0; ivertex < num_node; ivertex++, point_id++) {
+      for (ivertex = 0; ivertex < num_corners; ivertex++, point_id++) {
         /* Compute the vertex coordinates inside [0,1]^dim reference cube. */
         if (curved_flag) {
           t8_curved_element_get_reference_node_coords (element, element_shape,

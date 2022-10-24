@@ -257,7 +257,6 @@ void                t8_element_children (t8_eclass_scheme_c *ts,
  */
 int                 t8_element_child_id (t8_eclass_scheme_c *ts,
                                          const t8_element_t *elem);
-
 /** Compute the ancestor id of an element, that is the child id
  * at a given level.
  * \param [in] ts       Implementation of a class scheme.

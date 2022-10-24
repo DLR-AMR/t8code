@@ -2,7 +2,6 @@
 # Non-recursive Makefile.am in src/t8_schemes/t8_default
 # Included from toplevel directory
 
-
 libt8_installed_headers_schemes_default += \
   src/t8_schemes/t8_default/t8_default_cxx.hxx \
   src/t8_schemes/t8_default/t8_default_c_interface.h

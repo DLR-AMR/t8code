@@ -98,6 +98,7 @@ T8_EXTERN_C_BEGIN ();
  * \return        A committed cmesh holding the mesh of dimension \a dim in the
  *                specified .msh file.
  */
+
 /* *INDENT-OFF* */
 t8_cmesh_t
 t8_cmesh_from_msh_file (const char *fileprefix, int partition,
