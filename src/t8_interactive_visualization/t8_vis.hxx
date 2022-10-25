@@ -108,7 +108,7 @@ public:
   t8_interactive_vis_vtk (vtkSmartPointer < vtkUnstructuredGrid >
                             interaction_object, sc_MPI_Comm comm,
                             const char *path)
-  :8_interactive_vis (interaction_object, comm)
+  :t8_interactive_vis (interaction_object, comm)
   {
     strcpy (filepath, path);
   }
