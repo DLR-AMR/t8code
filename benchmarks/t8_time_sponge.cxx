@@ -215,7 +215,7 @@ t8_construct_sponge (int end_level, t8_eclass_t eclass, int remove, int output, 
   int                 level;
   int                 start_level;
   int                 procs_sent;
-  int                 runs = 10;
+  int                 runs = 5;
 
   sc_stats_init (&times[0], "refine");
   sc_stats_init (&times[1], "refine_partition");

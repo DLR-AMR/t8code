@@ -108,7 +108,7 @@ t8_carve_balls (int start_level, int end_level, int eclass_int, int output, int 
   sc_statinfo_t       times[5];
   char                vtuname[BUFSIZ];
   int                 level;
-  int                 runs = 10;
+  int                 runs = 5;
   int                 procs_sent;
   int64_t             num_elements = INT64_MAX;
 
