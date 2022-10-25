@@ -31,54 +31,7 @@
 #include <vtkMPICommunicator.h>
 #include <vtkMPI.h>
 
-void
-t8_interactive_vis_init (t8_interactive_vis_t ** pvis_handler)
-{
-  T8_ASSERT (pvis_handler != NULL);
-  t8_interactive_vis_t *vis_handler = T8_ALLOC (t8_interactive_vis_t, 1);
-  t8_forest_init (&vis_handler->forest);
-  vis_handler->refinement_lvl = 0;
-  vis_handler->data_has_been_read = 0;
-  /* Is this a good value to intitialize the communicator? */
-  vis_handler->comm = sc_MPI_COMM_NULL;
-  vis_handler->filepath = T8_ALLOC (char, BUFSIZ);
-  vis_handler->vtkGrid = NULL;
-  *pvis_handler = vis_handler;
-  t8_debugf ("[D] successfully initialized vis_handler\n");
-}
-
-void
-t8_interactive_vis_set_filepath (t8_interactive_vis_t * vis_handler,
-                                 const char *filepath)
-{
-  strcpy (vis_handler->filepath, filepath);
-  t8_debugf ("[D] successfully set the filepath\n");
-}
-
-void
-t8_interactive_vis_set_MPI_comm (t8_interactive_vis_t * vis_handler,
-                                 sc_MPI_Comm comm)
-{
-  vis_handler->comm = comm;
-  t8_debugf ("[D] successfully set the Communicator\n");
-}
-
-void
-t8_interactive_vis_set_refinement (t8_interactive_vis_t * vis_handler,
-                                   const int level)
-{
-  vis_handler->refinement_lvl = level;
-  t8_debugf ("[D] successfully set the refinement level\n");
-}
-
-void
-t8_interactive_vis_set_vtkGrid (t8_interactive_vis_t * vis_handler,
-                                vtkSmartPointer < vtkUnstructuredGrid > grid)
-{
-  vis_handler->vtkGrid = grid;
-  t8_debugf ("[D] successfully set the grid\n");
-}
-
+#if 0
 int
 t8_interactive_vis_adapt_callback (t8_forest_t forest,
                                    t8_forest_t forest_from,
@@ -152,4 +105,5 @@ t8_interactive_vis_destroy (t8_interactive_vis_t ** pvis_handler)
   *pvis_handler = NULL;
   t8_debugf ("[D] destroyed the vis handler\n");
 }
+#endif
 #endif

@@ -19,10 +19,13 @@
   along with t8code; if not, write to the Free Software Foundation, Inc.,
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
-#ifndef T8_VIS_H
-#define T8_VIS_H
+#ifndef T8_VIS_HXX
+#define T8_VIS_HXX
 
 #include <t8_cmesh_vtk_reader.hxx>
+#include <t8_forest/t8_forest_vtk_helper.hxx>
+#include <t8_cmesh/t8_cmesh_vtk_helper.hxx>
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_cmesh.h>
 #include <t8_forest.h>
 #include <t8.h>
@@ -33,29 +36,135 @@
 #endif
 #include <vtkUnstructuredGrid.h>
 
-T8_EXTERN_C_BEGIN ();
-
-typedef struct t8_interactive_vis
-{
+//T8_EXTERN_C_BEGIN ();
+template < class vis_object > class t8_interactive_vis {
+protected:
   /* Flag, if we have already read the Data from a file
    * non-zero, if the data has been read */
-  int                 data_has_been_read;
+  int                 data_has_been_read = -1;
 
   /* The refinement level of the forest. */
-  int                 refinement_lvl;
+  int                 refinement_lvl = -1;
 
-  /* cmesh representing the data */
-  t8_forest_t         forest;
+  /* forest representing the data */
+  t8_forest_t         forest = NULL;
 
-  /* Name of the file to read. */
-  char               *filepath;
+  /* Pointer to the object that will be used to transfer data between
+     an external library and t8code. */
+  vis_object          interaction_object;
 
-  vtkUnstructuredGrid *vtkGrid;
   /* The communicator used. */
-  sc_MPI_Comm         comm;
-} t8_interactive_vis_t;
+  sc_MPI_Comm         comm = sc_MPI_COMM_NULL;
 
-/**
+public:
+  /**
+   * Base constructor with no arguments.
+   */
+t8_interactive_vis ():t8_interactive_vis (-1, "Invalid") {
+  }
+
+  /**
+   * Basic constructor that sets the source, the communicator and
+   * initializes the forest.
+   * 
+   * \param interaction_object    The object that transfers data between t8code and another library
+   * \param comm                  The used communicator.
+   */
+  t8_interactive_vis (vis_object interaction_object, sc_MPI_Comm comm)
+:  interaction_object (interaction_object), comm (comm) {
+    t8_forest_init (&forest);
+  }
+
+  /**
+   * The destructor.  Dereferences the forest.
+   */
+  virtual ~ t8_interactive_vis () {
+    t8_forest_unref (&forest);
+  }
+
+  /**
+   * This functions implements how the data given by source can be translated
+   * into a forest. 
+   */
+  virtual void        t8_interactive_vis_source_to_forest () = 0;
+
+  /**
+   * Set a uniform refinment of the forest.  
+   * 
+   * \param[in, out] vis_hanlder       An initialized vis_handler.
+   * \param[in] level             The level we want to refine the forest to.
+   */
+  void                t8_interactive_vis_set_refinement (const int level);
+};
+
+/* *INDENT-OFF* */
+class t8_interactive_vis_vtk:public t8_interactive_vis <vtkSmartPointer < vtkUnstructuredGrid >> {
+protected:
+  /*Char-pointer with the filepath to the source. */
+  char *filepath = T8_ALLOC (char, BUFSIZ);
+
+public:
+  
+  t8_interactive_vis_vtk (vtkSmartPointer < vtkUnstructuredGrid >
+                            interaction_object, sc_MPI_Comm comm,
+                            const char *path)
+  :8_interactive_vis (interaction_object, comm)
+  {
+    strcpy (filepath, path);
+  }
+  
+
+  virtual ~t8_interactive_vis_vtk ()
+  {
+    T8_FREE (filepath);
+  }
+  /* *INDENT-ON* */
+
+void
+t8_interactive_vis_source_to_forest ()
+{
+  /* TODO: Currently done twice, extrad t8_read_unstructured from t8_cmesh_read */
+  const int           successful_read =
+    t8_read_unstructured (filepath, interaction_object, 1, 0, comm);
+  t8_cmesh_t          cmesh;
+  t8_cmesh_t          cmesh_in;
+  t8_cmesh_init (&cmesh_in);
+  t8_cmesh_init (&cmesh);
+  if (successful_read) {
+    t8_unstructured_to_cmesh (interaction_object, 1, 0, cmesh_in, comm);
+    t8_cmesh_commit (cmesh_in, comm);
+    t8_cmesh_set_derive (cmesh, cmesh_in);
+    t8_cmesh_set_partition_uniform (cmesh, 0, t8_scheme_new_default_cxx ());
+  }
+  if (cmesh != NULL) {
+    t8_cmesh_commit (cmesh, comm);
+  }
+  else {
+    t8_global_errorf ("Could not commit cmesh.\n");
+  }
+  t8_forest_set_cmesh (forest, cmesh, comm);
+  t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
+  t8_forest_commit (forest);
+}
+
+long int
+t8_interactive_vis_get_num_cells ()
+{
+  return interaction_object->GetNumberOfCells ();
+}
+
+void
+t8_interactive_vis_write ()
+{
+  /* TODO: Currently no data-writing. Enable writing of data. */
+  t8_forest_to_vtkUnstructuredGrid (forest, interaction_object,
+                                    1, 1, 1, 1, 0, 0, NULL);
+  t8_forest_write_vtk (forest, "vis_handler");
+}
+};
+
+#if 0
+  /**
  * Initalize an interactive visualization handler.
  * 
  * \param [in, out] pvis_handler The visualization handler to initialize.
@@ -87,16 +196,6 @@ void                t8_interactive_vis_set_vtkGrid (t8_interactive_vis_t *
                                                     grid);
 
 /**
- * Set a uniform refinment of the forest.  
- * 
- * \param[in, out] vis_hanlder       An initialized vis_handler.
- * \param[in] level             The level we want to refine the forest to.
- */
-void                t8_interactive_vis_set_refinement (t8_interactive_vis_t *
-                                                       vis_hanlder,
-                                                       const int level);
-
-/**
  * Set the MPI communicator to use
  * 
  * \param[in, out] vis_handler  An initialized vis_handler. Its communicator will be set to \a comm
@@ -123,8 +222,10 @@ void                t8_interactive_vis_update_vtkGrid (t8_interactive_vis *
 void                t8_interactive_vis_destroy (t8_interactive_vis_t **
                                                 pvis_handler);
 
-T8_EXTERN_C_END ();
+#endif
+
+//T8_EXTERN_C_END ();
 
 #endif /* T8_WITH_VTK */
 
-#endif /* !T8_VIS_H */
+#endif /* !T8_VIS_HXX */

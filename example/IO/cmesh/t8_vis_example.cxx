@@ -30,21 +30,20 @@ t8_forest_use_vis_handler (const char *vtk_file, sc_MPI_Comm comm,
                            const int num_keys, const int partition)
 {
 #if T8_WITH_VTK
-  t8_interactive_vis_t *vis_pipeline;
+
   vtkSmartPointer < vtkUnstructuredGrid > grid =
     vtkSmartPointer < vtkUnstructuredGrid >::New ();
-  t8_interactive_vis_init (&vis_pipeline);
-  t8_interactive_vis_set_filepath (vis_pipeline, vtk_file);
-  t8_interactive_vis_set_MPI_comm (vis_pipeline, comm);
-  t8_interactive_vis_set_vtkGrid (vis_pipeline, grid);
-  t8_interactive_vis_update_vtkGrid (vis_pipeline);
+  t8_interactive_vis_vtk *test =
+    new t8_interactive_vis_vtk (grid, comm, vtk_file);
+  test->t8_interactive_vis_source_to_forest ();
+  test->t8_interactive_vis_write ();
   t8_debugf ("[D] have read: %lli cells\n",
-             vis_pipeline->vtkGrid->GetNumberOfCells ());
-  t8_interactive_vis_destroy (&vis_pipeline);
+             test->t8_interactive_vis_get_num_cells ());
 #else
   t8_global_errorf
     ("Warning: t8code is not linked againt vtk library. Link t8code with the vtk library to enable this example.\n");
 #endif
+  test->~t8_interactive_vis_vtk ();
 }
 
 int
