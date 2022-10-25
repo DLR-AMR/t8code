@@ -33,8 +33,9 @@ t8_linear_face_descendant (t8_element_t *elem, t8_element_t *tmp,
                            t8_element_t *test, t8_eclass_scheme_c *ts,
                            int maxlvl)
 {
-  int                 level = ts->t8_element_level (elem),
-    type = ((t8_dpyramid_t *) elem)->type, child_id, i, j, k, num_faces;
+  int                 level = ts->t8_element_level (elem);
+  int                 type = ((t8_dpyramid_t *) elem)->pyramid.type;
+  int                 child_id, i, j, k, num_faces;
   if (type < 6) {
     num_faces = T8_DTET_FACES;
   }
@@ -104,7 +105,7 @@ t8_recursive_face_desendant (t8_element_t *elem, t8_element_t *test,
   else {
     num_faces = T8_DTET_FACES;
   }
-  type = ((t8_dpyramid_t *) elem)->type;
+  type = ((t8_dpyramid_t *) elem)->pyramid.type;
   /* Check face descendants from current-level + 1 to given maximum level */
   for (i = level + 1; i < maxlvl; i++) {
     for (j = 0; j < num_faces; j++) {

@@ -60,6 +60,7 @@ t8_default_scheme_pyramid_c::t8_element_init (int length, t8_element_t *elem,
       t8_dpyramid_init_linear_id (pyramid + i, 0, 0);
       T8_ASSERT (t8_dpyramid_is_valid (pyramid + i));
     }
+    pyramid->pyramid.type = 6;
   }
 #endif
 }
@@ -420,9 +421,9 @@ t8_default_scheme_pyramid_c::t8_element_anchor (const t8_element_t *elem,
   t8_dpyramid_t      *pyra = (t8_dpyramid_t *) elem;
 
   T8_ASSERT (t8_element_is_valid (elem));
-  anchor[0] = pyra->x;
-  anchor[1] = pyra->y;
-  anchor[2] = pyra->z;
+  anchor[0] = pyra->pyramid.x;
+  anchor[1] = pyra->pyramid.y;
+  anchor[2] = pyra->pyramid.z;
 }
 
 void
@@ -451,7 +452,8 @@ void
 t8_default_scheme_pyramid_c::t8_element_vertex_reference_coords (const
                                                                  t8_element_t
                                                                  *elem,
-                                                                 int vertex,
+                                                                 const int
+                                                                 vertex,
                                                                  double
                                                                  coords[])
 {
@@ -475,9 +477,10 @@ t8_default_scheme_pyramid_c::t8_element_general_function (const t8_element_t
 {
   T8_ASSERT (outdata != NULL);
   T8_ASSERT (t8_element_is_valid (elem));
-  *((int8_t *) outdata) = ((const t8_dpyramid_t *) elem)->type;
+  *((int8_t *) outdata) = ((const t8_dpyramid_t *) elem)->pyramid.type;
   /* Safety check to catch datatype conversion errors */
-  T8_ASSERT (*((int8_t *) outdata) == ((const t8_dpyramid_t *) elem)->type);
+  T8_ASSERT (*((int8_t *) outdata) ==
+             ((const t8_dpyramid_t *) elem)->pyramid.type);
 }
 
 #ifdef T8_ENABLE_DEBUG

@@ -1,6 +1,5 @@
 sc/
 p4est/
-config/
 build-aux/
 
 .deps/

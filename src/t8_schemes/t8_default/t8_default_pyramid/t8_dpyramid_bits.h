@@ -406,7 +406,8 @@ void                t8_dpyramid_successor (const t8_dpyramid_t *elem,
  * 		     will be filled with the reference coordinates of the vertex.
  */
 void                t8_dpyramid_vertex_reference_coords (const t8_dpyramid_t
-                                                         *elem, int vertex,
+                                                         *elem,
+                                                         const int vertex,
                                                          double coords[]);
 
 /**
