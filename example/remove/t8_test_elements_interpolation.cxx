@@ -116,7 +116,12 @@ t8_forest_replace (t8_forest_t forest_old,
     (struct t8_adapt_data *) t8_forest_get_user_data (forest_new);
   const struct t8_adapt_data *adapt_data_old =
     (const struct t8_adapt_data *) t8_forest_get_user_data (forest_old);
-  
+
+  for (t8_locidx_t t = 0; t < which_tree; t++)
+  {
+    first_incoming += t8_forest_get_tree_num_elements (forest_new, t);
+    first_outgoing += t8_forest_get_tree_num_elements (forest_old, t);
+  }
 
   if (refine == 0) {
     T8_ASSERT (num_incoming == num_outgoing && num_incoming == 1);
@@ -137,6 +142,10 @@ t8_forest_replace (t8_forest_t forest_old,
   else {
     T8_ASSERT (false);
   }
+
+  t8_debugf("[IL] old %lf, new %lf \n ",
+    adapt_data_old->element_data[first_outgoing], 
+    adapt_data_new->element_data[first_incoming]);
 
 }
 
@@ -183,7 +192,6 @@ t8_output_data (t8_forest_t forest,
     element_data[ielem] = data->element_data[ielem];
   }
 
-
   {
     /* To write user defined data, we need to extended output function t8_forest_vtk_write_file
      * from t8_forest_vtk.h. Despite writin user data, it also offers more control over which 
@@ -208,33 +216,33 @@ t8_test_linear_interpolation() {
   t8_scheme_cxx_t    *scheme;
   double             *data, *data_adapt;
 
+  double              radius = 0.85;
   struct t8_adapt_data adapt_data = {
-    {0.5, 0.5, 0},
-    0.3,
+    {0, 0, 0},
+    radius,
     NULL
   };
 
   scheme = t8_scheme_new_default_cxx ();
+  level = 4;
 
   /* Construct a cmesh */
-  cmesh = t8_cmesh_new_hypercube (T8_ECLASS_QUAD, sc_MPI_COMM_WORLD, 0, 0, 0);
+  cmesh = t8_cmesh_new_hypercube (T8_ECLASS_PYRAMID, sc_MPI_COMM_WORLD, 0, 0, 0);
 
-  /* Compute the first level, such that no process is empty */
-  level = t8_forest_min_nonempty_level (cmesh, scheme);
-  level = SC_MAX (level, 5);
-
-  t8_cmesh_ref (cmesh);
   forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
-  /* Set user data*/
+
+  /* Set user data */
   forest = t8_adapt_forest (forest, t8_adapt_remove, 0, 0, 0, &adapt_data);
   /* Build initial data array and set data for the local elements. */
   data = T8_ALLOC (double, t8_forest_get_local_num_elements (forest));
   for (t8_locidx_t i = 0; i < t8_forest_get_local_num_elements (forest); i++) {
     data[i] = 1;
   }
+
+  /* print forest */
   adapt_data = {
-    {0.5, 0.5, 0},
-    0.3,
+    {0, 0, 0},
+    radius,
     data
   };
   forest = t8_adapt_forest (forest, t8_adapt_non, 0, 0, 0, &adapt_data);
@@ -242,15 +250,11 @@ t8_test_linear_interpolation() {
     "/home/ioannis/VBshare/paraview_export/t8_test_interpolation_forest");
  
 
-
-
-
-
   /* Coarse forest */
   t8_forest_ref (forest);
   struct t8_adapt_data adapt_data_adapt = {
-    {0.5, 0.5, 0},
-    0.3,
+    {0, 0, 0},
+    radius,
     NULL
   };
   forest_adapt = t8_adapt_forest (forest, t8_adapt_coarse, 0, 0, 0, &adapt_data_adapt);
@@ -260,11 +264,13 @@ t8_test_linear_interpolation() {
   /* Interpolate element data */
   data_adapt = T8_ALLOC (double, t8_forest_get_local_num_elements (forest_adapt));
   adapt_data_adapt = {
-    {0.5, 0.5, 0},
-    0.3,
+    {0, 0, 0},
+    radius,
     data_adapt
   };
+
   t8_forest_iterate_replace (forest_adapt, forest, t8_forest_replace);
+
   t8_output_data (forest_adapt, &adapt_data_adapt, 
     "/home/ioannis/VBshare/paraview_export/t8_test_interpolation_forest_adapt");
     
@@ -273,7 +279,6 @@ t8_test_linear_interpolation() {
   T8_FREE (data_adapt);
   t8_forest_unref (&forest);
   t8_forest_unref (&forest_adapt);
-  t8_cmesh_destroy (&cmesh);
 }
 
 
