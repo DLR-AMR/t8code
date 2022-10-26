@@ -1610,7 +1610,6 @@ t8_cmesh_debug_print_trees (const t8_cmesh_t cmesh, sc_MPI_Comm comm)
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   if (t8_cmesh_is_partitioned (cmesh)) {
     /* The cmesh is partitioned */
-    /* Use Barrier to prevent mixed up output. */
     int                 rank;
     int                 size;
     int                 mpiret;
