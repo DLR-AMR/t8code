@@ -1568,6 +1568,7 @@ t8_cmesh_coords_axb (const double *coords_in, double *coords_out,
   }
 }
 
+#ifdef T8_ENABLE_DEBUG
 /**
  * \warning This function is only available in debug-modus and should only 
  * be used in debug-modus.
@@ -1579,7 +1580,6 @@ t8_cmesh_coords_axb (const double *coords_in, double *coords_out,
 static void
 t8_cmesh_print_local_trees (const t8_cmesh_t cmesh)
 {
-#ifdef T8_ENABLE_DEBUG
   const t8_locidx_t   num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
   for (t8_locidx_t itree = 0; itree < num_local_trees; itree++) {
     double             *vertices = t8_cmesh_get_tree_vertices (cmesh, itree);
@@ -1597,11 +1597,8 @@ t8_cmesh_print_local_trees (const t8_cmesh_t cmesh)
     }
     t8_debugf ("\n");
   }
-#else
-  t8_global_errorf
-    ("Do not call t8_cmesh_print_local_trees if t8code is not compiled with --enable-debug.\n");
-#endif
 }
+#endif
 
 void
 t8_cmesh_debug_print_trees (const t8_cmesh_t cmesh, sc_MPI_Comm comm)
