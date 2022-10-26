@@ -7,7 +7,7 @@ bin_PROGRAMS += \
   benchmarks/t8_time_forest_partition \
   benchmarks/t8_time_prism_adapt \
   benchmarks/t8_time_sponge \
-  benchmarks/t8_time_carved_balls \\
+  benchmarks/t8_time_carved_balls \
   benchmarks/t8_time_carved_ball
 #  benchmarks/t8_time_new_refine \
 #  benchmarks/t8_time_refine_type03 
