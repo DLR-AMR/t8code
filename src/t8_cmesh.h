@@ -644,7 +644,7 @@ void                t8_cmesh_print_profile (t8_cmesh_t cmesh);
 
 /** Return a pointer to the vertex coordinates of a tree.
  * \param [in]    cmesh         The cmesh.
- * \param [in]    ltreeid       The id of a loca tree.
+ * \param [in]    ltreeid       The id of a local tree.
  * \return    If stored, a pointer to the vertex coordinates of \a tree.
  *            If no coordinates for this tree are found, NULL.
  */
@@ -769,6 +769,17 @@ void                t8_cmesh_new_translate_vertices_to_attributes (t8_locidx_t
                                                                    *attr_vertices,
                                                                    int
                                                                    num_vertices);
+
+/**
+ * \warning This function is only available in debug-modus and should only 
+ * be used in debug-modus.
+ * 
+ * Prints the vertices of each tree of each process
+ * 
+ * \param[in] cmesh   Source-cmesh, which trees get printed.
+ */
+void                t8_cmesh_debug_print_trees (const t8_cmesh_t cmesh,
+                                                sc_MPI_Comm comm);
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_H */
