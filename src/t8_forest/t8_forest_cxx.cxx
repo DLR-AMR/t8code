@@ -105,34 +105,36 @@ t8_forest_is_incomplete_family (t8_forest_t forest,
       /* Level_current-1 is level of element_parent_current */
       T8_ASSERT (level <= level_current-1);
       if(level == level_current-1) {
-        family_size = 0;
+        tscheme->t8_element_destroy (1, &element_parent_current);
+        tscheme->t8_element_destroy (1, &element_compare);
+        return 0;
       }
     }
   }
 
   /* Reduce family_size to the number of family members that directly follow each other.*/
-  if (family_size > 1) {
-    for (family_iter = 1; family_iter < family_size ; family_iter++) {
-      level = tscheme->t8_element_level (elements[family_iter]);
-      /* Quick check by level. Not mandatory. */
-      if (level != level_current) {
-        family_size = family_iter;
-        break;
-      }
-      tscheme->t8_element_parent (elements[family_iter], element_compare);
-      /* If the levels are equal, check if the parents are too. */
-      if (0 != tscheme->t8_element_compare (element_parent_current, element_compare)) {
-        family_size = family_iter;
-        break;
-      }
+
+  for (family_iter = 1; family_iter < family_size ; family_iter++) {
+    level = tscheme->t8_element_level (elements[family_iter]);
+    /* Quick check by level. Not mandatory. */
+    if (level != level_current) {
+      family_size = family_iter;
+      break;
     }
-    T8_ASSERT (family_size > 0);
+    tscheme->t8_element_parent (elements[family_iter], element_compare);
+    /* If the levels are equal, check if the parents are too. */
+    if (0 != tscheme->t8_element_compare (element_parent_current, element_compare)) {
+      family_size = family_iter;
+      break;
+    }
   }
+  T8_ASSERT (family_size > 0);
+
   T8_ASSERT (family_size >= 0 && family_size <= elements_size);
 
   /* There may be successors of a hypothetical later family member (with index 
    * family_size in this family) that would be overlapped after coarsening. */
-  if (family_size > 0 && family_size < elements_size) {
+  if (family_size < elements_size) {
     /* Get level of element after last element of current possible family */
     level = tscheme->t8_element_level (elements[family_size]);
     /* Only elements with higher level then level of current element, can get 
@@ -144,7 +146,9 @@ t8_forest_is_incomplete_family (t8_forest_t forest,
       level = tscheme->t8_element_level (element_compare);
       T8_ASSERT (level <= level_current-1);
       if (level == level_current-1) {
-        family_size = 0;
+        tscheme->t8_element_destroy (1, &element_parent_current);
+        tscheme->t8_element_destroy (1, &element_compare);
+        return 0;
       }
     }
   }
@@ -161,13 +165,13 @@ t8_forest_is_incomplete_family (t8_forest_t forest,
    * family members.*/
   if (el_considered == 0 && child_id_current > 0 && 
       ltree_id == 0 && forest->mpirank > 0) {
-    family_size = 0;
+    return 0;
   }
   else if (el_considered > t8_forest_get_tree_element_count (tree) 
                             - (t8_locidx_t)num_siblings &&
            ltree_id == t8_forest_get_num_local_trees (forest)-1 && 
            forest->mpirank < forest->mpisize-1 ) {
-    family_size = 0;
+    return 0;
   }
 #endif
 
