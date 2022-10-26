@@ -25,6 +25,7 @@
 #include <t8_cmesh_vtk_reader.hxx>
 #include <t8_forest/t8_forest_vtk_helper.hxx>
 #include <t8_cmesh/t8_cmesh_vtk_helper.hxx>
+#include <t8_cmesh_vtk_writer.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_cmesh.h>
 #include <t8_forest.h>
@@ -37,6 +38,20 @@
 #include <vtkUnstructuredGrid.h>
 
 //T8_EXTERN_C_BEGIN ();
+
+static t8_cmesh_t
+t8_read_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
+{
+  t8_cmesh_t          p_mesh;
+  t8_cmesh_init (&p_mesh);
+  t8_cmesh_set_partition_uniform (p_mesh, 0, t8_scheme_new_default_cxx ());
+  t8_cmesh_set_derive (p_mesh, cmesh);
+
+  t8_cmesh_commit (p_mesh, comm);
+  t8_cmesh_vtk_write_file (p_mesh, "cmesh_part", 1.);
+  return p_mesh;
+}
+
 template < class vis_object > class t8_interactive_vis {
 protected:
   /* Flag, if we have already read the Data from a file
@@ -118,7 +133,7 @@ public:
   {
     T8_FREE (filepath);
   }
-  /* *INDENT-ON* */
+  
 
 void
 t8_interactive_vis_source_to_forest ()
@@ -128,19 +143,15 @@ t8_interactive_vis_source_to_forest ()
     t8_read_unstructured (filepath, interaction_object, 1, 0, comm);
   t8_cmesh_t          cmesh;
   t8_cmesh_t          cmesh_in;
-  t8_cmesh_init (&cmesh_in);
   t8_cmesh_init (&cmesh);
   if (successful_read) {
-    t8_unstructured_to_cmesh (interaction_object, 1, 0, cmesh_in, comm);
-    t8_cmesh_commit (cmesh_in, comm);
-    t8_cmesh_set_derive (cmesh, cmesh_in);
-    t8_cmesh_set_partition_uniform (cmesh, 0, t8_scheme_new_default_cxx ());
-  }
-  if (cmesh != NULL) {
-    t8_cmesh_commit (cmesh, comm);
+    cmesh_in = t8_unstructured_to_cmesh (interaction_object, 1, 0, comm);
+    t8_cmesh_vtk_write_file (cmesh_in, "cmesh_in", 1.0);
+    cmesh = t8_read_partition (cmesh_in, comm);
   }
   else {
     t8_global_errorf ("Could not commit cmesh.\n");
+    return;
   }
   t8_forest_set_cmesh (forest, cmesh, comm);
   t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
@@ -162,6 +173,7 @@ t8_interactive_vis_write ()
   t8_forest_write_vtk (forest, "vis_handler");
 }
 };
+/* *INDENT-ON* */
 
 #if 0
   /**

@@ -153,6 +153,7 @@ t8_read_unstructured (const char *filename,
     if (vtkGrid == NULL) {
       t8_errorf ("Could not read file\n");
       if (partition) {
+        main_proc_read_successful = 0;
         sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc,
                       comm);
       }
@@ -165,20 +166,22 @@ t8_read_unstructured (const char *filename,
   return main_proc_read_successful;
 }
 
-void
+t8_cmesh_t
 t8_unstructured_to_cmesh (vtkSmartPointer < vtkUnstructuredGrid > vtkGrid,
                           const int partition, const int main_proc,
-                          t8_cmesh_t cmesh, sc_MPI_Comm comm)
+                          sc_MPI_Comm comm)
 {
   int                 mpirank;
   int                 mpisize;
   int                 mpiret;
   int                 dim;
+  t8_cmesh_t          cmesh;
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   t8_gloidx_t         num_trees;
   vtkSmartPointer < vtkCellData > cellData;
+  t8_cmesh_init (&cmesh);
 
   if (!partition || mpirank == main_proc) {
     /* Get the Data of the all cells */
@@ -190,6 +193,7 @@ t8_unstructured_to_cmesh (vtkSmartPointer < vtkUnstructuredGrid > vtkGrid,
     /* Actual translation */
     num_trees = t8_vtk_iterate_cells (vtkGrid, cellData, cmesh, comm);
     dim = t8_get_dimension (vtkGrid);
+    t8_debugf ("[D] read data of dimension %i\n", dim);
     t8_cmesh_set_dimension (cmesh, dim);
     t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim);
     t8_cmesh_register_geometry (cmesh, linear_geom);
@@ -220,6 +224,10 @@ t8_unstructured_to_cmesh (vtkSmartPointer < vtkUnstructuredGrid > vtkGrid,
     }
     t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
   }
+  if (cmesh != NULL) {
+    t8_cmesh_commit (cmesh, comm);
+  }
+  return cmesh;
 }
 
 vtkSmartPointer < vtkPolyData > t8_read_poly (const char *filename)

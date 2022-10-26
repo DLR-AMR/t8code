@@ -64,7 +64,6 @@ t8_cmesh_read_from_vtk_unstructured (const char *filename,
 
   T8_ASSERT (partition == 0 || (main_proc >= 0 && main_proc < mpisize));
 
-  t8_cmesh_init (&cmesh);
   main_proc_read_successful =
     t8_read_unstructured (filename, vtkGrid, partition, main_proc, comm);
   if (!main_proc_read_successful) {
@@ -75,12 +74,9 @@ t8_cmesh_read_from_vtk_unstructured (const char *filename,
     return NULL;
   }
   else {
-    t8_unstructured_to_cmesh (vtkGrid, partition, main_proc, cmesh, comm);
+    cmesh = t8_unstructured_to_cmesh (vtkGrid, partition, main_proc, comm);
   }
   T8_ASSERT (cmesh != NULL);
-  if (cmesh != NULL) {
-    t8_cmesh_commit (cmesh, comm);
-  }
   return cmesh;
 #else
   /* Return NULL if not linked against vtk */

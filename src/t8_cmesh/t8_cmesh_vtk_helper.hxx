@@ -94,11 +94,10 @@ int                 t8_read_unstructured (const char *filename,
  * \param[in] main_proc 
  * \param[in, out] cmesh 
  */
-void                t8_unstructured_to_cmesh (vtkSmartPointer <
+t8_cmesh_t          t8_unstructured_to_cmesh (vtkSmartPointer <
                                               vtkUnstructuredGrid > vtkGrid,
                                               const int partition,
                                               const int main_proc,
-                                              t8_cmesh_t cmesh,
                                               sc_MPI_Comm comm);
 #endif
 
