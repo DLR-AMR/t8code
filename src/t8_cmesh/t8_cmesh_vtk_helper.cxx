@@ -314,13 +314,15 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > cells,
   t8_debugf ("[D] read %i data-arrays\n", num_data_arrays);
   /* Prepare attributes */
   if (num_data_arrays > 0) {
-    int                 tuple_size;
+    size_t              tuple_size;
     tuples = T8_ALLOC (double *, num_data_arrays);
     data_size = T8_ALLOC (size_t, num_data_arrays);
     for (int idata = 0; idata < num_data_arrays; idata++) {
       vtkDataArray       *data = cell_data->GetArray (idata);
       tuple_size = data->GetNumberOfComponents ();
       data_size[idata] = sizeof (double) * tuple_size;
+      t8_debugf ("[D] data_size[%i] = %li, tuple_size %li\n", idata,
+                 data_size[idata], tuple_size);
       /* Allocate memory for a tuple in array i */
       tuples[idata] = T8_ALLOC (double, tuple_size);
     }
@@ -340,9 +342,11 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > cells,
     const int           num_points = cell_it->GetNumberOfPoints ();
     T8_ASSERT (num_points > 0);
     points = cell_it->GetPoints ();
+
     for (int ipoint = 0; ipoint < num_points; ipoint++) {
       points->GetPoint (t8_element_shape_vtk_corner_number
                         (cell_type, ipoint), &vertices[3 * ipoint]);
+
     }
     /* The order of the vertices in vtk might give a tree with negative volume */
     if (t8_cmesh_tree_vertices_negative_volume
@@ -351,14 +355,16 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > cells,
     }
     t8_cmesh_set_tree_vertices (cmesh, tree_id, vertices, num_points);
 
+    /* TODO: when data extracting is enabled the cmesh is not stored correct. 
+     * Fix this. */
     /* Get and set the data of each cell */
-    for (int dtype = 0; dtype < num_data_arrays; dtype++) {
-      const t8_gloidx_t   cell_id = cell_it->GetCellId ();
-      vtkDataArray       *data = cell_data->GetArray (dtype);
-      data->GetTuple (cell_id, tuples[dtype]);
-      t8_cmesh_set_attribute (cmesh, cell_id, t8_get_package_id (), dtype + 1,
-                              tuples[dtype], data_size[dtype], 0);
-    }
+    /*for (int dtype = 0; dtype < num_data_arrays; dtype++) {
+       const t8_gloidx_t   cell_id = cell_it->GetCellId ();
+       vtkDataArray       *data = cell_data->GetArray (dtype);
+       data->GetTuple (cell_id, tuples[dtype]);
+       t8_cmesh_set_attribute (cmesh, tree_id, t8_get_package_id (), dtype + 1,
+       tuples[dtype], data_size[dtype], 0);
+       } */
     /* Check geometry-dimension */
     if (max_dim < cell_it->GetCellDimension ()) {
       max_dim = cell_it->GetCellDimension ();
