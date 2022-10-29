@@ -209,10 +209,9 @@ t8_construct_sponge (int end_level_it, int end_level_rec, t8_eclass_t eclass, in
   double              adapt_time = 0;
   double              partition_time = 0;
   double              adapt_rec_time = 0;
-  double              partition_rec_time = 0;
   double              adapt_coarse_time = 0;
   double              partition_coarse_time = 0;
-  sc_statinfo_t       times[6];
+  sc_statinfo_t       times[5];
   char                vtuname[BUFSIZ];
   int                 level;
   int                 start_level;
@@ -222,9 +221,8 @@ t8_construct_sponge (int end_level_it, int end_level_rec, t8_eclass_t eclass, in
   sc_stats_init (&times[0], "refine_it");
   sc_stats_init (&times[1], "refine_it_partition");
   sc_stats_init (&times[2], "refine_rec");
-  sc_stats_init (&times[3], "refine_rec_partition");
-  sc_stats_init (&times[4], "coarse");
-  sc_stats_init (&times[5], "coarse_partition");
+  sc_stats_init (&times[3], "coarse");
+  sc_stats_init (&times[4], "coarse_partition");
 
   if (eclass == T8_ECLASS_HEX) {
     start_level = 2;
@@ -322,13 +320,6 @@ t8_construct_sponge (int end_level_it, int end_level_rec, t8_eclass_t eclass, in
       t8_forest_commit (forest_adapt);
       adapt_rec_time += t8_forest_profile_get_adapt_time(forest_adapt);
 
-      /* Partition the adapted forest */
-      t8_forest_init (&forest_partition);
-      t8_forest_set_profiling (forest_partition, 1);
-      t8_forest_set_partition (forest_partition, forest_adapt, 0);
-      t8_forest_commit (forest_partition);
-      partition_rec_time += t8_forest_profile_get_partition_time (forest_partition, &procs_sent);
-
       forest = forest_adapt;
     }
 
@@ -369,7 +360,7 @@ t8_construct_sponge (int end_level_it, int end_level_rec, t8_eclass_t eclass, in
   adapt_time = adapt_time * (1/(double) runs);
   partition_time = partition_time * (1/(double) runs);
   adapt_rec_time = adapt_rec_time * (1/(double) runs);
-  partition_rec_time = partition_rec_time * (1/(double) runs);
+
   adapt_coarse_time = adapt_coarse_time * (1/(double) runs);
   partition_coarse_time = partition_coarse_time * (1/(double) runs);
 
@@ -384,11 +375,11 @@ t8_construct_sponge (int end_level_it, int end_level_rec, t8_eclass_t eclass, in
   sc_stats_accumulate (&times[0], adapt_time);
   sc_stats_accumulate (&times[1], partition_time);
   sc_stats_accumulate (&times[2], adapt_rec_time);
-  sc_stats_accumulate (&times[3], partition_rec_time);
-  sc_stats_accumulate (&times[4], adapt_coarse_time);
-  sc_stats_accumulate (&times[5], partition_coarse_time);
-  sc_stats_compute (sc_MPI_COMM_WORLD, 6, times);
-  sc_stats_print (t8_get_package_id (), SC_LP_ESSENTIAL, 6, times, 1, 1);
+
+  sc_stats_accumulate (&times[3], adapt_coarse_time);
+  sc_stats_accumulate (&times[4], partition_coarse_time);
+  sc_stats_compute (sc_MPI_COMM_WORLD, 5, times);
+  sc_stats_print (t8_get_package_id (), SC_LP_ESSENTIAL, 5, times, 1, 1);
 
   t8_forest_unref (&forest);
 }
