@@ -368,8 +368,8 @@ t8_construct_sponge (int end_level_it, int end_level_rec, t8_eclass_t eclass, in
   
   adapt_time = adapt_time * (1/(double) runs);
   partition_time = partition_time * (1/(double) runs);
-  adapt_rec_time = adapt_time * (1/(double) runs);
-  partition_rec_time = partition_time * (1/(double) runs);
+  adapt_rec_time = adapt_rec_time * (1/(double) runs);
+  partition_rec_time = partition_rec_time * (1/(double) runs);
   adapt_coarse_time = adapt_coarse_time * (1/(double) runs);
   partition_coarse_time = partition_coarse_time * (1/(double) runs);
 
@@ -471,7 +471,7 @@ main (int argc, char **argv)
   }
   else if (parsed >= 0 && 0 <= end_level_it
           && (eclass_int > 3 || eclass_int < 8)) {
-    t8_construct_sponge (end_level_it, end_level_it,(t8_eclass_t) eclass_int, remove, output, coarse);
+    t8_construct_sponge (end_level_it, end_level_rec,(t8_eclass_t) eclass_int, remove, output, coarse);
   }
   else {
     /* wrong usage */
