@@ -46,14 +46,16 @@ t8_adapt_menger (t8_forest_t forest,
                  t8_element_t * elements[])
 {
   int child_id;
-  int ancestor_id;
   int level_element;
+  int level_max;
+  int ancestor_id;
 
+  child_id = ts->t8_element_child_id (elements[0]);  
   level_element = ts->t8_element_level (elements[0]);
-
+  level_max = *(int *) t8_forest_get_user_data (forest);
+  ancestor_id = ts->t8_element_ancestor_id (elements[0], level_element-1);
+  
   if (0 == level_element%2) {
-    child_id = ts->t8_element_child_id (elements[0]);
-    ancestor_id = ts->t8_element_ancestor_id (elements[0], level_element-1);
     if (ancestor_id < 4) {
       if (child_id > 3) {
         if (4 != child_id - ancestor_id) {
@@ -79,10 +81,9 @@ t8_adapt_menger (t8_forest_t forest,
       }
     }
   }
-  if (level_element < *(int *) t8_forest_get_user_data (forest)) {
+  if (level_element < level_max) {
     return 1;
   }
-
   return 0;
 }
 
@@ -98,13 +99,17 @@ t8_adapt_sierpinski_tet (t8_forest_t forest,
 {
   int child_id;
   int level;
+  int level_max;
+
   child_id = ts->t8_element_child_id (elements[0]);  
+  level = ts->t8_element_level (elements[0]);
+  level_max = *(int *) t8_forest_get_user_data (forest);
+
   if (child_id == 2 || child_id == 3 
       || child_id == 5 || child_id == 6) {
     return -2;
   }
-  level = ts->t8_element_level (elements[0]);
-  if (level < *(int *) t8_forest_get_user_data (forest)) {
+  if (level < level_max) {
     return 1;
   }
   return 0;
@@ -122,12 +127,16 @@ t8_adapt_sierpinski_prism (t8_forest_t forest,
 {
   int child_id;
   int level;
+  int level_max;
+
   child_id = ts->t8_element_child_id (elements[0]);  
+  level = ts->t8_element_level (elements[0]);
+  level_max = *(int *) t8_forest_get_user_data (forest);
+
   if (child_id == 2 || child_id == 6) {
     return -2;
   }
-  level = ts->t8_element_level (elements[0]);
-  if (level < *(int *) t8_forest_get_user_data (forest)) {
+  if (level < level_max) {
     return 1;
   }
   return 0;
@@ -145,13 +154,17 @@ t8_adapt_sierpinski_pyramid (t8_forest_t forest,
 {
   int child_id;
   int level;
+  int level_max;
+
   child_id = ts->t8_element_child_id (elements[0]);  
-  if (child_id == 1 || child_id == 3 
-      || child_id == 5 || child_id == 6 || child_id == 8) {
+  level = ts->t8_element_level (elements[0]);
+  level_max = *(int *) t8_forest_get_user_data (forest);
+  
+  if (child_id == 2 || child_id == 3 
+      || child_id == 5 || child_id == 6) {
     return -2;
   }
-  level = ts->t8_element_level (elements[0]);
-  if (level < *(int *) t8_forest_get_user_data (forest)) {
+  if (level < level_max) {
     return 1;
   }
   return 0;
@@ -170,13 +183,17 @@ t8_adapt_sierpinski_tet_full (t8_forest_t forest,
 {
   int child_id;
   int level;
+  int level_max;
+
   child_id = ts->t8_element_child_id (elements[0]);  
+  level = ts->t8_element_level (elements[0]);
+  level_max = *(int *) t8_forest_get_user_data (forest);
+  
   if (child_id == 2 || child_id == 3 
       || child_id == 5 || child_id == 6) {
     return 0;
   }
-  level = ts->t8_element_level (elements[0]);
-  if (level < *(int *) t8_forest_get_user_data (forest)) {
+  if (level < level_max) {
     return 1;
   }
   return 0;
@@ -216,7 +233,7 @@ t8_construct_sponge (int end_level_it, int end_level_rec, t8_eclass_t eclass, in
   int                 level;
   int                 start_level;
   int                 procs_sent;
-  int                 runs = 10;
+  int                 runs = 30;
 
   sc_stats_init (&times[0], "refine_it");
   sc_stats_init (&times[1], "refine_it_partition");
@@ -248,9 +265,9 @@ t8_construct_sponge (int end_level_it, int end_level_rec, t8_eclass_t eclass, in
 
 #if 1
     t8_forest_init (&forest);
-    cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
+    //cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
     cmesh = t8_cmesh_new_bigmesh (eclass, 64, sc_MPI_COMM_WORLD),
-    //t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
+    t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
     t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
     t8_forest_set_level (forest, end_level_it);
     t8_forest_commit (forest);
