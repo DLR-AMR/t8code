@@ -228,7 +228,7 @@ void                t8_dline_last_descendant (const t8_dline_t *l,
  * \param [out] coords   The coordinates of the computed vertex
  */
 void                t8_dline_vertex_coords (const t8_dline_t *elem,
-                                            int vertex, int coords[]);
+                                            const int vertex, int coords[]);
 
 /** Compute the coordinates of a vertex of a line when the 
  * tree (level 0 line) is embedded in [0,1]^1.
@@ -238,7 +238,7 @@ void                t8_dline_vertex_coords (const t8_dline_t *elem,
  * 		     will be filled with the reference coordinates of the vertex.
  */
 void                t8_dline_vertex_ref_coords (const t8_dline_t *elem,
-                                                int vertex,
+                                                const int vertex,
                                                 double coordinates[1]);
 
 /** Computes the linear position of a line in an uniform grid.

@@ -71,7 +71,8 @@ void                t8_dtri_ancestor (const t8_dtri_t *t, int level,
  * 		     will be filled with the coordinates of the vertex.
  * \param [in] vertex The number of the vertex.
  */
-void                t8_dtri_compute_coords (const t8_dtri_t *t, int vertex,
+void                t8_dtri_compute_coords (const t8_dtri_t *t,
+                                            const int vertex,
                                             t8_dtri_coord_t coordinates[2]);
 
 /** Compute the reference coordinates of a vertex of a triangle when the 
@@ -82,7 +83,7 @@ void                t8_dtri_compute_coords (const t8_dtri_t *t, int vertex,
  * 		     will be filled with the reference coordinates of the vertex.
  */
 void                t8_dtri_compute_ref_coords (const t8_dtri_t *t,
-                                                int vertex,
+                                                const int vertex,
                                                 double coordinates[2]);
 
 /** Compute the coordinates of the four vertices of a triangle.
