@@ -266,7 +266,7 @@ t8_construct_sponge (int end_level_it, int end_level_rec, t8_eclass_t eclass, in
 #if 1
     t8_forest_init (&forest);
     //cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
-    cmesh = t8_cmesh_new_bigmesh (eclass, 64, sc_MPI_COMM_WORLD),
+    cmesh = t8_cmesh_new_bigmesh (eclass, 512, sc_MPI_COMM_WORLD),
     t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
     t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
     t8_forest_set_level (forest, end_level_it);
@@ -364,13 +364,17 @@ t8_construct_sponge (int end_level_it, int end_level_rec, t8_eclass_t eclass, in
         adapt_coarse_time += t8_forest_profile_get_adapt_time(forest_adapt);
 
         /* Partition the adapted forest */
+#if 0
         t8_forest_init (&forest_partition);
         t8_forest_set_profiling (forest_partition, 1);
         t8_forest_set_partition (forest_partition, forest_adapt, 0);
         t8_forest_commit (forest_partition);
         partition_coarse_time += t8_forest_profile_get_partition_time (forest_partition, &procs_sent);
-
+        
         forest = forest_partition;
+#else
+        forest = forest_adapt;
+#endif
       }
     }
 
@@ -402,7 +406,6 @@ t8_construct_sponge (int end_level_it, int end_level_rec, t8_eclass_t eclass, in
   sc_stats_accumulate (&times[0], adapt_time);
   sc_stats_accumulate (&times[1], partition_time);
   sc_stats_accumulate (&times[2], adapt_rec_time);
-
   sc_stats_accumulate (&times[3], adapt_coarse_time);
   sc_stats_accumulate (&times[4], partition_coarse_time);
   sc_stats_compute (sc_MPI_COMM_WORLD, 5, times);
