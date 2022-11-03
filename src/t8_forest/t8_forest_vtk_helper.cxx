@@ -472,7 +472,7 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
       }
       if (write_mpirank == 1) {
 
-        vtk_mpirank->InsertNextValue (t8_forest_get_mpicomm(forest));
+        vtk_mpirank->InsertNextValue (t8_forest_get_mpirank(forest));
       }
       if (write_level == 1) {
         vtk_level->InsertNextValue (scheme->t8_element_level (element));

@@ -837,6 +837,13 @@ t8_forest_get_mpicomm (t8_forest_t forest)
   return forest->mpicomm;
 }
 
+int
+t8_forest_get_mpirank (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  return forest->mpirank;
+}
+
 t8_gloidx_t
 t8_forest_get_first_local_tree_id (t8_forest_t forest)
 {
