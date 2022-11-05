@@ -46,7 +46,6 @@ t8_adapt_carve_and_refine (t8_forest_t forest,
                            const int num_elements,  
                            t8_element_t * elements[])
 {
- 
   double  centroid[3];
   double  midpoint[3] = {0.5, 0.5, 0.5};
   double  dist;
@@ -62,7 +61,7 @@ t8_adapt_carve_and_refine (t8_forest_t forest,
 }
 
 static int
-t8_adapt_coarse_all (t8_forest_t forest,
+t8_adapt_coarse_outside (t8_forest_t forest,
                      t8_forest_t forest_from,
                      t8_locidx_t which_tree,
                      t8_locidx_t lelement_id,
@@ -71,7 +70,12 @@ t8_adapt_coarse_all (t8_forest_t forest,
                      const int num_elements, 
                      t8_element_t * elements[])
 {
-  if(is_family) {
+  double  centroid[3];
+  double  midpoint[3] = {0.5, 0.5, 0.5};
+  double  dist;
+  t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
+  dist = t8_vec_dist(midpoint, centroid);
+  if(is_family && dist > 0.45) {
     return -1;
   }
   return 0;
@@ -93,7 +97,7 @@ t8_carve_ball (int start_level, int end_level, int eclass_int, int output, int c
   sc_statinfo_t       times[5];
   char                vtuname[BUFSIZ];
   int                 level;
-  int                 runs = 5;
+  int                 runs = 20;
   int                 procs_sent;
   int64_t             num_elements = INT64_MAX;
 
@@ -140,7 +144,7 @@ t8_carve_ball (int start_level, int end_level, int eclass_int, int output, int c
       t8_forest_set_profiling (forest_partition, 1);
       t8_forest_set_partition (forest_partition, forest_adapt, 0);
       t8_forest_commit (forest_partition);
-      partition_time += t8_forest_profile_get_partition_time (forest_partition, &procs_sent);
+      partition_coarse_time += t8_forest_profile_get_partition_time (forest_partition, &procs_sent);
 
       forest = forest_partition;
     } 
@@ -149,7 +153,7 @@ t8_carve_ball (int start_level, int end_level, int eclass_int, int output, int c
       /* Adapt - coarse */
       t8_forest_init (&forest_adapt);
       t8_forest_set_profiling (forest_adapt, 1);
-      t8_forest_set_adapt (forest_adapt, forest, t8_adapt_coarse_all, 0);
+      t8_forest_set_adapt (forest_adapt, forest, t8_adapt_coarse_outside, 0);
       t8_forest_commit (forest_adapt);
       adapt_coarse_time += t8_forest_profile_get_adapt_time(forest_adapt);
 
@@ -184,7 +188,7 @@ t8_carve_ball (int start_level, int end_level, int eclass_int, int output, int c
 
   /* vtu output */
   if (output) {
-      snprintf (vtuname, BUFSIZ, "/home/ioannis/VBshare/paraview_export/forest_carved_balls");
+      snprintf (vtuname, BUFSIZ, "/home/ioannis/VBshare/paraview_export/forest_carved_ball");
       t8_forest_write_vtk (forest, vtuname);
       t8_debugf ("Output to %s\n", vtuname);
   }

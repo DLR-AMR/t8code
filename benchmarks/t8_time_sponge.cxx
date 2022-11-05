@@ -160,8 +160,8 @@ t8_adapt_sierpinski_pyramid (t8_forest_t forest,
   level = ts->t8_element_level (elements[0]);
   level_max = *(int *) t8_forest_get_user_data (forest);
   
-  if (child_id == 2 || child_id == 3 
-      || child_id == 5 || child_id == 6) {
+  if (child_id == 1 || child_id == 3 
+      || child_id == 5 || child_id == 6 || child_id == 8) {
     return -2;
   }
   if (level < level_max) {
@@ -233,7 +233,7 @@ t8_construct_sponge (int end_level_it, int end_level_rec, t8_eclass_t eclass, in
   int                 level;
   int                 start_level;
   int                 procs_sent;
-  int                 runs = 30;
+  int                 runs = 20;
 
   sc_stats_init (&times[0], "refine_it");
   sc_stats_init (&times[1], "refine_it_partition");
@@ -263,10 +263,10 @@ t8_construct_sponge (int end_level_it, int end_level_rec, t8_eclass_t eclass, in
 
   for (int run = 0; run < runs; run++) {
 
-#if 1
+#if 0
     t8_forest_init (&forest);
-    //cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
-    cmesh = t8_cmesh_new_bigmesh (eclass, 512, sc_MPI_COMM_WORLD),
+    cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
+    //cmesh = t8_cmesh_new_bigmesh (eclass, 64, sc_MPI_COMM_WORLD),
     t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
     t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
     t8_forest_set_level (forest, end_level_it);
@@ -274,7 +274,7 @@ t8_construct_sponge (int end_level_it, int end_level_rec, t8_eclass_t eclass, in
 #else
     t8_forest_init (&forest);
     //cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
-    cmesh = t8_cmesh_new_bigmesh (eclass, 128, sc_MPI_COMM_WORLD),
+    cmesh = t8_cmesh_new_bigmesh (eclass, 64, sc_MPI_COMM_WORLD),
     t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
     t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
     t8_forest_set_level (forest, start_level);
@@ -307,6 +307,7 @@ t8_construct_sponge (int end_level_it, int end_level_rec, t8_eclass_t eclass, in
       adapt_time += t8_forest_profile_get_adapt_time(forest_adapt);
 
       /* Partition the adapted forest */
+#if 0
       t8_forest_init (&forest_partition);
       t8_forest_set_profiling (forest_partition, 1);
       t8_forest_set_partition (forest_partition, forest_adapt, 0);
@@ -314,6 +315,10 @@ t8_construct_sponge (int end_level_it, int end_level_rec, t8_eclass_t eclass, in
       partition_time += t8_forest_profile_get_partition_time (forest_partition, &procs_sent);
 
       forest = forest_partition;
+#else
+      forest = forest_adapt;
+#endif
+
     } 
 #endif
 
