@@ -52,7 +52,7 @@ t8_adapt_carve_and_refine (t8_forest_t forest,
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
   dist = t8_vec_dist(midpoint, centroid);
   if (dist < 0.39) {
-    return 0;
+    return -2;
   }
   else if (dist < 0.425) {
     return 1;
