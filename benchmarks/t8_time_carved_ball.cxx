@@ -52,7 +52,7 @@ t8_adapt_carve_and_refine (t8_forest_t forest,
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
   dist = t8_vec_dist(midpoint, centroid);
   if (dist < 0.39) {
-    return -2;
+    return 0;
   }
   else if (dist < 0.425) {
     return 1;
@@ -110,9 +110,6 @@ t8_carve_ball (int start_level, int end_level, int eclass_int, int output, int c
   if (start_level >= end_level) {
     end_level = start_level + 1;
   }
-  if (coarse == -1) {
-    coarse = INT_MAX;
-  }
 
   for (int run = 0; run < runs; run++) {
 
@@ -156,13 +153,6 @@ t8_carve_ball (int start_level, int end_level, int eclass_int, int output, int c
       t8_forest_set_adapt (forest_adapt, forest, t8_adapt_coarse_outside, 0);
       t8_forest_commit (forest_adapt);
       adapt_coarse_time += t8_forest_profile_get_adapt_time(forest_adapt);
-
-      if (num_elements > t8_forest_get_global_num_elements(forest_adapt)) {
-        num_elements = t8_forest_get_global_num_elements(forest_adapt);
-      }
-      else {
-        coarse = 0;
-      }
 
       /* Partition the adapted forest */
       t8_forest_init (&forest_partition);
