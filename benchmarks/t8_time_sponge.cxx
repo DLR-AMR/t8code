@@ -217,45 +217,41 @@ t8_adapt_coarse (t8_forest_t forest,
 }
 
 static void
-t8_construct_sponge (int end_level_it, int end_level_rec, t8_eclass_t eclass, int remove, int output, int coarse)
+t8_construct_sponge (int initial_level,
+                     int end_level_it, 
+                     int end_level_rec, 
+                     t8_eclass_t eclass, 
+                     int remove, 
+                     int output, 
+                     int coarse)
 {
   t8_forest_t         forest;
   t8_forest_t         forest_adapt;
   t8_forest_t         forest_partition;
   t8_cmesh_t          cmesh;
   double              adapt_time = 0;
-  double              partition_time = 0;
   double              adapt_rec_time = 0;
   double              adapt_coarse_time = 0;
-  double              partition_coarse_time = 0;
-  sc_statinfo_t       times[5];
+  sc_statinfo_t       times[3];
   char                vtuname[BUFSIZ];
   int                 level;
-  int                 start_level;
   int                 procs_sent;
   int                 runs = 20;
 
   sc_stats_init (&times[0], "refine_it");
-  sc_stats_init (&times[1], "refine_it_partition");
-  sc_stats_init (&times[2], "refine_rec");
-  sc_stats_init (&times[3], "coarse");
-  sc_stats_init (&times[4], "coarse_partition");
+  sc_stats_init (&times[1], "refine_rec");
+  sc_stats_init (&times[2], "coarse");
 
   if (eclass == T8_ECLASS_HEX) {
-    start_level = 2;
-    if (end_level_it < start_level) {
-      end_level_it = 4;
+    if (initial_level < 2) {
+      initial_level = 2;
     }
-    else if (0 != end_level_it%2) {
-      end_level_it--;
+    if (0 != initial_level%2) {
+      initial_level++;
     }
-  }
-  else {
-    start_level = 0;
-  }
-
-  if (end_level_it > end_level_rec) {
-    end_level_rec = end_level_it;
+    if (0 != end_level_it%2) {
+      end_level_it++;
+    }
   }
 
   T8_ASSERT (eclass == T8_ECLASS_HEX || eclass == T8_ECLASS_TET
@@ -263,71 +259,52 @@ t8_construct_sponge (int end_level_it, int end_level_rec, t8_eclass_t eclass, in
 
   for (int run = 0; run < runs; run++) {
 
-#if 0
     t8_forest_init (&forest);
     cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
-    //cmesh = t8_cmesh_new_bigmesh (eclass, 64, sc_MPI_COMM_WORLD),
+    //cmesh = t8_cmesh_new_bigmesh (eclass, 64, sc_MPI_COMM_WORLD);
+    //cmesh = t8_cmesh_new_bigmesh (eclass, 512, sc_MPI_COMM_WORLD);
     t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
     t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
-    t8_forest_set_level (forest, end_level_it);
-    t8_forest_commit (forest);
-#else
-    t8_forest_init (&forest);
-    //cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
-    cmesh = t8_cmesh_new_bigmesh (eclass, 64, sc_MPI_COMM_WORLD),
-    t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
-    t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
-    t8_forest_set_level (forest, start_level);
+    t8_forest_set_level (forest, initial_level);
     t8_forest_commit (forest);
 
-    for (level = start_level; level <= end_level_it; level++) {
-      /* Adapt - refine, remove */
-      t8_forest_init (&forest_adapt);
-      t8_forest_set_profiling (forest_adapt, 1);
-      t8_forest_set_user_data (forest_adapt, &end_level_it);
-      if (remove == 1) {
-        if (eclass == T8_ECLASS_HEX) {
-          t8_forest_set_adapt (forest_adapt, forest, t8_adapt_menger, 0);
-        }
-        else if (eclass == T8_ECLASS_TET) {
-          t8_forest_set_adapt (forest_adapt, forest, t8_adapt_sierpinski_tet, 0);
-        }
-        else if (eclass == T8_ECLASS_PRISM) {
-          t8_forest_set_adapt (forest_adapt, forest, t8_adapt_sierpinski_prism, 0);
+    if (initial_level < end_level_it) {
+      for (level = initial_level; level <= end_level_it; level++) {
+        /* Adapt - refine, remove */
+        t8_forest_init (&forest_adapt);
+        t8_forest_set_profiling (forest_adapt, 1);
+        t8_forest_set_user_data (forest_adapt, &end_level_it);
+        if (remove == 1) {
+          if (eclass == T8_ECLASS_HEX) {
+            t8_forest_set_adapt (forest_adapt, forest, t8_adapt_menger, 0);
+          }
+          else if (eclass == T8_ECLASS_TET) {
+            t8_forest_set_adapt (forest_adapt, forest, t8_adapt_sierpinski_tet, 0);
+          }
+          else if (eclass == T8_ECLASS_PRISM) {
+            t8_forest_set_adapt (forest_adapt, forest, t8_adapt_sierpinski_prism, 0);
+          }
+          else {
+            t8_forest_set_adapt (forest_adapt, forest, t8_adapt_sierpinski_pyramid, 0);
+          }
         }
         else {
-          t8_forest_set_adapt (forest_adapt, forest, t8_adapt_sierpinski_pyramid, 0);
+          t8_forest_set_adapt (forest_adapt, forest, t8_adapt_sierpinski_tet_full, 0);
         }
-      }
-      else {
-        t8_forest_set_adapt (forest_adapt, forest, t8_adapt_sierpinski_tet_full, 0);
-      }
 
-      t8_forest_commit (forest_adapt);
-      adapt_time += t8_forest_profile_get_adapt_time(forest_adapt);
+        t8_forest_commit (forest_adapt);
+        adapt_time += t8_forest_profile_get_adapt_time(forest_adapt);
 
-      /* Partition the adapted forest */
-#if 0
-      t8_forest_init (&forest_partition);
-      t8_forest_set_profiling (forest_partition, 1);
-      t8_forest_set_partition (forest_partition, forest_adapt, 0);
-      t8_forest_commit (forest_partition);
-      partition_time += t8_forest_profile_get_partition_time (forest_partition, &procs_sent);
-
-      forest = forest_partition;
-#else
-      forest = forest_adapt;
-#endif
-
-    } 
-#endif
+        forest = forest_adapt;
+      } 
+    }
 
     t8_global_productionf("##############################################################\n");
     t8_global_productionf("######################### END ITERATE ########################\n");
     t8_global_productionf("##############################################################\n");
 
     if (end_level_it < end_level_rec) {
-    /* Adapt - refine, remove */
+      /* Adapt - refine, remove */
       t8_forest_init (&forest_adapt);
       t8_forest_set_profiling (forest_adapt, 1);
       t8_forest_set_user_data (forest_adapt, &end_level_rec);
@@ -359,28 +336,15 @@ t8_construct_sponge (int end_level_it, int end_level_rec, t8_eclass_t eclass, in
     t8_global_productionf("######################## END RECURSIVE #######################\n");
     t8_global_productionf("##############################################################\n");
 
-    if (coarse) {
-      for (level = 0; level <= end_level_rec; level++) {
-        /* Adapt - coarse */
-        t8_forest_init (&forest_adapt);
-        t8_forest_set_profiling (forest_adapt, 1);
-        t8_forest_set_adapt (forest_adapt, forest, t8_adapt_coarse, 0);
-        t8_forest_commit (forest_adapt);
-        adapt_coarse_time += t8_forest_profile_get_adapt_time(forest_adapt);
+    for (level = 0; level < coarse; level++) {
+      /* Adapt - coarse */
+      t8_forest_init (&forest_adapt);
+      t8_forest_set_profiling (forest_adapt, 1);
+      t8_forest_set_adapt (forest_adapt, forest, t8_adapt_coarse, 0);
+      t8_forest_commit (forest_adapt);
+      adapt_coarse_time += t8_forest_profile_get_adapt_time(forest_adapt);
 
-        /* Partition the adapted forest */
-#if 0
-        t8_forest_init (&forest_partition);
-        t8_forest_set_profiling (forest_partition, 1);
-        t8_forest_set_partition (forest_partition, forest_adapt, 0);
-        t8_forest_commit (forest_partition);
-        partition_coarse_time += t8_forest_profile_get_partition_time (forest_partition, &procs_sent);
-        
-        forest = forest_partition;
-#else
-        forest = forest_adapt;
-#endif
-      }
+      forest = forest_adapt;
     }
 
     t8_global_productionf("##############################################################\n");
@@ -394,27 +358,22 @@ t8_construct_sponge (int end_level_it, int end_level_rec, t8_eclass_t eclass, in
   }
   
   adapt_time = adapt_time * (1/(double) runs);
-  partition_time = partition_time * (1/(double) runs);
   adapt_rec_time = adapt_rec_time * (1/(double) runs);
-
   adapt_coarse_time = adapt_coarse_time * (1/(double) runs);
-  partition_coarse_time = partition_coarse_time * (1/(double) runs);
 
   /* vtu output */
   if (output) {
-      snprintf (vtuname, BUFSIZ, "/home/ioannis/VBshare/paraview_export/forest_sponge_adapt_%s",
+      snprintf (vtuname, BUFSIZ, "forest_sponge_adapt_%s",
                 t8_eclass_to_string[eclass]);
       t8_forest_write_vtk (forest, vtuname);
       t8_debugf ("Output to %s\n", vtuname);
   }
 
   sc_stats_accumulate (&times[0], adapt_time);
-  sc_stats_accumulate (&times[1], partition_time);
-  sc_stats_accumulate (&times[2], adapt_rec_time);
-  sc_stats_accumulate (&times[3], adapt_coarse_time);
-  sc_stats_accumulate (&times[4], partition_coarse_time);
-  sc_stats_compute (sc_MPI_COMM_WORLD, 5, times);
-  sc_stats_print (t8_get_package_id (), SC_LP_ESSENTIAL, 5, times, 1, 1);
+  sc_stats_accumulate (&times[1], adapt_rec_time);
+  sc_stats_accumulate (&times[2], adapt_coarse_time);
+  sc_stats_compute (sc_MPI_COMM_WORLD, 3, times);
+  sc_stats_print (t8_get_package_id (), SC_LP_ESSENTIAL, 3, times, 1, 1);
 
   t8_forest_unref (&forest);
 }
@@ -427,6 +386,7 @@ main (int argc, char **argv)
   sc_options_t       *opt;
   char                usage[BUFSIZ];
   char                help[BUFSIZ];
+  int                 initial_level = 0;
   int                 end_level_it = 4;
   int                 end_level_rec = 4;
   int                 output = 0;
@@ -445,9 +405,7 @@ main (int argc, char **argv)
 
   /* long help message */
   sreturnB = snprintf (help, BUFSIZ,
-                       "This program constructs a sponge mesh."
-                       "\nThe user can choose the the final refinement level\n"
-                       "of the mesh. If not set, the final level is 4.\n"
+                       "This program constructs a fractal mesh\n"
                        "The program has a visual output, if desired.\n\n%s\n",
                        usage);
 
@@ -470,6 +428,8 @@ main (int argc, char **argv)
   opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'h', "help", &helpme,
                          "Display a short help message.");
+  sc_options_add_int (opt, 'u', "uniform", &initial_level, 0,
+                      "Initial uniform refinement level.");                     
   sc_options_add_int (opt, 'i', "iteration", &end_level_it, 4,
                       "Final refine level of iteration: greater to 0");
   sc_options_add_int (opt, 'r', "recursion", &end_level_rec, 4,
@@ -486,7 +446,7 @@ main (int argc, char **argv)
   sc_options_add_int (opt, 'o', "output", &output, 0,
                       "output = 1 -> visual output.");                    
   sc_options_add_int (opt, 'c', "coarse", &coarse, 0,
-                      "coarse = 1 -> coarse all elements f times, if possible"); 
+                      "number of times to coarse elements."); 
 
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
@@ -497,7 +457,7 @@ main (int argc, char **argv)
   }
   else if (parsed >= 0 && 0 <= end_level_it
           && (eclass_int > 3 || eclass_int < 8)) {
-    t8_construct_sponge (end_level_it, end_level_rec,(t8_eclass_t) eclass_int, remove, output, coarse);
+    t8_construct_sponge (initial_level, end_level_it, end_level_rec,(t8_eclass_t) eclass_int, remove, output, coarse);
   }
   else {
     /* wrong usage */

@@ -51,7 +51,7 @@ t8_adapt_carve_and_refine (t8_forest_t forest,
   double  dist;
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
   dist = t8_vec_dist(midpoint, centroid);
-  if (dist < 0.39) {
+  if (dist < 0.4) {
     return -2;
   }
   else if (dist < 0.425) {
@@ -61,14 +61,38 @@ t8_adapt_carve_and_refine (t8_forest_t forest,
 }
 
 static int
+t8_adapt_refine (t8_forest_t forest,
+                 t8_forest_t forest_from,
+                 t8_locidx_t which_tree,
+                 t8_locidx_t lelement_id,
+                 t8_eclass_scheme_c * ts,
+                 const int is_family,
+                 const int num_elements,  
+                 t8_element_t * elements[])
+{
+  double  centroid[3];
+  double  midpoint[3] = {0.5, 0.5, 0.5};
+  double  dist;
+  t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
+  dist = t8_vec_dist(midpoint, centroid);
+  if (dist < 0.4) {
+    return 0;
+  }
+  else if (dist < 0.425) {
+    return 1;
+  }
+  return 0;
+}
+
+static int
 t8_adapt_coarse_outside (t8_forest_t forest,
-                     t8_forest_t forest_from,
-                     t8_locidx_t which_tree,
-                     t8_locidx_t lelement_id,
-                     t8_eclass_scheme_c * ts,
-                     const int is_family,
-                     const int num_elements, 
-                     t8_element_t * elements[])
+                         t8_forest_t forest_from,
+                         t8_locidx_t which_tree,
+                         t8_locidx_t lelement_id,
+                         t8_eclass_scheme_c * ts,
+                         const int is_family,
+                         const int num_elements, 
+                         t8_element_t * elements[])
 {
   double  centroid[3];
   double  midpoint[3] = {0.5, 0.5, 0.5};
@@ -82,7 +106,7 @@ t8_adapt_coarse_outside (t8_forest_t forest,
 }
 
 static void
-t8_carve_ball (int start_level, int end_level, int eclass_int, int output, int coarse)
+t8_carve_ball (int start_level, int end_level, int eclass_int, int remove, int output, int coarse)
 {
   t8_forest_t         forest;
   t8_forest_t         forest_adapt;
@@ -99,7 +123,6 @@ t8_carve_ball (int start_level, int end_level, int eclass_int, int output, int c
   int                 level;
   int                 runs = 20;
   int                 procs_sent;
-  int64_t             num_elements = INT64_MAX;
 
   sc_stats_init (&times[0], "init");
   sc_stats_init (&times[1], "carve");
@@ -121,6 +144,7 @@ t8_carve_ball (int start_level, int end_level, int eclass_int, int output, int c
       cmesh = t8_cmesh_new_hypercube ((t8_eclass_t) eclass_int, sc_MPI_COMM_WORLD, 0, 0, 0);
     }
 
+    /* Uniform forest */
     t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
     t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
     t8_forest_set_level (forest, start_level);
@@ -132,7 +156,12 @@ t8_carve_ball (int start_level, int end_level, int eclass_int, int output, int c
       /* Adapt - refine, remove */
       t8_forest_init (&forest_adapt);
       t8_forest_set_profiling (forest_adapt, 1);
-      t8_forest_set_adapt (forest_adapt, forest, t8_adapt_carve_and_refine, 0);
+      if (remove == 1) {
+        t8_forest_set_adapt (forest_adapt, forest, t8_adapt_carve_and_refine, 0);
+      }
+      else {
+        t8_forest_set_adapt (forest_adapt, forest, t8_adapt_refine, 0);
+      }
       t8_forest_commit (forest_adapt);
       adapt_time += t8_forest_profile_get_adapt_time(forest_adapt);
 
@@ -141,7 +170,7 @@ t8_carve_ball (int start_level, int end_level, int eclass_int, int output, int c
       t8_forest_set_profiling (forest_partition, 1);
       t8_forest_set_partition (forest_partition, forest_adapt, 0);
       t8_forest_commit (forest_partition);
-      partition_coarse_time += t8_forest_profile_get_partition_time (forest_partition, &procs_sent);
+      partition_time += t8_forest_profile_get_partition_time (forest_partition, &procs_sent);
 
       forest = forest_partition;
     } 
@@ -178,7 +207,7 @@ t8_carve_ball (int start_level, int end_level, int eclass_int, int output, int c
 
   /* vtu output */
   if (output) {
-      snprintf (vtuname, BUFSIZ, "/home/ioannis/VBshare/paraview_export/forest_carved_ball");
+      snprintf (vtuname, BUFSIZ, "forest_carved_ball");
       t8_forest_write_vtk (forest, vtuname);
       t8_debugf ("Output to %s\n", vtuname);
   }
@@ -206,6 +235,7 @@ main (int argc, char **argv)
   int                 end_level = 0;
   int                 output = 0;
   int                 coarse = 0;
+  int                 remove = 1;
   int                 eclass_int;
   int                 parsed;
   int                 helpme;
@@ -216,11 +246,6 @@ main (int argc, char **argv)
   sreturnA = snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS>\n\t%s -h\t"
                        "for a brief overview of all options.",
                        basename (argv[0]), basename (argv[0]));
-
-  /* long help message */
-  sreturnB = snprintf (help, BUFSIZ,
-                       "This program constructs a hybrid hypercube \n\n%s\n",
-                       usage);
 
   if (sreturnA > BUFSIZ || sreturnB > BUFSIZ) {
     /* The usage string or help message was truncated */
@@ -252,10 +277,12 @@ main (int argc, char **argv)
                       "\t\t5 - tetrahedron\n"
                       "\t\t6 - prism\n"
                       "\t\t7 - pyramid");
+  sc_options_add_int (opt, 'd', "remove", &remove, 1,
+                      "remove = 0 -> do not remove elements.");
   sc_options_add_int (opt, 'o', "output", &output, 0,
                       "output = 1 -> visual output.");                    
   sc_options_add_int (opt, 'c', "coarse", &coarse, 0,
-                      "number of times to coarse all elements, if possible"); 
+                      "number of times to coarse elements, if possible"); 
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (helpme) {
@@ -264,7 +291,7 @@ main (int argc, char **argv)
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else if (parsed >= 0) {
-    t8_carve_ball (start_level, end_level, eclass_int, output, coarse);
+    t8_carve_ball (start_level, end_level, eclass_int, remove, output, coarse);
   }
   else {
     /* wrong usage */
