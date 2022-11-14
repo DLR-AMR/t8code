@@ -51,17 +51,6 @@ int                 t8_dpyramid_get_level (const t8_dpyramid_t *p);
 void                t8_dpyramid_copy (const t8_dpyramid_t *source,
                                       t8_dpyramid_t *dest);
 
-/**
- * Sets the field switch_shape_at_level for \a p. \a p has to have the shape
- * of a tetrahedron. 
- * switch_shape_at_level is set to the lowest level at which the ancestor of \a p
- * still has the shape of a tetrahedron. switch_shape_at_level is set to -1 for
- * pyramidal shaped elements.
- * 
- * \param p       Input element, whose switch_shape_at_level will be set.
- */
-void                t8_dpyramid_set_switch_shape_at_level (t8_dpyramid_t *p);
-
 /** Computes the linear position of a pyramid in an uniform grid.
  * \param [in] p          pyramid whose id will be computed.
  * \param [in] level      The level on which the linear-id should be computed.
@@ -200,21 +189,6 @@ int                 t8_dpyramid_child_id (const t8_dpyramid_t *p);
  \returns 0 if p is inside root, 1, ow*/
 int                 t8_dpyramid_is_inside_root (const t8_dpyramid_t *p);
 
-/** Check, if a given pyramid is inside another pyramid
- * \param[in] p     Pyramid to check
- * \param[in] check The outer pyramid in which \a p might lay*/
-int                 t8_dpyramid_is_inside_pyra (const t8_dpyramid_t *p,
-                                                const t8_dpyramid_t *check);
-
-/** Check, if the input pyramid with shape of a tet with type 0 or 3 is inside of a tetrahedron up to level \a level
- * \param [in] p        pyramid with tet shape
- * \param [in] level    The lowest level to check
- * \param [in] anc      If not set to NULL the last ancestor in the shape of a tet is computed.
- * \return      0, if the pyramid is insed of a tetrahedron
- */
-int                 t8_dpyramid_is_inside_tet (const t8_dpyramid_t *p,
-                                               int level, t8_dpyramid_t *anc);
-
 /** Check, if a tet of type 0 or 3 has a common face with its pyramid-ancestor
  * \param [in] p      input pyramid
  * \param [in] face   A face of \a p.
@@ -291,12 +265,6 @@ void                t8_dpyramid_last_descendant_face (const t8_dpyramid_t *p,
 void                t8_dpyramid_compute_coords (const t8_dpyramid_t *p,
                                                 const int vertex,
                                                 int coords[]);
-
-/** Compute the pyramid-parent-type of a tetrahedron
- * \param [in] p        Input pyramid
- * \return              The type of the parent.
- */
-int                 t8_dpyramid_tetparent_type (const t8_dpyramid_t *p);
 
 /** Compute the parent of a given pyramid
  * \param [in] p        Input pyramid.
