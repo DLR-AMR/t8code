@@ -111,18 +111,19 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
                                    t8_gloidx_t gtreeid,
                                    const double *ref_coords,
                                    double out_coords[3]) const
-{ 
-  switch (active_tree_class)
-  {
-    case T8_ECLASS_QUAD:
-      t8_geometry_occ::t8_geom_evaluate_occ_quad(cmesh, gtreeid, ref_coords, out_coords);
-      break;
-    case T8_ECLASS_HEX:
-      t8_geometry_occ::t8_geom_evaluate_occ_hex(cmesh, gtreeid, ref_coords, out_coords);
-      break;
-    default:
-    SC_ABORTF("Error: Curved %s geometry not yet implemented. \n", 
-                t8_eclass_to_string[active_tree_class]);
+{
+  switch (active_tree_class) {
+  case T8_ECLASS_QUAD:
+    t8_geometry_occ::t8_geom_evaluate_occ_quad (cmesh, gtreeid, ref_coords,
+                                                out_coords);
+    break;
+  case T8_ECLASS_HEX:
+    t8_geometry_occ::t8_geom_evaluate_occ_hex (cmesh, gtreeid, ref_coords,
+                                               out_coords);
+    break;
+  default:
+    SC_ABORTF ("Error: Curved %s geometry not yet implemented. \n",
+               t8_eclass_to_string[active_tree_class]);
 
   }
 }
@@ -159,28 +160,26 @@ t8_geometry_occ::t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
   }
 }
 
-/* Our indent skript has huge problems with c++ */
-/* *INDENT-OFF* */
 inline void
 t8_geometry_occ::t8_geom_load_tree_data (t8_cmesh_t cmesh,
                                          t8_gloidx_t gtreeid)
 {
-  t8_geometry_w_vertices::t8_geom_load_tree_data(cmesh, gtreeid);
+  t8_geometry_w_vertices::t8_geom_load_tree_data (cmesh, gtreeid);
   edges = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
                                                 T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY,
                                                 gtreeid);
   faces = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
                                                 T8_CMESH_OCC_FACE_ATTRIBUTE_KEY,
                                                 gtreeid);
-  T8_ASSERT(edges != NULL);
-  T8_ASSERT(faces != NULL);
+  T8_ASSERT (edges != NULL);
+  T8_ASSERT (faces != NULL);
 }
 
 void
-t8_geometry_occ::t8_geom_evaluate_occ_hex(t8_cmesh_t cmesh,
-                                          t8_gloidx_t gtreeid,
-                                          const double *ref_coords,
-                                          double out_coords[3]) const
+t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh,
+                                           t8_gloidx_t gtreeid,
+                                           const double *ref_coords,
+                                           double out_coords[3]) const
 {
   T8_ASSERT (active_tree_class == T8_ECLASS_HEX);
 
@@ -548,10 +547,10 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex(t8_cmesh_t cmesh,
 }
 
 void
-t8_geometry_occ::t8_geom_evaluate_occ_quad(t8_cmesh_t cmesh,
-                                          t8_gloidx_t gtreeid,
-                                          const double *ref_coords,
-                                          double out_coords[3]) const
+t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
+                                            t8_gloidx_t gtreeid,
+                                            const double *ref_coords,
+                                            double out_coords[3]) const
 {
   T8_ASSERT (active_tree_class == T8_ECLASS_QUAD);
 
@@ -564,33 +563,28 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad(t8_cmesh_t cmesh,
     interpolated_curve_parameter, interpolated_surface_parameters[2];
 
   /* Check if face has a linked geometry */
-  if (*faces > 0)
-  {
+  if (*faces > 0) {
 #if T8_ENABLE_DEBUG
     /* Check, that edges do not carry a surface as well */
-    for (int i_edge = 0; i_edge < num_edges; ++i_edge)
-    {
-      T8_ASSERT(edges[i_edge + num_edges] <= 0);
+    for (int i_edge = 0; i_edge < num_edges; ++i_edge) {
+      T8_ASSERT (edges[i_edge + num_edges] <= 0);
     }
 #endif /* T8_ENABLE_DEBUG */
 
     /* Retrieve surface parameters */
     const double       *face_parameters =
-        (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
-                                           T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY,
-                                           gtreeid);
+      (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
+                                         T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY,
+                                         gtreeid);
 
     /* Interpolate between surface parameters */
     t8_geom_linear_interpolation (ref_coords,
                                   face_parameters,
-                                  2, 2,
-                                  interpolated_surface_parameters);
-    
+                                  2, 2, interpolated_surface_parameters);
+
     /* Iterate over each edge to seach for parameter displacements */
-    for (int i_edge = 0; i_edge < num_edges; ++i_edge)
-    {
-      if (edges[i_edge] > 0)
-      {
+    for (int i_edge = 0; i_edge < num_edges; ++i_edge) {
+      if (edges[i_edge] > 0) {
         /* The edges of a quad point in direction of ref_coord 1 - i_edge / 2.
          *
          *     2 -------E3------- 3
@@ -604,7 +598,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad(t8_cmesh_t cmesh,
          *        
          */
         const int           edge_direction = 1 - i_edge / 2;
-        
+
         /* Retrieve edge parameters and interpolate */
         const double       *edge_parameters =
           (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
@@ -612,52 +606,56 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad(t8_cmesh_t cmesh,
                                              + i_edge,
                                              gtreeid);
         T8_ASSERT (edges[i_edge] <= occ_shape_edge_map.Size ());
+
+        /* *INDENT-OFF* */
         curve =
-          BRep_Tool::Curve (TopoDS::Edge (occ_shape_edge_map.FindKey (edges[i_edge])),
+          BRep_Tool::Curve (TopoDS::
+                            Edge (occ_shape_edge_map.FindKey (edges[i_edge])),
                             first, last);
+        /* *INDENT-ON* */
 
         /* Check if curve is valid */
         T8_ASSERT (!curve.IsNull ());
 
-        /* Interpolate between curve parameters and surface parameters of the same nodes*/
+        /* Interpolate between curve parameters and surface parameters of the same nodes */
         t8_geom_linear_interpolation (&ref_coords[edge_direction],
                                       edge_parameters,
-                                      1, 1,
-                                      &interpolated_curve_parameter);
+                                      1, 1, &interpolated_curve_parameter);
 
         /* Convert edge parameter to surface parameters */
-        double converted_edge_surface_parameters[2];
-        t8_geometry_occ::t8_geom_edge_parameter_to_face_parameters (edges[i_edge],
+        double              converted_edge_surface_parameters[2];
+        t8_geometry_occ::t8_geom_edge_parameter_to_face_parameters (edges
+                                                                    [i_edge],
                                                                     *faces,
                                                                     interpolated_curve_parameter,
                                                                     converted_edge_surface_parameters);
-        
+
         /* Interpolate between the surface parameters of the current edge */
-        double edge_surface_parameters[4],
-               interpolated_edge_surface_parameters[2];
+        double              edge_surface_parameters[4],
+          interpolated_edge_surface_parameters[2];
         t8_geom_get_edge_vertices (active_tree_class,
                                    face_parameters,
-                                   i_edge, 2,
-                                   edge_surface_parameters);
+                                   i_edge, 2, edge_surface_parameters);
         t8_geom_linear_interpolation (&ref_coords[edge_direction],
                                       edge_surface_parameters,
                                       2, 1,
                                       interpolated_edge_surface_parameters);
 
         /* Calculate parameter displacement and add it to the surface parameters */
-        for (int dim = 0; dim < 2; ++dim)
-        {
-          const double displacement = interpolated_edge_surface_parameters[dim]
-                                    - converted_edge_surface_parameters[dim];
-          const int edge_orthogonal_direction = (edge_direction + 1) % 2;
-          double scaled_displacement;
-          if (i_edge % 2 == 0)
-          {
-            scaled_displacement = displacement * (1 - ref_coords[edge_orthogonal_direction]);
+        for (int dim = 0; dim < 2; ++dim) {
+          const double        displacement =
+            interpolated_edge_surface_parameters[dim]
+            - converted_edge_surface_parameters[dim];
+          const int           edge_orthogonal_direction =
+            (edge_direction + 1) % 2;
+          double              scaled_displacement;
+          if (i_edge % 2 == 0) {
+            scaled_displacement =
+              displacement * (1 - ref_coords[edge_orthogonal_direction]);
           }
-          else
-          {
-            scaled_displacement = displacement * ref_coords[edge_orthogonal_direction];
+          else {
+            scaled_displacement =
+              displacement * ref_coords[edge_orthogonal_direction];
           }
           interpolated_surface_parameters[dim] += scaled_displacement;
         }
@@ -674,26 +672,19 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad(t8_cmesh_t cmesh,
 
     /* Evaluate surface and save result */
     surface->D0 (interpolated_surface_parameters[0],
-                 interpolated_surface_parameters[1],
-                 pnt);
-    for (int dim = 0; dim < 3; ++dim)
-    {
+                 interpolated_surface_parameters[1], pnt);
+    for (int dim = 0; dim < 3; ++dim) {
       out_coords[dim] = pnt.Coord (dim);
     }
   }
-  else
-  {
+  else {
     /* No surface is linked to the face. We therefore use a bilinear
      * interpolation for the quad cell and add the edge displacements.
      * Iterate over each edge and check if it is linked. */
     t8_geom_linear_interpolation (ref_coords,
-                                  active_tree_vertices,
-                                  3, 2,
-                                  out_coords);
-    for (int i_edge = 0; i_edge < num_edges; ++i_edge)
-    {
-      if (edges[i_edge] > 0 || edges[i_edge + num_edges] > 0)
-      {
+                                  active_tree_vertices, 3, 2, out_coords);
+    for (int i_edge = 0; i_edge < num_edges; ++i_edge) {
+      if (edges[i_edge] > 0 || edges[i_edge + num_edges] > 0) {
         /* An edge can only be linked to a curve or a surface, not both */
         T8_ASSERT (!(edges[i_edge] > 0) || !(edges[i_edge + num_edges] > 0));
 
@@ -710,7 +701,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad(t8_cmesh_t cmesh,
          *        
          */
         const int           edge_direction = 1 - i_edge / 2;
-        double temp_edge_vertices[2 * 3];
+        double              temp_edge_vertices[2 * 3];
 
         /* Save the edge vertices temporarily. */
         t8_geom_get_edge_vertices (active_tree_class,
@@ -732,7 +723,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad(t8_cmesh_t cmesh,
          * Therefore, we have to distinguish if the edge has a curve or surface linked to it. */
         if (edges[i_edge] > 0) {
           /* Linear interpolation between parameters */
-          double interpolated_curve_parameter;
+          double              interpolated_curve_parameter;
           t8_geom_linear_interpolation (&ref_coords[edge_direction],
                                         parameters, 1, 1,
                                         &interpolated_curve_parameter);
@@ -751,7 +742,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad(t8_cmesh_t cmesh,
           curve->D0 (interpolated_curve_parameter, pnt);
         }
         else {
-          double interpolated_surface_parameters[2];
+          double              interpolated_surface_parameters[2];
           /* Linear interpolation between parameters */
           t8_geom_linear_interpolation (&ref_coords[edge_direction],
                                         parameters, 2, 1,
@@ -772,19 +763,19 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad(t8_cmesh_t cmesh,
         }
         /* Calculate displacement between points on curve and pint on linear curve.
          * Then scale it and add the scaled displacement to the result. */
-        for (int dim = 0; dim < 3; ++dim)
-        {
-          const double displacement = pnt.Coord (dim)
-                                    - interpolated_coords[dim];
-          const int edge_orthogonal_direction = (edge_direction + 1) % 2;
-          double scaled_displacement;
-          if (i_edge % 2 == 0)
-          {
-            scaled_displacement = displacement * (1 - ref_coords[edge_orthogonal_direction]);
+        for (int dim = 0; dim < 3; ++dim) {
+          const double        displacement = pnt.Coord (dim)
+            - interpolated_coords[dim];
+          const int           edge_orthogonal_direction =
+            (edge_direction + 1) % 2;
+          double              scaled_displacement;
+          if (i_edge % 2 == 0) {
+            scaled_displacement =
+              displacement * (1 - ref_coords[edge_orthogonal_direction]);
           }
-          else
-          {
-            scaled_displacement = displacement * ref_coords[edge_orthogonal_direction];
+          else {
+            scaled_displacement =
+              displacement * ref_coords[edge_orthogonal_direction];
           }
           out_coords[dim] += scaled_displacement;
         }
@@ -793,6 +784,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad(t8_cmesh_t cmesh,
   }
 }
 
+/* Our indent skript has huge problems with c++ */
+/* *INDENT-OFF* */
 const gp_Pnt
 t8_geometry_occ::t8_geom_get_occ_point (const int index) const
 {
