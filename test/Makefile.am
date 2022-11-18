@@ -5,7 +5,6 @@
 t8code_test_programs = \
     test/t8_cmesh/t8_test_cmesh_copy \
     test/t8_cmesh/t8_test_cmesh_partition \
-    test/t8_cmesh/t8_test_hypercube \
     test/t8_cmesh/t8_test_cmesh_face_is_boundary \
     test/t8_cmesh/t8_test_cmesh_readmshfile \
     test/t8_forest/t8_test_find_owner \
@@ -29,7 +28,7 @@ t8code_test_programs = \
     test/t8_test_netcdf_linkage \
     test/t8_test_vtk_linkage
 
-test_t8_cmesh_t8_test_hypercube_SOURCES = test/t8_cmesh/t8_test_hypercube.c
+
 test_t8_cmesh_t8_test_cmesh_copy_SOURCES = test/t8_cmesh/t8_test_cmesh_copy.c
 test_t8_cmesh_t8_test_cmesh_partition_SOURCES = test/t8_cmesh/t8_test_cmesh_partition.cxx
 test_t8_cmesh_t8_test_cmesh_face_is_boundary_SOURCES = test/t8_cmesh/t8_test_cmesh_face_is_boundary.cxx
@@ -75,7 +74,8 @@ test_t8_gtest_main_SOURCES = test/t8_gtest_main.cxx \
   test/t8_gtest_version.cxx \
   test/t8_schemes/t8_gtest_init_linear_id.cxx \
   test/t8_gtest_basics.cxx \
-  test/t8_schemes/t8_gtest_ancestor.cxx
+  test/t8_schemes/t8_gtest_ancestor.cxx \
+  test/t8_cmesh/t8_gtest_hypercube.cxx
 
 test_t8_gtest_main_LDADD = $(LDADD) test/libgtest.la
 test_t8_gtest_main_LDFLAGS = $(AM_LDFLAGS) -pthread
