@@ -5,7 +5,6 @@
 t8code_test_programs = \
     test/t8_cmesh/t8_test_cmesh_copy \
     test/t8_cmesh/t8_test_cmesh_partition \
-    test/t8_cmesh/t8_test_hypercube \
     test/t8_cmesh/t8_test_cmesh_face_is_boundary \
     test/t8_cmesh/t8_test_cmesh_readmshfile \
     test/t8_forest/t8_test_find_owner \
