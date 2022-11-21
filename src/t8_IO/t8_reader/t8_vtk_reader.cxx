@@ -30,19 +30,17 @@
 T8_EXTERN_C_BEGIN ();
 
 void
-t8_vtk_reader::read (void)
+t8_vtk_reader::read ()
 {
-  t8_debugf ("[D] test\n");
+  t8_debugf ("[D] test read\n");
 }
 
 t8_vtk_reader::t8_vtk_reader (void)
 {
-  dest = T8_ALLOC (char, BUFSIZ);
 }
 
 t8_vtk_reader::~t8_vtk_reader ()
 {
-  T8_FREE (dest);
 }
 
 #ifdef T8_ENABLE_DEBUG

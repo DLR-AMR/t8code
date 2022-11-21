@@ -28,6 +28,9 @@
 
 T8_EXTERN_C_BEGIN ();
 
+/**
+ * Enumerator over all input-objects supported by t8code.
+ */
 typedef enum t8_reader_type
 {
   T8_READER_ZERO,
@@ -35,6 +38,9 @@ typedef enum t8_reader_type
   T8_READER_COUNT
 } t8_reader_type_t;
 
+/**
+ * Enumerator over all output-objects supported by t8code.
+ */
 typedef enum t8_writer_type
 {
   T8_WRITER_ZERO = 0,
@@ -48,6 +54,8 @@ typedef struct t8_IO_writer t8_IO_writer_t;
 
 typedef struct t8_IO_cxx t8_IO_cxx_t;
 
+/* Struct that holds reader and writer routines and can be passed to 
+ * Input/Output routines. */
 struct t8_IO_cxx
 {
   sc_refcount_t       rc;

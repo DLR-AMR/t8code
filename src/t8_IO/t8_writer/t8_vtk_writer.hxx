@@ -32,6 +32,10 @@
 #include <sc_options.h>
 #include <t8.h>
 
+/**
+ * An implementation of a writer for vtk-files
+ * 
+ */
 struct t8_vtk_writer:public t8_IO_writer_t
 {
 public:

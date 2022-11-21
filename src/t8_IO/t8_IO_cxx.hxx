@@ -31,11 +31,12 @@
 
 T8_EXTERN_C_BEGIN ();
 
+/**
+ * Base-Class for reader-routines.
+ */
 typedef struct t8_IO_reader
 {
 public:
-  t8_reader_type_t reader_type;
-
   /** The destructor. It does nothing but has to be defined since
  * we may want to delete an t8_IO_reader that is actually inherited
  * and providing an implementation for the destructor ensures that the
@@ -54,6 +55,10 @@ public:
 
 } t8_IO_reader_t;
 
+/**
+ * Base class for writer routines.
+ * 
+ */
 struct t8_IO_writer
 {
 public:

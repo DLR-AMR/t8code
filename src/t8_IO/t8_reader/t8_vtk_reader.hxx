@@ -32,16 +32,18 @@
 #include <sc_options.h>
 #include <t8.h>
 
+/**
+ * An implementation of a reader for vtk-files. 
+ */
 struct t8_vtk_reader:public t8_IO_reader_t
 {
 public:
-  char               *dest;
   /* Constructor */
-                      t8_vtk_reader ();
+  t8_vtk_reader ();
   /* Destructor */
-                     ~t8_vtk_reader ();
+  ~t8_vtk_reader ();
   /* Write the output */
-  virtual void        read (void);
+  virtual void        read ();
 #ifdef T8_ENABLE_DEBUG
   virtual int         valid ();
 #endif                          /* T8_ENABLE_DEBUG */

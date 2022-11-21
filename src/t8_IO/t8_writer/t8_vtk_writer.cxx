@@ -30,19 +30,17 @@
 T8_EXTERN_C_BEGIN ();
 
 void
-t8_vtk_writer::write (void)
+t8_vtk_writer::write ()
 {
-  t8_debugf ("[D] test\n");
+  t8_debugf ("[D] write_test\n");
 }
 
 t8_vtk_writer::t8_vtk_writer (void)
 {
-  dest = T8_ALLOC (char, BUFSIZ);
 }
 
 t8_vtk_writer::~t8_vtk_writer ()
 {
-  T8_FREE (dest);
 }
 
 #ifdef T8_ENABLE_DEBUG

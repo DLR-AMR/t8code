@@ -41,9 +41,11 @@ class basic_IO:public testing::TestWithParam<std::tuple<t8_reader_type, t8_write
     t8_writer_type writer_type;
 };
 
-TEST_P(basic_IO, valid) {
+TEST_P(basic_IO, valid) { 
     EXPECT_EQ(IO->reader[reader_type]->valid(), 1);
     EXPECT_EQ(IO->writer[writer_type]->valid(), 1);
+    IO->reader[reader_type]->read();
+    IO->writer[writer_type]->write();
 }
 
 INSTANTIATE_TEST_SUITE_P(t8_test_IO_basic, basic_IO, testing::Combine(
