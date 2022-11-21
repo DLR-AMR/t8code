@@ -75,7 +75,8 @@ test_t8_gtest_main_SOURCES = test/t8_gtest_main.cxx \
   test/t8_gtest_version.cxx \
   test/t8_schemes/t8_gtest_init_linear_id.cxx \
   test/t8_gtest_basics.cxx \
-  test/t8_schemes/t8_gtest_ancestor.cxx
+  test/t8_schemes/t8_gtest_ancestor.cxx \
+  test/t8_IO/t8_gtest_IO_basic.cxx
 
 test_t8_gtest_main_LDADD = $(LDADD) test/libgtest.la
 test_t8_gtest_main_LDFLAGS = $(AM_LDFLAGS) -pthread
