@@ -60,8 +60,8 @@ libt8_installed_headers_geometry_impl = \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx 
 libt8_installed_headers_IO = \
-  src/t8_IO/t8_vtk_writer.hxx \
-  src/t8_IO/t8_vtk_reader.hxx
+  src/t8_IO/t8_writer/t8_vtk_writer.hxx \
+  src/t8_IO/t8_reader/t8_vtk_reader.hxx
 libt8_installed_headers_schemes_default =
 libt8_installed_headers_default_common =
 libt8_installed_headers_default_vertex =
@@ -115,8 +115,8 @@ libt8_compiled_sources = \
   src/t8_element_shape.c \
   src/t8_netcdf.c \
   src/t8_cmesh/t8_cmesh_testcases.c  \
-  src/t8_IO/t8_vtk_writer.cxx \
-  src/t8_IO/t8_vtk_reader.cxx \
+  src/t8_IO/t8_writer/t8_vtk_writer.cxx \
+  src/t8_IO/t8_reader/t8_vtk_reader.cxx \
   src/t8_IO/t8_IO.c src/t8_IO/t8_IO_cxx.cxx
 
 # this variable is used for headers that are not publicly installed

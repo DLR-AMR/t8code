@@ -25,29 +25,29 @@
  * 
  */
 
-#include <src/t8_IO/t8_vtk_reader.hxx>
+#include <src/t8_IO/t8_writer/t8_vtk_writer.hxx>
 
 T8_EXTERN_C_BEGIN ();
 
 void
-t8_vtk_reader::read (void)
+t8_vtk_writer::write (void)
 {
   t8_debugf ("[D] test\n");
 }
 
-t8_vtk_reader::t8_vtk_reader (void)
+t8_vtk_writer::t8_vtk_writer (void)
 {
   dest = T8_ALLOC (char, BUFSIZ);
 }
 
-t8_vtk_reader::~t8_vtk_reader ()
+t8_vtk_writer::~t8_vtk_writer ()
 {
   T8_FREE (dest);
 }
 
 #ifdef T8_ENABLE_DEBUG
 int
-t8_vtk_reader::valid ()
+t8_vtk_writer::valid ()
 {
   /* TODO: replace with something better as soon as more functionalitiy is implemented. */
   return 1;

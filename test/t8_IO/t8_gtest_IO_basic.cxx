@@ -32,8 +32,6 @@ class basic_IO:public testing::TestWithParam<std::tuple<t8_reader_type, t8_write
             reader_type = std::get<0>(GetParam());
             writer_type = std::get<1>(GetParam());
             IO = t8_IO_new_cxx();
-            reader = IO->reader[reader_type];
-            writer = IO->writer[writer_type];
         }
         void TearDown() override{
             t8_IO_cxx_unref(&IO);
@@ -41,13 +39,11 @@ class basic_IO:public testing::TestWithParam<std::tuple<t8_reader_type, t8_write
     t8_IO_cxx_t *IO;
     t8_reader_type reader_type;
     t8_writer_type writer_type;
-    t8_IO_writer_t *writer;
-    t8_IO_reader_t *reader;
 };
 
 TEST_P(basic_IO, valid) {
-    EXPECT_EQ(reader->valid(), 1);
-    EXPECT_EQ(writer->valid(), 1);
+    EXPECT_EQ(IO->reader[reader_type]->valid(), 1);
+    EXPECT_EQ(IO->writer[writer_type]->valid(), 1);
 }
 
 INSTANTIATE_TEST_SUITE_P(t8_test_IO_basic, basic_IO, testing::Combine(

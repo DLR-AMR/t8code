@@ -22,8 +22,8 @@
 
 #include <src/t8_IO/t8_IO_cxx.hxx>
 
-#include <src/t8_IO/t8_vtk_reader.hxx>
-#include <src/t8_IO/t8_vtk_writer.hxx>
+#include <src/t8_IO/t8_reader/t8_vtk_reader.hxx>
+#include <src/t8_IO/t8_writer/t8_vtk_writer.hxx>
 
 #include <t8_refcount.h>
 
