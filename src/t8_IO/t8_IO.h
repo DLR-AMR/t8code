@@ -65,10 +65,10 @@ t8_IO_cxx_t        *t8_IO_new_cxx (void);
  *                              Otherwise, the pointer is not changed and
  *                              the scheme is not modified in other ways.
  */
-void                t8_IO_cxx_unref (t8_IO_cxx_t ** pscheme);
+void                t8_IO_cxx_unref (t8_IO_cxx_t ** pIO);
 
 /* Destroy the IO routine, see t8_IO.hxx */
-extern void         t8_IO_cxx_destroy (t8_IO_cxx_t * s);
+extern void         t8_IO_cxx_destroy (t8_IO_cxx_t * IO);
 
 T8_EXTERN_C_END ();
 
