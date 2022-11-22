@@ -28,12 +28,28 @@
 #include <src/t8_IO/t8_writer/t8_vtk_writer.hxx>
 
 T8_EXTERN_C_BEGIN ();
-
-void
+/* *INDENT-OFF* */
+t8_write_status 
 t8_vtk_writer::write ()
+/* *INDENT-ON* */
 {
   t8_debugf ("[D] write_test\n");
+  return T8_WRITE_SUCCESS;
 }
+
+/* *INDENT-OFF* */
+t8_write_status 
+t8_vtk_writer::set_dest (const t8_extern_t * dest)
+{
+  if (dest == NULL) {
+    return T8_WRITE_FAIL;
+  }
+  else {
+    filepath = (vtk_path *) dest;
+    return T8_WRITE_SUCCESS;
+  }
+}
+/* *INDENT-ON* */
 
 t8_vtk_writer::t8_vtk_writer (void)
 {

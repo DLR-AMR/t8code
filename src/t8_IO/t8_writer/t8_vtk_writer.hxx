@@ -33,6 +33,8 @@
 #include <sc_options.h>
 #include <t8.h>
 
+typedef char        vtk_path;
+
 /**
  * An implementation of a writer for vtk-files
  * 
@@ -40,13 +42,15 @@
 struct t8_vtk_writer:public t8_IO_writer_t
 {
 public:
-  char               *dest;
+  vtk_path * filepath;
   /* Constructor */
-                      t8_vtk_writer ();
+  t8_vtk_writer ();
   /* Destructor */
-                     ~t8_vtk_writer ();
+  ~t8_vtk_writer ();
   /* Write the output */
-  virtual void        write (void);
+  virtual t8_write_status write (void);
+
+  virtual t8_write_status set_dest (const t8_extern_t * dest);
 #ifdef T8_ENABLE_DEBUG
   virtual int         valid ();
 #endif                          /* T8_ENABLE_DEBUG */

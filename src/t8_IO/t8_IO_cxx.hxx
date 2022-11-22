@@ -33,6 +33,20 @@
 
 T8_EXTERN_C_BEGIN ();
 
+typedef void        t8_extern_t;
+
+typedef enum t8_read_status
+{
+  T8_READ_SUCCESS = 0,
+  T8_READ_FAIL
+} t8_read_status_t;
+
+typedef enum t8_write_status
+{
+  T8_WRITE_SUCCESS = 0,
+  T8_WRITE_FAIL
+} t8_write_status_t;
+
 /**
  * Base-Class for reader-routines.
  */
@@ -50,7 +64,9 @@ public:
     /**
    * A reader function, that translates an external object into a forest.
    */
-  virtual void        read (void) = 0;
+  virtual t8_read_status_t read (void) = 0;
+
+  virtual t8_read_status_t set_source (const t8_extern_t * source) = 0;
 #ifdef T8_ENABLE_DEBUG
   virtual int         valid () = 0;
 #endif /* T8_ENABLE_DEBUG */
@@ -76,7 +92,9 @@ public:
       /**
      * A reader function, that translates an external object into a forest.
      */
-  virtual void        write (void) = 0;
+  virtual t8_write_status_t write (void) = 0;
+
+  virtual t8_write_status_t set_dest (const t8_extern_t * dest) = 0;
 #ifdef T8_ENABLE_DEBUG
   virtual int         valid () = 0;
 #endif /* T8_ENABLE_DEBUG */

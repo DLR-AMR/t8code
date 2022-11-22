@@ -28,17 +28,33 @@
 #include <t8_refcount.h>
 
 t8_IO_cxx_t        *
-t8_IO_new_cxx (void)
+t8_IO_new_cxx (t8_reader_type_t reader, t8_writer_type_t writer)
 {
   t8_IO_cxx_t        *IO;
 
   IO = T8_ALLOC_ZERO (t8_IO_cxx_t, 1);
   t8_refcount_init (&IO->rc);
+  switch (reader) {
+  case T8_READER_VTK:
+    IO->reader = new t8_vtk_reader ();
+    break;
+  case T8_READER_NOT_USED:
+    IO->reader = NULL;
+  default:
+    SC_ABORT_NOT_REACHED ();
+    break;
+  }
 
-  IO->reader[T8_READER_VTK] = new t8_vtk_reader ();
-
-  IO->writer[T8_WRITER_VTK] = new t8_vtk_writer ();
-
+  switch (writer) {
+  case T8_WRITER_VTK:
+    IO->writer = new t8_vtk_writer ();
+    break;
+  case T8_WRITER_NOT_USED:
+    IO->writer = NULL;
+  default:
+    SC_ABORT_NOT_REACHED ();
+    break;
+  }
   return IO;
 
 }
@@ -48,17 +64,12 @@ t8_IO_cxx_destroy (t8_IO_cxx_t * IO)
 {
   T8_ASSERT (IO != NULL);
   T8_ASSERT (IO->rc.refcount == 0);
-  for (int writer_it = 0; writer_it < T8_WRITER_COUNT; ++writer_it) {
-    if (IO->writer[writer_it] != NULL) {
-      delete              IO->writer[writer_it];
-    }
-  }
 
-  for (int reader_it = 0; reader_it < T8_READER_COUNT; ++reader_it) {
-    if (IO->reader[reader_it] != NULL) {
-      delete              IO->reader[reader_it];
-    }
+  if (IO->writer != NULL) {
+    delete              IO->writer;
   }
-
+  if (IO->reader != NULL) {
+    delete              IO->reader;
+  }
   T8_FREE (IO);
 }

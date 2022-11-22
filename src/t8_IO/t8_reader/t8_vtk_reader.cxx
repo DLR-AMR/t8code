@@ -29,11 +29,28 @@
 
 T8_EXTERN_C_BEGIN ();
 
-void
+/* *INDENT-OFF* */
+t8_read_status_t
 t8_vtk_reader::read ()
+/* *INDENT-ON* */
 {
   t8_debugf ("[D] test read\n");
+  return T8_READ_SUCCESS;
 }
+
+/* *INDENT-OFF* */
+t8_read_status_t
+t8_vtk_reader::set_source (const t8_extern_t * source)
+{
+  if (source == NULL) {
+    return T8_READ_FAIL;
+  }
+  else {
+    filepath = (vtk_path *) source;
+    return T8_READ_SUCCESS;
+  }
+}
+/* *INDENT-ON* */
 
 t8_vtk_reader::t8_vtk_reader (void)
 {

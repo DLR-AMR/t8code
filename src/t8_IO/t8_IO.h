@@ -48,9 +48,13 @@ struct t8_IO_cxx
 {
   sc_refcount_t       rc;
 
-  t8_IO_reader_t     *reader[T8_READER_COUNT];
+  t8_reader_type_t    reader_type;
 
-  t8_IO_writer_t     *writer[T8_WRITER_COUNT];
+  t8_writer_type_t    writer_type;
+
+  t8_IO_reader_t     *reader;
+
+  t8_IO_writer_t     *writer;
 };
 
 /** Increase the reference counter of an IO routine.
@@ -60,7 +64,8 @@ struct t8_IO_cxx
 void                t8_IO_cxx_ref (t8_IO_cxx_t * IO);
 
 /* Construct a new IO routine. */
-t8_IO_cxx_t        *t8_IO_new_cxx (void);
+t8_IO_cxx_t        *t8_IO_new_cxx (t8_reader_type_t reader,
+                                   t8_writer_type_t writer);
 
 /** Decrease the reference counter of an IO routine.
  * If the counter reaches zero, this scheme is destroyed.
@@ -86,7 +91,7 @@ extern void         t8_IO_cxx_destroy (t8_IO_cxx_t * IO);
  * \param IO        the IO-interface
  * \param type      The type of the writer to use
  */
-void                t8_IO_write (t8_IO_cxx_t * IO, t8_writer_type_t type);
+void                t8_IO_write (t8_IO_cxx_t * IO);
 
 /**
  * A general routine for writing files in parallel. 
@@ -95,8 +100,7 @@ void                t8_IO_write (t8_IO_cxx_t * IO, t8_writer_type_t type);
  * \param IO        the IO-interface
  * \param type      The type of the writer to use
  */
-void                t8_IO_write_parallel (t8_IO_cxx_t * IO,
-                                          t8_writer_type_t type);
+void                t8_IO_write_parallel (t8_IO_cxx_t * IO);
 
 T8_EXTERN_C_END ();
 
