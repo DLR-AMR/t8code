@@ -20,6 +20,12 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/**
+ * \file  t8_IO.h
+ * Defines a class that combines input and outputroutines.
+ * 
+ */
+
 #ifndef T8_IO_H
 #define T8_IO_H
 
@@ -48,7 +54,7 @@ struct t8_IO_cxx
 };
 
 /** Increase the reference counter of an IO routine.
- * \param [in,out] scheme       On input, this IO must be alive, that is,
+ * \param [in,out] IO           On input, this IO must be alive, that is,
  *                              exist with positive reference count.
  */
 void                t8_IO_cxx_ref (t8_IO_cxx_t * IO);
@@ -58,7 +64,7 @@ t8_IO_cxx_t        *t8_IO_new_cxx (void);
 
 /** Decrease the reference counter of an IO routine.
  * If the counter reaches zero, this scheme is destroyed.
- * \param [in,out] pscheme      On input, the IO pointed to must exist
+ * \param [in,out] pIO          On input, the IO pointed to must exist
  *                              with positive reference count.  If the
  *                              reference count reaches zero, the scheme is
  *                              destroyed and this pointer set to NULL.
@@ -67,8 +73,30 @@ t8_IO_cxx_t        *t8_IO_new_cxx (void);
  */
 void                t8_IO_cxx_unref (t8_IO_cxx_t ** pIO);
 
-/* Destroy the IO routine, see t8_IO.hxx */
+/**
+ * Destroy the IO routine, see t8_IO.hxx
+ * \param IO        the IO-interface that should be destroyed.
+ */
 extern void         t8_IO_cxx_destroy (t8_IO_cxx_t * IO);
+
+/**
+ * A general routine for writing files in serial. 
+ * TODO: provide implementation
+ * 
+ * \param IO        the IO-interface
+ * \param type      The type of the writer to use
+ */
+void                t8_IO_write (t8_IO_cxx_t * IO, t8_writer_type_t type);
+
+/**
+ * A general routine for writing files in parallel. 
+ * TODO: provide implementation
+ * 
+ * \param IO        the IO-interface
+ * \param type      The type of the writer to use
+ */
+void                t8_IO_write_parallel (t8_IO_cxx_t * IO,
+                                          t8_writer_type_t type);
 
 T8_EXTERN_C_END ();
 

@@ -20,6 +20,11 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/**
+ * \file t8_writer.h
+ * Lists all supported writer. 
+ */
+
 #ifndef T8_WRITER_H
 #define T8_WRITER_H
 
@@ -29,7 +34,11 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 typedef enum t8_writer_type
 {
   T8_WRITER_ZERO = 0,
+  /* Refers to a vtk-output */
   T8_WRITER_VTK = T8_WRITER_ZERO,
-  T8_WRITER_COUNT
+  /* The number of supported writers */
+  T8_WRITER_COUNT,
+  /* Can be used, if no write routine should be used. */
+  T8_WRITER_NOT_USED
 } t8_writer_type_t;
 #endif /* T8_WRITER_H */

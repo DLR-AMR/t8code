@@ -21,8 +21,10 @@
 */
 
 /**
- * This file describes a class for Input and output routines.
- * TODO: Be more specific
+ * \file t8_IO_cxx.hxx
+ * This file describes base classes for Input and output routines.
+ * For every supported input/output type a reader/writer has to be implemented
+ * in t8_reader/t8_writer.
  */
 #ifndef T8_IO_CXX_HXX
 #define T8_IO_CXX_HXX

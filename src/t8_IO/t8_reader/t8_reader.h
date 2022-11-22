@@ -20,6 +20,11 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/**
+ * \file t8_reader.h
+ * Lists all supported reader.
+ */
+
 #ifndef T8_READER_H
 #define T8_READER_H
 
@@ -29,8 +34,12 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 typedef enum t8_reader_type
 {
   T8_READER_ZERO,
+  /* Refers to a vtk-reader */
   T8_READER_VTK = T8_READER_ZERO,
-  T8_READER_COUNT
+  /* The number of supported reader. */
+  T8_READER_COUNT,
+  /* Can be used, if no read routine should be used. */
+  T8_READER_NOT_USED
 } t8_reader_type_t;
 
 #endif /* T8_READER_H */
