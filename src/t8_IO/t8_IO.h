@@ -25,28 +25,10 @@
 
 #include <sc_refcount.h>
 #include <t8.h>
+#include <src/t8_IO/t8_reader/t8_reader.h>
+#include <src/t8_IO/t8_writer/t8_writer.h>
 
 T8_EXTERN_C_BEGIN ();
-
-/**
- * Enumerator over all input-objects supported by t8code.
- */
-typedef enum t8_reader_type
-{
-  T8_READER_ZERO,
-  T8_READER_VTK = T8_READER_ZERO,
-  T8_READER_COUNT
-} t8_reader_type_t;
-
-/**
- * Enumerator over all output-objects supported by t8code.
- */
-typedef enum t8_writer_type
-{
-  T8_WRITER_ZERO = 0,
-  T8_WRITER_VTK = T8_WRITER_ZERO,
-  T8_WRITER_COUNT
-} t8_writer_type_t;
 
 typedef struct t8_IO_reader t8_IO_reader_t;
 

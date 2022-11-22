@@ -60,6 +60,8 @@ libt8_installed_headers_geometry_impl = \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx 
 libt8_installed_headers_IO = \
+  src/t8_IO/t8_writer/t8_writer.h \
+  src/t8_IO/t8_reader/t8_reader.h \
   src/t8_IO/t8_writer/t8_vtk_writer.hxx \
   src/t8_IO/t8_reader/t8_vtk_reader.hxx
 libt8_installed_headers_schemes_default =
