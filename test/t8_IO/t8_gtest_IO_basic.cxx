@@ -42,8 +42,10 @@ class basic_IO:public testing::TestWithParam<std::tuple<t8_reader_type, t8_write
 };
 
 TEST_P(basic_IO, valid) { 
+#if T8_ENABLE_DEBUG
     EXPECT_EQ(IO->reader[reader_type]->valid(), 1);
     EXPECT_EQ(IO->writer[writer_type]->valid(), 1);
+#endif /* T8_ENABLE_DEBUG */
     IO->reader[reader_type]->read();
     IO->writer[writer_type]->write();
 }
