@@ -66,6 +66,12 @@ public:
    */
   virtual t8_read_status_t read (void) = 0;
 
+  /**
+   * Set the source object, if source is not NULL
+   * 
+   * \param[in] source an object to be filled.
+   * \return t8_write_status_t T8_WRITE_FAIL if it wasn't able to set the source, T8_WRITE_SUCCESS otherwise
+   */
   virtual t8_read_status_t set_source (const t8_extern_t * source) = 0;
 #ifdef T8_ENABLE_DEBUG
   virtual int         valid () = 0;
@@ -94,6 +100,12 @@ public:
      */
   virtual t8_write_status_t write (void) = 0;
 
+  /**
+   * Set the dest object, if dest is not NULL
+   * 
+   * \param[in] dest an object to be filled.
+   * \return t8_write_status_t T8_WRITE_FAIL if it wasn't able to set the destionation, T8_WRITE_SUCCESS otherwise
+   */
   virtual t8_write_status_t set_dest (const t8_extern_t * dest) = 0;
 #ifdef T8_ENABLE_DEBUG
   virtual int         valid () = 0;

@@ -50,6 +50,12 @@ public:
   /* Write the output */
   virtual t8_write_status write (void);
 
+  /**
+   * Set the dest object
+   * 
+   * \param[in] dest  Set filepath to \a dest
+   * \return t8_write_status T8_WRITE_FAIL is \a points to NULL, T8_WRITE_SUCCESS otherwise.
+   */
   virtual t8_write_status set_dest (const t8_extern_t * dest);
 #ifdef T8_ENABLE_DEBUG
   virtual int         valid ();

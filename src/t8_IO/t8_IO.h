@@ -63,7 +63,13 @@ struct t8_IO_cxx
  */
 void                t8_IO_cxx_ref (t8_IO_cxx_t * IO);
 
-/* Construct a new IO routine. */
+/**
+ * Construct a new IO routine using the reader/writer methods defined
+ * 
+ * \param reader        A reader supported by t8code, T8_READER_NOT_USED, if there is nothing to read.
+ * \param writer        A writer supported by t8code, T8_WRITER_NOT_USED, if there is nothing to write.
+ * \return t8_IO_cxx_t* the constructed IO interface
+ */
 t8_IO_cxx_t        *t8_IO_new_cxx (t8_reader_type_t reader,
                                    t8_writer_type_t writer);
 
