@@ -301,7 +301,7 @@ t8_default_scheme_pyramid_c::t8_element_is_family (t8_element_t **fam)
     T8_ASSERT (t8_element_is_valid (fam[i]));
   }
 #endif
-  return t8_dpyramid_is_family ((const t8_dpyramid_t **) fam);
+  return t8_dpyramid_is_family ((t8_dpyramid_t **) fam);
 }
 
 int
