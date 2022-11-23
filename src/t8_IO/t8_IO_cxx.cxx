@@ -21,9 +21,10 @@
 */
 
 #include <src/t8_IO/t8_IO_cxx.hxx>
+#include <src/t8_cmesh/t8_cmesh_types.h>
 
-#include <src/t8_IO/t8_reader/t8_vtk_reader.hxx>
-#include <src/t8_IO/t8_writer/t8_vtk_writer.hxx>
+#include <src/t8_IO/t8_reader/t8_vtk_reader/t8_vtk_reader.hxx>
+#include <src/t8_IO/t8_writer/t8_vtk_writer/t8_vtk_writer.hxx>
 
 #include <t8_refcount.h>
 
@@ -34,7 +35,6 @@ t8_IO_new_cxx (t8_reader_type_t reader, t8_writer_type_t writer)
 
   IO = T8_ALLOC_ZERO (t8_IO_cxx_t, 1);
   t8_refcount_init (&IO->rc);
-  IO->comm = sc_MPI_COMM_WORLD;
   IO->reader_type = reader;
   IO->writer_type = writer;
 
@@ -78,8 +78,98 @@ t8_IO_cxx_destroy (t8_IO_cxx_t * IO)
   T8_FREE (IO);
 }
 
+void
+t8_IO_set_reader_communicator (t8_IO_cxx_t * IO, sc_MPI_Comm comm)
+{
+  T8_ASSERT (IO != NULL);
+  IO->reader->set_Communicator (comm);
+}
+
+void
+t8_IO_set_reader_main_proc (t8_IO_cxx_t * IO, const unsigned int proc)
+{
+  T8_ASSERT (IO != NULL);
+  IO->reader->set_main_proc (proc);
+}
+
 t8_cmesh_t
 t8_IO_read (t8_IO_cxx_t * IO, const t8_extern_t * source)
 {
+  T8_ASSERT (IO != NULL);
+  T8_ASSERT (source != NULL);
+  /* The rank and size in the communicator */
+  int                 mpirank, mpisize;
+  /* Get the Communicator used */
+  const sc_MPI_Comm   comm = IO->reader->get_Communicator ();
+  /* Get rank of the proc and size of the communicator */
+  int                 mpiret = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  /* Get the main_proc */
+  const unsigned int  main_proc = IO->reader->get_main_proc ();
+  /* Do we need to partition? */
+  const t8_partition_t partition = IO->reader->get_partition ();
+  /* Used to communicate success of failure of the reading process on different processes. */
+  t8_read_status_t    main_proc_read_status = T8_READ_FAIL;
+  /* The cmesh to be filled by the data described by source. */
+  t8_cmesh_t          cmesh;
 
+  T8_ASSERT (partition == T8_NO_PARTITION
+             || (partition == T8_PARTITION && (int) main_proc < mpisize));
+
+  t8_cmesh_init (&cmesh);
+
+  /*TODO: the dimension has to be set by hand on every proc. Need a nice solution for that. */
+
+  if (partition == T8_NO_PARTITION || mpirank == main_proc) {
+    main_proc_read_status = IO->reader->set_source (source);
+    if (main_proc_read_status = T8_READ_FAIL) {
+      t8_global_errorf ("Reading from the source failed\n");
+      t8_cmesh_destroy (&cmesh);
+      if (partition) {
+        /* Communicate to other processes, that reading failed. */
+        sc_MPI_Bcast (&main_proc_read_status, 1, sc_MPI_INT, main_proc, comm);
+      }
+      return NULL;
+    }
+    main_proc_read_status = IO->reader->read (cmesh);
+  }
+  if (partition == T8_PARTITION) {
+    t8_gloidx_t         num_trees;
+    t8_gloidx_t         first_tree;
+    t8_gloidx_t         last_tree;
+    sc_MPI_Bcast (&main_proc_read_status, 1, sc_MPI_INT, main_proc, comm);
+    if (main_proc_read_status == T8_READ_FAIL) {
+      t8_debugf ("Main process could not read cmesh successfully.\n");
+      t8_cmesh_destroy (&cmesh);
+      return NULL;
+    }
+    /* Set the partition */
+    if (mpirank == main_proc) {
+      /* The main process sends the number of trees to all processes. It is used to
+       * tell, that all trees are on main_proc and zero on all other procs.*/
+      num_trees = cmesh->stash->classes.elem_count;
+      first_tree = 0;
+      last_tree = num_trees - 1;
+      T8_ASSERT (cmesh->dimension == dim);
+    }
+    /* Broadcast the number of trees to all procs */
+    sc_MPI_Bcast (&num_trees, 1, T8_MPI_GLOIDX, main_proc, comm);
+    if (mpirank < main_proc) {
+      first_tree = 0;
+      last_tree = -1;
+    }
+    else if (mpirank > main_proc) {
+      first_tree = num_trees;
+      last_tree = num_trees - 1;
+    }
+    t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
+  }
+
+  /* Commit the cmesh */
+  T8_ASSERT (cmesh != NULL);
+  if (cmesh != NULL) {
+    t8_cmesh_commit (cmesh, comm);
+  }
+  return cmesh;
 }

@@ -41,10 +41,3 @@ t8_IO_cxx_unref (t8_IO_cxx_t ** pIO)
     *pIO = NULL;
   }
 }
-
-void
-t8_IO_set_communicator (t8_IO_cxx_t * IO, sc_MPI_Comm comm)
-{
-  T8_ASSERT (IO != NULL);
-  IO->comm = comm;
-}

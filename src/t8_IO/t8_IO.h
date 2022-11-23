@@ -30,7 +30,6 @@
 #define T8_IO_H
 
 #include <sc_refcount.h>
-#include <sc_mpi.h>
 #include <t8.h>
 #include <t8_cmesh.h>
 #include <src/t8_IO/t8_reader/t8_reader.h>
@@ -59,8 +58,6 @@ struct t8_IO_cxx
   t8_IO_reader_t     *reader;
 
   t8_IO_writer_t     *writer;
-
-  sc_MPI_Comm         comm;
 };
 
 /** Increase the reference counter of an IO routine.
@@ -97,8 +94,8 @@ void                t8_IO_cxx_unref (t8_IO_cxx_t ** pIO);
  * \param[in, out] IO     The IO routine where the communicator is changed.
  * \param comm            The communicator to use.
  */
-void                t8_IO_set_communicator (t8_IO_cxx_t * IO,
-                                            sc_MPI_Comm comm);
+void                t8_IO_set_reader_communicator (t8_IO_cxx_t * IO,
+                                                   sc_MPI_Comm comm);
 
 /**
  * Destroy the IO routine, see t8_IO.hxx
@@ -106,6 +103,13 @@ void                t8_IO_set_communicator (t8_IO_cxx_t * IO,
  */
 extern void         t8_IO_cxx_destroy (t8_IO_cxx_t * IO);
 
+/**
+ * Read routine using the reader set in \ref t8_IO_new_cxx
+ * 
+ * \param IO          The IO interface defining the reader
+ * \param source      The source to read
+ * \return t8_cmesh_t A cmesh constructed as described by \a source.
+ */
 extern t8_cmesh_t   t8_IO_read (t8_IO_cxx_t * IO, const t8_extern_t * source);
 
 /**

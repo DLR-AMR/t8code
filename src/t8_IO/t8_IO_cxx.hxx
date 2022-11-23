@@ -30,8 +30,15 @@
 #define T8_IO_CXX_HXX
 
 #include <src/t8_IO/t8_IO.h>
+#include <sc_mpi.h>
 
 T8_EXTERN_C_BEGIN ();
+
+typedef enum t8_partition
+{
+  T8_NO_PARTITION = 0,
+  T8_PARTITION
+} t8_partition_t;
 
 typedef enum t8_read_status
 {
@@ -50,19 +57,93 @@ typedef enum t8_write_status
  */
 typedef struct t8_IO_reader
 {
+private:
+  /**
+   * The communicator used by the reader.
+   */
+  sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
+  /**
+   * The process that coordinates the reading.
+   * If a file should only be read unpartitioned, this is the
+   * process that reads the file.
+   */
+  unsigned int        main_proc = 0;
+
+  t8_partition_t      partition = T8_NO_PARTITION;
 public:
+
   /** The destructor. It does nothing but has to be defined since
  * we may want to delete an t8_IO_reader that is actually inherited
  * and providing an implementation for the destructor ensures that the
  * destructor of the child class will be executed. */
-  virtual ~ t8_IO_reader ()
+                      virtual ~ t8_IO_reader ()
   {
   };
 
     /**
    * A reader function, that translates an external object into a forest.
    */
-  virtual t8_read_status_t read (void) = 0;
+  virtual t8_read_status_t read (t8_cmesh_t cmesh) = 0;
+
+  /**
+   *  Set the Communicator
+   * 
+   * \param new_comm The new communicator to use.
+   */
+  void                set_Communicator (sc_MPI_Comm new_comm)
+  {
+    comm = new_comm;
+  }
+
+  /**
+   * Get the Communicator
+   * 
+   * \return sc_MPI_Comm 
+   */
+  sc_MPI_Comm         get_Communicator ()
+  {
+    return comm;
+  }
+
+  /**
+   * Set the main proc 
+   * 
+   * \param proc The rank of the process to use
+   */
+  void                set_main_proc (const unsigned int proc)
+  {
+    main_proc = proc;
+  }
+
+  /**
+   * Get the main proc
+   * 
+   * \return unsigned int The main-reader proc.
+   */
+  unsigned int        get_main_proc ()
+  {
+    return main_proc;
+  }
+
+  /**
+   * Set partition 
+   * 
+   * \param proc The rank of the process to use
+   */
+  void                set_partition (const t8_partition_t part)
+  {
+    partition = part;
+  }
+
+  /**
+   * Get the main proc
+   * 
+   * \return unsigned int The main-reader proc.
+   */
+  t8_partition_t      get_partition ()
+  {
+    return partition;
+  }
 
   /**
    * Set the source object, if source is not NULL
