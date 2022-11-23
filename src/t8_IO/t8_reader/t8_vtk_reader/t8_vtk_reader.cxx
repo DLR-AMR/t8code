@@ -27,7 +27,6 @@
 
 #include <src/t8_IO/t8_reader/t8_vtk_reader/t8_vtk_reader.hxx>
 
-T8_EXTERN_C_BEGIN ();
 
 /* *INDENT-OFF* */
 t8_read_status_t
@@ -68,5 +67,3 @@ t8_vtk_reader::valid ()
   return 1;
 }
 #endif /* T8_ENABLE_DEBUG */
-
-T8_EXTERN_C_END ();

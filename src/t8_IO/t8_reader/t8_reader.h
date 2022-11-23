@@ -36,6 +36,8 @@ typedef enum t8_reader_type
   T8_READER_ZERO,
   /* Refers to a vtk-reader */
   T8_READER_VTK = T8_READER_ZERO,
+  /* Refers to a gmsh reader */
+  T8_READER_GMSH,
   /* The number of supported reader. */
   T8_READER_COUNT,
   /* Can be used, if no read routine should be used. */

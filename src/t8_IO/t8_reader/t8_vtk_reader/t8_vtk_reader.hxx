@@ -30,7 +30,6 @@
 #define T8_VTK_READER_HXX
 
 #include <src/t8_IO/t8_IO_cxx.hxx>
-#include <sc_options.h>
 #include <t8.h>
 
 typedef char        vtk_path;
@@ -46,7 +45,7 @@ public:
   t8_vtk_reader ();
   /* Destructor */
   ~t8_vtk_reader ();
-  /* Write the output */
+  /* Read the input */
   virtual t8_read_status_t read (t8_cmesh_t cmesh);
 
   virtual t8_read_status_t set_source (const t8_extern_t * source);

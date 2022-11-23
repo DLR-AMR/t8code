@@ -24,6 +24,8 @@
 #include <src/t8_cmesh/t8_cmesh_types.h>
 
 #include <src/t8_IO/t8_reader/t8_vtk_reader/t8_vtk_reader.hxx>
+#include <src/t8_IO/t8_reader/t8_gmsh_reader/t8_gmsh_reader.hxx>
+
 #include <src/t8_IO/t8_writer/t8_vtk_writer/t8_vtk_writer.hxx>
 
 #include <t8_refcount.h>
@@ -41,6 +43,9 @@ t8_IO_new_cxx (t8_reader_type_t reader, t8_writer_type_t writer)
   switch (reader) {
   case T8_READER_VTK:
     IO->reader = new t8_vtk_reader ();
+    break;
+  case T8_READER_GMSH:
+    IO->reader = new t8_gmsh_reader ();
     break;
   case T8_READER_NOT_USED:
     IO->reader = NULL;
