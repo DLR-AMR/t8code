@@ -73,7 +73,7 @@ void                t8_IO_cxx_ref (t8_IO_cxx_t * IO);
  * \param writer        A writer supported by t8code, T8_WRITER_NOT_USED, if there is nothing to write.
  * \return t8_IO_cxx_t* the constructed IO interface
  */
-extern t8_IO_cxx_t *t8_IO_new_cxx (t8_reader_type_t reader,
+t8_IO_cxx_t        *t8_IO_new_cxx (t8_reader_type_t reader,
                                    t8_writer_type_t writer);
 
 /** Decrease the reference counter of an IO routine.
@@ -98,6 +98,14 @@ void                t8_IO_set_reader_communicator (t8_IO_cxx_t * IO,
                                                    sc_MPI_Comm comm);
 
 /**
+ * Set the dimension of the cmesh
+ * 
+ * \param[in, out] IO     The IO routine where the dimension is changed.
+ * \param dim            The dimension to use.
+ */
+void                t8_IO_set_dim (t8_IO_cxx_t * IO, int dim);
+
+/**
  * Destroy the IO routine, see t8_IO.hxx
  * \param IO        the IO-interface that should be destroyed.
  */
@@ -110,7 +118,7 @@ extern void         t8_IO_cxx_destroy (t8_IO_cxx_t * IO);
  * \param source      The source to read
  * \return t8_cmesh_t A cmesh constructed as described by \a source.
  */
-extern t8_cmesh_t   t8_IO_read (t8_IO_cxx_t * IO, const t8_extern_t * source);
+t8_cmesh_t          t8_IO_read (t8_IO_cxx_t * IO, const t8_extern_t * source);
 
 /**
  * A general routine for writing files in serial. 

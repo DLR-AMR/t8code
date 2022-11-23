@@ -26,6 +26,7 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh_readmshfile.h>
 #include "t8_cmesh/t8_cmesh_trees.h"
+#include <src/t8_IO/t8_IO.h>
 
 /* In this file we test the msh file (gmsh) reader of the cmesh.
  * Currently, we support version 2 and 4 ascii.
@@ -138,6 +139,7 @@ t8_test_cmesh_readmshfile_version2_ascii ()
 {
   int                 retval;
   t8_cmesh_t          cmesh;
+  t8_IO_cxx_t        *IO = t8_IO_new_cxx (T8_READER_GMSH, T8_WRITER_NOT_USED);
   const char          fileprefix[BUFSIZ - 4] =
     "test/testfiles/test_msh_file_vers2_ascii";
   char                filename[BUFSIZ];
@@ -151,7 +153,9 @@ t8_test_cmesh_readmshfile_version2_ascii ()
                    filename);
 
   /* Try to read cmesh */
-  cmesh = t8_cmesh_from_msh_file (fileprefix, 1, sc_MPI_COMM_WORLD, 2, 0, 0);
+  t8_IO_set_dim (IO, 2);
+  cmesh = t8_IO_read (IO, fileprefix);
+  //cmesh = t8_cmesh_from_msh_file (fileprefix, 1, sc_MPI_COMM_WORLD, 2, 0, 0);
   SC_CHECK_ABORT (cmesh != NULL,
                   "Could not read cmesh from ascii version 2, but should be able to.");
   retval = t8_test_supported_msh_file (cmesh);

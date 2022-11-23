@@ -26,6 +26,9 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <src/t8_IO/t8_IO_cxx.hxx>
 #include <t8.h>
 
+/* The supported .msh file versions.
+ * Currently, we support gmsh's file version 2 and 4 in ASCII format.
+ */
 #define T8_CMESH_N_SUPPORTED_MSH_FILE_VERSIONS 2
 
 /* *INDENT-OFF* */
@@ -35,6 +38,37 @@ t8_cmesh_supported_msh_file_versions[T8_CMESH_N_SUPPORTED_MSH_FILE_VERSIONS] =
   2, 4
 };
 /* *INDENT-ON* */
+
+/* put typedefs here */
+
+/* The nodes are stored in the .msh file in the format
+ *
+ * $Nodes
+ * n_nodes     // The number of nodes
+ * i x_i y_i z_i  // the node index and the node coordinates
+ * j x_j y_j z_j
+ * .....
+ * $EndNodes
+ *
+ * The node indices do not need to be in consecutive order.
+ * We thus use a hash table to read all node indices and coordinates.
+ * The hash value is the node index modulo the number of nodes.
+ */
+typedef struct
+{
+  t8_locidx_t         index;
+  double              coordinates[3];
+} t8_msh_file_node_t;
+
+typedef struct
+{
+  t8_locidx_t         index;
+  double              coordinates[3];
+  double              parameters[2];
+  int                 parametric;
+  int                 entity_dim;
+  t8_locidx_t         entity_tag;
+} t8_msh_file_node_parametric_t;
 
 typedef FILE        gmsh_file;
 

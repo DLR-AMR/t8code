@@ -49,6 +49,7 @@ t8_IO_new_cxx (t8_reader_type_t reader, t8_writer_type_t writer)
     break;
   case T8_READER_NOT_USED:
     IO->reader = NULL;
+    break;
   default:
     SC_ABORT_NOT_REACHED ();
     break;
@@ -60,6 +61,7 @@ t8_IO_new_cxx (t8_reader_type_t reader, t8_writer_type_t writer)
     break;
   case T8_WRITER_NOT_USED:
     IO->writer = NULL;
+    break;
   default:
     SC_ABORT_NOT_REACHED ();
     break;
@@ -91,6 +93,14 @@ t8_IO_set_reader_communicator (t8_IO_cxx_t * IO, sc_MPI_Comm comm)
 }
 
 void
+t8_IO_set_dim (t8_IO_cxx_t * IO, int dim)
+{
+  T8_ASSERT (IO != NULL);
+  t8_debugf ("[D] set dimension\n");
+  IO->reader->set_dim (dim);
+}
+
+void
 t8_IO_set_reader_main_proc (t8_IO_cxx_t * IO, const unsigned int proc)
 {
   T8_ASSERT (IO != NULL);
@@ -100,6 +110,7 @@ t8_IO_set_reader_main_proc (t8_IO_cxx_t * IO, const unsigned int proc)
 t8_cmesh_t
 t8_IO_read (t8_IO_cxx_t * IO, const t8_extern_t * source)
 {
+  t8_debugf ("[D] started to read");
   T8_ASSERT (IO != NULL);
   T8_ASSERT (source != NULL);
   /* The rank and size in the communicator */
@@ -118,6 +129,8 @@ t8_IO_read (t8_IO_cxx_t * IO, const t8_extern_t * source)
   t8_read_status_t    main_proc_read_status = T8_READ_FAIL;
   /* The cmesh to be filled by the data described by source. */
   t8_cmesh_t          cmesh;
+  t8_debugf ("[D] parameters are: main_proc %i, partition %i", main_proc,
+             partition);
 
   T8_ASSERT (partition == T8_NO_PARTITION
              || (partition == T8_PARTITION && (int) main_proc < mpisize));
@@ -137,7 +150,17 @@ t8_IO_read (t8_IO_cxx_t * IO, const t8_extern_t * source)
       }
       return NULL;
     }
+    t8_debugf ("[D] opend source\n");
     main_proc_read_status = IO->reader->read (cmesh);
+    if (main_proc_read_status = T8_READ_FAIL) {
+      t8_global_errorf ("Reading from the source failed\n");
+      t8_cmesh_destroy (&cmesh);
+      if (partition) {
+        /* Communicate to other processes, that reading failed. */
+        sc_MPI_Bcast (&main_proc_read_status, 1, sc_MPI_INT, main_proc, comm);
+      }
+      return NULL;
+    }
   }
   if (partition == T8_PARTITION) {
     t8_gloidx_t         num_trees;
@@ -150,21 +173,20 @@ t8_IO_read (t8_IO_cxx_t * IO, const t8_extern_t * source)
       return NULL;
     }
     /* Set the partition */
-    if (mpirank == main_proc) {
+    if (mpirank == (int) main_proc) {
       /* The main process sends the number of trees to all processes. It is used to
        * tell, that all trees are on main_proc and zero on all other procs.*/
       num_trees = cmesh->stash->classes.elem_count;
       first_tree = 0;
       last_tree = num_trees - 1;
-      T8_ASSERT (cmesh->dimension == dim);
     }
     /* Broadcast the number of trees to all procs */
     sc_MPI_Bcast (&num_trees, 1, T8_MPI_GLOIDX, main_proc, comm);
-    if (mpirank < main_proc) {
+    if (mpirank < (int) main_proc) {
       first_tree = 0;
       last_tree = -1;
     }
-    else if (mpirank > main_proc) {
+    else if (mpirank > (int) main_proc) {
       first_tree = num_trees;
       last_tree = num_trees - 1;
     }
@@ -175,6 +197,9 @@ t8_IO_read (t8_IO_cxx_t * IO, const t8_extern_t * source)
   T8_ASSERT (cmesh != NULL);
   if (cmesh != NULL) {
     t8_cmesh_commit (cmesh, comm);
+  }
+  else {
+    t8_debugf ("[D] no cmesh_constructed\n");
   }
   return cmesh;
 }

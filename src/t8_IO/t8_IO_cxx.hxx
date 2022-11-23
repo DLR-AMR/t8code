@@ -79,7 +79,8 @@ private:
 
   t8_geo_back_t       geo_type = T8_LINEAR;
 public:
-
+  /* The dimension of the elements in the source */
+  int                 dim;
   /** The destructor. It does nothing but has to be defined since
  * we may want to delete an t8_IO_reader that is actually inherited
  * and providing an implementation for the destructor ensures that the
@@ -151,6 +152,17 @@ public:
   t8_partition_t      get_partition ()
   {
     return partition;
+  }
+
+  /**
+   * Set the dimension of the elements in the source.
+   * 
+   * \param dimension 
+   */
+  void                set_dim (int dimension)
+  {
+    T8_ASSERT (0 <= dimension && dimension <= 3);
+    dim = dimension;
   }
 
   /**
