@@ -33,8 +33,6 @@
 
 T8_EXTERN_C_BEGIN ();
 
-typedef void        t8_extern_t;
-
 typedef enum t8_read_status
 {
   T8_READ_SUCCESS = 0,

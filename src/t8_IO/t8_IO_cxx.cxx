@@ -34,6 +34,10 @@ t8_IO_new_cxx (t8_reader_type_t reader, t8_writer_type_t writer)
 
   IO = T8_ALLOC_ZERO (t8_IO_cxx_t, 1);
   t8_refcount_init (&IO->rc);
+  IO->comm = sc_MPI_COMM_WORLD;
+  IO->reader_type = reader;
+  IO->writer_type = writer;
+
   switch (reader) {
   case T8_READER_VTK:
     IO->reader = new t8_vtk_reader ();
@@ -72,4 +76,10 @@ t8_IO_cxx_destroy (t8_IO_cxx_t * IO)
     delete              IO->reader;
   }
   T8_FREE (IO);
+}
+
+t8_cmesh_t
+t8_IO_read (t8_IO_cxx_t * IO, const t8_extern_t * source)
+{
+
 }

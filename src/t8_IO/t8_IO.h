@@ -30,7 +30,9 @@
 #define T8_IO_H
 
 #include <sc_refcount.h>
+#include <sc_mpi.h>
 #include <t8.h>
+#include <t8_cmesh.h>
 #include <src/t8_IO/t8_reader/t8_reader.h>
 #include <src/t8_IO/t8_writer/t8_writer.h>
 
@@ -39,6 +41,8 @@ T8_EXTERN_C_BEGIN ();
 typedef struct t8_IO_reader t8_IO_reader_t;
 
 typedef struct t8_IO_writer t8_IO_writer_t;
+
+typedef void        t8_extern_t;
 
 typedef struct t8_IO_cxx t8_IO_cxx_t;
 
@@ -55,6 +59,8 @@ struct t8_IO_cxx
   t8_IO_reader_t     *reader;
 
   t8_IO_writer_t     *writer;
+
+  sc_MPI_Comm         comm;
 };
 
 /** Increase the reference counter of an IO routine.
@@ -70,7 +76,7 @@ void                t8_IO_cxx_ref (t8_IO_cxx_t * IO);
  * \param writer        A writer supported by t8code, T8_WRITER_NOT_USED, if there is nothing to write.
  * \return t8_IO_cxx_t* the constructed IO interface
  */
-t8_IO_cxx_t        *t8_IO_new_cxx (t8_reader_type_t reader,
+extern t8_IO_cxx_t *t8_IO_new_cxx (t8_reader_type_t reader,
                                    t8_writer_type_t writer);
 
 /** Decrease the reference counter of an IO routine.
@@ -85,10 +91,22 @@ t8_IO_cxx_t        *t8_IO_new_cxx (t8_reader_type_t reader,
 void                t8_IO_cxx_unref (t8_IO_cxx_t ** pIO);
 
 /**
+ * Change the communicator used for the IO. The default communicator is
+ * sc_MPI_COMM_WORLD
+ * 
+ * \param[in, out] IO     The IO routine where the communicator is changed.
+ * \param comm            The communicator to use.
+ */
+void                t8_IO_set_communicator (t8_IO_cxx_t * IO,
+                                            sc_MPI_Comm comm);
+
+/**
  * Destroy the IO routine, see t8_IO.hxx
  * \param IO        the IO-interface that should be destroyed.
  */
 extern void         t8_IO_cxx_destroy (t8_IO_cxx_t * IO);
+
+extern t8_cmesh_t   t8_IO_read (t8_IO_cxx_t * IO, const t8_extern_t * source);
 
 /**
  * A general routine for writing files in serial. 
