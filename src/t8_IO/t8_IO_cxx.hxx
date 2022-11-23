@@ -128,7 +128,7 @@ public:
   /**
    * Set partition 
    * 
-   * \param proc The rank of the process to use
+   * \param part Flag, if partitioning should be used or not.
    */
   void                set_partition (const t8_partition_t part)
   {
@@ -136,15 +136,14 @@ public:
   }
 
   /**
-   * Get the main proc
+   * Get the partition-flag
    * 
-   * \return unsigned int The main-reader proc.
+   * \return t8_partition_t The partition-flag.
    */
   t8_partition_t      get_partition ()
   {
     return partition;
   }
-
   /**
    * Set the source object, if source is not NULL
    * 
