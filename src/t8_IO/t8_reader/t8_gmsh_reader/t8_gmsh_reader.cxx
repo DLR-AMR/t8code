@@ -223,6 +223,7 @@ t8_gmsh_reader::read (t8_cmesh_t cmesh)
 /* *INDENT-ON* */
 
 {
+  fclose (file);
   t8_debugf ("[D] test read\n");
   return T8_READ_SUCCESS;
 }
@@ -245,10 +246,18 @@ t8_gmsh_reader::set_source (const t8_extern_t * source)
     }
     /* Check if the msh-file version is compatible. */
     msh_version = t8_cmesh_check_version_of_msh_file (file);
+    const t8_geo_back_t geo_type = get_geo_back();
     if(msh_version < 1 || (msh_version != 2 && msh_version != 4)){
         fclose(file);
         t8_debugf ("The reading process of the msh-file has failed and the file has been closed.\n");
         return T8_READ_FAIL;
+    }
+    if(msh_version == 2 && geo_type == T8_USE_OCC){
+      fclose(file);
+      t8_errorf
+          ("WARNING: The occ geometry is only supported for msh files of "
+           "version 4\n");
+      return T8_READ_FAIL;
     }
     return T8_READ_SUCCESS;
   }

@@ -40,6 +40,12 @@ typedef enum t8_partition
   T8_PARTITION
 } t8_partition_t;
 
+typedef enum t8_geo_back
+{
+  T8_LINEAR = 0,
+  T8_USE_OCC
+} t8_geo_back_t;
+
 typedef enum t8_read_status
 {
   T8_READ_SUCCESS = 0,
@@ -70,6 +76,8 @@ private:
   unsigned int        main_proc = 0;
 
   t8_partition_t      partition = T8_NO_PARTITION;
+
+  t8_geo_back_t       geo_type = T8_LINEAR;
 public:
 
   /** The destructor. It does nothing but has to be defined since
@@ -144,6 +152,28 @@ public:
   {
     return partition;
   }
+
+  /**
+   * Set which geometry backend is used. The default is no geometry backend,
+   * hence the geometry is linear. 
+   * 
+   * \param geo Flag, which geometry backend to use.
+   */
+  void                set_geo_back (const t8_geo_back_t geo)
+  {
+    geo_type = geo;
+  }
+
+  /**
+   * Get the used geo-backend
+   * 
+   * \return t8_partition_t The partition-flag.
+   */
+  t8_geo_back_t       get_geo_back ()
+  {
+    return geo_type;
+  }
+
   /**
    * Set the source object, if source is not NULL
    * 

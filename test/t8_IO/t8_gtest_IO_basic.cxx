@@ -46,13 +46,12 @@ TEST_P(basic_IO, valid) {
     EXPECT_EQ(IO->reader->valid(), 1);
     EXPECT_EQ(IO->writer->valid(), 1);
 #endif /* T8_ENABLE_DEBUG */
-    EXPECT_EQ(IO->reader->read(NULL), T8_READ_SUCCESS);
     EXPECT_EQ(IO->writer->write(), T8_WRITE_SUCCESS);
 }
 
 const t8_extern_t *test_sources[T8_READER_COUNT] = {
-    "dummy_string",
-    "gmsh_dummy_string"
+    "dummy_string", /* test-mesh for vtk reader*/
+    "test/testfiles/test_msh_file_vers2_ascii" /* test-mesh for gmsh reader */
 };
 
 const t8_extern_t *test_dest[T8_WRITER_COUNT] = {
