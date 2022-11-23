@@ -21,38 +21,51 @@
 */
 
 /**
- * \file t8_vtk_reader.hxx
  * Implementation for a vtk-writer
  * 
  */
 
-#ifndef T8_VTK_READER_HXX
-#define T8_VTK_READER_HXX
+#include <src/t8_IO/t8_writer/t8_vtk_writer/t8_vtk_writer.hxx>
 
-#include <src/t8_IO/t8_IO_cxx.hxx>
-#include <sc_options.h>
-#include <t8.h>
-
-typedef char        vtk_path;
-
-/**
- * An implementation of a reader for vtk-files. 
- */
-struct t8_vtk_reader:public t8_IO_reader_t
+T8_EXTERN_C_BEGIN ();
+/* *INDENT-OFF* */
+t8_write_status 
+t8_vtk_writer::write ()
+/* *INDENT-ON* */
 {
-public:
-  vtk_path * filepath;
-  /* Constructor */
-  t8_vtk_reader ();
-  /* Destructor */
-  ~t8_vtk_reader ();
-  /* Write the output */
-  virtual t8_read_status_t read ();
+  t8_debugf ("[D] write_test\n");
+  return T8_WRITE_SUCCESS;
+}
 
-  virtual t8_read_status_t set_source (const t8_extern_t * source);
+/* *INDENT-OFF* */
+t8_write_status 
+t8_vtk_writer::set_dest (const t8_extern_t * dest)
+{
+  if (dest == NULL) {
+    return T8_WRITE_FAIL;
+  }
+  else {
+    filepath = (vtk_path *) dest;
+    return T8_WRITE_SUCCESS;
+  }
+}
+/* *INDENT-ON* */
+
+t8_vtk_writer::t8_vtk_writer (void)
+{
+}
+
+t8_vtk_writer::~t8_vtk_writer ()
+{
+}
+
 #ifdef T8_ENABLE_DEBUG
-  virtual int         valid ();
-#endif                          /* T8_ENABLE_DEBUG */
-};
+int
+t8_vtk_writer::valid ()
+{
+  /* TODO: replace with something better as soon as more functionalitiy is implemented. */
+  return 1;
+}
+#endif /* T8_ENABLE_DEBUG */
 
-#endif /* T8_VTK_READER_HXX */
+T8_EXTERN_C_END ();

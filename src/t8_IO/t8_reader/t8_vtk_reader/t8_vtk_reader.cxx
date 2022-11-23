@@ -25,13 +25,13 @@
  * 
  */
 
-#include <src/t8_IO/t8_reader/t8_vtk_reader.hxx>
+#include <src/t8_IO/t8_reader/t8_vtk_reader/t8_vtk_reader.hxx>
 
 T8_EXTERN_C_BEGIN ();
 
 /* *INDENT-OFF* */
 t8_read_status_t
-t8_vtk_reader::read ()
+t8_vtk_reader::read (t8_cmesh_t cmesh)
 /* *INDENT-ON* */
 {
   t8_debugf ("[D] test read\n");
@@ -52,7 +52,7 @@ t8_vtk_reader::set_source (const t8_extern_t * source)
 }
 /* *INDENT-ON* */
 
-t8_vtk_reader::t8_vtk_reader (void)
+t8_vtk_reader::t8_vtk_reader ()
 {
 }
 
