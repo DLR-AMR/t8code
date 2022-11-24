@@ -32,6 +32,7 @@ struct t8_gmsh_reader:public t8_IO_reader_t
 {
 public:
   gmsh_file * file;
+  char      filepath[BUFSIZ];
   int                 msh_version;
   /* Constructor */
                       t8_gmsh_reader ();

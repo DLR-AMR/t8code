@@ -123,12 +123,11 @@ t8_read_status_t
 t8_gmsh_reader::set_source (const t8_extern_t * source)
 {
   if (source == NULL) {
-    t8_errorf("Error trying to open source\n");
+    t8_errorf("No path to a file provided\n");
     return T8_READ_FAIL;
   }
   else {
-    char filepath[BUFSIZ];
-    snprintf(filepath, BUFSIZ, "%s.msh", (const char *) source);
+    snprintf(filepath, BUFSIZ, "%s.msh", (const char*) source);
     /* Open the file */
     t8_debugf ("Opening file %s\n", filepath);
     file = fopen (filepath, "r");
