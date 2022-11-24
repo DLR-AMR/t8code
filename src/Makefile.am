@@ -24,7 +24,7 @@ libt8_installed_headers = \
   src/t8_element_cxx.hxx src/t8_element.h \
   src/t8_element_c_interface.h \
   src/t8_refcount.h src/t8_cmesh.h src/t8_cmesh_triangle.h \
-  src/t8_cmesh_tetgen.h src/t8_cmesh_readmshfile.h \
+  src/t8_cmesh_tetgen.h \
   src/t8_cmesh_vtk.h \
   src/t8_forest.h \
   src/t8_vec.h \
@@ -83,7 +83,9 @@ libt8_internal_headers = \
   src/t8_forest/t8_forest_cxx.h  \
   src/t8_forest/t8_forest_ghost.h \
   src/t8_forest/t8_forest_balance.h src/t8_forest/t8_forest_types.h \
-  src/t8_forest/t8_forest_private.h 
+  src/t8_forest/t8_forest_private.h \
+  src/t8_IO/t8_reader/t8_gmsh_reader/t8_cmesh_readmshfile.h \
+  src/t8_IO/t8_reader/t8_gmsh_reader/t8_cmesh_readmshfile.hxx
 libt8_compiled_sources = \
   src/t8.c src/t8_eclass.c src/t8_mesh.c \
   src/t8_element.c src/t8_element_cxx.cxx \
@@ -100,7 +102,8 @@ libt8_compiled_sources = \
   src/t8_cmesh/t8_cmesh_geometry.cxx \
   src/t8_cmesh/t8_cmesh_examples.c \
   src/t8_data/t8_containers.cxx \
-  src/t8_cmesh/t8_cmesh_offset.c src/t8_cmesh/t8_cmesh_readmshfile.cxx \
+  src/t8_cmesh/t8_cmesh_offset.c \
+  src/t8_IO/t8_reader/t8_gmsh_reader/t8_cmesh_readmshfile.cxx \
   src/t8_forest/t8_forest.c src/t8_forest/t8_forest_adapt.cxx \
   src/t8_geometry/t8_geometry.cxx \
   src/t8_geometry/t8_geometry_helpers.c \

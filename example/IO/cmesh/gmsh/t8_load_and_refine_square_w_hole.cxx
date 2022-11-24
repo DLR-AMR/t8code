@@ -29,7 +29,7 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh_vtk.h>
 #include <t8_cmesh/t8_cmesh_partition.h>
-#include <t8_cmesh_readmshfile.h>
+#include <src/t8_IO/t8_reader/t8_gmsh_reader/t8_cmesh_readmshfile.h>
 #include <t8_forest.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 

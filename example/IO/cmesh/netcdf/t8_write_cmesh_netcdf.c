@@ -34,7 +34,7 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh_netcdf.h>
-#include <t8_cmesh_readmshfile.h>
+#include <src/t8_IO/t8_reader/t8_gmsh_reader/t8_cmesh_readmshfile.h>
 #include <t8_eclass.h>
 #include <t8_netcdf.h>
 

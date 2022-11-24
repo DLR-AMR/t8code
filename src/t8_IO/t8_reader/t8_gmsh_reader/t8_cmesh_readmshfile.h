@@ -80,30 +80,18 @@ T8_EXTERN_C_BEGIN ();
 
 /* put declarations here */
 
-/** Read a .msh file and create a cmesh from it.
- * \param [in]    fileprefix        The prefix of the mesh file.
- *                                  The file fileprefix.msh is read.
- * \param [in]    partition         If true the file is only opened on one process
- *                                  specified by the \a master argument and saved as
- *                                  a partitioned cmesh where each other process does not
- *                                  have any trees.
- * \param [in]    comm              The MPI communicator with which the cmesh is to be committed.
- * \param [in]    dim               The dimension to read from the .msh files. The .msh format
- *                                  can store several dimensions of the mesh and therefore the
- *                                  dimension to read has to be set manually.
- * \param [in]    master            If partition is true, a valid MPI rank that will
- *                                  read the file and store all the trees alone.
- * \param [in]    use_occ_geometry  Read the parameters of a parametric msh file and use the
- *                                  occ geometry.
- * \return        A committed cmesh holding the mesh of dimension \a dim in the
- *                specified .msh file.
- */
 /* *INDENT-OFF* */
 t8_cmesh_t
 t8_cmesh_from_msh_file (const char *fileprefix, int partition,
                         sc_MPI_Comm comm, int dim, int master,
                         int use_occ_geometry);
 /* *INDENT-ON* */
+
+/* Given a cmesh and a file prefix, partition the cmesh uniformly
+ * and write vtk files for the partitioned mesh.
+ * The original cmesh is unreffed in this function. */
+t8_cmesh_t
+         t8_read_msh_partition (t8_cmesh_t cmesh, const char *prefix);
 
 T8_EXTERN_C_END ();
 

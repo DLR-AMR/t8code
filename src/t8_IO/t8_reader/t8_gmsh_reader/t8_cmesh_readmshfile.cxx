@@ -21,13 +21,14 @@
 */
 
 #include <t8_eclass.h>
-#include <t8_cmesh_readmshfile.h>
+#include <src/t8_IO/t8_reader/t8_gmsh_reader/t8_cmesh_readmshfile.h>
+#include <src/t8_IO/t8_reader/t8_gmsh_reader/t8_cmesh_readmshfile.hxx>
 #include <t8_cmesh_vtk.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.h>
-#include "t8_cmesh_types.h"
-#include "t8_cmesh_stash.h"
+#include <src/t8_cmesh/t8_cmesh_types.h>
+#include <src/t8_cmesh/t8_cmesh_stash.h>
 
 /* The supported number of gmesh tree classes.
  * Currently, we only support first order trees.
@@ -89,17 +90,7 @@ const int           t8_vertex_to_msh_vertex_num[T8_ECLASS_COUNT][8]
  *       creating .neigh files with tetgen/triangle is not common and even seems
  *       to not work sometimes */
 
-/* Read a the next line from a file stream that does not start with '#' or
- * contains only whitespaces (tabs etc.)
- *
- * \param [in,out] line     An allocated string to store the line.
- * \param [in,out] n        The number of allocated bytes.
- *                          If more bytes are needed line is reallocated and
- *                          the new number of bytes is stored in n.
- * \param [in]     fp       The file stream to read from.
- * \return                  The number of read arguments of the last line read.
- *                          negative on failure */
-static int
+int
 t8_cmesh_msh_read_next_line (char **line, size_t *n, FILE *fp)
 {
   int                 retval;
@@ -158,7 +149,7 @@ t8_msh_file_node_compare (const void *node_a, const void *node_b,
 }
 
 /* Reads an open msh-file and checks whether the MeshFormat-Version is supported by t8code or not. */
-static int
+int
 t8_cmesh_check_version_of_msh_file (FILE *fp)
 {
   char               *line = (char *) malloc (1024);
@@ -248,7 +239,7 @@ die_format:
 }
 
 /* Read an open .msh file of version 2 and parse the nodes into a hash table. */
-static sc_hash_t   *
+sc_hash_t          *
 t8_msh_file_2_read_nodes (FILE *fp, t8_locidx_t *num_nodes,
                           sc_mempool_t ** node_mempool)
 {
@@ -351,7 +342,7 @@ die_node:
 }
 
 /* Read an open .msh file of version 4 and parse the nodes into a hash table. */
-static sc_hash_t   *
+sc_hash_t          *
 t8_msh_file_4_read_nodes (FILE *fp,
                           t8_locidx_t *num_nodes,
                           sc_mempool_t ** node_mempool)
@@ -1570,7 +1561,7 @@ t8_msh_file_face_orientation (t8_msh_file_face_t * Face_a,
  * vertices, find the neighborship relations of each element */
 /* This routine does only find neighbors between local trees.
  * Use with care if cmesh is partitioned. */
-static void
+void
 t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh,
                                   sc_array_t *vertex_indices)
 {

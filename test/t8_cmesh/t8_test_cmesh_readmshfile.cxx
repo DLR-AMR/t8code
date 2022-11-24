@@ -24,7 +24,6 @@
 #include <t8.h>
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
-#include <t8_cmesh_readmshfile.h>
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include <src/t8_IO/t8_IO.h>
 

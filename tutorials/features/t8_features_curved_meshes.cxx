@@ -42,7 +42,7 @@
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>     /* default refinement scheme. */
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>       /* Linear geometry calculation of trees */
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx>  /* Curved geometry calculation of trees */
-#include <t8_cmesh_readmshfile.h>       /* msh file reader */
+#include <src/t8_IO/t8_reader/t8_gmsh_reader/t8_cmesh_readmshfile.h>    /* msh file reader */
 
 /* We use this data to control to which level the elements at which 
  * surface get refined. */
