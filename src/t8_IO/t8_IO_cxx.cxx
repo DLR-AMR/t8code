@@ -75,6 +75,7 @@ t8_IO_cxx_destroy (t8_IO_cxx_t * IO)
 {
   T8_ASSERT (IO != NULL);
   T8_ASSERT (IO->rc.refcount == 0);
+  t8_debugf ("[D] destroy IO\n");
 
   if (IO->writer != NULL) {
     delete              IO->writer;
@@ -138,11 +139,12 @@ t8_IO_read (t8_IO_cxx_t * IO, const t8_extern_t * source)
   t8_cmesh_init (&cmesh);
 
   /*TODO: the dimension has to be set by hand on every proc. Need a nice solution for that. */
+  t8_cmesh_set_dimension (cmesh, IO->reader->dim);
 
-  if (partition == T8_NO_PARTITION || mpirank == main_proc) {
+  if (partition == T8_NO_PARTITION || mpirank == (int) main_proc) {
     main_proc_read_status = IO->reader->set_source (source);
-    if (main_proc_read_status = T8_READ_FAIL) {
-      t8_global_errorf ("Reading from the source failed\n");
+    if (main_proc_read_status == T8_READ_FAIL) {
+      t8_global_errorf ("Opening the source failed\n");
       t8_cmesh_destroy (&cmesh);
       if (partition) {
         /* Communicate to other processes, that reading failed. */
@@ -152,7 +154,7 @@ t8_IO_read (t8_IO_cxx_t * IO, const t8_extern_t * source)
     }
     t8_debugf ("[D] opend source\n");
     main_proc_read_status = IO->reader->read (cmesh);
-    if (main_proc_read_status = T8_READ_FAIL) {
+    if (main_proc_read_status == T8_READ_FAIL) {
       t8_global_errorf ("Reading from the source failed\n");
       t8_cmesh_destroy (&cmesh);
       if (partition) {

@@ -1686,12 +1686,12 @@ t8_gmsh_reader::read (t8_cmesh_t cmesh)
 
 {
   const t8_geo_back_t geo = get_geo_back ();
-  const t8_partition_t partition = get_partition ();
   sc_hash_t          *vertices = NULL;
   t8_locidx_t         num_vertices;
   sc_mempool_t       *node_mempool = NULL;
   sc_array_t         *vertex_indices;
   long               *indices_entry;
+  return T8_READ_SUCCESS;
 
   switch (msh_version) {
   case 2:
@@ -1730,7 +1730,7 @@ t8_gmsh_reader::read (t8_cmesh_t cmesh)
         fclose (file);
         t8_debugf ("Occ is not linked. Cannot use occ geometry.\n");
         t8_cmesh_destroy (&cmesh);
-        T8_READ_FAIL;
+        return T8_READ_FAIL;
 #endif /* T8_WITH_OCC */
       }
       else {
@@ -1749,8 +1749,11 @@ t8_gmsh_reader::read (t8_cmesh_t cmesh)
       break;
     }
   }
+  /* Close file after reading. */
   fclose (file);
+  /* Find face-neighbors */
   t8_cmesh_msh_file_find_neighbors (cmesh, vertex_indices);
+  /* Free allocated memory. */
   if (vertices != NULL) {
     sc_hash_destroy (vertices);
   }
@@ -1769,6 +1772,7 @@ t8_read_status_t
 t8_gmsh_reader::set_source (const t8_extern_t * source)
 {
   if (source == NULL) {
+    t8_errorf("Error trying to open source\n");
     return T8_READ_FAIL;
   }
   else {
@@ -1778,6 +1782,7 @@ t8_gmsh_reader::set_source (const t8_extern_t * source)
     t8_debugf ("Opening file %s\n", filepath);
     file = fopen (filepath, "r");
     if(file == NULL){
+        fclose(file);
         return T8_READ_FAIL;
     }
     /* Check if the msh-file version is compatible. */

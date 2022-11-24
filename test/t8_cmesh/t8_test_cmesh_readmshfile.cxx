@@ -155,7 +155,7 @@ t8_test_cmesh_readmshfile_version2_ascii ()
   /* Try to read cmesh */
   t8_IO_set_dim (IO, 2);
   cmesh = t8_IO_read (IO, fileprefix);
-  //cmesh = t8_cmesh_from_msh_file (fileprefix, 1, sc_MPI_COMM_WORLD, 2, 0, 0);
+  cmesh = t8_cmesh_from_msh_file (fileprefix, 1, sc_MPI_COMM_WORLD, 2, 0, 0);
   SC_CHECK_ABORT (cmesh != NULL,
                   "Could not read cmesh from ascii version 2, but should be able to.");
   retval = t8_test_supported_msh_file (cmesh);
@@ -163,6 +163,7 @@ t8_test_cmesh_readmshfile_version2_ascii ()
 
   /* The cmesh was read sucessfully and we need to destroy it. */
   t8_cmesh_destroy (&cmesh);
+  t8_IO_cxx_unref (&IO);
 
   t8_global_productionf ("Could successfully read.\n");
 }
