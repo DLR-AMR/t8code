@@ -41,7 +41,7 @@ typedef struct t8_IO_reader t8_IO_reader_t;
 
 typedef struct t8_IO_writer t8_IO_writer_t;
 
-typedef void        t8_extern_t;
+typedef void t8_extern_t;
 
 typedef struct t8_IO_cxx t8_IO_cxx_t;
 
@@ -88,7 +88,7 @@ struct t8_IO_cxx
  * \param [in,out] IO           On input, this IO must be alive, that is,
  *                              exist with positive reference count.
  */
-void                t8_IO_cxx_ref (t8_IO_cxx_t * IO);
+void                t8_IO_cxx_ref (t8_IO_cxx_t *IO);
 
 /**
  * Construct a new IO routine using the reader/writer methods defined
@@ -109,7 +109,7 @@ t8_IO_cxx_t        *t8_IO_new_cxx (t8_reader_type_t reader,
  *                              Otherwise, the pointer is not changed and
  *                              the scheme is not modified in other ways.
  */
-void                t8_IO_cxx_unref (t8_IO_cxx_t ** pIO);
+void                t8_IO_cxx_unref (t8_IO_cxx_t **pIO);
 
 /**
  * Change the communicator used for the IO. The default communicator is
@@ -118,7 +118,7 @@ void                t8_IO_cxx_unref (t8_IO_cxx_t ** pIO);
  * \param[in, out] IO     The IO routine where the communicator is changed.
  * \param comm            The communicator to use.
  */
-void                t8_IO_set_reader_communicator (t8_IO_cxx_t * IO,
+void                t8_IO_set_reader_communicator (t8_IO_cxx_t *IO,
                                                    sc_MPI_Comm comm);
 
 /**
@@ -127,7 +127,7 @@ void                t8_IO_set_reader_communicator (t8_IO_cxx_t * IO,
  * \param[in, out] IO     The IO routine where the dimension is changed.
  * \param dim            The dimension to use.
  */
-void                t8_IO_set_dim (t8_IO_cxx_t * IO, int dim);
+void                t8_IO_set_dim (t8_IO_cxx_t *IO, int dim);
 
 /**
  * Set the partition of the cmesh 
@@ -135,14 +135,14 @@ void                t8_IO_set_dim (t8_IO_cxx_t * IO, int dim);
  * \param[in, out] IO     The IO routine where the partition-type is changed.
  * \param dim            The partition to use.
  */
-void                t8_IO_set_partition (t8_IO_cxx_t * IO,
+void                t8_IO_set_partition (t8_IO_cxx_t *IO,
                                          t8_partition_t part);
 
 /**
  * Destroy the IO routine, see t8_IO.hxx
  * \param IO        the IO-interface that should be destroyed.
  */
-extern void         t8_IO_cxx_destroy (t8_IO_cxx_t * IO);
+extern void         t8_IO_cxx_destroy (t8_IO_cxx_t *IO);
 
 /**
  * Read routine using the reader set in \ref t8_IO_new_cxx
@@ -151,7 +151,7 @@ extern void         t8_IO_cxx_destroy (t8_IO_cxx_t * IO);
  * \param source      The source to read
  * \return t8_cmesh_t A cmesh constructed as described by \a source.
  */
-t8_cmesh_t          t8_IO_read (t8_IO_cxx_t * IO, const t8_extern_t * source);
+t8_cmesh_t          t8_IO_read (t8_IO_cxx_t *IO, const t8_extern_t *source);
 
 /**
  * A general routine for writing files in serial. 
@@ -160,7 +160,7 @@ t8_cmesh_t          t8_IO_read (t8_IO_cxx_t * IO, const t8_extern_t * source);
  * \param IO        the IO-interface
  * \param type      The type of the writer to use
  */
-void                t8_IO_write (t8_IO_cxx_t * IO);
+void                t8_IO_write (t8_IO_cxx_t *IO);
 
 /**
  * A general routine for writing files in parallel. 
@@ -169,7 +169,7 @@ void                t8_IO_write (t8_IO_cxx_t * IO);
  * \param IO        the IO-interface
  * \param type      The type of the writer to use
  */
-void                t8_IO_write_parallel (t8_IO_cxx_t * IO);
+void                t8_IO_write_parallel (t8_IO_cxx_t *IO);
 
 T8_EXTERN_C_END ();
 

@@ -32,7 +32,7 @@
 #include <src/t8_IO/t8_IO_cxx.hxx>
 #include <t8.h>
 
-typedef char        vtk_path;
+typedef char vtk_path;
 
 /**
  * An implementation of a reader for vtk-files. 
@@ -40,15 +40,15 @@ typedef char        vtk_path;
 struct t8_vtk_reader:public t8_IO_reader_t
 {
 public:
-  vtk_path * filepath;
+  vtk_path           *filepath;
   /* Constructor */
-  t8_vtk_reader ();
+                      t8_vtk_reader ();
   /* Destructor */
-  ~t8_vtk_reader ();
+                     ~t8_vtk_reader ();
   /* Read the input */
   virtual t8_read_status_t read (t8_cmesh_t cmesh);
 
-  virtual t8_read_status_t set_source (const t8_extern_t * source);
+  virtual t8_read_status_t set_source (const t8_extern_t *source);
 #ifdef T8_ENABLE_DEBUG
   virtual int         valid ();
 #endif                          /* T8_ENABLE_DEBUG */

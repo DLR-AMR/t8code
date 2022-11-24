@@ -26,12 +26,12 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <src/t8_IO/t8_IO_cxx.hxx>
 #include <t8.h>
 
-typedef FILE        gmsh_file;
+typedef FILE gmsh_file;
 
 struct t8_gmsh_reader:public t8_IO_reader_t
 {
 public:
-  gmsh_file * file;
+  gmsh_file          *file;
   char                fileprefix[BUFSIZ - 4];
   int                 msh_version;
   /* Constructor */
@@ -41,7 +41,7 @@ public:
   /* Read the gmsh-file and translate it into a cmesh */
   virtual t8_read_status_t read (t8_cmesh_t cmesh);
   /* Set the input */
-  virtual t8_read_status_t set_source (const t8_extern_t * source);
+  virtual t8_read_status_t set_source (const t8_extern_t *source);
 #ifdef T8_ENABLE_DEBUG
   virtual int         valid ();
 #endif

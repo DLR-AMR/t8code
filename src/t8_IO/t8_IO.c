@@ -23,14 +23,14 @@
 #include <src/t8_IO/t8_IO.h>
 
 void
-t8_IO_cxx_ref (t8_IO_cxx_t * IO)
+t8_IO_cxx_ref (t8_IO_cxx_t *IO)
 {
   T8_ASSERT (IO != NULL);
   sc_refcount_ref (&IO->rc);
 }
 
 void
-t8_IO_cxx_unref (t8_IO_cxx_t ** pIO)
+t8_IO_cxx_unref (t8_IO_cxx_t **pIO)
 {
   T8_ASSERT (pIO != NULL);
   t8_IO_cxx_t        *IO = *pIO;

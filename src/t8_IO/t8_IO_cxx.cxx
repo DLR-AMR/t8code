@@ -71,7 +71,7 @@ t8_IO_new_cxx (t8_reader_type_t reader, t8_writer_type_t writer)
 }
 
 void
-t8_IO_cxx_destroy (t8_IO_cxx_t * IO)
+t8_IO_cxx_destroy (t8_IO_cxx_t *IO)
 {
   T8_ASSERT (IO != NULL);
   T8_ASSERT (IO->rc.refcount == 0);
@@ -85,35 +85,35 @@ t8_IO_cxx_destroy (t8_IO_cxx_t * IO)
 }
 
 void
-t8_IO_set_reader_communicator (t8_IO_cxx_t * IO, sc_MPI_Comm comm)
+t8_IO_set_reader_communicator (t8_IO_cxx_t *IO, sc_MPI_Comm comm)
 {
   T8_ASSERT (IO != NULL);
   IO->reader->set_Communicator (comm);
 }
 
 void
-t8_IO_set_dim (t8_IO_cxx_t * IO, int dim)
+t8_IO_set_dim (t8_IO_cxx_t *IO, int dim)
 {
   T8_ASSERT (IO != NULL);
   IO->reader->set_dim (dim);
 }
 
 void
-t8_IO_set_partition (t8_IO_cxx_t * IO, t8_partition_t part)
+t8_IO_set_partition (t8_IO_cxx_t *IO, t8_partition_t part)
 {
   T8_ASSERT (IO != NULL);
   IO->reader->set_partition (part);
 }
 
 void
-t8_IO_set_reader_main_proc (t8_IO_cxx_t * IO, const unsigned int proc)
+t8_IO_set_reader_main_proc (t8_IO_cxx_t *IO, const unsigned int proc)
 {
   T8_ASSERT (IO != NULL);
   IO->reader->set_main_proc (proc);
 }
 
 t8_cmesh_t
-t8_IO_read (t8_IO_cxx_t * IO, const t8_extern_t * source)
+t8_IO_read (t8_IO_cxx_t *IO, const t8_extern_t *source)
 {
   T8_ASSERT (IO != NULL);
   T8_ASSERT (source != NULL);
