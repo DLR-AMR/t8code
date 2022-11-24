@@ -157,17 +157,17 @@ t8_IO_read (t8_IO_cxx_t * IO, const t8_extern_t * source)
     if (main_proc_read_status == T8_READ_FAIL) {
       t8_global_errorf ("Reading from the source failed\n");
       t8_cmesh_destroy (&cmesh);
-      if (partition) {
+      if (partition == T8_PARTITION) {
         /* Communicate to other processes, that reading failed. */
         sc_MPI_Bcast (&main_proc_read_status, 1, sc_MPI_INT, main_proc, comm);
       }
       return NULL;
     }
   }
-  if (partition) {
+  if (partition == T8_PARTITION) {
     t8_gloidx_t         num_trees;
     t8_gloidx_t         first_tree;
-    t8_gloidx_t         last_tree;
+    t8_gloidx_t         last_tree = -1;
     sc_MPI_Bcast (&main_proc_read_status, 1, sc_MPI_INT, main_proc, comm);
     if (main_proc_read_status == T8_READ_FAIL) {
       t8_debugf ("Main process could not read cmesh successfully.\n");
