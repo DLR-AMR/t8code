@@ -69,9 +69,9 @@ t8_gmsh_reader::read (t8_cmesh_t cmesh)
         t8_msh_file_4_read_nodes (file, &num_vertices, &node_mempool);
       if (geo == T8_USE_OCC) {
 #if T8_WITH_OCC
-        t8_geometry_occ     geometry_occ =
+        t8_geometry_occ    *geometry_occ =
           t8_geometry_occ_new (dim, fileprefix, "brep_geometry");
-        t8_geometry         geometry = geometry_occ;
+        t8_geometry        *geometry = geometry_occ;
         /* Register geometry */
         t8_cmesh_register_geometry (cmesh, geometry);
         t8_cmesh_msh_file_4_read_eles (cmesh, file, vertices, &vertex_indices,
@@ -127,7 +127,9 @@ t8_gmsh_reader::set_source (const t8_extern_t * source)
     return T8_READ_FAIL;
   }
   else {
-    snprintf(filepath, BUFSIZ, "%s.msh", (const char*) source);
+    char    filepath[BUFSIZ];
+    snprintf(fileprefix, BUFSIZ - 4, (const char*)source);
+    snprintf(filepath, BUFSIZ, "%s.msh", fileprefix);
     /* Open the file */
     t8_debugf ("Opening file %s\n", filepath);
     file = fopen (filepath, "r");
