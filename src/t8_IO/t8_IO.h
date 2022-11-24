@@ -45,6 +45,30 @@ typedef void        t8_extern_t;
 
 typedef struct t8_IO_cxx t8_IO_cxx_t;
 
+typedef enum t8_partition
+{
+  T8_NO_PARTITION = 0,
+  T8_PARTITION
+} t8_partition_t;
+
+typedef enum t8_geo_back
+{
+  T8_LINEAR = 0,
+  T8_USE_OCC
+} t8_geo_back_t;
+
+typedef enum t8_read_status
+{
+  T8_READ_SUCCESS = 0,
+  T8_READ_FAIL
+} t8_read_status_t;
+
+typedef enum t8_write_status
+{
+  T8_WRITE_SUCCESS = 0,
+  T8_WRITE_FAIL
+} t8_write_status_t;
+
 /* Struct that holds reader and writer routines and can be passed to 
  * Input/Output routines. */
 struct t8_IO_cxx
@@ -104,6 +128,15 @@ void                t8_IO_set_reader_communicator (t8_IO_cxx_t * IO,
  * \param dim            The dimension to use.
  */
 void                t8_IO_set_dim (t8_IO_cxx_t * IO, int dim);
+
+/**
+ * Set the partition of the cmesh 
+ * 
+ * \param[in, out] IO     The IO routine where the partition-type is changed.
+ * \param dim            The partition to use.
+ */
+void                t8_IO_set_partition (t8_IO_cxx_t * IO,
+                                         t8_partition_t part);
 
 /**
  * Destroy the IO routine, see t8_IO.hxx

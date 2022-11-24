@@ -34,30 +34,6 @@
 
 T8_EXTERN_C_BEGIN ();
 
-typedef enum t8_partition
-{
-  T8_NO_PARTITION = 0,
-  T8_PARTITION
-} t8_partition_t;
-
-typedef enum t8_geo_back
-{
-  T8_LINEAR = 0,
-  T8_USE_OCC
-} t8_geo_back_t;
-
-typedef enum t8_read_status
-{
-  T8_READ_SUCCESS = 0,
-  T8_READ_FAIL
-} t8_read_status_t;
-
-typedef enum t8_write_status
-{
-  T8_WRITE_SUCCESS = 0,
-  T8_WRITE_FAIL
-} t8_write_status_t;
-
 /**
  * Base-Class for reader-routines.
  */

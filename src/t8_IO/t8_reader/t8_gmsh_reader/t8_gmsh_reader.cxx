@@ -1691,7 +1691,6 @@ t8_gmsh_reader::read (t8_cmesh_t cmesh)
   sc_mempool_t       *node_mempool = NULL;
   sc_array_t         *vertex_indices;
   long               *indices_entry;
-  return T8_READ_SUCCESS;
 
   switch (msh_version) {
   case 2:
@@ -1749,6 +1748,7 @@ t8_gmsh_reader::read (t8_cmesh_t cmesh)
       break;
     }
   }
+
   /* Close file after reading. */
   fclose (file);
   /* Find face-neighbors */

@@ -154,8 +154,8 @@ t8_test_cmesh_readmshfile_version2_ascii ()
 
   /* Try to read cmesh */
   t8_IO_set_dim (IO, 2);
+  t8_IO_set_partition (IO, T8_PARTITION);
   cmesh = t8_IO_read (IO, fileprefix);
-  cmesh = t8_cmesh_from_msh_file (fileprefix, 1, sc_MPI_COMM_WORLD, 2, 0, 0);
   SC_CHECK_ABORT (cmesh != NULL,
                   "Could not read cmesh from ascii version 2, but should be able to.");
   retval = t8_test_supported_msh_file (cmesh);
@@ -174,6 +174,7 @@ t8_test_cmesh_readmshfile_version2_bin ()
 {
   int                 retval;
   t8_cmesh_t          cmesh;
+  t8_IO_cxx_t        *IO = t8_IO_new_cxx (T8_READER_GMSH, T8_WRITER_NOT_USED);
   const char          fileprefix[BUFSIZ - 4] =
     "test/testfiles/test_msh_file_vers2_bin";
   char                filename[BUFSIZ];
@@ -187,13 +188,15 @@ t8_test_cmesh_readmshfile_version2_bin ()
                    filename);
 
   /* Try to read cmesh */
-  cmesh = t8_cmesh_from_msh_file (fileprefix, 1, sc_MPI_COMM_WORLD, 2, 0, 0);
+  t8_IO_set_dim (IO, 2);
+  t8_IO_set_partition (IO, T8_PARTITION);
+  cmesh = t8_IO_read (IO, fileprefix);
   SC_CHECK_ABORT (cmesh == NULL,
                   "Expected fail of reading binary msh file v.2, but did not fail.");
   retval = t8_test_supported_msh_file (cmesh);
   SC_CHECK_ABORT (retval == 0,
                   "Unexpected return from t8_test_supported_msh_file.");
-
+  t8_IO_cxx_unref (&IO);
   t8_global_productionf ("Error handling successfull.\n");
 }
 
@@ -203,6 +206,7 @@ t8_test_cmesh_readmshfile_version4_ascii ()
 {
   int                 retval;
   t8_cmesh_t          cmesh;
+  t8_IO_cxx_t        *IO = t8_IO_new_cxx (T8_READER_GMSH, T8_WRITER_NOT_USED);
   const char          fileprefix[BUFSIZ - 4] =
     "test/testfiles/test_msh_file_vers4_ascii";
   char                filename[BUFSIZ];
@@ -216,7 +220,9 @@ t8_test_cmesh_readmshfile_version4_ascii ()
                    filename);
 
   /* Try to read cmesh */
-  cmesh = t8_cmesh_from_msh_file (fileprefix, 1, sc_MPI_COMM_WORLD, 2, 0, 0);
+  t8_IO_set_dim (IO, 2);
+  t8_IO_set_partition (IO, T8_PARTITION);
+  cmesh = t8_IO_read (IO, fileprefix);
   SC_CHECK_ABORT (cmesh != NULL,
                   "Could not read cmesh from ascii version 4, but should be able to.");
   retval = t8_test_supported_msh_file (cmesh);
@@ -224,7 +230,7 @@ t8_test_cmesh_readmshfile_version4_ascii ()
 
   /* The cmesh was read sucessfully and we need to destroy it. */
   t8_cmesh_destroy (&cmesh);
-
+  t8_IO_cxx_unref (&IO);
   t8_global_productionf ("Could successfully read.\n");
 }
 
@@ -234,6 +240,7 @@ t8_test_cmesh_readmshfile_version4_bin ()
 {
   int                 retval;
   t8_cmesh_t          cmesh;
+  t8_IO_cxx_t        *IO = t8_IO_new_cxx (T8_READER_GMSH, T8_WRITER_NOT_USED);
   const char          fileprefix[BUFSIZ - 4] =
     "test/testfiles/test_msh_file_vers4_bin";
   char                filename[BUFSIZ];
@@ -247,10 +254,14 @@ t8_test_cmesh_readmshfile_version4_bin ()
                    filename);
 
   /* Try to read cmesh */
-  cmesh = t8_cmesh_from_msh_file (fileprefix, 1, sc_MPI_COMM_WORLD, 2, 0, 0);
+  t8_IO_set_dim (IO, 2);
+  t8_IO_set_partition (IO, T8_PARTITION);
+  cmesh = t8_IO_read (IO, fileprefix);
   SC_CHECK_ABORT (cmesh == NULL,
                   "Expected fail of reading binary msh file v4, but did not fail.");
   retval = t8_test_supported_msh_file (cmesh);
+  t8_IO_cxx_unref (&IO);
+
   SC_CHECK_ABORT (retval == 0,
                   "Unexpected return from t8_test_supported_msh_file.");
   t8_global_productionf ("Error handling successfull.\n");
@@ -278,7 +289,7 @@ main (int argc, char **argv)
   /* Testing unsupported msh-file version 2 binary. */
   t8_test_cmesh_readmshfile_version2_bin ();
 
-  /* Testing supported msh-file version 4 ascii. */
+  /* Testing unsupported msh-file version 4 ascii. */
   t8_test_cmesh_readmshfile_version4_ascii ();
 
   /* Testing unsupported msh-file version 4 binary. */
