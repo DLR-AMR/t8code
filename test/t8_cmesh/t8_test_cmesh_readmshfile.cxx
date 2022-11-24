@@ -277,7 +277,7 @@ main (int argc, char **argv)
   /* Testing unsupported msh-file version 2 binary. */
   t8_test_cmesh_readmshfile_version2_bin ();
 
-  /* Testing unsupported msh-file version 4 ascii. */
+  /* Testing supported msh-file version 4 ascii. */
   t8_test_cmesh_readmshfile_version4_ascii ();
 
   /* Testing unsupported msh-file version 4 binary. */
