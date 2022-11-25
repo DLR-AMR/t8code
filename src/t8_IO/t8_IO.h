@@ -22,7 +22,7 @@
 
 /**
  * \file  t8_IO.h
- * Defines a class that combines input and outputroutines.
+ * This file defines a struct that combines input- and output-routines.
  * 
  */
 
@@ -92,7 +92,6 @@ extern void         t8_IO_cxx_destroy (t8_IO_cxx_t * IO);
 
 /**
  * A general routine for writing files in serial. 
- * TODO: provide implementation
  * 
  * \param IO        the IO-interface
  * \param type      The type of the writer to use
@@ -101,7 +100,6 @@ void                t8_IO_write (t8_IO_cxx_t * IO);
 
 /**
  * A general routine for writing files in parallel. 
- * TODO: provide implementation
  * 
  * \param IO        the IO-interface
  * \param type      The type of the writer to use
