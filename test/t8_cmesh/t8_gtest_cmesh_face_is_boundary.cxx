@@ -115,7 +115,6 @@ protected:
   t8_eclass           eclass;
   int                 do_partition;
   int                 num_faces;
-  int                 iface;
   int                 checkface;
   t8_gloidx_t         first_tree;
   t8_gloidx_t         last_tree;
@@ -123,7 +122,7 @@ protected:
 
 TEST_P (cmesh_face_boundary_two_trees, check_face_is_boundary_two_trees) {
 
-    for (iface = 0; iface < num_faces; ++iface) {
+    for (int iface = 0; iface < num_faces; ++iface) {
         /* For each face of the eclass we construct one cmesh having
          * this face as a connecting face.
          * Once partitioned and once replicated */
