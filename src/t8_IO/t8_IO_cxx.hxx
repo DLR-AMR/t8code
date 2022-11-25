@@ -37,7 +37,7 @@ T8_EXTERN_C_BEGIN ();
 /**
  * Base-Class for reader-routines.
  */
-typedef struct t8_IO_reader
+struct t8_IO_reader
 {
 private:
   /**

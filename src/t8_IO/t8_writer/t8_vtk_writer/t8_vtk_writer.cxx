@@ -29,7 +29,7 @@
 
 T8_EXTERN_C_BEGIN ();
 /* *INDENT-OFF* */
-t8_write_status 
+t8_write_status_t 
 t8_vtk_writer::write ()
 /* *INDENT-ON* */
 {
