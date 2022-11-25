@@ -110,17 +110,16 @@ protected:
 
   }
 
-  t8_cmesh_t          cmesh;
-
   t8_eclass           eclass;
   int                 do_partition;
   int                 num_faces;
-  int                 checkface;
-  t8_gloidx_t         first_tree;
-  t8_gloidx_t         last_tree;
 };
 
 TEST_P (cmesh_face_boundary_two_trees, check_face_is_boundary_two_trees) {
+
+  t8_cmesh_t          cmesh;
+  t8_gloidx_t         first_tree;
+  t8_gloidx_t         last_tree;
 
     for (int iface = 0; iface < num_faces; ++iface) {
         /* For each face of the eclass we construct one cmesh having
@@ -140,7 +139,7 @@ TEST_P (cmesh_face_boundary_two_trees, check_face_is_boundary_two_trees) {
         }
         t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
         EXPECT_TRUE(t8_cmesh_is_committed (cmesh));
-        for (checkface = 0; checkface < num_faces; ++checkface) {
+        for (int checkface = 0; checkface < num_faces; ++checkface) {
           if (iface != checkface) {
             /* The face checkface is a boundary face for tree 0 and tree 1 */
             /* Check that tree 0 face is a boundary */
