@@ -36,7 +36,7 @@ protected:
     cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
   }
   void TearDown() override {
-    t8_cmesh_unref(&cmesh);
+    t8_cmesh_destroy(&cmesh);
   }
 
   t8_cmesh_t          cmesh;
@@ -109,11 +109,9 @@ protected:
     t8_test_compute_parallel_bounds (sc_MPI_COMM_WORLD, &first_tree, &last_tree);
 
   }
-  void TearDown() override {
-    t8_cmesh_unref(&cmesh);
-  }
 
   t8_cmesh_t          cmesh;
+
   t8_eclass           eclass;
   int                 do_partition;
   int                 num_faces;
@@ -182,6 +180,7 @@ TEST_P (cmesh_face_boundary_two_trees, check_face_is_boundary_two_trees) {
             EXPECT_EQ(orientation, 0);
           }
         }
+        t8_cmesh_destroy(&cmesh);
     }       /* End iface loop */
 }
 
