@@ -128,7 +128,7 @@ t8_gmsh_reader::set_source (const t8_extern_t * source)
   }
   else {
     char    filepath[BUFSIZ];
-    snprintf(fileprefix, BUFSIZ - 4, (const char*)source);
+    snprintf(fileprefix, BUFSIZ - 4, "%s", (const char*)source);
     snprintf(filepath, BUFSIZ, "%s.msh", fileprefix);
     /* Open the file */
     t8_debugf ("Opening file %s\n", filepath);
