@@ -106,8 +106,6 @@ protected:
     eclass = std::get<0>(GetParam());
     do_partition = std::get<1>(GetParam());
     num_faces = t8_eclass_num_faces[(int)eclass];
-    t8_test_compute_parallel_bounds (sc_MPI_COMM_WORLD, &first_tree, &last_tree);
-
   }
 
   t8_eclass           eclass;
@@ -121,6 +119,8 @@ TEST_P (cmesh_face_boundary_two_trees, check_face_is_boundary_two_trees) {
   t8_gloidx_t         first_tree;
   t8_gloidx_t         last_tree;
 
+  t8_test_compute_parallel_bounds (sc_MPI_COMM_WORLD, &first_tree, &last_tree);
+  
     for (int iface = 0; iface < num_faces; ++iface) {
         /* For each face of the eclass we construct one cmesh having
          * this face as a connecting face.
