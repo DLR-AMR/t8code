@@ -1209,8 +1209,15 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
           /* Then we look for geometries linked to the edges */
           for (int i_tree_edges = 0; i_tree_edges < num_edges; ++i_tree_edges)
           {
-            edge_nodes[0] = tree_nodes[t8_edge_vertex_to_tree_vertex[i_tree_edges][0]];
-            edge_nodes[1] = tree_nodes[t8_edge_vertex_to_tree_vertex[i_tree_edges][1]];
+            if (t8_eclass_to_dimension[eclass] == 3) {
+              edge_nodes[0] = tree_nodes[t8_edge_vertex_to_tree_vertex[i_tree_edges][0]];
+              edge_nodes[1] = tree_nodes[t8_edge_vertex_to_tree_vertex[i_tree_edges][1]];
+            }
+            else
+            {
+              edge_nodes[0] = tree_nodes[t8_face_vertex_to_tree_vertex[eclass][i_tree_edges][0]];
+              edge_nodes[1] = tree_nodes[t8_face_vertex_to_tree_vertex[eclass][i_tree_edges][1]];
+            }
             /* Both nodes have to be parametric or on a vertex to be linked to a curve or surface */
             if ((!edge_nodes[0].parametric && 
                  edge_nodes[0].entity_dim != 0) ||
