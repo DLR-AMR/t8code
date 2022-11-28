@@ -263,11 +263,14 @@ t8_naca_plane_adapt_callback (t8_forest_t forest,
  * \param [in] level            The base level of the mesh.
  * \param [in] rlevel           The max level the elements get refined to.
  * \param [in] steps            The amount of time steps the plane makes.
- * \param [in] dist             The distance an element must not exceed from the plane, to get refined.
+ * \param [in] thickness        The thickness of the refinement band.
+ * \param [in] xmin             The starting x-coordinate of the refinement plane.
+ * \param [in] xmax             The ending x-coordinate of the refinement plane.
  */
 int
 t8_naca_plane_refinement (t8_forest_t forest, int level, int rlevel,
-                          int steps, double dist)
+                          int steps, double thickness, double xmin,
+                          double xmax)
 {
   char                forest_vtu[BUFSIZ];
   t8_forest_t         forest_new;
@@ -276,9 +279,9 @@ t8_naca_plane_refinement (t8_forest_t forest, int level, int rlevel,
   t8_naca_plane_adapt_data adapt_data = {
     0,                          /* The time step we are in */
     steps,                      /* The amount of time steps */
-    -0.2,                       /* The minimum x-coordinate of the profile */
-    1.5,                        /* The maximum x-coordinate of the profile */
-    dist,                       /* The distance an element can have from the plane to still be refined */
+    xmin,                       /* The minimum x-coordinate of the profile */
+    xmax,                       /* The maximum x-coordinate of the profile */
+    thickness / 2,              /* The distance an element can have from the plane to still be refined */
     level,                      /* The uniform refinement level */
     rlevel                      /* The max refinement level */
   };
@@ -321,8 +324,8 @@ main (int argc, char **argv)
   t8_forest_t         forest;
   const char         *fileprefix = NULL;
   int                 level, rlevel, rlevel_dorsal, rlevel_ventral;
-  int                 surface, plane, steps, occ;
-  double              dist;
+  int                 surface, plane, steps, occ, dim;
+  double              xmin, xmax, thickness;
 
   /* brief help message */
   snprintf (usage, BUFSIZ, "\t%s <OPTIONS>\n\t%s -h\t"
@@ -362,6 +365,8 @@ main (int argc, char **argv)
                          "Display a short help message.");
   sc_options_add_string (opt, 'f', "fileprefix", &fileprefix, NULL,
                          "Fileprefix of the msh and brep files.");
+  sc_options_add_int (opt, 'd', "dimension", &dim, 3,
+                      "The dimension of the mesh. Defailt: 3");
   sc_options_add_int (opt, 'l', "level", &level, 0,
                       "The uniform refinement level of the mesh. Default: 0");
   sc_options_add_int (opt, 'r', "rlevel", &rlevel, 3,
@@ -374,9 +379,13 @@ main (int argc, char **argv)
                       "The refinement level of the ventral side of the naca profile. Default: 2");
   sc_options_add_switch (opt, 'p', "plane", &plane,
                          "Move a plane through the forest and refine elements close to the plane.");
-  sc_options_add_double (opt, 'x', "distance", &dist, 0.1,
-                         "Maximum distance an element can have from the plane to still be refined. Default: 0.1");
-  sc_options_add_int (opt, 't', "timesteps", &steps, 10,
+  sc_options_add_double (opt, 'x', "xmin", &xmin, -0.2,
+                         "X coordinate where the plane starts. Default: -0.2");
+  sc_options_add_double (opt, 'X', "xmax", &xmax, 1.5,
+                         "X coordinate where the plane ends. Default: 1.5");
+  sc_options_add_double (opt, 't', "thickness", &thickness, 0.2,
+                         "Thickness of the refinement band. Default: 0.2");
+  sc_options_add_int (opt, 'n', "timesteps", &steps, 10,
                       "How many steps the plane takes to move through the airfoil. Default: 10");
   sc_options_add_switch (opt, 'o', "occ", &occ, "Use the occ geometry.");
   parsed =
@@ -395,7 +404,7 @@ main (int argc, char **argv)
   else {
     /* Read in the naca mesh from the msh file and the naca geometry from the brep file */
     cmesh =
-      t8_cmesh_from_msh_file (fileprefix, 0, sc_MPI_COMM_WORLD, 3, 0, occ);
+      t8_cmesh_from_msh_file (fileprefix, 0, sc_MPI_COMM_WORLD, dim, 0, occ);
     /* Construct a forest from the cmesh */
     forest = t8_forest_new_uniform (cmesh,
                                     t8_scheme_new_default_cxx (),
@@ -405,7 +414,8 @@ main (int argc, char **argv)
       t8_naca_surface_refinement (forest, rlevel_dorsal, rlevel_ventral);
     }
     if (plane) {
-      t8_naca_plane_refinement (forest, level, rlevel, steps, dist);
+      t8_naca_plane_refinement (forest, level, rlevel, steps, thickness, xmin,
+                                xmax);
     }
   }
   sc_options_destroy (opt);
