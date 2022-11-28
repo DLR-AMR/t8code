@@ -419,14 +419,14 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh,
             for (int dim = 0; dim < 2; ++dim) {
               face_displacement_from_edges[dim]
                 += (1 - ref_coords[orthogonal_direction_of_edge_on_face])
-                * (pnt.Coord (dim) - interpolated_edge_coordinates[0]);
+                * (pnt.Coord (dim + 1) - interpolated_edge_coordinates[0]);
             }
           }
           else {
             for (int dim = 0; dim < 2; ++dim) {
               face_displacement_from_edges[dim]
                 += (ref_coords[orthogonal_direction_of_edge_on_face])
-                * (pnt.Coord (dim) - interpolated_edge_coordinates[0]);
+                * (pnt.Coord (dim + 1) - interpolated_edge_coordinates[0]);
             }
           }
 
@@ -576,6 +576,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
       (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
                                          T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY,
                                          gtreeid);
+    T8_ASSERT (face_parameters != NULL);
 
     /* Interpolate between surface parameters */
     t8_geom_linear_interpolation (ref_coords,
@@ -585,7 +586,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
     /* Iterate over each edge to seach for parameter displacements */
     for (int i_edge = 0; i_edge < num_edges; ++i_edge) {
       if (edges[i_edge] > 0) {
-        /* The edges of a quad point in direction of ref_coord 1 - i_edge / 2.
+        /* The edges of a quad point in direction of ref_coord (1 - i_edge / 2).
          *
          *     2 -------E3------- 3
          *     |                  |
@@ -597,7 +598,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
          *     0 -------E2------- 1    x-- x
          *        
          */
-        const int           edge_direction = 1 - i_edge / 2;
+        const int           edge_orthogonal_direction = (i_edge / 2);
+        const int           edge_direction = 1 - edge_orthogonal_direction;
 
         /* Retrieve edge parameters and interpolate */
         const double       *edge_parameters =
@@ -605,6 +607,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
                                              T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY
                                              + i_edge,
                                              gtreeid);
+        T8_ASSERT (edge_parameters != NULL);
         T8_ASSERT (edges[i_edge] <= occ_shape_edge_map.Size ());
 
         /* *INDENT-OFF* */
@@ -633,7 +636,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
         /* Interpolate between the surface parameters of the current edge */
         double              edge_surface_parameters[4],
           interpolated_edge_surface_parameters[2];
-        t8_geom_get_edge_vertices (active_tree_class,
+        t8_geom_get_face_vertices (active_tree_class,
                                    face_parameters,
                                    i_edge, 2, edge_surface_parameters);
         t8_geom_linear_interpolation (&ref_coords[edge_direction],
@@ -644,10 +647,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
         /* Calculate parameter displacement and add it to the surface parameters */
         for (int dim = 0; dim < 2; ++dim) {
           const double        displacement =
-            interpolated_edge_surface_parameters[dim]
-            - converted_edge_surface_parameters[dim];
-          const int           edge_orthogonal_direction =
-            (edge_direction + 1) % 2;
+            converted_edge_surface_parameters[dim]
+            - interpolated_edge_surface_parameters[dim];
           double              scaled_displacement;
           if (i_edge % 2 == 0) {
             scaled_displacement =
@@ -674,7 +675,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
     surface->D0 (interpolated_surface_parameters[0],
                  interpolated_surface_parameters[1], pnt);
     for (int dim = 0; dim < 3; ++dim) {
-      out_coords[dim] = pnt.Coord (dim);
+      out_coords[dim] = pnt.Coord (dim + 1);
     }
   }
   else {
@@ -688,7 +689,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
         /* An edge can only be linked to a curve or a surface, not both */
         T8_ASSERT (!(edges[i_edge] > 0) || !(edges[i_edge + num_edges] > 0));
 
-        /* The edges of a quad point in direction of ref_coord 1 - i_edge / 2.
+        /* The edges of a quad point in direction of ref_coord (1 - i_edge / 2).
          *
          *     2 -------E3------- 3
          *     |                  |
@@ -700,11 +701,12 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
          *     0 -------E2------- 1    x-- x
          *        
          */
-        const int           edge_direction = 1 - i_edge / 2;
+        const int           edge_orthogonal_direction = (i_edge / 2);
+        const int           edge_direction = 1 - edge_orthogonal_direction;
         double              temp_edge_vertices[2 * 3];
 
         /* Save the edge vertices temporarily. */
-        t8_geom_get_edge_vertices (active_tree_class,
+        t8_geom_get_face_vertices (active_tree_class,
                                    active_tree_vertices,
                                    i_edge, 3, temp_edge_vertices);
         /* Interpolate between them. */
@@ -764,10 +766,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
         /* Calculate displacement between points on curve and pint on linear curve.
          * Then scale it and add the scaled displacement to the result. */
         for (int dim = 0; dim < 3; ++dim) {
-          const double        displacement = pnt.Coord (dim)
+          const double        displacement = pnt.Coord (dim + 1)
             - interpolated_coords[dim];
-          const int           edge_orthogonal_direction =
-            (edge_direction + 1) % 2;
           double              scaled_displacement;
           if (i_edge % 2 == 0) {
             scaled_displacement =
