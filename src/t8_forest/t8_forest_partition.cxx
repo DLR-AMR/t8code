@@ -917,7 +917,6 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm,
   }
   t8_debugf ("Receiving message of %i bytes from process %i\n", recv_bytes,
              proc);
-#endif
 
   if (proc != forest->mpirank) {
     /* allocate the receive buffer */
