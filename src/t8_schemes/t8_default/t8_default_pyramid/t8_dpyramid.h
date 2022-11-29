@@ -55,7 +55,17 @@ typedef int32_t     t8_dpyramid_coord_t;
 */
 typedef int8_t t8_dpyramid_type_t;
 
-/** This data type stores a pyramid. */
-typedef t8_dtet_t t8_dpyramid_t;
+/**
+ * This data type stores a pyramid. 
+ * The coordinates, the level and the type of a pyramid are stored in the tet-struct \a pyramid.
+ * Level, at which the shape switches from tet, to pyra. -1 if not computed for a pyramid with the shape of a tet
+ * undefined, if the pyramid has the shape of a pyramid.
+ */
+typedef struct t8_dpyramid
+{
+  t8_dtet_t           pyramid;  /* Coordinates, level and type */
+  int8_t              switch_shape_at_level;
+}
+t8_dpyramid_t;
 
 #endif /* T8_DPYRAMID_H */

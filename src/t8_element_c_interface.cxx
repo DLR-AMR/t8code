@@ -116,7 +116,8 @@ t8_element_sibling (t8_eclass_scheme_c *ts,
 }
 
 int
-t8_element_num_corners (t8_eclass_scheme_c *ts, const t8_element_t *elem)
+t8_element_num_corners (const t8_eclass_scheme_c *ts,
+                        const t8_element_t *elem)
 {
   T8_ASSERT (ts != NULL);
 
@@ -409,7 +410,7 @@ t8_element_root_len (t8_eclass_scheme_c *ts, const t8_element_t *elem)
 
 void
 t8_element_vertex_reference_coords (t8_eclass_scheme_c *ts,
-                                    const t8_element_t *t, int vertex,
+                                    const t8_element_t *t, const int vertex,
                                     double coords[])
 {
   T8_ASSERT (ts != NULL);

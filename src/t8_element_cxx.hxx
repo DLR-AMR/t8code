@@ -159,7 +159,8 @@ public:
    * \param [in] elem The element.
    * \return          The number of corners of \a elem.
    */
-  virtual int         t8_element_num_corners (const t8_element_t *elem) = 0;
+  virtual int         t8_element_num_corners (const t8_element_t *elem) const
+    = 0;
 
   /** Compute the number of faces of a given element.
    * \param [in] elem The element.
@@ -578,7 +579,8 @@ public:
    *                      whose entries will be filled with the coordinates of \a vertex.
    */
   virtual void        t8_element_vertex_reference_coords (const t8_element_t
-                                                          *t, int vertex,
+                                                          *t,
+                                                          const int vertex,
                                                           double coords[]) =
     0;
 

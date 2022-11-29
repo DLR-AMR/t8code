@@ -3,9 +3,7 @@
 # Included from toplevel directory
 
 t8code_test_programs = \
-    test/t8_cmesh/t8_test_cmesh_copy \
     test/t8_cmesh/t8_test_cmesh_partition \
-    test/t8_cmesh/t8_test_hypercube \
     test/t8_cmesh/t8_test_cmesh_face_is_boundary \
     test/t8_cmesh/t8_test_cmesh_readmshfile \
     test/t8_forest/t8_test_find_owner \
@@ -23,14 +21,13 @@ t8code_test_programs = \
     test/t8_schemes/t8_test_find_parent \
     test/t8_schemes/t8_test_successor \
     test/t8_schemes/t8_test_descendant \
-    test/t8_schemes/t8_test_init_linear_id \
     test/t8_schemes/t8_test_pyra_face_neigh \
     test/t8_schemes/t8_test_pyra_face_descendant \
     test/t8_data/t8_test_shmem \
     test/t8_test_netcdf_linkage \
     test/t8_test_vtk_linkage
 
-test_t8_cmesh_t8_test_hypercube_SOURCES = test/t8_cmesh/t8_test_hypercube.c
+
 test_t8_cmesh_t8_test_cmesh_copy_SOURCES = test/t8_cmesh/t8_test_cmesh_copy.c
 test_t8_cmesh_t8_test_cmesh_partition_SOURCES = test/t8_cmesh/t8_test_cmesh_partition.cxx
 test_t8_cmesh_t8_test_cmesh_face_is_boundary_SOURCES = test/t8_cmesh/t8_test_cmesh_face_is_boundary.cxx
@@ -50,7 +47,6 @@ test_t8_schemes_t8_test_pyra_face_neigh_SOURCES = test/t8_schemes/t8_test_pyra_f
 test_t8_schemes_t8_test_pyra_face_descendant_SOURCES = test/t8_schemes/t8_test_pyra_face_descendant.cxx
 test_t8_schemes_t8_test_find_parent_SOURCES = test/t8_schemes/t8_test_find_parent.cxx
 test_t8_schemes_t8_test_successor_SOURCES = test/t8_schemes/t8_test_successor.cxx
-test_t8_schemes_t8_test_init_linear_id_SOURCES = test/t8_schemes/t8_test_init_linear_id.cxx
 test_t8_schemes_t8_test_descendant_SOURCES = test/t8_schemes/t8_test_descendant.cxx
 test_t8_schemes_t8_test_element_count_leafs_SOURCES = test/t8_schemes/t8_test_element_count_leafs.cxx
 
@@ -75,8 +71,12 @@ test_t8_gtest_main_SOURCES = test/t8_gtest_main.cxx \
   test/t8_gtest_refcount.cxx \
   test/t8_gtest_occ_linkage.cxx \
   test/t8_gtest_version.cxx \
+  test/t8_schemes/t8_gtest_init_linear_id.cxx \
   test/t8_gtest_basics.cxx \
-  test/t8_schemes/t8_gtest_ancestor.cxx
+  test/t8_schemes/t8_gtest_ancestor.cxx \
+  test/t8_cmesh/t8_gtest_hypercube.cxx \
+  test/t8_cmesh/t8_gtest_cmesh_copy.cxx
+
 test_t8_gtest_main_LDADD = $(LDADD) test/libgtest.la
 test_t8_gtest_main_LDFLAGS = $(AM_LDFLAGS) -pthread
 test_t8_gtest_main_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)/thirdparty/googletest-mpi/ \
