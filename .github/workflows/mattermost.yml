@@ -39,7 +39,7 @@ on:
   
 jobs:
   send_mm_message:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: merge
         uses: Mitigram/gh-action-mattermost@main
