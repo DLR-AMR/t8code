@@ -371,7 +371,7 @@ public:
    * \return The index of the tree face that \a face is a subface of, if
    *         \a face is on a tree boundary.
    *         Any arbitrary integer if \a is not at a tree boundary.
-   * \warning The return value may look like a valid face of the tree even if
+   * \warning The return value may look like a valid face of the tree even if 
    *   the element does not lie on the root boundary.
    */
   virtual int         t8_element_tree_face (const t8_element_t *elem,
