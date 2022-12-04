@@ -25,8 +25,11 @@ t8code_test_programs = \
     test/t8_schemes/t8_test_pyra_face_descendant \
     test/t8_data/t8_test_shmem \
     test/t8_test_netcdf_linkage \
-    test/t8_test_vtk_linkage
-
+    test/t8_test_vtk_linkage \
+    test/forest_incomplete/t8_test_elements_remove \
+	  test/forest_incomplete/t8_test_remove_rand \
+	  test/forest_incomplete/t8_test_elements_interpolation \
+	  test/forest_incomplete/t8_test_recursive
 
 test_t8_cmesh_t8_test_cmesh_copy_SOURCES = test/t8_cmesh/t8_test_cmesh_copy.c
 test_t8_cmesh_t8_test_cmesh_partition_SOURCES = test/t8_cmesh/t8_test_cmesh_partition.cxx
@@ -57,6 +60,11 @@ test_t8_data_t8_test_shmem_SOURCES = test/t8_data/t8_test_shmem.cxx
 
 test_t8_test_netcdf_linkage_SOURCES = test/t8_test_netcdf_linkage.c
 test_t8_test_vtk_linkage_SOURCES = test/t8_test_vtk_linkage.cxx
+
+test_t8_forest_incomplete_t8_test_elements_remove_SOURCES = test/forest_incomplete/t8_test_elements_remove.cxx
+test_t8_forest_incomplete_t8_test_remove_rand_SOURCES = test/forest_incomplete/t8_test_remove_rand.cxx
+test_t8_forest_incomplete_t8_test_elements_interpolation_SOURCES = test/forest_incomplete/t8_test_elements_interpolation.cxx
+test_t8_forest_incomplete_t8_test_recursive_SOURCES = test/forest_incomplete/t8_test_recursive.cxx
 
 t8code_googletest_programs = \
   test/t8_gtest_main

@@ -217,13 +217,13 @@ t8_adapt_coarse (t8_forest_t forest,
 }
 
 static void
-t8_construct_sponge (int initial_level,
-                     int end_level_it, 
-                     int end_level_rec, 
-                     t8_eclass_t eclass, 
-                     int remove, 
-                     int output, 
-                     int coarse)
+t8_construct_fractal (int initial_level,
+                      int end_level_it, 
+                      int end_level_rec, 
+                      t8_eclass_t eclass, 
+                      int remove, 
+                      int output, 
+                      int coarse)
 {
   t8_forest_t         forest;
   t8_forest_t         forest_adapt;
@@ -236,7 +236,7 @@ t8_construct_sponge (int initial_level,
   char                vtuname[BUFSIZ];
   int                 level;
   int                 procs_sent;
-  int                 runs = 20;
+  int                 runs = 1;
 
   sc_stats_init (&times[0], "refine_it");
   sc_stats_init (&times[1], "refine_rec");
@@ -261,7 +261,6 @@ t8_construct_sponge (int initial_level,
 
     t8_forest_init (&forest);
     cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
-    //cmesh = t8_cmesh_new_bigmesh (eclass, 64, sc_MPI_COMM_WORLD);
     //cmesh = t8_cmesh_new_bigmesh (eclass, 512, sc_MPI_COMM_WORLD);
     t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
     t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
@@ -299,10 +298,6 @@ t8_construct_sponge (int initial_level,
       } 
     }
 
-    t8_global_productionf("##############################################################\n");
-    t8_global_productionf("######################### END ITERATE ########################\n");
-    t8_global_productionf("##############################################################\n");
-
     if (end_level_it < end_level_rec) {
       /* Adapt - refine, remove */
       t8_forest_init (&forest_adapt);
@@ -332,10 +327,6 @@ t8_construct_sponge (int initial_level,
       forest = forest_adapt;
     }
 
-    t8_global_productionf("##############################################################\n");
-    t8_global_productionf("######################## END RECURSIVE #######################\n");
-    t8_global_productionf("##############################################################\n");
-
     for (level = 0; level < coarse; level++) {
       /* Adapt - coarse */
       t8_forest_init (&forest_adapt);
@@ -346,10 +337,6 @@ t8_construct_sponge (int initial_level,
 
       forest = forest_adapt;
     }
-
-    t8_global_productionf("##############################################################\n");
-    t8_global_productionf("########################## END COARSE ########################\n");
-    t8_global_productionf("##############################################################\n");
 
     if (run < runs-1) {
       t8_forest_unref (&forest);
@@ -363,7 +350,7 @@ t8_construct_sponge (int initial_level,
 
   /* vtu output */
   if (output) {
-      snprintf (vtuname, BUFSIZ, "forest_sponge_adapt_%s",
+      snprintf (vtuname, BUFSIZ, "forest_fractal_adapt_%s",
                 t8_eclass_to_string[eclass]);
       t8_forest_write_vtk (forest, vtuname);
       t8_debugf ("Output to %s\n", vtuname);
@@ -446,20 +433,23 @@ main (int argc, char **argv)
   sc_options_add_int (opt, 'o', "output", &output, 0,
                       "output = 1 -> visual output.");                    
   sc_options_add_int (opt, 'c', "coarse", &coarse, 0,
-                      "number of times to coarse elements."); 
+                      "Number of times to coarse elements."); 
 
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
-  if (helpme) {
+  if (helpme)
+  {
     /* display help message and usage */
     t8_global_productionf ("%s\n", help);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-  else if (parsed >= 0 && 0 <= end_level_it
-          && (eclass_int > 3 || eclass_int < 8)) {
-    t8_construct_sponge (initial_level, end_level_it, end_level_rec,(t8_eclass_t) eclass_int, remove, output, coarse);
+  else if (parsed >= 0 && 0 <= end_level_it && (eclass_int > 3 || eclass_int < 8))
+  {
+    t8_construct_fractal 
+      (initial_level, end_level_it, end_level_rec,(t8_eclass_t) eclass_int, remove, output, coarse);
   }
-  else {
+  else
+  {
     /* wrong usage */
     t8_global_productionf ("\n\t ERROR: Wrong usage.\n\n");
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);

@@ -147,7 +147,7 @@ main (int argc, char **argv)
     t8_cmesh_t          cmesh;
     t8_forest_t         forest;
     double              speed;
-    std::string         prefix = "/home/ioannis/VBshare/paraview_export/t8_example_moving_circle_step_00";
+    std::string         prefix = "t8_example_moving_circle_step_00";
     const int           level = 4;
 
     mpiret = sc_MPI_Init (&argc, &argv);
@@ -179,13 +179,11 @@ main (int argc, char **argv)
         forest = t8_forest_new_adapt (forest, t8_adapt_callback_coarse, 0, 0, &adapt_data);
         forest = t8_forest_new_adapt (forest, t8_adapt_callback_coarse_all, 0, 0, NULL);
         forest = t8_forest_new_adapt (forest, t8_adapt_callback_coarse_all, 0, 0, NULL);
-        //t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_example_1");
         adapt_data = { { 0.5 + (i+1)*speed, 0.5, 0},
                        {-0.5 + (i+1)*speed, 0.5, 0}, 0.2, 0.2 };
         forest = t8_forest_new_adapt (forest, t8_adapt_callback_refine_all, 0, 0, NULL);
         forest = t8_forest_new_adapt (forest, t8_adapt_callback_refine_all, 0, 0, NULL);
         forest = t8_forest_new_adapt (forest, t8_adapt_callback_refine, 0, 0, &adapt_data);
-        //t8_forest_write_vtk (forest, "/home/ioannis/VBshare/paraview_export/t8_example_2");
         forest = t8_forest_new_adapt (forest, t8_adapt_callback_remove, 0, 0, &adapt_data);
         if (i+1 < 10) {
             prefix.pop_back();
@@ -198,9 +196,6 @@ main (int argc, char **argv)
         t8_forest_write_vtk (forest, prefix.c_str());
     }
     
-
-
-
     t8_forest_unref (&forest);
     sc_finalize ();
 

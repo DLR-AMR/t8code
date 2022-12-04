@@ -3,35 +3,15 @@
 # Included from toplevel directory
 
 bin_PROGRAMS += \
-	example/remove/t8_ring \
-	example/remove/t8_balls \
-	example/remove/t8_example_recursive \
-	example/remove/t8_test_elements_remove \
-	example/remove/t8_test_remove_rand \
-	example/remove/t8_example_moving_circle \
-	example/remove/t8_test_elements_interpolation \
-	example/remove/t8_test_recursive
+	example/remove/t8_example_ring \
+	example/remove/t8_example_balls \
+	example/remove/t8_example_moving_circle
 
-example_remove_t8_ring_SOURCES = \
-	example/remove/t8_ring.cxx
+example_remove_t8_example_ring_SOURCES = \
+	example/remove/t8_example_ring.cxx
 
-example_remove_t8_balls_SOURCES = \
-	example/remove/t8_balls.cxx
-
-example_remove_t8_test_elements_remove_SOURCES = \
-	example/remove/t8_test_elements_remove.cxx
-
-example_remove_t8_example_recursive_SOURCES = \
-	example/remove/t8_example_recursive.cxx
-
-example_remove_t8_test_remove_rand_SOURCES = \
-	example/remove/t8_test_remove_rand.cxx
+example_remove_t8_example_balls_SOURCES = \
+	example/remove/t8_example_balls.cxx
 
 example_remove_t8_example_moving_circle_SOURCES = \
 	example/remove/t8_example_moving_circle.cxx
-
-example_remove_t8_test_elements_interpolation_SOURCES = \
-	example/remove/t8_test_elements_interpolation.cxx
-
-example_remove_t8_test_recursive_SOURCES = \
-	example/remove/t8_test_recursive.cxx
