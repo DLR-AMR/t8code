@@ -60,6 +60,9 @@ t8_eclass_face_orientation[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES] = {
 const int    t8_eclass_num_vertices[T8_ECLASS_COUNT] =
   { 1, 2, 4, 3, 8, 4, 6, 5 };
 
+const int    t8_eclass_num_edges[T8_ECLASS_COUNT] =
+  { 0, 1, 4, 3, 12, 6, 9, 8 };
+
 const int t8_eclass_vtk_type[T8_ECLASS_COUNT] =
   { 1, 3, 9, 5, 12, 10, 13, 14};
 

@@ -238,13 +238,20 @@ void                t8_flow_incomp_cube_flow (const double x[3], double t,
                                               double x_out[3]);
 
 /** 2d flow around a circle with radius R = 1 and
- * constant inflow with x-speed U = 1. */
+ * constant inflow with x-speed U = 1. 
+ * See https://doi.org/10.13140/RG.2.2.34714.11203 */
 void                t8_flow_around_circle (const double x[3], double t,
                                            double x_out[3]);
 
 void                t8_flow_stokes_flow_sphere_shell (const double x[3],
                                                       double t,
                                                       double x_out[3]);
+
+void                t8_flow_around_circle_with_angular_velocity (const double
+                                                                 x[3],
+                                                                 double t,
+                                                                 double
+                                                                 x_out[]);
 
 T8_EXTERN_C_END ();
 

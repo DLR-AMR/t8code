@@ -4,7 +4,8 @@
 
 
 libt8_installed_headers_schemes_default += \
-  src/t8_schemes/t8_default/t8_default_cxx.hxx
+  src/t8_schemes/t8_default/t8_default_cxx.hxx \
+  src/t8_schemes/t8_default/t8_default_c_interface.h
 libt8_installed_headers_default_common += \
   src/t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx
 libt8_installed_headers_default_vertex += \

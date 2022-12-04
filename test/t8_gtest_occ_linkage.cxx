@@ -20,15 +20,33 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* This file is part of the step3 example of t8code.
- * Here, we only wrap the main function. See t8_step3_adapt_forest.cxx for the documentation of 
- * the step3 example.
+/* In this test we create an occ gp_Pnt object.
+ * The purpose of this test is to check whether t8code successfully links
+ * against occ.
+ * If t8code was not configured with --with-occ then this test
+ * does nothing and is always passed.
  */
 
-#include <tutorials/t8_step3.h>
+#include <t8.h>
+#include <gtest/gtest.h>
+#if T8_WITH_OCC
+#include <gp_Pnt.hxx>
+#endif
 
-int
-main (int argc, char **argv)
+/* Check whether we can successfully execute VTK code */
+TEST (t8_test_occ_linkage, test_gp_Pnt)
 {
-  return t8_step3_main (argc, argv);
+#if T8_WITH_OCC
+
+  /* *INDENT-OFF* */
+  EXPECT_NO_THROW (gp_Pnt pnt = gp_Pnt ();
+                   pnt.SetX (1);
+    );
+  /* *INDENT-ON* */
+
+  t8_global_productionf ("Successfully created occ gp_Pnt object.\n");
+#else
+  t8_global_productionf
+    ("This version of t8code is not compiled with occ support.\n");
+#endif
 }

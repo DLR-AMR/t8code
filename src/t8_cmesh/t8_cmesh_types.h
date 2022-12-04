@@ -59,10 +59,15 @@ typedef enum t8_cmesh_from
 t8_cmesh_from_t;
 #endif
 
-/* Definitions for attribute identifiers that are reserved 
- * for a special purpose. */
-#define T8_CMESH_VERTICES_ATTRIBUTE_KEY 0       /* Used to store vertex coordinates. */
-#define T8_CMESH_GEOMETRY_ATTRIBUTE_KEY 1       /* Used to store the name of a tree's geometry. */
+/* Definitions for attribute identifiers that are reserved for a special purpose. 
+ * T8_CMESH_NEXT_POSSIBLE_KEY is the first unused key, hence it can be repurposed for different attributes.*/
+#define T8_CMESH_VERTICES_ATTRIBUTE_KEY   0     /* Used to store vertex coordinates. */
+#define T8_CMESH_GEOMETRY_ATTRIBUTE_KEY   1     /* Used to store the name of a tree's geometry. */
+#define T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY    2    /* Used to store which edge is linked to which geometry */
+#define T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY    3 /* Used to store edge parameters */
+#define T8_CMESH_OCC_FACE_ATTRIBUTE_KEY T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + T8_ECLASS_MAX_EDGES        /* Used to store wich face is linked to which surface */
+#define T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY T8_CMESH_OCC_FACE_ATTRIBUTE_KEY + 1  /* Used to store face parameters */
+#define T8_CMESH_NEXT_POSSIBLE_KEY T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY + T8_ECLASS_MAX_FACES     /* The next free value for a t8code attribute key */
 
 /** This structure holds the connectivity data of the coarse mesh.
  *  It can either be replicated, then each process stores a copy of the whole

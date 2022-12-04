@@ -41,7 +41,7 @@ public:
   virtual ~ t8_default_scheme_common_c ();
 
   /** Compute the number of corners of a given element. */
-  virtual int         t8_element_num_corners (const t8_element_t *elem);
+  virtual int         t8_element_num_corners (const t8_element_t *elem) const;
 
   /** Allocate space for a bunch of elements. */
   virtual void        t8_element_new (int length, t8_element_t **elem);

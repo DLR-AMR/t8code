@@ -29,6 +29,7 @@
 #ifndef T8_FOREST_H
 #define T8_FOREST_H
 
+#include <sc_statistics.h>
 #include <t8_cmesh.h>
 #include <t8_element.h>
 #include <t8_vtk.h>
@@ -550,6 +551,23 @@ void                t8_forest_ghost_exchange_data (t8_forest_t forest,
 void                t8_forest_set_profiling (t8_forest_t forest,
                                              int set_profiling);
 
+/* TODO: document */
+void                t8_forest_compute_profile (t8_forest_t forest);
+
+const sc_statinfo_t *t8_forest_profile_get_adapt_stats (t8_forest_t forest);
+
+const sc_statinfo_t *t8_forest_profile_get_ghost_stats (t8_forest_t forest);
+
+const sc_statinfo_t *t8_forest_profile_get_partition_stats (t8_forest_t
+                                                            forest);
+
+const sc_statinfo_t *t8_forest_profile_get_commit_stats (t8_forest_t forest);
+
+const sc_statinfo_t *t8_forest_profile_get_balance_stats (t8_forest_t forest);
+
+const sc_statinfo_t *t8_forest_profile_get_balance_rounds_stats (t8_forest_t
+                                                                 forest);
+
 /** Print the collected statistics from a forest profile.
  * \param [in]    forest        The forest.
  *
@@ -1011,6 +1029,9 @@ void                t8_forest_element_face_normal (t8_forest_t forest,
                                                    double normal[3]);
 
 /** Query whether a given point lies inside an element or not. For bilinearly interpolated elements.
+ * \note For 2D quadrilateral elements this function is only an approximation. It is correct
+ *  if the four vertices lie in the same plane, but it may produce only approximate results if 
+ *  the vertices do not lie in the same plane.
  * \param [in]      forest     The forest.
  * \param [in]      ltree_id   The forest local id of the tree in which the element is.
  * \param [in]      element    The element.

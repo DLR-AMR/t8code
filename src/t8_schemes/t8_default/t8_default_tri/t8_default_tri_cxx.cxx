@@ -565,7 +565,7 @@ t8_default_scheme_tri_c::t8_element_general_function (const t8_element_t
 void
 t8_default_scheme_tri_c::t8_element_vertex_reference_coords (const
                                                              t8_element_t *t,
-                                                             int vertex,
+                                                             const int vertex,
                                                              double coords[])
 {
   T8_ASSERT (t8_element_is_valid (t));

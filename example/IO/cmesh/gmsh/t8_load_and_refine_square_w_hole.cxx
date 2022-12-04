@@ -123,7 +123,7 @@ t8_load_refine_adapt (t8_forest_t forest, t8_forest_t forest_from,
   double              elem_midpoint[3];
   double              h;
 
-  t8_midpoint (forest, which_tree, ts, elements[0], elem_midpoint, &h);
+  t8_midpoint (forest_from, which_tree, ts, elements[0], elem_midpoint, &h);
 
   level = ts->t8_element_level (elements[0]);
   if (level > 2) {
@@ -170,15 +170,13 @@ t8_load_refine_build_forest (t8_cmesh_t cmesh, sc_MPI_Comm comm, int level)
   t8_forest_commit (forest_adapt);
   t8_forest_write_vtk (forest_adapt, "adapted_forest");
   t8_forest_unref (&forest_adapt);
-  t8_cmesh_unref (&cmesh_partition);
-  t8_cmesh_unref (&cmesh);
 }
 
 t8_cmesh_t
 t8_load_refine_load_cmesh (const char *mshfile_prefix,
                            sc_MPI_Comm comm, int dim)
 {
-  return t8_cmesh_from_msh_file (mshfile_prefix, 1, comm, dim, 0);
+  return t8_cmesh_from_msh_file (mshfile_prefix, 1, comm, dim, 0, 0);
 }
 
 int

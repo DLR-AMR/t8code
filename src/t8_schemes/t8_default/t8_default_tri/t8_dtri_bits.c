@@ -288,7 +288,7 @@ t8_dtri_ancestor (const t8_dtri_t *t, int level, t8_dtri_t *ancestor)
 
 /* Compute the coordinates of a given vertex of a triangle/tet */
 void
-t8_dtri_compute_coords (const t8_dtri_t *t, int vertex,
+t8_dtri_compute_coords (const t8_dtri_t *t, const int vertex,
                         t8_dtri_coord_t coordinates[T8_DTRI_DIM])
 {
   t8_dtri_type_t      type;
@@ -336,7 +336,7 @@ t8_dtri_compute_coords (const t8_dtri_t *t, int vertex,
 }
 
 void
-t8_dtri_compute_ref_coords (const t8_dtri_t *t, int vertex,
+t8_dtri_compute_ref_coords (const t8_dtri_t *t, const int vertex,
                             double coordinates[T8_DTRI_DIM])
 {
   int                 coords_int[T8_DTRI_DIM];
@@ -1342,9 +1342,12 @@ t8_dtri_linear_id (const t8_dtri_t *t, int level)
    * origin with the same type as t */
   if (level > my_level) {
     exponent = (level - my_level) * T8_DTRI_DIM;
+    type_temp = t->type;
+    level = my_level;
   }
-  level = my_level;
-  type_temp = compute_type (t, level);
+  else {
+    type_temp = compute_type (t, level);
+  }
   for (i = level; i > 0; i--) {
     cid = compute_cubeid (t, i);
     id |=
