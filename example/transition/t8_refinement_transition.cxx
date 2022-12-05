@@ -268,11 +268,11 @@ t8_refine_transition (t8_eclass_t eclass)
 
   /* cmesh settings */
   int                 single_tree = 1;
-  int                 multiple_tree = 0, num_x_trees = 4, num_y_trees = 1;      /* Flo1314_TODO: abort because of dimension, or sc_finalize() when dimension is uncommented */
+  int                 multiple_tree = 0, num_x_trees = 3, num_y_trees = 2;      /* Flo1314_TODO: will lead to abort in t8_gemetry_base.cxx:44 because of wrong dimension */
   int                 hybrid_cmesh = 0; /* Flo1314_TODO: Implement this case */
 
   /* partition setting */
-  int                 do_partition = 0;
+  int                 do_partition = 1;
 
   /* ghost setting */
   int                 do_ghost = 1;
