@@ -971,6 +971,73 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
   }
 }
 
+/* Query whether a point lies inside a linear triangle defined by the tree 
+ * vertices p_0, p_1, p_2.
+ */
+static int
+t8_triangle_point_inside (const double p_0[3], const double p_1[3],
+                          const double p_2[3], const double point[3],
+                          const double tolerance)
+{
+
+  /* A point p is inside the triangle that is spanned
+   * by the vectors p_0 p_1 p_2 if and only if the linear system
+   * (p_1 - p_0)x + (p_2 - p_0)y = p - p_0
+   * has a solution with 0 <= x,y and x + y <= 1.
+   *
+   * We check whether such a solution exists by computing
+   * certain determinants of 2x2 submatrizes of the 3x3 matrix
+   *
+   *  | v w e_3 | with v = p_1 - p_0, w = p_2 - p_0, and e_3 = (0 0 1)^t (third unit vector)
+   */
+  T8_ASSERT (tolerance > 0);    /* negative values and zero are not allowed */
+
+  double              b[3], v[3], w[3];
+  double              x, y, z;
+
+  /* v = v - p_0 = p_1 - p_0 */
+  t8_vec_axpyz (p_0, p_1, v, -1);
+  /* w = w - p_0 = p_2 - p_0 */
+  t8_vec_axpyz (p_0, p_2, w, -1);
+  /* b = p - p_0 */
+  t8_vec_axpyz (p_0, point, b, -1);
+
+  /* Let d = det (v w e_3) */
+  const double        det_vwe3 = v[0] * w[1] - v[1] * w[0];
+
+  /* The system has a solution, we need to compute it and
+   * check whether 0 <= x,y and x + y <= 1 */
+  /* x = det (b w e_3) / d
+   * y = det (v b e_3) / d
+   */
+  x = b[0] * w[1] - b[1] * w[0];
+  x /= det_vwe3;
+  y = v[0] * b[1] - v[1] * b[0];
+  y /= det_vwe3;
+
+  if (x < -tolerance || y < -tolerance || x + y > 1 + tolerance) {
+    /* The solution is not admissible.
+     * x < 0 or y < 0 or x + y > 1 */
+    return 0;
+  }
+  /* The solution may be admissible, but we have to
+   * check whether the result of
+   *  (p_1 - p_0)x + (p_2 - p_0)y ( = vx + wy)
+   * is actually p - p_0.
+   * Since the system of equations is overrepresented (3 equations, 2 variables)
+   * this may actually break.
+   * If it breaks, it will break in the z coordinate of the result.
+   */
+  z = v[2] * x + w[2] * y;
+  /* Must match the last coordinate of b = p - p_0 */
+  if (fabs (z - b[2]) > tolerance) {
+    /* Does not match. Point lies outside. */
+    return 0;
+  }
+  /* All checks passed. Point lies inside. */
+  return 1;
+}
+
 int
 t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
                                 const t8_element_t *element,
@@ -985,6 +1052,17 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
   double              face_normal[3];
   double              dot_product;
   double              point_on_face[3];
+
+#if T8_ENABLE_DEBUG
+  /* Check whether the provided geometry is linear */
+  const t8_cmesh_t    cmesh = t8_forest_get_cmesh (forest);
+  const t8_locidx_t   cltreeid =
+    t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
+  const t8_gloidx_t   cgtreeid = t8_cmesh_get_global_id (cmesh, cltreeid);
+  const t8_geometry_c *geometry =
+    t8_cmesh_get_tree_geometry (cmesh, cgtreeid);
+  T8_ASSERT (t8_geom_is_linear (geometry));
+#endif
 
   switch (element_shape) {
   case T8_ECLASS_VERTEX:
@@ -1058,128 +1136,96 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
       /* The point is on the line. */
       return 1;
     }
+  case T8_ECLASS_QUAD:
+    {
+      /* We divide the quad in two triangles and use the triangle check. */
+      double              p_0[3], p_1[3], p_2[3], p_3[3];
+      int                 point_inside = 0;
+      /* Compute the vertex coordinates of the quad */
+      t8_forest_element_coordinate (forest, ltreeid, element, 0, p_0);
+      t8_forest_element_coordinate (forest, ltreeid, element, 1, p_1);
+      t8_forest_element_coordinate (forest, ltreeid, element, 2, p_2);
+      t8_forest_element_coordinate (forest, ltreeid, element, 3, p_3);
+
+#if T8_ENABLE_DEBUG
+      /* Issue a warning if the points of the quad do not lie in the same plane */
+      if (!t8_four_points_coplanar (p_0, p_1, p_2, p_3, tolerance)) {
+        t8_debugf
+          ("WARNING: Testing if point is inside a quad that is not coplanar. This test will be inaccurate.\n");
+      }
+#endif
+      /* Check whether the point is inside the first triangle. */
+      point_inside =
+        t8_triangle_point_inside (p_0, p_1, p_2, point, tolerance);
+
+      if (!point_inside) {
+        /* If not, check whether the point is inside the second triangle. */
+        point_inside =
+          t8_triangle_point_inside (p_1, p_2, p_3, point, tolerance);
+      }
+      /* point_inside is true if the point was inside the first or second triangle.
+       * Otherwise it is false. */
+      return point_inside;
+    }
   case T8_ECLASS_TRIANGLE:
     {
-      /* A point p is inside the triangle that is spanned
-       * by the vectors p_0 p_1 p_2 if and only if the linear system
-       * (p_1 - p_0)x + (p_2 - p_0)y = p - p_0
-       * has a solution with 0 <= x,y and x + y <= 1.
-       *
-       * We check whether such a solution exists by computing
-       * certain determinants of 2x2 submatrizes of the 3x3 matrix
-       *
-       *  | v w e_3 | with v = p_1 - p_0, w = p_2 - p_0, and e_3 = (0 0 1)^t (third unit vector)
-       */
-      double              p_0[3], v[3], w[3], b[3];
-      double              det_vwe3;
-      double              x, y, z;
-      T8_ASSERT (tolerance > 0);        /* negative values and zero are not allowed */
+      double              p_0[3], p_1[3], p_2[3];
 
       /* Compute the vertex coordinates of the triangle */
       t8_forest_element_coordinate (forest, ltreeid, element, 0, p_0);
-      /* v = p_1 */
-      t8_forest_element_coordinate (forest, ltreeid, element, 1, v);
-      /* w = p_2 */
-      t8_forest_element_coordinate (forest, ltreeid, element, 2, w);
-      /* v = v - p_0 = p_1 - p_0 */
-      t8_vec_axpy (p_0, v, -1);
-      /* w = w - p_0 = p_2 - p_0 */
-      t8_vec_axpy (p_0, w, -1);
-      /* b = p - p_0 */
-      t8_vec_axpyz (p_0, point, b, -1);
+      t8_forest_element_coordinate (forest, ltreeid, element, 1, p_1);
+      t8_forest_element_coordinate (forest, ltreeid, element, 2, p_2);
 
-      /* Let d = det (v w e_3) */
-      det_vwe3 = v[0] * w[1] - v[1] * w[0];
-
-      /* The system has a solution, we need to compute it and
-       * check whether 0 <= x,y and x + y <= 1 */
-      /* x = det (b w e_3) / d
-       * y = det (v b e_3) / d
-       */
-      x = b[0] * w[1] - b[1] * w[0];
-      x /= det_vwe3;
-      y = v[0] * b[1] - v[1] * b[0];
-      y /= det_vwe3;
-
-      if (x < -tolerance || y < -tolerance || x + y > 1 + tolerance) {
-        /* The solution is not admissible.
-         * x < 0 or y < 0 or x + y > 1 */
-        return 0;
-      }
-      /* The solution may be admissible, but we have to
-       * check whether the result of
-       *  (p_1 - p_0)x + (p_2 - p_0)y ( = vx + wy)
-       * id actually p - p_0.
-       * Since the system of equations is overrepresented (3 equations, 2 variables)
-       * this may actually break.
-       * If it breaks, it will break in the z coordinate of the result.
-       */
-      z = v[2] * x + w[2] * y;
-      /* Must match the last coordinate of b = p - p_0 */
-      if (fabs (z - b[2]) > tolerance) {
-        /* Does not match. Point lies outside. */
-        return 0;
-      }
-      /* All checks passed. Point lies inside. */
-      return 1;
+      return t8_triangle_point_inside (p_0, p_1, p_2, point, tolerance);
     }
-    break;
   case T8_ECLASS_TET:
   case T8_ECLASS_HEX:
   case T8_ECLASS_PRISM:
   case T8_ECLASS_PYRAMID:
-    {
-      /* For bilinearly interpolated volume elements, a point is inside an element
-       * if and only if it lies on the inner side of each face.
-       * The inner side is defined as the side where the outside normal vector does not
-       * point to.
-       * The point is on this inner side if and only if the scalar product of
-       * a point on the plane minus the point
-       *                with
-       * the outer normal of the face
-       * is >= 0.
-       *
-       * In other words, let p be the point to check, n the outer normal and x a point
-       * on the plane, then p is on the inner side if and only if
-       *  <x - p, n> >= 0
-       **/
 
-      for (iface = 0; iface < num_faces; ++iface) {
-        /* Compute the outer normal n of the face */
-        t8_forest_element_face_normal (forest, ltreeid, element, iface,
-                                       face_normal);
-        /* Compute a point x on the face */
-        afacecorner = ts->t8_element_get_face_corner (element, iface, 0);
-        t8_forest_element_coordinate (forest, ltreeid, element,
-                                      afacecorner, point_on_face);
+    /* For bilinearly interpolated volume elements, a point is inside an element
+     * if and only if it lies on the inner side of each face.
+     * The inner side is defined as the side where the outside normal vector does not
+     * point to.
+     * The point is on this inner side if and only if the scalar product of
+     * a point on the plane minus the point
+     *                with
+     * the outer normal of the face
+     * is >= 0.
+     *
+     * In other words, let p be the point to check, n the outer normal and x a point
+     * on the plane, then p is on the inner side if and only if
+     *  <x - p, n> >= 0
+     **/
 
-        /* Set x = x - p */
-        t8_vec_axpy (point, point_on_face, -1);
-        /* Compute <x-p,n> */
-        dot_product = t8_vec_dot (point_on_face, face_normal);
-        if (dot_product < 0) {
-          /* The point is outside of the element */
-          return 0;
-        }
+    for (iface = 0; iface < num_faces; ++iface) {
+      /* Compute the outer normal n of the face */
+      t8_forest_element_face_normal (forest, ltreeid, element, iface,
+                                     face_normal);
+      /* Compute a point x on the face */
+      afacecorner = ts->t8_element_get_face_corner (element, iface, 0);
+      t8_forest_element_coordinate (forest, ltreeid, element,
+                                    afacecorner, point_on_face);
+
+      /* Set x = x - p */
+      t8_vec_axpy (point, point_on_face, -1);
+      /* Compute <x-p,n> */
+      dot_product = t8_vec_dot (point_on_face, face_normal);
+      if (dot_product < 0) {
+        /* The point is outside of the element */
+        return 0;
       }
-      /* For all faces the dot product with the outer normal is <= 0.
-       * The point is inside the element. */
-      return 1;
     }
-  case T8_ECLASS_QUAD:
-    {
-      /* Point inside element check is currently not implemented for
-       *  - T8_ECLASS_QUAD
-       */
-      SC_ABORTF
-        ("Point inside check not implemented for elements of shape %s.\n",
-         t8_eclass_to_string[element_shape]);
-    }
+    /* For all faces the dot product with the outer normal is <= 0.
+     * The point is inside the element. */
+    return 1;
   default:
-    {
-      /* This case should not happen */
-      SC_ABORTF ("No valid element shape in point inside check");
-    }
+    /* Point inside element check is currently not implemented for
+     *  - T8_ECLASS_QUAD
+     */
+    SC_ABORTF
+      ("Point inside check not implemented for elements of shape %s.\n",
+       t8_eclass_to_string[element_shape]);
   }
 }
 
