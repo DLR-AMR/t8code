@@ -287,6 +287,9 @@ t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost,
                   "Ghost neighbors other than face-neighbors are not supported.\n");
   SC_CHECK_ABORT (1 <= ghost_version && ghost_version <= 3,
                   "Invalid choice for ghost version. Choose 1, 2, or 3.\n");
+  if (forest->set_subelements == 1) {
+    SC_CHECK_ABORT(ghost_version == 1, "When using the transition feature, ghost version 1 must be used");
+  }
 
   if (ghost_type == T8_GHOST_NONE) {
     /* none type disables ghost */
