@@ -178,7 +178,7 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
         t8_productionf
           ("******************** Current element: ********************\n");
         t8_productionf ("Current element has local index %i of %i\n",
-                        elem_count, local_num_elements);
+                        elem_count+1, local_num_elements);
         ts->t8_element_print_element (current_element,
                                       "t8_LFN_test_iterate: print current_element");
       }
@@ -237,7 +237,7 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
 static void
 t8_refine_transition (t8_eclass_t eclass)
 {
-  t8_debugf ("~~~~~~~~~~ Into the t8_refine_transition function ~~~~~~~~~~");
+  t8_debugf ("~~~~~~~~~~ Into the t8_refine_transition function ~~~~~~~~~~\n");
 
   t8_forest_t         forest;
   t8_forest_t         forest_adapt;
@@ -259,7 +259,7 @@ t8_refine_transition (t8_eclass_t eclass)
   double              start_radius = 0.2;
   double              band_width = 1.0;
 
-  int                 num_adaptations = 4;
+  int                 num_adaptations = 5;
   double              radius_increase = 0.3;
 
   /* adaptation setting */
@@ -276,7 +276,7 @@ t8_refine_transition (t8_eclass_t eclass)
 
   /* ghost setting */
   int                 do_ghost = 1;
-  int                 ghost_version = 3;
+  int                 ghost_version = 1; // 1 for transitioned forests
 
   /* vtk setting */
   int                 do_vtk = 1;
@@ -286,9 +286,9 @@ t8_refine_transition (t8_eclass_t eclass)
 
   /* Monitoring */
   int                 get_LFN_stats = 1;
-  int                 get_LFN_elem_info = 0;
-  int                 get_commit_stats = 1;
-  int                 get_general_stats = 1;
+  int                 get_LFN_elem_info = 1;
+  int                 get_commit_stats = 0;
+  int                 get_general_stats = 0;
 
   /* check settings */
   T8_ASSERT (do_balance + do_transition == 1);
@@ -377,9 +377,6 @@ t8_refine_transition (t8_eclass_t eclass)
     }
     if (do_transition) {
       t8_forest_set_transition (forest_adapt, forest);
-      ghost_version = 1;
-      t8_debugf ("Using transition: ghost version written to %d\n",
-                 ghost_version);
     }
     if (do_ghost) {
       t8_forest_set_ghost_ext (forest_adapt, do_ghost, T8_GHOST_FACES,
