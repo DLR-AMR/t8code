@@ -1118,13 +1118,13 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
           t8_forest_element_neighbor_eclass (forest, itree, elem, iface);
         neigh_scheme = t8_forest_get_eclass_scheme (forest, neigh_class);
         if (ghost_method == 0) {
-          /* Use half neighbors or face-neighbors in case of maxlevel or transitioned forests */
-          /* Get the number of face children of the element at this face */
-          num_face_children = ts->t8_element_num_face_children (elem, iface);
-
           if (forest->is_transitioned) {
             /* In transitioned forests, each element has exactly one neighbor at each face */
             num_face_children = 1;
+          }
+          else {
+            /* Get the number of face children of the element at this face */
+            num_face_children = ts->t8_element_num_face_children (elem, iface);
           }
           /* regrow the half_neighbors array if neccessary.
            * We also need to reallocate it, if the element class of the neighbor
