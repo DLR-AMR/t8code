@@ -44,6 +44,15 @@ t8_geometry_c      *t8_geometry_linear_new (int dimension);
  */
 void                t8_geometry_linear_destroy (t8_geometry_c **geom);
 
+#if T8_ENABLE_DEBUG
+/** Query whether a given geometry is \ref t8_geometry_linear.
+ * \param [in] geometry   A geometry.
+ * \return     True (non-zero) if and only if the geometry is of type \ref t8_geometry_linear.
+ * \note       This function is currently only available in debug mode.
+ */
+int                 t8_geom_is_linear (const t8_geometry_c *geometry);
+#endif
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_GEOMETRY_LINEAR_H! */
