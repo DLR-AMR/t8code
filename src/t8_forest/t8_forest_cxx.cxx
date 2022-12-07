@@ -36,6 +36,10 @@
 #include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_geometry/t8_geometry_base.hxx>
 
+#if T8_ENABLE_DEBUG
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
+#endif
+
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
@@ -757,6 +761,53 @@ t8_forest_element_face_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
     SC_ABORT_NOT_REACHED ();
   }
 }
+
+#if T8_ENABLE_DEBUG
+/* Test whether four given points in 3D are coplanar up to a given tolerance.
+ */
+static int
+t8_four_points_coplanar (const double p_0[3], const double p_1[3],
+                         const double p_2[3], const double p_3[3],
+                         const double tolerance)
+{
+  /* Let p0, p1, p2, p3 be the four points.
+   * The four points are coplanar if the normal vectors to the triangles
+   * p0, p1, p2 and p0, p2, p3 are pointing in the same direction.
+   *
+   * We build the vectors A = p1 - p0, B = p2 - p0 and C = p3 - p0.
+   * The normal vectors to the triangles are n1 = A x B and n2 = A x C.
+   * These are pointing in the same direction if their cross product is 0.
+   * Hence we check if || n1 x n2 || < tolerance. */
+
+  /* A = p1 - p0 */
+  double              A[3];
+  t8_vec_axpyz (p_0, p_1, A, -1);
+
+  /* B = p2 - p0 */
+  double              B[3];
+  t8_vec_axpyz (p_0, p_2, B, -1);
+
+  /* C = p3 - p0 */
+  double              C[3];
+  t8_vec_axpyz (p_0, p_3, C, -1);
+
+  /* n1 = A x B */
+  double              A_cross_B[3];
+  t8_vec_cross (A, B, A_cross_B);
+
+  /* n2 = A x C */
+  double              A_cross_C[3];
+  t8_vec_cross (A, C, A_cross_C);
+
+  /* n1 x n2 */
+  double              n1_cross_n2[3];
+  t8_vec_cross (A_cross_B, A_cross_C, n1_cross_n2);
+
+  /* || n1 x n2 || */
+  const double        norm = t8_vec_norm (n1_cross_n2);
+  return norm < tolerance;
+}
+#endif
 
 void
 t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
