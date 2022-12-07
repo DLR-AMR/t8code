@@ -247,7 +247,14 @@ void
 t8_forest_set_transition (t8_forest_t forest, const t8_forest_t set_from)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
-  SC_CHECK_ABORT(t8_forest_get_num_global_trees(set_from) == 1, "At the moment, transition only supports one-tree-forests");
+  // At the moment, transition only supports one-tree-forests
+  if (t8_forest_is_committed(forest)) {
+    T8_ASSERT (t8_forest_get_global_num_elements(forest) == 1);
+  }
+  if (set_from != NULL) {
+    // If set_from != NULL, we check that is has only one tree
+    T8_ASSERT (t8_forest_get_global_num_elements(set_from) == 1);
+  }
 
   /* If forest is not balanced, balance now. 
    * This binary operation checks, whether the third bit from the right from 
