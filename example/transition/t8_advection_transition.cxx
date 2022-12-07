@@ -2606,6 +2606,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     for (ilevel = problem->level; ilevel < problem->maxlevel; ilevel++) {
       /* initialize according to some adapt_init scheme */
       t8_advect_problem_adapt_init (problem, 0, refinementcriterion);
+      // Flo1314_TODO: add partition for transitioned forests
       if (!do_transition) {
         /* repartition */
         t8_advect_problem_partition (problem, 0);
@@ -2912,9 +2913,9 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
           time_adapt += sc_MPI_Wtime ();
         }
 
+        // Flo1314_TODO: add partition for transitioned forests
         if (!do_transition) {
           t8_advect_problem_partition (problem, 1);
-
         }
       }
     }
@@ -3031,7 +3032,7 @@ main (int argc, char *argv[])
   int                 parsed, helpme, no_vtk, vtk_freq, adapt_freq;
   int                 volume_refine;
   int                 do_transition;
-  int                 intitialphi;;
+  int                 initialphi;;
   int                 refinementcriterion;
   int                 flow_arg;
   double              T, cfl, band_width;
@@ -3135,7 +3136,7 @@ main (int argc, char *argv[])
   sc_options_add_int (opt, 't', "transition", &do_transition, 1,
                       "Transition the forest such that it is conformal.");
 
-  sc_options_add_int (opt, 'p', "initialphi", &intitialphi, 3,
+  sc_options_add_int (opt, 'p', "initialphi", &initialphi, 3,
                       "Choose the initial phi value for this advection simulation.\n"
                       "0 is a Gaussian pulse\n"
                       "1 is constant 1\n"
@@ -3193,48 +3194,21 @@ main (int argc, char *argv[])
       t8_cmesh_vtk_write_file (cmesh, "advection_cmesh", 1.0);
     }
 
+    // array of initial phi scalarfields
+    t8_example_level_set_fn levelfunc[4] = {t8_levelset_sphere, t8_constant, t8_periodic_2D_cos, t8_periodic_2D_cos_off_center};
+    SC_CHECK_ABORT (0 <= initialphi && initialphi <= 4, "Invalid type of initial phi.");
+
     double              adapt_time = 0;
     adapt_time -= sc_MPI_Wtime ();
-    /* Computations, choose an initial function */
-    if (intitialphi == 0) {     /* Gauss-pulse phi_0 */
-      t8_advect_solve (cmesh, u,
-                       t8_levelset_sphere, &ls_data,
+
+    t8_advect_solve (cmesh, u,
+                       levelfunc[initialphi], &ls_data,
                        level,
                        level + reflevel, T, cfl, sc_MPI_COMM_WORLD,
                        adapt_freq, no_vtk, vtk_freq, band_width, dim,
                        dummy_op, volume_refine, do_transition,
                        refinementcriterion);
-    }
-    else if (intitialphi == 1) {        /* constant 1 phi_0 */
-      t8_advect_solve (cmesh, u,
-                       t8_constant, &ls_data,
-                       level,
-                       level + reflevel, T, cfl, sc_MPI_COMM_WORLD,
-                       adapt_freq, no_vtk, vtk_freq, band_width, dim,
-                       dummy_op, volume_refine, do_transition,
-                       refinementcriterion);
-    }
-    else if (intitialphi == 2) {        /* on [0,1]^2 periodic trigonometric phi_0 off-center */
-      t8_advect_solve (cmesh, u,
-                       t8_periodic_2D_cos, &ls_data,
-                       level,
-                       level + reflevel, T, cfl, sc_MPI_COMM_WORLD,
-                       adapt_freq, no_vtk, vtk_freq, band_width, dim,
-                       dummy_op, volume_refine, do_transition,
-                       refinementcriterion);
-    }
-    else if (intitialphi == 3) {        /* on [0,1]^2 periodic trigonometric phi_0 in center */
-      t8_advect_solve (cmesh, u,
-                       t8_periodic_2D_cos_off_center, &ls_data,
-                       level,
-                       level + reflevel, T, cfl, sc_MPI_COMM_WORLD,
-                       adapt_freq, no_vtk, vtk_freq, band_width, dim,
-                       dummy_op, volume_refine, do_transition,
-                       refinementcriterion);
-    }
-    else {
-      SC_ABORT ("Invalid type of initial phi.");
-    }
+
     adapt_time += sc_MPI_Wtime ();
     t8_global_essentialf ("Runtime advect: %f\n", adapt_time);
     t8_global_essentialf ("Runtime interpolation: %f\n", time_interpolation);
