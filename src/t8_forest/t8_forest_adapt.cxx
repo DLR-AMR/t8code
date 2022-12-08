@@ -468,7 +468,7 @@ t8_forest_adapt (t8_forest_t forest)
         tscheme->t8_element_parent (elements_from[0], elements[0]);
 
         if (forest_from->is_transitioned == 0) {
-          /*num_siblings is now equivalent to the number of children of elements[0],
+          /* num_siblings is now equivalent to the number of children of elements[0],
            * as num_siblings is always associated with elements_from (this is not true for transitioned forests) */
           num_children = num_siblings;
         }
