@@ -275,24 +275,24 @@ t8_refine_transition (t8_eclass_t eclass)
   int                 do_partition = 1;
 
   /* ghost setting */
-  int                 do_ghost = 1;
-  int                 ghost_version = 1; // 1 for transitioned forests
-
-  /* vtk setting */
-  int                 do_vtk = 1;
+  int                 do_ghost = 1; // if do_LFN_test = 1, then do_ghost must be set to 1 as well when using multiple processes
+  int                 ghost_version = 1; // use v1 for transitioned forests
 
   /* LFN settings */
   int                 do_LFN_test = 1;
 
+  /* vtk setting */
+  int                 do_vtk = 1;
+
   /* Monitoring */
   int                 get_LFN_stats = 1;
-  int                 get_LFN_elem_info = 1;
-  int                 get_commit_stats = 0;
-  int                 get_general_stats = 0;
+  int                 get_LFN_elem_info = 0;
+  int                 get_commit_stats = 1;
+  int                 get_general_stats = 1;
 
   /* check settings */
-  T8_ASSERT (do_balance + do_transition == 1);
-  T8_ASSERT (single_tree + multiple_tree + hybrid_cmesh == 1);
+  SC_CHECK_ABORT (do_balance + do_transition == 1, "Setting-check failed");
+  SC_CHECK_ABORT (single_tree + multiple_tree + hybrid_cmesh == 1, "Setting-check failed");
 
   /* *************************************************************************************************************** */
 
