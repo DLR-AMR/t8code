@@ -38,9 +38,9 @@ t8_cad_geom::t8_cad_geom (const char *fileprefix)
 {
   BRep_Builder        builder;
   std::string current_file (fileprefix);
-  std::ifstream is (current_file + ".brep");
-  BRepTools::Read (occ_shape, is, builder);
-  is.close ();
+  std::ifstream filestream (current_file + ".brep");
+  BRepTools::Read (occ_shape, filestream, builder);
+  filestream.close ();
   if (occ_shape.IsNull ()) {
     SC_ABORTF ("Could not read brep file or brep file contains no shape \n");
   }
@@ -58,9 +58,9 @@ t8_cad_geom::t8_cad_init (const char *fileprefix)
 {
   BRep_Builder        builder;
   std::string current_file (fileprefix);
-  std::ifstream is (current_file + ".brep");
-  BRepTools::Read (occ_shape, is, builder);
-  is.close ();
+  std::ifstream filestream (current_file + ".brep");
+  BRepTools::Read (occ_shape, filestream, builder);
+  filestream.close ();
   if (occ_shape.IsNull ()) {
     SC_ABORTF ("Could not read brep file or brep file contains no shape \n");
   }
