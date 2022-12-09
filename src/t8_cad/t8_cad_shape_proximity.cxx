@@ -39,14 +39,14 @@
 
 /* *INDENT-OFF* */
 t8_cad_shape_proximity::t8_cad_shape_proximity (const char *filename,
-                                                int use_individual_bbs)
+                                                const int use_individual_bbs)
 {
   occ_shape = t8_cad_read_cad_file (filename);
   t8_cad_shape_proximity::t8_cad_init_internal_data (use_individual_bbs);
 }
 
 t8_cad_shape_proximity::t8_cad_shape_proximity (const TopoDS_Shape shape,
-                                                int use_individual_bbs)
+                                                const int use_individual_bbs)
 {
   occ_shape = shape;
   t8_cad_shape_proximity::t8_cad_init_internal_data (use_individual_bbs);
@@ -54,7 +54,7 @@ t8_cad_shape_proximity::t8_cad_shape_proximity (const TopoDS_Shape shape,
 
 void
 t8_cad_shape_proximity::t8_cad_init (const char *filename,
-                                     int use_individual_bbs)
+                                     const int use_individual_bbs)
 {
   occ_shape = t8_cad_read_cad_file (filename);
   t8_cad_shape_proximity::t8_cad_init_internal_data (use_individual_bbs);
@@ -62,14 +62,14 @@ t8_cad_shape_proximity::t8_cad_init (const char *filename,
 
 void
 t8_cad_shape_proximity::t8_cad_init (const TopoDS_Shape shape,
-                                     int use_individual_bbs)
+                                     const int use_individual_bbs)
 {
   occ_shape = shape;
   t8_cad_shape_proximity::t8_cad_init_internal_data (use_individual_bbs);
 }
 
 void
-t8_cad_shape_proximity::t8_cad_init_internal_data (int use_individual_bbs)
+t8_cad_shape_proximity::t8_cad_init_internal_data (const int use_individual_bbs)
 {
   if (occ_shape.IsNull ()) {
     SC_ABORTF ("Shape is null. \n");
@@ -107,8 +107,8 @@ int
 t8_cad_shape_proximity::t8_cad_is_element_inside_shape (t8_forest_t forest,
                                                         t8_locidx_t ltreeid,
                                                         const t8_element_t *element,
-                                                        int boundary,
-                                                        int optimize)
+                                                        const int boundary,
+                                                        const int optimize)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   t8_eclass_t         tree_class, element_class;
@@ -252,7 +252,7 @@ t8_cad_shape_proximity::t8_cad_is_element_inside_shape (t8_forest_t forest,
 }
 
 int
-t8_cad_shape_proximity::t8_cad_is_point_inside_shape (const double *coords, int optimize) const
+t8_cad_shape_proximity::t8_cad_is_point_inside_shape (const double *coords, const int optimize) const
 {
   gp_Pnt pnt = gp_Pnt(coords[0], coords[1], coords[2]);
 

@@ -72,7 +72,7 @@ t8_cad_geom (fileprefix)
   t8_cad_geom::t8_cad_init_internal_data ();
 }
 
-t8_geometry_occ::t8_geometry_occ (int dim, const TopoDS_Shape shape,
+t8_geometry_occ::t8_geometry_occ (const int dim, const TopoDS_Shape shape,
                                   const char *name_in):
 t8_cad_geom (shape)
 {

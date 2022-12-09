@@ -56,7 +56,7 @@ public:
    *                                 if shape contains multiple solids in
    *                                 different regions.
    */
-  t8_cad_shape_proximity (const char *filename, int use_individual_bbs);
+  t8_cad_shape_proximity (const char *filename, const int use_individual_bbs);
 
   /**
    * Constructor of the cad class. Fills the internal shape with the given shape.
@@ -67,7 +67,7 @@ public:
    *                                 if shape contains multiple solids in
    *                                 different regions.
    */
-  t8_cad_shape_proximity (const TopoDS_Shape shape, int use_individual_bbs);
+  t8_cad_shape_proximity (const TopoDS_Shape shape, const int use_individual_bbs);
 
   /**
    * The destructor
@@ -85,7 +85,7 @@ public:
    *                                 different regions.
    */
   void
-  t8_cad_init (const char *fileprefix, int use_individual_bbs);
+  t8_cad_init (const char *fileprefix, const int use_individual_bbs);
 
   /**
    * Fill the internal shape with the given shape.
@@ -97,7 +97,7 @@ public:
    *                                 different regions.
    */
   void
-  t8_cad_init (TopoDS_Shape shape, int use_individual_bbs);
+  t8_cad_init (TopoDS_Shape shape, const int use_individual_bbs);
 
   /**
    * Checks if an element is inside the occ shape. Only viable with 
@@ -122,8 +122,8 @@ public:
   t8_cad_is_element_inside_shape (t8_forest_t forest,
                                   t8_locidx_t ltreeid,
                                   const t8_element_t *element,
-                                  int boundary,
-                                  int optimize);
+                                  const int boundary,
+                                  const int optimize);
 
   /**
    * Checks if a point is inside the occ shape. Uses oriented bounding boxes for
@@ -138,7 +138,7 @@ public:
    *                       2: Point intersects the bounday of the shape.
    */
   int
-  t8_cad_is_point_inside_shape (const double *coords, int optimize) const;
+  t8_cad_is_point_inside_shape (const double *coords, const int optimize) const;
 
 protected:
   /**
