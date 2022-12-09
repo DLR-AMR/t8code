@@ -176,7 +176,7 @@ t8_cad_geom::t8_cad_get_common_face (const int edge1_index,
 
 int
 t8_cad_geom::t8_cad_is_vertex_on_edge (const int vertex_index, 
-                                            const int edge_index) const
+                                       const int edge_index) const
 {
   auto collection = occ_shape_vertex2edge_map.FindFromIndex(vertex_index);
   return collection.Contains(occ_shape_edge_map.FindKey(edge_index));
@@ -184,7 +184,7 @@ t8_cad_geom::t8_cad_is_vertex_on_edge (const int vertex_index,
 
 int
 t8_cad_geom::t8_cad_is_edge_on_face (const int edge_index, 
-                                          const int face_index) const
+                                     const int face_index) const
 {
   auto collection = occ_shape_edge2face_map.FindFromIndex(edge_index);
   return collection.Contains(occ_shape_face_map.FindKey(face_index));
@@ -192,7 +192,7 @@ t8_cad_geom::t8_cad_is_edge_on_face (const int edge_index,
 
 int
 t8_cad_geom::t8_cad_is_vertex_on_face (const int vertex_index, 
-                                            const int face_index) const
+                                       const int face_index) const
 {
   auto edge_collection = occ_shape_vertex2edge_map.FindFromIndex(vertex_index);
   for (auto edge = edge_collection.begin(); edge != edge_collection.end(); ++edge)
@@ -208,8 +208,8 @@ t8_cad_geom::t8_cad_is_vertex_on_face (const int vertex_index,
 
 void 
 t8_cad_geom::t8_cad_get_parameter_of_vertex_on_edge(const int vertex_index, 
-                                                         const int edge_index, 
-                                                         double* edge_param) const
+                                                    const int edge_index, 
+                                                    double* edge_param) const
 {
   T8_ASSERT(t8_cad_geom::t8_cad_is_vertex_on_edge(vertex_index, edge_index));
   TopoDS_Vertex vertex = TopoDS::Vertex(occ_shape_vertex_map.FindKey(vertex_index));
@@ -219,8 +219,8 @@ t8_cad_geom::t8_cad_get_parameter_of_vertex_on_edge(const int vertex_index,
 
 void 
 t8_cad_geom::t8_cad_get_parameters_of_vertex_on_face(const int vertex_index, 
-                                                          const int face_index, 
-                                                          double* face_params) const
+                                                     const int face_index, 
+                                                     double* face_params) const
 {
   T8_ASSERT(t8_cad_geom::t8_cad_is_vertex_on_face(vertex_index, 
                                                        face_index));
@@ -234,9 +234,9 @@ t8_cad_geom::t8_cad_get_parameters_of_vertex_on_face(const int vertex_index,
 
 void 
 t8_cad_geom::t8_cad_edge_parameter_to_face_parameters(const int edge_index, 
-                                                           const int face_index, 
-                                                           const double edge_param, 
-                                                           double* face_params) const
+                                                      const int face_index, 
+                                                      const double edge_param, 
+                                                      double* face_params) const
 {
   T8_ASSERT(t8_cad_geom::t8_cad_is_edge_on_face(edge_index, face_index));
   Standard_Real first, last;
