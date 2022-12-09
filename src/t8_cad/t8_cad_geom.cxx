@@ -132,11 +132,13 @@ t8_cad_geom::t8_cad_get_occ_shape_face_map() const
 
 int
 t8_cad_geom::t8_cad_get_common_edge (const int vertex1_index, 
-                                          const int vertex2_index) const
+                                     const int vertex2_index) const
 {
+  /* Save all edges the vertices lie on in a seperate collection */
   auto collection1 = occ_shape_vertex2edge_map.FindFromIndex(vertex1_index);
   auto collection2 = occ_shape_vertex2edge_map.FindFromIndex(vertex2_index);
 
+  /* Iterate over each edge to check, if both vertices share an edge */
   for (auto edge1 = collection1.begin(); edge1 != collection1.end(); ++edge1)
   {
     for (auto edge2 = collection2.begin(); edge2 != collection2.end(); ++edge2)
@@ -152,11 +154,13 @@ t8_cad_geom::t8_cad_get_common_edge (const int vertex1_index,
 
 int
 t8_cad_geom::t8_cad_get_common_face (const int edge1_index, 
-                                          const int edge2_index) const
+                                     const int edge2_index) const
 {
+  /* Save all faces the edges lie on in a seperate collection */
   auto collection1 = occ_shape_edge2face_map.FindFromIndex(edge1_index);
   auto collection2 = occ_shape_edge2face_map.FindFromIndex(edge2_index);
 
+  /* Iterate over each face to check, if both edges share a face */
   for (auto face1 = collection1.begin(); face1 != collection1.end(); ++face1)
   {
     for (auto face2 = collection2.begin(); face2 != collection2.end(); ++face2)
