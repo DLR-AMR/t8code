@@ -1674,6 +1674,33 @@ t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh,
 /* This part should be callable from C */
 T8_EXTERN_C_BEGIN ();
 
+/* This is a helper function to properly register the 
+ * geometries for the cmesh created in t8_cmesh_from_msh_file.
+ * It should be called by all processes of the cmesh.
+ * Returns 1 on success, 0 on OCC usage error: use_occ_geometry true, but occ not linked.
+ */
+static void
+t8_cmesh_from_msh_file_register_geometries (t8_cmesh_t cmesh,
+                                            const int use_occ_geometry,
+                                            const int dim,
+                                            const char *fileprefix)
+{
+
+  const t8_geometry_c *linear_geom = new t8_geometry_linear (dim);
+  /* Register linear geometry */
+  t8_cmesh_register_geometry (cmesh, linear_geom);
+  if (use_occ_geometry) {
+#if T8_WITH_OCC
+    const t8_geometry_c *occ_geom =
+      t8_geometry_occ_new (dim, fileprefix, "brep_geometry");
+    t8_cmesh_register_geometry (cmesh, occ_geom);
+#else /* !T8_WITH_OCC */
+    return 0;
+#endif
+  }
+  return 1;
+}
+
 t8_cmesh_t
 t8_cmesh_from_msh_file (const char *fileprefix, int partition,
                         sc_MPI_Comm comm, int dim, int main_proc,
@@ -1712,6 +1739,18 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
    * commit, since there are process without any trees. So the cmesh would
    * not know its dimension on these processes. */
   t8_cmesh_set_dimension (cmesh, dim);
+
+  /* Register the geometries for the cmesh. */
+  const int           registered_geom_success =
+    t8_cmesh_from_msh_file_register_geometries (cmesh, use_occ_geometry, dim,
+                                                fileprefix);
+  if (!registered_geom_success) {
+    /* Registering failed */
+    fclose (file);
+    t8_debugf ("Occ is not linked. Cannot use occ geometry.\n");
+    t8_cmesh_destroy (&cmesh);
+    return NULL;
+  }
 
   if (!partition || mpirank == main_proc) {
     snprintf (current_file, BUFSIZ, "%s.msh", fileprefix);
@@ -1766,9 +1805,6 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
       }
       vertices =
         t8_msh_file_2_read_nodes (file, &num_vertices, &node_mempool);
-      geometry = new t8_geometry_linear (dim);
-      /* Register geometry */
-      t8_cmesh_register_geometry (cmesh, geometry);
       t8_cmesh_msh_file_2_read_eles (cmesh, file, vertices, &vertex_indices,
                                      dim);
       break;
