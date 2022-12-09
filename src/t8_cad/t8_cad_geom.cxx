@@ -223,13 +223,13 @@ t8_cad_geom::t8_cad_get_parameters_of_vertex_on_face(const int vertex_index,
                                                      double* face_params) const
 {
   T8_ASSERT(t8_cad_geom::t8_cad_is_vertex_on_face(vertex_index, 
-                                                       face_index));
-  gp_Pnt2d uv;
+                                                  face_index));
+  gp_Pnt2d parameters;
   TopoDS_Vertex vertex = TopoDS::Vertex(occ_shape_vertex_map.FindKey(vertex_index));
   TopoDS_Face face = TopoDS::Face(occ_shape_face_map.FindKey(face_index));
-  uv = BRep_Tool::Parameters(vertex, face);
-  face_params[0] = uv.X();
-  face_params[1] = uv.Y();
+  parameters = BRep_Tool::Parameters(vertex, face);
+  face_params[0] = parameters.X();
+  face_params[1] = parameters.Y();
 }
 
 void 
@@ -240,14 +240,14 @@ t8_cad_geom::t8_cad_edge_parameter_to_face_parameters(const int edge_index,
 {
   T8_ASSERT(t8_cad_geom::t8_cad_is_edge_on_face(edge_index, face_index));
   Standard_Real first, last;
-  gp_Pnt2d uv;
+  gp_Pnt2d parameters;
   TopoDS_Edge edge = TopoDS::Edge(occ_shape_edge_map.FindKey(edge_index));
   TopoDS_Face face = TopoDS::Face(occ_shape_face_map.FindKey(face_index));
   Handle_Geom2d_Curve curve_on_surface  = BRep_Tool::CurveOnSurface(edge, face, 
                                                                     first, last);
-  curve_on_surface->D0(edge_param, uv);
-  face_params[0] = uv.X();
-  face_params[1] = uv.Y();
+  curve_on_surface->D0(edge_param, parameters);
+  face_params[0] = parameters.X();
+  face_params[1] = parameters.Y();
 }
 /* *INDENT-ON* */
 
