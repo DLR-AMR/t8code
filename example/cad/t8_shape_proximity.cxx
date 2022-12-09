@@ -198,9 +198,8 @@ t8_shape_proximity_refine_forest_with_cad (const char *filename,
     t8_forest_init (&forest_new);
     /* Note, that we do not use the centroid inside check as refinement criterion.
      * It makes no sense to use it as one, because elements would not get refined
-     * if their centroid is outside of the shape, but thex still intersect the shape.
-     * Imagine an element, which intersects the shape, but whose centroid is outside
-     * of the shape. If we use the position of the centroid as refinement criterion,
+     * if their centroid is outside of the shape, but they still intersect the shape.
+ If we use the position of the centroid as refinement criterion,
      * the element would not get refined. Even though the centroid of one or more of
      * its children would be inside of the shape. Therefore, we use the element inside
      * check as refinement criterion and later on we check, if the centroids of the
@@ -368,7 +367,7 @@ main (int argc, char **argv)
   /* long help message */
   sreturn = snprintf (help, BUFSIZ,
                       "Demonstrates the some of the cad capabitlities of t8code.\n"
-                      "You can read in brep files and refine elements inside the geometry.\n"
+                      "You can read in and generate brep files and refine elements inside the geometry.\n"
                       "Usage: %s\n", usage);
 
   if (sreturn >= BUFSIZ) {

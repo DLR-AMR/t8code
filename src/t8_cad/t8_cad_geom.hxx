@@ -48,7 +48,7 @@ class t8_cad_geom
 {
 public:
   /**
-   * Constructor of the cad collsion class. Fills the internal shape with the content of a brep file.
+   * Constructor of the cad_geometry class. Fills the internal shape with the content of a brep file.
    * \param [in] fileprefix Prefix of a .brep file from which to extract an occ geometry.
    */
   t8_cad_geom (const char *fileprefix);
