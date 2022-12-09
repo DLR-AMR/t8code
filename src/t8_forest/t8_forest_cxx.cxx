@@ -1874,6 +1874,7 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest,
   return neighbor_tree;
 }
 
+/* this function does not need a declaration and is only called by LFN */
 void
 t8_forest_subelement_face_neighbor (t8_forest_t forest,
                                     t8_element_t *pseudo_neighbor,
@@ -1930,61 +1931,57 @@ t8_forest_subelement_face_neighbor (t8_forest_t forest,
 
     return;
   }
-  else {
-    /* the neighbor subelement is a ghost (there might not be the whole family part of subelements the ghost array) */
-    int                 search_direction =
-      (leaf_neighbor_sub_id > pseudo_neighbor_sub_id) ? 1 : -1;
-    int                 id_diff_abs =
-      (leaf_neighbor_sub_id - pseudo_neighbor_sub_id) * search_direction;
 
-    bool                neighbor_found = false;
-    int                 subelement_count = 0;
+  /* the neighbor subelement is a ghost */
+  int                 search_direction =
+    (leaf_neighbor_sub_id > pseudo_neighbor_sub_id) ? 1 : -1;
+  int                 id_diff_abs =
+    (leaf_neighbor_sub_id - pseudo_neighbor_sub_id) * search_direction;
 
-    while (!neighbor_found) {
-      T8_ASSERT (ghost_element_index >= 0);     /* check, that ghost_element_index has been set in LFN before */
+  bool                neighbor_found = false;
+  int                 subelement_count = 0;
 
-      const t8_element_t *check_neighbor;
-      check_neighbor =
-        t8_forest_ghost_get_element (forest, lghost_treeid,
-                                     ghost_element_index +
-                                     search_direction * subelement_count);
+  while (!neighbor_found) {
+    T8_ASSERT (ghost_element_index >= 0);     /* check, that ghost_element_index has been set in LFN before */
 
-      if (ts->t8_element_get_subelement_id (check_neighbor) ==
-          leaf_neighbor_sub_id) {
-        /* neighbor found */
-        neighbor_found = true;
+    const t8_element_t *check_neighbor;
+    check_neighbor =
+      t8_forest_ghost_get_element (forest, lghost_treeid,
+                                    ghost_element_index +
+                                    search_direction * subelement_count);
 
-        /* both elements should be siblings or equal */
-        T8_ASSERT (ts->t8_element_get_transition_type (check_neighbor) ==
-                   ts->t8_element_get_transition_type (pseudo_neighbor));
+    if (ts->t8_element_get_subelement_id (check_neighbor) ==
+        leaf_neighbor_sub_id) {
+      /* both elements should be siblings or equal */
+      T8_ASSERT (ts->t8_element_get_transition_type (check_neighbor) ==
+                  ts->t8_element_get_transition_type (pseudo_neighbor));
 
-        /* adjust element index */
-        element_index = element_index + search_direction * subelement_count;
+      /* adjust element index */
+      element_index = element_index + search_direction * subelement_count;
 
-        /* free memory */
-        neigh_scheme->t8_element_destroy (0, neighbor_leafs + 1);
-        /* copy the neighbor */
-        neigh_scheme->t8_element_copy (check_neighbor, neighbor_leafs[0]);
+      /* free memory */
+      neigh_scheme->t8_element_destroy (0, neighbor_leafs + 1);
+      /* copy the neighbor */
+      neigh_scheme->t8_element_copy (check_neighbor, neighbor_leafs[0]);
 
-        /* set return values */
-        *pelement_indices = T8_ALLOC (t8_locidx_t, 1);
-        (*pelement_indices)[0] = element_index;
+      /* set return values */
+      *pelement_indices = T8_ALLOC (t8_locidx_t, 1);
+      (*pelement_indices)[0] = element_index;
 
-        T8_FREE (owners);
-      }
+      T8_FREE (owners);
 
-      if (subelement_count > id_diff_abs) {     /* we assume that the real neighbor is a sibling subelement and hence we should find it here */
-        SC_ABORT ("Ghost subelement neighbor not found!\n");
-      }
+      /* neighbor found */
+      neighbor_found = true;
+    }
 
-      subelement_count++;
-    }                           /* end while-loop to identify real ghost-subelement neighbor */
+    if (subelement_count > id_diff_abs) {     /* we assume that the real neighbor is a sibling subelement and hence we should find it here */
+      SC_ABORT ("Ghost subelement neighbor not found!\n");
+    }
 
-    return;
-  }                             /* end of if neighbor is ghost */
+    subelement_count++;
+  }                           /* end while-loop to identify real ghost-subelement neighbor */
 
-  /* this should not happen */
-  SC_ABORT ("No subelement neighbor found!\n");
+  return;
 }
 
 /* this function does not need a declaration and is only called by LFN */
