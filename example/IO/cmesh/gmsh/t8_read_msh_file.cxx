@@ -24,7 +24,7 @@
 #include <t8.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_partition.h>
-#include <t8_cmesh_readmshfile.h>
+#include <src/t8_IO/t8_reader/t8_gmsh_reader/t8_cmesh_readmshfile.h>
 #include <t8_cmesh_vtk.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
@@ -52,17 +52,18 @@ t8_read_msh_file_vtk (t8_cmesh_t cmesh, const char *prefix)
 /* Given a cmesh and a file prefix, partition the cmesh uniformly
  * and write vtk files for the partitioned mesh.
  * The original cmesh is unreffed in this function. */
-static t8_cmesh_t
+t8_cmesh_t
 t8_read_msh_partition (t8_cmesh_t cmesh, const char *prefix)
 {
   t8_cmesh_t          p_mesh;
-  char                vtk_prefix[BUFSIZ];
+  /* vtk_prefix will be appended by 7 chars in t8_read_msh_file_vtk */
+  char                vtk_prefix[BUFSIZ - 7];
 
   t8_cmesh_init (&p_mesh);
   t8_cmesh_set_derive (p_mesh, cmesh);
   t8_cmesh_set_partition_uniform (p_mesh, 0, t8_scheme_new_default_cxx ());
   t8_cmesh_commit (p_mesh, sc_MPI_COMM_WORLD);
-  snprintf (vtk_prefix, BUFSIZ, "%s_partition", prefix);
+  snprintf (vtk_prefix, BUFSIZ - 7, "%s_partition", prefix);
   t8_read_msh_file_vtk (p_mesh, vtk_prefix);
   return p_mesh;
 }

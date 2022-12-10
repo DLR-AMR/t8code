@@ -40,4 +40,16 @@ t8_shmem_array_t
 t8_stash_attribute_struct_t
 t8_stash_t
 t8_vtk_data_field_t
+gmsh_file
+t8_read_status_t
+t8_geo_back_t
+t8_reader_type_t
+t8_write_status_t
+vtk_path
+t8_writer_type_t
+t8_IO_reader_t
+t8_IO_writer_t
+t8_extern_t
+t8_partition_t
+t8_IO_cxx_t
 
