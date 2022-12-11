@@ -99,7 +99,7 @@ struct t8_step3_adapt_data
  */
  
 // !! Added a counter variable for the timesteps
-float counter;
+/*float counter;*/
   
 int
 t8_step3_adapt_callback (t8_forest_t forest,
@@ -149,7 +149,7 @@ t8_step3_adapt_callback (t8_forest_t forest,
  * This will create a new forest and return it. */
  
 t8_forest_t
-t8_step3_adapt_forest (t8_forest_t forest)
+t8_step3_adapt_forest (t8_forest_t forest, float counter)
 {
   t8_forest_t         forest_adapt;
   struct t8_step3_adapt_data adapt_data = {
@@ -268,11 +268,11 @@ t8_step3_main (int argc, char **argv)
    * for-loop runs 10 times with the uniform cube as input
    */
      
-  for ( counter = 0.0; counter < 1.1; counter = counter +  0.1)
+  for ( float counter = 0.0; counter < 1.1; counter = counter +  0.1)
   {    
 
 	// Adapting the forest, beginning with a uniform cube for each timestep          
-  	forest = t8_step3_adapt_forest (forest);
+  	forest = t8_step3_adapt_forest (forest, counter);
 
 	  /*
 	   *  Output.
