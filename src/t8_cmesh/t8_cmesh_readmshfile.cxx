@@ -735,7 +735,7 @@ int
 t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                                sc_hash_t * vertices,
                                sc_array_t **vertex_indices,
-                               int dim, t8_geometry_occ * occ_geometry)
+                               int dim, const int use_occ_geometry)
 {
   char               *line = (char *) malloc (1024), *line_modify;
   char                first_word[2048] = "\0";
@@ -954,9 +954,11 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
         /* *INDENT-OFF* */
 
         /* Calculate the parametric geometries of the tree */
-        if (occ_geometry != NULL)
+        const t8_geometry_c *occ_geometry = t8_cmesh_get_tree_geometry (cmesh, tree_count);
+        if (use_occ_geometry)
         {
 #if T8_WITH_OCC
+          T8_ASSERT (t8_geom_is_occ(occ_geometry));
           /* Check for right element class */
           if (eclass != T8_ECLASS_HEX)
           {
@@ -1814,12 +1816,8 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
         t8_msh_file_4_read_nodes (file, &num_vertices, &node_mempool);
       if (use_occ_geometry) {
 #if T8_WITH_OCC
-        geometry_occ = t8_geometry_occ_new (dim, fileprefix, "brep_geometry");
-        geometry = geometry_occ;
-        /* Register geometry */
-        t8_cmesh_register_geometry (cmesh, geometry);
         t8_cmesh_msh_file_4_read_eles (cmesh, file, vertices, &vertex_indices,
-                                       dim, geometry_occ);
+                                       dim, 1);
 #else /* !T8_WITH_OCC */
         fclose (file);
         t8_debugf ("Occ is not linked. Cannot use occ geometry.\n");
@@ -1834,11 +1832,8 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
 #endif /* T8_WITH_OCC */
       }
       else {
-        geometry = new t8_geometry_linear (dim);
-        /* Register geometry */
-        t8_cmesh_register_geometry (cmesh, geometry);
         t8_cmesh_msh_file_4_read_eles (cmesh, file, vertices, &vertex_indices,
-                                       dim, NULL);
+                                       dim, 0);
       }
       break;
 
