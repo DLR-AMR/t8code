@@ -1680,7 +1680,7 @@ T8_EXTERN_C_BEGIN ();
  * It should be called by all processes of the cmesh.
  * Returns 1 on success, 0 on OCC usage error: use_occ_geometry true, but occ not linked.
  */
-static void
+static int
 t8_cmesh_from_msh_file_register_geometries (t8_cmesh_t cmesh,
                                             const int use_occ_geometry,
                                             const int dim,
@@ -1717,12 +1717,8 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
   char                current_file[BUFSIZ];
   FILE               *file;
   t8_gloidx_t         num_trees, first_tree, last_tree = -1;
-  t8_geometry        *geometry = NULL;
   int                 main_proc_read_successful = 0;
   int                 msh_version;
-#if T8_WITH_OCC
-  t8_geometry_occ    *geometry_occ;
-#endif /* T8_WITH_OCC */
 
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
@@ -1747,7 +1743,6 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
                                                 fileprefix);
   if (!registered_geom_success) {
     /* Registering failed */
-    fclose (file);
     t8_debugf ("Occ is not linked. Cannot use occ geometry.\n");
     t8_cmesh_destroy (&cmesh);
     return NULL;
