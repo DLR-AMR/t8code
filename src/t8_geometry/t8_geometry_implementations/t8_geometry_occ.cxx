@@ -726,7 +726,7 @@ t8_geometry_occ_destroy (t8_geometry_occ_c ** geom)
 
 #if T8_ENABLE_DEBUG
 int
-t8_geom_is_occ (const t8_geometry_occ * geometry)
+t8_geom_is_occ (const t8_geometry_c * geometry)
 {
   /* Try to dynamic cast the geometry into linear geometry. This is only successful if
    * geometry pointed to a t8_geometry_occ.
