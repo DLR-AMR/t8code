@@ -954,10 +954,10 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
         /* *INDENT-OFF* */
 
         /* Calculate the parametric geometries of the tree */
-        const t8_geometry_c *occ_geometry_base = t8_cmesh_get_tree_geometry (cmesh, tree_count);
         if (use_occ_geometry)
         {
 #if T8_WITH_OCC
+          const t8_geometry_c *occ_geometry_base = t8_cmesh_get_tree_geometry (cmesh, tree_count);
           T8_ASSERT (t8_geom_is_occ(occ_geometry_base));
           const t8_geometry_occ_c *occ_geometry = dynamic_cast<const t8_geometry_occ_c *> (occ_geometry_base);
           /* Check for right element class */
