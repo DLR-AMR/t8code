@@ -829,7 +829,8 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
       }
     }
     else {
-      for (tree_loop = 0; tree_loop < num_ele_in_block; tree_loop++, tree_count++) {
+      for (tree_loop = 0; tree_loop < num_ele_in_block;
+           tree_loop++, tree_count++) {
         /* Read the next line containing tree information */
         retval = t8_cmesh_msh_read_next_line (&line, &linen, fp);
         if (retval < 0) {
