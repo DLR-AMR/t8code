@@ -70,7 +70,7 @@ void                t8_geometry_occ_destroy (t8_geometry_occ_c ** geom);
  * \return     True (non-zero) if and only if the geometry is of type \ref t8_geometry_occ_c.
  * \note       This function is currently only available in debug mode.
  */
-int                 t8_geom_is_occ (const t8_geometry_c * geometry);
+int                 t8_geom_is_occ (const t8_geometry_c *geometry);
 #endif
 
 T8_EXTERN_C_END ();
