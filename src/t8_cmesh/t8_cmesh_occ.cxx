@@ -192,10 +192,7 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
             parameters[current_tree_parameters + 7] = 0.5 - (i_axial_trees + 1) * dh;
           /* *INDENT-ON* */
           }
-          int                 edges[24] =
-            { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-          };
+          int                 edges[24] = { 0 };
 
           const int           current_tree =
             (i_tangential_trees * num_axial_trees +
@@ -203,7 +200,7 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
           /* If geometry on both sides of cell */
           if (num_radial_trees == 1) {
             /* Assign occ geometries to the corresponding faces */
-            int                 faces[6] = { 0, 0, 0, 0, 0, 0 };
+            int                 faces[6] = { 0 };
             faces[0] = cylinder_outer_index;
             faces[1] = cylinder_inner_index;
 

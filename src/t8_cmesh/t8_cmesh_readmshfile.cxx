@@ -965,11 +965,8 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
             goto die_ele;
           }
           double parameters[T8_ECLASS_MAX_CORNERS_2D * 2];
-          int edge_geometries[T8_ECLASS_MAX_EDGES * 2] =
-          {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-          int face_geometries[T8_ECLASS_MAX_FACES] =
-          {0, 0, 0, 0, 0, 0};
+          int edge_geometries[T8_ECLASS_MAX_EDGES * 2] = { 0 };
+          int face_geometries[T8_ECLASS_MAX_FACES] = { 0 };
           /* We look at each face to check, if it is linked to a occ surface */
           for (int i_tree_faces = 0; i_tree_faces < t8_eclass_num_faces[eclass]; ++i_tree_faces)
           {
