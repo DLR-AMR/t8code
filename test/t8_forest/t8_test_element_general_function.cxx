@@ -87,7 +87,7 @@ test_element_general_function (sc_MPI_Comm comm)
           should_be = ((t8_dprism_t *) element)->tri.type;
           break;
         case T8_ECLASS_PYRAMID:
-          should_be = ((t8_dpyramid_t *) element)->type;
+          should_be = ((t8_dpyramid_t *) element)->pyramid.type;
           break;
         }
         SC_CHECK_ABORTF (outdata == should_be,
