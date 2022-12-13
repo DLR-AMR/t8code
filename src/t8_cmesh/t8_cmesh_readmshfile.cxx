@@ -1744,7 +1744,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
                                                 fileprefix);
   if (!registered_geom_success) {
     /* Registering failed */
-    t8_debugf ("Occ is not linked. Cannot use occ geometry.\n");
+    t8_debugf ("OCC is not linked. Cannot use OCC geometry.\n");
     t8_cmesh_destroy (&cmesh);
     return NULL;
   }
