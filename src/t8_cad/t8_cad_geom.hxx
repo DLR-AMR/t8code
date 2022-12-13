@@ -44,6 +44,10 @@ T8_EXTERN_C_BEGIN ();
 #if T8_WITH_OCC
 
 /* *INDENT-OFF* */
+/**
+ * Wrapper for the usage of OCC shapes. 
+ * Manages the shapes and allows to read out topological information.
+ */
 class t8_cad_geom
 {
 public:

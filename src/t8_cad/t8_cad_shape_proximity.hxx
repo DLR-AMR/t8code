@@ -42,6 +42,10 @@ T8_EXTERN_C_BEGIN ();
 typedef NCollection_Array1<Bnd_OBB> Bnd_Array1OfBndOBB; /**< Array to handle oriented bounding boxes (Bnd_OBB) */
 DEFINE_HARRAY1(Bnd_HArray1OfBndOBB, Bnd_Array1OfBndOBB) /**< OpenCASCADE memory management */
 
+/**
+ * Wrapper for the usage of OCC shapes. 
+ * Manages the shapes and classify, if a point or element is inside the shape.
+ */
 class t8_cad_shape_proximity
 {
 public:
