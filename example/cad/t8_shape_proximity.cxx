@@ -155,10 +155,11 @@ t8_shape_proximity_element_boundary_adapt_callback (t8_forest_t forest,
 void
 t8_shape_proximity_refine_forest_with_cad (const char *filename,
                                            const double *corners,
-                                           int level, int rlevel,
-                                           int centroid,
-                                           int use_individual_bbs,
-                                           int boundary, sc_MPI_Comm comm)
+                                           const int level, const int rlevel,
+                                           const int centroid,
+                                           const int use_individual_bbs,
+                                           const int boundary,
+                                           const sc_MPI_Comm comm)
 {
 #if T8_WITH_OCC
   clock_t             begin = std::clock ();
@@ -199,7 +200,7 @@ t8_shape_proximity_refine_forest_with_cad (const char *filename,
     /* Note, that we do not use the centroid inside check as refinement criterion.
      * It makes no sense to use it as one, because elements would not get refined
      * if their centroid is outside of the shape, but they still intersect the shape.
- If we use the position of the centroid as refinement criterion,
+     * If we use the position of the centroid as refinement criterion,
      * the element would not get refined. Even though the centroid of one or more of
      * its children would be inside of the shape. Therefore, we use the element inside
      * check as refinement criterion and later on we check, if the centroids of the
@@ -279,7 +280,7 @@ t8_shape_proximity_refine_forest_with_cad (const char *filename,
 }
 
 void
-t8_shape_proximity_generate_geometries (sc_MPI_Comm comm)
+t8_shape_proximity_generate_geometries (const sc_MPI_Comm comm)
 {
 #if T8_WITH_OCC
   int                 mpirank, mpiret;
