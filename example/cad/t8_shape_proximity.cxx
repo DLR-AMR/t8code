@@ -29,6 +29,7 @@
 #include <t8_cmesh.h>
 #include <t8_forest.h>
 #include <t8_cmesh_vtk.h>
+#include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_cad/t8_cad_shape_proximity.hxx>
@@ -165,30 +166,13 @@ t8_shape_proximity_refine_forest_with_cad (const char *filename,
   clock_t             begin = std::clock ();
   t8_cmesh_t          cmesh;
   t8_forest_t         forest;
-  t8_geometry        *geometry;
   t8_cad_shape_proximity *cad;
   char                forest_vtu[BUFSIZ];
   t8_forest_t         forest_new;
   t8_locidx_t         num_local_elements;
   double             *inside_shape;
 
-  t8_cmesh_init (&cmesh);
-  t8_cmesh_set_dimension (cmesh, 3);
-  geometry = new t8_geometry_linear (3);
-  t8_cmesh_register_geometry (cmesh, geometry);
-  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
-  double              vertices[24] = {
-    corners[0], corners[1], corners[2],
-    corners[3], corners[1], corners[2],
-    corners[0], corners[4], corners[2],
-    corners[3], corners[4], corners[2],
-    corners[0], corners[1], corners[5],
-    corners[3], corners[1], corners[5],
-    corners[0], corners[4], corners[5],
-    corners[3], corners[4], corners[5]
-  };
-  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 24);
-  t8_cmesh_commit (cmesh, comm);
+  cmesh = t8_axis_aligned_hex_hypercube_from_corners (corners, comm);
   /* Construct a forest from the cmesh */
   forest = t8_forest_new_uniform (cmesh,
                                   t8_scheme_new_default_cxx (),

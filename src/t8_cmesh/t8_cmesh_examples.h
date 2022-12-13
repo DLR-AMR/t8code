@@ -113,6 +113,20 @@ t8_cmesh_t          t8_cmesh_new_hypercube_hybrid (sc_MPI_Comm comm,
                                                    int do_partition,
                                                    int periodic);
 
+/** Construct an axis-aligned, linear hypercube consisting of one hex tree 
+ *  given two diagonal corners of that tree.
+ * \param [in] corners      The two threedimensional corners of the tree. 
+ * \param [in] comm         The communicator to use.
+ * \return                  The cmesh.
+ */
+t8_cmesh_t
+ 
+ 
+ 
+ 
+ t8_axis_aligned_hex_hypercube_from_corners (const double *corners,
+                                             const sc_MPI_Comm comm);
+
 /** Construct a unit interval/square/cube coarse mesh that is periodic in each direction.
  * Element class?
  * Hypercube?

@@ -847,6 +847,33 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
 }
 
 t8_cmesh_t
+t8_axis_aligned_hex_hypercube_from_corners (const double *corners,
+                                            const sc_MPI_Comm comm)
+{
+  t8_cmesh_t          cmesh;
+  t8_geometry_c      *geometry;
+
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_set_dimension (cmesh, 3);
+  geometry = t8_geometry_linear_new (3);
+  t8_cmesh_register_geometry (cmesh, geometry);
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
+  double              vertices[24] = {
+    corners[0], corners[1], corners[2],
+    corners[3], corners[1], corners[2],
+    corners[0], corners[4], corners[2],
+    corners[3], corners[4], corners[2],
+    corners[0], corners[1], corners[5],
+    corners[3], corners[1], corners[5],
+    corners[0], corners[4], corners[5],
+    corners[3], corners[4], corners[5]
+  };
+  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 24);
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
+}
+
+t8_cmesh_t
 t8_cmesh_new_periodic_line_more_trees (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
