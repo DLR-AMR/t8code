@@ -35,8 +35,8 @@
 /* *INDENT-OFF* */
 
 /**
- * Reads a CAD file in the BRep, STEP or IGES format and extracts the shape.
- * \param [in] filename  Path to a CAD file in the BRep, STEP or IGES format.
+ * Reads a CAD file in the BREP, STEP or IGES format and extracts the shape.
+ * \param [in] filename  Path to a CAD file in the BREP, STEP or IGES format.
  * \return               The shape of the CAD file. 
  */
 TopoDS_Shape

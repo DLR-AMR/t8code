@@ -44,14 +44,14 @@ t8_cad_read_cad_file (const char * filename)
   }
 
   if (format == ".brep" || format == ".BREP") {
-    t8_global_productionf ("Reading in BRep file %s \n", filename);
+    t8_global_productionf ("Reading in BREP file %s \n", filename);
     TopoDS_Shape  shape;
     BRep_Builder  builder;
     std::ifstream is (name);
     BRepTools::Read (shape, is, builder);
     is.close ();
     if (shape.IsNull ()) {
-      SC_ABORTF ("Could not read BRep file or BRep file contains no shape.");
+      SC_ABORTF ("Could not read BREP file or BREP file contains no shape.");
     }
     return shape;
   }
