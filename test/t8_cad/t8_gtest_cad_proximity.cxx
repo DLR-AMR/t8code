@@ -187,28 +187,3 @@ TEST (t8_gtest_cad_proximity, element_and_point_inside)
   }
   t8_forest_unref (&forest);
 }
-
-/* Does not work with current version of gtest */
-#if 0                           //T8_ENABLE_DEBUG
-/**
- * The element inside function should throw an error if it gets a 
- * non-axis-aligned element in debug mode.
- */
-TEST (t8_gtest_cad_proximity_DeathTest, skewed_elements_error)
-{
-  sc_MPI_Comm         comm = sc_MPI_COMM_WORLD;
-  t8_forest_t         forest;
-  t8_element_t       *element;
-  TopoDS_Shape        shape;
-  /* Generate the shape, cad object and skewed forest. */
-  shape = t8_gtest_cad_proximity_create_box_with_cutout ();
-  t8_cad_shape_proximity cad (shape, 0);
-  forest = t8_gtest_cad_proximity_create_forest_skewed (1, comm);
-  element = t8_forest_get_element_in_tree (forest, 0, 0);
-  EXPECT_EXIT (cad.t8_cad_is_element_inside_shape (forest, 0,
-                                                   element, 0, 1),
-               testing::ExitedWithCode (1), "Abort");
-  t8_forest_unref (&forest);
-}
-#endif /* T8_ENABLE_DEBUG */
-#endif /* T8_WITH_OCC */
