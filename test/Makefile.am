@@ -73,7 +73,7 @@ test_t8_gtest_main_SOURCES = test/t8_gtest_main.cxx \
   test/t8_gtest_basics.cxx \
   test/t8_schemes/t8_gtest_ancestor.cxx \
   test/t8_cmesh/t8_gtest_hypercube.cxx \
-  test/t8_cmesh/t8_gtest_cmesh_.cxx
+  test/t8_cmesh/t8_gtest_cmesh_copy.cxx
 
 test_t8_gtest_main_LDADD = $(LDADD) test/libgtest.la
 test_t8_gtest_main_LDFLAGS = $(AM_LDFLAGS) -pthread
