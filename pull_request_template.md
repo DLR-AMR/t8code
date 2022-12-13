@@ -15,6 +15,7 @@ As a reviewer please read through all the code lines and make sure that the code
 
 - [ ] All tests pass (in various configurations, this should be executed automatically in a github action)
 - [ ] New source/header files are properly added to the Makefiles
+- [ ] New Datatypes are added to t8indent_custom_datatypes.txt
 - [ ] The reviewer executed the new code features at least once and checked the results manually
 - [ ] The code is covered in an existing or new test case
 - [ ] New tests use the Google Test framework

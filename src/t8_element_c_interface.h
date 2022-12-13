@@ -139,7 +139,7 @@ void                t8_element_sibling (t8_eclass_scheme_c *ts,
  * \param [in] elem   The element.
  * \return            The number of corners of \a element.
  */
-int                 t8_element_num_corners (t8_eclass_scheme_c *ts,
+int                 t8_element_num_corners (const t8_eclass_scheme_c *ts,
                                             const t8_element_t *elem);
 
 /** Compute the number of faces of an element.
@@ -615,7 +615,7 @@ int                 t8_element_root_len (t8_eclass_scheme_c *ts,
 void                t8_element_vertex_reference_coords (t8_eclass_scheme_c
                                                         *ts,
                                                         const t8_element_t *t,
-                                                        int vertex,
+                                                        const int vertex,
                                                         double coords[]);
 
 /* TODO: deactivate */

@@ -28,6 +28,7 @@
 #include <t8_refcount.h>
 #include <t8_data/t8_shmem.h>
 #include <t8_vec.h>
+#include <t8_eclass.h>
 #ifdef T8_WITH_METIS
 #include <metis.h>
 
@@ -1565,4 +1566,84 @@ t8_cmesh_coords_axb (const double *coords_in, double *coords_out,
   for (i = 0; i < num_vertices; i++) {
     t8_vec_axpyz (coords_in + i * 3, b, coords_out + i * 3, alpha);
   }
+}
+
+#ifdef T8_ENABLE_DEBUG
+/**
+ * \warning This function is only available in debug-modus and should only 
+ * be used in debug-modus.
+ * 
+ * Prints the vertices of each local tree. 
+ * 
+ * \param[in] cmesh   source-cmesh, which trees get printed.
+ */
+static void
+t8_cmesh_print_local_trees (const t8_cmesh_t cmesh)
+{
+  const t8_locidx_t   num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
+  for (t8_locidx_t itree = 0; itree < num_local_trees; itree++) {
+    double             *vertices = t8_cmesh_get_tree_vertices (cmesh, itree);
+    const t8_eclass_t   tree_class = t8_cmesh_get_tree_class (cmesh, itree);
+    const int           num_vertices = t8_eclass_num_vertices[tree_class];
+    const t8_gloidx_t   gtree = t8_cmesh_get_global_id (cmesh, itree);
+    for (int ivertex = 0; ivertex < num_vertices; ivertex++) {
+      const int           vert_x = 3 * ivertex;
+      const int           vert_y = 3 * ivertex + 1;
+      const int           vert_z = 3 * ivertex + 2;
+      t8_debugf
+        ("[Global_tree: %li, local_tree: %i, vertex: %i] eclass: %s\t %f, %f, %f\n",
+         gtree, itree, ivertex, t8_eclass_to_string[tree_class],
+         vertices[vert_x], vertices[vert_y], vertices[vert_z]);
+    }
+    t8_debugf ("\n");
+  }
+}
+#endif
+
+void
+t8_cmesh_debug_print_trees (const t8_cmesh_t cmesh, sc_MPI_Comm comm)
+{
+#ifdef T8_ENABLE_DEBUG
+  /* This function is probably rather slow, linear in the number of processes and therefore
+   * only available if the debug-modus is enabled. */
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  if (t8_cmesh_is_partitioned (cmesh)) {
+    /* The cmesh is partitioned */
+    int                 rank;
+    int                 size;
+    int                 mpiret;
+    mpiret = sc_MPI_Comm_rank (comm, &rank);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Comm_size (comm, &size);
+    SC_CHECK_MPI (mpiret);
+    const int           send_rank = (rank + 1) % size;
+    const int           recv_rank = rank - 1;
+    /* Print the local trees in process-order. */
+    if (rank != 0) {
+      int                 source_rank;
+      /* Send the rank as an additional check */
+      mpiret =
+        sc_MPI_Recv (&source_rank, 1, sc_MPI_INT, recv_rank, 0, comm,
+                     sc_MPI_STATUS_IGNORE);
+      SC_CHECK_MPI (mpiret);
+      T8_ASSERT (source_rank == (rank - 1));
+    }
+    t8_cmesh_print_local_trees (cmesh);
+    if (rank != (size - 1)) {
+      mpiret = sc_MPI_Send (&rank, 1, sc_MPI_INT, send_rank, 0, comm);
+      SC_CHECK_MPI (mpiret);
+    }
+  }
+  else {
+    /* The cmesh is not partitioned, only one rank prints the trees. */
+    if (cmesh->mpirank == 0) {
+      t8_cmesh_print_local_trees (cmesh);
+    }
+  }
+
+#else
+  t8_global_errorf
+    ("Do not call t8_cmesh_debug_print_trees if t8code is not compiled with --enable-debug.\n");
+#endif /* T8_ENABLE_DEBUG */
 }

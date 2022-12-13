@@ -39,6 +39,7 @@
 #include <TopoDS_Vertex.hxx>
 #include <TopoDS_Edge.hxx>
 #include <TopoDS_Face.hxx>
+#include <Standard_Version.hxx>
 
 #endif /* T8_WITH_OCC */
 
