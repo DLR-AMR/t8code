@@ -150,3 +150,5 @@ TEST (t8_gtest_cad_proximity, element_and_point_inside)
   }
   t8_forest_unref (&forest);
 }
+
+#endif /* T8_WITH_OCC */
