@@ -729,7 +729,7 @@ int
 t8_geom_is_occ (const t8_geometry_c *geometry)
 {
   /* Try to dynamic cast the geometry into linear geometry. This is only successful if
-   * geometry pointed to a t8_geometry_occ.
+   * geometry points to a t8_geometry_occ.
    * If successful, then is_occ_geom will be true.
    */
   const int           is_occ_geom =
