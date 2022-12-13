@@ -21,7 +21,8 @@
 */
 
 /** \file t8_cad_shape_proximity.hxx
- * Intgrates many CAD and CAM functionalities.
+ * Integrates CAD functionalities. Classifies if a point or element
+ * is inside a given CAD shape.
  */
 
 #ifndef T8_CAD_SHAPE_PROXIMITY_HXX
