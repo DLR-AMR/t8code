@@ -181,7 +181,7 @@ TEST (t8_gtest_cad_proximity, element_and_point_inside)
       cad.t8_cad_is_element_inside_shape (forest, 0,
                                           element, 0, 1);
     const int           point_inside =
-      (bool) cad.t8_cad_is_point_inside_shape (coords, 0);
+      (int) cad.t8_cad_is_point_inside_shape (coords, 0);
     EXPECT_EQ (elem_inside, expect);
     EXPECT_EQ (point_inside, expect);
   }
