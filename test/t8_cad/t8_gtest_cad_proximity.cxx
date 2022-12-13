@@ -111,43 +111,6 @@ t8_gtest_cad_proximity_create_forest (int level, sc_MPI_Comm comm)
 }
 
 /**
- * Creates a skewed hypercube forest.
- * 
- * \param [in] level     The level of the forest.
- * \param [in] comm      The communicator to use.
- * \return               The forest.
- */
-t8_forest_t
-t8_gtest_cad_proximity_create_forest_skewed (int level, sc_MPI_Comm comm)
-{
-  int                 mpiret, mpirank;
-  t8_cmesh_t          cmesh;
-  t8_scheme_cxx_t    *scheme;
-  t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
-
-  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
-  SC_CHECK_MPI (mpiret);
-  double              vertices[24] = {
-    0, 0, 0,
-    2, 0, 0,
-    0, 1, 0,
-    2, 1, 0,
-    0, 0, 1,
-    1, 0, 1,
-    0, 1, 1,
-    1, 1, 1
-  };
-  t8_cmesh_init (&cmesh);
-  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
-  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 8);
-  t8_cmesh_register_geometry (cmesh, linear_geom);
-  t8_cmesh_commit (cmesh, comm);
-
-  scheme = t8_scheme_new_default_cxx ();
-  return t8_forest_new_uniform (cmesh, scheme, level, 0, comm);
-}
-
-/**
  * Tests the element and point inside functions of \a t8_cad_shape_proximity.
  */
 TEST (t8_gtest_cad_proximity, element_and_point_inside)
