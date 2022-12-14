@@ -222,14 +222,9 @@ t8_mptrac_coords_to_lonlatpressure (const t8_mptrac_context_t * context,
   /* Interpolate lat coordinate */
   const int           max_lat_idx = meteo1->ny;
   T8_ASSERT (max_lat_idx >= 1);
-  /* Note that we switch max and min for latitude.
-   * We do this since meteo1->lat[0] = 90, meteo1->lat[max_lat_idx - 1] = -90 in the standard case.
-   * But, we want our interpolation to go in positive y axis, not negative.
-   * Thus, we need to switch them around.
-   */
-  t8_mptrac_interpol_helper (point[1],
-                             meteo1->lat[max_lat_idx - 1],
-                             meteo1->lat[0], lat);
+
+  t8_mptrac_interpol_helper (point[1], meteo1->lat[0],
+                             meteo1->lat[max_lat_idx - 1], lat);
 
   t8_debugf ("Interpolate (%f,%f) lon range (%f,%f) lat range (%f,%f)\n",
              point[0], point[1], meteo1->lon[0], meteo1->lon[max_lon_idx - 1],
