@@ -14,4 +14,3 @@ include example/common/Makefile.am
 include example/version/Makefile.am
 
 include example/remove/Makefile.am
-include example/figure_thesis/Makefile.am

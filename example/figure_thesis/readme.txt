@@ -1,1 +1,0 @@
-This folder and its content is temporary and will be deleted after completion of Ioannis thesis. The content is used to create images.
