@@ -31,10 +31,8 @@ protected:
   void SetUp() override {
     eclass = GetParam();
 
-    /* For each eclass create a cmesh consisting only of one tree.
-     * We then check whether all faces of this tree are a boundary face. */
+    /* For each eclass create a cmesh consisting only of one tree. */
     cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
-    EXPECT_TRUE(t8_cmesh_is_committed (cmesh));
     /* We now check each face */
     num_faces = t8_eclass_num_faces[(int) eclass];
   }
@@ -49,6 +47,9 @@ protected:
 
 TEST_P (cmesh_face_boundary_one_tree, check_face_is_boundary_one_tree) {
   
+    /* We check whether all faces of the tree are a boundary face. */
+    EXPECT_TRUE(t8_cmesh_is_committed (cmesh));
+    
     for (int iface = 0; iface < num_faces; ++iface) {
       EXPECT_TRUE(t8_cmesh_tree_face_is_boundary (cmesh, 0, iface));
       EXPECT_TRUE(t8_cmesh_get_face_neighbor (cmesh, 0, iface, NULL, NULL) < 0);
