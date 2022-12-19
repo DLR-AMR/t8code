@@ -27,13 +27,13 @@
  * does nothing and is always passed.
  */
 
+#include <gtest/gtest.h>
 #include <t8.h>
 #if T8_WITH_NETCDF
 #include <netcdf.h>
 #endif
 
-static void
-t8_test_netcdf_linkage ()
+TEST(t8_gtest_netcdf_linkage, test_linking_with_netcdf)
 {
 #if T8_WITH_NETCDF
 
@@ -43,16 +43,12 @@ t8_test_netcdf_linkage ()
   int                 nc_error = nc_create ("FileName", NC_DISKLESS, &ncid);
 
   /* Check for error */
-  SC_CHECK_ABORTF (nc_error == NC_NOERR,
-                   "netcdf error when creating in memory " "file: %s\n",
-                   nc_strerror (nc_error));
+  EXPECT_EQ(nc_error,NC_NOERR)
 
   /* Close the file */
   nc_error = nc_close (ncid);
   /* Check for error */
-  SC_CHECK_ABORTF (nc_error == NC_NOERR,
-                   "netcdf error when closing in memory file: %s\n",
-                   nc_strerror (nc_error));
+  EXPECT_EQ(nc_error,NC_NOERR)
 
   t8_global_productionf
     ("Successfully created and closed in memory netcdf file.\n");
@@ -60,31 +56,4 @@ t8_test_netcdf_linkage ()
   t8_global_productionf
     ("This version of t8code is not compiled with netcdf support.\n");
 #endif
-}
-
-int
-main (int argc, char **argv)
-{
-  int                 mpiret;
-
-  /* Initialize MPI */
-  mpiret = sc_MPI_Init (&argc, &argv);
-  SC_CHECK_MPI (mpiret);
-
-  /* Initialize sc */
-  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-  /* Initialize t8code */
-  t8_init (SC_LP_PRODUCTION);
-
-  /* Check netcdf linkage */
-  t8_test_netcdf_linkage ();
-
-  /* Finalize sc */
-  sc_finalize ();
-
-  /* Finalize MPI */
-  mpiret = sc_MPI_Finalize ();
-  SC_CHECK_MPI (mpiret);
-
-  return 0;
 }
