@@ -3,7 +3,6 @@
 # Included from toplevel directory
 
 t8code_test_programs = \
-    test/t8_cmesh/t8_test_cmesh_partition \
     test/t8_forest/t8_test_find_owner \
     test/t8_forest/t8_test_ghost_exchange \
     test/t8_forest/t8_test_ghost_and_owner \
@@ -24,9 +23,6 @@ t8code_test_programs = \
     test/t8_data/t8_test_shmem \
     test/t8_test_netcdf_linkage \
     test/t8_test_vtk_linkage
-
-
-test_t8_cmesh_t8_test_cmesh_partition_SOURCES = test/t8_cmesh/t8_test_cmesh_partition.cxx
 
 test_t8_forest_t8_test_find_owner_SOURCES = test/t8_forest/t8_test_find_owner.cxx
 test_t8_forest_t8_test_ghost_exchange_SOURCES = test/t8_forest/t8_test_ghost_exchange.cxx
@@ -72,6 +68,7 @@ test_t8_gtest_main_SOURCES = test/t8_gtest_main.cxx \
   test/t8_cmesh/t8_gtest_hypercube.cxx \
   test/t8_cmesh/t8_gtest_cmesh_copy.cxx \
   test/t8_cmesh/t8_gtest_cmesh_face_is_boundary.cxx \
+  test/t8_cmesh/t8_gtest_cmesh_partition.cxx \
   test/t8_cmesh/t8_gtest_cmesh_readmshfile.cxx
   
 
