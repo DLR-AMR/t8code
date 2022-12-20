@@ -817,7 +817,15 @@ t8_advect_replace (t8_forest_t forest_old,
   }
   else if (refine == 1) {
     T8_ASSERT (num_outgoing == 1);
-    T8_ASSERT (num_incoming == 1 << problem->dim);
+#if T8_ENABLE_DEBUG
+    /* Ensure that the numebr of incoming elements matches the
+     * number of children of the outgoing element. */
+    const t8_element_t *element_outgoing =
+      t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing);
+    const int           num_children =
+      ts->t8_element_num_children (element_outgoing);
+    T8_ASSERT (num_incoming == num_children);
+#endif
     /* The old element is refined, we copy the phi values and compute the new midpoints */
     for (i = 0; i < num_incoming; i++) {
       /* Get a pointer to the new element */
@@ -830,10 +838,9 @@ t8_advect_replace (t8_forest_t forest_old,
       t8_advect_element_set_phi_adapt (problem, first_incoming_data + i,
                                        phi_old);
       /* Set the neighbor entries to uninitialized */
-      elem_data_in[i].num_faces = elem_data_out->num_faces;
-      T8_ASSERT (elem_data_in[i].num_faces ==
-                 ts->t8_element_num_faces (element));
-      for (iface = 0; iface < elem_data_in[i].num_faces; iface++) {
+      const int           num_new_faces = ts->t8_element_num_faces (element);
+      elem_data_in[i].num_faces = num_new_faces;
+      for (iface = 0; iface < num_new_faces; iface++) {
         elem_data_in[i].num_neighbors[iface] = 0;
         elem_data_in[i].flux_valid[iface] = -1;
         elem_data_in[i].dual_faces[iface] = NULL;
@@ -847,7 +854,16 @@ t8_advect_replace (t8_forest_t forest_old,
   else {
     double              phi = 0;
     T8_ASSERT (refine = -1);
-    T8_ASSERT (num_outgoing == 1 << problem->dim && num_incoming == 1);
+    T8_ASSERT (num_incoming == 1);
+#if T8_ENABLE_DEBUG
+    /* Ensure that the number of outgoing elements matches the
+     * number of siblings of the first outgoing element. */
+    const t8_element_t *element_outgoing =
+      t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing);
+    const int           num_siblings =
+      ts->t8_element_num_siblings (element_outgoing);
+    T8_ASSERT (num_outgoing == num_siblings);
+#endif
     /* The old elements form a family which is coarsened. We compute the average
      * phi value and set it as the new phi value */
     /* Get a pointer to the new element */
@@ -1125,6 +1141,9 @@ t8_advect_create_cmesh (sc_MPI_Comm comm, int cube_type,
     }
     else if (cube_type == 8) {
       return t8_cmesh_new_hypercube_hybrid (comm, 0, 1);
+    }
+    else if (cube_type == 9) {
+      return t8_cmesh_new_hypercube (T8_ECLASS_PYRAMID, comm, 0, 0, 0);
     }
     else {
       T8_ASSERT (T8_ECLASS_ZERO <= cube_type && cube_type < T8_ECLASS_COUNT);
@@ -1912,7 +1931,8 @@ main (int argc, char *argv[])
                       "\t\t3 - triangle\n\t\t4 - hexahedron\n"
                       "\t\t5 - tetrahedron\n\t\t6 - prism\n"
                       "\t\t7 - triangle/quad (hybrid 2d).\n"
-                      "\t\t8 - tet/hex/prism (hybrid 3d).\n");
+                      "\t\t8 - tet/hex/prism (hybrid 3d).\n"
+                      "\t\t9 - pyramid.\n");
   sc_options_add_string (opt, 'f', "mshfile", &mshfile, NULL,
                          "If specified, the cmesh is constructed from a .msh file with "
                          "the given prefix.\n\t\t\t\t     The files must end in .msh "
@@ -1979,7 +1999,7 @@ main (int argc, char *argv[])
   else if (parsed >= 0 && 1 <= flow_arg && flow_arg <= 7 && 0 <= level
            && 0 <= reflevel && 0 <= vtk_freq
            && ((mshfile != NULL && 0 < dim && dim <= 3)
-               || (1 <= cube_type && cube_type <= 8)) && band_width >= 0) {
+               || (1 <= cube_type && cube_type <= 9)) && band_width >= 0) {
     t8_cmesh_t          cmesh;
     t8_flow_function_3d_fn u;
 
@@ -1992,7 +2012,7 @@ main (int argc, char *argv[])
         dim = 3;
         break;
       case 9:
-        dim = 2;
+        dim = 3;
         break;
       default:
         dim = t8_eclass_to_dimension[cube_type];
