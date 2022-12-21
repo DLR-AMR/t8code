@@ -1930,6 +1930,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
         element_index =
           t8_forest_bin_search_lower (element_array, neigh_id,
                                       forest->maxlevel);
+        T8_ASSERT (element_index >= 0);
         /* Get the element */
         ancestor =
           t8_forest_ghost_get_element (forest, lghost_treeid, element_index);
