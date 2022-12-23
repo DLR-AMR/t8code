@@ -28,7 +28,7 @@
  * If t8code was not configured with --with-vtk then this test
  * does nothing and is always passed.
  */
-
+#include <gtest/gtest.h>
 #include <t8.h>
 #if T8_WITH_VTK
 #include <vtkUnstructuredGrid.h>
@@ -47,27 +47,18 @@
 #endif
 
 /* Check whether T8_VTK_VERSION_USED equals VTK_MAJOR_VERSION.VTK_MINOR_VERSION */
-static void
-t8_test_vtk_version_number ()
+TEST(t8_gtest_vtk_linkage, t8_test_vtk_version_number)
 {
 #if T8_WITH_VTK
   char                vtk_version[BUFSIZ];
   snprintf (vtk_version, BUFSIZ, "%i.%i", VTK_MAJOR_VERSION,
             VTK_MINOR_VERSION);
-  if (strcmp (T8_VTK_VERSION_USED, vtk_version)) {
-    SC_ABORTF
-      ("linked vtk version (%s) does not equal the version t8code was configured"
-       " with (%s)\n", vtk_version, T8_VTK_VERSION_USED);
-  }
-  else {
-    t8_global_productionf ("Using vtk version %s.\n", vtk_version);
-  }
+  EXPECT_FALSE(strcmp (T8_VTK_VERSION_USED, vtk_version));
 #endif
 }
 
 /* Check whether we can successfully execute VTK code */
-static void
-t8_test_vtk_linkage ()
+TEST(t8_gtest_vtk_linkage, t8_test_vtk_linkage)
 {
 #if T8_WITH_VTK
   vtkNew < vtkUnstructuredGrid > unstructuredGrid;
@@ -78,33 +69,4 @@ t8_test_vtk_linkage ()
   t8_global_productionf
     ("This version of t8code is not compiled with vtk support.\n");
 #endif
-}
-
-int
-main (int argc, char **argv)
-{
-  int                 mpiret;
-
-  /* Initialize MPI */
-  mpiret = sc_MPI_Init (&argc, &argv);
-  SC_CHECK_MPI (mpiret);
-
-  /* Initialize sc */
-  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-  /* Initialize t8code */
-  t8_init (SC_LP_PRODUCTION);
-
-  /* Check for correct version number */
-  t8_test_vtk_version_number ();
-  /* Check vtk linkage */
-  t8_test_vtk_linkage ();
-
-  /* Finalize sc */
-  sc_finalize ();
-
-  /* Finalize MPI */
-  mpiret = sc_MPI_Finalize ();
-  SC_CHECK_MPI (mpiret);
-
-  return 0;
 }

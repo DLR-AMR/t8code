@@ -24,8 +24,7 @@ t8code_test_programs = \
     test/t8_schemes/t8_test_pyra_face_neigh \
     test/t8_schemes/t8_test_pyra_face_descendant \
     test/t8_data/t8_test_shmem \
-    test/t8_test_netcdf_linkage \
-    test/t8_test_vtk_linkage
+    test/t8_test_netcdf_linkage 
 
 test_t8_cmesh_t8_test_cmesh_partition_SOURCES = test/t8_cmesh/t8_test_cmesh_partition.cxx
 test_t8_cmesh_t8_test_cmesh_face_is_boundary_SOURCES = test/t8_cmesh/t8_test_cmesh_face_is_boundary.cxx
@@ -54,7 +53,6 @@ test_t8_geometry_t8_test_geometry_SOURCES = test/t8_geometry/t8_test_geometry.cx
 test_t8_data_t8_test_shmem_SOURCES = test/t8_data/t8_test_shmem.cxx
 
 test_t8_test_netcdf_linkage_SOURCES = test/t8_test_netcdf_linkage.c
-test_t8_test_vtk_linkage_SOURCES = test/t8_test_vtk_linkage.cxx
 
 t8code_googletest_programs = \
   test/t8_gtest_main
@@ -73,7 +71,8 @@ test_t8_gtest_main_SOURCES = test/t8_gtest_main.cxx \
   test/t8_gtest_basics.cxx \
   test/t8_schemes/t8_gtest_ancestor.cxx \
   test/t8_cmesh/t8_gtest_hypercube.cxx \
-  test/t8_cmesh/t8_gtest_cmesh_copy.cxx
+  test/t8_cmesh/t8_gtest_cmesh_copy.cxx \
+  test/t8_gtest_vtk_linkage.cxx
 
 test_t8_gtest_main_LDADD = $(LDADD) test/libgtest.la
 test_t8_gtest_main_LDFLAGS = $(AM_LDFLAGS) -pthread
