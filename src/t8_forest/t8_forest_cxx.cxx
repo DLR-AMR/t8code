@@ -35,6 +35,9 @@
 #include <t8_cmesh/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_geometry/t8_geometry_base.hxx>
+#if T8_ENABLE_DEBUG
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
+#endif
 
 #if T8_ENABLE_DEBUG
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
@@ -979,6 +982,22 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
      * We approximate the normal of the quad face as the normal of
      * the triangle spanned by the corners 0, 1, and 2.
      */
+
+#if T8_ENABLE_DEBUG
+    /* Issue a warning if the points of the quad do not lie in the same plane */
+    {
+      double              p_0[3], p_1[3], p_2[3], p_3[3];
+      /* Compute the vertex coordinates of the quad */
+      t8_forest_element_coordinate (forest, ltreeid, element, 0, p_0);
+      t8_forest_element_coordinate (forest, ltreeid, element, 1, p_1);
+      t8_forest_element_coordinate (forest, ltreeid, element, 2, p_2);
+      t8_forest_element_coordinate (forest, ltreeid, element, 3, p_3);
+      if (!t8_four_points_coplanar (p_0, p_1, p_2, p_3, 1e-16)) {
+        t8_debugf
+          ("WARNING: Computing normal to a quad that is not coplanar. This computation will be inaccurate.\n");
+      }
+    }
+#endif
   case T8_ECLASS_TRIANGLE:
     {
       /* We construct the normal as the cross product of two spanning
@@ -1271,12 +1290,7 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
      * The point is inside the element. */
     return 1;
   default:
-    /* Point inside element check is currently not implemented for
-     *  - T8_ECLASS_QUAD
-     */
-    SC_ABORTF
-      ("Point inside check not implemented for elements of shape %s.\n",
-       t8_eclass_to_string[element_shape]);
+    SC_ABORT_NOT_REACHED ();
   }
 }
 

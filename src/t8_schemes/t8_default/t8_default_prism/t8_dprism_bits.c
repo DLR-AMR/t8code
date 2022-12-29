@@ -555,7 +555,8 @@ t8_dprism_corner_descendant (const t8_dprism_t *p, t8_dprism_t *s,
 }
 
 void
-t8_dprism_vertex_coords (const t8_dprism_t *p, int vertex, int coords[3])
+t8_dprism_vertex_coords (const t8_dprism_t *p, const int vertex,
+                         int coords[3])
 {
   T8_ASSERT (vertex >= 0 && vertex < 6);
   T8_ASSERT (p->line.level == p->tri.level);
@@ -569,7 +570,7 @@ t8_dprism_vertex_coords (const t8_dprism_t *p, int vertex, int coords[3])
 }
 
 void
-t8_dprism_vertex_ref_coords (const t8_dprism_t *p, int vertex,
+t8_dprism_vertex_ref_coords (const t8_dprism_t *p, const int vertex,
                              double coords[3])
 {
   int                 coords_int[3];

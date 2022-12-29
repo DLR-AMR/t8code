@@ -52,9 +52,9 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     
-    timeout-minutes: 60
+    timeout-minutes: 90
     steps:
 #
 # Setup and bootstrap

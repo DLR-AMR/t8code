@@ -33,161 +33,209 @@
 #include <t8_cmesh/t8_cmesh_geometry.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 
-/* This function creates a single element of the specified element class.
- * It the creates a bunch of points, some of which lie whithin the element, some
+/* This function creates uniform forests of the specified element class.
+ * It then iterates over the forest's elements and 
+ * creates a bunch of points, some of which lie whithin the element, some
  * not. For each point we call t8_forest_element_point_inside and check whether
- * it gives the correct result. */
-/*
- * TODO: - Use more than one refinement level.
- *       - Does the new barycentric coordinate test work with HEX and PRISM?
+ * it gives the correct result.
+ * 
+ * \param [in] comm     MPI communicator
+ * \param [in] eclass   Element class to check
+ * \param [in] maxlevel Up to this level uniform forests are created.
  */
 static void
-t8_test_point_inside_level0 (sc_MPI_Comm comm, t8_eclass_t eclass)
+t8_test_point_inside (sc_MPI_Comm comm, t8_eclass_t eclass, int maxlevel)
 {
-  t8_cmesh_t          cmesh;
-  t8_forest_t         forest;
-  t8_scheme_cxx_t    *default_scheme;
-  t8_eclass_scheme_c *eclass_scheme;
-  t8_element_t       *element;
   double              test_point[3];
   int                 ipoint, icoord;   /* loop variables */
   int                 point_is_recognized_as_inside;
   int                 num_corners, icorner;
   double              element_vertices[T8_ECLASS_MAX_CORNERS][3];
   double             *barycentric_coordinates;
-  const double        barycentric_range_lower_bound = 0.001;    /* Must be > 0 */
+  const double        barycentric_range_lower_bound = 0.1;      /* Must be > 0 */
   const double        barycentric_range_upper_bound = 1.1;      /* Should be > 1 */
   int                 num_steps;
   double              step;
-  int                 num_points;
   /* Numerical tolerance that we allow in the point inside check */
   const double        tolerance = 1e-12;
+  int                 num_points_to_generate = 64;      /* Desired number of test points per element. 
+                                                         * The actual number is computed to be close to this and
+                                                         * will always be >= 2^num_corners (thus >= 128 for hex). */
 
-  default_scheme = t8_scheme_new_default_cxx ();
-  /* Construct a cube coarse mesh */
-  cmesh = t8_cmesh_new_from_class (eclass, comm);
-  /* Build a uniform level 0 forest */
-  forest = t8_forest_new_uniform (cmesh, default_scheme, 0, 0, comm);
+  t8_log_indent_push ();
+  for (int level = 0; level <= maxlevel; ++level) {
+    t8_debugf
+      ("Testing eclass %s, uniform level %i with approx. %i points per element.\n",
+       t8_eclass_to_string[eclass], level, num_points_to_generate);
+    t8_scheme_cxx_t    *default_scheme = t8_scheme_new_default_cxx ();
+    /* Construct a cube coarse mesh */
+    t8_cmesh_t          cmesh = t8_cmesh_new_from_class (eclass, comm);
 
-  if (t8_forest_get_local_num_elements (forest) > 0) {
-    /* Skip empty forests (can occur when executed in parallel) */
-
-    /* Get a pointer to the single element */
-    element = t8_forest_get_element (forest, 0, NULL);
-
-    /* Get the associated eclass scheme */
-    eclass_scheme = t8_forest_get_eclass_scheme (forest, eclass);
-
-    /* Compute the corner coordinates of the element */
-    num_corners = eclass_scheme->t8_element_num_corners (element);
-    T8_ASSERT (0 <= num_corners && num_corners <= T8_ECLASS_MAX_CORNERS);       /* Everything else is impossible */
-    /* For each corner get its coordinates */
-    for (icorner = 0; icorner < num_corners; ++icorner) {
-      t8_forest_element_coordinate (forest, 0, element,
-                                    icorner, element_vertices[icorner]);
+    /* We translate the coordinates of the cmesh to create a non-standard case.
+     * In particular, we want the 1D and 2D elements to move outside of axis
+     * perpendicular planes. We do this to detect possible errors in the point
+     * finding function that may be biased towards certrain coordinate axis.
+     */
+    double             *const tree_vertices =
+      t8_cmesh_get_tree_vertices (cmesh, 0);
+    const int           num_vertices = t8_eclass_num_vertices[eclass];
+    /* Translate all points by the same vector to move the element a bit. */
+    double              translate_all_points[3] = { -0.1, 0.3, 0.15 };
+    t8_cmesh_translate_coordinates (tree_vertices, tree_vertices,
+                                    num_vertices, translate_all_points);
+    /* Translate points 0 and 1 (if it exists) extra in order to move the 2D elements
+     * and 3D faces outside of axis perpendicular planes. */
+    double              translate_points_0_1[3] = { 0.1, -0.1, 0.3 };
+    t8_cmesh_translate_coordinates (tree_vertices, tree_vertices, 1,
+                                    translate_points_0_1);
+    if (num_vertices > 2) {
+      t8_cmesh_translate_coordinates (tree_vertices + 3, tree_vertices + 3, 1,
+                                      translate_points_0_1);
     }
 
-    /* Allocate the barycentric coordinates */
-    barycentric_coordinates = T8_ALLOC (double, num_corners);
+    /* Build a uniform forest */
+    t8_forest_t         forest =
+      t8_forest_new_uniform (cmesh, default_scheme, level, 1, comm);
 
-    /* Fill the barycentric coordinates with test values */
-    /* 1-Sum 0 0 0  ... start
-     * 1-Sum 0 0 0  ... start + step
-     *   .
-     *   .
-     * 1-Sum 0 0 0  ... end
-     * 1-Sum 0 0 0    start start
-     * 1-Sum 0 0 0    start + step start
-     *  .
-     *  .
-     *  .
-     *
-     * Thus, we have num_steps^(num_corners - 1) many points.
-     * if 0 <= i < num_points then the j-th coordinate has to be
-     * set to start + (i / num_steps^j) % num_steps * step
-     *
-     * We multiply this entry with a dampening factor that is smaller the smaller
-     * the sum of the already set entries is.
-     * This dampening increases the percentage of points that lie inside the element.
-     *
-     * The number of steps depends on the number of corners.
-     * The more corners the smaller the number of stepes in order to limit the
-     * number of points that we generate.
-     */
-    num_points = 10000;         /* Desired number of points */
-    /* Compute the number of steps needed */
-    num_steps = pow (num_points, 1. / (num_corners - 1));
-    /* Corrected number of points due to possible rounding errors in pow */
-    num_points = sc_intpow (num_steps, num_corners - 1);
-    step =
-      (barycentric_range_upper_bound -
-       barycentric_range_lower_bound) / (num_steps - 1);
-    t8_debugf ("step size %g, steps %i, points %i (corners %i)\n", step,
-               num_steps, num_points, num_corners);
-    int                 num_in = 0;
-    double              dampening;
-    for (ipoint = 0; ipoint < num_points; ++ipoint) {
-      double              Sum = 0;
-      int                 point_is_inside = 1;
+    const t8_locidx_t   num_trees = t8_forest_get_num_local_trees (forest);
 
-      /* Set the coordinates of the test point to 0 */
-      for (icoord = 0; icoord < 3; ++icoord) {
-        test_point[icoord] = 0;
-      }
-      for (icorner = 0; icorner < num_corners - 1; ++icorner) {
-        int                 this_step =
-          (ipoint / sc_intpow (num_steps, icorner)) % num_steps;
-        barycentric_coordinates[icorner] =
-          barycentric_range_lower_bound + this_step * step;
-        dampening = (1 - Sum) * (1 - Sum);
-        barycentric_coordinates[icorner] *= dampening;
-        Sum += barycentric_coordinates[icorner];
+    for (t8_locidx_t itree = 0; itree < num_trees; ++itree) {
+      t8_log_indent_push ();
+      const t8_locidx_t   num_elements =
+        t8_forest_get_tree_num_elements (forest, itree);
+      /* Get the associated eclass scheme */
+      const t8_eclass_t   tree_class =
+        t8_forest_get_tree_class (forest, itree);
+      const t8_eclass_scheme_c *eclass_scheme =
+        t8_forest_get_eclass_scheme (forest, tree_class);
+      for (t8_locidx_t ielement = 0; ielement < num_elements; ++ielement) {
 
-        /* Construct the actual test point */
-        for (icoord = 0; icoord < 3; ++icoord) {
-          test_point[icoord] +=
-            barycentric_coordinates[icorner] *
-            element_vertices[icorner][icoord];
+        /* Get a pointer to the element */
+        const t8_element_t *element =
+          t8_forest_get_element_in_tree (forest, itree, ielement);
+
+        /* Compute the corner coordinates of the element */
+        num_corners = eclass_scheme->t8_element_num_corners (element);
+        /* For each corner get its coordinates */
+        for (icorner = 0; icorner < num_corners; ++icorner) {
+          t8_forest_element_coordinate (forest, 0, element,
+                                        icorner, element_vertices[icorner]);
         }
 
-        point_is_inside = point_is_inside
-          && barycentric_coordinates[icorner] <= 1;
-      }
-      barycentric_coordinates[num_corners - 1] = 1 - Sum;
+        /* Allocate the barycentric coordinates */
+        barycentric_coordinates = T8_ALLOC (double, num_corners);
 
-      /* Add the last barycentric coordinate to the test point */
-      for (icoord = 0; icoord < 3; ++icoord) {
-        test_point[icoord] +=
-          barycentric_coordinates[num_corners -
-                                  1] * element_vertices[num_corners -
-                                                        1][icoord];
-      }
+        /* Fill the barycentric coordinates with test values */
+        /* 1-Sum 0 0 0  ... start
+         * 1-Sum 0 0 0  ... start + step
+         *   .
+         *   .
+         * 1-Sum 0 0 0  ... end
+         * 1-Sum 0 0 0    start start
+         * 1-Sum 0 0 0    start + step start
+         *  .
+         *  .
+         *  .
+         *
+         * Thus, we have num_steps^(num_corners - 1) many points.
+         * if 0 <= i < num_points then the j-th coordinate has to be
+         * set to start + (i / num_steps^j) % num_steps * step
+         *
+         * We multiply this entry with a dampening factor that is smaller the smaller
+         * the sum of the already set entries is.
+         * This dampening increases the percentage of points that lie inside the element.
+         *
+         * The number of steps depends on the number of corners.
+         * The more corners the smaller the number of steps in order to limit the
+         * number of points that we generate.
+         */
+        /* Compute the number of steps needed */
+        num_steps = pow (num_points_to_generate, 1. / (num_corners - 1));
+        if (num_steps <= 1) {
+          /* Correct to at least 2 steps in order to prevent division by 0 */
+          num_steps = 2;
+        }
+        /* Corrected number of points due to possible rounding errors in pow */
+        const int           num_points =
+          sc_intpow (num_steps, num_corners - 1);
+        step =
+          (barycentric_range_upper_bound -
+           barycentric_range_lower_bound) / (num_steps - 1);
+        t8_debugf ("step size %g, steps %i, points %i (corners %i)\n", step,
+                   num_steps, num_points, num_corners);
+        int                 num_in = 0;
+        double              dampening;
 
-      point_is_inside = point_is_inside
-        && barycentric_coordinates[num_corners - 1] >= 0
-        && barycentric_coordinates[num_corners - 1] <= 1;
-      num_in += point_is_inside ? 1 : 0;
+        /* For each test point, build coordinates and test whether it
+         * is correctly detected to be in/outside the element. */
+        for (ipoint = 0; ipoint < num_points; ++ipoint) {
+          double              Sum = 0;
+          int                 point_is_inside = 1;
 
-      /* We now check whether the point inside function correctly sees whether
-       * the point is inside the element or not. */
-      point_is_recognized_as_inside =
-        t8_forest_element_point_inside (forest, 0, element,
-                                        test_point, tolerance);
+          /* Set the coordinates of the test point to 0 */
+          for (icoord = 0; icoord < 3; ++icoord) {
+            test_point[icoord] = 0;
+          }
+          for (icorner = 0; icorner < num_corners - 1; ++icorner) {
+            int                 this_step =
+              (ipoint / sc_intpow (num_steps, icorner)) % num_steps;
 
-      SC_CHECK_ABORTF (!point_is_recognized_as_inside == !point_is_inside,
-                       "The point (%g,%g,%g) should %s be inside the %s element, but isn't detected as such.",
-                       test_point[0], test_point[1], test_point[2],
-                       point_is_inside ? "" : "not",
-                       t8_eclass_to_string[eclass]);
+            /* Set barycentric coordinates */
+            barycentric_coordinates[icorner] =
+              barycentric_range_lower_bound + this_step * step;
+            dampening = (1 - Sum) * (1 - Sum);
+            barycentric_coordinates[icorner] *= dampening;
+            Sum += barycentric_coordinates[icorner];
 
-    }
-    t8_debugf ("%i (%.2f%%) of test points are inside the element\n", num_in,
-               (100.0 * num_in) / num_points);
+            /* Construct the actual test point from the barycentric coordinate */
+            for (icoord = 0; icoord < 3; ++icoord) {
+              test_point[icoord] +=
+                barycentric_coordinates[icorner] *
+                element_vertices[icorner][icoord];
+            }
 
-    T8_FREE (barycentric_coordinates);
-  }                             /* Skip empty forest if */
+            /* The point is inside if and only if all barycentric coordinates are >= 0. */
+            point_is_inside = point_is_inside
+              && barycentric_coordinates[icorner] >= 0;
+          }
 
-  t8_forest_unref (&forest);
+          /* Ensure that sum over all bar. coordinates is 1 */
+          barycentric_coordinates[num_corners - 1] = 1 - Sum;
+
+          /* Add this last barycentric coordinate to the test point */
+          for (icoord = 0; icoord < 3; ++icoord) {
+            test_point[icoord] += barycentric_coordinates[num_corners - 1]
+              * element_vertices[num_corners - 1][icoord];
+          }
+          /* The point is inside if and only if all barycentric coordinates are >= 0. */
+          point_is_inside = point_is_inside
+            && barycentric_coordinates[num_corners - 1] >= 0;
+
+          num_in += point_is_inside ? 1 : 0;
+
+          /* We now check whether the point inside function correctly sees whether
+           * the point is inside the element or not. */
+          point_is_recognized_as_inside =
+            t8_forest_element_point_inside (forest, 0, element,
+                                            test_point, tolerance);
+
+          SC_CHECK_ABORTF (!point_is_recognized_as_inside == !point_is_inside,
+                           "Testing point #%i (%g,%g,%g) should %s be inside the %s element, but isn't detected as such.",
+                           ipoint,
+                           test_point[0], test_point[1], test_point[2],
+                           point_is_inside ? "" : "not",
+                           t8_eclass_to_string[eclass]);
+
+        }                       /* End loop over points. */
+        t8_debugf ("%i (%.2f%%) test points are inside the element\n", num_in,
+                   (100.0 * num_in) / num_points);
+        T8_FREE (barycentric_coordinates);
+      }                         /* End loop over elements */
+    }                           /* End loop over trees */
+    t8_forest_unref (&forest);
+    t8_log_indent_pop ();
+  }                             /* End loop over levels */
+  t8_log_indent_pop ();
 }
 
 /* In this test we define a triangle in the x-y plane
@@ -243,12 +291,71 @@ t8_test_point_inside_specific_triangle ()
   t8_forest_unref (&forest);
 }
 
+/* In this test we define a quad in the x-y plane
+ * and a point that lies in a quad that is parallel
+ * to the first quad on the z-axis.
+ * The point must be correctly identified as lying outside
+ * of the quad.
+ */
+static void
+t8_test_point_inside_specific_quad ()
+{
+  t8_cmesh_t          cmesh;
+  t8_forest_t         forest;
+  t8_element_t       *element;
+  double              vertices[12] = {
+    0., 0., 0.,
+    1., 0., 0.,
+    0., 1., 0.,
+    1., 1., 0.
+  };
+  double              test_point[3] = {
+    0.3, 0.3, 1
+  };
+  int                 point_is_inside;
+  const double        tolerance = 1e-12;        /* Numerical tolerance that we allow for the point inside check */
+  t8_geometry_c      *linear_geom = new t8_geometry_linear (2);
+
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
+  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 4);
+  /* We use standard linear geometry */
+  t8_cmesh_register_geometry (cmesh, linear_geom);
+
+  t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
+  forest =
+    t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 0, 0,
+                           sc_MPI_COMM_WORLD);
+
+  if (t8_forest_get_local_num_elements (forest) <= 0) {
+    /* Skip empty forests (can occur when executed in parallel) */
+    t8_forest_unref (&forest);
+    return;
+  }
+
+  element = t8_forest_get_element (forest, 0, NULL);
+
+  point_is_inside =
+    t8_forest_element_point_inside (forest, 0,
+                                    element, test_point, tolerance);
+
+  SC_CHECK_ABORT (!point_is_inside,
+                  "The point is wrongly detected as inside the triangle.");
+
+  t8_forest_unref (&forest);
+}
+
 int
 main (int argc, char **argv)
 {
   int                 mpiret;
   sc_MPI_Comm         mpic;
   int                 ieclass;
+#if T8_ENABLE_LESS_TESTS
+  const int           maxlevel = 4;
+#else
+  const int           maxlevel = 6;
+#endif
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -260,14 +367,14 @@ main (int argc, char **argv)
   t8_global_productionf
     ("Testing one specific point with one specific triangle.\n");
   t8_test_point_inside_specific_triangle ();
+  t8_global_productionf
+    ("Testing one specific point with one specific quad.\n");
+  t8_test_point_inside_specific_quad ();
   for (ieclass = T8_ECLASS_LINE; ieclass < T8_ECLASS_COUNT; ieclass++) {
-    if (ieclass != T8_ECLASS_QUAD) {
-      /* TODO: - point inside check does not work with quads yet. */
-      t8_global_productionf
-        ("Testing point finding with eclass %s\n",
-         t8_eclass_to_string[ieclass]);
-      t8_test_point_inside_level0 (mpic, (t8_eclass_t) ieclass);
-    }
+    t8_global_productionf
+      ("Testing point finding with eclass %s\n",
+       t8_eclass_to_string[ieclass]);
+    t8_test_point_inside (mpic, (t8_eclass_t) ieclass, maxlevel);
   }
 
   sc_finalize ();

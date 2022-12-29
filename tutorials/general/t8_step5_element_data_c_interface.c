@@ -22,7 +22,7 @@
 
 /* See also: https://github.com/holke/t8code/wiki/Step-5---Store-element-data
  *
- * This is step5 of the t8code tutorials.
+ * This is step5 of the t8code tutorials using the C interface of t8code.
  * In the following we will store data in the individual elements of our forest. 
  * To do this, we will again create a uniform forest, which will get adapted as in step4, 
  * with the difference that we partition, balance and create ghost elements all in the same step.
@@ -42,12 +42,15 @@
  *     data into the output file.
  *  */
 
+// #include <sc.h>                 /* sc library. */
+#include <sc_containers.h>      /* sc library. */
 #include <t8.h>                 /* General t8code header, always include this. */
 #include <t8_cmesh.h>           /* cmesh definition and basic interface. */
 #include <t8_cmesh/t8_cmesh_examples.h> /* A collection of exemplary cmeshes */
 #include <t8_forest.h>          /* forest definition and basic interface. */
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>     /* default refinement scheme. */
-#include <tutorials/t8_step3.h>
+#include <t8_schemes/t8_default/t8_default_c_interface.h>       /* default refinement scheme. */
+#include <t8_element_c_interface.h>     /* default refinement scheme. */
+#include <tutorials/general/t8_step3.h>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -156,8 +159,9 @@ t8_step5_create_element_data (t8_forest_t forest)
         element = t8_forest_get_element_in_tree (forest, itree, ielement);
         /* We want to store the elements level and its volume as data. We compute these
          * via the eclass_scheme and the forest_element interface. */
+
         element_data[current_index].level =
-          eclass_scheme->t8_element_level (element);
+          t8_element_level (eclass_scheme, element);
         element_data[current_index].volume =
           t8_forest_element_volume (forest, itree, element);
       }
@@ -174,7 +178,7 @@ static void
 t8_step5_exchange_ghost_data (t8_forest_t forest,
                               struct t8_step5_data_per_element *data)
 {
-  sc_array           *sc_array_wrapper;
+  sc_array_t         *sc_array_wrapper;
   t8_locidx_t         num_elements =
     t8_forest_get_local_num_elements (forest);
   t8_locidx_t         num_ghosts = t8_forest_get_num_ghosts (forest);
@@ -254,7 +258,7 @@ t8_step5_main (int argc, char **argv)
   /* The uniform refinement level of the forest. */
   const int           level = 3;
   /* The array that will hold our per element data. */
-  t8_step5_data_per_element *data;
+  struct t8_step5_data_per_element *data;
 
   /* Initialize MPI. This has to happen before we initialize sc or t8code. */
   mpiret = sc_MPI_Init (&argc, &argv);
