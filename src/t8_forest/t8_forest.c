@@ -247,14 +247,6 @@ void
 t8_forest_set_transition (t8_forest_t forest, const t8_forest_t set_from)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
-  // At the moment, transition only supports one-tree-forests
-  if (t8_forest_is_committed(forest)) {
-    T8_ASSERT (t8_forest_get_global_num_elements(forest) == 1);
-  }
-  if (set_from != NULL) {
-    // If set_from != NULL, we check that is has only one tree
-    T8_ASSERT (t8_forest_get_global_num_elements(set_from) == 1);
-  }
 
   /* If forest is not balanced, balance now. 
    * This binary operation checks, whether the third bit from the right from 
@@ -281,6 +273,7 @@ t8_forest_set_transition (t8_forest_t forest, const t8_forest_t set_from)
     forest->from_method |= T8_FOREST_FROM_SUBELEMENTS;
   }
 
+  // set the forests subelement flag, which is for example used by the LFN routine
   forest->set_subelements = 1;
 }
 
@@ -618,7 +611,7 @@ t8_forest_commit (t8_forest_t forest)
       forest->from_method -= T8_FOREST_FROM_ADAPT;
       if (forest->from_method > 0) {
         /* The forest should also be partitioned/balanced/transitioned.
-         * We first adapt the forest, then balance and then partition */
+         * We first adapt the forest, then balance, then partition and transition */
         t8_forest_t         forest_adapt;
 
         t8_forest_init (&forest_adapt);
@@ -649,8 +642,12 @@ t8_forest_commit (t8_forest_t forest)
         /* This forest should only be adapted */
         t8_forest_copy_trees (forest, forest->set_from, 0);
         t8_forest_adapt (forest);
+        /* adapt removes all subelements -
+         * this convention makes it easier to handle them within the 
+         * balance and transition routine. */
+        T8_ASSERT (!t8_forest_is_transitioned (forest));
+        forest->is_transitioned = 0;
       }
-      forest->is_transitioned = 0;
     }
     if (forest->from_method & T8_FOREST_FROM_PARTITION) {
       partitioned = 1;
@@ -695,6 +692,7 @@ t8_forest_commit (t8_forest_t forest)
         t8_forest_partition (forest);
       }
     }
+
     if (forest->from_method & T8_FOREST_FROM_BALANCE) {
       /* balance the forest */
       forest->from_method -= T8_FOREST_FROM_BALANCE;
