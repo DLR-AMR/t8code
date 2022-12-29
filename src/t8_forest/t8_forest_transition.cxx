@@ -149,11 +149,38 @@ t8_forest_transition (t8_forest_t forest)
   t8_global_productionf ("Done t8_forest_transition.\n");
 }
 
-/* TODO: it would be better to have a proper test if all hanging nodes are removed */
+/* TODO: implement */
 int
-t8_forest_is_conformal (t8_forest_t forest)
+t8_forest_is_transitioned (t8_forest_t forest)
 {
-  t8_global_productionf ("Warning: This test is not implemented.\n");
+  t8_eclass_scheme_c *tscheme;
+  t8_locidx_t         tree_count, num_trees;
+  t8_tree_t current_tree;
+  t8_element_array_t *telements;
+  t8_locidx_t elem_count, num_elems;
+
+  /* iterate through the forest and check for subelements */
+  num_trees = t8_forest_get_num_local_trees(forest);
+  for (tree_count = 0; tree_count < num_trees; tree_count++) {
+    current_tree = t8_forest_get_tree (forest, tree_count);
+    telements = &current_tree->elements;
+    num_elems = (t8_locidx_t) t8_element_array_get_count (telements);
+    for (elem_count = 0; elem_count < num_elems; elem_count++) {
+      t8_element_t       *current_element =
+        t8_element_array_index_locidx (telements, elem_count);
+      /* TODO: we do not use tscheme = t8_forest_get_eclass_scheme (forest, current_tree->eclass);
+       * as forest might not be committed at this point. Therefore, we use the return statement of this 
+       * function in order to avoid the is_committed assertion. */
+      tscheme = forest->scheme_cxx->eclass_schemes[current_tree->eclass];
+      tscheme->t8_element_print_element(current_element, "called from transition check");
+      if (tscheme->t8_element_is_subelement(current_element)) {
+        /* subelement found -> return true */
+        return 1;
+      }
+    }
+  }
+
+  /* only return false if there is no subelement in the forest */
   return 0;
 }
 
