@@ -350,7 +350,7 @@ t8_refine_transition (t8_eclass_t eclass)
   ls_data.max_level = maxlevel;
   ls_data.udata = &sdata;
 
-  /* ********************************** Adaptation with possible multiple steps ************************************ */
+  /* ********************************** Adaptation (possibly with multiple steps) ************************************ */
 
   double              commit_time_accum = 0;
   double              LFN_time_accum = 0;
