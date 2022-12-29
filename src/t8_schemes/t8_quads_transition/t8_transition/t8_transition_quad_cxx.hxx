@@ -350,7 +350,7 @@ public:
                                                             transition_type);
 
 /** Test wheter a given element is a subelement or not */
-  virtual bool        t8_element_is_subelement (const t8_element * elem);
+  virtual bool        t8_element_is_subelement (const t8_element * elem) const;
 
 /** Get the subelement type of elem */
   virtual int         t8_element_get_transition_type (const
@@ -386,7 +386,7 @@ public:
   virtual t8_element_shape_t t8_element_shape (const t8_element_t *elem);
 
 /** Return the number of vertices of an element */
-  virtual int         t8_element_num_corners (const t8_element_t *elem);
+  virtual int         t8_element_num_corners (const t8_element_t *elem) const;
 
 /** Compute the coordinates of a given element vertex inside a reference tree
    *  that is embedded into [0,1]^d (d = dimension).

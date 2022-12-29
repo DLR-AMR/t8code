@@ -1792,7 +1792,7 @@ t8_subelement_scheme_quad_c::t8_element_copy_subelement_values (const
 
 bool
 t8_subelement_scheme_quad_c::t8_element_is_subelement (const
-                                                       t8_element * elem)
+                                                       t8_element * elem) const
 {
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) elem;
@@ -1838,7 +1838,7 @@ t8_subelement_scheme_quad_c::t8_element_shape (const t8_element_t *elem)
 }
 
 int
-t8_subelement_scheme_quad_c::t8_element_num_corners (const t8_element_t *elem)
+t8_subelement_scheme_quad_c::t8_element_num_corners (const t8_element_t *elem) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
 

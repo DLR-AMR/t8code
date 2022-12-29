@@ -217,10 +217,11 @@ t8_default_scheme_common_c::t8_element_print_element (const t8_element_t
 }
 
 bool
-t8_default_scheme_common_c::t8_element_is_subelement (const t8_element * elem)
+t8_default_scheme_common_c::t8_element_is_subelement (const t8_element * elem) const
 {
   /* We implement this function since it is a "check" function and 
-   * should not abort the code even if no subelements are implemented in the given eclass. */
+   * should not abort the code even if no subelements are implemented in the given eclass.
+   * Schemes that support subelements must provide their own implementation of this function. */
 
   /* No subelements are implemented and therefore we return false meaning "is no subelement". */
   t8_debugf
