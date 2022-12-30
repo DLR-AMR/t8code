@@ -20,9 +20,16 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* In this test, a simple refinement criteria is used to construct an adapted and transitioned forest. 
- * Afterwards, we iterate through all elements and all faces of the the transitioned forest in order to
- * test the leaf_face_neighbor function which will determine all neighbor elements. */
+/* This test is used to validate the transition functionality of the quad_w_sub scheme. 
+ * This tests consists of two main tesfunctions: 
+ *   1) t8_test_transition_local 
+ *   2) t8_test_transition_global
+ * The local test function constructs a single quad_element and applies several low level function on it and its children
+ * (quad children and subelements). 
+ * The global test function constructs a large transitioned forest. This forest is adapted for several timesteps in order to
+ * validate the adapt, balance and transition routines. Furthermore the LFN function is testes for all elements and all faces
+ * of the transitioned forest.
+ */
 
 #include <cstring>
 #include <t8_schemes/t8_quads_transition/t8_transition/t8_transition_quad_cxx.hxx>
@@ -108,13 +115,16 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt,
       }                         /* end of face loop */
     }                           /* end of element loop */
   }                             /* end of tree loop */
-}
+
+  t8_debugf
+    ("~~~~~~~~~~ The LFN test function finshed successful ~~~~~~~~~~\n");
+} /* end of LFN test function */
 
 static void
-t8_test_transition (t8_eclass_t eclass)
+t8_test_transition_global (t8_eclass_t eclass)
 {
   t8_debugf
-    ("~~~~~~~~~~ Into the t8_refine_transition function ~~~~~~~~~~\n");
+    ("~~~~~~~~~~ Into the t8_test_transition_global function ~~~~~~~~~~\n");
 
   t8_forest_t         forest;
   t8_forest_t         forest_adapt;
@@ -252,7 +262,197 @@ t8_test_transition (t8_eclass_t eclass)
   }                             /* end of adaptation loop */
 
   t8_forest_unref (&forest);
+  t8_debugf
+    ("~~~~~~~~~~ The t8_test_transition_global function finshed successful ~~~~~~~~~~\n");
+} /* end of t8_test_transition_global */
+
+static int
+t8_check_coordinates (double* coords)
+{
+  /* the initial quad_element is the unit quad with vertices (0,0), (1,0), (0,1) and (1,1) 
+   * We know that therefore, all children (even our subelements) will have vertices with coordinates 0, 0.5 or 1. */
+  double eps = 1e-126; /* testing up to float precision */
+  if ( ( fabs(coords[0] - 0.0) < eps || fabs(coords[0] - 0.5)<eps || fabs(coords[0] - 1.0)<eps ) &&
+       ( fabs(coords[1] - 0.0) < eps || fabs(coords[1] - 0.5)<eps || fabs(coords[1] - 1.0)<eps )) {
+    return true;
+  }
+  return false;
 }
+
+static void
+t8_test_quad_local (t8_element_t* quad_element, t8_eclass_scheme_c* class_scheme)
+{
+  t8_debugf
+    ("~~~~~~~~~~ Into the t8_test_quad_local function ~~~~~~~~~~\n");
+
+  t8_element_t      *parent;
+  int num_children, num_faces, num_vertices;
+  int child_id;
+  double              coords[2];
+
+  /* Allocate enough memory for quad children */
+  num_children = class_scheme->t8_element_num_children (quad_element);
+  t8_element_t      **children =
+    T8_ALLOC (t8_element_t *, num_children);
+  class_scheme->t8_element_new (num_children, children);
+
+  /* Create all subelements for the given type from the initial quad element. */
+  class_scheme->t8_element_children(quad_element, P4EST_CHILDREN, children);
+
+  /* transition cell must be a family of subelements */
+  T8_ASSERT (class_scheme->t8_element_is_family (children));
+
+  t8_debugf
+      ("The children array consists of %i elements, whose IDs range from 0 to %i.\n",
+      num_children, num_children - 1);
+
+  /* Iterate through all subelements and determine their vertex coordinates */
+  for (child_id = 0; child_id < num_children; ++child_id) {
+    /* All children should be standard quad elements here */
+    T8_ASSERT (!class_scheme->t8_element_is_subelement(children[child_id]));
+
+    /* Print the current subelement */
+    class_scheme->t8_element_print_element (children
+                                            [child_id],
+                                            "t8_test_quad");
+
+    /* Iterate over all faces of the elements and determine their TODO: what?*/
+    num_faces = class_scheme->t8_element_num_faces(children[child_id]);
+    int face_count;
+    for (face_count = 0; face_count < num_faces; face_count++) {
+      // do something
+    }
+
+    /* determine the shape of the subelement and use it to determine the number of vertices it has (triangle -> 3 vertices) */
+    const t8_element_shape_t shape =
+      class_scheme->t8_element_shape (children[child_id]);
+    num_vertices = t8_eclass_num_vertices[shape];
+    T8_ASSERT (num_vertices == class_scheme->t8_element_num_corners(children[child_id]));
+    T8_ASSERT (num_vertices == class_scheme->t8_element_num_faces(children[child_id]));
+
+    /* Iterate over all vertices of the subelement and determine their coordinates */
+    int vertex_count;
+    for (vertex_count = 0; vertex_count < num_vertices; ++vertex_count) {
+      class_scheme->t8_element_vertex_reference_coords (children[child_id],
+                                                        vertex_count, coords);
+      t8_debugf
+        ("Child ID: %i; Vertex: %i; Ref cords in [0,1]^2: (%lf,%lf)\n",
+        child_id, vertex_count, coords[0], coords[1]);
+      T8_ASSERT (t8_check_coordinates (coords));
+    } // end of vertex loop
+  } // end of subelement loop
+
+  /* coarsen the transition cell back to its parent, which must be equal to the initial quad_element */
+  class_scheme->t8_element_new (1, &parent);
+  class_scheme->t8_element_parent(children[0], parent);
+  T8_ASSERT (class_scheme->t8_element_compare(quad_element, parent) == 0);
+
+  /* free memory */
+  class_scheme->t8_element_destroy (1, &parent);
+  class_scheme->t8_element_destroy (num_children, children);
+  T8_FREE (children);
+
+  t8_debugf
+    ("~~~~~~~~~~ The t8_test_quad_local function finshed successful ~~~~~~~~~~\n");
+} /* end of t8_test_quad_local*/
+
+static void
+t8_test_transition_local (t8_eclass_t eclass)
+{
+  t8_debugf
+    ("~~~~~~~~~~ Into the t8_transition_local function ~~~~~~~~~~\n");
+
+  t8_scheme_cxx_t    *ts = t8_scheme_new_subelement_cxx ();
+  t8_eclass_scheme_c *class_scheme;
+  t8_element_t       *quad_element, *parent;
+  int                 subelement_id;
+  double              coords[2];
+  int                 num_subelements;
+  int                 num_vertices, num_faces;
+
+  /* At the moment, subelements are only implemented for the quad scheme. */
+  T8_ASSERT (eclass = T8_ECLASS_QUAD);
+  class_scheme = ts->eclass_schemes[eclass];
+
+  /* Allocate memory for a new quad element and initialize it */
+  class_scheme->t8_element_new (1, &quad_element);
+  class_scheme->t8_element_set_linear_id (quad_element, 0, 0);
+  T8_ASSERT (class_scheme->t8_element_is_valid (quad_element));
+
+  /* First, validate some element funcitons for this quad element */
+  t8_test_quad_local (quad_element, class_scheme);
+
+  /* Make checks for all transition types */
+  int type;
+  for (type = 1; type <= T8_SUB_QUAD_MAX_TRANSITION_TYPE; type++) {
+    /* Allocate enough memory for subelements of the given type and initialize them */
+    num_subelements = class_scheme->t8_element_get_number_of_subelements (type);
+    t8_element_t      **transition_cell =
+      T8_ALLOC (t8_element_t *, num_subelements);
+    class_scheme->t8_element_new (num_subelements, transition_cell);
+
+    /* Create all subelements for the given type from the initial quad element. */
+    class_scheme->t8_element_to_transition_cell (quad_element, type,
+                                                transition_cell);
+
+    /* transition cell must be a family of subelements */
+    T8_ASSERT (class_scheme->t8_element_is_family (transition_cell));
+
+    t8_debugf ("The given type is type %i.\n", type);
+    t8_debugf
+      ("The transition cell of type %i consists of %i subelements, whose IDs range from 0 to %i.\n",
+      type, num_subelements, num_subelements - 1);
+
+    /* Iterate through all subelements and determine their vertex coordinates */
+    for (subelement_id = 0; subelement_id < num_subelements; ++subelement_id) {
+      /* All elements in a transition cell are subelements */
+      T8_ASSERT (class_scheme->t8_element_is_subelement(transition_cell[subelement_id]));
+
+      /* Print the current subelement */
+      class_scheme->t8_element_print_element (transition_cell
+                                              [subelement_id],
+                                              "t8_transition_local");
+
+      /* determine the shape of the subelement and use it to determine the number of vertices it has (triangle -> 3 vertices) */
+      const t8_element_shape_t shape =
+        class_scheme->t8_element_shape (transition_cell[subelement_id]);
+      num_vertices = t8_eclass_num_vertices[shape];
+      T8_ASSERT (num_vertices == class_scheme->t8_element_num_corners(transition_cell[subelement_id]));
+      T8_ASSERT (num_vertices == class_scheme->t8_element_num_faces(transition_cell[subelement_id]));
+
+      /* Iterate over all vertices of the subelement and determine their coordinates */
+      int vertex_count;
+      for (vertex_count = 0; vertex_count < num_vertices; ++vertex_count) {
+        class_scheme->t8_element_vertex_reference_coords (transition_cell
+                                                          [subelement_id],
+                                                          vertex_count, coords);
+        t8_debugf
+          ("Subelement ID: %i; Vertex: %i; Ref cords in [0,1]^2: (%lf,%lf)\n",
+          subelement_id, vertex_count, coords[0], coords[1]);
+        T8_ASSERT (t8_check_coordinates (coords));
+      } // end of vertex loop
+    } // end of subelement loop
+
+    /* coarsen the transition cell back to its parent, which must be equal to the initial quad_element */
+    class_scheme->t8_element_new (1, &parent);
+    class_scheme->t8_element_parent(transition_cell[0], parent);
+    T8_ASSERT (class_scheme->t8_element_compare(quad_element, parent) == 0);
+
+    /* free memory */
+    class_scheme->t8_element_destroy (1, &parent);
+    class_scheme->t8_element_destroy (num_subelements, transition_cell);
+    T8_FREE (transition_cell);
+
+  } // end of transition type loop
+
+  /* free more memory */
+  class_scheme->t8_element_destroy (1, &quad_element);
+  t8_scheme_cxx_unref (&ts);
+  
+  t8_debugf
+    ("~~~~~~~~~~ The t8_transition_local function finshed successful ~~~~~~~~~~\n");
+
+} /* end of t8_test_transition_local */
 
 int
 main (int argc, char **argv)
@@ -267,7 +467,12 @@ main (int argc, char **argv)
   sc_init (mpic, 1, 1, NULL, SC_LP_PRODUCTION);
   t8_init (SC_LP_DEFAULT);
 
-  t8_test_transition (T8_ECLASS_QUAD);
+  /* Transition check on element level - construct a transition cell and apply low level functions */
+  t8_test_transition_local (T8_ECLASS_QUAD);
+
+  /* Transition check on forest level - construct a large transitioned forest for multiple timesteps
+   * and apply the LFN function */
+  t8_test_transition_global (T8_ECLASS_QUAD);
 
   sc_finalize ();
 
