@@ -52,9 +52,9 @@ t8_recursive_child_find_parent (t8_element_t *element, t8_element_t *child,
                                 const int maxlvl)
 {
   T8_ASSERT (level <= maxlvl && maxlvl <= ts->t8_element_maxlevel () - 1);
-  
+
   /* Get number of children */
-  int       num_children = ts->t8_element_num_children (element);
+  int                 num_children = ts->t8_element_num_children (element);
   /* Get child and test_parent, to check if test_parent = parent of child */
   if (level == maxlvl)
     return;
@@ -65,7 +65,7 @@ t8_recursive_child_find_parent (t8_element_t *element, t8_element_t *child,
     ts->t8_element_parent (child, test_parent);
     /* If its equal, call child_find_parent, to check if parent-child relation
      * is correct in next level until maxlvl is reached*/
-    EXPECT_TRUE(!ts->t8_element_compare (element, test_parent));
+    EXPECT_TRUE (!ts->t8_element_compare (element, test_parent));
 
     t8_recursive_child_find_parent (child, element, test_parent, ts,
                                     level + 1, maxlvl);
@@ -75,30 +75,30 @@ t8_recursive_child_find_parent (t8_element_t *element, t8_element_t *child,
   }
 }
 
-TEST_P(class_find_parent, t8_compute_child_find_parent){
+TEST_P (class_find_parent, t8_compute_child_find_parent)
+{
 #ifdef T8_ENABLE_LESS_TESTS
   const int           maxlvl = 4;
 #else
   const int           maxlvl = 6;
 #endif
-    
-    t8_element_t       *element;
-    t8_element_t       *child;
-    t8_element_t       *test_parent;
-  
-    /* Get element and initialize it */
-    ts->t8_element_new (1, &element);
-    ts->t8_element_new (1, &child);
-    ts->t8_element_new (1, &test_parent);
 
-    ts->t8_element_set_linear_id (element, 0, 0);
-    /* Check for correct parent-child relation */
-    t8_recursive_child_find_parent (element, child, test_parent, ts, 0,
-                                maxlvl);
-    /* Destroy element */
-    ts->t8_element_destroy (1, &element);
-    ts->t8_element_destroy (1, &child);
-    ts->t8_element_destroy (1, &test_parent);
+  t8_element_t       *element;
+  t8_element_t       *child;
+  t8_element_t       *test_parent;
+
+  /* Get element and initialize it */
+  ts->t8_element_new (1, &element);
+  ts->t8_element_new (1, &child);
+  ts->t8_element_new (1, &test_parent);
+
+  ts->t8_element_set_linear_id (element, 0, 0);
+  /* Check for correct parent-child relation */
+  t8_recursive_child_find_parent (element, child, test_parent, ts, 0, maxlvl);
+  /* Destroy element */
+  ts->t8_element_destroy (1, &element);
+  ts->t8_element_destroy (1, &child);
+  ts->t8_element_destroy (1, &test_parent);
 }
 
 /* *INDENT-OFF* */
