@@ -213,7 +213,8 @@ t8_default_scheme_common_c::t8_element_print_element (const t8_element_t
   /* We implement this function since it is a simple print function and 
    * should not abort the code even if it is not implemented in the given eclass. */
   t8_debugf
-    ("This is t8_element_print_element() called from %s: There is no implementation provided for the given scheme.\n", called_from);
+    ("This is t8_element_print_element() called from %s: There is no implementation provided for the given scheme.\n",
+     called_from);
 }
 
 bool

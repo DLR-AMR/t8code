@@ -1956,19 +1956,19 @@ t8_forest_subelement_face_neighbor (t8_forest_t forest,
   int                 subelement_count = 0;
 
   while (!neighbor_found) {
-    T8_ASSERT (ghost_element_index >= 0);     /* check, that ghost_element_index has been set in LFN before */
+    T8_ASSERT (ghost_element_index >= 0);       /* check, that ghost_element_index has been set in LFN before */
 
     const t8_element_t *check_neighbor;
     check_neighbor =
       t8_forest_ghost_get_element (forest, lghost_treeid,
-                                    ghost_element_index +
-                                    search_direction * subelement_count);
+                                   ghost_element_index +
+                                   search_direction * subelement_count);
 
     if (ts->t8_element_get_subelement_id (check_neighbor) ==
         leaf_neighbor_sub_id) {
       /* both elements should be siblings or equal */
       T8_ASSERT (ts->t8_element_get_transition_type (check_neighbor) ==
-                  ts->t8_element_get_transition_type (pseudo_neighbor));
+                 ts->t8_element_get_transition_type (pseudo_neighbor));
 
       /* adjust element index */
       element_index = element_index + search_direction * subelement_count;
@@ -1988,12 +1988,12 @@ t8_forest_subelement_face_neighbor (t8_forest_t forest,
       neighbor_found = true;
     }
 
-    if (subelement_count > id_diff_abs) {     /* we assume that the real neighbor is a sibling subelement and hence we should find it here */
+    if (subelement_count > id_diff_abs) {       /* we assume that the real neighbor is a sibling subelement and hence we should find it here */
       SC_ABORT ("Ghost subelement neighbor not found!\n");
     }
 
     subelement_count++;
-  }                           /* end while-loop to identify real ghost-subelement neighbor */
+  }                             /* end while-loop to identify real ghost-subelement neighbor */
 
   return;
 }

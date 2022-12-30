@@ -665,7 +665,8 @@ public:
    *  \param [in] elem A valid element 
    *  \return true if elem is a subelement 
    */
-  virtual bool        t8_element_is_subelement (const t8_element * elem) const = 0;
+  virtual bool        t8_element_is_subelement (const t8_element *
+                                                elem) const = 0;
 
   /** Return the number of subelements in a transition cell of type transition_type
    *  \param [in] transition_type The subelement type as an integer

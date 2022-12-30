@@ -1019,7 +1019,7 @@ static void
 t8_forest_ghost_fill_remote_v3 (t8_forest_t forest)
 {
   // ghost v3 is not implemented for transitioned forests
-  T8_ASSERT(!forest->is_transitioned);
+  T8_ASSERT (!forest->is_transitioned);
 
   t8_forest_ghost_boundary_data_t data;
   void               *store_user_data = NULL;
@@ -1127,7 +1127,8 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
           }
           else {
             /* Get the number of face children of the element at this face */
-            num_face_children = ts->t8_element_num_face_children (elem, iface);
+            num_face_children =
+              ts->t8_element_num_face_children (elem, iface);
           }
           /* regrow the half_neighbors array if neccessary.
            * We also need to reallocate it, if the element class of the neighbor

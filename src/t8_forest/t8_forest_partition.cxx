@@ -915,7 +915,7 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm,
   else {
     recv_bytes = byte_to_self;
   }
-  
+
   t8_debugf ("Receiving message of %i bytes from process %i\n", recv_bytes,
              proc);
 

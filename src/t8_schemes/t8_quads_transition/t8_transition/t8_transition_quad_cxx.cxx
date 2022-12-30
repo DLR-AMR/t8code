@@ -141,7 +141,8 @@ t8_subelement_scheme_quad_c::t8_element_compare (const t8_element_t *elem1,
 
   int                 compare = p4est_quadrant_compare (q, r);
 
-  t8_debugf("This is t8_subelement_scheme_quad_c::t8_element_compare: make sure that this compare convention for subelements fits your needs.\n");
+  t8_debugf
+    ("This is t8_subelement_scheme_quad_c::t8_element_compare: make sure that this compare convention for subelements fits your needs.\n");
   if (compare == 0) {
     if (t8_element_is_subelement (elem1)
         && t8_element_is_subelement (elem2)) {
@@ -459,7 +460,7 @@ t8_subelement_scheme_quad_c::t8_element_is_family (t8_element_t **fam)
 #ifdef T8_ENABLE_DEBUG
   {
     int                 i;
-    int                 num_siblings = t8_element_num_siblings(fam[0]);
+    int                 num_siblings = t8_element_num_siblings (fam[0]);
     for (i = 0; i < num_siblings; i++) {
       T8_ASSERT (t8_element_is_valid (fam[i]));
     }
@@ -1790,7 +1791,8 @@ t8_subelement_scheme_quad_c::t8_element_copy_subelement_values (const
 
 bool
 t8_subelement_scheme_quad_c::t8_element_is_subelement (const
-                                                       t8_element * elem) const
+                                                       t8_element *
+                                                       elem) const
 {
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) elem;

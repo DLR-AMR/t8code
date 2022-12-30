@@ -113,7 +113,8 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt,
 static void
 t8_test_transition (t8_eclass_t eclass)
 {
-  t8_debugf ("~~~~~~~~~~ Into the t8_refine_transition function ~~~~~~~~~~\n");
+  t8_debugf
+    ("~~~~~~~~~~ Into the t8_refine_transition function ~~~~~~~~~~\n");
 
   t8_forest_t         forest;
   t8_forest_t         forest_adapt;
@@ -146,12 +147,12 @@ t8_test_transition (t8_eclass_t eclass)
   int                 do_partition = 1;
 
   /* ghost setting */
-  int                 do_ghost = 1; // if do_LFN_test = 1, then do_ghost must be set to 1 as well when using multiple processes
-  int                 ghost_version = 1; // use v1 for transitioned forests
-
+  int                 do_ghost = 1;     // if do_LFN_test = 1, then do_ghost must be set to 1 as well when using multiple processes
+  int                 ghost_version = 1;        // use v1 for transitioned forests
 
   /* check settings */
-  SC_CHECK_ABORT (single_tree + multiple_tree + hybrid_cmesh == 1, "Setting-check failed");
+  SC_CHECK_ABORT (single_tree + multiple_tree + hybrid_cmesh == 1,
+                  "Setting-check failed");
 
   /* *************************************************************************************************************** */
 
@@ -240,8 +241,7 @@ t8_test_transition (t8_eclass_t eclass)
 
     /* iterate through all elements of the adapted, transitioned forest and compute
      * their neighbors to all faces. */
-    t8_LFN_test_iterate (forest_adapt, adaptation_count,
-                         num_adaptations);
+    t8_LFN_test_iterate (forest_adapt, adaptation_count, num_adaptations);
 
     /* Set forest to forest_adapt for the next step */
     forest = forest_adapt;

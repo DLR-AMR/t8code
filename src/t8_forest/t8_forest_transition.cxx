@@ -157,12 +157,12 @@ t8_forest_is_transitioned (t8_forest_t forest)
 {
   t8_eclass_scheme_c *tscheme;
   t8_locidx_t         tree_count, num_trees;
-  t8_tree_t current_tree;
+  t8_tree_t           current_tree;
   t8_element_array_t *telements;
-  t8_locidx_t elem_count, num_elems;
+  t8_locidx_t         elem_count, num_elems;
 
   /* iterate through the forest and check for subelements */
-  num_trees = t8_forest_get_num_local_trees(forest);
+  num_trees = t8_forest_get_num_local_trees (forest);
   for (tree_count = 0; tree_count < num_trees; tree_count++) {
     current_tree = t8_forest_get_tree (forest, tree_count);
     telements = &current_tree->elements;
@@ -174,8 +174,9 @@ t8_forest_is_transitioned (t8_forest_t forest)
        * as forest might not be committed at this point. Therefore, we use the return statement of this 
        * function in order to avoid the is_committed assertion. */
       tscheme = forest->scheme_cxx->eclass_schemes[current_tree->eclass];
-      tscheme->t8_element_print_element(current_element, "called from transition check");
-      if (tscheme->t8_element_is_subelement(current_element)) {
+      tscheme->t8_element_print_element (current_element,
+                                         "called from transition check");
+      if (tscheme->t8_element_is_subelement (current_element)) {
         /* subelement found -> return true */
         return 1;
       }

@@ -179,7 +179,7 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
         t8_productionf
           ("******************** Current element: ********************\n");
         t8_productionf ("Current element has local index %i of %i\n",
-                        elem_count+1, local_num_elements);
+                        elem_count + 1, local_num_elements);
         ts->t8_element_print_element (current_element,
                                       "t8_LFN_test_iterate: print current_element");
       }
@@ -238,7 +238,8 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
 static void
 t8_refine_transition (t8_eclass_t eclass)
 {
-  t8_debugf ("~~~~~~~~~~ Into the t8_refine_transition function ~~~~~~~~~~\n");
+  t8_debugf
+    ("~~~~~~~~~~ Into the t8_refine_transition function ~~~~~~~~~~\n");
 
   t8_forest_t         forest;
   t8_forest_t         forest_adapt;
@@ -276,8 +277,8 @@ t8_refine_transition (t8_eclass_t eclass)
   int                 do_partition = 1;
 
   /* ghost setting */
-  int                 do_ghost = 1; // if do_LFN_test = 1, then do_ghost must be set to 1 as well when using multiple processes
-  int                 ghost_version = 1; // use v1 for transitioned forests
+  int                 do_ghost = 1;     // if do_LFN_test = 1, then do_ghost must be set to 1 as well when using multiple processes
+  int                 ghost_version = 1;        // use v1 for transitioned forests
 
   /* LFN settings */
   int                 do_LFN_test = 1;
@@ -293,7 +294,8 @@ t8_refine_transition (t8_eclass_t eclass)
 
   /* check settings */
   SC_CHECK_ABORT (do_balance + do_transition == 1, "Setting-check failed");
-  SC_CHECK_ABORT (single_tree + multiple_tree + hybrid_cmesh == 1, "Setting-check failed");
+  SC_CHECK_ABORT (single_tree + multiple_tree + hybrid_cmesh == 1,
+                  "Setting-check failed");
 
   /* *************************************************************************************************************** */
 
@@ -311,7 +313,7 @@ t8_refine_transition (t8_eclass_t eclass)
     p4est_connectivity_destroy (brick);
   }
   else if (hybrid_cmesh) {
-    /* TODO: implement this case for subelements*/
+    /* TODO: implement this case for subelements */
     SC_ABORT ("Hybrid cmesh not implemented yet.");
     // cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
   }

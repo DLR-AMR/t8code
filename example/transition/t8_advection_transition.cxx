@@ -3195,19 +3195,22 @@ main (int argc, char *argv[])
     }
 
     // array of initial phi scalarfields
-    t8_example_level_set_fn levelfunc[4] = {t8_levelset_sphere, t8_constant, t8_periodic_2D_cos, t8_periodic_2D_cos_off_center};
-    SC_CHECK_ABORT (0 <= initialphi && initialphi <= 4, "Invalid type of initial phi.");
+    t8_example_level_set_fn levelfunc[4] =
+      { t8_levelset_sphere, t8_constant, t8_periodic_2D_cos,
+t8_periodic_2D_cos_off_center };
+    SC_CHECK_ABORT (0 <= initialphi
+                    && initialphi <= 4, "Invalid type of initial phi.");
 
     double              adapt_time = 0;
     adapt_time -= sc_MPI_Wtime ();
 
     t8_advect_solve (cmesh, u,
-                       levelfunc[initialphi], &ls_data,
-                       level,
-                       level + reflevel, T, cfl, sc_MPI_COMM_WORLD,
-                       adapt_freq, no_vtk, vtk_freq, band_width, dim,
-                       dummy_op, volume_refine, do_transition,
-                       refinementcriterion);
+                     levelfunc[initialphi], &ls_data,
+                     level,
+                     level + reflevel, T, cfl, sc_MPI_COMM_WORLD,
+                     adapt_freq, no_vtk, vtk_freq, band_width, dim,
+                     dummy_op, volume_refine, do_transition,
+                     refinementcriterion);
 
     adapt_time += sc_MPI_Wtime ();
     t8_global_essentialf ("Runtime advect: %f\n", adapt_time);

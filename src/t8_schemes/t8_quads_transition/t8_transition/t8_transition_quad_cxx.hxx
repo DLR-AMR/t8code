@@ -350,7 +350,8 @@ public:
                                                             transition_type);
 
 /** Test wheter a given element is a subelement or not */
-  virtual bool        t8_element_is_subelement (const t8_element * elem) const;
+  virtual bool        t8_element_is_subelement (const t8_element *
+                                                elem) const;
 
 /** Get the subelement type of elem */
   virtual int         t8_element_get_transition_type (const
