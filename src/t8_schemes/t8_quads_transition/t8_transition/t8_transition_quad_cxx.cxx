@@ -141,9 +141,10 @@ t8_subelement_scheme_quad_c::t8_element_compare (const t8_element_t *elem1,
 
   int                 compare = p4est_quadrant_compare (q, r);
 
-  t8_debugf
-    ("This is t8_subelement_scheme_quad_c::t8_element_compare: make sure that this compare convention for subelements fits your needs.\n");
-  if (compare == 0) {
+  if (compare == 0 && (t8_element_is_subelement (elem1)
+        || t8_element_is_subelement (elem2)) ) {
+    t8_debugf
+      ("Caution, the t8_element_compare is used with subelements.\n");
     if (t8_element_is_subelement (elem1)
         && t8_element_is_subelement (elem2)) {
       /* Caution: The compare function is used for two subelements. */
@@ -1628,6 +1629,7 @@ int
 t8_subelement_scheme_quad_c::t8_element_get_number_of_subelements (int
                                                                    transition_type)
 {
+  /* we could return 0 for transition type 0 but we will assert this case for safety reasons */
   T8_ASSERT (transition_type != 0);
 
   /* consider transition_type 13 = 1101 in base two -> there are 4 + (1+1+0+1) = 7 subelements */
