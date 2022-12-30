@@ -142,9 +142,8 @@ t8_subelement_scheme_quad_c::t8_element_compare (const t8_element_t *elem1,
   int                 compare = p4est_quadrant_compare (q, r);
 
   if (compare == 0 && (t8_element_is_subelement (elem1)
-        || t8_element_is_subelement (elem2)) ) {
-    t8_debugf
-      ("Caution, the t8_element_compare is used with subelements.\n");
+                       || t8_element_is_subelement (elem2))) {
+    t8_debugf ("Caution, the t8_element_compare is used with subelements.\n");
     if (t8_element_is_subelement (elem1)
         && t8_element_is_subelement (elem2)) {
       /* Caution: The compare function is used for two subelements. */

@@ -3197,7 +3197,8 @@ main (int argc, char *argv[])
     // array of initial phi scalarfields
     t8_example_level_set_fn levelfunc[4] =
       { t8_levelset_sphere, t8_constant, t8_periodic_2D_cos,
-t8_periodic_2D_cos_off_center };
+      t8_periodic_2D_cos_off_center
+    };
     SC_CHECK_ABORT (0 <= initialphi
                     && initialphi <= 4, "Invalid type of initial phi.");
 
