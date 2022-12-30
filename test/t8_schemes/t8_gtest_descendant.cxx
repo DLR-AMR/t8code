@@ -21,34 +21,65 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <gtest/gtest.h>
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
-/*This program tests the descendant function of an element.*/
+/* This program tests the descendant function of an element. */
+
+/* *INDENT-OFF* */
+class class_schemes_descendant:public testing::TestWithParam <t8_eclass> {
+protected:
+  void SetUp () override {
+    eclassi = GetParam ();
+
+    scheme = t8_scheme_new_default_cxx ();
+    ts = scheme->eclass_schemes[(t8_eclass_t) eclassi];
+    ts->t8_element_new (1, &elem);
+    ts->t8_element_new (1, &desc);
+    ts->t8_element_new (1, &test);
+    ts->t8_element_set_linear_id (elem, 0, 0);
+  }
+  void TearDown () override {
+    ts->t8_element_destroy (1, &elem);
+    ts->t8_element_destroy (1, &desc);
+    ts->t8_element_destroy (1, &test);
+    t8_scheme_cxx_unref (&scheme);
+  }
+#ifdef T8_ENABLE_DEBUG
+  const int           maxlvl = 3;
+#else
+  const int           maxlvl = 4;
+#endif
+
+  t8_scheme_cxx      *scheme;
+  t8_eclass_scheme_c *ts;
+  t8_eclass                 eclassi;
+  t8_element_t       *elem;
+  t8_element_t       *desc;
+  t8_element_t       *test;
+};
 
 /* Test recursively if the first and last descendant of an element is
- * computed correctly. Only the descendant of elem->level + 1 is tested.*/
-static void
-t8_recursive_descendant (t8_element_t *elem, t8_element_t *desc,
+ * computed correctly. Only the descendant of elem->level + 1 is tested. 
+ */
+static void 
+t8_recursive_descendant(t8_element_t *elem, t8_element_t *desc,
                          t8_element_t *test, t8_eclass_scheme_c *ts,
-                         int maxlvl)
-{
+                         int maxlvl){
   int                 num_children = ts->t8_element_num_children (elem);
   int                 level = ts->t8_element_level (elem);
-  int                 i;
-  for (i = 0; i < num_children; i++) {
-    ts->t8_element_child (elem, i, desc);
-    /*first child == first descendant */
-    if (i == 0) {
+  for (int ichild = 0; ichild < num_children; ichild++) {
+    ts->t8_element_child (elem, ichild, desc);
+    /* first child == first descendant. */
+    if (ichild == 0) {
       ts->t8_element_first_descendant (elem, test, level + 1);
-      SC_CHECK_ABORT (!ts->t8_element_compare (desc, test),
-                      "Wrong first descendant\n");
+      EXPECT_TRUE (!ts->t8_element_compare (desc, test));
     }
-    /*last child == last descendant */
-    else if (i == num_children - 1) {
+    /* last child == last descendant. */
+    else if (ichild == num_children - 1) {
       ts->t8_element_last_descendant (elem, test, level + 1);
-      SC_CHECK_ABORT (!ts->t8_element_compare (desc, test),
-                      "Wrong last descendant\n");
+      EXPECT_TRUE (!ts->t8_element_compare (desc, test));
     }
     else if (level > maxlvl) {
       t8_recursive_descendant (desc, elem, test, ts, maxlvl);
@@ -58,118 +89,75 @@ t8_recursive_descendant (t8_element_t *elem, t8_element_t *desc,
 }
 
 /* Test, if the first descendant of an element is computed correctly over a range
- * of levels*/
-static void
+ * of levels. 
+ */
+ static void
 t8_deep_first_descendant (t8_element_t *elem, t8_element_t *desc,
                           t8_element_t *test, t8_eclass_scheme_c *ts,
                           int level)
 {
-  int                 i, elem_level = ts->t8_element_level (elem);
+  int                 elem_level = ts->t8_element_level (elem);
   ts->t8_element_copy (elem, test);
-  for (i = elem_level; i < level; i++) {
+
+  for (int ilevel = elem_level; ilevel < level; ilevel++) {
     ts->t8_element_child (test, 0, desc);
     ts->t8_element_copy (desc, test);
   }
   ts->t8_element_first_descendant (elem, test, level);
-  SC_CHECK_ABORT (!ts->t8_element_compare (desc, test),
-                  "Wrong deep first descendant\n");
+  EXPECT_TRUE(!ts->t8_element_compare (desc, test));
 }
 
 /* Test, if the last descendant of an element is computed correctly over a range
- * of levels*/
+ * of levels.
+ */
 static void
 t8_deep_last_descendant (t8_element_t *elem, t8_element_t *desc,
                          t8_element_t *test, t8_eclass_scheme_c *ts,
                          int level)
 {
-  int                 num_children, i;
+  int                 num_children;
   ts->t8_element_copy (elem, test);
-  /*Compute the correct element */
-  for (i = ts->t8_element_level (elem); i < level; i++) {
+  
+  /* Compute the correct element. */
+  for (int ilevel = ts->t8_element_level (elem); ilevel < level; ilevel++) {
     num_children = ts->t8_element_num_children (test);
     ts->t8_element_child (test, num_children - 1, desc);
     ts->t8_element_copy (desc, test);
   }
-  /*Check for equality */
+  /* Check for equality. */
   ts->t8_element_last_descendant (elem, test, level);
-  SC_CHECK_ABORT (!ts->t8_element_compare (desc, test),
-                  "Wrong deep last descendant\n");
+  EXPECT_TRUE(!ts->t8_element_compare (desc, test));
 }
 
 /* Test if the first and last descendant of an element are computed correctly.
- * The level between the element and the descendant is larger or equal to one */
+ * The level between the element and the descendant is larger or equal to one.
+ */
 static void
 t8_large_step_descendant (t8_element_t *elem, t8_element_t *desc,
                           t8_element_t *test, t8_eclass_scheme_c *ts,
                           int maxlvl)
 {
   int                 num_children = ts->t8_element_num_children (elem);
-  int                 i, j;
-  for (i = ts->t8_element_level (elem); i < maxlvl; i++) {
-    /*Use these functions to perform the actual test */
+
+  for (int ilevel = ts->t8_element_level (elem); ilevel < maxlvl; ilevel++) {
+    /* Use these functions to perform the actual test. */
     t8_deep_first_descendant (elem, desc, test, ts, maxlvl);
     t8_deep_last_descendant (elem, desc, test, ts, maxlvl);
-    for (j = 0; j < num_children; j++) {
-      ts->t8_element_child (elem, j, desc);
+    for (int jchild = 0; jchild < num_children; jchild++) {
+      ts->t8_element_child (elem, jchild, desc);
       t8_large_step_descendant (desc, elem, test, ts, maxlvl);
       ts->t8_element_parent (desc, elem);
     }
   }
 }
 
-static void
-t8_check_descendant (const int maxlvl)
-{
-  t8_scheme_cxx      *scheme;
-  t8_eclass_scheme_c *ts;
-  int                 eclassi;
-  t8_eclass_t         eclass;
-  t8_element_t       *elem, *desc, *test;
-  scheme = t8_scheme_new_default_cxx ();
-  for (eclassi = T8_ECLASS_ZERO; eclassi < T8_ECLASS_COUNT; eclassi++) {
-    t8_productionf ("Checking descendants for eclass %s\n",
-                    t8_eclass_to_string[eclassi]);
-    eclass = (t8_eclass_t) eclassi;
-    ts = scheme->eclass_schemes[eclass];
-    ts->t8_element_new (1, &elem);
-    ts->t8_element_new (1, &desc);
-    ts->t8_element_new (1, &test);
-    ts->t8_element_set_linear_id (elem, 0, 0);
-
+TEST_P(class_schemes_descendant, test_recursive_descendant){
     t8_recursive_descendant (elem, desc, test, ts, maxlvl);
-    t8_deep_first_descendant (elem, desc, test, ts,
-                              ts->t8_element_maxlevel ());
-    t8_deep_last_descendant (elem, desc, test, ts,
-                             ts->t8_element_maxlevel ());
+    t8_deep_first_descendant (elem, desc, test, ts, ts->t8_element_maxlevel ());
+    t8_deep_last_descendant (elem, desc, test, ts, ts->t8_element_maxlevel ());
     t8_large_step_descendant (elem, desc, test, ts, maxlvl);
-
-    ts->t8_element_destroy (1, &elem);
-    ts->t8_element_destroy (1, &desc);
-    ts->t8_element_destroy (1, &test);
-  }
-  t8_scheme_cxx_unref (&scheme);
 }
 
-int
-main (int argc, char **argv)
-{
-  int                 mpiret;
-#ifdef T8_ENABLE_DEBUG
-  const int           maxlvl = 3;
-#else
-  const int           maxlvl = 4;
-#endif
-
-  mpiret = sc_MPI_Init (&argc, &argv);
-  SC_CHECK_MPI (mpiret);
-  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-  t8_init (SC_LP_DEFAULT);
-
-  t8_check_descendant (maxlvl);
-
-  sc_finalize ();
-
-  mpiret = sc_MPI_Finalize ();
-  SC_CHECK_MPI (mpiret);
-  return 0;
-}
+INSTANTIATE_TEST_SUITE_P (t8_gtest_descendant, class_schemes_descendant,
+                        testing::Range(T8_ECLASS_ZERO, T8_ECLASS_COUNT));
+/* *INDENT-ON* */
