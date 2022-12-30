@@ -175,7 +175,7 @@ public:
   /** Return the number of children of an element when it is refined. */
   virtual int         t8_element_num_children (const t8_element_t *elem);
 
-  /** Return the number of siblings of an element */
+  /** Return the number of siblings of an element (or the number of elements in the family of elem) */
   virtual int         t8_element_num_siblings (const t8_element_t *elem)
     const;
 

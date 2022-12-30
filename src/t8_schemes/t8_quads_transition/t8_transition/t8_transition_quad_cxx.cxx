@@ -141,7 +141,7 @@ t8_subelement_scheme_quad_c::t8_element_compare (const t8_element_t *elem1,
 
   int                 compare = p4est_quadrant_compare (q, r);
 
-  /* Flo1314_TODO: think about how this should be implemented for subelements */
+  t8_debugf("This is t8_subelement_scheme_quad_c::t8_element_compare: make sure that this compare convention for subelements fits your needs.\n");
   if (compare == 0) {
     if (t8_element_is_subelement (elem1)
         && t8_element_is_subelement (elem2)) {
@@ -292,15 +292,14 @@ t8_subelement_scheme_quad_c::t8_element_get_face_corner (const t8_element_t
   T8_ASSERT (t8_element_is_valid (elem));
 
   if (!t8_element_is_subelement (elem)) {
-    /* Flo1314_TODO: check whether this enumeration of the faces is right. It might be f_3 and f_2 switched */
     /*
-     *   2    f_3    3
+     *   2    f_2    3
      *     x -->-- x
      *     |       |
      *     ^       ^
      * f_0 |       | f_1
      *     x -->-- x
-     *   0    f_2    1
+     *   0    f_3    1
      */
 
     T8_ASSERT (0 <= face && face < P4EST_FACES);
@@ -459,9 +458,9 @@ t8_subelement_scheme_quad_c::t8_element_is_family (t8_element_t **fam)
 
 #ifdef T8_ENABLE_DEBUG
   {
-    /* Flo1314_TODO: this loop goes from 0 to 3 but with subelements there can be more elements in fam */
     int                 i;
-    for (i = 0; i < P4EST_CHILDREN; i++) {
+    int                 num_siblings = t8_element_num_siblings(fam[0]);
+    for (i = 0; i < num_siblings; i++) {
       T8_ASSERT (t8_element_is_valid (fam[i]));
     }
   }
@@ -633,7 +632,7 @@ t8_subelement_scheme_quad_c::t8_element_nca (const t8_element_t *elem1,
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
 #if 0
-  /* Flo1314_TODO: This assertions throws an error since it expects a 3D hex.
+  /* TODO: This assertions throws an error since it expects a 3D hex.
    *       this does not make sense. investigate. */
   T8_ASSERT (t8_element_surround_matches (q1, q2));
 #endif
@@ -901,7 +900,6 @@ t8_subelement_scheme_quad_c::t8_element_extrude_face (const t8_element_t
   T8_ASSERT (face_scheme->t8_element_is_valid (elem));
   T8_ASSERT (0 <= root_face && root_face < P4EST_FACES);
 
-  /* Flo1314_TODO: check if the enumeration in this graphic is right (maybe f_2 and f_3 switched) */
   /*
    * The faces of the root quadrant are enumerated like this:
    *
@@ -1169,7 +1167,7 @@ t8_subelement_scheme_quad_c::t8_element_boundary (const t8_element_t *elem,
 #endif
 }
 
-int                             // Flo1314_TODO: return bool instead of int?
+int
 t8_subelement_scheme_quad_c::t8_element_is_root_boundary (const t8_element_t
                                                           *elem, int face)
 {
@@ -1658,7 +1656,7 @@ t8_subelement_scheme_quad_c::t8_element_get_location_of_subelement (const
 
   T8_ASSERT (t8_element_is_valid (elem));
 
-  /* Consider the following subelement of type 13:
+  /* Consider the following transition cell of type 13:
    *            
    *              f0                         1
    *        x - - x - - x              x - - x - - x           
