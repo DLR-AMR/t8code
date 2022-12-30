@@ -232,14 +232,17 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
                         subelement_count, LFN_call_count, time_LFN,
                         time_LFN / (double) LFN_call_count, adaptation_count,
                         num_adaptations);
+
+  t8_debugf
+    ("~~~~~~~~~~ The LFN test function finshed successful ~~~~~~~~~~\n");
 }
 
 /* Initializing and adapting a forest */
 static void
-t8_refine_transition (t8_eclass_t eclass)
+t8_transition_global (t8_eclass_t eclass)
 {
   t8_debugf
-    ("~~~~~~~~~~ Into the t8_refine_transition function ~~~~~~~~~~\n");
+    ("~~~~~~~~~~ Into the t8_transition_global function ~~~~~~~~~~\n");
 
   t8_forest_t         forest;
   t8_forest_t         forest_adapt;
@@ -451,7 +454,9 @@ t8_refine_transition (t8_eclass_t eclass)
                             LFN_time_accum);
   }
 
-}                               /* end of t8_refine_transition */
+  t8_debugf
+    ("~~~~~~~~~~ The t8_transition_global function finshed successful ~~~~~~~~~~\n");
+}                               /* end of t8_transition_global */
 
 int
 main (int argc, char **argv)
@@ -465,7 +470,7 @@ main (int argc, char **argv)
   t8_init (SC_LP_DEFAULT);
 
   /* At the moment, subelements are only implemented for T8_ECLASS_QUADS */
-  t8_refine_transition (T8_ECLASS_QUAD);
+  t8_transition_global (T8_ECLASS_QUAD);
 
   sc_finalize ();
 
