@@ -1519,7 +1519,7 @@ t8_advect_replace (t8_forest_t forest_old,
         corner_coords_in_y[corner_iterate_in] = corner_coords[1];
       }
 
-      /* Flo1314_TODO think of a better way -> maybe just use a lookuptable */
+      /* TODO think of a better way -> maybe just use a lookuptable */
       corner_coords_in_x[3] =
         corner_coords_in_x[0] / 2 + corner_coords_in_x[1] / 2;
       corner_coords_in_y[3] =
@@ -2606,7 +2606,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     for (ilevel = problem->level; ilevel < problem->maxlevel; ilevel++) {
       /* initialize according to some adapt_init scheme */
       t8_advect_problem_adapt_init (problem, 0, refinementcriterion);
-      // Flo1314_TODO: add partition for transitioned forests
+      // TODO: add partition for transitioned forests
       if (!do_transition) {
         /* repartition */
         t8_advect_problem_partition (problem, 0);
@@ -2913,7 +2913,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
           time_adapt += sc_MPI_Wtime ();
         }
 
-        // Flo1314_TODO: add partition for transitioned forests
+        // TODO: add partition for transitioned forests
         if (!do_transition) {
           t8_advect_problem_partition (problem, 1);
         }

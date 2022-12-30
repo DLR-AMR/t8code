@@ -171,8 +171,9 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
       current_element =
         t8_forest_get_element_in_tree (forest_adapt, tree_count, elem_count);
 
-      if (ts->t8_element_is_subelement (current_element))
-        subelement_count++;;
+      if (ts->t8_element_is_subelement (current_element)) {
+        subelement_count++;
+      }
 
       if (get_LFN_elem_info) {  /* print current element */
         t8_productionf
@@ -194,7 +195,7 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
                                        forest_is_balanced);
         time_LFN += sc_MPI_Wtime ();
 
-        /* free memory */
+        /* free memory if neighbors exist */
         if (num_neighbors > 0) {
           if (get_LFN_elem_info) {
             /* print all neighbor elements */
@@ -268,8 +269,8 @@ t8_refine_transition (t8_eclass_t eclass)
 
   /* cmesh settings */
   int                 single_tree = 1;
-  int                 multiple_tree = 0, num_x_trees = 3, num_y_trees = 2;      /* Flo1314_TODO: will lead to abort in t8_gemetry_base.cxx:44 because of wrong dimension */
-  int                 hybrid_cmesh = 0; /* Flo1314_TODO: Implement this case */
+  int                 multiple_tree = 0, num_x_trees = 3, num_y_trees = 2;      /* TODO: will lead to abort in t8_gemetry_base.cxx:44 because of wrong dimension */
+  int                 hybrid_cmesh = 0; /* TODO: Implement this case */
 
   /* partition setting */
   int                 do_partition = 1;
@@ -310,7 +311,7 @@ t8_refine_transition (t8_eclass_t eclass)
     p4est_connectivity_destroy (brick);
   }
   else if (hybrid_cmesh) {
-    /* Flo1314_TODO: implement this case */
+    /* TODO: implement this case for subelements*/
     SC_ABORT ("Hybrid cmesh not implemented yet.");
     // cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
   }
@@ -390,9 +391,7 @@ t8_refine_transition (t8_eclass_t eclass)
     double              commit_time = 0;
     commit_time_accum -= sc_MPI_Wtime ();
     commit_time -= sc_MPI_Wtime ();
-
     t8_forest_commit (forest_adapt);    /* adapt the forest */
-
     commit_time_accum += sc_MPI_Wtime ();
     commit_time += sc_MPI_Wtime ();
 
@@ -418,6 +417,8 @@ t8_refine_transition (t8_eclass_t eclass)
       t8_debugf ("~~~~~~~~~~ vtk has been constructed ~~~~~~~~~~\n");
     }
 
+    /* iterate through all elements of the adapted, transitioned forest and compute
+     * their neighbors to all faces. */
     if (do_LFN_test) {
       LFN_time_accum -= sc_MPI_Wtime ();
       t8_LFN_test_iterate (forest_adapt, get_LFN_stats, adaptation_count,
