@@ -140,7 +140,7 @@ t8_transition_local (t8_eclass_t eclass)
   int                 subelement_id;
   double              coords[2];
   int                 num_subelements;
-  int                 num_vertices, num_faces;
+  int                 num_vertices;
 
   /* At the moment, subelements are only implemented for the quad scheme. */
   T8_ASSERT (eclass = T8_ECLASS_QUAD);
