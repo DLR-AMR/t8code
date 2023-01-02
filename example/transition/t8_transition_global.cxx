@@ -313,7 +313,7 @@ t8_transition_global (t8_eclass_t eclass)
   }
   else if (multiple_tree) {
     p4est_connectivity_t *brick =
-      p4est_connectivity_new_brick (num_x_trees, num_y_trees, 0, 0);
+      p4est_connectivity_new_brick (num_x_trees, num_y_trees, periodic_boundary, periodic_boundary);
       cmesh = t8_cmesh_new_from_p4est (brick, sc_MPI_COMM_WORLD, periodic_boundary);
     p4est_connectivity_destroy (brick);
   }
