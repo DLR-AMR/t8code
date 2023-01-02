@@ -133,12 +133,16 @@ t8_forest_subelement_adapt_remove_hanging_faces (t8_forest_t forest,
 void
 t8_forest_transition (t8_forest_t forest)
 {
+  T8_ASSERT (forest->set_subelements == 1);
+  T8_ASSERT (forest->is_transitioned == 0 && forest->set_from->is_transitioned == 0);
+  T8_ASSERT (t8_forest_is_balanced(forest->set_from));
+
   t8_global_productionf ("Into t8_forest_transition.\n");
 
   /* Set ghost layers of all processes in order to find hanging faces over process-boundaries */
   if (forest->set_from->ghosts == NULL) {
     forest->set_from->ghost_type = T8_GHOST_FACES;
-    t8_forest_ghost_create_topdown (forest->set_from);
+    t8_forest_ghost_create_balanced_only (forest->set_from);
   }
 
   forest->set_adapt_fn = t8_forest_subelement_adapt_remove_hanging_faces;
@@ -150,8 +154,8 @@ t8_forest_transition (t8_forest_t forest)
 }
 
 /* Test whether there are subelements in the forest. Note, that we 
- * allow non-committed forests in this implementation since it should be 
- * used as a check after the adapt routine within forest_commit() */
+ * allow non-committed forests in this implementation since this check 
+ * might be used in forest_commit() */
 int
 t8_forest_is_transitioned (t8_forest_t forest)
 {
@@ -170,12 +174,7 @@ t8_forest_is_transitioned (t8_forest_t forest)
     for (elem_count = 0; elem_count < num_elems; elem_count++) {
       t8_element_t       *current_element =
         t8_element_array_index_locidx (telements, elem_count);
-      /* TODO: we do not use tscheme = t8_forest_get_eclass_scheme (forest, current_tree->eclass);
-       * as forest might not be committed at this point. Therefore, we use the return statement of this 
-       * function in order to avoid the is_committed assertion. */
       tscheme = forest->scheme_cxx->eclass_schemes[current_tree->eclass];
-      tscheme->t8_element_print_element (current_element,
-                                         "called from transition check");
       if (tscheme->t8_element_is_subelement (current_element)) {
         /* subelement found -> return true */
         return 1;
