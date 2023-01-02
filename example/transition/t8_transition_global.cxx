@@ -272,16 +272,18 @@ t8_transition_global (t8_eclass_t eclass)
   int                 do_transition = 1;
 
   /* cmesh settings */
-  int                 single_tree = 1;
-  int                 multiple_tree = 0, num_x_trees = 3, num_y_trees = 2;      /* TODO: will lead to abort in t8_gemetry_base.cxx:44 because of wrong dimension */
+  int                 single_tree = 0;
+  int                 multiple_tree = 1, num_x_trees = 2, num_y_trees = 1;
   int                 hybrid_cmesh = 0; /* TODO: Implement this case */
+  
+  int                 periodic_boundary = 1;
 
   /* partition setting */
   int                 do_partition = 1;
 
   /* ghost setting */
-  int                 do_ghost = 1;     // if do_LFN_test = 1, then do_ghost must be set to 1 as well when using multiple processes
-  int                 ghost_version = 1;        // use v1 for transitioned forests
+  int                 do_ghost = 1;     /* if do_LFN_test = 1, then do_ghost must be set to 1 as well when using multiple processes */
+  int                 ghost_version = 1;        /* use v1 for transitioned forests */
 
   /* LFN settings */
   int                 do_LFN_test = 1;
@@ -307,12 +309,12 @@ t8_transition_global (t8_eclass_t eclass)
   /* building the cmesh, using the initlevel */
   if (single_tree) {
     /* single quad cmesh */
-    cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
+    cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, periodic_boundary);
   }
   else if (multiple_tree) {
     p4est_connectivity_t *brick =
       p4est_connectivity_new_brick (num_x_trees, num_y_trees, 0, 0);
-    cmesh = t8_cmesh_new_from_p4est (brick, sc_MPI_COMM_WORLD, 0);
+      cmesh = t8_cmesh_new_from_p4est (brick, sc_MPI_COMM_WORLD, periodic_boundary);
     p4est_connectivity_destroy (brick);
   }
   else if (hybrid_cmesh) {
