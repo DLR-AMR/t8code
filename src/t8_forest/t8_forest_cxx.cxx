@@ -1888,7 +1888,7 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest,
   return neighbor_tree;
 }
 
-/* this function does not need a declaration and is only called by LFN */
+/* This function does not need a declaration and is only called by LFN */
 void
 t8_forest_subelement_face_neighbor (t8_forest_t forest,
                                     t8_element_t *pseudo_neighbor,
@@ -1903,6 +1903,7 @@ t8_forest_subelement_face_neighbor (t8_forest_t forest,
                                     t8_eclass_scheme_c *ts,
                                     t8_eclass_scheme_c *neigh_scheme)
 {
+  T8_ASSERT (forest->is_transitioned);
   /* Given that the transition cell of the subelement "pseudo_neighbor" contains the real subelement leaf_face_neighbor of "leaf",
    * this function is used to identify even this leaf_face_neighbor subelement. */
 
