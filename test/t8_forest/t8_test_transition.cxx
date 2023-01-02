@@ -21,13 +21,13 @@
 */
 
 /* This test is used to validate the transition functionality of the quad_w_sub scheme. 
- * This tests consists of two main tesfunctions: 
+ * The test executes two tesfunctions: 
  *   1) t8_test_transition_local 
  *   2) t8_test_transition_global
  * The local test function constructs a single quad_element and applies several low level function on it and its children
  * (quad children and subelements). 
  * The global test function constructs a large transitioned forest. This forest is adapted for several timesteps in order to
- * validate the adapt, balance and transition routines. Furthermore the LFN function is testes for all elements and all faces
+ * validate the adapt, balance and transition routines. Furthermore, the LFN routine is testes for all elements and all faces
  * of the transitioned forest.
  */
 
@@ -104,8 +104,12 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt,
                                        &element_indices, &neigh_scheme,
                                        forest_is_balanced);
 
+        /* The forest is transitioned and therefore conformal -> either one or zero neighbors */
+        SC_CHECK_ABORTF((num_neighbors == 0 || num_neighbors == 1), "");
+
         /* free memory if neighbors exists */
         if (num_neighbors > 0) {
+          T8_ASSERT(neigh_scheme->t8_element_is_valid (neighbor_leafs[0]));
           neigh_scheme->t8_element_destroy (num_neighbors, neighbor_leafs);
 
           T8_FREE (element_indices);
@@ -267,10 +271,23 @@ t8_test_transition_global (t8_eclass_t eclass)
 }                               /* end of t8_test_transition_global */
 
 static int
-t8_check_coordinates (double *coords)
+t8_check_coordinates_float_precision (double *coords)
 {
-  /* the initial quad_element is the unit quad with vertices (0,0), (1,0), (0,1) and (1,1) 
-   * We know that therefore, all children (even our subelements) will have vertices with coordinates 0, 0.5 or 1. */
+  /* The initial quad_element is the unit square with vertices (0,0), (1,0), (0,1) and (1,1).
+   * The below figure shows all possible children/subelements and their vertices.
+   *
+   *    (0,1)         (1,1)
+   *      x - - - - - - x         x - - x - - x   x - - - - - x   x - - x - - x
+   *      |             |         |     |     |   | \       / |   | \   |   / |
+   *      |             |         |     |     |   |   \   /   |   |   \ | /   |
+   *      |             |   -->   x - - X - - x   |     x     |   x - - x - - x
+   *      |             |         |     |     |   |   /   \   |   |   / | \   |
+   *      | quad_elem   |         |     |     |   | /       \ |   | /   |   \ |
+   *      x - - - - - - x         x - - x - - x   x - - - - - x   x - - x - - x
+   *    (0,0)         (1,0)
+   *
+   * The following coordinate check is very simple and just tests whether a given coordinate is in the set of 
+   * possible vertex coordinates of all children/subelements. */
   double              eps = 1e-126;     /* testing up to float precision */
   if ((fabs (coords[0] - 0.0) < eps || fabs (coords[0] - 0.5) < eps
        || fabs (coords[0] - 1.0) < eps) && (fabs (coords[1] - 0.0) < eps
@@ -289,7 +306,7 @@ t8_test_quad_local (t8_element_t *quad_element,
   t8_debugf ("~~~~~~~~~~ Into the t8_test_quad_local function ~~~~~~~~~~\n");
 
   t8_element_t       *parent;
-  int                 num_children, num_faces, num_vertices;
+  int                 num_children, num_vertices;
   int                 child_id;
   double              coords[2];
 
@@ -317,13 +334,6 @@ t8_test_quad_local (t8_element_t *quad_element,
     class_scheme->t8_element_print_element (children
                                             [child_id], "t8_test_quad");
 
-    /* Iterate over all faces of the elements and determine their TODO: what? */
-    num_faces = class_scheme->t8_element_num_faces (children[child_id]);
-    int                 face_count;
-    for (face_count = 0; face_count < num_faces; face_count++) {
-      // do something
-    }
-
     /* determine the shape of the subelement and use it to determine the number of vertices it has (triangle -> 3 vertices) */
     const t8_element_shape_t shape =
       class_scheme->t8_element_shape (children[child_id]);
@@ -341,9 +351,10 @@ t8_test_quad_local (t8_element_t *quad_element,
       t8_debugf
         ("Child ID: %i; Vertex: %i; Ref cords in [0,1]^2: (%lf,%lf)\n",
          child_id, vertex_count, coords[0], coords[1]);
-      T8_ASSERT (t8_check_coordinates (coords));
+      /* Check vertex coordinates in unit cube up to float precision */
+        SC_CHECK_ABORTF (t8_check_coordinates_float_precision (coords), "Coordinates of child are computed incorrect.");
     }                           // end of vertex loop
-  }                             // end of subelement loop
+  }                             // end of child loop
 
   /* coarsen the transition cell back to its parent, which must be equal to the initial quad_element */
   class_scheme->t8_element_new (1, &parent);
@@ -370,7 +381,7 @@ t8_test_transition_local (t8_eclass_t eclass)
   int                 subelement_id;
   double              coords[2];
   int                 num_subelements;
-  int                 num_vertices, num_faces;
+  int                 num_vertices;
 
   /* At the moment, subelements are only implemented for the quad scheme. */
   T8_ASSERT (eclass = T8_ECLASS_QUAD);
@@ -438,7 +449,8 @@ t8_test_transition_local (t8_eclass_t eclass)
         t8_debugf
           ("Subelement ID: %i; Vertex: %i; Ref cords in [0,1]^2: (%lf,%lf)\n",
            subelement_id, vertex_count, coords[0], coords[1]);
-        T8_ASSERT (t8_check_coordinates (coords));
+        /* Check vertex coordinates in unit cube up to float precision */
+        SC_CHECK_ABORTF (t8_check_coordinates_float_precision (coords), "Coordinates of subelement are computed incorrect.");
       }                         // end of vertex loop
     }                           // end of subelement loop
 
