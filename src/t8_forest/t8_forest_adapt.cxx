@@ -254,6 +254,8 @@ t8_forest_adapt (t8_forest_t forest)
     el_considered = 0;
     /* Index into the newly inserted elements */
     el_inserted = 0;
+    /* Index into the newly inserted subelements */
+    subel_inserted = 0;
     /* el_coarsen is the index of the first element in the new element
      * array which could be coarsened recursively. */
     el_coarsen = 0;
@@ -532,7 +534,7 @@ t8_forest_adapt (t8_forest_t forest)
     /* clean up */
     T8_FREE (elements);
     T8_FREE (elements_from);
-  }
+  } /* end of tree loop */
   if (forest->set_adapt_recursive) {
     /* clean up */
     sc_list_destroy (refine_list);
