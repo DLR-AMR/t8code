@@ -846,12 +846,30 @@ t8_forest_get_local_num_elements (t8_forest_t forest)
   return forest->local_num_elements;
 }
 
+t8_locidx_t
+t8_forest_get_local_num_subelements (t8_forest_t forest)
+{
+  T8_ASSERT (forest->local_num_subelements <= forest->local_num_elements);
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  return forest->local_num_subelements;
+}
+
 t8_gloidx_t
 t8_forest_get_global_num_elements (t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
   return forest->global_num_elements;
+}
+
+t8_gloidx_t
+t8_forest_get_global_num_subelements (t8_forest_t forest)
+{
+  T8_ASSERT (forest->global_num_subelements <= forest->global_num_elements);
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  return forest->global_num_subelements;
 }
 
 t8_locidx_t
