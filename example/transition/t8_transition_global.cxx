@@ -28,6 +28,7 @@
  *     (iv)  decide, whether we want to get statistics printed out, regarding # of elements in the meshes and runtime infos of the several functions or other debugging information
  */
 
+#include "t8_forest.h"
 #include <cstring>
 #include <t8_schemes/t8_quads_transition/t8_transition/t8_transition_quad_cxx.hxx>
 #include <t8_schemes/t8_quads_transition/t8_transition_cxx.hxx>
@@ -100,8 +101,8 @@ t8_print_commit_stats (double commit_time, int num_adaptations,
 }
 
 void
-t8_print_LFN_stats (int global_num_elements,
-                    int num_quad_elems, int subelement_count,
+t8_print_LFN_stats (int global_num_elements, int global_num_subelements,
+                    int local_num_elements, int local_num_subelements,
                     int LFN_call_count, double time_LFN,
                     double time_LFN_per_call, int adaptation_count,
                     int num_adaptations)
@@ -110,9 +111,12 @@ t8_print_LFN_stats (int global_num_elements,
   t8_productionf
     ("|+++++++++++++++++++++ LFN statistics | adaptation %i of %i +++++++++++++++++++++|\n",
      adaptation_count, num_adaptations);
-  t8_productionf
+     t8_productionf
     ("|    Global #elements:         %i (#quads: %i, #subelements: %i)\n",
-     global_num_elements, num_quad_elems, subelement_count);
+     global_num_elements, global_num_elements-global_num_subelements, global_num_subelements);
+  t8_productionf
+    ("|    Local #elements:          %i (#quads: %i, #subelements: %i)\n",
+     local_num_elements, local_num_elements-local_num_subelements, local_num_subelements);
   t8_productionf ("|    #LFN calls:               %i\n", LFN_call_count);
   t8_productionf ("|    LFN runtime total [s]:    %f\n", time_LFN);
   t8_productionf ("|    LFN runtime per call [s]: %.9f\n", time_LFN_per_call);
@@ -141,14 +145,10 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
 
   int                *dual_faces;
   int                 num_neighbors;
-
   int                 face_id;
-  int                 global_num_elements =
-    t8_forest_get_global_num_elements (forest_adapt);
-  int                 global_num_trees =
-    t8_forest_get_num_global_trees (forest_adapt);
-  int                 local_num_elements;
-
+  int                 local_num_trees =
+    t8_forest_get_num_local_trees (forest_adapt); /* get the number of trees, this process knows about */
+  int                 current_tree_num_elements;
   int                 subelement_count = 0;
   int                 LFN_call_count = 0;
   int                 tree_count;
@@ -157,15 +157,15 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
 
   double              time_LFN = 0;
 
-  for (tree_count = 0; tree_count < global_num_trees; ++tree_count) {
+  for (tree_count = 0; tree_count < local_num_trees; ++tree_count) {
     eclass = t8_forest_get_tree_class (forest_adapt, tree_count);
     ts = t8_forest_get_eclass_scheme (forest_adapt, eclass);
 
     /* get the number of elements in the current tree */
     current_tree = t8_forest_get_tree (forest_adapt, tree_count);
-    local_num_elements = t8_forest_get_tree_element_count (current_tree);
+    current_tree_num_elements = t8_forest_get_tree_element_count (current_tree);
 
-    for (elem_count = 0; elem_count < local_num_elements; ++elem_count) {
+    for (elem_count = 0; elem_count < current_tree_num_elements; ++elem_count) {
 
       /* determing the current element according to the given tree id and element id within the tree */
       current_element =
@@ -179,7 +179,7 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
         t8_productionf
           ("******************** Current element: ********************\n");
         t8_productionf ("Current element has local index %i of %i\n",
-                        elem_count + 1, local_num_elements);
+                        elem_count + 1, current_tree_num_elements);
         ts->t8_element_print_element (current_element,
                                       "t8_LFN_test_iterate: print current_element");
       }
@@ -226,10 +226,14 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
     }                           /* end of element loop */
   }                             /* end of tree loop */
 
+  T8_ASSERT (subelement_count == t8_forest_get_local_num_subelements(forest_adapt));
+
   if (get_LFN_stats)
-    t8_print_LFN_stats (global_num_elements,
-                        global_num_elements - subelement_count,
-                        subelement_count, LFN_call_count, time_LFN,
+    t8_print_LFN_stats (t8_forest_get_global_num_elements (forest_adapt),
+                        t8_forest_get_global_num_subelements (forest_adapt), 
+                        t8_forest_get_local_num_elements (forest_adapt),
+                        t8_forest_get_local_num_subelements(forest_adapt),
+                        LFN_call_count, time_LFN,
                         time_LFN / (double) LFN_call_count, adaptation_count,
                         num_adaptations);
 
@@ -252,7 +256,7 @@ t8_transition_global (t8_eclass_t eclass)
   /* ************************************************* Case Settings ************************************************* */
 
   /* refinement setting */
-  int                 initlevel = 5;    /* initial uniform refinement level */
+  int                 initlevel = 6;    /* initial uniform refinement level */
   int                 adaptlevel = 3;
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening (minlevel <= initlevel) */
   int                 maxlevel = initlevel + adaptlevel;        /* highest level allowed for refining */
@@ -264,16 +268,16 @@ t8_transition_global (t8_eclass_t eclass)
   double              start_radius = 0.2;
   double              band_width = 1.0;
 
-  int                 num_adaptations = 5;
-  double              radius_increase = 0.3;
+  int                 num_adaptations = 5; /* 1 for a single adapted forest */
+  double              radius_increase = 0.7;
 
   /* adaptation setting */
   int                 do_balance = 0;
-  int                 do_transition = 1;
+  int                 do_transition = 1;  
 
   /* cmesh settings */
   int                 single_tree = 0;
-  int                 multiple_tree = 1, num_x_trees = 2, num_y_trees = 1;
+  int                 multiple_tree = 1, num_x_trees = 5, num_y_trees = 4;
   int                 hybrid_cmesh = 0; /* TODO: Implement this case */
   
   int                 periodic_boundary = 1;
@@ -298,9 +302,16 @@ t8_transition_global (t8_eclass_t eclass)
   int                 get_general_stats = 1;
 
   /* check settings */
-  SC_CHECK_ABORT (do_balance + do_transition == 1, "Setting-check failed");
+  SC_CHECK_ABORT (num_adaptations > 0, "Setting-Check failed: Set num_adaptations > 0");
+  SC_CHECK_ABORT (do_balance + do_transition == 1, "Setting-check failed: only choose one of {do_balance, do_transition}");
   SC_CHECK_ABORT (single_tree + multiple_tree + hybrid_cmesh == 1,
-                  "Setting-check failed");
+                  "Setting-check failed: choose only one of {single_tree, multiple_tree, hybrid_cmesh}");
+  if (do_LFN_test == 1) {
+    SC_CHECK_ABORT (do_ghost == 1, "Setting-check failed: set do_ghost to one when using LFN");
+    if (do_transition == 1) {
+      SC_CHECK_ABORT(ghost_version == 1, "Setting-check failed: use ghost version 1 when using LFN for transitioned forests.");
+    }
+  }
 
   /* *************************************************************************************************************** */
 
@@ -314,13 +325,13 @@ t8_transition_global (t8_eclass_t eclass)
   else if (multiple_tree) {
     p4est_connectivity_t *brick =
       p4est_connectivity_new_brick (num_x_trees, num_y_trees, periodic_boundary, periodic_boundary);
-      cmesh = t8_cmesh_new_from_p4est (brick, sc_MPI_COMM_WORLD, periodic_boundary);
+    cmesh = t8_cmesh_new_from_p4est (brick, sc_MPI_COMM_WORLD, periodic_boundary);
     p4est_connectivity_destroy (brick);
   }
   else if (hybrid_cmesh) {
     /* TODO: implement this case for subelements */
     SC_ABORT ("Hybrid cmesh not implemented yet.");
-    // cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
+    cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
   }
   else {
     SC_ABORT ("Specify cmesh geometry.");
@@ -441,7 +452,7 @@ t8_transition_global (t8_eclass_t eclass)
     /* Increase the radius of the sphere for the next step */
     sdata.radius += radius_increase;
 
-    /* Monitoring the global number of elements */
+    /* Monitoring the total number of elements in the forest */
     global_num_elements_accum +=
       t8_forest_get_global_num_elements (forest_adapt);
 
@@ -469,6 +480,7 @@ main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
 
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
+  p4est_init (NULL, SC_LP_DEFAULT);
   t8_init (SC_LP_DEFAULT);
 
   /* At the moment, subelements are only implemented for T8_ECLASS_QUADS */
