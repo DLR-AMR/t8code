@@ -22,7 +22,6 @@ t8code_test_programs = \
     test/t8_schemes/t8_test_successor \
     test/t8_schemes/t8_test_descendant \
     test/t8_schemes/t8_test_pyra_face_neigh \
-    test/t8_schemes/t8_test_pyra_face_descendant \
     test/t8_data/t8_test_shmem \
     test/t8_test_netcdf_linkage \
     test/t8_test_vtk_linkage
@@ -42,7 +41,6 @@ test_t8_forest_t8_test_element_general_function_SOURCES = test/t8_forest/t8_test
 test_t8_forest_t8_test_user_data_SOURCES = test/t8_forest/t8_test_user_data.cxx
 
 test_t8_schemes_t8_test_pyra_face_neigh_SOURCES = test/t8_schemes/t8_test_pyra_face_neigh.cxx
-test_t8_schemes_t8_test_pyra_face_descendant_SOURCES = test/t8_schemes/t8_test_pyra_face_descendant.cxx
 test_t8_schemes_t8_test_find_parent_SOURCES = test/t8_schemes/t8_test_find_parent.cxx
 test_t8_schemes_t8_test_successor_SOURCES = test/t8_schemes/t8_test_successor.cxx
 test_t8_schemes_t8_test_descendant_SOURCES = test/t8_schemes/t8_test_descendant.cxx
@@ -73,7 +71,8 @@ test_t8_gtest_main_SOURCES = test/t8_gtest_main.cxx \
   test/t8_gtest_basics.cxx \
   test/t8_schemes/t8_gtest_ancestor.cxx \
   test/t8_cmesh/t8_gtest_hypercube.cxx \
-  test/t8_cmesh/t8_gtest_cmesh_copy.cxx
+  test/t8_cmesh/t8_gtest_cmesh_copy.cxx \
+  test/t8_schemes/t8_gtest_pyra_face_descendant.cxx
 
 test_t8_gtest_main_LDADD = $(LDADD) test/libgtest.la
 test_t8_gtest_main_LDFLAGS = $(AM_LDFLAGS) -pthread
