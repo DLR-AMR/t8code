@@ -52,7 +52,7 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim,
   int                 use_offset;
   int8_t              ttf;
   p4est_topidx_t      ttt;
-  t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim);
 
   /* Make sure that p4est is properly initialized. If not, do it here
    * and raise a warning. */
