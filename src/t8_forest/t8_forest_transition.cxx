@@ -24,6 +24,7 @@
  * In this file, we define the call-back function that is used to construct transition cells.
  */
 
+#include "t8_eclass.h"
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_private.h>
@@ -135,6 +136,9 @@ t8_forest_transition (t8_forest_t forest)
 {
   T8_ASSERT (forest->set_subelements == 1);
   T8_ASSERT (forest->is_transitioned == 0 && forest->set_from->is_transitioned == 0);
+  /* in the following, we will call forest_aapt to with the transition 
+   * refinement function in order to transition the forest. The refinement is then
+   * based on forest->set_from, which must be balanced. */
   T8_ASSERT (t8_forest_is_balanced(forest->set_from));
 
   t8_global_productionf ("Into t8_forest_transition.\n");
@@ -142,7 +146,7 @@ t8_forest_transition (t8_forest_t forest)
   /* Set ghost layers of all processes in order to find hanging faces over process-boundaries */
   if (forest->set_from->ghosts == NULL) {
     forest->set_from->ghost_type = T8_GHOST_FACES;
-    t8_forest_ghost_create_balanced_only (forest->set_from);
+    t8_forest_ghost_create(forest->set_from);
   }
 
   forest->set_adapt_fn = t8_forest_subelement_adapt_remove_hanging_faces;
