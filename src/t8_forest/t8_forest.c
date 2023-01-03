@@ -20,6 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include "t8.h"
 #include <sc_statistics.h>
 #include <t8_refcount.h>
 #include <t8_forest.h>
@@ -885,6 +886,17 @@ t8_forest_get_num_ghosts (t8_forest_t forest)
   return forest->ghosts->num_ghosts_elements;
 }
 
+int
+t8_forest_tree_supports_transitioning (t8_forest_t forest, t8_locidx_t ltreeid)
+{
+  if (t8_forest_get_tree_class(forest, ltreeid) == T8_ECLASS_QUAD) {
+    /* at the moment, we only support transitioning for Quads. 
+     * Nevertheless, note that hybrid meshes with Triangles are possible. */
+    return 1;
+  }
+  return 0;
+}
+
 /* Currently this function is not used */
 #if 0
 static t8_element_t *
@@ -1302,8 +1314,7 @@ t8_forest_ltreeid_to_cmesh_ltreeid (t8_forest_t forest, t8_locidx_t ltreeid)
              + t8_forest_ghost_num_trees (forest));
 
   if (ltreeid < num_local_trees) {
-    /* This a local tree and not a ghost */
-
+    /* This is a local tree and not a ghost */
     cmesh_gfirst = t8_cmesh_get_first_treeid (forest->cmesh);
     return forest->first_local_tree - cmesh_gfirst + ltreeid;
   }
