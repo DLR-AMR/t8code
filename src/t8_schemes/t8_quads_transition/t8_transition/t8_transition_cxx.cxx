@@ -23,6 +23,7 @@
 #include <new>
 #include <t8_schemes/t8_quads_transition/t8_transition_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_line/t8_default_line_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_tri/t8_default_tri_cxx.hxx>
 #include <t8_refcount.h>
 #include "t8_transition_quad_cxx.hxx"
 
@@ -41,7 +42,7 @@ t8_scheme_new_subelement_cxx (void)
   s->eclass_schemes[T8_ECLASS_LINE] = new t8_default_scheme_line_c ();
   s->eclass_schemes[T8_ECLASS_QUAD] = new t8_subelement_scheme_quad_c ();
   s->eclass_schemes[T8_ECLASS_HEX] = NULL;
-  s->eclass_schemes[T8_ECLASS_TRIANGLE] = NULL;
+  s->eclass_schemes[T8_ECLASS_TRIANGLE] = new t8_default_scheme_tri_c (); /* we use this implementation for hybrid meshes */
   s->eclass_schemes[T8_ECLASS_TET] = NULL;
   s->eclass_schemes[T8_ECLASS_PRISM] = NULL;
 
