@@ -299,11 +299,11 @@ t8_transition_global ()
   int                 ghost_version = 1;        /* use v1 for transitioned forests */
 
   /* LFN settings */
-  int                 do_LFN_test = 1;
+  int                 do_LFN_test = 0;
 
   /* vtk setting */
   int                 do_vtk = 1;
-  int                 do_vtk_cmesh = 1;
+  int                 do_vtk_cmesh = 0;
 
   /* Monitoring */
   int                 get_LFN_stats = 1;
