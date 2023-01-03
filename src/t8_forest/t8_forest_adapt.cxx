@@ -348,6 +348,17 @@ t8_forest_adapt (t8_forest_t forest)
                                      num_elements_to_adapt_callback,
                                      elements_from);
 
+      if (!t8_forest_tree_supports_transitioning (forest, ltree_id) && refine > 1) {
+        /* if the eclass of the current tree does not support transitioning,
+         * then we set the refine value to 0 and do nothing */
+
+         /* We should only get to this point if the current trees eclass does not 
+          * support transitioning, but subelements are set for forest_from. */
+        // TODO: check the below assertion
+        // T8_ASSERT (forest->set_from->set_subelements == 1);
+        refine = 0;
+      }
+
       /* Existing transition cells must be removed during adaptation.
        * We establish the rule to coarsen a transition cell back to its parent in case of refine = 0. */
       if (tscheme->t8_element_is_subelement (current_element) && refine == 0) {
