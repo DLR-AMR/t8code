@@ -28,10 +28,17 @@
  *     (iv)  decide, whether we want to get statistics printed out, regarding # of elements in the meshes and runtime infos of the several functions or other debugging information
  */
 
+/* to switch between the default quad scheme and the transition implementation */
+#define DO_TRANSITION_QUAD_SCHEME 1
+
 #include "t8_forest.h"
 #include <cstring>
-#include <t8_schemes/t8_quads_transition/t8_transition/t8_transition_quad_cxx.hxx>
-#include <t8_schemes/t8_quads_transition/t8_transition_cxx.hxx>
+#if DO_TRANSITION_QUAD_SCHEME
+  #include <t8_schemes/t8_quads_transition/t8_transition/t8_transition_quad_cxx.hxx>
+  #include <t8_schemes/t8_quads_transition/t8_transition_cxx.hxx>
+#else
+  #include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#endif
 #include <t8_vec.h>
 #include <example/common/t8_example_common.h>
 #include <t8_cmesh/t8_cmesh_examples.h> /* for cmesh initialization via for example t8_cmesh_new_hypercube */
@@ -243,10 +250,12 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
 
 /* Initializing and adapting a forest */
 static void
-t8_transition_global (t8_eclass_t eclass)
+t8_transition_global ()
 {
   t8_debugf
     ("~~~~~~~~~~ Into the t8_transition_global function ~~~~~~~~~~\n");
+
+  t8_eclass_t         eclass = T8_ECLASS_QUAD; /* as can be seen by the corresponding #include, this will be the transitioned quad implementation */
 
   t8_forest_t         forest;
   t8_forest_t         forest_adapt;
@@ -256,7 +265,7 @@ t8_transition_global (t8_eclass_t eclass)
   /* ************************************************* Case Settings ************************************************* */
 
   /* refinement setting */
-  int                 initlevel = 6;    /* initial uniform refinement level */
+  int                 initlevel = 3;    /* initial uniform refinement level */
   int                 adaptlevel = 3;
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening (minlevel <= initlevel) */
   int                 maxlevel = initlevel + adaptlevel;        /* highest level allowed for refining */
@@ -269,18 +278,18 @@ t8_transition_global (t8_eclass_t eclass)
   double              band_width = 1.0;
 
   int                 num_adaptations = 5; /* 1 for a single adapted forest */
-  double              radius_increase = 0.7;
+  double              radius_increase = 0.2;
 
   /* adaptation setting */
   int                 do_balance = 0;
-  int                 do_transition = 1;  
+  int                 do_transition = 1;
 
   /* cmesh settings */
   int                 single_tree = 0;
-  int                 multiple_tree = 1, num_x_trees = 5, num_y_trees = 4;
-  int                 hybrid_cmesh = 0; /* TODO: Implement this case */
+  int                 multiple_tree = 0, num_x_trees = 5, num_y_trees = 4;
+  int                 hybrid_cmesh = 1; /* TODO: Implement this case */
   
-  int                 periodic_boundary = 1;
+  int                 periodic_boundary = 0;
 
   /* partition setting */
   int                 do_partition = 1;
@@ -294,6 +303,7 @@ t8_transition_global (t8_eclass_t eclass)
 
   /* vtk setting */
   int                 do_vtk = 1;
+  int                 do_vtk_cmesh = 1;
 
   /* Monitoring */
   int                 get_LFN_stats = 1;
@@ -306,10 +316,11 @@ t8_transition_global (t8_eclass_t eclass)
   SC_CHECK_ABORT (do_balance + do_transition == 1, "Setting-check failed: only choose one of {do_balance, do_transition}");
   SC_CHECK_ABORT (single_tree + multiple_tree + hybrid_cmesh == 1,
                   "Setting-check failed: choose only one of {single_tree, multiple_tree, hybrid_cmesh}");
+  SC_CHECK_ABORT (do_transition + periodic_boundary + multiple_tree != 3, "Setting-check failed: there is a known issue when using these settings in parallel.");
   if (do_LFN_test == 1) {
-    SC_CHECK_ABORT (do_ghost == 1, "Setting-check failed: set do_ghost to one when using LFN");
+    SC_CHECK_ABORT (do_ghost == 1, "Setting-check failed: set do_ghost to one when applying the LFN test");
     if (do_transition == 1) {
-      SC_CHECK_ABORT(ghost_version == 1, "Setting-check failed: use ghost version 1 when using LFN for transitioned forests.");
+      SC_CHECK_ABORT(ghost_version == 1, "Setting-check failed: use ghost version 1 when applying the LFN test for transitioned forests.");
     }
   }
 
@@ -330,8 +341,8 @@ t8_transition_global (t8_eclass_t eclass)
   }
   else if (hybrid_cmesh) {
     /* TODO: implement this case for subelements */
-    SC_ABORT ("Hybrid cmesh not implemented yet.");
-    cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
+    // SC_ABORT ("Hybrid cmesh not implemented yet.");
+    cmesh = t8_cmesh_new_periodic_hybrid (sc_MPI_COMM_WORLD);
   }
   else {
     SC_ABORT ("Specify cmesh geometry.");
@@ -343,12 +354,22 @@ t8_transition_global (t8_eclass_t eclass)
   /* set forest parameter via cmesh */
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
   t8_forest_set_level (forest, initlevel);
+#if DO_TRANSITION_QUAD_SCHEME
   t8_forest_set_scheme (forest, t8_scheme_new_subelement_cxx ());
+#else
+  t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
+#endif
 
   /* commit the forest */
   t8_forest_commit (forest);
 
   t8_debugf ("~~~~~~~~~~ cmesh has been build ~~~~~~~~~~\n");
+
+  if (do_vtk_cmesh) {
+      snprintf (filename, BUFSIZ, "forest_cmesh");
+      t8_forest_write_vtk (forest, filename);
+      t8_debugf ("~~~~~~~~~~ vtk of cmesh has been constructed ~~~~~~~~~~\n");
+    }
 
   /* ************************************** Initializing refinement criterion ************************************** */
 
@@ -484,7 +505,7 @@ main (int argc, char **argv)
   t8_init (SC_LP_DEFAULT);
 
   /* At the moment, subelements are only implemented for T8_ECLASS_QUADS */
-  t8_transition_global (T8_ECLASS_QUAD);
+  t8_transition_global ();
 
   sc_finalize ();
 
