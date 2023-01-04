@@ -47,7 +47,6 @@ t8_forest_is_family_callback (t8_eclass_scheme_c *ts,
                               t8_element_t **elements) {
   t8_element_t       *element_parent;
   t8_element_t       *element_parent_compare;
-  int                 num_siblings;
 
   for (int iter = 0; iter < num_elements; iter++) {
     T8_ASSERT (ts->t8_element_is_valid (elements[iter]));
