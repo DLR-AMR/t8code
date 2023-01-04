@@ -110,14 +110,14 @@ t8_forest_pos (t8_forest_t forest,
                t8_element_array_t *telements,
                const t8_locidx_t telements_pos)
 {
-  const t8_locidx_t  elements_in_array = t8_element_array_get_count (telements);
-  T8_ASSERT (0 <= telements_pos && telements_pos < elements_in_array);
+  const size_t elements_in_array = t8_element_array_get_count (telements);
+  T8_ASSERT (0 <= telements_pos && (size_t) telements_pos < elements_in_array);
   const t8_element_t *element = t8_element_array_index_locidx (telements, telements_pos);
   const int level_current = ts->t8_element_level (element);
-  const t8_locidx_t num_siblings = ts->t8_element_num_siblings (element);
+  const int num_siblings = ts->t8_element_num_siblings (element);
   
   {
-    const t8_locidx_t child_id = ts->t8_element_child_id (element);
+    const int child_id = ts->t8_element_child_id (element);
     /* Left if condition:
      * If child_id is not last, elements cannot be coarsened recursively.
      * But elements (vertex) whose family consist of exactly one element do 
@@ -134,7 +134,7 @@ t8_forest_pos (t8_forest_t forest,
   /* If the forest is complete, the family is also complete. 
    * Thus, the index of the first member can be determined. */
   if (!forest->is_incomplete) {
-    return telements_pos - num_siblings - 1;
+    return telements_pos - (t8_locidx_t) num_siblings - 1;
   }
   
   t8_element_t *element_parent;
@@ -150,10 +150,10 @@ t8_forest_pos (t8_forest_t forest,
   t8_locidx_t   el_iter; /* Loop running variable */
   t8_locidx_t   pos;
   t8_element_t *element_compare;
-  for (el_iter = 1; el_iter < num_siblings 
-                    && el_iter < elements_in_array; el_iter++) {
+  for (el_iter = 1; el_iter < (t8_locidx_t) num_siblings 
+                    && (size_t) el_iter < elements_in_array; el_iter++) {
     pos = telements_pos - el_iter;
-    T8_ASSERT (0 <= pos && pos < elements_in_array);
+    T8_ASSERT (0 <= pos && (size_t) pos < elements_in_array);
     element_compare = t8_element_array_index_locidx (telements, pos);
     /* Quick check by level. Not mandatory. */
     const int level_compare = ts->t8_element_level (element_compare);
@@ -166,10 +166,11 @@ t8_forest_pos (t8_forest_t forest,
     }
   }
 
-  /* If the current family is smaller than possible, check that the first 
+  /* If the current family is smaller than possible, check if the first 
    * element along the space-filling-curve next to the family is overlapped 
    * when family is coarsened. */
-  if (el_iter < num_siblings && el_iter < elements_in_array) {
+  if (el_iter < (t8_locidx_t) num_siblings && 
+      el_iter < (t8_locidx_t) elements_in_array) {
     int level_compare = ts->t8_element_level (element_compare);
     /* Only elements with higher level then level of elements in family, can get 
      * potentially be overlapped. */
@@ -195,7 +196,7 @@ t8_forest_pos (t8_forest_t forest,
   if (pos == 0 && forest->mpirank > 0) {
     const t8_element_t *element_boarder = 
       t8_element_array_index_locidx (telements, pos);
-    const t8_locidx_t child_id = ts->t8_element_child_id (element_boarder);
+    const int child_id = ts->t8_element_child_id (element_boarder);
     if (child_id > 0) {
       return INT32_MIN;
     }
