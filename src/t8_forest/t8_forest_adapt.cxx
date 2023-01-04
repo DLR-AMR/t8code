@@ -36,6 +36,8 @@ T8_EXTERN_C_BEGIN ();
  *                           where the elements are from.
  * \param [in] elements      The elements array.
  * \param [in] num_elements  The first \a num_elements to be checked in \a elements.
+ * \return                   0 if the first \a num_elements in \a elements are 
+ *                           not a (sub)family.
  * \note If the first element has level 0, the return is 0.
  * \note This test does not compare with the elements before and after the elements
  *       given by \a elements in the current forest. A non-zero return is therefore
