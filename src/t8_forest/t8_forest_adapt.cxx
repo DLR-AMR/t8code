@@ -108,47 +108,37 @@ static t8_locidx_t
 t8_forest_pos (t8_forest_t forest,
                t8_eclass_scheme_c *ts,
                t8_element_array_t *telements,
-               t8_locidx_t telements_pos)
+               const t8_locidx_t telements_pos)
 {
-  t8_element_t       *element; /* element with index telements_pos */
-  t8_element_t       *element_compare;
-  t8_element_t       *element_parent;
-  t8_element_t       *element_parent_compare;
-  int                 level_current;
-  int                 level_compare;
-  t8_locidx_t         child_id;
-  t8_locidx_t         pos;
-  t8_locidx_t         el_iter; /* Loop running variable */
-  t8_locidx_t         elements_in_array;
-  t8_locidx_t         num_siblings;
-
-  pos = telements_pos;
-  elements_in_array = t8_element_array_get_count (telements);
-  T8_ASSERT (0 <= pos && pos < elements_in_array);
-  element = t8_element_array_index_locidx (telements, pos);
-  element_compare = t8_element_array_index_locidx (telements, pos);
-  level_current = ts->t8_element_level (element);
-  num_siblings = ts->t8_element_num_siblings (element);
-  child_id = ts->t8_element_child_id (element);
+  const t8_locidx_t  elements_in_array = t8_element_array_get_count (telements);
+  T8_ASSERT (0 <= telements_pos && telements_pos < elements_in_array);
+  const t8_element_t *element = t8_element_array_index_locidx (telements, telements_pos);
+  const int level_current = ts->t8_element_level (element);
+  const t8_locidx_t num_siblings = ts->t8_element_num_siblings (element);
   
-  /* Left if condition:
-   * If child_id is not last, elements cannot be coarsened recursively.
-   * But elements (vertex) whose family consist of exactly one element do 
-   * also not get coarsened recursively.
-   * Right if condition:
-   * Elements with level 0 cannot be further coarsened. */
-  if (!(child_id > 0 && child_id == num_siblings - 1) || level_current == 0) {
-    return INT32_MIN;
+  {
+    const t8_locidx_t child_id = ts->t8_element_child_id (element);
+    /* Left if condition:
+     * If child_id is not last, elements cannot be coarsened recursively.
+     * But elements (vertex) whose family consist of exactly one element do 
+     * also not get coarsened recursively.
+     * Right if condition:
+     * Elements with level 0 cannot be further coarsened. */
+    if (!(child_id > 0 && child_id == num_siblings - 1) || level_current == 0) {
+      return INT32_MIN;
+    }
+    T8_ASSERT (child_id > 0 && child_id == num_siblings - 1);
+    T8_ASSERT (level_current > 0);
   }
+
   /* If the forest is complete, the family is also complete. 
    * Thus, the index of the first member can be determined. */
   if (!forest->is_incomplete) {
-    return pos - num_siblings - 1;
+    return telements_pos - num_siblings - 1;
   }
   
-  T8_ASSERT (child_id > 0 && child_id == num_siblings - 1);
-  T8_ASSERT (level_current > 0);
-
+  t8_element_t *element_parent;
+  t8_element_t *element_parent_compare;
   ts->t8_element_new (1, &element_parent_compare);
   ts->t8_element_new (1, &element_parent);
   /* Get parent of a family member by coarsening last member. */
@@ -157,13 +147,16 @@ t8_forest_pos (t8_forest_t forest,
   /* Loop backward over all possible familie members until we hit an 
    * element that is not part of the family or we have reached the 
    * maximum number of member. */
+  t8_locidx_t   el_iter; /* Loop running variable */
+  t8_locidx_t   pos;
+  t8_element_t *element_compare;
   for (el_iter = 1; el_iter < num_siblings 
                     && el_iter < elements_in_array; el_iter++) {
     pos = telements_pos - el_iter;
     T8_ASSERT (0 <= pos && pos < elements_in_array);
     element_compare = t8_element_array_index_locidx (telements, pos);
     /* Quick check by level. Not mandatory. */
-    level_compare = ts->t8_element_level (element_compare);
+    const int level_compare = ts->t8_element_level (element_compare);
     if (level_current != level_compare) {
       break;
     }
@@ -177,7 +170,7 @@ t8_forest_pos (t8_forest_t forest,
    * element along the space-filling-curve next to the family is overlapped 
    * when family is coarsened. */
   if (el_iter < num_siblings && el_iter < elements_in_array) {
-    level_compare = ts->t8_element_level (element_compare);
+    int level_compare = ts->t8_element_level (element_compare);
     /* Only elements with higher level then level of elements in family, can get 
      * potentially be overlapped. */
     if (level_compare > level_current) {
@@ -200,8 +193,9 @@ t8_forest_pos (t8_forest_t forest,
   /* The first element on process rank must have child_id 0, otherwise other 
    * family members could be on process rank-1. */
   if (pos == 0 && forest->mpirank > 0) {
-    element = t8_element_array_index_locidx (telements, pos);
-    child_id = ts->t8_element_child_id (element);
+    const t8_element_t *element_boarder = 
+      t8_element_array_index_locidx (telements, pos);
+    const t8_locidx_t child_id = ts->t8_element_child_id (element_boarder);
     if (child_id > 0) {
       return INT32_MIN;
     }
