@@ -47,16 +47,13 @@ t8_forest_is_family_callback (t8_eclass_scheme_c *ts,
                               t8_element_t **elements) {
   t8_element_t       *element_parent;
   t8_element_t       *element_parent_compare;
-  int                 iter;
   int                 num_siblings;
-  int                 level;
 
-  for (iter = 0; iter < num_elements; iter++) {
+  for (int iter = 0; iter < num_elements; iter++) {
     T8_ASSERT (ts->t8_element_is_valid (elements[iter]));
   }
 
-  level = ts->t8_element_level(elements[0]);
-  if (level == 0) {
+  if (ts->t8_element_level(elements[0]) == 0) {
     return 0;
   }
 
@@ -65,7 +62,7 @@ t8_forest_is_family_callback (t8_eclass_scheme_c *ts,
   ts->t8_element_parent (elements[0], element_parent);
   num_siblings = ts->t8_element_num_siblings (elements[0]);
 
-  for (iter = 0; iter < num_elements; iter++) {
+  for (int iter = 0; iter < num_elements; iter++) {
     ts->t8_element_parent (elements[iter], element_parent_compare);
     if (ts->t8_element_compare (element_parent, element_parent_compare)) {
       ts->t8_element_destroy (1, &element_parent);
@@ -75,7 +72,7 @@ t8_forest_is_family_callback (t8_eclass_scheme_c *ts,
   }
 
   if (num_elements < num_siblings) {
-    for (iter = num_elements; iter < num_elements; iter++) {
+    for (int iter = num_elements; iter < num_elements; iter++) {
       if (elements[iter] != NULL) {
         T8_ASSERT (ts->t8_element_is_valid (elements[iter]));
         ts->t8_element_parent (elements[iter], element_parent_compare);
