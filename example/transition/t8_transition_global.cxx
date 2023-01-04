@@ -285,21 +285,21 @@ t8_transition_global ()
   int                 do_transition = 1;
 
   /* cmesh settings */
-  int                 single_tree = 0;
-  int                 multiple_tree = 0, num_x_trees = 5, num_y_trees = 4;
-  int                 hybrid_cmesh = 1; /* TODO: Implement this case */
+  int                 single_tree_mesh = 0;
+  int                 multiple_tree_mesh = 1, num_x_trees = 5, num_y_trees = 4;
+  int                 hybrid_tree_mesh = 0;
   
   int                 periodic_boundary = 0;
 
   /* partition setting */
-  int                 do_partition = 1;
+  int                 do_partition = 0;
 
   /* ghost setting */
   int                 do_ghost = 1;     /* if do_LFN_test = 1, then do_ghost must be set to 1 as well when using multiple processes */
   int                 ghost_version = 1;        /* use v1 for transitioned forests */
 
   /* LFN settings */
-  int                 do_LFN_test = 0;
+  int                 do_LFN_test = 1;
 
   /* vtk setting */
   int                 do_vtk = 1;
@@ -314,13 +314,14 @@ t8_transition_global ()
   /* check settings */
   SC_CHECK_ABORT (num_adaptations > 0, "Setting-Check failed: Set num_adaptations > 0");
   SC_CHECK_ABORT (do_balance + do_transition == 1, "Setting-check failed: only choose one of {do_balance, do_transition}");
-  SC_CHECK_ABORT (single_tree + multiple_tree + hybrid_cmesh == 1,
+  SC_CHECK_ABORT (single_tree_mesh + multiple_tree_mesh + hybrid_tree_mesh == 1,
                   "Setting-check failed: choose only one of {single_tree, multiple_tree, hybrid_cmesh}");
-  SC_CHECK_ABORT (do_transition + periodic_boundary + multiple_tree != 3, "Setting-check failed: there is a known issue when using these settings in parallel.");
+  SC_CHECK_ABORT (do_transition + periodic_boundary + multiple_tree_mesh != 3, "Setting-check failed: there is a known issue when using these settings in parallel.");
   if (do_LFN_test == 1) {
     SC_CHECK_ABORT (do_ghost == 1, "Setting-check failed: set do_ghost to one when applying the LFN test");
     if (do_transition == 1) {
       SC_CHECK_ABORT(ghost_version == 1, "Setting-check failed: use ghost version 1 when applying the LFN test for transitioned forests.");
+      SC_CHECK_ABORT(hybrid_tree_mesh != 1, "Setting-check failed: LFN not implemented for transitioned hybrid meshes");
     }
   }
 
@@ -329,17 +330,17 @@ t8_transition_global ()
   /* ********************************************* Initializing cmesh ********************************************** */
 
   /* building the cmesh, using the initlevel */
-  if (single_tree) {
+  if (single_tree_mesh) {
     /* single quad cmesh */
     cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, periodic_boundary);
   }
-  else if (multiple_tree) {
+  else if (multiple_tree_mesh) {
     p4est_connectivity_t *brick =
       p4est_connectivity_new_brick (num_x_trees, num_y_trees, periodic_boundary, periodic_boundary);
     cmesh = t8_cmesh_new_from_p4est (brick, sc_MPI_COMM_WORLD, periodic_boundary);
     p4est_connectivity_destroy (brick);
   }
-  else if (hybrid_cmesh) {
+  else if (hybrid_tree_mesh) {
     /* TODO: implement this case for subelements */
     // SC_ABORT ("Hybrid cmesh not implemented yet.");
     cmesh = t8_cmesh_new_periodic_hybrid (sc_MPI_COMM_WORLD);
