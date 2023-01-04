@@ -180,6 +180,44 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
   }
 }
 
+/* There are several rules, the refine value needs to fulfill for transitioned forests,
+ * independent of the specific refine function that has been applied before. This function
+ * checks if these rules are fulfilled and may change the refine value. */
+void
+t8_forest_adjust_refine_for_transitioned_forests (const t8_forest_t forest, 
+                                                  t8_eclass_scheme_c* tscheme,
+                                                  const t8_element_t* current_element,
+                                                  const t8_locidx_t ltree_id,
+                                                  int* refine_ptr)
+{
+  if (!t8_forest_tree_supports_transitioning (forest, ltree_id) && *refine_ptr > 1) {
+    /* In hybrid forests, if the eclass of the current tree does not support transitioning,
+     * then we set the refine value to 0 and do nothing. */
+
+    /* We should only get to this point if the current trees eclass does NOT 
+     * support transitioning, but subelements are set for the forest and refine > 1. */
+    T8_ASSERT (forest->set_subelements == 1);
+    *refine_ptr = 0;
+  }
+
+  /* Existing transition cells must be removed during adaptation.
+   * We establish the rule to coarsen a transition cell back to its parent in case of refine = 0. */
+  if (tscheme->t8_element_is_subelement (current_element) && *refine_ptr == 0) {
+    /* current_element is the first subelement in the transition cell (subelement_id = 0). We establish the rule to 
+     * coarsen it back to its parent quad and skip all of its following sibling subelements. */
+    T8_ASSERT (forest->set_from->is_transitioned == 1);
+    T8_ASSERT (*refine_ptr >= -1 && *refine_ptr <= 1);
+    T8_ASSERT (tscheme->t8_element_get_subelement_id (current_element) ==
+                0);
+    *refine_ptr = -1;
+  }
+
+  /* check that, at this point, refine values >1 are only applied to trees that support subelements */
+  T8_ASSERT (*refine_ptr > 1 && t8_forest_tree_supports_transitioning (forest, ltree_id)
+              || *refine_ptr <= 1);
+  return;
+}
+
 /* TODO: optimize this when we own forest_from */
 void
 t8_forest_adapt (t8_forest_t forest)
@@ -348,28 +386,9 @@ t8_forest_adapt (t8_forest_t forest)
                                      num_elements_to_adapt_callback,
                                      elements_from);
 
-      if (!t8_forest_tree_supports_transitioning (forest, ltree_id) && refine > 1) {
-        /* if the eclass of the current tree does not support transitioning,
-         * then we set the refine value to 0 and do nothing */
-
-         /* We should only get to this point if the current trees eclass does not 
-          * support transitioning, but subelements are set for forest_from. */
-        // TODO: check the below assertion
-        // T8_ASSERT (forest->set_from->set_subelements == 1);
-        refine = 0;
-      }
-
-      /* Existing transition cells must be removed during adaptation.
-       * We establish the rule to coarsen a transition cell back to its parent in case of refine = 0. */
-      if (tscheme->t8_element_is_subelement (current_element) && refine == 0) {
-        /* current_element is the first subelement in the transition cell (subelement_id = 0). We coarsen it back to its parent quad
-         * and skip all of its following sibling subelements. 
-         */
-        T8_ASSERT (refine >= -1 && refine <= 1);
-        T8_ASSERT (tscheme->t8_element_get_subelement_id (current_element) ==
-                   0);
-        /* It should never be the case that a transitioned forest is direclty adapted into another transitioned forest - therefore refine <= 1!  */
-        refine = -1;
+      /* make adjustments of the refine value in the context of transitioned forests */
+      if (forest->set_from->is_transitioned == 1 || forest->set_subelements == 1) {
+        t8_forest_adjust_refine_for_transitioned_forests (forest, tscheme, current_element, ltree_id, &refine);
       }
 
 #ifdef T8_ENABLE_DEBUG
