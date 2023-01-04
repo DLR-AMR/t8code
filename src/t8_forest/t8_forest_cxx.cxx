@@ -1888,7 +1888,7 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest,
   return neighbor_tree;
 }
 
-/* This function does not need a declaration and is only called by LFN */
+/* This function does not need a declaration and is only called by LFN_transitioned */
 void
 t8_forest_subelement_face_neighbor (t8_forest_t forest,
                                     t8_element_t *pseudo_neighbor,
@@ -1915,13 +1915,17 @@ t8_forest_subelement_face_neighbor (t8_forest_t forest,
     ts->t8_element_get_subelement_id (pseudo_neighbor);
 
   /* Get the subelement id of the real neighbor of leaf. 
-   * This function will determine the sub_id of the real neighbor, given leaf, face and the pseudo_neighbor. */
+   * This function will determine the sub_id of the real neighbor, given leaf, face and the pseudo_neighbor. 
+   * This function is subelememt-scheme-dependent. */
   int                 leaf_neighbor_sub_id =
     ts->t8_element_find_neighbor_in_transition_cell (leaf, pseudo_neighbor,
                                                      face);
 
   if (!neighbor_is_ghost) {
-    /* adjust the index of the pseudo neighbor to equal the index of the real neighbor */
+    /* adjust the index of the pseudo neighbor to equal the index of the real neighbor. 
+     * The following computation should be true for every subelement scheme and does not require
+     * a separate t8_element function. The important - and subelement-scheme-dependent - 
+     * aspect is the computation of leaf_neighbor_sub_id above. */
     element_index =
       pseudo_neigh_index - pseudo_neighbor_sub_id + leaf_neighbor_sub_id;
 
@@ -2024,15 +2028,12 @@ t8_forest_leaf_face_neighbors_transitioned (t8_forest_t forest, t8_locidx_t ltre
   int                 ineigh, *owners, different_owners, have_ghosts,
     neighbor_is_ghost = 0;
 
-  /* TODO: implement is_leaf check to apply to leaf */
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  SC_CHECK_ABORT (forest_is_balanced, "leaf face neighbors is not implemented for unbalanced forests.\n");   /* TODO: write version for unbalanced forests */
-  SC_CHECK_ABORT (forest->mpisize == 1 || forest->ghosts != NULL,
-                  "Ghost structure is needed for t8_forest_leaf_face_neighbors "
-                  "but was not found in forest.\n");
+  /* This function should only be called for transitioned forests */
+  T8_ASSERT (forest->is_transitioned);
 
-  if (forest_is_balanced || forest->is_transitioned) {
+  if (forest_is_balanced) {
     /* In a balanced forest, the leaf neighbor of a leaf is either the neighbor element itself,
      * its parent or its children at the face. If the forest is transitioned (especially if subelements are used)
      * the neighbor might also be a subelement whose level will also differ at most by +-1 to the leaf element. */
@@ -2357,6 +2358,11 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
   /* TODO: implement is_leaf check to apply to leaf */
   T8_ASSERT (t8_forest_is_committed (forest));
 
+  SC_CHECK_ABORT (forest_is_balanced, "leaf face neighbors is not implemented " "for unbalanced forests.\n");   /* TODO: write version for unbalanced forests */
+  SC_CHECK_ABORT (forest->mpisize == 1 || forest->ghosts != NULL,
+                  "Ghost structure is needed for t8_forest_leaf_face_neighbors "
+                  "but was not found in forest.\n");
+
   /* if the given forest is transitioned, then call the transitioned LFN function. */
   if (forest->is_transitioned) {
     t8_forest_leaf_face_neighbors_transitioned (forest, ltreeid,
@@ -2368,10 +2374,6 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
   }
 
   T8_ASSERT (!forest_is_balanced || t8_forest_is_balanced (forest));
-  SC_CHECK_ABORT (forest_is_balanced, "leaf face neighbors is not implemented " "for unbalanced forests.\n");   /* TODO: write version for unbalanced forests */
-  SC_CHECK_ABORT (forest->mpisize == 1 || forest->ghosts != NULL,
-                  "Ghost structure is needed for t8_forest_leaf_face_neighbors "
-                  "but was not found in forest.\n");
 
   if (forest_is_balanced) {
     /* In a balanced forest, the leaf neighbor of a leaf is either the neighbor element itself,
