@@ -188,33 +188,33 @@ t8_forest_adjust_refine_for_transitioned_forests (const t8_forest_t forest,
                                                   t8_eclass_scheme_c* tscheme,
                                                   const t8_element_t* current_element,
                                                   const t8_locidx_t ltree_id,
-                                                  int* refine_ptr)
+                                                  int* prefine)
 {
-  if (!t8_forest_tree_supports_transitioning (forest, ltree_id) && *refine_ptr > 1) {
+  if (!t8_forest_tree_supports_transitioning (forest, ltree_id) && *prefine > 1) {
     /* In hybrid forests, if the eclass of the current tree does not support transitioning,
      * then we set the refine value to 0 and do nothing. */
 
     /* We should only get to this point if the current trees eclass does NOT 
      * support transitioning, but subelements are set for the forest and refine > 1. */
     T8_ASSERT (forest->set_subelements == 1);
-    *refine_ptr = 0;
+    *prefine = 0;
   }
 
   /* Existing transition cells must be removed during adaptation.
    * We establish the rule to coarsen a transition cell back to its parent in case of refine = 0. */
-  if (tscheme->t8_element_is_subelement (current_element) && *refine_ptr == 0) {
+  if (tscheme->t8_element_is_subelement (current_element) && *prefine == 0) {
     /* current_element is the first subelement in the transition cell (subelement_id = 0). We establish the rule to 
      * coarsen it back to its parent quad and skip all of its following sibling subelements. */
     T8_ASSERT (forest->set_from->is_transitioned == 1);
-    T8_ASSERT (*refine_ptr >= -1 && *refine_ptr <= 1);
+    T8_ASSERT (*prefine >= -1 && *prefine <= 1);
     T8_ASSERT (tscheme->t8_element_get_subelement_id (current_element) ==
                 0);
-    *refine_ptr = -1;
+    *prefine = -1;
   }
 
   /* check that, at this point, refine values >1 are only applied to trees that support subelements */
-  T8_ASSERT (*refine_ptr > 1 && t8_forest_tree_supports_transitioning (forest, ltree_id)
-              || *refine_ptr <= 1);
+  T8_ASSERT ((*prefine > 1 && t8_forest_tree_supports_transitioning (forest, ltree_id))
+              || (*prefine <= 1));
   return;
 }
 
