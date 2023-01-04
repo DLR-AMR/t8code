@@ -131,9 +131,11 @@ t8_forest_pos (t8_forest_t forest,
   num_siblings = ts->t8_element_num_siblings (element);
   child_id = ts->t8_element_child_id (element);
   
-  /* Elements whose family consist of exactly one element do not 
-   * get coarsened recursively.
+  /* Left if condition:
    * If child_id is not last, elements cannot be coarsened recursively.
+   * But elements (vertex) whose family consist of exactly one element do 
+   * also not get coarsened recursively.
+   * Right if condition:
    * Elements with level 0 cannot be further coarsened. */
   if (!(child_id > 0 && child_id == num_siblings - 1) || level_current == 0) {
     return INT32_MIN;
