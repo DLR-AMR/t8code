@@ -31,7 +31,7 @@
 T8_EXTERN_C_BEGIN ();
 
 #if T8_ENABLE_DEBUG
-/** Return zero if the first \a num_elemets in \a elements are not a (sub)family.
+/** Return zero if the first \a num_elements in \a elements are not a (sub)family.
  * \param [in] tscheme       The element scheme for current local tree 
  *                           where the elements are from.
  * \param [in] elements      The elements array.
