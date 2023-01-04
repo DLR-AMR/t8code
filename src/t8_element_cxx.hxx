@@ -668,6 +668,29 @@ public:
   virtual bool        t8_element_is_subelement (const t8_element *
                                                 elem) const = 0;
 
+  /** Check whether the neighbors of an element at a specic face are siblings
+   *  \param [in] elem A valid element 
+   *  \param [in] elem_face A valid face 
+   *  \return true if the neighbor of elem at face elem_face is a sibling.
+   */
+  virtual int        t8_element_neighbor_is_sibling (const t8_element *elem,
+                                                     const int elem_face) const = 0;
+
+  /** Check whether the neighbors of an element at a specic face are siblings
+   *  \param [in] elem A valid element 
+   *  \param [in] elem_face A valid face 
+   *  \return return the number of sibling neighbors at a given face.
+   */
+  virtual int        t8_element_get_num_sibling_neighbors_at_face (const t8_element *elem,
+                                                                   const int elem_face) const = 0;
+
+  /** Construct all sibling neighbors of elem at face. */
+  virtual void        t8_element_get_sibling_neighbor_in_transition_cell (const t8_element_t *elem,
+                                                                          const int face,
+                                                                          const int num_neighbors,
+                                                                          t8_element_t *neighbor_at_face[],
+                                                                          int *neigh_face[]) = 0;
+
   /** Return the number of subelements in a transition cell of type transition_type
    *  \param [in] transition_type The subelement type as an integer
    *  \return the number of subelements, this transition cell consists of

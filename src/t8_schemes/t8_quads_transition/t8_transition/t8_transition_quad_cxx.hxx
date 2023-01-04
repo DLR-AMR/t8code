@@ -181,7 +181,15 @@ public:
 
   /** Return the number of children of an element's face when the element is refined. */
   virtual int         t8_element_num_face_children (const t8_element_t *elem,
-                                                    int face);
+                                                    const int face);
+
+  /** Return the number of children of an element's face when the element is refined. */
+  virtual int         t8_element_neighbor_is_sibling (const t8_element_t *elem,
+                                                      int face) const;
+
+/** Return the number of sibling neighbors at a given face. */
+  virtual int         t8_element_get_num_sibling_neighbors_at_face (const t8_element_t *elem,
+                                                                    int face) const;                                                      
 
   /** Return the corner number of an element's face corner. */
   virtual int         t8_element_get_face_corner (const t8_element_t *element,
@@ -191,9 +199,16 @@ public:
   virtual int         t8_element_get_corner_face (const t8_element_t *element,
                                                   int corner, int face);
 
-/** Construct the child element of a given number. */
+  /** Construct the child element of a given number. */
   virtual void        t8_element_child (const t8_element_t *elem,
                                         int childid, t8_element_t *child);
+
+  /** Construct all sibling neighbors of elem at face - it is required that sibling neighbors of elem at face exist */
+  virtual void        t8_element_get_sibling_neighbor_in_transition_cell (const t8_element_t *elem,
+                                                                          const int face,
+                                                                          const int num_neighbors,
+                                                                          t8_element_t *neighbor_at_face[],
+                                                                          int *neigh_face[]);
 
 /** Construct all children of a given element. */
   virtual void        t8_element_children (const t8_element_t *elem,

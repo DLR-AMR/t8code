@@ -113,6 +113,29 @@ public:
                                                      int type,
                                                      t8_element_t *c[]);
 
+  /** Check whether the neighbors of an element at a specic face are siblings
+   *  \param [in] elem A valid element 
+   *  \param [in] elem_face A valid face 
+   *  \return true if the neighbor of elem at face elem_face is a sibling.
+   */
+  virtual int        t8_element_neighbor_is_sibling (const t8_element *elem,
+                                                     const int elem_face) const;
+
+  /** Check whether the neighbors of an element at a specic face are siblings
+   *  \param [in] elem A valid element 
+   *  \param [in] elem_face A valid face 
+   *  \return return the number of sibling neighbors at a given face.
+   */
+  virtual int        t8_element_get_num_sibling_neighbors_at_face (const t8_element *elem,
+                                                                   const int elem_face) const;                                                     
+
+
+  virtual void t8_element_get_sibling_neighbor_in_transition_cell (const t8_element_t *elem,
+                                                                   const int face,
+                                                                   const int num_neighbors,
+                                                                   t8_element_t *neighbor_at_face[],
+                                                                   int *neigh_face[]);
+
   /** Check whether a given element is a subelement
    *  \param [in] elem A valid element 
    *  \return true if elem is a subelement 

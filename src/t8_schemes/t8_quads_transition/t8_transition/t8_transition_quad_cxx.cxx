@@ -279,10 +279,33 @@ t8_subelement_scheme_quad_c::t8_element_num_face_children (const t8_element_t
                                                            *elem, int face)
 {
   T8_ASSERT (t8_element_is_valid (elem));
-  /* this function is not implemented for subelements */
-  T8_ASSERT (!t8_element_is_subelement (elem));
 
   return 2;
+}
+
+int
+t8_subelement_scheme_quad_c::t8_element_neighbor_is_sibling (const t8_element_t *elem,
+                                                             const int face) const
+{
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (t8_element_is_subelement(elem));
+
+  if (face == 0 || face == 2) {
+    return 1;
+  }
+
+  return 0;
+}
+
+int
+t8_subelement_scheme_quad_c::t8_element_get_num_sibling_neighbors_at_face (const t8_element_t *elem,
+                                                                           const int face) const
+{
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (t8_element_is_subelement(elem));
+  T8_ASSERT (face == 0 || face == 2);
+  
+  return 1;
 }
 
 int
@@ -382,6 +405,53 @@ t8_subelement_scheme_quad_c::t8_element_child (const t8_element_t *elem,
   t8_element_reset_subelement_values (child);
 
   t8_element_copy_surround (q, r);
+}
+
+void
+t8_subelement_scheme_quad_c::t8_element_get_sibling_neighbor_in_transition_cell (const t8_element_t *elem,
+                                                                                 const int face,
+                                                                                 const int num_neighbors,
+                                                                                 t8_element_t *neighbor_at_face[],
+                                                                                 int *neigh_face[])
+{
+  T8_ASSERT (t8_element_is_subelement(elem));
+  T8_ASSERT (t8_element_neighbor_is_sibling(elem, face));
+  T8_ASSERT (num_neighbors == 1);
+  T8_ASSERT (t8_element_is_valid(neighbor_at_face[0]));
+
+  /* If face = 0, then the sibling subelement neighbor is the next subelement in counter clockwise enumeration,
+   * if face = 2, then it is the sibling subelement neighbor in  clockwise enumeration. */
+  t8_element_copy(elem, neighbor_at_face[0]);
+
+  t8_quad_with_subelements *pquad_w_sub_neighbor_at_face =
+    (t8_quad_with_subelements *) neighbor_at_face[0];
+
+  int num_siblings = t8_element_num_siblings(elem);
+
+  if (face == 0) {
+    /* adjust subelement id counter clockwise */
+    if (pquad_w_sub_neighbor_at_face->subelement_id == 0) {
+      pquad_w_sub_neighbor_at_face->subelement_id += num_siblings -1;
+    }
+    else {
+      pquad_w_sub_neighbor_at_face->subelement_id -= 1;
+    }
+  }
+  else {
+    /* adjust subelement id clockwise */
+    if (pquad_w_sub_neighbor_at_face->subelement_id == num_siblings-1) {
+      pquad_w_sub_neighbor_at_face->subelement_id = 0;
+    }
+    else {
+      pquad_w_sub_neighbor_at_face->subelement_id += 1;
+    }
+  }
+
+  /* return dual face with resprect to neighboring sibling subelement */
+  /* Compute the face number as seen from elem.
+   *  0 -> 2    2 -> 0
+   */
+  *neigh_face[0] = subelement_face_dual[face];
 }
 
 void
