@@ -61,7 +61,6 @@ t8_forest_is_family_callback (t8_eclass_scheme_c *ts,
   ts->t8_element_new (1, &element_parent_compare);
   ts->t8_element_new (1, &element_parent);
   ts->t8_element_parent (elements[0], element_parent);
- const int  num_siblings = ts->t8_element_num_siblings (elements[0]);
 
   for (int iter = 0; iter < num_elements; iter++) {
     ts->t8_element_parent (elements[iter], element_parent_compare);
@@ -72,7 +71,7 @@ t8_forest_is_family_callback (t8_eclass_scheme_c *ts,
     }
   }
 
-  if (num_elements < num_siblings) {
+  if (num_elements < ts->t8_element_num_siblings (elements[0])) {
     for (int iter = num_elements; iter < num_elements; iter++) {
       if (elements[iter] != NULL) {
         T8_ASSERT (ts->t8_element_is_valid (elements[iter]));
