@@ -274,15 +274,15 @@ t8_transition_global ()
   double              circ_midpoint_x = 0.0;
   double              circ_midpoint_y = 0.0;
   double              circ_midpoint_z = 0.0;
-  double              start_radius = 0.2;
+  double              start_radius = 0.0;
   double              band_width = 1.0;
 
-  int                 num_adaptations = 5; /* 1 for a single adapted forest */
+  int                 num_adaptations = 40; /* 1 for a single adapted forest */
   double              radius_increase = 0.2;
 
   /* adaptation setting */
-  int                 do_balance = 1;
-  int                 do_transition = 0;
+  int                 do_balance = 0;
+  int                 do_transition = 1;
 
   /* cmesh settings */
   int                 single_tree_mesh = 0;
@@ -299,7 +299,7 @@ t8_transition_global ()
   int                 ghost_version = 1;        /* use v1 for transitioned forests */
 
   /* LFN settings */
-  int                 do_LFN_test = 1;
+  int                 do_LFN_test = 0;
 
   /* vtk setting */
   int                 do_vtk = 1;
@@ -307,7 +307,7 @@ t8_transition_global ()
 
   /* Monitoring */
   int                 get_LFN_stats = 1;
-  int                 get_LFN_elem_info = 0;
+  int                 get_LFN_elem_info = 1;
   int                 get_commit_stats = 1;
   int                 get_general_stats = 1;
 
