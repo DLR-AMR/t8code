@@ -166,9 +166,9 @@ t8_forest_pos (t8_forest_t forest,
     }
   }
 
-  /* If the current family is smaller than possible, check if the first 
-   * element along the space-filling-curve next to the family is overlapped 
-   * when family is coarsened. */
+  /* If the current set of considered elements is smaller in size than a possible 
+   * family, check if the first element along the space-filling-curve next to the
+   * considered elements is overlapped when set is coarsened. */
   if (el_iter < (t8_locidx_t) num_siblings && 
       el_iter < (t8_locidx_t) elements_in_array) {
     int level_compare = ts->t8_element_level (element_compare);
