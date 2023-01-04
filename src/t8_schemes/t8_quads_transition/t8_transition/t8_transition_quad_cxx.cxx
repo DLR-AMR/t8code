@@ -1865,6 +1865,8 @@ t8_subelement_scheme_quad_c::t8_element_find_neighbor_in_transition_cell
     pquad_w_sub_pseudo_neigh =
     (const t8_quad_with_subelements *) pseudo_neigh;
 
+  /* In the following, all possible neighbor configurations are defined, such that subelement neighbors can be
+   * identified in LFN_transitioned. */
   if (pquad_w_sub_elem->transition_type != 0
       && (elem_face == 0 || elem_face == 2)) {
     /* In this case, we have the following situation:
