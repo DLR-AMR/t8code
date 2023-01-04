@@ -281,8 +281,8 @@ t8_transition_global ()
   double              radius_increase = 0.2;
 
   /* adaptation setting */
-  int                 do_balance = 0;
-  int                 do_transition = 1;
+  int                 do_balance = 1;
+  int                 do_transition = 0;
 
   /* cmesh settings */
   int                 single_tree_mesh = 0;
@@ -312,6 +312,7 @@ t8_transition_global ()
   int                 get_general_stats = 1;
 
   /* check settings */
+  SC_CHECK_ABORT(!(DO_TRANSITION_QUAD_SCHEME == 0 && do_transition == 1), "Setting-Check failed: you are trying to use set_transition for a scheme without transition implementation");
   SC_CHECK_ABORT (num_adaptations > 0, "Setting-Check failed: Set num_adaptations > 0");
   SC_CHECK_ABORT (do_balance + do_transition == 1, "Setting-check failed: only choose one of {do_balance, do_transition}");
   SC_CHECK_ABORT (single_tree_mesh + multiple_tree_mesh + hybrid_tree_mesh == 1,
