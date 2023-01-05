@@ -32,8 +32,8 @@
  */
 
 #include <cstring>
-#include <t8_schemes/t8_quads_transition/t8_transition/t8_transition_quad_cxx.hxx>
-#include <t8_schemes/t8_quads_transition/t8_transition_cxx.hxx>
+#include <t8_schemes/t8_transition/t8_transition_conformal_quad/t8_transition_conformal_quad_cxx.hxx>
+#include <t8_schemes/t8_transition/t8_transition_cxx.hxx>
 #include <t8_vec.h>
 #include <example/common/t8_example_common.h>
 #include <t8_cmesh/t8_cmesh_examples.h> /* for cmesh initialization via for example t8_cmesh_new_hypercube */

@@ -32,8 +32,8 @@
 
 #include "t8_eclass.h"
 #include <cmath>
-#include <t8_schemes/t8_quads_transition/t8_transition_cxx.hxx>
-#include <t8_schemes/t8_quads_transition/t8_transition/t8_transition_quad_cxx.hxx>
+#include <t8_schemes/t8_transition/t8_transition_conformal_quad/t8_transition_conformal_quad_cxx.hxx>
+#include <t8_schemes/t8_transition/t8_transition_cxx.hxx>
 #include <example/common/t8_example_common.h>
 
 static int

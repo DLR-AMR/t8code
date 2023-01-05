@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_transition_quad_cxx.hxx
+/** \file t8_transition_conformal_quad_cxx.hxx
  * We use a p4est_quadrant_t object as storage for the T8 quadrant.
  * Additionally, we store information for transition cells of triangular subelements:
  * 
@@ -30,8 +30,8 @@
  * In order to refine a quad element into a transition cell, it is important to know these additional parameter. 
  */
 
-#ifndef T8_TRANSITION_QUAD_CXX_HXX
-#define T8_TRANSITION_QUAD_CXX_HXX
+#ifndef T8_TRANSITION_CONFORMAL_QUAD_CXX_HXX
+#define T8_TRANSITION_CONFORMAL_QUAD_CXX_HXX
 
 #include <p4est.h>
 #include <t8_element_cxx.hxx>

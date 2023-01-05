@@ -34,8 +34,8 @@
 #include "t8_forest.h"
 #include <cstring>
 #if DO_TRANSITION_QUAD_SCHEME
-  #include <t8_schemes/t8_quads_transition/t8_transition/t8_transition_quad_cxx.hxx>
-  #include <t8_schemes/t8_quads_transition/t8_transition_cxx.hxx>
+  #include <t8_schemes/t8_transition/t8_transition_conformal_quad/t8_transition_conformal_quad_cxx.hxx>
+  #include <t8_schemes/t8_transition/t8_transition_cxx.hxx>
 #else
   #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #endif
@@ -207,7 +207,7 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
             /* print all neighbor elements */
             for (neighbor_count = 0; neighbor_count < num_neighbors;
                  neighbor_count++) {
-              /* make sure, the identified neighbors are correct */
+              /* TODO: make sure, the identified neighbors are correct */
               // T8_ASSERT(ts->t8_element_is_neighbor (current_element, neighbor_leafs[neighbor_count]));
               t8_productionf ("***** Neighbor %i of %i at face %i: *****\n",
                               neighbor_count + 1, num_neighbors, face_id);
@@ -275,10 +275,10 @@ t8_transition_global ()
   double              circ_midpoint_y = 0.0;
   double              circ_midpoint_z = 0.0;
   double              start_radius = 0.0;
-  double              band_width = 2.0;
+  double              band_width = 4.0;
 
-  int                 num_adaptations = 5; /* 1 for a single adapted forest */
-  double              radius_increase = 1.;
+  int                 num_adaptations = 34; /* 1 for a single adapted forest */
+  double              radius_increase = 0.05;
 
   /* adaptation setting */
   int                 do_balance = 0;
@@ -286,8 +286,8 @@ t8_transition_global ()
 
   /* cmesh settings */
   int                 single_tree_mesh = 0;
-  int                 multiple_tree_mesh = 1, num_x_trees = 5, num_y_trees = 4;
-  int                 hybrid_tree_mesh = 0;
+  int                 multiple_tree_mesh = 0, num_x_trees = 5, num_y_trees = 4;
+  int                 hybrid_tree_mesh = 1;
   
   int                 periodic_boundary = 0;
 
@@ -299,7 +299,7 @@ t8_transition_global ()
   int                 ghost_version = 1;        /* use v1 for transitioned forests */
 
   /* LFN settings */
-  int                 do_LFN_test = 1;
+  int                 do_LFN_test = 0;
 
   /* vtk setting */
   int                 do_vtk = 1;

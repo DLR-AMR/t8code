@@ -49,8 +49,8 @@
 #include <cstdint>
 #include <sc_options.h>
 #include <sc_statistics.h>
-#include <t8_schemes/t8_quads_transition/t8_transition/t8_transition_quad_cxx.hxx>
-#include <t8_schemes/t8_quads_transition/t8_transition_cxx.hxx>
+#include <t8_schemes/t8_transition/t8_transition_conformal_quad/t8_transition_conformal_quad_cxx.hxx>
+#include <t8_schemes/t8_transition/t8_transition_cxx.hxx>
 #include <t8_forest.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_forest/t8_forest_partition.h>

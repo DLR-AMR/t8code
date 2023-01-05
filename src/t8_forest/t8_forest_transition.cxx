@@ -32,7 +32,7 @@
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest.h>
 #include <t8_element_cxx.hxx>
-#include <t8_schemes/t8_quads_transition/t8_transition/t8_transition_quad_cxx.hxx>
+#include <t8_schemes/t8_transition/t8_transition_conformal_quad/t8_transition_conformal_quad_cxx.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
