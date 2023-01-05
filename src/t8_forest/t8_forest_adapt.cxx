@@ -329,10 +329,6 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
                                   t8_locidx_t *num_inserted,
                                   t8_element_t **el_buffer)
 {
-  if (elem_list->elem_count <= 0) {
-    return;
-  }
-
   while (elem_list->elem_count > 0) {
     /* Until the list is empty we
      * - remove the first element from the list.
