@@ -79,7 +79,7 @@ typedef t8_quad_with_subelements t8_pquad_t;
 #define T8_SUB_QUAD_MAX_SUBELEMENT_ID 7
 #define T8_SUBELEMENT_FACES 3
 
-/* this is the unique identifyer for the transition_conformal_quad refine function */
+/* this is the unique identifier for the transition_conformal_quad refine function */
 #define T8_TRANSITION_CONFORMAL_QUAD_REFINE_FUNCTION 1
 
 /** Return the toplevel dimension. */
