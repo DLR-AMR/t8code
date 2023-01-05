@@ -329,11 +329,6 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
                                   t8_locidx_t *num_inserted,
                                   t8_element_t **el_buffer)
 {
-  t8_element_t       *insert_el;
-  int                 num_children;
-  int                 ci;
-  int                 refine;
-
   if (elem_list->elem_count <= 0) {
     return;
   }
@@ -347,9 +342,12 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
      * - Otherwise, we add the element to the array of new elements
      */
     el_buffer[0] = (t8_element_t *) sc_list_pop (elem_list);
-    num_children = ts->t8_element_num_children (el_buffer[0]);
-    refine = forest->set_adapt_fn (forest, forest->set_from, ltreeid, lelement_id,
-                                   ts, 0, 1, el_buffer);
+    const int num_children = ts->t8_element_num_children (el_buffer[0]);
+    const int is_family = 0; 
+    const int num_elements_to_adapt_callback = 1;
+    const int refine = 
+      forest->set_adapt_fn (forest, forest->set_from, ltreeid, lelement_id, ts, 
+                            is_family, num_elements_to_adapt_callback, el_buffer);
     T8_ASSERT (refine != -1);
     if (refine == 1) {
       /* The element should be refined */
@@ -358,7 +356,7 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
         /* Create the children and add them to the list */
         ts->t8_element_new (num_children - 1, el_buffer + 1);
         ts->t8_element_children (el_buffer[0], num_children, el_buffer);
-        for (ci = num_children - 1; ci >= 0; ci--) {
+        for (int ci = num_children - 1; ci >= 0; ci--) {
           (void) sc_list_prepend (elem_list, el_buffer[ci]);
         }
       }
@@ -372,7 +370,7 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
       T8_ASSERT (refine == 0);
       /* This element should not get refined,
        * we remove it from the buffer and add it to the array of new elements. */
-      insert_el = t8_element_array_push (telements);
+      t8_element_t *insert_el = t8_element_array_push (telements);
       ts->t8_element_copy (el_buffer[0], insert_el);
       ts->t8_element_destroy (1, el_buffer);
       (*num_inserted)++;
