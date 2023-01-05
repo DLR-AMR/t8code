@@ -198,7 +198,7 @@ t8_test_transition_global (t8_eclass_t eclass)
   /* set forest parameter via cmesh */
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
   t8_forest_set_level (forest, initlevel);
-  t8_forest_set_scheme (forest, t8_scheme_new_subelement_cxx ());
+  t8_forest_set_scheme (forest, t8_scheme_new_transition_cxx ());
 
   /* commit the forest */
   t8_forest_commit (forest);
@@ -376,7 +376,7 @@ t8_test_transition_local (t8_eclass_t eclass)
 {
   t8_debugf ("~~~~~~~~~~ Into the t8_transition_local function ~~~~~~~~~~\n");
 
-  t8_scheme_cxx_t    *ts = t8_scheme_new_subelement_cxx ();
+  t8_scheme_cxx_t    *ts = t8_scheme_new_transition_cxx ();
   t8_eclass_scheme_c *class_scheme;
   t8_element_t       *quad_element, *parent;
   int                 subelement_id;

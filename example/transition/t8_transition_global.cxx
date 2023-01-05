@@ -183,11 +183,11 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
       }
 
       if (get_LFN_elem_info) {  /* print current element */
+#if T8_ENABLE_DEBUG
         t8_productionf
           ("******************** Current element: ********************\n");
         t8_productionf ("Current element has local index %i of %i\n",
                         elem_count + 1, current_tree_num_elements);
-#if T8_ENABLE_DEBUG
         ts->t8_element_debug_print (current_element);
 #endif
       }
@@ -202,18 +202,15 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
                                        &element_indices, &neigh_scheme,
                                        forest_is_balanced);
         time_LFN += sc_MPI_Wtime ();
-
         /* free memory if neighbors exist */
         if (num_neighbors > 0) {
           if (get_LFN_elem_info) {
             /* print all neighbor elements */
             for (neighbor_count = 0; neighbor_count < num_neighbors;
                  neighbor_count++) {
-              /* TODO: make sure, the identified neighbors are correct */
-              // T8_ASSERT(ts->t8_element_is_neighbor (current_element, neighbor_leafs[neighbor_count]));
+#if T8_ENABLE_DEBUG
               t8_productionf ("***** Neighbor %i of %i at face %i: *****\n",
                               neighbor_count + 1, num_neighbors, face_id);
-#if T8_ENABLE_DEBUG
               ts->t8_element_debug_print (neighbor_leafs[neighbor_count]);
 #endif
             }
@@ -227,10 +224,12 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
         }
         else {
           if (get_LFN_elem_info) {
+#if T8_ENABLE_DEBUG
             /* no neighbor in this case */
             t8_productionf ("***** Neighbor at face %i: *****\n", face_id);
             t8_productionf ("There is no neighbor (domain boundary).\n");
             t8_productionf ("\n");
+#endif
           }
         }
       }                         /* end of face loop */
@@ -290,8 +289,8 @@ t8_transition_global ()
 
   /* cmesh settings */
   int                 single_tree_mesh = 0;
-  int                 multiple_tree_mesh = 0, num_x_trees = 5, num_y_trees = 4;
-  int                 hybrid_tree_mesh = 1;
+  int                 multiple_tree_mesh = 1, num_x_trees = 5, num_y_trees = 4;
+  int                 hybrid_tree_mesh = 0;
   
   int                 periodic_boundary = 0;
 
@@ -303,15 +302,15 @@ t8_transition_global ()
   int                 ghost_version = 1;        /* use v1 for transitioned forests */
 
   /* LFN settings */
-  int                 do_LFN_test = 0;
+  int                 do_LFN_test = 1;
 
   /* vtk setting */
   int                 do_vtk = 1;
   int                 do_vtk_cmesh = 0;
 
-  /* Monitoring */
+  /* Monitoring (only available in debug configuration) */
   int                 get_LFN_stats = 1;
-  int                 get_LFN_elem_info = 1;
+  int                 get_LFN_elem_info = 0;
   int                 get_commit_stats = 1;
   int                 get_general_stats = 1;
 
@@ -360,7 +359,7 @@ t8_transition_global ()
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
   t8_forest_set_level (forest, initlevel);
 #if DO_TRANSITION_QUAD_SCHEME
-  t8_forest_set_scheme (forest, t8_scheme_new_subelement_cxx ());
+  t8_forest_set_scheme (forest, t8_scheme_new_transition_cxx ());
 #else
   t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
 #endif

@@ -33,7 +33,7 @@
 T8_EXTERN_C_BEGIN ();
 
 t8_scheme_cxx_t    *
-t8_scheme_new_subelement_cxx (void)
+t8_scheme_new_transition_cxx (void)
 {
   t8_scheme_cxx_t    *s;
 
@@ -52,13 +52,13 @@ t8_scheme_new_subelement_cxx (void)
 }
 
 int
-t8_eclass_scheme_is_sub (t8_eclass_scheme_c *ts)
+t8_eclass_scheme_supports_transitioning (t8_eclass_scheme_c *ts)
 {
   switch (ts->eclass) {
   case T8_ECLASS_VERTEX:
     return 0;
   case T8_ECLASS_LINE:
-    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_line_c *);
+    return 0;
   case T8_ECLASS_QUAD:
     return T8_COMMON_IS_TYPE (ts, t8_subelement_scheme_quad_c *);
   case T8_ECLASS_TRIANGLE:

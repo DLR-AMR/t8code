@@ -2165,7 +2165,7 @@ t8_advect_create_cmesh (sc_MPI_Comm comm, t8_eclass_t eclass,
     /* partition this cmesh according to the initial refinement level */
     t8_cmesh_init (&cmesh_partition);
     t8_cmesh_set_partition_uniform (cmesh_partition, level,
-                                    t8_scheme_new_subelement_cxx ());
+                                    t8_scheme_new_transition_cxx ());
     t8_cmesh_set_derive (cmesh_partition, cmesh);
     t8_cmesh_commit (cmesh_partition, comm);
     return cmesh_partition;
@@ -2266,7 +2266,7 @@ t8_advect_problem_init (t8_cmesh_t cmesh,
   }
 
   /* Contruct uniform forest with ghosts */
-  default_scheme = t8_scheme_new_subelement_cxx ();
+  default_scheme = t8_scheme_new_transition_cxx ();
 
   problem->forest =
     t8_forest_new_uniform (cmesh, default_scheme, level, 1, comm);
