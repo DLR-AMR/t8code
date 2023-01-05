@@ -35,7 +35,7 @@ T8_EXTERN_C_BEGIN ();
 /** Return the subelement element implementation of t8code. */
 t8_scheme_cxx_t    *t8_scheme_new_transition_cxx (void);
 
-int t8_eclass_scheme_supports_transitioning (t8_eclass_scheme_c *ts);
+int t8_eclass_scheme_is_transition (t8_eclass_scheme_c *ts);
 
 T8_EXTERN_C_END ();
 

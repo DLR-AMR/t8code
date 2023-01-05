@@ -58,7 +58,7 @@ t8_forest_transition_conformal_quad (t8_forest_t forest,
   t8_element_t       *element = elements[0], **face_neighbor;
 
   /* this function should only be called by the transitioned conformal quad scheme */
-  T8_ASSERT (t8_eclass_scheme_supports_transitioning(ts) == 1);
+  T8_ASSERT (t8_eclass_scheme_is_transition(ts) == 1);
 
   /* hanging faces can only exist at non-maxlevel elements */
   if (forest_from->maxlevel_existing <= 0 ||

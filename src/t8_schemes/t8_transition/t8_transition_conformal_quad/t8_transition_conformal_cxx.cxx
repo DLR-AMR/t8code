@@ -52,7 +52,7 @@ t8_scheme_new_transition_cxx (void)
 }
 
 int
-t8_eclass_scheme_supports_transitioning (t8_eclass_scheme_c *ts)
+t8_eclass_scheme_is_transition (t8_eclass_scheme_c *ts)
 {
   switch (ts->eclass) {
   case T8_ECLASS_VERTEX:
