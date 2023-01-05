@@ -33,6 +33,7 @@
 #include <t8_forest.h>
 #include <t8_element_cxx.hxx>
 #include <t8_schemes/t8_transition/t8_transition_conformal_quad/t8_transition_conformal_quad_cxx.hxx>
+#include <t8_schemes/t8_transition/t8_transition_cxx.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -56,8 +57,8 @@ t8_forest_transition_conformal_quad (t8_forest_t forest,
   t8_eclass_scheme_c *neigh_scheme;
   t8_element_t       *element = elements[0], **face_neighbor;
 
-  /* this function should only be called by the transitioned conformal quad scheme*/
-  T8_ASSERT (ts->t8_element_child_eclass(0) == T8_ECLASS_QUAD);
+  /* this function should only be called by the transitioned conformal quad scheme */
+  T8_ASSERT (t8_eclass_scheme_supports_transitioning(ts) == 1);
 
   /* hanging faces can only exist at non-maxlevel elements */
   if (forest_from->maxlevel_existing <= 0 ||
@@ -129,7 +130,7 @@ t8_forest_transition_conformal_quad (t8_forest_t forest,
     }
   }
   return 0;                     /* if elem has maxlevel then keep it unchanged since there will never be hanging faces */
-}
+} /* end of t8_forest_transition_conformal_quad */
 
 /* This is the entry function for all transition schemes, called bei forest_adapt.
  * The eclass of the current element hands off to the specific refine implementation above.
@@ -146,6 +147,10 @@ t8_forest_transition_entry (t8_forest_t forest,
 {
   t8_element_t       *current_element = elements[0];
 
+  /* TODO: there may be a better way for this than using switch statements and int functions */
+
+  /* the current element decides over the refine function. Normally, this function returns one fixed value per 
+   * element scheme, but note that it would also possible to switch the refine function within one tree. */
   switch (ts->t8_element_transition_refine_function(current_element)) {
     case 0:
       /* if no transition scheme is implemented for the given element/tree, 
@@ -159,7 +164,7 @@ t8_forest_transition_entry (t8_forest_t forest,
     default:
       SC_ABORT("This should nerver happen.");
   }
-}
+} /* end of t8_forest_transition_entry */
 
 void
 t8_forest_transition (t8_forest_t forest)
@@ -185,7 +190,7 @@ t8_forest_transition (t8_forest_t forest)
   t8_forest_adapt (forest);
 
   t8_global_productionf ("Done t8_forest_transition.\n");
-}
+} /* end of t8_forest_transition */
 
 /* Test whether there are subelements in the forest. Note, that we 
  * allow non-committed forests in this implementation since this check 
@@ -218,6 +223,6 @@ t8_forest_is_transitioned (t8_forest_t forest)
 
   /* only return false if there is no subelement in the forest */
   return 0;
-}
+} /* end of t8_forest_is_transitioned */
 
 T8_EXTERN_C_END ();
