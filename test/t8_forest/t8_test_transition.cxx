@@ -331,8 +331,7 @@ t8_test_quad_local (t8_element_t *quad_element,
     T8_ASSERT (!class_scheme->t8_element_is_subelement (children[child_id]));
 
     /* Print the current subelement */
-    class_scheme->t8_element_print_element (children
-                                            [child_id], "t8_test_quad");
+    class_scheme->t8_element_debug_print (children[child_id]);
 
     /* determine the shape of the subelement and use it to determine the number of vertices it has (triangle -> 3 vertices) */
     const t8_element_shape_t shape =
@@ -424,9 +423,7 @@ t8_test_transition_local (t8_eclass_t eclass)
                  t8_element_is_subelement (transition_cell[subelement_id]));
 
       /* Print the current subelement */
-      class_scheme->t8_element_print_element (transition_cell
-                                              [subelement_id],
-                                              "t8_transition_local");
+      class_scheme->t8_element_debug_print (transition_cell[subelement_id]);
 
       /* determine the shape of the subelement and use it to determine the number of vertices it has (triangle -> 3 vertices) */
       const t8_element_shape_t shape =

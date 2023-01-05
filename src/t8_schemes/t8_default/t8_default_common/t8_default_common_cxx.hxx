@@ -165,13 +165,6 @@ public:
                                                                 t8_element *
                                                                 elem);
 
-  /** Print the element data member.
-   *  \param [in] elem A valid element 
-   */
-  virtual void        t8_element_print_element (const t8_element * elem,
-                                                const char called_from[])
-    const;
-
   /** Return the subelement id of a given element. 
    *  \param [in] elem A valid element 
    *  \return the subelement id of elem (0 if elem is no subelement)

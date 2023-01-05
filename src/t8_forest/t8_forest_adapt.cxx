@@ -397,7 +397,7 @@ t8_forest_adapt (t8_forest_t forest)
          el_considered + 1, num_el_from, refine, is_family, num_siblings,
          num_children);
       t8_debugf ("Current element is: \n");
-      tscheme->t8_element_print_element (elements_from[0], "t8_forest_adapt");
+      tscheme->t8_element_debug_print (elements_from[0]);
 #endif
 
       T8_ASSERT (is_family || refine >= 0

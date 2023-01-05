@@ -2321,33 +2321,23 @@ t8_subelement_scheme_quad_c::t8_element_init (int length, t8_element_t *elem,
 void
 t8_subelement_scheme_quad_c::t8_element_debug_print (const t8_element_t *elem) const
 {
-  t8_element_print_element (elem, "t8_element_debug_print");
-}
-
-void
-t8_subelement_scheme_quad_c::t8_element_print_element (const t8_element_t
-                                                       *elem,
-                                                       const char
-                                                       called_from[]) const
-{
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) elem;
 
-  t8_productionf ("\n");
-  t8_productionf ("print_element called from: %s\n", called_from);      /* Message */
-  t8_productionf ("|---------- t8_element_print_element: ----------|\n");
-  t8_productionf ("|    Transition Type:     %i\n",
-                  pquad_w_sub->transition_type);
-  t8_productionf ("|    Subelement ID:       %i\n",
-                  pquad_w_sub->subelement_id);
-  t8_productionf ("|    Anchor (Morton):     (%i,%i)\n", pquad_w_sub->p4q.x,
-                  pquad_w_sub->p4q.y);
-  t8_productionf ("|    Anchor (ref coords): (%lf,%lf)\n",
-                  (double) pquad_w_sub->p4q.x / (double) P4EST_ROOT_LEN,
-                  (double) pquad_w_sub->p4q.y / (double) P4EST_ROOT_LEN);
-  t8_productionf ("|    Level:               %i\n", pquad_w_sub->p4q.level);
-  t8_productionf ("|-----------------------------------------------|\n");
-  t8_productionf ("\n");
+  t8_productionf ( "\n|------------ t8_element_debug_print: ------------|\n"
+                   "|    Transition Type:     %i\n"
+                   "|    Subelement ID:       %i\n"
+                   "|    Anchor (Morton):     (%i,%i)\n"
+                   "|    Anchor (ref coords): (%lf,%lf)\n"
+                   "|    Level:               %i\n"
+                   "|-------------------------------------------------|\n\n",
+                   pquad_w_sub->transition_type, pquad_w_sub->subelement_id, pquad_w_sub->p4q.x, pquad_w_sub->p4q.y,
+                   (double) pquad_w_sub->p4q.x / (double) P4EST_ROOT_LEN, (double) pquad_w_sub->p4q.y / (double) P4EST_ROOT_LEN,
+                   pquad_w_sub->p4q.level
+                 );
+
+  /* if the element is not valid, abort, but after printing */
+  T8_ASSERT (t8_element_is_valid (elem));
 }
 
 /* *INDENT-OFF* */

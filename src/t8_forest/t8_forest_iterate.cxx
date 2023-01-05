@@ -429,9 +429,9 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
 #if 0                           /* output for debugging */
       t8_debugf ("Using the subelement iterate_replace scheme:\n");
       t8_debugf ("elem_old (index: %i):\n", ielem_old);
-      ts->t8_element_print_element (elem_old, "t8_forest_iterate_replace");
+      ts->t8_element_debug_print (elem_old);
       t8_debugf ("elem_new (index: %i):\n", ielem_new);
-      ts->t8_element_print_element (elem_new, "t8_forest_iterate_replace");
+      ts->t8_element_debug_print (elem_new);
 #endif
       if (ts->t8_element_level (elem_old) < ts->t8_element_level (elem_new)) {
         /* the old element got refined */

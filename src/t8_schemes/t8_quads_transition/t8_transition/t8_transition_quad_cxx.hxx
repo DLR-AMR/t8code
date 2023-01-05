@@ -420,11 +420,6 @@ public:
 /** TODO: this should be the new element_print_element funciton */
   virtual void        t8_element_debug_print (const t8_element_t *elem) const;
 
-/** print element values for debugging */
-  virtual void        t8_element_print_element (const t8_element_t *elem,
-                                                const char called_form[])
-    const;
-
 /** Query whether an element is valid */
   virtual int         t8_element_is_valid (const t8_element_t *t) const;
 #endif

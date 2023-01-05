@@ -187,8 +187,7 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
           ("******************** Current element: ********************\n");
         t8_productionf ("Current element has local index %i of %i\n",
                         elem_count + 1, current_tree_num_elements);
-        ts->t8_element_print_element (current_element,
-                                      "t8_LFN_test_iterate: print current_element");
+        ts->t8_element_debug_print (current_element);
       }
 
       for (face_id = 0; face_id < ts->t8_element_num_faces (current_element);
@@ -202,18 +201,17 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
                                        forest_is_balanced);
         time_LFN += sc_MPI_Wtime ();
 
-        // T8_ASSERT(ts->t8_element_is_neighbor (elem1, elem2));
-
         /* free memory if neighbors exist */
         if (num_neighbors > 0) {
           if (get_LFN_elem_info) {
             /* print all neighbor elements */
             for (neighbor_count = 0; neighbor_count < num_neighbors;
                  neighbor_count++) {
+              /* make sure, the identified neighbors are correct */
+              // T8_ASSERT(ts->t8_element_is_neighbor (current_element, neighbor_leafs[neighbor_count]));
               t8_productionf ("***** Neighbor %i of %i at face %i: *****\n",
                               neighbor_count + 1, num_neighbors, face_id);
-              ts->t8_element_print_element (neighbor_leafs[neighbor_count],
-                                            "t8_LFN_test_iterate: print neighbor_leaf");
+              ts->t8_element_debug_print (neighbor_leafs[neighbor_count]);
             }
           }
 
@@ -309,7 +307,7 @@ t8_transition_global ()
 
   /* Monitoring */
   int                 get_LFN_stats = 1;
-  int                 get_LFN_elem_info = 0;
+  int                 get_LFN_elem_info = 1;
   int                 get_commit_stats = 1;
   int                 get_general_stats = 1;
 
