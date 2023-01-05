@@ -2024,8 +2024,8 @@ t8_forest_leaf_face_neighbors_transitioned (t8_forest_t forest, t8_locidx_t ltre
   /* Consider the following transitioned forest of two trees:
    *
    *                   forest
-   *             tree 0      tree 1 
-   *         x - - x - - x - -f1 - - x
+   *                          f1 
+   *         x - - x - - x - - - - - x
    *         |     |     | \  sub  / |
    *         |     |     | f0\   /f2 |
    *         x - - x - - x - - x     |
@@ -2034,11 +2034,11 @@ t8_forest_leaf_face_neighbors_transitioned (t8_forest_t forest, t8_locidx_t ltre
    *         x - - x - - x - - x - - x 
    *
    * How do we identify neighbors in transitioned forests? 
-   *   1) Check whether the current element is a subelement and its neighbor is a sibling subelement (for example sub at f0 or f2).
+   *   1) Check whether the current element is a subelement. If yes, then its neighbor might be a sibling subelement (for example sub at f0 or f2).
    *      If so, then we can quickly compute and return the corresponding neighbor.
-   *   2) Otherwise (in case of elem at any face or sub at f1), we apply the usual LFN concept of face neighbors or half-face neighbors 
+   *   2) Otherwise (in case of elem at any face or sub at f1), we apply the standard LFN concept of face neighbors or half-face neighbors 
    *      to identify the real neighbor element. Here, it does not matter whether the current element is a subelement or a standard element.
-   *   3) We are done at 2) if the identified neighbor is no subelement. Otherwise (elem at f1), the binary search, based on the Morton-Index 
+   *   3) We are done at 2) if the identified neighbor is no subelement. Otherwise (like in the case elem at f1), the binary search, based on the Morton-Index 
    *      will randomly pick one subelement of the corresponding transition cell. Hence, in this case we apply some additional - subelement 
    *      specific - t8_element functions in order to return the right subelement neighbor.
    */
