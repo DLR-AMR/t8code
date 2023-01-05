@@ -47,8 +47,6 @@ static int
 t8_forest_is_family_callback (t8_eclass_scheme_c *ts,
                               const int num_elements, 
                               t8_element_t **elements) {
-  t8_element_t       *element_parent;
-  t8_element_t       *element_parent_compare;
 
   for (int iter = 0; iter < num_elements; iter++) {
     T8_ASSERT (ts->t8_element_is_valid (elements[iter]));
@@ -58,6 +56,8 @@ t8_forest_is_family_callback (t8_eclass_scheme_c *ts,
     return 0;
   }
 
+  t8_element_t *element_parent;
+  t8_element_t *element_parent_compare;
   ts->t8_element_new (1, &element_parent_compare);
   ts->t8_element_new (1, &element_parent);
   ts->t8_element_parent (elements[0], element_parent);
@@ -230,52 +230,52 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest,
                                    t8_locidx_t *el_inserted,
                                    t8_element_t **el_buffer)
 {
-  t8_element_t       *element;
-  t8_element_t      **fam;
-  t8_locidx_t         pos;
-  t8_locidx_t         i; /* Loop running variable */
-  t8_locidx_t         elements_in_array;
-  t8_locidx_t         num_siblings;
-  t8_locidx_t         num_elements_to_adapt_callback;
-  int                 is_family;
+  T8_ASSERT (el_coarsen >= 0);
   /* el_inserted is the index of the last element in telements plus one.
    * el_coarsen is the index of the first element which could possibly
    * be coarsened. */
-  element = t8_element_array_index_locidx (telements, *el_inserted - 1);
-  elements_in_array = t8_element_array_get_count (telements);
-  num_siblings = ts->t8_element_num_siblings (element);
-  fam = el_buffer;
-  is_family = 1;
+  int num_siblings;
+  {
+    const t8_element_t *element = t8_element_array_index_locidx (telements, *el_inserted - 1);
+    T8_ASSERT (ts->t8_element_level (element) > 0);
+    num_siblings = ts->t8_element_num_siblings (element);
+  }
+
+  t8_locidx_t elements_in_array = t8_element_array_get_count (telements);
   T8_ASSERT (*el_inserted == (t8_locidx_t) elements_in_array);
-  T8_ASSERT (ts->t8_element_level (element) > 0);
-  T8_ASSERT (el_coarsen >= 0);
-  pos = t8_forest_pos (forest, ts, telements, *el_inserted - 1);
+  t8_element_t **fam = el_buffer;
+  int is_family = 1;
+  t8_locidx_t pos = t8_forest_pos (forest, ts, telements, *el_inserted - 1);
 
   while (is_family && pos >= el_coarsen && pos < elements_in_array) {
+    t8_locidx_t ielement; /* Loop running variable */
     /* Get all elements at indices pos, pos + 1, ... ,pos + num_siblings - 1 */
 #if T8_ENABLE_DEBUG
-    for (i = 0; i < num_siblings; i++) {
-      fam[i] = NULL;
+    for (ielement = 0; ielement < num_siblings; ielement++) {
+      fam[ielement] = NULL;
     }
 #endif
-    for (i = 0; i < num_siblings && pos + i < elements_in_array; i++) {
-      fam[i] = t8_element_array_index_locidx (telements, pos + i);
+    for (ielement = 0; ielement < num_siblings && 
+                       pos + ielement < elements_in_array; ielement++) {
+      fam[ielement] = t8_element_array_index_locidx (telements, pos + ielement);
     }
 
+    t8_locidx_t num_elements_to_adapt_callback;
     if (forest->is_incomplete) {
       /* We will pass a (in)complete family to the adapt callback */
       num_elements_to_adapt_callback = *el_inserted - pos;
       T8_ASSERT (0 < num_elements_to_adapt_callback);
       T8_ASSERT (num_elements_to_adapt_callback <= num_siblings);
     }
-    else if (i == num_siblings && ts->t8_element_is_family (fam)) {
+    else if (ielement == num_siblings && ts->t8_element_is_family (fam)) {
       /* We will pass a full family to the adapt callback */
-      num_elements_to_adapt_callback = num_siblings;
+      num_elements_to_adapt_callback = (t8_locidx_t) num_siblings;
     }
     else {
       is_family = 0;
       num_elements_to_adapt_callback = 1;
     }
+    /* If is_family is true, the set fam must be a family. */
     T8_ASSERT (forest->is_incomplete ? (!is_family || t8_forest_is_family_callback 
                                          (ts, num_elements_to_adapt_callback, fam))
               : (!is_family || ts->t8_element_is_family (fam)));
