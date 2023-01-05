@@ -1680,17 +1680,21 @@ t8_forest_element_face_neighbor (t8_forest_t forest,
   ts = t8_forest_get_eclass_scheme (forest, eclass);
 
 #if 0                           /* print the general setting at the beginning */
+#if T8_ENABLE_DEBUG
   t8_debugf ("face: %i\n", face);
   t8_debugf ("current element:\n");
   ts->t8_element_debug_print (elem);
+#endif
 #endif
 
   if (neigh_scheme == ts &&
       ts->t8_element_face_neighbor_inside (elem, neigh, face, neigh_face)) {
     /* The neighbor was constructed and is inside the current tree. */
-#if 0                           /* print the resulting neighbor */
+#if 0
+#if T8_ENABLE_DEBUG                           /* print the resulting neighbor */
     t8_debugf ("neigh initialized:\n");
     ts->t8_element_debug_print (neigh);
+#endif
 #endif
     return ltreeid + t8_forest_get_first_local_tree_id (forest);
   }
@@ -1803,8 +1807,10 @@ t8_forest_element_face_neighbor (t8_forest_t forest,
                                                 tree_neigh_face);
 
 #if 0                           /* print the resulting neighbor */
+#if T8_ENABLE_DEBUG
     t8_debugf ("neigh initialized:\n");
     neighbor_scheme->t8_element_debug_print (neigh);
+#endif
 #endif
 
     return global_neigh_id;

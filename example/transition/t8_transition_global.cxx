@@ -187,7 +187,9 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
           ("******************** Current element: ********************\n");
         t8_productionf ("Current element has local index %i of %i\n",
                         elem_count + 1, current_tree_num_elements);
+#if T8_ENABLE_DEBUG
         ts->t8_element_debug_print (current_element);
+#endif
       }
 
       for (face_id = 0; face_id < ts->t8_element_num_faces (current_element);
@@ -211,7 +213,9 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
               // T8_ASSERT(ts->t8_element_is_neighbor (current_element, neighbor_leafs[neighbor_count]));
               t8_productionf ("***** Neighbor %i of %i at face %i: *****\n",
                               neighbor_count + 1, num_neighbors, face_id);
+#if T8_ENABLE_DEBUG
               ts->t8_element_debug_print (neighbor_leafs[neighbor_count]);
+#endif
             }
           }
 

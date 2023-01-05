@@ -990,12 +990,14 @@ t8_advect_replace (t8_forest_t forest_old,
                                    first_incoming);
 
 #if T8_GET_DEBUG_OUTPUT         /* for debugging */
+#if T8_ENABLE_DEBUG
   t8_productionf ("first Element out:\n");
   ts->t8_element_debug_print (first_outgoing_elem);
   t8_productionf ("first Element in:\n");
   ts->t8_element_debug_print (first_incoming_elem);
   t8_productionf ("num_outgoing: %i  num_incoming %i\n", num_outgoing,
                   num_incoming);
+#endif
 #endif
 
   int                 elem_out_count;
@@ -1133,12 +1135,14 @@ t8_advect_replace (t8_forest_t forest_old,
                                        first_incoming + subelem_in_count);
 
 #if T8_GET_DEBUG_OUTPUT         /* for debugging */
+#if T8_ENABLE_DEBUG
       t8_productionf ("Out count: %i, In count: %i\n", subelem_out_count,
                       subelem_in_count);
       t8_productionf ("Element out:\n");
       ts->t8_element_debug_print (elem_out_iterate);
       t8_productionf ("Element in:\n");
       ts->t8_element_debug_print (elem_in_iterate);
+#endif
 #endif
 
       T8_ASSERT (ts->t8_element_is_subelement (elem_out_iterate));
@@ -1499,8 +1503,10 @@ t8_advect_replace (t8_forest_t forest_old,
         t8_forest_get_element_in_tree (problem->forest_adapt, which_tree,
                                        first_incoming + incoming_count);
 
+#if T8_ENABLE_DEBUG
       t8_debugf ("elem_in_itertate:\n");
       ts->t8_element_debug_print (elem_in_iterate);
+#endif
 
       T8_ASSERT (ts->t8_element_is_subelement (elem_in_iterate));
 
@@ -1576,8 +1582,10 @@ t8_advect_replace (t8_forest_t forest_old,
           t8_forest_get_element_in_tree (problem->forest, which_tree,
                                          first_outgoing + outgoing_count);
 
+#if T8_ENABLE_DEBUG
         t8_debugf ("elem_out_itertate\n");
         ts->t8_element_debug_print (elem_out_iterate);
+#endif
 
         /* compute the vertices of the recent outgoing element */
         int                 elem_num_faces_out =
@@ -1804,7 +1812,11 @@ t8_advect_problem_elements_destroy (t8_advect_problem_t * problem)
                                      t8_forest_get_tree_class
                                      (problem->forest, 0));
       element = t8_forest_get_element_in_tree (problem->forest, 0, lelement);
+
+#if T8_ENABLE_DEBUG
       ts->t8_element_debug_print (element);
+#endif
+
       printf ("elem_data->num_faces: %i element_num_faces: %i\n",
               elem_data->num_faces, ts->t8_element_num_faces (element));
       T8_ASSERT (elem_data->num_faces == 3 || elem_data->num_faces == 4);
@@ -2369,10 +2381,12 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
       for (iface = 0; iface < elem_data->num_faces; iface++) {
         /* Compute the indices of the face neighbors */
 #if T8_GET_DEBUG_OUTPUT
+#if T8_ENABLE_DEBUG
         t8_productionf
           ("LFN Test: Current element (tree: %i, element_index: %i, face: %i\n",
            itree, ielement, iface);
         ts->t8_element_debug_print (element);
+#endif
 #endif
 
         t8_forest_leaf_face_neighbors (problem->forest, itree, element,
@@ -2383,9 +2397,11 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
                                        &neigh_scheme, 1);
 
 #if T8_GET_DEBUG_OUTPUT
+#if T8_ENABLE_DEBUG
         /* for debugging */
         t8_productionf ("LFN Test: Neighbor at face %i:\n", iface);
         neigh_scheme->t8_element_debug_print (neighbors[0]);
+#endif
 #endif
 
         T8_ASSERT (elem_data->num_neighbors[iface] <= 2);
