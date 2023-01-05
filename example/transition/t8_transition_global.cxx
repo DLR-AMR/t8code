@@ -202,6 +202,8 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
                                        forest_is_balanced);
         time_LFN += sc_MPI_Wtime ();
 
+        // T8_ASSERT(ts->t8_element_is_neighbor (elem1, elem2));
+
         /* free memory if neighbors exist */
         if (num_neighbors > 0) {
           if (get_LFN_elem_info) {
@@ -265,7 +267,7 @@ t8_transition_global ()
   /* ************************************************* Case Settings ************************************************* */
 
   /* refinement setting */
-  int                 initlevel = 3;    /* initial uniform refinement level */
+  int                 initlevel = 5;    /* initial uniform refinement level */
   int                 adaptlevel = 3;
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening (minlevel <= initlevel) */
   int                 maxlevel = initlevel + adaptlevel;        /* highest level allowed for refining */
@@ -275,10 +277,10 @@ t8_transition_global ()
   double              circ_midpoint_y = 0.0;
   double              circ_midpoint_z = 0.0;
   double              start_radius = 0.0;
-  double              band_width = 1.0;
+  double              band_width = 2.0;
 
-  int                 num_adaptations = 40; /* 1 for a single adapted forest */
-  double              radius_increase = 0.2;
+  int                 num_adaptations = 5; /* 1 for a single adapted forest */
+  double              radius_increase = 1.;
 
   /* adaptation setting */
   int                 do_balance = 0;
@@ -299,7 +301,7 @@ t8_transition_global ()
   int                 ghost_version = 1;        /* use v1 for transitioned forests */
 
   /* LFN settings */
-  int                 do_LFN_test = 0;
+  int                 do_LFN_test = 1;
 
   /* vtk setting */
   int                 do_vtk = 1;
@@ -307,7 +309,7 @@ t8_transition_global ()
 
   /* Monitoring */
   int                 get_LFN_stats = 1;
-  int                 get_LFN_elem_info = 1;
+  int                 get_LFN_elem_info = 0;
   int                 get_commit_stats = 1;
   int                 get_general_stats = 1;
 
@@ -317,7 +319,6 @@ t8_transition_global ()
   SC_CHECK_ABORT (do_balance + do_transition == 1, "Setting-check failed: only choose one of {do_balance, do_transition}");
   SC_CHECK_ABORT (single_tree_mesh + multiple_tree_mesh + hybrid_tree_mesh == 1,
                   "Setting-check failed: choose only one of {single_tree, multiple_tree, hybrid_cmesh}");
-  SC_CHECK_ABORT (do_transition + periodic_boundary + multiple_tree_mesh != 3, "Setting-check failed: there is a known issue when using these settings in parallel.");
   if (do_LFN_test == 1) {
     SC_CHECK_ABORT (do_ghost == 1, "Setting-check failed: set do_ghost to one when applying the LFN test");
     if (do_transition == 1) {
@@ -338,7 +339,7 @@ t8_transition_global ()
   else if (multiple_tree_mesh) {
     p4est_connectivity_t *brick =
       p4est_connectivity_new_brick (num_x_trees, num_y_trees, periodic_boundary, periodic_boundary);
-    cmesh = t8_cmesh_new_from_p4est (brick, sc_MPI_COMM_WORLD, periodic_boundary);
+    cmesh = t8_cmesh_new_from_p4est (brick, sc_MPI_COMM_WORLD, 0);
     p4est_connectivity_destroy (brick);
   }
   else if (hybrid_tree_mesh) {
