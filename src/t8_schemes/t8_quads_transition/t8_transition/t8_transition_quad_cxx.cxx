@@ -2324,13 +2324,13 @@ t8_subelement_scheme_quad_c::t8_element_debug_print (const t8_element_t *elem) c
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) elem;
 
-  t8_productionf ( "\n|------------ t8_element_debug_print: ------------|\n"
-                   "|    Transition Type:     %i\n"
-                   "|    Subelement ID:       %i\n"
-                   "|    Anchor (Morton):     (%i,%i)\n"
-                   "|    Anchor (ref coords): (%lf,%lf)\n"
-                   "|    Level:               %i\n"
-                   "|-------------------------------------------------|\n\n",
+  t8_productionf ( "\n|------------ t8_element_debug_print: ------------|"
+                   "\n|    Transition Type:     %i"
+                   "\n|    Subelement ID:       %i"
+                   "\n|    Anchor (Morton):     (%i,%i)"
+                   "\n|    Anchor (ref coords): (%lf,%lf)"
+                   "\n|    Level:               %i"
+                   "\n|-------------------------------------------------|\n",
                    pquad_w_sub->transition_type, pquad_w_sub->subelement_id, pquad_w_sub->p4q.x, pquad_w_sub->p4q.y,
                    (double) pquad_w_sub->p4q.x / (double) P4EST_ROOT_LEN, (double) pquad_w_sub->p4q.y / (double) P4EST_ROOT_LEN,
                    pquad_w_sub->p4q.level
