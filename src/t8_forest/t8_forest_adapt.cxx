@@ -260,16 +260,16 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest,
       fam[ielement] = t8_element_array_index_locidx (telements, pos + ielement);
     }
 
-    t8_locidx_t num_elements_to_adapt_callback;
+    int num_elements_to_adapt_callback;
     if (forest->is_incomplete) {
       /* We will pass a (in)complete family to the adapt callback */
-      num_elements_to_adapt_callback = *el_inserted - pos;
+      num_elements_to_adapt_callback = (int) (*el_inserted - pos);
       T8_ASSERT (0 < num_elements_to_adapt_callback);
-      T8_ASSERT (num_elements_to_adapt_callback <= (t8_locidx_t) num_siblings);
+      T8_ASSERT (num_elements_to_adapt_callback <= num_siblings);
     }
     else if (ielement == (t8_locidx_t) num_siblings && ts->t8_element_is_family (fam)) {
       /* We will pass a full family to the adapt callback */
-      num_elements_to_adapt_callback = (t8_locidx_t) num_siblings;
+      num_elements_to_adapt_callback = num_siblings;
     }
     else {
       is_family = 0;
@@ -284,14 +284,14 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest,
                                  lelement_id, ts, is_family, 
                                  num_elements_to_adapt_callback, fam) == -1) {
       /* Coarsen the element */
-      *el_inserted -= num_elements_to_adapt_callback - 1;
+      *el_inserted -= (t8_locidx_t) (num_elements_to_adapt_callback - 1);
       /* remove num_elements_to_adapt_callback - 1 elements from the array */
       T8_ASSERT ((size_t) elements_in_array == t8_element_array_get_count (telements));
       T8_ASSERT (ts->t8_element_level 
                       (t8_element_array_index_locidx (telements, pos)) > 0);
       ts->t8_element_parent (fam[0], fam[0]);
       /*Shorten the array by the number of siblings of the fine element */
-      elements_in_array -= num_elements_to_adapt_callback - 1;
+      elements_in_array -= (t8_locidx_t) num_elements_to_adapt_callback - 1;
       num_siblings = ts->t8_element_num_siblings (fam[0]);
       t8_element_array_resize (telements, elements_in_array);
       /* Set element to the new constructed parent. Since resizing the array
