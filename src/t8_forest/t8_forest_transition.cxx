@@ -192,9 +192,10 @@ t8_forest_transition (t8_forest_t forest)
   t8_global_productionf ("Done t8_forest_transition.\n");
 } /* end of t8_forest_transition */
 
-/* Test whether there are subelements in the forest. Note, that we 
- * allow non-committed forests in this implementation since this check 
- * might be used in forest_commit() */
+/* Test whether the forest is transitioned.
+ * Note 1) We allow non-committed forests in this implementation since this check is used in forest_commit() 
+ * Note 2) This test does only check whether there is at least one subelement in the forest. 
+ *         It is not tested whether the forest is conformal or has any other property. */
 int
 t8_forest_is_transitioned (t8_forest_t forest)
 {
