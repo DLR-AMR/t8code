@@ -150,6 +150,7 @@ public:
 /** Compare to elements. returns negativ if elem1 < elem2, zero if elem1 equals elem2
  *  and positiv if elem1 > elem2.
  *  If elem2 is a copy of elem1 then the elements are equal.
+ *  If both elements are sibling subelements, return 0 if they are identical (same sub_id) and 1 otherwise.
  */
   virtual int         t8_element_compare (const t8_element_t *elem1,
                                           const t8_element_t *elem2);
