@@ -35,13 +35,6 @@ T8_EXTERN_C_BEGIN ();
 /** Return the subelement element implementation of t8code. */
 t8_scheme_cxx_t    *t8_scheme_new_subelement_cxx (void);
 
-/** Check whether a given eclass_scheme is one of the subelement schemes.
- * \param [in] ts   A (pointer to a) scheme
- * \return          True (non-zero) if \a ts is one of the default schemes,
- *                  false (zero) otherwise.
- */
-int                 t8_eclass_scheme_is_sub (t8_eclass_scheme_c *ts);
-
 T8_EXTERN_C_END ();
 
 #endif /* !T8_TRANSITION_CXX_HXX */
