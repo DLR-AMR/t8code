@@ -268,10 +268,10 @@ t8_forest_set_transition (t8_forest_t forest, const t8_forest_t set_from)
   /* Add SUBELEMENTS to the from_method.
    * This overwrites T8_FOREST_FROM_COPY */
   if (forest->from_method == T8_FOREST_FROM_LAST) {
-    forest->from_method = T8_FOREST_FROM_SUBELEMENTS;
+    forest->from_method = T8_FOREST_FROM_TRANSITION;
   }
   else {
-    forest->from_method |= T8_FOREST_FROM_SUBELEMENTS;
+    forest->from_method |= T8_FOREST_FROM_TRANSITION;
   }
 
   // set the forests subelement flag, which is for example used by the LFN routine
@@ -736,10 +736,10 @@ t8_forest_commit (t8_forest_t forest)
       forest->is_transitioned = 0;
       forest->time_balance += sc_MPI_Wtime ();
     }
-    if (forest->from_method & T8_FOREST_FROM_SUBELEMENTS) {
+    if (forest->from_method & T8_FOREST_FROM_TRANSITION) {
       forest->time_transition = 0;
       forest->time_transition -= sc_MPI_Wtime ();
-      forest->from_method -= T8_FOREST_FROM_SUBELEMENTS;
+      forest->from_method -= T8_FOREST_FROM_TRANSITION;
       /* this is the last from method that we execute,
        * nothing should be left todo */
       T8_ASSERT (forest->from_method == 0);
