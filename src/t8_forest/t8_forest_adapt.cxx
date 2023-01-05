@@ -251,11 +251,11 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest,
     t8_locidx_t ielement; /* Loop running variable */
     /* Get all elements at indices pos, pos + 1, ... ,pos + num_siblings - 1 */
 #if T8_ENABLE_DEBUG
-    for (ielement = 0; ielement < num_siblings; ielement++) {
+    for (ielement = 0; ielement < (t8_locidx_t) num_siblings; ielement++) {
       fam[ielement] = NULL;
     }
 #endif
-    for (ielement = 0; ielement < num_siblings && 
+    for (ielement = 0; ielement < (t8_locidx_t) num_siblings && 
                        pos + ielement < elements_in_array; ielement++) {
       fam[ielement] = t8_element_array_index_locidx (telements, pos + ielement);
     }
@@ -265,9 +265,9 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest,
       /* We will pass a (in)complete family to the adapt callback */
       num_elements_to_adapt_callback = *el_inserted - pos;
       T8_ASSERT (0 < num_elements_to_adapt_callback);
-      T8_ASSERT (num_elements_to_adapt_callback <= num_siblings);
+      T8_ASSERT (num_elements_to_adapt_callback <= (t8_locidx_t) num_siblings);
     }
-    else if (ielement == num_siblings && ts->t8_element_is_family (fam)) {
+    else if (ielement == (t8_locidx_t) num_siblings && ts->t8_element_is_family (fam)) {
       /* We will pass a full family to the adapt callback */
       num_elements_to_adapt_callback = (t8_locidx_t) num_siblings;
     }
