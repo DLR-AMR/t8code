@@ -37,17 +37,18 @@
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
-/* This is the adapt function, called for each element in a balanced forest during transition.
- * We refine an element into a suitable transition cell if it has at most one hanging face */
+/* This is the conformal transition refine function for the 2D quad scheme. 
+ * It will return a values p>1 in order to exchange the current element with a transition cell of type p,
+ * which is defined in the conformal_quad scheme. */
 int
-t8_forest_subelement_adapt_remove_hanging_faces (t8_forest_t forest,
-                                                 t8_forest_t forest_from,
-                                                 t8_locidx_t ltree_id,
-                                                 t8_locidx_t lelement_id,
-                                                 t8_eclass_scheme_c *ts,
-                                                 const int is_family,
-                                                 int num_elements,
-                                                 t8_element_t *elements[])
+t8_forest_transition_conformal_quad (t8_forest_t forest,
+                                     t8_forest_t forest_from,
+                                     t8_locidx_t ltree_id,
+                                     t8_locidx_t lelement_id,
+                                     t8_eclass_scheme_c *ts,
+                                     const int is_family,
+                                     int num_elements,
+                                     t8_element_t *elements[])
 {
   int                 iface, num_faces, neigh_face, transition_type = 0;
   t8_gloidx_t         neighbor_tree;
@@ -55,9 +56,8 @@ t8_forest_subelement_adapt_remove_hanging_faces (t8_forest_t forest,
   t8_eclass_scheme_c *neigh_scheme;
   t8_element_t       *element = elements[0], **face_neighbor;
 
-#if 0                           /* use this to refine all elements of a (uniform) mesh via transition type 16 for tests */
-  return 16;
-#endif
+  /* this function should only be called by the transitioned conformal quad scheme*/
+  T8_ASSERT (ts->t8_element_child_eclass(0) == T8_ECLASS_QUAD);
 
   /* hanging faces can only exist at non-maxlevel elements */
   if (forest_from->maxlevel_existing <= 0 ||
@@ -131,6 +131,36 @@ t8_forest_subelement_adapt_remove_hanging_faces (t8_forest_t forest,
   return 0;                     /* if elem has maxlevel then keep it unchanged since there will never be hanging faces */
 }
 
+/* This is the entry function for all transition schemes, called bei forest_adapt.
+ * The eclass of the current element hands off to the specific refine implementation above.
+ * Other schemes, for other eclasses can easily be added. */
+int
+t8_forest_transition_entry (t8_forest_t forest,
+                            t8_forest_t forest_from,
+                            t8_locidx_t ltree_id,
+                            t8_locidx_t lelement_id,
+                            t8_eclass_scheme_c *ts,
+                            const int is_family,
+                            int num_elements,
+                            t8_element_t *elements[])
+{
+  t8_element_t       *current_element = elements[0];
+
+  switch (ts->t8_element_transition_refine_function(current_element)) {
+    case 0:
+      /* if no transition scheme is implemented for the given element/tree, 
+       * then return zero and keep the current element unchanged. 
+       * The default_common implementation of the above function returns 0. */
+      return 0;
+    case 1:
+      return t8_forest_transition_conformal_quad (forest, forest_from, ltree_id,
+                                                  lelement_id, ts, is_family,
+                                                  num_elements, elements);
+    default:
+      SC_ABORT("This should nerver happen.");
+  }
+}
+
 void
 t8_forest_transition (t8_forest_t forest)
 {
@@ -143,13 +173,13 @@ t8_forest_transition (t8_forest_t forest)
 
   t8_global_productionf ("Into t8_forest_transition.\n");
 
-  /* Set ghost layers of all processes in order to find hanging faces over process-boundaries */
+  /* Set ghost layers of all processes */
   if (forest->set_from->ghosts == NULL) {
     forest->set_from->ghost_type = T8_GHOST_FACES;
     t8_forest_ghost_create(forest->set_from);
   }
 
-  forest->set_adapt_fn = t8_forest_subelement_adapt_remove_hanging_faces;
+  forest->set_adapt_fn = t8_forest_transition_entry;
   forest->set_adapt_recursive = 0;
   t8_forest_copy_trees (forest, forest->set_from, 0);
   t8_forest_adapt (forest);

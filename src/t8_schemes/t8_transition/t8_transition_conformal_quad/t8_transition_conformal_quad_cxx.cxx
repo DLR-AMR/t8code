@@ -309,6 +309,14 @@ t8_subelement_scheme_quad_c::t8_element_get_num_sibling_neighbors_at_face (const
 }
 
 int
+t8_subelement_scheme_quad_c::t8_element_transition_refine_function (const t8_element_t *elem) const
+{
+  T8_ASSERT (t8_element_is_valid (elem));
+  
+  return T8_TRANSITION_CONFORMAL_QUAD_REFINE_FUNCTION;
+}
+
+int
 t8_subelement_scheme_quad_c::t8_element_get_face_corner (const t8_element_t
                                                          *elem, int face,
                                                          int corner)

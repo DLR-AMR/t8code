@@ -453,13 +453,6 @@ t8_gloidx_t         t8_forest_get_global_num_subelements (t8_forest_t forest);
  */
 t8_locidx_t         t8_forest_get_num_ghosts (t8_forest_t forest);
 
-/** Check whether the current tree in the forest supports transitioning.
- * \param [in]      forest      The forest.
- * \param [in]      treeid      The current tree id.
- * \return                      True if the current tree class supports transitioning. False otherwise.
- */
-int                t8_forest_tree_supports_transitioning (t8_forest_t forest, t8_locidx_t ltreeid); 
-
 /** Return the element class of a forest local tree.
  *  \param [in] forest    The forest.
  *  \param [in] ltreeid   The local id of a tree in \a forest.

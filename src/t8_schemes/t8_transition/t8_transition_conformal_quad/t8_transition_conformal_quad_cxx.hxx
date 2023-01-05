@@ -79,6 +79,9 @@ typedef t8_quad_with_subelements t8_pquad_t;
 #define T8_SUB_QUAD_MAX_SUBELEMENT_ID 7
 #define T8_SUBELEMENT_FACES 3
 
+/* this is the unique identifyer for the transition_conformal_quad refine function */
+#define T8_TRANSITION_CONFORMAL_QUAD_REFINE_FUNCTION 1
+
 /** Return the toplevel dimension. */
 #define T8_QUAD_GET_TDIM(quad) ((int) (quad)->pad8)
 
@@ -188,9 +191,12 @@ public:
   virtual int         t8_element_neighbor_is_sibling (const t8_element_t *elem,
                                                       int face) const;
 
-/** Return the number of sibling neighbors at a given face. */
+  /** Return the number of sibling neighbors at a given face. */
   virtual int         t8_element_get_num_sibling_neighbors_at_face (const t8_element_t *elem,
-                                                                    int face) const;                                                      
+                                                                    int face) const;
+
+  /** Return zero refine value for schemes that do not have a transition implementation. */
+  virtual int        t8_element_transition_refine_function (const t8_element *elem) const;                                                  
 
   /** Return the corner number of an element's face corner. */
   virtual int         t8_element_get_face_corner (const t8_element_t *element,

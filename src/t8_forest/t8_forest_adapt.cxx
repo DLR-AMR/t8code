@@ -190,15 +190,8 @@ t8_forest_adjust_refine_for_transitioned_forests (const t8_forest_t forest,
                                                   const t8_locidx_t ltree_id,
                                                   int* prefine)
 {
-  if (!t8_forest_tree_supports_transitioning (forest, ltree_id) && *prefine > 1) {
-    /* In hybrid forests, if the eclass of the current tree does not support transitioning,
-     * then we set the refine value to 0 and do nothing. */
-
-    /* We should only get to this point if the current trees eclass does NOT 
-     * support transitioning, but subelements are set for the forest and refine > 1. */
-    T8_ASSERT (forest->set_subelements == 1);
-    *prefine = 0;
-  }
+  /* refine values >1 are only allowed for eclass schemes that support transitioning */
+  T8_ASSERT (!(tscheme->t8_element_transition_refine_function(current_element) == 0 && *prefine > 1));
 
   /* Existing transition cells must be removed during adaptation.
    * We establish the rule to coarsen a transition cell back to its parent in case of refine = 0. */
@@ -212,9 +205,6 @@ t8_forest_adjust_refine_for_transitioned_forests (const t8_forest_t forest,
     *prefine = -1;
   }
 
-  /* check that, at this point, refine values >1 are only applied to trees that support subelements */
-  T8_ASSERT ((*prefine > 1 && t8_forest_tree_supports_transitioning (forest, ltree_id))
-              || (*prefine <= 1));
   return;
 }
 

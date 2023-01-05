@@ -221,6 +221,14 @@ t8_default_scheme_common_c::t8_element_get_num_sibling_neighbors_at_face (const 
   return 0;
 }
 
+int
+t8_default_scheme_common_c::t8_element_transition_refine_function (const t8_element * elem) const
+{
+  /* This function will be called by the transition_entry function. It defaults to zero such that 
+   * the adapt routine will keep elem unchanged during the transition step. */
+  return 0;
+}
+
 void
 t8_default_scheme_common_c::t8_element_get_sibling_neighbor_in_transition_cell (const t8_element_t *elem,
                                                                                  const int face,

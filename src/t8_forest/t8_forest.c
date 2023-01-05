@@ -886,17 +886,6 @@ t8_forest_get_num_ghosts (t8_forest_t forest)
   return forest->ghosts->num_ghosts_elements;
 }
 
-int
-t8_forest_tree_supports_transitioning (t8_forest_t forest, t8_locidx_t ltreeid)
-{
-  if (t8_forest_get_tree_class(forest, ltreeid) == T8_ECLASS_QUAD) {
-    /* at the moment, we only support transitioning for Quads. 
-     * Nevertheless, note that hybrid meshes with Triangles are possible. */
-    return 1;
-  }
-  return 0;
-}
-
 /* Currently this function is not used */
 #if 0
 static t8_element_t *

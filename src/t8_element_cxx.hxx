@@ -684,6 +684,12 @@ public:
   virtual int        t8_element_get_num_sibling_neighbors_at_face (const t8_element *elem,
                                                                    const int elem_face) const = 0;
 
+  /** Return zero refine value for schemes that do not have a transition implementation.
+   *  \param [in] elem A valid element 
+   *  \return Integer, used as the refine value during transition adaptation.
+   */
+  virtual int        t8_element_transition_refine_function (const t8_element *elem) const = 0;
+
   /** Construct all sibling neighbors of elem at face. */
   virtual void        t8_element_get_sibling_neighbor_in_transition_cell (const t8_element_t *elem,
                                                                           const int face,
