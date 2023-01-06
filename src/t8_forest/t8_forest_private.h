@@ -56,11 +56,11 @@ T8_EXTERN_C_BEGIN ();
  *                  the first x elements in \a elements form a family.
  */
 int                 t8_forest_is_incomplete_family (t8_forest_t forest,
-                                                    t8_locidx_t ltree_id,
-                                                    t8_locidx_t el_considered,
+                                                    const t8_locidx_t ltree_id,
+                                                    const t8_locidx_t el_considered,
                                                     t8_eclass_scheme_c *tscheme,
                                                     t8_element_t **elements,
-                                                    size_t elements_size);
+                                                    const size_t elements_size);
 
 /* For each tree in a forest compute its first and last descendant */
 void                t8_forest_compute_desc (t8_forest_t forest);

@@ -43,31 +43,15 @@ T8_EXTERN_C_BEGIN ();
 
 int
 t8_forest_is_incomplete_family (t8_forest_t forest,
-                                t8_locidx_t ltree_id,
-                                t8_locidx_t el_considered,
+                                const t8_locidx_t ltree_id,
+                                const t8_locidx_t el_considered,
                                 t8_eclass_scheme_c *tscheme,
                                 t8_element_t **elements,
-                                size_t elements_size)
+                                const size_t elements_size)
 {
-  t8_tree_t           tree;
-  t8_element_t       *element_parent_current;
-  t8_element_t       *element_compare;
-  t8_element_t       *element_temp;            
-  size_t              family_iter;
-  size_t              family_size;
-  int                 child_id_current;
-  int                 level;
-  int                 level_current;
-
   T8_ASSERT (forest != NULL);
   T8_ASSERT (ltree_id >= 0);
   T8_ASSERT (ltree_id < t8_forest_get_num_local_trees (forest));
-
-  tree = t8_forest_get_tree (forest, ltree_id);
-
-  T8_ASSERT (tree != NULL);
-  T8_ASSERT (el_considered >= 0);
-  T8_ASSERT (el_considered < t8_forest_get_tree_element_count(tree));
   T8_ASSERT (tscheme != NULL);
   T8_ASSERT (elements != NULL);
   T8_ASSERT (elements_size > 0);
@@ -77,17 +61,24 @@ t8_forest_is_incomplete_family (t8_forest_t forest,
     return 0;
   }
 
+  t8_tree_t tree = t8_forest_get_tree (forest, ltree_id);
+  T8_ASSERT (tree != NULL);
+  T8_ASSERT (el_considered >= 0);
+  T8_ASSERT (el_considered < t8_forest_get_tree_element_count(tree));
+
   /* Buffer for elements */
+  t8_element_t  *element_parent_current;
+  t8_element_t  *element_compare;
   tscheme->t8_element_new (1, &element_parent_current);  
   tscheme->t8_element_new (1, &element_compare);
 
   /* We first assume that we have an (in)complete family with the size of array elements. 
    * In the following we try to disprove this. */
-  family_size = elements_size;
+  size_t family_size = elements_size;
   
   /* Get level, child ID and parent of first element of possible family */
-  level_current    = tscheme->t8_element_level (elements[0]);
-  child_id_current = tscheme->t8_element_child_id (elements[0]);
+  const int level_current    = tscheme->t8_element_level (elements[0]);
+  const int child_id_current = tscheme->t8_element_child_id (elements[0]);
   tscheme->t8_element_parent (elements[0], element_parent_current);
 
   /* Elements of the current family could already be passed, so that 
@@ -96,29 +87,28 @@ t8_forest_is_incomplete_family (t8_forest_t forest,
    * that would be overlapped after coarsening.
    * */
   if (child_id_current > 0 && el_considered > 0) {
-    element_temp = t8_forest_get_tree_element (tree, el_considered-1);
+    const t8_element_t *element_temp = t8_forest_get_tree_element (tree, el_considered-1);
     //element_temp = t8_forest_get_element_in_tree (forest, ltree_id, el_considered-1);
-    level = tscheme->t8_element_level (element_temp);
+    int level_temp = tscheme->t8_element_level (element_temp);
     /* Only elements with higher or equal level then level of current consideret 
      * element, can get potentially be overlapped. */
-    if (level >= level_current) {
+    if (level_temp >= level_current) {
       /* Compare ancestors */
       tscheme->t8_element_nca (element_parent_current, element_temp, element_compare);
-      level = tscheme->t8_element_level (element_compare);
+      const int level_compare = tscheme->t8_element_level (element_compare);
       /* Level_current-1 is level of element_parent_current */
-      T8_ASSERT (level <= level_current-1);
-      if(level == level_current-1) {
+      T8_ASSERT (level_compare <= level_current-1);
+      if(level_compare == level_current-1) {
         tscheme->t8_element_destroy (1, &element_parent_current);
         tscheme->t8_element_destroy (1, &element_compare);
         return 0;
       }
     }
-  }
+  }   
 
   /* Reduce family_size to the number of family members that directly follow each other.*/
-
-  for (family_iter = 1; family_iter < family_size ; family_iter++) {
-    level = tscheme->t8_element_level (elements[family_iter]);
+  for (size_t family_iter = 1; family_iter < family_size ; family_iter++) {
+    const int level = tscheme->t8_element_level (elements[family_iter]);
     /* Quick check by level. Not mandatory. */
     if (level != level_current) {
       family_size = family_iter;
@@ -131,24 +121,24 @@ t8_forest_is_incomplete_family (t8_forest_t forest,
       break;
     }
   }
-  T8_ASSERT (family_size > 0);
 
+  T8_ASSERT (family_size > 0);
   T8_ASSERT (family_size >= 0 && family_size <= elements_size);
 
   /* There may be successors of a hypothetical later family member (with index 
    * family_size in this family) that would be overlapped after coarsening. */
   if (family_size < elements_size) {
     /* Get level of element after last element of current possible family */
-    level = tscheme->t8_element_level (elements[family_size]);
+    const int level = tscheme->t8_element_level (elements[family_size]);
     /* Only elements with higher level then level of current element, can get 
      * potentially be overlapped. */
     if (level > level_current) {
       /* Compare ancestors */
       tscheme->t8_element_nca (element_parent_current, elements[family_size], 
                                element_compare);
-      level = tscheme->t8_element_level (element_compare);
-      T8_ASSERT (level <= level_current-1);
-      if (level == level_current-1) {
+      const int level_compare = tscheme->t8_element_level (element_compare);
+      T8_ASSERT (level_compare <= level_current-1);
+      if (level_compare == level_current-1) {
         tscheme->t8_element_destroy (1, &element_parent_current);
         tscheme->t8_element_destroy (1, &element_compare);
         return 0;
@@ -161,7 +151,7 @@ t8_forest_is_incomplete_family (t8_forest_t forest,
   tscheme->t8_element_destroy (1, &element_compare);
 
 #if T8_ENABLE_MPI
-  int num_siblings = tscheme->t8_element_num_siblings (elements[0]);
+  const int num_siblings = tscheme->t8_element_num_siblings (elements[0]);
   T8_ASSERT (family_size <= (size_t)num_siblings);
   /* If the first/last element at a process boundary is not the first/last
    * element of a possible family, we are not guaranteed to consider all 
