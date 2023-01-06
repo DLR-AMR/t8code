@@ -1012,7 +1012,7 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
 static void
 t8_forest_ghost_fill_remote_v3 (t8_forest_t forest)
 {
-  // ghost v3 is not implemented for transitioned forests
+  /* ghost v3 is not implemented for transitioned forests */
   T8_ASSERT (!forest->is_transitioned);
 
   t8_forest_ghost_boundary_data_t data;
@@ -1935,7 +1935,7 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
     t8_forest_ghost_init (&forest->ghosts, forest->ghost_type);
     ghost = forest->ghosts;
 
-    // make sure that we do not use transitioned forests in the ghost v3 algorithm
+    /* make sure that we do not use transitioned forests in the ghost v3 algorithm */
     if ((unbalanced_version == -1 && forest->is_transitioned == 0)) {
       t8_forest_ghost_fill_remote_v3 (forest);
     }

@@ -344,8 +344,6 @@ t8_transition_global ()
     p4est_connectivity_destroy (brick);
   }
   else if (hybrid_tree_mesh) {
-    /* TODO: implement this case for subelements */
-    // SC_ABORT ("Hybrid cmesh not implemented yet.");
     cmesh = t8_cmesh_new_periodic_hybrid (sc_MPI_COMM_WORLD);
   }
   else {

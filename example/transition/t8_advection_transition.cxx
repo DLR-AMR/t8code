@@ -60,7 +60,7 @@
 #include <t8_cmesh_readmshfile.h>
 #include <t8_cmesh_vtk.h>
 #include <t8_vec.h>
-#include <t8_cmesh/t8_cmesh_examples.h> // this is for t8_cmesh functions
+#include <t8_cmesh/t8_cmesh_examples.h> /* this is for t8_cmesh functions */
 
 #define T8_GET_DEBUG_OUTPUT 0
 
@@ -734,7 +734,6 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
       t8_debugf ("face %i neigh %i df %i, neigh_data->num_faces: %i\n", face,
                  neigh_id, dual_face, neigh_data->num_faces);
       SC_CHECK_ABORT (dual_face < neigh_data->num_faces, "num\n");
-      // SC_CHECK_ABORT (neigh_data->num_neighbors[dual_face] == 1, "entry\n");
       neigh_data->num_neighbors[dual_face] = 1;
       neigh_data->fluxes[dual_face][0] =
         -el_hang->fluxes[face][face_children_count];
@@ -1879,7 +1878,6 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem, int measure_time,
   }
   /* We also want ghost elements in the new forest */
   t8_forest_set_ghost_ext (problem->forest_adapt, 1, T8_GHOST_FACES, 1);        /* need ghost version 1 for transition cells */
-  // t8_forest_set_ghost (problem->forest_adapt, 1, T8_GHOST_FACES);
   /* Commit the forest, adaptation and balance happens here */
   t8_forest_commit (problem->forest_adapt);
 
@@ -1998,7 +1996,6 @@ t8_advect_problem_adapt_init (t8_advect_problem_t * problem, int measure_time,
   }
   /* We also want ghost elements in the new forest */
   t8_forest_set_ghost_ext (problem->forest_adapt, 1, T8_GHOST_FACES, 1);        /* need ghost version 1 for transition cells */
-  // t8_forest_set_ghost (problem->forest_adapt, 1, T8_GHOST_FACES);
   /* Commit the forest, adaptation and balance happens here */
   t8_forest_commit (problem->forest_adapt);
 
@@ -2091,7 +2088,6 @@ t8_advect_problem_partition (t8_advect_problem_t * problem, int measure_time)
   /* Partition the forest and create ghosts */
   t8_forest_set_partition (forest_partition, problem->forest, 0);
   t8_forest_set_ghost_ext (forest_partition, 1, T8_GHOST_FACES, 1);     /* need ghost version 1 for transition cells */
-  // t8_forest_set_ghost (forest_partition, 1, T8_GHOST_FACES);
   t8_forest_commit (forest_partition);
   /* Add runtimes to internal stats */
   if (measure_time) {
@@ -2414,7 +2410,6 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
           neigh_scheme->t8_element_destroy (elem_data->num_neighbors[iface],
                                             neighbors);
           T8_FREE (neighbors);
-          //t8_global_essentialf("alloc face %i of elem %i\n", iface, ielement);
           elem_data->fluxes[iface] =
             T8_ALLOC (double, elem_data->num_neighbors[iface]);
         }
@@ -2619,7 +2614,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     for (ilevel = problem->level; ilevel < problem->maxlevel; ilevel++) {
       /* initialize according to some adapt_init scheme */
       t8_advect_problem_adapt_init (problem, 0, refinementcriterion);
-      // TODO: add partition for transitioned forests
+      /* TODO: add partition for transitioned forests */
       if (!do_transition) {
         /* repartition */
         t8_advect_problem_partition (problem, 0);
@@ -2845,7 +2840,6 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                     }
                     SC_CHECK_ABORT (dual_face < neigh_data->num_faces,
                                     "num\n");
-                    //         SC_CHECK_ABORT (neigh_data->num_neighbors[dual_face] == 1, "dual face\n");
                     neigh_data->fluxes[dual_face][0] = -flux;
                     neigh_data->dual_faces[dual_face][0] = iface;
                     neigh_data->neighs[dual_face][0] = lelement;
@@ -2926,7 +2920,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
           time_adapt += sc_MPI_Wtime ();
         }
 
-        // TODO: add partition for transitioned forests
+        /* TODO: add partition for transitioned forests */
         if (!do_transition) {
           t8_advect_problem_partition (problem, 1);
         }
@@ -3207,7 +3201,7 @@ main (int argc, char *argv[])
       t8_cmesh_vtk_write_file (cmesh, "advection_cmesh", 1.0);
     }
 
-    // array of initial phi scalarfields
+    /* array of initial phi scalarfields */
     t8_example_level_set_fn levelfunc[4] =
       { t8_levelset_sphere, t8_constant, t8_periodic_2D_cos,
       t8_periodic_2D_cos_off_center

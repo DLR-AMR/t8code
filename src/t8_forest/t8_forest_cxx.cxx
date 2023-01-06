@@ -1911,9 +1911,23 @@ t8_forest_get_transition_cell_face_neighbor (t8_forest_t forest,
                                              t8_eclass_scheme_c *neigh_scheme,
                                              int * num_neighbors)
 {
+  /* Consider the following situation:
+   *                           
+   *         x - - x - - x - - - - - x
+   *         |           | \ pnei  / |
+   *         |           |   \   /   |
+   *         x   leaf  f1| nei x     |
+   *         |           |   / | \   |
+   *         |           | /   |   \ |
+   *         x - - x - - x - - x - - x 
+   *
+   * We are looking for the neighbor (nei) of leaf at f1.
+   * Given is a random element of the neighboring transition cell (pnei), which we call pseudo_neighbor for now.
+   * This function combines information of leaf, f1 and pnei to identify and return the real face neighbor nei.
+   */
+
   T8_ASSERT (forest->is_transitioned);
-  /* Given that the transition cell of the subelement "pseudo_neighbor" contains the real subelement leaf_face_neighbor of "leaf",
-   * this function is used to identify even this leaf_face_neighbor subelement. */
+
 
   T8_ASSERT (element_index < forest->global_num_elements);
   t8_locidx_t         pseudo_neigh_index = element_index;
@@ -2027,7 +2041,7 @@ t8_forest_leaf_face_neighbors_transitioned (t8_forest_t forest, t8_locidx_t ltre
                                             t8_eclass_scheme_c **pneigh_scheme,
                                             int forest_is_balanced)
 {
-  /* Consider the following transitioned forest of two trees:
+  /* Consider the following transitioned forest:
    *
    *                   forest
    *                          f1 
@@ -2044,9 +2058,9 @@ t8_forest_leaf_face_neighbors_transitioned (t8_forest_t forest, t8_locidx_t ltre
    *      If so, then we can quickly compute and return the corresponding neighbor.
    *   2) Otherwise (in case of elem at any face or sub at f1), we apply the standard LFN concept of face neighbors or half-face neighbors 
    *      to identify the real neighbor element. Here, it does not matter whether the current element is a subelement or a standard element.
-   *   3) We are done at 2) if the identified neighbor is no subelement. Otherwise (like in the case elem at f1), the binary search, based on the Morton-Index 
-   *      will randomly pick one subelement of the corresponding transition cell. Hence, in this case we apply some additional - subelement 
-   *      specific - t8_element functions in order to return the right subelement neighbor.
+   *   3) We are done at 2) if the identified neighbor is no subelement. Otherwise (like in the case of elem at f1), the binary search, based on the Morton-Index 
+   *      will randomly pick one subelement of the corresponding transition cell (since, by definition they all share the same Morton Index).
+   *      Hence, in this case we apply some additional - subelement specific - t8_element functions in order to return the right subelement neighbor.
    */
   t8_eclass_t         neigh_class, eclass;
   t8_gloidx_t         gneigh_treeid;

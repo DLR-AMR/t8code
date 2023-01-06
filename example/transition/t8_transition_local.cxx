@@ -88,13 +88,6 @@ t8_test_quad_local (t8_element_t *quad_element,
     class_scheme->t8_element_debug_print (children[child_id]);
 #endif
 
-    /* Iterate over all faces of the elements and determine their TODO: what? */
-    num_faces = class_scheme->t8_element_num_faces (children[child_id]);
-    int                 face_count;
-    for (face_count = 0; face_count < num_faces; face_count++) {
-      // do something
-    }
-
     /* determine the shape of the subelement and use it to determine the number of vertices it has (triangle -> 3 vertices) */
     const t8_element_shape_t shape =
       class_scheme->t8_element_shape (children[child_id]);
@@ -113,8 +106,8 @@ t8_test_quad_local (t8_element_t *quad_element,
         ("Child ID: %i; Vertex: %i; Ref cords in [0,1]^2: (%lf,%lf)\n",
          child_id, vertex_count, coords[0], coords[1]);
       T8_ASSERT (t8_check_coordinates (coords));
-    }                           // end of vertex loop
-  }                             // end of subelement loop
+    }                           /* end of vertex loop */
+  }                             /* end of subelement loop */
 
   /* coarsen the transition cell back to its parent, which must be equal to the initial quad_element */
   class_scheme->t8_element_new (1, &parent);
@@ -210,8 +203,8 @@ t8_transition_local (t8_eclass_t eclass)
           ("Subelement ID: %i; Vertex: %i; Ref cords in [0,1]^2: (%lf,%lf)\n",
            subelement_id, vertex_count, coords[0], coords[1]);
         T8_ASSERT (t8_check_coordinates (coords));
-      }                         // end of vertex loop
-    }                           // end of subelement loop
+      }                         /* end of vertex loop */
+    }                           /* end of subelement loop */
 
     /* coarsen the transition cell back to its parent, which must be equal to the initial quad_element */
     class_scheme->t8_element_new (1, &parent);
@@ -223,7 +216,7 @@ t8_transition_local (t8_eclass_t eclass)
     class_scheme->t8_element_destroy (num_subelements, transition_cell);
     T8_FREE (transition_cell);
 
-  }                             // end of transition type loop
+  }                             /* end of transition type loop */
 
   /* free more memory */
   class_scheme->t8_element_destroy (1, &quad_element);

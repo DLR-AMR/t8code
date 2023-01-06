@@ -161,8 +161,8 @@ t8_test_transition_global (t8_eclass_t eclass)
   int                 do_partition = 1;
 
   /* ghost setting */
-  int                 do_ghost = 1;     // if do_LFN_test = 1, then do_ghost must be set to 1 as well when using multiple processes
-  int                 ghost_version = 1;        // use v1 for transitioned forests
+  int                 do_ghost = 1;     /* if do_LFN_test = 1, then do_ghost must be set to 1 as well when using multiple processes */
+  int                 ghost_version = 1;        /* use v1 for transitioned forests */
 
   /* check settings */
   SC_CHECK_ABORT (single_tree + multiple_tree + hybrid_cmesh == 1,
@@ -184,9 +184,7 @@ t8_test_transition_global (t8_eclass_t eclass)
     p4est_connectivity_destroy (brick);
   }
   else if (hybrid_cmesh) {
-    /* TODO: implement this case for subelements */
-    SC_ABORT ("Hybrid cmesh not implemented yet.");
-    // cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
+    cmesh = t8_cmesh_new_periodic_hybrid (sc_MPI_COMM_WORLD);
   }
   else {
     SC_ABORT ("Specify cmesh geometry.");
@@ -354,8 +352,8 @@ t8_test_quad_local (t8_element_t *quad_element,
          child_id, vertex_count, coords[0], coords[1]);
       /* Check vertex coordinates in unit cube up to float precision */
         SC_CHECK_ABORTF (t8_check_coordinates_float_precision (coords), "Coordinates of child are computed incorrect.");
-    }                           // end of vertex loop
-  }                             // end of child loop
+    }                           /* end of vertex loop */
+  }                             /* end of child loop */
 
   /* coarsen the transition cell back to its parent, which must be equal to the initial quad_element */
   class_scheme->t8_element_new (1, &parent);
@@ -452,8 +450,8 @@ t8_test_transition_local (t8_eclass_t eclass)
            subelement_id, vertex_count, coords[0], coords[1]);
         /* Check vertex coordinates in unit cube up to float precision */
         SC_CHECK_ABORTF (t8_check_coordinates_float_precision (coords), "Coordinates of subelement are computed incorrect.");
-      }                         // end of vertex loop
-    }                           // end of subelement loop
+      }                         /* end of vertex loop */
+    }                           /* end of subelement loop */
 
     /* coarsen the transition cell back to its parent, which must be equal to the initial quad_element */
     class_scheme->t8_element_new (1, &parent);
@@ -465,7 +463,7 @@ t8_test_transition_local (t8_eclass_t eclass)
     class_scheme->t8_element_destroy (num_subelements, transition_cell);
     T8_FREE (transition_cell);
 
-  }                             // end of transition type loop
+  }                             /* end of transition type loop */
 
   /* free more memory */
   class_scheme->t8_element_destroy (1, &quad_element);

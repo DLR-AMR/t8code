@@ -274,7 +274,7 @@ t8_forest_set_transition (t8_forest_t forest, const t8_forest_t set_from)
     forest->from_method |= T8_FOREST_FROM_TRANSITION;
   }
 
-  // set the forests subelement flag, which is for example used by the LFN routine
+  /* set the forests subelement flag, which is for example used by the LFN routine */
   forest->set_subelements = 1;
 }
 
@@ -644,7 +644,7 @@ t8_forest_commit (t8_forest_t forest)
         /* This forest should only be adapted */
         t8_forest_copy_trees (forest, forest->set_from, 0);
         t8_forest_adapt (forest);
-        /* adapt removes all subelements -
+        /* adapt removes all subelements from a transitioned forest -
          * this convention makes it easier to handle them within the 
          * balance and transition routine. */
         T8_ASSERT (!t8_forest_is_transitioned (forest));
