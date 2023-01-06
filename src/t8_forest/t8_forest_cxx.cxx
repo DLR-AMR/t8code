@@ -269,30 +269,23 @@ t8_forest_min_nonempty_level (t8_cmesh_t cmesh, t8_scheme_cxx_t *scheme)
 int
 t8_forest_no_overlap (t8_forest_t forest) {
 #if T8_ENABLE_DEBUG
-  t8_locidx_t         num_local_trees;
-  t8_locidx_t         elems_in_tree;
-  t8_locidx_t         ielem;
-  t8_locidx_t         itree;
-  t8_tree_t           tree;
-  t8_element_t       *element_a;
-  t8_element_t       *element_b;
-  t8_element_t       *element_nca;
-  t8_eclass_scheme_c *ts;
-
   T8_ASSERT (t8_forest_is_committed (forest));
-  num_local_trees = t8_forest_get_num_local_trees (forest);
+  const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
   /* Iterate over all local trees */
-  for (itree = 0; itree < num_local_trees; itree++) {
-    tree          = t8_forest_get_tree (forest, itree);
-    ts            = t8_forest_get_eclass_scheme (forest, tree->eclass);
-    elems_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+  for (t8_locidx_t itree = 0; itree < num_local_trees; itree++) {
+    t8_tree_t tree = t8_forest_get_tree (forest, itree);
+    t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, tree->eclass);
+    const t8_locidx_t elems_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+    t8_element_t *element_nca;
     ts->t8_element_new(1, &element_nca);
     /* Iterate over all elements in current tree */
-    for (ielem = 0; ielem < elems_in_tree-1; ielem++) {
+    for (t8_locidx_t ielem = 0; ielem < elems_in_tree-1; ielem++) {
       /* Compare each two consecutive elements. If one element is
        * the nearest common ancestor of the other, they overlap. */
-      element_a = t8_forest_get_element_in_tree (forest, itree, ielem);
-      element_b = t8_forest_get_element_in_tree (forest, itree, ielem+1);
+      const t8_element_t *element_a = 
+        t8_forest_get_element_in_tree (forest, itree, ielem);
+      const t8_element_t *element_b = 
+        t8_forest_get_element_in_tree (forest, itree, ielem+1);
       T8_ASSERT (ts->t8_element_is_valid (element_a));
       T8_ASSERT (ts->t8_element_is_valid (element_b));
       ts->t8_element_nca (element_a, element_b, element_nca);
