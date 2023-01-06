@@ -59,7 +59,7 @@ t8_test_quad_local (t8_element_t *quad_element,
   t8_debugf ("~~~~~~~~~~ Into the t8_test_quad_local function ~~~~~~~~~~\n");
 
   t8_element_t       *parent;
-  int                 num_children, num_faces, num_vertices;
+  int                 num_children, num_vertices;
   int                 child_id;
   double              coords[2];
 
