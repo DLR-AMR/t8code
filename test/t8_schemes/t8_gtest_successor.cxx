@@ -54,28 +54,29 @@ t8_recursive_successor (t8_element_t *element, t8_element_t *successor,
                         const int maxlvl)
 {
   int                 level = ts->t8_element_level (element);
-  EXPECT_TRUE (ts->t8_element_level (element) <= maxlvl && maxlvl <= ts->t8_element_maxlevel () - 1);
+  EXPECT_TRUE (ts->t8_element_level (element) <= maxlvl
+               && maxlvl <= ts->t8_element_maxlevel () - 1);
   int                 num_children = ts->t8_element_num_children (element);
   if (level == maxlvl - 1) {
     /* Check, if the successor of the last recursion is the first child of
      * of this element.
      */
     ts->t8_element_child (element, 0, child);
-    EXPECT_TRUE(!ts->t8_element_compare (child, successor));
+    EXPECT_TRUE (!ts->t8_element_compare (child, successor));
     num_children = ts->t8_element_num_children (element);
     /*Check if the successor in this element is computed correctly */
     for (int ichild = 1; ichild < num_children; ichild++) {
-        ts->t8_element_successor (child, successor, maxlvl);
-        ts->t8_element_child (element, ichild, child);
-        EXPECT_TRUE(!ts->t8_element_compare (child, successor));
+      ts->t8_element_successor (child, successor, maxlvl);
+      ts->t8_element_child (element, ichild, child);
+      EXPECT_TRUE (!ts->t8_element_compare (child, successor));
     }
     /*If the iterator is the last element, the test can finish */
     if (!ts->t8_element_compare (last, child)) {
-        return;
+      return;
     }
     /*Compute the next successor / "jump" out of the current element */
     else {
-        ts->t8_element_successor (child, successor, maxlvl);
+      ts->t8_element_successor (child, successor, maxlvl);
     }
   }
   else {
@@ -108,7 +109,7 @@ t8_deep_successor (t8_element_t *element, t8_element_t *successor,
     for (int jchild = 0; jchild < num_children_child; jchild++) {
       ts->t8_element_child (child, jchild, element);
       /* Check the computation of the successor. */
-      EXPECT_TRUE(!ts->t8_element_compare (element, successor));
+      EXPECT_TRUE (!ts->t8_element_compare (element, successor));
       /* Compute the next successor. */
       ts->t8_element_successor (successor, successor, maxlvl);
     }
@@ -116,40 +117,41 @@ t8_deep_successor (t8_element_t *element, t8_element_t *successor,
   }
 }
 
-TEST_P(class_successor, test_recursive_and_deep_successor){
+TEST_P (class_successor, test_recursive_and_deep_successor)
+{
 #ifdef T8_ENABLE_DEBUG
   const int           maxlvl = 3;
 #else
   const int           maxlvl = 4;
 #endif
 
-    t8_element_t       *element;
-    t8_element_t       *successor;
-    t8_element_t       *child;
-    t8_element_t       *last;
+  t8_element_t       *element;
+  t8_element_t       *successor;
+  t8_element_t       *child;
+  t8_element_t       *last;
 
-    ts->t8_element_new (1, &element);
-    ts->t8_element_new (1, &successor);
-    ts->t8_element_new (1, &child);
-    ts->t8_element_new (1, &last);
+  ts->t8_element_new (1, &element);
+  ts->t8_element_new (1, &successor);
+  ts->t8_element_new (1, &child);
+  ts->t8_element_new (1, &last);
 
-    ts->t8_element_set_linear_id (element, 0, 0);
+  ts->t8_element_set_linear_id (element, 0, 0);
 
-    /* Test at lower level. */
-    for (int ilevel = 1; ilevel <= maxlvl; ilevel++) {
-      ts->t8_element_set_linear_id (successor, ilevel, 0);
-      ts->t8_element_last_descendant (element, last, ilevel);
-      t8_recursive_successor (element, successor, child, last, ts, ilevel);
-    }
-    /* Test at Maxlevel. */
-    ts->t8_element_set_linear_id (element, ts->t8_element_maxlevel () - 2, 0);
-    ts->t8_element_set_linear_id (successor, ts->t8_element_maxlevel (), 0);
-    t8_deep_successor (element, successor, last, ts);
+  /* Test at lower level. */
+  for (int ilevel = 1; ilevel <= maxlvl; ilevel++) {
+    ts->t8_element_set_linear_id (successor, ilevel, 0);
+    ts->t8_element_last_descendant (element, last, ilevel);
+    t8_recursive_successor (element, successor, child, last, ts, ilevel);
+  }
+  /* Test at Maxlevel. */
+  ts->t8_element_set_linear_id (element, ts->t8_element_maxlevel () - 2, 0);
+  ts->t8_element_set_linear_id (successor, ts->t8_element_maxlevel (), 0);
+  t8_deep_successor (element, successor, last, ts);
 
-    ts->t8_element_destroy (1, &element);
-    ts->t8_element_destroy (1, &successor);
-    ts->t8_element_destroy (1, &child);
-    ts->t8_element_destroy (1, &last);
+  ts->t8_element_destroy (1, &element);
+  ts->t8_element_destroy (1, &successor);
+  ts->t8_element_destroy (1, &child);
+  ts->t8_element_destroy (1, &last);
 }
 
 
