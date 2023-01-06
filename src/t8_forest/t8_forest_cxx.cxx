@@ -2083,7 +2083,8 @@ t8_forest_leaf_face_neighbors_transitioned (t8_forest_t forest, t8_locidx_t ltre
   if (forest_is_balanced) {
     /* In a balanced forest, the leaf neighbor of a leaf is either the neighbor element itself,
      * its parent or its children at the face. If the forest is transitioned,
-     * then the neighbor might also be a subelement whose level will also differ at most by +-1 to the leaf element. */
+     * then the neighbor might also be a subelement whose level will also differ at most by +-1 to the leaf element. 
+     * The leaf might as well be a subelement. */
     eclass = t8_forest_get_tree_class (forest, ltreeid);
     ts = t8_forest_get_eclass_scheme (forest, eclass);
 
@@ -2124,7 +2125,7 @@ t8_forest_leaf_face_neighbors_transitioned (t8_forest_t forest, t8_locidx_t ltre
      * Implement a more general version of this part (part 2)) in which non-conformal transitioned 
      * forests are allowed, such that new transition schemes can mainly be implemented
      * on element level without touching the LFN function. */
-    if (at_maxlevel || forest->is_transitioned) {
+    if (at_maxlevel) {
       /* If leaf has maxlevel or the forest is transitioned,
        * we know that the leaf element has at most one neighbor at each face */
       num_children_at_face = 1;
@@ -2138,8 +2139,6 @@ t8_forest_leaf_face_neighbors_transitioned (t8_forest_t forest, t8_locidx_t ltre
                                          face, *dual_faces);
     }
     else {
-      SC_CHECK_ABORT(!ts->t8_element_is_subelement(leaf), "LFN_transitioned not implemented for non-conformal transitioned forests.");
-
       /* Allocate neighbor element */
       num_children_at_face = ts->t8_element_num_face_children (leaf, face);
       neighbor_leafs = *pneighbor_leafs =

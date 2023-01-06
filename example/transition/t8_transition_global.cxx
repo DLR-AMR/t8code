@@ -258,7 +258,8 @@ t8_transition_global ()
   t8_debugf
     ("~~~~~~~~~~ Into the t8_transition_global function ~~~~~~~~~~\n");
 
-  t8_eclass_t         eclass = T8_ECLASS_QUAD; /* as can be seen by the corresponding #include, this will be the transitioned quad implementation */
+  /* At the moment, subelements are only implemented for T8_ECLASS_QUADS */
+  t8_eclass_t         eclass = T8_ECLASS_QUAD; /* depending on the include file, this will be the transitioned or default quad implementation */
 
   t8_forest_t         forest;
   t8_forest_t         forest_adapt;
@@ -506,7 +507,6 @@ main (int argc, char **argv)
   p4est_init (NULL, SC_LP_DEFAULT);
   t8_init (SC_LP_DEFAULT);
 
-  /* At the moment, subelements are only implemented for T8_ECLASS_QUADS */
   t8_transition_global ();
 
   sc_finalize ();
