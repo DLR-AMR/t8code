@@ -52,7 +52,7 @@ t8_scheme_cxx_destroy (t8_scheme_cxx_t *s)
 /* *INDENT-OFF* */
 /* Default implementation for the element size */
 size_t
-t8_eclass_scheme::t8_element_size ()
+t8_eclass_scheme::t8_element_size () const
 {
   return element_size;
 }
@@ -60,7 +60,7 @@ t8_eclass_scheme::t8_element_size ()
 
 /* Default implementation for array_index */
 t8_element_t       *
-t8_eclass_scheme::t8_element_array_index (sc_array_t *array, size_t it)
+t8_eclass_scheme::t8_element_array_index (sc_array_t *array, size_t it) const
 {
   T8_ASSERT (it < array->elem_count);
   T8_ASSERT (element_size == array->elem_size);
