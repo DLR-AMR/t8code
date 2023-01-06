@@ -450,7 +450,8 @@ protected:
    *  subelement with id 3 is located. 
    *  \param [in] elem A valid subelement
    *  \param [out] An array, whose entries are face_number, split and sub_face_id
-   *                      face_number: the face number (regarding the parent quad), the given subelement is adjacent to (value between 0 and 3)
+   *                      face_number: the face number (clockwise enumeration), the given subelement is adjacent to (value between 0 and 3)
+   *                                   It can be translated to the quad enumeration via subelement_location_to_parent_dual_face[location[0]]
    *                      split: whether there is a hanging node at the face, the subelement is adjacent to 
    *                             (value 0 if there is not hanging node and 1 if there is one)
    *                      sub_face_id: if there is a hanging node at the face, it is important to know if the given 

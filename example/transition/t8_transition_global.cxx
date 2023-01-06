@@ -269,8 +269,8 @@ t8_transition_global ()
   /* ************************************************* Case Settings ************************************************* */
 
   /* refinement setting */
-  int                 initlevel = 1;    /* initial uniform refinement level */
-  int                 adaptlevel = 2;
+  int                 initlevel = 4;    /* initial uniform refinement level */
+  int                 adaptlevel = 3;
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening (minlevel <= initlevel) */
   int                 maxlevel = initlevel + adaptlevel;        /* highest level allowed for refining */
 
@@ -290,13 +290,13 @@ t8_transition_global ()
 
   /* cmesh settings */
   int                 single_tree_mesh = 0;
-  int                 multiple_tree_mesh = 0, num_x_trees = 5, num_y_trees = 4;
-  int                 hybrid_tree_mesh = 1;
+  int                 multiple_tree_mesh = 1, num_x_trees = 5, num_y_trees = 4;
+  int                 hybrid_tree_mesh = 0;
   
   int                 periodic_boundary = 0;
 
   /* partition setting */
-  int                 do_partition = 0;
+  int                 do_partition = 1;
 
   /* ghost setting */
   int                 do_ghost = 1;     /* if do_LFN_test = 1, then do_ghost must be set to 1 as well when using multiple processes */

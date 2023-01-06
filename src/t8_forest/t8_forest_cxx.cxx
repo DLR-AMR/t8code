@@ -1945,8 +1945,8 @@ t8_forest_get_transition_cell_face_neighbor (t8_forest_t forest,
     neigh_scheme->t8_element_find_neighbor_in_transition_cell (leaf, pseudo_neighbor, face);
   }
   else {
-    /* TODO: implement solution */
-    SC_ABORT("Implement solution for this case.");
+    /* TODO: implement a solution for different element schemes */
+    SC_ABORT("LFN not implemented for transitioned hybrid meshes.");
   }
 
   if (!neighbor_is_ghost) {
@@ -2141,6 +2141,27 @@ t8_forest_leaf_face_neighbors_transitioned (t8_forest_t forest, t8_locidx_t ltre
                                          face, *dual_faces);
     }
     else {
+      /* At this point, we expect an arbitrary number of neighbors. Our transition implementation is
+       * build for this case and does not require a conformal mesh.
+       * But note the following: LFN is only implemented for balanced meshes and therefore uses the concept of 
+       * virtual half face neighbors. This concept WILL NOT WORK for a transition scheme whose transition cells enable more 
+       * neighbors than the maximum number of neighbors per element in the forests pure balanced version.
+       * This is because in such cases the concept of half face neighbors would not be sufficient to depict all 
+       * neighbor subelements in a neighboring transition cell. 
+       * TODO: think of a solution for this issue to enable more complex transition cells, consider for example the following situation:
+       * 
+       *             quad   transition cell
+       *        x - - - - - x - - - - - x
+       *        |           |           |
+       *        |           x - - - - - x
+       *        |   elem   f|           |
+       *        |           x - - - - - x
+       *        |           |           |
+       *        x - - - - - x - - - - - x
+       *
+       * Half face neighbors would not be sufficient to find all three neighbors of elem at f.
+       */
+
       /* Allocate neighbor element */
       num_children_at_face = ts->t8_element_num_face_children (leaf, face);
       neighbor_leafs = *pneighbor_leafs =

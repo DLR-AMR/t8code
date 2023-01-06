@@ -192,7 +192,7 @@ t8_subelement_scheme_quad_c::t8_element_parent (const t8_element_t *elem,
     p4est_quadrant_parent (q, r);
   }
 
-  /* resetting the subelement infos and ensuring that a parent element can never be a subelement */
+  /* the parent of any element will never be a subelement */
   t8_element_reset_subelement_values (parent);
 
   t8_element_copy_surround (q, r);
@@ -388,6 +388,25 @@ t8_subelement_scheme_quad_c::t8_element_child (const t8_element_t *elem,
                                                int childid,
                                                t8_element_t *child)
 {
+  /* The child of a subelement is the child of its parent 
+   *
+   *         x - - - - - x        x - - x - - x 
+   *         |           |        |     |     |
+   *         |           |        |  2  |  3  |
+   *         |   elem    |   =>   x - - x - - x
+   *         |           |        |     |     |
+   *         |           |        |  0  |  1  |
+   *         x - - - - - x        x - - x - - x
+   *
+   *         x - - - - - a        x - - x - - a
+   *         | \  elem / |        |     |     |
+   *         |   \   /   |        |  2  |  3  |
+   *         |     x - - x   =>   x - - x - - x
+   *         |   /   \   |        |     |     |
+   *         | /       \ |        |  0  |  1  |
+   *         x - - - - - x        x - - x - - x
+   * 
+   */
   const t8_quad_with_subelements *pquad_w_sub_elem =
     (const t8_quad_with_subelements *) elem;
   t8_quad_with_subelements *pquad_w_sub_child =
@@ -399,7 +418,7 @@ t8_subelement_scheme_quad_c::t8_element_child (const t8_element_t *elem,
   const p4est_qcoord_t shift = P4EST_QUADRANT_LEN (q->level + 1);
 
   /* it should not be possible to construct a child of a subelement */
-  T8_ASSERT (!t8_element_is_subelement (elem));
+  // T8_ASSERT (!t8_element_is_subelement (elem));
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (child));
@@ -814,8 +833,8 @@ t8_subelement_scheme_quad_c::t8_element_children_at_face (const t8_element_t
      *         x - - - - - a        x - - - - - a 
      *         | \       / |        |           |
      *         |   \   /   |        |   child   |
-     *         x - - x  el | f =>   |    at     |
-     *         |   /   \   |        |   face    |
+     *         x - - x  el | f =>   |    at f   |
+     *         |   /   \   |        |           |
      *         | /       \ |        |           |
      *         x - - - - - x        x - - - - - x
      *     
@@ -860,6 +879,8 @@ t8_subelement_scheme_quad_c::t8_element_children_at_face (const t8_element_t
           else childid = 2;
           break;
       }
+      /* it is not allowed to construct a child from a subelement.
+       * Therefore, we construct the child of its parent. */
       this->t8_element_child (elem, childid, children[0]);
     }
   }
@@ -874,9 +895,7 @@ t8_subelement_scheme_quad_c::t8_element_face_child_face (const t8_element_t
 
   if (t8_element_is_subelement(elem)) {
     T8_ASSERT (face == 1);
-    int                 location[3] = { };
-    t8_element_get_location_of_subelement (elem, location);
-    return location[0];
+    return t8_element_face_parent_face(elem, face);
   }
   else {
     /* For quadrants the face enumeration of children is the same as for the parent. */
@@ -1099,13 +1118,7 @@ t8_subelement_scheme_quad_c::t8_element_tree_face (const t8_element_t *elem,
     T8_ASSERT (face == 1);
     T8_ASSERT (0 <= face && face < T8_SUBELEMENT_FACES);
 
-    /* We use the location function in order to get the face of the tree that 
-     * is intersecting the face of the subelement elem */
-    int                 location[3] = { };
-    t8_element_get_location_of_subelement (elem, location);
-
-    /* subelements are enumerated clockwise (not as quadrant faces) */
-    return subelement_location_to_parent_face[location[0]];
+    return t8_element_face_parent_face(elem, face);
   }
   else {
     T8_ASSERT (0 <= face && face < P4EST_FACES);
@@ -2351,7 +2364,7 @@ t8_subelement_scheme_quad_c::t8_element_get_face_number_of_hypotenuse (const
 void
 t8_subelement_scheme_quad_c::t8_element_new (int length, t8_element_t **elem)
 {
-  /* allocate memory for a transiton cell */
+  /* allocate memory */
   t8_default_scheme_common_c::t8_element_new (length, elem);
 
   int                 elem_count;
