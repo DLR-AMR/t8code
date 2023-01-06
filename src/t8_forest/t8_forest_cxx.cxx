@@ -295,7 +295,16 @@ t8_forest_no_overlap (t8_forest_t forest)
     /* Iterate over all elements in current tree */
     for (t8_locidx_t ielem = 0; ielem < elems_in_tree - 1; ielem++) {
       /* Compare each two consecutive elements. If one element is
-       * the nearest common ancestor of the other, they overlap. */
+       * the nearest common ancestor (nca) of the other, they overlap.
+       * More detailed:
+       * Let e_a and e_b be two elements.
+       * If the level of e_a is equal to the level of the nca of e_a and e_b,
+       * then e_b is a descendant of e_a. 
+       * If the level of e_b is equal to the level of the nca of e_a and e_b,
+       * then e_a is a descendant of e_b. 
+       * Thus e_a and e_b overlap in both cases.
+       * Note: If e_a equals e_b, e_a is the descendant of e_b and vice versa.
+       * */
       const t8_element_t *element_a =
         t8_forest_get_element_in_tree (forest, itree, ielem);
       const t8_element_t *element_b =
