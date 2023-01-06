@@ -1927,21 +1927,27 @@ t8_forest_get_transition_cell_face_neighbor (t8_forest_t forest,
    */
 
   T8_ASSERT (forest->is_transitioned);
-
+  T8_ASSERT (neigh_scheme->t8_element_is_subelement(pseudo_neighbor));
 
   T8_ASSERT (element_index < forest->global_num_elements);
   t8_locidx_t         pseudo_neigh_index = element_index;
 
   /* get the subelement id of the pseudo neighbor */
   int                 pseudo_neighbor_sub_id =
-    ts->t8_element_get_subelement_id (pseudo_neighbor);
+    neigh_scheme->t8_element_get_subelement_id (pseudo_neighbor);
 
-  /* Get the subelement id of the real neighbor of leaf. 
+  /* Get the subelement id of the real neighbor of leaf.
    * This function will determine the sub_id of the real neighbor, given leaf, face and the pseudo_neighbor. 
    * This function is subelememt-scheme-dependent. */
-  int                 leaf_neighbor_sub_id =
-    ts->t8_element_find_neighbor_in_transition_cell (leaf, pseudo_neighbor,
-                                                     face);
+  int                 leaf_neighbor_sub_id;
+  if (ts == neigh_scheme) {
+    leaf_neighbor_sub_id =
+    neigh_scheme->t8_element_find_neighbor_in_transition_cell (leaf, pseudo_neighbor, face);
+  }
+  else {
+    /* TODO: implement solution */
+    SC_ABORT("Implement solution for this case.");
+  }
 
   if (!neighbor_is_ghost) {
     /* adjust the index of the pseudo neighbor to equal the index of the real neighbor. 
@@ -1993,11 +1999,11 @@ t8_forest_get_transition_cell_face_neighbor (t8_forest_t forest,
                                    ghost_element_index +
                                    search_direction * subelement_count);
 
-    if (ts->t8_element_get_subelement_id (check_neighbor) ==
+    if (neigh_scheme->t8_element_get_subelement_id (check_neighbor) ==
         leaf_neighbor_sub_id) {
       /* both elements should be siblings or equal */
-      T8_ASSERT (ts->t8_element_get_transition_type (check_neighbor) ==
-                 ts->t8_element_get_transition_type (pseudo_neighbor));
+      T8_ASSERT (neigh_scheme->t8_element_get_transition_type (check_neighbor) ==
+                 neigh_scheme->t8_element_get_transition_type (pseudo_neighbor));
 
       /* adjust element index */
       element_index = element_index + search_direction * subelement_count;
@@ -2121,10 +2127,6 @@ t8_forest_leaf_face_neighbors_transitioned (t8_forest_t forest, t8_locidx_t ltre
      * then we compute the single neighbor instead. */
     at_maxlevel =
       ts->t8_element_level (leaf) == t8_forest_get_maxlevel (forest);
-    /* TODO: this implementation assumes that a transitioned forest is conformal. 
-     * Implement a more general version of this part (part 2)) in which non-conformal transitioned 
-     * forests are allowed, such that new transition schemes can mainly be implemented
-     * on element level without touching the LFN function. */
     if (at_maxlevel) {
       /* If leaf has maxlevel or the forest is transitioned,
        * we know that the leaf element has at most one neighbor at each face */
@@ -2305,6 +2307,7 @@ t8_forest_leaf_face_neighbors_transitioned (t8_forest_t forest, t8_locidx_t ltre
         if (neigh_scheme->t8_element_is_subelement (ancestor)) {
           /* At this point, "ancestor" is a random subelement of the neighboring transition cell of leaf. */
           /* We need to identify the real subelement neighbor within this transition cell. */
+          // neigh_scheme->t8_element_debug_print(ancestor);
           t8_forest_get_transition_cell_face_neighbor (forest, ancestor, leaf,
                                                        element_index, face,
                                                        lneigh_treeid, neighbor_leafs,

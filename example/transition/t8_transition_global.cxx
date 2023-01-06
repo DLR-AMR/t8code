@@ -186,7 +186,7 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
 #if T8_ENABLE_DEBUG
         t8_productionf
           ("******************** Current element: ********************\n");
-        t8_productionf ("Current element has local index %i of %i\n",
+        t8_productionf ("Current element has local tree index %i of %i\n",
                         elem_count + 1, current_tree_num_elements);
         ts->t8_element_debug_print (current_element);
 #endif
@@ -269,8 +269,8 @@ t8_transition_global ()
   /* ************************************************* Case Settings ************************************************* */
 
   /* refinement setting */
-  int                 initlevel = 5;    /* initial uniform refinement level */
-  int                 adaptlevel = 3;
+  int                 initlevel = 1;    /* initial uniform refinement level */
+  int                 adaptlevel = 2;
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening (minlevel <= initlevel) */
   int                 maxlevel = initlevel + adaptlevel;        /* highest level allowed for refining */
 
@@ -279,10 +279,10 @@ t8_transition_global ()
   double              circ_midpoint_y = 0.0;
   double              circ_midpoint_z = 0.0;
   double              start_radius = 0.0;
-  double              band_width = 4.0;
+  double              band_width = 2.0;
 
-  int                 num_adaptations = 34; /* 1 for a single adapted forest */
-  double              radius_increase = 0.05;
+  int                 num_adaptations = 10; /* 1 for a single adapted forest */
+  double              radius_increase = 0.1;
 
   /* adaptation setting */
   int                 do_balance = 0;
@@ -290,8 +290,8 @@ t8_transition_global ()
 
   /* cmesh settings */
   int                 single_tree_mesh = 0;
-  int                 multiple_tree_mesh = 1, num_x_trees = 5, num_y_trees = 4;
-  int                 hybrid_tree_mesh = 0;
+  int                 multiple_tree_mesh = 0, num_x_trees = 5, num_y_trees = 4;
+  int                 hybrid_tree_mesh = 1;
   
   int                 periodic_boundary = 0;
 
@@ -311,7 +311,7 @@ t8_transition_global ()
 
   /* Monitoring (only available in debug configuration) */
   int                 get_LFN_stats = 1;
-  int                 get_LFN_elem_info = 0;
+  int                 get_LFN_elem_info = 1;
   int                 get_commit_stats = 1;
   int                 get_general_stats = 1;
 
@@ -325,7 +325,6 @@ t8_transition_global ()
     SC_CHECK_ABORT (do_ghost == 1, "Setting-check failed: set do_ghost to one when applying the LFN test");
     if (do_transition == 1) {
       SC_CHECK_ABORT(ghost_version == 1, "Setting-check failed: use ghost version 1 when applying the LFN test for transitioned forests.");
-      SC_CHECK_ABORT(hybrid_tree_mesh != 1, "Setting-check failed: LFN not implemented for transitioned hybrid meshes");
     }
   }
 
