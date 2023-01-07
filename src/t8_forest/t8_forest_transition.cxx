@@ -147,6 +147,9 @@ t8_forest_transition_entry (t8_forest_t forest,
 {
   t8_element_t       *current_element = elements[0];
 
+  T8_ASSERT (forest->set_subelements == 1);
+  T8_ASSERT (forest->is_transitioned == 0 && forest->set_from->is_transitioned == 0);
+
   /* TODO: there may be a better way for this than using switch statements and int functions */
 
   /* the current element decides over the refine function. Normally, this function returns one fixed value per 
@@ -162,7 +165,7 @@ t8_forest_transition_entry (t8_forest_t forest,
                                                   lelement_id, ts, is_family,
                                                   num_elements, elements);
     default:
-      SC_ABORT("This should nerver happen.");
+      SC_ABORT("The given eclass scheme must pecify a valid transition refine function.");
   }
 } /* end of t8_forest_transition_entry */
 
@@ -171,10 +174,9 @@ t8_forest_transition (t8_forest_t forest)
 {
   T8_ASSERT (forest->set_subelements == 1);
   T8_ASSERT (forest->is_transitioned == 0 && forest->set_from->is_transitioned == 0);
-  /* in the following, we will call forest_aapt to with the transition 
+  /* in the following, we will call forest_adapt to with the transition 
    * refinement function in order to transition the forest. The refinement is then
    * based on forest->set_from, which must be balanced. */
-  T8_ASSERT (t8_forest_is_balanced(forest->set_from));
 
   t8_global_productionf ("Into t8_forest_transition.\n");
 

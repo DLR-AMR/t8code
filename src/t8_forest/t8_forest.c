@@ -245,17 +245,14 @@ t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from,
 }
 
 void
-t8_forest_set_transition (t8_forest_t forest, const t8_forest_t set_from)
+t8_forest_set_transition (t8_forest_t forest, const t8_forest_t set_from, int set_transition_with_balance)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
 
   /* If forest is not balanced, balance now. 
    * This binary operation checks, whether the third bit from the right from 
    * forest->from_method is unequal to one. If so, set balanced is not set yet. */
-  if ((forest->from_method & (1 << 2)) >> 2 != 1) {
-    t8_productionf
-      ("This is forest_set_transition.\n"
-       "The forest might not be balanced and set_balance is not set yet. The set_transition function will set_balance with repartition now.\n");
+  if (set_transition_with_balance) {
     /* balance with repartition */
     t8_forest_set_balance (forest, set_from, 0);
   }

@@ -286,7 +286,7 @@ t8_transition_global ()
 
   /* adaptation setting */
   int                 do_balance = 0;
-  int                 do_transition = 1;
+  int                 do_transition = 1, set_transition_with_balance = 0; /* transitioned forests must not be balanced, but LFN wont work */
 
   /* cmesh settings */
   int                 single_tree_mesh = 0;
@@ -303,7 +303,7 @@ t8_transition_global ()
   int                 ghost_version = 1;        /* use v1 for transitioned forests */
 
   /* LFN settings */
-  int                 do_LFN_test = 1;
+  int                 do_LFN_test = 0;
 
   /* vtk setting */
   int                 do_vtk = 1;
@@ -325,6 +325,7 @@ t8_transition_global ()
     SC_CHECK_ABORT (do_ghost == 1, "Setting-check failed: set do_ghost to one when applying the LFN test");
     if (do_transition == 1) {
       SC_CHECK_ABORT(ghost_version == 1, "Setting-check failed: use ghost version 1 when applying the LFN test for transitioned forests.");
+      SC_CHECK_ABORT(set_transition_with_balance == 1, "LFN is not implemented for non-balanced forests.");
     }
   }
 
@@ -418,7 +419,7 @@ t8_transition_global ()
       t8_forest_set_balance (forest_adapt, forest, 0);
     }
     if (do_transition) {
-      t8_forest_set_transition (forest_adapt, forest);
+      t8_forest_set_transition (forest_adapt, forest, set_transition_with_balance);
     }
     if (do_ghost) {
       t8_forest_set_ghost_ext (forest_adapt, do_ghost, T8_GHOST_FACES,

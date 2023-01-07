@@ -1874,7 +1874,7 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem, int measure_time,
     did_balance = 1;
   }
   if (problem->transition) {
-    t8_forest_set_transition (problem->forest_adapt, NULL);
+    t8_forest_set_transition (problem->forest_adapt, NULL, 1);
   }
   /* We also want ghost elements in the new forest */
   t8_forest_set_ghost_ext (problem->forest_adapt, 1, T8_GHOST_FACES, 1);        /* need ghost version 1 for transition cells */
@@ -1992,7 +1992,7 @@ t8_advect_problem_adapt_init (t8_advect_problem_t * problem, int measure_time,
     did_balance = 1;
   }
   if (problem->transition) {
-    t8_forest_set_transition (problem->forest_adapt, NULL);
+    t8_forest_set_transition (problem->forest_adapt, NULL, 1);
   }
   /* We also want ghost elements in the new forest */
   t8_forest_set_ghost_ext (problem->forest_adapt, 1, T8_GHOST_FACES, 1);        /* need ghost version 1 for transition cells */

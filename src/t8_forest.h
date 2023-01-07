@@ -350,10 +350,13 @@ void                t8_forest_set_balance (t8_forest_t forest,
 /** Set a source forest to use subelements during commit, that will remove hanging faces from the adapted mesh.
  * \param [in, out] forest  The forest.
  * \param [in]      set_from A second forest that should be transitioned.
+ * \param [in]      set_transition_with_balance  If 1, then set_balance will be applied. If 0 and set_balance
+ *                                               has been used before, then balance will still be set (0 does not unset balance).
  * \note This feature is currently only available for the 2D quad scheme. 
  */
 void                t8_forest_set_transition (t8_forest_t forest,
-                                              const t8_forest_t set_from);
+                                              const t8_forest_t set_from,
+                                              int set_transition_with_balance);
 
 /** Enable or disable the creation of a layer of ghost elements.
  * On default no ghosts are created.
