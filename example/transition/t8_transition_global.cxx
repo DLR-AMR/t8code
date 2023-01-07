@@ -29,6 +29,7 @@
  */
 
 /* to switch between the default quad scheme and the transition implementation */
+#include "t8_eclass.h"
 #define DO_TRANSITION_QUAD_SCHEME 1
 
 #include "t8_forest.h"
@@ -130,6 +131,36 @@ t8_print_LFN_stats (int global_num_elements, int global_num_subelements,
   t8_productionf
     ("|++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|\n");
   t8_productionf ("\n");
+}
+
+void
+t8_print_vtk (t8_forest_t forest_adapt, char filename[BUFSIZ], int set_transition, int set_balance, int single_tree_mesh, int multiple_tree_mesh, int adaptation_count, t8_eclass_t eclass)
+{
+  if (set_transition) {
+    if (single_tree_mesh) snprintf (filename, BUFSIZ, "forest_transitioned_%i_%s",
+              adaptation_count, t8_eclass_to_string[eclass]);
+    else if (multiple_tree_mesh) snprintf (filename, BUFSIZ, "forest_transitioned_%i_%s",
+              adaptation_count, t8_eclass_to_string[T8_ECLASS_QUAD]);
+    else snprintf (filename, BUFSIZ, "forest_transitioned_%i_hybrid",
+              adaptation_count);
+  }
+  else if (set_balance) {
+    if (single_tree_mesh) snprintf (filename, BUFSIZ, "forest_balanced_%i_%s",
+              adaptation_count, t8_eclass_to_string[eclass]);
+    else if (multiple_tree_mesh) snprintf (filename, BUFSIZ, "forest_balanced_%i_%s",
+              adaptation_count, t8_eclass_to_string[T8_ECLASS_QUAD]);
+    else snprintf (filename, BUFSIZ, "forest_balanced_%i_hybrid",
+              adaptation_count);
+  }
+  else {
+    if (single_tree_mesh) snprintf (filename, BUFSIZ, "forest_adapted_%i_%s",
+              adaptation_count, t8_eclass_to_string[eclass]);
+    else if (multiple_tree_mesh) snprintf (filename, BUFSIZ, "forest_adapted_%i_%s",
+              adaptation_count, t8_eclass_to_string[T8_ECLASS_QUAD]);
+    else snprintf (filename, BUFSIZ, "forest_adapted_%i_hybrid",
+              adaptation_count);;
+  }
+  t8_forest_write_vtk (forest_adapt, filename);
 }
 
 /* Compute neighbors of all elements in all trees at all faces */
@@ -290,8 +321,8 @@ t8_transition_global ()
 
   /* cmesh settings */
   int                 single_tree_mesh = 0;
-  int                 multiple_tree_mesh = 0, num_x_trees = 5, num_y_trees = 4;
-  int                 hybrid_tree_mesh = 1;
+  int                 multiple_tree_mesh = 1, num_x_trees = 5, num_y_trees = 4;
+  int                 hybrid_tree_mesh = 0;
   
   int                 periodic_boundary = 0; /* use periodic boundaries */
 
@@ -303,7 +334,7 @@ t8_transition_global ()
   int                 ghost_version = 1;        /* use v1 for transitioned forests */
 
   /* LFN settings */
-  int                 do_LFN_test = 0;
+  int                 do_LFN_test = 1;
 
   /* vtk setting */
   int                 do_vtk = 1;
@@ -335,16 +366,20 @@ t8_transition_global ()
 
   /* building the cmesh, using the initlevel */
   if (single_tree_mesh) {
-    /* single quad cmesh */
+    /* construct a single tree quad cmesh */
     cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, periodic_boundary);
   }
   else if (multiple_tree_mesh) {
+    T8_ASSERT (eclass == T8_ECLASS_QUAD);
+    /* this is by default a 2D or 3D quad cmesh of multiple trees */
     p4est_connectivity_t *brick =
       p4est_connectivity_new_brick (num_x_trees, num_y_trees, periodic_boundary, periodic_boundary);
     cmesh = t8_cmesh_new_from_p4est (brick, sc_MPI_COMM_WORLD, 0);
     p4est_connectivity_destroy (brick);
   }
   else if (hybrid_tree_mesh) {
+    T8_ASSERT (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_TRIANGLE);
+    /* this is by default a hybrid 2D quad-triangle forest */
     cmesh = t8_cmesh_new_periodic_hybrid (sc_MPI_COMM_WORLD);
   }
   else {
@@ -443,19 +478,7 @@ t8_transition_global ()
     }
 
     if (do_vtk) {
-      if (set_transition) {
-        snprintf (filename, BUFSIZ, "forest_transitioned_%i_%s",
-                  adaptation_count, t8_eclass_to_string[eclass]);
-      }
-      else if (set_balance) {
-        snprintf (filename, BUFSIZ, "forest_balanced_%i_%s",
-                  adaptation_count, t8_eclass_to_string[eclass]);
-      }
-      else {
-        snprintf (filename, BUFSIZ, "forest_adapted_%i_%s",
-                  adaptation_count, t8_eclass_to_string[eclass]);
-      }
-      t8_forest_write_vtk (forest_adapt, filename);
+      t8_print_vtk (forest_adapt, filename, set_transition, set_balance, single_tree_mesh, multiple_tree_mesh, adaptation_count, eclass);
       t8_debugf ("~~~~~~~~~~ vtk has been constructed ~~~~~~~~~~\n");
     }
 
