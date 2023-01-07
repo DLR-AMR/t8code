@@ -46,7 +46,7 @@
 
 /* In this example, a simple refinement criteria is used to construct an adapted and transitioned forest. 
  * Afterwards, we iterate through all elements and all faces of the this forest in order to test the leaf_face_neighbor function that will determine all neighbor elements. */
- 
+
 typedef struct
 {
   double              mid_point[3];
@@ -68,44 +68,32 @@ t8_print_general_stats (double commit_time_total, int num_adaptations,
                         int global_num_elements_accum, double total_time,
                         double LFN_time_accum)
 {
-  t8_productionf ("\n");
   t8_productionf
-    ("|++++++++++++++++++++++++ Commit statistics | total +++++++++++++++++++++++++++|\n");
-  t8_productionf ("|    Average #elements:       %i\n",
-                  global_num_elements_accum / num_adaptations);
-  t8_productionf ("|    Time total [s]:          %.3f (%.2f %%)\n",
-                  total_time, 100.);
-  t8_productionf ("|    Step time average [s]:   %.3f\n",
-                  total_time / (double) num_adaptations);
-  t8_productionf ("|    LFN time total [s]:      %.3f (%.2f %%)\n",
-                  LFN_time_accum, 100. * LFN_time_accum / total_time);
-  t8_productionf ("|    LFN time average [s]:    %.3f\n",
-                  LFN_time_accum / (double) num_adaptations);
-  t8_productionf ("|    Commit time total [s]:   %.3f (%.2f %%)\n",
-                  commit_time_total, 100. * commit_time_total / total_time);
-  t8_productionf ("|    Commit time average [s]: %.3f\n",
-                  commit_time_total / (double) num_adaptations);
-  t8_productionf ("|    Rest [s]:                %.3f (%.2f %%)\n",
-                  total_time - LFN_time_accum - commit_time_total,
-                  100. * (total_time - LFN_time_accum -
-                          commit_time_total) / total_time);
-  t8_productionf
-    ("|++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|\n");
-  t8_productionf ("\n");
+    ("\n|++++++++++++++++++++++++ Commit statistics | total +++++++++++++++++++++++++++|\n"
+     "|    Average #elements:       %i\n"
+     "|    Time total [s]:          %.3f (%.2f %%)\n"
+     "|    Step time average [s]:   %.3f\n"
+     "|    LFN time total [s]:      %.3f (%.2f %%)\n"
+     "|    LFN time average [s]:    %.3f\n"
+     "|    Commit time total [s]:   %.3f (%.2f %%)\n"
+     "|    Commit time average [s]: %.3f\n"
+     "|    Rest [s]:                %.3f (%.2f %%)\n"
+     "|++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|\n\n",
+    global_num_elements_accum / num_adaptations, total_time, 100., total_time / (double) num_adaptations,
+    LFN_time_accum, 100. * LFN_time_accum / total_time, LFN_time_accum / (double) num_adaptations,
+    commit_time_total, 100. * commit_time_total / total_time, commit_time_total / (double) num_adaptations,
+    total_time - LFN_time_accum - commit_time_total, 100. * (total_time - LFN_time_accum - commit_time_total) / total_time);
 }
 
 void
 t8_print_commit_stats (double commit_time, int num_adaptations,
                        int adaptation_count)
 {
-  t8_productionf ("\n");
   t8_productionf
-    ("|++++++++++++++++++++ Commit statistics | adaptation %i of %i +++++++++++++++++++|\n",
-     adaptation_count, num_adaptations);
-  t8_productionf ("|    Commit time total [s]: %.9f\n", commit_time);
-  t8_productionf
-    ("|++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|\n");
-  t8_productionf ("\n");
+    ("\n|++++++++++++++++++++ Commit statistics | adaptation %i of %i +++++++++++++++++++|\n"
+     "|    Commit time total [s]: %.9f\n"
+     "|++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|\n\n",
+    adaptation_count, num_adaptations, commit_time);
 }
 
 void
@@ -115,22 +103,16 @@ t8_print_LFN_stats (int global_num_elements, int global_num_subelements,
                     double time_LFN_per_call, int adaptation_count,
                     int num_adaptations)
 {
-  t8_productionf ("\n");
   t8_productionf
-    ("|+++++++++++++++++++++ LFN statistics | adaptation %i of %i +++++++++++++++++++++|\n",
-     adaptation_count, num_adaptations);
-     t8_productionf
-    ("|    Global #elements:         %i (#quads: %i, #subelements: %i)\n",
-     global_num_elements, global_num_elements-global_num_subelements, global_num_subelements);
-  t8_productionf
-    ("|    Local #elements:          %i (#quads: %i, #subelements: %i)\n",
-     local_num_elements, local_num_elements-local_num_subelements, local_num_subelements);
-  t8_productionf ("|    #LFN calls:               %i\n", LFN_call_count);
-  t8_productionf ("|    LFN runtime total [s]:    %f\n", time_LFN);
-  t8_productionf ("|    LFN runtime per call [s]: %.9f\n", time_LFN_per_call);
-  t8_productionf
-    ("|++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|\n");
-  t8_productionf ("\n");
+    ("\n|+++++++++++++++++++++ LFN statistics | adaptation %i of %i +++++++++++++++++++++|\n"
+     "|    Global #elements:         %i (#quads: %i, #subelements: %i)\n"
+     "|    Local #elements:          %i (#quads: %i, #subelements: %i)\n"
+     "|    #LFN calls:               %i\n"
+     "|    LFN runtime total [s]:    %f\n"
+     "|    LFN runtime per call [s]: %.9f\n"
+     "|++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|\n\n",
+    adaptation_count, num_adaptations, global_num_elements, global_num_elements-global_num_subelements, global_num_subelements,
+    local_num_elements, local_num_elements-local_num_subelements, local_num_subelements, LFN_call_count, time_LFN, time_LFN_per_call);
 }
 
 void
@@ -215,8 +197,7 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
 
       if (get_LFN_elem_info) {  /* print current element */
 #if T8_ENABLE_DEBUG
-        t8_productionf
-          ("******************** Current element: ********************\n");
+        t8_productionf ("Current element:\n");
         t8_productionf ("Current element has local tree index %i of %i\n",
                         elem_count + 1, current_tree_num_elements);
         ts->t8_element_debug_print (current_element);
@@ -240,7 +221,7 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
             for (neighbor_count = 0; neighbor_count < num_neighbors;
                  neighbor_count++) {
 #if T8_ENABLE_DEBUG
-              t8_productionf ("***** Neighbor %i of %i at face %i: *****\n",
+              t8_productionf ("Neighbor %i of %i at face %i:\n",
                               neighbor_count + 1, num_neighbors, face_id);
               ts->t8_element_debug_print (neighbor_leafs[neighbor_count]);
 #endif
@@ -257,7 +238,7 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
           if (get_LFN_elem_info) {
 #if T8_ENABLE_DEBUG
             /* no neighbor in this case */
-            t8_productionf ("***** Neighbor at face %i: *****\n", face_id);
+            t8_productionf ("Neighbor at face %i:\n", face_id);
             t8_productionf ("There is no neighbor (domain boundary).\n");
             t8_productionf ("\n");
 #endif
@@ -284,7 +265,7 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
 
 /* Initializing and adapting a forest */
 static void
-t8_transition_global ()
+t8_transition_global (void)
 {
   t8_debugf
     ("~~~~~~~~~~ Into the t8_transition_global function ~~~~~~~~~~\n");
