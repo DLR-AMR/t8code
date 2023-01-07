@@ -1911,35 +1911,37 @@ t8_forest_get_transition_cell_face_neighbor (t8_forest_t forest,
                                              t8_eclass_scheme_c *neigh_scheme,
                                              int * num_neighbors)
 {
-  /* Consider the following situation:
-   *                           
-   *         x - - x - - x - - - - - x
-   *         |           | \ pnei  / |
-   *         |           |   \   /   |
-   *         x   leaf  f1| nei x     |
-   *         |           |   / | \   |
-   *         |           | /   |   \ |
-   *         x - - x - - x - - x - - x 
+  /* The following situations (regarding leaf) are possible:
    *
-   * We are looking for the neighbor (nei) of leaf at f1.
+   *              leaf is standard             leaf is subelement           leaf is another scheme
+   *         x - - - - - x - - - - - x      x - - - - -x - - - - - x                 x - - - - - x
+   *         |           | \ pnei  / |      | \       /| \ pnei  / |                / | \ pnei  / |
+   *         |           |   \   /   |      |   \   / f|   \   /   |              /   |   \   /   |
+   *         |   leaf   f| nei x     |      x - - xleaf| nei x     |            /    f| nei x     |
+   *         |           |   / | \   |      |   /   \  |   / | \   |          /       |   / | \   |
+   *         |           | /   |   \ |      | /       \| /   |   \ |        /  leaf   | /   |   \ |
+   *         x - - - - - x - - x - - x      x - - - - -x - - x - - x      x - - - - - x - - x - - x 
+   *             ts != neigh_scheme             ts == neigh_scheme            ts != neigh_scheme
+   *
+   * We are looking for the neighbor (nei) of leaf at f.
    * Given is a random element of the neighboring transition cell (pnei), which we call pseudo_neighbor for now.
-   * This function combines information of leaf, f1 and pnei to identify and return the real face neighbor nei.
-   */
+   * The aim of this function is to identify the real subelement neighbor (nei) of leaf, given leaf, pseudo_neighbor and f. */
+
+  const t8_element_t *neighbor;
+  t8_locidx_t         pseudo_neighbor_index;
+  int                 pseudo_neighbor_sub_id;
+  int                 leaf_neighbor_sub_id;
 
   T8_ASSERT (forest->is_transitioned);
   T8_ASSERT (neigh_scheme->t8_element_is_subelement(pseudo_neighbor));
-
   T8_ASSERT (element_index < forest->global_num_elements);
-  t8_locidx_t         pseudo_neigh_index = element_index;
-
-  /* get the subelement id of the pseudo neighbor */
-  int                 pseudo_neighbor_sub_id =
-    neigh_scheme->t8_element_get_subelement_id (pseudo_neighbor);
+  
+  pseudo_neighbor_index = element_index;
+  pseudo_neighbor_sub_id = neigh_scheme->t8_element_get_subelement_id (pseudo_neighbor);
 
   /* Get the subelement id of the real neighbor of leaf.
    * This function will determine the sub_id of the real neighbor, given leaf, face and the pseudo_neighbor. 
    * This function is subelememt-scheme-dependent. */
-  int                 leaf_neighbor_sub_id;
   if (ts == neigh_scheme) {
     leaf_neighbor_sub_id =
     neigh_scheme->t8_element_find_neighbor_in_transition_cell (leaf, pseudo_neighbor, face);
@@ -1955,10 +1957,9 @@ t8_forest_get_transition_cell_face_neighbor (t8_forest_t forest,
      * a separate t8_element function. The important - and subelement-scheme-dependent - 
      * aspect is the computation of leaf_neighbor_sub_id above. */
     element_index =
-      pseudo_neigh_index - pseudo_neighbor_sub_id + leaf_neighbor_sub_id;
+      pseudo_neighbor_index - pseudo_neighbor_sub_id + leaf_neighbor_sub_id;
 
     /* get the real neighbor */
-    const t8_element_t *neighbor;
     neighbor = t8_forest_get_tree_element (t8_forest_get_tree
                                            (forest, lneigh_treeid),
                                            element_index -
@@ -2142,12 +2143,13 @@ t8_forest_leaf_face_neighbors_transitioned (t8_forest_t forest, t8_locidx_t ltre
     }
     else {
       /* At this point, we expect an arbitrary number of neighbors. Our transition implementation is
-       * build for this case and does not require a conformal mesh.
-       * But note the following: LFN is only implemented for balanced meshes and therefore uses the concept of 
+       * build for this case and does not require a conformal mesh. */
+
+      /* Note the following: LFN is only implemented for balanced meshes and therefore uses the concept of 
        * virtual half face neighbors. This concept WILL NOT WORK for a transition scheme whose transition cells enable more 
        * neighbors than the maximum number of neighbors per element in the forests pure balanced version.
        * This is because in such cases the concept of half face neighbors would not be sufficient to depict all 
-       * neighbor subelements in a neighboring transition cell. 
+       * neighbor subelements in a neighboring transition cell.
        * TODO: think of a solution for this issue to enable more complex transition cells, consider for example the following situation:
        * 
        *             quad   transition cell
