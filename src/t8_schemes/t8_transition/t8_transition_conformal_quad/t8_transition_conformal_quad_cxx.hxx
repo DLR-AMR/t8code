@@ -82,6 +82,8 @@ typedef t8_quad_with_subelements t8_pquad_t;
 /* this is the unique identifier for the transition_conformal_quad refine function */
 #define T8_TRANSITION_CONFORMAL_QUAD_REFINE_FUNCTION 1
 
+#define T8_TRANSITION_IS_IMPLEMENTED 1
+
 /** Return the toplevel dimension. */
 #define T8_QUAD_GET_TDIM(quad) ((int) (quad)->pad8)
 
@@ -372,7 +374,7 @@ public:
                                                             transition_type);
 
 /** Test wheter a given element is a subelement or not */
-  virtual bool        t8_element_is_subelement (const t8_element *
+  virtual int        t8_element_is_subelement (const t8_element *
                                                 elem) const;
 
 /** Get the subelement type of elem */
@@ -398,6 +400,9 @@ public:
   virtual int         t8_element_get_face_number_of_hypotenuse (const
                                                                 t8_element_t
                                                                 *elem);
+
+/** Return 1 if the eclass scheme has an implementation for subelements. Return 0 otherwise. */
+  virtual int        t8_element_supports_transitioning (void);
 
 /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
    * Returns false otherwise.

@@ -290,10 +290,10 @@ t8_transition_global ()
 
   /* cmesh settings */
   int                 single_tree_mesh = 0;
-  int                 multiple_tree_mesh = 1, num_x_trees = 5, num_y_trees = 4;
-  int                 hybrid_tree_mesh = 0;
+  int                 multiple_tree_mesh = 0, num_x_trees = 5, num_y_trees = 4;
+  int                 hybrid_tree_mesh = 1;
   
-  int                 periodic_boundary = 1; /* use periodic boundaries */
+  int                 periodic_boundary = 0; /* use periodic boundaries */
 
   /* partition setting */
   int                 do_partition = 1;
@@ -303,7 +303,7 @@ t8_transition_global ()
   int                 ghost_version = 1;        /* use v1 for transitioned forests */
 
   /* LFN settings */
-  int                 do_LFN_test = 1;
+  int                 do_LFN_test = 0;
 
   /* vtk setting */
   int                 do_vtk = 1;
@@ -316,7 +316,7 @@ t8_transition_global ()
   int                 get_general_stats = 1;
 
   /* check settings */
-  SC_CHECK_ABORT(!(DO_TRANSITION_QUAD_SCHEME == 0 && set_transition == 1), "Setting-Check failed: you are trying to use set_transition for a scheme without transition implementation");
+  // SC_CHECK_ABORT(!(DO_TRANSITION_QUAD_SCHEME == 0 && set_transition == 1), "Setting-Check failed: you are trying to use set_transition for a scheme without transition implementation");
   SC_CHECK_ABORT (num_adaptations > 0, "Setting-Check failed: Set num_adaptations > 0");
   SC_CHECK_ABORT (single_tree_mesh + multiple_tree_mesh + hybrid_tree_mesh == 1,
                   "Setting-check failed: choose only one of {single_tree, multiple_tree, hybrid_cmesh}");

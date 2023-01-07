@@ -20,6 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <cstdint>
 #include <sc_functions.h>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx>
 
@@ -239,7 +240,7 @@ t8_default_scheme_common_c::t8_element_get_sibling_neighbor_in_transition_cell (
   SC_ABORT ("This function is not implemented for the given scheme.\n");
 }
 
-bool
+int
 t8_default_scheme_common_c::t8_element_is_subelement (const t8_element * elem) const
 {
   /* We implement this function since it is a "check" function and 
@@ -249,7 +250,14 @@ t8_default_scheme_common_c::t8_element_is_subelement (const t8_element * elem) c
   /* No subelements are implemented and therefore we return false meaning "is no subelement". */
   t8_debugf
     ("This is the default_common implementation of the t8_element_is_subelement check.\n");
-  return false;
+  return 0;
+}
+
+int
+t8_default_scheme_common_c::t8_element_supports_transitioning (void)
+{
+  /* This is the default common implementation - therefore, transitioning is not implemented for the given scheme that is calling this function */
+  return 0;
 }
 
 int

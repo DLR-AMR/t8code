@@ -1948,7 +1948,7 @@ t8_subelement_scheme_quad_c::t8_element_copy_subelement_values (const
   pquad_w_sub_dest->subelement_id = pquad_w_sub_source->subelement_id;
 }
 
-bool
+int
 t8_subelement_scheme_quad_c::t8_element_is_subelement (const
                                                        t8_element *
                                                        elem) const
@@ -2403,6 +2403,12 @@ t8_subelement_scheme_quad_c::t8_element_init (int length, t8_element_t *elem,
     }
 #endif
   }
+}
+
+int
+t8_subelement_scheme_quad_c::t8_element_supports_transitioning (void)
+{
+  return T8_TRANSITION_IS_IMPLEMENTED;
 }
 
 #ifdef T8_ENABLE_DEBUG

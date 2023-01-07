@@ -80,6 +80,38 @@ t8_forest_is_initialized (t8_forest_t forest)
   return 1;
 }
 
+/** Check whether at least one eclass scheme of forest supports transitioning
+ * \param [in] forest           A forest
+ * \return                      True if at least one eclass scheme in forest has an implementation for subelements
+ */
+int
+t8_forest_supports_transitioning (t8_forest_t forest)
+{
+  int                 supports_transition = 0;
+  int                 supports_transition_all_procs = 0;  /* Result over all procs */
+  int                 int_eclass;
+  int                 mpiret;
+  t8_eclass_scheme_c *tscheme;
+
+  /* Iterate over all eclasses */
+  for (int_eclass = (int) T8_ECLASS_ZERO; int_eclass < (int) T8_ECLASS_COUNT;
+       int_eclass++) {
+    /* If the forest has trees of the current eclass, check if elements of this
+     * eclass supports transitioning. */
+    if (forest->cmesh->num_local_trees_per_eclass[int_eclass] > 0) {
+      tscheme = forest->scheme_cxx->eclass_schemes[int_eclass];
+      supports_transition = supports_transition || t8_element_supports_transitioning (tscheme);
+    }
+  }
+  /* Combine the process-local results via a logic or and distribute the
+   * result over all procs (in the communicator).*/
+  mpiret = sc_MPI_Allreduce (&supports_transition, &supports_transition_all_procs, 1, sc_MPI_INT,
+                             sc_MPI_LOR, forest->mpicomm);
+  SC_CHECK_MPI (mpiret);
+
+  return supports_transition_all_procs;
+}
+
 int
 t8_forest_is_committed (t8_forest_t forest)
 {
@@ -248,10 +280,8 @@ void
 t8_forest_set_transition (t8_forest_t forest, const t8_forest_t set_from, int set_transition_with_balance)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
+  T8_ASSERT (t8_forest_supports_transitioning (set_from));
 
-  /* If forest is not balanced, balance now. 
-   * This binary operation checks, whether the third bit from the right from 
-   * forest->from_method is unequal to one. If so, set balanced is not set yet. */
   if (set_transition_with_balance) {
     /* balance with repartition */
     t8_forest_set_balance (forest, set_from, 0);

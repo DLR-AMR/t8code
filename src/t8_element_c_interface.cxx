@@ -47,6 +47,14 @@ t8_element_refines_irregular (t8_eclass_scheme_c *ts)
 }
 
 int
+t8_element_supports_transitioning (t8_eclass_scheme_c *ts)
+{
+  T8_ASSERT (ts != NULL);
+
+  return ts->t8_element_supports_transitioning ();
+}
+
+int
 t8_element_maxlevel (t8_eclass_scheme_c *ts)
 {
   T8_ASSERT (ts != NULL);

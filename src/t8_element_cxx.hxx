@@ -665,7 +665,7 @@ public:
    *  \param [in] elem A valid element 
    *  \return true if elem is a subelement 
    */
-  virtual bool        t8_element_is_subelement (const t8_element *
+  virtual int         t8_element_is_subelement (const t8_element *
                                                 elem) const = 0;
 
   /** Check whether the neighbors of an element at a specic face are siblings
@@ -718,6 +718,9 @@ public:
    */
   virtual int         t8_element_get_subelement_id (const
                                                     t8_element * elem) = 0;
+
+  /** Return 1 if the eclass scheme has an implementation for subelements. Return 0 otherwise. */
+  virtual int t8_element_supports_transitioning (void) = 0;
 
   /** Return the subelement id of the neighbor subelement of elem at face elem_face
   *   that is a sibling of the subelement neigh. 
