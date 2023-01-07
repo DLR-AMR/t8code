@@ -46,7 +46,7 @@
 
 /* In this example, a simple refinement criteria is used to construct an adapted and transitioned forest. 
  * Afterwards, we iterate through all elements and all faces of the this forest in order to test the leaf_face_neighbor function that will determine all neighbor elements. */
-
+ 
 typedef struct
 {
   double              mid_point[3];
@@ -346,8 +346,8 @@ t8_transition_global ()
   int                 get_commit_stats = 1;
   int                 get_general_stats = 1;
 
-  /* check settings */
-  // SC_CHECK_ABORT(!(DO_TRANSITION_QUAD_SCHEME == 0 && set_transition == 1), "Setting-Check failed: you are trying to use set_transition for a scheme without transition implementation");
+  /* ************************************** Check settings ************************************** */
+
   SC_CHECK_ABORT (num_adaptations > 0, "Setting-Check failed: Set num_adaptations > 0");
   SC_CHECK_ABORT (single_tree_mesh + multiple_tree_mesh + hybrid_tree_mesh == 1,
                   "Setting-check failed: choose only one of {single_tree, multiple_tree, hybrid_cmesh}");
@@ -360,7 +360,24 @@ t8_transition_global ()
     }
   }
 
-  /* *************************************************************************************************************** */
+  /* ************************************** Initializing refinement criterion ************************************** */
+
+  /* user-data (minlevel, maxlevel) */
+  t8_example_level_set_struct_t ls_data;
+  t8_basic_sphere_data_t sdata;
+
+  /* Midpoint and radius of a sphere */
+  sdata.mid_point[0] = circ_midpoint_x;
+  sdata.mid_point[1] = circ_midpoint_y;
+  sdata.mid_point[2] = circ_midpoint_z;
+  sdata.radius = start_radius;
+
+  /* refinement parameter */
+  ls_data.band_width = band_width;
+  ls_data.L = t8_distance_to_sphere;
+  ls_data.min_level = minlevel;
+  ls_data.max_level = maxlevel;
+  ls_data.udata = &sdata;
 
   /* ********************************************* Initializing cmesh ********************************************** */
 
@@ -408,25 +425,6 @@ t8_transition_global ()
       t8_forest_write_vtk (forest, filename);
       t8_debugf ("~~~~~~~~~~ vtk of cmesh has been constructed ~~~~~~~~~~\n");
     }
-
-  /* ************************************** Initializing refinement criterion ************************************** */
-
-  /* user-data (minlevel, maxlevel) */
-  t8_example_level_set_struct_t ls_data;
-  t8_basic_sphere_data_t sdata;
-
-  /* Midpoint and radius of a sphere */
-  sdata.mid_point[0] = circ_midpoint_x;
-  sdata.mid_point[1] = circ_midpoint_y;
-  sdata.mid_point[2] = circ_midpoint_z;
-  sdata.radius = start_radius;
-
-  /* refinement parameter */
-  ls_data.band_width = band_width;
-  ls_data.L = t8_distance_to_sphere;
-  ls_data.min_level = minlevel;
-  ls_data.max_level = maxlevel;
-  ls_data.udata = &sdata;
 
   /* ********************************** Adaptation (possibly with multiple steps) ************************************ */
 
