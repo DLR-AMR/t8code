@@ -285,15 +285,15 @@ t8_transition_global ()
   double              radius_increase = 0.1;
 
   /* adaptation setting */
-  int                 do_balance = 0;
-  int                 do_transition = 1, set_transition_with_balance = 0; /* transitioned forests must not be balanced, but LFN wont work */
+  int                 set_balance = 1;
+  int                 set_transition = 1;
 
   /* cmesh settings */
   int                 single_tree_mesh = 0;
   int                 multiple_tree_mesh = 1, num_x_trees = 5, num_y_trees = 4;
   int                 hybrid_tree_mesh = 0;
   
-  int                 periodic_boundary = 0;
+  int                 periodic_boundary = 1; /* use periodic boundaries */
 
   /* partition setting */
   int                 do_partition = 1;
@@ -303,7 +303,7 @@ t8_transition_global ()
   int                 ghost_version = 1;        /* use v1 for transitioned forests */
 
   /* LFN settings */
-  int                 do_LFN_test = 0;
+  int                 do_LFN_test = 1;
 
   /* vtk setting */
   int                 do_vtk = 1;
@@ -316,16 +316,16 @@ t8_transition_global ()
   int                 get_general_stats = 1;
 
   /* check settings */
-  SC_CHECK_ABORT(!(DO_TRANSITION_QUAD_SCHEME == 0 && do_transition == 1), "Setting-Check failed: you are trying to use set_transition for a scheme without transition implementation");
+  SC_CHECK_ABORT(!(DO_TRANSITION_QUAD_SCHEME == 0 && set_transition == 1), "Setting-Check failed: you are trying to use set_transition for a scheme without transition implementation");
   SC_CHECK_ABORT (num_adaptations > 0, "Setting-Check failed: Set num_adaptations > 0");
-  SC_CHECK_ABORT (do_balance + do_transition == 1, "Setting-check failed: only choose one of {do_balance, do_transition}");
   SC_CHECK_ABORT (single_tree_mesh + multiple_tree_mesh + hybrid_tree_mesh == 1,
                   "Setting-check failed: choose only one of {single_tree, multiple_tree, hybrid_cmesh}");
   if (do_LFN_test == 1) {
+    SC_CHECK_ABORT(set_balance == 1, "LFN is not implemented for non-balanced forests.");
     SC_CHECK_ABORT (do_ghost == 1, "Setting-check failed: set do_ghost to one when applying the LFN test");
-    if (do_transition == 1) {
+    if (set_transition == 1) {
       SC_CHECK_ABORT(ghost_version == 1, "Setting-check failed: use ghost version 1 when applying the LFN test for transitioned forests.");
-      SC_CHECK_ABORT(set_transition_with_balance == 1, "LFN is not implemented for non-balanced forests.");
+
     }
   }
 
@@ -415,11 +415,11 @@ t8_transition_global ()
     t8_forest_set_user_data (forest_adapt, &ls_data);
     t8_forest_set_adapt (forest_adapt, forest, t8_common_adapt_level_set, 1);
 
-    if (do_balance) {
+    if (set_balance && !set_transition) {
       t8_forest_set_balance (forest_adapt, forest, 0);
     }
-    if (do_transition) {
-      t8_forest_set_transition (forest_adapt, forest, set_transition_with_balance);
+    if (set_transition) {
+      t8_forest_set_transition (forest_adapt, forest, set_balance);
     }
     if (do_ghost) {
       t8_forest_set_ghost_ext (forest_adapt, do_ghost, T8_GHOST_FACES,
@@ -443,11 +443,11 @@ t8_transition_global ()
     }
 
     if (do_vtk) {
-      if (do_transition) {
+      if (set_transition) {
         snprintf (filename, BUFSIZ, "forest_transitioned_%i_%s",
                   adaptation_count, t8_eclass_to_string[eclass]);
       }
-      else if (do_balance) {
+      else if (set_balance) {
         snprintf (filename, BUFSIZ, "forest_balanced_%i_%s",
                   adaptation_count, t8_eclass_to_string[eclass]);
       }
