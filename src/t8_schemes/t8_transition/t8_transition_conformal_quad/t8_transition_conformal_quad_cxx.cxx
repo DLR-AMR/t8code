@@ -775,6 +775,7 @@ t8_subelement_scheme_quad_c::t8_element_children_at_face (const t8_element_t
 
   /* if elem is a quad */
   if (!t8_element_is_subelement (elem)) {
+    T8_ASSERT (num_children == 2);
     /*
      * Compute the child id of the first and second child at the face.
      *
@@ -828,6 +829,7 @@ t8_subelement_scheme_quad_c::t8_element_children_at_face (const t8_element_t
   /* elem is a subelement */
   else {
     T8_ASSERT (face == 1);
+    T8_ASSERT (num_children == 1);
     /* we implement this function recursive: 
      *
      *         x - - - - - a        x - - - - - a 
