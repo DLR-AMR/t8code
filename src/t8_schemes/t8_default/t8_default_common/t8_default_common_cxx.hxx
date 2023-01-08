@@ -118,42 +118,50 @@ public:
    *  \param [in] elem_face A valid face 
    *  \return true if the neighbor of elem at face elem_face is a sibling.
    */
-  virtual int        t8_element_neighbor_is_sibling (const t8_element *elem,
-                                                     const int elem_face) const;
+  virtual int         t8_element_neighbor_is_sibling (const t8_element * elem,
+                                                      const int elem_face)
+    const;
 
   /** Check whether the neighbors of an element at a specic face are siblings
    *  \param [in] elem A valid element 
    *  \param [in] elem_face A valid face 
    *  \return return the number of sibling neighbors at a given face.
    */
-  virtual int        t8_element_get_num_sibling_neighbors_at_face (const t8_element *elem,
-                                                                   const int elem_face) const;
+  virtual int         t8_element_get_num_sibling_neighbors_at_face (const
+                                                                    t8_element
+                                                                    * elem,
+                                                                    const int
+                                                                    elem_face)
+    const;
 
   /** Return zero refine value for schemes that do not have a transition implementation.
    *  \param [in] elem A valid element 
    *  \return Integer, used as the refine value during transition adaptation.
    */
-  virtual int        t8_element_get_transition_refine_identifier (void) const;                                                  
+  virtual int         t8_element_get_transition_refine_identifier (void)
+    const;
 
-
-  virtual void t8_element_get_sibling_neighbor_in_transition_cell (const t8_element_t *elem,
-                                                                   const int face,
-                                                                   const int num_neighbors,
-                                                                   t8_element_t *neighbor_at_face[],
-                                                                   int *neigh_face[]);
+  virtual void       
+    t8_element_get_sibling_neighbor_in_transition_cell (const t8_element_t
+                                                        *elem, const int face,
+                                                        const int
+                                                        num_neighbors,
+                                                        t8_element_t
+                                                        *neighbor_at_face[],
+                                                        int *neigh_face[]);
 
   /** Check whether a given element is a subelement
    *  \param [in] elem A valid element 
    *  \return true if elem is a subelement 
    */
-  virtual int        t8_element_is_subelement (const t8_element *
+  virtual int         t8_element_is_subelement (const t8_element *
                                                 elem) const;
 
   /** Return 1 if the eclass scheme has an implementation for subelements. Return 0 otherwise. */
-  virtual int        t8_element_scheme_supports_transitioning (void);
+  virtual int         t8_element_scheme_supports_transitioning (void);
 
   /** Return 1 if the eclass scheme has an implementation for subelements which is conformal. */
-  virtual int        t8_element_transition_scheme_is_conformal (void);
+  virtual int         t8_element_transition_scheme_is_conformal (void);
 
   /** Return the number of subelements in a transition cell of type transition_type
    *  \param [in] transition_type The subelement type as an integer

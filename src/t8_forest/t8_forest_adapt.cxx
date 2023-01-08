@@ -184,14 +184,17 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
  * independent of the specific refine function that has been applied before. This function
  * checks if these rules are fulfilled and may change the refine value. */
 void
-t8_forest_adjust_refine_for_transitioned_forests (const t8_forest_t forest, 
-                                                  t8_eclass_scheme_c* tscheme,
-                                                  const t8_element_t* current_element,
+t8_forest_adjust_refine_for_transitioned_forests (const t8_forest_t forest,
+                                                  t8_eclass_scheme_c *tscheme,
+                                                  const t8_element_t
+                                                  *current_element,
                                                   const t8_locidx_t ltree_id,
-                                                  int* prefine)
+                                                  int *prefine)
 {
   /* refine values >1 are only allowed for eclass schemes that support transitioning */
-  T8_ASSERT (!(tscheme->t8_element_get_transition_refine_identifier() == 0 && *prefine > 1));
+  T8_ASSERT (!
+             (tscheme->t8_element_get_transition_refine_identifier () == 0
+              && *prefine > 1));
 
   /* Existing transition cells must be removed during adaptation.
    * We establish the rule to coarsen a transition cell back to its parent in case of refine = 0. */
@@ -200,8 +203,7 @@ t8_forest_adjust_refine_for_transitioned_forests (const t8_forest_t forest,
      * coarsen it back to its parent quad and skip all of its following sibling subelements. */
     T8_ASSERT (forest->set_from->is_transitioned == 1);
     T8_ASSERT (*prefine >= -1 && *prefine <= 1);
-    T8_ASSERT (tscheme->t8_element_get_subelement_id (current_element) ==
-                0);
+    T8_ASSERT (tscheme->t8_element_get_subelement_id (current_element) == 0);
     *prefine = -1;
   }
 
@@ -377,8 +379,11 @@ t8_forest_adapt (t8_forest_t forest)
                                      elements_from);
 
       /* make adjustments of the refine value in the context of transitioned forests */
-      if (forest->set_from->is_transitioned == 1 || forest->set_subelements == 1) {
-        t8_forest_adjust_refine_for_transitioned_forests (forest, tscheme, current_element, ltree_id, &refine);
+      if (forest->set_from->is_transitioned == 1
+          || forest->set_subelements == 1) {
+        t8_forest_adjust_refine_for_transitioned_forests (forest, tscheme,
+                                                          current_element,
+                                                          ltree_id, &refine);
       }
 
 #ifdef T8_ENABLE_DEBUG
@@ -554,7 +559,7 @@ t8_forest_adapt (t8_forest_t forest)
     /* clean up */
     T8_FREE (elements);
     T8_FREE (elements_from);
-  } /* end of tree loop */
+  }                             /* end of tree loop */
   if (forest->set_adapt_recursive) {
     /* clean up */
     sc_list_destroy (refine_list);

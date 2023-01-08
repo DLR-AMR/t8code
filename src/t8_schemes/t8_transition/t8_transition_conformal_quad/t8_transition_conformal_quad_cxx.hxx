@@ -191,15 +191,19 @@ public:
                                                     const int face);
 
   /** Return the number of children of an element's face when the element is refined. */
-  virtual int         t8_element_neighbor_is_sibling (const t8_element_t *elem,
-                                                      int face) const;
+  virtual int         t8_element_neighbor_is_sibling (const t8_element_t
+                                                      *elem, int face) const;
 
   /** Return the number of sibling neighbors at a given face. */
-  virtual int         t8_element_get_num_sibling_neighbors_at_face (const t8_element_t *elem,
-                                                                    int face) const;
+  virtual int         t8_element_get_num_sibling_neighbors_at_face (const
+                                                                    t8_element_t
+                                                                    *elem,
+                                                                    int face)
+    const;
 
   /** Return zero refine value for schemes that do not have a transition implementation. */
-  virtual int        t8_element_get_transition_refine_identifier (void) const;                                                  
+  virtual int         t8_element_get_transition_refine_identifier (void)
+    const;
 
   /** Return the corner number of an element's face corner. */
   virtual int         t8_element_get_face_corner (const t8_element_t *element,
@@ -214,11 +218,14 @@ public:
                                         int childid, t8_element_t *child);
 
   /** Construct all sibling neighbors of elem at face - it is required that sibling neighbors of elem at face exist */
-  virtual void        t8_element_get_sibling_neighbor_in_transition_cell (const t8_element_t *elem,
-                                                                          const int face,
-                                                                          const int num_neighbors,
-                                                                          t8_element_t *neighbor_at_face[],
-                                                                          int *neigh_face[]);
+  virtual void       
+    t8_element_get_sibling_neighbor_in_transition_cell (const t8_element_t
+                                                        *elem, const int face,
+                                                        const int
+                                                        num_neighbors,
+                                                        t8_element_t
+                                                        *neighbor_at_face[],
+                                                        int *neigh_face[]);
 
 /** Construct all children of a given element. */
   virtual void        t8_element_children (const t8_element_t *elem,
@@ -375,7 +382,7 @@ public:
                                                             transition_type);
 
 /** Test wheter a given element is a subelement or not */
-  virtual int        t8_element_is_subelement (const t8_element *
+  virtual int         t8_element_is_subelement (const t8_element *
                                                 elem) const;
 
 /** Get the subelement type of elem */
@@ -403,10 +410,10 @@ public:
                                                                 *elem);
 
 /** Return 1 if the eclass scheme has an implementation for subelements. Return 0 otherwise. */
-  virtual int        t8_element_scheme_supports_transitioning (void);
+  virtual int         t8_element_scheme_supports_transitioning (void);
 
 /** Return 1 if the eclass scheme has an implementation for subelements. Return 0 otherwise. */
-  virtual int        t8_element_transition_scheme_is_conformal (void);
+  virtual int         t8_element_transition_scheme_is_conformal (void);
 
 /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
    * Returns false otherwise.

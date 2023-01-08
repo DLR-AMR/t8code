@@ -356,7 +356,8 @@ void                t8_forest_set_balance (t8_forest_t forest,
  */
 void                t8_forest_set_transition (t8_forest_t forest,
                                               const t8_forest_t set_from,
-                                              int set_transition_with_balance);
+                                              int
+                                              set_transition_with_balance);
 
 /** Enable or disable the creation of a layer of ghost elements.
  * On default no ghosts are created.

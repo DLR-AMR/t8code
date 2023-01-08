@@ -88,7 +88,7 @@ int
 t8_forest_supports_transitioning (t8_forest_t forest)
 {
   int                 supports_transition = 0;
-  int                 supports_transition_all_procs = 0;  /* Result over all procs */
+  int                 supports_transition_all_procs = 0;        /* Result over all procs */
   int                 int_eclass;
   int                 mpiret;
   t8_eclass_scheme_c *tscheme;
@@ -100,13 +100,15 @@ t8_forest_supports_transitioning (t8_forest_t forest)
      * eclass supports transitioning. */
     if (forest->cmesh->num_local_trees_per_eclass[int_eclass] > 0) {
       tscheme = forest->scheme_cxx->eclass_schemes[int_eclass];
-      supports_transition = supports_transition || t8_element_scheme_supports_transitioning (tscheme);
+      supports_transition = supports_transition
+        || t8_element_scheme_supports_transitioning (tscheme);
     }
   }
   /* Combine the process-local results via a logic or and distribute the
    * result over all procs (in the communicator).*/
-  mpiret = sc_MPI_Allreduce (&supports_transition, &supports_transition_all_procs, 1, sc_MPI_INT,
-                             sc_MPI_LOR, forest->mpicomm);
+  mpiret =
+    sc_MPI_Allreduce (&supports_transition, &supports_transition_all_procs, 1,
+                      sc_MPI_INT, sc_MPI_LOR, forest->mpicomm);
   SC_CHECK_MPI (mpiret);
 
   return supports_transition_all_procs;
@@ -277,7 +279,8 @@ t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from,
 }
 
 void
-t8_forest_set_transition (t8_forest_t forest, const t8_forest_t set_from, int set_transition_with_balance)
+t8_forest_set_transition (t8_forest_t forest, const t8_forest_t set_from,
+                          int set_transition_with_balance)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
 

@@ -35,10 +35,10 @@
 #include "t8_forest.h"
 #include <cstring>
 #if DO_TRANSITION_QUAD_SCHEME
-  #include <t8_schemes/t8_transition/t8_transition_conformal_quad/t8_transition_conformal_quad_cxx.hxx>
-  #include <t8_schemes/t8_transition/t8_transition_cxx.hxx>
+#include <t8_schemes/t8_transition/t8_transition_conformal_quad/t8_transition_conformal_quad_cxx.hxx>
+#include <t8_schemes/t8_transition/t8_transition_cxx.hxx>
 #else
-  #include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #endif
 #include <t8_vec.h>
 #include <example/common/t8_example_common.h>
@@ -79,10 +79,14 @@ t8_print_general_stats (double commit_time_total, int num_adaptations,
      "|    Commit time average [s]: %.3f\n"
      "|    Rest [s]:                %.3f (%.2f %%)\n"
      "|++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|\n\n",
-    global_num_elements_accum / num_adaptations, total_time, 100., total_time / (double) num_adaptations,
-    LFN_time_accum, 100. * LFN_time_accum / total_time, LFN_time_accum / (double) num_adaptations,
-    commit_time_total, 100. * commit_time_total / total_time, commit_time_total / (double) num_adaptations,
-    total_time - LFN_time_accum - commit_time_total, 100. * (total_time - LFN_time_accum - commit_time_total) / total_time);
+     global_num_elements_accum / num_adaptations, total_time, 100.,
+     total_time / (double) num_adaptations, LFN_time_accum,
+     100. * LFN_time_accum / total_time,
+     LFN_time_accum / (double) num_adaptations, commit_time_total,
+     100. * commit_time_total / total_time,
+     commit_time_total / (double) num_adaptations,
+     total_time - LFN_time_accum - commit_time_total,
+     100. * (total_time - LFN_time_accum - commit_time_total) / total_time);
 }
 
 void
@@ -93,7 +97,7 @@ t8_print_commit_stats (double commit_time, int num_adaptations,
     ("\n|++++++++++++++++++++ Commit statistics | adaptation %i of %i +++++++++++++++++++|\n"
      "|    Commit time total [s]: %.9f\n"
      "|++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|\n\n",
-    adaptation_count, num_adaptations, commit_time);
+     adaptation_count, num_adaptations, commit_time);
 }
 
 void
@@ -111,36 +115,50 @@ t8_print_LFN_stats (int global_num_elements, int global_num_subelements,
      "|    LFN runtime total [s]:    %f\n"
      "|    LFN runtime per call [s]: %.9f\n"
      "|++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|\n\n",
-    adaptation_count, num_adaptations, global_num_elements, global_num_elements-global_num_subelements, global_num_subelements,
-    local_num_elements, local_num_elements-local_num_subelements, local_num_subelements, LFN_call_count, time_LFN, time_LFN_per_call);
+     adaptation_count, num_adaptations, global_num_elements,
+     global_num_elements - global_num_subelements, global_num_subelements,
+     local_num_elements, local_num_elements - local_num_subelements,
+     local_num_subelements, LFN_call_count, time_LFN, time_LFN_per_call);
 }
 
 void
-t8_print_vtk (t8_forest_t forest_adapt, char filename[BUFSIZ], int set_transition, int set_balance, int single_tree_mesh, int multiple_tree_mesh, int adaptation_count, t8_eclass_t eclass)
+t8_print_vtk (t8_forest_t forest_adapt, char filename[BUFSIZ],
+              int set_transition, int set_balance, int single_tree_mesh,
+              int multiple_tree_mesh, int adaptation_count,
+              t8_eclass_t eclass)
 {
   if (set_transition) {
-    if (single_tree_mesh) snprintf (filename, BUFSIZ, "forest_transitioned_%i_%s",
-              adaptation_count, t8_eclass_to_string[eclass]);
-    else if (multiple_tree_mesh) snprintf (filename, BUFSIZ, "forest_transitioned_%i_%s",
-              adaptation_count, t8_eclass_to_string[T8_ECLASS_QUAD]);
-    else snprintf (filename, BUFSIZ, "forest_transitioned_%i_hybrid",
-              adaptation_count);
+    if (single_tree_mesh)
+      snprintf (filename, BUFSIZ, "forest_transitioned_%i_%s",
+                adaptation_count, t8_eclass_to_string[eclass]);
+    else if (multiple_tree_mesh)
+      snprintf (filename, BUFSIZ, "forest_transitioned_%i_%s",
+                adaptation_count, t8_eclass_to_string[T8_ECLASS_QUAD]);
+    else
+      snprintf (filename, BUFSIZ, "forest_transitioned_%i_hybrid",
+                adaptation_count);
   }
   else if (set_balance) {
-    if (single_tree_mesh) snprintf (filename, BUFSIZ, "forest_balanced_%i_%s",
-              adaptation_count, t8_eclass_to_string[eclass]);
-    else if (multiple_tree_mesh) snprintf (filename, BUFSIZ, "forest_balanced_%i_%s",
-              adaptation_count, t8_eclass_to_string[T8_ECLASS_QUAD]);
-    else snprintf (filename, BUFSIZ, "forest_balanced_%i_hybrid",
-              adaptation_count);
+    if (single_tree_mesh)
+      snprintf (filename, BUFSIZ, "forest_balanced_%i_%s",
+                adaptation_count, t8_eclass_to_string[eclass]);
+    else if (multiple_tree_mesh)
+      snprintf (filename, BUFSIZ, "forest_balanced_%i_%s",
+                adaptation_count, t8_eclass_to_string[T8_ECLASS_QUAD]);
+    else
+      snprintf (filename, BUFSIZ, "forest_balanced_%i_hybrid",
+                adaptation_count);
   }
   else {
-    if (single_tree_mesh) snprintf (filename, BUFSIZ, "forest_adapted_%i_%s",
-              adaptation_count, t8_eclass_to_string[eclass]);
-    else if (multiple_tree_mesh) snprintf (filename, BUFSIZ, "forest_adapted_%i_%s",
-              adaptation_count, t8_eclass_to_string[T8_ECLASS_QUAD]);
-    else snprintf (filename, BUFSIZ, "forest_adapted_%i_hybrid",
-              adaptation_count);;
+    if (single_tree_mesh)
+      snprintf (filename, BUFSIZ, "forest_adapted_%i_%s",
+                adaptation_count, t8_eclass_to_string[eclass]);
+    else if (multiple_tree_mesh)
+      snprintf (filename, BUFSIZ, "forest_adapted_%i_%s",
+                adaptation_count, t8_eclass_to_string[T8_ECLASS_QUAD]);
+    else
+      snprintf (filename, BUFSIZ, "forest_adapted_%i_hybrid",
+                adaptation_count);;
   }
   t8_forest_write_vtk (forest_adapt, filename);
 }
@@ -148,8 +166,7 @@ t8_print_vtk (t8_forest_t forest_adapt, char filename[BUFSIZ], int set_transitio
 /* Compute neighbors of all elements in all trees at all faces */
 void
 t8_LFN_test (const t8_forest_t forest_adapt, int get_LFN_stats,
-                     int adaptation_count, int num_adaptations,
-                     int get_LFN_elem_info)
+             int adaptation_count, int num_adaptations, int get_LFN_elem_info)
 {
   t8_debugf ("~~~~~~~~~~ Into the LFN test fucntion. ~~~~~~~~~~\n");
 
@@ -166,8 +183,7 @@ t8_LFN_test (const t8_forest_t forest_adapt, int get_LFN_stats,
   int                *dual_faces;
   int                 num_neighbors;
   int                 face_id;
-  int                 local_num_trees =
-    t8_forest_get_num_local_trees (forest_adapt); /* get the number of trees, this process knows about */
+  int                 local_num_trees = t8_forest_get_num_local_trees (forest_adapt);   /* get the number of trees, this process knows about */
   int                 current_tree_num_elements;
   int                 subelement_count = 0;
   int                 LFN_call_count = 0;
@@ -183,7 +199,8 @@ t8_LFN_test (const t8_forest_t forest_adapt, int get_LFN_stats,
 
     /* get the number of elements in the current tree */
     current_tree = t8_forest_get_tree (forest_adapt, tree_count);
-    current_tree_num_elements = t8_forest_get_tree_element_count (current_tree);
+    current_tree_num_elements =
+      t8_forest_get_tree_element_count (current_tree);
 
     for (elem_count = 0; elem_count < current_tree_num_elements; ++elem_count) {
 
@@ -197,8 +214,9 @@ t8_LFN_test (const t8_forest_t forest_adapt, int get_LFN_stats,
 
       if (get_LFN_elem_info) {  /* print current element */
 #if T8_ENABLE_DEBUG
-        t8_productionf ("\n\nCurrent element: elem index %i of %i (the ranks element index in current tree)\n",
-                        elem_count + 1, current_tree_num_elements);
+        t8_productionf
+          ("\n\nCurrent element: elem index %i of %i (the ranks element index in current tree)\n",
+           elem_count + 1, current_tree_num_elements);
         ts->t8_element_debug_print (current_element);
 #endif
       }
@@ -247,20 +265,21 @@ t8_LFN_test (const t8_forest_t forest_adapt, int get_LFN_stats,
     }                           /* end of element loop */
   }                             /* end of tree loop */
 
-  T8_ASSERT (subelement_count == t8_forest_get_local_num_subelements(forest_adapt));
+  T8_ASSERT (subelement_count ==
+             t8_forest_get_local_num_subelements (forest_adapt));
 
   if (get_LFN_stats)
     t8_print_LFN_stats (t8_forest_get_global_num_elements (forest_adapt),
-                        t8_forest_get_global_num_subelements (forest_adapt), 
+                        t8_forest_get_global_num_subelements (forest_adapt),
                         t8_forest_get_local_num_elements (forest_adapt),
-                        t8_forest_get_local_num_subelements(forest_adapt),
+                        t8_forest_get_local_num_subelements (forest_adapt),
                         LFN_call_count, time_LFN,
                         time_LFN / (double) LFN_call_count, adaptation_count,
                         num_adaptations);
 
   t8_debugf
     ("~~~~~~~~~~ The LFN test function finshed successful ~~~~~~~~~~\n");
-} /* end of t8_LFN_test */
+}                               /* end of t8_LFN_test */
 
 /* Initializing and adapting a forest */
 static void
@@ -270,7 +289,7 @@ t8_transition_global (void)
     ("~~~~~~~~~~ Into the t8_transition_global function ~~~~~~~~~~\n");
 
   /* At the moment, subelements are only implemented for T8_ECLASS_QUADS */
-  t8_eclass_t         eclass = T8_ECLASS_QUAD; /* depending on the include file, this will be the transitioned or default quad implementation */
+  t8_eclass_t         eclass = T8_ECLASS_QUAD;  /* depending on the include file, this will be the transitioned or default quad implementation */
 
   t8_forest_t         forest;
   t8_forest_t         forest_adapt;
@@ -292,7 +311,7 @@ t8_transition_global (void)
   double              start_radius = 0.0;
   double              band_width = 2.0;
 
-  int                 num_adaptations = 30; /* 1 for a single adapted forest */
+  int                 num_adaptations = 30;     /* 1 for a single adapted forest */
   double              radius_increase = 0.2;
 
   /* adaptation setting */
@@ -301,10 +320,11 @@ t8_transition_global (void)
 
   /* cmesh settings */
   int                 single_tree_mesh = 0;
-  int                 multiple_tree_mesh = 1, num_x_trees = 5, num_y_trees = 4;
+  int                 multiple_tree_mesh = 1, num_x_trees = 5, num_y_trees =
+    4;
   int                 hybrid_tree_mesh = 0;
-  
-  int                 periodic_boundary = 0; /* use periodic boundaries */
+
+  int                 periodic_boundary = 0;    /* use periodic boundaries */
 
   /* partition setting */
   int                 do_partition = 1;
@@ -328,14 +348,19 @@ t8_transition_global (void)
 
   /* ************************************** Check settings ************************************** */
 
-  SC_CHECK_ABORT (num_adaptations > 0, "Setting-Check failed: Set num_adaptations > 0");
-  SC_CHECK_ABORT (single_tree_mesh + multiple_tree_mesh + hybrid_tree_mesh == 1,
+  SC_CHECK_ABORT (num_adaptations > 0,
+                  "Setting-Check failed: Set num_adaptations > 0");
+  SC_CHECK_ABORT (single_tree_mesh + multiple_tree_mesh + hybrid_tree_mesh ==
+                  1,
                   "Setting-check failed: choose only one of {single_tree, multiple_tree, hybrid_cmesh}");
   if (do_LFN_test == 1) {
-    SC_CHECK_ABORT(set_balance == 1, "LFN is not implemented for non-balanced forests.");
-    SC_CHECK_ABORT (do_ghost == 1, "Setting-check failed: set do_ghost to one when applying the LFN test");
+    SC_CHECK_ABORT (set_balance == 1,
+                    "LFN is not implemented for non-balanced forests.");
+    SC_CHECK_ABORT (do_ghost == 1,
+                    "Setting-check failed: set do_ghost to one when applying the LFN test");
     if (set_transition == 1) {
-      SC_CHECK_ABORT(ghost_version == 1, "Setting-check failed: use ghost version 1 when applying the LFN test for transitioned forests.");
+      SC_CHECK_ABORT (ghost_version == 1,
+                      "Setting-check failed: use ghost version 1 when applying the LFN test for transitioned forests.");
 
     }
   }
@@ -364,13 +389,16 @@ t8_transition_global (void)
   /* building the cmesh, using the initlevel */
   if (single_tree_mesh) {
     /* construct a single tree quad cmesh */
-    cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, periodic_boundary);
+    cmesh =
+      t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0,
+                              periodic_boundary);
   }
   else if (multiple_tree_mesh) {
     T8_ASSERT (eclass == T8_ECLASS_QUAD);
     /* this is by default a 2D or 3D quad cmesh of multiple trees */
     p4est_connectivity_t *brick =
-      p4est_connectivity_new_brick (num_x_trees, num_y_trees, periodic_boundary, periodic_boundary);
+      p4est_connectivity_new_brick (num_x_trees, num_y_trees,
+                                    periodic_boundary, periodic_boundary);
     cmesh = t8_cmesh_new_from_p4est (brick, sc_MPI_COMM_WORLD, 0);
     p4est_connectivity_destroy (brick);
   }
@@ -401,10 +429,10 @@ t8_transition_global (void)
   t8_debugf ("~~~~~~~~~~ cmesh has been build ~~~~~~~~~~\n");
 
   if (do_vtk_cmesh) {
-      snprintf (filename, BUFSIZ, "forest_cmesh");
-      t8_forest_write_vtk (forest, filename);
-      t8_debugf ("~~~~~~~~~~ vtk of cmesh has been constructed ~~~~~~~~~~\n");
-    }
+    snprintf (filename, BUFSIZ, "forest_cmesh");
+    t8_forest_write_vtk (forest, filename);
+    t8_debugf ("~~~~~~~~~~ vtk of cmesh has been constructed ~~~~~~~~~~\n");
+  }
 
   /* ********************************** Adaptation (possibly with multiple steps) ************************************ */
 
@@ -456,8 +484,11 @@ t8_transition_global (void)
     }
 
     if (do_vtk) {
-      t8_print_vtk (forest_adapt, filename, set_transition, set_balance, single_tree_mesh, multiple_tree_mesh, adaptation_count, eclass);
-      t8_debugf ("~~~~~~~~~~ vtk of adapted forest has been constructed ~~~~~~~~~~\n");
+      t8_print_vtk (forest_adapt, filename, set_transition, set_balance,
+                    single_tree_mesh, multiple_tree_mesh, adaptation_count,
+                    eclass);
+      t8_debugf
+        ("~~~~~~~~~~ vtk of adapted forest has been constructed ~~~~~~~~~~\n");
     }
 
     /* iterate through all elements of the adapted, transitioned forest and compute
@@ -465,7 +496,7 @@ t8_transition_global (void)
     if (do_LFN_test) {
       LFN_time_accum -= sc_MPI_Wtime ();
       t8_LFN_test (forest_adapt, get_LFN_stats, adaptation_count,
-                           num_adaptations, get_LFN_elem_info);
+                   num_adaptations, get_LFN_elem_info);
       LFN_time_accum += sc_MPI_Wtime ();
       t8_debugf
         ("~~~~~~~~~~ all neighbors have been identified ~~~~~~~~~~\n");

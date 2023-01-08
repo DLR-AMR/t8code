@@ -41,10 +41,10 @@ t8_scheme_new_transition_cxx (void)
   t8_refcount_init (&s->rc);
 
   s->eclass_schemes[T8_ECLASS_VERTEX] = NULL;
-  s->eclass_schemes[T8_ECLASS_LINE] = new t8_default_scheme_line_c (); /* Standard T8_ECLASS_LINE is used by the quad scheme */
+  s->eclass_schemes[T8_ECLASS_LINE] = new t8_default_scheme_line_c ();  /* Standard T8_ECLASS_LINE is used by the quad scheme */
   s->eclass_schemes[T8_ECLASS_QUAD] = new t8_subelement_scheme_quad_c ();
   s->eclass_schemes[T8_ECLASS_HEX] = NULL;
-  s->eclass_schemes[T8_ECLASS_TRIANGLE] = new t8_default_scheme_tri_c (); /* we use this implementation for hybrid meshes */
+  s->eclass_schemes[T8_ECLASS_TRIANGLE] = new t8_default_scheme_tri_c ();       /* we use this implementation for hybrid meshes */
   s->eclass_schemes[T8_ECLASS_TET] = NULL;
   s->eclass_schemes[T8_ECLASS_PRISM] = NULL;
 

@@ -58,7 +58,7 @@ t8_forest_transition_conformal_quad (t8_forest_t forest,
   t8_element_t       *element = elements[0], **face_neighbor;
 
   /* this function should only be called by the transitioned conformal quad scheme */
-  T8_ASSERT (t8_eclass_scheme_is_transition(ts) == 1);
+  T8_ASSERT (t8_eclass_scheme_is_transition (ts) == 1);
 
   /* hanging faces can only exist at non-maxlevel elements */
   if (forest_from->maxlevel_existing <= 0 ||
@@ -130,7 +130,7 @@ t8_forest_transition_conformal_quad (t8_forest_t forest,
     }
   }
   return 0;                     /* if elem has maxlevel then keep it unchanged since there will never be hanging faces */
-} /* end of t8_forest_transition_conformal_quad */
+}                               /* end of t8_forest_transition_conformal_quad */
 
 /* This is the entry function for all transition schemes, called bei forest_adapt.
  * The eclass of the current element hands off to the specific refine implementation above.
@@ -142,36 +142,38 @@ t8_forest_transition_entry (t8_forest_t forest,
                             t8_locidx_t lelement_id,
                             t8_eclass_scheme_c *ts,
                             const int is_family,
-                            int num_elements,
-                            t8_element_t *elements[])
+                            int num_elements, t8_element_t *elements[])
 {
   T8_ASSERT (forest->set_subelements == 1);
-  T8_ASSERT (forest->is_transitioned == 0 && forest->set_from->is_transitioned == 0);
+  T8_ASSERT (forest->is_transitioned == 0
+             && forest->set_from->is_transitioned == 0);
 
   /* TODO: there may be a better way for this than using switch statements and int functions */
 
   /* the current element decides over the refine function. Normally, this function returns one fixed value per 
    * element scheme, but note that it would also possible to switch the refine function within one tree. */
-  switch (ts->t8_element_get_transition_refine_identifier()) {
-    case 0:
-      /* if no transition scheme is implemented for the given element/tree, 
-       * then return zero and keep the current element unchanged. 
-       * The default_common implementation of the above function returns 0. */
-      return 0;
-    case 1:
-      return t8_forest_transition_conformal_quad (forest, forest_from, ltree_id,
-                                                  lelement_id, ts, is_family,
-                                                  num_elements, elements);
-    default:
-      SC_ABORT("The given eclass scheme must pecify a valid transition refine function.");
+  switch (ts->t8_element_get_transition_refine_identifier ()) {
+  case 0:
+    /* if no transition scheme is implemented for the given element/tree, 
+     * then return zero and keep the current element unchanged. 
+     * The default_common implementation of the above function returns 0. */
+    return 0;
+  case 1:
+    return t8_forest_transition_conformal_quad (forest, forest_from, ltree_id,
+                                                lelement_id, ts, is_family,
+                                                num_elements, elements);
+  default:
+    SC_ABORT
+      ("The given eclass scheme must pecify a valid transition refine function.");
   }
-} /* end of t8_forest_transition_entry */
+}                               /* end of t8_forest_transition_entry */
 
 void
 t8_forest_transition (t8_forest_t forest)
 {
   T8_ASSERT (forest->set_subelements == 1);
-  T8_ASSERT (forest->is_transitioned == 0 && forest->set_from->is_transitioned == 0);
+  T8_ASSERT (forest->is_transitioned == 0
+             && forest->set_from->is_transitioned == 0);
   /* in the following, we will call forest_adapt to with the transition 
    * refinement function in order to transition the forest. The refinement is then
    * based on forest->set_from, which must be balanced. */
@@ -181,7 +183,7 @@ t8_forest_transition (t8_forest_t forest)
   /* Set ghost layers of all processes */
   if (forest->set_from->ghosts == NULL) {
     forest->set_from->ghost_type = T8_GHOST_FACES;
-    t8_forest_ghost_create(forest->set_from);
+    t8_forest_ghost_create (forest->set_from);
   }
 
   forest->set_adapt_fn = t8_forest_transition_entry;
@@ -190,7 +192,7 @@ t8_forest_transition (t8_forest_t forest)
   t8_forest_adapt (forest);
 
   t8_global_productionf ("Done t8_forest_transition.\n");
-} /* end of t8_forest_transition */
+}                               /* end of t8_forest_transition */
 
 /* Test whether the forest is transitioned.
  * Note 1) We allow non-committed forests in this implementation since this check is used in forest_commit() 
@@ -224,6 +226,6 @@ t8_forest_is_transitioned (t8_forest_t forest)
 
   /* only return false if there is no subelement in the forest */
   return 0;
-} /* end of t8_forest_is_transitioned */
+}                               /* end of t8_forest_is_transitioned */
 
 T8_EXTERN_C_END ();

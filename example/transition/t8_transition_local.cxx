@@ -173,8 +173,8 @@ t8_transition_local (t8_eclass_t eclass)
     /* Iterate through all subelements and determine their vertex coordinates */
     for (subelement_id = 0; subelement_id < num_subelements; ++subelement_id) {
       /* All elements in a transition cell are subelements */
-      T8_ASSERT (class_scheme->
-                 t8_element_is_subelement (transition_cell[subelement_id]));
+      T8_ASSERT (class_scheme->t8_element_is_subelement
+                 (transition_cell[subelement_id]));
 
 #if T8_ENABLE_DEBUG
       /* Print the current subelement */
@@ -186,11 +186,11 @@ t8_transition_local (t8_eclass_t eclass)
         class_scheme->t8_element_shape (transition_cell[subelement_id]);
       num_vertices = t8_eclass_num_vertices[shape];
       T8_ASSERT (num_vertices ==
-                 class_scheme->
-                 t8_element_num_corners (transition_cell[subelement_id]));
+                 class_scheme->t8_element_num_corners (transition_cell
+                                                       [subelement_id]));
       T8_ASSERT (num_vertices ==
-                 class_scheme->
-                 t8_element_num_faces (transition_cell[subelement_id]));
+                 class_scheme->t8_element_num_faces (transition_cell
+                                                     [subelement_id]));
 
       /* Iterate over all vertices of the subelement and determine their coordinates */
       int                 vertex_count;

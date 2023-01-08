@@ -105,11 +105,11 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt,
                                        forest_is_balanced);
 
         /* The forest is transitioned and therefore conformal -> either one or zero neighbors */
-        SC_CHECK_ABORTF((num_neighbors == 0 || num_neighbors == 1), "");
+        SC_CHECK_ABORTF ((num_neighbors == 0 || num_neighbors == 1), "");
 
         /* free memory if neighbors exists */
         if (num_neighbors > 0) {
-          T8_ASSERT(neigh_scheme->t8_element_is_valid (neighbor_leafs[0]));
+          T8_ASSERT (neigh_scheme->t8_element_is_valid (neighbor_leafs[0]));
           neigh_scheme->t8_element_destroy (num_neighbors, neighbor_leafs);
 
           T8_FREE (element_indices);
@@ -351,7 +351,8 @@ t8_test_quad_local (t8_element_t *quad_element,
         ("Child ID: %i; Vertex: %i; Ref cords in [0,1]^2: (%lf,%lf)\n",
          child_id, vertex_count, coords[0], coords[1]);
       /* Check vertex coordinates in unit cube up to float precision */
-        SC_CHECK_ABORTF (t8_check_coordinates_float_precision (coords), "Coordinates of child are computed incorrect.");
+      SC_CHECK_ABORTF (t8_check_coordinates_float_precision (coords),
+                       "Coordinates of child are computed incorrect.");
     }                           /* end of vertex loop */
   }                             /* end of child loop */
 
@@ -419,8 +420,8 @@ t8_test_transition_local (t8_eclass_t eclass)
     /* Iterate through all subelements and determine their vertex coordinates */
     for (subelement_id = 0; subelement_id < num_subelements; ++subelement_id) {
       /* All elements in a transition cell are subelements */
-      T8_ASSERT (class_scheme->
-                 t8_element_is_subelement (transition_cell[subelement_id]));
+      T8_ASSERT (class_scheme->t8_element_is_subelement
+                 (transition_cell[subelement_id]));
 
 #if T8_ENABLE_DEBUG
       /* Print the current subelement */
@@ -432,11 +433,11 @@ t8_test_transition_local (t8_eclass_t eclass)
         class_scheme->t8_element_shape (transition_cell[subelement_id]);
       num_vertices = t8_eclass_num_vertices[shape];
       T8_ASSERT (num_vertices ==
-                 class_scheme->
-                 t8_element_num_corners (transition_cell[subelement_id]));
+                 class_scheme->t8_element_num_corners (transition_cell
+                                                       [subelement_id]));
       T8_ASSERT (num_vertices ==
-                 class_scheme->
-                 t8_element_num_faces (transition_cell[subelement_id]));
+                 class_scheme->t8_element_num_faces (transition_cell
+                                                     [subelement_id]));
 
       /* Iterate over all vertices of the subelement and determine their coordinates */
       int                 vertex_count;
@@ -449,7 +450,8 @@ t8_test_transition_local (t8_eclass_t eclass)
           ("Subelement ID: %i; Vertex: %i; Ref cords in [0,1]^2: (%lf,%lf)\n",
            subelement_id, vertex_count, coords[0], coords[1]);
         /* Check vertex coordinates in unit cube up to float precision */
-        SC_CHECK_ABORTF (t8_check_coordinates_float_precision (coords), "Coordinates of subelement are computed incorrect.");
+        SC_CHECK_ABORTF (t8_check_coordinates_float_precision (coords),
+                         "Coordinates of subelement are computed incorrect.");
       }                         /* end of vertex loop */
     }                           /* end of subelement loop */
 

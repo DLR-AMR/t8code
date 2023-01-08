@@ -539,17 +539,16 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
   /* Test for subelement siblings. */
   int                 real_subelement_siblings = 0;
   if (elem_copy != NULL) {
-    if (ts->t8_element_is_subelement (elem) && ts->t8_element_is_subelement (elem_copy)) {
+    if (ts->t8_element_is_subelement (elem)
+        && ts->t8_element_is_subelement (elem_copy)) {
       /* t8_element_compare returns 1 for non-identical subelement siblings and 0 for identical subelements */
-      real_subelement_siblings = ts->t8_element_compare(elem, elem_copy);
+      real_subelement_siblings = ts->t8_element_compare (elem, elem_copy);
     }
   }
   /* Check if the element was not contained in the array.
    * If so, we add a copy of elem to the array.
    * Otherwise, we do nothing. */
-  if (elem_copy == NULL
-      || level != copy_level
-      || (ts->t8_element_get_linear_id (elem_copy, forest->maxlevel) != ts->t8_element_get_linear_id (elem, forest->maxlevel) || real_subelement_siblings)) { /* for subelements, we need the extra subelement_id check here since their linear_id is equal */
+  if (elem_copy == NULL || level != copy_level || (ts->t8_element_get_linear_id (elem_copy, forest->maxlevel) != ts->t8_element_get_linear_id (elem, forest->maxlevel) || real_subelement_siblings)) {  /* for subelements, we need the extra subelement_id check here since their linear_id is equal */
     /* Add the element */
     elem_copy = t8_element_array_push (&remote_tree->elements);
     ts->t8_element_copy (elem, elem_copy);
