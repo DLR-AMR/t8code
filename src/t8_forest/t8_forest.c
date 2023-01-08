@@ -284,19 +284,22 @@ t8_forest_set_transition (t8_forest_t forest, const t8_forest_t set_from,
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
 
-  /* Note that it is possible to apply transitioning to a forest without transition implementation.
-   * In this case, the transition refine routine will return 0, keeping the forest unchanged. 
-   * Nevertheless, we assert here in this case. */
-  T8_ASSERT (t8_forest_supports_transitioning (set_from));
-
   if (set_transition_with_balance) {
     /* balance with repartition */
     t8_forest_set_balance (forest, set_from, 0);
   }
 
   if (set_from != NULL) {
+    /* Note that it is possible to apply transitioning to a forest without transition implementation.
+     * In this case, the transition refine routine will return 0, keeping the forest unchanged. 
+     * Nevertheless, we assert here in this case. */
+    T8_ASSERT (t8_forest_supports_transitioning (set_from));
     /* If set_from = NULL, we assume a previous forest_from was set */
     forest->set_from = set_from;
+  }
+  else {
+    T8_ASSERT (forest->set_from != NULL);
+    T8_ASSERT (t8_forest_supports_transitioning (forest->set_from));
   }
 
   /* Add SUBELEMENTS to the from_method.
