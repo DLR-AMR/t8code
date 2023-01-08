@@ -278,12 +278,11 @@ int
 t8_subelement_scheme_quad_c::t8_element_num_face_children (const t8_element_t
                                                            *elem, int face)
 {
+  /* this function is not implemented for subelements */
+  T8_ASSERT (!t8_element_is_subelement(elem));
   T8_ASSERT (t8_element_is_valid (elem));
 
-  if (t8_element_is_subelement(elem)) {
-    return 1;
-  }
-
+  /* if we use this scheme without set_transition, then we are only balanced and two neighbors are possible */
   return 2;
 }
 
@@ -313,10 +312,8 @@ t8_subelement_scheme_quad_c::t8_element_get_num_sibling_neighbors_at_face (const
 }
 
 int
-t8_subelement_scheme_quad_c::t8_element_transition_refine_function (const t8_element_t *elem) const
-{
-  T8_ASSERT (t8_element_is_valid (elem));
-  
+t8_subelement_scheme_quad_c::t8_element_get_transition_refine_identifier () const
+{  
   return T8_TRANSITION_CONFORMAL_QUAD_REFINE_FUNCTION;
 }
 
@@ -388,7 +385,9 @@ t8_subelement_scheme_quad_c::t8_element_child (const t8_element_t *elem,
                                                int childid,
                                                t8_element_t *child)
 {
-  /* The child of a subelement is the child of its parent 
+  /* this function is not implemented for subelements */
+  T8_ASSERT (!t8_element_is_subelement(elem));
+  /*
    *
    *         x - - - - - x        x - - x - - x 
    *         |           |        |     |     |
@@ -396,14 +395,6 @@ t8_subelement_scheme_quad_c::t8_element_child (const t8_element_t *elem,
    *         |   elem    |   =>   x - - x - - x
    *         |           |        |     |     |
    *         |           |        |  0  |  1  |
-   *         x - - - - - x        x - - x - - x
-   *
-   *         x - - - - - a        x - - x - - a
-   *         | \  elem / |        |     |     |
-   *         |   \   /   |        |  2  |  3  |
-   *         |     x - - x   =>   x - - x - - x
-   *         |   /   \   |        |     |     |
-   *         | /       \ |        |  0  |  1  |
    *         x - - - - - x        x - - x - - x
    * 
    */
@@ -769,122 +760,62 @@ t8_subelement_scheme_quad_c::t8_element_children_at_face (const t8_element_t
     }
   }
 #endif
+  /* This function is not implemented for subelements */
+  T8_ASSERT (!t8_element_is_subelement(elem));
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= face && face < P4EST_FACES);
   T8_ASSERT (num_children == t8_element_num_face_children (elem, face));
 
-  /* if elem is a quad */
-  if (!t8_element_is_subelement (elem)) {
-    T8_ASSERT (num_children == 2);
-    /*
-     * Compute the child id of the first and second child at the face.
-     *
-     *            3
-     *
-     *      x - - x - - x           This picture shows a refined quadrant
-     *      |     |     |           with child_ids and the label for the faces.
-     *      | 2   | 3   |           For examle for face 2 (bottom face) we see
-     * 0    x - - x - - x   1       first_child = 0 and second_child = 1.
-     *      |     |     |
-     *      | 0   | 1   |
-     *      x - - x - - x
-     *
-     *            2
-     */
-    int                 first_child;
-    int                 second_child;
-    /* TODO: Think about a short and easy bitwise formula. */
-    switch (face) {
-    case 0:
-      first_child = 0;
-      second_child = 2;
-      break;
-    case 1:
-      first_child = 1;
-      second_child = 3;
-      break;
-    case 2:
-      first_child = 0;
-      second_child = 1;
-      break;
-    case 3:
-      first_child = 2;
-      second_child = 3;
-      break;
-    default:
-      SC_ABORT_NOT_REACHED ();
-    }
+  /*
+   * Compute the child id of the first and second child at the face.
+   *
+   *            3
+   *
+   *      x - - x - - x           This picture shows a refined quadrant
+   *      |     |     |           with child_ids and the label for the faces.
+   *      | 2   | 3   |           For examle for face 2 (bottom face) we see
+   * 0    x - - x - - x   1       first_child = 0 and second_child = 1.
+   *      |     |     |
+   *      | 0   | 1   |
+   *      x - - x - - x
+   *
+   *            2
+   */
 
-    /* From the child ids we now construct the children at the faces. */
-    /* We have to revert the order and compute second child first, since
-     * the usage allows for elem == children[0].
-     */
-    this->t8_element_child (elem, second_child, children[1]);
-    this->t8_element_child (elem, first_child, children[0]);
-    if (child_indices != NULL) {
-      child_indices[0] = first_child;
-      child_indices[1] = second_child;
-    }
+  T8_ASSERT (num_children == 2);
+  int                 first_child;
+  int                 second_child;
+  /* TODO: Think about a short and easy bitwise formula. */
+  switch (face) {
+  case 0:
+    first_child = 0;
+    second_child = 2;
+    break;
+  case 1:
+    first_child = 1;
+    second_child = 3;
+    break;
+  case 2:
+    first_child = 0;
+    second_child = 1;
+    break;
+  case 3:
+    first_child = 2;
+    second_child = 3;
+    break;
+  default:
+    SC_ABORT_NOT_REACHED ();
   }
-  /* elem is a subelement */
-  else {
-    T8_ASSERT (face == 1);
-    T8_ASSERT (num_children == 1);
-    /* we implement this function recursive: 
-     *
-     *         x - - - - - a        x - - - - - a 
-     *         | \       / |        |           |
-     *         |   \   /   |        |   child   |
-     *         x - - x  el | f =>   |    at f   |
-     *         |   /   \   |        |           |
-     *         | /       \ |        |           |
-     *         x - - - - - x        x - - - - - x
-     *     
-     *         x - - - - - a        x - - x - - a
-     *         | \       / |        |     |child|
-     *         |   \   / el| f =>   |     | at f|
-     *         |     x - - |        x - - x - - x
-     *         |   /   \   |        |     |     |
-     *         | /       \ |        |     |     |
-     *         x - - - - - x        x - - x - - x
-     * 
-     */ 
 
-    /* location = {location of subelement (face number of parent), split, first or second element if split} */
-    int                 location[3] = { };
-    t8_element_get_location_of_subelement (elem, location);
-    int                 parent_face = location[0];
-    int                 split = location[1];
-    int                 second = location[2];
-
-    if (!split) {
-      /* if the subelement is not split, then we construct the parent element*/
-      this->t8_element_parent (elem, children[0]);
-    }
-    else {
-      int childid;
-      switch(parent_face) {
-        case 0:
-          if (second) childid = 2;
-          else childid = 0;
-          break;
-        case 1:
-          if (second) childid = 1;
-          else childid = 3;
-          break;
-        case 2:
-          if (second) childid = 0;
-          else childid = 1;
-          break;
-        case 3:
-          if (second) childid = 3;
-          else childid = 2;
-          break;
-      }
-      /* it is not allowed to construct a child from a subelement.
-       * Therefore, we construct the child of its parent. */
-      this->t8_element_child (elem, childid, children[0]);
-    }
+  /* From the child ids we now construct the children at the faces. */
+  /* We have to revert the order and compute second child first, since
+    * the usage allows for elem == children[0].
+    */
+  this->t8_element_child (elem, second_child, children[1]);
+  this->t8_element_child (elem, first_child, children[0]);
+  if (child_indices != NULL) {
+    child_indices[0] = first_child;
+    child_indices[1] = second_child;
   }
 }
 
@@ -1052,6 +983,7 @@ t8_subelement_scheme_quad_c::t8_element_extrude_face (const t8_element_t
                                                       t8_element_t *elem,
                                                       int root_face)
 {
+  /* build (extrude) elem from a given face element */
   t8_quad_with_subelements *pquad_w_sub = (t8_quad_with_subelements *) elem;
   p4est_quadrant_t   *q = &pquad_w_sub->p4q;
 
@@ -1342,14 +1274,11 @@ t8_subelement_scheme_quad_c::t8_element_is_root_boundary (const t8_element_t
   /* In case of a subelement, we need to change its face number to the face number of the parent quad */
   if (t8_element_is_subelement (elem)) {
     if (face == 1) {
-      int                 location[3] = { };
-      t8_element_get_location_of_subelement (elem, location);
-
       /* adjust face of subelement to face of parent */
-      face = subelement_location_to_parent_face[location[0]];
+      face = t8_element_face_parent_face (elem, face);
     }
     else {                      /* in case of a subelement and face 0 or 2 the face is no subface of the root boundary */
-      return false;
+      return 0;
     }
   }
 
@@ -2406,9 +2335,15 @@ t8_subelement_scheme_quad_c::t8_element_init (int length, t8_element_t *elem,
 }
 
 int
-t8_subelement_scheme_quad_c::t8_element_supports_transitioning (void)
+t8_subelement_scheme_quad_c::t8_element_scheme_supports_transitioning (void)
 {
-  return T8_TRANSITION_IS_IMPLEMENTED;
+  return T8_QUAD_TRANSITION_IS_IMPLEMENTED;
+}
+
+int
+t8_subelement_scheme_quad_c::t8_element_transition_scheme_is_conformal (void)
+{
+  return T8_QUAD_TRANSITION_SCHEME_IS_CONFORMAL;
 }
 
 #ifdef T8_ENABLE_DEBUG

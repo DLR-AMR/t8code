@@ -82,7 +82,8 @@ typedef t8_quad_with_subelements t8_pquad_t;
 /* this is the unique identifier for the transition_conformal_quad refine function */
 #define T8_TRANSITION_CONFORMAL_QUAD_REFINE_FUNCTION 1
 
-#define T8_TRANSITION_IS_IMPLEMENTED 1
+#define T8_QUAD_TRANSITION_IS_IMPLEMENTED 1
+#define T8_QUAD_TRANSITION_SCHEME_IS_CONFORMAL 1
 
 /** Return the toplevel dimension. */
 #define T8_QUAD_GET_TDIM(quad) ((int) (quad)->pad8)
@@ -198,7 +199,7 @@ public:
                                                                     int face) const;
 
   /** Return zero refine value for schemes that do not have a transition implementation. */
-  virtual int        t8_element_transition_refine_function (const t8_element *elem) const;                                                  
+  virtual int        t8_element_get_transition_refine_identifier (void) const;                                                  
 
   /** Return the corner number of an element's face corner. */
   virtual int         t8_element_get_face_corner (const t8_element_t *element,
@@ -402,7 +403,10 @@ public:
                                                                 *elem);
 
 /** Return 1 if the eclass scheme has an implementation for subelements. Return 0 otherwise. */
-  virtual int        t8_element_supports_transitioning (void);
+  virtual int        t8_element_scheme_supports_transitioning (void);
+
+/** Return 1 if the eclass scheme has an implementation for subelements. Return 0 otherwise. */
+  virtual int        t8_element_transition_scheme_is_conformal (void);
 
 /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
    * Returns false otherwise.
