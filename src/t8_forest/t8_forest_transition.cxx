@@ -145,8 +145,6 @@ t8_forest_transition_entry (t8_forest_t forest,
                             int num_elements,
                             t8_element_t *elements[])
 {
-  t8_element_t       *current_element = elements[0];
-
   T8_ASSERT (forest->set_subelements == 1);
   T8_ASSERT (forest->is_transitioned == 0 && forest->set_from->is_transitioned == 0);
 
@@ -154,7 +152,7 @@ t8_forest_transition_entry (t8_forest_t forest,
 
   /* the current element decides over the refine function. Normally, this function returns one fixed value per 
    * element scheme, but note that it would also possible to switch the refine function within one tree. */
-  switch (ts->t8_element_transition_refine_function(current_element)) {
+  switch (ts->t8_element_get_transition_refine_identifier()) {
     case 0:
       /* if no transition scheme is implemented for the given element/tree, 
        * then return zero and keep the current element unchanged. 
