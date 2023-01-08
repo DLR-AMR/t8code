@@ -100,7 +100,7 @@ t8_forest_supports_transitioning (t8_forest_t forest)
      * eclass supports transitioning. */
     if (forest->cmesh->num_local_trees_per_eclass[int_eclass] > 0) {
       tscheme = forest->scheme_cxx->eclass_schemes[int_eclass];
-      supports_transition = supports_transition || t8_element_supports_transitioning (tscheme);
+      supports_transition = supports_transition || t8_element_scheme_supports_transitioning (tscheme);
     }
   }
   /* Combine the process-local results via a logic or and distribute the
@@ -280,6 +280,10 @@ void
 t8_forest_set_transition (t8_forest_t forest, const t8_forest_t set_from, int set_transition_with_balance)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
+
+  /* Note that it is possible to apply transitioning to a forest without transition implementation.
+   * In this case, the transition refine routine will return 0, keeping the forest unchanged. 
+   * Nevertheless, we assert here in this case. */
   T8_ASSERT (t8_forest_supports_transitioning (set_from));
 
   if (set_transition_with_balance) {
