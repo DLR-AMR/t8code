@@ -223,7 +223,7 @@ t8_default_scheme_common_c::t8_element_get_num_sibling_neighbors_at_face (const 
 }
 
 int
-t8_default_scheme_common_c::t8_element_transition_refine_function (const t8_element * elem) const
+t8_default_scheme_common_c::t8_element_get_transition_refine_identifier () const
 {
   /* This function will be called by the transition_entry function. It defaults to zero such that 
    * the adapt routine will keep elem unchanged during the transition step. */
@@ -254,7 +254,14 @@ t8_default_scheme_common_c::t8_element_is_subelement (const t8_element * elem) c
 }
 
 int
-t8_default_scheme_common_c::t8_element_supports_transitioning (void)
+t8_default_scheme_common_c::t8_element_scheme_supports_transitioning (void)
+{
+  /* This is the default common implementation - therefore, transitioning is not implemented for the given scheme that is calling this function */
+  return 0;
+}
+
+int
+t8_default_scheme_common_c::t8_element_transition_scheme_is_conformal (void)
 {
   /* This is the default common implementation - therefore, transitioning is not implemented for the given scheme that is calling this function */
   return 0;

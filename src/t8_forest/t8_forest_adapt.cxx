@@ -191,7 +191,7 @@ t8_forest_adjust_refine_for_transitioned_forests (const t8_forest_t forest,
                                                   int* prefine)
 {
   /* refine values >1 are only allowed for eclass schemes that support transitioning */
-  T8_ASSERT (!(tscheme->t8_element_transition_refine_function(current_element) == 0 && *prefine > 1));
+  T8_ASSERT (!(tscheme->t8_element_get_transition_refine_identifier() == 0 && *prefine > 1));
 
   /* Existing transition cells must be removed during adaptation.
    * We establish the rule to coarsen a transition cell back to its parent in case of refine = 0. */

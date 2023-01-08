@@ -688,7 +688,7 @@ public:
    *  \param [in] elem A valid element 
    *  \return Integer, used as the refine value during transition adaptation.
    */
-  virtual int        t8_element_transition_refine_function (const t8_element *elem) const = 0;
+  virtual int        t8_element_get_transition_refine_identifier (void) const = 0;
 
   /** Construct all sibling neighbors of elem at face. */
   virtual void        t8_element_get_sibling_neighbor_in_transition_cell (const t8_element_t *elem,
@@ -720,7 +720,10 @@ public:
                                                     t8_element * elem) = 0;
 
   /** Return 1 if the eclass scheme has an implementation for subelements. Return 0 otherwise. */
-  virtual int t8_element_supports_transitioning (void) = 0;
+  virtual int t8_element_scheme_supports_transitioning (void) = 0;
+
+  /** Return 1 if the eclass scheme has an implementation for subelements, which is conformal. */
+  virtual int t8_element_transition_scheme_is_conformal (void) = 0;
 
   /** Return the subelement id of the neighbor subelement of elem at face elem_face
   *   that is a sibling of the subelement neigh. 
