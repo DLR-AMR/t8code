@@ -147,11 +147,11 @@ t8_print_vtk (t8_forest_t forest_adapt, char filename[BUFSIZ], int set_transitio
 
 /* Compute neighbors of all elements in all trees at all faces */
 void
-t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
+t8_LFN_test (const t8_forest_t forest_adapt, int get_LFN_stats,
                      int adaptation_count, int num_adaptations,
                      int get_LFN_elem_info)
 {
-  t8_debugf ("Into the LFN test fucntion.\n");
+  t8_debugf ("~~~~~~~~~~ Into the LFN test fucntion. ~~~~~~~~~~\n");
 
   /* Collecting data of the adapted forest */
   t8_element_t       *current_element;
@@ -197,8 +197,7 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
 
       if (get_LFN_elem_info) {  /* print current element */
 #if T8_ENABLE_DEBUG
-        t8_productionf ("Current element:\n");
-        t8_productionf ("Current element has local tree index %i of %i\n",
+        t8_productionf ("\n\nCurrent element: elem index %i of %i (the ranks element index in current tree)\n",
                         elem_count + 1, current_tree_num_elements);
         ts->t8_element_debug_print (current_element);
 #endif
@@ -261,7 +260,7 @@ t8_LFN_test_iterate (const t8_forest_t forest_adapt, int get_LFN_stats,
 
   t8_debugf
     ("~~~~~~~~~~ The LFN test function finshed successful ~~~~~~~~~~\n");
-}
+} /* end of t8_LFN_test */
 
 /* Initializing and adapting a forest */
 static void
@@ -293,8 +292,8 @@ t8_transition_global (void)
   double              start_radius = 0.0;
   double              band_width = 2.0;
 
-  int                 num_adaptations = 10; /* 1 for a single adapted forest */
-  double              radius_increase = 0.1;
+  int                 num_adaptations = 30; /* 1 for a single adapted forest */
+  double              radius_increase = 0.2;
 
   /* adaptation setting */
   int                 set_balance = 1;
@@ -323,7 +322,7 @@ t8_transition_global (void)
 
   /* Monitoring (only available in debug configuration) */
   int                 get_LFN_stats = 1;
-  int                 get_LFN_elem_info = 1;
+  int                 get_LFN_elem_info = 0;
   int                 get_commit_stats = 1;
   int                 get_general_stats = 1;
 
@@ -458,14 +457,14 @@ t8_transition_global (void)
 
     if (do_vtk) {
       t8_print_vtk (forest_adapt, filename, set_transition, set_balance, single_tree_mesh, multiple_tree_mesh, adaptation_count, eclass);
-      t8_debugf ("~~~~~~~~~~ vtk has been constructed ~~~~~~~~~~\n");
+      t8_debugf ("~~~~~~~~~~ vtk of adapted forest has been constructed ~~~~~~~~~~\n");
     }
 
     /* iterate through all elements of the adapted, transitioned forest and compute
      * their neighbors to all faces. */
     if (do_LFN_test) {
       LFN_time_accum -= sc_MPI_Wtime ();
-      t8_LFN_test_iterate (forest_adapt, get_LFN_stats, adaptation_count,
+      t8_LFN_test (forest_adapt, get_LFN_stats, adaptation_count,
                            num_adaptations, get_LFN_elem_info);
       LFN_time_accum += sc_MPI_Wtime ();
       t8_debugf
