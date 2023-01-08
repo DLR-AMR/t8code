@@ -34,7 +34,7 @@
 #include <t8_forest/t8_forest_vtk.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_cmesh/t8_cmesh_trees.h>
-#include<t8_element_c_interface.h>
+#include <t8_element_c_interface.h>
 
 void
 t8_forest_init (t8_forest_t *pforest)
@@ -732,8 +732,6 @@ t8_forest_commit (t8_forest_t forest)
     if (forest->from_method & T8_FOREST_FROM_BALANCE) {
       /* balance the forest */
       forest->from_method -= T8_FOREST_FROM_BALANCE;
-      forest->time_balance = 0;
-      forest->time_balance -= sc_MPI_Wtime ();
       if (forest->from_method > 0) {
         /* in this case, we will use subelements after balancing */
         int                 flag_rep;
@@ -768,11 +766,8 @@ t8_forest_commit (t8_forest_t forest)
         }
       }
       forest->is_transitioned = 0;
-      forest->time_balance += sc_MPI_Wtime ();
     }
     if (forest->from_method & T8_FOREST_FROM_TRANSITION) {
-      forest->time_transition = 0;
-      forest->time_transition -= sc_MPI_Wtime ();
       forest->from_method -= T8_FOREST_FROM_TRANSITION;
       /* this is the last from method that we execute,
        * nothing should be left todo */
@@ -780,7 +775,6 @@ t8_forest_commit (t8_forest_t forest)
       /* use subelements */
       t8_forest_transition (forest);
       forest->is_transitioned = 1;
-      forest->time_transition += sc_MPI_Wtime ();
     }
 
     if (forest_from != forest->set_from) {
@@ -811,10 +805,6 @@ t8_forest_commit (t8_forest_t forest)
              (long long) forest->global_num_elements,
              (long long) forest->first_local_tree,
              (long long) forest->last_local_tree);
-
-  /* print runtime for balance and transition */
-  t8_productionf ("balance_time: %f\n", forest->time_balance);
-  t8_productionf ("transition_time: %f\n", forest->time_transition);
 
 #if 0
   /* TODO: Do we keep the arrays or not? */

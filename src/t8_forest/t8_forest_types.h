@@ -137,8 +137,6 @@ typedef struct t8_forest
 
   int                 is_transitioned;  /* Flag parameter that states whether the forest is transitioned or not */
 
-  double              time_adapt, time_balance, time_transition;        /* TODO: remove these later */
-
   sc_statinfo_t       stats[T8_PROFILE_NUM_STATS];
   int                 stats_computed;
 }
