@@ -215,8 +215,9 @@ t8_LFN_test (const t8_forest_t forest_adapt, int get_LFN_stats,
       if (get_LFN_elem_info) {  /* print current element */
 #if T8_ENABLE_DEBUG
         t8_productionf
-          ("\n\nCurrent element: elem index %i of %i (the ranks element index in current tree)\n",
-           elem_count + 1, current_tree_num_elements);
+          ("\n\n________________"
+           "\nCurrent element: local elem index of this process: %i of %i (without ghosts)\n",
+           elem_count, t8_forest_get_local_num_elements(forest_adapt));
         ts->t8_element_debug_print (current_element);
 #endif
       }
@@ -238,8 +239,12 @@ t8_LFN_test (const t8_forest_t forest_adapt, int get_LFN_stats,
             for (neighbor_count = 0; neighbor_count < num_neighbors;
                  neighbor_count++) {
 #if T8_ENABLE_DEBUG
-              t8_productionf ("Neighbor %i of %i at face %i (dual face: %i):\n",
-                              neighbor_count + 1, num_neighbors, face_id, dual_faces[neighbor_count]);
+              t8_productionf ("\n_________"
+                              "\nNeighbor: %i of %i at face %i: (dual face: %i | local index %i of %i (with ghosts)  | ghost, if >= %i):\n",
+                              neighbor_count + 1, num_neighbors, face_id, dual_faces[neighbor_count],
+                              element_indices[neighbor_count], 
+                              t8_forest_get_local_num_elements(forest_adapt) + t8_forest_get_num_ghosts(forest_adapt), 
+                              t8_forest_get_local_num_elements(forest_adapt) - 1);
               ts->t8_element_debug_print (neighbor_leafs[neighbor_count]);
 #endif
             }
@@ -255,9 +260,8 @@ t8_LFN_test (const t8_forest_t forest_adapt, int get_LFN_stats,
           if (get_LFN_elem_info) {
 #if T8_ENABLE_DEBUG
             /* no neighbor in this case */
-            t8_productionf ("Neighbor at face %i:\n", face_id);
-            t8_productionf ("There is no neighbor (domain boundary).\n");
-            t8_productionf ("\n");
+            t8_productionf ("\n_________"
+                            "\nNeighbor: at face %i: There is no neighbor (domain boundary).\n", face_id);
 #endif
           }
         }
@@ -299,8 +303,8 @@ t8_transition_global (void)
   /* ************************************************* Case Settings ************************************************* */
 
   /* refinement setting */
-  int                 initlevel = 4;    /* initial uniform refinement level */
-  int                 adaptlevel = 3;
+  int                 initlevel = 1;    /* initial uniform refinement level */
+  int                 adaptlevel = 2;
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening (minlevel <= initlevel) */
   int                 maxlevel = initlevel + adaptlevel;        /* highest level allowed for refining */
 
@@ -311,7 +315,7 @@ t8_transition_global (void)
   double              start_radius = 0.0;
   double              band_width = 2.0;
 
-  int                 num_adaptations = 30;     /* 1 for a single adapted forest */
+  int                 num_adaptations = 1;     /* 1 for a single adapted forest */
   double              radius_increase = 0.2;
 
   /* adaptation setting */
@@ -320,8 +324,7 @@ t8_transition_global (void)
 
   /* cmesh settings */
   int                 single_tree_mesh = 0;
-  int                 multiple_tree_mesh = 1, num_x_trees = 5, num_y_trees =
-    4;
+  int                 multiple_tree_mesh = 1, num_x_trees = 1, num_y_trees = 2;
   int                 hybrid_tree_mesh = 0;
 
   int                 periodic_boundary = 0;    /* use periodic boundaries */
@@ -339,10 +342,11 @@ t8_transition_global (void)
   /* vtk setting */
   int                 do_vtk = 1;
   int                 do_vtk_cmesh = 0;
+  int                 do_vtk_ghost = 1;
 
   /* Monitoring (only available in debug configuration) */
   int                 get_LFN_stats = 1;
-  int                 get_LFN_elem_info = 0;
+  int                 get_LFN_elem_info = 1;
   int                 get_commit_stats = 1;
   int                 get_general_stats = 1;
 
@@ -489,6 +493,11 @@ t8_transition_global (void)
                     eclass);
       t8_debugf
         ("~~~~~~~~~~ vtk of adapted forest has been constructed ~~~~~~~~~~\n");
+      if (do_vtk_ghost) {
+        snprintf (filename, BUFSIZ, "forest_ghost_%i_%s",
+                adaptation_count, t8_eclass_to_string[T8_ECLASS_QUAD]);
+        t8_forest_write_vtk_ext (forest_adapt, filename, 1, 1, 1, 1, 1, 0, 0, 0, NULL);
+      }
     }
 
     /* iterate through all elements of the adapted, transitioned forest and compute
