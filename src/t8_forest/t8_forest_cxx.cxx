@@ -20,6 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include "t8.h"
 #include <sc_statistics.h>
 #include <t8_refcount.h>
 #include <t8_vec.h>
@@ -2473,6 +2474,7 @@ t8_forest_leaf_face_neighbors_transitioned (t8_forest_t forest,
           T8_ASSERT (!neigh_scheme->t8_element_compare (check_element,
                                                         neighbor_leafs
                                                         [ineigh]));
+          t8_debugf("LFN_transitioned: the neighbor is a ghost.\n");
         }
 #endif
         /* Add the element offset of previous ghosts to this index */
@@ -2767,6 +2769,8 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
 #endif
       }
       else {
+        /* TODO: do we need to adjust in case of subelements here? */
+
         /* The neighbor is a ghost */
         element_array =
           t8_forest_ghost_get_tree_elements (forest, lghost_treeid);
@@ -2785,6 +2789,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
           T8_ASSERT (!neigh_scheme->t8_element_compare (check_element,
                                                         neighbor_leafs
                                                         [ineigh]));
+          t8_debugf("LFN: the neighbor is a ghost.\n");
         }
 #endif
         /* Add the element offset of previous ghosts to this index */
