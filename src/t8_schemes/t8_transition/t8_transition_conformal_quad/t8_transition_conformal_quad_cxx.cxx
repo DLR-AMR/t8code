@@ -866,7 +866,7 @@ t8_subelement_scheme_quad_c::t8_element_face_parent_face (const t8_element_t
       int                 location[3] = { };
       t8_element_get_location_of_subelement (elem, location);
 
-      /* subelements are enumerated clockwise (not as quadrant faces) */
+      /* subelements in location are enumerated clockwise (not as quadrant faces) */
       return subelement_location_to_parent_face[location[0]];
     }
     else {
@@ -1054,7 +1054,6 @@ t8_subelement_scheme_quad_c::t8_element_tree_face (const t8_element_t *elem,
    * face = 1 since other faces will never intersect a tree face. */
   if (t8_element_is_subelement (elem)) {
     T8_ASSERT (face == 1);
-    T8_ASSERT (0 <= face && face < T8_SUBELEMENT_FACES);
 
     return t8_element_face_parent_face (elem, face);
   }
