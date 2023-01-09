@@ -2086,7 +2086,7 @@ t8_forest_leaf_face_neighbors_transitioned (t8_forest_t forest,
   t8_gloidx_t         gneigh_treeid;
   t8_locidx_t         lneigh_treeid = -1;
   t8_locidx_t         lghost_treeid =
-    -1, *element_indices, element_index, ghost_element_index = -1;
+    -1, *element_indices, element_index, subelement_neighbor_index, ghost_element_index = -1;
   t8_eclass_scheme_c *ts, *neigh_scheme;
   t8_element_array_t *element_array;
   t8_element_t       *ancestor, **neighbor_leafs;
@@ -2128,22 +2128,28 @@ t8_forest_leaf_face_neighbors_transitioned (t8_forest_t forest,
      * Note, that a transition cell (a family of subelements will always be within the same process) */
     if (ts->t8_element_is_subelement (leaf)) {
       if (ts->t8_element_neighbor_is_sibling (leaf, face) > 0) {
+        /* subelement siblings will be in the same local tree */
+        T8_ASSERT (ts == neigh_scheme);
         *num_neighbors =
           ts->t8_element_get_num_sibling_neighbors_at_face (leaf, face);
         neighbor_leafs = *pneighbor_leafs =
           T8_ALLOC (t8_element_t *, *num_neighbors);
         *dual_faces = T8_ALLOC (int, *num_neighbors);
-        neigh_scheme->t8_element_new (*num_neighbors, neighbor_leafs);
+        ts->t8_element_new (*num_neighbors, neighbor_leafs);
         ts->t8_element_get_sibling_neighbor_in_transition_cell (leaf, face,
                                                                 *num_neighbors,
                                                                 neighbor_leafs,
                                                                 dual_faces);
         *pelement_indices = T8_ALLOC (t8_locidx_t, *num_neighbors);
-        for (int neighbor_count = 0; neighbor_count < *num_neighbors;
-             neighbor_count++) {
-          (*pelement_indices)[neighbor_count] =
-            ts->t8_element_get_linear_id (neighbor_leafs[neighbor_count],
-                                          t8_forest_get_maxlevel (forest));
+        element_indices = *pelement_indices;
+        for (int neighbor_count = 0; neighbor_count < *num_neighbors; neighbor_count++) {
+          neigh_id = ts->t8_element_get_linear_id (neighbor_leafs[neighbor_count], forest->maxlevel);
+          element_array = t8_forest_get_tree_element_array (forest, ltreeid);
+          subelement_neighbor_index = t8_forest_bin_search_lower (element_array, neigh_id, forest->maxlevel);
+          element_indices[neighbor_count] = subelement_neighbor_index
+            - ts->t8_element_get_subelement_id (t8_forest_get_tree_element (t8_forest_get_tree (forest, ltreeid), subelement_neighbor_index)) 
+            + ts->t8_element_get_subelement_id (neighbor_leafs[neighbor_count]);
+          T8_ASSERT (element_indices[neighbor_count] >= 0);
         }
         return;
       }
