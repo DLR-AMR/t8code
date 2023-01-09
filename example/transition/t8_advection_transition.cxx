@@ -625,30 +625,30 @@ t8_advect_flux_upwind (const t8_advect_problem_t * problem,
 #if T8_GET_DEBUG_OUTPUT
   /* Output, mainly for debugging */
   t8_productionf ("[advect] face %i\n", face);
-  t8_productionf ("[advect] normal %f %f %f\n", normal[0], normal[1],
+  t8_productionf ("[advect] face normal vec %f %f %f\n", normal[0], normal[1],
                   normal[2]);
   t8_productionf ("[advect] face center %f %f %f\n", face_center[0],
                   face_center[1], face_center[2]);
   t8_productionf ("[advect] u %f %f %f\n", u_at_face_center[0],
                   u_at_face_center[1], u_at_face_center[2]);
-  t8_productionf ("[advect] norm t u: %f\n", normal_times_u);
+  t8_productionf ("[advect] normal_times_u: %f\n", normal_times_u);
   t8_productionf ("[advect] area %f\n", area);
-  t8_productionf ("[advect] phi+ %f\n", el_plus_phi);
-  t8_productionf ("[advect] phi- %f\n", el_minus_phi);
+  t8_productionf ("[advect] phi+ (phi at current element) %f\n", el_plus_phi);
+  t8_productionf ("[advect] phi- (phi at neighbor) %f\n", el_minus_phi);
 #endif
 
   if (normal_times_u >= 0) {
-#if 0
+#if T8_GET_DEBUG_OUTPUT
     /* u flows out of the element_plus */
-    t8_debugf ("[advect] out flux: %f\n",
+    t8_debugf ("[advect] flux (out of current element): %f\n",
                -el_plus_phi * normal_times_u * area);
 #endif
     return -el_plus_phi * normal_times_u * area;
   }
   else {
     /* u flows into the element_plus */
-#if 0
-    t8_debugf ("[advect] in flux: %f\n",
+#if T8_GET_DEBUG_OUTPUT
+    t8_debugf ("[advect] flux (into current element): %f\n",
                -el_minus_phi * normal_times_u * area);
 #endif
     return -el_minus_phi * normal_times_u * area;
@@ -2731,6 +2731,10 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
               T8_FREE (elem_data->fluxes[iface]);
               neighbor_time = -sc_MPI_Wtime ();
               time_leaf_face_neighbors -= sc_MPI_Wtime ();
+#if T8_GET_DEBUG_OUTPUT
+              t8_debugf("current element:\n");
+              ts->t8_element_debug_print(elem);
+#endif
               t8_forest_leaf_face_neighbors (problem->forest, itree, elem,
                                              &neighs, iface,
                                              &elem_data->dual_faces[iface],
@@ -2740,6 +2744,10 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
               time_leaf_face_neighbors += sc_MPI_Wtime ();
               for (ineigh = 0; ineigh < elem_data->num_neighbors[iface];
                    ineigh++) {
+#if T8_GET_DEBUG_OUTPUT
+                t8_debugf("neighbor: (index: %i)\n", *elem_data->neighs[iface]);
+                ts->t8_element_debug_print(neighs[ineigh]);
+#endif
                 elem_data->neigh_level[iface] =
                   neigh_scheme->t8_element_level (neighs[ineigh]);
               }
@@ -2817,6 +2825,9 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                 /* There is exactly one face-neighbor */
                 /* get the phi value at the neighbor element */
                 phi_minus = t8_advect_element_get_phi (problem, neigh_index);
+#if T8_GET_DEBUG_OUTPUT
+                t8_debugf("current element index: %i, neigh index: %i\n", lelement, neigh_index);
+#endif
                 flux =
                   t8_advect_flux_upwind (problem, phi_plus, phi_minus,
                                          itree, elem, tree_vertices, iface);
@@ -2826,7 +2837,8 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
 
                 /* NOTE: The following part saves computations but does not work for subelements 
                  * it relies on the fact that elem_data->dual_face and neigh_data->face 
-                 * are not changing which is not true for subelements with a different enumeration of faces. */
+                 * are not changing which is not true for subelements with a different enumeration of faces. 
+                 * TODO: add a valid conversion from standard to subelement and the other way around */
                 if (!do_transition) {
                   /* If this face is not hanging, we can set the
                    * flux of the neighbor element as well */
@@ -2953,7 +2965,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     }
 #else
     /* Run simulation for a fixed number of time steps */
-    if (count_time_steps == 100) {
+    if (count_time_steps == 10) {
       done = 1;
     }
 #endif
@@ -3077,9 +3089,9 @@ main (int argc, char *argv[])
                       "with radius 0.15.\n)"
                       "\t\t6 - stokes_flow_sphere_shell"
                       "\t\t7 - flow_constant_2D_2to1");
-  sc_options_add_int (opt, 'l', "level", &level, 5,
+  sc_options_add_int (opt, 'l', "level", &level, 3,
                       "The minimum refinement level of the mesh.");
-  sc_options_add_int (opt, 'r', "rlevel", &reflevel, 2,
+  sc_options_add_int (opt, 'r', "rlevel", &reflevel, 3,
                       "The number of adaptive refinement levels.");
   sc_options_add_int (opt, 'e', "elements", &eclass_int, T8_ECLASS_QUAD,
                       "If specified the coarse mesh is a hypercube\n\t\t\t\t     consisting of the"
@@ -3109,7 +3121,7 @@ main (int argc, char *argv[])
                       "Controls how often the mesh is readapted. "
                       "A value of i means, every i-th time step.");
 
-  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 4,
+  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 20,
                       "How often the vtk output is produced "
                       "\n\t\t\t\t     (after how many time steps). "
                       "A value of 0 is equivalent to using -o.");
