@@ -735,7 +735,7 @@ public:
   /** Return 1 if the eclass scheme has an implementation for subelements, which is conformal. */
   virtual int         t8_element_transition_scheme_is_conformal (void) = 0;
 
-  /** Return the subelement id of the neighbor subelement of elem at face elem_face
+  /** Return the subelement id of the neighbor subelement of elem (possibly not subelement) at face elem_face
   *   that is a sibling of the subelement neigh. 
   *  \param [in] elem a given element (possibly subelement)
   *  \param [in] neigh a random subelement (pseudoneighbor) in a transition cell from which we assume that it owns the real neighbor of elem
