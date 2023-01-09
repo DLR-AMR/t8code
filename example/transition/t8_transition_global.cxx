@@ -238,8 +238,8 @@ t8_LFN_test (const t8_forest_t forest_adapt, int get_LFN_stats,
             for (neighbor_count = 0; neighbor_count < num_neighbors;
                  neighbor_count++) {
 #if T8_ENABLE_DEBUG
-              t8_productionf ("Neighbor %i of %i at face %i:\n",
-                              neighbor_count + 1, num_neighbors, face_id);
+              t8_productionf ("Neighbor %i of %i at face %i (dual face: %i):\n",
+                              neighbor_count + 1, num_neighbors, face_id, dual_faces[neighbor_count]);
               ts->t8_element_debug_print (neighbor_leafs[neighbor_count]);
 #endif
             }
