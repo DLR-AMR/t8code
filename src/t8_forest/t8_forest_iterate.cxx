@@ -419,16 +419,17 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
     T8_ASSERT (eclass == t8_forest_get_tree_class (forest_old, itree));
     ts = t8_forest_get_eclass_scheme (forest_new, eclass);
     T8_ASSERT (ts == t8_forest_get_eclass_scheme (forest_new, eclass));
+
+    /* element loop */
     for (ielem_new = 0, ielem_old = 0; ielem_new < elems_per_tree_new
          || ielem_old < elems_per_tree_old;) {
-      /* Iterate over the elements */
       /* Get pointers to the elements */
       elem_new = t8_forest_get_element_in_tree (forest_new, itree, ielem_new);
       elem_old = t8_forest_get_element_in_tree (forest_old, itree, ielem_old);
 
 #if 0                           /* output for debugging */
 #if T8_ENABLE_DEBUG
-      t8_debugf ("Using the subelement iterate_replace scheme:\n");
+      t8_debugf ("\nt8_forest_iterate_replace: Using the subelement iterate_replace scheme:\n");
       t8_debugf ("elem_old (index: %i):\n", ielem_old);
       ts->t8_element_debug_print (elem_old);
       t8_debugf ("elem_new (index: %i):\n", ielem_new);
@@ -448,8 +449,9 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
           elem_in_refinement =
             t8_forest_get_element_in_tree (forest_new, itree,
                                            ielem_new + element_count);
+
+          /* the element could additionally be refined into a transition cell */
           if (ts->t8_element_is_subelement (elem_in_refinement)) {
-            /* the element could additionally be refrned into a transition cell */
             family_size +=
               ts->t8_element_num_siblings (elem_in_refinement) - 1;
             element_count +=
@@ -457,13 +459,16 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
           }
         }
         number_new_elements = family_size;
+
+        /* check whether the old element is a transition cell */
         if (ts->t8_element_is_subelement (elem_old)) {
-          /* check whether the old element is a transition cell */
           number_old_elements = ts->t8_element_num_siblings (elem_old);
         }
         else {
           number_old_elements = 1;
         }
+
+        /* transfer values from elem_old to elem_new */
         replace_fn (forest_old, forest_new, itree, ts, 1, number_old_elements,
                     ielem_old, number_new_elements, ielem_new);
 
