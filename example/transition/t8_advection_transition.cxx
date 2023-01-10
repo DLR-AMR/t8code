@@ -39,7 +39,7 @@
  *        3 - periodic trigonometric off center (for example for a circular flow)
  *
  * Note 1: that it is possible to print out additional information during the simulation by setting
- * T8_GET_DEBUG_OUTPUT to 1.
+ * GET_DEBUG_OUTPUT to 1.
  * 
  * Note 2: For subelement validation it is possible to use the static refinement (return 0; case) and then set the refine_transition function to return 16;
  * This way, we compute on a uniform, completely transitioned mesh and can compare it with the uniform non transitioned mesh.
@@ -69,8 +69,8 @@
 #include <t8_vec.h>
 #include <t8_cmesh/t8_cmesh_examples.h> /* this is for t8_cmesh functions */
 
-#define T8_GET_DEBUG_OUTPUT 1
-#define DO_FIXED_NUMBER_OF_ADAPTAIONS 1
+#define GET_DEBUG_OUTPUT 0
+#define DO_DEBUGGING_EXAMPLE 0
 
 #define MAX_FACES 8             /* The maximum number of faces of an element */
 /* TODO: This is not memory efficient. If we run out of memory, we can optimize here. */
@@ -628,7 +628,7 @@ t8_advect_flux_upwind (const t8_advect_problem_t * problem,
   /* Compute the dot-product of u and the normal vector */
   normal_times_u = t8_vec_dot (normal, u_at_face_center);
 
-#if T8_GET_DEBUG_OUTPUT
+#if GET_DEBUG_OUTPUT
   /* Output, mainly for debugging */
   t8_productionf ("[advect] face %i\n", face);
   t8_productionf ("[advect] face normal vec %f %f %f\n", normal[0], normal[1],
@@ -644,7 +644,7 @@ t8_advect_flux_upwind (const t8_advect_problem_t * problem,
 #endif
 
   if (normal_times_u >= 0) {
-#if T8_GET_DEBUG_OUTPUT
+#if GET_DEBUG_OUTPUT
     /* u flows out of the element_plus */
     t8_debugf ("[advect] flux (out of current element): %f\n",
                -el_plus_phi * normal_times_u * area);
@@ -653,7 +653,7 @@ t8_advect_flux_upwind (const t8_advect_problem_t * problem,
   }
   else {
     /* u flows into the element_plus */
-#if T8_GET_DEBUG_OUTPUT
+#if GET_DEBUG_OUTPUT
     t8_debugf ("[advect] flux (into current element): %f\n",
                -el_minus_phi * normal_times_u * area);
 #endif
@@ -860,9 +860,9 @@ t8_advect_advance_element (t8_advect_problem_t * problem,
   }
   /* Phi^t = dt/dx * (f_(j-1/2) - f_(j+1/2)) + Phi^(t-1) */
   elem_data->phi_new = (problem->delta_t / elem_data->vol) * flux_sum + phi;
-#if T8_GET_DEBUG_OUTPUT
+#if GET_DEBUG_OUTPUT
   t8_productionf
-    ("[advect] advance el with delta_t %f vol %f phi %f  flux %f to %f\n",
+    ("advance el with delta_t %f vol %f phi %f  flux %f to %f\n",
      problem->delta_t, elem_data->vol, phi, flux_sum, elem_data->phi_new);
 #endif
 }
@@ -896,12 +896,12 @@ bool
 t8_advect_global_conservation_check (double scaled_global_phi_beginning,
                                      double scaled_global_phi_end)
 {
-  double              eps = 1e-12;
+  double              eps = 1e-6;
   double              diff_phi_global =
     scaled_global_phi_beginning - scaled_global_phi_end;
   double              abs_diff_phi_global =
     ((diff_phi_global < 0) ? -diff_phi_global : diff_phi_global);
-#if T8_GET_DEBUG_OUTPUT
+#if GET_DEBUG_OUTPUT
   t8_productionf
     ("\nglobal conservation check:\n"
      "global_phi_beginning: %e global_phi_end: %e abs_diff_phi_global: %e, threshhold: %e, return %d\n",
@@ -914,10 +914,10 @@ t8_advect_global_conservation_check (double scaled_global_phi_beginning,
 bool
 t8_advect_conservation_check_phi (double outgoing_phi, double incoming_phi)
 {
-  double              eps = 1e-12;
+  double              eps = 1e-6;
   double              diff_phi = outgoing_phi - incoming_phi;
   double              abs_diff_phi = ((diff_phi < 0) ? -diff_phi : diff_phi);
-#if T8_GET_DEBUG_OUTPUT
+#if GET_DEBUG_OUTPUT
   t8_productionf
     ("\nlocal conservation check:\n"
      "outgoing_phi: %e incoming_phi: %e abs_diff_phi: %e, threshhold: %e, return %d\n",
@@ -930,11 +930,11 @@ bool
 t8_advect_conservation_check_volume (double outgoing_volume,
                                      double incoming_volume)
 {
-  double              eps = 1e-12;
+  double              eps = 1e-6;
   double              diff_volume = outgoing_volume - incoming_volume;
   double              abs_diff_volume =
     ((diff_volume < 0) ? -diff_volume : diff_volume);
-#if T8_GET_DEBUG_OUTPUT
+#if GET_DEBUG_OUTPUT
   t8_productionf
     ("outgoing_volume: %e incoming_volume: %e abs_diff_volume: %e, threshhold: %e, return %d\n",
      outgoing_volume, incoming_volume, abs_diff_volume, eps, ((abs_diff_volume < eps) ? true : false));
@@ -996,7 +996,7 @@ t8_advect_replace (t8_forest_t forest_old,
     t8_forest_get_element_in_tree (problem->forest_adapt, which_tree,
                                    first_incoming);
 
-#if T8_GET_DEBUG_OUTPUT         /* for debugging */
+#if GET_DEBUG_OUTPUT         /* for debugging */
 #if T8_ENABLE_DEBUG
   t8_productionf ("first Element out:\n");
   ts->t8_element_debug_print (first_outgoing_elem);
@@ -1141,7 +1141,7 @@ t8_advect_replace (t8_forest_t forest_old,
         t8_forest_get_element_in_tree (problem->forest_adapt, which_tree,
                                        first_incoming + subelem_in_count);
 
-#if T8_GET_DEBUG_OUTPUT         /* for debugging */
+#if GET_DEBUG_OUTPUT         /* for debugging */
 #if T8_ENABLE_DEBUG
       t8_productionf ("Out count: %i, In count: %i\n", subelem_out_count,
                       subelem_in_count);
@@ -1789,7 +1789,7 @@ t8_advect_replace (t8_forest_t forest_old,
   SC_CHECK_ABORT (t8_advect_conservation_check_volume (outgoing_volume, incoming_volume),
                   "Conservation check volume failed at the end of t8_advect_replace");
   SC_CHECK_ABORT (t8_advect_conservation_check_phi (outgoing_phi, incoming_phi),
-                  "Conservation check local failed at the end of t8_advect_replace");
+                  "Conservation check phi failed at the end of t8_advect_replace");
 
 } /* end of t8_advect_replace */
 
@@ -2003,9 +2003,9 @@ t8_advect_problem_adapt_init (t8_advect_problem_t * problem, int measure_time,
   if (problem->transition) {
     t8_forest_set_transition (problem->forest_adapt, NULL, 1);
   }
-  /* We also want ghost elements in the new forest */
-  t8_forest_set_ghost_ext (problem->forest_adapt, 1, T8_GHOST_FACES, 1);        /* need ghost version 1 for transition cells */
-  /* Commit the forest, adaptation and balance happens here */
+  /* We also want ghost elements in the new forest (use version 1 for transitioned forests) */
+  t8_forest_set_ghost_ext (problem->forest_adapt, 1, T8_GHOST_FACES, 1);
+  /* Commit the forest, adaptation, balance and transition happens here if set */
   t8_forest_commit (problem->forest_adapt);
 
   /* Store the runtimes in problems stats */
@@ -2395,7 +2395,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
       T8_ASSERT (elem_data->num_faces == 3 || elem_data->num_faces == 4);
       for (iface = 0; iface < elem_data->num_faces; iface++) {
         /* Compute the indices of the face neighbors */
-#if T8_GET_DEBUG_OUTPUT
+#if GET_DEBUG_OUTPUT
 #if T8_ENABLE_DEBUG
         t8_productionf
           ("Initialization: Current element (tree: %i, element_index: %i, face: %i\n",
@@ -2411,7 +2411,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
                                        &elem_data->neighs[iface],
                                        &neigh_scheme, 1);
 
-#if T8_GET_DEBUG_OUTPUT
+#if GET_DEBUG_OUTPUT
 #if T8_ENABLE_DEBUG
         /* for debugging */
         t8_productionf ("Initialization: Neighbor at face %i:\n", iface);
@@ -2590,7 +2590,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                  sc_MPI_Comm comm, int adapt_freq, int no_vtk,
                  int vtk_freq, double band_width, int dim, int dummy_op,
                  int volume_refine, int do_transition,
-                 int refinementcriterion, int do_partition)
+                 int refinementcriterion, int do_partition, int fixed_number_TS)
 {
   t8_advect_problem_t *problem;
   int                 iface, ineigh;
@@ -2614,7 +2614,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   int                 dual_face;
   t8_locidx_t         neigh_index = -1;
   double              phi_plus, phi_minus;
-  double              scaled_global_phi_beginning = 0, scaled_global_phi_end = 0;       /* for conservation test */
+  double              scaled_global_phi_beginning = 0, scaled_global_phi_end = 0, scaled_global_phi_beginning_TS = 0;       /* for conservation test */
   int                 number_elements_global = 0;
   int                 count_time_steps = 0;
 
@@ -2678,9 +2678,12 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     }
 
     count_time_steps++;
+
+    /* get the global mass of the transported property - we test against these values later */
     if (problem->num_time_steps == 0) {
       scaled_global_phi_beginning = t8_advect_get_global_phi (problem);
     }
+    scaled_global_phi_beginning_TS = t8_advect_get_global_phi (problem);
 
     /* Print vtk */
     if (!no_vtk && (problem->num_time_steps + 1) % vtk_freq == 0) {
@@ -2751,7 +2754,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
               T8_FREE (elem_data->fluxes[iface]);
               neighbor_time = -sc_MPI_Wtime ();
               time_leaf_face_neighbors -= sc_MPI_Wtime ();
-#if T8_GET_DEBUG_OUTPUT
+#if GET_DEBUG_OUTPUT
               t8_productionf ("\n\n________________"
                               "\nCurrent element: local elem index of this process: %i of %i (without ghosts)\n",
                               ielement, t8_forest_get_local_num_elements(problem->forest));
@@ -2765,7 +2768,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                                              &neigh_scheme, 1);
               time_leaf_face_neighbors += sc_MPI_Wtime ();
               for (ineigh = 0; ineigh < elem_data->num_neighbors[iface]; ineigh++) {
-#if T8_GET_DEBUG_OUTPUT
+#if GET_DEBUG_OUTPUT
                 t8_debugf ("\n_________"
                            "\nNeighbor: %i of %i at face %i (dual face: %i | local index %i of %i (with ghosts) | ghost, if >= %i):\n",
                            ineigh + 1, elem_data->num_neighbors[iface], iface,
@@ -2931,11 +2934,15 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
         }
 
         /* Compute time step */
-        t8_debugf ("advance %i\n", lelement);
         t8_advect_advance_element (problem, lelement);
+
+        t8_debugf ("finish loop for element %i\n", lelement);
       }                         /* end element loop */
+
+      t8_debugf ("finish loop for tree %i\n", itree);
     }                           /* end tree loop */
     adapted_or_partitioned = 0;
+
     /* Store the advanced phi value in each element */
     t8_advect_project_element_data (problem);
     solve_time += sc_MPI_Wtime ();
@@ -2966,9 +2973,25 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     }
 
     /* Exchange ghost values */
+#if GET_DEBUG_OUTPUT
+    double global_phi_before_ghost_exchange, global_phi_after_ghost_exchange;
+    global_phi_before_ghost_exchange = t8_advect_get_global_phi (problem);
+    t8_debugf("t8_advect_solve: into forest_ghost_exchange_data.\n");
+#endif
+    t8_advect_get_global_phi (problem);
     ghost_exchange_time = -sc_MPI_Wtime ();
     t8_forest_ghost_exchange_data (problem->forest, problem->phi_values);
     ghost_exchange_time += sc_MPI_Wtime ();
+#if GET_DEBUG_OUTPUT
+    global_phi_after_ghost_exchange = t8_advect_get_global_phi (problem);
+    t8_debugf("t8_advect_solve: finished forest_ghost_exchange_data.\n"
+              "phi before: %e, phi after: %e\n", 
+              global_phi_before_ghost_exchange, global_phi_after_ghost_exchange);
+    SC_CHECK_ABORT(t8_advect_global_conservation_check
+                   (global_phi_before_ghost_exchange, global_phi_after_ghost_exchange),
+                   "Global conservation check failed after ghost exchange.");
+#endif
+
     sc_stats_accumulate (&problem->stats[ADVECT_GHOST_EXCHANGE],
                          ghost_exchange_time);
     ghost_waittime =
@@ -2980,26 +3003,29 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
 
     T8_ASSERT (problem->delta_t > 0);
 
-#if DO_FIXED_NUMBER_OF_ADAPTAIONS
-    /* Run simulation for a fixed number of time steps */
-    if (count_time_steps == 100) {
-      done = 1;
+    if (fixed_number_TS) {
+      /* Run simulation for a fixed number of time steps */
+      if (count_time_steps == 4) {
+        done = 1;
+      }
     }
-#else
-    if (problem->t + problem->delta_t > problem->T) {
-      /* Ensure that the last time step is always the given end time */
-      problem->delta_t = problem->T - problem->t;
+    else {
+      if (problem->t + problem->delta_t > problem->T) {
+        /* Ensure that the last time step is always the given end time */
+        problem->delta_t = problem->T - problem->t;
+      }
+      /* Check whether we are finished */
+      if (problem->t >= problem->T) {
+        done = 1;
+      }
     }
-    /* Check whether we are finished */
-    if (problem->t >= problem->T) {
-      done = 1;
-    }
-#endif
 
     /* Global conservation check for the new timestep - global sum of scaled phi values should not change */
-    // SC_CHECK_ABORT (t8_advect_global_conservation_check
-    //                 (scaled_global_phi_beginning, t8_advect_get_global_phi (problem)),
-    //                 "Global conservation check in time loop failed.");
+    SC_CHECK_ABORT (t8_advect_global_conservation_check
+                    (scaled_global_phi_beginning_TS, t8_advect_get_global_phi (problem)),
+                    "Global conservation check in time loop failed.");
+
+    t8_debugf ("finish loop for timestep %i\n", problem->num_time_steps);
 
   }                             /* End time loop */
 
@@ -3041,8 +3067,10 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     number_elements_global / problem->num_time_steps;
 
   /* Plot some results */
+#if GET_DEBUG_OUTPUT
   t8_advect_global_conservation_check (scaled_global_phi_beginning,
                                        scaled_global_phi_end);
+#endif
   t8_global_essentialf ("[advect] Number time steps: %i\n",
                         problem->num_time_steps);
   t8_global_essentialf ("[advect] Number elements mean: %i\n",
@@ -3079,6 +3107,7 @@ main (int argc, char *argv[])
   int                 refinementcriterion;
   int                 do_partition;
   int                 flow_arg;
+  int                 fixed_number_TS;
   double              T, cfl, band_width;
   t8_levelset_sphere_data_t ls_data;
   /* brief help message */
@@ -3103,7 +3132,7 @@ main (int argc, char *argv[])
 
   sc_options_add_switch (opt, 'h', "help", &helpme,
                          "Display a short help message.");
-  sc_options_add_int (opt, 'u', "flow", &flow_arg, 7,
+  sc_options_add_int (opt, 'u', "flow", &flow_arg, 4,
                       "Choose the flow field u.\n"
                       "\t\t1 - Constant 1 in x-direction.\n"
                       "\t\t2 - Constant 1 in x,y, and z.\n"
@@ -3116,7 +3145,7 @@ main (int argc, char *argv[])
                       "\t\t7 - flow_constant_2D_2to1");
   sc_options_add_int (opt, 'l', "level", &level, 2,
                       "The minimum refinement level of the mesh.");
-  sc_options_add_int (opt, 'r', "rlevel", &reflevel, 2,
+  sc_options_add_int (opt, 'r', "rlevel", &reflevel, 4,
                       "The number of adaptive refinement levels.");
   sc_options_add_int (opt, 'e', "elements", &eclass_int, T8_ECLASS_QUAD,
                       "If specified the coarse mesh is a hypercube\n\t\t\t\t     consisting of the"
@@ -3142,11 +3171,11 @@ main (int argc, char *argv[])
                          "Control the width of the refinement band around\n"
                          " the zero level-set. Default 1.");
 
-  sc_options_add_int (opt, 'a', "adapt-freq", &adapt_freq, 10,
+  sc_options_add_int (opt, 'a', "adapt-freq", &adapt_freq, 4,
                       "Controls how often the mesh is readapted. "
                       "A value of i means, every i-th time step.");
 
-  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 5,
+  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 1,
                       "How often the vtk output is produced "
                       "\n\t\t\t\t     (after how many time steps). "
                       "A value of 0 is equivalent to using -o.");
@@ -3197,8 +3226,23 @@ main (int argc, char *argv[])
   sc_options_add_int (opt, 'P', "partition", &do_partition, 0,
                       "Partition the forest after adaptation\n");
 
+  sc_options_add_int (opt, 'F', "fixed_number_TS", &fixed_number_TS, 0,
+                      "Partition the forest after adaptation\n");
+
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
+
+#if DO_DEBUGGING_EXAMPLE
+  flow_arg = 7; /* 2to1 flow */
+  level = 2;
+  reflevel = 2;
+  fixed_number_TS = 1; /* only a small, fixed number of timesteps */
+  adapt_freq = 2; /* do not adapt */
+  vtk_freq = 1;
+  do_transition = 1;
+  initialphi = 3; /* start trigonometric offcentered */
+  refinementcriterion = 0; /* numeric refinement */
+#endif 
 
   if (helpme) {
     /* display help message and usage */
@@ -3258,7 +3302,7 @@ main (int argc, char *argv[])
                      level + reflevel, T, cfl, sc_MPI_COMM_WORLD,
                      adapt_freq, no_vtk, vtk_freq, band_width, dim,
                      dummy_op, volume_refine, do_transition,
-                     refinementcriterion, do_partition);
+                     refinementcriterion, do_partition, fixed_number_TS);
 
     adapt_time += sc_MPI_Wtime ();
     t8_global_essentialf ("Runtime advect: %f\n", adapt_time);
