@@ -440,10 +440,10 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
          * It is assumed that no element was removed. */
         int el_removed = 0;
         if (level_old < level_new) {
-          /* elem_old may was refined */
+          /* elem_old got refined or removed */
           ts->t8_element_parent(elem_new, elem_parent);
           if (!ts->t8_element_compare (elem_old, elem_parent)){
-            /* elem_old was refined */
+            /* elem_old got refined */
             T8_ASSERT (level_new == level_old + 1);
             const t8_locidx_t family_size = ts->t8_element_num_children (elem_old);
 #if T8_DEBUG
@@ -466,15 +466,15 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
             ielem_old++;
           }
           else {
-            /* Element got removed */
+            /* elem_old got removed */
             el_removed = 1;
           }
         }
         else if (level_old > level_new) {
-          /* elem_old may was coarsened */
+          /* elem_old got coarsened or removed */
           ts->t8_element_parent(elem_old, elem_parent);
           if (!ts->t8_element_compare (elem_new, elem_parent)) {
-            /* elem_old was coarsened */
+            /* elem_old got coarsened */
             T8_ASSERT (level_new == level_old - 1);
             /* Get size of family of old forest */
             int family_size = 1;
@@ -509,11 +509,12 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
             ielem_old += family_size;
           }
           else {
-            /* Element got removed */
+            /* elem_old got removed */
             el_removed = 1;
           }
         }
         else {
+          /* elem_old was untouched or got removed */
           if (!ts->t8_element_compare (elem_new, elem_old)) {
             /* elem_new = elem_old */
             const int refine = 0;
@@ -524,12 +525,13 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
             ielem_old++;
           }
           else {
-            /* Element got removed */
+            /* elem_old got removed */
             el_removed = 1;
           }
         }
         if (el_removed) {
-          T8_ASSERT(el_removed == 1 && forest_new->is_incomplete == 1);
+          T8_ASSERT (el_removed == 1);
+          T8_ASSERT (forest_new->is_incomplete == 1);
           /* element got removed */
           const int refine = -2;
           replace_fn (forest_old, forest_new, itree, ts, refine,
@@ -537,7 +539,7 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
           /* Advance to the next element */
           ielem_old++;
         }
-        T8_ASSERT(el_removed == 1 || el_removed == 0);
+        T8_ASSERT (el_removed == 1 || el_removed == 0);
       }
       else {
         /* forest_new consists only of complete trees. */
