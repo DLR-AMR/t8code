@@ -23,4 +23,5 @@ As a reviewer please read through all the code lines and make sure that the code
 - [ ] The code is well documented
 - [ ] All function declarations, structs/classes and their members have a proper doxygen documentation
 - [ ] All new algorithms and data structures are sufficiently optimal in terms of memory and runtime (If this should be merged, but there is still potential for optimization, create a new issue)
+- [ ] There is a at least an example covering the new code, better even a wiki article or tutorial
 - [ ] Testing of this template: If you feel something is missing from this list, contact the developers
