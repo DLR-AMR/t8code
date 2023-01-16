@@ -68,7 +68,7 @@ T8_EXTERN_C_BEGIN ();
  *
  * \param [in] forest_old      The forest that is adapted
  * \param [in] forest_new      The forest that is newly constructed from \a forest_old
- * \param [in] which_tree      The local tree containing \a outgoing and \a incoming
+ * \param [in] which_tree      The local tree containing \a first_outgoing and \a first_incoming
  * \param [in] ts              The eclass scheme of the tree
  * \param [in] refine          -1 if family in \a forest_old got coarsened, 0 if element
  *                             has not been touched, 1 if element got refined and -2 if
@@ -93,10 +93,10 @@ typedef void        (*t8_forest_replace_t) (t8_forest_t forest_old,
                                             t8_forest_t forest_new,
                                             t8_locidx_t which_tree,
                                             t8_eclass_scheme_c *ts,
-                                            int refine,
-                                            int num_outgoing,
+                                            const int refine,
+                                            const int num_outgoing,
                                             t8_locidx_t first_outgoing,
-                                            int num_incoming,
+                                            const int num_incoming,
                                             t8_locidx_t first_incoming);
 
 /** Callback function prototype to decide for refining and coarsening.
