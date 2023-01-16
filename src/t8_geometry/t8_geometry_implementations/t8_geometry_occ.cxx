@@ -39,6 +39,7 @@
 #include <TopoDS_Vertex.hxx>
 #include <TopoDS_Edge.hxx>
 #include <TopoDS_Face.hxx>
+#include <Standard_Version.hxx>
 
 #endif /* T8_WITH_OCC */
 
@@ -76,7 +77,9 @@ t8_geometry_occ::t8_geometry_occ (int dim, const char *fileprefix,
   BRepTools::Read (occ_shape, is, builder);
   is.close ();
   if (occ_shape.IsNull ()) {
-    SC_ABORTF ("Could not read brep file or brep file contains no shape \n");
+    SC_ABORTF ("Could not read brep file or brep file contains no shape. "
+               "The OCC file may be written with a newer OCC version. "
+               "Linked OCC version: %s", OCC_VERSION_COMPLETE);
   }
   TopExp::MapShapes (occ_shape, TopAbs_VERTEX, occ_shape_vertex_map);
   TopExp::MapShapes (occ_shape, TopAbs_EDGE, occ_shape_edge_map);
