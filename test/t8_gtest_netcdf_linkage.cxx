@@ -33,7 +33,7 @@
 #include <netcdf.h>
 #endif
 
-TEST(t8_gtest_netcdf_linkage, test_linking_with_netcdf)
+TEST (t8_gtest_netcdf_linkage, test_linking_with_netcdf)
 {
 #if T8_WITH_NETCDF
 
@@ -43,12 +43,12 @@ TEST(t8_gtest_netcdf_linkage, test_linking_with_netcdf)
   int                 nc_error = nc_create ("FileName", NC_DISKLESS, &ncid);
 
   /* Check for error */
-  EXPECT_EQ(nc_error,NC_NOERR)
+  EXPECT_EQ (nc_error, NC_NOERR);
 
   /* Close the file */
   nc_error = nc_close (ncid);
   /* Check for error */
-  EXPECT_EQ(nc_error,NC_NOERR)
+  EXPECT_EQ (nc_error, NC_NOERR);
 
   t8_global_productionf
     ("Successfully created and closed in memory netcdf file.\n");
