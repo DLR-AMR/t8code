@@ -47,18 +47,18 @@
 #endif
 
 /* Check whether T8_VTK_VERSION_USED equals VTK_MAJOR_VERSION.VTK_MINOR_VERSION */
-TEST(t8_gtest_vtk_linkage, t8_test_vtk_version_number)
+TEST (t8_gtest_vtk_linkage, t8_test_vtk_version_number)
 {
 #if T8_WITH_VTK
   char                vtk_version[BUFSIZ];
   snprintf (vtk_version, BUFSIZ, "%i.%i", VTK_MAJOR_VERSION,
             VTK_MINOR_VERSION);
-  EXPECT_FALSE(strcmp (T8_VTK_VERSION_USED, vtk_version));
+  EXPECT_FALSE (strcmp (T8_VTK_VERSION_USED, vtk_version));
 #endif
 }
 
 /* Check whether we can successfully execute VTK code */
-TEST(t8_gtest_vtk_linkage, t8_test_vtk_linkage)
+TEST (t8_gtest_vtk_linkage, t8_test_vtk_linkage)
 {
 #if T8_WITH_VTK
   vtkNew < vtkUnstructuredGrid > unstructuredGrid;
