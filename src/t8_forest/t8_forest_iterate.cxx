@@ -459,8 +459,6 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
             }
 #endif
             const int refine = 1;
-            t8_debugf("[IL] itree %i, elem_old %i, elem_new %i, refine %i, family_size 1\n", 
-                      itree, ielem_old, ielem_new, refine);
             replace_fn (forest_old, forest_new, itree, ts, refine,
                         1, ielem_old, family_size, ielem_new);
             /* Advance to the next element */
@@ -504,8 +502,6 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
             }
 #endif
             const int refine = -1;
-            t8_debugf("[IL] itree %i, elem_old %i, elem_new %i, refine %i, family_size %i\n", 
-                      itree, ielem_old, ielem_new, refine, family_size);
             replace_fn (forest_old, forest_new, itree, ts, refine, 
                         family_size, ielem_old, 1, ielem_new);
             /* Advance to the next element */
@@ -521,8 +517,6 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
           if (!ts->t8_element_compare (elem_new, elem_old)) {
             /* elem_new = elem_old */
             const int refine = 0;
-            t8_debugf("[IL] itree %i, elem_old %i, elem_new %i, refine %i, family_size 1\n", 
-                      itree, ielem_old, ielem_new, refine);
             replace_fn (forest_old, forest_new, itree, ts, refine,
               1, ielem_old, 1, ielem_new);
             /* Advance to the next element */
@@ -538,8 +532,6 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
           T8_ASSERT(el_removed == 1 && forest_new->is_incomplete == 1);
           /* element got removed */
           const int refine = -2;
-          t8_debugf("[IL] itree %i, elem_old %i, elem_new %i, refine %i, family_size 1\n", 
-                    itree, ielem_old, ielem_new, refine);
           replace_fn (forest_old, forest_new, itree, ts, refine,
                       1, ielem_old, 0, NULL);
           /* Advance to the next element */
