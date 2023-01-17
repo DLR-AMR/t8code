@@ -85,7 +85,7 @@ void                t8_forest_partition_data (t8_forest_t forest_from,
  * \note \a forest must be committed before calling this function.
  */
 void
-t8_forest_partition_test_boundery_element (t8_forest_t forest);
+t8_forest_partition_test_boundery_element (const t8_forest_t forest);
 
 T8_EXTERN_C_END ();
 

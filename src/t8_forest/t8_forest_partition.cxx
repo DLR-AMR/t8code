@@ -163,7 +163,7 @@ t8_forest_partition_test_desc (t8_forest_t forest)
 #endif
 
 void
-t8_forest_partition_test_boundery_element (t8_forest_t forest)
+t8_forest_partition_test_boundery_element (const t8_forest_t forest)
 {
 #ifdef T8_ENABLE_DEBUG
   T8_ASSERT (t8_forest_is_committed (forest));
