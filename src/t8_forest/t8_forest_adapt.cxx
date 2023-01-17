@@ -269,7 +269,7 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest,
     }
 
     int                 num_elements_to_adapt_callback;
-    if (forest->is_incomplete) {
+    if (forest->set_from->is_incomplete) {
       /* We will pass a (in)complete family to the adapt callback */
       num_elements_to_adapt_callback = (int) (*el_inserted - pos);
       T8_ASSERT (0 < num_elements_to_adapt_callback);
@@ -286,14 +286,14 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest,
     }
 #if T8_ENABLE_DEBUG
     /* If is_family is true, the set fam must be a family. */
-    if (forest->is_incomplete) {
+    if (forest->set_from->is_incomplete) {
       T8_ASSERT (!is_family ||
                  t8_forest_is_family_callback (ts,
                                                num_elements_to_adapt_callback,
                                                fam));
     }
     else {
-      T8_ASSERT (forest->is_incomplete == 0);
+      T8_ASSERT (forest->set_from->is_incomplete == 0);
       T8_ASSERT (!is_family || ts->t8_element_is_family (fam));
     }
 #endif
@@ -326,7 +326,7 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest,
   }                             /* End while loop */
 }
 
-/** Check the lastly inserted element of an array for recursive refining.
+/** Check the lastly inserted element of an array for recursive refining or removing.
  * \param [in] forest  The new forest currently in construction.
  * \param [in] ltreeid The current local tree.
  * \param [in] lelement_id The id of the currently coarsened element in the tree of the original forest.
@@ -338,6 +338,7 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest,
  * \param [in,out] num_inserted On input the number of elements in \a telement, on output
  *                        the new number of elements (so it will be smaller or equal to its input).
  * \param [in] el_buffer Enough buffer space to store all children of the lastly created element.
+ * \param [in] element_removed Flag set to 1 if element was removed.
  */
 static void
 t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
@@ -346,7 +347,8 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
                                   sc_list_t * elem_list,
                                   t8_element_array_t *telements,
                                   t8_locidx_t *num_inserted,
-                                  t8_element_t **el_buffer)
+                                  t8_element_t **el_buffer,
+                                  int *element_removed)
 {
   while (elem_list->elem_count > 0) {
     /* Until the list is empty we
@@ -381,6 +383,7 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
     else if (refine == -2) {
       /* This element should get removed,
        * we just remove it from the buffer */
+      *element_removed = 1;
       ts->t8_element_destroy (1, el_buffer);
     }
     else {
@@ -424,6 +427,7 @@ t8_forest_adapt (t8_forest_t forest)
   int                 ci;
   int                 refine;
   int                 is_family;
+  int                 element_removed = 0;
 
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->set_from != NULL);
@@ -444,6 +448,8 @@ t8_forest_adapt (t8_forest_t forest)
   t8_global_productionf ("Into t8_forest_adapt from %lld total elements\n",
                          (long long) forest_from->global_num_elements);
 
+  T8_ASSERT (forest->is_incomplete != -1);
+  T8_ASSERT (forest->is_incomplete == forest_from->is_incomplete);
   /* TODO: Allocate memory for the trees of forest.
    * Will we do this here or in an extra function? */
   T8_ASSERT (forest->trees->elem_count == forest_from->trees->elem_count);
@@ -597,7 +603,7 @@ t8_forest_adapt (t8_forest_t forest)
           /* We now recursively check the newly created elements for refinement. */
           t8_forest_adapt_refine_recursive (forest, ltree_id, el_considered,
                                             tscheme, refine_list, telements,
-                                            &el_inserted, elements);
+                                            &el_inserted, elements, &element_removed);
           /* el_coarsen is the index of the first element in the new element
            * array which could be coarsened recursively.
            * We can set this here to the next element after the current family, 
@@ -671,8 +677,9 @@ t8_forest_adapt (t8_forest_t forest)
         el_considered++;
       }
       else {
-        T8_ASSERT (refine == -2);
         /* Remove the element */
+        T8_ASSERT (refine == -2);
+        element_removed = 1;
         el_considered++;
       }
     }                           /* End element loop */
@@ -712,6 +719,20 @@ t8_forest_adapt (t8_forest_t forest)
   /* We now adapted all local trees */
   /* Compute the new global number of elements */
   t8_forest_comm_global_num_elements (forest);
+
+  /* Updating other processes about local (in)complete trees.
+   * If the old forest already contained incomplete trees, 
+   * this step is not necessary. */
+  if (!forest_from->is_incomplete) {
+    T8_ASSERT (element_removed == 1 || element_removed == 0);
+    int incomplete_trees;
+    int mpiret = sc_MPI_Allreduce (&element_removed, &incomplete_trees, 1,
+                              MPI_INT, sc_MPI_MAX, forest->mpicomm);
+    SC_CHECK_MPI (mpiret);
+    T8_ASSERT (incomplete_trees == 1 || incomplete_trees == 0);
+    forest->is_incomplete = incomplete_trees;
+  }
+
   t8_global_productionf ("Done t8_forest_adapt with %lld total elements\n",
                          (long long) forest->global_num_elements);
 
