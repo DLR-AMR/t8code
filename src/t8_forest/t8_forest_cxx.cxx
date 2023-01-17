@@ -291,7 +291,7 @@ t8_forest_no_overlap (t8_forest_t forest)
       t8_forest_get_tree_num_elements (forest, itree);
     t8_element_t       *element_nca;
     ts->t8_element_new (1, &element_nca);
-    int has_overlap_local = 0;
+    int                 has_overlap_local = 0;
     /* Iterate over all elements in current tree */
     for (t8_locidx_t ielem = 0; ielem < elems_in_tree - 1; ielem++) {
       /* Compare each two consecutive elements. If one element is
@@ -325,13 +325,15 @@ t8_forest_no_overlap (t8_forest_t forest)
 
     /* Check if a local tree in the global forest has local overlapping elements.
      * has_overlap_local_global is equal to 1 if a process has a local overlap, else 0. */
-    int has_overlap_local_global;
-    int mpiret = sc_MPI_Allreduce (&has_overlap_local, &has_overlap_local_global,
-                      1, MPI_INT, sc_MPI_MAX, forest->mpicomm); 
+    int                 has_overlap_local_global;
+    int                 mpiret =
+      sc_MPI_Allreduce (&has_overlap_local, &has_overlap_local_global,
+                        1, MPI_INT, sc_MPI_MAX, forest->mpicomm);
     SC_CHECK_MPI (mpiret);
-    T8_ASSERT (has_overlap_local_global == 0 || has_overlap_local_global == 1);
+    T8_ASSERT (has_overlap_local_global == 0
+               || has_overlap_local_global == 1);
     if (has_overlap_local_global) {
-      T8_ASSERT(has_overlap_local == 1);
+      T8_ASSERT (has_overlap_local == 1);
       return 0;
     }
   }
@@ -1639,7 +1641,7 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
 #if T8_ENABLE_DEBUG
       if (global_neighbour_tree_idx > -1) {
         if (!(global_neighbour_tree_idx == forest->first_local_tree ||
-                   global_neighbour_tree_idx == forest->first_local_tree - 1)) {
+              global_neighbour_tree_idx == forest->first_local_tree - 1)) {
           T8_ASSERT (forest->last_local_tree == -1);
         }
       }
