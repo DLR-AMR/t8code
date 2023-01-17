@@ -45,7 +45,8 @@ T8_EXTERN_C_BEGIN ();
  */
 static int
 t8_forest_is_family_callback (t8_eclass_scheme_c *ts,
-                              const int num_elements, const t8_element_t **elements)
+                              const int num_elements,
+                              const t8_element_t **elements)
 {
 
   for (int iter = 0; iter < num_elements; iter++) {
@@ -288,7 +289,9 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest,
     /* If is_family is true, the set fam must be a family. */
     if (forest->is_incomplete) {
       T8_ASSERT (!is_family ||
-                 t8_forest_is_family_callback (ts, num_elements_to_adapt_callback, fam));
+                 t8_forest_is_family_callback (ts,
+                                               num_elements_to_adapt_callback,
+                                               fam));
     }
     else {
       T8_ASSERT (forest->is_incomplete == 0);
@@ -547,11 +550,14 @@ t8_forest_adapt (t8_forest_t forest)
 #if T8_ENABLE_DEBUG
       if (forest_from->is_incomplete) {
         T8_ASSERT (!is_family ||
-          t8_forest_is_family_callback (tscheme, num_elements_to_adapt_callback, elements_from));
+                   t8_forest_is_family_callback (tscheme,
+                                                 num_elements_to_adapt_callback,
+                                                 elements_from));
       }
       else {
         T8_ASSERT (forest_from->is_incomplete == 0);
-        T8_ASSERT (!is_family || tscheme->t8_element_is_family (elements_from));
+        T8_ASSERT (!is_family
+                   || tscheme->t8_element_is_family (elements_from));
       }
 #endif
       /* Pass the element, or the family to the adapt callback.
