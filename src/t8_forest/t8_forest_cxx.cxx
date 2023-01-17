@@ -1651,7 +1651,8 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
 #endif
     }
     else {
-      SC_ABORT ("Method t8_forest_last_tree_shared is not implemented.\n");
+      SC_ABORT ("For incomplete trees the method t8_forest_last_tree_shared aka "
+                "t8_forest_tree_shared(forest, 1) is not implemented.\n");
       /* TODO: If last_local_tree is 0 of the current process and it gets 0 as the 
        * first_local_tree of the bigger process, then it cannot be said whether 
        * the tree with id 0 is shared or not, since the bigger process could also 
