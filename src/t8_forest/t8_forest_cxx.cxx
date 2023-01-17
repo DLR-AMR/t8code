@@ -113,7 +113,8 @@ t8_forest_is_incomplete_family (t8_forest_t forest,
   for (size_t family_iter = 1; family_iter < family_size; family_iter++) {
     const int           level =
       tscheme->t8_element_level (elements[family_iter]);
-    /* Quick check by level. Not mandatory. */
+    /* By comparing the levels in advance we may be able to avoid
+     * the more complex test with the parent element.*/
     if (level != level_current) {
       family_size = family_iter;
       break;

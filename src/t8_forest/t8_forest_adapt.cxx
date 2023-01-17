@@ -157,9 +157,10 @@ t8_forest_pos (t8_forest_t forest,
     pos = telements_pos - el_iter;
     T8_ASSERT (0 <= pos && (size_t) pos < elements_in_array);
     element_compare = t8_element_array_index_locidx (telements, pos);
-    /* Quick check by level. Not mandatory. */
     const int           level_compare =
       ts->t8_element_level (element_compare);
+    /* By comparing the levels in advance we may be able to avoid
+     * the more complex test with the parent element.*/
     if (level_current != level_compare) {
       break;
     }
