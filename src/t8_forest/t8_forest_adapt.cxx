@@ -603,7 +603,8 @@ t8_forest_adapt (t8_forest_t forest)
           /* We now recursively check the newly created elements for refinement. */
           t8_forest_adapt_refine_recursive (forest, ltree_id, el_considered,
                                             tscheme, refine_list, telements,
-                                            &el_inserted, elements, &element_removed);
+                                            &el_inserted, elements,
+                                            &element_removed);
           /* el_coarsen is the index of the first element in the new element
            * array which could be coarsened recursively.
            * We can set this here to the next element after the current family, 
@@ -725,9 +726,10 @@ t8_forest_adapt (t8_forest_t forest)
    * this step is not necessary. */
   if (!forest_from->is_incomplete) {
     T8_ASSERT (element_removed == 1 || element_removed == 0);
-    int incomplete_trees;
-    int mpiret = sc_MPI_Allreduce (&element_removed, &incomplete_trees, 1,
-                              MPI_INT, sc_MPI_MAX, forest->mpicomm);
+    int                 incomplete_trees;
+    int                 mpiret =
+      sc_MPI_Allreduce (&element_removed, &incomplete_trees, 1,
+                        MPI_INT, sc_MPI_MAX, forest->mpicomm);
     SC_CHECK_MPI (mpiret);
     T8_ASSERT (incomplete_trees == 1 || incomplete_trees == 0);
     forest->is_incomplete = incomplete_trees;
