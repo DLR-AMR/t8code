@@ -55,7 +55,7 @@ T8_EXTERN_C_BEGIN ();
  *                  family member, return 0. Therefore, if \return is x > 0, 
  *                  the first x elements in \a elements form a family.
  */
-int                 t8_forest_is_incomplete_family (t8_forest_t forest,
+int                 t8_forest_is_incomplete_family (const t8_forest_t forest,
                                                     const t8_locidx_t ltree_id,
                                                     const t8_locidx_t el_considered,
                                                     t8_eclass_scheme_c *tscheme,
