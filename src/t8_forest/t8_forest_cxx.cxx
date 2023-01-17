@@ -90,7 +90,6 @@ t8_forest_is_incomplete_family (t8_forest_t forest,
   if (child_id_current > 0 && el_considered > 0) {
     const t8_element_t *element_temp =
       t8_forest_get_tree_element (tree, el_considered - 1);
-    //element_temp = t8_forest_get_element_in_tree (forest, ltree_id, el_considered-1);
     int                 level_temp = tscheme->t8_element_level (element_temp);
     /* Only elements with higher or equal level then level of current consideret 
      * element, can get potentially be overlapped. */
@@ -1576,10 +1575,15 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->first_local_tree > -1);
   T8_ASSERT (forest->first_local_tree < forest->global_num_trees);
-  T8_ASSERT ((forest->first_local_tree == 0
-              && forest->last_local_tree == -1) ? forest->last_local_tree <
-             0 : forest->last_local_tree > -1);
   T8_ASSERT (forest->last_local_tree < forest->global_num_trees);
+#if T8_ENABLE_DEBUG
+  if (forest->first_local_tree == 0 && forest->last_local_tree == -1) {
+    T8_ASSERT (forest->last_local_tree < 0);
+  }
+  else {
+    T8_ASSERT (forest->last_local_tree > -1);
+  }
+#endif
 
 #if T8_ENABLE_MPI
   t8_tree_t           tree;
@@ -1632,11 +1636,17 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
         return 0;
       }
       T8_ASSERT (global_neighbour_tree_idx < forest->global_num_trees);
-      T8_ASSERT (global_neighbour_tree_idx > -1 ?
-                 ((global_neighbour_tree_idx == forest->first_local_tree ||
-                   global_neighbour_tree_idx == forest->first_local_tree - 1)
-                   ? true : forest->last_local_tree == -1) 
-                   : global_neighbour_tree_idx == -1);
+#if T8_ENABLE_DEBUG
+      if (global_neighbour_tree_idx > -1) {
+        if (!(global_neighbour_tree_idx == forest->first_local_tree ||
+                   global_neighbour_tree_idx == forest->first_local_tree - 1)) {
+          T8_ASSERT (forest->last_local_tree == -1);
+        }
+      }
+      else {
+        T8_ASSERT (global_neighbour_tree_idx == -1);
+      }
+#endif
     }
     else {
       SC_ABORT ("Method t8_forest_last_tree_shared is not implemented.\n");
