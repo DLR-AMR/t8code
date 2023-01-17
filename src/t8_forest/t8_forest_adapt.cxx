@@ -45,8 +45,7 @@ T8_EXTERN_C_BEGIN ();
  */
 static int
 t8_forest_is_family_callback (t8_eclass_scheme_c *ts,
-                              const int num_elements,
-                              const t8_element_t **elements)
+                              const int num_elements, t8_element_t **elements)
 {
 
   for (int iter = 0; iter < num_elements; iter++) {
