@@ -284,12 +284,17 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest,
       is_family = 0;
       num_elements_to_adapt_callback = 1;
     }
+#if T8_ENABLE_DEBUG
     /* If is_family is true, the set fam must be a family. */
-    T8_ASSERT (forest->is_incomplete ? (!is_family
-                                        || t8_forest_is_family_callback (ts,
-                                                                         num_elements_to_adapt_callback,
-                                                                         fam))
-               : (!is_family || ts->t8_element_is_family (fam)));
+    if (forest->is_incomplete) {
+      T8_ASSERT (!is_family ||
+                 t8_forest_is_family_callback (ts, num_elements_to_adapt_callback, fam));
+    }
+    else {
+      T8_ASSERT (forest->is_incomplete == 0);
+      T8_ASSERT (!is_family || ts->t8_element_is_family (fam));
+    }
+#endif
     if (is_family
         && forest->set_adapt_fn (forest, forest->set_from, ltreeid,
                                  lelement_id, ts, is_family,
@@ -539,14 +544,16 @@ t8_forest_adapt (t8_forest_t forest)
         num_elements_to_adapt_callback = num_siblings;
       }
       T8_ASSERT (num_elements_to_adapt_callback <= num_siblings);
-      T8_ASSERT (forest_from->is_incomplete ? (!is_family
-                                               ||
-                                               t8_forest_is_family_callback
-                                               (tscheme,
-                                                num_elements_to_adapt_callback,
-                                                elements_from))
-                 : (!is_family
-                    || tscheme->t8_element_is_family (elements_from)));
+#if T8_ENABLE_DEBUG
+      if (forest_from->is_incomplete) {
+        T8_ASSERT (!is_family ||
+          t8_forest_is_family_callback (tscheme, num_elements_to_adapt_callback, elements_from));
+      }
+      else {
+        T8_ASSERT (forest_from->is_incomplete == 0);
+        T8_ASSERT (!is_family || tscheme->t8_element_is_family (elements_from));
+      }
+#endif
       /* Pass the element, or the family to the adapt callback.
        * The output will be  1 if the element should be refined
        *                     0 if the element should remain as is
