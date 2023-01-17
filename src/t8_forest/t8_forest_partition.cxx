@@ -166,20 +166,10 @@ void
 t8_forest_partition_test_boundery_element (t8_forest_t forest)
 {
 #ifdef T8_ENABLE_DEBUG
-  t8_tree_t           tree;
-  t8_element_t       *element_last;
-  t8_element_t       *element_last_desc;
-  t8_eclass_scheme_c *ts;
-  t8_linearidx_t      first_desc_id;
-  t8_linearidx_t      last_desc_id;
-  t8_locidx_t         num_local_trees;
-  t8_gloidx_t         global_tree_id;
-  int                 level;
-  
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (forest->global_first_desc != NULL);
 
-  num_local_trees = t8_forest_get_num_local_trees (forest);
+  const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
   if (num_local_trees == 0) {
     /* This forest is empty, nothing to do */
     return;
@@ -189,30 +179,32 @@ t8_forest_partition_test_boundery_element (t8_forest_t forest)
      * However, this is already tested by process rank-1. */
     return;
   }
-  global_tree_id = t8_shmem_array_get_gloidx (forest->tree_offsets, forest->mpirank+1);
+  const t8_gloidx_t global_tree_id = t8_shmem_array_get_gloidx (forest->tree_offsets, forest->mpirank+1);
   if (global_tree_id >= 0) {
     /* The first tree on process rank+1 is not shared with current rank,
      * nothing to do */
     return;
   }
-  /* Get the first descendant id of rank+1 */
-  first_desc_id = *(t8_linearidx_t *) t8_shmem_array_index (forest->global_first_desc,
-                                                            forest->mpirank+1);
+
   /* Get last element of current rank and its last descendant id */
-  tree = t8_forest_get_tree (forest, num_local_trees-1);
-  ts = t8_forest_get_eclass_scheme (forest, tree->eclass);
+  const t8_tree_t tree = t8_forest_get_tree (forest, num_local_trees-1);
+  t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, tree->eclass);
+  t8_element_t *element_last_desc;
   ts->t8_element_new (1, &element_last_desc);
   /* last element of current rank */
-  element_last = t8_forest_get_element_in_tree (forest, num_local_trees-1,
+  const t8_element_t *element_last = t8_forest_get_element_in_tree (forest, num_local_trees-1,
                                      t8_forest_get_tree_element_count (tree)-1);
   T8_ASSERT (ts->t8_element_is_valid (element_last));
   /* last and finest possiple element of current rank */
   ts->t8_element_last_descendant (element_last, element_last_desc, forest->maxlevel);
   T8_ASSERT (ts->t8_element_is_valid (element_last_desc));
-  level = ts->t8_element_level (element_last_desc);
+  const int level = ts->t8_element_level (element_last_desc);
   T8_ASSERT (level == ts->t8_element_level (element_last_desc));
   T8_ASSERT (level == forest->maxlevel);
-  last_desc_id = ts->t8_element_get_linear_id (element_last_desc, level);
+  const t8_linearidx_t last_desc_id = ts->t8_element_get_linear_id (element_last_desc, level);
+  /* Get the first descendant id of rank+1 */
+  const t8_linearidx_t first_desc_id = *(t8_linearidx_t *) t8_shmem_array_index 
+    (forest->global_first_desc, forest->mpirank+1);
   /* The following inequality must apply:
    * last_desc_id of last element of rank < first_desc_id of first element of rank+1 */
   T8_ASSERT (last_desc_id < first_desc_id);
