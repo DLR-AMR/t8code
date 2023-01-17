@@ -164,11 +164,12 @@ int                 t8_forest_is_initialized (t8_forest_t forest);
  */
 int                 t8_forest_is_committed (t8_forest_t forest);
 
-/** Check whether the forest has overlapping elements.
- * \param [in] forest_a The forest to consider.
+/** Check whether the forest has local overlapping elements.
+ * \param [in] forest   The forest to consider.
  * \return              True if \a forest has no elements which are inside each other.
- * \note This function is not collective. It only returns the state on the current
- * rank.
+ * \note This function is collective, but only checks local overlapping on each process.
+ * \see t8_forest_partition_test_boundery_element if you also want to test for 
+ * global overlap across the process boundaries.
  */
 int                 t8_forest_no_overlap (t8_forest_t forest);
 
