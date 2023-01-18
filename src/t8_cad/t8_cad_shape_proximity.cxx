@@ -31,8 +31,6 @@
 #include <BRepTools.hxx>
 #include <BRepClass3d_SolidClassifier.hxx>
 #include <BRepBndLib.hxx>
-#include <TopoDS_Solid.hxx>
-#include <BRepPrimAPI_MakeBox.hxx>
 #include <BRepExtrema_DistShapeShape.hxx>
 #include <Bnd_BoundSortBox.hxx>
 #include <TopExp.hxx>
@@ -108,75 +106,119 @@ t8_cad_shape_proximity::t8_cad_is_element_inside_shape (t8_forest_t forest,
                                                         t8_locidx_t ltreeid,
                                                         const t8_element_t *element,
                                                         const int boundary,
-                                                        const int optimize)
+                                                        const int optimize,
+                                                        const int axis_aligned)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
-  t8_eclass_t         tree_class, element_class;
-  t8_eclass_scheme_c *ts;
-  t8_cmesh_t          cmesh = t8_forest_get_cmesh(forest);
-  t8_gloidx_t         gtreeid = t8_forest_ltreeid_to_cmesh_ltreeid(forest, ltreeid);
-  tree_class = t8_forest_get_tree_class (forest, ltreeid);
-  ts = t8_forest_get_eclass_scheme (forest, tree_class);
+  const t8_eclass_t         tree_class = t8_forest_get_tree_class (forest, ltreeid);
+  t8_eclass_scheme_c       *ts = t8_forest_get_eclass_scheme (forest, tree_class);
+  const t8_eclass_t         element_class = ts->t8_element_shape(element);
+  const t8_cmesh_t          cmesh = t8_forest_get_cmesh(forest);
+  const t8_gloidx_t         gtreeid = t8_forest_ltreeid_to_cmesh_ltreeid(forest, ltreeid);
+  double                    corner_ref_coords[3], corner_coords[3], bbox_min[3] = { 0 }, bbox_max[3] = { 0 };
   /* Check if element is valid */
   T8_ASSERT (ts->t8_element_is_valid (element));
   
-  /* Check if element is quad or hex */
-  element_class = ts->t8_element_shape(element);
-  T8_ASSERT (element_class == T8_ECLASS_HEX || element_class == T8_ECLASS_QUAD);
-  
+  /* If the element is a vertex, this is just a point_inside check */
+  if (element_class == T8_ECLASS_VERTEX)
+  {
+    ts->t8_element_vertex_reference_coords(element, 0, corner_ref_coords);
+    t8_geometry_evaluate (cmesh, gtreeid, corner_ref_coords, corner_coords);
+    if (boundary) return t8_cad_shape_proximity::t8_cad_is_point_inside_shape (corner_coords, optimize);
+    else return (bool) t8_cad_shape_proximity::t8_cad_is_point_inside_shape (corner_coords, optimize);
+  }
+
 #if T8_ENABLE_DEBUG
   /* Check if geometry is linear */
   const t8_geometry_c *geom = t8_cmesh_get_tree_geometry (cmesh, gtreeid);
   T8_ASSERT (t8_geom_is_linear (geom));
-  /* Check if element is axis oriented */
-  double corner_values[24];
-  int num_equal_coordinates;
-  for (int corner = 0; corner < t8_eclass_num_vertices[element_class]; ++corner) {
-    double ref_coords[3] = { 0 };
-    ts->t8_element_vertex_reference_coords(element, 
-                                           corner, 
-                                           ref_coords);
-    t8_geometry_evaluate (cmesh, gtreeid, ref_coords,
-                          corner_values + corner * 3);
-  }
-  /* An element is axis oriented if all edges align to at least one axis */
-  for (int edge = 0; edge < t8_eclass_num_edges[element_class]; ++edge) {
-    num_equal_coordinates = 0;
-    for (int dim = 0; dim < 3; ++dim) {
-      if (element_class == T8_ECLASS_HEX) {
-        if (std::abs(corner_values[t8_edge_vertex_to_tree_vertex[edge][0] * 3 + dim]
-                     - corner_values[t8_edge_vertex_to_tree_vertex[edge][1] * 3 + dim])
-            <= DBL_EPSILON) {
-          ++num_equal_coordinates;
+  if (axis_aligned && (element_class == T8_ECLASS_HEX
+                    || element_class == T8_ECLASS_QUAD
+                    || element_class == T8_ECLASS_LINE))
+  {
+    /* Check if element is axis-aligned */
+    double corner_values[24];
+    int num_equal_coordinates;
+    for (int corner = 0; corner < t8_eclass_num_vertices[element_class]; ++corner) {
+      double ref_coords[3] = { 0 };
+      ts->t8_element_vertex_reference_coords(element,
+                                             corner,
+                                             ref_coords);
+      t8_geometry_evaluate (cmesh, gtreeid, ref_coords,
+                            corner_values + corner * 3);
+    }
+    /* An element is axis-aligned if all edges align to at least one axis */
+    for (int edge = 0; edge < t8_eclass_num_edges[element_class]; ++edge) {
+      num_equal_coordinates = 0;
+      for (int dim = 0; dim < 3; ++dim) {
+        if (element_class == T8_ECLASS_HEX) {
+          if (std::abs(corner_values[t8_edge_vertex_to_tree_vertex[edge][0] * 3 + dim]
+                       - corner_values[t8_edge_vertex_to_tree_vertex[edge][1] * 3 + dim])
+              <= DBL_EPSILON) {
+            ++num_equal_coordinates;
+          }
+        }
+        else {
+          if (std::abs(corner_values[t8_face_vertex_to_tree_vertex[T8_ECLASS_QUAD][edge][0] * 3 + dim]
+                       - corner_values[t8_face_vertex_to_tree_vertex[T8_ECLASS_QUAD][edge][1] * 3 + dim])
+              <= DBL_EPSILON) {
+            ++num_equal_coordinates;
+          }
         }
       }
-      else {
-        if (std::abs(corner_values[t8_face_vertex_to_tree_vertex[T8_ECLASS_QUAD][edge][0] * 3 + dim]
-                     - corner_values[t8_face_vertex_to_tree_vertex[T8_ECLASS_QUAD][edge][1] * 3 + dim])
-            <= DBL_EPSILON) {
-          ++num_equal_coordinates;
+      T8_ASSERT(num_equal_coordinates >= 2);
+    }
+  }
+#endif /* T8_ENABLE_DEBUG */
+
+  /* Compute bounding box of the element.
+   * If the element is a hex or quad, the bounding box is determined by its
+   * diagonal vertices. Hence the axis-aligned bounding box has the same
+   * geometrical shape as an exis aligned hex, quad or line element,
+   * we can use the bbox coordinates later on to generate the CAD shape
+   * of the element.
+   * If the element has another shape or is not axis-aligned, we have to
+   * compute the coordinates of the bounding box manually. */
+  if (axis_aligned && (element_class == T8_ECLASS_HEX
+                    || element_class == T8_ECLASS_QUAD
+                    || element_class == T8_ECLASS_LINE))
+  {
+    const int max_corner_number = t8_eclass_num_vertices[element_class] - 1;
+    ts->t8_element_vertex_reference_coords(element, 0, corner_ref_coords);
+    t8_geometry_evaluate (cmesh, gtreeid, corner_ref_coords, bbox_min);
+    ts->t8_element_vertex_reference_coords(element, max_corner_number, 
+                                           corner_ref_coords);
+    t8_geometry_evaluate (cmesh, gtreeid, corner_ref_coords, bbox_max);
+  }
+  else
+  {
+    /* The calculation of the elements bounding box is only needed for the
+     * optimization. We can omit this, if optimize is false. */
+    if (optimize)
+    {
+      const int num_corners = t8_eclass_num_vertices[element_class];
+      ts->t8_element_vertex_reference_coords(element, 0, corner_ref_coords);
+      t8_geometry_evaluate (cmesh, gtreeid, corner_ref_coords, bbox_min);
+      memcpy(bbox_max, bbox_min, 3 * sizeof(double));
+      for (int i_corner = 1; i_corner < num_corners; ++i_corner)
+      {
+        ts->t8_element_vertex_reference_coords(element, i_corner, corner_ref_coords);
+        t8_geometry_evaluate (cmesh, gtreeid, corner_ref_coords, corner_coords);
+        for (int dim = 0; dim < 3; ++dim)
+        {
+          if (corner_coords[dim] < bbox_min[dim]) bbox_min[dim] = corner_coords[dim];
+          if (corner_coords[dim] > bbox_max[dim]) bbox_max[dim] = corner_coords[dim];
         }
       }
     }
-    T8_ASSERT(num_equal_coordinates >= 2);
   }
-#endif /* T8_ENABLE_DEBUG */
-  /* Compute bounding box of element */
-  double corner_ref_coords[3], corner_coords[6];
-  const int max_corner_number = t8_eclass_num_vertices[element_class] - 1;
-  ts->t8_element_vertex_reference_coords(element, 0, corner_ref_coords);
-  t8_geometry_evaluate (cmesh, gtreeid, corner_ref_coords, corner_coords);
-  ts->t8_element_vertex_reference_coords(element, max_corner_number, 
-                                         corner_ref_coords);
-  t8_geometry_evaluate (cmesh, gtreeid, corner_ref_coords, corner_coords + 3);
-
   if (optimize)
   {
     /* Check if element bounding box is outside of shape bounding box (very fast).
      * If true, element is completely outside of the shape. */
     Bnd_Box element_bounding_box;
-    element_bounding_box.Update(corner_coords[0], corner_coords[1], corner_coords[2],
-                                corner_coords[3], corner_coords[4], corner_coords[5]);
+    element_bounding_box.Update(bbox_min[0], bbox_min[1], bbox_min[2],
+                                bbox_max[0], bbox_max[1], bbox_max[2]);
     Bnd_OBB element_obb = Bnd_OBB (element_bounding_box);
     if (occ_shape_bounding_box.IsOut (element_obb)) {
       return 0;
@@ -220,13 +262,29 @@ t8_cad_shape_proximity::t8_cad_is_element_inside_shape (t8_forest_t forest,
       }
     }
   }
-  /* TODO: Check if decomposition into solids and faces and bb checking for
-   * each individual brings a speedup */
+  /* TODO: Check if the decomposition into solids and faces and bbox checking for
+   * each individual solid and face brings a speedup */
 
   /* Check for intersection of element and shape (very slow). */
-  gp_Pnt box_min(corner_coords[0], corner_coords[1], corner_coords[2]);
-  gp_Pnt box_max(corner_coords[3], corner_coords[4], corner_coords[5]);
-  TopoDS_Solid element_shape = BRepPrimAPI_MakeBox(box_min, box_max);
+  TopoDS_Shape element_shape;
+  /* An axis-aligned hex can be computed faster */
+  if (axis_aligned && element_class == T8_ECLASS_HEX)
+  {
+    element_shape = t8_cad_make_axis_aligned_hex_element_shape(bbox_min, 
+                                                               bbox_max);
+  }
+  else
+  {
+    const int num_vertices = t8_eclass_num_vertices[element_class];
+    double *vertices = T8_ALLOC(double, num_vertices * 3);
+    for (int i_vertex = 0; i_vertex < num_vertices; ++i_vertex)
+    {
+      ts->t8_element_vertex_reference_coords(element, i_vertex, corner_ref_coords);
+      t8_geometry_evaluate (cmesh, gtreeid, corner_ref_coords, &vertices[i_vertex * 3]);
+    }
+    element_shape = t8_cad_make_element_shape (vertices, element_class);
+    T8_FREE (vertices);
+  }
   BRepExtrema_DistShapeShape dist_shape_shape;
   dist_shape_shape.LoadS1(element_shape);
   dist_shape_shape.LoadS2(occ_shape);

@@ -64,7 +64,8 @@ public:
   t8_cad_shape_proximity (const char *filename, const int use_individual_bbs);
 
   /**
-   * Constructor of the cad class. Fills the internal shape with the given shape.
+   * Constructor of the cad class.
+   * Fills the internal shape with the given shape.
    * \param [in] shape               Occ shape geometry.
    * \param [in] use_individual_bbs  Flag if individual oriented bounding
    *                                 boxes should be created to speed up the
@@ -108,39 +109,43 @@ public:
    * Checks if an element is inside the occ shape. Only viable with 
    * axis-oriented hex elements. Uses different optimization algorithms
    * (oriented bounding boxes and midpoint inside checks).
-   * \param [in] forest    The forest.
-   * \param [in] ltreeid   The local tree id of the element.
-   * \param [in] element   The element.
-   * \param [in] boundary  Deactivates some of the optimizations to be able to
-   *                       differentiate between elements intersecting the
-   *                       boundary and elements completely inside the shape.
-   * \param [in] optimize  Uses different algorithms to speed up
-   *                       the classification. Enabling recommented, except
-   *                       the optimization is taken care of elsewhere or the
-   *                       optimization breaks the results.
-   * \return               0: Element is fully outside of the shape.
-   *                       1: Element is inside the shape.
-   *                       2: Only with \a boundary activated: Element
-   *                          intersects the boundary of the shape.
+   * \param [in] forest        The forest.
+   * \param [in] ltreeid       The local tree id of the element.
+   * \param [in] element       The element.
+   * \param [in] boundary      Deactivates some of the optimizations to be able
+   *                           to differentiate between elements intersecting
+   *                           the boundary and elements completely inside the
+   *                           shape.
+   * \param [in] optimize      Uses different algorithms to speed up
+   *                           the classification. Enabling recommented, except
+   *                           the optimization is taken care of elsewhere or
+   *                           the optimization breaks the results.
+   * \param [in] axis_aligned  Indicates, if the element is axis-aligned.
+   *                           If true, the computation will be faster.
+   * \return                   0: Element is fully outside of the shape.
+   *                           1: Element is inside the shape.
+   *                           2: Only with \a boundary activated: Element
+   *                              intersects the boundary of the shape.
    */
   int
   t8_cad_is_element_inside_shape (t8_forest_t forest,
                                   t8_locidx_t ltreeid,
                                   const t8_element_t *element,
                                   const int boundary,
-                                  const int optimize);
+                                  const int optimize,
+                                  const int axis_aligned);
 
   /**
    * Checks if a point is inside the occ shape. Uses oriented bounding boxes for
    * speedup.
-   * \param [in] coords    The coordinates of the point.
-   * \param [in] optimize  Uses oriented bounding boxes to speed up
-   *                       the classification. Enabling recommented, except
-   *                       the optimization is taken care of elsewhere or the
-   *                       optimization breaks the results.
-   * \return               0: Point is outside of the shape. 
-   *                       1: Point is inside the shape.
-   *                       2: Point intersects the bounday of the shape.
+   * \param [in] coords        The coordinates of the point.
+   * \param [in] optimize      Uses oriented bounding boxes to speed up
+   *                           the classification. Enabling recommented, except
+   *                           the optimization is taken care of elsewhere or
+   *                           the optimization breaks the results.
+   * \return                   0: Point is outside of the shape.
+   *                           1: Point is inside the shape.
+   *                           2: Point intersects the bounday of the shape.
    */
   int
   t8_cad_is_point_inside_shape (const double *coords, const int optimize) const;
