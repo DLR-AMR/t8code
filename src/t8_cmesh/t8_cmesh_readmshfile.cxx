@@ -529,7 +529,7 @@ die_node:
  * If vertex_indices is not NULL, it is allocated and will store
  * for each tree the indices of its vertices.
  * They are stored as arrays of long ints. */
-int
+static int
 t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp,
                                sc_hash_t * vertices,
                                sc_array_t **vertex_indices, int dim)
