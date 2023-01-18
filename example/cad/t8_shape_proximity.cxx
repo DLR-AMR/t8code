@@ -88,7 +88,7 @@ t8_shape_proximity_element_inside_adapt_callback (t8_forest_t forest,
   t8_cad_shape_proximity *cad;
   cad = (t8_cad_shape_proximity *) t8_forest_get_user_data (forest);
   return cad->t8_cad_is_element_inside_shape (forest_from, which_tree,
-                                              elements[0], 0, 1);
+                                              elements[0], 0, 1, 1);
 #else /* !T8_WITH_OCC */
   SC_ABORTF ("OpenCASCADE is not linked");
 #endif /* T8_WITH_OCC */
@@ -132,7 +132,7 @@ t8_shape_proximity_element_boundary_adapt_callback (t8_forest_t forest,
   t8_cad_shape_proximity *cad;
   cad = (t8_cad_shape_proximity *) t8_forest_get_user_data (forest);
   return 2 == cad->t8_cad_is_element_inside_shape (forest_from, which_tree,
-                                                   elements[0], 1, 1);
+                                                   elements[0], 1, 1, 1);
 #else /* !T8_WITH_OCC */
   SC_ABORTF ("OpenCASCADE is not linked");
 #endif /* T8_WITH_OCC */
@@ -232,12 +232,12 @@ t8_shape_proximity_refine_forest_with_cad (const char *filename,
         if (boundary) {
           inside_shape[current_index] =
             2 == cad->t8_cad_is_element_inside_shape (forest, itree, element,
-                                                      1, 1);
+                                                      1, 1, 1);
         }
         else {
           inside_shape[current_index] =
             cad->t8_cad_is_element_inside_shape (forest, itree, element,
-                                                 0, 1);
+                                                 0, 1, 1);
         }
       }
     }
