@@ -28,6 +28,7 @@
 #define T8_CAD_UTILS_HXX
 
 #include <t8.h>
+#include <t8_eclass.h>
 
 #if T8_WITH_OCC
 #include <TopoDS_Shape.hxx>
@@ -41,6 +42,28 @@
  */
 TopoDS_Shape
 t8_cad_read_cad_file (const char *filename);
+
+/**
+ * Uses the diagonal vertices of a hex element to build a
+ * cad shape of the element. Faster than \a t8_cad_make_element_shape.
+ * \param [in] vertex1   Corner values of an axis-aligned hex element.
+ *                       (3 * double)
+ * \param [in] vertex2   Values if a corner diagonal of vertex1.
+ *                       (3 * double)
+ * \return               The cad shape.
+ */
+TopoDS_Shape
+t8_cad_make_axis_aligned_hex_element_shape (const double *vertex1,
+                                            const double *vertex2);
+
+/**
+ * Uses the vertices of an element to build a cad shape of the ekement.
+ * \param [in] vertices  Vertex coordinates of the element in zorder.
+ * \param [in] eclass    eclass of the element.
+ * \return
+ */
+TopoDS_Shape
+t8_cad_make_element_shape (const double *vertices, const t8_eclass_t eclass);
 
 /* *INDENT-ON* */
 
