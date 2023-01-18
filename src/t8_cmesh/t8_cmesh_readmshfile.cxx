@@ -730,12 +730,18 @@ die_ele:
 /* fp should be set after the Nodes section, right before the tree section.
  * If vertex_indices is not NULL, it is allocated and will store
  * for each tree the indices of its vertices.
- * They are stored as arrays of long ints. */
-int
+ * They are stored as arrays of long ints. 
+ * If occ geometry is used, the geometry is passed as a pointer here.
+ * We cannot access this geometry over the cmesh interface since the cmesh
+ * is not committed yet. */
+static int
 t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                                sc_hash_t * vertices,
                                sc_array_t **vertex_indices,
-                               int dim, const int use_occ_geometry)
+                               int dim,
+                               const t8_geometry_c *linear_geometry_base,
+                               const int use_occ_geometry,
+                               const t8_geometry_c *occ_geometry_base)
 {
   char               *line = (char *) malloc (1024), *line_modify;
   char                first_word[2048] = "\0";
@@ -838,6 +844,21 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
           goto die_ele;
         }
         t8_cmesh_set_tree_class (cmesh, tree_count, eclass);
+
+        /* Set the geometry of the tree to be occ or linear */
+        /* TODO: We should optimize here and only set the geometry to be 
+         *        occ if the tree actually has any curved data. */
+        if (use_occ_geometry) {
+          const char         *geom_name =
+            occ_geometry_base->t8_geom_get_name ();
+          t8_cmesh_set_tree_geometry (cmesh, tree_count, geom_name);
+        }
+        else {
+          const char         *geom_name =
+            linear_geometry_base->t8_geom_get_name ();
+          t8_cmesh_set_tree_geometry (cmesh, tree_count, geom_name);
+        }
+
         /* The line describing the tree looks like
          * tree_number(every ele type has its own numeration) Node_1 ... Node_m
          *
@@ -958,7 +979,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
         if (use_occ_geometry)
         {
 #if T8_WITH_OCC
-          const t8_geometry_c *occ_geometry_base = t8_cmesh_get_tree_geometry (cmesh, tree_count);
           T8_ASSERT (t8_geom_is_occ(occ_geometry_base));
           const t8_geometry_occ_c *occ_geometry = dynamic_cast<const t8_geometry_occ_c *> (occ_geometry_base);
           /* Check for right element class */
@@ -1677,23 +1697,33 @@ T8_EXTERN_C_BEGIN ();
  * geometries for the cmesh created in t8_cmesh_from_msh_file.
  * It should be called by all processes of the cmesh.
  * Returns 1 on success, 0 on OCC usage error: use_occ_geometry true, but occ not linked.
+ * The linear_geometry pointer will point to the newly created linear geometry.
+ * The occ_geometry pointer will point to the newly created occ geometry, or to NULL if
+ * no occ geometry is used.
  */
 static int
 t8_cmesh_from_msh_file_register_geometries (t8_cmesh_t cmesh,
                                             const int use_occ_geometry,
                                             const int dim,
-                                            const char *fileprefix)
+                                            const char *fileprefix,
+                                            const t8_geometry_c
+                                            **linear_geometry,
+                                            const t8_geometry_c
+                                            **occ_geometry)
 {
 
   const t8_geometry_c *linear_geom = new t8_geometry_linear (dim);
   /* Register linear geometry */
   t8_cmesh_register_geometry (cmesh, linear_geom);
+  *linear_geometry = linear_geom;
   if (use_occ_geometry) {
 #if T8_WITH_OCC
     const t8_geometry_c *occ_geom =
       t8_geometry_occ_new (dim, fileprefix, "brep_geometry");
     t8_cmesh_register_geometry (cmesh, occ_geom);
+    *occ_geometry = occ_geom;
 #else /* !T8_WITH_OCC */
+    *occ_geometry = NULL;
     return 0;
 #endif
   }
@@ -1717,6 +1747,8 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
   t8_gloidx_t         num_trees, first_tree, last_tree = -1;
   int                 main_proc_read_successful = 0;
   int                 msh_version;
+  const t8_geometry_c *occ_geometry;
+  const t8_geometry_c *linear_geometry;
 
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
@@ -1738,7 +1770,8 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
   /* Register the geometries for the cmesh. */
   const int           registered_geom_success =
     t8_cmesh_from_msh_file_register_geometries (cmesh, use_occ_geometry, dim,
-                                                fileprefix);
+                                                fileprefix, &linear_geometry,
+                                                &occ_geometry);
   if (!registered_geom_success) {
     /* Registering failed */
     t8_debugf ("OCC is not linked. Cannot use OCC geometry.\n");
@@ -1809,7 +1842,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
       if (use_occ_geometry) {
 #if T8_WITH_OCC
         t8_cmesh_msh_file_4_read_eles (cmesh, file, vertices, &vertex_indices,
-                                       dim, 1);
+                                       dim, linear_geometry, 1, occ_geometry);
 #else /* !T8_WITH_OCC */
         fclose (file);
         t8_debugf ("Occ is not linked. Cannot use occ geometry.\n");
@@ -1825,7 +1858,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
       }
       else {
         t8_cmesh_msh_file_4_read_eles (cmesh, file, vertices, &vertex_indices,
-                                       dim, 0);
+                                       dim, linear_geometry, 0, NULL);
       }
       break;
 
