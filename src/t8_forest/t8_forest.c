@@ -479,7 +479,7 @@ t8_forest_commit (t8_forest_t forest)
     T8_ASSERT (forest->cmesh != NULL);
     T8_ASSERT (forest->scheme_cxx != NULL);
     T8_ASSERT (forest->from_method == T8_FOREST_FROM_LAST);
-    T8_ASSERT (forest->is_incomplete == 0);
+    T8_ASSERT (forest->is_incomplete == -1);
 
     /* dup communicator if requested */
     if (forest->do_dup) {
@@ -517,6 +517,7 @@ t8_forest_commit (t8_forest_t forest)
     T8_ASSERT (!forest->do_dup);
     T8_ASSERT (forest->from_method >= T8_FOREST_FROM_FIRST &&
                forest->from_method < T8_FOREST_FROM_LAST);
+    T8_ASSERT (forest->set_from->is_incomplete > -1);
 
     /* TODO: optimize all this when forest->set_from has reference count one */
     /* TODO: Get rid of duping the communicator */
