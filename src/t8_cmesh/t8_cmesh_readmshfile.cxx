@@ -1740,7 +1740,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
   sc_hash_t          *vertices = NULL;
   t8_locidx_t         num_vertices;
   sc_mempool_t       *node_mempool = NULL;
-  sc_array_t         *vertex_indices;
+  sc_array_t         *vertex_indices = NULL;
   long               *indices_entry;
   char                current_file[BUFSIZ];
   FILE               *file;
