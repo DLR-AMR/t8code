@@ -555,6 +555,7 @@ t8_forest_adapt (t8_forest_t forest)
       T8_ASSERT (num_elements_to_adapt_callback <= num_siblings);
 #if T8_ENABLE_DEBUG
       if (forest_from->is_incomplete) {
+        T8_ASSERT (forest_from->is_incomplete == 1);
         T8_ASSERT (!is_family ||
                    t8_forest_is_family_callback (tscheme,
                                                  num_elements_to_adapt_callback,
