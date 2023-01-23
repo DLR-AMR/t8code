@@ -497,6 +497,8 @@ t8_transition_global (void)
         snprintf (filename, BUFSIZ, "forest_ghost_%i_%s",
                 adaptation_count, t8_eclass_to_string[T8_ECLASS_QUAD]);
         t8_forest_write_vtk_ext (forest_adapt, filename, 1, 1, 1, 1, 1, 0, 0, 0, NULL);
+        t8_debugf
+          ("~~~~~~~~~~ vtk of ghost has been constructed ~~~~~~~~~~\n");
       }
     }
 
