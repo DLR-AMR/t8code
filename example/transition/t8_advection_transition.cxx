@@ -45,14 +45,14 @@
  * This way, we compute on a uniform, completely transitioned mesh and can compare it with the uniform non transitioned mesh.
  */
 
-/* to switch to the default quad implementation */
- #define DO_TRANSITION_QUAD_SCHEME 1
+/* set to 0 in order to switch to the default quad implementation */
+ #define USE_TRANSITION_QUAD_SCHEME 1
 
 #include "t8.h"
 #include <cstdint>
 #include <sc_options.h>
 #include <sc_statistics.h>
-#if DO_TRANSITION_QUAD_SCHEME
+#if USE_TRANSITION_QUAD_SCHEME
 #include <t8_schemes/t8_transition/t8_transition_conformal_quad/t8_transition_conformal_quad_cxx.hxx>
 #include <t8_schemes/t8_transition/t8_transition_cxx.hxx>
 #else
@@ -69,8 +69,10 @@
 #include <t8_vec.h>
 #include <t8_cmesh/t8_cmesh_examples.h> /* this is for t8_cmesh functions */
 
-#define GET_DEBUG_OUTPUT 0
-#define DO_DEBUGGING_EXAMPLE 0
+/* helpful options for debugging */
+#define GET_DEBUG_OUTPUT 0 /* get print statements of LFN, etc. */
+#define DO_DEBUGGING_EXAMPLE 1 /* simulate a small example (4 timesteps, two adaptations) */
+#define ENABLE_GLOBAL_CONSERVATION_CHECKS 1 /* this throws warnings for unused variables when 0 */
 
 #define MAX_FACES 8             /* The maximum number of faces of an element */
 /* TODO: This is not memory efficient. If we run out of memory, we can optimize here. */
@@ -702,6 +704,7 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
   ts = t8_forest_get_eclass_scheme (problem->forest, eclass);
   /* Compute the children of the element at the face */
   num_face_children = ts->t8_element_num_face_children (element_hang, face);
+  ts->t8_element_debug_print(element_hang);
   T8_ASSERT (num_face_children == el_hang->num_neighbors[face]);
 
   face_children = T8_ALLOC (t8_element_t *, num_face_children);
@@ -719,6 +722,7 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
                                       face_children_count);
     /* Get a pointer to the neighbor's element data */
     neigh_id = el_hang->neighs[face][face_children_count];
+    t8_debugf("face = %i, iel_hang = %i, problem->element_data->elem_count = %li, neigh_id = %i\n", face, iel_hang, problem->element_data->elem_count, neigh_id);
     neigh_data = (t8_advect_element_data_t *)
       t8_sc_array_index_locidx (problem->element_data, neigh_id);
     neigh_is_ghost =
@@ -2169,7 +2173,7 @@ t8_advect_create_cmesh (sc_MPI_Comm comm, t8_eclass_t eclass,
     cmesh = t8_cmesh_from_msh_file (mshfile, 1, comm, dim, 0, 0);
     /* partition this cmesh according to the initial refinement level */
     t8_cmesh_init (&cmesh_partition);
-#if DO_TRANSITION_QUAD_SCHEME
+#if USE_TRANSITION_QUAD_SCHEME
     t8_cmesh_set_partition_uniform (cmesh_partition, level,
                                     t8_scheme_new_transition_cxx ());
 #else
@@ -2276,7 +2280,7 @@ t8_advect_problem_init (t8_cmesh_t cmesh,
   }
 
   /* Contruct uniform forest with ghosts */
-#if DO_TRANSITION_QUAD_SCHEME
+#if USE_TRANSITION_QUAD_SCHEME
   default_scheme = t8_scheme_new_transition_cxx ();
 #else
   T8_ASSERT (!do_transition);
@@ -2438,7 +2442,8 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
         elem_data->flux_valid[iface] = 0;
       }
     }
-  }
+  } /* end of tree loop */
+
   /* Exchange ghost values */
   t8_forest_ghost_exchange_data (problem->forest, problem->phi_values);
 
@@ -2590,7 +2595,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                  sc_MPI_Comm comm, int adapt_freq, int no_vtk,
                  int vtk_freq, double band_width, int dim, int dummy_op,
                  int volume_refine, int do_transition,
-                 int refinementcriterion, int do_partition, int fixed_number_TS)
+                 int refinementcriterion, int do_partition, int do_fixed_number_TS, int fixed_number_TS)
 {
   t8_advect_problem_t *problem;
   int                 iface, ineigh;
@@ -2987,9 +2992,11 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     t8_debugf("t8_advect_solve: finished forest_ghost_exchange_data.\n"
               "phi before: %e, phi after: %e\n", 
               global_phi_before_ghost_exchange, global_phi_after_ghost_exchange);
+#if ENABLE_GLOBAL_CONSERVATION_CHECKS
     SC_CHECK_ABORT(t8_advect_global_conservation_check
                    (global_phi_before_ghost_exchange, global_phi_after_ghost_exchange),
                    "Global conservation check failed after ghost exchange.");
+#endif
 #endif
 
     sc_stats_accumulate (&problem->stats[ADVECT_GHOST_EXCHANGE],
@@ -3003,7 +3010,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
 
     T8_ASSERT (problem->delta_t > 0);
 
-    if (fixed_number_TS) {
+    if (do_fixed_number_TS) {
       /* Run simulation for a fixed number of time steps */
       if (count_time_steps == 4) {
         done = 1;
@@ -3020,10 +3027,12 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
       }
     }
 
+#if ENABLE_GLOBAL_CONSERVATION_CHECKS
     /* Global conservation check for the new timestep - global sum of scaled phi values should not change */
     SC_CHECK_ABORT (t8_advect_global_conservation_check
                     (scaled_global_phi_beginning_TS, t8_advect_get_global_phi (problem)),
                     "Global conservation check in time loop failed.");
+#endif
 
     t8_debugf ("finish loop for timestep %i\n", problem->num_time_steps);
 
@@ -3036,10 +3045,12 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     vtk_time += sc_MPI_Wtime ();
   }
 
+#if ENABLE_GLOBAL_CONSERVATION_CHECKS
   /* Global conservation check for first and last forest - global sum of scaled phi values should not change */
   SC_CHECK_ABORT (t8_advect_global_conservation_check
                   (scaled_global_phi_beginning, t8_advect_get_global_phi (problem)),
                   "Global conservation check first-vs-last failed.");
+#endif
 
   /* Compute runtime */
   total_time += sc_MPI_Wtime ();
@@ -3065,12 +3076,14 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   /* Compute number time steps and mean number of elements in forests */
   int                 global_number_elements_mean =
     number_elements_global / problem->num_time_steps;
-
-  /* Plot some results */
-#if GET_DEBUG_OUTPUT
+  
+#if ENABLE_GLOBAL_CONSERVATION_CHECKS
+  /* Make final conservation check and print results */
   t8_advect_global_conservation_check (scaled_global_phi_beginning,
                                        scaled_global_phi_end);
 #endif
+
+  /* Print some results */
   t8_global_essentialf ("[advect] Number time steps: %i\n",
                         problem->num_time_steps);
   t8_global_essentialf ("[advect] Number elements mean: %i\n",
@@ -3107,7 +3120,6 @@ main (int argc, char *argv[])
   int                 refinementcriterion;
   int                 do_partition;
   int                 flow_arg;
-  int                 fixed_number_TS;
   double              T, cfl, band_width;
   t8_levelset_sphere_data_t ls_data;
   /* brief help message */
@@ -3226,22 +3238,22 @@ main (int argc, char *argv[])
   sc_options_add_int (opt, 'P', "partition", &do_partition, 0,
                       "Partition the forest after adaptation\n");
 
-  sc_options_add_int (opt, 'F', "fixed_number_TS", &fixed_number_TS, 0,
-                      "Partition the forest after adaptation\n");
-
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
 
+int do_fixed_number_TS = 0;
+int fixed_number_TS = 0;
 #if DO_DEBUGGING_EXAMPLE
   flow_arg = 7; /* 2to1 flow */
   level = 2;
   reflevel = 2;
-  fixed_number_TS = 1; /* only a small, fixed number of timesteps */
-  adapt_freq = 2; /* do not adapt */
+  do_fixed_number_TS = 1; /* only a small, fixed number of timesteps */
+  fixed_number_TS = 4;
+  adapt_freq = 2;
   vtk_freq = 1;
-  do_transition = 1;
+  do_transition = 0;
   initialphi = 3; /* start trigonometric offcentered */
-  refinementcriterion = 0; /* numeric refinement */
+  refinementcriterion = 0; /* (0, 1, 2) */
 #endif 
 
   if (helpme) {
@@ -3302,7 +3314,7 @@ main (int argc, char *argv[])
                      level + reflevel, T, cfl, sc_MPI_COMM_WORLD,
                      adapt_freq, no_vtk, vtk_freq, band_width, dim,
                      dummy_op, volume_refine, do_transition,
-                     refinementcriterion, do_partition, fixed_number_TS);
+                     refinementcriterion, do_partition, do_fixed_number_TS, fixed_number_TS);
 
     adapt_time += sc_MPI_Wtime ();
     t8_global_essentialf ("Runtime advect: %f\n", adapt_time);
