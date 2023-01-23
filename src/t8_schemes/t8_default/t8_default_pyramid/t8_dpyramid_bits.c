@@ -321,16 +321,16 @@ t8_dpyramid_is_family (t8_dpyramid_t **fam)
     if (level == 0) {
       return 0;
     }
-    /*The type of parent is the type of the first child in z-curve-order */
+    /* The type of parent is the type of the first child in z-curve-order */
     const int           type_of_first = fam[0]->pyramid.type;
     T8_ASSERT (type_of_first == T8_DPYRAMID_FIRST_TYPE
                || type_of_first == T8_DPYRAMID_SECOND_TYPE);
     for (int i = 1; i < T8_DPYRAMID_CHILDREN; i++) {
-      /*All elements must have the same level to be a family */
+      /* All elements must have the same level to be a family */
       if (fam[i]->pyramid.level != level) {
         return 0;
       }
-      /*Check if every family-member has the correct type */
+      /* Check if every family-member has the correct type */
       if (t8_dpyramid_parenttype_Iloc_to_type[type_of_first][i] !=
           fam[i]->pyramid.type) {
         return 0;
@@ -339,7 +339,7 @@ t8_dpyramid_is_family (t8_dpyramid_t **fam)
 
     x_inc = fam[0]->pyramid.x + inc;
     y_inc = fam[0]->pyramid.y + inc;
-    /*Check the coordinates of the anchor-coordinate */
+    /* Check the coordinates of the anchor-coordinate */
     if (type_of_first == T8_DPYRAMID_FIRST_TYPE) {
       return fam[0]->pyramid.z == fam[1]->pyramid.z
         && fam[0]->pyramid.z == fam[2]->pyramid.z

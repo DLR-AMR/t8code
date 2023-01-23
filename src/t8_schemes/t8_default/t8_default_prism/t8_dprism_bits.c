@@ -148,7 +148,7 @@ t8_dprism_is_familypv (t8_dprism_t **fam)
     for (j = 0; j < T8_DLINE_CHILDREN; j++) {
       line_fam[j] = &fam[j * T8_DTRI_CHILDREN + i]->line;
     }
-    /*Proof for line_family and equality of triangles in both planes */
+    /* Proof for line_family and equality of triangles in both planes */
     if (!(t8_dline_is_familypv ((const t8_dline_t **) line_fam)
           && (fam[i]->tri.level == fam[i + T8_DTRI_CHILDREN]->tri.level)
           && (fam[i]->tri.type == fam[i + T8_DTRI_CHILDREN]->tri.type)
