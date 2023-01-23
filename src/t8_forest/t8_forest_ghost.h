@@ -88,6 +88,7 @@ t8_element_array_t *t8_forest_ghost_get_tree_elements (t8_forest_t forest,
  *                        the ghost->ghost_trees array of the tree.
  *                        Otherwise a negative number.
  * \a forest must be committed before calling this function.
+ * \see https://github.com/DLR-AMR/t8code/wiki/Tree-indexing for more details about tree indexing.
  */
 t8_locidx_t         t8_forest_ghost_get_ghost_treeid (t8_forest_t forest,
                                                       t8_gloidx_t gtreeid);
@@ -96,6 +97,13 @@ t8_locidx_t         t8_forest_ghost_get_ghost_treeid (t8_forest_t forest,
 t8_eclass_t         t8_forest_ghost_get_tree_class (t8_forest_t forest,
                                                     t8_locidx_t lghost_tree);
 
+/** Given a local ghost tree compute the global tree id of it.
+ * \param [in]  forest    The forest. Ghost layer must exist.
+ * \param [in]  lghost_tree The ghost tree id of a ghost tree.
+ * \return                The global id of the local ghost tree \a lghost_tree.
+ * \a forest must be committed before calling this function.
+ * \see https://github.com/DLR-AMR/t8code/wiki/Tree-indexing for more details about tree indexing.
+ */
 t8_gloidx_t         t8_forest_ghost_get_global_treeid (t8_forest_t forest,
                                                        t8_locidx_t
                                                        lghost_tree);
