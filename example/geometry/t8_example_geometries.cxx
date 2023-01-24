@@ -473,7 +473,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
   char                vtuname[BUFSIZ];
   t8_geometry_c      *geometry;
   /* geoemtry_sincos is used for T8_GEOM_TWO_GEOMETRIES */
-  t8_geometry_c      *geometry_sincos; 
+  t8_geometry_c      *geometry_sincos;
   int                 uniform_level;
   double              time = 0; /* used for moving geometry */
   int                 sreturn;
