@@ -525,7 +525,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     t8_cmesh_set_join (cmesh, 0, 0, 0, 1, 0);
     t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_QUAD);
     /* Note that we have to register both geometries to the cmesh. The cylinder geometry is
-     * stored in the "geometry" pointer and registered later right before the cmesh is committed. */
+     * stored in the "geometry" pointer and registered later, right before the cmesh is committed. */
     t8_cmesh_register_geometry (cmesh, geometry_sincos);
     t8_cmesh_set_tree_geometry (cmesh, 0, geometry->t8_geom_get_name ());
     t8_cmesh_set_tree_geometry (cmesh, 1,
