@@ -272,7 +272,11 @@ t8_step3_main (int argc, char **argv)
   {    
 
 	// Adapting the forest, beginning with a uniform cube for each timestep          
+<<<<<<< HEAD
   	forest = t8_step3_adapt_forest (forest, counter);
+=======
+  	forest = t8_step3_adapt_forest (forest);
+>>>>>>> 20e9da7927998155b04f70ad6b6faedb846bb917
 
 	  /*
 	   *  Output.
@@ -282,8 +286,12 @@ t8_step3_main (int argc, char **argv)
 	  char filename[20];
           sprintf(filename, "%f", counter);
 
+<<<<<<< HEAD
 	  /* char         *prefix_adapt = "t8_step3_1_adapted_forest"; */
 	  	     
+=======
+   
+>>>>>>> 20e9da7927998155b04f70ad6b6faedb846bb917
 	 	  	  /* Print information of our new forest. */
 	  t8_global_productionf (" [step3] Adapted forest.\n");
 	  t8_step3_print_forest_information (forest);
