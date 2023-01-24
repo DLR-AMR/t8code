@@ -132,10 +132,16 @@ t8_dprism_is_familypv (const t8_dprism_t **fam)
   int                 i, j;
   t8_dtri_t         **tri_fam = T8_ALLOC (t8_dtri_t *, T8_DTRI_CHILDREN);
   t8_dline_t        **line_fam = T8_ALLOC (t8_dline_t *, T8_DLINE_CHILDREN);
+  t8_dprism_t        *fam_not_const =
+    T8_ALLOC (t8_dprism_t, T8_DPRISM_CHILDREN);
+
+  for (i = 0; i < T8_DPRISM_CHILDREN; i++) {
+    t8_dprism_copy (fam[i], &fam_not_const[i]);
+  }
 
   for (i = 0; i < T8_DLINE_CHILDREN; i++) {
     for (j = 0; j < T8_DTRI_CHILDREN; j++) {
-      tri_fam[j] = &fam[j + i * T8_DTRI_CHILDREN]->tri;
+      tri_fam[j] = &fam_not_const[j + i * T8_DTRI_CHILDREN].tri;
     }
     if (!t8_dtri_is_familypv ((const t8_dtri_t **) tri_fam)) {
       T8_FREE (tri_fam);
@@ -146,7 +152,7 @@ t8_dprism_is_familypv (const t8_dprism_t **fam)
 
   for (i = 0; i < T8_DTRI_CHILDREN; i++) {
     for (j = 0; j < T8_DLINE_CHILDREN; j++) {
-      line_fam[j] = &fam[j * T8_DTRI_CHILDREN + i]->line;
+      line_fam[j] = &fam_not_const[j * T8_DTRI_CHILDREN + i].line;
     }
     /*Proof for line_family and equality of triangles in both planes */
     if (!(t8_dline_is_familypv ((const t8_dline_t **) line_fam)
