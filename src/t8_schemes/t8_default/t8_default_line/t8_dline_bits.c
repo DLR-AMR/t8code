@@ -211,8 +211,6 @@ int
 t8_dline_is_familypv (const t8_dline_t *f[])
 {
   const int8_t        level = f[0]->level;
-  t8_dline_coord_t    len = T8_DLINE_LEN (level);
-
   /* Check the level */
   if (level == 0 || level != f[1]->level) {
     return 0;
@@ -222,6 +220,7 @@ t8_dline_is_familypv (const t8_dline_t *f[])
     return 0;
   }
 
+  const t8_dline_coord_t len = T8_DLINE_LEN (level);
   /* Check the coordinate */
   return (f[0]->x + len == f[1]->x);
 }

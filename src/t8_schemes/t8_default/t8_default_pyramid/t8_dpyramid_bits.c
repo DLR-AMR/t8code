@@ -303,17 +303,14 @@ t8_dpyramid_ancestor_id (const t8_dpyramid_t *p, const int level)
 int
 t8_dpyramid_is_family (t8_dpyramid_t **fam)
 {
-
   const int           level = fam[0]->pyramid.level;
-  t8_dpyramid_coord_t inc = T8_DPYRAMID_LEN (level), x_inc, y_inc;
   if (t8_dpyramid_shape (fam[0]) == T8_ECLASS_TET) {
-    int                 is_family;
     t8_dtet_t         **tet_fam = T8_ALLOC (t8_dtet_t *, T8_DTET_CHILDREN);
     for (int i = 0; i < T8_DTET_CHILDREN; i++) {
       tet_fam[i] = &fam[i]->pyramid;
     }
-
-    is_family = t8_dtet_is_familypv ((const t8_dtet_t **) tet_fam);
+    const int           is_family =
+      t8_dtet_is_familypv ((const t8_dtet_t **) tet_fam);
     T8_FREE (tet_fam);
     return is_family;
   }
@@ -337,6 +334,7 @@ t8_dpyramid_is_family (t8_dpyramid_t **fam)
       }
     }
 
+    t8_dpyramid_coord_t inc = T8_DPYRAMID_LEN (level), x_inc, y_inc;
     x_inc = fam[0]->pyramid.x + inc;
     y_inc = fam[0]->pyramid.y + inc;
     /* Check the coordinates of the anchor-coordinate */
