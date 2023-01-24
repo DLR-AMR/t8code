@@ -472,7 +472,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
   t8_cmesh_t          cmesh;
   char                vtuname[BUFSIZ];
   t8_geometry_c      *geometry;
-  t8_geometry_c      *geometry_sincos;
+  t8_geometry_c      *geometry_sincos; /* Used for T8_GEOM_TWO_GEOMETRIES*/
   int                 uniform_level;
   double              time = 0; /* used for moving geometry */
   int                 sreturn;
@@ -515,13 +515,13 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     break;
   case T8_GEOM_TWO_GEOMETRIES:
     t8_global_productionf
-      ("Creating uniform level %i forest with a cylinder and a sinus cosinus geometry.\n",
+      ("Creating uniform level %i forest with a cylinder and a sine cosine geometry.\n",
        level);
     /* Cylinder geometry on tree 0. Sincos geometry on tree 1. */
     geometry = new t8_geometry_cylinder;
     geometry_sincos = new t8_geometry_sincos;
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
-    /* Tree 0 is connecte to itself to form a cylinder */
+    /* Tree 0 is connected to itself to form a cylinder */
     t8_cmesh_set_join (cmesh, 0, 0, 0, 1, 0);
     t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_QUAD);
     t8_cmesh_register_geometry (cmesh, geometry_sincos);
