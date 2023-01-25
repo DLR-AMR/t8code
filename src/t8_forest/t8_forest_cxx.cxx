@@ -281,6 +281,7 @@ t8_forest_no_overlap (t8_forest_t forest)
 {
 #if T8_ENABLE_DEBUG
   T8_ASSERT (t8_forest_is_committed (forest));
+  int                 has_overlap_local = 0;
   const t8_locidx_t   num_local_trees =
     t8_forest_get_num_local_trees (forest);
   /* Iterate over all local trees */
@@ -292,7 +293,6 @@ t8_forest_no_overlap (t8_forest_t forest)
       t8_forest_get_tree_num_elements (forest, itree);
     t8_element_t       *element_nca;
     ts->t8_element_new (1, &element_nca);
-    int                 has_overlap_local = 0;
     /* Iterate over all elements in current tree */
     for (t8_locidx_t ielem = 0; ielem < elems_in_tree - 1; ielem++) {
       /* Compare each two consecutive elements. If one element is
@@ -323,22 +323,24 @@ t8_forest_no_overlap (t8_forest_t forest)
     }
     /* clean up, as each tree can have a different scheme */
     ts->t8_element_destroy (1, &element_nca);
+  }
+  /* Check if a local tree in the global forest has local overlapping elements.
+    * has_overlap_local_global is equal to 1 if a process has a local overlap, else 0. */
+  int                 has_overlap_local_global;
+  int                 mpiret =
+    sc_MPI_Allreduce (&has_overlap_local, &has_overlap_local_global,
+                      1, MPI_INT, sc_MPI_MAX, forest->mpicomm);
+  SC_CHECK_MPI (mpiret);
 
-    /* Check if a local tree in the global forest has local overlapping elements.
-     * has_overlap_local_global is equal to 1 if a process has a local overlap, else 0. */
-    int                 has_overlap_local_global;
-    int                 mpiret =
-      sc_MPI_Allreduce (&has_overlap_local, &has_overlap_local_global,
-                        1, MPI_INT, sc_MPI_MAX, forest->mpicomm);
-    SC_CHECK_MPI (mpiret);
-    T8_ASSERT (has_overlap_local_global == 0
-               || has_overlap_local_global == 1);
-    if (has_overlap_local_global) {
-      T8_ASSERT (has_overlap_local == 1);
-      return 0;
-    }
+  T8_ASSERT (has_overlap_local_global == 0
+              || has_overlap_local_global == 1);
+  if (has_overlap_local_global) {
+    T8_ASSERT (has_overlap_local == 1);
+    //t8_debugf ("[IL] no_overlap end 1 \n");
+    return 0;
   }
 #endif
+//t8_debugf ("[IL] no_overlap end 2 \n");
   return 1;
 }
 
