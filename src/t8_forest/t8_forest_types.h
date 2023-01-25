@@ -110,8 +110,12 @@ typedef struct t8_forest
   int                 mpisize;          /**< Number of MPI processes. */
   int                 mpirank;          /**< Number of this MPI process. */
 
-  t8_gloidx_t         first_local_tree;
-  t8_gloidx_t         last_local_tree;
+  t8_gloidx_t         first_local_tree; /**< The global index of the first local tree on this process. 
+                                             If first_local_tree is larger than last_local_tree then 
+                                             this processor/forest is empty.
+                                             See https://github.com/DLR-AMR/t8code/wiki/Tree-indexing */
+  t8_gloidx_t         last_local_tree;  /**< The global index of the last local tree on this process.
+                                             -1 if this processor is empty. */
   t8_gloidx_t         global_num_trees; /**< The total number of global trees */
   sc_array_t         *trees;
   t8_forest_ghost_t   ghosts;           /**< If not NULL, the ghost elements. \see t8_forest_ghost.h */
