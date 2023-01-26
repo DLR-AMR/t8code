@@ -449,8 +449,8 @@ t8_forest_adapt (t8_forest_t forest)
   t8_global_productionf ("Into t8_forest_adapt from %lld total elements\n",
                          (long long) forest_from->global_num_elements);
 
-  T8_ASSERT (forest->is_incomplete != -1);
-  T8_ASSERT (forest->is_incomplete == forest_from->is_incomplete);
+  T8_ASSERT (forest_from->is_incomplete != -1);
+  T8_ASSERT (forest->is_incomplete == -1);
   /* TODO: Allocate memory for the trees of forest.
    * Will we do this here or in an extra function? */
   T8_ASSERT (forest->trees->elem_count == forest_from->trees->elem_count);
@@ -735,6 +735,10 @@ t8_forest_adapt (t8_forest_t forest)
     SC_CHECK_MPI (mpiret);
     T8_ASSERT (incomplete_trees == 1 || incomplete_trees == 0);
     forest->is_incomplete = incomplete_trees;
+  }
+  else {
+    T8_ASSERT (forest_from->is_incomplete == 1);
+    forest->is_incomplete = 1;
   }
 
   t8_global_productionf ("Done t8_forest_adapt with %lld total elements\n",

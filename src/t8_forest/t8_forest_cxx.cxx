@@ -1775,10 +1775,12 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
   if (copy_elements) {
     forest->local_num_elements = from->local_num_elements;
     forest->global_num_elements = from->global_num_elements;
+    forest->is_incomplete = from->is_incomplete;
   }
   else {
     forest->local_num_elements = 0;
     forest->global_num_elements = 0;
+    forest->is_incomplete = -1;
   }
 }
 

@@ -545,7 +545,6 @@ t8_forest_commit (t8_forest_t forest)
     forest->cmesh = forest->set_from->cmesh;
     forest->scheme_cxx = forest->set_from->scheme_cxx;
     forest->global_num_trees = forest->set_from->global_num_trees;
-    forest->is_incomplete = forest->set_from->is_incomplete;
 
     /* Compute the maximum allowed refinement level */
     t8_forest_compute_maxlevel (forest);
@@ -631,6 +630,7 @@ t8_forest_commit (t8_forest_t forest)
         }
       }
       else {
+        forest->is_incomplete = forest->set_from->is_incomplete;
         /* Partitioning is the last routine, no balance was set */
         forest->global_num_elements = forest->set_from->global_num_elements;
         /* Initialize the trees array of the forest */
