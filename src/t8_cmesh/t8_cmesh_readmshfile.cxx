@@ -1839,27 +1839,9 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
     case 4:
       vertices =
         t8_msh_file_4_read_nodes (file, &num_vertices, &node_mempool);
-      if (use_occ_geometry) {
-#if T8_WITH_OCC
-        t8_cmesh_msh_file_4_read_eles (cmesh, file, vertices, &vertex_indices,
-                                       dim, linear_geometry, 1, occ_geometry);
-#else /* !T8_WITH_OCC */
-        fclose (file);
-        t8_debugf ("Occ is not linked. Cannot use occ geometry.\n");
-        t8_cmesh_destroy (&cmesh);
-        if (partition) {
-          /* Communicate to the other processes that reading failed. */
-          main_proc_read_successful = 0;
-          sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc,
-                        comm);
-        }
-        return NULL;
-#endif /* T8_WITH_OCC */
-      }
-      else {
-        t8_cmesh_msh_file_4_read_eles (cmesh, file, vertices, &vertex_indices,
-                                       dim, linear_geometry, 0, NULL);
-      }
+      t8_cmesh_msh_file_4_read_eles (cmesh, file, vertices, &vertex_indices,
+                                     dim, linear_geometry, use_occ_geometry,
+                                     occ_geometry);
       break;
 
     default:
