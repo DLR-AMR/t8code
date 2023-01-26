@@ -1747,8 +1747,8 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
   t8_gloidx_t         num_trees, first_tree, last_tree = -1;
   int                 main_proc_read_successful = 0;
   int                 msh_version;
-  const t8_geometry_c *occ_geometry;
-  const t8_geometry_c *linear_geometry;
+  const t8_geometry_c *occ_geometry = NULL;
+  const t8_geometry_c *linear_geometry = NULL;
 
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
