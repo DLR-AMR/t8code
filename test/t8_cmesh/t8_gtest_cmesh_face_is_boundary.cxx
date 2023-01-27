@@ -33,8 +33,10 @@ protected:
 
     /* For each eclass create a cmesh consisting only of one tree. */
     cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
+    
     /* We now check each face */
     num_faces = t8_eclass_num_faces[(int) eclass];
+    
   }
   void TearDown() override {
     t8_cmesh_destroy(&cmesh);
@@ -49,10 +51,10 @@ TEST_P (cmesh_face_boundary_one_tree, check_face_is_boundary_one_tree) {
   
     /* We check whether all faces of the tree are a boundary face. */
     EXPECT_TRUE(t8_cmesh_is_committed (cmesh));
-    
+
     for (int iface = 0; iface < num_faces; ++iface) {
       EXPECT_TRUE(t8_cmesh_tree_face_is_boundary (cmesh, 0, iface));
-      EXPECT_TRUE(t8_cmesh_get_face_neighbor (cmesh, 0, iface, NULL, NULL) < 0);
+      EXPECT_LT(t8_cmesh_get_face_neighbor (cmesh, 0, iface, NULL, NULL), 0);
     }
 }
 
@@ -65,8 +67,10 @@ static void
 t8_test_compute_parallel_bounds (sc_MPI_Comm comm, t8_gloidx_t *first_tree,
                                  t8_gloidx_t *last_tree)
 {
-  int                 mpirank, mpisize, mpiret;
-  int                 first_tree_shared = 0;
+  int                 mpirank;
+  int                 mpisize;
+  int                 mpiret;
+  int                 first_tree_shared;
 
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
@@ -147,8 +151,8 @@ TEST_P (cmesh_face_boundary_two_trees, check_face_is_boundary_two_trees) {
             /* Check that tree 1 face is a boundary */
             EXPECT_TRUE(t8_cmesh_tree_face_is_boundary (cmesh, 1, checkface));
             /* Check that we do not detect a face neighbor for tree 0 or tree 1 at this face */
-            EXPECT_TRUE(t8_cmesh_get_face_neighbor(cmesh, 0, checkface, NULL, NULL) < 0);
-            EXPECT_TRUE(t8_cmesh_get_face_neighbor(cmesh, 1, checkface, NULL, NULL) < 0);
+            EXPECT_LT(t8_cmesh_get_face_neighbor(cmesh, 0, checkface, NULL, NULL), 0);
+            EXPECT_LT(t8_cmesh_get_face_neighbor(cmesh, 1, checkface, NULL, NULL), 0);
           }
           else {
             /* checkface == iface 
