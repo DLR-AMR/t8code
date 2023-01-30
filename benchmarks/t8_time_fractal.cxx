@@ -35,48 +35,125 @@
 #include <sc_statistics.h>
 #include <sc_options.h>
 
+/* Refine a tree with quadrilateral elements.
+ * At every second adaptcall (level is even) remove the central elements 
+ * of the mesh or leave them untouched. Refine the remaining elements.
+ *
+ *  |x|x|x|x|       |x|x|x|x|
+ *  |x|x|x|x|  -->  |x| | |x|
+ *  |x|x|x|x|       |x| | |x|
+ *  |x|x|x|x|       |x|x|x|x|
+ *
+ */
 static int
-t8_adapt_menger (t8_forest_t forest,
-                 t8_forest_t forest_from,
-                 t8_locidx_t which_tree,
-                 t8_locidx_t lelement_id,
-                 t8_eclass_scheme_c * ts,
-                 const int is_family,
-                 const int num_elements, 
-                 t8_element_t * elements[])
+t8_adapt_menger_quad (t8_forest_t forest,
+                      t8_forest_t forest_from,
+                      t8_locidx_t which_tree,
+                      t8_locidx_t lelement_id,
+                      t8_eclass_scheme_c *ts,
+                      const int is_family,
+                      const int num_elements, t8_element_t *elements[])
 {
-  int child_id;
-  int level_element;
-  int level_max;
-  int ancestor_id;
+  const int          *adapt_data =
+    (const int *) t8_forest_get_user_data (forest);
+  const int           level_max = adapt_data[0];
+  const int           ret = adapt_data[1];      /* -2 if elements get removed, 0 else */
 
-  child_id = ts->t8_element_child_id (elements[0]);  
-  level_element = ts->t8_element_level (elements[0]);
-  level_max = *(int *) t8_forest_get_user_data (forest);
-  ancestor_id = ts->t8_element_ancestor_id (elements[0], level_element-1);
-  
-  if (0 == level_element%2) {
+  const int           child_id = ts->t8_element_child_id (elements[0]);
+  const int           level_element = ts->t8_element_level (elements[0]);
+  const int           ancestor_id =
+    ts->t8_element_ancestor_id (elements[0], level_element - 1);
+
+  if (0 == level_element % 2) {
+    /* ancestor_id == 0 && child_id == 3
+       ancestor_id == 1 && child_id == 1
+       ancestor_id == 2 && child_id == 2
+       ancestor_id == 3 && child_id == 0 */
+    if (ancestor_id + child_id == 3) {
+      return ret;
+    }
+  }
+  if (level_element < level_max) {
+    return 1;
+  }
+  return 0;
+}
+
+/* Refine a tree with triangular elements.
+ * At every adaptcall remove the central element with child id 2 
+ * of the mesh or leave it untouched. Refine the remaining elements.
+ */
+static int
+t8_adapt_sierpinski_tri (t8_forest_t forest,
+                         t8_forest_t forest_from,
+                         t8_locidx_t which_tree,
+                         t8_locidx_t lelement_id,
+                         t8_eclass_scheme_c *ts,
+                         const int is_family,
+                         const int num_elements, t8_element_t *elements[])
+{
+  const int          *adapt_data =
+    (const int *) t8_forest_get_user_data (forest);
+  const int           level_max = adapt_data[0];
+  const int           ret = adapt_data[1];      /* -2 if elements shall be removed, 0 else */
+
+  const int           child_id = ts->t8_element_child_id (elements[0]);
+  const int           level = ts->t8_element_level (elements[0]);
+
+  if (child_id == 2) {
+    return ret;
+  }
+  if (level < level_max) {
+    return 1;
+  }
+  return 0;
+}
+
+/* Refine a tree with hexahedral elements.
+ * At every second adaptcall (level is even) remove the central elements 
+ * of the mesh or leave them untouched. Refine the remaining elements.
+ */
+static int
+t8_adapt_menger_hex (t8_forest_t forest,
+                     t8_forest_t forest_from,
+                     t8_locidx_t which_tree,
+                     t8_locidx_t lelement_id,
+                     t8_eclass_scheme_c *ts,
+                     const int is_family,
+                     const int num_elements, t8_element_t *elements[])
+{
+  const int          *adapt_data =
+    (const int *) t8_forest_get_user_data (forest);
+  const int           level_max = adapt_data[0];
+  const int           ret = adapt_data[1];      /* -2 if elements shall be removed, 0 else */
+
+  const int           child_id = ts->t8_element_child_id (elements[0]);
+  const int           level_element = ts->t8_element_level (elements[0]);
+  const int           ancestor_id =
+    ts->t8_element_ancestor_id (elements[0], level_element - 1);
+
+  if (0 == level_element % 2) {
     if (ancestor_id < 4) {
       if (child_id > 3) {
         if (4 != child_id - ancestor_id) {
-          return -2;
+          return ret;
         }
       }
       else {
         if (3 == child_id + ancestor_id) {
-          return -2;
+          return ret;
         }
       }
     }
     else {
       if (child_id > 3) {
         if (11 == child_id + ancestor_id) {
-          return -2;
+          return ret;
         }
       }
       else {
         if (4 != ancestor_id - child_id) {
-          return -2;
+          return ret;
         }
       }
     }
@@ -87,27 +164,29 @@ t8_adapt_menger (t8_forest_t forest,
   return 0;
 }
 
+/* Refine a tree with tetrahedral elements.
+ * At every adaptcall remove the elements with child id 2, 3, 5 and 6 
+ * of the mesh or leave it untouched. Refine the remaining elements.
+ */
 static int
 t8_adapt_sierpinski_tet (t8_forest_t forest,
                          t8_forest_t forest_from,
                          t8_locidx_t which_tree,
                          t8_locidx_t lelement_id,
-                         t8_eclass_scheme_c * ts,
+                         t8_eclass_scheme_c *ts,
                          const int is_family,
-                         const int num_elements, 
-                         t8_element_t * elements[])
+                         const int num_elements, t8_element_t *elements[])
 {
-  int child_id;
-  int level;
-  int level_max;
+  const int          *adapt_data =
+    (const int *) t8_forest_get_user_data (forest);
+  const int           level_max = adapt_data[0];
+  const int           ret = adapt_data[1];      /* -2 if elements shall be removed, 0 else */
 
-  child_id = ts->t8_element_child_id (elements[0]);  
-  level = ts->t8_element_level (elements[0]);
-  level_max = *(int *) t8_forest_get_user_data (forest);
+  const int           child_id = ts->t8_element_child_id (elements[0]);
+  const int           level = ts->t8_element_level (elements[0]);
 
-  if (child_id == 2 || child_id == 3 
-      || child_id == 5 || child_id == 6) {
-    return -2;
+  if (child_id == 2 || child_id == 3 || child_id == 5 || child_id == 6) {
+    return ret;
   }
   if (level < level_max) {
     return 1;
@@ -115,26 +194,29 @@ t8_adapt_sierpinski_tet (t8_forest_t forest,
   return 0;
 }
 
+/* Refine a tree with prism elements.
+ * At every adaptcall remove the elements with child id 2 and 6 
+ * of the mesh or leave it untouched. Refine the remaining elements.
+ */
 static int
 t8_adapt_sierpinski_prism (t8_forest_t forest,
                            t8_forest_t forest_from,
                            t8_locidx_t which_tree,
                            t8_locidx_t lelement_id,
-                           t8_eclass_scheme_c * ts,
+                           t8_eclass_scheme_c *ts,
                            const int is_family,
-                           const int num_elements, 
-                           t8_element_t * elements[])
+                           const int num_elements, t8_element_t *elements[])
 {
-  int child_id;
-  int level;
-  int level_max;
+  const int          *adapt_data =
+    (const int *) t8_forest_get_user_data (forest);
+  const int           level_max = adapt_data[0];
+  const int           ret = adapt_data[1];      /* -2 if elements shall be removed, 0 else */
 
-  child_id = ts->t8_element_child_id (elements[0]);  
-  level = ts->t8_element_level (elements[0]);
-  level_max = *(int *) t8_forest_get_user_data (forest);
+  const int           child_id = ts->t8_element_child_id (elements[0]);
+  const int           level = ts->t8_element_level (elements[0]);
 
   if (child_id == 2 || child_id == 6) {
-    return -2;
+    return ret;
   }
   if (level < level_max) {
     return 1;
@@ -142,27 +224,30 @@ t8_adapt_sierpinski_prism (t8_forest_t forest,
   return 0;
 }
 
+/* Refine a tree with pyramid elements.
+ * At every adaptcall remove the elements with child id 1, 3, 5, 6 and 8 
+ * of the mesh or leave it untouched. Refine the remaining elements.
+ */
 static int
 t8_adapt_sierpinski_pyramid (t8_forest_t forest,
                              t8_forest_t forest_from,
                              t8_locidx_t which_tree,
                              t8_locidx_t lelement_id,
-                             t8_eclass_scheme_c * ts,
+                             t8_eclass_scheme_c *ts,
                              const int is_family,
-                             const int num_elements, 
-                             t8_element_t * elements[])
+                             const int num_elements, t8_element_t *elements[])
 {
-  int child_id;
-  int level;
-  int level_max;
+  const int          *adapt_data =
+    (const int *) t8_forest_get_user_data (forest);
+  const int           level_max = adapt_data[0];
+  const int           ret = adapt_data[1];      /* -2 if elements shall be removed, 0 else */
 
-  child_id = ts->t8_element_child_id (elements[0]);  
-  level = ts->t8_element_level (elements[0]);
-  level_max = *(int *) t8_forest_get_user_data (forest);
-  
-  if (child_id == 1 || child_id == 3 
+  const int           child_id = ts->t8_element_child_id (elements[0]);
+  const int           level = ts->t8_element_level (elements[0]);
+
+  if (child_id == 1 || child_id == 3
       || child_id == 5 || child_id == 6 || child_id == 8) {
-    return -2;
+    return ret;
   }
   if (level < level_max) {
     return 1;
@@ -170,45 +255,15 @@ t8_adapt_sierpinski_pyramid (t8_forest_t forest,
   return 0;
 }
 
-
-static int
-t8_adapt_sierpinski_tet_full (t8_forest_t forest,
-                              t8_forest_t forest_from,
-                              t8_locidx_t which_tree,
-                              t8_locidx_t lelement_id,
-                              t8_eclass_scheme_c * ts,
-                              const int is_family,
-                              const int num_elements, 
-                              t8_element_t * elements[])
-{
-  int child_id;
-  int level;
-  int level_max;
-
-  child_id = ts->t8_element_child_id (elements[0]);  
-  level = ts->t8_element_level (elements[0]);
-  level_max = *(int *) t8_forest_get_user_data (forest);
-  
-  if (child_id == 2 || child_id == 3 
-      || child_id == 5 || child_id == 6) {
-    return 0;
-  }
-  if (level < level_max) {
-    return 1;
-  }
-  return 0;
-}
-
-
+/* Coarse every family in the mesh. */
 static int
 t8_adapt_coarse (t8_forest_t forest,
                  t8_forest_t forest_from,
                  t8_locidx_t which_tree,
                  t8_locidx_t lelement_id,
-                 t8_eclass_scheme_c * ts,
+                 t8_eclass_scheme_c *ts,
                  const int is_family,
-                 const int num_elements, 
-                 t8_element_t * elements[])
+                 const int num_elements, t8_element_t *elements[])
 {
   if (is_family) {
     return -1;
@@ -216,185 +271,168 @@ t8_adapt_coarse (t8_forest_t forest,
   return 0;
 }
 
+/** Constructing different fractals on each element type.
+ * \param [in] level_initial Initial level of the uniform forest.
+ * \param [in] level_end     Final level of the fractal.
+ * \param [in] iterative     1 if fractal is constructed iterative
+ *                           0 if recursive
+ * \param [in] remove        1 if elements that will not get refined will be 
+ *                           removed instead.
+ * \param [in] trees         Number of trees the forest will contain.
+ * \param [in] eclass        Element type for each tree.
+ * \param [in] output        1 if VTU output is needed.
+ * \param [in] coarse        Number of times the final fractal shall be coarsen.
+ * \param [in] runs          Number of times the hole procedure will be repeated.
+ */
 static void
-t8_construct_fractal (int initial_level,
-                      int end_level_it, 
-                      int end_level_rec, 
-                      t8_eclass_t eclass, 
-                      int remove, 
-                      int output, 
-                      int coarse)
+t8_construct_fractal (int level_initial,
+                      int level_end,
+                      const int iterative,
+                      const int remove,
+                      const int trees,
+                      const t8_eclass_t eclass,
+                      const int output, const int coarse, const int runs)
 {
-  t8_forest_t         forest;
-  t8_forest_t         forest_adapt;
-  t8_forest_t         forest_partition;
-  t8_cmesh_t          cmesh;
-  double              adapt_time = 0;
-  double              adapt_rec_time = 0;
-  double              adapt_coarse_time = 0;
-  sc_statinfo_t       times[3];
-  char                vtuname[BUFSIZ];
-  int                 level;
-  int                 procs_sent;
-  int                 runs = 1;
+  T8_ASSERT (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_TRIANGLE
+             || eclass == T8_ECLASS_HEX || eclass == T8_ECLASS_TET
+             || eclass == T8_ECLASS_PRISM || eclass == T8_ECLASS_PYRAMID);
 
-  sc_stats_init (&times[0], "refine_it");
-  sc_stats_init (&times[1], "refine_rec");
-  sc_stats_init (&times[2], "coarse");
-
-  if (eclass == T8_ECLASS_HEX) {
-    if (initial_level < 2) {
-      initial_level = 2;
+  /* Quadrilateral and hexahedron elements must have an even initial level 
+   * greater 0, such that the refinement pattern can be applied. */
+  if (eclass == T8_ECLASS_HEX || eclass == T8_ECLASS_QUAD) {
+    if (level_initial < 2) {
+      level_initial = 2;
     }
-    if (0 != initial_level%2) {
-      initial_level++;
+    if (0 != level_initial % 2) {
+      level_initial++;
     }
-    if (0 != end_level_it%2) {
-      end_level_it++;
+    if (0 != level_end % 2) {
+      level_end++;
     }
   }
 
-  T8_ASSERT (eclass == T8_ECLASS_HEX || eclass == T8_ECLASS_TET
-             || eclass == T8_ECLASS_PRISM || eclass == T8_ECLASS_PYRAMID);
+  /* Set up userdata to adapt forest. 
+   * user_data[0] -> level_end
+   * user_data[1] -> {0, -2} -> return for adapt callback */
+  int                 user_data[2] = { level_end, remove };
+  if (remove == 1) {
+    user_data[1] = -2;
+  }
+
+  /* Time measurement */
+  double              time_refine = 0;
+  double              time_coarse = 0;
+  sc_statinfo_t       times[3];
+  sc_stats_init (&times[0], "refine");
+  sc_stats_init (&times[1], "coarse");
+
+  t8_forest_t         forest;
+  t8_forest_t         forest_adapt;
+  t8_cmesh_t          cmesh;
 
   for (int run = 0; run < runs; run++) {
+    if (output) {
+      cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
+    }
+    else {
+      cmesh = t8_cmesh_new_bigmesh (eclass, trees, sc_MPI_COMM_WORLD);
+    }
 
     t8_forest_init (&forest);
-    cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
-    //cmesh = t8_cmesh_new_bigmesh (eclass, 512, sc_MPI_COMM_WORLD);
     t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
     t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
-    t8_forest_set_level (forest, initial_level);
+    t8_forest_set_level (forest, level_initial);
     t8_forest_commit (forest);
 
-    if (initial_level < end_level_it) {
-      for (level = initial_level; level <= end_level_it; level++) {
-        /* Adapt - refine, remove */
-        t8_forest_init (&forest_adapt);
-        t8_forest_set_profiling (forest_adapt, 1);
-        t8_forest_set_user_data (forest_adapt, &end_level_it);
-        if (remove == 1) {
-          if (eclass == T8_ECLASS_HEX) {
-            t8_forest_set_adapt (forest_adapt, forest, t8_adapt_menger, 0);
-          }
-          else if (eclass == T8_ECLASS_TET) {
-            t8_forest_set_adapt (forest_adapt, forest, t8_adapt_sierpinski_tet, 0);
-          }
-          else if (eclass == T8_ECLASS_PRISM) {
-            t8_forest_set_adapt (forest_adapt, forest, t8_adapt_sierpinski_prism, 0);
-          }
-          else {
-            t8_forest_set_adapt (forest_adapt, forest, t8_adapt_sierpinski_pyramid, 0);
-          }
-        }
-        else {
-          t8_forest_set_adapt (forest_adapt, forest, t8_adapt_sierpinski_tet_full, 0);
-        }
-
-        t8_forest_commit (forest_adapt);
-        adapt_time += t8_forest_profile_get_adapt_time(forest_adapt);
-
-        forest = forest_adapt;
-      } 
-    }
-
-    if (end_level_it < end_level_rec) {
-      /* Adapt - refine, remove */
+    T8_ASSERT (level_initial < level_end);
+    for (int level = level_initial; level <= level_end; level++) {
+      /* Adapt - refine (and remove) */
       t8_forest_init (&forest_adapt);
       t8_forest_set_profiling (forest_adapt, 1);
-      t8_forest_set_user_data (forest_adapt, &end_level_rec);
-      if (remove == 1) {
-        if (eclass == T8_ECLASS_HEX) {
-          t8_forest_set_adapt (forest_adapt, forest, t8_adapt_menger, 1);
-        }
-        else if (eclass == T8_ECLASS_TET) {
-          t8_forest_set_adapt (forest_adapt, forest, t8_adapt_sierpinski_tet, 1);
-        }
-        else if (eclass == T8_ECLASS_PRISM) {
-          t8_forest_set_adapt (forest_adapt, forest, t8_adapt_sierpinski_prism, 1);
-        }
-        else {
-          t8_forest_set_adapt (forest_adapt, forest, t8_adapt_sierpinski_pyramid, 1);
-        }
+      t8_forest_set_user_data (forest_adapt, &user_data);
+      if (eclass == T8_ECLASS_QUAD) {
+        t8_forest_set_adapt (forest_adapt, forest,
+                             t8_adapt_menger_quad, iterative);
+      }
+      else if (eclass == T8_ECLASS_TRIANGLE) {
+        t8_forest_set_adapt (forest_adapt, forest,
+                             t8_adapt_sierpinski_tri, iterative);
+      }
+      else if (eclass == T8_ECLASS_HEX) {
+        t8_forest_set_adapt (forest_adapt, forest,
+                             t8_adapt_menger_hex, iterative);
+      }
+      else if (eclass == T8_ECLASS_TET) {
+        t8_forest_set_adapt (forest_adapt, forest,
+                             t8_adapt_sierpinski_tet, iterative);
+      }
+      else if (eclass == T8_ECLASS_PRISM) {
+        t8_forest_set_adapt (forest_adapt, forest,
+                             t8_adapt_sierpinski_prism, iterative);
       }
       else {
-        t8_forest_set_adapt (forest_adapt, forest, t8_adapt_sierpinski_tet_full, 1);
+        t8_forest_set_adapt (forest_adapt, forest,
+                             t8_adapt_sierpinski_pyramid, iterative);
+      }
+      t8_forest_commit (forest_adapt);
+      time_refine += t8_forest_profile_get_adapt_time (forest_adapt);
+      forest = forest_adapt;
+
+      /* In case of recursive adapt, only one iteration is required. */
+      if (iterative == 0) {
+        break;
       }
 
-      t8_forest_commit (forest_adapt);
-      adapt_rec_time += t8_forest_profile_get_adapt_time(forest_adapt);
-
-      forest = forest_adapt;
     }
 
-    for (level = 0; level < coarse; level++) {
+    for (int level = 0; level < coarse; level++) {
       /* Adapt - coarse */
       t8_forest_init (&forest_adapt);
       t8_forest_set_profiling (forest_adapt, 1);
       t8_forest_set_adapt (forest_adapt, forest, t8_adapt_coarse, 0);
       t8_forest_commit (forest_adapt);
-      adapt_coarse_time += t8_forest_profile_get_adapt_time(forest_adapt);
-
+      time_coarse += t8_forest_profile_get_adapt_time (forest_adapt);
       forest = forest_adapt;
     }
 
-    if (run < runs-1) {
+    if (run < runs - 1) {
       t8_forest_unref (&forest);
     }
-
   }
-  
-  adapt_time = adapt_time * (1/(double) runs);
-  adapt_rec_time = adapt_rec_time * (1/(double) runs);
-  adapt_coarse_time = adapt_coarse_time * (1/(double) runs);
 
   /* vtu output */
   if (output) {
-      snprintf (vtuname, BUFSIZ, "forest_fractal_adapt_%s",
-                t8_eclass_to_string[eclass]);
-      t8_forest_write_vtk (forest, vtuname);
-      t8_debugf ("Output to %s\n", vtuname);
+    char                vtuname[BUFSIZ];
+    snprintf (vtuname, BUFSIZ, "forest_fractal_adapt_%s",
+              t8_eclass_to_string[eclass]);
+    t8_forest_write_vtk (forest, vtuname);
+    t8_debugf ("Output to %s\n", vtuname);
   }
 
-  sc_stats_accumulate (&times[0], adapt_time);
-  sc_stats_accumulate (&times[1], adapt_rec_time);
-  sc_stats_accumulate (&times[2], adapt_coarse_time);
-  sc_stats_compute (sc_MPI_COMM_WORLD, 3, times);
-  sc_stats_print (t8_get_package_id (), SC_LP_ESSENTIAL, 3, times, 1, 1);
+  sc_stats_accumulate (&times[0], time_refine);
+  sc_stats_accumulate (&times[1], time_coarse);;
+  sc_stats_compute (sc_MPI_COMM_WORLD, 2, times);
+  sc_stats_print (t8_get_package_id (), SC_LP_ESSENTIAL, 2, times, 1, 1);
 
   t8_forest_unref (&forest);
 }
 
-
 int
 main (int argc, char **argv)
 {
-  int                 mpiret;
-  sc_options_t       *opt;
   char                usage[BUFSIZ];
-  char                help[BUFSIZ];
-  int                 initial_level = 0;
-  int                 end_level_it = 4;
-  int                 end_level_rec = 4;
-  int                 output = 0;
-  int                 coarse = 0;
-  int                 remove = 1;
-  int                 eclass_int;
-  int                 parsed;
-  int                 helpme;
-  int                 sreturnA;
-  int                 sreturnB;
-
   /* brief help message */
-  sreturnA = snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS>\n\t%s -h\t"
-                       "for a brief overview of all options.",
-                       basename (argv[0]), basename (argv[0]));
+  int                 sreturnA = snprintf (usage, BUFSIZ,
+                                           "Usage:\t%s <OPTIONS>\n\t%s -h\t"
+                                           "for a brief overview of all options.",
+                                           basename (argv[0]),
+                                           basename (argv[0]));
 
+  char                help[BUFSIZ];
   /* long help message */
-  sreturnB = snprintf (help, BUFSIZ,
-                       "This program constructs a fractal mesh\n"
-                       "The program has a visual output, if desired.\n\n%s\n",
-                       usage);
+  int                 sreturnB = snprintf (help, BUFSIZ,
+                                           "This program constructs a fractal mesh.\n\n%s\n",
+                                           usage);
 
   if (sreturnA > BUFSIZ || sreturnB > BUFSIZ) {
     /* The usage string or help message was truncated */
@@ -405,51 +443,75 @@ main (int argc, char **argv)
        usage, help);
   }
 
-  mpiret = sc_MPI_Init (&argc, &argv);
+  int                 mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
 
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
+  /* Parameter for t8_construct_fractal and command line */
+  int                 level_initial = -1;
+  int                 level_end = -1;
+  int                 iterative = -1;
+  int                 trees = 1;
+  int                 output = -1;
+  int                 coarse = -1;
+  int                 remove = -1;
+  int                 runs = -1;
+  int                 eclass_int = -1;
+  int                 helpme;
+
   /* initialize command line argument parser */
-  opt = sc_options_new (argv[0]);
+  sc_options_t       *opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'h', "help", &helpme,
                          "Display a short help message.");
-  sc_options_add_int (opt, 'u', "uniform", &initial_level, 0,
-                      "Initial uniform refinement level.");                     
-  sc_options_add_int (opt, 'i', "iteration", &end_level_it, 4,
-                      "Final refine level of iteration: greater to 0");
-  sc_options_add_int (opt, 'r', "recursion", &end_level_rec, 4,
-                      "Final refine level of recursion: greater to 0");
+  sc_options_add_int (opt, 'u', "uniform_level", &level_initial, -1,
+                      "Initial uniform refinement level.");
+  sc_options_add_int (opt, 'f', "final_level", &level_end, -1,
+                      "Final refine level, greater to initial refinement level.");
+  sc_options_add_int (opt, 'i', "iterative", &iterative, 0,
+                      "Specify if refining is recursive or iterative.\n"
+                      "\t\t\t\t\t1 - refine iterative\n"
+                      "\t\t\t\t\t0 - refine recursive (default)");
   sc_options_add_int (opt, 'e', "elements", &eclass_int, 4,
-                      "This option specifies the type of elements to use.\n"
-                      "\t\t4 - hexahedron\n"
-                      "\t\t5 - tetrahedron\n"
-                      "\t\t6 - prism\n"
-                      "\t\t7 - pyramid");
-  sc_options_add_int (opt, 'd', "remove", &remove, 1,
-                      "remove = 0 -> do not remove elements\n"
-                      "\t\t\t\t\tOnly works for tetrahedrons.");
+                      "Specify the type of elements to use.\n"
+                      "\t\t\t\t\t2 - quadrilateral\n"
+                      "\t\t\t\t\t3 - triangle\n"
+                      "\t\t\t\t\t4 - hexahedron (default)\n"
+                      "\t\t\t\t\t5 - tetrahedron\n"
+                      "\t\t\t\t\t6 - prism\n" "\t\t\t\t\t7 - pyramid");
+  sc_options_add_int (opt, 'd', "delete", &remove, 1,
+                      "Specify if elements in fractal should be removed.\n"
+                      "\t\t\t\t\t1 - delete elements after refining (default)\n"
+                      "\t\t\t\t\t0 - never delete elements");
+  sc_options_add_int (opt, 't', "trees", &trees, 512,
+                      "Number of trees the forest will contain. The default is 512.");
   sc_options_add_int (opt, 'o', "output", &output, 0,
-                      "output = 1 -> visual output.");                    
+                      "Specify if mesh should be outputed.\n"
+                      "\t\t\t\t     If yes, the forest contains only one tree.\n"
+                      "\t\t\t\t\t1 - visual output\n"
+                      "\t\t\t\t\t0 - no visual output (default)");
   sc_options_add_int (opt, 'c', "coarse", &coarse, 0,
-                      "Number of times to coarse elements."); 
+                      "Number of times to coarse hole mesh.");
+  sc_options_add_int (opt, 'r', "runs", &runs, 1,
+                      "Number of times the fractal gets constructed. The default is 1.\n"
+                      "\t\t\t\t     Note, the runntime summs up.");
 
-  parsed =
+  int                 parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
-  if (helpme)
-  {
+  if (helpme) {
     /* display help message and usage */
     t8_global_productionf ("%s\n", help);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-  else if (parsed >= 0 && 0 <= end_level_it && (eclass_int > 3 || eclass_int < 8))
-  {
-    t8_construct_fractal 
-      (initial_level, end_level_it, end_level_rec,(t8_eclass_t) eclass_int, remove, output, coarse);
+  else if (parsed >= 0 && level_initial >= 0 && level_initial < level_end &&
+           (iterative == 0 || iterative == 1) && (remove == 0 || remove == 1)
+           && (output == 0 || output == 1) && coarse >= 0 && trees > 0
+           && (eclass_int > 1 || eclass_int < 8) && runs > 0) {
+    t8_construct_fractal (level_initial, level_end, iterative, remove, trees,
+                          (t8_eclass_t) eclass_int, output, coarse, runs);
   }
-  else
-  {
+  else {
     /* wrong usage */
     t8_global_productionf ("\n\t ERROR: Wrong usage.\n\n");
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
