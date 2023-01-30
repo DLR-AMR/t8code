@@ -63,10 +63,8 @@ struct data_per_element
 };
 
 static t8_forest_t
-t8_step6_build_forest (sc_MPI_Comm comm, int level)
+t8_step6_build_forest (sc_MPI_Comm comm, int dim, int level)
 {
-
-  const int dim = 2;
   t8_cmesh_t          cmesh = t8_cmesh_new_periodic (comm, dim);
 
   t8_scheme_cxx_t    *scheme = t8_scheme_new_default_cxx ();
@@ -162,15 +160,12 @@ t8_step6_create_element_data (t8_forest_t forest)
 static void
 t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_data)
 {
-  t8_locidx_t         num_local_elements;
-  t8_locidx_t         num_ghost_elements;
-
   t8_locidx_t         itree, num_local_trees;
   t8_locidx_t         current_index;
   t8_locidx_t         ielement, num_elements_in_tree;
   t8_eclass_t         tree_class;
   t8_element_t       *element, **neighbors;
-  int                 iface, ineigh;
+  int                 iface;
   t8_eclass_scheme_c *eclass_scheme;
   t8_eclass_scheme_c *neigh_scheme;
 
@@ -178,15 +173,9 @@ t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_d
   int                 num_neighbors; /**< Number of neighbors for each face */
   int                *dual_faces; /**< The face indices of the neighbor elements */
   t8_locidx_t        *neighids; /**< Indices of the neighbor elements */
-  int8_t              neigh_level; /**< The level of the face neighbors at this face. */
 
   /* Check that forest is a committed, that is valid and usable, forest. */
   T8_ASSERT (t8_forest_is_committed (forest));
-
-  /* Get the number of local elements of forest. */
-  num_local_elements = t8_forest_get_local_num_elements (forest);
-  /* Get the number of ghost elements of forest. */
-  num_ghost_elements = t8_forest_get_num_ghosts (forest);
 
   /* Get the number of trees that have elements of this process. */
   num_local_trees = t8_forest_get_num_local_trees (forest);
@@ -218,7 +207,13 @@ t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_d
                                       &neighids,
                                       &neigh_scheme, 1);
 
-        double height = element_data[neighids[0]].height;
+        double height = 0.0;
+        if (num_neighbors > 0) {
+          for (int ineigh = 0; ineigh < num_neighbors; ineigh++) {
+            height = height + element_data[neighids[ineigh]].height;
+          }
+          height = height / num_neighbors;
+        }
 
         switch (iface) {
           case 0: // NORTH
@@ -388,7 +383,7 @@ t8_step6_main (int argc, char **argv)
   comm = sc_MPI_COMM_WORLD;
 
   /* Initialize an adapted forest with periodic boundaries. */
-  forest = t8_step6_build_forest (comm, level);
+  forest = t8_step6_build_forest (comm, dim, level);
 
   /*
    * Data handling and computation.
