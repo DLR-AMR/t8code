@@ -102,16 +102,17 @@ t8_adapt_callback_remove (t8_forest_t forest,
  * the thickness of the refined surface of the spheres.
  */
 static void
-t8_construct_spheres (int initial_level,
-                      double radius_inner,
-                      double radius_outer,
-                      t8_eclass_t eclass, const char **vtuname)
+t8_construct_spheres (const int initial_level,
+                      const double radius_inner,
+                      const double radius_outer,
+                      const t8_eclass_t eclass, const char **vtuname)
 {
   t8_cmesh_t          cmesh;
   t8_forest_t         forest;
 
   if (eclass != 0) {
-    T8_ASSERT (eclass == T8_ECLASS_HEX || eclass == T8_ECLASS_TET
+    T8_ASSERT (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_TRIANGLE
+               || eclass == T8_ECLASS_HEX || eclass == T8_ECLASS_TET
                || eclass == T8_ECLASS_PRISM || eclass == T8_ECLASS_PYRAMID);
     cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
   }
@@ -150,30 +151,20 @@ t8_construct_spheres (int initial_level,
 int
 main (int argc, char **argv)
 {
-  int                 mpiret;
-  sc_options_t       *opt;
   char                usage[BUFSIZ];
-  char                help[BUFSIZ];
-  int                 initial_level;
-  double              radius_inner;
-  double              radius_outer;
-  const char         *vtuname[BUFSIZ];
-  int                 eclass_int;
-  int                 parsed;
-  int                 helpme;
-  int                 sreturnA;
-  int                 sreturnB;
-
   /* brief help message */
-  sreturnA = snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS>\n\t%s -h\t"
-                       "for a brief overview of all options.",
-                       basename (argv[0]), basename (argv[0]));
+  int                 sreturnA =
+    snprintf (usage, BUFSIZ,
+              "Usage:\t%s <OPTIONS>\n\t%s -h\t"
+              "for a brief overview of all options.",
+              basename (argv[0]), basename (argv[0]));
 
+  char                help[BUFSIZ];
   /* long help message */
-  sreturnB = snprintf (help, BUFSIZ,
-                       "Create a cube in which \n"
-                       "6 half-spheres are removed, each on one side.\n\n%s\n",
-                       usage);
+  int                 sreturnB = snprintf (help, BUFSIZ,
+                                           "Create a cube in which \n"
+                                           "6 half-spheres are removed, each on one side.\n\n%s\n",
+                                           usage);
 
   if (sreturnA > BUFSIZ || sreturnB > BUFSIZ) {
     /* The usage string or help message was truncated */
@@ -184,32 +175,42 @@ main (int argc, char **argv)
        usage, help);
   }
 
-  mpiret = sc_MPI_Init (&argc, &argv);
+  int                 mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
 
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
+  /* Parameter for t8_construct_fractal and command line */
+  int                 initial_level;
+  double              radius_inner;
+  double              radius_outer;
+  int                 eclass_int;
+  const char         *vtuname[BUFSIZ];
+  int                 helpme;
+
   /* initialize command line argument parser */
-  opt = sc_options_new (argv[0]);
+  sc_options_t       *opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'h', "help", &helpme,
                          "Display a short help message.");
   sc_options_add_int (opt, 'l', "initial level", &initial_level, 4,
-                      "Initial uniform refinement level.");
+                      "Initial uniform refinement level. Default is 4.");
   sc_options_add_double (opt, 'i', "inner radius", &radius_inner, 0.45,
-                         "Inner radius of sphere shells.");
+                         "Inner radius of sphere shells. Default is 0.45.");
   sc_options_add_double (opt, 'o', "outer radius", &radius_outer, 0.5,
-                         "Outer radius of sphere shells.");
+                         "Outer radius of sphere shells. Default is 0.5.");
   sc_options_add_int (opt, 'e', "elements", &eclass_int, 0,
                       "Specify the type of elements to use.\n"
-                      "\t\t0 - hybrid\n"
-                      "\t\t4 - hexahedron\n"
-                      "\t\t5 - tetrahedron\n"
-                      "\t\t6 - prism\n" "\t\t7 - pyramid");
+                      "\t\t\t\t\t0 - hybrid (default)\n"
+                      "\t\t\t\t\t2 - quadrilateral\n"
+                      "\t\t\t\t\t3 - triangle\n"
+                      "\t\t\t\t\t4 - hexahedron\n"
+                      "\t\t\t\t\t5 - tetrahedron\n"
+                      "\t\t\t\t\t6 - prism\n" "\t\t7 - pyramid");
   sc_options_add_string (opt, 'p', "output path", vtuname,
                          "t8_example_spheres", "Path of outputfiles.\n");
 
-  parsed =
+  int                 parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (helpme) {
     /* display help message and usage */
@@ -218,7 +219,7 @@ main (int argc, char **argv)
   }
   else if (parsed >= 0 && 0 <= initial_level &&
            radius_inner <= radius_outer && radius_inner >= 0 &&
-           (eclass_int > 3 || eclass_int < 8 || eclass_int == 0)) {
+           (eclass_int > 1 || eclass_int < 8 || eclass_int == 0)) {
     t8_construct_spheres (initial_level, radius_inner, radius_outer,
                           (t8_eclass_t) eclass_int, vtuname);
   }
