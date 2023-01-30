@@ -199,12 +199,12 @@ TEST_P(shmem, test_shmem_array){
     /* Check element count of shared memory array. */
     const size_t        check_count =
       t8_shmem_array_get_elem_count (shmem_array);
-    EXPECT_EQ(check_count, array_length) << "shared memory array has wrong element count.";
+    EXPECT_TRUE(check_count == array_length) << "shared memory array has wrong element count.";
 
     /* Check element size of shared memory array. */
     const size_t        check_size =
       t8_shmem_array_get_elem_size (shmem_array);
-    EXPECT_EQ(check_size, element_size) << "shared memory has wrong element size.";
+    EXPECT_TRUE(check_size == element_size) << "shared memory has wrong element size.";
 
     /* Write into array */
     /* In the first half we use the t8_shmem_array_set_gloidx function,
