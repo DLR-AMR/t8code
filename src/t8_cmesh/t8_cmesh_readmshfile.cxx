@@ -1755,8 +1755,8 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
   t8_gloidx_t         num_trees, first_tree, last_tree = -1;
   int                 main_proc_read_successful = 0;
   int                 msh_version;
-  const t8_geometry_c *occ_geometry;
-  const t8_geometry_c *linear_geometry;
+  const t8_geometry_c *occ_geometry = NULL;
+  const t8_geometry_c *linear_geometry = NULL;
 
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
@@ -1782,7 +1782,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
                                                 &occ_geometry);
   if (!registered_geom_success) {
     /* Registering failed */
-    t8_debugf ("OCC is not linked. Cannot use OCC geometry.\n");
+    t8_errorf ("OCC is not linked. Cannot use OCC geometry.\n");
     t8_cmesh_destroy (&cmesh);
     return NULL;
   }
@@ -1847,27 +1847,9 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
     case 4:
       vertices =
         t8_msh_file_4_read_nodes (file, &num_vertices, &node_mempool);
-      if (use_occ_geometry) {
-#if T8_WITH_OCC
-        t8_cmesh_msh_file_4_read_eles (cmesh, file, vertices, &vertex_indices,
-                                       dim, linear_geometry, 1, occ_geometry);
-#else /* !T8_WITH_OCC */
-        fclose (file);
-        t8_debugf ("Occ is not linked. Cannot use occ geometry.\n");
-        t8_cmesh_destroy (&cmesh);
-        if (partition) {
-          /* Communicate to the other processes that reading failed. */
-          main_proc_read_successful = 0;
-          sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc,
-                        comm);
-        }
-        return NULL;
-#endif /* T8_WITH_OCC */
-      }
-      else {
-        t8_cmesh_msh_file_4_read_eles (cmesh, file, vertices, &vertex_indices,
-                                       dim, linear_geometry, 0, NULL);
-      }
+      t8_cmesh_msh_file_4_read_eles (cmesh, file, vertices, &vertex_indices,
+                                     dim, linear_geometry, use_occ_geometry,
+                                     occ_geometry);
       break;
 
     default:

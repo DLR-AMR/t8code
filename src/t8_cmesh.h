@@ -596,6 +596,7 @@ t8_eclass_t         t8_cmesh_get_ghost_class (t8_cmesh_t cmesh,
  *                              If \a local_id < cmesh.num_local_trees then it is
  *                              a tree, otherwise a ghost.
  * \return                      The global id of the tree/ghost.
+ * \see https://github.com/DLR-AMR/t8code/wiki/Tree-indexing for more details about tree indexing.
  */
 t8_gloidx_t         t8_cmesh_get_global_id (t8_cmesh_t cmesh,
                                             t8_locidx_t local_id);
@@ -610,6 +611,7 @@ t8_gloidx_t         t8_cmesh_get_global_id (t8_cmesh_t cmesh,
  *                              if \a global_id corresponds to a ghost trees,
  *                              or negative if \a global_id neither matches a local
  *                              nor a ghost tree.
+ * \see https://github.com/DLR-AMR/t8code/wiki/Tree-indexing for more details about tree indexing.
  */
 t8_locidx_t         t8_cmesh_get_local_id (t8_cmesh_t cmesh,
                                            t8_gloidx_t global_id);

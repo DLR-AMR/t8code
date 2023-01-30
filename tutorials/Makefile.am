@@ -13,6 +13,9 @@ bin_PROGRAMS += \
 	tutorials/general/t8_tutorial_search \
 	tutorials/features/t8_features_curved_meshes
 
+dist_t8data_DATA += \
+  tutorials/features/t8_features_curved_meshes_generate_cmesh.geo
+
 tutorials_general_t8_step0_helloworld_SOURCES = \
 	tutorials/general/t8_step0_helloworld.c
 tutorials_general_t8_step1_coarsemesh_SOURCES = \
