@@ -47,34 +47,47 @@ class t8_cmesh_partition_class : public testing::TestWithParam<int>{
 protected:
   void SetUp() override {
     cmesh_id = GetParam();
+
+    if (!(cmesh_id != 89 && (cmesh_id < 237 || cmesh_id > 256))) {
+      GTEST_SKIP();
+    }
+    cmesh_original = t8_test_create_cmesh (cmesh_id);
   }
 
   int                 cmesh_id;
+  t8_cmesh_t          cmesh_original;
 };
+/* *INDENT-ON* */
 
-TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate) {
-    /* This if statement is necessary to make the test work by avoiding specific cmeshes which do not work yet for this test.
-     * When the issues are gone, remove the if statement. 
-     */
-    if (cmesh_id != 89 && (cmesh_id < 237 || cmesh_id > 256)) {
-    int                 level = 11;
-    int                 mpisize;
-    int                 mpiret;
-    int                 mpirank;
-    t8_cmesh_t          cmesh_original;
-    t8_cmesh_t          cmesh_partition;
-    t8_cmesh_t          cmesh_partition_new1;
-    t8_cmesh_t          cmesh_partition_new2;
-    t8_shmem_array_t    offset_concentrate;   
-    
-    cmesh_original = t8_test_create_cmesh (cmesh_id); 
-    EXPECT_TRUE(t8_cmesh_is_committed (cmesh_original));
-    EXPECT_TRUE(t8_cmesh_trees_is_face_consistend (cmesh_original, cmesh_original->trees));
+static void
+test_cmesh_commited (t8_cmesh_t cmesh)
+{
+  EXPECT_TRUE (t8_cmesh_is_committed (cmesh)) << "Cmesh commit failed.";
+  EXPECT_TRUE (t8_cmesh_trees_is_face_consistend (cmesh, cmesh->trees)) <<
+    "Cmesh face consistency failed.";
+}
 
-    mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
-    SC_CHECK_MPI (mpiret);
-    /* Set up the partitioned cmesh */
-    for(int i=0;i<2;i++){
+TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate)
+{
+  /* This if statement is necessary to make the test work by avoiding specific cmeshes which do not work yet for this test.
+   * When the issues are gone, remove the if statement. 
+   */
+
+  const int           level = 11;
+  int                 mpisize;
+  int                 mpiret;
+  int                 mpirank;
+  t8_cmesh_t          cmesh_partition;
+  t8_cmesh_t          cmesh_partition_new1;
+  t8_cmesh_t          cmesh_partition_new2;
+  t8_shmem_array_t    offset_concentrate;
+
+  test_cmesh_commited (cmesh_original);
+
+  mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  /* Set up the partitioned cmesh */
+  for (int i = 0; i < 2; i++) {
     t8_cmesh_init (&cmesh_partition);
     t8_cmesh_set_derive (cmesh_partition, cmesh_original);
     /* Uniform partition according to level */
@@ -82,35 +95,34 @@ TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate) {
                                     t8_scheme_new_default_cxx ());
     t8_cmesh_commit (cmesh_partition, sc_MPI_COMM_WORLD);
 
-    EXPECT_TRUE(t8_cmesh_is_committed (cmesh_partition));
-    EXPECT_TRUE(t8_cmesh_trees_is_face_consistend (cmesh_partition, cmesh_partition->trees));
+    test_cmesh_commited (cmesh_partition);
     cmesh_original = cmesh_partition;
-    }
+  }
 
-    mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
-    SC_CHECK_MPI (mpiret);
-    /* Since we want to repartition the cmesh_partition in each step,
-     * we need to ref it. This ensure that we can still work with it after
-     * another cmesh is derived from it. 
-     */
-    t8_cmesh_ref (cmesh_partition);
+  mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  /* Since we want to repartition the cmesh_partition in each step,
+   * we need to ref it. This ensure that we can still work with it after
+   * another cmesh is derived from it. 
+   */
+  t8_cmesh_ref (cmesh_partition);
 
-    cmesh_partition_new1 = cmesh_partition;
+  cmesh_partition_new1 = cmesh_partition;
 
   /* We repartition the cmesh to be concentrated on each rank once */
   for (int irank = 0; irank < mpisize; irank++) {
     t8_cmesh_init (&cmesh_partition_new2);
     t8_cmesh_set_derive (cmesh_partition_new2, cmesh_partition_new1);
     /* Create an offset array where each tree resides on irank */
-    offset_concentrate = t8_cmesh_offset_concentrate (irank, sc_MPI_COMM_WORLD,
-                                                      t8_cmesh_get_num_trees
-                                                      (cmesh_partition));
+    offset_concentrate =
+      t8_cmesh_offset_concentrate (irank, sc_MPI_COMM_WORLD,
+                                   t8_cmesh_get_num_trees (cmesh_partition));
     /* Set the new cmesh to be partitioned according to that offset */
     t8_cmesh_set_partition_offsets (cmesh_partition_new2, offset_concentrate);
     /* Commit the cmesh and test if successful */
     t8_cmesh_commit (cmesh_partition_new2, sc_MPI_COMM_WORLD);
-    EXPECT_TRUE(t8_cmesh_is_committed (cmesh_partition_new2));
-    EXPECT_TRUE(t8_cmesh_trees_is_face_consistend (cmesh_partition_new2, cmesh_partition_new2->trees));
+    test_cmesh_commited (cmesh_partition_new2);
+
     /* Switch the rolls of the cmeshes */
     cmesh_partition_new1 = cmesh_partition_new2;
     cmesh_partition_new2 = NULL;
@@ -126,12 +138,13 @@ TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate) {
     t8_cmesh_commit (cmesh_partition_new2, sc_MPI_COMM_WORLD);
     cmesh_partition_new1 = cmesh_partition_new2;
   }
-  EXPECT_TRUE(t8_cmesh_is_equal (cmesh_partition_new2, cmesh_partition));
+  EXPECT_TRUE (t8_cmesh_is_equal (cmesh_partition_new2, cmesh_partition)) <<
+    "Cmesh equality check failed.";
   t8_cmesh_destroy (&cmesh_partition_new2);
-  t8_cmesh_destroy(&cmesh_partition);
-  }/* End if statement. */
+  t8_cmesh_destroy (&cmesh_partition);
 }
 
 /* Test all cmeshes over all different inputs we get through their id */
-INSTANTIATE_TEST_SUITE_P(t8_gtest_cmesh_partition, t8_cmesh_partition_class, testing::Range(0, t8_get_number_of_all_testcases ()));
-/* *INDENT-ON* */
+INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_partition, t8_cmesh_partition_class,
+                          testing::Range (0,
+                                          t8_get_number_of_all_testcases ()));
