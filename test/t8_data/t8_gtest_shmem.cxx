@@ -59,8 +59,8 @@ TEST_P(shmem, test_shmem_init_finalize){
 
 #if T8_ENABLE_MPI
   /* Check that they are not NULL */
-  EXPECT_TRUE(intranode != sc_MPI_COMM_NULL);
-  EXPECT_TRUE(internode != sc_MPI_COMM_NULL);
+  EXPECT_TRUE(intranode != sc_MPI_COMM_NULL) << "inter node communicator not set.";
+  EXPECT_TRUE(internode != sc_MPI_COMM_NULL) << "inter node communicator not set.";
 #endif
 
   /* Compute ranks and size */
@@ -79,8 +79,8 @@ TEST_P(shmem, test_shmem_init_finalize){
   /* Get intranode and internode comm */
   sc_mpi_comm_get_node_comms (comm, &intranode, &internode);
   /* Check that they are NULL */
-  EXPECT_TRUE(intranode == sc_MPI_COMM_NULL);
-  EXPECT_TRUE(internode == sc_MPI_COMM_NULL);
+  EXPECT_TRUE(intranode == sc_MPI_COMM_NULL) << "inter node communicator not set.";
+  EXPECT_TRUE(internode == sc_MPI_COMM_NULL) << "inter node communicator not set.";
 }
 
 TEST_P(shmem, test_sc_shmem_alloc){
@@ -110,13 +110,13 @@ TEST_P(shmem, test_sc_shmem_alloc){
 
 #if T8_ENABLE_MPI
     const sc_shmem_type_t control_shmem_type = sc_shmem_get_type (comm);
-    EXPECT_TRUE(shmem_type == control_shmem_type);
+    EXPECT_EQ(shmem_type, control_shmem_type) << "Setting shmem type not succesfull.";
 #endif
 
     sc_mpi_comm_get_node_comms (comm, &intranode, &internode);
 #if T8_ENABLE_MPI
-    EXPECT_TRUE(intranode != sc_MPI_COMM_NULL);
-    EXPECT_TRUE(internode != sc_MPI_COMM_NULL);
+    EXPECT_TRUE(intranode != sc_MPI_COMM_NULL) << "inter node communicator not set.";
+    EXPECT_TRUE(internode != sc_MPI_COMM_NULL) << "inter node communicator not set.";
 #endif
 
     /* Get the size and rank on the shared memory region (intranode) */
@@ -185,7 +185,7 @@ TEST_P(shmem, test_shmem_array){
 
 #if T8_ENABLE_MPI
     const sc_shmem_type_t control_shmem_type = sc_shmem_get_type (comm);
-    EXPECT_EQ(shmem_type, control_shmem_type);
+    EXPECT_EQ(shmem_type, control_shmem_type) << "Setting shmem type not succesfull.";
 #endif
 
     /* Allocate one integer */
@@ -194,17 +194,17 @@ TEST_P(shmem, test_shmem_array){
 
     sc_MPI_Comm         check_comm = t8_shmem_array_get_comm (shmem_array);
     /* Check communicator of shared memory array. */
-    EXPECT_EQ(comm, check_comm);
+    EXPECT_EQ(comm, check_comm) << "Shared memory array has wrong communicator.";
 
     /* Check element count of shared memory array. */
     const size_t        check_count =
       t8_shmem_array_get_elem_count (shmem_array);
-    EXPECT_TRUE(check_count == array_length);
+    EXPECT_EQ(check_count, array_length) << "shared memory array has wrong element count.";
 
     /* Check element size of shared memory array. */
     const size_t        check_size =
       t8_shmem_array_get_elem_size (shmem_array);
-    EXPECT_TRUE(check_size == element_size);
+    EXPECT_EQ(check_size, element_size) << "shared memory has wrong element size.";
 
     /* Write into array */
     /* In the first half we use the t8_shmem_array_set_gloidx function,
@@ -216,7 +216,7 @@ TEST_P(shmem, test_shmem_array){
        * is covered. */
       EXPECT_TRUE(0 < array_length / 3
                       && array_length / 3 < (int) (2. / 3 * array_length)
-                      && (int) (2. / 3 * array_length) < array_length);
+                      && (int) (2. / 3 * array_length) < array_length) << "Please choose a larger value for array length.";
 
       t8_gloidx_t        *array =
         t8_shmem_array_get_gloidx_array_for_writing (shmem_array);
@@ -237,7 +237,7 @@ TEST_P(shmem, test_shmem_array){
     /* Check value at each position */
     for (int i = 0; i < array_length; ++i) {
       t8_gloidx_t         value = t8_shmem_array_get_gloidx (shmem_array, i);
-      EXPECT_TRUE(value == i);
+      EXPECT_TRUE(value == i) << "Value at position " << i << " not correct (expected " << i << " got " << value << ")";
     }
 
     /* Copy */
@@ -245,7 +245,7 @@ TEST_P(shmem, test_shmem_array){
     t8_shmem_array_init (&copy_array, element_size, array_length, comm);
     t8_shmem_array_copy (copy_array, shmem_array);
     /* Check equality of arrays after copying. */
-    EXPECT_TRUE(t8_shmem_array_is_equal (copy_array, shmem_array));
+    EXPECT_TRUE(t8_shmem_array_is_equal (copy_array, shmem_array)) << "Arrays are not equal after copy.";
 
     t8_shmem_array_destroy (&shmem_array);
     t8_shmem_array_destroy (&copy_array);
