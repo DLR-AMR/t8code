@@ -136,8 +136,9 @@ typedef struct t8_cmesh
 
   t8_cmesh_trees_t    trees; /**< structure that holds all local trees and ghosts */
 
-  t8_gloidx_t         first_tree; /**< The global index of the first local tree
-                                       on this process. Zero if the cmesh is not partitioned. -1 if this processor is empty. */
+  t8_gloidx_t         first_tree; /**< The global index of the first local tree on this process. 
+                                       Zero if the cmesh is not partitioned. -1 if this processor is empty.
+                                       See also https://github.com/DLR-AMR/t8code/wiki/Tree-indexing */
   int8_t              first_tree_shared;/**< If partitioned true if the first tree on this process is also the last tree on the next process.
                                              Always zero if num_local_trees = 0 */
 
