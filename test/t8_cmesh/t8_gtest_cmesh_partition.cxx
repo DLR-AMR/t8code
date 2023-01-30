@@ -73,7 +73,11 @@ TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate)
    * When the issues are gone, remove the if statement. 
    */
 
+#ifdef T8_ENABLE_LESS_TESTS
+  const int           level = 6;
+#else
   const int           level = 11;
+#endif
   int                 mpisize;
   int                 mpiret;
   int                 mpirank;
