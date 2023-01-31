@@ -109,10 +109,9 @@ t8_adapt_forest (t8_forest_t forest_from,
 }
 
 /** Recursively constructs a mesh containing only the first and last elements
- * of a of any family.
- * Furthermore, for every two elements e_a and e_b that do not belong to the
- * same family, it holds that if linear_id(e_a) < linear_id(a_b)
- * level(a) > level(b).
+ * of a family. Furthermore, for every two elements e_a and e_b that do not 
+ * belong to the same family, it holds that if linear_id(e_a) < linear_id(a_b)
+ * level(e_a) > level(e_b).
  * Recursive coarsening should result in a tree containing only the
  * root element.
  */
