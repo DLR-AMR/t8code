@@ -135,7 +135,7 @@ t8_forest_pos (t8_forest_t forest,
 
   /* If the forest is complete, the family is also complete. 
    * Thus, the index of the first member can be determined. */
-  if (!forest->is_incomplete) {
+  if (!forest->incomplete_trees) {
     return telements_pos - (t8_locidx_t) num_siblings - 1;
   }
 
@@ -270,7 +270,7 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest,
     }
 
     int                 num_elements_to_adapt_callback;
-    if (forest->set_from->is_incomplete) {
+    if (forest->set_from->incomplete_trees) {
       /* We will pass a (in)complete family to the adapt callback */
       num_elements_to_adapt_callback = (int) (*el_inserted - pos);
       T8_ASSERT (0 < num_elements_to_adapt_callback);
@@ -287,14 +287,14 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest,
     }
 #if T8_ENABLE_DEBUG
     /* If is_family is true, the set fam must be a family. */
-    if (forest->set_from->is_incomplete) {
+    if (forest->set_from->incomplete_trees) {
       T8_ASSERT (!is_family ||
                  t8_forest_is_family_callback (ts,
                                                num_elements_to_adapt_callback,
                                                fam));
     }
     else {
-      T8_ASSERT (forest->set_from->is_incomplete == 0);
+      T8_ASSERT (forest->set_from->incomplete_trees == 0);
       T8_ASSERT (!is_family || ts->t8_element_is_family (fam));
     }
 #endif
@@ -449,8 +449,8 @@ t8_forest_adapt (t8_forest_t forest)
   t8_global_productionf ("Into t8_forest_adapt from %lld total elements\n",
                          (long long) forest_from->global_num_elements);
 
-  T8_ASSERT (forest_from->is_incomplete != -1);
-  T8_ASSERT (forest->is_incomplete == -1);
+  T8_ASSERT (forest_from->incomplete_trees != -1);
+  T8_ASSERT (forest->incomplete_trees == -1);
   /* TODO: Allocate memory for the trees of forest.
    * Will we do this here or in an extra function? */
   T8_ASSERT (forest->trees->elem_count == forest_from->trees->elem_count);
@@ -525,7 +525,7 @@ t8_forest_adapt (t8_forest_t forest)
          * be part of a family (Since we can only have a family if child ids
          * are 0, 1, 2, ... zz, ... num_siblings-1).
          * This check is however not sufficient - therefore, we call is_family later. */
-        if (!forest_from->is_incomplete &&
+        if (!forest_from->incomplete_trees &&
             (size_t) tscheme->t8_element_child_id (elements_from[zz]) != zz) {
           break;
         }
@@ -535,7 +535,7 @@ t8_forest_adapt (t8_forest_t forest)
        * So we will only pass the first element to the adapt callback. */
       is_family = 0;
       num_elements_to_adapt_callback = 1;
-      if (forest_from->is_incomplete) {
+      if (forest_from->incomplete_trees) {
         is_family =
           t8_forest_is_incomplete_family (forest_from, ltree_id,
                                           el_considered, tscheme,
@@ -554,15 +554,15 @@ t8_forest_adapt (t8_forest_t forest)
       }
       T8_ASSERT (num_elements_to_adapt_callback <= num_siblings);
 #if T8_ENABLE_DEBUG
-      if (forest_from->is_incomplete) {
-        T8_ASSERT (forest_from->is_incomplete == 1);
+      if (forest_from->incomplete_trees) {
+        T8_ASSERT (forest_from->incomplete_trees == 1);
         T8_ASSERT (!is_family ||
                    t8_forest_is_family_callback (tscheme,
                                                  num_elements_to_adapt_callback,
                                                  elements_from));
       }
       else {
-        T8_ASSERT (forest_from->is_incomplete == 0);
+        T8_ASSERT (forest_from->incomplete_trees == 0);
         T8_ASSERT (!is_family
                    || tscheme->t8_element_is_family (elements_from));
       }
@@ -726,7 +726,7 @@ t8_forest_adapt (t8_forest_t forest)
   /* Updating other processes about local (in)complete trees.
    * If the old forest already contained incomplete trees, 
    * this step is not necessary. */
-  if (!forest_from->is_incomplete) {
+  if (!forest_from->incomplete_trees) {
     T8_ASSERT (element_removed == 1 || element_removed == 0);
     int                 incomplete_trees;
     int                 mpiret =
@@ -734,11 +734,11 @@ t8_forest_adapt (t8_forest_t forest)
                         MPI_INT, sc_MPI_MAX, forest->mpicomm);
     SC_CHECK_MPI (mpiret);
     T8_ASSERT (incomplete_trees == 1 || incomplete_trees == 0);
-    forest->is_incomplete = incomplete_trees;
+    forest->incomplete_trees = incomplete_trees;
   }
   else {
-    T8_ASSERT (forest_from->is_incomplete == 1);
-    forest->is_incomplete = 1;
+    T8_ASSERT (forest_from->incomplete_trees == 1);
+    forest->incomplete_trees = 1;
   }
 
   t8_global_productionf ("Done t8_forest_adapt with %lld total elements\n",

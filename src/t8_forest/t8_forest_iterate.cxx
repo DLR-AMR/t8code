@@ -434,7 +434,7 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
       const int           level_new = ts->t8_element_level (elem_new);
       const int           level_old = ts->t8_element_level (elem_old);
 
-      if (forest_new->is_incomplete) {
+      if (forest_new->incomplete_trees) {
         /* If el_removed is 1, the element in forest_new has been removed.
          * It is assumed that no element was removed. */
         int                 el_removed = 0;
@@ -542,7 +542,7 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
         }
         if (el_removed) {
           T8_ASSERT (el_removed == 1);
-          T8_ASSERT (forest_new->is_incomplete == 1);
+          T8_ASSERT (forest_new->incomplete_trees == 1);
           /* element got removed */
           const int           refine = -2;
           replace_fn (forest_old, forest_new, itree, ts, refine,
@@ -554,8 +554,8 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
       }
       else {
         /* forest_new consists only of complete trees. */
-        T8_ASSERT (forest_new->is_incomplete == 0);
-        T8_ASSERT (forest_old->is_incomplete == 0);
+        T8_ASSERT (forest_new->incomplete_trees == 0);
+        T8_ASSERT (forest_old->incomplete_trees == 0);
         /* If the levels differ, elem_new was refined or its family coarsened */
         if (level_old < level_new) {
           T8_ASSERT (level_new == level_old + 1);

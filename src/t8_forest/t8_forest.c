@@ -57,7 +57,7 @@ t8_forest_init (t8_forest_t *pforest)
   forest->set_balance = -1;
   forest->maxlevel_existing = -1;
   forest->stats_computed = 0;
-  forest->is_incomplete = -1;
+  forest->incomplete_trees = -1;
 }
 
 int
@@ -479,7 +479,7 @@ t8_forest_commit (t8_forest_t forest)
     T8_ASSERT (forest->cmesh != NULL);
     T8_ASSERT (forest->scheme_cxx != NULL);
     T8_ASSERT (forest->from_method == T8_FOREST_FROM_LAST);
-    T8_ASSERT (forest->is_incomplete == -1);
+    T8_ASSERT (forest->incomplete_trees == -1);
 
     /* dup communicator if requested */
     if (forest->do_dup) {
@@ -506,7 +506,7 @@ t8_forest_commit (t8_forest_t forest)
       t8_forest_populate (forest);
     }
     forest->global_num_trees = t8_cmesh_get_num_trees (forest->cmesh);
-    forest->is_incomplete = 0;
+    forest->incomplete_trees = 0;
   }
   else {                        /* set_from != NULL */
     t8_forest_t         forest_from = forest->set_from; /* temporarily store set_from, since we may overwrite it */
@@ -517,7 +517,7 @@ t8_forest_commit (t8_forest_t forest)
     T8_ASSERT (!forest->do_dup);
     T8_ASSERT (forest->from_method >= T8_FOREST_FROM_FIRST &&
                forest->from_method < T8_FOREST_FROM_LAST);
-    T8_ASSERT (forest->set_from->is_incomplete > -1);
+    T8_ASSERT (forest->set_from->incomplete_trees > -1);
 
     /* TODO: optimize all this when forest->set_from has reference count one */
     /* TODO: Get rid of duping the communicator */
@@ -630,7 +630,7 @@ t8_forest_commit (t8_forest_t forest)
         }
       }
       else {
-        forest->is_incomplete = forest->set_from->is_incomplete;
+        forest->incomplete_trees = forest->set_from->incomplete_trees;
         /* Partitioning is the last routine, no balance was set */
         forest->global_num_elements = forest->set_from->global_num_elements;
         /* Initialize the trees array of the forest */

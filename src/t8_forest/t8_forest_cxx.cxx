@@ -1609,7 +1609,7 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
     /* Nothing to share */
     return 0;
   }
-  if (forest->is_incomplete) {
+  if (forest->incomplete_trees) {
     if (first_or_last == 0) {
       T8_ASSERT (forest->mpisize > 1);
       if (forest->mpirank == 0) {
@@ -1775,12 +1775,12 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
   if (copy_elements) {
     forest->local_num_elements = from->local_num_elements;
     forest->global_num_elements = from->global_num_elements;
-    forest->is_incomplete = from->is_incomplete;
+    forest->incomplete_trees = from->incomplete_trees;
   }
   else {
     forest->local_num_elements = 0;
     forest->global_num_elements = 0;
-    forest->is_incomplete = -1;
+    forest->incomplete_trees = -1;
   }
 }
 
