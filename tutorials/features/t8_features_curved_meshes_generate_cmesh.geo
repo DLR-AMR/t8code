@@ -20,20 +20,24 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* This file will create a brep and msh file of a NACA 6412 airfoil
- * when opened with Gmsh.
+/* This file will create a brep and msh file of a NACA 6412 airfoil.
+ * We can then use these files to generate a curved adaptive mesh in
+ * t8code.
 */
 
+/* We select the OpenCASCADE geometry kernel because we use the same kernel
+ * in t8code. Furthermore, it has a bigger functionality than the inbuilt
+ * GEO kernel. */
 SetFactory("OpenCASCADE");
-// NACA 6412 Aerofoil Shape and Spline fit
 
-// We define the points for the spline profile
+/* Now, we can define the points of our airfoil. The coordinates
+ * were taken from https://m-selig.ae.illinois.edu/ads/coord/naca6412.dat */
 lc = 0.5;
 
-// trailing edge
+/* Trailing edge */
 Point(1000) = {1.00400,  0.00000, 0, lc};
 
-// dorsal side
+/* Dorsal side */
 Point(1001) = {1.00025,  0.00124, 0, lc};
 Point(1002) = {0.99758,  0.00216, 0, lc};
 Point(1003) = {0.98961,  0.00490, 0, lc};
@@ -65,10 +69,10 @@ Point(1028) = {0.01745,  0.03204, 0, lc};
 Point(1029) = {0.00595,  0.02029, 0, lc};
 Point(1030) = {0.00014,  0.00955, 0, lc};
 
-// leading edge
+/* Leading edge */
 Point(2000) = {0.00000,  0.00000, 0, lc};
 
-// ventral side
+/* Ventral side */
 Point(2001) = {0.00534, -0.00792, 0, lc};
 Point(2002) = {0.01590, -0.01383, 0, lc};
 Point(2003) = {0.03149, -0.01781, 0, lc};
@@ -98,10 +102,14 @@ Point(2026) = {0.95546,  0.00129, 0, lc};
 Point(2027) = {0.97465,  0.00024, 0, lc};
 Point(2028) = {1.00000,  0.00000, 0, lc};
 
-// Spline
+/* Build a spline fit for the points. Starting and ending with the 
+ * trailing edge. */
 Spline(100) = {1000:1030, 2000:2028, 1000};
 
-// Points for the flow domain
+/* Definition of the corner points of the flow domain. Note, that we
+ * to define more than the four corner points. With these additional
+ * points we can divide the domain into quadrilaterals and later own
+ * into hexahedra. This is important to structurally mesh the domain. */
 Point(2032) = {-0.2, -0.5, 0, 1.0};
 Point(2033) = {-0.2, 0, 0, 1.0};
 Point(2034) = {-0.2, 0.5, 0, 1.0};
@@ -110,6 +118,8 @@ Point(2036) = {1.5, -0.5, 0, 1.0};
 Point(2037) = {1.5, 0, 0, 1.0};
 Point(2038) = {1.1, 0.5, 0, 1.0};
 Point(2039) = {1.1, -0.5, 0, 1.0};
+
+/* Build lines through the points. */
 Line(103) = {1000, 2037};
 Line(104) = {1000, 2039};
 Line(105) = {1000, 2038};
@@ -124,46 +134,76 @@ Line(113) = {2036, 2039};
 Line(114) = {2039, 2032};
 Line(115) = {2032, 2033};
 Line(116) = {2033, 2034};
+
+/* Split the NACA spline into three sections to get quadrilaterals. */
 BooleanFragments{ Curve{100}; Delete; }{ Curve{107}; Curve{106}; Curve{108}; }
 
-// Here we define our surfaces and extrude them to get a volume 
+/* Now, we define our quadrilateral surfaces. */ 
 Curve Loop(1) = {107, -117, 105, -109};
 Plane Surface(1) = {1};
+
 Curve Loop(2) = {110, 111, -103, 105};
 Plane Surface(2) = {2};
+
 Curve Loop(3) = {112, 113, -104, 103};
 Plane Surface(3) = {3};
-Curve Loop(4) = {120, 104, 114, -108};
-Curve Loop(5) = {104, 114, -108, 120};
-Plane Surface(4) = {5};
-Curve Loop(6) = {108, 115, -106, 119};
-Plane Surface(5) = {6};
-Curve Loop(7) = {116, 107, 118, 106};
-Plane Surface(6) = {7};
+
+Curve Loop(4) = {104, 114, -108, 120};
+Plane Surface(4) = {4};
+
+Curve Loop(5) = {108, 115, -106, 119};
+Plane Surface(5) = {5};
+
+Curve Loop(6) = {116, 107, 118, 106};
+Plane Surface(6) = {6};
+
+/* And extrude them to get hexahedral volumes. */
 Extrude {0, 0, 0.1} {
-  Surface{1}; Surface{6}; Surface{5}; Surface{4}; Surface{3}; Surface{2}; 
+  Surface{1}; Surface{2}; Surface{3}; Surface{4}; Surface{5}; Surface{6}; 
 }
 
-// We save the geometry in the brep format
+/* Due to the indexing behavior if Gmsh, we have to save the .brep file
+ * and reopen it again. */
 Save "naca6412.brep";
 
-// After creating the geometry we delete everything and start by loading in the brep file.
-// This is necessay, because gmsh gives the geometries its own label and after reloading the brep file
-// it uses the brep numeration
+/* After creating the geometry we delete everything and start by loading
+ * in the brep file. This is necessary because Gmsh gives the geometries its
+ * own indices and after reloading the brep file it uses the brep 
+ * numeration. */
 Delete All;
-// We open our brep file
+/* We re-open our brep file. */
 Merge "naca6412.brep";
 
-// After setting our geometries to transfinite we can mesh them
-Transfinite Curve {:} = 3 Using Progression 1;
-Transfinite Curve {8, 5, 29, 44, 36, 37, 1, 13, 22, 16, 2, 21} = 2 Using Progression 1;
-Transfinite Curve {6, 7, 11, 12, 32, 33, 34, 35} = 6 Using Progression 1;
+/* With the new numeration, we can start to transfinite the curves of the
+ * geometry. In Gmsh this is the first step of creating a structured mesh.
+ * Feel free to change these values and experiment.
+ * First, we transfinite all curves with two points (this means, that Gmsh
+ * will create two nodes on these curves). */
+Transfinite Curve {:} = 2 Using Progression 1;
+
+/* After that, we transfinite all curves, which should have more than two
+ * nodes on them. Here we transfinite all curves orthogonal to the airfoil. */
+Transfinite Curve {18, 17, 9, 10, 3, 4, 41, 42, 33, 34, 27, 28, 22, 23} = 
+  3 Using Progression 1;
+
+/* Then, we transfinite the curves parallel to the airfoil. Because of the difference
+ * in the length of the curves, we transfinite some with three nodes and some with
+ * six nodes. */
+Transfinite Curve {14, 15, 19, 20, 25, 26, 45, 46, 47, 48, 38, 39, 43, 44} = 
+  3 Using Progression 1;
+Transfinite Curve {11, 12, 6, 7, 35, 36, 30, 31} = 6 Using Progression 1;
+
+/* Then, we can transfinite the surfaces and volumes. Gmsh derives the
+ * necessary amount of nodes automatically from the transfinite curves. */
 Transfinite Surface{:};
 Recombine Surface{:};
 Transfinite Volume{:};
+
+/* Now we can create the three-dimensional mesh. */
 Mesh 3;
 
-// Now we can save the parametric mesh
+/* Lastly, we can save the mesh. Note, that we are using msh version 4.X
+ * and the parametric option. */
 Mesh.MshFileVersion = 4.1;
 Mesh.SaveParametric = 1;
 Save "naca6412.msh";

@@ -61,6 +61,7 @@ typedef enum
   T8_GEOM_SINCOS = T8_GEOM_ZERO,
   T8_GEOM_CYLINDER,
   T8_GEOM_MOEBIUS,
+  T8_GEOM_TWO_GEOMETRIES,
   T8_GEOM_CIRCLE,
   T8_GEOM_3D,
   T8_GEOM_MOVING,
@@ -471,6 +472,8 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
   t8_cmesh_t          cmesh;
   char                vtuname[BUFSIZ];
   t8_geometry_c      *geometry;
+  /* geoemtry_sincos is used for T8_GEOM_TWO_GEOMETRIES */
+  t8_geometry_c      *geometry_sincos;
   int                 uniform_level;
   double              time = 0; /* used for moving geometry */
   int                 sreturn;
@@ -510,6 +513,25 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
       geometry = new t8_geometry_moebius;
       snprintf (vtuname, BUFSIZ, "forest_moebius_lvl_%i", level);
     }
+    break;
+  case T8_GEOM_TWO_GEOMETRIES:
+    t8_global_productionf
+      ("Creating uniform level %i forest with a cylinder and a sine cosine geometry.\n",
+       level);
+    /* Cylinder geometry on tree 0. Sincos geometry on tree 1. */
+    geometry = new t8_geometry_cylinder;
+    geometry_sincos = new t8_geometry_sincos;
+    t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
+    /* Tree 0 is connected to itself to form a cylinder */
+    t8_cmesh_set_join (cmesh, 0, 0, 0, 1, 0);
+    t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_QUAD);
+    /* Note that we have to register both geometries to the cmesh. The cylinder geometry is
+     * stored in the "geometry" pointer and registered later, right before the cmesh is committed. */
+    t8_cmesh_register_geometry (cmesh, geometry_sincos);
+    t8_cmesh_set_tree_geometry (cmesh, 0, geometry->t8_geom_get_name ());
+    t8_cmesh_set_tree_geometry (cmesh, 1,
+                                geometry_sincos->t8_geom_get_name ());
+    snprintf (vtuname, BUFSIZ, "forest_cylinder_and_sincos_lvl_%i", level);
     break;
   case T8_GEOM_CIRCLE:
     t8_global_productionf ("Creating forest with a circle geometry.\n");
@@ -1030,13 +1052,14 @@ main (int argc, char **argv)
                       "\t\t0 - The graph of sin(x) * cos (y) with two 2D quad trees.\n"
                       "\t\t1 - A cylinder with one 2D quad tree.\n"
                       "\t\t2 - A moebius strip on a hybrid mesh with 4 triangles and 2 quads.\n"
-                      "\t\t3 - A square of two triangles that is mapped into a circle.\n"
+                      "\t\t3 - A mesh of two trees with different geometries each.\n\t\t    Using the cylinder for the first tree, the sin/cos for the second.\n"
+                      "\t\t4 - A square of two triangles that is mapped into a circle.\n"
                       "\t\t    The mesh will not be uniform. Instead it is refined at the domain boundary.\n"
-                      "\t\t4 - A cube that is distorted in z-direction with one 3D cube tree.\n"
-                      "\t\t5 - A moving mesh consisting of a single 2D quad tree.\n"
-                      "\t\t6 - A cube with two occ curves as edges.\n"
-                      "\t\t7 - Two cubes with one occ surface as face.\n"
-                      "\t\t8 - A hollow cylinder with a occ surface on the in- and outside.\n");
+                      "\t\t5 - A cube that is distorted in z-direction with one 3D cube tree.\n"
+                      "\t\t6 - A moving mesh consisting of a single 2D quad tree.\n"
+                      "\t\t7 - A cube with two occ curves as edges.\n"
+                      "\t\t8 - Two cubes with one occ surface as face.\n"
+                      "\t\t9 - A hollow cylinder with a occ surface on the in- and outside.\n");
 
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);

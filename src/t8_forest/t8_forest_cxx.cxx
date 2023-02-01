@@ -1214,12 +1214,7 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
      * The point is inside the element. */
     return 1;
   default:
-    /* Point inside element check is currently not implemented for
-     *  - T8_ECLASS_QUAD
-     */
-    SC_ABORTF
-      ("Point inside check not implemented for elements of shape %s.\n",
-       t8_eclass_to_string[element_shape]);
+    SC_ABORT_NOT_REACHED ();
   }
 }
 

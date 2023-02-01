@@ -45,9 +45,13 @@ protected:
     ts->t8_element_destroy (1, &test);
     t8_scheme_cxx_unref (&scheme);
   }
-  t8_element_t *element, *child, *test;
-  t8_scheme_cxx * scheme; t8_eclass_scheme_c *ts;
-  t8_eclass_t eclass; sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
+  t8_element_t *element;
+  t8_element_t *child;
+  t8_element_t *test;
+  t8_scheme_cxx * scheme; 
+  t8_eclass_scheme_c *ts;
+  t8_eclass_t eclass; 
+  sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
 };
 
 /* *INDENT-ON* */
