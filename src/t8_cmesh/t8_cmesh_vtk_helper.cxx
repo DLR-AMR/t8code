@@ -304,7 +304,7 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > cells,
   t8_gloidx_t         tree_id = 0;
   int                 max_dim = -1;
   const int           max_cell_points = cells->GetMaxCellSize ();
-  T8_ASSERT (max_cell_points > 0);
+  T8_ASSERT (max_cell_points >= 0);
   vertices = T8_ALLOC (double, 3 * max_cell_points);
   /* Get cell iterator */
   cell_it = cells->NewCellIterator ();
@@ -358,13 +358,13 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > cells,
     /* TODO: when data extracting is enabled the cmesh is not stored correct. 
      * Fix this. */
     /* Get and set the data of each cell */
-    /*for (int dtype = 0; dtype < num_data_arrays; dtype++) {
+    for (int dtype = 0; dtype < num_data_arrays; dtype++) {
        const t8_gloidx_t   cell_id = cell_it->GetCellId ();
        vtkDataArray       *data = cell_data->GetArray (dtype);
        data->GetTuple (cell_id, tuples[dtype]);
        t8_cmesh_set_attribute (cmesh, tree_id, t8_get_package_id (), dtype + 1,
        tuples[dtype], data_size[dtype], 0);
-       } */
+       } 
     /* Check geometry-dimension */
     if (max_dim < cell_it->GetCellDimension ()) {
       max_dim = cell_it->GetCellDimension ();
