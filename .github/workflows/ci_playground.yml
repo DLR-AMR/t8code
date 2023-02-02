@@ -34,7 +34,7 @@ on:
 
 jobs:
   test_vars:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     env:
       SC_DEBUG: ../sc/build_debug
       P4EST_DEBUG: ../p4est/build_debug
@@ -73,7 +73,7 @@ jobs:
         run: echo $IF_VAR2
 
   test_cache:
-    runs-on: ubuntu-latest    
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v1
       - name: define sc var

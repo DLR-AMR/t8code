@@ -39,6 +39,7 @@
 #include <TopoDS_Vertex.hxx>
 #include <TopoDS_Edge.hxx>
 #include <TopoDS_Face.hxx>
+#include <Standard_Version.hxx>
 
 #endif /* T8_WITH_OCC */
 
@@ -76,7 +77,9 @@ t8_geometry_occ::t8_geometry_occ (int dim, const char *fileprefix,
   BRepTools::Read (occ_shape, is, builder);
   is.close ();
   if (occ_shape.IsNull ()) {
-    SC_ABORTF ("Could not read brep file or brep file contains no shape \n");
+    SC_ABORTF ("Could not read brep file or brep file contains no shape. "
+               "The OCC file may be written with a newer OCC version. "
+               "Linked OCC version: %s", OCC_VERSION_COMPLETE);
   }
   TopExp::MapShapes (occ_shape, TopAbs_VERTEX, occ_shape_vertex_map);
   TopExp::MapShapes (occ_shape, TopAbs_EDGE, occ_shape_edge_map);
@@ -969,6 +972,21 @@ t8_geometry_occ_destroy (t8_geometry_occ_c ** geom)
   delete             *geom;
   *geom = NULL;
 }
+
+#if T8_ENABLE_DEBUG
+int
+t8_geom_is_occ (const t8_geometry_c *geometry)
+{
+  /* Try to dynamic cast the geometry into occ geometry. This is only successful if
+   * geometry points to a t8_geometry_occ.
+   * If successful, then is_occ_geom will be true.
+   */
+  const int           is_occ_geom =
+    (dynamic_cast < const t8_geometry_occ * >(geometry) != NULL);
+
+  return is_occ_geom;
+}
+#endif
 
 T8_EXTERN_C_END ();
 
