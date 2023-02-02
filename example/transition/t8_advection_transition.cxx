@@ -704,7 +704,6 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
   ts = t8_forest_get_eclass_scheme (problem->forest, eclass);
   /* Compute the children of the element at the face */
   num_face_children = ts->t8_element_num_face_children (element_hang, face);
-  ts->t8_element_debug_print(element_hang);
   T8_ASSERT (num_face_children == el_hang->num_neighbors[face]);
 
   face_children = T8_ALLOC (t8_element_t *, num_face_children);
