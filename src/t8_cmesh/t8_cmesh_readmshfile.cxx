@@ -1016,15 +1016,23 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
             const int face_eclass = dim == 2 ? eclass:
               t8_eclass_face_types[eclass][i_tree_faces];
             const int num_face_nodes = t8_eclass_num_vertices[face_eclass];
+            const int num_face_edges = t8_eclass_num_faces[face_eclass];
             
             /* Save each node of face separately. Face nodes of 2D elements are also tree nodes.
-             * Face nodes of 3D Elements need to be translated to tree nodes. */
+             * Face nodes of 3D elements need to be translated to tree nodes. */
             for (int i_face_node = 0; 
                  i_face_node < num_face_nodes; 
                  ++i_face_node)
             {
-              if (dim == 2) face_nodes[i_face_node] = tree_nodes[i_face_node];
-              else face_nodes[i_face_node] = tree_nodes[t8_face_vertex_to_tree_vertex[eclass][i_tree_faces][i_face_node]];
+              if (dim == 2) {
+                face_nodes[i_face_node] = tree_nodes[i_face_node];
+              }
+              else {
+                face_nodes[i_face_node] =
+                  tree_nodes[t8_face_vertex_to_tree_vertex[eclass]
+                                                          [i_tree_faces]
+                                                          [i_face_node]];
+              }
             }
             
             /* A face can only be linked to an occ surface if all nodes of the face are parametric or on a vertex 
@@ -1090,7 +1098,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
               {
                 /* For each edge of face */
                 for (int i_face_edges = 0; 
-                     i_face_edges < t8_eclass_num_faces[face_eclass]; 
+                     i_face_edges < num_face_edges;
                      ++i_face_edges)
                 {
                   /* Save nodes separately */
@@ -1195,7 +1203,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
               /* If we have found a surface we link it to the face */
               face_geometries[i_tree_faces] = surface_index;
               for (int i_face_edges = 0; 
-                   i_face_edges < t8_eclass_num_faces[face_eclass]; 
+                   i_face_edges < num_face_edges;
                    ++i_face_edges)
               {
                 /* We lock the edges of the face for surfaces, so that we do not link the same surface again 
