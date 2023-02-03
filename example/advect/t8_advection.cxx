@@ -818,7 +818,7 @@ t8_advect_replace (t8_forest_t forest_old,
   else if (refine == 1) {
     T8_ASSERT (num_outgoing == 1);
 #if T8_ENABLE_DEBUG
-    /* Ensure that the numebr of incoming elements matches the
+    /* Ensure that the number of incoming elements matches the
      * number of children of the outgoing element. */
     const t8_element_t *element_outgoing =
       t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing);
