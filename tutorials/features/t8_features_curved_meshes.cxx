@@ -384,7 +384,8 @@ main (int argc, char **argv)
                          "Maximum distance an element can have from the plane to still be refined. Default: 0.1");
   sc_options_add_int (opt, 't', "timesteps", &steps, 10,
                       "How many steps the plane takes to move through the airfoil. Default: 10");
-  sc_options_add_switch (opt, 'o', "occ", &occ, "Use the occ geometry.");
+  sc_options_add_switch (opt, 'o', "occ", &occ, "Use the occ geometry. "
+                         "In the surface mode this is enabled automatically.");
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (helpme) {
