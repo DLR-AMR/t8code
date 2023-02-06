@@ -48,6 +48,7 @@
  * surface get refined. */
 struct t8_naca_surface_adapt_data
 {
+  int                 level;    /* Uniform refinement level of the forest */
   int                 n_surfaces;       /* Amount of surfaces we want to refine */
   int                *surfaces; /* Array with surface indices */
   int                *levels;   /* Array with refinement levels */
@@ -94,7 +95,10 @@ t8_naca_surface_adapt_callback (t8_forest_t forest,
     t8_forest_get_user_data (forest);
   /* And check if it was retrieved successfully. */
   T8_ASSERT (adapt_data != NULL);
-
+  /* Refine element to the uniform refinement levl */
+  if (ts->t8_element_level (elements[0]) < adapt_data->level) {
+    return 1;
+  }
   /* We retrieve the number of faces of this element. */
   const int           num_faces = ts->t8_element_num_faces (elements[0]);
   for (int iface = 0; iface < num_faces; ++iface) {
@@ -134,7 +138,7 @@ t8_naca_surface_adapt_callback (t8_forest_t forest,
  * \param [in] rlevel_ventral   The refinement level of the elements touching the ventral side of the wing
  */
 int
-t8_naca_surface_refinement (t8_forest_t forest, int rlevel_dorsal,
+t8_naca_surface_refinement (t8_forest_t forest, int level, int rlevel_dorsal,
                             int rlevel_ventral)
 {
   t8_forest_t         forest_new;
@@ -147,6 +151,7 @@ t8_naca_surface_refinement (t8_forest_t forest, int rlevel_dorsal,
   int                 levels[4] =
     { rlevel_dorsal, rlevel_dorsal, rlevel_ventral, rlevel_ventral };
   t8_naca_surface_adapt_data adapt_data = {
+    level,                      /* Uniform refinement level of the forest */
     4,                          /* Amount of surfaces we want to refine */
     surfaces,                   /* Array with surface indices */
     levels                      /* Array with refinement levels */
@@ -362,18 +367,19 @@ main (int argc, char **argv)
                          "Display a short help message.");
   sc_options_add_string (opt, 'f', "fileprefix", &fileprefix, NULL,
                          "Fileprefix of the msh and brep files.");
+  sc_options_add_switch (opt, 's', "surface", &surface,
+                         "Refine the forest based on the surfaces the elements lie on. "
+                         "Only viable with curved meshes. Therefore the -o option is enabled automatically.");
   sc_options_add_int (opt, 'l', "level", &level, 0,
                       "The uniform refinement level of the mesh. Default: 0");
-  sc_options_add_int (opt, 'r', "rlevel", &rlevel, 3,
-                      "The refinement level of the mesh. Default: 3");
-  sc_options_add_switch (opt, 's', "surface", &surface,
-                         "Refine the forest based on the surfaces the elements lie on. Only viable with -o");
   sc_options_add_int (opt, 'd', "dorsal", &rlevel_dorsal, 3,
                       "The refinement level of the dorsal side of the naca profile. Default: 3");
   sc_options_add_int (opt, 'v', "ventral", &rlevel_ventral, 2,
                       "The refinement level of the ventral side of the naca profile. Default: 2");
   sc_options_add_switch (opt, 'p', "plane", &plane,
                          "Move a plane through the forest and refine elements close to the plane.");
+  sc_options_add_int (opt, 'r', "plane_level", &rlevel, 3,
+                      "The refinement level of the plane. Default: 3");
   sc_options_add_double (opt, 'x', "distance", &dist, 0.1,
                          "Maximum distance an element can have from the plane to still be refined. Default: 0.1");
   sc_options_add_int (opt, 't', "timesteps", &steps, 10,
@@ -387,7 +393,7 @@ main (int argc, char **argv)
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else if (parsed == 0 || fileprefix == NULL ||
-           (!plane && !surface) || (plane && surface) || (surface && !occ)) {
+           (!plane && !surface) || (plane && surface)) {
     /* wrong usage */
     t8_global_productionf ("\n\tERROR: Wrong usage.\n\n");
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
@@ -395,14 +401,16 @@ main (int argc, char **argv)
   else {
     /* Read in the naca mesh from the msh file and the naca geometry from the brep file */
     cmesh =
-      t8_cmesh_from_msh_file (fileprefix, 0, sc_MPI_COMM_WORLD, 3, 0, occ);
+      t8_cmesh_from_msh_file (fileprefix, 0, sc_MPI_COMM_WORLD, 3, 0, occ
+                              || surface);
     /* Construct a forest from the cmesh */
     forest = t8_forest_new_uniform (cmesh,
                                     t8_scheme_new_default_cxx (),
                                     level, 0, comm);
     T8_ASSERT (t8_forest_is_committed (forest));
     if (surface) {
-      t8_naca_surface_refinement (forest, rlevel_dorsal, rlevel_ventral);
+      t8_naca_surface_refinement (forest, level, rlevel_dorsal,
+                                  rlevel_ventral);
     }
     if (plane) {
       t8_naca_plane_refinement (forest, level, rlevel, steps, dist);
