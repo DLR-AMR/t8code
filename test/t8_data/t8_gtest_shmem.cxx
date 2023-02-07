@@ -59,11 +59,11 @@ TEST_P(shmem, test_shmem_init_finalize){
 
 #if T8_ENABLE_MPI
   /* Check that they are not NULL */
-  EXPECT_TRUE(intranode != sc_MPI_COMM_NULL) << "inter node communicator not set.";
-  EXPECT_TRUE(internode != sc_MPI_COMM_NULL) << "inter node communicator not set.";
+  ASSERT_NE(intranode, sc_MPI_COMM_NULL) << "inter node communicator not set.";
+  ASSERT_NE(internode, sc_MPI_COMM_NULL) << "inter node communicator not set.";
 #endif
 
-  /* Compute ranks and size */
+  /* Compute ranks and size and print them */
   mpiret = sc_MPI_Comm_size (intranode, &intrasize);
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_rank (intranode, &intrarank);
@@ -72,6 +72,8 @@ TEST_P(shmem, test_shmem_init_finalize){
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_rank (internode, &interrank);
   SC_CHECK_MPI (mpiret);
+  t8_debugf("On intranode comm i am %i of %i\n", intrarank, intrasize);
+  t8_debugf("On internode comm i am rank %i of %i\n", interrank, intersize);
 
   /* finalize shared mem usage */
   t8_shmem_finalize (comm);
@@ -79,8 +81,8 @@ TEST_P(shmem, test_shmem_init_finalize){
   /* Get intranode and internode comm */
   sc_mpi_comm_get_node_comms (comm, &intranode, &internode);
   /* Check that they are NULL */
-  EXPECT_TRUE(intranode == sc_MPI_COMM_NULL) << "inter node communicator not set.";
-  EXPECT_TRUE(internode == sc_MPI_COMM_NULL) << "inter node communicator not set.";
+  ASSERT_EQ(intranode, sc_MPI_COMM_NULL) << "inter node communicator not set.";
+  ASSERT_EQ(internode, sc_MPI_COMM_NULL) << "inter node communicator not set.";
 }
 
 TEST_P(shmem, test_sc_shmem_alloc){
@@ -115,8 +117,8 @@ TEST_P(shmem, test_sc_shmem_alloc){
 
     sc_mpi_comm_get_node_comms (comm, &intranode, &internode);
 #if T8_ENABLE_MPI
-    EXPECT_TRUE(intranode != sc_MPI_COMM_NULL) << "inter node communicator not set.";
-    EXPECT_TRUE(internode != sc_MPI_COMM_NULL) << "inter node communicator not set.";
+    ASSERT_NE(intranode, sc_MPI_COMM_NULL) << "inter node communicator not set.";
+    ASSERT_NE(internode, sc_MPI_COMM_NULL) << "inter node communicator not set.";
 #endif
 
     /* Get the size and rank on the shared memory region (intranode) */
@@ -199,12 +201,12 @@ TEST_P(shmem, test_shmem_array){
     /* Check element count of shared memory array. */
     const size_t        check_count =
       t8_shmem_array_get_elem_count (shmem_array);
-    EXPECT_TRUE(check_count == array_length) << "shared memory array has wrong element count.";
+    EXPECT_EQ(check_count, array_length) << "shared memory array has wrong element count.";
 
     /* Check element size of shared memory array. */
     const size_t        check_size =
       t8_shmem_array_get_elem_size (shmem_array);
-    EXPECT_TRUE(check_size == element_size) << "shared memory has wrong element size.";
+    EXPECT_EQ(check_size, element_size) << "shared memory has wrong element size.";
 
     /* Write into array */
     /* In the first half we use the t8_shmem_array_set_gloidx function,
@@ -237,7 +239,7 @@ TEST_P(shmem, test_shmem_array){
     /* Check value at each position */
     for (int i = 0; i < array_length; ++i) {
       t8_gloidx_t         value = t8_shmem_array_get_gloidx (shmem_array, i);
-      EXPECT_TRUE(value == i) << "Value at position " << i << " not correct (expected " << i << " got " << value << ")";
+      EXPECT_EQ(value, i) << "Value at position " << i << " not correct (expected " << i << " got " << value << ")";
     }
 
     /* Copy */
