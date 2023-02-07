@@ -199,12 +199,12 @@ TEST_P(shmem, test_shmem_array){
     EXPECT_EQ(comm, check_comm) << "Shared memory array has wrong communicator.";
 
     /* Check element count of shared memory array. */
-    const size_t        check_count =
+    const int        check_count =
       t8_shmem_array_get_elem_count (shmem_array);
     EXPECT_EQ(check_count, array_length) << "shared memory array has wrong element count.";
 
     /* Check element size of shared memory array. */
-    const size_t        check_size =
+    const int        check_size =
       t8_shmem_array_get_elem_size (shmem_array);
     EXPECT_EQ(check_size, element_size) << "shared memory has wrong element size.";
 
