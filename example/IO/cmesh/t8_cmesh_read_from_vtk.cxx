@@ -48,10 +48,7 @@ t8_forest_construct_from_vtk (const char *prefix, sc_MPI_Comm comm,
    * Triangle-strips and polygons will be broken down to multiple triangles. */
   t8_cmesh_t          cmesh_in =
     t8_cmesh_read_from_vtk_unstructured (prefix, partition, 0, comm);
-  t8_forest_t         forest;
-  t8_vtk_data_field_t *vtk_data;
-  double            **cell_values;
-  double             *tree_data;
+  
   t8_cmesh_t          cmesh;
   t8_cmesh_vtk_write_file (cmesh_in, "t8_cmesh_in", 1.0);
   if (partition) {
@@ -65,17 +62,22 @@ t8_forest_construct_from_vtk (const char *prefix, sc_MPI_Comm comm,
   }
   t8_cmesh_vtk_write_file (cmesh, "t8_cmesh_", 1.0);
 
+  t8_forest_t         forest;
   /* Initialize the forest */
   t8_forest_init (&forest);
   /* Initialize the cmesh of the forest */
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
   /* Set the scheme of the forest. In this case, the default schemes are used */
   t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
-  const t8_locidx_t   num_trees = t8_cmesh_get_num_trees (cmesh);
   t8_forest_commit (forest);
 
+  t8_vtk_data_field_t *vtk_data;
+  double             **cell_values;
+  double              *tree_data;
   /* Read the cell-data if there is any */
   if (values_per_cell > 0) {
+    const t8_locidx_t   num_trees = t8_cmesh_get_num_local_trees (cmesh);
+    T8_ASSERT (num_trees == t8_forest_get_num_local_trees(forest));
     vtk_data = T8_ALLOC (t8_vtk_data_field_t, values_per_cell);
     cell_values = T8_ALLOC (double *, values_per_cell);
     for (int ivalues = 0; ivalues < values_per_cell; ivalues++) {
@@ -99,6 +101,7 @@ t8_forest_construct_from_vtk (const char *prefix, sc_MPI_Comm comm,
   else {
     vtk_data = NULL;
   }
+
   /* Write the forest */
   t8_forest_write_vtk_ext (forest, "forest", 1, 1, 1, 1, 0, 0, 0,
                            values_per_cell, vtk_data);
@@ -168,6 +171,9 @@ main (int argc, char **argv)
   }
   sc_options_destroy (opt);
   sc_finalize ();
+
+  mpiret = sc_MPI_Finalize ();
+  SC_CHECK_MPI (mpiret);
 
   return 0;
 }
