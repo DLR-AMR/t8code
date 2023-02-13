@@ -186,16 +186,16 @@ t8_cghost_struct_t;
  * ttf % F is the face number and ttf / F is the orientation. (\ref t8_eclass_max_num_faces)
  * The orientation is determined as follows.  Let my_face and other_face
  * be the two face numbers of the connecting trees.
- * We chose a master_face from them as follows: Either both trees have the same
- * element class, then the face with the lower face number is the master_face or
+ * We chose a main_face from them as follows: Either both trees have the same
+ * element class, then the face with the lower face number is the main_face or
  * the trees belong to different classes in which case the face belonging to the
  * tree with the lower class according to the ordering
  * triangle < square,
  * hex < tet < prism < pyramid,
- * is the master_face.
- * Then the first face corner of the master_face connects to a face
+ * is the main_face.
+ * Then the first face corner of the main_face connects to a face
  * corner in the other face.  The face
- * orientation is defined as the number of this corner.
+ * orientation is defined as the number of the corner of the other face.
  * If the classes are equal and my_face == other_face, treating
  * either of both faces as the master_face leads to the same result.
  */
