@@ -331,7 +331,10 @@ main (int argc, char **argv)
 
   /* brief help message */
   snprintf (usage, BUFSIZ, "\t%s <OPTIONS>\n\t%s -h\t"
-            "for a brief overview of all options.",
+            "for a brief overview of all options. \n"
+            "\t%s -p\tfor a refinement plane moving through the mesh. \n"
+            "\t%s -s\tfor a refinement of elements touching certain surfaces.\n",
+            basename (argv[0]), basename (argv[0]),
             basename (argv[0]), basename (argv[0]));
 
   /* long help message */
@@ -339,6 +342,7 @@ main (int argc, char **argv)
                       "Demonstrates the some of the geometry capabitlities of t8code.\n"
                       "You can read in a msh and brep file of a naca profile and refine elements touching certain surfaces, \n"
                       "or advance a refinement plane through that NACA profile mesh.\n"
+                      "The brep and msh have to be generated with the gmsh software, using the .geo file in this directory.\n"
                       "Usage: %s\n", usage);
 
   if (sreturn >= BUFSIZ) {
@@ -365,11 +369,12 @@ main (int argc, char **argv)
   opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'h', "help", &helpme,
                          "Display a short help message.");
-  sc_options_add_string (opt, 'f', "fileprefix", &fileprefix, NULL,
-                         "Fileprefix of the msh and brep files.");
+  sc_options_add_string (opt, 'f', "fileprefix", &fileprefix, "./naca6412",
+                         "Fileprefix of the msh and brep files. Default: \"./naca6412\"");
   sc_options_add_switch (opt, 's', "surface", &surface,
                          "Refine the forest based on the surfaces the elements lie on. "
-                         "Only viable with curved meshes. Therefore the -o option is enabled automatically. Cannot be combined with '-p'.");
+                         "Only viable with curved meshes. Therefore, the -o option is enabled automatically. "
+                         "Cannot be combined with '-p'.");
   sc_options_add_int (opt, 'l', "level", &level, 0,
                       "The uniform refinement level of the mesh. Default: 0");
   sc_options_add_int (opt, 'd', "dorsal", &rlevel_dorsal, 3,
@@ -377,7 +382,8 @@ main (int argc, char **argv)
   sc_options_add_int (opt, 'v', "ventral", &rlevel_ventral, 2,
                       "The refinement level of the ventral side of the naca profile. Default: 2");
   sc_options_add_switch (opt, 'p', "plane", &plane,
-                         "Move a plane through the forest and refine elements close to the plane. Cannot be combined with '-s'.");
+                         "Move a plane through the forest and refine elements close to the plane. "
+                         "Cannot be combined with '-s'.");
   sc_options_add_int (opt, 'r', "plane_level", &rlevel, 3,
                       "The refinement level of the plane. Default: 3");
   sc_options_add_double (opt, 'x', "distance", &dist, 0.1,
@@ -396,7 +402,13 @@ main (int argc, char **argv)
   else if (parsed == 0 || fileprefix == NULL ||
            (!plane && !surface) || (plane && surface)) {
     /* wrong usage */
-    t8_global_productionf ("\n\tERROR: Wrong usage.\n\n");
+    if (!plane && !surface) {
+      t8_global_productionf ("%s\n", help);
+      t8_global_productionf
+        ("\n\tERROR: Wrong usage.\n"
+         "\tPlease specify either the '-p' or the '-s' option as described above.\n\n");
+    }
+    else t8_global_productionf ("\n\tERROR: Wrong usage.\n\n");
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else {
