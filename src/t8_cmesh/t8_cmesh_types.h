@@ -47,17 +47,6 @@ typedef struct t8_cprofile t8_cprofile_t;       /* Defined below */
  *       and whether a combination is currently supported,
  *       and provide informative error messages both in debug and non-debug.
  */
-#if 0
-/** Bitfield to designate the operations done on the cmesh created. */
-typedef enum t8_cmesh_from
-{
-  T8_CMESH_FROM_NONE = 0,
-  T8_CMESH_FROM = 0x01,
-  T8_CMESH_REFINE = 0x02,
-  T8_CMESH_PARTITION = 0x04,
-}
-t8_cmesh_from_t;
-#endif
 
 /* Definitions for attribute identifiers that are reserved for a special purpose. 
  * T8_CMESH_NEXT_POSSIBLE_KEY is the first unused key, hence it can be repurposed for different attributes.*/
@@ -110,9 +99,6 @@ typedef struct t8_cmesh
                                                 the scheme that describes the refinement pattern. See \ref t8_cmesh_set_partition. */
   int8_t              set_partition_level; /**< Non-negative if the cmesh should be partitioned from an already existing cmesh
                                          with an assumed \a level uniform mesh underneath. */
-#if 0
-  t8_cmesh_from_t     from_method;      /* TODO: Document */
-#endif
   struct t8_cmesh    *set_from; /**< If this cmesh shall be derived from an
                                   existing cmesh by copy or more elaborate
                                   modification, we store a pointer to this
