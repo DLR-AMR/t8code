@@ -687,7 +687,6 @@ t8_cmesh_trees_add_attribute (t8_cmesh_trees_t trees, int proc,
   }
 }
 
-
 /* gets a key_id_pair as first argument and an attribute as second */
 static int
 t8_cmesh_trees_compare_keyattr (const void *A1, const void *A2)
@@ -887,7 +886,6 @@ t8_cmesh_trees_print (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
   return;
 #endif
 }
-
 
 /* Given a global tree id find out whether the tree is a local ghost.
  * If it is we return its local ghost id otherwise we return -1.

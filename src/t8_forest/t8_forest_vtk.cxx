@@ -810,7 +810,6 @@ t8_forest_vtk_cells_vertices_kernel (t8_forest_t forest, t8_locidx_t ltree_id,
   return 1;
 }
 
-
 static int
 t8_forest_vtk_cells_connectivity_kernel (t8_forest_t forest,
                                          t8_locidx_t ltree_id, t8_tree_t tree,

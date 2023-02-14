@@ -53,7 +53,6 @@ t8_random_partition (int level)
 
   t8_cmesh_init (&cmesh_part);
 
-
   /* We still need acces to cmesh later */
   t8_cmesh_ref (cmesh);
   t8_cmesh_set_derive (cmesh_part, cmesh);
@@ -143,7 +142,6 @@ t8_partition (int level, int partition_from)
   t8_cmesh_unref (&cmesh_part);
   t8_cmesh_destroy (&cmesh_part2);
 }
-
 
 int
 main (int argc, char **argv)

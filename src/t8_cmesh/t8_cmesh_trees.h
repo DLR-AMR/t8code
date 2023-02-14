@@ -177,7 +177,6 @@ void                t8_cmesh_trees_init (t8_cmesh_trees_t *ptrees,
                                          int num_procs, t8_locidx_t num_trees,
                                          t8_locidx_t num_ghosts);
 
-
 /** Return one part of a specified tree array.
  * \param [in]        trees   The tree array to be queried
  * \param [in]        proc    An index specifying the part to be returned.
@@ -422,7 +421,6 @@ void                t8_cmesh_trees_init_attributes (t8_cmesh_trees_t trees,
                                                     t8_locidx_t ltree_id,
                                                     size_t num_attributes,
                                                     size_t attr_bytes);
-
 
 /** Return an attribute that is stored at a tree.
  *  \param [in]       trees   The trees structure.

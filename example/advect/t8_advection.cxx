@@ -180,8 +180,6 @@ t8_advect_element_set_phi_adapt (const t8_advect_problem_t * problem,
     = phi;
 }
 
-
-
 /* Adapt the forest. We refine if the level-set function is close to zero
  * and coarsen if it is larger than a given threshhold. */
 static int
@@ -287,8 +285,7 @@ t8_advect_l_infty_rel (const t8_advect_problem_t * problem,
     ana_sol =
       analytical_sol (elem_data->midpoint, problem->t,
                       problem->udata_for_phi);
-    if (fabs (ana_sol) < distance)
-    {
+    if (fabs (ana_sol) < distance) {
       /* Compute the error as the stored value at the midpoint of this element
        * minus the solution at this midpoint */
       phi = t8_advect_element_get_phi (problem, ielem);
@@ -327,8 +324,7 @@ t8_advect_l_2_rel (const t8_advect_problem_t * problem,
     ana_sol =
       analytical_sol (elem_data->midpoint, problem->t,
                       problem->udata_for_phi);
-    if (fabs (ana_sol) < distance)
-    {
+    if (fabs (ana_sol) < distance) {
       count++;
       /* Compute the error as the stored value at the midpoint of this element
        * minus the solution at this midpoint */
@@ -430,7 +426,6 @@ t8_advect_flux_upwind (const t8_advect_problem_t * problem,
 
   /* Compute the dot-product of u and the normal vector */
   normal_times_u = t8_vec_dot (normal, u_at_face_center);
-
 
   if (normal_times_u >= 0) {
     return -el_plus_phi * normal_times_u * area;
@@ -544,7 +539,6 @@ t8_advect_boundary_set_phi (const t8_advect_problem_t * problem,
 
   *boundary_phi = t8_advect_element_get_phi (problem, ielement);
 }
-
 
 static void
 t8_advect_advance_element (t8_advect_problem_t * problem,
@@ -1599,8 +1593,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     solve_time += sc_MPI_Wtime ();
     if (maxlevel > level) {
       /* Adapt the mesh after adapt_freq time steps */
-      if (problem->num_time_steps % adapt_freq == adapt_freq - 1)
-      {
+      if (problem->num_time_steps % adapt_freq == adapt_freq - 1) {
         adapted_or_partitioned = 1;
         t8_advect_problem_adapt (problem, 1);
         t8_advect_problem_partition (problem, 1);

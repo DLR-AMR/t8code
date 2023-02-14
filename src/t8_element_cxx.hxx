@@ -726,7 +726,6 @@ public:
   * param [in] scheme           Defines the implementation of the element class. */
 void                t8_scheme_cxx_destroy (t8_scheme_cxx_t *s);
 
-
 T8_EXTERN_C_END ();
 
 #endif /* !T8_ELEMENT_CXX_HXX */

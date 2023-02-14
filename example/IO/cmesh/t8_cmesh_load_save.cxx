@@ -89,7 +89,6 @@ t8_cmesh_save_cmesh (const char *mshfile, int dim)
   t8_cmesh_destroy (&cmesh);
 }
 
-
 int
 main (int argc, char **argv)
 {

@@ -73,7 +73,6 @@ typedef p4est_quadrant_t t8_pquad_t;
 #define T8_QUAD_SET_TCOORD(quad,coord)                          \
   do { (quad)->p.user_long = (long) (coord); } while (0)
 
-
 struct t8_default_scheme_quad_c:public t8_default_scheme_common_c
 {
 public:

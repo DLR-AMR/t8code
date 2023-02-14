@@ -169,5 +169,4 @@ t8_common_adapt_level_set (t8_forest_t forest,
   return 0;
 }
 
-
 T8_EXTERN_C_END ();

@@ -569,4 +569,3 @@ t8_offset_print (t8_shmem_array_t offset, sc_MPI_Comm comm)
   t8_debugf ("Offsets = %s\n", buf);
 #endif
 }
-

@@ -35,7 +35,6 @@ t8_linearidx_t      t8_element_get_linear_id (const t8_element_t *elem,
 
 #ifdef T8_ENABLE_DEBUG
 
-
 #endif /* T8_ENABLE_DEBUG */
 
 int

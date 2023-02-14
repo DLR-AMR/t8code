@@ -127,7 +127,6 @@ t8_cmesh_is_committed (t8_cmesh_t cmesh)
   return 1;
 }
 
-
 /* Check whether a given communicator assigns the same rank and mpisize
  * as stored in a given cmesh. */
 int
@@ -171,7 +170,6 @@ t8_cmesh_init (t8_cmesh_t *pcmesh)
 
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 }
-
 
 void
 t8_cmesh_set_derive (t8_cmesh_t cmesh, t8_cmesh_t set_from)
@@ -280,7 +278,6 @@ t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, int element_level,
     }
   }
 }
-
 
 void
 t8_cmesh_set_refine (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *scheme)
@@ -434,8 +431,6 @@ t8_cmesh_get_partition_table (t8_cmesh_t cmesh)
    * partition array. */
   return cmesh->tree_offsets;
 }
-
-
 
 void
 t8_cmesh_set_dimension (t8_cmesh_t cmesh, int dim)
@@ -728,7 +723,6 @@ t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
   }
   return 1;
 }
-
 
 int
 t8_cmesh_is_empty (t8_cmesh_t cmesh)

@@ -25,7 +25,6 @@
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
-
 /* This belongs here since it uses c++ function,
  * see t8_element.c/.h */
 void
@@ -64,4 +63,3 @@ t8_eclass_scheme::t8_element_array_index (sc_array_t *array, size_t it)
 }
 
 T8_EXTERN_C_END ();
-

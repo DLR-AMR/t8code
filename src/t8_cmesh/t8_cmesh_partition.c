@@ -33,7 +33,6 @@
 #include "t8_cmesh_partition.h"
 #include "t8_cmesh_offset.h"
 
-
 /* Change the neighbor entry of a tree to match the new partition.
  * Input: A face_neighbor entry in cmesh_from and a process to which the corresponding tree will be send
  * Output: The face neighbor entry is changed to match its new id in cmesh.
@@ -273,10 +272,8 @@ t8_cmesh_gather_treecount_nocommit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   t8_cmesh_gather_treecount_ext (cmesh, comm, 0);
 }
 
-
 /* TODO: currently this function is unused.
  *        Also it better fits to cmesh_offset.c/h */
-
 
 /* TODO: deprecated, can be removed */
 
@@ -1209,7 +1206,6 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
      */
     num_trees = SC_MAX (range_end - range_start + 1, 0);
 
-
     num_ghost_send = send_as_ghost.elem_count;
     /* parse through send_as_ghost to compute ghost_neighbor_bytes */
     ghost_neighbor_bytes = t8_partition_compute_gnb (cmesh_from,
@@ -1530,16 +1526,16 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
                              &status);
       SC_CHECK_MPI (mpiret);
       num_receive--;
-        /* There is a message to receive */
-        proc_recv = status.MPI_SOURCE;
-        /* TODO: assert that proc_recv is still contained in the list of receivers. */
-        T8_ASSERT (status.MPI_TAG == T8_MPI_PARTITION_CMESH);
-        T8_ASSERT (recv_first <= proc_recv && proc_recv <= recv_last &&
-                   t8_offset_sendsto (proc_recv, cmesh->mpirank, from_offsets,
-                                      tree_offset));
-        t8_cmesh_partition_receive_message (cmesh, comm, proc_recv, &status,
-                                            local_procid, recv_first,
-                                            &num_ghosts);
+      /* There is a message to receive */
+      proc_recv = status.MPI_SOURCE;
+      /* TODO: assert that proc_recv is still contained in the list of receivers. */
+      T8_ASSERT (status.MPI_TAG == T8_MPI_PARTITION_CMESH);
+      T8_ASSERT (recv_first <= proc_recv && proc_recv <= recv_last &&
+                 t8_offset_sendsto (proc_recv, cmesh->mpirank, from_offsets,
+                                    tree_offset));
+      t8_cmesh_partition_receive_message (cmesh, comm, proc_recv, &status,
+                                          local_procid, recv_first,
+                                          &num_ghosts);
     }
 
   }

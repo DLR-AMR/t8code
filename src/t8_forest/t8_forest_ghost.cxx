@@ -89,7 +89,6 @@ typedef struct
   sc_array_t          remote_trees;     /* Array of the remote trees of this process */
 } t8_ghost_remote_t;
 
-
 /* The hash function for the global tree hash.
  * As hash value we just return the global tree id. */
 static unsigned
@@ -537,7 +536,6 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
     remote_entry->num_elements++;
   }
 }
-
 
 typedef struct
 {
@@ -1472,58 +1470,57 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
     }
   }                             /* end for */
 #endif
-    }                           /* end while */
+}                               /* end while */
+
 #ifdef T8_POLLING
     /* polling */
-    T8_ASSERT (receivers->elem_count == 1);
+T8_ASSERT (receivers->elem_count == 1);
     /* Get the last rank from which we didnt receive yet */
-    recv_list_entry = *(t8_recv_list_entry_t *) sc_list_pop (receivers);
-    recv_rank = recv_list_entry.rank;
-    proc_pos = recv_list_entry.pos_in_remote_processes;
+recv_list_entry = *(t8_recv_list_entry_t *) sc_list_pop (receivers);
+recv_rank = recv_list_entry.rank;
+proc_pos = recv_list_entry.pos_in_remote_processes;
     /* destroy the list */
-    sc_list_destroy (receivers);
+sc_list_destroy (receivers);
     /* Blocking probe for the last message */
-    mpiret = sc_MPI_Probe (recv_rank, T8_MPI_GHOST_FOREST, comm, &status);
-    SC_CHECK_MPI (mpiret);
+mpiret = sc_MPI_Probe (recv_rank, T8_MPI_GHOST_FOREST, comm, &status);
+SC_CHECK_MPI (mpiret);
     /* Receive the message */
-    T8_ASSERT (received_flag[proc_pos] == 0);
-    buffer[proc_pos] = t8_forest_ghost_receive_message (recv_rank, comm,
-                                                        status,
-                                                        recv_bytes +
-                                                        proc_pos);
-    received_flag[proc_pos] = 1;
-    received_messages++;
-    T8_ASSERT (received_messages == num_remotes);
+T8_ASSERT (received_flag[proc_pos] == 0);
+buffer[proc_pos] = t8_forest_ghost_receive_message (recv_rank, comm,
+                                                    status,
+                                                    recv_bytes + proc_pos);
+received_flag[proc_pos] = 1;
+received_messages++;
+T8_ASSERT (received_messages == num_remotes);
     /* parse all messages that are left */
     /* For all ranks that we haven't parsed yet, but can be parsed in order */
-    for (parse_it = last_rank_parsed + 1; parse_it < num_remotes &&
-         received_flag[parse_it] == 1; parse_it++) {
-      recv_rank =
-        *(int *) sc_array_index_int (ghost->remote_processes, parse_it);
-      t8_forest_ghost_parse_received_message (forest, ghost,
-                                              &current_element_offset,
-                                              recv_rank, buffer[parse_it],
-                                              recv_bytes[parse_it]);
-      last_rank_parsed++;
-    }
+for (parse_it = last_rank_parsed + 1; parse_it < num_remotes &&
+     received_flag[parse_it] == 1; parse_it++) {
+  recv_rank = *(int *) sc_array_index_int (ghost->remote_processes, parse_it);
+  t8_forest_ghost_parse_received_message (forest, ghost,
+                                          &current_element_offset,
+                                          recv_rank, buffer[parse_it],
+                                          recv_bytes[parse_it]);
+  last_rank_parsed++;
+}
 #endif
 #ifdef T8_ENABLE_DEBUG
-    for (parse_it = 0; parse_it < num_remotes; parse_it++) {
-      T8_ASSERT (received_flag[parse_it] == 1);
-    }
+for (parse_it = 0; parse_it < num_remotes; parse_it++) {
+  T8_ASSERT (received_flag[parse_it] == 1);
+}
 #endif
-    T8_ASSERT (last_rank_parsed == num_remotes - 1);
+T8_ASSERT (last_rank_parsed == num_remotes - 1);
 
     /* clean-up */
 #ifndef T8_POLLING
-    sc_hash_destroy (recv_list_entries_hash);
+sc_hash_destroy (recv_list_entries_hash);
 #endif
-    T8_FREE (buffer);
-    T8_FREE (received_flag);
-    T8_FREE (recv_list_entries);
-    T8_FREE (recv_bytes);
+T8_FREE (buffer);
+T8_FREE (received_flag);
+T8_FREE (recv_list_entries);
+T8_FREE (recv_bytes);
 
-  }
+}
 
 }
 
