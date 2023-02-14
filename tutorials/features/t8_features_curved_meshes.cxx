@@ -369,7 +369,7 @@ main (int argc, char **argv)
                          "Fileprefix of the msh and brep files.");
   sc_options_add_switch (opt, 's', "surface", &surface,
                          "Refine the forest based on the surfaces the elements lie on. "
-                         "Only viable with curved meshes. Therefore the -o option is enabled automatically.");
+                         "Only viable with curved meshes. Therefore the -o option is enabled automatically. Cannot be combined with '-p'.");
   sc_options_add_int (opt, 'l', "level", &level, 0,
                       "The uniform refinement level of the mesh. Default: 0");
   sc_options_add_int (opt, 'd', "dorsal", &rlevel_dorsal, 3,
@@ -377,7 +377,7 @@ main (int argc, char **argv)
   sc_options_add_int (opt, 'v', "ventral", &rlevel_ventral, 2,
                       "The refinement level of the ventral side of the naca profile. Default: 2");
   sc_options_add_switch (opt, 'p', "plane", &plane,
-                         "Move a plane through the forest and refine elements close to the plane.");
+                         "Move a plane through the forest and refine elements close to the plane. Cannot be combined with '-s'.");
   sc_options_add_int (opt, 'r', "plane_level", &rlevel, 3,
                       "The refinement level of the plane. Default: 3");
   sc_options_add_double (opt, 'x', "distance", &dist, 0.1,
