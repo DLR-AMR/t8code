@@ -23,7 +23,7 @@
 
 # Search and remove all '#if 0' pragmas from C/C++ source files in
 # 'src', 'tutorials', and 'example' directories.
-# 
+#
 # Uses 'unidef', a non-standard commandline tool: https://dotat.at/prog/unifdef/
 #
 # On Ubuntu: sudo apt-get install unidef
