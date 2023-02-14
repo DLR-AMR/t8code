@@ -1387,7 +1387,7 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
 #endif
     }
 
-  /****     Actual communication    ****/
+    /****     Actual communication    ****/
 
     /* Until there is only one sender left we iprobe for a message for each
      * sender and if there is one we receive it and remove the sender from
@@ -1417,6 +1417,7 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
                              &status);
       SC_CHECK_MPI (mpiret);
 #endif
+
 #ifdef T8_POLLING
       if (iprobe_flag == 0) {
         /* There is no message to receive, we continue */
@@ -1429,6 +1430,7 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
       recv_rank = status.MPI_SOURCE;
       /* Get the position of this rank in the remote processes array */
       recv_list_entry.rank = recv_rank;
+
 #ifdef T8_ENABLE_DEBUG
       ret =
 #else
@@ -1440,6 +1442,7 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
       found = *pfound;
       proc_pos = found->pos_in_remote_processes;
 #endif
+
       T8_ASSERT (status.MPI_TAG == T8_MPI_GHOST_FOREST);
       buffer[proc_pos] =
         t8_forest_ghost_receive_message (recv_rank, comm, status,
@@ -1467,10 +1470,15 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
       /* Remove the process from the list of receivers. */
       proc_it = proc_it->next;
       sc_list_remove (receivers, prev);
-    }
-  }                             /* end for */
+    }                           /* end if */
 #endif
+
+#ifdef T8_POLLING               /* polling */
+  }                             /* end while */
+#else
+  }                             /* end for */
 }                               /* end while */
+#endif
 
 #ifdef T8_POLLING
     /* polling */
@@ -1504,6 +1512,7 @@ for (parse_it = last_rank_parsed + 1; parse_it < num_remotes &&
   last_rank_parsed++;
 }
 #endif
+
 #ifdef T8_ENABLE_DEBUG
 for (parse_it = 0; parse_it < num_remotes; parse_it++) {
   T8_ASSERT (received_flag[parse_it] == 1);
@@ -1520,9 +1529,13 @@ T8_FREE (received_flag);
 T8_FREE (recv_list_entries);
 T8_FREE (recv_bytes);
 
-}
+#ifdef __T8_CHEAT_INDENT_SCRIPT__
+{ {
+#endif
 
-}
+}                               /* end code block */
+
+}                               /* end function */
 
 /* Create one layer of ghost elements, following the algorithm
  * in: p4est: Scalable Algorithms For Parallel Adaptive
