@@ -258,7 +258,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh,
         /* *INDENT-OFF* */
         T8_ASSERT (edges[i_edge] <= occ_shape_edge_map.Size ());
         curve =
-          BRep_Tool::Curve (TopoDS:: Edge (occ_shape_edge_map.FindKey (edges[i_edge])), 
+          BRep_Tool::Curve (TopoDS::Edge (occ_shape_edge_map.FindKey (edges[i_edge])),
                                                                        first, last);
         /* *INDENT-ON* */
 
