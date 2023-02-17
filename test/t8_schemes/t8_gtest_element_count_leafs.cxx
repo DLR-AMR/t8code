@@ -64,7 +64,11 @@ TEST_P (class_element_leafs, test_element_count_leafs_root)
   for (int level = 0; level <= maxlevel; ++level) {
     t8_gloidx_t         leaf_count =
       class_scheme->t8_element_count_leafs_from_root (level);
-    EXPECT_TRUE (leaf_count == compare_value);
+    ASSERT_EQ (leaf_count,
+               compare_value) << "Incorrect leaf count " << leaf_count <<
+      " at eclass " << t8_eclass_to_string[eclass] << " and level " << level
+      << " (expecting " << compare_value << ")";
+    ;
 
     /* Multiply the compare_value with 2^dim (= number of children per element) */
     if (eclass == T8_ECLASS_PYRAMID) {
@@ -94,7 +98,7 @@ TEST_P (class_element_leafs, test_element_count_leafs_less_level)
     int                 leaf_count =
       class_scheme->t8_element_count_leafs (element, level);
     /* Check if equals 1 */
-    EXPECT_TRUE (leaf_count == 1);
+    ASSERT_EQ (leaf_count, 1);
     int                 lower_levels;
     for (lower_levels = level - 1; lower_levels >= 0; --lower_levels) {
       /* Count the leafs of this element on the lower levels */
@@ -102,7 +106,11 @@ TEST_P (class_element_leafs, test_element_count_leafs_less_level)
         class_scheme->t8_element_count_leafs (element,
                                               lower_levels);
       /* Check if equals 0 */
-      EXPECT_TRUE (leaf_count == 0);
+      ASSERT_EQ (leaf_count,
+                 0) << "Incorrect leaf count " << leaf_count << " at eclass "
+        << t8_eclass_to_string[eclass] << " and level " << level <<
+        " for element level " << lower_levels << "(expecting 0)";
+      ;
     }
   }
   /* Free the element's memory */
@@ -126,7 +134,10 @@ TEST_P (class_element_leafs, test_element_count_leafs_one_level)
     int                 number_of_children =
       class_scheme->t8_element_num_children (element);
     /* Check both values for equality */
-    EXPECT_TRUE (leaf_count == number_of_children);
+    ASSERT_EQ (leaf_count,
+               number_of_children) << "Incorrect leaf count " << leaf_count <<
+      " at eclass " << t8_eclass_to_string[eclass] << " and level " << level
+      << " (expecting " << number_of_children << ")";
   }
   class_scheme->t8_element_destroy (1, &element);
 }
