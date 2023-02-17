@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* See also: https://github.com/holke/t8code/wiki/Step-6---Compute stencils.
+/* See also: https://github.com/DLR-AMR/t8code/wiki/Step-6-Computing-stencils
  *
  * This is step6 of the t8code tutorials using the C++ interface of t8code.
  * In the following we will store data in the individual elements of our forest. 
@@ -55,13 +55,19 @@ struct data_per_element
 {
   int                 level;
   double              midpoint[3];
-  double              dx, dy;
+  double              dx;
+  double              dy;
   double              volume;
   double              height;
   double              schlieren;
   double              curvature;
 };
 
+/* In this function we first allocate new uniformly refined forest at given
+ * refinement level. Then a secondforest is created, where user data for the
+ * adaption call (cf. step 3) is registered.  The second forest inherts all
+ * properties of the first ("root") forest and deallocates it. The final
+ * adapted and commited forest is returned back to the calling scope. */
 static t8_forest_t
 t8_step6_build_forest (sc_MPI_Comm comm, int dim, int level)
 {
@@ -78,7 +84,8 @@ t8_step6_build_forest (sc_MPI_Comm comm, int dim, int level)
     t8_forest_new_uniform (cmesh, scheme, level, 0, comm);
   t8_forest_t         forest_apbg;
 
-  /* Adapt, partition, balance and create ghost elements all in the same step. */
+  /* Adapt, partition, balance and create ghost elements all in one go.
+   * See step 3 and 4 for more details. */
   t8_forest_init (&forest_apbg);
   t8_forest_set_user_data (forest_apbg, &adapt_data);
   t8_forest_set_adapt (forest_apbg, forest, t8_step3_adapt_callback, 0);
@@ -90,50 +97,45 @@ t8_step6_build_forest (sc_MPI_Comm comm, int dim, int level)
   return forest_apbg;
 }
 
+/* Allocate and fill the element data array with heights from an arbitrary
+ * mathematical function. Returns a pointer to the array which is then ownded
+ * by the calling scope. */
 static struct data_per_element *
 t8_step6_create_element_data (t8_forest_t forest)
 {
-  t8_locidx_t         num_local_elements;
-  t8_locidx_t         num_ghost_elements;
-  struct data_per_element *element_data;
-
-  t8_locidx_t         itree, num_local_trees;
-  t8_locidx_t         current_index;
-  t8_locidx_t         ielement, num_elements_in_tree;
-  t8_eclass_t         tree_class;
-  t8_eclass_scheme_c *eclass_scheme;
-  const t8_element_t *element;
-
-  double verts[4][3] = {0};
-
-  /* Check that forest is a committed, that is valid and usable, forest. */
+  /* Check that the forest is a committed. */
   T8_ASSERT (t8_forest_is_committed (forest));
 
   /* Get the number of local elements of forest. */
-  num_local_elements = t8_forest_get_local_num_elements (forest);
+  t8_locidx_t num_local_elements = t8_forest_get_local_num_elements (forest);
   /* Get the number of ghost elements of forest. */
-  num_ghost_elements = t8_forest_get_num_ghosts (forest);
+  t8_locidx_t num_ghost_elements = t8_forest_get_num_ghosts (forest);
 
-  element_data = T8_ALLOC (struct data_per_element, num_local_elements + num_ghost_elements);
+  /* Build an array of our data that is as long as the number of elements plus the number of ghosts. */
+  struct data_per_element *element_data = T8_ALLOC (struct data_per_element, num_local_elements + num_ghost_elements);
 
   /* Get the number of trees that have elements of this process. */
-  num_local_trees = t8_forest_get_num_local_trees (forest);
+  t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
 
-  for (itree = 0, current_index = 0; itree < num_local_trees; ++itree) {
-    tree_class = t8_forest_get_tree_class (forest, itree);
-    eclass_scheme = t8_forest_get_eclass_scheme (forest, tree_class);
+  /* Loop over all local trees in the forest. */
+  for (t8_locidx_t itree = 0, current_index = 0; itree < num_local_trees; ++itree) {
+    t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
+    t8_eclass_scheme_c *eclass_scheme = t8_forest_get_eclass_scheme (forest, tree_class);
 
     /* Get the number of elements of this tree. */
-    num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+    t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
 
-    for (ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
-      element = t8_forest_get_element_in_tree (forest, itree, ielement);
+    /* Loop over all local elements in the tree. */
+    for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
+      t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
 
       struct data_per_element *edat = &element_data[current_index];
 
       edat->level = eclass_scheme->t8_element_level (element);
       edat->volume = t8_forest_element_volume (forest, itree, element);
       t8_forest_element_centroid (forest, itree, element, edat->midpoint);
+
+      double verts[4][3] = {0};
 
       /* Compute vertex coordinates. */
       eclass_scheme->t8_element_vertex_reference_coords (element, 0, verts[0]);
@@ -157,49 +159,49 @@ t8_step6_create_element_data (t8_forest_t forest)
   return element_data;
 }
 
+/* Gather the 3x3 stencil for each element and compute finite difference approximations
+ * for schlieren and curvature of the stored heights in the elements. */
 static void
 t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_data)
 {
-  t8_locidx_t         itree, num_local_trees;
-  t8_locidx_t         current_index;
-  t8_locidx_t         ielement, num_elements_in_tree;
-  t8_eclass_t         tree_class;
-  t8_element_t       *element, **neighbors;
-  int                 iface;
-  t8_eclass_scheme_c *eclass_scheme;
-  t8_eclass_scheme_c *neigh_scheme;
-
-  int                 num_faces; /**< The number of faces */
-  int                 num_neighbors; /**< Number of neighbors for each face */
-  int                *dual_faces; /**< The face indices of the neighbor elements */
-  t8_locidx_t        *neighids; /**< Indices of the neighbor elements */
-
   /* Check that forest is a committed, that is valid and usable, forest. */
   T8_ASSERT (t8_forest_is_committed (forest));
 
   /* Get the number of trees that have elements of this process. */
-  num_local_trees = t8_forest_get_num_local_trees (forest);
+  t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
 
   double stencil[3][3] = {0};
   double dx[3] = {0};
   double dy[3] = {0};
 
-  for (itree = 0, current_index = 0; itree < num_local_trees; ++itree) {
-    tree_class = t8_forest_get_tree_class (forest, itree);
-    eclass_scheme = t8_forest_get_eclass_scheme (forest, tree_class);
+  /* Loop over all local trees in the forest. For each local tree the element
+   * data (level, midpoint[3], dx, dy, volume, height, schlieren, curvature) of
+   * each element is calculated and stored into the element data array. */
+  for (t8_locidx_t itree = 0, current_index = 0; itree < num_local_trees; ++itree) {
+    t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
+    t8_eclass_scheme_c *eclass_scheme = t8_forest_get_eclass_scheme (forest, tree_class);
 
-    num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+    t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
 
-    for (ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
-      element = t8_forest_get_element_in_tree (forest, itree, ielement);
+    /* Loop over all local elements in the tree. */
+    for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
+      t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
 
+      /* Gather center point of the 3x3 stencil. */
       stencil[1][1] = element_data[current_index].height;
       dx[1] = element_data[current_index].dx;
       dy[1] = element_data[current_index].dy;
 
-      num_faces = eclass_scheme->t8_element_num_faces (element);
-      for (iface = 0; iface < num_faces; iface++) {
+      /* Loop over all faces of an element. */
+      int num_faces = eclass_scheme->t8_element_num_faces (element);
+      for (int iface = 0; iface < num_faces; iface++) {
+        int                 num_neighbors; /**< Number of neighbors for each face */
+        int                *dual_faces; /**< The face indices of the neighbor elements */
+        t8_locidx_t        *neighids; /**< Indices of the neighbor elements */
+        t8_element_t **neighbors; /*< Neighboring elements. */
+        t8_eclass_scheme_c *neigh_scheme; /*< Neighboring elements scheme. */
 
+        /* Collect all neighbors at the current face. */
         t8_forest_leaf_face_neighbors (forest, itree, element,
                                       &neighbors, iface,
                                       &dual_faces,
@@ -207,6 +209,8 @@ t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_d
                                       &neighids,
                                       &neigh_scheme, 1);
 
+        /* Compute the 'height' of the face neighbor. Account for two neighbors in case
+           of a non-conforming interface. */
         double height = 0.0;
         if (num_neighbors > 0) {
           for (int ineigh = 0; ineigh < num_neighbors; ineigh++) {
@@ -215,6 +219,7 @@ t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_d
           height = height / num_neighbors;
         }
 
+        /* Fill in the neighbor information of the 3x3 stencil. */
         switch (iface) {
           case 0: // NORTH
             stencil[0][1] = height;
@@ -234,11 +239,13 @@ t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_d
             break;
         }
 
+        /* Free allocated memory. */
         T8_FREE(neighbors);
         T8_FREE(dual_faces);
         T8_FREE(neighids);
       }
 
+      /* Prepare finite difference computations. */
       const double xslope_m = 0.5/(dx[0] + dx[1])*(stencil[1][1] - stencil[0][1]);
       const double xslope_p = 0.5/(dx[1] + dx[2])*(stencil[2][1] - stencil[1][1]);
 
@@ -252,6 +259,7 @@ t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_d
       const double xcurve = (xslope_p - xslope_m)/0.25/(dx[0] + 2.0*dx[1] + dx[2]);
       const double ycurve = (yslope_p - yslope_m)/0.25/(dy[0] + 2.0*dy[1] + dy[2]);
 
+      /* Compute schlieren and curvature norm. */
       element_data[current_index].schlieren = sqrt(xslope*xslope + yslope*yslope);
       element_data[current_index].curvature = sqrt(xcurve*xcurve + ycurve*ycurve);
     }
@@ -285,8 +293,8 @@ t8_step6_exchange_ghost_data (t8_forest_t forest, struct data_per_element *data)
  * t8code supports writing element based data to vtu as long as its stored
  * as doubles. Each of the data fields to write has to be provided in its own
  * array of length num_local_elements.
- * We support two types: T8_VTK_SCALAR - One double per element
- *                  and  T8_VTK_VECTOR - 3 doubles per element
+ * We support two types: T8_VTK_SCALAR - One double per element.
+ *                  and  T8_VTK_VECTOR - Three doubles per element.
  */
 static void
 t8_step6_output_data_to_vtu (t8_forest_t forest,
