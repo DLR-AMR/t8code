@@ -25,7 +25,7 @@
  * This is step6 of the t8code tutorials using the C++ interface of t8code.
  * In the following we will store data in the individual elements of our forest. 
  * To do this, we will create a uniform forest in 2D, which will get adapted, 
- * partitioned, balanced and create ghost elements all in the same step.
+ * partitioned, balanced and create ghost elements all in one go.
  * After adapting the forest we build a data array and gather data for 
  * the local elements. Next, we exchange the data values of the ghost elements and compute
  * various stencils resp. finite differences. Finally, vtu files are stored with three
@@ -49,22 +49,30 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/* The data that we want to store for each element.
- * In this example we want to store the element's level and volume. */
+/* The data that we want to store for each element. */
 struct data_per_element
 {
+  /* The first three data fields are not necessary for our
+   * computations in this step, but are left here for reference. */
   int                 level;
+  double              volume;
   double              midpoint[3];
+
+  /* Element length in x- and y-direction. */
   double              dx;
   double              dy;
-  double              volume;
+
+  /* `Height` which is filled according to the position of the element
+   * in the computational domain. */
   double              height;
+
+  /* Storage for our finite difference computations. */
   double              schlieren;
   double              curvature;
 };
 
-/* In this function we first allocate new uniformly refined forest at given
- * refinement level. Then a secondforest is created, where user data for the
+/* In this function we first allocate a new uniformly refined forest at given
+ * refinement level. Then a second forest is created, where user data for the
  * adaption call (cf. step 3) is registered.  The second forest inherts all
  * properties of the first ("root") forest and deallocates it. The final
  * adapted and commited forest is returned back to the calling scope. */
@@ -75,7 +83,7 @@ t8_step6_build_forest (sc_MPI_Comm comm, int dim, int level)
 
   t8_scheme_cxx_t    *scheme = t8_scheme_new_default_cxx ();
   struct t8_step3_adapt_data adapt_data = {
-    {0.0, 0.0, 0.0},              /* Midpoints of the sphere. */
+    {0.0, 0.0, 0.0},            /* Midpoints of the sphere. */
     0.5,                        /* Refine if inside this radius. */
     0.7                         /* Coarsen if outside this radius. */
   };
@@ -97,7 +105,7 @@ t8_step6_build_forest (sc_MPI_Comm comm, int dim, int level)
   return forest_apbg;
 }
 
-/* Allocate and fill the element data array with heights from an arbitrary
+/* Allocate and fill the element data array with `heights` from an arbitrary
  * mathematical function. Returns a pointer to the array which is then ownded
  * by the calling scope. */
 static struct data_per_element *
@@ -129,15 +137,15 @@ t8_step6_create_element_data (t8_forest_t forest)
     for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
       t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
 
+      /* Pointer to our current element data struct. */
       struct data_per_element *edat = &element_data[current_index];
 
       edat->level = eclass_scheme->t8_element_level (element);
       edat->volume = t8_forest_element_volume (forest, itree, element);
       t8_forest_element_centroid (forest, itree, element, edat->midpoint);
 
-      double verts[4][3] = {0};
-
       /* Compute vertex coordinates. */
+      double verts[4][3] = {0};
       eclass_scheme->t8_element_vertex_reference_coords (element, 0, verts[0]);
       eclass_scheme->t8_element_vertex_reference_coords (element, 1, verts[1]);
       eclass_scheme->t8_element_vertex_reference_coords (element, 2, verts[2]);
@@ -209,8 +217,8 @@ t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_d
                                       &neighids,
                                       &neigh_scheme, 1);
 
-        /* Compute the 'height' of the face neighbor. Account for two neighbors in case
-           of a non-conforming interface. */
+        /* Retrieve the `height` of the face neighbor. Account for two neighbors in case
+           of a non-conforming interface by computing the average. */
         double height = 0.0;
         if (num_neighbors > 0) {
           for (int ineigh = 0; ineigh < num_neighbors; ineigh++) {
@@ -245,7 +253,7 @@ t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_d
         T8_FREE(neighids);
       }
 
-      /* Prepare finite difference computations. */
+      /* Prepare finite difference computations. The code also accounts for non-conforming interfaces. */
       const double xslope_m = 0.5/(dx[0] + dx[1])*(stencil[1][1] - stencil[0][1]);
       const double xslope_p = 0.5/(dx[1] + dx[2])*(stencil[2][1] - stencil[1][1]);
 
