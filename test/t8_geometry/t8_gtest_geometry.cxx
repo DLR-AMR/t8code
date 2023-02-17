@@ -68,8 +68,13 @@ TEST_P (geometry, geometry_linear)
   t8_geometry_linear  linear_geom (dim);
   char                name[BUFSIZ];
   snprintf (name, BUFSIZ, "t8_geom_linear_%i", dim);
-  EXPECT_FALSE (strcmp (linear_geom.t8_geom_get_name (), name));
-  EXPECT_EQ (dim, linear_geom.t8_geom_get_dimension ());
+  ASSERT_FALSE (strcmp (linear_geom.t8_geom_get_name (), name)) <<
+    "Linear geometry of dim " << dim << "has wrong name. Expected " << name <<
+    " got " << linear_geom.t8_geom_get_name ();
+  ASSERT_EQ (dim,
+             linear_geom.t8_geom_get_dimension ()) <<
+    "Linear geometry of dim " << dim << "has wrong dimension: " <<
+    linear_geom.t8_geom_get_dimension () << ".";
 }
 
 /* Check that the zero geometry for dimensions 0,1,2,3
@@ -79,8 +84,13 @@ TEST_P (geometry, geometry_zero)
   t8_geometry_zero    zero_geom (dim);
   char                name[BUFSIZ];
   snprintf (name, BUFSIZ, "t8_geom_zero_%i", dim);
-  EXPECT_FALSE (strcmp (zero_geom.t8_geom_get_name (), name));
-  EXPECT_EQ (dim, zero_geom.t8_geom_get_dimension ());
+  ASSERT_FALSE (strcmp (zero_geom.t8_geom_get_name (), name)) <<
+    "Linear geometry of dim " << dim << "has wrong name. Expected " << name <<
+    " got " << zero_geom.t8_geom_get_name ();
+  ASSERT_EQ (dim,
+             zero_geom.t8_geom_get_dimension ()) << "Linear geometry of dim "
+    << dim << "has wrong dimension: " << zero_geom.t8_geom_get_dimension () <<
+    ".";
 }
 
 /* Check whether the linear geometry map is correct.
@@ -90,6 +100,9 @@ TEST_P (geometry, geometry_zero)
 TEST_P (geometry, cmesh_geometry_linear)
 {
   /* TODO: Add a test for the jacobian, as soon as its implemented. */
+
+  t8_debugf ("Testing linear geometry evaluation.\n");
+
   /* Create random points in [0,1]^d and check if they are mapped correctly. */
   t8_geometry_linear  linear_geom (dim);
   t8_cmesh_t          cmesh;
@@ -122,9 +135,12 @@ TEST_P (geometry, cmesh_geometry_linear)
 
   /* Double check that the geometry is the linear geometry. */
   cmesh_geom = t8_cmesh_get_tree_geometry (cmesh, 0);
-  EXPECT_TRUE (cmesh_geom != NULL);
-  EXPECT_FALSE (strcmp (cmesh_geom->t8_geom_get_name (),
-                        linear_geom.t8_geom_get_name ()));
+  ASSERT_TRUE (cmesh_geom != NULL) << "Could not get cmesh's geometry.";
+  int                 has_same_name = strcmp (cmesh_geom->t8_geom_get_name (),
+                                              linear_geom.t8_geom_get_name
+                                              ());
+  ASSERT_FALSE (has_same_name) <<
+    "cmesh's geometry is not the linear geometry.";
 
   srand (seed);
   for (int ipoint = 0; ipoint < num_points; ++ipoint) {
@@ -144,11 +160,13 @@ TEST_P (geometry, cmesh_geometry_linear)
     int                 idim;
     for (idim = 0; idim < dim; ++idim) {
       const double        tolerance = 1e-14;
-      EXPECT_TRUE (fabs (point[idim] - point_mapped[idim]) < tolerance);
+      ASSERT_LT (fabs (point[idim] - point_mapped[idim]),
+                 tolerance) << "Linear geometry computed wrong value.";
     }
     /* Check that the remaining entries are 0. */
     for (; idim < 3; ++idim) {
-      EXPECT_EQ (point_mapped[idim], 0);
+      ASSERT_EQ (point_mapped[idim],
+                 0) << "Linear geometry computed wrong value.";
     }
   }
   /* Destroy the cmesh */
@@ -168,6 +186,8 @@ TEST (test_geometry, cmesh_geometry)
   t8_geometry_zero   *zero_geom = new t8_geometry_zero (2);
   const t8_geometry_c *found_geom;
 
+  t8_debugf ("Testing cmesh tree geometry set/get.\n");
+
   /* Build a simple 2 tree cmesh and set geometries for the trees. */
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
@@ -183,12 +203,16 @@ TEST (test_geometry, cmesh_geometry)
 
   /* Check that we can get the geometry back over the tree id. */
   found_geom = t8_cmesh_get_tree_geometry (cmesh, 0);
-  EXPECT_TRUE (found_geom != NULL);
-  EXPECT_TRUE (found_geom == linear_geom);
+  ASSERT_TRUE (found_geom !=
+               NULL) << "Could not find any geometry at tree 0.";
+  ASSERT_EQ (found_geom,
+             linear_geom) << "Could not find linear tree geometry at tree 0.";
 
   found_geom = t8_cmesh_get_tree_geometry (cmesh, 1);
-  EXPECT_TRUE (found_geom != NULL);
-  EXPECT_TRUE (found_geom == zero_geom);
+  ASSERT_TRUE (found_geom !=
+               NULL) << "Could not find any geometry at tree 1.";
+  ASSERT_EQ (found_geom,
+             zero_geom) << "Could not find linear tree geometry at tree 1.";
   /* clean-up */
   t8_cmesh_destroy (&cmesh);
 }
@@ -200,6 +224,8 @@ TEST (test_geometry, cmesh_geometry_unique)
 
   t8_geometry_linear *linear_geom = new t8_geometry_linear (2);
   const t8_geometry_c *found_geom;
+
+  t8_debugf ("Testing cmesh tree geometry get with unique geometry.\n");
 
   /* Build a simple 2 tree cmesh and set geometries for the trees. */
   t8_cmesh_init (&cmesh);
@@ -213,8 +239,9 @@ TEST (test_geometry, cmesh_geometry_unique)
    * This must now work even though we did not register the geometry for 
    * this tree. Since we only have one geometry. */
   found_geom = t8_cmesh_get_tree_geometry (cmesh, 0);
-  EXPECT_TRUE (found_geom != NULL);
-  EXPECT_EQ (found_geom, linear_geom);
+  ASSERT_TRUE (found_geom != NULL) << "Could not find any geometry.";
+  ASSERT_EQ (found_geom,
+             linear_geom) << "Could not find cmesh tree geometry.";
 
   /* clean-up */
   t8_cmesh_destroy (&cmesh);
@@ -224,6 +251,8 @@ TEST (test_geometry, geom_handler_register)
 {
   t8_geometry_handler_t *geom_handler;
   const t8_geometry_c *found_geom;
+
+  t8_debugf ("Testing geometry handler register.\n");
 
   /* Initialize a geometry handler. */
   t8_geom_handler_init (&geom_handler);
@@ -246,17 +275,22 @@ TEST (test_geometry, geom_handler_register)
     /* Get the name of this geometry. */
     name = zero_geom.t8_geom_get_name ();
 
+    t8_debugf ("Name of geometry: %s.\n", name);
+
     /* Find the geometry by name. */
     found_geom = t8_geom_handler_find_geometry (geom_handler, name);
-    EXPECT_TRUE (found_geom != NULL);
-    EXPECT_FALSE (strcmp (found_geom->t8_geom_get_name (), name));
+    ASSERT_TRUE (found_geom != NULL) << "No geometry found.";
+    ASSERT_FALSE (strcmp (found_geom->t8_geom_get_name (), name)) <<
+      "Could not find identity geometry.";
   }
   /* Try to find a different geometry. Must return NULL. */
   found_geom =
     t8_geom_handler_find_geometry (geom_handler, "random_name34823412414");
-  EXPECT_TRUE (found_geom == NULL);
+  ASSERT_TRUE (found_geom ==
+               NULL) << "Found a geometry that should not exist.";
 
   /* clean-up */
   t8_geom_handler_destroy (&geom_handler);
-  EXPECT_TRUE (geom_handler == NULL);
+  ASSERT_TRUE (geom_handler ==
+               NULL) << "Geometry handler was not destroyes properly.";
 }
