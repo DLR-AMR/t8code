@@ -193,9 +193,8 @@ t8_cghost_struct_t;
  * triangle < square,
  * hex < tet < prism < pyramid,
  * is the main_face.
- * Then the first face corner of the main_face connects to a face
- * corner in the other face.  The face
- * orientation is defined as the number of that face corner of the other face.
+ * Then face corner 0 of the main_face connects to a face
+ * corner k in the other face.  The face orientation is defined as the number k.
  * If the classes are equal and my_face == other_face, treating
  * either of both faces as the main_face leads to the same result.
  */
