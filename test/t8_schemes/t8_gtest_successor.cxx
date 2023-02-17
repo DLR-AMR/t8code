@@ -54,7 +54,7 @@ t8_recursive_successor (t8_element_t *element, t8_element_t *successor,
                         const int maxlvl)
 {
   int                 level = ts->t8_element_level (element);
-  EXPECT_TRUE (ts->t8_element_level (element) <= maxlvl
+  ASSERT_TRUE (ts->t8_element_level (element) <= maxlvl
                && maxlvl <= ts->t8_element_maxlevel () - 1);
   int                 num_children = ts->t8_element_num_children (element);
   if (level == maxlvl - 1) {
@@ -62,13 +62,17 @@ t8_recursive_successor (t8_element_t *element, t8_element_t *successor,
      * of this element.
      */
     ts->t8_element_child (element, 0, child);
-    EXPECT_TRUE (!ts->t8_element_compare (child, successor));
+    ASSERT_TRUE (!ts->t8_element_compare (child,
+                                          successor)) <<
+      "Wrong Sucessor, Case1.\n";
     num_children = ts->t8_element_num_children (element);
     /*Check if the successor in this element is computed correctly */
     for (int ichild = 1; ichild < num_children; ichild++) {
       ts->t8_element_successor (child, successor, maxlvl);
       ts->t8_element_child (element, ichild, child);
-      EXPECT_TRUE (!ts->t8_element_compare (child, successor));
+      ASSERT_TRUE (!ts->t8_element_compare (child,
+                                            successor)) <<
+        "Wrong Sucessor, Case2.\n";
     }
     /*If the iterator is the last element, the test can finish */
     if (!ts->t8_element_compare (last, child)) {
@@ -109,7 +113,9 @@ t8_deep_successor (t8_element_t *element, t8_element_t *successor,
     for (int jchild = 0; jchild < num_children_child; jchild++) {
       ts->t8_element_child (child, jchild, element);
       /* Check the computation of the successor. */
-      EXPECT_TRUE (!ts->t8_element_compare (element, successor));
+      ASSERT_TRUE (!ts->t8_element_compare (element,
+                                            successor)) <<
+        "Wrong Sucessor at Maxlvl.\n";
       /* Compute the next successor. */
       ts->t8_element_successor (successor, successor, maxlvl);
     }
