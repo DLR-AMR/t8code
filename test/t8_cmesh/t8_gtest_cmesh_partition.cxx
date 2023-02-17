@@ -62,8 +62,8 @@ protected:
 static void
 test_cmesh_commited (t8_cmesh_t cmesh)
 {
-  EXPECT_TRUE (t8_cmesh_is_committed (cmesh)) << "Cmesh commit failed.";
-  EXPECT_TRUE (t8_cmesh_trees_is_face_consistend (cmesh, cmesh->trees)) <<
+  ASSERT_TRUE (t8_cmesh_is_committed (cmesh)) << "Cmesh commit failed.";
+  ASSERT_TRUE (t8_cmesh_trees_is_face_consistend (cmesh, cmesh->trees)) <<
     "Cmesh face consistency failed.";
 }
 
@@ -142,7 +142,7 @@ TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate)
     t8_cmesh_commit (cmesh_partition_new2, sc_MPI_COMM_WORLD);
     cmesh_partition_new1 = cmesh_partition_new2;
   }
-  EXPECT_TRUE (t8_cmesh_is_equal (cmesh_partition_new2, cmesh_partition)) <<
+  ASSERT_TRUE (t8_cmesh_is_equal (cmesh_partition_new2, cmesh_partition)) <<
     "Cmesh equality check failed.";
   t8_cmesh_destroy (&cmesh_partition_new2);
   t8_cmesh_destroy (&cmesh_partition);
