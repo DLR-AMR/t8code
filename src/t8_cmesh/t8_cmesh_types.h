@@ -195,9 +195,9 @@ t8_cghost_struct_t;
  * is the main_face.
  * Then the first face corner of the main_face connects to a face
  * corner in the other face.  The face
- * orientation is defined as the number of the corner of the other face.
+ * orientation is defined as the number of that face corner of the other face.
  * If the classes are equal and my_face == other_face, treating
- * either of both faces as the master_face leads to the same result.
+ * either of both faces as the main_face leads to the same result.
  */
 typedef struct t8_ctree
 {
