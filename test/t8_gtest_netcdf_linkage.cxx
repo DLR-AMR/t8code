@@ -43,21 +43,19 @@ TEST (t8_gtest_netcdf_linkage, test_linking_with_netcdf)
   int                 nc_error = nc_create ("FileName", NC_DISKLESS, &ncid);
 
   /* Check for error */
-  EXPECT_EQ (nc_error,
+  ASSERT_EQ (nc_error,
              NC_NOERR) << "netcdf error when creating in memory file: " <<
     nc_strerror (nc_error);
 
   /* Close the file */
   nc_error = nc_close (ncid);
   /* Check for error */
-  EXPECT_EQ (nc_error,
+  ASSERT_EQ (nc_error,
              NC_NOERR) << "netcdf error when closing in memory file: " <<
     nc_strerror (nc_error);
 
-  t8_global_productionf
-    ("Successfully created and closed in memory netcdf file.\n");
+  t8_debugf ("Successfully created and closed in memory netcdf file.\n");
 #else
-  t8_global_productionf
-    ("This version of t8code is not compiled with netcdf support.\n");
+  t8_debugf ("This version of t8code is not compiled with netcdf support.\n");
 #endif
 }
