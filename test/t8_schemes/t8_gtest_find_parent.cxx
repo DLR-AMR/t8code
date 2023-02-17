@@ -65,10 +65,8 @@ t8_recursive_child_find_parent (t8_element_t *element, t8_element_t *child,
     ts->t8_element_parent (child, test_parent);
     /* If its equal, call child_find_parent, to check if parent-child relation
      * is correct in next level until maxlvl is reached*/
-    ASSERT_TRUE (!ts->
-                 t8_element_compare (element,
-                                     test_parent)) <<
-      "Computed child_parent is not the parent.";
+    ASSERT_TRUE (!ts->t8_element_compare (element, test_parent))
+      << "Computed child_parent is not the parent.";
 
     t8_recursive_child_find_parent (child, element, test_parent, ts,
                                     level + 1, maxlvl);
