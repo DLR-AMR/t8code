@@ -197,6 +197,7 @@ t8_cghost_struct_t;
  * corner k in the other face.  The face orientation is defined as the number k.
  * If the classes are equal and my_face == other_face, treating
  * either of both faces as the main_face leads to the same result.
+ * See https://arxiv.org/pdf/1611.02929.pdf for more details.
  */
 typedef struct t8_ctree
 {
