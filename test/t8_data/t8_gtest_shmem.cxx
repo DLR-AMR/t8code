@@ -105,6 +105,7 @@ TEST_P(shmem, test_sc_shmem_alloc){
        shmem_type_int < SC_SHMEM_NUM_TYPES; ++shmem_type_int) {
     const sc_shmem_type_t shmem_type = (sc_shmem_type_t) shmem_type_int;
     int                 intrasize, intrarank;
+    t8_debugf("Checking shared memory type %s.\n", sc_shmem_type_to_string[shmem_type]);
 
     /* setup shared memory usage */
     t8_shmem_init (comm);
@@ -112,7 +113,7 @@ TEST_P(shmem, test_sc_shmem_alloc){
 
 #if T8_ENABLE_MPI
     const sc_shmem_type_t control_shmem_type = sc_shmem_get_type (comm);
-    EXPECT_EQ(shmem_type, control_shmem_type) << "Setting shmem type not succesfull.";
+    ASSERT_EQ(shmem_type, control_shmem_type) << "Setting shmem type not succesfull.";
 #endif
 
     sc_mpi_comm_get_node_comms (comm, &intranode, &internode);
@@ -131,6 +132,7 @@ TEST_P(shmem, test_sc_shmem_alloc){
     int                *shared_int =
       (int *) sc_shmem_malloc (t8_get_package_id (), sizeof (int), intrasize,
                                comm);
+    t8_debugf("Allocated %i integers at pos %p.\n", intrasize, (void *) shared_int);
 
     /* Write something into the array */
     const int           random_number = rand ();
@@ -146,13 +148,14 @@ TEST_P(shmem, test_sc_shmem_alloc){
            0                    /* If neither SC_ENABLE_MPIWINSHARED or __bgq__ are defined, we neet a condition in this if
                                  * but do not want to execute any code. Hence, 0. */
         ) {
-        EXPECT_EQ(intrarank, 0);
+        ASSERT_EQ(intrarank, 0) << "Type is one of window, window_prescan, bgq or bgq_prescan and this process should not have write permissions.\n";
       }
+      t8_debugf("I have write permissions\n");
       shared_int[0] = random_number;
     }
     sc_shmem_write_end (shared_int, comm);
 
-    EXPECT_EQ(shared_int[0], random_number);
+    ASSERT_EQ(shared_int[0], random_number) << "shared integer was not assigned correctly at position 0.";
 
     /* Free the memory */
     sc_shmem_free (t8_get_package_id (), shared_int, comm);
@@ -187,7 +190,7 @@ TEST_P(shmem, test_shmem_array){
 
 #if T8_ENABLE_MPI
     const sc_shmem_type_t control_shmem_type = sc_shmem_get_type (comm);
-    EXPECT_EQ(shmem_type, control_shmem_type) << "Setting shmem type not succesfull.";
+    ASSERT_EQ(shmem_type, control_shmem_type) << "Setting shmem type not succesfull.";
 #endif
 
     /* Allocate one integer */
@@ -196,17 +199,17 @@ TEST_P(shmem, test_shmem_array){
 
     sc_MPI_Comm         check_comm = t8_shmem_array_get_comm (shmem_array);
     /* Check communicator of shared memory array. */
-    EXPECT_EQ(comm, check_comm) << "Shared memory array has wrong communicator.";
+    ASSERT_EQ(comm, check_comm) << "Shared memory array has wrong communicator.";
 
     /* Check element count of shared memory array. */
     const int        check_count =
       t8_shmem_array_get_elem_count (shmem_array);
-    EXPECT_EQ(check_count, array_length) << "shared memory array has wrong element count.";
+    ASSERT_EQ(check_count, array_length) << "shared memory array has wrong element count.";
 
     /* Check element size of shared memory array. */
     const int        check_size =
       t8_shmem_array_get_elem_size (shmem_array);
-    EXPECT_EQ(check_size, element_size) << "shared memory has wrong element size.";
+    ASSERT_EQ(check_size, element_size) << "shared memory has wrong element size.";
 
     /* Write into array */
     /* In the first half we use the t8_shmem_array_set_gloidx function,
@@ -216,7 +219,7 @@ TEST_P(shmem, test_shmem_array){
     if (t8_shmem_array_start_writing (shmem_array)) {
       /* Double check that array_length is big enough so that each of the three cases
        * is covered. */
-      EXPECT_TRUE(0 < array_length / 3
+      ASSERT_TRUE(0 < array_length / 3
                       && array_length / 3 < (int) (2. / 3 * array_length)
                       && (int) (2. / 3 * array_length) < array_length) << "Please choose a larger value for array length.";
 
@@ -239,7 +242,7 @@ TEST_P(shmem, test_shmem_array){
     /* Check value at each position */
     for (int i = 0; i < array_length; ++i) {
       t8_gloidx_t         value = t8_shmem_array_get_gloidx (shmem_array, i);
-      EXPECT_EQ(value, i) << "Value at position " << i << " not correct (expected " << i << " got " << value << ")";
+      ASSERT_EQ(value, i) << "Value at position " << i << " not correct (expected " << i << " got " << value << ")";
     }
 
     /* Copy */
@@ -247,7 +250,7 @@ TEST_P(shmem, test_shmem_array){
     t8_shmem_array_init (&copy_array, element_size, array_length, comm);
     t8_shmem_array_copy (copy_array, shmem_array);
     /* Check equality of arrays after copying. */
-    EXPECT_TRUE(t8_shmem_array_is_equal (copy_array, shmem_array)) << "Arrays are not equal after copy.";
+    ASSERT_TRUE(t8_shmem_array_is_equal (copy_array, shmem_array)) << "Arrays are not equal after copy.";
 
     t8_shmem_array_destroy (&shmem_array);
     t8_shmem_array_destroy (&copy_array);
