@@ -114,3 +114,15 @@ t8_vec_cross (const double vec_x[3], const double vec_y[3], double cross[3])
       vec_x[(i + 2) % 3] * vec_y[(i + 1) % 3];
   }
 }
+
+void
+t8_mat_vec (const double mat[3][3], const double vec[3], const double alpha,
+            double out[3])
+{
+  out[0] = mat[0][0] * vec[0] + mat[0][1] * vec[1] + mat[0][2] * vec[2];
+  out[1] = mat[1][0] * vec[0] + mat[1][1] * vec[1] + mat[1][2] * vec[2];
+  out[2] = mat[2][0] * vec[0] + mat[2][1] * vec[1] + mat[2][2] * vec[2];
+  out[0] *= alpha;
+  out[1] *= alpha;
+  out[2] *= alpha;
+}

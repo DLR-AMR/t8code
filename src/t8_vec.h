@@ -96,6 +96,18 @@ double              t8_vec_dot (const double vec_x[3], const double vec_y[3]);
 void                t8_vec_cross (const double vec_x[3],
                                   const double vec_y[3], double cross[3]);
 
+/**
+ * Matrix vector product of alpha*mat*vec = out 
+ * 
+ * \param[in] mat A 3x3 matrix
+ * \param[in] vec A 3D vector
+ * \param[in] alpha A scalar
+ * \param[in, out] out On output the matrix-vector product of \a alpha * \a mat * \a vec
+ */
+void                t8_mat_vec (const double mat[3][3],
+                                const double vec[3], const double alpha,
+                                double out[3]);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_VEC_H! */

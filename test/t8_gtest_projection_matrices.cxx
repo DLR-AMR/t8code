@@ -75,39 +75,41 @@ TEST (t8_gtest_projection, perspective_projection)
 {
   /* Define that is going to be mapped. */
   /*The image width and the 0-point form a triangle with sides of equal length. */
-  const double        fov = 60; /* Field of view */
-  const double        near = sqrt (3) / 2;
+  const double        near = 1.0;
   const double        far = 2.0 * near;
   const double        height = 1.0;
   const double        width = 1.0;
   double              perspective[4][4] = { 0.0 };
 
-  perspective_projection (fov, width, height, near, far, perspective);
-  const t8_test_point test[8] = { {-width / 2, -height / 2, near},
-  {width / 2, -height / 2, near},
-  {-width / 2, height / 2, near},
-  {width / 2, height / 2, near},
-  {-width, -height, far},
-  {width, -height, far},
-  {-width, height, far},
-  {width, height, far}
+  const t8_test_point test[8] = { {width, height, near},
+  {-width, height, near},
+  {width, -height, near},
+  {-width, -height, near},
+  {2 * width, 2 * height, far},
+  {-2 * width, 2 * height, far},
+  {2 * width, -2 * height, far},
+  {-2 * width, -2 * height, far}
   };
-  const t8_test_point result[8] = { {-1.0, -1.0, -1.0},
-  {1.0, -1.0, -1.0},
-  {-1.0, 1.0, -1.0},
-  {1.0, 1.0, -1.0},
-  {-1.0, -1.0, 1.0},
-  {1.0, -1.0, 1.0},
-  {-1.0, 1.0, 1.0},
-  {1.0, 1.0, 1.0}
+  const t8_test_point result[8] = { {-1.0, -1.0, 4.0},
+  {1.0, -1.0, 4.0},
+  {-1.0, 1.0, 4.0},
+  {1.0, 1.0, 4.0},
+  {-1.0, -1.0, 3.0},
+  {1.0, -1.0, 3.0},
+  {-1.0, 1.0, 3.0},
+  {1.0, 1.0, 3.0}
   };
+
+  perspective_projection (width, height, near, far, perspective);
 
   for (int i = 0; i < 8; i++) {
     t8_test_point       controll;
     mat4d_vec_multi (perspective, test[i], controll);
     EXPECT_NEAR (controll[0], result[i][0], epsilon);
-    EXPECT_NEAR (controll[1], result[i][0], epsilon);
-    EXPECT_NEAR (controll[1], result[i][0], epsilon);
+    EXPECT_NEAR (controll[1], result[i][1], epsilon);
+    EXPECT_NEAR (controll[2], result[i][2], epsilon);
   }
+  t8_test_point       controll;
+  mat4d_vec_multi (perspective, out[0], controll);
 
 }

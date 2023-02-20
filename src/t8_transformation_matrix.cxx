@@ -37,17 +37,18 @@ void
 mat4d_vec_multi (const double mat[4][4], const double vec[3],
                  double out_vec[3])
 {
-  out_vec[0] = mat[0][0] * vec[0] + mat[0][1] * vec[1] + mat[0][2] * vec[2];
-  out_vec[1] = mat[1][0] * vec[0] + mat[1][1] * vec[1] + mat[1][2] * vec[2];
-  out_vec[2] = mat[2][0] * vec[0] + mat[2][1] * vec[1] + mat[2][2] * vec[2];
-
+  out_vec[0] =
+    mat[0][0] * vec[0] + mat[0][1] * vec[1] + mat[0][2] * vec[2] + mat[0][3];
+  out_vec[1] =
+    mat[1][0] * vec[0] + mat[1][1] * vec[1] + mat[1][2] * vec[2] + mat[1][3];
+  out_vec[2] =
+    mat[2][0] * vec[0] + mat[2][1] * vec[1] + mat[2][2] * vec[2] + mat[2][3];
   const double        w =
     mat[3][0] * vec[0] + mat[3][1] * vec[1] + mat[3][2] * vec[2] + mat[3][3];
 
   /* From homogenous to cartesian coordinates */
   if (w != 1.0) {
     T8_ASSERT (w != 0.0);
-    printf ("w: %f\n", w);
     out_vec[0] /= w;
     out_vec[1] /= w;
     out_vec[2] /= w;
@@ -98,16 +99,20 @@ inverse_camera_transformation (const double cam[3], const double ref_point[3],
 }
 
 void
-perspective_projection (const double fov, const double width,
+perspective_projection (const double width,
                         const double height, const double near,
                         const double far, double projection[4][4])
 {
-  /*cotan of the field of view */
-  const double        f = cos (0.5 * fov) / sin (0.5 * fov);
+  /* near and width form a triangle with an angle of 90deg between near and width.
+   * The field of view is the angle between near and the hypothenuse. */
+  const double        hypothenuse = sqrt (near * near + width * width);
+  const double        fov = asin (width / hypothenuse);
+
+  const double        scale = cos (fov) / sin (fov);
   const double        aspect = width / height;
-  const double        data[16] = { f / aspect, 0.0, 0.0, 0.0,
-    0.0, f, 0.0, 0.0,
-    0.0, 0.0, (far + near) / (near - far), (2 * far * near) / (near - far),
+  const double        data[16] = { scale / aspect, 0.0, 0.0, 0.0,
+    0.0, scale, 0.0, 0.0,
+    0.0, 0.0, (-far) / (far - near), (-far * near) / (far - near),
     0.0, 0.0, -1.0, 0.0
   };
   fill_mat4d (projection, data);

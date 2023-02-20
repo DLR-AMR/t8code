@@ -63,7 +63,6 @@ void                inverse_camera_transformation (const double cam[3],
 /**
  * Compute the perspective projection matrix, mapping a a view-volume into the cube [0,1]^3. 
  * 
- * \param[in] fov The field of view, defined by angle in (0,0,0) and \a height
  * \param[in] width width of the image plane
  * \param[in] height height of the image plane
  * \param[in] near distance of the image plane along the z-axis
@@ -87,8 +86,7 @@ void                inverse_camera_transformation (const double cam[3],
  * 
  * 
  */
-void                perspective_projection (const double fov,
-                                            const double width,
+void                perspective_projection (const double width,
                                             const double height,
                                             const double near,
                                             const double far,
