@@ -51,7 +51,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * \param[in] cam       The coordinates of the camera in the world coordinate system
  * \param[in] ref_point The point the camera is focussing
  * \param[in] cam_y     The up direction in world-coordinates 
- * \param[in, out] transformation The inverse of the camera-transformation matrix, mapping points from
+ * \param[in, out] transformation A zero-initialized matrix on input. On output the inverse of the camera-transformation matrix, mapping points from
  *                      the world-coordinate-system into the camera-coordinate system.
  */
 void                inverse_camera_transformation (const double cam[3],
@@ -67,7 +67,7 @@ void                inverse_camera_transformation (const double cam[3],
  * \param[in] height height of the image plane
  * \param[in] near distance of the image plane along the z-axis
  * \param[in] far distance of the furthest displayed area along the z-axis
- * \param[in, out] projection On output the perspective projection matrix, projecting points in the
+ * \param[in, out] projection A zero-initialized matrix. On output the perspective projection matrix, projecting points in the
  *                  area defined by the image-plane, near and far-field into the cube [-1, 1]^3.
  *                  a pinhole camera model. A parallel projection can than be used to project the points
  *                  down to a plane. 

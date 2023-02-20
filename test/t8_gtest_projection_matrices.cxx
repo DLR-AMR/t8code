@@ -109,7 +109,4 @@ TEST (t8_gtest_projection, perspective_projection)
     EXPECT_NEAR (controll[1], result[i][1], epsilon);
     EXPECT_NEAR (controll[2], result[i][2], epsilon);
   }
-  t8_test_point       controll;
-  mat4d_vec_multi (perspective, out[0], controll);
-
 }
