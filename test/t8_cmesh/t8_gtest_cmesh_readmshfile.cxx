@@ -35,32 +35,21 @@
  * formats. All are not supported and we expect the reader to catch this.
  */
 
-/* *INDENT-OFF* */
-TEST(t8_cmesh_readmshfile, test_msh_file_vers2_ascii){
-    
-    const char  fileprefix[BUFSIZ - 4] = "test/testfiles/test_msh_file_vers2_ascii";
-    char        filename[BUFSIZ];
-
-    snprintf (filename, BUFSIZ, "%s.msh", fileprefix);
-    
-    EXPECT_FALSE(access (filename, R_OK));
-    
-    t8_cmesh_t cmesh = t8_cmesh_from_msh_file (fileprefix, 1, sc_MPI_COMM_WORLD, 2, 0, 0);
-    
-    EXPECT_TRUE(cmesh != NULL);
-    
-    int                 checkval;
-    int                 read_node = 1;
-    int                 check_neigh_elem = 1;
-    double             *vertices;
-    t8_locidx_t         ltree_id;
-    t8_locidx_t         lnum_trees;
-    t8_eclass_t         tree_class;
+static int
+t8_supported_msh_file (t8_cmesh_t cmesh)
+{
+  int                 read_node = 1;
+  int                 check_neigh_elem = 1;
+  double             *vertices;
+  t8_locidx_t         ltree_id;
+  t8_locidx_t         lnum_trees;
+  t8_eclass_t         tree_class;
 
   /* Description of the properties of the example msh-files. */
   const int           number_elements = 4;
   const t8_eclass_t   elem_type = T8_ECLASS_TRIANGLE;
-  
+
+  /* *INDENT-OFF* */
   int vertex[6][2] = {
                        {0, 0},
                        {2, 0},
@@ -80,28 +69,32 @@ TEST(t8_cmesh_readmshfile, test_msh_file_vers2_ascii){
                                 {3, 0, 2},
                                 {-1, 1, -1},
                                 {-1, -1, 1} };
-
+  /* *INDENT-ON* */
   if (cmesh == NULL) {
     /* If the cmesh is NULL. */
-    checkval = 0;
+    return 0;
   }
   else {
     /* Checks if the cmesh was comitted. */
-    EXPECT_TRUE(t8_cmesh_is_committed (cmesh));
+    EXPECT_TRUE (t8_cmesh_is_committed (cmesh)) << "Cmesh commit failed";
     /* Checks for face consistency. */
-    EXPECT_TRUE(t8_cmesh_trees_is_face_consistend (cmesh, cmesh->trees));
-    
+    EXPECT_TRUE (t8_cmesh_trees_is_face_consistend (cmesh, cmesh->trees)) <<
+      "Cmesh face consistency failed.";
+
     /* Checks if the number of elements was read correctly. */
-    EXPECT_EQ(t8_cmesh_get_num_trees (cmesh), number_elements); 
-    
+    EXPECT_EQ (t8_cmesh_get_num_trees (cmesh),
+               number_elements) <<
+      "Number of elements in msh-file was read incorrectly.";
+
     /* Number of local trees. */
     lnum_trees = t8_cmesh_get_num_local_trees (cmesh);
     /* Iterate through the local elements and check if they were read properly. */
     /* All trees should be local to the master rank. */
     for (t8_locidx_t ltree_it = 0; ltree_it < lnum_trees; ltree_it++) {
       tree_class = t8_cmesh_get_tree_class (cmesh, ltree_it);
-      EXPECT_FALSE(t8_eclass_compare (tree_class, elem_type));
-      
+      EXPECT_FALSE (t8_eclass_compare (tree_class, elem_type)) <<
+        "Element type in msh-file was read incorrectly.";
+
       /* Get pointer to the vertices of the tree. */
       vertices = t8_cmesh_get_tree_vertices (cmesh, ltree_it);
       /* Checking the msh-files elements and nodes. */
@@ -111,318 +104,132 @@ TEST(t8_cmesh_readmshfile, test_msh_file_vers2_ascii){
               && (vertex[elements[ltree_it][i]][1] ==
                   (int) vertices[(3 * i) + 1]))) {
           read_node = 0;
-          EXPECT_TRUE(read_node);
+          EXPECT_TRUE (read_node) << "Node was read incorrectly.";
           /* Return error, if the nodes are not read correctly. */
-          checkval = -1;
+          return -1;
         }
         /* Checks whether the face neighbor elements are not read correctly. */
         ltree_id =
           t8_cmesh_get_face_neighbor (cmesh, ltree_it, i, NULL, NULL);
         if (!(ltree_id == face_neigh_elem[ltree_it][i])) {
           check_neigh_elem = 0;
-          EXPECT_TRUE(check_neigh_elem);
+          EXPECT_TRUE (check_neigh_elem) <<
+            "The face neighbor element in the example test file was not read correctly.";
           /* Return error, if the face neighbor elements are not read correctly. */
-          checkval = -1;
+          return -1;
         }
       }
     }
     /* If the checks were performed correctly. */
-    checkval = 1;
+    return 1;
   }
-  
-  EXPECT_EQ(checkval, 1);
+}
+
+TEST (t8_cmesh_readmshfile, test_msh_file_vers2_ascii)
+{
+
+  const char          fileprefix[BUFSIZ - 4] =
+    "test/testfiles/test_msh_file_vers2_ascii";
+  char                filename[BUFSIZ];
+
+  snprintf (filename, BUFSIZ, "%s.msh", fileprefix);
+
+  t8_debugf ("Checking msh file version 2 ascii...\n");
+
+  ASSERT_FALSE (access (filename, R_OK)) << "Could not open file " <<
+    filename;
+
+  t8_cmesh_t          cmesh =
+    t8_cmesh_from_msh_file (fileprefix, 1, sc_MPI_COMM_WORLD, 2, 0, 0);
+  ASSERT_TRUE (cmesh !=
+               NULL) <<
+    "Could not read cmesh from ascii version 2, but should be able to.";
+
+  int                 checkval = t8_supported_msh_file (cmesh);
+  ASSERT_EQ (checkval, 1) << "Cmesh incorrectly read from file.";
 
   /* The cmesh was read sucessfully and we need to destroy it. */
   t8_cmesh_destroy (&cmesh);
+
+  t8_debugf ("Could successfully read.\n");
 }
 
-TEST(t8_cmesh_readmshfile, test_msh_file_vers4_ascii){
-    
-    const char  fileprefix[BUFSIZ - 4] = "test/testfiles/test_msh_file_vers4_ascii";
-    char        filename[BUFSIZ];
-    
-    snprintf (filename, BUFSIZ, "%s.msh", fileprefix);
+TEST (t8_cmesh_readmshfile, test_msh_file_vers4_ascii)
+{
 
-    EXPECT_FALSE(access (filename, R_OK));
-    t8_cmesh_t cmesh = t8_cmesh_from_msh_file (fileprefix, 1, sc_MPI_COMM_WORLD, 2, 0, 0);
-        
-    EXPECT_TRUE(cmesh != NULL);
-    
-    int                 checkval;
-    int                 read_node = 1;
-    int                 check_neigh_elem = 1;
-    double             *vertices;
-    t8_locidx_t         ltree_id;
-    t8_locidx_t         lnum_trees;
-    t8_eclass_t         tree_class;
+  const char          fileprefix[BUFSIZ - 4] =
+    "test/testfiles/test_msh_file_vers4_ascii";
+  char                filename[BUFSIZ];
 
-  /* Description of the properties of the example msh-files. */
-  const int           number_elements = 4;
-  const t8_eclass_t   elem_type = T8_ECLASS_TRIANGLE;
-  /* *INDENT-OFF* */
-  int vertex[6][2] = {
-                       {0, 0},
-                       {2, 0},
-                       {4, 0},
-                       {1, 2},
-                       {3, 2},
-                       {2, 4} };
+  snprintf (filename, BUFSIZ, "%s.msh", fileprefix);
 
-  int elements[4][3] = {
-                        {0, 1, 3},
-                        {1, 4, 3},
-                        {1, 2, 4},
-                        {3, 4, 5} };
+  t8_debugf ("Checking msh file version 4 ascii...\n");
 
-  int face_neigh_elem[4][3] = {
-                                {1, -1,-1},
-                                {3, 0, 2},
-                                {-1, 1, -1},
-                                {-1, -1, 1} };
+  ASSERT_FALSE (access (filename, R_OK)) << "Could not open file " <<
+    filename;
+  t8_cmesh_t          cmesh =
+    t8_cmesh_from_msh_file (fileprefix, 1, sc_MPI_COMM_WORLD, 2, 0, 0);
+  ASSERT_TRUE (cmesh !=
+               NULL) <<
+    "Could not read cmesh from ascii version 2, but should be able to.";
 
-  if (cmesh == NULL) {
-    /* If the cmesh is NULL. */
-    checkval = 0;
-  }
-  else {
-    /* Checks if the cmesh was comitted. */
-    EXPECT_TRUE(t8_cmesh_is_committed (cmesh));
-    /* Checks for face consistency. */
-    EXPECT_TRUE(t8_cmesh_trees_is_face_consistend (cmesh, cmesh->trees));
-    
-    /* Checks if the number of elements was read correctly. */
-    EXPECT_EQ(t8_cmesh_get_num_trees (cmesh), number_elements); 
-    
-    /* Number of local trees. */
-    lnum_trees = t8_cmesh_get_num_local_trees (cmesh);
-    /* Iterate through the local elements and check if they were read properly. */
-    /* All trees should be local to the master rank. */
-    for (t8_locidx_t ltree_it = 0; ltree_it < lnum_trees; ltree_it++) {
-      tree_class = t8_cmesh_get_tree_class (cmesh, ltree_it);
-      EXPECT_FALSE(t8_eclass_compare (tree_class, elem_type));
-      
-      /* Get pointer to the vertices of the tree. */
-      vertices = t8_cmesh_get_tree_vertices (cmesh, ltree_it);
-      /* Checking the msh-files elements and nodes. */
-      for (int i = 0; i < 3; i++) {
-        /* Checks if x and y coordinate of the nodes are not read correctly. */
-        if (!((vertex[elements[ltree_it][i]][0] == (int) vertices[3 * i])
-              && (vertex[elements[ltree_it][i]][1] ==
-                  (int) vertices[(3 * i) + 1]))) {
-          read_node = 0;
-          EXPECT_TRUE(read_node);
-          /* Return error, if the nodes are not read correctly. */
-          checkval = -1;
-        }
-        /* Checks whether the face neighbor elements are not read correctly. */
-        ltree_id =
-          t8_cmesh_get_face_neighbor (cmesh, ltree_it, i, NULL, NULL);
-        if (!(ltree_id == face_neigh_elem[ltree_it][i])) {
-          check_neigh_elem = 0;
-          EXPECT_TRUE(check_neigh_elem);
-          /* Return error, if the face neighbor elements are not read correctly. */
-          checkval = -1;
-        }
-      }
-    }
-    /* If the checks were performed correctly. */
-    checkval = 1;
-  }
-  
-  EXPECT_EQ(checkval, 1);
+  int                 checkval = t8_supported_msh_file (cmesh);
+  ASSERT_EQ (checkval, 1) << "Cmesh incorrectly read from file.";
 
   /* The cmesh was read sucessfully and we need to destroy it. */
   t8_cmesh_destroy (&cmesh);
+
+  t8_debugf ("Could successfully read.\n");
 }
 
+TEST (t8_cmesh_readmshfile, test_msh_file_vers2_bin)
+{
 
-TEST(t8_cmesh_readmshfile, test_msh_file_vers2_bin){
-    
-    const char fileprefix[BUFSIZ - 4] = "test/testfiles/test_msh_file_vers2_bin";
-    char      filename[BUFSIZ];
+  const char          fileprefix[BUFSIZ - 4] =
+    "test/testfiles/test_msh_file_vers2_bin";
+  char                filename[BUFSIZ];
 
-    snprintf (filename, BUFSIZ, "%s.msh", fileprefix);
+  snprintf (filename, BUFSIZ, "%s.msh", fileprefix);
 
-    EXPECT_FALSE(access (filename, R_OK));
-    t8_cmesh_t cmesh = t8_cmesh_from_msh_file (fileprefix, 1, sc_MPI_COMM_WORLD, 2, 0, 0);
+  t8_debugf ("Checking msh file version 2 binary...\n");
 
-    EXPECT_TRUE(cmesh == NULL);
+  ASSERT_FALSE (access (filename, R_OK)) << "Could not open file " <<
+    filename;
+  t8_cmesh_t          cmesh =
+    t8_cmesh_from_msh_file (fileprefix, 1, sc_MPI_COMM_WORLD, 2, 0, 0);
+  ASSERT_TRUE (cmesh ==
+               NULL) <<
+    "Expected fail of reading binary msh file v.2, but did not fail.";
 
-    int                 checkval;
-    int                 read_node = 1;
-    int                 check_neigh_elem = 1;
-    double             *vertices;
-    t8_locidx_t         ltree_id;
-    t8_locidx_t         lnum_trees;
-    t8_eclass_t         tree_class;
+  int                 checkval = t8_supported_msh_file (cmesh);
+  ASSERT_EQ (checkval,
+             0) << "Unexpected return from t8_test_supported_msh_file.";
 
-  /* Description of the properties of the example msh-files. */
-  const int           number_elements = 4;
-  const t8_eclass_t   elem_type = T8_ECLASS_TRIANGLE;
-  /* *INDENT-OFF* */
-  int vertex[6][2] = {
-                       {0, 0},
-                       {2, 0},
-                       {4, 0},
-                       {1, 2},
-                       {3, 2},
-                       {2, 4} };
-
-  int elements[4][3] = {
-                        {0, 1, 3},
-                        {1, 4, 3},
-                        {1, 2, 4},
-                        {3, 4, 5} };
-
-  int face_neigh_elem[4][3] = {
-                                {1, -1,-1},
-                                {3, 0, 2},
-                                {-1, 1, -1},
-                                {-1, -1, 1} };
-
-  if (cmesh == NULL) {
-    /* If the cmesh is NULL. */
-    checkval = 0;
-  }
-  else {
-    /* Checks if the cmesh was comitted. */
-    EXPECT_TRUE(t8_cmesh_is_committed (cmesh));
-    /* Checks for face consistency. */
-    EXPECT_TRUE(t8_cmesh_trees_is_face_consistend (cmesh, cmesh->trees));
-    
-    /* Checks if the number of elements was read correctly. */
-    EXPECT_EQ(t8_cmesh_get_num_trees (cmesh), number_elements); 
-    
-    /* Number of local trees. */
-    lnum_trees = t8_cmesh_get_num_local_trees (cmesh);
-    /* Iterate through the local elements and check if they were read properly. */
-    /* All trees should be local to the master rank. */
-    for (t8_locidx_t ltree_it = 0; ltree_it < lnum_trees; ltree_it++) {
-      tree_class = t8_cmesh_get_tree_class (cmesh, ltree_it);
-      EXPECT_FALSE(t8_eclass_compare (tree_class, elem_type));
-      
-      /* Get pointer to the vertices of the tree. */
-      vertices = t8_cmesh_get_tree_vertices (cmesh, ltree_it);
-      /* Checking the msh-files elements and nodes. */
-      for (int i = 0; i < 3; i++) {
-        /* Checks if x and y coordinate of the nodes are not read correctly. */
-        if (!((vertex[elements[ltree_it][i]][0] == (int) vertices[3 * i])
-              && (vertex[elements[ltree_it][i]][1] ==
-                  (int) vertices[(3 * i) + 1]))) {
-          read_node = 0;
-          EXPECT_TRUE(read_node);
-          /* Return error, if the nodes are not read correctly. */
-          checkval = -1;
-        }
-        /* Checks whether the face neighbor elements are not read correctly. */
-        ltree_id =
-          t8_cmesh_get_face_neighbor (cmesh, ltree_it, i, NULL, NULL);
-        if (!(ltree_id == face_neigh_elem[ltree_it][i])) {
-          check_neigh_elem = 0;
-          EXPECT_TRUE(check_neigh_elem);
-          /* Return error, if the face neighbor elements are not read correctly. */
-          checkval = -1;
-        }
-      }
-    }
-    /* If the checks were performed correctly. */
-    checkval = 1;
-  }
-  EXPECT_EQ(checkval, 0);
+  t8_debugf ("Error handling successfull.\n");
 }
 
-TEST(t8_cmesh_readmshfile, test_msh_file_vers4_bin){
-    
-    const char fileprefix[BUFSIZ - 4] = "test/testfiles/test_msh_file_vers4_bin";
-    char      filename[BUFSIZ];
+TEST (t8_cmesh_readmshfile, test_msh_file_vers4_bin)
+{
 
-    snprintf (filename, BUFSIZ, "%s.msh", fileprefix);
+  const char          fileprefix[BUFSIZ - 4] =
+    "test/testfiles/test_msh_file_vers4_bin";
+  char                filename[BUFSIZ];
 
-    EXPECT_FALSE(access (filename, R_OK));
-    t8_cmesh_t cmesh = t8_cmesh_from_msh_file (fileprefix, 1, sc_MPI_COMM_WORLD, 2, 0, 0);
+  snprintf (filename, BUFSIZ, "%s.msh", fileprefix);
 
-    EXPECT_TRUE(cmesh == NULL);
+  t8_debugf ("Checking msh file versin 4 binary...\n");
 
-    int                 checkval;
-    int                 read_node = 1;
-    int                 check_neigh_elem = 1;
-    double             *vertices;
-    t8_locidx_t         ltree_id;
-    t8_locidx_t         lnum_trees;
-    t8_eclass_t         tree_class;
+  ASSERT_FALSE (access (filename, R_OK)) << "Could not open file " <<
+    filename;
+  t8_cmesh_t          cmesh =
+    t8_cmesh_from_msh_file (fileprefix, 1, sc_MPI_COMM_WORLD, 2, 0, 0);
+  ASSERT_TRUE (cmesh ==
+               NULL) <<
+    "Expected fail of reading binary msh file v.4, but did not fail.";
 
-  /* Description of the properties of the example msh-files. */
-  const int           number_elements = 4;
-  const t8_eclass_t   elem_type = T8_ECLASS_TRIANGLE;
-  /* *INDENT-OFF* */
-  int vertex[6][2] = {
-                       {0, 0},
-                       {2, 0},
-                       {4, 0},
-                       {1, 2},
-                       {3, 2},
-                       {2, 4} };
+  int                 checkval = t8_supported_msh_file (cmesh);
+  ASSERT_EQ (checkval,
+             0) << "Unexpected return from t8_test_supported_msh_file.";
 
-  int elements[4][3] = {
-                        {0, 1, 3},
-                        {1, 4, 3},
-                        {1, 2, 4},
-                        {3, 4, 5} };
-
-  int face_neigh_elem[4][3] = {
-                                {1, -1,-1},
-                                {3, 0, 2},
-                                {-1, 1, -1},
-                                {-1, -1, 1} };
-
-  if (cmesh == NULL) {
-    /* If the cmesh is NULL. */
-    checkval = 0;
-  }
-  else {
-    /* Checks if the cmesh was comitted. */
-    EXPECT_TRUE(t8_cmesh_is_committed (cmesh));
-    /* Checks for face consistency. */
-    EXPECT_TRUE(t8_cmesh_trees_is_face_consistend (cmesh, cmesh->trees));
-    
-    /* Checks if the number of elements was read correctly. */
-    EXPECT_EQ(t8_cmesh_get_num_trees (cmesh), number_elements); 
-    
-    /* Number of local trees. */
-    lnum_trees = t8_cmesh_get_num_local_trees (cmesh);
-    /* Iterate through the local elements and check if they were read properly. */
-    /* All trees should be local to the master rank. */
-    for (t8_locidx_t ltree_it = 0; ltree_it < lnum_trees; ltree_it++) {
-      tree_class = t8_cmesh_get_tree_class (cmesh, ltree_it);
-      EXPECT_FALSE(t8_eclass_compare (tree_class, elem_type));
-      
-      /* Get pointer to the vertices of the tree. */
-      vertices = t8_cmesh_get_tree_vertices (cmesh, ltree_it);
-      /* Checking the msh-files elements and nodes. */
-      for (int i = 0; i < 3; i++) {
-        /* Checks if x and y coordinate of the nodes are not read correctly. */
-        if (!((vertex[elements[ltree_it][i]][0] == (int) vertices[3 * i])
-              && (vertex[elements[ltree_it][i]][1] ==
-                  (int) vertices[(3 * i) + 1]))) {
-          read_node = 0;
-          EXPECT_TRUE(read_node);
-          /* Return error, if the nodes are not read correctly. */
-          checkval = -1;
-        }
-        /* Checks whether the face neighbor elements are not read correctly. */
-        ltree_id =
-          t8_cmesh_get_face_neighbor (cmesh, ltree_it, i, NULL, NULL);
-        if (!(ltree_id == face_neigh_elem[ltree_it][i])) {
-          check_neigh_elem = 0;
-          EXPECT_TRUE(check_neigh_elem);
-          /* Return error, if the face neighbor elements are not read correctly. */
-          checkval = -1;
-        }
-      }
-    }
-    /* If the checks were performed correctly. */
-    checkval = 1;
-  }
-  EXPECT_EQ(checkval, 0);
+  t8_debugf ("Error handling successfull.\n");
 }
-/* *INDENT-ON* */
