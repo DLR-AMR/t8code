@@ -366,7 +366,7 @@ main (int argc, char **argv)
   sc_options_add_string (opt, 'f', "fileprefix", &fileprefix, NULL,
                          "Fileprefix of the msh and brep files.");
   sc_options_add_int (opt, 'd', "dimension", &dim, 3,
-                      "The dimension of the mesh. Defailt: 3");
+                      "The dimension of the mesh. Default: 3");
   sc_options_add_int (opt, 'l', "level", &level, 0,
                       "The uniform refinement level of the mesh. Default: 0");
   sc_options_add_int (opt, 'r', "rlevel", &rlevel, 3,
