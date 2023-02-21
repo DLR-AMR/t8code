@@ -272,8 +272,9 @@ public:
 
   /** Query whether a given set of elements is a family or not.
    * \param [in] fam      An array of as many elements as an element of class
-   *                      \b ts has children.
+   *                      \b ts has siblings.
    * \return              Zero if \b fam is not a family, nonzero if it is.
+   * \note level 0 elements do not form a family.
    */
   virtual int         t8_element_is_family (t8_element_t **fam) = 0;
 
@@ -364,11 +365,15 @@ public:
   /** Given an element and a face of this element. If the face lies on the
    *  tree boundary, return the face number of the tree face.
    *  If not the return value is arbitrary.
+   *  You can call \ref t8_element_is_root_boundary to query whether the face is
+   *  at the tree boundary.
    * \param [in] elem     The element.
    * \param [in] face     The index of a face of \a elem.
    * \return The index of the tree face that \a face is a subface of, if
    *         \a face is on a tree boundary.
    *         Any arbitrary integer if \a is not at a tree boundary.
+   * \warning The return value may look like a valid face of the tree even if 
+   *   the element does not lie on the root boundary.
    */
   virtual int         t8_element_tree_face (const t8_element_t *elem,
                                             int face) = 0;
@@ -482,6 +487,7 @@ public:
    * \param [in] elem     The input element.
    * \param [in] face     A face of \a elem.
    * \return              True if \a face is a subface of the element's root element.
+   * \note You can compute the corresponding face number of the tree via \ref t8_element_tree_face.
    */
   virtual int         t8_element_is_root_boundary (const t8_element_t *elem,
                                                    int face) = 0;

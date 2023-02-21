@@ -520,18 +520,12 @@ int
 t8_dtri_is_familypv (const t8_dtri_t *f[])
 {
   const int8_t        level = f[0]->level;
-  t8_dtri_coord_t     coords0[T8_DTRI_CHILDREN];
-  t8_dtri_coord_t     coords1[T8_DTRI_CHILDREN];
-  t8_dtri_coord_t     inc;
-  int                 type;
-  int                 dir1;
-
   if (level == 0 || level != f[1]->level ||
       level != f[2]->level || level != f[3]->level) {
     return 0;
   }
   /* check whether the types are correct */
-  type = f[0]->type;
+  const int           type = f[0]->type;
   if (f[1]->type != 0 && f[2]->type != 1 && f[3]->type != type) {
     return 0;
   }
@@ -540,8 +534,10 @@ t8_dtri_is_familypv (const t8_dtri_t *f[])
   if (f[1]->x != f[2]->x || f[1]->y != f[2]->y) {
     return 0;
   }
-  dir1 = type;
-  inc = T8_DTRI_LEN (level);
+  const int           dir1 = type;
+  const t8_dtri_coord_t inc = T8_DTRI_LEN (level);
+  t8_dtri_coord_t     coords0[T8_DTRI_CHILDREN];
+  t8_dtri_coord_t     coords1[T8_DTRI_CHILDREN];
   coords0[0] = f[0]->x;
   coords0[1] = f[0]->y;
   coords1[0] = f[1]->x;

@@ -194,10 +194,8 @@ t8_create_occ_hypercube (double *rot_vec,
   t8_euler_rotation (vertices, rot_vec, rotated_vertices, rotation_origin, 8);
   t8_cmesh_set_tree_vertices (cmesh, 0, rotated_vertices, 24);
 
-  int                 faces[6] = { 0, 0, 0, 0, 0, 0 };
-  int                 edges[24] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-  };
+  int                 faces[6] = { 0 };
+  int                 edges[24] = { 0 };
   T8_ASSERT (face < 0 || edge < 0);
   if (face >= 0) {
     faces[face] = 1;
