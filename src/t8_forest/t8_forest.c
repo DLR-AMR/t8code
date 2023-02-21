@@ -880,6 +880,360 @@ t8_forest_get_num_global_trees (t8_forest_t forest)
   return forest->global_num_trees;
 }
 
+void
+t8_forest_get_local_num_interfaces (t8_forest_t forest, t8_locidx_t
+*num_conforming, t8_locidx_t *num_nonconforming, t8_locidx_t *num_boundaries)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  t8_locidx_t local_num_conform = 0;
+  t8_locidx_t local_num_mortars = 0;
+  t8_locidx_t local_num_boundry = 0;
+
+  t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
+  for (t8_locidx_t itree = 0, current_index = 0; itree < num_local_trees; ++itree) {
+    t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
+    t8_eclass_scheme_c *eclass_scheme = t8_forest_get_eclass_scheme (forest, tree_class);
+    t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+
+    for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree;
+         ++ielement, ++current_index) {
+      const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
+
+      int level = t8_element_level (eclass_scheme, element);
+      
+      int num_faces = t8_element_num_faces(eclass_scheme, element);
+      for (int iface = 0; iface < num_faces, iface++) {
+        
+        int                 num_neighbors;
+        int                *dual_faces;
+        t8_locidx_t        *neighids;
+        t8_element_t      **neighbors;
+        t8_eclass_scheme_c *neigh_scheme;
+
+        t8_forest_leaf_face_neighbors (forest, itree, element,
+                                      &neighbors, iface,
+                                      &dual_faces,
+                                      &num_neighbors,
+                                      &neighids,
+                                      &neigh_scheme, 1);
+
+        if (num_neighbors > 0) {
+          int neighbor_level = t8_element_level(neigh_scheme, neighids[0]);
+
+          /* Conforming interface: The second condition ensures we only visit the interface once. */
+          if (level == neighbor_level && current_index < neighids[0])
+              local_num_conform = local_num_conform + 1;
+          /* Non-conforming interface. */
+          else if (level < neighbor_level) {
+              local_num_mortars = local_num_mortars + 1;
+          /* else if (level > neighbor_level) is skipped since we count only once. */
+          }
+        /* Interface with domain boundary. */
+        } else {
+          local_num_boundry = local_num_boundry + 1;
+        }
+
+        T8_FREE(neighbors);
+        T8_FREE(dual_faces);
+        T8_FREE(neighids);
+      }
+    }
+  }
+
+  *num_conforming = local_num_conform;
+  *num_non_conforming = local_num_mortars;
+  *num_boundaries = local_num_boundry;
+}
+
+t8_locidx_t
+t8_forest_get_local_num_faces (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  t8_locidx_t local_num_faces = 0;
+
+  t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
+  for (t8_locidx_t itree = 0, current_index = 0; itree < num_local_trees; ++itree) {
+    const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
+    const t8_eclass_scheme_c *eclass_scheme = t8_forest_get_eclass_scheme (forest, tree_class);
+    const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+
+    for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree;
+         ++ielement, ++current_index) {
+      const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      local_num_faces = local_num_faces + t8_element_num_faces(eclass_scheme, element);
+    }
+  }
+
+  return local_num_faces;
+}
+
+void
+t8_forest_get_local_connectivity (t8_forest_t forest, t8_locidx_t
+*elements, t8_locidx_tinterfaces, mortars, boundaries, boundary_names)
+
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  t8_locidx_t local_num_conform = 0;
+  t8_locidx_t local_num_mortars = 0;
+  t8_locidx_t local_num_boundry = 0;
+
+  t8_cmesh_t *cmesh = t8_forest_get_cmesh(forest);
+
+  t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
+  for (t8_locidx_t itree = 0, current_index = 0; itree < num_local_trees; ++itree) {
+    t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
+    t8_eclass_scheme_c *eclass_scheme = t8_forest_get_eclass_scheme (forest, tree_class);
+    t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+
+    t8_locidx_t itree_in_cmesh = t8_forest_ltreeid_to_cmesh_ltreeid(forest, itree);
+
+    for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree;
+         ++ielement, ++current_index) {
+      const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
+
+      int level = t8_element_level (eclass_scheme, element);
+      
+      int num_faces = t8_element_num_faces(eclass_scheme, element);
+      for (int iface = 0; iface < num_faces, iface++) {
+        
+        int                 num_neighbors;
+        int                *dual_faces;
+        t8_locidx_t        *neighids;
+        t8_element_t      **neighbors;
+        t8_eclass_scheme_c *neigh_scheme;
+
+        /* Compute the `orientation` of the touching faces. */
+        int orientation = 0;
+        if (t8_element_is_root_boundary(eclass_scheme, element, iface)) {
+          iface_in_tree = t8_element_tree_face(eclass_scheme, element, iface);
+          t8_cmesh_get_face_neighbor(cmesh, itree_in_cmesh, iface_in_tree, NULL, &orientation);
+        }
+
+        // element_face_shape = t8_eclass_to_element_type[t8_element_face_shape(eclass_scheme, element, iface)]
+
+        t8_forest_leaf_face_neighbors (forest, itree, element,
+                                      &neighbors, iface,
+                                      &dual_faces,
+                                      &num_neighbors,
+                                      &neighids,
+                                      &neigh_scheme, 1);
+
+        if (num_neighbors > 0) {
+          int neighbor_level = t8_element_level(neigh_scheme, neighids[0]);
+
+          /* Conforming interface: The second condition ensures we only visit the interface once. */
+          if (level == neighbor_level && current_index < neighids[0])
+          /* TODO: Find a fix for the case: Single element on root level with periodic boundaries.
+           * elseif level == neighbor_level && 
+           *   (all(Int32(current_index) .< neighbor_ielements) || 
+           *   level == 0 && (iface == 0 || iface == 2 || iface == 4)) */
+              // faces = (iface, dual_faces[1])
+              // interface_id = local_num_conform
+
+              // Write data to interfaces container.
+              interfaces[2*local_num_conform + 0] = current_index
+              interfaces[2*local_num_conform + 1] = neighids[0]
+
+              // # TODO: Is this correct for 3D, too?
+              // interfaces.shapes[interface_id] = element_face_shape
+
+              // # println("neighbor_ids = ", interfaces.neighbor_ids[:,interface_id] .- 1)
+              // # println("faces = ", faces)
+              // # println(itree+1, " ", orientation, " ", interfaces.neighbor_ids[:, interface_id], " ", faces)
+              // # orientation = 0.0
+
+              local_num_conform = local_num_conform + 1;
+
+          else if (level < neighbor_level) {
+
+              // mortars.neighbor_ids[end, mortar_id] = current_index + 1
+
+              // # First `1:end-1` entries are the smaller elements.
+              // mortars.neighbor_ids[1:end-1, mortar_id] .= neighbor_ielements[:] .+ 1
+
+              // # TODO: Is this correct for 3D, too?
+              // mortars.shapes[:, mortar_id] .= element_face_shape
+
+
+              local_num_mortars = local_num_mortars + 1;
+        } else {
+          local_num_boundry = local_num_boundry + 1;
+        }
+
+
+        if num_neighbors > 0
+          neighbor_level = t8_element_level(neighbor_scheme, neighbor_leafs[1])
+
+          if level == neighbor_level && Int32(current_index) <= neighbor_ielements[1]
+          # elseif level == neighbor_level &&
+          #   (all(Int32(current_index) .< neighbor_ielements) ||
+          #   level == 0 && (iface == 0 || iface == 2 || iface == 4))
+              local_num_conform += 1
+
+              faces = (iface, dual_faces[1])
+              interface_id = local_num_conform
+
+              # Write data to interfaces container.
+              interfaces.neighbor_ids[1, interface_id] = current_index + 1
+              interfaces.neighbor_ids[2, interface_id] = neighbor_ielements[1] + 1
+
+              # TODO: Is this correct for 3D, too?
+              interfaces.shapes[interface_id] = element_face_shape
+
+              # println("neighbor_ids = ", interfaces.neighbor_ids[:,interface_id] .- 1)
+              # println("faces = ", faces)
+              # println(itree+1, " ", orientation, " ", interfaces.neighbor_ids[:, interface_id], " ", faces)
+              # orientation = 0.0
+
+              # Iterate over primary and secondary element.
+              for side in 1:2
+                # Align interface in positive coordinate direction of primary element.
+                # For orientation == 1, the secondary element needs to be indexed backwards
+                # relative to the interface.
+                if side == 1 || orientation == 0
+                  # Forward indexing
+                  indexing = :i_forward
+                else
+                  # Backward indexing
+                  indexing = :i_backward
+                end
+
+                if faces[side] == 0
+                  # Index face in negative x-direction
+                  interfaces.node_indices[side, interface_id] = (:begin, indexing)
+                elseif faces[side] == 1
+                  # Index face in positive x-direction
+                  interfaces.node_indices[side, interface_id] = (:end, indexing)
+                elseif faces[side] == 2
+                  # Index face in negative y-direction
+                  interfaces.node_indices[side, interface_id] = (indexing, :begin)
+                else # faces[side] == 3
+                  # Index face in positive y-direction
+                  interfaces.node_indices[side, interface_id] = (indexing, :end)
+                end
+              end
+
+          # Non-conforming interface.
+          elseif level < neighbor_level 
+              local_num_mortars += 1
+
+              faces = (dual_faces[1],iface)
+
+              mortar_id = local_num_mortars
+
+              # Last entry is the large element ... What a stupid convention!
+              # mortars.neighbor_ids[end, mortar_id] = ielement + 1
+              mortars.neighbor_ids[end, mortar_id] = current_index + 1
+
+              # First `1:end-1` entries are the smaller elements.
+              mortars.neighbor_ids[1:end-1, mortar_id] .= neighbor_ielements[:] .+ 1
+
+              # TODO: Is this correct for 3D, too?
+              mortars.shapes[:, mortar_id] .= element_face_shape
+
+              for side in 1:2
+                # Align mortar in positive coordinate direction of small side.
+                # For orientation == 1, the large side needs to be indexed backwards
+                # relative to the mortar.
+                if side == 1 || orientation == 0
+                  # Forward indexing for small side or orientation == 0
+                  indexing = :i_forward
+                else
+                  # Backward indexing for large side with reversed orientation
+                  indexing = :i_backward
+                end
+
+                if faces[side] == 0
+                  # Index face in negative x-direction
+                  mortars.node_indices[side, mortar_id] = (:begin, indexing)
+                elseif faces[side] == 1
+                  # Index face in positive x-direction
+                  mortars.node_indices[side, mortar_id] = (:end, indexing)
+                elseif faces[side] == 2
+                  # Index face in negative y-direction
+                  mortars.node_indices[side, mortar_id] = (indexing, :begin)
+                else # faces[side] == 3
+                  # Index face in positive y-direction
+                  mortars.node_indices[side, mortar_id] = (indexing, :end)
+                end
+              end
+            
+          # else: "level > neighbor_level" is skipped since we visit the mortar interface only once.
+          end
+
+        # Domain boundary.
+        else
+          local_num_boundry += 1
+          boundary_id = local_num_boundry
+
+          boundaries.neighbor_ids[boundary_id] = current_index + 1
+
+          # println("neighbor_id = ", boundaries.neighbor_ids[boundary_id] -1)
+          # println("face = ", iface)
+
+          if iface == 0
+            # Index face in negative x-direction.
+            boundaries.node_indices[boundary_id] = (:begin, :i_forward)
+          elseif iface == 1
+            # Index face in positive x-direction.
+            boundaries.node_indices[boundary_id] = (:end, :i_forward)
+          elseif iface == 2
+            # Index face in negative y-direction.
+            boundaries.node_indices[boundary_id] = (:i_forward, :begin)
+          else # iface == 3
+            # Index face in positive y-direction.
+            boundaries.node_indices[boundary_id] = (:i_forward, :end)
+          end
+
+          # One-based indexing.
+          boundaries.name[boundary_id] = boundary_names[iface + 1, itree + 1]
+        end
+ 
+
+        T8_FREE(neighbors);
+        T8_FREE(dual_faces);
+        T8_FREE(neighids);
+      }
+    }
+  }
+
+      element_shape = t8_eclass_to_element_type[t8_element_shape(eclass_scheme, element)]
+      elements.shapes[current_index+1] = element_shape
+
+      num_faces = t8_element_num_faces(eclass_scheme,element)
+
+      for iface = 0:num_faces-1
+
+    
+        t8_free(dual_faces_ref[])
+        t8_free(pneighbor_leafs_ref[])
+        t8_free(pelement_indices_ref[])
+
+      end # for iface = ...
+
+      current_index += 1
+    end # for
+  end # for
+
+  # println("")
+  # println("")
+  # println(" ## local_num_conform = ", local_num_conform)
+  # println(" ## local_num_mortars = ", local_num_mortars)
+  # println(" ## local_num_boundry = ", local_num_boundry)
+  # println("")
+  # println("")
+
+  return (interfaces = local_num_conform,
+          mortars    = local_num_mortars,
+          boundaries = local_num_boundry)
+end
+
+
+
+
+
 t8_gloidx_t
 t8_forest_global_tree_id (t8_forest_t forest, t8_locidx_t ltreeid)
 {
