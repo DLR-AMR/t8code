@@ -93,7 +93,10 @@ void                perspective_projection (const double width,
                                             double projection[4][4]);
 
 /**
- * A matrix-vector product for projection matrices and 3D vectors. 
+ * A matrix-vector product for projection matrices and 3D vectors.
+ * We implicitly assume that the 4th coordinate of the 3D vector in homogenous
+ * coordinates is one and scale the vector back to homogenous coordinates after
+ * the matrix multiplication. 
  *
  * \param[in] mat A projection matrix
  * \param[in] vec A 3D vector
