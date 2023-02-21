@@ -719,6 +719,9 @@ t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp,
     }
   }
   free (line);
+  if (tree_count == 0) {
+    t8_global_errorf ("Warning: No %iD elements found in msh file.\n", dim);
+  }
   return 0;
 die_ele:
   /* Error handling */
@@ -1477,6 +1480,9 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
     }
   }
   free (line);
+  if (tree_count == 0) {
+    t8_global_errorf ("Warning: No %iD elements found in msh file.\n", dim);
+  }
   return 0;
 die_ele:
   /* Error handling */
