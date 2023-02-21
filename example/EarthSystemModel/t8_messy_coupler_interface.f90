@@ -198,6 +198,9 @@ Program MessyTest
       ! call MPI_Init (ierr)
       Print *, "Initialized MPI"
       ! call MPI_Comm_rank (MPI_COMM_WORLD, rank, ierr)
+
+      call MPI_Init()
+
       print *, "Rank:", rank
       ! Build C Communicator associated with MPI_COMM_WORLD
       c_comm = t8_fortran_MPI_Comm_new_f (MPI_COMM_WORLD)

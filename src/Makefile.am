@@ -83,9 +83,9 @@ src_libt8_la_SOURCES = \
 src_libt8_la_CPPFLAGS = $(AM_CPPFLAGS) $(T8_CPPFLAGS)
 src_libt8_la_LDFLAGS = -release $(VERSION)
 LDADD += \
-	@top_builddir@/example/mptrac/thirdparty/mptrac/libt8mptrac.la \
 	@top_builddir@/src/libt8.la \
-        @T8_P4EST_LDADD@ @T8_SC_LDADD@
+        @T8_P4EST_LDADD@ @T8_SC_LDADD@ \
+	@top_builddir@/example/mptrac/thirdparty/mptrac/libt8mptrac.la
 EXTRA_src_libt8_la_DEPENDENCIES = @T8_P4EST_LDADD@ @T8_SC_LDADD@
 
 nodist_include_HEADERS += $(libt8_generated_headers)
