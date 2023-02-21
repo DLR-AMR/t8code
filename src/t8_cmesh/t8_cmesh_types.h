@@ -136,8 +136,9 @@ typedef struct t8_cmesh
 
   t8_cmesh_trees_t    trees; /**< structure that holds all local trees and ghosts */
 
-  t8_gloidx_t         first_tree; /**< The global index of the first local tree
-                                       on this process. Zero if the cmesh is not partitioned. -1 if this processor is empty. */
+  t8_gloidx_t         first_tree; /**< The global index of the first local tree on this process. 
+                                       Zero if the cmesh is not partitioned. -1 if this processor is empty.
+                                       See also https://github.com/DLR-AMR/t8code/wiki/Tree-indexing */
   int8_t              first_tree_shared;/**< If partitioned true if the first tree on this process is also the last tree on the next process.
                                              Always zero if num_local_trees = 0 */
 
@@ -185,18 +186,18 @@ t8_cghost_struct_t;
  * ttf % F is the face number and ttf / F is the orientation. (\ref t8_eclass_max_num_faces)
  * The orientation is determined as follows.  Let my_face and other_face
  * be the two face numbers of the connecting trees.
- * We chose a master_face from them as follows: Either both trees have the same
- * element class, then the face with the lower face number is the master_face or
+ * We chose a main_face from them as follows: Either both trees have the same
+ * element class, then the face with the lower face number is the main_face or
  * the trees belong to different classes in which case the face belonging to the
  * tree with the lower class according to the ordering
  * triangle < square,
  * hex < tet < prism < pyramid,
- * is the master_face.
- * Then the first face corner of the master_face connects to a face
- * corner in the other face.  The face
- * orientation is defined as the number of this corner.
+ * is the main_face.
+ * Then face corner 0 of the main_face connects to a face
+ * corner k in the other face.  The face orientation is defined as the number k.
  * If the classes are equal and my_face == other_face, treating
- * either of both faces as the master_face leads to the same result.
+ * either of both faces as the main_face leads to the same result.
+ * See https://arxiv.org/pdf/1611.02929.pdf for more details.
  */
 typedef struct t8_ctree
 {
