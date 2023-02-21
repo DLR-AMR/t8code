@@ -44,7 +44,7 @@ void
 mat4d_vec_multi (const double mat[4][4], const double vec[3],
                  double out_vec[3])
 {
-  /* We assume vec[3] == 1 and add the 3rd value of each row of the matrix*/
+  /* We assume vec[3] == 1 and add the 3rd value of each row of the matrix */
   out_vec[0] =
     mat[0][0] * vec[0] + mat[0][1] * vec[1] + mat[0][2] * vec[2] + mat[0][3];
   out_vec[1] =
