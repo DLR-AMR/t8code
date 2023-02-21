@@ -36,7 +36,7 @@ typedef double      t8_test_point[3];
  * All points should be mapped to (0,0,-1) by the transformation.
  * 
  */
-TEST (t8_gtest_projection, cam_projection)
+TEST (t8_gtest_transformation, cam_transformation)
 {
   const t8_test_point cam = { 0.0, 0.0, 0.0 };
   /* Reference points on the axis */
@@ -69,18 +69,19 @@ TEST (t8_gtest_projection, cam_projection)
 
 /**
  * Test the perspective projection by checking if all the corners of the 
- * view-volume are mapped onto the corners of the cube [0,1]^3.
+ * view-volume are mapped onto the corners of the translated cube [0,1]^3.
  */
-TEST (t8_gtest_projection, perspective_projection)
+TEST (t8_gtest_transformation, perspective_projection)
 {
-  /* Define that is going to be mapped. */
-  /*The image width and the 0-point form a triangle with sides of equal length. */
+  /* Define what is going to be mapped. */
+  /*The image width and the 0-point form a triangle with cathetes of equal length. */
   const double        near = 1.0;
   const double        far = 2.0 * near;
   const double        height = 1.0;
   const double        width = 1.0;
   double              perspective[4][4] = { 0.0 };
 
+  /*The corners of the volume of view. */
   const t8_test_point test[8] = { {width, height, near},
   {-width, height, near},
   {width, -height, near},
@@ -90,6 +91,8 @@ TEST (t8_gtest_projection, perspective_projection)
   {2 * width, -2 * height, far},
   {-2 * width, -2 * height, far}
   };
+
+  /* The coordinates of the projected test-points */
   const t8_test_point result[8] = { {-1.0, -1.0, 4.0},
   {1.0, -1.0, 4.0},
   {-1.0, 1.0, 4.0},
