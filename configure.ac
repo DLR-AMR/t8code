@@ -80,7 +80,7 @@ AC_CONFIG_LINKS([test/testfiles/test_msh_file_vers2_bin.msh:test/testfiles/test_
 AC_CONFIG_LINKS([test/testfiles/test_msh_file_vers4_ascii.msh:test/testfiles/test_msh_file_vers4_ascii.msh])
 AC_CONFIG_LINKS([test/testfiles/test_msh_file_vers4_bin.msh:test/testfiles/test_msh_file_vers4_bin.msh])
 AC_CONFIG_LINKS([example/IO/cmesh/gmsh/circlesquare_hybrid_hole.msh:example/IO/cmesh/gmsh/circlesquare_hybrid_hole.msh])
-AC_CONFIG_LINKS([tutorials/features/t8_features_curved_meshes_generate_cmesh.geo:tutorials/features/t8_features_curved_meshes_generate_cmesh.geo])
+AC_CONFIG_FILES([tutorials/features/t8_features_curved_meshes_generate_cmesh.geo:tutorials/features/t8_features_curved_meshes_generate_cmesh.geo])
 
 # Print summary.
 
