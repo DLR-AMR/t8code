@@ -44,7 +44,7 @@ void
 mat4d_vec_multi (const double mat[4][4], const double vec[3],
                  double out_vec[3])
 {
-  /* We assume vec[3] == 1 and add the 3rd value of each row of the matrix */
+  /* We assume vec[3] == 1 and add the 3rd value of each row of the matrix*/
   out_vec[0] =
     mat[0][0] * vec[0] + mat[0][1] * vec[1] + mat[0][2] * vec[2] + mat[0][3];
   out_vec[1] =
@@ -93,13 +93,13 @@ inverse_camera_transformation (const double cam[3], const double ref_point[3],
   {cam_y_axis[0], cam_y_axis[1], cam_y_axis[2]},
   {cam_z_axis[0], cam_z_axis[1], cam_z_axis[2]}
   };
-  double              transformed_cam[3] = { 0.0 };
-  t8_mat_vec (transform_3D, cam, -1.0, transformed_cam);
+  double              translation[3] = { 0.0 };
+  t8_mat_vec (transform_3D, cam, -1.0, translation);
 
   const double        data[16] =
-    { cam_x_axis[0], cam_x_axis[1], cam_x_axis[2], transformed_cam[0],
-    cam_y_axis[0], cam_y_axis[1], cam_y_axis[2], transformed_cam[1],
-    cam_z_axis[0], cam_z_axis[1], cam_z_axis[2], transformed_cam[2],
+    { cam_x_axis[0], cam_x_axis[1], cam_x_axis[2], translation[0],
+    cam_y_axis[0], cam_y_axis[1], cam_y_axis[2], translation[1],
+    cam_z_axis[0], cam_z_axis[1], cam_z_axis[2], translation[2],
     0.0, 0.0, 0.0, 1.0
   };
   fill_mat4d (transformation, data);
