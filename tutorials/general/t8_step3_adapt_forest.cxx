@@ -61,17 +61,6 @@ T8_EXTERN_C_BEGIN ();
 
 /* This is our own defined data that we will pass on to the
  * adaptation callback. */
-#if 0
-/* Commented out, since it is actually defined in t8_step3.h.
- * We put a copy here for explanation.
- */
-struct t8_step3_adapt_data
-{
-  double              midpoint[3];      /* The midpoint of our sphere. */
-  double              refine_if_inside_radius;  /* if an element's center is smaller than this value, we refine the element. */
-  double              coarsen_if_outside_radius;        /* if an element's center is larger this value, we coarsen its family. */
-};
-#endif
 
 /* The adaptation callback function. This function will be called once for each element
  * and the return value decides whether this element should be refined or not.
