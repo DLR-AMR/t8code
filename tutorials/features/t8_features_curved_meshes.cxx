@@ -408,8 +408,7 @@ main (int argc, char **argv)
         ("\n\tERROR: Wrong usage.\n"
          "\tPlease specify either the '-p' or the '-s' option as described above.\n\n");
     }
-    else
-      t8_global_productionf ("\n\tERROR: Wrong usage.\n\n");
+    else t8_global_productionf ("\n\tERROR: Wrong usage.\n\n");
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else {
