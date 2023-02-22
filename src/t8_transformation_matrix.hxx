@@ -61,7 +61,7 @@ void                inverse_camera_transformation (const double cam[3],
                                                    transformation[4][4]);
 
 /**
- * Compute the perspective projection matrix, mapping a a view-volume into the cube [0,1]^3. 
+ * Compute the perspective projection matrix, mapping a a view-volume into the cube [-1,1]^3. 
  * 
  * \param[in] width width of the image plane
  * \param[in] height height of the image plane
