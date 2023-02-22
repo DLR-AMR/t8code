@@ -122,7 +122,7 @@ perspective_projection (const double width,
   /* Build the matrix */
   const double        data[16] = { scale / aspect, 0.0, 0.0, 0.0,
     0.0, scale, 0.0, 0.0,
-    0.0, 0.0, (-far) / (far - near), (-far * near) / (far - near),
+    0.0, 0.0, (far + near) / (near - far), (2 * far * near) / (near - far),
     0.0, 0.0, -1.0, 0.0
   };
   fill_mat4d (projection, data);

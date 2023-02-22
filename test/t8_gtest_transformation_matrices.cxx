@@ -69,7 +69,7 @@ TEST (t8_gtest_transformation, cam_transformation)
 
 /**
  * Test the perspective projection by checking if all the corners of the 
- * view-volume are mapped onto the corners of the translated cube [0,1]^3.
+ * view-volume are mapped onto the corners of the translated cube [-1,1]^3.
  */
 TEST (t8_gtest_transformation, perspective_projection)
 {
@@ -81,26 +81,27 @@ TEST (t8_gtest_transformation, perspective_projection)
   const double        width = 1.0;
   double              perspective[4][4] = { 0.0 };
 
-  /*The corners of the volume of view. */
-  const t8_test_point test[8] = { {width, height, near},
-  {-width, height, near},
-  {width, -height, near},
-  {-width, -height, near},
-  {2 * width, 2 * height, far},
-  {-2 * width, 2 * height, far},
-  {2 * width, -2 * height, far},
-  {-2 * width, -2 * height, far}
+  /*The corners of the volume of view. 
+   * Near and far have a negative sign because the coordinates are in the camera system. */
+  const t8_test_point test[8] = { {width, height, -near},
+  {-width, height, -near},
+  {width, -height, -near},
+  {-width, -height, -near},
+  {2 * width, 2 * height, -far},
+  {-2 * width, 2 * height, -far},
+  {2 * width, -2 * height, -far},
+  {-2 * width, -2 * height, -far}
   };
 
   /* The coordinates of the projected test-points */
-  const t8_test_point result[8] = { {-1.0, -1.0, 4.0},
-  {1.0, -1.0, 4.0},
-  {-1.0, 1.0, 4.0},
-  {1.0, 1.0, 4.0},
-  {-1.0, -1.0, 3.0},
-  {1.0, -1.0, 3.0},
-  {-1.0, 1.0, 3.0},
-  {1.0, 1.0, 3.0}
+  const t8_test_point result[8] = { {1.0, 1.0, -1.0},
+  {-1.0, 1.0, -1.0},
+  {1.0, -1.0, -1.0},
+  {-1.0, -1.0, -1.0},
+  {1.0, 1.0, 1.0},
+  {-1.0, 1.0, 1.0},
+  {1.0, -1.0, 1.0},
+  {-1.0, -1.0, 1.0}
   };
 
   perspective_projection (width, height, near, far, perspective);
