@@ -423,6 +423,22 @@ t8_gloidx_t         t8_forest_get_global_num_elements (t8_forest_t forest);
  */
 t8_locidx_t         t8_forest_get_num_ghosts (t8_forest_t forest);
 
+
+void
+t8_forest_get_local_num_interfaces (t8_forest_t forest, t8_locidx_t
+*num_conforming, t8_locidx_t *num_nonconforming, t8_locidx_t *num_boundaries);
+
+t8_locidx_t
+t8_forest_get_local_num_faces (t8_forest_t forest);
+
+t8_locidx_t
+t8_forest_get_local_num_interfaces_double (t8_forest_t forest);
+
+void
+t8_forest_get_local_face_connectivity (t8_forest_t forest, t8_locidx_t
+*primary_id, t8_locidx_t *secondary_id, int *orientation, int *primary_face, int *secondary_face, int
+*primary_child_id, int *secondary_child_id, int *faceShapes);
+
 /** Return the element class of a forest local tree.
  *  \param [in] forest    The forest.
  *  \param [in] ltreeid   The local id of a tree in \a forest.
