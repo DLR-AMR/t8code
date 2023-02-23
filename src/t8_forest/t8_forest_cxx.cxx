@@ -549,12 +549,14 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
       volume = t8_forest_element_tet_volume (coordinates);
 
       /*The second tetrahedron has pyra vertices 0, 3, 2 and 4 */
-      /*vertex 3 has already been computed and stored in coordinates[2] */
-      coordinates[1][0] = coordinates[2][0];
-      coordinates[1][1] = coordinates[2][1];
-      coordinates[1][2] = coordinates[2][2];
+      t8_forest_element_coordinate (forest, ltreeid, element, 0,
+                                    coordinates[0]);
+      t8_forest_element_coordinate (forest, ltreeid, element, 3,
+                                    coordinates[1]);
       t8_forest_element_coordinate (forest, ltreeid, element, 2,
                                     coordinates[2]);
+      t8_forest_element_coordinate (forest, ltreeid, element, 4,
+                                    coordinates[3]);
       volume += t8_forest_element_tet_volume (coordinates);
       return volume;
     }
