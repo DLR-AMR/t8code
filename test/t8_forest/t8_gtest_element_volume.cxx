@@ -69,11 +69,11 @@ TEST_P(t8_forest_volume, volume_check){
         for(t8_locidx_t ielement = 0; ielement < tree_elements; ielement++){
             const t8_element_t *element = t8_forest_get_element_in_tree(forest, itree, ielement);
             const double volume = t8_forest_element_volume(forest, itree, element);
-            ASSERT_NEAR(volume, controll_volume, epsilon);
+            EXPECT_NEAR(volume, controll_volume, epsilon);
         }
     }
 }
 
 INSTANTIATE_TEST_SUITE_P(t8_gtest_element_volume, t8_forest_volume, 
-                        testing::Combine(testing::Range(T8_ECLASS_ZERO, T8_ECLASS_COUNT),testing::Values(0,4)));
+                        testing::Combine(testing::Range(T8_ECLASS_ZERO, T8_ECLASS_COUNT),testing::Range(0,4)));
 /* *INDENT-ON* */
