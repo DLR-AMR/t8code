@@ -341,18 +341,29 @@ t8_naca_plane_refinement (t8_forest_t forest, const std::string & fileprefix,
 int
 main (int argc, char **argv)
 {
-  sc_options_t       *opt;
-  char                usage[BUFSIZ];
-  char                help[BUFSIZ];
-  int                 helpme, parsed, sreturn;
-  int                 mpiret;
-  sc_MPI_Comm         comm;
-  t8_cmesh_t          cmesh;
-  t8_forest_t         forest;
-  const char         *fileprefix = NULL;
-  int                 level, rlevel, rlevel_dorsal, rlevel_ventral;
-  int                 surface, plane, steps, occ, dim;
-  double              xmin, xmax, thickness;
+  sc_options_t       *opt;      /* The options we want to parse */
+  char                usage[BUFSIZ];    /* Usage message */
+  char                help[BUFSIZ];     /* Help message */
+  int                 helpme;   /* Print help message */
+  int                 parsed;   /* Return value of sc_options_parse */
+  int                 sreturn;  /* Return value of sc functions */
+  int                 mpiret;   /* Return value of MPI functions */
+  sc_MPI_Comm         comm;            /** The MPI communicator */
+  t8_cmesh_t          cmesh;           /** The cmesh we read in from the msh file */
+  t8_forest_t         forest;          /** The forest we want to refine */
+  const char         *fileprefix = NULL;        /* The prefix of the msh and brep file */
+  int                 level;           /** Uniform refinement level of the forest */
+  int                 rlevel_plane;    /** Refinement level of the plane moving through the mesh */
+  int                 rlevel_dorsal;   /** Refinement level of the dorsal side fo the naca profile */
+  int                 rlevel_ventral;  /** Refinement level of the ventral side fo the naca profile */
+  int                 surface;         /** Activates the surface refinement mode */
+  int                 plane;           /** Activates the plane refinement mode */
+  int                 steps;           /** The amount of time steps the plane makes */
+  int                 occ;             /** Activates the curved mesh in the plane mode */
+  int                 dim;             /** The dimension of the mesh */
+  double              xmin;            /** The starting x-coordinate of the refinement plane */
+  double              xmax;            /** The ending x-coordinate of the refinement plane */
+  double              thickness;       /** The thickness of the refinement band */
 
   /* brief help message */
   snprintf (usage, BUFSIZ, "\t%s <OPTIONS>\n\t%s -h\t"
@@ -417,7 +428,7 @@ main (int argc, char **argv)
                          "X coordinate where the plane ends. Default: 1.5");
   sc_options_add_double (opt, 't', "thickness", &thickness, 0.2,
                          "Thickness of the refinement band. Default: 0.2");
-  sc_options_add_int (opt, 'r', "plane_level", &rlevel, 3,
+  sc_options_add_int (opt, 'r', "plane_level", &rlevel_plane, 3,
                       "The refinement level of the plane. Default: 3");
   sc_options_add_int (opt, 'n', "timesteps", &steps, 10,
                       "How many steps the plane takes to move through the airfoil. Default: 10");
@@ -459,7 +470,7 @@ main (int argc, char **argv)
                                   rlevel_ventral);
     }
     if (plane) {
-      t8_naca_plane_refinement (forest, fp, level, rlevel, steps,
+      t8_naca_plane_refinement (forest, fp, level, rlevel_plane, steps,
                                 thickness, xmin, xmax, occ);
     }
   }
