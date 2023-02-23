@@ -1298,6 +1298,9 @@ t8_recv_list_entry_equal (const void *v1, const void *v2, const void *u)
   return e1->rank == e2->rank;
 }
 
+/* TODO: Due to many pre-processor directives our indent-script has difficulties in this part of the code */
+/* *INDENT-OFF* */
+
 /* Probe for all incoming messages from the remote ranks and receive them.
  * We receive the message in the order in which they arrive. To achieve this,
  * we have to use polling. */
@@ -1519,10 +1522,11 @@ T8_FREE (buffer);
 T8_FREE (received_flag);
 T8_FREE (recv_list_entries);
 T8_FREE (recv_bytes);
-
 }
 
 }
+
+/* *INDENT-ON* */
 
 /* Create one layer of ghost elements, following the algorithm
  * in: p4est: Scalable Algorithms For Parallel Adaptive
