@@ -382,9 +382,9 @@ main (int argc, char **argv)
                          "Cannot be combined with '-p'.");
   sc_options_add_int (opt, 'l', "level", &level, 0,
                       "The uniform refinement level of the mesh. Default: 0");
-  sc_options_add_int (opt, 'd', "dorsal", &rlevel_dorsal, 3,
+  sc_options_add_int (opt, 'D', "dorsal", &rlevel_dorsal, 3,
                       "The refinement level of the dorsal side of the naca profile. Default: 3");
-  sc_options_add_int (opt, 'v', "ventral", &rlevel_ventral, 2,
+  sc_options_add_int (opt, 'V', "ventral", &rlevel_ventral, 2,
                       "The refinement level of the ventral side of the naca profile. Default: 2");
   sc_options_add_switch (opt, 'p', "plane", &plane,
                          "Move a plane through the forest and refine elements close to the plane. "
