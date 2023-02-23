@@ -161,7 +161,7 @@ Merge "naca6412_2d.brep";
  *
  * For other Gmsh versions check the Gmsh website: 
  * https://gmsh.info/doc/texinfo/gmsh.html#Mesh-options */
-Mesh.MeshSizeFromCurvature = 1;
+Mesh.MeshSizeFromCurvature = 5;
 Mesh.Algorithm = 6;
 Mesh.RecombineAll = 1;
 Mesh.RecombinationAlgorithm = 2;
