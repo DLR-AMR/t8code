@@ -69,7 +69,8 @@ test_t8_gtest_main_SOURCES = test/t8_gtest_main.cxx \
   test/t8_cmesh/t8_gtest_hypercube.cxx \
   test/t8_cmesh/t8_gtest_cmesh_copy.cxx \
   test/t8_schemes/t8_gtest_descendant.cxx \
-  test/t8_cmesh/t8_gtest_cmesh_face_is_boundary.cxx
+  test/t8_cmesh/t8_gtest_cmesh_face_is_boundary.cxx \
+  test/t8_forest/t8_gtest_element_volume.cxx
 
 test_t8_gtest_main_LDADD = $(LDADD) test/libgtest.la
 test_t8_gtest_main_LDFLAGS = $(AM_LDFLAGS) -pthread
