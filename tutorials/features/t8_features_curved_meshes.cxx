@@ -134,13 +134,18 @@ t8_naca_surface_adapt_callback (t8_forest_t forest,
  * The surface refinement function. Here, we refine all elements, which touch certain surfaces.
  *  
  * \param [in] forest           The forest that has to be refined
- * \param [in] rlevel_dorsal    The refinement level of the elements touching the dorsal side of the wing
- * \param [in] rlevel_ventral   The refinement level of the elements touching the ventral side of the wing
+ * \param [in] fileprefix       The prefix of the msh and brep file.
+ *                              Influences only the vtu file name.
+ * \param [in] level            The uniform refinement level of the forest.
+ * \param [in] rlevel_dorsal    The refinement level of the elements touching the dorsal side of the wing.
+ * \param [in] rlevel_ventral   The refinement level of the elements touching the ventral side of the wing.
  */
 int
-t8_naca_surface_refinement (t8_forest_t forest, int level, int rlevel_dorsal,
-                            int rlevel_ventral)
+t8_naca_surface_refinement (t8_forest_t forest,
+                            const std::string & fileprefix, int level,
+                            int rlevel_dorsal, int rlevel_ventral)
 {
+  std::string forest_vtu;
   t8_forest_t         forest_new;
   /* Generate the adapt data. We refine the surfaces in the array surfaces[]
    * to the levels specified in the array levels[]. The surface indices can be visualized by opening
@@ -167,10 +172,13 @@ t8_naca_surface_refinement (t8_forest_t forest, int level, int rlevel_dorsal,
   /* Write the forest into vtk files and destroy the forest afterwards.
    * We use the curved output of VTK as well, because aur forest has curved
    * elements. */
-  t8_forest_write_vtk_ext (forest_new, "naca_surface_adapted_forest", 1, 1, 1,
-                           1, 0, 1, 0, 0, NULL);
-  t8_global_productionf
-    ("Wrote adapted and balanced forest to vtu files: naca_surface_adapted_forest*\n");
+  const int           filename_pos = fileprefix.find_last_of ("\\/");
+  forest_vtu =
+    "surface_adapted_forest_" + fileprefix.substr (filename_pos + 1);
+  t8_forest_write_vtk_ext (forest_new, forest_vtu.c_str (), 1, 1, 1, 1, 0, 1,
+                           0, 0, NULL);
+  t8_global_productionf ("Wrote forest to vtu files: %s*\n",
+                         forest_vtu.c_str ());
   t8_forest_unref (&forest_new);
   t8_global_productionf ("Destroyed forest.\n");
 
@@ -265,20 +273,24 @@ t8_naca_plane_adapt_callback (t8_forest_t forest,
  * through the mesh and refines it near the plane.
  *  
  * \param [in] forest           The forest which has to be refined.
+ * \param [in] fileprefix       The prefix of the msh and brep file.
+ *                              Influences only the vtu file name.
  * \param [in] level            The base level of the mesh.
  * \param [in] rlevel           The max level the elements get refined to.
  * \param [in] steps            The amount of time steps the plane makes.
  * \param [in] thickness        The thickness of the refinement band.
  * \param [in] xmin             The starting x-coordinate of the refinement plane.
  * \param [in] xmax             The ending x-coordinate of the refinement plane.
+ * \param [in] curved           Decides whether the vtu contains the phrase
+ *                              "curved" or "linear".
  */
 int
-t8_naca_plane_refinement (t8_forest_t forest, int level, int rlevel,
-                          int steps, double thickness, double xmin,
-                          double xmax)
+t8_naca_plane_refinement (t8_forest_t forest, const std::string & fileprefix,
+                          int level, int rlevel, int steps, double thickness,
+                          double xmin, double xmax, int curved)
 {
-  char                forest_vtu[BUFSIZ];
   t8_forest_t         forest_new;
+  std::string forest_vtu;
 
   /* Define the adapt data */
   t8_naca_plane_adapt_data adapt_data = {
@@ -304,10 +316,19 @@ t8_naca_plane_refinement (t8_forest_t forest, int level, int rlevel,
 
     /* Write the forest into vtk files and move the new forest for the next iteration.
      * Note that we use the curved vtk output, hence our mesh is curved. */
-    snprintf (forest_vtu, BUFSIZ, "naca_plane_adapted_forest%02d",
-              adapt_data.t);
-    t8_forest_write_vtk_ext (forest_new, forest_vtu, 1, 1, 1, 1, 0, 1, 0, 0,
-                             NULL);
+    const int           filename_pos = fileprefix.find_last_of ("\\/");
+    forest_vtu =
+      "plane_adapted_forest_" + fileprefix.substr (filename_pos + 1) + "_" +
+      std::to_string (adapt_data.t);
+    if (curved) {
+      forest_vtu = "curved_" + forest_vtu;
+    }
+    else {
+      forest_vtu = "linear_" + forest_vtu;
+    }
+    t8_forest_write_vtk_ext (forest_new, forest_vtu.c_str (), 1, 1, 1, 1, 0,
+                             1, 0, 0, NULL);
+    t8_productionf ("Wrote forest to %s*\n", forest_vtu.c_str ());
     forest = forest_new;
     ++adapt_data.t;
   }
@@ -417,13 +438,15 @@ main (int argc, char **argv)
         ("\n\tERROR: Wrong usage.\n"
          "\tPlease specify either the '-p' or the '-s' option as described above.\n\n");
     }
-    else t8_global_productionf ("\n\tERROR: Wrong usage.\n\n");
+    else
+      t8_global_productionf ("\n\tERROR: Wrong usage.\n\n");
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else {
+    std::string fp (fileprefix);
     /* Read in the naca mesh from the msh file and the naca geometry from the brep file */
     cmesh =
-      t8_cmesh_from_msh_file (fileprefix, 0, sc_MPI_COMM_WORLD, dim, 0, occ
+      t8_cmesh_from_msh_file (fp.c_str (), 0, sc_MPI_COMM_WORLD, dim, 0, occ
                               || surface);
     /* Construct a forest from the cmesh */
     forest = t8_forest_new_uniform (cmesh,
@@ -431,12 +454,12 @@ main (int argc, char **argv)
                                     level, 0, comm);
     T8_ASSERT (t8_forest_is_committed (forest));
     if (surface) {
-      t8_naca_surface_refinement (forest, level, rlevel_dorsal,
+      t8_naca_surface_refinement (forest, fp, level, rlevel_dorsal,
                                   rlevel_ventral);
     }
     if (plane) {
-      t8_naca_plane_refinement (forest, level, rlevel, steps, thickness, xmin,
-                                xmax);
+      t8_naca_plane_refinement (forest, fp, level, rlevel, steps,
+                                thickness, xmin, xmax, occ);
     }
   }
   sc_options_destroy (opt);
