@@ -27,11 +27,12 @@
 #include <t8_cmesh_vtk.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 
-/* Test if the attribute_offsets of a partitioned cmesh with multiple  
- * attributes is calculated correctly */
+/* Test if multiple attributes are partitioned correctly */
 
-/** Construct \a num_trees many cubes each of length 1 connected along the x-axis */
-t8_cmesh_t
+/** Construct \a num_trees many cubes each of length 1 connected along the x-axis 
+ * with only one attribute, or with additional attributes
+*/
+static t8_cmesh_t
 t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees, const int attributes,
                            sc_MPI_Comm comm)
 {
@@ -79,7 +80,7 @@ t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees, const int attributes,
   return cmesh;
 }
 
-t8_cmesh_t
+static t8_cmesh_t
 t8_cmesh_partition_cmesh (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh_partition;
@@ -112,62 +113,59 @@ protected:
   t8_cmesh_t        cmesh_mult_at;
   t8_locidx_t       num_trees;
 };
-/* *INDENT-ON* */
 
-/** Returns 1 if two cmeshes have the same vertices.
- * \note The number of trees and the respective eclasses must be the same.
-*/
-int
-t8_cmesh_is_equal_vertices (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
-{
-  t8_locidx_t         num_local_trees = cmesh_a->num_local_trees;
-  T8_ASSERT (num_local_trees == cmesh_b->num_local_trees);
-
-  for (t8_locidx_t tree_id = 0; tree_id < num_local_trees; tree_id++) {
-    double             *vertices_a =
-      t8_cmesh_get_tree_vertices (cmesh_a, tree_id);
-    double             *vertices_b =
-      t8_cmesh_get_tree_vertices (cmesh_b, tree_id);
-
-    t8_eclass_t         eclass = t8_cmesh_get_tree_class (cmesh_a, tree_id);
-    T8_ASSERT (eclass == t8_cmesh_get_tree_class (cmesh_b, tree_id));
-    const int           num_vertices = t8_eclass_num_vertices[eclass];
-    /* Compare vertices of cmesh_a and cmesh_b */
-    for (int v_id = 0; v_id < num_vertices * 3; v_id++) {
-      if (vertices_a[v_id] != vertices_b[v_id]) {
-        return 0;
-      }
-    }
-  }
-  return 1;
-}
-
-/** Returns 1 if the geometric volume of the trees with there coordinates 
- * is is negative. */
-int
-t8_cmesh_negative_volume (t8_cmesh_t cmesh)
-{
-  t8_locidx_t         num_local_trees = cmesh->num_local_trees;
-  for (t8_locidx_t tree_id = 0; tree_id < num_local_trees; tree_id++) {
-    double             *vertices =
-      t8_cmesh_get_tree_vertices (cmesh, tree_id);
-    t8_eclass_t         eclass = t8_cmesh_get_tree_class (cmesh, tree_id);
-    const int           num_vertices = t8_eclass_num_vertices[eclass];
-    /* Check if a tree does have negative volume. */
-    if (t8_cmesh_tree_vertices_negative_volume
-        (eclass, vertices, num_vertices)) {
-      return 1;
-    }
-  }
-  return 0;
-}
-
-/* *INDENT-OFF* */
 TEST_P (cmesh_multiple_attributes, multiple_attributes) {
-    EXPECT_TRUE(t8_cmesh_is_committed (cmesh_one_at));
-    EXPECT_TRUE(t8_cmesh_is_committed (cmesh_mult_at));
-    EXPECT_TRUE(!t8_cmesh_negative_volume (cmesh_one_at));
-    EXPECT_TRUE(t8_cmesh_is_equal_vertices (cmesh_one_at, cmesh_mult_at));
+  /* Vertices of first cube in row */
+  t8_locidx_t num_local_trees;
+  double              vertices_ref[24] = {
+    0, 0, 0,
+    1, 0, 0,
+    0, 1, 0,
+    1, 1, 0,
+    0, 0, 1,
+    1, 0, 1,
+    0, 1, 1,
+    1, 1, 1,
+  };
+
+  EXPECT_TRUE(t8_cmesh_is_committed (cmesh_one_at));
+  num_local_trees = cmesh_one_at->num_local_trees;
+  for (t8_locidx_t ltree_id = 0; ltree_id < num_local_trees; ltree_id++) {
+    t8_gloidx_t gtree_id = cmesh_one_at->first_tree + ltree_id;
+    double             *vertices_partition =
+      t8_cmesh_get_tree_vertices (cmesh_one_at, ltree_id);
+
+    EXPECT_EQ(T8_ECLASS_HEX, t8_cmesh_get_tree_class (cmesh_one_at, ltree_id));
+
+    for (int v_id = 0; v_id < 8; v_id++) {
+      EXPECT_EQ(vertices_partition[v_id * 3], vertices_ref[v_id*3] + gtree_id);
+      EXPECT_EQ(vertices_partition[v_id * 3 + 1], vertices_ref[v_id*3 + 1]);
+      EXPECT_EQ(vertices_partition[v_id * 3 + 2], vertices_ref[v_id*3 + 2]);
+    }
+  }
+
+  EXPECT_TRUE(t8_cmesh_is_committed (cmesh_mult_at));
+  num_local_trees = cmesh_mult_at->num_local_trees;
+  for (t8_locidx_t ltree_id = 0; ltree_id < num_local_trees; ltree_id++) {
+    t8_gloidx_t gtree_id = cmesh_mult_at->first_tree + ltree_id;
+    double             *vertices_partition =
+      t8_cmesh_get_tree_vertices (cmesh_one_at, ltree_id);
+
+    EXPECT_EQ(T8_ECLASS_HEX, t8_cmesh_get_tree_class (cmesh_one_at, ltree_id));
+
+    for (int v_id = 0; v_id < 8; v_id++) {
+      EXPECT_EQ(vertices_partition[v_id * 3], vertices_ref[v_id*3] + gtree_id);
+      EXPECT_EQ(vertices_partition[v_id * 3 + 1], vertices_ref[v_id*3 + 1]);
+      EXPECT_EQ(vertices_partition[v_id * 3 + 2], vertices_ref[v_id*3 + 2]);
+    }
+    t8_locidx_t att;
+    att = *(t8_locidx_t*) t8_cmesh_get_attribute
+      (cmesh_mult_at, t8_get_package_id (), T8_CMESH_NEXT_POSSIBLE_KEY, ltree_id);
+    EXPECT_EQ(gtree_id, att);
+    att = *(t8_locidx_t*) t8_cmesh_get_attribute
+      (cmesh_mult_at, t8_get_package_id (), T8_CMESH_NEXT_POSSIBLE_KEY + 1, ltree_id);
+    EXPECT_EQ(att, cmesh_mult_at->num_trees);
+  }
 }
 
 /* Test for diffrent number of trees. */
