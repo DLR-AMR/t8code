@@ -70,7 +70,7 @@ pyramid_controll_volume (t8_dpyramid_t *pyra)
   if (level == 0) {
     return controll_volume;
   }
-  /*Both pyramids and tets have 1/8th of the parents volume, if the shape does not switch. */
+  /* Both pyramids and tets have 1/8th of the parents volume, if the shape does not switch. */
   controll_volume /= 1 << ((pyra->pyramid.level - 1) * 3);
   /* All ancestors are pyramids */
   if (switch_shape_at_level == -1) {
