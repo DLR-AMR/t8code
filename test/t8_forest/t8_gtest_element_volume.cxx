@@ -64,16 +64,14 @@ class t8_forest_volume:public testing::TestWithParam <std::tuple<t8_eclass_t, in
 double
 pyramid_controll_volume (t8_dpyramid_t *pyra)
 {
-  const int           switch_shape_at_level = pyra->switch_shape_at_level;
-  const int           level = pyra->pyramid.level;
   double              controll_volume = 1.0 / 3.0;
-  if (level == 0) {
+  if (pyra->pyramid.level == 0) {
     return controll_volume;
   }
   /* Both pyramids and tets have 1/8th of the parents volume, if the shape does not switch. */
   controll_volume /= 1 << ((pyra->pyramid.level - 1) * 3);
   /* All ancestors are pyramids */
-  if (switch_shape_at_level == -1) {
+  if (pyra->switch_shape_at_level == -1) {
     controll_volume /= 8;
   }
   /* Ancestors switch the shape. A tetrahedron a 1/16th of its parents volume. */
