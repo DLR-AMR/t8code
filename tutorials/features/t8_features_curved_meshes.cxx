@@ -149,10 +149,11 @@ t8_naca_surface_refinement (t8_forest_t forest,
   t8_forest_t         forest_new;
   /* Generate the adapt data. We refine the surfaces in the array surfaces[]
    * to the levels specified in the array levels[]. The surface indices can be visualized by opening
-   * the brep file in the Gmsh GUI and turning on the visibility of surface tags 
-   * (Tools->Options->Geometry->Surface labels in version 4.8.4). In this case we choose the two
-   * dorsal and ventral surfaces of the NACA profile. */
-  int                 surfaces[4] = { 2, 8, 14, 19 };
+   * the brep file in the Gmsh GUI and turning on the visibility of surface tags
+   * (Tools->Options->Geometry->Surface labels in version 4.11). In this case we choose the two
+   * dorsal and ventral surfaces of the NACA profile. The surface tags can be different across
+   * different Gmsh versions. Just change them, if your Gmsh version provides different tags. */
+  int                 surfaces[4] = { 2, 28, 24, 19 };
   int                 levels[4] =
     { rlevel_dorsal, rlevel_dorsal, rlevel_ventral, rlevel_ventral };
   t8_naca_surface_adapt_data adapt_data = {
