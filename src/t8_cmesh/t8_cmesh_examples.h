@@ -267,7 +267,7 @@ t8_cmesh_t          t8_cmesh_new_long_brick_pyramid (sc_MPI_Comm comm,
 /** Construct \a num_trees many cubes each of length 1 connected along the x-axis 
  * without any additional attributes than the tree-vertices, or with additional attributes.
  * \param [in] num_trees     The number of trees along the x-axis
- * \param [in] attributes    If 1, set tree_id and num_trees as additional attribute for each tree.
+ * \param [in] set_attributes    If 1, set tree_id and num_trees as additional attribute for each tree.
  * \param [in] comm          The MPI communicator used to commit the cmesh
  * \return                   A cmesh with \a num_trees many hexahedrons.
  */
