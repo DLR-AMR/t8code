@@ -272,7 +272,7 @@ t8_cmesh_t          t8_cmesh_new_long_brick_pyramid (sc_MPI_Comm comm,
  * \return                   A cmesh with \a num_trees many hexahedrons.
  */
 t8_cmesh_t          t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees,
-                                               const int attributes,
+                                               const int set_attributes,
                                                sc_MPI_Comm comm);
 
 T8_EXTERN_C_END ();
