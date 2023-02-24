@@ -31,15 +31,6 @@
  * At the end we result in the same partition as at the beginning and we
  * compare this cmesh with the initial one. If they are equal the test is
  * passed.
- *
- * TODO: - Currently the test is not passed. This is probably because the
- *         cmesh_is_equal function is too strict and does not allow, for example,
- *         the order of the ghosts to change.
- *         We should implement a lighter version of cmesh_is_equal in order
- *         to account for this.
- * 
- *       - when this test works for all cmeshes remove if statement in 
- *         classes and tests 
  */
 
 /* *INDENT-OFF* */
@@ -48,9 +39,6 @@ protected:
   void SetUp() override {
     cmesh_id = GetParam();
 
-    if (!(cmesh_id != 89 && (cmesh_id < 237 || cmesh_id > 256))) {
-      GTEST_SKIP();
-    }
     cmesh_original = t8_test_create_cmesh (cmesh_id);
   }
 
@@ -69,9 +57,6 @@ test_cmesh_commited (t8_cmesh_t cmesh)
 
 TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate)
 {
-  /* This if statement is necessary to make the test work by avoiding specific cmeshes which do not work yet for this test.
-   * When the issues are gone, remove the if statement. 
-   */
 
 #ifdef T8_ENABLE_LESS_TESTS
   const int           level = 6;
