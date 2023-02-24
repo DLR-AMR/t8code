@@ -149,7 +149,7 @@ TEST_P (cmesh_multiple_attributes, multiple_attributes) {
   }
 
   /* Check partitioned cmesh with three attributes. */
-  EXPECT_TRUE(t8_cmesh_is_committed (cmesh_mult_at));
+ ASSERT_TRUE(t8_cmesh_is_committed (cmesh_mult_at));
   EXPECT_EQ(num_local_trees, cmesh_mult_at->num_local_trees);
   for (t8_locidx_t ltree_id = 0; ltree_id < num_local_trees; ltree_id++) {
     t8_gloidx_t gtree_id = cmesh_mult_at->first_tree + ltree_id;
