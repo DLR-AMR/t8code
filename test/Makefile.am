@@ -17,7 +17,6 @@ t8code_test_programs = \
     test/t8_geometry/t8_test_point_inside \
     test/t8_schemes/t8_test_element_count_leafs \
     test/t8_schemes/t8_test_find_parent \
-    test/t8_schemes/t8_test_successor \
     test/t8_schemes/t8_test_pyra_face_neigh \
     test/t8_schemes/t8_test_pyra_face_descendant \
     test/t8_data/t8_test_shmem \
@@ -39,7 +38,6 @@ test_t8_forest_t8_test_user_data_SOURCES = test/t8_forest/t8_test_user_data.cxx
 test_t8_schemes_t8_test_pyra_face_neigh_SOURCES = test/t8_schemes/t8_test_pyra_face_neigh.cxx
 test_t8_schemes_t8_test_pyra_face_descendant_SOURCES = test/t8_schemes/t8_test_pyra_face_descendant.cxx
 test_t8_schemes_t8_test_find_parent_SOURCES = test/t8_schemes/t8_test_find_parent.cxx
-test_t8_schemes_t8_test_successor_SOURCES = test/t8_schemes/t8_test_successor.cxx
 test_t8_schemes_t8_test_element_count_leafs_SOURCES = test/t8_schemes/t8_test_element_count_leafs.cxx
 
 test_t8_geometry_t8_test_point_inside_SOURCES = test/t8_geometry/t8_test_point_inside.cxx
@@ -70,6 +68,7 @@ test_t8_gtest_main_SOURCES = test/t8_gtest_main.cxx \
   test/t8_cmesh/t8_gtest_cmesh_copy.cxx \
   test/t8_schemes/t8_gtest_descendant.cxx \
   test/t8_cmesh/t8_gtest_cmesh_face_is_boundary.cxx \
+  test/t8_schemes/t8_gtest_successor.cxx \
   test/t8_cmesh/t8_gtest_cmesh_readmshfile.cxx
   
 
