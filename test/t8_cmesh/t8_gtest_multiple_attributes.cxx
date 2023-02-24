@@ -30,7 +30,7 @@
 /* Test if multiple attributes are partitioned correctly. */
 
 /** Construct \a num_trees many cubes each of length 1 connected along the x-axis 
- * with only one attribute, or with additional attributes.
+ * without any additional attributes than the tree-vertices, or with additional attributes.
 */
 static t8_cmesh_t
 t8_cmesh_new_row_of_cubes (const t8_locidx_t num_trees, const int attributes,
