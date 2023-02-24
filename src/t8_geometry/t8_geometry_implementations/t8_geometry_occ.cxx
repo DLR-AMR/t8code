@@ -724,21 +724,6 @@ t8_geometry_occ_destroy (t8_geometry_occ_c ** geom)
   *geom = NULL;
 }
 
-#if T8_ENABLE_DEBUG
-int
-t8_geom_is_occ (const t8_geometry_c *geometry)
-{
-  /* Try to dynamic cast the geometry into occ geometry. This is only successful if
-   * geometry points to a t8_geometry_occ.
-   * If successful, then is_occ_geom will be true.
-   */
-  const int           is_occ_geom =
-    (dynamic_cast < const t8_geometry_occ * >(geometry) != NULL);
-
-  return is_occ_geom;
-}
-#endif
-
 T8_EXTERN_C_END ();
 
 #endif /* T8_WITH_OCC */
