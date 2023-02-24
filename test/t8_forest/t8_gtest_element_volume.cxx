@@ -81,32 +81,40 @@ pyramid_controll_volume (t8_dpyramid_t *pyra)
 
   return controll_volume;
 }
-/* *INDENT-OFF* */
 
-TEST_P(t8_forest_volume, volume_check){
-    /* Compute the global number of elements*/
-    const t8_gloidx_t global_num_elements = t8_forest_get_global_num_elements (forest);
-    /* Vertices have a volume of 0. */
-    const double controll_volume = (eclass==T8_ECLASS_VERTEX) ? 0.0 : (1.0/global_num_elements);
+TEST_P (t8_forest_volume, volume_check)
+{
+  /* Compute the global number of elements */
+  const t8_gloidx_t   global_num_elements =
+    t8_forest_get_global_num_elements (forest);
+  /* Vertices have a volume of 0. */
+  const double        controll_volume =
+    (eclass == T8_ECLASS_VERTEX) ? 0.0 : (1.0 / global_num_elements);
 
-    const t8_locidx_t local_num_trees = t8_forest_get_num_local_trees(forest);
-    /* Iterate over all elements. */
-    for(t8_locidx_t itree = 0; itree < local_num_trees; itree++){
-        const t8_locidx_t tree_elements = t8_forest_get_tree_num_elements(forest, itree);
-        for(t8_locidx_t ielement = 0; ielement < tree_elements; ielement++){
-            const t8_element_t *element = t8_forest_get_element_in_tree(forest, itree, ielement);
-            const double volume = t8_forest_element_volume(forest, itree, element);
-            if(eclass == T8_ECLASS_PYRAMID){
-                const double shape_volume = pyramid_controll_volume((t8_dpyramid_t *) element);
-                EXPECT_NEAR(volume, shape_volume, epsilon);
-            }
-            else{
-                EXPECT_NEAR(volume, controll_volume, epsilon);
-            }   
-        }
+  const t8_locidx_t   local_num_trees =
+    t8_forest_get_num_local_trees (forest);
+  /* Iterate over all elements. */
+  for (t8_locidx_t itree = 0; itree < local_num_trees; itree++) {
+    const t8_locidx_t   tree_elements =
+      t8_forest_get_tree_num_elements (forest, itree);
+    for (t8_locidx_t ielement = 0; ielement < tree_elements; ielement++) {
+      const t8_element_t *element =
+        t8_forest_get_element_in_tree (forest, itree, ielement);
+      const double        volume =
+        t8_forest_element_volume (forest, itree, element);
+      if (eclass == T8_ECLASS_PYRAMID) {
+        const double        shape_volume =
+          pyramid_controll_volume ((t8_dpyramid_t *) element);
+        EXPECT_NEAR (volume, shape_volume, epsilon);
+      }
+      else {
+        EXPECT_NEAR (volume, controll_volume, epsilon);
+      }
     }
+  }
 }
 
-INSTANTIATE_TEST_SUITE_P(t8_gtest_element_volume, t8_forest_volume, 
-                        testing::Combine(testing::Range(T8_ECLASS_ZERO, T8_ECLASS_COUNT),testing::Range(0,4)));
-/* *INDENT-ON* */
+INSTANTIATE_TEST_SUITE_P (t8_gtest_element_volume, t8_forest_volume,
+                          testing::Combine (testing::Range (T8_ECLASS_ZERO,
+                                                            T8_ECLASS_COUNT),
+                                            testing::Range (0, 4)));
