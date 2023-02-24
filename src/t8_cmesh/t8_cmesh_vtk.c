@@ -289,9 +289,6 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix,
         /* Check for conversion errors */
         T8_ASSERT (ghost->treeid == (t8_gloidx_t) ((long) ghost->treeid));
 #endif
-#if 0
-        fprintf (vtufile, " %ld", (long) ghost->treeid);
-#endif
         /* Write -1 as tree_id so that we can distinguish ghosts from normal trees
          * in the vtk file */
         fprintf (vtufile, " %ld", (long) -1);

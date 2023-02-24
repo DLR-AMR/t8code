@@ -89,26 +89,6 @@ t8_cmesh_save_cmesh (const char *mshfile, int dim)
   t8_cmesh_destroy (&cmesh);
 }
 
-#if 0
-static void
-t8_cmesh_load_cmesh ()
-{
-  t8_cmesh_t          cmesh;
-  char                filename[BUFSIZ];
-  int                 mpirank, mpiret;
-
-  mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
-  SC_CHECK_MPI (mpiret);
-  snprintf (filename, BUFSIZ, "cmesh_saved_%04d.cmesh", mpirank);
-  cmesh = t8_cmesh_load (filename, sc_MPI_COMM_WORLD);
-  if (cmesh != NULL) {
-    t8_debugf ("Successfully loaded cmesh from %s\n", filename);
-    t8_cmesh_vtk_write_file (cmesh, "cmesh_loaded", 1.0);
-    t8_cmesh_destroy (&cmesh);
-  }
-}
-#endif
-
 int
 main (int argc, char **argv)
 {
