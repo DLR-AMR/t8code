@@ -1926,7 +1926,7 @@ t8_cmesh_new_full_hybrid (sc_MPI_Comm comm)
 }
 
 t8_cmesh_t
-t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees, const int attributes,
+t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees, const int set_attributes,
                            sc_MPI_Comm comm)
 {
   T8_ASSERT (num_trees > 0);
