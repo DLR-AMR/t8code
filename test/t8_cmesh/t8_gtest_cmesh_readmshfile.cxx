@@ -156,9 +156,6 @@ TEST (t8_cmesh_readmshfile, test_msh_file_vers4_ascii)
                NULL) <<
     "Could not read cmesh from ascii version 2, but should be able to.";
 
-  //int                 checkval = t8_supported_msh_file (cmesh);
-  //ASSERT_EQ (checkval, 1) << "Cmesh incorrectly read from file.";
-
   /* The cmesh was read sucessfully and we need to destroy it. */
   t8_cmesh_destroy (&cmesh);
 }
