@@ -56,7 +56,7 @@ t8_cmesh_new_row_of_cubes (const t8_locidx_t num_trees, const int attributes,
   /* Set each tree in cmesh. */
   for (t8_locidx_t tree_id = 0; tree_id < num_trees; tree_id++) {
     t8_cmesh_set_tree_class (cmesh, tree_id, T8_ECLASS_HEX);
-    /* Set first attribut - tree vertices. */
+    /* Set first attribute - tree vertices. */
     t8_cmesh_set_tree_vertices (cmesh, tree_id, vertices, 8);
     /* Update vertices_coords (x-axis) for next tree. */
     for (int v_id = 0; v_id < 8; v_id++) {
