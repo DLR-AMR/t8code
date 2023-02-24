@@ -30,10 +30,6 @@
  * level >= element_level (for eclass != T8_ECLASS_PYRAMID).
  * For level < element_level the value should be zero.
  */
-/*
- * TODO:
- *  - Add a test for different schemes as soon as they are implemented
- */
 
 /* Tests whether the leaf count for one additional level matches the number of children */
 /* *INDENT-OFF* */
