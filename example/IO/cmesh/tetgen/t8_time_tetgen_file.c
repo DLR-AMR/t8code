@@ -34,9 +34,6 @@ t8_read_tetgen_file_build_cmesh (const char *prefix, int do_dup,
                                  int do_partition)
 {
   t8_cmesh_t          cmesh;
-#if 0
-  char                fileprefix[BUFSIZ];
-#endif
   int                 mpirank, mpiret;
   sc_flopinfo_t       fi, snapshot;
   sc_statinfo_t       stats[6];
@@ -54,15 +51,6 @@ t8_read_tetgen_file_build_cmesh (const char *prefix, int do_dup,
     t8_debugf ("cmesh has:\n\t%lli tetrahedra %li local\n",
                (long long) t8_cmesh_get_num_trees (cmesh),
                (long) t8_cmesh_get_num_local_trees (cmesh));
-#if 0
-    snprintf (fileprefix, BUFSIZ, "%s_t8_tetgen", prefix);
-    if (!t8_cmesh_vtk_write_file (cmesh, fileprefix, 1.)) {
-      t8_debugf ("Wrote to file %s\n", fileprefix);
-    }
-    else {
-      t8_debugf ("Error in writing cmesh vtk\n");
-    }
-#endif
     t8_cmesh_unref (&cmesh);
   }
   else {
