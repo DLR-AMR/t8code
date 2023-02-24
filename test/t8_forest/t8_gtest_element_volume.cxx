@@ -62,24 +62,24 @@ class t8_forest_volume:public testing::TestWithParam <std::tuple<t8_eclass_t, in
  * \return The volume of the pyramid 
  */
 double
-pyramid_controll_volume (t8_dpyramid_t *pyra)
+pyramid_control_volume (t8_dpyramid_t *pyra)
 {
-  double              controll_volume = 1.0 / 3.0;
+  double              control_volume = 1.0 / 3.0;
   if (pyra->pyramid.level == 0) {
-    return controll_volume;
+    return control_volume;
   }
   /* Both pyramids and tets have 1/8th of the parents volume, if the shape does not switch. */
-  controll_volume /= 1 << ((pyra->pyramid.level - 1) * 3);
+  control_volume /= 1 << ((pyra->pyramid.level - 1) * 3);
   /* All ancestors are pyramids */
   if (pyra->switch_shape_at_level == -1) {
-    controll_volume /= 8;
+    control_volume /= 8;
   }
   /* Ancestors switch the shape. A tetrahedron a 1/16th of its parents volume. */
   else {
-    controll_volume /= 16;
+    control_volume /= 16;
   }
 
-  return controll_volume;
+  return control_volume;
 }
 
 TEST_P (t8_forest_volume, volume_check)
@@ -88,7 +88,7 @@ TEST_P (t8_forest_volume, volume_check)
   const t8_gloidx_t   global_num_elements =
     t8_forest_get_global_num_elements (forest);
   /* Vertices have a volume of 0. */
-  const double        controll_volume =
+  const double        control_volume =
     (eclass == T8_ECLASS_VERTEX) ? 0.0 : (1.0 / global_num_elements);
 
   const t8_locidx_t   local_num_trees =
@@ -104,11 +104,11 @@ TEST_P (t8_forest_volume, volume_check)
         t8_forest_element_volume (forest, itree, element);
       if (eclass == T8_ECLASS_PYRAMID) {
         const double        shape_volume =
-          pyramid_controll_volume ((t8_dpyramid_t *) element);
+          pyramid_control_volume ((t8_dpyramid_t *) element);
         EXPECT_NEAR (volume, shape_volume, epsilon);
       }
       else {
-        EXPECT_NEAR (volume, controll_volume, epsilon);
+        EXPECT_NEAR (volume, control_volume, epsilon);
       }
     }
   }
