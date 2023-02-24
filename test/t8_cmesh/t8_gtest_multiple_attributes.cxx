@@ -135,7 +135,7 @@ TEST_P (cmesh_multiple_attributes, multiple_attributes) {
   ASSERT_TRUE(t8_cmesh_is_committed (cmesh_one_at));
   const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees(cmesh);
   for (t8_locidx_t ltree_id = 0; ltree_id < num_local_trees; ltree_id++) {
-    t8_gloidx_t gtree_id = cmesh_one_at->first_tree + ltree_id;
+    t8_gloidx_t gtree_id = t8_cmesh_get_global_id(ltree_id);
     double             *vertices_partition =
       t8_cmesh_get_tree_vertices (cmesh_one_at, ltree_id);
 
