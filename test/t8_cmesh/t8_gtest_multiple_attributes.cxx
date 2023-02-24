@@ -62,7 +62,7 @@ t8_cmesh_new_row_of_cubes (const t8_locidx_t num_trees, const int attributes,
     for (int v_id = 0; v_id < 8; v_id++) {
       vertices[v_id * 3]++;
     }
-    /* Set two more dummy attributs - tree_id & num_trees. */
+    /* Set two more dummy attributes - tree_id & num_trees. */
     if (attributes) {
       t8_cmesh_set_attribute
         (cmesh, tree_id, t8_get_package_id (), T8_CMESH_NEXT_POSSIBLE_KEY,
