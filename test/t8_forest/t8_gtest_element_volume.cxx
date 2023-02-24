@@ -57,7 +57,16 @@ class t8_forest_volume:public testing::TestWithParam <std::tuple<t8_eclass_t, in
 /* *INDENT-ON* */
 /**
  * Compute the volume of a pyramid descending of a root-pyramid with volume 1/3
+ * Pyramids need a special handling of the control-volume computation, because
+ * they subdivide into pyramids and tetrahedra. Therefore in every refinement three 
+ * types of elements occur:
  * 
+ * 1. A pyramid with 1/8 of its parents volume
+ * 2. A tetrahedron with a pyramid parent, having 1/16th of its parents volume.
+ * 3. A tetrahedron with a tet-parent, having 1/8th of its parents volume.
+ * 
+ * On a leaf-level we therefore can have many different volumes for the
+ * elements and compute it element-specific. 
  * \param[in] pyra A pyramid
  * \return The volume of the pyramid 
  */
@@ -65,18 +74,13 @@ double
 pyramid_control_volume (t8_dpyramid_t *pyra)
 {
   double              control_volume = 1.0 / 3.0;
-  if (pyra->pyramid.level == 0) {
-    return control_volume;
-  }
   /* Both pyramids and tets have 1/8th of the parents volume, if the shape does not switch. */
-  control_volume /= 1 << ((pyra->pyramid.level - 1) * 3);
-  /* All ancestors are pyramids */
-  if (pyra->switch_shape_at_level == -1) {
-    control_volume /= 8;
-  }
-  /* Ancestors switch the shape. A tetrahedron a 1/16th of its parents volume. */
-  else {
-    control_volume /= 16;
+  control_volume /= 1 << ((pyra->pyramid.level) * 3);
+  /* Ancestors switch the shape. A tetrahedron has a 1/16th of its parents volume. 
+   * For all levels we already divided the control-volume by 8, hence we 
+   * divide it by 2 once. */
+  if (pyra->switch_shape_at_level > 0) {
+    control_volume /= 2;
   }
 
   return control_volume;
