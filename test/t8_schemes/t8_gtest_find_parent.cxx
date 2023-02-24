@@ -68,7 +68,7 @@ t8_recursive_child_find_parent (t8_element_t *element, t8_element_t *child,
   T8_ASSERT (level <= maxlvl && maxlvl <= ts->t8_element_maxlevel () - 1);
 
   /* Get number of children */
-  int                 num_children = ts->t8_element_num_children (element);
+ const int                 num_children = ts->t8_element_num_children (element);
   /* Get child and test_parent, to check if test_parent = parent of child */
   if (level == maxlvl)
     return;
