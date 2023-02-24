@@ -33,15 +33,29 @@ protected:
     scheme = t8_scheme_new_default_cxx ();
     /* Get scheme for eclass */
     ts = scheme->eclass_schemes[eclass];
+
+    /* Get element and initialize it */
+    ts->t8_element_new (1, &element);
+    ts->t8_element_new (1, &child);
+    ts->t8_element_new (1, &test_parent);
+
+    ts->t8_element_set_linear_id (element, 0, 0);
   }
   void TearDown () override {
+    /* Destroy element */
+    ts->t8_element_destroy (1, &element);
+    ts->t8_element_destroy (1, &child);
+    ts->t8_element_destroy (1, &test_parent);
+
     /* Destroy scheme */
     t8_scheme_cxx_unref (&scheme);
   }
   t8_eclass_t           eclass;
   t8_scheme_cxx         *scheme;
   t8_eclass_scheme_c    *ts;
-
+  t8_element_t          *element;
+  t8_element_t          *child;
+  t8_element_t          *test_parent;
 };
 /* *INDENT-ON* */
 
@@ -84,22 +98,8 @@ TEST_P (class_find_parent, t8_compute_child_find_parent)
   const int           maxlvl = 6;
 #endif
 
-  t8_element_t       *element;
-  t8_element_t       *child;
-  t8_element_t       *test_parent;
-
-  /* Get element and initialize it */
-  ts->t8_element_new (1, &element);
-  ts->t8_element_new (1, &child);
-  ts->t8_element_new (1, &test_parent);
-
-  ts->t8_element_set_linear_id (element, 0, 0);
   /* Check for correct parent-child relation */
   t8_recursive_child_find_parent (element, child, test_parent, ts, 0, maxlvl);
-  /* Destroy element */
-  ts->t8_element_destroy (1, &element);
-  ts->t8_element_destroy (1, &child);
-  ts->t8_element_destroy (1, &test_parent);
 }
 
 /* *INDENT-OFF* */
