@@ -569,16 +569,3 @@ t8_offset_print (t8_shmem_array_t offset, sc_MPI_Comm comm)
   t8_debugf ("Offsets = %s\n", buf);
 #endif
 }
-
-#if 0
-/* TODO: Do we need this function? */
-/* Determine whether a given global tree id is in the range of a given
- * process without considering the first tree if it is shared */
-int
-t8_offset_in_range_wofirstshared (t8_gloidx_t tree_id, int proc,
-                                  t8_gloidx_t *offset)
-{
-  return t8_offset_first (proc, offset) + (offset[proc] < 0) <= tree_id
-    && tree_id <= t8_offset_last (proc, offset);
-}
-#endif

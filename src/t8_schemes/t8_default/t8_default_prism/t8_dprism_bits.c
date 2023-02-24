@@ -129,12 +129,11 @@ t8_dprism_child_id (const t8_dprism_t *p)
 int
 t8_dprism_is_familypv (t8_dprism_t **fam)
 {
-  int                 i, j;
   t8_dtri_t         **tri_fam = T8_ALLOC (t8_dtri_t *, T8_DTRI_CHILDREN);
   t8_dline_t        **line_fam = T8_ALLOC (t8_dline_t *, T8_DLINE_CHILDREN);
 
-  for (i = 0; i < T8_DLINE_CHILDREN; i++) {
-    for (j = 0; j < T8_DTRI_CHILDREN; j++) {
+  for (int i = 0; i < T8_DLINE_CHILDREN; i++) {
+    for (int j = 0; j < T8_DTRI_CHILDREN; j++) {
       tri_fam[j] = &fam[j + i * T8_DTRI_CHILDREN]->tri;
     }
     if (!t8_dtri_is_familypv ((const t8_dtri_t **) tri_fam)) {
@@ -144,11 +143,11 @@ t8_dprism_is_familypv (t8_dprism_t **fam)
     }
   }
 
-  for (i = 0; i < T8_DTRI_CHILDREN; i++) {
-    for (j = 0; j < T8_DLINE_CHILDREN; j++) {
+  for (int i = 0; i < T8_DTRI_CHILDREN; i++) {
+    for (int j = 0; j < T8_DLINE_CHILDREN; j++) {
       line_fam[j] = &fam[j * T8_DTRI_CHILDREN + i]->line;
     }
-    /*Proof for line_family and equality of triangles in both planes */
+    /* Proof for line_family and equality of triangles in both planes */
     if (!(t8_dline_is_familypv ((const t8_dline_t **) line_fam)
           && (fam[i]->tri.level == fam[i + T8_DTRI_CHILDREN]->tri.level)
           && (fam[i]->tri.type == fam[i + T8_DTRI_CHILDREN]->tri.type)
@@ -160,7 +159,7 @@ t8_dprism_is_familypv (t8_dprism_t **fam)
     }
   }
 
-  for (i = 0; i < T8_DPRISM_CHILDREN; i++) {
+  for (int i = 0; i < T8_DPRISM_CHILDREN; i++) {
     if (fam[i]->line.level != fam[i]->tri.level) {
       T8_FREE (tri_fam);
       T8_FREE (line_fam);
@@ -477,19 +476,15 @@ t8_dprism_successor (const t8_dprism_t *p, t8_dprism_t *succ, int level)
   if (prism_child_id == T8_DPRISM_CHILDREN - 1) {
     t8_dprism_successor (p, succ, level - 1);
     /*Zero out the bits of higher level, caused by recursion */
-#if 1
     succ->tri.x =
       (succ->tri.x >> (T8_DTRI_MAXLEVEL - level + 1)) << (T8_DTRI_MAXLEVEL -
                                                           level + 1);
     succ->tri.y =
       (succ->tri.y >> (T8_DTRI_MAXLEVEL - level + 1)) << (T8_DTRI_MAXLEVEL -
                                                           level + 1);
-#endif
-#if 1
     succ->line.x =
       (succ->line.x >> (T8_DLINE_MAXLEVEL - level + 1)) <<
       (T8_DLINE_MAXLEVEL - level + 1);
-#endif
     /*Set the level to the actual level */
     succ->line.level = level;
     succ->tri.level = level;
