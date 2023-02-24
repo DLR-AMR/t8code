@@ -263,8 +263,9 @@ public:
 
   /** Query whether a given set of elements is a family or not.
    * \param [in] fam      An array of as many elements as an element of class
-   *                      \b ts has children.
+   *                      \b ts has siblings.
    * \return              Zero if \b fam is not a family, nonzero if it is.
+   * \note level 0 elements do not form a family.
    */
   virtual int         t8_element_is_family (t8_element_t **fam);
 

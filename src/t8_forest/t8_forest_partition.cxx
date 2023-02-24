@@ -985,12 +985,6 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm,
                                   (t8_element_t *) (recv_buffer +
                                                     element_cursor),
                                   tree_info->num_elements);
-#if 0
-      /* Debugging output */
-      t8_debugf ("receive %li elements for tree %lli\n",
-                 (long) tree_info->num_elements,
-                 (long long) tree_info->gtree_id);
-#endif
     }
     else {
       T8_ASSERT (itree == 0);   /* This situation only happens for the first tree */
@@ -1009,12 +1003,6 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm,
       t8_element_array_resize (&tree->elements, new_num_elements);
       first_new_element = t8_element_array_index_locidx (&tree->elements,
                                                          old_num_elements);
-#if 0
-      /* Debugging output */
-      t8_debugf ("receive %li elements for tree %lli\n",
-                 (long) tree_info->num_elements,
-                 (long long) tree_info->gtree_id);
-#endif
       /* Get the size of an element of the tree */
       eclass_scheme =
         t8_forest_get_eclass_scheme (forest->set_from, tree->eclass);
