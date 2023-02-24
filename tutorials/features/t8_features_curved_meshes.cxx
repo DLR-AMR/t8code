@@ -48,6 +48,7 @@
  * surface get refined. */
 struct t8_naca_surface_adapt_data
 {
+  int                 level;    /* Uniform refinement level of the forest */
   int                 n_surfaces;       /* Amount of surfaces we want to refine */
   int                *surfaces; /* Array with surface indices */
   int                *levels;   /* Array with refinement levels */
@@ -94,7 +95,10 @@ t8_naca_surface_adapt_callback (t8_forest_t forest,
     t8_forest_get_user_data (forest);
   /* And check if it was retrieved successfully. */
   T8_ASSERT (adapt_data != NULL);
-
+  /* Refine element to the uniform refinement levl */
+  if (ts->t8_element_level (elements[0]) < adapt_data->level) {
+    return 1;
+  }
   /* We retrieve the number of faces of this element. */
   const int           num_faces = ts->t8_element_num_faces (elements[0]);
   for (int iface = 0; iface < num_faces; ++iface) {
@@ -134,7 +138,7 @@ t8_naca_surface_adapt_callback (t8_forest_t forest,
  * \param [in] rlevel_ventral   The refinement level of the elements touching the ventral side of the wing
  */
 int
-t8_naca_surface_refinement (t8_forest_t forest, int rlevel_dorsal,
+t8_naca_surface_refinement (t8_forest_t forest, int level, int rlevel_dorsal,
                             int rlevel_ventral)
 {
   t8_forest_t         forest_new;
@@ -147,6 +151,7 @@ t8_naca_surface_refinement (t8_forest_t forest, int rlevel_dorsal,
   int                 levels[4] =
     { rlevel_dorsal, rlevel_dorsal, rlevel_ventral, rlevel_ventral };
   t8_naca_surface_adapt_data adapt_data = {
+    level,                      /* Uniform refinement level of the forest */
     4,                          /* Amount of surfaces we want to refine */
     surfaces,                   /* Array with surface indices */
     levels                      /* Array with refinement levels */
@@ -326,7 +331,10 @@ main (int argc, char **argv)
 
   /* brief help message */
   snprintf (usage, BUFSIZ, "\t%s <OPTIONS>\n\t%s -h\t"
-            "for a brief overview of all options.",
+            "for a brief overview of all options. \n"
+            "\t%s -p\tfor a refinement plane moving through the mesh. \n"
+            "\t%s -s\tfor a refinement of elements touching certain surfaces.\n",
+            basename (argv[0]), basename (argv[0]),
             basename (argv[0]), basename (argv[0]));
 
   /* long help message */
@@ -334,6 +342,7 @@ main (int argc, char **argv)
                       "Demonstrates the some of the geometry capabitlities of t8code.\n"
                       "You can read in a msh and brep file of a naca profile and refine elements touching certain surfaces, \n"
                       "or advance a refinement plane through that NACA profile mesh.\n"
+                      "The brep and msh have to be generated with the gmsh software, using the .geo file in this directory.\n"
                       "Usage: %s\n", usage);
 
   if (sreturn >= BUFSIZ) {
@@ -360,25 +369,29 @@ main (int argc, char **argv)
   opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'h', "help", &helpme,
                          "Display a short help message.");
-  sc_options_add_string (opt, 'f', "fileprefix", &fileprefix, NULL,
-                         "Fileprefix of the msh and brep files.");
+  sc_options_add_string (opt, 'f', "fileprefix", &fileprefix, "./naca6412",
+                         "Fileprefix of the msh and brep files. Default: \"./naca6412\"");
+  sc_options_add_switch (opt, 's', "surface", &surface,
+                         "Refine the forest based on the surfaces the elements lie on. "
+                         "Only viable with curved meshes. Therefore, the -o option is enabled automatically. "
+                         "Cannot be combined with '-p'.");
   sc_options_add_int (opt, 'l', "level", &level, 0,
                       "The uniform refinement level of the mesh. Default: 0");
-  sc_options_add_int (opt, 'r', "rlevel", &rlevel, 3,
-                      "The refinement level of the mesh. Default: 3");
-  sc_options_add_switch (opt, 's', "surface", &surface,
-                         "Refine the forest based on the surfaces the elements lie on. Only viable with -o");
   sc_options_add_int (opt, 'd', "dorsal", &rlevel_dorsal, 3,
                       "The refinement level of the dorsal side of the naca profile. Default: 3");
   sc_options_add_int (opt, 'v', "ventral", &rlevel_ventral, 2,
                       "The refinement level of the ventral side of the naca profile. Default: 2");
   sc_options_add_switch (opt, 'p', "plane", &plane,
-                         "Move a plane through the forest and refine elements close to the plane.");
+                         "Move a plane through the forest and refine elements close to the plane. "
+                         "Cannot be combined with '-s'.");
+  sc_options_add_int (opt, 'r', "plane_level", &rlevel, 3,
+                      "The refinement level of the plane. Default: 3");
   sc_options_add_double (opt, 'x', "distance", &dist, 0.1,
                          "Maximum distance an element can have from the plane to still be refined. Default: 0.1");
   sc_options_add_int (opt, 't', "timesteps", &steps, 10,
                       "How many steps the plane takes to move through the airfoil. Default: 10");
-  sc_options_add_switch (opt, 'o', "occ", &occ, "Use the occ geometry.");
+  sc_options_add_switch (opt, 'o', "occ", &occ, "Use the occ geometry. "
+                         "In the surface mode this is enabled automatically.");
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (helpme) {
@@ -387,22 +400,30 @@ main (int argc, char **argv)
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else if (parsed == 0 || fileprefix == NULL ||
-           (!plane && !surface) || (plane && surface) || (surface && !occ)) {
+           (!plane && !surface) || (plane && surface)) {
     /* wrong usage */
-    t8_global_productionf ("\n\tERROR: Wrong usage.\n\n");
+    if (!plane && !surface) {
+      t8_global_productionf ("%s\n", help);
+      t8_global_productionf
+        ("\n\tERROR: Wrong usage.\n"
+         "\tPlease specify either the '-p' or the '-s' option as described above.\n\n");
+    }
+    else t8_global_productionf ("\n\tERROR: Wrong usage.\n\n");
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else {
     /* Read in the naca mesh from the msh file and the naca geometry from the brep file */
     cmesh =
-      t8_cmesh_from_msh_file (fileprefix, 0, sc_MPI_COMM_WORLD, 3, 0, occ);
+      t8_cmesh_from_msh_file (fileprefix, 0, sc_MPI_COMM_WORLD, 3, 0, occ
+                              || surface);
     /* Construct a forest from the cmesh */
     forest = t8_forest_new_uniform (cmesh,
                                     t8_scheme_new_default_cxx (),
                                     level, 0, comm);
     T8_ASSERT (t8_forest_is_committed (forest));
     if (surface) {
-      t8_naca_surface_refinement (forest, rlevel_dorsal, rlevel_ventral);
+      t8_naca_surface_refinement (forest, level, rlevel_dorsal,
+                                  rlevel_ventral);
     }
     if (plane) {
       t8_naca_plane_refinement (forest, level, rlevel, steps, dist);
