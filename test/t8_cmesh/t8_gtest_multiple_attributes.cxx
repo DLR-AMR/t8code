@@ -133,9 +133,9 @@ TEST_P (cmesh_multiple_attributes, multiple_attributes) {
 
   /* Check partitioned cmesh with one attribute. */
   ASSERT_TRUE(t8_cmesh_is_committed (cmesh_one_at));
-  const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees(cmesh);
+  const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees(cmesh_one_at);
   for (t8_locidx_t ltree_id = 0; ltree_id < num_local_trees; ltree_id++) {
-    t8_gloidx_t gtree_id = t8_cmesh_get_global_id(ltree_id);
+    t8_gloidx_t gtree_id = t8_cmesh_get_global_id(cmesh_one_at, ltree_id);
     const double             *vertices_partition =
       t8_cmesh_get_tree_vertices (cmesh_one_at, ltree_id);
 
@@ -150,9 +150,9 @@ TEST_P (cmesh_multiple_attributes, multiple_attributes) {
 
   /* Check partitioned cmesh with three attributes. */
  ASSERT_TRUE(t8_cmesh_is_committed (cmesh_mult_at));
-  EXPECT_EQ(num_local_trees, cmesh_mult_at->num_local_trees);
+  EXPECT_EQ(num_local_trees, t8_cmesh_get_num_local_trees(cmesh_mult_at));
   for (t8_locidx_t ltree_id = 0; ltree_id < num_local_trees; ltree_id++) {
-    t8_gloidx_t gtree_id = cmesh_mult_at->first_tree + ltree_id;
+    t8_gloidx_t gtree_id = t8_cmesh_get_global_id(cmesh_mult_at, ltree_id);
     const double             *vertices_partition =
       t8_cmesh_get_tree_vertices (cmesh_one_at, ltree_id);
 
@@ -172,7 +172,7 @@ TEST_P (cmesh_multiple_attributes, multiple_attributes) {
     /* Compare third attribute with global number of trees. */
     att = *(t8_locidx_t*) t8_cmesh_get_attribute
       (cmesh_mult_at, t8_get_package_id (), T8_CMESH_NEXT_POSSIBLE_KEY + 1, ltree_id);
-    EXPECT_EQ(att, cmesh_mult_at->num_trees);
+    EXPECT_EQ(att, t8_cmesh_get_num_trees(cmesh_mult_at));
   }
 }
 
