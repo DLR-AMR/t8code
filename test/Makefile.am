@@ -1,6 +1,6 @@
-# This file is part of t8code
-# Non-recursive Makefile.am in test
-# Included from toplevel directory
+#This file is part of t8code
+#Non-recursive Makefile.am in test
+#Included from toplevel directory
 
 t8code_test_programs = \
     test/t8_cmesh/t8_test_cmesh_partition \
