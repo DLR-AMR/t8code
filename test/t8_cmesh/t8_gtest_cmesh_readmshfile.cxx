@@ -154,7 +154,7 @@ TEST (t8_cmesh_readmshfile, test_msh_file_vers4_ascii)
     t8_cmesh_from_msh_file (fileprefix, 1, sc_MPI_COMM_WORLD, 2, 0, 0);
   ASSERT_TRUE (cmesh !=
                NULL) <<
-    "Could not read cmesh from ascii version 2, but should be able to.";
+    "Could not read cmesh from ascii version 4, but should be able to.";
 
   /* The cmesh was read sucessfully and we need to destroy it. */
   t8_cmesh_destroy (&cmesh);
@@ -191,7 +191,7 @@ TEST (t8_cmesh_readmshfile, test_msh_file_vers4_bin)
 
   snprintf (filename, BUFSIZ, "%s.msh", fileprefix);
 
-  t8_debugf ("Checking msh file versin 4 binary...\n");
+  t8_debugf ("Checking msh file version 4 binary...\n");
 
   ASSERT_FALSE (access (filename, R_OK)) << "Could not open file " <<
     filename;
