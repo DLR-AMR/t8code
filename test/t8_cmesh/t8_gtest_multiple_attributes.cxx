@@ -153,7 +153,7 @@ TEST_P (cmesh_multiple_attributes, multiple_attributes) {
   EXPECT_EQ(num_local_trees, cmesh_mult_at->num_local_trees);
   for (t8_locidx_t ltree_id = 0; ltree_id < num_local_trees; ltree_id++) {
     t8_gloidx_t gtree_id = cmesh_mult_at->first_tree + ltree_id;
-    double             *vertices_partition =
+    const double             *vertices_partition =
       t8_cmesh_get_tree_vertices (cmesh_one_at, ltree_id);
 
     EXPECT_EQ(T8_ECLASS_HEX, t8_cmesh_get_tree_class (cmesh_one_at, ltree_id));
