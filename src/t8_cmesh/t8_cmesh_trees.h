@@ -177,14 +177,6 @@ void                t8_cmesh_trees_init (t8_cmesh_trees_t *ptrees,
                                          int num_procs, t8_locidx_t num_trees,
                                          t8_locidx_t num_ghosts);
 
-#if 0
-void                t8_cmesh_trees_init_part (t8_cmesh_trees_t trees,
-                                              int proc,
-                                              t8_locidx_t first_tree,
-                                              t8_locidx_t last_tree,
-                                              t8_locidx_t num_ghosts);
-#endif
-
 /** Return one part of a specified tree array.
  * \param [in]        trees   The tree array to be queried
  * \param [in]        proc    An index specifying the part to be returned.
@@ -429,17 +421,6 @@ void                t8_cmesh_trees_init_attributes (t8_cmesh_trees_t trees,
                                                     t8_locidx_t ltree_id,
                                                     size_t num_attributes,
                                                     size_t attr_bytes);
-
-#if 0
-/* TODO: document
- * TODO: Is this function needed?
- * sorts for each tree its attribute info objects, such that looking up
- * attributes is in O(log(A)) with A the number of attributes of that tree.
- * However, with this method we do not know the size of an attribute any longer,
- * this is something the user has to take care of */
-void                t8_cmesh_trees_attribute_info_sort (t8_cmesh_trees_t
-                                                        trees);
-#endif
 
 /** Return an attribute that is stored at a tree.
  *  \param [in]       trees   The trees structure.

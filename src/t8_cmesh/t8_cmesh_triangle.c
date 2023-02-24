@@ -82,9 +82,6 @@ t8_cmesh_triangle_read_nodes (t8_cmesh_t cmesh, char *filename,
   long                corner;
   t8_locidx_t         corner_offset = 0;
   double              x, y, z;
-#if 0                           /* used for currently disabeld code */
-  int                 i, bdy_marker;
-#endif
   int                 num_attributes;
   int                 nbdy_marker;
   int                 retval;
@@ -149,19 +146,6 @@ t8_cmesh_triangle_read_nodes (t8_cmesh_t cmesh, char *filename,
       (*vertices)[dim * cit + 2] = z;
     }
 
-#if 0                           /* read attributes and boundary marker. This part is currently not needed */
-    /* read attributes but do not save them */
-    for (i = 0; i < num_attributes; i++) {
-      retval = sscanf (line, "%*f ");
-      if (retval != 0) {
-        t8_global_errorf ("Premature end of line in %s.\n", filename);
-      }
-    }
-    retval = sscanf (&line, "%i", &bdy_marker);
-    if (retval != 1) {
-      t8_global_errorf ("Premature end of line in %s.\n", filename);
-    }
-#endif /* if 0 */
   }
   fclose (fp);
   /* Done reading .node file */
@@ -496,11 +480,6 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition,
   SC_CHECK_MPI (mpiret);
 
   cmesh = NULL;
-#if 0
-  /* TODO: Use cmesh_bcast when scanning replicated mesh.
-   *       in that case only rank 0 will read the mesh */
-  if (mpirank == 0 || partition)
-#endif
   {
     int                 retval, corner_offset = 0;
     char                current_file[BUFSIZ];
@@ -552,12 +531,6 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition,
   /* TODO: broadcasting NULL does not work. We need a way to tell the
    *       other processes if something went wrong. */
   /* This broadcasts the NULL pointer if anything went wrong */
-#if 0
-  /* TODO: If not partitioned use bcast */
-  if (!partition) {
-    cmesh = t8_cmesh_bcast (cmesh, 0, comm);
-  }
-#endif
 
   if (cmesh != NULL) {
     if (partition) {

@@ -35,20 +35,6 @@ t8_linearidx_t      t8_element_get_linear_id (const t8_element_t *elem,
 
 #ifdef T8_ENABLE_DEBUG
 
-#if 0
-/* TODO: Used in one assertion in t8_element_nca, but wrongly triggers error there.
-         Investigate and decide whether we really need this. */
-static int
-t8_element_surround_matches (const p4est_quadrant_t * q,
-                             const p4est_quadrant_t * r)
-{
-  return T8_QUAD_GET_TDIM (q) == T8_QUAD_GET_TDIM (r) &&
-    (T8_QUAD_GET_TDIM (q) == -1 ||
-     (T8_QUAD_GET_TNORMAL (q) == T8_QUAD_GET_TNORMAL (r) &&
-      T8_QUAD_GET_TCOORD (q) == T8_QUAD_GET_TCOORD (r)));
-}
-#endif
-
 #endif /* T8_ENABLE_DEBUG */
 
 int
@@ -351,11 +337,6 @@ t8_default_scheme_quad_c::t8_element_nca (const t8_element_t *elem1,
 
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
-#if 0
-  /* TODO: This assertions throws an error since it expects a 3D hex.
-   *       this does not make sense. investigate. */
-  T8_ASSERT (t8_element_surround_matches (q1, q2));
-#endif
 
   p4est_nearest_common_ancestor (q1, q2, r);
   t8_element_copy_surround (q1, r);
@@ -702,20 +683,6 @@ t8_default_scheme_quad_c::t8_element_boundary (const t8_element_t *elem,
                                                t8_element_t **boundary)
 {
   SC_ABORT ("Not implemented\n");
-#if 0
-#ifdef T8_ENABLE_DEBUG
-  int                 per_eclass[T8_ECLASS_COUNT];
-#endif
-  int                 iface;
-
-  T8_ASSERT (length ==
-             t8_eclass_count_boundary (T8_ECLASS_QUAD, min_dim, per_eclass));
-
-  T8_ASSERT (length == P4EST_FACES);
-  for (iface = 0; iface < P4EST_FACES; iface++) {
-    t8_element_boundary_face (elem, iface, boundary[iface]);
-  }
-#endif
 }
 
 int
