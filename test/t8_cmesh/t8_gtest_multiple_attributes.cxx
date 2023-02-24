@@ -132,7 +132,7 @@ TEST_P (cmesh_multiple_attributes, multiple_attributes) {
   };
 
   /* Check partitioned cmesh with one attribute. */
-  EXPECT_TRUE(t8_cmesh_is_committed (cmesh_one_at));
+  ASSERT_TRUE(t8_cmesh_is_committed (cmesh_one_at));
   const t8_locidx_t num_local_trees = cmesh_one_at->num_local_trees;
   for (t8_locidx_t ltree_id = 0; ltree_id < num_local_trees; ltree_id++) {
     t8_gloidx_t gtree_id = cmesh_one_at->first_tree + ltree_id;
