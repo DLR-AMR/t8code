@@ -57,7 +57,7 @@ void                t8_vec_ax (double vec_x[3], const double alpha);
  * \param [in]  alpha  A factor.
  * \param [out] vec_z  On output set to \a alpha * \a vec_x.
  */
-void                t8_vec_axy (const double vec_x[3], double vec_y[3], 
+void                t8_vec_axy (const double vec_x[3], double vec_y[3],
                                 const double alpha);
 
 /** Y = alpha * X + b

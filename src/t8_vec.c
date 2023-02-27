@@ -62,7 +62,8 @@ t8_vec_axy (const double vec_x[3], double vec_y[3], const double alpha)
 
 /* y = ax + b */
 void
-t8_vec_axb (const double vec_x[3], double vec_y[3], const double alpha, const double b)
+t8_vec_axb (const double vec_x[3], double vec_y[3], const double alpha,
+            const double b)
 {
   for (int i = 0; i < 3; i++) {
     vec_y[i] = alpha * vec_x[i] + b;
