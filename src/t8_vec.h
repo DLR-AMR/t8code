@@ -52,6 +52,14 @@ double              t8_vec_dist (const double vec_x[3],
  */
 void                t8_vec_ax (double vec_x[3], double alpha);
 
+/** Compute Y = alpha * X
+ * \param [in]  vec_x  A 3D vector.
+ * \param [in]  alpha  A factor.
+ * \param [out] vec_z  On output set to \a alpha * \a vec_x.
+ */
+void                t8_vec_axy (const double vec_x[3], double vec_y[3], 
+                                const double alpha);
+
 /** Y = alpha * X + b
  * \param [in]  vec_x  A 3D vector.
  * \param [out] vec_y  On input, a 3D vector.
