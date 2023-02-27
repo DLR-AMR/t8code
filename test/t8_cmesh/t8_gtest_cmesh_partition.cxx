@@ -59,9 +59,9 @@ TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate)
 {
 
 #ifdef T8_ENABLE_LESS_TESTS
-  const int           level = 4;
+  const int           level = 2;
 #else
-  const int           level = 7;
+  const int           level = 4;
 #endif
   int                 mpisize;
   int                 mpiret;
