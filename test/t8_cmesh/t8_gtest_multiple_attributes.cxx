@@ -132,8 +132,7 @@ TEST_P (cmesh_multiple_attributes, multiple_attributes) {
     t8_gloidx_t gtree_id = t8_cmesh_get_global_id(cmesh_mult_at_from_stash, ltree_id);
     const double             *vertices_partition = (double *) t8_cmesh_get_attribute
       (cmesh_mult_at_from_stash, t8_get_package_id (), T8_CMESH_VERTICES_ATTRIBUTE_KEY, ltree_id);
-
-    t8_eclass_t eclass = (ltree_id <= num_local_trees) ? t8_cmesh_get_tree_class (cmesh_one_at, ltree_id) : t8_cmesh_get_ghost_class (cmesh_one_at, ltree_id - num_local_trees);
+    t8_eclass_t eclass = (ltree_id < num_local_trees) ? t8_cmesh_get_tree_class (cmesh_one_at, ltree_id) : t8_cmesh_get_ghost_class (cmesh_one_at, ltree_id - num_local_trees);
     EXPECT_EQ(T8_ECLASS_HEX, eclass);
 
     /* Compare vertices with reference vertices. */
