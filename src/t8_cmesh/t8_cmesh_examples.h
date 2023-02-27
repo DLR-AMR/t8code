@@ -101,6 +101,26 @@ t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
                                             int do_bcast, int do_partition,
                                             int periodic);
 
+/** Construct a hypercube forest from one primitive tree class.
+ * \param [in] eclass       This element class determines the dimension of the cube.
+ * \param [in] comm         The mpi communicator to be used.
+ * \param [in] boundary     The coordinate, that define the hypercube vertices.
+ * \param [in] trees_x      The number of trees along the x-axis.
+ * \param [in] trees_y      The number of trees along the y-axis.
+ *                          Only required if \a eclass is 2D or 3D.
+ * \param [in] trees_z      The number of trees along the z-axis.
+ *                          Only required if \a eclass is 3D.
+ * \return                  A committed t8_cmesh structure with 
+ *                          \a trees_x * \a trees_y * \a trees_z many trees of class \a eclass.
+ * \note \a boundary must point to an array with 3*8 (3D), 3*4 (2D), 3*2 (1D), or 3 (0D) entries.
+ */
+t8_cmesh_t          t8_cmesh_new_hypercube_ext (t8_eclass_t eclass,
+                                                sc_MPI_Comm comm,
+                                                const double *boundary, 
+                                                const t8_locidx_t trees_x, 
+                                                const t8_locidx_t trees_y,
+                                                const t8_locidx_t trees_z);
+
 /** Hybercube with 6 Tets, 6 Prism, 4 Hex. 
  * \param [in]  comm            The mpi communicator to be used.
  * \param [in]  do_partition    If non-zero create a partitioned cmesh.

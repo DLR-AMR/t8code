@@ -846,6 +846,122 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
   return cmesh;
 }
 
+static t8_cmesh_t
+t8_cmesh_new_quad_ext (const double *boundary, 
+                      const t8_locidx_t trees_x, 
+                      const t8_locidx_t trees_y,
+                      sc_MPI_Comm comm)
+{
+  /* x axis */
+  T8_ASSERT (trees_x > 0);
+  T8_ASSERT (boundary[3] > boundary[0]);
+  T8_ASSERT (boundary[9] > boundary[6]);
+  /* y axis */
+  T8_ASSERT (trees_y > 0);
+  T8_ASSERT (boundary[7] > boundary[1]);
+  T8_ASSERT (boundary[10] > boundary[4]);
+
+  t8_cmesh_t          cmesh;
+  t8_cmesh_init (&cmesh);
+  /* We use standard linear geometry */
+  const t8_geometry_c      *linear_geom = t8_geometry_linear_new (2);
+  t8_cmesh_register_geometry (cmesh, linear_geom);
+
+
+
+
+
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
+}
+
+static t8_cmesh_t
+t8_cmesh_new_hex_ext (const double *boundary, 
+                     const t8_locidx_t trees_x, 
+                     const t8_locidx_t trees_y,
+                     const t8_locidx_t trees_z,
+                     sc_MPI_Comm comm)
+{
+  /* x axis */
+  T8_ASSERT (trees_x > 0);
+  T8_ASSERT (boundary[3] > boundary[0]);
+  T8_ASSERT (boundary[9] > boundary[6]);
+  T8_ASSERT (boundary[15] > boundary[12]);
+  T8_ASSERT (boundary[21] > boundary[18]);
+  /* y axis */
+  T8_ASSERT (trees_y > 0);
+  T8_ASSERT (boundary[7] > boundary[1]);
+  T8_ASSERT (boundary[10] > boundary[4]);
+  T8_ASSERT (boundary[19] > boundary[13]);
+  T8_ASSERT (boundary[22] > boundary[16]);
+  /* z axis */
+  T8_ASSERT (trees_z > 0);
+  T8_ASSERT (boundary[14] > boundary[2]);
+  T8_ASSERT (boundary[17] > boundary[5]);
+  T8_ASSERT (boundary[20] > boundary[8]);
+  T8_ASSERT (boundary[23] > boundary[11]);
+
+  t8_cmesh_t          cmesh;
+  t8_cmesh_init (&cmesh);
+  /* We use standard linear geometry */
+  const t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
+  t8_cmesh_register_geometry (cmesh, linear_geom);
+
+
+
+
+
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
+}
+
+
+t8_cmesh_t          
+t8_cmesh_new_hypercube_ext (t8_eclass_t eclass,
+                           sc_MPI_Comm comm,
+                           const double *boundary, 
+                           const t8_locidx_t trees_x, 
+                           const t8_locidx_t trees_y,
+                           const t8_locidx_t trees_z)
+{
+  switch (eclass) {
+  case T8_ECLASS_VERTEX:
+    SC_ABORT ("T8_ECLASS_VERTEX is not yet supported by this function.\n");
+    return NULL;
+    break;
+  case T8_ECLASS_LINE:
+    SC_ABORT ("T8_ECLASS_LINE is not yet supported by this function.\n");
+    return NULL; 
+    break;
+  case T8_ECLASS_TRIANGLE:
+    SC_ABORT ("T8_ECLASS_TRIANGLE is not yet supported by this function.\n");
+    return NULL;
+    break;
+  case T8_ECLASS_QUAD:
+    return t8_cmesh_new_quad_ext (comm, boundary, trees_x, trees_y);
+    break;
+  case T8_ECLASS_TET:
+    SC_ABORT ("T8_ECLASS_TET is not yet supported by this function.\n");
+    return NULL;
+    break;
+  case T8_ECLASS_HEX:
+    return t8_cmesh_new_hex_ext (comm, boundary, trees_x, trees_y, trees_z);
+    break;
+  case T8_ECLASS_PYRAMID:
+    SC_ABORT ("T8_ECLASS_PYRAMID is not yet supported by this function.\n");
+    return NULL;
+    break;
+  case T8_ECLASS_PRISM:
+    SC_ABORT ("T8_ECLASS_PRISM is not yet supported by this function.\n");
+    return NULL;
+    break;
+  default:
+    SC_ABORT ("Invalid eclass\n");
+    return NULL;
+  }
+}
+
+
 t8_cmesh_t
 t8_cmesh_new_periodic_line_more_trees (sc_MPI_Comm comm)
 {
