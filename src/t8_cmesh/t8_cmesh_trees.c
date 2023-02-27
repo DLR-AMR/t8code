@@ -322,7 +322,7 @@ t8_cmesh_trees_finish_part (t8_cmesh_trees_t trees, int proc)
     ghost->att_offset =
       first_face - temp_offset + face_neigh_bytes + tree_attr_bytes +
       num_ghost_attributes * sizeof (t8_attribute_info_struct_t);
-    num_ghost_attributes += tree->num_attributes;
+    num_ghost_attributes += ghost->num_attributes;
     temp_offset += sizeof (t8_cghost_struct_t);
   }
   ghost_attr_bytes +=
