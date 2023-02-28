@@ -94,15 +94,15 @@ extern const int
      t8_face_vertex_to_tree_vertex[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES]
   [T8_ECLASS_MAX_CORNERS_2D];
 
-extern const int   
-  t8_face_to_edge_neighbor[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES]
+extern const int
+     t8_face_to_edge_neighbor[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES]
   [T8_ECLASS_MAX_CORNERS_2D];
 
 extern const int
      t8_edge_vertex_to_tree_vertex_n[T8_ECLASS_COUNT][T8_ECLASS_MAX_EDGES][2];
 
-extern const int   
-  t8_edge_to_face_n[T8_ECLASS_COUNT][T8_ECLASS_MAX_EDGES][2];
+extern const int
+     t8_edge_to_face_n[T8_ECLASS_COUNT][T8_ECLASS_MAX_EDGES][2];
 
 extern const int
      t8_face_edge_to_tree_edge_n[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES]
