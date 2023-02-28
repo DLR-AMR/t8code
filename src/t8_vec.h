@@ -54,8 +54,8 @@ void                t8_vec_ax (double vec_x[3], const double alpha);
 
 /** Compute Y = alpha * X
  * \param [in]  vec_x  A 3D vector.
- * \param [in]  alpha  A factor.
  * \param [out] vec_z  On output set to \a alpha * \a vec_x.
+ * \param [in]  alpha  A factor.
  */
 void                t8_vec_axy (const double vec_x[3], double vec_y[3],
                                 const double alpha);
