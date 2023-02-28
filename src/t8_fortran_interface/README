@@ -1,0 +1,8 @@
+To generate the t8code_fortran_interface.mod file,
+we currently need to call
+
+mpif90 t8code_fortran_interface.f90
+
+by hand.
+The resulting file must then be copied to
+example/EarthSystemModel
