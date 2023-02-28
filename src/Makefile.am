@@ -5,6 +5,7 @@
 cmeshincludedir = $(includedir)/t8_cmesh
 dataincludedir = $(includedir)/t8_data
 forestincludedir = $(includedir)/t8_forest
+fortraninterfaceincludedir = $(includedir)/t8_fortran_interface
 geometryincludedir = $(includedir)/t8_geometry
 geometryimplincludedir = $(geometryincludedir)/t8_geometry_implementations
 schemesdefaultincludedir = $(includedir)/t8_schemes/t8_default
@@ -46,6 +47,8 @@ libt8_installed_headers_forest = \
   src/t8_forest/t8_forest_adapt.h \
   src/t8_forest/t8_forest_vtk.h \
   src/t8_forest/t8_forest_iterate.h src/t8_forest/t8_forest_partition.h
+libt8_installed_headers_fortran_interface = \
+  src/t8_fortran_interface/t8_fortran_interface.h
 libt8_installed_headers_geometry = \
   src/t8_geometry/t8_geometry.h \
   src/t8_geometry/t8_geometry_base.hxx \
@@ -105,6 +108,7 @@ libt8_compiled_sources = \
   src/t8_forest/t8_forest_partition.cxx src/t8_forest/t8_forest_cxx.cxx \
   src/t8_forest/t8_forest_private.c src/t8_forest/t8_forest_vtk.cxx \
   src/t8_forest/t8_forest_ghost.cxx src/t8_forest/t8_forest_iterate.cxx \
+  src/t8_fortran_interface/t8_fortran_interface.c \
   src/t8_version.c \
   src/t8_vtk.c src/t8_forest/t8_forest_balance.cxx src/t8_vec.c \
   src/t8_forest/t8_forest_netcdf.cxx \
@@ -131,6 +135,7 @@ dist_include_HEADERS = $(libt8_installed_headers)
 dist_cmeshinclude_HEADERS = $(libt8_installed_headers_cmesh)
 dist_datainclude_HEADERS = $(libt8_installed_headers_data)
 dist_forestinclude_HEADERS = $(libt8_installed_headers_forest)
+dist_fortran_interface_HEADERS = $(libt8_installed_headers_fortran_interface)
 dist_geometryinclude_HEADERS = $(libt8_installed_headers_geometry)
 dist_geometryimplinclude_HEADERS = $(libt8_installed_headers_geometry_impl)
 dist_schemesdefaultinclude_HEADERS = $(libt8_installed_headers_schemes_default)
