@@ -1103,6 +1103,43 @@ t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh,
           t8_cmesh_set_tree_vertices (cmesh, cube_id, vertices, 8);
           break;
         case T8_ECLASS_TET:
+          {
+            const t8_locidx_t tree_id_0 = 6 * cube_id;
+            /* Map vertices of a quad on to two triangles */
+            double vertices_tet[12];
+            for (int i = 0; i < 3; i++) {
+              vertices_tet[i]      = vertices[i];  
+              vertices_tet[i + 3]  = vertices[i + 3];  
+              vertices_tet[i + 6]  = vertices[i + 15];
+              vertices_tet[i + 9]  = vertices[i + 21];
+            }
+            t8_cmesh_set_tree_vertices (cmesh, tree_id_0, vertices_tet, 4);
+            for (int i = 0; i < 3; i++) {
+              vertices_tet[i + 3]  = vertices[i + 9];  
+              vertices_tet[i + 6]  = vertices[i + 3];
+            }
+            t8_cmesh_set_tree_vertices (cmesh, tree_id_0 + 1, vertices_tet, 4);
+            for (int i = 0; i < 3; i++) {
+              vertices_tet[i + 3]  = vertices[i + 6];  
+              vertices_tet[i + 6]  = vertices[i + 9];
+            }
+            t8_cmesh_set_tree_vertices (cmesh, tree_id_0 + 2, vertices_tet, 4);
+            for (int i = 0; i < 3; i++) {
+              vertices_tet[i + 3]  = vertices[i + 18];  
+              vertices_tet[i + 6]  = vertices[i + 6];
+            }
+            t8_cmesh_set_tree_vertices (cmesh, tree_id_0 + 3, vertices_tet, 4);
+            for (int i = 0; i < 3; i++) {
+              vertices_tet[i + 3]  = vertices[i + 12];  
+              vertices_tet[i + 6]  = vertices[i + 18];
+            }
+            t8_cmesh_set_tree_vertices (cmesh, tree_id_0 + 4, vertices_tet, 4);
+            for (int i = 0; i < 3; i++) {
+              vertices_tet[i + 3]  = vertices[i + 15];  
+              vertices_tet[i + 6]  = vertices[i + 12];
+            }
+            t8_cmesh_set_tree_vertices (cmesh, tree_id_0 + 5, vertices_tet, 4);
+          }
           break;
         case T8_ECLASS_PRISM:
           {
@@ -1265,6 +1302,11 @@ t8_cmesh_new_hypercube_ext (t8_eclass_t eclass,
           t8_cmesh_set_join (cmesh, tree_id_0, tree_id_0 + 1, 1, 2, 0);
           break;
         case T8_ECLASS_TET:
+          for (int i = 0; i < 6; i++) {
+            const t8_locidx_t tree_id_0 = cube_id * 6 + i;
+            const t8_locidx_t tree_id_1 = cube_id * 6 + (i + 1)%6;
+            t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 2, 1, 0); 
+          }
           break;
         case T8_ECLASS_PYRAMID:
           break;
@@ -1295,6 +1337,12 @@ t8_cmesh_new_hypercube_ext (t8_eclass_t eclass,
           t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 1, 0);
           break;
         case T8_ECLASS_TET:
+          tree_id_0 = cube_id * 6;
+          tree_id_1 = cube_id * 6 + 10;
+          t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 3, 0);
+          tree_id_0 = cube_id * 6 + 1;
+          tree_id_1 = cube_id * 6 + 9;
+          t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 3, 0);
           break;
         case T8_ECLASS_PYRAMID:
           break;
@@ -1325,6 +1373,12 @@ t8_cmesh_new_hypercube_ext (t8_eclass_t eclass,
           t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 2, 1);
           break;
         case T8_ECLASS_TET:
+          tree_id_0 = cube_id_0 * 6 + 2;
+          tree_id_1 = cube_id_0 * 6 + 6 * trees_x;
+          t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 3, 0);
+          tree_id_0 = cube_id_0 * 6 + 3;
+          tree_id_1 = cube_id_0 * 6 + 6 * trees_x + 5;
+          t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 3, 2);
           break;
         case T8_ECLASS_PYRAMID:
           break;
@@ -1348,6 +1402,12 @@ t8_cmesh_new_hypercube_ext (t8_eclass_t eclass,
           t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 5, 4, 4);
           break;
         case T8_ECLASS_TET:
+          tree_id_0 = cube_id_0 * 6 + 5;
+          tree_id_1 = cube_id_0 * 6 + (6 * trees_y * trees_x) + 1;
+          t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 3, 3);
+          tree_id_0 = cube_id_0 * 6 + 4;
+          tree_id_1 = cube_id_0 * 6 + (6 * trees_y * trees_x) + 2;
+          t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 3, 0);
           break;
         case T8_ECLASS_PRISM:
           for (int i = 0; i < 2; i++) {
