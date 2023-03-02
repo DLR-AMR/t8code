@@ -114,7 +114,7 @@ t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
  *                          \a trees_x * \a trees_y * \a trees_z many trees of class \a eclass.
  * \note \a boundary must point to an array with 3*8 (3D), 3*4 (2D), 3*2 (1D), or 3 (0D) entries.
  */
-t8_cmesh_t          t8_cmesh_new_hypercube_ext (t8_eclass_t eclass,
+t8_cmesh_t          t8_cmesh_new_hypercube_ext (const t8_eclass_t eclass,
                                                 sc_MPI_Comm comm,
                                                 const double *boundary, 
                                                 t8_locidx_t trees_x, 

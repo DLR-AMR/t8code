@@ -852,8 +852,8 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
  * z > y > x and factor_1 > factor 0
  */
 static void
-t8_update_box_face_edges (t8_eclass_t eclass,
-                          double *box_corners,
+t8_update_box_face_edges (const t8_eclass_t eclass,
+                          const double *box_corners,
                           double *box_edges,
                           const int face,
                           const t8_locidx_t *axes)
@@ -879,9 +879,9 @@ t8_update_box_face_edges (t8_eclass_t eclass,
 }
 
 static void
-t8_resize_box (t8_eclass_t eclass,
+t8_resize_box (const t8_eclass_t eclass,
                double *box,
-               double *box_dir,
+               const double *box_dir,
                const int face,
                const t8_locidx_t factor,
                int *axes)
@@ -904,7 +904,7 @@ t8_resize_box (t8_eclass_t eclass,
 
 static void
 t8_cmesh_set_vertices_2D (t8_cmesh_t cmesh,
-                          t8_eclass_t eclass,
+                          const t8_eclass_t eclass,
                           const double *boundary,
                           const t8_locidx_t quads_x,
                           const t8_locidx_t quads_y)
@@ -926,17 +926,15 @@ t8_cmesh_set_vertices_2D (t8_cmesh_t cmesh,
 
   int axes[2] = {quads_x, quads_y};
 
-  /* The directional vector between two vertices v_i and v_j, i > j.
-   * The length is egual to distance (v_i, v_j) / #trees 
+  /* The directional vector e_k between two vertices v_i and v_j, i > j.
+   * The length is egual to distance (v_i, v_j) / #quads 
    * along the respective axis.
-   *       -->             
-   *   2 _______ 3         
-   *    |       |          
-   *  ^ |       | ^        
-   *  | |       | |        
-   *    |_______|          
-   *   0         1         
-   *       -->              
+   *   
+   *     v2--e3--v3                 
+   *      |       |       
+   *     e0      e1     y      
+   *      |       |     |                   
+   *     v0--e2--v1     0---x
    **/
   double box_dir[12];
   t8_update_box_face_edges (T8_ECLASS_QUAD, box, box_dir, 0, axes);
@@ -999,7 +997,7 @@ t8_cmesh_set_vertices_2D (t8_cmesh_t cmesh,
 
 static void
 t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh,
-                          t8_eclass_t eclass,
+                          const t8_eclass_t eclass,
                           const double *boundary,
                           const t8_locidx_t hexs_x,
                           const t8_locidx_t hexs_y,
@@ -1031,9 +1029,22 @@ t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh,
 
   t8_locidx_t axes[3] = {hexs_x, hexs_y, hexs_z};
 
-  /* The directional vector between two vertices v_i and v_j, i > j.
-   * The length is egual to distance (v_i, v_j) / #trees 
+  /* The directional vector e_k between two vertices v_i and v_j, i > j.
+   * The length is egual to distance (v_i, v_j) / #hexes 
    * along the respective axis.
+   *          
+   *         v6-------e3------v7
+   *         /|               /|
+   *       e6 |             e7 |
+   *       / e10            / e11      z y       
+   *     v4-------e2-----v5    |       |/          
+   *      |   |           |    |       0--- x     
+   *      |  v2 ------e1--|---v3
+   *     e8  /           e9   /
+   *      | e4            |  e5
+   *      |/              | /
+   *     v0------e0------v1
+   *        
    **/
   double box_dir[36];
   t8_update_box_face_edges (T8_ECLASS_HEX, box, box_dir, 0, axes);
@@ -1188,12 +1199,12 @@ t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh,
 
 
 t8_cmesh_t          
-t8_cmesh_new_hypercube_ext (t8_eclass_t eclass,
+t8_cmesh_new_hypercube_ext (const t8_eclass_t eclass,
                             sc_MPI_Comm comm,
                             const double *boundary, 
-                            t8_locidx_t polygons_x,
-                            t8_locidx_t polygons_y,
-                            t8_locidx_t polygons_z)
+                            const t8_locidx_t polygons_x,
+                            const t8_locidx_t polygons_y,
+                            const t8_locidx_t polygons_z)
 {
   SC_CHECK_ABORT (eclass != T8_ECLASS_PYRAMID, "Pyramids are not yet supported.");
   const int                 dim = t8_eclass_to_dimension[eclass];
