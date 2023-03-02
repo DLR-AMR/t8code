@@ -117,9 +117,9 @@ t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
 t8_cmesh_t          t8_cmesh_new_hypercube_ext (t8_eclass_t eclass,
                                                 sc_MPI_Comm comm,
                                                 const double *boundary, 
-                                                const t8_locidx_t trees_x, 
-                                                const t8_locidx_t trees_y,
-                                                const t8_locidx_t trees_z);
+                                                t8_locidx_t trees_x, 
+                                                t8_locidx_t trees_y,
+                                                t8_locidx_t trees_z);                                            
 
 /** Hybercube with 6 Tets, 6 Prism, 4 Hex. 
  * \param [in]  comm            The mpi communicator to be used.
@@ -128,7 +128,6 @@ t8_cmesh_t          t8_cmesh_new_hypercube_ext (t8_eclass_t eclass,
  * \return                      A comitted cmesh consisting of 6 Tets, 6 prism and 4 hex. 
  *                              Together, they form a cube.
 */
-
 t8_cmesh_t          t8_cmesh_new_hypercube_hybrid (sc_MPI_Comm comm,
                                                    int do_partition,
                                                    int periodic);
