@@ -966,6 +966,7 @@ t8_cmesh_set_vertices_2D (t8_cmesh_t cmesh,
         t8_cmesh_set_tree_vertices (cmesh, tree_id, vertices, 4);
       }
       else {
+        T8_ASSERT (eclass == T8_ECLASS_TRIANGLE);
         const t8_locidx_t tree_id = (tree_y * trees_x + tree_x) * 2;
         /* Map vertices of a quad on to two triangles */
         double vertices_triangle[9];
@@ -1098,76 +1099,67 @@ t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh,
         t8_vec_axpyz (box, box_dir + 12, vertices + 9, 1.0);
 
         const t8_locidx_t cube_id = tree_z * trees_y * trees_x  + tree_y * trees_x + tree_x;
-        switch (eclass) {
-        case T8_ECLASS_HEX:
+        if (eclass == T8_ECLASS_HEX) {
           t8_cmesh_set_tree_vertices (cmesh, cube_id, vertices, 8);
-          break;
-        case T8_ECLASS_TET:
-          {
-            const t8_locidx_t tree_id_0 = 6 * cube_id;
-            /* Map vertices of a quad on to two triangles */
-            double vertices_tet[12];
-            for (int i = 0; i < 3; i++) {
-              vertices_tet[i]      = vertices[i];  
-              vertices_tet[i + 3]  = vertices[i + 3];  
-              vertices_tet[i + 6]  = vertices[i + 15];
-              vertices_tet[i + 9]  = vertices[i + 21];
-            }
-            t8_cmesh_set_tree_vertices (cmesh, tree_id_0, vertices_tet, 4);
-            for (int i = 0; i < 3; i++) {
-              vertices_tet[i + 3]  = vertices[i + 9];  
-              vertices_tet[i + 6]  = vertices[i + 3];
-            }
-            t8_cmesh_set_tree_vertices (cmesh, tree_id_0 + 1, vertices_tet, 4);
-            for (int i = 0; i < 3; i++) {
-              vertices_tet[i + 3]  = vertices[i + 6];  
-              vertices_tet[i + 6]  = vertices[i + 9];
-            }
-            t8_cmesh_set_tree_vertices (cmesh, tree_id_0 + 2, vertices_tet, 4);
-            for (int i = 0; i < 3; i++) {
-              vertices_tet[i + 3]  = vertices[i + 18];  
-              vertices_tet[i + 6]  = vertices[i + 6];
-            }
-            t8_cmesh_set_tree_vertices (cmesh, tree_id_0 + 3, vertices_tet, 4);
-            for (int i = 0; i < 3; i++) {
-              vertices_tet[i + 3]  = vertices[i + 12];  
-              vertices_tet[i + 6]  = vertices[i + 18];
-            }
-            t8_cmesh_set_tree_vertices (cmesh, tree_id_0 + 4, vertices_tet, 4);
-            for (int i = 0; i < 3; i++) {
-              vertices_tet[i + 3]  = vertices[i + 15];  
-              vertices_tet[i + 6]  = vertices[i + 12];
-            }
-            t8_cmesh_set_tree_vertices (cmesh, tree_id_0 + 5, vertices_tet, 4);
+        }
+        else if ( eclass == T8_ECLASS_TET) {
+          const t8_locidx_t tree_id_0 = 6 * cube_id;
+          /* Map vertices of a quad on to two triangles */
+          double vertices_tet[12];
+          for (int i = 0; i < 3; i++) {
+            vertices_tet[i]      = vertices[i];  
+            vertices_tet[i + 3]  = vertices[i + 3];  
+            vertices_tet[i + 6]  = vertices[i + 15];
+            vertices_tet[i + 9]  = vertices[i + 21];
           }
-          break;
-        case T8_ECLASS_PRISM:
-          {
-            const t8_locidx_t tree_id_0 = 2 * cube_id;
-            /* Map vertices of a quad on to two triangles */
-            double vertices_prism[18];
-            for (int i = 0; i < 3; i++) {
-              vertices_prism[i]      = vertices[i];  
-              vertices_prism[i + 3]  = vertices[i + 3];  
-              vertices_prism[i + 6]  = vertices[i + 9];
-              vertices_prism[i + 9]  = vertices[i + 12];
-              vertices_prism[i + 12] = vertices[i + 15];
-              vertices_prism[i + 15] = vertices[i + 21];
-            }
-            t8_cmesh_set_tree_vertices (cmesh, tree_id_0, vertices_prism, 6);
-            for (int i = 0; i < 3; i++) { 
-              vertices_prism[i + 3]  = vertices[i + 9];  
-              vertices_prism[i + 6]  = vertices[i + 6];  
-              vertices_prism[i + 12] = vertices[i + 21];  
-              vertices_prism[i + 15] = vertices[i + 18];  
-            }
-            t8_cmesh_set_tree_vertices (cmesh, tree_id_0 + 1, vertices_prism, 6);
+          t8_cmesh_set_tree_vertices (cmesh, tree_id_0, vertices_tet, 4);
+          for (int i = 0; i < 3; i++) {
+            vertices_tet[i + 3]  = vertices[i + 9];  
+            vertices_tet[i + 6]  = vertices[i + 3];
           }
-          break;
-        case T8_ECLASS_PYRAMID:
-          break;
-        default:
-          break;
+          t8_cmesh_set_tree_vertices (cmesh, tree_id_0 + 1, vertices_tet, 4);
+          for (int i = 0; i < 3; i++) {
+            vertices_tet[i + 3]  = vertices[i + 6];  
+            vertices_tet[i + 6]  = vertices[i + 9];
+          }
+          t8_cmesh_set_tree_vertices (cmesh, tree_id_0 + 2, vertices_tet, 4);
+          for (int i = 0; i < 3; i++) {
+            vertices_tet[i + 3]  = vertices[i + 18];  
+            vertices_tet[i + 6]  = vertices[i + 6];
+          }
+          t8_cmesh_set_tree_vertices (cmesh, tree_id_0 + 3, vertices_tet, 4);
+          for (int i = 0; i < 3; i++) {
+            vertices_tet[i + 3]  = vertices[i + 12];  
+            vertices_tet[i + 6]  = vertices[i + 18];
+          }
+          t8_cmesh_set_tree_vertices (cmesh, tree_id_0 + 4, vertices_tet, 4);
+          for (int i = 0; i < 3; i++) {
+            vertices_tet[i + 3]  = vertices[i + 15];  
+            vertices_tet[i + 6]  = vertices[i + 12];
+          }
+          t8_cmesh_set_tree_vertices (cmesh, tree_id_0 + 5, vertices_tet, 4);
+        }
+        else {
+          T8_ASSERT (eclass == T8_ECLASS_PRISM);
+          const t8_locidx_t tree_id_0 = 2 * cube_id;
+          /* Map vertices of a quad on to two triangles */
+          double vertices_prism[18];
+          for (int i = 0; i < 3; i++) {
+            vertices_prism[i]      = vertices[i];  
+            vertices_prism[i + 3]  = vertices[i + 3];  
+            vertices_prism[i + 6]  = vertices[i + 9];
+            vertices_prism[i + 9]  = vertices[i + 12];
+            vertices_prism[i + 12] = vertices[i + 15];
+            vertices_prism[i + 15] = vertices[i + 21];
+          }
+          t8_cmesh_set_tree_vertices (cmesh, tree_id_0, vertices_prism, 6);
+          for (int i = 0; i < 3; i++) { 
+            vertices_prism[i + 3]  = vertices[i + 9];  
+            vertices_prism[i + 6]  = vertices[i + 6];  
+            vertices_prism[i + 12] = vertices[i + 21];  
+            vertices_prism[i + 15] = vertices[i + 18];  
+          }
+          t8_cmesh_set_tree_vertices (cmesh, tree_id_0 + 1, vertices_prism, 6);
         }
       }
       T8_ASSERT (axes[0] == 1);
@@ -1204,6 +1196,7 @@ t8_cmesh_new_hypercube_ext (t8_eclass_t eclass,
                             t8_locidx_t trees_y,
                             t8_locidx_t trees_z)
 {
+  SC_CHECK_ABORT (eclass != T8_ECLASS_PYRAMID, "Pyramids are not yet supported.");
   const int                 dim = t8_eclass_to_dimension[eclass];
   switch (dim) {
   case 0:
@@ -1238,55 +1231,47 @@ t8_cmesh_new_hypercube_ext (t8_eclass_t eclass,
     t8_cmesh_set_tree_class (cmesh, tree_id, eclass);
   }
 
-  /* Set vertices of trees and join them */
-  switch (eclass) {
-  case T8_ECLASS_VERTEX:
-    {
-      double vertices_attr_vert[4];
-      /* Set first vertex to lower end of line */
-      t8_vec_axy (boundary, vertices_attr_vert, 1.0);
-      t8_cmesh_set_tree_vertices (cmesh, 0, vertices_attr_vert, 1);
-    }
-    break;
-  case T8_ECLASS_LINE:
-    {
-      T8_ASSERT (boundary[3] > boundary[0]);
-      /* Get the direction of the line */
-      double line_dir[3];
-      t8_vec_axpyz (boundary, boundary + 3, line_dir, -1.0);
-      /* Get length of one tree */
-      double length;
-      length = t8_vec_norm (line_dir) * (double) trees_x;
-      length = t8_vec_dist (boundary, boundary + 3) / length;
-      t8_vec_ax (line_dir, length);
-
-      double vertices_attr[6];
-      /* Set first vertex to lower end of line */
-      t8_vec_axy (boundary, vertices_attr, 1.0);
-      /* Set second vertex to lower end of line + line_dir */
-      t8_vec_axpyz (vertices_attr + 3, boundary, line_dir, 1.0);
-
-      for (t8_locidx_t tree_x = 0; tree_x < trees_x; tree_x++) {  
-        t8_cmesh_set_tree_vertices (cmesh, tree_x, vertices_attr, 2);
-        /* Update vertices for next tree */
-        t8_vec_axy (vertices_attr, vertices_attr + 3, 1.0);
-        t8_vec_axpy (line_dir, vertices_attr + 3, 1.0);
-      }
-    }
-    break;
-  case T8_ECLASS_QUAD:
-  case T8_ECLASS_TRIANGLE:
-    t8_cmesh_set_vertices_2D (cmesh, eclass, boundary, trees_x, trees_y);
-    break;
-  case T8_ECLASS_HEX:
-  case T8_ECLASS_TET:
-  case T8_ECLASS_PRISM:
-  case T8_ECLASS_PYRAMID:
+  /* Set vertices of trees */
+  if (dim == 3) {
+    T8_ASSERT (eclass == T8_ECLASS_HEX || eclass == T8_ECLASS_TET || eclass == T8_ECLASS_PRISM);
     t8_cmesh_set_vertices_3D (cmesh, eclass, boundary, trees_x, trees_y, trees_z);
-    break;
-  default:
-    SC_ABORT ("Invalid eclass\n");
-    break;
+  }
+  else if (dim == 2) {
+    T8_ASSERT (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_TRIANGLE);
+    t8_cmesh_set_vertices_2D (cmesh, eclass, boundary, trees_x, trees_y);
+  }
+  else if (dim == 1) {
+    T8_ASSERT (eclass == T8_ECLASS_LINE);
+    T8_ASSERT (boundary[3] > boundary[0]);
+    /* Get the direction of the line */
+    double line_dir[3];
+    t8_vec_axpyz (boundary, boundary + 3, line_dir, -1.0);
+    /* Get length of one tree */
+    double length;
+    length = t8_vec_norm (line_dir) * (double) trees_x;
+    length = t8_vec_dist (boundary, boundary + 3) / length;
+    t8_vec_ax (line_dir, length);
+
+    double vertices_attr[6];
+    /* Set first vertex to lower end of line */
+    t8_vec_axy (boundary, vertices_attr, 1.0);
+    /* Set second vertex to lower end of line + line_dir */
+    t8_vec_axpyz (vertices_attr + 3, boundary, line_dir, 1.0);
+
+    for (t8_locidx_t tree_x = 0; tree_x < trees_x; tree_x++) {  
+      t8_cmesh_set_tree_vertices (cmesh, tree_x, vertices_attr, 2);
+      /* Update vertices for next tree */
+      t8_vec_axy (vertices_attr, vertices_attr + 3, 1.0);
+      t8_vec_axpy (line_dir, vertices_attr + 3, 1.0);
+    }
+  }
+  else {
+    T8_ASSERT (dim == 0);
+    T8_ASSERT (eclass == T8_ECLASS_VERTEX);
+    double vertices_attr_vert[4];
+    /* Set first vertex to lower end of line */
+    t8_vec_axy (boundary, vertices_attr_vert, 1.0);
+    t8_cmesh_set_tree_vertices (cmesh, 0, vertices_attr_vert, 1);
   }
 
   /* Join the trees inside each cube */
@@ -1294,24 +1279,18 @@ t8_cmesh_new_hypercube_ext (t8_eclass_t eclass,
     for (t8_locidx_t cube_y = 0; cube_y < trees_y; cube_y++) {
       for (t8_locidx_t cube_x = 0; cube_x < trees_x; cube_x++) {
         const t8_locidx_t cube_id = cube_z * trees_y * trees_x  + cube_y * trees_x + cube_x;
-        t8_locidx_t tree_id_0; 
-        switch (eclass) {
-        case T8_ECLASS_TRIANGLE:
-        case T8_ECLASS_PRISM:
-          tree_id_0 = cube_id * 2;
-          t8_cmesh_set_join (cmesh, tree_id_0, tree_id_0 + 1, 1, 2, 0);
-          break;
-        case T8_ECLASS_TET:
+        if (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_PRISM) {
+          const t8_locidx_t tree_id_0 = cube_id * 2;
+          const t8_locidx_t tree_id_1 = cube_id * 2 + 1;
+          t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 1, 2, 0);
+        }
+        else {
+          T8_ASSERT (eclass == T8_ECLASS_TET);
           for (int i = 0; i < 6; i++) {
             const t8_locidx_t tree_id_0 = cube_id * 6 + i;
             const t8_locidx_t tree_id_1 = cube_id * 6 + (i + 1)%6;
             t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 2, 1, 0); 
           }
-          break;
-        case T8_ECLASS_PYRAMID:
-          break;
-        default:
-          break;
         }
       }
     }
@@ -1321,33 +1300,23 @@ t8_cmesh_new_hypercube_ext (t8_eclass_t eclass,
     for (t8_locidx_t cube_y = 0; cube_y < trees_y; cube_y++) {
       for (t8_locidx_t cube_x = 0; cube_x < trees_x - 1; cube_x++) {
         const t8_locidx_t cube_id = cube_z * trees_y * trees_x  + cube_y * trees_x + cube_x;
-        t8_locidx_t tree_id_0;
-        t8_locidx_t tree_id_1;
-        switch (eclass) {
-        case T8_ECLASS_QUAD:
-        case T8_ECLASS_HEX:
-          tree_id_0 = cube_id;
-          tree_id_1 = cube_id + 1;
+        if (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX) {
+          const t8_locidx_t tree_id_0 = cube_id;
+          const t8_locidx_t tree_id_1 = cube_id + 1;
           t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 1, 0, 1);
-          break;
-        case T8_ECLASS_TRIANGLE:
-        case T8_ECLASS_PRISM:
-          tree_id_0 = cube_id * 2;
-          tree_id_1 = cube_id * 2 + 3;
+        }
+        else if (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_PRISM) {
+          const t8_locidx_t tree_id_0 = cube_id * 2;
+          const t8_locidx_t tree_id_1 = cube_id * 2 + 3;
           t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 1, 0);
-          break;
-        case T8_ECLASS_TET:
-          tree_id_0 = cube_id * 6;
-          tree_id_1 = cube_id * 6 + 10;
-          t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 3, 0);
-          tree_id_0 = cube_id * 6 + 1;
-          tree_id_1 = cube_id * 6 + 9;
-          t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 3, 0);
-          break;
-        case T8_ECLASS_PYRAMID:
-          break;
-        default:
-          break;
+        }
+        else {
+          T8_ASSERT (eclass == T8_ECLASS_TET);
+          for (int i = 0; i < 2; i++) {
+            const t8_locidx_t tree_id_0 = cube_id * 6 + i;
+            const t8_locidx_t tree_id_1 = cube_id * 6 + 10 - i;
+            t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 3, 0);
+          }
         }
       }
     }
@@ -1357,33 +1326,24 @@ t8_cmesh_new_hypercube_ext (t8_eclass_t eclass,
     for (t8_locidx_t cube_y = 0; cube_y < trees_y - 1; cube_y++) {
       for (t8_locidx_t cube_x = 0; cube_x < trees_x; cube_x++) {
         const t8_locidx_t cube_id_0 = cube_z * trees_y * trees_x  + cube_y * trees_x + cube_x;
-        t8_locidx_t tree_id_0;
-        t8_locidx_t tree_id_1;
-        switch (eclass) {
-        case T8_ECLASS_QUAD:
-        case T8_ECLASS_HEX:
-          tree_id_0 = cube_id_0;
-          tree_id_1 = cube_id_0 + trees_x;
+        if (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX) {
+          const t8_locidx_t tree_id_0 = cube_id_0;
+          const t8_locidx_t tree_id_1 = cube_id_0 + trees_x;
           t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 3, 2, 2);
-          break;
-        case T8_ECLASS_TRIANGLE:
-        case T8_ECLASS_PRISM:
-          tree_id_0 = cube_id_0 * 2 + 1;
-          tree_id_1 = cube_id_0 * 2 + 2 * trees_x;
+        }
+        if (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_PRISM) {
+          const t8_locidx_t tree_id_0 = cube_id_0 * 2 + 1;
+          const t8_locidx_t tree_id_1 = cube_id_0 * 2 + 2 * trees_x;
           t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 2, 1);
-          break;
-        case T8_ECLASS_TET:
-          tree_id_0 = cube_id_0 * 6 + 2;
-          tree_id_1 = cube_id_0 * 6 + 6 * trees_x;
+        }
+        else {
+          T8_ASSERT (eclass == T8_ECLASS_TET);
+          t8_locidx_t tree_id_0 = cube_id_0 * 6 + 2;
+          t8_locidx_t tree_id_1 = cube_id_0 * 6 + 6 * trees_x;
           t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 3, 0);
           tree_id_0 = cube_id_0 * 6 + 3;
           tree_id_1 = cube_id_0 * 6 + 6 * trees_x + 5;
           t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 3, 2);
-          break;
-        case T8_ECLASS_PYRAMID:
-          break;
-        default:
-          break;
         }
       }
     }
@@ -1393,33 +1353,26 @@ t8_cmesh_new_hypercube_ext (t8_eclass_t eclass,
     for (t8_locidx_t cube_y = 0; cube_y < trees_y; cube_y++) {
       for (t8_locidx_t cube_x = 0; cube_x < trees_x; cube_x++) {
         const t8_locidx_t cube_id_0 = cube_z * trees_y * trees_x  + cube_y * trees_x + cube_x;
-        t8_locidx_t tree_id_0;
-        t8_locidx_t tree_id_1;
-        switch (eclass) {
-        case T8_ECLASS_HEX:
-          tree_id_0 = cube_id_0;
-          tree_id_1 = cube_id_0 + (trees_y * trees_x);
+        if (eclass == T8_ECLASS_HEX) {
+          const t8_locidx_t tree_id_0 = cube_id_0;
+          const t8_locidx_t tree_id_1 = cube_id_0 + (trees_y * trees_x);
           t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 5, 4, 4);
-          break;
-        case T8_ECLASS_TET:
-          tree_id_0 = cube_id_0 * 6 + 5;
-          tree_id_1 = cube_id_0 * 6 + (6 * trees_y * trees_x) + 1;
+        }
+        else if (eclass == T8_ECLASS_TET) {
+          t8_locidx_t tree_id_0 = cube_id_0 * 6 + 5;
+          t8_locidx_t tree_id_1 = cube_id_0 * 6 + (6 * trees_y * trees_x) + 1;
           t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 3, 3);
           tree_id_0 = cube_id_0 * 6 + 4;
           tree_id_1 = cube_id_0 * 6 + (6 * trees_y * trees_x) + 2;
           t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 3, 0);
-          break;
-        case T8_ECLASS_PRISM:
+        }
+        else {
+          T8_ASSERT (eclass == T8_ECLASS_PRISM);
           for (int i = 0; i < 2; i++) {
-            tree_id_0 = cube_id_0 * 2 + i;
-            tree_id_1 = cube_id_0 * 2 + i + (2 * trees_y * trees_x);
+            const t8_locidx_t tree_id_0 = cube_id_0 * 2 + i;
+            const t8_locidx_t tree_id_1 = cube_id_0 * 2 + i + (2 * trees_y * trees_x);
             t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 4, 3, 3);
           }
-          break;
-        case T8_ECLASS_PYRAMID:
-          break;
-        default:
-          break;
         }
       }
     }
