@@ -33,14 +33,27 @@ const int t8_eclass_max_num_faces[T8_ECLASS_MAX_DIM + 1] =
   { 0, 2, 4, 6 };
 
 const int t8_face_vertex_to_tree_vertex[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_CORNERS_2D] = {
- {{-1}},                                                                                /* vertex */
- {{0}, {1}},                                                                            /* line */
- {{0, 2}, {1, 3}, {0, 1}, {2, 3}},                                                      /* quad */
- {{1, 2}, {0, 2}, {0, 1}},                                                              /* triangle */
+ {{-1}},                            /* vertex */
+ {{0}, {1}},                        /* line */
+ {{0, 2}, {1, 3}, {0, 1}, {2, 3}},  /* quad */
+ {{1, 2}, {0, 2}, {0, 1}},          /* triangle */
  {{0, 2, 4, 6}, {1, 3, 5, 7}, {0, 1, 4, 5}, {2, 3, 6, 7}, {0, 1, 2, 3}, {4, 5, 6, 7}},  /* hex */
  {{1, 2, 3}, {0, 2, 3}, {0, 1, 3}, {0, 1, 2}},                                          /* tet */
  {{1, 2, 4, 5}, {0, 2, 3, 5}, {0, 1, 3, 4}, {0, 1, 2}, {3, 4, 5}},                      /* prism */
  {{0, 2, 4}, {1, 3, 4}, {0, 1, 4}, {2, 3, 4}, {0, 1, 2, 3}}                             /* pyramid */
+};
+
+/* TODO: tet, prism, pyramid 
+ *       remove suffix _n if issue #446 is solved */
+const int t8_face_edge_to_tree_edge_n[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_EDGES_2D] = {
+  {{-1}},                            /* vertex */
+  {{0}},                             /* line */
+  {{0}, {1}, {2}, {3}},              /* quad */
+  {{0}, {1}, {2}},                   /* triangle */
+  {{8, 10, 4, 6}, {9, 11, 5, 7}, {8, 9, 0, 2}, {10, 11, 1, 3}, {4, 5, 0, 1}, {6, 7, 2, 3}},  /* hex */
+  {},  /* tet */
+  {},  /* prism */
+  {},  /* pyramid */
 };
 
 /* TODO: tet, prism, pyramid */
@@ -55,7 +68,8 @@ const int t8_face_to_edge_neighbor[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES][T8_ECLA
   {},  /* pyramid */
 };
 
-/* TODO: tet, prism, pyramid */
+/* TODO: tet, prism, pyramid
+ *       remove suffix _n if issue #446 is solved */
 const int t8_edge_vertex_to_tree_vertex_n[T8_ECLASS_COUNT][T8_ECLASS_MAX_EDGES][2] = {
   {{-1}},                            /* vertex */
   {{0}, {1}},                        /* line */
@@ -67,25 +81,14 @@ const int t8_edge_vertex_to_tree_vertex_n[T8_ECLASS_COUNT][T8_ECLASS_MAX_EDGES][
   {},  /* pyramid */
 };
 
-/* TODO: tet, prism, pyramid */
+/* TODO: tet, prism, pyramid
+ *       remove suffix _n if issue #446 is solved */
 const int t8_edge_to_face_n[T8_ECLASS_COUNT][T8_ECLASS_MAX_EDGES][2] = {
   {{-1}},                            /* vertex */
   {{0}},                             /* line */
   {{0}, {1}, {2}, {3}},              /* quad */
   {{0}, {1}, {2}},                   /* triangle */
   {{2, 4}, {3, 4}, {2, 5}, {3, 5}, {0, 4}, {1, 4}, {0, 5}, {1, 5}, {0, 2}, {1, 2}, {0, 3}, {1, 3}},  /* hex */
-  {},  /* tet */
-  {},  /* prism */
-  {},  /* pyramid */
-};
-
-/* TODO: tet, prism, pyramid */
-const int t8_face_edge_to_tree_edge_n[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_EDGES_2D] = {
-  {{-1}},                            /* vertex */
-  {{0}},                             /* line */
-  {{0}, {1}, {2}, {3}},              /* quad */
-  {{0}, {1}, {2}},                   /* triangle */
-  {{8, 10, 4, 6}, {9, 11, 5, 7}, {8, 9, 0, 2}, {10, 11, 1, 3}, {4, 5, 0, 1}, {6, 7, 2, 3}},  /* hex */
   {},  /* tet */
   {},  /* prism */
   {},  /* pyramid */
