@@ -1105,6 +1105,27 @@ t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh,
         case T8_ECLASS_TET:
           break;
         case T8_ECLASS_PRISM:
+          {
+            const t8_locidx_t tree_id_0 = 2 * cube_id;
+            /* Map vertices of a quad on to two triangles */
+            double vertices_prism[18];
+            for (int i = 0; i < 3; i++) {
+              vertices_prism[i]      = vertices[i];  
+              vertices_prism[i + 3]  = vertices[i + 3];  
+              vertices_prism[i + 6]  = vertices[i + 9];
+              vertices_prism[i + 9]  = vertices[i + 12];
+              vertices_prism[i + 12] = vertices[i + 15];
+              vertices_prism[i + 15] = vertices[i + 21];
+            }
+            t8_cmesh_set_tree_vertices (cmesh, tree_id_0, vertices_prism, 6);
+            for (int i = 0; i < 3; i++) { 
+              vertices_prism[i + 3]  = vertices[i + 9];  
+              vertices_prism[i + 6]  = vertices[i + 6];  
+              vertices_prism[i + 12] = vertices[i + 21];  
+              vertices_prism[i + 15] = vertices[i + 18];  
+            }
+            t8_cmesh_set_tree_vertices (cmesh, tree_id_0 + 1, vertices_prism, 6);
+          }
           break;
         case T8_ECLASS_PYRAMID:
           break;
@@ -1239,12 +1260,11 @@ t8_cmesh_new_hypercube_ext (t8_eclass_t eclass,
         t8_locidx_t tree_id_0; 
         switch (eclass) {
         case T8_ECLASS_TRIANGLE:
+        case T8_ECLASS_PRISM:
           tree_id_0 = cube_id * 2;
           t8_cmesh_set_join (cmesh, tree_id_0, tree_id_0 + 1, 1, 2, 0);
           break;
         case T8_ECLASS_TET:
-          break;
-        case T8_ECLASS_PRISM:
           break;
         case T8_ECLASS_PYRAMID:
           break;
@@ -1269,13 +1289,12 @@ t8_cmesh_new_hypercube_ext (t8_eclass_t eclass,
           t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 1, 0, 1);
           break;
         case T8_ECLASS_TRIANGLE:
+        case T8_ECLASS_PRISM:
           tree_id_0 = cube_id * 2;
           tree_id_1 = cube_id * 2 + 3;
           t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 1, 0);
           break;
         case T8_ECLASS_TET:
-          break;
-        case T8_ECLASS_PRISM:
           break;
         case T8_ECLASS_PYRAMID:
           break;
@@ -1300,13 +1319,12 @@ t8_cmesh_new_hypercube_ext (t8_eclass_t eclass,
           t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 3, 2, 2);
           break;
         case T8_ECLASS_TRIANGLE:
+        case T8_ECLASS_PRISM:
           tree_id_0 = cube_id_0 * 2 + 1;
           tree_id_1 = cube_id_0 * 2 + 2 * trees_x;
           t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 2, 1);
           break;
         case T8_ECLASS_TET:
-          break;
-        case T8_ECLASS_PRISM:
           break;
         case T8_ECLASS_PYRAMID:
           break;
@@ -1332,6 +1350,11 @@ t8_cmesh_new_hypercube_ext (t8_eclass_t eclass,
         case T8_ECLASS_TET:
           break;
         case T8_ECLASS_PRISM:
+          for (int i = 0; i < 2; i++) {
+            tree_id_0 = cube_id_0 * 2 + i;
+            tree_id_1 = cube_id_0 * 2 + i + (2 * trees_y * trees_x);
+            t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 4, 3, 3);
+          }
           break;
         case T8_ECLASS_PYRAMID:
           break;
