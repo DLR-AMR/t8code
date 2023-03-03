@@ -857,9 +857,10 @@ t8_cmesh_partition_copy_data (char *send_buffer, t8_cmesh_t cmesh,
 
       /* set new attribtue data offsets */
       for (iz = 1; iz < (size_t) tree_cpy->num_attributes; iz++) {
-        attr_info->attribute_offset = last_offset + last_size;
-        last_size = attr_info->attribute_size;
         attr_info++;
+        attr_info->attribute_offset = last_offset + last_size;
+        last_offset = attr_info->attribute_offset;
+        last_size = attr_info->attribute_size;
       }
       temp_offset_att += tree_cpy->num_attributes *
         sizeof (t8_attribute_info_struct_t);

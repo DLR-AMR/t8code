@@ -257,9 +257,6 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
   num_hashs = cmesh->num_local_trees > 0 ? cmesh->num_local_trees : 10;
   ghost_facejoin_mempool = sc_mempool_new (sizeof (t8_ghost_facejoin_t));
-  /* TODO: There could be a mayor bug here, since the mempool given to
-   * sc_hash_new should actually allocate sc_link_t objects and not the
-   * data objects. */
   ghost_ids = sc_hash_new (t8_ghost_hash, t8_ghost_facejoin_equal,
                            &num_hashs, NULL);
 
