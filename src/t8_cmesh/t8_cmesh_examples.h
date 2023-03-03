@@ -252,16 +252,28 @@ t8_cmesh_t          t8_cmesh_new_full_hybrid (sc_MPI_Comm comm);
  * \param [in] comm         The MPI communicator used to commit the cmesh
  * \param [in] num_of_pyra  The number of pyramids to construct. Should be larger than 2
  * \return                  A cmesh with num_of_pyra many pyramids
-*/
+ */
 t8_cmesh_t          t8_cmesh_new_pyramid_cake (sc_MPI_Comm comm,
                                                int num_of_pyra);
 
 /** Construct a bigger mesh, consisting of many cubes made by pyramids
  * \param [in] comm         The MPI communicator used to commit the cmesh
  * \param [in] num_cubes    The number of cubes of pyramids
- * return                   A cmesh with \a num_cubes many hypercubes*/
+ * \return                  A cmesh with \a num_cubes many hypercubes
+ * */
 t8_cmesh_t          t8_cmesh_new_long_brick_pyramid (sc_MPI_Comm comm,
                                                      int num_cubes);
+
+/** Construct \a num_trees many cubes each of length 1 connected along the x-axis 
+ * without any additional attributes than the tree-vertices, or with additional attributes.
+ * \param [in] num_trees     The number of trees along the x-axis
+ * \param [in] set_attributes    If 1, set tree_id and num_trees as additional attribute for each tree.
+ * \param [in] comm          The MPI communicator used to commit the cmesh
+ * \return                   A cmesh with \a num_trees many hexahedrons.
+ */
+t8_cmesh_t          t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees,
+                                               const int set_attributes,
+                                               sc_MPI_Comm comm);
 
 T8_EXTERN_C_END ();
 
