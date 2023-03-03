@@ -150,7 +150,7 @@ TEST_P (forest_commit, test_forest_commit)
   /* Use one level with empty processes */
   min_level = SC_MAX (min_level - 1, 0);
   for (int level = min_level; level < min_level + level_step; level++) {
-    t8_global_productionf ("Testing forest commit level %i\n", level);
+    t8_debugf ("Testing forest commit level %i\n", level);
     int                 maxlevel = level + level_step;
     /* ref the cmesh since we reuse it */
     t8_cmesh_ref (cmesh);
@@ -163,12 +163,7 @@ TEST_P (forest_commit, test_forest_commit)
     forest_ada_bal_part = t8_test_forest_commit_abp (forest, maxlevel);
     /* Adapt, balance and partition the forest using three seperate steps */
     forest_abp_3part = t8_test_forest_commit_abp_3step (forest, maxlevel);
-/*
-        if (ctype != 2) {
-          t8_forest_write_vtk (forest_ada_bal_part, "test_1step");
-          t8_forest_write_vtk (forest_abp_3part, "test_3step");
-        }
-*/
+
     ASSERT_TRUE (t8_forest_is_equal
                  (forest_abp_3part,
                   forest_ada_bal_part)) << "The forests are not equal";
