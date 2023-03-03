@@ -104,22 +104,23 @@ t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
 /** Construct a hypercube forest from one primitive tree class.
  * \param [in] eclass       This element class determines the dimension of the cube.
  * \param [in] comm         The mpi communicator to be used.
- * \param [in] boundary     The coordinate, that define the hypercube vertices.
- * \param [in] trees_x      The number of trees along the x-axis.
- * \param [in] trees_y      The number of trees along the y-axis.
+ * \param [in] boundary     The vertices, that define the hypercube boundary.
+ * \param [in] polygons_x   The number of polygons along the x-axis.
+ * \param [in] polygons_y   The number of polygons along the y-axis.
  *                          Only required if \a eclass is 2D or 3D.
- * \param [in] trees_z      The number of trees along the z-axis.
+ * \param [in] polygons_z   The number of polygons along the z-axis.
  *                          Only required if \a eclass is 3D.
  * \return                  A committed t8_cmesh structure with 
- *                          \a trees_x * \a trees_y * \a trees_z many trees of class \a eclass.
+ *                          \a polygons_x * \a polygons_z * \a polygons_y many 
+ *                          sub-hypercubes of class \a eclass.
  * \note \a boundary must point to an array with 3*8 (3D), 3*4 (2D), 3*2 (1D), or 3 (0D) entries.
  */
 t8_cmesh_t          t8_cmesh_new_hypercube_ext (const t8_eclass_t eclass,
                                                 sc_MPI_Comm comm,
                                                 const double *boundary, 
-                                                t8_locidx_t trees_x, 
-                                                t8_locidx_t trees_y,
-                                                t8_locidx_t trees_z);                                            
+                                                t8_locidx_t polygons_x,
+                                                t8_locidx_t polygons_y,
+                                                t8_locidx_t polygons_z);                                           
 
 /** Hybercube with 6 Tets, 6 Prism, 4 Hex. 
  * \param [in]  comm            The mpi communicator to be used.
