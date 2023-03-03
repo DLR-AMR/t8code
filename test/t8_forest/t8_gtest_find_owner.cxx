@@ -41,32 +41,120 @@ protected:
     default_scheme = t8_scheme_new_default_cxx ();
     /* Construct a coarse mesh of one tree */
     cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
-    /* initialize the array of owners to store ints */
-    sc_array_init (&owners, sizeof (int));
-    /* Build a uniform forest */
-    forest = t8_forest_new_uniform (cmesh, default_scheme, level, 0, sc_MPI_COMM_WORLD);
-    ts = t8_forest_get_eclass_scheme (forest, eclass);
-    /* Construct the root element */
-    ts->t8_element_new (1, &root_element);
-    ts->t8_element_set_linear_id (root_element, 0, 0);
   }
   void TearDown () override {
 
   }
   t8_eclass_t         eclass;
   t8_cmesh_t          cmesh;
-  t8_forest_t         forest;
   t8_scheme_cxx_t    *default_scheme;
-  t8_eclass_scheme_c *ts;
-  t8_element_t       *root_element;
-  sc_array_t          owners;
-  int                 level = 1;
+
 };
 /* *INDENT-ON* */
 
+#if 0
+/* Depending on an integer i create a different cmesh.
+ * i = 0: cmesh_new_class
+ * i = 1: cmesh_new_hypercube
+ * i = 2: cmesh_new_bigmesh (100 trees)
+ * else:  cmesh_new_class
+ */
+static t8_cmesh_t
+t8_test_create_cmesh (int i, t8_eclass_t eclass, sc_MPI_Comm comm)
+{
+  switch (i) {
+  case 0:
+    return t8_cmesh_new_from_class (eclass, comm);
+  case 1:
+    return t8_cmesh_new_hypercube (eclass, comm, 0, 0, 0);
+  case 2:
+    return t8_cmesh_new_bigmesh (eclass, 100, comm);
+  default:
+    return t8_cmesh_new_from_class (eclass, comm);
+  }
+}
+
+TEST_P (forest_find_owner, find_owner)
+{
+  t8_element_t       *element;
+  int                 level = 5;
+
+  T8_ASSERT (eclass != T8_ECLASS_PYRAMID);
+
+  t8_debugf ("Testing find_owner with eclass %s\n",
+             t8_eclass_to_string[eclass]);
+
+  default_scheme = t8_scheme_new_default_cxx ();
+  /* allocate the element */
+  t8_eclass_scheme_c  ts = scheme->eclass_schemes[eclass];
+  ts->t8_element_new (1, &element);
+  /* Compute the number of elements per tree */
+  ts->t8_element_set_linear_id (element, 0, 0);
+  /* TODO: This computation fails with pyramids */
+  t8_gloidx_t         elements_per_tree =
+    pow (ts->t8_element_num_children (element), level);
+
+  for (int itype = 0; itype < 3; itype++) {
+    t8_debugf ("\tTesting cmesh type %i\n", itype);
+    /* build the cmesh */
+    cmesh = t8_test_create_cmesh (itype, eclass, sc_MPI_COMM_WORLD);
+    /* We reuse the scheme for all forests and thus ref it */
+    t8_scheme_cxx_ref (default_scheme);
+    /* build the forest */
+    t8_forest_t         forest =
+      t8_forest_new_uniform (cmesh, default_scheme, level, 0,
+                             sc_MPI_COMM_WORLD);
+    for (int itree = 0, t8_gloidx_t global_elem_num = 0;
+         itree < t8_forest_get_num_global_trees (forest); itree++) {
+      /* Iterate over all trees */
+      for (t8_gloidx_t ielement = 0; ielement < elements_per_tree;
+           ielement++, global_elem_num++) {
+        /* Compute the ielement's elements in the tree */
+        ts->t8_element_set_linear_id (element, level, (uint64_t) ielement);
+        /* Find the owner of the element */
+        int                 owner =
+          t8_forest_element_find_owner (forest, itree, element, eclass);
+        /* Find the owner in a different way via the element offset array.
+         * This is only possible since we have a uniform refinement. */
+        if (forest->element_offsets == NULL) {
+          t8_forest_partition_create_offsets (forest);
+        }
+        int                 owner_alter = -1;
+        t8_offset_first_owner_of_tree (forest->mpisize, global_elem_num,
+                                       t8_shmem_array_get_gloidx_array
+                                       (forest->element_offsets),
+                                       &owner_alter);
+        /* Check if both owners are the same */
+        ASSERT_EQ (owner,
+                   owner_alter) << "Finding owner for element " << (long long)
+          ielement << " in tree " << (long long) itree << " failed.\n";
+      }
+    }
+    t8_forest_unref (&forest);
+  }
+  /* clean-up */
+  ts->t8_element_destroy (1, &element);
+  t8_scheme_cxx_unref (&default_scheme);
+}
+#endif
+
 TEST_P (forest_find_owner, find_multiple_owners)
 {
+  t8_element_t       *root_element;
+  sc_array_t          owners;
+  int                 level = 1;
   char                buffer[BUFSIZ];
+
+  /* initialize the array of owners to store ints */
+  sc_array_init (&owners, sizeof (int));
+  /* Build a uniform forest */
+  t8_forest_t         forest =
+    t8_forest_new_uniform (cmesh, default_scheme, level, 0,
+                           sc_MPI_COMM_WORLD);
+  t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, eclass);
+  /* Construct the root element */
+  ts->t8_element_new (1, &root_element);
+  ts->t8_element_set_linear_id (root_element, 0, 0);
 
   for (int face = 0; face < t8_eclass_num_faces[eclass]; face++) {
     t8_forest_element_owners_at_face (forest, 0, root_element, eclass, face,
