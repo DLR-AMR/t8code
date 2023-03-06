@@ -288,9 +288,9 @@ t8_step6_compute_stencil (t8_forest_t forest,
 
       /* TODO: Probably still not optimal at non-conforming interfaces. */
       const double        xcurve =
-        (xslope_p - xslope_m) / 0.25 / (dx[0] + 2.0 * dx[1] + dx[2]);
+        (xslope_p - xslope_m) * 4 / (dx[0] + 2.0 * dx[1] + dx[2]);
       const double        ycurve =
-        (yslope_p - yslope_m) / 0.25 / (dy[0] + 2.0 * dy[1] + dy[2]);
+        (yslope_p - yslope_m) * 4 / (dy[0] + 2.0 * dy[1] + dy[2]);
 
       /* Compute schlieren and curvature norm. */
       element_data[current_index].schlieren =
