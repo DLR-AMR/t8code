@@ -29,8 +29,6 @@
 #include <t8_cmesh.h>
 #include "t8_cmesh/t8_cmesh_testcases.h"
 
-/* TODO: when this test works for all cmeshes remove if statement in test_cmesh_ghost_and_owner_all () */
-
 /* This test program tests the forest ghost layer.
  * We adapt a forest and create its ghost layer. Afterwards, we
  * parse through all ghost elements and test whether the owner of an
@@ -46,10 +44,6 @@ protected:
     scheme = t8_scheme_new_default_cxx ();
     /* Construct a cmesh */
     cmesh = t8_test_create_cmesh (cmesh_id);
-
-    // if(cmesh_id == 89 || (cmesh_id >= 237 && cmesh_id <= 256)){
-    //     GTEST_SKIP ();
-    // }
   }
   void TearDown () override {
     t8_cmesh_destroy (&cmesh);
