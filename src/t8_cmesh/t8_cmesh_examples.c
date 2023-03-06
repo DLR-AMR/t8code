@@ -1340,13 +1340,15 @@ t8_cmesh_new_hypercube_ext (const t8_eclass_t eclass,
           const t8_locidx_t   tree_id_1 = poly_id * 2 + 1;
           t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 1, 2, 0);
         }
-        else {
-          T8_ASSERT (eclass == T8_ECLASS_TET);
+        else if (eclass == T8_ECLASS_TET) {
           for (int i = 0; i < 6; i++) {
             const t8_locidx_t   tree_id_0 = poly_id * 6 + i;
             const t8_locidx_t   tree_id_1 = poly_id * 6 + (i + 1) % 6;
             t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 2, 1, 0);
           }
+        }
+        else {
+          T8_ASSERT (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX);
         }
       }
     }
@@ -1389,7 +1391,7 @@ t8_cmesh_new_hypercube_ext (const t8_eclass_t eclass,
           const t8_locidx_t   tree_id_1 = poly_id_0 + polygons_x;
           t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 3, 2, 2);
         }
-        if (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_PRISM) {
+        else if (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_PRISM) {
           const t8_locidx_t   tree_id_0 = poly_id_0 * 2 + 1;
           const t8_locidx_t   tree_id_1 = (poly_id_0 + polygons_x) * 2;
           t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 2, 1);
