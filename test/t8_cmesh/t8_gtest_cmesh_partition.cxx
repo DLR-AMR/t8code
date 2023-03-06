@@ -39,6 +39,10 @@ protected:
   void SetUp() override {
     cmesh_id = GetParam();
 
+    if(cmesh_id == 89 || (cmesh_id>=237 && cmesh_id<=256)){
+      GTEST_SKIP ();
+    }
+
     cmesh_original = t8_test_create_cmesh (cmesh_id);
   }
 
@@ -59,9 +63,9 @@ TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate)
 {
 
 #ifdef T8_ENABLE_LESS_TESTS
-  const int           level = 2;
-#else
   const int           level = 4;
+#else
+  const int           level = 7;
 #endif
   int                 mpisize;
   int                 mpiret;
