@@ -1272,7 +1272,7 @@ t8_cmesh_new_hypercube_ext (const t8_eclass_t eclass,
   t8_cmesh_register_geometry (cmesh, linear_geom);
 
   /* Number of trees inside each polygon of given eclass. */
-  int                 num_trees_for_single_hypercube[T8_ECLASS_COUNT] = {
+  const t8_locidx_t   num_trees_for_single_hypercube[T8_ECLASS_COUNT] = {
     1, 1, 1, 2, 1, 6, 2, -1
   };
 
