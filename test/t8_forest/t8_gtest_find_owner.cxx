@@ -42,13 +42,9 @@ protected:
     /* Construct a coarse mesh of one tree */
     cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
   }
-  void TearDown () override {
-
-  }
   t8_eclass_t         eclass;
   t8_cmesh_t          cmesh;
   t8_scheme_cxx_t    *default_scheme;
-
 };
 /* *INDENT-ON* */
 
@@ -84,7 +80,6 @@ TEST_P (forest_find_owner, find_owner)
   t8_debugf ("Testing find_owner with eclass %s\n",
              t8_eclass_to_string[eclass]);
 
-  default_scheme = t8_scheme_new_default_cxx ();
   /* allocate the element */
   t8_eclass_scheme_c  ts = scheme->eclass_schemes[eclass];
   ts->t8_element_new (1, &element);
