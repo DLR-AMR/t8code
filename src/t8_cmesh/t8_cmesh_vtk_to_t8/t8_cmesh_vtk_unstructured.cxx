@@ -21,12 +21,10 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 */
 
 #if T8_WITH_VTK
-    #include <vtkUnstructuredGrid.h>
-    #include <vtkUnstructuredGridReader.h>
-    #include <vtkXMLUnstructuredGridReader.h>
-    #include <t8_cmesh_vtk_unstructured_reader.hxx>
-
-
+#include <vtkUnstructuredGrid.h>
+#include <vtkUnstructuredGridReader.h>
+#include <vtkXMLUnstructuredGridReader.h>
+#include <t8_cmesh_vtk_unstructured.hxx>
 
 void
 t8_read_unstructured_ext (const char *filename,
