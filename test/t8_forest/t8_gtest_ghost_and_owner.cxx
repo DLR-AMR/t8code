@@ -161,9 +161,7 @@ TEST_P (cmesh_ghost_owner, test_ghost_owner)
     t8_test_gao_check (forest_adapt);
     t8_forest_unref (&forest_adapt);
   }
-
 }
-
 
 /* *INDENT-OFF* */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_and_owner, cmesh_ghost_owner,testing::Range(0, t8_get_number_of_all_testcases ()));
