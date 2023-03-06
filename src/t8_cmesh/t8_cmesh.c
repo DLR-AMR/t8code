@@ -22,7 +22,7 @@
 
 #include <sc_statistics.h>
 #include <t8_cmesh.h>
-#include <t8_cmesh_vtk.h>
+#include <t8_cmesh_vtk_writer.h>
 #include <t8_cmesh/t8_cmesh_geometry.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_refcount.h>

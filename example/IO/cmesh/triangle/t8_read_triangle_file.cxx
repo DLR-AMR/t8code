@@ -24,7 +24,7 @@
 #include <t8.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh_triangle.h>
-#include <t8_cmesh_vtk.h>
+#include <t8_cmesh_vtk_writer.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
 void
