@@ -6,7 +6,6 @@ t8code_test_programs = \
     test/t8_cmesh/t8_test_cmesh_partition \
     test/t8_forest/t8_test_find_owner \
     test/t8_forest/t8_test_ghost_exchange \
-    test/t8_forest/t8_test_ghost_and_owner \
     test/t8_forest/t8_test_forest_commit \
     test/t8_forest/t8_test_transform \
     test/t8_forest/t8_test_half_neighbors \
@@ -69,7 +68,8 @@ test_t8_gtest_main_SOURCES = test/t8_gtest_main.cxx \
   test/t8_schemes/t8_gtest_descendant.cxx \
   test/t8_cmesh/t8_gtest_cmesh_face_is_boundary.cxx \
   test/t8_cmesh/t8_gtest_multiple_attributes.cxx \
-  test/t8_schemes/t8_gtest_successor.cxx
+  test/t8_schemes/t8_gtest_successor.cxx \
+  test/t8_forest/t8_gtest_ghost_and_owner.cxx
 
 test_t8_gtest_main_LDADD = $(LDADD) test/libgtest.la
 test_t8_gtest_main_LDFLAGS = $(AM_LDFLAGS) -pthread
