@@ -38,7 +38,7 @@
   */
 
 /* *INDENT-OFF* */
-class cmesh_ghost_owner:public testing::TestWithParam <int> {
+class forest_ghost_owner:public testing::TestWithParam <int> {
 protected:
   void SetUp () override {
     cmesh_id = GetParam();
@@ -133,7 +133,7 @@ t8_test_gao_check (t8_forest_t forest)
   }
 }
 
-TEST_P (cmesh_ghost_owner, test_ghost_owner)
+TEST_P (forest_ghost_owner, test_ghost_owner)
 {
 
   /* Compute the minimum level, such that the forest is nonempty */
@@ -164,5 +164,5 @@ TEST_P (cmesh_ghost_owner, test_ghost_owner)
 }
 
 /* *INDENT-OFF* */
-INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_and_owner, cmesh_ghost_owner,testing::Range(0, t8_get_number_of_all_testcases ()));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_and_owner, forest_ghost_owner,testing::Range(0, t8_get_number_of_all_testcases ()));
 /* *INDENT-ON* */
