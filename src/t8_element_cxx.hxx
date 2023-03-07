@@ -726,40 +726,6 @@ public:
   * param [in] scheme           Defines the implementation of the element class. */
 void                t8_scheme_cxx_destroy (t8_scheme_cxx_t *s);
 
-#if 0
-/* TODO: These functions defined for the deprecated t8_scheme_t and t8_eclass_t
- * do not yet exist for t8_eclass_scheme_c class */
-
-/** Allocate a set of elements suitable for the boundary of a given class.
- * \param [in] scheme           Defines the implementation of the element class.
- * \param [in] theclass         The element class whose boundary we want.
- * \param [in] min_dim          Ignore boundary points of lesser dimension.
- * \param [in] length           Must be equal to the return value
- *                              of \ref t8_eclass_count_boundary.
- * \param [in,out] boundary     On input, array of element pointers of at
- *                              least length \b length.  Filled on output.
- */
-void                t8_eclass_boundary_new (t8_scheme_t * scheme,
-                                            t8_eclass_t theclass, int min_dim,
-                                            int length,
-                                            t8_element_t **boundary);
-
-/** Destroy a set of elements suitable for the boundary of a given class.
- * \param [in] scheme           Defines the implementation of the element class.
- * \param [in] theclass         The element class whose boundary we have.
- * \param [in] min_dim          Ignore boundary points of lesser dimension.
- * \param [in] length           Must be equal to the return value
- *                              of \ref t8_eclass_count_boundary.
- * \param [in,out] boundary     Array of element pointers holding elements
- *                              as created by \ref t8_eclass_boundary_new.
- *                              The elements are destroyed by this function.
- */
-void                t8_eclass_boundary_destroy (t8_scheme_t * scheme,
-                                                t8_eclass_t theclass,
-                                                int min_dim, int length,
-                                                t8_element_t **boundary);
-#endif /* if 0 */
-
 T8_EXTERN_C_END ();
 
 #endif /* !T8_ELEMENT_CXX_HXX */

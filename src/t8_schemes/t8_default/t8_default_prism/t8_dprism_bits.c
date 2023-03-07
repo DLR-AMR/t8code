@@ -476,19 +476,15 @@ t8_dprism_successor (const t8_dprism_t *p, t8_dprism_t *succ, int level)
   if (prism_child_id == T8_DPRISM_CHILDREN - 1) {
     t8_dprism_successor (p, succ, level - 1);
     /*Zero out the bits of higher level, caused by recursion */
-#if 1
     succ->tri.x =
       (succ->tri.x >> (T8_DTRI_MAXLEVEL - level + 1)) << (T8_DTRI_MAXLEVEL -
                                                           level + 1);
     succ->tri.y =
       (succ->tri.y >> (T8_DTRI_MAXLEVEL - level + 1)) << (T8_DTRI_MAXLEVEL -
                                                           level + 1);
-#endif
-#if 1
     succ->line.x =
       (succ->line.x >> (T8_DLINE_MAXLEVEL - level + 1)) <<
       (T8_DLINE_MAXLEVEL - level + 1);
-#endif
     /*Set the level to the actual level */
     succ->line.level = level;
     succ->tri.level = level;

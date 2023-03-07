@@ -390,7 +390,7 @@ main (int argc, char **argv)
   snprintf (usage, BUFSIZ, "\t%s <OPTIONS>\n\t%s -h\t"
             "for a brief overview of all options. \n"
             "\t%s -p\tfor a refinement plane moving through the mesh. \n"
-            "\t%s -s\tfor a refinement of elements touching certain geometries.\n",
+            "\t%s -g\tfor a refinement of elements touching certain geometries.\n",
             basename (argv[0]), basename (argv[0]),
             basename (argv[0]), basename (argv[0]));
 
@@ -471,9 +471,10 @@ main (int argc, char **argv)
         ("\n\tERROR: Wrong usage.\n"
          "\tPlease specify either the '-p' or the '-s' option as described above.\n\n");
     }
-    else
+    else {
       t8_global_productionf ("\n\tERROR: Wrong usage.\n\n");
-    sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
+      sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
+    }
   }
   else {
     std::string fp (fileprefix);
