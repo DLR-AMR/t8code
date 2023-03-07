@@ -20,15 +20,16 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include "t8_cmesh_vtk_unstructured.hxx"
+
 #if T8_WITH_VTK
 #include <vtkUnstructuredGrid.h>
 #include <vtkUnstructuredGridReader.h>
 #include <vtkXMLUnstructuredGridReader.h>
-#include <t8_cmesh_vtk_unstructured.hxx>
+#include <vtkSmartPointer.h>
 
 void
-t8_read_unstructured_ext (const char *filename,
-                          vtkSmartPointer < vtkUnstructuredGrid > grid)
+t8_read_unstructured (const char *filename, vtkDataSet * grid)
 {
   char                tmp[BUFSIZ], *extension;
   /* Get the file-extension to decide which reader to use */
@@ -46,7 +47,7 @@ t8_read_unstructured_ext (const char *filename,
     }
     reader->SetFileName (filename);
     reader->Update ();
-    grid->ShallowCopy (reader->GetOutput ());
+    grid->ShallowCopy (vtkDataSet::SafeDownCast (reader->GetOutput ()));
     t8_debugf ("Finished reading of file.\n");
     return;
   }
@@ -58,7 +59,7 @@ t8_read_unstructured_ext (const char *filename,
     if (!reader->IsFileUnstructuredGrid ()) {
       t8_errorf ("File-content is not an unstructured Grid. ");
     }
-    grid->ShallowCopy (reader->GetOutput ());
+    grid->ShallowCopy (vtkDataSet::SafeDownCast (reader->GetOutput ()));
     t8_debugf ("Finished reading of file.\n");
 
     return;
@@ -69,5 +70,4 @@ t8_read_unstructured_ext (const char *filename,
     return;
   }
 }
-
 #endif

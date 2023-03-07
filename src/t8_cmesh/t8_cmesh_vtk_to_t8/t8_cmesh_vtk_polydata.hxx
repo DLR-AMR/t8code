@@ -28,10 +28,10 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #ifndef T8_CMESH_VTK_POLYDATA
 #define T8_CMESH_VTK_POLYDATA
 
+#include <t8.h>
 #if T8_WITH_VTK
-#include <vtkSmartPointer.h>
-#include <vtkCellData.h>
 #include <vtkDataSet.h>
+#include <vtkPolyData.h>
 
 /**
  * Given a filename to a file containing Polydata, read
@@ -42,8 +42,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  *                      \a filename.
  * 
  */
-void                t8_read_poly (const char *filename,
-                                  vtkSmartPointer < vtkPolyData > grid);
+void                t8_read_poly (const char *filename, vtkDataSet * grid);
 
 #endif
 
