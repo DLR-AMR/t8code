@@ -24,7 +24,7 @@
 #include <sc_refcount.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_forest.h>
-#include <t8_cmesh_vtk.h>
+#include <t8_cmesh_vtk_writer.h>
 #include <t8_geometry/t8_geometry_base.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
