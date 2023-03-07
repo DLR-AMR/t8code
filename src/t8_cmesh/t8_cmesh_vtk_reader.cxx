@@ -36,6 +36,19 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 T8_EXTERN_C_BEGIN ();
 
 #if T8_WITH_VTK
+/**
+ * Read a vtk-file and ShallowCopy its content into a vtkDataSet.
+ * The success (or failure) of the reading process is communicated 
+ * over all processes.
+ * 
+ * \param[in] filename      The name of the file to read
+ * \param[in, out] vtkGrid  A pointer to a vtkDataSet. We ShallowCopy the grid there.
+ * \param[in] partition     Flag if the input is read partitioned
+ * \param[in] main_proc     The main reading proc.
+ * \param[in] comm          A communicator.
+ * \param[in] vtk_file_type The type of the Data in the file.
+ * \return                  0 if the file was read successfully, 1 otherwise.                
+ */
 int
 t8_file_to_vtkGrid (const char *filename,
                     vtkDataSet * vtkGrid,
@@ -44,9 +57,16 @@ t8_file_to_vtkGrid (const char *filename,
 {
   int                 main_proc_read_successful = 0;
   int                 mpirank;
+  int                 mpisize;
   int                 mpiret;
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  T8_ASSERT (filename != NULL);
+  T8_ASSERT (0 <= main_proc && main_proc < mpisize);
+
+  /* Read the file and set the pointer to the */
   if (!partition || mpirank == main_proc) {
     switch (vtk_file_type) {
     case VTK_UNSTRUCTURED_FILE:
