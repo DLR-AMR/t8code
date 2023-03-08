@@ -48,7 +48,7 @@ t8_read_poly_ext (const char *filename, vtkSmartPointer < vtkPolyData > grid)
     vtkNew < vtkPLYReader > reader;
     reader->SetFileName (filename);
     reader->Update ();
-    grid->ShallowCopy (reader->GetOutput ());
+    grid->ShallowCopy (vtkDataSet::SafeDownCast (reader->GetOutput ()));
     return;
   }
   else if (strcmp (extension, "vtp") == 0) {
@@ -59,21 +59,21 @@ t8_read_poly_ext (const char *filename, vtkSmartPointer < vtkPolyData > grid)
       return;
     }
     reader->Update ();
-    grid->ShallowCopy (reader->GetOutput ());
+    grid->ShallowCopy (vtkDataSet::SafeDownCast (reader->GetOutput ()));
     return;
   }
   else if (strcmp (extension, "obj") == 0) {
     vtkNew < vtkOBJReader > reader;
     reader->SetFileName (filename);
     reader->Update ();
-    grid->ShallowCopy (reader->GetOutput ());
+    grid->ShallowCopy (vtkDataSet::SafeDownCast (reader->GetOutput ()));
     return;
   }
   else if (strcmp (extension, "stl") == 0) {
     vtkNew < vtkSTLReader > reader;
     reader->SetFileName (filename);
     reader->Update ();
-    grid->ShallowCopy (reader->GetOutput ());
+    grid->ShallowCopy (vtkDataSet::SafeDownCast (reader->GetOutput ()));
     return;
   }
   else if (strcmp (extension, "vtk") == 0) {
@@ -85,14 +85,14 @@ t8_read_poly_ext (const char *filename, vtkSmartPointer < vtkPolyData > grid)
         ("File-content is not polydata. If it is a vtkUnstructuredGrid use the unstructured Grid reader.");
       return;
     }
-    grid->ShallowCopy (reader->GetOutput ());
+    grid->ShallowCopy (vtkDataSet::SafeDownCast (reader->GetOutput ()));
     return;
   }
   else if (strcmp (extension, "g") == 0) {
     vtkNew < vtkBYUReader > reader;
     reader->SetGeometryFileName (filename);
     reader->Update ();
-    grid->ShallowCopy (reader->GetOutput ());
+    grid->ShallowCopy (vtkDataSet::SafeDownCast (reader->GetOutput ()));
     return;
   }
   else {
@@ -124,6 +124,6 @@ t8_read_poly (const char *filename, vtkDataSet * grid)
   /* PolyLines to lines */
   tri_filter->PassLinesOn ();
   tri_filter->Update ();
-  grid->ShallowCopy (vtkDataSet::SafeDownCast (tri_filter->GetOutput ()));
+  grid->DeepCopy (vtkDataSet::SafeDownCast (tri_filter->GetOutput ()));
 }
 #endif

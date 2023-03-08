@@ -41,6 +41,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  *                      \a filename. 
  */
 void                t8_read_unstructured (const char *filename,
-                                          vtkDataSet * grid);
+                                          vtkSmartPointer < vtkDataSet >
+                                          grid);
 #endif
 #endif /* T8_CMESH_VTK_UNSTRUCTURED_READER */

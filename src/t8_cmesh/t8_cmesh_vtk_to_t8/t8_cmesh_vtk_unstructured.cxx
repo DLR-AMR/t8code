@@ -29,7 +29,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <vtkSmartPointer.h>
 
 void
-t8_read_unstructured (const char *filename, vtkDataSet * grid)
+t8_read_unstructured (const char *filename,
+                      vtkSmartPointer < vtkDataSet > grid)
 {
   char                tmp[BUFSIZ], *extension;
   /* Get the file-extension to decide which reader to use */
@@ -48,7 +49,6 @@ t8_read_unstructured (const char *filename, vtkDataSet * grid)
     reader->SetFileName (filename);
     reader->Update ();
     grid->ShallowCopy (vtkDataSet::SafeDownCast (reader->GetOutput ()));
-    t8_debugf ("Finished reading of file.\n");
     return;
   }
   else if (strcmp (extension, "vtk") == 0) {
@@ -60,8 +60,6 @@ t8_read_unstructured (const char *filename, vtkDataSet * grid)
       t8_errorf ("File-content is not an unstructured Grid. ");
     }
     grid->ShallowCopy (vtkDataSet::SafeDownCast (reader->GetOutput ()));
-    t8_debugf ("Finished reading of file.\n");
-
     return;
   }
   else {

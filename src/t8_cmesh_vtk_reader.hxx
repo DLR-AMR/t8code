@@ -46,39 +46,52 @@ typedef enum vtk_file_type
   VTK_POLYDATA_FILE = 1
 } vtk_file_type_t;
 
+#if T8_WITH_VTK
 /**
- * Translator between vtk-type of elements and t8code-elements. 
- * Not all elements are supported. Return T8_ECLASS_INVALID for unsupported
- * elements.  
+ * Read a vtk-file and ShallowCopy its content into a vtkDataSet.
+ * The success (or failure) of the reading process is communicated 
+ * over all processes.
+ * 
+ * \param[in] filename      The name of the file to read
+ * \param[in, out] vtkGrid  A pointer to a vtkDataSet. We ShallowCopy the grid there.
+ * \param[in] partition     Flag if the input is read partitioned
+ * \param[in] main_proc     The main reading proc.
+ * \param[in] comm          A communicator.
+ * \param[in] vtk_file_type The type of the Data in the file.
+ * \return                  0 if the file was read successfully, 1 otherwise.                
  */
-extern const t8_eclass_t t8_cmesh_vtk_type_to_t8_type[82] = {
-  T8_ECLASS_INVALID, T8_ECLASS_VERTEX, T8_ECLASS_INVALID, T8_ECLASS_LINE,
-  T8_ECLASS_INVALID, T8_ECLASS_TRIANGLE, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_QUAD, T8_ECLASS_QUAD, T8_ECLASS_TET,
-  T8_ECLASS_HEX, T8_ECLASS_HEX, T8_ECLASS_PRISM, T8_ECLASS_PYRAMID,
-  T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID
-};
+int                 t8_file_to_vtkGrid (const char *filename,
+                                        vtkSmartPointer < vtkDataSet >
+                                        vtkGrid, const int partition,
+                                        const int main_proc, sc_MPI_Comm comm,
+                                        const vtk_file_type_t vtk_file_type);
 
 /**
- * Construct a cmesh given a filename refering to a vtk-file either containing an
- * unstructured grid, or vtk-polydata, most likely constructed by vtk. 
+ * Given a pointer to a vtkDataSet a cmesh representing the vtkDataSet is
+ * constructed and can be shared over the processes. 
+ * 
+ * \param[in] vtkGrid A pointer to a vtkDataSet
+ * \param[in] partition Flag if the cmesh should be partitioned
+ * \param[in] main_proc The main reading process
+ * \param[in] comm The communicator. 
+ * \return t8_cmesh_t 
+ */
+t8_cmesh_t          t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet >
+                                         vtkGrid, const int partition,
+                                         const int main_proc,
+                                         sc_MPI_Comm comm);
+
+#endif
+
+/**
+ * Given a filename to a vtkUnstructuredGrid or vtkPolyData read the file and
+ * construct a cmesh. This is a two stage process. First the file is read and
+ * stored in a vtkDataSet using \a t8_file_to_vtkGrid. 
+ * In the second stage a cmesh is constructed from the vtkDataSet using \a t8_vtkGrid_to_cmesh. 
+ * 
+ * Both stages use the vtk-library, therefore the function is only available if 
+ * t8code is linked against VTK. 
+ * 
  * 
  * \param[in] filename      The name of the file
  * \param[in] partition     Flag if the constructed mesh should be partitioned
