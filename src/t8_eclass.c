@@ -161,7 +161,7 @@ const char * t8_eclass_to_string[T8_ECLASS_COUNT] =
 int
 t8_eclass_count_boundary (t8_eclass_t theclass, int min_dim, int *per_eclass)
 {
-  int sum = 0;
+  int                 sum = 0;
   for (int t = 0; t < T8_ECLASS_COUNT; ++t) {
     if (t8_eclass_to_dimension[t] >= min_dim) {
       sum += (per_eclass[t] = t8_eclass_boundary_count[theclass][t]);
