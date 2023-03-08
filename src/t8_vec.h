@@ -50,7 +50,15 @@ double              t8_vec_dist (const double vec_x[3],
  * \param [in,out] vec_x  A 3D vector. On output set to \a alpha * \a vec_x.
  * \param [in]     alpha  A factor.
  */
-void                t8_vec_ax (double vec_x[3], double alpha);
+void                t8_vec_ax (double vec_x[3], const double alpha);
+
+/** Compute Y = alpha * X
+ * \param [in]  vec_x  A 3D vector.
+ * \param [out] vec_z  On output set to \a alpha * \a vec_x.
+ * \param [in]  alpha  A factor.
+ */
+void                t8_vec_axy (const double vec_x[3], double vec_y[3],
+                                const double alpha);
 
 /** Y = alpha * X + b
  * \param [in]  vec_x  A 3D vector.
@@ -61,7 +69,7 @@ void                t8_vec_ax (double vec_x[3], double alpha);
  * \note It is possible that vec_x = vec_y on input to overwrite x
  */
 void                t8_vec_axb (const double vec_x[3], double vec_y[3],
-                                double alpha, double b);
+                                const double alpha, const double b);
 
 /** Y = Y + alpha * X
  * \param [in]  vec_x  A 3D vector.
@@ -70,7 +78,7 @@ void                t8_vec_axb (const double vec_x[3], double vec_y[3],
  * \param [in]  alpha  A factor.
  */
 void                t8_vec_axpy (const double vec_x[3], double vec_y[3],
-                                 double alpha);
+                                 const double alpha);
 
 /** Z = Y + alpha * X
  * \param [in]  vec_x  A 3D vector.
@@ -79,7 +87,7 @@ void                t8_vec_axpy (const double vec_x[3], double vec_y[3],
  */
 void                t8_vec_axpyz (const double vec_x[3],
                                   const double vec_y[3], double vec_z[3],
-                                  double alpha);
+                                  const double alpha);
 
 /** Dot product of X and Y.
  * \param [in]  vec_x  A 3D vector.
