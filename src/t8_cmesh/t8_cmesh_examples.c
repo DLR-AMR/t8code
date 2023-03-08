@@ -1924,3 +1924,55 @@ t8_cmesh_new_full_hybrid (sc_MPI_Comm comm)
   t8_cmesh_commit (cmesh, comm);
   return cmesh;
 }
+
+t8_cmesh_t
+t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees, const int set_attributes,
+                           sc_MPI_Comm comm)
+{
+  T8_ASSERT (num_trees > 0);
+
+  t8_cmesh_t          cmesh;
+  t8_cmesh_init (&cmesh);
+  const t8_geometry_c *linear_geom = t8_geometry_linear_new (3);
+  t8_cmesh_register_geometry (cmesh, linear_geom);
+
+  /* Vertices of first cube in row. */
+  double              vertices[24] = {
+    0, 0, 0,
+    1, 0, 0,
+    0, 1, 0,
+    1, 1, 0,
+    0, 0, 1,
+    1, 0, 1,
+    0, 1, 1,
+    1, 1, 1,
+  };
+
+  /* Set each tree in cmesh. */
+  for (t8_locidx_t tree_id = 0; tree_id < num_trees; tree_id++) {
+    t8_cmesh_set_tree_class (cmesh, tree_id, T8_ECLASS_HEX);
+    /* Set first attribute - tree vertices. */
+    t8_cmesh_set_tree_vertices (cmesh, tree_id, vertices, 8);
+    /* Update the x-axis of vertices for next tree. */
+    for (int v_id = 0; v_id < 8; v_id++) {
+      vertices[v_id * 3]++;
+    }
+    /* Set two more dummy attributes - tree_id & num_trees. */
+    if (set_attributes) {
+      t8_cmesh_set_attribute
+        (cmesh, tree_id, t8_get_package_id (), T8_CMESH_NEXT_POSSIBLE_KEY,
+         &tree_id, sizeof (t8_locidx_t), 0);
+      t8_cmesh_set_attribute
+        (cmesh, tree_id, t8_get_package_id (), T8_CMESH_NEXT_POSSIBLE_KEY + 1,
+         &num_trees, sizeof (t8_locidx_t), 0);
+    }
+  }
+
+  /* Join the hexes. */
+  for (t8_locidx_t tree_id = 0; tree_id < num_trees - 1; tree_id++) {
+    t8_cmesh_set_join (cmesh, tree_id, tree_id + 1, 0, 1, 0);
+  }
+
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
+}

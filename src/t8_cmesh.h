@@ -216,27 +216,6 @@ void                t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh,
                                                     t8_scheme_cxx_t *ts);
 
 /* TODO: This function is no longer needed.  Scavenge documentation if helpful. */
-#if 0
-/* TODO: Currently cmesh_from needs to be partitioned as well.
- *       Change partition function such that it also accepts replicated cmesh_from */
-/** Set a cmesh to be partitioned from a second cmesh.
- *  This function can be used instead of \ref t8_cmesh_set_partition.
- *  There a two modes: Either a level is specified, than the new cmesh is partitioned
- *  according to an assumed uniform refinement of the old cmesh,
- *  or an array of tree offsets for each process is specified.
- *  In the latter case each process will get the local trees given by his offsets.
- *  For specification of the offset array see \ref t8_cmesh_types.h.
- * \param [in,out] cmesh       The cmesh to be partitioned.
- * \param [in] cmesh_from      The cmesh to start with.
- * \param [in] level           If >= 0 a uniform refinement of this level is taken
- *                             as reference for the partitioning.
- * \param [in] tree_offsets    If level < 0 then an array of global tree_id offsets
- *                             for each process can be specified here.
- *                             TODO: document flag for shared trees.
- */
-void                t8_cmesh_set_partition_given (t8_cmesh_t cmesh,
-                                                  t8_gloidx_t *tree_offsets);
-#endif
 
 /** Refine the cmesh to a given level.
  * Thus split each tree into x^level subtrees

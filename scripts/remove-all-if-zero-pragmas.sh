@@ -4,7 +4,7 @@
 #  t8code is a C library to manage a collection (a forest) of multiple
 #  connected adaptive space-trees of general element classes in parallel.
 #
-#  Copyright (C) 2015 the developers
+#  Copyright (C) 2023 Johannes Markert <johannes.markert@dlr.de>
 #
 #  t8code is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -20,27 +20,16 @@
 #  along with t8code; if not, write to the Free Software Foundation, Inc.,
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-# This script lists all .c .h .cxx and .hxx
-# files in t8code's src/ example/ and test/ subfolders.
+
+# Search and remove all '#if 0' pragmas from C/C++ source files in
+# 'src', 'tutorials', and 'example' directories.
+#
+# Uses 'unidef', a non-standard commandline tool: https://dotat.at/prog/unifdef/
+#
+# On Ubuntu: sudo apt-get install unidef
+
+#
+# Usage: ./scripts/remove-all-if-zero-pragmas.sh
 #
 
-#
-# This script must be executed from the scripts/ folder.
-#
-if [ `basename $PWD` != scripts ]
-then
-  echo ERROR: Must be executed from whitin the scripts/ subfolder.
-  exit 1
-fi
-
-# All valid file suffixes.
-# Seperated by '|' in order to be directly used
-# as a regex in the find command.
-
-suffixes="c|cxx|h|hxx"
-
-# Find all files with the appropriate suffix in the 
-# src/ example/ test/ and tutorials/ subfolder.
-files=`find ../src ../example ../test ../tutorials -regextype egrep -iregex ".*\.($suffixes)"`
-
-echo $files
+grep -r -i -l -E '^\s*#\s*if\s+0' src/ tutorials/ example/ | xargs unifdef -k -m

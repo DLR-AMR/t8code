@@ -127,39 +127,6 @@ t8_cmesh_is_committed (t8_cmesh_t cmesh)
   return 1;
 }
 
-#if 0
-/* Compute a hash value for a ghost tree. */
-/* deprecated */
-static unsigned
-t8_cmesh_ghost_hash_fn (const void *ghost, const void *data)
-{
-  t8_cmesh_t          cmesh;
-  t8_cghost_t         G;
-
-  T8_ASSERT (data != NULL);
-  cmesh = (t8_cmesh_t) data;
-  T8_ASSERT (cmesh->num_ghosts > 0);
-  T8_ASSERT (cmesh->set_partition);
-  T8_ASSERT (cmesh->num_local_trees > 0);
-
-  G = (t8_cghost_t) ghost;
-  /* TODO: is this a reasonable hash value? */
-  return G->treeid % cmesh->num_ghosts;
-}
-
-static int
-t8_cmesh_ghost_equal_fn (const void *ghost1, const void *ghost2,
-                         const void *data)
-{
-  t8_cghost_t         G1, G2;
-
-  G1 = (t8_cghost_t) ghost1;
-  G2 = (t8_cghost_t) ghost2;
-
-  return G1->treeid == G2->treeid;
-}
-#endif
-
 /* Check whether a given communicator assigns the same rank and mpisize
  * as stored in a given cmesh. */
 int
@@ -203,47 +170,6 @@ t8_cmesh_init (t8_cmesh_t *pcmesh)
 
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 }
-
-#if 0
-/* This function is not part of the interface. The number of trees is always clear
- * from the number of calls to t8_cmesh_set_tree_class.
- * It is set in t8_cmesh_commit */
-/* TODO: rename num_trees to global_num_trees or num_gtrees etc.
- *       to always distinguish between local and global.
- *       Do this everywhere in the code.
- */
-static void
-t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_gloidx_t num_trees)
-{
-  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
-
-  /* If the cmesh is entered as a partitioned cmesh,
-   * this function sets the local number of trees;
-   * (TODO ^^^ would require locidx -- better provide two arguments)
-   * the global number then must have been set in cmesh_set_partition.
-   * Otherwise the global number of trees is set here.
-   * TODO: make this function behave consistently independent on prior
-   *       calls to set_partition.
-   *       We want the user to be free in the sequence of calls
-   *       as much as possible.
-   */
-  if (cmesh->set_partition) {
-    /* num_trees == 0 is allowed */
-    T8_ASSERT (cmesh->num_trees > 0);
-    T8_ASSERT (cmesh->num_local_trees == 0);
-    cmesh->num_local_trees = num_trees;
-  }
-  else {
-    /* num_trees == 0 is allowed */
-    T8_ASSERT (cmesh->num_trees >= 0);
-    cmesh->num_trees = cmesh->num_local_trees = num_trees;
-  }
-  /* As soon as we know the number of trees, we allocate
-   * the ctree array.
-   * TODO?
-   */
-}
-#endif
 
 void
 t8_cmesh_set_derive (t8_cmesh_t cmesh, t8_cmesh_t set_from)
@@ -352,29 +278,6 @@ t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, int element_level,
     }
   }
 }
-
-#if 0
-/* No longer needed */
-void
-t8_cmesh_set_partition_from (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from,
-                             int level, t8_gloidx_t *tree_offsets)
-{
-  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
-  T8_ASSERT (t8_cmesh_is_committed (cmesh_from));
-  T8_ASSERT (cmesh_from->set_partition);
-
-  cmesh->set_from = cmesh_from;
-  cmesh->set_partition = 1;
-  cmesh->face_knowledge = cmesh_from->face_knowledge;
-  if (level >= 0) {
-    cmesh->set_partition_level = level;
-  }
-  else {
-    cmesh->tree_offsets = tree_offsets;
-  }
-  cmesh->from_method |= T8_CMESH_PARTITION;
-}
-#endif
 
 void
 t8_cmesh_set_refine (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *scheme)
@@ -528,36 +431,6 @@ t8_cmesh_get_partition_table (t8_cmesh_t cmesh)
    * partition array. */
   return cmesh->tree_offsets;
 }
-
-#if 0
-/* Check whether a given tree_id belongs to a tree in the cmesh.
- * If partitioned only local trees are allowed.
- */
-static int
-t8_cmesh_tree_id_is_owned (t8_cmesh_t cmesh, t8_locidx_t tree_id)
-{
-  T8_ASSERT (cmesh->committed);
-  if (cmesh->set_partition) {
-    return cmesh->first_tree <= tree_id
-      && tree_id < cmesh->first_tree + cmesh->num_local_trees;
-  }
-  else {
-    return 0 <= tree_id && tree_id < cmesh->num_trees;
-  }
-}
-
-#endif
-
-#if 0
-/* Given a tree_id return the index of the specified tree in
- * cmesh's tree array
- */
-static t8_locidx_t
-t8_cmesh_tree_index (t8_cmesh_t cmesh, t8_locidx_t tree_id)
-{
-  return cmesh->set_partition ? tree_id - cmesh->first_tree : tree_id;
-}
-#endif
 
 void
 t8_cmesh_set_dimension (t8_cmesh_t cmesh, int dim)
@@ -811,16 +684,6 @@ t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
     cmesh_a->num_local_trees != cmesh_b->num_local_trees ||
     cmesh_a->num_ghosts != cmesh_b->num_ghosts ||
     cmesh_a->first_tree != cmesh_b->first_tree;
-#if 0
-  /* TODO: The inserted variables are counters that are only active if the
-   * cmesh is committed from scratch. If a cmesh is commited via cmesh_copy,
-   * then these counters are not active. So even for equal cmeshes
-   * these counters must not store the same value. */
-#ifdef T8_ENABLE_DEBUG
-  is_equal = is_equal || cmesh_a->inserted_trees != cmesh_b->inserted_trees ||
-    cmesh_a->inserted_ghosts != cmesh_b->inserted_ghosts;
-#endif
-#endif
   if (is_equal != 0) {
     return 0;
   }
@@ -860,46 +723,6 @@ t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
   }
   return 1;
 }
-
-#if 0
-/* broadcast the tree attributes of a cmesh on root to all processors */
-/* TODO: can we optimize it by just sending the memory of the mempools? */
-static void
-t8_cmesh_bcast_attributes (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
-{
-  int                 mpirank, mpisize, mpiret;
-  int                 has_attr;
-  t8_ctree_t          tree;
-
-  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
-  SC_CHECK_MPI (mpiret);
-  mpiret = sc_MPI_Comm_size (comm, &mpisize);
-  SC_CHECK_MPI (mpiret);
-
-  for (tree = t8_cmesh_get_first_tree (cmesh_in); tree != NULL;
-       tree = t8_cmesh_get_next_tree (cmesh_in, tree)) {
-    if (mpirank == root && tree->attribute != NULL) {
-      has_attr = 1;
-    }
-    else {
-      has_attr = 0;
-    }
-    mpiret = sc_MPI_Bcast (&has_attr, 1, sc_MPI_INT, root, comm);
-    SC_CHECK_MPI (mpiret);
-    if (has_attr) {
-      if (mpirank != root) {
-        tree->attribute =
-          sc_mempool_alloc (cmesh_in->tree_attributes_mem[tree->eclass]);
-      }
-      mpiret = sc_MPI_Bcast (tree->attribute,
-                             t8_cmesh_get_attribute_size (cmesh_in,
-                                                          tree->eclass),
-                             sc_MPI_BYTE, root, comm);
-      SC_CHECK_MPI (mpiret);
-    }
-  }
-}
-#endif
 
 int
 t8_cmesh_is_empty (t8_cmesh_t cmesh)
