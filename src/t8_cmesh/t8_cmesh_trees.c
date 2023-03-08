@@ -284,9 +284,6 @@ t8_cmesh_trees_finish_part (t8_cmesh_trees_t trees, int proc)
     T8_ASSERT (face_neigh_bytes % T8_PADDING_SIZE == 0);
     temp_offset += sizeof (t8_ctree_struct_t);
   }
-#if 0
-  num_attributes++;
-#endif
   /* Second pass through trees to set attribute offsets */
   temp_offset = 0;
   num_attributes = 0;
@@ -300,9 +297,6 @@ t8_cmesh_trees_finish_part (t8_cmesh_trees_t trees, int proc)
     num_attributes += tree->num_attributes;
     temp_offset += sizeof (t8_ctree_struct_t);
   }
-#if 0
-  num_attributes++;             /* Add one attribute at the end */
-#endif
   attr_bytes += num_attributes * sizeof (t8_attribute_info_struct_t);
   /* Done setting all tree and ghost offsets */
   /* Allocate memory, first_face + attr_bytes gives the new total byte count */
@@ -693,60 +687,6 @@ t8_cmesh_trees_add_attribute (t8_cmesh_trees_t trees, int proc,
   }
 }
 
-#if 0
-/* TODO: Are the tree following function needed? */
-
-/* Gets two attribute_info structs and compares their package id and key */
-static int
-t8_cmesh_trees_compare_attributes (const void *A1, const void *A2)
-{
-  t8_attribute_info_struct_t *attr1, *attr2;
-
-  attr1 = (t8_attribute_info_struct_t *) A1;
-  attr2 = (t8_attribute_info_struct_t *) A2;
-
-  if (attr1->package_id < attr2->package_id) {
-    return -1;
-  }
-  else if (attr1->package_id > attr2->package_id) {
-    return 1;
-  }
-  else {
-    return attr1->key < attr2->key ? -1 : attr1->key != attr2->key;
-  }
-}
-
-static void
-t8_cmesh_part_attribute_info_sort (t8_part_tree_t P)
-{
-  t8_locidx_t         itree;
-  t8_ctree_t          tree;
-  sc_array_t          tree_attr;
-
-  T8_ASSERT (P != NULL);
-
-  for (itree = 0; itree < P->num_trees; itree++) {
-    tree = t8_part_tree_get_tree (P, P->first_tree_id + itree);
-    sc_array_init_data (&tree_attr, (char *) tree + tree->att_offset,
-                        sizeof (t8_attribute_info_struct_t),
-                        tree->num_attributes);
-    sc_array_sort (&tree_attr, t8_cmesh_trees_compare_attributes);
-  }
-}
-
-void
-t8_cmesh_trees_attribute_info_sort (t8_cmesh_trees_t trees)
-{
-  int                 iproc;
-
-  T8_ASSERT (trees != NULL);
-  for (iproc = 0; iproc < (int) trees->from_proc->elem_count; iproc++) {
-    t8_cmesh_part_attribute_info_sort (t8_cmesh_trees_get_part
-                                       (trees, iproc));
-  }
-}
-#endif
-
 /* gets a key_id_pair as first argument and an attribute as second */
 static int
 t8_cmesh_trees_compare_keyattr (const void *A1, const void *A2)
@@ -946,40 +886,6 @@ t8_cmesh_trees_print (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
   return;
 #endif
 }
-
-#if 0
-/* compare two arrays of face_neighbors for equality */
-static int
-t8_cmesh_face_n_is_equal (t8_ctree_t tree_a, t8_ctree_t tree_b, int num_neigh)
-{
-  return memcmp (T8_TREE_FACE (tree_a), T8_TREE_FACE (tree_b),
-                 num_neigh * sizeof (t8_locidx_t)) ||
-    memcmp (T8_TREE_TTF (tree_a), T8_TREE_TTF (tree_b),
-            num_neigh * sizeof (int8_t)) ? 0 : 1;
-}
-
-/* TODO: hide this function, is used by t8_cmesh_trees_is_equal */
-static int
-t8_cmesh_ctree_is_equal (t8_ctree_t tree_a, t8_ctree_t tree_b)
-{
-  int                 is_equal;
-  T8_ASSERT (tree_a != NULL && tree_b != NULL);
-
-  is_equal = tree_a->treeid != tree_b->treeid ||
-    tree_a->eclass != tree_b->eclass;
-  if (is_equal != 0) {
-    return 0;
-  }
-  if (!t8_cmesh_face_n_is_equal
-      (tree_a, tree_b, t8_eclass_num_faces[tree_a->eclass])) {
-    return 0;
-  }
-
-  /* TODO check attributes */
-
-  return 1;
-}
-#endif
 
 /* Given a global tree id find out whether the tree is a local ghost.
  * If it is we return its local ghost id otherwise we return -1.

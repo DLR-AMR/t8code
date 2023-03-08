@@ -73,11 +73,6 @@ typedef p4est_quadrant_t t8_pquad_t;
 #define T8_QUAD_SET_TCOORD(quad,coord)                          \
   do { (quad)->p.user_long = (long) (coord); } while (0)
 
-#if 0
-/** Provide an implementation for the quadrilateral element class. */
-t8_eclass_scheme_t *t8_default_scheme_new_quad (void);
-#endif
-
 struct t8_default_scheme_quad_c:public t8_default_scheme_common_c
 {
 public:
@@ -286,8 +281,9 @@ public:
 
   /** Query whether a given set of elements is a family or not.
    * \param [in] fam      An array of as many elements as an element of class
-   *                      \b ts has children.
+   *                      \b ts has siblings.
    * \return              Zero if \b fam is not a family, nonzero if it is.
+   * \note level 0 elements do not form a family.
    */
   virtual int         t8_element_is_family (t8_element_t **fam) const;
 

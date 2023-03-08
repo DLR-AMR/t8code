@@ -10,8 +10,13 @@ bin_PROGRAMS += \
 	tutorials/general/t8_step4_partition_balance_ghost \
 	tutorials/general/t8_step5_element_data \
 	tutorials/general/t8_step5_element_data_c_interface \
+	tutorials/general/t8_step6_stencil \
 	tutorials/general/t8_tutorial_search \
 	tutorials/features/t8_features_curved_meshes
+
+dist_t8data_DATA += \
+  tutorials/features/t8_features_curved_meshes_generate_cmesh.geo \
+  tutorials/features/t8_features_curved_meshes_generate_cmesh_2d.geo
 
 tutorials_general_t8_step0_helloworld_SOURCES = \
 	tutorials/general/t8_step0_helloworld.c
@@ -34,6 +39,10 @@ tutorials_general_t8_step5_element_data_c_interface_SOURCES = \
 	tutorials/general/t8_step3_adapt_forest.cxx \
 	tutorials/general/t8_step5_element_data_c_interface.c \
 	tutorials/general/t8_step5_main.cxx
+tutorials_general_t8_step6_stencil_SOURCES = \
+	tutorials/general/t8_step3_adapt_forest.cxx \
+	tutorials/general/t8_step6_stencil.cxx \
+	tutorials/general/t8_step6_main.cxx
 tutorials_general_t8_tutorial_search_SOURCES = \
 	tutorials/general/t8_tutorial_search.cxx \
 	tutorials/general/t8_step3_adapt_forest.cxx
@@ -43,5 +52,6 @@ tutorials_features_t8_features_curved_meshes_SOURCES = \
 libt8_installed_headers += \
         tutorials/general/t8_step3.h \
         tutorials/general/t8_step4.h \
-        tutorials/general/t8_step5.h
+        tutorials/general/t8_step5.h \
+        tutorials/general/t8_step6.h
 
