@@ -42,7 +42,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  *                      \a filename.
  * 
  */
-void                t8_read_poly (const char *filename, vtkDataSet * grid);
+int                 t8_read_poly (const char *filename, vtkDataSet * grid);
 
 #endif
 

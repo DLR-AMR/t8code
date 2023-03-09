@@ -163,25 +163,21 @@ t8_file_to_vtkGrid (const char *filename,
   if (!partition || mpirank == main_proc) {
     switch (vtk_file_type) {
     case VTK_UNSTRUCTURED_FILE:
-      t8_read_unstructured (filename, vtkGrid);
+      main_proc_read_successful = t8_read_unstructured (filename, vtkGrid);
       break;
     case VTK_POLYDATA_FILE:
-      t8_read_poly (filename, vtkGrid);
+      main_proc_read_successful = t8_read_poly (filename, vtkGrid);
       break;
     default:
       vtkGrid = NULL;
       t8_errorf ("Filetype not supported.\n");
       break;
     }
-    if (vtkGrid == NULL) {
-      if (partition) {
-        main_proc_read_successful = 0;
-        /* Communicate the failure of the reading process. */
-        sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc,
-                      comm);
-      }
+    if (partition) {
+      /* Communicate the success/failure of the reading process. */
+      sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc,
+                    comm);
     }
-    main_proc_read_successful = 1;
   }
   if (partition) {
     sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc, comm);
@@ -451,7 +447,6 @@ t8_cmesh_vtk_reader (const char *filename, const int partition,
     t8_global_errorf
       ("Main process (Rank %i) did not read the file successfully.\n",
        main_proc);
-    t8_cmesh_destroy (&cmesh);
     return NULL;
   }
   else {
