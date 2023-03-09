@@ -335,7 +335,7 @@ t8_forest_element_triangle_area (double coordinates[3][3])
 }
 
 static double
-t8_forest_element_tet_volume (double coordinates[4][3])
+t8_forest_element_tet_volume (const double coordinates[4][3])
 {
   /* We compute the volume as a sixth of the determinant of the
    * three vectors of the corners minus the forth vector.
@@ -346,17 +346,18 @@ t8_forest_element_tet_volume (double coordinates[4][3])
    */
   double              cross[3];
   int                 i;
+  double              coordinates_tmp[3][3];
 
   /* subtract the 4-th vector from the other 3 */
   for (i = 0; i < 3; i++) {
-    t8_vec_axpy (coordinates[3], coordinates[i], -1);
+    t8_vec_axpyz (coordinates[3], coordinates[i], coordinates_tmp[i], -1);
   }
 
   /* Compute the cross product of the 2nd and 3rd */
-  t8_vec_cross (coordinates[1], coordinates[2], cross);
+  t8_vec_cross (coordinates_tmp[1], coordinates_tmp[2], cross);
 
   /* return |(a-d) * ((b-d)x(c-d))| / 6 */
-  return fabs (t8_vec_dot (coordinates[0], cross)) / 6;
+  return fabs (t8_vec_dot (coordinates_tmp[0], cross)) / 6;
 }
 
 /* Compute an element's volume */
@@ -549,12 +550,10 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
       volume = t8_forest_element_tet_volume (coordinates);
 
       /*The second tetrahedron has pyra vertices 0, 3, 2 and 4 */
-      /*vertex 3 has already been computed and stored in coordinates[2] */
-      coordinates[1][0] = coordinates[2][0];
-      coordinates[1][1] = coordinates[2][1];
-      coordinates[1][2] = coordinates[2][2];
+
       t8_forest_element_coordinate (forest, ltreeid, element, 2,
-                                    coordinates[2]);
+                                    coordinates[1]);
+
       volume += t8_forest_element_tet_volume (coordinates);
       return volume;
     }
