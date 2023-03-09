@@ -39,14 +39,14 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 class t8_forest_volume:public testing::TestWithParam <std::tuple<t8_eclass_t, int>> {
     protected:
         void SetUp () override{
-            eclass = std::get<0>(GetParam ());
-            level = std::get<1>(GetParam ());
+            eclass = std::get<0> (GetParam ());
+            level = std::get<1> (GetParam ());
             scheme = t8_scheme_new_default_cxx ();
             t8_cmesh_t cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
-            forest = t8_forest_new_uniform(cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
+            forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
         }
         void TearDown () override {
-            t8_forest_unref(&forest);
+            t8_forest_unref (&forest);
         }
     t8_forest_t forest;
     t8_scheme_cxx * scheme;
