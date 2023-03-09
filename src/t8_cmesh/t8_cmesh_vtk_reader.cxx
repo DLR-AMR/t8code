@@ -31,6 +31,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include "t8_cmesh_vtk_to_t8/t8_cmesh_vtk_unstructured.hxx"
 #include "t8_cmesh_vtk_to_t8/t8_cmesh_vtk_polydata.hxx"
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
+#include "t8_cmesh_vtk_to_t8/t8_vtk_types.h"
 
 #if T8_WITH_VTK
 #include <vtkCellIterator.h>
@@ -49,36 +50,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #endif
 
 T8_EXTERN_C_BEGIN ();
-
-/**
- * Translator between vtk-type of elements and t8code-elements. 
- * Not all elements are supported. Return T8_ECLASS_INVALID for unsupported
- * elements.  
- */
-const t8_eclass_t   t8_cmesh_vtk_type_to_t8_type[82] = {
-  T8_ECLASS_INVALID, T8_ECLASS_VERTEX, T8_ECLASS_INVALID, T8_ECLASS_LINE,
-  T8_ECLASS_INVALID, T8_ECLASS_TRIANGLE, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_QUAD, T8_ECLASS_QUAD, T8_ECLASS_TET,
-  T8_ECLASS_HEX, T8_ECLASS_HEX, T8_ECLASS_PRISM, T8_ECLASS_PYRAMID,
-  T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID, T8_ECLASS_INVALID,
-  T8_ECLASS_INVALID, T8_ECLASS_INVALID
-};
 
 /**
  * If the vertices of a tree describe a negative \param, 
@@ -143,13 +114,13 @@ t8_cmesh_correct_volume (double *tree_vertices, t8_eclass_t eclass)
 
 #if T8_WITH_VTK
 
-int
+vtk_read_success_t
 t8_file_to_vtkGrid (const char *filename,
                     vtkSmartPointer < vtkDataSet > vtkGrid,
                     const int partition, const int main_proc,
                     sc_MPI_Comm comm, const vtk_file_type_t vtk_file_type)
 {
-  int                 main_proc_read_successful = 0;
+  vtk_read_success_t  main_proc_read_successful = read_failure;
   int                 mpirank;
   int                 mpisize;
   int                 mpiret;
@@ -423,7 +394,7 @@ t8_cmesh_vtk_reader (const char *filename, const int partition,
   /* Ensure that the main-proc is a valid proc. */
   T8_ASSERT (0 <= main_proc && main_proc < mpisize);
   T8_ASSERT (filename != NULL);
-  int                 main_proc_read_successful = 0;
+  vtk_read_success_t  main_proc_read_successful = read_failure;
 
   vtkSmartPointer < vtkDataSet > vtkGrid;
   switch (vtk_file_type) {

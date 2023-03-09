@@ -28,6 +28,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #define T8_CMESH_VTK_READER
 
 #include <t8_cmesh.h>
+#include "t8_cmesh/t8_cmesh_vtk_to_t8/t8_vtk_types.h"
 
 #if T8_WITH_VTK
 #include <vtkSmartPointer.h>
@@ -36,15 +37,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #endif
 
 T8_EXTERN_C_BEGIN ();
-/**
- * Enumerator for all types of files readable by t8code. 
- */
-typedef enum vtk_file_type
-{
-  VTK_FILE_ERROR = -1,          /*For Testing purpose. */
-  VTK_UNSTRUCTURED_FILE = 0,
-  VTK_POLYDATA_FILE = 1
-} vtk_file_type_t;
 
 #if T8_WITH_VTK
 /**
@@ -60,7 +52,7 @@ typedef enum vtk_file_type
  * \param[in] vtk_file_type The type of the Data in the file.
  * \return                  0 if the file was read successfully, 1 otherwise.                
  */
-int                 t8_file_to_vtkGrid (const char *filename,
+vtk_read_success_t  t8_file_to_vtkGrid (const char *filename,
                                         vtkSmartPointer < vtkDataSet >
                                         vtkGrid, const int partition,
                                         const int main_proc, sc_MPI_Comm comm,

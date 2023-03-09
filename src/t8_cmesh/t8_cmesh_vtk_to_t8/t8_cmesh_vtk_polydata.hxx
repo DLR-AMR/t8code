@@ -29,6 +29,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #define T8_CMESH_VTK_POLYDATA
 
 #include <t8.h>
+#include "t8_vtk_types.h"
 #if T8_WITH_VTK
 #include <vtkDataSet.h>
 #include <vtkPolyData.h>
@@ -42,7 +43,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  *                      \a filename.
  * 
  */
-int                 t8_read_poly (const char *filename, vtkDataSet * grid);
+vtk_read_success_t  t8_read_poly (const char *filename, vtkDataSet * grid);
 
 #endif
 
