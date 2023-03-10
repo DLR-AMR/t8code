@@ -7,6 +7,7 @@ bin_PROGRAMS += \
 	tutorials/general/t8_step1_coarsemesh \
 	tutorials/general/t8_step2_uniform_forest \
 	tutorials/general/t8_step3_adapt_forest \
+	tutorials/general/t8_step3_1_moving_refinement_sphere \
 	tutorials/general/t8_step4_partition_balance_ghost \
 	tutorials/general/t8_step5_element_data \
 	tutorials/general/t8_step5_element_data_c_interface \
@@ -27,6 +28,8 @@ tutorials_general_t8_step2_uniform_forest_SOURCES = \
 tutorials_general_t8_step3_adapt_forest_SOURCES = \
 	tutorials/general/t8_step3_adapt_forest.cxx \
 	tutorials/general/t8_step3_main.cxx
+tutorials_general_t8_step3_1_moving_refinement_sphere_SOURCES = \
+	tutorials/general/t8_step3_1_moving_refinement_sphere.cxx
 tutorials_general_t8_step4_partition_balance_ghost_SOURCES = \
 	tutorials/general/t8_step3_adapt_forest.cxx \
 	tutorials/general/t8_step4_partition_balance_ghost.cxx \
