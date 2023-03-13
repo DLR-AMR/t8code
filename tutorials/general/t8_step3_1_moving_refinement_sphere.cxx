@@ -59,7 +59,8 @@
 #include <t8_forest.h>          /* forest definition and basic interface. */
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>     /* default refinement scheme. */
 #include <t8_vec.h>             /* Basic operations on 3D vectors. */
-   
+  
+ 
 /* This is our own defined data that we will pass on to the
  * adaptation callback. */ 
   
@@ -68,11 +69,17 @@
  */ 
 struct t8_step3_adapt_data 
 {
-  double             midpoint[3];      /* The midpoint of our sphere. */
-                     double refine_if_inside_radius;   /* if an element's center is smaller than this value, we refine the element. */
-                     double coarsen_if_outside_radius; /* if an element's center is larger this value, we coarsen its family. */
-                   };
-  
+  
+double             midpoint[3];      /* The midpoint of our sphere. */
+                     
+double refine_if_inside_radius;   /* if an element's center is smaller than this value, we refine the element. */
+                     
+double coarsen_if_outside_radius; /* if an element's center is larger this value, we coarsen its family. */
+                   
+};
+
+ 
+ 
 /* The adaptation callback function. This function will be called once for each element
  * and the return value decides whether this element should be refined or not.
  *   return > 0 -> This element should get refined.
@@ -96,12 +103,20 @@ struct t8_step3_adapt_data
   
 // !! Added a counter variable for the timesteps
 /*float counter;*/ 
-static int        
-t8_step3_adapt_callback (t8_forest_t forest, t8_forest_t forest_from,
-                         t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                         t8_eclass_scheme_c *ts, const int is_family,
-                         const int num_elements,
-                         t8_element_t *elements[])  { 
+
+static int        
+t8_step3_adapt_callback (t8_forest_t forest, 
+t8_forest_t forest_from,
+                         
+t8_locidx_t which_tree, 
+t8_locidx_t lelement_id,
+                         
+t8_eclass_scheme_c *ts, 
+const int is_family,
+                         
+const int num_elements,
+                         t8_element_t *elements[]) 
+ { 
     /* Our adaptation criterion is to look at the midpoint coordinates of the current element and if
      * they are inside a sphere around a given midpoint we refine, if they are outside, we coarsen. */ 
     double centroid[3];         /* Will hold the element midpoint. */
@@ -111,52 +126,68 @@ t8_step3_adapt_callback (t8_forest_t forest, t8_forest_t forest_from,
      * and we can now access it with t8_forest_get_user_data (forest). */ 
   const struct t8_step3_adapt_data *adapt_data = 
     (const struct t8_step3_adapt_data *) t8_forest_get_user_data (forest);
-  double             dist;     /* Will store the distance of the element's midpoint and the sphere midpoint. */
-   
+  
+double             dist;     /* Will store the distance of the element's midpoint and the sphere midpoint. */
+  
+ 
     /* You can use T8_ASSERT for assertions that are active in debug mode (when configured with --enable-debug).
      * If the condition is not true, then the code will abort.
      * In this case, we want to make sure that we actually did set a user pointer to forest and thus
      * did not get the NULL pointer from t8_forest_get_user_data.
      */ 
     T8_ASSERT (adapt_data != NULL);
-   
+  
+ 
     /* Compute the element's centroid coordinates. */ 
     t8_forest_element_centroid (forest_from, which_tree, elements[0],
                                 centroid);
-   
+  
+ 
     /* Compute the distance to our sphere midpoint. */ 
     dist = t8_vec_dist (centroid, adapt_data->midpoint);
-  if (dist < adapt_data->refine_if_inside_radius) {
+  
+if (dist < adapt_data->refine_if_inside_radius) {
     
       /* Refine this element. */ 
       return 1;
-  }
+  
+}
   
   else if (is_family && dist > adapt_data->coarsen_if_outside_radius) {
     
       /* Coarsen this family. Note that we check for is_family before, since returning < 0
        * if we do not have a family as input is illegal. */ 
       return -1;
-  }
+  
+}
   
     /* Do not change this element. */ 
     return 0;
-}
 
- 
+}
+
+
+ 
 /* Adapt a forest according to our t8_step3_adapt_callback function.
  * This will create a new forest and return it. */ 
-t8_forest_t       
+
+t8_forest_t       
 t8_step3_adapt_forest (t8_forest_t forest, float counter) 
-  { t8_forest_t forest_adapt;
-  struct t8_step3_adapt_data adapt_data = { {0.5, 0.5, counter}, /* Midpoints of the sphere. !! added the counter for z-axis */ 
+  { 
+t8_forest_t forest_adapt;
+  
+struct t8_step3_adapt_data adapt_data = { 
+{0.5, 0.5, counter}, /* Midpoints of the sphere. !! added the counter for z-axis */ 
     0.2, /* Refine if inside this radius. */ 
     0.4 /* Coarsen if outside this radius. */  
   };
-    
+  
+ 
+ 
     /* Check that forest is a committed, that is valid and usable, forest. */ 
     T8_ASSERT (t8_forest_is_committed (forest));
-   
+  
+ 
     /* Create a new forest that is adapted from \a forest with our adaptation callback.
      * We provide the adapt_data as user data that is stored as the used_data pointer of the
      * new forest (see also t8_forest_set_user_data).
@@ -169,34 +200,55 @@ t8_step3_adapt_forest (t8_forest_t forest, float counter)
      *                   We will discuss ghost in later steps of the tutorial.
      */ 
     forest_adapt =
-    t8_forest_new_adapt (forest, t8_step3_adapt_callback, 0, 0, &adapt_data);
-   return forest_adapt;
-}
+    
+t8_forest_new_adapt (forest, t8_step3_adapt_callback, 0, 0, &adapt_data);
+  
+ 
+return forest_adapt;
 
- 
+}
+
+
+ 
 /* Print the local and global number of elements of a forest. */ 
 static void        
 t8_step3_print_forest_information (t8_forest_t forest) 
-  { t8_locidx_t local_num_elements;
-  t8_gloidx_t        global_num_elements;
-   
+  { 
+t8_locidx_t local_num_elements;
+  
+t8_gloidx_t        global_num_elements;
+  
+ 
     /* Check that forest is a committed, that is valid and usable, forest. */ 
     T8_ASSERT (t8_forest_is_committed (forest));
-   
+  
+ 
     /* Get the local number of elements. */ 
     local_num_elements = t8_forest_get_local_num_elements (forest);
   
     /* Get the global number of elements. */ 
     global_num_elements = t8_forest_get_global_num_elements (forest);
-  t8_global_productionf (" [step3] Local number of elements:\t\t%i\n",
-                          local_num_elements);
-  t8_global_productionf (" [step3] Global number of elements:\t%li\n",
-                          global_num_elements);
-}  static int   
-t8_step3_main (int argc, char **argv)  { int mpiret;
-  sc_MPI_Comm comm;
-  t8_cmesh_t         cmesh;
-  t8_forest_t        forest;
+  
+t8_global_productionf (" [step3] Local number of elements:\t\t%i\n",
+                          
+local_num_elements);
+  
+t8_global_productionf (" [step3] Global number of elements:\t%li\n",
+                          
+global_num_elements);
+
+} 
+ 
+static int   
+t8_step3_main (int argc, char **argv) 
+ { 
+int mpiret;
+  
+sc_MPI_Comm comm;
+  
+t8_cmesh_t         cmesh;
+  
+t8_forest_t        forest;
   
     /* The prefix for our output files. */ 
   const char         *prefix_uniform = "t8_step3_1_uniform_forest";
@@ -204,30 +256,38 @@ t8_step3_main (int argc, char **argv)  { int mpiret;
     //char         *prefix_adapt = "t8_step3_1_adapted_forest";
     /* The uniform refinement level of the forest. */ 
   const int           level = 3;
-   
+  
+ 
     /* Initialize MPI. This has to happen before we initialize sc or t8code. */ 
     mpiret = sc_MPI_Init (&argc, &argv);
   
     /* Error check the MPI return value. */ 
     SC_CHECK_MPI (mpiret);
-   
+  
+ 
     /* Initialize the sc library, has to happen before we initialize t8code. */ 
     sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   
     /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */ 
     t8_init (SC_LP_PRODUCTION);
-   
+  
+ 
     /* Print a message on the root process. */ 
     t8_global_productionf (" [step3] \n");
-  t8_global_productionf 
+  
+t8_global_productionf 
     (" [step3] Hello, this is the step3 example of t8code.\n");
-  t8_global_productionf 
+  
+t8_global_productionf 
     (" [step3] In this example we will refine and coarsen a forest.\n");
-  t8_global_productionf (" [step3] \n");
-   
+  
+t8_global_productionf (" [step3] \n");
+  
+ 
     /* We will use MPI_COMM_WORLD as a communicator. */ 
     comm = sc_MPI_COMM_WORLD;
-   
+  
+ 
     /*
      * Setup.
      * Build cmesh and uniform forest.
@@ -235,21 +295,32 @@ t8_step3_main (int argc, char **argv)  { int mpiret;
     
     /* Build a cube cmesh with tet, hex, and prism trees. */ 
     cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
-  t8_global_productionf (" [step3] Created coarse mesh.\n");
-  forest =
-    t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0,
-                            comm);
-   
+  
+t8_global_productionf (" [step3] Created coarse mesh.\n");
+  
+forest =
+    
+t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0,
+                            
+comm);
+  
+ 
     /* Print information of the forest. */ 
     t8_global_productionf (" [step3] Created uniform forest.\n");
-  t8_global_productionf (" [step3] Refinement level:\t%i\n", level);
-  t8_step3_print_forest_information (forest);
-   
+  
+t8_global_productionf (" [step3] Refinement level:\t%i\n", level);
+  
+t8_step3_print_forest_information (forest);
+  
+ 
     /* Write forest to vtu files. */ 
     t8_forest_write_vtk (forest, prefix_uniform);
-  t8_global_productionf (" [step3] Wrote uniform forest to vtu files: %s*\n",
-                          prefix_uniform);
-   
+  
+t8_global_productionf (" [step3] Wrote uniform forest to vtu files: %s*\n",
+                          
+prefix_uniform);
+  
+ 
     /*
      *  Adapt the forest.
      */ 
@@ -262,29 +333,44 @@ t8_step3_main (int argc, char **argv)  { int mpiret;
      * Alteration for 3_1 task of 10 timesteps and moving refinement sphere.
      * for-loop runs 10 times with the uniform cube as input
      */ 
-    for (float counter = 0.0; counter < 1.1; counter = counter + 0.1)
-     {
-     
+    
+for (float counter = 0.0; counter < 1.1; counter = counter + 0.1)
+    
+ {
+    
+ 
       // Adapting the forest, beginning with a uniform cube for each timestep          
-      forest = t8_step3_adapt_forest (forest, counter);
-      
+      
+forest = t8_step3_adapt_forest (forest, counter);
+    
+ 
+ 
       /*
        *  Output.
        */ 
       
       // A quick way of naming the output files done as char array with the counter in it
     char                filename[20];
-    sprintf (filename, "%f", counter);
-       
+    
+sprintf (filename, "%f", counter);
+    
+ 
+ 
+ 
       /* Print information of our new forest. */ 
       t8_global_productionf (" [step3] Adapted forest.\n");
-    t8_step3_print_forest_information (forest);
-     
+    
+t8_step3_print_forest_information (forest);
+    
+ 
       /* Write forest to vtu files. */ 
       t8_forest_write_vtk (forest, filename);
-    t8_global_productionf
-      (" [step3] Wrote adapted forest to vtu files: %s*\n", filename);
-    } 
+    
+t8_global_productionf
+      (" [step3] Wrote adapted forest to vtu files: %s*\n", 
+filename);
+    
+} 
     /* End of alteration. 
      * 
      * clean-up
@@ -292,15 +378,29 @@ t8_step3_main (int argc, char **argv)  { int mpiret;
     
     /* Destroy the forest. */ 
     t8_forest_unref (&forest);
-  t8_global_productionf (" [step3] Destroyed forest.\n");
-   sc_finalize ();
-   mpiret = sc_MPI_Finalize ();
-  SC_CHECK_MPI (mpiret);
-   return 0;
-}
+  
+t8_global_productionf (" [step3] Destroyed forest.\n");
+  
+ 
+sc_finalize ();
+  
+ 
+mpiret = sc_MPI_Finalize ();
+  
+SC_CHECK_MPI (mpiret);
+  
+ 
+return 0;
 
-  
+}
+
+
+ 
+ 
 // inluding main-file here
 int                
-main (int argc, char **argv)  { return t8_step3_main (argc, argv);
-}
+main (int argc, char **argv) 
+ { 
+return t8_step3_main (argc, argv);
+
+}
