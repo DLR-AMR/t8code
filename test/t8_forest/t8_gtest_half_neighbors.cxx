@@ -43,9 +43,7 @@ protected:
     /* Construct a coarse mesh of one tree */
     cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
   }
-  void TearDown () override {
 
-  }
   t8_eclass_t         eclass;
   int                 cmesh_type;
   t8_cmesh_t          cmesh;
@@ -80,7 +78,7 @@ TEST_P (forest_halt_neighbors, test_create_cmesh)
 TEST_P (forest_half_neighbors, test_half_neighbors)
 {
 
-  int                 level = 3;
+  const int           level = 3;
   sc_array_t          owners;
   int                 dual_face;
 
@@ -105,11 +103,11 @@ TEST_P (forest_half_neighbors, test_half_neighbors)
       /* iterate over the faces */
       for (int face = 0; face < ts->t8_element_num_faces (element); face++) {
         /* Get the eclass of the face neighbor and get the scheme */
-        t8_eclass_t         neigh_class =
+        const t8_eclass_t   neigh_class =
           t8_forest_element_neighbor_eclass (forest, itree, element, face);
         t8_eclass_scheme_c *neigh_scheme =
           t8_forest_get_eclass_scheme (forest, neigh_class);
-        int                 num_face_neighs =
+        const int           num_face_neighs =
           ts->t8_element_num_face_children (element, face);
         t8_element_t      **half_neighbors =
           T8_ALLOC (t8_element_t *, num_face_neighs);
@@ -120,7 +118,7 @@ TEST_P (forest_half_neighbors, test_half_neighbors)
                                                num_face_neighs, NULL);
         /* allocate memory for element's neighbor and construct it */
         neigh_scheme->t8_element_new (1, &neighbor);
-        t8_locidx_t         neigh_tree =
+        const t8_locidx_t   neigh_tree =
           t8_forest_element_face_neighbor (forest, itree, element, neighbor,
                                            neigh_scheme, face, &dual_face);
         if (neigh_tree > 0) {
@@ -139,12 +137,11 @@ TEST_P (forest_half_neighbors, test_half_neighbors)
                                                      child_ids);
           /* Check that the children at face of the neighbor are the half neighbors of the element */
           for (int ineigh = 0; ineigh < num_face_neighs; ineigh++) {
-            SC_CHECK_ABORTF (!neigh_scheme->t8_element_compare
-                             (neighbor_face_childs[ineigh],
-                              half_neighbors[ineigh]),
-                             "Half neighbor %i at face %i is not equal to child %i "
-                             "of the neighbor element.\n", ineigh, face,
-                             ineigh);
+            ASSERT_TRUE (!neigh_scheme->t8_element_compare
+                         (neighbor_face_childs[ineigh],
+                          half_neighbors[ineigh])) << "Half neighbor " <<
+              ineigh << " at face " << face << "is not equal to child" <<
+              ineigh << "of the neighbor element.\n";
           }
           neigh_scheme->t8_element_destroy (num_face_neighs,
                                             neighbor_face_childs);
