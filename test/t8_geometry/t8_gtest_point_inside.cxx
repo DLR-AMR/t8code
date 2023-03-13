@@ -43,17 +43,15 @@
 TEST (t8_point_inside, test_point_inside_specific_triangle)
 {
   t8_cmesh_t          cmesh;
-  t8_forest_t         forest;
-  t8_element_t       *element;
-  double              vertices[9] = {
+
+  const double        vertices[9] = {
     0., 0., 0.,
     1., 0., 0.,
     1., 1., 0.
   };
-  double              test_point[3] = {
+  const double        test_point[3] = {
     0.3, 0.3, 1
   };
-  int                 point_is_inside;
   const double        tolerance = 1e-12;        /* Numerical tolerance that we allow for the point inside check */
   t8_geometry_c      *linear_geom = new t8_geometry_linear (2);
 
@@ -64,7 +62,7 @@ TEST (t8_point_inside, test_point_inside_specific_triangle)
   t8_cmesh_register_geometry (cmesh, linear_geom);
 
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
-  forest =
+  t8_forest_t         forest =
     t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 0, 0,
                            sc_MPI_COMM_WORLD);
 
@@ -74,9 +72,9 @@ TEST (t8_point_inside, test_point_inside_specific_triangle)
     GTEST_SKIP ();
   }
 
-  element = t8_forest_get_element (forest, 0, NULL);
+  t8_element_t       *element = t8_forest_get_element (forest, 0, NULL);
 
-  point_is_inside =
+  const int           point_is_inside =
     t8_forest_element_point_inside (forest, 0, element, test_point,
                                     tolerance);
   ASSERT_FALSE (point_is_inside) <<
@@ -93,18 +91,16 @@ TEST (t8_point_inside, test_point_inside_specific_triangle)
 TEST (t8_point_inside, test_point_inside_specific_quad)
 {
   t8_cmesh_t          cmesh;
-  t8_forest_t         forest;
-  t8_element_t       *element;
-  double              vertices[12] = {
+
+  const double        vertices[12] = {
     0., 0., 0.,
     1., 0., 0.,
     0., 1., 0.,
     1., 1., 0.
   };
-  double              test_point[3] = {
+  const double        test_point[3] = {
     0.3, 0.3, 1
   };
-  int                 point_is_inside;
   const double        tolerance = 1e-12;        /* Numerical tolerance that we allow for the point inside check */
   t8_geometry_c      *linear_geom = new t8_geometry_linear (2);
 
@@ -115,7 +111,7 @@ TEST (t8_point_inside, test_point_inside_specific_quad)
   t8_cmesh_register_geometry (cmesh, linear_geom);
 
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
-  forest =
+  t8_forest_t         forest =
     t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 0, 0,
                            sc_MPI_COMM_WORLD);
 
@@ -125,9 +121,9 @@ TEST (t8_point_inside, test_point_inside_specific_quad)
     GTEST_SKIP ();
   }
 
-  element = t8_forest_get_element (forest, 0, NULL);
+  t8_element_t       *element = t8_forest_get_element (forest, 0, NULL);
 
-  point_is_inside =
+  const int           point_is_inside =
     t8_forest_element_point_inside (forest, 0,
                                     element, test_point, tolerance);
 
