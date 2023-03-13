@@ -3,7 +3,6 @@
 # Included from toplevel directory
 
 t8code_test_programs = \
-    test/t8_cmesh/t8_test_cmesh_partition \
     test/t8_forest/t8_test_find_owner \
     test/t8_forest/t8_test_ghost_exchange \
     test/t8_forest/t8_test_ghost_and_owner \
@@ -15,15 +14,12 @@ t8code_test_programs = \
     test/t8_forest/t8_test_user_data  \
     test/t8_geometry/t8_test_geometry \
     test/t8_geometry/t8_test_point_inside \
-    test/t8_schemes/t8_test_element_count_leafs \
     test/t8_schemes/t8_test_find_parent \
     test/t8_schemes/t8_test_pyra_face_neigh \
     test/t8_schemes/t8_test_pyra_face_descendant \
     test/t8_data/t8_test_shmem \
     test/t8_test_netcdf_linkage \
     test/t8_test_vtk_linkage
-
-test_t8_cmesh_t8_test_cmesh_partition_SOURCES = test/t8_cmesh/t8_test_cmesh_partition.cxx
 
 test_t8_forest_t8_test_find_owner_SOURCES = test/t8_forest/t8_test_find_owner.cxx
 test_t8_forest_t8_test_ghost_exchange_SOURCES = test/t8_forest/t8_test_ghost_exchange.cxx
@@ -38,7 +34,6 @@ test_t8_forest_t8_test_user_data_SOURCES = test/t8_forest/t8_test_user_data.cxx
 test_t8_schemes_t8_test_pyra_face_neigh_SOURCES = test/t8_schemes/t8_test_pyra_face_neigh.cxx
 test_t8_schemes_t8_test_pyra_face_descendant_SOURCES = test/t8_schemes/t8_test_pyra_face_descendant.cxx
 test_t8_schemes_t8_test_find_parent_SOURCES = test/t8_schemes/t8_test_find_parent.cxx
-test_t8_schemes_t8_test_element_count_leafs_SOURCES = test/t8_schemes/t8_test_element_count_leafs.cxx
 
 test_t8_geometry_t8_test_point_inside_SOURCES = test/t8_geometry/t8_test_point_inside.cxx
 test_t8_geometry_t8_test_geometry_SOURCES = test/t8_geometry/t8_test_geometry.cxx
@@ -66,8 +61,10 @@ test_t8_gtest_main_SOURCES = test/t8_gtest_main.cxx \
   test/t8_schemes/t8_gtest_ancestor.cxx \
   test/t8_cmesh/t8_gtest_hypercube.cxx \
   test/t8_cmesh/t8_gtest_cmesh_copy.cxx \
+  test/t8_schemes/t8_gtest_element_count_leafs.cxx \
   test/t8_schemes/t8_gtest_descendant.cxx \
-  test/t8_cmesh/t8_gtest_cmesh_face_is_boundary.cxx \
+  test/t8_cmesh/t8_gtest_cmesh_partition.cxx \
+  test/t8_forest/t8_gtest_element_volume.cxx \
   test/t8_cmesh/t8_gtest_multiple_attributes.cxx \
   test/t8_schemes/t8_gtest_successor.cxx
 
