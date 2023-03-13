@@ -11,7 +11,6 @@ t8code_test_programs = \
     test/t8_forest/t8_test_half_neighbors \
     test/t8_forest/t8_test_search \
     test/t8_forest/t8_test_element_general_function \
-    test/t8_forest/t8_test_user_data  \
     test/t8_geometry/t8_test_geometry \
     test/t8_geometry/t8_test_point_inside \
     test/t8_schemes/t8_test_pyra_face_neigh \
@@ -28,7 +27,6 @@ test_t8_forest_t8_test_transform_SOURCES = test/t8_forest/t8_test_transform.cxx
 test_t8_forest_t8_test_half_neighbors_SOURCES = test/t8_forest/t8_test_half_neighbors.cxx
 test_t8_forest_t8_test_search_SOURCES = test/t8_forest/t8_test_search.cxx
 test_t8_forest_t8_test_element_general_function_SOURCES = test/t8_forest/t8_test_element_general_function.cxx
-test_t8_forest_t8_test_user_data_SOURCES = test/t8_forest/t8_test_user_data.cxx
 
 test_t8_schemes_t8_test_pyra_face_neigh_SOURCES = test/t8_schemes/t8_test_pyra_face_neigh.cxx
 test_t8_schemes_t8_test_pyra_face_descendant_SOURCES = test/t8_schemes/t8_test_pyra_face_descendant.cxx
@@ -66,7 +64,8 @@ test_t8_gtest_main_SOURCES = test/t8_gtest_main.cxx \
   test/t8_cmesh/t8_gtest_cmesh_partition.cxx \
   test/t8_forest/t8_gtest_element_volume.cxx \
   test/t8_cmesh/t8_gtest_multiple_attributes.cxx \
-  test/t8_schemes/t8_gtest_successor.cxx
+  test/t8_schemes/t8_gtest_successor.cxx \
+  test/t8_forest/t8_gtest_user_data.cxx
 
 test_t8_gtest_main_LDADD = $(LDADD) test/libgtest.la
 test_t8_gtest_main_LDFLAGS = $(AM_LDFLAGS) -pthread
