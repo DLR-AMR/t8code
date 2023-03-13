@@ -44,12 +44,12 @@ TEST (t8_point_inside, test_point_inside_specific_triangle)
 {
   t8_cmesh_t          cmesh;
 
-  const double        vertices[9] = {
+  double              vertices[9] = {
     0., 0., 0.,
     1., 0., 0.,
     1., 1., 0.
   };
-  const double        test_point[3] = {
+  double              test_point[3] = {
     0.3, 0.3, 1
   };
   const double        tolerance = 1e-12;        /* Numerical tolerance that we allow for the point inside check */
@@ -92,13 +92,13 @@ TEST (t8_point_inside, test_point_inside_specific_quad)
 {
   t8_cmesh_t          cmesh;
 
-  const double        vertices[12] = {
+  double              vertices[12] = {
     0., 0., 0.,
     1., 0., 0.,
     0., 1., 0.,
     1., 1., 0.
   };
-  const double        test_point[3] = {
+  double              test_point[3] = {
     0.3, 0.3, 1
   };
   const double        tolerance = 1e-12;        /* Numerical tolerance that we allow for the point inside check */
