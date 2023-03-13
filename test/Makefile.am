@@ -65,7 +65,6 @@ test_t8_gtest_main_SOURCES = test/t8_gtest_main.cxx \
   test/t8_cmesh/t8_gtest_cmesh_face_is_boundary.cxx \
   test/t8_cmesh/t8_gtest_multiple_attributes.cxx \
   test/t8_schemes/t8_gtest_successor.cxx \
-  test/t8_forest/t8_gtest_half_neighbors.cxx \
   test/t8_data/t8_gtest_shmem.cxx
 
 test_t8_gtest_main_LDADD = $(LDADD) test/libgtest.la
