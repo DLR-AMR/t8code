@@ -60,7 +60,7 @@ TEST_P(shmem, test_shmem_init_finalize){
 #if T8_ENABLE_MPI
   /* Check that they are not NULL */
   ASSERT_NE(intranode, sc_MPI_COMM_NULL) << "inter node communicator not set.";
-  ASSERT_NE(internode, sc_MPI_COMM_NULL) << "inter node communicator not set.";
+  ASSERT_NE(internode, sc_MPI_COMM_NULL) << "intra node communicator not set.";
 #endif
 
   /* Compute ranks and size and print them */
@@ -72,8 +72,8 @@ TEST_P(shmem, test_shmem_init_finalize){
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_rank (internode, &interrank);
   SC_CHECK_MPI (mpiret);
-  t8_debugf("On intranode comm i am %i of %i\n", intrarank, intrasize);
-  t8_debugf("On internode comm i am rank %i of %i\n", interrank, intersize);
+  t8_debugf("On intranode communicator I am %i of %i\n", intrarank, intrasize);
+  t8_debugf("On internode communicator I am rank %i of %i\n", interrank, intersize);
 
   /* finalize shared mem usage */
   t8_shmem_finalize (comm);
@@ -81,7 +81,7 @@ TEST_P(shmem, test_shmem_init_finalize){
   /* Get intranode and internode comm */
   sc_mpi_comm_get_node_comms (comm, &intranode, &internode);
   /* Check that they are NULL */
-  ASSERT_EQ(intranode, sc_MPI_COMM_NULL) << "inter node communicator not set.";
+  ASSERT_EQ(intranode, sc_MPI_COMM_NULL) << "intra node communicator not set.";
   ASSERT_EQ(internode, sc_MPI_COMM_NULL) << "inter node communicator not set.";
 }
 
@@ -118,7 +118,7 @@ TEST_P(shmem, test_sc_shmem_alloc){
 
     sc_mpi_comm_get_node_comms (comm, &intranode, &internode);
 #if T8_ENABLE_MPI
-    ASSERT_NE(intranode, sc_MPI_COMM_NULL) << "inter node communicator not set.";
+    ASSERT_NE(intranode, sc_MPI_COMM_NULL) << "intra node communicator not set.";
     ASSERT_NE(internode, sc_MPI_COMM_NULL) << "inter node communicator not set.";
 #endif
 
