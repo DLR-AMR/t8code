@@ -23,4 +23,5 @@ As a reviewer please read through all the code lines and make sure that the code
 - [ ] The code is well documented
 - [ ] All function declarations, structs/classes and their members have a proper doxygen documentation
 - [ ] All new algorithms and data structures are sufficiently optimal in terms of memory and runtime (If this should be merged, but there is still potential for optimization, create a new issue)
+- [ ] If a new directory with source-files is added, it must be covered by the `script/find_all_source_files.scp` to check the indentation of these files.
 - [ ] If this PR introduces a new feature, it must be covered in an example/tutorial and a Wiki article.
