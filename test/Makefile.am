@@ -8,7 +8,6 @@ t8code_test_programs = \
     test/t8_forest/t8_test_ghost_exchange \
     test/t8_forest/t8_test_ghost_and_owner \
     test/t8_forest/t8_test_forest_commit \
-    test/t8_forest/t8_test_transform \
     test/t8_forest/t8_test_half_neighbors \
     test/t8_forest/t8_test_search \
     test/t8_forest/t8_test_element_general_function \
@@ -29,7 +28,6 @@ test_t8_forest_t8_test_find_owner_SOURCES = test/t8_forest/t8_test_find_owner.cx
 test_t8_forest_t8_test_ghost_exchange_SOURCES = test/t8_forest/t8_test_ghost_exchange.cxx
 test_t8_forest_t8_test_ghost_and_owner_SOURCES = test/t8_forest/t8_test_ghost_and_owner.cxx
 test_t8_forest_t8_test_forest_commit_SOURCES = test/t8_forest/t8_test_forest_commit.cxx
-test_t8_forest_t8_test_transform_SOURCES = test/t8_forest/t8_test_transform.cxx
 test_t8_forest_t8_test_half_neighbors_SOURCES = test/t8_forest/t8_test_half_neighbors.cxx
 test_t8_forest_t8_test_search_SOURCES = test/t8_forest/t8_test_search.cxx
 test_t8_forest_t8_test_element_general_function_SOURCES = test/t8_forest/t8_test_element_general_function.cxx
@@ -69,7 +67,8 @@ test_t8_gtest_main_SOURCES = test/t8_gtest_main.cxx \
   test/t8_schemes/t8_gtest_descendant.cxx \
   test/t8_cmesh/t8_gtest_cmesh_face_is_boundary.cxx \
   test/t8_cmesh/t8_gtest_multiple_attributes.cxx \
-  test/t8_schemes/t8_gtest_successor.cxx
+  test/t8_schemes/t8_gtest_successor.cxx \
+  test/t8_forest/t8_gtest_transform.cxx
 
 test_t8_gtest_main_LDADD = $(LDADD) test/libgtest.la
 test_t8_gtest_main_LDFLAGS = $(AM_LDFLAGS) -pthread
