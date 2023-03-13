@@ -59,8 +59,8 @@ TEST_P(shmem, test_shmem_init_finalize){
 
 #if T8_ENABLE_MPI
   /* Check that they are not NULL */
-  ASSERT_NE(intranode, sc_MPI_COMM_NULL) << "inter node communicator not set.";
-  ASSERT_NE(internode, sc_MPI_COMM_NULL) << "intra node communicator not set.";
+  ASSERT_NE(intranode, sc_MPI_COMM_NULL) << "intra node communicator not set.";
+  ASSERT_NE(internode, sc_MPI_COMM_NULL) << "inter node communicator not set.";
 #endif
 
   /* Compute ranks and size and print them */
