@@ -696,6 +696,23 @@ t8_geometry_occ::t8_geom_edge_parameter_to_face_parameters(const int edge_index,
   face_params[0] = uv.X();
   face_params[1] = uv.Y();
 }
+
+int
+t8_geometry_occ::t8_geom_is_line(const int edge_index) const
+{
+  const Handle_Geom_Curve curve  = t8_geom_get_occ_curve(edge_index);
+  GeomAdaptor_Curve curve_adaptor (curve);
+  return curve_adaptor.GetType() == GeomAbs_Line;
+}
+
+int
+t8_geometry_occ::t8_geom_is_plane(const int face_index) const
+{
+  const Handle_Geom_Surface face = t8_geom_get_occ_surface(face_index);
+  GeomAdaptor_Surface face_adaptor (face);
+  return face_adaptor.GetType() == GeomAbs_Plane;
+}
+
 /* *INDENT-ON* */
 
 /* This part should be callable from C */

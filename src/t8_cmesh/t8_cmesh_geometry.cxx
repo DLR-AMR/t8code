@@ -41,6 +41,7 @@ t8_cmesh_register_geometry (t8_cmesh_t cmesh, const t8_geometry_c *geometry)
     t8_geom_handler_init (&cmesh->geometry_handler);
   }
 
+
   t8_geom_handler_register_geometry (cmesh->geometry_handler, geometry);
 }
 

@@ -259,6 +259,20 @@ public:
                                             const double edge_param, 
                                             double* face_params) const;
 
+  /** Check if an edge is linear or not.
+   * \param [in]  edge_index     The index of the occ edge.
+   * \return                     0 if edge is line.
+   */
+  int
+  t8_geom_is_line(const int edge_index) const;
+
+  /** Check if a face is plane or not.
+   * \param [in]  face_index     The index of the occ face.
+   * \return                     0 if face is plane.
+   */
+  int
+  t8_geom_is_plane(const int face_index) const;
+
 private:
   const int                                  *edges;                      /**< The linked edges of the currently active tree. */
   const int                                  *faces;                      /**< The linked faces of the currently active tree. */

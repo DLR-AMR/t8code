@@ -1150,8 +1150,8 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                   }
                 }
               }
-              /* Abort if not all nodes are on the surface */
-              if (!all_nodes_on_surface)
+              /* Abort if nodes are not on surface or surface is not curved */
+              if (!all_nodes_on_surface || occ_geometry->t8_geom_is_plane(surface_index))
               {
                 continue;
               }
