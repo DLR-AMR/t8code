@@ -1413,14 +1413,12 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                                   0);
           
           /* Now we set the tree geometry according to the tree linkage status. */
-          char geom_name[BUFSIZ];
+          const char *geom_name;
           if (tree_is_linked) {
-            snprintf (geom_name, BUFSIZ, "%s", 
-                      occ_geometry_base->t8_geom_get_name());
+            geom_name = occ_geometry_base->t8_geom_get_name();
           }
           else {
-            snprintf (geom_name, BUFSIZ, "%s", 
-                      linear_geometry_base->t8_geom_get_name());
+            geom_name = linear_geometry_base->t8_geom_get_name();
           }
           t8_debugf ("Registering tree %li with geometry %s \n", tree_count,
                      geom_name);
