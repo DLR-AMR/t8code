@@ -33,6 +33,18 @@
 #include <t8.h>
 #include <t8_forest.h>
 
+/** CHTODO: Is this function necessary or is there a function that does the same? */
+/** A simple struct managing a sphere. We use it to define
+ *  adapt functions inside or outside of spheres and a union of them.
+ */
+typedef struct
+{
+  double              midpoint[3];      /*< Midpoint of sphere */
+  double              radius;   /*< Radius of sphere */
+  int                 refine_outside;   /*< If non-zero the forest shall be refined outside of the sphere. */
+  int                 max_level;        /*< The maximum refinement level for this sphere. */
+} t8_example_sphere_t;
+
 /** A levelset function in 3+1 space dimensions. */
 typedef double      (*t8_example_level_set_fn) (const double[3], double,
                                                 void *);

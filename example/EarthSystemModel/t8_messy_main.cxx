@@ -19,6 +19,7 @@
   along with t8code; if not, write to the Free Software Foundation, Inc.,
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
+#if 0
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,8 +28,8 @@
 #include <sc_options.h>
 #include <sc_refcount.h>
 #include <t8.h>
-#include <t8_schemes/t8_default_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_common_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx>
 #include <t8_forest.h>
 #include <t8_cmesh_vtk.h>
 #ifdef T8_ENABLE_DEBUG
@@ -211,3 +212,4 @@ main (int argc, char **argv)
 
   return 0;
 }
+#endif

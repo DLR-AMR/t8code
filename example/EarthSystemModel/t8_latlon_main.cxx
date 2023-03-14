@@ -22,8 +22,8 @@
 
 #include <sc_options.h>
 #include <sc_refcount.h>
-#include <t8_schemes/t8_default_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_common_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx>
 #include <t8_forest.h>
 #include <t8_cmesh_vtk.h>
 #ifdef T8_ENABLE_DEBUG
