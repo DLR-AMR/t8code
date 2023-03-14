@@ -767,10 +767,6 @@ t8_forest_vtk_cells_vertices_kernel (t8_forest_t forest, t8_locidx_t ltree_id,
                                      FILE *vtufile, int *columns,
                                      void **data, T8_VTK_KERNEL_MODUS modus)
 {
-#if 0
-  /* if we eventually implement scaling the elements, activate this line */
-  double              midpoint[3];
-#endif
   double              element_coordinates[3];
   int                 num_el_vertices, ivertex;
   int                 freturn;
@@ -785,23 +781,12 @@ t8_forest_vtk_cells_vertices_kernel (t8_forest_t forest, t8_locidx_t ltree_id,
    *       does this work too over tree->class or do we need something else?
    */
 
-#if 0
-  /* if we eventually implement scaling the elements, activate this line */
-  t8_forest_element_centroid (forest, ltree_id, element, midpoint);
-#endif
   element_shape = ts->t8_element_shape (element);
   num_el_vertices = t8_eclass_num_vertices[element_shape];
   for (ivertex = 0; ivertex < num_el_vertices; ivertex++) {
     t8_forest_element_coordinate (forest, ltree_id, element,
                                   t8_eclass_vtk_corner_number[element_shape]
                                   [ivertex], element_coordinates);
-#if 0
-    /* if we eventually implement scaling the elements, activate this line */
-    /* replace 0.9 with the scale factor
-     * replace 0.1 with 1-scale_factor */
-    t8_vec_ax (element_coordinates, 0.9);
-    t8_vec_axpy (midpoint, element_coordinates, 0.1);
-#endif
     freturn = fprintf (vtufile, "         ");
     if (freturn <= 0) {
       return 0;
@@ -824,115 +809,6 @@ t8_forest_vtk_cells_vertices_kernel (t8_forest_t forest, t8_locidx_t ltree_id,
   }
   return 1;
 }
-
-#if 0
-/* Write vertex coordinates into the already opened file.
- * Returns true when successful, false otherwise.
- * After completion the file will remain open, whether writing
- * vertices was successful or not. */
-static int
-t8_forest_vtk_write_vertices (t8_forest_t forest, FILE *vtufile)
-{
-  t8_element_t       *ielement;
-  t8_tree_t           tree;
-  t8_locidx_t         itree, ivertex;
-  t8_locidx_t         element_index;
-  t8_cmesh_t          cmesh;
-  t8_ctree_t          ctree;
-  double             *vertices, coordinates[3];
-  double              x, y, z;
-  int                 freturn;
-
-  T8_ASSERT (t8_forest_is_committed (forest));
-  T8_ASSERT (vtufile != NULL);
-  cmesh = forest->cmesh;
-  freturn = fprintf (vtufile, "      <Points>\n");
-  if (freturn <= 0) {
-    goto t8_forest_vtk_vertex_failure;
-  }
-
-  /* write point position data */
-  freturn =
-    fprintf (vtufile,
-             "        <DataArray type=\"%s\" Name=\"Position\""
-             " NumberOfComponents=\"3\" format=\"%s\">\n", T8_VTK_FLOAT_NAME,
-             T8_VTK_FORMAT_STRING);
-  if (freturn <= 0) {
-    goto t8_forest_vtk_vertex_failure;
-  }
-  /* To get the point position data, we iterate over each tree and
-   * over each element in this tree. For each element we compute
-   * the coordinates of its corner vertices */
-  for (itree = 0; itree < (t8_locidx_t) forest->trees->elem_count; itree++) {
-    /* get the coarse mesh tree */
-    ctree = t8_cmesh_get_tree (cmesh,
-                               t8_forest_ltreeid_to_cmesh_ltreeid (forest,
-                                                                   itree));
-    /* Get corner coordinates of tree */
-    /* *INDENT-OFF* */
-    /* indent bug */
-    vertices = ((double *)
-                t8_cmesh_get_attribute (cmesh, t8_get_package_id (), 0,
-                                        ctree->treeid));
-    /* *INDENT-ON* */
-    /* Get the tree that stores the elements */
-    tree = t8_forest_get_tree (forest, itree);
-    /* Check whether an element exist and then get the first one */
-    /* TODO: use an element iterator here! */
-    if (tree->elements.elem_count > 0) {
-      ielement = (t8_element_t *) sc_array_index (&tree->elements, 0);
-    }
-    else {
-      ielement = NULL;
-    }
-    element_index = 0;
-    while (ielement != NULL) {
-      /* TODO: be careful with pyramid class here.
-       *       does this work too over tree->class or do we need something else?
-       */
-      for (ivertex = 0; ivertex < t8_eclass_num_vertices[tree->eclass];
-           ivertex++) {
-        t8_forest_element_coordinate (forest, itree, ielement,
-                                      vertices,
-                                      t8_eclass_vtk_corner_number
-                                      [tree->eclass]
-                                      [ivertex], coordinates);
-        x = coordinates[0];
-        y = coordinates[1];
-        z = coordinates[2];
-#ifdef T8_VTK_DOUBLES
-        freturn =
-          fprintf (vtufile, "     %24.16e %24.16e %24.16e\n", x, y, z);
-#else
-        freturn =
-          fprintf (vtufile, "          %16.8e %16.8e %16.8e\n", x, y, z);
-#endif
-        if (freturn <= 0) {
-          goto t8_forest_vtk_vertex_failure;
-        }
-      }
-      element_index++;
-      ielement =
-        element_index >=
-        (t8_locidx_t) tree->elements.elem_count ? NULL : (t8_element_t *)
-        t8_sc_array_index_locidx (&tree->elements, element_index);
-    }
-    /* loop over tree ends here */
-  }
-  freturn = fprintf (vtufile, "      </Points>\n");
-  if (freturn <= 0) {
-    goto t8_forest_vtk_vertex_failure;
-  }
-
-  /* Function completed successfuly */
-  return 1;
-
-t8_forest_vtk_vertex_failure:
-  /* Something went wrong */
-  t8_errorf ("Error when writing vertices to forest vtk file.\n");
-  return 0;
-}
-#endif
 
 static int
 t8_forest_vtk_cells_connectivity_kernel (t8_forest_t forest,

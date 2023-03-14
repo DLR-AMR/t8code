@@ -133,7 +133,7 @@ jobs:
         rm xx01
     - name: Create Pull Request at DLR-AMR/t8code-website
       if: ${{ env.MINOR_RELEASE == 'true' }}
-      uses: peter-evans/create-pull-request@v3
+      uses: peter-evans/create-pull-request@v4
       with:
         path: t8code-website
         title: Add documentation for t8code ${{ github.ref_name }}
@@ -141,3 +141,4 @@ jobs:
         branch: add-t8code-${{ github.ref_name }}-documentation
         commit-message: add documentation for t8code ${{ github.ref_name }}
         token: ${{ secrets.T8DDY_TOKEN }}
+        delete-branch: true
