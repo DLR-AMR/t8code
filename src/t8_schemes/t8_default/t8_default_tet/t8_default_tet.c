@@ -28,8 +28,8 @@ typedef t8_dtet_t   t8_default_tet_t;
 
 /* This function is used by other element functions and we thus need to
  * declare it up here */
-static uint64_t     t8_default_tet_get_linear_id (const t8_element_t *elem,
-                                                  int level);
+static t8_linearidx_t t8_default_tet_get_linear_id (const t8_element_t *elem,
+                                                    int level);
 
 static size_t
 t8_default_tet_size (void)
@@ -133,15 +133,16 @@ t8_default_tet_nca (const t8_element_t *elem1,
 }
 
 static void
-t8_default_tet_set_linear_id (t8_element_t *elem, int level, uint64_t id)
+t8_default_tet_set_linear_id (t8_element_t *elem, int level,
+                              t8_linearidx_t id)
 {
   T8_ASSERT (0 <= level && level <= T8_DTET_MAXLEVEL);
-  T8_ASSERT (0 <= id && id < ((uint64_t) 1) << 3 * level);
+  T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << 3 * level);
 
   t8_dtet_init_linear_id ((t8_default_tet_t *) elem, id, level);
 }
 
-static uint64_t
+static              t8_linearidx_t
 t8_default_tet_get_linear_id (const t8_element_t *elem, int level)
 {
   T8_ASSERT (0 <= level && level <= T8_DTET_MAXLEVEL);
