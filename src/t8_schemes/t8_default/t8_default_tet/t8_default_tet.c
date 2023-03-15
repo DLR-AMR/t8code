@@ -59,7 +59,7 @@ static int
 t8_default_tet_compare (const t8_element_t *elem1, const t8_element_t *elem2)
 {
   int                 maxlvl;
-  t8_linearidx_t            id1, id2;
+  t8_linearidx_t      id1, id2;
 
   /* Compute the bigger level of the two */
   maxlvl = SC_MAX (t8_default_tet_level (elem1),
