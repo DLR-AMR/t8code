@@ -53,7 +53,7 @@ int
 t8_dprism_compare (const t8_dprism_t *p1, const t8_dprism_t *p2)
 {
   int                 maxlvl;
-  u_int64_t           id1, id2;
+  t8_linearidx_t      id1, id2;
   T8_ASSERT (p1->line.level == p1->tri.level);
   T8_ASSERT (p2->line.level == p2->tri.level);
 
