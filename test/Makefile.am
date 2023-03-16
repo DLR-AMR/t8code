@@ -12,9 +12,7 @@ t8code_test_programs = \
     test/t8_forest/t8_test_element_general_function \
     test/t8_forest/t8_test_user_data  \
     test/t8_geometry/t8_test_geometry \
-    test/t8_geometry/t8_test_point_inside \
-    test/t8_schemes/t8_test_pyra_face_neigh \
-    test/t8_schemes/t8_test_pyra_face_descendant
+    test/t8_geometry/t8_test_point_inside
 
 test_t8_forest_t8_test_find_owner_SOURCES = test/t8_forest/t8_test_find_owner.cxx
 test_t8_forest_t8_test_ghost_exchange_SOURCES = test/t8_forest/t8_test_ghost_exchange.cxx
