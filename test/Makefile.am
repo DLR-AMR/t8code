@@ -57,7 +57,7 @@ test_t8_gtest_main_SOURCES = test/t8_gtest_main.cxx \
   test/t8_schemes/t8_gtest_ancestor.cxx \
   test/t8_cmesh/t8_gtest_hypercube.cxx \
   test/t8_cmesh/t8_gtest_cmesh_copy.cxx \
-  test/t8_schemes/t8_gtest_pyra_face_neigh.cxx
+  test/t8_schemes/t8_gtest_pyra_face_neigh.cxx \
   test/t8_schemes/t8_gtest_element_count_leafs.cxx \
   test/t8_schemes/t8_gtest_descendant.cxx \
   test/t8_schemes/t8_gtest_find_parent.cxx \
