@@ -84,15 +84,16 @@ int                 t8_forest_vtk_write_file_via_API (const t8_forest_t
  * \return  True if succesful, false if not (process local).
  */
 
-int                 t8_forest_vtk_write_file (const t8_forest_t forest,
+//CHTODO: Make parameter const again
+int                 t8_forest_vtk_write_file (t8_forest_t forest,
                                               const char *fileprefix,
-                                              const int write_treeid,
-                                              const int write_mpirank,
-                                              const int write_level,
-                                              const int write_element_id,
-                                              const int write_ghosts,
-                                              const int num_data,
-                                              const t8_vtk_data_field_t
+                                              int write_treeid,
+                                              int write_mpirank,
+                                              int write_level,
+                                              int write_element_id,
+                                              int write_ghosts,
+                                              int num_data,
+                                              t8_vtk_data_field_t
                                               *data);
 
 int                 t8_get_number_of_vtk_nodes (t8_element_shape_t eclass,
@@ -110,19 +111,12 @@ int                 t8_get_number_of_vtk_nodes (t8_element_shape_t eclass,
  * \param [in]  vertex  The vertex number. 
  * \param [in]  coords  The array containing the coordinates of the reference node.
  */
-void                t8_curved_element_get_reference_node_coords (const
-                                                                 t8_element_t
-                                                                 *elem,
-                                                                 const
-                                                                 t8_element_shape_t
-                                                                 eclass,
-                                                                 const
-                                                                 t8_eclass_scheme_c
-                                                                 *scheme,
-                                                                 const int
-                                                                 vertex,
-                                                                 double
-                                                                 *coords);
+//CHTODO: Make parameters const again
+void                t8_curved_element_get_reference_node_coords (const t8_element_t *elem,
+                                                                 const t8_element_shape_t eclass,
+                                                                 t8_eclass_scheme_c *scheme,
+                                                                 const int vertex,
+                                                                 double *coords);
 
 /* lookup table for number of nodes for curved eclasses. */
 const int           t8_curved_eclass_num_nodes[T8_ECLASS_COUNT] =

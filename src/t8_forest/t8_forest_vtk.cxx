@@ -28,6 +28,7 @@
 #include <t8_vec.h>
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include "t8_forest_types.h"
+#include <t8_element.h>
 #if T8_WITH_VTK
 #include <vtkCellArray.h>
 #include <vtkCellData.h>
@@ -150,11 +151,11 @@ t8_get_number_of_vtk_nodes (const t8_element_shape_t eclass,
  * formulas. For more information look into the vtk documentation.
  * TODO: Add Pyramids when they are merged into the dev branch.
  * */
-#if T8_WITH_VTK
+//CHTODO: Make parameters const again
 void
 t8_curved_element_get_reference_node_coords (const t8_element_t *elem,
                                              const t8_element_shape_t eclass,
-                                             const t8_eclass_scheme_c *scheme,
+                                             t8_eclass_scheme_c *scheme,
                                              const int vertex, double *coords)
 {
   double              vertex_coords[3] = { 0, 0, 0 };
@@ -321,7 +322,6 @@ t8_curved_element_get_reference_node_coords (const t8_element_t *elem,
     break;
   }
 }
-#endif
 
 int
 t8_forest_vtk_write_file_via_API (const t8_forest_t forest,
@@ -381,22 +381,22 @@ t8_forest_vtk_write_file_via_API (const t8_forest_t forest,
    * We have to define the t8_vtk_gloidx_array_type_t that hold 
    * metadata if wanted. 
    */
+  t8_vtk_gloidx_array_type_t *vtk_treeid;
+  t8_vtk_gloidx_array_type_t *vtk_mpirank;
+  t8_vtk_gloidx_array_type_t *vtk_level;
+  t8_vtk_gloidx_array_type_t *vtk_element_id;
 
   if (write_treeid) {
-    t8_vtk_gloidx_array_type_t *vtk_treeid =
-      t8_vtk_gloidx_array_type_t::New ();
+    vtk_treeid = t8_vtk_gloidx_array_type_t::New ();
   }
   if (write_mpirank) {
-    t8_vtk_gloidx_array_type_t *vtk_mpirank =
-      t8_vtk_gloidx_array_type_t::New ();
+    vtk_mpirank = t8_vtk_gloidx_array_type_t::New ();
   }
   if (write_level) {
-    t8_vtk_gloidx_array_type_t *vtk_level =
-      t8_vtk_gloidx_array_type_t::New ();
+    vtk_level = t8_vtk_gloidx_array_type_t::New ();
   }
   if (write_element_id) {
-    t8_vtk_gloidx_array_type_t *vtk_element_id =
-      t8_vtk_gloidx_array_type_t::New ();
+    vtk_element_id = t8_vtk_gloidx_array_type_t::New ();
   }
 
 /*
@@ -410,7 +410,7 @@ t8_forest_vtk_write_file_via_API (const t8_forest_t forest,
 
   const t8_cmesh_t    cmesh = t8_forest_get_cmesh (forest);
 /* We iterate over all local trees*/
-  t8_element_t        element;
+  t8_element_t        *element;
   vtkSmartPointer < vtkCell > pvtkCell;
   for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest);
        itree++) {
@@ -431,7 +431,7 @@ t8_forest_vtk_write_file_via_API (const t8_forest_t forest,
     /* Compute the global tree id */
     gtreeid = t8_forest_global_tree_id (forest, itree);
     for (t8_locidx_t ielement = 0; ielement < elems_in_tree; ielement++) {
-      *element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      element = t8_forest_get_element_in_tree (forest, itree, ielement);
       T8_ASSERT (element != NULL);
       pvtkCell = NULL;
       t8_element_shape_t  element_shape = scheme->t8_element_shape (element);
@@ -462,8 +462,8 @@ t8_forest_vtk_write_file_via_API (const t8_forest_t forest,
           pvtkCell = prism;
           break;
         case T8_ECLASS_PYRAMID:
-          pvtkCell = pyra;
-          break;
+          SC_CHECK_ABORT (element_shape != T8_ECLASS_PYRAMID,
+                          "Pyramids are not supported in vtk output");
         default:
           SC_ABORT_NOT_REACHED ();
         }
@@ -1658,11 +1658,15 @@ t8_forest_vtk_cell_failure:
   return 0;
 }
 
+
+//CHtodo: Make parameters const again
 int
-t8_forest_vtk_write_file (t8_forest_t forest, const char *fileprefix,
+t8_forest_vtk_write_file (t8_forest_t forest, 
+                          const char *fileprefix,
                           int write_treeid,
                           int write_mpirank,
-                          int write_level, int write_element_id,
+                          int write_level, 
+                          int write_element_id,
                           int write_ghosts,
                           int num_data, t8_vtk_data_field_t *data)
 {
