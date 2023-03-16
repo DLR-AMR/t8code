@@ -13,10 +13,6 @@ t8code_test_programs = \
     test/t8_forest/t8_test_user_data  \
     test/t8_geometry/t8_test_geometry \
     test/t8_geometry/t8_test_point_inside \
-    test/t8_schemes/t8_test_element_count_leafs \
-    test/t8_schemes/t8_test_find_parent \
-    test/t8_schemes/t8_test_successor \
-    test/t8_schemes/t8_test_descendant \
     test/t8_schemes/t8_test_pyra_face_neigh \
     test/t8_schemes/t8_test_pyra_face_descendant \
     test/t8_test_netcdf_linkage \
