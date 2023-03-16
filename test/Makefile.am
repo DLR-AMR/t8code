@@ -24,9 +24,6 @@ test_t8_forest_t8_test_user_data_SOURCES = test/t8_forest/t8_test_user_data.cxx
 test_t8_geometry_t8_test_point_inside_SOURCES = test/t8_geometry/t8_test_point_inside.cxx
 test_t8_geometry_t8_test_geometry_SOURCES = test/t8_geometry/t8_test_geometry.cxx
 
-test_t8_data_t8_test_shmem_SOURCES = test/t8_data/t8_test_shmem.cxx
-test_t8_test_netcdf_linkage_SOURCES = test/t8_test_netcdf_linkage.c
-
 t8code_googletest_programs = \
   test/t8_gtest_main
 
