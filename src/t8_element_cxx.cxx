@@ -25,12 +25,6 @@
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
-#if 0
-t8_eclass_scheme_c::~t8_eclass_scheme_c ()
-{
-}
-#endif
-
 /* This belongs here since it uses c++ function,
  * see t8_element.c/.h */
 void
@@ -69,73 +63,3 @@ t8_eclass_scheme::t8_element_array_index (sc_array_t *array, size_t it)
 }
 
 T8_EXTERN_C_END ();
-
-#if 0
-void
-t8_eclass_scheme_destroy (t8_eclass_scheme_t * ts)
-{
-  T8_ASSERT (ts != NULL);
-
-  if (ts->ts_destroy != NULL) {
-    ts->ts_destroy (ts);
-  }
-  T8_FREE (ts);
-}
-
-void
-t8_eclass_boundary_alloc (t8_scheme_t * scheme, t8_eclass_t theclass,
-                          int min_dim, int length, t8_element_t **boundary)
-{
-  int                 t, offset, per;
-#ifdef T8_ENABLE_DEBUG
-  int                 per_eclass[T8_ECLASS_COUNT];
-#endif
-
-  T8_ASSERT (length ==
-             t8_eclass_count_boundary (theclass, min_dim, per_eclass));
-
-  for (offset = t = 0; t < T8_ECLASS_COUNT; ++t) {
-    if (t8_eclass_to_dimension[t] >= min_dim) {
-      per = t8_eclass_boundary_count[theclass][t];
-      if (per > 0) {
-        t8_element_new (scheme->eclass_schemes[t], per, boundary + offset);
-        offset += per;
-      }
-    }
-  }
-  T8_ASSERT (offset == length);
-}
-
-void
-t8_eclass_boundary_destroy (t8_scheme_t * scheme, t8_eclass_t theclass,
-                            int min_dim, int length, t8_element_t **boundary)
-{
-  int                 t, offset, per;
-#ifdef T8_ENABLE_DEBUG
-  int                 per_eclass[T8_ECLASS_COUNT];
-#endif
-
-  T8_ASSERT (length ==
-             t8_eclass_count_boundary (theclass, min_dim, per_eclass));
-
-  for (offset = t = 0; t < T8_ECLASS_COUNT; ++t) {
-    if (t8_eclass_to_dimension[t] >= min_dim) {
-      per = t8_eclass_boundary_count[theclass][t];
-      if (per > 0) {
-        t8_element_destroy (scheme->eclass_schemes[t], per,
-                            boundary + offset);
-        offset += per;
-      }
-    }
-  }
-  T8_ASSERT (offset == length);
-}
-
-size_t
-t8_element_size (t8_eclass_scheme_t * ts)
-{
-  T8_ASSERT (ts != NULL && ts->elem_size != NULL);
-  return ts->elem_size ();
-}
-
-#endif /* if 0 */

@@ -217,22 +217,6 @@ t8_flow_compressible (const double x_in[3], double t, double x_out[3])
 /* The following function is a incompressible flow on the unit cube.
  * It is constructed from any function f with f(0) = f(1) = 0.
  */
-#if 0
-/* Function with f(0) = f(1) = 0 */
-static double
-t8_incomp_cube_f (double x)
-{
-  return 2 * (1. - x) * x;
-}
-
-/* The derivative of f */
-static double
-t8_incomp_cube_df (double x)
-{
-
-  return 2. - 4. * x;
-}
-#endif
 
 static double
 t8_incomp_cube_f_sin (double x)
@@ -372,7 +356,6 @@ t8_flow_stokes_flow_sphere_shell (const double x[3], double t, double x_out[])
   double              vel_phi;
   const double        r_1 = .5, r_2 = 1, gamma = 1, m = 3;
 
-#if 1
   /* translate unit cube to cube centered around origin */
   ((double *) x)[0] -= 0.5;
   ((double *) x)[1] -= 0.5;
@@ -380,14 +363,11 @@ t8_flow_stokes_flow_sphere_shell (const double x[3], double t, double x_out[])
   ((double *) x)[0] *= 2;
   ((double *) x)[1] *= 2;
   ((double *) x)[2] *= 2;
-#endif
   /* Compute spherical coordinates */
   radius = t8_vec_norm (x);
   theta = acos (x[2] / radius);
-#if 1
   /* Phi component, not used */
   phi = atan2 (x[1], x[0]);
-#endif
 
   if (radius < r_1) {
     /* If there are points in the geometry that lie in the inside radius,

@@ -37,14 +37,12 @@ typedef struct t8_shmem_array *t8_shmem_array_t;
  * \see sc_shmem.h
  */
 /* TODO: Change it as soon as we do not always need basic */
-#if 1
 #if defined(__bgq__)
 #define T8_SHMEM_BEST_TYPE SC_SHMEM_BGQ
 #elif defined(SC_ENABLE_MPIWINSHARED)
 #define T8_SHMEM_BEST_TYPE SC_SHMEM_WINDOW
 #else
 #define T8_SHMEM_BEST_TYPE SC_SHMEM_BASIC
-#endif
 #endif
 
 T8_EXTERN_C_BEGIN ();

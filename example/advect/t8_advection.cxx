@@ -180,73 +180,6 @@ t8_advect_element_set_phi_adapt (const t8_advect_problem_t * problem,
     = phi;
 }
 
-#if 0
-/* Decide whether an element should be refined or coarsened to match the cfl number */
-/* TODO: use t8_advect_element_get_phi */
-static int
-t8_advect_adapt_cfl (t8_advect_problem_t * problem,
-                     t8_advect_element_data_t * elem_data)
-{
-  double              u[3], speed;
-  double              range = 0.2;
-
-  /* Compute the flow at this element */
-  problem->u (elem_data->midpoint, problem->t, u);
-  /* Compute the speed of the flow */
-  speed = t8_vec_norm (u);
-  speed = sqrt (speed);
-  if (speed * problem->delta_t / elem_data->vol <=
-      problem->cfl - range * problem->cfl) {
-    /* refine if the element is too large */
-    return 1;
-  }
-  else if (speed * problem->delta_t / elem_data->vol >
-           problem->cfl + range * problem->cfl) {
-    /* coarsen if the element is too small */
-    return -1;
-  }
-  return 0;
-}
-#endif
-
-#if 0
-/* estimate the absolute value of the gradient of phi at an element.
- * We compute the gradient as finite difference with the left and right
- * neighbor element and take the maximum (absolute value) of both values */
-/* TODO: use t8_advect_element_get_phi */
-static double
-t8_advect_gradient_phi (t8_advect_problem_t * problem,
-                        t8_advect_element_data_t * elem_data)
-{
-  t8_advect_element_data_t *neigh;
-  double              phi_neigh;
-  double              vol;
-  double              max_gradient = 0, gradient_abs;
-  int                 iface;
-
-  for (iface = 0; iface < 2; iface++) {
-    if (elem_data->num_neighbors[iface] >= 0) {
-      /* Get the neighbor element */
-      neigh = (t8_advect_element_data_t *)
-        t8_sc_array_index_locidx (problem->element_data,
-                                  elem_data->neighs[iface][0]);
-      /* Get the phi value of the neighbor */
-      phi_neigh = neigh->phi;
-      /* Compute the distance of the midpoints of the element and its neighbor */
-      /* |---x---|--x--|  (size of left element + size of right element)/2 */
-      vol = (elem_data->vol + neigh->vol) / 2;
-      /* compute the absolute value of the gradient */
-      gradient_abs = fabs ((phi_neigh - elem_data->phi) / vol);
-      /* compute the maximum */
-      max_gradient = SC_MAX (max_gradient, gradient_abs);
-    }
-    /* If there is no neighbor at this face (boundary element), we do not compute the
-     * gradient. If there is no neighbor at any face, the max_gradient is 0 */
-  }
-  return max_gradient;
-}
-#endif
-
 /* Adapt the forest. We refine if the level-set function is close to zero
  * and coarsen if it is larger than a given threshhold. */
 static int
@@ -352,10 +285,7 @@ t8_advect_l_infty_rel (const t8_advect_problem_t * problem,
     ana_sol =
       analytical_sol (elem_data->midpoint, problem->t,
                       problem->udata_for_phi);
-#if 1
-    if (fabs (ana_sol) < distance)
-#endif
-    {
+    if (fabs (ana_sol) < distance) {
       /* Compute the error as the stored value at the midpoint of this element
        * minus the solution at this midpoint */
       phi = t8_advect_element_get_phi (problem, ielem);
@@ -394,10 +324,7 @@ t8_advect_l_2_rel (const t8_advect_problem_t * problem,
     ana_sol =
       analytical_sol (elem_data->midpoint, problem->t,
                       problem->udata_for_phi);
-#if 1
-    if (fabs (ana_sol) < distance)
-#endif
-    {
+    if (fabs (ana_sol) < distance) {
       count++;
       /* Compute the error as the stored value at the midpoint of this element
        * minus the solution at this midpoint */
@@ -500,34 +427,11 @@ t8_advect_flux_upwind (const t8_advect_problem_t * problem,
   /* Compute the dot-product of u and the normal vector */
   normal_times_u = t8_vec_dot (normal, u_at_face_center);
 
-#if 0
-  /* Output, mainly for debugging */
-  t8_debugf ("[advect] face %i\n", face);
-  t8_debugf ("[advect] normal %f %f %f\n", normal[0], normal[1], normal[2]);
-  t8_debugf ("[advect] face center %f %f %f\n", face_center[0],
-             face_center[1], face_center[2]);
-  t8_debugf ("[advect] u %f %f %f\n", u_at_face_center[0],
-             u_at_face_center[1], u_at_face_center[2]);
-  t8_debugf ("[advect] norm t u: %f\n", normal_times_u);
-  t8_debugf ("[advect] area %f\n", area);
-  t8_debugf ("[advect] phi+ %f\n", el_plus_phi);
-  t8_debugf ("[advect] phi- %f\n", el_minus_phi);
-#endif
-
   if (normal_times_u >= 0) {
-#if 0
-    /* u flows out of the element_plus */
-    t8_debugf ("[advect] out flux: %f\n",
-               -el_plus_phi * normal_times_u * area);
-#endif
     return -el_plus_phi * normal_times_u * area;
   }
   else {
     /* u flows into the element_plus */
-#if 0
-    t8_debugf ("[advect] in flux: %f\n",
-               -el_minus_phi * normal_times_u * area);
-#endif
     return -el_minus_phi * normal_times_u * area;
   }
 }
@@ -636,73 +540,6 @@ t8_advect_boundary_set_phi (const t8_advect_problem_t * problem,
   *boundary_phi = t8_advect_element_get_phi (problem, ielement);
 }
 
-#if 0
-static double
-t8_advect_lax_friedrich_alpha (const t8_advect_problem_t * problem,
-                               const t8_advect_element_data_t *
-                               el_data_plus,
-                               const t8_advect_element_data_t * el_data_minus)
-{
-  double              alpha;
-  double              dist, u_plus[3], u_minus[3];
-
-  /* We compute alpha as the derivative of u at the midpoint between
-   * the cells */
-
-  /* The distance between the two cells is the sum of their length divided by two */
-
-  dist = (el_data_plus->vol + el_data_minus->vol) / 2.;
-  /* Approximate the derivative of u */
-
-  problem->u (el_data_plus->midpoint, problem->t, u_plus);
-  problem->u (el_data_minus->midpoint, problem->t, u_minus);
-  /* in 1D we are only interested in the first coordinate of u */
-  alpha = fabs ((u_plus[0] - u_minus[0]) / dist);
-
-  return alpha;
-}
-
-static double
-t8_advect_flux_lax_friedrich_1d (const t8_advect_problem_t * problem,
-                                 const t8_advect_element_data_t *
-                                 el_data_plus,
-                                 const t8_advect_element_data_t *
-                                 el_data_minus)
-{
-  double              alpha = 0;        /* TODO: Choose alpha according to a reasonable criterion */
-  double              x_j_half[3];
-  int                 idim;
-  double              u_at_x_j_half[3];
-  double              phi_sum, phi_diff;
-
-  /*
-   *    | --x-- | --x-- |   Two elements, midpoints marked with 'x'
-   *       x_j     x_j+1
-   *          x_j_half
-   */
-  /* Compute x_j_half */
-  for (idim = 0; idim < 3; idim++) {
-    x_j_half[idim] =
-      (el_data_plus->midpoint[idim] -
-       (idim == 0 ? el_data_plus->vol / 2 : 0));
-  }
-
-  /* Compute u at the interval boundary. */
-  problem->u (x_j_half, problem->t, u_at_x_j_half);
-
-  /* Compute the sum of both phi values */
-  phi_sum = el_data_minus->phi + el_data_plus->phi;
-  /* Compute the difference of both */
-  phi_diff = el_data_plus->phi - el_data_minus->phi;
-
-  /* Compute alpha */
-  alpha =
-    t8_advect_lax_friedrich_alpha (problem, el_data_plus, el_data_minus);
-  /* in 1D only the first coordinate of u is interesting */
-  return .5 * (u_at_x_j_half[0] * phi_sum - alpha * phi_diff);
-}
-#endif
-
 static void
 t8_advect_advance_element (t8_advect_problem_t * problem,
                            t8_locidx_t lelement)
@@ -728,11 +565,6 @@ t8_advect_advance_element (t8_advect_problem_t * problem,
   }
   /* Phi^t = dt/dx * (f_(j-1/2) - f_(j+1/2)) + Phi^(t-1) */
   elem->phi_new = (problem->delta_t / elem->vol) * flux_sum + phi;
-#if 0
-  t8_debugf
-    ("[advect] advance el with delta_t %f vol %f phi %f  flux %f to %f\n",
-     problem->delta_t, elem->vol, phi, flux_sum, elem->phi_new);
-#endif
 }
 
 /* Compute element midpoint and vol and store at element_data field. */
@@ -1131,10 +963,6 @@ t8_advect_create_cmesh (sc_MPI_Comm comm, int cube_type,
       return t8_cmesh_new_hypercube ((t8_eclass_t) cube_type, comm, 0, 0, 1);
     }
   }
-#if 0
-  /* Unit square with 6 trees (2 quads, 4 triangles) */
-  return t8_cmesh_new_periodic_hybrid (comm);
-#endif
 }
 
 static              t8_flow_function_3d_fn
@@ -1419,12 +1247,6 @@ t8_advect_write_vtk (t8_advect_problem_t * problem)
   else {
     t8_errorf ("[Advect] Error writing to files %s\n", fileprefix);
   }
-#if 0
-  /* Write the cmesh as vtk file */
-  snprintf (fileprefix + strlen (fileprefix), BUFSIZ - strlen (fileprefix),
-            "_cmesh");
-  t8_cmesh_vtk_write_file (problem->forest->cmesh, fileprefix, 1);
-#endif
   /* clean-up */
   T8_FREE (u_and_phi_array[0]);
   T8_FREE (u_and_phi_array[1]);
@@ -1668,15 +1490,9 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                 /* This is a boundary */
                 neigh_index = -1;
               }
-#if 0
-              flux =
-                t8_advect_flux_lax_friedrich_1d (problem, plus_data,
-                                                 minus_data);
-#else
               flux =
                 t8_advect_flux_upwind_1d (problem, lelement, neigh_index,
                                           iface);
-#endif
               elem_data->fluxes[iface][0] = flux;
               elem_data->flux_valid[iface] = 1;
             }
@@ -1775,16 +1591,9 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     /* Store the advanced phi value in each element */
     t8_advect_project_element_data (problem);
     solve_time += sc_MPI_Wtime ();
-#if 0
-    /* test adapt, adapt and balance 3 times during the whole computation */
-    if (adapt && time_steps / 3 > 0
-        && problem->num_time_steps % (time_steps / 3) == (time_steps / 3) - 1)
-#else
     if (maxlevel > level) {
       /* Adapt the mesh after adapt_freq time steps */
-      if (problem->num_time_steps % adapt_freq == adapt_freq - 1)
-#endif
-      {
+      if (problem->num_time_steps % adapt_freq == adapt_freq - 1) {
         adapted_or_partitioned = 1;
         t8_advect_problem_adapt (problem, 1);
         t8_advect_problem_partition (problem, 1);
