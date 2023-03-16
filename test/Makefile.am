@@ -13,8 +13,7 @@ t8code_test_programs = \
     test/t8_forest/t8_test_user_data  \
     test/t8_geometry/t8_test_geometry \
     test/t8_geometry/t8_test_point_inside \
-    test/t8_test_netcdf_linkage \
-    test/t8_test_vtk_linkage
+    test/t8_test_netcdf_linkage
 
 test_t8_forest_t8_test_find_owner_SOURCES = test/t8_forest/t8_test_find_owner.cxx
 test_t8_forest_t8_test_ghost_exchange_SOURCES = test/t8_forest/t8_test_ghost_exchange.cxx
@@ -29,7 +28,6 @@ test_t8_geometry_t8_test_point_inside_SOURCES = test/t8_geometry/t8_test_point_i
 test_t8_geometry_t8_test_geometry_SOURCES = test/t8_geometry/t8_test_geometry.cxx
 
 test_t8_test_netcdf_linkage_SOURCES = test/t8_test_netcdf_linkage.c
-test_t8_test_vtk_linkage_SOURCES = test/t8_test_vtk_linkage.cxx
 
 t8code_googletest_programs = \
   test/t8_gtest_main
@@ -58,7 +56,9 @@ test_t8_gtest_main_SOURCES = test/t8_gtest_main.cxx \
   test/t8_forest/t8_gtest_element_volume.cxx \
   test/t8_cmesh/t8_gtest_multiple_attributes.cxx \
   test/t8_schemes/t8_gtest_successor.cxx \
+  test/t8_gtest_vtk_linkage.cxx \
   test/t8_data/t8_gtest_shmem.cxx
+
 
 test_t8_gtest_main_LDADD = $(LDADD) test/libgtest.la
 test_t8_gtest_main_LDFLAGS = $(AM_LDFLAGS) -pthread
