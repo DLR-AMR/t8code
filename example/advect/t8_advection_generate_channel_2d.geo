@@ -31,11 +31,15 @@ h = 2; // height/2 of the channel
 l = 3; // length/2 of the channel
 
 // Definition all the points needed for construction
-Rectangle(1) = {-l, -h, 0, 2*l, 2*h, 0};
-Circle(5) = {0, 0, 0, r, 0, 2*Pi};
-Curve Loop(2) = {5};
-Plane Surface(2) = {2};
-BooleanDifference{ Surface{1}; Delete; }{ Surface{2}; Delete; }
+Point (1) = {0, 0, 0};
+Point (2) = {-r, 0, 0};
+Point (3) = {r, 0, 0};
+Circle(1) = {2, 1, 3};
+Circle(2) = {3, 1, 2};
+Curve Loop(1) = {1, 2};
+Plane Surface(1) = {1};
+Rectangle(2) = {-l, -h, 0, 2*l, 2*h, 0};
+BooleanDifference{ Surface{2}; Delete; }{ Surface{1}; Delete; }
 
 // Save the channel geometry and reopen it. 
 // Gmsh has its own numbering of the geometries during the construction, 
