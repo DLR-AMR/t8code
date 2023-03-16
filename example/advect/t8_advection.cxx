@@ -1709,7 +1709,9 @@ main (int argc, char *argv[])
                       "with radius 0.15.\n"
                       "\t\t6 - A solution to the stokes equation on a spherical shell.\n"
                       "\t\t7 - Flow past a rotating cylinder of radius of 0.5"
-                      " around the z-axis.\n");
+                      " around the z-axis. This flow is defined for a specific"
+                      " mesh, which can be generated with Gmsh and the .geo"
+                      " files. These meshes can also be used with the curved geometry.\n");
   sc_options_add_int (opt, 'l', "level", &level, 0,
                       "The minimum refinement level of the mesh.");
   sc_options_add_int (opt, 'r', "rlevel", &reflevel, 0,
