@@ -33,7 +33,6 @@ test_t8_geometry_t8_test_geometry_SOURCES = test/t8_geometry/t8_test_geometry.cx
 
 test_t8_data_t8_test_shmem_SOURCES = test/t8_data/t8_test_shmem.cxx
 test_t8_test_netcdf_linkage_SOURCES = test/t8_test_netcdf_linkage.c
-test_t8_test_vtk_linkage_SOURCES = test/t8_test_vtk_linkage.cxx
 
 t8code_googletest_programs = \
   test/t8_gtest_main
@@ -62,7 +61,9 @@ test_t8_gtest_main_SOURCES = test/t8_gtest_main.cxx \
   test/t8_cmesh/t8_gtest_multiple_attributes.cxx \
   test/t8_schemes/t8_gtest_successor.cxx \
   test/t8_gtest_netcdf_linkage.cxx \
+  test/t8_gtest_vtk_linkage.cxx \
   test/t8_data/t8_gtest_shmem.cxx
+
 
 test_t8_gtest_main_LDADD = $(LDADD) test/libgtest.la
 test_t8_gtest_main_LDFLAGS = $(AM_LDFLAGS) -pthread
