@@ -84,7 +84,7 @@ t8_linear_face_descendant (t8_element_t *elem, t8_element_t *tmp,
       }
 
       ts->t8_element_first_descendant_face (elem, jface, tmp, ilevel);
-      EXPECT_TRUE(!ts->t8_element_compare (test, tmp));
+      ASSERT_FALSE(ts->t8_element_compare (test, tmp)) << "Wrong first descendant face\n";
 
       /* Computing the child-id of the last descendant */
       if (type >= 6) {
@@ -102,7 +102,7 @@ t8_linear_face_descendant (t8_element_t *elem, t8_element_t *tmp,
       }
       ts->t8_element_last_descendant_face (elem, jface, tmp, ilevel);
 
-      EXPECT_TRUE(!ts->t8_element_compare (test, tmp));
+      EXPECT_FALSE(ts->t8_element_compare (test, tmp)) << "Wrong last descendant face\n";
     }
   }
 }
@@ -149,7 +149,7 @@ t8_recursive_face_desendant (t8_element_t *elem, t8_element_t *test,
       }
 
       ts->t8_element_first_descendant_face (elem, jface, tmp, ilevel);
-      EXPECT_TRUE(!ts->t8_element_compare (test, tmp));
+      EXPECT_FALSE(ts->t8_element_compare (test, tmp)) << "Wrong first descendant face\n";
 
       /* Analogously check the last facedescendant */
       if (type >= 6) {
@@ -166,7 +166,7 @@ t8_recursive_face_desendant (t8_element_t *elem, t8_element_t *test,
         ts->t8_element_copy (test, tmp);
       }
       ts->t8_element_last_descendant_face (elem, jface, tmp, ilevel);
-      EXPECT_TRUE(!ts->t8_element_compare (test, tmp));
+      EXPECT_FALSE(ts->t8_element_compare (test, tmp)) << "Wrong last descendant face\n";
     }
   }
 
