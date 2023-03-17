@@ -61,7 +61,7 @@ int                 t8_dprism_compare (const t8_dprism_t *p1,
  * \param [in] level  level of uniform grid to be considered.
  */
 void                t8_dprism_init_linear_id (t8_dprism_t *p, int level,
-                                              uint64_t id);
+                                              t8_linearidx_t id);
 
 /** Computes the successor of a prism in a uniform grid of level \a level.
  * \param [in] p  prism whose id will be computed.
@@ -318,7 +318,7 @@ void                t8_dprism_vertex_ref_coords (const t8_dprism_t *p,
  * \param [in] p  Prism whose id will be computed.
  * \return Returns the linear position of this prism on a grid.
  */
-uint64_t            t8_dprism_linear_id (const t8_dprism_t *p, int level);
+t8_linearidx_t      t8_dprism_linear_id (const t8_dprism_t *p, int level);
 
 /** Query whether all entries of a prism are in valid ranges.
  * A prism is valid if and only if its triangle and line member are valid.
