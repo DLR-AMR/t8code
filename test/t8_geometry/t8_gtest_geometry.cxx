@@ -68,7 +68,7 @@ TEST_P (geometry, geometry_linear)
   t8_geometry_linear  linear_geom (dim);
   char                name[BUFSIZ];
   snprintf (name, BUFSIZ, "t8_geom_linear_%i", dim);
-  ASSERT_FALSE (strcmp (linear_geom.t8_geom_get_name (), name)) <<
+  ASSERT_EQ (strcmp (linear_geom.t8_geom_get_name (), name), 0) <<
     "Linear geometry of dim " << dim << "has wrong name. Expected " << name <<
     " got " << linear_geom.t8_geom_get_name ();
   ASSERT_EQ (dim,
@@ -84,7 +84,7 @@ TEST_P (geometry, geometry_zero)
   t8_geometry_zero    zero_geom (dim);
   char                name[BUFSIZ];
   snprintf (name, BUFSIZ, "t8_geom_zero_%i", dim);
-  ASSERT_FALSE (strcmp (zero_geom.t8_geom_get_name (), name)) <<
+  ASSERT_EQ (strcmp (zero_geom.t8_geom_get_name (), name), 0) <<
     "Linear geometry of dim " << dim << "has wrong name. Expected " << name <<
     " got " << zero_geom.t8_geom_get_name ();
   ASSERT_EQ (dim,
@@ -139,7 +139,7 @@ TEST_P (geometry, cmesh_geometry_linear)
   int                 has_same_name = strcmp (cmesh_geom->t8_geom_get_name (),
                                               linear_geom.t8_geom_get_name
                                               ());
-  ASSERT_FALSE (has_same_name) <<
+  ASSERT_EQ (has_same_name, 0) <<
     "cmesh's geometry is not the linear geometry.";
 
   srand (seed);
@@ -280,7 +280,7 @@ TEST (test_geometry, geom_handler_register)
     /* Find the geometry by name. */
     found_geom = t8_geom_handler_find_geometry (geom_handler, name);
     ASSERT_TRUE (found_geom != NULL) << "No geometry found.";
-    ASSERT_FALSE (strcmp (found_geom->t8_geom_get_name (), name)) <<
+    ASSERT_EQ (strcmp (found_geom->t8_geom_get_name (), name), 0) <<
       "Could not find identity geometry.";
   }
   /* Try to find a different geometry. Must return NULL. */
