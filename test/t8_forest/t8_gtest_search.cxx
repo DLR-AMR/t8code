@@ -164,9 +164,9 @@ TEST_P (forest_search, test_search_one_query_matches_all)
   t8_forest_set_user_data (forest, &matched_leafs);
   /* Call search. This search matches all elements. After this call we expect
    * all entries in the matched_leafs array to be set to 1. */
-  ASSERT_TRUE (t8_test_search_query_all_fn);
-  ASSERT_TRUE (t8_test_search_all_fn);
-  t8_forest_search (forest, 1, 1, &queries);
+
+  t8_forest_search (forest, t8_test_search_all_fn,
+                    t8_test_search_query_all_fn, &queries);
 
   /* Check whether matched_leafs entries are all 1 */
   for (t8_locidx_t ielement = 0; ielement < num_elements; ++ielement) {
