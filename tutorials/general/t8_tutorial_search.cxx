@@ -249,7 +249,6 @@ t8_tutorial_search_vtk (t8_forest_t forest, sc_array * particles_per_element,
      prefix);
 }
 
-
 /* Perform the actual search and write the forest with the number of particles per element
  * to vtu files. */
 static void
