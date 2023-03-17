@@ -128,7 +128,7 @@ TEST (t8_point_inside, test_point_inside_specific_quad)
                                     element, test_point, tolerance);
 
   ASSERT_FALSE (point_is_inside) <<
-    "The point is wrongly detected as inside the triangle.";
+    "The point is wrongly detected as inside the quad.";
 
   t8_forest_unref (&forest);
 }
