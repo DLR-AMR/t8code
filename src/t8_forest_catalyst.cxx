@@ -228,7 +228,6 @@ t8_build_vtk_unstructured_grid (const t8_forest_t forest,
 
   const t8_cmesh_t    cmesh = t8_forest_get_cmesh (forest);
   /* We iterate over all local trees */
-  t8_element_t        *element;
   vtkSmartPointer < vtkCell > pvtkCell;
   for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest);
        itree++) {
@@ -249,7 +248,7 @@ t8_build_vtk_unstructured_grid (const t8_forest_t forest,
     /* Compute the global tree id */
     gtreeid = t8_forest_global_tree_id (forest, itree);
     for (t8_locidx_t ielement = 0; ielement < elems_in_tree; ielement++) {
-      element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
       T8_ASSERT (element != NULL);
       pvtkCell = NULL;
       t8_element_shape_t  element_shape = scheme->t8_element_shape (element);
