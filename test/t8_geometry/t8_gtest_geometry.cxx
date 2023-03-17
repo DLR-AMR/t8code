@@ -43,8 +43,6 @@
  */
  /* TODO: 
   * - Add a test for the jacobian, as soon as its implemented in parameterized test geometry.cmesh_geometry_linear.
-  * - We need to use a different geometry since we remove the identity geomeytry in test_cmesh_geometry. 
-  * - We need to use a different geometry since we remove the identity geomeytry in test_cmesh_geometry_unique.
   */
 
 /* Check that the linear geometry for dimensions 0,1,2,3
@@ -180,7 +178,6 @@ INSTANTIATE_TEST_SUITE_P (t8_gtest_geometry, geometry,testing::Range(0,4));
 TEST (test_geometry, cmesh_geometry)
 {
   t8_cmesh_t          cmesh;
-  /* TODO: We need to use a different geometry since we remove the identity geomeytry. */
 
   t8_geometry_linear *linear_geom = new t8_geometry_linear (2);
   t8_geometry_zero   *zero_geom = new t8_geometry_zero (2);
@@ -220,7 +217,6 @@ TEST (test_geometry, cmesh_geometry)
 TEST (test_geometry, cmesh_geometry_unique)
 {
   t8_cmesh_t          cmesh;
-  /* TODO: We need to use a different geometry since we remove the identity geomeytry. */
 
   t8_geometry_linear *linear_geom = new t8_geometry_linear (2);
   const t8_geometry_c *found_geom;
@@ -292,5 +288,5 @@ TEST (test_geometry, geom_handler_register)
   /* clean-up */
   t8_geom_handler_destroy (&geom_handler);
   ASSERT_TRUE (geom_handler ==
-               NULL) << "Geometry handler was not destroyes properly.";
+               NULL) << "Geometry handler was not destroyed properly.";
 }
