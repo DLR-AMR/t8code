@@ -126,6 +126,14 @@ libt8_compiled_sources = \
   src/t8_netcdf.c \
   src/t8_cmesh/t8_cmesh_testcases.c 
 
+#If the enable-fortran option has been chosen, we will add the .f90 and .mod files to the SOURCES and HEADERS
+if T8_ENABLE_FORTRAN
+libt8_installed_headers_fortran_interface += t8_mo_fortran_interface.$(FC_MODEXT)
+libt8_compiled_sources += src/t8_fortran_interface/t8_mo_fortran_interface.f90
+libt8_installed_headers_messy += t8_mo_messy_coupler_interface.$(FC_MODEXT)
+libt8_compiled_sources += src/t8_messy/t8_mo_messy_coupler_interface.f90
+endif
+
 # this variable is used for headers that are not publicly installed
 T8_CPPFLAGS =
 
@@ -136,6 +144,8 @@ src_libt8_la_SOURCES = \
 src_libt8_la_CPPFLAGS = $(AM_CPPFLAGS) $(T8_CPPFLAGS)
 src_libt8_la_LDFLAGS = -release $(VERSION)
 src_libt8_la_LIBADD = @T8_P4EST_LDADD@ @T8_SC_LDADD@
+src_libt8_la_FCFLAGS = $(FCFLAGS)
+src_libt8_la_FFLAGS = $(FFLAGS)
 LDADD += @top_builddir@/src/libt8.la \
         @T8_P4EST_LDADD@ @T8_SC_LDADD@
 EXTRA_src_libt8_la_DEPENDENCIES = @T8_P4EST_LDADD@ @T8_SC_LDADD@
