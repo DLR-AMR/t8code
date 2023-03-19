@@ -1,4 +1,4 @@
-module t8code_fortran_interface
+module t8_mo_fortran_interface
 
       use, intrinsic :: ISO_C_BINDING
 
@@ -137,4 +137,4 @@ module t8code_fortran_interface
       !       end function t8_fortran_adapt_by_coordinates_f
       ! end Interface
 
-End module t8code_fortran_interface
+End module t8_mo_fortran_interface
