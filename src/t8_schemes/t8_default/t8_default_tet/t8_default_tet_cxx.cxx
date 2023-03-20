@@ -407,14 +407,6 @@ t8_default_scheme_tet_c::t8_element_boundary (const t8_element_t *elem,
 {
   T8_ASSERT (t8_element_is_valid (elem));
   SC_ABORT ("Not implemented\n");
-#if 0
-  int                 iface;
-
-  T8_ASSERT (length == T8_DTET_FACES);
-  for (iface = 0; iface < T8_DTET_FACES; iface++) {
-    t8_element_boundary_face (elem, iface, boundary[iface]);
-  }
-#endif
 }
 
 int

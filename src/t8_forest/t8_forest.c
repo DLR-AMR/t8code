@@ -309,18 +309,12 @@ void
 t8_forest_set_user_data (t8_forest_t forest, void *data)
 {
   /* TODO: we need a is_initialized and may be committed check! */
-#if 0
-  T8_ASSERT (t8_forest_is_initialized (forest));
-#endif
   forest->user_data = data;
 }
 
 void               *
 t8_forest_get_user_data (t8_forest_t forest)
 {
-#if 0
-  T8_ASSERT (t8_forest_is_initialized (forest));
-#endif
   return forest->user_data;
 }
 
@@ -680,13 +674,6 @@ t8_forest_commit (t8_forest_t forest)
              (long long) forest->first_local_tree,
              (long long) forest->last_local_tree);
 
-#if 0
-  /* TODO: Do we keep the arrays or not? */
-  /* verify that no (memory intensive) shared memory array is active */
-  T8_ASSERT (forest->element_offsets == NULL);
-  T8_ASSERT (forest->tree_offsets == NULL);
-  T8_ASSERT (forest->global_first_desc == NULL);
-#else
   if (forest->tree_offsets == NULL) {
     /* Compute the tree offset array */
     t8_forest_partition_create_tree_offsets (forest);
@@ -699,7 +686,6 @@ t8_forest_commit (t8_forest_t forest)
     /* Compute global first desc array */
     t8_forest_partition_create_first_desc (forest);
   }
-#endif
 
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of commit */
@@ -767,19 +753,6 @@ t8_forest_get_num_ghosts (t8_forest_t forest)
 }
 
 /* Currently this function is not used */
-#if 0
-static t8_element_t *
-t8_forest_get_first_element (t8_forest_t forest)
-{
-  t8_tree_t           tree;
-
-  if (forest->trees == NULL || forest->trees->elem_count == 0) {
-    return NULL;
-  }
-  tree = t8_forest_get_tree (forest, 0);
-  return (t8_element_t *) sc_array_index (&tree->elements, 0);
-}
-#endif
 
 /* Compute the offset array for a partition cmesh that should match the
  * forest's partition.
@@ -1526,8 +1499,8 @@ t8_forest_write_vtk_ext (t8_forest_t forest,
   }
   do_not_use_API = 1;
 #endif
-  T8_ASSERT (!write_ghosts);
   if (!do_not_use_API) {
+    T8_ASSERT (!write_ghosts);
     return t8_forest_vtk_write_file_via_API (forest,
                                              fileprefix,
                                              write_treeid,
