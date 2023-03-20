@@ -452,8 +452,8 @@ main (int argc, char *argv[])
                          "Create ghost elements.");
   sc_options_add_switch (opt, 'b', "balance", &do_balance,
                          "Establish a 2:1 balance in the forest.");
-  sc_options_add_int (opt, 'x', "use_occ", &use_occ, 0,
-                      "If set to 1, occ cmesh is used. Default is 0.");
+  sc_options_add_switch (opt, 'z', "use_occ", &use_occ,
+                         "If set to 1, occ cmesh is used. Default is 0.");
 
   /* parse command line options */
   first_argc = sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT,
