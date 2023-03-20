@@ -56,9 +56,9 @@ TEST (t8_gtest_vtk_linkage, t8_test_vtk_version_number)
   ASSERT_FALSE (strcmp (T8_VTK_VERSION_USED, vtk_version)) <<
     "linked vtk version (" << vtk_version <<
     ") does not equal the version t8code was configured with (" <<
-    T (T8_VTK_VERSION_USED << ").\n");
+    T8_VTK_VERSION_USED << ").\n";
   if (!strcmp (T8_VTK_VERSION_USED, vtk_version)) {
-    t8_debugf ("Using vtk version %s.\n", vtk_verion);
+    t8_debugf ("Using vtk version %s.\n", vtk_version);
   }
 #endif
 }
