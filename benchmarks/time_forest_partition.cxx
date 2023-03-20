@@ -328,7 +328,7 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim,
   if (msh_file != NULL) {
     /* Create a cmesh from the given mesh files */
     cmesh =
-      t8_cmesh_from_msh_file ((char *) msh_file, 0, comm, mesh_dim, 0, 0);
+      t8_cmesh_from_msh_file ((char *) msh_file, 0, comm, mesh_dim, 0, use_occ);
     partition = 1;
   }
   else {
@@ -466,7 +466,8 @@ main (int argc, char *argv[])
       || T <= 0 || test_tet + test_linear_cylinder + test_occ_cylinder > 1
       || (cmesh_level >= 0 && (!test_linear_cylinder && !test_occ_cylinder))
       || ((mshfileprefix != NULL || cmeshfileprefix != NULL)
-          && (test_linear_cylinder || test_occ_cylinder || test_tet))) {
+          && (test_linear_cylinder || test_occ_cylinder || test_tet))
+      || use_occ < 0 || use_occ > 1) {
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
     return 1;
   }
@@ -486,7 +487,8 @@ main (int argc, char *argv[])
     t8_global_productionf ("Using delta_t = %f\n", delta_t);
     if (mshfileprefix != NULL) {
       cmesh = t8_time_forest_create_cmesh (mshfileprefix, dim, NULL, -1,
-                                           sc_MPI_COMM_WORLD, level, stride, use_occ);
+                                           sc_MPI_COMM_WORLD, level, stride,
+                                           use_occ);
       vtu_prefix = mshfileprefix;
     }
     else if (test_tet) {
@@ -510,7 +512,8 @@ main (int argc, char *argv[])
       T8_ASSERT (cmeshfileprefix != NULL);
       cmesh = t8_time_forest_create_cmesh (NULL, -1, cmeshfileprefix,
                                            num_files, sc_MPI_COMM_WORLD,
-                                           level, stride, use_occ);
+                                           level, stride,
+                                           use_occ);
       vtu_prefix = cmeshfileprefix;
     }
     t8_time_forest_cmesh_mshfile (cmesh, vtu_prefix,
