@@ -38,6 +38,24 @@ void                t8_geom_compute_linear_geometry (t8_eclass_t tree_class,
                                                      const double *ref_coords,
                                                      double out_coords[3]);
 
+/** Compute the linear, axis-aligned geometry of a tree at a given reference coordinate.
+ *  This function is faster than \ref t8_geom_compute_linear_geometry, but only works
+ *  for axis-aligned trees of \ref T8_ECLASS_LINE, \ref T8_ECLASS_QUAD and \ref T8_ECLASS_HEX.
+ * \param [in]    tree_class     The eclass of the tree.
+ * \param [in]    tree_vertices  Array with the tree vertex coordinates.
+ * \param [in]    ref_coords     The reference coordinates of the point.
+ * \param [out]   out_coords     The output coordinates.
+ */
+void                t8_geom_compute_linear_axis_aligned_geometry (t8_eclass_t
+                                                                  tree_class,
+                                                                  const double
+                                                                  *tree_vertices,
+                                                                  const double
+                                                                  *ref_coords,
+                                                                  double
+                                                                  out_coords
+                                                                  [3]);
+
 /** Interpolates linearly between 2, bilinearly between 4 or trilineraly between 8 points.
  * \param [in]    coefficients        An array of size at least dim giving the coefficients used for the interpolation
  * \param [in]    corner_values       An array of size 2^dim * 3, giving for each corner (in zorder) of
