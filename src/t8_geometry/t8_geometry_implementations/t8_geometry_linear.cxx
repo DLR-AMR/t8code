@@ -47,8 +47,6 @@ t8_geometry_linear::~t8_geometry_linear ()
  * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
  * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
  * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
- * \note Since this is the identity geometry, \a out_coords will be equal to \a ref_coords in
- *       the first d entries and 0 in the remaining 3-d entries.
  */
 /* *INDENT-OFF* */
 /* indent adds second const */
