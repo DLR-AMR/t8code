@@ -680,16 +680,6 @@ t8_dtri_nearest_common_ancestor (const t8_dtri_t *t1,
   T8_ASSERT (r_level >= 0);
   /* Construct the ancestor of the first triangle at this leve */
   t8_dtri_ancestor (t1, r_level, r);
-#if 0
-  /* Find the correct type of r by testing with
-   * which type it becomes an ancestor of t1. */
-  for (r->type = 0; r->type < 6; r->type++) {
-    if (t8_dtri_is_ancestor (r, t1)) {
-      return;
-    }
-  }
-  SC_ABORT_NOT_REACHED ();
-#endif
 }
 
 void
