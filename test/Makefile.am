@@ -9,8 +9,7 @@ t8code_test_programs = \
     test/t8_forest/t8_test_forest_commit \
     test/t8_forest/t8_test_transform \
     test/t8_forest/t8_test_search \
-    test/t8_forest/t8_test_user_data \
-    test/t8_geometry/t8_test_geometry
+    test/t8_forest/t8_test_user_data
 
 test_t8_forest_t8_test_find_owner_SOURCES = test/t8_forest/t8_test_find_owner.cxx
 test_t8_forest_t8_test_ghost_exchange_SOURCES = test/t8_forest/t8_test_ghost_exchange.cxx
@@ -19,8 +18,6 @@ test_t8_forest_t8_test_forest_commit_SOURCES = test/t8_forest/t8_test_forest_com
 test_t8_forest_t8_test_transform_SOURCES = test/t8_forest/t8_test_transform.cxx
 test_t8_forest_t8_test_search_SOURCES = test/t8_forest/t8_test_search.cxx
 test_t8_forest_t8_test_user_data_SOURCES = test/t8_forest/t8_test_user_data.cxx
-
-test_t8_geometry_t8_test_geometry_SOURCES = test/t8_geometry/t8_test_geometry.cxx
 
 t8code_googletest_programs = \
   test/t8_gtest_main
@@ -42,6 +39,7 @@ test_t8_gtest_main_SOURCES = test/t8_gtest_main.cxx \
   test/t8_cmesh/t8_gtest_hypercube.cxx \
   test/t8_cmesh/t8_gtest_cmesh_copy.cxx \
   test/t8_schemes/t8_gtest_element_count_leafs.cxx \
+  test/t8_geometry/t8_gtest_geometry.cxx \
   test/t8_schemes/t8_gtest_descendant.cxx \
   test/t8_schemes/t8_gtest_find_parent.cxx \
   test/t8_cmesh/t8_gtest_cmesh_face_is_boundary.cxx \
