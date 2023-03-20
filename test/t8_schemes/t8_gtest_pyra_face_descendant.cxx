@@ -162,7 +162,7 @@ t8_recursive_face_desendant (t8_element_t *elem, t8_element_t *test,
                                             tmp)) <<
         "Wrong first descendant face\n";
 
-      /* Analogously check the last facedescendant */
+      /* Analogously check the last face descendant. */
       if (type >= 6) {
         child_id =
           t8_dpyramid_type_face_to_children_at_face[type - 6][jface][3];
