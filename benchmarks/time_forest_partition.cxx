@@ -187,7 +187,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
                          " %lli global trees.\n",
                          (long long) t8_cmesh_get_num_trees (cmesh));
 
-  /* If the input cmesh is partitioned then we use a partitioned cmehs
+  /* If the input cmesh is partitioned then we use a partitioned cmesh
    * and also repartition it in each timestep (happens automatically in
    * t8_forest_commit). We have to initially start with a uniformly refined
    * cmesh in order to be able to construct the forest on it.
@@ -329,7 +329,7 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim,
     /* Create a cmesh from the given mesh files */
     cmesh =
       t8_cmesh_from_msh_file ((char *) msh_file, 0, comm, mesh_dim, 0, use_occ);
-    partition = 1;
+    // partition = 1;
   }
   else {
     T8_ASSERT (cmesh_file != NULL);
@@ -339,7 +339,7 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim,
     cmesh = t8_cmesh_load_and_distribute (cmesh_file, num_files, comm,
                                           T8_LOAD_STRIDE, stride);
     /* Partition only if more than 1 input file */
-    partition = num_files > 1;
+    // partition = num_files > 1;
   }
   SC_CHECK_ABORT (cmesh != NULL, "Error when creating cmesh.\n");
 
