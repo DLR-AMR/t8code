@@ -103,8 +103,8 @@ t8_dvertex_childrenpv (const t8_dvertex_t *v,
 int
 t8_dvertex_is_familypv (const t8_dvertex_t *f[])
 {
-  /* A vertex is always a family */
-  return 1;
+  /* A vertex with level greater 0 is always a family */
+  return f[0]->level > 0;
 }
 
 int
