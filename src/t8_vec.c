@@ -109,3 +109,11 @@ t8_vec_cross (const double vec_x[3], const double vec_y[3], double cross[3])
       vec_x[(i + 2) % 3] * vec_y[(i + 1) % 3];
   }
 }
+
+void
+t8_vec_diff (const double vec_x[3], const double vec_y[3], double diff[3])
+{
+  for (int i = 0; i < 3; i++) {
+    diff[i] = vec_x[i] - vec_y[i];
+  }
+}
