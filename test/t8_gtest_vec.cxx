@@ -29,7 +29,6 @@
 /* Wrapper for 3D vector dataype */
 typedef double      t8_test_vec[3];
 /* Accuracy used for comparisons with correct result */
-#define epsilon 1e-9
 
 /* test the t8_vec_norm function */
 TEST (t8_gtest_vec, norm)
@@ -42,8 +41,8 @@ TEST (t8_gtest_vec, norm)
   const double        normarbitrary = 42.117360883;
 
   EXPECT_EQ (t8_vec_norm (zero), 0);
-  EXPECT_NEAR (t8_vec_norm (onetwothree), normonetwothree, epsilon);
-  EXPECT_NEAR (t8_vec_norm (arbitrary), normarbitrary, epsilon);
+  EXPECT_NEAR (t8_vec_norm (onetwothree), normonetwothree, T8_PRECISION_EPS);
+  EXPECT_NEAR (t8_vec_norm (arbitrary), normarbitrary, T8_PRECISION_EPS);
 }
 
 /* test the t8_vec_dist function */
@@ -57,12 +56,14 @@ TEST (t8_gtest_vec, dist)
 
   EXPECT_EQ (t8_vec_dist (zero, zero), 0);
   EXPECT_EQ (t8_vec_dist (onetwothree, onetwothree), 0);
-  EXPECT_NEAR (t8_vec_dist (onetwothree, zero), distzeroonetwothree, epsilon);
-  EXPECT_NEAR (t8_vec_dist (zero, onetwothree), distzeroonetwothree, epsilon);
+  EXPECT_NEAR (t8_vec_dist (onetwothree, zero), distzeroonetwothree,
+               T8_PRECISION_EPS);
+  EXPECT_NEAR (t8_vec_dist (zero, onetwothree), distzeroonetwothree,
+               T8_PRECISION_EPS);
   EXPECT_NEAR (t8_vec_dist (arbitrary, onetwothree), distarbitraryonetwothree,
-               epsilon);
+               T8_PRECISION_EPS);
   EXPECT_NEAR (t8_vec_dist (onetwothree, arbitrary), distarbitraryonetwothree,
-               epsilon);
+               T8_PRECISION_EPS);
 }
 
 /* test the t8_vec_ax function */
@@ -83,9 +84,9 @@ TEST (t8_gtest_vec, ax)
 
   /* Check results */
   for (int i = 0; i < 3; ++i) {
-    EXPECT_NEAR (zero[i], alpha * czero[i], epsilon);
-    EXPECT_NEAR (onetwothree[i], alpha * conetwothree[i], epsilon);
-    EXPECT_NEAR (arbitrary[i], alpha * carbitrary[i], epsilon);
+    EXPECT_NEAR (zero[i], alpha * czero[i], T8_PRECISION_EPS);
+    EXPECT_NEAR (onetwothree[i], alpha * conetwothree[i], T8_PRECISION_EPS);
+    EXPECT_NEAR (arbitrary[i], alpha * carbitrary[i], T8_PRECISION_EPS);
   }
 }
 
@@ -107,9 +108,9 @@ TEST (t8_gtest_vec, axy)
 
   /* Check results */
   for (int i = 0; i < 3; ++i) {
-    EXPECT_NEAR (zero[i], alpha * czero[i], epsilon);
-    EXPECT_NEAR (onetwothree[i], alpha * conetwothree[i], epsilon);
-    EXPECT_NEAR (arbitrary[i], alpha * carbitrary[i], epsilon);
+    EXPECT_NEAR (zero[i], alpha * czero[i], T8_PRECISION_EPS);
+    EXPECT_NEAR (onetwothree[i], alpha * conetwothree[i], T8_PRECISION_EPS);
+    EXPECT_NEAR (arbitrary[i], alpha * carbitrary[i], T8_PRECISION_EPS);
   }
 }
 
@@ -132,9 +133,10 @@ TEST (t8_gtest_vec, axb)
 
   /* Check results */
   for (int i = 0; i < 3; ++i) {
-    EXPECT_NEAR (zero[i], alpha * czero[i] + b, epsilon);
-    EXPECT_NEAR (onetwothree[i], alpha * conetwothree[i] + b, epsilon);
-    EXPECT_NEAR (arbitrary[i], alpha * carbitrary[i] + b, epsilon);
+    EXPECT_NEAR (zero[i], alpha * czero[i] + b, T8_PRECISION_EPS);
+    EXPECT_NEAR (onetwothree[i], alpha * conetwothree[i] + b,
+                 T8_PRECISION_EPS);
+    EXPECT_NEAR (arbitrary[i], alpha * carbitrary[i] + b, T8_PRECISION_EPS);
   }
 }
 
@@ -160,9 +162,11 @@ TEST (t8_gtest_vec, axpy)
 
   /* Check results */
   for (int i = 0; i < 3; ++i) {
-    EXPECT_NEAR (zero[i], init[i] + alpha * czero[i], epsilon);
-    EXPECT_NEAR (onetwothree[i], init[i] + alpha * conetwothree[i], epsilon);
-    EXPECT_NEAR (arbitrary[i], init[i] + alpha * carbitrary[i], epsilon);
+    EXPECT_NEAR (zero[i], init[i] + alpha * czero[i], T8_PRECISION_EPS);
+    EXPECT_NEAR (onetwothree[i], init[i] + alpha * conetwothree[i],
+                 T8_PRECISION_EPS);
+    EXPECT_NEAR (arbitrary[i], init[i] + alpha * carbitrary[i],
+                 T8_PRECISION_EPS);
   }
 }
 
@@ -179,17 +183,17 @@ TEST (t8_gtest_vec, axpyz)
   /* Z = init + alpha * zero */
   t8_vec_axpyz (czero, init, Z, alpha);
   for (int i = 0; i < 3; ++i) {
-    EXPECT_NEAR (Z[i], init[i] + alpha * czero[i], epsilon);
+    EXPECT_NEAR (Z[i], init[i] + alpha * czero[i], T8_PRECISION_EPS);
   }
   /* Z = init + alpha * conetwothree */
   t8_vec_axpyz (conetwothree, init, Z, alpha);
   for (int i = 0; i < 3; ++i) {
-    EXPECT_NEAR (Z[i], init[i] + alpha * conetwothree[i], epsilon);
+    EXPECT_NEAR (Z[i], init[i] + alpha * conetwothree[i], T8_PRECISION_EPS);
   }
   /* Z = init + alpha * carbitrary */
   t8_vec_axpyz (carbitrary, init, Z, alpha);
   for (int i = 0; i < 3; ++i) {
-    EXPECT_NEAR (Z[i], init[i] + alpha * carbitrary[i], epsilon);
+    EXPECT_NEAR (Z[i], init[i] + alpha * carbitrary[i], T8_PRECISION_EPS);
   }
 }
 
@@ -213,14 +217,16 @@ TEST (t8_gtest_vec, dot)
   for (int i = 0; i < 3; ++i) {
     result += conetwothree[i] * carbitrary[i];
   }
-  EXPECT_NEAR (t8_vec_dot (conetwothree, carbitrary), result, epsilon);
+  EXPECT_NEAR (t8_vec_dot (conetwothree, carbitrary), result,
+               T8_PRECISION_EPS);
 
   /* For the dot-product of a vector with itself we use the square of its norm */
   result = t8_vec_norm (conetwothree) * t8_vec_norm (conetwothree);
-  EXPECT_NEAR (t8_vec_dot (conetwothree, conetwothree), result, epsilon);
+  EXPECT_NEAR (t8_vec_dot (conetwothree, conetwothree), result,
+               T8_PRECISION_EPS);
 
   result = t8_vec_norm (carbitrary) * t8_vec_norm (carbitrary);
-  EXPECT_NEAR (t8_vec_dot (carbitrary, carbitrary), result, epsilon);
+  EXPECT_NEAR (t8_vec_dot (carbitrary, carbitrary), result, T8_PRECISION_EPS);
 }
 
 /* test the t8_vec_cross function */
@@ -249,11 +255,11 @@ TEST (t8_gtest_vec, cross)
   /* e1 x e2 = e3 */
   t8_vec_cross (e1, e2, cross);
   for (int i = 0; i < 3; ++i) {
-    EXPECT_NEAR (cross[i], e3[i], epsilon);
+    EXPECT_NEAR (cross[i], e3[i], T8_PRECISION_EPS);
   }
   /* e2 x e3 = e1 */
   t8_vec_cross (e2, e3, cross);
   for (int i = 0; i < 3; ++i) {
-    EXPECT_NEAR (cross[i], e1[i], epsilon);
+    EXPECT_NEAR (cross[i], e1[i], T8_PRECISION_EPS);
   }
 }
