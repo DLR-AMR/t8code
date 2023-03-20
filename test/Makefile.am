@@ -50,6 +50,7 @@ test_t8_gtest_main_SOURCES = test/t8_gtest_main.cxx \
   test/t8_forest/t8_gtest_element_general_function.cxx \
   test/t8_gtest_vtk_linkage.cxx \
   test/t8_data/t8_gtest_shmem.cxx \
+  test/t8_schemes/t8_gtest_pyra_face_descendant.cxx \
   test/t8_geometry/t8_gtest_point_inside.cxx
 
 test_t8_gtest_main_LDADD = $(LDADD) test/libgtest.la
