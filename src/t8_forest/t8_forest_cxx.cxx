@@ -1280,7 +1280,7 @@ t8_forest_refines_irregular (t8_forest_t forest)
       tscheme =
         t8_forest_get_eclass_scheme_before_commit (forest,
                                                    (t8_eclass_t) int_eclass);
-      irregular = irregular || tscheme->t8_element_refines_irregular();
+      irregular = irregular || tscheme->t8_element_refines_irregular ();
     }
   }
   /* Combine the process-local results via a logic or and distribute the
@@ -1316,10 +1316,11 @@ t8_forest_populate (t8_forest_t forest)
                   "Given refinement level exceeds the maximum.\n");
   /* TODO: create trees and quadrants according to uniform refinement */
   t8_cmesh_uniform_bounds_hybrid (forest->cmesh, forest->set_level,
-                          forest->scheme_cxx,
-                          &forest->first_local_tree,
-                          &child_in_tree_begin, &forest->last_local_tree,
-                          &child_in_tree_end, NULL, forest->mpicomm);
+                                  forest->scheme_cxx,
+                                  &forest->first_local_tree,
+                                  &child_in_tree_begin,
+                                  &forest->last_local_tree,
+                                  &child_in_tree_end, NULL, forest->mpicomm);
 
   /* True if the forest has no elements */
   is_empty = forest->first_local_tree > forest->last_local_tree

@@ -697,14 +697,19 @@ void                t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
  *                                 same as \a last_local_tree on the next process.
  * \param [in] comm         The communicator 
  */
-void                t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh, 
-                                int level,
-                                t8_scheme_cxx_t * scheme,
-                                t8_gloidx_t * first_local_tree,
-                                t8_gloidx_t * child_in_tree_begin,
-                                t8_gloidx_t * last_local_tree,
-                                t8_gloidx_t * child_in_tree_end,
-                                int8_t * first_tree_shared, sc_MPI_Comm comm);
+void                t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh,
+                                                    int level,
+                                                    t8_scheme_cxx_t *scheme,
+                                                    t8_gloidx_t
+                                                    *first_local_tree,
+                                                    t8_gloidx_t
+                                                    *child_in_tree_begin,
+                                                    t8_gloidx_t
+                                                    *last_local_tree,
+                                                    t8_gloidx_t
+                                                    *child_in_tree_end,
+                                                    int8_t *first_tree_shared,
+                                                    sc_MPI_Comm comm);
 
 /** Increase the reference counter of a cmesh.
  * \param [in,out] cmesh        On input, this cmesh must exist with positive

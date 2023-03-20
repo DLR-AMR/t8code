@@ -372,8 +372,6 @@ t8_forest_refine_everything (t8_forest_t forest, t8_forest_t forest_from,
   return 1;
 }
 
-
-
 /**Algorithm to populate a forest, if any tree refines irregularly.
  * Create the elements on this process given a uniform partition
  * of the coarse mesh. We can not use the function t8_forest_populate, because

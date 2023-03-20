@@ -265,7 +265,7 @@ void               *t8_sc_array_index_locidx (sc_array_t *array,
  * \param [in] index needs to be in [0]..[elem_count-1].
  * \return           A void * pointing to entry \a it in \a array.
  */
-void               *t8_sc_array_index_gloidx (sc_array_t * array,
+void               *t8_sc_array_index_gloidx (sc_array_t *array,
                                               t8_gloidx_t it);
 
 /* call this at the end of a header file to match T8_EXTERN_C_BEGIN (). */

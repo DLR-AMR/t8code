@@ -46,15 +46,14 @@ typedef struct
  * the uniform partition is empty.
  * We set all values to -1 and first_tree_shared to 0. */
 static void
-t8_cmesh_uniform_set_return_parameters_to_empty (t8_gloidx_t *
-                                                 first_local_tree,
-                                                 t8_gloidx_t *
-                                                 child_in_tree_begin,
-                                                 t8_gloidx_t *
-                                                 last_local_tree,
-                                                 t8_gloidx_t *
-                                                 child_in_tree_end,
-                                                 int8_t * first_tree_shared)
+t8_cmesh_uniform_set_return_parameters_to_empty (t8_gloidx_t
+                                                 *first_local_tree,
+                                                 t8_gloidx_t
+                                                 *child_in_tree_begin,
+                                                 t8_gloidx_t *last_local_tree,
+                                                 t8_gloidx_t
+                                                 *child_in_tree_end,
+                                                 int8_t *first_tree_shared)
 {
   *first_local_tree = *last_local_tree = -1;
   if (child_in_tree_begin != NULL) {
@@ -254,8 +253,8 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
  * storing the number of processe and the global number of elements. 
  * 
  * This function is used standalone and as callback of sc_array_split. */
-static              size_t
-t8_cmesh_determine_partition (sc_array_t * first_element_tree,
+static size_t
+t8_cmesh_determine_partition (sc_array_t *first_element_tree,
                               size_t pure_local_tree, void *data)
 {
   T8_ASSERT (data != NULL);
@@ -315,15 +314,15 @@ t8_cmesh_determine_partition (sc_array_t * first_element_tree,
  * use partition_given to partition the cmesh*/
 void
 t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh, int level,
-                                t8_scheme_cxx_t * scheme,
-                                t8_gloidx_t * first_local_tree,
-                                t8_gloidx_t * child_in_tree_begin,
-                                t8_gloidx_t * last_local_tree,
-                                t8_gloidx_t * child_in_tree_end,
-                                int8_t * first_tree_shared, sc_MPI_Comm comm)
+                                t8_scheme_cxx_t *scheme,
+                                t8_gloidx_t *first_local_tree,
+                                t8_gloidx_t *child_in_tree_begin,
+                                t8_gloidx_t *last_local_tree,
+                                t8_gloidx_t *child_in_tree_end,
+                                int8_t *first_tree_shared, sc_MPI_Comm comm)
 {
   t8_gloidx_t         local_num_children = 0;
-  t8_gloidx_t         *elem_index_pointer;
+  t8_gloidx_t        *elem_index_pointer;
   int                 send_first, send_last, send_first_nonempty,
     num_procs_we_send_to = 0;
   t8_cmesh_partition_query_t data;
@@ -378,7 +377,7 @@ t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh, int level,
 
   /* Do not consider shared trees */
   if (cmesh->first_tree_shared && cmesh->set_partition) {
-    const int ieclass = t8_cmesh_get_tree_class (cmesh, 0);
+    const int           ieclass = t8_cmesh_get_tree_class (cmesh, 0);
     tree_scheme = scheme->eclass_schemes[ieclass];
     local_num_children -=
       tree_scheme->t8_element_count_leafs_from_root (level);
@@ -398,10 +397,10 @@ t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh, int level,
     /* Compute the first and last element of this process. Then loop over
      * all trees to find the trees in which these are contained.
      * We cast to long double and double to prevent overflow. */
-    const t8_gloidx_t first_child =
+    const t8_gloidx_t   first_child =
       t8_cmesh_get_first_element_of_process (cmesh->mpirank, cmesh->mpisize,
                                              local_num_children);
-    const t8_gloidx_t last_child =
+    const t8_gloidx_t   last_child =
       t8_cmesh_get_first_element_of_process (cmesh->mpirank + 1,
                                              cmesh->mpisize,
                                              local_num_children) - 1;
@@ -413,12 +412,14 @@ t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh, int level,
      */
     current_tree_element_offset = 0;
     for (t8_gloidx_t igtree = 0; igtree < num_trees; ++igtree) {
-      const int ieclass = t8_cmesh_get_tree_class (cmesh, (t8_locidx_t) igtree);
+      const int           ieclass =
+        t8_cmesh_get_tree_class (cmesh, (t8_locidx_t) igtree);
       tree_scheme = scheme->eclass_schemes[ieclass];
       /* TODO: We can optimize by buffering the elem_in_tree value. Thus, if 
          the computation is expensive (may be for non-morton-type schemes),
          we do it only once. */
-      const t8_gloidx_t elem_in_tree = tree_scheme->t8_element_count_leafs_from_root (level);
+      const t8_gloidx_t   elem_in_tree =
+        tree_scheme->t8_element_count_leafs_from_root (level);
       /* Check if the first element is on the current tree */
       if (current_tree_element_offset <= first_child &&
           first_child < current_tree_element_offset + elem_in_tree) {
@@ -496,12 +497,13 @@ t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh, int level,
   t8_debugf ("[H] global num %li\n", data.global_num_elements);
 
   /*Compute number of non-shared-trees and the local index of the first non-shared-tree */
-  const t8_locidx_t pure_local_trees = cmesh->num_local_trees - first_tree_shared_shift;
+  const t8_locidx_t   pure_local_trees =
+    cmesh->num_local_trees - first_tree_shared_shift;
 
   if (pure_local_trees > 0) {
     /* Compute which trees and elements to send to which process.
      * We skip empty processes. */
-    t8_locidx_t igtree = first_tree_shared_shift;
+    t8_locidx_t         igtree = first_tree_shared_shift;
 
     sc_array_init_size (&first_element_tree, sizeof (t8_gloidx_t),
                         pure_local_trees + 1);
@@ -521,7 +523,7 @@ t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh, int level,
         (const t8_gloidx_t *) sc_array_index_int (&first_element_tree, itree);
       t8_gloidx_t        *first_element_of_next_tree =
         (t8_gloidx_t *) sc_array_index_int (&first_element_tree, itree + 1);
-      const int ieclass = t8_cmesh_get_tree_class (cmesh, igtree);
+      const int           ieclass = t8_cmesh_get_tree_class (cmesh, igtree);
       tree_scheme = scheme->eclass_schemes[ieclass];
       /* Set the first element of the next tree by adding the number of element of the current tree. */
       *first_element_of_next_tree =
@@ -564,7 +566,6 @@ t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh, int level,
       send_last = cmesh->mpisize - 1;
     }
     num_procs_we_send_to = send_last - send_first + 1;
-
 
     sc_array_init_size (&offset_partition, sizeof (size_t),
                         num_procs_we_send_to);
@@ -1008,7 +1009,6 @@ t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh, int level,
   SC_CHECK_MPI (mpiret);
   T8_ASSERT (num_received_start_messages == 1);
   T8_ASSERT (num_received_end_messages == 1);
-
 
   if (pure_local_trees > 0) {
     sc_array_reset (&first_element_tree);

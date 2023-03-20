@@ -2067,6 +2067,7 @@ t8_cmesh_new_long_brick_pyramid (sc_MPI_Comm comm, int num_cubes)
   return cmesh;
 }
 
+t8_cmesh_t
 t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees, const int set_attributes,
                            sc_MPI_Comm comm)
 {
@@ -2078,7 +2079,7 @@ t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees, const int set_attributes,
   t8_cmesh_register_geometry (cmesh, linear_geom);
 
   /* Vertices of first cube in row. */
- double              vertices_coords[24] = {
+  double              vertices[24] = {
     0, 0, 0,
     1, 0, 0,
     0, 1, 0,
@@ -2113,3 +2114,6 @@ t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees, const int set_attributes,
   for (t8_locidx_t tree_id = 0; tree_id < num_trees - 1; tree_id++) {
     t8_cmesh_set_join (cmesh, tree_id, tree_id + 1, 0, 1, 0);
   }
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
+}
