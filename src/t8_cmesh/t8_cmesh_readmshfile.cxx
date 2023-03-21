@@ -766,6 +766,8 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
   long                node_indices[T8_ECLASS_MAX_CORNERS], *stored_indices,
     num_ele_in_block;
   double              tree_vertices[T8_ECLASS_MAX_CORNERS * 3];
+  int linked_faces_counter = 0;
+  int linked_edges_counter = 0;
 
   T8_ASSERT (fp != NULL);
   /* Search for the line beginning with "$Elements" */
@@ -1199,6 +1201,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
               /* If we have found a surface we link it to the face */
               face_geometries[i_tree_faces] = surface_index;
               tree_is_linked = 1;
+              ++linked_faces_counter;
               for (int i_face_edges = 0; 
                    i_face_edges < num_face_edges;
                    ++i_face_edges)
@@ -1229,6 +1232,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                                       parameters,
                                       num_face_nodes * 2 * sizeof(double), 
                                       0);
+              t8_global_productionf ("%i geometries linked to faces.", linked_faces_counter);
             }
           }
           const int num_edges = t8_eclass_num_edges[eclass];
@@ -1375,6 +1379,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
               tree_is_linked = 1;
               parameters[0] = edge_nodes[0].parameters[0];
               parameters[1] = edge_nodes[1].parameters[0];
+              ++linked_edges_counter;
               t8_cmesh_set_attribute (cmesh, 
                                       tree_count, 
                                       t8_get_package_id(), 
@@ -1382,6 +1387,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                                       parameters,
                                       2 * sizeof(double), 
                                       0);
+              t8_global_productionf ("%i geometries linked to edges.", linked_edges_counter);
             }
             /* If we have found a surface we can look for the parameters. 
              * If the edge is locked for edges on surfaces we have to skip this edge */
@@ -1444,6 +1450,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
               parameters[1] = edge_nodes[0].parameters[1];
               parameters[2] = edge_nodes[1].parameters[0];
               parameters[3] = edge_nodes[1].parameters[1];
+              ++linked_faces_counter;
               t8_cmesh_set_attribute (cmesh, 
                                       tree_count, 
                                       t8_get_package_id(), 
@@ -1451,6 +1458,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                                       parameters,
                                       4 * sizeof(double), 
                                       0);
+              t8_global_productionf ("%i geometries linked to faces.", linked_faces_counter);
             }
           }
           /* Remove the -1 used to lock the edges */
