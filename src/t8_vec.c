@@ -25,10 +25,9 @@
 double
 t8_vec_norm (const double vec[3])
 {
-  int                 i;
   double              norm = 0;
 
-  for (i = 0; i < 3; i++) {
+  for (int i = 0; i < 3; i++) {
     norm += vec[i] * vec[i];
   }
   return sqrt (norm);
@@ -37,43 +36,45 @@ t8_vec_norm (const double vec[3])
 double
 t8_vec_dist (const double vec_x[3], const double vec_y[3])
 {
-  int                 i;
   double              dist = 0;
 
-  for (i = 0; i < 3; i++) {
+  for (int i = 0; i < 3; i++) {
     dist += SC_SQR (vec_x[i] - vec_y[i]);
   }
   return sqrt (dist);
 }
 
 void
-t8_vec_ax (double vec_x[3], double alpha)
+t8_vec_ax (double vec_x[3], const double alpha)
 {
-  int                 i;
-
-  for (i = 0; i < 3; i++) {
+  for (int i = 0; i < 3; i++) {
     vec_x[i] *= alpha;
+  }
+}
+
+void
+t8_vec_axy (const double vec_x[3], double vec_y[3], const double alpha)
+{
+  for (int i = 0; i < 3; i++) {
+    vec_y[i] = vec_x[i] * alpha;
   }
 }
 
 /* y = ax + b */
 void
-t8_vec_axb (const double vec_x[3], double vec_y[3], double alpha, double b)
+t8_vec_axb (const double vec_x[3], double vec_y[3], const double alpha,
+            const double b)
 {
-  int                 i;
-
-  for (i = 0; i < 3; i++) {
+  for (int i = 0; i < 3; i++) {
     vec_y[i] = alpha * vec_x[i] + b;
   }
 }
 
 /* y = y + alpha * x */
 void
-t8_vec_axpy (const double vec_x[3], double vec_y[3], double alpha)
+t8_vec_axpy (const double vec_x[3], double vec_y[3], const double alpha)
 {
-  int                 i;
-
-  for (i = 0; i < 3; i++) {
+  for (int i = 0; i < 3; i++) {
     vec_y[i] += alpha * vec_x[i];
   }
 }
@@ -81,12 +82,9 @@ t8_vec_axpy (const double vec_x[3], double vec_y[3], double alpha)
 /* z = y + alpha * x */
 void
 t8_vec_axpyz (const double vec_x[3], const double vec_y[3], double vec_z[3],
-              double alpha)
+              const double alpha)
 {
-
-  int                 i;
-
-  for (i = 0; i < 3; i++) {
+  for (int i = 0; i < 3; i++) {
     vec_z[i] = vec_y[i] + alpha * vec_x[i];
   }
 }
@@ -94,10 +92,9 @@ t8_vec_axpyz (const double vec_x[3], const double vec_y[3], double vec_z[3],
 double
 t8_vec_dot (const double vec_x[3], const double vec_y[3])
 {
-  int                 i;
   double              dot = 0;
 
-  for (i = 0; i < 3; i++) {
+  for (int i = 0; i < 3; i++) {
     dot += vec_x[i] * vec_y[i];
   }
   return dot;
@@ -106,9 +103,7 @@ t8_vec_dot (const double vec_x[3], const double vec_y[3])
 void
 t8_vec_cross (const double vec_x[3], const double vec_y[3], double cross[3])
 {
-  int                 i;
-
-  for (i = 0; i < 3; i++) {
+  for (int i = 0; i < 3; i++) {
     cross[i] =
       vec_x[(i + 1) % 3] * vec_y[(i + 2) % 3] -
       vec_x[(i + 2) % 3] * vec_y[(i + 1) % 3];
