@@ -29,6 +29,10 @@
 #include "t8_cmesh_types.h"
 #include "t8_cmesh_stash.h"
 
+#ifdef _WIN32
+#include "t8_windows.h"
+#endif
+
 /* The supported number of gmesh tree classes.
  * Currently, we only support first order trees.
  */
