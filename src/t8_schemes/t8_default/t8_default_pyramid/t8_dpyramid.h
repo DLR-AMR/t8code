@@ -68,5 +68,6 @@ typedef struct t8_dpyramid_t
   t8_dpyramid_coord_t     x;        /**< The x integer coordinate of the anchor node. */
   t8_dpyramid_coord_t     y;        /**< The y integer coordinate of the anchor node. */
   t8_dpyramid_coord_t     z;        /**< The z integer coordinate of the anchor node. */
+} t8_dpyramid_t;
 
 #endif /* T8_DPYRAMID_H */
