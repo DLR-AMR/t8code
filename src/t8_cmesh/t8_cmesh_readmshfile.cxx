@@ -852,20 +852,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
         }
         t8_cmesh_set_tree_class (cmesh, tree_count, eclass);
 
-        /* Set the geometry of the tree to be occ or linear */
-        /* TODO: We should optimize here and only set the geometry to be 
-         *        occ if the tree actually has any curved data. */
-        if (use_occ_geometry) {
-          const char         *geom_name =
-            occ_geometry_base->t8_geom_get_name ();
-          t8_cmesh_set_tree_geometry (cmesh, tree_count, geom_name);
-        }
-        else {
-          const char         *geom_name =
-            linear_geometry_base->t8_geom_get_name ();
-          t8_cmesh_set_tree_geometry (cmesh, tree_count, geom_name);
-        }
-
         /* The line describing the tree looks like
          * tree_number(every ele type has its own numeration) Node_1 ... Node_m
          *
@@ -981,10 +967,16 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
          * deactivate the automatic indentation.
          * TODO: Indent after switching to other indentation rules */
         /* *INDENT-OFF* */
-
-        /* Calculate the parametric geometries of the tree */
-        if (use_occ_geometry)
-        {
+        if (!use_occ_geometry) {
+          /* Set the geometry of the tree to be linear.
+           * If we use an occ geometry, we set the geometry in accordance,
+           * if the tree is linked to a geometry or not */
+          const char         *geom_name =
+            linear_geometry_base->t8_geom_get_name ();
+          t8_cmesh_set_tree_geometry (cmesh, tree_count, geom_name);
+        }
+        else {
+          /* Calculate the parametric geometries of the tree */
 #if T8_WITH_OCC
           T8_ASSERT (t8_geom_is_occ(occ_geometry_base));
           const t8_geometry_occ_c *occ_geometry = dynamic_cast<const t8_geometry_occ_c *> (occ_geometry_base);
@@ -995,6 +987,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                       t8_eclass_to_string[eclass]);
             goto die_ele;
           }
+          int tree_is_linked = 0;
           double parameters[T8_ECLASS_MAX_CORNERS_2D * 2];
           int edge_geometries[T8_ECLASS_MAX_EDGES * 2] = { 0 };
           int face_geometries[T8_ECLASS_MAX_FACES] = { 0 };
@@ -1209,6 +1202,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
               }
               /* If we have found a surface we link it to the face */
               face_geometries[i_tree_faces] = surface_index;
+              tree_is_linked = 1;
               for (int i_face_edges = 0; 
                    i_face_edges < num_face_edges;
                    ++i_face_edges)
@@ -1377,6 +1371,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                 }
               }
               edge_geometries[i_tree_edges] = edge_geometry_tag;
+              tree_is_linked = 1;
               parameters[0] = edge_nodes[0].parameters[0];
               parameters[1] = edge_nodes[1].parameters[0];
               t8_cmesh_set_attribute (cmesh, 
@@ -1438,7 +1433,8 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                   edge_nodes[i_edge_node].entity_dim = 2;
                 }
               }
-              edge_geometries[i_tree_edges + num_edges] = edge_geometry_tag;
+              edge_geometries[i_tree_edges + t8_eclass_num_edges[eclass]] = edge_geometry_tag;
+              tree_is_linked = 1;
               parameters[0] = edge_nodes[0].parameters[0];
               parameters[1] = edge_nodes[0].parameters[1];
               parameters[2] = edge_nodes[1].parameters[0];
@@ -1474,6 +1470,18 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                                   edge_geometries, 
                                   2 * num_edges * sizeof(int), 
                                   0);
+          
+          /* Now we set the tree geometry according to the tree linkage status. */
+          const char *geom_name;
+          if (tree_is_linked) {
+            geom_name = occ_geometry_base->t8_geom_get_name();
+          }
+          else {
+            geom_name = linear_geometry_base->t8_geom_get_name();
+          }
+          t8_debugf ("Registering tree %li with geometry %s \n", tree_count,
+                     geom_name);
+          t8_cmesh_set_tree_geometry (cmesh, tree_count, geom_name);
 #else /* !T8_WITH_OCC */
           SC_ABORTF ("OCC not linked");
 #endif /* T8_WITH_OCC */
