@@ -24,7 +24,7 @@
 #define T8_DPYRAMID_CONNECTIVITY_H
 
 #include <t8.h>
-#include <t8_dpyramid.h>
+#include "t8_dpyramid.h"
 
 /* these two together enable computing the child*/
 
@@ -52,7 +52,7 @@ extern const int    t8_dpyramid_type_cubeid_to_parenttype[T8_DPYRAMID_NUM_TYPES]
 
 extern const int    t8_dpyramid_type_edge_equations[T8_DPYRAMID_NUM_EQUATIONS][2];
 
-extern const int    t8_dpyramid_type_vertex_dim_to_binary[T8_DPYRAMID_NUM_TYPES][T8_DPYRAMID_MAX_VERTICES][T8_DPYRAMID_DIM];
+extern const int    t8_dpyramid_type_vertex_dim_to_binary[T8_DPYRAMID_NUM_TYPES][T8_DPYRAMID_MAX_CORNERS][T8_DPYRAMID_DIM];
 
 /**
 extern const int    t8_dpyramid_type_cubeid_siblingid_to_siblingtype[T8_DPYRAMID_NUM_TYPES][1<<T8_DPYRAMID_DIM][T8_DPYRAMID_MAX_CHILDREN];

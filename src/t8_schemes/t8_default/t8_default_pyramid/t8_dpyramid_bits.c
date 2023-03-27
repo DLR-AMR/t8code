@@ -30,6 +30,93 @@
 
 typedef int8_t t8_dpyramid_cube_id_t;
 
+/*********GETTER******/
+int
+t8_dpyramid_get_level (const t8_dpyramid_t *p)
+{
+  T8_ASSERT (0 <= p->level
+             && p->level <= T8_DPYRAMID_MAXLEVEL);
+  return p->level;
+}
+
+t8_dpyramid_type_t
+t8_dpyramid_get_type (const t8_dpyramid_t *p)
+{
+  return p->type;
+}
+
+t8_element_shape_t
+t8_dpyramid_shape (const t8_dpyramid_t *p)
+{
+  T8_ASSERT (0 <= p->level
+             && p->level <= T8_DPYRAMID_MAXLEVEL);
+  /*The pyramid has the shape of a tetrahedron */
+  if (t8_dpyramid_get_type(p) == T8_DPYRAMID_FIRST_PYRA_TYPE ||t8_dpyramid_get_type(p) == T8_DPYRAMID_SECOND_PYRA_TYPE) {
+    return T8_ECLASS_PYRAMID;
+  }
+  else {
+    return T8_ECLASS_TET;
+  }
+}
+
+int
+t8_dpyramid_num_corners (const t8_dpyramid_t *p)
+{
+  T8_ASSERT (0 <= p->level
+             && p->level <= T8_DPYRAMID_MAXLEVEL);
+  if (t8_dpyramid_shape (p) == T8_ECLASS_TET) {
+    return T8_DPYRAMID_TET_CORNERS;
+  }
+  else {
+    return T8_DPYRAMID_PYRA_CORNERS;
+  }
+}
+
+int
+t8_dpyramid_num_children (const t8_dpyramid_t *p)
+{
+  T8_ASSERT (0 <= p->level
+             && p->level <= T8_DPYRAMID_MAXLEVEL);
+  if (t8_dpyramid_shape (p) == T8_ECLASS_TET) {
+    return T8_DPYRAMID_TET_CHILDREN;
+  }
+  else {
+    return T8_DPYRAMID_PYRA_CHILDREN;
+  }
+}
+
+int
+t8_dpyramid_num_siblings (const t8_dpyramid_t *p)
+{
+  T8_ASSERT (0 <= p->level
+             && p->level <= T8_DPYRAMID_MAXLEVEL);
+  t8_dpyramid_t parent;
+  t8_dpyramid_parent(p, &parent);
+  return t8_dpyramid_num_children(&parent);
+}
+
+int
+t8_dpyramid_num_faces (const t8_dpyramid_t *p)
+{
+  T8_ASSERT (0 <= p->level
+             && p->level <= T8_DPYRAMID_MAXLEVEL);
+  if (t8_dpyramid_shape (p) == T8_ECLASS_TET) {
+    return T8_DPYRAMID_TET_FACES;
+  }
+  else {
+    return T8_DPYRAMID_PYRA_FACES;
+  }
+}
+
+int
+t8_dpyramid_max_num_faces (const t8_dpyramid_t *p)
+{
+  T8_ASSERT (0 <= p->level
+             && p->level <= T8_DPYRAMID_MAXLEVEL);
+  return T8_DPYRAMID_MAX_FACES;
+}
+
+
 /**Cube helper**/
 
 static t8_dpyramid_cube_id_t
@@ -50,7 +137,7 @@ t8_dpyramid_compute_cubeid (const t8_dpyramid_t *p, const int level)
   return cube_id;
 }
 
-int8_t t8_dpyramid_compute_type_at_level(t8_dpyramid_t *p, int level){
+int8_t t8_dpyramid_compute_type_at_level(const t8_dpyramid_t *p, int level){
   int8_t type = 0;
   t8_dpyramid_type_t type_at_levels = 0;
   T8_ASSERT (0 <= p->level
@@ -59,8 +146,8 @@ int8_t t8_dpyramid_compute_type_at_level(t8_dpyramid_t *p, int level){
 
   for(int e = 0; e < T8_DPYRAMID_NUM_EQUATIONS; e++)
   {
-    t8_dpyramid_coord_t coord_v0 = p->coords[t8_dpyramid_equation[e][0]];
-    t8_dpyramid_coord_t coord_v1 = p->coords[t8_dpyramid_equation[e][1]];
+    t8_dpyramid_coord_t coord_v0 = p->coords[t8_dpyramid_type_edge_equations[e][0]];
+    t8_dpyramid_coord_t coord_v1 = p->coords[t8_dpyramid_type_edge_equations[e][1]];
     t8_dpyramid_coord_t type_at_levels = (~coord_v0 & coord_v1);
     if (p->type & (1<<e)){
       type_at_levels |= ((coord_v0 & coord_v1) | (~coord_v0 & ~coord_v1));
@@ -84,11 +171,6 @@ t8_dpyramid_cut_coordinates (t8_dpyramid_t *p, const int shift)
   for (int i=0; i<T8_DPYRAMID_DIM; i++){
     p->coords[i] = (p->coords[i] >> shift) << shift;
   }
-}
-
-int
-t8_dpyramid_is_inside_root (const t8_dpyramid_t *p)
-{
 }
 
 /*Copies a pyramid from source to dest*/
@@ -177,8 +259,8 @@ t8_dpyramid_child_id (const t8_dpyramid_t *p)
   }
   const t8_dpyramid_cube_id_t cube_id =
     t8_dpyramid_compute_cubeid (p, p->level);
-  T8_ASSERT (t8_dpyramid_type_cid_to_Iloc[t8_dpyramid_get_type(p)][cube_id] >= 0);
-  return t8_dpyramid_type_cid_to_Iloc[t8_dpyramid_get_type(p)][cube_id];
+  T8_ASSERT (t8_dpyramid_type_cubeid_to_Iloc[t8_dpyramid_get_type(p)][cube_id] >= 0);
+  return t8_dpyramid_type_cubeid_to_Iloc[t8_dpyramid_get_type(p)][cube_id];
 }
 
 void
@@ -190,17 +272,17 @@ t8_dpyramid_child (const t8_dpyramid_t *elem, const int child_id,
              && elem->level <= T8_DPYRAMID_MAXLEVEL);
   /* Compute the cube id and shift the coordinates accordingly */
   const t8_dpyramid_cube_id_t cube_id =
-    t8_dpyramid_parenttype_Iloc_to_cid[elem->type][child_id];
+    t8_dpyramid_type_Iloc_to_childcubeid[elem->type][child_id];
   T8_ASSERT (cube_id >= 0);
   const t8_dpyramid_coord_t length =
     T8_DPYRAMID_LEN (elem->level + 1);
 
   for (int i=0; i<T8_DPYRAMID_DIM; i++){
-    child->coords[i] = elem->coords[i] + (cube_id & 1<<e) ? length : 0);
+    child->coords[i] = elem->coords[i] + ((cube_id & 1<<i) ? length : 0);
   }
   child->level = elem->level + 1;
   child->type =
-    t8_dpyramid_parenttype_Iloc_to_type[elem->type][child_id];
+    t8_dpyramid_type_Iloc_to_childtype[elem->type][child_id];
 
   T8_ASSERT (child->type >= 0);
 }
@@ -211,15 +293,15 @@ t8_dpyramid_is_family (t8_dpyramid_t **fam)
   t8_dpyramid_t parent, compare;
   /* Take the parent of the first element as baseline to compare against */
   t8_dpyramid_parent(fam[0],&parent);
-  const int num_children = t8_dpyramid_num_children(&parent)
+  const int num_children = t8_dpyramid_num_children(&parent);
   for(int childid=0; childid < num_children; childid++){
     /* check whether each element has the same parent */
     t8_dpyramid_parent(fam[childid], &compare);
-    if t8_dpyramid_compare(&parent, &compare) return 0;
+    if (t8_dpyramid_compare(&parent, &compare)) return 0;
     /* check whether each element is the correct child of the collective parent */
     /* Could be replaced by type comparison as level is already checked in parent comparison */
-    t8_dpyramid_child(parent,&compare, &childid);
-    if t8_dpyramid_compare(fam[childid], &compare) return 0;
+    t8_dpyramid_child(&parent, childid, &compare);
+    if (t8_dpyramid_compare(fam[childid], &compare)) return 0;
   }
   return 1;
 }
@@ -283,20 +365,19 @@ void
 t8_dpyramid_parent (const t8_dpyramid_t *p, t8_dpyramid_t *parent)
 {
   T8_ASSERT (p->level > 0);
-  T8_ASSERT (T8_DPYRAMID_MAXLEVEL == T8_DTET_MAXLEVEL);
   const t8_dpyramid_coord_t length = T8_DPYRAMID_LEN (p->level);
-  const t8_dpyramid_cube_id_t cube_id = compute_cubeid (p, p->level);
+  const t8_dpyramid_cube_id_t cube_id = t8_dpyramid_compute_cubeid (p, p->level);
 
   for(int i=0; i<T8_DPYRAMID_DIM; i++) {
     parent->coords[i] = p->coords[i] & ~length;
   }
-  parent->type = t8_dpyramid_type_cubeid_to_parenttype[p->type][cube_id]
+  parent->type = t8_dpyramid_type_cubeid_to_parenttype[p->type][cube_id];
   parent->level = p->level - 1;
 
   T8_ASSERT (parent->level >= 0);
 }
 
-static void
+void
 t8_dpyramid_successor (const t8_dpyramid_t *elem,
                                  t8_dpyramid_t *succ, const int level)
 {
@@ -340,7 +421,7 @@ t8_dpyramid_ancestor (const t8_dpyramid_t *pyra, const int level,
   }
   /* The coordinates and the type of the anc are defined by the level. */
   t8_dpyramid_cut_coordinates (anc, T8_DPYRAMID_MAXLEVEL - level);
-  t8_dpyramid_cut_type (anc, T8_DPYRAMID_MAXLEVEL - level);
+  anc->type = t8_dpyramid_compute_type_at_level(pyra, level);
   anc->level = level;
 }
 
@@ -349,7 +430,8 @@ static int
 t8_dpyramid_nca_level(const t8_dpyramid_t *pyra1,
                       const t8_dpyramid_t *pyra2)
 {
-
+  SC_ABORT("not implemented\n");
+  return 0;
 }
 
 void
@@ -368,7 +450,7 @@ static t8_linearidx_t t8_dpyramid_num_descendants_at_leveldiff(const t8_dpyramid
 {
   t8_linearidx_t two_to_l = 1>>leveldiff;
   t8_linearidx_t eight_to_l = 8>>leveldiff;
-  if(t8_dpyramid_shape(child) == T8_ECLASS_PYRAMID){
+  if(t8_dpyramid_shape(p) == T8_ECLASS_PYRAMID){
     return (eight_to_l >> 2 - two_to_l)/3;
   }else{
     return (eight_to_l >> 1 + two_to_l)/3;
@@ -378,8 +460,8 @@ static t8_linearidx_t t8_dpyramid_num_descendants_at_leveldiff(const t8_dpyramid
 static t8_linearidx_t t8_dpyramid_num_descendants_of_child_at_leveldiff(const t8_dpyramid_t *p, int childindex, int leveldiff)
 {
   t8_dpyramid_t child;
-  t8_dpyramid_child(p,&child,childindex);
-  return t8_dpyramid_num_descendants_at_leveldiff(child, leveldiff - 1);//????
+  t8_dpyramid_child(p,childindex,&child);
+  return t8_dpyramid_num_descendants_at_leveldiff(&child, leveldiff - 1);//????
 }
 
 static void
@@ -400,7 +482,7 @@ t8_dpyramid_init_linear_id_recursive (t8_dpyramid_t *p, const int level_diff,
     if(sum_descendants_of_children_before + num_descendants_of_child > id) break;
     sum_descendants_of_children_before += num_descendants_of_child;
   }
-  t8_dpyramid_child(p,p,childindex);
+  t8_dpyramid_child(p,childindex,p);
   t8_dpyramid_init_linear_id_recursive(p,level_diff-1, id - sum_descendants_of_children_before);
 }
 
@@ -425,7 +507,7 @@ t8_dpyramid_linear_id_recursive(t8_dpyramid_t *p, const t8_linearidx_t id, const
     parent_id += t8_dpyramid_num_descendants_of_child_at_leveldiff(p,ichild,level_diff);
   }
   parent_id+=id;
-  return t8_dpyramid_linear_id_recursive(parent,parent_id, level_diff+1);
+  return t8_dpyramid_linear_id_recursive(p, parent_id, level_diff+1);
 }
 
 t8_linearidx_t
@@ -434,100 +516,9 @@ t8_dpyramid_linear_id (const t8_dpyramid_t *p, const int level)
   t8_dpyramid_t first_desc;
   t8_dpyramid_first_descendant(p,&first_desc, level);
   /* Maybe we can also input p into recursice function and calculate id directly for first desc */
-  return t8_dpyramid_linear_id_recursive(&first_desc,0);
+  return t8_dpyramid_linear_id_recursive(&first_desc,0,0);
 }
 
-/*********GETTER******/
-t8_element_shape_t
-t8_dpyramid_shape (const t8_dpyramid_t *p)
-{
-  T8_ASSERT (0 <= p->level
-             && p->level <= T8_DPYRAMID_MAXLEVEL);
-  /*The pyramid has the shape of a tetrahedron */
-  if (t8_dpyramid_get_type(p) == T8_DPYRAMID_FIRST_TYPE ||t8_dpyramid_get_type(p) == T8_DPYRAMID_SECOND_TYPE) {
-    return T8_ECLASS_PYRAMID;
-  }
-  else {
-    return T8_ECLASS_TET;
-  }
-}
-
-int
-t8_dpyramid_get_level (const t8_dpyramid_t *p)
-{
-  T8_ASSERT (0 <= p->level
-             && p->level <= T8_DPYRAMID_MAXLEVEL);
-  return p->level;
-}
-
-t8_dpyramid_type_t
-t8_dpyramid_get_type (const t8_dpyramid_t *p)
-{
-  return p->type;
-}
-
-int
-t8_dpyramid_num_corners (const t8_dpyramid_t *p)
-{
-  T8_ASSERT (0 <= p->level
-             && p->level <= T8_DPYRAMID_MAXLEVEL);
-  if (t8_dpyramid_shape (p) == T8_ECLASS_TET) {
-    return T8_DTET_CORNERS;
-  }
-  else {
-    return T8_DPYRAMID_CORNERS;
-  }
-}
-
-int
-t8_dpyramid_num_children (const t8_dpyramid_t *p)
-{
-  T8_ASSERT (0 <= p->level
-             && p->level <= T8_DPYRAMID_MAXLEVEL);
-  if (t8_dpyramid_shape (p) == T8_ECLASS_TET) {
-    return T8_DTET_CHILDREN;
-  }
-  else {
-    return T8_DPYRAMID_CHILDREN;
-  }
-}
-
-int
-t8_dpyramid_num_siblings (const t8_dpyramid_t *p)
-{
-  T8_ASSERT (0 <= p->level
-             && p->level <= T8_DPYRAMID_MAXLEVEL);
-  t8_dpyramid_t parent;
-  t8_dpyramid_parent(p, &parent);
-  if (t8_dpyramid_shape (&parent) == T8_ECLASS_PYRAMID) {
-    /* The parent is a pyramid. */
-    return T8_DPYRAMID_CHILDREN;
-  }
-  else {
-    return T8_DTET_CHILDREN;
-  }
-}
-
-int
-t8_dpyramid_num_faces (const t8_dpyramid_t *p)
-{
-  T8_ASSERT (0 <= p->level
-             && p->level <= T8_DPYRAMID_MAXLEVEL);
-  if (t8_dpyramid_shape (p) == T8_ECLASS_TET) {
-    return T8_DTET_FACES;
-  }
-  else {
-    return T8_DPYRAMID_FACES;
-  }
-}
-
-int
-t8_dpyramid_max_num_faces (const t8_dpyramid_t *p)
-{
-  T8_ASSERT (0 <= p->level
-             && p->level <= T8_DPYRAMID_MAXLEVEL);
-  return T8_DPYRAMID_FACES;
-}
 
 
 
@@ -537,8 +528,8 @@ t8_dpyramid_compute_coords (const t8_dpyramid_t *p, const int vertex,
                             int coords[])
 {
   T8_ASSERT (0 <= vertex && vertex < t8_dpyramid_num_corners(p));
-  for (int idim=0; idim < T8_DPYRAMID_DIM; ivertex++){
-    type = t8_dpyramid_get_type(p);
+  for (int idim=0; idim < T8_DPYRAMID_DIM; idim++){
+    t8_dpyramid_type_t type = t8_dpyramid_get_type(p);
     coords[idim] = t8_dpyramid_type_vertex_dim_to_binary[type][vertex][idim];
   }
 }
@@ -549,7 +540,7 @@ t8_dpyramid_vertex_reference_coords (const t8_dpyramid_t *elem,
                                      const int vertex, double coords[])
 {
   int                 coords_int[T8_DPYRAMID_DIM];
-  T8_ASSERT (0 <= vertex && vertex < T8_DPYRAMID_CORNERS);
+  T8_ASSERT (0 <= vertex && vertex < T8_DPYRAMID_MAX_CORNERS);
   t8_dpyramid_compute_coords (elem, vertex, coords_int);
   /*scale the coordinates onto the reference cube */
   coords[0] = coords_int[0] / (double) T8_DPYRAMID_ROOT_LEN;

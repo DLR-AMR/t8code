@@ -224,7 +224,9 @@ t8_default_scheme_pyramid_c::t8_element_is_root_boundary (const t8_element_t
                                                           *elem, int face)
 {
   T8_ASSERT (t8_element_is_valid (elem));
-  return t8_dpyramid_is_root_boundary ((const t8_dpyramid_t *) elem, face);
+  SC_ABORT ("Not implemented\n");
+  return 0;
+  //return t8_dpyramid_is_root_boundary ((const t8_dpyramid_t *) elem, face);
 }
 
 t8_element_shape_t
@@ -238,8 +240,8 @@ int
 t8_default_scheme_pyramid_c::t8_element_num_face_children (const t8_element_t
                                                            *elem, int face)
 {
-  T8_ASSERT (t8_element_is_valid (elem));
-  return T8_DPYRAMID_FACE_CHILDREN;
+  SC_ABORT("not implemented\n");
+  return 0;
 }
 
 t8_linearidx_t
@@ -288,9 +290,9 @@ t8_default_scheme_pyramid_c::t8_element_anchor (const t8_element_t *elem,
   t8_dpyramid_t      *pyra = (t8_dpyramid_t *) elem;
 
   T8_ASSERT (t8_element_is_valid (elem));
-  anchor[0] = pyra->x;
-  anchor[1] = pyra->y;
-  anchor[2] = pyra->z;
+  anchor[0] = pyra->coords[0];
+  anchor[1] = pyra->coords[1];
+  anchor[2] = pyra->coords[2];
 }
 
 void

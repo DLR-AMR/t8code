@@ -8,19 +8,23 @@
 #include <t8.h>
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtet.h>
 
+/** The dim of the pyramid refinement scheme. */
+#define T8_DPYRAMID_DIM 3
+
 /** The number of children that a pyramid is refined into. */
 #define T8_DPYRAMID_MAX_CHILDREN 10
 #define T8_DPYRAMID_PYRA_CHILDREN 10
 #define T8_DPYRAMID_TET_CHILDREN 6
 
-/** The dim of the pyramid refinement scheme. */
-#define T8_DPYRAMID_DIM 3
-
 /** The number of faces of a pyramid. */
-#define T8_DPYRAMID_FACES 5
+#define T8_DPYRAMID_MAX_FACES 5
+#define T8_DPYRAMID_PYRA_FACES 5
+#define T8_DPYRAMID_TET_FACES 4
 
 /** The number of corners of a pyramid */
-#define T8_DPYRAMID_CORNERS 5
+#define T8_DPYRAMID_MAX_CORNERS 5
+#define T8_DPYRAMID_PYRA_CORNERS 5
+#define T8_DPYRAMID_TET_CORNERS 4
 
 /** The maximum refinement level allowed for a pyramid */
 /*The tetrahedral elements are linked with pyra-elements*/

@@ -26,7 +26,7 @@
 /*The type of a child pyramid depending on the parent pyramid and its local index
  *type = (parent_type, local_index)
  */
-const int           t8_dpyramid_type_Iloc_to_childtype[T8_DPYRAMID_NUM_TYPES][T8_DPYRAMID_MAX] = {
+const int           t8_dpyramid_type_Iloc_to_childtype[T8_DPYRAMID_NUM_TYPES][T8_DPYRAMID_MAX_CHILDREN] = {
   {0, 0, 2, 0, 1, 0, 1, 2, 3, 0},
   {1, 1, 3, 0, 1, 1, -1, -1, -1, -1},
   {2, 2, 3, 0, 2, 2, -1, -1, -1, -1},
@@ -34,7 +34,7 @@ const int           t8_dpyramid_type_Iloc_to_childtype[T8_DPYRAMID_NUM_TYPES][T8
 };
 
 /*The cube Id of a child pyramid depending on its parenttype and local index*/
-const int           t8_dpyramid_type_Iloc_to_childcubeid[T8_DPYRAMID_NUM_TYPES][10] = {
+const int           t8_dpyramid_type_Iloc_to_childcubeid[T8_DPYRAMID_NUM_TYPES][T8_DPYRAMID_MAX_CHILDREN] = {
   {0, 1, 1, 2, 2, 3, 3, 3, 3, 7},
   {0, 1, 1, 5, 5, 7, -1, -1, -1, -1},
   {0, 2, 2, 6, 6, 7, -1, -1, -1, -1},
@@ -43,7 +43,7 @@ const int           t8_dpyramid_type_Iloc_to_childcubeid[T8_DPYRAMID_NUM_TYPES][
 
 /* The local index of the element, dependant of the cube id and its own type
  */
-const int           t8_dpyramid_type_cubeid_to_Iloc[T8_DPYRAMID_NUM_TYPES][8] = {
+const int           t8_dpyramid_type_cubeid_to_Iloc[T8_DPYRAMID_NUM_TYPES][1<<T8_DPYRAMID_DIM] = {
   {0, 1, 3, 5, 1, 3, 3, 9},
   {0, 1, 4, 6, 2, 4, 7, 5},
   {0, 2, 1, 7, 3, 5, 4, 5},
@@ -52,7 +52,7 @@ const int           t8_dpyramid_type_cubeid_to_Iloc[T8_DPYRAMID_NUM_TYPES][8] = 
 
 /* The type of the parent, dependant of the cube id and its own type
  */
-const int           t8_dpyramid_type_cubeid_to_parenttype[T8_DPYRAMID_NUM_TYPES][8] = {
+const int           t8_dpyramid_type_cubeid_to_parenttype[T8_DPYRAMID_NUM_TYPES][1<<T8_DPYRAMID_DIM] = {
   {0, 0, 0, 0, 3, 1, 2, 0},
   {1, 1, 0, 0, 3, 1, 3, 1},
   {2, 0, 2, 0, 3, 3, 2, 2},
@@ -64,7 +64,7 @@ const int    t8_dpyramid_type_edge_equations[T8_DPYRAMID_NUM_EQUATIONS][2] = {
   {1,2}
 };
 
-const int    t8_dpyramid_type_vertex_dim_to_binary[T8_DPYRAMID_NUM_TYPES][T8_DPYRAMID_MAX_VERTICES][T8_DPYRAMID_DIM] = {
+const int    t8_dpyramid_type_vertex_dim_to_binary[T8_DPYRAMID_NUM_TYPES][T8_DPYRAMID_MAX_CORNERS][T8_DPYRAMID_DIM] = {
   {
     {0,0,0},
     {1,0,0},
@@ -93,4 +93,4 @@ const int    t8_dpyramid_type_vertex_dim_to_binary[T8_DPYRAMID_NUM_TYPES][T8_DPY
     {0,1,1},
     {1,1,1}
   }
-}
+};
