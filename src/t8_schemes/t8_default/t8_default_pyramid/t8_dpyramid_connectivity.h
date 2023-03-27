@@ -24,89 +24,34 @@
 #define T8_DPYRAMID_CONNECTIVITY_H
 
 #include <t8.h>
+#include <t8_dpyramid.h>
 
 /**The type of a pyramid depending on the parent pyramid and its local index
- *type = A(parent_type, local_index)
+ * child_type = A(type, local_index)
  */
-extern const int    t8_dpyramid_parenttype_Iloc_to_type[4][10];
+extern const int    t8_dpyramid_type_Iloc_to_childtype[T8_DPYRAMID_NUM_TYPES][T8_DPYRAMID_MAX_CHILDREN];
 
 /** The cube Id of a pyramid depending on its parenttype and local index
- * cube_id = A(parent_type, local_index)
+ * cube_id = A(type, local_index)
  */
-extern const int    t8_dpyramid_parenttype_Iloc_to_cid[4][10];
+extern const int    t8_dpyramid_type_Iloc_to_childcubeid[T8_DPYRAMID_NUM_TYPES][T8_DPYRAMID_MAX_CHILDREN];
 
 /** The local ID of an element in a pyramid.
  * Iloc = A(type, cube_id)*/
-extern const int    t8_dpyramid_type_cid_to_Iloc[4][8];
-
-/** The type of the parent from of the cube id and its own type
- * parent_type = A(cube_id, type);
- */
-extern const int    t8_dpyramid_cid_type_to_parenttype[8][4];
-
-/** The parenttype of a pyramid, computed by its own type and local ID
- * parenttype = A(type, local_index)
-*/
-extern const int    t8_dpyramid_type_Iloc_to_parenttype[4][10];
+extern const int    t8_dpyramid_type_cubeid_to_Iloc[T8_DPYRAMID_NUM_TYPES][1<<T8_DPYRAMID_DIM];
 
 /** The type of the parent of a pyramid, computed by its own type and cube-id
- * type = A(cube_id, parent_type)
+ * parent_type = A(type, cube_id)
 */
-extern const int    t8_dpyramid_type_cid_to_parenttype[4][8];
+extern const int    t8_dpyramid_type_cubeid_to_parenttype[T8_DPYRAMID_NUM_TYPES][1<<T8_DPYRAMID_DIM];
 
-/** The number of local pyramid-siblings with lower id. This is computed with
- * help of the type of the parent and its own local id. A tetrahedron has
- * no pyramid-children, therefore this makes sense only for pyramidparents
- * num_siblings_with_lower_id = (parent_type, local_id)*/
-extern const int    t8_dpyramid_parenttype_iloc_pyra_w_lower_id[4][10];
+extern const int    t8_dpyramid_type_edge_equations[T8_DPYRAMID_NUM_EQUATIONS][2];
 
-/** Returns the face number of the neighbour touching the current pyramid.
- * The facenumber depends on the type of the pyramid
- * neigh_face_number = A(type, face)*/
-extern const int    t8_dpyramid_type_face_to_nface[4][5];
+extern const int    t8_dpyramid_type_vertex_dim_to_binary[T8_DPYRAMID_NUM_TYPES][T8_DPYRAMID_MAX_VERTICES][T8_DPYRAMID_DIM];
 
-/*TODO: Documentation*/
-//?
-// extern const int    t8_dpyramid_face_childid_to_is_inside[4][8];
-
-/** The child ids of children touching a given face of a pyramid
- * child_id = A(type, face_num, child_id_at_face)
+/**
+extern const int    t8_dpyramid_type_cubeid_siblingid_to_siblingtype[T8_DPYRAMID_NUM_TYPES][1<<T8_DPYRAMID_DIM][T8_DPYRAMID_MAX_CHILDREN];
+extern const int    t8_dpyramid_type_cubeid_siblingid_to_siblingcubeid[T8_DPYRAMID_NUM_TYPES][1<<T8_DPYRAMID_DIM][T8_DPYRAMID_MAX_CHILDREN];
 */
-extern const int    t8_dpyramid_type_face_to_children_at_face[4][5][4];
-
-/** Return the face-number of a children at a face of a pyramid
- * face_number_of_child = A(type, face, child_id_at_face)
-*/
-extern const int    t8_dpyramid_type_face_to_child_face[4][5][4];
-
-/** Return the type of a boundary element which has a pyramid parent, depending on
- * the type of the boundary triangle and the face number of root
- * boundary_type = A(tri_type, face_number)*/
-//?
-//extern const int    t8_dpyramid_tritype_rootface_to_pyratype[4][4];
-
-/** Return the type of a boundary element which has a tet-parent, depending on
- * the type of the boundary triangle and the face number of root
- * tettype = A(tri_type, face_number_of_root)*/
-//?
-//extern const int    t8_dpyramid_tritype_rootface_to_tettype[4][4];
-
-/** Return the face number of a boundary element which has a tet-parent, depending
- * on the type of the boundary triangle and the the facenumber of root
- * face_number = A(tri_type, face_number_of_root)*/
-//?
-// extern const int    t8_dpyramid_tritype_rootface_to_face[4][4];
-
-/** Return the parent-type of a tetrahedron that has a pyramid as a parent
- * using the type of the tetrahedron and the cube_id of the tetrahedron
- * parent_type = A(tet_type, cube_id)
-*/
-//?
-//extern const int    t8_dtet_type_cid_to_pyramid_parenttype[6][8];
-
-/** The corner numbers of the face of a pyramid
- * corner_number = A(face, corner_number_at_face)
-*/
-extern const int    t8_dpyramid_face_corner[5][4];
 
 #endif // T8_DPYRAMID_CONNECTIVITY_H

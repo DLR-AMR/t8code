@@ -9,13 +9,15 @@
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtet.h>
 
 /** The number of children that a pyramid is refined into. */
-#define T8_DPYRAMID_CHILDREN 10
+#define T8_DPYRAMID_MAX_CHILDREN 10
+#define T8_DPYRAMID_PYRA_CHILDREN 10
+#define T8_DPYRAMID_TET_CHILDREN 6
+
+/** The dim of the pyramid refinement scheme. */
+#define T8_DPYRAMID_DIM 3
 
 /** The number of faces of a pyramid. */
 #define T8_DPYRAMID_FACES 5
-
-/** The number of children at a face*/
-#define T8_DPYRAMID_FACE_CHILDREN 4
 
 /** The number of corners of a pyramid */
 #define T8_DPYRAMID_CORNERS 5
@@ -30,21 +32,26 @@
 /** The length of a pyramid at a given level in integer coordinates */
 #define T8_DPYRAMID_LEN(l) (1 << (T8_DPYRAMID_MAXLEVEL- (l)))
 
+/* The number of xi = xj equations that determine the refinement scheme */
+#define T8_DPYRAMID_NUM_EQUATIONS 2
+
 /** The number of types of a pyramid */
 #define T8_DPYRAMID_NUM_TYPES 4
 
 /** The type of the root pyramid*/
-#define T8_DPYRAMID_ROOT_TPYE 2
+#define T8_DPYRAMID_ROOT_TPYE 0
 
 /** The first type of pyramids in the shape of a pyramid*/
-#define T8_DPYRAMID_FIRST_TYPE 2
+#define T8_DPYRAMID_FIRST_PYRA_TYPE 0
 
 /** The second type of pyramids in the shape of a pyramid*/
-#define T8_DPYRAMID_SECOND_TYPE 3
+#define T8_DPYRAMID_SECOND_PYRA_TYPE 3
 
-/** The length of a triangle divided by the length of a pyramid.
- * This is useful to convert boundary coordinates from pyra to tri*/
-#define T8_DTRI_ROOT_BY_DPYRAMID_ROOT (1 <<(T8_DTRI_MAXLEVEL - T8_DPYRAMID_MAXLEVEL))
+/** The first type of pyramids in the shape of a tet*/
+#define T8_DPYRAMID_FIRST_TET_TYPE 1
+
+/** The second type of pyramids in the shape of a tet*/
+#define T8_DPYRAMID_SECOND_TET_TYPE 2
 
 /** The coordinates of a pyramid are integers relative to the maximum refinement. */
 typedef int32_t     t8_dpyramid_coord_t;
@@ -62,12 +69,10 @@ typedef struct t8_dpyramid_t
   /** The refinement level of the element relative to the root at level 0. */
   int8_t              level;
 
-  /** Type of the tetrahedron in 0, ...,3. */
+  /** Bit array: which inequality is fulfilled at which level. */
   t8_dpyramid_type_t      type;
 
-  t8_dpyramid_coord_t     x;        /**< The x integer coordinate of the anchor node. */
-  t8_dpyramid_coord_t     y;        /**< The y integer coordinate of the anchor node. */
-  t8_dpyramid_coord_t     z;        /**< The z integer coordinate of the anchor node. */
+  t8_dpyramid_coord_t     coords[T8_DPYRAMID_DIM];
 } t8_dpyramid_t;
 
 #endif /* T8_DPYRAMID_H */
