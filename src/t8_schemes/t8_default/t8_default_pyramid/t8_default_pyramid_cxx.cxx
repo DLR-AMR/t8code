@@ -184,7 +184,6 @@ t8_default_scheme_pyramid_c::t8_element_first_descendant (const t8_element_t
   T8_ASSERT (t8_element_is_valid (desc));
 }
 
-
 int
 t8_default_scheme_pyramid_c::t8_element_level (const t8_element_t *elem)
 {
@@ -240,7 +239,7 @@ int
 t8_default_scheme_pyramid_c::t8_element_num_face_children (const t8_element_t
                                                            *elem, int face)
 {
-  SC_ABORT("not implemented\n");
+  SC_ABORT ("not implemented\n");
   return 0;
 }
 
@@ -349,8 +348,7 @@ t8_default_scheme_pyramid_c::t8_element_general_function (const t8_element_t
   T8_ASSERT (t8_element_is_valid (elem));
   *((int8_t *) outdata) = ((const t8_dpyramid_t *) elem)->type;
   /* Safety check to catch datatype conversion errors */
-  T8_ASSERT (*((int8_t *) outdata) ==
-             ((const t8_dpyramid_t *) elem)->type);
+  T8_ASSERT (*((int8_t *) outdata) == ((const t8_dpyramid_t *) elem)->type);
 }
 
 #ifdef T8_ENABLE_DEBUG

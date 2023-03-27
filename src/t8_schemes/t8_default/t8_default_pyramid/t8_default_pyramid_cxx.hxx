@@ -299,7 +299,8 @@ public:
    * \return              The element shape of the face.
    */
   virtual t8_element_shape_t t8_element_face_shape (const t8_element_t *elem,
-                                                    int face){
+                                                    int face)
+  {
     SC_ABORT ("This function is not implemented yet.\n");
   }
 
@@ -321,11 +322,11 @@ public:
                                                    int face,
                                                    t8_element_t *children[],
                                                    int num_children,
-                                                   int *child_indices)  {
+                                                   int *child_indices)
+  {
     SC_ABORT ("This function is not implemented yet.\n");
     return;                     /* suppresses compiler warning */
   }
-
 
   /** Given a face of an element and a child number of a child of that face, return the face number
    * of the child of the element that matches the child face.
@@ -348,7 +349,8 @@ public:
    *                      that conincides with \a face_child.
    */
   virtual int         t8_element_face_child_face (const t8_element_t *elem,
-                                                  int face, int face_child){
+                                                  int face, int face_child)
+  {
     SC_ABORT ("This function is not implemented yet.\n");
   }
 
@@ -363,7 +365,8 @@ public:
      * \note For the root element this function always returns \a face.
      */
   virtual int         t8_element_face_parent_face (const t8_element_t *elem,
-                                                   int face){
+                                                   int face)
+  {
     SC_ABORT ("This function is not implemented yet.\n");
   }
 
@@ -377,7 +380,8 @@ public:
    *         Any arbitrary integer if \a is not at a tree boundary.
    */
   virtual int         t8_element_tree_face (const t8_element_t *elem,
-                                            int face){
+                                            int face)
+  {
     SC_ABORT ("This function is not implemented yet.\n");
   }
 
@@ -427,10 +431,10 @@ public:
                                                const t8_eclass_scheme_c
                                                *face_scheme,
                                                t8_element_t *elem,
-                                               int root_face)  {
+                                               int root_face)
+  {
     SC_ABORT ("This function is not implemented yet.\n");
   }
-
 
   /** Construct the first descendant of an element at a given level that touches a given face.
    * \param [in] elem      The input element.
@@ -444,11 +448,11 @@ public:
                                                         *elem, int face,
                                                         t8_element_t
                                                         *first_desc,
-                                                        int level)  {
+                                                        int level)
+  {
     SC_ABORT ("This function is not implemented yet.\n");
     return;                     /* suppresses compiler warning */
   }
-
 
   /** Construct the last descendant of an element at a given level that touches a given face.
    * \param [in] elem      The input element.
@@ -461,11 +465,11 @@ public:
   virtual void        t8_element_last_descendant_face (const t8_element_t
                                                        *elem, int face,
                                                        t8_element_t
-                                                       *last_desc, int level){
+                                                       *last_desc, int level)
+  {
     SC_ABORT ("This function is not implemented yet.\n");
     return;                     /* suppresses compiler warning */
   }
-
 
   /** Construct the boundary element at a specific face.
    * \param [in] elem     The input element.

@@ -66,7 +66,6 @@ typedef int32_t     t8_dpyramid_coord_t;
 */
 typedef int8_t t8_dpyramid_type_t;
 
-
 /** This data type stores a pyramid/tetrahedron. */
 typedef struct t8_dpyramid_t
 {
@@ -74,9 +73,9 @@ typedef struct t8_dpyramid_t
   int8_t              level;
 
   /** Bit array: which inequality is fulfilled at which level. */
-  t8_dpyramid_type_t      type;
+  t8_dpyramid_type_t  type;
 
-  t8_dpyramid_coord_t     coords[T8_DPYRAMID_DIM];
+  t8_dpyramid_coord_t coords[T8_DPYRAMID_DIM];
 } t8_dpyramid_t;
 
 #endif /* T8_DPYRAMID_H */
