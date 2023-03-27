@@ -26,6 +26,8 @@
 #include <t8.h>
 #include <t8_dpyramid.h>
 
+/* these two together enable computing the child*/
+
 /**The type of a pyramid depending on the parent pyramid and its local index
  * child_type = A(type, local_index)
  */
@@ -35,6 +37,9 @@ extern const int    t8_dpyramid_type_Iloc_to_childtype[T8_DPYRAMID_NUM_TYPES][T8
  * cube_id = A(type, local_index)
  */
 extern const int    t8_dpyramid_type_Iloc_to_childcubeid[T8_DPYRAMID_NUM_TYPES][T8_DPYRAMID_MAX_CHILDREN];
+
+
+/* shortcut to get own iloc*/
 
 /** The local ID of an element in a pyramid.
  * Iloc = A(type, cube_id)*/

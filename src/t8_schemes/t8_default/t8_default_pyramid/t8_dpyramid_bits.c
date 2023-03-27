@@ -86,6 +86,11 @@ t8_dpyramid_cut_coordinates (t8_dpyramid_t *p, const int shift)
   }
 }
 
+int
+t8_dpyramid_is_inside_root (const t8_dpyramid_t *p)
+{
+}
+
 /*Copies a pyramid from source to dest*/
 void
 t8_dpyramid_copy (const t8_dpyramid_t *source, t8_dpyramid_t *dest)
@@ -161,7 +166,6 @@ static void t8_dpyramid_root(t8_dpyramid_t *p)
   p->type=T8_DPYRAMID_ROOT_TPYE;
   p->coords[0] = p->coords[1] = p->coords[2] = 0;
 }
-
 
 /**SFC functionality*/
 int

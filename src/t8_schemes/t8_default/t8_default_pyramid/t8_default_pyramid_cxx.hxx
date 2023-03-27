@@ -363,7 +363,9 @@ public:
      * \note For the root element this function always returns \a face.
      */
   virtual int         t8_element_face_parent_face (const t8_element_t *elem,
-                                                   int face);
+                                                   int face){
+    SC_ABORT ("This function is not implemented yet.\n");
+  }
 
   /** Given an element and a face of this element. If the face lies on the
    *  tree boundary, return the face number of the tree face.
@@ -375,7 +377,9 @@ public:
    *         Any arbitrary integer if \a is not at a tree boundary.
    */
   virtual int         t8_element_tree_face (const t8_element_t *elem,
-                                            int face);
+                                            int face){
+    SC_ABORT ("This function is not implemented yet.\n");
+  }
 
   /** Suppose we have two trees that share a common face f.
    *  Given an element e that is a subface of f in one of the trees
