@@ -3,10 +3,8 @@
 #Included from toplevel directory
 
 t8code_test_programs = \
-    test/t8_forest/t8_test_transform \
     test/t8_forest/t8_test_user_data
 
-test_t8_forest_t8_test_transform_SOURCES = test/t8_forest/t8_test_transform.cxx
 test_t8_forest_t8_test_user_data_SOURCES = test/t8_forest/t8_test_user_data.cxx
 
 t8code_googletest_programs = \
@@ -46,6 +44,7 @@ test_t8_gtest_main_SOURCES = test/t8_gtest_main.cxx \
   test/t8_forest/t8_gtest_find_owner.cxx \
   test/t8_schemes/t8_gtest_pyra_face_descendant.cxx \
   test/t8_geometry/t8_gtest_point_inside.cxx \
+  test/t8_forest/t8_gtest_transform.cxx \
   test/t8_forest/t8_gtest_ghost_exchange.cxx \
   test/t8_forest/t8_gtest_ghost_and_owner.cxx
 
