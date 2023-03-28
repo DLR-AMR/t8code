@@ -105,7 +105,7 @@ TEST_F (face_neigh, face_check_easy)
     ts->t8_element_face_neighbor_inside (child, neigh, iface, &face_num);
     ts->t8_element_face_neighbor_inside (neigh, element, face_num, &check);
 
-    EXPECT_FALSE (ts->t8_element_compare (child, element));
+    EXPECT_EQ (ts->t8_element_compare (child, element), 0);
     EXPECT_EQ (check, iface);
   }
 
@@ -117,7 +117,7 @@ TEST_F (face_neigh, face_check_easy)
     ts->t8_element_face_neighbor_inside (child, neigh, iface, &face_num);
     ts->t8_element_face_neighbor_inside (neigh, element, face_num, &check);
 
-    EXPECT_FALSE (ts->t8_element_compare (child, element));
+    EXPECT_EQ (ts->t8_element_compare (child, element), 0);
     EXPECT_EQ (check, iface);
   }
   /* Face neighbor check for all children of type 6 pyra. */
@@ -134,7 +134,7 @@ TEST_F (face_neigh, face_check_easy)
        * original element. */
       ts->t8_element_face_neighbor_inside (child, neigh, jface, &face_num);
       ts->t8_element_face_neighbor_inside (neigh, element, face_num, &check);
-      EXPECT_FALSE (ts->t8_element_compare (child, element));
+      EXPECT_EQ (ts->t8_element_compare (child, element), 0);
       EXPECT_EQ (check, jface);
     }
     ts->t8_element_parent (child, element);
@@ -165,7 +165,7 @@ t8_recursive_check_diff (t8_element_t *element, t8_element_t *child,
   for (int iface = 0; iface < num_face; iface++) {
     ts->t8_element_face_neighbor_inside (element, neigh, iface, &face_num);
     ts->t8_element_face_neighbor_inside (neigh, child, face_num, &check);;
-    EXPECT_FALSE (ts->t8_element_compare (child, element));
+    EXPECT_EQ (ts->t8_element_compare (child, element), 0);
     EXPECT_EQ (iface, check);
   }
   int                 num_children = ts->t8_element_num_children (element);
