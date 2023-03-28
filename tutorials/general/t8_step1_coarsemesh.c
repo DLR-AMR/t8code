@@ -37,7 +37,7 @@
 
 #include <t8.h>
 #include <t8_cmesh.h>
-#include <t8_cmesh_vtk.h>
+#include <t8_cmesh_vtk_writer.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 
 /* Builds cmesh of 6 tetrahedra that build up a unit cube.
