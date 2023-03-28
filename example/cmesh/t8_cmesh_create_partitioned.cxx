@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_cmesh_vtk.h>
+#include <t8_cmesh_vtk_writer.h>
 
 /* Create a coarse mesh that is partitioned across two processes
  * (if mpisize >= 2).

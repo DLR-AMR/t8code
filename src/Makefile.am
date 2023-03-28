@@ -25,7 +25,8 @@ libt8_installed_headers = \
   src/t8_element_c_interface.h \
   src/t8_refcount.h src/t8_cmesh.h src/t8_cmesh_triangle.h \
   src/t8_cmesh_tetgen.h src/t8_cmesh_readmshfile.h \
-  src/t8_cmesh_vtk.h \
+  src/t8_cmesh_vtk_writer.h \
+  src/t8_cmesh_vtk_reader.hxx \
   src/t8_forest.h \
   src/t8_vec.h \
   src/t8_version.h \
@@ -84,7 +85,8 @@ libt8_compiled_sources = \
   src/t8_refcount.c src/t8_cmesh/t8_cmesh.c \
   src/t8_cmesh/t8_cmesh_occ.cxx \
   src/t8_cmesh/t8_cmesh_cxx.cxx src/t8_cmesh/t8_cmesh_triangle.c \
-  src/t8_cmesh/t8_cmesh_vtk.c src/t8_cmesh/t8_cmesh_stash.c \
+  src/t8_cmesh/t8_cmesh_vtk_writer.c src/t8_cmesh/t8_cmesh_stash.c \
+  src/t8_cmesh/t8_cmesh_vtk_reader.cxx \
   src/t8_cmesh/t8_cmesh_save.c \
   src/t8_cmesh/t8_cmesh_netcdf.c \
   src/t8_cmesh/t8_cmesh_trees.c src/t8_cmesh/t8_cmesh_commit.c \
