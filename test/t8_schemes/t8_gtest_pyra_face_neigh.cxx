@@ -76,10 +76,10 @@ t8_check_not_inside_root (t8_element_t *element, t8_element_t *neigh,
         ts->t8_element_face_neighbor_inside (child, neigh, face_contact,
                                              &face_num);
 
-      EXPECT_TRUE (inside == 0);
+      EXPECT_EQ (inside, 0);
 
       inside = ts->t8_element_tree_face (child, face_contact);
-      EXPECT_TRUE (inside == iface);
+      EXPECT_EQ (inside, iface);
     }
   }
 }
@@ -105,7 +105,8 @@ TEST_F (face_neigh, face_check_easy)
     ts->t8_element_face_neighbor_inside (child, neigh, iface, &face_num);
     ts->t8_element_face_neighbor_inside (neigh, element, face_num, &check);
 
-    EXPECT_TRUE (!ts->t8_element_compare (child, element) && check == iface);
+    EXPECT_FALSE (ts->t8_element_compare (child, element));
+    EXPECT_EQ (check, iface);
   }
 
   ts->t8_element_child (element, 3, child);
@@ -116,7 +117,8 @@ TEST_F (face_neigh, face_check_easy)
     ts->t8_element_face_neighbor_inside (child, neigh, iface, &face_num);
     ts->t8_element_face_neighbor_inside (neigh, element, face_num, &check);
 
-    EXPECT_TRUE (!ts->t8_element_compare (child, element) && check == iface);
+    EXPECT_FALSE (ts->t8_element_compare (child, element));
+    EXPECT_EQ (check, iface);
   }
   /* Face neighbor check for all children of type 6 pyra. */
   for (int ichild = 0; ichild < T8_DPYRAMID_CHILDREN; ichild++) {
@@ -132,8 +134,8 @@ TEST_F (face_neigh, face_check_easy)
        * original element. */
       ts->t8_element_face_neighbor_inside (child, neigh, jface, &face_num);
       ts->t8_element_face_neighbor_inside (neigh, element, face_num, &check);
-      EXPECT_TRUE (!ts->t8_element_compare (child, element)
-                   && check == jface);
+      EXPECT_FALSE (ts->t8_element_compare (child, element));
+      EXPECT_EQ (check, jface);
     }
     ts->t8_element_parent (child, element);
   }
@@ -163,7 +165,8 @@ t8_recursive_check_diff (t8_element_t *element, t8_element_t *child,
   for (int iface = 0; iface < num_face; iface++) {
     ts->t8_element_face_neighbor_inside (element, neigh, iface, &face_num);
     ts->t8_element_face_neighbor_inside (neigh, child, face_num, &check);;
-    EXPECT_TRUE (!ts->t8_element_compare (child, element) && iface == check);
+    EXPECT_FALSE (ts->t8_element_compare (child, element));
+    EXPECT_EQ (iface, check);
   }
   int                 num_children = ts->t8_element_num_children (element);
   for (int ichild = 0; ichild < num_children; ichild++) {
