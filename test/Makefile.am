@@ -3,11 +3,9 @@
 #Included from toplevel directory
 
 t8code_test_programs = \
-    test/t8_forest/t8_test_forest_commit \
     test/t8_forest/t8_test_transform \
     test/t8_forest/t8_test_user_data
 
-test_t8_forest_t8_test_forest_commit_SOURCES = test/t8_forest/t8_test_forest_commit.cxx
 test_t8_forest_t8_test_transform_SOURCES = test/t8_forest/t8_test_transform.cxx
 test_t8_forest_t8_test_user_data_SOURCES = test/t8_forest/t8_test_user_data.cxx
 
