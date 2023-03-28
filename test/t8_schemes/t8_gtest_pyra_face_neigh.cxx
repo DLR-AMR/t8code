@@ -27,50 +27,34 @@
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_connectivity.h>
 
-class               face_neight:public
-  testing::Test
+/* *INDENT-OFF* */
+class face_neigh:public testing::Test
 {
 protected:
-  void
-  SetUp ()
-  override
-  {
+  void SetUp () override {
     scheme = t8_scheme_new_default_cxx ();
 
     ts = scheme->eclass_schemes[eclass];
-    ts->
-    t8_element_new (1, &element);
-    ts->
-    t8_element_new (1, &child);
-    ts->
-    t8_element_new (1, &neigh);
-
-    ts->
-    t8_element_set_linear_id (element, 0, 0);
+    ts->t8_element_new (1, &element);
+    ts->t8_element_new (1, &child);
+    ts->t8_element_new (1, &neigh);
+    ts->t8_element_set_linear_id (element, 0, 0);
   }
 
-  void
-  TearDown ()
-  override
-  {
+  void TearDown () override {
     ts->t8_element_destroy (1, &element);
     ts->t8_element_destroy (1, &child);
     ts->t8_element_destroy (1, &neigh);
     t8_scheme_cxx_unref (&scheme);
   }
-  t8_element_t       *
-    element;
-  t8_element_t       *
-    child;
-  t8_element_t       *
-    neigh;
-  t8_scheme_cxx      *
-    scheme;
-  t8_eclass_scheme_c *
-    ts;
-  t8_eclass_t
-    eclass = T8_ECLASS_PYRAMID;
+  t8_element_t       *element;
+  t8_element_t       *child;
+  t8_element_t       *neigh;
+  t8_scheme_cxx      *scheme;
+  t8_eclass_scheme_c *ts;
+  t8_eclass_t        eclass = T8_ECLASS_PYRAMID;
 };
+/* *INDENT-ON* */
 
 /* Compute all children along all faces. Compute their neighbors along the face,
  * check, if the children have root contact, and if the neighbors are outside of the
@@ -79,14 +63,10 @@ void
 t8_check_not_inside_root (t8_element_t *element, t8_element_t *neigh,
                           t8_element_t *child, t8_eclass_scheme_c *ts)
 {
-  int
-    face_num;
-  int
-    face_contact;
-  int
-    inside;
-  int
-    child_id;
+  int                 face_num;
+  int                 face_contact;
+  int                 inside;
+  int                 child_id;
   for (int iface = 0; iface < T8_DPYRAMID_FACES; iface++) {
     for (int jchild = 0; jchild < T8_DPYRAMID_FACE_CHILDREN; jchild++) {
       child_id = t8_dpyramid_type_face_to_children_at_face[0][iface][jchild];
@@ -108,14 +88,11 @@ t8_check_not_inside_root (t8_element_t *element, t8_element_t *neigh,
  * which should all lie outside. Then, the child of type 7 is constructed and it is checked,
  * if if all neighbors are computed correctly. The same is done for the child of type six of
  * this pyramid. Then, the same is done for all of the children of the type six pyramid. */
-TEST_F (face_neight, face_check_easy)
+TEST_F (face_neigh, face_check_easy)
 {
-  int
-    face_num;
-  int
-    num_faces;
-  int
-    check;
+  int                 face_num;
+  int                 num_faces;
+  int                 check;
 
   /* Are the neighbors of the element realy outside?. */
   t8_check_not_inside_root (element, neigh, child, ts);
@@ -167,12 +144,9 @@ t8_recursive_check_diff (t8_element_t *element, t8_element_t *child,
                          t8_element_t *neigh, t8_eclass_scheme_c *ts,
                          int maxlvl, int level)
 {
-  int
-    num_face;
-  int
-    face_num;
-  int
-    check;
+  int                 num_face;
+  int                 face_num;
+  int                 check;
   T8_ASSERT (level <= maxlvl && maxlvl <= ts->t8_element_maxlevel () - 1);
   if (level == maxlvl) {
     return;
@@ -191,8 +165,7 @@ t8_recursive_check_diff (t8_element_t *element, t8_element_t *child,
     ts->t8_element_face_neighbor_inside (neigh, child, face_num, &check);;
     EXPECT_TRUE (!ts->t8_element_compare (child, element) && iface == check);
   }
-  int
-    num_children = ts->t8_element_num_children (element);
+  int                 num_children = ts->t8_element_num_children (element);
   for (int ichild = 0; ichild < num_children; ichild++) {
     ts->t8_element_child (element, ichild, child);
     t8_recursive_check_diff (child, element, neigh, ts, maxlvl, level + 1);
@@ -201,14 +174,12 @@ t8_recursive_check_diff (t8_element_t *element, t8_element_t *child,
 }
 
 /* Recursivly check, if all neighbors are computed correct up to a given level. */
-TEST_F (face_neight, face_check_diff)
+TEST_F (face_neigh, face_check_diff)
 {
 #ifdef T8_ENABLE_DEBUG
-  const int
-    maxlvl = 3;
+  const int           maxlvl = 3;
 #else
-  const int
-    maxlvl = 4;
+  const int           maxlvl = 4;
 #endif
 
   ts->t8_element_child (element, 8, child);
