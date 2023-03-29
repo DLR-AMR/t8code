@@ -75,11 +75,11 @@ pyramid_control_volume (t8_dpyramid_t *pyra)
 {
   double              control_volume = 1.0 / 3.0;
   /* Both pyramids and tets have 1/8th of the parents volume, if the shape does not switch. */
-  control_volume /= 1 << ((pyra->pyramid.level) * 3);
+  control_volume /= 1 << ((pyra->level) * 3);
   /* Ancestors switch the shape. A tetrahedron has a 1/16th of its parents volume. 
    * For all levels we already divided the control-volume by 8, hence we 
    * divide it by 2 once. */
-  if (pyra->switch_shape_at_level > 0) {
+  if (t8_dpyramid_shape(pyra) == T8_ECLASS_TET) {
     control_volume /= 2;
   }
 

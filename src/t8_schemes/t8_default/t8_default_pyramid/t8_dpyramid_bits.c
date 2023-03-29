@@ -238,7 +238,7 @@ static void
 t8_dpyramid_root (t8_dpyramid_t *p)
 {
   p->level = 0;
-  p->type = T8_DPYRAMID_ROOT_TPYE;
+  p->type = T8_DPYRAMID_ROOT_TYPE;
   p->coords[0] = p->coords[1] = p->coords[2] = 0;
 }
 
@@ -261,7 +261,7 @@ void
 t8_dpyramid_child (const t8_dpyramid_t *elem, const int child_id,
                    t8_dpyramid_t *child)
 {
-  T8_ASSERT (0 <= child_id && child_id < T8_DPYRAMID_CHILDREN);
+  T8_ASSERT (0 <= child_id && child_id < T8_DPYRAMID_MAX_CHILDREN);
   T8_ASSERT (0 <= elem->level && elem->level <= T8_DPYRAMID_MAXLEVEL);
   /* Compute the cube id and shift the coordinates accordingly */
   const t8_dpyramid_cube_id_t cube_id =
@@ -302,7 +302,7 @@ t8_dpyramid_is_family (t8_dpyramid_t **fam)
 int
 t8_dpyramid_is_inside_root (const t8_dpyramid_t *p)
 {
-  return t8_dpyramid_compute_type_at_level (p, 0) == T8_DPYRAMID_ROOT_TPYE;
+  return t8_dpyramid_compute_type_at_level (p, 0) == T8_DPYRAMID_ROOT_TYPE;
 }
 
 void
@@ -416,11 +416,74 @@ t8_dpyramid_ancestor (const t8_dpyramid_t *pyra, const int level,
   anc->level = level;
 }
 
+
+static t8_dpyramid_coord_t
+t8_dpyramid_type_coord(t8_dpyramid_coord_t coord1, t8_dpyramid_coord_t coord2, int typebit)
+{
+  t8_dpyramid_type_t return_type;
+  return_type = (~coord1 & coord2);
+  t8_debugf("coord1 <= coord2: %p\n",return_type);
+  t8_debugf("typebit: %d\n",typebit);
+  if (typebit) {
+    return_type |= ((coord1 & coord2) | (~coord1 & ~coord2)) & (1<<T8_DPYRAMID_MAXLEVEL - 1);
+  }
+  t8_debugf("include typebit info of descendant: %p\n",return_type);
+  return_type = return_type<<1+typebit;
+  t8_debugf("shift and include orginal typebit: %p\n",return_type);
+  return return_type;
+}
+
 static int
 t8_dpyramid_nca_level (const t8_dpyramid_t *pyra1, const t8_dpyramid_t *pyra2)
 {
-  SC_ABORT ("not implemented\n");
-  return 0;
+  int typebit;
+  t8_dpyramid_coord_t xor_combine, xor_temp, type1, type2, coordsleft, coordsright;
+  xor_combine = 0;
+
+  t8_dpyramid_debug_print(pyra1);
+  t8_dpyramid_debug_print(pyra2);
+
+  for(int i=0; i <T8_DPYRAMID_DIM; i++){
+    xor_temp = pyra1->coords[i] ^ pyra2->coords[i];
+    xor_combine |= xor_temp;
+  }
+
+  for(int e = 0; e < T8_DPYRAMID_NUM_EQUATIONS; e++){
+    coordsleft = pyra1->coords[t8_dpyramid_type_edge_equations[e][0]];
+    coordsright = pyra1->coords[t8_dpyramid_type_edge_equations[e][1]];
+    typebit = (pyra1->type & (1<<e))>>e;
+    type1 = t8_dpyramid_type_coord(coordsleft, coordsright, typebit);
+ 
+    t8_debugf("first pyra, typebit: %p\n",typebit);
+    t8_debugf("first pyra, coordsl: %p\n",coordsleft);
+    t8_debugf("first pyra, coordsr: %p\n",coordsright);
+    t8_debugf("first pyra, type   : %p\n",type1);
+
+
+    coordsleft = pyra2->coords[t8_dpyramid_type_edge_equations[e][0]];
+    coordsright = pyra2->coords[t8_dpyramid_type_edge_equations[e][1]];
+    typebit = (pyra2->type & (1<<e))>>e;
+    type2 = t8_dpyramid_type_coord(coordsleft, coordsright, typebit);
+
+    t8_debugf("second pyra, typebit: %p\n",typebit);
+    t8_debugf("second pyra, coordsl: %p\n",coordsleft);
+    t8_debugf("second pyra, coordsr: %p\n",coordsright);
+    t8_debugf("second pyra, type   : %p\n",type2);
+
+
+    xor_temp = type1 ^ type2;
+    t8_debugf("xor_temp: %p\n",xor_temp);
+    xor_combine |= xor_temp;
+    t8_debugf("xor_combine: %p\n",xor_combine);
+  }
+  
+  int level = SC_LOG2_32(xor_combine) + 1;
+  t8_debugf("level: %d\n", level);
+  level = SC_MAX(level, pyra1->level);
+  level = SC_MAX(level, pyra2->level);
+  t8_debugf("maxlevel: %d\n", level);
+
+  return T8_DPYRAMID_MAXLEVEL - level;
 }
 
 void

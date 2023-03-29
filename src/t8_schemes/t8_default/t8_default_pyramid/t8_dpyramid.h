@@ -21,6 +21,8 @@
 #define T8_DPYRAMID_PYRA_FACES 5
 #define T8_DPYRAMID_TET_FACES 4
 
+#define T8_DPYRAMID_MAX_FACE_CHILDREN 4
+
 /** The number of corners of a pyramid */
 #define T8_DPYRAMID_MAX_CORNERS 5
 #define T8_DPYRAMID_PYRA_CORNERS 5
@@ -43,7 +45,7 @@
 #define T8_DPYRAMID_NUM_TYPES 4
 
 /** The type of the root pyramid*/
-#define T8_DPYRAMID_ROOT_TPYE 0
+#define T8_DPYRAMID_ROOT_TYPE 0
 
 /** The first type of pyramids in the shape of a pyramid*/
 #define T8_DPYRAMID_FIRST_PYRA_TYPE 0
