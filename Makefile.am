@@ -112,7 +112,7 @@ distclean-local:
 ## maintainer-clean should delete it. However maintainer-clean should not delete
 ## anything that needs to exist in order to run ‘./configure && make’.
 maintainer-clean-local:
-	rm -rf doxygen
+	rm -rf doc/{html,latex,man,*.doxygen.tags}
 
 # We are using a README.md and not a README file. However, autotools forces us
 # to use a README file. With this rule, we trick autotools in thinking that we
@@ -120,10 +120,7 @@ maintainer-clean-local:
 README: README.md
 	pandoc -f markdown -t plain --wrap=none $< -o $@
 
-doxygen: Doxyfile
-	doxygen
-
-gtest: 
+gtest:
 	-make check
 	@grep "gtest" test/t8_gtest_main.log
 	@echo -e "\e[32m============================================================================\e[0m"
@@ -133,6 +130,8 @@ gtest:
 	@echo -e "\e[32m# PASS:"
 	@grep -o -i OK test/t8_gtest_main.log | wc -l
 	@echo -e "\e[32m============================================================================\e[0m"	
-	
+
+doxygen-local: doc/Doxyfile
+	cd doc && doxygen Doxyfile
 
 .PHONY: gtest doxygen
