@@ -124,8 +124,7 @@ src_libt8_la_SOURCES = \
 src_libt8_la_CPPFLAGS = $(AM_CPPFLAGS) $(T8_CPPFLAGS)
 src_libt8_la_LDFLAGS = -release $(VERSION)
 src_libt8_la_LIBADD = @T8_P4EST_LDADD@ @T8_SC_LDADD@
-LDADD += @top_builddir@/src/libt8.la \
-        @T8_P4EST_LDADD@ @T8_SC_LDADD@
+LDADD += src/libt8.la @T8_P4EST_LDADD@ @T8_SC_LDADD@
 EXTRA_src_libt8_la_DEPENDENCIES = @T8_P4EST_LDADD@ @T8_SC_LDADD@
 
 nodist_include_HEADERS += $(libt8_generated_headers)
@@ -146,5 +145,4 @@ dist_defaulttetinclude_HEADERS = $(libt8_installed_headers_default_tet)
 dist_defaultprisminclude_HEADERS = $(libt8_installed_headers_default_prism)
 dist_defaultpyramidinclude_HEADERS = $(libt8_installed_headers_default_pyramid)
 
-AM_CPPFLAGS += -I@top_srcdir@/src \
-        @T8_SC_CPPFLAGS@ @T8_P4EST_CPPFLAGS@
+AM_CPPFLAGS += -I@top_srcdir@/src @T8_SC_CPPFLAGS@ @T8_P4EST_CPPFLAGS@
