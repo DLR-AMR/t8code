@@ -270,47 +270,8 @@ t8_default_scheme_hex_c::t8_element_children_at_face (const t8_element_t
    *     x ---- x
    *        f_4
    */
-
-  /* TODO: Think about a short and easy bitwise formula. */
-  switch (face) {
-  case 0:
-    child_ids[0] = 0;
-    child_ids[1] = 2;
-    child_ids[2] = 4;
-    child_ids[3] = 6;
-    break;
-  case 1:
-    child_ids[0] = 1;
-    child_ids[1] = 3;
-    child_ids[2] = 5;
-    child_ids[3] = 7;
-    break;
-  case 2:
-    child_ids[0] = 0;
-    child_ids[1] = 1;
-    child_ids[2] = 4;
-    child_ids[3] = 5;
-    break;
-  case 3:
-    child_ids[0] = 2;
-    child_ids[1] = 3;
-    child_ids[2] = 6;
-    child_ids[3] = 7;
-    break;
-  case 4:
-    child_ids[0] = 0;
-    child_ids[1] = 1;
-    child_ids[2] = 2;
-    child_ids[3] = 3;
-    break;
-  case 5:
-    child_ids[0] = 4;
-    child_ids[1] = 5;
-    child_ids[2] = 6;
-    child_ids[3] = 7;
-    break;
-  default:
-    SC_ABORT_NOT_REACHED ();
+  for (i = 0; i < P8EST_HALF; ++i) {
+    child_ids[i] = p8est_face_corners[face][i];
   }
 
   /* Create the four face children */
