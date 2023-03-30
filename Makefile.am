@@ -51,10 +51,7 @@ dist_t8aclocal_DATA = config/t8_include.m4 \
 t8datadir = $(datadir)/t8code/data
 
 # setup test environment
-if T8_MPIRUN
-LOG_COMPILER = @T8_MPIRUN@
-AM_LOG_FLAGS = @T8_MPI_TEST_FLAGS@
-endif
+LOG_COMPILER = @T8_MPIRUN@ @T8_MPI_TEST_FLAGS@
 
 # recurse only into subpackages
 SUBDIRS = @T8_SC_SUBDIR@ @T8_P4EST_SUBDIR@

@@ -125,7 +125,9 @@ src_libt8_la_SOURCES = \
 	$(libt8_internal_headers) \
 	$(libt8_compiled_sources)
 src_libt8_la_CPPFLAGS = $(AM_CPPFLAGS) $(T8_CPPFLAGS)
-src_libt8_la_LDFLAGS = -release $(VERSION)
+## This is the official API versioning scheme of libtool.  Please see:
+## Read https://www.gnu.org/software/libtool/manual/libtool.html#Versioning
+src_libt8_la_LDFLAGS = -release $(VERSION) -version-info 2:0:0
 src_libt8_la_LIBADD = @T8_P4EST_LDADD@ @T8_SC_LDADD@
 LDADD += src/libt8.la @T8_P4EST_LDADD@ @T8_SC_LDADD@
 EXTRA_src_libt8_la_DEPENDENCIES = @T8_P4EST_LDADD@ @T8_SC_LDADD@
