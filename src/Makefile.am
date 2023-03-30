@@ -117,6 +117,7 @@ libt8_compiled_sources = \
 # this variable is used for headers that are not publicly installed
 T8_CPPFLAGS =
 
+justlibs-local: src/libt8.la
 lib_LTLIBRARIES += src/libt8.la
 src_libt8_la_SOURCES = \
 	$(libt8_internal_headers) \
