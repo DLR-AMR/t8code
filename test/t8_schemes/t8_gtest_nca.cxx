@@ -28,6 +28,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include "t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.h"
 
 /* *INDENT-OFF* */
 class nca:public testing::TestWithParam < t8_eclass > {
@@ -161,7 +162,7 @@ static void
 t8_recursive_nca_check (t8_element_t *check_nca, t8_element_t *desc_a,
                         t8_element_t *desc_b, t8_element_t *check,
                         t8_element_t *parent_a, t8_element_t *parent_b,
-                        const int max_lvl, t8_eclass_scheme_c *ts)
+                        const int max_lvl, t8_eclass_scheme_c *ts, t8_eclass_t eclass)
 {
   T8_ASSERT (max_lvl <= ts->t8_element_maxlevel () - 1);
   /* compute the level of the parents */
@@ -183,6 +184,14 @@ t8_recursive_nca_check (t8_element_t *check_nca, t8_element_t *desc_a,
     for (j = 0; j < num_children_b; j++) {
       ts->t8_element_child (parent_b, j, desc_b);
       ts->t8_element_nca (desc_a, desc_b, check);
+
+      t8_debugf("[check_recursive 2] i:%d, j:%d\n",i,j);
+      if(eclass == T8_ECLASS_PYRAMID){
+        t8_dpyramid_debug_print((t8_dpyramid_t *) desc_a);
+        t8_dpyramid_debug_print((t8_dpyramid_t *) desc_b);
+        t8_dpyramid_debug_print((t8_dpyramid_t *) check);
+        t8_dpyramid_debug_print((t8_dpyramid_t *) check_nca);
+      }      
 
       if (ts->t8_element_compare (check_nca, check) != 0) {
         level_a = ts->t8_element_level (desc_a);
@@ -218,7 +227,7 @@ t8_recursive_nca_check (t8_element_t *check_nca, t8_element_t *desc_a,
       }
       /* parent_a stays fixed, b-part goes one level deeper into the recursion */
       t8_recursive_nca_check (check_nca, desc_a, parent_b, check, parent_a,
-                              desc_b, max_lvl, ts);
+                              desc_b, max_lvl, ts, eclass);
       /* We reused parent_b, hence we have to recompute the correct parent */
       ts->t8_element_parent (desc_b, parent_b);
     }
@@ -250,9 +259,10 @@ TEST_P (nca, recursive_check)
     for (i = 0; i < num_children - 1; i++) {
       ts->t8_element_child (correct_nca, i, parent_a);
       for (j = i + 1; j < num_children; j++) {
+        t8_debugf("[check_recursive] i:%d, j:%d\n",i,j);
         ts->t8_element_child (correct_nca, j, parent_b);
         t8_recursive_nca_check (correct_nca, desc_a, desc_b, check, parent_a,
-                                parent_b, recursion_depth, ts);
+                                parent_b, recursion_depth, ts, eclass);
       }
     }
   }
@@ -303,7 +313,7 @@ TEST_P (nca, resursive_check_higher_level)
           ts->t8_element_child (correct_nca_high_level, l, parent_b);
           if (k != l) {
             t8_recursive_nca_check (correct_nca_high_level, desc_a, desc_b,
-                                    check, parent_a, parent_b, i, ts);
+                                    check, parent_a, parent_b, i, ts, eclass);
           }
           else {
             ts->t8_element_nca (parent_a, parent_b, check);

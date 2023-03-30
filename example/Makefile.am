@@ -6,6 +6,7 @@ include example/advect/Makefile.am
 
 include example/IO/Makefile.am
 
+include example/schemes/Makefile.am
 include example/forest/Makefile.am
 include example/cmesh/Makefile.am
 include example/geometry/Makefile.am

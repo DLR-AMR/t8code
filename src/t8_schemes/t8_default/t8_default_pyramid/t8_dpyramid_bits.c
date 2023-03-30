@@ -188,6 +188,10 @@ t8_dpyramid_compare (const t8_dpyramid_t *p1, const t8_dpyramid_t *p2)
     /* The linear ids are the same, the pyramid with the smaller level
      * is considered smaller */
     if (p1->level == p2->level) {
+      t8_dpyramid_debug_print(p1);
+      t8_debugf("linear_id: %d \n", id1);
+      t8_dpyramid_debug_print(p2);
+      t8_debugf("linear_id: %d \n", id2);
       T8_ASSERT (p1->type == p2->type);
       return 0;
     }
@@ -477,13 +481,12 @@ t8_dpyramid_nca_level (const t8_dpyramid_t *pyra1, const t8_dpyramid_t *pyra2)
     t8_debugf("xor_combine: %p\n",xor_combine);
   }
   
-  int level = SC_LOG2_32(xor_combine) + 1;
+  int level = T8_DPYRAMID_MAXLEVEL - SC_LOG2_32(xor_combine) - 1;
   t8_debugf("level: %d\n", level);
-  level = SC_MAX(level, pyra1->level);
-  level = SC_MAX(level, pyra2->level);
+  level = SC_MIN(level, SC_MIN(pyra1->level,pyra2->level));
   t8_debugf("maxlevel: %d\n", level);
 
-  return T8_DPYRAMID_MAXLEVEL - level;
+  return level;
 }
 
 void
@@ -560,17 +563,23 @@ t8_linearidx_t
 t8_dpyramid_linear_id_recursive (t8_dpyramid_t *p, const t8_linearidx_t id,
                                  const int level_diff)
 {
+  t8_debugf("recursive linear id:\n");
+  t8_dpyramid_debug_print(p);
+  t8_debugf("id: %d, level_diff:%d\n", id, level_diff);
   if (p->level == 0)
     return id;
 
   const int           childid = t8_dpyramid_child_id (p);
+  t8_debugf("childid: %d\n", childid);
   t8_dpyramid_parent (p, p);
   t8_linearidx_t      parent_id = 0;
   for (int ichild = 0; ichild < childid; ichild++) {
     /* p is now parent, so compute child to get sibling of original p */
-    parent_id +=
+    t8_linearidx_t num_child_descendants = 
       t8_dpyramid_num_descendants_of_child_at_leveldiff (p, ichild,
-                                                         level_diff);
+                                                         level_diff + 1);
+    t8_debugf("ichild: %d, num_child_descendants: %d \n", ichild, num_child_descendants);
+    parent_id += num_child_descendants;
   }
   parent_id += id;
   return t8_dpyramid_linear_id_recursive (p, parent_id, level_diff + 1);
@@ -579,10 +588,14 @@ t8_dpyramid_linear_id_recursive (t8_dpyramid_t *p, const t8_linearidx_t id,
 t8_linearidx_t
 t8_dpyramid_linear_id (const t8_dpyramid_t *p, const int level)
 {
+  t8_debugf("Calculate linear id for level: %d\n", level);
+  t8_dpyramid_debug_print(p);
   t8_dpyramid_t       first_desc;
   t8_dpyramid_first_descendant (p, &first_desc, level);
   /* Maybe we can also input p into recursice function and calculate id directly for first desc */
-  return t8_dpyramid_linear_id_recursive (&first_desc, 0, 0);
+  t8_linearidx_t id = t8_dpyramid_linear_id_recursive (&first_desc, 0, 0);
+  t8_debugf("Finished calculating linear id: %d\n");
+  return id;
 }
 
 /* Vertex information */
