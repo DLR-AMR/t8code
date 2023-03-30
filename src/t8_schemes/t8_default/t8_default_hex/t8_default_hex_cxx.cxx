@@ -622,15 +622,11 @@ void
 t8_default_scheme_hex_c::t8_element_successor (const t8_element_t *elem1,
                                                t8_element_t *elem2, int level)
 {
-  t8_linearidx_t      id;
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
-  T8_ASSERT (0 <= level && level <= HEX_LINEAR_MAXLEVEL);
-
-  /* TODO: we have a successor function in p4est for HEX_REFINE_MAXLEVEL */
-  id = p8est_quadrant_linear_id ((const p8est_quadrant_t *) elem1, level);
-  T8_ASSERT (id + 1 < ((t8_linearidx_t) 1) << P8EST_DIM * level);
-  p8est_quadrant_set_morton ((p8est_quadrant_t *) elem2, level, id + 1);
+  T8_ASSERT (0 <= level && level <= HEX_REFINE_MAXLEVEL);
+  p8est_quadrant_successor ((p8est_quadrant_t *) elem1,
+                            (p8est_quadrant_t *) elem2);
 }
 
 void
