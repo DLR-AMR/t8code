@@ -20,6 +20,7 @@ test_t8_gtest_main_SOURCES = \
   test/t8_schemes/t8_gtest_init_linear_id.cxx \
   test/t8_gtest_basics.cxx \
   test/t8_schemes/t8_gtest_ancestor.cxx \
+  test/t8_IO/t8_gtest_IO_basic.cxx \
   test/t8_cmesh/t8_gtest_hypercube.cxx \
   test/t8_cmesh/t8_gtest_cmesh_copy.cxx \
   test/t8_schemes/t8_gtest_element_count_leafs.cxx \
