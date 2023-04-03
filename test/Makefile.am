@@ -13,7 +13,7 @@ test_t8_gtest_cmesh_bcast_SOURCES = \
 
 test_t8_gtest_schemes_nca_SOURCES = \
   test/t8_gtest_main.cxx \
-  test/t8_schemes/t8_gtest_nca.cxx \
+  test/t8_schemes/t8_gtest_nca.cxx
 
 test_t8_gtest_main_SOURCES = \
   test/t8_gtest_main.cxx \
