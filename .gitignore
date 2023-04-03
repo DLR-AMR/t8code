@@ -4,6 +4,7 @@ build-aux/
 
 .deps/
 .libs/
+.vscode/
 
 Makefile
 Makefile.in

@@ -7,7 +7,8 @@
                 "/home/fuss_ja/git/t8code_debug/src/*",
                 "/home/fuss_ja/git/t8code_debug/sc/src/*",
                 "/home/fuss_ja/git/t8code_debug/p4est/src/*",
-                "/usr/include/x86_64-linux-gnu/mpich"
+                "/usr/include/x86_64-linux-gnu/mpich",
+                "/home/fuss_ja/cmake_install/**"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
