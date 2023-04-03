@@ -3,11 +3,20 @@
 #Included from toplevel directory
 
 t8code_googletest_programs = \
+  test/t8_gtest_cmesh_bcast \
+  test/t8_gtest_schemes_nca \
   test/t8_gtest_main
+
+test_t8_gtest_cmesh_bcast_SOURCES = \
+  test/t8_gtest_main.cxx \
+  test/t8_cmesh/t8_gtest_bcast.cxx
+
+test_t8_gtest_schemes_nca_SOURCES = \
+  test/t8_gtest_main.cxx \
+  test/t8_schemes/t8_gtest_nca.cxx \
 
 test_t8_gtest_main_SOURCES = \
   test/t8_gtest_main.cxx \
-  test/t8_cmesh/t8_gtest_bcast.cxx \
   test/t8_schemes/t8_gtest_nca.cxx \
   test/t8_schemes/t8_gtest_pyra_connectivity.cxx \
   test/t8_schemes/t8_gtest_pyra_face_neigh.cxx \
