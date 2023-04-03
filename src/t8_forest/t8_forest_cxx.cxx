@@ -223,19 +223,25 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
 }
 
 void
-t8_forest_element_from_ref_coord (t8_forest_t forest, t8_locidx_t ltreeid,
-                                  const t8_element_t *element,
-                                  const double *ref_coord, double *coords_out,
-                                  sc_array_t *stretch_factors)
+t8_forest_element_from_ref_coords (t8_forest_t forest, t8_locidx_t ltreeid,
+                                   const t8_element_t *element,
+                                   const double *ref_coords,
+                                   double *coords_out,
+                                   sc_array_t *stretch_factors)
 {
-  //call element_ref_coord
+  double              tree_ref_coords[3] = { 0 };
+  const t8_eclass_t   tree_class = t8_forest_get_tree_class (forest, ltreeid);
+  const t8_eclass_scheme_c *scheme =
+    t8_forest_get_eclass_scheme (forest, tree_class);
+  scheme->t8_element_reference_coords (element, ref_coords, NULL,
+                                       tree_ref_coords);
   if (stretch_factors != NULL) {
     //get element_midpoint
     //stretch ref_coords by factor stored in array
   }
   const t8_cmesh_t    cmesh = t8_forest_get_cmesh (forest);
   const t8_gloidx_t   gtreeid = t8_forest_global_tree_id (forest, ltreeid);
-  t8_geometry_evaluate (cmesh, gtreeid, ref_coord, coords_out);
+  t8_geometry_evaluate (cmesh, gtreeid, tree_ref_coords, coords_out);
 }
 
 /* Compute the diameter of an element. */

@@ -805,7 +805,8 @@ t8_default_scheme_quad_c::t8_element_reference_coords (const t8_element_t *t,
   const p4est_quadrant_t *q1 = (const p4est_quadrant_t *) t;
   const double        x_lower = q1->x / (double) P4EST_ROOT_LEN;
   const double        y_lower = q1->y / (double) P4EST_ROOT_LEN;
-  const double        len = P4EST_QUADRANT_LEN (q1->level);
+  const double        len =
+    P4EST_QUADRANT_LEN (q1->level) / (double) P4EST_ROOT_LEN;
 
   coords_out[0] = x_lower + ref_coords[0] * len;
   coords_out[1] = y_lower + ref_coords[1] * len;

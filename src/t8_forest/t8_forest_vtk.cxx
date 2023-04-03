@@ -125,13 +125,81 @@ typedef int         (*t8_forest_vtk_cell_data_kernel) (t8_forest_t forest,
                                                        modus);
 
 #if T8_WITH_VTK
-/* lookup table for number of nodes for curved eclasses. */
+#define T8_FOREST_VTK_QUADRATIC_ELEMENT_MAX_CORNERS 20
+/** Lookup table for number of nodes for curved eclasses. */
 const int           t8_curved_eclass_num_nodes[T8_ECLASS_COUNT] =
   { 1, 3, 8, 6, 20, 10, 15, 13 };
 
-/* lookup table for vtk types of curved elements */
+/** Lookup table for vtk types of curved elements */
 const int           t8_curved_eclass_vtk_type[T8_ECLASS_COUNT] =
   { 1, 21, 23, 22, 25, 24, 26, 27 };
+
+/** Map element corners to element reference coordinates */
+const double        t8_forest_vtk_point_to_element_ref_coords[T8_ECLASS_COUNT]
+  [T8_ECLASS_MAX_CORNERS][3] = {
+  {{0, 0, 0}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}},        /* T8_ECLASS_VERTEX */
+  {{0, 0, 0}, {1, 0, 0}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}},   /* T8_ECLASS_LINE */
+  {{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}}, /* T8_ECLASS_QUAD */
+  {{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}},      /* T8_ECLASS_TRIANGLE */
+  {{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}}, /* T8_ECLASS_TET */
+  {{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1}, {1, 1, 0}, {1, 0, 1}, {0, 1, 1}, {1, 1, 1}},     /* T8_ECLASS_HEX */
+  {{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1}, {1, 1, 0}, {1, 0, 1}, {-1, -1, -1}, {-1, -1, -1}},       /* T8_ECLASS_PRISM */
+  {{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1}, {1, 1, 0}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}}     /* T8_ECLASS_PYRAMID */
+};
+
+const double
+         t8_forest_vtk_point_to_quadratic_element_ref_coords[T8_ECLASS_COUNT]
+  [T8_FOREST_VTK_QUADRATIC_ELEMENT_MAX_CORNERS][3] = {
+  {                             /* T8_ECLASS_VERTEX */
+   {0, 0, 0}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1},
+   {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1},
+   {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1},
+   {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}
+   },
+  {                             /* T8_ECLASS_LINE */
+   {0, 0, 0}, {1, 0, 0}, {0.5, 0, 0}, {-1, -1, -1}, {-1, -1, -1},
+   {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1},
+   {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1},
+   {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}
+   },
+  {                             /* T8_ECLASS_QUAD */
+   {0, 0, 0}, {1, 0, 0}, {1, 1, 0}, {0, 1, 0}, {0.5, 0, 0},
+   {1, 0.5, 0}, {0.5, 1, 0}, {0, 0.5, 0}, {-1, -1, -1}, {-1, -1, -1},
+   {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1},
+   {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}
+   },
+  {                             /* T8_ECLASS_TRIANGLE */
+   {0, 0, 0}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1},
+   {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1},
+   {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1},
+   {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}
+   },
+  {                             /* T8_ECLASS_TET */
+   {0, 0, 0}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1},
+   {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1},
+   {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1},
+   {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}
+   },
+  {                             /* T8_ECLASS_HEX */
+   {0, 0, 0}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1},
+   {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1},
+   {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1},
+   {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}
+   },
+  {                             /* T8_ECLASS_PRISM */
+   {0, 0, 0}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1},
+   {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1},
+   {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1},
+   {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}
+   },
+  {                             /* T8_ECLASS_PYRAMID */
+   {0, 0, 0}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1},
+   {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1},
+   {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1},
+   {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}
+   }
+};
+
 #endif
 
 /* 
@@ -150,6 +218,24 @@ t8_get_number_of_vtk_nodes (t8_element_shape_t eclass, int curved_flag)
 }
 #endif
 
+#if T8_WITH_VTK
+static void
+t8_forest_vtk_get_element_nodes (t8_forest_t forest, t8_locidx_t ltreeid,
+                                 const t8_element_t *element,
+                                 const int vertex, double *out_coords,
+                                 sc_array_t *stretch_factors)
+{
+  const t8_eclass_t   tree_class = t8_forest_get_tree_class (forest, ltreeid);
+  const t8_eclass_scheme_c *scheme =
+    t8_forest_get_eclass_scheme (forest, tree_class);
+  const t8_element_shape_t element_shape = scheme->t8_element_shape (element);
+  const double       *ref_coords =
+    t8_forest_vtk_point_to_quadratic_element_ref_coords[element_shape]
+    [vertex];
+  t8_forest_element_from_ref_coords (forest, ltreeid, element, ref_coords,
+                                     out_coords, stretch_factors);
+}
+
 /* If we want to write curved elements, we need to calculate 
  * the reference coordinates. For the vertices(end points)
  * of the elements, we can use t8_element_vertex_reference_coords 
@@ -161,7 +247,7 @@ t8_get_number_of_vtk_nodes (t8_element_shape_t eclass, int curved_flag)
  * formulas. For more information look into the vtk documentation.
  * TODO: Add Pyramids when they are merged into the dev branch.
  * */
-#if T8_WITH_VTK
+#if 0
 static void
 t8_curved_element_get_reference_node_coords (const t8_element_t *elem,
                                              t8_element_shape_t eclass,
@@ -333,6 +419,7 @@ t8_curved_element_get_reference_node_coords (const t8_element_t *elem,
   }
 }
 #endif
+#endif
 
 int
 t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix,
@@ -354,12 +441,10 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix,
   t8_locidx_t         ielement; /* The iterator over elements in a tree. */
   t8_locidx_t         itree, ivertex;
   double              coordinates[3];
-  double              vertex_coords[3] = { 0, 0, 0 };
   int                 elem_id = 0;
   t8_locidx_t         num_elements;
   int                 freturn = 0;
   t8_gloidx_t         gtreeid;
-  t8_cmesh_t          cmesh;
   int                 num_node;
 
 /* Since we want to use different element types and a points Array and cellArray 
@@ -421,7 +506,6 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix,
   vtkDoubleArray    **dataArrays;
   dataArrays = T8_ALLOC (vtkDoubleArray *, num_data);
 
-  cmesh = t8_forest_get_cmesh (forest);
 /* We iterate over all local trees*/
   for (itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {
 /* 
@@ -511,22 +595,9 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix,
 
       /* For each element we iterate over all points */
       for (ivertex = 0; ivertex < num_node; ivertex++, point_id++) {
-        /* Compute the vertex coordinates inside [0,1]^dim reference cube. */
-        if (curved_flag) {
-          t8_curved_element_get_reference_node_coords (element, element_shape,
-                                                       scheme, ivertex,
-                                                       vertex_coords);
-        }
-        else {
-          scheme->t8_element_vertex_reference_coords (element,
-                                                      t8_eclass_vtk_corner_number
-                                                      [element_shape]
-                                                      [ivertex],
-                                                      vertex_coords);
-        }
-
-        /* Evaluate the geometry */
-        t8_geometry_evaluate (cmesh, gtreeid, vertex_coords, coordinates);
+        /* Compute the vertex coordinates inside the domain. */
+        t8_forest_vtk_get_element_nodes (forest, itree, element, ivertex,
+                                         coordinates, NULL);
 
         /* Insert point in the points array */
         points->InsertNextPoint (coordinates[0], coordinates[1],
