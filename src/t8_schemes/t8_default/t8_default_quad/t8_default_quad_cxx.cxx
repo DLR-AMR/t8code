@@ -794,6 +794,24 @@ t8_default_scheme_quad_c::t8_element_vertex_reference_coords (const
 }
 
 void
+t8_default_scheme_quad_c::t8_element_reference_coords (const t8_element_t *t,
+                                                       const double
+                                                       *ref_coords,
+                                                       const void *user_data,
+                                                       double *coords_out)
+  const
+{
+  T8_ASSERT (t8_element_is_valid (t));
+  const p4est_quadrant_t *q1 = (const p4est_quadrant_t *) t;
+  const double        x_lower = q1->x / (double) P4EST_ROOT_LEN;
+  const double        y_lower = q1->y / (double) P4EST_ROOT_LEN;
+  const double        len = P4EST_QUADRANT_LEN (q1->level);
+
+  coords_out[0] = x_lower + ref_coords[0] * len;
+  coords_out[1] = y_lower + ref_coords[1] * len;
+}
+
+void
 t8_default_scheme_quad_c::t8_element_new (int length, t8_element_t **elem) const
 {
   /* allocate memory for a quad */

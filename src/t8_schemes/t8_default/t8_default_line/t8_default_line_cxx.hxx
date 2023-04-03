@@ -585,6 +585,20 @@ public:
                                                           double coords[])
     const;
 
+  /** Convert a point in the reference space of an element to a point in the
+   *  reference space of the tree.
+   * 
+   * \param [in] t            The element.
+   * \param [in] coords_input The coordinates of the point in the reference space of the element.
+   * \param [in] user_data    User data.
+   * \param [out] coords_out  The coordinates of the point in the reference space of the tree.
+   */
+  virtual void        t8_element_reference_coords (const t8_element_t *t,
+                                                   const double *ref_coords,
+                                                   const void *user_data,
+                                                   double *out_coords)
+    const;
+
   /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
    * Returns false otherwise.
    * * \return           0, because lines refine regularly

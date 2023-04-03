@@ -554,6 +554,17 @@ t8_default_scheme_tet_c::t8_element_vertex_reference_coords (const
   t8_dtet_compute_ref_coords ((const t8_default_tet_t *) t, vertex, coords);
 }
 
+void
+t8_default_scheme_tet_c::t8_element_reference_coords (const t8_element_t *t,
+                                                      const double
+                                                      *ref_coords,
+                                                      const void *user_data,
+                                                      double *coords_out)
+  const
+{
+  SC_ABORTF ("Not implemented\n");
+}
+
 /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
  * Returns false otherwise.
  */
