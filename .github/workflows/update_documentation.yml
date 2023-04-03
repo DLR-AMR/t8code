@@ -87,7 +87,7 @@ jobs:
         cd t8code-website/content
         rm -rf doc/dev/*
         mkdir -p doc/dev
-        cp -r ../../build_debug/doxygen/html/* doc/dev/
+        cp -r ../../doc/Doxyfile/* doc/dev/
     - name: Commit and push files
       run: |
         cd t8code-website
