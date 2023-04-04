@@ -59,6 +59,19 @@ test_t8_gtest_main_LDFLAGS = $(AM_LDFLAGS) -pthread
 test_t8_gtest_main_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)/thirdparty/googletest-mpi/ \
   -pthread \
   -std=c++11
+
+test_t8_gtest_cmesh_bcast_LDADD = $(LDADD) test/libgtest.la
+test_t8_gtest_cmesh_bcast_LDFLAGS = $(AM_LDFLAGS) -pthread
+test_t8_gtest_cmesh_bcast_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)/thirdparty/googletest-mpi/ \
+  -pthread \
+  -std=c++11
+
+test_t8_gtest_schemes_nca_LDADD = $(LDADD) test/libgtest.la
+test_t8_gtest_schemes_nca_LDFLAGS = $(AM_LDFLAGS) -pthread
+test_t8_gtest_schemes_nca_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)/thirdparty/googletest-mpi/ \
+  -pthread \
+  -std=c++11
+
 # If we did not configure t8code with MPI we need to build Googletest
 # without MPI support.
 if !T8_ENABLE_MPI
