@@ -21,7 +21,9 @@
 */
 
 /** \file t8_default_prism_cxx.hxx
- * The default implementation for prism.
+ * The default implementation for prisms. Interface between the
+ * \file t8_default_common_cxx.hxx definitions and the element type specific
+ * implementations in \file t8_dprism_bits.h
  */
 
 #ifndef T8_DEFAULT_PRISM_CXX_HXX

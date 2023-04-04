@@ -21,7 +21,9 @@
 */
 
 /** \file t8_default_tet_cxx.hxx
- * The default implementation for tetrahedra.
+ * The default implementation for tetrahedra. Interface between the
+ * \file t8_default_common_cxx.hxx definitions and the element type specific
+ * implementations in \file t8_dtet_bits.h
  */
 
 #ifndef T8_DEFAULT_TET_CXX_H

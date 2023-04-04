@@ -21,7 +21,9 @@
 */
 
 /** \file t8_default_vertex.h
- * The default implementation for vertex.
+ * The default implementation for vertices. Interface between the
+ * \file t8_default_common_cxx.hxx definitions and the element type specific
+ * implementations in \file t8_dvertex_bits.h
  */
 
 #ifndef T8_DEFAULT_VERTEX_CXX_H
