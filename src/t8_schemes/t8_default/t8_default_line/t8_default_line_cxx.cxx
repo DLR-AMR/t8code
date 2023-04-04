@@ -374,7 +374,9 @@ t8_default_scheme_line_c::t8_element_reference_coords (const t8_element_t *t,
                                                        double *out_coords)
   const
 {
-  SC_ABORTF ("Not implemented\n");
+  out_coords[0] = ((const t8_dline_t *) t)->x;
+  out_coords[0] +=
+    T8_DLINE_LEN (((const t8_dline_t *) t)->level) * ref_coords[0];
 }
 
 int
