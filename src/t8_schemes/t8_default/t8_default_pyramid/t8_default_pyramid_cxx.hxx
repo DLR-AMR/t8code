@@ -21,7 +21,9 @@
 */
 
 /** \file t8_default_pyramid_cxx.hxx
- * The default implementation for pyramid.
+ * The default implementation for pyramids. Interface between the
+ * \file t8_default_common_cxx.hxx definitions and the element type specific
+ * implementations in \file t8_dpyramid_bits.h
  */
 
 #ifndef T8_DEFAULT_PYRAMID_CXX_HXX

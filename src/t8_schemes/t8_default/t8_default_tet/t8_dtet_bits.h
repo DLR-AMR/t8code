@@ -21,7 +21,7 @@
 */
 
 /** \file t8_dtet_bits.h
- * TODO: Document this.
+ * Definition if tet-specific functions.
  * TODO: Run make doxygen and grep for files.
  *       Also document all arguments of functions.
  * TODO: Group the dtet_is functions together.

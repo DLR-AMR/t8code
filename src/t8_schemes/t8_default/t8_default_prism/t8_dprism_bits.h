@@ -21,6 +21,7 @@
 */
 
 /** \file t8_dprism_bits.h
+ * Definition if prism-specific functions.
  */
 
 #ifndef T8_DPRISM_BITS_H

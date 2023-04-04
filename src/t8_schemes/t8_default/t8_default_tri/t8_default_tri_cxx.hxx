@@ -21,7 +21,9 @@
 */
 
 /** \file t8_default_tri.h
- * The default implementation for triangles.
+ * The default implementation for triangles. Interface between the
+ * \file t8_default_common_cxx.hxx definitions and the element type specific
+ * implementations in \file t8_dtri_bits.h
  */
 
 #ifndef T8_DEFAULT_TRI_CXX_H

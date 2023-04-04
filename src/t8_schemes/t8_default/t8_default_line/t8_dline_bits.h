@@ -21,6 +21,7 @@
 */
 
 /** \file t8_dline_bits.h
+ * Definition if line-specific functions.
  */
 
 #ifndef T8_DLINE_BITS_H

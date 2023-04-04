@@ -21,7 +21,9 @@
 */
 
 /** \file t8_default_lines.h
- * The default implementation for lines.
+ * The default implementation for lines. Interface between the
+ * \file t8_default_common_cxx.hxx definitions and the element type specific
+ * implementations in \file t8_dline_bits.h
  */
 
 #ifndef T8_DEFAULT_LINE_CXX_HXX
