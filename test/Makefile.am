@@ -217,7 +217,7 @@ test_t8_schemes_t8_gtest_pyra_face_neigh_CPPFLAGS = $(target_cpp_flags)
 
 test_t8_geometry_t8_gtest_geometry_occ_LDADD = $(target_ld_add)
 test_t8_geometry_t8_gtest_geometry_occ_LDFLAGS = $(target_ld_flags)
-test_t8_geometry_t8_gtest_geometry_occ_CPPFLAGS = $$(target_cpp_flags)
+test_t8_geometry_t8_gtest_geometry_occ_CPPFLAGS = $(target_cpp_flags)
 
 test_t8_gtest_eclass_LDADD = $(target_ld_add)
 test_t8_gtest_eclass_LDFLAGS = $(target_ld_flags)
