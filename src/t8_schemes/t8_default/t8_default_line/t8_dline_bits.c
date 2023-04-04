@@ -349,6 +349,14 @@ t8_dline_vertex_ref_coords (const t8_dline_t *elem, const int vertex,
   coordinates[0] = coords_int / (double) T8_DLINE_ROOT_LEN;
 }
 
+void
+t8_dline_reference_coords (const t8_dline_t *t, const double *ref_coords,
+                           double *out_coords)
+{
+  out_coords[0] = t->x;
+  out_coords[0] += T8_DLINE_LEN (t->level) * ref_coords[0];
+}
+
 t8_linearidx_t
 t8_dline_linear_id (const t8_dline_t *elem, int level)
 {
