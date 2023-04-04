@@ -197,7 +197,7 @@ target_cpp_flags = $(AM_CPPFLAGS) -I$(top_srcdir)/thirdparty/googletest-mpi/ \
   -pthread \
   -std=c++11
 #flags to add when we compile with mpi
-target_mpi_cpp_flags = $(target_mpi_cpp_flags)
+target_mpi_cpp_flags = -DGTEST_HAS_MPI=0
 
 test_t8_gtest_cmesh_bcast_LDADD = $(target_ld_add)
 test_t8_gtest_cmesh_bcast_LDFLAGS = $(target_ld_flags)
