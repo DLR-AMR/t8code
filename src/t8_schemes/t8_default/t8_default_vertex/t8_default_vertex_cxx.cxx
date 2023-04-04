@@ -330,7 +330,10 @@ t8_default_scheme_vertex_c::t8_element_reference_coords (const t8_element_t
                                                          double *out_coords)
   const
 {
-  SC_ABORTF ("Not implemented\n");
+  T8_ASSERT (t8_element_is_valid (t));
+  T8_ASSERT (ref_coords != NULL);
+  T8_ASSERT (abs (ref_coords[0]) <= T8_PRECISION_EPS);
+  out_coords[0];
 }
 
 #ifdef T8_ENABLE_DEBUG
