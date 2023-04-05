@@ -134,21 +134,12 @@ const int           t8_curved_eclass_num_nodes[T8_ECLASS_COUNT] =
 const int           t8_curved_eclass_vtk_type[T8_ECLASS_COUNT] =
   { 1, 21, 23, 22, 25, 24, 26, 27 };
 
-/** Map element corners to element reference coordinates */
+/** Map vtk element corners to element reference coordinates. The reference
+ * coordinates are defined in such a way, that the linear vtk corners are listed
+ * first and then the curved coords. This way, this array can be used for linear
+ * vtk elements as well as quadratic vtk elements.
+ */
 const double        t8_forest_vtk_point_to_element_ref_coords[T8_ECLASS_COUNT]
-  [T8_ECLASS_MAX_CORNERS][3] = {
-  {{0, 0, 0}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}},        /* T8_ECLASS_VERTEX */
-  {{0, 0, 0}, {1, 0, 0}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}},   /* T8_ECLASS_LINE */
-  {{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}}, /* T8_ECLASS_QUAD */
-  {{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}},      /* T8_ECLASS_TRIANGLE */
-  {{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}}, /* T8_ECLASS_TET */
-  {{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1}, {1, 1, 0}, {1, 0, 1}, {0, 1, 1}, {1, 1, 1}},     /* T8_ECLASS_HEX */
-  {{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1}, {1, 1, 0}, {1, 0, 1}, {-1, -1, -1}, {-1, -1, -1}},       /* T8_ECLASS_PRISM */
-  {{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1}, {1, 1, 0}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}}     /* T8_ECLASS_PYRAMID */
-};
-
-const double
-         t8_forest_vtk_point_to_quadratic_element_ref_coords[T8_ECLASS_COUNT]
   [T8_FOREST_VTK_QUADRATIC_ELEMENT_MAX_CORNERS][3] = {
   {                             /* T8_ECLASS_VERTEX */
    {0, 0, 0}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1},
@@ -230,7 +221,7 @@ t8_forest_vtk_get_element_nodes (t8_forest_t forest, t8_locidx_t ltreeid,
     t8_forest_get_eclass_scheme (forest, tree_class);
   const t8_element_shape_t element_shape = scheme->t8_element_shape (element);
   const double       *ref_coords =
-    t8_forest_vtk_point_to_quadratic_element_ref_coords[element_shape]
+    t8_forest_vtk_point_to_element_ref_coords[element_shape]
     [vertex];
   t8_forest_element_from_ref_coords (forest, ltreeid, element, ref_coords,
                                      out_coords, stretch_factors);
