@@ -39,4 +39,4 @@ A tutorial for the hierarchical search to identify elements matching a user defi
 A tutorial about the generation of curved adaptive meshes.
 ## To be implemented in the future
 
-step6 - Changing a mesh with element data on it: Partitioning element data and interpolating data after adaptation.
+step7 - Changing a mesh with element data on it: Partitioning element data and interpolating data after adaptation.
