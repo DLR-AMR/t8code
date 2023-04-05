@@ -37,7 +37,7 @@ t8_read_unstructured (const char *filename, vtkDataSet * grid)
   extension = strtok (tmp, ".");
   extension = strtok (NULL, ".");
 
-  /* Read the file */
+  /* Chose the vtk-Reader according to the file-ending and read the file */
   if (strcmp (extension, "vtu") == 0) {
     vtkSmartPointer < vtkXMLUnstructuredGridReader > reader =
       vtkSmartPointer < vtkXMLUnstructuredGridReader >::New ();
@@ -58,6 +58,7 @@ t8_read_unstructured (const char *filename, vtkDataSet * grid)
     reader->Update ();
     if (!reader->IsFileUnstructuredGrid ()) {
       t8_errorf ("File-content is not an unstructured Grid. ");
+      return;
     }
     grid->ShallowCopy (vtkDataSet::SafeDownCast (reader->GetOutput ()));
     t8_debugf ("Finished reading of file.\n");
