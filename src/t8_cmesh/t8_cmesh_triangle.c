@@ -27,6 +27,10 @@
 #include "t8_cmesh_types.h"
 #include "t8_cmesh_stash.h"
 
+#ifdef _WIN32
+#include "t8_windows.h"
+#endif
+
 /* TODO: if partitioned then only add the needed face-connections to join faces
  *       maybe also only trees and ghosts to classes.
  *       Specifying all face-connections makes commit algorithm slow! */

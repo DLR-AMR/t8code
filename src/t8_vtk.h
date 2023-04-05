@@ -23,7 +23,7 @@
 /** file t8_vtk.h
  * This header file collects macros that are needed for
  * the forest and cmesh vtk routines.
- * \see t8_forest_vtk.h \see t8_cmesh_vtk.h
+ * \see t8_forest_vtk.h \see t8_cmesh_vtk_writer.h \see t8_cmesh_vtk_reader.hxx
  */
 
 #ifndef T8_VTK_H
