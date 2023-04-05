@@ -488,7 +488,7 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
   long int            point_id = 0;     /* The id of the point in the points Object. */
   double              coordinates[3];
   double              vertex_coords[3] = { 0, 0, 0 };
-  t8_gloidx_t         elem_id = 0;
+  t8_gloidx_t         elem_id = t8_forest_get_first_local_element_id (forest);
 
 /* Since we want to use different element types and a points Array and cellArray 
  * we have to declare these vtk objects. The cellArray stores the Elements.
@@ -551,6 +551,7 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
   dataArrays = T8_ALLOC (vtkDoubleArray *, num_data);
 
   t8_cmesh_t          cmesh = t8_forest_get_cmesh (forest);
+
 /* We iterate over all local trees*/
   for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest);
        itree++) {
@@ -565,8 +566,6 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
                                                                      itree));
     const t8_locidx_t   elems_in_tree =
       t8_forest_get_tree_num_elements (forest, itree);
-    const t8_locidx_t   offset =
-      t8_forest_get_tree_element_offset (forest, itree);
     /* We iterate over all elements in the tree */
     /* Compute the global tree id */
     const t8_gloidx_t   gtreeid = t8_forest_global_tree_id (forest, itree);
@@ -695,9 +694,7 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
         vtk_level->InsertNextValue (scheme->t8_element_level (element));
       }
       if (write_element_id == 1) {
-        vtk_element_id->InsertNextValue (elem_id + offset +
-                                         t8_forest_get_first_local_element_id
-                                         (forest));
+        vtk_element_id->InsertNextValue (elem_id);
       }
       /* *INDENT-ON* */
       elem_id++;
