@@ -405,8 +405,8 @@ t8_dtri_compute_reference_coords (const t8_dtri_t *t,
   out_coords[2] = t->z;
 #endif
 #ifndef T8_DTRI_TO_DTET
-  out_coords[tri_orientation] += h * ref_coords[0];
-  out_coords[1 - tri_orientation] += h * ref_coords[1];
+  out_coords[tri_orientation] += h * ref_coords[1];
+  out_coords[1 - tri_orientation] += h * ref_coords[0];
 #else
   out_coords[tet_orientation0] += h * ref_coords[0];
   out_coords[tet_orientation1] += h * ref_coords[1];
