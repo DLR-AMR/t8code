@@ -122,7 +122,7 @@ jobs:
       run: |
         cd t8code-website/content
         mkdir -p doc/$GITHUB_REF_NAME
-        cp -r ../../t8code/build_debug/doxygen/html/* doc/$GITHUB_REF_NAME/
+        cp -r ../../t8code/build_debug/doc/html/* doc/$GITHUB_REF_NAME/
         cd pages
         today=`date +'%Y-%m-%d %H:%M'`
         sed -i s/"^Date:.*"/"Date: $today"/g 4_Documentation.md
