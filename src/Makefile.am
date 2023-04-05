@@ -46,7 +46,7 @@ libt8_installed_headers_data = \
 libt8_installed_headers_forest = \
   src/t8_forest/t8_forest_adapt.h \
   src/t8_forest/t8_forest_vtk.h \
-  src/t8_forest/t8_forest_vtk_API.hxx \
+  src/t8_forest/t8_forest_to_vtkUnstructured.hxx \
   src/t8_forest/t8_forest_iterate.h src/t8_forest/t8_forest_partition.h
 libt8_installed_headers_geometry = \
   src/t8_geometry/t8_geometry.h \
