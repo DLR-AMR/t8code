@@ -51,9 +51,22 @@ void                t8_dtet_compute_coords (const t8_dtet_t *t, int vertex,
  * \param [out] coordinates An array of 3 double that
  * 		     will be filled with the reference coordinates of the vertex.
  */
-void                t8_dtet_compute_ref_coords (const t8_dtet_t *t,
-                                                int vertex,
-                                                double coordinates[3]);
+void                t8_dtet_compute_vertex_ref_coords (const t8_dtet_t *t,
+                                                       int vertex,
+                                                       double coordinates[3]);
+
+/** Convert a point in the reference space of a tetrahedron to a point in the
+ *  reference space of the tree (level 0 tetrahedron) embedded in [0,1]^2.
+ * \param [in]  t    Input tetrahedron.
+ * \param [in]  ref_coords The reference coordinates inside the
+ *                         tet element [0,1]^2
+ * \param [out] out_coords An array of 3 doubles that will be filled with the
+ *                         reference coordinates in the tree of the tet.
+ */
+void                t8_dtet_compute_reference_coords (const t8_dtet_t *t,
+                                                      const double
+                                                      *ref_coords,
+                                                      double out_coords[3]);
 
 /** Compute the coordinates of the four vertices of a tetrahedron.
  * \param [in] t    Input tetrahedron.

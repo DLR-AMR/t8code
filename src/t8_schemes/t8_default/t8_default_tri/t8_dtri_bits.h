@@ -83,9 +83,22 @@ void                t8_dtri_compute_coords (const t8_dtri_t *t,
  * \param [out] coordinates An array of 2 double that
  * 		     will be filled with the reference coordinates of the vertex.
  */
-void                t8_dtri_compute_ref_coords (const t8_dtri_t *t,
-                                                const int vertex,
-                                                double coordinates[2]);
+void                t8_dtri_compute_vertex_ref_coords (const t8_dtri_t *t,
+                                                       const int vertex,
+                                                       double coordinates[2]);
+
+/** Convert a point in the reference space of a triangle to a point in the
+ *  reference space of the tree (level 0 triangle) embedded in [0,1]^2.
+ * \param [in]  t    Input triangle.
+ * \param [in]  ref_coords The reference coordinates inside the
+ *                         triangle element [0,1]^2
+ * \param [out] out_coords An array of 2 doubles that will be filled with the
+ *                         reference coordinates in the tree of the triangle.
+ */
+void                t8_dtri_compute_reference_coords (const t8_dtri_t *t,
+                                                      const double
+                                                      *ref_coords,
+                                                      double out_coords[2]);
 
 /** Compute the coordinates of the four vertices of a triangle.
  * \param [in] t    Input triangle.
