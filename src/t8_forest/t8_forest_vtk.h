@@ -44,7 +44,7 @@ T8_EXTERN_C_BEGIN ();
  * "--with-vtk" in order to use it.
  * Currently does not support pyramid elements.
  * \param [in]  forest    The forest.
- * \param [in]  fileprefix The prefix of the output files. The meta file will be named \a fileprefix.pvtu .
+ * \param [in,out]  unstructuredGrid A pointer to a vtkUnstructuredGrid, which is going to be filled with the elements and data of the \a forest.
  * \param [in]  write_treeid If true, the global tree id is written for each element.
  * \param [in]  write_mpirank If true, the mpirank is written for each element.
  * \param [in]  write_level If true, the refinement level is written for each element.
