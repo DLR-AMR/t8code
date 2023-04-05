@@ -31,13 +31,13 @@ typedef t8_dline_t  t8_default_line_t;
 T8_EXTERN_C_BEGIN ();
 
 int
-t8_default_scheme_line_c::t8_element_maxlevel (void)
+t8_default_scheme_line_c::t8_element_maxlevel (void) const
 {
   return T8_DLINE_MAXLEVEL;
 }
 
 int
-t8_default_scheme_line_c::t8_element_level (const t8_element_t *elem)
+t8_default_scheme_line_c::t8_element_level (const t8_element_t *elem) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   return t8_dline_get_level ((const t8_dline_t *) elem);
@@ -45,7 +45,7 @@ t8_default_scheme_line_c::t8_element_level (const t8_element_t *elem)
 
 void
 t8_default_scheme_line_c::t8_element_copy (const t8_element_t *source,
-                                           t8_element_t *dest)
+                                           t8_element_t *dest) const
 {
   T8_ASSERT (t8_element_is_valid (source));
   T8_ASSERT (t8_element_is_valid (dest));
@@ -54,7 +54,7 @@ t8_default_scheme_line_c::t8_element_copy (const t8_element_t *source,
 
 int
 t8_default_scheme_line_c::t8_element_compare (const t8_element_t *elem1,
-                                              const t8_element_t *elem2)
+                                              const t8_element_t *elem2) const
 {
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
@@ -64,7 +64,7 @@ t8_default_scheme_line_c::t8_element_compare (const t8_element_t *elem1,
 
 void
 t8_default_scheme_line_c::t8_element_parent (const t8_element_t *elem,
-                                             t8_element_t *parent)
+                                             t8_element_t *parent) const
 {
   const t8_default_line_t *l = (const t8_default_line_t *) elem;
   t8_default_line_t  *p = (t8_default_line_t *) parent;
@@ -76,7 +76,8 @@ t8_default_scheme_line_c::t8_element_parent (const t8_element_t *elem,
 
 void
 t8_default_scheme_line_c::t8_element_child (const t8_element_t *elem,
-                                            int childid, t8_element_t *child)
+                                            int childid,
+                                            t8_element_t *child) const
 {
   const t8_default_line_t *l = (const t8_default_line_t *) elem;
   t8_default_line_t  *c = (t8_default_line_t *) child;
@@ -89,7 +90,7 @@ t8_default_scheme_line_c::t8_element_child (const t8_element_t *elem,
 void
 t8_default_scheme_line_c::t8_element_nca (const t8_element_t *elem1,
                                           const t8_element_t *elem2,
-                                          t8_element_t *nca)
+                                          t8_element_t *nca) const
 {
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
@@ -101,7 +102,7 @@ t8_default_scheme_line_c::t8_element_nca (const t8_element_t *elem1,
 
 t8_element_shape_t
 t8_default_scheme_line_c::t8_element_face_shape (const t8_element_t *elem,
-                                                 int face)
+                                                 int face) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   return T8_ECLASS_VERTEX;
@@ -114,6 +115,7 @@ t8_default_scheme_line_c::t8_element_children_at_face (const t8_element_t
                                                        *children[],
                                                        int num_children,
                                                        int *child_indices)
+  const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= face && face < T8_DLINE_FACES);
@@ -132,7 +134,7 @@ t8_default_scheme_line_c::t8_element_children_at_face (const t8_element_t
 int
 t8_default_scheme_line_c::t8_element_face_child_face (const t8_element_t
                                                       *elem, int face,
-                                                      int face_child)
+                                                      int face_child) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= face && face < T8_DLINE_FACES);
@@ -144,7 +146,7 @@ t8_default_scheme_line_c::t8_element_face_child_face (const t8_element_t
 
 int
 t8_default_scheme_line_c::t8_element_face_parent_face (const t8_element_t
-                                                       *elem, int face)
+                                                       *elem, int face) const
 {
   /* The number of faces does not change from parent to child */
   T8_ASSERT (t8_element_is_valid (elem));
@@ -154,7 +156,7 @@ t8_default_scheme_line_c::t8_element_face_parent_face (const t8_element_t
 
 int
 t8_default_scheme_line_c::t8_element_tree_face (const t8_element_t *elem,
-                                                int face)
+                                                int face) const
 {
   /* The number of faces does not change from tree to element */
   T8_ASSERT (t8_element_is_valid (elem));
@@ -169,6 +171,7 @@ t8_default_scheme_line_c::t8_element_transform_face (const t8_element_t
                                                      int orientation,
                                                      int sign,
                                                      int is_smaller_face)
+  const
 {
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
@@ -188,7 +191,7 @@ t8_default_scheme_line_c::t8_element_extrude_face (const t8_element_t *face,
                                                    const t8_eclass_scheme_c
                                                    *face_scheme,
                                                    t8_element_t *elem,
-                                                   int root_face)
+                                                   int root_face) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (T8_COMMON_IS_TYPE
@@ -205,7 +208,7 @@ t8_default_scheme_line_c::t8_element_boundary_face (const t8_element_t *elem,
                                                     int face,
                                                     t8_element_t *boundary,
                                                     const t8_eclass_scheme_c
-                                                    *boundary_scheme)
+                                                    *boundary_scheme) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (T8_COMMON_IS_TYPE
@@ -226,7 +229,7 @@ t8_default_scheme_line_c::t8_element_first_descendant_face (const t8_element_t
                                                             *elem, int face,
                                                             t8_element_t
                                                             *first_desc,
-                                                            int level)
+                                                            int level) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (first_desc));
@@ -252,7 +255,7 @@ t8_default_scheme_line_c::t8_element_last_descendant_face (const t8_element_t
                                                            *elem, int face,
                                                            t8_element_t
                                                            *last_desc,
-                                                           int level)
+                                                           int level) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (last_desc));
@@ -265,7 +268,7 @@ t8_default_scheme_line_c::t8_element_last_descendant_face (const t8_element_t
 
 int
 t8_default_scheme_line_c::t8_element_is_root_boundary (const t8_element_t
-                                                       *elem, int face)
+                                                       *elem, int face) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= face && face < T8_DLINE_FACES);
@@ -279,6 +282,7 @@ t8_default_scheme_line_c::t8_element_face_neighbor_inside (const t8_element_t
                                                            t8_element_t
                                                            *neigh, int face,
                                                            int *neigh_face)
+  const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (neigh));
@@ -292,7 +296,7 @@ t8_default_scheme_line_c::t8_element_face_neighbor_inside (const t8_element_t
 void
 t8_default_scheme_line_c::t8_element_set_linear_id (t8_element_t *elem,
                                                     int level,
-                                                    t8_linearidx_t id)
+                                                    t8_linearidx_t id) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= T8_DLINE_MAXLEVEL);
@@ -304,7 +308,7 @@ t8_default_scheme_line_c::t8_element_set_linear_id (t8_element_t *elem,
 void
 t8_default_scheme_line_c::t8_element_successor (const t8_element_t *elem1,
                                                 t8_element_t *elem2,
-                                                int level)
+                                                int level) const
 {
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
@@ -318,7 +322,7 @@ void
 t8_default_scheme_line_c::t8_element_first_descendant (const t8_element_t
                                                        *elem,
                                                        t8_element_t *desc,
-                                                       int level)
+                                                       int level) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (desc));
@@ -332,7 +336,7 @@ void
 t8_default_scheme_line_c::t8_element_last_descendant (const t8_element_t
                                                       *elem,
                                                       t8_element_t *desc,
-                                                      int level)
+                                                      int level) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (desc));
@@ -343,7 +347,8 @@ t8_default_scheme_line_c::t8_element_last_descendant (const t8_element_t
 
 void
 t8_default_scheme_line_c::t8_element_vertex_coords (const t8_element_t *t,
-                                                    int vertex, int coords[])
+                                                    int vertex,
+                                                    int coords[]) const
 {
   T8_ASSERT (t8_element_is_valid (t));
   t8_dline_vertex_coords ((const t8_dline_t *) t, vertex, coords);
@@ -355,13 +360,14 @@ t8_default_scheme_line_c::t8_element_vertex_reference_coords (const
                                                               const int
                                                               vertex,
                                                               double coords[])
+  const
 {
   T8_ASSERT (t8_element_is_valid (t));
   t8_dline_vertex_ref_coords ((const t8_dline_t *) t, vertex, coords);
 }
 
 int
-t8_default_scheme_line_c::t8_element_root_len (const t8_element_t *elem)
+t8_default_scheme_line_c::t8_element_root_len (const t8_element_t *elem) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   return T8_DLINE_ROOT_LEN;
@@ -369,7 +375,7 @@ t8_default_scheme_line_c::t8_element_root_len (const t8_element_t *elem)
 
 t8_linearidx_t
   t8_default_scheme_line_c::t8_element_get_linear_id (const t8_element_t
-                                                      *elem, int level)
+                                                      *elem, int level) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= T8_DLINE_MAXLEVEL);
@@ -378,21 +384,21 @@ t8_linearidx_t
 }
 
 int
-t8_default_scheme_line_c::t8_element_num_faces (const t8_element_t *elem)
+t8_default_scheme_line_c::t8_element_num_faces (const t8_element_t *elem) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   return T8_DLINE_FACES;
 }
 
 int
-t8_default_scheme_line_c::t8_element_max_num_faces (const t8_element_t *elem)
+t8_default_scheme_line_c::t8_element_max_num_faces (const t8_element_t *elem) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   return T8_DLINE_FACES;
 }
 
 int
-t8_default_scheme_line_c::t8_element_num_children (const t8_element_t *elem)
+t8_default_scheme_line_c::t8_element_num_children (const t8_element_t *elem) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   return T8_DLINE_CHILDREN;
@@ -400,7 +406,7 @@ t8_default_scheme_line_c::t8_element_num_children (const t8_element_t *elem)
 
 int
 t8_default_scheme_line_c::t8_element_num_face_children (const t8_element_t
-                                                        *elem, int face)
+                                                        *elem, int face) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= face && face < T8_DLINE_FACES);
@@ -409,7 +415,7 @@ t8_default_scheme_line_c::t8_element_num_face_children (const t8_element_t
 }
 
 int
-t8_default_scheme_line_c::t8_element_child_id (const t8_element_t *elem)
+t8_default_scheme_line_c::t8_element_child_id (const t8_element_t *elem) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   return t8_dline_child_id ((const t8_dline_t *) elem);
@@ -417,7 +423,8 @@ t8_default_scheme_line_c::t8_element_child_id (const t8_element_t *elem)
 
 void
 t8_default_scheme_line_c::t8_element_children (const t8_element_t *elem,
-                                               int length, t8_element_t *c[])
+                                               int length,
+                                               t8_element_t *c[]) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (length == T8_DLINE_CHILDREN);
@@ -427,14 +434,14 @@ t8_default_scheme_line_c::t8_element_children (const t8_element_t *elem,
 
 int
 t8_default_scheme_line_c::t8_element_ancestor_id (const t8_element_t *elem,
-                                                  int level)
+                                                  int level) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   return t8_dline_ancestor_id ((const t8_dline_t *) elem, level);
 }
 
 int
-t8_default_scheme_line_c::t8_element_is_family (t8_element_t **fam)
+t8_default_scheme_line_c::t8_element_is_family (t8_element_t **fam) const
 {
 #ifdef T8_ENABLE_DEBUG
   int                 i;
@@ -446,7 +453,7 @@ t8_default_scheme_line_c::t8_element_is_family (t8_element_t **fam)
 }
 
 int
-t8_default_scheme_line_c::t8_element_refines_irregular ()
+t8_default_scheme_line_c::t8_element_refines_irregular () const
 {
   /*lines always refine regularly */
   return 0;
@@ -471,7 +478,7 @@ t8_default_scheme_line_c::t8_element_debug_print (const t8_element_t *elem) cons
 #endif
 
 void
-t8_default_scheme_line_c::t8_element_new (int length, t8_element_t **elem)
+t8_default_scheme_line_c::t8_element_new (int length, t8_element_t **elem) const
 {
   /* allocate memory for a line */
   t8_default_scheme_common_c::t8_element_new (length, elem);
@@ -489,7 +496,7 @@ t8_default_scheme_line_c::t8_element_new (int length, t8_element_t **elem)
 
 void
 t8_default_scheme_line_c::t8_element_init (int length, t8_element_t *elem,
-                                           int new_called)
+                                           int new_called) const
 {
 #ifdef T8_ENABLE_DEBUG
   if (!new_called) {
