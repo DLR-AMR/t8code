@@ -38,7 +38,7 @@ t8_read_unstructured (const char *filename,
   extension = strtok (tmp, ".");
   extension = strtok (NULL, ".");
 
-  /* Read the file */
+  /* Chose the vtk-Reader according to the file-ending and read the file */
   if (strcmp (extension, "vtu") == 0) {
     vtkSmartPointer < vtkXMLUnstructuredGridReader > reader =
       vtkSmartPointer < vtkXMLUnstructuredGridReader >::New ();

@@ -58,7 +58,7 @@ public:
    * \see t8_element_init
    * \see t8_element_is_valid
    */
-  virtual void        t8_element_new (int length, t8_element_t **elem);
+  virtual void        t8_element_new (int length, t8_element_t **elem) const;
 
   /** Initialize an array of allocated tri elements.
    * \param [in] length   The number of tri elements to be initialized.
@@ -78,18 +78,18 @@ public:
    * \see t8_element_is_valid
    */
   virtual void        t8_element_init (int length, t8_element_t *elem,
-                                       int called_new);
+                                       int called_new) const;
 
   /** Return the refinement level of an element.
    * \param [in] elem    The element whose level should be returned.
    * \return             The level of \b elem.
    */
-  virtual int         t8_element_level (const t8_element_t *elem);
+  virtual int         t8_element_level (const t8_element_t *elem) const;
 
   /** Return the maximum allowed level for this element class.
    * \return                      The maximum allowed level for elements of this class.
    */
-  virtual int         t8_element_maxlevel (void);
+  virtual int         t8_element_maxlevel (void) const;
 
   /** Copy all entries of \b source to \b dest. \b dest must be an existing
    *  element. No memory is allocated by this function.
@@ -99,7 +99,7 @@ public:
    * \note \a source and \a dest may point to the same element.
    */
   virtual void        t8_element_copy (const t8_element_t *source,
-                                       t8_element_t *dest);
+                                       t8_element_t *dest) const;
 
   /** Compare two elements.
    * \param [in] elem1  The first element.
@@ -109,7 +109,7 @@ public:
    *  If elem2 is a copy of elem1 then the elements are equal.
    */
   virtual int         t8_element_compare (const t8_element_t *elem1,
-                                          const t8_element_t *elem2);
+                                          const t8_element_t *elem2) const;
 
   /** Compute the parent of a given element \b elem and store it in \b parent.
    *  \b parent needs to be an existing element. No memory is allocated by this function.
@@ -124,7 +124,7 @@ public:
    *                    tetrahedron or a pyramid depending on \b elem's childid.
    */
   virtual void        t8_element_parent (const t8_element_t *elem,
-                                         t8_element_t *parent);
+                                         t8_element_t *parent) const;
 
   /** Compute a specific sibling of a given tri element \b elem and store it in \b sibling.
    *  \b sibling needs to be an existing element. No memory is allocated by this function.
@@ -138,26 +138,29 @@ public:
    *                    and match the element class of the sibling.
    */
   virtual void        t8_element_sibling (const t8_element_t *elem,
-                                          int sibid, t8_element_t *sibling);
+                                          int sibid,
+                                          t8_element_t *sibling) const;
 
   /** Compute the number of faces of a given element.
    * \param [in] elem The element.
    * \return          The number of faces of \a elem.
    */
-  virtual int         t8_element_num_faces (const t8_element_t *elem);
+  virtual int         t8_element_num_faces (const t8_element_t *elem) const;
 
   /** Compute the maximum number of faces of a given element and all of its
    *  descendants.
    * \param [in] elem The element.
    * \return          The maximum number of faces of \a elem and its descendants.
    */
-  virtual int         t8_element_max_num_faces (const t8_element_t *elem);
+  virtual int         t8_element_max_num_faces (const t8_element_t *elem)
+    const;
 
   /** Return the number of children of an element when it is refined.
    * \param [in] elem   The element whose number of children is returned.
    * \return            The number of children of \a elem if it is to be refined.
    */
-  virtual int         t8_element_num_children (const t8_element_t *elem);
+  virtual int         t8_element_num_children (const t8_element_t *elem)
+    const;
 
   /** Return the number of children of an element's face when the element is refined.
    * \param [in] elem   The element whose face is considered.
@@ -165,7 +168,7 @@ public:
    * \return            The number of children of \a face if \a elem is to be refined.
    */
   virtual int         t8_element_num_face_children (const t8_element_t *elem,
-                                                    int face);
+                                                    int face) const;
   /** Return the corner number of an element's face corner.
    * \param [in] element  The element.
    * \param [in] face     A face index for \a element.
@@ -173,7 +176,7 @@ public:
    * \return              The corner number of the \a corner-th vertex of \a face.
    */
   virtual int         t8_element_get_face_corner (const t8_element_t *element,
-                                                  int face, int corner);
+                                                  int face, int corner) const;
 
   /** Return the face numbers of the faces sharing an element's corner.
    * \param [in] element  The element.
@@ -182,14 +185,14 @@ public:
    * \return              The face number of the \a face-th face at \a corner.
    */
   virtual int         t8_element_get_corner_face (const t8_element_t *element,
-                                                  int corner, int face);
+                                                  int corner, int face) const;
 
   /** Return the type of each child in the ordering of the implementation.
    * \param [in] childid  Must be between 0 and the number of children (exclusive).
    *                      The number of children is defined in \a t8_element_num_children.
    * \return              The type for the given child.
    */
-  virtual t8_eclass_t t8_element_child_eclass (int childid)
+  virtual t8_eclass_t t8_element_child_eclass (int childid) const
   {
     SC_ABORT ("This function is not implemented yet.\n");
     return T8_ECLASS_ZERO;      /* suppresses compiler warning */
@@ -205,7 +208,8 @@ public:
    * \see t8_element_child_eclass
    */
   virtual void        t8_element_child (const t8_element_t *elem,
-                                        int childid, t8_element_t *child);
+                                        int childid,
+                                        t8_element_t *child) const;
 
   /** Construct all children of a given element.
    * \param [in] elem     This must be a valid element, bigger than maxlevel.
@@ -219,13 +223,14 @@ public:
    * \see t8_element_child_eclass
    */
   virtual void        t8_element_children (const t8_element_t *elem,
-                                           int length, t8_element_t *c[]);
+                                           int length,
+                                           t8_element_t *c[]) const;
 
   /** Compute the child id of an element.
    * \param [in] elem     This must be a valid element.
    * \return              The child id of elem.
    */
-  virtual int         t8_element_child_id (const t8_element_t *elem);
+  virtual int         t8_element_child_id (const t8_element_t *elem) const;
 
   /** Compute the ancestor id of an element, that is the child id
    * at a given level.
@@ -234,7 +239,7 @@ public:
    * \return              The child_id of \a elem in regard to its \a level ancestor.
    */
   virtual int         t8_element_ancestor_id (const t8_element_t *elem,
-                                              int level);
+                                              int level) const;
 
   /** Query whether a given set of elements is a family or not.
    * \param [in] fam      An array of as many elements as an element of class
@@ -242,7 +247,7 @@ public:
    * \return              Zero if \b fam is not a family, nonzero if it is.
    * \note level 0 elements do not form a family.
    */
-  virtual int         t8_element_is_family (t8_element_t **fam);
+  virtual int         t8_element_is_family (t8_element_t **fam) const;
 
   /** Compute the nearest common ancestor of two elements. That is,
    * the element with highest level that still has both given elements as
@@ -256,7 +261,7 @@ public:
    */
   virtual void        t8_element_nca (const t8_element_t *elem1,
                                       const t8_element_t *elem2,
-                                      t8_element_t *nca);
+                                      t8_element_t *nca) const;
 
   /** Compute the shape of the face of an element.
    * \param [in] elem     The element.
@@ -264,7 +269,7 @@ public:
    * \return              The element shape of the face.
    */
   virtual t8_element_shape_t t8_element_face_shape (const t8_element_t *elem,
-                                                    int face);
+                                                    int face) const;
 
   /** Given an element and a face of the element, compute all children of
    * the element that touch the face.
@@ -284,7 +289,7 @@ public:
                                                    int face,
                                                    t8_element_t *children[],
                                                    int num_children,
-                                                   int *child_indices);
+                                                   int *child_indices) const;
 
   /** Given a face of an element and a child number of a child of that face, return the face number
    * of the child of the element that matches the child face.
@@ -307,7 +312,8 @@ public:
    *                      that conincides with \a face_child.
    */
   virtual int         t8_element_face_child_face (const t8_element_t *elem,
-                                                  int face, int face_child);
+                                                  int face,
+                                                  int face_child) const;
 
     /** Given a face of an element return the face number
      * of the parent of the element that matches the element's face. Or return -1 if
@@ -320,7 +326,7 @@ public:
      * \note For the root element this function always returns \a face.
      */
   virtual int         t8_element_face_parent_face (const t8_element_t *elem,
-                                                   int face);
+                                                   int face) const;
 
   /** Given an element and a face of this element. If the face lies on the
    *  tree boundary, return the face number of the tree face.
@@ -332,7 +338,7 @@ public:
    *         Any arbitrary integer if \a is not at a tree boundary.
    */
   virtual int         t8_element_tree_face (const t8_element_t *elem,
-                                            int face);
+                                            int face) const;
 
   /** Suppose we have two trees that share a common face f.
    *  Given an element e that is a subface of f in one of the trees
@@ -358,7 +364,7 @@ public:
   virtual void        t8_element_transform_face (const t8_element_t *elem1,
                                                  t8_element_t *elem2,
                                                  int orientation, int sign,
-                                                 int is_smaller_face);
+                                                 int is_smaller_face) const;
 
   /** Given a boundary face inside a root tree's face construct
    *  the element inside the root tree that has the given face as a
@@ -377,7 +383,7 @@ public:
                                                const t8_eclass_scheme_c
                                                *face_scheme,
                                                t8_element_t *elem,
-                                               int root_face);
+                                               int root_face) const;
 
   /** Construct the first descendant of an element at a given level that touches a given face.
    * \param [in] elem      The input element.
@@ -391,7 +397,7 @@ public:
                                                         *elem, int face,
                                                         t8_element_t
                                                         *first_desc,
-                                                        int level);
+                                                        int level) const;
 
   /** Construct the last descendant of an element at a given level that touches a given face.
    * \param [in] elem      The input element.
@@ -404,7 +410,8 @@ public:
   virtual void        t8_element_last_descendant_face (const t8_element_t
                                                        *elem, int face,
                                                        t8_element_t
-                                                       *last_desc, int level);
+                                                       *last_desc,
+                                                       int level) const;
 
   /** Construct the boundary element at a specific face.
    * \param [in] elem     The input element.
@@ -419,7 +426,7 @@ public:
                                                 int face,
                                                 t8_element_t *boundary,
                                                 const t8_eclass_scheme_c
-                                                *boundary_scheme);
+                                                *boundary_scheme) const;
 
   /** Construct all codimension-one boundary elements of a given element.
    * \param [in] elem     The input element.
@@ -428,7 +435,7 @@ public:
    */
   virtual void        t8_element_boundary (const t8_element_t *elem,
                                            int min_dim, int length,
-                                           t8_element_t **boundary);
+                                           t8_element_t **boundary) const;
 
   /** Compute whether a given element shares a given face with its root tree.
    * \param [in] elem     The input element.
@@ -436,7 +443,7 @@ public:
    * \return              True if \a face is a subface of the element's root element.
    */
   virtual int         t8_element_is_root_boundary (const t8_element_t *elem,
-                                                   int face);
+                                                   int face) const;
 
   /** Construct the face neighbor of a given element if this face neighbor
    * is inside the root tree. Return 0 otherwise.
@@ -457,7 +464,7 @@ public:
                                                        *elem,
                                                        t8_element_t *neigh,
                                                        int face,
-                                                       int *neigh_face);
+                                                       int *neigh_face) const;
 
   /** Initialize the entries of an allocated element according to a
    *  given linear id in a uniform refinement.
@@ -467,7 +474,8 @@ public:
    *                      id must fulfil 0 <= id < 'number of leafs in the uniform refinement'
    */
   virtual void        t8_element_set_linear_id (t8_element_t *elem,
-                                                int level, t8_linearidx_t id);
+                                                int level,
+                                                t8_linearidx_t id) const;
 
   /** Compute the linear id of a given element in a hypothetical uniform
    * refinement of a given level.
@@ -477,7 +485,7 @@ public:
    */
   virtual t8_linearidx_t t8_element_get_linear_id (const
                                                    t8_element_t *elem,
-                                                   int level);
+                                                   int level) const;
 
   /** Compute the first descendant of a given element.
    * \param [in] elem     The element whose descendant is computed.
@@ -487,7 +495,7 @@ public:
    */
   virtual void        t8_element_first_descendant (const t8_element_t *elem,
                                                    t8_element_t *desc,
-                                                   int level);
+                                                   int level) const;
 
   /** Compute the last descendant of a given element.
    * \param [in] elem     The element whose descendant is computed.
@@ -497,7 +505,7 @@ public:
    */
   virtual void        t8_element_last_descendant (const t8_element_t *elem,
                                                   t8_element_t *desc,
-                                                  int level);
+                                                  int level) const;
 
   /** Construct the successor in a uniform refinement of a given element.
    * \param [in] elem1    The element whose successor should be constructed.
@@ -505,7 +513,7 @@ public:
    * \param [in] level    The level of the uniform refinement to consider.
    */
   virtual void        t8_element_successor (const t8_element_t *t,
-                                            t8_element_t *s, int level);
+                                            t8_element_t *s, int level) const;
 
   /** Get the integer coordinates of the anchor node of an element.
    * The default scheme implements the Morton type SFCs. In these SFCs the
@@ -518,14 +526,14 @@ public:
    * \param [out] anchor The integer coordinates of the anchor node in the cube [0,1]^(dL)
    */
   virtual void        t8_element_anchor (const t8_element_t *elem,
-                                         int anchor[3]);
+                                         int anchor[3]) const;
 
   /** Compute the root length of a given element, that is the length of
    * its level 0 ancestor.
    * \param [in] elem     The element whose root length should be computed.
    * \return              The root length of \a elem
    */
-  virtual int         t8_element_root_len (const t8_element_t *elem);
+  virtual int         t8_element_root_len (const t8_element_t *elem) const;
 
   /** Compute the integer coordinates of a given element vertex.
    * The default scheme implements the Morton type SFCs. In these SFCs the
@@ -538,7 +546,8 @@ public:
    *                      whose entries will be filled with the coordinates of \a vertex.
    */
   virtual void        t8_element_vertex_coords (const t8_element_t *t,
-                                                int vertex, int coords[]);
+                                                int vertex,
+                                                int coords[]) const;
 
   /** The tetrahedron schemes uses the general function to return the type of
    * a tetrahedron.
@@ -549,7 +558,7 @@ public:
    */
   virtual void        t8_element_general_function (const t8_element_t *elem,
                                                    const void *indata,
-                                                   void *outdata);
+                                                   void *outdata) const;
 
   /** Compute the coordinates of a given element vertex inside a reference tree
    *  that is embedded into [0,1]^d (d = dimension).
@@ -561,13 +570,14 @@ public:
   virtual void        t8_element_vertex_reference_coords (const t8_element_t
                                                           *t,
                                                           const int vertex,
-                                                          double coords[]);
+                                                          double coords[])
+    const;
 
   /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
    * Returns false otherwise.
    * * \return           0, because tris refine regularly
    */
-  virtual int         t8_element_refines_irregular (void);
+  virtual int         t8_element_refines_irregular (void) const;
 
 #ifdef T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is
