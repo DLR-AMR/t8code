@@ -383,9 +383,6 @@ t8_dtri_compute_reference_coords (const t8_dtri_t *t,
   T8_ASSERT (ref_coords != NULL);
 
   t8_dtri_type_t      type;
-#ifdef T8_DTRI_TO_DTET
-  int                 tet_orientation;
-#endif
   t8_dtri_coord_t     h;
 
   type = t->type;
@@ -397,9 +394,9 @@ t8_dtri_compute_reference_coords (const t8_dtri_t *t,
    * to the out_coords */
   const int           tet_orientation0 = type / 2;
   const int           tet_orientation1 =
-    (tri_orientation + ((type % 2 == 0) ? 1 : 2)) % 3;
+    (tet_orientation0 + ((type % 2 == 0) ? 1 : 2)) % 3;
   const int           tet_orientation2 =
-    (tri_orientation + ((type % 2 == 0) ? 2 : 1)) % 3;
+    (tet_orientation0 + ((type % 2 == 0) ? 2 : 1)) % 3;
 #endif
 
   out_coords[0] = t->x;
