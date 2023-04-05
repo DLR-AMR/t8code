@@ -379,6 +379,7 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix,
    * information about the points(coordinates, stored in the points object)
    * and the cells(cellTypes and which points belong to this cell) 
    */
+
   vtkSmartPointer < vtkUnstructuredGrid > unstructuredGrid =
     vtkSmartPointer < vtkUnstructuredGrid >::New ();
   t8_forest_to_vtkUnstructuredGrid (forest, unstructuredGrid, write_treeid,
