@@ -534,12 +534,14 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
    * metadata if wanted. 
    */
 
-  t8_vtk_gloidx_array_type_t *vtk_treeid = t8_vtk_gloidx_array_type_t::New ();
-  t8_vtk_gloidx_array_type_t *vtk_mpirank =
-    t8_vtk_gloidx_array_type_t::New ();
-  t8_vtk_gloidx_array_type_t *vtk_level = t8_vtk_gloidx_array_type_t::New ();
-  t8_vtk_gloidx_array_type_t *vtk_element_id =
-    t8_vtk_gloidx_array_type_t::New ();
+  vtkSmartPointer < t8_vtk_gloidx_array_type_t > vtk_treeid =
+    vtkSmartPointer < t8_vtk_gloidx_array_type_t >::New ();
+  vtkSmartPointer < t8_vtk_gloidx_array_type_t > vtk_mpirank =
+    vtkSmartPointer < t8_vtk_gloidx_array_type_t >::New ();
+  vtkSmartPointer < t8_vtk_gloidx_array_type_t > vtk_level =
+    vtkSmartPointer < t8_vtk_gloidx_array_type_t >::New ();
+  vtkSmartPointer < t8_vtk_gloidx_array_type_t > vtk_element_id =
+    vtkSmartPointer < t8_vtk_gloidx_array_type_t >::New ();
 
 /*
  * We need the dataArray for writing double valued user defined data in the vtu files.
@@ -745,10 +747,6 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
   }
 
   /* We have to free the allocated memory for the cellTypes Array and the other arrays we allocated memory for. */
-  vtk_treeid->Delete ();
-  vtk_mpirank->Delete ();
-  vtk_level->Delete ();
-  vtk_element_id->Delete ();
   for (int idata = 0; idata < num_data; idata++) {
     dataArrays[idata]->Delete ();
   }
