@@ -661,10 +661,26 @@ t8_default_scheme_hex_c::t8_element_reference_coords (const t8_element_t *t,
                                                       const double
                                                       *ref_coords,
                                                       const void *user_data,
-                                                      double *coords_out)
+                                                      double *out_coords)
   const
 {
-  SC_ABORTF ("Not implemented\n");
+  T8_ASSERT (t8_element_is_valid (t));
+  const p8est_quadrant_t *q1 = (const p8est_quadrant_t *) t;
+
+  /* Get the length of the quadrant */
+  const int           len = P8EST_QUADRANT_LEN (q1->level);
+
+  /* Compute the x, y and z coordinates of the point depending on the
+   * reference coordinates */
+  out_coords[0] = q1->x + ref_coords[0] * len;
+  out_coords[1] = q1->y + ref_coords[1] * len;
+  out_coords[2] = q1->z + ref_coords[2] * len;
+
+  /* We divide the integer coordinates by the root length of the hex
+   * to obtain the reference coordinates. */
+  out_coords[0] = out_coords[0] / (double) P8EST_ROOT_LEN;
+  out_coords[1] = out_coords[1] / (double) P8EST_ROOT_LEN;
+  out_coords[2] = out_coords[2] / (double) P8EST_ROOT_LEN;
 }
 
 int
