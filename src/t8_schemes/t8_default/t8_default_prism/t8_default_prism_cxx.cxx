@@ -481,11 +481,12 @@ t8_default_scheme_prism_c::t8_element_vertex_reference_coords (const
 }
 
 void
-t8_default_scheme_prism_c::t8_element_reference_coords (const t8_element_t *t,
+t8_default_scheme_prism_c::t8_element_reference_coords (const t8_element_t
+                                                        *elem,
                                                         const double
                                                         *ref_coords,
                                                         const void *user_data,
-                                                        double *coords_out)
+                                                        double *out_coords)
   const
 {
   SC_ABORTF ("Not implemented\n");

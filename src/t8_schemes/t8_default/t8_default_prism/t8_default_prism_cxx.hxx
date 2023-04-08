@@ -585,13 +585,13 @@ public:
 
   /** Compute the coordinates of a given element vertex inside a reference tree
    *  that is embedded into [0,1]^d (d = dimension).
-   *   \param [in] t      The element to be considered.
+   *   \param [in] elem   The element to be considered.
    *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
    *   \param [out] coords An array of at least as many doubles as the element's dimension
    *                      whose entries will be filled with the coordinates of \a vertex.
    */
   virtual void        t8_element_vertex_reference_coords (const t8_element_t
-                                                          *t,
+                                                          *elem,
                                                           const int vertex,
                                                           double coords[])
     const;
@@ -599,12 +599,12 @@ public:
   /** Convert a point in the reference space of an element to a point in the
    *  reference space of the tree.
    * 
-   * \param [in] t            The element.
+   * \param [in] elem         The element.
    * \param [in] coords_input The coordinates of the point in the reference space of the element.
    * \param [in] user_data    User data.
    * \param [out] coords_out  The coordinates of the point in the reference space of the tree.
    */
-  virtual void        t8_element_reference_coords (const t8_element_t *t,
+  virtual void        t8_element_reference_coords (const t8_element_t *elem,
                                                    const double *ref_coords,
                                                    const void *user_data,
                                                    double *out_coords)

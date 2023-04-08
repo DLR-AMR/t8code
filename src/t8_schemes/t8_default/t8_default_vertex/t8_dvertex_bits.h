@@ -195,7 +195,8 @@ void                t8_dvertex_vertex_ref_coords (const t8_dvertex_t *elem,
                                                   int vertex,
                                                   double coords[]);
 
-/** Compute the coordinates of a refrence coordinate (always 0) inside the [0,1]^0 reference space.
+/** Compute the coordinates of a refrence coordinate (always 0) inside the 
+ * [0,1]^0 reference space.
  * \param [in] elem         Vertex whose vertex is computed.
  * \param [in] ref_coords   The reference coordinate inside the vertex (must be 0).
  * \param [out] out_coords  The coordinates of the computed vertex, must have one entry (will be set to 0).
