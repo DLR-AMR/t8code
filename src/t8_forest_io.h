@@ -26,8 +26,8 @@
 
 /* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest */
 
-#ifndef T8_FOREST_GENERAL_H
-#define T8_FOREST_GENERAL_H
+#ifndef T8_FOREST_IO_H
+#define T8_FOREST_IO_H
 
 /*TODO: Check if all headers are needed */
 #include <sc_statistics.h>

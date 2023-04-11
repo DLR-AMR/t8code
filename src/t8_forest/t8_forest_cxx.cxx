@@ -23,7 +23,8 @@
 #include <sc_statistics.h>
 #include <t8_refcount.h>
 #include <t8_vec.h>
-#include <t8_forest.h>
+#include <t8_forest_general.h>
+#include <t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_cxx.h>
 #include <t8_forest/t8_forest_partition.h>

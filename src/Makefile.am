@@ -26,7 +26,10 @@ libt8_installed_headers = \
   src/t8_refcount.h src/t8_cmesh.h src/t8_cmesh_triangle.h \
   src/t8_cmesh_tetgen.h src/t8_cmesh_readmshfile.h \
   src/t8_cmesh_vtk.h \
-  src/t8_forest.h \
+  src/t8_forest_general.h \
+  src/t8_forest_geometrical.h \
+  src/t8_forest_profiling.h \
+  src/t8_forest_io.h \
   src/t8_vec.h \
   src/t8_version.h \
   src/t8_vtk.h \

@@ -36,17 +36,6 @@
 #include <t8_vtk.h>
 #include <t8_data/t8_containers.h>
 
-/** This type controls, which neighbors count as ghost elements.
- * Currently, we support face-neighbors. Vertex and edge neighbors
- * will eventually be added. */
-typedef enum
-{
-  T8_GHOST_NONE = 0,  /**< Do not create ghost layer. */
-  T8_GHOST_FACES,     /**< Consider all face (codimension 1) neighbors. */
-  T8_GHOST_EDGES,     /**< Consider all edge (codimension 2) and face neighbors. */
-  T8_GHOST_VERTICES   /**< Consider all vertex (codimension 3) and edge and face neighbors. */
-} t8_ghost_type_t;
-
 T8_EXTERN_C_BEGIN ();
 
 /** Compute the coordinates of a given vertex of an element if a geometry

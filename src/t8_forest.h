@@ -26,6 +26,8 @@
 
 /* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest */
 
+#if 0
+
 #ifndef T8_FOREST_H
 #define T8_FOREST_H
 
@@ -1102,3 +1104,5 @@ void                t8_forest_unref (t8_forest_t *pforest);
 T8_EXTERN_C_END ();
 
 #endif /* !T8_FOREST_H */
+
+#endif

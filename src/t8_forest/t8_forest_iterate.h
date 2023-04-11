@@ -31,7 +31,7 @@
 #define T8_FOREST_ITERATE_H
 
 #include <t8.h>
-#include <t8_forest.h>
+#include <t8_forest_general.h>
 
 typedef int         (*t8_forest_iterate_face_fn) (t8_forest_t forest,
                                                   t8_locidx_t ltreeid,
