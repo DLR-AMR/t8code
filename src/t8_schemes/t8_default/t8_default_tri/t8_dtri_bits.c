@@ -368,10 +368,10 @@ t8_dtri_compute_vertex_ref_coords (const t8_dtri_t *elem, const int vertex,
   /* Since the integer coordinates are coordinates w.r.t to
    * the embedding into [0,T8_DTRI_ROOT_LEN]^d, we just need
    * to divide them by the root length. */
-  coordinates[0] = coords_int[0] / (double) T8_DTRI_ROOT_LEN;
-  coordinates[1] = coords_int[1] / (double) T8_DTRI_ROOT_LEN;
+  coordinates[0] /= (double) T8_DTRI_ROOT_LEN;
+  coordinates[1] /= (double) T8_DTRI_ROOT_LEN;
 #ifdef T8_DTRI_TO_DTET
-  coordinates[2] = coords_int[2] / (double) T8_DTRI_ROOT_LEN;
+  coordinates[2] /= (double) T8_DTRI_ROOT_LEN;
 #endif
 }
 
@@ -439,10 +439,10 @@ t8_dtri_compute_reference_coords (const t8_dtri_t *elem,
   /* Since the integer coordinates are coordinates w.r.t to
    * the embedding into [0,T8_DTRI_ROOT_LEN]^d, we just need
    * to divide them by the root length. */
-  out_coords[0] = out_coords[0] / (double) T8_DTRI_ROOT_LEN;
-  out_coords[1] = out_coords[1] / (double) T8_DTRI_ROOT_LEN;
+  out_coords[0] /= (double) T8_DTRI_ROOT_LEN;
+  out_coords[1] /= (double) T8_DTRI_ROOT_LEN;
 #ifdef T8_DTRI_TO_DTET
-  out_coords[2] = out_coords[2] / (double) T8_DTRI_ROOT_LEN;
+  out_coords[2] /= (double) T8_DTRI_ROOT_LEN;
 #endif
 }
 

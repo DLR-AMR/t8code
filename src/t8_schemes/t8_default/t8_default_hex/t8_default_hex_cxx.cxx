@@ -652,9 +652,9 @@ t8_default_scheme_hex_c::t8_element_vertex_reference_coords (const
 
   /* We divide the integer coordinates by the root length of the hex
    * to obtain the reference coordinates. */
-  coords[0] = coords_int[0] / (double) P8EST_ROOT_LEN;
-  coords[1] = coords_int[1] / (double) P8EST_ROOT_LEN;
-  coords[2] = coords_int[2] / (double) P8EST_ROOT_LEN;
+  coords[0] /= (double) P8EST_ROOT_LEN;
+  coords[1] /= (double) P8EST_ROOT_LEN;
+  coords[2] /= (double) P8EST_ROOT_LEN;
 }
 
 void
@@ -680,9 +680,9 @@ t8_default_scheme_hex_c::t8_element_reference_coords (const t8_element_t
 
   /* We divide the integer coordinates by the root length of the hex
    * to obtain the reference coordinates. */
-  out_coords[0] = out_coords[0] / (double) P8EST_ROOT_LEN;
-  out_coords[1] = out_coords[1] / (double) P8EST_ROOT_LEN;
-  out_coords[2] = out_coords[2] / (double) P8EST_ROOT_LEN;
+  out_coords[0] /= (double) P8EST_ROOT_LEN;
+  out_coords[1] /= (double) P8EST_ROOT_LEN;
+  out_coords[2] /= (double) P8EST_ROOT_LEN;
 }
 
 int

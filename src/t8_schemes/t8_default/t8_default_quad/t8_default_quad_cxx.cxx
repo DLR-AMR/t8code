@@ -786,8 +786,8 @@ t8_default_scheme_quad_c::t8_element_vertex_reference_coords (const
 
   /* We divide the integer coordinates by the root length of the quad
    * to obtain the reference coordinates. */
-  coords[0] = coords_int[0] / (double) P4EST_ROOT_LEN;
-  coords[1] = coords_int[1] / (double) P4EST_ROOT_LEN;
+  coords[0] /= (double) P4EST_ROOT_LEN;
+  coords[1] /= (double) P4EST_ROOT_LEN;
 }
 
 void
@@ -796,18 +796,21 @@ t8_default_scheme_quad_c::t8_element_reference_coords (const t8_element_t
                                                        const double
                                                        *ref_coords,
                                                        const void *user_data,
-                                                       double *coords_out)
+                                                       double *out_coords)
   const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   const p4est_quadrant_t *q1 = (const p4est_quadrant_t *) elem;
-  coords_out[0] = q1->x / (double) P4EST_ROOT_LEN;
-  coords_out[1] = q1->y / (double) P4EST_ROOT_LEN;
+  out_coords[0] = q1->x / (double) P4EST_ROOT_LEN;
+  out_coords[1] = q1->y / (double) P4EST_ROOT_LEN;
   const double        len =
     P4EST_QUADRANT_LEN (q1->level) / (double) P4EST_ROOT_LEN;
 
-  coords_out[0] += ref_coords[0] * len;
-  coords_out[1] += ref_coords[1] * len;
+  out_coords[0] += ref_coords[0] * len;
+  out_coords[1] += ref_coords[1] * len;
+
+  out_coords[0] /= (double) P4EST_ROOT_LEN;
+  out_coords[1] /= (double) P4EST_ROOT_LEN;
 }
 
 void
