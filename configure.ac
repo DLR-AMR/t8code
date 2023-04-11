@@ -32,21 +32,19 @@ echo "o---------------------------------------"
 echo "| Checking MPI and related programs"
 echo "o---------------------------------------"
 
-dnl Check for MPI: A nonempty second/third argument causes to enable F77+F90/CXX, respectively.
-if test "x$T8_ENABLE_FORTRAN" != xno; then
-  SC_MPI_CONFIG([T8], [yes], [yes])
-else
+dnl Check for MPI
+if test "x$T8_ENABLE_FORTRAN" = xno; then
+dnl Enable C++ 
   SC_MPI_CONFIG([T8], [], [yes])
+else
+dnl Enable C++ and Fortran
+  SC_MPI_CONFIG([T8], [yes], [yes])
 fi
 
 SC_MPI_ENGAGE([T8])
 
-if test "x$T8_ENABLE_FORTRAN" != xno; then
-dnl Check the properties of fortran modules after the Fortran Compiler has been found
-  AC_FC_MODULE_EXTENSION
-  AC_FC_MODULE_FLAG
-  AC_FC_MODULE_OUTPUT_FLAG
-fi
+dnl Check for all Fortran related options and features
+T8_CHECK_FORTRAN
 
 # This is needed for compatibility with automake >= 1.12
 m4_ifdef([AM_PROG_AR],[AM_PROG_AR])
@@ -127,6 +125,7 @@ if test "x$T8_ENABLE_FORTRAN" != xno; then
 echo "| FC:          $FC"
 echo "| F77:         $F77"
 echo "| FFLAGS:      $FFLAGS"
+echo "| FCFLAGS:     $FCFLAGS"
 fi
 echo "| LDFLAGS:     $LDFLAGS"
 echo "| LIBS:        $LIBS"

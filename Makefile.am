@@ -28,6 +28,9 @@ noinst_HEADERS =
 noinst_PROGRAMS =
 t8sysconf_DATA =
 dist_t8data_DATA =
+MODSOURCES = 
+AM_FCFLAGS = 
+FORTPROGRAMSOURCES = 
 
 # use this if you want to link in T8 without autotools
 t8sysconfdir = $(sysconfdir)/t8code
@@ -59,11 +62,6 @@ endif
 SUBDIRS = @T8_SC_SUBDIR@ @T8_P4EST_SUBDIR@
 DIST_SUBDIRS = $(SUBDIRS)
 
-if T8_ENABLE_FORTRAN
-#Clean fortran module files
-CLEANFILES += *.$(FC_MODEXT)
-endif
-
 # handle toplevel directory
 EXTRA_DIST += \
   bootstrap build-aux/git-version-gen build-aux/git2cl scripts doc
@@ -82,6 +80,9 @@ include test/Makefile.am
 include example/Makefile.am
 include tutorials/Makefile.am
 include benchmarks/Makefile.am
+
+# Include the Fortran specific variables and rules
+include t8_fortran_specific.mk
 
 # revision control and ChangeLog
 ChangeLog:
