@@ -77,7 +77,8 @@ libt8_internal_headers = \
   src/t8_forest/t8_forest_cxx.h  \
   src/t8_forest/t8_forest_ghost.h \
   src/t8_forest/t8_forest_balance.h src/t8_forest/t8_forest_types.h \
-  src/t8_forest/t8_forest_private.h 
+  src/t8_forest/t8_forest_private.h \
+  src/t8_cmesh/t8_cmesh_vtk_to_t8/t8_cmesh_vtk_unstructured.hxx
 libt8_compiled_sources = \
   src/t8.c src/t8_eclass.c src/t8_mesh.c \
   src/t8_element.c src/t8_element_cxx.cxx \
@@ -112,20 +113,24 @@ libt8_compiled_sources = \
   src/t8_forest/t8_forest_netcdf.cxx \
   src/t8_element_shape.c \
   src/t8_netcdf.c \
-  src/t8_cmesh/t8_cmesh_testcases.c 
+  src/t8_cmesh/t8_cmesh_testcases.c  \
+  src/t8_cmesh/t8_cmesh_vtk_to_t8/t8_cmesh_vtk_unstructured.cxx
+
 
 # this variable is used for headers that are not publicly installed
 T8_CPPFLAGS =
 
+justlibs-local: src/libt8.la
 lib_LTLIBRARIES += src/libt8.la
 src_libt8_la_SOURCES = \
 	$(libt8_internal_headers) \
 	$(libt8_compiled_sources)
 src_libt8_la_CPPFLAGS = $(AM_CPPFLAGS) $(T8_CPPFLAGS)
-src_libt8_la_LDFLAGS = -release $(VERSION)
+## This is the official API versioning scheme of libtool.  Please see:
+## Read https://www.gnu.org/software/libtool/manual/libtool.html#Versioning
+src_libt8_la_LDFLAGS = -release $(VERSION) -version-info 2:0:0
 src_libt8_la_LIBADD = @T8_P4EST_LDADD@ @T8_SC_LDADD@
-LDADD += @top_builddir@/src/libt8.la \
-        @T8_P4EST_LDADD@ @T8_SC_LDADD@
+LDADD += src/libt8.la @T8_P4EST_LDADD@ @T8_SC_LDADD@
 EXTRA_src_libt8_la_DEPENDENCIES = @T8_P4EST_LDADD@ @T8_SC_LDADD@
 
 nodist_include_HEADERS += $(libt8_generated_headers)
@@ -146,5 +151,4 @@ dist_defaulttetinclude_HEADERS = $(libt8_installed_headers_default_tet)
 dist_defaultprisminclude_HEADERS = $(libt8_installed_headers_default_prism)
 dist_defaultpyramidinclude_HEADERS = $(libt8_installed_headers_default_pyramid)
 
-AM_CPPFLAGS += -I@top_srcdir@/src \
-        @T8_SC_CPPFLAGS@ @T8_P4EST_CPPFLAGS@
+AM_CPPFLAGS += -I@top_srcdir@/src @T8_SC_CPPFLAGS@ @T8_P4EST_CPPFLAGS@
