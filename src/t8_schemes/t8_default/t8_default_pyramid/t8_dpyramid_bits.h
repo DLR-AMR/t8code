@@ -261,12 +261,12 @@ void                t8_dpyramid_last_descendant_face (const t8_dpyramid_t *p,
                                                       const int level);
 
 /** Compute the coordinates of a vertex of a pyramid.
- * \param [in] p    Input pyramid.
- * \param [in] vertex The number of the vertex.
+ * \param [in] elem    Input pyramid.
+ * \param [in] vertex  The number of the vertex.
  * \param [out] coords An array of 3 t8_dpyramid_coord_t that
  * 		     will be filled with the coordinates of the vertex.
  */
-void                t8_dpyramid_compute_coords (const t8_dpyramid_t *p,
+void                t8_dpyramid_compute_coords (const t8_dpyramid_t *elem,
                                                 const int vertex,
                                                 int coords[]);
 
@@ -371,6 +371,20 @@ void                t8_dpyramid_vertex_reference_coords (const t8_dpyramid_t
                                                          *elem,
                                                          const int vertex,
                                                          double coords[]);
+
+/** Convert a point in the reference space of a pyramid element to a point in
+ *  the reference space of the tree (level 0) embedded in [0,1]^3.
+ * \param [in]  elem       Input pyramid.
+ * \param [in]  ref_coords The reference coordinates inside the
+ *                         pyramid element [0,1]^3
+ * \param [out] out_coords An array of 3 doubles that will be filled with the
+ *                         reference coordinates in the tree of the pyramid.
+ */
+void                t8_dpyramid_compute_reference_coords (const t8_dpyramid_t
+                                                          *elem,
+                                                          const double
+                                                          *ref_coords,
+                                                          double *out_coords);
 
 /**
  * Compute the nearest common ancestor of two elements
