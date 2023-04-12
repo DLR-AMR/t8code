@@ -322,7 +322,7 @@ t8_default_scheme_vertex_c::t8_element_vertex_reference_coords (const
 
 void
 t8_default_scheme_vertex_c::t8_element_reference_coords (const t8_element_t
-                                                         *t,
+                                                         *elem,
                                                          const double
                                                          *ref_coords,
                                                          const void
