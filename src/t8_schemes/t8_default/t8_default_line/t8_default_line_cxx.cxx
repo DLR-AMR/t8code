@@ -367,6 +367,17 @@ t8_default_scheme_line_c::t8_element_vertex_reference_coords (const
   t8_dline_vertex_ref_coords ((const t8_dline_t *) elem, vertex, coords);
 }
 
+void
+t8_default_scheme_line_c::t8_element_reference_coords (const t8_element_t *t,
+                                                       const double
+                                                       *ref_coords,
+                                                       const void *user_data,
+                                                       double *out_coords)
+  const
+{
+  SC_ABORTF ("Not implemented\n");
+}
+
 int
 t8_default_scheme_line_c::t8_element_root_len (const t8_element_t *elem) const
 {
