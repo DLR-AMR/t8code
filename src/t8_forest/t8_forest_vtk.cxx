@@ -45,6 +45,7 @@
 #include <vtkQuadraticTetra.h>
 #include <vtkQuadraticHexahedron.h>
 #include <vtkQuadraticWedge.h>
+#include <vtkQuadraticPyramid.h>
 #include <vtkUnstructuredGrid.h>
 #include <vtkXMLPUnstructuredGridWriter.h>
 #include <vtkDoubleArray.h>
@@ -184,9 +185,9 @@ const double        t8_forest_vtk_point_to_element_ref_coords[T8_ECLASS_COUNT]
    {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}
    },
   {                             /* T8_ECLASS_PYRAMID */
-   {0, 0, 0}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1},
-   {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1},
-   {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1},
+   {0, 0, 0}, {1, 0, 0}, {1, 1, 0}, {0, 1, 0}, {1, 1, 1},
+   {0.5, 0, 0}, {1, 0.5, 0}, {0.5, 1, 0}, {0, 0.5, 0}, {0.5, 0.5, 0.5},
+   {1, 0.5, 0.5}, {1, 1, 0.5}, {0.5, 1, 0.5}, {-1, -1, -1}, {-1, -1, -1},
    {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}
    }
 };
@@ -459,6 +460,7 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix,
   vtkNew < vtkQuadraticTetra > quadratictet;
   vtkNew < vtkQuadraticHexahedron > quadratichexa;
   vtkNew < vtkQuadraticWedge > quadraticprism;
+  vtkNew < vtkQuadraticPyramid > quadraticpyra;
 
   /* 
    * The cellTypes Array stores the element types as integers(see vtk doc).
@@ -577,8 +579,8 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix,
           pvtkCell = quadraticprism;
           break;
         case T8_ECLASS_PYRAMID:
-          SC_CHECK_ABORT (element_shape != T8_ECLASS_PYRAMID,
-                          "Quadratic Pyramids are not supported in vtk output");
+          pvtkCell = quadraticpyra;
+          break;
         default:
           SC_ABORT_NOT_REACHED ();
         }
