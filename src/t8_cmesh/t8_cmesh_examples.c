@@ -863,7 +863,7 @@ t8_update_box_face_edges (const int dim,
                           const int face, const t8_locidx_t *axes)
 {
   T8_ASSERT (dim == 2 || dim == 3);
-  const t8_eclass_t eclass = dim == 2 ? T8_ECLASS_QUAD : T8_ECLASS_HEX;
+  const t8_eclass_t   eclass = dim == 2 ? T8_ECLASS_QUAD : T8_ECLASS_HEX;
   T8_ASSERT (-1 < face && face < t8_eclass_num_faces[eclass]);
   const int           num_face_edges = eclass == T8_ECLASS_QUAD ? 1 : 4;
   for (int face_edge = 0; face_edge < num_face_edges; face_edge++) {
@@ -904,7 +904,7 @@ t8_resize_box (const int dim,
                const int face, const t8_locidx_t factor, int *axes)
 {
   T8_ASSERT (dim == 2 || dim == 3);
-  const t8_eclass_t eclass = dim == 2 ? T8_ECLASS_QUAD : T8_ECLASS_HEX;
+  const t8_eclass_t   eclass = dim == 2 ? T8_ECLASS_QUAD : T8_ECLASS_HEX;
   T8_ASSERT (-1 < face && face < t8_eclass_num_faces[eclass]);
   const int           num_face_corner = eclass == T8_ECLASS_QUAD ? 2 : 4;
   for (int face_corner = 0; face_corner < num_face_corner; face_corner++) {
@@ -1361,7 +1361,7 @@ t8_cmesh_new_hypercube_ext (const t8_eclass_t eclass,
       for (t8_locidx_t poly_x_id = 0; poly_x_id < polygons_x - 1; poly_x_id++) {
         const t8_locidx_t   poly_id = poly_z_id * polygons_y * polygons_x
           + poly_y_id * polygons_x + poly_x_id;
-        if (eclass == T8_ECLASS_LINE || eclass == T8_ECLASS_QUAD 
+        if (eclass == T8_ECLASS_LINE || eclass == T8_ECLASS_QUAD
             || eclass == T8_ECLASS_HEX) {
           const t8_locidx_t   tree_id_0 = poly_id;
           const t8_locidx_t   tree_id_1 = poly_id + 1;
