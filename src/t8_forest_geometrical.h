@@ -141,8 +141,6 @@ void                t8_forest_element_face_normal (t8_forest_t forest,
                                                    *element, int face,
                                                    double normal[3]);
 
-
-
 T8_EXTERN_C_END ();
 
 #endif /* !T8_FOREST_GEOMETRICAL_H */

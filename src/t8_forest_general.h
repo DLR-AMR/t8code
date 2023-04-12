@@ -740,7 +740,6 @@ t8_gloidx_t         t8_forest_element_face_neighbor (t8_forest_t forest,
                                                      *neigh_scheme, int face,
                                                      int *neigh_face);
 
-
 /* TODO: implement */
 void                t8_forest_iterate (t8_forest_t forest);
 
@@ -821,24 +820,6 @@ void                t8_forest_ref (t8_forest_t forest);
  *                              the forest is not modified in other ways.
  */
 void                t8_forest_unref (t8_forest_t *pforest);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 T8_EXTERN_C_END ();
 
