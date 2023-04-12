@@ -32,9 +32,6 @@
 /*TODO: Check if all headers are needed */
 #include <sc_statistics.h>
 #include <t8_cmesh.h>
-#include <t8_element.h>
-#include <t8_vtk.h>
-#include <t8_data/t8_containers.h>
 
 T8_EXTERN_C_BEGIN ();
 
