@@ -850,19 +850,20 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
 
 /** This is just a helper function that was needed when we update the 
  * directional vector around a box for t8_cmesh_set_vertices_2D and _3D.
- * \param [in] eclass       The class of the box. T8_ECLASS_QUAD or T8_ECLASS_HEX
+ * \param [in] dim          The dimension of the box. 2 or 3D.
  * \param [in] box_corners  The vertices that define the box.
  * \param [in, out] box_dir The direction vectors of the edges of the surrounding box.
  * \param [in] face         The box face whose edges need to be updated.
  * \param [in] axes         The number of quads or hexes along the axes.
  */
 static void
-t8_update_box_face_edges (const t8_eclass_t eclass,
+t8_update_box_face_edges (const int dim,
                           const double *box_corners,
                           double *box_dir,
                           const int face, const t8_locidx_t *axes)
 {
-  T8_ASSERT (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX);
+  T8_ASSERT (dim == 2 || dim == 3);
+  const t8_eclass_t eclass = dim == 2 ? T8_ECLASS_QUAD : T8_ECLASS_HEX;
   T8_ASSERT (-1 < face && face < t8_eclass_num_faces[eclass]);
   const int           num_face_edges = eclass == T8_ECLASS_QUAD ? 1 : 4;
   for (int face_edge = 0; face_edge < num_face_edges; face_edge++) {
@@ -888,7 +889,7 @@ t8_update_box_face_edges (const t8_eclass_t eclass,
 
 /** This is just a helper function that was needed when we change the 
  * size of a box for t8_cmesh_set_vertices_2D and _3D.
- * \param [in] eclass       The class of the box. T8_ECLASS_QUAD or T8_ECLASS_HEX
+ * \param [in] dim          The dimension of the box. 2 or 3D.
  * \param [in, out] box_corners  The vertices that define the box.
  * \param [in] box_dir      The direction vectors of the edges of the surrounding box.
  * \param [in] face         The box face along which we change the box size.
@@ -897,13 +898,13 @@ t8_update_box_face_edges (const t8_eclass_t eclass,
  * \param [in, out] axes    The number of quads or hexes along the axes. 
  */
 static void
-t8_resize_box (const t8_eclass_t eclass,
+t8_resize_box (const int dim,
                double *box_corners,
                const double *box_dir,
                const int face, const t8_locidx_t factor, int *axes)
 {
-  T8_ASSERT (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX);
-  T8_ASSERT (t8_eclass_to_dimension[eclass] > 1);
+  T8_ASSERT (dim == 2 || dim == 3);
+  const t8_eclass_t eclass = dim == 2 ? T8_ECLASS_QUAD : T8_ECLASS_HEX;
   T8_ASSERT (-1 < face && face < t8_eclass_num_faces[eclass]);
   const int           num_face_corner = eclass == T8_ECLASS_QUAD ? 2 : 4;
   for (int face_corner = 0; face_corner < num_face_corner; face_corner++) {
@@ -967,10 +968,10 @@ t8_cmesh_set_vertices_2D (t8_cmesh_t cmesh,
    **/
   double              box_dir[12];
   /* Set up initial box_dir. */
-  t8_update_box_face_edges (T8_ECLASS_QUAD, box, box_dir, 0, box_quads);
-  t8_update_box_face_edges (T8_ECLASS_QUAD, box, box_dir, 1, box_quads);
-  t8_update_box_face_edges (T8_ECLASS_QUAD, box, box_dir, 2, box_quads);
-  t8_update_box_face_edges (T8_ECLASS_QUAD, box, box_dir, 3, box_quads);
+  t8_update_box_face_edges (2, box, box_dir, 0, box_quads);
+  t8_update_box_face_edges (2, box, box_dir, 1, box_quads);
+  t8_update_box_face_edges (2, box, box_dir, 2, box_quads);
+  t8_update_box_face_edges (2, box, box_dir, 3, box_quads);
 
   /* The first vertex of box corresponds to the first vertex of the
    * current quad box (or tree in case of eclass = T8_ECLASS_QUADS).
@@ -987,8 +988,8 @@ t8_cmesh_set_vertices_2D (t8_cmesh_t cmesh,
       t8_vec_axpyz (box, box_dir, vertices + 6, 1.0);   /* Vertex 2 */
 
       /* Reduce box along x axis */
-      t8_resize_box (T8_ECLASS_QUAD, box, box_dir, 0, 1, box_quads);
-      t8_update_box_face_edges (T8_ECLASS_QUAD, box, box_dir, 0, box_quads);
+      t8_resize_box (2, box, box_dir, 0, 1, box_quads);
+      t8_update_box_face_edges (2, box, box_dir, 0, box_quads);
 
       t8_vec_axy (box, vertices + 3, 1.0);      /* Vertex 1 */
       t8_vec_axpyz (box, box_dir, vertices + 9, 1.0);   /* Vertex 3 */
@@ -1024,11 +1025,11 @@ t8_cmesh_set_vertices_2D (t8_cmesh_t cmesh,
     }
     box_quads[0] = quads_x;
     box_quads[1] = quads_y;
-    t8_update_box_face_edges (T8_ECLASS_QUAD, box, box_dir, 0, box_quads);
+    t8_update_box_face_edges (2, box, box_dir, 0, box_quads);
 
     /* Reduce box along y axis and face 2. */
-    t8_resize_box (T8_ECLASS_QUAD, box, box_dir, 2, quad_y_id + 1, box_quads);
-    t8_update_box_face_edges (T8_ECLASS_QUAD, box, box_dir, 2, box_quads);
+    t8_resize_box (2, box, box_dir, 2, quad_y_id + 1, box_quads);
+    t8_update_box_face_edges (2, box, box_dir, 2, box_quads);
   }
 }
 
@@ -1097,20 +1098,20 @@ t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh,
    */
   double              box_dir[36];
   /* Set up initial box_dir. Faces 0, 1, 2 and 3 cover all edges. */
-  t8_update_box_face_edges (T8_ECLASS_HEX, box, box_dir, 0, box_hexs);
-  t8_update_box_face_edges (T8_ECLASS_HEX, box, box_dir, 1, box_hexs);
-  t8_update_box_face_edges (T8_ECLASS_HEX, box, box_dir, 2, box_hexs);
-  t8_update_box_face_edges (T8_ECLASS_HEX, box, box_dir, 3, box_hexs);
+  t8_update_box_face_edges (3, box, box_dir, 0, box_hexs);
+  t8_update_box_face_edges (3, box, box_dir, 1, box_hexs);
+  t8_update_box_face_edges (3, box, box_dir, 2, box_hexs);
+  t8_update_box_face_edges (3, box, box_dir, 3, box_hexs);
 
   /* Increase the box along each axis x, y and z with faces 1, 3 and 5
    * by one hex. This is necessary because otherwise we get a box of 
    * length 0 at one point. */
-  t8_resize_box (T8_ECLASS_HEX, box, box_dir, 1, 1, box_hexs);
-  t8_update_box_face_edges (T8_ECLASS_HEX, box, box_dir, 1, box_hexs);
-  t8_resize_box (T8_ECLASS_HEX, box, box_dir, 3, 1, box_hexs);
-  t8_update_box_face_edges (T8_ECLASS_HEX, box, box_dir, 3, box_hexs);
-  t8_resize_box (T8_ECLASS_HEX, box, box_dir, 5, 1, box_hexs);
-  t8_update_box_face_edges (T8_ECLASS_HEX, box, box_dir, 5, box_hexs);
+  t8_resize_box (3, box, box_dir, 1, 1, box_hexs);
+  t8_update_box_face_edges (3, box, box_dir, 1, box_hexs);
+  t8_resize_box (3, box, box_dir, 3, 1, box_hexs);
+  t8_update_box_face_edges (3, box, box_dir, 3, box_hexs);
+  t8_resize_box (3, box, box_dir, 5, 1, box_hexs);
+  t8_update_box_face_edges (3, box, box_dir, 5, box_hexs);
 
   /* The first vertex of box corresponds to the first vertex of the
    * current hexahedral box (or tree in case of eclass = T8_ECLASS_HEX).
@@ -1129,22 +1130,22 @@ t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh,
         t8_vec_axpyz (box, box_dir + 12, vertices + 6, 1.0);    /* Vertex 2 */
 
         /* Reduce box along z axis and face 4. */
-        t8_resize_box (T8_ECLASS_HEX, box, box_dir, 4, 1, box_hexs);
-        t8_update_box_face_edges (T8_ECLASS_HEX, box, box_dir, 4, box_hexs);
+        t8_resize_box (3, box, box_dir, 4, 1, box_hexs);
+        t8_update_box_face_edges (3, box, box_dir, 4, box_hexs);
 
         t8_vec_axy (box, vertices + 12, 1.0);   /* Vertex 4 */
         t8_vec_axpyz (box, box_dir + 12, vertices + 18, 1.0);   /* Vertex 6 */
 
         /* Reduce box along x axis and face 0. */
-        t8_resize_box (T8_ECLASS_HEX, box, box_dir, 0, 1, box_hexs);
-        t8_update_box_face_edges (T8_ECLASS_HEX, box, box_dir, 0, box_hexs);
+        t8_resize_box (3, box, box_dir, 0, 1, box_hexs);
+        t8_update_box_face_edges (3, box, box_dir, 0, box_hexs);
 
         t8_vec_axy (box, vertices + 15, 1.0);   /* Vertex 5 */
         t8_vec_axpyz (box, box_dir + 12, vertices + 21, 1.0);   /* Vertex 7 */
 
         /* Increase box along z axis and and face 4 */
-        t8_resize_box (T8_ECLASS_HEX, box, box_dir, 4, -1, box_hexs);
-        t8_update_box_face_edges (T8_ECLASS_HEX, box, box_dir, 4, box_hexs);
+        t8_resize_box (3, box, box_dir, 4, -1, box_hexs);
+        t8_update_box_face_edges (3, box, box_dir, 4, box_hexs);
 
         t8_vec_axy (box, vertices + 3, 1.0);    /* Vertex 1 */
         t8_vec_axpyz (box, box_dir + 12, vertices + 9, 1.0);    /* Vertex 3 */
@@ -1217,23 +1218,23 @@ t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh,
       }
       T8_ASSERT (box_hexs[0] == 1);
       /* Resize box along x axis and face 0 to get initial length. */
-      t8_resize_box (T8_ECLASS_HEX, box, box_dir, 0, -hexs_x, box_hexs);
-      t8_update_box_face_edges (T8_ECLASS_HEX, box, box_dir, 0, box_hexs);
+      t8_resize_box (3, box, box_dir, 0, -hexs_x, box_hexs);
+      t8_update_box_face_edges (3, box, box_dir, 0, box_hexs);
 
       /* Reduce box along y axis and face 2. */
-      t8_resize_box (T8_ECLASS_HEX, box, box_dir, 2, 1, box_hexs);
-      t8_update_box_face_edges (T8_ECLASS_HEX, box, box_dir, 2, box_hexs);
+      t8_resize_box (3, box, box_dir, 2, 1, box_hexs);
+      t8_update_box_face_edges (3, box, box_dir, 2, box_hexs);
     }
     T8_ASSERT (box_hexs[0] == hexs_x + 1);
     T8_ASSERT (box_hexs[1] == 1);
 
     /* Resize box along y axis and face 2 to get initial length. */
-    t8_resize_box (T8_ECLASS_HEX, box, box_dir, 2, -hexs_y, box_hexs);
-    t8_update_box_face_edges (T8_ECLASS_HEX, box, box_dir, 2, box_hexs);
+    t8_resize_box (3, box, box_dir, 2, -hexs_y, box_hexs);
+    t8_update_box_face_edges (3, box, box_dir, 2, box_hexs);
 
     /* Reduce box along z axis and face 4. */
-    t8_resize_box (T8_ECLASS_HEX, box, box_dir, 4, 1, box_hexs);
-    t8_update_box_face_edges (T8_ECLASS_HEX, box, box_dir, 4, box_hexs);
+    t8_resize_box (3, box, box_dir, 4, 1, box_hexs);
+    t8_update_box_face_edges (3, box, box_dir, 4, box_hexs);
   }
   T8_ASSERT (box_hexs[2] == 1);
   T8_ASSERT (box_hexs[1] == hexs_y + 1);
