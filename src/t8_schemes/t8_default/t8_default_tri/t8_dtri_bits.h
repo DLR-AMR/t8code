@@ -21,7 +21,7 @@
 */
 
 /** \file t8_dtri_bits.h
- * Definition if triangle-specific functions.
+ * Definitions of triangle-specific functions.
  */
 
 #ifndef T8_DTRI_BITS_H
