@@ -201,9 +201,11 @@ void                t8_dvertex_vertex_ref_coords (const t8_dvertex_t *elem,
  * \param [in] ref_coords   The reference coordinate inside the vertex (must be 0).
  * \param [out] out_coords  The coordinates of the computed vertex, must have one entry (will be set to 0).
  */
-void                t8_dvertex_reference_coords (const t8_dvertex_t *elem,
-                                                 const double *ref_coords,
-                                                 double *out_coords);
+void                t8_dvertex_compute_reference_coords (const t8_dvertex_t
+                                                         *elem,
+                                                         const double
+                                                         *ref_coords,
+                                                         double *out_coords);
 
 /** Computes the linear position of a vertex in an uniform grid.
  * \param [in] vertex  vertex whose id will be computed.
