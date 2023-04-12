@@ -1349,7 +1349,8 @@ t8_cmesh_new_hypercube_ext (const t8_eclass_t eclass,
           }
         }
         else {
-          T8_ASSERT (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX);
+          T8_ASSERT (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX ||
+                     eclass == T8_ECLASS_VERTEX || eclass == T8_ECLASS_LINE);
         }
       }
     }
@@ -1360,7 +1361,8 @@ t8_cmesh_new_hypercube_ext (const t8_eclass_t eclass,
       for (t8_locidx_t poly_x_id = 0; poly_x_id < polygons_x - 1; poly_x_id++) {
         const t8_locidx_t   poly_id = poly_z_id * polygons_y * polygons_x
           + poly_y_id * polygons_x + poly_x_id;
-        if (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX) {
+        if (eclass == T8_ECLASS_LINE || eclass == T8_ECLASS_QUAD 
+            || eclass == T8_ECLASS_HEX) {
           const t8_locidx_t   tree_id_0 = poly_id;
           const t8_locidx_t   tree_id_1 = poly_id + 1;
           t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 1, 0, 1);
