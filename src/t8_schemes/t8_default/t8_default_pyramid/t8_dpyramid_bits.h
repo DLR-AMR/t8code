@@ -21,7 +21,7 @@
 */
 
 /** \file t8_dpyramid_bits.h
- * Definition if pyramid-specific functions.
+ * Definitions of pyramid-specific functions.
  */
 
 #ifndef T8_DPYRAMID_BITS_H
