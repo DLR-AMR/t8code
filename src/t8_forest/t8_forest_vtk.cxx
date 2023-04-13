@@ -488,7 +488,8 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
   long int            point_id = 0;     /* The id of the point in the points Object. */
   double              coordinates[3];
   double              vertex_coords[3] = { 0, 0, 0 };
-  t8_gloidx_t         elem_id = t8_forest_get_first_local_element_id (forest);
+  const t8_gloidx_t   offset = t8_forest_get_first_local_element_id (forest);
+  t8_gloidx_t         elem_id = offset;
 
 /* Since we want to use different element types and a points Array and cellArray 
  * we have to declare these vtk objects. The cellArray stores the Elements.
@@ -681,10 +682,10 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
 
       /* *INDENT-OFF* */
       if(curved_flag==0){
-        cellTypes[elem_id] = t8_eclass_vtk_type[element_shape];
+        cellTypes[elem_id - offset] = t8_eclass_vtk_type[element_shape];
       }
       else{
-        cellTypes[elem_id] = t8_curved_eclass_vtk_type[element_shape];
+        cellTypes[elem_id - offset] = t8_curved_eclass_vtk_type[element_shape];
       }
       if (write_treeid == 1) {
         vtk_treeid->InsertNextValue (gtreeid);
