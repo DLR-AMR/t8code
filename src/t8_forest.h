@@ -959,7 +959,6 @@ void                t8_forest_element_from_ref_coords (t8_forest_t forest,
 
 /** Compute the coordinates of the centroid of an element if a geometry
  * for this tree is registered in the forest's cmesh.
- * The centroid is the sum of all corner vertices divided by the number of corners.
  * The centroid can be seen as the midpoint of an element and thus can for example be used
  * to compute level-set values or the distance between two elements.
  * \param [in]      forest     The forest.
