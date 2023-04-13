@@ -123,6 +123,9 @@ typedef uint64_t    t8_linearidx_t;
 #define T8_ADD_PADDING(_x) \
   ((T8_PADDING_SIZE - ((_x) % T8_PADDING_SIZE)) % T8_PADDING_SIZE)
 
+/** Define precisions for computations */
+#define T8_PRECISION_EPS SC_EPS
+
 /** Communication tags used internal to t8code. */
 typedef enum
 {

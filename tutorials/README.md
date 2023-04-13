@@ -26,6 +26,9 @@ Partitioning, balancing and creating ghost layer for forest. Explains the forest
 [step5](https://github.com/DLR-AMR/t8code/wiki/Step-5---Store-element-data) - 
 Associating user data with a forest's elements. Exchanging ghost values for element user data. Writing element user data to vtu.
 
+[step6](https://github.com/DLR-AMR/t8code/wiki/Step-6-Computing-stencils) - 
+Gather data from element's face neighbors and collect stencils in, e.g., finite difference computations.
+
 [Search](https://github.com/DLR-AMR/t8code/wiki/Tutorial:-Search) - 
 A tutorial for the hierarchical search to identify elements matching a user defined criterion.
 
@@ -36,4 +39,4 @@ A tutorial for the hierarchical search to identify elements matching a user defi
 A tutorial about the generation of curved adaptive meshes.
 ## To be implemented in the future
 
-step6 - Changing a mesh with element data on it: Partitioning element data and interpolating data after adaptation.
+step7 - Changing a mesh with element data on it: Partitioning element data and interpolating data after adaptation.
