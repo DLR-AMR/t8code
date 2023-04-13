@@ -33,7 +33,7 @@
 #include <example/common/t8_example_common.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh_readmshfile.h>
-#include <t8_cmesh_vtk.h>
+#include <t8_cmesh_vtk_writer.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_vec.h>
 
@@ -1712,7 +1712,11 @@ main (int argc, char *argv[])
                       "with radius 0.15.\n"
                       "\t\t6 - A solution to the stokes equation on a spherical shell.\n"
                       "\t\t7 - Flow past a rotating cylinder of radius of 0.5"
-                      " around the z-axis.\n");
+                      " around the z-axis. This flow is defined for a specific"
+                      " mesh, which can be generated with Gmsh and the .geo"
+                      " files 't8_advection_generate_channel.geo' and"
+                      " 't8_advection_generate_channel_2d.geo'. These meshes"
+                      " can also be used with the curved geometry.\n");
   sc_options_add_int (opt, 'l', "level", &level, 0,
                       "The minimum refinement level of the mesh.");
   sc_options_add_int (opt, 'r', "rlevel", &reflevel, 0,

@@ -29,8 +29,9 @@
 #ifndef T8_FOREST_GENERAL_H
 #define T8_FOREST_GENERAL_H
 
-#include <sc_statistics.h>
-#include <t8_cmesh.h>     /* also includes t8_element.h and sc_containers.h */
+#include <t8_cmesh.h>
+#include <t8_element.h>
+#include <t8_data/t8_containers.h>
 
 /** Opaque pointer to a forest implementation. */
 typedef struct t8_forest *t8_forest_t;

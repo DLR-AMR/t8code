@@ -31,7 +31,7 @@
 #include <t8_element_c_interface.h>
 
 size_t
-t8_element_size (t8_eclass_scheme_c *ts)
+t8_element_size (const t8_eclass_scheme_c *ts)
 {
   T8_ASSERT (ts != NULL);
 
@@ -39,7 +39,7 @@ t8_element_size (t8_eclass_scheme_c *ts)
 }
 
 int
-t8_element_refines_irregular (t8_eclass_scheme_c *ts)
+t8_element_refines_irregular (const t8_eclass_scheme_c *ts)
 {
   T8_ASSERT (ts != NULL);
 
@@ -47,7 +47,7 @@ t8_element_refines_irregular (t8_eclass_scheme_c *ts)
 }
 
 int
-t8_element_maxlevel (t8_eclass_scheme_c *ts)
+t8_element_maxlevel (const t8_eclass_scheme_c *ts)
 {
   T8_ASSERT (ts != NULL);
 
@@ -55,7 +55,7 @@ t8_element_maxlevel (t8_eclass_scheme_c *ts)
 }
 
 t8_eclass_t
-t8_element_child_eclass (t8_eclass_scheme_c *ts, int childid)
+t8_element_child_eclass (const t8_eclass_scheme_c *ts, int childid)
 {
   T8_ASSERT (ts != NULL);
 
@@ -63,7 +63,7 @@ t8_element_child_eclass (t8_eclass_scheme_c *ts, int childid)
 }
 
 int
-t8_element_level (t8_eclass_scheme_c *ts, const t8_element_t *elem)
+t8_element_level (const t8_eclass_scheme_c *ts, const t8_element_t *elem)
 {
   T8_ASSERT (ts != NULL);
 
@@ -71,7 +71,7 @@ t8_element_level (t8_eclass_scheme_c *ts, const t8_element_t *elem)
 }
 
 void
-t8_element_copy (t8_eclass_scheme_c *ts, const t8_element_t *source,
+t8_element_copy (const t8_eclass_scheme_c *ts, const t8_element_t *source,
                  t8_element_t *dest)
 {
   T8_ASSERT (ts != NULL);
@@ -80,7 +80,7 @@ t8_element_copy (t8_eclass_scheme_c *ts, const t8_element_t *source,
 }
 
 int
-t8_element_compare (t8_eclass_scheme_c *ts, const t8_element_t *elem1,
+t8_element_compare (const t8_eclass_scheme_c *ts, const t8_element_t *elem1,
                     const t8_element_t *elem2)
 {
   T8_ASSERT (ts != NULL);
@@ -89,7 +89,7 @@ t8_element_compare (t8_eclass_scheme_c *ts, const t8_element_t *elem1,
 }
 
 void
-t8_element_parent (t8_eclass_scheme_c *ts,
+t8_element_parent (const t8_eclass_scheme_c *ts,
                    const t8_element_t *elem, t8_element_t *parent)
 {
   T8_ASSERT (ts != NULL);
@@ -98,7 +98,8 @@ t8_element_parent (t8_eclass_scheme_c *ts,
 }
 
 int
-t8_element_num_siblings (t8_eclass_scheme_c *ts, const t8_element_t *elem)
+t8_element_num_siblings (const t8_eclass_scheme_c *ts,
+                         const t8_element_t *elem)
 {
   T8_ASSERT (ts != NULL);
 
@@ -106,7 +107,7 @@ t8_element_num_siblings (t8_eclass_scheme_c *ts, const t8_element_t *elem)
 }
 
 void
-t8_element_sibling (t8_eclass_scheme_c *ts,
+t8_element_sibling (const t8_eclass_scheme_c *ts,
                     const t8_element_t *elem, int sibid,
                     t8_element_t *sibling)
 {
@@ -125,7 +126,7 @@ t8_element_num_corners (const t8_eclass_scheme_c *ts,
 }
 
 int
-t8_element_num_faces (t8_eclass_scheme_c *ts, const t8_element_t *elem)
+t8_element_num_faces (const t8_eclass_scheme_c *ts, const t8_element_t *elem)
 {
   T8_ASSERT (ts != NULL);
 
@@ -133,7 +134,8 @@ t8_element_num_faces (t8_eclass_scheme_c *ts, const t8_element_t *elem)
 }
 
 int
-t8_element_max_num_faces (t8_eclass_scheme_c *ts, const t8_element_t *elem)
+t8_element_max_num_faces (const t8_eclass_scheme_c *ts,
+                          const t8_element_t *elem)
 {
   T8_ASSERT (ts != NULL);
 
@@ -141,7 +143,8 @@ t8_element_max_num_faces (t8_eclass_scheme_c *ts, const t8_element_t *elem)
 }
 
 int
-t8_element_num_children (t8_eclass_scheme_c *ts, const t8_element_t *elem)
+t8_element_num_children (const t8_eclass_scheme_c *ts,
+                         const t8_element_t *elem)
 {
   T8_ASSERT (ts != NULL);
 
@@ -149,7 +152,7 @@ t8_element_num_children (t8_eclass_scheme_c *ts, const t8_element_t *elem)
 }
 
 int
-t8_element_num_face_children (t8_eclass_scheme_c *ts,
+t8_element_num_face_children (const t8_eclass_scheme_c *ts,
                               const t8_element_t *elem, int face)
 {
   T8_ASSERT (ts != NULL);
@@ -158,7 +161,7 @@ t8_element_num_face_children (t8_eclass_scheme_c *ts,
 }
 
 int
-t8_element_get_face_corner (t8_eclass_scheme_c *ts,
+t8_element_get_face_corner (const t8_eclass_scheme_c *ts,
                             const t8_element_t *elem, int face, int corner)
 {
   T8_ASSERT (ts != NULL);
@@ -167,8 +170,8 @@ t8_element_get_face_corner (t8_eclass_scheme_c *ts,
 }
 
 int
-t8_element_get_corner_face (t8_eclass_scheme_c *ts, const t8_element_t *elem,
-                            int corner, int face)
+t8_element_get_corner_face (const t8_eclass_scheme_c *ts,
+                            const t8_element_t *elem, int corner, int face)
 {
   T8_ASSERT (ts != NULL);
 
@@ -176,7 +179,7 @@ t8_element_get_corner_face (t8_eclass_scheme_c *ts, const t8_element_t *elem,
 }
 
 void
-t8_element_child (t8_eclass_scheme_c *ts, const t8_element_t *elem,
+t8_element_child (const t8_eclass_scheme_c *ts, const t8_element_t *elem,
                   int childid, t8_element_t *child)
 {
   T8_ASSERT (ts != NULL);
@@ -185,7 +188,7 @@ t8_element_child (t8_eclass_scheme_c *ts, const t8_element_t *elem,
 }
 
 void
-t8_element_children (t8_eclass_scheme_c *ts, const t8_element_t *elem,
+t8_element_children (const t8_eclass_scheme_c *ts, const t8_element_t *elem,
                      int length, t8_element_t *c[])
 {
   T8_ASSERT (ts != NULL);
@@ -194,7 +197,7 @@ t8_element_children (t8_eclass_scheme_c *ts, const t8_element_t *elem,
 }
 
 int
-t8_element_child_id (t8_eclass_scheme_c *ts, const t8_element_t *elem)
+t8_element_child_id (const t8_eclass_scheme_c *ts, const t8_element_t *elem)
 {
   T8_ASSERT (ts != NULL);
 
@@ -202,8 +205,8 @@ t8_element_child_id (t8_eclass_scheme_c *ts, const t8_element_t *elem)
 }
 
 int
-t8_element_ancestor_id (t8_eclass_scheme_c *ts, const t8_element_t *elem,
-                        int level)
+t8_element_ancestor_id (const t8_eclass_scheme_c *ts,
+                        const t8_element_t *elem, int level)
 {
   T8_ASSERT (ts != NULL);
 
@@ -211,7 +214,7 @@ t8_element_ancestor_id (t8_eclass_scheme_c *ts, const t8_element_t *elem,
 }
 
 int
-t8_element_is_family (t8_eclass_scheme_c *ts, t8_element_t **fam)
+t8_element_is_family (const t8_eclass_scheme_c *ts, t8_element_t **fam)
 {
   T8_ASSERT (ts != NULL);
 
@@ -219,7 +222,7 @@ t8_element_is_family (t8_eclass_scheme_c *ts, t8_element_t **fam)
 }
 
 void
-t8_element_nca (t8_eclass_scheme_c *ts, const t8_element_t *elem1,
+t8_element_nca (const t8_eclass_scheme_c *ts, const t8_element_t *elem1,
                 const t8_element_t *elem2, t8_element_t *nca)
 {
   T8_ASSERT (ts != NULL);
@@ -228,7 +231,7 @@ t8_element_nca (t8_eclass_scheme_c *ts, const t8_element_t *elem1,
 }
 
 t8_element_shape_t
-t8_element_face_shape (t8_eclass_scheme_c *ts, const t8_element_t *elem,
+t8_element_face_shape (const t8_eclass_scheme_c *ts, const t8_element_t *elem,
                        int face)
 {
   T8_ASSERT (ts != NULL);
@@ -237,9 +240,10 @@ t8_element_face_shape (t8_eclass_scheme_c *ts, const t8_element_t *elem,
 }
 
 void
-t8_element_children_at_face (t8_eclass_scheme_c *ts, const t8_element_t *elem,
-                             int face, t8_element_t *children[],
-                             int num_children, int *child_indices)
+t8_element_children_at_face (const t8_eclass_scheme_c *ts,
+                             const t8_element_t *elem, int face,
+                             t8_element_t *children[], int num_children,
+                             int *child_indices)
 {
   T8_ASSERT (ts != NULL);
 
@@ -248,8 +252,9 @@ t8_element_children_at_face (t8_eclass_scheme_c *ts, const t8_element_t *elem,
 }
 
 int
-t8_element_face_child_face (t8_eclass_scheme_c *ts, const t8_element_t *elem,
-                            int face, int face_child)
+t8_element_face_child_face (const t8_eclass_scheme_c *ts,
+                            const t8_element_t *elem, int face,
+                            int face_child)
 {
   T8_ASSERT (ts != NULL);
 
@@ -257,8 +262,8 @@ t8_element_face_child_face (t8_eclass_scheme_c *ts, const t8_element_t *elem,
 }
 
 int
-t8_element_face_parent_face (t8_eclass_scheme_c *ts, const t8_element_t *elem,
-                             int face)
+t8_element_face_parent_face (const t8_eclass_scheme_c *ts,
+                             const t8_element_t *elem, int face)
 {
   T8_ASSERT (ts != NULL);
 
@@ -266,7 +271,7 @@ t8_element_face_parent_face (t8_eclass_scheme_c *ts, const t8_element_t *elem,
 }
 
 int
-t8_element_tree_face (t8_eclass_scheme_c *ts, const t8_element_t *elem,
+t8_element_tree_face (const t8_eclass_scheme_c *ts, const t8_element_t *elem,
                       int face)
 {
   T8_ASSERT (ts != NULL);
@@ -275,9 +280,9 @@ t8_element_tree_face (t8_eclass_scheme_c *ts, const t8_element_t *elem,
 }
 
 void
-t8_element_transform_face (t8_eclass_scheme_c *ts, const t8_element_t *elem1,
-                           t8_element_t *elem2, int orientation, int sign,
-                           int is_smaller_face)
+t8_element_transform_face (const t8_eclass_scheme_c *ts,
+                           const t8_element_t *elem1, t8_element_t *elem2,
+                           int orientation, int sign, int is_smaller_face)
 {
   T8_ASSERT (ts != NULL);
 
@@ -286,7 +291,8 @@ t8_element_transform_face (t8_eclass_scheme_c *ts, const t8_element_t *elem1,
 }
 
 int
-t8_element_extrude_face (t8_eclass_scheme_c *ts, const t8_element_t *face,
+t8_element_extrude_face (const t8_eclass_scheme_c *ts,
+                         const t8_element_t *face,
                          const t8_eclass_scheme_c *face_scheme,
                          t8_element_t *elem, int root_face)
 {
@@ -296,8 +302,9 @@ t8_element_extrude_face (t8_eclass_scheme_c *ts, const t8_element_t *face,
 }
 
 void
-t8_element_boundary_face (t8_eclass_scheme_c *ts, const t8_element_t *elem,
-                          int face, t8_element_t *boundary,
+t8_element_boundary_face (const t8_eclass_scheme_c *ts,
+                          const t8_element_t *elem, int face,
+                          t8_element_t *boundary,
                           const t8_eclass_scheme_c *boundary_scheme)
 {
   T8_ASSERT (ts != NULL);
@@ -306,7 +313,7 @@ t8_element_boundary_face (t8_eclass_scheme_c *ts, const t8_element_t *elem,
 }
 
 void
-t8_element_first_descendant_face (t8_eclass_scheme_c *ts,
+t8_element_first_descendant_face (const t8_eclass_scheme_c *ts,
                                   const t8_element_t *elem, int face,
                                   t8_element_t *first_desc, int level)
 {
@@ -316,7 +323,7 @@ t8_element_first_descendant_face (t8_eclass_scheme_c *ts,
 }
 
 void
-t8_element_last_descendant_face (t8_eclass_scheme_c *ts,
+t8_element_last_descendant_face (const t8_eclass_scheme_c *ts,
                                  const t8_element_t *elem, int face,
                                  t8_element_t *last_desc, int level)
 {
@@ -326,7 +333,7 @@ t8_element_last_descendant_face (t8_eclass_scheme_c *ts,
 }
 
 void
-t8_element_set_linear_id (t8_eclass_scheme_c *ts,
+t8_element_set_linear_id (const t8_eclass_scheme_c *ts,
                           t8_element_t *elem, int level, t8_linearidx_t id)
 {
   T8_ASSERT (ts != NULL);
@@ -335,8 +342,8 @@ t8_element_set_linear_id (t8_eclass_scheme_c *ts,
 }
 
 int
-t8_element_is_root_boundary (t8_eclass_scheme_c *ts, const t8_element_t *elem,
-                             int face)
+t8_element_is_root_boundary (const t8_eclass_scheme_c *ts,
+                             const t8_element_t *elem, int face)
 {
   T8_ASSERT (ts != NULL);
 
@@ -344,7 +351,7 @@ t8_element_is_root_boundary (t8_eclass_scheme_c *ts, const t8_element_t *elem,
 }
 
 int
-t8_element_face_neighbor_inside (t8_eclass_scheme_c *ts,
+t8_element_face_neighbor_inside (const t8_eclass_scheme_c *ts,
                                  const t8_element_t *elem,
                                  t8_element_t *neigh, int face,
                                  int *neigh_face)
@@ -355,7 +362,7 @@ t8_element_face_neighbor_inside (t8_eclass_scheme_c *ts,
 }
 
 t8_element_shape_t
-t8_element_shape (t8_eclass_scheme_c *ts, const t8_element_t *elem)
+t8_element_shape (const t8_eclass_scheme_c *ts, const t8_element_t *elem)
 {
   T8_ASSERT (ts != NULL);
 
@@ -363,7 +370,7 @@ t8_element_shape (t8_eclass_scheme_c *ts, const t8_element_t *elem)
 }
 
 t8_linearidx_t
-t8_element_get_linear_id (t8_eclass_scheme_c *ts,
+t8_element_get_linear_id (const t8_eclass_scheme_c *ts,
                           const t8_element_t *elem, int level)
 {
   T8_ASSERT (ts != NULL);
@@ -372,7 +379,7 @@ t8_element_get_linear_id (t8_eclass_scheme_c *ts,
 }
 
 void
-t8_element_first_descendant (t8_eclass_scheme_c *ts,
+t8_element_first_descendant (const t8_eclass_scheme_c *ts,
                              const t8_element_t *elem, t8_element_t *desc,
                              int level)
 {
@@ -382,7 +389,7 @@ t8_element_first_descendant (t8_eclass_scheme_c *ts,
 }
 
 void
-t8_element_last_descendant (t8_eclass_scheme_c *ts,
+t8_element_last_descendant (const t8_eclass_scheme_c *ts,
                             const t8_element_t *elem, t8_element_t *desc,
                             int level)
 {
@@ -392,7 +399,7 @@ t8_element_last_descendant (t8_eclass_scheme_c *ts,
 }
 
 void
-t8_element_successor (t8_eclass_scheme_c *ts, const t8_element_t *elem1,
+t8_element_successor (const t8_eclass_scheme_c *ts, const t8_element_t *elem1,
                       t8_element_t *elem2, int level)
 {
   T8_ASSERT (ts != NULL);
@@ -401,7 +408,7 @@ t8_element_successor (t8_eclass_scheme_c *ts, const t8_element_t *elem1,
 }
 
 int
-t8_element_root_len (t8_eclass_scheme_c *ts, const t8_element_t *elem)
+t8_element_root_len (const t8_eclass_scheme_c *ts, const t8_element_t *elem)
 {
   T8_ASSERT (ts != NULL);
 
@@ -409,7 +416,7 @@ t8_element_root_len (t8_eclass_scheme_c *ts, const t8_element_t *elem)
 }
 
 void
-t8_element_vertex_reference_coords (t8_eclass_scheme_c *ts,
+t8_element_vertex_reference_coords (const t8_eclass_scheme_c *ts,
                                     const t8_element_t *t, const int vertex,
                                     double coords[])
 {
@@ -419,7 +426,7 @@ t8_element_vertex_reference_coords (t8_eclass_scheme_c *ts,
 }
 
 t8_gloidx_t
-t8_element_count_leafs (t8_eclass_scheme_c *ts, const t8_element_t *t,
+t8_element_count_leafs (const t8_eclass_scheme_c *ts, const t8_element_t *t,
                         int level)
 {
   T8_ASSERT (ts != NULL);
@@ -428,7 +435,7 @@ t8_element_count_leafs (t8_eclass_scheme_c *ts, const t8_element_t *t,
 }
 
 t8_gloidx_t
-t8_element_count_leafs_from_root (t8_eclass_scheme_c *ts, int level)
+t8_element_count_leafs_from_root (const t8_eclass_scheme_c *ts, int level)
 {
   T8_ASSERT (ts != NULL);
 
@@ -436,8 +443,9 @@ t8_element_count_leafs_from_root (t8_eclass_scheme_c *ts, int level)
 }
 
 void
-t8_element_general_function (t8_eclass_scheme_c *ts, const t8_element_t *elem,
-                             const void *indata, void *outdata)
+t8_element_general_function (const t8_eclass_scheme_c *ts,
+                             const t8_element_t *elem, const void *indata,
+                             void *outdata)
 {
   T8_ASSERT (ts != NULL);
 
@@ -446,7 +454,7 @@ t8_element_general_function (t8_eclass_scheme_c *ts, const t8_element_t *elem,
 
 #ifdef T8_ENABLE_DEBUG
 int
-t8_element_is_valid (t8_eclass_scheme_c *ts, const t8_element_t *elem)
+t8_element_is_valid (const t8_eclass_scheme_c *ts, const t8_element_t *elem)
 {
   T8_ASSERT (ts != NULL);
 
@@ -454,7 +462,8 @@ t8_element_is_valid (t8_eclass_scheme_c *ts, const t8_element_t *elem)
 }
 
 void
-t8_element_debug_print (t8_eclass_scheme_c *ts, const t8_element_t *elem)
+t8_element_debug_print (const t8_eclass_scheme_c *ts,
+                        const t8_element_t *elem)
 {
   T8_ASSERT (ts != NULL);
 
@@ -463,7 +472,8 @@ t8_element_debug_print (t8_eclass_scheme_c *ts, const t8_element_t *elem)
 #endif
 
 void
-t8_element_new (t8_eclass_scheme_c *ts, int length, t8_element_t **elems)
+t8_element_new (const t8_eclass_scheme_c *ts, int length,
+                t8_element_t **elems)
 {
   T8_ASSERT (ts != NULL);
 
@@ -471,7 +481,8 @@ t8_element_new (t8_eclass_scheme_c *ts, int length, t8_element_t **elems)
 }
 
 void
-t8_element_destroy (t8_eclass_scheme_c *ts, int length, t8_element_t **elems)
+t8_element_destroy (const t8_eclass_scheme_c *ts, int length,
+                    t8_element_t **elems)
 {
   T8_ASSERT (ts != NULL);
 

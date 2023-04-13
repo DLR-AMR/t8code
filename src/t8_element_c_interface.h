@@ -40,18 +40,19 @@ T8_EXTERN_C_BEGIN ();
  * We provide a default implementation of this routine that should suffice
  * for most use cases.
  */
-size_t              t8_element_size (t8_eclass_scheme_c *ts);
+size_t              t8_element_size (const t8_eclass_scheme_c *ts);
 
  /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
  * Returns false otherwise.
  */
-int                 t8_element_refines_irregular (t8_eclass_scheme_c *ts);
+int                 t8_element_refines_irregular (const t8_eclass_scheme_c
+                                                  *ts);
 
 /** Return the maximum allowed level for any element of a given class.
  * \param [in] ts     Implementation of a class scheme.
  * \return            The maximum allowed level for elements of class \b ts.
  */
-int                 t8_element_maxlevel (t8_eclass_scheme_c *ts);
+int                 t8_element_maxlevel (const t8_eclass_scheme_c *ts);
 
 /** Return the type of each child in the ordering of the implementation.
  * \param [in] ts       Implementation of a class scheme.
@@ -59,14 +60,14 @@ int                 t8_element_maxlevel (t8_eclass_scheme_c *ts);
  *                      The number of children is defined in \a t8_element_num_children.
  * \return              The type for the given child.
  */
-t8_eclass_t         t8_element_child_eclass (t8_eclass_scheme_c *ts,
+t8_eclass_t         t8_element_child_eclass (const t8_eclass_scheme_c *ts,
                                              int childid);
 /** Return the level of a particular element.
  * \param [in] ts      Implementation of a class scheme.
  * \param [in] elem    The element whose level should be returned.
  * \return             The level of \b elem.
  */
-int                 t8_element_level (t8_eclass_scheme_c *ts,
+int                 t8_element_level (const t8_eclass_scheme_c *ts,
                                       const t8_element_t *elem);
 
 /** Copy all entries of \b source to \b dest. \b dest must be an existing
@@ -77,7 +78,7 @@ int                 t8_element_level (t8_eclass_scheme_c *ts,
  *                        entries of \b source.
  * \note \a source and \a dest may point to the same element.
  */
-void                t8_element_copy (t8_eclass_scheme_c *ts,
+void                t8_element_copy (const t8_eclass_scheme_c *ts,
                                      const t8_element_t *source,
                                      t8_element_t *dest);
 
@@ -89,7 +90,7 @@ void                t8_element_copy (t8_eclass_scheme_c *ts,
  *               and positiv if elem1 > elem2.
  *  If elem2 is a copy of elem1 then the elements are equal.
  */
-int                 t8_element_compare (t8_eclass_scheme_c *ts,
+int                 t8_element_compare (const t8_eclass_scheme_c *ts,
                                         const t8_element_t *elem1,
                                         const t8_element_t *elem2);
 
@@ -104,7 +105,7 @@ int                 t8_element_compare (t8_eclass_scheme_c *ts,
  *                    The storage for this element must exist
  *                    and match the element class of the parent.
  */
-void                t8_element_parent (t8_eclass_scheme_c *ts,
+void                t8_element_parent (const t8_eclass_scheme_c *ts,
                                        const t8_element_t *elem,
                                        t8_element_t *parent);
 
@@ -115,7 +116,7 @@ void                t8_element_parent (t8_eclass_scheme_c *ts,
  * \return            The number of siblings of \a element.
  * Note that this number is >= 1, since we count the element itself as a sibling.
  */
-int                 t8_element_num_siblings (t8_eclass_scheme_c *ts,
+int                 t8_element_num_siblings (const t8_eclass_scheme_c *ts,
                                              const t8_element_t *elem);
 
 /** Compute a specific sibling of a given element \b elem and store it in \b sibling.
@@ -130,7 +131,7 @@ int                 t8_element_num_siblings (t8_eclass_scheme_c *ts,
  *                    The storage for this element must exist
  *                    and match the element class of the sibling.
  */
-void                t8_element_sibling (t8_eclass_scheme_c *ts,
+void                t8_element_sibling (const t8_eclass_scheme_c *ts,
                                         const t8_element_t *elem, int sibid,
                                         t8_element_t *sibling);
 
@@ -147,7 +148,7 @@ int                 t8_element_num_corners (const t8_eclass_scheme_c *ts,
  * \param [in] elem   The element.
  * \return            The number of faces of \a element.
  */
-int                 t8_element_num_faces (t8_eclass_scheme_c *ts,
+int                 t8_element_num_faces (const t8_eclass_scheme_c *ts,
                                           const t8_element_t *elem);
 
 /** Compute the maximum number of faces of a given element and all of its
@@ -156,7 +157,7 @@ int                 t8_element_num_faces (t8_eclass_scheme_c *ts,
  * \param [in] elem   The element.
  * \return            The number of faces of \a element.
  */
-int                 t8_element_max_num_faces (t8_eclass_scheme_c *ts,
+int                 t8_element_max_num_faces (const t8_eclass_scheme_c *ts,
                                               const t8_element_t *elem);
 
 /** Compute the number of children of an element when it is refined.
@@ -164,7 +165,7 @@ int                 t8_element_max_num_faces (t8_eclass_scheme_c *ts,
  * \param [in] elem   The element.
  * \return            The number of children of \a element.
  */
-int                 t8_element_num_children (t8_eclass_scheme_c *ts,
+int                 t8_element_num_children (const t8_eclass_scheme_c *ts,
                                              const t8_element_t *elem);
 
 /** Compute the number of children of an element's face when the element is refined.
@@ -173,7 +174,8 @@ int                 t8_element_num_children (t8_eclass_scheme_c *ts,
  * \param [in] face   A face of \a elem.
  * \return            The number of children of \a face if \a elem is to be refined.
  */
-int                 t8_element_num_face_children (t8_eclass_scheme_c *ts,
+int                 t8_element_num_face_children (const t8_eclass_scheme_c
+                                                  *ts,
                                                   const t8_element_t *elem,
                                                   int face);
 
@@ -196,7 +198,7 @@ int                 t8_element_num_face_children (t8_eclass_scheme_c *ts,
  * TET               :  Starting with the lowest corner number counterclockwise as seen from
  *                      'outside' of the element.
  */
-int                 t8_element_get_face_corner (t8_eclass_scheme_c *ts,
+int                 t8_element_get_face_corner (const t8_eclass_scheme_c *ts,
                                                 const t8_element_t *elem,
                                                 int face, int corner);
 
@@ -213,7 +215,7 @@ int                 t8_element_get_face_corner (t8_eclass_scheme_c *ts,
  * \param [in] face     A face index for \a corner.
  * \return              The face number of the \a face-th face at \a corner.
  */
-int                 t8_element_get_corner_face (t8_eclass_scheme_c *ts,
+int                 t8_element_get_corner_face (const t8_eclass_scheme_c *ts,
                                                 const t8_element_t *elem,
                                                 int corner, int face);
 
@@ -230,7 +232,7 @@ int                 t8_element_get_corner_face (t8_eclass_scheme_c *ts,
  * It is valid to call this function with elem = child.
  * \see t8_element_child_eclass
  */
-void                t8_element_child (t8_eclass_scheme_c *ts,
+void                t8_element_child (const t8_eclass_scheme_c *ts,
                                       const t8_element_t *elem, int childid,
                                       t8_element_t *child);
 
@@ -246,7 +248,7 @@ void                t8_element_child (t8_eclass_scheme_c *ts,
  * \see t8_element_num_children
  * \see t8_element_child_eclass
  */
-void                t8_element_children (t8_eclass_scheme_c *ts,
+void                t8_element_children (const t8_eclass_scheme_c *ts,
                                          const t8_element_t *elem,
                                          int length, t8_element_t *c[]);
 
@@ -255,7 +257,7 @@ void                t8_element_children (t8_eclass_scheme_c *ts,
  * \param [in] elem     This must be a valid element.
  * \return              The child id of elem.
  */
-int                 t8_element_child_id (t8_eclass_scheme_c *ts,
+int                 t8_element_child_id (const t8_eclass_scheme_c *ts,
                                          const t8_element_t *elem);
 
 /** Compute the ancestor id of an element, that is the child id
@@ -265,7 +267,7 @@ int                 t8_element_child_id (t8_eclass_scheme_c *ts,
  * \param [in] level    A refinement level. Must satisfy \a level < elem.level
  * \return              The child_id of \a elem in regard to its \a level ancestor.
  */
-int                 t8_element_ancestor_id (t8_eclass_scheme_c *ts,
+int                 t8_element_ancestor_id (const t8_eclass_scheme_c *ts,
                                             const t8_element_t *elem,
                                             int level);
 
@@ -275,7 +277,7 @@ int                 t8_element_ancestor_id (t8_eclass_scheme_c *ts,
  *                      \b ts has children.
  * \return              Zero if \b fam is not a family, nonzero if it is.
  */
-int                 t8_element_is_family (t8_eclass_scheme_c *ts,
+int                 t8_element_is_family (const t8_eclass_scheme_c *ts,
                                           t8_element_t **fam);
 
 /** Compute the nearest common ancestor of two elements. That is,
@@ -289,7 +291,7 @@ int                 t8_element_is_family (t8_eclass_scheme_c *ts,
  *                      On output the unique nearest common ancestor of
  *                      \b elem1 and \b elem2.
  */
-void                t8_element_nca (t8_eclass_scheme_c *ts,
+void                t8_element_nca (const t8_eclass_scheme_c *ts,
                                     const t8_element_t *elem1,
                                     const t8_element_t *elem2,
                                     t8_element_t *nca);
@@ -303,7 +305,7 @@ void                t8_element_nca (t8_eclass_scheme_c *ts,
  *      and depending on the face number either T8_ECLASS_QUAD or
  *      T8_ECLASS_TRIANGLE for prisms.
  */
-t8_element_shape_t  t8_element_face_shape (t8_eclass_scheme_c *ts,
+t8_element_shape_t  t8_element_face_shape (const t8_eclass_scheme_c *ts,
                                            const t8_element_t *elem,
                                            int face);
 
@@ -322,7 +324,7 @@ t8_element_shape_t  t8_element_face_shape (t8_eclass_scheme_c *ts,
  *                      on output its i-th entry is the child_id of the i-th face_child.
  * It is valid to call this function with elem = children[0].
  */
-void                t8_element_children_at_face (t8_eclass_scheme_c *ts,
+void                t8_element_children_at_face (const t8_eclass_scheme_c *ts,
                                                  const t8_element_t *elem,
                                                  int face,
                                                  t8_element_t *children[],
@@ -350,7 +352,7 @@ void                t8_element_children_at_face (t8_eclass_scheme_c *ts,
  * \return                The face number of the face of a child of \a elem
  *                        that conincides with \a face_child.
  */
-int                 t8_element_face_child_face (t8_eclass_scheme_c *ts,
+int                 t8_element_face_child_face (const t8_eclass_scheme_c *ts,
                                                 const t8_element_t *elem,
                                                 int face, int face_child);
 
@@ -365,7 +367,7 @@ int                 t8_element_face_child_face (t8_eclass_scheme_c *ts,
  *                    the face number of this face. Otherwise -1.
  * \note For the root element this function always returns \a face.
  */
-int                 t8_element_face_parent_face (t8_eclass_scheme_c *ts,
+int                 t8_element_face_parent_face (const t8_eclass_scheme_c *ts,
                                                  const t8_element_t *elem,
                                                  int face);
 
@@ -379,7 +381,7 @@ int                 t8_element_face_parent_face (t8_eclass_scheme_c *ts,
  *         \a face is on a tree boundary.
  *         Any arbitrary integer if \a is not at a tree boundary.
  */
-int                 t8_element_tree_face (t8_eclass_scheme_c *ts,
+int                 t8_element_tree_face (const t8_eclass_scheme_c *ts,
                                           const t8_element_t *elem, int face);
 
 /** Suppose we have two trees that share a common face f.
@@ -404,7 +406,7 @@ int                 t8_element_tree_face (t8_eclass_scheme_c *ts,
  *                       defined in relation to the smaller face.
  * \note \a elem1 and \a elem2 may point to the same element.
  */
-void                t8_element_transform_face (t8_eclass_scheme_c *ts,
+void                t8_element_transform_face (const t8_eclass_scheme_c *ts,
                                                const t8_element_t *elem1,
                                                t8_element_t *elem2,
                                                int orientation,
@@ -424,7 +426,7 @@ void                t8_element_transform_face (t8_eclass_scheme_c *ts,
  * \return              The face number of the face of \a elem that coincides
  *                      with \a face.
  */
-int                 t8_element_extrude_face (t8_eclass_scheme_c *ts,
+int                 t8_element_extrude_face (const t8_eclass_scheme_c *ts,
                                              const t8_element_t *face,
                                              const t8_eclass_scheme_c
                                              *face_scheme,
@@ -443,7 +445,7 @@ int                 t8_element_extrude_face (t8_eclass_scheme_c *ts,
  * If \a elem is of class T8_ECLASS_VERTEX, then \a boundary must be NULL
  * and will not be modified.
  */
-void                t8_element_boundary_face (t8_eclass_scheme_c *ts,
+void                t8_element_boundary_face (const t8_eclass_scheme_c *ts,
                                               const t8_element_t *elem,
                                               int face,
                                               t8_element_t *boundary,
@@ -459,7 +461,8 @@ void                t8_element_boundary_face (t8_eclass_scheme_c *ts,
  *                       that shares a face with \a face.
  * \param [in] level     The level, at which the first descendant is constructed
  */
-void                t8_element_first_descendant_face (t8_eclass_scheme_c *ts,
+void                t8_element_first_descendant_face (const t8_eclass_scheme_c
+                                                      *ts,
                                                       const t8_element_t
                                                       *elem, int face,
                                                       t8_element_t
@@ -474,11 +477,12 @@ void                t8_element_first_descendant_face (t8_eclass_scheme_c *ts,
  *                       that shares a face with \a face.
  * \param [in] level     The level, at which the last descendant is constructed
  */
-void                t8_element_last_descendant_face (t8_eclass_scheme_c *ts,
-                                                     const t8_element_t
-                                                     *elem, int face,
-                                                     t8_element_t
-                                                     *last_desc, int level);
+void                t8_element_last_descendant_face (const t8_eclass_scheme_c
+                                                     *ts,
+                                                     const t8_element_t *elem,
+                                                     int face,
+                                                     t8_element_t *last_desc,
+                                                     int level);
 
 /* TODO:  Do we need this function at all?
  *        If not remove it. If so, what to do with prisms and pyramids?
@@ -504,7 +508,7 @@ void                t8_element_last_descendant_face (t8_eclass_scheme_c *ts,
  * \param [in] face     A face of \a elem.
  * \return              True if \a face is a subface of the element's root element.
  */
-int                 t8_element_is_root_boundary (t8_eclass_scheme_c *ts,
+int                 t8_element_is_root_boundary (const t8_eclass_scheme_c *ts,
                                                  const t8_element_t *elem,
                                                  int face);
 
@@ -524,7 +528,8 @@ int                 t8_element_is_root_boundary (t8_eclass_scheme_c *ts,
  *                  False if not. In this case \a neigh's data can be arbitrary
  *                  on output.
  */
-int                 t8_element_face_neighbor_inside (t8_eclass_scheme_c *ts,
+int                 t8_element_face_neighbor_inside (const t8_eclass_scheme_c
+                                                     *ts,
                                                      const t8_element_t *elem,
                                                      t8_element_t *neigh,
                                                      int face,
@@ -537,7 +542,7 @@ int                 t8_element_face_neighbor_inside (t8_eclass_scheme_c *ts,
 *  \param [in] elem   The element to be considered
 *  \return            The shape of the element as an eclass
 */
-t8_element_shape_t  t8_element_shape (t8_eclass_scheme_c *ts,
+t8_element_shape_t  t8_element_shape (const t8_eclass_scheme_c *ts,
                                       const t8_element_t *elem);
 
 /** Initialize the entries of an allocated element according to a
@@ -548,7 +553,7 @@ t8_element_shape_t  t8_element_shape (t8_eclass_scheme_c *ts,
  * \param [in] id       The linear id.
  *                      id must fulfil 0 <= id < 'number of leafs in the uniform refinement'
  */
-void                t8_element_set_linear_id (t8_eclass_scheme_c *ts,
+void                t8_element_set_linear_id (const t8_eclass_scheme_c *ts,
                                               t8_element_t *elem, int level,
                                               t8_linearidx_t id);
 
@@ -559,7 +564,7 @@ void                t8_element_set_linear_id (t8_eclass_scheme_c *ts,
  * \param [in] level    The level of the uniform refinement to consider.
  * \return              The linear id of the element.
  */
-t8_linearidx_t      t8_element_get_linear_id (t8_eclass_scheme_c *ts,
+t8_linearidx_t      t8_element_get_linear_id (const t8_eclass_scheme_c *ts,
                                               const t8_element_t *elem,
                                               int level);
 
@@ -569,7 +574,7 @@ t8_linearidx_t      t8_element_get_linear_id (t8_eclass_scheme_c *ts,
  * \param [out] desc    The first element in a uniform refinement of \a elem
  *                      of the maximum possible level.
  */
-void                t8_element_first_descendant (t8_eclass_scheme_c *ts,
+void                t8_element_first_descendant (const t8_eclass_scheme_c *ts,
                                                  const t8_element_t *elem,
                                                  t8_element_t *desc,
                                                  int level);
@@ -580,7 +585,7 @@ void                t8_element_first_descendant (t8_eclass_scheme_c *ts,
  * \param [out] desc    The last element in a uniform refinement of \a elem
  *                      of the maximum possible level.
  */
-void                t8_element_last_descendant (t8_eclass_scheme_c *ts,
+void                t8_element_last_descendant (const t8_eclass_scheme_c *ts,
                                                 const t8_element_t *elem,
                                                 t8_element_t *desc,
                                                 int level);
@@ -591,7 +596,7 @@ void                t8_element_last_descendant (t8_eclass_scheme_c *ts,
  * \param [in,out] elem2  The element whose entries will be set.
  * \param [in] level    The level of the uniform refinement to consider.
  */
-void                t8_element_successor (t8_eclass_scheme_c *ts,
+void                t8_element_successor (const t8_eclass_scheme_c *ts,
                                           const t8_element_t *elem1,
                                           t8_element_t *elem2, int level);
 
@@ -601,7 +606,7 @@ void                t8_element_successor (t8_eclass_scheme_c *ts,
  * \param [in] elem     The element whose root length should be computed.
  * \return              The root length of \a elem
  */
-int                 t8_element_root_len (t8_eclass_scheme_c *ts,
+int                 t8_element_root_len (const t8_eclass_scheme_c *ts,
                                          const t8_element_t *elem);
 
 /** Compute the coordinates of a given element vertex inside a reference tree
@@ -612,7 +617,8 @@ int                 t8_element_root_len (t8_eclass_scheme_c *ts,
  * \param [out] coords An array of at least as many doubles as the element's dimension
  *                      whose entries will be filled with the coordinates of \a vertex.
  */
-void                t8_element_vertex_reference_coords (t8_eclass_scheme_c
+void                t8_element_vertex_reference_coords (const
+                                                        t8_eclass_scheme_c
                                                         *ts,
                                                         const t8_element_t *t,
                                                         const int vertex,
@@ -640,7 +646,7 @@ void                t8_element_vertex_reference_coords (t8_eclass_scheme_c
  *  then the return value is max(0, 2^{\a level - level(\a t)}).
  *  Thus, if \a t's level is 0, and \a level = 3, the return value is 2^3 = 8.
  */
-t8_gloidx_t         t8_element_count_leafs (t8_eclass_scheme_c *ts,
+t8_gloidx_t         t8_element_count_leafs (const t8_eclass_scheme_c *ts,
                                             const t8_element_t *t, int level);
 
 /** Count how many leaf descendants of a given uniform level the root element will produce.
@@ -652,8 +658,8 @@ t8_gloidx_t         t8_element_count_leafs (t8_eclass_scheme_c *ts,
  * This is a convenience function, and can be implemented via
  * \ref t8_element_count_leafs.
  */
-t8_gloidx_t         t8_element_count_leafs_from_root (t8_eclass_scheme_c *ts,
-                                                      int level);
+t8_gloidx_t         t8_element_count_leafs_from_root (const t8_eclass_scheme_c
+                                                      *ts, int level);
 
 /** This function has no defined effect but each implementation is free to
  *  provide its own meaning of it. Thus this function can be used to compute or
@@ -667,7 +673,7 @@ t8_gloidx_t         t8_element_count_leafs_from_root (t8_eclass_scheme_c *ts,
  *  For example the default scheme triangle and tetrahedron implementations use 
  *  this function to return the type of a tri/tet to the caller.
  */
-void                t8_element_general_function (t8_eclass_scheme_c *ts,
+void                t8_element_general_function (const t8_eclass_scheme_c *ts,
                                                  const t8_element_t *elem,
                                                  const void *indata,
                                                  void *outdata);
@@ -690,7 +696,7 @@ void                t8_element_general_function (t8_eclass_scheme_c *ts,
    * \note            We recommend to use the assertion T8_ASSERT (t8_element_is_valid (elem))
    *                  in the implementation of each of the functions in this file.
    */
-int                 t8_element_is_valid (t8_eclass_scheme_c *ts,
+int                 t8_element_is_valid (const t8_eclass_scheme_c *ts,
                                          const t8_element_t *elem);
 
 /**
@@ -701,7 +707,7 @@ int                 t8_element_is_valid (t8_eclass_scheme_c *ts,
  * \param [in] ts     Implementation of a class scheme.
  * \param [in] elem   The element to print
  */
-void                t8_element_debug_print (t8_eclass_scheme_c *ts,
+void                t8_element_debug_print (const t8_eclass_scheme_c *ts,
                                             const t8_element_t *elem);
 #endif
 
@@ -723,7 +729,7 @@ void                t8_element_debug_print (t8_eclass_scheme_c *ts,
  * \see t8_element_init
  * \see t8_element_is_valid
  */
-void                t8_element_new (t8_eclass_scheme_c *ts, int length,
+void                t8_element_new (const t8_eclass_scheme_c *ts, int length,
                                     t8_element_t **elems);
 
 /** Deallocate an array of elements.
@@ -734,8 +740,8 @@ void                t8_element_new (t8_eclass_scheme_c *ts, int length,
  *                      On output all these pointers will be freed.
  *                      \b elem itself will not be freed by this function.
  */
-void                t8_element_destroy (t8_eclass_scheme_c *ts, int length,
-                                        t8_element_t **elems);
+void                t8_element_destroy (const t8_eclass_scheme_c *ts,
+                                        int length, t8_element_t **elems);
 
 T8_EXTERN_C_END ();
 

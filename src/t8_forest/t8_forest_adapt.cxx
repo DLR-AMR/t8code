@@ -350,10 +350,7 @@ t8_forest_adapt (t8_forest_t forest)
           t8_forest_adapt_refine_recursive (forest, ltree_id, el_considered,
                                             tscheme, refine_list, telements,
                                             &el_inserted, elements);
-          /* el_coarsen is the index of the first element in the new element
-           * array which could be coarsened recursively.
-           * We can set this here to the next element after the current family, since a family that emerges from a refinement will never be coarsened */
-          el_coarsen = el_inserted + num_children;
+          el_coarsen = el_inserted;
         }
         else {
           (void) t8_element_array_push_count (telements, num_children);

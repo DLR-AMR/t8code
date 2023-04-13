@@ -255,7 +255,8 @@ t8_test_geometry_occ (double *rot_vec,
   double              rotated_test_ref_coords[24];
   double              rotation_origin[3] = { 0.5, 0.5, 0.5 };
   double              inversed_rot_vec[3];
-  double              tol = FLT_EPSILON > 1e-10 ? FLT_EPSILON : 1e-10;
+  double              tol =
+    T8_PRECISION_EPS > 1e-10 ? T8_PRECISION_EPS : 1e-10;
   t8_cmesh_t          cmesh =
     t8_create_occ_hypercube (rot_vec, face, edge, parameters);
 

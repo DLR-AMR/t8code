@@ -72,10 +72,10 @@ t8_dprism_compare (const t8_dprism_t *p1, const t8_dprism_t *p2)
 }
 
 void
-t8_dprism_init_linear_id (t8_dprism_t *p, int level, uint64_t id)
+t8_dprism_init_linear_id (t8_dprism_t *p, int level, t8_linearidx_t id)
 {
-  uint64_t            tri_id = 0;
-  uint64_t            line_id = 0;
+  t8_linearidx_t      tri_id = 0;
+  t8_linearidx_t      line_id = 0;
   int                 i;
   int                 triangles_of_size_i = 1;
 
@@ -512,7 +512,7 @@ t8_dprism_first_descendant (const t8_dprism_t *p, t8_dprism_t *s, int level)
   t8_dline_first_descendant (&p->line, &s->line, level);
 #ifdef T8_ENABLE_DEBUG
   {
-    uint64_t            id;
+    t8_linearidx_t      id;
     id = t8_dprism_linear_id (p, level);
     T8_ASSERT (t8_dprism_linear_id (s, level) == id);
   }
@@ -580,18 +580,18 @@ t8_dprism_vertex_ref_coords (const t8_dprism_t *p, const int vertex,
   coords[2] = coords_int[2] / (double) T8_DPRISM_ROOT_LEN;
 }
 
-uint64_t
+t8_linearidx_t
 t8_dprism_linear_id (const t8_dprism_t *p, int level)
 {
-  uint64_t            id = 0;
-  uint64_t            tri_id;
-  uint64_t            line_id;
+  t8_linearidx_t      id = 0;
+  t8_linearidx_t      tri_id;
+  t8_linearidx_t      line_id;
   int                 i;
-  uint64_t            prisms_of_size_i = 1;
-  /*line_level = Num_of_Line_children ^ (level - 1) */
-  uint64_t            line_level;
+  t8_linearidx_t      prisms_of_size_i = 1;
+  /*lines_at_level = Num_of_Line_children ^ (level - 1) */
+  t8_linearidx_t      lines_at_level;
   /*prism_shift = Num_of_Prism_children / Num_of_line-Children * 8 ^ (level - 1) */
-  uint64_t            prism_shift;
+  t8_linearidx_t      prism_shift;
   T8_ASSERT (0 <= level && level <= T8_DPRISM_MAXLEVEL);
   T8_ASSERT (p->line.level == p->tri.level);
   /*id = 0 for root element */
@@ -599,7 +599,7 @@ t8_dprism_linear_id (const t8_dprism_t *p, int level)
     return 0;
   }
 
-  line_level = sc_intpow64u (T8_DLINE_CHILDREN, level - 1);
+  lines_at_level = sc_intpow64u (T8_DLINE_CHILDREN, level - 1);
   /* *INDENT-OFF* */
   prism_shift =
     (T8_DPRISM_CHILDREN / T8_DLINE_CHILDREN) *
@@ -620,10 +620,10 @@ t8_dprism_linear_id (const t8_dprism_t *p, int level)
   for (i = level - 1; i >= 0; i--) {
     /*The number to add to the id computed via the tri_id is 4*8^(level-i)
      *for each plane in a prism of size i*/
-    id += line_id / line_level * prism_shift;
-    line_id = (uint64_t) (line_id % line_level);
+    id += line_id / lines_at_level * prism_shift;
+    line_id = (line_id % lines_at_level);
     prism_shift /= T8_DPRISM_CHILDREN;
-    line_level /= T8_DLINE_CHILDREN;
+    lines_at_level /= T8_DLINE_CHILDREN;
   }
 
   return id;
