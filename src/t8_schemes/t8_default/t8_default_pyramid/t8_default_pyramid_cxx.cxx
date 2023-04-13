@@ -482,7 +482,7 @@ t8_default_scheme_pyramid_c::t8_element_reference_coords (const t8_element_t
                                                           *ref_coords,
                                                           const void
                                                           *user_data,
-                                                          double *coords_out)
+                                                          double *out_coords)
   const
 {
   T8_ASSERT (t8_element_is_valid (elem));
