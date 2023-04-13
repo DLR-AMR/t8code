@@ -482,10 +482,12 @@ t8_default_scheme_pyramid_c::t8_element_reference_coords (const t8_element_t
                                                           *ref_coords,
                                                           const void
                                                           *user_data,
-                                                          double *out_coords)
+                                                          double *coords_out)
   const
 {
-  SC_ABORTF ("Not implemented\n");
+  T8_ASSERT (t8_element_is_valid (elem));
+  t8_dpyramid_compute_reference_coords ((const t8_dpyramid_t *) elem,
+                                        ref_coords, coords_out);
 }
 
 int

@@ -799,7 +799,18 @@ t8_default_scheme_quad_c::t8_element_reference_coords (const t8_element_t
                                                        double *out_coords)
   const
 {
-  SC_ABORTF ("Not implemented\n");
+  T8_ASSERT (t8_element_is_valid (elem));
+  const p4est_quadrant_t *q1 = (const p4est_quadrant_t *) elem;
+  out_coords[0] = q1->x / (double) P4EST_ROOT_LEN;
+  out_coords[1] = q1->y / (double) P4EST_ROOT_LEN;
+  const double        len =
+    P4EST_QUADRANT_LEN (q1->level) / (double) P4EST_ROOT_LEN;
+
+  out_coords[0] += ref_coords[0] * len;
+  out_coords[1] += ref_coords[1] * len;
+
+  out_coords[0] /= (double) P4EST_ROOT_LEN;
+  out_coords[1] /= (double) P4EST_ROOT_LEN;
 }
 
 void
