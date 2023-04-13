@@ -25,10 +25,6 @@ libt8_installed_headers = \
   src/t8_element_c_interface.h \
   src/t8_refcount.h src/t8_cmesh.h src/t8_cmesh_triangle.h \
   src/t8_cmesh_tetgen.h src/t8_cmesh_readmshfile.h \
-  src/t8_forest_general.h \
-  src/t8_forest_geometrical.h \
-  src/t8_forest_profiling.h \
-  src/t8_forest_io.h \
   src/t8_cmesh_vtk_writer.h \
   src/t8_cmesh_vtk_reader.hxx \
   src/t8_vec.h \
@@ -47,6 +43,11 @@ libt8_installed_headers_cmesh = \
 libt8_installed_headers_data = \
   src/t8_data/t8_shmem.h src/t8_data/t8_containers.h
 libt8_installed_headers_forest = \
+  src/t8_forest/t8_forest.h \
+  src/t8_forest/t8_forest_general.h \
+  src/t8_forest/t8_forest_geometrical.h \
+  src/t8_forest/t8_forest_profiling.h \
+  src/t8_forest/t8_forest_io.h \
   src/t8_forest/t8_forest_adapt.h \
   src/t8_forest/t8_forest_vtk.h \
   src/t8_forest/t8_forest_iterate.h src/t8_forest/t8_forest_partition.h

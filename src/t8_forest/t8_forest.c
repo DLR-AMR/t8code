@@ -22,8 +22,8 @@
 
 #include <sc_statistics.h>
 #include <t8_refcount.h>
-#include <t8_forest_general.h>
-#include <t8_forest_profiling.h>
+#include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_profiling.h>
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_partition.h>
