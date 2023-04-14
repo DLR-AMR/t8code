@@ -57,6 +57,8 @@
 #endif
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_io.h>
+#include <t8_forest/t8_forest_geometrical.h>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
