@@ -18,26 +18,25 @@
   You should have received a copy of the GNU General Public License
   along with t8code; if not, write to the Free Software Foundation, Inc.,
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
-*/
-
+*/  
+  
 /** \file t8_forest_general.h
  * We define the forest of trees in this file.
- */
-
-/* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest */
-
+ */ 
+  
+/* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest */ 
+  
 #ifndef T8_FOREST_IO_H
 #define T8_FOREST_IO_H
-
-/*TODO: Check if all headers are needed */
+  
+/*TODO: Check if all headers are needed */ 
 #include <t8_cmesh.h>
 #include <t8_vtk.h>
-
-T8_EXTERN_C_BEGIN ();
-
-/* TODO: implement */
+  T8_EXTERN_C_BEGIN ();
+ 
+/* TODO: implement */ 
 void                t8_forest_save (t8_forest_t forest);
-
+ 
 /** Write the forest in a parallel vtu format. Extended version.
  * See \ref t8_forest_write_vtk for the standard version of this function.
  * Writes one master .pvtu file and each process writes in its own .vtu file.
@@ -71,19 +70,19 @@ void                t8_forest_save (t8_forest_t forest);
  *                                      must come first in the array.
  * \return  True if successful, false if not (process local).
  * See also \ref t8_forest_write_vtk .
- */
+ */ 
 int                 t8_forest_write_vtk_ext (t8_forest_t forest,
-                                             const char *fileprefix,
-                                             int write_treeid,
-                                             int write_mpirank,
-                                             int write_level,
-                                             int write_element_id,
-                                             int write_ghosts,
-                                             int write_curved,
-                                             int do_not_use_API,
-                                             int num_data,
-                                             t8_vtk_data_field_t *data);
-
+                                             const char *fileprefix,
+                                             int write_treeid,
+                                             int write_mpirank,
+                                             int write_level,
+                                             int write_element_id,
+                                             int write_ghosts,
+                                             int write_curved,
+                                             int do_not_use_API,
+                                             int num_data,
+                                             t8_vtk_data_field_t *data);
+ 
 /** Write the forest in a parallel vtu format. Writes one master
  * .pvtu file and each process writes in its own .vtu file.
  * If linked, the VTK API is used.
@@ -98,10 +97,9 @@ int                 t8_forest_write_vtk_ext (t8_forest_t forest,
  *                                      and the process with rank r writes in the file
  *                                      fileprefix_r.vtu.
  * \return  True if successful, false if not (process local).
- */
+ */ 
 int                 t8_forest_write_vtk (t8_forest_t forest,
-                                         const char *fileprefix);
-
-T8_EXTERN_C_END ();
-
+                                         const char *fileprefix);
+ T8_EXTERN_C_END ();
+ 
 #endif /* !T8_FOREST_IO_H */

@@ -18,22 +18,21 @@
   You should have received a copy of the GNU General Public License
   along with t8code; if not, write to the Free Software Foundation, Inc.,
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
-*/
-
+*/  
+  
 /** \file t8_forest_geometrical.h
  * We define the geometrical queries for a forest of trees in this file.
- */
-
-/* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest */
-
+ */ 
+  
+/* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest */ 
+  
 #ifndef T8_FOREST_GEOMETRICAL_H
 #define T8_FOREST_GEOMETRICAL_H
-
+  
 #include <sc_statistics.h>
 #include <t8_cmesh.h>
-
-T8_EXTERN_C_BEGIN ();
-
+  T8_EXTERN_C_BEGIN ();
+ 
 /** Compute the coordinates of a given vertex of an element if a geometry
  * for this tree is registered in the forest's cmesh.
  * \param [in]      forest     The forest.
@@ -42,13 +41,14 @@ T8_EXTERN_C_BEGIN ();
  * \param [in]      corner_number The corner number, in Z-order, of the vertex which should be computed.
  * \param [out]     coordinates On input an allocated array to store 3 doubles, on output
  *                             the x, y and z coordinates of the vertex.
- */
+ */ 
 void                t8_forest_element_coordinate (t8_forest_t forest,
-                                                  t8_locidx_t ltree_id,
-                                                  const t8_element_t *element,
-                                                  int corner_number,
-                                                  double *coordinates);
-
+                                                  t8_locidx_t ltree_id,
+                                                  const t8_element_t
+                                                  *element,
+                                                  int corner_number,
+                                                  double *coordinates);
+ 
 /** Compute the coordinates of the centroid of an element if a geometry
  * for this tree is registered in the forest's cmesh.
  * The centroid is the sum of all corner vertices divided by the number of corners.
@@ -59,12 +59,12 @@ void                t8_forest_element_coordinate (t8_forest_t forest,
  * \param [in]      element    The element.
  * \param [out]     coordinates On input an allocated array to store 3 doubles, on output
  *                             the x, y and z coordinates of the centroid.
- */
+ */ 
 void                t8_forest_element_centroid (t8_forest_t forest,
-                                                t8_locidx_t ltreeid,
-                                                const t8_element_t *element,
-                                                double *coordinates);
-
+                                                t8_locidx_t ltreeid,
+                                                const t8_element_t *element,
+                                                double *coordinates);
+ 
 /** Compute the diameter of an element if a geometry
  * for this tree is registered in the forest's cmesh.
  * This is only an approximation.
@@ -74,11 +74,11 @@ void                t8_forest_element_centroid (t8_forest_t forest,
  * \return                     The diameter of the element.
  * \note                       For lines the value is exact while for other element types it is only
  *                             an approximation.
- */
+ */ 
 double              t8_forest_element_diam (t8_forest_t forest,
-                                            t8_locidx_t ltreeid,
-                                            const t8_element_t *element);
-
+                                            t8_locidx_t ltreeid,
+                                            const t8_element_t *element);
+ 
 /** Compute the volume of an element if a geometry
  * for this tree is registered in the forest's cmesh.
  * This is only an approximation.
@@ -89,11 +89,11 @@ double              t8_forest_element_diam (t8_forest_t forest,
  * \note                       This function assumes d-linear interpolation for the
  *                             tree vertex coordinates.
  *                             \a forest must be committed when calling this function.
- */
+ */ 
 double              t8_forest_element_volume (t8_forest_t forest,
-                                              t8_locidx_t ltreeid,
-                                              const t8_element_t *element);
-
+                                              t8_locidx_t ltreeid,
+                                              const t8_element_t *element);
+ 
 /** Compute the area of an element's face if a geometry
  * for this tree is registered in the forest's cmesh.
  * Currently implemented for 2D elements only.
@@ -104,12 +104,12 @@ double              t8_forest_element_volume (t8_forest_t forest,
  * \param [in]      face       A face of \a element.
  * \return                     The area of \a face.
  * \a forest must be committed when calling this function.
- */
+ */ 
 double              t8_forest_element_face_area (t8_forest_t forest,
-                                                 t8_locidx_t ltreeid,
-                                                 const t8_element_t *element,
-                                                 int face);
-
+                                                 t8_locidx_t ltreeid,
+                                                 const t8_element_t *element,
+                                                 int face);
+ 
 /** Compute the vertex coordinates of the centroid of an element's face if a geometry
  * for this tree is registered in the forest's cmesh.
  * \param [in]      forest     The forest.
@@ -118,13 +118,13 @@ double              t8_forest_element_face_area (t8_forest_t forest,
  * \param [in]      face       A face of \a element.
  * \param [out]     normal     On output the centroid of \a face.
  * \a forest must be committed when calling this function.
- */
+ */ 
 void                t8_forest_element_face_centroid (t8_forest_t forest,
-                                                     t8_locidx_t ltreeid,
-                                                     const t8_element_t
-                                                     *element, int face,
-                                                     double centroid[3]);
-
+                                                     t8_locidx_t ltreeid,
+                                                     const t8_element_t
+                                                     *element, int face,
+                                                     double centroid[3]);
+ 
 /** Compute the normal vector of an element's face if a geometry
  * for this tree is registered in the forest's cmesh.
  * Currently implemented for 2D elements only.
@@ -134,13 +134,12 @@ void                t8_forest_element_face_centroid (t8_forest_t forest,
  * \param [in]      face       A face of \a element.
  * \param [out]     normal     On output the normal vector of \a element at \a face.
  * \a forest must be committed when calling this function.
- */
+ */ 
 void                t8_forest_element_face_normal (t8_forest_t forest,
-                                                   t8_locidx_t ltreeid,
-                                                   const t8_element_t
-                                                   *element, int face,
-                                                   double normal[3]);
-
-T8_EXTERN_C_END ();
-
-#endif /* !T8_FOREST_GEOMETRICAL_H */
+                                                   t8_locidx_t ltreeid,
+                                                   const t8_element_t
+                                                   *element, int face,
+                                                   double normal[3]);
+ T8_EXTERN_C_END ();
+ 
+#endif  /* !T8_FOREST_GEOMETRICAL_H */
