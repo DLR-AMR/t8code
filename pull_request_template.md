@@ -8,6 +8,7 @@ As a reviewer please read through all the code lines and make sure that the code
 
 
 #### General
+- [ ] The reviewer executed the new code features at least once and checked the results manually
 
 - [ ] The code follows the [t8code coding guidelines](https://github.com/holke/t8code/wiki/Coding-Guideline)
 - [ ] New source/header files are properly added to the Makefiles
