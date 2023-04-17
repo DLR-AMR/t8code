@@ -585,7 +585,7 @@ t8_dprism_compute_reference_coords (const t8_dprism_t *elem,
                                     const double *ref_coords,
                                     double *out_coords)
 {
-  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (t8_dprism_is_valid (elem));
   T8_ASSERT (elem->line.level == elem->tri.level);
   /*Compute x and y coordinate */
   t8_dtri_compute_reference_coords (&elem->tri, ref_coords, out_coords);

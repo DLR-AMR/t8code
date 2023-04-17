@@ -403,6 +403,7 @@ t8_dtri_compute_reference_coords (const t8_dtri_t *elem,
    *   z--> x
    */
   T8_ASSERT (ref_coords != NULL);
+  T8_ASSERT (t8_dtri_is_valid (elem));
 
   t8_dtri_type_t      type;
   t8_dtri_coord_t     h;
