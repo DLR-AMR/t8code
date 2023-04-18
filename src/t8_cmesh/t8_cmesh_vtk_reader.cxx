@@ -35,11 +35,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #if T8_WITH_VTK
 #include <vtkCellIterator.h>
-#include <vtkPointData.h>
 #include <vtkCellData.h>
 #include <vtkCellDataToPointData.h>
-#include <vtkStructuredPoints.h>
-#include <vtkDataSetAlgorithm.h>
 #include <vtkCellTypes.h>
 #include <vtkUnstructuredGrid.h>
 #include <vtkUnstructuredGridReader.h>
