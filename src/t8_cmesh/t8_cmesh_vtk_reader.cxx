@@ -35,7 +35,11 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #if T8_WITH_VTK
 #include <vtkCellIterator.h>
+#include <vtkPointData.h>
 #include <vtkCellData.h>
+#include <vtkCellDataToPointData.h>
+#include <vtkStructuredPoints.h>
+#include <vtkDataSetAlgorithm.h>
 #include <vtkCellTypes.h>
 #include <vtkUnstructuredGrid.h>
 #include <vtkUnstructuredGridReader.h>
@@ -373,15 +377,43 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet > vtkGrid,
   }
   return cmesh;
 }
-#endif
 
-t8_cmesh_t
-t8_cmesh_vtk_reader (const char *filename, const int partition,
-                     const int main_proc, sc_MPI_Comm comm,
-                     const vtk_file_type_t vtk_file_type)
+vtkSmartPointer < vtkPointSet >
+t8_vtkGrid_to_vtkPointSet (vtkSmartPointer < vtkDataSet > vtkGrid)
 {
-#if T8_WITH_VTK
-  t8_cmesh_t          cmesh;
+  /* Set points */
+  vtkSmartPointer < vtkPoints > points = vtkSmartPointer < vtkPoints >::New ();
+  const vtkIdType num_points = vtkGrid->GetNumberOfPoints ();
+  points->SetDataType (VTK_DOUBLE);
+  points->SetNumberOfPoints (num_points);
+
+  for (vtkIdType ipoint = 0; ipoint < num_points; ipoint++) {
+    double vp[3];
+    vtkGrid->GetPoint (ipoint, vp);
+    points->SetPoint (ipoint, vp);
+  }
+  points->Modified ();
+  T8_ASSERT (points->GetNumberOfPoints() == num_points);
+  vtkSmartPointer < vtkPointSet > cloud = 
+    vtkSmartPointer < vtkPointSet >::New ();
+  cloud->SetPoints (points);
+
+  /* Map cell data to point data */
+  vtkSmartPointer < vtkCellDataToPointData > c2p = vtkCellDataToPointData::New ();
+  c2p->PassCellDataOff ();
+  c2p->SetInputData (vtkGrid);
+  c2p->Update ();
+  cloud->DeepCopy (c2p->GetOutput ());
+  //cloud->DeepCopy (vtkPointSet::SafeDownCast (c2p->GetOutput ()));
+
+  return cloud;
+}
+
+vtkSmartPointer < vtkDataSet >
+t8_vtk_reader (const char *filename, const int partition,
+               const int main_proc, sc_MPI_Comm comm,
+               const vtk_file_type_t vtk_file_type)
+{
   int                 mpisize;
   int                 mpirank;
   int                 mpiret;
@@ -421,8 +453,40 @@ t8_cmesh_vtk_reader (const char *filename, const int partition,
     return NULL;
   }
   else {
-    cmesh = t8_vtkGrid_to_cmesh (vtkGrid, partition, main_proc, comm);
+    return vtkGrid;
   }
+}
+#endif
+
+vtkSmartPointer < vtkPointSet >
+t8_pointSet_vtk_reader (const char *filename,
+                        const int partition,
+                        const int main_proc,
+                        sc_MPI_Comm comm,
+                        const vtk_file_type_t vtk_file_type)
+{
+#if T8_WITH_VTK
+  vtkSmartPointer < vtkDataSet > vtkGrid = 
+    t8_vtk_reader (filename, partition, main_proc, comm, vtk_file_type);
+  return t8_vtkGrid_to_vtkPointSet (vtkGrid);
+#else
+  /* Return NULL if not linked against vtk */
+  t8_global_errorf
+    ("WARNING: t8code is not linked against the vtk library. Without proper linking t8code cannot use the vtk-reader\n");
+#endif
+  return NULL;
+}
+
+t8_cmesh_t
+t8_cmesh_vtk_reader (const char *filename, const int partition,
+                     const int main_proc, sc_MPI_Comm comm,
+                     const vtk_file_type_t vtk_file_type)
+{
+#if T8_WITH_VTK
+  vtkSmartPointer < vtkDataSet > vtkGrid = 
+    t8_vtk_reader (filename, partition, main_proc, comm, vtk_file_type);
+  
+  t8_cmesh_t cmesh = t8_vtkGrid_to_cmesh (vtkGrid, partition, main_proc, comm);
   T8_ASSERT (cmesh != NULL);
   return cmesh;
 #else
