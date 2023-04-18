@@ -463,7 +463,7 @@ main (int argc, char *argv[])
       || T <= 0 || test_tet + test_linear_cylinder + test_occ_cylinder > 1
       || (cmesh_level >= 0 && (!test_linear_cylinder && !test_occ_cylinder))
       || ((mshfileprefix != NULL || cmeshfileprefix != NULL)
-          && (test_linear_cylinder || test_occ_cylinder || test_tet))) {
+          && (test_linear_cylinder || test_occ_cylinder || test_tet || use_occ))) {
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
     return 1;
   }
