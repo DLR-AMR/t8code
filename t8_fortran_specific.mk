@@ -21,7 +21,7 @@ $(MODSOURCES): %.f90 : | create-moddir
 
 # Rule to create the module directory
 create-moddir:
-	$(MKDIR_P) @T8_FORTRAN_MODULE_DIR@
+	@$(MKDIR_P) @T8_FORTRAN_MODULE_DIR@
 
 # Save the module directory
 t8_current_moddir += @T8_FORTRAN_MODULE_DIR@/
