@@ -288,9 +288,31 @@ t8_dtri_ancestor (const t8_dtri_t *t, int level, t8_dtri_t *ancestor)
 
 /* Compute the coordinates of a given vertex of a triangle/tet */
 void
-t8_dtri_compute_coords (const t8_dtri_t *t, const int vertex,
+t8_dtri_compute_coords (const t8_dtri_t *elem, const int vertex,
                         t8_dtri_coord_t coordinates[T8_DTRI_DIM])
 {
+  /* Calculate the vertex coordinates of a triangle/tetrahedron in
+   * relation to its orientation. Orientations are described here:
+   * https://doi.org/10.1137/15M1040049
+   * 1---------------------2
+   * |   orientation     /  2
+   * |       1         /  / |
+   * |               /  /   |
+   * |             /  /     |
+   * |           /  /       |
+   * |         /  /         |
+   * |       /  /           |
+   * |     /  /             |
+   * |   /  /  orientation  |
+   * | /  /        0        |
+   * 0  /                   |
+   *   0--------------------1
+   *
+   *   y
+   *   ^
+   *   |
+   *   z--> x
+   */
   t8_dtri_type_t      type;
   int                 ei;
 #ifdef T8_DTRI_TO_DTET
@@ -299,8 +321,8 @@ t8_dtri_compute_coords (const t8_dtri_t *t, const int vertex,
   t8_dtri_coord_t     h;
   T8_ASSERT (0 <= vertex && vertex < T8_DTRI_FACES);
 
-  type = t->type;
-  h = T8_DTRI_LEN (t->level);
+  type = elem->type;
+  h = T8_DTRI_LEN (elem->level);
 #ifndef T8_DTRI_TO_DTET
   ei = type;
 #else
@@ -308,10 +330,10 @@ t8_dtri_compute_coords (const t8_dtri_t *t, const int vertex,
   ej = (ei + ((type % 2 == 0) ? 2 : 1)) % 3;
 #endif
 
-  coordinates[0] = t->x;
-  coordinates[1] = t->y;
+  coordinates[0] = elem->x;
+  coordinates[1] = elem->y;
 #ifdef T8_DTRI_TO_DTET
-  coordinates[2] = t->z;
+  coordinates[2] = elem->z;
 #endif
   if (vertex == 0) {
     return;
@@ -336,13 +358,13 @@ t8_dtri_compute_coords (const t8_dtri_t *t, const int vertex,
 }
 
 void
-t8_dtri_compute_ref_coords (const t8_dtri_t *t, const int vertex,
-                            double coordinates[T8_DTRI_DIM])
+t8_dtri_compute_vertex_ref_coords (const t8_dtri_t *elem, const int vertex,
+                                   double coordinates[T8_DTRI_DIM])
 {
   int                 coords_int[T8_DTRI_DIM];
   T8_ASSERT (0 <= vertex && vertex < T8_DTRI_CORNERS);
 
-  t8_dtri_compute_coords (t, vertex, coords_int);
+  t8_dtri_compute_coords (elem, vertex, coords_int);
   /* Since the integer coordinates are coordinates w.r.t to
    * the embedding into [0,T8_DTRI_ROOT_LEN]^d, we just need
    * to divide them by the root length. */
@@ -355,10 +377,32 @@ t8_dtri_compute_ref_coords (const t8_dtri_t *t, const int vertex,
 
 /* Compute the coordinates of each vertex of a triangle/tet */
 void
-t8_dtri_compute_all_coords (const t8_dtri_t *t,
+t8_dtri_compute_all_coords (const t8_dtri_t *elem,
                             t8_dtri_coord_t
                             coordinates[T8_DTRI_FACES][T8_DTRI_DIM])
 {
+  /* Calculate the vertex coordinates of a triangle/tetrahedron in
+   * relation to its orientation. Orientations are described here:
+   * https://doi.org/10.1137/15M1040049
+   * 1---------------------2
+   * |   orientation     /  2
+   * |       1         /  / |
+   * |               /  /   |
+   * |             /  /     |
+   * |           /  /       |
+   * |         /  /         |
+   * |       /  /           |
+   * |     /  /             |
+   * |   /  /  orientation  |
+   * | /  /        0        |
+   * 0  /                   |
+   *   0--------------------1
+   *
+   *   y
+   *   ^
+   *   |
+   *   z--> x
+   */
   t8_dtri_type_t      type;
   int                 ei;
 #ifdef T8_DTRI_TO_DTET
@@ -367,8 +411,8 @@ t8_dtri_compute_all_coords (const t8_dtri_t *t,
   int                 i;
   t8_dtri_coord_t     h;
 
-  type = t->type;
-  h = T8_DTRI_LEN (t->level);
+  type = elem->type;
+  h = T8_DTRI_LEN (elem->level);
 #ifndef T8_DTRI_TO_DTET
   ei = type;
 #else
@@ -376,10 +420,10 @@ t8_dtri_compute_all_coords (const t8_dtri_t *t,
   ej = (ei + ((type % 2 == 0) ? 2 : 1)) % 3;
 #endif
 
-  coordinates[0][0] = t->x;
-  coordinates[0][1] = t->y;
+  coordinates[0][0] = elem->x;
+  coordinates[0][1] = elem->y;
 #ifdef T8_DTRI_TO_DTET
-  coordinates[0][2] = t->z;
+  coordinates[0][2] = elem->z;
 #endif
   for (i = 0; i < T8_DTRI_DIM; i++) {
     coordinates[1][i] = coordinates[0][i];
@@ -403,7 +447,7 @@ t8_dtri_compute_all_coords (const t8_dtri_t *t,
     int                 ivertex;
     t8_dtri_coord_t     coords[T8_DTRI_DIM];
     for (ivertex = 0; ivertex < T8_DTRI_FACES; ivertex++) {
-      t8_dtri_compute_coords (t, ivertex, coords);
+      t8_dtri_compute_coords (elem, ivertex, coords);
       T8_ASSERT (coords[0] == coordinates[ivertex][0]);
       T8_ASSERT (coords[1] == coordinates[ivertex][1]);
 #ifdef T8_DTRI_TO_DTET
@@ -680,16 +724,6 @@ t8_dtri_nearest_common_ancestor (const t8_dtri_t *t1,
   T8_ASSERT (r_level >= 0);
   /* Construct the ancestor of the first triangle at this leve */
   t8_dtri_ancestor (t1, r_level, r);
-#if 0
-  /* Find the correct type of r by testing with
-   * which type it becomes an ancestor of t1. */
-  for (r->type = 0; r->type < 6; r->type++) {
-    if (t8_dtri_is_ancestor (r, t1)) {
-      return;
-    }
-  }
-  SC_ABORT_NOT_REACHED ();
-#endif
 }
 
 void

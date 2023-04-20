@@ -21,6 +21,7 @@
 */
 
 /** \file t8_dvertex_bits.h
+ * Definitions of vertex-specific functions.
  */
 
 #ifndef T8_DVERTEX_BITS_H
