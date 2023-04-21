@@ -308,7 +308,7 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
   /* Initialization of the mesh */
   t8_cmesh_t          cmesh;
   t8_cmesh_init (&cmesh);
-
+  
   /*  Definition of the geometry */
   t8_cmesh_register_geometry (cmesh, linear_geom);       /* Use linear geometry */
 
@@ -449,6 +449,63 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
   /* Commit the mesh */
   t8_cmesh_commit (cmesh, comm);
   return cmesh;
+}
+
+int
+t8_step8_main (int argc, char **argv)
+{
+  int                 mpiret;
+  sc_MPI_Comm         comm;
+  t8_cmesh_t          cmesh_2D;
+  t8_cmesh_t          cmesh_3D;
+
+  /* The prefix for our output files. */
+  const char         *prefix_2D = "t8_step8_user_defined_mesh_2D";
+  const char         *prefix_3D = "t8_step8_user_defined_mesh_3D";
+
+  /* The uniform refinement level of the forest. */
+  const int           level = 0;
+
+  /*
+   * Initialization.
+   */
+
+  /* Initialize MPI. This has to happen before we initialize sc or t8code. */
+  mpiret = sc_MPI_Init (&argc, &argv);
+  /* Error check the MPI return value. */
+  SC_CHECK_MPI (mpiret);
+
+  /* Initialize the sc library, has to happen before we initialize t8code. */
+  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
+  /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
+  t8_init (SC_LP_PRODUCTION);
+
+  /* We will use MPI_COMM_WORLD as a communicator. */
+  comm = sc_MPI_COMM_WORLD;
+
+
+  /*
+   * Definition of the meshes.
+   */
+  /* Creation of a two dimensional cmesh with periodic boundaries. */
+  cmesh_2D = t8_cmesh_new_periodic_hybrid_2d(comm);
+
+  /* Creation of a three dimensional cmesh */
+  cmesh_3D = t8_cmesh_new_hybrid_gate_3d(comm);
+
+  /* Output the meshes to vtu files. */
+  t8_cmesh_vtk_write_file(cmesh_2D, prefix_2D, 1.0);
+  t8_cmesh_vtk_write_file(cmesh_3D, prefix_3D, 1.0);
+
+  /*
+   * Clean-up
+   */
+  sc_finalize ();
+
+  mpiret = sc_MPI_Finalize ();
+  SC_CHECK_MPI (mpiret);
+
+  return 0;
 }
 
 T8_EXTERN_C_END ();
