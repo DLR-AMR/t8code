@@ -124,5 +124,97 @@ T8_EXTERN_C_BEGIN ();
  *  */
 
 
+/* Definition of a two dimensional mesh with linear geometry and periodic boundaries.
+ * The mesh consists of four triangles and two quads.
+ *
+ *  This is how the cmesh looks like. The numbers are the tree numbers:
+ *
+ *   +---+---+
+ *   |   |5 /|
+ *   | 3 | / |
+ *   |   |/ 4|
+ *   +---+---+
+ *   |1 /|   |
+ *   | / | 2 |
+ *   |/0 |   |
+ *   +---+---+
+ *  */
+t8_cmesh_t
+t8_cmesh_new_periodic_hybrid_2d (sc_MPI_Comm comm)
+{
+
+  /* 1. Defining an array with all vertices */
+  /* Just all vertices of all trees. partly duplicated */
+  double              vertices[60] = {  
+    0, 0, 0,                    /* tree 0, triangle */
+    0.5, 0, 0,
+    0.5, 0.5, 0,
+    0, 0, 0,                    /* tree 1, triangle */
+    0.5, 0.5, 0,
+    0, 0.5, 0,
+    0.5, 0, 0,                  /* tree 2, quad */
+    1, 0, 0,
+    0.5, 0.5, 0,
+    1, 0.5, 0,
+    0, 0.5, 0,                  /* tree 3, quad */
+    0.5, 0.5, 0,
+    0, 1, 0,
+    0.5, 1, 0,
+    0.5, 0.5, 0,                /* tree 4, triangle */
+    1, 0.5, 0,
+    1, 1, 0,
+    0.5, 0.5, 0,                /* tree 5, triangle */
+    1, 1, 0,
+    0.5, 1, 0
+  };
+
+  /* 2. Initialization of the mesh */
+  t8_cmesh_t          cmesh;
+  t8_cmesh_init (&cmesh);
+
+  /* 3. Definition of the geometry */
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (2); 
+  t8_cmesh_register_geometry (cmesh, linear_geom);    /* Use linear geometry */
+
+
+  /* 4. Defitition of the classes of the different trees */
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
+  t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_TRIANGLE);
+  t8_cmesh_set_tree_class (cmesh, 2, T8_ECLASS_QUAD);
+  t8_cmesh_set_tree_class (cmesh, 3, T8_ECLASS_QUAD);
+  t8_cmesh_set_tree_class (cmesh, 4, T8_ECLASS_TRIANGLE);
+  t8_cmesh_set_tree_class (cmesh, 5, T8_ECLASS_TRIANGLE);
+
+  /* 5. Classification of the vertices for each tree */
+  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 3);
+  t8_cmesh_set_tree_vertices (cmesh, 1, vertices + 9, 3);
+  t8_cmesh_set_tree_vertices (cmesh, 2, vertices + 18, 4);
+  t8_cmesh_set_tree_vertices (cmesh, 3, vertices + 30, 4);
+  t8_cmesh_set_tree_vertices (cmesh, 4, vertices + 42, 3);
+  t8_cmesh_set_tree_vertices (cmesh, 5, vertices + 51, 3);
+
+  /* 6. Definition of the face neighboors between the different trees */
+  t8_cmesh_set_join (cmesh, 0, 1, 1, 2, 0);
+  t8_cmesh_set_join (cmesh, 0, 2, 0, 0, 0);
+  t8_cmesh_set_join (cmesh, 0, 3, 2, 3, 0);
+
+  t8_cmesh_set_join (cmesh, 1, 3, 0, 2, 1);
+  t8_cmesh_set_join (cmesh, 1, 2, 1, 1, 0);
+
+  t8_cmesh_set_join (cmesh, 2, 4, 3, 2, 0);
+  t8_cmesh_set_join (cmesh, 2, 5, 2, 0, 1);
+
+  t8_cmesh_set_join (cmesh, 3, 5, 1, 1, 0);
+  t8_cmesh_set_join (cmesh, 3, 4, 0, 0, 0);
+
+  t8_cmesh_set_join (cmesh, 4, 5, 1, 2, 0);
+
+  /* 7. Commit the mesh */
+  t8_cmesh_commit (cmesh, comm);
+
+  return cmesh;
+}
+
+
 
 T8_EXTERN_C_END ();
