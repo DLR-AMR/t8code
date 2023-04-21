@@ -46,6 +46,83 @@
 
 T8_EXTERN_C_BEGIN ();
 
+/* Different steps of creating a cmesh
+ * 1. Defining an array with all vertices
+ *    The vertices are ordered in a listing for each cell.
+ *    Thus, there can be duplicates in the List.
+ *    Example: double vertices[numberOfValues] = {
+ *               //point values for cell 1
+ *               x_1,y_1,z_1         //(x,y,z) of first point of cell 1
+ *               x_2,y_2,z_2         //(x,y,z) of second point of cell 1
+ *                   .
+ *                   .
+ *                   .
+ *               x_n,y_n,z_n         //(x,y,z) of nth point (last point) of cell 1
+ *
+ *               //point values for cell 2
+ *               x_1,y_1,z_1         //(x,y,z) of first point of cell 2
+ *               x_2,y_2,z_2         //(x,y,z) of second point of cell 2
+ *                   .
+ *                   .
+ *                   .
+ *               x_m,y_m,z_m         //(x,y,z) of nth point (last point) of cell 2
+ *
+ *                   .
+ *                   .
+ *                   .
+ *
+ *               //point values for the last cell 
+ *               x_1,y_1,z_1         //(x,y,z) of first point of the last cell
+ *               x_2,y_2,z_2         //(x,y,z) of second point of the last cell
+ *                   .
+ *                   .
+ *                   .
+ *               x_o,y_o,z_o         //(x,y,z) of nth point (last point) of the last cell
+ *             };
+ *
+ * 2. Initialization of the mesh
+ *    Example: t8_cmesh_t          cmesh;
+ *             t8_cmesh_init (&cmesh);
+ * 
+ *
+ * 3. Definition of the geometry
+ *             t8_geometry_c      *linear_geom = [defineTheGeometry];
+ *
+ * 4. Defitition of the classes of the different trees - each tree is defined by one cell
+ *    Example: //Class of the first tree
+ *             t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_[TYPE]);
+ *             //Class of the second tree
+ *             t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_[TYPE]);
+ *                   .
+ *                   .
+ *                   .
+ *             //Class of the last tree
+ *             t8_cmesh_set_tree_class (cmesh, x, T8_ECLASS_[TYPE]);
+ *
+ * 5. Classification of the vertices for each tree
+ *             // Vertices of the first tree
+ *             t8_cmesh_set_tree_vertices (cmesh, 0, [pointerToVerticesOfTreeOne], [numberOfVerticesTreeOne]);
+ *             // Vertices of the second tree
+ *             t8_cmesh_set_tree_vertices (cmesh, 1, [pointerToVerticesOfTreeTwo] , [numberOfVerticesTreeTwo]);
+ *                   .
+ *                   .
+ *                   .
+ *             // Vertices of the last tree
+ *             t8_cmesh_set_tree_vertices (cmesh, x, [pointerToVerticesOfTree(x+1)] , [numberOfVerticesTree(x+1)]);
+ *
+ * 6. Definition of the face neighboors between the different trees
+ *             // List of all face neighboor connections
+ *             t8_cmesh_set_join (cmesh, [treeId1], [treeId2], [faceIdInTree1], [faceIdInTree2], [orientation]);
+ *             t8_cmesh_set_join (cmesh, [treeId1], [treeId2], [faceIdInTree1], [faceIdInTree2], [orientation]);
+ *                   .
+ *                   .
+ *                   .
+ *             t8_cmesh_set_join (cmesh, [treeId1], [treeId2], [faceIdInTree1], [faceIdInTree2], [orientation]);
+ *
+ * 7. Commit the mesh
+ *             t8_cmesh_commit (cmesh, comm);
+ *  */
+
 
 
 T8_EXTERN_C_END ();
