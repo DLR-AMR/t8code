@@ -88,7 +88,7 @@ T8_EXTERN_C_BEGIN ();
  * 3. Definition of the geometry
  *             t8_geometry_c      *linear_geom = [defineTheGeometry];
  *
- * 4. Defitition of the classes of the different trees - each tree is defined by one cell
+ * 4. Definition of the classes of the different trees - each tree is defined by one cell
  *    Example: //Class of the first tree
  *             t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_[TYPE]);
  *             //Class of the second tree
@@ -177,7 +177,7 @@ t8_cmesh_new_periodic_hybrid_2d (sc_MPI_Comm comm)
   t8_cmesh_register_geometry (cmesh, linear_geom);    /* Use linear geometry */
 
 
-  /* 4. Defitition of the classes of the different trees */
+  /* 4. Definition of the classes of the different trees */
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
   t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_TRIANGLE);
   t8_cmesh_set_tree_class (cmesh, 2, T8_ECLASS_QUAD);
@@ -266,7 +266,7 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
    * t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
    * t8_cmesh_register_geometry (cmesh, linear_geom);    // Use linear geometry 
    * 
-   * // 4. Defitition of the classes of the different trees
+   * // 4. Definition of the classes of the different trees
    * t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TET);
    * t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_TET);
    * t8_cmesh_set_tree_class (cmesh, 2, T8_ECLASS_PRISM);
@@ -308,7 +308,7 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
   /* Initialization of the mesh */
   t8_cmesh_t          cmesh;
   t8_cmesh_init (&cmesh);
-  
+
   /*  Definition of the geometry */
   t8_cmesh_register_geometry (cmesh, linear_geom);       /* Use linear geometry */
 
