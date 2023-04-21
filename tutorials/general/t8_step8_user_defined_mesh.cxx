@@ -292,7 +292,163 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
    * return cmesh;
    *  */
 
-  
+  /* In many cases the points of the different trees are dependent of these of the previous trees
+   * or of these of the same tree. Then it is reasonable to define the different vertices dependent 
+   * of each other.
+   * Also the order of the sheme is not fixed. The definition of the face neighboors can be 
+   * before the definition of the vertices.
+   * In the following example the tree classes are defined, then the face neighboors are set.
+   * After that the vertices are defined for each tree separate.
+   *  */
+
+  double              vertices[24];
+  int                 i;
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
+
+  /* Initialization of the mesh */
+  t8_cmesh_t          cmesh;
+  t8_cmesh_init (&cmesh);
+
+  /*  Definition of the geometry */
+  t8_cmesh_register_geometry (cmesh, linear_geom);       /* Use linear geometry */
+
+  /* Defitition of the classes of the different trees */
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TET);
+  t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_TET);
+  t8_cmesh_set_tree_class (cmesh, 2, T8_ECLASS_PRISM);
+  t8_cmesh_set_tree_class (cmesh, 3, T8_ECLASS_PRISM);
+  t8_cmesh_set_tree_class (cmesh, 4, T8_ECLASS_HEX);
+
+  /* Classification of the vertices for each tree */
+  t8_cmesh_set_join (cmesh, 0, 2, 0, 4, 0);
+  t8_cmesh_set_join (cmesh, 1, 3, 0, 4, 0);
+  t8_cmesh_set_join (cmesh, 2, 4, 0, 0, 0);
+  t8_cmesh_set_join (cmesh, 3, 4, 1, 1, 0);
+
+  /*
+   * Definition of the first tree
+   */
+  /* Tetrahedron 1 vertices */
+  vertices[0] = 0.43;
+  vertices[1] = 0;
+  vertices[2] = 2;
+
+  vertices[3] = 0;
+  vertices[4] = 0;
+  vertices[5] = 1;
+
+  vertices[6] = 0.86;
+  vertices[7] = -0.5;
+  vertices[8] = 1;
+
+  vertices[9] = 0.86;
+  vertices[10] = 0.5;
+  vertices[11] = 1;
+
+  /* Classification of the vertices for the first tree */
+  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 4);
+
+  /*
+   * Definition of the second tree
+   */
+  /* Tetrahedron 2 vertices */
+  for (i = 0; i < 3; i++) {
+
+    vertices[i] = vertices[i] + (i == 0 ? 1 + 0.86 : 0);
+    vertices[3 + i] = vertices[6 + i] + (i == 0 ? 1 : 0);
+    vertices[9 + i] = vertices[9 + i] + (i == 0 ? 1 : 0);
+  }
+
+
+  vertices[6] = 1 + 2 * 0.86;
+  vertices[7] = 0;
+  vertices[8] = 1;
+
+  /* Classification of the vertices for the second tree */
+  t8_cmesh_set_tree_vertices (cmesh, 1, vertices, 4);
+
+  /*
+   * Definition of the third tree
+   */
+  /* Prism 1 vertices */
+  vertices[0] = 0;
+  vertices[1] = 0;
+  vertices[2] = 0;
+
+  vertices[3] = 0.86;
+  vertices[4] = -0.5;
+  vertices[5] = 0;
+
+  vertices[6] = 0.86;
+  vertices[7] = 0.5;
+  vertices[8] = 0;
+
+  /* Translate +1 in z-axis for the upper vertices */
+  for (i = 0; i < 3; i++) {
+    vertices[9 + 3 * i] = vertices[3 * i];
+    vertices[9 + 3 * i + 1] = vertices[3 * i + 1];
+    vertices[9 + 3 * i + 2] = vertices[3 * i + 2] + 1;
+  }
+
+  /* Classification of the vertices for the third tree */
+  t8_cmesh_set_tree_vertices (cmesh, 2, vertices, 6);
+
+  /*
+   * Definition of the fourth tree
+   */
+  /* Prism 2 vertices */
+  for (i = 0; i < 3; i++) {
+    vertices[3 + i] = vertices[i] + (i == 0 ? 1 + 2 * 0.86 : 0);
+    vertices[6 + i] = vertices[6 + i] + (i == 0 ? 1 : 0);
+  }
+
+  vertices[0] = 0.86 + 1;
+  vertices[1] = -0.5;
+  vertices[2] = 0;
+
+  /* Translate +1 in z-axis for the upper vertices */
+  for (i = 0; i < 3; i++) {
+    vertices[9 + 3 * i] = vertices[3 * i];
+    vertices[9 + 3 * i + 1] = vertices[3 * i + 1];
+    vertices[9 + 3 * i + 2] = vertices[3 * i + 2] + 1;
+  }
+
+  /* Classification of the vertices for the fourth tree */
+  t8_cmesh_set_tree_vertices (cmesh, 3, vertices, 6);
+
+  /*
+   * Definition of the fifth tree
+   */
+  /* Hex coordinates */
+  vertices[0] = 0.86;
+  vertices[1] = -0.5;
+  vertices[2] = 0;
+
+  vertices[3] = 1.86;
+  vertices[4] = -0.5;
+  vertices[5] = 0;
+
+  vertices[6] = 0.86;
+  vertices[7] = 0.5;
+  vertices[8] = 0;
+
+  vertices[9] = 1.86;
+  vertices[10] = 0.5;
+  vertices[11] = 0;
+
+  /* Translate +1 in z-axis for the upper vertices */
+  for (i = 0; i < 4; i++) {
+    vertices[12 + 3 * i] = vertices[3 * i];
+    vertices[12 + 3 * i + 1] = vertices[3 * i + 1];
+    vertices[12 + 3 * i + 2] = vertices[3 * i + 2] + 1;
+  }
+
+  /* Classification of the vertices for the fifth tree */
+  t8_cmesh_set_tree_vertices (cmesh, 4, vertices, 8);
+
+  /* Commit the mesh */
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
 }
 
 T8_EXTERN_C_END ();
