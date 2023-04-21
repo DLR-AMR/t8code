@@ -11,6 +11,7 @@ bin_PROGRAMS += \
 	tutorials/general/t8_step5_element_data \
 	tutorials/general/t8_step5_element_data_c_interface \
 	tutorials/general/t8_step6_stencil \
+	tutorials/general/t8_step8_user_defined_mesh \
 	tutorials/general/t8_tutorial_search \
 	tutorials/features/t8_features_curved_meshes
 
@@ -43,6 +44,9 @@ tutorials_general_t8_step6_stencil_SOURCES = \
 	tutorials/general/t8_step3_adapt_forest.cxx \
 	tutorials/general/t8_step6_stencil.cxx \
 	tutorials/general/t8_step6_main.cxx
+tutorials_general_t8_step8_user_defined_mesh_SOURCES = \
+  tutorials/general/t8_step8_user_defined_mesh.cxx \
+  tutorials/general/t8_step8_main.cxx
 tutorials_general_t8_tutorial_search_SOURCES = \
 	tutorials/general/t8_tutorial_search.cxx \
 	tutorials/general/t8_step3_adapt_forest.cxx
@@ -53,5 +57,6 @@ libt8_installed_headers += \
         tutorials/general/t8_step3.h \
         tutorials/general/t8_step4.h \
         tutorials/general/t8_step5.h \
-        tutorials/general/t8_step6.h
+        tutorials/general/t8_step6.h \
+        tutorials/general/t8_step8.h
 
