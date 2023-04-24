@@ -196,10 +196,10 @@ t8_cmesh_new_periodic_hybrid_2d (sc_MPI_Comm comm)
   /* 6. Definition of the face neighboors between the different trees */
   t8_cmesh_set_join (cmesh, 0, 1, 1, 2, 0);
   t8_cmesh_set_join (cmesh, 0, 2, 0, 0, 0);
-  t8_cmesh_set_join (cmesh, 0, 3, 2, 3, 0);
+  t8_cmesh_set_join (cmesh, 0, 3, 2, 3, 0); 
 
   t8_cmesh_set_join (cmesh, 1, 3, 0, 2, 1);
-  t8_cmesh_set_join (cmesh, 1, 2, 1, 1, 0);
+  t8_cmesh_set_join (cmesh, 1, 2, 1, 1, 0); 
 
   t8_cmesh_set_join (cmesh, 2, 4, 3, 2, 0);
   t8_cmesh_set_join (cmesh, 2, 5, 2, 0, 1);
@@ -249,6 +249,12 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
            2.72, 0, 1,
            1.86, 0.5, 1,
 
+           0.86, -0.5, 0,       // Pyramid coordinates
+           1.86, -0.5, 0,
+           0.86, 0.5, 0,
+           1.86, 0.5, 0,
+           1.29, 0, 0,
+
            0.86, -0.5, 0,       // Hex coordinates
            1.86, -0.5, 0,
            0.86, 0.5, 0,
@@ -257,6 +263,7 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
            1.86, -0.5, 1,
            0.86, 0.5, 1,
            1.86, 0.5, 1
+
    *     }
    * // 2. Initialization of the mesh
    * t8_cmesh_t          cmesh;
@@ -271,20 +278,23 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
    * t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_TET);
    * t8_cmesh_set_tree_class (cmesh, 2, T8_ECLASS_PRISM);
    * t8_cmesh_set_tree_class (cmesh, 3, T8_ECLASS_PRISM);
+   * t8_cmesh_set_tree_class (cmesh, 4, T8_ECLASS_PYRAMID);
    * t8_cmesh_set_tree_class (cmesh, 4, T8_ECLASS_HEX);
    *
    * // 5. Classification of the vertices for each tree
-   * t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 4);
-   * t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 4);
-   * t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 4);
-   * t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 4);
-   * t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 4);
+   * t8_cmesh_set_tree_vertices (cmesh, 0, vertices + 12, 4);
+   * t8_cmesh_set_tree_vertices (cmesh, 1, vertices + 24, 4);
+   * t8_cmesh_set_tree_vertices (cmesh, 2, vertices + 42, 6);
+   * t8_cmesh_set_tree_vertices (cmesh, 3, vertices + 60, 6);
+   * t8_cmesh_set_tree_vertices (cmesh, 4, vertices + 78, 5);
+   * t8_cmesh_set_tree_vertices (cmesh, 5, vertices + 93, 8);
    *
    * // 6. Definition of the face neighboors between the different trees
    * t8_cmesh_set_join (cmesh, 0, 2, 0, 4, 0);
    * t8_cmesh_set_join (cmesh, 1, 3, 0, 4, 0);
-   * t8_cmesh_set_join (cmesh, 2, 4, 0, 0, 0);
-   * t8_cmesh_set_join (cmesh, 3, 4, 1, 1, 0);
+   * t8_cmesh_set_join (cmesh, 2, 5, 0, 0, 0);
+   * t8_cmesh_set_join (cmesh, 3, 5, 1, 1, 0);
+   * t8_cmesh_set_join (cmesh, 4, 5, 4, 2, 0);
    *
    * // 7. Commit the mesh
    * t8_cmesh_commit (cmesh, comm);
@@ -317,13 +327,15 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
   t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_TET);
   t8_cmesh_set_tree_class (cmesh, 2, T8_ECLASS_PRISM);
   t8_cmesh_set_tree_class (cmesh, 3, T8_ECLASS_PRISM);
-  t8_cmesh_set_tree_class (cmesh, 4, T8_ECLASS_HEX);
+  t8_cmesh_set_tree_class (cmesh, 4, T8_ECLASS_PYRAMID);
+  t8_cmesh_set_tree_class (cmesh, 5, T8_ECLASS_HEX);
 
   /* Classification of the vertices for each tree */
   t8_cmesh_set_join (cmesh, 0, 2, 0, 4, 0);
   t8_cmesh_set_join (cmesh, 1, 3, 0, 4, 0);
-  t8_cmesh_set_join (cmesh, 2, 4, 0, 0, 0);
-  t8_cmesh_set_join (cmesh, 3, 4, 1, 1, 0);
+  t8_cmesh_set_join (cmesh, 2, 5, 0, 0, 0);
+  t8_cmesh_set_join (cmesh, 3, 5, 1, 1, 0);
+  t8_cmesh_set_join (cmesh, 4, 5, 4, 2, 0);
 
   /*
    * Definition of the first tree
@@ -416,10 +428,12 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
   /* Classification of the vertices for the fourth tree */
   t8_cmesh_set_tree_vertices (cmesh, 3, vertices, 6);
 
+
   /*
    * Definition of the fifth tree
    */
-  /* Hex coordinates */
+  /* Pyramid vertices */
+
   vertices[0] = 0.86;
   vertices[1] = -0.5;
   vertices[2] = 0;
@@ -436,6 +450,17 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
   vertices[10] = 0.5;
   vertices[11] = 0;
 
+  vertices[12] = 1.36;
+  vertices[13] = 0;
+  vertices[14] = -0.5;
+
+  /* Classification of the vertices for the fifth tree */
+  t8_cmesh_set_tree_vertices (cmesh, 4, vertices, 5);
+
+  /*
+   * Definition of the sixth tree
+   */
+  /* Hex coordinates */
   /* Translate +1 in z-axis for the upper vertices */
   for (i = 0; i < 4; i++) {
     vertices[12 + 3 * i] = vertices[3 * i];
@@ -444,7 +469,7 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
   }
 
   /* Classification of the vertices for the fifth tree */
-  t8_cmesh_set_tree_vertices (cmesh, 4, vertices, 8);
+  t8_cmesh_set_tree_vertices (cmesh, 5, vertices, 8);
 
   /* Commit the mesh */
   t8_cmesh_commit (cmesh, comm);
