@@ -575,6 +575,18 @@ t8_default_scheme_tri_c::t8_element_vertex_reference_coords (const
                                      coords);
 }
 
+void
+t8_default_scheme_tri_c::t8_element_reference_coords (const t8_element_t
+                                                      *elem,
+                                                      const double
+                                                      *ref_coords,
+                                                      const void *user_data,
+                                                      double *out_coords)
+  const
+{
+  SC_ABORTF ("Not implemented\n");
+}
+
 int
 t8_default_scheme_tri_c::t8_element_refines_irregular () const
 {
