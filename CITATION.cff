@@ -64,8 +64,8 @@ authors:
     email: Chiara.Hergl@dlr.de
     affiliation: "German Aerospace Center (DLR)"
     orcid: "https://orcid.org/0000-0002-4016-9113"
-  - given-names: Schlottke-Lakemper
-    family-names: Michael 
+  - given-names: Michael
+    family-names: Schlottke-Lakemper
     email: "m.schlottke-lakemper@acom.rwth-aachen.de"
     affiliation: "RWTH Aachen"
     orcid: "https://orcid.org/0000-0002-3195-2536"
