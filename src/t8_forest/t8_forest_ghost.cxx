@@ -917,7 +917,7 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
  */
 static t8_ghost_mpi_send_info_t *
 t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost,
-                            sc_MPI_Request **requests)
+                            sc_MPI_Request ** requests)
 {
   int                 proc_index, remote_rank;
   int                 num_remotes;
@@ -1067,7 +1067,7 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost,
 static void
 t8_forest_ghost_send_end (t8_forest_t forest, t8_forest_ghost_t ghost,
                           t8_ghost_mpi_send_info_t *send_info,
-                          sc_MPI_Request *requests)
+                          sc_MPI_Request * requests)
 {
   int                 num_remotes;
   int                 proc_pos, mpiret;

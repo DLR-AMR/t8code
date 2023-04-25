@@ -77,7 +77,7 @@ t8_default_scheme_common_c::t8_element_destroy (int length,
 }
 
 static void
-t8_default_mempool_alloc (sc_mempool_t *ts_context, int length,
+t8_default_mempool_alloc (sc_mempool_t * ts_context, int length,
                           t8_element_t **elem)
 {
   int                 i;
@@ -92,7 +92,7 @@ t8_default_mempool_alloc (sc_mempool_t *ts_context, int length,
 }
 
 static void
-t8_default_mempool_free (sc_mempool_t *ts_context, int length,
+t8_default_mempool_free (sc_mempool_t * ts_context, int length,
                          t8_element_t **elem)
 {
   int                 i;

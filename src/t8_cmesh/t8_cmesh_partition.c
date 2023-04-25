@@ -1103,7 +1103,7 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
                              int *send_last,
                              char ***send_buffer, char **my_buffer,
                              size_t *my_buffer_bytes,
-                             sc_MPI_Request **requests, sc_MPI_Comm comm)
+                             sc_MPI_Request ** requests, sc_MPI_Comm comm)
 {
   size_t              attr_bytes = 0, tree_neighbor_bytes,
     ghost_neighbor_bytes, attr_info_bytes, ghost_attribute_bytes,
@@ -1364,7 +1364,7 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
 
 void
 t8_cmesh_partition_receive_message (t8_cmesh_t cmesh, sc_MPI_Comm comm,
-                                    int proc_recv, sc_MPI_Status *status,
+                                    int proc_recv, sc_MPI_Status * status,
                                     int *local_procid, int recv_first,
                                     t8_locidx_t *num_ghosts)
 {

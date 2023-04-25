@@ -82,7 +82,7 @@ t8_netcdf_create_double_var (const char *var_name, const char *var_long_name,
 
 /* Free the memory of the allocated NetCDF variable */
 void
-t8_netcdf_variable_destroy (t8_netcdf_variable_t *var_destroy)
+t8_netcdf_variable_destroy (t8_netcdf_variable_t * var_destroy)
 {
   T8_ASSERT (var_destroy != NULL);
   T8_FREE (var_destroy);

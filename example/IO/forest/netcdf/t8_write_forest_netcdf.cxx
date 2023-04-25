@@ -152,7 +152,7 @@ t8_example_time_netcdf_writing_operation (t8_forest_t forest,
                                           int netcdf_var_mpi_access,
                                           const char *title,
                                           int num_additional_vars,
-                                          t8_netcdf_variable_t *ext_vars[])
+                                          t8_netcdf_variable_t * ext_vars[])
 {
 #if T8_WITH_NETCDF_PAR
   double              start_time, end_time, duration, global;

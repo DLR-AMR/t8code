@@ -962,7 +962,7 @@ t8_geometry_occ_new (int dimension, const char *fileprefix,
 }
 
 void
-t8_geometry_occ_destroy (t8_geometry_occ_c **geom)
+t8_geometry_occ_destroy (t8_geometry_occ_c ** geom)
 {
 #ifdef T8_ENABLE_DEBUG
   t8_geometry_occ_c  *pgeom = *geom;

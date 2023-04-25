@@ -502,7 +502,7 @@ t8_dpyramid_get_level (const t8_dpyramid_t *p)
  * \return int              The local-id of the child
  */
 static int
-t8_dpyramid_update_index (t8_linearidx_t *id, const t8_dpyramid_type_t type,
+t8_dpyramid_update_index (t8_linearidx_t * id, const t8_dpyramid_type_t type,
                           const t8_linearidx_t pyra, const t8_linearidx_t tet)
 {
   t8_linearidx_t      test = 0;
