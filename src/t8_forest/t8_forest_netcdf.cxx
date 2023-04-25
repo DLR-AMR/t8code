@@ -116,8 +116,8 @@ typedef struct
 
 /* The UGRID conventions are applied for dimension and variable descriptions */
 static void
-t8_forest_init_ugrid_namespace_context (t8_forest_netcdf_ugrid_namespace_t *
-                                        namespace_conv, int dim)
+t8_forest_init_ugrid_namespace_context (t8_forest_netcdf_ugrid_namespace_t
+                                        *namespace_conv, int dim)
 {
   if (dim == 2) {
     /* UGRID 2D Grid name conventions */
@@ -159,9 +159,9 @@ t8_forest_init_ugrid_namespace_context (t8_forest_netcdf_ugrid_namespace_t *
 
 /* Define NetCDF-dimesnions */
 static void
-t8_forest_write_netcdf_dimensions (t8_forest_netcdf_context_t * context,
-                                   t8_forest_netcdf_ugrid_namespace_t *
-                                   namespace_context)
+t8_forest_write_netcdf_dimensions (t8_forest_netcdf_context_t *context,
+                                   t8_forest_netcdf_ugrid_namespace_t
+                                   *namespace_context)
 {
 #if T8_WITH_NETCDF
   /* *Define dimensions in the NetCDF file.* */
@@ -193,9 +193,9 @@ t8_forest_write_netcdf_dimensions (t8_forest_netcdf_context_t * context,
 
 /* Define NetCDF-variables */
 static void
-t8_forest_write_netcdf_variables (t8_forest_netcdf_context_t * context,
-                                  t8_forest_netcdf_ugrid_namespace_t *
-                                  namespace_context)
+t8_forest_write_netcdf_variables (t8_forest_netcdf_context_t *context,
+                                  t8_forest_netcdf_ugrid_namespace_t
+                                  *namespace_context)
 {
 #if T8_WITH_NETCDF
   /* *Define variables in the NetCDF file.* */
@@ -424,7 +424,7 @@ t8_forest_write_netcdf_variables (t8_forest_netcdf_context_t * context,
 
 static void
 t8_forest_write_netcdf_data (t8_forest_t forest,
-                             t8_forest_netcdf_context_t * context,
+                             t8_forest_netcdf_context_t *context,
                              sc_MPI_Comm comm)
 {
 #if T8_WITH_NETCDF
@@ -526,10 +526,10 @@ t8_forest_write_netcdf_data (t8_forest_t forest,
 
 /* Define NetCDF-coordinate-dimension */
 static void
-t8_forest_write_netcdf_coordinate_dimension (t8_forest_netcdf_context_t *
-                                             context,
+t8_forest_write_netcdf_coordinate_dimension (t8_forest_netcdf_context_t
+                                             *context,
                                              t8_forest_netcdf_ugrid_namespace_t
-                                             * namespace_context)
+                                             *namespace_context)
 {
 #if T8_WITH_NETCDF
   /* Define dimension: number of nodes */
@@ -544,10 +544,10 @@ t8_forest_write_netcdf_coordinate_dimension (t8_forest_netcdf_context_t *
 
 /* Define NetCDF-coordinate-variables */
 static void
-t8_forest_write_netcdf_coordinate_variables (t8_forest_netcdf_context_t *
-                                             context,
+t8_forest_write_netcdf_coordinate_variables (t8_forest_netcdf_context_t
+                                             *context,
                                              t8_forest_netcdf_ugrid_namespace_t
-                                             * namespace_context)
+                                             *namespace_context)
 {
 #if T8_WITH_NETCDF
   /* Define the Mesh_node_x  variable. */
@@ -691,11 +691,11 @@ t8_forest_write_netcdf_coordinate_variables (t8_forest_netcdf_context_t *
 
 /* Declare the user-defined elementwise NetCDF-variables which were passed to function. */
 static void
-t8_forest_write_user_netcdf_vars (t8_forest_netcdf_context_t * context,
-                                  t8_forest_netcdf_ugrid_namespace_t *
-                                  namespace_context,
+t8_forest_write_user_netcdf_vars (t8_forest_netcdf_context_t *context,
+                                  t8_forest_netcdf_ugrid_namespace_t
+                                  *namespace_context,
                                   int num_extern_netcdf_vars,
-                                  t8_netcdf_variable_t * ext_variables[],
+                                  t8_netcdf_variable_t *ext_variables[],
                                   sc_MPI_Comm comm)
 {
 #if T8_WITH_NETCDF
@@ -783,7 +783,7 @@ t8_forest_write_user_netcdf_vars (t8_forest_netcdf_context_t * context,
 /* Write the netCDF coordinate data to he file */
 static void
 t8_forest_write_netcdf_coordinate_data (t8_forest_t forest,
-                                        t8_forest_netcdf_context_t * context,
+                                        t8_forest_netcdf_context_t *context,
                                         sc_MPI_Comm comm)
 {
 #if T8_WITH_NETCDF
@@ -951,9 +951,9 @@ t8_forest_write_netcdf_coordinate_data (t8_forest_t forest,
 /* It is only possible to write exactly one value per element per variable */
 static void
 t8_forest_write_user_netcdf_data (t8_forest_t forest,
-                                  t8_forest_netcdf_context_t * context,
+                                  t8_forest_netcdf_context_t *context,
                                   int num_extern_netcdf_vars,
-                                  t8_netcdf_variable_t * ext_variables[],
+                                  t8_netcdf_variable_t *ext_variables[],
                                   sc_MPI_Comm comm)
 {
 #if T8_WITH_NETCDF
@@ -1017,10 +1017,10 @@ t8_forest_write_user_netcdf_data (t8_forest_t forest,
 /* Function that creates the NetCDF-File and fills it  */
 static void
 t8_forest_write_netcdf_file (t8_forest_t forest,
-                             t8_forest_netcdf_context_t * context,
-                             t8_forest_netcdf_ugrid_namespace_t *
-                             namespace_context, int num_extern_netcdf_vars,
-                             t8_netcdf_variable_t * ext_variables[],
+                             t8_forest_netcdf_context_t *context,
+                             t8_forest_netcdf_ugrid_namespace_t
+                             *namespace_context, int num_extern_netcdf_vars,
+                             t8_netcdf_variable_t *ext_variables[],
                              sc_MPI_Comm comm)
 {
 #if T8_WITH_NETCDF
@@ -1147,7 +1147,7 @@ void
 t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix,
                             const char *file_title, int dim,
                             int num_extern_netcdf_vars,
-                            t8_netcdf_variable_t * ext_variables[],
+                            t8_netcdf_variable_t *ext_variables[],
                             sc_MPI_Comm comm, int netcdf_var_storage_mode,
                             int netcdf_mpi_access)
 {
@@ -1247,7 +1247,7 @@ void
 t8_forest_write_netcdf (t8_forest_t forest, const char *file_prefix,
                         const char *file_title, int dim,
                         int num_extern_netcdf_vars,
-                        t8_netcdf_variable_t * ext_variables[],
+                        t8_netcdf_variable_t *ext_variables[],
                         sc_MPI_Comm comm)
 {
   /* Choose NC_CONTIGUOUS as default storage pattern, this is equal to 1 (defined in 'netcdf.h') */

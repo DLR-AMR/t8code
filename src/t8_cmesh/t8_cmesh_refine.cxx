@@ -51,7 +51,7 @@ typedef struct
  * We store an additional entry with child_id = -1 at the end, so that
  * this search terminates when the entry is not found. */
 static t8_locidx_t
-t8_cmesh_refine_childid_to_localid (t8_child_id_to_local_id ** idarray,
+t8_cmesh_refine_childid_to_localid (t8_child_id_to_local_id **idarray,
                                     t8_locidx_t lparent_id, int8_t child_id)
 {
   int                 ichild;
@@ -85,7 +85,7 @@ t8_cmesh_refine_init_idarray (t8_cmesh_t cmesh_from)
  * their local ids.
  */
 static t8_locidx_t
-t8_cmesh_refine_fill_idarray (t8_child_id_to_local_id ** idarray,
+t8_cmesh_refine_fill_idarray (t8_child_id_to_local_id **idarray,
                               t8_locidx_t gparent_id,
                               int8_t child_counted[10], int num_children,
                               t8_locidx_t next_local_id)
@@ -113,7 +113,7 @@ t8_cmesh_refine_fill_idarray (t8_child_id_to_local_id ** idarray,
 }
 
 static void
-t8_cmesh_refine_destroy_idarray (t8_child_id_to_local_id ** idarray,
+t8_cmesh_refine_destroy_idarray (t8_child_id_to_local_id **idarray,
                                  t8_locidx_t num_parent_ghosts)
 {
   t8_locidx_t         lghost;
@@ -131,7 +131,7 @@ t8_cmesh_refine_destroy_idarray (t8_child_id_to_local_id ** idarray,
 static t8_locidx_t
 t8_cmesh_refine_new_neighborid (t8_cmesh_t cmesh_from, t8_locidx_t parent_id,
                                 int child_id,
-                                t8_child_id_to_local_id ** id_array,
+                                t8_child_id_to_local_id **id_array,
                                 int factor)
 {
   if (parent_id >= cmesh_from->num_local_trees) {
@@ -172,7 +172,7 @@ static void
 t8_cmesh_refine_new_neighbors (t8_cmesh_t cmesh_from, t8_locidx_t parent_id,
                                t8_gloidx_t global_parent_id,
                                t8_eclass_t eclass,
-                               t8_child_id_to_local_id ** id_array,
+                               t8_child_id_to_local_id **id_array,
                                int child_id,
                                t8_locidx_t *neighbor_out,
                                t8_gloidx_t *neighbor_out_ghost,
@@ -566,7 +566,7 @@ t8_cmesh_refine_inittree (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
  */
 static void
 t8_cmesh_refine_tree (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
-                      t8_child_id_to_local_id ** id_array,
+                      t8_child_id_to_local_id **id_array,
                       t8_locidx_t treeid, t8_locidx_t firstnewtree,
                       int factor)
 {
@@ -622,7 +622,7 @@ t8_cmesh_refine_tree (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
  * faces of the ghost connected to local trees. */
 static void
 t8_cmesh_refine_initghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
-                           t8_child_id_to_local_id ** idarray,
+                           t8_child_id_to_local_id **idarray,
                            t8_locidx_t ghostid, int factor)
 {
   t8_cghost_t         ghost, newghost;
@@ -657,7 +657,7 @@ t8_cmesh_refine_initghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
 
 static void
 t8_cmesh_refine_ghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
-                       t8_child_id_to_local_id ** idarray,
+                       t8_child_id_to_local_id **idarray,
                        t8_locidx_t ghostid, int factor)
 {
   t8_cghost_t         newghost;
@@ -686,7 +686,7 @@ t8_cmesh_refine_ghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
 
 static t8_locidx_t
 t8_cmesh_refine_count_ghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
-                             t8_child_id_to_local_id ** idarray)
+                             t8_child_id_to_local_id **idarray)
 {
   t8_cghost_t         ghost;
   t8_gloidx_t        *face_neighbor, neighbor;

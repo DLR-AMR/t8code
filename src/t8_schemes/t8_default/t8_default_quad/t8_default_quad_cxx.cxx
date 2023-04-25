@@ -62,7 +62,7 @@ t8_default_scheme_quad_c::t8_element_level (const t8_element_t *elem) const
 }
 
 static void
-t8_element_copy_surround (const p4est_quadrant_t * q, p4est_quadrant_t * r)
+t8_element_copy_surround (const p4est_quadrant_t *q, p4est_quadrant_t *r)
 {
   T8_QUAD_SET_TDIM (r, T8_QUAD_GET_TDIM (q));
   if (T8_QUAD_GET_TDIM (q) == 3) {

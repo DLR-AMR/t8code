@@ -158,7 +158,7 @@ typedef struct
  * 0 <= ielement < num_elements + num_ghosts
  */
 static double
-t8_advect_element_get_phi (const t8_advect_problem_t * problem,
+t8_advect_element_get_phi (const t8_advect_problem_t *problem,
                            t8_locidx_t ielement)
 {
   return *((double *)
@@ -167,7 +167,7 @@ t8_advect_element_get_phi (const t8_advect_problem_t * problem,
 
 /* Set the phi value of an element to a given entry */
 static void
-t8_advect_element_set_phi (const t8_advect_problem_t * problem,
+t8_advect_element_set_phi (const t8_advect_problem_t *problem,
                            t8_locidx_t ielement, double phi)
 {
   *((double *) t8_sc_array_index_locidx (problem->phi_values, ielement)) =
@@ -176,7 +176,7 @@ t8_advect_element_set_phi (const t8_advect_problem_t * problem,
 
 /* Set the phi value of an element in the adapted forest to a given entry */
 static void
-t8_advect_element_set_phi_adapt (const t8_advect_problem_t * problem,
+t8_advect_element_set_phi_adapt (const t8_advect_problem_t *problem,
                                  t8_locidx_t ielement, double phi)
 {
   *((double *) t8_sc_array_index_locidx (problem->phi_values_adapt, ielement))
@@ -242,7 +242,7 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
 
 /* Compute the total volume of the elements with negative phi value */
 static double
-t8_advect_level_set_volume (const t8_advect_problem_t * problem)
+t8_advect_level_set_volume (const t8_advect_problem_t *problem)
 {
   t8_locidx_t         num_local_elements, ielem;
   t8_advect_element_data_t *elem_data;
@@ -267,7 +267,7 @@ t8_advect_level_set_volume (const t8_advect_problem_t * problem)
 /* Compute the relative l_infty error of the stored phi values compared to a
  * given analytical function at time problem->t */
 static double
-t8_advect_l_infty_rel (const t8_advect_problem_t * problem,
+t8_advect_l_infty_rel (const t8_advect_problem_t *problem,
                        t8_example_level_set_fn analytical_sol,
                        double distance)
 {
@@ -308,7 +308,7 @@ t8_advect_l_infty_rel (const t8_advect_problem_t * problem,
 }
 
 static double
-t8_advect_l_2_rel (const t8_advect_problem_t * problem,
+t8_advect_l_2_rel (const t8_advect_problem_t *problem,
                    t8_example_level_set_fn analytical_sol, double distance)
 {
   t8_locidx_t         num_local_elements, ielem, count = 0;
@@ -350,7 +350,7 @@ t8_advect_l_2_rel (const t8_advect_problem_t * problem,
 }
 
 static double
-t8_advect_flux_upwind_1d (const t8_advect_problem_t * problem,
+t8_advect_flux_upwind_1d (const t8_advect_problem_t *problem,
                           const t8_locidx_t el_plus,
                           const t8_locidx_t el_minus, int face)
 {
@@ -397,7 +397,7 @@ t8_advect_flux_upwind_1d (const t8_advect_problem_t * problem,
 /* This works also if element_plus hangs on element_minus.
  * It does not work if it hangs the other way around. */
 static double
-t8_advect_flux_upwind (const t8_advect_problem_t * problem,
+t8_advect_flux_upwind (const t8_advect_problem_t *problem,
                        double el_plus_phi,
                        double el_minus_phi,
                        t8_locidx_t ltreeid,
@@ -452,7 +452,7 @@ t8_advect_flux_upwind (const t8_advect_problem_t * problem,
  */
 int                 a = 0;
 static double
-t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
+t8_advect_flux_upwind_hanging (const t8_advect_problem_t *problem,
                                t8_locidx_t iel_hang,
                                t8_locidx_t ltreeid,
                                t8_element_t *element_hang,
@@ -536,7 +536,7 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
  * We currently set the phi value
  * to the value of the element itself. */
 static void
-t8_advect_boundary_set_phi (const t8_advect_problem_t * problem,
+t8_advect_boundary_set_phi (const t8_advect_problem_t *problem,
                             t8_locidx_t ielement, double *boundary_phi)
 {
 
@@ -544,8 +544,7 @@ t8_advect_boundary_set_phi (const t8_advect_problem_t * problem,
 }
 
 static void
-t8_advect_advance_element (t8_advect_problem_t * problem,
-                           t8_locidx_t lelement)
+t8_advect_advance_element (t8_advect_problem_t *problem, t8_locidx_t lelement)
 {
   int                 iface, ineigh;
   double              flux_sum = 0;
@@ -572,8 +571,8 @@ t8_advect_advance_element (t8_advect_problem_t * problem,
 
 /* Compute element midpoint and vol and store at element_data field. */
 static void
-t8_advect_compute_element_data (t8_advect_problem_t * problem,
-                                t8_advect_element_data_t * elem_data,
+t8_advect_compute_element_data (t8_advect_problem_t *problem,
+                                t8_advect_element_data_t *elem_data,
                                 t8_element_t *element,
                                 t8_locidx_t ltreeid, t8_eclass_scheme_c *ts)
 {
@@ -715,7 +714,7 @@ t8_advect_replace (t8_forest_t forest_old,
 }
 
 static void
-t8_advect_problem_elements_destroy (t8_advect_problem_t * problem)
+t8_advect_problem_elements_destroy (t8_advect_problem_t *problem)
 {
 
   t8_locidx_t         lelement, num_local_elem;
@@ -748,7 +747,7 @@ t8_advect_problem_elements_destroy (t8_advect_problem_t * problem)
 /* Adapt the forest and interpolate the phi values to the new grid,
  * compute the new u values on the grid */
 static void
-t8_advect_problem_adapt (t8_advect_problem_t * problem, int measure_time)
+t8_advect_problem_adapt (t8_advect_problem_t *problem, int measure_time)
 {
   t8_locidx_t         num_elems_p_ghosts, num_elems;
   double              adapt_time, balance_time = 0, ghost_time;
@@ -847,7 +846,7 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem, int measure_time)
 
 /* Re-partition the forest and element data of a problem */
 static void
-t8_advect_problem_partition (t8_advect_problem_t * problem, int measure_time)
+t8_advect_problem_partition (t8_advect_problem_t *problem, int measure_time)
 {
   t8_forest_t         forest_partition;
   sc_array_t          data_view, data_view_new, phi_view, phi_view_new;
@@ -1062,7 +1061,7 @@ t8_advect_problem_init (t8_cmesh_t cmesh,
 /* Project the solution at the last time step to the forest.
  * Also set the fluxes to invalid */
 static void
-t8_advect_project_element_data (t8_advect_problem_t * problem)
+t8_advect_project_element_data (t8_advect_problem_t *problem)
 {
   t8_locidx_t         num_local_elements, ielem;
   t8_advect_element_data_t *elem_data;
@@ -1086,7 +1085,7 @@ t8_advect_project_element_data (t8_advect_problem_t * problem)
 }
 
 static void
-t8_advect_problem_init_elements (t8_advect_problem_t * problem)
+t8_advect_problem_init_elements (t8_advect_problem_t *problem)
 {
   t8_locidx_t         itree, ielement, idata;
   t8_locidx_t         num_trees, num_elems_in_tree;
@@ -1190,7 +1189,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
 }
 
 static void
-t8_advect_write_vtk (t8_advect_problem_t * problem)
+t8_advect_write_vtk (t8_advect_problem_t *problem)
 {
   double             *u_and_phi_array[4], u_temp[3];
   t8_locidx_t         num_local_elements, ielem;
@@ -1260,7 +1259,7 @@ t8_advect_write_vtk (t8_advect_problem_t * problem)
 
 #ifdef T8_ENABLE_DEBUG
 static void
-t8_advect_print_phi (t8_advect_problem_t * problem)
+t8_advect_print_phi (t8_advect_problem_t *problem)
 {
   t8_locidx_t         ielement;
   t8_locidx_t         num_local_els;
@@ -1283,7 +1282,7 @@ t8_advect_print_phi (t8_advect_problem_t * problem)
 #endif
 
 static void
-t8_advect_problem_destroy (t8_advect_problem_t ** pproblem)
+t8_advect_problem_destroy (t8_advect_problem_t **pproblem)
 {
   t8_advect_problem_t *problem;
 

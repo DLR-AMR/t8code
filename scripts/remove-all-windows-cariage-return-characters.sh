@@ -22,8 +22,8 @@
 # Usage
 #
 # Search and remove all Windows(TM) cariage return characters '\r' from C/C++
-# source files in 'src', 'tutorials', and 'test' directories. Usually, these
+# source files in source code directories. Usually, these
 # characters are visible as '^M' characters and are introduced by misconfigured
 # source code editors on Windows(TM).
 
-grep -R -l $'\r' src tutorials test | xargs -r -l1 perl -i -p -e 's/\r//g'
+grep -R -l $'\r' src tutorials example test | xargs -r -l1 perl -i -p -e 's/\r//g'

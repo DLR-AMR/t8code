@@ -559,9 +559,9 @@ static t8_cmesh_t
 t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix,
                                             int partition,
                                             sc_MPI_Comm comm, int do_dup,
-                                            int dim, sc_flopinfo_t * fi,
-                                            sc_flopinfo_t * snapshot,
-                                            sc_statinfo_t * stats,
+                                            int dim, sc_flopinfo_t *fi,
+                                            sc_flopinfo_t *snapshot,
+                                            sc_statinfo_t *stats,
                                             int statindex)
 {
   int                 mpirank, mpisize, mpiret;
@@ -659,9 +659,9 @@ t8_cmesh_from_triangle_file (char *fileprefix, int partition,
 t8_cmesh_t
 t8_cmesh_from_tetgen_file_time (char *fileprefix, int partition,
                                 sc_MPI_Comm comm, int do_dup,
-                                sc_flopinfo_t * fi,
-                                sc_flopinfo_t * snapshot,
-                                sc_statinfo_t * stats, int statentry)
+                                sc_flopinfo_t *fi,
+                                sc_flopinfo_t *snapshot,
+                                sc_statinfo_t *stats, int statentry)
 {
   return t8_cmesh_from_tetgen_or_triangle_file_time (fileprefix, partition,
                                                      comm, do_dup, 3, fi,

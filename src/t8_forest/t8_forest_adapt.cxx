@@ -133,7 +133,7 @@ static void
 t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
                                   t8_locidx_t lelement_id,
                                   t8_eclass_scheme_c *ts,
-                                  sc_list_t * elem_list,
+                                  sc_list_t *elem_list,
                                   t8_element_array_t *telements,
                                   t8_locidx_t *num_inserted,
                                   t8_element_t **el_buffer)

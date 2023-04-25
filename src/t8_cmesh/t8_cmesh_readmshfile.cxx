@@ -254,7 +254,7 @@ die_format:
 /* Read an open .msh file of version 2 and parse the nodes into a hash table. */
 static sc_hash_t   *
 t8_msh_file_2_read_nodes (FILE *fp, t8_locidx_t *num_nodes,
-                          sc_mempool_t ** node_mempool)
+                          sc_mempool_t **node_mempool)
 {
   t8_msh_file_node_t *Node;
   sc_hash_t          *node_table = NULL;
@@ -357,8 +357,7 @@ die_node:
 /* Read an open .msh file of version 4 and parse the nodes into a hash table. */
 static sc_hash_t   *
 t8_msh_file_4_read_nodes (FILE *fp,
-                          t8_locidx_t *num_nodes,
-                          sc_mempool_t ** node_mempool)
+                          t8_locidx_t *num_nodes, sc_mempool_t **node_mempool)
 {
   t8_msh_file_node_parametric_t *Node;
   sc_hash_t          *node_table = NULL;
@@ -535,7 +534,7 @@ die_node:
  * They are stored as arrays of long ints. */
 static int
 t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp,
-                               sc_hash_t * vertices,
+                               sc_hash_t *vertices,
                                sc_array_t **vertex_indices, int dim)
 {
   char               *line = (char *) malloc (1024), *line_modify;
@@ -743,7 +742,7 @@ die_ele:
  * is not committed yet. */
 static int
 t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
-                               sc_hash_t * vertices,
+                               sc_hash_t *vertices,
                                sc_array_t **vertex_indices,
                                int dim,
                                const t8_geometry_c *linear_geometry_base,
@@ -1599,8 +1598,8 @@ t8_msh_file_face_set_boundary (void **face, const void *data)
 /* Given two faces and the classes of their volume trees,
  * compute the orientation of the faces to each other */
 static int
-t8_msh_file_face_orientation (t8_msh_file_face_t * Face_a,
-                              t8_msh_file_face_t * Face_b,
+t8_msh_file_face_orientation (t8_msh_file_face_t *Face_a,
+                              t8_msh_file_face_t *Face_b,
                               t8_eclass_t tree_class_a,
                               t8_eclass_t tree_class_b)
 {

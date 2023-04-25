@@ -18,18 +18,18 @@
   You should have received a copy of the GNU General Public License
   along with t8code; if not, write to the Free Software Foundation, Inc.,
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
-*/  
-  
+*/
+
 /** \file t8_forest.h
  * Includes all headers based on previous t8_forest.h
- */ 
-  
+ */
+
 #ifndef T8_FOREST_H
 #define T8_FOREST_H
-  
+
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_profiling.h>
 #include <t8_forest/t8_forest_io.h>
-  
+
 #endif /* !T8_FOREST_H */

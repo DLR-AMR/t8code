@@ -233,7 +233,7 @@ t8_tutorial_search_query_callback (t8_forest_t forest,
 /* Write the forest to vtu files and also write the particles_per_element
  * data. */
 static void
-t8_tutorial_search_vtk (t8_forest_t forest, sc_array * particles_per_element,
+t8_tutorial_search_vtk (t8_forest_t forest, sc_array *particles_per_element,
                         const char *prefix)
 {
   /* Define the additional vtu data that we want to write. */
@@ -253,7 +253,7 @@ t8_tutorial_search_vtk (t8_forest_t forest, sc_array * particles_per_element,
 /* Perform the actual search and write the forest with the number of particles per element
  * to vtu files. */
 static void
-t8_tutorial_search_for_particles (t8_forest_t forest, sc_array * particles)
+t8_tutorial_search_for_particles (t8_forest_t forest, sc_array *particles)
 {
   sc_array            particles_per_element;
   t8_locidx_t         num_local_elements =

@@ -150,14 +150,14 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim,
 }
 
 t8_cmesh_t
-t8_cmesh_new_from_p4est (p4est_connectivity_t * conn,
+t8_cmesh_new_from_p4est (p4est_connectivity_t *conn,
                          sc_MPI_Comm comm, int do_partition)
 {
   return t8_cmesh_new_from_p4est_ext (conn, 2, comm, do_partition, 0);
 }
 
 t8_cmesh_t
-t8_cmesh_new_from_p8est (p8est_connectivity_t * conn,
+t8_cmesh_new_from_p8est (p8est_connectivity_t *conn,
                          sc_MPI_Comm comm, int do_partition)
 {
   return t8_cmesh_new_from_p4est_ext (conn, 3, comm, do_partition, 0);

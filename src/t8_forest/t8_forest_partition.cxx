@@ -654,7 +654,7 @@ t8_forest_partition_fill_buffer_data (t8_forest_t forest_from,
  * Returns true if we sent to ourselves. */
 static int
 t8_forest_partition_sendloop (t8_forest_t forest, const int send_first,
-                              const int send_last, sc_MPI_Request ** requests,
+                              const int send_last, sc_MPI_Request **requests,
                               int *num_request_alloc, char ***send_buffer,
                               const int send_data, const sc_array_t *data_in,
                               size_t *byte_to_self)
@@ -818,7 +818,7 @@ t8_forest_partition_sendloop (t8_forest_t forest, const int send_first,
  */
 static void
 t8_forest_partition_recv_message_data (t8_forest_t forest, sc_MPI_Comm comm,
-                                       int proc, sc_MPI_Status * status,
+                                       int proc, sc_MPI_Status *status,
                                        t8_locidx_t *last_loc_elem_recvd,
                                        sc_array_t *data_out,
                                        char *sent_to_self,
@@ -888,7 +888,7 @@ t8_forest_partition_recv_message_data (t8_forest_t forest, sc_MPI_Comm comm,
  */
 static void
 t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm,
-                                  int proc, sc_MPI_Status * status,
+                                  int proc, sc_MPI_Status *status,
                                   int prev_recvd, char *sent_to_self,
                                   size_t byte_to_self)
 {
