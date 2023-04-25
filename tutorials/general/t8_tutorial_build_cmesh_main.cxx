@@ -25,7 +25,7 @@
  * the step8 example.
  */
 
-#include <tutorials/general/t8_step8.h>
+#include <tutorials/general/t8_tutorial_build_cmesh.h>
 
 int
 main (int argc, char **argv)

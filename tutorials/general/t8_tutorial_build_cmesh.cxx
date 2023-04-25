@@ -505,7 +505,6 @@ t8_step8_main (int argc, char **argv)
   /* We will use MPI_COMM_WORLD as a communicator. */
   comm = sc_MPI_COMM_WORLD;
 
-
   /*
    * Definition of the meshes.
    */
