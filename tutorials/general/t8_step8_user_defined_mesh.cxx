@@ -488,9 +488,6 @@ t8_step8_main (int argc, char **argv)
   const char         *prefix_2D = "t8_step8_user_defined_mesh_2D";
   const char         *prefix_3D = "t8_step8_user_defined_mesh_3D";
 
-  /* The uniform refinement level of the forest. */
-  const int           level = 0;
-
   /*
    * Initialization.
    */
