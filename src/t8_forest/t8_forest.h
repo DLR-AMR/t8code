@@ -20,25 +20,16 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_forest/t8_forest_types.h>
-#include <t8_forest/t8_forest_private.h>
+/** \file t8_forest.h
+ * Includes all headers based on previous t8_forest.h
+ */
+
+#ifndef T8_FOREST_H
+#define T8_FOREST_H
+
 #include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_geometrical.h>
+#include <t8_forest/t8_forest_profiling.h>
+#include <t8_forest/t8_forest_io.h>
 
-t8_element_t       *
-t8_forest_get_tree_element (t8_tree_t tree, t8_locidx_t elem_in_tree)
-{
-  T8_ASSERT (tree != NULL);
-  T8_ASSERT (0 <= elem_in_tree
-             && elem_in_tree < t8_forest_get_tree_element_count (tree));
-  return t8_element_array_index_locidx (&tree->elements, elem_in_tree);
-}
-
-t8_element_array_t *
-t8_forest_get_tree_element_array (t8_forest_t forest, t8_locidx_t ltreeid)
-{
-  T8_ASSERT (t8_forest_is_committed (forest));
-  T8_ASSERT (0 <= ltreeid
-             && ltreeid < t8_forest_get_num_local_trees (forest));
-
-  return &t8_forest_get_tree (forest, ltreeid)->elements;
-}
+#endif /* !T8_FOREST_H */

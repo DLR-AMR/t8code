@@ -42,6 +42,8 @@
 #include <t8_schemes/t8_default/t8_default_prism/t8_dprism.h>
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtet.h>
 #include <t8_forest/t8_forest_adapt.h>
+#include <t8_forest/t8_forest_io.h>
+#include <t8_forest/t8_forest_profiling.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
 /* The refinement criterion

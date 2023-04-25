@@ -25,7 +25,9 @@
 #include <t8_eclass.h>
 #include <t8_element_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_io.h>
+#include <t8_forest/t8_forest_profiling.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_cmesh_vtk_writer.h>
