@@ -31,8 +31,8 @@
   
 #include <sc_statistics.h>
 #include <t8_cmesh.h>
-  T8_EXTERN_C_BEGIN ();
- 
+  T8_EXTERN_C_BEGIN ();
+ 
 /** Compute the coordinates of a given vertex of an element if a geometry
  * for this tree is registered in the forest's cmesh.
  * \param [in]      forest     The forest.
@@ -43,12 +43,12 @@
  *                             the x, y and z coordinates of the vertex.
  */ 
 void                t8_forest_element_coordinate (t8_forest_t forest,
-                                                  t8_locidx_t ltree_id,
-                                                  const t8_element_t
+                                                  t8_locidx_t ltree_id,
+                                                  const t8_element_t
                                                   *element,
-                                                  int corner_number,
-                                                  double *coordinates);
- 
+                                                  int corner_number,
+                                                  double *coordinates);
+ 
 /** Compute the coordinates of the centroid of an element if a geometry
  * for this tree is registered in the forest's cmesh.
  * The centroid is the sum of all corner vertices divided by the number of corners.
@@ -61,10 +61,10 @@ void                t8_forest_element_coordinate (t8_forest_t forest,
  *                             the x, y and z coordinates of the centroid.
  */ 
 void                t8_forest_element_centroid (t8_forest_t forest,
-                                                t8_locidx_t ltreeid,
-                                                const t8_element_t *element,
-                                                double *coordinates);
- 
+                                                t8_locidx_t ltreeid,
+                                                const t8_element_t *element,
+                                                double *coordinates);
+ 
 /** Compute the diameter of an element if a geometry
  * for this tree is registered in the forest's cmesh.
  * This is only an approximation.
@@ -76,9 +76,9 @@ void                t8_forest_element_centroid (t8_forest_t forest,
  *                             an approximation.
  */ 
 double              t8_forest_element_diam (t8_forest_t forest,
-                                            t8_locidx_t ltreeid,
-                                            const t8_element_t *element);
- 
+                                            t8_locidx_t ltreeid,
+                                            const t8_element_t *element);
+ 
 /** Compute the volume of an element if a geometry
  * for this tree is registered in the forest's cmesh.
  * This is only an approximation.
@@ -91,9 +91,9 @@ double              t8_forest_element_diam (t8_forest_t forest,
  *                             \a forest must be committed when calling this function.
  */ 
 double              t8_forest_element_volume (t8_forest_t forest,
-                                              t8_locidx_t ltreeid,
-                                              const t8_element_t *element);
- 
+                                              t8_locidx_t ltreeid,
+                                              const t8_element_t *element);
+ 
 /** Compute the area of an element's face if a geometry
  * for this tree is registered in the forest's cmesh.
  * Currently implemented for 2D elements only.
@@ -106,10 +106,10 @@ double              t8_forest_element_volume (t8_forest_t forest,
  * \a forest must be committed when calling this function.
  */ 
 double              t8_forest_element_face_area (t8_forest_t forest,
-                                                 t8_locidx_t ltreeid,
-                                                 const t8_element_t *element,
-                                                 int face);
- 
+                                                 t8_locidx_t ltreeid,
+                                                 const t8_element_t *element,
+                                                 int face);
+ 
 /** Compute the vertex coordinates of the centroid of an element's face if a geometry
  * for this tree is registered in the forest's cmesh.
  * \param [in]      forest     The forest.
@@ -120,11 +120,11 @@ double              t8_forest_element_face_area (t8_forest_t forest,
  * \a forest must be committed when calling this function.
  */ 
 void                t8_forest_element_face_centroid (t8_forest_t forest,
-                                                     t8_locidx_t ltreeid,
-                                                     const t8_element_t
-                                                     *element, int face,
-                                                     double centroid[3]);
- 
+                                                     t8_locidx_t ltreeid,
+                                                     const t8_element_t
+                                                     *element, int face,
+                                                     double centroid[3]);
+ 
 /** Compute the normal vector of an element's face if a geometry
  * for this tree is registered in the forest's cmesh.
  * Currently implemented for 2D elements only.
@@ -136,10 +136,10 @@ void                t8_forest_element_face_centroid (t8_forest_t forest,
  * \a forest must be committed when calling this function.
  */ 
 void                t8_forest_element_face_normal (t8_forest_t forest,
-                                                   t8_locidx_t ltreeid,
-                                                   const t8_element_t
-                                                   *element, int face,
-                                                   double normal[3]);
- T8_EXTERN_C_END ();
- 
+                                                   t8_locidx_t ltreeid,
+                                                   const t8_element_t
+                                                   *element, int face,
+                                                   double normal[3]);
+ T8_EXTERN_C_END ();
+ 
 #endif  /* !T8_FOREST_GEOMETRICAL_H */
