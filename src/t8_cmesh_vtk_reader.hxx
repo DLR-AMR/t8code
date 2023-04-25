@@ -41,6 +41,7 @@ T8_EXTERN_C_BEGIN ();
  */
 typedef enum vtk_file_type
 {
+  VTK_FILE_ERROR = -1,          /*For Testing purpose. */
   VTK_UNSTRUCTURED_FILE = 0,
   VTK_POLYDATA_FILE = 1
 } vtk_file_type_t;
