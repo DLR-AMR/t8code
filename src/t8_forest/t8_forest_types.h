@@ -34,7 +34,7 @@
 #include <t8_element.h>
 #include <t8_data/t8_containers.h>
 #include <t8_forest/t8_forest_adapt.h>
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
 
 typedef struct t8_profile t8_profile_t; /* Defined below */
 typedef struct t8_forest_ghost *t8_forest_ghost_t;      /* Defined below */

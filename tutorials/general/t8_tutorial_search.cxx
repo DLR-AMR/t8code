@@ -110,7 +110,8 @@
 #include <t8.h>                 /* General t8code header, always include this. */
 #include <t8_cmesh.h>           /* cmesh definition and basic interface. */
 #include <t8_cmesh/t8_cmesh_examples.h> /* A collection of exemplary cmeshes */
-#include <t8_forest.h>          /* forest definition and basic interface. */
+#include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
+#include <t8_forest/t8_forest_io.h>     /* save forest */
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>     /* default refinement scheme. */
 #include <t8_vec.h>             /* Basic operations on 3D vectors. */
 #include <t8_forest/t8_forest_iterate.h>        /* For the search algorithm. */

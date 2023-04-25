@@ -25,7 +25,7 @@
  * In this example we initialize t8code and print a small welcome message.
  * This is the t8code equivalent of HelloWorld. */
 
-#include <t8.h>
+#include <t8.h>                 /* General t8code header, always include this. */
 
 int
 main (int argc, char **argv)

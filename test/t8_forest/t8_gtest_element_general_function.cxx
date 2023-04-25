@@ -28,7 +28,7 @@
 #include <t8_schemes/t8_default/t8_default_prism/t8_dprism.h>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
 
 /*
  * In this file we test whether the t8_element_general_function

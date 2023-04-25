@@ -20,6 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_dpyramid_bits.h
+ * Definitions of pyramid-specific functions.
+ */
+
 #ifndef T8_DPYRAMID_BITS_H
 #define T8_DPYRAMID_BITS_H
 
