@@ -28,7 +28,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #define T8_CMESH_VTK_READER
 
 #include <t8_cmesh.h>
-#include "t8_cmesh/t8_cmesh_vtk_to_t8/t8_vtk_types.h"
+#include <t8_vtk/t8_vtk_types.h>
 
 #if T8_WITH_VTK
 #include <vtkSmartPointer.h>

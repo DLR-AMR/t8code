@@ -28,10 +28,10 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_cmesh_vtk_writer.h>        /* To set tree vertices */
 
 #include <t8_cmesh_vtk_reader.hxx>
-#include "t8_cmesh_vtk_to_t8/t8_cmesh_vtk_unstructured.hxx"
-#include "t8_cmesh_vtk_to_t8/t8_cmesh_vtk_polydata.hxx"
+#include <t8_vtk/t8_vtk_unstructured.hxx>
+#include <t8_vtk/t8_vtk_polydata.hxx>
+#include <t8_vtk/t8_vtk_types.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
-#include "t8_cmesh_vtk_to_t8/t8_vtk_types.h"
 
 #if T8_WITH_VTK
 #include <vtkCellIterator.h>
