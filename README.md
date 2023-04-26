@@ -138,62 +138,68 @@ You can also find the documentation of our releases on the [t8code website](http
   
   An (incomplete) list of publications related to t8code:
     
-  [1] Holke, Johannes und Burstedde, Carsten und Knapp, David und Dreyer, Lukas und Elsweijer, Sandro und Ünlü, Veli und Markert, Johannes und Lilikakis, Ioannis und Böing, Niklas und Ponnusamy, Prasanna und Basermann, Achim  (2023) *t8code v. 1.0 - Modular Adaptive Mesh Refinement in the Exascale Era*. SIAM International Meshing Round Table 2023, 06.03.2023 - 09.03.2023, Amsterdam, Niederlande. 
+  [1] **Overview Paper**: Holke, Johannes und Burstedde, Carsten und Knapp, David und Dreyer, Lukas und Elsweijer, Sandro und Ünlü, Veli und Markert, Johannes und Lilikakis, Ioannis und Böing, Niklas und Ponnusamy, Prasanna und Basermann, Achim  (2023) *t8code v. 1.0 - Modular Adaptive Mesh Refinement in the Exascale Era*. SIAM International Meshing Round Table 2023, 06.03.2023 - 09.03.2023, Amsterdam, Niederlande. 
   [Full text available](https://elib.dlr.de/194377/1/t8code_overview_IMR2023.pdf)
-  **Overview Paper**
+  
     
-  [2] Johannes Holke, *Scalable algorithms for parallel tree-based adaptive mesh refinement with general element types*, PhD thesis at University of Bonn, 2018,
+  [2] **Original PhD thesis**: Johannes Holke, *Scalable algorithms for parallel tree-based adaptive mesh refinement with general element types*, PhD thesis at University of Bonn, 2018,
       [Full text available](https://bonndoc.ulb.uni-bonn.de/xmlui/handle/20.500.11811/7661)
-   **Original PhD thesis**
+   
       
-  [3] Carsten Burstedde and Johannes Holke, *A Tetrahedral Space-Filling Curve for Nonconforming Adaptive Meshes*, SIAM Journal on Scientific Computing, 2016, [10.1137/15M1040049](https://epubs.siam.org/doi/10.1137/15M1040049)
-  **Tetrahedral and triangular Space-filling curve**
+  [3] **Tetrahedral and triangular Space-filling curve**:
+  Carsten Burstedde and Johannes Holke, *A Tetrahedral Space-Filling Curve for Nonconforming Adaptive Meshes*, SIAM Journal on Scientific Computing, 2016, [10.1137/15M1040049](https://epubs.siam.org/doi/10.1137/15M1040049)
   
-  [4] Carsten Burstedde and Johannes Holke, *Coarse mesh partitioning for tree-based AMR*, SIAM Journal on Scientific Computing, 2017, [10.1137/16M1103518](https://epubs.siam.org/doi/10.1137/16M1103518)
-  **Coarse mesh partitioning**
   
-  [5] Johannes Holke and David Knapp and Carsten Burstedde, *An Optimized, Parallel Computation of the Ghost Layer for Adaptive Hybrid Forest Meshes*, SIAM Journal on Scientific Computing, 2021, [10.1137/20M1383033](https://epubs.siam.org/doi/abs/10.1137/20M1383033)
-  **Ghost computation**
+  [4] **Coarse mesh partitioning**:
+  Carsten Burstedde and Johannes Holke, *Coarse mesh partitioning for tree-based AMR*, SIAM Journal on Scientific Computing, 2017, [10.1137/16M1103518](https://epubs.siam.org/doi/10.1137/16M1103518)
   
-  [6]  Elsweijer, Sandro und Holke, Johannes und Kleinert, Jan und Reith, Dirk  (2022) *Constructing a Volume Geometry Map for Hexahedra with Curved Boundary Geometries*.   In: SIAM International Meshing Roundtable Workshop 2022.  SIAM International Meshing Roundtable Workshop 2022, 22. - 25. Feb. 2022, [Full text available](https://elib.dlr.de/186570/1/ConstructingAVolumeGeometryMapForHexahedraWithCurvedBoundaryGeometries.pdf) **Geometry controlled refinement for hexahedra**
+  
+  [5] **Ghost computation**:
+  Johannes Holke and David Knapp and Carsten Burstedde, *An Optimized, Parallel Computation of the Ghost Layer for Adaptive Hybrid Forest Meshes*, SIAM Journal on Scientific Computing, 2021, [10.1137/20M1383033](https://epubs.siam.org/doi/abs/10.1137/20M1383033)
+ 
+  
+  [6] **Geometry controlled refinement for hexahedra**:
+  Elsweijer, Sandro und Holke, Johannes und Kleinert, Jan und Reith, Dirk  (2022) *Constructing a Volume Geometry Map for Hexahedra with Curved Boundary Geometries*.   In: SIAM International Meshing Roundtable Workshop 2022.  SIAM International Meshing Roundtable Workshop 2022, 22. - 25. Feb. 2022, [Full text available](https://elib.dlr.de/186570/1/ConstructingAVolumeGeometryMapForHexahedraWithCurvedBoundaryGeometries.pdf) 
   
 ### Theses with t8code relations
 
   An (incomplete) list of theses written with or about t8code:
   
 
-  [A] Knapp, David (2017) *Adaptive Verfeinerung von Prismen*. Bachelor's thesis, Rheinische Friedrich-Wilhems-Universität Bonn.
-  **Prism space-filling curve**
+  [A] **Prism space-filling curve**: 
+  Knapp, David (2017) *Adaptive Verfeinerung von Prismen*. Bachelor's thesis, Rheinische Friedrich-Wilhems-Universität Bonn.
   
-  [B] Knapp, David (2020) *A space-filling curve for pyramidal adaptive mesh refinement*. Master's thesis, Rheinische Friedrich-Wilhems-Universität Bonn.
-  **Pyramidal space-filling curve**
+  
+  [B] **Pyramidal space-filling curve**: 
+  Knapp, David (2020) *A space-filling curve for pyramidal adaptive mesh refinement*. Master's thesis, Rheinische Friedrich-Wilhems-Universität Bonn.
+  
    
-  [C] Dreyer, Lukas (2021) *The local discontinuous galerkin method for the advection-diffusion equation on adaptive meshes*.  Master's thesis, Rheinische Friedrich-Wilhems-Universität Bonn.
+  [C] **DG solver based on t8code**: Dreyer, Lukas (2021) *The local discontinuous galerkin method for the advection-diffusion equation on adaptive meshes*.  Master's thesis, Rheinische Friedrich-Wilhems-Universität Bonn.
   [Full text available] (https://elib.dlr.de/143969/1/masterthesis_dreyer.pdf) 
-  **DG solver based on t8code**
   
-  [D] Elsweijer, Sandro (2021) *Curved Domain Adaptive Mesh Refinement with Hexahedra*.  Tech report, Hochschule Bonn-Rhein-Sieg.
+  
+  [D] **Geometry controlled refinement for hexahedra (Part 1)**: Elsweijer, Sandro (2021) *Curved Domain Adaptive Mesh Refinement with Hexahedra*.  Tech report, Hochschule Bonn-Rhein-Sieg.
   [Full text available] (https://elib.dlr.de/186571/1/masterprojekt-2_elsweijer_ABGABEVERSION_TITEL.pdf)
-  **Geometry controlled refinement for hexahedra (Part 1)**
+  
 
-  [E] Becker, Florian (2021) *Removing hanging faces from tree-based adaptive meshes for numerical simulation*, Master's thesis, Universität zu Köln.
+  [E] **Subelement and resolving hanging faces in 2D**: Becker, Florian (2021) *Removing hanging faces from tree-based adaptive meshes for numerical simulation*, Master's thesis, Universität zu Köln.
   [Full text available](https://elib.dlr.de/187499/1/RemovingHangingFacesFromTreeBasedAMR.pdf)
-  **Subelement and resolving hanging faces in 2D**
   
-  [F] Spataro, Luca  (2021) *Lossy data compression for atmospheric chemistry using adaptive mesh coarsening*.  Master's thesis, Technische Universität München.
+  
+  [F] **Coarsening as post-processing to reduce simulation file size**: Spataro, Luca  (2021) *Lossy data compression for atmospheric chemistry using adaptive mesh coarsening*.  Master's thesis, Technische Universität München.
   [Full text available](https://elib.dlr.de/144997/1/master-thesis-final-spataro.pdf)
-  **Coarsening as post-processing to reduce simulation file size**
+ 
   
-  [G] Elsweijer, Sandro (2022) *Evaluation and generic application scenarios for curved hexahedral adaptive mesh refinement*.  Master's thesis, Hochschule Bonn-Rhein-Sieg.  [10.13140/RG.2.2.34714.11203](<https://doi.org/10.13140/RG.2.2.34714.11203>) [Full text available](https://elib.dlr.de/186561/1/sandro_elsweijer-evaluation_and_generic_application_scenarios_for_curved_hexahedral_adaptive_mesh_refinement.pdf)
-  **Geometry controlled refinement for hexahedra (Part 2)**
+  [G] **Geometry controlled refinement for hexahedra (Part 2)**: Elsweijer, Sandro (2022) *Evaluation and generic application scenarios for curved hexahedral adaptive mesh refinement*.  Master's thesis, Hochschule Bonn-Rhein-Sieg.  [10.13140/RG.2.2.34714.11203](<https://doi.org/10.13140/RG.2.2.34714.11203>) [Full text available](https://elib.dlr.de/186561/1/sandro_elsweijer-evaluation_and_generic_application_scenarios_for_curved_hexahedral_adaptive_mesh_refinement.pdf)
   
-  [H] Böing, Niklas  (2022) *Evaluation of preconditioners for implicit solvers of local DG for the advection-diffusion equation* (*Untersuchung von Präkonditionierern für implizite Löser für das Local DG-Verfahren zur Lösung der Advektions-Diffusionsgleichung*).  Master's thesis, Universität zu Köln.
+  
+  [H] **Multigrid and other preconditioners for DG**: Böing, Niklas  (2022) *Evaluation of preconditioners for implicit solvers of local DG for the advection-diffusion equation* (*Untersuchung von Präkonditionierern für implizite Löser für das Local DG-Verfahren zur Lösung der Advektions-Diffusionsgleichung*).  Master's thesis, Universität zu Köln.
 [Full text available](https://elib.dlr.de/186347/1/Untersuchung%20von%20Pr%C3%A4konditionierern%20f%C3%BCr%20implizite%20L%C3%B6ser%20f%C3%BCr%20das%20Local%20DG-Verfahren%20zur%20L%C3%B6sung%20der%20Advektions-Diffusionsgleichung.pdf)
-  **Multigrid and other preconditioners for DG**
+  
 
-  [I] Lilikakis, Ioannis  (2022) *Algorithms for tree-based adaptive meshes with incomplete trees*.  Master's thesis, Universität zu Köln.    
+  [I] **Removing elements from the mesh (cutting holes)**: Lilikakis, Ioannis  (2022) *Algorithms for tree-based adaptive meshes with incomplete trees*.  Master's thesis, Universität zu Köln.    
  [Full text may be available in future](https://elib.dlr.de/191968/)
- **Removing elements from the mesh (cutting holes)**
+ 
 
   ### Citing t8code
   
