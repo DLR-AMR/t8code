@@ -76,10 +76,11 @@ libt8_internal_headers = \
   src/t8_cmesh/t8_cmesh_offset.h \
   src/t8_vtk/t8_vtk_polydata.hxx \
   src/t8_vtk/t8_vtk_unstructured.hxx \
+  src/t8_vtk/t8_vtk_reader.hxx \
   src/t8_vtk/t8_vtk_types.h \
   src/t8_forest/t8_forest_cxx.h  \
   src/t8_forest/t8_forest_ghost.h \
-  src/t8_forest/t8_forest_balance.h src/t8_forest/t8_forest_types.h \ 
+  src/t8_forest/t8_forest_balance.h src/t8_forest/t8_forest_types.h \
   src/t8_forest/t8_forest_private.h
 libt8_compiled_sources = \
   src/t8.c src/t8_eclass.c src/t8_mesh.c \
@@ -117,7 +118,8 @@ libt8_compiled_sources = \
   src/t8_netcdf.c \
   src/t8_cmesh/t8_cmesh_testcases.c \
   src/t8_vtk/t8_vtk_polydata.cxx \
-  src/t8_vtk/t8_vtk_unstructured.cxx
+  src/t8_vtk/t8_vtk_unstructured.cxx \
+  src/t8_vtk/t8_vtk_reader.cxx
 
 
 # this variable is used for headers that are not publicly installed
