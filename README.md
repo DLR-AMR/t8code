@@ -155,6 +155,8 @@ You can also find the documentation of our releases on the [t8code website](http
   [5] Johannes Holke and David Knapp and Carsten Burstedde, *An Optimized, Parallel Computation of the Ghost Layer for Adaptive Hybrid Forest Meshes*, SIAM Journal on Scientific Computing, 2021, [10.1137/20M1383033](https://epubs.siam.org/doi/abs/10.1137/20M1383033)
   **Ghost computation**
   
+  [6]  Elsweijer, Sandro und Holke, Johannes und Kleinert, Jan und Reith, Dirk  (2022) Constructing a Volume Geometry Map for Hexahedra with Curved Boundary Geometries.   In: SIAM International Meshing Roundtable Workshop 2022.  SIAM International Meshing Roundtable Workshop 2022, 22. - 25. Feb. 2022, [Full text available](https://elib.dlr.de/186570/1/ConstructingAVolumeGeometryMapForHexahedraWithCurvedBoundaryGeometries.pdf) **Geometry controlled refinement for hexahedra**
+  
   ### Citing t8code
   
   If you use t8code in any of your publications, please cite the [github repository](https://doi.org/10.5281/zenodo.7034838), [1] and [2]. For publications specifically related to 
