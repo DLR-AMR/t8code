@@ -138,7 +138,7 @@ You can also find the documentation of our releases on the [t8code website](http
   
   An (incomplete) list of publications related to t8code:
     
-  [1] **Overview Paper**: Holke, Johannes und Burstedde, Carsten und Knapp, David und Dreyer, Lukas und Elsweijer, Sandro und Ünlü, Veli und Markert, Johannes und Lilikakis, Ioannis und Böing, Niklas und Ponnusamy, Prasanna und Basermann, Achim  (2023) *t8code v. 1.0 - Modular Adaptive Mesh Refinement in the Exascale Era*. SIAM International Meshing Round Table 2023, 06.03.2023 - 09.03.2023, Amsterdam, Niederlande. 
+  [1] **Overview Paper**: Holke, Johannes and Burstedde, Carsten and Knapp, David and Dreyer, Lukas and Elsweijer, Sandro and Ünlü, Veli and Markert, Johannes and Lilikakis, Ioannis and Böing, Niklas and Ponnusamy, Prasanna and Basermann, Achim  (2023) *t8code v. 1.0 - Modular Adaptive Mesh Refinement in the Exascale Era*. SIAM International Meshing Round Table 2023, 06.03.2023 - 09.03.2023, Amsterdam, Niederlande. 
   [Full text available](https://elib.dlr.de/194377/1/t8code_overview_IMR2023.pdf)
   
     
@@ -159,7 +159,7 @@ You can also find the documentation of our releases on the [t8code website](http
  
   
   [6] **Geometry controlled refinement for hexahedra**:
-  Elsweijer, Sandro und Holke, Johannes und Kleinert, Jan und Reith, Dirk  (2022) *Constructing a Volume Geometry Map for Hexahedra with Curved Boundary Geometries*.   In: SIAM International Meshing Roundtable Workshop 2022.  SIAM International Meshing Roundtable Workshop 2022, 22. - 25. Feb. 2022, [Full text available](https://elib.dlr.de/186570/1/ConstructingAVolumeGeometryMapForHexahedraWithCurvedBoundaryGeometries.pdf) 
+  Elsweijer, Sandro and Holke, Johannes and Kleinert, Jan and Reith, Dirk  (2022) *Constructing a Volume Geometry Map for Hexahedra with Curved Boundary Geometries*.   In: SIAM International Meshing Roundtable Workshop 2022.  SIAM International Meshing Roundtable Workshop 2022, 22. - 25. Feb. 2022, [Full text available](https://elib.dlr.de/186570/1/ConstructingAVolumeGeometryMapForHexahedraWithCurvedBoundaryGeometries.pdf) 
   
 ### Theses with t8code relations
 
