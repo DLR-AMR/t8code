@@ -140,20 +140,24 @@ You can also find the documentation of our releases on the [t8code website](http
     
   [1] Holke, Johannes und Burstedde, Carsten und Knapp, David und Dreyer, Lukas und Elsweijer, Sandro und Ünlü, Veli und Markert, Johannes und Lilikakis, Ioannis und Böing, Niklas und Ponnusamy, Prasanna und Basermann, Achim  (2023) *t8code v. 1.0 - Modular Adaptive Mesh Refinement in the Exascale Era*. SIAM International Meshing Round Table 2023, 06.03.2023 - 09.03.2023, Amsterdam, Niederlande. 
   [Full text available](https://elib.dlr.de/194377/1/t8code_overview_IMR2023.pdf)
-
+  **Overview Paper**
     
   [2] Johannes Holke, *Scalable algorithms for parallel tree-based adaptive mesh refinement with general element types*, PhD thesis at University of Bonn, 2018,
       [Full text available](https://bonndoc.ulb.uni-bonn.de/xmlui/handle/20.500.11811/7661)
+   **Original PhD thesis**
       
   [3] Carsten Burstedde and Johannes Holke, *A Tetrahedral Space-Filling Curve for Nonconforming Adaptive Meshes*, SIAM Journal on Scientific Computing, 2016, [10.1137/15M1040049](https://epubs.siam.org/doi/10.1137/15M1040049)
+  **Tetrahedral and triangular Space-filling curve**
   
   [4] Carsten Burstedde and Johannes Holke, *Coarse mesh partitioning for tree-based AMR*, SIAM Journal on Scientific Computing, 2017, [10.1137/16M1103518](https://epubs.siam.org/doi/10.1137/16M1103518)
+  **Coarse mesh partitioning**
   
   [5] Johannes Holke and David Knapp and Carsten Burstedde, *An Optimized, Parallel Computation of the Ghost Layer for Adaptive Hybrid Forest Meshes*, SIAM Journal on Scientific Computing, 2021, [10.1137/20M1383033](https://epubs.siam.org/doi/abs/10.1137/20M1383033)
+  **Ghost computation**
   
   ### Citing t8code
   
-  If you use t8code in any of your publications, please cite the [github repository](https://doi.org/10.5281/zenodo.7034838) and [1]. For publications specifically related to 
-- the TM index, please cite [2].
-- coarse mesh partitioning, please cite [3].
-- construction and handling of the ghost layer, please cite [4].
+  If you use t8code in any of your publications, please cite the [github repository](https://doi.org/10.5281/zenodo.7034838), [1] and [2]. For publications specifically related to 
+- the TM index, please cite [3].
+- coarse mesh partitioning, please cite [4].
+- construction and handling of the ghost layer, please cite [5].
