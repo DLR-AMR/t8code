@@ -53,6 +53,8 @@ Currently,
 
 You find more information on t8code in the [t8code Wiki](https://github.com/DLR-AMR/t8code/wiki).
 
+For a brief introduction in AMR and the algorithms used by t8code we recommend to read our [overview paper](https://elib.dlr.de/194377/1/t8code_overview_IMR2023.pdf).
+
 ### Setup
 
 We provide a short guide to install t8code. 
