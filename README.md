@@ -207,6 +207,6 @@ You can also find the documentation of our releases on the [t8code website](http
 - **the tetrahedral index**, please cite [3].
 - **coarse mesh partitioning**, please cite [4].
 - **construction and handling of the ghost layer**, please cite [5].
-- **Geometry controlled refinement**, please cite [6]
+- **geometry controlled refinement**, please cite [6]
 
 If you use any functionality described in the theses, we encourage you to cite them as well.
