@@ -130,7 +130,7 @@ t8code uses [Doxygen](https://doxygen.nl/) to generate the code documentation. Y
 make doxygen
 ```
 
-and then find the generated files in the `/doxygen` subfolder.
+and then find the generated files in the `/doc` subfolder.
 
 You can also find the documentation of our releases on the [t8code website](https://dlr-amr.github.io/t8code/pages/documentation.html).
 
