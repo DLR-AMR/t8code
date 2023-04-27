@@ -144,20 +144,20 @@ You can also find the documentation of our releases on the [t8code website](http
   
     
   [2] **Original PhD thesis**: 
-  Johannes Holke, *Scalable algorithms for parallel tree-based adaptive mesh refinement with general element types*, PhD thesis at University of Bonn, 2018,
+  Holke, Johannes *Scalable algorithms for parallel tree-based adaptive mesh refinement with general element types*, PhD thesis at University of Bonn, 2018,
       [Full text available](https://bonndoc.ulb.uni-bonn.de/xmlui/handle/20.500.11811/7661)
    
       
   [3] **Tetrahedral and triangular Space-filling curve**:
-  Carsten Burstedde and Johannes Holke, *A Tetrahedral Space-Filling Curve for Nonconforming Adaptive Meshes*, SIAM Journal on Scientific Computing, 2016, [10.1137/15M1040049](https://epubs.siam.org/doi/10.1137/15M1040049)
+  Burstedde, Carsten and Holke, Johannes *A Tetrahedral Space-Filling Curve for Nonconforming Adaptive Meshes*, SIAM Journal on Scientific Computing, 2016, [10.1137/15M1040049](https://epubs.siam.org/doi/10.1137/15M1040049)
   
   
   [4] **Coarse mesh partitioning**:
-  Carsten Burstedde and Johannes Holke, *Coarse mesh partitioning for tree-based AMR*, SIAM Journal on Scientific Computing, 2017, [10.1137/16M1103518](https://epubs.siam.org/doi/10.1137/16M1103518)
+  Burstedde, Carsten and Holke, Johannes *Coarse mesh partitioning for tree-based AMR*, SIAM Journal on Scientific Computing, 2017, [10.1137/16M1103518](https://epubs.siam.org/doi/10.1137/16M1103518)
   
   
   [5] **Ghost computation**:
-  Johannes Holke and David Knapp and Carsten Burstedde, *An Optimized, Parallel Computation of the Ghost Layer for Adaptive Hybrid Forest Meshes*, SIAM Journal on Scientific Computing, 2021, [10.1137/20M1383033](https://epubs.siam.org/doi/abs/10.1137/20M1383033)
+  Holke, Johannes and Knapp, David and Burstedde, Carsten *An Optimized, Parallel Computation of the Ghost Layer for Adaptive Hybrid Forest Meshes*, SIAM Journal on Scientific Computing, 2021, [10.1137/20M1383033](https://epubs.siam.org/doi/abs/10.1137/20M1383033)
  
   
   [6] **Geometry controlled refinement for hexahedra**:
