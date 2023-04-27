@@ -22,7 +22,7 @@
 
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_types.h>
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
 #include <t8_data/t8_containers.h>
 #include <t8_element_cxx.hxx>
 

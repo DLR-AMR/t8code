@@ -100,14 +100,28 @@ public:
    * elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and 
    * L the maximum refinement level. 
    * All element vertices have integer coordinates in this cube.
-   *   \param [in] t      The element to be considered.
-   *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
+   *   \param [in] elem    The element.
+   *   \param [in] vertex  The id of the vertex whose coordinates shall be computed.
    *   \param [out] coords An array of at least as many integers as the element's dimension
    *                      whose entries will be filled with the coordinates of \a vertex.
    */
-  virtual void        t8_element_vertex_coords (const t8_element_t *t,
+  virtual void        t8_element_vertex_coords (const t8_element_t *elem,
                                                 int vertex,
                                                 int coords[]) const = 0;
+
+  /** Convert a point in the reference space of an element to a point in the
+   *  reference space of the tree.
+   * 
+   * \param [in] elem         The element.
+   * \param [in] coords_input The coordinates of the point in the reference space of the element.
+   * \param [in] user_data    User data.
+   * \param [out] out_coords  The coordinates of the point in the reference space of the tree.
+   */
+  virtual void        t8_element_reference_coords (const t8_element_t *elem,
+                                                   const double *ref_coords,
+                                                   const void *user_data,
+                                                   double *out_coords)
+    const = 0;
 
   /** Get the integer coordinates of the anchor node of an element.
    * The default scheme implements the Morton type SFCs. In these SFCs the
