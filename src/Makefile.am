@@ -120,8 +120,7 @@ libt8_compiled_sources = \
   src/t8_cmesh/t8_cmesh_testcases.c  \
   src/t8_cmesh/t8_cmesh_vtk_to_t8/t8_cmesh_vtk_unstructured.cxx
 
-
-# this variable is used for headers that are not publicly installed
+# This variable is used for headers that are not publicly installed.
 T8_CPPFLAGS =
 
 justlibs-local: src/libt8.la
