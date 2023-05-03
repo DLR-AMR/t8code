@@ -173,17 +173,17 @@ You can also find the documentation of our releases on the [t8code website](http
   
   
   [B] **Pyramidal space-filling curve**: 
-  Knapp, David (2020) *A space-filling curve for pyramidal adaptive mesh refinement*. Master's thesis, Rheinische Friedrich-Wilhems-Universität Bonn.
+  Knapp, David (2020) *A space-filling curve for pyramidal adaptive mesh refinement*. Master's thesis, Rheinische Friedrich-Wilhems-Universität Bonn. [Full text available](https://www.researchgate.net/publication/346789160_A_space-filling_curve_for_pyramidal_adaptive_mesh_refinement)
   
    
   [C] **DG solver based on t8code**: 
   Dreyer, Lukas (2021) *The local discontinuous galerkin method for the advection-diffusion equation on adaptive meshes*.  Master's thesis, Rheinische Friedrich-Wilhems-Universität Bonn.
-  [Full text available] (https://elib.dlr.de/143969/1/masterthesis_dreyer.pdf) 
+  [Full text available](https://elib.dlr.de/143969/1/masterthesis_dreyer.pdf) 
   
   
   [D] **Geometry controlled refinement for hexahedra (Part 1)**: 
   Elsweijer, Sandro (2021) *Curved Domain Adaptive Mesh Refinement with Hexahedra*.  Tech report, Hochschule Bonn-Rhein-Sieg.
-  [Full text available] (https://elib.dlr.de/186571/1/masterprojekt-2_elsweijer_ABGABEVERSION_TITEL.pdf)
+  [Full text available](https://elib.dlr.de/186571/1/masterprojekt-2_elsweijer_ABGABEVERSION_TITEL.pdf)
   
 
   [E] **Subelement and resolving hanging faces in 2D**: 
