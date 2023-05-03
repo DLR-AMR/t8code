@@ -34,7 +34,8 @@ t8_cmesh_vtk_reader (const char *filename, const int partition,
                      const int main_proc, sc_MPI_Comm comm,
                      const vtk_file_type_t vtk_file_type)
 {
-  return t8_vtk_reader_cmesh (filename, partition, main_proc, comm, vtk_file_type);
+  return t8_vtk_reader_cmesh (filename, partition, main_proc, comm,
+                              vtk_file_type);
 }
 
 T8_EXTERN_C_END ();

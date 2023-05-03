@@ -364,24 +364,26 @@ vtkSmartPointer < vtkPointSet >
 t8_vtkGrid_to_vtkPointSet (vtkSmartPointer < vtkDataSet > vtkGrid)
 {
   /* Set points */
-  vtkSmartPointer < vtkPoints > points = vtkSmartPointer < vtkPoints >::New ();
-  const vtkIdType num_points = vtkGrid->GetNumberOfPoints ();
+  vtkSmartPointer < vtkPoints > points =
+    vtkSmartPointer < vtkPoints >::New ();
+  const vtkIdType     num_points = vtkGrid->GetNumberOfPoints ();
   points->SetDataType (VTK_DOUBLE);
   points->SetNumberOfPoints (num_points);
 
   for (vtkIdType ipoint = 0; ipoint < num_points; ipoint++) {
-    double vp[3];
+    double              vp[3];
     vtkGrid->GetPoint (ipoint, vp);
     points->SetPoint (ipoint, vp);
   }
   points->Modified ();
-  T8_ASSERT (points->GetNumberOfPoints() == num_points);
-  vtkSmartPointer < vtkPointSet > cloud = 
+  T8_ASSERT (points->GetNumberOfPoints () == num_points);
+  vtkSmartPointer < vtkPointSet > cloud =
     vtkSmartPointer < vtkPointSet >::New ();
   cloud->SetPoints (points);
 
   /* Map cell data to point data */
-  vtkSmartPointer < vtkCellDataToPointData > c2p = vtkCellDataToPointData::New ();
+  vtkSmartPointer < vtkCellDataToPointData > c2p =
+    vtkCellDataToPointData::New ();
   c2p->PassCellDataOff ();
   c2p->SetInputData (vtkGrid);
   c2p->Update ();
@@ -444,11 +446,10 @@ vtkSmartPointer < vtkPointSet >
 t8_vtk_reader_pointSet (const char *filename,
                         const int partition,
                         const int main_proc,
-                        sc_MPI_Comm comm,
-                        const vtk_file_type_t vtk_file_type)
+                        sc_MPI_Comm comm, const vtk_file_type_t vtk_file_type)
 {
 #if T8_WITH_VTK
-  vtkSmartPointer < vtkDataSet > vtkGrid = 
+  vtkSmartPointer < vtkDataSet > vtkGrid =
     t8_vtk_reader (filename, partition, main_proc, comm, vtk_file_type);
   return t8_vtkGrid_to_vtkPointSet (vtkGrid);
 #else
@@ -465,10 +466,11 @@ t8_vtk_reader_cmesh (const char *filename, const int partition,
                      const vtk_file_type_t vtk_file_type)
 {
 #if T8_WITH_VTK
-  vtkSmartPointer < vtkDataSet > vtkGrid = 
+  vtkSmartPointer < vtkDataSet > vtkGrid =
     t8_vtk_reader (filename, partition, main_proc, comm, vtk_file_type);
-  
-  t8_cmesh_t cmesh = t8_vtkGrid_to_cmesh (vtkGrid, partition, main_proc, comm);
+
+  t8_cmesh_t          cmesh =
+    t8_vtkGrid_to_cmesh (vtkGrid, partition, main_proc, comm);
   T8_ASSERT (cmesh != NULL);
   return cmesh;
 #else
