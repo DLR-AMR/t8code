@@ -131,6 +131,9 @@ t8_dpyramid_compute_cubeid (const t8_dpyramid_t *p, const int level)
   return cube_id;
 }
 
+/* For each typebit, consider the coordinate information between level and p->level |10...11|xxxx|0...0| 
+ * of both inequality defining dimensions */
+
 int8_t
 t8_dpyramid_compute_type_at_level (const t8_dpyramid_t *p, int level)
 {
@@ -145,15 +148,19 @@ t8_dpyramid_compute_type_at_level (const t8_dpyramid_t *p, int level)
     t8_dpyramid_coord_t coord_v1 =
       p->coords[t8_dpyramid_type_edge_equations[e][1]];
 
-    coord_v0 = ((coord_v0 << level) + 1) & ((1 << T8_DPYRAMID_MAXLEVEL) - 1);
-    coord_v1 = ((coord_v1 << level) + 1) & ((1 << T8_DPYRAMID_MAXLEVEL) - 1);
+    coord_v0 = (coord_v0 << level) & ((1 << T8_DPYRAMID_MAXLEVEL) - 1);
+    coord_v1 = (coord_v1 << level) & ((1 << T8_DPYRAMID_MAXLEVEL) - 1);
+
     if (coord_v0 == coord_v1) {
       type |= (p->type & 1 << e);
     }
     else if (coord_v0 < coord_v1) {
       type |= (1 << e);
     }
-
+    else {
+      T8_ASSERT (coord_v0 > coord_v1);
+      T8_ASSERT (type && (1 << e) == 0);
+    }
   }
   return type;
 }
