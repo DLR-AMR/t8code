@@ -161,8 +161,8 @@ t8_test_point_inside (sc_MPI_Comm comm, t8_eclass_t eclass, int maxlevel)
         step =
           (barycentric_range_upper_bound -
            barycentric_range_lower_bound) / (num_steps - 1);
-        t8_debugf ("step size %g, steps %i, points %i (corners %i)\n", step,
-                   num_steps, num_points, num_corners);
+        //t8_debugf ("step size %g, steps %i, points %i (corners %i)\n", step,
+        //           num_steps, num_points, num_corners);
         int                 num_in = 0;
         double              dampening;
 
@@ -227,8 +227,8 @@ t8_test_point_inside (sc_MPI_Comm comm, t8_eclass_t eclass, int maxlevel)
                            t8_eclass_to_string[eclass]);
 
         }                       /* End loop over points. */
-        t8_debugf ("%i (%.2f%%) test points are inside the element\n", num_in,
-                   (100.0 * num_in) / num_points);
+        //t8_debugf ("%i (%.2f%%) test points are inside the element\n", num_in,
+        //           (100.0 * num_in) / num_points);
         T8_FREE (barycentric_coordinates);
       }                         /* End loop over elements */
     }                           /* End loop over trees */

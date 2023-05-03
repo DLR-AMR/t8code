@@ -55,8 +55,9 @@ t8_default_scheme_common_c::~t8_default_scheme_common_c ()
 }
 
 /** Compute the number of corners of a given element. */
-int
-t8_default_scheme_common_c::t8_element_num_corners (const t8_element_t *elem) const
+/* *INDENT-OFF* */
+int t8_default_scheme_common_c::t8_element_num_corners (const t8_element_t *elem) const
+/* *INDENT-ON* */
 {
   /* use the lookup table of the eclasses.
    * Pyramids should implement their own version of this function. */
@@ -130,14 +131,22 @@ t8_default_scheme_common_c::t8_element_count_leafs (const t8_element_t *t,
   int                 element_level = t8_element_level (t);
   t8_element_shape_t  element_shape;
   int                 dim = t8_eclass_to_dimension[eclass];
+  t8_debugf ("count leafs for eclass: %d\n", eclass);
   if (eclass == T8_ECLASS_PYRAMID) {
     int                 level_diff = level - element_level;
-    if (element_level <= level) return 0;
-    element_shape = t8_element_shape(t);
-    if(element_shape == T8_ECLASS_PYRAMID)
-      return (4 * sc_intpow64 (8, level_diff) - sc_intpow64 (2, level_diff))/3;
-    else{
-      return (2 * sc_intpow64 (8, level_diff) + sc_intpow64 (2, level_diff))/3;
+    if (element_level > level)
+      return 0;
+    if (element_level == level)
+      return 1;
+    element_shape = t8_element_shape (t);
+    t8_debugf ("count leafs for shape: %d\n", element_shape);
+    if (element_shape == T8_ECLASS_PYRAMID) {
+      t8_debugf ("level_diff: %d\n", level_diff);
+      return (4 * sc_intpow64 (8, level_diff) - sc_intpow64 (2, level_diff)) / 3;       // TODO: Remove from common, use bitshift
+    }
+    else {
+      return (2 * sc_intpow64 (8, level_diff) +
+              sc_intpow64 (2, level_diff)) / 3;
     }
   }
   return count_leafs_from_level (element_level, level, dim);
@@ -160,7 +169,7 @@ t8_gloidx_t
 t8_default_scheme_common_c::t8_element_count_leafs_from_root (int level)
 {
   if (eclass == T8_ECLASS_PYRAMID) {
-    return 2 * sc_intpow64u (8, level) - sc_intpow64u (6, level);
+    return (4 * sc_intpow64 (8, level) - sc_intpow64 (2, level)) / 3;   // TODO: Remove from common, use bitshift
   }
   int                 dim = t8_eclass_to_dimension[eclass];
   return count_leafs_from_level (0, level, dim);

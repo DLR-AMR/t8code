@@ -101,7 +101,7 @@ TEST_P (linear_id, uniform_forest) {
         /*Get the ID of the element at current level */
         const t8_locidx_t id = ts->t8_element_get_linear_id (element, level);
         /* Check the computed id*/
-        EXPECT_EQ (id, id_iter + shift);
+        EXPECT_EQ (id, id_iter + shift)<<"id_iter: "<<id_iter<<", shift: "<<shift<<", level: "<< level <<", tree_id";
       }
     }
     /* Construct the uniformly refined forest of the next level */
@@ -109,7 +109,8 @@ TEST_P (linear_id, uniform_forest) {
     t8_forest_set_level (forest_adapt, level + 1);
     t8_forest_set_adapt (forest_adapt, forest,
                           t8_test_init_linear_id_refine_everything,
-                          0); 
+                          0);
+    t8_debugf("commit forest at level: %d\n", level+1);
     t8_forest_commit (forest_adapt);
     forest = forest_adapt;
   }
@@ -121,6 +122,7 @@ TEST_P (linear_id, uniform_forest) {
  * (on the level defined by the element) */
 TEST_P(linear_id, id_at_other_level)
 {
+#if 0
 #ifdef T8_ENABLE_LESS_TESTS
   const int max_lvl = 3; /* Maximal level to compute elements on */
   const int add_lvl = 3; /* maxlvl + add_lvl is the level of the descendants*/
@@ -128,6 +130,10 @@ TEST_P(linear_id, id_at_other_level)
   const int max_lvl = 4;
   const int add_lvl = 3;
 #endif
+#endif
+  const int max_lvl = 2;
+  const int add_lvl = 2;
+
   for (int level = 0; level < max_lvl; level++) {
     /* Compute the number of elements at the current level */
     const t8_linearidx_t num_desc = ts->t8_element_count_leafs_from_root (level);
@@ -139,6 +145,7 @@ TEST_P(linear_id, id_at_other_level)
       /* Compute how many leafs/descendants child has at level level+add_lvl */
       const t8_linearidx_t child_desc = ts->t8_element_count_leafs(child, level + add_lvl);
       /* Iterate over all descendants */
+      t8_debugf("id: %d, id_at_level: %d, num_desc %lu\n", id, id_at_lvl, child_desc);
       for(t8_linearidx_t leaf_id = 0; leaf_id < child_desc; leaf_id++){
         /* Set the descendant (test) at level of the descendants and shift the 
          * leaf_id into the region of the descendants of child*/

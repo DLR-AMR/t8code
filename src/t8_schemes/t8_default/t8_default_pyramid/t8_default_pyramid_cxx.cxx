@@ -96,16 +96,20 @@ t8_default_scheme_pyramid_c::t8_element_num_children (const t8_element_t
   return t8_dpyramid_num_children ((const t8_dpyramid_t *) elem);
 }
 
+/* *INDENT-OFF* */
 int
 t8_default_scheme_pyramid_c::t8_element_num_corners (const t8_element_t *elem) const
+/* *INDENT-ON* */
+
 {
   T8_ASSERT (t8_element_is_valid (elem));
   return t8_dpyramid_num_corners ((const t8_dpyramid_t *) elem);
 }
-
+/* *INDENT-OFF* */
 int
-t8_default_scheme_pyramid_c::t8_element_num_siblings (const t8_element_t
-                                                      *elem) const
+t8_default_scheme_pyramid_c::t8_element_num_siblings (const t8_element_t *elem) const
+/* *INDENT-ON* */
+
 {
   T8_ASSERT (t8_element_is_valid (elem));
   return t8_dpyramid_num_siblings ((const t8_dpyramid_t *) elem);
@@ -352,15 +356,22 @@ t8_default_scheme_pyramid_c::t8_element_general_function (const t8_element_t
 }
 
 #ifdef T8_ENABLE_DEBUG
+/* *INDENT-OFF* */
+/* indent bug, indent adds a second "const" modifier */
 int
 t8_default_scheme_pyramid_c::t8_element_is_valid (const t8_element_t *elem) const
+/* *INDENT-ON* */
 {
   T8_ASSERT (elem != NULL);
   return t8_dpyramid_is_valid ((const t8_dpyramid_t *) elem);
 }
-
+/* *INDENT-OFF* */
+/* indent bug, indent adds a second "const" modifier */
 void
-t8_default_scheme_pyramid_c::t8_element_debug_print (const t8_element_t *elem) const
+t8_default_scheme_pyramid_c::
+  t8_element_debug_print (const t8_element_t *elem) const
+/* *INDENT-ON* */
+
 {
   T8_ASSERT (t8_element_is_valid (elem));
   t8_dpyramid_debug_print ((const t8_dpyramid_t *) elem);

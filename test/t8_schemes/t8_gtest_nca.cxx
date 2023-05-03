@@ -82,6 +82,13 @@ TEST_P (nca, nca_check_shallow)
       /*Compute the nca */
       ts->t8_element_nca (desc_a, desc_b, check);
       /*expect equality */
+      if (eclass == T8_ECLASS_PYRAMID) {
+        t8_debugf ("shallow nca, i: %d, j: %d\n", i, j);
+        t8_dpyramid_debug_print ((t8_dpyramid_t *) desc_a);
+        t8_dpyramid_debug_print ((t8_dpyramid_t *) desc_b);
+        t8_dpyramid_debug_print ((t8_dpyramid_t *) check);
+        t8_dpyramid_debug_print ((t8_dpyramid_t *) correct_nca);
+      }
       EXPECT_TRUE ((ts->t8_element_compare (correct_nca, check) == 0));
     }
   }
@@ -126,6 +133,13 @@ TEST_P (nca, nca_check_deep)
                                ts->t8_element_level (desc_b)));
           }
           else {
+            if (eclass == T8_ECLASS_PYRAMID) {
+              t8_debugf ("\ndeep nca:\n");
+              t8_dpyramid_debug_print ((t8_dpyramid_t *) desc_a);
+              t8_dpyramid_debug_print ((t8_dpyramid_t *) desc_b);
+              t8_dpyramid_debug_print ((t8_dpyramid_t *) check);
+              t8_dpyramid_debug_print ((t8_dpyramid_t *) correct_nca);
+            }
             /* Expect equality of correct_nca and check for every other class */
             EXPECT_TRUE ((ts->t8_element_compare (correct_nca, check) == 0));
           }
@@ -162,7 +176,8 @@ static void
 t8_recursive_nca_check (t8_element_t *check_nca, t8_element_t *desc_a,
                         t8_element_t *desc_b, t8_element_t *check,
                         t8_element_t *parent_a, t8_element_t *parent_b,
-                        const int max_lvl, t8_eclass_scheme_c *ts, t8_eclass_t eclass)
+                        const int max_lvl, t8_eclass_scheme_c *ts,
+                        t8_eclass_t eclass)
 {
   T8_ASSERT (max_lvl <= ts->t8_element_maxlevel () - 1);
   /* compute the level of the parents */
@@ -183,15 +198,19 @@ t8_recursive_nca_check (t8_element_t *check_nca, t8_element_t *desc_a,
     /* Iterate over all children of parent_b */
     for (j = 0; j < num_children_b; j++) {
       ts->t8_element_child (parent_b, j, desc_b);
+      if (eclass == T8_ECLASS_PYRAMID) {
+        //t8_debugf("\nrecursive check for \n");
+        //t8_dpyramid_debug_print((t8_dpyramid_t *) desc_a);
+        //t8_dpyramid_debug_print((t8_dpyramid_t *) desc_b);
+      }
       ts->t8_element_nca (desc_a, desc_b, check);
 
-      t8_debugf("[check_recursive 2] i:%d, j:%d\n",i,j);
-      if(eclass == T8_ECLASS_PYRAMID){
-        t8_dpyramid_debug_print((t8_dpyramid_t *) desc_a);
-        t8_dpyramid_debug_print((t8_dpyramid_t *) desc_b);
-        t8_dpyramid_debug_print((t8_dpyramid_t *) check);
-        t8_dpyramid_debug_print((t8_dpyramid_t *) check_nca);
-      }      
+//      if (0){
+      if (eclass == T8_ECLASS_PYRAMID) {
+        //t8_debugf("\nresult\n");
+        //t8_dpyramid_debug_print((t8_dpyramid_t *) check);
+        //t8_dpyramid_debug_print((t8_dpyramid_t *) check_nca);
+      }
 
       if (ts->t8_element_compare (check_nca, check) != 0) {
         level_a = ts->t8_element_level (desc_a);
@@ -223,6 +242,13 @@ t8_recursive_nca_check (t8_element_t *check_nca, t8_element_t *desc_a,
                    ts->t8_element_get_linear_id (check, level_nca),
                    level_nca);
 
+        if (eclass == T8_ECLASS_PYRAMID) {
+          t8_debugf ("check went wrong for\n");
+          t8_dpyramid_global_print ((t8_dpyramid_t *) desc_a);
+          t8_dpyramid_global_print ((t8_dpyramid_t *) desc_b);
+          t8_dpyramid_global_print ((t8_dpyramid_t *) check_nca);
+          t8_dpyramid_global_print ((t8_dpyramid_t *) check);
+        }
         SC_ABORT ("Computed nca is not the correct nca!\n");
       }
       /* parent_a stays fixed, b-part goes one level deeper into the recursion */
@@ -259,7 +285,7 @@ TEST_P (nca, recursive_check)
     for (i = 0; i < num_children - 1; i++) {
       ts->t8_element_child (correct_nca, i, parent_a);
       for (j = i + 1; j < num_children; j++) {
-        t8_debugf("[check_recursive] i:%d, j:%d\n",i,j);
+        t8_debugf ("i,j: %d %d\n", i, j);
         ts->t8_element_child (correct_nca, j, parent_b);
         t8_recursive_nca_check (correct_nca, desc_a, desc_b, check, parent_a,
                                 parent_b, recursion_depth, ts, eclass);

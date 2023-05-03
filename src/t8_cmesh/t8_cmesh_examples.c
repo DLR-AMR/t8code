@@ -292,7 +292,7 @@ t8_cmesh_new_pyramid (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   double              vertices[15] = {
-    -1, -1, 0, 1, -1, 0, -1, 1, 0, 1, 1, 0, 0, 0, sqrt (2)
+    0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1
   };
   t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
 

@@ -31,15 +31,14 @@
 /**The type of a pyramid depending on the parent pyramid and its local index
  * child_type = A(type, local_index)
  */
-extern const int   
-  t8_dpyramid_type_Iloc_to_childtype[T8_DPYRAMID_NUM_TYPES]
+extern const int    t8_dpyramid_type_Iloc_to_childtype[T8_DPYRAMID_NUM_TYPES]
   [T8_DPYRAMID_MAX_CHILDREN];
 
 /** The cube Id of a pyramid depending on its parenttype and local index
  * cube_id = A(type, local_index)
  */
-extern const int   
-  t8_dpyramid_type_Iloc_to_childcubeid[T8_DPYRAMID_NUM_TYPES]
+extern const int
+     t8_dpyramid_type_Iloc_to_childcubeid[T8_DPYRAMID_NUM_TYPES]
   [T8_DPYRAMID_MAX_CHILDREN];
 
 /* shortcut to get own iloc*/
@@ -53,15 +52,16 @@ extern const int    t8_dpyramid_type_cubeid_to_Iloc[T8_DPYRAMID_NUM_TYPES][1
 /** The type of the parent of a pyramid, computed by its own type and cube-id
  * parent_type = A(type, cube_id)
 */
-extern const int   
-  t8_dpyramid_type_cubeid_to_parenttype[T8_DPYRAMID_NUM_TYPES][1 <<
-                                                               T8_DPYRAMID_DIM];
+extern const int
+   
+   t8_dpyramid_type_cubeid_to_parenttype[T8_DPYRAMID_NUM_TYPES][1 <<
+                                                                T8_DPYRAMID_DIM];
 
-extern const int   
-  t8_dpyramid_type_edge_equations[T8_DPYRAMID_NUM_EQUATIONS][2];
+extern const int
+     t8_dpyramid_type_edge_equations[T8_DPYRAMID_NUM_EQUATIONS][2];
 
-extern const int   
-  t8_dpyramid_type_vertex_dim_to_binary[T8_DPYRAMID_NUM_TYPES]
+extern const int
+     t8_dpyramid_type_vertex_dim_to_binary[T8_DPYRAMID_NUM_TYPES]
   [T8_DPYRAMID_MAX_CORNERS][T8_DPYRAMID_DIM];
 
 /**

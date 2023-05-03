@@ -53,8 +53,8 @@ TEST_P (class_element_leafs, test_element_count_leafs_root)
 {
   const int           maxlevel = class_scheme->t8_element_maxlevel ();
   t8_gloidx_t         compare_value = 1;
-  t8_gloidx_t         sum1 = 1;
-  t8_gloidx_t         sum2 = 1;
+  t8_gloidx_t         num_pyra = 1;
+  t8_gloidx_t         num_tet = 0;
 
   for (int level = 0; level <= maxlevel; ++level) {
     const t8_gloidx_t   leaf_count =
@@ -63,13 +63,13 @@ TEST_P (class_element_leafs, test_element_count_leafs_root)
                compare_value) << "Incorrect leaf count " << leaf_count <<
       " at eclass " << t8_eclass_to_string[eclass] << " and level " << level
       << " (expecting " << compare_value << ")";
-    ;
 
     /* Multiply the compare_value with 2^dim (= number of children per element) */
     if (eclass == T8_ECLASS_PYRAMID) {
-      sum1 *= 8;
-      sum2 *= 6;
-      compare_value = 2 * sum1 - sum2;
+      t8_gloidx_t         temp_num_pyra = num_pyra;
+      num_pyra = 6 * num_pyra + 2 * num_tet;
+      num_tet = 4 * (temp_num_pyra + num_tet);
+      compare_value = num_pyra + num_tet;
     }
     else {
       compare_value *= 1 << t8_eclass_to_dimension[eclass];

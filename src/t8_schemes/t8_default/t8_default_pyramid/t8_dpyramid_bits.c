@@ -85,7 +85,9 @@ t8_dpyramid_num_children (const t8_dpyramid_t *p)
 int
 t8_dpyramid_num_siblings (const t8_dpyramid_t *p)
 {
-  T8_ASSERT (0 <= p->level && p->level <= T8_DPYRAMID_MAXLEVEL);
+  if (p->level == 0)
+    return 1;
+  T8_ASSERT (0 < p->level && p->level <= T8_DPYRAMID_MAXLEVEL);
   t8_dpyramid_t       parent;
   t8_dpyramid_parent (p, &parent);
   return t8_dpyramid_num_children (&parent);
@@ -142,11 +144,16 @@ t8_dpyramid_compute_type_at_level (const t8_dpyramid_t *p, int level)
       p->coords[t8_dpyramid_type_edge_equations[e][0]];
     t8_dpyramid_coord_t coord_v1 =
       p->coords[t8_dpyramid_type_edge_equations[e][1]];
-    t8_dpyramid_coord_t type_at_levels = (~coord_v0 & coord_v1);
-    if (p->type & (1 << e)) {
-      type_at_levels |= ((coord_v0 & coord_v1) | (~coord_v0 & ~coord_v1));
+
+    coord_v0 = ((coord_v0 << level) + 1) & ((1 << T8_DPYRAMID_MAXLEVEL) - 1);
+    coord_v1 = ((coord_v1 << level) + 1) & ((1 << T8_DPYRAMID_MAXLEVEL) - 1);
+    if (coord_v0 == coord_v1) {
+      type |= (p->type & 1 << e);
     }
-    type |= ((type_at_levels & h) ? 1 << e : 0);
+    else if (coord_v0 < coord_v1) {
+      type |= (1 << e);
+    }
+
   }
   return type;
 }
@@ -188,10 +195,11 @@ t8_dpyramid_compare (const t8_dpyramid_t *p1, const t8_dpyramid_t *p2)
     /* The linear ids are the same, the pyramid with the smaller level
      * is considered smaller */
     if (p1->level == p2->level) {
-      t8_dpyramid_debug_print(p1);
-      t8_debugf("linear_id: %d \n", id1);
-      t8_dpyramid_debug_print(p2);
-      t8_debugf("linear_id: %d \n", id2);
+/*      //t8_dpyramid_debug_print(p1);
+      //t8_debugf("linear_id: %d \n", id1);
+      //t8_dpyramid_debug_print(p2);
+      //t8_debugf("linear_id: %d \n", id2);
+*/
       T8_ASSERT (p1->type == p2->type);
       return 0;
     }
@@ -233,6 +241,15 @@ void
 t8_dpyramid_debug_print (const t8_dpyramid_t *p)
 {
   t8_debugf
+    ("x: %i, y: %i, z: %i, type %i, level: %i\n",
+     p->coords[0], p->coords[1], p->coords[2], t8_dpyramid_get_type (p),
+     p->level);
+}
+
+void
+t8_dpyramid_global_print (const t8_dpyramid_t *p)
+{
+  t8_global_productionf
     ("x: %i, y: %i, z: %i, type %i, level: %i\n",
      p->coords[0], p->coords[1], p->coords[2], t8_dpyramid_get_type (p),
      p->level);
@@ -318,6 +335,8 @@ t8_dpyramid_first_descendant (const t8_dpyramid_t *p, t8_dpyramid_t *desc,
   /*The first descendant of a pyramid has the same anchor coords and type, but another level */
   t8_dpyramid_copy (p, desc);
   desc->level = level;
+  //t8_debugf("first_desc\n");
+  //t8_dpyramid_debug_print(desc);
 }
 
 void
@@ -420,71 +439,58 @@ t8_dpyramid_ancestor (const t8_dpyramid_t *pyra, const int level,
   anc->level = level;
 }
 
-
-static t8_dpyramid_coord_t
-t8_dpyramid_type_coord(t8_dpyramid_coord_t coord1, t8_dpyramid_coord_t coord2, int typebit)
-{
-  t8_dpyramid_type_t return_type;
-  return_type = (~coord1 & coord2);
-  t8_debugf("coord1 <= coord2: %p\n",return_type);
-  t8_debugf("typebit: %d\n",typebit);
-  if (typebit) {
-    return_type |= ((coord1 & coord2) | (~coord1 & ~coord2)) & (1<<T8_DPYRAMID_MAXLEVEL - 1);
-  }
-  t8_debugf("include typebit info of descendant: %p\n",return_type);
-  return_type = return_type<<1+typebit;
-  t8_debugf("shift and include orginal typebit: %p\n",return_type);
-  return return_type;
-}
-
 static int
 t8_dpyramid_nca_level (const t8_dpyramid_t *pyra1, const t8_dpyramid_t *pyra2)
 {
-  int typebit;
-  t8_dpyramid_coord_t xor_combine, xor_temp, type1, type2, coordsleft, coordsright;
+  int                 typebit1, typebit2;
+  t8_dpyramid_coord_t xor_combine, xor_temp, coordsleft, coordsright;
   xor_combine = 0;
 
-  t8_dpyramid_debug_print(pyra1);
-  t8_dpyramid_debug_print(pyra2);
+  //t8_dpyramid_debug_print(pyra1);
+  //t8_dpyramid_debug_print(pyra2);
 
-  for(int i=0; i <T8_DPYRAMID_DIM; i++){
+  for (int i = 0; i < T8_DPYRAMID_DIM; i++) {
     xor_temp = pyra1->coords[i] ^ pyra2->coords[i];
     xor_combine |= xor_temp;
+    //t8_debugf("xor_temp: %p\n", xor_temp);
+    //t8_debugf("xor_combine: %p\n", xor_combine);
+  }
+//TODO: Check!!
+  int                 level =
+    T8_DPYRAMID_MAXLEVEL - SC_LOG2_32 (xor_combine) - 1;
+//  int level = T8_DPYRAMID_MAXLEVEL - SC_LOG2_32(xor_combine);
+  level = SC_MIN (level, SC_MIN (pyra1->level, pyra2->level));
+  //t8_debugf("cube_level: %d\n", level);
+
+  t8_dpyramid_t       cube_anc1, cube_anc2;
+  t8_dpyramid_ancestor (pyra1, level, &cube_anc1);
+  t8_dpyramid_ancestor (pyra2, level, &cube_anc2);
+
+  //t8_debugf("cube_anc1");
+  //t8_dpyramid_debug_print(&cube_anc1);
+  //t8_debugf("cube_anc2");
+  //t8_dpyramid_debug_print(&cube_anc2);
+
+  if (cube_anc1.type == cube_anc2.type)
+    return level;
+
+  int                 num_zero_bits_right;
+  for (int e = 0; e < T8_DPYRAMID_NUM_EQUATIONS; e++) {
+    coordsleft = cube_anc1.coords[t8_dpyramid_type_edge_equations[e][0]];
+    coordsright = cube_anc1.coords[t8_dpyramid_type_edge_equations[e][1]];
+    typebit1 = (cube_anc1.type & (1 << e)) >> e;
+    typebit2 = (cube_anc2.type & (1 << e)) >> e;
+    if (typebit1 == typebit2)
+      continue;
+    xor_temp = coordsleft ^ coordsright;
+    //t8_debugf("edge: %d, t1: %d, t2: %d, xor: %p\n", e,typebit1, typebit2, xor_temp);
+    num_zero_bits_right = SC_NUM_RIGHT_ZERO_BITS_32 (xor_temp);
+    //t8_debugf("num_zero_bits: %d\n", num_zero_bits_right);
+
+    level = SC_MIN (T8_DPYRAMID_MAXLEVEL - num_zero_bits_right - 1, level);     //+-1?
   }
 
-  for(int e = 0; e < T8_DPYRAMID_NUM_EQUATIONS; e++){
-    coordsleft = pyra1->coords[t8_dpyramid_type_edge_equations[e][0]];
-    coordsright = pyra1->coords[t8_dpyramid_type_edge_equations[e][1]];
-    typebit = (pyra1->type & (1<<e))>>e;
-    type1 = t8_dpyramid_type_coord(coordsleft, coordsright, typebit);
- 
-    t8_debugf("first pyra, typebit: %p\n",typebit);
-    t8_debugf("first pyra, coordsl: %p\n",coordsleft);
-    t8_debugf("first pyra, coordsr: %p\n",coordsright);
-    t8_debugf("first pyra, type   : %p\n",type1);
-
-
-    coordsleft = pyra2->coords[t8_dpyramid_type_edge_equations[e][0]];
-    coordsright = pyra2->coords[t8_dpyramid_type_edge_equations[e][1]];
-    typebit = (pyra2->type & (1<<e))>>e;
-    type2 = t8_dpyramid_type_coord(coordsleft, coordsright, typebit);
-
-    t8_debugf("second pyra, typebit: %p\n",typebit);
-    t8_debugf("second pyra, coordsl: %p\n",coordsleft);
-    t8_debugf("second pyra, coordsr: %p\n",coordsright);
-    t8_debugf("second pyra, type   : %p\n",type2);
-
-
-    xor_temp = type1 ^ type2;
-    t8_debugf("xor_temp: %p\n",xor_temp);
-    xor_combine |= xor_temp;
-    t8_debugf("xor_combine: %p\n",xor_combine);
-  }
-  
-  int level = T8_DPYRAMID_MAXLEVEL - SC_LOG2_32(xor_combine) - 1;
-  t8_debugf("level: %d\n", level);
-  level = SC_MIN(level, SC_MIN(pyra1->level,pyra2->level));
-  t8_debugf("maxlevel: %d\n", level);
+  //t8_debugf("final level: %d\n", level);
 
   return level;
 }
@@ -503,13 +509,14 @@ static              t8_linearidx_t
 t8_dpyramid_num_descendants_at_leveldiff (const t8_dpyramid_t *p,
                                           const int leveldiff)
 {
-  t8_linearidx_t      two_to_l = 1 >> leveldiff;
-  t8_linearidx_t      eight_to_l = 8 >> leveldiff;
+  t8_linearidx_t      two_to_l = 1LL << leveldiff;
+  t8_linearidx_t      eight_to_l = 1LL << (3 * leveldiff);
+//  //t8_debugf("leveldiff: %d, 2^l: %lu, 8^l: %lu\n", leveldiff, two_to_l, eight_to_l);
   if (t8_dpyramid_shape (p) == T8_ECLASS_PYRAMID) {
-    return (eight_to_l >> 2 - two_to_l) / 3;
+    return ((eight_to_l << 2) - two_to_l) / 3;
   }
   else {
-    return (eight_to_l >> 1 + two_to_l) / 3;
+    return ((eight_to_l << 1) + two_to_l) / 3;
   }
 }
 
@@ -520,15 +527,26 @@ t8_dpyramid_num_descendants_of_child_at_leveldiff (const t8_dpyramid_t *p,
 {
   t8_dpyramid_t       child;
   t8_dpyramid_child (p, childindex, &child);
-  return t8_dpyramid_num_descendants_at_leveldiff (&child, leveldiff - 1);      //????
+  t8_linearidx_t      num_descendants = t8_dpyramid_num_descendants_at_leveldiff (&child, leveldiff - 1);       //????
+//  //t8_debugf("%d descendants of child %d with leveldiff %d\n", num_descendants, childindex, leveldiff);
+  return num_descendants;
 }
 
 static void
 t8_dpyramid_init_linear_id_recursive (t8_dpyramid_t *p, const int level_diff,
                                       t8_linearidx_t id)
 {
+  T8_ASSERT (0 <= id);
+  T8_ASSERT (1 <= level_diff && level_diff <= T8_DPYRAMID_MAXLEVEL);
+
   if (id == 0) {
     t8_dpyramid_first_descendant (p, p, p->level + level_diff);
+    return;
+  }
+
+  if (level_diff == 1) {
+    T8_ASSERT (id <= T8_DPYRAMID_MAX_CHILDREN);
+    t8_dpyramid_child (p, id, p);
     return;
   }
 
@@ -541,9 +559,11 @@ t8_dpyramid_init_linear_id_recursive (t8_dpyramid_t *p, const int level_diff,
     num_descendants_of_child =
       t8_dpyramid_num_descendants_of_child_at_leveldiff (p, childindex,
                                                          level_diff);
-    if (sum_descendants_of_children_before + num_descendants_of_child > id)
-      break;
     sum_descendants_of_children_before += num_descendants_of_child;
+    if (sum_descendants_of_children_before > id) {
+      sum_descendants_of_children_before -= num_descendants_of_child;
+      break;
+    }
   }
   t8_dpyramid_child (p, childindex, p);
   t8_dpyramid_init_linear_id_recursive (p, level_diff - 1,
@@ -556,6 +576,10 @@ t8_dpyramid_init_linear_id (t8_dpyramid_t *p, const int level,
                             t8_linearidx_t id)
 {
   t8_dpyramid_root (p);
+  if (level == 0) {
+    T8_ASSERT (id == 0);
+    return;
+  }
   t8_dpyramid_init_linear_id_recursive (p, level, id);
 }
 
@@ -563,22 +587,17 @@ t8_linearidx_t
 t8_dpyramid_linear_id_recursive (t8_dpyramid_t *p, const t8_linearidx_t id,
                                  const int level_diff)
 {
-  t8_debugf("recursive linear id:\n");
-  t8_dpyramid_debug_print(p);
-  t8_debugf("id: %d, level_diff:%d\n", id, level_diff);
   if (p->level == 0)
     return id;
 
   const int           childid = t8_dpyramid_child_id (p);
-  t8_debugf("childid: %d\n", childid);
   t8_dpyramid_parent (p, p);
   t8_linearidx_t      parent_id = 0;
   for (int ichild = 0; ichild < childid; ichild++) {
     /* p is now parent, so compute child to get sibling of original p */
-    t8_linearidx_t num_child_descendants = 
+    t8_linearidx_t      num_child_descendants =
       t8_dpyramid_num_descendants_of_child_at_leveldiff (p, ichild,
                                                          level_diff + 1);
-    t8_debugf("ichild: %d, num_child_descendants: %d \n", ichild, num_child_descendants);
     parent_id += num_child_descendants;
   }
   parent_id += id;
@@ -588,13 +607,24 @@ t8_dpyramid_linear_id_recursive (t8_dpyramid_t *p, const t8_linearidx_t id,
 t8_linearidx_t
 t8_dpyramid_linear_id (const t8_dpyramid_t *p, const int level)
 {
-  t8_debugf("Calculate linear id for level: %d\n", level);
-  t8_dpyramid_debug_print(p);
-  t8_dpyramid_t       first_desc;
-  t8_dpyramid_first_descendant (p, &first_desc, level);
-  /* Maybe we can also input p into recursice function and calculate id directly for first desc */
-  t8_linearidx_t id = t8_dpyramid_linear_id_recursive (&first_desc, 0, 0);
-  t8_debugf("Finished calculating linear id: %d\n");
+  //t8_debugf("linear_id at level %d\n", level);
+  //t8_dpyramid_debug_print(p);
+  t8_dpyramid_t       recursive_start;
+
+  if (level < p->level) {
+    //t8_debugf("ancestor\n");
+    t8_dpyramid_ancestor (p, level, &recursive_start);
+  }
+  else {
+    //t8_debugf("first_descendant\n");
+    t8_dpyramid_first_descendant (p, &recursive_start, level);
+  }
+  //t8_dpyramid_debug_print(p);
+
+  /* Maybe we can also input p into recursive function and calculate id directly for first desc */
+  t8_linearidx_t      id =
+    t8_dpyramid_linear_id_recursive (&recursive_start, 0, 0);
+  T8_ASSERT (id >= 0);
   return id;
 }
 
@@ -606,7 +636,10 @@ t8_dpyramid_compute_coords (const t8_dpyramid_t *p, const int vertex,
   T8_ASSERT (0 <= vertex && vertex < t8_dpyramid_num_corners (p));
   for (int idim = 0; idim < T8_DPYRAMID_DIM; idim++) {
     t8_dpyramid_type_t  type = t8_dpyramid_get_type (p);
-    coords[idim] = t8_dpyramid_type_vertex_dim_to_binary[type][vertex][idim];
+    coords[idim] =
+      p->coords[idim] +
+      t8_dpyramid_type_vertex_dim_to_binary[type][vertex][idim] *
+      T8_DPYRAMID_LEN (p->level);
   }
 }
 
@@ -624,11 +657,3 @@ t8_dpyramid_vertex_reference_coords (const t8_dpyramid_t *elem,
   coords[1] = coords_int[1] / (double) T8_DPYRAMID_ROOT_LEN;
   coords[2] = coords_int[2] / (double) T8_DPYRAMID_ROOT_LEN;
 }
-
-/**
- * Compute the ancestor of \a pyra on level \a level.
- * 
- * \param[in]       pyra    Input pyramid
- * \param[in]       level   The level at which we want to compute \a anc
- * \param[in, out]  anc     Allocated input element which will be filled by the data of the anc of \a pyra at level \a level
- */

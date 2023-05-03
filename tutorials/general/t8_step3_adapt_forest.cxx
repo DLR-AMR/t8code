@@ -110,10 +110,10 @@ t8_step3_adapt_callback (t8_forest_t forest,
 
   /* Compute the element's centroid coordinates. */
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
-
   /* Compute the distance to our sphere midpoint. */
   dist = t8_vec_dist (centroid, adapt_data->midpoint);
-  if (dist < adapt_data->refine_if_inside_radius) {
+  if (dist < adapt_data->refine_if_inside_radius
+      && dist > adapt_data->refine_if_inside_radius / 2) {
     /* Refine this element. */
     return 1;
   }
@@ -133,7 +133,7 @@ t8_step3_adapt_forest (t8_forest_t forest)
 {
   t8_forest_t         forest_adapt;
   struct t8_step3_adapt_data adapt_data = {
-    {0.5, 0.5, 1},              /* Midpoints of the sphere. */
+    {1, 1, 0},                  /* Midpoints of the sphere. */
     0.2,                        /* Refine if inside this radius. */
     0.4                         /* Coarsen if outside this radius. */
   };
@@ -189,7 +189,7 @@ t8_step3_main (int argc, char **argv)
   const char         *prefix_uniform = "t8_step3_uniform_forest";
   const char         *prefix_adapt = "t8_step3_adapted_forest";
   /* The uniform refinement level of the forest. */
-  const int           level = 3;
+  const int           level = 1;
 
   /* Initialize MPI. This has to happen before we initialize sc or t8code. */
   mpiret = sc_MPI_Init (&argc, &argv);
@@ -218,7 +218,7 @@ t8_step3_main (int argc, char **argv)
    */
 
   /* Build a cube cmesh with tet, hex, and prism trees. */
-  cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
+  cmesh = t8_cmesh_new_from_class (T8_ECLASS_PYRAMID, sc_MPI_COMM_WORLD);
   t8_global_productionf (" [step3] Created coarse mesh.\n");
   forest =
     t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0,
@@ -241,7 +241,9 @@ t8_step3_main (int argc, char **argv)
   /* Adapt the forest. We can reuse the forest variable, since the new adapted
    * forest will take ownership of the old forest and destroy it.
    * Note that the adapted forest is a new forest, though. */
-  forest = t8_step3_adapt_forest (forest);
+//  forest = t8_step3_adapt_forest (forest);
+//  forest = t8_step3_adapt_forest (forest);
+//  forest = t8_step3_adapt_forest (forest);
 
   /*
    *  Output.

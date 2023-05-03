@@ -25,7 +25,6 @@
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.c>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h>
 
-
 int
 main (int argc, char **argv)
 {
@@ -37,20 +36,14 @@ main (int argc, char **argv)
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
-  t8_dpyramid_t pyra, anc;
-  pyra.coords[0] = 1<<19;
-  pyra.coords[1] = 0;
-  pyra.coords[2] = 0;
-  pyra.type = 2;
-  pyra.level = 2;
+  t8_dpyramid_t       root;
+  t8_dpyramid_root (&root);
 
-  t8_dpyramid_parent(&pyra,&anc);
-  t8_dpyramid_debug_print(anc);
-  t8_dpyramid_parent(&anc,&anc);
-  t8_dpyramid_debug_print(anc);
-  
-  t8_dpyramid_ancestor(&pyra, &anc);
-  t8_dpyramid_debug_print(anc);
+  t8_linearidx_t      leafs_on_level =
+    t8_dpyramid_num_descendants_at_leveldiff (&root, 12);
+  t8_debugf ("leafs_on_level: %lu\n", leafs_on_level);
+  t8_dpyramid_init_linear_id (&root, 12, leafs_on_level / 2);
+  t8_dpyramid_debug_print (&root);
 
   sc_finalize ();
 

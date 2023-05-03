@@ -396,6 +396,7 @@ int                 t8_dpyramid_is_valid (const t8_dpyramid_t *p);
  * 
  */
 void                t8_dpyramid_debug_print (const t8_dpyramid_t *p);
+void                t8_dpyramid_global_print (const t8_dpyramid_t *p);
 
 T8_EXTERN_C_END ();
 
