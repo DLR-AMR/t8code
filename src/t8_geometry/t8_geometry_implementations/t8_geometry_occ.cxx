@@ -550,6 +550,224 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh,
 }
 
 void
+t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
+                                                t8_gloidx_t gtreeid,
+                                                const double *ref_coords,
+                                                double out_coords[3]) const
+{
+  T8_ASSERT (active_tree_class == T8_ECLASS_TRIANGLE);
+
+  const int num_edges = t8_eclass_num_edges[active_tree_class];
+  gp_Pnt              pnt;
+  Handle_Geom_Curve   curve;
+  Standard_Real       first, last;
+
+  /* Linear mapping from ref_coords to out_coords */
+  t8_geom_compute_linear_geometry(active_tree_class, active_tree_vertices, ref_coords, out_coords);
+  for (int i_edge = 0; i_edge < num_edges; i_edge++) {
+    if (edges[i_edge] > 0) {
+      double  ref_opposite_vertex[2];
+      double ref_slope;
+
+      /* Determine the opposite vertex of the current edge in the unit triangle
+      * and calculate the slope of the line trough the opposite vertex
+      * and the reference point.
+      *
+      * slope = (y2-y1)/(x2-x1) */
+      switch (i_edge)
+      {
+      case 0:
+        ref_opposite_vertex[0] = 0;
+        ref_opposite_vertex[1] = 0;
+
+        if (ref_opposite_vertex[0] == ref_coords[0]) {
+          ref_slope = 0;
+        }
+        else {
+          ref_slope = (ref_opposite_vertex[1] - ref_coords[1])
+                      / (ref_opposite_vertex[0] - ref_coords[0]);
+        }
+        break;
+      case 1:
+        ref_opposite_vertex[0] = 1;
+        ref_opposite_vertex[1] = 0;
+
+        if (ref_coords[0] == ref_opposite_vertex[0]) {
+          ref_slope = 0;
+        }
+        else {
+          ref_slope = (ref_coords[1] - ref_opposite_vertex[1])
+                      / (ref_coords[0] - ref_opposite_vertex[0]);
+        }
+        break;
+      case 2:
+        ref_opposite_vertex[0] = 1;
+        ref_opposite_vertex[1] = 1;
+
+        if (ref_coords[0] == ref_opposite_vertex[0]) {
+            ref_slope = 0;
+        }
+        else {
+          ref_slope = (ref_coords[1] - ref_opposite_vertex[1])
+                      / (ref_coords[0] - ref_opposite_vertex[0]);
+        }
+        break;
+      default: 
+        SC_ABORTF("Error: Current element is not a triangle.");
+        break;
+      }
+
+      /* Calculate the projection of the opposite vertex, through the reference point, onto the current edge in reference space. */
+      double ref_intersection[2];
+      double  ref_c2;
+      switch (i_edge)
+      {
+      case 0:
+        ref_intersection[0] = 1;
+        ref_intersection[1] = ref_slope * 1;
+        break;
+      case 1:
+        if (ref_coords[0] == ref_opposite_vertex[0]) {
+          ref_intersection[0] = 1;
+          ref_intersection[1] = 1;
+          break;
+        }
+        else if (ref_coords[1] == ref_opposite_vertex[1]) {
+          ref_intersection[0] = 0;
+          ref_intersection[1] = 0;
+          break;
+        }
+        else {
+          /* c2 = ((x2*y1)-(x1*y2)) / (x2-x1) */
+          ref_c2 = ((ref_coords[0]*ref_opposite_vertex[1])-(ref_opposite_vertex[0]*ref_coords[1]))
+                    / (ref_coords[0] - ref_opposite_vertex[0]);
+        }
+        /* intersectionX = (c2-c1)/(m1-m2)
+        * intersectionY = (m1*c1 - c2*m2)/(m1-m2)
+        *
+        * c1 is the y axis intercept of the hypotenuse
+        * m1 is the slope of the hypotenuse
+        */
+        ref_intersection[0] = (ref_c2 - 0) / (1 - ref_slope);
+        ref_intersection[1] = ((1*0) - (ref_c2*ref_slope)) / (1 - ref_slope);
+        break;
+      case 2:
+        if (ref_coords[0] == ref_opposite_vertex[0] || ref_coords[1] == ref_opposite_vertex[1]) {
+          ref_intersection[0] = 1;
+          ref_intersection[1] = 0;
+          break;
+        }
+        else {
+          /* c2 = ((x2*y1)-(x1*y2)) / (x2-x1) */
+          ref_c2 = ((ref_coords[0]*ref_opposite_vertex[1])-(ref_opposite_vertex[0]*ref_coords[1]))
+                    / (ref_coords[0] - ref_opposite_vertex[0]);
+        }
+        /* intersectionX = (c2-c1)/(m1-m2)
+        * intersectionY = 0
+        *
+        * c1 is the y axis intercept of edge 2
+        * m1 is the slope of edge 2
+        */
+        ref_intersection[0] = (ref_c2 - 0) / (0 - ref_slope);
+        ref_intersection[1] = 0;
+        break;
+      default:
+        SC_ABORTF("Error: Current element is not a triangle.");
+        break;
+      }
+
+      /* Converting ref_intersection to global_intersection */
+      double  glob_intersection[3];
+
+      t8_geom_compute_linear_geometry(active_tree_class, active_tree_vertices,
+                                      ref_intersection, glob_intersection);
+
+      /* Determine the scaling factor by calculating the distances from the opposite vertex to the glob_intersection and to the reference point*/
+      double dist_x_intersection, dist_y_intersection, dist_x_ref, dist_y_ref, scaling_factor;
+
+      switch (i_edge)
+      {
+      case 0:
+        dist_x_intersection = sqrt(pow(active_tree_vertices[0] - glob_intersection[0], 2));
+        dist_y_intersection = sqrt(pow(active_tree_vertices[1] - glob_intersection[1], 2));
+        dist_x_ref = sqrt(pow(active_tree_vertices[0] - out_coords[0], 2));
+        dist_y_ref = sqrt(pow(active_tree_vertices[1] - out_coords[1], 2));
+        break;
+      case 1:
+        dist_x_intersection = sqrt(pow(active_tree_vertices[6] - glob_intersection[0], 2));
+        dist_y_intersection = sqrt(pow(active_tree_vertices[7] - glob_intersection[1], 2));
+        dist_x_ref = sqrt(pow(active_tree_vertices[6] - out_coords[0], 2));
+        dist_y_ref = sqrt(pow(active_tree_vertices[7] - out_coords[1], 2));
+        break;
+      case 2:
+        dist_x_intersection = sqrt(pow(active_tree_vertices[3] - glob_intersection[0], 2));
+        dist_y_intersection = sqrt(pow(active_tree_vertices[4] - glob_intersection[1], 2));
+        dist_x_ref = sqrt(pow(active_tree_vertices[3] - out_coords[0], 2));
+        dist_y_ref = sqrt(pow(active_tree_vertices[4] - out_coords[1], 2));
+        break;
+      default:
+        SC_ABORTF("Error: Current element is not a triangle.");
+        break;
+      }
+
+      if (dist_x_intersection == 0 && dist_y_intersection == 0) {
+        scaling_factor = 0;
+      }
+      else {
+        if (dist_x_intersection == 0) {
+          scaling_factor = dist_y_ref / dist_y_intersection;
+        }
+        else {
+          scaling_factor = dist_x_ref / dist_x_intersection;
+        }
+      }
+
+      /* Get parameters of the current edge if the edge is curved */
+      const double       *parameters =
+      (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
+                                        T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY
+                                        + i_edge,
+                                        gtreeid);
+      T8_ASSERT (parameters != NULL);
+
+      /* Linear interpolation between parameters */
+      double  interpolated_curve_parameter;
+
+      if (i_edge == 0) {
+        t8_geom_linear_interpolation (&ref_coords[1],
+                                      parameters, 1, 1,
+                                      &interpolated_curve_parameter);
+      }
+      else {
+        t8_geom_linear_interpolation (&ref_coords[0],
+                                      parameters, 1, 1,
+                                      &interpolated_curve_parameter);
+      }
+
+      curve =
+        BRep_Tool::Curve (TopoDS:: Edge (occ_shape_edge_map.FindKey (edges[i_edge])), 
+                          first, last);
+      /* Check if curve are valid */
+      T8_ASSERT (!curve.IsNull ());
+
+      /* Calculate point on curve with interpolated parameters. */
+      curve->D0 (interpolated_curve_parameter, pnt);
+
+      /* Calculate displacement between points on curve and point on linear curve.
+      * Then scale it and add the scaled displacement to the result. */
+      for (int dim = 0; dim < 3; ++dim) {
+        double displacement = pnt.Coord (dim + 1) - glob_intersection[dim];
+        double scaled_displacement = displacement * scaling_factor;
+        t8_global_productionf("out_coords[%f, %f, %f]\n", out_coords[0], out_coords[1], out_coords[2]);
+        out_coords[dim] += scaled_displacement;
+        t8_global_productionf("out_coords_scaled[%f, %f, %f]\n", out_coords[0], out_coords[1], out_coords[2]);
+      }
+      //t8_global_productionf("Current edge: %d\nout_coords[%f, %f, %f]\n", i_edge, out_coords[0], out_coords[1], out_coords[2]);
+    }
+  }
+}
+
+void
 t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
                                             t8_gloidx_t gtreeid,
                                             const double *ref_coords,

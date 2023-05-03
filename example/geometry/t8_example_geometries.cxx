@@ -935,6 +935,90 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
       SC_ABORTF ("OCC not linked");
 #endif /* T8_WITH_OCC */
     }
+  case T8_GEOM_OCC_TRIANGLE:
+    {
+#if T8_WITH_OCC
+      t8_global_productionf
+        ("Creating uniform level %i forests with an occ triangle geometry.\n",
+         level);
+      
+      /* Constructing a triangle with one curved edge (f2) */
+      Handle_Geom_Curve   occ_curve0, occ_curve1, occ_curve2;
+      TColgp_Array1OfPnt  point_array0 (1, 2);
+      TColgp_Array1OfPnt  point_array1 (1, 2);
+      TColgp_Array1OfPnt  point_array2 (1, 3);
+      TopoDS_Shape        shape;
+
+      /* Define knots along the bsplines. */
+      point_array0(1) = gp_Pnt (1.0, 2.0, 0.0);
+      point_array0(2) = gp_Pnt (2.0, 0.0, 0.0);
+
+      point_array1(1) = gp_Pnt (0.0, 0.0, 0.0);
+      point_array1(2) = gp_Pnt (1.0, 2.0, 0.0);
+
+      point_array2(1) = gp_Pnt (0.0, 0.0, 0.0);
+      point_array2(2) = gp_Pnt (1.0, 0.2, 0.0);
+      point_array2(3) = gp_Pnt (2.0, 0.0, 0.0);
+
+      /* Generate bsplines from arrays. */
+      occ_curve0 = GeomAPI_PointsToBSpline (point_array0).Curve ();
+      occ_curve1 = GeomAPI_PointsToBSpline (point_array1).Curve ();
+      occ_curve2 = GeomAPI_PointsToBSpline (point_array2).Curve ();
+
+      /* Fill shape with bsplines so that we can create a geometry with this shape. */
+      shape = BRepBuilderAPI_MakeEdge (occ_curve0).Edge ();
+      shape =
+        BRepAlgoAPI_Fuse (shape,
+                          BRepBuilderAPI_MakeEdge (occ_curve1).Edge ());
+      shape =
+        BRepAlgoAPI_Fuse (shape,
+                          BRepBuilderAPI_MakeEdge (occ_curve2).Edge ());
+
+      BRepTools::Write (shape, "shape_occ_triangle.brep", 0, 0, TopTools_FormatVersion_VERSION_1);
+
+      /* Create an occ geometry. */
+      t8_geometry_occ    *geometry_occ =
+        new t8_geometry_occ (3, shape, "occ curve dim=3");
+
+      /* The arrays indicate which face/edge carries a geometry. 
+       * 0 means no geometry and any other number indicates the position of the geometry 
+       * in the global geometry array. Here edge 2 carries occ_curve2.
+       * We add them in the next step. */
+      int                 faces[1] = { 0 };
+      int                 edges[6] = { 0, 0, 3, 0, 0, 0 };
+
+      /* Create tree 0 */
+      t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
+      double              vertices[9] = {
+        0.0, 0.0, 0.0,
+        1.0, 2.0, 0.0,
+        2.0, 0.0, 0.0
+      };
+      t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 9);
+
+      /* The valid parameter range for bsplines is [0, 1]. We defined the bsplines in such a way, 
+       * that parameter 0 and 1 resemble the two vertices of the connected edge. */
+      double              parameters[2] = { 0, 1 };
+
+      /* Give the tree information about its curves and the parameters of the vertices. 
+       * Each parameter set is given to the tree via its attribute key + the edge or face index it corresponds with. */
+      t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (),
+                              T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces,
+                              1 * sizeof (int), 0);
+      t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (),
+                              T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges,
+                              9 * sizeof (int), 0);
+      t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (),
+                              T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + 2,
+                              parameters, 2 * sizeof (double), 0);
+
+      geometry = geometry_occ;
+      snprintf (vtuname, BUFSIZ, "forest_occ_triangle_lvl_%i", level);
+      break;
+#else /* !T8_WITH_OCC */
+      SC_ABORTF ("OCC not linked");
+#endif /* T8_WITH_OCC */
+    }
   default:
     SC_ABORT_NOT_REACHED ();
   }
