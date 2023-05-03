@@ -120,7 +120,7 @@ t8_cmesh_t          t8_vtk_reader_cmesh (const char *filename,
  * \param[in] vtk_file_type A vtk-filetype that is readable by t8code. 
  * \return                  Pointer to vtkDataSet      
  */
-vtkSmartPointer < vtkPointSet > t8_pointSet_vtk_reader (const char *filename,
+vtkSmartPointer < vtkPointSet > t8_vtk_reader_pointSet (const char *filename,
                                                         const int partition,
                                                         const int main_proc,
                                                         sc_MPI_Comm comm,

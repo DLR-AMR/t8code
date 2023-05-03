@@ -441,7 +441,7 @@ t8_vtk_reader (const char *filename, const int partition,
 #endif
 
 vtkSmartPointer < vtkPointSet >
-t8_pointSet_vtk_reader (const char *filename,
+t8_vtk_reader_pointSet (const char *filename,
                         const int partition,
                         const int main_proc,
                         sc_MPI_Comm comm,
