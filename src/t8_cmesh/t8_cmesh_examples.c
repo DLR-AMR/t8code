@@ -1242,11 +1242,12 @@ t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh,
 }
 
 t8_cmesh_t
-t8_cmesh_new_hypercube_ext (const t8_eclass_t eclass,
-                            sc_MPI_Comm comm,
-                            const double *boundary,
-                            t8_locidx_t polygons_x,
-                            t8_locidx_t polygons_y, t8_locidx_t polygons_z)
+t8_cmesh_new_hypercube_extrude (const t8_eclass_t eclass,
+                                sc_MPI_Comm comm,
+                                const double *boundary,
+                                t8_locidx_t polygons_x,
+                                t8_locidx_t polygons_y, 
+                                t8_locidx_t polygons_z)
 {
   SC_CHECK_ABORT (eclass != T8_ECLASS_PYRAMID,
                   "Pyramids are not yet supported.");
