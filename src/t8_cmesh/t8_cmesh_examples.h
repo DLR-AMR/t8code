@@ -117,6 +117,20 @@ t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
  * \note Every sub-hypercube contains diffrent number of trees depending on \a eclass.
  * \note If \a eclass == T8_ECLASS_VERTEX, _LINE, _QUAD or _HEX every sub-hypercube contains
  *  one tree, if _TRIANGLE or _PRISM two trees and if _TET six trees.
+ *  This is done in the same way as in \see t8_cmesh_new_hypercube.
+ * \example let eclass = T8_ECLASS_TRIANGLE
+ *              boundary coordinates = a(0,0,0), b(3,0,0), c(0,2,0), d(3,2,0)
+ *              polygons_x, _y, _z = 3, 1, 0                 
+ *      
+ *    c--f--h--d     The hypercube defined by the boundary coordinates
+ *    |  |  |  |     is first split into 3 sub-hypercubes. The sub-hypercubes
+ *    |  |  |  |     are ordert from left to right (and top to bottom).
+ *    a--e--g--b     Coordinates e,f,g,h are (1,0,0),(1,2,0),(2,0,0),(2,2,0).
+ * 
+ *    c--f--h--d     Each sub-hypercube is the split into 2 triangle roots.
+ *    |1/|3/|5/|     The ordering is the same as in \see t8_cmesh_new_hypercube.
+ *    |/0|/2|/4|     Thus, we get 6 trees, which are ordered as shown in the picture. 
+ *    a--e--g--b     
  */
 t8_cmesh_t          t8_cmesh_new_hypercube_ext (const t8_eclass_t eclass,
                                                 sc_MPI_Comm comm,
