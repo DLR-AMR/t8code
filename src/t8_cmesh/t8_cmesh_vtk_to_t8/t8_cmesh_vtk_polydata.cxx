@@ -42,7 +42,7 @@ t8_read_poly (const char *filename, vtkSmartPointer < vtkPolyData > grid)
   T8_ASSERT (strcmp (extension, ""));
 
   /* Read the file depending on the extension. Not all readers have
-   * a built-in check if the file is readable.  */
+   * a built-in check if the file is readable. */
   if (strcmp (extension, "ply") == 0) {
     vtkNew < vtkPLYReader > reader;
     reader->SetFileName (filename);
