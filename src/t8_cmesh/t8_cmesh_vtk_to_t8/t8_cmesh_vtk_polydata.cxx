@@ -37,7 +37,7 @@ t8_read_poly (const char *filename, vtkSmartPointer < vtkPolyData > grid)
   char               *extension;
   /* Get the file-extension to decide which reader to use. */
   strcpy (tmp, filename);
-  extension = strchr (tmp, ".") + 1;
+  extension = strrchr (tmp, ".") + 1;
   T8_ASSERT (strcmp (extension, ""));
 
   /* Check if we can open the file. */
