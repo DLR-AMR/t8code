@@ -63,7 +63,7 @@ t8_read_poly (const char *filename, vtkSmartPointer < vtkPolyData > grid)
     vtkNew < vtkXMLPolyDataReader > reader;
     reader->SetFileName (filename);
     if (!reader->CanReadFile (filename)) {
-      t8_errorf ("Unable to read file.\n");
+      t8_errorf ("Unable to read file %s.\n", filename);
       return 1;
     }
     reader->Update ();
@@ -105,7 +105,8 @@ t8_read_poly (const char *filename, vtkSmartPointer < vtkPolyData > grid)
   }
   else {
     /* Return NULL if the reader is not used correctly. */
-    t8_global_errorf ("Please use .ply, .vtp, .obj, .stl, .vtk or .g file\n");
+    t8_global_errorf
+      ("Please use .ply, .vtp, .obj, .stl, .vtk or .g file %s\n", filename);
     return 1;
   }
 }
