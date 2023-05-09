@@ -37,9 +37,18 @@ t8_read_poly (const char *filename, vtkSmartPointer < vtkPolyData > grid)
   char               *extension;
   /* Get the file-extension to decide which reader to use. */
   strcpy (tmp, filename);
-  extension = strtok (tmp, ".");
-  extension = strtok (NULL, ".");
+  extension = strchr (tmp, ".") + 1;
   T8_ASSERT (strcmp (extension, ""));
+
+  /* Check if we can open the file. */
+  FILE               *first_check;
+  first_check = fopen (filename, "r");
+  if (first_check == NULL) {
+    t8_errorf ("Can not find the file %s\n", filename);
+    fclose (first_check);
+    return;
+  }
+  fclose (first_check);
 
   /* Read the file depending on the extension. Not all readers have
    * a built-in check if the file is readable. */
