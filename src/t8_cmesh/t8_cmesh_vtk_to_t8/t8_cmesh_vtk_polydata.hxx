@@ -28,6 +28,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #ifndef T8_CMESH_VTK_POLYDATA
 #define T8_CMESH_VTK_POLYDATA
 
+#include <t8.h>
 #if T8_WITH_VTK
 #include <vtkSmartPointer.h>
 #include <vtkCellData.h>
