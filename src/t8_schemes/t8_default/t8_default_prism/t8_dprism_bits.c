@@ -569,6 +569,7 @@ t8_dprism_vertex_ref_coords (const t8_dprism_t *elem, const int vertex,
                              double coords[3])
 {
   int                 coords_int[3];
+  T8_ASSERT (t8_dprism_is_valid (elem));
   T8_ASSERT (vertex >= 0 && vertex < 6);
 
   /* Compute the integere coordinates in [0, root_len]^3 */
