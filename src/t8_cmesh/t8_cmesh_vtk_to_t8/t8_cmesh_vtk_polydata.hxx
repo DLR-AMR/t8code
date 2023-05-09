@@ -40,9 +40,10 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * \param[in] filename  The name of the file
  * \param[in, out] grid On input a vtkSmartPointer, that will hold the grid described in
  *                      \a filename.
+ * \return              0 if the file was read successfully, non-zero otherwise.               
  * 
  */
-void                t8_read_poly (const char *filename,
+int                 t8_read_poly (const char *filename,
                                   vtkSmartPointer < vtkPolyData > grid);
 
 #endif
