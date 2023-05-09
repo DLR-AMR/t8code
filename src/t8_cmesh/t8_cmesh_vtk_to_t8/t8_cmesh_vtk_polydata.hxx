@@ -30,6 +30,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <t8.h>
 #if T8_WITH_VTK
+#include <vtkPolyData.h>
 #include <vtkSmartPointer.h>
 #include <vtkCellData.h>
 #include <vtkDataSet.h>
