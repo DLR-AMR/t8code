@@ -33,7 +33,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 void
 t8_read_poly (const char *filename, vtkSmartPointer < vtkPolyData > grid)
 {
-  char                tmp[BUFSIZ], *extension;
+  char                tmp[BUFSIZ];
+  char               *extension;
   /* Get the file-extension to decide which reader to use. */
   strcpy (tmp, filename);
   extension = strtok (tmp, ".");
