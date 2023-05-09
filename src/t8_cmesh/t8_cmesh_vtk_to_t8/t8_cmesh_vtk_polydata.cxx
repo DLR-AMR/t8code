@@ -40,7 +40,8 @@ t8_read_poly (const char *filename, vtkSmartPointer < vtkPolyData > grid)
   extension = strtok (NULL, ".");
   T8_ASSERT (strcmp (extension, ""));
 
-  /* Read the file depending on the extension */
+  /* Read the file depending on the extension. Not all readers have
+   * a built-in check if the file is readable.  */
   if (strcmp (extension, "ply") == 0) {
     vtkNew < vtkPLYReader > reader;
     reader->SetFileName (filename);
@@ -49,72 +50,53 @@ t8_read_poly (const char *filename, vtkSmartPointer < vtkPolyData > grid)
     return;
   }
   else if (strcmp (extension, "vtp") == 0) {
-    char                tmp[BUFSIZ], *extension;
-    /* Get the file-extension to decide which reader to use. */
-    strcpy (tmp, filename);
-    extension = strtok (tmp, ".");
-    extension = strtok (NULL, ".");
-    T8_ASSERT (strcmp (extension, ""));
-
-    /* Read the file depending on the extension. Not all readers have
-     * a built-in check if the file is readable.  */
-    if (strcmp (extension, "ply") == 0) {
-      vtkNew < vtkPLYReader > reader;
-      reader->SetFileName (filename);
-      reader->Update ();
-      grid->ShallowCopy (reader->GetOutput ());
-      return;
-    }
-    else if (strcmp (extension, "vtp") == 0) {
-      vtkNew < vtkXMLPolyDataReader > reader;
-      reader->SetFileName (filename);
-      if (!reader->CanReadFile (filename)) {
-        t8_errorf ("Unable to read file.\n");
-        return NULL;
-      }
-      reader->Update ();
-      grid->ShallowCopy (reader->GetOutput ());
-      return;
-    }
-    else if (strcmp (extension, "obj") == 0) {
-      vtkNew < vtkOBJReader > reader;
-      reader->SetFileName (filename);
-      reader->Update ();
-      grid->ShallowCopy (reader->GetOutput ());
-      return;
-    }
-    else if (strcmp (extension, "stl") == 0) {
-      vtkNew < vtkSTLReader > reader;
-      reader->SetFileName (filename);
-      reader->Update ();
-      grid->ShallowCopy (reader->GetOutput ());
-      return;
-    }
-    else if (strcmp (extension, "vtk") == 0) {
-      vtkNew < vtkPolyDataReader > reader;
-      reader->SetFileName (filename);
-      reader->Update ();
-      if (!reader->IsFilePolyData ()) {
-        t8_errorf
-          ("File-content is not polydata. If it is a vtkUnstructuredGrid use the unstructured Grid reader.");
-        return NULL;
-      }
-      grid->ShallowCopy (reader->GetOutput ());
-      return;
-    }
-    else if (strcmp (extension, "g") == 0) {
-      vtkNew < vtkBYUReader > reader;
-      reader->SetGeometryFileName (filename);
-      reader->Update ();
-      grid->ShallowCopy (reader->GetOutput ());
-      return;
-    }
-    else {
-      /* Return NULL if the reader is not used correctly. */
-      t8_global_errorf
-        ("Please use .ply, .vtp, .obj, .stl, .vtk or .g file\n");
+    vtkNew < vtkXMLPolyDataReader > reader;
+    reader->SetFileName (filename);
+    if (!reader->CanReadFile (filename)) {
+      t8_errorf ("Unable to read file.\n");
       return NULL;
     }
+    reader->Update ();
+    grid->ShallowCopy (reader->GetOutput ());
+    return;
+  }
+  else if (strcmp (extension, "obj") == 0) {
+    vtkNew < vtkOBJReader > reader;
+    reader->SetFileName (filename);
+    reader->Update ();
+    grid->ShallowCopy (reader->GetOutput ());
+    return;
+  }
+  else if (strcmp (extension, "stl") == 0) {
+    vtkNew < vtkSTLReader > reader;
+    reader->SetFileName (filename);
+    reader->Update ();
+    grid->ShallowCopy (reader->GetOutput ());
+    return;
+  }
+  else if (strcmp (extension, "vtk") == 0) {
+    vtkNew < vtkPolyDataReader > reader;
+    reader->SetFileName (filename);
+    reader->Update ();
+    if (!reader->IsFilePolyData ()) {
+      t8_errorf
+        ("File-content is not polydata. If it is a vtkUnstructuredGrid use the unstructured Grid reader.");
+      return NULL;
+    }
+    grid->ShallowCopy (reader->GetOutput ());
+    return;
+  }
+  else if (strcmp (extension, "g") == 0) {
+    vtkNew < vtkBYUReader > reader;
+    reader->SetGeometryFileName (filename);
+    reader->Update ();
+    grid->ShallowCopy (reader->GetOutput ());
+    return;
+  }
+  else {
+    /* Return NULL if the reader is not used correctly. */
+    t8_global_errorf ("Please use .ply, .vtp, .obj, .stl, .vtk or .g file\n");
+    return NULL;
   }
 }
 #endif
