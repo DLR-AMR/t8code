@@ -1,6 +1,6 @@
 title: t8code
-version: 1.1.0
-date-released: "2023-02-27"
+version: 1.2.0
+date-released: "2023-04-24"
 repository-code: "https://github.com/dlr-amr/t8code"
 url: "https://dlr-amr.github.io/t8code/"
 doi: "10.5281/zenodo.7034838"
@@ -54,6 +54,26 @@ authors:
     family-names: Becker
     email: F.Becker@dlr.de
     affiliation: "German Aerospace Center (DLR)"
+  - given-names: Jakob
+    family-names: Fußbroich
+    email: jakob.fussbroich@dlr.de
+    affiliation: "German Aerospace Center (DLR)"
+    orcid: "https://orcid.org/0000-0003-0784-2182"
+  - given-names: Chiara
+    family-names: Hergl
+    email: Chiara.Hergl@dlr.de
+    affiliation: "German Aerospace Center (DLR)"
+    orcid: "https://orcid.org/0000-0002-4016-9113"
+  - given-names: Michael
+    family-names: Schlottke-Lakemper
+    email: "m.schlottke-lakemper@acom.rwth-aachen.de"
+    affiliation: "RWTH Aachen"
+    orcid: "https://orcid.org/0000-0002-3195-2536"
+  - given-names: Prasanna 
+    family-names: Ponnusamy
+    email: "Prasanna.Ponnusamy@dlr.de"
+    affiliation: "German Aerospace Center (DLR)"
+    orcid: "https://orcid.org/0000-0002-4950-7297"
 #Contributors
 cff-version: 1.2.0
 message: >-
