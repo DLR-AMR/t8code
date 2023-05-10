@@ -48,6 +48,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 int                 t8_read_poly (const char *filename,
                                   vtkSmartPointer < vtkPolyData > grid);
 
-#endif
+#endif /* T8_WITH_VTK */
 
 #endif /* T8_CMESH_VTK_POLYDATA */
