@@ -132,12 +132,12 @@ t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
  *    |/0|/2|/4|     Thus, we get 6 trees, which are ordered as shown in the picture. 
  *    a--e--g--b     
  */
-t8_cmesh_t          t8_cmesh_new_hypercube_extrude (const t8_eclass_t eclass,
-                                                    sc_MPI_Comm comm,
-                                                    const double *boundary,
-                                                    t8_locidx_t polygons_x,
-                                                    t8_locidx_t polygons_y,
-                                                    t8_locidx_t polygons_z);
+t8_cmesh_t          t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass,
+                                                sc_MPI_Comm comm,
+                                                const double *boundary,
+                                                t8_locidx_t polygons_x,
+                                                t8_locidx_t polygons_y,
+                                                t8_locidx_t polygons_z);
 
 /** Hybercube with 6 Tets, 6 Prism, 4 Hex. 
  * \param [in]  comm            The mpi communicator to be used.
