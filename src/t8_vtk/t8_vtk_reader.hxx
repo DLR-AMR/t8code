@@ -83,6 +83,30 @@ vtkSmartPointer < vtkDataSet > t8_vtk_reader (const char *filename,
                                               const vtk_file_type_t
                                               vtk_file_type);
 
+/**
+ * Given a filename to a vtkUnstructuredGrid or vtkPolyData read the file and
+ * a set of points is constructed. This is a two stage process. First the file
+ * is read and stored in a vtkDataSet using \a t8_vtk_reader and 
+ * \a t8_file_to_vtkGrid. In the second stage a vtkPointSet is constructed from 
+ * the vtkDataSet using \a t8_vtkGrid_to_vtkPointSet. 
+ * 
+ * Both stages use the vtk-library, therefore the function is only available if 
+ * t8code is linked against VTK. 
+ * 
+ * \param[in] filename      The name of the file
+ * \param[in] partition     Flag if the constructed mesh should be partitioned
+ * \param[in] main_proc     The main reading processor
+ * \param[in] comm          An mpi-communicator
+ * \param[in] vtk_file_type A vtk-filetype that is readable by t8code. 
+ * \return                  Pointer to vtkDataSet      
+ */
+vtkSmartPointer < vtkPointSet > t8_vtk_reader_pointSet (const char *filename,
+                                                        const int partition,
+                                                        const int main_proc,
+                                                        sc_MPI_Comm comm,
+                                                        const vtk_file_type_t
+                                                        vtk_file_type);
+
 #endif
 
 /**
@@ -108,29 +132,6 @@ t8_cmesh_t          t8_vtk_reader_cmesh (const char *filename,
                                          sc_MPI_Comm comm,
                                          const vtk_file_type_t vtk_file_type);
 
-/**
- * Given a filename to a vtkUnstructuredGrid or vtkPolyData read the file and
- * a set of points is constructed. This is a two stage process. First the file
- * is read and stored in a vtkDataSet using \a t8_vtk_reader and 
- * \a t8_file_to_vtkGrid. In the second stage a vtkPointSet is constructed from 
- * the vtkDataSet using \a t8_vtkGrid_to_vtkPointSet. 
- * 
- * Both stages use the vtk-library, therefore the function is only available if 
- * t8code is linked against VTK. 
- * 
- * \param[in] filename      The name of the file
- * \param[in] partition     Flag if the constructed mesh should be partitioned
- * \param[in] main_proc     The main reading processor
- * \param[in] comm          An mpi-communicator
- * \param[in] vtk_file_type A vtk-filetype that is readable by t8code. 
- * \return                  Pointer to vtkDataSet      
- */
-vtkSmartPointer < vtkPointSet > t8_vtk_reader_pointSet (const char *filename,
-                                                        const int partition,
-                                                        const int main_proc,
-                                                        sc_MPI_Comm comm,
-                                                        const vtk_file_type_t
-                                                        vtk_file_type);
 
 T8_EXTERN_C_END ();
 

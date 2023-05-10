@@ -441,8 +441,6 @@ t8_vtk_reader (const char *filename, const int partition,
   }
 }
 
-#endif /* T8_WITH_VTK */
-
 vtkSmartPointer < vtkPointSet >
 t8_vtk_reader_pointSet (const char *filename,
                         const int partition,
@@ -460,6 +458,8 @@ t8_vtk_reader_pointSet (const char *filename,
 #endif
   return NULL;
 }
+
+#endif /* T8_WITH_VTK */
 
 t8_cmesh_t
 t8_vtk_reader_cmesh (const char *filename, const int partition,
