@@ -991,8 +991,8 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
       t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
       double              vertices[9] = {
         0.0, 0.0, 0.0,
-        1.0, 2.0, 0.0,
-        2.0, 0.0, 0.0
+        2.0, 0.0, 0.0,
+        1.0, 2.0, 0.0
       };
       t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 9);
 
