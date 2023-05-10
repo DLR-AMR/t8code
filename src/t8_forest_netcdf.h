@@ -27,7 +27,7 @@
 #ifndef T8_FOREST_NETCDF_H
 #define T8_FOREST_NETCDF_H
 
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
 #include <t8_netcdf.h>
 
 T8_EXTERN_C_BEGIN ();
