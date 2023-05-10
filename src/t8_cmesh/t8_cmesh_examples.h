@@ -131,6 +131,8 @@ t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
  *    |1/|3/|5/|     The ordering is the same as in \see t8_cmesh_new_hypercube.
  *    |/0|/2|/4|     Thus, we get 6 trees, which are ordered as shown in the picture. 
  *    a--e--g--b     
+ *
+ * See `example/cmesh/t8_cmesh_hypercube_pad.cxx` for a working example.
  */
 t8_cmesh_t          t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass,
                                                 sc_MPI_Comm comm,
