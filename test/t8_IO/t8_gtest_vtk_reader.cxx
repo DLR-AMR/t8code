@@ -25,7 +25,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /**
  * This is currently a place-holder for a propper cmesh_vtk_reader-test.
- * The function is not implemented yet and therefore we do not provide a propper
+ * The function is not implemented yet and therefore we do not provide a proper
  * test yet. 
  * 
  */
