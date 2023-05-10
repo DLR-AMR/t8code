@@ -2205,7 +2205,7 @@ INCLUDE_FILE_PATTERNS  =
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
 PREDEFINED             = @PACKAGE_PREFIX@_DOXYGEN \
-                         T8_ENABL_DEBUG \
+                         T8_ENABLE_DEBUG \
                          T8_WITH_VTK \
                          T8_WITH_OCC \
                          T8_WITH_NETCDF \
