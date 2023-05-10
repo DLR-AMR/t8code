@@ -27,6 +27,7 @@ libt8_installed_headers = \
   src/t8_cmesh_tetgen.h src/t8_cmesh_readmshfile.h \
   src/t8_cmesh_vtk_writer.h \
   src/t8_cmesh_vtk_reader.hxx \
+  src/t8_vtk/t8_vtk_reader.hxx \
   src/t8_forest.h \
   src/t8_vec.h \
   src/t8_version.h \
@@ -76,7 +77,6 @@ libt8_internal_headers = \
   src/t8_cmesh/t8_cmesh_offset.h \
   src/t8_vtk/t8_vtk_polydata.hxx \
   src/t8_vtk/t8_vtk_unstructured.hxx \
-  src/t8_vtk/t8_vtk_reader.hxx \
   src/t8_vtk/t8_vtk_types.h \
   src/t8_forest/t8_forest_cxx.h  \
   src/t8_forest/t8_forest_ghost.h \
