@@ -129,7 +129,7 @@ TEST_P (cmesh_multiple_attributes, multiple_attributes) {
   EXPECT_EQ(num_local_trees, t8_cmesh_get_num_local_trees(cmesh_mult_at_from_stash));
   t8_locidx_t num_ghosts = t8_cmesh_get_num_ghosts(cmesh_mult_at_from_stash);
   for (t8_locidx_t ltree_id = 0; ltree_id < num_local_trees + num_ghosts; ltree_id++) {
-    t8_gloidx_t gtree_id = t8_cmesh_get_global_id(cmesh_mult_at_from_stash, ltree_id);
+   const t8_gloidx_t gtree_id = t8_cmesh_get_global_id(cmesh_mult_at_from_stash, ltree_id);
     const double             *vertices_partition = (double *) t8_cmesh_get_attribute
       (cmesh_mult_at_from_stash, t8_get_package_id (), T8_CMESH_VERTICES_ATTRIBUTE_KEY, ltree_id);
     t8_eclass_t eclass = (ltree_id < num_local_trees) ? t8_cmesh_get_tree_class (cmesh_one_at, ltree_id) : t8_cmesh_get_ghost_class (cmesh_one_at, ltree_id - num_local_trees);
