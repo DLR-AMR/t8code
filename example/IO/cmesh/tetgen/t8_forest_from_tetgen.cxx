@@ -25,9 +25,10 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_partition.h>
 #include <t8_cmesh_tetgen.h>
-#include <t8_cmesh_vtk.h>
+#include <t8_cmesh_vtk_writer.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_io.h>
 
 static t8_cmesh_t
 t8_cmesh_from_tetgen (const char *prefix, int do_partition)

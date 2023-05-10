@@ -22,7 +22,9 @@
 
 #include <sc_statistics.h>
 #include <t8_refcount.h>
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_profiling.h>
+#include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_partition.h>
@@ -1499,8 +1501,8 @@ t8_forest_write_vtk_ext (t8_forest_t forest,
   }
   do_not_use_API = 1;
 #endif
-  T8_ASSERT (!write_ghosts);
   if (!do_not_use_API) {
+    T8_ASSERT (!write_ghosts);
     return t8_forest_vtk_write_file_via_API (forest,
                                              fileprefix,
                                              write_treeid,
