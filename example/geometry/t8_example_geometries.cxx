@@ -944,17 +944,19 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
       
       /* Constructing a triangle with one curved edge (f2) */
       Handle_Geom_Curve   occ_curve0, occ_curve1, occ_curve2;
-      TColgp_Array1OfPnt  point_array0 (1, 2);
-      TColgp_Array1OfPnt  point_array1 (1, 2);
+      TColgp_Array1OfPnt  point_array0 (1, 3);
+      TColgp_Array1OfPnt  point_array1 (1, 3);
       TColgp_Array1OfPnt  point_array2 (1, 3);
       TopoDS_Shape        shape;
 
       /* Define knots along the bsplines. */
-      point_array0(1) = gp_Pnt (1.0, 2.0, 0.0);
-      point_array0(2) = gp_Pnt (2.0, 0.0, 0.0);
+      point_array0(1) = gp_Pnt (2.0, 0.0, 0.0);
+      point_array0(2) = gp_Pnt (1.6, 1.5, 0.0);
+      point_array0(3) = gp_Pnt (1.0, 2.0, 0.0);
 
       point_array1(1) = gp_Pnt (0.0, 0.0, 0.0);
-      point_array1(2) = gp_Pnt (1.0, 2.0, 0.0);
+      point_array1(2) = gp_Pnt (0.5, 0.6, 0.0);
+      point_array1(3) = gp_Pnt (1.0, 2.0, 0.0);
 
       point_array2(1) = gp_Pnt (0.0, 0.0, 0.0);
       point_array2(2) = gp_Pnt (1.0, 0.2, 0.0);
@@ -982,10 +984,10 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
 
       /* The arrays indicate which face/edge carries a geometry. 
        * 0 means no geometry and any other number indicates the position of the geometry 
-       * in the global geometry array. Here edge 2 carries occ_curve2.
+       * in the global geometry array. Here edge 0 carries occ_curve0 and 2 carries occ_curve2.
        * We add them in the next step. */
       int                 faces[1] = { 0 };
-      int                 edges[6] = { 0, 0, 3, 0, 0, 0 };
+      int                 edges[6] = { 1, 2, 3, 0, 0, 0 };
 
       /* Create tree 0 */
       t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
@@ -1008,6 +1010,12 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
       t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (),
                               T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges,
                               9 * sizeof (int), 0);
+      t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (),
+                              T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + 0,
+                              parameters, 2 * sizeof (double), 0);
+      t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (),
+                              T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + 1,
+                              parameters, 2 * sizeof (double), 0);
       t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (),
                               T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + 2,
                               parameters, 2 * sizeof (double), 0);

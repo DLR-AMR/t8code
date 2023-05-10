@@ -561,6 +561,9 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
   gp_Pnt              pnt;
   Handle_Geom_Curve   curve;
   Standard_Real       first, last;
+
+  /* Linear mapping from ref_coords to out_coords */
+  t8_geom_compute_linear_geometry(active_tree_class, active_tree_vertices, ref_coords, out_coords);
   
   /* For each line linked to an edge determine and apply the out_coords scaling */
   for (int i_edge = 0; i_edge < num_edges; i_edge++) {
@@ -638,19 +641,20 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
           ref_intersection[1] = 0;
           break;
         }
-        else {
-          /* c2 = ((x2*y1)-(x1*y2)) / (x2-x1) */
-          ref_c2 = ((ref_coords[0]*ref_opposite_vertex[1])-(ref_opposite_vertex[0]*ref_coords[1]))
-                    / (ref_coords[0] - ref_opposite_vertex[0]);
-        
-          /* intersectionX = (c2-c1)/(m1-m2)
-          * intersectionY = (m1*c1 - c2*m2)/(m1-m2)
-          *
-          * c1 is the y axis intercept of the hypotenuse
-          * m1 is the slope of the hypotenuse
-          */
-          ref_intersection[0] = (ref_c2 - 0) / (1 - ref_slope);
-          ref_intersection[1] = ((1*0) - (ref_c2*ref_slope)) / (1 - ref_slope);
+        else {        
+          /* intersectionX = (x1y2-y1x2)(x3-x4)-(x1-x2)(x3y4-y3x4)
+           *                 /(x1-x2)(y3-y4)-(y1-y2)(x3-x4)
+           * intersectionY = (x1y2-y1x2)(y3-y4)-(y1-y2)(x3y4-y3x4)
+           *                 /(x1-x2)(y3-y4)-(y1-y2)(x3-x4)
+           *
+           * c1 is the y axis intercept of the hypotenuse
+           * m1 is the slope of the hypotenuse
+           */
+           // x1=0 y1=0 x2=1 y2=1 x3=ref_coords[0] y3=ref_coords[1] x4=ref_opposite_vertex[0] y4=ref_opposite_vertex[1]
+          ref_intersection[0] = ((0*1-0*1)*(ref_coords[0]-ref_opposite_vertex[0])-(0-1)*(ref_coords[0]*ref_opposite_vertex[1]-ref_coords[1]*ref_opposite_vertex[0]))
+                                /((0-1)*(ref_coords[1]-ref_opposite_vertex[1])-(0-1)*(ref_coords[0]-ref_opposite_vertex[0]));
+          ref_intersection[1] = ((0*1-0*1)*(ref_coords[1]-ref_opposite_vertex[1])-(0-1)*(ref_coords[0]*ref_opposite_vertex[1]-ref_coords[1]*ref_opposite_vertex[0]))
+                                /((0-1)*(ref_coords[1]-ref_opposite_vertex[1])-(0-1)*(ref_coords[0]-ref_opposite_vertex[0]));
           break;
         }
       case 2:
@@ -664,18 +668,20 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
           ref_intersection[1] = 1;
         }
         else {
-          /* c2 = ((x2*y1)-(x1*y2)) / (x2-x1) */
-          ref_c2 = ((ref_coords[0]*ref_opposite_vertex[1])-(ref_opposite_vertex[0]*ref_coords[1]))
-                    / (ref_coords[0] - ref_opposite_vertex[0]);
-
-          /* intersectionX = (c2-c1)/(m1-m2)
-          * intersectionY = 0
-          *
-          * c1 is the y axis intercept of edge 2
-          * m1 is the slope of edge 2
-          */
-          ref_intersection[0] = (ref_c2 - 0) / (0 - ref_slope);
-          ref_intersection[1] = 0;
+          /* intersectionX = (x1y2-y1x2)(x3-x4)-(x1-x2)(x3y4-y3x4)
+           *                 /(x1-x2)(y3-y4)-(y1-y2)(x3-x4)
+           * intersectionY = (x1y2-y1x2)(y3-y4)-(y1-y2)(x3y4-y3x4)
+           *                 /(x1-x2)(y3-y4)-(y1-y2)(x3-x4)
+           *
+           * c1 is the y axis intercept of edge 2
+           * m1 is the slope of edge 2
+           */
+           // x1=0 y1=0 x2=1 y2=0 x3=ref_coords[0] y3=ref_coords[1] x4=ref_opposite_vertex[0] y4=ref_opposite_vertex[1]
+          ref_intersection[0] = ((0*1-0*0)*(ref_coords[0]-ref_opposite_vertex[0])-(0-1)*(ref_coords[0]*ref_opposite_vertex[1]-ref_coords[1]*ref_opposite_vertex[0]))
+                                /((0-1)*(ref_coords[1]-ref_opposite_vertex[1])-(0-0)*(ref_coords[0]-ref_opposite_vertex[0]));
+          ref_intersection[1] = ((0*1-0*0)*(ref_coords[1]-ref_opposite_vertex[1])-(0-0)*(ref_coords[0]*ref_opposite_vertex[1]-ref_coords[1]*ref_opposite_vertex[0]))
+                                /((0-1)*(ref_coords[1]-ref_opposite_vertex[1])-(0-0)*(ref_coords[0]-ref_opposite_vertex[0]));
+          t8_global_productionf("edge: %d, ref_intersection: [%f, %f]\n", i_edge, ref_intersection[0], ref_intersection[1]);
           break;
         }
       default:
@@ -687,9 +693,6 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
       double  glob_intersection[3];
       t8_geom_compute_linear_geometry(active_tree_class, active_tree_vertices,
                                       ref_intersection, glob_intersection);
-      
-      /* Linear mapping from ref_coords to out_coords */
-      t8_geom_compute_linear_geometry(active_tree_class, active_tree_vertices, ref_coords, out_coords);
 
       /* Determine the scaling factor by calculating the distances from the opposite vertex
        * to the glob_intersection and to the reference point
@@ -766,11 +769,11 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
       for (int dim = 0; dim < 3; ++dim) {
         double displacement = pnt.Coord (dim + 1) - glob_intersection[dim];
         double scaled_displacement = displacement * scaling_factor;
-        //t8_global_productionf("out_coords: [%f, %f, %f]\npnt: [%f, %f, %f], glob_interseciton: [%f, %f, %f]\ndisplacement: %f\n", out_coords[0], out_coords[1], out_coords[2], pnt.Coord(1), pnt.Coord(2), pnt.Coord(3), glob_intersection[0], glob_intersection[1], glob_intersection[2], displacement);
+        //t8_global_productionf("current_edge: %d\nout_coords: [%f, %f, %f], pnt: [%f, %f, %f]\nref_intersection: [%f, %f], glob_interseciton: [%f, %f, %f]\ndisplacement: %f\n", i_edge, out_coords[0], out_coords[1], out_coords[2], pnt.Coord(1), pnt.Coord(2), pnt.Coord(3), ref_intersection[0], ref_intersection[1], glob_intersection[0], glob_intersection[1], glob_intersection[2], displacement);
         out_coords[dim] += scaled_displacement;
         //t8_global_productionf("out_coords_curved: [%f, %f, %f]\n", out_coords[0], out_coords[1], out_coords[2]);
       }
-      //t8_global_productionf("Current edge: %d\nout_coords[%f, %f, %f]\n", i_edge, out_coords[0], out_coords[1], out_coords[2]);
+      //t8_global_productionf("current_edge: %d, out_coords: [%f, %f, %f]\n", i_edge, out_coords[0], out_coords[1], out_coords[2]);
     }
   }
 }
