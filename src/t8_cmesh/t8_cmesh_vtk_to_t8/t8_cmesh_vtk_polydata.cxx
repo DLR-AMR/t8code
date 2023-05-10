@@ -110,4 +110,4 @@ t8_read_poly (const char *filename, vtkSmartPointer < vtkPolyData > grid)
     return 1;
   }
 }
-#endif
+#endif /* T8_WITH_VTK */
