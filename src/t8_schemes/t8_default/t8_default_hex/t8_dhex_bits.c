@@ -41,7 +41,7 @@ t8_dhex_compute_reference_coords (const t8_dhex_t * elem,
 
   /* We divide the integer coordinates by the root length of the hex
    * to obtain the reference coordinates. */
-  out_coords[0] /= (double) T8_DHEX_ROOT_LEN;
-  out_coords[1] /= (double) T8_DHEX_ROOT_LEN;
-  out_coords[2] /= (double) T8_DHEX_ROOT_LEN;
+  out_coords[0] /= (double) P8EST_ROOT_LEN;
+  out_coords[1] /= (double) P8EST_ROOT_LEN;
+  out_coords[2] /= (double) P8EST_ROOT_LEN;
 }
