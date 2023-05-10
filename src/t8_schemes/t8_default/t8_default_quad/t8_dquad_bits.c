@@ -29,14 +29,12 @@ t8_dquad_compute_reference_coords (const t8_dquad_t * elem,
                                    double *out_coords)
 {
   const p4est_quadrant_t *q1 = (const p4est_quadrant_t *) elem;
-  out_coords[0] = q1->x / (double) T8_DQUAD_ROOT_LEN;
-  out_coords[1] = q1->y / (double) T8_DQUAD_ROOT_LEN;
-  const double        len =
-    P4EST_QUADRANT_LEN (q1->level) / (double) T8_DQUAD_ROOT_LEN;
 
-  out_coords[0] += ref_coords[0] * len;
-  out_coords[1] += ref_coords[1] * len;
+  const p4est_qcoord_t h = P4EST_QUADRANT_LEN (q1->level);
 
-  out_coords[0] /= (double) T8_DQUAD_ROOT_LEN;
-  out_coords[1] /= (double) T8_DQUAD_ROOT_LEN;
+  out_coords[0] = q1->x + ref_coords[0] * h;
+  out_coords[1] = q1->y + ref_coords[1] * h;
+
+  out_coords[0] /= (double) P4EST_ROOT_LEN;
+  out_coords[1] /= (double) P4EST_ROOT_LEN;
 }

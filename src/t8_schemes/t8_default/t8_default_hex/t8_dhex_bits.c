@@ -31,7 +31,7 @@ t8_dhex_compute_reference_coords (const t8_dhex_t * elem,
   const p8est_quadrant_t *q1 = (const p8est_quadrant_t *) elem;
 
   /* Get the length of the quadrant */
-  const int           len = P8EST_QUADRANT_LEN (q1->level);
+  const p4est_qcoord_t len = P8EST_QUADRANT_LEN (q1->level);
 
   /* Compute the x, y and z coordinates of the point depending on the
    * reference coordinates */
