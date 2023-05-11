@@ -623,7 +623,6 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
        * onto the current edge in reference space.
        */
       double ref_intersection[2];
-      double  ref_c2;
       switch (i_edge)
       {
       case 0:
@@ -681,7 +680,6 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
                                 /((0-1)*(ref_coords[1]-ref_opposite_vertex[1])-(0-0)*(ref_coords[0]-ref_opposite_vertex[0]));
           ref_intersection[1] = ((0*1-0*0)*(ref_coords[1]-ref_opposite_vertex[1])-(0-0)*(ref_coords[0]*ref_opposite_vertex[1]-ref_coords[1]*ref_opposite_vertex[0]))
                                 /((0-1)*(ref_coords[1]-ref_opposite_vertex[1])-(0-0)*(ref_coords[0]-ref_opposite_vertex[0]));
-          t8_global_productionf("edge: %d, ref_intersection: [%f, %f]\n", i_edge, ref_intersection[0], ref_intersection[1]);
           break;
         }
       default:
@@ -768,12 +766,9 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
       * Then scale it and add the scaled displacement to the result. */
       for (int dim = 0; dim < 3; ++dim) {
         double displacement = pnt.Coord (dim + 1) - glob_intersection[dim];
-        double scaled_displacement = displacement * scaling_factor;
-        //t8_global_productionf("current_edge: %d\nout_coords: [%f, %f, %f], pnt: [%f, %f, %f]\nref_intersection: [%f, %f], glob_interseciton: [%f, %f, %f]\ndisplacement: %f\n", i_edge, out_coords[0], out_coords[1], out_coords[2], pnt.Coord(1), pnt.Coord(2), pnt.Coord(3), ref_intersection[0], ref_intersection[1], glob_intersection[0], glob_intersection[1], glob_intersection[2], displacement);
+        double scaled_displacement = displacement * pow(scaling_factor, 2);
         out_coords[dim] += scaled_displacement;
-        //t8_global_productionf("out_coords_curved: [%f, %f, %f]\n", out_coords[0], out_coords[1], out_coords[2]);
       }
-      //t8_global_productionf("current_edge: %d, out_coords: [%f, %f, %f]\n", i_edge, out_coords[0], out_coords[1], out_coords[2]);
     }
   }
 }
