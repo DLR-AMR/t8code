@@ -47,7 +47,7 @@ T8_EXTERN_C_BEGIN ();
  * \param[in] main_proc     The main reading proc.
  * \param[in] comm          A communicator.
  * \param[in] vtk_file_type The type of the Data in the file.
- * \return                  0 if the file was read successfully, 1 otherwise.                
+ * \returns                 non-zero on success, zero if the reading failed.                
  */
 int
 t8_file_to_vtkGrid (const char *filename,
@@ -65,7 +65,7 @@ t8_file_to_vtkGrid (const char *filename,
   SC_CHECK_MPI (mpiret);
   T8_ASSERT (filename != NULL);
   T8_ASSERT (0 <= main_proc && main_proc < mpisize);
-  int                 read_success = 1;
+  int                 read_success = 0;
 
   /* Read the file and set the pointer to the */
   if (!partition || mpirank == main_proc) {
@@ -89,7 +89,9 @@ t8_file_to_vtkGrid (const char *filename,
                       comm);
       }
     }
-    main_proc_read_successful = 1;
+    else {
+      main_proc_read_successful = 1;
+    }
   }
   if (partition) {
     sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc, comm);
@@ -129,7 +131,6 @@ t8_cmesh_vtk_reader (const char *filename, const int partition,
     t8_global_errorf
       ("Main process (Rank %i) did not read the file successfully.\n",
        main_proc);
-    t8_cmesh_destroy (&cmesh);
     return NULL;
   }
   else {

@@ -47,8 +47,7 @@ t8_read_poly_ext (const char *filename, vtkSmartPointer < vtkPolyData > grid)
   first_check = fopen (filename, "r");
   if (first_check == NULL) {
     t8_errorf ("Can not find the file %s\n", filename);
-    fclose (first_check);
-    return 1;
+    return 0;
   }
   fclose (first_check);
 
@@ -59,32 +58,32 @@ t8_read_poly_ext (const char *filename, vtkSmartPointer < vtkPolyData > grid)
     reader->SetFileName (filename);
     reader->Update ();
     grid->ShallowCopy (reader->GetOutput ());
-    return 0;
+    return 1;
   }
   else if (strcmp (extension, "vtp") == 0) {
     vtkNew < vtkXMLPolyDataReader > reader;
     reader->SetFileName (filename);
     if (!reader->CanReadFile (filename)) {
       t8_errorf ("Unable to read file %s.\n", filename);
-      return 1;
+      return 0;
     }
     reader->Update ();
     grid->ShallowCopy (reader->GetOutput ());
-    return 0;
+    return 1;
   }
   else if (strcmp (extension, "obj") == 0) {
     vtkNew < vtkOBJReader > reader;
     reader->SetFileName (filename);
     reader->Update ();
     grid->ShallowCopy (reader->GetOutput ());
-    return 0;
+    return 1;
   }
   else if (strcmp (extension, "stl") == 0) {
     vtkNew < vtkSTLReader > reader;
     reader->SetFileName (filename);
     reader->Update ();
     grid->ShallowCopy (reader->GetOutput ());
-    return 0;
+    return 1;
   }
   else if (strcmp (extension, "vtk") == 0) {
     vtkNew < vtkPolyDataReader > reader;
@@ -93,10 +92,10 @@ t8_read_poly_ext (const char *filename, vtkSmartPointer < vtkPolyData > grid)
     if (!reader->IsFilePolyData ()) {
       t8_errorf
         ("File-content is not polydata. If it is a vtkUnstructuredGrid use the unstructured Grid reader.");
-      return 1;
+      return 0;
     }
     grid->ShallowCopy (reader->GetOutput ());
-    return 0;
+    return 1;
   }
   else if (strcmp (extension, "g") == 0) {
     vtkNew < vtkBYUReader > reader;
@@ -104,12 +103,12 @@ t8_read_poly_ext (const char *filename, vtkSmartPointer < vtkPolyData > grid)
     reader->Update ();
     grid->ShallowCopy (reader->GetOutput ());
 
-    return 0;
+    return 1;
   }
   else {
     /* Return NULL if the reader is not used correctly. */
     t8_global_errorf ("Please use .ply, .vtp, .obj, .stl, .vtk or .g file\n");
-    return 1;
+    return 0;
   }
 }
 
@@ -136,6 +135,6 @@ t8_read_poly (const char *filename, vtkDataSet * grid)
   tri_filter->PassLinesOn ();
   tri_filter->Update ();
   grid->ShallowCopy (vtkDataSet::SafeDownCast (tri_filter->GetOutput ()));
-  return 0;
+  return 1;
 }
 #endif /* T8_WITH_VTK */
