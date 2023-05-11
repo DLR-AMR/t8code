@@ -65,21 +65,23 @@ t8_file_to_vtkGrid (const char *filename,
   SC_CHECK_MPI (mpiret);
   T8_ASSERT (filename != NULL);
   T8_ASSERT (0 <= main_proc && main_proc < mpisize);
+  int                 read_success = 1;
 
   /* Read the file and set the pointer to the */
   if (!partition || mpirank == main_proc) {
     switch (vtk_file_type) {
     case VTK_UNSTRUCTURED_FILE:
-      t8_read_unstructured (filename, vtkGrid);
+      read_success = t8_read_unstructured (filename, vtkGrid);
       break;
     case VTK_POLYDATA_FILE:
-      t8_read_poly (filename, vtkGrid);
+      read_success = t8_read_poly (filename, vtkGrid);
+      break;
     default:
       vtkGrid = NULL;
       t8_errorf ("Filetype not supported.\n");
       break;
     }
-    if (vtkGrid == NULL) {
+    if (!read_success) {
       t8_errorf ("Could not read file\n");
       if (partition) {
         main_proc_read_successful = 0;

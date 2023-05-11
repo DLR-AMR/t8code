@@ -46,7 +46,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * \return              0 if the file was read successfully, non-zero otherwise.               
  * 
  */
-void                t8_read_poly (const char *filename, vtkDataSet * grid);
+int                 t8_read_poly (const char *filename, vtkDataSet * grid);
 
 #endif /* T8_WITH_VTK */
 #endif /* T8_CMESH_VTK_POLYDATA */

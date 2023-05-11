@@ -32,9 +32,9 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 TEST (t8_cmesh_vtk_reader, dummy_test)
 {
 #if T8_WITH_VTK
-#else
   t8_cmesh_t          cmesh =
     t8_cmesh_vtk_reader (NULL, 0, 0, sc_MPI_COMM_WORLD, VTK_FILE_ERROR);
   EXPECT_TRUE (cmesh == NULL);
+#else
 #endif
 }
