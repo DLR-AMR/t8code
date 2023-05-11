@@ -67,7 +67,7 @@ t8_file_to_vtkGrid (const char *filename,
   T8_ASSERT (0 <= main_proc && main_proc < mpisize);
   int                 read_success = 0;
 
-  /* Read the file and set the pointer to the */
+  /* Read the file and fill the vtkDataSet pointer. */
   if (!partition || mpirank == main_proc) {
     switch (vtk_file_type) {
     case VTK_UNSTRUCTURED_FILE:
