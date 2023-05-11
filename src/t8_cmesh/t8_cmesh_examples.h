@@ -312,6 +312,7 @@ t8_cmesh_t          t8_cmesh_new_long_brick_pyramid (sc_MPI_Comm comm,
  */
 t8_cmesh_t          t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees,
                                                const int set_attributes,
+                                               const int do_partition,
                                                sc_MPI_Comm comm);
 
 T8_EXTERN_C_END ();

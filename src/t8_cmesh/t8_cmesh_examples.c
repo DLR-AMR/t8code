@@ -2529,7 +2529,7 @@ t8_cmesh_new_full_hybrid (sc_MPI_Comm comm)
 
 t8_cmesh_t
 t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees, const int set_attributes,
-                           sc_MPI_Comm comm)
+                           const int do_partition, sc_MPI_Comm comm)
 {
   T8_ASSERT (num_trees > 0);
 
@@ -2573,6 +2573,18 @@ t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees, const int set_attributes,
   /* Join the hexes. */
   for (t8_locidx_t tree_id = 0; tree_id < num_trees - 1; tree_id++) {
     t8_cmesh_set_join (cmesh, tree_id, tree_id + 1, 0, 1, 0);
+  }
+
+  if (do_partition) {
+    int                 mpirank, mpisize, mpiret;
+    int                 first_tree, last_tree;
+    mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Comm_size (comm, &mpisize);
+    SC_CHECK_MPI (mpiret);
+    first_tree = (mpirank * num_trees) / mpisize;
+    last_tree = ((mpirank + 1) * num_trees) / mpisize - 1;
+    t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
   }
 
   t8_cmesh_commit (cmesh, comm);
