@@ -79,6 +79,7 @@ libt8_internal_headers = \
   src/t8_cmesh/t8_cmesh_refine.h src/t8_cmesh/t8_cmesh_copy.h \
   src/t8_cmesh/t8_cmesh_offset.h \
   src/t8_cmesh/t8_cmesh_vtk_to_t8/t8_cmesh_vtk_polydata.hxx \
+  src/t8_cmesh/t8_cmesh_vtk_to_t8/t8_cmesh_vtk_unstructured.hxx \
   src/t8_forest/t8_forest_cxx.h  \
   src/t8_forest/t8_forest_ghost.h \
   src/t8_forest/t8_forest_balance.h src/t8_forest/t8_forest_types.h \

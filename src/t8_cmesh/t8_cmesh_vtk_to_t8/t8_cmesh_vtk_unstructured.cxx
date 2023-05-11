@@ -20,21 +20,30 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include "t8_cmesh_vtk_unstructured.hxx"
+
 #if T8_WITH_VTK
 #include <vtkUnstructuredGrid.h>
 #include <vtkUnstructuredGridReader.h>
 #include <vtkXMLUnstructuredGridReader.h>
-#include <t8_cmesh_vtk_unstructured.hxx>
+#include <vtkSmartPointer.h>
 
-void
-t8_read_unstructured_ext (const char *filename,
-                          vtkSmartPointer < vtkUnstructuredGrid > grid)
+int
+t8_read_unstructured (const char *filename, vtkDataSet * grid)
 {
   char                tmp[BUFSIZ], *extension;
-  /* Get the file-extension to decide which reader to use */
   strcpy (tmp, filename);
-  extension = strtok (tmp, ".");
-  extension = strtok (NULL, ".");
+  extension = strrchr (tmp, '.') + 1;
+  T8_ASSERT (strcmp (extension, ""));
+
+  /* Check if we can open the file. */
+  FILE               *first_check;
+  first_check = fopen (filename, "r");
+  if (first_check == NULL) {
+    t8_errorf ("Can not find the file %s\n", filename);
+    return 0;
+  }
+  fclose (first_check);
 
   /* Chose the vtk-Reader according to the file-ending and read the file */
   if (strcmp (extension, "vtu") == 0) {
@@ -42,13 +51,13 @@ t8_read_unstructured_ext (const char *filename,
       vtkSmartPointer < vtkXMLUnstructuredGridReader >::New ();
     if (!reader->CanReadFile (filename)) {
       t8_errorf ("Unable to read file.\n");
-      return;
+      return 0;
     }
     reader->SetFileName (filename);
     reader->Update ();
-    grid->ShallowCopy (reader->GetOutput ());
+    grid->ShallowCopy (vtkDataSet::SafeDownCast (reader->GetOutput ()));
     t8_debugf ("Finished reading of file.\n");
-    return;
+    return 1;
   }
   else if (strcmp (extension, "vtk") == 0) {
     vtkSmartPointer < vtkUnstructuredGridReader > reader =
@@ -57,18 +66,17 @@ t8_read_unstructured_ext (const char *filename,
     reader->Update ();
     if (!reader->IsFileUnstructuredGrid ()) {
       t8_errorf ("File-content is not an unstructured Grid. ");
-      return;
+      return 0;
     }
-    grid->ShallowCopy (reader->GetOutput ());
+    grid->ShallowCopy (vtkDataSet::SafeDownCast (reader->GetOutput ()));
     t8_debugf ("Finished reading of file.\n");
 
-    return;
+    return 1;
   }
   else {
     /* Return NULL if the reader is not used correctly */
     t8_global_errorf ("Please use .vtk or .vtu file\n");
-    return;
+    return 0;
   }
 }
-
 #endif

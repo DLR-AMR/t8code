@@ -26,8 +26,79 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 */
 
 #include <t8_cmesh_vtk_reader.hxx>
+#include "t8_cmesh_vtk_to_t8/t8_cmesh_vtk_unstructured.hxx"
+#include "t8_cmesh_vtk_to_t8/t8_cmesh_vtk_polydata.hxx"
+
+#if T8_WITH_VTK
+#include <vtkDataObject.h>
+#endif
 
 T8_EXTERN_C_BEGIN ();
+
+#if T8_WITH_VTK
+/**
+ * Read a vtk-file and ShallowCopy its content into a vtkDataSet.
+ * The success (or failure) of the reading process is communicated 
+ * over all processes.
+ * 
+ * \param[in] filename      The name of the file to read
+ * \param[in, out] vtkGrid  A pointer to a vtkDataSet. We ShallowCopy the grid there.
+ * \param[in] partition     Flag if the input is read partitioned
+ * \param[in] main_proc     The main reading proc.
+ * \param[in] comm          A communicator.
+ * \param[in] vtk_file_type The type of the Data in the file.
+ * \returns                 non-zero on success, zero if the reading failed.                
+ */
+int
+t8_file_to_vtkGrid (const char *filename,
+                    vtkDataSet * vtkGrid,
+                    const int partition, const int main_proc,
+                    sc_MPI_Comm comm, const vtk_file_type_t vtk_file_type)
+{
+  int                 main_proc_read_successful = 0;
+  int                 mpirank;
+  int                 mpisize;
+  int                 mpiret;
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  T8_ASSERT (filename != NULL);
+  T8_ASSERT (0 <= main_proc && main_proc < mpisize);
+  int                 read_success = 0;
+
+  /* Read the file and fill the vtkDataSet pointer. */
+  if (!partition || mpirank == main_proc) {
+    switch (vtk_file_type) {
+    case VTK_UNSTRUCTURED_FILE:
+      read_success = t8_read_unstructured (filename, vtkGrid);
+      break;
+    case VTK_POLYDATA_FILE:
+      read_success = t8_read_poly (filename, vtkGrid);
+      break;
+    default:
+      vtkGrid = NULL;
+      t8_errorf ("Filetype not supported.\n");
+      break;
+    }
+    if (!read_success) {
+      t8_errorf ("Could not read file\n");
+      if (partition) {
+        main_proc_read_successful = 0;
+        sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc,
+                      comm);
+      }
+    }
+    else {
+      main_proc_read_successful = 1;
+    }
+  }
+  if (partition) {
+    sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc, comm);
+  }
+  return main_proc_read_successful;
+}
+#endif
 
 t8_cmesh_t
 t8_cmesh_vtk_reader (const char *filename, const int partition,
@@ -35,7 +106,41 @@ t8_cmesh_vtk_reader (const char *filename, const int partition,
                      const vtk_file_type_t vtk_file_type)
 {
 #if T8_WITH_VTK
-  SC_ABORT ("This function is not yet implemented.\n");
+  t8_cmesh_t          cmesh;
+  int                 mpisize;
+  int                 mpirank;
+  int                 mpiret;
+  /* Get the size of the communicator and the rank of the process. */
+  mpiret = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+
+  /* Ensure that the main-proc is a valid proc. */
+  T8_ASSERT (0 <= main_proc && main_proc < mpisize);
+  T8_ASSERT (filename != NULL);
+  int                 main_proc_read_successful = 0;
+
+  vtkDataSet         *vtkGrid = NULL;
+  T8_ASSERT (partition == 0 || (main_proc >= 0 && main_proc < mpisize));
+  /* Read the file and set the pointer. */
+  main_proc_read_successful =
+    t8_file_to_vtkGrid (filename, vtkGrid, partition, main_proc, comm,
+                        vtk_file_type);
+  if (!main_proc_read_successful) {
+    t8_global_errorf
+      ("Main process (Rank %i) did not read the file successfully.\n",
+       main_proc);
+    return NULL;
+  }
+  else {
+    /*TODO: translate the vtkGrid into a cmesh and partition it. */
+    SC_ABORT
+      ("The translation from a vtkGrid to a cmesh is not implemented yet.\n");
+    return NULL;
+  }
+  T8_ASSERT (cmesh != NULL);
+  return cmesh;
 #else
   /* Return NULL if not linked against vtk */
   t8_global_errorf
