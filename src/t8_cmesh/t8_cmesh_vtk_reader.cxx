@@ -113,7 +113,15 @@ t8_cmesh_correct_volume (double *tree_vertices, t8_eclass_t eclass)
 }
 
 #if T8_WITH_VTK
-
+/*
+ * \param[in] filename      The name of the file to read
+ * \param[in, out] vtkGrid  A pointer to a vtkDataSet. We ShallowCopy the grid there.
+ * \param[in] partition     Flag if the input is read partitioned
+ * \param[in] main_proc     The main reading proc.
+ * \param[in] comm          A communicator.
+ * \param[in] vtk_file_type The type of the Data in the file.
+ * \returns                 non-zero on success, zero if the reading failed.  
+ */
 vtk_read_success_t
 t8_file_to_vtkGrid (const char *filename,
                     vtkSmartPointer < vtkDataSet > vtkGrid,

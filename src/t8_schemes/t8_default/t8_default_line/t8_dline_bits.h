@@ -21,6 +21,7 @@
 */
 
 /** \file t8_dline_bits.h
+ * Definitions of line-specific functions.
  */
 
 #ifndef T8_DLINE_BITS_H
@@ -240,6 +241,19 @@ void                t8_dline_vertex_coords (const t8_dline_t *elem,
 void                t8_dline_vertex_ref_coords (const t8_dline_t *elem,
                                                 const int vertex,
                                                 double coordinates[1]);
+
+/** Convert a point in the reference space of a line element to a point in the
+ *  reference space of the tree (level 0) embedded in [0,1]^1.
+ * \param [in]  elem       Input line.
+ * \param [in]  ref_coords The reference coordinate on the line [0, 1]^1
+ * \param [out] out_coords An array of 1 double that
+ * 		                     will be filled with the reference coordinates
+ *                         of the point on the line.
+ */
+void                t8_dline_compute_reference_coords (const t8_dline_t *elem,
+                                                       const double
+                                                       *ref_coords,
+                                                       double *out_coords);
 
 /** Computes the linear position of a line in an uniform grid.
  * \param [in] line  Line whose id will be computed.
