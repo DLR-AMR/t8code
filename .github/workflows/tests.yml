@@ -60,7 +60,7 @@ jobs:
     - name: Run t8-dependencies docker image
       run: docker run -d --name t8-dependencies dlramr/t8code-ubuntu:t8-dependencies
     - name: Enter container interactively
-      run: docker exec -it t8-dependencies bash
+      run: docker exec -i t8-dependencies bash
     - name: Install actions-runner
       run: mkdir actions-runner && cd actions-runner
        && curl -O -L https://github.com/actions/runner/releases/download/v2.304.0/actions-runner-linux-x64-2.304.0.tar.gz
