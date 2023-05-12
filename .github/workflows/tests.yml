@@ -53,13 +53,14 @@ jobs:
     container: dlramr/t8code-ubuntu:t8-dependencies
     timeout-minutes: 90
     steps:
-
+#
 # Setup and bootstrap
 #
     - uses: actions/checkout@v1
     - name: Update packages
       run: apt-get update && apt-get upgrade -y
-    - name: disable ownership checks # We are in a container and therefore, we have a different git user
+      # This seems to be necessary because of the docker container
+    - name: disable ownership checks
       run: git config --global --add safe.directory '*'
     - name: init submodules
       run: git submodule init
@@ -412,7 +413,7 @@ jobs:
       if: failure()
       uses: actions/upload-artifact@v1
       with:
-        name: config_debug_debug.log
+        name: config_debug_serial.log
         path: build_netcdf/config.log
     - name: make
       run: cd build_netcdf && make -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
