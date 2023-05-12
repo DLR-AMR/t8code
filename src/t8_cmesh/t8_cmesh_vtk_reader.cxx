@@ -170,7 +170,7 @@ t8_file_to_vtkGrid (const char *filename,
  * \param[in] vtkGrid The vtkDataSet
  * \return The dimension of \a vtkGrid. 
  */
-int
+static int
 t8_get_dimension (vtkSmartPointer < vtkDataSet > vtkGrid)
 {
   /* This array contains the type of each cell */
@@ -208,7 +208,7 @@ t8_get_dimension (vtkSmartPointer < vtkDataSet > vtkGrid)
  * \return  The number of elements that have been read by the process.  
  */
 
-t8_gloidx_t
+static t8_gloidx_t
 t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > vtkGrid,
                       t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
