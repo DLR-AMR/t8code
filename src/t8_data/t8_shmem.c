@@ -218,6 +218,36 @@ t8_shmem_array_allgather (const void *sendbuf, int sendcount,
                       recvcount, recvtype, recvarray->comm);
 }
 
+/**
+ * Computes the recvcounter- and displacementarray for 
+ * an MPI_Gatherv
+ * 
+ * \param[in] sendcount The number of items this proc sends
+ * \param[in, out] recvcounts On input a zero-initialized array that is going to be filled with the number of elements send by rank i
+ * \param[in, out] displs On input a zero-initialized  array that is going to be filled with the displacements
+ * \returns   The total number of items 
+ */
+static int
+t8_compute_recvcounts_displs (int sendcount, int *recvcounts, int *displs,
+                              int elem_size, sc_MPI_Comm comm)
+{
+  int                 mpisize;
+  int                 mpiret = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+
+  mpiret = sc_MPI_Allgather ((void *) &sendcount, 1, sc_MPI_INT, recvcounts,
+                             1, sc_MPI_INT, comm);
+  SC_CHECK_MPI (mpiret);
+
+  int                 recv_total = recvcounts[0];
+  for (int i = 1; i < mpisize; i++) {
+    displs[i] = displs[i - 1] + recvcounts[i - 1];
+    recv_total += recvcounts[i];
+  }
+
+  return recv_total;
+}
+
 static void
 t8_shmem_array_allgatherv_common (const void *sendbuf,
                                   int sendcount,
@@ -244,14 +274,9 @@ t8_shmem_array_allgatherv_common (const void *sendbuf,
   int                *intra_displ = T8_ALLOC_ZERO (int, intrasize);
   int                *intra_recvcounts = T8_ALLOC_ZERO (int, intrasize);
 
-  sc_MPI_Allgather ((void *) &sendcount, 1, sc_MPI_INT, intra_recvcounts,
-                    intrasize, sc_MPI_INT, intranode);
-  SC_CHECK_MPI (mpiret);
-  int                 intra_recv_total = intra_recvcounts[0];
-  for (int i = 1; i < intersize; i++) {
-    intra_displ[i] = intra_displ[i - 1] + intra_recvcounts[i - 1];
-    intra_recv_total += intra_recvcounts[i];
-  }
+  int                 intra_recv_total =
+    t8_compute_recvcounts_displs (sendcount, intra_recvcounts, intra_displ,
+                                  sizeof (sendtype), intranode);
   if (!intrarank) {
     noderecvchar = SC_ALLOC (char, intra_recv_total * typesize);
   }
@@ -263,15 +288,11 @@ t8_shmem_array_allgatherv_common (const void *sendbuf,
   int                *inter_displ = T8_ALLOC_ZERO (int, intersize);
   int                *inter_recvcount = T8_ALLOC_ZERO (int, intersize);
 
-  sc_MPI_Allgather ((void *) &intra_recv_total, 1, sc_MPI_INT,
-                    inter_recvcount, intersize, sc_MPI_INT, internode);
-  SC_CHECK_MPI (mpiret);
-  for (int i = 1; i < intersize; i++) {
-    inter_displ[i] = inter_displ[i - 1] + inter_recvcount[i - 1];
-  }
+  t8_compute_recvcounts_displs (intra_recv_total, inter_recvcount,
+                                inter_displ, sizeof (sendtype), internode);
 
   /* node root allgathers between nodes */
-  if (sc_shmem_write_start (recvarray->array, comm)) {
+  if (t8_shmem_array_start_writing (recvarray)) {
     mpiret =
       sc_MPI_Allgatherv (noderecvchar, intra_recv_total, sendtype,
                          recvarray->array, inter_recvcount, inter_displ,
@@ -279,7 +300,7 @@ t8_shmem_array_allgatherv_common (const void *sendbuf,
     SC_CHECK_MPI (mpiret);
     SC_FREE (noderecvchar);
   }
-  sc_shmem_write_end (recvarray->array, comm);
+  t8_shmem_array_end_writing (recvarray);
   T8_FREE (inter_displ);
   T8_FREE (inter_recvcount);
   T8_FREE (intra_displ);
@@ -302,6 +323,10 @@ t8_shmem_array_allgatherv (const void *sendbuf,
     sc_MPI_COMM_NULL;
 
   type = sc_shmem_get_type (comm);
+  if (type == SC_SHMEM_NOT_SET) {
+    type = sc_shmem_default_type;
+    sc_shmem_set_type (comm, type);
+  }
   sc_mpi_comm_get_node_comms (comm, &intranode, &internode);
   if (intranode == sc_MPI_COMM_NULL || internode == sc_MPI_COMM_NULL) {
     type = SC_SHMEM_BASIC;
@@ -309,24 +334,28 @@ t8_shmem_array_allgatherv (const void *sendbuf,
   switch (type) {
   case SC_SHMEM_BASIC:
   case SC_SHMEM_PRESCAN:
-    int                 mpi_size;
-    int                 mpiret = sc_MPI_Comm_size (comm, &mpi_size);
+    int                 mpisize;
+    int                 mpirank;
+    int                 mpiret;
+    mpiret = sc_MPI_Comm_size (comm, &mpisize);
     SC_CHECK_MPI (mpiret);
-    int                *displ = T8_ALLOC_ZERO (int, mpi_size);
-    int                *recvcounts = T8_ALLOC_ZERO (int, mpi_size);
+    mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+    SC_CHECK_MPI (mpiret);
 
-    mpiret = sc_MPI_Allgather ((void *) &sendcount, 1, sc_MPI_INT, recvcounts,
-                               mpi_size, sc_MPI_INT, intranode);
-    SC_CHECK_MPI (mpiret);
-    for (int i = 1; i < mpi_size; i++) {
-      displ[i] = displ[i - 1] + recvcounts[i - 1];
-    }
+    int                *displs = T8_ALLOC_ZERO (int, mpisize);
+    int                *recvcounts = T8_ALLOC_ZERO (int, mpisize);
+
+    t8_compute_recvcounts_displs (sendcount, recvcounts, displs,
+                                  sizeof (sendtype), comm);
+
     mpiret =
       sc_MPI_Allgatherv ((void *) sendbuf, sendcount, sendtype,
-                         recvarray->array, recvcounts, displ, recvtype, comm);
+                         recvarray->array, recvcounts, displs, recvtype,
+                         comm);
     SC_CHECK_MPI (mpiret);
+
     T8_FREE (recvcounts);
-    T8_FREE (displ);
+    T8_FREE (displs);
     break;
 #if defined(__bgq__) || defined(SC_ENABLE_MPIWINSHARED)
 #if defined(__bgq__)
