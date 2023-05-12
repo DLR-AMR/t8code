@@ -63,9 +63,9 @@ jobs:
       run: docker exec -it t8-dependencies bash
     - name: Install actions-runner
       run: mkdir actions-runner && cd actions-runner
-      && curl -O -L https://github.com/actions/runner/releases/download/v2.304.0/actions-runner-linux-x64-2.304.0.tar.gz
-      && tar xzf ./actions-runner-linux-x64-2.304.0.tar.gz
-      && ./actions-runner/bin/installdependencies.sh
+       && curl -O -L https://github.com/actions/runner/releases/download/v2.304.0/actions-runner-linux-x64-2.304.0.tar.gz
+       && tar xzf ./actions-runner-linux-x64-2.304.0.tar.gz
+       && ./actions-runner/bin/installdependencies.sh
 
 # Setup and bootstrap
 #
