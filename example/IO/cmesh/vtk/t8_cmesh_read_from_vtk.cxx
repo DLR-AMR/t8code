@@ -108,7 +108,6 @@ t8_forest_construct_from_vtk (const char *prefix, sc_MPI_Comm comm,
 
   /* Write the forest */
   snprintf (out_file, BUFSIZ - 7, "%s_forest", out_prefix);
-  t8_cmesh_vtk_write_file (cmesh_in, out_file, 1.0);
   t8_forest_write_vtk_ext (forest, out_file, 1, 1, 1, 1, 1, 0, 1,
                            values_per_cell, vtk_data);
 
