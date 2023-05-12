@@ -49,18 +49,16 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-20.04
+    runs-on: dlramr/t8code-ubuntu:t8-dependencies
     
     timeout-minutes: 90
     steps:
-#
+
 # Setup and bootstrap
 #
     - uses: actions/checkout@v1
-    - name: Install mpich
-      run: sudo apt-get update && sudo apt-get install libmpich-dev
-    - name: Install zlib
-      run: sudo apt-get install libz-dev
+    - name: Update packages
+      run: sudo apt-get update && sudo apt-get upgrade -y
     - name: init submodules
       run: git submodule init
     - name: update submodules
@@ -303,6 +301,8 @@ jobs:
         path: build_release/config.log
     - name: make
       run: cd build_release && make -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
+    - name: make install
+      run: cd build_release && make install -j
     - name: make check
       run: cd build_release && make check -j4 V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
     - name: OnFailUploadLog
@@ -324,8 +324,9 @@ jobs:
         path: build_debug/config.log
     - name: make
       run: cd build_debug && make -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
+    - name: make install
+      run: cd build_release && make install -j
     - name: make check
-
       run: cd build_debug && make check -j4 V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
     - name: OnFailUploadLog
       if: failure()
@@ -346,6 +347,8 @@ jobs:
         path: build_release_cpp/config.log
     - name: make
       run: cd build_release_cpp && make -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
+    - name: make install
+      run: cd build_release && make install -j
     - name: make check
       run: cd build_release_cpp && make check -j4 V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
     - name: OnFailUploadLog
@@ -367,6 +370,8 @@ jobs:
         path: build_serial_release/config.log
     - name: make
       run: cd build_serial_release && make -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
+    - name: make install
+      run: cd build_release && make install -j
     - name: make check
       run: cd build_serial_release && make check -j4 V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
     - name: OnFailUploadLog
@@ -388,6 +393,8 @@ jobs:
         path: build_serial_debug/config.log
     - name: make
       run: cd build_serial_release && make -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
+    - name: make install
+      run: cd build_release && make install -j
     - name: make check
       run: cd build_serial_release && make check -j4 V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
     - name: OnFailUploadLog
@@ -396,19 +403,19 @@ jobs:
       with:
         name: test-suite_release_serial.log
         path: build_serial_release/test-suite.log
-# configure and test with MPI and netcdf
-    - name: Install netcdf
-      run: sudo apt-get install libnetcdf-dev
+# configure and test with MPI and netcdf (debug mode)
     - name: configure
-      run: mkdir build_netcdf && cd build_netcdf && ../configure $CONFIG_RELEASE --with-netcdf CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
+      run: mkdir build_netcdf && cd build_netcdf && ../configure $CONFIG_DEBUG --with-netcdf CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v1
       with:
-        name: config_debug_serial.log
+        name: config_debug_debug.log
         path: build_netcdf/config.log
     - name: make
       run: cd build_netcdf && make -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
+    - name: make install
+      run: cd build_release && make install -j
     - name: make check
       run: cd build_netcdf && make check -j4 V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
     - name: OnFailUploadLog
@@ -417,19 +424,19 @@ jobs:
       with:
         name: test-suite_netcdf.log
         path: build_netcdf/test-suite.log
-# configure and test with MPI and OpenCASCADE
-    - name: Install OpenCASCADE
-      run: sudo apt-get install libocct-foundation-dev libocct-modeling-algorithms-dev libocct-modeling-data-dev
+# configure and test with MPI and OpenCASCADE (debug mode)
     - name: configure
-      run: mkdir build_occ && cd build_occ && ../configure $CONFIG_RELEASE --with-occ CFLAGS="$CFLAGS_var -I/usr/include/opencascade" CXXFLAGS="$CXXFLAGS_var -I/usr/include/opencascade"
+      run: mkdir build_occ && cd build_occ && ../configure $CONFIG_DEBUG --with-occ CFLAGS="$CFLAGS_var -I/usr/include/opencascade" CXXFLAGS="$CXXFLAGS_var -I/usr/include/opencascade"
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v1
       with:
-        name: config_occ_release_MPI.log
+        name: config_occ_debug_MPI.log
         path: build_occ/config.log
     - name: make
       run: cd build_occ && make -j V=0 CFLAGS="$CFLAGS_var -Werror -I/usr/include/opencascade" CXXFLAGS="$CXXFLAGS_var -Werror -I/usr/include/opencascade"
+    - name: make install
+      run: cd build_release && make install -j
     - name: make check
       run: cd build_occ && make check -j4 V=0 CFLAGS="$CFLAGS_var -Werror -I/usr/include/opencascade" CXXFLAGS="$CXXFLAGS_var -Werror -I/usr/include/opencascade"
     - name: OnFailUploadLog
@@ -438,3 +445,24 @@ jobs:
       with:
         name: test-suite_occ.log
         path: build_occ/test-suite.log
+# configure and test with MPI and VTK (debug mode)
+    - name: configure
+      run: mkdir build_vtk && cd build_vtk && ../configure $CONFIG_DEBUG --with-vtk --with-vtk_version_number=9.2 CFLAGS="$CFLAGS_var -I/usr/local/include/vtk-9.2" CXXFLAGS="$CXXFLAGS_var -I/usr/local/include/vtk-9.2"
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v1
+      with:
+        name: config_vtk_debug_MPI.log
+        path: build_vtk/config.log
+    - name: make
+      run: cd build_vtk && make -j V=0 CFLAGS="$CFLAGS_var -Werror -I/usr/local/include/vtk-9.2" CXXFLAGS="$CXXFLAGS_var -Werror -I/usr/local/include/vtk-9.2"
+    - name: make install
+      run: cd build_release && make install -j
+    - name: make check
+      run: cd build_vtk && make check -j4 V=0 CFLAGS="$CFLAGS_var -Werror -I/usr/local/include/vtk-9.2" CXXFLAGS="$CXXFLAGS_var -Werror -I/usr/local/include/vtk-9.2"
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v1
+      with:
+        name: test-suite_vtk.log
+        path: build_vtk/test-suite.log
