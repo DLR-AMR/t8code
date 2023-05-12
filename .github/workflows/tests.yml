@@ -50,17 +50,9 @@ jobs:
   build:
 
     runs-on: ubuntu-20.04
-    
+    container: dlramr/t8code-ubuntu:t8-dependencies
     timeout-minutes: 90
     steps:
-
-# Pull latest t8-dependencies docker image
-    - name: Pull t8-dependencies docker image
-      run: docker pull dlramr/t8code-ubuntu:t8-dependencies
-    - name: Run t8-dependencies docker image
-      run: docker run -d --name t8-dependencies dlramr/t8code-ubuntu:t8-dependencies
-    - name: Enter container interactively
-      run: docker exec -i t8-dependencies bash
 
 # Setup and bootstrap
 #
