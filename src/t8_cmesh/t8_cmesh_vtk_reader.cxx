@@ -358,7 +358,8 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet > vtkGrid,
     t8_debugf ("[D] dim: %i\n", dim);
     /* Communicate the number of trees to all processes. 
      * TODO: This probably crashes when a vtkGrid is distributed in many 
-     * files. */
+     * files. Replace with an sc_MPI_Reduce and compute the ranges per Process
+     * properly. */
     sc_MPI_Bcast (&num_trees, 1, T8_MPI_GLOIDX, main_proc, comm);
     t8_cmesh_set_dimension (cmesh, dim);
     /* Build the partition. */
