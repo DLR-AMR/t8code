@@ -294,7 +294,7 @@ jobs:
       run: echo "Checking release mode (MPI)"
     - name: echo configure line
       run: echo configure $CONFIG_RELEASE
-    - name: configure
+    - name: configure MPI release
       run: mkdir build_release && cd build_release && ../configure $CONFIG_RELEASE CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
     - name: OnFailUploadLog
       if: failure()
@@ -317,7 +317,7 @@ jobs:
 # configure and test with MPI (debug mode)
     - name: check debugging mode
       run: echo "Checking debug mode"
-    - name: configure
+    - name: configure MPI debug
       run: mkdir build_debug && cd build_debug && ../configure $CONFIG_DEBUG CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
     - name: OnFailUploadLog
       if: failure()
@@ -340,7 +340,7 @@ jobs:
 # configure and test with MPI (C++ compiler only, release mode)
     - name: check C++ compiler
       run: echo "Checking C++, release mode (MPI)"
-    - name: configure
+    - name: configure MPI release (only C++ compiler)
       run: mkdir build_release_cpp &&cd build_release_cpp && ../configure CC=mpicxx CXX=mpicxx $CONFIG_RELEASE CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
     - name: OnFailUploadLog
       if: failure()
@@ -362,8 +362,8 @@ jobs:
         path: build_release_cpp/test-suite.log
 # configure and test serial (release mode)
     - name: check serial
-      run: echo "Checking serial release mode"
-    - name: configure
+      run: echo "Checking release mode in serial"
+    - name: configure serial release
       run: mkdir build_serial_release && cd build_serial_release && ../configure $CONFIG_SERIAL_RELEASE CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
     - name: OnFailUploadLog
       if: failure()
@@ -384,9 +384,9 @@ jobs:
         name: test-suite_release_serial.log
         path: build_serial_release/test-suite.log
 # configure and test serial (debug mode)
-    - name: check serial
-      run: echo "Checking debugging mode"
-    - name: configure
+    - name: check serial debug
+      run: echo "Checking debugging mode in serial"
+    - name: configure serial debug
       run: mkdir build_serial_debug && cd build_serial_debug && ../configure $CONFIG_SERIAL_DEBUG CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
     - name: OnFailUploadLog
       if: failure()
@@ -407,7 +407,9 @@ jobs:
         name: test-suite_release_serial.log
         path: build_serial_release/test-suite.log
 # configure and test with MPI and netcdf (debug mode)
-    - name: configure
+    - name: check NetCDF
+      run: echo "Checking NetCDF with MPI in debugging mode"
+    - name: configure MPI NetCDF debug
       run: mkdir build_netcdf && cd build_netcdf && ../configure $CONFIG_DEBUG --with-netcdf CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
     - name: OnFailUploadLog
       if: failure()
@@ -428,7 +430,9 @@ jobs:
         name: test-suite_netcdf.log
         path: build_netcdf/test-suite.log
 # configure and test with MPI and OpenCASCADE (debug mode)
-    - name: configure
+    - name: check OpenCASCADE
+      run: echo "Checking OpenCASCADE with MPI in debugging mode"
+    - name: configure MPI OpenCASCADE debug
       run: mkdir build_occ && cd build_occ && ../configure $CONFIG_DEBUG --with-occ CFLAGS="$CFLAGS_var -I/usr/include/opencascade" CXXFLAGS="$CXXFLAGS_var -I/usr/include/opencascade"
     - name: OnFailUploadLog
       if: failure()
@@ -449,7 +453,9 @@ jobs:
         name: test-suite_occ.log
         path: build_occ/test-suite.log
 # configure and test with MPI and VTK (debug mode)
-    - name: configure
+    - name: check VTK
+      run: echo "Checking VTK with MPI in debugging mode"
+    - name: configure MPI VTK debug
       run: mkdir build_vtk && cd build_vtk && ../configure $CONFIG_DEBUG --with-vtk --with-vtk_version_number=9.2 CFLAGS="$CFLAGS_var -I/usr/local/include/vtk-9.2" CXXFLAGS="$CXXFLAGS_var -I/usr/local/include/vtk-9.2"
     - name: OnFailUploadLog
       if: failure()
