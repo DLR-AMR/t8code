@@ -218,6 +218,134 @@ t8_shmem_array_allgather (const void *sendbuf, int sendcount,
                       recvcount, recvtype, recvarray->comm);
 }
 
+static void
+t8_shmem_array_allgatherv_common (const void *sendbuf,
+                                  int sendcount,
+                                  sc_MPI_Datatype sendtype,
+                                  t8_shmem_array_t recvarray,
+                                  sc_MPI_Datatype recvtype,
+                                  sc_MPI_Comm comm, sc_MPI_Comm intranode,
+                                  sc_MPI_Comm internode)
+{
+  size_t              typesize;
+  int                 mpiret, intrarank, intrasize, intersize;
+  char               *noderecvchar = NULL;
+
+  typesize = sc_mpi_sizeof (recvtype);
+
+  mpiret = sc_MPI_Comm_rank (intranode, &intrarank);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_size (intranode, &intrasize);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_size (internode, &intersize);
+  SC_CHECK_MPI (mpiret);
+
+  /* node root gathers from node */
+  int                *intra_displ = T8_ALLOC_ZERO (int, intrasize);
+  int                *intra_recvcounts = T8_ALLOC_ZERO (int, intrasize);
+
+  sc_MPI_Allgather ((void *) &sendcount, 1, sc_MPI_INT, intra_recvcounts,
+                    intrasize, sc_MPI_INT, intranode);
+  SC_CHECK_MPI (mpiret);
+  int                 intra_recv_total = intra_recvcounts[0];
+  for (int i = 1; i < intersize; i++) {
+    intra_displ[i] = intra_displ[i - 1] + intra_recvcounts[i - 1];
+    intra_recv_total += intra_recvcounts[i];
+  }
+  if (!intrarank) {
+    noderecvchar = SC_ALLOC (char, intra_recv_total * typesize);
+  }
+  mpiret =
+    sc_MPI_Gatherv (sendbuf, sendcount, sendtype, noderecvchar,
+                    intra_recvcounts, intra_displ, recvtype, 0, intranode);
+  SC_CHECK_MPI (mpiret);
+
+  int                *inter_displ = T8_ALLOC_ZERO (int, intersize);
+  int                *inter_recvcount = T8_ALLOC_ZERO (int, intersize);
+
+  sc_MPI_Allgather ((void *) &intra_recv_total, 1, sc_MPI_INT,
+                    inter_recvcount, intersize, sc_MPI_INT, internode);
+  SC_CHECK_MPI (mpiret);
+  for (int i = 1; i < intersize; i++) {
+    inter_displ[i] = inter_displ[i - 1] + inter_recvcount[i - 1];
+  }
+
+  /* node root allgathers between nodes */
+  if (sc_shmem_write_start (recvarray->array, comm)) {
+    mpiret =
+      sc_MPI_Allgatherv (noderecvchar, intra_recv_total, sendtype,
+                         recvarray->array, inter_recvcount, inter_displ,
+                         recvtype, internode);
+    SC_CHECK_MPI (mpiret);
+    SC_FREE (noderecvchar);
+  }
+  sc_shmem_write_end (recvarray->array, comm);
+  T8_FREE (inter_displ);
+  T8_FREE (inter_recvcount);
+  T8_FREE (intra_displ);
+  T8_FREE (intra_recvcounts);
+}
+
+void
+t8_shmem_array_allgatherv (const void *sendbuf,
+                           int sendcount,
+                           sc_MPI_Datatype
+                           sendtype,
+                           t8_shmem_array_t
+                           recvarray,
+                           sc_MPI_Datatype recvtype, sc_MPI_Comm comm)
+{
+  T8_ASSERT (t8_shmem_array_is_initialized (recvarray));
+  T8_ASSERT (!t8_shmem_array_is_writing_possible (recvarray));
+  sc_shmem_type_t     type;
+  sc_MPI_Comm         intranode = sc_MPI_COMM_NULL, internode =
+    sc_MPI_COMM_NULL;
+
+  type = sc_shmem_get_type (comm);
+  sc_mpi_comm_get_node_comms (comm, &intranode, &internode);
+  if (intranode == sc_MPI_COMM_NULL || internode == sc_MPI_COMM_NULL) {
+    type = SC_SHMEM_BASIC;
+  }
+  switch (type) {
+  case SC_SHMEM_BASIC:
+  case SC_SHMEM_PRESCAN:
+    int                 mpi_size;
+    int                 mpiret = sc_MPI_Comm_size (comm, &mpi_size);
+    SC_CHECK_MPI (mpiret);
+    int                *displ = T8_ALLOC_ZERO (int, mpi_size);
+    int                *recvcounts = T8_ALLOC_ZERO (int, mpi_size);
+
+    mpiret = sc_MPI_Allgather ((void *) &sendcount, 1, sc_MPI_INT, recvcounts,
+                               mpi_size, sc_MPI_INT, intranode);
+    SC_CHECK_MPI (mpiret);
+    for (int i = 1; i < mpi_size; i++) {
+      displ[i] = displ[i - 1] + recvcounts[i - 1];
+    }
+    mpiret =
+      sc_MPI_Allgatherv ((void *) sendbuf, sendcount, sendtype,
+                         recvarray->array, recvcounts, displ, recvtype, comm);
+    SC_CHECK_MPI (mpiret);
+    T8_FREE (recvcounts);
+    T8_FREE (displ);
+    break;
+#if defined(__bgq__) || defined(SC_ENABLE_MPIWINSHARED)
+#if defined(__bgq__)
+  case SC_SHMEM_BGQ:
+  case SC_SHMEM_BGQ_PRESCAN:
+#endif
+#if defined(SC_ENABLE_MPIWINSHARED)
+  case SC_SHMEM_WINDOW:
+  case SC_SHMEM_WINDOW_PRESCAN:
+#endif
+    t8_shmem_array_allgatherv_common (sendbuf, sendcount, sendtype, recvarray,
+                                      recvtype, comm, intranode, internode);
+    break;
+#endif
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
+}
+
 sc_MPI_Comm
 t8_shmem_array_get_comm (t8_shmem_array_t array)
 {
