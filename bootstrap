@@ -1,7 +1,7 @@
 #! /bin/sh
 
-# Call this without arguments if T8 is the toplevel package.
-# Call this with two arguments if T8 is itself a subdirectory:
+# Call this without arguments if t8code is the toplevel package.
+# Call this with two arguments if t8code is itself a subdirectory:
 # ./bootstrap <sc config directory> <p4est config directory>
 
 # RUNNING BOOTSTRAP FOR LIBSC
@@ -50,6 +50,8 @@ fi
 
 echo "--- This is the bootstrap script for t8code ---"
 echo "Current directory is $PWD"
+
+rm -rf autom4te.cache
 
 LIBTOOLIZE=`which glibtoolize`
 if test ! -x "$LIBTOOLIZE" ; then LIBTOOLIZE=`which libtoolize` ; fi

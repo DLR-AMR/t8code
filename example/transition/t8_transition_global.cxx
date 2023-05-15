@@ -32,7 +32,7 @@
 #include "t8_eclass.h"
 #define DO_TRANSITION_QUAD_SCHEME 1
 
-#include "t8_forest.h"
+#include "t8_forest/t8_forest_general.h"
 #include <cstring>
 #if DO_TRANSITION_QUAD_SCHEME
 #include <t8_schemes/t8_transition/t8_transition_conformal_quad/t8_transition_conformal_quad_cxx.hxx>
@@ -40,6 +40,7 @@
 #else
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #endif
+#include <t8_forest/t8_forest_io.h> // to write vtk
 #include <t8_vec.h>
 #include <example/common/t8_example_common.h>
 #include <t8_cmesh/t8_cmesh_examples.h> /* for cmesh initialization via for example t8_cmesh_new_hypercube */
@@ -320,7 +321,7 @@ t8_transition_global (void)
 
   /* adaptation setting */
   int                 set_balance = 1;
-  int                 set_transition = 0;
+  int                 set_transition = 1;
 
   /* cmesh settings */
   int                 single_tree_mesh = 1;
@@ -337,7 +338,7 @@ t8_transition_global (void)
   int                 ghost_version = 1;        /* use v1 for transitioned forests */
 
   /* LFN settings */
-  int                 do_LFN_test = 0;
+  int                 do_LFN_test = 1;
 
   /* vtk setting */
   int                 do_vtk = 1;

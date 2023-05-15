@@ -30,7 +30,7 @@
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_adapt.h>
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
 #include <t8_element_cxx.hxx>
 #include <t8_schemes/t8_transition/t8_transition_conformal_quad/t8_transition_conformal_quad_cxx.hxx>
 #include <t8_schemes/t8_transition/t8_transition_cxx.hxx>

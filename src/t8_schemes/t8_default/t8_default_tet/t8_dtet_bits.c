@@ -27,13 +27,6 @@ int
 t8_dtet_is_familypv (const t8_dtri_t *f[])
 {
   const int8_t        level = f[0]->level;
-  t8_dtet_coord_t     coords0[T8_DTET_CHILDREN];
-  t8_dtet_coord_t     coords1[T8_DTET_CHILDREN];
-  t8_dtet_coord_t     coords2[T8_DTET_CHILDREN];
-  t8_dtet_coord_t     inc;
-  int                 local_ind, type;
-  int                 dir1, dir2, dir3;
-
   if (level == 0 || level != f[1]->level ||
       level != f[2]->level || level != f[3]->level
       || level != f[4]->level || level != f[5]->level ||
@@ -41,8 +34,8 @@ t8_dtet_is_familypv (const t8_dtri_t *f[])
     return 0;
   }
   /* check whether the types are correct */
-  type = f[0]->type;
-  for (local_ind = 1; local_ind < T8_DTET_CHILDREN - 1; local_ind++) {
+  const int           type = f[0]->type;
+  for (int local_ind = 1; local_ind < T8_DTET_CHILDREN - 1; local_ind++) {
     if (f[local_ind]->type != t8_dtet_type_of_child_morton[type][local_ind]) {
       return 0;
     }
@@ -62,10 +55,13 @@ t8_dtet_is_familypv (const t8_dtri_t *f[])
    *   plus the element length.
    * - The coordinate dir3 of tet 7 is coordinate dir3 of tet 0
    */
-  dir1 = type / 2;
-  dir2 = 2 - type % 3;
-  dir3 = ((type + 3) % 6) / 2;
-  inc = T8_DTET_LEN (level);
+  const int           dir1 = type / 2;
+  const int           dir2 = 2 - type % 3;
+  const int           dir3 = ((type + 3) % 6) / 2;
+  const t8_dtet_coord_t inc = T8_DTET_LEN (level);
+  t8_dtet_coord_t     coords0[T8_DTET_CHILDREN];
+  t8_dtet_coord_t     coords1[T8_DTET_CHILDREN];
+  t8_dtet_coord_t     coords2[T8_DTET_CHILDREN];
   coords0[0] = f[0]->x;
   coords0[1] = f[0]->y;
   coords0[2] = f[0]->z;

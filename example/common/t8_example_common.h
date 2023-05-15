@@ -31,7 +31,7 @@
 #define T8_EXAMPLE_COMMON_H
 
 #include <t8.h>
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
 
 /** A levelset function in 3+1 space dimensions. */
 typedef double      (*t8_example_level_set_fn) (const double[3], double,

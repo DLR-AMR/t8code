@@ -64,16 +64,17 @@
 #else
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #endif
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_vtk.h>
 #include <example/common/t8_example_common.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh_readmshfile.h>
-#include <t8_cmesh_vtk.h>
+#include <t8_cmesh_vtk_writer.h>
 #include <t8_vec.h>
 #include <t8_cmesh/t8_cmesh_examples.h> /* this is for t8_cmesh functions */
+#include <t8_forest/t8_forest_profiling.h>
 
 #define MAX_FACES 8             /* The maximum number of faces of an element */
 /* TODO: This is not memory efficient. If we run out of memory, we can optimize here. */

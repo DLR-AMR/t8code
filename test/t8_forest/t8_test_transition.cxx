@@ -239,7 +239,7 @@ t8_test_transition_global (t8_eclass_t eclass)
     t8_forest_set_adapt (forest_adapt, forest, t8_common_adapt_level_set, 1);
 
     /* Set forest adaptation settings */
-    t8_forest_set_transition (forest_adapt, forest);
+    t8_forest_set_transition (forest_adapt, forest, 1);
     if (do_ghost) {
       t8_forest_set_ghost_ext (forest_adapt, do_ghost, T8_GHOST_FACES,
                                ghost_version);

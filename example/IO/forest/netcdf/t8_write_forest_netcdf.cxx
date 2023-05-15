@@ -39,7 +39,8 @@
 #include <t8_vec.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_forest_netcdf.h>
@@ -454,12 +455,6 @@ t8_example_netcdf_write_forest (sc_MPI_Comm comm, int forest_refinement_level,
 
 #if T8_WITH_NETCDF
   t8_global_productionf ("The forest has been written to a netCDF file\n");
-#endif
-
-#if 0
-  /* Eventually write out the forest in a vtk file in order to display it in paraview */
-  t8_forest_write_vtk (forest, "T8_Example_VTK_Forest_With_Add_Vars");
-  t8_global_productionf ("The forest has been written to a vtk file.\n");
 #endif
 
   /* Destroy the forest */

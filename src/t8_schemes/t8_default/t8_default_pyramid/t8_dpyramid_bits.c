@@ -303,17 +303,14 @@ t8_dpyramid_ancestor_id (const t8_dpyramid_t *p, const int level)
 int
 t8_dpyramid_is_family (t8_dpyramid_t **fam)
 {
-
   const int           level = fam[0]->pyramid.level;
-  t8_dpyramid_coord_t inc = T8_DPYRAMID_LEN (level), x_inc, y_inc;
   if (t8_dpyramid_shape (fam[0]) == T8_ECLASS_TET) {
-    int                 is_family;
     t8_dtet_t         **tet_fam = T8_ALLOC (t8_dtet_t *, T8_DTET_CHILDREN);
     for (int i = 0; i < T8_DTET_CHILDREN; i++) {
       tet_fam[i] = &fam[i]->pyramid;
     }
-
-    is_family = t8_dtet_is_familypv ((const t8_dtet_t **) tet_fam);
+    const int           is_family =
+      t8_dtet_is_familypv ((const t8_dtet_t **) tet_fam);
     T8_FREE (tet_fam);
     return is_family;
   }
@@ -321,25 +318,26 @@ t8_dpyramid_is_family (t8_dpyramid_t **fam)
     if (level == 0) {
       return 0;
     }
-    /*The type of parent is the type of the first child in z-curve-order */
+    /* The type of parent is the type of the first child in z-curve-order */
     const int           type_of_first = fam[0]->pyramid.type;
     T8_ASSERT (type_of_first == T8_DPYRAMID_FIRST_TYPE
                || type_of_first == T8_DPYRAMID_SECOND_TYPE);
     for (int i = 1; i < T8_DPYRAMID_CHILDREN; i++) {
-      /*All elements must have the same level to be a family */
+      /* All elements must have the same level to be a family */
       if (fam[i]->pyramid.level != level) {
         return 0;
       }
-      /*Check if every family-member has the correct type */
+      /* Check if every family-member has the correct type */
       if (t8_dpyramid_parenttype_Iloc_to_type[type_of_first][i] !=
           fam[i]->pyramid.type) {
         return 0;
       }
     }
 
+    t8_dpyramid_coord_t inc = T8_DPYRAMID_LEN (level), x_inc, y_inc;
     x_inc = fam[0]->pyramid.x + inc;
     y_inc = fam[0]->pyramid.y + inc;
-    /*Check the coordinates of the anchor-coordinate */
+    /* Check the coordinates of the anchor-coordinate */
     if (type_of_first == T8_DPYRAMID_FIRST_TYPE) {
       return fam[0]->pyramid.z == fam[1]->pyramid.z
         && fam[0]->pyramid.z == fam[2]->pyramid.z
@@ -1685,43 +1683,49 @@ t8_dpyramid_successor (const t8_dpyramid_t *elem, t8_dpyramid_t *succ,
 }
 
 void
-t8_dpyramid_compute_coords (const t8_dpyramid_t *p, const int vertex,
+t8_dpyramid_compute_coords (const t8_dpyramid_t *elem, const int vertex,
                             int coords[])
 {
   T8_ASSERT (0 <= vertex && vertex < T8_DPYRAMID_CORNERS);
 
-  if (t8_dpyramid_shape (p) == T8_ECLASS_PYRAMID) {
-    const t8_dpyramid_coord_t length = T8_DPYRAMID_LEN (p->pyramid.level);
-    coords[0] = p->pyramid.x;
-    coords[1] = p->pyramid.y;
-    coords[2] = p->pyramid.z;
+  if (t8_dpyramid_shape (elem) == T8_ECLASS_PYRAMID) {
+    const t8_dpyramid_coord_t length = T8_DPYRAMID_LEN (elem->pyramid.level);
+    coords[0] = elem->pyramid.x;
+    coords[1] = elem->pyramid.y;
+    coords[2] = elem->pyramid.z;
     switch (vertex) {
     case 0:
-      coords[2] += (p->pyramid.type == T8_DPYRAMID_SECOND_TYPE) ? length : 0;
+      if (elem->pyramid.type == T8_DPYRAMID_SECOND_TYPE)
+        coords[2] += length;
       break;
     case 1:
       coords[0] += length;
-      coords[2] += (p->pyramid.type == T8_DPYRAMID_SECOND_TYPE) ? length : 0;
+      if (elem->pyramid.type == T8_DPYRAMID_SECOND_TYPE)
+        coords[2] += length;
       break;
     case 2:
       coords[1] += length;
-      coords[2] += (p->pyramid.type == T8_DPYRAMID_SECOND_TYPE) ? length : 0;
+      if (elem->pyramid.type == T8_DPYRAMID_SECOND_TYPE)
+        coords[2] += length;
       break;
     case 3:
       coords[0] += length;
       coords[1] += length;
-      coords[2] += (p->pyramid.type == T8_DPYRAMID_SECOND_TYPE) ? length : 0;
+      if (elem->pyramid.type == T8_DPYRAMID_SECOND_TYPE)
+        coords[2] += length;
       break;
     case 4:
-      coords[0] += (p->pyramid.type == T8_DPYRAMID_FIRST_TYPE) ? length : 0;
-      coords[1] += (p->pyramid.type == T8_DPYRAMID_FIRST_TYPE) ? length : 0;
-      coords[2] += (p->pyramid.type == T8_DPYRAMID_FIRST_TYPE) ? length : 0;
+      if (elem->pyramid.type == T8_DPYRAMID_FIRST_TYPE) {
+        coords[0] += length;
+        coords[1] += length;
+        coords[2] += length;
+      }
       break;
     }
   }
   else {
     T8_ASSERT (0 <= vertex && vertex < T8_DTET_CORNERS);
-    t8_dtet_compute_coords (&(p->pyramid), vertex, coords);
+    t8_dtet_compute_coords (&(elem->pyramid), vertex, coords);
   }
 }
 
@@ -1736,6 +1740,41 @@ t8_dpyramid_vertex_reference_coords (const t8_dpyramid_t *elem,
   coords[0] = coords_int[0] / (double) T8_DPYRAMID_ROOT_LEN;
   coords[1] = coords_int[1] / (double) T8_DPYRAMID_ROOT_LEN;
   coords[2] = coords_int[2] / (double) T8_DPYRAMID_ROOT_LEN;
+}
+
+void
+t8_dpyramid_compute_reference_coords (const t8_dpyramid_t *elem,
+                                      const double *ref_coords,
+                                      double *out_coords)
+{
+  T8_ASSERT (ref_coords != NULL);
+  T8_ASSERT (t8_dpyramid_is_valid (elem));
+  if (t8_dpyramid_shape (elem) == T8_ECLASS_PYRAMID) {
+    const t8_dpyramid_coord_t length = T8_DPYRAMID_LEN (elem->pyramid.level);
+    out_coords[0] = elem->pyramid.x;
+    out_coords[1] = elem->pyramid.y;
+    out_coords[2] = elem->pyramid.z;
+
+    if (elem->pyramid.type == T8_DPYRAMID_FIRST_TYPE) {
+      out_coords[0] += ref_coords[0] * length;
+      out_coords[1] += ref_coords[1] * length;
+      out_coords[2] += ref_coords[2] * length;
+    }
+    else {
+      out_coords[0] += ref_coords[0] * length * (1 - ref_coords[2]);
+      out_coords[1] += ref_coords[1] * length * (1 - ref_coords[2]);
+      out_coords[2] += (1 - ref_coords[2]) * length;
+    }
+
+    /*scale the coordinates onto the reference cube */
+    out_coords[0] /= (double) T8_DPYRAMID_ROOT_LEN;
+    out_coords[1] /= (double) T8_DPYRAMID_ROOT_LEN;
+    out_coords[2] /= (double) T8_DPYRAMID_ROOT_LEN;
+  }
+  else {
+    t8_dtet_compute_reference_coords (&(elem->pyramid), ref_coords,
+                                      out_coords);
+  }
 }
 
 /**

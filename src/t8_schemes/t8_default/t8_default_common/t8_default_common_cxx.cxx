@@ -65,14 +65,14 @@ t8_default_scheme_common_c::t8_element_num_corners (const t8_element_t *elem) co
 }
 
 void
-t8_default_scheme_common_c::t8_element_new (int length, t8_element_t **elem)
+t8_default_scheme_common_c::t8_element_new (int length, t8_element_t **elem) const
 {
   t8_default_mempool_alloc ((sc_mempool_t *) this->ts_context, length, elem);
 }
 
 void
 t8_default_scheme_common_c::t8_element_destroy (int length,
-                                                t8_element_t **elem)
+                                                t8_element_t **elem) const
 {
   t8_default_mempool_free ((sc_mempool_t *) this->ts_context, length, elem);
 }
@@ -108,7 +108,7 @@ t8_default_mempool_free (sc_mempool_t * ts_context, int length,
 }
 
 t8_element_shape_t
-t8_default_scheme_common_c::t8_element_shape (const t8_element_t *elem)
+t8_default_scheme_common_c::t8_element_shape (const t8_element_t *elem) const
 {
   return eclass;
 }
@@ -125,7 +125,7 @@ count_leafs_from_level (int element_level, int refinement_level,
 
 t8_gloidx_t
 t8_default_scheme_common_c::t8_element_count_leafs (const t8_element_t *t,
-                                                    int level)
+                                                    int level) const
 {
 
   int                 element_level = t8_element_level (t);
@@ -170,7 +170,7 @@ t8_default_scheme_common_c::t8_element_num_siblings (const t8_element_t * elem) 
 }
 
 t8_gloidx_t
-t8_default_scheme_common_c::t8_element_count_leafs_from_root (int level)
+t8_default_scheme_common_c::t8_element_count_leafs_from_root (int level) const
 {
   if (eclass == T8_ECLASS_PYRAMID) {
     return 2 * sc_intpow64u (8, level) - sc_intpow64u (6, level);
@@ -183,7 +183,7 @@ void
 t8_default_scheme_common_c::t8_element_general_function (const t8_element_t
                                                          *elem,
                                                          const void *indata,
-                                                         void *outdata)
+                                                         void *outdata) const
 {
   /* This function is intentionally left blank. */
 }
@@ -199,7 +199,7 @@ t8_default_scheme_common_c::t8_element_to_transition_cell (const t8_element_t
 void
 t8_default_scheme_common_c::t8_element_vertex_coords (const t8_element_t *t,
                                                       int vertex,
-                                                      int coords[])
+                                                      int coords[]) const
 {
   SC_ABORT ("This function is not implemented for the given scheme.\n");
 }
@@ -284,7 +284,7 @@ t8_default_scheme_common_c::t8_element_get_face_number_of_hypotenuse (const
 
 int
 t8_default_scheme_common_c::t8_element_get_number_of_subelements (int
-                                                                  transition_type)
+                                                                  transition_type) const
 {
   SC_ABORT ("This function is not implemented for the given scheme.\n");
 }
