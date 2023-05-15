@@ -303,8 +303,8 @@ t8_transition_global (void)
   /* ************************************************* Case Settings ************************************************* */
 
   /* refinement setting */
-  int                 initlevel = 1;    /* initial uniform refinement level */
-  int                 adaptlevel = 2;
+  int                 initlevel = 4;    /* initial uniform refinement level */
+  int                 adaptlevel = 3;
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening (minlevel <= initlevel) */
   int                 maxlevel = initlevel + adaptlevel;        /* highest level allowed for refining */
 
@@ -315,16 +315,16 @@ t8_transition_global (void)
   double              start_radius = 0.0;
   double              band_width = 2.0;
 
-  int                 num_adaptations = 1;     /* 1 for a single adapted forest */
+  int                 num_adaptations = 6;     /* 1 for a single adapted forest */
   double              radius_increase = 0.2;
 
   /* adaptation setting */
   int                 set_balance = 1;
-  int                 set_transition = 1;
+  int                 set_transition = 0;
 
   /* cmesh settings */
-  int                 single_tree_mesh = 0;
-  int                 multiple_tree_mesh = 1, num_x_trees = 1, num_y_trees = 2;
+  int                 single_tree_mesh = 1;
+  int                 multiple_tree_mesh = 0, num_x_trees = 1, num_y_trees = 2;
   int                 hybrid_tree_mesh = 0;
 
   int                 periodic_boundary = 0;    /* use periodic boundaries */
@@ -337,7 +337,7 @@ t8_transition_global (void)
   int                 ghost_version = 1;        /* use v1 for transitioned forests */
 
   /* LFN settings */
-  int                 do_LFN_test = 1;
+  int                 do_LFN_test = 0;
 
   /* vtk setting */
   int                 do_vtk = 1;
@@ -345,10 +345,10 @@ t8_transition_global (void)
   int                 do_vtk_ghost = 1;
 
   /* Monitoring (only available in debug configuration) */
-  int                 get_LFN_stats = 1;
-  int                 get_LFN_elem_info = 1;
-  int                 get_commit_stats = 1;
-  int                 get_general_stats = 1;
+  int                 get_LFN_stats = 0;
+  int                 get_LFN_elem_info = 0;
+  int                 get_commit_stats = 0;
+  int                 get_general_stats = 0;
 
   /* ************************************** Check settings ************************************** */
 

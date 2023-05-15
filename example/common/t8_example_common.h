@@ -144,6 +144,9 @@ double              t8_periodic_2D_cos (const double x[3], double t,
 double              t8_periodic_2D_cos_off_center (const double x[3],
                                                    double t, void *data);
 
+/** 2D Gauss function on [-5,5]^2 scaled to [0,1]^2 to fit the coarse quad mesh geometry */
+double              t8_2D_gauss (const double x[3], double t, void *data);
+
 /** Returns always 1.
  * \return 1
  */

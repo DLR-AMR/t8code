@@ -45,6 +45,12 @@
  * This way, we compute on a uniform, completely transitioned mesh and can compare it with the uniform non transitioned mesh.
  */
 
+
+/* helpful options for debugging */
+#define GET_DEBUG_OUTPUT 0 /* get print statements of LFN, etc. */
+#define DO_DEBUGGING_EXAMPLE 0 /* simulate a small example (4 timesteps, two adaptations) */
+#define ENABLE_GLOBAL_CONSERVATION_CHECKS 1 /* this throws warnings for unused variables when 0 */
+
 /* set to 0 in order to switch to the default quad implementation */
  #define USE_TRANSITION_QUAD_SCHEME 1
 
@@ -68,11 +74,6 @@
 #include <t8_cmesh_vtk.h>
 #include <t8_vec.h>
 #include <t8_cmesh/t8_cmesh_examples.h> /* this is for t8_cmesh functions */
-
-/* helpful options for debugging */
-#define GET_DEBUG_OUTPUT 0 /* get print statements of LFN, etc. */
-#define DO_DEBUGGING_EXAMPLE 1 /* simulate a small example (4 timesteps, two adaptations) */
-#define ENABLE_GLOBAL_CONSERVATION_CHECKS 1 /* this throws warnings for unused variables when 0 */
 
 #define MAX_FACES 8             /* The maximum number of faces of an element */
 /* TODO: This is not memory efficient. If we run out of memory, we can optimize here. */
@@ -306,10 +307,15 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
   problem = (t8_advect_problem_t *) t8_forest_get_user_data (forest);
   /* Get the element's level */
   level = ts->t8_element_level (elements[0]);
-  if (level == problem->maxlevel && num_elements == 1) {
+  if (level >= problem->maxlevel && num_elements == 1) {
     /* It is not possible to refine this level */
     return 0;
   }
+  if (level < problem->level && num_elements == 1) {
+    /* refine up to min init refinement level */
+    return 1;
+  }
+
   /* Compute the volume threshold. Elements larger than this and
    * close to the 0 level-set are refined */
   if (problem->volume_refine >= 0) {
@@ -323,13 +329,16 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
   offset = t8_forest_get_tree_element_offset (forest_from, ltree_id);
   phi = t8_advect_element_get_phi (problem, lelement_id + offset);
 
-#if 0
-  if (0 <= phi && level < problem->maxlevel) {
+#if 1 /* refine areas with high values */
+  float phi_threshhold = 0.3;
+  if (phi >= phi_threshhold && level < problem->maxlevel) {
     return 1;
   }
-  else if (level > problem->level && num_elements > 1) {
+  if (phi <= phi_threshhold && num_elements > 1 && level > problem->level) {
     return -1;
   }
+  /* if no rule applies, do nothing */
+  return 0;
 #else
   /* Get a pointer to the element data */
   elem_data = (t8_advect_element_data_t *)
@@ -346,8 +355,9 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
     /* refine if level is not too large */
     return level < problem->maxlevel;
   }
-#endif
+  /* if no rule applies, do nothing */
   return 0;
+#endif
 } /* end of t8_advect_adapt */
 
 /* Initial geometric adapt scheme */
@@ -2634,7 +2644,10 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   if (maxlevel > level) {
     int                 ilevel;
 
-    for (ilevel = problem->level; ilevel < problem->maxlevel; ilevel++) {
+    /* iterate until ilevel <= problem->maxlevel + non_recursive_adaptation_buffer to make sure that the initialization is finished 
+     * since we do not adapt recursively */
+    int non_recursive_adaptation_buffer = 2;
+    for (ilevel = problem->level; ilevel <= problem->maxlevel + non_recursive_adaptation_buffer; ilevel++) {
       /* initialize according to some adapt_init scheme */
       t8_advect_problem_adapt_init (problem, 0, refinementcriterion);
       /* TODO: add partition for transitioned forests */
@@ -2689,8 +2702,8 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     }
     scaled_global_phi_beginning_TS = t8_advect_get_global_phi (problem);
 
-    /* Print vtk */
-    if (!no_vtk && (problem->num_time_steps + 1) % vtk_freq == 0) {
+    /* Print vtk - before first timestep and then modulo vtk_freq */
+    if (!no_vtk && (problem->num_time_steps == 0 || (problem->num_time_steps) % vtk_freq == 0) ) {
       vtk_time -= sc_MPI_Wtime ();
       t8_advect_write_vtk (problem);
       vtk_time += sc_MPI_Wtime ();
@@ -3154,7 +3167,7 @@ main (int argc, char *argv[])
                       "with radius 0.15.\n)"
                       "\t\t6 - stokes_flow_sphere_shell"
                       "\t\t7 - flow_constant_2D_2to1");
-  sc_options_add_int (opt, 'l', "level", &level, 2,
+  sc_options_add_int (opt, 'l', "level", &level, 5,
                       "The minimum refinement level of the mesh.");
   sc_options_add_int (opt, 'r', "rlevel", &reflevel, 4,
                       "The number of adaptive refinement levels.");
@@ -3182,11 +3195,11 @@ main (int argc, char *argv[])
                          "Control the width of the refinement band around\n"
                          " the zero level-set. Default 1.");
 
-  sc_options_add_int (opt, 'a', "adapt-freq", &adapt_freq, 4,
+  sc_options_add_int (opt, 'a', "adapt-freq", &adapt_freq, 1,
                       "Controls how often the mesh is readapted. "
                       "A value of i means, every i-th time step.");
 
-  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 1,
+  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 40,
                       "How often the vtk output is produced "
                       "\n\t\t\t\t     (after how many time steps). "
                       "A value of 0 is equivalent to using -o.");
@@ -3220,12 +3233,13 @@ main (int argc, char *argv[])
   sc_options_add_int (opt, 't', "transition", &do_transition, 1,
                       "Transition the forest.");
 
-  sc_options_add_int (opt, 'p', "initialphi", &initialphi, 3,
+  sc_options_add_int (opt, 'p', "initialphi", &initialphi, 4,
                       "Choose the initial phi value for this advection simulation.\n"
                       "0 is a Gaussian pulse\n"
                       "1 is constant 1\n"
                       "2 is periodic trigonometric centered\n"
-                      "3 is periodic trigonometric off-centered\n");
+                      "3 is periodic trigonometric off-centered\n"
+                      "4 is centered 2D Gauss function\n");
 
   sc_options_add_int (opt, 'c', "refinementcriterion", &refinementcriterion,
                       0,
@@ -3243,16 +3257,16 @@ main (int argc, char *argv[])
 int do_fixed_number_TS = 0;
 int fixed_number_TS = 0;
 #if DO_DEBUGGING_EXAMPLE
-  flow_arg = 7; /* 2to1 flow */
-  level = 2;
-  reflevel = 2;
+  flow_arg = 7; /* 2x1y flow */
+  level = 3;
+  reflevel = 3;
   do_fixed_number_TS = 1; /* only a small, fixed number of timesteps */
   fixed_number_TS = 4;
   adapt_freq = 2;
   vtk_freq = 1;
-  do_transition = 0;
+  do_transition = 1;
   initialphi = 3; /* start trigonometric offcentered */
-  refinementcriterion = 0; /* (0, 1, 2) */
+  refinementcriterion = 1; /* (0: numeric, 1: random, 2: static defined) */
 #endif 
 
   if (helpme) {
@@ -3297,12 +3311,12 @@ int fixed_number_TS = 0;
     }
 
     /* array of initial phi scalarfields */
-    t8_example_level_set_fn levelfunc[4] =
+    t8_example_level_set_fn levelfunc[5] =
       { t8_levelset_sphere, t8_constant, t8_periodic_2D_cos,
-      t8_periodic_2D_cos_off_center
+      t8_periodic_2D_cos_off_center, t8_2D_gauss
     };
     SC_CHECK_ABORT (0 <= initialphi
-                    && initialphi <= 4, "Invalid type of initial phi.");
+                    && initialphi <= 5, "Invalid type of initial phi.");
 
     double              adapt_time = 0;
     adapt_time -= sc_MPI_Wtime ();
