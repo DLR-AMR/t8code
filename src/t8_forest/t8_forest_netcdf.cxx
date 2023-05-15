@@ -52,7 +52,8 @@ These functions write a file in the NetCDF-format which represents the given 2D-
 #endif
 #endif
 #include <t8_element_cxx.hxx>
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest_netcdf.h>
 #include <t8_element_shape.h>
 
@@ -115,8 +116,8 @@ typedef struct
 
 /* The UGRID conventions are applied for dimension and variable descriptions */
 static void
-t8_forest_init_ugrid_namespace_context (t8_forest_netcdf_ugrid_namespace_t *
-                                        namespace_conv, int dim)
+t8_forest_init_ugrid_namespace_context (t8_forest_netcdf_ugrid_namespace_t
+                                        * namespace_conv, int dim)
 {
   if (dim == 2) {
     /* UGRID 2D Grid name conventions */
@@ -159,8 +160,8 @@ t8_forest_init_ugrid_namespace_context (t8_forest_netcdf_ugrid_namespace_t *
 /* Define NetCDF-dimesnions */
 static void
 t8_forest_write_netcdf_dimensions (t8_forest_netcdf_context_t * context,
-                                   t8_forest_netcdf_ugrid_namespace_t *
-                                   namespace_context)
+                                   t8_forest_netcdf_ugrid_namespace_t
+                                   * namespace_context)
 {
 #if T8_WITH_NETCDF
   /* *Define dimensions in the NetCDF file.* */
@@ -193,8 +194,8 @@ t8_forest_write_netcdf_dimensions (t8_forest_netcdf_context_t * context,
 /* Define NetCDF-variables */
 static void
 t8_forest_write_netcdf_variables (t8_forest_netcdf_context_t * context,
-                                  t8_forest_netcdf_ugrid_namespace_t *
-                                  namespace_context)
+                                  t8_forest_netcdf_ugrid_namespace_t
+                                  * namespace_context)
 {
 #if T8_WITH_NETCDF
   /* *Define variables in the NetCDF file.* */
@@ -525,8 +526,8 @@ t8_forest_write_netcdf_data (t8_forest_t forest,
 
 /* Define NetCDF-coordinate-dimension */
 static void
-t8_forest_write_netcdf_coordinate_dimension (t8_forest_netcdf_context_t *
-                                             context,
+t8_forest_write_netcdf_coordinate_dimension (t8_forest_netcdf_context_t
+                                             * context,
                                              t8_forest_netcdf_ugrid_namespace_t
                                              * namespace_context)
 {
@@ -543,8 +544,8 @@ t8_forest_write_netcdf_coordinate_dimension (t8_forest_netcdf_context_t *
 
 /* Define NetCDF-coordinate-variables */
 static void
-t8_forest_write_netcdf_coordinate_variables (t8_forest_netcdf_context_t *
-                                             context,
+t8_forest_write_netcdf_coordinate_variables (t8_forest_netcdf_context_t
+                                             * context,
                                              t8_forest_netcdf_ugrid_namespace_t
                                              * namespace_context)
 {
@@ -691,8 +692,8 @@ t8_forest_write_netcdf_coordinate_variables (t8_forest_netcdf_context_t *
 /* Declare the user-defined elementwise NetCDF-variables which were passed to function. */
 static void
 t8_forest_write_user_netcdf_vars (t8_forest_netcdf_context_t * context,
-                                  t8_forest_netcdf_ugrid_namespace_t *
-                                  namespace_context,
+                                  t8_forest_netcdf_ugrid_namespace_t
+                                  * namespace_context,
                                   int num_extern_netcdf_vars,
                                   t8_netcdf_variable_t * ext_variables[],
                                   sc_MPI_Comm comm)
@@ -1017,8 +1018,8 @@ t8_forest_write_user_netcdf_data (t8_forest_t forest,
 static void
 t8_forest_write_netcdf_file (t8_forest_t forest,
                              t8_forest_netcdf_context_t * context,
-                             t8_forest_netcdf_ugrid_namespace_t *
-                             namespace_context, int num_extern_netcdf_vars,
+                             t8_forest_netcdf_ugrid_namespace_t
+                             * namespace_context, int num_extern_netcdf_vars,
                              t8_netcdf_variable_t * ext_variables[],
                              sc_MPI_Comm comm)
 {

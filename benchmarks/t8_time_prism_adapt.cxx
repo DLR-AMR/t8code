@@ -26,7 +26,9 @@
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri.h>
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtet.h>
 #include <t8_forest/t8_forest_adapt.h>
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_io.h>
+#include <t8_forest/t8_forest_profiling.h>
 #include <sc_flops.h>
 #include <sc_statistics.h>
 #include <sc_options.h>

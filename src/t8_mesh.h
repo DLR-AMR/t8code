@@ -76,12 +76,6 @@ void                t8_mesh_set_element_vertices (t8_mesh_t *mesh,
                                                   t8_locidx_t vids_length,
                                                   const t8_locidx_t *vids);
 
-#if 0
-void                t8_mesh_set_element_scheme (t8_mesh_t *mesh,
-                                                t8_locidx_t locid,
-                                                t8_scheme_t * scheme);
-#endif
-
 /***************************** construct ************************/
 
 /** Setup a mesh and turn it into a usable object.

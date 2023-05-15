@@ -52,7 +52,9 @@
 #include <t8.h>                 /* General t8code header, always include this. */
 #include <t8_cmesh.h>           /* cmesh definition and basic interface. */
 #include <t8_cmesh/t8_cmesh_examples.h> /* A collection of exemplary cmeshes */
-#include <t8_forest.h>          /* forest definition and basic interface. */
+#include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
+#include <t8_forest/t8_forest_io.h>     /* save forest */
+#include <t8_forest/t8_forest_geometrical.h>    /* geometrical information of the forest */
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>     /* default refinement scheme. */
 #include <t8_vec.h>             /* Basic operations on 3D vectors. */
 #include <tutorials/general/t8_step3.h>
@@ -61,17 +63,6 @@ T8_EXTERN_C_BEGIN ();
 
 /* This is our own defined data that we will pass on to the
  * adaptation callback. */
-#if 0
-/* Commented out, since it is actually defined in t8_step3.h.
- * We put a copy here for explanation.
- */
-struct t8_step3_adapt_data
-{
-  double              midpoint[3];      /* The midpoint of our sphere. */
-  double              refine_if_inside_radius;  /* if an element's center is smaller than this value, we refine the element. */
-  double              coarsen_if_outside_radius;        /* if an element's center is larger this value, we coarsen its family. */
-};
-#endif
 
 /* The adaptation callback function. This function will be called once for each element
  * and the return value decides whether this element should be refined or not.

@@ -211,9 +211,7 @@ int
 t8_dline_is_familypv (const t8_dline_t *f[])
 {
   const int8_t        level = f[0]->level;
-  t8_dline_coord_t    len = T8_DLINE_LEN (level);
-
-  /*Check the level */
+  /* Check the level */
   if (level == 0 || level != f[1]->level) {
     return 0;
   }                             /* Check the parent */
@@ -222,7 +220,8 @@ t8_dline_is_familypv (const t8_dline_t *f[])
     return 0;
   }
 
-  /*Check the coordinate */
+  const t8_dline_coord_t len = T8_DLINE_LEN (level);
+  /* Check the coordinate */
   return (f[0]->x + len == f[1]->x);
 }
 
@@ -348,6 +347,17 @@ t8_dline_vertex_ref_coords (const t8_dline_t *elem, const int vertex,
   /* Compute integere coordinates and divide by root length. */
   t8_dline_vertex_coords (elem, vertex, &coords_int);
   coordinates[0] = coords_int / (double) T8_DLINE_ROOT_LEN;
+}
+
+void
+t8_dline_compute_reference_coords (const t8_dline_t *elem,
+                                   const double *ref_coords,
+                                   double *out_coords)
+{
+  T8_ASSERT (t8_dline_is_valid (elem));
+  out_coords[0] = elem->x;
+  out_coords[0] += T8_DLINE_LEN (elem->level) * ref_coords[0];
+  out_coords[0] /= (double) T8_DLINE_ROOT_LEN;
 }
 
 t8_linearidx_t
