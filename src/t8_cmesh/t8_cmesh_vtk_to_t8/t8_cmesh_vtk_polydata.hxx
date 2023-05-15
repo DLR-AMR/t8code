@@ -29,6 +29,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #define T8_CMESH_VTK_POLYDATA
 
 #include <t8.h>
+#include "t8_vtk_types.h"
 #if T8_WITH_VTK
 #include <vtkPolyData.h>
 #include <vtkSmartPointer.h>
@@ -46,7 +47,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * \returns             non-zero on success, zero if the reading failed.              
  * 
  */
-int                 t8_read_poly (const char *filename, vtkDataSet * grid);
+vtk_read_success_t  t8_read_poly (const char *filename, vtkDataSet * grid);
 
 #endif /* T8_WITH_VTK */
 #endif /* T8_CMESH_VTK_POLYDATA */

@@ -46,6 +46,18 @@ TEST (t8_cmesh_vtk_reader, dummy_test)
     t8_cmesh_vtk_reader ("non-existing-file.vtp", 0, 0, sc_MPI_COMM_WORLD,
                          VTK_POLYDATA_FILE);
   EXPECT_TRUE (cmesh == NULL);
+
+  cmesh =
+    t8_cmesh_vtk_reader ("test/testfiles/test_vtk_tri.vtu", 0, 0,
+                         sc_MPI_COMM_WORLD, VTK_UNSTRUCTURED_FILE);
+  EXPECT_FALSE (cmesh == NULL);
+  t8_cmesh_destroy (&cmesh);
+  cmesh =
+    t8_cmesh_vtk_reader ("test/testfiles/test_vtk_cube.vtp", 0, 0,
+                         sc_MPI_COMM_WORLD, VTK_POLYDATA_FILE);
+  EXPECT_FALSE (cmesh == NULL);
+  t8_cmesh_destroy (&cmesh);
+
 #else
 #endif
 }
