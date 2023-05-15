@@ -248,6 +248,7 @@ t8_compute_recvcounts_displs (int sendcount, int *recvcounts, int *displs,
   return recv_total;
 }
 
+#if defined(__bgq__) || defined(SC_ENABLE_MPIWINSHARED)
 static void
 t8_shmem_array_allgatherv_common (void *sendbuf,
                                   const int sendcount,
@@ -278,7 +279,7 @@ t8_shmem_array_allgatherv_common (void *sendbuf,
     t8_compute_recvcounts_displs (sendcount, intra_recvcounts, intra_displ,
                                   sizeof (sendtype), intranode);
   if (!intrarank) {
-    noderecvchar = SC_ALLOC (char, intra_recv_total * typesize);
+    noderecvchar = T8_ALLOC (char, intra_recv_total * typesize);
   }
   mpiret =
     sc_MPI_Gatherv (sendbuf, sendcount, sendtype, noderecvchar,
@@ -298,7 +299,7 @@ t8_shmem_array_allgatherv_common (void *sendbuf,
                          recvarray->array, inter_recvcount, inter_displ,
                          recvtype, internode);
     SC_CHECK_MPI (mpiret);
-    SC_FREE (noderecvchar);
+    T8_FREE (noderecvchar);
   }
   t8_shmem_array_end_writing (recvarray);
   T8_FREE (inter_displ);
@@ -306,6 +307,7 @@ t8_shmem_array_allgatherv_common (void *sendbuf,
   T8_FREE (intra_displ);
   T8_FREE (intra_recvcounts);
 }
+#endif /* __bgq__ || SC_ENABLE_MPI_WINSHARED */
 
 static void
 t8_shmem_array_allgatherv_basic (void *sendbuf,
@@ -371,15 +373,15 @@ t8_shmem_array_allgatherv (void *sendbuf,
 #if defined(__bgq__)
   case SC_SHMEM_BGQ:
   case SC_SHMEM_BGQ_PRESCAN:
-#endif
+#endif /* __bgq__ */
 #if defined(SC_ENABLE_MPIWINSHARED)
   case SC_SHMEM_WINDOW:
   case SC_SHMEM_WINDOW_PRESCAN:
-#endif
+#endif /* SC_ENABLE_MPIWINSHARED */
     t8_shmem_array_allgatherv_common (sendbuf, sendcount, sendtype, recvarray,
                                       recvtype, comm, intranode, internode);
     break;
-#endif
+#endif /* __bgq__ || SC_ENABLE_MPI_WINSHARED */
   default:
     SC_ABORT_NOT_REACHED ();
   }
