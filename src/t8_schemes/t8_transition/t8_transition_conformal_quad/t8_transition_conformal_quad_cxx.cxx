@@ -2253,16 +2253,16 @@ t8_subelement_scheme_quad_c::t8_element_get_id_from_location (int type,
   T8_ASSERT (type >= 0 && type <= T8_SUB_QUAD_MAX_TRANSITION_TYPE);
 
   int                 sub_id, subelements_count = 0;
-  int                 type_temp = type;
+  double              type_temp = double(type); // would work for ints but we use libc pow(double, double)
   int                 binary_type[4] = { };
   int                 binary_type_clockwise[4] = { };
 
   /* get the type as a binary array */
   int                 iface;
   for (iface = 0; iface < P4EST_FACES; iface++) {
-    if (type_temp >= pow (2, 4 - (iface + 1))) {
+    if (type_temp >= pow (2.0, 4 - (iface + 1))) {
       binary_type[iface] = 1;
-      type_temp -= pow (2, 4 - (iface + 1));
+      type_temp -= pow (2.0, 4 - (iface + 1));
     }
     else {
       binary_type[iface] = 0;
