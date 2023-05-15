@@ -113,7 +113,15 @@ t8_cmesh_correct_volume (double *tree_vertices, t8_eclass_t eclass)
 }
 
 #if T8_WITH_VTK
-
+/*
+ * \param[in] filename      The name of the file to read
+ * \param[in, out] vtkGrid  A pointer to a vtkDataSet. We ShallowCopy the grid there.
+ * \param[in] partition     Flag if the input is read partitioned
+ * \param[in] main_proc     The main reading proc.
+ * \param[in] comm          A communicator.
+ * \param[in] vtk_file_type The type of the Data in the file.
+ * \returns                 non-zero on success, zero if the reading failed.  
+ */
 vtk_read_success_t
 t8_file_to_vtkGrid (const char *filename,
                     vtkSmartPointer < vtkDataSet > vtkGrid,
@@ -162,7 +170,7 @@ t8_file_to_vtkGrid (const char *filename,
  * \param[in] vtkGrid The vtkDataSet
  * \return The dimension of \a vtkGrid. 
  */
-int
+static int
 t8_get_dimension (vtkSmartPointer < vtkDataSet > vtkGrid)
 {
   /* This array contains the type of each cell */
@@ -200,7 +208,7 @@ t8_get_dimension (vtkSmartPointer < vtkDataSet > vtkGrid)
  * \return  The number of elements that have been read by the process.  
  */
 
-t8_gloidx_t
+static t8_gloidx_t
 t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > vtkGrid,
                       t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
@@ -350,7 +358,8 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet > vtkGrid,
     t8_debugf ("[D] dim: %i\n", dim);
     /* Communicate the number of trees to all processes. 
      * TODO: This probably crashes when a vtkGrid is distributed in many 
-     * files. */
+     * files. Replace with an sc_MPI_Reduce and compute the ranges per Process
+     * properly. */
     sc_MPI_Bcast (&num_trees, 1, T8_MPI_GLOIDX, main_proc, comm);
     t8_cmesh_set_dimension (cmesh, dim);
     /* Build the partition. */

@@ -605,6 +605,20 @@ public:
                                                           double coords[])
     const = 0;
 
+  /** Convert a point in the reference space of an element to a point in the
+   *  reference space of the tree.
+   * 
+   * \param [in] elem         The element.
+   * \param [in] coords_input The coordinates of the point in the reference space of the element.
+   * \param [in] user_data    User data.
+   * \param [out] out_coords  The coordinates of the point in the reference space of the tree.
+   */
+  virtual void        t8_element_reference_coords (const t8_element_t *elem,
+                                                   const double *ref_coords,
+                                                   const void *user_data,
+                                                   double *out_coords)
+    const = 0;
+
   /* TODO: deactivate */
   /** Return a pointer to a t8_element in an array indexed by a size_t.
    * \param [in] array    The \ref sc_array storing \t t8_element_t pointers.

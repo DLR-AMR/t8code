@@ -29,7 +29,8 @@
 #define T8_FOREST_VTK_H
 
 #include <t8_vtk.h>
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_geometrical.h>
 
 T8_EXTERN_C_BEGIN ();
 /* function declarations */
