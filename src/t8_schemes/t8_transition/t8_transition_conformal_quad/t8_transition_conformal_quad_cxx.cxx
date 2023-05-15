@@ -2253,7 +2253,7 @@ t8_subelement_scheme_quad_c::t8_element_get_id_from_location (int type,
   T8_ASSERT (type >= 0 && type <= T8_SUB_QUAD_MAX_TRANSITION_TYPE);
 
   int                 sub_id, subelements_count = 0;
-  double              type_temp = double(type); // would work for ints but we use libc pow(double, double)
+  double              type_temp = double (type);        // would work for ints but we use libc pow(double, double)
   int                 binary_type[4] = { };
   int                 binary_type_clockwise[4] = { };
 
