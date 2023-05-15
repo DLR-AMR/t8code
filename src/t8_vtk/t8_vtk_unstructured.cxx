@@ -20,7 +20,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include "t8_vtk_unstructured.hxx"
+#include "t8_vtk/t8_vtk_unstructured.hxx"
 
 #if T8_WITH_VTK
 #include <vtkUnstructuredGrid.h>
@@ -33,10 +33,18 @@ t8_read_unstructured (const char *filename,
                       vtkSmartPointer < vtkDataSet > grid)
 {
   char                tmp[BUFSIZ], *extension;
-  /* Get the file-extension to decide which reader to use */
   strcpy (tmp, filename);
-  extension = strtok (tmp, ".");
-  extension = strtok (NULL, ".");
+  extension = strrchr (tmp, '.') + 1;
+  T8_ASSERT (strcmp (extension, ""));
+
+  /* Check if we can open the file. */
+  FILE               *first_check;
+  first_check = fopen (filename, "r");
+  if (first_check == NULL) {
+    t8_errorf ("Can not find the file %s\n", filename);
+    return read_failure;
+  }
+  fclose (first_check);
 
   /* Chose the vtk-Reader according to the file-ending and read the file */
   if (strcmp (extension, "vtu") == 0) {

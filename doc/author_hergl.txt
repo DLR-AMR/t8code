@@ -1,0 +1,1 @@
+I hereby place my contributions to t8code under the FreeBSD license. Chiara Hergl <chiara.hergl@dlr.de>

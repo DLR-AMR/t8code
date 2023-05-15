@@ -481,6 +481,20 @@ t8_default_scheme_prism_c::t8_element_vertex_reference_coords (const
 }
 
 void
+t8_default_scheme_prism_c::t8_element_reference_coords (const t8_element_t
+                                                        *elem,
+                                                        const double
+                                                        *ref_coords,
+                                                        const void *user_data,
+                                                        double *out_coords)
+  const
+{
+  T8_ASSERT (t8_element_is_valid (elem));
+  t8_dprism_compute_reference_coords ((const t8_dprism_t *) elem, ref_coords,
+                                      out_coords);
+}
+
+void
 t8_default_scheme_prism_c::t8_element_general_function (const t8_element_t
                                                         *elem,
                                                         const void *indata,
