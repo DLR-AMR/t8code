@@ -164,7 +164,7 @@ void                t8_shmem_array_allgather (const void *sendbuf,
  * \param[in] internode       the internode mpi communicator
  * 
  */
-void                t8_shmem_array_allgatherv (const void *sendbuf,
+void                t8_shmem_array_allgatherv (void *sendbuf,
                                                const int sendcount,
                                                sc_MPI_Datatype
                                                sendtype,

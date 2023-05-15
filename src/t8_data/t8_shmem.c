@@ -249,7 +249,7 @@ t8_compute_recvcounts_displs (int sendcount, int *recvcounts, int *displs,
 }
 
 static void
-t8_shmem_array_allgatherv_common (const void *sendbuf,
+t8_shmem_array_allgatherv_common (void *sendbuf,
                                   const int sendcount,
                                   sc_MPI_Datatype sendtype,
                                   t8_shmem_array_t recvarray,
@@ -308,7 +308,7 @@ t8_shmem_array_allgatherv_common (const void *sendbuf,
 }
 
 static void
-t8_shmem_array_allgatherv_basic (const void *sendbuf,
+t8_shmem_array_allgatherv_basic (void *sendbuf,
                                  const int sendcount,
                                  sc_MPI_Datatype sendtype,
                                  t8_shmem_array_t recvarray,
@@ -338,7 +338,7 @@ t8_shmem_array_allgatherv_basic (const void *sendbuf,
 }
 
 void
-t8_shmem_array_allgatherv (const void *sendbuf,
+t8_shmem_array_allgatherv (void *sendbuf,
                            const int sendcount,
                            sc_MPI_Datatype
                            sendtype,
