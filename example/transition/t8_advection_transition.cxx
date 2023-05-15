@@ -2786,8 +2786,8 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
               t8_productionf ("\n\n________________"
                               "\nCurrent element: local elem index of this process: %i of %i (without ghosts)\n",
                               ielement,
-                              t8_forest_get_local_num_elements (problem->
-                                                                forest));
+                              t8_forest_get_local_num_elements
+                              (problem->forest));
               ts->t8_element_debug_print (elem);
 #endif
               t8_forest_leaf_face_neighbors (problem->forest, itree, elem,
@@ -2805,11 +2805,10 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                            ineigh + 1, elem_data->num_neighbors[iface], iface,
                            *elem_data->dual_faces[iface],
                            *elem_data->neighs[iface],
-                           t8_forest_get_local_num_elements (problem->
-                                                             forest) +
-                           t8_forest_get_num_ghosts (problem->forest),
-                           t8_forest_get_local_num_elements (problem->
-                                                             forest) - 1);
+                           t8_forest_get_local_num_elements (problem->forest)
+                           + t8_forest_get_num_ghosts (problem->forest),
+                           t8_forest_get_local_num_elements (problem->forest)
+                           - 1);
                 neigh_scheme->t8_element_debug_print (neighs[ineigh]);
 #endif
                 elem_data->neigh_level[iface] =

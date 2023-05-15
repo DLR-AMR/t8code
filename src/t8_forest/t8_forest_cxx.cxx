@@ -2172,11 +2172,10 @@ t8_forest_leaf_face_neighbors_transitioned (t8_forest_t forest,
                                         forest->maxlevel);
           element_indices[neighbor_count] =
             subelement_neighbor_index -
-            ts->
-            t8_element_get_subelement_id (t8_forest_get_tree_element
-                                          (t8_forest_get_tree
-                                           (forest, ltreeid),
-                                           subelement_neighbor_index))
+            ts->t8_element_get_subelement_id (t8_forest_get_tree_element
+                                              (t8_forest_get_tree
+                                               (forest, ltreeid),
+                                               subelement_neighbor_index))
             +
             ts->t8_element_get_subelement_id (neighbor_leafs[neighbor_count]);
           T8_ASSERT (element_indices[neighbor_count] >= 0);
