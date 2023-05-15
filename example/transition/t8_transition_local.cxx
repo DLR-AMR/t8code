@@ -105,7 +105,8 @@ t8_test_quad_local (t8_element_t *quad_element,
       t8_debugf
         ("Child ID: %i; Vertex: %i; Ref cords in [0,1]^2: (%lf,%lf)\n",
          child_id, vertex_count, coords[0], coords[1]);
-      T8_ASSERT (t8_check_coordinates (coords));
+      int                 coordinate_check = t8_check_coordinates (coords);
+      T8_ASSERT (coordinate_check);
     }                           /* end of vertex loop */
   }                             /* end of subelement loop */
 
@@ -202,7 +203,8 @@ t8_transition_local (t8_eclass_t eclass)
         t8_debugf
           ("Subelement ID: %i; Vertex: %i; Ref cords in [0,1]^2: (%lf,%lf)\n",
            subelement_id, vertex_count, coords[0], coords[1]);
-        T8_ASSERT (t8_check_coordinates (coords));
+        int                 coordinate_check = t8_check_coordinates (coords);
+        T8_ASSERT (coordinate_check);
       }                         /* end of vertex loop */
     }                           /* end of subelement loop */
 

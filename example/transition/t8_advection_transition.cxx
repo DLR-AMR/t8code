@@ -75,6 +75,8 @@
 #include <t8_cmesh/t8_cmesh_examples.h> /* this is for t8_cmesh functions */
 #include <t8_forest/t8_forest_profiling.h>
 
+#include <string.h>             // for strlen fct
+
 #define MAX_FACES 8             /* The maximum number of faces of an element */
 /* TODO: This is not memory efficient. If we run out of memory, we can optimize here. */
 
@@ -297,7 +299,8 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
 {
   t8_advect_problem_t *problem;
   t8_advect_element_data_t *elem_data;
-  double              band_width, elem_diam;
+  double              band_width;
+  double              elem_diam;
   int                 level;
   t8_locidx_t         offset;
   double              phi;
@@ -329,35 +332,37 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
   offset = t8_forest_get_tree_element_offset (forest_from, ltree_id);
   phi = t8_advect_element_get_phi (problem, lelement_id + offset);
 
-#if 1                           /* refine areas with high values */
-  float               phi_threshhold = 0.3;
-  if (phi >= phi_threshhold && level < problem->maxlevel) {
-    return 1;
+  if (true) {
+    float               phi_threshhold = 0.3;
+    if (phi >= phi_threshhold && level < problem->maxlevel) {
+      return 1;
+    }
+    if (phi <= phi_threshhold && num_elements > 1 && level > problem->level) {
+      return -1;
+    }
+    /* if no rule applies, do nothing */
+    return 0;
   }
-  if (phi <= phi_threshhold && num_elements > 1 && level > problem->level) {
-    return -1;
-  }
-  /* if no rule applies, do nothing */
-  return 0;
-#else
-  /* Get a pointer to the element data */
-  elem_data = (t8_advect_element_data_t *)
-    t8_sc_array_index_locidx (problem->element_data, lelement_id + offset);
+  else {
+    /* Get a pointer to the element data */
+    elem_data = (t8_advect_element_data_t *)
+      t8_sc_array_index_locidx (problem->element_data, lelement_id + offset);
 
-  /* Refine if close to levelset, coarsen if not */
-  band_width = problem->band_width;
-  elem_diam = t8_forest_element_diam (forest_from, ltree_id, elements[0]);
-  if (fabs (phi) > 2 * band_width * elem_diam) {
-    /* coarsen if this is a family and level is not too small */
-    return -(num_elements > 1 && level > problem->level);
-  }
-  else if (fabs (phi) < band_width * elem_diam && elem_data->vol > vol_thresh) {
-    /* refine if level is not too large */
-    return level < problem->maxlevel;
-  }
-  /* if no rule applies, do nothing */
-  return 0;
-#endif
+    /* Refine if close to levelset, coarsen if not */
+    band_width = problem->band_width;
+    elem_diam = t8_forest_element_diam (forest_from, ltree_id, elements[0]);
+    if (fabs (phi) > 2 * band_width * elem_diam) {
+      /* coarsen if this is a family and level is not too small */
+      return -(num_elements > 1 && level > problem->level);
+    }
+    else if (fabs (phi) < band_width * elem_diam
+             && elem_data->vol > vol_thresh) {
+      /* refine if level is not too large */
+      return level < problem->maxlevel;
+    }
+    /* if no rule applies, do nothing */
+    return 0;
+  }                             /* refine areas with high values */
 }                               /* end of t8_advect_adapt */
 
 /* Initial geometric adapt scheme */
@@ -2959,7 +2964,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
           for (i = 1; i < 5; i++) {
             phi_values[1] *= i;
             for (j = 0; j < 5; j++) {
-              phi_values[1] += pow (i, j);
+              phi_values[1] += pow (double (i), double (j));
             }
           }
           dummy_time += sc_MPI_Wtime ();
