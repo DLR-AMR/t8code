@@ -522,12 +522,12 @@ t8_default_scheme_tet_c::t8_element_root_len (const t8_element_t *elem) const
 }
 
 void
-t8_default_scheme_tet_c::t8_element_vertex_coords (const t8_element_t *t,
+t8_default_scheme_tet_c::t8_element_vertex_coords (const t8_element_t *elem,
                                                    int vertex,
                                                    int coords[]) const
 {
-  T8_ASSERT (t8_element_is_valid (t));
-  t8_dtet_compute_coords ((const t8_default_tet_t *) t, vertex, coords);
+  T8_ASSERT (t8_element_is_valid (elem));
+  t8_dtet_compute_coords ((const t8_default_tet_t *) elem, vertex, coords);
 }
 
 void
@@ -545,13 +545,29 @@ t8_default_scheme_tet_c::t8_element_general_function (const t8_element_t
 
 void
 t8_default_scheme_tet_c::t8_element_vertex_reference_coords (const
-                                                             t8_element_t *t,
+                                                             t8_element_t
+                                                             *elem,
                                                              const int vertex,
                                                              double coords[])
   const
 {
-  T8_ASSERT (t8_element_is_valid (t));
-  t8_dtet_compute_ref_coords ((const t8_default_tet_t *) t, vertex, coords);
+  T8_ASSERT (t8_element_is_valid (elem));
+  t8_dtet_compute_vertex_ref_coords ((const t8_default_tet_t *) elem, vertex,
+                                     coords);
+}
+
+void
+t8_default_scheme_tet_c::t8_element_reference_coords (const t8_element_t
+                                                      *elem,
+                                                      const double
+                                                      *ref_coords,
+                                                      const void *user_data,
+                                                      double *out_coords)
+  const
+{
+  T8_ASSERT (t8_element_is_valid (elem));
+  t8_dtet_compute_reference_coords ((const t8_dtet_t *) elem, ref_coords,
+                                    out_coords);
 }
 
 /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
