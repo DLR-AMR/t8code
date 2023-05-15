@@ -143,14 +143,18 @@ public:
   virtual int         t8_element_get_transition_refine_identifier (void)
     const;
 
-  virtual void       
-    t8_element_get_sibling_neighbor_in_transition_cell (const t8_element_t
-                                                        *elem, const int face,
-                                                        const int
-                                                        num_neighbors,
-                                                        t8_element_t
-                                                        *neighbor_at_face[],
-                                                        int *neigh_face[]);
+  virtual void
+     
+     
+     
+     t8_element_get_sibling_neighbor_in_transition_cell (const t8_element_t
+                                                         *elem,
+                                                         const int face,
+                                                         const int
+                                                         num_neighbors,
+                                                         t8_element_t
+                                                         *neighbor_at_face[],
+                                                         int *neigh_face[]);
 
   /** Check whether a given element is a subelement
    *  \param [in] elem A valid element 
@@ -170,7 +174,8 @@ public:
    *  \return the number of subelements, this transition cell consists of
    */
   virtual int         t8_element_get_number_of_subelements (int
-                                                            transition_type) const;
+                                                            transition_type)
+    const;
 
   /** Return the transition type of an element
    *  \param [in] elem A valid element 

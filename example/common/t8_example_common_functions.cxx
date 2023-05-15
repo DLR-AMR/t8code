@@ -60,7 +60,7 @@ double
 t8_2D_gauss (const double x[3], double t, void *data)
 {
   // gauss pulse at top center
-  return exp (-pow(10*x[0]-5, 2) - pow(10*x[1]-7.8125, 2));
+  return exp (-pow (10 * x[0] - 5, 2) - pow (10 * x[1] - 7.8125, 2));
   // gauss pulse in center
   // return exp (-pow(10*x[0]-5, 2) - pow(10*x[1]-5, 2));
 }

@@ -167,7 +167,8 @@ public:
 
 /** Construct a same-size sibling of a given element. */
   virtual void        t8_element_sibling (const t8_element_t *elem,
-                                          int sibid, t8_element_t *sibling) const;
+                                          int sibid,
+                                          t8_element_t *sibling) const;
 
   /** Compute the number of face of a given element. */
   virtual int         t8_element_num_faces (const t8_element_t *elem) const;
@@ -177,10 +178,12 @@ public:
    * \param [in] elem The element.
    * \return          The maximum number of faces of \a elem and its descendants.
    */
-  virtual int         t8_element_max_num_faces (const t8_element_t *elem) const;
+  virtual int         t8_element_max_num_faces (const t8_element_t *elem)
+    const;
 
   /** Return the number of children of an element when it is refined. */
-  virtual int         t8_element_num_children (const t8_element_t *elem) const;
+  virtual int         t8_element_num_children (const t8_element_t *elem)
+    const;
 
   /** Return the number of siblings of an element (or the number of elements in the family of elem) */
   virtual int         t8_element_num_siblings (const t8_element_t *elem)
@@ -215,21 +218,27 @@ public:
 
   /** Construct the child element of a given number. */
   virtual void        t8_element_child (const t8_element_t *elem,
-                                        int childid, t8_element_t *child) const;
+                                        int childid,
+                                        t8_element_t *child) const;
 
   /** Construct all sibling neighbors of elem at face - it is required that sibling neighbors of elem at face exist */
-  virtual void       
-    t8_element_get_sibling_neighbor_in_transition_cell (const t8_element_t
-                                                        *elem, const int face,
-                                                        const int
-                                                        num_neighbors,
-                                                        t8_element_t
-                                                        *neighbor_at_face[],
-                                                        int *neigh_face[]);
+  virtual void
+     
+     
+     
+     t8_element_get_sibling_neighbor_in_transition_cell (const t8_element_t
+                                                         *elem,
+                                                         const int face,
+                                                         const int
+                                                         num_neighbors,
+                                                         t8_element_t
+                                                         *neighbor_at_face[],
+                                                         int *neigh_face[]);
 
 /** Construct all children of a given element. */
   virtual void        t8_element_children (const t8_element_t *elem,
-                                           int length, t8_element_t *c[]) const;
+                                           int length,
+                                           t8_element_t *c[]) const;
 
 /** Return the child id of an element */
   virtual int         t8_element_child_id (const t8_element_t *elem) const;
@@ -263,7 +272,8 @@ public:
   /** Given a face of an element and a child number of a child of that face, return the face number
    * of the child of the element that matches the child face. */
   virtual int         t8_element_face_child_face (const t8_element_t *elem,
-                                                  int face, int face_child) const;
+                                                  int face,
+                                                  int face_child) const;
 
   /** Given a face of an element return the face number
    * of the parent of the element that matches the element's face. Or return -1 if
@@ -302,7 +312,8 @@ public:
   virtual void        t8_element_last_descendant_face (const t8_element_t
                                                        *elem, int face,
                                                        t8_element_t
-                                                       *last_desc, int level) const;
+                                                       *last_desc,
+                                                       int level) const;
 
   /** Construct the boundary element at a specific face. */
   virtual void        t8_element_boundary_face (const t8_element_t *elem,
@@ -334,7 +345,8 @@ public:
 
 /** Initialize an element according to a given linear id */
   virtual void        t8_element_set_linear_id (t8_element_t *elem,
-                                                int level, t8_linearidx_t id) const;
+                                                int level,
+                                                t8_linearidx_t id) const;
 
 /** Calculate the linear id of an element */
   virtual t8_linearidx_t t8_element_get_linear_id (const
@@ -370,7 +382,8 @@ public:
 
 /** Compute the integer coordinates of a given element vertex. */
   virtual void        t8_element_vertex_coords (const t8_element_t *t,
-                                                int vertex, int coords[]) const;
+                                                int vertex,
+                                                int coords[]) const;
 
 /** Convert a point in the reference space of an element to a point in the
  *  reference space of the tree.
@@ -393,7 +406,8 @@ public:
 
 /** Determine the number of sibling subelements, of a transition cell of a specific type */
   virtual int         t8_element_get_number_of_subelements (int
-                                                            transition_type) const;
+                                                            transition_type)
+    const;
 
 /** Test wheter a given element is a subelement or not */
   virtual int         t8_element_is_subelement (const t8_element *
@@ -436,7 +450,8 @@ public:
   virtual int         t8_element_refines_irregular (void) const;
 
 /** Get the shape of a given element. Subelements are triangles */
-  virtual t8_element_shape_t t8_element_shape (const t8_element_t *elem) const;
+  virtual t8_element_shape_t t8_element_shape (const t8_element_t *elem)
+    const;
 
 /** Return the number of vertices of an element */
   virtual int         t8_element_num_corners (const t8_element_t *elem) const;
@@ -450,7 +465,8 @@ public:
    */
   virtual void        t8_element_vertex_reference_coords (const t8_element_t
                                                           *t, int vertex,
-                                                          double coords[]) const;
+                                                          double coords[])
+    const;
 
 #ifdef T8_ENABLE_DEBUG
 /** TODO: this should be the new element_print_element funciton */
@@ -473,7 +489,8 @@ protected:
   void                t8_element_vertex_coords_of_subelement (const
                                                               t8_element_t *t,
                                                               int vertex,
-                                                              int coords[]) const;
+                                                              int coords[])
+    const;
 
   /** This function will determine the location of a specific subelement in the parent element.
    *  Since different subelement types are possible, it is a priori not known where for example the
@@ -493,7 +510,8 @@ protected:
   void                t8_element_get_location_of_subelement (const
                                                              t8_element_t
                                                              *elem,
-                                                             int location[]) const;
+                                                             int location[])
+    const;
 
   /** This help function returns the subelement if of an element whose location and transition type is known. */
   int                 t8_element_get_id_from_location (int type,
@@ -505,12 +523,14 @@ protected:
    */
   void                t8_element_copy_subelement_values (const
                                                          t8_element_t *source,
-                                                         t8_element_t *dest) const;
+                                                         t8_element_t *dest)
+    const;
 
   /** This function resets the subelement values of an element to the default value -1.
    *  \param [in,out] elem A valid element, whose subelement values have been resetted. 
    */
-  void                t8_element_reset_subelement_values (t8_element_t *elem) const;
+  void                t8_element_reset_subelement_values (t8_element_t *elem)
+    const;
 
 #ifdef T8_ENABLE_DEBUG
   /** Query whether an elements subelement values are valid

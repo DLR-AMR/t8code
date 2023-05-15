@@ -40,7 +40,7 @@
 #else
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #endif
-#include <t8_forest/t8_forest_io.h> // to write vtk
+#include <t8_forest/t8_forest_io.h>     // to write vtk
 #include <t8_vec.h>
 #include <example/common/t8_example_common.h>
 #include <t8_cmesh/t8_cmesh_examples.h> /* for cmesh initialization via for example t8_cmesh_new_hypercube */
@@ -218,7 +218,7 @@ t8_LFN_test (const t8_forest_t forest_adapt, int get_LFN_stats,
         t8_productionf
           ("\n\n________________"
            "\nCurrent element: local elem index of this process: %i of %i (without ghosts)\n",
-           elem_count, t8_forest_get_local_num_elements(forest_adapt));
+           elem_count, t8_forest_get_local_num_elements (forest_adapt));
         ts->t8_element_debug_print (current_element);
 #endif
       }
@@ -242,10 +242,13 @@ t8_LFN_test (const t8_forest_t forest_adapt, int get_LFN_stats,
 #if T8_ENABLE_DEBUG
               t8_productionf ("\n_________"
                               "\nNeighbor: %i of %i at face %i: (dual face: %i | local index %i of %i (with ghosts)  | ghost, if >= %i):\n",
-                              neighbor_count + 1, num_neighbors, face_id, dual_faces[neighbor_count],
-                              element_indices[neighbor_count], 
-                              t8_forest_get_local_num_elements(forest_adapt) + t8_forest_get_num_ghosts(forest_adapt), 
-                              t8_forest_get_local_num_elements(forest_adapt) - 1);
+                              neighbor_count + 1, num_neighbors, face_id,
+                              dual_faces[neighbor_count],
+                              element_indices[neighbor_count],
+                              t8_forest_get_local_num_elements (forest_adapt)
+                              + t8_forest_get_num_ghosts (forest_adapt),
+                              t8_forest_get_local_num_elements (forest_adapt)
+                              - 1);
               ts->t8_element_debug_print (neighbor_leafs[neighbor_count]);
 #endif
             }
@@ -262,7 +265,8 @@ t8_LFN_test (const t8_forest_t forest_adapt, int get_LFN_stats,
 #if T8_ENABLE_DEBUG
             /* no neighbor in this case */
             t8_productionf ("\n_________"
-                            "\nNeighbor: at face %i: There is no neighbor (domain boundary).\n", face_id);
+                            "\nNeighbor: at face %i: There is no neighbor (domain boundary).\n",
+                            face_id);
 #endif
           }
         }
@@ -316,7 +320,7 @@ t8_transition_global (void)
   double              start_radius = 0.0;
   double              band_width = 2.0;
 
-  int                 num_adaptations = 6;     /* 1 for a single adapted forest */
+  int                 num_adaptations = 6;      /* 1 for a single adapted forest */
   double              radius_increase = 0.2;
 
   /* adaptation setting */
@@ -325,7 +329,8 @@ t8_transition_global (void)
 
   /* cmesh settings */
   int                 single_tree_mesh = 1;
-  int                 multiple_tree_mesh = 0, num_x_trees = 1, num_y_trees = 2;
+  int                 multiple_tree_mesh = 0, num_x_trees = 1, num_y_trees =
+    2;
   int                 hybrid_tree_mesh = 0;
 
   int                 periodic_boundary = 0;    /* use periodic boundaries */
@@ -496,8 +501,9 @@ t8_transition_global (void)
         ("~~~~~~~~~~ vtk of adapted forest has been constructed ~~~~~~~~~~\n");
       if (do_vtk_ghost) {
         snprintf (filename, BUFSIZ, "forest_ghost_%i_%s",
-                adaptation_count, t8_eclass_to_string[T8_ECLASS_QUAD]);
-        t8_forest_write_vtk_ext (forest_adapt, filename, 1, 1, 1, 1, 1, 0, 0, 0, NULL);
+                  adaptation_count, t8_eclass_to_string[T8_ECLASS_QUAD]);
+        t8_forest_write_vtk_ext (forest_adapt, filename, 1, 1, 1, 1, 1, 0, 0,
+                                 0, NULL);
         t8_debugf
           ("~~~~~~~~~~ vtk of ghost has been constructed ~~~~~~~~~~\n");
       }

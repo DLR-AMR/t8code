@@ -45,14 +45,13 @@
  * This way, we compute on a uniform, completely transitioned mesh and can compare it with the uniform non transitioned mesh.
  */
 
-
 /* helpful options for debugging */
-#define GET_DEBUG_OUTPUT 0 /* get print statements of LFN, etc. */
-#define DO_DEBUGGING_EXAMPLE 0 /* simulate a small example (4 timesteps, two adaptations) */
-#define ENABLE_GLOBAL_CONSERVATION_CHECKS 1 /* this throws warnings for unused variables when 0 */
+#define GET_DEBUG_OUTPUT 0      /* get print statements of LFN, etc. */
+#define DO_DEBUGGING_EXAMPLE 0  /* simulate a small example (4 timesteps, two adaptations) */
+#define ENABLE_GLOBAL_CONSERVATION_CHECKS 1     /* this throws warnings for unused variables when 0 */
 
 /* set to 0 in order to switch to the default quad implementation */
- #define USE_TRANSITION_QUAD_SCHEME 1
+#define USE_TRANSITION_QUAD_SCHEME 1
 
 #include "t8.h"
 #include <cstdint>
@@ -330,8 +329,8 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
   offset = t8_forest_get_tree_element_offset (forest_from, ltree_id);
   phi = t8_advect_element_get_phi (problem, lelement_id + offset);
 
-#if 1 /* refine areas with high values */
-  float phi_threshhold = 0.3;
+#if 1                           /* refine areas with high values */
+  float               phi_threshhold = 0.3;
   if (phi >= phi_threshhold && level < problem->maxlevel) {
     return 1;
   }
@@ -359,7 +358,7 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
   /* if no rule applies, do nothing */
   return 0;
 #endif
-} /* end of t8_advect_adapt */
+}                               /* end of t8_advect_adapt */
 
 /* Initial geometric adapt scheme */
 static int
@@ -732,7 +731,9 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
                                       face_children_count);
     /* Get a pointer to the neighbor's element data */
     neigh_id = el_hang->neighs[face][face_children_count];
-    t8_debugf("face = %i, iel_hang = %i, problem->element_data->elem_count = %li, neigh_id = %i\n", face, iel_hang, problem->element_data->elem_count, neigh_id);
+    t8_debugf
+      ("face = %i, iel_hang = %i, problem->element_data->elem_count = %li, neigh_id = %i\n",
+       face, iel_hang, problem->element_data->elem_count, neigh_id);
     neigh_data = (t8_advect_element_data_t *)
       t8_sc_array_index_locidx (problem->element_data, neigh_id);
     neigh_is_ghost =
@@ -921,7 +922,7 @@ t8_advect_global_conservation_check (double scaled_global_phi_beginning,
      "global_phi_beginning: %e global_phi_end: %e abs_diff_phi_global: %e, threshhold: %e, return %d\n",
      scaled_global_phi_beginning, scaled_global_phi_end, abs_diff_phi_global,
      eps, ((abs_diff_phi_global < eps) ? true : false));
-#endif 
+#endif
   return ((abs_diff_phi_global < eps) ? true : false);
 }
 
@@ -935,7 +936,8 @@ t8_advect_conservation_check_phi (double outgoing_phi, double incoming_phi)
   t8_productionf
     ("\nlocal conservation check:\n"
      "outgoing_phi: %e incoming_phi: %e abs_diff_phi: %e, threshhold: %e, return %d\n",
-     outgoing_phi, incoming_phi, abs_diff_phi, eps, ((abs_diff_phi < eps) ? true : false));
+     outgoing_phi, incoming_phi, abs_diff_phi, eps,
+     ((abs_diff_phi < eps) ? true : false));
 #endif
   return ((abs_diff_phi < eps) ? true : false);
 }
@@ -951,7 +953,8 @@ t8_advect_conservation_check_volume (double outgoing_volume,
 #if GET_DEBUG_OUTPUT
   t8_productionf
     ("outgoing_volume: %e incoming_volume: %e abs_diff_volume: %e, threshhold: %e, return %d\n",
-     outgoing_volume, incoming_volume, abs_diff_volume, eps, ((abs_diff_volume < eps) ? true : false));
+     outgoing_volume, incoming_volume, abs_diff_volume, eps,
+     ((abs_diff_volume < eps) ? true : false));
 #endif
   return ((abs_diff_volume < eps) ? true : false);
 }
@@ -1010,7 +1013,7 @@ t8_advect_replace (t8_forest_t forest_old,
     t8_forest_get_element_in_tree (problem->forest_adapt, which_tree,
                                    first_incoming);
 
-#if GET_DEBUG_OUTPUT         /* for debugging */
+#if GET_DEBUG_OUTPUT            /* for debugging */
 #if T8_ENABLE_DEBUG
   t8_productionf ("first Element out:\n");
   ts->t8_element_debug_print (first_outgoing_elem);
@@ -1155,7 +1158,7 @@ t8_advect_replace (t8_forest_t forest_old,
         t8_forest_get_element_in_tree (problem->forest_adapt, which_tree,
                                        first_incoming + subelem_in_count);
 
-#if GET_DEBUG_OUTPUT         /* for debugging */
+#if GET_DEBUG_OUTPUT            /* for debugging */
 #if T8_ENABLE_DEBUG
       t8_productionf ("Out count: %i, In count: %i\n", subelem_out_count,
                       subelem_in_count);
@@ -1800,12 +1803,14 @@ t8_advect_replace (t8_forest_t forest_old,
    *    1) the volume difference of the sum of all incoming and outgoing elements is at most 1e-12
    *    2) the volume scaled phi difference of the sum of all incoming and outgoing elements is at most 1e-12
    */
-  SC_CHECK_ABORT (t8_advect_conservation_check_volume (outgoing_volume, incoming_volume),
+  SC_CHECK_ABORT (t8_advect_conservation_check_volume
+                  (outgoing_volume, incoming_volume),
                   "Conservation check volume failed at the end of t8_advect_replace");
-  SC_CHECK_ABORT (t8_advect_conservation_check_phi (outgoing_phi, incoming_phi),
+  SC_CHECK_ABORT (t8_advect_conservation_check_phi
+                  (outgoing_phi, incoming_phi),
                   "Conservation check phi failed at the end of t8_advect_replace");
 
-} /* end of t8_advect_replace */
+}                               /* end of t8_advect_replace */
 
 static void
 t8_advect_problem_elements_destroy (t8_advect_problem_t * problem)
@@ -2452,7 +2457,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
         elem_data->flux_valid[iface] = 0;
       }
     }
-  } /* end of tree loop */
+  }                             /* end of tree loop */
 
   /* Exchange ghost values */
   t8_forest_ghost_exchange_data (problem->forest, problem->phi_values);
@@ -2605,7 +2610,8 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                  sc_MPI_Comm comm, int adapt_freq, int no_vtk,
                  int vtk_freq, double band_width, int dim, int dummy_op,
                  int volume_refine, int do_transition,
-                 int refinementcriterion, int do_partition, int do_fixed_number_TS, int fixed_number_TS)
+                 int refinementcriterion, int do_partition,
+                 int do_fixed_number_TS, int fixed_number_TS)
 {
   t8_advect_problem_t *problem;
   int                 iface, ineigh;
@@ -2629,7 +2635,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   int                 dual_face;
   t8_locidx_t         neigh_index = -1;
   double              phi_plus, phi_minus;
-  double              scaled_global_phi_beginning = 0, scaled_global_phi_end = 0, scaled_global_phi_beginning_TS = 0;       /* for conservation test */
+  double              scaled_global_phi_beginning = 0, scaled_global_phi_end = 0, scaled_global_phi_beginning_TS = 0;   /* for conservation test */
   int                 number_elements_global = 0;
   int                 count_time_steps = 0;
 
@@ -2647,13 +2653,15 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
 
     /* iterate until ilevel <= problem->maxlevel + non_recursive_adaptation_buffer to make sure that the initialization is finished 
      * since we do not adapt recursively */
-    int non_recursive_adaptation_buffer = 2;
-    for (ilevel = problem->level; ilevel <= problem->maxlevel + non_recursive_adaptation_buffer; ilevel++) {
+    int                 non_recursive_adaptation_buffer = 2;
+    for (ilevel = problem->level;
+         ilevel <= problem->maxlevel + non_recursive_adaptation_buffer;
+         ilevel++) {
       /* initialize according to some adapt_init scheme */
       t8_advect_problem_adapt_init (problem, 0, refinementcriterion);
       /* TODO: add partition for transitioned forests */
       if (do_partition) {
-        SC_CHECK_ABORT(!do_transition, "Not implemented yet.");
+        SC_CHECK_ABORT (!do_transition, "Not implemented yet.");
         /* repartition */
         t8_advect_problem_partition (problem, 0);
       }
@@ -2704,7 +2712,9 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     scaled_global_phi_beginning_TS = t8_advect_get_global_phi (problem);
 
     /* Print vtk - before first timestep and then modulo vtk_freq */
-    if (!no_vtk && (problem->num_time_steps == 0 || (problem->num_time_steps) % vtk_freq == 0) ) {
+    if (!no_vtk
+        && (problem->num_time_steps == 0
+            || (problem->num_time_steps) % vtk_freq == 0)) {
       vtk_time -= sc_MPI_Wtime ();
       t8_advect_write_vtk (problem);
       vtk_time += sc_MPI_Wtime ();
@@ -2775,8 +2785,10 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
 #if GET_DEBUG_OUTPUT
               t8_productionf ("\n\n________________"
                               "\nCurrent element: local elem index of this process: %i of %i (without ghosts)\n",
-                              ielement, t8_forest_get_local_num_elements(problem->forest));
-                              ts->t8_element_debug_print(elem);
+                              ielement,
+                              t8_forest_get_local_num_elements (problem->
+                                                                forest));
+              ts->t8_element_debug_print (elem);
 #endif
               t8_forest_leaf_face_neighbors (problem->forest, itree, elem,
                                              &neighs, iface,
@@ -2785,19 +2797,24 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                                              &elem_data->neighs[iface],
                                              &neigh_scheme, 1);
               time_leaf_face_neighbors += sc_MPI_Wtime ();
-              for (ineigh = 0; ineigh < elem_data->num_neighbors[iface]; ineigh++) {
+              for (ineigh = 0; ineigh < elem_data->num_neighbors[iface];
+                   ineigh++) {
 #if GET_DEBUG_OUTPUT
                 t8_debugf ("\n_________"
                            "\nNeighbor: %i of %i at face %i (dual face: %i | local index %i of %i (with ghosts) | ghost, if >= %i):\n",
                            ineigh + 1, elem_data->num_neighbors[iface], iface,
-                           *elem_data->dual_faces[iface], *elem_data->neighs[iface], 
-                           t8_forest_get_local_num_elements(problem->forest) + t8_forest_get_num_ghosts(problem->forest), 
-                           t8_forest_get_local_num_elements(problem->forest) - 1);
-                neigh_scheme->t8_element_debug_print(neighs[ineigh]);
+                           *elem_data->dual_faces[iface],
+                           *elem_data->neighs[iface],
+                           t8_forest_get_local_num_elements (problem->
+                                                             forest) +
+                           t8_forest_get_num_ghosts (problem->forest),
+                           t8_forest_get_local_num_elements (problem->
+                                                             forest) - 1);
+                neigh_scheme->t8_element_debug_print (neighs[ineigh]);
 #endif
                 elem_data->neigh_level[iface] =
                   neigh_scheme->t8_element_level (neighs[ineigh]);
-              } /* if adapted_or_partitioned */
+              }                 /* if adapted_or_partitioned */
 
               /* *INDENT-OFF* */
               neigh_scheme->t8_element_destroy (elem_data->num_neighbors[iface],
@@ -2923,7 +2940,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                 elem_data->flux_valid[iface] = 1;
                 elem_data->fluxes[iface][0] = flux;
               }
-            } /* if dim == 2 || dim == 3 */
+            }                   /* if dim == 2 || dim == 3 */
             flux_time += sc_MPI_Wtime ();
 
             sc_stats_accumulate (&problem->stats[ADVECT_FLUX], flux_time);
@@ -2984,7 +3001,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
 
         /* TODO: add partition for transitioned forests */
         if (do_partition) {
-          SC_CHECK_ABORT(!do_transition, "Not implemented yet.");
+          SC_CHECK_ABORT (!do_transition, "Not implemented yet.");
           t8_advect_problem_partition (problem, 1);
         }
       }
@@ -2992,9 +3009,10 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
 
     /* Exchange ghost values */
 #if GET_DEBUG_OUTPUT
-    double global_phi_before_ghost_exchange, global_phi_after_ghost_exchange;
+    double              global_phi_before_ghost_exchange,
+      global_phi_after_ghost_exchange;
     global_phi_before_ghost_exchange = t8_advect_get_global_phi (problem);
-    t8_debugf("t8_advect_solve: into forest_ghost_exchange_data.\n");
+    t8_debugf ("t8_advect_solve: into forest_ghost_exchange_data.\n");
 #endif
     t8_advect_get_global_phi (problem);
     ghost_exchange_time = -sc_MPI_Wtime ();
@@ -3002,13 +3020,15 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     ghost_exchange_time += sc_MPI_Wtime ();
 #if GET_DEBUG_OUTPUT
     global_phi_after_ghost_exchange = t8_advect_get_global_phi (problem);
-    t8_debugf("t8_advect_solve: finished forest_ghost_exchange_data.\n"
-              "phi before: %e, phi after: %e\n", 
-              global_phi_before_ghost_exchange, global_phi_after_ghost_exchange);
+    t8_debugf ("t8_advect_solve: finished forest_ghost_exchange_data.\n"
+               "phi before: %e, phi after: %e\n",
+               global_phi_before_ghost_exchange,
+               global_phi_after_ghost_exchange);
 #if ENABLE_GLOBAL_CONSERVATION_CHECKS
-    SC_CHECK_ABORT(t8_advect_global_conservation_check
-                   (global_phi_before_ghost_exchange, global_phi_after_ghost_exchange),
-                   "Global conservation check failed after ghost exchange.");
+    SC_CHECK_ABORT (t8_advect_global_conservation_check
+                    (global_phi_before_ghost_exchange,
+                     global_phi_after_ghost_exchange),
+                    "Global conservation check failed after ghost exchange.");
 #endif
 #endif
 
@@ -3043,7 +3063,8 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
 #if ENABLE_GLOBAL_CONSERVATION_CHECKS
     /* Global conservation check for the new timestep - global sum of scaled phi values should not change */
     SC_CHECK_ABORT (t8_advect_global_conservation_check
-                    (scaled_global_phi_beginning_TS, t8_advect_get_global_phi (problem)),
+                    (scaled_global_phi_beginning_TS,
+                     t8_advect_get_global_phi (problem)),
                     "Global conservation check in time loop failed.");
 #endif
 
@@ -3061,7 +3082,8 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
 #if ENABLE_GLOBAL_CONSERVATION_CHECKS
   /* Global conservation check for first and last forest - global sum of scaled phi values should not change */
   SC_CHECK_ABORT (t8_advect_global_conservation_check
-                  (scaled_global_phi_beginning, t8_advect_get_global_phi (problem)),
+                  (scaled_global_phi_beginning,
+                   t8_advect_get_global_phi (problem)),
                   "Global conservation check first-vs-last failed.");
 #endif
 
@@ -3089,7 +3111,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   /* Compute number time steps and mean number of elements in forests */
   int                 global_number_elements_mean =
     number_elements_global / problem->num_time_steps;
-  
+
 #if ENABLE_GLOBAL_CONSERVATION_CHECKS
   /* Make final conservation check and print results */
   t8_advect_global_conservation_check (scaled_global_phi_beginning,
@@ -3255,20 +3277,20 @@ main (int argc, char *argv[])
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
 
-int do_fixed_number_TS = 0;
-int fixed_number_TS = 0;
+  int                 do_fixed_number_TS = 0;
+  int                 fixed_number_TS = 0;
 #if DO_DEBUGGING_EXAMPLE
-  flow_arg = 7; /* 2x1y flow */
+  flow_arg = 7;                 /* 2x1y flow */
   level = 3;
   reflevel = 3;
-  do_fixed_number_TS = 1; /* only a small, fixed number of timesteps */
+  do_fixed_number_TS = 1;       /* only a small, fixed number of timesteps */
   fixed_number_TS = 4;
   adapt_freq = 2;
   vtk_freq = 1;
   do_transition = 1;
-  initialphi = 3; /* start trigonometric offcentered */
-  refinementcriterion = 1; /* (0: numeric, 1: random, 2: static defined) */
-#endif 
+  initialphi = 3;               /* start trigonometric offcentered */
+  refinementcriterion = 1;      /* (0: numeric, 1: random, 2: static defined) */
+#endif
 
   if (helpme) {
     /* display help message and usage */
@@ -3328,7 +3350,8 @@ int fixed_number_TS = 0;
                      level + reflevel, T, cfl, sc_MPI_COMM_WORLD,
                      adapt_freq, no_vtk, vtk_freq, band_width, dim,
                      dummy_op, volume_refine, do_transition,
-                     refinementcriterion, do_partition, do_fixed_number_TS, fixed_number_TS);
+                     refinementcriterion, do_partition, do_fixed_number_TS,
+                     fixed_number_TS);
 
     adapt_time += sc_MPI_Wtime ();
     t8_global_essentialf ("Runtime advect: %f\n", adapt_time);

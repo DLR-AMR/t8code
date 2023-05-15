@@ -766,7 +766,6 @@ public:
   virtual void        t8_element_destroy (int length,
                                           t8_element_t **elem) const = 0;
 
-
   /* -------------------------------- Functions for transition schemes -------------------------------- */
 
   /** This function refines a parent element into subelements.
@@ -817,14 +816,18 @@ public:
     = 0;
 
   /** Construct all sibling neighbors of elem at face. */
-  virtual void       
-    t8_element_get_sibling_neighbor_in_transition_cell (const t8_element_t
-                                                        *elem, const int face,
-                                                        const int
-                                                        num_neighbors,
-                                                        t8_element_t
-                                                        *neighbor_at_face[],
-                                                        int *neigh_face[]) =
+  virtual void
+     
+     
+     
+     t8_element_get_sibling_neighbor_in_transition_cell (const t8_element_t
+                                                         *elem,
+                                                         const int face,
+                                                         const int
+                                                         num_neighbors,
+                                                         t8_element_t
+                                                         *neighbor_at_face[],
+                                                         int *neigh_face[]) =
     0;
 
   /** Return the number of subelements in a transition cell of type transition_type
@@ -832,8 +835,8 @@ public:
    *  \return the number of subelements, this transition cell consists of
    */
   virtual int         t8_element_get_number_of_subelements (int
-                                                            transition_type) const =
-    0;
+                                                            transition_type)
+    const = 0;
 
   /** Return the transition type of an element
    *  \param [in] elem A valid element 
