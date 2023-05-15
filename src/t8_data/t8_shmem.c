@@ -250,7 +250,7 @@ t8_compute_recvcounts_displs (int sendcount, int *recvcounts, int *displs,
 
 static void
 t8_shmem_array_allgatherv_common (const void *sendbuf,
-                                  int sendcount,
+                                  const int sendcount,
                                   sc_MPI_Datatype sendtype,
                                   t8_shmem_array_t recvarray,
                                   sc_MPI_Datatype recvtype,
@@ -307,9 +307,39 @@ t8_shmem_array_allgatherv_common (const void *sendbuf,
   T8_FREE (intra_recvcounts);
 }
 
+static void
+t8_shmem_array_allgatherv_basic (const void *sendbuf,
+                                 const int sendcount,
+                                 sc_MPI_Datatype sendtype,
+                                 t8_shmem_array_t recvarray,
+                                 sc_MPI_Datatype recvtype, sc_MPI_Comm comm)
+{
+  int                 mpisize;
+  int                 mpirank;
+  int                 mpiret;
+  mpiret = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+
+  int                *displs = T8_ALLOC_ZERO (int, mpisize);
+  int                *recvcounts = T8_ALLOC_ZERO (int, mpisize);
+
+  t8_compute_recvcounts_displs (sendcount, recvcounts, displs,
+                                sizeof (sendtype), comm);
+
+  mpiret =
+    sc_MPI_Allgatherv ((void *) sendbuf, sendcount, sendtype,
+                       recvarray->array, recvcounts, displs, recvtype, comm);
+  SC_CHECK_MPI (mpiret);
+
+  T8_FREE (recvcounts);
+  T8_FREE (displs);
+}
+
 void
 t8_shmem_array_allgatherv (const void *sendbuf,
-                           int sendcount,
+                           const int sendcount,
                            sc_MPI_Datatype
                            sendtype,
                            t8_shmem_array_t
@@ -334,28 +364,8 @@ t8_shmem_array_allgatherv (const void *sendbuf,
   switch (type) {
   case SC_SHMEM_BASIC:
   case SC_SHMEM_PRESCAN:
-    int                 mpisize;
-    int                 mpirank;
-    int                 mpiret;
-    mpiret = sc_MPI_Comm_size (comm, &mpisize);
-    SC_CHECK_MPI (mpiret);
-    mpiret = sc_MPI_Comm_rank (comm, &mpirank);
-    SC_CHECK_MPI (mpiret);
-
-    int                *displs = T8_ALLOC_ZERO (int, mpisize);
-    int                *recvcounts = T8_ALLOC_ZERO (int, mpisize);
-
-    t8_compute_recvcounts_displs (sendcount, recvcounts, displs,
-                                  sizeof (sendtype), comm);
-
-    mpiret =
-      sc_MPI_Allgatherv ((void *) sendbuf, sendcount, sendtype,
-                         recvarray->array, recvcounts, displs, recvtype,
-                         comm);
-    SC_CHECK_MPI (mpiret);
-
-    T8_FREE (recvcounts);
-    T8_FREE (displs);
+    t8_shmem_array_allgatherv_basic (sendbuf, sendcount, sendtype, recvarray,
+                                     recvtype, comm);
     break;
 #if defined(__bgq__) || defined(SC_ENABLE_MPIWINSHARED)
 #if defined(__bgq__)

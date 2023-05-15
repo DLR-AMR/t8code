@@ -155,7 +155,7 @@ void                t8_shmem_array_allgather (const void *sendbuf,
  * recvcount-array and displacement-array between nodes. 
  * 
  * \param[in] sendbuf         the source from this process
- * \param[in] sendcount       the number of items to gather
+ * \param[in] sendcount       the number of items to gather on this proc
  * \param[in] sendtype        the type of items ot gather
  * \param[in, out] recvarray  array of type recvtype where the data gets written to
  * \param[in] recvtype        the type of items to recieve
@@ -165,7 +165,7 @@ void                t8_shmem_array_allgather (const void *sendbuf,
  * 
  */
 void                t8_shmem_array_allgatherv (const void *sendbuf,
-                                               int sendcount,
+                                               const int sendcount,
                                                sc_MPI_Datatype
                                                sendtype,
                                                t8_shmem_array_t
