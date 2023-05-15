@@ -23,8 +23,6 @@
 #include <new>
 #include <t8_schemes/t8_transition/t8_transition_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_line/t8_default_line_cxx.hxx>
-/* TODO: Note that, if a transition_conformal version of triangles would be implemented,
- * then this version could be included here, enabling hybrid-quad-triangle transitioned conformal meshes. */
 #include <t8_schemes/t8_default/t8_default_tri/t8_default_tri_cxx.hxx>
 #include <t8_refcount.h>
 #include "t8_transition_conformal_quad_cxx.hxx"
@@ -44,7 +42,7 @@ t8_scheme_new_transition_cxx (void)
   s->eclass_schemes[T8_ECLASS_LINE] = new t8_default_scheme_line_c ();  /* Standard T8_ECLASS_LINE is used by the quad scheme */
   s->eclass_schemes[T8_ECLASS_QUAD] = new t8_subelement_scheme_quad_c ();
   s->eclass_schemes[T8_ECLASS_HEX] = NULL;
-  s->eclass_schemes[T8_ECLASS_TRIANGLE] = new t8_default_scheme_tri_c ();       /* we use this implementation for hybrid meshes */
+  s->eclass_schemes[T8_ECLASS_TRIANGLE] = new t8_default_scheme_tri_c ();       /* can be used for hybrid meshes - not conformal as long as no conformal transition tri class exists */
   s->eclass_schemes[T8_ECLASS_TET] = NULL;
   s->eclass_schemes[T8_ECLASS_PRISM] = NULL;
 
