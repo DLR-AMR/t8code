@@ -213,9 +213,9 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > vtkGrid,
                       t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
 
-  double             *vertices;
-  double            **tuples;
-  size_t             *data_size;
+  double             *vertices = NULL;
+  double            **tuples = NULL;
+  size_t             *data_size = NULL;
   t8_gloidx_t         tree_id = 0;
   int                 max_dim = -1;
 
