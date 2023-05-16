@@ -36,6 +36,7 @@
 #include <t8_schemes/t8_transition/t8_transition_cxx.hxx>
 #include <example/common/t8_example_common.h>
 
+#ifdef T8_ENABLE_DEBUG
 static int
 t8_check_coordinates (double *coords)
 {
@@ -51,6 +52,7 @@ t8_check_coordinates (double *coords)
   }
   return false;
 }
+#endif
 
 static void
 t8_test_quad_local (t8_element_t *quad_element,
@@ -105,8 +107,7 @@ t8_test_quad_local (t8_element_t *quad_element,
       t8_debugf
         ("Child ID: %i; Vertex: %i; Ref cords in [0,1]^2: (%lf,%lf)\n",
          child_id, vertex_count, coords[0], coords[1]);
-      int                 coordinate_check = t8_check_coordinates (coords);
-      T8_ASSERT (coordinate_check);
+      T8_ASSERT (t8_check_coordinates (coords));
     }                           /* end of vertex loop */
   }                             /* end of subelement loop */
 
@@ -203,8 +204,7 @@ t8_transition_local (t8_eclass_t eclass)
         t8_debugf
           ("Subelement ID: %i; Vertex: %i; Ref cords in [0,1]^2: (%lf,%lf)\n",
            subelement_id, vertex_count, coords[0], coords[1]);
-        int                 coordinate_check = t8_check_coordinates (coords);
-        T8_ASSERT (coordinate_check);
+        T8_ASSERT (t8_check_coordinates (coords));
       }                         /* end of vertex loop */
     }                           /* end of subelement loop */
 
