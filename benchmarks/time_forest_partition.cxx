@@ -310,9 +310,10 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim,
   if (msh_file != NULL) {
     if (use_occ) {
       partition = 0;
-      t8_global_productionf("The cmesh is not partitioned due to the usage of the curved mesh option. "
-                            "Timing will not be comparable to non-curved meshes.");
-    } else {
+      t8_global_productionf("The cmesh is not partitioned due to the usage of the curved mesh option. \n"
+                            "Timing will not be comparable to non-curved meshes. \n");
+    }
+    else {
       partition = 1;
     }
     /* Create a cmesh from the given mesh files */
