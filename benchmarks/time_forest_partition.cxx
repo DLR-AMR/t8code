@@ -172,12 +172,11 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
                               int no_vtk, double x_min_max[2], double T,
                               double delta_t, int do_ghost, int do_balance)
 {
-  t8_cmesh_t          cmesh_partition;
   char                forest_vtu[BUFSIZ], cmesh_vtu[BUFSIZ];
   adapt_data_t        adapt_data;
   t8_forest_t         forest, forest_adapt, forest_partition;
   double              t;
-  int                 partition_cmesh;
+  int                 cmesh_is_partitioned;
   int                 time_step;
   double              adapt_time = 0, ghost_time = 0, partition_time =
     0, new_time = 0, total_time = 0, balance_time = 0;
@@ -201,26 +200,10 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
   sc_stats_init (&times[5], "total");
   total_time -= sc_MPI_Wtime ();
 
-  partition_cmesh = t8_cmesh_is_partitioned (cmesh);
-  if (partition_cmesh) {
-    /* Set up cmesh_partition to be a repartition of cmesh. */
-    t8_cmesh_init (&cmesh_partition);
-    t8_cmesh_set_derive (cmesh_partition, cmesh);
-    /* The new cmesh is partitioned according to a uniform init_level refinement */
-    t8_cmesh_set_partition_uniform (cmesh_partition, init_level,
-                                    t8_scheme_new_default_cxx ());
-    t8_cmesh_set_profiling (cmesh_partition, 1);
-    t8_cmesh_commit (cmesh_partition, comm);
-  }
-  else {
-    /* Use cmesh_partition as the original replicated cmesh */
-    cmesh_partition = cmesh;
-  }
-
-  cmesh_partition = cmesh;
+  cmesh_is_partitioned = t8_cmesh_is_partitioned (cmesh);
   /* Initialize forest and set cmesh */
   t8_forest_init (&forest);
-  t8_forest_set_cmesh (forest, cmesh_partition, comm);
+  t8_forest_set_cmesh (forest, cmesh, comm);
   /* Set the element scheme */
   t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
   /* Set the initial refinement level */
@@ -284,7 +267,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
                                cmesh_vtu, 1.0);
       t8_debugf ("Wrote partitioned forest and cmesh\n");
     }
-    if (partition_cmesh) {
+    if (cmesh_is_partitioned) {
       /* Print runtimes and statistics of forest and cmesh partition */
       t8_cmesh_print_profile (t8_forest_get_cmesh (forest_partition));
     }
@@ -325,10 +308,16 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim,
   T8_ASSERT (msh_file == NULL || cmesh_file == NULL);
 
   if (msh_file != NULL) {
+    if (use_occ) {
+      partition = 0;
+      t8_global_productionf("The cmesh is not partitioned due to the usage of the curved mesh option. "
+                            "Timing will not be comparable to non-curved meshes.");
+    } else {
+      partition = 1;
+    }
     /* Create a cmesh from the given mesh files */
     cmesh =
-      t8_cmesh_from_msh_file ((char *) msh_file, 0, comm, mesh_dim, 0, 0);
-    partition = 1;
+      t8_cmesh_from_msh_file ((char *) msh_file, partition, comm, mesh_dim, 0, use_occ);
   }
   else {
     T8_ASSERT (cmesh_file != NULL);
@@ -348,6 +337,7 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim,
     t8_cmesh_set_derive (cmesh_partition, cmesh);
     t8_cmesh_set_partition_uniform (cmesh_partition, init_level,
                                     t8_scheme_new_default_cxx ());
+    t8_cmesh_set_profiling (cmesh_partition, 1);
     t8_cmesh_commit (cmesh_partition, comm);
     return cmesh_partition;
   }
