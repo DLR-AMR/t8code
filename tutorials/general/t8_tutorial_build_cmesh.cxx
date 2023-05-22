@@ -39,9 +39,9 @@
 
 #include <t8.h>                 /* General t8code header, always include this. */
 #include <t8_cmesh.h>           /* cmesh definition and basic interface. */
-#include <t8_forest/t8_forest_general.h>          /* forest definition and basic interface. */
+#include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>     /* default refinement scheme. */
-#include <t8_cmesh_vtk_writer.h> /* write file in vtu file */
+#include <t8_cmesh_vtk_writer.h>        /* write file in vtu file */
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h> /* linear geometry of the cmesh */
 
 T8_EXTERN_C_BEGIN ();
@@ -123,7 +123,6 @@ T8_EXTERN_C_BEGIN ();
  *             t8_cmesh_commit (cmesh, comm);
  *  */
 
-
 /* Definition of a two dimensional mesh with linear geometry and periodic boundaries.
  * The mesh consists of four triangles and two quads.
  *
@@ -145,7 +144,7 @@ t8_cmesh_new_periodic_hybrid_2d (sc_MPI_Comm comm)
 
   /* 1. Defining an array with all vertices */
   /* Just all vertices of all trees. partly duplicated */
-  double              vertices[60] = {  
+  double              vertices[60] = {
     0, 0, 0,                    /* tree 0, triangle */
     0.5, 0, 0,
     0.5, 0.5, 0,
@@ -173,9 +172,8 @@ t8_cmesh_new_periodic_hybrid_2d (sc_MPI_Comm comm)
   t8_cmesh_init (&cmesh);
 
   /* 3. Definition of the geometry */
-  t8_geometry_c      *linear_geom = t8_geometry_linear_new (2); 
-  t8_cmesh_register_geometry (cmesh, linear_geom);    /* Use linear geometry */
-
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (2);
+  t8_cmesh_register_geometry (cmesh, linear_geom);      /* Use linear geometry */
 
   /* 4. Definition of the classes of the different trees */
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
@@ -196,10 +194,10 @@ t8_cmesh_new_periodic_hybrid_2d (sc_MPI_Comm comm)
   /* 6. Definition of the face neighboors between the different trees */
   t8_cmesh_set_join (cmesh, 0, 1, 1, 2, 0);
   t8_cmesh_set_join (cmesh, 0, 2, 0, 0, 0);
-  t8_cmesh_set_join (cmesh, 0, 3, 2, 3, 0); 
+  t8_cmesh_set_join (cmesh, 0, 3, 2, 3, 0);
 
   t8_cmesh_set_join (cmesh, 1, 3, 0, 2, 1);
-  t8_cmesh_set_join (cmesh, 1, 2, 1, 1, 0); 
+  t8_cmesh_set_join (cmesh, 1, 2, 1, 1, 0);
 
   t8_cmesh_set_join (cmesh, 2, 4, 3, 2, 0);
   t8_cmesh_set_join (cmesh, 2, 5, 2, 0, 1);
@@ -226,43 +224,43 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
    * double vertices[ ] =
    *     { 
    *       0.43, 0, 2,          // Tetrahedron 1 vertices 
-           0, 0, 1,
-           0.86, -0.5, 1,
-           0.86, 0.5, 1,
+   0, 0, 1,
+   0.86, -0.5, 1,
+   0.86, 0.5, 1,
 
-           2.29, 0, 2,          // Tetrahedron 2 vertices 
-           1.86, -0.5, 1,
-           2.72, 0, 1, 
-           1.86, 0.5, 1,
+   2.29, 0, 2,          // Tetrahedron 2 vertices 
+   1.86, -0.5, 1,
+   2.72, 0, 1, 
+   1.86, 0.5, 1,
 
-           0, 0, 0,             // Prism 1 vertices
-           0.86, -0.5, 0,
-           0.86, 0.5, 0,
-           0, 0, 1, 
-           0.86, -0.5, 1,
-           0.86, 0.5, 1,
+   0, 0, 0,             // Prism 1 vertices
+   0.86, -0.5, 0,
+   0.86, 0.5, 0,
+   0, 0, 1, 
+   0.86, -0.5, 1,
+   0.86, 0.5, 1,
 
-           1.86, -0.5, 0,       // Prism 2 vertices
-           2.72, 0, 0,
-           1.86, 0.5, 0,
-           1.86, -0.5, 1,
-           2.72, 0, 1,
-           1.86, 0.5, 1,
+   1.86, -0.5, 0,       // Prism 2 vertices
+   2.72, 0, 0,
+   1.86, 0.5, 0,
+   1.86, -0.5, 1,
+   2.72, 0, 1,
+   1.86, 0.5, 1,
 
-           0.86, -0.5, 0,       // Pyramid coordinates
-           1.86, -0.5, 0,
-           0.86, 0.5, 0,
-           1.86, 0.5, 0,
-           1.29, 0, 0,
+   0.86, -0.5, 0,       // Pyramid coordinates
+   1.86, -0.5, 0,
+   0.86, 0.5, 0,
+   1.86, 0.5, 0,
+   1.29, 0, 0,
 
-           0.86, -0.5, 0,       // Hex coordinates
-           1.86, -0.5, 0,
-           0.86, 0.5, 0,
-           1.86, 0.5, 0,
-           0.86, -0.5, 1,
-           1.86, -0.5, 1,
-           0.86, 0.5, 1,
-           1.86, 0.5, 1
+   0.86, -0.5, 0,       // Hex coordinates
+   1.86, -0.5, 0,
+   0.86, 0.5, 0,
+   1.86, 0.5, 0,
+   0.86, -0.5, 1,
+   1.86, -0.5, 1,
+   0.86, 0.5, 1,
+   1.86, 0.5, 1
 
    *     }
    * // 2. Initialization of the mesh
@@ -320,7 +318,7 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
   t8_cmesh_init (&cmesh);
 
   /*  Definition of the geometry */
-  t8_cmesh_register_geometry (cmesh, linear_geom);       /* Use linear geometry */
+  t8_cmesh_register_geometry (cmesh, linear_geom);      /* Use linear geometry */
 
   /* Defitition of the classes of the different trees */
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TET);
@@ -370,7 +368,6 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
     vertices[3 + i] = vertices[6 + i] + (i == 0 ? 1 : 0);
     vertices[9 + i] = vertices[9 + i] + (i == 0 ? 1 : 0);
   }
-
 
   vertices[6] = 1 + 2 * 0.86;
   vertices[7] = 0;
@@ -427,7 +424,6 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
 
   /* Classification of the vertices for the fourth tree */
   t8_cmesh_set_tree_vertices (cmesh, 3, vertices, 6);
-
 
   /*
    * Definition of the fifth tree
@@ -509,14 +505,14 @@ t8_step8_main (int argc, char **argv)
    * Definition of the meshes.
    */
   /* Creation of a two dimensional cmesh with periodic boundaries. */
-  cmesh_2D = t8_cmesh_new_periodic_hybrid_2d(comm);
+  cmesh_2D = t8_cmesh_new_periodic_hybrid_2d (comm);
 
   /* Creation of a three dimensional cmesh */
-  cmesh_3D = t8_cmesh_new_hybrid_gate_3d(comm);
+  cmesh_3D = t8_cmesh_new_hybrid_gate_3d (comm);
 
   /* Output the meshes to vtu files. */
-  t8_cmesh_vtk_write_file(cmesh_2D, prefix_2D, 1.0);
-  t8_cmesh_vtk_write_file(cmesh_3D, prefix_3D, 1.0);
+  t8_cmesh_vtk_write_file (cmesh_2D, prefix_2D, 1.0);
+  t8_cmesh_vtk_write_file (cmesh_3D, prefix_3D, 1.0);
 
   /*
    * Clean-up
