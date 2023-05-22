@@ -33,6 +33,8 @@
 
 #include <p4est.h>
 #include <t8_element_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_quad/t8_dquad.h>
+#include <t8_schemes/t8_default/t8_default_quad/t8_dquad_bits.h>
 #include <t8_schemes/t8_default/t8_default_line/t8_default_line_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx>
 

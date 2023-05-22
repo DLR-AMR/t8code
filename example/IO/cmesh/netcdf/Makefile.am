@@ -5,4 +5,4 @@
 bin_PROGRAMS += \
 	example/IO/cmesh/netcdf/t8_write_cmesh_netcdf
 
-example_IO_cmesh_netcdf_t8_write_cmesh_netcdf_SOURCES = example/IO/cmesh/netcdf/t8_write_cmesh_netcdf.c
+example_IO_cmesh_netcdf_t8_write_cmesh_netcdf_SOURCES = example/IO/cmesh/netcdf/t8_write_cmesh_netcdf.cxx

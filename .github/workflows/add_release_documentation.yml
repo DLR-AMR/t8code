@@ -34,8 +34,6 @@ on:
   release:
     types:
       - created
-    branches:
-      - main
 
 jobs:
   add_release_doc:

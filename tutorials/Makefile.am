@@ -20,9 +20,9 @@ dist_t8data_DATA += \
   tutorials/features/t8_features_curved_meshes_generate_cmesh_2d.geo
 
 tutorials_general_t8_step0_helloworld_SOURCES = \
-	tutorials/general/t8_step0_helloworld.c
+	tutorials/general/t8_step0_helloworld.cxx
 tutorials_general_t8_step1_coarsemesh_SOURCES = \
-	tutorials/general/t8_step1_coarsemesh.c
+	tutorials/general/t8_step1_coarsemesh.cxx
 tutorials_general_t8_step2_uniform_forest_SOURCES = \
 	tutorials/general/t8_step2_uniform_forest.cxx
 tutorials_general_t8_step3_adapt_forest_SOURCES = \
@@ -60,4 +60,3 @@ libt8_installed_headers += \
         tutorials/general/t8_step5.h \
         tutorials/general/t8_step6.h \
         tutorials/general/t8_step7.h
-

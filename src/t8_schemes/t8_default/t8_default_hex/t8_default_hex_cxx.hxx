@@ -28,6 +28,8 @@
 
 #include <p8est.h>
 #include <t8_element_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_hex/t8_dhex.h>
+#include <t8_schemes/t8_default/t8_default_hex/t8_dhex_bits.h>
 #include <t8_schemes/t8_default/t8_default_quad/t8_default_quad_cxx.hxx>
 
 /** The structure holding a hexahedral element in the default scheme.
