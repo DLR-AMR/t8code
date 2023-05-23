@@ -31,7 +31,7 @@
 #define T8_FOREST_CXX_H
 
 #include <t8.h>
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
 
 T8_EXTERN_C_BEGIN ();
 

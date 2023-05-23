@@ -25,16 +25,39 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /**
  * This is currently a place-holder for a propper cmesh_vtk_reader-test.
- * The function is not implemented yet and therefore we do not provide a propper
+ * The function is not implemented yet and therefore we do not provide a proper
  * test yet. 
  * 
  */
 TEST (t8_cmesh_vtk_reader, dummy_test)
 {
 #if T8_WITH_VTK
-#else
   t8_cmesh_t          cmesh =
-    t8_cmesh_vtk_reader (NULL, 0, 0, sc_MPI_COMM_WORLD, VTK_FILE_ERROR);
+    t8_cmesh_vtk_reader ("non-existing-file.vtu", 0, 0, sc_MPI_COMM_WORLD,
+                         VTK_FILE_ERROR);
   EXPECT_TRUE (cmesh == NULL);
+
+  cmesh =
+    t8_cmesh_vtk_reader ("non-existing-file.vtu", 0, 0, sc_MPI_COMM_WORLD,
+                         VTK_UNSTRUCTURED_FILE);
+  EXPECT_TRUE (cmesh == NULL);
+
+  cmesh =
+    t8_cmesh_vtk_reader ("non-existing-file.vtp", 0, 0, sc_MPI_COMM_WORLD,
+                         VTK_POLYDATA_FILE);
+  EXPECT_TRUE (cmesh == NULL);
+
+  cmesh =
+    t8_cmesh_vtk_reader ("test/testfiles/test_vtk_tri.vtu", 0, 0,
+                         sc_MPI_COMM_WORLD, VTK_UNSTRUCTURED_FILE);
+  EXPECT_FALSE (cmesh == NULL);
+  t8_cmesh_destroy (&cmesh);
+  cmesh =
+    t8_cmesh_vtk_reader ("test/testfiles/test_vtk_cube.vtp", 0, 0,
+                         sc_MPI_COMM_WORLD, VTK_POLYDATA_FILE);
+  EXPECT_FALSE (cmesh == NULL);
+  t8_cmesh_destroy (&cmesh);
+
+#else
 #endif
 }

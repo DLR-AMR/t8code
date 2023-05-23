@@ -475,6 +475,21 @@ t8_default_scheme_pyramid_c::t8_element_vertex_reference_coords (const
                                        vertex, coords);
 }
 
+void
+t8_default_scheme_pyramid_c::t8_element_reference_coords (const t8_element_t
+                                                          *elem,
+                                                          const double
+                                                          *ref_coords,
+                                                          const void
+                                                          *user_data,
+                                                          double *out_coords)
+  const
+{
+  T8_ASSERT (t8_element_is_valid (elem));
+  t8_dpyramid_compute_reference_coords ((const t8_dpyramid_t *) elem,
+                                        ref_coords, out_coords);
+}
+
 int
 t8_default_scheme_pyramid_c::t8_element_refines_irregular () const
 {
