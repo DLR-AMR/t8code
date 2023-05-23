@@ -431,7 +431,7 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset,
                 && fabs (el_vertices1[2] -
                          el_vertices2[3 * ((face2 + ivertex) % 4) + 2]) <
                 tolerance) {
-              orientation = ivertex;
+              orientation = (face2 + ivertex) % 4;
               found_orientation = 1;    /* We found an orientation and can stop the loop */
             }
           }
