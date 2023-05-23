@@ -471,12 +471,11 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset,
             goto die_neigh;
           }
         }
-        /* Insert this face connection if we did not insert it before */
-        if (tit < neighbor || face1 <= face2) {
-          /* if tit !< neighbor then tit == neighbor,
-           * face1 > face2 would mean that we already inserted this connection */
-          t8_cmesh_set_join (cmesh, tit, neighbor, face1, face2, orientation);
-        }
+        /* if tit !< neighbor then tit == neighbor,
+         * face1 > face2 would mean that we already inserted this connection */
+        T8_ASSERT (tit < neighbor || face1 <= face2);
+        /* Insert face connection */
+        t8_cmesh_set_join (cmesh, tit, neighbor, face1, face2, orientation);
       }
     }
   }
