@@ -442,48 +442,29 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset,
         }
         T8_ASSERT (-1 < face2 && face2 < num_faces);
 
-        if (dim == 2) {
-          /* compute orientation after the pattern
-           *         f1
-           *        0 1 2
-           *       ======
-           *    0 | 1 0 1
-           * f2 1 | 0 1 0
-           *    2 | 1 0 1
-           */
-          orientation = (face1 + face2 + 1) % 2;
-        }
-        else {
-          /* dim == 3 */
-          int                 found_orientation = 0;
-          int                 firstvertex = face1 == 0 ? 1 : 0;
-          el_vertices1 += 3 * firstvertex;
+        int                 found_orientation = 0;
+        int                 firstvertex = face1 == 0 ? 1 : 0;
+        el_vertices1 += 3 * firstvertex;
 
-          for (int ivertex = 1; ivertex <= 3 && !found_orientation; ivertex++) {
-            /* The face with number k consists of the vertices with numbers
-             * k+1, k+2, k+3 (mod 4)
-             * in el_vertices are the coordinates of these vertices in order
-             * v_0x v_0y v_0z v_1x v_1y ... */
-            if (fabs (el_vertices1[0] -
-                      el_vertices2[3 * ((face2 + ivertex) % 4)]) < tolerance
-                && fabs (el_vertices1[1] -
-                         el_vertices2[3 * ((face2 + ivertex) % 4) + 1]) <
-                tolerance
-                && fabs (el_vertices1[2] -
-                         el_vertices2[3 * ((face2 + ivertex) % 4) + 2]) <
-                tolerance) {
-              orientation = (face2 + ivertex) % 4;
-              found_orientation = 1;    /* We found an orientation and can stop the loop */
-            }
+        for (int ivertex = 1; ivertex <= dim && !found_orientation; ivertex++) {
+          /* The face with number k consists of the vertices with numbers
+            * k+1, k+2, k+3 (mod 4) or k+1, k+2 (mod 3) in case of triangles.
+            * In el_vertices are the coordinates of these vertices in order
+            * v_0x v_0y v_0z v_1x v_1y ... */
+          if (fabs (el_vertices1[0] - el_vertices2[3 * ((face2 + ivertex) % num_faces)]) < tolerance
+              && fabs (el_vertices1[1] -el_vertices2[3 * ((face2 + ivertex) % num_faces) + 1]) < tolerance
+              && fabs (el_vertices1[2] - el_vertices2[3 * ((face2 + ivertex) % num_faces) + 2]) < tolerance) {
+            orientation = (face2 + ivertex) % num_faces;
+            found_orientation = 1;    /* We found an orientation and can stop the loop */
           }
-          if (!found_orientation) {
-            /* We could not find an orientation */
-            t8_global_errorf
-              ("Could not detect the orientation of the face connection of elements %i and %i\n"
-               "across faces %i and %i when reading from file %s.\n", tit,
-               neighbor, face1, face2, filename);
-            goto die_neigh;
-          }
+        }
+        if (!found_orientation) {
+          /* We could not find an orientation */
+          t8_global_errorf
+            ("Could not detect the orientation of the face connection of elements %i and %i\n"
+              "across faces %i and %i when reading from file %s.\n", tit,
+              neighbor, face1, face2, filename);
+          goto die_neigh;
         }
         T8_ASSERT (-1 < orientation && orientation < 4);
         T8_ASSERT (orientation != face2);
