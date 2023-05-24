@@ -90,12 +90,7 @@ typedef void        (*t8_forest_replace_t) (t8_forest_t forest_old,
                                             t8_forest_t forest_new,
                                             t8_locidx_t which_tree,
                                             t8_eclass_scheme_c *ts,
-<<<<<<< HEAD:src/t8_forest.h
-                                            const int refine,
-                                            const int num_outgoing,
-=======
                                             int refine, int num_outgoing,
->>>>>>> main:src/t8_forest/t8_forest_general.h
                                             t8_locidx_t first_outgoing,
                                             const int num_incoming,
                                             t8_locidx_t first_incoming);
