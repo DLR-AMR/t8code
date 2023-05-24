@@ -20,11 +20,11 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** file t8_step8.h
+/** file t8_tutorial_build_cmesh.h
  */
 
-#ifndef T8_STEP8_H
-#define T8_STEP8_H
+#ifndef T8_TUTORIAL_BUILD_CMESH_H
+#define T8_TUTORIAL_BUILD_CMESH_H
 
 #include <t8.h>
 
@@ -36,4 +36,4 @@ int                 t8_tutorial_build_cmesh_main (int argc, char **argv);
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_STEP8_H */
+#endif /* !T8_TUTORIAL_BUILD_CMESH_H */

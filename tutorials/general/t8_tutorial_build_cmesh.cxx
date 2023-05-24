@@ -262,7 +262,7 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
    0.86, 0.5, 1,
    1.86, 0.5, 1
 
-   *     }
+   *     };
    * // 2. Initialization of the mesh
    * t8_cmesh_t          cmesh;
    * t8_cmesh_init (&cmesh);
@@ -277,17 +277,17 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
    * t8_cmesh_set_tree_class (cmesh, 2, T8_ECLASS_PRISM);
    * t8_cmesh_set_tree_class (cmesh, 3, T8_ECLASS_PRISM);
    * t8_cmesh_set_tree_class (cmesh, 4, T8_ECLASS_PYRAMID);
-   * t8_cmesh_set_tree_class (cmesh, 4, T8_ECLASS_HEX);
+   * t8_cmesh_set_tree_class (cmesh, 5, T8_ECLASS_HEX);
    *
    * // 5. Classification of the vertices for each tree
-   * t8_cmesh_set_tree_vertices (cmesh, 0, vertices + 12, 4);
-   * t8_cmesh_set_tree_vertices (cmesh, 1, vertices + 24, 4);
-   * t8_cmesh_set_tree_vertices (cmesh, 2, vertices + 42, 6);
-   * t8_cmesh_set_tree_vertices (cmesh, 3, vertices + 60, 6);
-   * t8_cmesh_set_tree_vertices (cmesh, 4, vertices + 78, 5);
-   * t8_cmesh_set_tree_vertices (cmesh, 5, vertices + 93, 8);
+   * t8_cmesh_set_tree_vertices (cmesh, 0, vertices , 4);
+   * t8_cmesh_set_tree_vertices (cmesh, 1, vertices + 12, 4);
+   * t8_cmesh_set_tree_vertices (cmesh, 2, vertices + 24, 6);
+   * t8_cmesh_set_tree_vertices (cmesh, 3, vertices + 42, 6);
+   * t8_cmesh_set_tree_vertices (cmesh, 4, vertices + 60, 5);
+   * t8_cmesh_set_tree_vertices (cmesh, 5, vertices + 75, 8);
    *
-   * // 6. Definition of the face neighboors between the different trees
+   * // 6. Definition of the face neighbors between the different trees
    * t8_cmesh_set_join (cmesh, 0, 2, 0, 4, 0);
    * t8_cmesh_set_join (cmesh, 1, 3, 0, 4, 0);
    * t8_cmesh_set_join (cmesh, 2, 5, 0, 0, 0);
@@ -303,10 +303,10 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
   /* In many cases the points of the different trees are dependent of these of the previous trees
    * or of these of the same tree. Then it is reasonable to define the different vertices dependent 
    * of each other.
-   * Also the order of the sheme is not fixed. The definition of the face neighboors can be 
+   * Also the order of the scheme is not fixed. The definition of the face neighbors can be 
    * before the definition of the vertices.
-   * In the following example the tree classes are defined, then the face neighboors are set.
-   * After that the vertices are defined for each tree separate.
+   * In the following example the tree classes are defined, then the face neighbors are set.
+   * After that the vertices are defined for each tree separately.
    *  */
 
   double              vertices[24];
@@ -506,16 +506,32 @@ t8_tutorial_build_cmesh_main (int argc, char **argv)
   /* Creation of a two dimensional cmesh with periodic boundaries. */
   cmesh_2D = t8_cmesh_new_periodic_hybrid_2d (comm);
 
+  t8_global_productionf
+    ("[tutorial] A 2D hybrid cmesh with periodic boundaries has been created.\n");
+
   /* Creation of a three dimensional cmesh */
   cmesh_3D = t8_cmesh_new_hybrid_gate_3d (comm);
 
+  t8_global_productionf
+    ("[tutorial] A 3D hybrid cmesh (in style of a gate) has been created.\n");
+
   /* Output the meshes to vtu files. */
   t8_cmesh_vtk_write_file (cmesh_2D, prefix_2D, 1.0);
+  t8_global_productionf ("[tutorial] Wrote the 2D cmesh to vtu files.\n");
   t8_cmesh_vtk_write_file (cmesh_3D, prefix_3D, 1.0);
+  t8_global_productionf ("[tutorial] Wrote the 3D cmesh to vtu files.\n");
 
   /*
    * Clean-up
    */
+  /* Deallocate the cmeshes */
+  t8_cmesh_destroy (&cmesh_2D);
+  t8_global_productionf ("[tutorial] The 2D cmesh has been deallocated.\n");
+
+  t8_cmesh_destroy (&cmesh_3D);
+  t8_global_productionf ("[tutorial] The 3D cmesh has been deallocated.\n");
+
+  /* Finalize the sc library */
   sc_finalize ();
 
   mpiret = sc_MPI_Finalize ();
