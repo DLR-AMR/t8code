@@ -310,7 +310,6 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
    *  */
 
   double              vertices[24];
-  int                 i;
   t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
 
   /* Initialization of the mesh */
@@ -362,11 +361,11 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
    * Definition of the second tree
    */
   /* Tetrahedron 2 vertices */
-  for (i = 0; i < 3; i++) {
+  for (int itet = 0; itet < 3; itet++) {
 
-    vertices[i] = vertices[i] + (i == 0 ? 1 + 0.86 : 0);
-    vertices[3 + i] = vertices[6 + i] + (i == 0 ? 1 : 0);
-    vertices[9 + i] = vertices[9 + i] + (i == 0 ? 1 : 0);
+    vertices[itet] = vertices[itet] + (itet == 0 ? 1 + 0.86 : 0);
+    vertices[3 + itet] = vertices[6 + itet] + (itet == 0 ? 1 : 0);
+    vertices[9 + itet] = vertices[9 + itet] + (itet == 0 ? 1 : 0);
   }
 
   vertices[6] = 1 + 2 * 0.86;
@@ -393,10 +392,10 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
   vertices[8] = 0;
 
   /* Translate +1 in z-axis for the upper vertices */
-  for (i = 0; i < 3; i++) {
-    vertices[9 + 3 * i] = vertices[3 * i];
-    vertices[9 + 3 * i + 1] = vertices[3 * i + 1];
-    vertices[9 + 3 * i + 2] = vertices[3 * i + 2] + 1;
+  for (int iprism1 = 0; iprism1 < 3; iprism1++) {
+    vertices[9 + 3 * iprism1] = vertices[3 * iprism1];
+    vertices[9 + 3 * iprism1 + 1] = vertices[3 * iprism1 + 1];
+    vertices[9 + 3 * iprism1 + 2] = vertices[3 * iprism1 + 2] + 1;
   }
 
   /* Classification of the vertices for the third tree */
@@ -406,9 +405,10 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
    * Definition of the fourth tree
    */
   /* Prism 2 vertices */
-  for (i = 0; i < 3; i++) {
-    vertices[3 + i] = vertices[i] + (i == 0 ? 1 + 2 * 0.86 : 0);
-    vertices[6 + i] = vertices[6 + i] + (i == 0 ? 1 : 0);
+  for (int iprism2 = 0; iprism2 < 3; iprism2++) {
+    vertices[3 + iprism2] =
+      vertices[iprism2] + (iprism2 == 0 ? 1 + 2 * 0.86 : 0);
+    vertices[6 + iprism2] = vertices[6 + iprism2] + (iprism2 == 0 ? 1 : 0);
   }
 
   vertices[0] = 0.86 + 1;
@@ -416,10 +416,10 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
   vertices[2] = 0;
 
   /* Translate +1 in z-axis for the upper vertices */
-  for (i = 0; i < 3; i++) {
-    vertices[9 + 3 * i] = vertices[3 * i];
-    vertices[9 + 3 * i + 1] = vertices[3 * i + 1];
-    vertices[9 + 3 * i + 2] = vertices[3 * i + 2] + 1;
+  for (int iprism2 = 0; iprism2 < 3; iprism2++) {
+    vertices[9 + 3 * iprism2] = vertices[3 * iprism2];
+    vertices[9 + 3 * iprism2 + 1] = vertices[3 * iprism2 + 1];
+    vertices[9 + 3 * iprism2 + 2] = vertices[3 * iprism2 + 2] + 1;
   }
 
   /* Classification of the vertices for the fourth tree */
@@ -457,10 +457,10 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
    */
   /* Hex coordinates */
   /* Translate +1 in z-axis for the upper vertices */
-  for (i = 0; i < 4; i++) {
-    vertices[12 + 3 * i] = vertices[3 * i];
-    vertices[12 + 3 * i + 1] = vertices[3 * i + 1];
-    vertices[12 + 3 * i + 2] = vertices[3 * i + 2] + 1;
+  for (int hex = 0; hex < 4; hex++) {
+    vertices[12 + 3 * hex] = vertices[3 * hex];
+    vertices[12 + 3 * hex + 1] = vertices[3 * hex + 1];
+    vertices[12 + 3 * hex + 2] = vertices[3 * hex + 2] + 1;
   }
 
   /* Classification of the vertices for the fifth tree */
@@ -474,11 +474,6 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
 int
 t8_tutorial_build_cmesh_main (int argc, char **argv)
 {
-  int                 mpiret;
-  sc_MPI_Comm         comm;
-  t8_cmesh_t          cmesh_2D;
-  t8_cmesh_t          cmesh_3D;
-
   /* The prefix for our output files. */
   const char         *prefix_2D = "t8_step8_user_defined_mesh_2D";
   const char         *prefix_3D = "t8_step8_user_defined_mesh_3D";
@@ -488,7 +483,7 @@ t8_tutorial_build_cmesh_main (int argc, char **argv)
    */
 
   /* Initialize MPI. This has to happen before we initialize sc or t8code. */
-  mpiret = sc_MPI_Init (&argc, &argv);
+  int                 mpiret = sc_MPI_Init (&argc, &argv);
   /* Error check the MPI return value. */
   SC_CHECK_MPI (mpiret);
 
@@ -498,19 +493,19 @@ t8_tutorial_build_cmesh_main (int argc, char **argv)
   t8_init (SC_LP_PRODUCTION);
 
   /* We will use MPI_COMM_WORLD as a communicator. */
-  comm = sc_MPI_COMM_WORLD;
+  sc_MPI_Comm         comm = sc_MPI_COMM_WORLD;
 
   /*
    * Definition of the meshes.
    */
   /* Creation of a two dimensional cmesh with periodic boundaries. */
-  cmesh_2D = t8_cmesh_new_periodic_hybrid_2d (comm);
+  t8_cmesh_t          cmesh_2D = t8_cmesh_new_periodic_hybrid_2d (comm);
 
   t8_global_productionf
     ("[tutorial] A 2D hybrid cmesh with periodic boundaries has been created.\n");
 
   /* Creation of a three dimensional cmesh */
-  cmesh_3D = t8_cmesh_new_hybrid_gate_3d (comm);
+  t8_cmesh_t          cmesh_3D = t8_cmesh_new_hybrid_gate_3d (comm);
 
   t8_global_productionf
     ("[tutorial] A 3D hybrid cmesh (in style of a gate) has been created.\n");
