@@ -20,9 +20,9 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* This file is part of the step6 example of t8code.
- * Here, we only wrap the main function. See t8_step8_user_defined_mesh.cxx for the documentation of
- * the step8 example.
+/* This file is part of the t8code tutorial regarding the creation of a scmesh.
+ * Here, we only wrap the main function. See t8_tutorial_build_cmesh.cxx for the documentation of
+ * the 'build-cmesh'-tutorial
  */
 
 #include <tutorials/general/t8_tutorial_build_cmesh.h>
@@ -30,5 +30,5 @@
 int
 main (int argc, char **argv)
 {
-  return t8_step8_main (argc, argv);
+  return t8_tutorial_build_cmesh_main (argc, argv);
 }

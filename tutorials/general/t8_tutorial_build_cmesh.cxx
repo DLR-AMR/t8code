@@ -20,14 +20,14 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* See also: https://github.com/DLR-AMR/t8code/wiki/Step-6-Computing-stencils
+/* See also: https://github.com/DLR-AMR/t8code/wiki/Build-Cmesh
  *
- * This is step8 of the t8code tutorials using the C++ interface of t8code.
+ * This is a tutorial regarding the creation of a cmesh using the C++ interface of t8code.
  * In the following we will create two user defined meshes.
  * The first example is given by a periodic two dimensional mesh using linear
  * geometry consisting of four triangles and and two quads.
  * The second example is given by a non-periodic three dimensional mesh 
- * with linear geometry constructed using one tetrahedron, two prisms and one 
+ * with linear geometry constructed using two tetrahedra, two prisms, one pyramid, and one 
  * hexaedron.
  *
  * How you can experiment here:
@@ -191,7 +191,7 @@ t8_cmesh_new_periodic_hybrid_2d (sc_MPI_Comm comm)
   t8_cmesh_set_tree_vertices (cmesh, 4, vertices + 42, 3);
   t8_cmesh_set_tree_vertices (cmesh, 5, vertices + 51, 3);
 
-  /* 6. Definition of the face neighboors between the different trees */
+  /* 6. Definition of the face neighbors between the different trees */
   t8_cmesh_set_join (cmesh, 0, 1, 1, 2, 0);
   t8_cmesh_set_join (cmesh, 0, 2, 0, 0, 0);
   t8_cmesh_set_join (cmesh, 0, 3, 2, 3, 0);
@@ -214,7 +214,7 @@ t8_cmesh_new_periodic_hybrid_2d (sc_MPI_Comm comm)
 }
 
 /* Definition of a three dimensional mesh with linear geometry.
- * The mesh consists of two tetrahedra, two prisms and one hexahedron.
+ * The mesh consists of two tetrahedra, two prisms, one pyramid, and one hexahedron.
  *  */
 t8_cmesh_t
 t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
@@ -429,21 +429,20 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
    * Definition of the fifth tree
    */
   /* Pyramid vertices */
-
   vertices[0] = 0.86;
-  vertices[1] = -0.5;
+  vertices[1] = 0.5;
   vertices[2] = 0;
 
   vertices[3] = 1.86;
-  vertices[4] = -0.5;
+  vertices[4] = 0.5;
   vertices[5] = 0;
 
   vertices[6] = 0.86;
-  vertices[7] = 0.5;
+  vertices[7] = -0.5;
   vertices[8] = 0;
 
   vertices[9] = 1.86;
-  vertices[10] = 0.5;
+  vertices[10] = -0.5;
   vertices[11] = 0;
 
   vertices[12] = 1.36;
@@ -473,7 +472,7 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
 }
 
 int
-t8_step8_main (int argc, char **argv)
+t8_tutorial_build_cmesh_main (int argc, char **argv)
 {
   int                 mpiret;
   sc_MPI_Comm         comm;
