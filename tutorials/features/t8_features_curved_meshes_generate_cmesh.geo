@@ -108,7 +108,7 @@ Spline(100) = {1000:1030, 2000:2028, 1000};
 
 /* Definition of the corner points of the flow domain. Note, that we
  * to define more than the four corner points. With these additional
- * points we can divide the domain into quadrilaterals and later own
+ * points we can divide the domain into quadrilaterals and later on
  * into hexahedra. This is important to structurally mesh the domain. */
 Point(2032) = {-0.2, -0.5, 0, 1.0};
 Point(2033) = {-0.2, 0, 0, 1.0};

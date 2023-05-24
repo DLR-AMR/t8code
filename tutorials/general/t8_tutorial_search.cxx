@@ -110,7 +110,8 @@
 #include <t8.h>                 /* General t8code header, always include this. */
 #include <t8_cmesh.h>           /* cmesh definition and basic interface. */
 #include <t8_cmesh/t8_cmesh_examples.h> /* A collection of exemplary cmeshes */
-#include <t8_forest.h>          /* forest definition and basic interface. */
+#include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
+#include <t8_forest/t8_forest_io.h>     /* save forest */
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>     /* default refinement scheme. */
 #include <t8_vec.h>             /* Basic operations on 3D vectors. */
 #include <t8_forest/t8_forest_iterate.h>        /* For the search algorithm. */
@@ -248,27 +249,6 @@ t8_tutorial_search_vtk (t8_forest_t forest, sc_array * particles_per_element,
     (" [search] Wrote forest and number of particles per element to %s*\n",
      prefix);
 }
-
-#if 0
-/* Currently deactivated output function that prints all particles.
- * Used for debugging. */
-static void
-t8_tutorial_search_print_particles (sc_array_t *particles)
-{
-  int                 iparticle;
-  size_t              num_particles = particles->elem_count;
-
-  for (iparticle = 0; iparticle < num_particles; ++iparticle) {
-    const t8_tutorial_search_particle_t *particle =
-      (const t8_tutorial_search_particle_t *) sc_array_index_int (particles,
-                                                                  iparticle);
-    t8_global_productionf ("(%f, %f, %f) \t%s\n", particle->coordinates[0],
-                           particle->coordinates[1], particle->coordinates[2],
-                           particle->is_inside_partition ?
-                           "" : "NOT IN DOMAIN");
-  }
-}
-#endif
 
 /* Perform the actual search and write the forest with the number of particles per element
  * to vtu files. */

@@ -22,7 +22,7 @@
 
 #include <gtest/gtest.h>
 #include <t8_cmesh/t8_cmesh.c>
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
 #include <t8_vtk.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx>
@@ -255,7 +255,8 @@ t8_test_geometry_occ (double *rot_vec,
   double              rotated_test_ref_coords[24];
   double              rotation_origin[3] = { 0.5, 0.5, 0.5 };
   double              inversed_rot_vec[3];
-  double              tol = FLT_EPSILON > 1e-10 ? FLT_EPSILON : 1e-10;
+  double              tol =
+    T8_PRECISION_EPS > 1e-10 ? T8_PRECISION_EPS : 1e-10;
   t8_cmesh_t          cmesh =
     t8_create_occ_hypercube (rot_vec, face, edge, parameters);
 

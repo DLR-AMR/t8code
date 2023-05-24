@@ -23,7 +23,7 @@
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_private.h>
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
 #include <t8_data/t8_containers.h>
 #include <t8_element_cxx.hxx>
 
@@ -607,11 +607,7 @@ t8_forest_adapt (t8_forest_t forest)
                                             tscheme, refine_list, telements,
                                             &el_inserted, elements,
                                             &element_removed);
-          /* el_coarsen is the index of the first element in the new element
-           * array which could be coarsened recursively.
-           * We can set this here to the next element after the current family, 
-           * since a family that emerges from a refinement will never be coarsened */
-          el_coarsen = el_inserted + num_children;
+          el_coarsen = el_inserted;
         }
         else {
           (void) t8_element_array_push_count (telements, num_children);
