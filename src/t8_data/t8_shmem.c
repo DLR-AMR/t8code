@@ -240,9 +240,9 @@ t8_compute_recvcounts_displs (int sendcount, int *recvcounts, int *displs,
   SC_CHECK_MPI (mpiret);
 
   int                 recv_total = recvcounts[0];
-  for (int i = 1; i < mpisize; i++) {
-    displs[i] = displs[i - 1] + recvcounts[i - 1];
-    recv_total += recvcounts[i];
+  for (int irank = 1; irank < mpisize; irank++) {
+    displs[irank] = displs[irank - 1] + recvcounts[irank - 1];
+    recv_total += recvcounts[irank];
   }
 
   return recv_total;

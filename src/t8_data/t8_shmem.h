@@ -160,8 +160,6 @@ void                t8_shmem_array_allgather (const void *sendbuf,
  * \param[in, out] recvarray  array of type recvtype where the data gets written to
  * \param[in] recvtype        the type of items to recieve
  * \param[in] comm            the mpi communicator
- * \param[in] intranode       the intranode mpi communicator
- * \param[in] internode       the internode mpi communicator
  * 
  */
 void                t8_shmem_array_allgatherv (void *sendbuf,
