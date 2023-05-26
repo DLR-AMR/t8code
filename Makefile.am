@@ -135,3 +135,8 @@ doxygen-local: doc/Doxyfile
 	cd doc && doxygen Doxyfile
 
 .PHONY: gtest doxygen
+
+lib_LTLIBRARIES         += libt8big.la
+libt8big_la_SOURCES     =
+libt8big_la_LDFLAGS     = -release $(VERSION) -version-info 2:0:0
+libt8big_la_LIBADD      = sc/src/libsc.la p4est/src/libp4est.la src/libt8.la
