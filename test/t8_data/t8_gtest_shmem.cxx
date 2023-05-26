@@ -167,7 +167,8 @@ TEST_P(shmem, test_sc_shmem_alloc){
 
 TEST_P(shmem, test_shmem_array_allgatherv){
   const size_t           element_size = sizeof (t8_gloidx_t);
-  int                 mpirank, mpisize;
+  int                 mpirank;
+  int                 mpisize;
   int                 mpiret;
 
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
