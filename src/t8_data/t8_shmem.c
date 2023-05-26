@@ -219,7 +219,7 @@ t8_shmem_array_allgather (const void *sendbuf, int sendcount,
 }
 
 /**
- * Computes the recvcounter- and displacementarray for 
+ * Computes the recvcounter- and displacement array for 
  * an MPI_Gatherv
  * 
  * \param[in] sendcount The number of items this proc sends
@@ -315,6 +315,9 @@ t8_shmem_array_allgatherv_common (void *sendbuf,
                          recvtype, internode_comm);
     SC_CHECK_MPI (mpiret);
     T8_FREE (noderecvchar);
+  }
+  else {
+    t8_errorf ("Can not write shmem-array.\n");
   }
   t8_shmem_array_end_writing (recvarray);
 
