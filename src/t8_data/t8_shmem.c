@@ -224,7 +224,7 @@ t8_shmem_array_allgather (const void *sendbuf, int sendcount,
  * 
  * \param[in] sendcount The number of items this proc sends
  * \param[in, out] recvcounts On input a zero-initialized array that is going to be filled with the number of elements send by rank i
- * \param[in, out] displs On input a zero-initialized  array that is going to be filled with the displacements
+ * \param[in, out] displs On input a zero-initialized array that is going to be filled with the displacements
  * \returns   The total number of items 
  */
 static int
