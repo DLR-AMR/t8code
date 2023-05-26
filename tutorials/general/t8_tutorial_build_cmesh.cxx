@@ -456,11 +456,11 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
    * Definition of the sixth tree
    */
   /* Hex coordinates */
-  /* Translate +1 in z-axis for the upper vertices */
   for (int hex = 0; hex < 4; hex++) {
-    vertices[12 + 3 * hex] = vertices[3 * hex];
-    vertices[12 + 3 * hex + 1] = vertices[3 * hex + 1];
-    vertices[12 + 3 * hex + 2] = vertices[3 * hex + 2] + 1;
+    vertices[3 * hex + 1] = vertices[3 * hex + 1] * (-1);
+    vertices[3 * hex + 12] = vertices[3 * hex];
+    vertices[3 * hex + 13] = vertices[3 * hex + 1];
+    vertices[3 * hex + 14] = vertices[3 * hex + 2] + 1;
   }
 
   /* Classification of the vertices for the fifth tree */
@@ -488,7 +488,7 @@ t8_tutorial_build_cmesh_main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
 
   /* Initialize the sc library, has to happen before we initialize t8code. */
-  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
+  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_PRODUCTION);
   /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
   t8_init (SC_LP_PRODUCTION);
 
