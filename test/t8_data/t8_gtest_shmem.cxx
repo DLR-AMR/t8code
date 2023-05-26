@@ -178,6 +178,8 @@ TEST_P(shmem, test_shmem_array_allgatherv){
 
   t8_debugf("[D] mpirank: %i\n", mpirank);
   
+  /* Each process fills an array of size mpirank * 10, where the elements
+   * in the arrays increase, such that in the shmem we have a contiguous increase. */
   const int                   base_size = 10;
   const t8_gloidx_t           array_length = (mpirank+1) * base_size;
   t8_gloidx_t                 *sendbuf = T8_ALLOC_ZERO(t8_gloidx_t, array_length);
