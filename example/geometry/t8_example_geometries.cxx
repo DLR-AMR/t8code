@@ -53,6 +53,9 @@
 #include <gp_Circ.hxx>
 #include <gp_Vec.hxx>
 #include <BRep_Tool.hxx>
+#include <BRepTools.hxx>
+#include <GeomFill_BSplineCurves.hxx>
+#include <Geom_Surface.hxx>
 #endif
 
 typedef enum
@@ -943,65 +946,66 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
          level);
       
       /* Constructing a triangle with one curved edge (f2) */
-      Handle_Geom_Curve   occ_curve0, occ_curve1, occ_curve2;
-      TColgp_Array1OfPnt  point_array0 (1, 3);
-      TColgp_Array1OfPnt  point_array1 (1, 3);
+      Handle_Geom_BSplineCurve   occ_curve0, occ_curve1, occ_curve2, occ_curve3;
+      TColgp_Array1OfPnt  point_array0 (1, 2);
+      TColgp_Array1OfPnt  point_array1 (1, 2);
       TColgp_Array1OfPnt  point_array2 (1, 3);
+      TColgp_Array1OfPnt  point_array3 (1, 2);
       TopoDS_Shape        shape;
 
       /* Define knots along the bsplines. */
-      point_array0(1) = gp_Pnt (2.0, 0.0, 0.0);
-      point_array0(2) = gp_Pnt (1.6, 1.5, 0.0);
-      point_array0(3) = gp_Pnt (1.0, 2.0, 0.0);
+      point_array0(1) = gp_Pnt (0.0, 0.0, 0.0);
+      point_array0(2) = gp_Pnt (1.0, 2.0, 0.0);
 
-      point_array1(1) = gp_Pnt (0.0, 0.0, 0.0);
-      point_array1(2) = gp_Pnt (0.5, 0.6, 0.0);
-      point_array1(3) = gp_Pnt (1.0, 2.0, 0.0);
+      point_array1(1) = gp_Pnt (2.0, 0.0, 0.0);
+      point_array1(2) = gp_Pnt (3.0, 2.0, 0.0);
 
       point_array2(1) = gp_Pnt (0.0, 0.0, 0.0);
       point_array2(2) = gp_Pnt (1.0, 0.2, 0.0);
       point_array2(3) = gp_Pnt (2.0, 0.0, 0.0);
 
+      point_array3(1) = gp_Pnt (1.0, 2.0, 0.0);
+      point_array3(2) = gp_Pnt (3.0, 2.0, 0.0);
+
       /* Generate bsplines from arrays. */
       occ_curve0 = GeomAPI_PointsToBSpline (point_array0).Curve ();
       occ_curve1 = GeomAPI_PointsToBSpline (point_array1).Curve ();
       occ_curve2 = GeomAPI_PointsToBSpline (point_array2).Curve ();
+      occ_curve3 = GeomAPI_PointsToBSpline (point_array3).Curve ();
 
-      /* Fill shape with bsplines so that we can create a geometry with this shape. */
-      shape = BRepBuilderAPI_MakeEdge (occ_curve0).Edge ();
-      shape =
-        BRepAlgoAPI_Fuse (shape,
-                          BRepBuilderAPI_MakeEdge (occ_curve1).Edge ());
-      shape =
-        BRepAlgoAPI_Fuse (shape,
-                          BRepBuilderAPI_MakeEdge (occ_curve2).Edge ());
+      Handle_Geom_BSplineSurface occ_surface = GeomFill_BSplineCurves (occ_curve0, occ_curve1, occ_curve2, occ_curve3, GeomFill_CurvedStyle).Surface ();
+
+      /* Fill shape with bsplinesurface so that we can create a geometry with this shape. */
+      shape = BRepBuilderAPI_MakeFace (occ_surface, 1e-6).Face ();
 
       BRepTools::Write (shape, "shape_occ_triangle.brep", 0, 0, TopTools_FormatVersion_VERSION_1);
 
       /* Create an occ geometry. */
       t8_geometry_occ    *geometry_occ =
-        new t8_geometry_occ (3, shape, "occ curve dim=3");
+        new t8_geometry_occ (3, shape, "occ surface dim=3");
 
       /* The arrays indicate which face/edge carries a geometry. 
        * 0 means no geometry and any other number indicates the position of the geometry 
-       * in the global geometry array. Here edge 0 carries occ_curve0 and 2 carries occ_curve2.
-       * We add them in the next step. */
+       * in the global geometry array. Here the only face carries occ_surface and the edges are unlinked. */
       int                 faces[1] = { 0 };
-      int                 edges[6] = { 1, 2, 3, 0, 0, 0 };
+      int                 edges[6] = { 0, 0, 0, 1, 1, 1 };
 
       /* Create tree 0 */
       t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
-      double              vertices[9] = {
+      double vertices0[9] = {
         0.0, 0.0, 0.0,
         2.0, 0.0, 0.0,
         1.0, 2.0, 0.0
       };
-      t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 9);
+      t8_cmesh_set_tree_vertices (cmesh, 0, vertices0, 9);
 
-      /* The valid parameter range for bsplines is [0, 1]. We defined the bsplines in such a way, 
-       * that parameter 0 and 1 resemble the two vertices of the connected edge. */
-      double              parameters[2] = { 0, 1 };
-
+      /* The valid parameter range for bspline surfaces is [0, 1]^2. We defined the bspline surface in such a way, 
+       *  that parameters 0 and 1 resemble the vertices of the connected surface. */
+      // double parameters0_face[6] = {0, 0,
+      //                               1, 0,
+      //                               0, 1};
+      double parameters0_edge[2] = {0, 1};
+      
       /* Give the tree information about its curves and the parameters of the vertices. 
        * Each parameter set is given to the tree via its attribute key + the edge or face index it corresponds with. */
       t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (),
@@ -1011,14 +1015,32 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
                               T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges,
                               9 * sizeof (int), 0);
       t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (),
-                              T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + 0,
-                              parameters, 2 * sizeof (double), 0);
-      t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (),
-                              T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + 1,
-                              parameters, 2 * sizeof (double), 0);
-      t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (),
                               T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + 2,
-                              parameters, 2 * sizeof (double), 0);
+                              parameters0_edge, 2 * sizeof (double), 0);
+      
+      /* Create tree 1 */
+      t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_TRIANGLE);
+      double vertices1[9] = {
+        2.0, 0.0, 0.0,
+        3.0, 2.0, 0.0,
+        1.0, 2.0, 0.0
+      };
+      t8_cmesh_set_tree_vertices (cmesh, 1, vertices1, 9);
+
+      /* The valid parameter range for bspline surfaces is [0, 1]^2. We defined the bspline surface in such a way, 
+       *  that parameters 0 and 1 resemble the vertices of the connected surface. */
+      // double parameters1[6] = {1, 0,
+      //                          1, 1,
+      //                          0, 1};
+
+      /* Give the tree information about its curves and the parameters of the vertices. 
+       * Each parameter set is given to the tree via its attribute key + the edge or face index it corresponds with. */
+      t8_cmesh_set_attribute (cmesh, 1, t8_get_package_id (),
+                              T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces,
+                              1 * sizeof (int), 0);
+      t8_cmesh_set_attribute (cmesh, 1, t8_get_package_id (),
+                              T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges,
+                              9 * sizeof (int), 0);
 
       geometry = geometry_occ;
       snprintf (vtuname, BUFSIZ, "forest_occ_triangle_lvl_%i", level);
