@@ -267,20 +267,24 @@ t8_shmem_array_allgatherv_common (void *sendbuf,
                                   sc_MPI_Datatype sendtype,
                                   t8_shmem_array_t recvarray,
                                   sc_MPI_Datatype recvtype,
-                                  sc_MPI_Comm comm, sc_MPI_Comm intranode,
-                                  sc_MPI_Comm internode)
+                                  sc_MPI_Comm comm,
+                                  sc_MPI_Comm intranode_comm,
+                                  sc_MPI_Comm internode_comm)
 {
   size_t              typesize;
-  int                 mpiret, intrarank, intrasize, intersize;
+  int                 mpiret;
+  int                 intrarank;        /* The rank in the intranode communicator */
+  int                 intrasize;        /* The size of the intranode communicator */
+  int                 intersize;        /* The size of the internode communicator */
   char               *noderecvchar = NULL;
 
   typesize = sc_mpi_sizeof (recvtype);
 
-  mpiret = sc_MPI_Comm_rank (intranode, &intrarank);
+  mpiret = sc_MPI_Comm_rank (intranode_comm, &intrarank);
   SC_CHECK_MPI (mpiret);
-  mpiret = sc_MPI_Comm_size (intranode, &intrasize);
+  mpiret = sc_MPI_Comm_size (intranode_comm, &intrasize);
   SC_CHECK_MPI (mpiret);
-  mpiret = sc_MPI_Comm_size (internode, &intersize);
+  mpiret = sc_MPI_Comm_size (internode_comm, &intersize);
   SC_CHECK_MPI (mpiret);
 
   /* intranode-gatherv */
@@ -288,25 +292,27 @@ t8_shmem_array_allgatherv_common (void *sendbuf,
   int                *intra_recvcounts = T8_ALLOC_ZERO (int, intrasize);
   int                 intra_recv_total =
     t8_compute_recvcounts_displs (sendcount, intra_recvcounts, intra_displ,
-                                  sizeof (sendtype), intranode);
+                                  sizeof (sendtype), intranode_comm);
   if (!intrarank) {
     noderecvchar = T8_ALLOC (char, intra_recv_total * typesize);
   }
   mpiret =
     sc_MPI_Gatherv (sendbuf, sendcount, sendtype, noderecvchar,
-                    intra_recvcounts, intra_displ, recvtype, 0, intranode);
+                    intra_recvcounts, intra_displ, recvtype, 0,
+                    intranode_comm);
   SC_CHECK_MPI (mpiret);
 
 /* internode-allgatherv */
   int                *inter_displ = T8_ALLOC_ZERO (int, intersize);
   int                *inter_recvcount = T8_ALLOC_ZERO (int, intersize);
   t8_compute_recvcounts_displs (intra_recv_total, inter_recvcount,
-                                inter_displ, sizeof (sendtype), internode);
+                                inter_displ, sizeof (sendtype),
+                                internode_comm);
   if (t8_shmem_array_start_writing (recvarray)) {
     mpiret =
       sc_MPI_Allgatherv (noderecvchar, intra_recv_total, sendtype,
                          recvarray->array, inter_recvcount, inter_displ,
-                         recvtype, internode);
+                         recvtype, internode_comm);
     SC_CHECK_MPI (mpiret);
     T8_FREE (noderecvchar);
   }
@@ -372,8 +378,8 @@ t8_shmem_array_allgatherv (void *sendbuf,
   T8_ASSERT (t8_shmem_array_is_initialized (recvarray));
   T8_ASSERT (!t8_shmem_array_is_writing_possible (recvarray));
   sc_shmem_type_t     type;
-  sc_MPI_Comm         intranode = sc_MPI_COMM_NULL, internode =
-    sc_MPI_COMM_NULL;
+  sc_MPI_Comm         intranode_comm = sc_MPI_COMM_NULL;
+  sc_MPI_Comm         internode_comm = sc_MPI_COMM_NULL;
 
   /* Get the type of the used shared memory. */
   type = sc_shmem_get_type (comm);
@@ -383,8 +389,9 @@ t8_shmem_array_allgatherv (void *sendbuf,
   }
 
   /* Get the intra- and internode communicator. */
-  sc_mpi_comm_get_node_comms (comm, &intranode, &internode);
-  if (intranode == sc_MPI_COMM_NULL || internode == sc_MPI_COMM_NULL) {
+  sc_mpi_comm_get_node_comms (comm, &intranode_comm, &internode_comm);
+  if (intranode_comm == sc_MPI_COMM_NULL
+      || intranode_comm == sc_MPI_COMM_NULL) {
     type = SC_SHMEM_BASIC;
   }
 
@@ -405,7 +412,8 @@ t8_shmem_array_allgatherv (void *sendbuf,
   case SC_SHMEM_WINDOW_PRESCAN:
 #endif /* SC_ENABLE_MPIWINSHARED */
     t8_shmem_array_allgatherv_common (sendbuf, sendcount, sendtype, recvarray,
-                                      recvtype, comm, intranode, internode);
+                                      recvtype, comm, intranode_comm,
+                                      internode_comm);
     break;
 #endif /* __bgq__ || SC_ENABLE_MPI_WINSHARED */
   default:
