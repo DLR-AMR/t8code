@@ -21,9 +21,9 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 */
 
 #ifndef T8_FOREST_VTK_API_HXX
-#define T8_FOREST_VTK_API_HXX
+#define T8_FOREST_VTK_UNSTRUCTURED_API_HXX
 
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_vtk.h>
 #include <t8_vtk.h>
 
 #if T8_WITH_VTK
