@@ -293,7 +293,7 @@ t8_shmem_array_allgatherv_common (void *sendbuf,
   int                 intra_recv_total =
     t8_compute_recvcounts_displs (sendcount, intra_recvcounts, intra_displ,
                                   sizeof (sendtype), intranode_comm);
-  if (!intrarank) {
+  if (intrarank == 0) {
     noderecvchar = T8_ALLOC (char, intra_recv_total * typesize);
   }
   mpiret =
