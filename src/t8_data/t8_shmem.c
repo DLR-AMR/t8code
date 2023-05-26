@@ -260,6 +260,8 @@ t8_compute_recvcounts_displs (int sendcount, int *recvcounts, int *displs,
  * \param[in, out] recvarray The destination
  * \param[in] recvtype The type of items to receive
  * \param[in] comm The mpicommunicator to use. 
+ * \param[in] intranode_comm The intranode communicator to use. 
+ * \param[in] internode_comm  The internode communicator to use. 
  */
 static void
 t8_shmem_array_allgatherv_common (void *sendbuf,
