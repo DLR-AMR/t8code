@@ -20,7 +20,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#ifndef T8_FOREST_VTK_API_HXX
+#ifndef T8_FOREST_VTK_UNSTRUCTURED_API_HXX
 #define T8_FOREST_VTK_UNSTRUCTURED_API_HXX
 
 #include <t8_forest/t8_forest_vtk.h>
@@ -70,4 +70,4 @@ void                t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
 
 T8_EXTERN_C_END ();
 
-#endif /* T8_FOREST_VTK_API_HXX */
+#endif /* T8_FOREST_VTK_UNSTRUCTURED_API_HXX */
