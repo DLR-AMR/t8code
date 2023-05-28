@@ -315,6 +315,20 @@ void                t8_dprism_vertex_ref_coords (const t8_dprism_t *elem,
                                                  int vertex,
                                                  double coords[3]);
 
+/** Convert a point in the reference space of a prism element to a point in the
+ *  reference space of the tree (level 0) embedded in [0,1]^3.
+ * \param [in]  elem       Input prism.
+ * \param [in]  ref_coords The reference coordinates inside the
+ *                         prism element [0,1]^3
+ * \param [out] out_coords An array of 3 doubles that will be filled with the
+ *                         reference coordinates in the tree of the prism.
+ */
+void                t8_dprism_compute_reference_coords (const t8_dprism_t
+                                                        *elem,
+                                                        const double
+                                                        *ref_coords,
+                                                        double *out_coords);
+
 /** Computes the linear position of a prism in an uniform grid.
  * \param [in] p  Prism whose id will be computed.
  * \return Returns the linear position of this prism on a grid.
