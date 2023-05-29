@@ -150,14 +150,11 @@ t8_step7_adapt_callback (t8_forest_t forest,
  *                              or parents are plugged into the callback again recursively until the forest does not
  *                              change any more. If you use this you should ensure that refinement will stop eventually.
  *                              One way is to check the element's level against a given maximum level.
- * \param [in] do_face_ghost    If non-zero additionally a layer of ghost elements is created for the forest.
- *                              We will discuss ghost in later steps of the tutorial.
  * \param [in] user_data        User defined data array to store on the forest
  */
 t8_forest_t
 t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn,
-                 int do_partition, int recursive, int do_face_ghost,
-                 void *user_data)
+                 int do_partition, int recursive, void *user_data)
 {
   t8_forest_t         forest_new;
 
@@ -168,11 +165,6 @@ t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn,
   /* Set user data for the adapted forest */
   if (user_data != NULL) {
     t8_forest_set_user_data (forest_new, user_data);
-  }
-  /* Create ghost elements */
-  t8_forest_set_ghost (forest_new, do_face_ghost, T8_GHOST_FACES);
-  if (do_partition) {
-    t8_forest_set_partition (forest_new, NULL, 0);
   }
   /* Commit the adapted forest */
   t8_forest_commit (forest_new);
@@ -298,15 +290,16 @@ t8_interpolation ()
   t8_step7_adapt_data *data;
   double              centroid[3];
   const double        midpoint[3] = { 0.5, 0.5, 1 };
-
   t8_scheme_cxx_t    *scheme = t8_scheme_new_default_cxx ();
 
   /* Construct a cmesh */
   t8_cmesh_t          cmesh =
     t8_cmesh_new_hypercube (T8_ECLASS_PYRAMID, sc_MPI_COMM_WORLD, 0, 0, 0);
 
+  /* Construct a forest with one tree */
   t8_forest_t         forest =
     t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
+
   /* Build initial data array and set data for the local elements. */
   data = T8_ALLOC (t8_step7_adapt_data, 1);
   elem_data = T8_ALLOC (t8_step7_element_data_t, 1);
@@ -341,13 +334,14 @@ t8_interpolation ()
     }
   }
 
+  /*  Set the data elements which will be set as user elements on the forest */
   data->midpoint[0] = 0.5;
   data->midpoint[1] = 0.5;
   data->midpoint[2] = 1;
   data->refine_if_inside_radius = 0.2;
   data->coarsen_if_outside_radius = 0.4;
 
-  /* Save the data on the forest - do not adapt the forest */
+  /* Set the user data (values for callback and element values) */
   t8_forest_set_user_data (forest, data);
 
   /* Write vtu file */
@@ -359,20 +353,23 @@ t8_interpolation ()
 
   /* Adapt the forest correponding tho the callback function (distance to the centroid) */
   forest_adapt =
-    t8_adapt_forest (forest, t8_step7_adapt_callback, 0, 0, 0, data);
+    t8_adapt_forest (forest, t8_step7_adapt_callback, 0, 0, data);
   /* Calculate/Interpolate the data array for the adapted forest */
 
+  /* Create user_data element for the adapted forest */
   struct t8_step7_adapt_data *adapt_data = T8_ALLOC (t8_step7_adapt_data, 1);
   adapt_data->element_data =
     sc_array_new_count (sizeof (t8_step7_element_data_t),
                         t8_forest_get_local_num_elements (forest_adapt));
 
+  /* Initialize user_data element for the adapted forest */
   (*adapt_data).midpoint[0] = (*data).midpoint[0];
   (*adapt_data).midpoint[1] = (*data).midpoint[1];
   (*adapt_data).midpoint[2] = (*data).midpoint[2];
   (*adapt_data).refine_if_inside_radius = (*data).refine_if_inside_radius;
   (*adapt_data).coarsen_if_outside_radius = (*data).coarsen_if_outside_radius;
 
+  t8_forest_set_user_data (forest_adapt, adapt_data);
   t8_forest_iterate_replace (forest_adapt, forest, t8_forest_replace);
 
   /* Write the adapted forest to a vtu file */
@@ -384,7 +381,6 @@ t8_interpolation ()
   forest = forest_adapt;
   data = adapt_data;
 
-  printf ("1\n");
   /* Now you could continue working with the forest. */
   T8_FREE (data);
   t8_forest_unref (&forest);
