@@ -247,11 +247,11 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
    2.72, 0, 1,
    1.86, 0.5, 1,
 
-   0.86, -0.5, 0,       // Pyramid coordinates
-   1.86, -0.5, 0,
-   0.86, 0.5, 0,
+   0.86, 0.5, 0,       // Pyramid coordinates
    1.86, 0.5, 0,
-   1.29, 0, 0,
+   0.86, -0.5, 0,
+   1.86, -0.5, 0,
+   1.36, 0, -0.5,
 
    0.86, -0.5, 0,       // Hex coordinates
    1.86, -0.5, 0,
