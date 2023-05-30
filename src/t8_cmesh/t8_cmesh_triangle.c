@@ -312,6 +312,7 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset,
   size_t              linen = 1024;
   t8_locidx_t         element;
   t8_locidx_t         num_elems;
+  t8_locidx_t        *tneighbors = NULL;
   int                 retval;
   int                 temp;
   int                 num_read;
@@ -343,8 +344,7 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset,
    * The trees are sorted in the same order as in the cmesh.
    * The order of the neighboring elements is not consistent with the 
    * t8code face enumeration */
-  t8_locidx_t        *tneighbors =
-    T8_ALLOC (t8_locidx_t, num_elems * num_faces);
+  tneighbors = T8_ALLOC (t8_locidx_t, num_elems * num_faces);
 
   /* We read all the neighbors and write them into an array.
    * Since TRIANGLE provides us for each triangle and each face with
