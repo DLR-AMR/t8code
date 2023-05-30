@@ -202,10 +202,11 @@ t8_forest_replace (t8_forest_t forest_old,
     (const struct t8_step7_adapt_data *) t8_forest_get_user_data (forest_old);
 
   /* get the index of the data array corresponding to the old and the adapted forest */
-  for (int itree = 0; itree < which_tree; itree++) {
-    first_incoming += t8_forest_get_tree_num_elements (forest_new, itree);
-    first_outgoing += t8_forest_get_tree_num_elements (forest_old, itree);
-  }
+  first_incoming +=
+    t8_forest_get_tree_element_offset (forest_new, which_tree);
+  first_outgoing +=
+    t8_forest_get_tree_element_offset (forest_old, which_tree);
+
   /* Do not adapt or coarsen */
   if (refine == 0) {
     t8_element_set_element (adapt_data_new, first_incoming,
@@ -222,13 +223,13 @@ t8_forest_replace (t8_forest_t forest_old,
   }
   /* Old element is coarsened */
   else if (refine == -1) {
-    double              tmpValue = 0;
+    double              tmp_value = 0;
     for (t8_locidx_t i = 0; i < num_outgoing; i++) {
-      tmpValue +=
+      tmp_value +=
         t8_element_get_value (adapt_data_old, first_outgoing + i).values;
     }
     t8_element_set_value (adapt_data_new, first_incoming,
-                          tmpValue / num_outgoing);
+                          tmp_value / num_outgoing);
   }
   t8_forest_set_user_data (forest_new, adapt_data_new);
 }
@@ -245,7 +246,6 @@ t8_write_vtu (t8_forest_t forest,
 {
   const t8_locidx_t   num_elements =
     t8_forest_get_local_num_elements (forest);
-  t8_locidx_t         ielem;
   /* We need to allocate a new array to store the volumes on their own.
    * This array has one entry per local element. */
   double             *element_data = T8_ALLOC (double, num_elements);
@@ -256,7 +256,7 @@ t8_write_vtu (t8_forest_t forest,
   strcpy (vtk_data.description, "Element own data");
   vtk_data.data = element_data;
   /* Copy the elment's data from the data array to the output array. */
-  for (ielem = 0; ielem < num_elements; ++ielem) {
+  for (t8_locidx_t ielem = 0; ielem < num_elements; ++ielem) {
     element_data[ielem] = t8_element_get_value (data, ielem).values;
   }
 
@@ -294,7 +294,7 @@ t8_interpolation ()
 
   /* Construct a cmesh */
   t8_cmesh_t          cmesh =
-    t8_cmesh_new_hypercube (T8_ECLASS_PYRAMID, sc_MPI_COMM_WORLD, 0, 0, 0);
+    t8_cmesh_new_from_class (T8_ECLASS_HEX, sc_MPI_COMM_WORLD);
 
   /* Construct a forest with one tree */
   t8_forest_t         forest =
@@ -307,22 +307,23 @@ t8_interpolation ()
     sc_array_new_count (sizeof (t8_step7_element_data_t),
                         t8_forest_get_local_num_elements (forest));
 
-  const t8_locidx_t   numTrees = t8_forest_get_num_local_trees (forest);
+  const t8_locidx_t   num_trees = t8_forest_get_num_local_trees (forest);
   /* Loop over all trees. The index of the data array is independent of the tree
    * index. Thus, we set the index of the tree index to zero and add one in each 
    * loop step of the inner loop.
    */
   int                 itree;
   int                 ielem;
-  for (itree = 0, ielem = 0; itree < numTrees; itree++) {
-    const t8_locidx_t   numElem =
+  for (itree = 0, ielem = 0; itree < num_trees; itree++) {
+    const t8_locidx_t   num_elem =
       t8_forest_get_tree_num_elements (forest, itree);
     /* Inner loop: Iteration over the elements of the local tree */
 
-    for (t8_locidx_t ielemTree = 0; ielemTree < numElem; ielemTree++, ielem++) {
+    for (t8_locidx_t ielem_tree = 0; ielem_tree < num_elem;
+         ielem_tree++, ielem++) {
       /* To calculate the distance to the centroid of an element the element is saved */
       const t8_element_t *element =
-        t8_forest_get_element_in_tree (forest, itree, ielemTree);
+        t8_forest_get_element_in_tree (forest, itree, ielem_tree);
 
       /* Get the centroid of the local element. */
       t8_forest_element_centroid (forest, 0, element, centroid);
@@ -380,6 +381,7 @@ t8_interpolation ()
   /* Save the new forest as old forest */
   forest = forest_adapt;
   data = adapt_data;
+  t8_forest_unref (&forest_adapt);
 
   /* Now you could continue working with the forest. */
   T8_FREE (data);

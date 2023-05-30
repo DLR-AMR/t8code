@@ -30,16 +30,6 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/* This is our own defined data that we will pass on to the
- * adaptation callback. */
-struct t8_step7_adapt_data
-{
-  double              midpoint[3];      /* The midpoint of our sphere. */
-  double              refine_if_inside_radius;  /* if an element's center is smaller than this value, we refine the element. */
-  double              coarsen_if_outside_radius;        /* if an element's center is larger this value, we coarsen its family. */
-  double             *element_data;
-};
-
 /** This is the main program of this example.
  */
 int                 t8_step7_main (int argc, char **argv);
