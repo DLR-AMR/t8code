@@ -20,12 +20,54 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <gtest/gtest.h>
 #include <t8.h>
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_forest.h>
+#include <t8_forest/t8_forest.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
+
+/* In this test, we recursively constructs a mesh containing only the first 
+ * and last elements of a family. Furthermore, for every two elements 
+ * e_a and e_b that do not belong to the same family, it holds that 
+ * if linear_id(e_a) < linear_id(a_b) then level(e_a) > level(e_b).
+ * Thus, recursive coarsening should result in a tree containing only the
+ * root element.
+ */
+
+/* *INDENT-OFF* */
+class recursive_tree:public testing::TestWithParam <t8_eclass_t> {
+protected:
+  void SetUp () override {
+    eclass = GetParam();
+    sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &MPI_size);
+    
+    /* Construct a cmesh such that each process will get one rooted tree */
+    cmesh = t8_cmesh_new_bigmesh (eclass, MPI_size, sc_MPI_COMM_WORLD);
+
+    scheme = t8_scheme_new_default_cxx ();
+
+    t8_scheme_cxx_ref (scheme);
+    t8_cmesh_ref (cmesh);
+
+    forest = 
+      t8_forest_new_uniform (cmesh, scheme, 0, 0, sc_MPI_COMM_WORLD);  
+    forest_base = 
+      t8_forest_new_uniform (cmesh, scheme, 0, 0, sc_MPI_COMM_WORLD);
+  }
+  void TearDown () override {
+    t8_forest_unref (&forest);
+    t8_forest_unref (&forest_base);
+  }
+  int                 MPI_size;
+  t8_eclass_t         eclass;
+  t8_scheme_cxx_t    *scheme;
+  t8_cmesh_t          cmesh;
+  t8_forest_t         forest;
+  t8_forest_t         forest_base;
+};
+/* *INDENT-ON* */
 
 /** Remove every element except last and first of a family. */
 static int
@@ -108,67 +150,17 @@ t8_adapt_forest (t8_forest_t forest_from,
   return forest_new;
 }
 
-/** Recursively constructs a mesh containing only the first and last elements
- * of a family. Furthermore, for every two elements e_a and e_b that do not 
- * belong to the same family, it holds that if linear_id(e_a) < linear_id(a_b)
- * level(e_a) > level(e_b).
- * Recursive coarsening should result in a tree containing only the
- * root element.
- */
-void
-t8_test_recursive (t8_eclass_t eclass)
+TEST_P (recursive_tree, test_recursive)
 {
-  t8_scheme_cxx_t    *scheme = t8_scheme_new_default_cxx ();
-  /* Get number of ranks */
-  int                 MPI_size;
-  sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &MPI_size);
-  /* Construct a cmesh such that each process will get one rooted tree */
-  t8_cmesh_t          cmesh =
-    t8_cmesh_new_bigmesh (eclass, MPI_size, sc_MPI_COMM_WORLD);
-  t8_forest_t         forest =
-    t8_forest_new_uniform (cmesh, scheme, 0, 0, sc_MPI_COMM_WORLD);
-
   forest = t8_adapt_forest (forest, t8_adapt_refine_first, 1);
   forest = t8_adapt_forest (forest, t8_adapt_remove_but_last_first, 0);
   forest = t8_adapt_forest (forest, t8_adapt_refine_all, 0);
   forest = t8_adapt_forest (forest, t8_adapt_remove_but_last_first, 1);
   forest = t8_adapt_forest (forest, t8_adapt_coarse_all, 1);
 
-  t8_cmesh_ref (cmesh);
-  t8_scheme_cxx_ref (scheme);
-  t8_forest_t         forest_base =
-    t8_forest_new_uniform (cmesh, scheme, 0, 0, sc_MPI_COMM_WORLD);
-
-  SC_CHECK_ABORT (t8_forest_is_equal (forest, forest_base),
-                  "The forests are not equal.");
-
-  t8_forest_unref (&forest);
-  t8_forest_unref (&forest_base);
+  ASSERT_TRUE (t8_forest_is_equal (forest, forest_base));
 }
 
-void
-t8_test_recursive_all ()
-{
-  /* Test for any element class except vertex */
-  for (int eclass_int = 1; eclass_int < T8_ECLASS_COUNT; eclass_int++) {
-    t8_test_recursive ((t8_eclass_t) eclass_int);
-  }
-}
-
-int
-main (int argc, char **argv)
-{
-  int                 mpiret = sc_MPI_Init (&argc, &argv);
-  SC_CHECK_MPI (mpiret);
-
-  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_PRODUCTION);
-  t8_init (SC_LP_DEFAULT);
-
-  t8_test_recursive_all ();
-  sc_finalize ();
-
-  mpiret = sc_MPI_Finalize ();
-  SC_CHECK_MPI (mpiret);
-
-  return 0;
-}
+/* *INDENT-OFF* */
+INSTANTIATE_TEST_SUITE_P (t8_gtest_recursive, recursive_tree, testing::Range(T8_ECLASS_QUAD, T8_ECLASS_COUNT));
+/* *INDENT-ON* */
