@@ -88,10 +88,11 @@ typedef void        (*t8_forest_replace_t) (t8_forest_t forest_old,
                                             t8_forest_t forest_new,
                                             t8_locidx_t which_tree,
                                             t8_eclass_scheme_c *ts,
-                                            int refine, int num_outgoing,
-                                            t8_locidx_t first_outgoing,
-                                            int num_incoming,
-                                            t8_locidx_t first_incoming);
+                                            const int refine,
+                                            const int num_outgoing,
+                                            const t8_locidx_t first_outgoing,
+                                            const int num_incoming,
+                                            const t8_locidx_t first_incoming);
 
 /** Callback function prototype to decide for refining and coarsening.
  * If \a is_family equals 1, the first \a num_elements in \a elements
