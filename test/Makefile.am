@@ -2,11 +2,6 @@
 #Non-recursive Makefile.am in test
 #Included from toplevel directory
 
-test_t8_forest_incomplete_t8_test_elements_remove_SOURCES = test/t8_forest_incomplete/t8_test_elements_remove.cxx
-test_t8_forest_incomplete_t8_test_remove_rand_SOURCES = test/t8_forest_incomplete/t8_test_remove_rand.cxx
-test_t8_forest_incomplete_t8_test_elements_interpolation_SOURCES = test/t8_forest_incomplete/t8_test_elements_interpolation.cxx
-test_t8_forest_incomplete_t8_test_recursive_SOURCES = test/t8_forest_incomplete/t8_test_recursive.cxx
-
 t8code_googletest_programs = \
   test/t8_gtest_cmesh_bcast \
   test/t8_schemes/t8_gtest_nca \
@@ -45,7 +40,9 @@ t8code_googletest_programs = \
   test/t8_forest/t8_gtest_transform \
   test/t8_forest/t8_gtest_ghost_exchange \
   test/t8_forest/t8_gtest_ghost_and_owner \
-  test/t8_IO/t8_gtest_vtk_reader
+  test/t8_IO/t8_gtest_vtk_reader \
+  test/t8_forest_incomplete/t8_gtest_permute_hole \
+  test/t8_forest_incomplete/t8_gtest_recursive
 
 test_t8_IO_t8_gtest_vtk_reader_SOURCES = \
   test/t8_gtest_main.cxx \
@@ -199,6 +196,13 @@ test_t8_forest_t8_gtest_ghost_and_owner_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_forest/t8_gtest_ghost_and_owner.cxx
 
+test_t8_forest_incomplete_t8_gtest_permute_hole_SOURCES = \
+  test/t8_gtest_main.cxx \
+  test/t8_forest_incomplete/t8_gtest_permute_hole.cxx
+
+test_t8_forest_incomplete_t8_gtest_recursive_SOURCES = \
+  test/t8_gtest_main.cxx \
+  test/t8_forest_incomplete/t8_gtest_recursive.cxx
 
 #define ld and cpp flags for all targets
 t8_gtest_target_ld_add = $(LDADD) test/libgtest.la
@@ -361,6 +365,14 @@ test_t8_IO_t8_gtest_vtk_reader_LDADD = $(t8_gtest_target_ld_add)
 test_t8_IO_t8_gtest_vtk_reader_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_IO_t8_gtest_vtk_reader_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
+test_t8_forest_incomplete_t8_gtest_permute_hole_LDADD = $(t8_gtest_target_ld_add)
+test_t8_forest_incomplete_t8_gtest_permute_hole_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_forest_incomplete_t8_gtest_permute_hole_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+
+test_t8_forest_incomplete_t8_gtest_recursive_LDADD = $(t8_gtest_target_ld_add)
+test_t8_forest_incomplete_t8_gtest_recursive_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_forest_incomplete_t8_gtest_recursive_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+
 # If we did not configure t8code with MPI we need to build Googletest
 # without MPI support.
 if !T8_ENABLE_MPI
@@ -402,6 +414,8 @@ test_t8_forest_t8_gtest_transform_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_t8_gtest_ghost_exchange_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_t8_gtest_ghost_and_owner_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_IO_t8_gtest_vtk_reader_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_forest_incomplete_t8_gtest_permute_hole_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_forest_incomplete_t8_gtest_recursive_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 endif
 
 # Build Googletest library
