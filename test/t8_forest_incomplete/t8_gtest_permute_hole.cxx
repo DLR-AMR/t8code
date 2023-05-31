@@ -98,10 +98,10 @@ t8_adapt_remove (t8_forest_t forest,
                  t8_locidx_t lelement_id,
                  t8_eclass_scheme_c *ts,
                  const int is_family,
-                 const int num_elements,
-                 t8_element_t *elements[])
+                 const int num_elements, t8_element_t *elements[])
 {
-  std::bitset<MAX_NUM_ELEMETS> *removes = (std::bitset<MAX_NUM_ELEMETS>*) t8_forest_get_user_data (forest);
+  std::bitset < MAX_NUM_ELEMETS > *removes =
+    (std::bitset < MAX_NUM_ELEMETS > *)t8_forest_get_user_data (forest);
   if (removes[lelement_id] == 0) {
     return -2;
   }
@@ -115,8 +115,7 @@ t8_adapt_coarse (t8_forest_t forest,
                  t8_locidx_t lelement_id,
                  t8_eclass_scheme_c *ts,
                  const int is_family,
-                 const int num_elements,
-                 t8_element_t *elements[])
+                 const int num_elements, t8_element_t *elements[])
 {
   if (is_family) {
     return -1;
@@ -127,14 +126,13 @@ t8_adapt_coarse (t8_forest_t forest,
 t8_forest_t
 t8_adapt_forest (t8_forest_t forest_from,
                  t8_forest_adapt_t adapt_fn,
-                 int do_partition, 
-                 void *user_data)
+                 int do_partition, void *user_data)
 {
   t8_forest_t         forest_new;
 
   t8_forest_init (&forest_new);
   t8_forest_set_adapt (forest_new, forest_from, adapt_fn, 0);
-  
+
   if (user_data != NULL) {
     t8_forest_set_user_data (forest_new, user_data);
   }
@@ -149,15 +147,16 @@ t8_adapt_forest (t8_forest_t forest_from,
 TEST_P (forest_permute, test_permute_hole)
 {
   /* number of instances */
-  const t8_locidx_t   num_elments = t8_forest_get_tree_num_elements (forest, 0);
+  const t8_locidx_t   num_elments =
+    t8_forest_get_tree_num_elements (forest, 0);
   T8_ASSERT (num_elments < MAX_NUM_ELEMETS);
   const uint32_t      num_permutation = 1 << num_elments;
 
-  for (uint32_t permutation = 1; permutation < num_permutation; permutation++)
-  {
-    std::bitset<MAX_NUM_ELEMETS> removes (permutation);
+  for (uint32_t permutation = 1; permutation < num_permutation; permutation++) {
+    std::bitset < MAX_NUM_ELEMETS > removes (permutation);
     t8_forest_ref (forest);
-    t8_forest_t         forest_adapt = t8_adapt_forest (forest, t8_adapt_remove, 0, &removes);
+    t8_forest_t         forest_adapt =
+      t8_adapt_forest (forest, t8_adapt_remove, 0, &removes);
     for (int level = 0; level < 2; level++) {
       forest_adapt = t8_adapt_forest (forest_adapt, t8_adapt_coarse, 0, NULL);
     }
