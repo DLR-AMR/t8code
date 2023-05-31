@@ -326,7 +326,7 @@ t8_interpolation ()
         t8_forest_get_element_in_tree (forest, itree, ielem_tree);
 
       /* Get the centroid of the local element. */
-      t8_forest_element_centroid (forest, 0, element, centroid);
+      t8_forest_element_centroid (forest, itree, element, centroid);
 
       /* Calculation of the distance to the centroid for the referenced element */
       elem_data->values = t8_vec_dist (centroid, midpoint);
