@@ -30,7 +30,7 @@
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <bitset>
 
-#define MAX_NUM_ELEMETS 64
+#define MAX_NUM_ELEMETS 32
 
 /**
  * Example:
@@ -56,17 +56,22 @@
  */
 
 /* *INDENT-OFF* */
-class forest_permute:public testing::TestWithParam <int> {
+class forest_permute:public testing::TestWithParam <t8_eclass_t> {
 protected:
   void SetUp () override {
-    cmesh_id = GetParam();
-    /* Construct a cmesh */
-    cmesh = t8_test_create_cmesh (cmesh_id);
-    sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &MPI_size);
+    eclass = GetParam();
+#if T8_ENABLE_LESS_TESTS
+    level = 1;
+#else
+    level = eclass < 4 ? 2 : 1;
+#endif
     forest =
-        t8_forest_new_uniform (cmesh, 
+        t8_forest_new_uniform (t8_cmesh_new_from_class
+                               (eclass, sc_MPI_COMM_WORLD), 
                                t8_scheme_new_default_cxx (),
-                               1, 0, sc_MPI_COMM_WORLD);
+                               level, 0, sc_MPI_COMM_WORLD);
+    
+    sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &MPI_size);
     if (MPI_size > 1) {
       GTEST_SKIP ();
     } 
@@ -75,7 +80,8 @@ protected:
     t8_forest_unref (&forest);
   }
   int                 MPI_size;
-  int                 cmesh_id;
+  int                 level;
+  t8_eclass_t         eclass;
   t8_forest_t         forest;
   t8_cmesh_t          cmesh;
 };
@@ -158,5 +164,5 @@ TEST_P (forest_permute, test_permute_hole)
 }
 
 /* *INDENT-OFF* */
-INSTANTIATE_TEST_SUITE_P (t8_gtest_permute_hole, forest_permute, testing::Range(0, t8_get_number_of_all_testcases ()));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_permute_hole, forest_permute, testing::Range(T8_ECLASS_ZERO, T8_ECLASS_COUNT));
 /* *INDENT-ON* */
