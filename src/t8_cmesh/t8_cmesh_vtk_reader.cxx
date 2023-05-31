@@ -213,9 +213,9 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > vtkGrid,
                       t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
 
-  double             *vertices;
-  double            **tuples;
-  size_t             *data_size;
+  double             *vertices = NULL;
+  double            **tuples = NULL;
+  size_t             *data_size = NULL;
   t8_gloidx_t         tree_id = 0;
   int                 max_dim = -1;
 
@@ -347,8 +347,8 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet > vtkGrid,
     t8_cmesh_register_geometry (cmesh, linear_geom);
   }
   if (partition) {
-    t8_gloidx_t         first_tree;
-    t8_gloidx_t         last_tree;
+    t8_gloidx_t         first_tree = 0;
+    t8_gloidx_t         last_tree = 0;
     if (mpirank == main_proc) {
       first_tree = 0;
       last_tree = num_trees - 1;
