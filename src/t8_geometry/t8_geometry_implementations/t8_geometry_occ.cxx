@@ -202,6 +202,22 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
   Standard_Real       first, last;
   double  interpolated_surface_parameters[2];
 
+  /*
+   *
+   *              2
+   *             / \
+   *            /   \
+   *           /     \
+   *          /       \
+   *         E1        E0
+   *        /           \
+   *       /             \
+   *      /               \     y
+   *     /                 \    |
+   *    0---------E2--------1   x--x
+   * 
+   */
+
   /* Linear mapping from ref_coords to out_coords */
   t8_geom_compute_linear_geometry(active_tree_class, active_tree_vertices, ref_coords, out_coords);
   
@@ -300,8 +316,6 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
         t8_geom_get_triangle_scaling_factor (i_edge, active_tree_vertices,
                                              glob_intersection, out_coords,
                                              &scaling_factor);
-
-        t8_global_productionf("scaling_factor: %f\n", scaling_factor); // ALARM!!!! Reihenfolge der tree vertices?
 
         /* Calculate parameter displacement and add it to the surface parameters */
         for (int dim = 0; dim < 2; ++dim) {
