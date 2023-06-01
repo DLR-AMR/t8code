@@ -29,8 +29,10 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  */
 
 #include <t8.h>
+#include "t8_vtk_types.h"
 #if T8_WITH_VTK
 #include <vtkDataSet.h>
+#include <vtkSmartPointer.h>
 
 /**
  * Given a filename to a file containing an vtkUnstructured Grid, read
@@ -41,7 +43,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  *                      \a filename.
  * \returns             non-zero on success, zero if the reading failed.
  */
-int                 t8_read_unstructured (const char *filename,
-                                          vtkDataSet * grid);
+vtk_read_success_t  t8_read_unstructured (const char *filename,
+                                          vtkSmartPointer < vtkDataSet >
+                                          grid);
 #endif
 #endif /* T8_CMESH_VTK_UNSTRUCTURED_READER */
