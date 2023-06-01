@@ -158,7 +158,7 @@ TEST_P (forest_permute, test_permute_hole)
     t8_forest_ref (forest);
     t8_forest_t         forest_adapt =
       t8_adapt_forest (forest, t8_adapt_remove, 0, &removes);
-    for (int level = 0; level < 2; level++) {
+    for (int l = 0; l < level + 1; l++) {
       forest_adapt = t8_adapt_forest (forest_adapt, t8_adapt_coarse, 0, NULL);
     }
     ASSERT_TRUE (t8_forest_no_overlap (forest));
