@@ -37,6 +37,13 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <vtkPointData.h>
 #include <vtkPolyData.h>
 #endif
+
+typedef struct
+{
+  sc_array_t         *point_ids;
+  double              average;
+} element_data_t;
+
 typedef struct
 {
   t8_shmem_array_t    vtk_points;
@@ -44,13 +51,8 @@ typedef struct
   int                 num_data;
   int                 num_points;
   int                 data_size;
+  element_data_t     *element_data;
 } t8_user_data_t;
-
-typedef struct
-{
-  sc_array_t          point_ids;
-  double              average;
-} element_data_t;
 
 double             *
 t8_shmem_array_get_point (t8_shmem_array_t array, int index)
@@ -60,6 +62,41 @@ t8_shmem_array_get_point (t8_shmem_array_t array, int index)
              && (size_t) index < t8_shmem_array_get_elem_count (array) / 3);
 
   return (double *) t8_shmem_array_index (array, 3 * index);
+}
+
+/* We start without any refinement, hence all indices are put into the root-element */
+static void
+t8_init_element_data (t8_user_data_t * user_data)
+{
+  user_data->element_data = T8_ALLOC (element_data_t, 1);
+  user_data->element_data[0].point_ids =
+    sc_array_new_count (sizeof (int), user_data->num_points);
+  user_data->element_data[0].average = 0;
+  for (int ipoint = 0; ipoint < user_data->num_points; ipoint++) {
+    int                *point_id =
+      (int *) sc_array_index_int (user_data->element_data[0].point_ids,
+                                  ipoint);
+    *point_id = ipoint;
+    const double       *my_data =
+      (double *) t8_shmem_array_index (user_data->point_data, ipoint);
+    user_data->element_data[0].average += *my_data;
+  }
+  user_data->element_data[0].average /= user_data->num_points;
+  return;
+}
+
+static void
+t8_destroy_element_data (t8_forest_t forest, t8_user_data_t * user_data)
+{
+  const t8_locidx_t   num_elements =
+    t8_forest_get_local_num_elements (forest);
+  t8_debugf ("[D] num_elements: %i\n", num_elements);
+  for (t8_locidx_t ielem = num_elements - 1; ielem >= 0; ielem--) {
+    t8_debugf ("[D] ielem: %i\n", ielem);
+    sc_array_destroy_null (&(user_data->element_data[ielem].point_ids));
+  }
+  t8_debugf ("[D] sc_array destroyed\n");
+  T8_FREE (user_data->element_data);
 }
 
 static void
@@ -149,6 +186,7 @@ t8_init_user_data (t8_user_data_t * user_data,
   }
   T8_FREE (local_points);
 
+  t8_init_element_data (user_data);
   t8_debugf ("[D] successfully initialized user_data\n");
 }
 
@@ -157,11 +195,12 @@ t8_user_data_destroy (t8_forest_t forest, sc_MPI_Comm comm)
 {
   t8_user_data_t     *user_data =
     (t8_user_data_t *) t8_forest_get_user_data (forest);
-  //t8_shmem_array_end_writing(user_data->point_data);
   t8_shmem_array_destroy (&(user_data->point_data));
-  t8_debugf ("[D] destroy shmem\n");
   t8_shmem_array_destroy (&(user_data->vtk_points));
-
+  t8_debugf ("[D] destroy shmem\n");
+  t8_destroy_element_data (forest, user_data);
+  t8_debugf ("[D] Destroy user Data\n");
+  return;
 }
 
 static void
@@ -183,6 +222,12 @@ t8_pipeline (t8_forest_t forest, vtkSmartPointer < vtkDataSet > data,
     }
     t8_debugf ("\n");
   }
+  for (int ipoint = 0; ipoint < user_data.num_points; ipoint++) {
+    int                *point =
+      (int *) sc_array_index_int (user_data.element_data->point_ids, ipoint);
+    t8_debugf ("[D] point_id: %i\n", *point);
+  }
+  t8_debugf ("[D] average: %f\n", user_data.element_data[0].average);
   t8_user_data_destroy (forest, comm);
   return;
 }
@@ -199,7 +244,7 @@ main (int argc, char **argv)
   t8_init (SC_LP_DEFAULT);
 
   t8_cmesh_t          cmesh =
-    t8_cmesh_new_hypercube (T8_ECLASS_TET, comm, 0, 0, 0);
+    t8_cmesh_new_hypercube (T8_ECLASS_HEX, comm, 0, 0, 0);
   t8_scheme_cxx_t    *scheme = t8_scheme_new_default_cxx ();
   t8_forest_t         forest =
     t8_forest_new_uniform (cmesh, scheme, level, 0, comm);
