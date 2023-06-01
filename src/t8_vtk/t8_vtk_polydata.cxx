@@ -20,7 +20,9 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_cmesh/t8_cmesh_vtk_to_t8/t8_cmesh_vtk_polydata.hxx>
+//#include <t8_cmesh/t8_cmesh_vtk_to_t8/t8_cmesh_vtk_polydata.hxx>
+//=======
+#include "t8_vtk_polydata.hxx"
 #include "t8_vtk_types.h"
 #if T8_WITH_VTK
 #include <vtkPolyData.h>
@@ -36,11 +38,11 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 static              vtk_read_success_t
 t8_read_poly_ext (const char *filename, vtkSmartPointer < vtkPolyData > grid)
 {
-  char                tmp[BUFSIZ];
-  char               *extension;
+  char                tmp[BUFSIZ], *extension;
   /* Get the file-extension to decide which reader to use. */
   strcpy (tmp, filename);
-  extension = strrchr (tmp, '.') + 1;
+  extension = strtok (tmp, ".");
+  extension = strtok (NULL, ".");
   T8_ASSERT (strcmp (extension, ""));
 
   /* Check if we can open the file. */
@@ -68,9 +70,6 @@ t8_read_poly_ext (const char *filename, vtkSmartPointer < vtkPolyData > grid)
       t8_errorf ("Unable to read file %s.\n", filename);
       return read_failure;
     }
-    reader->Update ();
-    grid->ShallowCopy (vtkDataSet::SafeDownCast (reader->GetOutput ()));
-    return read_success;
   }
   else if (strcmp (extension, "obj") == 0) {
     vtkNew < vtkOBJReader > reader;
@@ -137,4 +136,4 @@ t8_read_poly (const char *filename, vtkDataSet * grid)
   grid->DeepCopy (vtkDataSet::SafeDownCast (tri_filter->GetOutput ()));
   return read_successfull;
 }
-#endif /* T8_WITH_VTK */
+#endif
