@@ -51,8 +51,35 @@ typedef struct
   int                 num_data;
   int                 num_points;
   int                 data_size;
+  int                 max_level;
   element_data_t     *element_data;
 } t8_user_data_t;
+
+int
+t8_non_empty_adapt (t8_forest_t forest, t8_forest_t forest_from,
+                    t8_locidx_t ltree_id, t8_locidx_t lelement_id,
+                    t8_eclass_scheme_c *ts, const int is_family,
+                    const int num_elements, t8_element_t *elements[])
+{
+  t8_user_data_t     *user_data;
+  user_data = (t8_user_data_t *) t8_forest_get_user_data (forest);
+  const int           level = ts->t8_element_level (elements[0]);
+  if (level == user_data->max_level && !is_family) {
+    /* It is not possible to refine this level */
+    return 0;
+  }
+  const t8_locidx_t   offset =
+    t8_forest_get_tree_element_offset (forest_from, ltree_id);
+  element_data_t     *elem_data =
+    &(user_data->element_data[offset + lelement_id]);
+  const int           num_points = (int) elem_data->point_ids->elem_count;
+  if (num_points > 1) {
+    return 1;
+  }
+  else {
+    return 0;
+  }
+}
 
 double             *
 t8_shmem_array_get_point (t8_shmem_array_t array, int index)
@@ -182,6 +209,7 @@ t8_init_user_data (t8_user_data_t * user_data,
     user_data->data_size = tuple_dim;
     user_data->num_data = num_data_arrays;
     user_data->num_points = num_global_points;
+    user_data->max_level = 6;
     T8_FREE (data_array);
   }
   T8_FREE (local_points);
