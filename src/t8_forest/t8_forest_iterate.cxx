@@ -457,7 +457,7 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
                 t8_forest_get_element_in_tree (forest_new, itree,
                                                ielem_new + ielem);
               ts->t8_element_parent (elem_new_debug, elem_parent);
-              SC_CHECK_ABORT (ts->t8_element_compare (elem_old, elem_parent),
+              SC_CHECK_ABORT (!ts->t8_element_compare (elem_old, elem_parent),
                               "Family is not complete.");
             }
 #endif
