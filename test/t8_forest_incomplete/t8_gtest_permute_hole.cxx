@@ -27,7 +27,7 @@
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <bitset>
 
-#define MAX_NUM_ELEMETS 32 /* number of digits for binary representation */
+#define MAX_NUM_ELEMETS 32      /* number of digits for binary representation */
 
 /* In this test, a uniform forest with x many elements is given. 
  * There are 2^x many ways to remove these x elements. After removing the elements,
@@ -123,8 +123,7 @@ t8_adapt_coarse (t8_forest_t forest,
 
 t8_forest_t
 t8_adapt_forest (t8_forest_t forest_from,
-                 t8_forest_adapt_t adapt_fn,
-                 void *user_data)
+                 t8_forest_adapt_t adapt_fn, void *user_data)
 {
   t8_forest_t         forest_new;
 
@@ -149,12 +148,26 @@ TEST_P (forest_permute, test_permute_hole)
   for (uint32_t permutation = 1; permutation < num_permutation; permutation++) {
     std::bitset < MAX_NUM_ELEMETS > removes (permutation);
     t8_forest_ref (forest);
-    t8_forest_t         forest_adapt = 
+    t8_forest_t         forest_adapt =
       t8_adapt_forest (forest, t8_adapt_remove, &removes);
+
+    /* check if the correct number of elements got removed */
+    t8_locidx_t         element_count = 0;
+    for (t8_locidx_t ridx = 0; ridx < MAX_NUM_ELEMETS; ridx++) {
+      if (removes[ridx] == 1) {
+        element_count++;
+      }
+    }
+    ASSERT_TRUE (element_count ==
+                 t8_forest_get_tree_num_elements (forest_adapt, 0));
+
+    /* check if coarsening results in overlapping elements */
     for (int l = 0; l < level + 1; l++) {
       forest_adapt = t8_adapt_forest (forest_adapt, t8_adapt_coarse, NULL);
     }
     ASSERT_TRUE (t8_forest_no_overlap (forest));
+    ASSERT_TRUE (1 == t8_forest_get_tree_num_elements (forest_adapt, 0));
+
     t8_forest_unref (&forest_adapt);
   }
 }
