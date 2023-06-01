@@ -30,7 +30,7 @@
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <bitset>
 
-#define MAX_NUM_ELEMETS 32
+#define MAX_NUM_ELEMETS 32 /* number of digits for binary representation */
 
 /* In this test, a uniform forest with x many elements is given. 
  * There are 2^x many ways to remove these x elements. After removing the elements,
@@ -38,24 +38,25 @@
  * 
  * Example:
  * num of elements = 4
- * instances - bianry with num elements many digits
- *      0    -    0 0 0 0
- *      1    -    0 0 0 1
- *      2    -    0 0 1 0
- *      3    -    0 0 1 1
- *      4    -    0 1 0 0
- *      5    -    0 1 0 1
- *      6    -    0 1 1 0
- *      7    -    0 1 1 1
- *      8    -    1 0 0 0
- *      9    -    1 0 0 1
- *      10   -    1 0 1 0
- *      11   -    1 0 1 1
- *      12   -    1 1 0 0
- *      13   -    1 1 0 1
- *      14   -    1 1 1 0
- *      15   -    1 1 1 1
- * We remove every element with id i if the i`th bit in the current instances is 0.
+ * instances - bianry representation
+ *      0    -  ...0 0 0 0 0 0 0
+ *      1    -  ...0 0 0 0 0 0 1
+ *      2    -  ...0 0 0 0 0 1 0
+ *      3    -  ...0 0 0 0 0 1 1
+ *      4    -  ...0 0 0 0 1 0 0
+ *      5    -  ...0 0 0 0 1 0 1
+ *      6    -  ...0 0 0 0 1 1 0
+ *      7    -  ...0 0 0 0 1 1 1
+ *      8    -  ...0 0 0 1 0 0 0
+ *      9    -  ...0 0 0 1 0 0 1
+ *      10   -  ...0 0 0 1 0 1 0
+ *      11   -  ...0 0 0 1 0 1 1
+ *      12   -  ...0 0 0 1 1 0 0
+ *      13   -  ...0 0 0 1 1 0 1
+ *      14   -  ...0 0 0 1 1 1 0
+ *      15   -  ...0 0 0 1 1 1 1
+ * We remove every element with id i if the i`th bit (right to left) 
+ * in the current instances is 0.
  */
 
 /* *INDENT-OFF* */
@@ -146,7 +147,7 @@ t8_adapt_forest (t8_forest_t forest_from,
 
 TEST_P (forest_permute, test_permute_hole)
 {
-  /* number of instances */
+  /* number of instances/permutations */
   const t8_locidx_t   num_elments =
     t8_forest_get_tree_num_elements (forest, 0);
   T8_ASSERT (num_elments < MAX_NUM_ELEMETS);
