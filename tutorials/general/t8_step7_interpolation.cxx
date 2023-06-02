@@ -376,6 +376,10 @@ t8_interpolation ()
     (struct t8_step7_adapt_data *) t8_forest_get_user_data (forest_adapt);
   t8_write_vtu (forest_adapt, adapt_data, "t8_step7_adapt_forest");
 
+  /* Free the memory */
+  sc_array_destroy (adapt_data->element_data);
+  sc_array_destroy (data->element_data);
+
   /* Save the new forest as old forest */
   t8_forest_unref (&forest);
   forest = forest_adapt;
@@ -385,6 +389,7 @@ t8_interpolation ()
   /* Now you could continue working with the forest. */
   T8_FREE (data);
   T8_FREE (adapt_data);
+  T8_FREE (elem_data);
 }
 
 int
