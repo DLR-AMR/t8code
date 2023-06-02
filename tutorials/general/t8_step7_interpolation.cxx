@@ -318,7 +318,6 @@ t8_interpolation ()
     const t8_locidx_t   num_elem =
       t8_forest_get_tree_num_elements (forest, itree);
     /* Inner loop: Iteration over the elements of the local tree */
-
     for (t8_locidx_t ielem_tree = 0; ielem_tree < num_elem;
          ielem_tree++, ielem++) {
       /* To calculate the distance to the centroid of an element the element is saved */
@@ -350,7 +349,6 @@ t8_interpolation ()
 
   /* Build a second forest to store the adapted forest - keep the old one */
   t8_forest_ref (forest);
-  t8_forest_init (&forest_adapt);
 
   /* Adapt the forest correponding tho the callback function (distance to the centroid) */
   forest_adapt =
@@ -379,13 +377,14 @@ t8_interpolation ()
   t8_write_vtu (forest_adapt, adapt_data, "t8_step7_adapt_forest");
 
   /* Save the new forest as old forest */
+  t8_forest_unref (&forest);
   forest = forest_adapt;
-  data = adapt_data;
+  *data = *adapt_data;
   t8_forest_unref (&forest_adapt);
 
   /* Now you could continue working with the forest. */
   T8_FREE (data);
-  t8_forest_unref (&forest);
+  T8_FREE (adapt_data);
 }
 
 int
@@ -399,9 +398,9 @@ t8_step7_main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
 
   /* Initialize the sc library, has to happen before we initialize t8code. */
-  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_PRODUCTION);
+  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEBUG);
   /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
-  t8_init (SC_LP_PRODUCTION);
+  t8_init (SC_LP_DEBUG);
 
   /* Create forest, define data on forest, adapt forest, interpolate data */
   t8_interpolation ();
