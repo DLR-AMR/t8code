@@ -232,6 +232,33 @@ t8_user_data_destroy (t8_forest_t forest, sc_MPI_Comm comm)
 }
 
 static void
+t8_interpolate_write_vtk (t8_forest_t forest, char *fileprefix)
+{
+  t8_vtk_data_field_t vtk_data;
+  t8_user_data_t     *user_data =
+    (t8_user_data_t *) t8_forest_get_user_data (forest);
+
+  const t8_locidx_t   num_local_elements =
+    t8_forest_get_local_num_elements (forest);
+  double             *avg = T8_ALLOC_ZERO (double, num_local_elements);
+  for (t8_locidx_t ielem = 0; ielem < num_local_elements; ielem++) {
+    avg[ielem] = user_data->element_data[0].average;
+  }
+  snprintf (vtk_data.description, BUFSIZ, "Average value");
+  vtk_data.type = T8_VTK_SCALAR;
+  vtk_data.data = avg;
+
+  if (t8_forest_write_vtk_ext
+      (forest, fileprefix, 1, 1, 1, 1, 0, 0, 0, 1, &vtk_data)) {
+    t8_debugf ("[Interpolate] Wrote pvtu files to %s\n", fileprefix);
+  }
+  else {
+    t8_errorf ("[Interpolate] Error writing to files %s\n", fileprefix);
+  }
+  T8_FREE (avg);
+}
+
+static void
 t8_pipeline (t8_forest_t forest, vtkSmartPointer < vtkDataSet > data,
              sc_MPI_Comm comm)
 {
@@ -256,6 +283,8 @@ t8_pipeline (t8_forest_t forest, vtkSmartPointer < vtkDataSet > data,
     t8_debugf ("[D] point_id: %i\n", *point);
   }
   t8_debugf ("[D] average: %f\n", user_data.element_data[0].average);
+  char                fileprefix[9] = "test_vtk";
+  t8_interpolate_write_vtk (forest, fileprefix);
   t8_user_data_destroy (forest, comm);
   return;
 }
