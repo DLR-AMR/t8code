@@ -50,7 +50,7 @@ protected:
     t8_cmesh_ref (cmesh);
 
     forest = 
-      t8_forest_new_uniform (cmesh, scheme, 0, 0, sc_MPI_COMM_WORLD);  
+      t8_forest_new_uniform (cmesh, scheme, 1, 0, sc_MPI_COMM_WORLD);  
     forest_base = 
       t8_forest_new_uniform (cmesh, scheme, 0, 0, sc_MPI_COMM_WORLD);
   }
