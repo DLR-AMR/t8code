@@ -419,10 +419,10 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
 
     t8_locidx_t         ielem_new = 0;
     t8_locidx_t         ielem_old = 0;
-    while (ielem_new < elems_per_tree_new || ielem_old < elems_per_tree_old) {
+    while (ielem_new < elems_per_tree_new) {
       /* Iterate over the elements */
-      T8_ASSERT (ielem_new <= elems_per_tree_new);
-      T8_ASSERT (ielem_old <= elems_per_tree_old);
+      T8_ASSERT (ielem_new < elems_per_tree_new);
+      T8_ASSERT (ielem_old < elems_per_tree_old);
 
       /* Get pointers to the elements */
       const t8_element_t *elem_new =
@@ -593,10 +593,17 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
         }
       }
     }                           /* element loop */
-    T8_ASSERT (ielem_new ==
-               t8_forest_get_tree_num_elements (forest_new, itree));
-    T8_ASSERT (ielem_old ==
-               t8_forest_get_tree_num_elements (forest_old, itree));
+    T8_ASSERT (ielem_new == elems_per_tree_new);
+    if (forest_new->incomplete_trees) {
+      for (; ielem_old < elems_per_tree_old; ielem_old++) {
+        /* remaining elements in old tree got removed */
+        const int           refine = -2;
+        replace_fn (forest_old, forest_new, itree, ts, refine, 1, ielem_old, 0, NULL);
+      }
+    }
+    else {
+      T8_ASSERT (ielem_old == elems_per_tree_old);
+    }
   }                             /* tree loop */
   t8_global_productionf ("Done t8_forest_iterate_replace\n");
 }
