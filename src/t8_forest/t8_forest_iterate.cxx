@@ -415,8 +415,6 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
     t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest_new, eclass);
     T8_ASSERT (ts == t8_forest_get_eclass_scheme (forest_new, eclass));
 
-    T8_ASSERT (elems_per_tree_old > 0 && elems_per_tree_new > 0);
-
     t8_locidx_t         ielem_new = 0;
     t8_locidx_t         ielem_old = 0;
     while (ielem_new < elems_per_tree_new) {
