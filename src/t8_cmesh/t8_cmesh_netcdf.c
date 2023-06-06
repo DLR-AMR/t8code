@@ -97,8 +97,8 @@ typedef struct
 
 /* The UGRID conventions are applied for dimension and variable descriptions */
 static void
-t8_cmesh_init_ugrid_namespace_context (t8_cmesh_netcdf_ugrid_namespace_t *
-                                       namespace_conv, int dim)
+t8_cmesh_init_ugrid_namespace_context (t8_cmesh_netcdf_ugrid_namespace_t
+                                       * namespace_conv, int dim)
 {
   if (dim == 2) {
     namespace_conv->mesh = "Mesh2";
@@ -138,8 +138,8 @@ t8_cmesh_init_ugrid_namespace_context (t8_cmesh_netcdf_ugrid_namespace_t *
 
 /* Define  NetCDF-coordinate-dimension */
 static void
-t8_cmesh_write_netcdf_coordinate_dimension (t8_cmesh_netcdf_context_t *
-                                            context,
+t8_cmesh_write_netcdf_coordinate_dimension (t8_cmesh_netcdf_context_t
+                                            * context,
                                             t8_cmesh_netcdf_ugrid_namespace_t
                                             * namespace_context)
 {
@@ -156,8 +156,8 @@ t8_cmesh_write_netcdf_coordinate_dimension (t8_cmesh_netcdf_context_t *
 
 /* Define NetCDF-coordinate-variables */
 static void
-t8_cmesh_write_netcdf_coordinate_variables (t8_cmesh_netcdf_context_t *
-                                            context,
+t8_cmesh_write_netcdf_coordinate_variables (t8_cmesh_netcdf_context_t
+                                            * context,
                                             t8_cmesh_netcdf_ugrid_namespace_t
                                             * namespace_context)
 {
@@ -310,8 +310,8 @@ t8_cmesh_write_netcdf_coordinate_variables (t8_cmesh_netcdf_context_t *
 /* Define NetCDF-dimesnions */
 static void
 t8_cmesh_write_netcdf_dimensions (t8_cmesh_netcdf_context_t * context,
-                                  t8_cmesh_netcdf_ugrid_namespace_t *
-                                  namespace_context)
+                                  t8_cmesh_netcdf_ugrid_namespace_t
+                                  * namespace_context)
 {
 #if T8_WITH_NETCDF
   /* *Define dimensions in the NetCDF file.* */
@@ -344,8 +344,8 @@ t8_cmesh_write_netcdf_dimensions (t8_cmesh_netcdf_context_t * context,
 /* Define NetCDF-variables */
 static void
 t8_cmesh_write_netcdf_variables (t8_cmesh_netcdf_context_t * context,
-                                 t8_cmesh_netcdf_ugrid_namespace_t *
-                                 namespace_context)
+                                 t8_cmesh_netcdf_ugrid_namespace_t
+                                 * namespace_context)
 {
 #if T8_WITH_NETCDF
   /* *Define variables in the NetCDF file.* */
@@ -581,8 +581,8 @@ t8_cmesh_write_netcdf_variables (t8_cmesh_netcdf_context_t * context,
 /* Declare the user-defined elementwise NetCDF-variables which were passed to function. */
 static void
 t8_cmesh_write_user_netcdf_vars (t8_cmesh_netcdf_context_t * context,
-                                 t8_cmesh_netcdf_ugrid_namespace_t *
-                                 namespace_context,
+                                 t8_cmesh_netcdf_ugrid_namespace_t
+                                 * namespace_context,
                                  int num_extern_netcdf_vars,
                                  t8_netcdf_variable_t * ext_variables[],
                                  sc_MPI_Comm comm)
@@ -936,8 +936,8 @@ t8_cmesh_write_user_netcdf_data (t8_cmesh_t cmesh,
 static void
 t8_cmesh_write_netcdf_file (t8_cmesh_t cmesh,
                             t8_cmesh_netcdf_context_t * context,
-                            t8_cmesh_netcdf_ugrid_namespace_t *
-                            namespace_context, int num_extern_netcdf_vars,
+                            t8_cmesh_netcdf_ugrid_namespace_t
+                            * namespace_context, int num_extern_netcdf_vars,
                             t8_netcdf_variable_t * ext_variables[],
                             sc_MPI_Comm comm)
 {
