@@ -31,6 +31,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_data/t8_shmem.h>
 #include <t8_forest/t8_forest.h>
 #include <t8_forest/t8_forest_iterate.h>
+#include <t8_forest/t8_forest_partition.h>
 #if T8_WITH_VTK
 #include <vtkDataSet.h>
 #include <vtkSmartPointer.h>
@@ -55,9 +56,10 @@ t8_non_empty_adapt (t8_forest_t forest, t8_forest_t forest_from,
   }
   const t8_locidx_t   offset =
     t8_forest_get_tree_element_offset (forest_from, ltree_id);
-  element_data_t     *elem_data =
-    &(user_data->element_data[offset + lelement_id]);
-  const int           num_points = (int) elem_data->point_ids->elem_count;
+  element_point_t    *elem_point =
+    user_data->get_element_point (user_data->element_points,
+                                  offset + lelement_id);
+  const int           num_points = elem_point->num_points;
   if (num_points > 1) {
     return 1;
   }
@@ -86,118 +88,171 @@ t8_interpolate_replace (t8_forest_t forest_old,
                         t8_locidx_t first_outgoing,
                         int num_incoming, t8_locidx_t first_incoming)
 {
+  /* Get Metadata */
   interpolate        *inter =
     (interpolate *) t8_forest_get_user_data (forest_old);
   T8_ASSERT (forest_old == inter->forest);
   T8_ASSERT (forest_new == inter->forest_adapt);
 
+  /* ID to Data from the new forest (Data will go in there) */
   t8_locidx_t         first_incoming_data =
     first_incoming + t8_forest_get_tree_element_offset (forest_new,
                                                         which_tree);
+  /* Data from the old forest (Data is going out) */
   t8_locidx_t         first_outgoing_data =
     first_outgoing + t8_forest_get_tree_element_offset (forest_old,
                                                         which_tree);
 
-  element_data_t     *elem_data_in =
-    (element_data_t *) & (inter->element_data_adapt[first_incoming_data]);
-  element_data_t     *elem_data_out =
-    (element_data_t *) & (inter->element_data[first_outgoing_data]);
+  /* Pointer to element data */
+  element_point_t    *elem_point_in =
+    inter->get_element_point (inter->element_points_adapt,
+                              first_incoming_data);
+  element_point_t    *elem_point_out =
+    inter->get_element_point (inter->element_points, first_outgoing_data);
 
   if (refine == 0) {
     T8_ASSERT (num_incoming == num_outgoing && num_incoming == 1);
-    elem_data_in->point_ids =
-      sc_array_new_count (sizeof (int), elem_data_out->point_ids->elem_count);
-    sc_array_copy (elem_data_in->point_ids, elem_data_out->point_ids);
-    const int           num_data = inter->num_data;
-
-    elem_data_in->average = T8_ALLOC (double *, num_data);
-    for (int idata = 0; idata < num_data; idata++) {
-      elem_data_in->average[idata] =
-        T8_ALLOC (double, inter->data_dim[idata]);
-      memcpy (elem_data_in->average[idata], elem_data_out->average[idata],
-              sizeof (double) * inter->data_dim[idata]);
-    }
+    /* Allocate and copy point_ids array */
+    memcpy (elem_point_in, elem_point_out, sizeof (element_point_t));
   }
   else if (refine == 1) {
-    for (int ielem = 0; ielem < num_incoming; ielem++) {
-      element_data_t     *ielem_data_in =
-        (element_data_t *) & (inter->element_data_adapt[first_incoming_data +
-                                                        ielem]);
-      t8_element_t       *elem_in =
-        t8_forest_get_element_in_tree (forest_new, which_tree,
-                                       first_incoming + ielem);
-      ielem_data_in->average = T8_ALLOC (double *, inter->num_data);
-      for (int idata = 0; idata < inter->num_data; idata++) {
-        ielem_data_in->average[idata] =
-          T8_ALLOC_ZERO (double, inter->data_dim[idata]);
-      }
-      ielem_data_in->point_ids = sc_array_new (sizeof (int));
-      for (int ipoint = 0;
-           (size_t) ipoint < elem_data_out->point_ids->elem_count; ipoint++) {
-        int                *out_point_id =
-          (int *) sc_array_index_int (elem_data_out->point_ids, ipoint);
-        const double       *point =
-          t8_shmem_array_get_point (inter->vtk_points, *out_point_id);
+    sc_array_t        **index = T8_ALLOC (sc_array_t *, num_incoming);
+    for (t8_locidx_t ielem = 0; ielem < num_incoming; ielem++) {
+      index[ielem] = sc_array_new (sizeof (int));
+      element_point_t    *ielem_point_in =
+        inter->get_element_point (inter->element_points_adapt,
+                                  first_incoming_data + ielem);
+      ielem_point_in->num_points = 0;
+      ielem_point_in->offset = elem_point_out->offset;
+    }
+    const int           num_outgoing_points = elem_point_out->num_points;
+    const int           offset_outgoing = elem_point_out->offset;
+
+    sc_array_t         *point_indices =
+      sc_array_new_count (sizeof (int), num_outgoing_points);
+    for (int ipoint = 0; ipoint < num_outgoing_points; ipoint++) {
+      const int           ipoint_id = *((int *)
+                                        t8_shmem_array_index
+                                        (inter->point_ids,
+                                         ipoint + offset_outgoing));
+      int                *point_id =
+        (int *) sc_array_index_int (point_indices, ipoint);
+      *point_id = ipoint_id;
+    }
+
+    for (int ipoint = 0; ipoint < num_outgoing_points; ipoint++) {
+      /* Ensures that no points is associated twice. */
+      const int           ipoint_id = *((int *) sc_array_pop (point_indices));
+      for (t8_locidx_t ielem = 0; ielem < num_incoming; ielem++) {
+        t8_element_t       *elem =
+          t8_forest_get_element_in_tree (forest_new, which_tree,
+                                         first_incoming + ielem);
+        element_point_t    *ielem_point_in =
+          inter->get_element_point (inter->element_points_adapt,
+                                    first_incoming_data + ielem);
+        double             *vtk_point =
+          (double *) t8_shmem_array_index (inter->vtk_points, 3 * ipoint_id);
         if (t8_forest_element_point_inside
-            (forest_new, which_tree, elem_in, point, 0.001) != 0) {
-          int                *point_id =
-            (int *) sc_array_push (ielem_data_in->point_ids);
-          *point_id = *out_point_id;
-          for (int idata = 0; idata < inter->num_data; idata++) {
-            const double       *my_data =
-              (double *) t8_shmem_array_index (inter->point_data[idata],
-                                               inter->data_dim[idata] *
-                                               *point_id);
-            for (int idim = 0; idim < inter->data_dim[idata]; idim++) {
-              ielem_data_in->average[idata][idim] += my_data[idim];
-            }
-          }
+            (forest_new, which_tree, elem, vtk_point, 0.001)) {
+          int                *new_point_id =
+            (int *) sc_array_push (index[ielem]);
+          *new_point_id = ipoint_id;
+          ielem_point_in->num_points++;
+          break;
         }
       }
-      for (int idata = 0; idata < inter->num_data; idata++) {
-        for (int idim = 0; idim < inter->data_dim[idata]; idim++) {
-          ielem_data_in->average[idata][idim] /=
-            ielem_data_in->point_ids->elem_count;
+    }
+    sc_array_destroy (point_indices);
+    for (t8_locidx_t ielem = 1; ielem < num_incoming; ielem++) {
+      element_point_t    *ielem_point_in =
+        inter->get_element_point (inter->element_points_adapt,
+                                  first_incoming_data + ielem);
+      element_point_t    *ielem_point_in_prev =
+        inter->get_element_point (inter->element_points_adapt,
+                                  first_incoming_data + ielem - 1);
+      ielem_point_in->offset =
+        ielem_point_in_prev->offset + ielem_point_in_prev->num_points;
+    }
+    if (t8_shmem_array_start_writing (inter->point_ids)) {
+      for (t8_locidx_t ielem = 0; ielem < num_incoming; ielem++) {
+        element_point_t    *ielem_point_in =
+          inter->get_element_point (inter->element_points_adapt,
+                                    first_incoming_data + ielem);
+        //t8_debugf("[D] write from: %i to %i\n", ielem_point_in->offset, ielem_point_in->offset + ielem_point_in->num_points);
+        for (int ipoint = 0; ipoint < ielem_point_in->num_points; ipoint++) {
+          int                *point_index =
+            (int *) t8_shmem_array_index_for_writing (inter->point_ids,
+                                                      ipoint +
+                                                      ielem_point_in->offset);
+          *point_index = *((int *) sc_array_index_int (index[ielem], ipoint));
         }
+      }
+    }
+    else {
+      SC_ABORTF ("Can't write point_ids");
+    }
+    t8_shmem_array_end_writing (inter->point_ids);
+    for (int ielem = 0; ielem < num_incoming; ielem++) {
+      sc_array_destroy (index[ielem]);
+    }
+    T8_FREE (index);
+  }
+  else {
+    /* We copy all ids into the array of the coarse element. */
+    elem_point_in->offset = elem_point_out->offset;
+    elem_point_in->num_points = 0;
+    for (int ielem = 0; ielem < num_outgoing; ielem++) {
+      element_point_t    *ielem_point_out =
+        inter->get_element_point (inter->element_points,
+                                  first_outgoing_data + ielem);
+      elem_point_in->num_points += ielem_point_out->num_points;
+    }
+  }
+}
+
+void
+interpolate::set_elements ()
+{
+  const t8_locidx_t   num_elements =
+    t8_forest_get_local_num_elements (forest);
+
+  for (int idata = 0; idata < num_data; idata++) {
+    const int           idata_dim = data_dim[idata];
+    for (t8_locidx_t ielem = 0; ielem < num_elements; ielem++) {
+      element_data_t     *ielem_data =
+        get_element_data (average, ielem, idata);
+      ielem_data->data = T8_ALLOC_ZERO (double, idata_dim);
+      const int           offset =
+        *(get_element_point_offset (element_points, ielem));
+      const int           num_points =
+        *(get_element_num_points (element_points, ielem));
+      for (int ipoint = offset; ipoint < offset + num_points; ipoint++) {
+        const int           ipoint_id =
+          *((int *) t8_shmem_array_index (point_ids, ipoint));
+        t8_debugf ("[D] points_id: %i\n", ipoint_id);
+        const double       *my_data =
+          (double *) t8_shmem_array_index (point_data[idata],
+                                           ipoint_id * idata_dim);
+        for (int idim = 0; idim < idata_dim; idim++) {
+          t8_debugf ("[D] my_Data: %f\n", my_data[idim]);
+          ielem_data->data[idim] += my_data[idim];
+        }
+      }
+      for (int idim = 0; idim < idata_dim; idim++) {
+        ielem_data->data[idim] /= ((num_points == 0) ? 1 : num_points);
       }
     }
   }
-  else {
-    elem_data_in->average = T8_ALLOC (double *, inter->num_data);
-    int                 num_merge_points =
-      elem_data_out->point_ids->elem_count;
-    size_t             *offsets = T8_ALLOC_ZERO (size_t, num_outgoing + 1);
-    offsets[1] = num_merge_points;
-    for (int ielem = 1; ielem < num_outgoing; ielem++) {
-      element_data_t     *ielem_data_out =
-        (element_data_t *) &
-        (inter->element_data[first_outgoing_data + ielem]);
-      num_merge_points += ielem_data_out->point_ids->elem_count;
-      offsets[ielem + 1] = num_merge_points;
-    }
-    sc_array_init_count (elem_data_in->point_ids, sizeof (int),
-                         num_merge_points);
-    for (int ielem = 0; ielem < num_outgoing; ielem++) {
-      element_data_t     *ielem_data_out =
-        (element_data_t *) &
-        (inter->element_data[first_outgoing_data + ielem]);
-      sc_array_copy_into (elem_data_in->point_ids, offsets[ielem],
-                          ielem_data_out->point_ids);
-      for (int idata = 0; idata < inter->num_data; idata++) {
-        elem_data_in->average[idata] =
-          T8_ALLOC_ZERO (double, inter->data_dim[idata]);
-        for (int idim = 0; idim < inter->data_dim[idata]; idim++) {
-          elem_data_in->average[idata][idim] +=
-            ielem_data_out->average[idata][idim] *
-            ielem_data_out->point_ids->elem_count;
-        }
+  for (int idata = 0; idata < num_data; idata++) {
+    for (t8_locidx_t ielem = 0; ielem < num_elements; ielem++) {
+      element_data_t     *ielem_data =
+        get_element_data (average, ielem, idata);
+      t8_debugf ("[D] idata: %i elem %i\n", idata, ielem);
+      for (int idim = 0; idim < data_dim[idata]; idim++) {
+        printf ("%f, ", ielem_data->data[idim]);
       }
-    }
-    for (int idata = 0; idata < inter->num_data; idata++) {
-      for (int idim = 0; idim < inter->data_dim[idata]; idim++) {
-        elem_data_in->average[idata][idim] /=
-          elem_data_in->point_ids->elem_count;
-      }
+      printf ("\n");
+
     }
   }
 }
@@ -205,6 +260,7 @@ t8_interpolate_replace (t8_forest_t forest_old,
 void
 interpolate::adapt ()
 {
+
   t8_forest_ref (forest);
   t8_forest_init (&forest_adapt);
   t8_forest_set_user_data (forest_adapt, this);
@@ -216,23 +272,110 @@ interpolate::adapt ()
     t8_forest_get_local_num_elements (forest_adapt);
   const t8_locidx_t   old_num_elems =
     t8_forest_get_local_num_elements (forest);
-  element_data_adapt = T8_ALLOC (element_data_t, adapt_num_elems);
+  element_points_adapt =
+    sc_array_new_count (sizeof (element_point_t), adapt_num_elems);
+
+  average_adapt = T8_ALLOC (sc_array_t *, num_data);
+  for (int idata = 0; idata < num_data; idata++) {
+    average_adapt[idata] =
+      sc_array_new_count (sizeof (element_data_t), adapt_num_elems);
+  }
 
   t8_forest_iterate_replace (forest_adapt, forest, t8_interpolate_replace);
 
+  /* Set forest to forest_adapt and delete all data from forest. */
   t8_forest_unref (&forest);
   forest = forest_adapt;
   forest_adapt = NULL;
-  for (t8_locidx_t ielem = old_num_elems - 1; ielem >= 0; ielem--) {
-    sc_array_destroy (element_data[ielem].point_ids);
-    for (int idata = num_data - 1; idata >= 0; idata--) {
-      T8_FREE (element_data[ielem].average[idata]);
+  for (int idata = num_data - 1; idata >= 0; idata--) {
+    sc_array_t         *idata_array = average[idata];
+    for (t8_locidx_t ielem = old_num_elems - 1; ielem >= 0; ielem--) {
+      element_data_t     *ielem_data =
+        (element_data_t *) sc_array_index_int (idata_array, ielem);
+      T8_FREE (ielem_data->data);
     }
-    T8_FREE (element_data[ielem].average);
+    sc_array_destroy (idata_array);
   }
-  T8_FREE (element_data);
-  element_data = element_data_adapt;
-  element_data_adapt = NULL;
+  T8_FREE (average);
+  average = average_adapt;
+  average_adapt = NULL;
+  sc_array_destroy (element_points);
+  element_points = element_points_adapt;
+  element_points_adapt = NULL;
+}
+
+void
+interpolate::partition ()
+{
+  t8_forest_t         forest_partition;
+  t8_forest_ref (forest);
+  t8_forest_init (&forest_partition);
+  t8_forest_set_user_data (forest_partition, this);
+  t8_forest_set_partition (forest_partition, forest, 0);
+  /*TODO: Ghosts?? */
+  t8_forest_commit (forest_partition);
+
+  const t8_locidx_t   num_local_elements =
+    t8_forest_get_local_num_elements (forest);
+  const t8_locidx_t   num_local_elements_part =
+    t8_forest_get_local_num_elements (forest_partition);
+
+  sc_array_t          points_view;
+  sc_array_init_view (&points_view, element_points, 0, num_local_elements);
+  sc_array_t         *data_view = T8_ALLOC (sc_array, num_data);
+
+  sc_array_t         *partition_points
+    = sc_array_new_count (sizeof (element_point_t), num_local_elements_part);
+  sc_array_t        **partition_data = T8_ALLOC (sc_array_t *, num_data);
+
+  for (int idata = 0; idata < num_data; idata++) {
+    partition_data[idata] =
+      sc_array_new_count (sizeof (element_data_t), num_local_elements_part);
+  }
+
+  sc_array_t          points_part_view;
+  sc_array_init_view (&points_part_view, partition_points, 0,
+                      num_local_elements_part);
+  sc_array_t         *data_part_view = T8_ALLOC (sc_array, num_data);
+
+  for (int idata = 0; idata < num_data; idata++) {
+    sc_array_init_view (&data_view[idata], average[idata], 0,
+                        num_local_elements);
+    sc_array_init_view (&data_part_view[idata], partition_data[idata], 0,
+                        num_local_elements_part);
+  }
+
+  t8_forest_partition_data (forest, forest_partition, &points_view,
+                            &points_part_view);
+
+  for (int idata = 0; idata < num_data; idata++) {
+    t8_forest_partition_data (forest, forest_partition, &data_view[idata],
+                              &data_part_view[idata]);
+  }
+  t8_forest_unref (&forest);
+
+  forest = forest_partition;
+  forest_partition = NULL;
+
+  sc_array_destroy (element_points);
+  element_points = partition_points;
+  partition_points = NULL;
+
+  for (int idata = num_data - 1; idata >= 0; idata--) {
+    sc_array_t         *idata_array = average[idata];
+    sc_array_t         *idata_partion = partition_data[idata];
+    for (t8_locidx_t ielem = num_local_elements - 1; ielem >= 0; ielem--) {
+      element_data_t     *ielem_data =
+        (element_data_t *) sc_array_index_int (idata_array, ielem);
+    }
+
+    sc_array_destroy (idata_array);
+    idata_array = idata_partion;
+    idata_partion = NULL;
+  }
+  T8_FREE (average);
+  average = partition_data;
+  partition_data = NULL;
 }
 
 static void
@@ -241,7 +384,8 @@ t8_pipeline (vtkSmartPointer < vtkDataSet > data, sc_MPI_Comm comm)
   interpolate         test = interpolate (data, comm);
   t8_debugf ("[D] Constructed class\n");
 
-  const char          filename[12] = "class_test";
+  const char          filename[11] = "class_test";
+  const char          first_data[13] = "class_test_0";
 
   const char         *data_name[3] = {
     "average",
@@ -254,16 +398,17 @@ t8_pipeline (vtkSmartPointer < vtkDataSet > data, sc_MPI_Comm comm)
   types[1] = T8_VTK_SCALAR;
   types[2] = T8_VTK_SCALAR;
 
-  test.interpolate_write_vtk (filename, data_name, types);
-  for (int i = 0; i < 6; i++) {
+  test.interpolate_write_vtk (first_data, data_name, types);
+  for (int i = 0; i < 4; i++) {
     test.adapt ();
+
+    test.partition ();
+    test.set_elements ();
     char                fileprefix[12];
-    snprintf (fileprefix, BUFSIZ, "%s_%i", filename, i);
+    snprintf (fileprefix, BUFSIZ, "%s_%i", filename, i + 1);
     test.interpolate_write_vtk (fileprefix, data_name, types);
   }
-
   t8_debugf ("[D] wrote vtk file\n");
-
   return;
 }
 

@@ -42,6 +42,7 @@ protected:
     { "comm world", "comm self" };
 };
 
+
 TEST_P(shmem, test_shmem_init_finalize){
   sc_MPI_Comm         intranode;
   sc_MPI_Comm         internode;
