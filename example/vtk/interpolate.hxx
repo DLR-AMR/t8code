@@ -53,15 +53,21 @@ typedef struct
   double             *data;
 } element_data_t;
 
-
+/*
+ * Idea of point_ids: each element holds and offset-id and num_points. 
+ * offset points to a location in point_ids where the ids of the vtk_points inside
+ * of this element starts. num_points defines how many points are inside. 
+ * We ensure in t8_forest_iterate_replace, that the correct point-ids are
+ * in correct memeory-location. 
+*/
 
 /* *INDENT-OFF* */
 class interpolate
 {
 public:
-    t8_shmem_array_t    vtk_points;
-    t8_shmem_array_t   *point_data;
-    t8_shmem_array_t    point_ids;
+    t8_shmem_array_t    vtk_points;     /* Coordinates of the vtk points as a linear array 3 * num_points*/
+    t8_shmem_array_t   *point_data;     /* Array of shared memeory arrays, holding the point-data*/
+    t8_shmem_array_t    point_ids;      /* An array holding point ids*/
     int                 num_data;       /* Number of data-arrays. */
     int                 num_points;     /* Global number of points. */
     int                 *data_dim;      /* Array of size num_data, where each entry holds the dimension of the data*/
@@ -185,7 +191,7 @@ public:
                 data_dim[idata] * num_local_points, sc_MPI_DOUBLE,
                 point_data[idata], sc_MPI_DOUBLE, comm);
             T8_FREE (data_array);
-            t8_debugf ("[D] point_data[%i] with dim %i dim allgatherved\n", idata, data_dim[idata]);
+             t8_debugf("[D] point_data[%i] with dim %i dim allgatherved\n", idata, data_dim[idata]);
         }
         t8_shmem_array_init(&point_ids, sizeof(int), num_points, comm);
         /* Currently mpirank 0 holds all data. */
@@ -245,6 +251,15 @@ public:
 
     void partition();
 
+    /**
+     * Get a element_data_t pointer to the data of element \a ielem of 
+     * data \a idata
+     * 
+     * \param[in] array The data array
+     * \param[in] ielem an id to an element
+     * \param[in] idata an id to a datafield
+     * \return  a pointer to the element data
+     */
     element_data_t * 
     get_element_data (sc_array_t **array, const t8_locidx_t ielem, const int idata)
     {   
@@ -271,48 +286,59 @@ public:
         return &(elem_point->num_points);
     }
     
+    /**
+     * Write the current forest and average data into a vtk file
+     * 
+     * \param[in] fileprefix The vtk-file-prefix
+     * \param[in] data_names The names of the data
+     * \param[in] data_types The vtk-types of data, either T8_VTK_SCALAR or T8_VTK_VECTOR
+     */
     void 
     interpolate_write_vtk(const char *fileprefix, const char **data_names, const t8_vtk_data_type_t *data_types){
         t8_vtk_data_field_t *vtk_data = T8_ALLOC(t8_vtk_data_field_t, num_data);
         double **data_array = T8_ALLOC(double *, num_data);
         const t8_locidx_t num_local_elements = t8_forest_get_local_num_elements(forest);
+        /*Linearise each data-field*/
         for(int idata = 0; idata < num_data; idata++){
-            sc_array_t *iaverage = average[idata];
-            data_array[idata] = T8_ALLOC_ZERO(double, num_local_elements * data_dim[idata]);
-            for(t8_locidx_t ielem = 0; ielem < num_local_elements; ielem++){
-                /*t8_debugf("[D] elem: %i\n", ielem);
+            /*for(t8_locidx_t ielem = 0; ielem < num_local_elements; ielem++){
+                ("[D] elem: %i\n", ielem);
                 element_point_t *elem_p = get_element_point(element_points, ielem);
                 for(int ipoint = elem_p->offset; ipoint < elem_p->offset + elem_p->num_points; ipoint++){
                     int *point_id = (int *) t8_shmem_array_index(point_ids, ipoint);
                     printf("%i, ", *point_id);
-                }*/
+                }
+            }*/
+            sc_array_t *iaverage = average[idata];
+            data_array[idata] = T8_ALLOC_ZERO(double, num_local_elements * data_dim[idata]);
+            for(t8_locidx_t ielem = 0; ielem < num_local_elements; ielem++){
+                
                 const int current_dim = data_dim[idata];
                 element_data_t *ielem_data = (element_data_t *) sc_array_index_int(iaverage, ielem);
                 for(int idim = 0; idim < current_dim; idim++){
                     data_array[idata][current_dim * ielem + idim] = ielem_data->data[idim];
-                    printf("%f\n", ielem_data->data[idim]);
+                    /* printf("%f\n", ielem_data->data[idim]); */
                 }
             }
             snprintf(vtk_data[idata].description, BUFSIZ, data_names[idata]);
             vtk_data[idata].data = data_array[idata];
             vtk_data[idata].type = data_types[idata];
         }
-        for(int ipoint = 0; ipoint < num_points; ipoint++){
+        /*for(int ipoint = 0; ipoint < num_points; ipoint++){
             int *point_id = (int *) t8_shmem_array_index(point_ids, ipoint);
             printf("%i, ", *point_id);
-        }/*
+        }
         for(t8_locidx_t ielem = 0; ielem < num_local_elements; ielem++){
             element_point_t *elem_p = get_element_point(element_points, ielem);
-            t8_debugf("[D] %i, offset: %i num_points: %i\n", ielem, elem_p->offset, elem_p->num_points);
-        }*/
+            ("[D] %i, offset: %i num_points: %i\n", ielem, elem_p->offset, elem_p->num_points);
+        }
         
         for(int idata = 0; idata < num_data; idata++){
-            t8_debugf("[D] idata: %i\n", idata);
+            ("[D] idata: %i\n", idata);
             for(int iter = 0; iter < num_local_elements * data_dim[idata]; iter++)
             {
-                t8_debugf("[D] %f\n", data_array[idata][iter]);
+                ("[D] %f\n", data_array[idata][iter]);
             }
-        }
+        }*/
         if(t8_forest_write_vtk_ext(forest, fileprefix, 1, 1, 1, 1, 0, 0, 0, num_data, vtk_data)){
             t8_debugf("[Interpolate] Wrote pvtu to files %s\n", fileprefix);
         }
@@ -326,7 +352,10 @@ public:
         T8_FREE(data_array);
         T8_FREE(vtk_data);
     }
-
+    /**
+     * Destructor
+     * 
+     */
     ~interpolate()
     {
         t8_shmem_array_destroy(&vtk_points);

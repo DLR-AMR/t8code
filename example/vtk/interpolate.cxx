@@ -111,11 +111,15 @@ t8_interpolate_replace (t8_forest_t forest_old,
     inter->get_element_point (inter->element_points, first_outgoing_data);
 
   if (refine == 0) {
+    /* point_ids array stays the same */
     T8_ASSERT (num_incoming == num_outgoing && num_incoming == 1);
     /* Allocate and copy point_ids array */
     memcpy (elem_point_in, elem_point_out, sizeof (element_point_t));
   }
   else if (refine == 1) {
+    /* New offsets and new num_points for each ielem_in */
+
+    /* Tempory array to hold the point-ids for ielem_in */
     sc_array_t        **index = T8_ALLOC (sc_array_t *, num_incoming);
     for (t8_locidx_t ielem = 0; ielem < num_incoming; ielem++) {
       index[ielem] = sc_array_new (sizeof (int));
@@ -128,6 +132,8 @@ t8_interpolate_replace (t8_forest_t forest_old,
     const int           num_outgoing_points = elem_point_out->num_points;
     const int           offset_outgoing = elem_point_out->offset;
 
+    /* Fill the array with the point_ids of elem_out. 
+     * we pop the id from the list as soon as it is insed of ielem_in */
     sc_array_t         *point_indices =
       sc_array_new_count (sizeof (int), num_outgoing_points);
     for (int ipoint = 0; ipoint < num_outgoing_points; ipoint++) {
@@ -163,6 +169,8 @@ t8_interpolate_replace (t8_forest_t forest_old,
       }
     }
     sc_array_destroy (point_indices);
+
+    /* Update ielem_ins offset */
     for (t8_locidx_t ielem = 1; ielem < num_incoming; ielem++) {
       element_point_t    *ielem_point_in =
         inter->get_element_point (inter->element_points_adapt,
@@ -173,6 +181,7 @@ t8_interpolate_replace (t8_forest_t forest_old,
       ielem_point_in->offset =
         ielem_point_in_prev->offset + ielem_point_in_prev->num_points;
     }
+    /* Update point_ids. */
     if (t8_shmem_array_start_writing (inter->point_ids)) {
       for (t8_locidx_t ielem = 0; ielem < num_incoming; ielem++) {
         element_point_t    *ielem_point_in =
@@ -198,7 +207,9 @@ t8_interpolate_replace (t8_forest_t forest_old,
     T8_FREE (index);
   }
   else {
-    /* We copy all ids into the array of the coarse element. */
+    /* point-ids array stays the same. Offset of element_in is set to the
+     * offset of the first element_out. Sum over the num_points to get the
+     * total of points in the coarsend array. */
     elem_point_in->offset = elem_point_out->offset;
     elem_point_in->num_points = 0;
     for (int ielem = 0; ielem < num_outgoing; ielem++) {
@@ -229,12 +240,10 @@ interpolate::set_elements ()
       for (int ipoint = offset; ipoint < offset + num_points; ipoint++) {
         const int           ipoint_id =
           *((int *) t8_shmem_array_index (point_ids, ipoint));
-        t8_debugf ("[D] points_id: %i\n", ipoint_id);
         const double       *my_data =
           (double *) t8_shmem_array_index (point_data[idata],
                                            ipoint_id * idata_dim);
         for (int idim = 0; idim < idata_dim; idim++) {
-          t8_debugf ("[D] my_Data: %f\n", my_data[idim]);
           ielem_data->data[idim] += my_data[idim];
         }
       }
@@ -242,19 +251,19 @@ interpolate::set_elements ()
         ielem_data->data[idim] /= ((num_points == 0) ? 1 : num_points);
       }
     }
-  }
-  for (int idata = 0; idata < num_data; idata++) {
-    for (t8_locidx_t ielem = 0; ielem < num_elements; ielem++) {
-      element_data_t     *ielem_data =
-        get_element_data (average, ielem, idata);
-      t8_debugf ("[D] idata: %i elem %i\n", idata, ielem);
-      for (int idim = 0; idim < data_dim[idata]; idim++) {
-        printf ("%f, ", ielem_data->data[idim]);
-      }
-      printf ("\n");
+  }                             /*
+                                   for (int idata = 0; idata < num_data; idata++) {
+                                   for (t8_locidx_t ielem = 0; ielem < num_elements; ielem++) {
+                                   element_data_t     *ielem_data =
+                                   get_element_data (average, ielem, idata);
+                                   t8_debugf ("[D] idata: %i elem %i\n", idata, ielem);
+                                   for (int idim = 0; idim < data_dim[idata]; idim++) {
+                                   printf ("%f, ", ielem_data->data[idim]);
+                                   }
+                                   printf ("\n");
 
-    }
-  }
+                                   }
+                                   } */
 }
 
 void
@@ -399,10 +408,11 @@ t8_pipeline (vtkSmartPointer < vtkDataSet > data, sc_MPI_Comm comm)
   types[2] = T8_VTK_SCALAR;
 
   test.interpolate_write_vtk (first_data, data_name, types);
+
   for (int i = 0; i < 4; i++) {
     test.adapt ();
 
-    test.partition ();
+    //test.partition ();
     test.set_elements ();
     char                fileprefix[12];
     snprintf (fileprefix, BUFSIZ, "%s_%i", filename, i + 1);

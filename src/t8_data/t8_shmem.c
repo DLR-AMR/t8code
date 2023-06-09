@@ -318,9 +318,6 @@ t8_shmem_array_allgatherv_common (void *sendbuf,
     SC_CHECK_MPI (mpiret);
     T8_FREE (noderecvchar);
   }
-  else {
-    t8_errorf ("Can not write shmem-array.\n");
-  }
   t8_shmem_array_end_writing (recvarray);
 
   T8_FREE (inter_displ);
