@@ -444,23 +444,67 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset,
         int                 orientation = -1;
         int                 found_orientation = 0;
         int                 firstvertex = face1 == 0 ? 1 : 0;
-        el_vertices1 += 3 * firstvertex;
 
         for (int ivertex = 1; ivertex <= dim && !found_orientation; ivertex++) {
           /* The face with number k consists of the vertices with numbers
            * k+1, k+2, k+3 (mod 4) or k+1, k+2 (mod 3) in case of triangles.
            * In el_vertices are the coordinates of these vertices in order
            * v_0x v_0y v_0z v_1x v_1y ... */
-          if (fabs (el_vertices1[0] -
+          if (fabs (el_vertices1[3 * firstvertex] -
                     el_vertices2[3 * ((face2 + ivertex) % num_faces)]) <
               tolerance
-              && fabs (el_vertices1[1] -
+              && fabs (el_vertices1[3 * firstvertex] -
                        el_vertices2[3 * ((face2 + ivertex) % num_faces) +
                                     1]) < tolerance
-              && fabs (el_vertices1[2] -
+              && fabs (el_vertices1[3 * firstvertex] -
                        el_vertices2[3 * ((face2 + ivertex) % num_faces) +
                                     2]) < tolerance) {
-            orientation = (face2 + ivertex) % num_faces;
+            /* We identified the vertex (face2 + ivertex) % num_faces of the 
+             * neighboring element as equivalent to the first vertex of face1.*/
+            int                 el_vertex = (face2 + ivertex) % num_faces;
+            /* True for triangles and tets */
+            T8_ASSERT (-1 < el_vertex && el_vertex < num_faces);
+            if (dim == 2) {
+              switch (face2)
+              {
+              case 0:
+                T8_ASSERT (el_vertex == 1 || el_vertex == 2);
+                orientation = el_vertex - 1;
+                break;
+              case 1:
+                T8_ASSERT (el_vertex == 0 || el_vertex == 2);
+                orientation = el_vertex == 0 ? 0 : 1;
+                break;
+              default:
+                T8_ASSERT (face2 == 2);
+                T8_ASSERT (el_vertex == 0 || el_vertex == 1);
+                orientation = el_vertex;
+                break;
+              }
+            }
+            else {
+              switch (face2)
+              {
+              case 0:
+                T8_ASSERT (el_vertex == 1 || el_vertex == 2 || el_vertex == 3);
+                orientation = el_vertex - 1;
+                break;
+              case 1:
+                T8_ASSERT (el_vertex == 0 || el_vertex == 2 || el_vertex == 3);
+                orientation = el_vertex == 0 ? 0 : el_vertex - 1;
+                break;
+              case 2:
+                T8_ASSERT (el_vertex == 0 || el_vertex == 1 || el_vertex == 3);
+                orientation = el_vertex == 3 ? el_vertex - 1 : el_vertex;
+                break;
+              default:
+                T8_ASSERT (face2 == 3);
+                T8_ASSERT (el_vertex == 0 || el_vertex == 1 || el_vertex == 2);
+                orientation = el_vertex;
+                break;
+              }
+            }
+            T8_ASSERT (-1 < orientation && orientation < num_faces - 1);
             found_orientation = 1;      /* We found an orientation and can stop the loop */
           }
         }
