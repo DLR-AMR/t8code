@@ -41,188 +41,311 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <vtkPolyData.h>
 #endif
 
-int
-t8_non_empty_adapt (t8_forest_t forest, t8_forest_t forest_from,
-                    t8_locidx_t ltree_id, t8_locidx_t lelement_id,
-                    t8_eclass_scheme_c *ts, const int is_family,
-                    const int num_elements, t8_element_t *elements[])
+MeshAdapter::MeshAdapter (vtkSmartPointer < vtkDataSet > input,
+                          sc_MPI_Comm comm)
 {
-  interpolate        *user_data =
-    (interpolate *) t8_forest_get_user_data (forest);
-  const int           level = ts->t8_element_level (elements[0]);
-  if (level == user_data->max_level && !is_family) {
-    /* It is not possible to refine this level */
-    return 0;
+  levelMaximum = 6;
+
+  /* Set MPI Communicator */
+  m_iComm = comm;
+
+  /* Create just a point set from the input and ignore the topology */
+  vtkSmartPointer < vtkPointSet > pointSet =
+    t8_vtkGrid_to_vtkPointSet (input);
+
+  /* Bounding Box */
+    /*-----------------------------------------------------------------------------------------------*/
+
+  /* Reduce the global bounds. Each MPI rank just has a portion of data */
+  vtkBoundingBox      globalBounds;
+  const vtkBoundingBox localBounds (pointSet->GetBounds ());
+
+  /* Collect and reduce bounds from all processes */
+  //vtkMultiProcessController::GetGlobalController()->AllReduce(localBounds, globalBounds);
+
+  /* Get and Convert Boundaries */
+  double             *vtkBounds = new double[6];
+  double             *t8Bounds = new double[24];
+
+  globalBounds.GetBounds (vtkBounds);
+
+  t8Bounds = ConvertVTKBoundariesToT8Boundaries (vtkBounds);
+
+  /* Initialize */
+    /*-----------------------------------------------------------------------------------------------*/
+
+  int                 dimensionCell = GetDimensionCell (input);
+  //int dimensionData = GetDimensionData(vtkBounds);
+  int                 dimensionData = 2;
+
+  t8_global_productionf ("( t8SeriesWriter ) >> Dimension Cell: %i\n",
+                         dimensionCell);
+  t8_global_productionf ("( t8SeriesWriter ) >> Dimension Data: %i\n",
+                         dimensionData);
+
+  /* Create Cmesh based on PointCloud */
+  t8_eclass_t         eclass = T8_ECLASS_LINE;
+
+  if (dimensionData == 2) {
+    eclass = T8_ECLASS_QUAD;
   }
-  const t8_locidx_t   offset =
-    t8_forest_get_tree_element_offset (forest_from, ltree_id);
-  element_point_t    *elem_point =
-    user_data->get_element_point (user_data->element_points,
-                                  offset + lelement_id);
-  const int           num_points = elem_point->num_points;
-  if (num_points > 1) {
-    return 1;
+
+  if (dimensionData == 3) {
+    eclass = T8_ECLASS_HEX;
   }
-  else {
-    return 0;
+
+  /* Create Cmesh with correct eclass */
+  t8_cmesh_t          cmesh =
+    t8_cmesh_new_hypercube_pad (eclass, m_iComm, t8Bounds, 1, 1, 1);
+
+  /* Create Initial Forest */
+  t8_forest_t         forest_tmp =
+    t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 0, 0, comm);
+
+  /* Initialize, Partition and Commit */
+  t8_forest_init (&forest);
+  t8_forest_set_partition (forest, forest_tmp, 0);
+  t8_forest_commit (forest);
+
+  /* Get Local Number of Elements */
+  const t8_locidx_t   num_elements =
+    t8_forest_get_local_num_elements (forest);
+
+  /* TODO: Write vtk-point data stuff only where forest exits. */
+
+  /* Get MPI Rank and process if Rank 0 */
+  int                 mpirank;
+  int                 mpiret = sc_MPI_Comm_rank (m_iComm, &mpirank);
+
+  /* Check if MPI is fine */
+  SC_CHECK_MPI (mpiret);
+
+  /* Get number of local points, might be 0 */
+  int                 num_local_points = 0;
+
+  if (mpirank == 0) {
+    num_local_points = (int) pointSet->GetNumberOfPoints ();
   }
-}
 
-double             *
-t8_shmem_array_get_point (t8_shmem_array_t array, int index)
-{
-  T8_ASSERT (t8_shmem_array_is_initialized (array));
-  T8_ASSERT (0 <= index
-             && (size_t) index < t8_shmem_array_get_elem_count (array) / 3);
+  double             *local_points = T8_ALLOC (double, 3 * num_local_points);
 
-  return (double *) t8_shmem_array_index (array, 3 * index);
-}
-
-static void
-t8_interpolate_replace (t8_forest_t forest_old,
-                        t8_forest_t forest_new,
-                        t8_locidx_t which_tree,
-                        t8_eclass_scheme_c *ts,
-                        int refine,
-                        int num_outgoing,
-                        t8_locidx_t first_outgoing,
-                        int num_incoming, t8_locidx_t first_incoming)
-{
-  /* Get Metadata */
-  interpolate        *inter =
-    (interpolate *) t8_forest_get_user_data (forest_old);
-  T8_ASSERT (forest_old == inter->forest);
-  T8_ASSERT (forest_new == inter->forest_adapt);
-
-  /* ID to Data from the new forest (Data will go in there) */
-  t8_locidx_t         first_incoming_data =
-    first_incoming + t8_forest_get_tree_element_offset (forest_new,
-                                                        which_tree);
-  /* Data from the old forest (Data is going out) */
-  t8_locidx_t         first_outgoing_data =
-    first_outgoing + t8_forest_get_tree_element_offset (forest_old,
-                                                        which_tree);
-
-  /* Pointer to element data */
-  element_point_t    *elem_point_in =
-    inter->get_element_point (inter->element_points_adapt,
-                              first_incoming_data);
-  element_point_t    *elem_point_out =
-    inter->get_element_point (inter->element_points, first_outgoing_data);
-
-  if (refine == 0) {
-    /* point_ids array stays the same */
-    T8_ASSERT (num_incoming == num_outgoing && num_incoming == 1);
-    /* Allocate and copy point_ids array */
-    memcpy (elem_point_in, elem_point_out, sizeof (element_point_t));
+  /* Write point-coordinates */
+  for (vtkIdType i = 0; i < num_local_points; i++) {
+    pointSet->GetPoint (i, &(local_points[3 * i]));
   }
-  else if (refine == 1) {
-    /* New offsets and new num_points for each ielem_in */
 
-    /* Tempory array to hold the point-ids for ielem_in */
-    sc_array_t        **index = T8_ALLOC (sc_array_t *, num_incoming);
-    for (t8_locidx_t ielem = 0; ielem < num_incoming; ielem++) {
-      index[ielem] = sc_array_new (sizeof (int));
-      element_point_t    *ielem_point_in =
-        inter->get_element_point (inter->element_points_adapt,
-                                  first_incoming_data + ielem);
-      ielem_point_in->num_points = 0;
-      ielem_point_in->offset = elem_point_out->offset;
+  /*Get global number of points */
+  num_global_points = 0;
+  mpiret = sc_MPI_Allreduce ((void *) (&num_local_points),
+                             (void *) (&num_global_points), 1,
+                             sc_MPI_INT, sc_MPI_SUM, m_iComm);
+
+  SC_CHECK_MPI (mpiret);
+
+  /* Fill shmem with point-data. */
+  t8_shmem_init (m_iComm);
+  t8_shmem_set_type (m_iComm, T8_SHMEM_BEST_TYPE);
+
+  t8_shmem_array_init (&vtk_points, sizeof (double),
+                       3 * num_global_points, m_iComm);
+
+  t8_shmem_array_allgatherv ((void *) local_points, 3 * num_local_points,
+                             sc_MPI_DOUBLE, vtk_points,
+                             sc_MPI_DOUBLE, m_iComm);
+
+  num_data = 0;
+
+  vtkSmartPointer < vtkPointData > vtk_point_data = NULL;
+  if (mpirank == 0) {
+    vtk_point_data = pointSet->GetPointData ();
+    num_data = vtk_point_data->GetNumberOfArrays ();
+  }
+
+  /* Currently proc 0 is the main proc. */
+  mpiret = sc_MPI_Bcast ((void *) &num_data, 1, sc_MPI_INT, 0, m_iComm);
+
+  SC_CHECK_MPI (mpiret);
+  point_data = T8_ALLOC (t8_shmem_array_t, num_data);
+
+  data_dim = T8_ALLOC_ZERO (int, num_data);
+  if (mpirank == 0) {
+    for (int i = 0; i < num_data; i++) {
+      data_dim[i] =
+        (int) (vtk_point_data->GetArray (i)->GetNumberOfComponents ());
     }
-    const int           num_outgoing_points = elem_point_out->num_points;
-    const int           offset_outgoing = elem_point_out->offset;
+  }
+  mpiret = sc_MPI_Bcast ((void *) data_dim, num_data, sc_MPI_INT, 0, m_iComm);
 
-    /* Fill the array with the point_ids of elem_out. 
-     * we pop the id from the list as soon as it is insed of ielem_in */
-    sc_array_t         *point_indices =
-      sc_array_new_count (sizeof (int), num_outgoing_points);
-    for (int ipoint = 0; ipoint < num_outgoing_points; ipoint++) {
-      const int           ipoint_id = *((int *)
-                                        t8_shmem_array_index
-                                        (inter->point_ids,
-                                         ipoint + offset_outgoing));
-      int                *point_id =
-        (int *) sc_array_index_int (point_indices, ipoint);
-      *point_id = ipoint_id;
-    }
+  SC_CHECK_MPI (mpiret);
 
-    for (int ipoint = 0; ipoint < num_outgoing_points; ipoint++) {
-      /* Ensures that no points is associated twice. */
-      const int           ipoint_id = *((int *) sc_array_pop (point_indices));
-      for (t8_locidx_t ielem = 0; ielem < num_incoming; ielem++) {
-        t8_element_t       *elem =
-          t8_forest_get_element_in_tree (forest_new, which_tree,
-                                         first_incoming + ielem);
-        element_point_t    *ielem_point_in =
-          inter->get_element_point (inter->element_points_adapt,
-                                    first_incoming_data + ielem);
-        double             *vtk_point =
-          (double *) t8_shmem_array_index (inter->vtk_points, 3 * ipoint_id);
-        if (t8_forest_element_point_inside
-            (forest_new, which_tree, elem, vtk_point, 0.001)) {
-          int                *new_point_id =
-            (int *) sc_array_push (index[ielem]);
-          *new_point_id = ipoint_id;
-          ielem_point_in->num_points++;
-          break;
-        }
+  for (int i = 0; i < num_data; i++) {
+    /* Allocate memory depending on data dimension. */
+    double             *data_array =
+      T8_ALLOC (double, data_dim[i] * num_local_points);
+
+    if (mpirank == 0) {
+      vtkDataArray       *my_data = vtk_point_data->GetArray (i);
+
+      for (vtkIdType j = 0; j < num_local_points; j++) {
+        my_data->GetTuple (j, &(data_array[j * data_dim[i]]));
       }
     }
-    sc_array_destroy (point_indices);
+    t8_shmem_array_init (&(point_data[i]), sizeof (double),
+                         data_dim[i] * num_global_points, m_iComm);
+    t8_shmem_array_allgatherv ((void *) data_array,
+                               data_dim[i] * num_local_points, sc_MPI_DOUBLE,
+                               point_data[i], sc_MPI_DOUBLE, m_iComm);
+    T8_FREE (data_array);
+  }
 
-    /* Update ielem_ins offset */
-    for (t8_locidx_t ielem = 1; ielem < num_incoming; ielem++) {
-      element_point_t    *ielem_point_in =
-        inter->get_element_point (inter->element_points_adapt,
-                                  first_incoming_data + ielem);
-      element_point_t    *ielem_point_in_prev =
-        inter->get_element_point (inter->element_points_adapt,
-                                  first_incoming_data + ielem - 1);
-      ielem_point_in->offset =
-        ielem_point_in_prev->offset + ielem_point_in_prev->num_points;
-    }
-    /* Update point_ids. */
-    if (t8_shmem_array_start_writing (inter->point_ids)) {
-      for (t8_locidx_t ielem = 0; ielem < num_incoming; ielem++) {
-        element_point_t    *ielem_point_in =
-          inter->get_element_point (inter->element_points_adapt,
-                                    first_incoming_data + ielem);
-        //t8_debugf("[D] write from: %i to %i\n", ielem_point_in->offset, ielem_point_in->offset + ielem_point_in->num_points);
-        for (int ipoint = 0; ipoint < ielem_point_in->num_points; ipoint++) {
-          int                *point_index =
-            (int *) t8_shmem_array_index_for_writing (inter->point_ids,
-                                                      ipoint +
-                                                      ielem_point_in->offset);
-          *point_index = *((int *) sc_array_index_int (index[ielem], ipoint));
-        }
+  t8_shmem_array_init (&point_ids, sizeof (int), num_global_points, m_iComm);
+  /* Currently mpirank 0 holds all data. */
+  if (mpirank == 0) {
+    if (t8_shmem_array_start_writing (point_ids)) {
+      for (int ipoint = 0; ipoint < num_global_points; ipoint++) {
+        int                *index =
+          (int *) t8_shmem_array_index_for_writing (point_ids, ipoint);
+        *index = ipoint;
       }
     }
     else {
       SC_ABORTF ("Can't write point_ids");
     }
-    t8_shmem_array_end_writing (inter->point_ids);
-    for (int ielem = 0; ielem < num_incoming; ielem++) {
-      sc_array_destroy (index[ielem]);
-    }
-    T8_FREE (index);
+    t8_shmem_array_end_writing (point_ids);
   }
-  else {
-    /* point-ids array stays the same. Offset of element_in is set to the
-     * offset of the first element_out. Sum over the num_points to get the
-     * total of points in the coarsend array. */
-    elem_point_in->offset = elem_point_out->offset;
-    elem_point_in->num_points = 0;
-    for (int ielem = 0; ielem < num_outgoing; ielem++) {
-      element_point_t    *ielem_point_out =
-        inter->get_element_point (inter->element_points,
-                                  first_outgoing_data + ielem);
-      elem_point_in->num_points += ielem_point_out->num_points;
+
+  /* Init level is zero, hence only 1 for hex */
+  if (num_local_points > 0) {
+    element_points = sc_array_new_count (sizeof (element_point_t), 1);
+    element_point_t    *elem_point =
+      (element_point_t *) sc_array_index_int (element_points, 0);
+    /* The first element holds all points. */
+    elem_point->offset = 0;
+    elem_point->num_points = num_global_points;
+    average = T8_ALLOC (sc_array_t *, num_data);
+
+    for (int idata = 0; idata < num_data; idata++) {
+      average[idata] = sc_array_new_count (sizeof (element_data_t), 1);
+      element_data_t     *ielem_data =
+        (element_data_t *) sc_array_index_int (average[idata], 0);
+      ielem_data->data = T8_ALLOC_ZERO (double, data_dim[idata]);
+    }
+
+    /* This computation has to be adapted for the application. */
+    for (int ipoint = 0; ipoint < num_global_points; ipoint++) {
+      for (int idata = 0; idata < num_data; idata++) {
+        const double       *my_data =
+          (double *) t8_shmem_array_index (point_data[idata],
+                                           data_dim[idata] * ipoint);
+        element_data_t     *ielem_data = get_element_data (average, 0, idata);
+
+        for (int idim = 0; idim < data_dim[idata]; idim++) {
+          ielem_data->data[idim] += my_data[idim];
+        }
+      }
+    }
+
+    for (int idata = 0; idata < num_data; idata++) {
+      element_data_t     *ielem_data = get_element_data (average, 0, idata);
+
+      for (int idim = 0; idim < data_dim[idata]; idim++) {
+        ielem_data->data[idim] /= num_global_points;
+      }
     }
   }
+
+  T8_FREE (local_points);
+  t8_forest_set_user_data (forest, (void *) this);
 }
 
 void
-interpolate::set_elements ()
+MeshAdapter::WritePVTU (const char *fileprefix, const char **data_names,
+                        const t8_vtk_data_type_t * data_types)
+{
+  std::cout << "WritePVTU" << std::endl;
+  std::cout << data_names[0] << std::endl;
+  std::cout << data_names[1] << std::endl;
+
+  t8_vtk_data_field_t *vtk_data = T8_ALLOC (t8_vtk_data_field_t, num_data);
+  double            **data_array = T8_ALLOC (double *, num_data);
+  const t8_locidx_t   num_local_elements =
+    t8_forest_get_local_num_elements (forest);
+
+  std::cout << "WritePVTU 1 | num_data: " << num_data << std::endl;
+
+  /*Linearise each data-field */
+  for (int idata = 0; idata < num_data; idata++) {
+    /*for(t8_locidx_t ielem = 0; ielem < num_local_elements; ielem++){
+       ("[D] elem: %i\n", ielem);
+       element_point_t *elem_p = get_element_point(element_points, ielem);
+       for(int ipoint = elem_p->offset; ipoint < elem_p->offset + elem_p->num_points; ipoint++){
+       int *point_id = (int *) t8_shmem_array_index(point_ids, ipoint);
+       printf("%i, ", *point_id);
+       }
+       } */
+    sc_array_t         *iaverage = average[idata];
+
+    std::cout << "WritePVTU 2 | idata " << idata << std::endl;
+
+    data_array[idata] =
+      T8_ALLOC_ZERO (double, num_local_elements * data_dim[idata]);
+    for (t8_locidx_t ielem = 0; ielem < num_local_elements; ielem++) {
+
+      const int           current_dim = data_dim[idata];
+      element_data_t     *ielem_data =
+        (element_data_t *) sc_array_index_int (iaverage, ielem);
+
+      std::cout << "WritePVTU 3 | ielem " << ielem << std::endl;
+
+      for (int idim = 0; idim < current_dim; idim++) {
+        std::cout << "WritePVTU 4 | idim " << idim << std::endl;
+
+        data_array[idata][current_dim * ielem + idim] =
+          ielem_data->data[idim];
+        /* printf("%f\n", ielem_data->data[idim]); */
+      }
+    }
+    snprintf (vtk_data[idata].description, BUFSIZ, "%s", data_names[idata]);
+    vtk_data[idata].data = data_array[idata];
+    vtk_data[idata].type = data_types[idata];
+  }
+
+  std::cout << "WritePVTU 2" << std::endl;
+
+  /*for(int ipoint = 0; ipoint < num_points; ipoint++){
+     int *point_id = (int *) t8_shmem_array_index(point_ids, ipoint);
+     printf("%i, ", *point_id);
+     }
+     for(t8_locidx_t ielem = 0; ielem < num_local_elements; ielem++){
+     element_point_t *elem_p = get_element_point(element_points, ielem);
+     ("[D] %i, offset: %i num_points: %i\n", ielem, elem_p->offset, elem_p->num_points);
+     }
+
+     for(int idata = 0; idata < num_data; idata++){
+     ("[D] idata: %i\n", idata);
+     for(int iter = 0; iter < num_local_elements * data_dim[idata]; iter++)
+     {
+     ("[D] %f\n", data_array[idata][iter]);
+     }
+     } */
+  if (t8_forest_write_vtk_ext
+      (forest, fileprefix, 1, 1, 1, 1, 0, 0, 0, num_data, vtk_data)) {
+    t8_debugf ("[Interpolate] Wrote pvtu to files %s\n", fileprefix);
+  }
+  else {
+    t8_errorf ("[Interpolate] Error writing to files %s\n", fileprefix);
+  }
+  for (int idata = num_data - 1; idata >= 0; idata--) {
+    T8_FREE (data_array[idata]);
+  }
+
+  T8_FREE (data_array);
+  T8_FREE (vtk_data);
+}
+
+//----------------------------------------------------------------------------
+void
+MeshAdapter::SetElements ()
 {
   const t8_locidx_t   num_elements =
     t8_forest_get_local_num_elements (forest);
@@ -243,10 +366,12 @@ interpolate::set_elements ()
         const double       *my_data =
           (double *) t8_shmem_array_index (point_data[idata],
                                            ipoint_id * idata_dim);
+
         for (int idim = 0; idim < idata_dim; idim++) {
           ielem_data->data[idim] += my_data[idim];
         }
       }
+
       for (int idim = 0; idim < idata_dim; idim++) {
         ielem_data->data[idim] /= ((num_points == 0) ? 1 : num_points);
       }
@@ -266,31 +391,38 @@ interpolate::set_elements ()
                                    } */
 }
 
+//----------------------------------------------------------------------------
 void
-interpolate::adapt ()
+MeshAdapter::Adapt (t8_forest_adapt_t adaptCallback,
+                    t8_forest_replace_t replaceCallback)
 {
-
   t8_forest_ref (forest);
   t8_forest_init (&forest_adapt);
-  t8_forest_set_user_data (forest_adapt, this);
-  t8_forest_set_adapt (forest_adapt, forest, t8_non_empty_adapt, 0);
-  /* Balance und Ghost hier?? */
+  t8_forest_set_user_data (forest_adapt, (void *) this);
+
+  /* Set the Adapt Callback */
+
+  t8_forest_set_adapt (forest_adapt, forest, adaptCallback, 0);
+  /* Todo: Balance und Ghost hier?? */
   t8_forest_commit (forest_adapt);
 
   const t8_locidx_t   adapt_num_elems =
     t8_forest_get_local_num_elements (forest_adapt);
   const t8_locidx_t   old_num_elems =
     t8_forest_get_local_num_elements (forest);
+
   element_points_adapt =
     sc_array_new_count (sizeof (element_point_t), adapt_num_elems);
 
   average_adapt = T8_ALLOC (sc_array_t *, num_data);
+
   for (int idata = 0; idata < num_data; idata++) {
     average_adapt[idata] =
       sc_array_new_count (sizeof (element_data_t), adapt_num_elems);
   }
 
-  t8_forest_iterate_replace (forest_adapt, forest, t8_interpolate_replace);
+  /* Set the Replace Callback */
+  t8_forest_iterate_replace (forest_adapt, forest, replaceCallback);
 
   /* Set forest to forest_adapt and delete all data from forest. */
   t8_forest_unref (&forest);
@@ -305,6 +437,7 @@ interpolate::adapt ()
     }
     sc_array_destroy (idata_array);
   }
+
   T8_FREE (average);
   average = average_adapt;
   average_adapt = NULL;
@@ -313,131 +446,196 @@ interpolate::adapt ()
   element_points_adapt = NULL;
 }
 
-void
-interpolate::partition ()
+//----------------------------------------------------------------------------
+double             *
+MeshAdapter::ConvertVTKBoundariesToT8Boundaries (double *vtkBounds)
 {
-  t8_forest_t         forest_partition;
-  t8_forest_ref (forest);
-  t8_forest_init (&forest_partition);
-  t8_forest_set_user_data (forest_partition, this);
-  t8_forest_set_partition (forest_partition, forest, 0);
-  /*TODO: Ghosts?? */
-  t8_forest_commit (forest_partition);
+  double             *t8Bounds = new double[24];
 
-  const t8_locidx_t   num_local_elements =
+  t8Bounds[0] = 0;
+  t8Bounds[1] = 0;
+  t8Bounds[2] = 0;
+
+  t8Bounds[3] = 10;
+  t8Bounds[4] = 0;
+  t8Bounds[5] = 0;
+
+  t8Bounds[6] = 0;
+  t8Bounds[7] = 10;
+  t8Bounds[8] = 0;
+
+  t8Bounds[9] = 10;
+  t8Bounds[10] = 10;
+  t8Bounds[11] = 0;
+
+  // XMin, XMax, YMin, YMax, ZMin, ZMax
+
+  t8Bounds[12] = vtkBounds[0];
+  t8Bounds[13] = vtkBounds[2];
+  t8Bounds[14] = vtkBounds[5];
+
+  t8Bounds[15] = vtkBounds[1];
+  t8Bounds[16] = vtkBounds[2];
+  t8Bounds[17] = vtkBounds[5];
+
+  t8Bounds[18] = vtkBounds[0];
+  t8Bounds[19] = vtkBounds[3];
+  t8Bounds[20] = vtkBounds[5];
+
+  t8Bounds[21] = vtkBounds[1];
+  t8Bounds[22] = vtkBounds[3];
+  t8Bounds[23] = vtkBounds[5];
+
+  return t8Bounds;
+}
+
+//----------------------------------------------------------------------------
+int
+MeshAdapter::GetDimensionData (double *vtkBounds)
+{
+  int                 dimensionData = -1;
+
+  /* Get DataSet Dimension */
+  auto                dimX =
+    ((int) (vtkBounds[1] - vtkBounds[0]) > 0) ? 1 : 0;
+  auto                dimY =
+    ((int) (vtkBounds[3] - vtkBounds[2]) > 0) ? 1 : 0;
+  auto                dimZ =
+    ((int) (vtkBounds[5] - vtkBounds[4]) > 0) ? 1 : 0;
+
+  dimensionData = dimX + dimY + dimZ;
+
+  if (dimensionData < 1 || dimensionData > 3) {
+    t8_global_errorf
+      ("( t8SeriesWriter ) >>  Error: Dimension of Data is not 1, 2 or 3\n");
+  }
+
+  return dimensionData;
+}
+
+//----------------------------------------------------------------------------
+int
+MeshAdapter::GetDimensionCell (vtkSmartPointer < vtkDataSet > dataSet)
+{
+  int                 dimensionCell = -1;
+
+  /* Get Cell Dimension */
+  if (dataSet->GetNumberOfCells () > 0) {
+    dimensionCell = dataSet->GetCell (0)->GetCellDimension ();
+  }
+
+  if (dimensionCell < 1 || dimensionCell > 3) {
+    t8_global_errorf
+      ("( t8SeriesWriter ) >>  Error: Dimension of Cell is not 1, 2 or 3\n");
+  }
+
+  return dimensionCell;
+}
+
+//----------------------------------------------------------------------------
+MeshAdapter::~MeshAdapter ()
+{
+  t8_shmem_array_destroy (&vtk_points);
+  t8_shmem_array_destroy (&point_ids);
+
+  for (int idata = num_data - 1; idata >= 0; idata--) {
+    t8_shmem_array_destroy (&point_data[idata]);
+  }
+
+  const t8_locidx_t   num_elements =
     t8_forest_get_local_num_elements (forest);
-  const t8_locidx_t   num_local_elements_part =
-    t8_forest_get_local_num_elements (forest_partition);
-
-  sc_array_t          points_view;
-  sc_array_init_view (&points_view, element_points, 0, num_local_elements);
-  sc_array_t         *data_view = T8_ALLOC (sc_array, num_data);
-
-  sc_array_t         *partition_points
-    = sc_array_new_count (sizeof (element_point_t), num_local_elements_part);
-  sc_array_t        **partition_data = T8_ALLOC (sc_array_t *, num_data);
-
-  for (int idata = 0; idata < num_data; idata++) {
-    partition_data[idata] =
-      sc_array_new_count (sizeof (element_data_t), num_local_elements_part);
-  }
-
-  sc_array_t          points_part_view;
-  sc_array_init_view (&points_part_view, partition_points, 0,
-                      num_local_elements_part);
-  sc_array_t         *data_part_view = T8_ALLOC (sc_array, num_data);
-
-  for (int idata = 0; idata < num_data; idata++) {
-    sc_array_init_view (&data_view[idata], average[idata], 0,
-                        num_local_elements);
-    sc_array_init_view (&data_part_view[idata], partition_data[idata], 0,
-                        num_local_elements_part);
-  }
-
-  t8_forest_partition_data (forest, forest_partition, &points_view,
-                            &points_part_view);
-
-  for (int idata = 0; idata < num_data; idata++) {
-    t8_forest_partition_data (forest, forest_partition, &data_view[idata],
-                              &data_part_view[idata]);
-  }
-  t8_forest_unref (&forest);
-
-  forest = forest_partition;
-  forest_partition = NULL;
-
-  sc_array_destroy (element_points);
-  element_points = partition_points;
-  partition_points = NULL;
 
   for (int idata = num_data - 1; idata >= 0; idata--) {
     sc_array_t         *idata_array = average[idata];
-    sc_array_t         *idata_partion = partition_data[idata];
-    for (t8_locidx_t ielem = num_local_elements - 1; ielem >= 0; ielem--) {
+
+    for (t8_locidx_t ielem = num_elements - 1; ielem >= 0; ielem--) {
       element_data_t     *ielem_data =
         (element_data_t *) sc_array_index_int (idata_array, ielem);
+      T8_FREE (ielem_data->data);
     }
 
     sc_array_destroy (idata_array);
-    idata_array = idata_partion;
-    idata_partion = NULL;
   }
+
   T8_FREE (average);
-  average = partition_data;
-  partition_data = NULL;
+  T8_FREE (data_dim);
+  T8_FREE (point_data);
+
+  sc_array_destroy (element_points);
+  t8_forest_unref (&forest);
+  t8_debugf ("[D] destroyed class\n");
 }
 
-static void
-t8_pipeline (vtkSmartPointer < vtkDataSet > data, sc_MPI_Comm comm)
-{
-  interpolate         test = interpolate (data, comm);
-  t8_debugf ("[D] Constructed class\n");
+// void
+// interpolate::partition ()
+// {
+//   t8_forest_t         forest_partition;
+//   t8_forest_ref (forest);
+//   t8_forest_init (&forest_partition);
+//   t8_forest_set_user_data (forest_partition, this);
+//   t8_forest_set_partition (forest_partition, forest, 0);
+//   /*TODO: Ghosts?? */
+//   t8_forest_commit (forest_partition);
 
-  const char          filename[11] = "class_test";
-  const char          first_data[13] = "class_test_0";
+//   const t8_locidx_t   num_local_elements =
+//     t8_forest_get_local_num_elements (forest);
+//   const t8_locidx_t   num_local_elements_part =
+//     t8_forest_get_local_num_elements (forest_partition);
 
-  const char         *data_name[3] = {
-    "average",
-    "data1",
-    "data2"
-  };
-  t8_vtk_data_type_t  types[3];
+//   sc_array_t          points_view;
+//   sc_array_init_view (&points_view, element_points, 0, num_local_elements);
+//   sc_array_t         *data_view = T8_ALLOC (sc_array, num_data);
 
-  types[0] = T8_VTK_SCALAR;
-  types[1] = T8_VTK_SCALAR;
-  types[2] = T8_VTK_SCALAR;
+//   sc_array_t         *partition_points
+//     = sc_array_new_count (sizeof (element_point_t), num_local_elements_part);
+//   sc_array_t        **partition_data = T8_ALLOC (sc_array_t *, num_data);
 
-  test.interpolate_write_vtk (first_data, data_name, types);
+//   for (int idata = 0; idata < num_data; idata++) {
+//     partition_data[idata] =
+//       sc_array_new_count (sizeof (element_data_t), num_local_elements_part);
+//   }
 
-  for (int i = 0; i < 4; i++) {
-    test.adapt ();
+//   sc_array_t          points_part_view;
+//   sc_array_init_view (&points_part_view, partition_points, 0,
+//                       num_local_elements_part);
+//   sc_array_t         *data_part_view = T8_ALLOC (sc_array, num_data);
 
-    //test.partition ();
-    test.set_elements ();
-    char                fileprefix[12];
-    snprintf (fileprefix, BUFSIZ, "%s_%i", filename, i + 1);
-    test.interpolate_write_vtk (fileprefix, data_name, types);
-  }
-  t8_debugf ("[D] wrote vtk file\n");
-  return;
-}
+//   for (int idata = 0; idata < num_data; idata++) {
+//     sc_array_init_view (&data_view[idata], average[idata], 0,
+//                         num_local_elements);
+//     sc_array_init_view (&data_part_view[idata], partition_data[idata], 0,
+//                         num_local_elements_part);
+//   }
 
-int
-main (int argc, char **argv)
-{
-  int                 mpiret;
-  mpiret = sc_MPI_Init (&argc, &argv);
-  sc_MPI_Comm         comm = sc_MPI_COMM_WORLD;
-  SC_CHECK_MPI (mpiret);
-  sc_init (comm, 1, 1, NULL, SC_LP_ESSENTIAL);
-  t8_init (SC_LP_DEFAULT);
+//   t8_forest_partition_data (forest, forest_partition, &points_view,
+//                             &points_part_view);
 
-  vtkSmartPointer < vtkDataSet > vtk_grid =
-    t8_vtk_reader
-    ("/localdata1/knap_da/projects/t8code/t8code/test/testfiles/test_vtk_tri.vtu",
-     0, 0, comm, VTK_UNSTRUCTURED_FILE);
-  t8_debugf ("[D] read successfull\n");
-  t8_pipeline (vtk_grid, comm);
-  sc_finalize ();
-  return 0;
-}
+//   for (int idata = 0; idata < num_data; idata++) {
+//     t8_forest_partition_data (forest, forest_partition, &data_view[idata],
+//                               &data_part_view[idata]);
+//   }
+//   t8_forest_unref (&forest);
+
+//   forest = forest_partition;
+//   forest_partition = NULL;
+
+//   sc_array_destroy (element_points);
+//   element_points = partition_points;
+//   partition_points = NULL;
+
+//   for (int idata = num_data - 1; idata >= 0; idata--) {
+//     sc_array_t         *idata_array = average[idata];
+//     sc_array_t         *idata_partion = partition_data[idata];
+//     for (t8_locidx_t ielem = num_local_elements - 1; ielem >= 0; ielem--) {
+//       element_data_t     *ielem_data =
+//         (element_data_t *) sc_array_index_int (idata_array, ielem);
+//     }
+
+//     sc_array_destroy (idata_array);
+//     idata_array = idata_partion;
+//     idata_partion = NULL;
+//   }
+//   T8_FREE (average);
+//   average = partition_data;
+//   partition_data = NULL;
+// }
