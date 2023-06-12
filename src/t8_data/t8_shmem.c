@@ -310,6 +310,7 @@ t8_shmem_array_allgatherv_common (void *sendbuf,
   t8_compute_recvcounts_displs (intra_recv_total, inter_recvcount,
                                 inter_displ, sizeof (sendtype),
                                 internode_comm);
+
   if (t8_shmem_array_start_writing (recvarray)) {
     mpiret =
       sc_MPI_Allgatherv (noderecvchar, intra_recv_total, sendtype,
@@ -317,9 +318,6 @@ t8_shmem_array_allgatherv_common (void *sendbuf,
                          recvtype, internode_comm);
     SC_CHECK_MPI (mpiret);
     T8_FREE (noderecvchar);
-  }
-  else {
-    t8_errorf ("Can not write shmem-array.\n");
   }
   t8_shmem_array_end_writing (recvarray);
 
