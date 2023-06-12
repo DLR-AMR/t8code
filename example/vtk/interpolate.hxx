@@ -155,7 +155,7 @@ class MeshAdapter
 
         void Adapt(t8_forest_adapt_t adaptCallback, t8_forest_replace_t replaceCallback);
 
-        // void partition();
+        void partition();
     
         /**
          * Write the current forest and average data into a vtk file
