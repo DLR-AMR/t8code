@@ -153,6 +153,7 @@ void                t8_shmem_array_allgather (const void *sendbuf,
  * sendcount.
  * The total number of items of each node is then used to compute the
  * recvcount-array and displacement-array between nodes. 
+ * Use t8_shmem_array_allgather if the sendcount is equal on all procs for better scaling. 
  * 
  * \param[in] sendbuf         the source from this process
  * \param[in] sendcount       the number of items to gather on this proc
