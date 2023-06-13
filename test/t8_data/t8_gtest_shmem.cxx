@@ -165,6 +165,79 @@ TEST_P(shmem, test_sc_shmem_alloc){
   }
 }
 
+TEST_P(shmem, test_shmem_array_allgatherv){
+  const size_t           element_size = sizeof (t8_gloidx_t);
+  int                 mpirank;
+  int                 mpisize;
+  int                 mpiret;
+
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+
+  t8_debugf("[D] mpirank: %i\n", mpirank);
+  
+  /* Each process fills an array of size mpirank * 10, where the elements
+   * in the arrays increase, such that in the shmem we have a contiguous increase. */
+  const int                   base_size = 10;
+  const t8_gloidx_t           array_length = (mpirank+1) * base_size;
+  t8_gloidx_t                 *sendbuf = T8_ALLOC_ZERO(t8_gloidx_t, array_length);
+  const t8_gloidx_t           first_array_value = base_size * mpirank * (mpirank + 1) / 2;
+  const int                   total_size = base_size * mpisize * (mpisize + 1) / 2;
+
+  for(t8_gloidx_t i = 0; i < array_length; i++){
+    sendbuf[i] = first_array_value + i;
+  }
+
+  t8_debugf("[D] total_size: %i\n", total_size);
+
+  for(int shmem_type_int = SC_SHMEM_BASIC;
+    shmem_type_int < SC_SHMEM_NUM_TYPES; ++shmem_type_int){
+    t8_debugf("Checking shared memory type %s.\n", sc_shmem_type_to_string[shmem_type_int]);
+
+    const sc_shmem_type_t shmem_type = (sc_shmem_type_t) shmem_type_int;
+  
+    /* setup shared memory usage */
+    t8_shmem_init (comm);
+    t8_shmem_set_type (comm, shmem_type);
+
+#if T8_ENABLE_MPI
+    const sc_shmem_type_t control_shmem_type = sc_shmem_get_type (comm);
+    ASSERT_EQ(shmem_type, control_shmem_type) << "Setting shmem type not succesfull.";
+#endif
+
+    t8_shmem_array_t  shmem_array;
+    t8_shmem_array_init(&shmem_array, element_size, total_size, comm);
+
+    sc_MPI_Comm         check_comm = t8_shmem_array_get_comm (shmem_array);
+    /* Check communicator of shared memory array. */
+    ASSERT_EQ(comm, check_comm) << "Shared memory array has wrong communicator.";
+
+    /* Check element count of shared memory array. */
+    const int        check_count =
+      t8_shmem_array_get_elem_count (shmem_array);
+    ASSERT_EQ(check_count, total_size) << "shared memory array has wrong element count.";
+
+    /* Check element size of shared memory array. */
+    const size_t        check_size =
+      t8_shmem_array_get_elem_size (shmem_array);
+    ASSERT_EQ(check_size, element_size) << "shared memory has wrong element size.";
+
+    t8_shmem_array_allgatherv((void *) sendbuf, array_length, T8_MPI_GLOIDX, shmem_array,
+                        T8_MPI_GLOIDX, comm);
+
+    for(int i = 0; i < total_size; ++i){
+      const int value = t8_shmem_array_get_gloidx(shmem_array,  i);
+      ASSERT_EQ(value, i) << "Value at position " << i << " not correct (expected " << i << " got " << value << ")";
+    }
+    
+    t8_shmem_array_destroy(&shmem_array);
+    t8_shmem_finalize(comm);
+  }
+  T8_FREE(sendbuf);
+}
+
 TEST_P(shmem, test_shmem_array){
   const int           array_length = 100;
   const int           element_size = sizeof (t8_gloidx_t);
