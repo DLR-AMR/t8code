@@ -32,6 +32,8 @@
  * if linear_id(e_a) < linear_id(a_b) then level(e_a) > level(e_b).
  * Thus, recursive coarsening should result in a tree containing only the
  * root element.
+ * 
+ * Note, that each rank has its own local/global tree. No trees are shared.
  */
 
 /* *INDENT-OFF* */
@@ -43,14 +45,15 @@ protected:
     
     /* Construct a cmesh such that each process will get one rooted tree */
     cmesh = t8_cmesh_new_bigmesh (eclass, MPI_size, sc_MPI_COMM_WORLD);
-
     scheme = t8_scheme_new_default_cxx ();
 
     t8_scheme_cxx_ref (scheme);
     t8_cmesh_ref (cmesh);
-
+    
+    /* The forest to be adapted. */
     forest = 
-      t8_forest_new_uniform (cmesh, scheme, 1, 0, sc_MPI_COMM_WORLD);  
+      t8_forest_new_uniform (cmesh, scheme, 1, 0, sc_MPI_COMM_WORLD);
+    /* The forest contains only root elements and serves as a comparison. */  
     forest_base = 
       t8_forest_new_uniform (cmesh, scheme, 0, 0, sc_MPI_COMM_WORLD);
   }
@@ -156,6 +159,7 @@ TEST_P (recursive_tree, test_recursive)
   forest = t8_adapt_forest (forest, t8_adapt_remove_but_last_first, 1);
   forest = t8_adapt_forest (forest, t8_adapt_coarse_all, 1);
 
+  /* The adaptet forest should only contian root elements as forest_base */
   ASSERT_TRUE (t8_forest_is_equal (forest, forest_base));
 }
 

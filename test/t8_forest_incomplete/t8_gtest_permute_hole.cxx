@@ -35,7 +35,7 @@
  * 
  * Example:
  * num of elements = 4
- * instances - bianry representation
+ * instances - binary representation
  *      0    -  ...0 0 0 0 0 0 0
  *      1    -  ...0 0 0 0 0 0 1
  *      2    -  ...0 0 0 0 0 1 0
@@ -54,6 +54,8 @@
  *      15   -  ...0 0 0 1 1 1 1
  * We remove every element with id i if the i`th bit (right to left) 
  * in the current instances is 0.
+ * 
+ * Note, this test runs only on one rank.
  */
 
 /* *INDENT-OFF* */
@@ -88,7 +90,8 @@ protected:
 };
 /* *INDENT-ON* */
 
-/** Remove every element with local_id i if the i`th bit in the current permutation \a removes is 0. */
+/** Remove every element with local_id i if the i`th bit in 
+ * the current permutation \a removes is 0. */
 static int
 t8_adapt_remove (t8_forest_t forest,
                  t8_forest_t forest_from,
@@ -106,6 +109,7 @@ t8_adapt_remove (t8_forest_t forest,
   return 0;
 }
 
+/** Coarse every (incomplete) family */
 static int
 t8_adapt_coarse (t8_forest_t forest,
                  t8_forest_t forest_from,
@@ -148,6 +152,7 @@ TEST_P (forest_permute, test_permute_hole)
   for (uint32_t permutation = 1; permutation < num_permutation; permutation++) {
     std::bitset < MAX_NUM_ELEMETS > removes (permutation);
     t8_forest_ref (forest);
+    /* Remove elements for every 0 bit in \a removes */
     t8_forest_t         forest_adapt =
       t8_adapt_forest (forest, t8_adapt_remove, &removes);
 
@@ -164,8 +169,8 @@ TEST_P (forest_permute, test_permute_hole)
     /* check if coarsening results in overlapping elements */
     for (int l = 0; l < level + 1; l++) {
       forest_adapt = t8_adapt_forest (forest_adapt, t8_adapt_coarse, NULL);
+      ASSERT_TRUE (t8_forest_no_overlap (forest_adapt));
     }
-    ASSERT_TRUE (t8_forest_no_overlap (forest));
     ASSERT_TRUE (1 == t8_forest_get_tree_num_elements (forest_adapt, 0));
 
     t8_forest_unref (&forest_adapt);
