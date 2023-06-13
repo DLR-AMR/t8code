@@ -1459,6 +1459,13 @@ t8_forest_compute_desc (t8_forest_t forest)
   for (itree_id = 0; itree_id < num_trees; itree_id++) {
     /* get a pointer to the tree */
     itree = t8_forest_get_tree (forest, itree_id);
+    if (t8_forest_get_tree_element_count (itree) < 1) {
+      /* if local tree is empty */
+      T8_ASSERT (forest->incomplete_trees);
+      itree->first_desc = NULL;
+      itree->last_desc = NULL;
+      break;
+    }
     /* get the eclass scheme associated to tree */
     ts = forest->scheme_cxx->eclass_schemes[itree->eclass];
     /* get a pointer to the first element of itree */
