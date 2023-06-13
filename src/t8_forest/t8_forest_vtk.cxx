@@ -361,7 +361,6 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
 
   long int            point_id = 0;     /* The id of the point in the points Object. */
   double              coordinates[3];
-  double              vertex_coords[3] = { 0, 0, 0 };
   const t8_gloidx_t   offset = t8_forest_get_first_local_element_id (forest);
   t8_gloidx_t         elem_id = offset;
 
@@ -427,8 +426,6 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
  */
   vtkDoubleArray    **dataArrays;
   dataArrays = T8_ALLOC (vtkDoubleArray *, num_data);
-
-  t8_cmesh_t          cmesh = t8_forest_get_cmesh (forest);
 
   const t8_locidx_t   num_local_trees =
     t8_forest_get_num_local_trees (forest);
