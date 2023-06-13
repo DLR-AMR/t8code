@@ -21,20 +21,12 @@
 */
 
 #include <gtest/gtest.h>
-//#include <iostream>
 #include <t8.h>
-#include <t8_eclass.h>
-#include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_forest/t8_forest.h>
-//#include <t8_vec.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
-#include <t8_forest/t8_forest_private.h>
-#include <t8_forest/t8_forest_iterate.h>
 #include "t8_cmesh/t8_cmesh_testcases.h"
-
-//#include <t8_forest/t8_forest_partition.h>
-
+#include <t8_forest/t8_forest.h>
+#include <t8_forest/t8_forest_iterate.h>
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
 /* *INDENT-OFF* */
 class forest_iterate:public testing::TestWithParam <int> {
@@ -46,8 +38,6 @@ protected:
         t8_forest_new_uniform (t8_test_create_cmesh (cmesh_id), 
                                t8_scheme_new_default_cxx (),
                                3, 0, sc_MPI_COMM_WORLD);
-
-    //adapt_callbacks = NULL;
   }
 
   void TearDown () override {
@@ -95,14 +85,10 @@ t8_forest_replace (t8_forest_t forest_old,
     elidx_old += t8_forest_get_tree_num_elements (forest_old, tidx);
   }
 
-  //printf ("which_tree: %i \n", which_tree);
-  //printf ("elidx_new:  %i \n", elidx_new);
-  //printf ("elidx_old:  %i \n\n", elidx_old);
-
   ASSERT_EQ (adapt_data->callbacks[elidx_old], refine);
 
-  //T8_ASSERT (first_outgoing == elidx_old);
-  //T8_ASSERT (refine == -2 ? true : first_incoming == elidx_new);
+  T8_ASSERT (first_outgoing == elidx_old);
+  T8_ASSERT (refine == -2 ? true : first_incoming == elidx_new);
 
   if (refine == 0) {
     ASSERT_EQ (num_outgoing, 1);
@@ -148,6 +134,17 @@ t8_forest_replace (t8_forest_t forest_old,
 
 }
 
+int
+t8_adapt_non (t8_forest_t forest,
+              t8_forest_t forest_from,
+              t8_locidx_t which_tree,
+              t8_locidx_t lelement_id,
+              t8_eclass_scheme_c *ts,
+              const int is_family,
+              const int num_elements, t8_element_t *elements[])
+{
+  return 0;
+}
 
 int
 t8_adapt_callback (t8_forest_t forest,
@@ -164,6 +161,9 @@ t8_adapt_callback (t8_forest_t forest,
   int return_val = lelement_id % 20;
   if (return_val < 5) {
     return_val = -2;
+    if (t8_forest_get_eclass (forest_from, which_tree) == T8_ECLASS_VERTEX) {
+      return_val = 0;
+    }
   }
   else if (return_val < 10) {
     if (is_family) {
@@ -179,8 +179,8 @@ t8_adapt_callback (t8_forest_t forest,
   else {
     return_val = 1;
   }
-  ASSERT_TRUE (-3 < return_val);
-  ASSERT_TRUE (return_val < 2);
+  T8_ASSERT (-3 < return_val);
+  T8_ASSERT (return_val < 2);
 
   t8_locidx_t lelement_id_forest = lelement_id;
   for (t8_locidx_t tidx = 0; tidx < which_tree; tidx++)
@@ -196,12 +196,16 @@ t8_adapt_callback (t8_forest_t forest,
 t8_forest_t
 t8_adapt_forest (t8_forest_t forest_from,
                  t8_forest_adapt_t adapt_fn,
+                 int do_partition,
                  void *user_data)
 {
   t8_forest_t         forest_new;
 
   t8_forest_init (&forest_new);
   t8_forest_set_adapt (forest_new, forest_from, adapt_fn, 0);
+  if (do_partition) {
+    t8_forest_set_partition (forest_new, NULL, 0);
+  }
   if (user_data != NULL) {
     t8_forest_set_user_data (forest_new, user_data);
   }
@@ -210,37 +214,38 @@ t8_adapt_forest (t8_forest_t forest_from,
   return forest_new;
 }
 
-
-
 TEST_P (forest_iterate, test_iterate_replace)
 {
+#if T8_ENABLE_LESS_TESTS
+    const int runs = 2;
+#else
+    const int runs = 2;
+#endif
+  for (int run = 0; run < runs; run++) {
+    t8_locidx_t num_elements = t8_forest_get_local_num_elements (forest);
+    adapt_callbacks = T8_ALLOC (int, num_elements);
 
-  t8_locidx_t num_elements = t8_forest_get_local_num_elements (forest);
+    for (t8_locidx_t elidx = 0; elidx < num_elements; elidx++) {
+      adapt_callbacks[elidx] = -3;
+    }
 
-  adapt_callbacks = T8_ALLOC (int, num_elements);
+    struct t8_return_data data {
+      adapt_callbacks
+    };
 
-  for (t8_locidx_t elidx = 0; elidx < num_elements; elidx++) {
-    adapt_callbacks[elidx] = -3;
+    t8_forest_ref (forest);
+    forest_adapt = t8_adapt_forest (forest, t8_adapt_callback, 0, &data);
+
+    t8_forest_iterate_replace (forest_adapt, forest, t8_forest_replace);
+
+    forest_adapt = t8_adapt_forest (forest_adapt, t8_adapt_non, 1, NULL);   
+    if (run < runs - 1) {
+      T8_FREE (adapt_callbacks);
+      forest = forest_adapt;
+    }
   }
-
-  struct t8_return_data data {
-    adapt_callbacks
-  };
-
-  t8_forest_ref (forest);
-  forest_adapt = t8_adapt_forest (forest, t8_adapt_callback, &data);
-
-  for (t8_locidx_t elidx = 0; elidx < num_elements; elidx++) {
-   //printf ("%i: %i \n",elidx, adapt_callbacks[elidx]);
-  }
-  //t8_forest_write_vtk (forest, "output_forest");
-  //t8_forest_write_vtk (forest_adapt, "output_forest_adapt");
-
-  t8_forest_iterate_replace (forest_adapt, forest, t8_forest_replace);
-
 }
-//t8_get_number_of_all_testcases ()
-/* *INDENT-OFF* */
-INSTANTIATE_TEST_SUITE_P (t8_gtest_iterate_replace, forest_iterate, testing::Range(100, 101));
-/* *INDENT-ON* */
 
+/* *INDENT-OFF* */
+INSTANTIATE_TEST_SUITE_P (t8_gtest_iterate_replace, forest_iterate, testing::Range(2, t8_get_number_of_all_testcases ()));
+/* *INDENT-ON* */

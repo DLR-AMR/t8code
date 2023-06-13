@@ -24,14 +24,8 @@
 #include <t8.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
-
-#include <t8_forest/t8_forest_partition.h>
-#include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_types.h>
-#include <t8_forest/t8_forest_private.h>
-
-
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
 /* *INDENT-OFF* */
 class local_tree:public testing::TestWithParam <t8_eclass_t> {
@@ -106,5 +100,5 @@ TEST_P (local_tree, test_empty_local_tree)
 }
 
 /* *INDENT-OFF* */
-INSTANTIATE_TEST_SUITE_P (t8_gtest_empty_local_tree, local_tree, testing::Range(T8_ECLASS_QUAD, T8_ECLASS_TRIANGLE));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_empty_local_tree, local_tree, testing::Range(T8_ECLASS_LINE, T8_ECLASS_COUNT));
 /* *INDENT-ON* */

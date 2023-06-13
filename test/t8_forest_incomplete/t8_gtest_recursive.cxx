@@ -160,5 +160,5 @@ TEST_P (recursive_tree, test_recursive)
 }
 
 /* *INDENT-OFF* */
-INSTANTIATE_TEST_SUITE_P (t8_gtest_recursive, recursive_tree, testing::Range(T8_ECLASS_QUAD, T8_ECLASS_COUNT));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_recursive, recursive_tree, testing::Range(T8_ECLASS_LINE, T8_ECLASS_COUNT));
 /* *INDENT-ON* */
