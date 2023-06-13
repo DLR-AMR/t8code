@@ -24,10 +24,7 @@
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h>
-#include <t8_schemes/t8_default/t8_default_tet/t8_dtet.h>
-#include <t8_schemes/t8_default/t8_default_tet/t8_dtet_connectivity.h>
-#include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_connectivity.h>
+
 /*TODO: Delete GTEST_SKIP in TEST_P t8_check_face_desc if t8_prism_children_at_face is fixed. */
 
 /* *INDENT-OFF* */
@@ -79,24 +76,14 @@ t8_face_descendant_test_child (t8_element_t *tmp, t8_element_t *test,
 void
 t8_linear_face_descendant (t8_element_t *elem, t8_element_t *tmp,
                            t8_element_t *test, t8_eclass_scheme_c *ts,
-                           int maxlvl, t8_eclass_t eclass)
+                           int maxlvl)
 {
 
   int                 level = ts->t8_element_level (elem);
-  /* Type is used for the different types of a pyramid. */
-  int                 type;
   int                 num_faces;
 
   num_faces = ts->t8_element_num_faces (elem);
-  /*if ((int) eclass == (int) T8_ECLASS_PYRAMID) {
-     type = ((t8_dpyramid_t *) elem)->pyramid.type;
-     if (type >= 6) {
-     num_faces = T8_DPYRAMID_FACES;
-     }
-     else {
-     num_faces = T8_DTET_FACES;
-     }
-     } */
+
   ts->t8_element_copy (elem, tmp);
   for (int ilevel = level + 1; ilevel < maxlvl; ilevel++) {
     for (int jface = 0; jface < num_faces; jface++) {
@@ -136,7 +123,19 @@ t8_recursive_face_desendant (t8_element_t *elem, t8_element_t *test,
                              t8_element_t *tmp, t8_element_t *child,
                              t8_eclass_scheme_c *ts, int maxlvl)
 {
+  int                 level = ts->t8_element_level (elem);
+  T8_ASSERT (level <= maxlvl && maxlvl <= ts->t8_element_maxlevel () - 1);
+  if (level == maxlvl)
+    return;
 
+  t8_linear_face_descendant (elem, tmp, test, ts, maxlvl);
+
+  int                 num_children = ts->t8_element_num_children (elem);
+  for (int ichild = 0; ichild < num_children; ichild++) {
+    ts->t8_element_child (elem, ichild, child);
+    t8_recursive_face_desendant (child, test, tmp, elem, ts, maxlvl);
+    ts->t8_element_parent (child, elem);
+  }
 }
 
 TEST_P (class_descendant, t8_check_face_desc)
@@ -164,7 +163,7 @@ TEST_P (class_descendant, t8_check_face_desc)
   ts->t8_element_set_linear_id (element, 0, 0);
 
   /* Check for correct parent-child relation */
-  t8_linear_face_descendant (element, child, test, ts, maxlvl, eclass);
+  t8_linear_face_descendant (element, child, test, ts, maxlvl);
   t8_recursive_face_desendant (element, test, tmp, child, ts, maxlvl);
 
   /* Destroy element */
@@ -174,8 +173,6 @@ TEST_P (class_descendant, t8_check_face_desc)
   ts->t8_element_destroy (1, &tmp);
 }
 
-
 /* *INDENT-OFF* */
-//INSTANTIATE_TEST_SUITE_P (t8_gtest_element_face_descendant, class_descendant,testing::Range(T8_ECLASS_LINE, T8_ECLASS_PRISM));
 INSTANTIATE_TEST_SUITE_P (t8_gtest_element_face_descendant, class_descendant,testing::Range(T8_ECLASS_VERTEX, T8_ECLASS_COUNT));
 /* *INDENT-ON* */
