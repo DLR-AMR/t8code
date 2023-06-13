@@ -50,6 +50,32 @@ protected:
 
 };
 /* *INDENT-ON* */
+
+void
+t8_face_descendant_test_child (t8_element_t *tmp, t8_element_t *test,
+                               t8_element_t *elem, t8_eclass_scheme_c *ts,
+                               int face, int level, int ilevel,
+                               int num_children, int test_child_id)
+{
+
+  int                 child_indices[num_children];
+
+  t8_element_t      **children = T8_ALLOC (t8_element_t *, num_children);
+  ts->t8_element_new (num_children, children);
+
+  /* Computing the child-id of the last descendant */
+  ts->t8_element_children_at_face (tmp, face, children, num_children,
+                                   child_indices);
+  int                 child_id = child_indices[test_child_id];
+  ts->t8_element_copy (elem, tmp);
+  for (int klevel = level; klevel < ilevel; klevel++) {
+    ts->t8_element_child (tmp, child_id, test);
+    ts->t8_element_copy (test, tmp);
+  }
+  ts->t8_element_destroy (num_children, children);
+  T8_FREE (children);
+}
+
 void
 t8_linear_face_descendant (t8_element_t *elem, t8_element_t *tmp,
                            t8_element_t *test, t8_eclass_scheme_c *ts,
@@ -57,53 +83,33 @@ t8_linear_face_descendant (t8_element_t *elem, t8_element_t *tmp,
 {
 
   int                 level = ts->t8_element_level (elem);
-
-  /* Calculate the type (with eclass?, seperate function?) */
+  /* Type is used for the different types of a pyramid. */
   int                 type;
   int                 num_faces;
 
   num_faces = ts->t8_element_num_faces (elem);
-  if ((int) eclass == (int) T8_ECLASS_PYRAMID) {
-    type = ((t8_dpyramid_t *) elem)->pyramid.type;
-    if (type >= 6) {
-      num_faces = T8_DPYRAMID_FACES;
-    }
-    else {
-      num_faces = T8_DTET_FACES;
-    }
-  }
+  /*if ((int) eclass == (int) T8_ECLASS_PYRAMID) {
+     type = ((t8_dpyramid_t *) elem)->pyramid.type;
+     if (type >= 6) {
+     num_faces = T8_DPYRAMID_FACES;
+     }
+     else {
+     num_faces = T8_DTET_FACES;
+     }
+     } */
   ts->t8_element_copy (elem, tmp);
   for (int ilevel = level + 1; ilevel < maxlvl; ilevel++) {
     for (int jface = 0; jface < num_faces; jface++) {
 
       int                 num_children =
         ts->t8_element_num_face_children (tmp, jface);
-      int                 child_indices[num_children];
-
-      t8_element_t      **children = T8_ALLOC (t8_element_t *, num_children);
-      ts->t8_element_new (num_children, children);
-
-      /* Compute the child-id of the first-descendent */
-      ts->t8_element_children_at_face (tmp, jface, children, num_children,
-                                       child_indices);
-      ASSERT_TRUE (child_indices !=
-                   NULL) << "child indices NULL at eclass: " <<
-        t8_eclass_to_string[eclass];
-      int                 child_id = child_indices[0];
-      ts->t8_element_copy (elem, tmp);
-      for (int klevel = level; klevel < ilevel; klevel++) {
-        ts->t8_element_child (tmp, child_id, test);
-        ts->t8_element_copy (test, tmp);
-      }
+      t8_face_descendant_test_child (tmp, test, elem, ts, jface, level,
+                                     ilevel, num_children, 0);
 
       ts->t8_element_first_descendant_face (elem, jface, tmp, ilevel);
-      ASSERT_FALSE (ts->
-                    t8_element_compare (test,
-                                        tmp)) <<
+      ASSERT_FALSE (ts->t8_element_compare (test,
+                                            tmp)) <<
         "Wrong first descendant face\n";
-
-      ts->t8_element_destroy (num_children, children);
-      T8_FREE (children);
     }
   }
 
@@ -113,32 +119,13 @@ t8_linear_face_descendant (t8_element_t *elem, t8_element_t *tmp,
 
       int                 num_children =
         ts->t8_element_num_face_children (tmp, jface);
-      int                 child_indices[num_children];
-
-      t8_element_t      **children = T8_ALLOC (t8_element_t *, num_children);
-      ts->t8_element_new (num_children, children);
-
-      /* Computing the child-id of the last descendant */
-      ts->t8_element_children_at_face (tmp, jface, children, num_children,
-                                       child_indices);
-      ASSERT_TRUE (child_indices !=
-                   NULL) << "child indices NULL at eclass: " <<
-        t8_eclass_to_string[eclass];
-      int                 child_id = child_indices[num_children - 1];
-      ts->t8_element_copy (elem, tmp);
-      for (int klevel = level; klevel < ilevel; klevel++) {
-        ts->t8_element_child (tmp, child_id, test);
-        ts->t8_element_copy (test, tmp);
-      }
+      t8_face_descendant_test_child (tmp, test, elem, ts, jface, level,
+                                     ilevel, num_children, num_children - 1);
 
       ts->t8_element_last_descendant_face (elem, jface, tmp, ilevel);
-      ASSERT_FALSE (ts->
-                    t8_element_compare (test,
-                                        tmp)) <<
+      ASSERT_FALSE (ts->t8_element_compare (test,
+                                            tmp)) <<
         "Wrong last descendant face\n";
-
-      ts->t8_element_destroy (num_children, children);
-      T8_FREE (children);
     }
   }
 }
