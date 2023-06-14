@@ -31,11 +31,8 @@ t8_standalone_scheme_c<eclass_T>::t8_standalone_scheme_c(void) {
 
 template<t8_eclass_t eclass_T>
 t8_standalone_scheme_c<eclass_T>::~t8_standalone_scheme_c() {
-  /* This destructor is empty since the destructor of the
-  * default_common scheme is called automatically and it
-  * suffices to destroy the quad_scheme.
-  * However we need to provide an implementation of the destructor
-  * and hence this empty function. */
+  T8_ASSERT (ts_context != NULL);
+  sc_mempool_destroy ((sc_mempool_t *) ts_context);
 }
 
 template<t8_eclass_t eclass_T>
