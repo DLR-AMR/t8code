@@ -265,8 +265,8 @@ static void
 t8_sele_root (t8_standalone_element_t<eclass_T> *p)
 {
   p->level = 0;
-  if constexpr (eclass_T > T8_ECLASS_VERTEX) {
-    p->coords[0] = p->coords[1] = p->coords[2] = 0;
+  for (size_t i=0; i<T8_ELEMENT_DIM[eclass_T]; i++) {
+    p->coords[i] = 0;
   }
 }
 

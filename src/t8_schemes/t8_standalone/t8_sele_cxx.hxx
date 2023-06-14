@@ -24,6 +24,7 @@
 #define T8_SELE_HXX
 
 #include <t8.h>
+#include <array>
 
 // name is to long.. maybe t8_sele_t or t8_selement_t or t8_element_t 
 #define t8_standalone_element_t t8_sele_t
@@ -58,13 +59,7 @@ struct t8_standalone_element_t
 
   /** Bit array: which inequality is fulfilled at which level. */
   t8_element_type_t  type;
-  t8_element_coord_t coords[T8_ELEMENT_DIM[eclass_T]];
-};
-
-template<>
-struct t8_standalone_element_t<T8_ECLASS_ZERO>
-{
-  uint8_t              level; 
+  std::array<t8_element_coord_t, T8_ELEMENT_DIM[eclass_T]> coords;
 };
 
 #endif /* T8_SELE_HXX */
