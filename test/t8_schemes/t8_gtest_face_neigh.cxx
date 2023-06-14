@@ -65,22 +65,23 @@ t8_check_not_inside_root (t8_element_t *element, t8_element_t *neigh,
   int                 num_faces = ts->t8_element_num_faces (element);
 
   for (int iface = 0; iface < num_faces; iface++) {
-    int                 num_children =
-        ts->t8_element_num_face_children (child, iface);
-    for (int jchild = 0; jchild < num_children; jchild++) {
-      
-      int                 *child_indices = T8_ALLOC(int, num_children);
-      t8_element_t      **children = T8_ALLOC (t8_element_t *, num_children);
-      ts->t8_element_new (num_children, children);
 
-      /* Computing the child-id of the last descendant */
-      ts->t8_element_children_at_face (child, iface, children, num_children,
-                                   child_indices);
+    int                 num_children =
+      ts->t8_element_num_face_children (child, iface);
+    int                *child_indices = T8_ALLOC (int, num_children);
+    t8_element_t      **children = T8_ALLOC (t8_element_t *, num_children);
+    ts->t8_element_new (num_children, children);
+    ts->t8_element_children_at_face (child, iface, children, num_children,
+                                     child_indices);
+
+    for (int jchild = 0; jchild < num_children; jchild++) {
+
       int                 child_id = child_indices[jchild];
-      int face_contact = t8_element_face_child_face (ts, child,iface,jchild);
-      
+      int                 face_contact =
+        t8_element_face_child_face (ts, child, iface, jchild);
+
       ts->t8_element_child (element, child_id, child);
-      int inside =
+      int                 inside =
         ts->t8_element_face_neighbor_inside (child, neigh, face_contact,
                                              &face_num);
 
@@ -88,13 +89,13 @@ t8_check_not_inside_root (t8_element_t *element, t8_element_t *neigh,
 
       inside = ts->t8_element_tree_face (child, face_contact);
       ASSERT_EQ (inside, iface);
-      
-      ts->t8_element_destroy (num_children, children);
-      T8_FREE (children);
-      T8_FREE (child_indices);
     }
+    ts->t8_element_destroy (num_children, children);
+    T8_FREE (children);
+    T8_FREE (child_indices);
   }
 }
+
 /* First "simple" check. First, the neighbors of the root-pyramid at level 0 are computed
  * which should all lie outside. Then, the child of type 7 is constructed and it is checked,
  * if if all neighbors are computed correctly. The same is done for the child of type six of
@@ -104,7 +105,7 @@ TEST_P (face_neigh, face_check_easy)
   int                 face_num;
   int                 num_faces;
   int                 check;
-   if ((int) eclass == (int) T8_ECLASS_PRISM) {
+  if ((int) eclass == (int) T8_ECLASS_PRISM) {
     GTEST_SKIP ();
   }
 
