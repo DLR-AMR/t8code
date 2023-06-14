@@ -55,7 +55,7 @@ t8_face_descendant_test_child (t8_element_t *tmp, t8_element_t *test,
                                int num_children, int test_child_id)
 {
 
-  int                 *child_indices = T8_ALLOC(int, num_children);
+  int                *child_indices = T8_ALLOC (int, num_children);
 
   t8_element_t      **children = T8_ALLOC (t8_element_t *, num_children);
   ts->t8_element_new (num_children, children);
