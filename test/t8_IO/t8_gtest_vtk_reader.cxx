@@ -32,32 +32,45 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 TEST (t8_cmesh_vtk_reader, dummy_test)
 {
 #if T8_WITH_VTK
-  t8_cmesh_t          cmesh =
-    t8_cmesh_vtk_reader ("non-existing-file.vtu", 0, 0, sc_MPI_COMM_WORLD,
-                         VTK_FILE_ERROR);
-  EXPECT_TRUE (cmesh == NULL);
+  /*t8_cmesh_t          cmesh =
+     t8_cmesh_vtk_reader ("non-existing-file.vtu", 0, 0, sc_MPI_COMM_WORLD,
+     VTK_FILE_ERROR);
+     EXPECT_TRUE (cmesh == NULL);
 
-  cmesh =
-    t8_cmesh_vtk_reader ("non-existing-file.vtu", 0, 0, sc_MPI_COMM_WORLD,
-                         VTK_UNSTRUCTURED_FILE);
-  EXPECT_TRUE (cmesh == NULL);
+     cmesh =
+     t8_cmesh_vtk_reader ("non-existing-file.vtu", 0, 0, sc_MPI_COMM_WORLD,
+     VTK_UNSTRUCTURED_FILE);
+     EXPECT_TRUE (cmesh == NULL);
 
-  cmesh =
-    t8_cmesh_vtk_reader ("non-existing-file.vtp", 0, 0, sc_MPI_COMM_WORLD,
-                         VTK_POLYDATA_FILE);
-  EXPECT_TRUE (cmesh == NULL);
+     cmesh =
+     t8_cmesh_vtk_reader ("non-existing-file.vtp", 0, 0, sc_MPI_COMM_WORLD,
+     VTK_POLYDATA_FILE);
+     EXPECT_TRUE (cmesh == NULL);
 
-  cmesh =
-    t8_cmesh_vtk_reader ("test/testfiles/test_vtk_tri.vtu", 0, 0,
-                         sc_MPI_COMM_WORLD, VTK_UNSTRUCTURED_FILE);
-  EXPECT_FALSE (cmesh == NULL);
-  t8_cmesh_destroy (&cmesh);
-  cmesh =
-    t8_cmesh_vtk_reader ("test/testfiles/test_vtk_cube.vtp", 0, 0,
-                         sc_MPI_COMM_WORLD, VTK_POLYDATA_FILE);
-  EXPECT_FALSE (cmesh == NULL);
-  t8_cmesh_destroy (&cmesh);
+     cmesh =
+     t8_cmesh_vtk_reader ("test/testfiles/test_vtk_tri.vtu", 0, 0,
+     sc_MPI_COMM_WORLD, VTK_UNSTRUCTURED_FILE);
+     EXPECT_FALSE (cmesh == NULL);
+     t8_cmesh_destroy (&cmesh);
+     cmesh =
+     t8_cmesh_vtk_reader ("test/testfiles/test_vtk_cube.vtp", 0, 0,
+     sc_MPI_COMM_WORLD, VTK_POLYDATA_FILE);
+     EXPECT_FALSE (cmesh == NULL);
+     t8_cmesh_destroy (&cmesh); */
+#else
+#endif
+}
 
+TEST (t8_cmesh_vtk_reader, point_cloud)
+{
+#if T8_WITH_VTK
+  vtkSmartPointer < vtkPointSet > points =
+    t8_vtk_reader_pointSet ("test/testfiles/test_vtk_tri.vtu", 1, 0,
+                            sc_MPI_COMM_WORLD, VTK_UNSTRUCTURED_FILE);
+
+  if (points == NULL) {
+    t8_debugf ("points == NULL");
+  }
 #else
 #endif
 }

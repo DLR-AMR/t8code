@@ -153,6 +153,8 @@ class MeshAdapter
 
         void SetElements();
 
+        void SetPointIds();
+
         void Adapt(t8_forest_adapt_t adaptCallback, t8_forest_replace_t replaceCallback);
 
         void partition();
@@ -181,7 +183,7 @@ class MeshAdapter
          * @param[in] boundaries   VTK Boundaries
          * @return                 T8Code Boundaries
          */
-        double *ConvertVTKBoundariesToT8Boundaries(double *boundaries);
+        void ConvertVTKBoundariesToT8Boundaries(double *boundaries, double *t8Bounds);
 
         /** @brief Compute the dimension of the domain
          *

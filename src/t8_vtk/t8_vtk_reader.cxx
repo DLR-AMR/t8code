@@ -364,6 +364,10 @@ vtkSmartPointer < vtkPointSet >
 t8_vtkGrid_to_vtkPointSet (vtkSmartPointer < vtkDataSet > vtkGrid)
 {
   /* Set points */
+  if (vtkGrid == NULL) {
+    t8_debugf ("[D] Empty vtkGrid on this proc\n");
+    return NULL;
+  }
   vtkSmartPointer < vtkPoints > points =
     vtkSmartPointer < vtkPoints >::New ();
   const vtkIdType     num_points = vtkGrid->GetNumberOfPoints ();
@@ -389,7 +393,6 @@ t8_vtkGrid_to_vtkPointSet (vtkSmartPointer < vtkDataSet > vtkGrid)
   c2p->Update ();
   cloud->DeepCopy (c2p->GetOutput ());
   //cloud->DeepCopy (vtkPointSet::SafeDownCast (c2p->GetOutput ()));
-
   return cloud;
 }
 
@@ -412,7 +415,7 @@ t8_vtk_reader (const char *filename, const int partition,
   T8_ASSERT (filename != NULL);
   vtk_read_success_t  main_proc_read_successful = read_failure;
 
-  vtkSmartPointer < vtkDataSet > vtkGrid;
+  vtkSmartPointer < vtkDataSet > vtkGrid = NULL;
   switch (vtk_file_type) {
   case VTK_UNSTRUCTURED_FILE:
     vtkGrid = vtkSmartPointer < vtkUnstructuredGrid >::New ();
