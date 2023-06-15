@@ -1453,14 +1453,14 @@ t8_forest_compute_elements_offset (t8_forest_t forest)
 int
 t8_forest_write_vtk_ext (t8_forest_t forest,
                          const char *fileprefix,
-                         int write_treeid,
-                         int write_mpirank,
-                         int write_level,
-                         int write_element_id,
-                         int write_ghosts,
-                         int write_curved,
+                         const int write_treeid,
+                         const int write_mpirank,
+                         const int write_level,
+                         const int write_element_id,
+                         const int write_ghosts,
+                         const int write_curved,
                          int do_not_use_API,
-                         int num_data, t8_vtk_data_field_t *data)
+                         const int num_data, t8_vtk_data_field_t *data)
 {
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->rc.refcount > 0);

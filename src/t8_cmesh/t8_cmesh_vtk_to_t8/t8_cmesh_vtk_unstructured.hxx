@@ -32,6 +32,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include "t8_vtk_types.h"
 #if T8_WITH_VTK
 #include <vtkDataSet.h>
+#include <vtkSmartPointer.h>
 
 /**
  * Given a filename to a file containing an vtkUnstructured Grid, read
