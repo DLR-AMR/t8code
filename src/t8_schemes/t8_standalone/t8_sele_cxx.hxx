@@ -25,12 +25,12 @@
 
 #include <t8.h>
 #include <array>
+#include <bitset>
 
 // name is to long.. maybe t8_sele_t or t8_selement_t or t8_element_t 
 #define t8_standalone_element_t t8_sele_t
 
 typedef uint32_t t8_element_coord_t;
-typedef uint8_t  t8_element_type_t;
 typedef uint8_t  t8_element_level_t;
 typedef int8_t   t8_cube_id_t;
 
@@ -58,7 +58,7 @@ struct t8_standalone_element_t
   t8_element_level_t level; 
 
   /** Bit array: which inequality is fulfilled at which level. */
-  t8_element_type_t  type;
+  std::bitset<T8_ELEMENT_NUM_EQUATIONS[eclass_T]>  type;
   std::array<t8_element_coord_t, T8_ELEMENT_DIM[eclass_T]> coords;
 };
 

@@ -120,32 +120,28 @@ t8_sele_compute_cubeid (const t8_standalone_element_t<eclass_T> *p, const int le
 /* For each typebit, consider the coordinate information between level and p->level |10...11|xxxx|0...0| 
  * of both inequality defining dimensions */
 template<t8_eclass_t eclass_T>
-t8_element_type_t
+std::bitset<T8_ELEMENT_NUM_EQUATIONS[eclass_T]>
 t8_sele_compute_type_at_level (const t8_standalone_element_t<eclass_T> *p, int level)
 {
-  t8_element_type_t              type = 0;
-  if constexpr (eclass_T > T8_ECLASS_VERTEX) {
-    t8_element_type_t  type_at_levels = 0;
-    T8_ASSERT (0 <= p->level && p->level <= T8_ELEMENT_MAXLEVEL[eclass_T]);
-    const t8_element_coord_t h = t8_sele_get_len<eclass_T> (level);
+  std::bitset<T8_ELEMENT_NUM_EQUATIONS[eclass_T]>              type = 0;
+  T8_ASSERT (0 <= p->level && p->level <= T8_ELEMENT_MAXLEVEL[eclass_T]);
 
-    for (int e = 0; e < T8_ELEMENT_NUM_EQUATIONS[eclass_T]; e++) {
-      t8_element_coord_t coord_v0 = 0;// p->coords[t8_type_edge_equations[e][0]];
-      t8_element_coord_t coord_v1 = 0;// p->coords[t8_type_edge_equations[e][1]];
+  for (int e = 0; e < T8_ELEMENT_NUM_EQUATIONS[eclass_T]; e++) {
+    t8_element_coord_t coord_v0 = 0;// p->coords[t8_type_edge_equations[e][0]];
+    t8_element_coord_t coord_v1 = 0;// p->coords[t8_type_edge_equations[e][1]];
 
-      coord_v0 = (coord_v0 << level) & ((1 << T8_ELEMENT_MAXLEVEL[eclass_T]) - 1);
-      coord_v1 = (coord_v1 << level) & ((1 << T8_ELEMENT_MAXLEVEL[eclass_T]) - 1);
+    coord_v0 = (coord_v0 << level) & ((1 << T8_ELEMENT_MAXLEVEL[eclass_T]) - 1);
+    coord_v1 = (coord_v1 << level) & ((1 << T8_ELEMENT_MAXLEVEL[eclass_T]) - 1);
 
-      if (coord_v0 == coord_v1) {
-        type |= (p->type & 1 << e);
-      }
-      else if (coord_v0 < coord_v1) {
-        type |= (1 << e);
-      }
-      else {
-        T8_ASSERT (coord_v0 > coord_v1);
-        T8_ASSERT (type && (1 << e) == 0);
-      }
+    if (coord_v0 == coord_v1) {
+      type |= (p->type & 1 << e);
+    }
+    else if (coord_v0 < coord_v1) {
+      type |= (1 << e);
+    }
+    else {
+      T8_ASSERT (coord_v0 > coord_v1);
+      T8_ASSERT (type && (1 << e) == 0);
     }
   }
   return type;
