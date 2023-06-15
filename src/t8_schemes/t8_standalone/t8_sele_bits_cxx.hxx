@@ -376,7 +376,7 @@ void                t8_sele_ancestor (const t8_standalone_element_t<eclass_T> *e
  * \return            The type of \a p at level \a level.
  */
 template<t8_eclass_t eclass_T>
-std::bitset<T8_ELEMENT_NUM_EQUATIONS[eclass_T]> t8_sele_compute_type_at_level (const t8_standalone_element_t<eclass_T> *p,
+t8_element_type_t<eclass_T> t8_sele_compute_type_at_level (const t8_standalone_element_t<eclass_T> *p,
                                                const int level);
 
 /** Returns the shape of the pyramid (pyramid or tetrahedron)
