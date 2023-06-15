@@ -61,7 +61,7 @@ template<t8_eclass_t eclass_T>
 int
 t8_standalone_scheme_c<eclass_T>::t8_element_level (const t8_element_t *elem) const {
   T8_ASSERT(t8_element_is_valid(elem));
-  return t8_sele_get_level<eclass_T>((const t8_standalone_element_t<eclass_T> *)elem);
+  return ((const t8_standalone_element_t<eclass_T> *)elem)->level;
 }
 
 template<t8_eclass_t eclass_T>

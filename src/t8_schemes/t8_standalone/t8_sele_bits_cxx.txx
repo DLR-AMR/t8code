@@ -44,14 +44,6 @@ t8_element_coord_t  t8_sele_get_root_len()
 }
 
 template<t8_eclass_t eclass_T>
-int
-t8_sele_get_level (const t8_standalone_element_t<eclass_T> *p)
-{
-  T8_ASSERT (0 <= p->level && p->level <= T8_ELEMENT_MAXLEVEL[eclass_T]);
-  return p->level;
-}
-
-template<t8_eclass_t eclass_T>
 t8_element_shape_t
 t8_sele_shape (const t8_standalone_element_t<eclass_T> *p)
 {

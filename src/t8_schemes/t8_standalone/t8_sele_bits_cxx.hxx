@@ -38,12 +38,6 @@ void                t8_sele_init_linear_id (t8_standalone_element_t<eclass_T> *p
                                                 const int level,
                                                 t8_linearidx_t id);
 
-/** Compute the level of a pyramid.
- * \param [in] p    Pyramid whose level is computed.
- * \return          The level of \a p.
- */
-template<t8_eclass_t eclass_T>
-int                 t8_sele_get_level (const t8_standalone_element_t<eclass_T> *p);
 
 /** Copy the data from source to dest
  * \param[in] source    The source-pyramid
