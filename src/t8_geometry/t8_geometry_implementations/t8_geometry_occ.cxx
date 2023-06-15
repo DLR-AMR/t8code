@@ -203,18 +203,20 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
   double  interpolated_surface_parameters[2];
 
   /*
-   *
-   *              2
-   *             / \
-   *            /   \
-   *           /     \
-   *          /       \
-   *         E1        E0
-   *        /           \
-   *       /             \
-   *      /               \     y
-   *     /                 \    |
-   *    0---------E2--------1   x--x
+   * Reference Space    |      Global Space
+   *      [0,1]^2       |         [x,y]^2
+   *                    |
+   *              2     |            2
+   *            / |     |           / \
+   *           /  |     |          /    \
+   *          /   |     |         /       \              o ref_coords in reference space
+   *         /    |     |        /          \            @ glob_ref_coords in global space
+   *        E1     E0   |       E1           E0
+   *       /      |     |      /                \
+   *      /       o     |     /                  @
+   *     /        |     |    /                   |   y
+   *    /         |     |   /                   /    |
+   *   0----E2----1     |  0---------E2--------1     x--x
    * 
    */
 
@@ -283,12 +285,20 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
 
         /* Convert edge parameter to surface parameters */
         double              converted_edge_surface_parameters[2];
+        const int num_face_nodes = t8_eclass_num_vertices[active_tree_class];
+        surface =
+          BRep_Tool::Surface (TopoDS::Face (occ_shape_face_map.FindKey (*faces)));
+        double parametric_bounds[4];
+        surface->Bounds(parametric_bounds[0], parametric_bounds[1], parametric_bounds[2], parametric_bounds[3]);
+
         t8_geometry_occ::t8_geom_edge_parameter_to_face_parameters (edges
                                                                     [i_edge],
                                                                     *faces,
+                                                                    num_face_nodes,
                                                                     interpolated_curve_parameter,
+                                                                    face_parameters,
                                                                     converted_edge_surface_parameters);
-        
+
         /* Interpolate between the surface parameters of the current edge */
         double              edge_surface_parameters[4],
           interpolated_edge_surface_parameters[2];
@@ -520,10 +530,13 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
 
         /* Convert edge parameter to surface parameters */
         double              converted_edge_surface_parameters[2];
+        const int num_face_nodes = t8_eclass_num_vertices[active_tree_class];
         t8_geometry_occ::t8_geom_edge_parameter_to_face_parameters (edges
                                                                     [i_edge],
                                                                     *faces,
+                                                                    num_face_nodes,
                                                                     interpolated_curve_parameter,
+                                                                    face_parameters,
                                                                     converted_edge_surface_parameters);
 
         /* Interpolate between the surface parameters of the current edge */
@@ -932,12 +945,14 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh,
                 * (pnt.Coord (dim + 1) - interpolated_edge_coordinates[dim]);
             }
           }
-
           /* Convert the interpolated parameter of the curve into the corresponding parameters on the surface */
+          const int num_face_nodes = t8_eclass_num_vertices[active_tree_class];
           t8_geometry_occ::t8_geom_edge_parameter_to_face_parameters (edges
                                                                       [t8_face_edge_to_tree_edge
                                                                        [i_faces]
-                                                                       [i_face_edge]], faces[i_faces], interpolated_curve_param, surface_parameters_from_curve);
+                                                                       [i_face_edge]], faces[i_faces], num_face_nodes,
+                                                                       interpolated_curve_param, surface_parameters,
+                                                                       surface_parameters_from_curve);
 
           /* Calculate the displacement between the interpolated parameters on the surface 
            * and the parameters on the surface converted from the parameter of the curve
@@ -1192,8 +1207,10 @@ t8_geometry_occ::t8_geom_get_parameters_of_vertex_on_face(const int vertex_index
 
 void 
 t8_geometry_occ::t8_geom_edge_parameter_to_face_parameters(const int edge_index, 
-                                                           const int face_index, 
+                                                           const int face_index,
+                                                           const int num_face_nodes,
                                                            const double edge_param, 
+                                                           const double* surface_params,
                                                            double* face_params) const
 {
   T8_ASSERT(t8_geometry_occ::t8_geom_is_edge_on_face(edge_index, face_index));
@@ -1203,9 +1220,46 @@ t8_geometry_occ::t8_geom_edge_parameter_to_face_parameters(const int edge_index,
   TopoDS_Face face = TopoDS::Face(occ_shape_face_map.FindKey(face_index));
   Handle_Geom2d_Curve curve_on_surface  = BRep_Tool::CurveOnSurface(edge, face, 
                                                                     first, last);
+  Handle_Geom_Surface surface = BRep_Tool::Surface(face);
+  double parametric_bounds[4];
+  surface->Bounds(parametric_bounds[0], parametric_bounds[1], parametric_bounds[2], parametric_bounds[3]);
   curve_on_surface->D0(edge_param, uv);
   face_params[0] = uv.X();
   face_params[1] = uv.Y();
+
+  /* Check for right conversion of edge to surface parameter and correct if needed */
+  /* Checking u parameter */
+  if (surface_params != NULL) {
+    if (surface->IsUClosed()) {
+      for (int i_face_node = 0; i_face_node < num_face_nodes; ++i_face_node) {
+        if (surface_params[i_face_node * 2] == parametric_bounds[0]) {
+          if (face_params[0] == parametric_bounds[1]) {
+            face_params[0] = parametric_bounds[0];
+          }
+        }
+        else if (surface_params[i_face_node * 2] == parametric_bounds[1]) {
+          if (face_params[0] == parametric_bounds[0]) {
+            face_params[0] = parametric_bounds[1];
+          }
+        }
+      }
+    }
+    /* Checking v parameter */
+    if (surface->IsVClosed()) {
+      for (int i_face_node = 0; i_face_node < num_face_nodes; ++i_face_node) {
+        if (surface_params[i_face_node * 2 + 1] == parametric_bounds[0]) {
+          if (face_params[1] == parametric_bounds[1]) {
+            face_params[1] = parametric_bounds[0];
+          }
+        }
+        else if (surface_params[i_face_node * 2 + 1] == parametric_bounds[1]) {
+          if (face_params[1] == parametric_bounds[0]) {
+            face_params[1] = parametric_bounds[1];
+          }
+        }
+      }
+    }
+  }
 }
 /* *INDENT-ON* */
 

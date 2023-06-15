@@ -250,13 +250,18 @@ public:
    *  The edge has to lie on the face.
    * \param [in]  edge_index     The index of the occ edge.
    * \param [in]  face_index     The index of the occ face.
+   * \param [in]  num_face_nodes The number of the face nodes.
    * \param [in]  edge_param     The parameter on the edge.
+   * \param [in]  surface_param  The parameters of the surface nodes. If there are no surface parameter
+   *                             to pass in to the function, you can pass NULL.
    * \param [out] face_params    The corresponding parameters on the face.
    */   
   void
   t8_geom_edge_parameter_to_face_parameters(const int edge_index, 
-                                            const int face_index, 
+                                            const int face_index,
+                                            const int num_face_nodes,
                                             const double edge_param, 
+                                            const double* surface_params,
                                             double* face_params) const;
 
 private:
