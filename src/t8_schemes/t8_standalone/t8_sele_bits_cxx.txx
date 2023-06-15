@@ -28,19 +28,13 @@
 template<t8_eclass_t eclass_T>
 t8_element_coord_t  t8_sele_get_len(t8_element_level_t level)
 {
-  if constexpr (eclass_T > T8_ECLASS_VERTEX) {
-    return 1 << (T8_ELEMENT_MAXLEVEL[eclass_T] - (level));
-  }
-  return 0;
+  return 1 << (T8_ELEMENT_MAXLEVEL[eclass_T] - (level));
 }
 
 template<t8_eclass_t eclass_T>
 t8_element_coord_t  t8_sele_get_root_len()
 {
-  if constexpr (eclass_T > T8_ECLASS_VERTEX) {
-    return 1 << T8_ELEMENT_MAXLEVEL[eclass_T];
-  }
-  return 0;
+  return 1 << T8_ELEMENT_MAXLEVEL[eclass_T];
 }
 
 template<t8_eclass_t eclass_T>
@@ -109,10 +103,8 @@ t8_sele_compute_cubeid (const t8_standalone_element_t<eclass_T> *p, const int le
   if (level == 0) {
     return 0;
   }
-  if constexpr (eclass_T > T8_ECLASS_VERTEX) {
-    for (int i = 0; i < T8_ELEMENT_DIM[eclass_T]; i++) {
-      cube_id |= ((p->coords[i] & h) ? 1 << i : 0);
-    }
+  for (int i = 0; i < T8_ELEMENT_DIM[eclass_T]; i++) {
+    cube_id |= ((p->coords[i] & h) ? 1 << i : 0);
   }
   return cube_id;
 }
@@ -158,10 +150,8 @@ static void
 t8_sele_cut_coordinates (t8_standalone_element_t<eclass_T> *p, const int shift)
 {
   T8_ASSERT (0 <= shift && shift <= T8_ELEMENT_MAXLEVEL[eclass_T]);
-  if constexpr (eclass_T > T8_ECLASS_VERTEX) {
-    for (int i = 0; i < T8_ELEMENT_DIM[eclass_T]; i++) {
-      p->coords[i] = (p->coords[i] >> shift) << shift;
-    }
+  for (int i = 0; i < T8_ELEMENT_DIM[eclass_T]; i++) {
+    p->coords[i] = (p->coords[i] >> shift) << shift;
   }
 }
 
@@ -212,14 +202,10 @@ t8_sele_is_valid (const t8_standalone_element_t<eclass_T> *p)
   is_valid = 0 <= p->level && p->level <= T8_ELEMENT_MAXLEVEL[eclass_T];
 
   /*Check coordinates, we allow a boundary layer around the root-pyramid */
-  if constexpr (eclass_T > T8_ECLASS_VERTEX) {
-    for (int i = 0; i < T8_ELEMENT_DIM[eclass_T]; i++) {
-      is_valid = is_valid && - (int64_t)t8_sele_get_root_len<eclass_T> <= p->coords[i]
-        && p->coords[i] <= max_coord;
-    }
+  for (int i = 0; i < T8_ELEMENT_DIM[eclass_T]; i++) {
+    is_valid = is_valid && - (int64_t)t8_sele_get_root_len<eclass_T> <= p->coords[i]
+      && p->coords[i] <= max_coord;
   }
-  /* Check shape*/
-  is_valid = is_valid && (shape == eclass_T);
 
   return is_valid;
 }
@@ -228,24 +214,26 @@ template<t8_eclass_t eclass_T>
 void
 t8_sele_debug_print (const t8_standalone_element_t<eclass_T> *p)
 {
-  //if constexpr (eclass_T > T8_ECLASS_VERTEX) {
-  //  t8_debugf
-  //    ("x: %i, y: %i, z: %i, type %i, level: %i\n",
-  //    p->coords[0], p->coords[1], p->coords[2], t8_sele_get_type (p),
-  //    p->level);
-  //}
+  t8_debugf("level: %i", p->level);
+  for (int i = 0; i < T8_ELEMENT_DIM[eclass_T]; i++) {
+    t8_debugf("x_%i: %i \n", i, p->coords[i]);
+  }
+  for (int e = 0; e < T8_ELEMENT_NUM_EQUATIONS[eclass_T]; e++) {
+    t8_debugf("t_%i: %i \n", e, p->type[e]);
+  }
 }
 
 template<t8_eclass_t eclass_T>
 void
 t8_sele_global_print (const t8_standalone_element_t<eclass_T> *p)
 {
-  //if constexpr (eclass_T > T8_ECLASS_VERTEX) {
-  //  t8_global_productionf
-  //    ("x: %i, y: %i, z: %i, type %i, level: %i\n",
-  //    p->coords[0], p->coords[1], p->coords[2], t8_sele_get_type (p),
-  //    p->level);
-  //}
+  t8_global_productionf("level: %i", p->level);
+  for (int i = 0; i < T8_ELEMENT_DIM[eclass_T]; i++) {
+    t8_global_productionf("x_%i: %i \n", i, p->coords[i]);
+  }
+  for (int e = 0; e < T8_ELEMENT_NUM_EQUATIONS[eclass_T]; e++) {
+    t8_global_productionf("t_%i: %i \n", e, p->type[e]);
+  }
 }
 
 template<t8_eclass_t eclass_T>
@@ -282,10 +270,10 @@ t8_sele_child (const t8_standalone_element_t<eclass_T> *elem, const int child_id
   const t8_cube_id_t cube_id = (t8_cube_id_t) child_id;
   T8_ASSERT (cube_id == child_id);
   const t8_element_coord_t length = t8_sele_get_len<eclass_T> (elem->level + 1);
-  if constexpr (eclass_T > T8_ECLASS_VERTEX) {
-    for (int i = 0; i < T8_ELEMENT_DIM[eclass_T]; i++) {
-      child->coords[i] = elem->coords[i] + ((cube_id & 1 << i) ? length : 0);
-    }
+
+  // Auslagern als bithelper funktion?
+  for (int i = 0; i < T8_ELEMENT_DIM[eclass_T]; i++) {
+    child->coords[i] = elem->coords[i] + ((cube_id & 1 << i) ? length : 0);
   }
   child->level = elem->level + 1;
 }
@@ -345,10 +333,8 @@ t8_sele_last_descendant (const t8_standalone_element_t<eclass_T> *p, t8_standalo
    * is the type of the input element*/
   t8_element_coord_t coord_offset =
     t8_sele_get_len<eclass_T> (p->level) - t8_sele_get_len<eclass_T> (level);
-  if constexpr (eclass_T > T8_ECLASS_VERTEX) {
-    for (int i = 0; i < T8_ELEMENT_DIM[eclass_T]; i++) {
-      desc->coords[i] |= coord_offset;
-    }
+  for (int i = 0; i < T8_ELEMENT_DIM[eclass_T]; i++) {
+    desc->coords[i] |= coord_offset;
   }
 }
 
@@ -381,10 +367,8 @@ t8_sele_parent (const t8_standalone_element_t<eclass_T> *p, t8_standalone_elemen
   const t8_element_coord_t length = t8_sele_get_len<eclass_T> (p->level);
   const t8_cube_id_t cube_id =
     t8_sele_compute_cubeid (p, p->level);
-  if constexpr (eclass_T > T8_ECLASS_VERTEX) {
-    for (int i = 0; i < T8_ELEMENT_DIM[eclass_T]; i++) {
-      parent->coords[i] = p->coords[i] & ~length;
-    }
+  for (int i = 0; i < T8_ELEMENT_DIM[eclass_T]; i++) {
+    parent->coords[i] = p->coords[i] & ~length;
   }
   parent->level = p->level - 1;
   T8_ASSERT (parent->level >= 0);
@@ -597,16 +581,14 @@ t8_sele_compute_coords (const t8_standalone_element_t<eclass_T> *p, const int ve
 {
 
   T8_ASSERT (0 <= vertex && vertex < t8_sele_num_corners (p));
-  if constexpr (eclass_T > T8_ECLASS_VERTEX) {
-    for (int idim = 0; idim < T8_ELEMENT_DIM[eclass_T]; idim++) {
-      // Only for hypercubes
-      coords[idim] = p->coords[idim] + ((vertex & (1 << idim)) >> idim) * t8_sele_get_len<eclass_T> (p->level);
-      //t8_standalone_element_type_t  type = t8_sele_get_type (p);
-      //coords[idim] =
-      //  p->coords[idim] +
-      //  t8_standalone_element_type_vertex_dim_to_binary[type][vertex][idim] *
-      //  t8_sele_get_len<eclass_T> (p->level);
-    }
+  for (int idim = 0; idim < T8_ELEMENT_DIM[eclass_T]; idim++) {
+    // Only for hypercubes
+    coords[idim] = p->coords[idim] + ((vertex & (1 << idim)) >> idim) * t8_sele_get_len<eclass_T> (p->level);
+    //t8_standalone_element_type_t  type = t8_sele_get_type (p);
+    //coords[idim] =
+    //  p->coords[idim] +
+    //  t8_standalone_element_type_vertex_dim_to_binary[type][vertex][idim] *
+    //  t8_sele_get_len<eclass_T> (p->level);
   }
 }
 
