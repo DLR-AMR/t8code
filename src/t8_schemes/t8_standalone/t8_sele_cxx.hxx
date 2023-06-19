@@ -49,6 +49,7 @@ typedef int8_t   t8_cube_id_t;
 
 template <t8_eclass_t eclass_T>
 using t8_element_type_t = std::bitset<T8_ELEMENT_NUM_EQUATIONS[eclass_T]>;
+
 template <t8_eclass_t eclass_T>
 using t8_element_coords_t = std::array<t8_element_coord_t, T8_ELEMENT_DIM[eclass_T]>;
 
@@ -58,9 +59,11 @@ struct t8_standalone_element_t
   /** The refinement level of the element relative to the root at level 0. */
   t8_element_level_t level; 
 
-  /** Bit array: which inequality is fulfilled at which level. */
-  t8_element_type_t<eclass_T>  type;
+  /** The coordinates of the anchor vertex of the element. */
   t8_element_coords_t<eclass_T> coords;
+
+  /** Bit array: which inequality is fulfilled at which level. */
+  t8_element_type_t<eclass_T> type;
 };
 
 #endif /* T8_SELE_HXX */
