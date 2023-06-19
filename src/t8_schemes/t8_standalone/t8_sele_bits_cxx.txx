@@ -42,6 +42,15 @@ t8_element_shape_t
 t8_sele_shape (const t8_standalone_element_t<eclass_T> *p)
 {
   T8_ASSERT (0 <= p->level && p->level <= T8_ELEMENT_MAXLEVEL[eclass_T]);
+  if constexpr(eclass_T == T8_ECLASS_PYRAMID){
+    if (p->type == T8_DPYRAMID_FIRST_PYRA_TYPE ||
+        p->type == T8_DPYRAMID_SECOND_PYRA_TYPE) {
+      return T8_ECLASS_PYRAMID;
+    }
+    else {
+      return T8_ECLASS_TET;
+    }
+  }
   return eclass_T;
 }
 
@@ -50,6 +59,13 @@ int
 t8_sele_num_corners (const t8_standalone_element_t<eclass_T> *p)
 {
   T8_ASSERT (0 <= p->level && p->level <= T8_ELEMENT_MAXLEVEL[eclass_T]);
+  /*TODO*/
+  if constexpr(eclass_T==T8_ECLASS_PYRAMID){
+    if(t8_sele_shape(p)==T8_ECLASS_PYRAMID){
+      return 5;
+    }
+    return 4;
+  }
   return T8_ELEMENT_NUM_CORNERS[eclass_T];
 }
 
@@ -58,6 +74,13 @@ int
 t8_sele_num_children (const t8_standalone_element_t<eclass_T> *p)
 {
   T8_ASSERT (0 <= p->level && p->level <= T8_ELEMENT_MAXLEVEL[eclass_T]);
+  /*TODO*/
+  if constexpr(eclass_T==T8_ECLASS_PYRAMID){
+    if(t8_sele_shape(p)==T8_ECLASS_PYRAMID){
+      return 10;
+    }
+    return 6;
+  }
   return T8_ELEMENT_NUM_CHILDREN[eclass_T];
 }
 
