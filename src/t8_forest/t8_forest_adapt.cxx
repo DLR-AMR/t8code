@@ -472,6 +472,8 @@ t8_forest_adapt (t8_forest_t forest)
       num_el_from = (t8_locidx_t) t8_element_array_get_count (telements_from);
       T8_ASSERT (num_el_from ==
                 t8_forest_get_tree_num_elements (forest_from, ltree_id));
+    /* Continue only if tree_from is not empty.
+     * Otherwise there is nothing to adapt, since elements can't be inserted. */
     if (num_el_from > 0) {
       const t8_element_t *first_element_from = t8_element_array_index_locidx
         (telements_from, 0);
@@ -510,11 +512,11 @@ t8_forest_adapt (t8_forest_t forest)
             T8_REALLOC (elements_from, t8_element_t *, num_siblings);
           curr_size_elements_from = num_siblings;
         }
-  #if T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
         for (zz = 0; zz < (unsigned int) num_siblings; zz++) {
           elements_from[zz] = NULL;
         }
-  #endif
+#endif
         for (zz = 0; zz < (unsigned int) num_siblings &&
             el_considered + (t8_locidx_t) zz < num_el_from; zz++) {
           elements_from[zz] = t8_element_array_index_locidx (telements_from,
@@ -554,7 +556,7 @@ t8_forest_adapt (t8_forest_t forest)
           num_elements_to_adapt_callback = num_siblings;
         }
         T8_ASSERT (num_elements_to_adapt_callback <= num_siblings);
-  #if T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
         if (forest_from->incomplete_trees) {
           T8_ASSERT (forest_from->incomplete_trees == 1);
           T8_ASSERT (!is_family ||
@@ -567,7 +569,7 @@ t8_forest_adapt (t8_forest_t forest)
           T8_ASSERT (!is_family
                     || tscheme->t8_element_is_family (elements_from));
         }
-  #endif
+#endif
         /* Pass the element, or the family to the adapt callback.
         * The output will be  1 if the element should be refined
         *                     0 if the element should remain as is
@@ -687,18 +689,6 @@ t8_forest_adapt (t8_forest_t forest)
       /* Check that if we had recursive adaptation, the refine list is now empty. */
       T8_ASSERT (!forest->set_adapt_recursive || refine_list->elem_count == 0);
 
-      /* Empty trees, even subtrees on processes, lead to problems. 
-      * When all elements have been removed from new tree, insert the last 
-      * element from old tree (tree_from). */
-      if (!el_inserted) {
-        // T8_ASSERT (refine == -2
-        //            || (refine == 1 && forest->set_adapt_recursive));
-        // T8_ASSERT (!(t8_locidx_t) t8_element_array_get_count (telements));
-        // /* We copy the last element to the new element array. */
-        // elements[0] = t8_element_array_push (telements);
-        // tscheme->t8_element_copy (elements_from[0], elements[0]);
-        // el_inserted++;
-      }
       /* Set the new element offset of this tree */
       tree->elements_offset = el_offset;
       el_offset += el_inserted;
@@ -710,7 +700,7 @@ t8_forest_adapt (t8_forest_t forest)
       /* clean up */
       T8_FREE (elements);
       T8_FREE (elements_from);
-    }
+    } /* End if (num_el_from > 0) */
   }                             /* End tree loop */
   if (forest->set_adapt_recursive) {
     /* clean up */
