@@ -36,11 +36,30 @@ constexpr uint8_t T8_ELEMENT_MAX_NUM_FACES[T8_ECLASS_COUNT] = {1, 2, 4, 3, 6, 4,
 constexpr uint8_t T8_ELEMENT_NUM_CHILDREN[T8_ECLASS_COUNT] = {0, 2, 4, 4, 8, 8, 8, 10};
 constexpr uint8_t T8_ELEMENT_NUM_CORNERS[T8_ECLASS_COUNT] = {1, 2, 4, 3, 8, 4, 6, 5};
 constexpr uint8_t T8_ELEMENT_NUM_FACES[T8_ECLASS_COUNT] = {0, 2, 4, 3, 6, 4, 5, 5};
+  
+constexpr uint8_t T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_COUNT] = {0, 0, 0, 1, 0, 3, 1, 2};
 
-/* To be filled */
-constexpr uint8_t T8_ELEMENT_TYPE[T8_ECLASS_COUNT] = {0, 0, 0, 0, 0, 0, 0, 0};
-constexpr uint8_t T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_COUNT] = {0, 0, 0, 0, 0, 0, 0, 0};
+/*HEADER*/
+template<t8_eclass_t eclass_T>
+constexpr int8_t t8_element_type_Iloc_to_childtype[1<<T8_ELEMENT_NUM_EQUATIONS[eclass_T]][T8_ELEMENT_NUM_CHILDREN[eclass_T]];
+template<t8_eclass_t eclass_T>
+constexpr int8_t t8_element_type_Iloc_to_childcubeid[1<<T8_ELEMENT_NUM_EQUATIONS[eclass_T]][T8_ELEMENT_NUM_CHILDREN[eclass_T]];
+template<t8_eclass_t eclass_T>
+constexpr int8_t t8_element_type_cubeid_to_parenttype[1<<T8_ELEMENT_NUM_EQUATIONS[eclass_T]][1<<T8_ELEMENT_DIM[eclass_T]];
+template<t8_eclass_t eclass_T>
+constexpr int8_t t8_element_type_cubeid_to_Iloc[1<<T8_ELEMENT_NUM_EQUATIONS[eclass_T]][1<<T8_ELEMENT_DIM[eclass_T]];
 
+template<t8_eclass_t eclass_T>
+constexpr int8_t t8_type_edge_equations[T8_ELEMENT_NUM_EQUATIONS[eclass_T]][2];
+
+template<t8_eclass_t eclass_T>
+constexpr int8_t t8_type_vertex_dim_to_binary[1 << T8_ELEMENT_NUM_EQUATIONS[eclass_T]]
+  [T8_ELEMENT_NUM_CORNERS[eclass_T]][T8_ELEMENT_DIM[eclass_T]];
+
+#include "t8_sele_lut_triangle_cxx.hxx"
+#include "t8_sele_lut_prism_cxx.hxx"
+#include "t8_sele_lut_pyra_cxx.hxx"
+#include "t8_sele_lut_tet_cxx.hxx"
 
 
 typedef uint32_t t8_element_coord_t;
