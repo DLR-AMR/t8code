@@ -69,7 +69,7 @@ t8_cmesh_t          t8_cmesh_new_from_p8est (p8est_connectivity_t * conn,
  * this function is merely for debugging and to show the possibility.
  * \param [in]      comm       mpi communicator to be used with the new cmesh.
  * \param [in]      do_partition Flag whether the cmesh should be partitioned or not.
- * \param [in]      dimension  An empty cmesh requires a dimension nevertheless 0 <= \a dimension <= 4.
+ * \param [in]      dimension  An empty cmesh requires a dimension nevertheless. 0 <= \a dimension <= 3.
  * \return                     A committed t8_cmesh structure that has no trees.
  */
 t8_cmesh_t          t8_cmesh_new_empty (sc_MPI_Comm comm, int do_partition,
@@ -101,6 +101,46 @@ t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
                                             int do_bcast, int do_partition,
                                             int periodic);
 
+/** Construct a hypercube forest from one primitive tree class.
+ * \param [in] eclass       This element class determines the dimension of the cube.
+ * \param [in] comm         The mpi communicator to be used.
+ * \param [in] boundary     The vertices, that define the hypercube boundary.
+ * \param [in] polygons_x   The number of polygons along the x-axis.
+ * \param [in] polygons_y   The number of polygons along the y-axis.
+ *                          Only required if \a eclass is 2D or 3D.
+ * \param [in] polygons_z   The number of polygons along the z-axis.
+ *                          Only required if \a eclass is 3D.
+ * \return                  A committed t8_cmesh structure with 
+ *                          \a polygons_x * \a polygons_z * \a polygons_y many 
+ *                          sub-hypercubes of class \a eclass.
+ * \note \a boundary must point to an array with 3*8 (3D), 3*4 (2D), 3*2 (1D), or 3 (0D) entries.
+ * \note Every sub-hypercube contains diffrent number of trees depending on \a eclass.
+ * \note If \a eclass == T8_ECLASS_VERTEX, _LINE, _QUAD or _HEX every sub-hypercube contains
+ *  one tree, if _TRIANGLE or _PRISM two trees and if _TET six trees.
+ *  This is done in the same way as in \see t8_cmesh_new_hypercube.
+ * \example let eclass = T8_ECLASS_TRIANGLE
+ *              boundary coordinates = a(0,0,0), b(3,0,0), c(0,2,0), d(3,2,0)
+ *              polygons_x, _y, _z = 3, 1, 0                 
+ *      
+ *    c--f--h--d     The hypercube defined by the boundary coordinates
+ *    |  |  |  |     is first split into 3 sub-hypercubes. The sub-hypercubes
+ *    |  |  |  |     are ordert from left to right (and top to bottom).
+ *    a--e--g--b     Coordinates e,f,g,h are (1,0,0),(1,2,0),(2,0,0),(2,2,0).
+ * 
+ *    c--f--h--d     Each sub-hypercube is the split into 2 triangle roots.
+ *    |1/|3/|5/|     The ordering is the same as in \see t8_cmesh_new_hypercube.
+ *    |/0|/2|/4|     Thus, we get 6 trees, which are ordered as shown in the picture. 
+ *    a--e--g--b     
+ *
+ * See `example/cmesh/t8_cmesh_hypercube_pad.cxx` for a working example.
+ */
+t8_cmesh_t          t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass,
+                                                sc_MPI_Comm comm,
+                                                const double *boundary,
+                                                t8_locidx_t polygons_x,
+                                                t8_locidx_t polygons_y,
+                                                t8_locidx_t polygons_z);
+
 /** Hybercube with 6 Tets, 6 Prism, 4 Hex. 
  * \param [in]  comm            The mpi communicator to be used.
  * \param [in]  do_partition    If non-zero create a partitioned cmesh.
@@ -108,7 +148,6 @@ t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
  * \return                      A comitted cmesh consisting of 6 Tets, 6 prism and 4 hex. 
  *                              Together, they form a cube.
 */
-
 t8_cmesh_t          t8_cmesh_new_hypercube_hybrid (sc_MPI_Comm comm,
                                                    int do_partition,
                                                    int periodic);
@@ -273,6 +312,7 @@ t8_cmesh_t          t8_cmesh_new_long_brick_pyramid (sc_MPI_Comm comm,
  */
 t8_cmesh_t          t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees,
                                                const int set_attributes,
+                                               const int do_partition,
                                                sc_MPI_Comm comm);
 
 T8_EXTERN_C_END ();

@@ -401,15 +401,15 @@ void
 t8_flow_around_circle_with_angular_velocity (const double x[3], double t,
                                              double x_out[])
 {
-  double              radius = 0.5;
-  double              omega = 1.5 * M_PI;
+  const double        radius = 0.5;
+  const double        omega = 1.5 * M_PI;
   // convert to polar coordinates
-  double              r = sqrt (x[0] * x[0] + x[1] * x[1]);
-  double              theta = atan2 (x[1], x[0]);
+  const double        r = sqrt (x[0] * x[0] + x[1] * x[1]);
+  const double        theta = atan2 (x[1], x[0]);
 
   //calculate flow
-  double              u_r = (1 - (radius * radius) / (r * r)) * cos (theta);
-  double              u_theta =
+  const double        u_r = (1 - (radius * radius) / (r * r)) * cos (theta);
+  const double        u_theta =
     -(1 + (radius * radius) / (r * r)) * sin (theta) - omega / (2 * M_PI * r);
 
   // convert back to Cartesian

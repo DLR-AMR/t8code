@@ -22,7 +22,7 @@
 
 #include <sc_statistics.h>
 #include <t8_cmesh.h>
-#include <t8_cmesh_vtk.h>
+#include <t8_cmesh_vtk_writer.h>
 #include <t8_cmesh/t8_cmesh_geometry.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_refcount.h>
@@ -1363,12 +1363,10 @@ t8_cmesh_translate_coordinates (const double *coords_in, double *coords_out,
  *       It would be nice to eventually rewrite these functions correctly.
  */
 void
-t8_cmesh_new_translate_vertices_to_attributes (t8_locidx_t *tvertices,
-                                               double
-                                               *vertices,
-                                               double
-                                               *attr_vertices,
-                                               int num_vertices)
+t8_cmesh_new_translate_vertices_to_attributes (const t8_locidx_t *tvertices,
+                                               const double *vertices,
+                                               double *attr_vertices,
+                                               const int num_vertices)
 {
   int                 i;
   for (i = 0; i < num_vertices; i++) {
