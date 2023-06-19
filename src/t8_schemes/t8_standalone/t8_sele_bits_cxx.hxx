@@ -356,16 +356,30 @@ int                 t8_sele_ancestor_id (const t8_standalone_element_t<eclass_T>
                                              const int level);
 
 /**
- * Compute the ancestor of \a pyra at a given level
+ * Compute the ancestor of \a el at a given level via a loop over the parent function.
+ * Used in debug mode to compare against the equation based calculation.
+ * 
+ * \param[in] el        Input element
+ * \param[in] level     Level of the ancestor to compute
+ * \param[in, out] anc  Allocated element that will be filled with the data of the ancestor.
+ */
+template<t8_eclass_t eclass_T>
+void                t8_sele_ancestor_loop (const t8_standalone_element_t<eclass_T> *el,
+                                          const int level,
+                                          t8_standalone_element_t<eclass_T> *anc);
+/**
+ * Compute the ancestor of \a el at a given level via the equation properties
  * 
  * \param[in] pyra      Input pyramid
  * \param[in] level     Level of the ancestor to compute
  * \param[in, out] anc  Allocated element that will be filled with the data of the ancestor.
  */
 template<t8_eclass_t eclass_T>
-void                t8_sele_ancestor (const t8_standalone_element_t<eclass_T> *el,
+void                t8_sele_ancestor_equation (const t8_standalone_element_t<eclass_T> *el,
                                           const int level,
                                           t8_standalone_element_t<eclass_T> *anc);
+
+
 
 /** Compute the type of a pyramid at a given level. Starting from its own level,
  * we iterate over the levels and compute the type of this level. If p is a tetrahedron,

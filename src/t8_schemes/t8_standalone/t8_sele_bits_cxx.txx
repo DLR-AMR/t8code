@@ -142,21 +142,21 @@ t8_sele_compute_type_at_level (const t8_standalone_element_t<eclass_T> *p, int l
   T8_ASSERT (0 <= p->level && p->level <= T8_ELEMENT_MAXLEVEL[eclass_T]);
 
   for (int e = 0; e < T8_ELEMENT_NUM_EQUATIONS[eclass_T]; e++) {
-    t8_element_coord_t coord_v0 = 0;// p->coords[t8_type_edge_equations[e][0]];
-    t8_element_coord_t coord_v1 = 0;// p->coords[t8_type_edge_equations[e][1]];
+    t8_element_coord_t coord_v0 = p->coords[t8_type_edge_equations<eclass_T>[e][0]];
+    t8_element_coord_t coord_v1 = p->coords[t8_type_edge_equations<eclass_T>[e][1]];
 
     coord_v0 = (coord_v0 << level) & ((1 << T8_ELEMENT_MAXLEVEL[eclass_T]) - 1);
     coord_v1 = (coord_v1 << level) & ((1 << T8_ELEMENT_MAXLEVEL[eclass_T]) - 1);
 
     if (coord_v0 == coord_v1) {
-      type |= (p->type & 1 << e);
+      type[e] = p->type[e] | type[e];
     }
     else if (coord_v0 < coord_v1) {
       type |= (1 << e);
     }
     else {
       T8_ASSERT (coord_v0 > coord_v1);
-      T8_ASSERT (type && (1 << e) == 0);
+      T8_ASSERT (!(type & (t8_element_type_t<eclass_T>)(1 << e)).all());
     }
   }
   return type;
@@ -379,7 +379,7 @@ t8_sele_ancestor_id (const t8_standalone_element_t<eclass_T> *p, const int level
 {
   t8_standalone_element_t<eclass_T>       ancestor;
   T8_ASSERT (0 <= p->level && p->level <= T8_ELEMENT_MAXLEVEL[eclass_T]);
-  t8_sele_ancestor (p, level, &ancestor);
+  t8_sele_ancestor_equation (p, level, &ancestor);
   return t8_sele_child_id (&ancestor);
 }
 
@@ -446,7 +446,19 @@ t8_sele_successor (const t8_standalone_element_t<eclass_T> *elem,
 
 template<t8_eclass_t eclass_T>
 void
-t8_sele_ancestor (const t8_standalone_element_t<eclass_T> *el, const int level,
+t8_sele_ancestor_loop (const t8_standalone_element_t<eclass_T> *el, const int level,
+                      t8_standalone_element_t<eclass_T> *anc)
+{
+  T8_ASSERT (0 <= level && level <= el->level);
+  t8_sele_copy (el, anc);
+  for(int ilevel=el->level; ilevel < level; ilevel++){
+    t8_sele_parent (anc, anc);
+  }
+}
+
+template<t8_eclass_t eclass_T>
+void
+t8_sele_ancestor_equation (const t8_standalone_element_t<eclass_T> *el, const int level,
                       t8_standalone_element_t<eclass_T> *anc)
 {
   T8_ASSERT (0 <= level && level <= el->level);
@@ -454,11 +466,12 @@ t8_sele_ancestor (const t8_standalone_element_t<eclass_T> *el, const int level,
   if (el->level == level) {
     return;
   }
-  else if (level == el->level - 1) {
-    /* We can reuse the parent computation if we want to go only one level up. */
-    t8_sele_parent (el, anc);
-    return;
+
+  /* Set type */
+  if constexpr (T8_ELEMENT_NUM_EQUATIONS[eclass_T]){
+    anc->type = t8_sele_compute_type_at_level(anc, level);
   }
+
   /* The coordinates and the type of the anc are defined by the level. */
   t8_sele_cut_coordinates (anc, T8_ELEMENT_MAXLEVEL[eclass_T] - level);
 
@@ -596,7 +609,7 @@ t8_sele_linear_id (const t8_standalone_element_t<eclass_T> *p, const int level)
   t8_standalone_element_t<eclass_T>       recursive_start;
 
   if (level < p->level) {
-    t8_sele_ancestor (p, level, &recursive_start);
+    t8_sele_ancestor_equation (p, level, &recursive_start);
   }
   else {
     t8_sele_first_descendant (p, &recursive_start, level);
