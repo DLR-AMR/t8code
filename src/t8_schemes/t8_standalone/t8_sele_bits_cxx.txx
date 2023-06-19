@@ -401,12 +401,17 @@ void
 t8_sele_parent (const t8_standalone_element_t<eclass_T> *p, t8_standalone_element_t<eclass_T> *parent)
 {
   T8_ASSERT (p->level > 0);
+
+  if constexpr (T8_ELEMENT_NUM_EQUATIONS[eclass_T]){
+    const t8_cube_id_t cube_id = t8_sele_compute_cubeid (p, p->level);
+    parent->type = t8_element_type_cubeid_to_parenttype<eclass_T>[p->type.to_ulong()][cube_id];
+  }
+
   const t8_element_coord_t length = t8_sele_get_len<eclass_T> (p->level);
-  const t8_cube_id_t cube_id =
-    t8_sele_compute_cubeid (p, p->level);
   for (int i = 0; i < T8_ELEMENT_DIM[eclass_T]; i++) {
     parent->coords[i] = p->coords[i] & ~length;
   }
+
   parent->level = p->level - 1;
   T8_ASSERT (parent->level >= 0);
 }
