@@ -38,6 +38,34 @@ t8_levelset_sphere (const double x[3], double t, void *data)
 }
 
 double
+t8_constant (const double x[3], double t, void *data)
+{
+  return 1;
+}
+
+double
+t8_periodic_2D_cos (const double x[3], double t, void *data)
+{
+  return (cos (x[0] * 2 * M_PI) + cos (x[1] * 2 * M_PI));
+}
+
+double
+t8_periodic_2D_cos_off_center (const double x[3], double t, void *data)
+{
+  return (cos (x[0] * 2 * M_PI + M_PI / 2.0) +
+          cos (x[1] * 2 * M_PI + M_PI / 2.0));
+}
+
+double
+t8_2D_gauss (const double x[3], double t, void *data)
+{
+  // gauss pulse at top center
+  return exp (-pow (10 * x[0] - 5, 2) - pow (10 * x[1] - 7.8125, 2));
+  // gauss pulse in center
+  // return exp (-pow(10*x[0]-5, 2) - pow(10*x[1]-5, 2));
+}
+
+double
 t8_scalar3d_constant_one (const double x[3], double t)
 {
   return 1;
@@ -173,6 +201,14 @@ t8_flow_constant_one_x_vec (const double x[3], double t, double x_out[3])
 {
   x_out[0] = 1;
   x_out[1] = x_out[2] = 0;
+}
+
+void
+t8_flow_constant_2D_2to1 (const double x[3], double t, double x_out[3])
+{
+  x_out[0] = 2;
+  x_out[1] = 1;
+  x_out[2] = 0;
 }
 
 void

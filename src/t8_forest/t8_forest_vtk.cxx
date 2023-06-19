@@ -633,7 +633,6 @@ t8_forest_num_points (t8_forest_t forest, const int count_ghosts)
         t8_element_array_index_locidx (&tree->elements, ielem);
       num_points += tscheme->t8_element_num_corners (elem);
     }
-
   }
   if (count_ghosts) {
     T8_ASSERT (forest->ghosts != NULL);

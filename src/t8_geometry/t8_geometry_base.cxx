@@ -40,6 +40,8 @@ t8_geometry_w_vertices::t8_geom_load_tree_data (t8_cmesh_t cmesh,
   /* Load this trees vertices. */
   active_tree_vertices = t8_cmesh_get_tree_vertices (cmesh, ltreeid);
 
+  /* TODO: the following assertion is triggert when using multiple-tree-transitioned forests
+   * Hotfix for tests: just uncomment the following assertion. */
   T8_ASSERT (t8_eclass_to_dimension[active_tree_class] == dimension);
 
   /* Check whether we support this class */

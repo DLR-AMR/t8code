@@ -112,7 +112,8 @@ typedef void        (*t8_forest_replace_t) (t8_forest_t forest_old,
  *                          pointer to one element.
  * \return greater zero if the first entry in \a elements should be refined,
  *         smaller zero if the family \a elements shall be coarsened,
- *         zero else.
+ *         zero if the element should not change,
+ *         greater one if the element should be refined into a transition cell of subelements \ref t8_eclass_scheme::t8_element_to_transition_cell
  */
 /* TODO: Do we really need the forest argument? Since the forest is not committed yet it
  *       seems dangerous to expose to the user. */
@@ -343,6 +344,18 @@ void                t8_forest_set_balance (t8_forest_t forest,
                                            const t8_forest_t set_from,
                                            int no_repartition);
 
+/** Set a source forest to use subelements during commit, that will remove hanging faces from the adapted mesh.
+ * \param [in, out] forest  The forest.
+ * \param [in]      set_from A second forest that should be transitioned.
+ * \param [in]      set_transition_with_balance  If 1, then set_balance will be applied. If 0 and set_balance
+ *                                               has been used before, then balance will still be set (0 does not unset balance).
+ * \note This feature is currently only available for the 2D quad scheme. 
+ */
+void                t8_forest_set_transition (t8_forest_t forest,
+                                              const t8_forest_t set_from,
+                                              int
+                                              set_transition_with_balance);
+
 /** Enable or disable the creation of a layer of ghost elements.
  * On default no ghosts are created.
  * \param [in]      forest    The forest.
@@ -377,6 +390,13 @@ void                t8_forest_set_load (t8_forest_t forest,
  */
 void                t8_forest_comm_global_num_elements (t8_forest_t forest);
 
+/** Compute the global number of subelements in a forest as the sum
+ *  of the local subelement counts.
+ *  \param [in] forest    The forest.
+ */
+void                t8_forest_comm_global_num_subelements (t8_forest_t
+                                                           forest);
+
 /** After allocating and adding properties to a forest, commit the changes.
  * This call sets up the internal state of the forest.
  * \param [in,out] forest       Must be created with \ref t8_forest_init and
@@ -404,12 +424,26 @@ int                 t8_forest_get_maxlevel (t8_forest_t forest);
   */
 t8_locidx_t         t8_forest_get_local_num_elements (t8_forest_t forest);
 
+/** Return the number of process local subelements in the forest.
+  * \param [in]  forest    A forest.
+  * \return                The number of subelements on this process in \a forest.
+ * \a forest must be committed before calling this function.
+  */
+t8_locidx_t         t8_forest_get_local_num_subelements (t8_forest_t forest);
+
 /** Return the number of global elements in the forest.
   * \param [in]  forest    A forest.
   * \return                The number of elements (summed over all processes) in \a forest.
  * \a forest must be committed before calling this function.
   */
 t8_gloidx_t         t8_forest_get_global_num_elements (t8_forest_t forest);
+
+/** Return the number of global subelements in the forest.
+  * \param [in]  forest    A forest.
+  * \return                The number of subelements (summed over all processes) in \a forest.
+ * \a forest must be committed before calling this function.
+  */
+t8_gloidx_t         t8_forest_get_global_num_subelements (t8_forest_t forest);
 
 /** Return the number of ghost elements of a forest.
  * \param [in]      forest      The forest.

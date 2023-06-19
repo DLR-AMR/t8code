@@ -37,6 +37,9 @@ on:
       - main
       - develop
       - feature-*CI* # for testing this script, all feature branches with "CI" in their name
+      - feature-pyramid_element 
+      - feature-subelements_quad_w_triangles # temporarily while in code review
+
   pull_request:
     branches:
       - main

@@ -45,8 +45,10 @@ t8_common_adapt_balance (t8_forest_t forest, t8_forest_t forest_from,
 {
   int                 level;
   int                 maxlevel, child_id;
+
   T8_ASSERT (!is_family || num_elements ==
-             ts->t8_element_num_children (elements[0]));
+             ts->t8_element_num_siblings (elements[0]));
+
   level = ts->t8_element_level (elements[0]);
 
   /* we set a maximum refinement level as forest user data */
@@ -111,6 +113,12 @@ t8_common_within_levelset (t8_forest_t forest, t8_locidx_t ltreeid,
   /* Compute L(X) */
   value = levelset (elem_midpoint, t, udata);
 
+#if 0                           /* activate the following case to refine the whole circular disk instead of its boundary */
+  if (value < 0) {
+    return 1;
+  }
+#endif
+
   if (fabs (value) < band_width * elem_diam) {
     /* The element is in the band that should be refined. */
     return 1;
@@ -137,8 +145,8 @@ t8_common_adapt_level_set (t8_forest_t forest,
   int                 within_band;
   int                 level;
 
-  T8_ASSERT (!is_family || num_elements ==
-             ts->t8_element_num_children (elements[0]));
+  T8_ASSERT (num_elements == 1 || num_elements ==
+             ts->t8_element_num_siblings (elements[0]));
 
   data = (t8_example_level_set_struct_t *) t8_forest_get_user_data (forest);
   level = ts->t8_element_level (elements[0]);
@@ -150,14 +158,37 @@ t8_common_adapt_level_set (t8_forest_t forest,
   if (level > data->max_level && is_family) {
     return -1;
   }
+  /* The following case is not reasonable for multiple timesteps.
+   * Elements of the highest level will not be coarsended again. */
+#if 0
+  if (level >= data->max_level) {
+    return 0;
+  }
+#endif
+
   /* Refine at least until min level */
   if (level < data->min_level) {
     return 1;
   }
-  within_band =
-    t8_common_within_levelset (forest_from, which_tree, elements[0],
-                               ts, data->L,
-                               data->band_width / 2, data->t, data->udata);
+
+  /* If a subelement is given, we apply the callback function to its parent */
+  if (ts->t8_element_is_subelement (elements[0])) {
+    t8_element_t      **parent = T8_ALLOC (t8_element_t *, 1);
+    ts->t8_element_new (1, parent);
+    ts->t8_element_parent (elements[0], parent[0]);
+    within_band =
+      t8_common_within_levelset (forest_from, which_tree, parent[0],
+                                 ts, data->L,
+                                 data->band_width / 2, data->t, data->udata);
+    T8_FREE (parent);
+  }
+  else {
+    within_band =
+      t8_common_within_levelset (forest_from, which_tree, elements[0],
+                                 ts, data->L,
+                                 data->band_width / 2, data->t, data->udata);
+  }
+
   if (within_band && level < data->max_level) {
     /* The element can be refined and lies inside the refinement region */
     return 1;
@@ -167,7 +198,9 @@ t8_common_adapt_level_set (t8_forest_t forest,
      * as argument, we coarsen to level base level */
     return -1;
   }
-  return 0;
+  else {
+    return 0;
+  }
 }
 
 T8_EXTERN_C_END ();

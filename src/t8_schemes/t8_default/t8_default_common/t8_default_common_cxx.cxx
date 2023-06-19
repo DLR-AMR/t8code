@@ -20,6 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <cstdint>
 #include <sc_functions.h>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx>
 
@@ -59,7 +60,7 @@ int
 t8_default_scheme_common_c::t8_element_num_corners (const t8_element_t *elem) const
 {
   /* use the lookup table of the eclasses.
-   * Pyramids should implement their own version of this function. */
+   * Pyramids and schemes with subelements should implement their own version of this function. */
   return t8_eclass_num_vertices[eclass];
 }
 
@@ -139,6 +140,22 @@ t8_default_scheme_common_c::t8_element_count_leafs (const t8_element_t *t,
   return count_leafs_from_level (element_level, level, dim);
 }
 
+/* Count the maximum number of siblings.
+ * The number of children is 2^dim for each element, except for pyramids.
+ */
+/* *INDENT-OFF* */
+/* Indent bug: indent adds an additional const */
+int
+t8_default_scheme_common_c::t8_element_max_num_siblings (const t8_element_t * elem) const
+/* *INDENT-ON* */
+{
+  const int           dim = t8_eclass_to_dimension[eclass];
+  if (eclass == T8_ECLASS_PYRAMID) {
+    return 10;
+  }
+  return sc_intpow (2, dim);
+}
+
 /* Count the number of siblings.
  * The number of children is 2^dim for each element, except for pyramids. */
 /* *INDENT-OFF* */
@@ -169,6 +186,135 @@ t8_default_scheme_common_c::t8_element_general_function (const t8_element_t
                                                          void *outdata) const
 {
   /* This function is intentionally left blank. */
+}
+
+void
+t8_default_scheme_common_c::t8_element_to_transition_cell (const t8_element_t
+                                                           *elem, int type,
+                                                           t8_element_t *c[])
+{
+  SC_ABORT ("This function is not implemented for the given scheme.\n");
+}
+
+void
+t8_default_scheme_common_c::t8_element_vertex_coords (const t8_element_t *t,
+                                                      int vertex,
+                                                      int coords[]) const
+{
+  SC_ABORT ("This function is not implemented for the given scheme.\n");
+}
+
+/* *INDENT-OFF* */
+int
+t8_default_scheme_common_c::t8_element_neighbor_is_sibling (const t8_element *
+                                                            elem,
+                                                            const int face) const
+{
+  /* No subelements are implemented and therefore we return false, 
+   * meaning "the neighbor at face <face> is not a sibling of elem". */
+  t8_debugf
+    ("This is the default_common implementation of t8_element_neighbor_is_sibling.\n");
+  return 0;
+}
+
+int
+t8_default_scheme_common_c::t8_element_get_num_sibling_neighbors_at_face (const t8_element * elem,
+                                                                          const int face) const
+     
+{
+  /* No subelements are implemented and therefore we return false meaning "the neighbor at face is not a sibling of elem". */
+  t8_debugf
+    ("This is the default_common implementation of t8_element_get_num_sibling_neighbors_at_face.\n");
+  return 0;
+}
+
+int
+t8_default_scheme_common_c::t8_element_get_transition_refine_identifier () const
+{
+  /* This function will be called by the transition_entry function. It defaults to zero such that 
+   * the adapt routine will keep elem unchanged during the transition step. */
+  return 0;
+}
+
+void
+t8_default_scheme_common_c::t8_element_get_sibling_neighbor_in_transition_cell (const t8_element_t *elem,
+                                                                                const int face,
+                                                                                const int num_neighbors,
+                                                                                t8_element_t *neighbor_at_face[],
+                                                                                int *neigh_face[])
+{
+  SC_ABORT ("This function is not implemented for the given scheme.\n");
+}
+/* *INDENT-ON* */
+
+int
+t8_default_scheme_common_c::t8_element_is_subelement (const t8_element * elem) const
+{
+  /* We implement this function since it is a "check" function and 
+   * should not abort the code even if no subelements are implemented in the given eclass.
+   * Schemes that support subelements must provide their own implementation of this function. */
+
+  /* No subelements are implemented and therefore we return false meaning "is no subelement". */
+  t8_debugf
+    ("This is the default_common implementation of the t8_element_is_subelement check.\n");
+  return 0;
+}
+
+int
+t8_default_scheme_common_c::t8_element_scheme_supports_transitioning (void)
+{
+  /* Default implementation - current scheme is no transition scheme */
+  return 0;
+}
+
+int
+t8_default_scheme_common_c::t8_element_transition_scheme_is_conformal (void)
+{
+  /* Default implementation - current scheme is no transition scheme */
+  return 0;
+}
+
+int
+t8_default_scheme_common_c::t8_element_get_face_number_of_hypotenuse (const
+                                                                      t8_element
+                                                                      * elem)
+{
+  SC_ABORT ("This function is not implemented for the given scheme.\n");
+}
+
+int
+t8_default_scheme_common_c::t8_element_get_number_of_subelements (int
+                                                                  transition_type)
+  const
+{
+  SC_ABORT ("This function is not implemented for the given scheme.\n");
+}
+
+int
+t8_default_scheme_common_c::t8_element_get_transition_type (const
+                                                            t8_element * elem)
+{
+  SC_ABORT ("This function is not implemented for the given scheme.\n");
+}
+
+int
+t8_default_scheme_common_c::t8_element_get_subelement_id (const
+                                                          t8_element * elem)
+{
+  SC_ABORT ("This function is not implemented for the given scheme.\n");
+}
+
+int
+t8_default_scheme_common_c::t8_element_find_neighbor_in_transition_cell (const
+                                                                         t8_element_t
+                                                                         *elem,
+                                                                         const
+                                                                         t8_element_t
+                                                                         *neigh,
+                                                                         int
+                                                                         elem_face)
+{
+  SC_ABORT ("This function is not implemented for the given scheme.\n");
 }
 
 T8_EXTERN_C_END ();

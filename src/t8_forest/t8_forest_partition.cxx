@@ -35,7 +35,7 @@ T8_EXTERN_C_BEGIN ();
  * other process */
 typedef struct
 {
-  t8_gloidx_t         gtree_id; /* The global id of that tree *//* TODO: we could optimize this out */
+  t8_gloidx_t         gtree_id; /* The global id of that tree | TODO: we could optimize this out */
   t8_eclass_t         eclass;   /* The element class of that tree */
   t8_locidx_t         num_elements;     /* The number of elements from this tree that were sent */
 } t8_forest_partition_tree_info_t;
@@ -915,6 +915,7 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm,
   else {
     recv_bytes = byte_to_self;
   }
+
   t8_debugf ("Receiving message of %i bytes from process %i\n", recv_bytes,
              proc);
 
@@ -1194,7 +1195,7 @@ t8_forest_partition (t8_forest_t forest)
   t8_forest_t         forest_from;
   int                 create_offset_from = 0;
 
-  t8_global_productionf ("Enter  forest partition.\n");
+  t8_global_productionf ("Enter forest partition.\n");
   t8_log_indent_push ();
   T8_ASSERT (t8_forest_is_initialized (forest));
   forest_from = forest->set_from;

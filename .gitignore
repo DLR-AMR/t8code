@@ -4,6 +4,7 @@ build-aux/
 
 .deps/
 .libs/
+.cache/
 
 Makefile
 Makefile.in
@@ -35,6 +36,9 @@ src/pre_config.h.in
 *.vtu
 *.pvtu
 *~
+
+# this file is used by the clangd language server
+compile_commands.json
 
 # ------------------------------------------------------------ #
 # Following list of files can be easily generated with:
