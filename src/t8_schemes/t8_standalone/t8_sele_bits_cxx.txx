@@ -219,7 +219,6 @@ t8_sele_is_valid (const t8_standalone_element_t<eclass_T> *p)
 {
   int                 is_valid;
   const t8_element_coord_t max_coord = ((uint64_t)2 * (uint64_t)t8_sele_get_root_len<eclass_T>) - 1;
-  const t8_element_shape_t shape = t8_sele_shape (p);
 
   /*Check the level */
   is_valid = 0 <= p->level && p->level <= T8_ELEMENT_MAXLEVEL[eclass_T];
@@ -237,7 +236,7 @@ template<t8_eclass_t eclass_T>
 void
 t8_sele_debug_print (const t8_standalone_element_t<eclass_T> *p)
 {
-  t8_debugf("level: %i", p->level);
+  t8_debugf("level: %i\n", p->level);
   for (int i = 0; i < T8_ELEMENT_DIM[eclass_T]; i++) {
     t8_debugf("x_%i: %i \n", i, p->coords[i]);
   }
@@ -267,6 +266,7 @@ t8_sele_root (t8_standalone_element_t<eclass_T> *p)
   for (size_t i=0; i<T8_ELEMENT_DIM[eclass_T]; i++) {
     p->coords[i] = 0;
   }
+  p->type = 0;
 }
 
 /**SFC functionality*/
