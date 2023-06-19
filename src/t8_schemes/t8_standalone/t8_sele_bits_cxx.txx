@@ -279,7 +279,13 @@ t8_sele_child_id (const t8_standalone_element_t<eclass_T> *p)
     return -1;
   }
   const t8_cube_id_t cube_id = t8_sele_compute_cubeid (p, p->level);
-  return cube_id;
+  int8_t child_id;
+  if constexpr (T8_ELEMENT_NUM_EQUATIONS[eclass_T]){
+    child_id = t8_element_type_cubeid_to_Iloc<eclass_T>[p->type.to_ulong()][cube_id];
+  }else{
+    child_id = cube_id;
+  }
+  return child_id;
 }
 
 template<t8_eclass_t eclass_T>
@@ -289,15 +295,23 @@ t8_sele_child (const t8_standalone_element_t<eclass_T> *elem, const int child_id
 {
   T8_ASSERT (0 <= child_id && child_id < T8_ELEMENT_NUM_CHILDREN[eclass_T]);
   T8_ASSERT (0 <= elem->level && elem->level <= T8_ELEMENT_MAXLEVEL[eclass_T]);
+
   /* Compute the cube id and shift the coordinates accordingly */
-  const t8_cube_id_t cube_id = (t8_cube_id_t) child_id;
-  T8_ASSERT (cube_id == child_id);
+  t8_cube_id_t cube_id;
+  if constexpr(T8_ELEMENT_NUM_EQUATIONS[eclass_T]){
+    cube_id = t8_element_type_Iloc_to_childcubeid<eclass_T>[elem->type.to_ulong()][child_id];
+    child->type = t8_element_type_Iloc_to_childtype<eclass_T>[elem->type.to_ulong()][child_id];
+  } else {
+    cube_id = child_id;
+  }
+
   const t8_element_coord_t length = t8_sele_get_len<eclass_T> (elem->level + 1);
 
   // Auslagern als bithelper funktion?
   for (int i = 0; i < T8_ELEMENT_DIM[eclass_T]; i++) {
     child->coords[i] = elem->coords[i] + ((cube_id & 1 << i) ? length : 0);
   }
+
   child->level = elem->level + 1;
 }
 
