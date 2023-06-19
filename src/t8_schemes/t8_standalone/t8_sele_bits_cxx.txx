@@ -341,7 +341,12 @@ template<t8_eclass_t eclass_T>
 int
 t8_sele_is_inside_root (const t8_standalone_element_t<eclass_T> *p)
 {
-  return 1;
+  t8_standalone_element_t<eclass_T> anc;
+  t8_sele_ancestor_equation(p,0,&anc);
+  for(int idim = 0; idim < T8_ELEMENT_DIM[eclass_T]; idim++){
+    if (p->x[idim]) return 0;
+  }
+  return p->type == 0;
 }
 
 template<t8_eclass_t eclass_T>
