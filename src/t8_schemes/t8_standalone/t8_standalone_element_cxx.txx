@@ -38,9 +38,9 @@ t8_standalone_scheme_c<eclass_T>::~t8_standalone_scheme_c() {
 template<t8_eclass_t eclass_T>
 int
 t8_standalone_scheme_c<eclass_T>::t8_element_refines_irregular (void) const {
-  // if constexpr (eclass_T == T8_ECLASS_PYRAMID) {
-  //   return 1;
-  // }
+  if constexpr (eclass_T == T8_ECLASS_PYRAMID) {
+     return 1;
+  }
   return 0;
 }
 
@@ -441,16 +441,19 @@ t8_standalone_scheme_c<eclass_T>::t8_element_reference_coords (const t8_element_
 
 template<t8_eclass_t eclass_T>
 t8_gloidx_t
-t8_standalone_scheme_c<eclass_T>::t8_element_count_leafs (const t8_element_t *t, int level) const {
-  SC_ABORT("This function is not implemented yet.\n");
-  return 0;
+t8_standalone_scheme_c<eclass_T>::t8_element_count_leafs (const t8_element_t *elem, int level) const {
+  return t8_sele_num_descendants_at_leveldiff<eclass_T>((const t8_standalone_element_t<eclass_T> *) elem, level - t8_element_level(elem));
 }
 
 template<t8_eclass_t eclass_T>
 t8_gloidx_t
 t8_standalone_scheme_c<eclass_T>::t8_element_count_leafs_from_root (int level) const {
-  //SC_ABORT("This function is not implemented yet.\n");
-  // nur für hypercubes !!!
+  T8_ASSERT(level >= 0);
+  if constexpr(eclass_T == T8_ECLASS_PYRAMID){
+    t8_linearidx_t      two_to_l = 1LL << level;
+    t8_linearidx_t      eight_to_l = 1LL << (3 * level);
+    return ((eight_to_l << 2) - two_to_l) / 3;
+  }
   return 1 << (level * T8_ELEMENT_DIM[eclass_T]);
 }
 

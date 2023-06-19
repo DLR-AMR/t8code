@@ -493,25 +493,27 @@ t8_sele_nearest_common_ancestor (const t8_standalone_element_t<eclass_T> *el1,
                                      t8_standalone_element_t<eclass_T> *nca)
 {
   const t8_element_level_t nca_level = t8_sele_nca_level (el1, el2);
-  t8_sele_ancestor (el1, nca_level, nca);
+  t8_sele_ancestor_equation (el1, nca_level, nca);
 }
 
 /*******Linear id stuff *************/
 template<t8_eclass_t eclass_T>
 static              t8_linearidx_t
-t8_sele_num_descendants_at_leveldiff (const t8_standalone_element_t<eclass_T> *p,
+t8_sele_num_descendants_at_leveldiff (const t8_standalone_element_t<eclass_T> *elem,
                                           const int leveldiff)
 {
-  return 1 << leveldiff * T8_ELEMENT_DIM[eclass_T];
-//  t8_linearidx_t      two_to_l = 1LL << leveldiff;
-//  t8_linearidx_t      eight_to_l = 1LL << (3 * leveldiff);
-////  //t8_debugf("leveldiff: %d, 2^l: %lu, 8^l: %lu\n", leveldiff, two_to_l, eight_to_l);
-//  if (t8_sele_shape (p) == T8_ECLASS_PYRAMID) {
-//    return ((eight_to_l << 2) - two_to_l) / 3;
-//  }
-//  else {
-//    return ((eight_to_l << 1) + two_to_l) / 3;
-//  }
+  if (leveldiff < 0) return 0;
+  if constexpr(eclass_T == T8_ECLASS_PYRAMID){
+    t8_linearidx_t      two_to_l = 1LL << leveldiff;
+    t8_linearidx_t      eight_to_l = 1LL << (3 * leveldiff);
+    if (t8_sele_shape (elem) == T8_ECLASS_PYRAMID) {
+      return ((eight_to_l << 2) - two_to_l) / 3;
+    }
+    else {
+     return ((eight_to_l << 1) + two_to_l) / 3;
+    }
+  }
+  return 1 <<( T8_ELEMENT_DIM[eclass_T] * leveldiff);
 }
 
 template<t8_eclass_t eclass_T>
@@ -522,8 +524,7 @@ t8_sele_num_descendants_of_child_at_leveldiff (const t8_standalone_element_t<ecl
 {
   t8_standalone_element_t<eclass_T>       child;
   t8_sele_child (p, childindex, &child);
-  t8_linearidx_t      num_descendants = t8_sele_num_descendants_at_leveldiff (&child, leveldiff - 1);       //????
-//  //t8_debugf("%d descendants of child %d with leveldiff %d\n", num_descendants, childindex, leveldiff);
+  t8_linearidx_t      num_descendants = t8_sele_num_descendants_at_leveldiff (&child, leveldiff - 1);
   return num_descendants;
 }
 
