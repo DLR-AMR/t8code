@@ -631,14 +631,20 @@ t8_sele_compute_coords (const t8_standalone_element_t<eclass_T> *p, const int ve
 {
 
   T8_ASSERT (0 <= vertex && vertex < t8_sele_num_corners (p));
-  for (int idim = 0; idim < T8_ELEMENT_DIM[eclass_T]; idim++) {
-    // Only for hypercubes
-    coords[idim] = p->coords[idim] + ((vertex & (1 << idim)) >> idim) * t8_sele_get_len<eclass_T> (p->level);
-    //t8_standalone_element_type_t  type = t8_sele_get_type (p);
-    //coords[idim] =
-    //  p->coords[idim] +
-    //  t8_standalone_element_type_vertex_dim_to_binary[type][vertex][idim] *
-    //  t8_sele_get_len<eclass_T> (p->level);
+
+  if constexpr(T8_ELEMENT_NUM_EQUATIONS[eclass_T]){
+    int8_t type = p->type.to_ulong();
+    for (int idim = 0; idim < T8_ELEMENT_DIM[eclass_T]; idim++) {
+      coords[idim] =
+        p->coords[idim] +
+        t8_type_vertex_dim_to_binary<eclass_T>[type][vertex][idim] *
+        t8_sele_get_len<eclass_T> (p->level);
+    }
+  }else{
+    //Hypercubes
+    for (int idim = 0; idim < T8_ELEMENT_DIM[eclass_T]; idim++) {
+      coords[idim] = p->coords[idim] + ((vertex & (1 << idim)) >> idim) * t8_sele_get_len<eclass_T> (p->level);
+    }
   }
 }
 
