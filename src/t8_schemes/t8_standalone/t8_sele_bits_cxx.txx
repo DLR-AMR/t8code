@@ -354,8 +354,6 @@ t8_sele_first_descendant (const t8_standalone_element_t<eclass_T> *p, t8_standal
   /*The first descendant of a pyramid has the same anchor coords and type, but another level */
   t8_sele_copy (p, desc);
   desc->level = level;
-  //t8_debugf("first_desc\n");
-  //t8_sele_debug_print(desc);
 }
 
 template<t8_eclass_t eclass_T>
@@ -366,7 +364,7 @@ t8_sele_last_descendant (const t8_standalone_element_t<eclass_T> *p, t8_standalo
   T8_ASSERT (level >= p->level);
   t8_sele_copy (p, desc);
   desc->level = level;
-  /* Shift the coords to the eights cube. The type of the last descendant is
+  /* Shift the coords to the eights cube. The type of the last descendant
    * is the type of the input element*/
   t8_element_coord_t coord_offset =
     t8_sele_get_len<eclass_T> (p->level) - t8_sele_get_len<eclass_T> (level);
@@ -437,6 +435,7 @@ t8_sele_successor (const t8_standalone_element_t<eclass_T> *elem,
     /* set bits from elem-->level to level to 0, emulates first descendant */
     int                 shift = T8_ELEMENT_MAXLEVEL[eclass_T] - level + 1;
     t8_sele_cut_coordinates (succ, shift);
+    /* first descendants */
   }
   else {
     /* Not the last element. Compute child with local ID child_id+1 */
@@ -594,19 +593,14 @@ template<t8_eclass_t eclass_T>
 t8_linearidx_t
 t8_sele_linear_id (const t8_standalone_element_t<eclass_T> *p, const int level)
 {
-  //t8_debugf("linear_id at level %d\n", level);
-  //t8_sele_debug_print(p);
   t8_standalone_element_t<eclass_T>       recursive_start;
 
   if (level < p->level) {
-    //t8_debugf("ancestor\n");
     t8_sele_ancestor (p, level, &recursive_start);
   }
   else {
-    //t8_debugf("first_descendant\n");
     t8_sele_first_descendant (p, &recursive_start, level);
   }
-  //t8_sele_debug_print(p);
 
   /* Maybe we can also input p into recursive function and calculate id directly for first desc */
   t8_linearidx_t      id =
