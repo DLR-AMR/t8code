@@ -34,7 +34,7 @@ struct t8_adapt_data
   const int           num_spheres;
   const double        spheres_radius_inner;
   const double        spheres_radius_outer;
-  const double        midpoint[6][3];
+  const double       *midpoints;
 };
 
 /* Refine, if element is within a given radius. */
@@ -56,7 +56,7 @@ t8_adapt_callback_refine (t8_forest_t forest,
 
   for (int i = 0; i < adapt_data->num_spheres; i++) {
     const double        dist =
-      t8_vec_dist (adapt_data->midpoint[i], centroid);
+      t8_vec_dist (adapt_data->midpoints + (i * 3), centroid);
     if (dist < adapt_data->spheres_radius_outer) {
       return 1;
     }
@@ -83,7 +83,7 @@ t8_adapt_callback_remove (t8_forest_t forest,
 
   for (int i = 0; i < adapt_data->num_spheres; i++) {
     const double        dist =
-      t8_vec_dist (adapt_data->midpoint[i], centroid);
+      t8_vec_dist (adapt_data->midpoints + (i * 3), centroid);
     if (dist < adapt_data->spheres_radius_inner) {
       return -2;
     }
@@ -123,16 +123,16 @@ t8_construct_spheres (const int initial_level,
   /* On each face of a cube, a sphere rises halfway in. 
    * Its center is therefore the center of the corresponding surface. */
   const int           num_spheres = 6;
-  struct t8_adapt_data adapt_data = { num_spheres,
-    radius_inner,
-    radius_outer,
-    {{1.0, 0.5, 0.5},
-     {0.5, 1.0, 0.5},
-     {0.5, 0.5, 1.0},
-     {0.0, 0.5, 0.5},
-     {0.5, 0.0, 0.5},
-     {0.5, 0.5, 0.0}}
+  double              midpoints[6 * 3] = {
+    1.0, 0.5, 0.5,
+    0.5, 1.0, 0.5,
+    0.5, 0.5, 1.0,
+    0.0, 0.5, 0.5,
+    0.5, 0.0, 0.5,
+    0.5, 0.5, 0.0
   };
+  struct t8_adapt_data adapt_data =
+    { num_spheres, radius_inner, radius_outer, midpoints };
 
   forest = t8_forest_new_uniform
     (cmesh, t8_scheme_new_default_cxx (), initial_level, 0,
@@ -153,11 +153,11 @@ main (int argc, char **argv)
 {
   char                usage[BUFSIZ];
   /* brief help message */
-  int                 sreturnA =
-    snprintf (usage, BUFSIZ,
-              "Usage:\t%s <OPTIONS>\n\t%s -h\t"
-              "for a brief overview of all options.",
-              basename (argv[0]), basename (argv[0]));
+  int                 sreturnA = snprintf (usage, BUFSIZ,
+                                           "Usage:\t%s <OPTIONS>\n\t%s -h\t"
+                                           "for a brief overview of all options.",
+                                           basename (argv[0]),
+                                           basename (argv[0]));
 
   char                help[BUFSIZ];
   /* long help message */
