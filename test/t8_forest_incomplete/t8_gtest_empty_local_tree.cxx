@@ -142,7 +142,7 @@ TEST_P (local_tree, test_empty_local_tree)
     t8_forest_t         forest_adapt_b = t8_adapt_forest (forest, t8_adapt_remove, 1, 0, &removes);
     ASSERT_TRUE (forest_adapt_b->incomplete_trees);
     ASSERT_TRUE (!forest->incomplete_trees);
-    forest_adapt_b = t8_adapt_forest (forest, NULL, 0, 1, NULL);
+    forest_adapt_b = t8_adapt_forest (forest_adapt_b, NULL, 0, 1, NULL);
 
     /* The trees have to be equal */
     ASSERT_TRUE (t8_forest_is_equal (forest_adapt_b, forest_adapt_a));
