@@ -415,12 +415,12 @@ t8_forest_adapt (t8_forest_t forest)
   t8_tree_t           tree;
   t8_tree_t           tree_from;
   sc_list_t          *refine_list = NULL;       /* This is only needed when we adapt recursively */
-  size_t              num_children;
-  size_t              num_siblings;
-  size_t              zz;
-  size_t              curr_size_elements_from;
-  size_t              curr_size_elements;
-  size_t              num_elements_to_adapt_callback;
+  int                 num_children;
+  int                 num_siblings;
+  int                 curr_size_elements_from;
+  int                 curr_size_elements;
+  int                 num_elements_to_adapt_callback;
+  int                 zz;
   int                 ci;
   int                 refine;
   int                 is_family;
@@ -509,15 +509,15 @@ t8_forest_adapt (t8_forest_t forest)
           curr_size_elements_from = num_siblings;
         }
 #if T8_ENABLE_DEBUG
-        for (zz = 0; zz < (unsigned int) num_siblings; zz++) {
+        for (zz = 0; zz < num_siblings; zz++) {
           elements_from[zz] = NULL;
         }
 #endif
-        for (zz = 0; zz < (unsigned int) num_siblings &&
+        for (zz = 0; zz < num_siblings &&
             el_considered + (t8_locidx_t) zz < num_el_from; zz++) {
           elements_from[zz] = t8_element_array_index_locidx (telements_from,
                                                             el_considered +
-                                                            zz);
+                                                            (t8_locidx_t) zz);
           /* This is a quick check whether we build up a family here and could
           * abort early if not.
           * If the child id of the current element is not zz, then it cannot
@@ -525,7 +525,7 @@ t8_forest_adapt (t8_forest_t forest)
           * are 0, 1, 2, ... zz, ... num_siblings-1).
           * This check is however not sufficient - therefore, we call is_family later. */
           if (!forest_from->incomplete_trees &&
-              (size_t) tscheme->t8_element_child_id (elements_from[zz]) != zz) {
+              tscheme->t8_element_child_id (elements_from[zz]) != zz) {
             break;
           }
         }
@@ -616,7 +616,7 @@ t8_forest_adapt (t8_forest_t forest)
             }
             tscheme->t8_element_children (elements_from[0], num_children,
                                           elements);
-            el_inserted += num_children;
+            el_inserted += (t8_locidx_t) num_children;
           }
           el_considered++;
         }
@@ -643,14 +643,14 @@ t8_forest_adapt (t8_forest_t forest)
             * If so, we check this family for recursive coarsening. */
             const int           child_id =
               tscheme->t8_element_child_id (elements[0]);
-            if (child_id > 0 && (size_t) child_id == num_children - 1) {
+            if (child_id > 0 && child_id == num_children - 1) {
               t8_forest_adapt_coarsen_recursive (forest, ltree_id,
                                                 el_considered, tscheme,
                                                 telements, el_coarsen,
                                                 &el_inserted, elements);
             }
           }
-          el_considered += num_elements_to_adapt_callback;
+          el_considered += (t8_locidx_t) num_elements_to_adapt_callback;
         }
         else if (refine == 0) {
           /* The considered elements are neither to be coarsened nor is the first
@@ -665,7 +665,7 @@ t8_forest_adapt (t8_forest_t forest)
             * (and not the only one), we need to check for recursive coarsening. */
             const int           child_id =
               tscheme->t8_element_child_id (elements[0]);
-            if (child_id > 0 && (size_t) child_id == num_children - 1) {
+            if (child_id > 0 && child_id == num_children - 1) {
               t8_forest_adapt_coarsen_recursive (forest, ltree_id,
                                                 el_considered, tscheme,
                                                 telements, el_coarsen,

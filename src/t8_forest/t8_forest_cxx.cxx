@@ -48,7 +48,7 @@ t8_forest_is_incomplete_family (const t8_forest_t forest,
                                 const t8_locidx_t el_considered,
                                 t8_eclass_scheme_c *tscheme,
                                 t8_element_t **elements,
-                                const size_t elements_size)
+                                const int elements_size)
 {
   T8_ASSERT (forest != NULL);
   T8_ASSERT (ltree_id >= 0);
@@ -75,7 +75,7 @@ t8_forest_is_incomplete_family (const t8_forest_t forest,
 
   /* We first assume that we have an (in)complete family with the size of array elements. 
    * In the following we try to disprove this. */
-  size_t              family_size = elements_size;
+  int                 family_size = elements_size;
 
   /* Get level, child ID and parent of first element of possible family */
   const int           level_current = tscheme->t8_element_level (elements[0]);
@@ -111,7 +111,7 @@ t8_forest_is_incomplete_family (const t8_forest_t forest,
   }
 
   /* Reduce family_size to the number of family members that directly follow each other. */
-  for (size_t family_iter = 1; family_iter < family_size; family_iter++) {
+  for (int family_iter = 1; family_iter < family_size; family_iter++) {
     const int           level =
       tscheme->t8_element_level (elements[family_iter]);
     /* By comparing the levels in advance we may be able to avoid
@@ -163,7 +163,7 @@ t8_forest_is_incomplete_family (const t8_forest_t forest,
 #if T8_ENABLE_MPI
   const int           num_siblings =
     tscheme->t8_element_num_siblings (elements[0]);
-  T8_ASSERT (family_size <= (size_t) num_siblings);
+  T8_ASSERT (family_size <= num_siblings);
   /* If the first/last element at a process boundary is not the first/last
    * element of a possible family, we are not guaranteed to consider all 
    * family members.*/

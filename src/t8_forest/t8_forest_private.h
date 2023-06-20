@@ -60,7 +60,7 @@ int                 t8_forest_is_incomplete_family (const t8_forest_t forest,
                                                     const t8_locidx_t el_considered,
                                                     t8_eclass_scheme_c *tscheme,
                                                     t8_element_t **elements,
-                                                    const size_t elements_size);
+                                                    const int elements_size);
 
 /* For each tree in a forest compute its first and last descendant */
 void                t8_forest_compute_desc (t8_forest_t forest);
