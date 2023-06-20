@@ -76,7 +76,7 @@ protected:
 };
 /* *INDENT-ON* */
 
-/** This structure contains an bitset with all 
+/** This structure contains a bitset with all 
  * local trees on all processes to be removed.
  */
 struct t8_trees
