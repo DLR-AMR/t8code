@@ -61,31 +61,32 @@ void
 t8_check_not_inside_root (t8_element_t *element, t8_element_t *neigh,
                           t8_element_t *child, t8_eclass_scheme_c *ts)
 {
-  int                 face_num;
-  int                 num_faces = ts->t8_element_num_faces (element);
+
+  const int           num_faces = ts->t8_element_num_faces (element);
 
   for (int iface = 0; iface < num_faces; iface++) {
 
-    int                 num_children =
-      ts->t8_element_num_face_children (child, iface);
+    const int           num_children =
+      ts->t8_element_num_face_children (element, iface);
     int                *child_indices = T8_ALLOC (int, num_children);
     t8_element_t      **children = T8_ALLOC (t8_element_t *, num_children);
     ts->t8_element_new (num_children, children);
-    ts->t8_element_children_at_face (child, iface, children, num_children,
+    ts->t8_element_children_at_face (element, iface, children, num_children,
                                      child_indices);
 
     for (int jchild = 0; jchild < num_children; jchild++) {
 
-      int                 child_id = child_indices[jchild];
-      int                 face_contact =
-        t8_element_face_child_face (ts, child, iface, jchild);
+      const int           child_id = child_indices[jchild];
+      const int           face_contact =
+        ts->t8_element_face_child_face (element, iface, jchild);
 
       ts->t8_element_child (element, child_id, child);
+      int                 face_num;
       int                 inside =
         ts->t8_element_face_neighbor_inside (child, neigh, face_contact,
                                              &face_num);
 
-      ASSERT_FALSE (inside);
+      ASSERT_EQ (inside, 0);
 
       inside = ts->t8_element_tree_face (child, face_contact);
       ASSERT_EQ (inside, iface);
@@ -94,6 +95,7 @@ t8_check_not_inside_root (t8_element_t *element, t8_element_t *neigh,
     T8_FREE (children);
     T8_FREE (child_indices);
   }
+
 }
 
 /* First "simple" check. First, the neighbors of the root-pyramid at level 0 are computed
