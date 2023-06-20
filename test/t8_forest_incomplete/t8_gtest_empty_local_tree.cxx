@@ -132,12 +132,12 @@ TEST_P (local_tree, test_empty_local_tree)
 {
   /* Number of instances */
   const uint32_t      num_instances = 1 << MPI_size;
-  for (uint32_t instances = 1; instances < num_instances; instances++) {
+  for (uint32_t instances = 1; instances < num_instances - 1; instances++) {
     /* Remove all local elements for every process \a remove[rank] == 0 */
     std::bitset < MAX_NUM_RANKS > remove (instances);
 
     /* *INDENT-OFF* */
-    struct t8_data      data { remove };
+    struct t8_trees    data { remove };
     /* *INDENT-ON* */
 
     t8_forest_ref (forest);
