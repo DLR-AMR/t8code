@@ -450,23 +450,20 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset,
            * k+1, k+2, k+3 (mod 4) or k+1, k+2 (mod 3) in case of triangles.
            * In el_vertices are the coordinates of these vertices in order
            * v_0x v_0y v_0z v_1x v_1y ... */
+          int                 el_vertex = (face2 + ivertex) % num_faces;
           if (fabs (el_vertices1[3 * firstvertex] -
-                    el_vertices2[3 * ((face2 + ivertex) % num_faces)]) <
-              tolerance
-              && fabs (el_vertices1[3 * firstvertex] -
-                       el_vertices2[3 * ((face2 + ivertex) % num_faces) +
-                                    1]) < tolerance
-              && fabs (el_vertices1[3 * firstvertex] -
-                       el_vertices2[3 * ((face2 + ivertex) % num_faces) +
-                                    2]) < tolerance) {
+                    el_vertices2[3 * el_vertex]) < tolerance
+              && fabs (el_vertices1[3 * firstvertex + 1] -
+                       el_vertices2[3 * el_vertex + 1]) < tolerance
+              && fabs (el_vertices1[3 * firstvertex + 2] -
+                       el_vertices2[3 * el_vertex + 2]) < tolerance) {
+
             /* We identified the vertex (face2 + ivertex) % num_faces of the 
              * neighboring element as equivalent to the first vertex of face1.*/
-            int                 el_vertex = (face2 + ivertex) % num_faces;
             /* True for triangles and tets */
             T8_ASSERT (-1 < el_vertex && el_vertex < num_faces);
             if (dim == 2) {
-              switch (face2)
-              {
+              switch (face2) {
               case 0:
                 T8_ASSERT (el_vertex == 1 || el_vertex == 2);
                 orientation = el_vertex - 1;
@@ -483,23 +480,26 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset,
               }
             }
             else {
-              switch (face2)
-              {
+              switch (face2) {
               case 0:
-                T8_ASSERT (el_vertex == 1 || el_vertex == 2 || el_vertex == 3);
+                T8_ASSERT (el_vertex == 1 || el_vertex == 2
+                           || el_vertex == 3);
                 orientation = el_vertex - 1;
                 break;
               case 1:
-                T8_ASSERT (el_vertex == 0 || el_vertex == 2 || el_vertex == 3);
+                T8_ASSERT (el_vertex == 0 || el_vertex == 2
+                           || el_vertex == 3);
                 orientation = el_vertex == 0 ? 0 : el_vertex - 1;
                 break;
               case 2:
-                T8_ASSERT (el_vertex == 0 || el_vertex == 1 || el_vertex == 3);
+                T8_ASSERT (el_vertex == 0 || el_vertex == 1
+                           || el_vertex == 3);
                 orientation = el_vertex == 3 ? el_vertex - 1 : el_vertex;
                 break;
               default:
                 T8_ASSERT (face2 == 3);
-                T8_ASSERT (el_vertex == 0 || el_vertex == 1 || el_vertex == 2);
+                T8_ASSERT (el_vertex == 0 || el_vertex == 1
+                           || el_vertex == 2);
                 orientation = el_vertex;
                 break;
               }
@@ -516,8 +516,7 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset,
              neighbor, face1, face2, filename);
           goto die_neigh;
         }
-        T8_ASSERT (-1 < orientation && orientation < 4);
-        T8_ASSERT (orientation != face2);
+        T8_ASSERT (-1 < orientation && orientation < dim - 1);
         /* if tit !< neighbor then tit == neighbor,
          * face1 > face2 would mean that we already inserted this connection */
         T8_ASSERT (tit < neighbor || face1 <= face2);
