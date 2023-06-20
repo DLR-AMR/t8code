@@ -44,9 +44,9 @@ protected:
         t8_forest_new_uniform (t8_test_create_cmesh (cmesh_id), 
                                t8_scheme_new_default_cxx (),
                                5, 0, sc_MPI_COMM_WORLD);
+    /* we skip this test until feature of empty global trees is fully supported */
+    GTEST_SKIP ();
   }
-  /* we skip this test until feature of empty global trees is fully supported */
-  GTEST_SKIP ();
   void TearDown () override {
     t8_forest_unref (&forest);
     t8_forest_unref (&forest_adapt);
