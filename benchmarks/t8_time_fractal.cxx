@@ -299,17 +299,9 @@ t8_construct_fractal (int level_initial,
 
   /* Quadrilateral and hexahedron elements must have an even initial level 
    * greater 0, such that the refinement pattern can be applied. */
-  if (eclass == T8_ECLASS_HEX || eclass == T8_ECLASS_QUAD) {
-    if (level_initial < 2) {
-      level_initial = 2;
-    }
-    if (0 != level_initial % 2) {
-      level_initial++;
-    }
-    if (0 != level_end % 2) {
-      level_end++;
-    }
-  }
+  T8_ASSERT ((eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX)
+             && level_initial > 1 && 0 == level_initial % 2
+             && 0 == level_end % 2);
 
   /* Set up userdata to adapt forest. 
    * user_data[0] -> level_end
@@ -502,6 +494,14 @@ main (int argc, char **argv)
   if (helpme) {
     /* display help message and usage */
     t8_global_productionf ("%s\n", help);
+    sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
+  }
+  else if ((eclass_int == 2 || eclass_int == 4)
+           && (level_initial < 2 || 0 != level_initial % 2
+               || 0 != level_end % 2)) {
+    t8_global_productionf
+      ("\n\t ERROR: Quadrilateral and hexahedron elements must have an even levels greater 0,\n"
+       "\t\tsuch that the refinement pattern can be applied.\n\n");
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else if (parsed >= 0 && level_initial >= 0 && level_initial < level_end &&
