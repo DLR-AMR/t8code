@@ -348,29 +348,31 @@ t8_construct_fractal (int level_initial,
       t8_forest_init (&forest_adapt);
       t8_forest_set_profiling (forest_adapt, 1);
       t8_forest_set_user_data (forest_adapt, &user_data);
-      if (eclass == T8_ECLASS_QUAD) {
+      switch (eclass) {
+      case T8_ECLASS_QUAD:
         t8_forest_set_adapt (forest_adapt, forest,
                              t8_adapt_menger_quad, iterative);
-      }
-      else if (eclass == T8_ECLASS_TRIANGLE) {
+        break;
+      case T8_ECLASS_TRIANGLE:
         t8_forest_set_adapt (forest_adapt, forest,
                              t8_adapt_sierpinski_tri, iterative);
-      }
-      else if (eclass == T8_ECLASS_HEX) {
+        break;
+      case T8_ECLASS_HEX:
         t8_forest_set_adapt (forest_adapt, forest,
                              t8_adapt_menger_hex, iterative);
-      }
-      else if (eclass == T8_ECLASS_TET) {
+        break;
+      case T8_ECLASS_TET:
         t8_forest_set_adapt (forest_adapt, forest,
                              t8_adapt_sierpinski_tet, iterative);
-      }
-      else if (eclass == T8_ECLASS_PRISM) {
+        break;
+      case T8_ECLASS_PRISM:
         t8_forest_set_adapt (forest_adapt, forest,
                              t8_adapt_sierpinski_prism, iterative);
-      }
-      else {
+        break;
+      default:
         t8_forest_set_adapt (forest_adapt, forest,
                              t8_adapt_sierpinski_pyramid, iterative);
+        break;
       }
       t8_forest_commit (forest_adapt);
       time_refine += t8_forest_profile_get_adapt_time (forest_adapt);
