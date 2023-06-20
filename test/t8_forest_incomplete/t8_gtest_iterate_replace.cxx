@@ -99,9 +99,6 @@ t8_forest_replace (t8_forest_t forest_old,
 
   ASSERT_EQ (adapt_data->callbacks[elidx_old], refine);
 
-  T8_ASSERT (first_outgoing == elidx_old);
-  T8_ASSERT (refine == -2 ? true : first_incoming == elidx_new);
-
   /* Element remained untouched. */
   if (refine == 0) {
     ASSERT_EQ (num_outgoing, 1);
@@ -140,6 +137,7 @@ t8_forest_replace (t8_forest_t forest_old,
   if (refine == -2) {
     ASSERT_EQ (num_outgoing, 1);
     ASSERT_EQ (num_incoming, 0);
+    ASSERT_EQ (first_incoming, -1);
   }
   /* Element got refined. */
   if (refine == 1) {
