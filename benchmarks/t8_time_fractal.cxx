@@ -314,10 +314,8 @@ t8_construct_fractal (int level_initial,
   /* Set up userdata to adapt forest. 
    * user_data[0] -> level_end
    * user_data[1] -> {0, -2} -> return for adapt callback */
-  int                 user_data[2] = { level_end, remove };
-  if (remove == 1) {
-    user_data[1] = -2;
-  }
+  int                 user_data[2] =
+    { level_end, (remove == 1) ? -2 : remove };
 
   /* Time measurement */
   double              time_refine = 0;
