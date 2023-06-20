@@ -399,7 +399,10 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset,
         double             *el_vertices2 =
           (double *) t8_stash_get_attribute (cmesh->stash, neighbor);
 
-        /* Get face number of element tit neighboring element neighbor */
+        /* Get face number of element tit neighboring element neighbor.
+         * For every vertex i of element tit, check if ther exist a vertex 
+         * of element neighbor which is equal to it. If no such vertex exist, 
+         * the index of i is the facenumber we are looking for. */
         for (int ivertex = 0; ivertex < num_faces; ivertex++) {
           int                 vertex_count = 0;
           for (int jvertex = 0; jvertex < num_faces; jvertex++) {
