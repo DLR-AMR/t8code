@@ -49,7 +49,9 @@ protected:
   }
   void TearDown () override {
     t8_forest_unref (&forest);
-    t8_forest_unref (&forest_adapt);
+    if (forest_adapt != NULL) {
+      t8_forest_unref (&forest_adapt);
+    }
     if (adapt_callbacks != NULL) {
       T8_FREE (adapt_callbacks);
     }
@@ -57,8 +59,8 @@ protected:
 
   int                 cmesh_id;
   t8_forest_t         forest;
-  t8_forest_t         forest_adapt;
-  int                 *adapt_callbacks;
+  t8_forest_t         forest_adapt = NULL;
+  int                 *adapt_callbacks = NULL;
 };
 /* *INDENT-ON* */
 
