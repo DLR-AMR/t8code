@@ -73,14 +73,11 @@ t8_forest_is_family_callback (t8_eclass_scheme_c *ts,
 
   if (num_elements < ts->t8_element_num_siblings (elements[0])) {
     for (int iter = num_elements; iter < num_elements; iter++) {
-      if (elements[iter] != NULL) {
-        T8_ASSERT (ts->t8_element_is_valid (elements[iter]));
-        ts->t8_element_parent (elements[iter], element_parent_compare);
-        if (!ts->t8_element_compare (element_parent, element_parent_compare)) {
-          ts->t8_element_destroy (1, &element_parent);
-          ts->t8_element_destroy (1, &element_parent_compare);
-          return 0;
-        }
+      ts->t8_element_parent (elements[iter], element_parent_compare);
+      if (!ts->t8_element_compare (element_parent, element_parent_compare)) {
+        ts->t8_element_destroy (1, &element_parent);
+        ts->t8_element_destroy (1, &element_parent_compare);
+        return 0;
       }
     }
   }
