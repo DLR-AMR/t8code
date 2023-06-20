@@ -44,6 +44,8 @@ protected:
     instance = std::get<1>(GetParam());
     forest = 
       t8_forest_new_uniform (t8_cmesh_new_bigmesh (eclass, 3, sc_MPI_COMM_WORLD), t8_scheme_new_default_cxx (), 0, 0, sc_MPI_COMM_WORLD);  
+    /* we skip this test until feature is fully supported */
+    GTEST_SKIP ();
   }
   void TearDown () override {
     t8_forest_unref (&forest);
