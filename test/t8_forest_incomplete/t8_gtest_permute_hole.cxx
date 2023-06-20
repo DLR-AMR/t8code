@@ -90,8 +90,16 @@ protected:
 };
 /* *INDENT-ON* */
 
+/** This structure contains a bitset with all 
+ *  elements to be removed.
+ */
+struct t8_elements
+{
+  std::bitset < MAX_NUM_ELEMETS > remove;
+};
+
 /** Remove every element with local_id i if the i`th bit in 
- * the current permutation \a removes is 0. */
+ * the current permutation \a remove is 0. */
 static int
 t8_adapt_remove (t8_forest_t forest,
                  t8_forest_t forest_from,
@@ -101,9 +109,9 @@ t8_adapt_remove (t8_forest_t forest,
                  const int is_family,
                  const int num_elements, t8_element_t *elements[])
 {
-  std::bitset < MAX_NUM_ELEMETS > *removes =
-    (std::bitset < MAX_NUM_ELEMETS > *)t8_forest_get_user_data (forest);
-  if (removes[lelement_id] == 0) {
+  struct t8_elements *data =
+    (struct t8_elements *) t8_forest_get_user_data (forest);
+  if (data->remove[lelement_id] == 0) {
     return -2;
   }
   return 0;
@@ -150,16 +158,21 @@ TEST_P (forest_permute, test_permute_hole)
   const uint32_t      num_permutation = 1 << num_elments;
 
   for (uint32_t permutation = 1; permutation < num_permutation; permutation++) {
-    std::bitset < MAX_NUM_ELEMETS > removes (permutation);
+    std::bitset < MAX_NUM_ELEMETS > remove (permutation);
+
+    /* *INDENT-OFF* */
+    struct t8_elements  data { remove };
+    /* *INDENT-ON* */    
+
     t8_forest_ref (forest);
     /* Remove elements for every 0 bit in \a removes */
     t8_forest_t         forest_adapt =
-      t8_adapt_forest (forest, t8_adapt_remove, &removes);
+      t8_adapt_forest (forest, t8_adapt_remove, &data);
 
     /* check if the correct number of elements got removed */
     t8_locidx_t         element_count = 0;
     for (t8_locidx_t ridx = 0; ridx < MAX_NUM_ELEMETS; ridx++) {
-      if (removes[ridx] == 1) {
+      if (remove[ridx] == 1) {
         element_count++;
       }
     }
