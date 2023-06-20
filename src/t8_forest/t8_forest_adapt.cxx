@@ -106,10 +106,9 @@ t8_forest_pos (t8_forest_t forest,
                t8_eclass_scheme_c *ts,
                t8_element_array_t *telements, const t8_locidx_t telements_pos)
 {
-  const size_t        elements_in_array =
+  const t8_locidx_t      elements_in_array =
     t8_element_array_get_count (telements);
-  T8_ASSERT (0 <= telements_pos
-             && (size_t) telements_pos < elements_in_array);
+  T8_ASSERT (0 <= telements_pos && telements_pos < elements_in_array);
   const t8_element_t *element =
     t8_element_array_index_locidx (telements, telements_pos);
   const int           level_current = ts->t8_element_level (element);
@@ -150,9 +149,9 @@ t8_forest_pos (t8_forest_t forest,
   t8_locidx_t         pos;
   t8_element_t       *element_compare;
   for (el_iter = 1; el_iter < (t8_locidx_t) num_siblings
-       && (size_t) el_iter < elements_in_array; el_iter++) {
+       && el_iter < elements_in_array; el_iter++) {
     pos = telements_pos - el_iter;
-    T8_ASSERT (0 <= pos && (size_t) pos < elements_in_array);
+    T8_ASSERT (0 <= pos && pos < elements_in_array);
     element_compare = t8_element_array_index_locidx (telements, pos);
     const int           level_compare =
       ts->t8_element_level (element_compare);
@@ -171,7 +170,7 @@ t8_forest_pos (t8_forest_t forest,
    * family, check if the first element along the space-filling-curve next to the
    * considered elements is overlapped when set is coarsened. */
   if (el_iter < (t8_locidx_t) num_siblings &&
-      el_iter < (t8_locidx_t) elements_in_array) {
+      el_iter < elements_in_array) {
     int                 level_compare =
       ts->t8_element_level (element_compare);
     /* Only elements with higher level then level of elements in family, can get 
