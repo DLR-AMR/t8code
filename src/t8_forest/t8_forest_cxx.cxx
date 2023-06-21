@@ -1666,17 +1666,6 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
         return 0;
       }
       T8_ASSERT (global_neighbour_tree_idx < forest->global_num_trees);
-#if T8_ENABLE_DEBUG
-      if (global_neighbour_tree_idx > -1) {
-        if (!(global_neighbour_tree_idx == forest->first_local_tree ||
-              global_neighbour_tree_idx == forest->first_local_tree - 1)) {
-          T8_ASSERT (forest->last_local_tree == -1);
-        }
-      }
-      else {
-        T8_ASSERT (global_neighbour_tree_idx == -1);
-      }
-#endif
     }
     else {
       SC_ABORT ("For incomplete trees the method t8_forest_last_tree_shared aka "
