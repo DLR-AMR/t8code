@@ -43,24 +43,14 @@ protected:
     forest =
         t8_forest_new_uniform (t8_test_create_cmesh (cmesh_id), 
                                t8_scheme_new_default_cxx (),
-                               5, 0, sc_MPI_COMM_WORLD);
-    /* we skip this test until feature of empty global trees is fully supported */
-    GTEST_SKIP ();
+                               4, 0, sc_MPI_COMM_WORLD);
   }
   void TearDown () override {
     t8_forest_unref (&forest);
-    if (forest_adapt != NULL) {
-      t8_forest_unref (&forest_adapt);
-    }
-    if (adapt_callbacks != NULL) {
-      T8_FREE (adapt_callbacks);
-    }
   }
 
   int                 cmesh_id;
   t8_forest_t         forest;
-  t8_forest_t         forest_adapt = NULL;
-  int                 *adapt_callbacks = NULL;
 };
 /* *INDENT-ON* */
 
@@ -69,7 +59,7 @@ protected:
  */
 struct t8_return_data
 {
-  int                 *callbacks;
+  int                *callbacks;
 };
 
 /** Inside the callback of iterate_replace we compare \a refine 
@@ -84,18 +74,17 @@ t8_forest_replace (t8_forest_t forest_old,
                    int refine,
                    int num_outgoing,
                    t8_locidx_t first_outgoing,
-                   int num_incoming,
-                   t8_locidx_t first_incoming)
+                   int num_incoming, t8_locidx_t first_incoming)
 {
   /* Note, the new forest contains the callback returns of the old forest */
-  struct t8_return_data *adapt_data = (struct t8_return_data *) t8_forest_get_user_data (forest_new);
+  struct t8_return_data *adapt_data =
+    (struct t8_return_data *) t8_forest_get_user_data (forest_new);
   T8_ASSERT (adapt_data != NULL);
 
   /* Local element index of the old and new forest. */
-  t8_locidx_t elidx_old = first_outgoing;
-  t8_locidx_t elidx_new = first_incoming;
-  for (t8_locidx_t tidx = 0; tidx < which_tree; tidx++)
-  {
+  t8_locidx_t         elidx_old = first_outgoing;
+  t8_locidx_t         elidx_new = first_incoming;
+  for (t8_locidx_t tidx = 0; tidx < which_tree; tidx++) {
     elidx_new += t8_forest_get_tree_num_elements (forest_new, tidx);
     elidx_old += t8_forest_get_tree_num_elements (forest_old, tidx);
   }
@@ -112,15 +101,19 @@ t8_forest_replace (t8_forest_t forest_old,
     ASSERT_EQ (num_incoming, 1);
 
     /* Begin check family */
-    t8_element_t *parent = t8_forest_get_element_in_tree (forest_new, which_tree, first_incoming);
-    t8_element_t *child;
-    t8_element_t *parent_compare;
+    t8_element_t       *parent =
+      t8_forest_get_element_in_tree (forest_new, which_tree, first_incoming);
+    t8_element_t       *child;
+    t8_element_t       *parent_compare;
     ts->t8_element_new (1, &parent_compare);
-    int family_size = 1;
-    t8_locidx_t tree_num_elements_old = t8_forest_get_tree_num_elements (forest_old ,which_tree);
+    int                 family_size = 1;
+    t8_locidx_t         tree_num_elements_old =
+      t8_forest_get_tree_num_elements (forest_old, which_tree);
     for (t8_locidx_t elidx = 1; elidx < ts->t8_element_num_children (parent)
-          && elidx + first_outgoing < tree_num_elements_old; elidx++) {
-      child = t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing + elidx);
+         && elidx + first_outgoing < tree_num_elements_old; elidx++) {
+      child =
+        t8_forest_get_element_in_tree (forest_old, which_tree,
+                                       first_outgoing + elidx);
       ts->t8_element_parent (child, parent_compare);
       if (!ts->t8_element_compare (parent, parent_compare)) {
         family_size++;
@@ -145,18 +138,19 @@ t8_forest_replace (t8_forest_t forest_old,
   /* Element got refined. */
   if (refine == 1) {
     ASSERT_EQ (num_outgoing, 1);
-    t8_element_t *element = t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing);
-    const t8_locidx_t family_size = ts->t8_element_num_children (element);
+    t8_element_t       *element =
+      t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing);
+    const t8_locidx_t   family_size = ts->t8_element_num_children (element);
     ASSERT_EQ (num_incoming, family_size);
   }
 
 }
 
 /** For each locale element: Remove, coarsen, leave untouched, or refine it depending on its index.
- *      if \a lelement_id mod 20 < 5  -> remove element
- * else if \a lelement_id mod 20 < 10 -> coarse element
- * else if \a lelement_id mod 20 < 15 -> leave element untouched
- * else if \a lelement_id mod 20 < 20 -> refine element
+ *      if \a lelement_id mod 12 < 3  -> remove element
+ * else if \a lelement_id mod 12 < 6  -> coarse element
+ * else if \a lelement_id mod 12 < 9  -> leave element untouched
+ * else if \a lelement_id mod 12 < 12 -> refine element
 */
 int
 t8_adapt_callback (t8_forest_t forest,
@@ -167,17 +161,18 @@ t8_adapt_callback (t8_forest_t forest,
                    const int is_family,
                    const int num_elements, t8_element_t *elements[])
 {
-  struct t8_return_data *return_data = (struct t8_return_data *) t8_forest_get_user_data (forest);
+  struct t8_return_data *return_data =
+    (struct t8_return_data *) t8_forest_get_user_data (forest);
   T8_ASSERT (return_data != NULL);
 
-  int return_val = lelement_id % 20;
-  if (return_val < 5) {
+  int                 return_val = lelement_id % 12;
+  if (return_val < 3) {
     return_val = -2;
     if (t8_forest_get_eclass (forest_from, which_tree) == T8_ECLASS_VERTEX) {
       return_val = 0;
     }
   }
-  else if (return_val < 10) {
+  else if (return_val < 6) {
     if (is_family) {
       return_val = -1;
     }
@@ -185,7 +180,7 @@ t8_adapt_callback (t8_forest_t forest,
       return_val = 0;
     }
   }
-  else if (return_val < 15) {
+  else if (return_val < 9) {
     return_val = 0;
   }
   else {
@@ -195,7 +190,7 @@ t8_adapt_callback (t8_forest_t forest,
   T8_ASSERT (return_val < 2);
 
   /* Get the local index of current element in the local forest. */
-  t8_locidx_t lelement_id_forest = lelement_id;
+  t8_locidx_t         lelement_id_forest = lelement_id;
   for (t8_locidx_t tidx = 0; tidx < which_tree; tidx++) {
     lelement_id_forest += t8_forest_get_tree_num_elements (forest_from, tidx);
   }
@@ -207,9 +202,7 @@ t8_adapt_callback (t8_forest_t forest,
 t8_forest_t
 t8_adapt_forest (t8_forest_t forest_from,
                  t8_forest_adapt_t adapt_fn,
-                 int do_adapt,
-                 int do_partition,
-                 void *user_data)
+                 int do_adapt, int do_partition, void *user_data)
 {
   t8_forest_t         forest_new;
 
@@ -234,35 +227,35 @@ t8_adapt_forest (t8_forest_t forest_from,
 TEST_P (forest_iterate, test_iterate_replace)
 {
 #if T8_ENABLE_LESS_TESTS
-    const int runs = 1;
+  const int           runs = 1;
 #else
-    const int runs = 2;
+  const int           runs = 2;
 #endif
   for (int run = 0; run < runs; run++) {
-    t8_locidx_t num_elements = t8_forest_get_local_num_elements (forest);
-    adapt_callbacks = T8_ALLOC (int, num_elements);
+    t8_locidx_t         num_elements =
+      t8_forest_get_local_num_elements (forest);
+    int                *adapt_callbacks = T8_ALLOC (int, num_elements);
 
     for (t8_locidx_t elidx = 0; elidx < num_elements; elidx++) {
       adapt_callbacks[elidx] = -3;
     }
-
-    struct t8_return_data data {
-      adapt_callbacks
-    };
+    /* *INDENT-OFF* */
+    struct t8_return_data data { adapt_callbacks };
+    /* *INDENT-ON* */
 
     t8_forest_ref (forest);
+    t8_forest_t         forest_adapt;
     forest_adapt = t8_adapt_forest (forest, t8_adapt_callback, 1, 0, &data);
 
     t8_forest_iterate_replace (forest_adapt, forest, t8_forest_replace);
+    t8_forest_unref (&forest);
 
     /* Partition the forest. This is useful,
      * if we run the test a second time with the adapted forest. */
     forest_adapt = t8_adapt_forest (forest_adapt, NULL, 0, 1, NULL);
 
-    if (run < runs - 1) {
-      T8_FREE (adapt_callbacks);
-      forest = forest_adapt;
-    }
+    T8_FREE (adapt_callbacks);
+    forest = forest_adapt;
   }
 }
 
