@@ -61,7 +61,9 @@ protected:
     sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &MPI_size);
     
     forest = 
-      t8_forest_new_uniform (t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD), t8_scheme_new_default_cxx (), MPI_size, 0, sc_MPI_COMM_WORLD);  
+      t8_forest_new_uniform (t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD),
+                             t8_scheme_new_default_cxx (),
+                             MPI_size, 0, sc_MPI_COMM_WORLD);  
 
     if (MPI_size == 1 || MPI_size > MAX_NUM_RANKS) {
       GTEST_SKIP ();
