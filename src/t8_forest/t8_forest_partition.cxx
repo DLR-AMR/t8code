@@ -1099,7 +1099,6 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm,
       /* initialize the elements array and copy the elements from the receive buffer */
       T8_ASSERT (element_cursor + tree_info->num_elements * element_size <=
                  (size_t) recv_bytes);
-      t8_debugf ("[H} init array for tree %i\n", itree);
       t8_element_array_init_copy (&tree->elements, eclass_scheme,
                                   (t8_element_t *) (recv_buffer +
                                                     element_cursor),
@@ -1109,15 +1108,11 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm,
       T8_ASSERT (itree == 0);   /* This situation only happens for the first tree */
       /* The tree is already present in the forest and we need to add elements
        * to it */
-      t8_debugf ("[IL] forest->last_local_tree %li\n", forest->last_local_tree);
-      t8_debugf ("[IL] tree_info->gtree_id %li\n", tree_info->gtree_id);
       T8_ASSERT (forest->last_local_tree == tree_info->gtree_id);
       /* Get a pointer to the tree */
       tree = t8_forest_get_tree (forest, forest->last_local_tree
                                  - forest->first_local_tree);
       /* assert for correctness */
-      t8_debugf ("[IL] tree->eclass %i\n", (int) tree->eclass);
-      t8_debugf ("[IL] tree_info->eclass %i\n", (int) tree_info->eclass);
       T8_ASSERT (tree->eclass == tree_info->eclass);
       /* Get the old number of elements in the tree and calculate the new number */
       old_num_elements = t8_forest_get_tree_element_count (tree);
@@ -1291,7 +1286,6 @@ t8_forest_partition_given (t8_forest_t forest, const int send_data,
     forest->local_num_elements = 0;
   }
   /* Wait for all sends to complete */
-  t8_debugf ("[HH] waiting...\n");
   if (num_request_alloc > 0) {
     mpiret =
       sc_MPI_Waitall (num_request_alloc, requests, sc_MPI_STATUSES_IGNORE);
