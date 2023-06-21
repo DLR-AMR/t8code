@@ -665,7 +665,7 @@ t8_forest_partition_fill_buffer (t8_forest_t forest_from,
                                               &last_tree_element);
     /* We now know how many elements this tree will send */
     num_elements_send = last_tree_element - first_tree_element + 1;
-    T8_ASSERT (num_elements_send > 0);
+    T8_ASSERT (num_elements_send >= 0);
     elem_size = t8_element_array_get_size (&tree->elements);
     element_alloc += num_elements_send * elem_size;
     current_element += num_elements_send;
@@ -708,16 +708,17 @@ t8_forest_partition_fill_buffer (t8_forest_t forest_from,
 
     num_elements_send = last_tree_element - first_tree_element + 1;
 
+    T8_ASSERT (num_elements_send >= 0);
+    /* Get the tree info struct for this tree and fill it */
+    tree_info = (t8_forest_partition_tree_info_t *)
+      (*send_buffer + tree_info_pos);
+    tree_info->eclass = tree->eclass;
+    tree_info->gtree_id = tree_id + *current_tree +
+      forest_from->first_local_tree;
+    tree_info->num_elements = num_elements_send;
+    tree_info_pos += sizeof (t8_forest_partition_tree_info_t);
+    /* We can now fill the send buffer with all elements of that tree */
     if (num_elements_send > 0) {
-      /* Get the tree info struct for this tree and fill it */
-      tree_info = (t8_forest_partition_tree_info_t *)
-        (*send_buffer + tree_info_pos);
-      tree_info->eclass = tree->eclass;
-      tree_info->gtree_id = tree_id + *current_tree +
-        forest_from->first_local_tree;
-      tree_info->num_elements = num_elements_send;
-      tree_info_pos += sizeof (t8_forest_partition_tree_info_t);
-      /* We can now fill the send buffer with all elements of that tree */
       pfirst_element =
         t8_element_array_index_locidx (&tree->elements, first_tree_element);
       elem_size = t8_element_array_get_size (&tree->elements);
