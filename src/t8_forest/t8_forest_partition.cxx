@@ -169,9 +169,48 @@ t8_forest_partition_test_boundery_element (const t8_forest_t forest)
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (forest->global_first_desc != NULL);
 
+  if (forest->mpisize == 1) {
+    return;
+  }
+  /* Get the local number of elements of the first tree of process rank + 1.
+   * If a rank contains no trees, its local_tree_num_elemets is set to 0. */
+  int mpirank_from;
+  int mpirank_to;
+  int mpiret;
+  sc_MPI_Request      request;
+  sc_MPI_Status       status;
+  t8_locidx_t   local_tree_num_elemets;
+  t8_locidx_t   local_tree_num_elemets_my;
+  if (t8_forest_get_num_local_trees (forest) > 0) {
+    local_tree_num_elemets_my = t8_forest_get_tree_num_elements (forest, 0);
+  }
+  else {
+    local_tree_num_elemets_my = 0;
+  }
+  if (forest->mpirank == 0) {
+    mpirank_from = forest->mpirank + 1;
+    mpirank_to = forest->mpisize - 1;
+  }
+  else if (forest->mpirank == forest->mpisize - 1) {
+    mpirank_from = 0;
+    mpirank_to = forest->mpirank - 1;
+  }
+  else {
+    mpirank_from = forest->mpirank + 1;
+    mpirank_to = forest->mpirank - 1;
+  }
+  mpiret = sc_MPI_Irecv (&local_tree_num_elemets, 1, T8_MPI_LOCIDX,
+                          mpirank_from, 0, forest->mpicomm, &request);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Send (&local_tree_num_elemets_my , 1, T8_MPI_LOCIDX,
+                        mpirank_to, 0, forest->mpicomm);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Wait (&request, &status);
+  SC_CHECK_MPI (mpiret);
+
   const t8_locidx_t   num_local_trees =
     t8_forest_get_num_local_trees (forest);
-  if (num_local_trees == 0) {
+  if (t8_forest_get_local_num_elements (forest) == 0) {
     /* This forest is empty, nothing to do */
     return;
   }
@@ -187,17 +226,26 @@ t8_forest_partition_test_boundery_element (const t8_forest_t forest)
      * nothing to do */
     return;
   }
+  /* The first tree on process rank+1 may be shared but empty. 
+   * Thus, the first descendant id of rank+1 is not of the first local tree. */
+  if (local_tree_num_elemets == 0) {
+    /* check if first not shared tree of process rank+1 contains elements */
+    return;
+  }
 
   /* Get last element of current rank and its last descendant id */
-  const t8_tree_t     tree = t8_forest_get_tree (forest, num_local_trees - 1);
+  t8_locidx_t itree = num_local_trees - 1;
+  while (t8_forest_get_tree_num_elements (forest, itree) < 1) {
+    itree--;
+    T8_ASSERT (itree > -1);
+  }
+  const t8_tree_t     tree = t8_forest_get_tree (forest, itree);
   t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, tree->eclass);
   t8_element_t       *element_last_desc;
   ts->t8_element_new (1, &element_last_desc);
   /* last element of current rank */
   const t8_element_t *element_last =
-    t8_forest_get_element_in_tree (forest, num_local_trees - 1,
-                                   t8_forest_get_tree_element_count (tree) -
-                                   1);
+    t8_forest_get_element_in_tree (forest, itree, t8_forest_get_tree_element_count (tree) - 1);
   T8_ASSERT (ts->t8_element_is_valid (element_last));
   /* last and finest possiple element of current rank */
   ts->t8_element_last_descendant (element_last, element_last_desc,
@@ -256,7 +304,18 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
   }
   else {
     /* Get a pointer to the first local element. */
-    first_element = t8_forest_get_element_in_tree (forest, 0, 0);
+    if (forest->incomplete_trees) {
+      for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++)
+      {
+        if (t8_forest_get_tree_num_elements (forest, itree) > 0) {
+          first_element = t8_forest_get_element_in_tree (forest, itree, 0);
+          break;
+        }
+      }
+    }
+    else {
+      first_element = t8_forest_get_element_in_tree (forest, 0, 0);
+    }
     /* This process is not empty, the element was found, so we compute
      * its first descendant. */
     /* Get the eclass_scheme of the element. */
@@ -649,22 +708,23 @@ t8_forest_partition_fill_buffer (t8_forest_t forest_from,
 
     num_elements_send = last_tree_element - first_tree_element + 1;
 
-    T8_ASSERT (num_elements_send > 0);
-    /* Get the tree info struct for this tree and fill it */
-    tree_info = (t8_forest_partition_tree_info_t *)
-      (*send_buffer + tree_info_pos);
-    tree_info->eclass = tree->eclass;
-    tree_info->gtree_id = tree_id + *current_tree +
-      forest_from->first_local_tree;
-    tree_info->num_elements = num_elements_send;
-    tree_info_pos += sizeof (t8_forest_partition_tree_info_t);
-    /* We can now fill the send buffer with all elements of that tree */
-    pfirst_element =
-      t8_element_array_index_locidx (&tree->elements, first_tree_element);
-    elem_size = t8_element_array_get_size (&tree->elements);
-    memcpy (*send_buffer + element_pos, pfirst_element,
-            num_elements_send * elem_size);
-    element_pos += num_elements_send * elem_size;
+    if (num_elements_send > 0) {
+      /* Get the tree info struct for this tree and fill it */
+      tree_info = (t8_forest_partition_tree_info_t *)
+        (*send_buffer + tree_info_pos);
+      tree_info->eclass = tree->eclass;
+      tree_info->gtree_id = tree_id + *current_tree +
+        forest_from->first_local_tree;
+      tree_info->num_elements = num_elements_send;
+      tree_info_pos += sizeof (t8_forest_partition_tree_info_t);
+      /* We can now fill the send buffer with all elements of that tree */
+      pfirst_element =
+        t8_element_array_index_locidx (&tree->elements, first_tree_element);
+      elem_size = t8_element_array_get_size (&tree->elements);
+      memcpy (*send_buffer + element_pos, pfirst_element,
+              num_elements_send * elem_size);
+      element_pos += num_elements_send * elem_size;
+    }
   }
   *current_tree += num_trees_send - 1 + last_element_is_last_tree_element;
   *buffer_alloc = byte_alloc;
@@ -1048,11 +1108,15 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm,
       T8_ASSERT (itree == 0);   /* This situation only happens for the first tree */
       /* The tree is already present in the forest and we need to add elements
        * to it */
+      t8_debugf ("[IL] forest->last_local_tree %li\n", forest->last_local_tree);
+      t8_debugf ("[IL] tree_info->gtree_id %li\n", tree_info->gtree_id);
       T8_ASSERT (forest->last_local_tree == tree_info->gtree_id);
       /* Get a pointer to the tree */
       tree = t8_forest_get_tree (forest, forest->last_local_tree
                                  - forest->first_local_tree);
       /* assert for correctness */
+      t8_debugf ("[IL] tree->eclass %i\n", (int) tree->eclass);
+      t8_debugf ("[IL] tree_info->eclass %i\n", (int) tree_info->eclass);
       T8_ASSERT (tree->eclass == tree_info->eclass);
       /* Get the old number of elements in the tree and calculate the new number */
       old_num_elements = t8_forest_get_tree_element_count (tree);
