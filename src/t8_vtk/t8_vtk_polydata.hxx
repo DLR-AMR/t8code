@@ -31,6 +31,9 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8.h>
 #include "t8_vtk_types.h"
 #if T8_WITH_VTK
+#include <vtkPolyData.h>
+#include <vtkSmartPointer.h>
+#include <vtkCellData.h>
 #include <vtkDataSet.h>
 #include <vtkPolyData.h>
 
@@ -41,11 +44,10 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * \param[in] filename  The name of the file
  * \param[in, out] grid On input a vtkSmartPointer, that will hold the grid described in
  *                      \a filename.
- * \return              0 if the file was read successfully, non-zero otherwise.               
+ * \returns             non-zero on success, zero if the reading failed.              
  * 
  */
 vtk_read_success_t  t8_read_poly (const char *filename, vtkDataSet * grid);
 
 #endif /* T8_WITH_VTK */
-
 #endif /* T8_CMESH_VTK_POLYDATA */

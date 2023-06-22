@@ -469,11 +469,16 @@ t8_vtk_reader_cmesh (const char *filename, const int partition,
 #if T8_WITH_VTK
   vtkSmartPointer < vtkDataSet > vtkGrid =
     t8_vtk_reader (filename, partition, main_proc, comm, vtk_file_type);
-
-  t8_cmesh_t          cmesh =
-    t8_vtkGrid_to_cmesh (vtkGrid, partition, main_proc, comm);
-  T8_ASSERT (cmesh != NULL);
-  return cmesh;
+  if (vtkGrid != NULL) {
+    t8_cmesh_t          cmesh =
+      t8_vtkGrid_to_cmesh (vtkGrid, partition, main_proc, comm);
+    T8_ASSERT (cmesh != NULL);
+    return cmesh;
+  }
+  else {
+    t8_global_errorf ("Error translating file %s\n", filename);
+    return NULL;
+  }
 #else
   /* Return NULL if not linked against vtk */
   t8_global_errorf

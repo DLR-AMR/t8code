@@ -36,15 +36,24 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 static              vtk_read_success_t
 t8_read_poly_ext (const char *filename, vtkSmartPointer < vtkPolyData > grid)
 {
-  char                tmp[BUFSIZ], *extension;
+  char                tmp[BUFSIZ];
+  char               *extension;
   /* Get the file-extension to decide which reader to use. */
   strcpy (tmp, filename);
-  extension = strtok (tmp, ".");
-  extension = strtok (NULL, ".");
+  extension = strrchr (tmp, '.') + 1;
   T8_ASSERT (strcmp (extension, ""));
 
+  /* Check if we can open the file. */
+  FILE               *first_check;
+  first_check = fopen (filename, "r");
+  if (first_check == NULL) {
+    t8_errorf ("Can not find the file %s\n", filename);
+    return read_failure;
+  }
+  fclose (first_check);
+
   /* Read the file depending on the extension. Not all readers have
-   * a built-in check if the file is readable.  */
+   * a built-in check if the file is readable. */
   if (strcmp (extension, "ply") == 0) {
     vtkNew < vtkPLYReader > reader;
     reader->SetFileName (filename);
@@ -56,7 +65,7 @@ t8_read_poly_ext (const char *filename, vtkSmartPointer < vtkPolyData > grid)
     vtkNew < vtkXMLPolyDataReader > reader;
     reader->SetFileName (filename);
     if (!reader->CanReadFile (filename)) {
-      t8_errorf ("Unable to read file.\n");
+      t8_errorf ("Unable to read file %s.\n", filename);
       return read_failure;
     }
     reader->Update ();
@@ -110,7 +119,6 @@ t8_read_poly (const char *filename, vtkDataSet * grid)
     vtkSmartPointer < vtkPolyData >::New ();
   vtkSmartPointer < vtkPolyData > triangulated;
   vtkNew < vtkTriangleFilter > tri_filter;
-
   /* Prepare the poly-data for the translation from vtk to t8code.
    * We split all polygons (which are not supported by t8code) to
    * triangles, vertices and lines. */
@@ -129,4 +137,4 @@ t8_read_poly (const char *filename, vtkDataSet * grid)
   grid->DeepCopy (vtkDataSet::SafeDownCast (tri_filter->GetOutput ()));
   return read_successfull;
 }
-#endif
+#endif /* T8_WITH_VTK */

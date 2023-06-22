@@ -22,8 +22,9 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <sc_options.h>
 #include <t8.h>
 #include <t8_vtk.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+
 #include <t8_forest/t8_forest.h>
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
 /**
  * Construct a cmesh read from a VTK-file type supported by our vtk-reader.
@@ -37,7 +38,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 void
 t8_forest_construct_from_vtk (const char *prefix, sc_MPI_Comm comm,
                               const int values_per_cell, const int partition,
-                              vtk_file_type_t vtk_file_type)
+                              vtk_file_type_t vtk_file_type,
+                              const char *out_prefix)
 {
   /* Read a poly-data file (.ply, .vtp, .obj, .stl, .vtk, .g) and construct a cmesh 
    * representing the mesh. If  there is any cell-data, it will be read too. 
@@ -48,19 +50,22 @@ t8_forest_construct_from_vtk (const char *prefix, sc_MPI_Comm comm,
     t8_errorf ("Error reading file.\n");
     return;
   }
+  char                out_file[BUFSIZ];
+  snprintf (out_file, BUFSIZ - 9, "%s_cmesh_in", out_prefix);
+  t8_cmesh_vtk_write_file (cmesh_in, out_file, 1.0);
   t8_cmesh_t          cmesh;
-  t8_cmesh_vtk_write_file (cmesh_in, "t8_cmesh_in", 1.0);
+
   if (partition) {
     t8_cmesh_init (&cmesh);
     t8_cmesh_set_derive (cmesh, cmesh_in);
     t8_cmesh_set_partition_uniform (cmesh, 0, t8_scheme_new_default_cxx ());
     t8_cmesh_commit (cmesh, comm);
+    snprintf (out_file, BUFSIZ - 16, "%s_cmesh_partition", out_prefix);
+    t8_cmesh_vtk_write_file (cmesh, out_file, 1.0);
   }
   else {
     cmesh = cmesh_in;
   }
-
-  t8_cmesh_vtk_write_file (cmesh, "t8_cmesh_", 1.0);
 
   t8_forest_t         forest;
   /* Initialize the forest */
@@ -103,7 +108,8 @@ t8_forest_construct_from_vtk (const char *prefix, sc_MPI_Comm comm,
   }
 
   /* Write the forest */
-  t8_forest_write_vtk_ext (forest, "forest", 1, 1, 1, 1, 1, 0, 1,
+  snprintf (out_file, BUFSIZ - 7, "%s_forest", out_prefix);
+  t8_forest_write_vtk_ext (forest, out_file, 1, 1, 1, 1, 1, 0, 1,
                            values_per_cell, vtk_data);
 
   /* Free the cell-data */
@@ -122,6 +128,7 @@ main (int argc, char **argv)
 {
   int                 mpiret, helpme = 0, parsed, num_keys;
   const char         *vtk_file;
+  const char         *out_file;
   sc_options_t       *opt;
   char                usage[BUFSIZ], help[BUFSIZ];
   int                 sreturn;
@@ -151,6 +158,8 @@ main (int argc, char **argv)
                          "Display a short help message.");
   sc_options_add_string (opt, 'f', "vtk-file", &vtk_file, "",
                          "The prefix of the .vtk file.");
+  sc_options_add_string (opt, 'o', "output", &out_file, "output",
+                         "The prefix of the output-file.");
   sc_options_add_int (opt, 'c', "num_cell_values", &num_keys, 0,
                       "Number of values per cell stored in the vtk-file.");
   sc_options_add_int (opt, 't', "type_of_file", &vtk_file_type, -1,
@@ -170,7 +179,8 @@ main (int argc, char **argv)
   }
   else {
     t8_forest_construct_from_vtk (vtk_file, sc_MPI_COMM_WORLD, num_keys,
-                                  partition, (vtk_file_type_t) vtk_file_type);
+                                  partition, (vtk_file_type_t) vtk_file_type,
+                                  out_file);
   }
   sc_options_destroy (opt);
   sc_finalize ();
