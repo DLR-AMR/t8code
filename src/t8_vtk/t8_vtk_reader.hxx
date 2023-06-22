@@ -20,16 +20,58 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_vtk_reader.hxx
-* Header for the vtk-reader. 
-*/
+#ifndef T8_VTK_READER
+#define T8_VTK_READER
 
-#ifndef T8_CMESH_VTK_READER
-#define T8_CMESH_VTK_READER
+#include <t8_cmesh.h>
+#include "t8_vtk_types.h"
 
-#include <t8_vtk/t8_vtk_reader.hxx>
+#if T8_WITH_VTK
+#include <vtkSmartPointer.h>
+#include <vtkCellData.h>
+#include <vtkDataSet.h>
+#endif
 
 T8_EXTERN_C_BEGIN ();
+
+#if T8_WITH_VTK
+
+/**
+ * Given a pointer to a vtkDataSet a cmesh representing the vtkDataSet is
+ * constructed and can be shared over the processes. 
+ * 
+ * \param[in] vtkGrid A pointer to a vtkDataSet
+ * \param[in] partition Flag if the cmesh should be partitioned
+ * \param[in] main_proc The main reading process
+ * \param[in] comm The communicator. 
+ * \return t8_cmesh_t 
+ */
+t8_cmesh_t          t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet >
+                                         vtkGrid, const int partition,
+                                         const int main_proc,
+                                         sc_MPI_Comm comm);
+
+/**
+ * Given a filename to a vtkUnstructuredGrid or vtkPolyData read the file and
+ * construct a abstract class to specify dataset behavior. The file is read and
+ * stored in a vtkDataSet.
+ * \note This function is only available if t8code is linked against VTK. 
+ * 
+ * \param[in] filename      The name of the file
+ * \param[in] partition     Flag if the constructed mesh should be partitioned
+ * \param[in] main_proc     The main reading processor
+ * \param[in] comm          An mpi-communicator
+ * \param[in] vtk_file_type A vtk-filetype that is readable by t8code. 
+ * \return                  Pointer to vtkDataSet
+ */
+vtkSmartPointer < vtkDataSet > t8_vtk_reader (const char *filename,
+                                              const int partition,
+                                              const int main_proc,
+                                              sc_MPI_Comm comm,
+                                              const vtk_file_type_t
+                                              vtk_file_type);
+
+#endif
 
 /**
  * Given a filename to a vtkUnstructuredGrid or vtkPolyData read the file and
@@ -48,7 +90,7 @@ T8_EXTERN_C_BEGIN ();
  * \param[in] vtk_file_type A vtk-filetype that is readable by t8code. 
  * \return                  A commited cmesh.       
  */
-t8_cmesh_t          t8_cmesh_vtk_reader (const char *filename,
+t8_cmesh_t          t8_vtk_reader_cmesh (const char *filename,
                                          const int partition,
                                          const int main_proc,
                                          sc_MPI_Comm comm,
@@ -56,4 +98,4 @@ t8_cmesh_t          t8_cmesh_vtk_reader (const char *filename,
 
 T8_EXTERN_C_END ();
 
-#endif /* T8_CMESH_VTK_READER */
+#endif /* T8_VTK_READER */
