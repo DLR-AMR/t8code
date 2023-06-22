@@ -282,7 +282,7 @@ t8_step4_main (int argc, char **argv)
   t8_step3_print_forest_information (forest);
   /* Write forest to vtu files. */
   t8_forest_write_vtk_ext (forest, prefix_partition_ghost, 1, 1, 1, 1, 1, 0,
-                           0, 0, NULL);
+                           1, 0, NULL);
 
   /*
    * Balance
