@@ -26,7 +26,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <vtkUnstructuredGrid.h>
 #include <vtkUnstructuredGridReader.h>
 #include <vtkXMLUnstructuredGridReader.h>
-#include <vtkSmartPointer.h>
 
 vtk_read_success_t
 t8_read_unstructured (const char *filename,
