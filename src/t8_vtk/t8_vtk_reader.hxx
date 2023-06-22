@@ -132,7 +132,6 @@ t8_cmesh_t          t8_vtk_reader_cmesh (const char *filename,
                                          sc_MPI_Comm comm,
                                          const vtk_file_type_t vtk_file_type);
 
-
 T8_EXTERN_C_END ();
 
 #endif /* T8_VTK_READER */
