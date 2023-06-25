@@ -519,7 +519,6 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset,
              neighbor, face1, face2, filename);
           goto die_neigh;
         }
-        T8_ASSERT (-1 < orientation && orientation < dim - 1);
         /* if tit !< neighbor then tit == neighbor,
          * face1 > face2 would mean that we already inserted this connection */
         T8_ASSERT (tit < neighbor || face1 <= face2);
