@@ -170,7 +170,7 @@ TEST_P (global_tree, test_empty_global_tree)
   t8_gloidx_t         global_num_trees;
   int                 mpiret =
     sc_MPI_Allreduce (&local_num_trees, &global_num_trees, 1,
-                      MPI_LONG_LONG_INT, sc_MPI_SUM, sc_MPI_COMM_WORLD);
+                      sc_MPI_LONG_LONG_INT, sc_MPI_SUM, sc_MPI_COMM_WORLD);
   SC_CHECK_MPI (mpiret);
   ASSERT_EQ (global_num_trees, t8_forest_get_num_global_trees (forest));
 
