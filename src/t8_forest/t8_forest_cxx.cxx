@@ -326,15 +326,14 @@ t8_forest_no_overlap (t8_forest_t forest)
     ts->t8_element_destroy (1, &element_nca);
   }
   /* Check if a local tree in the global forest has local overlapping elements.
-    * has_overlap_local_global is equal to 1 if a process has a local overlap, else 0. */
+   * has_overlap_local_global is equal to 1 if a process has a local overlap, else 0. */
   int                 has_overlap_local_global;
   int                 mpiret =
     sc_MPI_Allreduce (&has_overlap_local, &has_overlap_local_global,
                       1, MPI_INT, sc_MPI_MAX, forest->mpicomm);
   SC_CHECK_MPI (mpiret);
 
-  T8_ASSERT (has_overlap_local_global == 0
-              || has_overlap_local_global == 1);
+  T8_ASSERT (has_overlap_local_global == 0 || has_overlap_local_global == 1);
   if (has_overlap_local_global) {
     T8_ASSERT (has_overlap_local == 1);
     //t8_debugf ("[IL] no_overlap end 1 \n");
@@ -1668,8 +1667,9 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
       T8_ASSERT (global_neighbour_tree_idx < forest->global_num_trees);
     }
     else {
-      SC_ABORT ("For incomplete trees the method t8_forest_last_tree_shared aka "
-                "t8_forest_tree_shared(forest, 1) is not implemented.\n");
+      SC_ABORT
+        ("For incomplete trees the method t8_forest_last_tree_shared aka "
+         "t8_forest_tree_shared(forest, 1) is not implemented.\n");
       /* TODO: If last_local_tree is 0 of the current process and it gets 0 as the 
        * first_local_tree of the bigger process, then it cannot be said whether 
        * the tree with id 0 is shared or not, since the bigger process could also 

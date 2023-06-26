@@ -174,13 +174,13 @@ t8_forest_partition_test_boundery_element (const t8_forest_t forest)
   }
   /* Get the local number of elements of the first tree of process rank + 1.
    * If a rank contains no trees, its local_tree_num_elemets is set to 0. */
-  int mpirank_from;
-  int mpirank_to;
-  int mpiret;
+  int                 mpirank_from;
+  int                 mpirank_to;
+  int                 mpiret;
   sc_MPI_Request      request;
   sc_MPI_Status       status;
-  t8_locidx_t   local_tree_num_elemets;
-  t8_locidx_t   local_tree_num_elemets_my;
+  t8_locidx_t         local_tree_num_elemets;
+  t8_locidx_t         local_tree_num_elemets_my;
   if (t8_forest_get_num_local_trees (forest) > 0) {
     local_tree_num_elemets_my = t8_forest_get_tree_num_elements (forest, 0);
   }
@@ -200,9 +200,9 @@ t8_forest_partition_test_boundery_element (const t8_forest_t forest)
     mpirank_to = forest->mpirank - 1;
   }
   mpiret = sc_MPI_Irecv (&local_tree_num_elemets, 1, T8_MPI_LOCIDX,
-                          mpirank_from, 0, forest->mpicomm, &request);
+                         mpirank_from, 0, forest->mpicomm, &request);
   SC_CHECK_MPI (mpiret);
-  mpiret = sc_MPI_Send (&local_tree_num_elemets_my , 1, T8_MPI_LOCIDX,
+  mpiret = sc_MPI_Send (&local_tree_num_elemets_my, 1, T8_MPI_LOCIDX,
                         mpirank_to, 0, forest->mpicomm);
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Wait (&request, &status);
@@ -234,7 +234,7 @@ t8_forest_partition_test_boundery_element (const t8_forest_t forest)
   }
 
   /* Get last element of current rank and its last descendant id */
-  t8_locidx_t itree = num_local_trees - 1;
+  t8_locidx_t         itree = num_local_trees - 1;
   while (t8_forest_get_tree_num_elements (forest, itree) < 1) {
     itree--;
     T8_ASSERT (itree > -1);
@@ -245,7 +245,9 @@ t8_forest_partition_test_boundery_element (const t8_forest_t forest)
   ts->t8_element_new (1, &element_last_desc);
   /* last element of current rank */
   const t8_element_t *element_last =
-    t8_forest_get_element_in_tree (forest, itree, t8_forest_get_tree_element_count (tree) - 1);
+    t8_forest_get_element_in_tree (forest, itree,
+                                   t8_forest_get_tree_element_count (tree) -
+                                   1);
   T8_ASSERT (ts->t8_element_is_valid (element_last));
   /* last and finest possiple element of current rank */
   ts->t8_element_last_descendant (element_last, element_last_desc,
@@ -305,8 +307,8 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
   else {
     /* Get a pointer to the first local element. */
     if (forest->incomplete_trees) {
-      for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++)
-      {
+      for (t8_locidx_t itree = 0;
+           itree < t8_forest_get_num_local_trees (forest); itree++) {
         if (t8_forest_get_tree_num_elements (forest, itree) > 0) {
           first_element = t8_forest_get_element_in_tree (forest, itree, 0);
           break;

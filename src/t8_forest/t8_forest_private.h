@@ -56,9 +56,12 @@ T8_EXTERN_C_BEGIN ();
  *                  the first x elements in \a elements form a family.
  */
 int                 t8_forest_is_incomplete_family (const t8_forest_t forest,
-                                                    const t8_locidx_t ltree_id,
-                                                    const t8_locidx_t el_considered,
-                                                    t8_eclass_scheme_c *tscheme,
+                                                    const t8_locidx_t
+                                                    ltree_id,
+                                                    const t8_locidx_t
+                                                    el_considered,
+                                                    t8_eclass_scheme_c
+                                                    *tscheme,
                                                     t8_element_t **elements,
                                                     const int elements_size);
 

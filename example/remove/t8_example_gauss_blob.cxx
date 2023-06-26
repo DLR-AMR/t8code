@@ -37,22 +37,25 @@ struct t8_adapt_data
 };
 
 static double
-t8_gausss_blob (const double center_elem[3], const double center_cube[3], const double radius)
+t8_gausss_blob (const double center_elem[3], const double center_cube[3],
+                const double radius)
 {
-  double expo = 0;
+  double              expo = 0;
   for (int i = 0; i < 3; i++) {
-    expo += (center_elem[i] - center_cube[i]) * (center_elem[i] - center_cube[i]);
+    expo +=
+      (center_elem[i] - center_cube[i]) * (center_elem[i] - center_cube[i]);
   }
   expo = expo / radius;
-  return exp(-expo);
+  return exp (-expo);
 }
 
-static double *
-t8_create_element_data (t8_forest_t forest, const double sphere_center[3], const double sphere_radius)
+static double      *
+t8_create_element_data (t8_forest_t forest, const double sphere_center[3],
+                        const double sphere_radius)
 {
   t8_locidx_t         num_local_elements;
   t8_locidx_t         num_ghost_elements;
-  double *element_data;
+  double             *element_data;
 
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -61,29 +64,31 @@ t8_create_element_data (t8_forest_t forest, const double sphere_center[3], const
 
   element_data = T8_ALLOC (double, num_local_elements + num_ghost_elements);
 
-  const t8_element_t *element;  
-  t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
-  for (t8_locidx_t itree = 0, current_index = 0; itree < num_local_trees; ++itree) {
-      t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
-      for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree;
-          ++ielement, ++current_index) {
-        element = t8_forest_get_element_in_tree (forest, itree, ielement);
-        double center[3];
-        t8_forest_element_centroid (forest, itree, element, center);
-        element_data[current_index] = t8_gausss_blob (center, sphere_center, sphere_radius);
-      }
+  const t8_element_t *element;
+  t8_locidx_t         num_local_trees =
+    t8_forest_get_num_local_trees (forest);
+  for (t8_locidx_t itree = 0, current_index = 0; itree < num_local_trees;
+       ++itree) {
+    t8_locidx_t         num_elements_in_tree =
+      t8_forest_get_tree_num_elements (forest, itree);
+    for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree;
+         ++ielement, ++current_index) {
+      element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      double              center[3];
+      t8_forest_element_centroid (forest, itree, element, center);
+      element_data[current_index] =
+        t8_gausss_blob (center, sphere_center, sphere_radius);
+    }
   }
   return element_data;
 }
 
 static void
-t8_output_data_to_vtu (t8_forest_t forest,
-                       double *data,
-                       const char *prefix)
+t8_output_data_to_vtu (t8_forest_t forest, double *data, const char *prefix)
 {
   t8_vtk_data_field_t vtk_data;
   vtk_data.type = T8_VTK_SCALAR;
-  snprintf (vtk_data.description, BUFSIZ, "Gauss"); 
+  snprintf (vtk_data.description, BUFSIZ, "Gauss");
   vtk_data.data = data;
 
   int                 num_data = 1;
@@ -96,7 +101,6 @@ t8_output_data_to_vtu (t8_forest_t forest,
                            write_level, write_element_id, write_ghosts,
                            0, 0, num_data, &vtk_data);
 }
-
 
 /* Refine, if element is within a given radius. */
 static int
@@ -117,7 +121,7 @@ t8_adapt_refine (t8_forest_t forest,
 
   const double        dist = t8_vec_dist (adapt_data->midpoint, centroid);
   if (dist < adapt_data->spheres_radius_outer) {
-      return 1;
+    return 1;
   }
   return 0;
 }
@@ -200,18 +204,18 @@ t8_construct_spheres (const int initial_level,
   forest = t8_forest_new_uniform
     (cmesh, t8_scheme_new_default_cxx (), initial_level, 0,
      sc_MPI_COMM_WORLD);
-  forest =
-    t8_forest_new_adapt (forest, t8_adapt_refine, 0, 0, &adapt_data);
+  forest = t8_forest_new_adapt (forest, t8_adapt_refine, 0, 0, &adapt_data);
   if (remove == 1) {
     forest =
-        t8_forest_new_adapt (forest, t8_adapt_remove_inner, 0, 0, &adapt_data);
+      t8_forest_new_adapt (forest, t8_adapt_remove_inner, 0, 0, &adapt_data);
   }
   if (remove == 2) {
     forest =
-        t8_forest_new_adapt (forest, t8_adapt_remove_outer, 0, 0, &adapt_data);
+      t8_forest_new_adapt (forest, t8_adapt_remove_outer, 0, 0, &adapt_data);
   }
-  
-  double *data = t8_create_element_data(forest, adapt_data.midpoint, radius_outer);
+
+  double             *data =
+    t8_create_element_data (forest, adapt_data.midpoint, radius_outer);
   t8_output_data_to_vtu (forest, data, *vtuname);
   t8_debugf ("Output to %s\n", *vtuname);
 
@@ -224,11 +228,11 @@ main (int argc, char **argv)
 {
   char                usage[BUFSIZ];
   /* brief help message */
-  int                 sreturnA =
-    snprintf (usage, BUFSIZ,
-              "Usage:\t%s <OPTIONS>\n\t%s -h\t"
-              "for a brief overview of all options.",
-              basename (argv[0]), basename (argv[0]));
+  int                 sreturnA = snprintf (usage, BUFSIZ,
+                                           "Usage:\t%s <OPTIONS>\n\t%s -h\t"
+                                           "for a brief overview of all options.",
+                                           basename (argv[0]),
+                                           basename (argv[0]));
 
   char                help[BUFSIZ];
   /* long help message */
@@ -276,13 +280,12 @@ main (int argc, char **argv)
                       "\t\t\t\t\t0 - hybrid (default)\n"
                       "\t\t\t\t\t4 - hexahedron\n"
                       "\t\t\t\t\t5 - tetrahedron\n"
-                      "\t\t\t\t\t6 - prism\n"
-                      "\t\t\t\t\t7 - pyramid");
+                      "\t\t\t\t\t6 - prism\n" "\t\t\t\t\t7 - pyramid");
   sc_options_add_int (opt, 'r', "remove", &remove, 0,
                       "Specify if elements get removed.\n"
                       "\t\t\t\t\t0 - no element get removed (default)\n"
                       "\t\t\t\t\t1 - elements inside inner radius get removed\n"
-                      "\t\t\t\t\t2 - elements outside outer radius get removed");                    
+                      "\t\t\t\t\t2 - elements outside outer radius get removed");
   sc_options_add_string (opt, 'p', "output path", vtuname,
                          "t8_example_gauss_blob", "Path of outputfiles.\n");
 

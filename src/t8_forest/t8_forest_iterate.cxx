@@ -583,8 +583,8 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
           /* elem_new = elem_old */
           T8_ASSERT (!ts->t8_element_compare (elem_new, elem_old));
           const int           refine = 0;
-          replace_fn (forest_old, forest_new, itree, ts, refine, 1, ielem_old, 1,
-                      ielem_new);
+          replace_fn (forest_old, forest_new, itree, ts, refine, 1, ielem_old,
+                      1, ielem_new);
           /* Advance to the next element */
           ielem_new++;
           ielem_old++;
@@ -596,7 +596,8 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
       for (; ielem_old < elems_per_tree_old; ielem_old++) {
         /* remaining elements in old tree got removed */
         const int           refine = -2;
-        replace_fn (forest_old, forest_new, itree, ts, refine, 1, ielem_old, 0, -1);
+        replace_fn (forest_old, forest_new, itree, ts, refine, 1, ielem_old,
+                    0, -1);
       }
     }
     else {
