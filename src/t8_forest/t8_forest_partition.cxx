@@ -275,7 +275,8 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
 {
   sc_MPI_Comm         comm;
   t8_linearidx_t      local_first_desc;
-  t8_element_t       *first_element, *first_desc;
+  t8_element_t       *first_element = NULL;
+  t8_element_t       *first_desc = NULL;
   t8_eclass_scheme_c *ts;
 
   T8_ASSERT (t8_forest_is_committed (forest));
@@ -320,16 +321,18 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
     }
     /* This process is not empty, the element was found, so we compute
      * its first descendant. */
-    /* Get the eclass_scheme of the element. */
-    ts = t8_forest_get_eclass_scheme (forest,
-                                      t8_forest_get_tree_class (forest, 0));
-    ts->t8_element_new (1, &first_desc);
-    ts->t8_element_first_descendant (first_element, first_desc,
-                                     forest->maxlevel);
-    /* Compute the linear id of the descendant. */
-    local_first_desc =
-      ts->t8_element_get_linear_id (first_desc, forest->maxlevel);
-    ts->t8_element_destroy (1, &first_desc);
+    if (first_element != NULL) {
+      /* Get the eclass_scheme of the element. */
+      ts = t8_forest_get_eclass_scheme (forest,
+                                        t8_forest_get_tree_class (forest, 0));
+      ts->t8_element_new (1, &first_desc);
+      ts->t8_element_first_descendant (first_element, first_desc,
+                                       forest->maxlevel);
+      /* Compute the linear id of the descendant. */
+      local_first_desc =
+        ts->t8_element_get_linear_id (first_desc, forest->maxlevel);
+      ts->t8_element_destroy (1, &first_desc);
+    }
   }
   /* Collect all first global indices in the array */
 #ifdef T8_ENABLE_DEBUG
