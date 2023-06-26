@@ -213,10 +213,11 @@ t8_default_scheme_prism_c::t8_element_children_at_face (const t8_element_t
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
   T8_ASSERT (num_children ==
              t8_dprism_num_face_children ((const t8_dprism_t *) elem, face));
-  t8_dprism_children_at_face ((const t8_dprism_t *) elem, face,
-                              (t8_dprism_t **) children, num_children);
-  /* TODO: Properly implement child_indices */
   T8_ASSERT (child_indices == NULL);
+  t8_dprism_children_at_face ((const t8_dprism_t *) elem, face,
+                              (t8_dprism_t **) children, num_children,
+                              child_indices);
+  /* TODO: Properly implement child_indices */
 #if T8_ENABLE_DEBUG
   for (int i = 0; i < num_children; i++) {
     T8_ASSERT (t8_element_is_valid (children[i]));

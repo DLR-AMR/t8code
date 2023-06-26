@@ -348,7 +348,7 @@ const int           children_at_face[2][12] = {
 void
 t8_dprism_children_at_face (const t8_dprism_t *p,
                             int face, t8_dprism_t **children,
-                            int num_children)
+                            int num_children, int *child_indices)
 {
   int                 i;
   T8_ASSERT (num_children == t8_dprism_num_face_children (p, face));
@@ -357,11 +357,13 @@ t8_dprism_children_at_face (const t8_dprism_t *p,
     for (i = 0; i < 4; i++) {
       t8_dprism_child (p, children_at_face[p->tri.type][face * 4 + i],
                        children[i]);
+      child_indices[i] = children_at_face[p->tri.type][face * 4 + i];
     }
   }
   else {
     for (i = 0; i < 4; i++) {
       t8_dprism_child (p, (face % 3) * 4 + i, children[i]);
+      child_indices[i] = (face % 3) * 4 + i;
     }
   }
 }
