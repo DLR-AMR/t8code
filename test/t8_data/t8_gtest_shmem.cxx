@@ -29,15 +29,14 @@
 /* *INDENT-OFF* */
 #define T8_TEST_SHMEM_NUM_COMMS 2
 
-class shmem : public testing::TestWithParam<int>{
+class shmem : public testing::TestWithParam<std::tuple<int, sc_MPI_Comm>>{
 protected:
   void SetUp() override {
-    icomm = GetParam();
-    comm = test_comms[icomm];
+    icomm = std::get<0>(GetParam());
+    comm = std::get<1>(GetParam());
   }
   int icomm;
   sc_MPI_Comm         comm;
-  sc_MPI_Comm         test_comms[T8_TEST_SHMEM_NUM_COMMS] = { sc_MPI_COMM_WORLD, sc_MPI_COMM_SELF };
   const char         *test_comms_names[T8_TEST_SHMEM_NUM_COMMS] =
     { "comm world", "comm self" };
 };
@@ -332,5 +331,5 @@ TEST_P(shmem, test_shmem_array){
   }
 }
 
-INSTANTIATE_TEST_SUITE_P(t8_gtest_shmem, shmem, testing::Range(0, T8_TEST_SHMEM_NUM_COMMS));
+INSTANTIATE_TEST_SUITE_P(t8_gtest_shmem, shmem, testing::Combine(testing::Range(0, T8_TEST_SHMEM_NUM_COMMS), testing::Values(sc_MPI_COMM_WORLD, sc_MPI_COMM_SELF )));
 /* *INDENT-ON* */
