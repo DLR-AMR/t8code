@@ -146,7 +146,7 @@ t8_forest_pos (t8_forest_t forest,
    * element that is not part of the family or we have reached the 
    * maximum number of member. */
   t8_locidx_t         el_iter;  /* Loop running variable */
-  t8_locidx_t         pos;
+  t8_locidx_t         pos = -1;
   t8_element_t       *element_compare;
   for (el_iter = 1; el_iter < (t8_locidx_t) num_siblings
        && el_iter < elements_in_array; el_iter++) {
@@ -185,7 +185,7 @@ t8_forest_pos (t8_forest_t forest,
     }
     pos++;
   }
-
+  T8_ASSERT (pos > -1);
   /* clean up */
   ts->t8_element_destroy (1, &element_parent);
   ts->t8_element_destroy (1, &element_parent_compare);
