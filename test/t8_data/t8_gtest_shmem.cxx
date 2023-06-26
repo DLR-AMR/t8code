@@ -187,8 +187,6 @@ TEST_P(shmem, test_shmem_array_allgatherv){
     sendbuf[i] = first_array_value + i;
   }
 
-  t8_debugf("[D] total_size: %i\n", total_size);
-
   for(int shmem_type_int = SC_SHMEM_BASIC;
     shmem_type_int < SC_SHMEM_NUM_TYPES; ++shmem_type_int){
     t8_debugf("Checking shared memory type %s.\n", sc_shmem_type_to_string[shmem_type_int]);
