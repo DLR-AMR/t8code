@@ -28,8 +28,11 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.h>
 #include "t8_cmesh_types.h"
 #include "t8_cmesh_stash.h"
+
+#if T8_WITH_OCC
 #include <BRep_Tool.hxx>
 #include <TopoDS.hxx>
+#endif /* !T8_WITH_OCC */
 
 #ifdef _WIN32
 #include "t8_windows.h"
