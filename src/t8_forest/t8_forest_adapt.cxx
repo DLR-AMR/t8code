@@ -185,7 +185,6 @@ t8_forest_pos (t8_forest_t forest,
     }
     pos++;
   }
-  T8_ASSERT (pos > -1);
   /* clean up */
   ts->t8_element_destroy (1, &element_parent);
   ts->t8_element_destroy (1, &element_parent_compare);
