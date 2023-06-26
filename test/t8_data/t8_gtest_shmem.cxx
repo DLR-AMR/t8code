@@ -174,8 +174,6 @@ TEST_P(shmem, test_shmem_array_allgatherv){
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
-
-  t8_debugf("[D] mpirank: %i\n", mpirank);
   
   /* Each process fills an array of size mpirank * 10, where the elements
    * in the arrays increase, such that in the shmem we have a contiguous increase. */
