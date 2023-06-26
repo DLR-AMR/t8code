@@ -31,6 +31,7 @@ T8_EXTERN_C_BEGIN ();
 
 struct t8_adapt_data
 {
+  const int           remove_scope;
   const double        spheres_radius_inner;
   const double        spheres_radius_outer;
   const double        midpoint[3];
@@ -126,15 +127,15 @@ t8_adapt_refine (t8_forest_t forest,
   return 0;
 }
 
-/* Remove, element if it is within a given radius. */
+/* Remove, element if it is within our outside a given radius. */
 static int
-t8_adapt_remove_inner (t8_forest_t forest,
-                       t8_forest_t forest_from,
-                       t8_locidx_t which_tree,
-                       t8_locidx_t lelement_id,
-                       t8_eclass_scheme_c *ts,
-                       const int is_family,
-                       const int num_elements, t8_element_t *elements[])
+t8_adapt_remove (t8_forest_t forest,
+                 t8_forest_t forest_from,
+                 t8_locidx_t which_tree,
+                 t8_locidx_t lelement_id,
+                 t8_eclass_scheme_c *ts,
+                 const int is_family,
+                 const int num_elements, t8_element_t *elements[])
 {
   const struct t8_adapt_data *adapt_data =
     (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
@@ -144,31 +145,10 @@ t8_adapt_remove_inner (t8_forest_t forest,
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
 
   const double        dist = t8_vec_dist (adapt_data->midpoint, centroid);
-  if (dist < adapt_data->spheres_radius_inner) {
-    return -2;
-  }
-  return 0;
-}
-
-/* Remove, element if it is outside a given radius. */
-static int
-t8_adapt_remove_outer (t8_forest_t forest,
-                       t8_forest_t forest_from,
-                       t8_locidx_t which_tree,
-                       t8_locidx_t lelement_id,
-                       t8_eclass_scheme_c *ts,
-                       const int is_family,
-                       const int num_elements, t8_element_t *elements[])
-{
-  const struct t8_adapt_data *adapt_data =
-    (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
-  T8_ASSERT (adapt_data != NULL);
-
-  double              centroid[3];
-  t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
-
-  const double        dist = t8_vec_dist (adapt_data->midpoint, centroid);
-  if (dist > adapt_data->spheres_radius_outer) {
+  if ((dist < adapt_data->spheres_radius_inner
+       && adapt_data->remove_scope == 1)
+      || (dist > adapt_data->spheres_radius_outer
+          && adapt_data->remove_scope == 2)) {
     return -2;
   }
   return 0;
@@ -178,7 +158,7 @@ static void
 t8_construct_spheres (const int initial_level,
                       const double radius_inner,
                       const double radius_outer,
-                      const int remove,
+                      const int remove_scope,
                       const t8_eclass_t eclass, const char **vtuname)
 {
   t8_cmesh_t          cmesh;
@@ -196,6 +176,7 @@ t8_construct_spheres (const int initial_level,
   /* On each face of a cube, a sphere rises halfway in. 
    * Its center is therefore the center of the corresponding surface. */
   struct t8_adapt_data adapt_data = {
+    remove_scope,
     radius_inner,
     radius_outer,
     {0.5, 0.5, 0.5}
@@ -205,13 +186,8 @@ t8_construct_spheres (const int initial_level,
     (cmesh, t8_scheme_new_default_cxx (), initial_level, 0,
      sc_MPI_COMM_WORLD);
   forest = t8_forest_new_adapt (forest, t8_adapt_refine, 0, 0, &adapt_data);
-  if (remove == 1) {
-    forest =
-      t8_forest_new_adapt (forest, t8_adapt_remove_inner, 0, 0, &adapt_data);
-  }
-  if (remove == 2) {
-    forest =
-      t8_forest_new_adapt (forest, t8_adapt_remove_outer, 0, 0, &adapt_data);
+  if (remove_scope > 0) {
+    forest = t8_forest_new_adapt (forest, t8_adapt_remove, 0, 0, &adapt_data);
   }
 
   double             *data =
@@ -260,7 +236,7 @@ main (int argc, char **argv)
   int                 initial_level;
   double              radius_inner;
   double              radius_outer;
-  int                 remove;
+  int                 remove_scope;
   int                 eclass_int;
   const char         *vtuname[BUFSIZ];
   int                 helpme;
@@ -271,8 +247,8 @@ main (int argc, char **argv)
                          "Display a short help message.");
   sc_options_add_int (opt, 'l', "initial level", &initial_level, 4,
                       "Initial uniform refinement level. Default is 4.");
-  sc_options_add_double (opt, 'i', "inner radius", &radius_inner, 0,
-                         "Inner radius of sphere shells. Default is 0.");
+  sc_options_add_double (opt, 'i', "inner radius", &radius_inner, 0.5,
+                         "Inner radius of sphere shells. Default is 0.5.");
   sc_options_add_double (opt, 'o', "outer radius", &radius_outer, 0.5,
                          "Outer radius of sphere shells. Default is 0.5.");
   sc_options_add_int (opt, 'e', "elements", &eclass_int, 0,
@@ -281,7 +257,7 @@ main (int argc, char **argv)
                       "\t\t\t\t\t4 - hexahedron\n"
                       "\t\t\t\t\t5 - tetrahedron\n"
                       "\t\t\t\t\t6 - prism\n" "\t\t\t\t\t7 - pyramid");
-  sc_options_add_int (opt, 'r', "remove", &remove, 0,
+  sc_options_add_int (opt, 'r', "remove", &remove_scope, 0,
                       "Specify if elements get removed.\n"
                       "\t\t\t\t\t0 - no element get removed (default)\n"
                       "\t\t\t\t\t1 - elements inside inner radius get removed\n"
@@ -299,9 +275,9 @@ main (int argc, char **argv)
   else if (parsed >= 0 && 0 <= initial_level &&
            radius_inner <= radius_outer && radius_inner >= 0 &&
            (eclass_int > 3 || eclass_int < 8 || eclass_int == 0) &&
-           remove >= 0 && remove < 3) {
-    t8_construct_spheres (initial_level, radius_inner, radius_outer, remove,
-                          (t8_eclass_t) eclass_int, vtuname);
+           remove_scope >= 0 && remove_scope < 3) {
+    t8_construct_spheres (initial_level, radius_inner, radius_outer,
+                          remove_scope, (t8_eclass_t) eclass_int, vtuname);
   }
   else {
     /* wrong usage */
