@@ -716,7 +716,7 @@ t8_forest_adapt (t8_forest_t forest)
     int                 incomplete_trees;
     int                 mpiret =
       sc_MPI_Allreduce (&element_removed, &incomplete_trees, 1,
-                        MPI_INT, sc_MPI_MAX, forest->mpicomm);
+                        sc_MPI_INT, sc_MPI_MAX, forest->mpicomm);
     SC_CHECK_MPI (mpiret);
     T8_ASSERT (incomplete_trees == 1 || incomplete_trees == 0);
     forest->incomplete_trees = incomplete_trees;
