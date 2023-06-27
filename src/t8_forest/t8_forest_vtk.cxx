@@ -248,6 +248,7 @@ t8_forest_element_to_vtk_cell (t8_forest_t forest,
                                const int write_level,
                                const int write_element_id,
                                const int curved_flag,
+                               const int write_ghosts,
                                const int elem_id,
                                long int *point_id,
                                int *cellTypes,
@@ -381,6 +382,7 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix,
                                   const int write_level,
                                   const int write_element_id,
                                   const int curved_flag,
+                                  const int write_ghosts,
                                   const int num_data,
                                   t8_vtk_data_field_t *data)
 {
@@ -398,8 +400,8 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix,
     vtkSmartPointer < vtkUnstructuredGrid >::New ();
   t8_forest_to_vtkUnstructuredGrid (forest, unstructuredGrid, write_treeid,
                                     write_mpirank, write_level,
-                                    write_element_id, curved_flag, num_data,
-                                    data);
+                                    write_element_id, curved_flag,
+                                    write_ghosts, num_data, data);
   /*
    * We define the filename used to write the pvtu and the vtu files.
    * The pwriterObj is of class XMLPUnstructuredGridWriter, the P in
@@ -490,6 +492,7 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
                                   const int write_mpirank,
                                   const int write_level,
                                   const int write_element_id,
+                                  const int write_ghosts,
                                   const int curved_flag, const int num_data,
                                   t8_vtk_data_field_t *data)
 {
@@ -509,12 +512,22 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
   vtkSmartPointer < vtkPoints > points =
     vtkSmartPointer < vtkPoints >::New ();
 
+  int                 ghosts = write_ghosts;
+  if (forest->ghosts == NULL || forest->ghosts->num_ghosts_elements == 0) {
+    /* Never write ghost elements if there aren't any */
+    ghosts = 0;
+  }
+  T8_ASSERT (forest->ghosts != NULL || !ghosts);
+
   /* 
    * The cellTypes Array stores the element types as integers(see vtk doc).
    */
-  const t8_locidx_t   num_elements =
+  t8_locidx_t         num_elements =
     t8_forest_get_local_num_elements (forest);
   int                *cellTypes = T8_ALLOC (int, num_elements);
+  if (ghosts) {
+    num_elements += t8_forest_get_num_ghosts (forest);
+  }
 
   /*
    * We need the vertex coords array to be of the 
@@ -573,16 +586,40 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
 
       t8_forest_element_to_vtk_cell (forest, element, scheme, itree, offset,
                                      write_treeid, write_mpirank, write_level,
-                                     write_element_id, curved_flag, elem_id,
-                                     &point_id, cellTypes, points, cellArray,
-                                     vtk_treeid, vtk_mpirank, vtk_level,
-                                     vtk_element_id);
+                                     write_element_id, curved_flag,
+                                     write_ghosts, elem_id, &point_id,
+                                     cellTypes, points, cellArray, vtk_treeid,
+                                     vtk_mpirank, vtk_level, vtk_element_id);
 
       elem_id++;
     }                           /* end of loop over elements */
   }                             /* end of loop over local trees */
-
-  t8_debugf ("[D] Number of Cells: %i\n", cellArray->GetNumberOfCells ());
+  if (ghosts) {
+    /* Get number of ghost-trees */
+    const t8_locidx_t   num_ghost_trees = t8_forest_ghost_num_trees (forest);
+    for (t8_locidx_t itree_ghost = 0; itree_ghost < num_ghost_trees;
+         itree_ghost++) {
+      /* Get Tree scheme of the ghost tree */
+      t8_eclass_scheme_c *scheme = t8_forest_get_eclass_scheme (forest,
+                                                                t8_forest_ghost_get_tree_class
+                                                                (forest,
+                                                                 itree_ghost));
+      const t8_locidx_t   num_ghosts =
+        t8_forest_ghost_tree_num_elements (forest, itree_ghost);
+      for (t8_locidx_t ielem_ghost = 0; ielem_ghost < num_ghosts;
+           ielem_ghost++) {
+        const t8_element_t *element =
+          t8_forest_ghost_get_element (forest, itree_ghost, ielem_ghost);
+        t8_forest_element_to_vtk_cell (forest, element, scheme, itree_ghost,
+                                       offset, write_treeid, write_mpirank,
+                                       write_level, write_element_id,
+                                       curved_flag, write_ghosts, ielem_ghost,
+                                       &point_id, cellTypes, points,
+                                       cellArray, vtk_treeid, vtk_mpirank,
+                                       vtk_level, vtk_element_id);
+      }
+    }
+  }
 
   unstructuredGrid->SetPoints (points);
   unstructuredGrid->SetCells (cellTypes, cellArray);

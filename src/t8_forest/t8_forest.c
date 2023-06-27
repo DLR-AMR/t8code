@@ -1502,13 +1502,13 @@ t8_forest_write_vtk_ext (t8_forest_t forest,
   do_not_use_API = 1;
 #endif
   if (!do_not_use_API) {
-    T8_ASSERT (!write_ghosts);
     return t8_forest_vtk_write_file_via_API (forest,
                                              fileprefix,
                                              write_treeid,
                                              write_mpirank,
                                              write_level,
                                              write_element_id,
+                                             write_ghosts,
                                              write_curved, num_data, data);
   }
   else {
