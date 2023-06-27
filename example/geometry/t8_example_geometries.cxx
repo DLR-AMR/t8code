@@ -23,7 +23,8 @@
 #include <sc_options.h>
 #include <sc_refcount.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_io.h>
 #include <t8_cmesh_vtk_writer.h>
 #include <t8_geometry/t8_geometry_base.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx>
@@ -71,6 +72,7 @@ typedef enum
   T8_GEOM_OCC_CURVE_CUBE,
   T8_GEOM_OCC_SURFACE_CUBES,
   T8_GEOM_OCC_SURFACE_CYLINDER,
+  T8_GEOM_OCC_TRIANGLE,
   T8_GEOM_COUNT
 } t8_example_geom_type;
 
@@ -1140,7 +1142,8 @@ main (int argc, char **argv)
                       "\t\t6 - A moving mesh consisting of a single 2D quad tree.\n"
                       "\t\t7 - A cube with two occ curves as edges.\n"
                       "\t\t8 - Two cubes with one occ surface as face.\n"
-                      "\t\t9 - A hollow cylinder with a occ surface on the in- and outside.\n");
+                      "\t\t9 - A hollow cylinder with a occ surface on the in- and outside.\n"
+                      "\t\t10 - A curved triangle with a occ surface.\n");
 
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);

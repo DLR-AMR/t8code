@@ -266,6 +266,19 @@ public:
 
 private:
   /**
+   * Map a point in the reference space $$[0,1]^2$$ to $$\mathbb R^3$$. Only for triangle trees.
+   * \param [in]  cmesh      The cmesh in which the point lies.
+   * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
+   * \param [in]  ref_coords  Array of 2 entries, specifying a point in [0,1]^2.
+   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   */
+  void
+  t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
+                                 t8_gloidx_t gtreeid,
+                                 const double *ref_coords,
+                                 double out_coords[3]) const;
+
+  /**
    * Map a point in the reference space $$[0,1]^2$$ to $$\mathbb R^3$$. Only for quad trees.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
