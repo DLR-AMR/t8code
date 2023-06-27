@@ -10,6 +10,7 @@ messyinterfaceincludedir = $(includedir)/t8_messy
 geometryincludedir = $(includedir)/t8_geometry
 geometryimplincludedir = $(geometryincludedir)/t8_geometry_implementations
 schemesdefaultincludedir = $(includedir)/t8_schemes/t8_default
+vtkincludedir = $(includedir)/t8_vtk
 defaultcommonincludedir = $(schemesdefaultincludedir)/t8_default_common
 defaultvertexincludedir = $(schemesdefaultincludedir)/t8_default_vertex
 defaultlineincludedir = $(schemesdefaultincludedir)/t8_default_line
@@ -73,6 +74,9 @@ libt8_installed_headers_geometry_impl = \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx 
+libt8_installed_headers_vtk = \
+  src/t8_vtk/t8_vtk_reader.hxx \
+  src/t8_vtk/t8_vtk_types.h
 libt8_installed_headers_schemes_default =
 libt8_installed_headers_default_common =
 libt8_installed_headers_default_vertex =
@@ -88,14 +92,12 @@ libt8_internal_headers = \
   src/t8_cmesh/t8_cmesh_types.h src/t8_cmesh/t8_cmesh_partition.h \
   src/t8_cmesh/t8_cmesh_refine.h src/t8_cmesh/t8_cmesh_copy.h \
   src/t8_cmesh/t8_cmesh_offset.h \
-  src/t8_cmesh/t8_cmesh_vtk_to_t8/t8_cmesh_vtk_polydata.hxx \
-  src/t8_cmesh/t8_cmesh_vtk_to_t8/t8_cmesh_vtk_unstructured.hxx \
-  src/t8_cmesh/t8_cmesh_vtk_to_t8/t8_vtk_types.h \
+  src/t8_vtk/t8_vtk_polydata.hxx \
+  src/t8_vtk/t8_vtk_unstructured.hxx \
   src/t8_forest/t8_forest_cxx.h  \
   src/t8_forest/t8_forest_ghost.h \
   src/t8_forest/t8_forest_balance.h src/t8_forest/t8_forest_types.h \
-  src/t8_forest/t8_forest_private.h \
-  src/t8_cmesh/t8_cmesh_vtk_to_t8/t8_cmesh_vtk_unstructured.hxx
+  src/t8_forest/t8_forest_private.h
 libt8_compiled_sources = \
   src/t8.c src/t8_eclass.c src/t8_mesh.c \
   src/t8_element.c src/t8_element_cxx.cxx \
@@ -136,8 +138,9 @@ libt8_compiled_sources = \
   src/t8_element_shape.c \
   src/t8_netcdf.c \
   src/t8_cmesh/t8_cmesh_testcases.c \
-  src/t8_cmesh/t8_cmesh_vtk_to_t8/t8_cmesh_vtk_polydata.cxx \
-  src/t8_cmesh/t8_cmesh_vtk_to_t8/t8_cmesh_vtk_unstructured.cxx
+  src/t8_vtk/t8_vtk_polydata.cxx \
+  src/t8_vtk/t8_vtk_unstructured.cxx \
+  src/t8_vtk/t8_vtk_reader.cxx
 
 
 # If the the Fortran interfaces should be built
@@ -185,6 +188,7 @@ dist_messyinterfaceinclude_HEADERS = $(libt8_installed_headers_messy)
 dist_geometryinclude_HEADERS = $(libt8_installed_headers_geometry)
 dist_geometryimplinclude_HEADERS = $(libt8_installed_headers_geometry_impl)
 dist_schemesdefaultinclude_HEADERS = $(libt8_installed_headers_schemes_default)
+dist_vtkinclude_HEADERS = $(libt8_installed_headers_vtk)
 dist_defaultcommoninclude_HEADERS = $(libt8_installed_headers_default_common)
 dist_defaultvertexinclude_HEADERS = $(libt8_installed_headers_default_vertex)
 dist_defaultlineinclude_HEADERS = $(libt8_installed_headers_default_line)
