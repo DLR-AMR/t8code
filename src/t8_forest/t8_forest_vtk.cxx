@@ -582,8 +582,6 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
     }                           /* end of loop over elements */
   }                             /* end of loop over local trees */
 
-  t8_debugf ("[D] Number of Cells: %i\n", cellArray->GetNumberOfCells ());
-
   unstructuredGrid->SetPoints (points);
   unstructuredGrid->SetCells (cellTypes, cellArray);
 
