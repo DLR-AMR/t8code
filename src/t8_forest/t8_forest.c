@@ -1473,21 +1473,11 @@ t8_forest_write_vtk_ext (t8_forest_t forest,
   }
 
 #if T8_WITH_VTK
-  if (!do_not_use_API) {
-    if (write_ghosts) {
-      t8_errorf
-        ("WARNING: Export of ghosts not yet available with the vtk API. "
-         "Using the inbuild function instead.\n");
-      do_not_use_API = 1;
-    }
-  }
-  else {
-    if (write_curved) {
-      t8_errorf
-        ("WARNING: Export of curved elements not yet available with the inbuild function. "
-         "Using the VTK API instead.\n");
-      do_not_use_API = 0;
-    }
+  if (do_not_use_API && write_curved) {
+    t8_errorf
+      ("WARNING: Export of curved elements not yet available with the inbuild function. "
+       "Using the VTK API instead.\n");
+    do_not_use_API = 0;
   }
 #else
   /* We are not linked against the VTK library, so
@@ -1526,7 +1516,7 @@ t8_forest_write_vtk_ext (t8_forest_t forest,
 int
 t8_forest_write_vtk (t8_forest_t forest, const char *fileprefix)
 {
-  return t8_forest_write_vtk_ext (forest, fileprefix, 1, 1, 1, 1, 0, 0, 0, 0,
+  return t8_forest_write_vtk_ext (forest, fileprefix, 1, 1, 1, 1, 1, 0, 0, 0,
                                   NULL);
 }
 

@@ -248,7 +248,7 @@ t8_forest_element_to_vtk_cell (t8_forest_t forest,
                                const int write_level,
                                const int write_element_id,
                                const int curved_flag,
-                               const int write_ghosts,
+                               const int is_ghost,
                                const int elem_id,
                                long int *point_id,
                                int *cellTypes,
@@ -359,7 +359,12 @@ t8_forest_element_to_vtk_cell (t8_forest_t forest,
       }
       if (write_treeid == 1) {
         const t8_gloidx_t gtree_id = t8_forest_global_tree_id(forest, itree);
-        vtk_treeid->InsertNextValue (gtree_id);
+        if(is_ghost){
+          vtk_treeid->InsertNextValue(-1);
+        }
+        else{
+          vtk_treeid->InsertNextValue (gtree_id);
+        }
       }
       if (write_mpirank == 1) {
         vtk_mpirank->InsertNextValue (forest->mpirank);
@@ -587,7 +592,7 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
       t8_forest_element_to_vtk_cell (forest, element, scheme, itree, offset,
                                      write_treeid, write_mpirank, write_level,
                                      write_element_id, curved_flag,
-                                     write_ghosts, elem_id, &point_id,
+                                     0, elem_id, &point_id,
                                      cellTypes, points, cellArray, vtk_treeid,
                                      vtk_mpirank, vtk_level, vtk_element_id);
 
@@ -613,7 +618,7 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
         t8_forest_element_to_vtk_cell (forest, element, scheme, itree_ghost,
                                        offset, write_treeid, write_mpirank,
                                        write_level, write_element_id,
-                                       curved_flag, write_ghosts, ielem_ghost,
+                                       curved_flag, 1, ielem_ghost,
                                        &point_id, cellTypes, points,
                                        cellArray, vtk_treeid, vtk_mpirank,
                                        vtk_level, vtk_element_id);
