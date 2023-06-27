@@ -41,18 +41,18 @@ t8_adapt_remove (t8_forest_t forest,
                  const int is_family,
                  const int num_elements, t8_element_t *elements[])
 {
-  const t8_locidx_t  *tree_id =
-    (const t8_locidx_t *) t8_forest_get_user_data (forest);
+  const t8_gloidx_t  *tree_id =
+    (const t8_gloidx_t *) t8_forest_get_user_data (forest);
   const t8_gloidx_t   global_tree_id =
     t8_forest_global_tree_id (forest_from, which_tree);
-  if (global_tree_id == (t8_gloidx_t) *tree_id) {
+  if (global_tree_id == *tree_id) {
     return -2;
   }
   return 0;
 }
 
 void
-t8_strip_of_quads (t8_locidx_t num_trees, t8_locidx_t empty_tree,
+t8_strip_of_quads (t8_gloidx_t num_trees, t8_gloidx_t empty_tree,
                    const char **vtuname)
 {
 
@@ -169,7 +169,7 @@ main (int argc, char **argv)
   }
   else if (parsed >= 0 && 0 < num_trees && 0 <= empty_tree
            && empty_tree < num_trees) {
-    t8_strip_of_quads (num_trees, empty_tree, vtuname);
+    t8_strip_of_quads ((t8_gloidx_t) num_trees, (t8_gloidx_t) empty_tree, vtuname);
   }
   else {
     /* wrong usage */
