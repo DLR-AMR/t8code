@@ -97,7 +97,7 @@ t8_adapt_remove (t8_forest_t forest,
                  const int is_family,
                  const int num_elements, t8_element_t *elements[])
 {
-  struct t8_trees_to_remove    *trees_to_remove =
+  struct t8_trees_to_remove *trees_to_remove =
     (struct t8_trees_to_remove *) t8_forest_get_user_data (forest);
   if (trees_to_remove->remove[forest_from->mpirank] == 0) {
     return -2;

@@ -169,7 +169,8 @@ main (int argc, char **argv)
   }
   else if (parsed >= 0 && 0 < num_trees && 0 <= empty_tree
            && empty_tree < num_trees) {
-    t8_strip_of_quads ((t8_gloidx_t) num_trees, (t8_gloidx_t) empty_tree, vtuname);
+    t8_strip_of_quads ((t8_gloidx_t) num_trees, (t8_gloidx_t) empty_tree,
+                       vtuname);
   }
   else {
     /* wrong usage */
