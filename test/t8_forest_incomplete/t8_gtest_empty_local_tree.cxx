@@ -81,7 +81,7 @@ protected:
 /** This structure contains a bitset with all 
  * local trees on all processes to be removed.
  */
-struct t8_trees
+struct t8_trees_to_remove
 {
   std::bitset < MAX_NUM_RANKS > remove;
 };
@@ -97,9 +97,9 @@ t8_adapt_remove (t8_forest_t forest,
                  const int is_family,
                  const int num_elements, t8_element_t *elements[])
 {
-  struct t8_trees    *data =
-    (struct t8_trees *) t8_forest_get_user_data (forest);
-  if (data->remove[forest_from->mpirank] == 0) {
+  struct t8_trees_to_remove    *trees_to_remove =
+    (struct t8_trees_to_remove *) t8_forest_get_user_data (forest);
+  if (trees_to_remove->remove[forest_from->mpirank] == 0) {
     return -2;
   }
   return 0;
@@ -132,14 +132,14 @@ t8_adapt_forest (t8_forest_t forest_from,
 
 TEST_P (local_tree, test_empty_local_tree)
 {
-  /* Number of instances */
+  /* Number of instances/testcases */
   const uint32_t      num_instances = 1 << MPI_size;
   for (uint32_t instances = 1; instances < num_instances - 1; instances++) {
     /* Remove all local elements for every process \a remove[rank] == 0 */
     std::bitset < MAX_NUM_RANKS > remove (instances);
 
     /* *INDENT-OFF* */
-    struct t8_trees    data { remove };
+    struct t8_trees_to_remove    data { remove };
     /* *INDENT-ON* */
 
     t8_forest_ref (forest);
