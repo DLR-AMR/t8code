@@ -336,11 +336,9 @@ t8_forest_no_overlap (t8_forest_t forest)
   T8_ASSERT (has_overlap_local_global == 0 || has_overlap_local_global == 1);
   if (has_overlap_local_global) {
     T8_ASSERT (has_overlap_local == 1);
-    //t8_debugf ("[IL] no_overlap end 1 \n");
     return 0;
   }
 #endif
-//t8_debugf ("[IL] no_overlap end 2 \n");
   return 1;
 }
 
