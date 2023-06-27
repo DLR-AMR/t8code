@@ -34,14 +34,8 @@ t8_cmesh_vtk_reader (const char *filename, const int partition,
                      const int main_proc, sc_MPI_Comm comm,
                      const vtk_file_type_t vtk_file_type)
 {
-#if T8_WITH_VTK
-  SC_ABORT ("This function is not yet implemented.\n");
-#else
-  /* Return NULL if not linked against vtk */
-  t8_global_errorf
-    ("WARNING: t8code is not linked against the vtk library. Without proper linking t8code cannot use the vtk-reader\n");
-#endif
-  return NULL;
+  return t8_vtk_reader_cmesh (filename, partition, main_proc, comm,
+                              vtk_file_type);
 }
 
 T8_EXTERN_C_END ();

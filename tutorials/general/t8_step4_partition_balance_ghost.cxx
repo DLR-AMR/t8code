@@ -88,7 +88,8 @@
 #include <t8.h>                 /* General t8code header, always include this. */
 #include <t8_cmesh.h>           /* cmesh definition and basic interface. */
 #include <t8_cmesh/t8_cmesh_examples.h> /* A collection of exemplary cmeshes */
-#include <t8_forest.h>          /* forest definition and basic interface. */
+#include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
+#include <t8_forest/t8_forest_io.h>     /* save forest */
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>     /* default refinement scheme. */
 #include <tutorials/general/t8_step3.h>
 
@@ -280,7 +281,8 @@ t8_step4_main (int argc, char **argv)
     (" [step4] Repartitioned forest and built ghost layer.\n");
   t8_step3_print_forest_information (forest);
   /* Write forest to vtu files. */
-  t8_forest_write_vtk (forest, prefix_partition_ghost);
+  t8_forest_write_vtk_ext (forest, prefix_partition_ghost, 1, 1, 1, 1, 1, 0,
+                           1, 0, NULL);
 
   /*
    * Balance
