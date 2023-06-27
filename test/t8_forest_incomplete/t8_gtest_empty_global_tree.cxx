@@ -30,7 +30,7 @@
 /** In this test, we are given a forest with 3 global trees. 
  * We adapt the forest so that all 6 compositions of empty 
  * global trees are the result of it. 
- * Therefore, \a instance runs from 0 to 5.
+ * Therefore, \a testcase runs from 0 to 5.
  * We do this twice. Once we partition the forest in the same call. 
  * The second time, we do the adapting and partitioning separately.
  * The two resulting forests must be equal.
@@ -41,7 +41,7 @@ class global_tree:public testing::TestWithParam <std::tuple<t8_eclass,int>> {
 protected:
   void SetUp () override {
     eclass = std::get<0>(GetParam());
-    instance = std::get<1>(GetParam());
+    testcase = std::get<1>(GetParam());
     forest = 
       t8_forest_new_uniform (t8_cmesh_new_bigmesh (eclass, 3, sc_MPI_COMM_WORLD),
                              t8_scheme_new_default_cxx (), 0, 0, sc_MPI_COMM_WORLD);  
@@ -51,14 +51,14 @@ protected:
   void TearDown () override {
     t8_forest_unref (&forest);
   }
-  int                 instance;
+  int                 testcase;
   t8_eclass_t         eclass;
   t8_forest_t         forest;
 };
 /* *INDENT-ON* */
 
 /** Removes all elements of local trees if they belong to the corresponding
- *  global trees which are defined by the current instance of test. */
+ *  global trees which are defined by the current testcase of test. */
 static int
 t8_adapt_remove (t8_forest_t forest,
                  t8_forest_t forest_from,
@@ -68,10 +68,10 @@ t8_adapt_remove (t8_forest_t forest,
                  const int is_family,
                  const int num_elements, t8_element_t *elements[])
 {
-  const int          *inst = (const int *) t8_forest_get_user_data (forest);
+  const int          *testcase = (const int *) t8_forest_get_user_data (forest);
   const t8_gloidx_t   global_tree_id =
     t8_forest_global_tree_id (forest_from, which_tree);
-  switch (*inst) {
+  switch (*testcase) {
   case 0:
     if (global_tree_id == 0) {
       return -2;
@@ -141,14 +141,14 @@ TEST_P (global_tree, test_empty_global_tree)
   t8_forest_ref (forest);
   /* Do adapt and partition in one step */
   t8_forest_t         forest_adapt_a =
-    t8_adapt_forest (forest, t8_adapt_remove, 1, 1, &instance);
+    t8_adapt_forest (forest, t8_adapt_remove, 1, 1, &testcase);
   ASSERT_TRUE (forest_adapt_a->incomplete_trees);
   ASSERT_TRUE (!forest->incomplete_trees);
 
   t8_forest_ref (forest);
   /* Do adapt and partition in seperate steps */
   t8_forest_t         forest_adapt_b =
-    t8_adapt_forest (forest, t8_adapt_remove, 1, 0, &instance);
+    t8_adapt_forest (forest, t8_adapt_remove, 1, 0, &testcase);
   ASSERT_TRUE (forest_adapt_b->incomplete_trees);
   ASSERT_TRUE (!forest->incomplete_trees);
   forest_adapt_b = t8_adapt_forest (forest_adapt_b, NULL, 0, 1, NULL);
