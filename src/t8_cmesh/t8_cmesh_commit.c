@@ -82,25 +82,29 @@ t8_cmesh_set_shmem_type (sc_MPI_Comm comm)
   t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
 }
 
-void
-t8_cmesh_add_attributes (t8_cmesh_t cmesh)
+static void
+t8_cmesh_add_attributes (t8_cmesh_t cmesh, sc_hash_t * ghost_ids,
+                         size_t *attribute_data_offset)
 {
   t8_stash_attribute_struct_t *attribute;
   t8_stash_t          stash = cmesh->stash;
   t8_locidx_t         ltree;
   size_t              si, sj;
+  t8_ghost_facejoin_t *temp_facejoin, **facejoin_pp;    /* used to lookup global ghost ids in the hash */
+
+  temp_facejoin = T8_ALLOC_ZERO (t8_ghost_facejoin_t, 1);
 
   ltree = -1;
   for (si = 0, sj = 0; si < stash->attributes.elem_count; si++, sj++) {
     attribute = (t8_stash_attribute_struct_t *)
       sc_array_index (&stash->attributes, si);
+    if (attribute->id > ltree) {
+      /* Enter a new tree */
+      ltree = attribute->id;
+      sj = 0;
+    }
     if (cmesh->first_tree <= attribute->id &&
         attribute->id < cmesh->first_tree + cmesh->num_local_trees) {
-      if (attribute->id > ltree) {
-        /* Enter a new tree */
-        ltree = attribute->id;
-        sj = 0;
-      }
       /* attribute->id is a gloidx that is casted to a locidx here.
        * Should not cause problems, since mesh is replicated */
       T8_ASSERT (attribute->id - cmesh->first_tree ==
@@ -108,7 +112,18 @@ t8_cmesh_add_attributes (t8_cmesh_t cmesh)
       t8_cmesh_trees_add_attribute (cmesh->trees, 0, attribute,
                                     attribute->id - cmesh->first_tree, sj);
     }
+    else {
+      T8_ASSERT (ghost_ids != NULL);
+      temp_facejoin->ghost_id = attribute->id;
+      if (sc_hash_lookup (ghost_ids, temp_facejoin, (void ***) &facejoin_pp)) {
+        /* attribute is on a ghost tree */
+        t8_cmesh_trees_add_ghost_attribute (cmesh->trees, 0, attribute,
+                                            (*facejoin_pp)->local_id, sj,
+                                            attribute_data_offset);
+      }
+    }
   }
+  T8_FREE (temp_facejoin);
 }
 
 static void
@@ -158,7 +173,7 @@ t8_cmesh_commit_replicated_new (t8_cmesh_t cmesh)
     t8_stash_attribute_sort (cmesh->stash);
     cmesh->num_trees = cmesh->num_local_trees = num_trees;
     cmesh->first_tree = 0;
-    t8_cmesh_add_attributes (cmesh);
+    t8_cmesh_add_attributes (cmesh, NULL, NULL);
 
     /* Set all face connections */
     t8_cmesh_trees_set_all_boundary (cmesh, cmesh->trees);
@@ -193,8 +208,10 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   int8_t             *ttf, *ttf2;
   t8_stash_joinface_struct_t *joinface;
   t8_ctree_t          tree1, tree2;
+  t8_cghost_t         ghost1;
   int                 F;
   size_t              si;
+  size_t              attribute_data_offset;
 
 #if T8_ENABLE_DEBUG
   sc_flopinfo_t       fi, snapshot;
@@ -203,8 +220,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
   sc_hash_t          *ghost_ids;
   sc_mempool_t       *ghost_facejoin_mempool;
-  struct ghost_facejoins_struct *ghost_facejoin = NULL, *temp_facejoin,
-    **facejoin_pp;
+  t8_ghost_facejoin_t *ghost_facejoin = NULL, *temp_facejoin, **facejoin_pp;
   size_t              joinfaces_it, iz;
   t8_gloidx_t         last_tree = cmesh->num_local_trees +
     cmesh->first_tree - 1, id1, id2;
@@ -214,7 +230,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   t8_stash_class_struct_t *classentry;
   int                 id1_istree, id2_istree;
 #if T8_ENABLE_DEBUG
-  t8_cghost_t         ghost1, ghost2;
+  t8_cghost_t         ghost2;
 #endif
 
 #if T8_ENABLE_DEBUG
@@ -364,6 +380,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     for (si = 0; si < cmesh->stash->attributes.elem_count; si++) {
       attribute = (t8_stash_attribute_struct_t *)
         sc_array_index (&cmesh->stash->attributes, si);
+      temp_facejoin->ghost_id = attribute->id;
       if (cmesh->first_tree <= attribute->id && attribute->id <
           cmesh->first_tree + cmesh->num_local_trees) {
         /* attribute->id is a gloidx that is casted to a locidx here.
@@ -373,10 +390,20 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
         tree1 = t8_cmesh_trees_get_tree (cmesh->trees, attribute->id
                                          - cmesh->first_tree);
         tree1->num_attributes++;
+        /* temporarily misuse the att_offset to store the total attribute size, until t8_cmesh_trees_finish_part */
         tree1->att_offset += attribute->attr_size;
       }
+      else if (sc_hash_lookup (ghost_ids, temp_facejoin,
+                               (void ***) &facejoin_pp)) {
+        /* attribute is on a ghost tree */
+        ghost1 =
+          t8_cmesh_trees_get_ghost (cmesh->trees, (*facejoin_pp)->local_id);
+        ghost1->num_attributes++;
+        /* temporarily misuse the att_offset to store the total attribute size, until t8_cmesh_trees_finish_part */
+        ghost1->att_offset += attribute->attr_size;
+      }
     }
-    t8_cmesh_trees_finish_part (cmesh->trees, 0);
+    attribute_data_offset = t8_cmesh_trees_finish_part (cmesh->trees, 0);
     t8_cmesh_trees_set_all_boundary (cmesh, cmesh->trees);
 
     /* Go through all face_neighbour entries and parse every
@@ -493,7 +520,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
      *       counting the attributes per tree. */
 
     t8_stash_attribute_sort (cmesh->stash);
-    t8_cmesh_add_attributes (cmesh);
+    t8_cmesh_add_attributes (cmesh, ghost_ids, &attribute_data_offset);
 
     /* compute global number of trees. id1 serves as buffer since
      * global number and local number have different datatypes */

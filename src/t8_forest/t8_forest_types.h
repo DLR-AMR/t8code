@@ -34,7 +34,7 @@
 #include <t8_element.h>
 #include <t8_data/t8_containers.h>
 #include <t8_forest/t8_forest_adapt.h>
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
 
 typedef struct t8_profile t8_profile_t; /* Defined below */
 typedef struct t8_forest_ghost *t8_forest_ghost_t;      /* Defined below */
@@ -81,6 +81,9 @@ typedef struct t8_forest
   int                 maxlevel_existing;/**< If >= 0, the maximum occurring refinemnent level of a forest element. */
   int                 do_dup;           /**< Communicator shall be duped. */
   int                 dimension;        /**< Dimension inferred from \b cmesh. */
+  int                 incomplete_trees; /**< Flag to check whether the forest has (potential) incomplete trees.
+                                             A tree is incomplete if an element has been removed from it.
+                                             Once an element got removed, the flag sets to 1 (true) and stays. */
 
   t8_forest_t         set_from;         /**< Temporarily store source forest. */
   t8_forest_from_t    from_method;      /**< Method to derive from \b set_from. */

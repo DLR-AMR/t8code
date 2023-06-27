@@ -27,7 +27,7 @@
 /* The following three tests check whether t8code computes the correct
  * version.
  * The current version of t8code is
- *    1.1.0
+ *    1.2.0
  * If you increase the major or minor version number, you need to adjust these tests and
  * this comment. */
 
@@ -42,7 +42,7 @@ TEST (t8_gtest_version, major_version)
 TEST (t8_gtest_version, minor_version)
 {
   /* Change this number when you increase the minor version. */
-  const int           minor_version = 1;
+  const int           minor_version = 2;
 
   EXPECT_EQ (t8_get_version_minor (), minor_version);
 }
