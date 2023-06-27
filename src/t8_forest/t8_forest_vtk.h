@@ -29,7 +29,8 @@
 #define T8_FOREST_VTK_H
 
 #include <t8_vtk.h>
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_geometrical.h>
 
 T8_EXTERN_C_BEGIN ();
 /* function declarations */
@@ -56,12 +57,13 @@ T8_EXTERN_C_BEGIN ();
  */
 int                 t8_forest_vtk_write_file_via_API (t8_forest_t forest,
                                                       const char *fileprefix,
-                                                      int write_treeid,
-                                                      int write_mpirank,
-                                                      int write_level,
-                                                      int write_element_id,
-                                                      int curved_flag,
-                                                      int num_data,
+                                                      const int write_treeid,
+                                                      const int write_mpirank,
+                                                      const int write_level,
+                                                      const int
+                                                      write_element_id,
+                                                      const int curved_flag,
+                                                      const int num_data,
                                                       t8_vtk_data_field_t
                                                       *data);
 
@@ -87,12 +89,12 @@ int                 t8_forest_vtk_write_file_via_API (t8_forest_t forest,
  */
 int                 t8_forest_vtk_write_file (t8_forest_t forest,
                                               const char *fileprefix,
-                                              int write_treeid,
-                                              int write_mpirank,
-                                              int write_level,
-                                              int write_element_id,
+                                              const int write_treeid,
+                                              const int write_mpirank,
+                                              const int write_level,
+                                              const int write_element_id,
                                               int write_ghosts,
-                                              int num_data,
+                                              const int num_data,
                                               t8_vtk_data_field_t *data);
 
 T8_EXTERN_C_END ();

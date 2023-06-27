@@ -32,4 +32,4 @@
 # Usage: ./scripts/remove-all-if-zero-pragmas.sh
 #
 
-grep -r -i -l -E '^\s*#\s*if\s+0' src/ tutorials/ example/ | xargs unifdef -k -m
+grep -r -i -l -E '^\s*#\s*if\s+0' src/ tutorials/ example/ test/ | xargs unifdef -k -m

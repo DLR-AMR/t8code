@@ -32,7 +32,7 @@
 #define T8_STEP3_H
 
 #include <t8.h>                 /* General t8code header, always include this. */
-#include <t8_forest.h>          /* forest definition and basic interface. */
+#include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
 
 T8_EXTERN_C_BEGIN ();
 

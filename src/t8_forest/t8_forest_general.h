@@ -20,19 +20,17 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_forest.h
+/** \file t8_forest_general.h
  * We define the forest of trees in this file.
  */
 
 /* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest */
 
-#ifndef T8_FOREST_H
-#define T8_FOREST_H
+#ifndef T8_FOREST_GENERAL_H
+#define T8_FOREST_GENERAL_H
 
-#include <sc_statistics.h>
 #include <t8_cmesh.h>
 #include <t8_element.h>
-#include <t8_vtk.h>
 #include <t8_data/t8_containers.h>
 
 /** Opaque pointer to a forest implementation. */
@@ -43,11 +41,11 @@ typedef struct t8_tree *t8_tree_t;
  * Currently, we support face-neighbors. Vertex and edge neighbors
  * will eventually be added. */
 typedef enum
-{
-  T8_GHOST_NONE = 0,  /**< Do not create ghost layer. */
-  T8_GHOST_FACES,     /**< Consider all face (codimension 1) neighbors. */
-  T8_GHOST_EDGES,     /**< Consider all edge (codimension 2) and face neighbors. */
-  T8_GHOST_VERTICES   /**< Consider all vertex (codimension 3) and edge and face neighbors. */
+{ T8_GHOST_NONE = 0, /**< Do not create ghost layer. */
+  T8_GHOST_FACES,   /**< Consider all face (codimension 1) neighbors. */
+  T8_GHOST_EDGES,   /**< Consider all edge (codimension 2) and face neighbors. */
+  T8_GHOST_VERTICES
+    /**< Consider all vertex (codimension 3) and edge and face neighbors. */
 } t8_ghost_type_t;
 
 /** This typedef is needed as a helper construct to 
@@ -55,7 +53,6 @@ typedef enum
  * a pointer to a void fun(void) function. \see t8_forest_get_user_function.
  */
 typedef void        (*t8_generic_function_pointer) (void);
-
 T8_EXTERN_C_BEGIN ();
 
 /** Callback function prototype to replace one set of elements with another.
@@ -91,11 +88,11 @@ typedef void        (*t8_forest_replace_t) (t8_forest_t forest_old,
                                             t8_forest_t forest_new,
                                             t8_locidx_t which_tree,
                                             t8_eclass_scheme_c *ts,
-                                            int refine,
-                                            int num_outgoing,
-                                            t8_locidx_t first_outgoing,
-                                            int num_incoming,
-                                            t8_locidx_t first_incoming);
+                                            const int refine,
+                                            const int num_outgoing,
+                                            const t8_locidx_t first_outgoing,
+                                            const int num_incoming,
+                                            const t8_locidx_t first_incoming);
 
 /** Callback function prototype to decide for refining and coarsening.
  * If \a is_family equals 1, the first \a num_elements in \a elements
@@ -530,107 +527,6 @@ void                t8_forest_leaf_face_neighbors (t8_forest_t forest,
 void                t8_forest_ghost_exchange_data (t8_forest_t forest,
                                                    sc_array_t *element_data);
 
-/** Enable or disable profiling for a forest. If profiling is enabled, runtimes
- * and statistics are collected during forest_commit.
- * \param [in,out] forest        The forest to be updated.
- * \param [in]     set_profiling If true, profiling will be enabled, if false
- *                              disabled.
- *
- * Profiling is disabled by default.
- * The forest must not be committed before calling this function.
- * \see t8_forest_print_profile
- */
-void                t8_forest_set_profiling (t8_forest_t forest,
-                                             int set_profiling);
-
-/* TODO: document */
-void                t8_forest_compute_profile (t8_forest_t forest);
-
-const sc_statinfo_t *t8_forest_profile_get_adapt_stats (t8_forest_t forest);
-
-const sc_statinfo_t *t8_forest_profile_get_ghost_stats (t8_forest_t forest);
-
-const sc_statinfo_t *t8_forest_profile_get_partition_stats (t8_forest_t
-                                                            forest);
-
-const sc_statinfo_t *t8_forest_profile_get_commit_stats (t8_forest_t forest);
-
-const sc_statinfo_t *t8_forest_profile_get_balance_stats (t8_forest_t forest);
-
-const sc_statinfo_t *t8_forest_profile_get_balance_rounds_stats (t8_forest_t
-                                                                 forest);
-
-/** Print the collected statistics from a forest profile.
- * \param [in]    forest        The forest.
- *
- * \a forest must be committed before calling this function.
- * \see t8_forest_set_profiling
- */
-void                t8_forest_print_profile (t8_forest_t forest);
-
-/** Get the runtime of the last call to \ref t8_forest_adapt.
- * \param [in]   forest         The forest.
- * \return                      The runtime of adapt if profiling was activated.
- *                              0 otherwise.
- * \a forest must be committed before calling this function.
- * \see t8_forest_set_profiling
- * \see t8_forest_set_adapt
- */
-double              t8_forest_profile_get_adapt_time (t8_forest_t forest);
-
-/** Get the runtime of the last call to \ref t8_forest_partition.
- * \param [in]   forest         The forest.
- * \param [out]  procs_sent     On output the number of processes that this rank
- *                              sent elements to in partition
- *                              if profiling was activated.
- * \return                      The runtime of partition if profiling was activated.
- *                              0 otherwise.
- * \a forest must be committed before calling this function.
- * \see t8_forest_set_profiling
- * \see t8_forest_set_partition
- */
-double              t8_forest_profile_get_partition_time (t8_forest_t forest,
-                                                          int *procs_sent);
-
-/** Get the runtime of the last call to \ref t8_forest_balance.
- * \param [in]   forest         The forest.
- * \param [out]  balance_rounts On output the number of rounds in balance
- *                              if profiling was activated.
- * \return                      The runtime of balance if profiling was activated.
- *                              0 otherwise.
- * \a forest must be committed before calling this function.
- * \see t8_forest_set_profiling
- * \see t8_forest_set_balance
- */
-double              t8_forest_profile_get_balance_time (t8_forest_t forest,
-                                                        int *balance_rounds);
-
-/** Get the runtime of the last call to \ref t8_forest_create_ghosts.
- * \param [in]   forest         The forest.
- * \param [out]  ghosts_sent    On output the number of ghost elements sent to other processes
- *                              if profiling was activated.
- * \return                      The runtime of ghost if profiling was activated.
- *                              0 otherwise.
- * \a forest must be committed before calling this function.
- * \see t8_forest_set_profiling
- * \see t8_forest_set_ghost
- */
-double              t8_forest_profile_get_ghost_time (t8_forest_t forest,
-                                                      t8_locidx_t
-                                                      *ghosts_sent);
-
-/** Get the waittime of the last call to \ref t8_forest_ghost_exchange_data.
- * \param [in]   forest         The forest.
- * \return                      The time of ghost_exchange_data that was spent waiting
- *                              for other MPI processes, if profiling was activated.
- *                              0 otherwise.
- * \a forest must be committed before calling this function.
- * \see t8_forest_set_profiling
- * \see t8_forest_ghost_exchange_data
- */
-double              t8_forest_profile_get_ghostexchange_waittime (t8_forest_t
-                                                                  forest);
-
 /** Print the ghost structure of a forest. Only used for debugging. */
 void                t8_forest_ghost_print (t8_forest_t forest);
 
@@ -838,188 +734,15 @@ t8_eclass_t         t8_forest_element_neighbor_eclass (t8_forest_t forest,
  */
 t8_gloidx_t         t8_forest_element_face_neighbor (t8_forest_t forest,
                                                      t8_locidx_t ltreeid,
-                                                     const t8_element_t *elem,
+                                                     const t8_element_t
+                                                     *elem,
                                                      t8_element_t *neigh,
                                                      t8_eclass_scheme_c
                                                      *neigh_scheme, int face,
                                                      int *neigh_face);
 
 /* TODO: implement */
-void                t8_forest_save (t8_forest_t forest);
-
-/** Write the forest in a parallel vtu format. Extended version.
- * See \ref t8_forest_write_vtk for the standard version of this function.
- * Writes one master .pvtu file and each process writes in its own .vtu file.
- * If linked and not otherwise specified, the VTK API is used.
- * If the VTK library is not linked, an ASCII file is written.
- * This may change in accordance with \a write_ghosts, \a write_curved and 
- * \a do_not_use_API, because the export of ghosts is not yet available with 
- * the VTK API and the export of curved elements is not available with the
- * inbuilt function to write ASCII files. The function will for example
- * still use the VTK API to satisfy \a write_curved, even if \a do_not_use_API 
- * is set to true.
- * Forest must be committed when calling this function.
- * This function is collective and must be called on each process.
- * \param [in]      forest              The forest to write.
- * \param [in]      fileprefix          The prefix of the files where the vtk will
- *                                      be stored. The master file is then fileprefix.pvtu
- *                                      and the process with rank r writes in the file
- *                                      fileprefix_r.vtu.
- * \param [in]      write_treeid        If true, the global tree id is written for each element.
- * \param [in]      write_mpirank       If true, the mpirank is written for each element.
- * \param [in]      write_level         If true, the refinement level is written for each element.
- * \param [in]      write_element_id    If true, the global element id is written for each element.
- * \param [in]      write_ghosts        If true, each process additionally writes its ghost elements.
- *                                      For ghost element the treeid is -1.
- * \param [in]      write_curved        If true, write the elements as curved element types from vtk.
- * \param [in]      do_not_use_API      Do not use the VTK API, even if linked and available.
- * \param [in]      num_data            Number of user defined double valued data fields to write.
- * \param [in]      data                Array of t8_vtk_data_field_t of length \a num_data
- *                                      providing the user defined per element data.
- *                                      If scalar and vector fields are used, all scalar fields
- *                                      must come first in the array.
- * \return  True if successful, false if not (process local).
- * See also \ref t8_forest_write_vtk .
- */
-int                 t8_forest_write_vtk_ext (t8_forest_t forest,
-                                             const char *fileprefix,
-                                             int write_treeid,
-                                             int write_mpirank,
-                                             int write_level,
-                                             int write_element_id,
-                                             int write_ghosts,
-                                             int write_curved,
-                                             int do_not_use_API,
-                                             int num_data,
-                                             t8_vtk_data_field_t *data);
-
-/** Write the forest in a parallel vtu format. Writes one master
- * .pvtu file and each process writes in its own .vtu file.
- * If linked, the VTK API is used.
- * If the VTK library is not linked, an ASCII file is written.
- * This function writes the forest elements, the tree id, element level, mpirank and element id as data.
- * Forest must be committed when calling this function.
- * This function is collective and must be called on each process.
- * For more options use \ref t8_forest_write_vtk_ext
- * \param [in]      forest              The forest to write.
- * \param [in]      fileprefix          The prefix of the files where the vtk will
- *                                      be stored. The master file is then fileprefix.pvtu
- *                                      and the process with rank r writes in the file
- *                                      fileprefix_r.vtu.
- * \return  True if successful, false if not (process local).
- */
-int                 t8_forest_write_vtk (t8_forest_t forest,
-                                         const char *fileprefix);
-
-/* TODO: implement */
 void                t8_forest_iterate (t8_forest_t forest);
-
-/** Compute the coordinates of a given vertex of an element if a geometry
- * for this tree is registered in the forest's cmesh.
- * \param [in]      forest     The forest.
- * \param [in]      ltree_id   The forest local id of the tree in which the element is.
- * \param [in]      element    The element.
- * \param [in]      corner_number The corner number, in Z-order, of the vertex which should be computed.
- * \param [out]     coordinates On input an allocated array to store 3 doubles, on output
- *                             the x, y and z coordinates of the vertex.
- */
-void                t8_forest_element_coordinate (t8_forest_t forest,
-                                                  t8_locidx_t ltree_id,
-                                                  const t8_element_t *element,
-                                                  int corner_number,
-                                                  double *coordinates);
-
-/** Compute the coordinates of the centroid of an element if a geometry
- * for this tree is registered in the forest's cmesh.
- * The centroid is the sum of all corner vertices divided by the number of corners.
- * The centroid can be seen as the midpoint of an element and thus can for example be used
- * to compute level-set values or the distance between two elements.
- * \param [in]      forest     The forest.
- * \param [in]      ltree_id   The forest local id of the tree in which the element is.
- * \param [in]      element    The element.
- * \param [out]     coordinates On input an allocated array to store 3 doubles, on output
- *                             the x, y and z coordinates of the centroid.
- */
-void                t8_forest_element_centroid (t8_forest_t forest,
-                                                t8_locidx_t ltreeid,
-                                                const t8_element_t *element,
-                                                double *coordinates);
-
-/** Compute the diameter of an element if a geometry
- * for this tree is registered in the forest's cmesh.
- * This is only an approximation.
- * \param [in]      forest     The forest.
- * \param [in]      ltree_id   The forest local id of the tree in which the element is.
- * \param [in]      element    The element.
- * \return                     The diameter of the element.
- * \note                       For lines the value is exact while for other element types it is only
- *                             an approximation.
- */
-double              t8_forest_element_diam (t8_forest_t forest,
-                                            t8_locidx_t ltreeid,
-                                            const t8_element_t *element);
-
-/** Compute the volume of an element if a geometry
- * for this tree is registered in the forest's cmesh.
- * This is only an approximation.
- * \param [in]      forest     The forest.
- * \param [in]      ltree_id   The forest local id of the tree in which the element is.
- * \param [in]      element    The element.
- * \return                     The diameter of the element.
- * \note                       This function assumes d-linear interpolation for the
- *                             tree vertex coordinates.
- *                             \a forest must be committed when calling this function.
- */
-double              t8_forest_element_volume (t8_forest_t forest,
-                                              t8_locidx_t ltreeid,
-                                              const t8_element_t *element);
-
-/** Compute the area of an element's face if a geometry
- * for this tree is registered in the forest's cmesh.
- * Currently implemented for 2D elements only.
- * This is only an approximation.
- * \param [in]      forest     The forest.
- * \param [in]      ltree_id   The forest local id of the tree in which the element is.
- * \param [in]      element    The element.
- * \param [in]      face       A face of \a element.
- * \return                     The area of \a face.
- * \a forest must be committed when calling this function.
- */
-double              t8_forest_element_face_area (t8_forest_t forest,
-                                                 t8_locidx_t ltreeid,
-                                                 const t8_element_t *element,
-                                                 int face);
-
-/** Compute the vertex coordinates of the centroid of an element's face if a geometry
- * for this tree is registered in the forest's cmesh.
- * \param [in]      forest     The forest.
- * \param [in]      ltree_id   The forest local id of the tree in which the element is.
- * \param [in]      element    The element.
- * \param [in]      face       A face of \a element.
- * \param [out]     normal     On output the centroid of \a face.
- * \a forest must be committed when calling this function.
- */
-void                t8_forest_element_face_centroid (t8_forest_t forest,
-                                                     t8_locidx_t ltreeid,
-                                                     const t8_element_t
-                                                     *element, int face,
-                                                     double centroid[3]);
-
-/** Compute the normal vector of an element's face if a geometry
- * for this tree is registered in the forest's cmesh.
- * Currently implemented for 2D elements only.
- * \param [in]      forest     The forest.
- * \param [in]      ltree_id   The forest local id of the tree in which the element is.
- * \param [in]      element    The element.
- * \param [in]      face       A face of \a element.
- * \param [out]     normal     On output the normal vector of \a element at \a face.
- * \a forest must be committed when calling this function.
- */
-void                t8_forest_element_face_normal (t8_forest_t forest,
-                                                   t8_locidx_t ltreeid,
-                                                   const t8_element_t
-                                                   *element, int face,
-                                                   double normal[3]);
 
 /** Query whether a given point lies inside an element or not. For bilinearly interpolated elements.
  * \note For 2D quadrilateral elements this function is only an approximation. It is correct
@@ -1098,7 +821,6 @@ void                t8_forest_ref (t8_forest_t forest);
  *                              the forest is not modified in other ways.
  */
 void                t8_forest_unref (t8_forest_t *pforest);
-
 T8_EXTERN_C_END ();
 
-#endif /* !T8_FOREST_H */
+#endif /* !T8_FOREST_GENERAL_H */

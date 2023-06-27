@@ -26,7 +26,8 @@
 #include <sc_refcount.h>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_element_cxx.hxx>
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_geometrical.h>
 #include <example/common/t8_example_common.h>
 
 T8_EXTERN_C_BEGIN ();
