@@ -1820,6 +1820,12 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
   SC_CHECK_ABORT (forest->mpisize == 1 || forest->ghosts != NULL,
                   "Ghost structure is needed for t8_forest_leaf_face_neighbors "
                   "but was not found in forest.\n");
+  
+  /* Only caluculate leaf face neigbors if the caller provides sufficient memory */
+  if (pneighbor_leafs == NULL || dual_faces == NULL ||
+      num_neighbors == NULL || pelement_indices == NULL) {
+    return;
+  }
 
   if (forest_is_balanced) {
     /* In a balanced forest, the leaf neighbor of a leaf is either the neighbor element itself,

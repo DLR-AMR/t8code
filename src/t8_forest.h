@@ -482,13 +482,13 @@ t8_ctree_t          t8_forest_get_coarse_tree (t8_forest_t forest,
  * \param [in]    forest  The forest. Must have a valid ghost layer.
  * \param [in]    ltreeid A local tree id.
  * \param [in]    leaf    A leaf in tree \a ltreeid of \a forest.
- * \param [out]   neighbor_leafs Unallocated on input. On output the neighbor
+ * \param [out]   neighbor_leafs On output the neighbor
  *                        leafs are stored here.
  * \param [in]    face    The index of the face across which the face neighbors
  *                        are searched.
  * \param [out]   dual_face On output the face id's of the neighboring elements' faces.
  * \param [out]   num_neighbors On output the number of neighbor leafs.
- * \param [out]   pelement_indices Unallocated on input. On output the element indices
+ * \param [out]   pelement_indices On output the element indices
  *                        of the neighbor leafs are stored here.
  *                        0, 1, ... num_local_el - 1 for local leafs and
  *                        num_local_el , ... , num_local_el + num_ghosts - 1 for ghosts.
