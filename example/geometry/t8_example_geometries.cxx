@@ -23,8 +23,9 @@
 #include <sc_options.h>
 #include <sc_refcount.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
-#include <t8_forest.h>
-#include <t8_cmesh_vtk.h>
+#include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_io.h>
+#include <t8_cmesh_vtk_writer.h>
 #include <t8_geometry/t8_geometry_base.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
@@ -961,8 +962,9 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     forest = forest_adapt;
   }
 
-  /* Write to vtk */
-  t8_forest_write_vtk (forest, vtuname);
+  /* Write to vtk. We use the extended vtk function to export a curved vtk mesh.
+   * This is only viable if you link to vtk. */
+  t8_forest_write_vtk_ext (forest, vtuname, 1, 1, 1, 1, 0, 1, 0, 0, NULL);
   /* Output */
   t8_global_productionf ("Wrote forest to vtu files %s.*\n", vtuname);
   if (geom_type == T8_GEOM_CIRCLE) {

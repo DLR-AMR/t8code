@@ -31,7 +31,7 @@
 #define T8_EXAMPLE_COMMON_H
 
 #include <t8.h>
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
 
 /** CHTODO: Is this function necessary or is there a function that does the same? */
 /** A simple struct managing a sphere. We use it to define

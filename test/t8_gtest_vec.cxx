@@ -89,6 +89,30 @@ TEST (t8_gtest_vec, ax)
   }
 }
 
+/* test the t8_vec_axy function */
+TEST (t8_gtest_vec, axy)
+{
+  const t8_test_vec   czero = { 0, 0, 0 };
+  const t8_test_vec   conetwothree = { 1, 2, 3 };
+  const t8_test_vec   carbitrary = { -.05, 3.14159, 42 };
+  t8_test_vec         zero;
+  t8_test_vec         onetwothree;
+  t8_test_vec         arbitrary;
+  const double        alpha = 5.1234;
+
+  /* Compute Y = alpha * X */
+  t8_vec_axy (czero, zero, alpha);
+  t8_vec_axy (conetwothree, onetwothree, alpha);
+  t8_vec_axy (carbitrary, arbitrary, alpha);
+
+  /* Check results */
+  for (int i = 0; i < 3; ++i) {
+    EXPECT_NEAR (zero[i], alpha * czero[i], epsilon);
+    EXPECT_NEAR (onetwothree[i], alpha * conetwothree[i], epsilon);
+    EXPECT_NEAR (arbitrary[i], alpha * carbitrary[i], epsilon);
+  }
+}
+
 /* test the t8_vec_axb function */
 TEST (t8_gtest_vec, axb)
 {

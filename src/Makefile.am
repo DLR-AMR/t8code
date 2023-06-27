@@ -10,6 +10,7 @@ messyinterfaceincludedir = $(includedir)/t8_messy
 geometryincludedir = $(includedir)/t8_geometry
 geometryimplincludedir = $(geometryincludedir)/t8_geometry_implementations
 schemesdefaultincludedir = $(includedir)/t8_schemes/t8_default
+vtkincludedir = $(includedir)/t8_vtk
 defaultcommonincludedir = $(schemesdefaultincludedir)/t8_default_common
 defaultvertexincludedir = $(schemesdefaultincludedir)/t8_default_vertex
 defaultlineincludedir = $(schemesdefaultincludedir)/t8_default_line
@@ -27,8 +28,8 @@ libt8_installed_headers = \
   src/t8_element_c_interface.h \
   src/t8_refcount.h src/t8_cmesh.h src/t8_cmesh_triangle.h \
   src/t8_cmesh_tetgen.h src/t8_cmesh_readmshfile.h \
-  src/t8_cmesh_vtk.h \
-  src/t8_forest.h \
+  src/t8_cmesh_vtk_writer.h \
+  src/t8_cmesh_vtk_reader.hxx \
   src/t8_vec.h \
   src/t8_version.h \
   src/t8_vtk.h \
@@ -45,8 +46,14 @@ libt8_installed_headers_cmesh = \
 libt8_installed_headers_data = \
   src/t8_data/t8_shmem.h src/t8_data/t8_containers.h
 libt8_installed_headers_forest = \
+  src/t8_forest/t8_forest.h \
+  src/t8_forest/t8_forest_general.h \
+  src/t8_forest/t8_forest_geometrical.h \
+  src/t8_forest/t8_forest_profiling.h \
+  src/t8_forest/t8_forest_io.h \
   src/t8_forest/t8_forest_adapt.h \
   src/t8_forest/t8_forest_vtk.h \
+  src/t8_forest/t8_forest_to_vtkUnstructured.hxx \
   src/t8_forest/t8_forest_iterate.h src/t8_forest/t8_forest_partition.h
 libt8_installed_headers_fortran_interface = \
   src/t8_fortran_interface/t8_fortran_interface.h
@@ -67,6 +74,9 @@ libt8_installed_headers_geometry_impl = \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx 
+libt8_installed_headers_vtk = \
+  src/t8_vtk/t8_vtk_reader.hxx \
+  src/t8_vtk/t8_vtk_types.h
 libt8_installed_headers_schemes_default =
 libt8_installed_headers_default_common =
 libt8_installed_headers_default_vertex =
@@ -82,10 +92,12 @@ libt8_internal_headers = \
   src/t8_cmesh/t8_cmesh_types.h src/t8_cmesh/t8_cmesh_partition.h \
   src/t8_cmesh/t8_cmesh_refine.h src/t8_cmesh/t8_cmesh_copy.h \
   src/t8_cmesh/t8_cmesh_offset.h \
+  src/t8_vtk/t8_vtk_polydata.hxx \
+  src/t8_vtk/t8_vtk_unstructured.hxx \
   src/t8_forest/t8_forest_cxx.h  \
   src/t8_forest/t8_forest_ghost.h \
   src/t8_forest/t8_forest_balance.h src/t8_forest/t8_forest_types.h \
-  src/t8_forest/t8_forest_private.h 
+  src/t8_forest/t8_forest_private.h
 libt8_compiled_sources = \
   src/t8.c src/t8_eclass.c src/t8_mesh.c \
   src/t8_element.c src/t8_element_cxx.cxx \
@@ -93,7 +105,8 @@ libt8_compiled_sources = \
   src/t8_refcount.c src/t8_cmesh/t8_cmesh.c \
   src/t8_cmesh/t8_cmesh_occ.cxx \
   src/t8_cmesh/t8_cmesh_cxx.cxx src/t8_cmesh/t8_cmesh_triangle.c \
-  src/t8_cmesh/t8_cmesh_vtk.c src/t8_cmesh/t8_cmesh_stash.c \
+  src/t8_cmesh/t8_cmesh_vtk_writer.c src/t8_cmesh/t8_cmesh_stash.c \
+  src/t8_cmesh/t8_cmesh_vtk_reader.cxx \
   src/t8_cmesh/t8_cmesh_save.c \
   src/t8_cmesh/t8_cmesh_netcdf.c \
   src/t8_cmesh/t8_cmesh_trees.c src/t8_cmesh/t8_cmesh_commit.c \
@@ -124,20 +137,26 @@ libt8_compiled_sources = \
   src/t8_forest/t8_forest_netcdf.cxx \
   src/t8_element_shape.c \
   src/t8_netcdf.c \
-  src/t8_cmesh/t8_cmesh_testcases.c 
+  src/t8_cmesh/t8_cmesh_testcases.c \
+  src/t8_vtk/t8_vtk_polydata.cxx \
+  src/t8_vtk/t8_vtk_unstructured.cxx \
+  src/t8_vtk/t8_vtk_reader.cxx
+
 
 # this variable is used for headers that are not publicly installed
 T8_CPPFLAGS =
 
+justlibs-local: src/libt8.la
 lib_LTLIBRARIES += src/libt8.la
 src_libt8_la_SOURCES = \
 	$(libt8_internal_headers) \
 	$(libt8_compiled_sources)
 src_libt8_la_CPPFLAGS = $(AM_CPPFLAGS) $(T8_CPPFLAGS)
-src_libt8_la_LDFLAGS = -release $(VERSION)
+## This is the official API versioning scheme of libtool.  Please see:
+## Read https://www.gnu.org/software/libtool/manual/libtool.html#Versioning
+src_libt8_la_LDFLAGS = -release $(VERSION) -version-info 2:0:0
 src_libt8_la_LIBADD = @T8_P4EST_LDADD@ @T8_SC_LDADD@
-LDADD += @top_builddir@/src/libt8.la \
-        @T8_P4EST_LDADD@ @T8_SC_LDADD@
+LDADD += src/libt8.la @T8_P4EST_LDADD@ @T8_SC_LDADD@
 EXTRA_src_libt8_la_DEPENDENCIES = @T8_P4EST_LDADD@ @T8_SC_LDADD@
 
 nodist_include_HEADERS += $(libt8_generated_headers)
@@ -150,6 +169,7 @@ dist_messyinterfaceinclude_HEADERS = $(libt8_installed_headers_messy)
 dist_geometryinclude_HEADERS = $(libt8_installed_headers_geometry)
 dist_geometryimplinclude_HEADERS = $(libt8_installed_headers_geometry_impl)
 dist_schemesdefaultinclude_HEADERS = $(libt8_installed_headers_schemes_default)
+dist_vtkinclude_HEADERS = $(libt8_installed_headers_vtk)
 dist_defaultcommoninclude_HEADERS = $(libt8_installed_headers_default_common)
 dist_defaultvertexinclude_HEADERS = $(libt8_installed_headers_default_vertex)
 dist_defaultlineinclude_HEADERS = $(libt8_installed_headers_default_line)
@@ -160,5 +180,4 @@ dist_defaulttetinclude_HEADERS = $(libt8_installed_headers_default_tet)
 dist_defaultprisminclude_HEADERS = $(libt8_installed_headers_default_prism)
 dist_defaultpyramidinclude_HEADERS = $(libt8_installed_headers_default_pyramid)
 
-AM_CPPFLAGS += -I@top_srcdir@/src \
-        @T8_SC_CPPFLAGS@ @T8_P4EST_CPPFLAGS@
+AM_CPPFLAGS += -I@top_srcdir@/src @T8_SC_CPPFLAGS@ @T8_P4EST_CPPFLAGS@
