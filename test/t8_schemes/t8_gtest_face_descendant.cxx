@@ -48,6 +48,7 @@ protected:
 };
 /* *INDENT-ON* */
 
+/* Computes manually the test_child_id-th child. */
 void
 t8_face_descendant_test_child (t8_element_t *tmp, t8_element_t *test,
                                t8_element_t *elem, t8_eclass_scheme_c *ts,
@@ -60,19 +61,22 @@ t8_face_descendant_test_child (t8_element_t *tmp, t8_element_t *test,
   t8_element_t      **children = T8_ALLOC (t8_element_t *, num_children);
   ts->t8_element_new (num_children, children);
 
-  /* Computing the child-id of the last descendant */
-  ts->t8_element_children_at_face (tmp, face, children, num_children,
-                                   child_indices);
-  int                 child_id = child_indices[test_child_id];
   ts->t8_element_copy (elem, tmp);
   for (int klevel = level; klevel < ilevel; klevel++) {
-    ts->t8_element_child (tmp, child_id, tmp);
+    /* Compute child_id of the test_child_id-th child. */
+    ts->t8_element_children_at_face (tmp, face, children, num_children,
+                                     child_indices);
+    int                 child_id = child_indices[test_child_id];
+
+    ts->t8_element_child (tmp, child_id, test);
+    ts->t8_element_copy (test, tmp);
   }
   ts->t8_element_destroy (num_children, children);
   T8_FREE (children);
   T8_FREE (child_indices);
 }
 
+/* Check the linear first and last descendants of an element along all faces. */
 void
 t8_linear_face_descendant (t8_element_t *elem, t8_element_t *tmp,
                            t8_element_t *test, t8_eclass_scheme_c *ts,
@@ -84,32 +88,38 @@ t8_linear_face_descendant (t8_element_t *elem, t8_element_t *tmp,
 
   num_faces = ts->t8_element_num_faces (elem);
 
+  /* Testing the linear first descendant. */
   ts->t8_element_copy (elem, tmp);
   for (int ilevel = level + 1; ilevel < maxlvl; ilevel++) {
     for (int jface = 0; jface < num_faces; jface++) {
 
+      /* Number of children of the first descendant of the previous level. */
       int                 num_children =
         ts->t8_element_num_face_children (tmp, jface);
       t8_face_descendant_test_child (tmp, test, elem, ts, jface, level,
                                      ilevel, num_children, 0);
 
-      ts->t8_element_first_descendant_face (elem, jface, tmp, ilevel);
+      ts->t8_element_first_descendant_face (elem, jface, test, ilevel);
+      /* Compare the manually computed child with the result of t8_element_first_descendant_face. */
       ASSERT_FALSE (ts->t8_element_compare (test,
                                             tmp)) <<
         "Wrong first descendant face\n";
     }
   }
 
+  /* Testing the linar last descendant. */
   ts->t8_element_copy (elem, tmp);
   for (int ilevel = level + 1; ilevel < maxlvl; ilevel++) {
     for (int jface = 0; jface < num_faces; jface++) {
 
+      /* Number of children of the last descendant of the previous level. */
       int                 num_children =
         ts->t8_element_num_face_children (tmp, jface);
       t8_face_descendant_test_child (tmp, test, elem, ts, jface, level,
                                      ilevel, num_children, num_children - 1);
 
-      ts->t8_element_last_descendant_face (elem, jface, tmp, ilevel);
+      /* Compare the manuall computed child with the result of t8_element_last_descendant_face. */
+      ts->t8_element_last_descendant_face (elem, jface, test, ilevel);
       ASSERT_FALSE (ts->t8_element_compare (test,
                                             tmp)) <<
         "Wrong last descendant face\n";
@@ -117,7 +127,7 @@ t8_linear_face_descendant (t8_element_t *elem, t8_element_t *tmp,
   }
 }
 
-/*Recursivly check the first and last descendant along a face*/
+/*Recursivly check the first and last descendant along a face for all childs. */
 void
 t8_recursive_face_desendant (t8_element_t *elem, t8_element_t *test,
                              t8_element_t *tmp, t8_element_t *child,
