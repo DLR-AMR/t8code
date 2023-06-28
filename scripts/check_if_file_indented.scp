@@ -29,7 +29,6 @@
 # file is properly indented and not 0 if it is not.
 #
 
-
 usage="$0 FILENAME [INDENT_SCRIPT]"
 
 #
@@ -37,31 +36,42 @@ usage="$0 FILENAME [INDENT_SCRIPT]"
 #
 if [ `basename $PWD` != scripts ]
 then
-  echo ERROR: Must be executed from whitin the scripts/ subfolder. 2>&1
-  exit 1
+  if [ -d scripts ]
+  then
+    # The directory stack is automatically reset on script exit.
+    pushd scripts/ > /dev/null
+  else
+    echo ERROR: scripts/ directory not found.
+    exit 1
+  fi
 fi
 
-
 # Check if first argument given
-if [ x$1 = x ]
+if [ ${1-x} = x ]
 then
-  echo ERROR: Need to provide a file as first argument. 2>&1
+  echo ERROR: Need to provide a file as first argument.
   echo $usage
   exit 1
 fi
 
 # Check if first argument is a file and store it in variable
-if [ -f $1 ]
+if [ -f "$1" ]
   then
-  file=$1
+  file="$1"
 else
-  echo ERROR: Non existing file.
-  echo $usage
-  exit 1
+  # Try from folder above.
+  if [ -f "../$1" ]
+  then
+    file="../$1"
+  else
+    echo "ERROR: Non existing file: $1"
+    echo $usage
+    exit 1
+  fi
 fi
 
 # Check if second argument given and set indent script
-if [ x$2 = x ]
+if [ ${2-x} = x ]
 then
   # Set default indent script
   INDENT=./t8indent
