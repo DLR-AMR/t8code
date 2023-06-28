@@ -25,8 +25,8 @@
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_hex/t8_default_hex_cxx.hxx>
 
-#define HEX_LINEAR_MAXLEVEL P8EST_OLD_QMAXLEVEL
-#define HEX_REFINE_MAXLEVEL P8EST_OLD_QMAXLEVEL
+#define HEX_LINEAR_MAXLEVEL P8EST_QMAXLEVEL
+#define HEX_REFINE_MAXLEVEL P8EST_QMAXLEVEL
 /* This is the ideal but currently not exposed in the overall interface. */
 /* #define HEX_REFINE_MAXLEVEL P8EST_QMAXLEVEL */
 
