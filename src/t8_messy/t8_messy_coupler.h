@@ -23,7 +23,7 @@
 #define T8_MESSY_COUPLER_H
 
 #include <t8.h>
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
 #include "t8_latlon_refine.h"
 #include "t8_latlon_data.h"
 

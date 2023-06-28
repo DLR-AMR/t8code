@@ -27,7 +27,7 @@
 #define T8_LATLON_DATA_H
 
 #include <t8.h>
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
 
 /* If we associate data on an X x Y subgrid, it can be 
  * sorted in memory to match the gridcells in different ways.
