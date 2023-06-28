@@ -349,27 +349,27 @@ t8_forest_element_to_vtk_cell (t8_forest_t forest,
    * To get the element id, we have to add the local id in the tree 
    * plus theo
    */
-    /* *INDENT-OFF* */
-    if(curved_flag==0){
-      cellTypes[elem_id - offset] = t8_eclass_vtk_type[element_shape];
-    }
-    else{
-      cellTypes[elem_id - offset] = t8_curved_eclass_vtk_type[element_shape];
-    }
-    if (write_treeid == 1) {
-      const t8_gloidx_t gtree_id = t8_forest_global_tree_id(forest, itree);
-      vtk_treeid->InsertNextValue (gtree_id);
-    }
-    if (write_mpirank == 1) {
-      vtk_mpirank->InsertNextValue (forest->mpirank);
-    }
-    if (write_level == 1) {
-      vtk_level->InsertNextValue (scheme->t8_element_level (element));
-    }
-    if (write_element_id == 1) {
-      vtk_element_id->InsertNextValue (elem_id);
-    }
-    /* *INDENT-ON* */
+  /* *INDENT-OFF* */
+  if(curved_flag==0){
+    cellTypes[elem_id - offset] = t8_eclass_vtk_type[element_shape];
+  }
+  else{
+    cellTypes[elem_id - offset] = t8_curved_eclass_vtk_type[element_shape];
+  }
+  if (write_treeid == 1) {
+    const t8_gloidx_t gtree_id = t8_forest_global_tree_id(forest, itree);
+    vtk_treeid->InsertNextValue (gtree_id);
+  }
+  if (write_mpirank == 1) {
+    vtk_mpirank->InsertNextValue (forest->mpirank);
+  }
+  if (write_level == 1) {
+    vtk_level->InsertNextValue (scheme->t8_element_level (element));
+  }
+  if (write_element_id == 1) {
+    vtk_element_id->InsertNextValue (elem_id);
+  }
+  /* *INDENT-ON* */
 }
 
 #endif
