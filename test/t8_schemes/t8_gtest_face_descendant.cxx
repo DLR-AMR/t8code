@@ -66,8 +66,7 @@ t8_face_descendant_test_child (t8_element_t *tmp, t8_element_t *test,
   int                 child_id = child_indices[test_child_id];
   ts->t8_element_copy (elem, tmp);
   for (int klevel = level; klevel < ilevel; klevel++) {
-    ts->t8_element_child (tmp, child_id, test);
-    ts->t8_element_copy (test, tmp);
+    ts->t8_element_child (tmp, child_id, tmp);
   }
   ts->t8_element_destroy (num_children, children);
   T8_FREE (children);
