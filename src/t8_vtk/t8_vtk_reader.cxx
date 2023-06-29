@@ -220,7 +220,6 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > vtkGrid,
   const int           num_data_arrays = cell_data->GetNumberOfArrays ();
   T8_ASSERT (num_data_arrays >= 0);
 
-  t8_debugf ("[D] read %i data-arrays\n", num_data_arrays);
   /* Prepare attributes */
   if (num_data_arrays > 0) {
     size_t              tuple_size;
@@ -230,8 +229,6 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > vtkGrid,
       vtkDataArray       *data = cell_data->GetArray (idata);
       tuple_size = data->GetNumberOfComponents ();
       data_size[idata] = sizeof (double) * tuple_size;
-      t8_debugf ("[D] data_size[%i] = %li, tuple_size %li\n", idata,
-                 data_size[idata], tuple_size);
       /* Allocate memory for a tuple in array i */
       tuples[idata] = T8_ALLOC (double, tuple_size);
     }
@@ -279,7 +276,6 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > vtkGrid,
     }
     tree_id++;
   }
-  t8_debugf ("[D] read %li trees\n", tree_id);
 
   /* Clean-up */
   cell_it->Delete ();
@@ -333,7 +329,6 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet > vtkGrid,
     }
     /* Communicate the dimension to all processes */
     sc_MPI_Bcast (&dim, 1, sc_MPI_INT, main_proc, comm);
-    t8_debugf ("[D] dim: %i\n", dim);
     /* Communicate the number of trees to all processes. 
      * TODO: This probably crashes when a vtkGrid is distributed in many 
      * files. */
