@@ -189,7 +189,7 @@ jobs:
     - name: make install
       run: cd build_netcdf && make install -j
     - name: make check
-      run: cd build_netcdf && make check -j4 V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
+      run: cd build_netcdf && make check -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v1
@@ -212,7 +212,7 @@ jobs:
     - name: make install
       run: cd build_occ && make install -j
     - name: make check
-      run: cd build_occ && make check -j4 V=0 CFLAGS="$CFLAGS_var -Werror -I/usr/include/opencascade" CXXFLAGS="$CXXFLAGS_var -Werror -I/usr/include/opencascade"
+      run: cd build_occ && make check -j V=0 CFLAGS="$CFLAGS_var -Werror -I/usr/include/opencascade" CXXFLAGS="$CXXFLAGS_var -Werror -I/usr/include/opencascade"
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v1
@@ -235,7 +235,7 @@ jobs:
     - name: make install
       run: cd build_vtk && make install -j
     - name: make check
-      run: cd build_vtk && make check -j4 V=0 CFLAGS="$CFLAGS_var -Werror -isystem/usr/local/include/vtk-9.0" CXXFLAGS="$CXXFLAGS_var -Werror -isystem/usr/local/include/vtk-9.0"
+      run: cd build_vtk && make check -j V=0 CFLAGS="$CFLAGS_var -Werror -isystem/usr/local/include/vtk-9.0" CXXFLAGS="$CXXFLAGS_var -Werror -isystem/usr/local/include/vtk-9.0"
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v1

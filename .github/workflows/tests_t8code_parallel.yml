@@ -216,7 +216,7 @@ jobs:
     - name: make install
       run: cd build_release && make install -j
     - name: make check
-      run: cd build_release && make check -j4 V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
+      run: cd build_release && make check -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v1
@@ -239,7 +239,7 @@ jobs:
     - name: make install
       run: cd build_debug && make install -j
     - name: make check
-      run: cd build_debug && make check -j4 V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
+      run: cd build_debug && make check -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v1
@@ -262,7 +262,7 @@ jobs:
     - name: make install
       run: cd build_release_cpp && make install -j
     - name: make check
-      run: cd build_release_cpp && make check -j4 V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
+      run: cd build_release_cpp && make check -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v1
