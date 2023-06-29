@@ -986,7 +986,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
           T8_ASSERT (t8_geom_is_occ(occ_geometry_base));
           const t8_geometry_occ_c *occ_geometry = dynamic_cast<const t8_geometry_occ_c *> (occ_geometry_base);
           /* Check for right element class */
-          if (eclass != T8_ECLASS_HEX && eclass != T8_ECLASS_QUAD)
+          if (eclass != T8_ECLASS_TRIANGLE && eclass != T8_ECLASS_QUAD && eclass != T8_ECLASS_HEX)
           {
             t8_errorf("%s element detected. The occ geometry currently only supports quad and hex elements.", 
                       t8_eclass_to_string[eclass]);
@@ -1208,9 +1208,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
               }
               /* If we have found a surface we link it to the face */
               face_geometries[i_tree_faces] = surface_index;
-              const Handle_Geom_Surface occ_surface = occ_geometry->t8_geom_get_occ_surface(surface_index);
-              double parametric_bounds[4];
-              occ_surface->Bounds(parametric_bounds[0], parametric_bounds[1], parametric_bounds[2], parametric_bounds[3]);
               tree_is_linked = 1;
               for (int i_face_edges = 0; 
                    i_face_edges < num_face_edges;
@@ -1235,74 +1232,13 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                 parameters[i_face_nodes * 2] = face_nodes[i_face_nodes].parameters[0];
                 parameters[i_face_nodes * 2 + 1] = face_nodes[i_face_nodes].parameters[1];
               }
-
-              if (occ_surface->IsUClosed()) {
-                for (int i_face_nodes = 0; 
-                     i_face_nodes < num_face_nodes; 
-                     ++i_face_nodes)
-                {
-                  if (parameters[i_face_nodes * 2] == parametric_bounds[0]) {
-                    for (int j_face_nodes = 0; 
-                         j_face_nodes < num_face_nodes; 
-                         ++j_face_nodes) {
-                      if (parameters[j_face_nodes * 2] != parametric_bounds[0]
-                          && parameters[j_face_nodes * 2] != parametric_bounds[1]) {
-                        if (parameters[j_face_nodes * 2] > ((parametric_bounds[1] - parametric_bounds[0]) / 2)) {
-                          parameters[i_face_nodes * 2] = parametric_bounds[1];
-                          break;
-                        }
-                      }
-                    }
-                  }
-                  else if (parameters[i_face_nodes * 2] == parametric_bounds[1]) {
-                    for (int j_face_nodes = 0; 
-                         j_face_nodes < num_face_nodes; 
-                         ++j_face_nodes) {
-                      if (parameters[j_face_nodes * 2] != parametric_bounds[1]
-                          && parameters[j_face_nodes * 2] != parametric_bounds[0]) {
-                        if (parameters[j_face_nodes * 2] < ((parametric_bounds[1] - parametric_bounds[0]) / 2)) {
-                          parameters[i_face_nodes * 2] = parametric_bounds[0];
-                          break;
-                        }
-                      }
-                    }
-                  }
-                }
+              /* Corrects the parameters on the surface if it is closed to prevent disorted elements. */
+              const Handle_Geom_Surface occ_surface = occ_geometry->t8_geom_get_occ_surface(surface_index);
+              if (occ_surface->IsUClosed() || occ_surface->IsVClosed()) {
+                occ_geometry->t8_geom_correct_closed_geometry_parametric(1, surface_index,
+                                                                         num_face_nodes,
+                                                                         parameters);
               }
-              if (occ_surface->IsVClosed()) {
-                for (int i_face_nodes = 0; 
-                     i_face_nodes < num_face_nodes; 
-                     ++i_face_nodes)
-                {
-                  if (parameters[i_face_nodes * 2 + 1] == parametric_bounds[2]) {
-                    for (int j_face_nodes = 0; 
-                         j_face_nodes < num_face_nodes; 
-                         ++j_face_nodes) {
-                      if (parameters[j_face_nodes * 2 + 1] != parametric_bounds[2]
-                          && parameters[j_face_nodes * 2 + 1] != parametric_bounds[3]) {
-                        if (parameters[j_face_nodes * 2 + 1] > ((parametric_bounds[3] - parametric_bounds[2]) / 2)) {
-                          parameters[i_face_nodes * 2 + 1] = parametric_bounds[3];
-                          break;
-                        }
-                      }
-                    }
-                  }
-                  else if (parameters[i_face_nodes * 2 + 1] == parametric_bounds[3]) {
-                    for (int j_face_nodes = 0; 
-                         j_face_nodes < num_face_nodes; 
-                         ++j_face_nodes) {
-                      if (parameters[j_face_nodes * 2 + 1] != parametric_bounds[3]
-                          && parameters[j_face_nodes * 2 + 1] != parametric_bounds[2]) {
-                        if (parameters[j_face_nodes * 2 + 1] < ((parametric_bounds[3] - parametric_bounds[2]) / 2)) {
-                          parameters[i_face_nodes * 2 + 1] = parametric_bounds[2];
-                          break;
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-
               t8_cmesh_set_attribute (cmesh, 
                                       tree_count, 
                                       t8_get_package_id(), 
@@ -1449,43 +1385,14 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
               }
               edge_geometries[i_tree_edges] = edge_geometry_tag;
               const Handle_Geom_Curve occ_edge = occ_geometry->t8_geom_get_occ_curve(edge_geometry_tag);
-              double edge_parametric_bounds[2];
-              edge_parametric_bounds[0] = occ_edge->FirstParameter();
-              edge_parametric_bounds[1] = occ_edge->LastParameter();
               tree_is_linked = 1;
               parameters[0] = edge_nodes[0].parameters[0];
               parameters[1] = edge_nodes[1].parameters[0];
 
+              /* Corrects the parameters on the edge if it is closed to prevent disorted elements. */
               if (occ_edge->IsClosed()) {
-                for (int i_edge_nodes = 0; 
-                     i_edge_nodes < 2; 
-                     ++i_edge_nodes)
-                {
-                  if (parameters[i_edge_nodes] == edge_parametric_bounds[0]) {
-                    for (int j_edge_nodes = 0; 
-                         j_edge_nodes < 2; 
-                         ++j_edge_nodes) {
-                      if (parameters[j_edge_nodes] != edge_parametric_bounds[0]) {
-                        if (parameters[j_edge_nodes] > ((edge_parametric_bounds[1] - edge_parametric_bounds[0]) / 2)) {
-                          parameters[i_edge_nodes] = edge_parametric_bounds[1];
-                          break;
-                        }
-                      }
-                    }
-                  }
-                  else if (parameters[i_edge_nodes] == edge_parametric_bounds[1]) {
-                    for (int j_edge_nodes = 0; 
-                         j_edge_nodes < 2; 
-                         ++j_edge_nodes) {
-                      if (parameters[j_edge_nodes] != edge_parametric_bounds[1]) {
-                        if (parameters[j_edge_nodes] < ((edge_parametric_bounds[1] - edge_parametric_bounds[0]) / 2)) {
-                          parameters[i_edge_nodes] = edge_parametric_bounds[0];
-                          break;
-                        }
-                      }
-                    }
-                  }
-                }
+                occ_geometry->t8_geom_correct_closed_geometry_parametric(0, edge_geometry_tag,
+                                                                         2, parameters);
               }
 
               t8_cmesh_set_attribute (cmesh, 
@@ -1548,82 +1455,21 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                                                                           edge_nodes[i_edge_node].parameters[0],
                                                                           parameters,
                                                                           edge_nodes[i_edge_node].parameters);
-                  t8_global_productionf("test");
                   edge_nodes[i_edge_node].entity_dim = 2;
                 }
               }
               edge_geometries[i_tree_edges + t8_eclass_num_edges[eclass]] = edge_geometry_tag;
               const Handle_Geom_Surface occ_surface = occ_geometry->t8_geom_get_occ_surface(edge_geometry_tag);
-              double parametric_bounds[4];
-              occ_surface->Bounds(parametric_bounds[0], parametric_bounds[1], parametric_bounds[2], parametric_bounds[3]);
               tree_is_linked = 1;
               parameters[0] = edge_nodes[0].parameters[0];
               parameters[1] = edge_nodes[0].parameters[1];
               parameters[2] = edge_nodes[1].parameters[0];
               parameters[3] = edge_nodes[1].parameters[1];
 
-              if (occ_surface->IsUClosed()) {
-                for (int i_edge_nodes = 0; 
-                     i_edge_nodes < 2; 
-                     ++i_edge_nodes)
-                {
-                  if (parameters[i_edge_nodes * 2] == parametric_bounds[0]) {
-                    for (int j_edge_nodes = 0; 
-                         j_edge_nodes < 2; 
-                         ++j_edge_nodes) {
-                      if (parameters[j_edge_nodes * 2] != parametric_bounds[0]) {
-                        if (parameters[j_edge_nodes * 2] > ((parametric_bounds[1] - parametric_bounds[0]) / 2)) {
-                          parameters[i_edge_nodes * 2] = parametric_bounds[1];
-                          break;
-                        }
-                      }
-                    }
-                  }
-                  else if (parameters[i_edge_nodes * 2] == parametric_bounds[1]) {
-                    for (int j_edge_nodes = 0; 
-                         j_edge_nodes < 2; 
-                         ++j_edge_nodes) {
-                      if (parameters[j_edge_nodes * 2] != parametric_bounds[1]) {
-                        if (parameters[j_edge_nodes * 2] < ((parametric_bounds[1] - parametric_bounds[0]) / 2)) {
-                          parameters[i_edge_nodes * 2] = parametric_bounds[0];
-                          break;
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-
-              if (occ_surface->IsVClosed()) {
-                for (int i_edge_nodes = 0; 
-                     i_edge_nodes < 2; 
-                     ++i_edge_nodes)
-                {
-                  if (parameters[i_edge_nodes * 2 + 1] == parametric_bounds[2]) {
-                    for (int j_edge_nodes = 0; 
-                         j_edge_nodes < 2; 
-                         ++j_edge_nodes) {
-                      if (parameters[j_edge_nodes * 2 + 1] != parametric_bounds[2]) {
-                        if (parameters[j_edge_nodes * 2 + 1] > ((parametric_bounds[3] - parametric_bounds[2]) / 2)) {
-                          parameters[i_edge_nodes * 2 + 1] = parametric_bounds[3];
-                          break;
-                        }
-                      }
-                    }
-                  }
-                  else if (parameters[i_edge_nodes * 2 + 1] == parametric_bounds[3]) {
-                    for (int j_edge_nodes = 0; 
-                         j_edge_nodes < 2; 
-                         ++j_edge_nodes) {
-                      if (parameters[j_edge_nodes * 2 + 1] != parametric_bounds[3]) {
-                        if (parameters[j_edge_nodes * 2 + 1] < ((parametric_bounds[3] - parametric_bounds[2]) / 2)) {
-                          parameters[i_edge_nodes * 2 + 1] = parametric_bounds[2];
-                          break;
-                        }
-                      }
-                    }
-                  }
-                }
+              /* Corrects the parameters on the surface if it is closed to prevent disorted elements. */
+              if (occ_surface->IsUClosed() || occ_surface->IsVClosed()) {
+                occ_geometry->t8_geom_correct_closed_geometry_parametric(1, edge_geometry_tag,
+                                                                         2, parameters);
               }
 
               t8_cmesh_set_attribute (cmesh, 

@@ -32,6 +32,7 @@
 #include <t8.h>
 #include <t8_geometry/t8_geometry_base.hxx>
 #include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.h>
 
 #if T8_WITH_OCC
 
@@ -263,6 +264,35 @@ public:
                                             const double edge_param, 
                                             const double* surface_params,
                                             double* face_params) const;
+  
+  /** Finds the parametric bounds of a occ surface.
+   * \param [in]  surface_index   The index of the occ face.
+   * \param [out] bounds          The parametric bounds of the occ surface.
+   */   
+  void
+  t8_geom_get_surface_parametric_bounds(const int surface_index,
+                                        double *bounds) const;
+
+  /** Finds the parametric bounds of an occ edge.
+   * \param [in]  edge_index   The index of the occ edge.
+   * \param [out] bounds       The parametric bounds of the occ edge.
+   */  
+  void
+  t8_geom_get_edge_parametric_bounds(const int edge_index,
+                                     double *bounds) const;
+  
+  /** Corrects the parameters on closed geometries to prevent disorted elements.
+   * \param [in]  geometry_index   The index of the closed geometry.
+   * \param [in]  geometry_type    The type of the closed geometry.
+   *                               0 for edges and 1 for surfaces.
+   * \param [in]  num_face_nodes   The number of the face nodes of the current tree.
+   * \param [out] parameters       The parameters at each vertex of the current tree.
+   */  
+  void
+  t8_geom_correct_closed_geometry_parametric(const int geometry_type,
+                                             const int geometry_index,
+                                             const int num_face_nodes,
+                                             double* parameters) const;
 
 private:
   /**

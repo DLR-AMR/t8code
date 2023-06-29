@@ -74,7 +74,7 @@ t8_geometry_occ::t8_geometry_occ (int dim, const char *fileprefix,
   BRep_Builder        builder;
   std::string current_file (fileprefix);
   std::ifstream is (current_file + ".brep");
-  if(is.is_open () == false) {
+  if (is.is_open () == false) {
     SC_ABORTF ("Can not find the file %s.\n", fileprefix);
   }
   BRepTools::Read (occ_shape, is, builder);
@@ -120,8 +120,8 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
 {
   switch (active_tree_class) {
   case T8_ECLASS_TRIANGLE:
-    t8_geometry_occ::t8_geom_evaluate_occ_triangle (cmesh, gtreeid, ref_coords,
-                                                    out_coords);
+    t8_geometry_occ::t8_geom_evaluate_occ_triangle (cmesh, gtreeid,
+                                                    ref_coords, out_coords);
     break;
   case T8_ECLASS_QUAD:
     t8_geometry_occ::t8_geom_evaluate_occ_quad (cmesh, gtreeid, ref_coords,
@@ -193,14 +193,13 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
 {
   T8_ASSERT (active_tree_class == T8_ECLASS_TRIANGLE);
 
-  const int num_edges = t8_eclass_num_edges[active_tree_class];
+  const int           num_edges = t8_eclass_num_edges[active_tree_class];
   gp_Pnt              pnt, converted_edge_surface_pnt,
-                      interpolated_edge_surface_pnt,
-                      interpolated_surface_pnt;
+    interpolated_edge_surface_pnt, interpolated_surface_pnt;
   Handle_Geom_Curve   curve;
   Handle_Geom_Surface surface;
   Standard_Real       first, last;
-  double  interpolated_surface_parameters[2];
+  double              interpolated_surface_parameters[2];
 
   /*
    * Reference Space    |      Global Space
@@ -221,17 +220,18 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
    */
 
   /* Linear mapping from ref_coords to out_coords */
-  t8_geom_compute_linear_geometry(active_tree_class, active_tree_vertices, ref_coords, out_coords);
-  
+  t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices,
+                                   ref_coords, out_coords);
+
   /* Check if face has a linked geometry */
   if (*faces > 0) {
     for (int i_edge = 0; i_edge < num_edges; i_edge++) {
       /* If face carries a surface, edges can't carry surfaces too */
-      T8_ASSERT(edges[i_edge + num_edges] == 0);
+      T8_ASSERT (edges[i_edge + num_edges] == 0);
     }
-      
+
     /* Retrieve surface parameters */
-    const double *face_parameters =
+    const double       *face_parameters =
       (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
                                          T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY,
                                          gtreeid);
@@ -240,37 +240,37 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
     /* Retrive surface_parameter in global space by triangular interpolation from ref_coords to global space */
     t8_geom_trianglular_interpolation (ref_coords, face_parameters,
                                        2, 2, interpolated_surface_parameters);
-    
+
     /* Check every edge and search for edge displacement */
     for (int i_edge = 0; i_edge < num_edges; i_edge++) {
       if (edges[i_edge] > 0) {
-        double ref_intersection[2];
-        t8_geom_get_ref_intersection (i_edge,
-                                      ref_coords,
-                                      ref_intersection);
+        double              ref_intersection[2];
+        t8_geom_get_ref_intersection (i_edge, ref_coords, ref_intersection);
 
         /* Converting ref_intersection to global_intersection */
-        double  glob_intersection[3];
-        t8_geom_compute_linear_geometry(active_tree_class, active_tree_vertices,
-                                        ref_intersection, glob_intersection);
-        
+        double              glob_intersection[3];
+        t8_geom_compute_linear_geometry (active_tree_class,
+                                         active_tree_vertices,
+                                         ref_intersection, glob_intersection);
+
         /* Get parameters of the current edge if the edge is curved */
         const double       *edge_parameters =
-        (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
-                                          T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY
-                                          + i_edge,
-                                          gtreeid);
+          (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
+                                             T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY
+                                             + i_edge,
+                                             gtreeid);
         T8_ASSERT (edge_parameters != NULL);
 
         /* Retrieve curve */
         curve =
-          BRep_Tool::Curve (TopoDS:: Edge (occ_shape_edge_map.FindKey (edges[i_edge])), 
+          BRep_Tool::Curve (TopoDS::
+                            Edge (occ_shape_edge_map.FindKey (edges[i_edge])),
                             first, last);
         /* Check if curve is valid */
         T8_ASSERT (!curve.IsNull ());
 
         /* Linear interpolation between parameters */
-        double  interpolated_curve_parameter;
+        double              interpolated_curve_parameter;
 
         if (i_edge == 0) {
           t8_geom_linear_interpolation (&ref_intersection[1],
@@ -285,11 +285,14 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
 
         /* Convert edge parameter to surface parameters */
         double              converted_edge_surface_parameters[2];
-        const int num_face_nodes = t8_eclass_num_vertices[active_tree_class];
+        const int           num_face_nodes =
+          t8_eclass_num_vertices[active_tree_class];
         surface =
-          BRep_Tool::Surface (TopoDS::Face (occ_shape_face_map.FindKey (*faces)));
-        double parametric_bounds[4];
-        surface->Bounds(parametric_bounds[0], parametric_bounds[1], parametric_bounds[2], parametric_bounds[3]);
+          BRep_Tool::Surface (TopoDS::
+                              Face (occ_shape_face_map.FindKey (*faces)));
+        double              parametric_bounds[4];
+        surface->Bounds (parametric_bounds[0], parametric_bounds[1],
+                         parametric_bounds[2], parametric_bounds[3]);
 
         t8_geometry_occ::t8_geom_edge_parameter_to_face_parameters (edges
                                                                     [i_edge],
@@ -302,11 +305,11 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
         /* Interpolate between the surface parameters of the current edge */
         double              edge_surface_parameters[4],
           interpolated_edge_surface_parameters[2];
-        
+
         t8_geom_get_face_vertices (active_tree_class,
                                    face_parameters,
                                    i_edge, 2, edge_surface_parameters);
-        
+
         if (i_edge == 0) {
           t8_geom_linear_interpolation (&ref_intersection[1],
                                         edge_surface_parameters,
@@ -319,10 +322,10 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
                                         2, 1,
                                         interpolated_edge_surface_parameters);
         }
-        
+
         /* Determine the scaling factor by calculating the distances from the opposite vertex
-        * to the glob_intersection and to the reference point */
-        double  scaling_factor;
+         * to the glob_intersection and to the reference point */
+        double              scaling_factor;
         t8_geom_get_triangle_scaling_factor (i_edge, active_tree_vertices,
                                              glob_intersection, out_coords,
                                              &scaling_factor);
@@ -332,7 +335,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
           const double        displacement =
             converted_edge_surface_parameters[dim]
             - interpolated_edge_surface_parameters[dim];
-          const double scaled_displacement = displacement * scaling_factor;
+          const double        scaled_displacement =
+            displacement * scaling_factor;
           interpolated_surface_parameters[dim] += scaled_displacement;
         }
       }
@@ -340,10 +344,11 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
       /* Retrieve surface */
       T8_ASSERT (*faces <= occ_shape_face_map.Size ());
       surface =
-        BRep_Tool::Surface (TopoDS::Face (occ_shape_face_map.FindKey (*faces)));
+        BRep_Tool::Surface (TopoDS::
+                            Face (occ_shape_face_map.FindKey (*faces)));
 
       /* Check if surface is valid */
-      T8_ASSERT (!surface.IsNull ()); 
+      T8_ASSERT (!surface.IsNull ());
 
       /* Evaluate surface and save result */
       surface->D0 (interpolated_surface_parameters[0],
@@ -362,25 +367,24 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
       if (edges[i_edge] > 0 || edges[i_edge + num_edges] > 0) {
         /* Get parameters of the current edge if the edge is curved */
         const double       *parameters =
-        (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
-                                           T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY
-                                           + i_edge,
-                                           gtreeid);
+          (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
+                                             T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY
+                                             + i_edge,
+                                             gtreeid);
         T8_ASSERT (parameters != NULL);
 
-        double ref_intersection[2];
-        t8_geom_get_ref_intersection (i_edge,
-                                      ref_coords,
-                                      ref_intersection);
+        double              ref_intersection[2];
+        t8_geom_get_ref_intersection (i_edge, ref_coords, ref_intersection);
 
         /* Converting ref_intersection to global_intersection */
-        double  glob_intersection[3];
-        t8_geom_compute_linear_geometry(active_tree_class, active_tree_vertices,
-                                        ref_intersection, glob_intersection);
+        double              glob_intersection[3];
+        t8_geom_compute_linear_geometry (active_tree_class,
+                                         active_tree_vertices,
+                                         ref_intersection, glob_intersection);
 
         if (edges[i_edge] > 0) {
           /* Linear interpolation between parameters */
-          double  interpolated_curve_parameter;
+          double              interpolated_curve_parameter;
 
           if (i_edge == 0) {
             t8_geom_linear_interpolation (&ref_intersection[1],
@@ -394,8 +398,9 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
           }
 
           curve =
-            BRep_Tool::Curve (TopoDS:: Edge (occ_shape_edge_map.FindKey (edges[i_edge])), 
-                              first, last);
+            BRep_Tool::Curve (TopoDS::
+                              Edge (occ_shape_edge_map.
+                                    FindKey (edges[i_edge])), first, last);
           /* Check if curve is valid */
           T8_ASSERT (!curve.IsNull ());
 
@@ -404,7 +409,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
         }
         else {
           /* Linear interpolation between parameters */
-          double  interpolated_surface_parameters[2];
+          double              interpolated_surface_parameters[2];
 
           if (i_edge == 0) {
             t8_geom_linear_interpolation (&ref_intersection[1],
@@ -431,18 +436,20 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
                        interpolated_surface_parameters[1], pnt);
         }
         /* Determine the scaling factor by calculating the distances from the opposite vertex
-           * to the glob_intersection and to the reference point */
-          double scaling_factor;
-          t8_geom_get_triangle_scaling_factor (i_edge, active_tree_vertices,
-                                               glob_intersection, out_coords,
-                                               &scaling_factor);
+         * to the glob_intersection and to the reference point */
+        double              scaling_factor;
+        t8_geom_get_triangle_scaling_factor (i_edge, active_tree_vertices,
+                                             glob_intersection, out_coords,
+                                             &scaling_factor);
 
         /* Calculate displacement between points on curve and point on linear curve.
          * Then scale it and add the scaled displacement to the result. */
         for (int dim = 0; dim < 3; ++dim) {
-        double displacement = pnt.Coord (dim + 1) - glob_intersection[dim];
-        double scaled_displacement = displacement * pow(scaling_factor, 2);
-        out_coords[dim] += scaled_displacement;
+          double              displacement =
+            pnt.Coord (dim + 1) - glob_intersection[dim];
+          double              scaled_displacement =
+            displacement * pow (scaling_factor, 2);
+          out_coords[dim] += scaled_displacement;
         }
       }
     }
@@ -530,14 +537,14 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
 
         /* Convert edge parameter to surface parameters */
         double              converted_edge_surface_parameters[2];
-        const int num_face_nodes = t8_eclass_num_vertices[active_tree_class];
-        t8_geometry_occ::t8_geom_edge_parameter_to_face_parameters (edges
-                                                                    [i_edge],
-                                                                    *faces,
-                                                                    num_face_nodes,
-                                                                    interpolated_curve_parameter,
-                                                                    face_parameters,
-                                                                    converted_edge_surface_parameters);
+        const int           num_face_nodes =
+          t8_eclass_num_vertices[active_tree_class];
+        t8_geometry_occ::
+          t8_geom_edge_parameter_to_face_parameters (edges[i_edge], *faces,
+                                                     num_face_nodes,
+                                                     interpolated_curve_parameter,
+                                                     face_parameters,
+                                                     converted_edge_surface_parameters);
 
         /* Interpolate between the surface parameters of the current edge */
         double              edge_surface_parameters[4],
@@ -689,7 +696,6 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
     }
   }
 }
-
 
 void
 t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh,
@@ -946,13 +952,18 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh,
             }
           }
           /* Convert the interpolated parameter of the curve into the corresponding parameters on the surface */
-          const int num_face_nodes = t8_eclass_num_vertices[active_tree_class];
-          t8_geometry_occ::t8_geom_edge_parameter_to_face_parameters (edges
-                                                                      [t8_face_edge_to_tree_edge
-                                                                       [i_faces]
-                                                                       [i_face_edge]], faces[i_faces], num_face_nodes,
-                                                                       interpolated_curve_param, surface_parameters,
-                                                                       surface_parameters_from_curve);
+          const int           num_face_nodes =
+            t8_eclass_num_vertices[active_tree_class];
+          t8_geometry_occ::
+            t8_geom_edge_parameter_to_face_parameters (edges
+                                                       [t8_face_edge_to_tree_edge
+                                                        [i_faces]
+                                                        [i_face_edge]],
+                                                       faces[i_faces],
+                                                       num_face_nodes,
+                                                       interpolated_curve_param,
+                                                       surface_parameters,
+                                                       surface_parameters_from_curve);
 
           /* Calculate the displacement between the interpolated parameters on the surface 
            * and the parameters on the surface converted from the parameter of the curve
@@ -1261,6 +1272,214 @@ t8_geometry_occ::t8_geom_edge_parameter_to_face_parameters(const int edge_index,
     }
   }
 }
+
+void
+t8_geometry_occ::t8_geom_get_surface_parametric_bounds(const int surface_index,
+                                                       double *bounds) const
+{
+  const Handle_Geom_Surface occ_surface = t8_geom_get_occ_surface(surface_index);
+  occ_surface->Bounds(bounds[0], bounds[1], bounds[2], bounds[3]);
+}
+
+void
+t8_geometry_occ::t8_geom_get_edge_parametric_bounds(const int edge_index,
+                                                    double *bounds) const
+{
+  const Handle_Geom_Curve occ_edge = t8_geom_get_occ_curve(edge_index);
+  bounds[0] = occ_edge->FirstParameter();
+  bounds[1] = occ_edge->LastParameter();
+}
+
+void
+t8_geometry_occ::t8_geom_correct_closed_geometry_parametric(const int geometry_type,
+                                                            const int geometry_index,
+                                                            const int num_face_nodes,
+                                                            double* parameters) const
+{
+  /* Get the parametric bounds of the closed geometry 
+   * surface -> [Umin, Umax, Vmin, Vmax]
+   * edge    -> [Umin, Umax]
+   */
+  double parametric_bounds[2 + (2 * geometry_type)];
+  /* Check for closed U parameter in case of an edge. */
+  if (geometry_type == 0) {
+    /* Get the parametric edge bounds. */
+    t8_geom_get_edge_parametric_bounds(geometry_index, parametric_bounds);
+    /* Get a handle to the edge and check if it has a closed U parameter. */
+    const Handle_Geom_Curve occ_edge = t8_geom_get_occ_curve(geometry_index);
+    /* Only correct the U parameter if the edge is closed. */
+    if (occ_edge->IsClosed()) {
+      /* Iterate over both nodes of the edge. */
+      for (int i_nodes = 0; 
+          i_nodes < 2; 
+          ++i_nodes)
+      {
+        /* Check if one of the U parameters lies on the lower parametric bound. */
+        if (parameters[i_nodes] == parametric_bounds[0]) {
+          /* Iterate over both nodes of the edge again. */
+          for (int j_nodes = 0; 
+              j_nodes < 2; 
+              ++j_nodes)
+          {
+            /* Search for a U parameter that is non of the parametric bounds. To check
+            * rather the tree lives closer to the lower or the upper parametric bound.
+            */
+            if (parameters[j_nodes] != parametric_bounds[0]) {
+              /* Now check if the U parameter is bigger than the half parametric range.
+              * In this case the tree would be closer to the upper parametric bound.
+              */
+              if (parameters[j_nodes] > ((parametric_bounds[1] - parametric_bounds[0]) / 2)) {
+                /* Switch from lower bound U parameter to upper bound U parameter. */
+                parameters[i_nodes] = parametric_bounds[1];
+                break;
+              }
+            }
+          }
+        }
+        /* Check if one of the U parameters lies on the upper parametric bound. */
+        else if (parameters[i_nodes] == parametric_bounds[1]) {
+          /* Iterate over both nodes of the edge again. */
+          for (int j_nodes = 0; 
+              j_nodes < 2; 
+              ++j_nodes)
+          {
+            /* Search for a U parameter that is non of the parametric bounds. To check
+            * rather the tree lives closer to the lower or the upper parametric bound.
+            */
+            if (parameters[j_nodes] != parametric_bounds[1]) {
+              /* Now check if the U parameter is smaller than the half parametric range.
+              * In this case the tree would be closer to the lower parametric bound.
+              */
+              if (parameters[j_nodes] < ((parametric_bounds[1] - parametric_bounds[0]) / 2)) {
+                /* Switch from upper bound U parameter to lower bound U parameter. */
+                parameters[i_nodes] = parametric_bounds[0];
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  /* Check for closed U parameter and closed V parameter in case of a surface. */
+  if (geometry_type == 1) {
+    /* Get the parametric surface bounds. */
+    t8_geom_get_surface_parametric_bounds(geometry_index, parametric_bounds);
+    /* Get a handle to the surface and check if it has a closed U parameter. */
+    const Handle_Geom_Surface occ_surface = t8_geom_get_occ_surface(geometry_index);
+    /* Only correct the U parameter if the surface is closed in U. */
+    if (occ_surface->IsUClosed()) {
+      /* Iterate over every corner node of the tree. */
+      for (int i_nodes = 0; 
+          i_nodes < num_face_nodes; 
+          ++i_nodes)
+      {
+        /* Check if one of the U parameters lies on the lower parametric bound. */
+        if (parameters[i_nodes * 2] == parametric_bounds[0]) {
+          /* Iterate over every corner node of the tree again. */
+          for (int j_nodes = 0; 
+              j_nodes < num_face_nodes; 
+              ++j_nodes)
+          {
+            /* Search for a U parameter that is non of the parametric bounds. To check
+            * rather the tree lives closer to the lower or the upper parametric bound.
+            */
+            if (parameters[j_nodes * 2] != parametric_bounds[0]
+                && parameters[j_nodes * 2] != parametric_bounds[1]) {
+              /* Now check if the U parameter is bigger than the half parametric range.
+              * In this case the tree would be closer to the upper parametric bound.
+              */
+              if (parameters[j_nodes * 2] > ((parametric_bounds[1] - parametric_bounds[0]) / 2)) {
+                /* Switch from lower bound U parameter to upper bound U parameter. */
+                parameters[i_nodes * 2] = parametric_bounds[1];
+                break;
+              }
+            }
+          }
+        }
+        /* Check if one of the U parameters lies on the upper parametric bound */
+        else if (parameters[i_nodes * 2] == parametric_bounds[1]) {
+          /* Iterate over every corner node of the tree again. */
+          for (int j_nodes = 0; 
+              j_nodes < num_face_nodes; 
+              ++j_nodes)
+          {
+            /* Search for a U parameter that is non of the parametric bounds. To check
+            * rather the tree lives closer to the lower or the upper parametric bound.
+            */
+            if (parameters[j_nodes * 2] != parametric_bounds[1]
+                && parameters[j_nodes * 2] != parametric_bounds[0]) {
+              /* Now check if the U parameter is smaller than the half parametric range.
+              * In this case the tree would be closer to the lower parametric bound.
+              */
+              if (parameters[j_nodes * 2] < ((parametric_bounds[1] - parametric_bounds[0]) / 2)) {
+                  /* Switch from upper bound U parameter to lower bound U parameter. */
+                  parameters[i_nodes * 2] = parametric_bounds[0];
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+    /* Only correct the V parameter if the surface is closed in V. */
+    if (occ_surface->IsVClosed()) {
+      /* Iterate over every corner node of the tree. */
+      for (int i_nodes = 0; 
+           i_nodes < num_face_nodes; 
+           ++i_nodes)
+      {
+        /* Check if one of the V parameters lies on the lower parametric bound. */
+        if (parameters[i_nodes * 2 + 1] == parametric_bounds[2]) {
+          /* Iterate over every corner node of the tree again. */
+          for (int j_nodes = 0; 
+              j_nodes < num_face_nodes; 
+              ++j_nodes)
+          {
+            /* Search for a V parameter that is non of the parametric bounds. To check
+             * rather the tree lives closer to the lower or the upper parametric bound.
+             */
+            if (parameters[j_nodes * 2 + 1] != parametric_bounds[2]
+                && parameters[j_nodes * 2 + 1] != parametric_bounds[3]) {
+              /* Now check if the V parameter is bigger than the half parametric range.
+               * In this case the tree would be closer to the upper parametric bound.
+               */
+              if (parameters[j_nodes * 2 + 1] > ((parametric_bounds[3] - parametric_bounds[2]) / 2)) {
+                /* Switch from lower bound V parameter to upper bound V parameter. */
+                parameters[i_nodes * 2 + 1] = parametric_bounds[3];
+                break;
+              }
+            }
+          }
+        }
+        /* Check if one of the V parameters lies on the upper parametric bound */
+        else if (parameters[i_nodes * 2 + 1] == parametric_bounds[3]) {
+          /* Iterate over every corner node of the tree again. */
+          for (int j_nodes = 0; 
+               j_nodes < num_face_nodes; 
+               ++j_nodes)
+          {
+            /* Search for a V parameter that is non of the parametric bounds. To check
+             * rather the tree lives closer to the lower or the upper parametric bound.
+             */
+            if (parameters[j_nodes * 2 + 1] != parametric_bounds[3]
+                && parameters[j_nodes * 2 + 1] != parametric_bounds[2]) {
+              /* Now check if the V parameter is smaller than the half parametric range.
+               * In this case the tree would be closer to the lower parametric bound.
+               */
+              if (parameters[j_nodes * 2 + 1] < ((parametric_bounds[3] - parametric_bounds[2]) / 2)) {
+                /* Switch from upper bound V parameter to lower bound V parameter. */
+                parameters[i_nodes * 2 + 1] = parametric_bounds[2];
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 /* *INDENT-ON* */
 
 /* This part should be callable from C */

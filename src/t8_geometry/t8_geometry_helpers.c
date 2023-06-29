@@ -64,20 +64,23 @@ t8_geom_trianglular_interpolation (const double *coefficients,
   double              temp[3] = { 0 };
 
   for (i = 0; i < corner_value_dim; i++) {
-      temp[i] =
-        (corner_values[1 * corner_value_dim + i] -
-         corner_values[i]) * coefficients[0] + (interpolation_dim ==
-                                                3
-                                                ? (corner_values
-                                                   [3 * corner_value_dim + i] -
-                                                  corner_values[2 * corner_value_dim + i])
-                                                * coefficients[1]
-                                                : 0.)
-        + (corner_values[2 * corner_value_dim + i] -
-           corner_values[1 * corner_value_dim + i]) * coefficients[interpolation_dim - 1]
-        + corner_values[i];
-      evaluated_function[i] = temp[i];
-    }
+    temp[i] =
+      (corner_values[1 * corner_value_dim + i] -
+       corner_values[i]) * coefficients[0] + (interpolation_dim ==
+                                              3
+                                              ? (corner_values
+                                                 [3 * corner_value_dim + i] -
+                                                 corner_values[2 *
+                                                               corner_value_dim
+                                                               + i])
+                                              * coefficients[1]
+                                              : 0.)
+      + (corner_values[2 * corner_value_dim + i] -
+         corner_values[1 * corner_value_dim +
+                       i]) * coefficients[interpolation_dim - 1]
+      + corner_values[i];
+    evaluated_function[i] = temp[i];
+  }
 }
 
 void
@@ -107,7 +110,8 @@ t8_geom_compute_linear_geometry (t8_eclass_t tree_class,
   case T8_ECLASS_TRIANGLE:
   case T8_ECLASS_TET:
     t8_geom_trianglular_interpolation (ref_coords,
-                                       tree_vertices, 3, dimension, out_coords);
+                                       tree_vertices, 3, dimension,
+                                       out_coords);
     break;
   case T8_ECLASS_PRISM:
     {
@@ -222,70 +226,95 @@ t8_geom_get_ref_intersection (int edge_index,
                               const double *ref_coords,
                               double ref_intersection[2])
 {
-  double  ref_opposite_vertex[2];
-  double  ref_slope;
-
-  switch (edge_index)
-  {
-  case 0:
+  double              ref_opposite_vertex[2];
+  double              ref_slope;
+  /*              2
+   *            / |
+   *           /  |
+   *          /   |
+   *         /    |
+   *        E1   E0
+   *       /      |
+   *      /       |
+   *     /        |
+   *    /         |
+   *   0----E2----1
+   *
+   * First we calculate the slope of the line going through the reference point
+   * and the opposite vertex for each edge of the triangle.
+   */
+  switch (edge_index) {
+  case 0:                      /* edge 0 */
+    /* opposite vertex -> vertex 0 */
     ref_opposite_vertex[0] = 0;
     ref_opposite_vertex[1] = 0;
-
+    /* In case the reference point is equal to the opposite vertex, the slope of the line is 0. */
     if (ref_opposite_vertex[0] == ref_coords[0]) {
       ref_slope = 0;
     }
+    /* slope = (y2-y1)/(x2-x1) */
     else {
       ref_slope = (ref_opposite_vertex[1] - ref_coords[1])
-                   / (ref_opposite_vertex[0] - ref_coords[0]);
+        / (ref_opposite_vertex[0] - ref_coords[0]);
     }
     break;
-  case 1:
+  case 1:                      /* edge 1 */
+    /* opposite vertex -> vertex 1 */
     ref_opposite_vertex[0] = 1;
     ref_opposite_vertex[1] = 0;
-
+    /* In case the reference point is equal to the opposite vertex, the slope of the line is 0. */
     if (ref_coords[0] == ref_opposite_vertex[0]) {
       ref_slope = 0;
     }
+    /* slope = (y2-y1)/(x2-x1) */
     else {
       ref_slope = (ref_coords[1] - ref_opposite_vertex[1])
-                   / (ref_coords[0] - ref_opposite_vertex[0]);
+        / (ref_coords[0] - ref_opposite_vertex[0]);
     }
     break;
-  case 2:
+  case 2:                      /* edge 2 */
+    /* opposite vertex -> vertex 2 */
     ref_opposite_vertex[0] = 1;
     ref_opposite_vertex[1] = 1;
-
+    /* In case the reference point is equal to the opposite vertex, the slope of the line is 0. */
     if (ref_coords[0] == ref_opposite_vertex[0]) {
       ref_slope = 0;
     }
+    /* slope = (y2-y1)/(x2-x1) */
     else {
       ref_slope = (ref_coords[1] - ref_opposite_vertex[1])
-                   / (ref_coords[0] - ref_opposite_vertex[0]);
+        / (ref_coords[0] - ref_opposite_vertex[0]);
     }
     break;
-  default: 
-    SC_ABORT_NOT_REACHED();
+  default:
+    SC_ABORT_NOT_REACHED ();
     break;
   }
-  
-  switch (edge_index)
-  {
-  case 0:
+  /* Now that we have the slope of the lines going through each vertex and the reference point,
+   * we can calculate the intersection of the lines with each edge.
+   */
+  switch (edge_index) {
+  case 0:                      /* edge 0 */
+    /* Because of the verticality of edge 0, the x value of the intersection is always 1.
+     * The y value is determined by the slope times the horizontal edge length.
+     */
     ref_intersection[0] = 1;
     ref_intersection[1] = ref_slope * 1;
     break;
-  case 1:
+  case 1:                      /* edge 1 */
+    /* If the reference point lies somewhere on edge 0, the intersection has to be at (1,1). */
     if (ref_coords[0] == ref_opposite_vertex[0]) {
       ref_intersection[0] = 1;
       ref_intersection[1] = 1;
       break;
     }
+    /* If the reference point lies somewhere on edge 2, the intersection has to be at (0,0). */
     else if (ref_coords[1] == ref_opposite_vertex[1]) {
       ref_intersection[0] = 0;
       ref_intersection[1] = 0;
       break;
     }
-    else {        
+    else {
       /* intersectionX = (x1y2-y1x2)(x3-x4)-(x1-x2)(x3y4-y3x4)
        *                 /(x1-x2)(y3-y4)-(y1-y2)(x3-x4)
        * intersectionY = (x1y2-y1x2)(y3-y4)-(y1-y2)(x3y4-y3x4)
@@ -295,18 +324,28 @@ t8_geom_get_ref_intersection (int edge_index,
        * m1 is the slope of the hypotenuse
        */
       // x1=0 y1=0 x2=1 y2=1 x3=ref_coords[0] y3=ref_coords[1] x4=ref_opposite_vertex[0] y4=ref_opposite_vertex[1]
-      ref_intersection[0] = ((0*1-0*1)*(ref_coords[0]-ref_opposite_vertex[0])-(0-1)*(ref_coords[0]*ref_opposite_vertex[1]-ref_coords[1]*ref_opposite_vertex[0]))
-                             /((0-1)*(ref_coords[1]-ref_opposite_vertex[1])-(0-1)*(ref_coords[0]-ref_opposite_vertex[0]));
-      ref_intersection[1] = ((0*1-0*1)*(ref_coords[1]-ref_opposite_vertex[1])-(0-1)*(ref_coords[0]*ref_opposite_vertex[1]-ref_coords[1]*ref_opposite_vertex[0]))
-                             /((0-1)*(ref_coords[1]-ref_opposite_vertex[1])-(0-1)*(ref_coords[0]-ref_opposite_vertex[0]));
+      ref_intersection[0] =
+        ((0 * 1 - 0 * 1) * (ref_coords[0] - ref_opposite_vertex[0]) -
+         (0 - 1) * (ref_coords[0] * ref_opposite_vertex[1] -
+                    ref_coords[1] * ref_opposite_vertex[0]))
+        / ((0 - 1) * (ref_coords[1] - ref_opposite_vertex[1]) -
+           (0 - 1) * (ref_coords[0] - ref_opposite_vertex[0]));
+      ref_intersection[1] =
+        ((0 * 1 - 0 * 1) * (ref_coords[1] - ref_opposite_vertex[1]) -
+         (0 - 1) * (ref_coords[0] * ref_opposite_vertex[1] -
+                    ref_coords[1] * ref_opposite_vertex[0]))
+        / ((0 - 1) * (ref_coords[1] - ref_opposite_vertex[1]) -
+           (0 - 1) * (ref_coords[0] - ref_opposite_vertex[0]));
       break;
     }
-  case 2:
+  case 2:                      /* edge 2 */
+    /* If the reference point lies somewhere on edge 0, the intersection has to be at (1,0). */
     if (ref_coords[0] == ref_opposite_vertex[0]) {
       ref_intersection[0] = 1;
       ref_intersection[1] = 0;
       break;
     }
+    /* If the reference point is equal to the opposite vertex, the intersection has to be at (0,1). */
     else if (ref_coords[1] == ref_opposite_vertex[1]) {
       ref_intersection[0] = 0;
       ref_intersection[1] = 1;
@@ -321,10 +360,18 @@ t8_geom_get_ref_intersection (int edge_index,
        * m1 is the slope of edge 2
        */
       // x1=0 y1=0 x2=1 y2=0 x3=ref_coords[0] y3=ref_coords[1] x4=ref_opposite_vertex[0] y4=ref_opposite_vertex[1]
-      ref_intersection[0] = ((0*1-0*0)*(ref_coords[0]-ref_opposite_vertex[0])-(0-1)*(ref_coords[0]*ref_opposite_vertex[1]-ref_coords[1]*ref_opposite_vertex[0]))
-                            /((0-1)*(ref_coords[1]-ref_opposite_vertex[1])-(0-0)*(ref_coords[0]-ref_opposite_vertex[0]));
-      ref_intersection[1] = ((0*1-0*0)*(ref_coords[1]-ref_opposite_vertex[1])-(0-0)*(ref_coords[0]*ref_opposite_vertex[1]-ref_coords[1]*ref_opposite_vertex[0]))
-                            /((0-1)*(ref_coords[1]-ref_opposite_vertex[1])-(0-0)*(ref_coords[0]-ref_opposite_vertex[0]));
+      ref_intersection[0] =
+        ((0 * 1 - 0 * 0) * (ref_coords[0] - ref_opposite_vertex[0]) -
+         (0 - 1) * (ref_coords[0] * ref_opposite_vertex[1] -
+                    ref_coords[1] * ref_opposite_vertex[0]))
+        / ((0 - 1) * (ref_coords[1] - ref_opposite_vertex[1]) -
+           (0 - 0) * (ref_coords[0] - ref_opposite_vertex[0]));
+      ref_intersection[1] =
+        ((0 * 1 - 0 * 0) * (ref_coords[1] - ref_opposite_vertex[1]) -
+         (0 - 0) * (ref_coords[0] * ref_opposite_vertex[1] -
+                    ref_coords[1] * ref_opposite_vertex[0]))
+        / ((0 - 1) * (ref_coords[1] - ref_opposite_vertex[1]) -
+           (0 - 0) * (ref_coords[0] - ref_opposite_vertex[0]));
       break;
     }
   default:
@@ -340,34 +387,52 @@ t8_geom_get_triangle_scaling_factor (int edge_index,
                                      const double *glob_ref_point,
                                      double *scaling_factor)
 {
-  double dist_intersection, dist_ref;
-  switch (edge_index)
-  {
-  case 0:
-    dist_intersection = sqrt(pow((tree_vertices[0] - glob_intersection[0]), 2)
-                             + pow((tree_vertices[1] - glob_intersection[1]), 2)
-                             + pow((tree_vertices[2] - glob_intersection[2]), 2));
-    dist_ref = sqrt(pow((tree_vertices[0] - glob_ref_point[0]), 2)
-                    + pow((tree_vertices[1] - glob_ref_point[1]), 2)
-                    + pow((tree_vertices[2] - glob_ref_point[2]), 2));
+  double              dist_intersection, dist_ref;
+  /* The scaling factor depents on the relation of the distance of the opposite vertex
+   * to the global reference point and the distance of the opposite vertex to the global
+   * intersection on the edge.
+   */
+  switch (edge_index) {
+  case 0:                      /* edge 0 */
+    /* The distance for both, the intersection and the reference point, are calculated
+     * using the theorem of pythagoras.
+     */
+    dist_intersection =
+      sqrt (pow ((tree_vertices[0] - glob_intersection[0]), 2)
+            + pow ((tree_vertices[1] - glob_intersection[1]), 2)
+            + pow ((tree_vertices[2] - glob_intersection[2]), 2));
+    dist_ref = sqrt (pow ((tree_vertices[0] - glob_ref_point[0]), 2)
+                     + pow ((tree_vertices[1] - glob_ref_point[1]), 2)
+                     + pow ((tree_vertices[2] - glob_ref_point[2]), 2));
+    /* The closer the reference point is to the intersection, the bigger is the scaling factor. */
     *scaling_factor = dist_ref / dist_intersection;
     break;
-  case 1:
-    dist_intersection = sqrt(pow((tree_vertices[3] - glob_intersection[0]), 2)
-                             + pow((tree_vertices[4] - glob_intersection[1]), 2)
-                             + pow((tree_vertices[5] - glob_intersection[2]), 2));
-    dist_ref = sqrt(pow((tree_vertices[3] - glob_ref_point[0]), 2)
-                    + pow((tree_vertices[4] - glob_ref_point[1]), 2)
-                    + pow((tree_vertices[5] - glob_ref_point[2]), 2));
+  case 1:                      /* edge 1 */
+    /* The distance for both, the intersection and the reference point, are calculated
+     * using the theorem of pythagoras.
+     */
+    dist_intersection =
+      sqrt (pow ((tree_vertices[3] - glob_intersection[0]), 2)
+            + pow ((tree_vertices[4] - glob_intersection[1]), 2)
+            + pow ((tree_vertices[5] - glob_intersection[2]), 2));
+    dist_ref = sqrt (pow ((tree_vertices[3] - glob_ref_point[0]), 2)
+                     + pow ((tree_vertices[4] - glob_ref_point[1]), 2)
+                     + pow ((tree_vertices[5] - glob_ref_point[2]), 2));
+    /* The closer the reference point is to the intersection, the bigger is the scaling factor. */
     *scaling_factor = dist_ref / dist_intersection;
     break;
-  case 2:
-    dist_intersection = sqrt(pow((tree_vertices[6] - glob_intersection[0]), 2)
-                             + pow((tree_vertices[7] - glob_intersection[1]), 2)
-                             + pow((tree_vertices[8] - glob_intersection[2]), 2));
-    dist_ref = sqrt(pow((tree_vertices[6] - glob_ref_point[0]), 2)
-                    + pow((tree_vertices[7] - glob_ref_point[1]), 2)
-                    + pow((tree_vertices[8] - glob_ref_point[2]), 2));
+  case 2:                      /* edge 2 */
+    /* The distance for both, the intersection and the reference point, are calculated
+     * using the theorem of pythagoras.
+     */
+    dist_intersection =
+      sqrt (pow ((tree_vertices[6] - glob_intersection[0]), 2)
+            + pow ((tree_vertices[7] - glob_intersection[1]), 2)
+            + pow ((tree_vertices[8] - glob_intersection[2]), 2));
+    dist_ref = sqrt (pow ((tree_vertices[6] - glob_ref_point[0]), 2)
+                     + pow ((tree_vertices[7] - glob_ref_point[1]), 2)
+                     + pow ((tree_vertices[8] - glob_ref_point[2]), 2));
+    /* The closer the reference point is to the intersection, the bigger is the scaling factor. */
     *scaling_factor = dist_ref / dist_intersection;
     break;
   default:

@@ -52,19 +52,24 @@ void                t8_geom_linear_interpolation (const double *coefficients,
                                                   int interpolation_dim,
                                                   double *evaluated_function);
 
-/** Triangular interpolation between 3 points (triangle) or 4 points (tetrahedron).
- * \param [in]    coefficients        An array of size at least dim giving the coefficients used for the interpolation
- * \param [in]    corner_values       An array of size 2^dim * 2, giving for each corner (in zorder) of
- *                                    the unit triangle/tetrahedron its function values in space.
+/** Triangular interpolation between 3 points (triangle) or 4 points (tetrahedron) using barycentric coordinates.
+ * \param [in]    coefficients        An array of size \a interpolation_dim giving the coefficients used for the interpolation
+ * \param [in]    corner_values       An array of size 
+                                                       3 * \a corner_value_dim for \a interpolation_dim == 2 or
+                                                       4 * \a corner_value_dim for \a interpolation_dim == 3, 
+                                                       giving the function values of the triangle/tetrahedron for each corner (in zorder)
  * \param [in]    corner_value_dim    The dimension of the \a corner_values.
  * \param [in]    interpolation_dim   The dimension of the interpolation (2 for triangle, 3 for tetrahedron)
  * \param [out]   evaluated_function  An array of size \a corner_value_dim, on output the result of the interpolation.
  */
-void                t8_geom_trianglular_interpolation (const double *coefficients,
-                                                       const double *corner_values,
+void                t8_geom_trianglular_interpolation (const double
+                                                       *coefficients,
+                                                       const double
+                                                       *corner_values,
                                                        int corner_value_dim,
                                                        int interpolation_dim,
-                                                       double *evaluated_function);
+                                                       double
+                                                       *evaluated_function);
 
 /** Copies the vertex coordinates of a tree face in zorder into a separate array.
  * \param [in]    tree_class     The eclass of the tree.
@@ -112,10 +117,14 @@ void                t8_geom_get_ref_intersection (int edge_index,
  * \param [out]   scaling_factor      Factor, the edge displacement is scaled by at the glob_ref_point.
  */
 void                t8_geom_get_triangle_scaling_factor (int edge_index,
-                                                         const double *tree_vertices,
-                                                         const double *glob_intersection,
-                                                         const double *glob_ref_point,
-                                                         double *scaling_factor);
+                                                         const double
+                                                         *tree_vertices,
+                                                         const double
+                                                         *glob_intersection,
+                                                         const double
+                                                         *glob_ref_point,
+                                                         double
+                                                         *scaling_factor);
 
 T8_EXTERN_C_END ();
 
