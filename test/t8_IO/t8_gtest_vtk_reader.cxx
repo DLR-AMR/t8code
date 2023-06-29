@@ -23,6 +23,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <gtest/gtest.h>
 #include <t8_cmesh_vtk_reader.hxx>
 
+#define T8_VTK_TEST_NUM_PROCS 2
+
 /**
  * This is currently a place-holder for a propper cmesh_vtk_reader-test.
  * The function is not implemented yet and therefore we do not provide a proper
@@ -30,16 +32,22 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * 
  */
 
-
 /* *INDENT-OFF* */
-class vtk_reader : public testing::TestWithParam<vtk_file_type_t>{
+class vtk_reader : public testing::TestWithParam<std::tuple<vtk_file_type_t, int, int>>{
   protected:
     void SetUp() override{
-      file_type = GetParam();
+      int mpisize;
+      int mpiret = sc_MPI_Comm_size(sc_MPI_COMM_WORLD, &mpisize);
+      SC_CHECK_MPI(mpiret);
+      file_type = std::get<0>(GetParam());
       file = (int)file_type + 1;
+      partition = std::get<1>(GetParam()) % mpisize;
+      main_proc = std::get<2>(GetParam()) % mpisize;
     }
     int file;
     vtk_file_type_t file_type;
+    int partition;
+    int main_proc;
     const char* failing_files[3] = {
       "no_file",
       "non-existing-file.vtu",
@@ -51,6 +59,7 @@ class vtk_reader : public testing::TestWithParam<vtk_file_type_t>{
       "test/testfiles/test_vtk_cube.vtp"
     };
     const int num_points[3] = {0, 121, 24};
+    const int num_trees[3] = {0, 200, 12};
 };
 /* *INDENT-ON* */
 
@@ -59,7 +68,7 @@ TEST_P (vtk_reader, vtk_to_cmesh_fail)
 {
 #if T8_WITH_VTK
   t8_cmesh_t          cmesh =
-    t8_cmesh_vtk_reader (failing_files[file], 0, 0, sc_MPI_COMM_WORLD,
+    t8_cmesh_vtk_reader (failing_files[file], 0, main_proc, sc_MPI_COMM_WORLD,
                          file_type);
   EXPECT_TRUE (cmesh == NULL);
 #else
@@ -70,11 +79,21 @@ TEST_P (vtk_reader, vtk_to_cmesh_fail)
 TEST_P (vtk_reader, vtk_to_cmesh_success)
 {
 #if T8_WITH_VTK
-  t8_cmesh_t          cmesh = t8_cmesh_vtk_reader (test_files[file], 0, 0,
-                                                   sc_MPI_COMM_WORLD,
-                                                   file_type);
+  int                 mpirank;
+  int                 mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  t8_cmesh_t          cmesh =
+    t8_cmesh_vtk_reader (test_files[file], partition, main_proc,
+                         sc_MPI_COMM_WORLD,
+                         file_type);
   if (file_type != VTK_FILE_ERROR) {
-    EXPECT_FALSE (cmesh == NULL);
+    if (!partition || main_proc == mpirank) {
+      EXPECT_FALSE (cmesh == NULL);
+      EXPECT_EQ (num_trees[file], t8_cmesh_get_num_local_trees (cmesh));
+    }
+    else {
+      EXPECT_FALSE (cmesh == NULL);
+    }
     t8_cmesh_destroy (&cmesh);
   }
   else {
@@ -99,5 +118,10 @@ TEST_P (vtk_reader, vtk_to_pointSet)
 #endif
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_vtk_reader, vtk_reader,
-                          testing::Range (VTK_FILE_ERROR, VTK_NUM_TYPES));
+/* *INDENT-OFF* */
+INSTANTIATE_TEST_SUITE_P (t8_gtest_vtk_reader, vtk_reader,testing::Combine (
+                          testing::Range (VTK_FILE_ERROR, VTK_NUM_TYPES),
+                          testing::Values (0, 1),
+                          testing::Range (0,T8_VTK_TEST_NUM_PROCS)
+                          ));
+/* *INDENT-ON* */
