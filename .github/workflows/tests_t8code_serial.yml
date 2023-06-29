@@ -207,7 +207,7 @@ jobs:
     - name: make
       run: cd build_serial_release && make -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
     - name: make install
-      run: cd build_release && make install -j
+      run: cd build_serial_release && make install -j
     - name: make check
       run: cd build_serial_release && make check -j4 V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
     - name: OnFailUploadLog
@@ -230,7 +230,7 @@ jobs:
     - name: make
       run: cd build_serial_release && make -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
     - name: make install
-      run: cd build_release && make install -j
+      run: cd build_serial_release && make install -j
     - name: make check
       run: cd build_serial_release && make check -j4 V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
     - name: OnFailUploadLog
