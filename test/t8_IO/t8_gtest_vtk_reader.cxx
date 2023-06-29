@@ -26,56 +26,78 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 /**
  * This is currently a place-holder for a propper cmesh_vtk_reader-test.
  * The function is not implemented yet and therefore we do not provide a proper
- * test yet. 
+ * test yet. A proper test would compare the read files with a reference-cmesh. 
  * 
  */
-TEST (t8_vtk_reader, vtk_to_cmesh)
+
+
+/* *INDENT-OFF* */
+class vtk_reader : public testing::TestWithParam<vtk_file_type_t>{
+  protected:
+    void SetUp() override{
+      file_type = GetParam();
+      file = (int)file_type + 1;
+    }
+    int file;
+    vtk_file_type_t file_type;
+    const char* failing_files[3] = {
+      "no_file",
+      "non-existing-file.vtu",
+      "non-existing-file.vtp"
+    };
+    const char* test_files[3] = {
+      "no_file",
+      "test/testfiles/test_vtk_tri.vtu",
+      "test/testfiles/test_vtk_cube.vtp"
+    };
+    const int num_points[3] = {0, 121, 24};
+};
+/* *INDENT-ON* */
+
+/* All readers should fail properly with a non-existing file. */
+TEST_P (vtk_reader, vtk_to_cmesh_fail)
 {
 #if T8_WITH_VTK
   t8_cmesh_t          cmesh =
-    t8_cmesh_vtk_reader ("non-existing-file.vtu", 0, 0, sc_MPI_COMM_WORLD,
-                         VTK_FILE_ERROR);
+    t8_cmesh_vtk_reader (failing_files[file], 0, 0, sc_MPI_COMM_WORLD,
+                         file_type);
   EXPECT_TRUE (cmesh == NULL);
-
-  cmesh =
-    t8_cmesh_vtk_reader ("non-existing-file.vtu", 0, 0, sc_MPI_COMM_WORLD,
-                         VTK_UNSTRUCTURED_FILE);
-  EXPECT_TRUE (cmesh == NULL);
-
-  cmesh =
-    t8_cmesh_vtk_reader ("non-existing-file.vtp", 0, 0, sc_MPI_COMM_WORLD,
-                         VTK_POLYDATA_FILE);
-  EXPECT_TRUE (cmesh == NULL);
-
-  cmesh =
-    t8_cmesh_vtk_reader ("test/testfiles/test_vtk_tri.vtu", 0, 0,
-                         sc_MPI_COMM_WORLD, VTK_UNSTRUCTURED_FILE);
-  EXPECT_FALSE (cmesh == NULL);
-  t8_cmesh_destroy (&cmesh);
-  cmesh =
-    t8_cmesh_vtk_reader ("test/testfiles/test_vtk_cube.vtp", 0, 0,
-                         sc_MPI_COMM_WORLD, VTK_POLYDATA_FILE);
-  EXPECT_FALSE (cmesh == NULL);
-  t8_cmesh_destroy (&cmesh);
-
 #else
 #endif
 }
 
-TEST (t8_vtk_reader, vtk_to_pointSet)
+/* All readers should construct a cmesh from a file. */
+TEST_P (vtk_reader, vtk_to_cmesh_success)
 {
 #if T8_WITH_VTK
-  vtkSmartPointer < vtkPointSet > points =
-    t8_vtk_reader_pointSet ("test/testfiles/test_vtk_tri.vtu", 0, 0,
-                            sc_MPI_COMM_WORLD, VTK_UNSTRUCTURED_FILE);
-  int                 num_points = points->GetNumberOfPoints ();
-  EXPECT_EQ (num_points, 121);
-
-  points =
-    t8_vtk_reader_pointSet ("test/testfiles/test_vtk_cube.vtp", 0, 0,
-                            sc_MPI_COMM_WORLD, VTK_POLYDATA_FILE);
-  num_points = points->GetNumberOfPoints ();
-  EXPECT_EQ (num_points, 24);
+  t8_cmesh_t          cmesh = t8_cmesh_vtk_reader (test_files[file], 0, 0,
+                                                   sc_MPI_COMM_WORLD,
+                                                   file_type);
+  if (file_type != VTK_FILE_ERROR) {
+    EXPECT_FALSE (cmesh == NULL);
+    t8_cmesh_destroy (&cmesh);
+  }
+  else {
+    EXPECT_TRUE (cmesh == NULL);
+  }
 #else
 #endif
 }
+
+/* Read a file as a pointSet and compare the number of points with the known number of points. */
+TEST_P (vtk_reader, vtk_to_pointSet)
+{
+#if T8_WITH_VTK
+  if (file_type != VTK_FILE_ERROR) {
+    vtkSmartPointer < vtkPointSet > points =
+      t8_vtk_reader_pointSet (test_files[file], 0, 0,
+                              sc_MPI_COMM_WORLD, file_type);
+    int                 test_points = points->GetNumberOfPoints ();
+    EXPECT_EQ (num_points[file], test_points);
+  }
+#else
+#endif
+}
+
+INSTANTIATE_TEST_SUITE_P (t8_gtest_vtk_reader, vtk_reader,
+                          testing::Range (VTK_FILE_ERROR, VTK_NUM_TYPES));
