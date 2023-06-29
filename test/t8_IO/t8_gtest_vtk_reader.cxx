@@ -29,7 +29,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * test yet. 
  * 
  */
-TEST (t8_cmesh_vtk_reader, dummy_test)
+TEST (t8__vtk_reader, vtk_to_cmesh)
 {
 #if T8_WITH_VTK
   t8_cmesh_t          cmesh =
