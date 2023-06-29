@@ -29,7 +29,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * test yet. 
  * 
  */
-TEST (t8__vtk_reader, vtk_to_cmesh)
+TEST (t8_vtk_reader, vtk_to_cmesh)
 {
 #if T8_WITH_VTK
   t8_cmesh_t          cmesh =
@@ -58,6 +58,24 @@ TEST (t8__vtk_reader, vtk_to_cmesh)
   EXPECT_FALSE (cmesh == NULL);
   t8_cmesh_destroy (&cmesh);
 
+#else
+#endif
+}
+
+TEST (t8_vtk_reader, vtk_to_pointSet)
+{
+#if T8_WITH_VTK
+  vtkSmartPointer < vtkPointSet > points =
+    t8_vtk_reader_pointSet ("test/testfiles/test_vtk_tri.vtu", 0, 0,
+                            sc_MPI_COMM_WORLD, VTK_UNSTRUCTURED_FILE);
+  int                 num_points = points->GetNumberOfPoints ();
+  EXPECT_EQ (num_points, 121);
+
+  points =
+    t8_vtk_reader_pointSet ("test/testfiles/test_vtk_cube.vtp", 0, 0,
+                            sc_MPI_COMM_WORLD, VTK_POLYDATA_FILE);
+  num_points = points->GetNumberOfPoints ();
+  EXPECT_EQ (num_points, 24);
 #else
 #endif
 }
