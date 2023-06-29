@@ -223,7 +223,7 @@ jobs:
     - name: check VTK
       run: echo "Checking VTK with MPI in debugging mode"
     - name: configure MPI VTK debug
-      run: mkdir build_vtk && cd build_vtk && ../configure $CONFIG_DEBUG --with-vtk --with-vtk_version_number=9.0 CFLAGS="$CFLAGS_var -isystem/usr/local/include/vtk-9.0" CXXFLAGS="$CXXFLAGS_var -isystem/usr/local/include/vtk-9.0"
+      run: mkdir build_vtk && cd build_vtk && ../configure $CONFIG_DEBUG --with-vtk --with-vtk_version_number=9.1 CFLAGS="$CFLAGS_var -isystem/usr/local/include/vtk-9.1" CXXFLAGS="$CXXFLAGS_var -isystem/usr/local/include/vtk-9.1"
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v1
@@ -231,11 +231,11 @@ jobs:
         name: config_vtk_debug_MPI.log
         path: build_vtk/config.log
     - name: make
-      run: cd build_vtk && make -j V=0 CFLAGS="$CFLAGS_var -Werror -isystem/usr/local/include/vtk-9.0" CXXFLAGS="$CXXFLAGS_var -Werror -isystem/usr/local/include/vtk-9.0"
+      run: cd build_vtk && make -j V=0 CFLAGS="$CFLAGS_var -Werror -isystem/usr/local/include/vtk-9.1" CXXFLAGS="$CXXFLAGS_var -Werror -isystem/usr/local/include/vtk-9.1"
     - name: make install
       run: cd build_vtk && make install -j
     - name: make check
-      run: cd build_vtk && make check -j V=0 CFLAGS="$CFLAGS_var -Werror -isystem/usr/local/include/vtk-9.0" CXXFLAGS="$CXXFLAGS_var -Werror -isystem/usr/local/include/vtk-9.0"
+      run: cd build_vtk && make check -j V=0 CFLAGS="$CFLAGS_var -Werror -isystem/usr/local/include/vtk-9.1" CXXFLAGS="$CXXFLAGS_var -Werror -isystem/usr/local/include/vtk-9.1"
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v1
