@@ -22,6 +22,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <sc_options.h>
 #include <t8.h>
 #include <t8_vtk.h>
+
 #include <t8_forest/t8_forest.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
