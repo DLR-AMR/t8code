@@ -31,7 +31,6 @@ t8sysconf_DATA =
 dist_t8data_DATA =
 MODSOURCES = 
 AM_FCFLAGS = 
-FORTPROGRAMSOURCES = 
 
 # use this if you want to link in t8code without autotools
 t8sysconfdir = $(sysconfdir)/t8code

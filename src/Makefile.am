@@ -150,7 +150,7 @@ src/t8_messy/t8_mo_messy_coupler_interface.f90
 
 # Add the Fortran sources to the lib 
 libt8_compiled_sources += $(t8_fortran_module_sources)
-# Save the module sources as well in a different variable for later use
+# Save the module sources in a different variable for later use
 MODSOURCES += $(t8_fortran_module_sources)
 endif
 
