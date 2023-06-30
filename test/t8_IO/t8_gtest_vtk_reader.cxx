@@ -37,12 +37,15 @@ class vtk_reader : public testing::TestWithParam<std::tuple<vtk_file_type_t, int
   protected:
     void SetUp() override{
       int mpisize;
-      int mpiret = sc_MPI_Comm_size(sc_MPI_COMM_WORLD, &mpisize);
-      SC_CHECK_MPI(mpiret);
+      int mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
+      SC_CHECK_MPI (mpiret);
+      if (MPI_size > T8_VTK_TEST_NUM_PROCS) {
+        GTEST_SKIP ();
+      } 
       file_type = std::get<0>(GetParam());
       file = (int)file_type + 1;
-      partition = std::get<1>(GetParam()) % mpisize;
-      main_proc = std::get<2>(GetParam()) % mpisize;
+      partition = std::get<1>(GetParam());
+      main_proc = std::get<2>(GetParam());
     }
     int file;
     vtk_file_type_t file_type;
@@ -87,12 +90,9 @@ TEST_P (vtk_reader, vtk_to_cmesh_success)
                          sc_MPI_COMM_WORLD,
                          file_type);
   if (file_type != VTK_FILE_ERROR) {
+    EXPECT_FALSE (cmesh == NULL);
     if (!partition || main_proc == mpirank) {
-      EXPECT_FALSE (cmesh == NULL);
       EXPECT_EQ (num_trees[file], t8_cmesh_get_num_local_trees (cmesh));
-    }
-    else {
-      EXPECT_FALSE (cmesh == NULL);
     }
     t8_cmesh_destroy (&cmesh);
   }
