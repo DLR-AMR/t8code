@@ -39,7 +39,7 @@ class vtk_reader : public testing::TestWithParam<std::tuple<vtk_file_type_t, int
       int mpisize;
       int mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
       SC_CHECK_MPI (mpiret);
-      if (MPI_size > T8_VTK_TEST_NUM_PROCS) {
+      if (mpisize > T8_VTK_TEST_NUM_PROCS) {
         GTEST_SKIP ();
       } 
       file_type = std::get<0>(GetParam());
