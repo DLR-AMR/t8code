@@ -135,7 +135,7 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix,
       for (ivertex = 0; ivertex < t8_eclass_num_vertices[tree->eclass];
            ivertex++) {
         vertex = vertices +
-          3 * t8_eclass_vtk_to_t8_corner_number[tree->eclass][ivertex];
+          3 * t8_eclass_t8_to_vtk_corner_number[tree->eclass][ivertex];
         x = vertex[0];
         y = vertex[1];
         z = vertex[2];
