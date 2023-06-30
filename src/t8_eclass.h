@@ -137,7 +137,7 @@ extern const int    t8_eclass_vtk_type[T8_ECLASS_COUNT];
 
 /** Map the t8code corner number to the vtk corner number */
 extern const int
-     t8_eclass_vtk_corner_number[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS];
+     t8_eclass_vtk_to_t8corner_number[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS];
 
 /** For each of the element classes, list the type of the faces. */
 extern const int
