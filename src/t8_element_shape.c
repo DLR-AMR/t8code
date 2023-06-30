@@ -57,7 +57,7 @@ t8_element_shape_vtk_type (int element_shape)
 int
 t8_element_shape_vtk_corner_number (int element_shape, int index)
 {
-  return t8_eclass_vtk_corner_number[element_shape][index];
+  return t8_eclass_vtk_to_t8corner_number[element_shape][index];
 }
 
 /** For each element_shape, the name of this class as a string */

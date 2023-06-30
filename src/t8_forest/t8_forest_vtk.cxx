@@ -710,7 +710,8 @@ t8_forest_vtk_cells_vertices_kernel (t8_forest_t forest,
   num_el_vertices = t8_eclass_num_vertices[element_shape];
   for (ivertex = 0; ivertex < num_el_vertices; ivertex++) {
     t8_forest_element_coordinate (forest, ltree_id, element,
-                                  t8_eclass_vtk_corner_number[element_shape]
+                                  t8_eclass_vtk_to_t8corner_number
+                                  [element_shape]
                                   [ivertex], element_coordinates);
     freturn = fprintf (vtufile, "         ");
     if (freturn <= 0) {
