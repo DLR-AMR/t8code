@@ -36,6 +36,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * \returns        non-zero on success, zero if the reading failed. 
  */
 vtk_read_success_t  t8_read_parallel (const char *filename,
-                                      vtkSmartPointer < vtkDataSet > grid);
+                                      vtkSmartPointer < vtkDataSet > grid,
+                                      sc_MPI_Comm comm);
 
 #endif /* T8_VTK_PARALLEL_HXX */

@@ -22,8 +22,49 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include "t8_vtk_parallel.hxx"
 
+#if T8_WITH_VTK
+#include <vtkXMLPDataReader.h>
+
 vtk_read_success_t
-t8_read_parallel (const char *filename, vtkSmartPointer < vtkDataSet > grid)
+t8_read_parallel (const char *filename, vtkSmartPointer < vtkDataSet > grid,
+                  sc_MPI_Comm comm)
 {
+  /* Check if we can open the parallel file */
+  FILE               *first_check;
+  first_check = fopen (filename, "r");
+  if (first_check == NULL) {
+    t8_errorf ("Can not find the file %s\n", filename);
+    return read_failure;
+  }
+  fclose (first_check);
+
+  /* Setup parallel reader. */
+  vtkSmartPointer < vtkXMLPDataReader > reader =
+    vtkSmartPointer < vtkXMLPDataReader >::New ();
+  if (!reader->CanReadFile (filename)) {
+    return read_failure;
+  }
+  /* Get mpi size and rank */
+  const int           total_num_pieces = reader->GetNumberOfPieces ();
+  int                 mpiret;
+  int                 mpisize;
+  mpiret = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+
+  int                 mpirank;
+  mpiret = sc_MPI_Comm_rank (comm & mpirank);
+  SC_CHECK_MPI (mpiret);
+
+  /* Setup number of pieces to read on this proc. */
+  int                 local_num_pieces = 0;
+  if (mpisize >= total_num_pieces) {
+    local_num_pieces = mpirank < mpisize ? 1 : 0;
+  }
+  else {
+    local_num_pieces = total_num_pieces / mpisize * mpirank;
+  }
+
   return read_failure;
 }
+
+#endif
