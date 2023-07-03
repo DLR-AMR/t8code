@@ -201,9 +201,8 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > vtkGrid,
                       t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
 
-  double             *vertices;
-  double            **tuples;
-  size_t             *data_size;
+  double            **tuples = NULL;
+  size_t             *data_size = NULL;
   t8_gloidx_t         tree_id = 0;
   int                 max_dim = -1;
 
@@ -213,7 +212,7 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > vtkGrid,
   const int           max_cell_points = vtkGrid->GetMaxCellSize ();
 
   T8_ASSERT (max_cell_points >= 0);
-  vertices = T8_ALLOC (double, 3 * max_cell_points);
+  double             *vertices = T8_ALLOC (double, 3 * max_cell_points);
   /* Get cell iterator */
   cell_it = vtkGrid->NewCellIterator ();
   /* get the number of data-arrays per cell */
