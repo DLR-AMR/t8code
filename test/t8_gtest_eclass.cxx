@@ -25,37 +25,37 @@
 #include <t8_eclass.h>
 
 /* *INDENT-OFF* */
-class t8_gtest_eclass : public testing::TestWithParam<int>{
+class gtest_eclass : public testing::TestWithParam<int>{
 protected:
-  void SetUP() override {
+  void SetUp() override {
     ieclass = GetParam();
   }
   int ieclass;
 };
 /* *INDENT-ON* */
 
-TEST (t8_gtest_eclass, eclassCountIs8)
+TEST (gtest_eclass, eclassCountIs8)
 {
   EXPECT_EQ (T8_ECLASS_COUNT, 8);
 }
 
-TEST (t8_gtest_eclass, invalid_class)
+TEST (gtest_eclass, invalid_class)
 {
   EXPECT_FALSE (t8_eclass_is_valid ((t8_eclass_t) T8_ECLASS_INVALID));
 }
 
-TEST_P (t8_gtest_eclass, dimension)
+TEST_P (gtest_eclass, dimension)
 {
   int                 eclass_dims[8] = { 0, 1, 2, 2, 3, 3, 3, 3 };
   EXPECT_EQ (t8_eclass_to_dimension[ieclass], eclass_dims[ieclass]);
 }
 
-TEST_P (t8_gtest_eclass, valid_class)
+TEST_P (gtest_eclass, valid_class)
 {
   EXPECT_TRUE (t8_eclass_is_valid ((t8_eclass_t) ieclass));
 }
 
-TEST_P (t8_gtest_eclass, compare)
+TEST_P (gtest_eclass, compare)
 {
   for (int jeclass = T8_ECLASS_ZERO; jeclass < T8_ECLASS_COUNT; ++jeclass) {
     if (ieclass == jeclass) {
@@ -70,7 +70,7 @@ TEST_P (t8_gtest_eclass, compare)
   }
 }
 
-TEST_P (t8_gtest_eclass, t8_to_vtk_corner_numbers)
+TEST_P (gtest_eclass, t8_to_vtk_corner_numbers)
 {
   const int           num_vertices = t8_eclass_num_vertices[ieclass];
   for (int ivertex = 0; ivertex < num_vertices; ivertex++) {
@@ -82,5 +82,6 @@ TEST_P (t8_gtest_eclass, t8_to_vtk_corner_numbers)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_eclass,
-                          testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_eclass, gtest_eclass,
+                          testing::Range ((int) T8_ECLASS_ZERO,
+                                          (int) T8_ECLASS_COUNT));
