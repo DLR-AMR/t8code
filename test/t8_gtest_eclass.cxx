@@ -46,7 +46,7 @@ TEST (gtest_eclass, invalid_class)
 
 TEST_P (gtest_eclass, dimension)
 {
-  int                 eclass_dims[8] = { 0, 1, 2, 2, 3, 3, 3, 3 };
+  const int           eclass_dims[8] = { 0, 1, 2, 2, 3, 3, 3, 3 };
   EXPECT_EQ (t8_eclass_to_dimension[ieclass], eclass_dims[ieclass]);
 }
 
