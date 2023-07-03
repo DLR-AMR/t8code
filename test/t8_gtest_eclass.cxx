@@ -52,10 +52,7 @@ TEST_P (t8_gtest_eclass, dimension)
 
 TEST_P (t8_gtest_eclass, valid_class)
 {
-  int                 eclass;
-  for (eclass = T8_ECLASS_ZERO; eclass < T8_ECLASS_COUNT; ++eclass) {
-    EXPECT_TRUE (t8_eclass_is_valid ((t8_eclass_t) eclass));
-  }
+  EXPECT_TRUE (t8_eclass_is_valid ((t8_eclass_t) ieclass));
 }
 
 TEST (t8_gtest_eclass, compare)
