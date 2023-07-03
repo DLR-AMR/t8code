@@ -24,18 +24,25 @@
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 
+/* *INDENT-OFF* */
+class t8_gtest_eclass : public testing::TestWithParam<int>{
+protected:
+  void SetUP() override {
+    ieclass = GetParam();
+  }
+  int ieclass;
+};
+/* *INDENT-ON* */
+
 TEST (t8_gtest_eclass, eclassCountIs8)
 {
   EXPECT_EQ (T8_ECLASS_COUNT, 8);
 }
 
-TEST (t8_gtest_eclass, dimension)
+TEST_P (t8_gtest_eclass, dimension)
 {
   int                 eclass_dims[8] = { 0, 1, 2, 2, 3, 3, 3, 3 };
-
-  for (int eci = T8_ECLASS_ZERO; eci < T8_ECLASS_COUNT; ++eci) {
-    EXPECT_EQ (t8_eclass_to_dimension[eci], eclass_dims[eci]);
-  }
+  EXPECT_EQ (t8_eclass_to_dimension[ieclass], eclass_dims[ieclass]);
 }
 
 TEST (t8_gtest_eclass, valid_class)
@@ -80,3 +87,6 @@ TEST (t8_gtest_eclass, t8_to_vtk_corner_numbers)
     }
   }
 }
+
+INSTANTIATE_TEST_SUITE_P (t8_gtest_eclass,
+                          testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT));
