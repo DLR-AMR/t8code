@@ -39,22 +39,23 @@ TEST (t8_gtest_eclass, eclassCountIs8)
   EXPECT_EQ (T8_ECLASS_COUNT, 8);
 }
 
+TEST (t8_gtest_eclass, invalid_class)
+{
+  EXPECT_FALSE (t8_eclass_is_valid ((t8_eclass_t) T8_ECLASS_INVALID));
+}
+
 TEST_P (t8_gtest_eclass, dimension)
 {
   int                 eclass_dims[8] = { 0, 1, 2, 2, 3, 3, 3, 3 };
   EXPECT_EQ (t8_eclass_to_dimension[ieclass], eclass_dims[ieclass]);
 }
 
-TEST (t8_gtest_eclass, valid_class)
+TEST_P (t8_gtest_eclass, valid_class)
 {
   int                 eclass;
   for (eclass = T8_ECLASS_ZERO; eclass < T8_ECLASS_COUNT; ++eclass) {
     EXPECT_TRUE (t8_eclass_is_valid ((t8_eclass_t) eclass));
   }
-  for (eclass = T8_ECLASS_COUNT; eclass <= T8_ECLASS_INVALID; ++eclass) {
-    EXPECT_FALSE (t8_eclass_is_valid ((t8_eclass_t) eclass));
-  }
-
 }
 
 TEST (t8_gtest_eclass, compare)
