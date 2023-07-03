@@ -60,9 +60,10 @@ const t8_eclass_t   t8_cmesh_vtk_type_to_t8_type[82] = {
  */
 typedef enum vtk_file_type
 {
-  VTK_FILE_ERROR = -1,          /*For Testing purpose. */
+  VTK_FILE_ERROR = -1,          /* For Testing purpose. */
   VTK_UNSTRUCTURED_FILE = 0,
   VTK_POLYDATA_FILE = 1,
+  VTK_PARALLEL_FILE = 2,        /* All parallel vtk files. */
   VTK_NUM_TYPES
 } vtk_file_type_t;
 
