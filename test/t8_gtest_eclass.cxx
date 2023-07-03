@@ -55,19 +55,17 @@ TEST_P (t8_gtest_eclass, valid_class)
   EXPECT_TRUE (t8_eclass_is_valid ((t8_eclass_t) ieclass));
 }
 
-TEST (t8_gtest_eclass, compare)
+TEST_P (t8_gtest_eclass, compare)
 {
-  int                 eci, ecj;
-  for (eci = T8_ECLASS_ZERO; eci < T8_ECLASS_COUNT; ++eci) {
-    for (ecj = T8_ECLASS_ZERO; ecj < T8_ECLASS_COUNT; ++ecj) {
-      if (eci == ecj) {
-        EXPECT_FALSE (t8_eclass_compare
-                      ((t8_eclass_t) eci, (t8_eclass_t) ecj));
-      }
-      else if (t8_eclass_to_dimension[eci] == t8_eclass_to_dimension[ecj]) {
-        EXPECT_TRUE (t8_eclass_compare
-                     ((t8_eclass_t) eci, (t8_eclass_t) ecj));
-      }
+  for (int jeclass = T8_ECLASS_ZERO; jeclass < T8_ECLASS_COUNT; ++jeclass) {
+    if (ieclass == jeclass) {
+      EXPECT_FALSE (t8_eclass_compare
+                    ((t8_eclass_t) ieclass, (t8_eclass_t) jeclass));
+    }
+    else if (t8_eclass_to_dimension[ieclass] ==
+             t8_eclass_to_dimension[jeclass]) {
+      EXPECT_TRUE (t8_eclass_compare
+                   ((t8_eclass_t) ieclass, (t8_eclass_t) jeclass));
     }
   }
 }
