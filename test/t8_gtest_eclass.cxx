@@ -70,17 +70,15 @@ TEST_P (t8_gtest_eclass, compare)
   }
 }
 
-TEST (t8_gtest_eclass, t8_to_vtk_corner_numbers)
+TEST_P (t8_gtest_eclass, t8_to_vtk_corner_numbers)
 {
-  for (int ieclass = T8_ECLASS_ZERO; ieclass < T8_ECLASS_COUNT; ieclass++) {
-    const int           num_vertices = t8_eclass_num_vertices[ieclass];
-    for (int ivertex = 0; ivertex < num_vertices; ivertex++) {
-      const int           vtk_corner_number =
-        t8_eclass_t8_to_vtk_corner_number[ieclass][ivertex];
-      const int           t8_corner_number =
-        t8_eclass_vtk_to_t8_corner_number[ieclass][vtk_corner_number];
-      EXPECT_EQ (ivertex, t8_corner_number);
-    }
+  const int           num_vertices = t8_eclass_num_vertices[ieclass];
+  for (int ivertex = 0; ivertex < num_vertices; ivertex++) {
+    const int           vtk_corner_number =
+      t8_eclass_t8_to_vtk_corner_number[ieclass][ivertex];
+    const int           t8_corner_number =
+      t8_eclass_vtk_to_t8_corner_number[ieclass][vtk_corner_number];
+    EXPECT_EQ (ivertex, t8_corner_number);
   }
 }
 
