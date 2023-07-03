@@ -23,4 +23,19 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #ifndef T8_VTK_PARALLEL_HXX
 #define T8_VTK_PARALLEL_HXX
 
+#include <t8.h>
+#include "t8_vtk_types.h>"
+
+/**
+ * given a filename to a parallel vtk file and its data-files, 
+ * read a piece of the data-files (like .vtu, .vtp, ...).
+ * 
+ * \param[in] filename  The name of a parallel vtk file (.pvtu for example)
+ * \param[in] grid On input a vtkSmartPointer, that will hold the grid described
+ *                 by the pieces read on this proc. 
+ * \returns        non-zero on success, zero if the reading failed. 
+ */
+vtk_read_success_t  t8_read_parallel (const char *filename,
+                                      vtkSmartPointer < vtkDataSet > grid);
+
 #endif /* T8_VTK_PARALLEL_HXX */

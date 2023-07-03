@@ -21,3 +21,9 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 */
 
 #include "t8_vtk_parallel.hxx"
+
+vtk_read_success_t
+t8_read_parallel (const char *filename, vtkSmartPointer < vtkDataSet > grid)
+{
+  return read_failure;
+}
