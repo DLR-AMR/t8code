@@ -81,7 +81,6 @@ t8_read_parallel (const char *filename, vtkSmartPointer < vtkDataSet > grid,
       last_piece = total_num_pieces - first_piece;
     }
   }
-
   /* Read the pieces if there are any pieces to read on this proc. */
   if (first_piece < last_piece) {
     vtkNew < vtkAppendFilter > append;
@@ -96,6 +95,9 @@ t8_read_parallel (const char *filename, vtkSmartPointer < vtkDataSet > grid,
     t8_debugf ("[D] read %lli cells\n", grid->GetNumberOfCells ());
   }
   else {
+    /* Initialize the grid, but don't construct any cells. 
+     * simplifies further processing of the grid on multiple procs. */
+    grid->Initialize ();
     t8_debugf ("[D] dont read any file on this proc\n");
   }
   return read_success;

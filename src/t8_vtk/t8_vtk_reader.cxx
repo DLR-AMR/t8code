@@ -128,7 +128,8 @@ t8_file_to_vtkGrid (const char *filename,
   T8_ASSERT (filename != NULL);
   T8_ASSERT (0 <= main_proc && main_proc < mpisize);
   /* Read the file and set the pointer to the vtkGrid */
-  if (!partition || mpirank == main_proc) {
+  if (!partition || mpirank == main_proc
+      || vtk_file_type == VTK_PARALLEL_FILE) {
     switch (vtk_file_type) {
     case VTK_UNSTRUCTURED_FILE:
       main_proc_read_successful = t8_read_unstructured (filename, vtkGrid);
@@ -141,8 +142,8 @@ t8_file_to_vtkGrid (const char *filename,
         main_proc_read_successful = t8_read_unstructured (filename, vtkGrid);
       }
       else {
-        t8_errorf ("Distributed reading is not supported yet.\n");
-        vtkGrid = NULL;
+        main_proc_read_successful =
+          t8_read_parallel (filename, vtkGrid, comm);
         break;
       }
       break;
