@@ -51,10 +51,11 @@ class vtk_reader : public testing::TestWithParam<std::tuple<vtk_file_type_t, int
     vtk_file_type_t file_type;
     int partition;
     int main_proc;
-    const char* failing_files[3] = {
+    const char* failing_files[4] = {
       "no_file",
       "non-existing-file.vtu",
-      "non-existing-file.vtp"
+      "non-existing-file.vtp",
+      "non-existing-file.pvtu"
     };
     const char* test_files[3] = {
       "no_file",
@@ -82,6 +83,9 @@ TEST_P (vtk_reader, vtk_to_cmesh_fail)
 TEST_P (vtk_reader, vtk_to_cmesh_success)
 {
 #if T8_WITH_VTK
+  if (file_type == VTK_PARALLEL_FILE) {
+    GTEST_SKIP ();
+  }
   int                 mpirank;
   int                 mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
@@ -107,6 +111,9 @@ TEST_P (vtk_reader, vtk_to_cmesh_success)
 TEST_P (vtk_reader, vtk_to_pointSet)
 {
 #if T8_WITH_VTK
+  if (file_type == VTK_PARALLEL_FILE) {
+    GTEST_SKIP ();
+  }
   if (file_type != VTK_FILE_ERROR) {
     vtkSmartPointer < vtkPointSet > points =
       t8_vtk_reader_pointSet (test_files[file], 0, 0,
@@ -122,7 +129,7 @@ TEST_P (vtk_reader, vtk_to_pointSet)
 /* Currently does not work for parallel files. Replace with VTK_NUM_TYPES as soon
  * as reading and constructing cmeshes from parallel files is enabled. */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_vtk_reader, vtk_reader,testing::Combine (
-                          testing::Range (VTK_FILE_ERROR, VTK_POLYDATA_FILE),
+                          testing::Range (VTK_FILE_ERROR, VTK_NUM_TYPES),
                           testing::Values (0, 1),
                           testing::Range (0,T8_VTK_TEST_NUM_PROCS)
                           ));
