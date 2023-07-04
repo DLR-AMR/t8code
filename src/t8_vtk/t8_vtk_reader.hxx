@@ -44,12 +44,14 @@ T8_EXTERN_C_BEGIN ();
  * \param[in] vtkGrid A pointer to a vtkDataSet
  * \param[in] partition Flag if the cmesh should be partitioned
  * \param[in] main_proc The main reading process
+ * \param[in] distributed_grid Flag if the vtkGrid is distributed over several procs. 
  * \param[in] comm The communicator. 
  * \return t8_cmesh_t 
  */
 t8_cmesh_t          t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet >
                                          vtkGrid, const int partition,
                                          const int main_proc,
+                                         const int distributed_grid,
                                          sc_MPI_Comm comm);
 
 /**

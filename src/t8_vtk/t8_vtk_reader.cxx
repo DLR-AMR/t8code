@@ -298,6 +298,7 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > vtkGrid,
     }
     tree_id++;
   }
+  t8_debugf ("[D] translated %i trees \n", tree_id);
 
   /* Clean-up */
   cell_it->Delete ();
@@ -315,7 +316,7 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > vtkGrid,
 t8_cmesh_t
 t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet > vtkGrid,
                      const int partition, const int main_proc,
-                     sc_MPI_Comm comm)
+                     const int distributed_grid, sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   int                 mpisize;
@@ -335,7 +336,10 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet > vtkGrid,
   int                 dim = 0;
 
   t8_cmesh_init (&cmesh);
-  if (!partition || mpirank == main_proc) {
+  t8_debugf ("[D] p %i, mpi: %i, dg: %i\n", !partition, mpirank == main_proc,
+             !distributed_grid);
+  if (!partition || mpirank == main_proc || !distributed_grid) {
+    t8_debugf ("[D] translate grid\n");
     num_trees = t8_vtk_iterate_cells (vtkGrid, cmesh, comm);
     dim = t8_get_dimension (vtkGrid);
     t8_cmesh_set_dimension (cmesh, dim);
@@ -491,8 +495,12 @@ t8_vtk_reader_cmesh (const char *filename, const int partition,
   vtkSmartPointer < vtkDataSet > vtkGrid =
     t8_vtk_reader (filename, partition, main_proc, comm, vtk_file_type);
   if (vtkGrid != NULL) {
+    const int           distributed_grid =
+      (vtk_file_type == VTK_PARALLEL_FILE) && !partition;
+    t8_debugf ("[D] distributed_grid: %i\n", distributed_grid);
     t8_cmesh_t          cmesh =
-      t8_vtkGrid_to_cmesh (vtkGrid, partition, main_proc, comm);
+      t8_vtkGrid_to_cmesh (vtkGrid, partition, main_proc, distributed_grid,
+                           comm);
     T8_ASSERT (cmesh != NULL);
     return cmesh;
   }
