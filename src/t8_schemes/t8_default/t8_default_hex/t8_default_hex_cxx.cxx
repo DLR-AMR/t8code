@@ -156,7 +156,7 @@ t8_default_scheme_hex_c::t8_element_child (const t8_element_t *elem,
   r->y = childid & 0x02 ? (q->y | shift) : q->y;
   r->z = childid & 0x04 ? (q->z | shift) : q->z;
   r->level = q->level + 1;
-  if(q!=r){
+  if (q != r) {
     T8_ASSERT (p8est_quadrant_is_parent (q, r));
   }
 }
