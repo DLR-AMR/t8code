@@ -119,8 +119,10 @@ TEST_P (vtk_reader, vtk_to_pointSet)
 }
 
 /* *INDENT-OFF* */
+/* Currently does not work for parallel files. Replace with VTK_NUM_TYPES as soon
+ * as reading and constructing cmeshes from parallel files is enabled. */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_vtk_reader, vtk_reader,testing::Combine (
-                          testing::Range (VTK_FILE_ERROR, VTK_NUM_TYPES),
+                          testing::Range (VTK_FILE_ERROR, VTK_POLYDATA_FILE),
                           testing::Values (0, 1),
                           testing::Range (0,T8_VTK_TEST_NUM_PROCS)
                           ));

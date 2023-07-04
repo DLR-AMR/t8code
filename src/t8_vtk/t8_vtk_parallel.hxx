@@ -24,10 +24,14 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #define T8_VTK_PARALLEL_HXX
 
 #include <t8.h>
-#include "t8_vtk_types.h>"
+#include "t8_vtk_types.h"
+
+#if T8_WITH_VTK
+#include <vtkDataSet.h>
+#include <vtkSmartPointer.h>
 
 /**
- * given a filename to a parallel vtk file and its data-files, 
+ * given a filename to a parallel vtk file (for example .pvtu) and its data-files, 
  * read a piece of the data-files (like .vtu, .vtp, ...).
  * 
  * \param[in] filename  The name of a parallel vtk file (.pvtu for example)
@@ -39,4 +43,5 @@ vtk_read_success_t  t8_read_parallel (const char *filename,
                                       vtkSmartPointer < vtkDataSet > grid,
                                       sc_MPI_Comm comm);
 
+#endif /* T8_WITH_VTK */
 #endif /* T8_VTK_PARALLEL_HXX */

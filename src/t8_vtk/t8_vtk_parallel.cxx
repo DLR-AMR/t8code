@@ -23,7 +23,9 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include "t8_vtk_parallel.hxx"
 
 #if T8_WITH_VTK
-#include <vtkXMLPDataReader.h>
+#include <vtkUnstructuredGrid.h>
+#include <vtkXMLPUnstructuredGridReader.h>
+#include <vtkAppendFilter.h>
 
 vtk_read_success_t
 t8_read_parallel (const char *filename, vtkSmartPointer < vtkDataSet > grid,
@@ -37,13 +39,17 @@ t8_read_parallel (const char *filename, vtkSmartPointer < vtkDataSet > grid,
     return read_failure;
   }
   fclose (first_check);
-
   /* Setup parallel reader. */
-  vtkSmartPointer < vtkXMLPDataReader > reader =
-    vtkSmartPointer < vtkXMLPDataReader >::New ();
+  vtkSmartPointer < vtkXMLPUnstructuredGridReader > reader =
+    vtkSmartPointer < vtkXMLPUnstructuredGridReader >::New ();
   if (!reader->CanReadFile (filename)) {
+    t8_errorf ("Unable to read file.\n");
     return read_failure;
   }
+
+  reader->SetFileName (filename);
+  reader->UpdateInformation ();
+
   /* Get mpi size and rank */
   const int           total_num_pieces = reader->GetNumberOfPieces ();
   int                 mpiret;
@@ -52,19 +58,47 @@ t8_read_parallel (const char *filename, vtkSmartPointer < vtkDataSet > grid,
   SC_CHECK_MPI (mpiret);
 
   int                 mpirank;
-  mpiret = sc_MPI_Comm_rank (comm & mpirank);
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
 
   /* Setup number of pieces to read on this proc. */
-  int                 local_num_pieces = 0;
+  int                 last_piece = -1;
+  int                 first_piece = 0;
   if (mpisize >= total_num_pieces) {
-    local_num_pieces = mpirank < mpisize ? 1 : 0;
+    /* The first n-procs read a piece each. */
+    first_piece = mpirank;
+    last_piece = first_piece + ((mpirank < mpisize) ? 1 : 0);
   }
   else {
-    local_num_pieces = total_num_pieces / mpisize * mpirank;
+    first_piece = total_num_pieces / mpisize * mpirank;
+    last_piece = first_piece;
+    const int           prev_proc_first_piece =
+      total_num_pieces / mpisize * (mpirank - 1);
+    last_piece +=
+      first_piece == prev_proc_first_piece ? 0 : total_num_pieces / mpisize;
+    if (first_piece == total_num_pieces / mpisize * (mpisize - 1)) {
+      /* Read the last chunk of data */
+      last_piece = total_num_pieces - first_piece;
+    }
   }
 
-  return read_failure;
+  /* Read the pieces if there are any pieces to read on this proc. */
+  if (first_piece < last_piece) {
+    vtkNew < vtkAppendFilter > append;
+    for (int ipiece = first_piece; ipiece < last_piece; ipiece++) {
+      reader->UpdatePiece (ipiece, total_num_pieces, 0);
+      append->AddInputData (reader->GetOutput ());
+    }
+    /* Merge all read grids together */
+    append->Update ();
+    append->MergePointsOn ();
+    grid->ShallowCopy (append->GetOutput ());
+    t8_debugf ("[D] read %lli cells\n", grid->GetNumberOfCells ());
+  }
+  else {
+    t8_debugf ("[D] dont read any file on this proc\n");
+  }
+  return read_success;
 }
 
 #endif

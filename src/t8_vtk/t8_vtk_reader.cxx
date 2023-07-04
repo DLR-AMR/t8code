@@ -25,6 +25,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include "t8_vtk_reader.hxx"
 #include "t8_vtk_unstructured.hxx"
 #include "t8_vtk_polydata.hxx"
+#include "t8_vtk_parallel.hxx"
 #include "t8_vtk_types.h"
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 
@@ -134,6 +135,16 @@ t8_file_to_vtkGrid (const char *filename,
       break;
     case VTK_POLYDATA_FILE:
       main_proc_read_successful = t8_read_poly (filename, vtkGrid);
+      break;
+    case VTK_PARALLEL_FILE:
+      if (!partition) {
+        main_proc_read_successful = t8_read_unstructured (filename, vtkGrid);
+      }
+      else {
+        t8_errorf ("Distributed reading is not supported yet.\n");
+        vtkGrid = NULL;
+        break;
+      }
       break;
     default:
       vtkGrid = NULL;
@@ -403,7 +414,7 @@ t8_vtk_reader (const char *filename, const int partition,
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
-
+  t8_debugf ("[D] file_type: %i\n", (int) vtk_file_type);
   /* Ensure that the main-proc is a valid proc. */
   T8_ASSERT (0 <= main_proc && main_proc < mpisize);
   T8_ASSERT (filename != NULL);
@@ -416,6 +427,9 @@ t8_vtk_reader (const char *filename, const int partition,
     break;
   case VTK_POLYDATA_FILE:
     vtkGrid = vtkSmartPointer < vtkPolyData >::New ();
+    break;
+  case VTK_PARALLEL_FILE:
+    vtkGrid = vtkSmartPointer < vtkUnstructuredGrid >::New ();
     break;
   default:
     t8_errorf ("Filetype is not supported.\n");
