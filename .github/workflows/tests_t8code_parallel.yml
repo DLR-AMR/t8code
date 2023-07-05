@@ -152,8 +152,8 @@ jobs:
       run: rm -r $P4EST_DEBUG $P4EST_RELEASE $P4EST_SERIAL_DEBUG $P4EST_SERIAL_RELEASE || true 
     - name: make folders
       run: mkdir $P4EST_DEBUG && mkdir $P4EST_RELEASE
-    ## p4est debug
       if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+      ## p4est debug
     - name: p4est configure debug
       run: cd $P4EST_DEBUG && ../configure --enable-mpi --enable-debug --prefix=$PWD/install --with-sc=$SC_DEBUG/install
       if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
