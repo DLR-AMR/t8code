@@ -144,6 +144,7 @@ t8_file_to_vtkGrid (const char *filename,
       /* Communicate the success/failure of the reading process. */
       sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc,
                     comm);
+      return main_proc_read_successful;
     }
   }
   if (partition) {
@@ -308,8 +309,8 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet > vtkGrid,
   T8_ASSERT (0 <= main_proc && main_proc < mpisize);
 
   /* Already declared here, because we might use them during communication */
-  t8_gloidx_t         num_trees;
-  int                 dim;
+  t8_gloidx_t         num_trees = 0;
+  int                 dim = 0;
 
   t8_cmesh_init (&cmesh);
   if (!partition || mpirank == main_proc) {
@@ -328,11 +329,12 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet > vtkGrid,
     }
     /* Communicate the dimension to all processes */
     sc_MPI_Bcast (&dim, 1, sc_MPI_INT, main_proc, comm);
+    t8_cmesh_set_dimension (cmesh, dim);
     /* Communicate the number of trees to all processes. 
      * TODO: This probably crashes when a vtkGrid is distributed in many 
      * files. */
     sc_MPI_Bcast (&num_trees, 1, T8_MPI_GLOIDX, main_proc, comm);
-    t8_cmesh_set_dimension (cmesh, dim);
+
     /* Build the partition. */
     if (mpirank < main_proc) {
       first_tree = 0;
@@ -406,7 +408,7 @@ t8_vtk_reader (const char *filename, const int partition,
   T8_ASSERT (filename != NULL);
   vtk_read_success_t  main_proc_read_successful = read_failure;
 
-  vtkSmartPointer < vtkDataSet > vtkGrid;
+  vtkSmartPointer < vtkDataSet > vtkGrid = NULL;
   switch (vtk_file_type) {
   case VTK_UNSTRUCTURED_FILE:
     vtkGrid = vtkSmartPointer < vtkUnstructuredGrid >::New ();
@@ -470,7 +472,7 @@ t8_vtk_reader_cmesh (const char *filename, const int partition,
     return cmesh;
   }
   else {
-    t8_global_errorf ("Error translating file %s\n", filename);
+    t8_global_errorf ("Error translating file \n");
     return NULL;
   }
 #else

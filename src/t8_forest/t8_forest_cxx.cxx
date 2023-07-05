@@ -330,7 +330,7 @@ t8_forest_no_overlap (t8_forest_t forest)
   int                 has_overlap_local_global;
   int                 mpiret =
     sc_MPI_Allreduce (&has_overlap_local, &has_overlap_local_global,
-                      1, MPI_INT, sc_MPI_MAX, forest->mpicomm);
+                      1, sc_MPI_INT, sc_MPI_MAX, forest->mpicomm);
   SC_CHECK_MPI (mpiret);
 
   T8_ASSERT (has_overlap_local_global == 0 || has_overlap_local_global == 1);
