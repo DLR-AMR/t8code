@@ -174,8 +174,10 @@ jobs:
 #
     # build config vars
     - name: build CFLAGS and CXXFLAGS variables
-      run: echo CFLAGS_var="-Wall -pedantic -O3" >> $GITHUB_ENV
-        && echo CXXFLAGS_var="-Wall -pedantic -O3" >> $GITHUB_ENV
+      run: echo CFLAGS_var_debug="-Wall -pedantic -O0" >> $GITHUB_ENV
+        && echo CXXFLAGS_var_debug="-Wall -pedantic -O0" >> $GITHUB_ENV
+        && echo CFLAGS_var_release="-Wall -pedantic -O3" >> $GITHUB_ENV
+        && echo CXXFLAGS_var_release="-Wall -pedantic -O3" >> $GITHUB_ENV
     # Note: We want to use '-Werror', but if we already provide it at the configure step
     #       we get errors in configure that we cannot remove (for example the autotools way
     #       of checking for libm results in a compiler warning).
@@ -204,7 +206,7 @@ jobs:
     - name: echo configure line
       run: echo configure $CONFIG_RELEASE
     - name: configure MPI release
-      run: mkdir build_release && cd build_release && ../configure $CONFIG_RELEASE CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
+      run: mkdir build_release && cd build_release && ../configure $CONFIG_RELEASE CFLAGS="$CFLAGS_var_release" CXXFLAGS="$CXXFLAGS_var_release"
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v1
@@ -212,11 +214,11 @@ jobs:
         name: config_release_MPI.log
         path: build_release/config.log
     - name: make
-      run: cd build_release && make -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
+      run: cd build_release && make -j V=0 CFLAGS="$CFLAGS_var_release -Werror" CXXFLAGS="$CXXFLAGS_var_release -Werror"
     - name: make install
       run: cd build_release && make install -j
     - name: make check
-      run: cd build_release && make check -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
+      run: cd build_release && make check -j V=0 CFLAGS="$CFLAGS_var_release -Werror" CXXFLAGS="$CXXFLAGS_var_release -Werror"
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v1
@@ -227,7 +229,7 @@ jobs:
     - name: check debugging mode
       run: echo "Checking debug mode"
     - name: configure MPI debug
-      run: mkdir build_debug && cd build_debug && ../configure $CONFIG_DEBUG CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
+      run: mkdir build_debug && cd build_debug && ../configure $CONFIG_DEBUG CFLAGS="$CFLAGS_var_debug" CXXFLAGS="$CXXFLAGS_var_debug"
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v1
@@ -235,11 +237,11 @@ jobs:
         name: config_debug_MPI.log
         path: build_debug/config.log
     - name: make
-      run: cd build_debug && make -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
+      run: cd build_debug && make -j V=0 CFLAGS="$CFLAGS_var_debug -Werror" CXXFLAGS="$CXXFLAGS_var_debug -Werror"
     - name: make install
       run: cd build_debug && make install -j
     - name: make check
-      run: cd build_debug && make check -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
+      run: cd build_debug && make check -j V=0 CFLAGS="$CFLAGS_var_debug -Werror" CXXFLAGS="$CXXFLAGS_var_debug -Werror"
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v1
@@ -250,7 +252,7 @@ jobs:
     - name: check C++ compiler
       run: echo "Checking C++, release mode (MPI)"
     - name: configure MPI release (only C++ compiler)
-      run: mkdir build_release_cpp &&cd build_release_cpp && ../configure CC=mpicxx CXX=mpicxx $CONFIG_RELEASE CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
+      run: mkdir build_release_cpp &&cd build_release_cpp && ../configure CC=mpicxx CXX=mpicxx $CONFIG_RELEASE CFLAGS="$CFLAGS_var_release" CXXFLAGS="$CXXFLAGS_var_release"
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v1
@@ -258,11 +260,11 @@ jobs:
         name: config_release_MPI_CXX.log
         path: build_release_cpp/config.log
     - name: make
-      run: cd build_release_cpp && make -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
+      run: cd build_release_cpp && make -j V=0 CFLAGS="$CFLAGS_var_release -Werror" CXXFLAGS="$CXXFLAGS_var_release -Werror"
     - name: make install
       run: cd build_release_cpp && make install -j
     - name: make check
-      run: cd build_release_cpp && make check -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
+      run: cd build_release_cpp && make check -j V=0 CFLAGS="$CFLAGS_var_release -Werror" CXXFLAGS="$CXXFLAGS_var_release -Werror"
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v1
