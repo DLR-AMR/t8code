@@ -325,7 +325,7 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > vtkGrid,
  */
 static void
 t8_vtk_cmesh_partition (t8_cmesh_t cmesh, const int mpirank,
-                        const int main_proc, int num_trees, int dim,
+                        const int main_proc, t8_gloidx_t num_trees, int dim,
                         sc_MPI_Comm comm)
 {
   t8_gloidx_t         first_tree;
@@ -355,6 +355,30 @@ t8_vtk_cmesh_partition (t8_cmesh_t cmesh, const int mpirank,
     t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim);
     t8_cmesh_register_geometry (cmesh, linear_geom);
   }
+  t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
+}
+
+static void
+t8_vtk_distributed_partition (t8_cmesh_t cmesh, const int mpirank,
+                              const int main_proc, t8_gloidx_t num_trees,
+                              int dim, sc_MPI_Comm comm)
+{
+  t8_gloidx_t         first_tree;
+  t8_gloidx_t         last_tree;
+  t8_gloidx_t         global_num_trees;
+  sc_MPI_Allreduce (&num_trees, &global_num_trees, 1, T8_MPI_GLOIDX,
+                    sc_MPI_SUM, comm);
+  int                 dim_buf;
+  sc_MPI_Allreduce (&dim, &dim_buf, 1, sc_MPI_INT, sc_MPI_BOR, comm);
+  t8_debugf ("[D] dim: %i\n", dim_buf);
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim);
+  t8_cmesh_register_geometry (cmesh, linear_geom);
+
+  if (num_trees == 0) {
+    first_tree = 0;
+    last_tree = -1;
+  }
+
   t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
 }
 
