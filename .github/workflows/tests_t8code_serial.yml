@@ -229,14 +229,14 @@ jobs:
         name: config_debug_serial.log
         path: build_serial_debug/config.log
     - name: make
-      run: cd build_serial_release && make -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
+      run: cd build_serial_debug && make -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
     - name: make install
-      run: cd build_serial_release && make install -j
+      run: cd build_serial_debug && make install -j
     - name: make check
-      run: cd build_serial_release && make check -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
+      run: cd build_serial_debug && make check -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v1
       with:
-        name: test-suite_release_serial.log
-        path: build_serial_release/test-suite.log
+        name: test-suite_debug_serial.log
+        path: build_serial_debug/test-suite.log
