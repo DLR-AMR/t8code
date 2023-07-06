@@ -321,8 +321,8 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet > vtkGrid,
     t8_cmesh_register_geometry (cmesh, linear_geom);
   }
   if (partition) {
-    t8_gloidx_t         first_tree;
-    t8_gloidx_t         last_tree;
+    t8_gloidx_t         first_tree = -1;
+    t8_gloidx_t         last_tree = -1;
     if (mpirank == main_proc) {
       first_tree = 0;
       last_tree = num_trees - 1;
