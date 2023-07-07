@@ -12,5 +12,6 @@ include example/IO/cmesh/gmsh/Makefile.am
 include example/IO/cmesh/tetgen/Makefile.am
 include example/IO/cmesh/triangle/Makefile.am
 include example/IO/cmesh/netcdf/Makefile.am
+include example/IO/cmesh/vtk/Makefile.am
 
 include example/IO/forest/netcdf/Makefile.am
