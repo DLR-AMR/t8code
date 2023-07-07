@@ -218,6 +218,212 @@ t8_shmem_array_allgather (const void *sendbuf, int sendcount,
                       recvcount, recvtype, recvarray->comm);
 }
 
+/**
+ * Computes the recvcounter- and displacement array for 
+ * an MPI_Gatherv
+ * 
+ * \param[in] sendcount The number of items this proc sends
+ * \param[in, out] recvcounts On input a zero-initialized array that is going to be filled with the number of elements send by rank i
+ * \param[in, out] displs On input a zero-initialized array that is going to be filled with the displacements
+ * \returns   The total number of items 
+ */
+static int
+t8_compute_recvcounts_displs (int sendcount, int *recvcounts, int *displs,
+                              int elem_size, sc_MPI_Comm comm)
+{
+  int                 mpisize;
+  int                 mpiret = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+
+  mpiret = sc_MPI_Allgather ((void *) &sendcount, 1, sc_MPI_INT, recvcounts,
+                             1, sc_MPI_INT, comm);
+  SC_CHECK_MPI (mpiret);
+
+  int                 recv_total = recvcounts[0];
+  for (int irank = 1; irank < mpisize; irank++) {
+    displs[irank] = displs[irank - 1] + recvcounts[irank - 1];
+    recv_total += recvcounts[irank];
+  }
+
+  return recv_total;
+}
+
+#if defined(__bgq__) || defined(SC_ENABLE_MPIWINSHARED)
+/**
+ * Allgathers sendbuffer of various sizes and writes them in the recvarray. 
+ * Can be used for SC_SHMEM_WINDOW, SC_SHMEM_WINDOW_PRESCAN
+ * SC_SHMEM_BGQ or SC_SHMEMBGQ_PRESCAN (sc_shmem.h) 
+ * 
+ * \param[in] sendbuf   The sendbuffer
+ * \param[in] sendcount The number of items send by this proc
+ * \param[in] sendtype The type of items to send
+ * \param[in, out] recvarray The destination
+ * \param[in] recvtype The type of items to receive
+ * \param[in] comm The mpicommunicator to use. 
+ * \param[in] intranode_comm The intranode communicator to use. 
+ * \param[in] internode_comm  The internode communicator to use. 
+ */
+static void
+t8_shmem_array_allgatherv_common (void *sendbuf,
+                                  const int sendcount,
+                                  sc_MPI_Datatype sendtype,
+                                  t8_shmem_array_t recvarray,
+                                  sc_MPI_Datatype recvtype,
+                                  sc_MPI_Comm comm,
+                                  sc_MPI_Comm intranode_comm,
+                                  sc_MPI_Comm internode_comm)
+{
+  size_t              typesize;
+  int                 mpiret;
+  int                 intrarank;        /* The rank in the intranode communicator */
+  int                 intrasize;        /* The size of the intranode communicator */
+  int                 intersize;        /* The size of the internode communicator */
+  char               *noderecvchar = NULL;
+
+  typesize = sc_mpi_sizeof (recvtype);
+
+  mpiret = sc_MPI_Comm_rank (intranode_comm, &intrarank);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_size (intranode_comm, &intrasize);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_size (internode_comm, &intersize);
+  SC_CHECK_MPI (mpiret);
+
+  /* intranode-gatherv */
+  int                *intra_displ = T8_ALLOC_ZERO (int, intrasize);
+  int                *intra_recvcounts = T8_ALLOC_ZERO (int, intrasize);
+  int                 intra_recv_total =
+    t8_compute_recvcounts_displs (sendcount, intra_recvcounts, intra_displ,
+                                  sizeof (sendtype), intranode_comm);
+  if (intrarank == 0) {
+    noderecvchar = T8_ALLOC (char, intra_recv_total * typesize);
+  }
+  mpiret =
+    sc_MPI_Gatherv (sendbuf, sendcount, sendtype, noderecvchar,
+                    intra_recvcounts, intra_displ, recvtype, 0,
+                    intranode_comm);
+  SC_CHECK_MPI (mpiret);
+
+/* internode-allgatherv */
+  int                *inter_displ = T8_ALLOC_ZERO (int, intersize);
+  int                *inter_recvcount = T8_ALLOC_ZERO (int, intersize);
+  t8_compute_recvcounts_displs (intra_recv_total, inter_recvcount,
+                                inter_displ, sizeof (sendtype),
+                                internode_comm);
+
+  if (t8_shmem_array_start_writing (recvarray)) {
+    mpiret =
+      sc_MPI_Allgatherv (noderecvchar, intra_recv_total, sendtype,
+                         recvarray->array, inter_recvcount, inter_displ,
+                         recvtype, internode_comm);
+    SC_CHECK_MPI (mpiret);
+    T8_FREE (noderecvchar);
+  }
+  t8_shmem_array_end_writing (recvarray);
+
+  T8_FREE (inter_displ);
+  T8_FREE (inter_recvcount);
+  T8_FREE (intra_displ);
+  T8_FREE (intra_recvcounts);
+}
+#endif /* __bgq__ || SC_ENABLE_MPI_WINSHARED */
+
+/**
+ * Allgathers sendbuffer of various sizes and writes them in the recvarray. 
+ * Can be used for Basic or Prescan shared memory (sc_shmem.h) 
+ * 
+ * \param[in] sendbuf   The sendbuffer
+ * \param[in] sendcount The number of items send by this proc
+ * \param[in] sendtype The type of items to send
+ * \param[in, out] recvarray The destination
+ * \param[in] recvtype The type of items to receive
+ * \param[in] comm The mpicommunicator to use. 
+ */
+static void
+t8_shmem_array_allgatherv_basic (void *sendbuf,
+                                 const int sendcount,
+                                 sc_MPI_Datatype sendtype,
+                                 t8_shmem_array_t recvarray,
+                                 sc_MPI_Datatype recvtype, sc_MPI_Comm comm)
+{
+  int                 mpisize;
+  int                 mpirank;
+  int                 mpiret;
+  mpiret = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+
+  int                *displs = T8_ALLOC_ZERO (int, mpisize);
+  int                *recvcounts = T8_ALLOC_ZERO (int, mpisize);
+
+  t8_compute_recvcounts_displs (sendcount, recvcounts, displs,
+                                sizeof (sendtype), comm);
+
+  mpiret =
+    sc_MPI_Allgatherv ((void *) sendbuf, sendcount, sendtype,
+                       recvarray->array, recvcounts, displs, recvtype, comm);
+  SC_CHECK_MPI (mpiret);
+
+  T8_FREE (recvcounts);
+  T8_FREE (displs);
+}
+
+void
+t8_shmem_array_allgatherv (void *sendbuf,
+                           const int sendcount,
+                           sc_MPI_Datatype
+                           sendtype,
+                           t8_shmem_array_t
+                           recvarray,
+                           sc_MPI_Datatype recvtype, sc_MPI_Comm comm)
+{
+  T8_ASSERT (t8_shmem_array_is_initialized (recvarray));
+  T8_ASSERT (!t8_shmem_array_is_writing_possible (recvarray));
+  sc_shmem_type_t     type;
+  sc_MPI_Comm         intranode_comm = sc_MPI_COMM_NULL;
+  sc_MPI_Comm         internode_comm = sc_MPI_COMM_NULL;
+
+  /* Get the type of the used shared memory. */
+  type = sc_shmem_get_type (comm);
+  if (type == SC_SHMEM_NOT_SET) {
+    type = sc_shmem_default_type;
+    sc_shmem_set_type (comm, type);
+  }
+
+  /* Get the intra- and internode communicator. */
+  sc_mpi_comm_get_node_comms (comm, &intranode_comm, &internode_comm);
+  if (intranode_comm == sc_MPI_COMM_NULL
+      || intranode_comm == sc_MPI_COMM_NULL) {
+    type = SC_SHMEM_BASIC;
+  }
+
+  /* Choose the type of allgatherv depending on the used shmem type. */
+  switch (type) {
+  case SC_SHMEM_BASIC:
+  case SC_SHMEM_PRESCAN:
+    t8_shmem_array_allgatherv_basic (sendbuf, sendcount, sendtype, recvarray,
+                                     recvtype, comm);
+    break;
+#if defined(__bgq__) || defined(SC_ENABLE_MPIWINSHARED)
+#if defined(__bgq__)
+  case SC_SHMEM_BGQ:
+  case SC_SHMEM_BGQ_PRESCAN:
+#endif /* __bgq__ */
+#if defined(SC_ENABLE_MPIWINSHARED)
+  case SC_SHMEM_WINDOW:
+  case SC_SHMEM_WINDOW_PRESCAN:
+#endif /* SC_ENABLE_MPIWINSHARED */
+    t8_shmem_array_allgatherv_common (sendbuf, sendcount, sendtype, recvarray,
+                                      recvtype, comm, intranode_comm,
+                                      internode_comm);
+    break;
+#endif /* __bgq__ || SC_ENABLE_MPI_WINSHARED */
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
+}
+
 sc_MPI_Comm
 t8_shmem_array_get_comm (t8_shmem_array_t array)
 {

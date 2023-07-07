@@ -354,7 +354,7 @@ t8_dline_compute_reference_coords (const t8_dline_t *elem,
                                    const double *ref_coords,
                                    double *out_coords)
 {
-  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (t8_dline_is_valid (elem));
   out_coords[0] = elem->x;
   out_coords[0] += T8_DLINE_LEN (elem->level) * ref_coords[0];
   out_coords[0] /= (double) T8_DLINE_ROOT_LEN;

@@ -1748,7 +1748,7 @@ t8_dpyramid_compute_reference_coords (const t8_dpyramid_t *elem,
                                       double *out_coords)
 {
   T8_ASSERT (ref_coords != NULL);
-  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (t8_dpyramid_is_valid (elem));
   if (t8_dpyramid_shape (elem) == T8_ECLASS_PYRAMID) {
     const t8_dpyramid_coord_t length = T8_DPYRAMID_LEN (elem->pyramid.level);
     out_coords[0] = elem->pyramid.x;
@@ -1761,8 +1761,8 @@ t8_dpyramid_compute_reference_coords (const t8_dpyramid_t *elem,
       out_coords[2] += ref_coords[2] * length;
     }
     else {
-      out_coords[0] += ref_coords[0] * length * (1 - ref_coords[2]);
-      out_coords[1] += ref_coords[1] * length * (1 - ref_coords[2]);
+      out_coords[0] += (ref_coords[0] - ref_coords[2]) * length;
+      out_coords[1] += (ref_coords[1] - ref_coords[2]) * length;
       out_coords[2] += (1 - ref_coords[2]) * length;
     }
 

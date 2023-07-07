@@ -97,8 +97,8 @@ typedef struct
 
 /* The UGRID conventions are applied for dimension and variable descriptions */
 static void
-t8_cmesh_init_ugrid_namespace_context (t8_cmesh_netcdf_ugrid_namespace_t *
-                                       namespace_conv, int dim)
+t8_cmesh_init_ugrid_namespace_context (t8_cmesh_netcdf_ugrid_namespace_t
+                                       * namespace_conv, int dim)
 {
   if (dim == 2) {
     namespace_conv->mesh = "Mesh2";
@@ -138,8 +138,8 @@ t8_cmesh_init_ugrid_namespace_context (t8_cmesh_netcdf_ugrid_namespace_t *
 
 /* Define  NetCDF-coordinate-dimension */
 static void
-t8_cmesh_write_netcdf_coordinate_dimension (t8_cmesh_netcdf_context_t *
-                                            context,
+t8_cmesh_write_netcdf_coordinate_dimension (t8_cmesh_netcdf_context_t
+                                            * context,
                                             t8_cmesh_netcdf_ugrid_namespace_t
                                             * namespace_context)
 {
@@ -156,8 +156,8 @@ t8_cmesh_write_netcdf_coordinate_dimension (t8_cmesh_netcdf_context_t *
 
 /* Define NetCDF-coordinate-variables */
 static void
-t8_cmesh_write_netcdf_coordinate_variables (t8_cmesh_netcdf_context_t *
-                                            context,
+t8_cmesh_write_netcdf_coordinate_variables (t8_cmesh_netcdf_context_t
+                                            * context,
                                             t8_cmesh_netcdf_ugrid_namespace_t
                                             * namespace_context)
 {
@@ -310,8 +310,8 @@ t8_cmesh_write_netcdf_coordinate_variables (t8_cmesh_netcdf_context_t *
 /* Define NetCDF-dimesnions */
 static void
 t8_cmesh_write_netcdf_dimensions (t8_cmesh_netcdf_context_t * context,
-                                  t8_cmesh_netcdf_ugrid_namespace_t *
-                                  namespace_context)
+                                  t8_cmesh_netcdf_ugrid_namespace_t
+                                  * namespace_context)
 {
 #if T8_WITH_NETCDF
   /* *Define dimensions in the NetCDF file.* */
@@ -344,8 +344,8 @@ t8_cmesh_write_netcdf_dimensions (t8_cmesh_netcdf_context_t * context,
 /* Define NetCDF-variables */
 static void
 t8_cmesh_write_netcdf_variables (t8_cmesh_netcdf_context_t * context,
-                                 t8_cmesh_netcdf_ugrid_namespace_t *
-                                 namespace_context)
+                                 t8_cmesh_netcdf_ugrid_namespace_t
+                                 * namespace_context)
 {
 #if T8_WITH_NETCDF
   /* *Define variables in the NetCDF file.* */
@@ -581,8 +581,8 @@ t8_cmesh_write_netcdf_variables (t8_cmesh_netcdf_context_t * context,
 /* Declare the user-defined elementwise NetCDF-variables which were passed to function. */
 static void
 t8_cmesh_write_user_netcdf_vars (t8_cmesh_netcdf_context_t * context,
-                                 t8_cmesh_netcdf_ugrid_namespace_t *
-                                 namespace_context,
+                                 t8_cmesh_netcdf_ugrid_namespace_t
+                                 * namespace_context,
                                  int num_extern_netcdf_vars,
                                  t8_netcdf_variable_t * ext_variables[],
                                  sc_MPI_Comm comm)
@@ -727,11 +727,11 @@ t8_cmesh_write_netcdf_coordinate_data (t8_cmesh_t cmesh,
     for (; i < t8_eclass_num_vertices[tree_class]; i++) {
       /* Stores the x-, y- and z- coordinate of the nodes */
       Mesh_node_x[num_it] =
-        vertices[3 * (t8_eclass_vtk_corner_number[tree_class][i])];
+        vertices[3 * (t8_eclass_t8_to_vtk_corner_number[tree_class][i])];
       Mesh_node_y[num_it] =
-        vertices[3 * (t8_eclass_vtk_corner_number[tree_class][i]) + 1];
+        vertices[3 * (t8_eclass_t8_to_vtk_corner_number[tree_class][i]) + 1];
       Mesh_node_z[num_it] =
-        vertices[3 * (t8_eclass_vtk_corner_number[tree_class][i]) + 2];
+        vertices[3 * (t8_eclass_t8_to_vtk_corner_number[tree_class][i]) + 2];
       /* Stores the the nodes which correspond to this element. */
       Mesh_elem_nodes[(ltree_id) * context->nMaxMesh_elem_nodes + i] =
         local_tree_offset + num_it;
@@ -936,8 +936,8 @@ t8_cmesh_write_user_netcdf_data (t8_cmesh_t cmesh,
 static void
 t8_cmesh_write_netcdf_file (t8_cmesh_t cmesh,
                             t8_cmesh_netcdf_context_t * context,
-                            t8_cmesh_netcdf_ugrid_namespace_t *
-                            namespace_context, int num_extern_netcdf_vars,
+                            t8_cmesh_netcdf_ugrid_namespace_t
+                            * namespace_context, int num_extern_netcdf_vars,
                             t8_netcdf_variable_t * ext_variables[],
                             sc_MPI_Comm comm)
 {

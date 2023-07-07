@@ -23,7 +23,10 @@
 #include <sc_options.h>
 #include <sc_statistics.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_io.h>
+#include <t8_forest/t8_forest_geometrical.h>
+#include <t8_forest/t8_forest_profiling.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_ghost.h>
@@ -499,7 +502,6 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
     el_hang->fluxes[face][i] =
       t8_advect_flux_upwind (problem, phi_plus, phi_minus, ltreeid,
                              face_children[i], child_face);
-    // if (a == 1) printf  ("%i %i %f\n",face, i, el_hang->fluxes[face][i]);
     /* Set the flux of the neighbor element */
     dual_face = el_hang->dual_faces[face][i];
     if (!adapted_or_partitioned && !neigh_is_ghost) {
@@ -508,7 +510,6 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
         /* We need to allocate the fluxes */
         neigh_data->fluxes[dual_face] = T8_ALLOC (double, 1);
       }
-      // printf ("face %i neigh %i df %i\n", face, neigh_id, dual_face);
       SC_CHECK_ABORT (dual_face < neigh_data->num_faces, "num\n");
       // SC_CHECK_ABORT (neigh_data->num_neighbors[dual_face] == 1, "entry\n");
       neigh_data->num_neighbors[dual_face] = 1;
@@ -1583,7 +1584,6 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
           problem->stats[ADVECT_DUMMY].count = 1;
         }
         /* Compute time step */
-        //      printf ("advance %i\n", ielement);
         t8_advect_advance_element (problem, lelement);
       }
     }
