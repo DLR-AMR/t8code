@@ -34,7 +34,7 @@
  * \param [in]          angle   Rotation angle in radians.
  */
 static void
-t8_mat_init_xrot(double mat[3][3], const double angle)
+t8_mat_init_xrot (double mat[3][3], const double angle)
 {
   /* first row */
   mat[0][0] = 1.0;
@@ -43,13 +43,13 @@ t8_mat_init_xrot(double mat[3][3], const double angle)
 
   /* second row */
   mat[1][0] = 0.0;
-  mat[1][1] =  cos(angle);
-  mat[1][2] = -sin(angle);
+  mat[1][1] = cos (angle);
+  mat[1][2] = -sin (angle);
 
   /* third row */
   mat[2][0] = 0.0;
-  mat[2][1] =  sin(angle);
-  mat[2][2] =  cos(angle);
+  mat[2][1] = sin (angle);
+  mat[2][2] = cos (angle);
 }
 
 /** Initialize given 3x3 matrix as rotation matrix around the y-axis with given angle.
@@ -57,12 +57,12 @@ t8_mat_init_xrot(double mat[3][3], const double angle)
  * \param [in]          angle   Rotation angle in radians.
  */
 static inline void
-t8_mat_init_yrot(double mat[3][3], const double angle)
+t8_mat_init_yrot (double mat[3][3], const double angle)
 {
   /* first row */
-  mat[0][0] =  cos(angle);
-  mat[0][1] =  0.0;
-  mat[0][2] =  sin(angle);
+  mat[0][0] = cos (angle);
+  mat[0][1] = 0.0;
+  mat[0][2] = sin (angle);
 
   /* second row */
   mat[1][0] = 0.0;
@@ -70,9 +70,9 @@ t8_mat_init_yrot(double mat[3][3], const double angle)
   mat[1][2] = 0.0;
 
   /* third row */
-  mat[2][0] = -sin(angle);
-  mat[2][1] =  0.0;
-  mat[2][2] =  cos(angle);
+  mat[2][0] = -sin (angle);
+  mat[2][1] = 0.0;
+  mat[2][2] = cos (angle);
 }
 
 /** Initialize given 3x3 matrix as rotation matrix around the z-axis with given angle.
@@ -80,16 +80,16 @@ t8_mat_init_yrot(double mat[3][3], const double angle)
  * \param [in]          angle   Rotation angle in radians.
  */
 static inline void
-t8_mat_init_zrot(double mat[3][3], const double angle)
+t8_mat_init_zrot (double mat[3][3], const double angle)
 {
   /* first row */
-  mat[0][0] =  cos(angle);
-  mat[0][1] = -sin(angle);
-  mat[0][2] =  0.0;
+  mat[0][0] = cos (angle);
+  mat[0][1] = -sin (angle);
+  mat[0][2] = 0.0;
 
   /* second row */
-  mat[1][0] = sin(angle);
-  mat[1][1] = cos(angle);
+  mat[1][0] = sin (angle);
+  mat[1][1] = cos (angle);
   mat[1][2] = 0.0;
 
   /* third row */
@@ -104,11 +104,11 @@ t8_mat_init_zrot(double mat[3][3], const double angle)
  * \param [in,out]    b     3-vector.
  */
 static inline void
-t8_mat_mult_vec(const double mat[3][3], const double a[3], double b[3])
+t8_mat_mult_vec (const double mat[3][3], const double a[3], double b[3])
 {
-  b[0] = mat[0][0]*a[0] + mat[0][1]*a[1] + mat[0][2]*a[2];
-  b[1] = mat[1][0]*a[0] + mat[1][1]*a[1] + mat[1][2]*a[2];
-  b[2] = mat[2][0]*a[0] + mat[2][1]*a[1] + mat[2][2]*a[2];
+  b[0] = mat[0][0] * a[0] + mat[0][1] * a[1] + mat[0][2] * a[2];
+  b[1] = mat[1][0] * a[0] + mat[1][1] * a[1] + mat[1][2] * a[2];
+  b[2] = mat[2][0] * a[0] + mat[2][1] * a[1] + mat[2][2] * a[2];
 }
 
 /** Apply matrix-matrix multiplication: C = A*B.
@@ -117,18 +117,18 @@ t8_mat_mult_vec(const double mat[3][3], const double a[3], double b[3])
  * \param [int,out]   C     3x3-matrix.
  */
 static inline void
-t8_mat_mult_mat(const double A[3][3], const double B[3][3], double C[3][3])
+t8_mat_mult_mat (const double A[3][3], const double B[3][3], double C[3][3])
 {
   for (int i = 0; i < 3; i++)
-  for (int j = 0; j < 3; j++) {
-    C[i][j] = 0.0;
-  }
+    for (int j = 0; j < 3; j++) {
+      C[i][j] = 0.0;
+    }
 
   for (int i = 0; i < 3; i++)
-  for (int j = 0; j < 3; j++)
-  for (int k = 0; k < 3; k++) {
-    C[i][j] = C[i][j] + A[i][k]*B[k][j];
-  }
+    for (int j = 0; j < 3; j++)
+      for (int k = 0; k < 3; k++) {
+        C[i][j] = C[i][j] + A[i][k] * B[k][j];
+      }
 }
 
 #endif /* !T8_MAT_H! */
