@@ -61,25 +61,28 @@ t8_geom_trianglular_interpolation (const double *coefficients,
                                    int interpolation_dim,
                                    double *evaluated_function)
 {
+  /* The algorithm is able to calculate any point in a triangle or tetrahedron using barycentric coordinates.
+   * All points are calculated by the sum of each corner point (e.g. p1 -> corner point 1) multiplied by a
+   * scalar, which in this case are the reference coordinates (ref_coords).
+   */
   int                 i;
   double              temp[3] = { 0 };
 
   for (i = 0; i < corner_value_dim; i++) {
-    temp[i] =
-      (corner_values[1 * corner_value_dim + i] -
-       corner_values[i]) * coefficients[0] + (interpolation_dim ==
-                                              3
-                                              ? (corner_values
-                                                 [3 * corner_value_dim + i] -
-                                                 corner_values[2 *
-                                                               corner_value_dim
-                                                               + i])
-                                              * coefficients[1]
-                                              : 0.)
-      + (corner_values[2 * corner_value_dim + i] -
-         corner_values[1 * corner_value_dim +
-                       i]) * coefficients[interpolation_dim - 1]
-      + corner_values[i];
+    temp[i] = (corner_values[1 * corner_value_dim + i] -        /* (p2 - p1) * ref_coords */
+               corner_values[i]) * coefficients[0] + (interpolation_dim ==
+                                                      3
+                                                      ? (corner_values
+                                                         [3 *
+                                                          corner_value_dim +
+                                                          i] -
+                                                         corner_values[2 *
+                                                                       corner_value_dim
+                                                                       + i])
+                                                      * coefficients[1]
+                                                      : 0.)     /* (p4 - p3) * ref_coords */
+      +(corner_values[2 * corner_value_dim + i] - corner_values[1 * corner_value_dim + i]) * coefficients[interpolation_dim - 1]        /* (p3 - p2) * ref_coords */
+      +corner_values[i];        /* p1 */
     evaluated_function[i] = temp[i];
   }
 }
@@ -269,6 +272,8 @@ t8_geom_get_ref_intersection (int edge_index,
                               const double *ref_coords,
                               double ref_intersection[2])
 {
+  t8_global_productionf ("ref_coords: [%f, %f, %f]\n", ref_coords[0],
+                         ref_coords[1], ref_coords[2]);
   const double       *ref_opposite_vertex;
   double              ref_slope;
   const t8_eclass_t   eclass = T8_ECLASS_TRIANGLE;
@@ -289,7 +294,7 @@ t8_geom_get_ref_intersection (int edge_index,
    */
 
   /* The opposite vertex of an edge always has the same index as the edge (see picture above). */
-  ref_opposite_vertex = t8_element_corner_ref_coords[T8_ECLASS_TRIANGLE][edge_index];
+  ref_opposite_vertex = t8_element_corner_ref_coords[eclass][edge_index];
 
   /* In case the reference point is equal to the opposite vertex, the slope of the line is 0. */
   if (ref_opposite_vertex[0] == ref_coords[0]) {
@@ -298,59 +303,8 @@ t8_geom_get_ref_intersection (int edge_index,
   /* slope = (y2-y1)/(x2-x1) */
   else {
     ref_slope = (ref_opposite_vertex[1] - ref_coords[1])
-                / (ref_opposite_vertex[0] - ref_coords[0]);
+      / (ref_opposite_vertex[0] - ref_coords[0]);
   }
-
-  // switch (edge_index) {
-  // case 0:                      /* edge 0 */
-  //   /* opposite vertex -> vertex 0 */
-  //   ref_opposite_vertex[0] = 0;
-  //   ref_opposite_vertex[1] = 0;
-  //   /* In case the reference point is equal to the opposite vertex, the slope of the line is 0. */
-  //   if (ref_opposite_vertex[0] == ref_coords[0]) {
-  //     ref_slope = 0;
-  //   }
-  //   /* slope = (y2-y1)/(x2-x1) */
-  //   else {
-  //     ref_slope = (ref_opposite_vertex[1] - ref_coords[1])
-  //       / (ref_opposite_vertex[0] - ref_coords[0]);
-  //   }
-  //   break;
-  // case 1:                      /* edge 1 */
-  //   /* opposite vertex -> vertex 1 */
-  //   ref_opposite_vertex[0] = 1;
-  //   ref_opposite_vertex[1] = 0;
-  //   /* In case the reference point is equal to the opposite vertex, the slope of the line is 0. */
-  //   if (ref_coords[0] == ref_opposite_vertex[0]) {
-  //     ref_slope = 0;
-  //   }
-  //   /* slope = (y2-y1)/(x2-x1) */
-  //   else {
-  //     ref_slope = (ref_coords[1] - ref_opposite_vertex[1])
-  //       / (ref_coords[0] - ref_opposite_vertex[0]);
-  //     t8_global_productionf("ref_slope: %f\n", ref_slope);
-  //   }
-  //   break;
-  // case 2:                      /* edge 2 */
-  //   /* opposite vertex -> vertex 2 */
-  //   ref_opposite_vertex[0] = 1;
-  //   ref_opposite_vertex[1] = 1;
-  //   /* In case the reference point is equal to the opposite vertex, the slope of the line is 0. */
-  //   if (ref_coords[0] == ref_opposite_vertex[0]) {
-  //     ref_slope = 0;
-  //   }
-  //   /* slope = (y2-y1)/(x2-x1) */
-  //   else {
-  //     ref_slope = (ref_coords[1] - ref_opposite_vertex[1])
-  //       / (ref_coords[0] - ref_opposite_vertex[0]);
-  //   }
-  //   break;
-  // default:
-  //   SC_ABORT_NOT_REACHED ();
-  //   break;
-  // }
-  t8_global_productionf("ref_coords: [%f, %f]\n", ref_coords[0], ref_coords[1]);
-  t8_global_productionf("edge_index: %d; ref_opposite_vertex: [%f, %f]; ref_slope: %f\n", edge_index, ref_opposite_vertex[0], ref_opposite_vertex[1], ref_slope);
   /* Now that we have the slope of the lines going through each vertex and the reference point,
    * we can calculate the intersection of the lines with each edge.
    */
@@ -380,37 +334,16 @@ t8_geom_get_ref_intersection (int edge_index,
        *                 /(x1-x2)(y3-y4)-(y1-y2)(x3-x4)
        * intersectionY = (x1y2-y1x2)(y3-y4)-(y1-y2)(x3y4-y3x4)
        *                 /(x1-x2)(y3-y4)-(y1-y2)(x3-x4)
-       *
-       * c1 is the y axis intercept of the hypotenuse
-       * m1 is the slope of the hypotenuse
        * 
        * x1=0 y1=0 x2=1 y2=1 x3=ref_coords[0] y3=ref_coords[1] x4=ref_opposite_vertex[0] y4=ref_opposite_vertex[1]
        * 
        * Since the intersection point lies on edge 2, which has a slope of 1, the x and the y value has to be equal
        */
-      // ref_intersection[0] =
-      //   ((ref_coords[0] * ref_opposite_vertex[1] -
-      //     ref_coords[1] * ref_opposite_vertex[0])
-      //    / -(ref_coords[1] - ref_opposite_vertex[1]) +
-      //    (ref_coords[0] - ref_opposite_vertex[0]));
-      // ref_intersection[1] =
-      //   ((ref_coords[0] * ref_opposite_vertex[1] -
-      //     ref_coords[1] * ref_opposite_vertex[0])
-      //    / -(ref_coords[1] - ref_opposite_vertex[1]) +
-      //    (ref_coords[0] - ref_opposite_vertex[0]));
-      
-      ref_intersection[0] =
-        ((0 * 1 - 0 * 0) * (ref_coords[0] - ref_opposite_vertex[0]) -
-         (0 - 1) * (ref_coords[0] * ref_opposite_vertex[1] -
-                    ref_coords[1] * ref_opposite_vertex[0]))
-        / ((0 - 1) * (ref_coords[1] - ref_opposite_vertex[1]) -
-           (0 - 0) * (ref_coords[0] - ref_opposite_vertex[0]));
-      ref_intersection[1] =
-        ((0 * 1 - 0 * 0) * (ref_coords[1] - ref_opposite_vertex[1]) -
-         (0 - 0) * (ref_coords[0] * ref_opposite_vertex[1] -
-                    ref_coords[1] * ref_opposite_vertex[0]))
-        / ((0 - 1) * (ref_coords[1] - ref_opposite_vertex[1]) -
-           (0 - 0) * (ref_coords[0] - ref_opposite_vertex[0]));
+      ref_intersection[0] = ref_intersection[1] =
+        ((ref_coords[0] * ref_opposite_vertex[1] -
+          ref_coords[1] * ref_opposite_vertex[0])
+         / -(ref_coords[1] - ref_opposite_vertex[1]) +
+         (ref_coords[0] - ref_opposite_vertex[0]));
       break;
     }
   case 2:                      /* edge 2 */
@@ -430,30 +363,24 @@ t8_geom_get_ref_intersection (int edge_index,
        *                 /(x1-x2)(y3-y4)-(y1-y2)(x3-x4)
        * intersectionY = (x1y2-y1x2)(y3-y4)-(y1-y2)(x3y4-y3x4)
        *                 /(x1-x2)(y3-y4)-(y1-y2)(x3-x4)
-       *
-       * c1 is the y axis intercept of edge 2
-       * m1 is the slope of edge 2
+       * 
+       * x1=0 y1=0 x2=1 y2=0 x3=ref_coords[0] y3=ref_coords[1] x4=ref_opposite_vertex[0] y4=ref_opposite_vertex[1]
+       * 
+       * Since the intersection point lies on edge 2, which has a slope of 1, the x and the y value has to be equal
        */
-      // x1=0 y1=0 x2=1 y2=0 x3=ref_coords[0] y3=ref_coords[1] x4=ref_opposite_vertex[0] y4=ref_opposite_vertex[1]
       ref_intersection[0] =
-        ((0 * 1 - 0 * 0) * (ref_coords[0] - ref_opposite_vertex[0]) -
-         (0 - 1) * (ref_coords[0] * ref_opposite_vertex[1] -
-                    ref_coords[1] * ref_opposite_vertex[0]))
-        / ((0 - 1) * (ref_coords[1] - ref_opposite_vertex[1]) -
-           (0 - 0) * (ref_coords[0] - ref_opposite_vertex[0]));
-      ref_intersection[1] =
-        ((0 * 1 - 0 * 0) * (ref_coords[1] - ref_opposite_vertex[1]) -
-         (0 - 0) * (ref_coords[0] * ref_opposite_vertex[1] -
-                    ref_coords[1] * ref_opposite_vertex[0]))
-        / ((0 - 1) * (ref_coords[1] - ref_opposite_vertex[1]) -
-           (0 - 0) * (ref_coords[0] - ref_opposite_vertex[0]));
+        (ref_coords[0] * ref_opposite_vertex[1] -
+         ref_coords[1] * ref_opposite_vertex[0])
+        / (-(ref_coords[1] - ref_opposite_vertex[1]));
+      /* Since edge 2 is horizontal, the y value of the intersection always has to be 0. */
+      ref_intersection[1] = 0;
       break;
     }
   default:
     SC_ABORT_NOT_REACHED ();
     break;
   }
-  t8_global_productionf("ref_intersection: [%f, %f]\n", ref_intersection[0], ref_intersection[1]);
+  //t8_global_productionf("ref_intersection: [%f, %f]\n", ref_intersection[0], ref_intersection[1]);
 }
 
 void
