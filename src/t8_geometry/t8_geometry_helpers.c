@@ -20,6 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <t8_vec.h>
 #include <t8_eclass.h>
 #include <t8_geometry/t8_geometry_helpers.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.h>
@@ -182,8 +183,50 @@ t8_geom_compute_linear_geometry (t8_eclass_t tree_class,
       break;
     }
   default:
-    SC_ABORT ("Linear geometry coordinate computation is supported only for "
+    SC_ABORT ("Linear geometry coordinate computation is only supported for "
               "vertices/lines/triangles/tets/quads/prisms/hexes/pyramids.");
+  }
+}
+
+void
+t8_geom_compute_linear_axis_aligned_geometry (t8_eclass_t tree_class,
+                                              const double *tree_vertices,
+                                              const double *ref_coords,
+                                              double out_coords[3])
+{
+  if (tree_class != T8_ECLASS_LINE && tree_class != T8_ECLASS_QUAD
+      && tree_class != T8_ECLASS_HEX) {
+    SC_ABORT ("Linear geometry coordinate computation is only supported for "
+              "lines/quads/hexes.");
+  }
+#if T8_ENABLE_DEBUG
+  /* Check if vertices are axis-aligned */
+  if (tree_class == T8_ECLASS_LINE || tree_class == T8_ECLASS_QUAD) {
+    /* The two vertices of a line must have two matching coordinates to be
+     * axis-aligned. A quad needs one matching coordinate. */
+    int                 n_equal_coords = 0;
+    for (int dim = 0; dim < 3; ++dim) {
+      if (abs (tree_vertices[dim] - tree_vertices[3 + dim]) <= SC_EPS) {
+        ++n_equal_coords;
+      }
+    }
+    if (tree_class == T8_ECLASS_LINE && n_equal_coords != 2) {
+      SC_ABORT ("Line vertices are not axis-aligned.");
+    }
+    else if (tree_class == T8_ECLASS_QUAD && n_equal_coords != 1) {
+      SC_ABORT ("Quad vertices are not axis-aligned.");
+    }
+  }
+#endif /* T8_ENABLE_DEBUG */
+
+  /* Compute vector between both points */
+  double              vector[3];
+  t8_vec_diff (tree_vertices + 3, tree_vertices, vector);
+
+  /* Compute the coordinates of the reference point. */
+  for (int dim = 0; dim < 3; ++dim) {
+    out_coords[dim] = tree_vertices[dim];
+    out_coords[dim] += ref_coords[dim] * vector[dim];
   }
 }
 
