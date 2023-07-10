@@ -226,8 +226,9 @@ t8_geom_get_ref_intersection (int edge_index,
                               const double *ref_coords,
                               double ref_intersection[2])
 {
-  double              ref_opposite_vertex[2];
+  double             *ref_opposite_vertex;
   double              ref_slope;
+  const t8_eclass_t   eclass = T8_ECLASS_TRIANGLE;
   /*              2
    *            / |
    *           /  |
@@ -240,7 +241,7 @@ t8_geom_get_ref_intersection (int edge_index,
    *    /         |
    *   0----E2----1
    *
-   * First we calculate the slope of the line going through the reference point
+   * First, we calculate the slope of the line going through the reference point
    * and the opposite vertex for each edge of the triangle.
    */
   switch (edge_index) {
@@ -322,20 +323,16 @@ t8_geom_get_ref_intersection (int edge_index,
        *
        * c1 is the y axis intercept of the hypotenuse
        * m1 is the slope of the hypotenuse
+       * 
+       * x1=0 y1=0 x2=1 y2=1 x3=ref_coords[0] y3=ref_coords[1] x4=ref_opposite_vertex[0] y4=ref_opposite_vertex[1]
+       * 
+       * Since the intersection point lies on edge 2, which has a slope of 1, the x and the y value has to be equal
        */
-      // x1=0 y1=0 x2=1 y2=1 x3=ref_coords[0] y3=ref_coords[1] x4=ref_opposite_vertex[0] y4=ref_opposite_vertex[1]
-      ref_intersection[0] =
-        ((0 * 1 - 0 * 1) * (ref_coords[0] - ref_opposite_vertex[0]) -
-         (0 - 1) * (ref_coords[0] * ref_opposite_vertex[1] -
-                    ref_coords[1] * ref_opposite_vertex[0]))
-        / ((0 - 1) * (ref_coords[1] - ref_opposite_vertex[1]) -
-           (0 - 1) * (ref_coords[0] - ref_opposite_vertex[0]));
-      ref_intersection[1] =
-        ((0 * 1 - 0 * 1) * (ref_coords[1] - ref_opposite_vertex[1]) -
-         (0 - 1) * (ref_coords[0] * ref_opposite_vertex[1] -
-                    ref_coords[1] * ref_opposite_vertex[0]))
-        / ((0 - 1) * (ref_coords[1] - ref_opposite_vertex[1]) -
-           (0 - 1) * (ref_coords[0] - ref_opposite_vertex[0]));
+      ref_intersection[0] = ref_intersection[1] =
+        ((ref_coords[0] * ref_opposite_vertex[1] -
+          ref_coords[1] * ref_opposite_vertex[0])
+         / -(ref_coords[1] - ref_opposite_vertex[1]) +
+         (ref_coords[0] - ref_opposite_vertex[0]));
       break;
     }
   case 2:                      /* edge 2 */
@@ -392,51 +389,30 @@ t8_geom_get_triangle_scaling_factor (int edge_index,
    * to the global reference point and the distance of the opposite vertex to the global
    * intersection on the edge.
    */
-  switch (edge_index) {
-  case 0:                      /* edge 0 */
-    /* The distance for both, the intersection and the reference point, are calculated
-     * using the theorem of pythagoras.
-     */
-    dist_intersection =
-      sqrt (pow ((tree_vertices[0] - glob_intersection[0]), 2)
-            + pow ((tree_vertices[1] - glob_intersection[1]), 2)
-            + pow ((tree_vertices[2] - glob_intersection[2]), 2));
-    dist_ref = sqrt (pow ((tree_vertices[0] - glob_ref_point[0]), 2)
-                     + pow ((tree_vertices[1] - glob_ref_point[1]), 2)
-                     + pow ((tree_vertices[2] - glob_ref_point[2]), 2));
-    /* The closer the reference point is to the intersection, the bigger is the scaling factor. */
-    *scaling_factor = dist_ref / dist_intersection;
-    break;
-  case 1:                      /* edge 1 */
-    /* The distance for both, the intersection and the reference point, are calculated
-     * using the theorem of pythagoras.
-     */
-    dist_intersection =
-      sqrt (pow ((tree_vertices[3] - glob_intersection[0]), 2)
-            + pow ((tree_vertices[4] - glob_intersection[1]), 2)
-            + pow ((tree_vertices[5] - glob_intersection[2]), 2));
-    dist_ref = sqrt (pow ((tree_vertices[3] - glob_ref_point[0]), 2)
-                     + pow ((tree_vertices[4] - glob_ref_point[1]), 2)
-                     + pow ((tree_vertices[5] - glob_ref_point[2]), 2));
-    /* The closer the reference point is to the intersection, the bigger is the scaling factor. */
-    *scaling_factor = dist_ref / dist_intersection;
-    break;
-  case 2:                      /* edge 2 */
-    /* The distance for both, the intersection and the reference point, are calculated
-     * using the theorem of pythagoras.
-     */
-    dist_intersection =
-      sqrt (pow ((tree_vertices[6] - glob_intersection[0]), 2)
-            + pow ((tree_vertices[7] - glob_intersection[1]), 2)
-            + pow ((tree_vertices[8] - glob_intersection[2]), 2));
-    dist_ref = sqrt (pow ((tree_vertices[6] - glob_ref_point[0]), 2)
-                     + pow ((tree_vertices[7] - glob_ref_point[1]), 2)
-                     + pow ((tree_vertices[8] - glob_ref_point[2]), 2));
-    /* The closer the reference point is to the intersection, the bigger is the scaling factor. */
-    *scaling_factor = dist_ref / dist_intersection;
-    break;
-  default:
-    SC_ABORT_NOT_REACHED ();
-    break;
-  }
+  dist_intersection =
+    sqrt (((tree_vertices[edge_index * 3] -
+            glob_intersection[0]) * (tree_vertices[edge_index * 3] -
+                                     glob_intersection[0]))
+          +
+          ((tree_vertices[edge_index * 3 + 1] -
+            glob_intersection[1]) * (tree_vertices[edge_index * 3 + 1] -
+                                     glob_intersection[1]))
+          +
+          ((tree_vertices[edge_index * 3 + 2] -
+            glob_intersection[2]) * (tree_vertices[edge_index * 3 + 2] -
+                                     glob_intersection[2])));
+  dist_ref =
+    sqrt (((tree_vertices[edge_index * 3] -
+            glob_ref_point[0]) * (tree_vertices[edge_index * 3] -
+                                  glob_ref_point[0]))
+          +
+          ((tree_vertices[edge_index * 3 + 1] -
+            glob_ref_point[1]) * (tree_vertices[edge_index * 3 + 1] -
+                                  glob_ref_point[1]))
+          +
+          ((tree_vertices[edge_index * 3 + 2] -
+            glob_ref_point[2]) * (tree_vertices[edge_index * 3 + 2] -
+                                  glob_ref_point[2])));
+  /* The closer the reference point is to the intersection, the bigger is the scaling factor. */
+  *scaling_factor = dist_ref / dist_intersection;
 }

@@ -263,9 +263,9 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
 
         /* Retrieve curve */
         curve =
-          BRep_Tool::Curve (TopoDS::
-                            Edge (occ_shape_edge_map.FindKey (edges[i_edge])),
-                            first, last);
+          BRep_Tool::
+          Curve (TopoDS::Edge (occ_shape_edge_map.FindKey (edges[i_edge])),
+                 first, last);
         /* Check if curve is valid */
         T8_ASSERT (!curve.IsNull ());
 
@@ -288,8 +288,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
         const int           num_face_nodes =
           t8_eclass_num_vertices[active_tree_class];
         surface =
-          BRep_Tool::Surface (TopoDS::
-                              Face (occ_shape_face_map.FindKey (*faces)));
+          BRep_Tool::
+          Surface (TopoDS::Face (occ_shape_face_map.FindKey (*faces)));
         double              parametric_bounds[4];
         surface->Bounds (parametric_bounds[0], parametric_bounds[1],
                          parametric_bounds[2], parametric_bounds[3]);
@@ -344,8 +344,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
       /* Retrieve surface */
       T8_ASSERT (*faces <= occ_shape_face_map.Size ());
       surface =
-        BRep_Tool::Surface (TopoDS::
-                            Face (occ_shape_face_map.FindKey (*faces)));
+        BRep_Tool::
+        Surface (TopoDS::Face (occ_shape_face_map.FindKey (*faces)));
 
       /* Check if surface is valid */
       T8_ASSERT (!surface.IsNull ());
@@ -398,9 +398,9 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
           }
 
           curve =
-            BRep_Tool::Curve (TopoDS::
-                              Edge (occ_shape_edge_map.
-                                    FindKey (edges[i_edge])), first, last);
+            BRep_Tool::
+            Curve (TopoDS::Edge (occ_shape_edge_map.FindKey (edges[i_edge])),
+                   first, last);
           /* Check if curve is valid */
           T8_ASSERT (!curve.IsNull ());
 
@@ -539,12 +539,13 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
         double              converted_edge_surface_parameters[2];
         const int           num_face_nodes =
           t8_eclass_num_vertices[active_tree_class];
-        t8_geometry_occ::
-          t8_geom_edge_parameter_to_face_parameters (edges[i_edge], *faces,
-                                                     num_face_nodes,
-                                                     interpolated_curve_parameter,
-                                                     face_parameters,
-                                                     converted_edge_surface_parameters);
+        t8_geometry_occ::t8_geom_edge_parameter_to_face_parameters (edges
+                                                                    [i_edge],
+                                                                    *faces,
+                                                                    num_face_nodes,
+                                                                    interpolated_curve_parameter,
+                                                                    face_parameters,
+                                                                    converted_edge_surface_parameters);
 
         /* Interpolate between the surface parameters of the current edge */
         double              edge_surface_parameters[4],
@@ -954,16 +955,10 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh,
           /* Convert the interpolated parameter of the curve into the corresponding parameters on the surface */
           const int           num_face_nodes =
             t8_eclass_num_vertices[active_tree_class];
-          t8_geometry_occ::
-            t8_geom_edge_parameter_to_face_parameters (edges
-                                                       [t8_face_edge_to_tree_edge
-                                                        [i_faces]
-                                                        [i_face_edge]],
-                                                       faces[i_faces],
-                                                       num_face_nodes,
-                                                       interpolated_curve_param,
-                                                       surface_parameters,
-                                                       surface_parameters_from_curve);
+          t8_geometry_occ::t8_geom_edge_parameter_to_face_parameters (edges
+                                                                      [t8_face_edge_to_tree_edge
+                                                                       [i_faces]
+                                                                       [i_face_edge]], faces[i_faces], num_face_nodes, interpolated_curve_param, surface_parameters, surface_parameters_from_curve);
 
           /* Calculate the displacement between the interpolated parameters on the surface 
            * and the parameters on the surface converted from the parameter of the curve
@@ -1290,194 +1285,25 @@ t8_geometry_occ::t8_geom_get_edge_parametric_bounds(const int edge_index,
   bounds[1] = occ_edge->LastParameter();
 }
 
-void
-t8_geometry_occ::t8_geom_correct_closed_geometry_parametric(const int geometry_type,
-                                                            const int geometry_index,
-                                                            const int num_face_nodes,
-                                                            double* parameters) const
+int
+t8_geometry_occ::t8_geom_check_if_edge_is_closed (int geometry_index) const
 {
-  /* Get the parametric bounds of the closed geometry 
-   * surface -> [Umin, Umax, Vmin, Vmax]
-   * edge    -> [Umin, Umax]
-   */
-  double parametric_bounds[2 + (2 * geometry_type)];
-  /* Check for closed U parameter in case of an edge. */
-  if (geometry_type == 0) {
-    /* Get the parametric edge bounds. */
-    t8_geom_get_edge_parametric_bounds(geometry_index, parametric_bounds);
-    /* Get a handle to the edge and check if it has a closed U parameter. */
-    const Handle_Geom_Curve occ_edge = t8_geom_get_occ_curve(geometry_index);
-    /* Only correct the U parameter if the edge is closed. */
-    if (occ_edge->IsClosed()) {
-      /* Iterate over both nodes of the edge. */
-      for (int i_nodes = 0; 
-          i_nodes < 2; 
-          ++i_nodes)
-      {
-        /* Check if one of the U parameters lies on the lower parametric bound. */
-        if (parameters[i_nodes] == parametric_bounds[0]) {
-          /* Iterate over both nodes of the edge again. */
-          for (int j_nodes = 0; 
-              j_nodes < 2; 
-              ++j_nodes)
-          {
-            /* Search for a U parameter that is non of the parametric bounds. To check
-            * rather the tree lives closer to the lower or the upper parametric bound.
-            */
-            if (parameters[j_nodes] != parametric_bounds[0]) {
-              /* Now check if the U parameter is bigger than the half parametric range.
-              * In this case the tree would be closer to the upper parametric bound.
-              */
-              if (parameters[j_nodes] > ((parametric_bounds[1] - parametric_bounds[0]) / 2)) {
-                /* Switch from lower bound U parameter to upper bound U parameter. */
-                parameters[i_nodes] = parametric_bounds[1];
-                break;
-              }
-            }
-          }
-        }
-        /* Check if one of the U parameters lies on the upper parametric bound. */
-        else if (parameters[i_nodes] == parametric_bounds[1]) {
-          /* Iterate over both nodes of the edge again. */
-          for (int j_nodes = 0; 
-              j_nodes < 2; 
-              ++j_nodes)
-          {
-            /* Search for a U parameter that is non of the parametric bounds. To check
-            * rather the tree lives closer to the lower or the upper parametric bound.
-            */
-            if (parameters[j_nodes] != parametric_bounds[1]) {
-              /* Now check if the U parameter is smaller than the half parametric range.
-              * In this case the tree would be closer to the lower parametric bound.
-              */
-              if (parameters[j_nodes] < ((parametric_bounds[1] - parametric_bounds[0]) / 2)) {
-                /* Switch from upper bound U parameter to lower bound U parameter. */
-                parameters[i_nodes] = parametric_bounds[0];
-                break;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  /* Check for closed U parameter and closed V parameter in case of a surface. */
-  if (geometry_type == 1) {
-    /* Get the parametric surface bounds. */
-    t8_geom_get_surface_parametric_bounds(geometry_index, parametric_bounds);
-    /* Get a handle to the surface and check if it has a closed U parameter. */
-    const Handle_Geom_Surface occ_surface = t8_geom_get_occ_surface(geometry_index);
-    /* Only correct the U parameter if the surface is closed in U. */
-    if (occ_surface->IsUClosed()) {
-      /* Iterate over every corner node of the tree. */
-      for (int i_nodes = 0; 
-          i_nodes < num_face_nodes; 
-          ++i_nodes)
-      {
-        /* Check if one of the U parameters lies on the lower parametric bound. */
-        if (parameters[i_nodes * 2] == parametric_bounds[0]) {
-          /* Iterate over every corner node of the tree again. */
-          for (int j_nodes = 0; 
-              j_nodes < num_face_nodes; 
-              ++j_nodes)
-          {
-            /* Search for a U parameter that is non of the parametric bounds. To check
-            * rather the tree lives closer to the lower or the upper parametric bound.
-            */
-            if (parameters[j_nodes * 2] != parametric_bounds[0]
-                && parameters[j_nodes * 2] != parametric_bounds[1]) {
-              /* Now check if the U parameter is bigger than the half parametric range.
-              * In this case the tree would be closer to the upper parametric bound.
-              */
-              if (parameters[j_nodes * 2] > ((parametric_bounds[1] - parametric_bounds[0]) / 2)) {
-                /* Switch from lower bound U parameter to upper bound U parameter. */
-                parameters[i_nodes * 2] = parametric_bounds[1];
-                break;
-              }
-            }
-          }
-        }
-        /* Check if one of the U parameters lies on the upper parametric bound */
-        else if (parameters[i_nodes * 2] == parametric_bounds[1]) {
-          /* Iterate over every corner node of the tree again. */
-          for (int j_nodes = 0; 
-              j_nodes < num_face_nodes; 
-              ++j_nodes)
-          {
-            /* Search for a U parameter that is non of the parametric bounds. To check
-            * rather the tree lives closer to the lower or the upper parametric bound.
-            */
-            if (parameters[j_nodes * 2] != parametric_bounds[1]
-                && parameters[j_nodes * 2] != parametric_bounds[0]) {
-              /* Now check if the U parameter is smaller than the half parametric range.
-              * In this case the tree would be closer to the lower parametric bound.
-              */
-              if (parameters[j_nodes * 2] < ((parametric_bounds[1] - parametric_bounds[0]) / 2)) {
-                  /* Switch from upper bound U parameter to lower bound U parameter. */
-                  parameters[i_nodes * 2] = parametric_bounds[0];
-                break;
-              }
-            }
-          }
-        }
-      }
-    }
-    /* Only correct the V parameter if the surface is closed in V. */
-    if (occ_surface->IsVClosed()) {
-      /* Iterate over every corner node of the tree. */
-      for (int i_nodes = 0; 
-           i_nodes < num_face_nodes; 
-           ++i_nodes)
-      {
-        /* Check if one of the V parameters lies on the lower parametric bound. */
-        if (parameters[i_nodes * 2 + 1] == parametric_bounds[2]) {
-          /* Iterate over every corner node of the tree again. */
-          for (int j_nodes = 0; 
-              j_nodes < num_face_nodes; 
-              ++j_nodes)
-          {
-            /* Search for a V parameter that is non of the parametric bounds. To check
-             * rather the tree lives closer to the lower or the upper parametric bound.
-             */
-            if (parameters[j_nodes * 2 + 1] != parametric_bounds[2]
-                && parameters[j_nodes * 2 + 1] != parametric_bounds[3]) {
-              /* Now check if the V parameter is bigger than the half parametric range.
-               * In this case the tree would be closer to the upper parametric bound.
-               */
-              if (parameters[j_nodes * 2 + 1] > ((parametric_bounds[3] - parametric_bounds[2]) / 2)) {
-                /* Switch from lower bound V parameter to upper bound V parameter. */
-                parameters[i_nodes * 2 + 1] = parametric_bounds[3];
-                break;
-              }
-            }
-          }
-        }
-        /* Check if one of the V parameters lies on the upper parametric bound */
-        else if (parameters[i_nodes * 2 + 1] == parametric_bounds[3]) {
-          /* Iterate over every corner node of the tree again. */
-          for (int j_nodes = 0; 
-               j_nodes < num_face_nodes; 
-               ++j_nodes)
-          {
-            /* Search for a V parameter that is non of the parametric bounds. To check
-             * rather the tree lives closer to the lower or the upper parametric bound.
-             */
-            if (parameters[j_nodes * 2 + 1] != parametric_bounds[3]
-                && parameters[j_nodes * 2 + 1] != parametric_bounds[2]) {
-              /* Now check if the V parameter is smaller than the half parametric range.
-               * In this case the tree would be closer to the lower parametric bound.
-               */
-              if (parameters[j_nodes * 2 + 1] < ((parametric_bounds[3] - parametric_bounds[2]) / 2)) {
-                /* Switch from upper bound V parameter to lower bound V parameter. */
-                parameters[i_nodes * 2 + 1] = parametric_bounds[2];
-                break;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
+  const Handle_Geom_Curve occ_edge = t8_geom_get_occ_curve(geometry_index);
+  return occ_edge->IsClosed();
+}
+
+int
+t8_geometry_occ::t8_geom_check_if_surface_is_U_closed (int geometry_index) const
+{
+  const Handle_Geom_Surface occ_surface = t8_geom_get_occ_surface(geometry_index);
+  return occ_surface->IsUClosed();
+}
+
+int
+t8_geometry_occ::t8_geom_check_if_surface_is_V_closed (int geometry_index) const
+{
+  const Handle_Geom_Surface occ_surface = t8_geom_get_occ_surface(geometry_index);
+  return occ_surface->IsVClosed();
 }
 
 /* *INDENT-ON* */

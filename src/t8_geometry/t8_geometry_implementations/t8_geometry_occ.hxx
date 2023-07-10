@@ -281,18 +281,26 @@ public:
   t8_geom_get_edge_parametric_bounds(const int edge_index,
                                      double *bounds) const;
   
-  /** Corrects the parameters on closed geometries to prevent disorted elements.
+  /** Checks if an edge is closed in its U parameter.
    * \param [in]  geometry_index   The index of the closed geometry.
-   * \param [in]  geometry_type    The type of the closed geometry.
-   *                               0 for edges and 1 for surfaces.
-   * \param [in]  num_face_nodes   The number of the face nodes of the current tree.
-   * \param [out] parameters       The parameters at each vertex of the current tree.
-   */  
-  void
-  t8_geom_correct_closed_geometry_parametric(const int geometry_type,
-                                             const int geometry_index,
-                                             const int num_face_nodes,
-                                             double* parameters) const;
+   * \return                       1 if geometry is closed in U. 0 if geometry is not closed in U.
+   */
+  int
+  t8_geom_check_if_edge_is_closed (int geometry_index) const;
+
+  /** Checks if a surface is closed in its U parameter.
+   * \param [in]  geometry_index   The index of the closed geometry.
+   * \return                       1 if geometry is closed in U. 0 if geometry is not closed in U.
+   */
+  int
+  t8_geom_check_if_surface_is_U_closed (int geometry_index) const;
+
+  /** Checks if a surface is closed in its V parameter.
+   * \param [in]  geometry_index   The index of the closed geometry.
+   * \return                       1 if geometry is closed in V. 0 if geometry is not closed in V.
+   */
+  int
+  t8_geom_check_if_surface_is_V_closed (int geometry_index) const;
 
 private:
   /**

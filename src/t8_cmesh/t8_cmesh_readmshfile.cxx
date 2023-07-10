@@ -739,6 +739,177 @@ die_ele:
   return -1;
 }
 
+#if T8_WITH_OCC
+/* Corrects the parameters on closed geometries to prevent disorted elements. */
+static void
+correct_closed_geometry_parametric (const int geometry_type,
+                                    const int geometry_index,
+                                    const int num_face_nodes,
+                                    const t8_geometry_occ_c * geometry_occ,
+                                    double *parameters)
+{
+  /* Get the parametric bounds of the closed geometry 
+   * surface -> [Umin, Umax, Vmin, Vmax]
+   * edge    -> [Umin, Umax]
+   */
+  double              parametric_bounds[2 + (2 * geometry_type)];
+  /* Check for closed U parameter in case of an edge. */
+  if (geometry_type == 0) {
+    /* Get the parametric edge bounds. */
+    geometry_occ->t8_geom_get_edge_parametric_bounds (geometry_index,
+                                                      parametric_bounds);
+    /* Only correct the U parameter if the edge is closed. */
+    if (geometry_occ->t8_geom_check_if_edge_is_closed (geometry_index)) {
+      /* Iterate over both nodes of the edge. */
+      for (int i_nodes = 0; i_nodes < 2; ++i_nodes) {
+        /* Check if one of the U parameters lies on the lower parametric bound. */
+        if (parameters[i_nodes] == parametric_bounds[0]) {
+          /* Iterate over both nodes of the edge again. */
+          for (int j_nodes = 0; j_nodes < 2; ++j_nodes) {
+            /* Search for a U parameter that is non of the parametric bounds. To check
+             * rather the tree lives closer to the lower or the upper parametric bound.
+             */
+            if (parameters[j_nodes] != parametric_bounds[0]) {
+              /* Now check if the U parameter is bigger than the half parametric range.
+               * In this case the tree would be closer to the upper parametric bound.
+               */
+              if (parameters[j_nodes] >
+                  ((parametric_bounds[1] - parametric_bounds[0]) / 2)) {
+                /* Switch from lower bound U parameter to upper bound U parameter. */
+                parameters[i_nodes] = parametric_bounds[1];
+                break;
+              }
+            }
+          }
+        }
+        /* Check if one of the U parameters lies on the upper parametric bound. */
+        else if (parameters[i_nodes] == parametric_bounds[1]) {
+          /* Iterate over both nodes of the edge again. */
+          for (int j_nodes = 0; j_nodes < 2; ++j_nodes) {
+            /* Search for a U parameter that is non of the parametric bounds. To check
+             * rather the tree lives closer to the lower or the upper parametric bound.
+             */
+            if (parameters[j_nodes] != parametric_bounds[1]) {
+              /* Now check if the U parameter is smaller than the half parametric range.
+               * In this case the tree would be closer to the lower parametric bound.
+               */
+              if (parameters[j_nodes] <
+                  ((parametric_bounds[1] - parametric_bounds[0]) / 2)) {
+                /* Switch from upper bound U parameter to lower bound U parameter. */
+                parameters[i_nodes] = parametric_bounds[0];
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  /* Check for closed U parameter and closed V parameter in case of a surface. */
+  if (geometry_type == 1) {
+    /* Get the parametric surface bounds. */
+    geometry_occ->t8_geom_get_surface_parametric_bounds (geometry_index,
+                                                         parametric_bounds);
+    /* Only correct the U parameter if the surface is closed in U. */
+    if (geometry_occ->t8_geom_check_if_surface_is_U_closed (geometry_index)) {
+      /* Iterate over every corner node of the tree. */
+      for (int i_nodes = 0; i_nodes < num_face_nodes; ++i_nodes) {
+        /* Check if one of the U parameters lies on the lower parametric bound. */
+        if (parameters[i_nodes * 2] == parametric_bounds[0]) {
+          /* Iterate over every corner node of the tree again. */
+          for (int j_nodes = 0; j_nodes < num_face_nodes; ++j_nodes) {
+            /* Search for a U parameter that is non of the parametric bounds. To check
+             * rather the tree lives closer to the lower or the upper parametric bound.
+             */
+            if (parameters[j_nodes * 2] != parametric_bounds[0]
+                && parameters[j_nodes * 2] != parametric_bounds[1]) {
+              /* Now check if the U parameter is bigger than the half parametric range.
+               * In this case the tree would be closer to the upper parametric bound.
+               */
+              if (parameters[j_nodes * 2] >
+                  ((parametric_bounds[1] - parametric_bounds[0]) / 2)) {
+                /* Switch from lower bound U parameter to upper bound U parameter. */
+                parameters[i_nodes * 2] = parametric_bounds[1];
+                break;
+              }
+            }
+          }
+        }
+        /* Check if one of the U parameters lies on the upper parametric bound */
+        else if (parameters[i_nodes * 2] == parametric_bounds[1]) {
+          /* Iterate over every corner node of the tree again. */
+          for (int j_nodes = 0; j_nodes < num_face_nodes; ++j_nodes) {
+            /* Search for a U parameter that is non of the parametric bounds. To check
+             * rather the tree lives closer to the lower or the upper parametric bound.
+             */
+            if (parameters[j_nodes * 2] != parametric_bounds[1]
+                && parameters[j_nodes * 2] != parametric_bounds[0]) {
+              /* Now check if the U parameter is smaller than the half parametric range.
+               * In this case the tree would be closer to the lower parametric bound.
+               */
+              if (parameters[j_nodes * 2] <
+                  ((parametric_bounds[1] - parametric_bounds[0]) / 2)) {
+                /* Switch from upper bound U parameter to lower bound U parameter. */
+                parameters[i_nodes * 2] = parametric_bounds[0];
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+    /* Only correct the V parameter if the surface is closed in V. */
+    if (geometry_occ->t8_geom_check_if_surface_is_V_closed (geometry_index)) {
+      /* Iterate over every corner node of the tree. */
+      for (int i_nodes = 0; i_nodes < num_face_nodes; ++i_nodes) {
+        /* Check if one of the V parameters lies on the lower parametric bound. */
+        if (parameters[i_nodes * 2 + 1] == parametric_bounds[2]) {
+          /* Iterate over every corner node of the tree again. */
+          for (int j_nodes = 0; j_nodes < num_face_nodes; ++j_nodes) {
+            /* Search for a V parameter that is non of the parametric bounds. To check
+             * rather the tree lives closer to the lower or the upper parametric bound.
+             */
+            if (parameters[j_nodes * 2 + 1] != parametric_bounds[2]
+                && parameters[j_nodes * 2 + 1] != parametric_bounds[3]) {
+              /* Now check if the V parameter is bigger than the half parametric range.
+               * In this case the tree would be closer to the upper parametric bound.
+               */
+              if (parameters[j_nodes * 2 + 1] >
+                  ((parametric_bounds[3] - parametric_bounds[2]) / 2)) {
+                /* Switch from lower bound V parameter to upper bound V parameter. */
+                parameters[i_nodes * 2 + 1] = parametric_bounds[3];
+                break;
+              }
+            }
+          }
+        }
+        /* Check if one of the V parameters lies on the upper parametric bound */
+        else if (parameters[i_nodes * 2 + 1] == parametric_bounds[3]) {
+          /* Iterate over every corner node of the tree again. */
+          for (int j_nodes = 0; j_nodes < num_face_nodes; ++j_nodes) {
+            /* Search for a V parameter that is non of the parametric bounds. To check
+             * rather the tree lives closer to the lower or the upper parametric bound.
+             */
+            if (parameters[j_nodes * 2 + 1] != parametric_bounds[3]
+                && parameters[j_nodes * 2 + 1] != parametric_bounds[2]) {
+              /* Now check if the V parameter is smaller than the half parametric range.
+               * In this case the tree would be closer to the lower parametric bound.
+               */
+              if (parameters[j_nodes * 2 + 1] <
+                  ((parametric_bounds[3] - parametric_bounds[2]) / 2)) {
+                /* Switch from upper bound V parameter to lower bound V parameter. */
+                parameters[i_nodes * 2 + 1] = parametric_bounds[2];
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+#endif /* T8_WITH_OCC */
+
 /* fp should be set after the Nodes section, right before the tree section.
  * If vertex_indices is not NULL, it is allocated and will store
  * for each tree the indices of its vertices.
@@ -988,7 +1159,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
           /* Check for right element class */
           if (eclass != T8_ECLASS_TRIANGLE && eclass != T8_ECLASS_QUAD && eclass != T8_ECLASS_HEX)
           {
-            t8_errorf("%s element detected. The occ geometry currently only supports quad and hex elements.", 
+            t8_errorf("%s element detected. The occ geometry currently only supports quad, tri and hex elements.", 
                       t8_eclass_to_string[eclass]);
             goto die_ele;
           }
@@ -1233,11 +1404,12 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                 parameters[i_face_nodes * 2 + 1] = face_nodes[i_face_nodes].parameters[1];
               }
               /* Corrects the parameters on the surface if it is closed to prevent disorted elements. */
-              const Handle_Geom_Surface occ_surface = occ_geometry->t8_geom_get_occ_surface(surface_index);
-              if (occ_surface->IsUClosed() || occ_surface->IsVClosed()) {
-                occ_geometry->t8_geom_correct_closed_geometry_parametric(1, surface_index,
-                                                                         num_face_nodes,
-                                                                         parameters);
+              if (occ_geometry->t8_geom_check_if_surface_is_U_closed(surface_index)
+                  || occ_geometry->t8_geom_check_if_surface_is_V_closed(surface_index)) {
+                correct_closed_geometry_parametric(1, surface_index,
+                                                   num_face_nodes,
+                                                   occ_geometry,
+                                                   parameters);
               }
               t8_cmesh_set_attribute (cmesh, 
                                       tree_count, 
@@ -1384,15 +1556,14 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                 }
               }
               edge_geometries[i_tree_edges] = edge_geometry_tag;
-              const Handle_Geom_Curve occ_edge = occ_geometry->t8_geom_get_occ_curve(edge_geometry_tag);
               tree_is_linked = 1;
               parameters[0] = edge_nodes[0].parameters[0];
               parameters[1] = edge_nodes[1].parameters[0];
 
               /* Corrects the parameters on the edge if it is closed to prevent disorted elements. */
-              if (occ_edge->IsClosed()) {
-                occ_geometry->t8_geom_correct_closed_geometry_parametric(0, edge_geometry_tag,
-                                                                         2, parameters);
+              if (occ_geometry->t8_geom_check_if_edge_is_closed(edge_geometry_tag)) {
+                correct_closed_geometry_parametric(0, edge_geometry_tag,
+                                                   2, occ_geometry, parameters);
               }
 
               t8_cmesh_set_attribute (cmesh, 
@@ -1407,7 +1578,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
              * If the edge is locked for edges on surfaces we have to skip this edge */
             else if (edge_geometry_dim == 2 && edge_geometries[i_tree_edges + num_edges] >= 0)
             {
-              t8_global_productionf("test");
               /* If the node lies on a geometry with a different dimension we try to retrieve the parameters */
               for (int i_edge_node = 0; i_edge_node < 2; ++i_edge_node)
               {
@@ -1459,7 +1629,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                 }
               }
               edge_geometries[i_tree_edges + t8_eclass_num_edges[eclass]] = edge_geometry_tag;
-              const Handle_Geom_Surface occ_surface = occ_geometry->t8_geom_get_occ_surface(edge_geometry_tag);
               tree_is_linked = 1;
               parameters[0] = edge_nodes[0].parameters[0];
               parameters[1] = edge_nodes[0].parameters[1];
@@ -1467,9 +1636,10 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
               parameters[3] = edge_nodes[1].parameters[1];
 
               /* Corrects the parameters on the surface if it is closed to prevent disorted elements. */
-              if (occ_surface->IsUClosed() || occ_surface->IsVClosed()) {
-                occ_geometry->t8_geom_correct_closed_geometry_parametric(1, edge_geometry_tag,
-                                                                         2, parameters);
+              if (occ_geometry->t8_geom_check_if_surface_is_U_closed(edge_geometry_tag)
+                  || occ_geometry->t8_geom_check_if_surface_is_V_closed(edge_geometry_tag)) {
+                correct_closed_geometry_parametric(1, edge_geometry_tag,
+                                                   2, occ_geometry,parameters);
               }
 
               t8_cmesh_set_attribute (cmesh, 

@@ -577,10 +577,8 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
          level);
 
       /* Constructing a triangle with one curved edge (f2) */
-      Handle_Geom_BSplineCurve occ_curve0, occ_curve1, occ_curve2, occ_curve3;
-      TColgp_Array1OfPnt  point_array0 (1, 2);
+      Handle_Geom_BSplineCurve occ_curve1;
       TColgp_Array1OfPnt  point_array1 (1, 3);
-      TColgp_Array1OfPnt  point_array2 (1, 2);
       TopoDS_Shape        shape;
 
       /* Define knots along the bsplines. */
@@ -1132,7 +1130,7 @@ main (int argc, char **argv)
                       "\t\t    The mesh will not be uniform. Instead it is refined at the domain boundary.\n"
                       "\t\t5 - A cube that is distorted in z-direction with one 3D cube tree.\n"
                       "\t\t6 - A moving mesh consisting of a single 2D quad tree.\n"
-                      "\t\t7 - A curved triangle with a occ surface.\n"
+                      "\t\t7 - A curved triangle with an occ curve.\n"
                       "\t\t8 - A cube with two occ curves as edges.\n"
                       "\t\t9 - Two cubes with one occ surface as face.\n"
                       "\t\t10 - A hollow cylinder with a occ surface on the in- and outside.\n");
