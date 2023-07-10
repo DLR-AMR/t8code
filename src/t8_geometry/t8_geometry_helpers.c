@@ -20,6 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <t8_vec.h>
 #include <t8_eclass.h>
 #include <t8_geometry/t8_geometry_helpers.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.h>
@@ -182,8 +183,50 @@ t8_geom_compute_linear_geometry (t8_eclass_t tree_class,
       break;
     }
   default:
-    SC_ABORT ("Linear geometry coordinate computation is supported only for "
+    SC_ABORT ("Linear geometry coordinate computation is only supported for "
               "vertices/lines/triangles/tets/quads/prisms/hexes/pyramids.");
+  }
+}
+
+void
+t8_geom_compute_linear_axis_aligned_geometry (t8_eclass_t tree_class,
+                                              const double *tree_vertices,
+                                              const double *ref_coords,
+                                              double out_coords[3])
+{
+  if (tree_class != T8_ECLASS_LINE && tree_class != T8_ECLASS_QUAD
+      && tree_class != T8_ECLASS_HEX) {
+    SC_ABORT ("Linear geometry coordinate computation is only supported for "
+              "lines/quads/hexes.");
+  }
+#if T8_ENABLE_DEBUG
+  /* Check if vertices are axis-aligned */
+  if (tree_class == T8_ECLASS_LINE || tree_class == T8_ECLASS_QUAD) {
+    /* The two vertices of a line must have two matching coordinates to be
+     * axis-aligned. A quad needs one matching coordinate. */
+    int                 n_equal_coords = 0;
+    for (int dim = 0; dim < 3; ++dim) {
+      if (abs (tree_vertices[dim] - tree_vertices[3 + dim]) <= SC_EPS) {
+        ++n_equal_coords;
+      }
+    }
+    if (tree_class == T8_ECLASS_LINE && n_equal_coords != 2) {
+      SC_ABORT ("Line vertices are not axis-aligned.");
+    }
+    else if (tree_class == T8_ECLASS_QUAD && n_equal_coords != 1) {
+      SC_ABORT ("Quad vertices are not axis-aligned.");
+    }
+  }
+#endif /* T8_ENABLE_DEBUG */
+
+  /* Compute vector between both points */
+  double              vector[3];
+  t8_vec_diff (tree_vertices + 3, tree_vertices, vector);
+
+  /* Compute the coordinates of the reference point. */
+  for (int dim = 0; dim < 3; ++dim) {
+    out_coords[dim] = tree_vertices[dim];
+    out_coords[dim] += ref_coords[dim] * vector[dim];
   }
 }
 
@@ -226,7 +269,7 @@ t8_geom_get_ref_intersection (int edge_index,
                               const double *ref_coords,
                               double ref_intersection[2])
 {
-  double             *ref_opposite_vertex;
+  const double       *ref_opposite_vertex;
   double              ref_slope;
   const t8_eclass_t   eclass = T8_ECLASS_TRIANGLE;
   /*              2
@@ -244,53 +287,70 @@ t8_geom_get_ref_intersection (int edge_index,
    * First, we calculate the slope of the line going through the reference point
    * and the opposite vertex for each edge of the triangle.
    */
-  switch (edge_index) {
-  case 0:                      /* edge 0 */
-    /* opposite vertex -> vertex 0 */
-    ref_opposite_vertex[0] = 0;
-    ref_opposite_vertex[1] = 0;
-    /* In case the reference point is equal to the opposite vertex, the slope of the line is 0. */
-    if (ref_opposite_vertex[0] == ref_coords[0]) {
-      ref_slope = 0;
-    }
-    /* slope = (y2-y1)/(x2-x1) */
-    else {
-      ref_slope = (ref_opposite_vertex[1] - ref_coords[1])
-        / (ref_opposite_vertex[0] - ref_coords[0]);
-    }
-    break;
-  case 1:                      /* edge 1 */
-    /* opposite vertex -> vertex 1 */
-    ref_opposite_vertex[0] = 1;
-    ref_opposite_vertex[1] = 0;
-    /* In case the reference point is equal to the opposite vertex, the slope of the line is 0. */
-    if (ref_coords[0] == ref_opposite_vertex[0]) {
-      ref_slope = 0;
-    }
-    /* slope = (y2-y1)/(x2-x1) */
-    else {
-      ref_slope = (ref_coords[1] - ref_opposite_vertex[1])
-        / (ref_coords[0] - ref_opposite_vertex[0]);
-    }
-    break;
-  case 2:                      /* edge 2 */
-    /* opposite vertex -> vertex 2 */
-    ref_opposite_vertex[0] = 1;
-    ref_opposite_vertex[1] = 1;
-    /* In case the reference point is equal to the opposite vertex, the slope of the line is 0. */
-    if (ref_coords[0] == ref_opposite_vertex[0]) {
-      ref_slope = 0;
-    }
-    /* slope = (y2-y1)/(x2-x1) */
-    else {
-      ref_slope = (ref_coords[1] - ref_opposite_vertex[1])
-        / (ref_coords[0] - ref_opposite_vertex[0]);
-    }
-    break;
-  default:
-    SC_ABORT_NOT_REACHED ();
-    break;
+
+  /* The opposite vertex of an edge always has the same index as the edge (see picture above). */
+  ref_opposite_vertex = t8_element_corner_ref_coords[T8_ECLASS_TRIANGLE][edge_index];
+
+  /* In case the reference point is equal to the opposite vertex, the slope of the line is 0. */
+  if (ref_opposite_vertex[0] == ref_coords[0]) {
+    ref_slope = 0;
   }
+  /* slope = (y2-y1)/(x2-x1) */
+  else {
+    ref_slope = (ref_opposite_vertex[1] - ref_coords[1])
+                / (ref_opposite_vertex[0] - ref_coords[0]);
+  }
+
+  // switch (edge_index) {
+  // case 0:                      /* edge 0 */
+  //   /* opposite vertex -> vertex 0 */
+  //   ref_opposite_vertex[0] = 0;
+  //   ref_opposite_vertex[1] = 0;
+  //   /* In case the reference point is equal to the opposite vertex, the slope of the line is 0. */
+  //   if (ref_opposite_vertex[0] == ref_coords[0]) {
+  //     ref_slope = 0;
+  //   }
+  //   /* slope = (y2-y1)/(x2-x1) */
+  //   else {
+  //     ref_slope = (ref_opposite_vertex[1] - ref_coords[1])
+  //       / (ref_opposite_vertex[0] - ref_coords[0]);
+  //   }
+  //   break;
+  // case 1:                      /* edge 1 */
+  //   /* opposite vertex -> vertex 1 */
+  //   ref_opposite_vertex[0] = 1;
+  //   ref_opposite_vertex[1] = 0;
+  //   /* In case the reference point is equal to the opposite vertex, the slope of the line is 0. */
+  //   if (ref_coords[0] == ref_opposite_vertex[0]) {
+  //     ref_slope = 0;
+  //   }
+  //   /* slope = (y2-y1)/(x2-x1) */
+  //   else {
+  //     ref_slope = (ref_coords[1] - ref_opposite_vertex[1])
+  //       / (ref_coords[0] - ref_opposite_vertex[0]);
+  //     t8_global_productionf("ref_slope: %f\n", ref_slope);
+  //   }
+  //   break;
+  // case 2:                      /* edge 2 */
+  //   /* opposite vertex -> vertex 2 */
+  //   ref_opposite_vertex[0] = 1;
+  //   ref_opposite_vertex[1] = 1;
+  //   /* In case the reference point is equal to the opposite vertex, the slope of the line is 0. */
+  //   if (ref_coords[0] == ref_opposite_vertex[0]) {
+  //     ref_slope = 0;
+  //   }
+  //   /* slope = (y2-y1)/(x2-x1) */
+  //   else {
+  //     ref_slope = (ref_coords[1] - ref_opposite_vertex[1])
+  //       / (ref_coords[0] - ref_opposite_vertex[0]);
+  //   }
+  //   break;
+  // default:
+  //   SC_ABORT_NOT_REACHED ();
+  //   break;
+  // }
+  t8_global_productionf("ref_coords: [%f, %f]\n", ref_coords[0], ref_coords[1]);
+  t8_global_productionf("edge_index: %d; ref_opposite_vertex: [%f, %f]; ref_slope: %f\n", edge_index, ref_opposite_vertex[0], ref_opposite_vertex[1], ref_slope);
   /* Now that we have the slope of the lines going through each vertex and the reference point,
    * we can calculate the intersection of the lines with each edge.
    */
@@ -328,11 +388,29 @@ t8_geom_get_ref_intersection (int edge_index,
        * 
        * Since the intersection point lies on edge 2, which has a slope of 1, the x and the y value has to be equal
        */
-      ref_intersection[0] = ref_intersection[1] =
-        ((ref_coords[0] * ref_opposite_vertex[1] -
-          ref_coords[1] * ref_opposite_vertex[0])
-         / -(ref_coords[1] - ref_opposite_vertex[1]) +
-         (ref_coords[0] - ref_opposite_vertex[0]));
+      // ref_intersection[0] =
+      //   ((ref_coords[0] * ref_opposite_vertex[1] -
+      //     ref_coords[1] * ref_opposite_vertex[0])
+      //    / -(ref_coords[1] - ref_opposite_vertex[1]) +
+      //    (ref_coords[0] - ref_opposite_vertex[0]));
+      // ref_intersection[1] =
+      //   ((ref_coords[0] * ref_opposite_vertex[1] -
+      //     ref_coords[1] * ref_opposite_vertex[0])
+      //    / -(ref_coords[1] - ref_opposite_vertex[1]) +
+      //    (ref_coords[0] - ref_opposite_vertex[0]));
+      
+      ref_intersection[0] =
+        ((0 * 1 - 0 * 0) * (ref_coords[0] - ref_opposite_vertex[0]) -
+         (0 - 1) * (ref_coords[0] * ref_opposite_vertex[1] -
+                    ref_coords[1] * ref_opposite_vertex[0]))
+        / ((0 - 1) * (ref_coords[1] - ref_opposite_vertex[1]) -
+           (0 - 0) * (ref_coords[0] - ref_opposite_vertex[0]));
+      ref_intersection[1] =
+        ((0 * 1 - 0 * 0) * (ref_coords[1] - ref_opposite_vertex[1]) -
+         (0 - 0) * (ref_coords[0] * ref_opposite_vertex[1] -
+                    ref_coords[1] * ref_opposite_vertex[0]))
+        / ((0 - 1) * (ref_coords[1] - ref_opposite_vertex[1]) -
+           (0 - 0) * (ref_coords[0] - ref_opposite_vertex[0]));
       break;
     }
   case 2:                      /* edge 2 */
@@ -375,6 +453,7 @@ t8_geom_get_ref_intersection (int edge_index,
     SC_ABORT_NOT_REACHED ();
     break;
   }
+  t8_global_productionf("ref_intersection: [%f, %f]\n", ref_intersection[0], ref_intersection[1]);
 }
 
 void
