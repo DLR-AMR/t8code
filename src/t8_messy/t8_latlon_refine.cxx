@@ -25,6 +25,7 @@
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx>
 #include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_io.h>
 #include <t8_cmesh_vtk_writer.h>
 #ifdef T8_ENABLE_DEBUG
 /* In debugging mode, we check whether we use the correct scheme.

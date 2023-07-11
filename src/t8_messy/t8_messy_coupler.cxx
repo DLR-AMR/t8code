@@ -22,6 +22,7 @@
 
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_vtk.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_schemes/t8_default/t8_default_quad/t8_default_quad_cxx.hxx>
