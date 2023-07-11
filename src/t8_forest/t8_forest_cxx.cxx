@@ -2121,7 +2121,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
   SC_CHECK_ABORT (forest->mpisize == 1 || forest->ghosts != NULL,
                   "Ghost structure is needed for t8_forest_leaf_face_neighbors "
                   "but was not found in forest.\n");
-  
+
   /* Only caluculate leaf face neigbors if the caller provides sufficient memory */
   if (pneighbor_leafs == NULL || dual_faces == NULL ||
       num_neighbors == NULL || pelement_indices == NULL) {
@@ -2171,6 +2171,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
      * parent or grandparent. */
     different_owners = 0;
     have_ghosts = 0;
+    owners = nullptr;
     for (ineigh = 0; ineigh < num_children_at_face; ineigh++) {
       /* At first, we check whether the current rank owns the neighbor, since
        * this is a constant time check and it is the most common case */
