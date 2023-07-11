@@ -231,6 +231,147 @@ t8_forest_vtk_get_element_nodes (t8_forest_t forest, t8_locidx_t ltreeid,
   t8_forest_element_from_ref_coords (forest, ltreeid, element, ref_coords,
                                      out_coords, stretch_factors);
 }
+
+/**
+ * Translate a single element from the forest into a vtkCell and fill the vtkArrays with
+ * the data related to the element (not element_data). 
+ * 
+ */
+static void
+t8_forest_element_to_vtk_cell (t8_forest_t forest,
+                               const t8_element_t *element,
+                               t8_eclass_scheme_c *scheme,
+                               const t8_locidx_t itree,
+                               const t8_gloidx_t offset,
+                               const int write_treeid,
+                               const int write_mpirank,
+                               const int write_level,
+                               const int write_element_id,
+                               const int curved_flag,
+                               const int elem_id,
+                               long int *point_id,
+                               int *cellTypes,
+                               vtkSmartPointer < vtkPoints > points,
+                               vtkSmartPointer < vtkCellArray > cellArray,
+                               vtkSmartPointer < t8_vtk_gloidx_array_type_t >
+                               vtk_treeid,
+                               vtkSmartPointer < t8_vtk_gloidx_array_type_t >
+                               vtk_mpirank,
+                               vtkSmartPointer < t8_vtk_gloidx_array_type_t >
+                               vtk_level,
+                               vtkSmartPointer < t8_vtk_gloidx_array_type_t >
+                               vtk_element_id)
+{
+  vtkSmartPointer < vtkCell > pvtkCell = NULL;
+
+  const t8_element_shape_t element_shape = scheme->t8_element_shape (element);
+  const int           num_node =
+    t8_get_number_of_vtk_nodes (element_shape, curved_flag);
+  /* depending on the element type we choose the correct vtk cell to insert points to */
+  if (curved_flag == 0) {
+    switch (element_shape) {
+    case T8_ECLASS_VERTEX:
+      pvtkCell = vtkSmartPointer < vtkVertex >::New ();
+      break;
+    case T8_ECLASS_LINE:
+      pvtkCell = vtkSmartPointer < vtkLine >::New ();
+      break;
+    case T8_ECLASS_QUAD:
+      pvtkCell = vtkSmartPointer < vtkQuad >::New ();
+      break;
+    case T8_ECLASS_TRIANGLE:
+      pvtkCell = vtkSmartPointer < vtkTriangle >::New ();
+      break;
+    case T8_ECLASS_HEX:
+      pvtkCell = vtkSmartPointer < vtkHexahedron >::New ();
+      break;
+    case T8_ECLASS_TET:
+      pvtkCell = vtkSmartPointer < vtkTetra >::New ();
+      break;
+    case T8_ECLASS_PRISM:
+      pvtkCell = vtkSmartPointer < vtkWedge >::New ();
+      break;
+    case T8_ECLASS_PYRAMID:
+      pvtkCell = vtkSmartPointer < vtkPyramid >::New ();
+      break;
+    default:
+      SC_ABORT_NOT_REACHED ();
+    }
+  }
+  else {                        /* curved_flag != 0 */
+    switch (element_shape) {
+    case T8_ECLASS_VERTEX:
+      pvtkCell = vtkSmartPointer < vtkVertex >::New ();
+      break;
+    case T8_ECLASS_LINE:
+      pvtkCell = vtkSmartPointer < vtkQuadraticEdge >::New ();
+      break;
+    case T8_ECLASS_QUAD:
+      pvtkCell = vtkSmartPointer < vtkQuadraticQuad >::New ();
+      break;
+    case T8_ECLASS_TRIANGLE:
+      pvtkCell = vtkSmartPointer < vtkQuadraticTriangle >::New ();
+      break;
+    case T8_ECLASS_HEX:
+      pvtkCell = vtkSmartPointer < vtkQuadraticHexahedron >::New ();
+      break;
+    case T8_ECLASS_TET:
+      pvtkCell = vtkSmartPointer < vtkQuadraticTetra >::New ();
+      break;
+    case T8_ECLASS_PRISM:
+      pvtkCell = vtkSmartPointer < vtkQuadraticWedge >::New ();
+      break;
+    case T8_ECLASS_PYRAMID:
+      pvtkCell = vtkSmartPointer < vtkQuadraticPyramid >::New ();
+      break;
+    default:
+      SC_ABORT_NOT_REACHED ();
+    }
+  }
+  /* For each element we iterate over all points */
+  double              coordinates[3];
+  for (int ivertex = 0; ivertex < num_node; ivertex++, (*point_id)++) {
+    /* Compute the vertex coordinates inside the domain. */
+    t8_forest_vtk_get_element_nodes (forest, itree, element, ivertex,
+                                     coordinates, NULL);
+    /* Insert point in the points array */
+    points->InsertNextPoint (coordinates[0], coordinates[1], coordinates[2]);
+
+    pvtkCell->GetPointIds ()->SetId (ivertex, *point_id);
+  }
+  /* We insert the next cell in the cell array */
+  cellArray->InsertNextCell (pvtkCell);
+  /*
+   * Write current cell Type in the cell Types array at the elem_id index.
+   * Depending on the values of the binary inputs write_treeid,
+   * write_mpirank and write_element_id we also fill the corresponding
+   * arrays with the data we want(treeid,mpirank,element_id).
+   * To get the element id, we have to add the local id in the tree 
+   * plus theo
+   */
+  /* *INDENT-OFF* */
+  if(curved_flag==0){
+    cellTypes[elem_id - offset] = t8_eclass_vtk_type[element_shape];
+  }
+  else{
+    cellTypes[elem_id - offset] = t8_curved_eclass_vtk_type[element_shape];
+  }
+  if (write_treeid == 1) {
+    const t8_gloidx_t gtree_id = t8_forest_global_tree_id(forest, itree);
+    vtk_treeid->InsertNextValue (gtree_id);
+  }
+  if (write_mpirank == 1) {
+    vtk_mpirank->InsertNextValue (forest->mpirank);
+  }
+  if (write_level == 1) {
+    vtk_level->InsertNextValue (scheme->t8_element_level (element));
+  }
+  if (write_element_id == 1) {
+    vtk_element_id->InsertNextValue (elem_id);
+  }
+  /* *INDENT-ON* */
+}
+
 #endif
 
 int
@@ -358,32 +499,15 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
   T8_ASSERT (forest->committed);
 
   long int            point_id = 0;     /* The id of the point in the points Object. */
-  double              coordinates[3];
+
   const t8_gloidx_t   offset = t8_forest_get_first_local_element_id (forest);
   t8_gloidx_t         elem_id = offset;
 
-/* Since we want to use different element types and a points Array and cellArray 
- * we have to declare these vtk objects. The cellArray stores the Elements.
- * The points and cellArray are needed to store the data we want to write in the Unstructured Grid. 
- */
-  vtkNew < vtkPoints > points;
-  vtkNew < vtkCellArray > cellArray;
-  vtkNew < vtkHexahedron > hexa;
-  vtkNew < vtkVertex > vertex;
-  vtkNew < vtkLine > line;
-  vtkNew < vtkQuad > quad;
-  vtkNew < vtkTriangle > tri;
-  vtkNew < vtkWedge > prism;
-  vtkNew < vtkTetra > tet;
-  vtkNew < vtkPyramid > pyra;
+  vtkSmartPointer < vtkCellArray > cellArray =
+    vtkSmartPointer < vtkCellArray >::New ();
 
-  vtkNew < vtkQuadraticEdge > quadraticedge;
-  vtkNew < vtkQuadraticTriangle > quadratictri;
-  vtkNew < vtkQuadraticQuad > quadraticquad;
-  vtkNew < vtkQuadraticTetra > quadratictet;
-  vtkNew < vtkQuadraticHexahedron > quadratichexa;
-  vtkNew < vtkQuadraticWedge > quadraticprism;
-  vtkNew < vtkQuadraticPyramid > quadraticpyra;
+  vtkSmartPointer < vtkPoints > points =
+    vtkSmartPointer < vtkPoints >::New ();
 
   /* 
    * The cellTypes Array stores the element types as integers(see vtk doc).
@@ -442,120 +566,18 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
     const t8_locidx_t   elems_in_tree =
       t8_forest_get_tree_num_elements (forest, itree);
     /* We iterate over all elements in the tree */
-    /* Compute the global tree id */
-    const t8_gloidx_t   gtreeid = t8_forest_global_tree_id (forest, itree);
     for (t8_locidx_t ielement = 0; ielement < elems_in_tree; ielement++) {
       const t8_element_t *element =
         t8_forest_get_element_in_tree (forest, itree, ielement);
       T8_ASSERT (element != NULL);
-      vtkSmartPointer < vtkCell > pvtkCell = NULL;
-      const t8_element_shape_t element_shape =
-        scheme->t8_element_shape (element);
-      const int           num_node =
-        t8_get_number_of_vtk_nodes (element_shape, curved_flag);
-      /* depending on the element type we choose the correct vtk cell to insert points to */
-      if (curved_flag == 0) {
-        switch (element_shape) {
-        case T8_ECLASS_VERTEX:
-          pvtkCell = vertex;
-          break;
-        case T8_ECLASS_LINE:
-          pvtkCell = line;
-          break;
-        case T8_ECLASS_QUAD:
-          pvtkCell = quad;
-          break;
-        case T8_ECLASS_TRIANGLE:
-          pvtkCell = tri;
-          break;
-        case T8_ECLASS_HEX:
-          pvtkCell = hexa;
-          break;
-        case T8_ECLASS_TET:
-          pvtkCell = tet;
-          break;
-        case T8_ECLASS_PRISM:
-          pvtkCell = prism;
-          break;
-        case T8_ECLASS_PYRAMID:
-          pvtkCell = pyra;
-          break;
-        default:
-          SC_ABORT_NOT_REACHED ();
-        }
-      }
-      else {                    /* curved_flag != 0 */
-        switch (element_shape) {
-        case T8_ECLASS_VERTEX:
-          pvtkCell = vertex;
-          break;
-        case T8_ECLASS_LINE:
-          pvtkCell = quadraticedge;
-          break;
-        case T8_ECLASS_QUAD:
-          pvtkCell = quadraticquad;
-          break;
-        case T8_ECLASS_TRIANGLE:
-          pvtkCell = quadratictri;
-          break;
-        case T8_ECLASS_HEX:
-          pvtkCell = quadratichexa;
-          break;
-        case T8_ECLASS_TET:
-          pvtkCell = quadratictet;
-          break;
-        case T8_ECLASS_PRISM:
-          pvtkCell = quadraticprism;
-          break;
-        case T8_ECLASS_PYRAMID:
-          pvtkCell = quadraticpyra;
-          break;
-        default:
-          SC_ABORT_NOT_REACHED ();
-        }
-      }
 
-      /* For each element we iterate over all points */
-      for (int ivertex = 0; ivertex < num_node; ivertex++, point_id++) {
-        /* Compute the vertex coordinates inside the domain. */
-        t8_forest_vtk_get_element_nodes (forest, itree, element, ivertex,
-                                         coordinates, NULL);
-        /* Insert point in the points array */
-        points->InsertNextPoint (coordinates[0], coordinates[1],
-                                 coordinates[2]);
+      t8_forest_element_to_vtk_cell (forest, element, scheme, itree, offset,
+                                     write_treeid, write_mpirank, write_level,
+                                     write_element_id, curved_flag, elem_id,
+                                     &point_id, cellTypes, points, cellArray,
+                                     vtk_treeid, vtk_mpirank, vtk_level,
+                                     vtk_element_id);
 
-        pvtkCell->GetPointIds ()->SetId (ivertex, point_id);
-      }
-      /* We insert the next cell in the cell array */
-      cellArray->InsertNextCell (pvtkCell);
-      /*
-       * Write current cell Type in the cell Types array at the elem_id index.
-       * Depending on the values of the binary inputs write_treeid,
-       * write_mpirank and write_element_id we also fill the corresponding
-       * arrays with the data we want(treeid,mpirank,element_id).
-       * To get the element id, we have to add the local id in the tree 
-       * plus theo
-       */
-      /* *INDENT-OFF* */
-      if(curved_flag==0){
-        cellTypes[elem_id - offset] = t8_eclass_vtk_type[element_shape];
-      }
-      else{
-        cellTypes[elem_id - offset] = t8_curved_eclass_vtk_type[element_shape];
-      }
-      if (write_treeid == 1) {
-        vtk_treeid->InsertNextValue (gtreeid);
-      }
-      if (write_mpirank == 1) {
-        vtk_mpirank->InsertNextValue (forest->mpirank);
-      }
-      if (write_level == 1) {
-        vtk_level->InsertNextValue (scheme->t8_element_level (element));
-      }
-      if (write_element_id == 1) {
-        vtk_element_id->InsertNextValue (elem_id);
-      }
-      /* *INDENT-ON* */
       elem_id++;
     }                           /* end of loop over elements */
   }                             /* end of loop over local trees */
@@ -688,7 +710,8 @@ t8_forest_vtk_cells_vertices_kernel (t8_forest_t forest,
   num_el_vertices = t8_eclass_num_vertices[element_shape];
   for (ivertex = 0; ivertex < num_el_vertices; ivertex++) {
     t8_forest_element_coordinate (forest, ltree_id, element,
-                                  t8_eclass_vtk_corner_number[element_shape]
+                                  t8_eclass_t8_to_vtk_corner_number
+                                  [element_shape]
                                   [ivertex], element_coordinates);
     freturn = fprintf (vtufile, "         ");
     if (freturn <= 0) {
