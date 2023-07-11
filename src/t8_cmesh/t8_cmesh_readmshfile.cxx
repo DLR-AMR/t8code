@@ -742,19 +742,18 @@ die_ele:
 #if T8_WITH_OCC
 /* Corrects the parameters on closed geometries to prevent disorted elements. */
 static void
-correct_closed_geometry_parametric (const int geometry_type,
+correct_closed_geometry_parametric (const int geometry_type,    // 0 for edge, 1 for surface
                                     const int geometry_index,
                                     const int num_face_nodes,
                                     const t8_geometry_occ_c * geometry_occ,
                                     double *parameters)
 {
-  /* Get the parametric bounds of the closed geometry 
-   * surface -> [Umin, Umax, Vmin, Vmax]
-   * edge    -> [Umin, Umax]
-   */
-  double              parametric_bounds[2 + (2 * geometry_type)];
   /* Check for closed U parameter in case of an edge. */
   if (geometry_type == 0) {
+    /* Get the parametric bounds of the closed geometry 
+     * edge    -> [Umin, Umax]
+     */
+    double              parametric_bounds[2];
     /* Get the parametric edge bounds. */
     geometry_occ->t8_geom_get_edge_parametric_bounds (geometry_index,
                                                       parametric_bounds);
@@ -807,6 +806,10 @@ correct_closed_geometry_parametric (const int geometry_type,
   }
   /* Check for closed U parameter and closed V parameter in case of a surface. */
   if (geometry_type == 1) {
+    /* Get the parametric bounds of the closed geometry 
+     * surface -> [Umin, Umax, Vmin, Vmax]
+     */
+    double              parametric_bounds[4];
     /* Get the parametric surface bounds. */
     geometry_occ->t8_geom_get_surface_parametric_bounds (geometry_index,
                                                          parametric_bounds);

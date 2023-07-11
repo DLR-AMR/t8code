@@ -57,6 +57,7 @@
 #include <BRepTools.hxx>
 #include <GeomFill_BSplineCurves.hxx>
 #include <Geom_Surface.hxx>
+#include <TopTools_FormatVersion.hxx>
 #endif
 
 typedef enum

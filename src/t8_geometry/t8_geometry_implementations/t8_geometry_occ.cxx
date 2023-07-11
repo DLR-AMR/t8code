@@ -262,10 +262,12 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
         T8_ASSERT (edge_parameters != NULL);
 
         /* Retrieve curve */
+        /* *INDENT-OFF* */
         curve =
-          BRep_Tool::
-          Curve (TopoDS::Edge (occ_shape_edge_map.FindKey (edges[i_edge])),
-                 first, last);
+          BRep_Tool::Curve (TopoDS::
+                            Edge (occ_shape_edge_map.FindKey (edges[i_edge])),
+                            first, last);
+        /* *INDENT-ON* */
         /* Check if curve is valid */
         T8_ASSERT (!curve.IsNull ());
 
@@ -285,11 +287,13 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
 
         /* Convert edge parameter to surface parameters */
         double              converted_edge_surface_parameters[2];
+        /* *INDENT-OFF* */
         const int           num_face_nodes =
           t8_eclass_num_vertices[active_tree_class];
         surface =
-          BRep_Tool::
-          Surface (TopoDS::Face (occ_shape_face_map.FindKey (*faces)));
+          BRep_Tool::Surface (TopoDS::
+                              Face (occ_shape_face_map.FindKey (*faces)));
+        /* *INDENT-ON* */
         double              parametric_bounds[4];
         surface->Bounds (parametric_bounds[0], parametric_bounds[1],
                          parametric_bounds[2], parametric_bounds[3]);
@@ -343,10 +347,11 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
 
       /* Retrieve surface */
       T8_ASSERT (*faces <= occ_shape_face_map.Size ());
+      /* *INDENT-OFF* */
       surface =
-        BRep_Tool::
-        Surface (TopoDS::Face (occ_shape_face_map.FindKey (*faces)));
-
+        BRep_Tool::Surface (TopoDS::
+                            Face (occ_shape_face_map.FindKey (*faces)));
+      /* *INDENT-ON* */
       /* Check if surface is valid */
       T8_ASSERT (!surface.IsNull ());
 
@@ -396,11 +401,12 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
                                           parameters, 1, 1,
                                           &interpolated_curve_parameter);
           }
-
+          /* *INDENT-OFF* */
           curve =
-            BRep_Tool::
-            Curve (TopoDS::Edge (occ_shape_edge_map.FindKey (edges[i_edge])),
-                   first, last);
+            BRep_Tool::Curve (TopoDS::
+                              Edge (occ_shape_edge_map.
+                                    FindKey (edges[i_edge])), first, last);
+          /* *INDENT-ON* */
           /* Check if curve is valid */
           T8_ASSERT (!curve.IsNull ());
 
