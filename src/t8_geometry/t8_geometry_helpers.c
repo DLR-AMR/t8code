@@ -272,8 +272,6 @@ t8_geom_get_ref_intersection (int edge_index,
                               const double *ref_coords,
                               double ref_intersection[2])
 {
-  t8_global_productionf ("ref_coords: [%f, %f, %f]\n", ref_coords[0],
-                         ref_coords[1], ref_coords[2]);
   const double       *ref_opposite_vertex;
   double              ref_slope;
   const t8_eclass_t   eclass = T8_ECLASS_TRIANGLE;
@@ -380,7 +378,6 @@ t8_geom_get_ref_intersection (int edge_index,
     SC_ABORT_NOT_REACHED ();
     break;
   }
-  //t8_global_productionf("ref_intersection: [%f, %f]\n", ref_intersection[0], ref_intersection[1]);
 }
 
 void

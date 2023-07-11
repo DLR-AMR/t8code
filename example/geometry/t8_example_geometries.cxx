@@ -57,7 +57,6 @@
 #include <BRepTools.hxx>
 #include <GeomFill_BSplineCurves.hxx>
 #include <Geom_Surface.hxx>
-#include <TopTools_FormatVersion.hxx>
 #endif
 
 typedef enum
@@ -592,9 +591,6 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
 
       /* Fill shape with bsplines so that we can create a geometry with this shape. */
       shape = BRepBuilderAPI_MakeEdge (occ_curve1).Edge ();
-
-      BRepTools::Write (shape, "shape_occ_triangle.brep", 0, 0,
-                        TopTools_FormatVersion_VERSION_1);
 
       /* Create an occ geometry. */
       t8_geometry_occ    *geometry_occ =
