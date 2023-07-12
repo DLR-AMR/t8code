@@ -246,6 +246,10 @@ void                t8_cmesh_set_tree_class (t8_cmesh_t cmesh,
                                              t8_gloidx_t gtree_id,
                                              t8_eclass_t tree_class);
 
+void                t8_cmesh_shift_tree_id (t8_cmesh_t cmesh,
+                                            const t8_locidx_t tree_id,
+                                            const t8_gloidx_t shift);
+
 /** Store an attribute at a tree in a cmesh.
  *  Attributes can be arbitrary data that is copied to an internal storage
  *  associated to the tree.
@@ -274,6 +278,10 @@ void                t8_cmesh_set_attribute (t8_cmesh_t cmesh,
                                             int package_id, int key,
                                             void *data, size_t data_size,
                                             int data_persists);
+
+void                t8_cmesh_attribute_local_to_global (t8_cmesh_t cmesh,
+                                                        const t8_gloidx_t
+                                                        first_id);
 
 /** Store a string as an attribute at a tree in a cmesh.
  * \param [in, out] cmesh       The cmesh to be updated.

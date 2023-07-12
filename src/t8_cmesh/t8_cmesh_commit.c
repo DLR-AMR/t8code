@@ -387,8 +387,11 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
          * Should not cause problems, since mesh is replicated */
         T8_ASSERT (attribute->id - cmesh->first_tree ==
                    (t8_locidx_t) (attribute->id - cmesh->first_tree));
-        tree1 = t8_cmesh_trees_get_tree (cmesh->trees, attribute->id
-                                         - cmesh->first_tree);
+        t8_debugf ("[D] attribute-id: %li, first_tree %li\n", attribute->id,
+                   cmesh->first_tree);
+        tree1 =
+          t8_cmesh_trees_get_tree (cmesh->trees,
+                                   attribute->id - cmesh->first_tree);
         tree1->num_attributes++;
         /* temporarily misuse the att_offset to store the total attribute size, until t8_cmesh_trees_finish_part */
         tree1->att_offset += attribute->attr_size;

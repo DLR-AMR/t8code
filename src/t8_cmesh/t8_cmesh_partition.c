@@ -1741,6 +1741,8 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
      * to be set before. This is because we may be accessing any tree in the new cmesh.  */
     num_ghosts += recv_part->num_ghosts;
   }
+  t8_debugf ("[D] cmesh->num_local_trees: %li, num_trees: %li\n",
+             cmesh->num_local_trees, num_trees);
   T8_ASSERT (cmesh->num_local_trees == num_trees);
   cmesh->num_ghosts = num_ghosts;
 }

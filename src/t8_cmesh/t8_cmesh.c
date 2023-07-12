@@ -377,6 +377,13 @@ t8_cmesh_set_attribute (t8_cmesh_t cmesh, t8_gloidx_t gtree_id,
 }
 
 void
+t8_cmesh_attribute_local_to_global (t8_cmesh_t cmesh,
+                                    const t8_gloidx_t first_id)
+{
+  t8_stash_attribute_local_to_global (cmesh->stash, first_id);
+}
+
+void
 t8_cmesh_set_attribute_string (t8_cmesh_t cmesh, t8_gloidx_t gtree_id,
                                int package_id, int key, const char *string)
 {
@@ -467,6 +474,15 @@ t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_gloidx_t gtree_id,
 #ifdef T8_ENABLE_DEBUG
   cmesh->inserted_trees++;
 #endif
+}
+
+void
+t8_cmesh_shift_tree_id (t8_cmesh_t cmesh, const t8_locidx_t tree_id,
+                        const t8_gloidx_t shift)
+{
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (tree_id >= 0);
+  t8_stash_update_class_id (cmesh->stash, tree_id, tree_id + shift);
 }
 
 /* Compute erg = v_1 . v_2

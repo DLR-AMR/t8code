@@ -76,6 +76,18 @@ t8_stash_add_class (t8_stash_t stash, t8_gloidx_t id, t8_eclass_t eclass)
   sclass->id = id;
 }
 
+void
+t8_stash_update_class_id (t8_stash_t stash, const t8_locidx_t old_id,
+                          const t8_gloidx_t new_id)
+{
+  t8_stash_class_struct_t *sclass;
+
+  T8_ASSERT (stash != NULL);
+  sclass =
+    (t8_stash_class_struct_t *) sc_array_index_int (&stash->classes, old_id);
+  sclass->id = new_id;
+}
+
 /* returns -1 if treeid1 < treeid2
  *          0            =
  *         +1            >
@@ -172,6 +184,18 @@ t8_stash_add_attribute (t8_stash_t stash, t8_gloidx_t id, int package_id,
   sattr->attr_data = !copy ? attr : T8_ALLOC (char, size);
   if (copy) {
     memcpy (sattr->attr_data, attr, size);
+  }
+}
+
+void
+t8_stash_attribute_local_to_global (t8_stash_t stash,
+                                    const t8_gloidx_t first_id)
+{
+  const t8_gloidx_t   attr_size = stash->attributes.elem_count;
+  for (t8_gloidx_t iattr = 0; iattr < attr_size; iattr++) {
+    t8_stash_attribute_struct_t *sattr =
+      sc_array_index_long (&stash->attributes, iattr);
+    sattr->id += first_id;
   }
 }
 

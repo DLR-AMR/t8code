@@ -397,7 +397,17 @@ t8_vtk_distributed_partition (t8_cmesh_t cmesh, const int mpirank,
     last_tree = first_tree + num_trees - 1;
   }
 
+  /* In the stash all the gloidx are currently locidx_t. During 
+   * vtk_iterate_cell we don't know the offset. Now we know and need to adjust. */
+  for (t8_locidx_t itree = 0; itree < num_trees; itree++) {
+    t8_cmesh_shift_tree_id (cmesh, itree, first_tree);
+  }
+
+  t8_cmesh_attribute_local_to_global (cmesh, first_tree);
+
+  t8_debugf ("[D] local range: %li to % li\n", first_tree, last_tree);
   t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
+  t8_shmem_array_destroy (&offsets);
 }
 
 t8_cmesh_t
