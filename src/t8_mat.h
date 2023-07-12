@@ -33,7 +33,7 @@
  * \param [in,out]      mat     3x3-matrix.
  * \param [in]          angle   Rotation angle in radians.
  */
-static void
+static inline void
 t8_mat_init_xrot (double mat[3][3], const double angle)
 {
   /* first row */
