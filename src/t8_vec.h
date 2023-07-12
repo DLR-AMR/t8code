@@ -104,6 +104,14 @@ double              t8_vec_dot (const double vec_x[3], const double vec_y[3]);
 void                t8_vec_cross (const double vec_x[3],
                                   const double vec_y[3], double cross[3]);
 
+/** Compute the difference of two vectors.
+ * \param [in]  vec_x  A 3D vector.
+ * \param [in]  vec_y  A 3D vector.
+ * \param [out] diff   On output, the difference of \a vec_x and \a vec_y.
+ */
+void                t8_vec_diff (const double vec_x[3],
+                                 const double vec_y[3], double diff[3]);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_VEC_H! */

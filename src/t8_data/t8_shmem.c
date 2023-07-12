@@ -218,6 +218,18 @@ t8_shmem_array_allgather (const void *sendbuf, int sendcount,
                       recvcount, recvtype, recvarray->comm);
 }
 
+void
+t8_shmem_array_prefix (const void *sendbuf,
+                       t8_shmem_array_t recvarray,
+                       const int count,
+                       sc_MPI_Datatype type, sc_MPI_Op op, sc_MPI_Comm comm)
+{
+  T8_ASSERT (t8_shmem_array_is_initialized (recvarray));
+  T8_ASSERT (!t8_shmem_array_is_writing_possible (recvarray));
+
+  sc_shmem_prefix ((void *) sendbuf, recvarray->array, count, type, op, comm);
+}
+
 /**
  * Computes the recvcounter- and displacement array for 
  * an MPI_Gatherv

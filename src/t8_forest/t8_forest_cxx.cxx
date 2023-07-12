@@ -32,6 +32,7 @@
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_element_cxx.hxx>
+#include <t8_element_c_interface.h>
 #include <t8_cmesh/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_geometry/t8_geometry_base.hxx>
@@ -330,7 +331,7 @@ t8_forest_no_overlap (t8_forest_t forest)
   int                 has_overlap_local_global;
   int                 mpiret =
     sc_MPI_Allreduce (&has_overlap_local, &has_overlap_local_global,
-                      1, MPI_INT, sc_MPI_MAX, forest->mpicomm);
+                      1, sc_MPI_INT, sc_MPI_MAX, forest->mpicomm);
   SC_CHECK_MPI (mpiret);
 
   T8_ASSERT (has_overlap_local_global == 0 || has_overlap_local_global == 1);
@@ -483,17 +484,14 @@ t8_forest_element_diam (t8_forest_t forest, t8_locidx_t ltreeid,
   return 2 * dist / num_corners;
 }
 
-/* Compute the center of mass of an element.
- * The center of mass of a polygon with vertices x_1, ... , x_n
- * is given by   1/n * (x_1 + ... + x_n)
- */
+/* Compute the center of mass of an element. We can use the element reference
+ * coordinates of the centroid.*/
 void
 t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
                             const t8_element_t *element, double *coordinates)
 {
-  double              corner_coords[3];
-  int                 num_corners, icorner;
   t8_eclass_t         tree_class;
+  t8_element_shape_t  element_shape;
   t8_eclass_scheme_c *ts;
 
   T8_ASSERT (t8_forest_is_committed (forest));
@@ -503,19 +501,12 @@ t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
   ts = t8_forest_get_eclass_scheme (forest, tree_class);
   T8_ASSERT (ts->t8_element_is_valid (element));
 
-  /* initialize the centroid with 0 */
-  memset (coordinates, 0, 3 * sizeof (double));
-  /* get the number of corners of element */
-  num_corners = ts->t8_element_num_corners (element);
-  for (icorner = 0; icorner < num_corners; icorner++) {
-    /* For each corner, add its coordinates to the centroids coordinates. */
-    t8_forest_element_coordinate (forest, ltreeid, element, icorner,
-                                  corner_coords);
-    /* coordinates = coordinates + corner_coords */
-    t8_vec_axpy (corner_coords, coordinates, 1);
-  }
-  /* Divide each coordinate by num_corners */
-  t8_vec_ax (coordinates, 1. / num_corners);
+  /* Get the element class and calculate the centroid using its element
+   * reference coordinates */
+  element_shape = t8_element_shape (ts, element);
+  t8_forest_element_from_ref_coords (forest, ltreeid, element,
+                                     t8_element_centroid_ref_coords
+                                     [element_shape], coordinates, NULL);
 }
 
 /* Compute the length of the line from one corner to a second corner in an element */

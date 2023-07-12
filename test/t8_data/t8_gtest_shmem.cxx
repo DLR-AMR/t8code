@@ -233,6 +233,48 @@ TEST_P(shmem, test_shmem_array_allgatherv){
   T8_FREE(sendbuf);
 }
 
+TEST_P(shmem, test_shmem_array_prefix)
+{
+  int                 mpirank;
+  int                 mpisize;
+  int                 mpiret;
+
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+
+   /* Checking shared memory type */
+  const sc_shmem_type_t shmem_type = (sc_shmem_type_t) shmem_type_int;
+  
+  /* setup shared memory usage */
+  t8_shmem_init (comm);
+  t8_shmem_set_type (comm, shmem_type);
+
+#if T8_ENABLE_MPI
+  const sc_shmem_type_t control_shmem_type = sc_shmem_get_type (comm);
+  ASSERT_EQ(shmem_type, control_shmem_type) << "Setting shmem type not succesfull.";
+#endif
+
+  /* Allocate one integer */
+  t8_shmem_array_t    shmem_array;
+  t8_shmem_array_init (&shmem_array, sizeof(t8_gloidx_t), mpisize + 1, comm);
+
+  t8_gloidx_t sendbuf = 1;
+  t8_shmem_array_prefix((void *)&sendbuf, shmem_array, 1, T8_MPI_GLOIDX, sc_MPI_SUM, comm);
+
+  /* Check value at each position */
+  for (int i = 0; i < mpisize; ++i) {
+    t8_gloidx_t         value = t8_shmem_array_get_gloidx (shmem_array, i);
+    ASSERT_EQ(value, i) << "Value at position " << i << " not correct (expected " << i << " got " << value << ")";
+  }
+
+  t8_shmem_array_destroy (&shmem_array);
+
+  t8_shmem_finalize (comm);
+
+}
+
 TEST_P(shmem, test_shmem_array){
   const int           array_length = 100;
   const int           element_size = sizeof (t8_gloidx_t);

@@ -56,6 +56,11 @@ struct t8_scheme_cxx
   t8_eclass_scheme_c *eclass_schemes[T8_ECLASS_COUNT];
 };
 
+extern const double
+  t8_element_corner_ref_coords[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS][3];
+
+extern const double t8_element_centroid_ref_coords[T8_ECLASS_COUNT][3];
+
 /** Increase the reference counter of a scheme.
  * \param [in,out] scheme       On input, this scheme must be alive, that is,
  *                              exist with positive reference count.
