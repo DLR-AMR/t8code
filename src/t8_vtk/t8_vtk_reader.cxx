@@ -425,7 +425,7 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet > vtkGrid,
 
   /* Already declared here, because we might use them during communication */
   const t8_gloidx_t         num_trees = vtkGrid->GetNumberOfCells();
-  const int                 dim = t8_get_dimension (vtkGrid);
+  const int                 dim = num_trees > 0?t8_get_dimension (vtkGrid) :0;
   t8_gloidx_t               first_tree = 0;
 
   t8_cmesh_init (&cmesh);
