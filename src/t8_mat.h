@@ -119,16 +119,19 @@ t8_mat_mult_vec (const double mat[3][3], const double a[3], double b[3])
 static inline void
 t8_mat_mult_mat (const double A[3][3], const double B[3][3], double C[3][3])
 {
-  for (int i = 0; i < 3; i++)
-    for (int j = 0; j < 3; j++) {
-      C[i][j] = 0.0;
-    }
+  for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 3; j++) {
+        C[i][j] = 0.0;
+      }
+  }
 
-  for (int i = 0; i < 3; i++)
-    for (int j = 0; j < 3; j++)
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
       for (int k = 0; k < 3; k++) {
         C[i][j] = C[i][j] + A[i][k] * B[k][j];
       }
+    }
+  }
 }
 
 #endif /* !T8_MAT_H! */
