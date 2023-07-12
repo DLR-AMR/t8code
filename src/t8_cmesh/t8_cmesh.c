@@ -377,13 +377,6 @@ t8_cmesh_set_attribute (t8_cmesh_t cmesh, t8_gloidx_t gtree_id,
 }
 
 void
-t8_cmesh_attribute_local_to_global (t8_cmesh_t cmesh,
-                                    const t8_gloidx_t first_id)
-{
-  t8_stash_attribute_local_to_global (cmesh->stash, first_id);
-}
-
-void
 t8_cmesh_set_attribute_string (t8_cmesh_t cmesh, t8_gloidx_t gtree_id,
                                int package_id, int key, const char *string)
 {
@@ -476,13 +469,6 @@ t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_gloidx_t gtree_id,
 #endif
 }
 
-void
-t8_cmesh_tree_local_to_global (t8_cmesh_t cmesh, const t8_gloidx_t first_id)
-{
-  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
-  T8_ASSERT (first_id >= 0);
-  t8_stash_class_id_local_to_global (cmesh->stash, first_id);
-}
 
 /* Compute erg = v_1 . v_2
  * the 3D scalar product.

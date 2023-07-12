@@ -214,19 +214,21 @@ t8_get_dimension (vtkSmartPointer < vtkDataSet > vtkGrid)
  * 
  * \param[in] vtkGrid The vtkGrid that gets tranlated
  * \param[in, out] cmesh   An empty cmesh that is filled with the data. 
+ * \param[in] first_tree  The global id of the first tree. 
  * \param[in] comm        A communicator. 
  * \return  The number of elements that have been read by the process.  
  */
 
-t8_gloidx_t
+static void
 t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > vtkGrid,
-                      t8_cmesh_t cmesh, sc_MPI_Comm comm)
+                      t8_cmesh_t cmesh, 
+                      const t8_gloidx_t first_tree, sc_MPI_Comm comm)
 {
 
   double             *vertices;
   double            **tuples;
   size_t             *data_size;
-  t8_gloidx_t         tree_id = 0;
+  t8_gloidx_t         tree_id = first_tree;
   int                 max_dim = -1;
 
   vtkCellIterator    *cell_it;
@@ -310,7 +312,7 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > vtkGrid,
     T8_FREE (tuples);
   }
   T8_FREE (vertices);
-  return tree_id;
+  return;
 }
 
 /**
@@ -359,7 +361,7 @@ t8_vtk_cmesh_partition (t8_cmesh_t cmesh, const int mpirank,
   t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
 }
 
-static void
+static int
 t8_vtk_distributed_partition (t8_cmesh_t cmesh, const int mpirank,
                               const int mpisize,
                               t8_gloidx_t num_trees, int dim,
@@ -397,15 +399,10 @@ t8_vtk_distributed_partition (t8_cmesh_t cmesh, const int mpirank,
     last_tree = first_tree + num_trees - 1;
   }
 
-  /* In the stash all the gloidx are currently locidx_t. During 
-   * vtk_iterate_cell we don't know the offset. Now we know and need to adjust. */
-
-  t8_cmesh_tree_local_to_global (cmesh, first_tree);
-  t8_cmesh_attribute_local_to_global (cmesh, first_tree);
-
   t8_debugf ("[D] local range: %li to % li\n", first_tree, last_tree);
   t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
   t8_shmem_array_destroy (&offsets);
+  return first_tree;
 }
 
 t8_cmesh_t
@@ -427,27 +424,17 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet > vtkGrid,
   T8_ASSERT (0 <= main_proc && main_proc < mpisize);
 
   /* Already declared here, because we might use them during communication */
-  t8_gloidx_t         num_trees = 0;
-  int                 dim = 0;
+  const t8_gloidx_t         num_trees = vtkGrid->GetNumberOfCells();
+  const int                 dim = t8_get_dimension (vtkGrid);
+  t8_gloidx_t               first_tree = 0;
 
   t8_cmesh_init (&cmesh);
-  t8_debugf ("[D] p %i, mpi: %i, dg: %i\n", !partition, mpirank == main_proc,
-             !distributed_grid);
-  if (!partition || mpirank == main_proc || distributed_grid) {
-    t8_debugf ("[D] translate grid\n");
-    num_trees = t8_vtk_iterate_cells (vtkGrid, cmesh, comm);
-    dim = t8_get_dimension (vtkGrid);
-    t8_cmesh_set_dimension (cmesh, dim);
-    if (!distributed_grid) {
-      t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim);
-      t8_cmesh_register_geometry (cmesh, linear_geom);
-    }
-  }
+
   if (partition) {
     t8_debugf ("[D] partition\n");
     if (distributed_grid) {
       t8_debugf ("[D] distributed grid\n");
-      t8_vtk_distributed_partition (cmesh, mpirank, mpisize, num_trees, dim,
+      first_tree = t8_vtk_distributed_partition (cmesh, mpirank, mpisize, num_trees, dim,
                                     comm);
     }
     else {
@@ -456,6 +443,20 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet > vtkGrid,
                               comm);
     }
   }
+
+  t8_debugf ("[D] p %i, mpi: %i, dg: %i\n", !partition, mpirank == main_proc,
+             !distributed_grid);
+  if (!partition || mpirank == main_proc || distributed_grid) {
+    t8_debugf ("[D] translate grid\n");
+    t8_vtk_iterate_cells (vtkGrid, cmesh, first_tree, comm);
+    
+    t8_cmesh_set_dimension (cmesh, dim);
+    if (!distributed_grid) {
+      t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim);
+      t8_cmesh_register_geometry (cmesh, linear_geom);
+    }
+  }
+  
   if (cmesh != NULL) {
     t8_cmesh_commit (cmesh, comm);
   }

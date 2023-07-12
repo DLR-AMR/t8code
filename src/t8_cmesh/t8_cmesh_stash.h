@@ -105,10 +105,6 @@ void                t8_stash_destroy (t8_stash_t *pstash);
 void                t8_stash_add_class (t8_stash_t stash, t8_gloidx_t id,
                                         t8_eclass_t eclass);
 
-void                t8_stash_class_id_local_to_global (t8_stash_t stash,
-                                                       const t8_gloidx_t
-                                                       first_id);
-
 /** Add a face connection to a stash.
  * \param [in, out] stash The stash to be updated.
  * \param [in]      id1   The global id of the first tree.
@@ -158,10 +154,6 @@ void                t8_stash_add_attribute (t8_stash_t stash, t8_gloidx_t id,
                                             int package_id, int key,
                                             size_t size, void *attr,
                                             int copy);
-
-void                t8_stash_attribute_local_to_global (t8_stash_t stash,
-                                                        const t8_gloidx_t
-                                                        first_id);
 
 /** Return the size (in bytes) of an attribute in the stash.
  * \param [in]   stash   The stash to be considered.
