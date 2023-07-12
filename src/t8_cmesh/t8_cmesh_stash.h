@@ -105,9 +105,9 @@ void                t8_stash_destroy (t8_stash_t *pstash);
 void                t8_stash_add_class (t8_stash_t stash, t8_gloidx_t id,
                                         t8_eclass_t eclass);
 
-void                t8_stash_update_class_id (t8_stash_t stash,
-                                              const t8_locidx_t old_id,
-                                              const t8_gloidx_t new_id);
+void                t8_stash_class_id_local_to_global (t8_stash_t stash,
+                                                       const t8_gloidx_t
+                                                       first_id);
 
 /** Add a face connection to a stash.
  * \param [in, out] stash The stash to be updated.

@@ -77,15 +77,19 @@ t8_stash_add_class (t8_stash_t stash, t8_gloidx_t id, t8_eclass_t eclass)
 }
 
 void
-t8_stash_update_class_id (t8_stash_t stash, const t8_locidx_t old_id,
-                          const t8_gloidx_t new_id)
+t8_stash_class_id_local_to_global (t8_stash_t stash,
+                                   const t8_gloidx_t first_id)
 {
-  t8_stash_class_struct_t *sclass;
-
   T8_ASSERT (stash != NULL);
-  sclass =
-    (t8_stash_class_struct_t *) sc_array_index_int (&stash->classes, old_id);
-  sclass->id = new_id;
+  const t8_locidx_t   num_classes = stash->classes.elem_count;
+
+  for (t8_locidx_t iclass = 0; iclass < num_classes; iclass++) {
+    t8_stash_class_struct_t *sclass;
+    sclass =
+      (t8_stash_class_struct_t *) sc_array_index_int (&stash->classes,
+                                                      iclass);
+    sclass->id += first_id;
+  }
 }
 
 /* returns -1 if treeid1 < treeid2

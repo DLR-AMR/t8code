@@ -477,12 +477,11 @@ t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_gloidx_t gtree_id,
 }
 
 void
-t8_cmesh_shift_tree_id (t8_cmesh_t cmesh, const t8_locidx_t tree_id,
-                        const t8_gloidx_t shift)
+t8_cmesh_tree_local_to_global (t8_cmesh_t cmesh, const t8_gloidx_t first_id)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
-  T8_ASSERT (tree_id >= 0);
-  t8_stash_update_class_id (cmesh->stash, tree_id, tree_id + shift);
+  T8_ASSERT (first_id >= 0);
+  t8_stash_class_id_local_to_global (cmesh->stash, first_id);
 }
 
 /* Compute erg = v_1 . v_2
