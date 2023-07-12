@@ -120,9 +120,9 @@ static inline void
 t8_mat_mult_mat (const double A[3][3], const double B[3][3], double C[3][3])
 {
   for (int i = 0; i < 3; i++) {
-      for (int j = 0; j < 3; j++) {
-        C[i][j] = 0.0;
-      }
+    for (int j = 0; j < 3; j++) {
+      C[i][j] = 0.0;
+    }
   }
 
   for (int i = 0; i < 3; i++) {
