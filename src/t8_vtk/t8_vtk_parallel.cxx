@@ -81,6 +81,7 @@ t8_read_parallel (const char *filename, vtkSmartPointer < vtkDataSet > grid,
       last_piece = total_num_pieces - first_piece;
     }
   }
+
   /* Read the pieces if there are any pieces to read on this proc. */
   if (first_piece < last_piece) {
     vtkNew < vtkAppendFilter > append;

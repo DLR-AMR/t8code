@@ -35,6 +35,7 @@ on:
 jobs:
   test_vars:
     runs-on: ubuntu-20.04
+    container: dlramr/t8code-ubuntu:t8-dependencies
     env:
       SC_DEBUG: ../sc/build_debug
       P4EST_DEBUG: ../p4est/build_debug
