@@ -172,6 +172,29 @@ void                t8_shmem_array_allgatherv (void *sendbuf,
                                                sc_MPI_Datatype
                                                recvtype, sc_MPI_Comm comm);
 
+/**
+ * Fill a t8_shmem array with an Allgather of the prefix operation over all 
+ * processes. 
+ * 
+ * The recieve array will be
+ * (0, send0, send0 op send1, send0 op send1 op send2, ...)
+ * 
+ * \note the first entry of \a recvarray will be set to 0 using memset. 
+ * The entry can be changed after calling t8_shmem_array_prefix 
+ * 
+ * @param sendbuf 
+ * @param recvarray 
+ * @param count 
+ * @param type 
+ * @param op 
+ * @param comm 
+ */
+void                t8_shmem_array_prefix (const void *sendbuf,
+                                           t8_shmem_array_t recvarray,
+                                           const int count,
+                                           sc_MPI_Datatype type,
+                                           sc_MPI_Op op, sc_MPI_Comm comm);
+
 /** Return the MPI communicator associated with a shmem array.
  * \param [in]          array The shmem_array to be queried.
  * \return              The MPI communicator stored at \a array.
