@@ -226,8 +226,7 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > vtkGrid,
   double            **tuples = NULL;
   size_t             *data_size = NULL;
   t8_gloidx_t         tree_id = first_tree;
-  int                 max_dim = -1;
-
+  
   vtkCellIterator    *cell_it;
   vtkSmartPointer < vtkPoints > points;
   vtkSmartPointer < vtkCellData > cell_data = vtkGrid->GetCellData ();
@@ -290,10 +289,6 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > vtkGrid,
       data->GetTuple (cell_id, tuples[dtype]);
       t8_cmesh_set_attribute (cmesh, tree_id, t8_get_package_id (), dtype + 1,
                               tuples[dtype], data_size[dtype], 0);
-    }
-    /* Check geometry-dimension */
-    if (max_dim < cell_it->GetCellDimension ()) {
-      max_dim = cell_it->GetCellDimension ();
     }
     tree_id++;
   }
@@ -374,15 +369,10 @@ t8_vtk_distributed_partition (t8_cmesh_t cmesh, const int mpirank,
 {
   t8_gloidx_t         first_tree;
   t8_gloidx_t         last_tree;
-  t8_gloidx_t         global_num_trees;
   int                 mpiret;
-  /* Comput the global number of trees */
-  mpiret = sc_MPI_Allreduce (&num_trees, &global_num_trees, 1, T8_MPI_GLOIDX,
-                             sc_MPI_SUM, comm);
-  SC_CHECK_MPI (mpiret);
   /* Compute the dimension of the cmesh. Is necessary, because procs can be empty. */
   int                 dim_buf;
-  sc_MPI_Allreduce (&dim, &dim_buf, 1, sc_MPI_INT, sc_MPI_MAX, comm);
+  mpiret = sc_MPI_Allreduce (&dim, &dim_buf, 1, sc_MPI_INT, sc_MPI_MAX, comm);
   SC_CHECK_MPI (mpiret);
   t8_cmesh_set_dimension (cmesh, dim_buf);
   t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim_buf);
