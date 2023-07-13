@@ -142,6 +142,7 @@ t8_file_to_vtkGrid (const char *filename,
         main_proc_read_successful = t8_read_unstructured (filename, vtkGrid);
       }
       else {
+        t8_debugf("[D] read parallel file\n ");
         main_proc_read_successful =
           t8_read_parallel (filename, vtkGrid, comm);
         break;
@@ -224,7 +225,6 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > vtkGrid,
                       t8_cmesh_t cmesh, 
                       const t8_gloidx_t first_tree, sc_MPI_Comm comm)
 {
-  double             *vertices = NULL;
   double            **tuples = NULL;
   size_t             *data_size = NULL;
   t8_gloidx_t         tree_id = first_tree;
@@ -375,11 +375,11 @@ t8_vtk_distributed_partition (t8_cmesh_t cmesh, const int mpirank,
   SC_CHECK_MPI (mpiret);
   t8_debugf ("[D] %i/%li trees\n", num_trees, global_num_trees);
   int                 dim_buf;
-  sc_MPI_Allreduce (&dim, &dim_buf, 1, sc_MPI_INT, sc_MPI_BOR, comm);
+  sc_MPI_Allreduce (&dim, &dim_buf, 1, sc_MPI_INT, sc_MPI_MAX, comm);
   SC_CHECK_MPI (mpiret);
-  t8_cmesh_set_dimension (cmesh, dim);
+  t8_cmesh_set_dimension (cmesh, dim_buf);
   t8_debugf ("[D] dim: %i\n", dim_buf);
-  t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim);
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim_buf);
   t8_cmesh_register_geometry (cmesh, linear_geom);
   t8_shmem_init (comm);
   t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
@@ -424,7 +424,7 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet > vtkGrid,
 
   /* Already declared here, because we might use them during communication */
   const t8_gloidx_t         num_trees = vtkGrid->GetNumberOfCells();
-  const int                 dim = num_trees > 0?t8_get_dimension (vtkGrid) :0;
+  const int                 dim = num_trees > 0?t8_get_dimension (vtkGrid) : 0;
   t8_gloidx_t               first_tree = 0;
 
   t8_cmesh_init (&cmesh);
@@ -530,6 +530,7 @@ t8_vtk_reader (const char *filename, const int partition,
     break;
   }
   T8_ASSERT (partition == 0 || (main_proc >= 0 && main_proc < mpisize));
+  t8_debugf("[D] read_successfull\n");
   /* Read the file and set the pointer. */
   main_proc_read_successful =
     t8_file_to_vtkGrid (filename, vtkGrid, partition, main_proc, comm,
