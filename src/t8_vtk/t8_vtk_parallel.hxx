@@ -3,7 +3,7 @@ This file is part of t8code.
 t8code is a C library to manage a collection (a forest) of multiple
 connected adaptive space-trees of general element classes in parallel.
 
-Copyright (C) 2015 the developers
+Copyright (C) 2023 the developers
 
 t8code is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -31,8 +31,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <vtkSmartPointer.h>
 
 /**
- * given a filename to a parallel vtk file (for example .pvtu) and its data-files, 
- * read a piece of the data-files (like .vtu, .vtp, ...).
+ * Given a filename to a parallel vtk file (for example .pvtu) and its data files, 
+ * read a piece of the data files (like .vtu, .vtp, ...).
  * 
  * \param[in] filename  The name of a parallel vtk file (.pvtu for example)
  * \param[in] grid On input a vtkSmartPointer, that will hold the grid described
