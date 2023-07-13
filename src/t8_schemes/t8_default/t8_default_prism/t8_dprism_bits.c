@@ -353,14 +353,14 @@ t8_dprism_children_at_face (const t8_dprism_t *p,
   T8_ASSERT (num_children == t8_dprism_num_face_children (p, face));
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
   if (face < 3) {
-    for (int ichild = 0; i < 4; ichild++) {
+    for (int ichild = 0; ichild < 4; ichild++) {
       t8_dprism_child (p, children_at_face[p->tri.type][face * 4 + ichild],
                        children[ichild]);
     }
   }
   else {
-    for (i = 0; i < 4; i++) {
-      t8_dprism_child (p, (face % 3) * 4 + i, children[i]);
+    for (int ichild = 0; ichild < 4; ichild++) {
+      t8_dprism_child (p, (face % 3) * 4 + ichild, children[ichild]);
     }
   }
   /* Fill child-indices array */
