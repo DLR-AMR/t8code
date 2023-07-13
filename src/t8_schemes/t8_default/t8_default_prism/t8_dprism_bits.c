@@ -367,7 +367,8 @@ t8_dprism_children_at_face (const t8_dprism_t *p,
   if (child_indices != NULL) {
     if (face < 3) {
       for (int ichild = 0; ichild < 4; ichild++) {
-        child_indices[ichild] = children_at_face[p->tri.type][face * 4 + ichild];
+        child_indices[ichild] =
+          children_at_face[p->tri.type][face * 4 + ichild];
       }
     }
     else {
