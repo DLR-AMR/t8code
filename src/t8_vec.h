@@ -35,7 +35,8 @@ T8_EXTERN_C_BEGIN ();
  * \param [in] vec  A 3D vector.
  * \return          The norm of \a vec.
  */
-static inline double              t8_vec_norm (const double vec[3])
+static inline double
+t8_vec_norm (const double vec[3])
 {
   double              norm = 0;
 
