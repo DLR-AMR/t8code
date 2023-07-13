@@ -36,7 +36,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 class vtk_reader : public testing::TestWithParam<std::tuple<vtk_file_type_t, int, int>>{
   protected:
     void SetUp() override{
-      int mpisize;
       int mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
       SC_CHECK_MPI (mpiret);
       if (mpisize > T8_VTK_TEST_NUM_PROCS) {
@@ -46,14 +45,12 @@ class vtk_reader : public testing::TestWithParam<std::tuple<vtk_file_type_t, int
       file = (int)file_type + 1;
       partition = std::get<1>(GetParam());
       main_proc = std::get<2>(GetParam());
-      if(file_type == VTK_PARALLEL_FILE && partition){
-        GTEST_SKIP();
-      }
     }
     int file;
     vtk_file_type_t file_type;
     int partition;
     int main_proc;
+    int mpisize;
     const char* failing_files[4] = {
       "no_file",
       "non-existing-file.vtu",
@@ -87,9 +84,6 @@ TEST_P (vtk_reader, vtk_to_cmesh_fail)
 TEST_P (vtk_reader, vtk_to_cmesh_success)
 {
 #if T8_WITH_VTK
-  if (file_type == VTK_PARALLEL_FILE) {
-    GTEST_SKIP ();
-  }
   int                 mpirank;
   int                 mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
@@ -100,7 +94,13 @@ TEST_P (vtk_reader, vtk_to_cmesh_success)
   if (file_type != VTK_FILE_ERROR) {
     EXPECT_FALSE (cmesh == NULL);
     if (!partition || main_proc == mpirank) {
-      EXPECT_EQ (num_trees[file], t8_cmesh_get_num_local_trees (cmesh));
+      if(file_type == VTK_PARALLEL_FILE && partition){
+        t8_gloidx_t local_num_trees = t8_cmesh_get_num_local_trees(cmesh);
+        EXPECT_EQ (num_trees[file] / mpisize, local_num_trees );
+      }
+      else{
+        EXPECT_EQ (num_trees[file], t8_cmesh_get_num_local_trees (cmesh));
+      }
     }
     t8_cmesh_destroy (&cmesh);
   }
@@ -115,7 +115,7 @@ TEST_P (vtk_reader, vtk_to_cmesh_success)
 TEST_P (vtk_reader, vtk_to_pointSet)
 {
 #if T8_WITH_VTK
-  if (file_type == VTK_PARALLEL_FILE) {
+  if (file_type == VTK_PARALLEL_FILE && partition) {
     GTEST_SKIP ();
   }
   if (file_type != VTK_FILE_ERROR) {
