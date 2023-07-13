@@ -469,35 +469,6 @@ t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_gloidx_t gtree_id,
 #endif
 }
 
-/* Compute erg = v_1 . v_2
- * the 3D scalar product.
- */
-static double
-t8_cmesh_tree_vertices_dot (double *v_1, double *v_2)
-{
-  double              erg = 0;
-  int                 i;
-
-  for (i = 0; i < 3; i++) {
-    erg += v_1[i] * v_2[i];
-  }
-  return erg;
-}
-
-/* Compute erg = v_1 x v_2
- * the 3D cross product.
- */
-static void
-t8_cmesh_tree_vertices_cross (double *v_1, double *v_2, double *erg)
-{
-  int                 i;
-
-  for (i = 0; i < 3; i++) {
-    erg[i] = v_1[(i + 1) % 3] * v_2[(i + 2) % 3]
-      - v_1[(i + 2) % 3] * v_2[(i + 1) % 3];
-  }
-}
-
 /* Given a set of vertex coordinates for a tree of a given eclass.
  * Query whether the geometric volume of the tree with this coordinates
  * would be negative.
@@ -557,9 +528,9 @@ t8_cmesh_tree_vertices_negative_volume (t8_eclass_t eclass,
     v_j[i] = vertices[3 * j + i] - vertices[i];
   }
   /* compute cross = v_1 x v_2 */
-  t8_cmesh_tree_vertices_cross (v_1, v_2, cross);
+  t8_vec_cross (v_1, v_2, cross);
   /* Compute sc_prod = <v_j, cross> */
-  sc_prod = t8_cmesh_tree_vertices_dot (v_j, cross);
+  sc_prod = t8_vec_dot (v_j, cross);
 
   T8_ASSERT (sc_prod != 0);
   return eclass == T8_ECLASS_TET ? sc_prod > 0 : sc_prod < 0;
