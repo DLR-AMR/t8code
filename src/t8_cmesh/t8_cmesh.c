@@ -469,7 +469,6 @@ t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_gloidx_t gtree_id,
 #endif
 }
 
-
 /* Compute erg = v_1 . v_2
  * the 3D scalar product.
  */

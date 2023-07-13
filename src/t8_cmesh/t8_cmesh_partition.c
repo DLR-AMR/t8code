@@ -139,7 +139,7 @@ t8_partition_new_ghost_ids (t8_cmesh_t cmesh,
 void
 t8_cmesh_gather_trees_per_eclass (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
-  t8_gloidx_t         temp_trees_per_eclass[T8_ECLASS_COUNT] = { 0 };
+  t8_gloidx_t         temp_trees_per_eclass[T8_ECLASS_COUNT];
   int                 ieclass;
 
   T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
