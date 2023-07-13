@@ -448,9 +448,7 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet > vtkGrid,
   if (!partition || mpirank == main_proc || distributed_grid) {
     t8_debugf ("[D] translate grid\n");
     t8_vtk_iterate_cells (vtkGrid, cmesh, first_tree, comm);
-    
-    t8_cmesh_set_dimension (cmesh, dim);
-    if (!distributed_grid) {
+      if (!distributed_grid) {
       t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim);
       t8_cmesh_register_geometry (cmesh, linear_geom);
     }
