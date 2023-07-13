@@ -93,13 +93,11 @@ t8_read_parallel (const char *filename, vtkSmartPointer < vtkDataSet > grid,
     append->Update ();
     append->MergePointsOn ();
     grid->ShallowCopy (append->GetOutput ());
-    t8_debugf ("[D] read %lli cells\n", grid->GetNumberOfCells ());
   }
   else {
     /* Initialize the grid, but don't construct any cells. 
      * simplifies further processing of the grid on multiple procs. */
     grid->Initialize ();
-    t8_debugf ("[D] dont read any file on this proc\n");
   }
   return read_success;
 }

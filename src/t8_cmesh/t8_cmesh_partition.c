@@ -145,15 +145,12 @@ t8_cmesh_gather_trees_per_eclass (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
 
   if (cmesh->set_partition) {
-    t8_debugf ("[D] cmesh->set_partition\n");
     /* Copy the local values */
     /* We need to do it in a loop since we convert from locidx to gloidx.
      * memcpy is thus not possible */
     for (ieclass = 0; ieclass < T8_ECLASS_COUNT; ieclass++) {
       temp_trees_per_eclass[ieclass] =
         cmesh->num_local_trees_per_eclass[ieclass];
-      t8_debugf ("[D] [%i] tree_per_class: %i\n", ieclass,
-                 cmesh->num_local_trees_per_eclass[ieclass]);
     }
 
     if (cmesh->first_tree_shared) {
@@ -188,8 +185,6 @@ t8_cmesh_gather_trees_per_eclass (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     for (ieclass = 0; ieclass < T8_ECLASS_COUNT; ieclass++) {
       num_trees += cmesh->num_trees_per_eclass[ieclass];
     }
-    t8_debugf ("[D] num_trees: %li, cmesh->num_trees: %li\n", num_trees,
-               cmesh->num_trees);
     T8_ASSERT (num_trees == cmesh->num_trees);
   }
 #endif
@@ -1741,8 +1736,6 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
      * to be set before. This is because we may be accessing any tree in the new cmesh.  */
     num_ghosts += recv_part->num_ghosts;
   }
-  t8_debugf ("[D] cmesh->num_local_trees: %li, num_trees: %li\n",
-             cmesh->num_local_trees, num_trees);
   T8_ASSERT (cmesh->num_local_trees == num_trees);
   cmesh->num_ghosts = num_ghosts;
 }

@@ -142,7 +142,6 @@ t8_file_to_vtkGrid (const char *filename,
         main_proc_read_successful = t8_read_unstructured (filename, vtkGrid);
       }
       else {
-        t8_debugf("[D] read parallel file\n ");
         main_proc_read_successful =
           t8_read_parallel (filename, vtkGrid, comm);
         break;
@@ -299,8 +298,6 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > vtkGrid,
     }
     tree_id++;
   }
-  t8_debugf ("[D] translated %i trees \n", tree_id);
-
   /* Clean-up */
   cell_it->Delete ();
   if (num_data_arrays > 0) {
@@ -337,7 +334,6 @@ t8_vtk_cmesh_partition (t8_cmesh_t cmesh, const int mpirank,
   }
   /* Communicate the dimension to all processes */
   sc_MPI_Bcast (&dim, 1, sc_MPI_INT, main_proc, comm);
-  t8_debugf ("[D] set dimension: %i\n", dim);
   t8_cmesh_set_dimension (cmesh, dim);
   /* Communicate the number of trees to all processes. 
    * TODO: This probably crashes when a vtkGrid is distributed in many 
@@ -373,12 +369,10 @@ t8_vtk_distributed_partition (t8_cmesh_t cmesh, const int mpirank,
   mpiret = sc_MPI_Allreduce (&num_trees, &global_num_trees, 1, T8_MPI_GLOIDX,
                              sc_MPI_SUM, comm);
   SC_CHECK_MPI (mpiret);
-  t8_debugf ("[D] %i/%li trees\n", num_trees, global_num_trees);
   int                 dim_buf;
   sc_MPI_Allreduce (&dim, &dim_buf, 1, sc_MPI_INT, sc_MPI_MAX, comm);
   SC_CHECK_MPI (mpiret);
   t8_cmesh_set_dimension (cmesh, dim_buf);
-  t8_debugf ("[D] dim: %i\n", dim_buf);
   t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim_buf);
   t8_cmesh_register_geometry (cmesh, linear_geom);
   t8_shmem_init (comm);
@@ -397,8 +391,6 @@ t8_vtk_distributed_partition (t8_cmesh_t cmesh, const int mpirank,
   else {
     last_tree = first_tree + num_trees - 1;
   }
-
-  t8_debugf ("[D] local range: %li to % li\n", first_tree, last_tree);
   t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
   t8_shmem_array_destroy (&offsets);
   return first_tree;
@@ -430,23 +422,17 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet > vtkGrid,
   t8_cmesh_init (&cmesh);
 
   if (partition) {
-    t8_debugf ("[D] partition\n");
     if (distributed_grid) {
-      t8_debugf ("[D] distributed grid\n");
       first_tree = t8_vtk_distributed_partition (cmesh, mpirank, mpisize, num_trees, dim,
                                     comm);
     }
     else {
-      t8_debugf ("[D] normal grid\n");
       t8_vtk_cmesh_partition (cmesh, mpirank, main_proc, num_trees, dim,
                               comm);
     }
   }
 
-  t8_debugf ("[D] p %i, mpi: %i, dg: %i\n", !partition, mpirank == main_proc,
-             !distributed_grid);
   if (!partition || mpirank == main_proc || distributed_grid) {
-    t8_debugf ("[D] translate grid\n");
     t8_vtk_iterate_cells (vtkGrid, cmesh, first_tree, comm);
       if (!distributed_grid) {
       t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim);
@@ -506,7 +492,6 @@ t8_vtk_reader (const char *filename, const int partition,
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
-  t8_debugf ("[D] file_type: %i\n", (int) vtk_file_type);
   /* Ensure that the main-proc is a valid proc. */
   T8_ASSERT (0 <= main_proc && main_proc < mpisize);
   T8_ASSERT (filename != NULL);
@@ -528,7 +513,6 @@ t8_vtk_reader (const char *filename, const int partition,
     break;
   }
   T8_ASSERT (partition == 0 || (main_proc >= 0 && main_proc < mpisize));
-  t8_debugf("[D] read_successfull\n");
   /* Read the file and set the pointer. */
   main_proc_read_successful =
     t8_file_to_vtkGrid (filename, vtkGrid, partition, main_proc, comm,
@@ -576,7 +560,6 @@ t8_vtk_reader_cmesh (const char *filename, const int partition,
   if (vtkGrid != NULL) {
     const int           distributed_grid =
       (vtk_file_type == VTK_PARALLEL_FILE) && partition;
-    t8_debugf ("[D] distributed_grid: %i\n", distributed_grid);
     t8_cmesh_t          cmesh =
       t8_vtkGrid_to_cmesh (vtkGrid, partition, main_proc, distributed_grid,
                            comm);
