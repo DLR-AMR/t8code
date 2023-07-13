@@ -31,8 +31,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <vtkSmartPointer.h>
 
 /**
- * given a filename to a parallel vtk file (for example .pvtu) and its data-files, 
- * read a piece of the data-files (like .vtu, .vtp, ...).
+ * Given a filename to a parallel vtk file (for example .pvtu) and its data files, 
+ * read a piece of the data files (like .vtu, .vtp, ...).
  * 
  * \param[in] filename  The name of a parallel vtk file (.pvtu for example)
  * \param[in] grid On input a vtkSmartPointer, that will hold the grid described
