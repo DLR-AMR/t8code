@@ -434,7 +434,8 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet > vtkGrid,
   t8_gloidx_t               first_tree = 0;
 
   t8_cmesh_init (&cmesh);
-
+  /* Set the partition first, so we know the global id of the first id in case
+   * we have a parallel process with empty vtkGrids. */
   if (partition) {
     if (distributed_grid) {
       first_tree = t8_vtk_distributed_partition (cmesh, mpirank, mpisize, num_trees, dim,
@@ -445,7 +446,7 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet > vtkGrid,
                               comm);
     }
   }
-
+  /* Translation of vtkGrid to cmesh */
   if (!partition || mpirank == main_proc || distributed_grid) {
     t8_vtk_iterate_cells (vtkGrid, cmesh, first_tree, comm);
       if (!distributed_grid) {
