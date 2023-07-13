@@ -355,7 +355,18 @@ t8_vtk_cmesh_partition (t8_cmesh_t cmesh, const int mpirank,
   t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
 }
 
-static int
+/**
+ * Set the partition for cmesh coming from a distributed vtkGrid (like pvtu)
+ * 
+ * \param[in, out] cmesh On input a cmesh, on output a cmesh with a partition according to the number of trees read on each proc
+ * \param[in] mpirank The mpirank of this proc
+ * \param[in] mpisize The size of the mpicommunicator
+ * \param[in] num_trees The number of trees read on this proc. Must be >= 0
+ * \param[in] dim     The dimension of the cells
+ * \param[in] comm    The mpi-communicator to use. 
+ * \return            the global id of the first tree on this proc. 
+ */
+static t8_gloidx_t
 t8_vtk_distributed_partition (t8_cmesh_t cmesh, const int mpirank,
                               const int mpisize,
                               t8_gloidx_t num_trees, int dim,
@@ -365,15 +376,19 @@ t8_vtk_distributed_partition (t8_cmesh_t cmesh, const int mpirank,
   t8_gloidx_t         last_tree;
   t8_gloidx_t         global_num_trees;
   int                 mpiret;
+  /* Comput the global number of trees */
   mpiret = sc_MPI_Allreduce (&num_trees, &global_num_trees, 1, T8_MPI_GLOIDX,
                              sc_MPI_SUM, comm);
   SC_CHECK_MPI (mpiret);
+  /* Compute the dimension of the cmesh. Is necessary, because procs can be empty. */
   int                 dim_buf;
   sc_MPI_Allreduce (&dim, &dim_buf, 1, sc_MPI_INT, sc_MPI_MAX, comm);
   SC_CHECK_MPI (mpiret);
   t8_cmesh_set_dimension (cmesh, dim_buf);
   t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim_buf);
   t8_cmesh_register_geometry (cmesh, linear_geom);
+
+  /* Compute the global id of the first tree on each proc. */
   t8_shmem_init (comm);
   t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
   t8_shmem_array_t    offsets = NULL;
@@ -383,7 +398,7 @@ t8_vtk_distributed_partition (t8_cmesh_t cmesh, const int mpirank,
                          sc_MPI_SUM, comm);
 
   first_tree = t8_shmem_array_get_gloidx (offsets, mpirank);
-
+  /* Set the partition of the cmesh. */
   if (num_trees == 0) {
     last_tree = first_tree - 1;
   }
