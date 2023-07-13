@@ -220,13 +220,13 @@ t8_get_dimension (vtkSmartPointer < vtkDataSet > vtkGrid)
 
 static void
 t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > vtkGrid,
-                      t8_cmesh_t cmesh, 
+                      t8_cmesh_t cmesh,
                       const t8_gloidx_t first_tree, sc_MPI_Comm comm)
 {
   double            **tuples = NULL;
   size_t             *data_size = NULL;
   t8_gloidx_t         tree_id = first_tree;
-  
+
   vtkCellIterator    *cell_it;
   vtkSmartPointer < vtkPoints > points;
   vtkSmartPointer < vtkCellData > cell_data = vtkGrid->GetCellData ();
@@ -419,17 +419,18 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet > vtkGrid,
   T8_ASSERT (0 <= main_proc && main_proc < mpisize);
 
   /* Already declared here, because we might use them during communication */
-  const t8_gloidx_t         num_trees = vtkGrid->GetNumberOfCells();
-  const int                 dim = num_trees > 0?t8_get_dimension (vtkGrid) : 0;
-  t8_gloidx_t               first_tree = 0;
+  const t8_gloidx_t   num_trees = vtkGrid->GetNumberOfCells ();
+  const int           dim = num_trees > 0 ? t8_get_dimension (vtkGrid) : 0;
+  t8_gloidx_t         first_tree = 0;
 
   t8_cmesh_init (&cmesh);
   /* Set the partition first, so we know the global id of the first id in case
    * we have a parallel process with empty vtkGrids. */
   if (partition) {
     if (distributed_grid) {
-      first_tree = t8_vtk_distributed_partition (cmesh, mpirank, mpisize, num_trees, dim,
-                                    comm);
+      first_tree =
+        t8_vtk_distributed_partition (cmesh, mpirank, mpisize, num_trees, dim,
+                                      comm);
     }
     else {
       t8_vtk_cmesh_partition (cmesh, mpirank, main_proc, num_trees, dim,
@@ -439,12 +440,12 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet > vtkGrid,
   /* Translation of vtkGrid to cmesh */
   if (!partition || mpirank == main_proc || distributed_grid) {
     t8_vtk_iterate_cells (vtkGrid, cmesh, first_tree, comm);
-      if (!distributed_grid) {
+    if (!distributed_grid) {
       t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim);
       t8_cmesh_register_geometry (cmesh, linear_geom);
     }
   }
-  
+
   if (cmesh != NULL) {
     t8_cmesh_commit (cmesh, comm);
   }
