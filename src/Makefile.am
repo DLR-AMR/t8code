@@ -40,6 +40,7 @@ libt8_installed_headers_cmesh = \
   src/t8_cmesh/t8_cmesh_save.h \
   src/t8_cmesh/t8_cmesh_examples.h \
   src/t8_cmesh/t8_cmesh_geometry.h \
+  src/t8_cmesh/t8_cmesh_helpers.h \
   src/t8_cmesh/t8_cmesh_occ.hxx
 libt8_installed_headers_data = \
   src/t8_data/t8_shmem.h src/t8_data/t8_containers.h
@@ -107,6 +108,7 @@ libt8_compiled_sources = \
   src/t8_cmesh/t8_cmesh_copy.c src/t8_data/t8_shmem.c \
   src/t8_cmesh/t8_cmesh_geometry.cxx \
   src/t8_cmesh/t8_cmesh_examples.c \
+  src/t8_cmesh/t8_cmesh_helpers.c \
   src/t8_data/t8_containers.cxx \
   src/t8_cmesh/t8_cmesh_offset.c src/t8_cmesh/t8_cmesh_readmshfile.cxx \
   src/t8_forest/t8_forest.c src/t8_forest/t8_forest_adapt.cxx \
