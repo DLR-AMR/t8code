@@ -65,11 +65,11 @@ T8_EXTERN_C_BEGIN ();
  *
  * \param [in] forest_old      The forest that is adapted
  * \param [in] forest_new      The forest that is newly constructed from \a forest_old
- * \param [in] which_tree      The local tree containing \a outgoing and \a incoming
+ * \param [in] which_tree      The local tree containing \a first_outgoing and \a first_incoming
  * \param [in] ts              The eclass scheme of the tree
  * \param [in] refine          -1 if family in \a forest_old got coarsened, 0 if element
- *                             has not been touched, 1 if element got refined. 
- *                             See return of t8_forest_adapt_t.
+ *                             has not been touched, 1 if element got refined and -2 if
+ *                             element got removed. See return of t8_forest_adapt_t.
  * \param [in] num_outgoing    The number of outgoing elements.
  * \param [in] first_outgoing  The tree local index of the first outgoing element.
  *                             0 <= first_outgoing < which_tree->num_elements
@@ -80,8 +80,10 @@ T8_EXTERN_C_BEGIN ();
  * If an element is being refined, \a refine and \a num_outgoing will be 1 and 
  * \a num_incoming will be the number of children.
  * If a family is being coarsened, \a refine will be -1, \a num_outgoing will be 
- * the number of family members and \a num_incoming will be 1. Else \a refine will 
- * be 0 and \a num_outgoing and \a num_incoming will both be 1.
+ * the number of family members and \a num_incoming will be 1. 
+ * If an element is being removed, \a refine and \a num_outgoing will be 1 and 
+ * \a num_incoming will be 0. 
+ * Else \a refine will be 0 and \a num_outgoing and \a num_incoming will both be 1.
  * \see t8_forest_iterate_replace
  */
 typedef void        (*t8_forest_replace_t) (t8_forest_t forest_old,
@@ -110,9 +112,10 @@ typedef void        (*t8_forest_replace_t) (t8_forest_t forest_old,
  * \param [in] num_elements the number of entries in \a elements that are defined
  * \param [in] elements     Pointers to a family or, if \a is_family is zero,
  *                          pointer to one element.
- * \return greater zero if the first entry in \a elements should be refined,
- *         smaller zero if the family \a elements shall be coarsened,
- *         zero else.
+ * \return 1 if the first entry in \a elements should be refined,
+ *         -1 if the family \a elements shall be coarsened,
+ *         -2 if the first entry in \a elements should be removed,
+ *         0 else.
  */
 /* TODO: Do we really need the forest argument? Since the forest is not committed yet it
  *       seems dangerous to expose to the user. */
@@ -157,6 +160,15 @@ int                 t8_forest_is_initialized (t8_forest_t forest);
  *                              False otherwise.
  */
 int                 t8_forest_is_committed (t8_forest_t forest);
+
+/** Check whether the forest has local overlapping elements.
+ * \param [in] forest   The forest to consider.
+ * \return              True if \a forest has no elements which are inside each other.
+ * \note This function is collective, but only checks local overlapping on each process.
+ * \see t8_forest_partition_test_boundery_element if you also want to test for 
+ * global overlap across the process boundaries.
+ */
+int                 t8_forest_no_overlap (t8_forest_t forest);
 
 /** Check whether two committed forests have the same local elements.
  * \param [in] forest_a The first forest.
@@ -783,7 +795,8 @@ int                 t8_forest_element_point_inside (t8_forest_t forest,
  */
 t8_forest_t         t8_forest_new_uniform (t8_cmesh_t cmesh,
                                            t8_scheme_cxx_t *scheme,
-                                           int level, int do_face_ghost,
+                                           const int level,
+                                           const int do_face_ghost,
                                            sc_MPI_Comm comm);
 
 /** Build a adapted forest from another forest.

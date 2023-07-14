@@ -20,8 +20,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-//#include <t8_cmesh/t8_cmesh_vtk_to_t8/t8_cmesh_vtk_polydata.hxx>
-//=======
 #include "t8_vtk_polydata.hxx"
 #include "t8_vtk_types.h"
 #if T8_WITH_VTK
@@ -38,11 +36,11 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 static              vtk_read_success_t
 t8_read_poly_ext (const char *filename, vtkSmartPointer < vtkPolyData > grid)
 {
-  char                tmp[BUFSIZ], *extension;
+  char                tmp[BUFSIZ];
+  char               *extension;
   /* Get the file-extension to decide which reader to use. */
   strcpy (tmp, filename);
-  extension = strtok (tmp, ".");
-  extension = strtok (NULL, ".");
+  extension = strrchr (tmp, '.') + 1;
   T8_ASSERT (strcmp (extension, ""));
 
   /* Check if we can open the file. */
@@ -136,4 +134,4 @@ t8_read_poly (const char *filename, vtkDataSet * grid)
   grid->DeepCopy (vtkDataSet::SafeDownCast (tri_filter->GetOutput ()));
   return read_successfull;
 }
-#endif
+#endif /* T8_WITH_VTK */

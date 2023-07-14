@@ -62,7 +62,8 @@ typedef enum vtk_file_type
 {
   VTK_FILE_ERROR = -1,          /*For Testing purpose. */
   VTK_UNSTRUCTURED_FILE = 0,
-  VTK_POLYDATA_FILE = 1
+  VTK_POLYDATA_FILE = 1,
+  VTK_NUM_TYPES
 } vtk_file_type_t;
 
 typedef enum vtk_read_success
