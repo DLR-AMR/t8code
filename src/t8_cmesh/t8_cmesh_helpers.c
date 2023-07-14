@@ -180,12 +180,6 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees,
             conn[T8_I3 (ntrees, T8_ECLASS_MAX_FACES, 3, itree, iface, 2)] =
               orientation;
 
-            t8_debugf ("%2d %2d | %2d %2d | %2d %2d %2d %2d -> %d\n",
-                       itree, neigh_itree,
-                       iface, neigh_iface,
-                       face_vert_order[0], face_vert_order[1],
-                       face_vert_order[2], face_vert_order[3], orientation);
-
             break;
           }
         }
