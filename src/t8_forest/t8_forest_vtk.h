@@ -52,6 +52,8 @@ T8_EXTERN_C_BEGIN ();
  *                        providing the user defined per element data.
  *                        If scalar and vector fields are used, all scalar fields
  *                        must come first in the array.
+ * \param [in] stretch_factors sc_array_t with length num_local_elements. Used to stretch elements
+ *                             according to the stretch factors.
  * \return  True if successful, false if not (process local).
  * \note If t8code was not configured with vtk, use \ref t8_forest_vtk_write_file
  */
@@ -63,6 +65,7 @@ int                 t8_forest_vtk_write_file_via_API (t8_forest_t forest,
                                                       const int
                                                       write_element_id,
                                                       const int curved_flag,
+                                                      const int stretch_flag,
                                                       const int num_data,
                                                       t8_vtk_data_field_t
                                                       *data);

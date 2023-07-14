@@ -56,7 +56,8 @@ typedef struct t8_cprofile t8_cprofile_t;       /* Defined below */
 #define T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY    3 /* Used to store edge parameters */
 #define T8_CMESH_OCC_FACE_ATTRIBUTE_KEY T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + T8_ECLASS_MAX_EDGES        /* Used to store wich face is linked to which surface */
 #define T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY T8_CMESH_OCC_FACE_ATTRIBUTE_KEY + 1  /* Used to store face parameters */
-#define T8_CMESH_NEXT_POSSIBLE_KEY T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY + T8_ECLASS_MAX_FACES     /* The next free value for a t8code attribute key */
+#define T8_CMESH_PATCH_STRETCH_FACTORS_KEY T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY + T8_ECLASS_MAX_FACES     /* Used to store the patch stretch factors of a tree */
+#define T8_CMESH_NEXT_POSSIBLE_KEY T8_CMESH_PATCH_STRETCH_FACTORS_KEY + 1       /* The next free value for a t8code attribute key */
 
 /** This structure holds the connectivity data of the coarse mesh.
  *  It can either be replicated, then each process stores a copy of the whole

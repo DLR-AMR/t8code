@@ -270,7 +270,7 @@ t8_write_vtu (t8_forest_t forest,
   int                 write_ghosts = 0;
   t8_forest_write_vtk_ext (forest, prefix, write_treeid, write_mpirank,
                            write_level, write_element_id, write_ghosts,
-                           0, 0, num_data, &vtk_data);
+                           0, 0, 0, num_data, &vtk_data);
   T8_FREE (element_data);
 }
 

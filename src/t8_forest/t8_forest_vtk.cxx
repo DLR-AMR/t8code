@@ -220,7 +220,7 @@ static void
 t8_forest_vtk_get_element_nodes (t8_forest_t forest, t8_locidx_t ltreeid,
                                  const t8_element_t *element,
                                  const int vertex, double *out_coords,
-                                 sc_array_t *stretch_factors)
+                                 const int stretch_flag)
 {
   const t8_eclass_t   tree_class = t8_forest_get_tree_class (forest, ltreeid);
   const t8_eclass_scheme_c *scheme =
@@ -230,7 +230,7 @@ t8_forest_vtk_get_element_nodes (t8_forest_t forest, t8_locidx_t ltreeid,
     t8_forest_vtk_point_to_element_ref_coords[element_shape]
     [vertex];
   t8_forest_element_from_ref_coords (forest, ltreeid, element, ref_coords,
-                                     out_coords, stretch_factors);
+                                     out_coords, stretch_flag);
 }
 #endif
 
@@ -241,6 +241,7 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix,
                                   const int write_level,
                                   const int write_element_id,
                                   const int curved_flag,
+                                  const int stretch_flag,
                                   const int num_data,
                                   t8_vtk_data_field_t *data)
 {
@@ -412,7 +413,7 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix,
       for (int ivertex = 0; ivertex < num_node; ivertex++, point_id++) {
         /* Compute the vertex coordinates inside the domain. */
         t8_forest_vtk_get_element_nodes (forest, itree, element, ivertex,
-                                         coordinates, NULL);
+                                         coordinates, stretch_flag);
         /* Insert point in the points array */
         points->InsertNextPoint (coordinates[0], coordinates[1],
                                  coordinates[2]);
@@ -671,9 +672,10 @@ t8_forest_vtk_cells_vertices_kernel (t8_forest_t forest,
   element_shape = ts->t8_element_shape (element);
   num_el_vertices = t8_eclass_num_vertices[element_shape];
   for (ivertex = 0; ivertex < num_el_vertices; ivertex++) {
-    t8_forest_element_coordinate (forest, ltree_id, element,
-                                  t8_eclass_vtk_corner_number[element_shape]
-                                  [ivertex], element_coordinates);
+    const double       *ref_coords =
+      t8_forest_vtk_point_to_element_ref_coords[element_shape][ivertex];
+    t8_forest_element_from_ref_coords (forest, ltree_id, element, ref_coords,
+                                       element_coordinates, 0);
     freturn = fprintf (vtufile, "         ");
     if (freturn <= 0) {
       return 0;

@@ -200,7 +200,7 @@ t8_naca_geometry_refinement (t8_forest_t forest,
   forest_vtu =
     "geometry_adapted_forest_" + fileprefix.substr (filename_pos + 1);
   t8_forest_write_vtk_ext (forest_new, forest_vtu.c_str (), 1, 1, 1, 1, 0, 1,
-                           0, 0, NULL);
+                           0, 0, 0, NULL);
   t8_global_productionf ("Wrote forest to vtu files: %s*\n",
                          forest_vtu.c_str ());
   t8_forest_unref (&forest_new);
@@ -351,7 +351,7 @@ t8_naca_plane_refinement (t8_forest_t forest, const std::string & fileprefix,
       forest_vtu = "linear_" + forest_vtu;
     }
     t8_forest_write_vtk_ext (forest_new, forest_vtu.c_str (), 1, 1, 1, 1, 0,
-                             1, 0, 0, NULL);
+                             1, 0, 0, 0, NULL);
     t8_productionf ("Wrote forest to %s*\n", forest_vtu.c_str ());
     forest = forest_new;
     ++adapt_data.t;

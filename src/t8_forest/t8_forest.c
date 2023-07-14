@@ -1451,6 +1451,7 @@ t8_forest_write_vtk_ext (t8_forest_t forest,
                          const int write_element_id,
                          const int write_ghosts,
                          const int write_curved,
+                         const int stretched_flag,
                          int do_not_use_API,
                          const int num_data, t8_vtk_data_field_t *data)
 {
@@ -1458,15 +1459,20 @@ t8_forest_write_vtk_ext (t8_forest_t forest,
   T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (forest->committed);
 
-  if (write_ghosts && write_curved) {
+  if (write_ghosts && (write_curved || stretched_flag)) {
     t8_errorf
-      ("ERROR: Cannot export ghosts and curved elements at the same time. "
+      ("ERROR: Cannot export ghosts and curved/stretched elements at the same time. "
        "Please specify only one option.\n" "Did not write anything.\n");
 #if !T8_WITH_VTK
     if (write_curved) {
       t8_errorf
         ("WARNING: t8code is not linked against VTK. "
          "Therefore, the export of curved elements is not possible anyway.\n");
+    }
+    if (stretched_flag) {
+      t8_errorf
+        ("WARNING: t8code is not linked against VTK. "
+         "Therefore, the export of stretched elements is not possible anyway.\n");
     }
 #endif
     return 0;
@@ -1488,6 +1494,12 @@ t8_forest_write_vtk_ext (t8_forest_t forest,
          "Using the VTK API instead.\n");
       do_not_use_API = 0;
     }
+    if (stretched_flag) {
+      t8_errorf
+        ("WARNING: Export of stretched elements not yet available with the inbuild function. "
+         "Using the VTK API instead.\n");
+      do_not_use_API = 0;
+    }
   }
 #else
   /* We are not linked against the VTK library, so
@@ -1499,6 +1511,12 @@ t8_forest_write_vtk_ext (t8_forest_t forest,
        "Please link to VTK.\n"
        "Using the inbuild function to write out uncurved elements instead.\n");
   }
+  if (stretched_flag) {
+    t8_errorf
+      ("WARNING: Export of stretched elements not yet available with the inbuild function. "
+       "Please link to VTK.\n"
+       "Using the inbuild function to write out unstretched elements instead.\n");
+  }
   do_not_use_API = 1;
 #endif
   if (!do_not_use_API) {
@@ -1509,7 +1527,8 @@ t8_forest_write_vtk_ext (t8_forest_t forest,
                                              write_mpirank,
                                              write_level,
                                              write_element_id,
-                                             write_curved, num_data, data);
+                                             write_curved, stretched_flag,
+                                             num_data, data);
   }
   else {
     T8_ASSERT (!write_curved);
@@ -1527,7 +1546,7 @@ int
 t8_forest_write_vtk (t8_forest_t forest, const char *fileprefix)
 {
   return t8_forest_write_vtk_ext (forest, fileprefix, 1, 1, 1, 1, 0, 0, 0, 0,
-                                  NULL);
+                                  0, NULL);
 }
 
 t8_forest_t

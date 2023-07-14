@@ -73,8 +73,8 @@ void                t8_forest_element_from_ref_coords (t8_forest_t forest,
                                                        const double
                                                        *ref_coord,
                                                        double *coords_out,
-                                                       sc_array_t
-                                                       *stretch_factors);
+                                                       const int
+                                                       stretch_elements);
 
 /** Compute the coordinates of the centroid of an element if a geometry
  * for this tree is registered in the forest's cmesh.
