@@ -159,7 +159,7 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees,
              * Face corner 0 of the face with the lower face direction connects
              * to a corner of the other face. The number of this corner is the
              * orientation code. */
-            int                 orientation;
+            int                 orientation = 0;
             if (iface <= neigh_iface) {
               orientation = face_vert_order[0];
             }
