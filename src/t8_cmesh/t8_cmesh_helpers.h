@@ -51,7 +51,12 @@ T8_EXTERN_C_BEGIN ();
 
   NOTE: This routine does not detect periodic boundaries.
  */
-void t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees, const t8_eclass_t *eclasses, const double *vertices, int **connectivity);
+void                t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh,
+                                                   const int ntrees,
+                                                   const t8_eclass_t
+                                                   *eclasses,
+                                                   const double *vertices,
+                                                   int **connectivity);
 
 T8_EXTERN_C_END ();
 
