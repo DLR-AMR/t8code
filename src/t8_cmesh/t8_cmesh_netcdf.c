@@ -727,11 +727,11 @@ t8_cmesh_write_netcdf_coordinate_data (t8_cmesh_t cmesh,
     for (; i < t8_eclass_num_vertices[tree_class]; i++) {
       /* Stores the x-, y- and z- coordinate of the nodes */
       Mesh_node_x[num_it] =
-        vertices[3 * (t8_eclass_vtk_corner_number[tree_class][i])];
+        vertices[3 * (t8_eclass_t8_to_vtk_corner_number[tree_class][i])];
       Mesh_node_y[num_it] =
-        vertices[3 * (t8_eclass_vtk_corner_number[tree_class][i]) + 1];
+        vertices[3 * (t8_eclass_t8_to_vtk_corner_number[tree_class][i]) + 1];
       Mesh_node_z[num_it] =
-        vertices[3 * (t8_eclass_vtk_corner_number[tree_class][i]) + 2];
+        vertices[3 * (t8_eclass_t8_to_vtk_corner_number[tree_class][i]) + 2];
       /* Stores the the nodes which correspond to this element. */
       Mesh_elem_nodes[(ltree_id) * context->nMaxMesh_elem_nodes + i] =
         local_tree_offset + num_it;

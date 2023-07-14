@@ -144,6 +144,7 @@ t8_file_to_vtkGrid (const char *filename,
       /* Communicate the success/failure of the reading process. */
       sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc,
                     comm);
+      return main_proc_read_successful;
     }
   }
   if (partition) {
@@ -201,9 +202,8 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > vtkGrid,
                       t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
 
-  double             *vertices;
-  double            **tuples;
-  size_t             *data_size;
+  double            **tuples = NULL;
+  size_t             *data_size = NULL;
   t8_gloidx_t         tree_id = 0;
   int                 max_dim = -1;
 
@@ -213,14 +213,13 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > vtkGrid,
   const int           max_cell_points = vtkGrid->GetMaxCellSize ();
 
   T8_ASSERT (max_cell_points >= 0);
-  vertices = T8_ALLOC (double, 3 * max_cell_points);
+  double             *vertices = T8_ALLOC (double, 3 * max_cell_points);
   /* Get cell iterator */
   cell_it = vtkGrid->NewCellIterator ();
   /* get the number of data-arrays per cell */
   const int           num_data_arrays = cell_data->GetNumberOfArrays ();
   T8_ASSERT (num_data_arrays >= 0);
 
-  t8_debugf ("[D] read %i data-arrays\n", num_data_arrays);
   /* Prepare attributes */
   if (num_data_arrays > 0) {
     size_t              tuple_size;
@@ -230,8 +229,6 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > vtkGrid,
       vtkDataArray       *data = cell_data->GetArray (idata);
       tuple_size = data->GetNumberOfComponents ();
       data_size[idata] = sizeof (double) * tuple_size;
-      t8_debugf ("[D] data_size[%i] = %li, tuple_size %li\n", idata,
-                 data_size[idata], tuple_size);
       /* Allocate memory for a tuple in array i */
       tuples[idata] = T8_ALLOC (double, tuple_size);
     }
@@ -279,7 +276,6 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > vtkGrid,
     }
     tree_id++;
   }
-  t8_debugf ("[D] read %li trees\n", tree_id);
 
   /* Clean-up */
   cell_it->Delete ();
@@ -313,8 +309,8 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet > vtkGrid,
   T8_ASSERT (0 <= main_proc && main_proc < mpisize);
 
   /* Already declared here, because we might use them during communication */
-  t8_gloidx_t         num_trees;
-  int                 dim;
+  t8_gloidx_t         num_trees = 0;
+  int                 dim = 0;
 
   t8_cmesh_init (&cmesh);
   if (!partition || mpirank == main_proc) {
@@ -325,20 +321,20 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet > vtkGrid,
     t8_cmesh_register_geometry (cmesh, linear_geom);
   }
   if (partition) {
-    t8_gloidx_t         first_tree;
-    t8_gloidx_t         last_tree;
+    t8_gloidx_t         first_tree = -1;
+    t8_gloidx_t         last_tree = -1;
     if (mpirank == main_proc) {
       first_tree = 0;
       last_tree = num_trees - 1;
     }
     /* Communicate the dimension to all processes */
     sc_MPI_Bcast (&dim, 1, sc_MPI_INT, main_proc, comm);
-    t8_debugf ("[D] dim: %i\n", dim);
+    t8_cmesh_set_dimension (cmesh, dim);
     /* Communicate the number of trees to all processes. 
      * TODO: This probably crashes when a vtkGrid is distributed in many 
      * files. */
     sc_MPI_Bcast (&num_trees, 1, T8_MPI_GLOIDX, main_proc, comm);
-    t8_cmesh_set_dimension (cmesh, dim);
+
     /* Build the partition. */
     if (mpirank < main_proc) {
       first_tree = 0;
@@ -412,7 +408,7 @@ t8_vtk_reader (const char *filename, const int partition,
   T8_ASSERT (filename != NULL);
   vtk_read_success_t  main_proc_read_successful = read_failure;
 
-  vtkSmartPointer < vtkDataSet > vtkGrid;
+  vtkSmartPointer < vtkDataSet > vtkGrid = NULL;
   switch (vtk_file_type) {
   case VTK_UNSTRUCTURED_FILE:
     vtkGrid = vtkSmartPointer < vtkUnstructuredGrid >::New ();
@@ -476,7 +472,7 @@ t8_vtk_reader_cmesh (const char *filename, const int partition,
     return cmesh;
   }
   else {
-    t8_global_errorf ("Error translating file %s\n", filename);
+    t8_global_errorf ("Error translating file \n");
     return NULL;
   }
 #else
