@@ -156,9 +156,6 @@ test_with_cmesh (t8_cmesh_t cmesh)
         }
       }
 
-      t8_eclass_t         eclass = all_eclasses[this_itree];
-      t8_eclass_t         conn_neigh_eclass = all_eclasses[conn_dual_itree];
-
       EXPECT_EQ (conn_dual_itree,
                  cmesh_dual_itree) << "Neighboring trees do not match.";
 
@@ -180,9 +177,7 @@ TEST (t8_cmesh_set_join_by_vertices, test_set_join_hypercube_hybrid)
 {
   /* Some defaults. */
   sc_MPI_Comm         comm = sc_MPI_COMM_WORLD;
-  const int           do_bcast = 0;
   const int           do_partition = 0;
-  const int           periodic = 0;
 
   /* 
    * Tests with 2D and 3D example meshes from `t8code`.
