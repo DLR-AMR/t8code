@@ -130,13 +130,11 @@ test_with_cmesh (t8_cmesh_t cmesh)
             int                 match_count_per_coord = 0;
             for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
               const double        this_face_vert =
-                this_vertices[T8_I2
-                              (this_nface_verts, T8_ECLASS_MAX_DIM,
-                               this_ivert, icoord)];
+                this_vertices[T8_I2 (this_nface_verts, T8_ECLASS_MAX_DIM,
+                                     this_ivert, icoord)];
               const double        dual_face_vert =
-                dual_vertices[T8_I2
-                              (dual_nface_verts, T8_ECLASS_MAX_DIM,
-                               dual_ivert, icoord)];
+                dual_vertices[T8_I2 (dual_nface_verts, T8_ECLASS_MAX_DIM,
+                                     dual_ivert, icoord)];
 
               if (fabs (this_face_vert - dual_face_vert) <
                   10 * T8_PRECISION_EPS) {
