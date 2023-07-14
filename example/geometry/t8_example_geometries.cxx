@@ -128,6 +128,15 @@ public:
   {
     /* Do nothing */
   }
+
+  /**
+   * Get the type of this geometry.
+   * \return The type.
+   */
+  t8_geometry_type_t  t8_geom_get_type () const
+  {
+    return T8_GEOMETRY_TYPE_UNDEFINED;
+  }
 };
 
 /** This geometry maps the unit square [0,1]^2 to the moebius strip.
@@ -187,6 +196,15 @@ public:
     SC_ABORT_NOT_REACHED ();
   }
 
+  /**
+   * Get the type of this geometry.
+   * \return The type.
+   */
+  t8_geometry_type_t  t8_geom_get_type () const
+  {
+    return T8_GEOMETRY_TYPE_UNDEFINED;
+  }
+
   /* Load tree data is inherited from vertices geometry. */
 };
 
@@ -235,6 +253,15 @@ public:
                                               t8_gloidx_t gtreeid)
   {
     /* Do nothing */
+  }
+
+  /**
+   * Get the type of this geometry.
+   * \return The type.
+   */
+  t8_geometry_type_t  t8_geom_get_type () const
+  {
+    return T8_GEOMETRY_TYPE_UNDEFINED;
   }
 };
 
@@ -295,6 +322,15 @@ public:
                                                 double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
+  }
+
+  /**
+   * Get the type of this geometry.
+   * \return The type.
+   */
+  t8_geometry_type_t  t8_geom_get_type () const
+  {
+    return T8_GEOMETRY_TYPE_UNDEFINED;
   }
 
   /* Load tree data is inherited from vertices geometry. */
@@ -372,6 +408,15 @@ public:
     /* Do nothing */
   }
 
+  /**
+   * Get the type of this geometry.
+   * \return The type.
+   */
+  t8_geometry_type_t  t8_geom_get_type () const
+  {
+    return T8_GEOMETRY_TYPE_UNDEFINED;
+  }
+
 protected:
   const double       *ptime;    /* Time pointer to outside time variable */
 };
@@ -422,6 +467,15 @@ public:
                                               t8_gloidx_t gtreeid)
   {
     /* Do nothing */
+  }
+
+  /**
+   * Get the type of this geometry.
+   * \return The type.
+   */
+  t8_geometry_type_t  t8_geom_get_type () const
+  {
+    return T8_GEOMETRY_TYPE_UNDEFINED;
   }
 };
 

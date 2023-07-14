@@ -112,6 +112,12 @@ public:
     return name;
   }
 
+  /**
+   * Get the type of this geometry.
+   * \return The type.
+   */
+  virtual t8_geometry_type_t t8_geom_get_type () const = 0;
+
 protected:
 
   int                 dimension;
@@ -159,6 +165,12 @@ public:
    */
   virtual void        t8_geom_load_tree_data (t8_cmesh_t cmesh,
                                               t8_gloidx_t gtreeid);
+
+  /**
+   * Get the type of this geometry.
+   * \return The type.
+   */
+  virtual t8_geometry_type_t t8_geom_get_type () const = 0;
 
 protected:
   t8_gloidx_t         active_tree;      /*< The tree of which currently vertices are loaded. */

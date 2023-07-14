@@ -55,6 +55,15 @@ public:
   /* *INDENT-ON* */
 
   /**
+   * Get the type of this geometry.
+   * \return The type.
+   */
+  inline t8_geometry_type_t t8_geom_get_type () const
+  {
+    return T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED;
+  };
+
+  /**
    * Map a point in the reference space $$[0,1]^dimension$$ to $$\mathbb R^3$$
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
