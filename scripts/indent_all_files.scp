@@ -31,8 +31,14 @@
 #
 if [ `basename $PWD` != scripts ]
 then
-  echo ERROR: Must be executed from whitin the scripts/ subfolder.
-  exit 1
+  if [ -d scripts ]
+  then
+    # The directory stack is automatically reset on script exit.
+    pushd scripts/ > /dev/null
+  else
+    echo ERROR: scripts/ directory not found.
+    exit 1
+  fi
 fi
 
 # Find all files with the appropriate suffix.

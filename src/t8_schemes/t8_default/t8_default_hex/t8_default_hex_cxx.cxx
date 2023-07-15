@@ -156,7 +156,9 @@ t8_default_scheme_hex_c::t8_element_child (const t8_element_t *elem,
   r->y = childid & 0x02 ? (q->y | shift) : q->y;
   r->z = childid & 0x04 ? (q->z | shift) : q->z;
   r->level = q->level + 1;
-  T8_ASSERT (p8est_quadrant_is_parent (q, r));
+  if (q != r) {
+    T8_ASSERT (p8est_quadrant_is_parent (q, r));
+  }
 }
 
 void
@@ -666,7 +668,9 @@ t8_default_scheme_hex_c::t8_element_reference_coords (const t8_element_t
                                                       double *out_coords)
   const
 {
-  SC_ABORTF ("Not implemented\n");
+  T8_ASSERT (t8_element_is_valid (elem));
+  t8_dhex_compute_reference_coords ((const t8_dhex_t *) elem, ref_coords,
+                                    out_coords);
 }
 
 int

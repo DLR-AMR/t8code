@@ -29,19 +29,15 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh/t8_cmesh_testcases.h>
 
-#ifdef T8_ENABLE_LESS_TESTS
-#define T8_CMESH_TEST_NUM_COMMS 1
-#define T8_CMESH_BINARY 2
-#define T8_CMESH_DIM_RANGE 4
-#define T8_CMESH_MAX_TEST_DIMS 3
-#define T8_CMESH_MAX_NUM_OF_TREES 20
-#define T8_CMESH_MAX_NUM_OF_PRISMS 20
-#define T8_CMESH_MAX_NUM_XYZ_TREES 5
-#else
 #define T8_CMESH_TEST_NUM_COMMS 1
 #define T8_CMESH_BINARY 2
 #define T8_CMESH_DIM_RANGE 4    /* this is the dim range for hypercube hybrid and empty cmesh */
 #define T8_CMESH_MAX_TEST_DIMS 3
+#ifdef T8_ENABLE_LESS_TESTS
+#define T8_CMESH_MAX_NUM_OF_TREES 5
+#define T8_CMESH_MAX_NUM_OF_PRISMS 5
+#define T8_CMESH_MAX_NUM_XYZ_TREES 3
+#else
 #define T8_CMESH_MAX_NUM_OF_TREES 10
 #define T8_CMESH_MAX_NUM_OF_PRISMS 10
 #define T8_CMESH_MAX_NUM_XYZ_TREES 5
