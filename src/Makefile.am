@@ -144,7 +144,6 @@ src_libt8_la_CPPFLAGS = $(AM_CPPFLAGS) $(T8_CPPFLAGS)
 ## Read https://www.gnu.org/software/libtool/manual/libtool.html#Versioning
 src_libt8_la_LDFLAGS = -version-info 2:0:0
 src_libt8_la_LIBADD = @T8_P4EST_LIBADD@ @T8_SC_LIBADD@
-src_libt8_la_DEPENDENCIES = @T8_P4EST_EDEPS@ @T8_SC_EDEPS@
 EXTRA_src_libt8_la_DEPENDENCIES = @T8_P4EST_EDEPS@ @T8_SC_EDEPS@
 
 ## Code libsc & p4est installation paths into t8code executables
