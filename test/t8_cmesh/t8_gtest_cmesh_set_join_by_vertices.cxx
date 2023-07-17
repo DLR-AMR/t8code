@@ -179,6 +179,8 @@ TEST (t8_cmesh_set_join_by_vertices, test_set_join_hypercube_hybrid)
   sc_MPI_Comm         comm = sc_MPI_COMM_WORLD;
   const int           do_partition = 0;
 
+  /* TODO: Parametrize this test. There is a `t8_cmesh_test_create_cmesh`(es) iterator. */
+
   /* 
    * Tests with 2D and 3D example meshes from `t8code`.
    */
