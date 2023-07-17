@@ -63,7 +63,8 @@ typedef enum vtk_file_type
   VTK_FILE_ERROR = -1,          /* For Testing purpose. */
   VTK_UNSTRUCTURED_FILE = 0,
   VTK_POLYDATA_FILE = 1,
-  VTK_PARALLEL_FILE = 2,        /* All parallel vtk files. */
+  VTK_PARALLEL_UNSTRUCTURED_FILE = 2,   /* For parallel unstructured files. */
+  VTK_PARALLEL_POLYDATA_FILE = 3,
   VTK_NUM_TYPES
 } vtk_file_type_t;
 

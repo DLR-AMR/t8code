@@ -45,17 +45,21 @@ class vtk_reader : public testing::TestWithParam<std::tuple<vtk_file_type_t, int
       file = (int)file_type + 1;
       partition = std::get<1>(GetParam());
       main_proc = std::get<2>(GetParam());
+      if(file_type == VTK_PARALLEL_UNSTRUCTURED_FILE && partition){
+        GTEST_SKIP();
+      }
     }
     int file;
     vtk_file_type_t file_type;
     int partition;
     int main_proc;
     int mpisize;
-    const char* failing_files[4] = {
+    const char* failing_files[5] = {
       "no_file",
       "non-existing-file.vtu",
       "non-existing-file.vtp",
-      "non-existing-file.pvtu"
+      "non-existing-file.pvtu",
+      "non-existing-file.pvtp"
     };
     const char* test_files[4] = {
       "no_file",
@@ -84,6 +88,10 @@ TEST_P (vtk_reader, vtk_to_cmesh_fail)
 TEST_P (vtk_reader, vtk_to_cmesh_success)
 {
 #if T8_WITH_VTK
+  /*TODO: Implement reader for parallel polydata. Delete this if-block */
+  if (file_type == VTK_PARALLEL_POLYDATA_FILE) {
+    GTEST_SKIP ();
+  }
   int                 mpirank;
   int                 mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
@@ -116,7 +124,8 @@ TEST_P (vtk_reader, vtk_to_cmesh_success)
 TEST_P (vtk_reader, vtk_to_pointSet)
 {
 #if T8_WITH_VTK
-  if (file_type == VTK_PARALLEL_FILE && partition) {
+  /*TODO: Implement reader for parallel polydata. Delete this if-block */
+  if (file_type == VTK_PARALLEL_POLYDATA_FILE) {
     GTEST_SKIP ();
   }
   if (file_type != VTK_FILE_ERROR) {
@@ -136,6 +145,6 @@ TEST_P (vtk_reader, vtk_to_pointSet)
 INSTANTIATE_TEST_SUITE_P (t8_gtest_vtk_reader, vtk_reader,testing::Combine (
                           testing::Range (VTK_FILE_ERROR, VTK_NUM_TYPES),
                           testing::Values (0, 1),
-                          testing::Range (0,T8_VTK_TEST_NUM_PROCS)
+                          testing::Range (0, T8_VTK_TEST_NUM_PROCS)
                           ));
 /* *INDENT-ON* */

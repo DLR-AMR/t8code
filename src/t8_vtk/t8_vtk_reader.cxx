@@ -137,7 +137,7 @@ t8_file_to_vtkGrid (const char *filename,
     case VTK_POLYDATA_FILE:
       main_proc_read_successful = t8_read_poly (filename, vtkGrid);
       break;
-    case VTK_PARALLEL_FILE:
+    case VTK_PARALLEL_UNSTRUCTURED_FILE:
       if (!partition) {
         main_proc_read_successful = t8_read_unstructured (filename, vtkGrid);
       }
@@ -511,7 +511,7 @@ t8_vtk_reader (const char *filename, const int partition,
   case VTK_POLYDATA_FILE:
     vtkGrid = vtkSmartPointer < vtkPolyData >::New ();
     break;
-  case VTK_PARALLEL_FILE:
+  case VTK_PARALLEL_UNSTRUCTURED_FILE:
     vtkGrid = vtkSmartPointer < vtkUnstructuredGrid >::New ();
     break;
   default:
