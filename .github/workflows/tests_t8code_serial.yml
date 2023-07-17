@@ -57,6 +57,8 @@ jobs:
 # Setup and bootstrap
 #
     - uses: actions/checkout@v3
+      with: 
+        fetch-depth: 0
     - name: Update packages
       run: apt-get update && apt-get upgrade -y
       # This seems to be necessary because of the docker container
