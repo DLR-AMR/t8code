@@ -44,7 +44,7 @@ jobs:
 #
 # Setup and bootstrap
 #
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v3
     - name: Install zlib
       run: sudo apt-get install libz-dev
     - name: Install doxygen
