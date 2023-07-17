@@ -203,7 +203,7 @@ jobs:
       run: mkdir build_serial_release && cd build_serial_release && ../configure $CONFIG_SERIAL_RELEASE CFLAGS="$CFLAGS_var_release" CXXFLAGS="$CXXFLAGS_var_release"
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v3
       with:
         name: config_release_serial.log
         path: build_serial_release/config.log
@@ -215,7 +215,7 @@ jobs:
       run: cd build_serial_release && make check -j V=0 CFLAGS="$CFLAGS_var_release -Werror" CXXFLAGS="$CXXFLAGS_var_release -Werror"
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v3
       with:
         name: test-suite_release_serial.log
         path: build_serial_release/test-suite.log
@@ -226,7 +226,7 @@ jobs:
       run: mkdir build_serial_debug && cd build_serial_debug && ../configure $CONFIG_SERIAL_DEBUG CFLAGS="$CFLAGS_var_debug" CXXFLAGS="$CXXFLAGS_var_debug"
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v3
       with:
         name: config_debug_serial.log
         path: build_serial_debug/config.log
@@ -238,7 +238,7 @@ jobs:
       run: cd build_serial_debug && make check -j V=0 CFLAGS="$CFLAGS_var_debug -Werror" CXXFLAGS="$CXXFLAGS_var_debug -Werror"
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v3
       with:
         name: test-suite_debug_serial.log
         path: build_serial_debug/test-suite.log
