@@ -162,11 +162,13 @@ main (int argc, char **argv)
                          "The prefix of the output-file.");
   sc_options_add_int (opt, 'c', "num_cell_values", &num_keys, 0,
                       "Number of values per cell stored in the vtk-file.");
-  sc_options_add_int (opt, 't', "type_of_file", &vtk_file_type, -1,
-                      " Set the type of the data in the file.\n"
-                      "0 for vtkUnstructuredGrid \n" "1 for vtkPolyData");
   sc_options_add_bool (opt, 'p', "partition", &partition, 0,
-                       "If set, partition the cmesh uniformly.\n");
+                       "If set, partition the cmesh uniformly.");
+  sc_options_add_int (opt, 't', "type_of_file", &vtk_file_type, -1,
+                      "Set the type of the data in the file.\n"
+                      "\t\t\t\t\t0 for vtkUnstructuredGrid \n"
+                      "\t\t\t\t\t1 for vtkPolyData\n"
+                      "\t\t\t\t\t2 for pvtu. Currently not working with -p");
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
 
