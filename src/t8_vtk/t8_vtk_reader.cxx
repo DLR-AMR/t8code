@@ -345,7 +345,9 @@ t8_vtk_cmesh_partition (t8_cmesh_t cmesh, const int mpirank,
     t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim);
     t8_cmesh_register_geometry (cmesh, linear_geom);
   }
-  t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
+  const int           set_face_knowledge = 3;   /* Exoect face connection of local and ghost trees. */
+  t8_cmesh_set_partition_range (cmesh, set_face_knowledge, first_tree,
+                                last_tree);
 }
 
 /**
@@ -365,8 +367,8 @@ t8_vtk_distributed_partition (t8_cmesh_t cmesh, const int mpirank,
                               t8_gloidx_t num_trees, int dim,
                               sc_MPI_Comm comm)
 {
-  t8_gloidx_t         first_tree;
-  t8_gloidx_t         last_tree;
+  t8_gloidx_t         first_tree = 0;
+  t8_gloidx_t         last_tree = 1;
   int                 mpiret;
   /* Compute the dimension of the cmesh. Is necessary, because procs can be empty. */
   int                 dim_buf;
@@ -393,7 +395,9 @@ t8_vtk_distributed_partition (t8_cmesh_t cmesh, const int mpirank,
   else {
     last_tree = first_tree + num_trees - 1;
   }
-  t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
+  const int           set_face_knowledge = 3;   /* Exoect face connection of local and ghost trees. */
+  t8_cmesh_set_partition_range (cmesh, set_face_knowledge, first_tree,
+                                last_tree);
   t8_shmem_array_destroy (&offsets);
   return first_tree;
 }
