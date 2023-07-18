@@ -30,6 +30,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <vtkPolyDataReader.h>
 #include <vtkSTLReader.h>
 #include <vtkXMLPolyDataReader.h>
+#include <vtkXMLPPolyDataReader.h>
 #include <vtkTriangleFilter.h>
 #include <vtkSmartPointer.h>
 
@@ -105,6 +106,18 @@ t8_read_poly_ext (const char *filename, vtkSmartPointer < vtkPolyData > grid)
     grid->ShallowCopy (vtkDataSet::SafeDownCast (reader->GetOutput ()));
     return read_failure;
   }
+  else if (strcmp (extension, "pvtp") == 0) {
+    vtkSmartPointer < vtkXMLPPolyDataReader > reader =
+      vtkSmartPointer < vtkXMLPPolyDataReader >::New ();
+    if (!reader->CanReadFile (filename)) {
+      t8_errorf ("Unable to read file.\n");
+      return read_failure;
+    }
+    reader->SetFileName (filename);
+    reader->Update ();
+    grid->ShallowCopy (vtkDataSet::SafeDownCast (reader->GetOutput ()));
+    return read_success;
+  }
   else {
     /* Return NULL if the reader is not used correctly. */
     t8_global_errorf ("Please use .ply, .vtp, .obj, .stl, .vtk or .g file\n");
@@ -128,6 +141,7 @@ t8_read_poly (const char *filename, vtkDataSet * grid)
     t8_errorf ("Could not read file.\n");
     return read_successfull;
   }
+  t8_debugf ("[D] read %i cells\n", grid->GetNumberOfCells ());
   tri_filter->SetInputData (poly_data);
   /* PolyVertex to vertex */
   tri_filter->PassVertsOn ();

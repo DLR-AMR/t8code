@@ -38,6 +38,8 @@ class vtk_reader : public testing::TestWithParam<std::tuple<vtk_file_type_t, int
     void SetUp() override{
       int mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
       SC_CHECK_MPI (mpiret);
+      mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
+      SC_CHECK_MPI (mpiret);
       if (mpisize > T8_VTK_TEST_NUM_PROCS) {
         GTEST_SKIP ();
       } 
@@ -45,15 +47,16 @@ class vtk_reader : public testing::TestWithParam<std::tuple<vtk_file_type_t, int
       file = (int)file_type + 1;
       partition = std::get<1>(GetParam());
       main_proc = std::get<2>(GetParam());
-      if(file_type == VTK_PARALLEL_UNSTRUCTURED_FILE && partition){
-        GTEST_SKIP();
-      }
+      distributed = file_type >= VTK_PARALLEL_UNSTRUCTURED_FILE && partition;
+      t8_debugf("[D] distributed: %i file_type: %i, partition: %i\n", distributed, file_type, partition);
     }
     int file;
     vtk_file_type_t file_type;
     int partition;
+    int distributed; 
     int main_proc;
     int mpisize;
+    int mpirank;
     const char* failing_files[5] = {
       "no_file",
       "non-existing-file.vtu",
@@ -66,10 +69,10 @@ class vtk_reader : public testing::TestWithParam<std::tuple<vtk_file_type_t, int
       "test/testfiles/test_vtk_tri.vtu",
       "test/testfiles/test_vtk_cube.vtp",
       "test/testfiles/test_parallel_file.pvtu",
-      "test/testfilest/test_polydata.pvtp"
+      "test/testfiles/test_polydata.pvtp"
     };
-    const int num_points[5] = {0, 121, 24, 6144, 0};
-    const int num_trees[5] = {0, 200, 12, 1024, 0};
+    const int num_points[5] = {0, 121, 24, 6144, 900};
+    const int num_trees[5] = {0, 200, 12, 1024, 1680};
 };
 /* *INDENT-ON* */
 
@@ -98,16 +101,7 @@ TEST_P (vtk_reader, vtk_to_cmesh_success)
                          file_type);
   if (file_type != VTK_FILE_ERROR) {
     EXPECT_FALSE (cmesh == NULL);
-    if (!partition || main_proc == mpirank) {
-      if (file_type == VTK_PARALLEL_UNSTRUCTURED_FILE && partition) {
-        t8_gloidx_t         local_num_trees =
-          t8_cmesh_get_num_local_trees (cmesh);
-        EXPECT_EQ (num_trees[file] / mpisize, local_num_trees);
-      }
-      else {
-        EXPECT_EQ (num_trees[file], t8_cmesh_get_num_local_trees (cmesh));
-      }
-    }
+    EXPECT_EQ (num_trees[file], t8_cmesh_get_num_trees (cmesh));
     t8_cmesh_destroy (&cmesh);
   }
   else {
@@ -121,10 +115,6 @@ TEST_P (vtk_reader, vtk_to_cmesh_success)
 TEST_P (vtk_reader, vtk_to_pointSet)
 {
 #if T8_WITH_VTK
-  /*TODO: Implement reader for parallel polydata. Delete this if-block */
-  if (file_type == VTK_PARALLEL_POLYDATA_FILE) {
-    GTEST_SKIP ();
-  }
   if (file_type != VTK_FILE_ERROR) {
     vtkSmartPointer < vtkPointSet > points =
       t8_vtk_reader_pointSet (test_files[file], 0, 0,

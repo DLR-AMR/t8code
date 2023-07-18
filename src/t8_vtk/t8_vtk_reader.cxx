@@ -37,6 +37,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <vtkUnstructuredGrid.h>
 #include <vtkUnstructuredGridReader.h>
 #include <vtkXMLUnstructuredGridReader.h>
+#include <vtkXMLPUnstructuredGridReader.h>
+#include <vtkXMLPPolyDataReader.h>
 #include <vtkPolyData.h>
 #include <vtkBYUReader.h>
 #include <vtkOBJReader.h>
@@ -129,7 +131,7 @@ t8_file_to_vtkGrid (const char *filename,
   T8_ASSERT (0 <= main_proc && main_proc < mpisize);
   /* Read the file and set the pointer to the vtkGrid */
   if (!partition || mpirank == main_proc
-      || vtk_file_type == VTK_PARALLEL_UNSTRUCTURED_FILE) {
+      || vtk_file_type >= VTK_PARALLEL_UNSTRUCTURED_FILE) {
     switch (vtk_file_type) {
     case VTK_UNSTRUCTURED_FILE:
       main_proc_read_successful = t8_read_unstructured (filename, vtkGrid);
@@ -147,8 +149,21 @@ t8_file_to_vtkGrid (const char *filename,
         break;
       }
       break;
+    case VTK_PARALLEL_POLYDATA_FILE:
+      if (!partition) {
+        t8_debugf ("[D] read poly\n");
+        main_proc_read_successful = t8_read_poly (filename, vtkGrid);
+      }
+      else {
+        t8_debugf ("[D] read poly_distributed\n");
+        main_proc_read_successful =
+          t8_read_parallel (filename, vtkGrid, comm);
+        break;
+      }
+      break;
     default:
       vtkGrid = NULL;
+      t8_debugf ("[D] filetype: %i\n", vtk_file_type);
       t8_errorf ("Filetype not supported.\n");
       break;
     }
@@ -514,6 +529,9 @@ t8_vtk_reader (const char *filename, const int partition,
   case VTK_PARALLEL_UNSTRUCTURED_FILE:
     vtkGrid = vtkSmartPointer < vtkUnstructuredGrid >::New ();
     break;
+  case VTK_PARALLEL_POLYDATA_FILE:
+    vtkGrid = vtkSmartPointer < vtkPolyData >::New ();
+    break;
   default:
     t8_errorf ("Filetype is not supported.\n");
     break;
@@ -565,7 +583,7 @@ t8_vtk_reader_cmesh (const char *filename, const int partition,
     t8_vtk_reader (filename, partition, main_proc, comm, vtk_file_type);
   if (vtkGrid != NULL) {
     const int           distributed_grid =
-      (vtk_file_type == VTK_PARALLEL_UNSTRUCTURED_FILE) && partition;
+      (vtk_file_type >= VTK_PARALLEL_UNSTRUCTURED_FILE) && partition;
     t8_cmesh_t          cmesh =
       t8_vtkGrid_to_cmesh (vtkGrid, partition, main_proc, distributed_grid,
                            comm);
