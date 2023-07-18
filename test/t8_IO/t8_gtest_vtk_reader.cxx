@@ -102,7 +102,7 @@ TEST_P (vtk_reader, vtk_to_cmesh_success)
   if (file_type != VTK_FILE_ERROR) {
     EXPECT_FALSE (cmesh == NULL);
     if (!partition || main_proc == mpirank) {
-      if (file_type == VTK_PARALLEL_FILE && partition) {
+      if (file_type == VTK_PARALLEL_UNSTRUCTURED_FILE && partition) {
         t8_gloidx_t         local_num_trees =
           t8_cmesh_get_num_local_trees (cmesh);
         EXPECT_EQ (num_trees[file] / mpisize, local_num_trees);
