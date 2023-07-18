@@ -320,8 +320,8 @@ t8_vtk_cmesh_partition (t8_cmesh_t cmesh, const int mpirank,
                         const int main_proc, t8_gloidx_t num_trees, int dim,
                         sc_MPI_Comm comm)
 {
-  t8_gloidx_t         first_tree;
-  t8_gloidx_t         last_tree;
+  t8_gloidx_t         first_tree = 0;
+  t8_gloidx_t         last_tree = -1;
   if (mpirank == main_proc) {
     first_tree = 0;
     last_tree = num_trees - 1;
@@ -336,8 +336,6 @@ t8_vtk_cmesh_partition (t8_cmesh_t cmesh, const int mpirank,
 
   /* Build the partition. */
   if (mpirank < main_proc) {
-    first_tree = 0;
-    last_tree = -1;
     t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim);
     t8_cmesh_register_geometry (cmesh, linear_geom);
   }
