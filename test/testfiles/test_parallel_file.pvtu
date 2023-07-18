@@ -1,0 +1,15 @@
+<VTKFile type="PUnstructuredGrid" version="0.1" byte_order="LittleEndian" header_type="UInt32" compressor="vtkZLibDataCompressor">
+  <PUnstructuredGrid GhostLevel="0">
+    <PCellData>
+      <PDataArray type="Int64" Name="treeid"/>
+      <PDataArray type="Int64" Name="mpirank"/>
+      <PDataArray type="Int64" Name="level"/>
+      <PDataArray type="Int64" Name="element_id"/>
+    </PCellData>
+    <PPoints>
+      <PDataArray type="Float32" Name="Points" NumberOfComponents="3"/>
+    </PPoints>
+    <Piece Source="test_parallel_file_0.vtu"/>
+    <Piece Source="test_parallel_file_1.vtu"/>
+  </PUnstructuredGrid>
+</VTKFile>

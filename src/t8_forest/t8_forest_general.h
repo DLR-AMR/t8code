@@ -817,7 +817,8 @@ t8_forest_element_point_outside_quick_estimate (t8_forest_t forest,
  */
 t8_forest_t         t8_forest_new_uniform (t8_cmesh_t cmesh,
                                            t8_scheme_cxx_t *scheme,
-                                           int level, int do_face_ghost,
+                                           const int level,
+                                           const int do_face_ghost,
                                            sc_MPI_Comm comm);
 
 /** Build a adapted forest from another forest.
