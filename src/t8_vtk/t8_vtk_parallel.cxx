@@ -103,12 +103,12 @@ t8_read_parallel (const char *filename, vtkSmartPointer < vtkDataSet > grid,
     vtkNew < vtkAppendFilter > append;
     for (int ipiece = first_piece; ipiece < last_piece; ipiece++) {
       reader->UpdatePiece (ipiece, total_num_pieces, 0);
-      append->AddInputData (reader->GetOutput ());
+      append->AddInputData (reader->GetOutputAsDataSet ());
     }
     /* Merge all read grids together */
     append->Update ();
     append->MergePointsOn ();
-    grid->ShallowCopy (append->GetOutputAsDataSet ());
+    grid->ShallowCopy (append->GetOutput ());
   }
   else {
     /* Initialize the grid, but don't construct any cells. 
