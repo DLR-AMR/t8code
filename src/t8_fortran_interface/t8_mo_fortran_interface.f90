@@ -77,6 +77,93 @@ module t8_mo_fortran_interface
       end Interface
 
       Interface
+            subroutine t8_fortran_cmesh_init_f (cmesh) &
+                                    bind (c, name = 't8_cmesh_init')
+                  use, intrinsic :: ISO_C_BINDING, only: c_ptr
+                  IMPLICIT NONE
+                  type (c_ptr) :: cmesh
+            end subroutine t8_fortran_cmesh_init_f
+      end Interface
+
+      Interface
+            subroutine t8_fortran_geometry_linear_new_f (dimension) &
+                                    bind (c, name = 't8_geometry_linear_new')
+                  use, intrinsic :: ISO_C_BINDING, only: c_int
+                  IMPLICIT NONE
+                  integer (c_int), value :: dimension
+            end subroutine t8_fortran_geometry_linear_new_f
+      end Interface
+
+      Interface
+            type (c_ptr) function t8_fortran_cmesh_register_geometry_f (cmesh, geometry) &
+                                    bind (c, name = 't8_cmesh_register_geometry')
+                  use, intrinsic :: ISO_C_BINDING, only: c_ptr
+                  IMPLICIT NONE
+                  type (c_ptr), value :: cmesh
+                  type (c_ptr) :: geometry
+            end function t8_fortran_cmesh_register_geometry_f
+      end Interface
+
+      Interface
+            subroutine t8_fortran_cmesh_set_tree_class_f (cmesh, gtree_id, tree_class) &
+                                    bind (c, name = 't8_cmesh_set_tree_class')
+                  use, intrinsic :: ISO_C_BINDING, only: c_ptr
+                  IMPLICIT NONE
+                  type (c_ptr), value :: cmesh
+                  type (c_ptr), value :: gtree_id
+                  type (c_ptr), value :: tree_class
+            end subroutine t8_fortran_cmesh_set_tree_class_f
+      end Interface
+
+      Interface
+            subroutine t8_fortran_cmesh_set_tree_vertices_f (cmesh, ltree_id, vertices, num_vertices) &
+                                    bind (c, name = 't8_cmesh_set_tree_vertices')
+                  use, intrinsic :: ISO_C_BINDING, only: c_ptr, c_int, c_double
+                  IMPLICIT NONE
+                  type (c_ptr), value :: cmesh
+                  type (c_ptr), value :: ltree_id
+                  real (c_double) :: vertices
+                  integer (c_int), value :: num_vertices
+            end subroutine t8_fortran_cmesh_set_tree_vertices_f
+      end Interface
+
+      Interface
+            subroutine t8_fortran_cmesh_set_join_f (cmesh, gtree1, gtree2, face1, face2, orientation) &
+                                    bind (c, name = 't8_cmesh_set_join')
+                  use, intrinsic :: ISO_C_BINDING, only: c_ptr, c_int
+                  IMPLICIT NONE
+                  type (c_ptr), value :: cmesh
+                  type (c_ptr), value :: gtree1
+                  type (c_ptr), value :: gtree2
+                  integer (c_int), value :: face1
+                  integer (c_int), value :: face2
+                  integer (c_int), value :: orientation
+            end subroutine t8_fortran_cmesh_set_join_f
+      end Interface
+
+      Interface
+            subroutine t8_fortran_cmesh_set_tree_vertices_f (cmesh, ltree_id, vertices, num_vertices) &
+                                    bind (c, name = 't8_cmesh_set_tree_vertices')
+                  use, intrinsic :: ISO_C_BINDING, only: c_ptr, c_double, c_int
+                  IMPLICIT NONE
+                  type (c_ptr), value :: cmesh
+                  type (c_ptr), value :: ltree_id
+                  real (c_double) :: vertices
+                  integer (c_int), value :: num_vertices
+            end subroutine t8_fortran_cmesh_set_tree_vertices_f
+      end Interface
+
+      Interface
+            subroutine t8_fortran_cmesh_commit_f (cmesh, Ccom) &
+                                    bind (c, name = 't8_cmesh_commit')
+                  use, intrinsic :: ISO_C_BINDING, only: c_ptr
+                  IMPLICIT NONE
+                  type (c_ptr), value :: cmesh
+                  type (c_ptr), value :: Ccom
+            end subroutine t8_fortran_cmesh_commit_f
+      end Interface
+
+      Interface
             type (c_ptr) function t8_forest_new_uniform_default_f (cmesh, level, do_face_ghost, Ccomm) &
                                     bind (c, name = 't8_forest_new_uniform_default')
                   use, intrinsic :: ISO_C_BINDING, only: c_ptr, c_int
@@ -110,6 +197,17 @@ module t8_mo_fortran_interface
       end Interface
 
       Interface
+            integer (c_int) function t8_forest_iterate_replace_f (forest_new, forest_old, replace_fn) &
+                                    bind (c, name = 't8_forest_iterate_replace')
+                  use, intrinsic :: ISO_C_BINDING, only: c_ptr
+                  IMPLICIT NONE
+                  type (c_ptr), value :: forest_new
+                  type (c_ptr), value :: forest_old
+                  type (c_ptr), value :: replace_fn
+            end function t8_forest_iterate_replace_f
+      end Interface
+
+      Interface
             subroutine t8_global_productionf_noargs_f (string) &
                                     bind (c, name = 't8_global_productionf_noargs')
                   use, intrinsic :: ISO_C_BINDING, only: c_char
@@ -117,7 +215,7 @@ module t8_mo_fortran_interface
                   character (c_char) :: string
             end subroutine t8_global_productionf_noargs_f
       end Interface
-      
+
       Interface
             subroutine t8_fortran_finalize_f () &
                                     bind (c, name = 't8_fortran_finalize')
