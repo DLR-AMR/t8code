@@ -312,7 +312,7 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > vtkGrid,
  * \param[in] mpirank     The mpirank of this proc.
  * \param[in] main_proc   The rank of the main process.
  * \param[in] num_trees   The number of trees.
- * \param[in] dim         The dimension of the cmesh.
+ * \param[in] dim         The dimension of the cmesh. 0 if unknown on this process. 
  * \param[in] comm        The communicator to use. 
  */
 static void
@@ -326,12 +326,12 @@ t8_vtk_cmesh_partition (t8_cmesh_t cmesh, const int mpirank,
     first_tree = 0;
     last_tree = num_trees - 1;
   }
-  /* Communicate the dimension to all processes */
+  /* Communicate the dimension to all processes. We need to know the correct dimension
+   * on all processes, because we can have processes with empty cmeshes, that need to 
+   * know the dimension. */
   sc_MPI_Bcast (&dim, 1, sc_MPI_INT, main_proc, comm);
   t8_cmesh_set_dimension (cmesh, dim);
-  /* Communicate the number of trees to all processes. 
-   * TODO: This probably crashes when a vtkGrid is distributed in many 
-   * files. */
+  /* Communicate the number of trees to all processes. */
   sc_MPI_Bcast (&num_trees, 1, T8_MPI_GLOIDX, main_proc, comm);
 
   /* Build the partition. */
