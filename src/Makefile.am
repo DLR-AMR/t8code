@@ -143,6 +143,17 @@ libt8_compiled_sources = \
   src/t8_vtk/t8_vtk_reader.cxx
 
 
+# If the the Fortran interfaces should be built
+if T8_ENABLE_FORTRAN
+t8_fortran_module_sources = src/t8_fortran_interface/t8_mo_fortran_interface.f90 \
+src/t8_messy/t8_mo_messy_coupler_interface.f90
+
+# Add the Fortran sources to the lib 
+libt8_compiled_sources += $(t8_fortran_module_sources)
+# Save the module sources in a different variable for later use
+MODSOURCES += $(t8_fortran_module_sources)
+endif
+
 # this variable is used for headers that are not publicly installed
 T8_CPPFLAGS =
 
@@ -156,6 +167,14 @@ src_libt8_la_CPPFLAGS = $(AM_CPPFLAGS) $(T8_CPPFLAGS)
 ## Read https://www.gnu.org/software/libtool/manual/libtool.html#Versioning
 src_libt8_la_LDFLAGS = -release $(VERSION) -version-info 2:0:0
 src_libt8_la_LIBADD = @T8_P4EST_LDADD@ @T8_SC_LDADD@
+
+if T8_ENABLE_FORTRAN
+src_libt8_la_FCFLAGS = $(AM_FCFLAGS)
+src_libt8_la_FFLAGS = $(FFLAGS)
+endif
+
+#LDADD += @top_builddir@/src/libt8.la \
+#        @T8_P4EST_LDADD@ @T8_SC_LDADD@
 LDADD += src/libt8.la @T8_P4EST_LDADD@ @T8_SC_LDADD@
 EXTRA_src_libt8_la_DEPENDENCIES = @T8_P4EST_LDADD@ @T8_SC_LDADD@
 

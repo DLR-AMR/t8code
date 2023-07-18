@@ -25,11 +25,12 @@
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx>
 #include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_io.h>
 #include <t8_cmesh_vtk_writer.h>
 #ifdef T8_ENABLE_DEBUG
 /* In debugging mode, we check whether we use the correct scheme.
  * To do so, we have to include the quad default scheme directly. */
-#include <t8_schemes/t8_default/t8_default_quad_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_quad/t8_default_quad_cxx.hxx>
 #endif
 #include <p4est_bits.h>
 #include "t8_latlon_refine.h"
@@ -49,7 +50,7 @@
  * but this would not be as efficient.
  */
 int
-t8_latlon_refine_grid_cuts_elements (const t8_element_t * element,
+t8_latlon_refine_grid_cuts_elements (const t8_element_t *element,
                                      t8_default_scheme_common_c * ts,
                                      const t8_latlon_adapt_data_t *
                                      adapt_data)
@@ -92,15 +93,14 @@ t8_latlon_refine_grid_cuts_elements (const t8_element_t * element,
  * In refine mode, we refine all elements that cut a given x times y grid.
  * In coarsen mode, we coarsen all elements that do not cut the grid.
  */
-int         
+int
 t8_latlon_adapt_callback (t8_forest_t forest,
                           t8_forest_t forest_from,
                           t8_locidx_t which_tree,
                           t8_locidx_t lelement_id,
                           t8_eclass_scheme_c *ts,
                           const int is_family,
-                          const int num_elements,
-                          t8_element_t *elements[])
+                          const int num_elements, t8_element_t *elements[])
 {
   /* Get the user data pointer of forest, it points to a t8_latlon_adapt_data_t */
   t8_latlon_adapt_data_t *adapt_data =

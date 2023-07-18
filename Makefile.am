@@ -29,6 +29,8 @@ noinst_HEADERS =
 noinst_PROGRAMS =
 t8sysconf_DATA =
 dist_t8data_DATA =
+MODSOURCES = 
+AM_FCFLAGS = 
 
 # use this if you want to link in t8code without autotools
 t8sysconfdir = $(sysconfdir)/t8code
@@ -75,6 +77,9 @@ include test/Makefile.am
 include example/Makefile.am
 include tutorials/Makefile.am
 include benchmarks/Makefile.am
+
+# Include the Fortran specific variables and rules
+include t8_fortran_specific.mk
 
 # revision control and ChangeLog
 ChangeLog:

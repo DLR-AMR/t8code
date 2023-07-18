@@ -2,6 +2,12 @@
 # Non-recursive Makefile.am in example/EarthSystemModel
 # Included from toplevel directory
 
+# Build Fortran programs if the option --enable-fortran is supplied
+if T8_ENABLE_FORTRAN
+bin_PROGRAMS += example/EarthSystemModel/t8_messy_test
+example_EarthSystemModel_t8_messy_test_SOURCES = example/EarthSystemModel/t8_messy_test.f90
+endif
+
 # bin_PROGRAMS += \
 #	example/EarthSystemModel/t8_read_reanalysis_data \
 #	example/EarthSystemModel/t8_latlon_refine \
