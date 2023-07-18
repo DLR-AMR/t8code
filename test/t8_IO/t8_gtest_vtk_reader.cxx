@@ -61,14 +61,15 @@ class vtk_reader : public testing::TestWithParam<std::tuple<vtk_file_type_t, int
       "non-existing-file.pvtu",
       "non-existing-file.pvtp"
     };
-    const char* test_files[4] = {
+    const char* test_files[5] = {
       "no_file",
       "test/testfiles/test_vtk_tri.vtu",
       "test/testfiles/test_vtk_cube.vtp",
-      "test/testfiles/test_parallel_file.pvtu"
+      "test/testfiles/test_parallel_file.pvtu",
+      "test/testfilest/test_polydata.pvtp"
     };
-    const int num_points[4] = {0, 121, 24, 6144};
-    const int num_trees[4] = {0, 200, 12, 1024};
+    const int num_points[5] = {0, 121, 24, 6144, 0};
+    const int num_trees[5] = {0, 200, 12, 1024, 0};
 };
 /* *INDENT-ON* */
 
