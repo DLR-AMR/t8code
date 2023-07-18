@@ -17,13 +17,13 @@ Program MessyTest
       real (c_double) missing_value
       real (c_double), dimension (0:4, 0:4, 1, 1) :: data
       integer, dimension(4), target :: shape
+
+      call MPI_Init()
       
       ! Initialize MPI
       ! call MPI_Init (ierr)
       Print *, "Initialized MPI"
       ! call MPI_Comm_rank (MPI_COMM_WORLD, rank, ierr)
-
-      call MPI_Init()
 
       print *, "Rank:", rank
       ! Build C Communicator associated with MPI_COMM_WORLD
