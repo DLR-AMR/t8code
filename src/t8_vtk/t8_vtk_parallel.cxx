@@ -50,8 +50,9 @@ t8_read_parallel (const char *filename, vtkSmartPointer < vtkDataSet > grid,
   reader->SetFileName (filename);
   reader->UpdateInformation ();
 
-  /* Get mpi size and rank */
+  /*  Get the number of files to read. */
   const int           total_num_pieces = reader->GetNumberOfPieces ();
+  /* Get mpi size and rank */
   int                 mpiret;
   int                 mpisize;
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
