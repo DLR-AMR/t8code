@@ -88,10 +88,6 @@ TEST_P (vtk_reader, vtk_to_cmesh_fail)
 TEST_P (vtk_reader, vtk_to_cmesh_success)
 {
 #if T8_WITH_VTK
-  /*TODO: Implement reader for parallel polydata. Delete this if-block */
-  if (file_type == VTK_PARALLEL_POLYDATA_FILE) {
-    GTEST_SKIP ();
-  }
   int                 mpirank;
   int                 mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);

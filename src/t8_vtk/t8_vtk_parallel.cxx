@@ -24,7 +24,9 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #if T8_WITH_VTK
 #include <vtkUnstructuredGrid.h>
+#include <vtkXMLPDataReader.h>
 #include <vtkXMLPUnstructuredGridReader.h>
+#include <vtkXMLPPolyDataReader.h>
 #include <vtkAppendFilter.h>
 
 vtk_read_success_t
@@ -39,9 +41,22 @@ t8_read_parallel (const char *filename, vtkSmartPointer < vtkDataSet > grid,
     return read_failure;
   }
   fclose (first_check);
+
+  char                tmp[BUFSIZ], *extension;
+  strcpy (tmp, filename);
+  extension = strrchr (tmp, '.') + 1;
+  T8_ASSERT (strcmp (extension, ""));
+
   /* Setup parallel reader. */
-  vtkSmartPointer < vtkXMLPUnstructuredGridReader > reader =
-    vtkSmartPointer < vtkXMLPUnstructuredGridReader >::New ();
+  vtkSmartPointer < vtkXMLPDataReader > reader = NULL;
+
+  if (strcmp (extension, "pvtu") == 0) {
+    reader = vtkSmartPointer < vtkXMLPUnstructuredGridReader >::New ();
+  }
+  else if (strcmp (extension, "pvtu") == 0) {
+    reader = vtkSmartPointer < vtkXMLPPolyDataReader >::New ();
+  }
+
   if (!reader->CanReadFile (filename)) {
     t8_errorf ("Unable to read file.\n");
     return read_failure;
@@ -93,7 +108,7 @@ t8_read_parallel (const char *filename, vtkSmartPointer < vtkDataSet > grid,
     /* Merge all read grids together */
     append->Update ();
     append->MergePointsOn ();
-    grid->ShallowCopy (append->GetOutput ());
+    grid->ShallowCopy (append->GetOutputAsDataSet ());
   }
   else {
     /* Initialize the grid, but don't construct any cells. 
