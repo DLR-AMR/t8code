@@ -25,13 +25,10 @@
  * Collection of cmesh helper routines.
  */
 
-#include <t8_data/t8_shmem.h>
+#include <t8.h>
 #include <t8_cmesh.h>
-#include "t8_cmesh_types.h"
-#include "t8_cmesh_partition.h"
-#include "t8_cmesh_trees.h"
-#include "t8_cmesh_copy.h"
 #include <t8_eclass.h>
+#include <t8_cmesh/t8_cmesh_helpers.h>
 
 void
 t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees,
