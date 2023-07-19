@@ -151,19 +151,16 @@ t8_file_to_vtkGrid (const char *filename,
       break;
     case VTK_PARALLEL_POLYDATA_FILE:
       if (!partition) {
-        t8_debugf ("[D] read poly\n");
         main_proc_read_successful = t8_read_poly (filename, vtkGrid);
       }
       else {
-        t8_debugf ("[D] read poly_distributed\n");
         main_proc_read_successful =
-          t8_read_parallel (filename, vtkGrid, comm);
+          t8_read_parallel_poly (filename, vtkGrid, comm);
         break;
       }
       break;
     default:
       vtkGrid = NULL;
-      t8_debugf ("[D] filetype: %i\n", vtk_file_type);
       t8_errorf ("Filetype not supported.\n");
       break;
     }

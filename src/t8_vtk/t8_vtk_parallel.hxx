@@ -32,9 +32,9 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /**
  * Given a filename to a parallel vtk file (for example .pvtu) and its data files, 
- * read a piece of the data files (like .vtu, .vtp, ...).
+ * read a piece of the data files (like .vtu, ...).
  * 
- * \param[in] filename  The name of a parallel vtk file (.pvtu for example)
+ * \param[in] filename  The name of a parallel vtk file to a distributed vtkUnstructuredGrid
  * \param[in] grid On input a vtkSmartPointer, that will hold the grid described
  *                 by the pieces read on this proc. 
  * \returns        non-zero on success, zero if the reading failed. 
@@ -42,6 +42,19 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 vtk_read_success_t  t8_read_parallel (const char *filename,
                                       vtkSmartPointer < vtkDataSet > grid,
                                       sc_MPI_Comm comm);
+
+/**
+ * Given a filename to a parallel vtk file (for example .pvtp) and its data files, 
+ * read a piece of the data files (like  .vtp, ...).
+ * 
+ * \param[in] filename  The name of a parallel vtk file to a distributed vtkPolyData
+ * \param[in] grid On input a vtkSmartPointer, that will hold the grid described
+ *                 by the pieces read on this proc. 
+ * \returns        non-zero on success, zero if the reading failed. 
+ */
+vtk_read_success_t  t8_read_parallel_poly (const char *filename,
+                                           vtkSmartPointer < vtkDataSet >
+                                           grid, sc_MPI_Comm comm);
 
 #endif /* T8_WITH_VTK */
 #endif /* T8_VTK_PARALLEL_HXX */
