@@ -30,13 +30,22 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <vtkAppendFilter.h>
 #include <vtkAppendPolyData.h>
 
+/**
+ * Merge the vtkUnstructuredGrids comming from a vtkXMLPReader into a single
+ * vtkUnstructuredGrid. 
+ * 
+ * \param[in] reader        An vtkXMLPReader
+ * \param[in, out] grid     On input an empty DataSet, on output the DataSet representing the merged pieces assigned to the reader
+ * \param[in] first_piece   The index of the first piece to read by \a reader
+ * \param[in] last_piece    The (not included) index of the last piece to read by \a reader
+ */
 static void
 merge_unstructured (vtkSmartPointer < vtkXMLPDataReader > reader,
                     vtkSmartPointer < vtkDataSet > grid,
-                    const int first_piece, const int last_piece,
-                    const int total_num_pieces)
+                    const int first_piece, const int last_piece)
 {
   vtkNew < vtkAppendFilter > append;
+  const int           total_num_pieces = last_piece - first_piece + 1;
   for (int ipiece = first_piece; ipiece < last_piece; ipiece++) {
     reader->UpdatePiece (ipiece, total_num_pieces, 0);
     append->AddInputData (reader->GetOutputAsDataSet ());
@@ -47,12 +56,22 @@ merge_unstructured (vtkSmartPointer < vtkXMLPDataReader > reader,
   grid->ShallowCopy (append->GetOutput ());
 }
 
+/**
+ * Merge the vtkPolyData comming from a vtkXMLPPolyDataReader into a single
+ * vtkDataSet. 
+ * 
+ * \param[in] reader        An vtkXMLPPolyDataReader
+ * \param[in, out] grid     On input an empty DataSet, on output the DataSet representing the merged pieces assigned to the reader
+ * \param[in] first_piece   The index of the first piece to read by \a reader
+ * \param[in] last_piece    The (not included) index of the last piece to read by \a reader
+ */
 static void
 merge_polydata (vtkSmartPointer < vtkXMLPPolyDataReader > reader,
                 vtkSmartPointer < vtkDataSet > grid, const int first_piece,
-                const int last_piece, const int total_num_pieces)
+                const int last_piece)
 {
   vtkNew < vtkAppendPolyData > append;
+  const int           total_num_pieces = last_piece - first_piece + 1;
   for (int ipiece = first_piece; ipiece < last_piece; ipiece++) {
     reader->UpdatePiece (ipiece, total_num_pieces, 0);
     append->AddInputData (reader->GetOutput ());
@@ -61,11 +80,20 @@ merge_polydata (vtkSmartPointer < vtkXMLPPolyDataReader > reader,
   grid->ShallowCopy (append->GetOutput ());
 }
 
+/**
+ * Setup the reader on each process
+ * 
+ * \param[in] filename          The filename of the parallel file to read
+ * \param[in, out] reader       On input a reader, on output a reader linked to \a filename
+ * \param[in, out] first_piece  Arbitrary on input, the index of the first piece to read on output
+ * \param[in, out] last_piece   Arbitrary on input, the (non-included) index of the last piece to read on output
+ * \param[in] comm              The Communicator to use. 
+ * \return vtk_read_success_t 
+ */
 static              vtk_read_success_t
-setup_reader (const char *filename, vtkSmartPointer < vtkDataSet > grid,
+setup_reader (const char *filename,
               vtkSmartPointer < vtkXMLPDataReader > reader,
-              int *first_piece, int *last_piece,
-              int *total_num_pieces, sc_MPI_Comm comm)
+              int *first_piece, int *last_piece, sc_MPI_Comm comm)
 {
   /* Check if we can open the parallel file */
   FILE               *first_check;
@@ -90,7 +118,7 @@ setup_reader (const char *filename, vtkSmartPointer < vtkDataSet > grid,
   reader->UpdateInformation ();
 
   /*  Get the number of files to read. */
-  *total_num_pieces = reader->GetNumberOfPieces ();
+  const int           total_num_pieces = reader->GetNumberOfPieces ();
   /* Get mpi size and rank */
   int                 mpiret;
   int                 mpisize;
@@ -105,21 +133,21 @@ setup_reader (const char *filename, vtkSmartPointer < vtkDataSet > grid,
   *last_piece = -1;
   *first_piece = 0;
 
-  if (mpisize >= *total_num_pieces) {
+  if (mpisize >= total_num_pieces) {
     /* The first n-procs read a piece each. */
     *first_piece = mpirank;
     *last_piece = *first_piece + ((mpirank < mpisize) ? 1 : 0);
   }
   else {
-    *first_piece = *total_num_pieces / mpisize * mpirank;
+    *first_piece = total_num_pieces / mpisize * mpirank;
     *last_piece = *first_piece;
     const int           prev_proc_first_piece =
-      *total_num_pieces / mpisize * (mpirank - 1);
+      total_num_pieces / mpisize * (mpirank - 1);
     *last_piece +=
-      *first_piece == prev_proc_first_piece ? 0 : *total_num_pieces / mpisize;
-    if (*first_piece == *total_num_pieces / mpisize * (mpisize - 1)) {
+      *first_piece == prev_proc_first_piece ? 0 : total_num_pieces / mpisize;
+    if (*first_piece == total_num_pieces / mpisize * (mpisize - 1)) {
       /* Read the last chunk of data */
-      *last_piece = *total_num_pieces - *first_piece;
+      *last_piece = total_num_pieces - *first_piece;
     }
   }
   return read_success;
@@ -137,16 +165,14 @@ t8_read_parallel_poly (const char *filename,
 
   int                 first_piece = 0;
   int                 last_piece = -1;
-  int                 total_num_pieces;
   read_status =
-    setup_reader (filename, grid, reader, &first_piece, &last_piece,
-                  &total_num_pieces, comm);
+    setup_reader (filename, reader, &first_piece, &last_piece, comm);
   if (read_status == read_failure) {
     return read_status;
   }
   /* Read the pieces if there are any pieces to read on this proc. */
   if (first_piece < last_piece) {
-    merge_polydata (reader, grid, first_piece, last_piece, total_num_pieces);
+    merge_polydata (reader, grid, first_piece, last_piece);
   }
   else {
     /* Initialize the grid, but don't construct any cells. 
@@ -168,17 +194,14 @@ t8_read_parallel (const char *filename, vtkSmartPointer < vtkDataSet > grid,
 
   int                 first_piece = 0;
   int                 last_piece = -1;
-  int                 total_num_pieces;
   read_status =
-    setup_reader (filename, grid, reader, &first_piece, &last_piece,
-                  &total_num_pieces, comm);
+    setup_reader (filename, reader, &first_piece, &last_piece, comm);
   if (read_status == read_failure) {
     return read_status;
   }
   /* Read the pieces if there are any pieces to read on this proc. */
   if (first_piece < last_piece) {
-    merge_unstructured (reader, grid, first_piece, last_piece,
-                        total_num_pieces);
+    merge_unstructured (reader, grid, first_piece, last_piece);
   }
   else {
     /* Initialize the grid, but don't construct any cells. 
