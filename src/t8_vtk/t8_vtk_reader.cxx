@@ -20,8 +20,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_cmesh_vtk_writer.h>        /* To set tree vertices */
-
 #include "t8_vtk_reader.hxx"
 #include "t8_vtk_unstructured.hxx"
 #include "t8_vtk_polydata.hxx"

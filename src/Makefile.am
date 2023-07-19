@@ -57,6 +57,8 @@ libt8_installed_headers_geometry = \
   src/t8_geometry/t8_geometry.h \
   src/t8_geometry/t8_geometry_base.hxx \
   src/t8_geometry/t8_geometry_base.h \
+  src/t8_geometry/t8_geometry_w_vertices.hxx \
+  src/t8_geometry/t8_geometry_w_vertices.h \
   src/t8_geometry/t8_geometry_helpers.h
 libt8_installed_headers_geometry_impl = \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.h \
@@ -114,6 +116,7 @@ libt8_compiled_sources = \
   src/t8_geometry/t8_geometry.cxx \
   src/t8_geometry/t8_geometry_helpers.c \
   src/t8_geometry/t8_geometry_base.cxx \
+  src/t8_geometry/t8_geometry_w_vertices.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_analytic.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_occ.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.cxx \

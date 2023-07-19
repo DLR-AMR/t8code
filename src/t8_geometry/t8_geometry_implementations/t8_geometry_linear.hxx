@@ -28,7 +28,8 @@
 #define T8_GEOMETRY_LINEAR_HXX
 
 #include <t8.h>
-#include <t8_geometry/t8_geometry_base.hxx>
+#include <t8_geometry/t8_geometry_w_vertices.hxx>
+#include <t8_geometry/t8_geometry_w_vertices.h>
 
 struct t8_geometry_linear:public t8_geometry_w_vertices
 {
