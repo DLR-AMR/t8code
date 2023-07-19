@@ -101,7 +101,21 @@ TEST_P (vtk_reader, vtk_to_cmesh_success)
                          file_type);
   if (file_type != VTK_FILE_ERROR) {
     EXPECT_FALSE (cmesh == NULL);
-    EXPECT_EQ (num_trees[file], t8_cmesh_get_num_trees (cmesh));
+    const int           test_num_trees = t8_cmesh_get_num_local_trees (cmesh);
+    if (distributed) {
+      /* In this testcase the cmesh should be distributed equally. */
+      EXPECT_EQ (num_trees[file] / mpisize, test_num_trees);
+    }
+    else {
+      if (!partition || main_proc == mpirank) {
+        /* The proc has the complete cmesh */
+        EXPECT_EQ (num_trees[file], test_num_trees);
+      }
+      else {
+        /* Every other proc should be empty. */
+        EXPECT_EQ (0, test_num_trees);
+      }
+    }
     t8_cmesh_destroy (&cmesh);
   }
   else {
@@ -117,10 +131,23 @@ TEST_P (vtk_reader, vtk_to_pointSet)
 #if T8_WITH_VTK
   if (file_type != VTK_FILE_ERROR) {
     vtkSmartPointer < vtkPointSet > points =
-      t8_vtk_reader_pointSet (test_files[file], 0, 0,
+      t8_vtk_reader_pointSet (test_files[file], partition, main_proc,
                               sc_MPI_COMM_WORLD, file_type);
     int                 test_points = points->GetNumberOfPoints ();
-    EXPECT_EQ (num_points[file], test_points);
+    if (distributed) {
+      /* The points should be distributed equally in this case. */
+      EXPECT_EQ (num_points[file] / mpisize, test_points);
+    }
+    else {
+      if (!partition || main_proc == mpirank) {
+        /* The proc has all points. */
+        EXPECT_EQ (num_points[file], test_points);
+      }
+      else {
+        /* Every other proc should have no points. */
+        EXPECT_EQ (0, test_points);
+      }
+    }
   }
 #else
 #endif
