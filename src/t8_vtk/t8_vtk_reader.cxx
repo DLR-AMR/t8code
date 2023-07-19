@@ -369,15 +369,6 @@ t8_vtk_distributed_partition (t8_cmesh_t cmesh, const int mpirank,
 {
   t8_gloidx_t         first_tree = 0;
   t8_gloidx_t         last_tree = 1;
-  int                 mpiret;
-  /* Compute the dimension of the cmesh. Is necessary, because procs can be empty. */
-  int                 dim_buf;
-  mpiret = sc_MPI_Allreduce (&dim, &dim_buf, 1, sc_MPI_INT, sc_MPI_MAX, comm);
-  SC_CHECK_MPI (mpiret);
-  t8_cmesh_set_dimension (cmesh, dim_buf);
-  t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim_buf);
-  t8_cmesh_register_geometry (cmesh, linear_geom);
-
   /* Compute the global id of the first tree on each proc. */
   t8_shmem_init (comm);
   t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
@@ -411,6 +402,7 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet > vtkGrid,
   int                 mpisize;
   int                 mpirank;
   int                 mpiret;
+  t8_cmesh_init (&cmesh);
   /* Get the size of the communicator and the rank of the process. */
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
@@ -421,31 +413,34 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet > vtkGrid,
   T8_ASSERT (0 <= main_proc && main_proc < mpisize);
 
   /* Already declared here, because we might use them during communication */
-  const t8_gloidx_t   num_trees = vtkGrid->GetNumberOfCells ();
+  t8_gloidx_t         num_trees = 0;
+  if (!partition || mpirank == main_proc || distributed_grid) {
+    num_trees = vtkGrid->GetNumberOfCells ();
+  }
   const int           dim = num_trees > 0 ? t8_get_dimension (vtkGrid) : 0;
+  int                 dim_buf = dim;
+  mpiret = sc_MPI_Allreduce (&dim, &dim_buf, 1, sc_MPI_INT, sc_MPI_MAX, comm);
+  SC_CHECK_MPI (mpiret);
+  t8_cmesh_set_dimension (cmesh, dim_buf);
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim_buf);
+  t8_cmesh_register_geometry (cmesh, linear_geom);
   t8_gloidx_t         first_tree = 0;
 
-  t8_cmesh_init (&cmesh);
   /* Set the partition first, so we know the global id of the first id in case
    * we have a parallel process with empty vtkGrids. */
   if (partition) {
-    if (distributed_grid) {
-      first_tree =
-        t8_vtk_distributed_partition (cmesh, mpirank, mpisize, num_trees, dim,
-                                      comm);
-    }
-    else {
-      t8_vtk_cmesh_partition (cmesh, mpirank, main_proc, num_trees, dim,
-                              comm);
-    }
+    first_tree =
+      t8_vtk_distributed_partition (cmesh, mpirank, mpisize, num_trees, dim,
+                                    comm);
   }
+
   /* Translation of vtkGrid to cmesh */
   if (!partition || mpirank == main_proc || distributed_grid) {
     t8_vtk_iterate_cells (vtkGrid, cmesh, first_tree, comm);
-    if (!distributed_grid) {
-      t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim);
-      t8_cmesh_register_geometry (cmesh, linear_geom);
-    }
+    //if (!distributed_grid) {
+    //  t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim);
+    //  t8_cmesh_register_geometry (cmesh, linear_geom);
+    //}
   }
 
   if (cmesh != NULL) {
