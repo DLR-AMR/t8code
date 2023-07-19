@@ -142,18 +142,6 @@ module t8_mo_fortran_interface
       end Interface
 
       Interface
-            subroutine t8_fortran_cmesh_set_tree_vertices_f (cmesh, ltree_id, vertices, num_vertices) &
-                                    bind (c, name = 't8_cmesh_set_tree_vertices')
-                  use, intrinsic :: ISO_C_BINDING, only: c_ptr, c_double, c_int
-                  IMPLICIT NONE
-                  type (c_ptr), value :: cmesh
-                  type (c_ptr), value :: ltree_id
-                  real (c_double) :: vertices
-                  integer (c_int), value :: num_vertices
-            end subroutine t8_fortran_cmesh_set_tree_vertices_f
-      end Interface
-
-      Interface
             subroutine t8_fortran_cmesh_commit_f (cmesh, Ccom) &
                                     bind (c, name = 't8_cmesh_commit')
                   use, intrinsic :: ISO_C_BINDING, only: c_ptr
@@ -197,14 +185,14 @@ module t8_mo_fortran_interface
       end Interface
 
       Interface
-            integer (c_int) function t8_forest_iterate_replace_f (forest_new, forest_old, replace_fn) &
+            subroutine t8_forest_iterate_replace_f (forest_new, forest_old, replace_fn) &
                                     bind (c, name = 't8_forest_iterate_replace')
                   use, intrinsic :: ISO_C_BINDING, only: c_ptr
                   IMPLICIT NONE
                   type (c_ptr), value :: forest_new
                   type (c_ptr), value :: forest_old
                   type (c_ptr), value :: replace_fn
-            end function t8_forest_iterate_replace_f
+            end subroutine t8_forest_iterate_replace_f
       end Interface
 
       Interface
