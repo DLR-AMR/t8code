@@ -33,7 +33,6 @@
 #include <t8_geometry/t8_geometry_base.h>
 #include <t8_geometry/t8_geometry_w_vertices.h>
 
-
 T8_EXTERN_C_BEGIN ();
 
 class               t8_geometry_w_vertices:public t8_geometry
