@@ -1519,7 +1519,7 @@ t8_forest_write_vtk_ext (t8_forest_t forest,
 int
 t8_forest_write_vtk (t8_forest_t forest, const char *fileprefix)
 {
-  return t8_forest_write_vtk_ext (forest, fileprefix, 1, 1, 1, 1, 1, 0, 0, 0,
+  return t8_forest_write_vtk_ext (forest, fileprefix, 1, 1, 1, 1, 0, 0, 0, 0,
                                   NULL);
 }
 
