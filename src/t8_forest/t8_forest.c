@@ -1466,19 +1466,14 @@ t8_forest_write_vtk_ext (t8_forest_t forest,
   T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (forest->committed);
 
-  if (write_ghosts && write_curved) {
-    t8_errorf
-      ("ERROR: Cannot export ghosts and curved elements at the same time. "
-       "Please specify only one option.\n" "Did not write anything.\n");
 #if !T8_WITH_VTK
-    if (write_curved) {
-      t8_errorf
-        ("WARNING: t8code is not linked against VTK. "
-         "Therefore, the export of curved elements is not possible anyway.\n");
-    }
-#endif
+  if (write_curved) {
+    t8_errorf
+      ("WARNING: t8code is not linked against VTK. "
+       "Therefore, the export of curved elements is not possible anyway.\n");
     return 0;
   }
+#endif
 
 #if T8_WITH_VTK
   if (do_not_use_API && write_curved) {
