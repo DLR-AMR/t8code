@@ -82,7 +82,10 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees,
            * skip the computations here since we only need the connectivity in one direction. */
           /* *INDENT-OFF* */
           if (!do_both_directions
-            && conn[T8_3D_TO_1D(ntrees, T8_ECLASS_MAX_FACES, 3, neigh_itree, neigh_iface, 0)] > -1) {
+              &&
+              conn[T8_3D_TO_1D
+                   (ntrees, T8_ECLASS_MAX_FACES, 3, neigh_itree, neigh_iface,
+                    0)] > -1) {
             continue;
           }
           /* *INDENT-ON* */
@@ -123,6 +126,7 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees,
               for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
                 /* Retrieve the x, y or z component of the face vertex
                  * coordinate from the vertices array. */
+
                 /* *INDENT-OFF* */
                 const double        face_vert =
                   vertices[T8_3D_TO_1D(ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree, ivert, icoord)];
@@ -186,6 +190,7 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees,
             }
 
             /* Store the results. */
+
             /* *INDENT-OFF* */
             conn[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_FACES, 3, itree, iface, 0)] = neigh_itree;
             conn[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_FACES, 3, itree, iface, 1)] = neigh_iface;
