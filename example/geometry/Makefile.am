@@ -6,4 +6,4 @@ bin_PROGRAMS += \
 	example/geometry/t8_example_geometries
 
 example_geometry_t8_example_geometries_SOURCES = \
-	example/geometry/t8_example_geometries.cxx 
+	example/geometry/t8_example_geometries.cxx

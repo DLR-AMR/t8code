@@ -39,7 +39,8 @@ on:
   
 jobs:
   send_mm_message:
-    runs-on: ubuntu-latest
+    if: github.repository == 'DLR-AMR/t8code'
+    runs-on: ubuntu-20.04
     steps:
       - name: merge
         uses: Mitigram/gh-action-mattermost@main

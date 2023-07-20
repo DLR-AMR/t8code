@@ -32,6 +32,7 @@
 
 #include <sc_refcount.h>
 #include <t8_eclass.h>
+#include <t8_element_shape.h>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -45,11 +46,6 @@ typedef struct t8_eclass_scheme t8_eclass_scheme_c;
 
 typedef struct t8_scheme_cxx t8_scheme_cxx_t;
 
-/** Type definition for the geometric shape of an element.
- * Currently the possible shapes are the same as the possible element classes.
- * I.e. T8_ECLASS_VERTEX, T8_ECLASS_TET, etc... */
-typedef t8_eclass_t t8_element_shape_t;
-
 /** The scheme holds implementations for one or more element classes. */
 struct t8_scheme_cxx
 {
@@ -59,6 +55,11 @@ struct t8_scheme_cxx
   /** This array holds one virtual table per element class. */
   t8_eclass_scheme_c *eclass_schemes[T8_ECLASS_COUNT];
 };
+
+extern const double
+  t8_element_corner_ref_coords[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS][3];
+
+extern const double t8_element_centroid_ref_coords[T8_ECLASS_COUNT][3];
 
 /** Increase the reference counter of a scheme.
  * \param [in,out] scheme       On input, this scheme must be alive, that is,

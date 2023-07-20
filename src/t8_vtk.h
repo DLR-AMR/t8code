@@ -23,7 +23,7 @@
 /** file t8_vtk.h
  * This header file collects macros that are needed for
  * the forest and cmesh vtk routines.
- * \see t8_forest_vtk.h \see t8_cmesh_vtk.h
+ * \see t8_forest_vtk.h \see t8_cmesh_vtk_writer.h \see t8_cmesh_vtk_reader.hxx
  */
 
 #ifndef T8_VTK_H
@@ -33,8 +33,6 @@
 
 /* typedef and macros */
 
-/* TODO: TOPIDX is deprecated, remove it */
-#define T8_VTK_TOPIDX "Int32"
 #define T8_VTK_LOCIDX "Int32"
 /* TODO: Paraview has troubles with Int64, so we switch to Int32 and be careful.
  *       Investigate this further. See also vtk makro VTK_USE_64BIT_IDS */

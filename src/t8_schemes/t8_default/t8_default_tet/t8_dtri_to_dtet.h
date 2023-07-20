@@ -72,7 +72,8 @@ T8_EXTERN_C_BEGIN ();
 #define t8_dtri_ancestor t8_dtet_ancestor
 #define t8_dtri_compute_all_coords t8_dtet_compute_all_coords
 #define t8_dtri_compute_coords t8_dtet_compute_coords
-#define t8_dtri_compute_ref_coords t8_dtet_compute_ref_coords
+#define t8_dtri_compute_vertex_ref_coords t8_dtet_compute_vertex_ref_coords
+#define t8_dtri_compute_reference_coords t8_dtet_compute_reference_coords
 #define t8_dtri_child t8_dtet_child
 #define t8_dtri_childrenpv t8_dtet_childrenpv
 #define t8_dtri_is_familypv t8_dtet_is_familypv
@@ -103,6 +104,9 @@ T8_EXTERN_C_BEGIN ();
 #define t8_dtri_get_level t8_dtet_get_level
 #define t8_dtri_is_valid t8_dtet_is_valid
 #define t8_dtri_init t8_dtet_init
+#define t8_dtri_init_linear_id_with_level t8_dtet_init_linear_id_with_level
+#define t8_dtri_linear_id_with_level t8_dtet_linear_id_with_level
+#define t8_dtri_debug_print t8_dtet_debug_print
 
 T8_EXTERN_C_END ();
 

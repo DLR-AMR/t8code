@@ -21,6 +21,7 @@
 */
 
 /** \file t8_dprism_bits.h
+ * Definition if prism-specific functions.
  */
 
 #ifndef T8_DPRISM_BITS_H
@@ -61,7 +62,7 @@ int                 t8_dprism_compare (const t8_dprism_t *p1,
  * \param [in] level  level of uniform grid to be considered.
  */
 void                t8_dprism_init_linear_id (t8_dprism_t *p, int level,
-                                              uint64_t id);
+                                              t8_linearidx_t id);
 
 /** Computes the successor of a prism in a uniform grid of level \a level.
  * \param [in] p  prism whose id will be computed.
@@ -181,8 +182,8 @@ int                 t8_dprism_get_face_corner (const t8_dprism_t *p,
 
 /** Compute the 8 children of a prism, array version.
  * \param [in]     p  Input prism.
- * \param [in,out] c  Pointers to the 2 computed children in Morton order.
- *                    t may point to the same quadrant as c[0].
+ * \param [in,out] c  Pointers to the 8 computed children in Morton order.
+ *
  */
 void                t8_dprism_childrenpv (const t8_dprism_t *p,
                                           int length, t8_dprism_t *c[]);
@@ -295,30 +296,44 @@ void                t8_dprism_corner_descendant (const t8_dprism_t *p,
                                                  int level);
 
 /** Compute the coordinates of a vertex of a prism.
- * \param [in] p    Input prism.
- * \param [out] coordinates An array of 2 t8_dprism_coord_t that
+ * \param [in] elem         Input prism.
+ * \param [in] vertex       The number of the vertex.
+ * \param [out] coordinates An array of 3 t8_dprism_coord_t that
  * 		     will be filled with the coordinates of the vertex.
- * \param [in] vertex The number of the vertex.
  */
-void                t8_dprism_vertex_coords (const t8_dprism_t *p,
-                                             int vertex, int coords[]);
+void                t8_dprism_vertex_coords (const t8_dprism_t *elem,
+                                             int vertex, int coords[3]);
 
 /** Compute the reference coordinates of a vertex of a prism when the 
- * tree (level 0 prism) is embedded in [0,1]^3.
- * \param [in] p    Input prism.
- * \param [in] vertex The number of the vertex.
+ * tree (level 0) is embedded in [0,1]^3.
+ * \param [in] elem         Input prism.
+ * \param [in] vertex       The number of the vertex.
  * \param [out] coordinates An array of 3 double that
  * 		     will be filled with the reference coordinates of the vertex.
  */
-void                t8_dprism_vertex_ref_coords (const t8_dprism_t *p,
+void                t8_dprism_vertex_ref_coords (const t8_dprism_t *elem,
                                                  int vertex,
                                                  double coords[3]);
+
+/** Convert a point in the reference space of a prism element to a point in the
+ *  reference space of the tree (level 0) embedded in [0,1]^3.
+ * \param [in]  elem       Input prism.
+ * \param [in]  ref_coords The reference coordinates inside the
+ *                         prism element [0,1]^3
+ * \param [out] out_coords An array of 3 doubles that will be filled with the
+ *                         reference coordinates in the tree of the prism.
+ */
+void                t8_dprism_compute_reference_coords (const t8_dprism_t
+                                                        *elem,
+                                                        const double
+                                                        *ref_coords,
+                                                        double *out_coords);
 
 /** Computes the linear position of a prism in an uniform grid.
  * \param [in] p  Prism whose id will be computed.
  * \return Returns the linear position of this prism on a grid.
  */
-uint64_t            t8_dprism_linear_id (const t8_dprism_t *p, int level);
+t8_linearidx_t      t8_dprism_linear_id (const t8_dprism_t *p, int level);
 
 /** Query whether all entries of a prism are in valid ranges.
  * A prism is valid if and only if its triangle and line member are valid.
@@ -328,6 +343,12 @@ uint64_t            t8_dprism_linear_id (const t8_dprism_t *p, int level);
  *                False otherwise.
  */
 int                 t8_dprism_is_valid (const t8_dprism_t *p);
+
+/**
+ * Print the coordinates, the level and the type of a prism.
+ * \param [in] p  prism to be considered.
+ */
+void                t8_dprism_debug_print (const t8_dprism_t *p);
 
 T8_EXTERN_C_END ();
 

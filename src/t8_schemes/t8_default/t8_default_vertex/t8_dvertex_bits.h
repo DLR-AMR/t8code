@@ -21,6 +21,7 @@
 */
 
 /** \file t8_dvertex_bits.h
+ * Definitions of vertex-specific functions.
  */
 
 #ifndef T8_DVERTEX_BITS_H
@@ -109,7 +110,8 @@ void                t8_dvertex_sibling (const t8_dvertex_t *v, int sibid,
  *                    t may point to the same quadrant as c[0].
  */
 void                t8_dvertex_childrenpv (const t8_dvertex_t *t,
-                                           t8_dvertex_t *c[]);
+                                           t8_dvertex_t
+                                           *c[T8_DVERTEX_CHILDREN]);
 
 /** Check whether a collection of two vertexs is a family in Morton order.
  * \param [in]     f  An array of two vertexs.
@@ -193,6 +195,18 @@ void                t8_dvertex_vertex_ref_coords (const t8_dvertex_t *elem,
                                                   int vertex,
                                                   double coords[]);
 
+/** Compute the coordinates of a refrence coordinate (always 0) inside the 
+ * [0,1]^0 reference space.
+ * \param [in] elem         Vertex whose vertex is computed.
+ * \param [in] ref_coords   The reference coordinate inside the vertex (must be 0).
+ * \param [out] out_coords  The coordinates of the computed vertex, must have one entry (will be set to 0).
+ */
+void                t8_dvertex_compute_reference_coords (const t8_dvertex_t
+                                                         *elem,
+                                                         const double
+                                                         *ref_coords,
+                                                         double *out_coords);
+
 /** Computes the linear position of a vertex in an uniform grid.
  * \param [in] vertex  vertex whose id will be computed.
  * \return Returns the linear position of this vertex on a grid.
@@ -207,6 +221,11 @@ t8_linearidx_t      t8_dvertex_linear_id (const t8_dvertex_t *elem,
  *                False otherwise.
  */
 int                 t8_dvertex_is_valid (const t8_dvertex_t *v);
+
+/** Print a vertex
+ * \param [in] v  vertex to be considered.
+ */
+void                t8_dvertex_debug_print (const t8_dvertex_t *v);
 
 /** Set default values for a vertex, such that it passes \ref t8_dvertex_is_valid.
  * \param [in] l  vertex to be initialized

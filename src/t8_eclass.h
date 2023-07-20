@@ -68,6 +68,10 @@ t8_eclass_t;
 
 /** The maximum number of boundary faces an element class can have. */
 #define T8_ECLASS_MAX_FACES 6
+/** The maximum number of boundary edges an element class can have. */
+#define T8_ECLASS_MAX_EDGES 12
+/** The maximum number of boundary edges a 2D element class can have. */
+#define T8_ECLASS_MAX_EDGES_2D 4
 /** The maximum number of cornes a 2-dimensional element class can have. */
 #define T8_ECLASS_MAX_CORNERS_2D 4
 /** The maximum number of cornes an element class can have. */
@@ -90,6 +94,28 @@ extern const int
      t8_face_vertex_to_tree_vertex[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES]
   [T8_ECLASS_MAX_CORNERS_2D];
 
+/** For each eclass and each face f the entry i gives the edge number
+ * of f's i-th edge within all edges of the tree. */
+extern const int
+     t8_face_edge_to_tree_edge_n[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES]
+  [T8_ECLASS_MAX_EDGES_2D];
+
+/** For each eclass, each face f and the face vertex v, we get the edge number
+ *  of the tree which is incident to vertex v but not part of f. */
+extern const int
+     t8_face_to_edge_neighbor[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES]
+  [T8_ECLASS_MAX_CORNERS_2D];
+
+/** For each eclass and each edge e the entry i gives the vertex number
+ * of e's i-th vertex within all vertices of the tree. */
+extern const int
+     t8_edge_vertex_to_tree_vertex_n[T8_ECLASS_COUNT][T8_ECLASS_MAX_EDGES][2];
+
+/** For each eclass and each edge e the entry i gives the face number
+ * of e's i-th incident face within all faces of the tree. */
+extern const int
+     t8_edge_to_face_n[T8_ECLASS_COUNT][T8_ECLASS_MAX_EDGES][2];
+
 /** Each face is either 0 or 1 oriented, depending on the order of its vertices.
  * We say a face is 0 oriented, if its normal vector points inwards,
  * 1 oriented otherwise.
@@ -103,12 +129,21 @@ extern const int
 /** The number of vertices of an element class. */
 extern const int    t8_eclass_num_vertices[T8_ECLASS_COUNT];
 
+/** The number of edges of an element class. */
+extern const int    t8_eclass_num_edges[T8_ECLASS_COUNT];
+
 /** The vtk cell type for the eclass */
 extern const int    t8_eclass_vtk_type[T8_ECLASS_COUNT];
 
+/* *INDENT-OFF* */
+/** Map the vtk corner number to the t8 corner number */
+extern const int   
+  t8_eclass_vtk_to_t8_corner_number[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS];
+
 /** Map the t8code corner number to the vtk corner number */
-extern const int
-     t8_eclass_vtk_corner_number[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS];
+extern const int   
+  t8_eclass_t8_to_vtk_corner_number[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS];
+/* *INDENT-ON* */
 
 /** For each of the element classes, list the type of the faces. */
 extern const int
@@ -152,7 +187,6 @@ int                 t8_eclass_compare (t8_eclass_t eclass1,
  * \return               Non-zero if \a eclass is valid, zero otherwise.
 */
 int                 t8_eclass_is_valid (t8_eclass_t eclass);
-
 T8_EXTERN_C_END ();
 
 #endif /* !T8_ELEMENT_H */

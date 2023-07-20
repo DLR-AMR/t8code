@@ -11,6 +11,8 @@ t8_cmesh_t
 t8_cmesh_trees_t
 t8_dprism_t
 t8_dpyramid_t
+t8_dpyramid_cube_id_t
+t8_dpyramid_type_t
 t8_dtet_t
 t8_dtri_t
 t8_dvertex_t
@@ -38,4 +40,4 @@ t8_shmem_array_t
 t8_stash_attribute_struct_t
 t8_stash_t
 t8_vtk_data_field_t
-
+vtk_file_type_t

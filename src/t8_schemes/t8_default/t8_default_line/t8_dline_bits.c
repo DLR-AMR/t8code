@@ -211,9 +211,7 @@ int
 t8_dline_is_familypv (const t8_dline_t *f[])
 {
   const int8_t        level = f[0]->level;
-  t8_dline_coord_t    len = T8_DLINE_LEN (level);
-
-  /*Check the level */
+  /* Check the level */
   if (level == 0 || level != f[1]->level) {
     return 0;
   }                             /* Check the parent */
@@ -222,7 +220,8 @@ t8_dline_is_familypv (const t8_dline_t *f[])
     return 0;
   }
 
-  /*Check the coordinate */
+  const t8_dline_coord_t len = T8_DLINE_LEN (level);
+  /* Check the coordinate */
   return (f[0]->x + len == f[1]->x);
 }
 
@@ -325,7 +324,8 @@ t8_dline_last_descendant (const t8_dline_t *l, t8_dline_t *s, int level)
 }
 
 void
-t8_dline_vertex_coords (const t8_dline_t *elem, int vertex, int coords[])
+t8_dline_vertex_coords (const t8_dline_t *elem, const int vertex,
+                        int coords[])
 {
   T8_ASSERT (vertex == 0 || vertex == 1);
   if (vertex == 0) {
@@ -337,7 +337,7 @@ t8_dline_vertex_coords (const t8_dline_t *elem, int vertex, int coords[])
 }
 
 void
-t8_dline_vertex_ref_coords (const t8_dline_t *elem, int vertex,
+t8_dline_vertex_ref_coords (const t8_dline_t *elem, const int vertex,
                             double coordinates[1])
 {
   /* we need to set and initial value to prevent compiler warning. */
@@ -347,6 +347,17 @@ t8_dline_vertex_ref_coords (const t8_dline_t *elem, int vertex,
   /* Compute integere coordinates and divide by root length. */
   t8_dline_vertex_coords (elem, vertex, &coords_int);
   coordinates[0] = coords_int / (double) T8_DLINE_ROOT_LEN;
+}
+
+void
+t8_dline_compute_reference_coords (const t8_dline_t *elem,
+                                   const double *ref_coords,
+                                   double *out_coords)
+{
+  T8_ASSERT (t8_dline_is_valid (elem));
+  out_coords[0] = elem->x;
+  out_coords[0] += T8_DLINE_LEN (elem->level) * ref_coords[0];
+  out_coords[0] /= (double) T8_DLINE_ROOT_LEN;
 }
 
 t8_linearidx_t
@@ -372,6 +383,12 @@ t8_dline_is_valid (const t8_dline_t *l)
    * correct bounds of the root three and its left and right neighbor */
   return 0 <= l->level && l->level <= T8_DLINE_MAXLEVEL
     && -T8_DLINE_ROOT_LEN <= l->x && l->x <= max_coord;
+}
+
+void
+t8_dline_debug_print (const t8_dline_t *l)
+{
+  t8_debugf ("x: %i, level: %i\n", l->x, l->level);
 }
 
 void

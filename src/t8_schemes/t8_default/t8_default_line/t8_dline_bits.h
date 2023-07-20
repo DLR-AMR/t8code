@@ -21,6 +21,7 @@
 */
 
 /** \file t8_dline_bits.h
+ * Definitions of line-specific functions.
  */
 
 #ifndef T8_DLINE_BITS_H
@@ -133,7 +134,7 @@ int                 t8_dline_child_id (const t8_dline_t *t);
  *                    t may point to the same quadrant as c[0].
  */
 void                t8_dline_childrenpv (const t8_dline_t *t,
-                                         t8_dline_t *c[]);
+                                         t8_dline_t *c[T8_DLINE_CHILDREN]);
 
 /** Check whether a collection of two lines is a family in Morton order.
  * \param [in]     f  An array of two lines.
@@ -228,7 +229,7 @@ void                t8_dline_last_descendant (const t8_dline_t *l,
  * \param [out] coords   The coordinates of the computed vertex
  */
 void                t8_dline_vertex_coords (const t8_dline_t *elem,
-                                            int vertex, int coords[]);
+                                            const int vertex, int coords[]);
 
 /** Compute the coordinates of a vertex of a line when the 
  * tree (level 0 line) is embedded in [0,1]^1.
@@ -238,8 +239,21 @@ void                t8_dline_vertex_coords (const t8_dline_t *elem,
  * 		     will be filled with the reference coordinates of the vertex.
  */
 void                t8_dline_vertex_ref_coords (const t8_dline_t *elem,
-                                                int vertex,
+                                                const int vertex,
                                                 double coordinates[1]);
+
+/** Convert a point in the reference space of a line element to a point in the
+ *  reference space of the tree (level 0) embedded in [0,1]^1.
+ * \param [in]  elem       Input line.
+ * \param [in]  ref_coords The reference coordinate on the line [0, 1]^1
+ * \param [out] out_coords An array of 1 double that
+ * 		                     will be filled with the reference coordinates
+ *                         of the point on the line.
+ */
+void                t8_dline_compute_reference_coords (const t8_dline_t *elem,
+                                                       const double
+                                                       *ref_coords,
+                                                       double *out_coords);
 
 /** Computes the linear position of a line in an uniform grid.
  * \param [in] line  Line whose id will be computed.
@@ -254,6 +268,11 @@ t8_linearidx_t      t8_dline_linear_id (const t8_dline_t *elem, int level);
  *                False otherwise.
  */
 int                 t8_dline_is_valid (const t8_dline_t *l);
+
+/** Print a line
+ * \param [in] l  line to be initialized 
+ */
+void                t8_dline_debug_print (const t8_dline_t *l);
 
 /** Set default values for a line, such that it passes \ref t8_dline_is_valid.
  * \param [in] l  line to be initialized

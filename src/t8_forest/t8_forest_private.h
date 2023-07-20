@@ -31,11 +31,39 @@
 #define T8_FOREST_PRIVATE_H
 
 #include <t8.h>
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
 
 T8_EXTERN_C_BEGIN ();
 
 /* TODO: document */
+
+/** Check whether or not \a elements contains a (in)complete family and 
+ *  return the size of it or zero if no family is considered.
+ * \param [in]      forest          The forest.
+ * \param [in]      ltree_id        The index of considered local tree.
+ * \param [in]      el_considered   The local id of the first element in 
+ *                                  \a elements in the local tree of the forest.
+ * \param [in]      tscheme         The scheme for the local tree.
+ * \param [in]      elements        Array of elements to consider.
+ * \param [in]      elements_size   Number of elements in \a elements.
+ * \return          Size of family or zero, if \a elements does not contain a
+ *                  family. 
+ * \note            The check works for complete and incomplete forests.
+ *                  In the case of complete forests, the scheme based element 
+ *                  funktion \see t8_element_is_family is recommended.
+ * \note            If the element with id \a el_considered is not the first
+ *                  family member, return 0. Therefore, if \return is x > 0, 
+ *                  the first x elements in \a elements form a family.
+ */
+int                 t8_forest_is_incomplete_family (const t8_forest_t forest,
+                                                    const t8_locidx_t
+                                                    ltree_id,
+                                                    const t8_locidx_t
+                                                    el_considered,
+                                                    t8_eclass_scheme_c
+                                                    *tscheme,
+                                                    t8_element_t **elements,
+                                                    const int elements_size);
 
 /* For each tree in a forest compute its first and last descendant */
 void                t8_forest_compute_desc (t8_forest_t forest);
@@ -110,8 +138,8 @@ void                t8_forest_copy_trees (t8_forest_t forest,
 /** Given the local id of a tree in a forest, return the coarse tree of the
  * cmesh that corresponds to this tree, also return the neighbor information of
  * the tree.
- * \param [in] forest      The forest.
- * \param [in] ltreeid     The local id of a tree in the forest.
+ * \param [in]  forest     The forest.
+ * \param [in]  ltreeid    The local id of a tree in the forest.
  * \param [out] face_neigh If not NULL a pointer to the trees face_neighbor
  *                             array is stored here on return.
  * \param [out] ttf        If not NULL a pointer to the trees tree_to_face

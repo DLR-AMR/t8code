@@ -28,12 +28,13 @@
  */
 
 #include <t8.h>
+#include <sc_statistics.h>
 #include <t8_refcount.h>
 #include <t8_cmesh.h>
 #include <t8_element.h>
 #include <t8_data/t8_containers.h>
 #include <t8_forest/t8_forest_adapt.h>
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
 
 typedef struct t8_profile t8_profile_t; /* Defined below */
 typedef struct t8_forest_ghost *t8_forest_ghost_t;      /* Defined below */
@@ -60,6 +61,9 @@ typedef int8_t      t8_forest_from_t;
 #define T8_FOREST_BALANCE_REPART 1 /**< Value of forest->set_balance if balancing with repartitioning */
 #define T8_FOREST_BALANCE_NO_REPART 2 /**< Value of forest->set_balance if balancing without repartitioning */
 
+/** The number of statistics collected by a profile struct. */
+#define T8_PROFILE_NUM_STATS 14
+
 /** This structure is private to the implementation. */
 typedef struct t8_forest
 {
@@ -77,14 +81,12 @@ typedef struct t8_forest
   int                 maxlevel_existing;/**< If >= 0, the maximum occurring refinemnent level of a forest element. */
   int                 do_dup;           /**< Communicator shall be duped. */
   int                 dimension;        /**< Dimension inferred from \b cmesh. */
+  int                 incomplete_trees; /**< Flag to check whether the forest has (potential) incomplete trees.
+                                             A tree is incomplete if an element has been removed from it.
+                                             Once an element got removed, the flag sets to 1 (true) and stays. */
 
   t8_forest_t         set_from;         /**< Temporarily store source forest. */
   t8_forest_from_t    from_method;      /**< Method to derive from \b set_from. */
-#if 0
-  /* TODO: Think about this. see t8_forest_iterate.{cxx,h} */
-  t8_forest_replace_t set_replace_fn;   /**< Replace function. Called when \b from_method
-                                             is set to T8_FOREST_FROM_ADAPT. */
-#endif
   t8_forest_adapt_t   set_adapt_fn;     /**< refinement and coarsen function. Called when \b from_method
                                              is set to T8_FOREST_FROM_ADAPT. */
   int                 set_adapt_recursive; /**< Flag to decide whether coarsen and refine
@@ -104,8 +106,12 @@ typedef struct t8_forest
   int                 mpisize;          /**< Number of MPI processes. */
   int                 mpirank;          /**< Number of this MPI process. */
 
-  t8_gloidx_t         first_local_tree;
-  t8_gloidx_t         last_local_tree;
+  t8_gloidx_t         first_local_tree; /**< The global index of the first local tree on this process. 
+                                             If first_local_tree is larger than last_local_tree then 
+                                             this processor/forest is empty.
+                                             See https://github.com/DLR-AMR/t8code/wiki/Tree-indexing */
+  t8_gloidx_t         last_local_tree;  /**< The global index of the last local tree on this process.
+                                             -1 if this processor is empty. */
   t8_gloidx_t         global_num_trees; /**< The total number of global trees */
   sc_array_t         *trees;
   t8_forest_ghost_t   ghosts;           /**< If not NULL, the ghost elements. \see t8_forest_ghost.h */
@@ -126,7 +132,8 @@ typedef struct t8_forest
   t8_locidx_t         local_num_elements;  /**< Number of elements on this processor. */
   t8_gloidx_t         global_num_elements; /**< Number of elements on all processors. */
   t8_profile_t       *profile; /**< If not NULL, runtimes and statistics about forest_commit are stored here. */
-
+  sc_statinfo_t       stats[T8_PROFILE_NUM_STATS];
+  int                 stats_computed;
 }
 t8_forest_struct_t;
 
@@ -195,10 +202,6 @@ typedef struct t8_forest_ghost
                                                          */
   sc_hash_t          *process_offsets;  /* Given a process, return the first ghost tree and
                                            whithin it the first element of that process. */
-#if 0
-  /* TODO: obsolete by remote_processes below. */
-  sc_array_t         *processes;        /* ranks of the processes */
-#endif
   sc_hash_array_t    *remote_ghosts;    /* array of local trees that have ghost elements for another process.
                                            for each tree an array of t8_element_t * of the local ghost elements.
                                            Also an array of t8_locidx_t of the local indices of these elements whithin the tree.

@@ -22,14 +22,16 @@
 
 #include <sc_statistics.h>
 #include <t8_cmesh.h>
-#include <t8_cmesh_vtk.h>
+#include <t8_cmesh_vtk_writer.h>
 #include <t8_cmesh/t8_cmesh_geometry.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_refcount.h>
 #include <t8_data/t8_shmem.h>
 #include <t8_vec.h>
+#include <t8_eclass.h>
 #ifdef T8_WITH_METIS
 #include <metis.h>
+
 #endif
 #include "t8_cmesh_trees.h"
 
@@ -125,39 +127,6 @@ t8_cmesh_is_committed (t8_cmesh_t cmesh)
   return 1;
 }
 
-#if 0
-/* Compute a hash value for a ghost tree. */
-/* deprecated */
-static unsigned
-t8_cmesh_ghost_hash_fn (const void *ghost, const void *data)
-{
-  t8_cmesh_t          cmesh;
-  t8_cghost_t         G;
-
-  T8_ASSERT (data != NULL);
-  cmesh = (t8_cmesh_t) data;
-  T8_ASSERT (cmesh->num_ghosts > 0);
-  T8_ASSERT (cmesh->set_partition);
-  T8_ASSERT (cmesh->num_local_trees > 0);
-
-  G = (t8_cghost_t) ghost;
-  /* TODO: is this a reasonable hash value? */
-  return G->treeid % cmesh->num_ghosts;
-}
-
-static int
-t8_cmesh_ghost_equal_fn (const void *ghost1, const void *ghost2,
-                         const void *data)
-{
-  t8_cghost_t         G1, G2;
-
-  G1 = (t8_cghost_t) ghost1;
-  G2 = (t8_cghost_t) ghost2;
-
-  return G1->treeid == G2->treeid;
-}
-#endif
-
 /* Check whether a given communicator assigns the same rank and mpisize
  * as stored in a given cmesh. */
 int
@@ -202,47 +171,6 @@ t8_cmesh_init (t8_cmesh_t *pcmesh)
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 }
 
-#if 0
-/* This function is not part of the interface. The number of trees is always clear
- * from the number of calls to t8_cmesh_set_tree_class.
- * It is set in t8_cmesh_commit */
-/* TODO: rename num_trees to global_num_trees or num_gtrees etc.
- *       to always distinguish between local and global.
- *       Do this everywhere in the code.
- */
-static void
-t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_gloidx_t num_trees)
-{
-  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
-
-  /* If the cmesh is entered as a partitioned cmesh,
-   * this function sets the local number of trees;
-   * (TODO ^^^ would require locidx -- better provide two arguments)
-   * the global number then must have been set in cmesh_set_partition.
-   * Otherwise the global number of trees is set here.
-   * TODO: make this function behave consistently independent on prior
-   *       calls to set_partition.
-   *       We want the user to be free in the sequence of calls
-   *       as much as possible.
-   */
-  if (cmesh->set_partition) {
-    /* num_trees == 0 is allowed */
-    T8_ASSERT (cmesh->num_trees > 0);
-    T8_ASSERT (cmesh->num_local_trees == 0);
-    cmesh->num_local_trees = num_trees;
-  }
-  else {
-    /* num_trees == 0 is allowed */
-    T8_ASSERT (cmesh->num_trees >= 0);
-    cmesh->num_trees = cmesh->num_local_trees = num_trees;
-  }
-  /* As soon as we know the number of trees, we allocate
-   * the ctree array.
-   * TODO?
-   */
-}
-#endif
-
 void
 t8_cmesh_set_derive (t8_cmesh_t cmesh, t8_cmesh_t set_from)
 {
@@ -259,48 +187,6 @@ t8_cmesh_set_derive (t8_cmesh_t cmesh, t8_cmesh_t set_from)
     t8_cmesh_set_dimension (cmesh, set_from->dimension);
   }
 }
-
-#if 0
-/* TODO: deprecated, remove */
-void
-t8_cmesh_set_partition (t8_cmesh_t cmesh, int set_partition,
-                        int set_face_knowledge,
-                        t8_gloidx_t first_local_tree,
-                        t8_gloidx_t last_local_tree,
-                        t8_gloidx_t *tree_offsets)
-{
-  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
-  T8_ASSERT (0 <= set_face_knowledge && set_face_knowledge <= 3);
-  /* TODO: allow -1 for set_face_knowledge to keep it unchanged?
-   *      update: unchanged from what? face_knowledge is only important for the
-   * information on the stash. When the cmesh is derived there is no
-   * stash. A committed cmesh has always face_knowledge 3. */
-
-  /* TODO: Careful with tese assumptions; allow the user maximum flexibility */
-#if 0
-  T8_ASSERT (cmesh->num_trees == 0);
-  T8_ASSERT (cmesh->num_local_trees == 0);
-  T8_ASSERT (cmesh->first_tree == 0);
-#endif
-
-  /* set cmesh->set_partition to 0 or 1 (no; we always treat nonzero as true) */
-  cmesh->set_partition = set_partition;
-  /* TODO: this is how to query boolean variables */
-  if (set_partition) {
-    cmesh->first_tree = first_local_tree;
-    cmesh->num_local_trees = last_local_tree - first_local_tree + 1;
-    /* Since num_local_trees is a locidx we have to check whether we did create an
-     * overflow in the previous computation */
-    T8_ASSERT (cmesh->num_local_trees ==
-               last_local_tree - first_local_tree + 1);
-    cmesh->face_knowledge = set_face_knowledge;
-    /* Right now no other face_knowledge is supported */
-    SC_CHECK_ABORTF (set_face_knowledge == 3, "Level %i of face knowledge"
-                     "is not supported.\n", set_face_knowledge);
-    cmesh->tree_offsets = tree_offsets;
-  }
-}
-#endif
 
 t8_shmem_array_t
 t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm)
@@ -392,29 +278,6 @@ t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, int element_level,
     }
   }
 }
-
-#if 0
-/* No longer needed */
-void
-t8_cmesh_set_partition_from (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from,
-                             int level, t8_gloidx_t *tree_offsets)
-{
-  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
-  T8_ASSERT (t8_cmesh_is_committed (cmesh_from));
-  T8_ASSERT (cmesh_from->set_partition);
-
-  cmesh->set_from = cmesh_from;
-  cmesh->set_partition = 1;
-  cmesh->face_knowledge = cmesh_from->face_knowledge;
-  if (level >= 0) {
-    cmesh->set_partition_level = level;
-  }
-  else {
-    cmesh->tree_offsets = tree_offsets;
-  }
-  cmesh->from_method |= T8_CMESH_PARTITION;
-}
-#endif
 
 void
 t8_cmesh_set_refine (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *scheme)
@@ -569,36 +432,6 @@ t8_cmesh_get_partition_table (t8_cmesh_t cmesh)
   return cmesh->tree_offsets;
 }
 
-#if 0
-/* Check whether a given tree_id belongs to a tree in the cmesh.
- * If partitioned only local trees are allowed.
- */
-static int
-t8_cmesh_tree_id_is_owned (t8_cmesh_t cmesh, t8_locidx_t tree_id)
-{
-  T8_ASSERT (cmesh->committed);
-  if (cmesh->set_partition) {
-    return cmesh->first_tree <= tree_id
-      && tree_id < cmesh->first_tree + cmesh->num_local_trees;
-  }
-  else {
-    return 0 <= tree_id && tree_id < cmesh->num_trees;
-  }
-}
-
-#endif
-
-#if 0
-/* Given a tree_id return the index of the specified tree in
- * cmesh's tree array
- */
-static t8_locidx_t
-t8_cmesh_tree_index (t8_cmesh_t cmesh, t8_locidx_t tree_id)
-{
-  return cmesh->set_partition ? tree_id - cmesh->first_tree : tree_id;
-}
-#endif
-
 void
 t8_cmesh_set_dimension (t8_cmesh_t cmesh, int dim)
 {
@@ -634,35 +467,6 @@ t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_gloidx_t gtree_id,
 #ifdef T8_ENABLE_DEBUG
   cmesh->inserted_trees++;
 #endif
-}
-
-/* Compute erg = v_1 . v_2
- * the 3D scalar product.
- */
-static double
-t8_cmesh_tree_vertices_dot (double *v_1, double *v_2)
-{
-  double              erg = 0;
-  int                 i;
-
-  for (i = 0; i < 3; i++) {
-    erg += v_1[i] * v_2[i];
-  }
-  return erg;
-}
-
-/* Compute erg = v_1 x v_2
- * the 3D cross product.
- */
-static void
-t8_cmesh_tree_vertices_cross (double *v_1, double *v_2, double *erg)
-{
-  int                 i;
-
-  for (i = 0; i < 3; i++) {
-    erg[i] = v_1[(i + 1) % 3] * v_2[(i + 2) % 3]
-      - v_1[(i + 2) % 3] * v_2[(i + 1) % 3];
-  }
 }
 
 /* Given a set of vertex coordinates for a tree of a given eclass.
@@ -723,11 +527,10 @@ t8_cmesh_tree_vertices_negative_volume (t8_eclass_t eclass,
     v_2[i] = vertices[6 + i] - vertices[i];
     v_j[i] = vertices[3 * j + i] - vertices[i];
   }
-
   /* compute cross = v_1 x v_2 */
-  t8_cmesh_tree_vertices_cross (v_1, v_2, cross);
+  t8_vec_cross (v_1, v_2, cross);
   /* Compute sc_prod = <v_j, cross> */
-  sc_prod = t8_cmesh_tree_vertices_dot (v_j, cross);
+  sc_prod = t8_vec_dot (v_j, cross);
 
   T8_ASSERT (sc_prod != 0);
   return eclass == T8_ECLASS_TET ? sc_prod > 0 : sc_prod < 0;
@@ -852,16 +655,6 @@ t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
     cmesh_a->num_local_trees != cmesh_b->num_local_trees ||
     cmesh_a->num_ghosts != cmesh_b->num_ghosts ||
     cmesh_a->first_tree != cmesh_b->first_tree;
-#if 0
-  /* TODO: The inserted variables are counters that are only active if the
-   * cmesh is committed from scratch. If a cmesh is commited via cmesh_copy,
-   * then these counters are not active. So even for equal cmeshes
-   * these counters must not store the same value. */
-#ifdef T8_ENABLE_DEBUG
-  is_equal = is_equal || cmesh_a->inserted_trees != cmesh_b->inserted_trees ||
-    cmesh_a->inserted_ghosts != cmesh_b->inserted_ghosts;
-#endif
-#endif
   if (is_equal != 0) {
     return 0;
   }
@@ -901,46 +694,6 @@ t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
   }
   return 1;
 }
-
-#if 0
-/* broadcast the tree attributes of a cmesh on root to all processors */
-/* TODO: can we optimize it by just sending the memory of the mempools? */
-static void
-t8_cmesh_bcast_attributes (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
-{
-  int                 mpirank, mpisize, mpiret;
-  int                 has_attr;
-  t8_ctree_t          tree;
-
-  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
-  SC_CHECK_MPI (mpiret);
-  mpiret = sc_MPI_Comm_size (comm, &mpisize);
-  SC_CHECK_MPI (mpiret);
-
-  for (tree = t8_cmesh_get_first_tree (cmesh_in); tree != NULL;
-       tree = t8_cmesh_get_next_tree (cmesh_in, tree)) {
-    if (mpirank == root && tree->attribute != NULL) {
-      has_attr = 1;
-    }
-    else {
-      has_attr = 0;
-    }
-    mpiret = sc_MPI_Bcast (&has_attr, 1, sc_MPI_INT, root, comm);
-    SC_CHECK_MPI (mpiret);
-    if (has_attr) {
-      if (mpirank != root) {
-        tree->attribute =
-          sc_mempool_alloc (cmesh_in->tree_attributes_mem[tree->eclass]);
-      }
-      mpiret = sc_MPI_Bcast (tree->attribute,
-                             t8_cmesh_get_attribute_size (cmesh_in,
-                                                          tree->eclass),
-                             sc_MPI_BYTE, root, comm);
-      SC_CHECK_MPI (mpiret);
-    }
-  }
-}
-#endif
 
 int
 t8_cmesh_is_empty (t8_cmesh_t cmesh)
@@ -1581,13 +1334,10 @@ t8_cmesh_translate_coordinates (const double *coords_in, double *coords_out,
  *       It would be nice to eventually rewrite these functions correctly.
  */
 void
-t8_cmesh_new_translate_vertices_to_attributes (t8_topidx_t *
-                                               tvertices,
-                                               double
-                                               *vertices,
-                                               double
-                                               *attr_vertices,
-                                               int num_vertices)
+t8_cmesh_new_translate_vertices_to_attributes (const t8_locidx_t *tvertices,
+                                               const double *vertices,
+                                               double *attr_vertices,
+                                               const int num_vertices)
 {
   int                 i;
   for (i = 0; i < num_vertices; i++) {
@@ -1608,4 +1358,84 @@ t8_cmesh_coords_axb (const double *coords_in, double *coords_out,
   for (i = 0; i < num_vertices; i++) {
     t8_vec_axpyz (coords_in + i * 3, b, coords_out + i * 3, alpha);
   }
+}
+
+#ifdef T8_ENABLE_DEBUG
+/**
+ * \warning This function is only available in debug-modus and should only 
+ * be used in debug-modus.
+ * 
+ * Prints the vertices of each local tree. 
+ * 
+ * \param[in] cmesh   source-cmesh, which trees get printed.
+ */
+static void
+t8_cmesh_print_local_trees (const t8_cmesh_t cmesh)
+{
+  const t8_locidx_t   num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
+  for (t8_locidx_t itree = 0; itree < num_local_trees; itree++) {
+    double             *vertices = t8_cmesh_get_tree_vertices (cmesh, itree);
+    const t8_eclass_t   tree_class = t8_cmesh_get_tree_class (cmesh, itree);
+    const int           num_vertices = t8_eclass_num_vertices[tree_class];
+    const t8_gloidx_t   gtree = t8_cmesh_get_global_id (cmesh, itree);
+    for (int ivertex = 0; ivertex < num_vertices; ivertex++) {
+      const int           vert_x = 3 * ivertex;
+      const int           vert_y = 3 * ivertex + 1;
+      const int           vert_z = 3 * ivertex + 2;
+      t8_debugf
+        ("[Global_tree: %li, local_tree: %i, vertex: %i] eclass: %s\t %f, %f, %f\n",
+         gtree, itree, ivertex, t8_eclass_to_string[tree_class],
+         vertices[vert_x], vertices[vert_y], vertices[vert_z]);
+    }
+    t8_debugf ("\n");
+  }
+}
+#endif
+
+void
+t8_cmesh_debug_print_trees (const t8_cmesh_t cmesh, sc_MPI_Comm comm)
+{
+#ifdef T8_ENABLE_DEBUG
+  /* This function is probably rather slow, linear in the number of processes and therefore
+   * only available if the debug-modus is enabled. */
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  if (t8_cmesh_is_partitioned (cmesh)) {
+    /* The cmesh is partitioned */
+    int                 rank;
+    int                 size;
+    int                 mpiret;
+    mpiret = sc_MPI_Comm_rank (comm, &rank);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Comm_size (comm, &size);
+    SC_CHECK_MPI (mpiret);
+    const int           send_rank = (rank + 1) % size;
+    const int           recv_rank = rank - 1;
+    /* Print the local trees in process-order. */
+    if (rank != 0) {
+      int                 source_rank;
+      /* Send the rank as an additional check */
+      mpiret =
+        sc_MPI_Recv (&source_rank, 1, sc_MPI_INT, recv_rank, 0, comm,
+                     sc_MPI_STATUS_IGNORE);
+      SC_CHECK_MPI (mpiret);
+      T8_ASSERT (source_rank == (rank - 1));
+    }
+    t8_cmesh_print_local_trees (cmesh);
+    if (rank != (size - 1)) {
+      mpiret = sc_MPI_Send (&rank, 1, sc_MPI_INT, send_rank, 0, comm);
+      SC_CHECK_MPI (mpiret);
+    }
+  }
+  else {
+    /* The cmesh is not partitioned, only one rank prints the trees. */
+    if (cmesh->mpirank == 0) {
+      t8_cmesh_print_local_trees (cmesh);
+    }
+  }
+
+#else
+  t8_global_errorf
+    ("Do not call t8_cmesh_debug_print_trees if t8code is not compiled with --enable-debug.\n");
+#endif /* T8_ENABLE_DEBUG */
 }

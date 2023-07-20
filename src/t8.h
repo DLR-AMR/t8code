@@ -43,9 +43,8 @@
 #error "MPI I/O configured differently in t8code and libsc"
 #endif
 
-/* indirectly also include p4est_config.h, sc.h */
+/* indirectly also include sc.h */
 #include <sc_containers.h>
-#include <p4est_base.h>
 
 /** This macro opens the extern "C" brace needed in C headers.
  * It needs to be followed by a semicolon to look like a statement. */
@@ -64,44 +63,52 @@ T8_EXTERN_C_BEGIN ();
 /** Portable way to use the const keyword determined by configure. */
 #define t8_restrict _sc_restrict
 
-#define T8_ASSERT P4EST_ASSERT          /**< TODO: write proper function. */
-#define T8_ALLOC P4EST_ALLOC            /**< TODO: write proper function. */
-#define T8_ALLOC_ZERO P4EST_ALLOC_ZERO  /**< TODO: write proper function. */
-#define T8_FREE P4EST_FREE              /**< TODO: write proper function. */
-#define T8_REALLOC P4EST_REALLOC        /**< TODO: write proper function. */
-
-/** A type for counting coarse mesh related values (trees, tree vertices, ...).
- * The name topidx alludes to mesh topology as this is what cmesh defines.
- * We use the p4est_locidx_t type here since t8code allows for creating
- * really large connectivities.
+/** Widely used assertion. Only active in debug-mode. */
+/* Note that we use the same definition as in sc.h. We are deliberately not using
+ * #define T8_ASSERT SC_ASSERT
+ * since then the assertion would not trigger if sc is not configured in debugging mode.
+ * However, we want it to trigger any time t8code is in debugging mode, independent of sc.
  */
-typedef p4est_locidx_t t8_topidx_t;
-/** The MPI Datatype of t8_topidx_t */
-#define T8_MPI_TOPIDX P4EST_MPI_LOCIDX
-/** Macro to get the absolute value of a t8_topidx_t */
-#define T8_TOPIDX_ABS(x) P4EST_LOCIDX_ABS(x)
-/** Comparison function for t8_topidx_t */
-#define t8_compare_topidx(v,w) p4est_locidx_compare(v,w)
+#ifdef T8_ENABLE_DEBUG
+#define T8_ASSERT(c) SC_CHECK_ABORT ((c), "Assertion '" #c "'")
+#else
+#define T8_ASSERT(c) SC_NOOP ()
+#endif
+
+/** Allocate a \a t-array with \a n elements. */
+#define T8_ALLOC(t,n) (t *) sc_malloc (t8_get_package_id(),    \
+                                        (n) * sizeof(t))
+
+/** Allocate a \a t-array with \a n elements and init to zero. */
+#define T8_ALLOC_ZERO(t,n) (t *) sc_calloc (t8_get_package_id(),    \
+                                        (size_t) (n), sizeof(t))
+
+/** Deallocate a \a t-array. */
+#define T8_FREE(p) sc_free (t8_get_package_id(), (p))
+
+/** Reallocate the \a t-array \a p with \a n elements. */
+#define T8_REALLOC(p,t,n) (t *) sc_realloc (t8_get_package_id(),   \
+                                        (p), (n) * sizeof(t))
 
 /** A type for processor-local indexing. */
-typedef p4est_locidx_t t8_locidx_t;
+typedef int32_t t8_locidx_t;
 /** The MPI Datatype of t8_locidx_t */
-#define T8_MPI_LOCIDX P4EST_MPI_LOCIDX
+#define T8_MPI_LOCIDX sc_MPI_INT
 /** Macro to get the absolute value of a t8_locidx_t */
-#define T8_LOCIDX_ABS(x) P4EST_LOCIDX_ABS(x)
+#define T8_LOCIDX_ABS(x) ((t8_locidx_t) labs ((long) (x)))
 /** Maximum possible value of a t8_locidx_t */
-#define T8_LOCIDX_MAX P4EST_LOCIDX_MAX
+#define T8_LOCIDX_MAX INT32_MAX
 /** Comparison function for t8_locidx_t */
-#define t8_compare_locidx(v,w) p4est_locidx_compare(v,w)
+#define t8_compare_locidx(v,w) sc_int32_compare(v,w)
 
 /** A type for global indexing that holds really big numbers. */
-typedef p4est_gloidx_t t8_gloidx_t;
+typedef int64_t t8_gloidx_t;
 /** The MPI Datatype of t8_gloidx_t */
-#define T8_MPI_GLOIDX P4EST_MPI_GLOIDX
+#define T8_MPI_GLOIDX sc_MPI_LONG_LONG_INT
 /** Macro to get the absolute value of a t8_gloidx_t */
-#define T8_GLOIDX_ABS(x) P4EST_GLOIDX_ABS(x)
+#define T8_GLOIDX_ABS(x) ((t8_gloidx_t) llabs ((long long) (x)))
 /** Comparison function for t8_gloidx_t */
-#define t8_compare_gloidx(v,w) p4est_gloidx_compare(v,w)
+#define t8_compare_gloidx(v,w) sc_int64_compare(v,w)
 
 /** A type for storing SFC indices */
 typedef uint64_t    t8_linearidx_t;
@@ -114,11 +121,14 @@ typedef uint64_t    t8_linearidx_t;
 #define T8_ADD_PADDING(_x) \
   ((T8_PADDING_SIZE - ((_x) % T8_PADDING_SIZE)) % T8_PADDING_SIZE)
 
+/** Define precisions for computations */
+#define T8_PRECISION_EPS SC_EPS
+
 /** Communication tags used internal to t8code. */
 typedef enum
 {
-  T8_MPI_TAG_FIRST = P4EST_COMM_TAG_FIRST,
-  T8_MPI_PARTITION_CMESH = P4EST_COMM_TAG_LAST, /**< Used for coarse mesh partitioning */
+  T8_MPI_TAG_FIRST = SC_TAG_FIRST,
+  T8_MPI_PARTITION_CMESH = SC_TAG_LAST, /**< Used for coarse mesh partitioning */
   T8_MPI_PARTITION_FOREST,  /**< Used for forest partitioning */
   T8_MPI_GHOST_FOREST,  /**< Used for for ghost layer creation */
   T8_MPI_GHOST_EXC_FOREST,  /**< Used for ghost data exchange */
@@ -242,13 +252,6 @@ void                t8_errorf (const char *fmt, ...)
  *                           You can also choose from log levels SC_LP_*.
  */
 void                t8_init (int log_threshold);
-
-/** Return a pointer to an array element indexed by a t8_topidx_t.
- * \param [in] index needs to be in [0]..[elem_count-1].
- * \return           A void * pointing to entry \a it in \a array.
- */
-void               *t8_sc_array_index_topidx (sc_array_t *array,
-                                              t8_topidx_t it);
 
 /** Return a pointer to an array element indexed by a t8_locidx_t.
  * \param [in] index needs to be in [0]..[elem_count-1].
