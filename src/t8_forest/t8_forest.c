@@ -1470,7 +1470,7 @@ t8_forest_write_vtk_ext (t8_forest_t forest,
   if (write_curved) {
     t8_errorf
       ("WARNING: t8code is not linked against VTK. "
-       "Therefore, the export of curved elements is not possible anyway.\n");
+       "Export of curved elements not yet available with the inbuild function.\n");
     return 0;
   }
 #endif
