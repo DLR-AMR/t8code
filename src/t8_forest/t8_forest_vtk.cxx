@@ -527,10 +527,10 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
    */
   t8_locidx_t         num_elements =
     t8_forest_get_local_num_elements (forest);
-  int                *cellTypes = T8_ALLOC (int, num_elements);
   if (ghosts) {
     num_elements += t8_forest_get_num_ghosts (forest);
   }
+  int                *cellTypes = T8_ALLOC (int, num_elements);
 
   /*
    * We need the vertex coords array to be of the 
