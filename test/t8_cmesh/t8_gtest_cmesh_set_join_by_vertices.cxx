@@ -41,7 +41,7 @@
 static void
 test_with_cmesh (t8_cmesh_t cmesh)
 {
-  const t8_locidx_t         ntrees = t8_cmesh_get_num_local_trees (cmesh);
+  const t8_locidx_t   ntrees = t8_cmesh_get_num_local_trees (cmesh);
 
   /* Arrays for the face connectivity computations via vertices. */
   double             *all_verts =
@@ -50,12 +50,12 @@ test_with_cmesh (t8_cmesh_t cmesh)
 
   /* Retrieve all tree vertices and element classes and store them into arrays. */
   for (t8_locidx_t itree = 0; itree < ntrees; itree++) {
-    const t8_eclass_t         eclass = t8_cmesh_get_tree_class (cmesh, itree);
+    const t8_eclass_t   eclass = t8_cmesh_get_tree_class (cmesh, itree);
     all_eclasses[itree] = eclass;
 
-    const double             *vertices = t8_cmesh_get_tree_vertices (cmesh, itree);
+    const double       *vertices = t8_cmesh_get_tree_vertices (cmesh, itree);
 
-    const int                 nverts = t8_eclass_num_vertices[eclass];
+    const int           nverts = t8_eclass_num_vertices[eclass];
 
     for (int ivert = 0; ivert < nverts; ivert++) {
       for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
@@ -69,7 +69,7 @@ test_with_cmesh (t8_cmesh_t cmesh)
 
   /* Compute face connectivity. */
   int                *conn = NULL;
-  const int do_both_directions = 1;
+  const int           do_both_directions = 1;
   t8_cmesh_set_join_by_vertices (NULL, ntrees, all_eclasses, all_verts,
                                  &conn, do_both_directions);
 
@@ -133,11 +133,13 @@ test_with_cmesh (t8_cmesh_t cmesh)
             int                 match_count_per_coord = 0;
             for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
               const double        this_face_vert =
-                this_vertices[T8_2D_TO_1D (this_nface_verts, T8_ECLASS_MAX_DIM,
-                                     this_ivert, icoord)];
+                this_vertices[T8_2D_TO_1D
+                              (this_nface_verts, T8_ECLASS_MAX_DIM,
+                               this_ivert, icoord)];
               const double        dual_face_vert =
-                dual_vertices[T8_2D_TO_1D (dual_nface_verts, T8_ECLASS_MAX_DIM,
-                                     dual_ivert, icoord)];
+                dual_vertices[T8_2D_TO_1D
+                              (dual_nface_verts, T8_ECLASS_MAX_DIM,
+                               dual_ivert, icoord)];
 
               if (fabs (this_face_vert - dual_face_vert) <
                   10 * T8_PRECISION_EPS) {
@@ -247,8 +249,8 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
 
   {
     // Note: `t8_set_join_by_vertices` finds more face connections than stored in the cmesh.
-    t8_cmesh_t cmesh = t8_cmesh_new_prism_cake_funny_oriented (comm);
-    test_with_cmesh(cmesh);
+    t8_cmesh_t          cmesh = t8_cmesh_new_prism_cake_funny_oriented (comm);
+    test_with_cmesh (cmesh);
     t8_cmesh_destroy (&cmesh);
   }
 
@@ -265,14 +267,15 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
   }
 
   {
-    const int periodic = 0;
-    t8_cmesh_t          cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD,
-                                                   do_partition,
-                                                   periodic);
-    test_with_cmesh(cmesh);
+    const int           periodic = 0;
+    t8_cmesh_t          cmesh =
+      t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD,
+                                     do_partition,
+                                     periodic);
+    test_with_cmesh (cmesh);
     t8_cmesh_destroy (&cmesh);
   }
- 
+
   /* The following cmeshes give erroneous results and the tests fail.
    * It is unclear yet if there is a bug in the `t8_set_join_by_vertices` routine
    * or if these cmesh examples have wrongly set face connectivities. */
@@ -464,11 +467,14 @@ protected:
 };
 /* *INDENT-ON* */
 
-TEST_P (t8_cmesh_set_join_by_vertices_class, test_cmesh_set_join_by_vertices_parametrized)
+TEST_P (t8_cmesh_set_join_by_vertices_class,
+        test_cmesh_set_join_by_vertices_parametrized)
 {
   test_with_cmesh (cmesh);
 }
 
 /* Test all cmeshes over all different inputs we get through their id */
-INSTANTIATE_TEST_SUITE_P (t8_cmesh_set_join_by_vertices, t8_cmesh_set_join_by_vertices_class,
-                          testing::Range (0, t8_get_number_of_all_testcases ()));
+INSTANTIATE_TEST_SUITE_P (t8_cmesh_set_join_by_vertices,
+                          t8_cmesh_set_join_by_vertices_class,
+                          testing::Range (0,
+                                          t8_get_number_of_all_testcases ()));

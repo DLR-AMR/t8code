@@ -56,7 +56,9 @@ void                t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh,
                                                    const t8_eclass_t
                                                    *eclasses,
                                                    const double *vertices,
-                                                   int **connectivity, const int do_both_directions);
+                                                   int **connectivity,
+                                                   const int
+                                                   do_both_directions);
 
 T8_EXTERN_C_END ();
 
