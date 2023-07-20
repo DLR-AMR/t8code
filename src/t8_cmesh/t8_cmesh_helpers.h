@@ -46,7 +46,7 @@ T8_EXTERN_C_BEGIN ();
                                   For each element and each face the following is stored:
                                       neighbor_tree_id, neighbor_dual_face_id, orientation
 
-  WARNING: This routine might be too expensive for very large meshes. In this case, consider to use a fully featured mesh generator.
+  \warning This routine might be too expensive for very large meshes. In this case, consider to use a fully featured mesh generator.
 
   NOTE: This routine does not detect periodic boundaries.
  */
