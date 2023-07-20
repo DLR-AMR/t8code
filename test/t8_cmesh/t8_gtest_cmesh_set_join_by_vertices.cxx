@@ -26,6 +26,7 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh/t8_cmesh_helpers.h>
+#include <t8_cmesh/t8_cmesh_testcases.h>
 
 #include <p8est_geometry.h>
 
@@ -40,7 +41,7 @@
 static void
 test_with_cmesh (t8_cmesh_t cmesh)
 {
-  t8_locidx_t         ntrees = t8_cmesh_get_num_local_trees (cmesh);
+  const t8_locidx_t         ntrees = t8_cmesh_get_num_local_trees (cmesh);
 
   /* Arrays for the face connectivity computations via vertices. */
   double             *all_verts =
@@ -49,7 +50,7 @@ test_with_cmesh (t8_cmesh_t cmesh)
 
   /* Retrieve all tree vertices and element classes and store them into arrays. */
   for (t8_locidx_t itree = 0; itree < ntrees; itree++) {
-    t8_eclass_t         eclass = t8_cmesh_get_tree_class (cmesh, itree);
+    const t8_eclass_t         eclass = t8_cmesh_get_tree_class (cmesh, itree);
     all_eclasses[itree] = eclass;
 
     const double             *vertices = t8_cmesh_get_tree_vertices (cmesh, itree);
@@ -98,7 +99,8 @@ test_with_cmesh (t8_cmesh_t cmesh)
                                     &cmesh_dual_iface,
                                     &cmesh_orientation);
 
-      /* If this is a connected domain boundary (e.g. periodic boundary) we skip particular test. */
+      /* Here we check for a connected domain boundary (e.g. periodic
+       * boundary). In this case we skip the test. */
       if (cmesh_dual_itree > -1) {
         const t8_eclass_t   this_eclass = all_eclasses[this_itree];
         const t8_eclass_t   dual_eclass = all_eclasses[cmesh_dual_itree];
@@ -157,10 +159,10 @@ test_with_cmesh (t8_cmesh_t cmesh)
         }
       }
 
-      EXPECT_EQ (conn_dual_itree,
-                 cmesh_dual_itree) << "Neighboring trees do not match.";
-
+      /* Here we ignore found connections which are not stored in the `cmesh` object. */
       if (cmesh_dual_itree > -1) {
+        EXPECT_EQ (conn_dual_itree,
+                   cmesh_dual_itree) << "Neighboring trees do not match.";
         EXPECT_EQ (conn_dual_iface,
                    cmesh_dual_iface) << "Dual faces do not match.";
         EXPECT_EQ (conn_orientation,
@@ -174,13 +176,11 @@ test_with_cmesh (t8_cmesh_t cmesh)
   T8_FREE (all_eclasses);
 }
 
-TEST (t8_cmesh_set_join_by_vertices, test_set_join_hypercube_hybrid)
+TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
 {
   /* Some defaults. */
   sc_MPI_Comm         comm = sc_MPI_COMM_WORLD;
   const int           do_partition = 0;
-
-  /* TODO: Parametrize this test. There is a `t8_cmesh_test_create_cmesh`(es) iterator. */
 
   /* 
    * Tests with 2D and 3D example meshes from `t8code`.
@@ -235,6 +235,20 @@ TEST (t8_cmesh_set_join_by_vertices, test_set_join_hypercube_hybrid)
     const int           num_of_prisms = 28;
     t8_cmesh_t          cmesh = t8_cmesh_new_prism_cake (comm, num_of_prisms);
     test_with_cmesh (cmesh);
+    t8_cmesh_destroy (&cmesh);
+  }
+
+  {
+    // Note: `t8_set_join_by_vertices` finds more face connections than stored in the cmesh.
+    t8_cmesh_t          cmesh = t8_cmesh_new_prism_geometry (comm);
+    test_with_cmesh (cmesh);
+    t8_cmesh_destroy (&cmesh);
+  }
+
+  {
+    // Note: `t8_set_join_by_vertices` finds more face connections than stored in the cmesh.
+    t8_cmesh_t cmesh = t8_cmesh_new_prism_cake_funny_oriented (comm);
+    test_with_cmesh(cmesh);
     t8_cmesh_destroy (&cmesh);
   }
 
@@ -296,18 +310,11 @@ TEST (t8_cmesh_set_join_by_vertices, test_set_join_hypercube_hybrid)
 
   /* {
    *   // Problem: Crashes with memory error.
+   *   // Reason: There are no tree vertices set. Thus it cannot work.
    *   int num_trees = 1;
    *   t8_eclass_t eclass = T8_ECLASS_HEX;
    *   t8_cmesh_t  cmesh = t8_cmesh_new_bigmesh (eclass, num_trees,
    *                                         sc_MPI_COMM_WORLD);
-   *   test_with_cmesh(cmesh);
-   *   t8_cmesh_destroy (&cmesh);
-   * }
-   */
-
-  /* {
-   *   // Problem: Neighboring treeid discrepancy.
-   *   t8_cmesh_t cmesh = t8_cmesh_new_prism_cake_funny_oriented (comm);
    *   test_with_cmesh(cmesh);
    *   t8_cmesh_destroy (&cmesh);
    * }
@@ -423,3 +430,45 @@ TEST (t8_cmesh_set_join_by_vertices, test_set_join_hypercube_hybrid)
     t8_cmesh_destroy (&cmesh);
   }
 }
+
+/* *INDENT-OFF* */
+class t8_cmesh_set_join_by_vertices_class : public testing::TestWithParam<int>{
+protected:
+  void SetUp() override {
+    cmesh_id = GetParam();
+
+    int first_id_new_bigmesh = t8_get_number_of_comm_only_cmesh_testcases () +
+          t8_get_number_of_new_hypercube_cmesh_testcases ()
+          + t8_get_number_of_new_empty_cmesh_testcases () +
+          t8_get_number_of_new_from_class_cmesh_testcases ()
+          + t8_get_number_of_new_hypercube_hybrid_cmesh_testcases () +
+          t8_get_number_of_new_periodic_cmesh_testcases ();
+
+    int last_id_new_bigmesh = first_id_new_bigmesh + t8_get_number_of_new_bigmesh_cmesh_testcases () - 1;
+
+    if (cmesh_id >= first_id_new_bigmesh && cmesh_id <= last_id_new_bigmesh) {
+      GTEST_SKIP ();
+    }
+
+    cmesh = t8_test_create_cmesh (cmesh_id);
+  }
+
+  void TearDown() override {
+    if (cmesh != NULL) {
+      t8_cmesh_destroy (&cmesh);
+    }
+  }
+
+  int                 cmesh_id;
+  t8_cmesh_t          cmesh = NULL;
+};
+/* *INDENT-ON* */
+
+TEST_P (t8_cmesh_set_join_by_vertices_class, test_cmesh_set_join_by_vertices_parametrized)
+{
+  test_with_cmesh (cmesh);
+}
+
+/* Test all cmeshes over all different inputs we get through their id */
+INSTANTIATE_TEST_SUITE_P (t8_cmesh_set_join_by_vertices, t8_cmesh_set_join_by_vertices_class,
+                          testing::Range (0, t8_get_number_of_all_testcases ()));
