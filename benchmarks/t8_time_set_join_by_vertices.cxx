@@ -42,6 +42,9 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh/t8_cmesh_helpers.h>
 
+#include <sc_flops.h>
+#include <sc_statistics.h>
+
 /* In this file we test `t8_set_join_by_vertices` routine with a lot of example
  * meshes provided by t8code and p4est. The general idea is a follows: We first
  * retrieve all tree vertices from a given cmesh, construct the connectivity
@@ -81,10 +84,31 @@ test_with_cmesh (t8_cmesh_t cmesh)
     }
   }
 
+  {
+    const int do_both_directions = 0;
+
+    sc_flopinfo_t       fi, snapshot;
+    sc_statinfo_t       stats[1];
+
+    /* Start timer */
+    sc_flops_start (&fi);
+    sc_flops_snap (&fi, &snapshot);
+
+    /* Compute face connectivity. */
+    t8_cmesh_set_join_by_vertices (NULL, ntrees, all_eclasses, all_verts, NULL, do_both_directions);
+
+    /* Measure passed time. */
+    sc_flops_shot (&fi, &snapshot);
+    sc_stats_set1 (&stats[0], snapshot.iwtime, "t8_cmesh_set_join_by_vertices");
+    /* Print stats. */
+    sc_stats_compute (sc_MPI_COMM_WORLD, 1, stats);
+    sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, 1, stats, 1, 1);
+  }
+
   /* Compute face connectivity. */
-  int                *conn = NULL;
-  t8_cmesh_set_join_by_vertices (NULL, ntrees, all_eclasses, all_verts,
-                                 &conn);
+  int *conn = NULL;
+  const int do_both_directions = 1;
+  t8_cmesh_set_join_by_vertices (NULL, ntrees, all_eclasses, all_verts, &conn, do_both_directions);
 
   /* Compare results with `t8_cmesh_get_face_neighbor`. */
   for (int this_itree = 0; this_itree < ntrees; this_itree++) {
@@ -171,18 +195,19 @@ test_with_cmesh (t8_cmesh_t cmesh)
         }
       }
 
-      if (conn_dual_itree != cmesh_dual_itree) {
-        t8_global_productionf ("Neighboring trees do not match: %5d %2d: %5d %5d\n", this_itree, this_iface, conn_dual_itree, cmesh_dual_itree);
+      if (cmesh_dual_itree > -1) {
+        if (conn_dual_itree != cmesh_dual_itree) {
+          t8_global_productionf ("Neighboring trees do not match: %5d %2d: %5d %5d\n", this_itree, this_iface, conn_dual_itree, cmesh_dual_itree);
+        } else {
+          if (conn_dual_iface != cmesh_dual_iface) {
+            t8_global_productionf ("Dual faces do not match: %d %d.\n", conn_dual_iface, cmesh_dual_iface);
+          } else {
+            if (conn_orientation != cmesh_orientation) {
+              t8_global_productionf ("Face orientations do not match: %d %d.\n", conn_orientation, cmesh_orientation);
+            }
+          }
+        }
       }
-
-      // if (cmesh_dual_itree > -1) {
-      //   if (conn_dual_iface != cmesh_dual_iface) {
-      //     t8_global_productionf ("Dual faces do not match.\n");
-      //   }
-      //   if (conn_orientation != cmesh_orientation) {
-      //     t8_global_productionf ("Face orientations do not match.\n");
-      //   }
-      // }
     }
   }
 
@@ -225,16 +250,6 @@ main (int argc, char **argv)
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
-  /* Parameter for t8_construct_fractal and command line */
-  // int                 level_initial = -1;
-  // int                 level_end = -1;
-  // int                 iterative = -1;
-  // int                 trees = 1;
-  // int                 output = -1;
-  // int                 coarse = -1;
-  // int                 remove = -1;
-  // int                 runs = -1;
-  // int                 eclass_int = -1;
   int                 helpme;
 
   const char *meshfile;
@@ -257,23 +272,37 @@ main (int argc, char **argv)
   const int partition = 0;
   const int use_occ_geometry = 0;
 
-  t8_cmesh_t cmesh = t8_cmesh_from_msh_file (meshfile, partition,
-                        sc_MPI_COMM_WORLD, dim, main_proc,
-                        use_occ_geometry);
+  t8_cmesh_t cmesh;
+
+  {
+    sc_flopinfo_t       fi, snapshot;
+    sc_statinfo_t       stats[1];
+
+    /* Start timer */
+    sc_flops_start (&fi);
+    sc_flops_snap (&fi, &snapshot);
+
+    cmesh = t8_cmesh_from_msh_file (meshfile, partition,
+                          sc_MPI_COMM_WORLD, dim, main_proc,
+                          use_occ_geometry);
+
+    /* Measure passed time. */
+    sc_flops_shot (&fi, &snapshot);
+    sc_stats_set1 (&stats[0], snapshot.iwtime, "t8_cmesh_from_msh_file");
+    /* Print stats. */
+    sc_stats_compute (sc_MPI_COMM_WORLD, 1, stats);
+    sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, 1, stats, 1, 1);
+  }
 
   test_with_cmesh (cmesh);
 
   t8_cmesh_unref (&cmesh);
 
   } else {
-    /* display help message and usage */
+    /* Display help message and usage. */
     t8_global_productionf ("%s\n", help);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-
-
-
-
 
   sc_options_destroy (opt);
   sc_finalize ();

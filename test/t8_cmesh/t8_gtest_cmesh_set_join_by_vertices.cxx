@@ -68,8 +68,9 @@ test_with_cmesh (t8_cmesh_t cmesh)
 
   /* Compute face connectivity. */
   int                *conn = NULL;
+  const int do_both_directions = 1;
   t8_cmesh_set_join_by_vertices (NULL, ntrees, all_eclasses, all_verts,
-                                 &conn);
+                                 &conn, do_both_directions);
 
   /* Compare results with `t8_cmesh_get_face_neighbor`. */
   for (int this_itree = 0; this_itree < ntrees; this_itree++) {
@@ -249,6 +250,15 @@ TEST (t8_cmesh_set_join_by_vertices, test_set_join_hypercube_hybrid)
     t8_cmesh_destroy (&cmesh);
   }
 
+  {
+    const int periodic = 0;
+    t8_cmesh_t          cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD,
+                                                   do_partition,
+                                                   periodic);
+    test_with_cmesh(cmesh);
+    t8_cmesh_destroy (&cmesh);
+  }
+ 
   /* The following cmeshes give erroneous results and the tests fail.
    * It is unclear yet if there is a bug in the `t8_set_join_by_vertices` routine
    * or if these cmesh examples have wrongly set face connectivities. */
@@ -290,16 +300,6 @@ TEST (t8_cmesh_set_join_by_vertices, test_set_join_hypercube_hybrid)
    *   t8_eclass_t eclass = T8_ECLASS_HEX;
    *   t8_cmesh_t  cmesh = t8_cmesh_new_bigmesh (eclass, num_trees,
    *                                         sc_MPI_COMM_WORLD);
-   *   test_with_cmesh(cmesh);
-   *   t8_cmesh_destroy (&cmesh);
-   * }
-   */
-
-  /* {
-   *   // Problem: Orientation discrepancy.
-   *   t8_cmesh_t          cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD,
-   *                                                  do_partition,
-   *                                                  periodic);
    *   test_with_cmesh(cmesh);
    *   t8_cmesh_destroy (&cmesh);
    * }
