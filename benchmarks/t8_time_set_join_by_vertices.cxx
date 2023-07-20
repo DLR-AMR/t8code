@@ -76,10 +76,10 @@ test_with_cmesh (t8_cmesh_t cmesh)
 
     for (int ivert = 0; ivert < nverts; ivert++) {
       for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
-        all_verts[T8_I3
+        all_verts[T8_3D_TO_1D
                   (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree,
                    ivert, icoord)]
-          = vertices[T8_I2 (nverts, T8_ECLASS_MAX_DIM, ivert, icoord)];
+          = vertices[T8_2D_TO_1D (nverts, T8_ECLASS_MAX_DIM, ivert, icoord)];
       }
     }
   }
@@ -117,13 +117,13 @@ test_with_cmesh (t8_cmesh_t cmesh)
 
     for (int this_iface = 0; this_iface < this_nfaces; this_iface++) {
       const int           conn_dual_itree =
-        conn[T8_I3
+        conn[T8_3D_TO_1D
              (ntrees, T8_ECLASS_MAX_FACES, 3, this_itree, this_iface, 0)];
       const int           conn_dual_iface =
-        conn[T8_I3
+        conn[T8_3D_TO_1D
              (ntrees, T8_ECLASS_MAX_FACES, 3, this_itree, this_iface, 1)];
       const int           conn_orientation =
-        conn[T8_I3
+        conn[T8_3D_TO_1D
              (ntrees, T8_ECLASS_MAX_FACES, 3, this_itree, this_iface, 2)];
 
       int                 cmesh_dual_iface;
@@ -169,10 +169,10 @@ test_with_cmesh (t8_cmesh_t cmesh)
             int                 match_count_per_coord = 0;
             for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
               const double        this_face_vert =
-                this_vertices[T8_I2 (this_nface_verts, T8_ECLASS_MAX_DIM,
+                this_vertices[T8_2D_TO_1D (this_nface_verts, T8_ECLASS_MAX_DIM,
                                      this_ivert, icoord)];
               const double        dual_face_vert =
-                dual_vertices[T8_I2 (dual_nface_verts, T8_ECLASS_MAX_DIM,
+                dual_vertices[T8_2D_TO_1D (dual_nface_verts, T8_ECLASS_MAX_DIM,
                                      dual_ivert, icoord)];
 
               if (fabs (this_face_vert - dual_face_vert) <

@@ -81,7 +81,7 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees,
            * skip the computations here since we only need the connectivity in one direction. */
           /* *INDENT-ON* */
           if (!do_both_directions
-            && conn[T8_I3(ntrees, T8_ECLASS_MAX_FACES, 3, neigh_itree, neigh_iface, 0)] > -1) {
+            && conn[T8_3D_TO_1D(ntrees, T8_ECLASS_MAX_FACES, 3, neigh_itree, neigh_iface, 0)] > -1) {
             continue;
           }
           /* *INDENT-OFF* */
@@ -124,9 +124,9 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees,
                  * coordinate from the vertices array. */
                 /* *INDENT-ON* */
                 const double        face_vert =
-                  vertices[T8_I3(ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree, ivert, icoord)];
+                  vertices[T8_3D_TO_1D(ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree, ivert, icoord)];
                 const double        neigh_face_vert =
-                  vertices[T8_I3(ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, neigh_itree, neigh_ivert, icoord)];
+                  vertices[T8_3D_TO_1D(ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, neigh_itree, neigh_ivert, icoord)];
                 /* *INDENT-OFF* */
 
                 /* Compare the coordinates with some tolerance. */
@@ -183,9 +183,9 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees,
 
             /* Store the results. */
             /* *INDENT-ON* */
-            conn[T8_I3 (ntrees, T8_ECLASS_MAX_FACES, 3, itree, iface, 0)] = neigh_itree;
-            conn[T8_I3 (ntrees, T8_ECLASS_MAX_FACES, 3, itree, iface, 1)] = neigh_iface;
-            conn[T8_I3 (ntrees, T8_ECLASS_MAX_FACES, 3, itree, iface, 2)] = orientation;
+            conn[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_FACES, 3, itree, iface, 0)] = neigh_itree;
+            conn[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_FACES, 3, itree, iface, 1)] = neigh_iface;
+            conn[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_FACES, 3, itree, iface, 2)] = orientation;
             /* *INDENT-OFF* */
 
             break;
@@ -203,11 +203,11 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees,
 
       for (int iface = 0; iface < nfaces; iface++) {
         const int           neigh_itree =
-          conn[T8_I3 (ntrees, T8_ECLASS_MAX_FACES, 3, itree, iface, 0)];
+          conn[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_FACES, 3, itree, iface, 0)];
         const int           neigh_iface =
-          conn[T8_I3 (ntrees, T8_ECLASS_MAX_FACES, 3, itree, iface, 1)];
+          conn[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_FACES, 3, itree, iface, 1)];
         const int           orientation =
-          conn[T8_I3 (ntrees, T8_ECLASS_MAX_FACES, 3, itree, iface, 2)];
+          conn[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_FACES, 3, itree, iface, 2)];
 
         if (neigh_itree > -1) {
           t8_cmesh_set_join (cmesh, itree, neigh_itree, iface, neigh_iface,

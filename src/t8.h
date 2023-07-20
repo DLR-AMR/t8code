@@ -125,10 +125,10 @@ typedef uint64_t    t8_linearidx_t;
 #define T8_PRECISION_EPS SC_EPS
 
 /** Access multidimensional data on one-dimensional C arrays. */
-#define T8_I1(nx,i) (i)
-#define T8_I2(nx,ny,i,j) ((i)*(ny) + (j))
-#define T8_I3(nx,ny,nz,i,j,k) (((i)*(ny) + (j))*(nz) + (k))
-#define T8_I4(nx,ny,nz,nl,i,j,k,l) ((((i)*(ny) + (j))*(nz) + (k))*(nl) + (l))
+#define T8_1D_TO_1D(nx,i) (i)
+#define T8_2D_TO_1D(nx,ny,i,j) ((i)*(ny) + (j))
+#define T8_3D_TO_1D(nx,ny,nz,i,j,k) (((i)*(ny) + (j))*(nz) + (k))
+#define T8_4D_TO_1D(nx,ny,nz,nl,i,j,k,l) ((((i)*(ny) + (j))*(nz) + (k))*(nl) + (l))
 
 /** Communication tags used internal to t8code. */
 typedef enum
