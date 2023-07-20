@@ -620,7 +620,8 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
                                        &point_id, cellTypes, points,
                                        cellArray, vtk_treeid, vtk_mpirank,
                                        vtk_level, vtk_element_id);
-      elem_id++}
+      elem_id++;
+      }
     }
   }
 
