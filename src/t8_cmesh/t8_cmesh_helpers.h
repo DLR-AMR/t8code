@@ -45,6 +45,7 @@ T8_EXTERN_C_BEGIN ();
                                   testing purposes. The dimension of \a connectivity are [ntrees,T8_ECLASS_MAX_FACES,3].
                                   For each element and each face the following is stored:
                                       neighbor_tree_id, neighbor_dual_face_id, orientation
+ * \param[in]       do_both_directions Compute the connectivty from both neighboring sides. Takes much longer to compute.
 
   WARNING: This routine might be too expensive for very large meshes. In this case, consider to use a fully featured mesh generator.
 
@@ -55,7 +56,7 @@ void                t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh,
                                                    const t8_eclass_t
                                                    *eclasses,
                                                    const double *vertices,
-                                                   int **connectivity);
+                                                   int **connectivity, const int do_both_directions);
 
 T8_EXTERN_C_END ();
 

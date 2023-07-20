@@ -30,26 +30,16 @@
 #include <t8_eclass.h>
 #include <t8_cmesh/t8_cmesh_helpers.h>
 
-#include <sc_flops.h>
-#include <sc_statistics.h>
-
 void
 t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees,
                                const t8_eclass_t *eclasses,
-                               const double *vertices, int **connectivity)
+                               const double *vertices, int **connectivity, const int do_both_directions)
 {
   /* If `connectivity` is NULL then the following array gets freed at the end of this routine. */
   int                *conn = T8_ALLOC (int, ntrees * T8_ECLASS_MAX_FACES * 3);
   for (int i = 0; i < ntrees * T8_ECLASS_MAX_FACES * 3; i++) {
     conn[i] = -1;
   }
-
-  sc_flopinfo_t       fi, snapshot;
-  sc_statinfo_t       stats[1];
-
-  /* Start timer */
-  sc_flops_start (&fi);
-  sc_flops_snap (&fi, &snapshot);
 
   /* The general idea of this function is as follows: Loop over each element
    * then again loop over each element and compare the vertices of each their
@@ -87,9 +77,9 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees,
         /* Loop over all faces of the potentially neighboring cmesh element. */
         for (int neigh_iface = 0; neigh_iface < neigh_nfaces; neigh_iface++) {
 
-          /* If cmesh is given and we already checked the two faces, we can
+          /* If we already checked the two faces, we can
            * skip the computations here since we only need the connectivity in one direction. */
-          if (connectivity == NULL
+          if (!do_both_directions
               &&
               conn[T8_I3
                    (ntrees, T8_ECLASS_MAX_FACES, 3, neigh_itree, neigh_iface,
@@ -97,7 +87,7 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees,
             continue;
           }
 
-          /* Get the number of vertices per face of potentiall neighboring element. */
+          /* Get the number of vertices per face of potentially neighboring element. */
           const int           neigh_nface_verts =
             t8_eclass_num_vertices[t8_eclass_face_types[neigh_eclass]
                                    [neigh_iface]];
@@ -114,7 +104,7 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees,
             face_vert_order[i] = -1;
           }
 
-          int                 match_count = 0;  /* This tracks the number matching vertices. */
+          int                 match_count = 0;  /* This tracks the number of matching vertices. */
           /* Loop over the vertices of the current element's face. */
           for (int iface_vert = 0; iface_vert < nface_verts; iface_vert++) {
             /* Map from a face vertex id to the element vertex id. */
@@ -166,8 +156,23 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees,
              * Face corner 0 of the face with the lower face direction connects
              * to a corner of the other face. The number of this corner is the
              * orientation code. */
-            int                 orientation = 0;
-            if (iface <= neigh_iface) {
+            int                 orientation = -1;
+            int smaller_bigger_face_condition = -1;
+
+            int compare = t8_eclass_compare (eclass, neigh_eclass);
+            if (compare < 0) {
+              /* This tree class is smaller than neigh. tree class.*/
+              smaller_bigger_face_condition = 1;
+            } else if (compare > 0) {
+              /* This tree class is bigger than neigh. tree class.*/
+              smaller_bigger_face_condition = 0;
+            } else {
+              /* This tree class is the same as the neigh. tree class. 
+                 Then the face with the smaller face id is the smaller one. */
+              smaller_bigger_face_condition = iface < neigh_iface;
+            }
+
+            if (smaller_bigger_face_condition) {
               orientation = face_vert_order[0];
             }
             else {
@@ -193,13 +198,6 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees,
       }
     }
   }
-
-  /* measure passed time */
-  sc_flops_shot (&fi, &snapshot);
-  sc_stats_set1 (&stats[0], snapshot.iwtime, "face_conn_by_verts");
-  /* print stats */
-  sc_stats_compute (sc_MPI_COMM_WORLD, 1, stats);
-  sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, 1, stats, 1, 1);
 
   /* Transfer the computed face connectivity to the `cmesh` object. */
   if (cmesh != NULL) {
