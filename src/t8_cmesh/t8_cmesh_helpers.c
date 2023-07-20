@@ -59,7 +59,7 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees,
       const t8_eclass_t   eclass = eclasses[itree];
 
       /* Get the number of faces of this element. */
-      int                 nfaces = t8_eclass_num_faces[eclass];
+      const int                 nfaces = t8_eclass_num_faces[eclass];
 
       /* Loop over all faces of the current cmesh element. */
       for (int iface = 0; iface < nfaces; iface++) {
