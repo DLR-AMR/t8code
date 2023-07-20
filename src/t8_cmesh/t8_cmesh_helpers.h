@@ -47,9 +47,9 @@ T8_EXTERN_C_BEGIN ();
                                       neighbor_tree_id, neighbor_dual_face_id, orientation
  * \param[in]       do_both_directions Compute the connectivty from both neighboring sides. Takes much longer to compute.
 
-  WARNING: This routine might be too expensive for very large meshes. In this case, consider to use a fully featured mesh generator.
+  \warning This routine might be too expensive for very large meshes. In this case, consider to use a fully featured mesh generator.
 
-  NOTE: This routine does not detect periodic boundaries.
+  \note This routine does not detect periodic boundaries.
  */
 void                t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh,
                                                    const int ntrees,
