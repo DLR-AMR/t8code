@@ -30,6 +30,9 @@
 #include <t8_eclass.h>
 #include <t8_cmesh/t8_cmesh_helpers.h>
 
+#include <sc_flops.h>
+#include <sc_statistics.h>
+
 void
 t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees,
                                const t8_eclass_t *eclasses,
@@ -40,6 +43,13 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees,
   for (int i = 0; i < ntrees * T8_ECLASS_MAX_FACES * 3; i++) {
     conn[i] = -1;
   }
+
+  sc_flopinfo_t       fi, snapshot;
+  sc_statinfo_t       stats[1];
+
+  /* Start timer */
+  sc_flops_start (&fi);
+  sc_flops_snap (&fi, &snapshot);
 
   /* The general idea of this function is as follows: Loop over each element
    * then again loop over each element and compare the vertices of each their
@@ -183,6 +193,13 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees,
       }
     }
   }
+
+  /* measure passed time */
+  sc_flops_shot (&fi, &snapshot);
+  sc_stats_set1 (&stats[0], snapshot.iwtime, "face_conn_by_verts");
+  /* print stats */
+  sc_stats_compute (sc_MPI_COMM_WORLD, 1, stats);
+  sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, 1, stats, 1, 1);
 
   /* Transfer the computed face connectivity to the `cmesh` object. */
   if (cmesh != NULL) {
