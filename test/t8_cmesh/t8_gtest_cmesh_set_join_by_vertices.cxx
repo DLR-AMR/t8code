@@ -52,7 +52,7 @@ test_with_cmesh (t8_cmesh_t cmesh)
     t8_eclass_t         eclass = t8_cmesh_get_tree_class (cmesh, itree);
     all_eclasses[itree] = eclass;
 
-    double             *vertices = t8_cmesh_get_tree_vertices (cmesh, itree);
+    const double             *vertices = t8_cmesh_get_tree_vertices (cmesh, itree);
 
     int                 nverts = t8_eclass_num_vertices[eclass];
 
