@@ -616,11 +616,11 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
         t8_forest_element_to_vtk_cell (forest, element, scheme, itree_ghost,
                                        offset, write_treeid, write_mpirank,
                                        write_level, write_element_id,
-                                       curved_flag, 1, ielem_ghost,
+                                       curved_flag, 1, elem_id,
                                        &point_id, cellTypes, points,
                                        cellArray, vtk_treeid, vtk_mpirank,
                                        vtk_level, vtk_element_id);
-      }
+      elem_id++}
     }
   }
 
