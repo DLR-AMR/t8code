@@ -20,30 +20,16 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <sc_flops.h>
+#include <sc_options.h>
+#include <sc_statistics.h>
+
 #include <t8.h>
-#include <t8_forest/t8_forest.h>
-#include <t8_forest/t8_forest_private.h>
-#include <t8_forest/t8_forest_partition.h>
-#include <t8_forest/t8_forest_types.h>
-#include <t8_forest/t8_forest_adapt.h>
-#include <t8_eclass.h>
 #include <t8_cmesh.h>
+#include <t8_eclass.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
-#include <sc_refcount.h>
-#include <sc_flops.h>
-#include <sc_statistics.h>
-#include <sc_options.h>
-
-#include <t8.h>
-#include <t8_eclass.h>
-#include <t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh/t8_cmesh_helpers.h>
-
-#include <sc_flops.h>
-#include <sc_statistics.h>
 
 /* In this file we test `t8_set_join_by_vertices` routine with a lot of example
  * meshes provided by t8code and p4est. The general idea is a follows: We first
