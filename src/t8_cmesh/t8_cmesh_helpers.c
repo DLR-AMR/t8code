@@ -33,7 +33,8 @@
 void
 t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees,
                                const t8_eclass_t *eclasses,
-                               const double *vertices, int **connectivity, const int do_both_directions)
+                               const double *vertices, int **connectivity,
+                               const int do_both_directions)
 {
   /* If `connectivity` is NULL then the following array gets freed at the end of this routine. */
   int                *conn = T8_ALLOC (int, ntrees * T8_ECLASS_MAX_FACES * 3);
@@ -59,7 +60,7 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees,
       const t8_eclass_t   eclass = eclasses[itree];
 
       /* Get the number of faces of this element. */
-      const int                 nfaces = t8_eclass_num_faces[eclass];
+      const int           nfaces = t8_eclass_num_faces[eclass];
 
       /* Loop over all faces of the current cmesh element. */
       for (int iface = 0; iface < nfaces; iface++) {
@@ -79,12 +80,12 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees,
 
           /* If we already checked the two faces, we can
            * skip the computations here since we only need the connectivity in one direction. */
-          /* *INDENT-ON* */
+          /* *INDENT-OFF* */
           if (!do_both_directions
             && conn[T8_3D_TO_1D(ntrees, T8_ECLASS_MAX_FACES, 3, neigh_itree, neigh_iface, 0)] > -1) {
             continue;
           }
-          /* *INDENT-OFF* */
+          /* *INDENT-ON* */
 
           /* Get the number of vertices per face of potentially neighboring element. */
           const int           neigh_nface_verts =
@@ -122,12 +123,12 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees,
               for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
                 /* Retrieve the x, y or z component of the face vertex
                  * coordinate from the vertices array. */
-                /* *INDENT-ON* */
+                /* *INDENT-OFF* */
                 const double        face_vert =
                   vertices[T8_3D_TO_1D(ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree, ivert, icoord)];
                 const double        neigh_face_vert =
                   vertices[T8_3D_TO_1D(ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, neigh_itree, neigh_ivert, icoord)];
-                /* *INDENT-OFF* */
+                /* *INDENT-ON* */
 
                 /* Compare the coordinates with some tolerance. */
                 if (fabs (face_vert - neigh_face_vert) <
@@ -154,16 +155,19 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees,
              * to a corner of the other face. The number of this corner is the
              * orientation code. */
             int                 orientation = -1;
-            int smaller_bigger_face_condition = -1;
+            int                 smaller_bigger_face_condition = -1;
 
-            int compare = t8_eclass_compare (eclass, neigh_eclass);
+            int                 compare =
+              t8_eclass_compare (eclass, neigh_eclass);
             if (compare < 0) {
-              /* This tree class is smaller than neigh. tree class.*/
+              /* This tree class is smaller than neigh. tree class. */
               smaller_bigger_face_condition = 1;
-            } else if (compare > 0) {
-              /* This tree class is bigger than neigh. tree class.*/
+            }
+            else if (compare > 0) {
+              /* This tree class is bigger than neigh. tree class. */
               smaller_bigger_face_condition = 0;
-            } else {
+            }
+            else {
               /* This tree class is the same as the neigh. tree class. 
                  Then the face with the smaller face id is the smaller one. */
               smaller_bigger_face_condition = iface < neigh_iface;
@@ -182,11 +186,11 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees,
             }
 
             /* Store the results. */
-            /* *INDENT-ON* */
+            /* *INDENT-OFF* */
             conn[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_FACES, 3, itree, iface, 0)] = neigh_itree;
             conn[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_FACES, 3, itree, iface, 1)] = neigh_iface;
             conn[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_FACES, 3, itree, iface, 2)] = orientation;
-            /* *INDENT-OFF* */
+            /* *INDENT-ON* */
 
             break;
           }
