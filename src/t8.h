@@ -126,9 +126,9 @@ typedef uint64_t    t8_linearidx_t;
 
 /** Access multidimensional data on one-dimensional C arrays. */
 #define T8_I1(nx,i) (i)
-#define T8_I2(nx,ny,i,j) (i*ny + j)
-#define T8_I3(nx,ny,nz,i,j,k) ((i*ny + j)*nz + k)
-#define T8_I4(nx,ny,nz,nl,i,j,k,l) (((i*ny + j)*nz + k)*nl + l)
+#define T8_I2(nx,ny,i,j) ((i)*(ny) + (j))
+#define T8_I3(nx,ny,nz,i,j,k) (((i)*(ny) + (j))*(nz) + (k))
+#define T8_I4(nx,ny,nz,nl,i,j,k,l) ((((i)*(ny) + (j))*(nz) + (k))*(nl) + (l))
 
 /** Communication tags used internal to t8code. */
 typedef enum
