@@ -1364,7 +1364,7 @@ t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass,
             || eclass == T8_ECLASS_HEX) {
           const t8_locidx_t   tree_id_0 = poly_id;
           const t8_locidx_t   tree_id_1 = poly_id + 1;
-          t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 1, 0, 1);
+          t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 1, 0, 0);
         }
         else if (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_PRISM) {
           const t8_locidx_t   tree_id_0 = poly_id * 2;
@@ -1376,7 +1376,8 @@ t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass,
           for (int i = 0; i < 2; i++) {
             const t8_locidx_t   tree_id_0 = poly_id * 6 + i;
             const t8_locidx_t   tree_id_1 = poly_id * 6 + 10 - i;
-            t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 3, 0);
+            t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 3,
+                               i % 2 == 0 ? 0 : 2);
           }
         }
       }
@@ -1391,7 +1392,7 @@ t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass,
         if (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX) {
           const t8_locidx_t   tree_id_0 = poly_id_0;
           const t8_locidx_t   tree_id_1 = poly_id_0 + polygons_x;
-          t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 3, 2, 2);
+          t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 3, 2, 0);
         }
         else if (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_PRISM) {
           const t8_locidx_t   tree_id_0 = poly_id_0 * 2 + 1;
@@ -1425,7 +1426,7 @@ t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass,
           t8_locidx_t         tree_id_0 = poly_id_0 * 6 + 5;
           t8_locidx_t         tree_id_1 =
             (poly_id_0 + polygons_y * polygons_x) * 6 + 1;
-          t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 3, 3);
+          t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 3, 2);
           tree_id_0 = poly_id_0 * 6 + 4;
           tree_id_1 = (poly_id_0 + polygons_y * polygons_x) * 6 + 2;
           t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 3, 0);
@@ -1436,7 +1437,7 @@ t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass,
             const t8_locidx_t   tree_id_0 = poly_id_0 * 2 + i;
             const t8_locidx_t   tree_id_1 =
               (poly_id_0 + polygons_y * polygons_x) * 2 + i;
-            t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 4, 3, 3);
+            t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 4, 3, 0);
           }
         }
       }
