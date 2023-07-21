@@ -1364,7 +1364,7 @@ t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass,
             || eclass == T8_ECLASS_HEX) {
           const t8_locidx_t   tree_id_0 = poly_id;
           const t8_locidx_t   tree_id_1 = poly_id + 1;
-          t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 1, 0, 1);
+          t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 1, 0, 0);
         }
         else if (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_PRISM) {
           const t8_locidx_t   tree_id_0 = poly_id * 2;
@@ -1391,7 +1391,7 @@ t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass,
         if (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX) {
           const t8_locidx_t   tree_id_0 = poly_id_0;
           const t8_locidx_t   tree_id_1 = poly_id_0 + polygons_x;
-          t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 3, 2, 2);
+          t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 3, 2, 0);
         }
         else if (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_PRISM) {
           const t8_locidx_t   tree_id_0 = poly_id_0 * 2 + 1;
