@@ -97,148 +97,26 @@ test_with_cmesh (t8_cmesh_t cmesh)
     }
   }
 
-  {
-    const int           do_both_directions = 0;
+  sc_flopinfo_t       fi, snapshot;
+  sc_statinfo_t       stats[1];
 
-    sc_flopinfo_t       fi, snapshot;
-    sc_statinfo_t       stats[1];
-
-    /* Start timer */
-    sc_flops_start (&fi);
-    sc_flops_snap (&fi, &snapshot);
-
-    /* Compute face connectivity. */
-    t8_cmesh_set_join_by_vertices (NULL, ntrees, all_eclasses, all_verts,
-                                   NULL, do_both_directions);
-
-    /* Measure passed time. */
-    sc_flops_shot (&fi, &snapshot);
-    sc_stats_set1 (&stats[0], snapshot.iwtime,
-                   "t8_cmesh_set_join_by_vertices");
-    /* Print stats. */
-    sc_stats_compute (sc_MPI_COMM_WORLD, 1, stats);
-    sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, 1, stats, 1, 1);
-  }
+  /* Start timer */
+  sc_flops_start (&fi);
+  sc_flops_snap (&fi, &snapshot);
 
   /* Compute face connectivity. */
-  int                *conn = NULL;
-  const int           do_both_directions = 1;
-  t8_cmesh_set_join_by_vertices (NULL, ntrees, all_eclasses, all_verts, &conn,
-                                 do_both_directions);
+  const int           do_both_directions = 0;
+  t8_cmesh_set_join_by_vertices (NULL, ntrees, all_eclasses, all_verts,
+                                 NULL, do_both_directions);
 
-  /* Compare results with `t8_cmesh_get_face_neighbor`. */
-  for (int this_itree = 0; this_itree < ntrees; this_itree++) {
-    const t8_eclass_t   this_eclass = all_eclasses[this_itree];
-    const int           this_nfaces = t8_eclass_num_faces[this_eclass];
+  /* Measure passed time. */
+  sc_flops_shot (&fi, &snapshot);
+  sc_stats_set1 (&stats[0], snapshot.iwtime, "t8_cmesh_set_join_by_vertices");
 
-    for (int this_iface = 0; this_iface < this_nfaces; this_iface++) {
-      const int           conn_dual_itree =
-        conn[T8_3D_TO_1D
-             (ntrees, T8_ECLASS_MAX_FACES, 3, this_itree, this_iface, 0)];
-      const int           conn_dual_iface =
-        conn[T8_3D_TO_1D
-             (ntrees, T8_ECLASS_MAX_FACES, 3, this_itree, this_iface, 1)];
-      const int           conn_orientation =
-        conn[T8_3D_TO_1D
-             (ntrees, T8_ECLASS_MAX_FACES, 3, this_itree, this_iface, 2)];
+  /* Print stats. */
+  sc_stats_compute (sc_MPI_COMM_WORLD, 1, stats);
+  sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, 1, stats, 1, 1);
 
-      int                 cmesh_dual_iface;
-      int                 cmesh_orientation;
-
-      t8_locidx_t         cmesh_dual_itree =
-        t8_cmesh_get_face_neighbor (cmesh,
-                                    this_itree,
-                                    this_iface,
-                                    &cmesh_dual_iface,
-                                    &cmesh_orientation);
-
-      /* If this is a connected domain boundary (e.g. periodic boundary) we skip particular test. */
-      if (cmesh_dual_itree > -1) {
-        const t8_eclass_t   this_eclass = all_eclasses[this_itree];
-        const t8_eclass_t   dual_eclass = all_eclasses[cmesh_dual_itree];
-
-        const int           this_nface_verts =
-          t8_eclass_num_vertices[t8_eclass_face_types[this_eclass]
-                                 [this_iface]];
-        const int           dual_nface_verts =
-          t8_eclass_num_vertices[t8_eclass_face_types[dual_eclass]
-                                 [cmesh_dual_iface]];
-
-        const double       *this_vertices =
-          t8_cmesh_get_tree_vertices (cmesh, this_itree);
-        const double       *dual_vertices =
-          t8_cmesh_get_tree_vertices (cmesh, cmesh_dual_itree);
-
-        int                 match_count = 0;
-        for (int this_iface_vert = 0; this_iface_vert < this_nface_verts;
-             this_iface_vert++) {
-          const int           this_ivert =
-            t8_face_vertex_to_tree_vertex[this_eclass][this_iface]
-            [this_iface_vert];
-
-          for (int dual_iface_vert = 0; dual_iface_vert < dual_nface_verts;
-               dual_iface_vert++) {
-            const int           dual_ivert =
-              t8_face_vertex_to_tree_vertex[dual_eclass][cmesh_dual_iface]
-              [dual_iface_vert];
-
-            int                 match_count_per_coord = 0;
-            for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
-              const double        this_face_vert =
-                this_vertices[T8_2D_TO_1D
-                              (this_nface_verts, T8_ECLASS_MAX_DIM,
-                               this_ivert, icoord)];
-              const double        dual_face_vert =
-                dual_vertices[T8_2D_TO_1D
-                              (dual_nface_verts, T8_ECLASS_MAX_DIM,
-                               dual_ivert, icoord)];
-
-              if (fabs (this_face_vert - dual_face_vert) <
-                  10 * T8_PRECISION_EPS) {
-                match_count_per_coord++;
-              }
-              else {
-                break;
-              }
-            }
-            if (match_count_per_coord == T8_ECLASS_MAX_DIM) {
-              match_count++;
-              continue;
-            }
-          }
-        }
-
-        if (match_count < this_nface_verts) {
-          continue;
-        }
-      }
-
-      if (cmesh_dual_itree > -1) {
-        if (conn_dual_itree != cmesh_dual_itree) {
-          t8_global_productionf
-            ("Neighboring trees do not match: %5d %2d: %5d %5d\n", this_itree,
-             this_iface, conn_dual_itree, cmesh_dual_itree);
-        }
-        else {
-          if (conn_dual_iface != cmesh_dual_iface) {
-            t8_global_productionf ("Dual faces do not match: %d %d.\n",
-                                   conn_dual_iface, cmesh_dual_iface);
-          }
-          else {
-            if (conn_orientation != cmesh_orientation) {
-              t8_global_productionf
-                ("Face orientations do not match: %d %d.\n", conn_orientation,
-                 cmesh_orientation);
-            }
-          }
-        }
-      }
-    }
-  }
-
-  if (conn != NULL) {
-    T8_FREE (conn);
-  }
   T8_FREE (all_verts);
   T8_FREE (all_eclasses);
 }
