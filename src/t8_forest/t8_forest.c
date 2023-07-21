@@ -1466,36 +1466,21 @@ t8_forest_write_vtk_ext (t8_forest_t forest,
   T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (forest->committed);
 
-  if (write_ghosts && write_curved) {
-    t8_errorf
-      ("ERROR: Cannot export ghosts and curved elements at the same time. "
-       "Please specify only one option.\n" "Did not write anything.\n");
 #if !T8_WITH_VTK
-    if (write_curved) {
-      t8_errorf
-        ("WARNING: t8code is not linked against VTK. "
-         "Therefore, the export of curved elements is not possible anyway.\n");
-    }
-#endif
+  if (write_curved) {
+    t8_errorf
+      ("WARNING: t8code is not linked against VTK. "
+       "Export of curved elements not yet available with the inbuild function.\n");
     return 0;
   }
+#endif
 
 #if T8_WITH_VTK
-  if (!do_not_use_API) {
-    if (write_ghosts) {
-      t8_errorf
-        ("WARNING: Export of ghosts not yet available with the vtk API. "
-         "Using the inbuild function instead.\n");
-      do_not_use_API = 1;
-    }
-  }
-  else {
-    if (write_curved) {
-      t8_errorf
-        ("WARNING: Export of curved elements not yet available with the inbuild function. "
-         "Using the VTK API instead.\n");
-      do_not_use_API = 0;
-    }
+  if (do_not_use_API && write_curved) {
+    t8_errorf
+      ("WARNING: Export of curved elements not yet available with the inbuild function. "
+       "Using the VTK API instead.\n");
+    do_not_use_API = 0;
   }
 #else
   /* We are not linked against the VTK library, so
@@ -1510,13 +1495,13 @@ t8_forest_write_vtk_ext (t8_forest_t forest,
   do_not_use_API = 1;
 #endif
   if (!do_not_use_API) {
-    T8_ASSERT (!write_ghosts);
     return t8_forest_vtk_write_file_via_API (forest,
                                              fileprefix,
                                              write_treeid,
                                              write_mpirank,
                                              write_level,
                                              write_element_id,
+                                             write_ghosts,
                                              write_curved, num_data, data);
   }
   else {
