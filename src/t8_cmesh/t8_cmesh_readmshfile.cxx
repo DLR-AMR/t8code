@@ -22,7 +22,6 @@
 
 #include <t8_eclass.h>
 #include <t8_cmesh_readmshfile.h>
-#include <t8_cmesh_vtk_writer.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.h>
