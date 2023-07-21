@@ -20,27 +20,27 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_geometry_w_vertices.hxx
- * Implements the inherited class t8_geometry_w_vertices, which can be 
+/** \file t8_geometry_with_vertices.hxx
+ * Implements the inherited class t8_geometry_with_vertices, which can be 
  * used for geoemtries that use vertex coordinate information of the cmesh.
  */
 
-#ifndef T8_GEOMETRY_W_VERTICES_HXX
-#define T8_GEOMETRY_W_VERTICES_HXX
+#ifndef T8_GEOMETRY_WITH_VERTICES_HXX
+#define T8_GEOMETRY_WITH_VERTICES_HXX
 
 #include <t8_cmesh.h>
 #include <t8_geometry/t8_geometry_base.hxx>
 #include <t8_geometry/t8_geometry_base.h>
-#include <t8_geometry/t8_geometry_w_vertices.h>
+#include <t8_geometry/t8_geometry_with_vertices.h>
 
 T8_EXTERN_C_BEGIN ();
 
-class               t8_geometry_w_vertices:public t8_geometry
+class               t8_geometry_with_vertices:public t8_geometry
 {
 public:
   /* Basic constructor that sets the dimension, the name, and the name for the attribute. */
-  t8_geometry_w_vertices (int dimension, const char *name,
-                          const char *attribute_name = NULL)
+  t8_geometry_with_vertices (int dimension, const char *name,
+                             const char *attribute_name = NULL)
 :  t8_geometry (dimension, name, attribute_name) {
     active_tree_vertices = NULL;
     active_tree = -1;
@@ -49,7 +49,7 @@ public:
   /* Base constructor with no arguments. We need this since it
    * is called from derived class constructors.
    * Sets dimension and name to invalid values. */
-  t8_geometry_w_vertices ():t8_geometry_w_vertices (-1, "Invalid")
+  t8_geometry_with_vertices ():t8_geometry_with_vertices (-1, "Invalid")
   {
     active_tree_vertices = NULL;
     active_tree = -1;
@@ -60,7 +60,7 @@ public:
    * and providing an implementation
    * for the destructor ensures that the
    * destructor of the child class will be executed. */
-  virtual ~ t8_geometry_w_vertices () {
+  virtual ~ t8_geometry_with_vertices () {
   }
 
   /** Update a possible internal data buffer for per tree data.
@@ -82,4 +82,4 @@ protected:
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_GEOMETRY_W_VERTICES_HXX! */
+#endif /* !T8_GEOMETRY_WITH_VERTICES_HXX! */

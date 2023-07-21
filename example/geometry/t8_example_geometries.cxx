@@ -135,11 +135,11 @@ public:
  * It inherits from the w_vertices geometry since we use the tree's vertex coordinates.
  * This geometry does not provide a jacobian.
  */
-class               t8_geometry_moebius:public t8_geometry_w_vertices
+class               t8_geometry_moebius:public t8_geometry_with_vertices
 {
 public:
   /* Basic constructor that sets the dimension and the name. */
-  t8_geometry_moebius ():t8_geometry_w_vertices (2, "t8_moebius_geometry")
+  t8_geometry_moebius ():t8_geometry_with_vertices (2, "t8_moebius_geometry")
   {
   }
 
@@ -245,11 +245,11 @@ public:
  * 
  * This geometry does not provide a jacobian.
  */
-class               t8_geometry_circle:public t8_geometry_w_vertices
+class               t8_geometry_circle:public t8_geometry_with_vertices
 {
 public:
   /* Basic constructor that sets the dimension and the name. */
-  t8_geometry_circle ():t8_geometry_w_vertices (2, "t8_circle_geometry")
+  t8_geometry_circle ():t8_geometry_with_vertices (2, "t8_circle_geometry")
   {
   }
 

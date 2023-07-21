@@ -28,8 +28,8 @@
 #define T8_GEOMETRY_ANALYTIC_HXX
 
 #include <t8.h>
-#include <t8_geometry/t8_geometry_w_vertices.hxx>
-#include <t8_geometry/t8_geometry_w_vertices.h>
+#include <t8_geometry/t8_geometry_with_vertices.hxx>
+#include <t8_geometry/t8_geometry_with_vertices.h>
 
 /**
  * Definition of an analytic geometry function.

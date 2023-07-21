@@ -20,13 +20,13 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_geometry_w_vertices.h
+/** \file t8_geometry_with_vertices.h
  * This header file provides a C interface for functions for the 
- * t8_geometry_w_vertices class.
+ * t8_geometry_with_vertices class.
  */
 
-#ifndef T8_GEOMETRY_W_VERTICES_H
-#define T8_GEOMETRY_W_VERTICES_H
+#ifndef T8_GEOMETRY_WITH_VERTICES_H
+#define T8_GEOMETRY_WITH_VERTICES_H
 
 T8_EXTERN_C_BEGIN ();
 
@@ -48,4 +48,4 @@ void                t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh,
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_GEOMETRY_W_VERTICES_H! */
+#endif /* !T8_GEOMETRY_WITH_VERTICES_H! */

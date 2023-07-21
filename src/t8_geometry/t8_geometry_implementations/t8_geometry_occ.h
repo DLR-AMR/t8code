@@ -29,7 +29,7 @@
 
 #include <t8.h>
 #include <t8_geometry/t8_geometry.h>
-#include <t8_geometry/t8_geometry_w_vertices.h>
+#include <t8_geometry/t8_geometry_with_vertices.h>
 
 /* The vertices of each edge of a hexahedron. Used in the occ geometry. */
 extern const int    t8_edge_vertex_to_tree_vertex[T8_ECLASS_MAX_EDGES][2];

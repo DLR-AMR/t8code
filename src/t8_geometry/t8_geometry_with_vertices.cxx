@@ -24,14 +24,14 @@
  * class.
  * */
 
-#include <t8_geometry/t8_geometry_w_vertices.hxx>
-#include <t8_geometry/t8_geometry_w_vertices.h>
+#include <t8_geometry/t8_geometry_with_vertices.hxx>
+#include <t8_geometry/t8_geometry_with_vertices.h>
 
 /* Load the coordinates of the newly active tree to the active_tree_vertices
  * variable. */
 void
-t8_geometry_w_vertices::t8_geom_load_tree_data (t8_cmesh_t cmesh,
-                                                t8_gloidx_t gtreeid)
+t8_geometry_with_vertices::t8_geom_load_tree_data (t8_cmesh_t cmesh,
+                                                   t8_gloidx_t gtreeid)
 {
   /* Set active id and eclass */
   t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);

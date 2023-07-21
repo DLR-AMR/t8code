@@ -29,7 +29,7 @@
 
 #include <t8.h>
 #include <t8_geometry/t8_geometry.h>
-#include <t8_geometry/t8_geometry_w_vertices.h>
+#include <t8_geometry/t8_geometry_with_vertices.h>
 
 T8_EXTERN_C_BEGIN ();
 
