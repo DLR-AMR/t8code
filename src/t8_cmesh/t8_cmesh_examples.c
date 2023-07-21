@@ -1436,7 +1436,7 @@ t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass,
             const t8_locidx_t   tree_id_0 = poly_id_0 * 2 + i;
             const t8_locidx_t   tree_id_1 =
               (poly_id_0 + polygons_y * polygons_x) * 2 + i;
-            t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 4, 3, 3);
+            t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 4, 3, 0);
           }
         }
       }
