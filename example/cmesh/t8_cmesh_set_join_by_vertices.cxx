@@ -38,7 +38,7 @@
 static void
 test_with_cmesh (t8_cmesh_t cmesh)
 {
-  t8_locidx_t         ntrees = t8_cmesh_get_num_local_trees (cmesh);
+  const t8_locidx_t         ntrees = t8_cmesh_get_num_local_trees (cmesh);
 
   t8_global_productionf ("ntrees = %d.\n", ntrees);
 
