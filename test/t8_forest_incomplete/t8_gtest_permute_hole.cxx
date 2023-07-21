@@ -152,8 +152,7 @@ t8_adapt_forest (t8_forest_t forest_from,
 TEST_P (forest_permute, test_permute_hole)
 {
   /* number of instances/permutations */
-  const t8_locidx_t   num_s =
-    t8_forest_get_tree_num_elements (forest, 0);
+  const t8_locidx_t   num_s = t8_forest_get_tree_num_elements (forest, 0);
   T8_ASSERT (num_s < MAX_NUM_ELEMETS);
   const uint32_t      num_permutation = 1 << num_s;
 
