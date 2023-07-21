@@ -1936,18 +1936,18 @@ t8_cmesh_new_prism_geometry (sc_MPI_Comm comm)
     t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_PRISM);
   }
   /*Ordinary join over quad-face */
-  t8_cmesh_set_join (cmesh, 0, 1, 2, 0, 0);
+  t8_cmesh_set_join (cmesh, 0, 1, 1, 1, 1);
   /*Join over quad-face of rotated prisms, but orientation is the same */
-  t8_cmesh_set_join (cmesh, 1, 2, 1, 2, 0);
+  t8_cmesh_set_join (cmesh, 1, 2, 0, 0, 1);
   /*Join via top-triangle of prism 2 */
   t8_cmesh_set_join (cmesh, 2, 3, 4, 3, 1);
   /*Remaining joins are all via quad-faces */
   /*prism 4 is rotated, therefore there is a different orientation */
-  t8_cmesh_set_join (cmesh, 3, 4, 2, 0, 1);
+  t8_cmesh_set_join (cmesh, 3, 4, 1, 1, 1);
   /*No different orientation between these faces. */
-  t8_cmesh_set_join (cmesh, 4, 5, 2, 1, 0);
-  t8_cmesh_set_join (cmesh, 5, 6, 2, 1, 0);
-  t8_cmesh_set_join (cmesh, 6, 7, 0, 1, 0);
+  t8_cmesh_set_join (cmesh, 4, 5, 0, 2, 1);
+  t8_cmesh_set_join (cmesh, 5, 6, 1, 2, 0);
+  t8_cmesh_set_join (cmesh, 6, 7, 0, 2, 1);
 
   for (i = 0; i < 8; i++) {
     t8_cmesh_set_tree_vertices (cmesh, i, vertices + i * 18, 6);
