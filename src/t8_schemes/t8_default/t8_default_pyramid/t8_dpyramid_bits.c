@@ -61,7 +61,7 @@ compute_cubeid (const t8_dpyramid_t *p, const int level)
  * \param [in]  known_level The level where we already know the type of \a p
  * \return      t8_dpyramid_type_t The type of \a p at level \a level.
  * 
- * CAREFUL: This computation assumes that the shape of the element does not switch between \a known_level
+ * WARNING: This computation assumes that the shape of the element does not switch between \a known_level
  *          and \a level. 
  */
 static t8_dpyramid_type_t
@@ -98,7 +98,7 @@ compute_type_same_shape_ext (const t8_dpyramid_t *p, const int level,
  * \param         level 
  * \return        The type of \a p at \a level
  * 
- * CAREFUL: This computation assumes that the shape of the element does not switch between \a known_level
+ * WARNING: This computation assumes that the shape of the element does not switch between \a known_level
  *          and \a level.
  */
 t8_dpyramid_type_t
