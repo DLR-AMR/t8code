@@ -28,7 +28,6 @@
 #include <t8_cmesh/t8_cmesh_occ.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx>
-#include <t8_cmesh_vtk_writer.h>
 
 #if T8_WITH_OCC
 #include <gp_Pnt.hxx>
