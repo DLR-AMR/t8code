@@ -153,6 +153,6 @@ TEST_P (cmesh_multiple_attributes, multiple_attributes) {
   }
 }
 
-/* Test for diffrent number of trees. */
+/* Test for different number of trees. */
 INSTANTIATE_TEST_SUITE_P(t8_gtest_multiple_attributes, cmesh_multiple_attributes, testing::Range(1, 4));
 /* *INDENT-ON* */

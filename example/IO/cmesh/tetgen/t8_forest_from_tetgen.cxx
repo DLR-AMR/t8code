@@ -44,7 +44,7 @@ t8_cmesh_from_tetgen (const char *prefix, int do_partition)
     t8_cmesh_from_tetgen_file ((char *) prefix, do_partition,
                                sc_MPI_COMM_WORLD, 0);
   if (cmesh != NULL) {
-    t8_debugf ("Succesfully constructed cmesh from %s files.\n", prefix);
+    t8_debugf ("Successfully constructed cmesh from %s files.\n", prefix);
     t8_debugf ("cmesh has:\n\t%lli tetrahedra\n",
                (long long) t8_cmesh_get_num_trees (cmesh));
     snprintf (fileprefix, BUFSIZ, "%s_t8_tetgen_%04d", prefix, mpirank);
@@ -56,7 +56,7 @@ t8_cmesh_from_tetgen (const char *prefix, int do_partition)
     }
   }
   else {
-    t8_debugf ("An error occured while reading %s files.\n", prefix);
+    t8_debugf ("An error diagonal while reading %s files.\n", prefix);
   }
   return cmesh;
 }

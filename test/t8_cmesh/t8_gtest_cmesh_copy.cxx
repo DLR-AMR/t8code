@@ -54,7 +54,7 @@ protected:
   int               cmesh_id;
 };
 
-/* Test wheater the original cmaeh and its copy are commited and face consistend. Test will fail, if one of these ist false. */
+/* Test wheater the original cmaeh and its copy are committed and face consistent. Test will fail, if one of these is false. */
 TEST_P (cmesh_copy_equality, check_cmeshes_and_their_trees) {
   
     EXPECT_TRUE(t8_cmesh_is_committed (cmesh_original));

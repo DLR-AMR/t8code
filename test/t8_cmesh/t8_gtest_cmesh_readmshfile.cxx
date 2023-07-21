@@ -70,7 +70,7 @@ t8_supported_msh_file (t8_cmesh_t cmesh)
   /* *INDENT-ON* */
   ASSERT_FALSE (cmesh == NULL) << "Reading cmesh failed.";
 
-  /* Checks if the cmesh was comitted. */
+  /* Checks if the cmesh was committed. */
   ASSERT_TRUE (t8_cmesh_is_committed (cmesh)) << "Cmesh commit failed";
   /* Checks for face consistency. */
   ASSERT_TRUE (t8_cmesh_trees_is_face_consistend (cmesh, cmesh->trees)) <<
@@ -133,7 +133,7 @@ TEST (t8_cmesh_readmshfile, test_msh_file_vers2_ascii)
 
   t8_supported_msh_file (cmesh);
 
-  /* The cmesh was read sucessfully and we need to destroy it. */
+  /* The cmesh was read successfully and we need to destroy it. */
   t8_cmesh_destroy (&cmesh);
 }
 
@@ -156,7 +156,7 @@ TEST (t8_cmesh_readmshfile, test_msh_file_vers4_ascii)
                NULL) <<
     "Could not read cmesh from ascii version 4, but should be able to.";
 
-  /* The cmesh was read sucessfully and we need to destroy it. */
+  /* The cmesh was read successfully and we need to destroy it. */
   t8_cmesh_destroy (&cmesh);
 }
 
@@ -179,7 +179,7 @@ TEST (t8_cmesh_readmshfile, test_msh_file_vers2_bin)
                NULL) <<
     "Expected fail of reading binary msh file v.2, but did not fail.";
 
-  t8_debugf ("Error handling successfull.\n");
+  t8_debugf ("Error handling successful.\n");
 }
 
 TEST (t8_cmesh_readmshfile, test_msh_file_vers4_bin)
@@ -201,5 +201,5 @@ TEST (t8_cmesh_readmshfile, test_msh_file_vers4_bin)
                NULL) <<
     "Expected fail of reading binary msh file v.4, but did not fail.";
 
-  t8_debugf ("Error handling successfull.\n");
+  t8_debugf ("Error handling successful.\n");
 }

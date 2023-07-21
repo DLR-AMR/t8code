@@ -184,7 +184,7 @@ t8_cmesh_commit_replicated_new (t8_cmesh_t cmesh)
                                           &face_neigh, &ttf);
       (void) t8_cmesh_trees_get_tree_ext (cmesh->trees, joinface->id2,
                                           &face_neigh2, &ttf2);
-      /* Set the correct face neighbors and tree_fo_face values */
+      /* Set the correct face neighbors and tree_to_face values */
       face_neigh[joinface->face1] = (t8_locidx_t) joinface->id2;
       ttf[joinface->face1] =
         t8_cmesh_tree_to_face_encode (cmesh->dimension,
@@ -604,7 +604,7 @@ t8_cmesh_commit_refine (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     t8_scheme_cxx_ref (cmesh->set_refine_scheme);
     t8_cmesh_set_refine (cmesh_temp[il % 2], 1, cmesh->set_refine_scheme);
     t8_cmesh_commit (cmesh_temp[il % 2], comm);
-    t8_debugf ("[%i] Commited %i\n", level, il % 2);
+    t8_debugf ("[%i] committed %i\n", level, il % 2);
   }
   if (level > 1) {
     /* Refine from the last temporary cmesh */
@@ -798,7 +798,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     t8_stash_destroy (&cmesh->stash);
   }
 
-  t8_debugf ("Commited cmesh with %li local and %lli global trees and"
+  t8_debugf ("committed cmesh with %li local and %lli global trees and"
              " %li ghosts.\n", (long) cmesh->num_local_trees,
              (long long) cmesh->num_trees, (long) cmesh->num_ghosts);
 

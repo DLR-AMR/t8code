@@ -125,7 +125,7 @@ t8_deep_last_descendant (t8_element_t *elem, t8_element_t *desc,
   }
   /* Check for equality. */
   ts->t8_element_last_descendant (elem, test, level);
-  ASSERT_TRUE(!ts->t8_element_compare (desc, test)) << "Wrong deep last decendant.\n";
+  ASSERT_TRUE(!ts->t8_element_compare (desc, test)) << "Wrong deep last descendant.\n";
 }
 
 /* Test if the first and last descendant of an element are computed correctly.

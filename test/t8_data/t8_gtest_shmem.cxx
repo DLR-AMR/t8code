@@ -23,7 +23,7 @@
 #include <gtest/gtest.h>
 #include <t8_data/t8_shmem.h>
 
-/* This Test test the shared memory for mpi. It includes tests for initalization and finalizing, the type, the communicator,
+/* This Test test the shared memory for mpi. It includes tests for initialization and finalizing, the type, the communicator,
  * the element size and count of the shared memory  */
 
 /* *INDENT-OFF* */
@@ -116,7 +116,7 @@ TEST_P(shmem, test_sc_shmem_alloc){
 
 #if T8_ENABLE_MPI
   const sc_shmem_type_t control_shmem_type = sc_shmem_get_type (comm);
-  ASSERT_EQ(shmem_type, control_shmem_type) << "Setting shmem type not succesfull.";
+  ASSERT_EQ(shmem_type, control_shmem_type) << "Setting shmem type not successful.";
 #endif
 
   sc_mpi_comm_get_node_comms (comm, &intranode, &internode);
@@ -148,7 +148,7 @@ TEST_P(shmem, test_sc_shmem_alloc){
 #if defined(__bgq__)
           shmem_type == SC_SHMEM_BGQ || shmem_type == SC_SHMEM_BGQ_PRESCAN ||
 #endif
-          0                    /* If neither SC_ENABLE_MPIWINSHARED or __bgq__ are defined, we neet a condition in this if
+          0                    /* If neither SC_ENABLE_MPIWINSHARED or __bgq__ are defined, we need a condition in this if
                                 * but do not want to execute any code. Hence, 0. */
       ) {
       ASSERT_EQ(intrarank, 0) << "Type is one of window, window_prescan, bgq or bgq_prescan and this process should not have write permissions.\n";
@@ -200,7 +200,7 @@ TEST_P(shmem, test_shmem_array_allgatherv){
 
 #if T8_ENABLE_MPI
   const sc_shmem_type_t control_shmem_type = sc_shmem_get_type (comm);
-  ASSERT_EQ(shmem_type, control_shmem_type) << "Setting shmem type not succesfull.";
+  ASSERT_EQ(shmem_type, control_shmem_type) << "Setting shmem type not successful.";
 #endif
 
   t8_shmem_array_t  shmem_array;
@@ -253,7 +253,7 @@ TEST_P(shmem, test_shmem_array_prefix)
 
 #if T8_ENABLE_MPI
   const sc_shmem_type_t control_shmem_type = sc_shmem_get_type (comm);
-  ASSERT_EQ(shmem_type, control_shmem_type) << "Setting shmem type not succesfull.";
+  ASSERT_EQ(shmem_type, control_shmem_type) << "Setting shmem type not successful.";
 #endif
 
   /* Allocate one integer */
@@ -298,7 +298,7 @@ TEST_P(shmem, test_shmem_array){
 
 #if T8_ENABLE_MPI
   const sc_shmem_type_t control_shmem_type = sc_shmem_get_type (comm);
-  ASSERT_EQ(shmem_type, control_shmem_type) << "Setting shmem type not succesfull.";
+  ASSERT_EQ(shmem_type, control_shmem_type) << "Setting shmem type not successful.";
 #endif
 
   /* Allocate one integer */

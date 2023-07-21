@@ -227,7 +227,7 @@ t8_step5_output_data_to_vtu (t8_forest_t forest,
   /* The name of the field as should be written to the file. */
   strcpy (vtk_data.description, "Element volume");
   vtk_data.data = element_volumes;
-  /* Copy the elment's volumes from our data array to the output array. */
+  /* Copy the 's volumes from our data array to the output array. */
   for (ielem = 0; ielem < num_elements; ++ielem) {
     element_volumes[ielem] = data[ielem].volume;
   }

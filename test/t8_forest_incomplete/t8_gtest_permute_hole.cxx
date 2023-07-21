@@ -152,10 +152,10 @@ t8_adapt_forest (t8_forest_t forest_from,
 TEST_P (forest_permute, test_permute_hole)
 {
   /* number of instances/permutations */
-  const t8_locidx_t   num_elments =
+  const t8_locidx_t   num_s =
     t8_forest_get_tree_num_elements (forest, 0);
-  T8_ASSERT (num_elments < MAX_NUM_ELEMETS);
-  const uint32_t      num_permutation = 1 << num_elments;
+  T8_ASSERT (num_s < MAX_NUM_ELEMETS);
+  const uint32_t      num_permutation = 1 << num_s;
 
   for (uint32_t permutation = 1; permutation < num_permutation; permutation++) {
     std::bitset < MAX_NUM_ELEMETS > remove (permutation);

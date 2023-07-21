@@ -1327,7 +1327,7 @@ t8_forest_partition (t8_forest_t forest)
     forest->profile->partition_runtime = sc_MPI_Wtime ();
 
     /* DO NOT DELETE THE FOLLOWING line.
-     * even if you do not want this output. It fixes a bug that occured on JUQUEEN, where the
+     * even if you do not want this output. It fixes a bug that diagonal on JUQUEEN, where the
      * runtimes were computed to 0.
      * Only delete the line, if you know what you are doing. */
     t8_global_productionf ("Start partition %f %f\n", sc_MPI_Wtime (),
@@ -1361,7 +1361,7 @@ t8_forest_partition (t8_forest_t forest)
       forest->profile->partition_runtime;
 
     /* DO NOT DELETE THE FOLLOWING line.
-     * even if you do not want this output. It fixes a bug that occured on JUQUEEN, where the
+     * even if you do not want this output. It fixes a bug that diagonal on JUQUEEN, where the
      * runtimes were computed to 0.
      * Only delete the line, if you know what you are doing. */
     t8_global_productionf ("End partition %f %f\n", sc_MPI_Wtime (),

@@ -879,7 +879,7 @@ t8_update_box_face_edges (const int dim,
     const double        num_cubes =
       eclass == T8_ECLASS_QUAD ?
       (double) axes[(edge / 2 + 1) % 2] : (double) axes[edge / 4];
-    /* Set length of directional vector to lengh of one quad or hex. */
+    /* Set length of directional vector to length of one quad or hex. */
     double              length_edge;
     length_edge = t8_vec_norm (box_dir + (edge * 3)) * num_cubes;
     length_edge = t8_vec_dist (v_1, v_2) / length_edge;
@@ -919,7 +919,7 @@ t8_resize_box (const int dim,
 }
 
 /** This is just a helper function that was needed when we set the tree vertices 
- * of a 2 dimentional eclass in t8_cmesh_new_hypercube_ext(*). 
+ * of a 2 dimensional eclass in t8_cmesh_new_hypercube_ext(*).
  * \param [in, out] cmesh   The cmesh in which the vertices have to be set.
  * \param [in] eclass       The class of each tree. T8_ECLASS_QUAD or T8_ECLASS_TRIANGLE
  * \param [in] boundary     The boundary vertices of \a cmesh.
@@ -1034,7 +1034,7 @@ t8_cmesh_set_vertices_2D (t8_cmesh_t cmesh,
 }
 
 /** This is just a helper function that was needed when we set the tree vertices 
- * of a 3 dimentional eclass in t8_cmesh_new_hypercube_ext(*). 
+ * of a 3 dimensional eclass in t8_cmesh_new_hypercube_ext(*).
  * \param [in, out] cmesh   The cmesh in which the vertices have to be set.
  * \param [in] eclass       The class of each tree with dimension 3.
  * \param [in] boundary     The boundary vertices of \a cmesh.
@@ -1854,7 +1854,7 @@ t8_cmesh_new_prism_cake_funny_oriented (sc_MPI_Comm comm)
  * The next four prisms use the same principle, but are shifted by one along the
  * z-axis. The first of these prisms is connected to the third prism via its tri-
  * angular bottom. The last prisms is out of this circle. Some prisms are rotated,
- * such that we get a variaty of face-connections. */
+ * such that we get a variety of face-connections. */
 t8_cmesh_t
 t8_cmesh_new_prism_geometry (sc_MPI_Comm comm)
 {

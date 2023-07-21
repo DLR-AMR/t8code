@@ -27,7 +27,7 @@
  * 
  * The geometry (coarse mesh) is again a cube, this time modelled with
  * 6 tetrahedra, 6 prisms and 4 cubes.
- * We refine an element if its midpoint is whithin a sphere of given radius
+ * We refine an element if its midpoint is within a sphere of given radius
  * around the point (0.5, 0.5, 1) and we coarsen outside of a given radius.
  * We will use non-recursive refinement, that means that the refinement level
  * of any element will change by at most +-1.

@@ -242,7 +242,7 @@ t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh,
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 
   if (cmesh->tree_offsets != NULL && cmesh->tree_offsets != tree_offsets) {
-    /* We overwrite a previouly set offset array, so
+    /* We overwrite a previously set offset array, so
      * we need to free its memory first. */
     t8_shmem_array_destroy (&cmesh->tree_offsets);
   }
@@ -720,7 +720,7 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
   } meta_info;
 
   /* TODO: BUG: running with two processes and a cmesh of one T8_ECLASS_LINE,
-   *       then on both processes the face_neigbors and vertices arrays of
+   *       then on both processes the face_neighbors and vertices arrays of
    *       the single tree point to the same physical memory.
    *       (face_neighbors on both processes are equal and vertices on both
    *        processes are equal)
@@ -752,7 +752,7 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
      * classes that we cannot know of on the receiving process.
      * Geometries must therefore be added after broadcasting. */
     SC_CHECK_ABORT (cmesh_in->geometry_handler == NULL,
-                    "Error: Broadcasting a cmesh with registerd geometries is not possible.\n"
+                    "Error: Broadcasting a cmesh with registered geometries is not possible.\n"
                     "We recommend to broadcast first and register the geometries after.\n");
     memcpy (&meta_info.cmesh, cmesh_in, sizeof (*cmesh_in));
     for (iclass = 0; iclass < T8_ECLASS_COUNT; iclass++) {
@@ -861,7 +861,7 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   t8_locidx_t         neigh_id;
   t8_ctree_t          tree;
 
-  /* cmesh must be commited and not partitioned */
+  /* cmesh must be committed and not partitioned */
   T8_ASSERT (cmesh->committed);
   T8_ASSERT (!cmesh->set_partition);
 
@@ -912,7 +912,7 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   T8_ASSERT (success == METIS_OK);
   /* memory to store the new treeid of a tree */
   new_number = T8_ALLOC (t8_locidx_t, cmesh->num_trees);
-  /* Store the number of trees pinter partition */
+  /* Store the number of trees pointer partition */
   tree_per_part = T8_ALLOC_ZERO (t8_locidx_t, mpisize);
   /* Store the treeid offset of each partition. */
   tree_per_part_off = T8_ALLOC_ZERO (t8_locidx_t, mpisize + 1);
@@ -1330,7 +1330,7 @@ t8_cmesh_translate_coordinates (const double *coords_in, double *coords_out,
  *       to use attributes. Before we stored a list of vertex coordinates in the cmesh and each tree indexed into this list.
  *       Now each tree carries the coordinates of its vertices.
  *       This function translates from the first approached to the second
- *       and was introduced to avoid rewritting the already existing cmesh_new... functions below.
+ *       and was introduced to avoid rewriting the already existing cmesh_new... functions below.
  *       It would be nice to eventually rewrite these functions correctly.
  */
 void

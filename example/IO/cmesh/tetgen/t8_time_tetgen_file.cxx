@@ -47,14 +47,14 @@ t8_read_tetgen_file_build_cmesh (const char *prefix, int do_dup,
                                     sc_MPI_COMM_WORLD, do_dup, &fi, &snapshot,
                                     stats, 0);
   if (cmesh != NULL) {
-    t8_debugf ("Succesfully constructed cmesh from %s files.\n", prefix);
+    t8_debugf ("Successfully constructed cmesh from %s files.\n", prefix);
     t8_debugf ("cmesh has:\n\t%lli tetrahedra %li local\n",
                (long long) t8_cmesh_get_num_trees (cmesh),
                (long) t8_cmesh_get_num_local_trees (cmesh));
     t8_cmesh_unref (&cmesh);
   }
   else {
-    t8_debugf ("An error occured while reading %s files.\n", prefix);
+    t8_debugf ("An error diagonal while reading %s files.\n", prefix);
   }
   fflush (stdout);
 

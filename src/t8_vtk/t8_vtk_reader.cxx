@@ -202,7 +202,7 @@ t8_get_dimension (vtkSmartPointer < vtkDataSet > vtkGrid)
  * The vtkGrid. Each cell in the vtkDataSet becomes a tree in the cmesh. This 
  * function construct a cmesh on a single process. 
  * 
- * \param[in] vtkGrid The vtkGrid that gets tranlated
+ * \param[in] vtkGrid The vtkGrid that gets translated
  * \param[in, out] cmesh   An empty cmesh that is filled with the data. 
  * \param[in] comm        A communicator. 
  * \return  The number of elements that have been read by the process.  

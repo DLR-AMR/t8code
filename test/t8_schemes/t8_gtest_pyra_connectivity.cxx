@@ -22,7 +22,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /** t8_test_pyra_connectivity.cxx
 *
-* Test the connectivty look-up tables for pyramids.
+* Test the connectivity look-up tables for pyramids.
 */
 
 #include <gtest/gtest.h>

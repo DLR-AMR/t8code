@@ -47,7 +47,7 @@ t8_dline_compare (const t8_dline_t *l1, const t8_dline_t *l2)
      * is considered smaller */
     return l1->level - l2->level;
   }
-  /* return negativ if id1 < id2, zero if id1 = id2, positive if id1 >
+  /* return negative if id1 < id2, zero if id1 = id2, positive if id1 >
      id2 */
   return id1 < id2 ? -1 : id1 != id2;
 }
@@ -296,7 +296,7 @@ t8_dline_transform_face (const t8_dline_t *line1, t8_dline_t *line2,
      * 0 ---|_|------- N
      * N ---|_|------- 0
      *
-     * With N = 2^maxlvl the root lenght, |_| marks the line elements within their trees.
+     * With N = 2^maxlvl the root length, |_| marks the line elements within their trees.
      * Thus, the x-coordinate of line2 is given as N-line1.x - h.
      * Where h is the length of the line element.
      */
@@ -344,7 +344,7 @@ t8_dline_vertex_ref_coords (const t8_dline_t *elem, const int vertex,
   int                 coords_int = -1;
   T8_ASSERT (vertex == 0 || vertex == 1);
 
-  /* Compute integere coordinates and divide by root length. */
+  /* Compute integer coordinates and divide by root length. */
   t8_dline_vertex_coords (elem, vertex, &coords_int);
   coordinates[0] = coords_int / (double) T8_DLINE_ROOT_LEN;
 }

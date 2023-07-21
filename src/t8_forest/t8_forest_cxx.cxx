@@ -93,7 +93,7 @@ t8_forest_is_incomplete_family (const t8_forest_t forest,
     const t8_element_t *element_temp =
       t8_forest_get_tree_element (tree, el_considered - 1);
     int                 level_temp = tscheme->t8_element_level (element_temp);
-    /* Only elements with higher or equal level then level of current consideret 
+    /* Only elements with higher or equal level then level of current considered
      * element, can get potentially be overlapped. */
     if (level_temp >= level_current) {
       /* Compare ancestors */
@@ -250,7 +250,7 @@ t8_forest_min_nonempty_level (t8_cmesh_t cmesh, t8_scheme_cxx_t *scheme)
     return 0;
   }
 
-  /* Compute the minumum number of children for a tree in the cmesh */
+  /* Compute the minimum number of children for a tree in the cmesh */
   /* Also compute the maximum possible level */
   min_num_childs = 100;
   maxlevel = 100;
@@ -1166,7 +1166,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
       t8_vec_axpy (corner_vertices[0], center, -1);
       /* Compute the dot-product of normal and center */
       c_n = t8_vec_dot (center, normal);
-      /* if c_n is positiv, the computed normal points inwards, so we have to reverse it */
+      /* if c_n is positive, the computed normal points inwards, so we have to reverse it */
       if (c_n > 0) {
         norm = -norm;
       }
@@ -2676,12 +2676,12 @@ t8_forest_element_find_owner_ext (t8_forest_t forest,
           /* reset guess */
           guess = last_guess;
           if (reached_bound > 0) {
-            /* The upper bound was reached, we ommit all empty
+            /* The upper bound was reached, we omit all empty
              * ranks from the search. */
             upper_bound = last_guess;
           }
           else {
-            /* The lower bound was reached, we ommit all empty
+            /* The lower bound was reached, we omit all empty
              * ranks from the search. */
             lower_bound = last_guess;
           }

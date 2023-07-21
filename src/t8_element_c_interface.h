@@ -24,7 +24,7 @@
  * This file defines the c interface to (some of) the member functions of the 
  * t8_eclass_scheme_c class.
  *
- * We recomment to use the C++ functions directly and only use this
+ * We recommend to use the C++ functions directly and only use this
  * interface when you really need to use C.
  */
 
@@ -74,7 +74,7 @@ int                 t8_element_level (const t8_eclass_scheme_c *ts,
  *  element. No memory is allocated by this function.
 * \param [in] ts          Implementation of a class scheme.
  * \param [in] source     The element whose entries will be copied to \b dest.
- * \param [in,out] dest   This element's entries will be overwritted with the
+ * \param [in,out] dest   This element's entries will be overwritten with the
  *                        entries of \b source.
  * \note \a source and \a dest may point to the same element.
  */
@@ -86,8 +86,8 @@ void                t8_element_copy (const t8_eclass_scheme_c *ts,
  * \param [in] ts     Implementation of a class scheme.
  * \param [in] elem1  The first element.
  * \param [in] elem2  The second element.
- * \return       negativ if elem1 < elem2, zero if elem1 equals elem2
- *               and positiv if elem1 > elem2.
+ * \return       negative if elem1 < elem2, zero if elem1 equals elem2
+ *               and positive if elem1 > elem2.
  *  If elem2 is a copy of elem1 then the elements are equal.
  */
 int                 t8_element_compare (const t8_eclass_scheme_c *ts,
@@ -350,7 +350,7 @@ void                t8_element_children_at_face (const t8_eclass_scheme_c *ts,
  *                        These children are counted in linear order. This coincides with
  *                        the order of children from a call to \ref t8_element_children_at_face.
  * \return                The face number of the face of a child of \a elem
- *                        that conincides with \a face_child.
+ *                        that coincides with \a face_child.
  */
 int                 t8_element_face_child_face (const t8_eclass_scheme_c *ts,
                                                 const t8_element_t *elem,
@@ -391,7 +391,7 @@ int                 t8_element_tree_face (const t8_eclass_scheme_c *ts,
  *  but lies in the coordinate system of the neighbor tree.
  * \param [in] ts        Implementation of a class scheme.
  * \param [in] elem1     The face element.
- * \param [in,out] elem2 On return the face elment \a elem1 with respective
+ * \param [in,out] elem2 On return the face  \a elem1 with respective
  *                       to the coordinate system of the other tree.
  * \param [in] orientation The orientation of the tree-tree connection.
  *                       \see t8_cmesh_set_join
@@ -600,7 +600,7 @@ void                t8_element_successor (const t8_eclass_scheme_c *ts,
                                           const t8_element_t *elem1,
                                           t8_element_t *elem2, int level);
 
-/** Compute the root lenght of a given element, that is the length of
+/** Compute the root length of a given element, that is the length of
  * its level 0 ancestor.
  * \param [in] ts             Implementation of a class scheme.
  * \param [in] elem     The element whose root length should be computed.

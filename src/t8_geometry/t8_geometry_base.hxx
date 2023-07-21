@@ -22,7 +22,7 @@
 
 /** \file t8_geometry_base.hxx
  * Implements the base pure virtual class t8_geometry and the inherited class t8_geometry_w_vertices.
- * The first provides a general template for all geometries while the latter one can be used for geoemtries
+ * The first provides a general template for all geometries while the latter one can be used for geometries
  * that use vertex coordinate information of the cmesh.
  */
 

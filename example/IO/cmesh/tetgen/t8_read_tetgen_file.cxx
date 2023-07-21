@@ -42,7 +42,7 @@ t8_read_tetgen_file_build_cmesh (const char *prefix, int do_dup,
     t8_cmesh_from_tetgen_file ((char *) prefix, do_partition,
                                sc_MPI_COMM_WORLD, do_dup);
   if (cmesh != NULL) {
-    t8_debugf ("Succesfully constructed cmesh from %s files.\n", prefix);
+    t8_debugf ("Successfully constructed cmesh from %s files.\n", prefix);
     t8_debugf ("cmesh has:\n\t%lli tetrahedra\n",
                (long long) t8_cmesh_get_num_trees (cmesh));
     snprintf (fileprefix, BUFSIZ, "%s_t8_tetgen", prefix);
@@ -63,7 +63,7 @@ t8_read_tetgen_file_build_cmesh (const char *prefix, int do_dup,
                                       (sc_MPI_COMM_WORLD, cmesh->num_trees,
                                        1, -1));
       t8_cmesh_commit (cmesh_partitioned, sc_MPI_COMM_WORLD);
-      t8_debugf ("Succesfully partitioned %s.\n", "cmesh");
+      t8_debugf ("Successfully partitioned %s.\n", "cmesh");
       t8_debugf ("cmesh has:\n\t%li local tetrahedra\n",
                  (long) t8_cmesh_get_num_local_trees (cmesh_partitioned));
       snprintf (fileprefix, BUFSIZ, "%s_t8_tetgen_partitioned", prefix);
@@ -78,7 +78,7 @@ t8_read_tetgen_file_build_cmesh (const char *prefix, int do_dup,
     t8_cmesh_unref (&cmesh);
   }
   else {
-    t8_debugf ("An error occured while reading %s files.\n", prefix);
+    t8_debugf ("An error diagonal while reading %s files.\n", prefix);
   }
   fflush (stdout);
 }

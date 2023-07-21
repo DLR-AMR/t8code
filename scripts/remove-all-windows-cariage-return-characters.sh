@@ -21,7 +21,7 @@
 
 # Usage
 #
-# Search and remove all Windows(TM) cariage return characters '\r' from C/C++
+# Search and remove all Windows(TM) carriage return characters '\r' from C/C++
 # source files in source code directories. Usually, these
 # characters are visible as '^M' characters and are introduced by misconfigured
 # source code editors on Windows(TM).

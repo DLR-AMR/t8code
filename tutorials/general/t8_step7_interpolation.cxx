@@ -22,7 +22,7 @@ In this tutorial we will store the distance to the centroid in the data.
 You can store more than one element here (see for example tutorial - step 5). */
 struct t8_step7_element_data_t
 {
-  /* Storage for our elemet values. */
+  /* Storage for our element values. */
   double              values;
 
 };
@@ -179,7 +179,7 @@ t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn,
  * \param [in] forest_old        non adapted forest
  * \param [in] forest_new        adapted forest
  * \param [in] which_tree        tree_id of the analyzed element
- * \param [in] ts                eclass sheme 
+ * \param [in] ts                eclass scheme
  * \param [in] refine            ==0 - do nothing, == -1 - coarsen, == 1 - refine
  * \param [in] num_outgoing      number of the elements not refined forest
  * \param [in] first_outgoing    index of the old element
@@ -255,7 +255,7 @@ t8_write_vtu (t8_forest_t forest,
   vtk_data.type = T8_VTK_SCALAR;
   strcpy (vtk_data.description, "Element own data");
   vtk_data.data = element_data;
-  /* Copy the elment's data from the data array to the output array. */
+  /* Copy the 's data from the data array to the output array. */
   for (t8_locidx_t ielem = 0; ielem < num_elements; ++ielem) {
     element_data[ielem] = t8_element_get_value (data, ielem).values;
   }
@@ -350,7 +350,7 @@ t8_interpolation ()
   /* Build a second forest to store the adapted forest - keep the old one */
   t8_forest_ref (forest);
 
-  /* Adapt the forest correponding tho the callback function (distance to the centroid) */
+  /* Adapt the forest corresponding tho the callback function (distance to the centroid) */
   forest_adapt =
     t8_adapt_forest (forest, t8_step7_adapt_callback, 0, 0, data);
   /* Calculate/Interpolate the data array for the adapted forest */

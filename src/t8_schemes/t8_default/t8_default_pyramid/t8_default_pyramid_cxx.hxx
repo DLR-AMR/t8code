@@ -98,7 +98,7 @@ public:
   /** Copy all entries of \b source to \b dest. \b dest must be an existing
    *  element. No memory is allocated by this function.
    * \param [in] source The element whose entries will be copied to \b dest.
-   * \param [in,out] dest This element's entries will be overwritted with the
+   * \param [in,out] dest This element's entries will be overwritten with the
    *                    entries of \b source.
    * \note \a source and \a dest may point to the same element.
    */
@@ -108,8 +108,8 @@ public:
   /** Compare two elements.
    * \param [in] elem1  The first element.
    * \param [in] elem2  The second element.
-   * \return       negativ if elem1 < elem2, zero if elem1 equals elem2
-   *               and positiv if elem1 > elem2.
+   * \return       negative if elem1 < elem2, zero if elem1 equals elem2
+   *               and positive if elem1 > elem2.
    *  If elem2 is a copy of elem1 then the elements are equal.
    */
   virtual int         t8_element_compare (const t8_element_t *elem1,
@@ -345,7 +345,7 @@ public:
    *                      These children are counted in linear order. This coincides with
    *                      the order of children from a call to \ref t8_element_children_at_face.
    * \return              The face number of the face of a child of \a elem
-   *                      that conincides with \a face_child.
+   *                      that coincides with \a face_child.
    */
   virtual int         t8_element_face_child_face (const t8_element_t *elem,
                                                   int face,
@@ -382,7 +382,7 @@ public:
    *  element of the respective tree neighbor that logically coincides with e
    *  but lies in the coordinate system of the neighbor tree.
    *  \param [in] elem1     The face element.
-   *  \param [in,out] elem2 On return the face elment \a elem1 with respective
+   *  \param [in,out] elem2 On return the face  \a elem1 with respective
    *                        to the coordinate system of the other tree.
    *  \param [in] orientation The orientation of the tree-tree connection.
    *                        \see t8_cmesh_set_join

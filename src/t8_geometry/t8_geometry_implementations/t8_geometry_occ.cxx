@@ -586,7 +586,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
                                   face_parameters,
                                   2, 2, interpolated_surface_parameters);
 
-    /* Iterate over each edge to seach for parameter displacements */
+    /* Iterate over each edge to search for parameter displacements */
     for (int i_edge = 0; i_edge < num_edges; ++i_edge) {
       if (edges[i_edge] > 0) {
         /* The edges of a quad point in direction of ref_coord (1 - i_edge / 2).
