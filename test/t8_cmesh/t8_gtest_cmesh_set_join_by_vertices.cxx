@@ -241,7 +241,6 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
   }
 
   {
-    // Note: `t8_set_join_by_vertices` finds more face connections than stored in the cmesh.
     t8_cmesh_t          cmesh = t8_cmesh_new_prism_geometry (comm);
     test_with_cmesh (cmesh);
     t8_cmesh_destroy (&cmesh);
@@ -276,42 +275,35 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
     t8_cmesh_destroy (&cmesh);
   }
 
-  /* The following cmeshes give erroneous results and the tests fail.
-   * It is unclear yet if there is a bug in the `t8_set_join_by_vertices` routine
-   * or if these cmesh examples have wrongly set face connectivities. */
+  {
+     const double        boundary_coords[24] = {
+       1, 0, 0,
+       4, 0, 0,
+       0, 6, 0,
+       5, 5, 0,
+       -1, -2, 8,
+       9, 0, 10,
+       0, 8, 9,
+       10, 10, 10
+     };
+   
+     t8_eclass_t eclass = T8_ECLASS_HEX;
+     t8_cmesh_t cmesh = t8_cmesh_new_hypercube_pad (eclass,
+                                                   comm,
+                                                   boundary_coords,
+                                                   2,2,2);
+     test_with_cmesh(cmesh);
+     t8_cmesh_destroy (&cmesh);
+  }
+   
+  {
+    t8_cmesh_t cmesh = t8_cmesh_new_full_hybrid (comm);
+    test_with_cmesh(cmesh);
+    t8_cmesh_destroy (&cmesh);
+  }
 
   /* {
-   *   // Problem: Orientation discrepancy.
-   *   const double        boundary_coords[24] = {
-   *     1, 0, 0,
-   *     4, 0, 0,
-   *     0, 6, 0,
-   *     5, 5, 0,
-   *     -1, -2, 8,
-   *     9, 0, 10,
-   *     0, 8, 9,
-   *     10, 10, 10
-   *   };
-   *
-   *   t8_eclass_t eclass = T8_ECLASS_HEX;
-   *   t8_cmesh_t cmesh = t8_cmesh_new_hypercube_pad (eclass,
-   *                                                 comm,
-   *                                                 boundary_coords,
-   *                                                 2,2,2);
-   *   test_with_cmesh(cmesh);
-   *   t8_cmesh_destroy (&cmesh);
-   * }
-   */
-
-  /* {
-   *   // Problem: Orientation discrepancy.
-   *   t8_cmesh_t cmesh = t8_cmesh_new_full_hybrid (comm);
-   *   test_with_cmesh(cmesh);
-   *   t8_cmesh_destroy (&cmesh);
-   * }
-   */
-
-  /* {
+   *   // This test does not work.
    *   // Problem: Crashes with memory error.
    *   // Reason: There are no tree vertices set. Thus it cannot work.
    *   int num_trees = 1;
