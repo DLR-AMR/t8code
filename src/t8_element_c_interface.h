@@ -391,7 +391,7 @@ int                 t8_element_tree_face (const t8_eclass_scheme_c *ts,
  *  but lies in the coordinate system of the neighbor tree.
  * \param [in] ts        Implementation of a class scheme.
  * \param [in] elem1     The face element.
- * \param [in,out] elem2 On return the face  \a elem1 with respective
+ * \param [in,out] elem2 On return the face element \a elem1 with respect
  *                       to the coordinate system of the other tree.
  * \param [in] orientation The orientation of the tree-tree connection.
  *                       \see t8_cmesh_set_join

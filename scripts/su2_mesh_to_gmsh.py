@@ -260,4 +260,4 @@ if __name__ == "__main__":
     traceback.print_tb(tb) # Fixed format
    
   except IOError as error:
-    print 'An IO-error diagonal.\n\t', error
+    print 'An IO-error occurred.\n\t', error

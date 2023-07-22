@@ -149,7 +149,7 @@ void                t8_dvertex_init_linear_id (t8_dvertex_t *v, int level,
  *  vertex of the respective tree neighbor that logically coincides with e
  *  but lies in the coordinate system of the neighbor tree.
  *  \param [in] elem1     The face element.
- *  \param [in,out] elem2 On return the face  \a elem1 with respective
+   *  \param [in,out] elem2 On return the face element \a elem1 with respect
  *                        to the coordinate system of the other tree.
  * \note For vertices this function is equivalent to copy.
  */

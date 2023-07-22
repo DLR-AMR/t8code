@@ -56,7 +56,7 @@ t8_cmesh_from_tetgen (const char *prefix, int do_partition)
     }
   }
   else {
-    t8_debugf ("An error diagonal while reading %s files.\n", prefix);
+    t8_debugf ("An error occurred while reading %s files.\n", prefix);
   }
   return cmesh;
 }

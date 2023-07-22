@@ -255,7 +255,7 @@ t8_write_vtu (t8_forest_t forest,
   vtk_data.type = T8_VTK_SCALAR;
   strcpy (vtk_data.description, "Element own data");
   vtk_data.data = element_data;
-  /* Copy the 's data from the data array to the output array. */
+  /* Copy the element's data from the data array to the output array. */
   for (t8_locidx_t ielem = 0; ielem < num_elements; ++ielem) {
     element_data[ielem] = t8_element_get_value (data, ielem).values;
   }

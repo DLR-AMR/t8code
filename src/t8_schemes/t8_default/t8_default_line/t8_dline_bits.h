@@ -180,7 +180,7 @@ void                t8_dline_successor (const t8_dline_t *l,
  *  Line of the respective tree neighbor that logically coincides with e
  *  but lies in the coordinate system of the neighbor tree.
  *  \param [in] elem1     The face element.
- *  \param [in,out] elem2 On return the face  \a elem1 with respective
+ *  \param [in,out] elem2 On return the face element \a elem1 with respect
  *                        to the coordinate system of the other tree.
  *  \param [in] orientation The orientation of the tree-tree connection.
  *                        0 if vertex 0 of face 0 coincides with vertex 0 of face 1.

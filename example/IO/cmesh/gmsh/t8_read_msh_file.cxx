@@ -101,7 +101,7 @@ t8_read_msh_file_build_cmesh (const char *prefix, int do_partition, int dim,
     return cmesh;
   }
   else {
-    t8_global_productionf ("An error diagonal while reading %s.msh file.\n",
+    t8_global_productionf ("An error occurred while reading %s.msh file.\n",
                            prefix);
     return NULL;
   }

@@ -361,7 +361,7 @@ public:
    *  element of the respective tree neighbor that logically coincides with e
    *  but lies in the coordinate system of the neighbor tree.
    *  \param [in] elem1     The face element.
-   *  \param [in,out] elem2 On return the face  \a elem1 with respective
+   *  \param [in,out] elem2 On return the face element \a elem1 with respect
    *                        to the coordinate system of the other tree.
    *  \param [in] orientation The orientation of the tree-tree connection.
    *                        \see t8_cmesh_set_join

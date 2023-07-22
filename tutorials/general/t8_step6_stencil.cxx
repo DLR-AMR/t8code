@@ -361,7 +361,7 @@ t8_step6_output_data_to_vtu (t8_forest_t forest,
   /* The name of the field as should be written to the file. */
   strcpy (vtk_data[0].description, "height");
   vtk_data[0].data = heights;
-  /* Copy the 's volumes from our data array to the output array. */
+  /* Copy the element's volumes from our data array to the output array. */
   for (t8_locidx_t ielem = 0; ielem < num_elements; ++ielem) {
     heights[ielem] = data[ielem].height;
   }
