@@ -214,8 +214,8 @@ t8_get_dimension (vtkSmartPointer < vtkDataSet > vtkGrid)
 
 /**
  * Iterate over all cells of a vtkDataset and construct a cmesh representing
- * The vtkGrid. Each cell in the vtkDataSet becomes a tree in the cmesh. This 
- * function construct a cmesh on a single process. 
+ * the vtkGrid. Each cell in the vtkDataSet becomes a tree in the cmesh. This 
+ * function constructs a cmesh on a single process. 
  * 
  * \param[in] vtkGrid       The vtkGrid that gets tranlated
  * \param[in, out] cmesh    An empty cmesh that is filled with the data. 
@@ -345,7 +345,7 @@ t8_vtk_partition (t8_cmesh_t cmesh, const int mpirank,
   else {
     last_tree = first_tree + num_trees - 1;
   }
-  const int           set_face_knowledge = 3;   /* Exoect face connection of local and ghost trees. */
+  const int           set_face_knowledge = 3;   /* Expect face connection of local and ghost trees. */
   t8_cmesh_set_partition_range (cmesh, set_face_knowledge, first_tree,
                                 last_tree);
   t8_shmem_array_destroy (&offsets);
