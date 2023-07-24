@@ -134,7 +134,7 @@ t8_file_to_vtkGrid (const char *filename,
    * - We use a parallel file-type and use a partitioned read, every proc reads its chunk of the files. 
    */
   if (!partition || mpirank == main_proc ||
-      vtk_file_type == VTK_PARALLEL_UNSTRUCTURED_FILE) {
+      vtk_file_type && VTK_PARALLEL_FILE) {
     switch (vtk_file_type) {
     case VTK_UNSTRUCTURED_FILE:
       main_proc_read_successful = t8_read_unstructured (filename, vtkGrid);
@@ -157,7 +157,7 @@ t8_file_to_vtkGrid (const char *filename,
       t8_errorf ("Filetype not supported.\n");
       break;
     }
-    if (partition && vtk_file_type < VTK_PARALLEL_UNSTRUCTURED_FILE) {
+    if (partition && vtk_file_type && VTK_SERIAL_FILE) {
       /* Communicate the success/failure of the reading process. */
       sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc,
                     comm);
@@ -165,7 +165,7 @@ t8_file_to_vtkGrid (const char *filename,
     }
   }
   if (partition) {
-    if (vtk_file_type < VTK_PARALLEL_UNSTRUCTURED_FILE) {
+    if (vtk_file_type && VTK_SERIAL_FILE) {
       sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc,
                     comm);
     }
@@ -516,7 +516,7 @@ t8_vtk_reader_cmesh (const char *filename, const int partition,
     t8_vtk_reader (filename, partition, main_proc, comm, vtk_file_type);
   if (vtkGrid != NULL) {
     const int           distributed_grid =
-      (vtk_file_type == VTK_PARALLEL_UNSTRUCTURED_FILE) && partition;
+      (vtk_file_type && VTK_PARALLEL_FILE) && partition;
     t8_cmesh_t          cmesh =
       t8_vtkGrid_to_cmesh (vtkGrid, partition, main_proc, distributed_grid,
                            comm);
