@@ -314,15 +314,17 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim,
   if (msh_file != NULL) {
     if (use_occ) {
       partition = 0;
-      t8_global_productionf("The cmesh is not partitioned due to the usage of the curved mesh option. \n"
-                            "Timing will not be comparable to non-curved meshes. \n");
+      t8_global_productionf
+        ("The cmesh is not partitioned due to the usage of the curved mesh option. \n"
+         "Timing will not be comparable to non-curved meshes. \n");
     }
     else {
       partition = 1;
     }
     /* Create a cmesh from the given mesh files */
     cmesh =
-      t8_cmesh_from_msh_file ((char *) msh_file, partition, comm, mesh_dim, 0, use_occ);
+      t8_cmesh_from_msh_file ((char *) msh_file, partition, comm, mesh_dim, 0,
+                              use_occ);
   }
   else {
     T8_ASSERT (cmesh_file != NULL);
