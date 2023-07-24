@@ -127,7 +127,6 @@ t8_file_to_vtkGrid (const char *filename,
   SC_CHECK_MPI (mpiret);
   T8_ASSERT (filename != NULL);
   T8_ASSERT (0 <= main_proc && main_proc < mpisize);
-<<<<<<< HEAD
   /* Read the file and set the pointer to the vtkGrid
    * We read the file if:
    * - We do not use a partitioned read, every process reads the vtk-file, or if
@@ -135,12 +134,7 @@ t8_file_to_vtkGrid (const char *filename,
    * - We use a parallel file-type and use a partitioned read, every proc reads its chunk of the files. 
    */
   if (!partition || mpirank == main_proc ||
-      vtk_file_type && VTK_PARALLEL_FILE) {
-=======
-  /* Read the file and set the pointer to the vtkGrid */
-  if (!partition || mpirank == main_proc
-      || vtk_file_type == VTK_PARALLEL_UNSTRUCTURED_FILE) {
->>>>>>> parent of 79951ea5... Refactor code a little bit
+      vtk_file_type >= VTK_PARALLEL_FILE) {
     switch (vtk_file_type) {
     case VTK_UNSTRUCTURED_FILE:
       main_proc_read_successful = t8_read_unstructured (filename, vtkGrid);
@@ -163,7 +157,7 @@ t8_file_to_vtkGrid (const char *filename,
       t8_errorf ("Filetype not supported.\n");
       break;
     }
-    if (partition && vtk_file_type && VTK_SERIAL_FILE) {
+    if (partition && vtk_file_type < VTK_PARALLEL_FILE) {
       /* Communicate the success/failure of the reading process. */
       sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc,
                     comm);
@@ -171,14 +165,14 @@ t8_file_to_vtkGrid (const char *filename,
     }
   }
   if (partition) {
-    if (vtk_file_type && VTK_SERIAL_FILE) {
+    if (vtk_file_type < VTK_PARALLEL_FILE) {
       sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc,
                     comm);
     }
     else {
       int                 recv_buf;
-      sc_MPI_Allreduce (&main_proc_read_successful, &recv_buf, 1, sc_MPI_INT,
-                        sc_MPI_LOR, comm);
+      sc_MPI_Allreduce (&main_proc_read_successful, &recv_buf, 1,
+                        sc_MPI_INT, sc_MPI_LOR, comm);
       main_proc_read_successful = (vtk_read_success_t) recv_buf;
     }
   }
@@ -298,8 +292,8 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > vtkGrid,
       const t8_gloidx_t   cell_id = cell_it->GetCellId ();
       vtkDataArray       *data = cell_data->GetArray (dtype);
       data->GetTuple (cell_id, tuples[dtype]);
-      t8_cmesh_set_attribute (cmesh, tree_id, t8_get_package_id (), dtype + 1,
-                              tuples[dtype], data_size[dtype], 0);
+      t8_cmesh_set_attribute (cmesh, tree_id, t8_get_package_id (),
+                              dtype + 1, tuples[dtype], data_size[dtype], 0);
     }
     tree_id++;
   }
@@ -532,7 +526,7 @@ t8_vtk_reader_cmesh (const char *filename, const int partition,
     t8_vtk_reader (filename, partition, main_proc, comm, vtk_file_type);
   if (vtkGrid != NULL) {
     const int           distributed_grid =
-      (vtk_file_type && VTK_PARALLEL_FILE) && partition;
+      (vtk_file_type >= VTK_PARALLEL_FILE) && partition;
     t8_cmesh_t          cmesh =
       t8_vtkGrid_to_cmesh (vtkGrid, partition, main_proc, distributed_grid,
                            comm);
