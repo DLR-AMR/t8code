@@ -392,7 +392,12 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet > vtkGrid,
       t8_vtk_partition (cmesh, mpirank, mpisize, num_trees, dim, comm);
   }
 
-  /* Translation of vtkGrid to cmesh */
+  /* Translation of vtkGrid to cmesh 
+   * We translate the file if:
+   * - We do not use a partitioned read, every process has read the vtk-file and shall now translate it, or if
+   * - We use a partitioned read for a non-parallel filetype and the main-process reaches the code-block, or if
+   * - We use a parallel file-type and use a partitioned read, every proc translates its chunk of the grid. 
+   */
   if (!partition || mpirank == main_proc || distributed_grid) {
     t8_vtk_iterate_cells (vtkGrid, cmesh, first_tree, comm);
   }
