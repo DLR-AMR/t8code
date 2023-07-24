@@ -57,13 +57,17 @@ libt8_installed_headers_geometry = \
   src/t8_geometry/t8_geometry.h \
   src/t8_geometry/t8_geometry_base.hxx \
   src/t8_geometry/t8_geometry_base.h \
+  src/t8_geometry/t8_geometry_with_vertices.hxx \
+  src/t8_geometry/t8_geometry_with_vertices.h \
   src/t8_geometry/t8_geometry_helpers.h
 libt8_installed_headers_geometry_impl = \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.h \
+  src/t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_occ.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx \
+  src/t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx 
 libt8_installed_headers_vtk = \
   src/t8_vtk/t8_vtk_reader.hxx \
@@ -85,6 +89,7 @@ libt8_internal_headers = \
   src/t8_cmesh/t8_cmesh_offset.h \
   src/t8_vtk/t8_vtk_polydata.hxx \
   src/t8_vtk/t8_vtk_unstructured.hxx \
+  src/t8-vtk/t8_vtk_parallel.hxx \
   src/t8_forest/t8_forest_cxx.h  \
   src/t8_forest/t8_forest_ghost.h \
   src/t8_forest/t8_forest_balance.h src/t8_forest/t8_forest_types.h \
@@ -111,21 +116,24 @@ libt8_compiled_sources = \
   src/t8_geometry/t8_geometry.cxx \
   src/t8_geometry/t8_geometry_helpers.c \
   src/t8_geometry/t8_geometry_base.cxx \
+  src/t8_geometry/t8_geometry_with_vertices.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_analytic.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_occ.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.cxx \
+  src/t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.cxx \
   src/t8_forest/t8_forest_partition.cxx src/t8_forest/t8_forest_cxx.cxx \
   src/t8_forest/t8_forest_private.c src/t8_forest/t8_forest_vtk.cxx \
   src/t8_forest/t8_forest_ghost.cxx src/t8_forest/t8_forest_iterate.cxx \
   src/t8_version.c \
-  src/t8_vtk.c src/t8_forest/t8_forest_balance.cxx src/t8_vec.c \
+  src/t8_vtk.c src/t8_forest/t8_forest_balance.cxx \
   src/t8_forest/t8_forest_netcdf.cxx \
   src/t8_element_shape.c \
   src/t8_netcdf.c \
   src/t8_cmesh/t8_cmesh_testcases.c \
   src/t8_vtk/t8_vtk_polydata.cxx \
   src/t8_vtk/t8_vtk_unstructured.cxx \
+  src/t8_vtk/t8_vtk_parallel.cxx \
   src/t8_vtk/t8_vtk_reader.cxx
 
 

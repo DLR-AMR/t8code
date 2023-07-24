@@ -59,6 +59,7 @@ t8_forest_init (t8_forest_t *pforest)
   forest->set_balance = -1;
   forest->maxlevel_existing = -1;
   forest->stats_computed = 0;
+  forest->incomplete_trees = -1;
 }
 
 int
@@ -474,6 +475,7 @@ t8_forest_commit (t8_forest_t forest)
     T8_ASSERT (forest->cmesh != NULL);
     T8_ASSERT (forest->scheme_cxx != NULL);
     T8_ASSERT (forest->from_method == T8_FOREST_FROM_LAST);
+    T8_ASSERT (forest->incomplete_trees == -1);
 
     /* dup communicator if requested */
     if (forest->do_dup) {
@@ -500,6 +502,7 @@ t8_forest_commit (t8_forest_t forest)
       t8_forest_populate (forest);
     }
     forest->global_num_trees = t8_cmesh_get_num_trees (forest->cmesh);
+    forest->incomplete_trees = 0;
   }
   else {                        /* set_from != NULL */
     t8_forest_t         forest_from = forest->set_from; /* temporarily store set_from, since we may overwrite it */
@@ -510,6 +513,7 @@ t8_forest_commit (t8_forest_t forest)
     T8_ASSERT (!forest->do_dup);
     T8_ASSERT (forest->from_method >= T8_FOREST_FROM_FIRST &&
                forest->from_method < T8_FOREST_FROM_LAST);
+    T8_ASSERT (forest->set_from->incomplete_trees > -1);
 
     /* TODO: optimize all this when forest->set_from has reference count one */
     /* TODO: Get rid of duping the communicator */
@@ -622,6 +626,7 @@ t8_forest_commit (t8_forest_t forest)
         }
       }
       else {
+        forest->incomplete_trees = forest->set_from->incomplete_trees;
         /* Partitioning is the last routine, no balance was set */
         forest->global_num_elements = forest->set_from->global_num_elements;
         /* Initialize the trees array of the forest */
@@ -670,7 +675,7 @@ t8_forest_commit (t8_forest_t forest)
   forest->set_from = NULL;
   forest->committed = 1;
   t8_debugf ("Committed forest with %li local elements and %lli "
-             "global elements.\n\tTree range ist from %lli to %lli.\n",
+             "global elements.\n\tTree range is from %lli to %lli.\n",
              (long) forest->local_num_elements,
              (long long) forest->global_num_elements,
              (long long) forest->first_local_tree,
@@ -723,6 +728,9 @@ t8_forest_commit (t8_forest_t forest)
     }
     forest->do_ghost = 0;
   }
+#ifdef T8_ENABLE_DEBUG
+  t8_forest_partition_test_boundery_element (forest);
+#endif
 }
 
 t8_locidx_t
@@ -1458,36 +1466,21 @@ t8_forest_write_vtk_ext (t8_forest_t forest,
   T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (forest->committed);
 
-  if (write_ghosts && write_curved) {
-    t8_errorf
-      ("ERROR: Cannot export ghosts and curved elements at the same time. "
-       "Please specify only one option.\n" "Did not write anything.\n");
 #if !T8_WITH_VTK
-    if (write_curved) {
-      t8_errorf
-        ("WARNING: t8code is not linked against VTK. "
-         "Therefore, the export of curved elements is not possible anyway.\n");
-    }
-#endif
+  if (write_curved) {
+    t8_errorf
+      ("WARNING: t8code is not linked against VTK. "
+       "Export of curved elements not yet available with the inbuild function.\n");
     return 0;
   }
+#endif
 
 #if T8_WITH_VTK
-  if (!do_not_use_API) {
-    if (write_ghosts) {
-      t8_errorf
-        ("WARNING: Export of ghosts not yet available with the vtk API. "
-         "Using the inbuild function instead.\n");
-      do_not_use_API = 1;
-    }
-  }
-  else {
-    if (write_curved) {
-      t8_errorf
-        ("WARNING: Export of curved elements not yet available with the inbuild function. "
-         "Using the VTK API instead.\n");
-      do_not_use_API = 0;
-    }
+  if (do_not_use_API && write_curved) {
+    t8_errorf
+      ("WARNING: Export of curved elements not yet available with the inbuild function. "
+       "Using the VTK API instead.\n");
+    do_not_use_API = 0;
   }
 #else
   /* We are not linked against the VTK library, so
@@ -1502,13 +1495,13 @@ t8_forest_write_vtk_ext (t8_forest_t forest,
   do_not_use_API = 1;
 #endif
   if (!do_not_use_API) {
-    T8_ASSERT (!write_ghosts);
     return t8_forest_vtk_write_file_via_API (forest,
                                              fileprefix,
                                              write_treeid,
                                              write_mpirank,
                                              write_level,
                                              write_element_id,
+                                             write_ghosts,
                                              write_curved, num_data, data);
   }
   else {
@@ -1532,7 +1525,8 @@ t8_forest_write_vtk (t8_forest_t forest, const char *fileprefix)
 
 t8_forest_t
 t8_forest_new_uniform (t8_cmesh_t cmesh, t8_scheme_cxx_t *scheme,
-                       int level, int do_face_ghost, sc_MPI_Comm comm)
+                       const int level, const int do_face_ghost,
+                       sc_MPI_Comm comm)
 {
   t8_forest_t         forest;
 
