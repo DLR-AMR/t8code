@@ -127,6 +127,7 @@ t8_file_to_vtkGrid (const char *filename,
   SC_CHECK_MPI (mpiret);
   T8_ASSERT (filename != NULL);
   T8_ASSERT (0 <= main_proc && main_proc < mpisize);
+<<<<<<< HEAD
   /* Read the file and set the pointer to the vtkGrid
    * We read the file if:
    * - We do not use a partitioned read, every process reads the vtk-file, or if
@@ -135,6 +136,11 @@ t8_file_to_vtkGrid (const char *filename,
    */
   if (!partition || mpirank == main_proc ||
       vtk_file_type && VTK_PARALLEL_FILE) {
+=======
+  /* Read the file and set the pointer to the vtkGrid */
+  if (!partition || mpirank == main_proc
+      || vtk_file_type == VTK_PARALLEL_UNSTRUCTURED_FILE) {
+>>>>>>> parent of 79951ea5... Refactor code a little bit
     switch (vtk_file_type) {
     case VTK_UNSTRUCTURED_FILE:
       main_proc_read_successful = t8_read_unstructured (filename, vtkGrid);
@@ -372,7 +378,10 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet > vtkGrid,
   T8_ASSERT (0 <= main_proc && main_proc < mpisize);
 
   /* Already declared here, because we might use them during communication */
-  const t8_gloidx_t   num_trees = vtkGrid->GetNumberOfCells ();
+  t8_gloidx_t         num_trees = 0;
+  if (!partition || mpirank == main_proc || distributed_grid) {
+    num_trees = vtkGrid->GetNumberOfCells ();
+  }
 
   /* Set the dimension on all procs (even empty procs). */
   const int           dim = num_trees > 0 ? t8_get_dimension (vtkGrid) : 0;
@@ -394,8 +403,15 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet > vtkGrid,
       t8_vtk_partition (cmesh, mpirank, mpisize, num_trees, dim, comm);
   }
 
-  /* Translation of vtkGrid to cmesh */
-  t8_vtk_iterate_cells (vtkGrid, cmesh, first_tree, comm);
+  /* Translation of vtkGrid to cmesh 
+   * We translate the file if:
+   * - We do not use a partitioned read, every process has read the vtk-file and shall now translate it, or if
+   * - We use a partitioned read for a non-parallel filetype and the main-process reaches the code-block, or if
+   * - We use a parallel file-type and use a partitioned read, every proc translates its chunk of the grid. 
+   */
+  if (!partition || mpirank == main_proc || distributed_grid) {
+    t8_vtk_iterate_cells (vtkGrid, cmesh, first_tree, comm);
+  }
 
   if (cmesh != NULL) {
     t8_cmesh_commit (cmesh, comm);
