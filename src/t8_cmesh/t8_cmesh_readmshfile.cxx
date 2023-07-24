@@ -1194,8 +1194,8 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                   }
                 }
               }
-              /* Abort if not all nodes are on the surface */
-              if (!all_nodes_on_surface)
+              /* Abort if not all nodes are on the surface or if the surface is a plane */
+              if (!all_nodes_on_surface || occ_geometry->t8_geom_is_plane(surface_index))
               {
                 continue;
               }
@@ -1369,6 +1369,13 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                   edge_nodes[i_edge_node].entity_dim = 1;
                 }
               }
+
+              /* Abort if the edge is a line */
+              if (occ_geometry->t8_geom_is_line(edge_geometry_tag))
+              {
+                continue;
+              }
+
               edge_geometries[i_tree_edges] = edge_geometry_tag;
               tree_is_linked = 1;
               parameters[0] = edge_nodes[0].parameters[0];
@@ -1432,6 +1439,13 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                   edge_nodes[i_edge_node].entity_dim = 2;
                 }
               }
+
+              /* Abort if the edge is a line */
+              if (occ_geometry->t8_geom_is_line(edge_geometry_tag))
+              {
+                continue;
+              }
+
               edge_geometries[i_tree_edges + t8_eclass_num_edges[eclass]] = edge_geometry_tag;
               tree_is_linked = 1;
               parameters[0] = edge_nodes[0].parameters[0];

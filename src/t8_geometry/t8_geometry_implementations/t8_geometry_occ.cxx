@@ -191,6 +191,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh,
                                    active_tree_vertices, ref_coords,
                                    out_coords);
 
+  int                 tree_is_linear = 1;
   const int           num_edges = t8_eclass_num_edges[active_tree_class];
   const int           num_faces = t8_eclass_num_faces[active_tree_class];
   double              interpolated_coords[3],
@@ -212,6 +213,9 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh,
     if (edges[i_edge] > 0 || edges[i_edge + num_edges] > 0) {
       /* Check if only a surface or a curve is present. Abort if both is true. */
       T8_ASSERT (!(edges[i_edge] > 0) != !(edges[i_edge + num_edges] > 0));
+
+      /* tree carries a surface or an edge and is therefore not  */
+      tree_is_linear = 0;
 
       /* Interpolate coordinates between edge vertices. Due to the indices i_edge of the edges, the edges point in
        * direction of ref_coord i_edge / 4. Therefore, we can use ref_coords[i_edge / 4] for the interpolation.              
@@ -789,6 +793,22 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
 
 /* Our indent skript has huge problems with c++ */
 /* *INDENT-OFF* */
+int
+t8_geometry_occ::t8_geom_is_line(const int curve_index) const
+{
+  const Handle_Geom_Curve curve  = t8_geom_get_occ_curve(curve_index);
+  const GeomAdaptor_Curve curve_adaptor (curve);
+  return curve_adaptor.GetType() == GeomAbs_Line;
+}
+
+int
+t8_geometry_occ::t8_geom_is_plane(const int surface_index) const
+{
+  const Handle_Geom_Surface surface = t8_geom_get_occ_surface (surface_index);
+  const GeomAdaptor_Surface surface_adaptor (surface);
+  return surface_adaptor.GetType() == GeomAbs_Plane;
+}
+
 const gp_Pnt
 t8_geometry_occ::t8_geom_get_occ_point (const int index) const
 {
