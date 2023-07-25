@@ -76,7 +76,8 @@ class               t8_geometry_cubed_spherical_surface:public t8_geometry
 {
 public:
   /* Basic constructor that sets the dimension and the name. */
-  t8_geometry_cubed_spherical_surface ():t8_geometry (2, "t8_cubed_spherical_surface")
+  t8_geometry_cubed_spherical_surface ():t8_geometry (2,
+                                                      "t8_cubed_spherical_surface")
   {
   }
 
@@ -112,11 +113,13 @@ public:
 
 /** This geometry maps the faces of an oktaeder to a spherical surface.
  */
-class               t8_geometry_triangulated_spherical_surface:public t8_geometry
+class               t8_geometry_triangulated_spherical_surface:public
+  t8_geometry
 {
 public:
   /* Basic constructor that sets the dimension and the name. */
-  t8_geometry_triangulated_spherical_surface ():t8_geometry (2, "t8_triangulated_spherical_surface")
+  t8_geometry_triangulated_spherical_surface ():t8_geometry (2,
+                                                             "t8_triangulated_spherical_surface")
   {
   }
 
@@ -156,7 +159,8 @@ class               t8_geometry_cubed_spherical_shell:public t8_geometry
 {
 public:
   /* Basic constructor that sets the dimension and the name. */
-  t8_geometry_cubed_spherical_shell ():t8_geometry (3, "t8_cubed_spherical_shell")
+  t8_geometry_cubed_spherical_shell ():t8_geometry (3,
+                                                    "t8_cubed_spherical_shell")
   {
   }
 
