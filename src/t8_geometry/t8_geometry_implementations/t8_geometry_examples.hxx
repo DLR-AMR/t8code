@@ -30,7 +30,7 @@
 #include <t8.h>
 #include <t8_geometry/t8_geometry_base.hxx>
 
-/** This geometry maps the faces of a unit cube to a spherical surface.
+/** This geometry maps five quads to a disk.
  */
 class               t8_geometry_squared_disk:public t8_geometry
 {
@@ -41,7 +41,7 @@ public:
   }
 
   /**
-   * Map the faces of a unit cube to a spherical surface.
+   * Map five quads to a disk.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
@@ -121,7 +121,7 @@ public:
   }
 
   /**
-   * Map the faces of a unit cube to a spherical surface.
+   * Map the faces of an oktaeder to a spherical surface.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
@@ -150,7 +150,7 @@ public:
   }
 };
 
-/** This geometry maps the faces of a unit cube to a spherical shell.
+/** This geometry maps six hexs to a spherical shell.
  */
 class               t8_geometry_cubed_spherical_shell:public t8_geometry
 {
@@ -161,7 +161,7 @@ public:
   }
 
   /**
-   * Map a reference point in the unit cube to a spherical shell.
+   * Map six hexs to a spherical shell.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
@@ -190,7 +190,7 @@ public:
   }
 };
 
-/** This geometry maps the faces of a unit cube to a sphere of given radius and thickness.
+/** This geometry maps the unit cube (consisting seven hexs) to a sphere.
  */
 class               t8_geometry_cubed_sphere:public t8_geometry
 {
@@ -201,7 +201,7 @@ public:
   }
 
   /**
-   * Map a reference point in the unit square to a cylinder.
+   * Map a reference point in the unit cube (consisting seven hexs) to a sphere.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.

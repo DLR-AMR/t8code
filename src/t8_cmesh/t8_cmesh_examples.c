@@ -2679,7 +2679,7 @@ t8_cmesh_new_squared_disk(const double radius, sc_MPI_Comm comm)
   }
 
   /* Face connectivity. */
-  t8_cmesh_set_join_by_vertices (cmesh, ntrees, all_eclasses, all_verts, NULL);
+  t8_cmesh_set_join_by_vertices (cmesh, ntrees, all_eclasses, all_verts, NULL, 0);
 
   /* Commit the mesh */
   t8_cmesh_commit (cmesh, comm);
@@ -2757,7 +2757,7 @@ t8_cmesh_new_triangulated_spherical_surface(const double radius, sc_MPI_Comm com
   }
 
   /* Face connectivity. */
-  t8_cmesh_set_join_by_vertices (cmesh, ntrees, all_eclasses, all_verts, NULL);
+  t8_cmesh_set_join_by_vertices (cmesh, ntrees, all_eclasses, all_verts, NULL, 0);
 
   /* Commit the mesh */
   t8_cmesh_commit (cmesh, comm);
@@ -2830,7 +2830,7 @@ t8_cmesh_new_cubed_spherical_surface(const double radius, sc_MPI_Comm comm)
   }
 
   /* Face connectivity. */
-  t8_cmesh_set_join_by_vertices (cmesh, ntrees, all_eclasses, all_verts, NULL);
+  t8_cmesh_set_join_by_vertices (cmesh, ntrees, all_eclasses, all_verts, NULL, 0);
     
   /* Commit the mesh */
   t8_cmesh_commit (cmesh, comm);
@@ -2914,7 +2914,7 @@ t8_cmesh_new_cubed_spherical_shell(const double radius, const double thickness, 
   }
 
   /* Face connectivity. */
-  t8_cmesh_set_join_by_vertices (cmesh, ntrees, all_eclasses, all_verts, NULL);
+  t8_cmesh_set_join_by_vertices (cmesh, ntrees, all_eclasses, all_verts, NULL, 0);
 
   /* Commit the mesh */
   t8_cmesh_commit (cmesh, comm);
@@ -3025,7 +3025,7 @@ t8_cmesh_new_cubed_sphere(const double radius, sc_MPI_Comm comm)
   }
 
   /* Face connectivity. */
-  t8_cmesh_set_join_by_vertices (cmesh, ntrees, all_eclasses, all_verts, NULL);
+  t8_cmesh_set_join_by_vertices (cmesh, ntrees, all_eclasses, all_verts, NULL, 0);
 
   /* Commit the mesh */
   t8_cmesh_commit (cmesh, comm);

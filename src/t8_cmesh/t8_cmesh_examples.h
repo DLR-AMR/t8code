@@ -315,28 +315,28 @@ t8_cmesh_t          t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees,
                                                const int do_partition,
                                                sc_MPI_Comm comm);
 
-/** Construct \a cubed disk of given radius.
+/** Construct a cubed disk of given radius.
  * \param [in] radius        Radius of the sphere.
  * \param [in] comm          The MPI communicator used to commit the cmesh
  * \return                   A cmesh representing the spherical surface.
  */
 t8_cmesh_t t8_cmesh_new_squared_disk(const double radius, sc_MPI_Comm comm);
 
-/** Construct \a triangulated spherical surface of given radius.
+/** Construct a triangulated spherical surface of given radius.
  * \param [in] radius        Radius of the sphere.
  * \param [in] comm          The MPI communicator used to commit the cmesh
  * \return                   A cmesh representing the spherical surface.
  */
 t8_cmesh_t t8_cmesh_new_triangulated_spherical_surface (const double radius, sc_MPI_Comm comm);
 
-/** Construct \a cubed spherical surface of given radius.
+/** Construct a cubed spherical surface of given radius.
  * \param [in] radius        Radius of the sphere.
  * \param [in] comm          The MPI communicator used to commit the cmesh
  * \return                   A cmesh representing the spherical surface.
  */
 t8_cmesh_t t8_cmesh_new_cubed_spherical_surface(const double radius, sc_MPI_Comm comm);
 
-/** Construct \a cubed spherical shell of given inner radius and thickness.
+/** Construct a cubed spherical shell of given inner radius and thickness.
  * \param [in] radius        Radius of the inner side of the shell.
  * \param [in] thickness     Thickness of the shell.
  * \param [in] comm          The MPI communicator used to commit the cmesh
@@ -344,7 +344,7 @@ t8_cmesh_t t8_cmesh_new_cubed_spherical_surface(const double radius, sc_MPI_Comm
  */
 t8_cmesh_t t8_cmesh_new_cubed_spherical_shell(const double radius, const double thickness, sc_MPI_Comm comm);
 
-/** Construct \a cubed sphere of given radius.
+/** Construct a cubed sphere of given radius.
  * \param [in] radius        Radius of the sphere.
  * \param [in] comm          The MPI communicator used to commit the cmesh
  * \return                   A cmesh representing the spherical surface.
