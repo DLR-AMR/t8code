@@ -225,10 +225,12 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
 
   /* Check if face has a linked geometry */
   if (*faces > 0) {
+#ifdef T8_ENABLE_DEBUG
     for (int i_edge = 0; i_edge < num_edges; i_edge++) {
       /* If face carries a surface, edges can't carry surfaces too */
       T8_ASSERT (edges[i_edge + num_edges] == 0);
     }
+#endif /* T8_ENABLE_DEBUG */
 
     /* Retrieve surface parameters */
     const double       *face_parameters =
