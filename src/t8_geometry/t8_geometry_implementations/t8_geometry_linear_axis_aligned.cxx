@@ -25,7 +25,7 @@
 #include <t8_geometry/t8_geometry_helpers.h>
 
 t8_geometry_linear_axis_aligned::t8_geometry_linear_axis_aligned (int dim):
-t8_geometry_w_vertices (dim, "")
+t8_geometry_with_vertices (dim, "")
 {
   T8_ASSERT (0 <= dim && dim <= 3);
   size_t              num_chars = 100;
