@@ -168,7 +168,7 @@ main (int argc, char **argv)
                       "Set the type of the data in the file.\n"
                       "\t\t\t\t\t0 for vtkUnstructuredGrid \n"
                       "\t\t\t\t\t1 for vtkPolyData\n"
-                      "\t\t\t\t\t2 for pvtu. Currently not working with -p");
+                      "\t\t\t\t\t2 for pvtu.");
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
 
