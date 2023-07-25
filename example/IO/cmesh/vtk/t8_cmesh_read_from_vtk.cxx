@@ -80,8 +80,7 @@ t8_forest_construct_from_vtk (const char *prefix, sc_MPI_Comm comm,
   double             *tree_data;
   /* Read the cell-data if there is any */
   if (values_per_cell > 0) {
-    const t8_locidx_t   num_trees = t8_cmesh_get_num_local_trees (cmesh);
-    T8_ASSERT (num_trees == t8_forest_get_num_local_trees (forest));
+    const t8_locidx_t   num_trees = t8_forest_get_num_local_trees (forest);
     vtk_data = T8_ALLOC (t8_vtk_data_field_t, values_per_cell);
     cell_values = T8_ALLOC (double *, values_per_cell);
     for (int ivalues = 0; ivalues < values_per_cell; ivalues++) {

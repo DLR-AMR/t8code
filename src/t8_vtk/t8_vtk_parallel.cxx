@@ -50,8 +50,9 @@ t8_read_parallel (const char *filename, vtkSmartPointer < vtkDataSet > grid,
   reader->SetFileName (filename);
   reader->UpdateInformation ();
 
-  /* Get mpi size and rank */
+  /*  Get the number of files to read. */
   const int           total_num_pieces = reader->GetNumberOfPieces ();
+  /* Get mpi size and rank */
   int                 mpiret;
   int                 mpisize;
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
@@ -93,10 +94,11 @@ t8_read_parallel (const char *filename, vtkSmartPointer < vtkDataSet > grid,
     append->Update ();
     append->MergePointsOn ();
     grid->ShallowCopy (append->GetOutput ());
-    t8_debugf ("[D] read %lli cells\n", grid->GetNumberOfCells ());
   }
   else {
-    t8_debugf ("[D] dont read any file on this proc\n");
+    /* Initialize the grid, but don't construct any cells. 
+     * simplifies further processing of the grid on multiple procs. */
+    grid->Initialize ();
   }
   return read_success;
 }
