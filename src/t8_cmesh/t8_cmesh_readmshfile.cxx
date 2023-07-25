@@ -804,8 +804,8 @@ t8_correct_closed_geometry_parametric (const int geometry_dim,
        */
       double              parametric_bounds[4];
       /* Get the parametric surface bounds. */
-      geometry_occ->t8_geom_get_surface_parametric_bounds (geometry_index,
-                                                           parametric_bounds);
+      geometry_occ->t8_geom_get_face_parametric_bounds (geometry_index,
+                                                        parametric_bounds);
       /* Switch is_V_closed flag to false, if surface is closed in the U parameter. */
       if (geometry_occ->t8_geom_check_if_surface_is_U_closed (geometry_index)) {
         is_V_closed = false;

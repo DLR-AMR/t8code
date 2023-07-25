@@ -1273,7 +1273,7 @@ t8_geometry_occ::t8_geom_edge_parameter_to_face_parameters(const int edge_index,
 }
 
 void
-t8_geometry_occ::t8_geom_get_surface_parametric_bounds(const int surface_index,
+t8_geometry_occ::t8_geom_get_face_parametric_bounds(const int surface_index,
                                                        double *bounds) const
 {
   const Handle_Geom_Surface occ_surface = t8_geom_get_occ_surface(surface_index);

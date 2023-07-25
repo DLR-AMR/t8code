@@ -269,12 +269,12 @@ public:
                                             const double* surface_params,
                                             double* face_params) const;
   
-  /** Finds the parametric bounds of a occ surface.
-   * \param [in]  surface_index   The index of the occ face.
-   * \param [out] bounds          The parametric bounds of the occ surface.
+  /** Finds the parametric bounds of an occ face.
+   * \param [in]  face_index   The index of the occ face.
+   * \param [out] bounds          The parametric bounds of the occ face.
    */   
   void
-  t8_geom_get_surface_parametric_bounds(const int surface_index,
+  t8_geom_get_face_parametric_bounds(const int surface_index,
                                         double *bounds) const;
 
   /** Finds the parametric bounds of an occ edge.
