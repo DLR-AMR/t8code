@@ -247,11 +247,13 @@ public:
                                            const int face_index, 
                                            double* face_params) const;
 
-  /** Converts the parameter of an occ edge to the corresponding parameters on an occ face.
-   *  The edge has to lie on the face.
-   * \param [in]  edge_index     The index of the occ edge.
-   * \param [in]  face_index     The index of the occ face.
-   * \param [in]  num_face_nodes The number of the face nodes.
+  /** Converts the parameters of an occ edge to the corresponding parameters on an occ face.
+   * The edge has to lie on the face.
+   * For the conversion of edge parameters of mesh elements to topological face parameters of a closed surface, it is additionally
+   * checked, whether the conversion was correct, to prevent disorted elements. 
+   * \param [in]  edge_index     The index of the occ edge, which parameters should be converted to face parameters.
+   * \param [in]  face_index     The index of the occ face, on to which the edge parameters should be converted.
+   * \param [in]  num_face_nodes The number of the face nodes of the evaluated element. Only needed for closed surface check, otherwise NULL.
    * \param [in]  edge_param     The parameter on the edge.
    * \param [in]  surface_param  The parameters of the surface nodes.
    *                             When provided, there are additional checks for closed geometries.
