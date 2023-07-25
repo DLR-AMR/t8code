@@ -1277,9 +1277,9 @@ t8_geometry_occ::t8_geom_get_edge_parametric_bounds(const int edge_index,
 }
 
 int
-t8_geometry_occ::t8_geom_check_if_edge_is_closed (int geometry_index) const
+t8_geometry_occ::t8_geom_is_edge_closed (int edge_index) const
 {
-  const Handle_Geom_Curve occ_edge = t8_geom_get_occ_curve(geometry_index);
+  const Handle_Geom_Curve occ_edge = t8_geom_get_occ_curve(edge_index);
   return occ_edge->IsClosed();
 }
 

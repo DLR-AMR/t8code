@@ -755,7 +755,7 @@ t8_correct_closed_geometry_parametric (const int geometry_dim,
     /* Check for closed U parameter in case of an edge. */
   case 1:
     /* Only correct the U parameter if the edge is closed. */
-    if (geometry_occ->t8_geom_check_if_edge_is_closed (geometry_index)) {
+    if (geometry_occ->t8_geom_is_edge_closed (geometry_index)) {
       /* Get the parametric bounds of the closed geometry 
        * edge    -> [Umin, Umax]
        */
@@ -1511,7 +1511,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
               parameters[1] = edge_nodes[1].parameters[0];
 
               /* Corrects the parameters on the edge if it is closed to prevent disorted elements. */
-              if (occ_geometry->t8_geom_check_if_edge_is_closed(edge_geometry_tag)) {
+              if (occ_geometry->t8_geom_is_edge_closed(edge_geometry_tag)) {
                 t8_correct_closed_geometry_parametric(1, edge_geometry_tag,
                                                       2, occ_geometry, parameters);
               }

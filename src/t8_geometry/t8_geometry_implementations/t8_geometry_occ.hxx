@@ -286,11 +286,11 @@ public:
                                      double *bounds) const;
   
   /** Checks if an edge is closed in its U parameter.
-   * \param [in]  geometry_index   The index of the closed geometry.
-   * \return                       1 if geometry is closed in U. 0 if geometry is not closed in U.
+   * \param [in]  edge_index   The index of the closed edge.
+   * \return                   1 if edge is closed in U. 0 if edge is not closed in U.
    */
   int
-  t8_geom_check_if_edge_is_closed (int geometry_index) const;
+  t8_geom_is_edge_closed (int edge_index) const;
 
   /** Checks if a surface is closed in its U parameter.
    * \param [in]  geometry_index   The index of the closed geometry.
