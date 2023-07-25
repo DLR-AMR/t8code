@@ -193,6 +193,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
 {
   T8_ASSERT (active_tree_class == T8_ECLASS_TRIANGLE);
 
+  t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
   const int           num_edges = t8_eclass_num_edges[active_tree_class];
   gp_Pnt              pnt, converted_edge_surface_pnt,
     interpolated_edge_surface_pnt, interpolated_surface_pnt;
@@ -231,8 +232,6 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
       T8_ASSERT (edges[i_edge + num_edges] == 0);
     }
 #endif /* T8_ENABLE_DEBUG */
-    /* Convert global tree id to local tree id, for receiving cmesh attributes. */
-    t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
     /* Retrieve surface parameters */
     const double       *face_parameters =
       (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
@@ -240,7 +239,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
                                          ltreeid);
     T8_ASSERT (face_parameters != NULL);
 
-    /* Retrive surface_parameter in global space by triangular interpolation from ref_coords to global space */
+    /* Retrieve surface_parameter in global space by triangular interpolation from ref_coords to global space */
     t8_geom_trianglular_interpolation (ref_coords, face_parameters,
                                        2, 2, interpolated_surface_parameters);
 
@@ -255,8 +254,6 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
         t8_geom_compute_linear_geometry (active_tree_class,
                                          active_tree_vertices,
                                          ref_intersection, glob_intersection);
-        /* Convert global tree id to local tree id, for receiving cmesh attributes. */
-        t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
         /* Get parameters of the current edge if the edge is curved */
         const double       *edge_parameters =
           (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
@@ -373,8 +370,6 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
      * Iterate over each edge and check if it is linked. */
     for (int i_edge = 0; i_edge < num_edges; i_edge++) {
       if (edges[i_edge] > 0 || edges[i_edge + num_edges] > 0) {
-        /* Convert global tree id to local tree id, for receiving cmesh attributes. */
-        t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
         /* Get parameters of the current edge if the edge is curved */
         const double       *parameters =
           (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
@@ -474,6 +469,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
 {
   T8_ASSERT (active_tree_class == T8_ECLASS_QUAD);
 
+  t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
   const int           num_edges = t8_eclass_num_edges[active_tree_class];
   gp_Pnt              pnt;
   Handle_Geom_Curve   curve;
@@ -490,8 +486,6 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
       T8_ASSERT (edges[i_edge + num_edges] <= 0);
     }
 #endif /* T8_ENABLE_DEBUG */
-    /* Convert global tree id to local tree id, for receiving cmesh attributes. */
-    t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
     /* Retrieve surface parameters */
     const double       *face_parameters =
       (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
@@ -521,8 +515,6 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
          */
         const int           edge_orthogonal_direction = (i_edge / 2);
         const int           edge_direction = 1 - edge_orthogonal_direction;
-        /* Convert global tree id to local tree id, for receiving cmesh attributes. */
-        t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
         /* Retrieve edge parameters and interpolate */
         const double       *edge_parameters =
           (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
@@ -639,8 +631,6 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
         t8_geom_linear_interpolation (&ref_coords[edge_direction],
                                       temp_edge_vertices,
                                       3, 1, interpolated_coords);
-        /* Convert global tree id to local tree id, for receiving cmesh attributes. */
-        t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
         /* Interpolate parameters between edge vertices. Same procedure as above. */
         const double       *parameters =
           (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
@@ -724,6 +714,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh,
                                    active_tree_vertices, ref_coords,
                                    out_coords);
 
+  t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
   const int           num_edges = t8_eclass_num_edges[active_tree_class];
   const int           num_faces = t8_eclass_num_faces[active_tree_class];
   double              interpolated_coords[3],
@@ -772,8 +763,6 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh,
       t8_geom_linear_interpolation (&ref_coords[edge_direction],
                                     temp_edge_vertices,
                                     3, 1, interpolated_coords);
-      /* Convert global tree id to local tree id, for receiving cmesh attributes. */
-      t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
       /* Interpolate parameters between edge vertices. Same procedure as above. */
       const double       *parameters =
         (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
@@ -876,8 +865,6 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh,
       double              face_displacement_from_edges[3] = { 0 },
         surface_parameter_displacement_from_edges[2] = { 0 },
         surface_parameters_from_curve[2] = { 0 };
-      /* Convert global tree id to local tree id, for receiving cmesh attributes. */
-      t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
       /* Retrieve surface parameters of nodes */
       const double       *surface_parameters =
         (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
