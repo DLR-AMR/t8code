@@ -177,8 +177,8 @@ void  t8_geometry_triangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t c
     const double w_ref[3] = {-1.0,  1.0, 0.0};
 
     /* Compute local triangle coordinate. */
-    const double vv = u_ref[0] + ref_coords[0] * v_ref[0] + ref_coords[1] * w_ref[0];
-    const double ww = u_ref[1] + ref_coords[0] * v_ref[1] + ref_coords[1] * w_ref[1];
+    double vv = u_ref[0] + ref_coords[0] * v_ref[0] + ref_coords[1] * w_ref[0];
+    double ww = u_ref[1] + ref_coords[0] * v_ref[1] + ref_coords[1] * w_ref[1];
 
     /* Correction in order to rectify elements near the corners. */
     vv = tan(0.5*M_PI*(vv-0.5))*0.5 + 0.5;
@@ -221,8 +221,8 @@ void  t8_geometry_triangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t c
     const double w_ref[3] = { 0.0, -1.0, 0.0};
 
     /* Compute local triangle coordinate. */
-    const double vv = u_ref[0] + ref_coords[0] * v_ref[0] + ref_coords[1] * w_ref[0];
-    const double ww = u_ref[1] + ref_coords[0] * v_ref[1] + ref_coords[1] * w_ref[1];
+    double vv = u_ref[0] + ref_coords[0] * v_ref[0] + ref_coords[1] * w_ref[0];
+    double ww = u_ref[1] + ref_coords[0] * v_ref[1] + ref_coords[1] * w_ref[1];
 
     /* Correction in order to rectify elements near the corners. */
     vv = tan(0.5*M_PI*(vv-0.5))*0.5 + 0.5;
@@ -265,8 +265,8 @@ void  t8_geometry_triangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t c
     const double w_ref[3] = { 1.0,  0.0, 0.0};
 
     /* Compute local triangle coordinate. */
-    const double vv = u_ref[0] + ref_coords[0] * v_ref[0] + ref_coords[1] * w_ref[0];
-    const double ww = u_ref[1] + ref_coords[0] * v_ref[1] + ref_coords[1] * w_ref[1];
+    double vv = u_ref[0] + ref_coords[0] * v_ref[0] + ref_coords[1] * w_ref[0];
+    double ww = u_ref[1] + ref_coords[0] * v_ref[1] + ref_coords[1] * w_ref[1];
 
     /* Correction in order to rectify elements near the corners. */
     vv = tan(0.5*M_PI*(vv-0.5))*0.5 + 0.5;
@@ -490,12 +490,12 @@ void  t8_geometry_cubed_sphere::t8_geom_evaluate (t8_cmesh_t cmesh,
     r[2] = r[2] / norm;
   }
 
+  const double x = ref_coords[0];
+  const double y = ref_coords[1];
+  const double z = ref_coords[2];
+
   {
     double corr_ref_coords[3];
-
-    const double x = ref_coords[0];
-    const double y = ref_coords[1];
-    const double z = ref_coords[2];
 
     /* Correction in order to rectify elements near the corners. */
     corr_ref_coords[0] = tan(0.5*M_PI*(x-0.5))*0.5 + 0.5;

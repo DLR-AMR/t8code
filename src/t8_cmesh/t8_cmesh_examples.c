@@ -2607,11 +2607,9 @@ t8_cmesh_new_squared_disk(const double radius, sc_MPI_Comm comm)
 
   const double xi = ri / M_SQRT2;
   const double yi = ri / M_SQRT2;
-  const double zi = ri / M_SQRT2;
 
   const double xo = ro / M_SQRT2;
   const double yo = ro / M_SQRT2;
-  const double zo = ro / M_SQRT2;
 
   const int ntrees = 5; /* Number of cmesh elements resp. trees. */
   const int nverts = 4; /* Number of cmesh element vertices. */
@@ -2632,10 +2630,10 @@ t8_cmesh_new_squared_disk(const double radius, sc_MPI_Comm comm)
   /* Central quad. */
   {
     const double vertices[4][3] = {
-      -xi, -yi,  0.0,
-       xi, -yi,  0.0,
-      -xi,  yi,  0.0,
-       xi,  yi,  0.0
+      {-xi, -yi,  0.0},
+      { xi, -yi,  0.0},
+      {-xi,  yi,  0.0},
+      { xi,  yi,  0.0}
     };
 
     t8_cmesh_set_tree_vertices (cmesh, 0, (double*) vertices, 4);
@@ -2643,7 +2641,7 @@ t8_cmesh_new_squared_disk(const double radius, sc_MPI_Comm comm)
     /* itree = 0; */
     for (int ivert = 0; ivert < nverts; ivert++) {
       for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
-        all_verts[T8_I3(ntrees,T8_ECLASS_MAX_CORNERS,T8_ECLASS_MAX_DIM,0,ivert,icoord)]
+        all_verts[T8_3D_TO_1D(ntrees,T8_ECLASS_MAX_CORNERS,T8_ECLASS_MAX_DIM,0,ivert,icoord)]
           = vertices[ivert][icoord];
       }
     }
@@ -2652,10 +2650,10 @@ t8_cmesh_new_squared_disk(const double radius, sc_MPI_Comm comm)
   /* Four quads framing the central quad. */
   {
     const double vertices[4][3] = {
-      -xi, yi,  0.0,
-       xi, yi,  0.0,
-      -xo, yo,  0.0,
-       xo, yo,  0.0
+      {-xi, yi,  0.0},
+      { xi, yi,  0.0},
+      {-xo, yo,  0.0},
+      { xo, yo,  0.0}
     };
 
     for (int itree = 1; itree < ntrees; itree++) {
@@ -2672,7 +2670,7 @@ t8_cmesh_new_squared_disk(const double radius, sc_MPI_Comm comm)
 
       for (int ivert = 0; ivert < nverts; ivert++) {
         for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
-          all_verts[T8_I3(ntrees,T8_ECLASS_MAX_CORNERS,T8_ECLASS_MAX_DIM,itree,ivert,icoord)] 
+          all_verts[T8_3D_TO_1D(ntrees,T8_ECLASS_MAX_CORNERS,T8_ECLASS_MAX_DIM,itree,ivert,icoord)] 
             = rot_vertices[ivert][icoord];
         }
       }
@@ -2714,15 +2712,15 @@ t8_cmesh_new_triangulated_spherical_surface(const double radius, sc_MPI_Comm com
   const double r = radius; /* Only for readabilty. */
 
   double vertices_top[3][3] = {
-      r, 0.0,  0.0,
-    0.0,   r,  0.0,
-    0.0, 0.0,    r
+    {  r, 0.0,  0.0},
+    {0.0,   r,  0.0},
+    {0.0, 0.0,    r}
   };
 
   double vertices_bot[3][3] = {
-      r, 0.0,  0.0,
-    0.0,   r,  0.0,
-    0.0, 0.0,   -r
+    {  r, 0.0,  0.0},
+    {0.0,   r,  0.0},
+    {0.0, 0.0,   -r}
   };
 
   int itree = -1;
@@ -2742,7 +2740,7 @@ t8_cmesh_new_triangulated_spherical_surface(const double radius, sc_MPI_Comm com
 
     for (int ivert = 0; ivert < nverts; ivert++) {
       for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
-        all_verts[T8_I3(ntrees,T8_ECLASS_MAX_CORNERS,T8_ECLASS_MAX_DIM,itree,ivert,icoord)] 
+        all_verts[T8_3D_TO_1D(ntrees,T8_ECLASS_MAX_CORNERS,T8_ECLASS_MAX_DIM,itree,ivert,icoord)] 
           = rot_vertices_top[ivert][icoord];
       }
     }
@@ -2751,7 +2749,7 @@ t8_cmesh_new_triangulated_spherical_surface(const double radius, sc_MPI_Comm com
 
     for (int ivert = 0; ivert < nverts; ivert++) {
       for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
-        all_verts[T8_I3(ntrees,T8_ECLASS_MAX_CORNERS,T8_ECLASS_MAX_DIM,itree,ivert,icoord)] 
+        all_verts[T8_3D_TO_1D(ntrees,T8_ECLASS_MAX_CORNERS,T8_ECLASS_MAX_DIM,itree,ivert,icoord)] 
           = rot_vertices_bot[ivert][icoord];
       }
     }
@@ -2796,10 +2794,10 @@ t8_cmesh_new_cubed_spherical_surface(const double radius, sc_MPI_Comm comm)
   const double z = radius / _SQRT3;
 
   const double vertices[4][3] = {
-    -x, -y,  z,
-     x, -y,  z,
-    -x,  y,  z,
-     x,  y,  z
+    {-x, -y,  z},
+    { x, -y,  z},
+    {-x,  y,  z},
+    { x,  y,  z}
   };
 
   const double angles[] = {0.0, 0.5*M_PI, 0.5*M_PI, M_PI, -0.5*M_PI, -0.5*M_PI};
@@ -2824,7 +2822,7 @@ t8_cmesh_new_cubed_spherical_surface(const double radius, sc_MPI_Comm comm)
 
     for (int ivert = 0; ivert < nverts; ivert++) {
       for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
-        all_verts[T8_I3(ntrees,T8_ECLASS_MAX_CORNERS,T8_ECLASS_MAX_DIM,itree,ivert,icoord)] 
+        all_verts[T8_3D_TO_1D(ntrees,T8_ECLASS_MAX_CORNERS,T8_ECLASS_MAX_DIM,itree,ivert,icoord)] 
           = rot_vertices[ivert][icoord];
       }
     }
@@ -2875,15 +2873,15 @@ t8_cmesh_new_cubed_spherical_shell(const double radius, const double thickness, 
   const double zo = ro / _SQRT3;
 
   const double vertices[8][3] = {
-    -xi, -yi,  zi,
-     xi, -yi,  zi,
-    -xi,  yi,  zi,
-     xi,  yi,  zi,
+    {-xi, -yi,  zi},
+    { xi, -yi,  zi},
+    {-xi,  yi,  zi},
+    { xi,  yi,  zi},
 
-    -xo, -yo,  zo,
-     xo, -yo,  zo,
-    -xo,  yo,  zo,
-     xo,  yo,  zo
+    {-xo, -yo,  zo},
+    { xo, -yo,  zo},
+    {-xo,  yo,  zo},
+    { xo,  yo,  zo}
   };
 
   const double angles[] = {0.0, 0.5*M_PI, 0.5*M_PI, M_PI, -0.5*M_PI, -0.5*M_PI};
@@ -2908,7 +2906,7 @@ t8_cmesh_new_cubed_spherical_shell(const double radius, const double thickness, 
 
     for (int ivert = 0; ivert < nverts; ivert++) {
       for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
-        all_verts[T8_I3(ntrees,T8_ECLASS_MAX_CORNERS,T8_ECLASS_MAX_DIM,itree,ivert,icoord)] 
+        all_verts[T8_3D_TO_1D(ntrees,T8_ECLASS_MAX_CORNERS,T8_ECLASS_MAX_DIM,itree,ivert,icoord)] 
           = rot_vertices[ivert][icoord];
       }
     }
@@ -2961,15 +2959,15 @@ t8_cmesh_new_cubed_sphere(const double radius, sc_MPI_Comm comm)
   /* Set the vertices for the central cube. */
   {
     double vertices[8][3] = {
-      -xi, -yi, -zi,
-       xi, -yi, -zi,
-      -xi,  yi, -zi,
-       xi,  yi, -zi,
+      {-xi, -yi, -zi},
+      { xi, -yi, -zi},
+      {-xi,  yi, -zi},
+      { xi,  yi, -zi},
 
-      -xi, -yi,  zi,
-       xi, -yi,  zi,
-      -xi,  yi,  zi,
-       xi,  yi,  zi
+      {-xi, -yi,  zi},
+      { xi, -yi,  zi},
+      {-xi,  yi,  zi},
+      { xi,  yi,  zi}
     };
 
     t8_cmesh_set_tree_vertices (cmesh, 0, (double*) vertices, 8);
@@ -2977,7 +2975,7 @@ t8_cmesh_new_cubed_sphere(const double radius, sc_MPI_Comm comm)
     /* itree = 0 */
     for (int ivert = 0; ivert < nverts; ivert++) {
       for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
-        all_verts[T8_I3(ntrees,T8_ECLASS_MAX_CORNERS,T8_ECLASS_MAX_DIM,0,ivert,icoord)] 
+        all_verts[T8_3D_TO_1D(ntrees,T8_ECLASS_MAX_CORNERS,T8_ECLASS_MAX_DIM,0,ivert,icoord)] 
           = vertices[ivert][icoord];
       }
     }
@@ -2986,15 +2984,15 @@ t8_cmesh_new_cubed_sphere(const double radius, sc_MPI_Comm comm)
   /* Set the vertices for the six cubes framing the central cube. */
   {
     const double vertices[8][3] = {
-      -xi, -yi,  zi,
-       xi, -yi,  zi,
-      -xi,  yi,  zi,
-       xi,  yi,  zi,
+      {-xi, -yi,  zi},
+      { xi, -yi,  zi},
+      {-xi,  yi,  zi},
+      { xi,  yi,  zi},
 
-      -xo, -yo,  zo,
-       xo, -yo,  zo,
-      -xo,  yo,  zo,
-       xo,  yo,  zo
+      {-xo, -yo,  zo},
+      { xo, -yo,  zo},
+      {-xo,  yo,  zo},
+      { xo,  yo,  zo}
     };
 
     const double angles[] = {0.0, 0.0, 0.5*M_PI, 0.5*M_PI, M_PI, -0.5*M_PI, -0.5*M_PI};
@@ -3018,7 +3016,7 @@ t8_cmesh_new_cubed_sphere(const double radius, sc_MPI_Comm comm)
 
       for (int ivert = 0; ivert < nverts; ivert++) {
         for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
-          all_verts[T8_I3(ntrees,T8_ECLASS_MAX_CORNERS,T8_ECLASS_MAX_DIM,itree,ivert,icoord)] 
+          all_verts[T8_3D_TO_1D(ntrees,T8_ECLASS_MAX_CORNERS,T8_ECLASS_MAX_DIM,itree,ivert,icoord)] 
             = rot_vertices[ivert][icoord];
         }
       }
