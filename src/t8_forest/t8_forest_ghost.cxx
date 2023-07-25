@@ -1536,7 +1536,7 @@ while (received_messages < num_remotes - 1) {
  *     T. Isaac, C. Burstedde, L. C. Wilcox and O. Ghattas
  * for unbalanced_version = 1 (also unbalanced forests possible).
  *
- * verion 3 with top-down search
+ * version 3 with top-down search
  * for unbalanced_version = -1
  */
 void
