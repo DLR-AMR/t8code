@@ -278,7 +278,6 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
 
         /* Convert edge parameter to surface parameters */
         double              converted_edge_surface_parameters[2];
-        /* *INDENT-OFF* */
         const int           num_face_nodes =
           t8_eclass_num_vertices[active_tree_class];
 
@@ -383,8 +382,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
                                           parameters, 1, 1,
                                           &interpolated_curve_parameter);
           }
-          /* Retrieve curve*/
-          T8_ASSERT (edges[i_edge]<= occ_shape_face_map.Size ());
+          /* Retrieve curve */
+          T8_ASSERT (edges[i_edge] <= occ_shape_face_map.Size ());
           /* *INDENT-OFF* */
           curve =
             BRep_Tool::Curve (TopoDS::
@@ -429,7 +428,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
          * to the glob_intersection and to the reference point */
         double              scaling_factor =
           t8_geom_get_triangle_scaling_factor (i_edge, active_tree_vertices,
-                                               glob_intersection, out_coords);
+                                               glob_intersection,
+                                               out_coords);
 
         /* Calculate displacement between points on curve and point on linear curve.
          * Then scale it and add the scaled displacement to the result. */
@@ -589,7 +589,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
     for (int i_edge = 0; i_edge < num_edges; ++i_edge) {
       if (edges[i_edge] > 0 || edges[i_edge + num_edges] > 0) {
         /* An edge can only be linked to a curve or a surface, not both */
-        T8_ASSERT (!(edges[i_edge] > 0) || !(edges[i_edge + num_edges] > 0));
+        T8_ASSERT (!(edges[i_edge] > 0)
+                   || !(edges[i_edge + num_edges] > 0));
 
         /* The edges of a quad point in direction of ref_coord (1 - i_edge / 2).
          *
@@ -740,10 +741,12 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh,
        */
       const int           edge_direction = i_edge / 4;
       /* Save the edge vertices temporarily. */
+
       t8_geom_get_edge_vertices (active_tree_class,
                                  active_tree_vertices,
                                  i_edge, 3, temp_edge_vertices);
       /* Interpolate between them. */
+
       t8_geom_linear_interpolation (&ref_coords[edge_direction],
                                     temp_edge_vertices,
                                     3, 1, interpolated_coords);
@@ -913,13 +916,13 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh,
                                         interpolated_edge_coordinates);
 
           /* Retrieve the curve of the edge */
-          T8_ASSERT (edges[t8_face_edge_to_tree_edge[i_faces][i_face_edge]] <=
-                     occ_shape_edge_map.Size ());
+          T8_ASSERT (edges[t8_face_edge_to_tree_edge[i_faces][i_face_edge]]
+                     <= occ_shape_edge_map.Size ());
           curve =
-            BRep_Tool::Curve (TopoDS::Edge (occ_shape_edge_map.FindKey (edges
-                                                                        [t8_face_edge_to_tree_edge
-                                                                         [i_faces]
-                                                                         [i_face_edge]])), first, last);
+            BRep_Tool::Curve (TopoDS::Edge
+                              (occ_shape_edge_map.FindKey
+                               (edges[t8_face_edge_to_tree_edge[i_faces]
+                                      [i_face_edge]])), first, last);
           /* Check if curve is valid */
           T8_ASSERT (!curve.IsNull ());
           /* Calculate point on curve with interpolated parameters */
@@ -1302,8 +1305,8 @@ T8_EXTERN_C_BEGIN ();
 /* Satisfy the C interface from t8_geometry_occ.h.
  * Create a new geometry with given dimension. */
 t8_geometry_occ_c  *
-t8_geometry_occ_new (int dimension, const char *fileprefix,
-                     const char *name_in)
+t8_geometry_occ_new (int dimension,
+                     const char *fileprefix, const char *name_in)
 {
   t8_geometry_occ    *geom =
     new t8_geometry_occ (dimension, fileprefix, name_in);
