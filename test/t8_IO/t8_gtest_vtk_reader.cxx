@@ -31,10 +31,16 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * test yet. A proper test would compare the read files with a reference-cmesh. 
  * 
  */
-
+const vtk_file_type_t gtest_vtk_filetypes[VTK_NUM_TYPES] = {
+  VTK_FILE_ERROR,
+  VTK_UNSTRUCTURED_FILE,
+  VTK_POLYDATA_FILE,
+  VTK_PARALLEL_UNSTRUCTURED_FILE,
+  VTK_PARALLEL_POLYDATA_FILE
+};
 
 /* *INDENT-OFF* */
-class vtk_reader : public testing::TestWithParam<std::tuple<vtk_file_type_t, int, int>>{
+class vtk_reader : public testing::TestWithParam<std::tuple<int, int, int>>{
   protected:
     void SetUp() override{
       int mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
@@ -42,11 +48,11 @@ class vtk_reader : public testing::TestWithParam<std::tuple<vtk_file_type_t, int
       if (mpisize > T8_VTK_TEST_NUM_PROCS) {
         GTEST_SKIP ();
       } 
-      file_type = std::get<0>(GetParam());
-      file = (int) file_type + 1;
+      file = std::get<0>(GetParam());
+      file_type = gtest_vtk_filetypes[file];
       partition = std::get<1>(GetParam());
       main_proc = std::get<2>(GetParam());
-      if(file_type == VTK_PARALLEL_POLYDATA_FILE && partition){
+      if((file_type & VTK_PARALLEL_POLYDATA_FILE )&& partition){
         GTEST_SKIP();
       }
     }
@@ -144,7 +150,7 @@ TEST_P (vtk_reader, vtk_to_pointSet)
 /* Currently does not work for parallel files. Replace with VTK_NUM_TYPES as soon
  * as reading and constructing cmeshes from parallel files is enabled. */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_vtk_reader, vtk_reader,testing::Combine (
-                          testing::Range (VTK_FILE_ERROR , VTK_NUM_TYPES),
+                          testing::Range (VTK_FILE_ERROR + 1, (int)VTK_NUM_TYPES),
                           testing::Values (0, 1),
                           testing::Range (0, T8_VTK_TEST_NUM_PROCS)
                           ));
