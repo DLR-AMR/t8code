@@ -262,16 +262,6 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
                                              ltreeid);
         T8_ASSERT (edge_parameters != NULL);
 
-        /* Retrieve curve */
-        /* *INDENT-OFF* */
-        curve =
-          BRep_Tool::Curve (TopoDS::
-                            Edge (occ_shape_edge_map.FindKey (edges[i_edge])),
-                            first, last);
-        /* *INDENT-ON* */
-        /* Check if curve is valid */
-        T8_ASSERT (!curve.IsNull ());
-
         /* Linear interpolation between parameters */
         double              interpolated_curve_parameter;
 
@@ -291,13 +281,6 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
         /* *INDENT-OFF* */
         const int           num_face_nodes =
           t8_eclass_num_vertices[active_tree_class];
-        surface =
-          BRep_Tool::Surface (TopoDS::
-                              Face (occ_shape_face_map.FindKey (*faces)));
-        /* *INDENT-ON* */
-        double              parametric_bounds[4];
-        surface->Bounds (parametric_bounds[0], parametric_bounds[1],
-                         parametric_bounds[2], parametric_bounds[3]);
 
         t8_geometry_occ::t8_geom_edge_parameter_to_face_parameters (edges
                                                                     [i_edge],
@@ -344,7 +327,6 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
           interpolated_surface_parameters[dim] += scaled_displacement;
         }
       }
-
       /* Retrieve surface */
       T8_ASSERT (*faces <= occ_shape_face_map.Size ());
       /* *INDENT-OFF* */
@@ -401,6 +383,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
                                           parameters, 1, 1,
                                           &interpolated_curve_parameter);
           }
+          /* Retrieve curve*/
+          T8_ASSERT (edges[i_edge]<= occ_shape_face_map.Size ());
           /* *INDENT-OFF* */
           curve =
             BRep_Tool::Curve (TopoDS::
