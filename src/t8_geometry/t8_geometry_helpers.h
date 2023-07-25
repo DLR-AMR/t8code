@@ -138,17 +138,14 @@ void                t8_geom_get_ref_intersection (int edge_index,
  *                                    glob_ref_point onto the edge with edge_index.
  * \param [in]    glob_ref_point      Array containing the coordinates of the reference point
  *                                    mapped into the global space.
- * \param [out]   scaling_factor      Factor, the edge displacement is scaled by at the glob_ref_point.
  */
-void                t8_geom_get_triangle_scaling_factor (int edge_index,
+double              t8_geom_get_triangle_scaling_factor (int edge_index,
                                                          const double
                                                          *tree_vertices,
                                                          const double
                                                          *glob_intersection,
                                                          const double
-                                                         *glob_ref_point,
-                                                         double
-                                                         *scaling_factor);
+                                                         *glob_ref_point);
 
 T8_EXTERN_C_END ();
 

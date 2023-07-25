@@ -65,11 +65,10 @@ t8_geom_trianglular_interpolation (const double *coefficients,
    * All points are calculated by the sum of each corner point (e.g. p1 -> corner point 1) multiplied by a
    * scalar, which in this case are the reference coordinates (ref_coords).
    */
-  int                 i;
   double              temp[3] = { 0 };
 
-  for (i = 0; i < corner_value_dim; i++) {
-    temp[i] = (corner_values[1 * corner_value_dim + i] -        /* (p2 - p1) * ref_coords */
+  for (int i = 0; i < corner_value_dim; i++) {
+    temp[i] = (corner_values[corner_value_dim + i] -    /* (p2 - p1) * ref_coords */
                corner_values[i]) * coefficients[0] + (interpolation_dim ==
                                                       3
                                                       ? (corner_values
@@ -81,7 +80,7 @@ t8_geom_trianglular_interpolation (const double *coefficients,
                                                                        + i])
                                                       * coefficients[1]
                                                       : 0.)     /* (p4 - p3) * ref_coords */
-      +(corner_values[2 * corner_value_dim + i] - corner_values[1 * corner_value_dim + i]) * coefficients[interpolation_dim - 1]        /* (p3 - p2) * ref_coords */
+      +(corner_values[2 * corner_value_dim + i] - corner_values[corner_value_dim + i]) * coefficients[interpolation_dim - 1]    /* (p3 - p2) * ref_coords */
       +corner_values[i];        /* p1 */
     evaluated_function[i] = temp[i];
   }
@@ -272,9 +271,11 @@ t8_geom_get_ref_intersection (int edge_index,
                               const double *ref_coords,
                               double ref_intersection[2])
 {
-  const double       *ref_opposite_vertex;
   double              ref_slope;
   const t8_eclass_t   eclass = T8_ECLASS_TRIANGLE;
+  /* The opposite vertex of an edge always has the same index as the edge (see picture below). */
+  const double       *ref_opposite_vertex =
+    t8_element_corner_ref_coords[eclass][edge_index];
   /*              2
    *            / |
    *           /  |
@@ -290,9 +291,6 @@ t8_geom_get_ref_intersection (int edge_index,
    * First, we calculate the slope of the line going through the reference point
    * and the opposite vertex for each edge of the triangle.
    */
-
-  /* The opposite vertex of an edge always has the same index as the edge (see picture above). */
-  ref_opposite_vertex = t8_element_corner_ref_coords[eclass][edge_index];
 
   /* In case the reference point is equal to the opposite vertex, the slope of the line is 0. */
   if (ref_opposite_vertex[0] == ref_coords[0]) {
@@ -364,7 +362,7 @@ t8_geom_get_ref_intersection (int edge_index,
        * 
        * x1=0 y1=0 x2=1 y2=0 x3=ref_coords[0] y3=ref_coords[1] x4=ref_opposite_vertex[0] y4=ref_opposite_vertex[1]
        * 
-       * Since the intersection point lies on edge 2, which has a slope of 1, the x and the y value has to be equal
+       * Since the intersection point lies on edge 2, which has a slope of 1 in the reference space, the x and the y value has to be equal
        */
       ref_intersection[0] =
         (ref_coords[0] * ref_opposite_vertex[1] -
@@ -380,15 +378,14 @@ t8_geom_get_ref_intersection (int edge_index,
   }
 }
 
-void
+double
 t8_geom_get_triangle_scaling_factor (int edge_index,
                                      const double *tree_vertices,
                                      const double *glob_intersection,
-                                     const double *glob_ref_point,
-                                     double *scaling_factor)
+                                     const double *glob_ref_point)
 {
   double              dist_intersection, dist_ref;
-  /* The scaling factor depents on the relation of the distance of the opposite vertex
+  /* The scaling factor depends on the relation of the distance of the opposite vertex
    * to the global reference point and the distance of the opposite vertex to the global
    * intersection on the edge.
    */
@@ -417,5 +414,6 @@ t8_geom_get_triangle_scaling_factor (int edge_index,
             glob_ref_point[2]) * (tree_vertices[edge_index * 3 + 2] -
                                   glob_ref_point[2])));
   /* The closer the reference point is to the intersection, the bigger is the scaling factor. */
-  *scaling_factor = dist_ref / dist_intersection;
+  double              scaling_factor = dist_ref / dist_intersection;
+  return scaling_factor;
 }

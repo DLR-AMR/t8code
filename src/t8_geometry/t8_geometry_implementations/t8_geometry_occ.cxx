@@ -75,7 +75,7 @@ t8_geometry_occ::t8_geometry_occ (int dim, const char *fileprefix,
   std::string current_file (fileprefix);
   std::ifstream is (current_file + ".brep");
   if (is.is_open () == false) {
-    SC_ABORTF ("Can not find the file %s.\n", fileprefix);
+    SC_ABORTF ("Cannot find the file %s.brep.\n", fileprefix);
   }
   BRepTools::Read (occ_shape, is, builder);
   is.close ();
@@ -329,10 +329,9 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
 
         /* Determine the scaling factor by calculating the distances from the opposite vertex
          * to the glob_intersection and to the reference point */
-        double              scaling_factor;
-        t8_geom_get_triangle_scaling_factor (i_edge, active_tree_vertices,
-                                             glob_intersection, out_coords,
-                                             &scaling_factor);
+        double              scaling_factor =
+          t8_geom_get_triangle_scaling_factor (i_edge, active_tree_vertices,
+                                               glob_intersection, out_coords);
 
         /* Calculate parameter displacement and add it to the surface parameters */
         for (int dim = 0; dim < 2; ++dim) {
@@ -443,10 +442,9 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
         }
         /* Determine the scaling factor by calculating the distances from the opposite vertex
          * to the glob_intersection and to the reference point */
-        double              scaling_factor;
-        t8_geom_get_triangle_scaling_factor (i_edge, active_tree_vertices,
-                                             glob_intersection, out_coords,
-                                             &scaling_factor);
+        double              scaling_factor =
+          t8_geom_get_triangle_scaling_factor (i_edge, active_tree_vertices,
+                                               glob_intersection, out_coords);
 
         /* Calculate displacement between points on curve and point on linear curve.
          * Then scale it and add the scaled displacement to the result. */
@@ -1233,8 +1231,6 @@ t8_geometry_occ::t8_geom_edge_parameter_to_face_parameters(const int edge_index,
   Handle_Geom2d_Curve curve_on_surface  = BRep_Tool::CurveOnSurface(edge, face, 
                                                                     first, last);
   Handle_Geom_Surface surface = BRep_Tool::Surface(face);
-  double parametric_bounds[4];
-  surface->Bounds(parametric_bounds[0], parametric_bounds[1], parametric_bounds[2], parametric_bounds[3]);
   curve_on_surface->D0(edge_param, uv);
   face_params[0] = uv.X();
   face_params[1] = uv.Y();
@@ -1242,6 +1238,8 @@ t8_geometry_occ::t8_geom_edge_parameter_to_face_parameters(const int edge_index,
   /* Check for right conversion of edge to surface parameter and correct if needed */
   /* Checking u parameter */
   if (surface_params != NULL) {
+    double parametric_bounds[4];
+    surface->Bounds(parametric_bounds[0], parametric_bounds[1], parametric_bounds[2], parametric_bounds[3]);
     if (surface->IsUClosed()) {
       for (int i_face_node = 0; i_face_node < num_face_nodes; ++i_face_node) {
         if (surface_params[i_face_node * 2] == parametric_bounds[0]) {

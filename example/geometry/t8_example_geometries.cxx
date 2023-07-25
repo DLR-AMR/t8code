@@ -54,9 +54,6 @@
 #include <gp_Circ.hxx>
 #include <gp_Vec.hxx>
 #include <BRep_Tool.hxx>
-#include <BRepTools.hxx>
-#include <GeomFill_BSplineCurves.hxx>
-#include <Geom_Surface.hxx>
 #endif
 
 typedef enum
@@ -577,20 +574,20 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
          level);
 
       /* Constructing a triangle with one curved edge (f2) */
-      Handle_Geom_BSplineCurve occ_curve1;
-      TColgp_Array1OfPnt  point_array1 (1, 3);
+      Handle_Geom_BSplineCurve occ_curve;
+      TColgp_Array1OfPnt  point_array (1, 3);
       TopoDS_Shape        shape;
 
       /* Define knots along the bsplines. */
-      point_array1 (1) = gp_Pnt (0.0, 0.0, 0.0);
-      point_array1 (2) = gp_Pnt (0.4, 1.3, 0.0);
-      point_array1 (3) = gp_Pnt (1.0, 2.0, 0.0);
+      point_array (1) = gp_Pnt (0.0, 0.0, 0.0);
+      point_array (2) = gp_Pnt (0.4, 1.3, 0.0);
+      point_array (3) = gp_Pnt (1.0, 2.0, 0.0);
 
       /* Generate bsplines from arrays. */
-      occ_curve1 = GeomAPI_PointsToBSpline (point_array1).Curve ();
+      occ_curve = GeomAPI_PointsToBSpline (point_array).Curve ();
 
       /* Fill shape with bsplines so that we can create a geometry with this shape. */
-      shape = BRepBuilderAPI_MakeEdge (occ_curve1).Edge ();
+      shape = BRepBuilderAPI_MakeEdge (occ_curve).Edge ();
 
       /* Create an occ geometry. */
       t8_geometry_occ    *geometry_occ =
@@ -598,10 +595,9 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
 
       /* The arrays indicate which face/edge carries a geometry. 
        * 0 means no geometry and any other number indicates the position of the geometry 
-       * in the global geometry array. Here edge 1 carries the created occ_curve1. */
+       * in the global geometry array. Here edge 1 carries the created occ_curve. */
       int                 faces[1] = { 0 };
       int                 edges[6] = { 0, 1, 0, 0, 0, 0 };
-
       /* Create tree 0 */
       t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
       double              vertices[9] = {
@@ -609,9 +605,9 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
         2.0, 0.0, 0.0,
         1.0, 2.0, 0.0
       };
-      t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 9);
+      t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 3);
 
-      /* The valid parameter range for bspline is [0, 1]. Therefore we define the parameter range accordingly. */
+      /* The valid parameter range for bsplines is [0, 1]. Therefore, we define the parameter range accordingly. */
       double              parameters_edge[2] = { 0, 1 };
 
       /* Give the tree information about its curves and the parameters of the vertices. 
@@ -696,7 +692,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
         0, 1, 1,
         1, 1, 1
       };
-      t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 24);
+      t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 8);
 
       /* The valid parameter range for bsplines is [0, 1]. We defined the bsplines in such a way, 
        * that parameter 0 and 1 resemble the two vertices of the connected edge. */
@@ -810,7 +806,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
         -0.2, -0.2, 1.2,        // Point (1, 1) from array
         1.0, -0.2, 0.8          // Point (3, 1) from array
       };
-      t8_cmesh_set_tree_vertices (cmesh, 0, vertices0, 24);
+      t8_cmesh_set_tree_vertices (cmesh, 0, vertices0, 8);
 
       /* The valid parameter range for bspline surfaces is [0, 1]^2. We defined the bspline surface in such a way, 
        * that parameters 0, 0.5 and 1 resemble the vertices of the connected surface. */
@@ -845,7 +841,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
         1.0, -0.2, 0.8,         /* Point (3, 1) from array */
         2.2, -0.2, 1.2          /* Point (5, 1) from array */
       };
-      t8_cmesh_set_tree_vertices (cmesh, 1, vertices1, 24);
+      t8_cmesh_set_tree_vertices (cmesh, 1, vertices1, 8);
 
       /* The valid parameter range for bspline surfaces is [0, 1]^2. We defined the bspline surface in such a way, 
        *  that parameters 0, 0.5 and 1 resemble the vertices of the connected surface. */
@@ -963,7 +959,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
         vertices[i * 24 + 21] = cos (i * 2 * M_PI / num) * radius_inner;
         vertices[i * 24 + 22] = sin (i * 2 * M_PI / num) * radius_inner;
         vertices[i * 24 + 23] = 1;
-        t8_cmesh_set_tree_vertices (cmesh, i, vertices + i * 24, 24);
+        t8_cmesh_set_tree_vertices (cmesh, i, vertices + i * 24, 8);
 
         /* Create corresponding parameters for the cylinders. 
          * The parameter range of the cylinders is u ∈ [0, 2 * M_PI] and v ∈ ]inf, -inf[ */

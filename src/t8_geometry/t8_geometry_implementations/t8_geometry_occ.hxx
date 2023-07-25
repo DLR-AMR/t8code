@@ -253,7 +253,9 @@ public:
    * \param [in]  face_index     The index of the occ face.
    * \param [in]  num_face_nodes The number of the face nodes.
    * \param [in]  edge_param     The parameter on the edge.
-   * \param [in]  surface_param  The parameters of the surface nodes. If there are no surface parameter
+   * \param [in]  surface_param  The parameters of the surface nodes.
+   *                             When provided, there are additional checks for closed geometries.
+   *                             If there are no surface parameter
    *                             to pass in to the function, you can pass NULL.
    * \param [out] face_params    The corresponding parameters on the face.
    */   
