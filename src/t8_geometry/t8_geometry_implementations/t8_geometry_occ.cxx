@@ -1284,17 +1284,22 @@ t8_geometry_occ::t8_geom_is_edge_closed (int edge_index) const
 }
 
 int
-t8_geometry_occ::t8_geom_check_if_surface_is_U_closed (int geometry_index) const
+t8_geometry_occ::t8_geom_is_surface_closed (int geometry_index,
+                                            int parameter) const
 {
   const Handle_Geom_Surface occ_surface = t8_geom_get_occ_surface(geometry_index);
-  return occ_surface->IsUClosed();
-}
-
-int
-t8_geometry_occ::t8_geom_check_if_surface_is_V_closed (int geometry_index) const
-{
-  const Handle_Geom_Surface occ_surface = t8_geom_get_occ_surface(geometry_index);
-  return occ_surface->IsVClosed();
+  switch (parameter)
+  {
+  case 0:
+    return occ_surface->IsUClosed();
+    break;
+  case 1:
+    return occ_surface->IsVClosed();
+    break;
+  default:
+    SC_ABORT_NOT_REACHED ();
+    break;
+  }
 }
 
 /* *INDENT-ON* */

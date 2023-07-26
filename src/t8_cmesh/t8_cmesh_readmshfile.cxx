@@ -794,21 +794,20 @@ t8_cmesh_correct_closed_geometry_parametric (const int geometry_dim,
 
     /* Check for closed U parameter and closed V parameter in case of a surface. */
   case 2:
-    /* Only correct the surface parameters if they are closed */
-    if (geometry_occ->t8_geom_check_if_surface_is_U_closed (geometry_index) ||
-        geometry_occ->t8_geom_check_if_surface_is_V_closed (geometry_index)) {
-      /* Get the parametric bounds of the closed geometry
-       * surface -> [Umin, Umax, Vmin, Vmax]
-       */
-      double              parametric_bounds[4];
-      geometry_occ->t8_geom_get_face_parametric_bounds (geometry_index,
-                                                        parametric_bounds);
-      /* Check the upper an the lower parametric bound. */
-      for (int bound = 0; bound < 2; ++bound) {
-        /* Iterate over every corner node of the tree. */
-        for (int i_nodes = 0; i_nodes < num_face_nodes; ++i_nodes) {
-          /* Iterate over both parameters. 0 stands for the U parameter an 1 for the V parameter. */
-          for (int param_dim = 0; param_dim < 2; ++param_dim) {
+    /* Iterate over both parameters. 0 stands for the U parameter an 1 for the V parameter. */
+    for (int param_dim = 0; param_dim < 2; ++param_dim) {
+      /* Only correct the surface parameters if they are closed */
+      if (geometry_occ->t8_geom_is_surface_closed (geometry_index, param_dim)) {
+        /* Get the parametric bounds of the closed geometry
+         * surface -> [Umin, Umax, Vmin, Vmax]
+         */
+        double              parametric_bounds[4];
+        geometry_occ->t8_geom_get_face_parametric_bounds (geometry_index,
+                                                          parametric_bounds);
+        /* Check the upper an the lower parametric bound. */
+        for (int bound = 0; bound < 2; ++bound) {
+          /* Iterate over every corner node of the tree. */
+          for (int i_nodes = 0; i_nodes < num_face_nodes; ++i_nodes) {
             /* Check if one of the U parameters lies on one of the parametric bounds. */
             if (std::abs (parameters[i_nodes * 2 + (param_dim ? 1 : 0)] -
                           parametric_bounds[bound + (param_dim ? 2 : 0)]) <=
@@ -1349,13 +1348,15 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                 parameters[i_face_nodes * 2 + 1] = face_nodes[i_face_nodes].parameters[1];
               }
               /* Corrects the parameters on the surface if it is closed to prevent disorted elements. */
-              if (occ_geometry->t8_geom_check_if_surface_is_U_closed(surface_index)
-                  || occ_geometry->t8_geom_check_if_surface_is_V_closed(surface_index)) {
-                t8_cmesh_correct_closed_geometry_parametric(2, surface_index,
-                                                            num_face_nodes,
-                                                            occ_geometry,
-                                                            parameters);
+              for (int param_dim = 0; param_dim < 2; ++param_dim) {
+                if (occ_geometry->t8_geom_is_surface_closed(surface_index, param_dim)) {
+                  t8_cmesh_correct_closed_geometry_parametric(2, surface_index,
+                                                              num_face_nodes,
+                                                              occ_geometry,
+                                                              parameters);
+                }
               }
+
               t8_cmesh_set_attribute (cmesh, 
                                       tree_count, 
                                       t8_get_package_id(), 
@@ -1580,10 +1581,11 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
               parameters[3] = edge_nodes[1].parameters[1];
 
               /* Corrects the parameters on the surface if it is closed to prevent disorted elements. */
-              if (occ_geometry->t8_geom_check_if_surface_is_U_closed(edge_geometry_tag)
-                  || occ_geometry->t8_geom_check_if_surface_is_V_closed(edge_geometry_tag)) {
-                t8_cmesh_correct_closed_geometry_parametric(2, edge_geometry_tag,
-                                                            2, occ_geometry, parameters);
+              for (int param_dim = 0; param_dim < 2; ++param_dim) {
+                if (occ_geometry->t8_geom_is_surface_closed(edge_geometry_tag, param_dim)) {
+                  t8_cmesh_correct_closed_geometry_parametric(2, edge_geometry_tag,
+                                                              2, occ_geometry, parameters);
+                }
               }
 
               t8_cmesh_set_attribute (cmesh, 

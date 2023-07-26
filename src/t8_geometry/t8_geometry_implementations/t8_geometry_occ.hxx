@@ -292,19 +292,15 @@ public:
   int
   t8_geom_is_edge_closed (int edge_index) const;
 
-  /** Checks if a surface is closed in its U parameter.
+  /** Checks if a surface is closed in its U parameter or V parameter.
    * \param [in]  geometry_index   The index of the closed geometry.
+   * \param [in]  parameter        The parameter, which should be check for closeness.
+   *                               0 stands for the U parameter and 1 for the V parameter. 
    * \return                       1 if geometry is closed in U. 0 if geometry is not closed in U.
    */
   int
-  t8_geom_check_if_surface_is_U_closed (int geometry_index) const;
-
-  /** Checks if a surface is closed in its V parameter.
-   * \param [in]  geometry_index   The index of the closed geometry.
-   * \return                       1 if geometry is closed in V. 0 if geometry is not closed in V.
-   */
-  int
-  t8_geom_check_if_surface_is_V_closed (int geometry_index) const;
+  t8_geom_is_surface_closed (int geometry_index,
+                             int parameter) const;
 
 private:
   /**
