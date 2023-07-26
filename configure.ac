@@ -89,6 +89,8 @@ echo "o---------------------------------------"
 echo "| Copying files"
 echo "o---------------------------------------"
 
+AC_CONFIG_LINKS([test/testfiles/test_cube_unstructured_1.inp:test/testfiles/test_cube_unstructured_1.inp])
+AC_CONFIG_LINKS([test/testfiles/test_cube_unstructured_2.inp:test/testfiles/test_cube_unstructured_2.inp])
 AC_CONFIG_LINKS([test/testfiles/test_msh_file_vers2_ascii.msh:test/testfiles/test_msh_file_vers2_ascii.msh])
 AC_CONFIG_LINKS([test/testfiles/test_msh_file_vers2_bin.msh:test/testfiles/test_msh_file_vers2_bin.msh])
 AC_CONFIG_LINKS([test/testfiles/test_msh_file_vers4_ascii.msh:test/testfiles/test_msh_file_vers4_ascii.msh])

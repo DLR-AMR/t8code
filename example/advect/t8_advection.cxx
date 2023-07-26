@@ -184,7 +184,7 @@ t8_advect_element_set_phi_adapt (const t8_advect_problem_t * problem,
 }
 
 /* Adapt the forest. We refine if the level-set function is close to zero
- * and coarsen if it is larger than a given threshhold. */
+ * and coarsen if it is larger than a given threshold. */
 static int
 t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
                  t8_locidx_t ltree_id, t8_locidx_t lelement_id,
@@ -588,7 +588,7 @@ t8_advect_compute_element_data (t8_advect_problem_t * problem,
  * If elements are coarsened, the parent gets the average phi value of the children.
  */
 /* outgoing are the old elements and incoming the new ones */
-/* TODO: If coarsening, weight the phi vaules by volume of the children:
+/* TODO: If coarsening, weight the phi values by volume of the children:
  *       phi_E = sum (phi_Ei *vol(E_i)/vol(E))
  *       Similar formula for refining?
  */
@@ -614,7 +614,7 @@ t8_advect_replace (t8_forest_t forest_old,
   problem = (t8_advect_problem_t *) t8_forest_get_user_data (forest_new);
   T8_ASSERT (forest_old == problem->forest);
   T8_ASSERT (forest_new == problem->forest_adapt);
-  /* Get pointers to the element datas */
+  /* Get pointers to the element data */
   first_incoming_data =
     first_incoming + t8_forest_get_tree_element_offset (forest_new,
                                                         which_tree);
@@ -1035,7 +1035,7 @@ t8_advect_problem_init (t8_cmesh_t cmesh,
     sc_stats_init (&problem->stats[i], advect_stat_names[i]);
   }
 
-  /* Contruct uniform forest with ghosts */
+  /* Construct uniform forest with ghosts */
   default_scheme = t8_scheme_new_default_cxx ();
 
   problem->forest =

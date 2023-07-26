@@ -159,7 +159,7 @@ TEST_P (recursive_tree, test_recursive)
   forest = t8_adapt_forest (forest, t8_adapt_remove_but_last_first, 1);
   forest = t8_adapt_forest (forest, t8_adapt_coarse_all, 1);
 
-  /* The adaptet forest should only contian root elements as forest_base */
+  /* The adaptet forest should only contain root elements as forest_base */
   ASSERT_TRUE (t8_forest_is_equal (forest, forest_base));
 }
 

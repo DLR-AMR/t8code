@@ -373,7 +373,7 @@ main (int argc, char *argv[])
   t8_cmesh_t          cmesh;
   const char         *mshfileprefix, *cmeshfileprefix;
   const char         *vtu_prefix;
-  double              x_min_max[2];     /* At position 0 the minumum x-coordinate,
+  double              x_min_max[2];     /* At position 0 the minimum x-coordinate,
                                            at position 1 the maximum x-coordinate. */
 
   /* Initialize MPI, sc, p4est and t8code */

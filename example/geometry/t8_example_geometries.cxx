@@ -25,7 +25,6 @@
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
-#include <t8_cmesh_vtk_writer.h>
 #include <t8_geometry/t8_geometry_base.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
@@ -113,10 +112,10 @@ public:
   }
 
   /* Jacobian, not implemented. */
-  void                t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
-                                                t8_gloidx_t gtreeid,
-                                                const double *ref_coords,
-                                                double *jacobian) const
+  void                t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
+                                                 t8_gloidx_t gtreeid,
+                                                 const double *ref_coords,
+                                                 double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -136,11 +135,11 @@ public:
  * It inherits from the w_vertices geometry since we use the tree's vertex coordinates.
  * This geometry does not provide a jacobian.
  */
-class               t8_geometry_moebius:public t8_geometry_w_vertices
+class               t8_geometry_moebius:public t8_geometry_with_vertices
 {
 public:
   /* Basic constructor that sets the dimension and the name. */
-  t8_geometry_moebius ():t8_geometry_w_vertices (2, "t8_moebius_geometry")
+  t8_geometry_moebius ():t8_geometry_with_vertices (2, "t8_moebius_geometry")
   {
   }
 
@@ -179,10 +178,10 @@ public:
   }
 
   /* Jacobian, not implemented. */
-  void                t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
-                                                t8_gloidx_t gtreeid,
-                                                const double *ref_coords,
-                                                double *jacobian) const
+  void                t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
+                                                 t8_gloidx_t gtreeid,
+                                                 const double *ref_coords,
+                                                 double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -221,10 +220,10 @@ public:
   }
 
   /* Jacobian, not implemented. */
-  void                t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
-                                                t8_gloidx_t gtreeid,
-                                                const double *ref_coords,
-                                                double *jacobian) const
+  void                t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
+                                                 t8_gloidx_t gtreeid,
+                                                 const double *ref_coords,
+                                                 double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -246,11 +245,11 @@ public:
  * 
  * This geometry does not provide a jacobian.
  */
-class               t8_geometry_circle:public t8_geometry_w_vertices
+class               t8_geometry_circle:public t8_geometry_with_vertices
 {
 public:
   /* Basic constructor that sets the dimension and the name. */
-  t8_geometry_circle ():t8_geometry_w_vertices (2, "t8_circle_geometry")
+  t8_geometry_circle ():t8_geometry_with_vertices (2, "t8_circle_geometry")
   {
   }
 
@@ -289,10 +288,10 @@ public:
   }
 
   /* Jacobian, not implemented. */
-  void                t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
-                                                t8_gloidx_t gtreeid,
-                                                const double *ref_coords,
-                                                double *jacobian) const
+  void                t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
+                                                 t8_gloidx_t gtreeid,
+                                                 const double *ref_coords,
+                                                 double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -356,10 +355,10 @@ public:
   }
 
   /* Jacobian, not implemented. */
-  void                t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
-                                                t8_gloidx_t gtreeid,
-                                                const double *ref_coords,
-                                                double *jacobian) const
+  void                t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
+                                                 t8_gloidx_t gtreeid,
+                                                 const double *ref_coords,
+                                                 double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -408,10 +407,10 @@ public:
   }
 
   /* Jacobian, not implemented. */
-  void                t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
-                                                t8_gloidx_t gtreeid,
-                                                const double *ref_coords,
-                                                double *jacobian) const
+  void                t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
+                                                 t8_gloidx_t gtreeid,
+                                                 const double *ref_coords,
+                                                 double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -473,7 +472,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
   t8_cmesh_t          cmesh;
   char                vtuname[BUFSIZ];
   t8_geometry_c      *geometry;
-  /* geoemtry_sincos is used for T8_GEOM_TWO_GEOMETRIES */
+  /* geometry_sincos is used for T8_GEOM_TWO_GEOMETRIES */
   t8_geometry_c      *geometry_sincos;
   int                 uniform_level;
   double              time = 0; /* used for moving geometry */

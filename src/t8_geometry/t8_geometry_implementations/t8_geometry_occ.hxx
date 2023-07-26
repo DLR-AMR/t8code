@@ -30,7 +30,8 @@
 #define T8_GEOMETRY_OCC_HXX
 
 #include <t8.h>
-#include <t8_geometry/t8_geometry_base.hxx>
+#include <t8_geometry/t8_geometry_with_vertices.hxx>
+#include <t8_geometry/t8_geometry_with_vertices.h>
 #include <t8_cmesh/t8_cmesh_types.h>
 
 #if T8_WITH_OCC
@@ -72,7 +73,7 @@ typedef void        (*t8_geom_occ_fn) (t8_cmesh_t cmesh,
                                        const void *tree_data);
 
 /* *INDENT-OFF* */
-struct t8_geometry_occ:public t8_geometry_w_vertices
+struct t8_geometry_occ:public t8_geometry_with_vertices
 {
 public:
 
@@ -123,7 +124,7 @@ public:
    *                          correspond to the i-th column of the jacobian (Entry 3*i + j is del f_j/del x_i).
    */
   virtual void
-  t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
+  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
                             t8_gloidx_t gtreeid,
                             const double *ref_coords,
                             double *jacobian) const;

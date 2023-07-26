@@ -795,7 +795,7 @@ t8_cmesh_load_bigger_nonloading (int mpirank, int mpisize,
   switch (mode) {
   case T8_LOAD_SIMPLE:
     /* In simple mode, the first num_files processes load the cmesh and
-     * the rest is empty, this the next bigger nonloading rank is allways
+     * the rest is empty, this the next bigger nonloading rank is always
      * rank mpisize. */
     next_bigger_nonloading = mpisize;
     break;

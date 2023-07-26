@@ -80,14 +80,14 @@ t8_recursive_successor (t8_element_t *element, t8_element_t *successor,
     ts->t8_element_child (element, 0, child);
     ASSERT_TRUE (!ts->t8_element_compare (child,
                                           successor)) <<
-      "Wrong Sucessor, Case1.\n";
+      "Wrong Successor, Case1.\n";
     /*Check if the successor in this element is computed correctly */
     for (int ichild = 1; ichild < num_children; ichild++) {
       ts->t8_element_successor (child, successor, maxlvl);
       ts->t8_element_child (element, ichild, child);
       ASSERT_TRUE (!ts->t8_element_compare (child,
                                             successor)) <<
-        "Wrong Sucessor, Case2.\n";
+        "Wrong Successor, Case2.\n";
     }
     /*If the iterator is the last element, the test can finish */
     if (!ts->t8_element_compare (last, child)) {
@@ -129,7 +129,7 @@ t8_deep_successor (t8_element_t *element, t8_element_t *successor,
       /* Check the computation of the successor. */
       ASSERT_TRUE (!ts->t8_element_compare (element,
                                             successor)) <<
-        "Wrong Sucessor at Maxlvl.\n";
+        "Wrong Successor at Maxlvl.\n";
       /* Compute the next successor. */
       ts->t8_element_successor (successor, successor, maxlvl);
     }
