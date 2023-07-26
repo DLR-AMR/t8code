@@ -789,6 +789,22 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
 
 /* Our indent skript has huge problems with c++ */
 /* *INDENT-OFF* */
+int
+t8_geometry_occ::t8_geom_is_line(const int curve_index) const
+{
+  const Handle_Geom_Curve curve  = t8_geom_get_occ_curve(curve_index);
+  const GeomAdaptor_Curve curve_adaptor (curve);
+  return curve_adaptor.GetType() == GeomAbs_Line;
+}
+
+int
+t8_geometry_occ::t8_geom_is_plane(const int surface_index) const
+{
+  const Handle_Geom_Surface surface = t8_geom_get_occ_surface (surface_index);
+  const GeomAdaptor_Surface surface_adaptor (surface);
+  return surface_adaptor.GetType() == GeomAbs_Plane;
+}
+
 const gp_Pnt
 t8_geometry_occ::t8_geom_get_occ_point (const int index) const
 {
