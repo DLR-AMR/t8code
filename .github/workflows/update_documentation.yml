@@ -88,7 +88,12 @@ jobs:
         rm -rf doc/dev/*
         mkdir -p doc/dev
         cp -r ../../build_debug/doc/html/* doc/dev/
+    - name: check_diff
+      run: |
+        cd t8code-website
+        git diff --quiet || echo "::set-output name=commit_new_doc::true"
     - name: Commit and push files
+      if: steps.check_diff.outputs.commit_new_doc == 'true'
       run: |
         cd t8code-website
         git config --local user.email "t8ddy.bot@gmail.com"
@@ -96,3 +101,4 @@ jobs:
         git add content/doc/dev/
         git commit -m "Add newest documentation"
         git push --force-with-lease
+        
