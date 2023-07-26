@@ -44,7 +44,25 @@ then
 
   echo
   echo "Changed files according to git diff:"
-  git diff --name-only
+  changed_files=``
+  for file in `(cd $repo_main_dir && git diff --name-only)`
+  do
+    # only check existing files, this is necessary since if we rename or delete
+    # a file it is added to the committed files and we thus would try to indent a
+    # nonexisting file.
+    if [ ! -e $repo_main_dir/$file ]
+    then
+      continue
+    fi
+    # We only indent .c, .cxx, .h and .hxx files
+    #-a ${file: -2} != ".h" ]
+    FILE_ENDING="${file##*.}"
+    if [ $FILE_ENDING = "c" -o $FILE_ENDING = "h" -o $FILE_ENDING = "cxx" -o $FILE_ENDING = "hxx" ]
+    then
+      echo $file
+      changed_files="$changed_files $file"
+    fi
+  done
   echo
   echo "Should also all changed (according to git diff) files be indented?"
   read -p "('Y' or 'y' to continue) " -n 1 -r
@@ -52,7 +70,6 @@ then
   if [[ $REPLY =~ ^[Yy]$ ]]
   then
     echo Indenting all files...
-    changed_files=`git diff --name-only`
     (cd $repo_main_dir && ./scripts/t8indent $changed_files)
     echo done.
   else
