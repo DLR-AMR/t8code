@@ -853,8 +853,7 @@ t8_cmesh_correct_closed_geometry_parametric (const int geometry_dim,
     }
     break;
   default:
-    SC_ABORT
-      ("t8_correct_closed_geometry_parametric only works for closed geometry and only accepts a geometry_dim of 1 (for edges) or 2 (for surfaces).\n");
+    SC_ABORT_NOT_REACHED ();
     break;
   }
 }
