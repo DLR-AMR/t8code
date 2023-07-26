@@ -119,8 +119,13 @@ void                t8_geom_get_edge_vertices (t8_eclass_t tree_class,
                                                int edge_index, int dim,
                                                double *edge_vertices);
 
-/** Calculates the point of intersection of a line going through the opposite vertex of an edge
- *  and a reference point of a triangle in reference space.
+/** Calculates a point of intersection in a triangular reference space. The intersection is the extension
+ * of a straight line passing through a reference point and the opposite vertex of the edge.
+ *     /|\
+ *    / | \     o -> reference point
+ *   /  o  \    x -> intersection point
+ *  /   |   \
+ * /____x____\
  * \param [in]    edge_index        Index of the edge, the intersection lies on.
  * \param [in]    ref_coords        Array containing the coordinates of the reference point.
  * \param [out]   ref_intersection  Coordinates of the intersection point.
