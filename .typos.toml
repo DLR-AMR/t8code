@@ -3,4 +3,4 @@ eles = "eles"
 packageid = "packageid"
 
 [files]
-extend-exclude = ["scripts/t8indent", "scripts/remove-all-windows-cariage-return-characters.sh", "thirdparty/"]
+extend-exclude = ["scripts/t8indent", "thirdparty/"]
