@@ -110,7 +110,7 @@ t8_cmesh_is_committed (t8_cmesh_t cmesh)
 
 #ifdef T8_ENABLE_DEBUG
     /* TODO: check more conditions that must always hold after commit */
-    if ((!t8_cmesh_trees_is_face_consistend (cmesh, cmesh->trees)) ||
+    if ((!t8_cmesh_trees_is_face_consistent (cmesh, cmesh->trees)) ||
         (!t8_cmesh_no_negative_volume (cmesh))
         || (!t8_cmesh_check_trees_per_eclass (cmesh))) {
       is_checking = 0;
@@ -850,7 +850,7 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
   int                 mpisize, mpiret;
   idx_t               idx_mpisize;
-  idx_t               ncon = 1, elemens;
+  idx_t               ncon = 1, elements;
   idx_t               volume, *partition, ipart, newpart;
   int                 num_faces, iface, count_face;
   idx_t              *xadj, *adjncy;
@@ -868,8 +868,8 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   idx_mpisize = mpisize;
   SC_CHECK_MPI (mpiret);
 
-  elemens = cmesh->num_trees;
-  T8_ASSERT ((t8_locidx_t) elemens == cmesh->num_trees);
+  elements = cmesh->num_trees;
+  T8_ASSERT ((t8_locidx_t) elements == cmesh->num_trees);
 
   /* Count the number of tree-to-tree connections via a face */
   num_faces = 0;
@@ -886,7 +886,7 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
    * xadj[treeid] = offset of the tree in adjncy
    * adjncy[xadj[treeid]]...adjncy[xadj[treeid]-1] are the trees with which
    * the tree has a face connection */
-  xadj = T8_ALLOC_ZERO (idx_t, elemens + 1);
+  xadj = T8_ALLOC_ZERO (idx_t, elements + 1);
   adjncy = T8_ALLOC (idx_t, num_faces);
 
   /* fill xadj and adjncy arrays */
@@ -902,11 +902,11 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   }
 
   /* partition stores the new partition number for each element */
-  partition = T8_ALLOC (idx_t, elemens);
+  partition = T8_ALLOC (idx_t, elements);
   /* partition the elements in mpisize many partitions */
   success =
-    METIS_PartGraphRecursive (&elemens, &ncon, xadj, adjncy, NULL, NULL, NULL,
-                              &idx_mpisize, NULL, NULL, NULL, &volume,
+    METIS_PartGraphRecursive (&elements, &ncon, xadj, adjncy, NULL, NULL,
+                              NULL, &idx_mpisize, NULL, NULL, NULL, &volume,
                               partition);
   T8_ASSERT (success == METIS_OK);
   /* memory to store the new treeid of a tree */

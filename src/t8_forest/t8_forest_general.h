@@ -164,7 +164,7 @@ int                 t8_forest_is_committed (t8_forest_t forest);
  * \param [in] forest   The forest to consider.
  * \return              True if \a forest has no elements which are inside each other.
  * \note This function is collective, but only checks local overlapping on each process.
- * \see t8_forest_partition_test_boundery_element if you also want to test for 
+ * \see t8_forest_partition_test_boundary_element if you also want to test for 
  * global overlap across the process boundaries.
  */
 int                 t8_forest_no_overlap (t8_forest_t forest);

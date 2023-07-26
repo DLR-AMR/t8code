@@ -1,15 +1,6 @@
 [default.extend-words]
-boundery ="boundery"
-childs = "childs"
-consistend = "consistend"
 eles = "eles"
-elemens = "elemens"
-elemets = "elemets"
-evalute = "evalute"
-hashs = "hashs"
 packageid = "packageid"
-seh = "seh"
-tpye = "tpye"
 
 [files]
 extend-exclude = ["scripts/t8indent", "scripts/remove-all-windows-cariage-return-characters.sh", "thirdparty/"]

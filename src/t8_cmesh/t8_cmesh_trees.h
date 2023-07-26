@@ -537,7 +537,7 @@ void                t8_cmesh_trees_bcast (t8_cmesh_t cmesh_in, int root,
  * \return          True if the face connections are consistent,
  *                  False if not.
  */
-int                 t8_cmesh_trees_is_face_consistend (t8_cmesh_t cmesh,
+int                 t8_cmesh_trees_is_face_consistent (t8_cmesh_t cmesh,
                                                        t8_cmesh_trees_t
                                                        trees);
 

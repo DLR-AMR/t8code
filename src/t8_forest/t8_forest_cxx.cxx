@@ -240,7 +240,7 @@ t8_forest_get_maxlevel (t8_forest_t forest)
 int
 t8_forest_min_nonempty_level (t8_cmesh_t cmesh, t8_scheme_cxx_t *scheme)
 {
-  int                 level, min_num_childs, maxlevel;
+  int                 level, min_num_children, maxlevel;
   t8_eclass_scheme_c *ts;
   int                 eclass;
   t8_element_t       *element;
@@ -252,7 +252,7 @@ t8_forest_min_nonempty_level (t8_cmesh_t cmesh, t8_scheme_cxx_t *scheme)
 
   /* Compute the minimum number of children for a tree in the cmesh */
   /* Also compute the maximum possible level */
-  min_num_childs = 100;
+  min_num_children = 100;
   maxlevel = 100;
   for (eclass = T8_ECLASS_ZERO; eclass < T8_ECLASS_COUNT; eclass++) {
     if (cmesh->num_trees_per_eclass[eclass] > 0) {
@@ -260,8 +260,8 @@ t8_forest_min_nonempty_level (t8_cmesh_t cmesh, t8_scheme_cxx_t *scheme)
       /* Compute the number of children of the root tree. */
       ts->t8_element_new (1, &element);
       ts->t8_element_set_linear_id (element, 0, 0);
-      min_num_childs =
-        SC_MIN (min_num_childs, ts->t8_element_num_children (element));
+      min_num_children =
+        SC_MIN (min_num_children, ts->t8_element_num_children (element));
       ts->t8_element_destroy (1, &element);
       /* Compute the minimum possible maximum refinement level */
       maxlevel = SC_MIN (maxlevel, ts->t8_element_maxlevel ());
@@ -274,7 +274,7 @@ t8_forest_min_nonempty_level (t8_cmesh_t cmesh, t8_scheme_cxx_t *scheme)
    */
   level =
     ceil (log (cmesh->mpisize / (double) cmesh->num_trees) /
-          log (min_num_childs));
+          log (min_num_children));
   return level;
 }
 

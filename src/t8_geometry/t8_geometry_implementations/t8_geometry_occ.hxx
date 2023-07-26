@@ -124,7 +124,7 @@ public:
    *                          correspond to the i-th column of the jacobian (Entry 3*i + j is del f_j/del x_i).
    */
   virtual void
-  t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
+  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
                             t8_gloidx_t gtreeid,
                             const double *ref_coords,
                             double *jacobian) const;

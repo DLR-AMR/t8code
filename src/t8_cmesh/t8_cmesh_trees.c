@@ -1067,7 +1067,7 @@ t8_cmesh_trees_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
  * then tree2 must list tree1 as neighbor at face j with ttf entries (or, face i).
  */
 int
-t8_cmesh_trees_is_face_consistend (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
+t8_cmesh_trees_is_face_consistent (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
 {
   t8_locidx_t         ltree, lghost;
   t8_ctree_t          tree1;

@@ -73,7 +73,7 @@ t8_supported_msh_file (t8_cmesh_t cmesh)
   /* Checks if the cmesh was committed. */
   ASSERT_TRUE (t8_cmesh_is_committed (cmesh)) << "Cmesh commit failed";
   /* Checks for face consistency. */
-  ASSERT_TRUE (t8_cmesh_trees_is_face_consistend (cmesh, cmesh->trees)) <<
+  ASSERT_TRUE (t8_cmesh_trees_is_face_consistent (cmesh, cmesh->trees)) <<
     "Cmesh face consistency failed.";
 
   /* Checks if the number of elements was read correctly. */

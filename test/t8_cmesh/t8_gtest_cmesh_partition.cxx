@@ -55,7 +55,7 @@ static void
 test_cmesh_committed (t8_cmesh_t cmesh)
 {
   ASSERT_TRUE (t8_cmesh_is_committed (cmesh)) << "Cmesh commit failed.";
-  ASSERT_TRUE (t8_cmesh_trees_is_face_consistend (cmesh, cmesh->trees)) <<
+  ASSERT_TRUE (t8_cmesh_trees_is_face_consistent (cmesh, cmesh->trees)) <<
     "Cmesh face consistency failed.";
 }
 

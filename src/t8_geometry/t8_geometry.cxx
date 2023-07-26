@@ -370,7 +370,7 @@ t8_geometry_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
   /* Evaluate the jacobian. */
   /* *INDENT-OFF* */
   geom_handler->active_geometry->
-    t8_geom_evalute_jacobian (cmesh, geom_handler->active_tree, ref_coords,
+    t8_geom_evaluate_jacobian (cmesh, geom_handler->active_tree, ref_coords,
                               jacobian);
   /* *INDENT-ON* */
 }

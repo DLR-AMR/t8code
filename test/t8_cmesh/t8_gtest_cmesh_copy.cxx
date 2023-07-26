@@ -59,8 +59,8 @@ TEST_P (cmesh_copy_equality, check_cmeshes_and_their_trees) {
   
     EXPECT_TRUE(t8_cmesh_is_committed (cmesh_original));
     EXPECT_TRUE(t8_cmesh_is_committed (cmesh_copy));
-    EXPECT_TRUE(t8_cmesh_trees_is_face_consistend (cmesh_original, cmesh_original->trees));
-    EXPECT_TRUE(t8_cmesh_trees_is_face_consistend (cmesh_copy, cmesh_copy->trees));
+    EXPECT_TRUE(t8_cmesh_trees_is_face_consistent (cmesh_original, cmesh_original->trees));
+    EXPECT_TRUE(t8_cmesh_trees_is_face_consistent (cmesh_copy, cmesh_copy->trees));
 }
 
 /* Test the equality of the original and copied cmeshs*/

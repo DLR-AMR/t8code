@@ -618,7 +618,7 @@ t8_cmesh_refine_tree (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
 }
 
 /* Set the class for each child of a given ghost in cmesh_from.
- * The number of childs that stay a ghost on this process depends on the
+ * The number of children that stay a ghost on this process depends on the
  * faces of the ghost connected to local trees. */
 static void
 t8_cmesh_refine_initghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
