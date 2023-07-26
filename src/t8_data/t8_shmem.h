@@ -114,7 +114,7 @@ void                t8_shmem_array_end_writing (t8_shmem_array_t array);
 
 /** Set an entry of a t8_shmem array that is used to store t8_gloidx_t.
  * The array must have writing mode enabled \ref t8_shmem_array_start_writing.
- * \param [in,out]      array   The array to be mofified.
+ * \param [in,out]      array   The array to be modified.
  * \param [in]          index   The array entry to be modified.
  * \param [in]          value   The new value to be set.
  */
@@ -157,9 +157,9 @@ void                t8_shmem_array_allgather (const void *sendbuf,
  * 
  * \param[in] sendbuf         the source from this process
  * \param[in] sendcount       the number of items to gather on this proc
- * \param[in] sendtype        the type of items ot gather
+ * \param[in] sendtype        the type of items to gather
  * \param[in, out] recvarray  array of type recvtype where the data gets written to
- * \param[in] recvtype        the type of items to recieve
+ * \param[in] recvtype        the type of items to receive
  * \param[in] comm            the mpi communicator
  * 
  */
@@ -176,7 +176,7 @@ void                t8_shmem_array_allgatherv (void *sendbuf,
  * Fill a t8_shmem array with an Allgather of the prefix operation over all 
  * processes. 
  * 
- * The recieve array will be
+ * The receive array will be
  * (0, send0, send0 op send1, send0 op send1 op send2, ...)
  * 
  * \note the first entry of \a recvarray will be set to 0 using memset. 

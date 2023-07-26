@@ -638,7 +638,7 @@ t8_test_create_cmesh (int cmesh_id)
       && cmesh_id < t8_get_number_of_new_empty_cmesh_testcases ()) {
     t8_debugf
       ("Empty cmesh does not work with the tests, there is a SEGV fault error. Therefore we replace it here with hypercube cmesh");
-    /*change when teh SEGV fault issue is closed to: t8_test_create_new_empty_cmesh (cmesh_id); */
+    /*change when the SEGV fault issue is closed to: t8_test_create_new_empty_cmesh (cmesh_id); */
     return t8_test_create_new_hypercube_cmesh (cmesh_id);
   }
   cmesh_id -= t8_get_number_of_new_empty_cmesh_testcases ();

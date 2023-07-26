@@ -71,7 +71,7 @@ t8_geometry_zero::t8_geom_evaluate (t8_cmesh_t cmesh,
 /* *INDENT-OFF* */
 /* Indent has trouble with the const keyword at the end */
 void
-t8_geometry_zero::t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
+t8_geometry_zero::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
                                             t8_gloidx_t gtreeid,
                                             const double
                                             *ref_coords, double *jacobian) const

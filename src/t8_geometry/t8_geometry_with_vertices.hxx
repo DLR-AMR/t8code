@@ -22,7 +22,7 @@
 
 /** \file t8_geometry_with_vertices.hxx
  * Implements the inherited class t8_geometry_with_vertices, which can be 
- * used for geoemtries that use vertex coordinate information of the cmesh.
+ * used for geometries that use vertex coordinate information of the cmesh.
  */
 
 #ifndef T8_GEOMETRY_WITH_VERTICES_HXX

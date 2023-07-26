@@ -94,7 +94,7 @@ TEST_F (face_neigh, face_check_easy)
   int                 num_faces;
   int                 check;
 
-  /* Are the neighbors of the element realy outside?. */
+  /* Are the neighbors of the element really outside?. */
   t8_check_not_inside_root (element, neigh, child, ts);
 
   ts->t8_element_child (element, 8, child);
@@ -176,7 +176,7 @@ t8_recursive_check_diff (t8_element_t *element, t8_element_t *child,
   }
 }
 
-/* Recursivly check, if all neighbors are computed correct up to a given level. */
+/* Recursively check, if all neighbors are computed correct up to a given level. */
 TEST_F (face_neigh, face_check_diff)
 {
 #ifdef T8_ENABLE_DEBUG

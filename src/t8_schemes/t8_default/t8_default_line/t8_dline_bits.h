@@ -46,8 +46,8 @@ int                 t8_dline_get_level (const t8_dline_t *l);
  */
 void                t8_dline_copy (const t8_dline_t *l, t8_dline_t *dest);
 
-/** Compare two elements. returns negativ if l1 < l2, zero if l1 equals l2
- *  and positiv if l1 > l2.
+/** Compare two elements. returns negative if l1 < l2, zero if l1 equals l2
+ *  and positive if l1 > l2.
  *  If l2 is a copy of l1 then the elements are equal.
  */
 int                 t8_dline_compare (const t8_dline_t *l1,
@@ -180,7 +180,7 @@ void                t8_dline_successor (const t8_dline_t *l,
  *  Line of the respective tree neighbor that logically coincides with e
  *  but lies in the coordinate system of the neighbor tree.
  *  \param [in] elem1     The face element.
- *  \param [in,out] elem2 On return the face elment \a elem1 with respective
+ *  \param [in,out] elem2 On return the face element \a elem1 with respect
  *                        to the coordinate system of the other tree.
  *  \param [in] orientation The orientation of the tree-tree connection.
  *                        0 if vertex 0 of face 0 coincides with vertex 0 of face 1.

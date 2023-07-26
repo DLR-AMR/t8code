@@ -26,7 +26,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #define T8_VTK_TEST_NUM_PROCS 2
 
 /**
- * This is currently a place-holder for a propper cmesh_vtk_reader-test.
+ * This is currently a place-holder for a proper cmesh_vtk_reader-test.
  * The function is not implemented yet and therefore we do not provide a proper
  * test yet. A proper test would compare the read files with a reference-cmesh. 
  * 

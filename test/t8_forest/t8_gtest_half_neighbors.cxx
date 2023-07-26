@@ -126,27 +126,27 @@ TEST_P (forest_half_neighbors, test_half_neighbors)
           T8_ASSERT (num_face_neighs ==
                      neigh_scheme->t8_element_num_face_children (neighbor,
                                                                  dual_face));
-          t8_element_t      **neighbor_face_childs =
+          t8_element_t      **neighbor_face_children =
             T8_ALLOC (t8_element_t *, num_face_neighs);
           neigh_scheme->t8_element_new (num_face_neighs,
-                                        neighbor_face_childs);
+                                        neighbor_face_children);
           int                *child_ids = T8_ALLOC (int, num_face_neighs);
           neigh_scheme->t8_element_children_at_face (neighbor, dual_face,
-                                                     neighbor_face_childs,
+                                                     neighbor_face_children,
                                                      num_face_neighs,
                                                      child_ids);
           /* Check that the children at face of the neighbor are the half neighbors of the element */
           for (int ineigh = 0; ineigh < num_face_neighs; ineigh++) {
             ASSERT_TRUE (!neigh_scheme->t8_element_compare
-                         (neighbor_face_childs[ineigh],
+                         (neighbor_face_children[ineigh],
                           half_neighbors[ineigh])) << "Half neighbor " <<
               ineigh << " at face " << face << "is not equal to child" <<
               ineigh << "of the neighbor element.\n";
           }
           neigh_scheme->t8_element_destroy (num_face_neighs,
-                                            neighbor_face_childs);
+                                            neighbor_face_children);
           T8_FREE (child_ids);
-          T8_FREE (neighbor_face_childs);
+          T8_FREE (neighbor_face_children);
         }
         neigh_scheme->t8_element_destroy (num_face_neighs, half_neighbors);
         T8_FREE (half_neighbors);

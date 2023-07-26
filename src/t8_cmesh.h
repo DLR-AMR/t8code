@@ -228,7 +228,7 @@ void                t8_cmesh_set_refine (t8_cmesh_t cmesh, int level,
  * via \a t8_cmesh_set_tree_class, then the dimension is set automatically
  * to that of the inserted tree.
  * However, if the cmesh is constructed partitioned and the part on this process
- * is empty, it is neccessary to set the dimension by hand.
+ * is empty, it is necessary to set the dimension by hand.
  * \param [in,out]  cmesh The cmesh to be updated.
  * \param [in]      dim   The dimension to be set. Must satisfy 0 <= dim <= 3.
  * The cmesh must not be committed before calling this function.
@@ -250,7 +250,7 @@ void                t8_cmesh_set_tree_class (t8_cmesh_t cmesh,
  *  Attributes can be arbitrary data that is copied to an internal storage
  *  associated to the tree.
  *  Each application can set multiple attributes and attributes are distinguished
- *  by an interger key, where each application can use any integer as key.
+ *  by an integer key, where each application can use any integer as key.
  *
  * \param [in, out] cmesh       The cmesh to be updated.
  * \param [in]      gtree_id     The global id of the tree.
@@ -373,7 +373,7 @@ void                t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 /* If no geometry is registered and cmesh is modified from another cmesh then
  * the other cmesh's geometries are used.
  * \note If you need to use \ref t8_cmesh_bcast, then all geometries must be
- *       registerd \a after the bcast operation, not before.
+ *       registered \a after the bcast operation, not before.
  */
 void                t8_cmesh_register_geometry (t8_cmesh_t cmesh,
                                                 const t8_geometry_c
@@ -457,7 +457,7 @@ t8_locidx_t         t8_cmesh_get_num_local_trees (t8_cmesh_t cmesh);
 t8_locidx_t         t8_cmesh_get_num_ghosts (t8_cmesh_t cmesh);
 
 /** Return the global index of the first local tree of a cmesh.
- * If the cmesh is not partitioned this is allways 0.
+ * If the cmesh is not partitioned this is always 0.
  * \param [in] cmesh       The cmesh to be considered.
  * \return                 The global id of the first local tree in cmesh.
  * \a cmesh must be committed before calling this function.
@@ -492,7 +492,7 @@ int                 t8_cmesh_treeid_is_ghost (const t8_cmesh_t cmesh,
  * \param [in] cmesh       The cmesh to be considered.
  * \param [in] ltreeid     The local id of a ghost, satisfying \ref t8_cmesh_treeid_is_ghost,
  *                         thus num_trees <= \a ltreeid < num_trees + num_ghosts
- * \return                 The index of the ghost whithin all ghosts, thus an index
+ * \return                 The index of the ghost within all ghosts, thus an index
  *                         0 <= index < num_ghosts
  * \a cmesh must be committed before calling this function.
  */
@@ -712,7 +712,7 @@ void                t8_cmesh_unref (t8_cmesh_t *pcmesh);
  */
 void                t8_cmesh_destroy (t8_cmesh_t *pcmesh);
 
-/* Functions for construcing complete and committed cmeshes */
+/* Functions for constructing complete and committed cmeshes */
 
 t8_cmesh_t          t8_cmesh_new_testhybrid (sc_MPI_Comm comm);
 

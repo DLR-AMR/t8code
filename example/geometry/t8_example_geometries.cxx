@@ -112,10 +112,10 @@ public:
   }
 
   /* Jacobian, not implemented. */
-  void                t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
-                                                t8_gloidx_t gtreeid,
-                                                const double *ref_coords,
-                                                double *jacobian) const
+  void                t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
+                                                 t8_gloidx_t gtreeid,
+                                                 const double *ref_coords,
+                                                 double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -178,10 +178,10 @@ public:
   }
 
   /* Jacobian, not implemented. */
-  void                t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
-                                                t8_gloidx_t gtreeid,
-                                                const double *ref_coords,
-                                                double *jacobian) const
+  void                t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
+                                                 t8_gloidx_t gtreeid,
+                                                 const double *ref_coords,
+                                                 double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -220,10 +220,10 @@ public:
   }
 
   /* Jacobian, not implemented. */
-  void                t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
-                                                t8_gloidx_t gtreeid,
-                                                const double *ref_coords,
-                                                double *jacobian) const
+  void                t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
+                                                 t8_gloidx_t gtreeid,
+                                                 const double *ref_coords,
+                                                 double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -288,10 +288,10 @@ public:
   }
 
   /* Jacobian, not implemented. */
-  void                t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
-                                                t8_gloidx_t gtreeid,
-                                                const double *ref_coords,
-                                                double *jacobian) const
+  void                t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
+                                                 t8_gloidx_t gtreeid,
+                                                 const double *ref_coords,
+                                                 double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -355,10 +355,10 @@ public:
   }
 
   /* Jacobian, not implemented. */
-  void                t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
-                                                t8_gloidx_t gtreeid,
-                                                const double *ref_coords,
-                                                double *jacobian) const
+  void                t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
+                                                 t8_gloidx_t gtreeid,
+                                                 const double *ref_coords,
+                                                 double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -407,10 +407,10 @@ public:
   }
 
   /* Jacobian, not implemented. */
-  void                t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
-                                                t8_gloidx_t gtreeid,
-                                                const double *ref_coords,
-                                                double *jacobian) const
+  void                t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
+                                                 t8_gloidx_t gtreeid,
+                                                 const double *ref_coords,
+                                                 double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -472,7 +472,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
   t8_cmesh_t          cmesh;
   char                vtuname[BUFSIZ];
   t8_geometry_c      *geometry;
-  /* geoemtry_sincos is used for T8_GEOM_TWO_GEOMETRIES */
+  /* geometry_sincos is used for T8_GEOM_TWO_GEOMETRIES */
   t8_geometry_c      *geometry_sincos;
   int                 uniform_level;
   double              time = 0; /* used for moving geometry */

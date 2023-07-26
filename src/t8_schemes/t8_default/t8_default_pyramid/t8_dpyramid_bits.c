@@ -61,7 +61,7 @@ compute_cubeid (const t8_dpyramid_t *p, const int level)
  * \param [in]  known_level The level where we already know the type of \a p
  * \return      t8_dpyramid_type_t The type of \a p at level \a level.
  * 
- * CARFULL: This computation assumes that the shape of the element does not switch between \a known_level
+ * WARNING: This computation assumes that the shape of the element does not switch between \a known_level
  *          and \a level. 
  */
 static t8_dpyramid_type_t
@@ -98,7 +98,7 @@ compute_type_same_shape_ext (const t8_dpyramid_t *p, const int level,
  * \param         level 
  * \return        The type of \a p at \a level
  * 
- * CAREFUL: This computation assumes that the shape of the element does not switch between \a known_level
+ * WARNING: This computation assumes that the shape of the element does not switch between \a known_level
  *          and \a level.
  */
 t8_dpyramid_type_t
@@ -492,7 +492,7 @@ t8_dpyramid_get_level (const t8_dpyramid_t *p)
 /**
  * Computes the local index of a pyramid and updates its current global index. 
  * for further computation of init_linear_id. For each sibling that is a predecessor
- * the number of pyramids or tets on the level used in init_linear_id is substracted from
+ * the number of pyramids or tets on the level used in init_linear_id is subtracted from
  * the id. 
  * 
  * \\param[in, out] id       The current id that will be updated
@@ -1463,7 +1463,7 @@ t8_dpyramid_child (const t8_dpyramid_t *elem, const int child_id,
       t8_dpyramid_parenttype_Iloc_to_type[elem->pyramid.type][child_id];
     if (t8_dpyramid_shape (child) == T8_ECLASS_TET) {
       /* Use the level to set switch_shape_at_level, because the function has to be callable
-       * wich elem = child */
+       * which elem = child */
       child->switch_shape_at_level = child->pyramid.level;
     }
     else {
@@ -1894,7 +1894,7 @@ t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t *pyra1,
     return;
   }
   else {
-    /* Both elements are a tet. The ancestor can be at a level befor any of the
+    /* Both elements are a tet. The ancestor can be at a level before any of the
      * elementes switches the shape from a tet to a pyra. If one of the tets switches
      * the shape, both tets have to switch the shape. */
     T8_ASSERT (t8_dpyramid_shape (pyra1) == T8_ECLASS_TET);
@@ -1932,7 +1932,7 @@ t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t *pyra1,
 
     /* We iterate over the levels and check if the types of both tets match and 
      * stop at that level.
-     * The loop is interupted, if we get to a level where one element switches 
+     * The loop is interrupted, if we get to a level where one element switches
      * the shape.*/
     T8_ASSERT (0 < pyra1->switch_shape_at_level
                && pyra1->switch_shape_at_level <= T8_DPYRAMID_MAXLEVEL);

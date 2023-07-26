@@ -166,7 +166,7 @@ t8_ghost_large_level_diff (const char *prefix, int dim, int level, int refine,
   if (!no_vtk) {
     t8_forest_write_vtk (forest, "Forest_new");
   }
-  t8_global_productionf ("Successfully commited forest.\n");
+  t8_global_productionf ("Successfully committed forest.\n");
 
   /* Adapt */
   t8_forest_init (&forest_adapt);
@@ -250,7 +250,7 @@ main (int argc, char *argv[])
                          "If no file is given, a hypercube of prisms is created.");
   sc_options_add_int (opt, 'd', "dim", &dim, 3, "The dimension of the mesh.");
   sc_options_add_int (opt, 'l', "level", &level, 0,
-                      "The intial refinement level of the mesh.");
+                      "The initial refinement level of the mesh.");
   sc_options_add_int (opt, 'r', "refine", &refine, 0,
                       "The number of levels that the forest "
                       "is refined from the initial level.");
