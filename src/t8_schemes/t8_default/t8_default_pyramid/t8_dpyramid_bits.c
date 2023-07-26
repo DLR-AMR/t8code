@@ -80,7 +80,7 @@ compute_type_same_shape_ext (const t8_dpyramid_t *p, const int level,
   }
   if (level == 0) {
     /*Type of the root pyra */
-    return T8_DPYRAMID_ROOT_TPYE;
+    return T8_DPYRAMID_ROOT_TYPE;
   }
   for (int i = known_level; i > level; i--) {
     const t8_dpyramid_cube_id_t cube_id = compute_cubeid (p, i);
@@ -542,7 +542,7 @@ t8_dpyramid_init_linear_id (t8_dpyramid_t *p, const int level,
   p->pyramid.x = 0;
   p->pyramid.y = 0;
   p->pyramid.z = 0;
-  t8_dpyramid_type_t  type = T8_DPYRAMID_ROOT_TPYE;     /*This is the type of the root pyramid */
+  t8_dpyramid_type_t  type = T8_DPYRAMID_ROOT_TYPE;     /*This is the type of the root pyramid */
   for (int i = 1; i <= level; i++) {
     const int           offset_expo = T8_DPYRAMID_MAXLEVEL - i;
     p_sum1 >>= 3;
@@ -992,7 +992,7 @@ t8_dpyramid_is_inside_root (const t8_dpyramid_t *p)
              && p->pyramid.level <= T8_DPYRAMID_MAXLEVEL);
   /*Check, if p is root pyramid */
   if (p->pyramid.level == 0) {
-    return p->pyramid.type == T8_DPYRAMID_ROOT_TPYE && p->pyramid.x == 0
+    return p->pyramid.type == T8_DPYRAMID_ROOT_TYPE && p->pyramid.x == 0
       && p->pyramid.y == 0 && p->pyramid.z == 0;
   }
   /*Check, if all coordinates are in the limit set by the length of root */
@@ -1351,7 +1351,7 @@ t8_dpyramid_extrude_face (const t8_element_t *face, t8_dpyramid_t *p,
     p->pyramid.x = ((int64_t) q->x * T8_DPYRAMID_ROOT_LEN) / P4EST_ROOT_LEN;
     p->pyramid.y = ((int64_t) q->y * T8_DPYRAMID_ROOT_LEN) / P4EST_ROOT_LEN;
     p->pyramid.z = 0;
-    p->pyramid.type = T8_DPYRAMID_ROOT_TPYE;
+    p->pyramid.type = T8_DPYRAMID_ROOT_TYPE;
     p->pyramid.level = q->level;
     p->switch_shape_at_level = -1;
     return root_face;
@@ -1993,7 +1993,7 @@ t8_dpyramid_is_valid (const t8_dpyramid_t *p)
     && p->pyramid.type < T8_DPYRAMID_NUM_TYPES;
 
   if (p->pyramid.level == 0) {
-    is_valid = is_valid && (p->pyramid.type == T8_DPYRAMID_ROOT_TPYE);
+    is_valid = is_valid && (p->pyramid.type == T8_DPYRAMID_ROOT_TYPE);
   }
   if (t8_dpyramid_shape (p) == T8_ECLASS_TET) {
     is_valid = is_valid && (p->switch_shape_at_level > 0);
