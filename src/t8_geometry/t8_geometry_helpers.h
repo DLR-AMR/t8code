@@ -86,14 +86,14 @@ void                t8_geom_linear_interpolation (const double *coefficients,
  * \param [in]    interpolation_dim   The dimension of the interpolation (2 for triangle, 3 for tetrahedron)
  * \param [out]   evaluated_function  An array of size \a corner_value_dim, on output the result of the interpolation.
  */
-void                t8_geom_trianglular_interpolation (const double
-                                                       *coefficients,
-                                                       const double
-                                                       *corner_values,
-                                                       int corner_value_dim,
-                                                       int interpolation_dim,
-                                                       double
-                                                       *evaluated_function);
+void                t8_geom_triangular_interpolation (const double
+                                                      *coefficients,
+                                                      const double
+                                                      *corner_values,
+                                                      int corner_value_dim,
+                                                      int interpolation_dim,
+                                                      double
+                                                      *evaluated_function);
 
 /** Copies the vertex coordinates of a tree face in zorder into a separate array.
  * \param [in]    tree_class     The eclass of the tree.

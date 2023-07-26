@@ -55,11 +55,11 @@ t8_geom_linear_interpolation (const double *coefficients,
 }
 
 void
-t8_geom_trianglular_interpolation (const double *coefficients,
-                                   const double *corner_values,
-                                   int corner_value_dim,
-                                   int interpolation_dim,
-                                   double *evaluated_function)
+t8_geom_triangular_interpolation (const double *coefficients,
+                                  const double *corner_values,
+                                  int corner_value_dim,
+                                  int interpolation_dim,
+                                  double *evaluated_function)
 {
   /* The algorithm is able to calculate any point in a triangle or tetrahedron using barycentric coordinates.
    * All points are calculated by the sum of each corner point (e.g. p1 -> corner point 1) multiplied by a
@@ -112,9 +112,9 @@ t8_geom_compute_linear_geometry (t8_eclass_t tree_class,
     break;
   case T8_ECLASS_TRIANGLE:
   case T8_ECLASS_TET:
-    t8_geom_trianglular_interpolation (ref_coords,
-                                       tree_vertices, 3, dimension,
-                                       out_coords);
+    t8_geom_triangular_interpolation (ref_coords,
+                                      tree_vertices, 3, dimension,
+                                      out_coords);
     break;
   case T8_ECLASS_PRISM:
     {

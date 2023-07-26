@@ -240,8 +240,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
     T8_ASSERT (face_parameters != NULL);
 
     /* Retrieve surface_parameter in global space by triangular interpolation from ref_coords to global space */
-    t8_geom_trianglular_interpolation (ref_coords, face_parameters,
-                                       2, 2, interpolated_surface_parameters);
+    t8_geom_triangular_interpolation (ref_coords, face_parameters,
+                                      2, 2, interpolated_surface_parameters);
 
     /* Check every edge and search for edge displacement */
     for (int i_edge = 0; i_edge < num_edges; i_edge++) {
