@@ -53,7 +53,7 @@ public:
                                         double out_coords[3]) const;
 
   /* Jacobian, not implemented. */
-  void                t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
+  void                t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
                                                 t8_gloidx_t gtreeid,
                                                 const double *ref_coords,
                                                 double *jacobian) const
@@ -94,7 +94,7 @@ public:
                                         double out_coords[3]) const;
 
   /* Jacobian, not implemented. */
-  void                t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
+  void                t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
                                                 t8_gloidx_t gtreeid,
                                                 const double *ref_coords,
                                                 double *jacobian) const
@@ -136,7 +136,7 @@ public:
                                         double out_coords[3]) const;
 
   /* Jacobian, not implemented. */
-  void                t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
+  void                t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
                                                 t8_gloidx_t gtreeid,
                                                 const double *ref_coords,
                                                 double *jacobian) const
@@ -177,7 +177,7 @@ public:
                                         double out_coords[3]) const;
 
   /* Jacobian, not implemented. */
-  void                t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
+  void                t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
                                                 t8_gloidx_t gtreeid,
                                                 const double *ref_coords,
                                                 double *jacobian) const
@@ -217,7 +217,7 @@ public:
                                         double out_coords[3]) const;
 
   /* Jacobian, not implemented. */
-  void                t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
+  void                t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
                                                 t8_gloidx_t gtreeid,
                                                 const double *ref_coords,
                                                 double *jacobian) const

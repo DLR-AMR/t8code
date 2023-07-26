@@ -154,7 +154,7 @@ t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
     r[2] = r[2] / norm;
   }
 
-  /* The next three code blocks straigthen out the elements near the triangle corners
+  /* The next three code blocks straighten out the elements near the triangle corners
      by averaging the rectification with all three corners. */
 
   /* First corner. */
