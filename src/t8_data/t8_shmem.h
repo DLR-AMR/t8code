@@ -147,6 +147,54 @@ void                t8_shmem_array_allgather (const void *sendbuf,
                                               int recvcount,
                                               sc_MPI_Datatype recvtype);
 
+/**
+ * Fill a t8_shmem array with an Allgatherv
+ * Computes the recvcount-array and displacement-array for each rank of a node using the
+ * sendcount.
+ * The total number of items of each node is then used to compute the
+ * recvcount-array and displacement-array between nodes. 
+ * Use t8_shmem_array_allgather if the sendcount is equal on all procs for better scaling. 
+ * 
+ * \param[in] sendbuf         the source from this process
+ * \param[in] sendcount       the number of items to gather on this proc
+ * \param[in] sendtype        the type of items ot gather
+ * \param[in, out] recvarray  array of type recvtype where the data gets written to
+ * \param[in] recvtype        the type of items to recieve
+ * \param[in] comm            the mpi communicator
+ * 
+ */
+void                t8_shmem_array_allgatherv (void *sendbuf,
+                                               const int sendcount,
+                                               sc_MPI_Datatype
+                                               sendtype,
+                                               t8_shmem_array_t
+                                               recvarray,
+                                               sc_MPI_Datatype
+                                               recvtype, sc_MPI_Comm comm);
+
+/**
+ * Fill a t8_shmem array with an Allgather of the prefix operation over all 
+ * processes. 
+ * 
+ * The recieve array will be
+ * (0, send0, send0 op send1, send0 op send1 op send2, ...)
+ * 
+ * \note the first entry of \a recvarray will be set to 0 using memset. 
+ * The entry can be changed after calling t8_shmem_array_prefix 
+ * 
+ * @param sendbuf 
+ * @param recvarray 
+ * @param count 
+ * @param type 
+ * @param op 
+ * @param comm 
+ */
+void                t8_shmem_array_prefix (const void *sendbuf,
+                                           t8_shmem_array_t recvarray,
+                                           const int count,
+                                           sc_MPI_Datatype type,
+                                           sc_MPI_Op op, sc_MPI_Comm comm);
+
 /** Return the MPI communicator associated with a shmem array.
  * \param [in]          array The shmem_array to be queried.
  * \return              The MPI communicator stored at \a array.

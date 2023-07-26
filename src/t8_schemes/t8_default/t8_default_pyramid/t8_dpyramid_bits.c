@@ -1425,7 +1425,7 @@ t8_dpyramid_child_id (const t8_dpyramid_t *p)
   if (t8_dpyramid_shape (p) == T8_ECLASS_PYRAMID ||
       p->switch_shape_at_level == p->pyramid.level) {
     if (p->pyramid.level == 0) {
-      return -1;
+      return 0;
     }
     const t8_dpyramid_cube_id_t cube_id =
       compute_cubeid (p, p->pyramid.level);

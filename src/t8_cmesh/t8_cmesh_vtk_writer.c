@@ -129,13 +129,11 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix,
     for (tree = t8_cmesh_get_first_tree (cmesh); tree != NULL;
          tree = t8_cmesh_get_next_tree (cmesh, tree)) {
       /*  TODO: Use new geometry here. Need cmesh_get_reference coords function. */
-      vertices = ((double *) t8_cmesh_get_attribute (cmesh,
-                                                     t8_get_package_id (), 0,
-                                                     tree->treeid));
+      vertices = t8_cmesh_get_tree_vertices (cmesh, tree->treeid);
       for (ivertex = 0; ivertex < t8_eclass_num_vertices[tree->eclass];
            ivertex++) {
         vertex = vertices +
-          3 * t8_eclass_vtk_corner_number[tree->eclass][ivertex];
+          3 * t8_eclass_t8_to_vtk_corner_number[tree->eclass][ivertex];
         x = vertex[0];
         y = vertex[1];
         z = vertex[2];
@@ -162,7 +160,7 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix,
         /* TODO: This code is duplicated above */
         for (ivertex = 0; ivertex < t8_eclass_num_vertices[eclass]; ivertex++) {
           vertex = vertices +
-            3 * t8_eclass_vtk_corner_number[eclass][ivertex];
+            3 * t8_eclass_vtk_to_t8_corner_number[eclass][ivertex];
           x = vertex[0];
           y = vertex[1];
           z = vertex[2];

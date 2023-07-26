@@ -1,7 +1,8 @@
 
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7034838.svg)](https://doi.org/10.5281/zenodo.7034838)
-[![t8code tests](https://github.com/DLR-AMR/t8code/actions/workflows/tests.yml/badge.svg)](https://github.com/DLR-AMR/t8code/actions/workflows/tests.yml)
+[![t8code tests serial](https://github.com/DLR-AMR/t8code/actions/workflows/tests_t8code_serial.yml/badge.svg)](https://github.com/DLR-AMR/t8code/actions/workflows/tests_t8code_serial.yml)
+[![t8code tests parallel](https://github.com/DLR-AMR/t8code/actions/workflows/tests_t8code_parallel.yml/badge.svg)](https://github.com/DLR-AMR/t8code/actions/workflows/tests_t8code_parallel.yml)
 
 ### Introduction
 
@@ -57,62 +58,8 @@ For a brief introduction in AMR and the algorithms used by t8code we recommend t
 
 ### Setup
 
-We provide a short guide to install t8code. 
+We provide a short guide to install t8code in our Wiki [Installation guide](https://github.com/DLR-AMR/t8code/wiki/Installation).
 
-For a more detailed description, please see the [Installation guide](https://github.com/DLR-AMR/t8code/wiki/Installation) in our Wiki.
-
-#### Requirements
-
-- [libsc](https://github.com/cburstedde/libsc) (Included in t8code's git repository)
-- [p4est](https://github.com/cburstedde/p4est) (Included in t8code's git repository)
-- automake
-- libtool
-- make
-
-Optional
-- The VTK library for advanced VTK output (basic VTK output is provided without linking against VTK)
-- The netcdf library for netcdf file output
-
-  
-#### Steps
-To setup the project perform the following steps
-  
-    1.) If you cloned from github, initialize and download the git submodules
-       p4est and sc.
-      - git submodule init
-      - git submodule update      
-    2.) Call the bootstrap script in the source directory
-      - ./bootstrap        
-    3.) Goto your installation folder and call configure and make
-      - cd /path/to/install
-      - /path/to/source/configure [OPTIONS]
-      - make 
-      - make check
-      - make install
-
-To see a list of possible configure options, call
- 
- ./configure -h
-
-or visit [the Wiki](https://github.com/DLR-AMR/t8code/wiki/Configure-Options).
-
-Most commonly used for t8code are
-
-  --enable-mpi    (enables MPI parallelization)
-  
-  --enable-debug  (enables debugging mode - massively reduces performance)
-  
-  --with-LIB/--without-LIB (enable/disable linking with LIB)
-  
-#### Example configurations
-
-For a parallel release mode with local installation path `$HOME/t8code_install`:
-
-`configure --enable-mpi CFLAGS=-O3 CXXFLAGS=-O3 --prefix=$HOME/t8code_install`
-
-For a debugging mode with static linkage (makes using gdb and valgrind more comfortable):
-
-`configure --enable-mpi --enable-debug --enable-static --disable-shared CFLAGS="-Wall -O0 -g" CXXFLAGS="-Wall -O0 -g"`
   
 ### Getting started
   

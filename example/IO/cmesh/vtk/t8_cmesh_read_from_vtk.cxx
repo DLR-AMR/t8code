@@ -22,6 +22,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <sc_options.h>
 #include <t8.h>
 #include <t8_vtk.h>
+
 #include <t8_forest/t8_forest.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
@@ -80,8 +81,7 @@ t8_forest_construct_from_vtk (const char *prefix, sc_MPI_Comm comm,
   double             *tree_data;
   /* Read the cell-data if there is any */
   if (values_per_cell > 0) {
-    const t8_locidx_t   num_trees = t8_cmesh_get_num_local_trees (cmesh);
-    T8_ASSERT (num_trees == t8_forest_get_num_local_trees (forest));
+    const t8_locidx_t   num_trees = t8_forest_get_num_local_trees (forest);
     vtk_data = T8_ALLOC (t8_vtk_data_field_t, values_per_cell);
     cell_values = T8_ALLOC (double *, values_per_cell);
     for (int ivalues = 0; ivalues < values_per_cell; ivalues++) {
@@ -132,7 +132,8 @@ main (int argc, char **argv)
   char                usage[BUFSIZ], help[BUFSIZ];
   int                 sreturn;
   int                 partition;
-  int                 vtk_file_type;
+  int                 vtk_file_type_int;
+  vtk_file_type_t     vtk_file_type;
 
   snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS> <ARGUMENTS>\n\t%s -h\t"
             "for a brief overview of all options.",
@@ -161,11 +162,13 @@ main (int argc, char **argv)
                          "The prefix of the output-file.");
   sc_options_add_int (opt, 'c', "num_cell_values", &num_keys, 0,
                       "Number of values per cell stored in the vtk-file.");
-  sc_options_add_int (opt, 't', "type_of_file", &vtk_file_type, -1,
-                      " Set the type of the data in the file.\n"
-                      "0 for vtkUnstructuredGrid \n" "1 for vtkPolyData");
   sc_options_add_bool (opt, 'p', "partition", &partition, 0,
-                       "If set, partition the cmesh uniformly.\n");
+                       "If set, partition the cmesh uniformly.");
+  sc_options_add_int (opt, 't', "type_of_file", &vtk_file_type_int, -1,
+                      "Set the type of the data in the file.\n"
+                      "\t\t\t\t\t0 for vtkUnstructuredGrid \n"
+                      "\t\t\t\t\t1 for vtkPolyData\n"
+                      "\t\t\t\t\t2 for pvtu.");
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
 
@@ -177,6 +180,20 @@ main (int argc, char **argv)
     return 1;
   }
   else {
+    switch (vtk_file_type_int) {
+    case 0:
+      vtk_file_type = VTK_UNSTRUCTURED_FILE;
+      break;
+    case 1:
+      vtk_file_type = VTK_POLYDATA_FILE;
+      break;
+    case 2:
+      vtk_file_type = VTK_PARALLEL_UNSTRUCTURED_FILE;
+      break;
+    default:
+      vtk_file_type = VTK_FILE_ERROR;
+      break;
+    }
     t8_forest_construct_from_vtk (vtk_file, sc_MPI_COMM_WORLD, num_keys,
                                   partition, (vtk_file_type_t) vtk_file_type,
                                   out_file);

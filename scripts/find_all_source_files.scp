@@ -29,8 +29,14 @@
 #
 if [ `basename $PWD` != scripts ]
 then
-  echo ERROR: Must be executed from whitin the scripts/ subfolder.
-  exit 1
+  if [ -d scripts ]
+  then
+    # The directory stack is automatically reset on script exit.
+    pushd scripts/ > /dev/null
+  else
+    echo ERROR: scripts/ directory not found.
+    exit 1
+  fi
 fi
 
 # All valid file suffixes.
@@ -41,6 +47,6 @@ suffixes="c|cxx|h|hxx"
 
 # Find all files with the appropriate suffix in the 
 # src/ example/ test/ and tutorials/ subfolder.
-files=`find ../src ../example ../test ../tutorials -regextype egrep -iregex ".*\.($suffixes)"`
+files=`find ../src ../example ../test ../tutorials ../benchmarks -regextype egrep -iregex ".*\.($suffixes)"`
 
 echo $files
