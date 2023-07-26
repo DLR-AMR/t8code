@@ -104,11 +104,6 @@ setup_reader (const char *filename,
   }
   fclose (first_check);
 
-  char                tmp[BUFSIZ], *extension;
-  strcpy (tmp, filename);
-  extension = strrchr (tmp, '.') + 1;
-  T8_ASSERT (strcmp (extension, ""));
-
   if (!reader->CanReadFile (filename)) {
     t8_errorf ("Unable to read file.\n");
     return read_failure;
