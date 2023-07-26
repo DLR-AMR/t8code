@@ -32,7 +32,7 @@
 /* In this test, we adapt, balance and partition a uniform forest.
  * We do this in two ways:
  * 1st  All operations are performed in one single call to t8_forest_commit
- * 2nd  Each intermediate step is performed in a seperate commit
+ * 2nd  Each intermediate step is performed in a separate commit
  *
  * After these two forests are created, we check for equality.
  */
@@ -161,7 +161,7 @@ TEST_P (forest_commit, test_forest_commit)
     t8_forest_ref (forest);
     /* Adapt, balance and partition the forest */
     forest_ada_bal_part = t8_test_forest_commit_abp (forest, maxlevel);
-    /* Adapt, balance and partition the forest using three seperate steps */
+    /* Adapt, balance and partition the forest using three separate steps */
     forest_abp_3part = t8_test_forest_commit_abp_3step (forest, maxlevel);
 
     ASSERT_TRUE (t8_forest_is_equal

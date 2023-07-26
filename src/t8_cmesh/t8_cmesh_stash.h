@@ -70,11 +70,11 @@ typedef struct t8_stash_attribute
 } t8_stash_attribute_struct_t;
 
 /** The stash data structure is used to store information about the cmesh
- *  before it is commited. In particular we store the eclasses of the trees,
+ *  before it is committed. In particular we store the eclasses of the trees,
  *  the face-connections and the tree attributes.
  *  Using the stash structure allows us to have a very flexible interface.  When constructing a new mesh, the
  *  user can specify all these mesh entities in arbitrary order.
- *  As soon as the cmesh is commited the information is copied from the stash
+ *  As soon as the cmesh is committed the information is copied from the stash
  *  to the cmesh in an order mannered.
  */
 typedef struct t8_stash
@@ -217,7 +217,7 @@ void                t8_stash_attribute_sort (t8_stash_t stash);
  *                          On the other process an initialized stash. Its entries will
  *                          get overwritten by the entries in the root stash.
  *  \param [in]     root    The mpirank of the root process.
- *  \param [in]     comm    The mpi communicator which is used fpr broadcast.
+ *  \param [in]     comm    The mpi communicator which is used for broadcast.
  *  \param [in]     elem_counts An array with three entries giving the number of
  *                  elements in the classes, joinfaces and attributes arrays.
  */

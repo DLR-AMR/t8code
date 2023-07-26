@@ -147,7 +147,7 @@ TEST_P (global_tree, test_empty_global_tree)
   ASSERT_TRUE (!forest->incomplete_trees);
 
   t8_forest_ref (forest);
-  /* Do adapt and partition in seperate steps */
+  /* Do adapt and partition in separate steps */
   t8_forest_t         forest_adapt_b =
     t8_adapt_forest (forest, t8_adapt_remove, 1, 0, &testcase);
   ASSERT_TRUE (forest_adapt_b->incomplete_trees);

@@ -41,7 +41,7 @@ typedef struct
 {
   int                 recv_rank;        /* The rank to which we send. */
   size_t              num_bytes;        /* The number of bytes that we send. */
-  sc_MPI_Request     *request;  /* Commuication request, not owned by this struct. */
+  sc_MPI_Request     *request;  /* Communication request, not owned by this struct. */
   char               *buffer;   /* The send buffer. */
 } t8_ghost_mpi_send_info_t;
 
@@ -143,7 +143,7 @@ t8_ghost_process_equal_function (const void *process_dataa,
   return processa->mpirank == processb->mpirank;
 }
 
-/* The hash funtion for the remote_ghosts hash table.
+/* The hash function for the remote_ghosts hash table.
  * The hash value for an mpirank is just the rank */
 static unsigned
 t8_ghost_remote_hash_function (const void *remote_data, const void *user_data)
@@ -472,7 +472,7 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
     *remote_process_entry = remote_rank;
   }
   else {
-    /* The remote rank alrady is contained in the remotes array at
+    /* The remote rank already is contained in the remotes array at
      * position index. */
     remote_array = &ghost->remote_ghosts->a;
     remote_entry = (t8_ghost_remote_t *) sc_array_index (remote_array, index);
@@ -632,7 +632,7 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
   faces_totally_owned = 1;
 
   /* TODO: we may not carry on with the face computations if the element is not
-   *       totally onwed and immediately return 1. However, how do we set the bounds for
+   *       totally owned and immediately return 1. However, how do we set the bounds for
    *       the face owners then?
    */
   for (iface = 0; iface < num_faces; iface++) {
@@ -815,7 +815,7 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
           /* Use half neighbors */
           /* Get the number of face children of the element at this face */
           num_face_children = ts->t8_element_num_face_children (elem, iface);
-          /* regrow the half_neighbors array if neccessary.
+          /* regrow the half_neighbors array if necessary.
            * We also need to reallocate it, if the element class of the neighbor
            * changes */
           if (max_num_face_children < num_face_children ||
@@ -870,7 +870,7 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
         }                       /* end ghost_method 0 */
         else {
           size_t              iowner;
-          /* Construc the owners at the face of the neighbor element */
+          /* Construct the owners at the face of the neighbor element */
           t8_forest_element_owners_at_neigh_face (forest, itree, elem, iface,
                                                   &owners);
           T8_ASSERT (owners.elem_count >= 0);
@@ -960,7 +960,7 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost,
     /* add padding before the eclass */
     current_send_info->num_bytes +=
       T8_ADD_PADDING (current_send_info->num_bytes);
-    /* TODO: put this in a funtion */
+    /* TODO: put this in a function */
     /* TODO: Use remote_entry to count the number of bytes while inserting
      *        the remote ghosts. */
     remote_trees = &remote_entry->remote_trees;
@@ -1198,7 +1198,7 @@ t8_forest_ghost_parse_received_message (t8_forest_t forest,
        * thus has as index the number of currently inserted trees. */
       tree_hash->index = ghost->ghost_trees->elem_count;
       found_tree = tree_hash;
-      /* We grow the array by one and initilize the entry */
+      /* We grow the array by one and initialize the entry */
       ghost_tree = (t8_ghost_tree_t *) sc_array_push (ghost->ghost_trees);
       ghost_tree->global_id = global_id;
       ghost_tree->eclass = eclass;
@@ -1536,7 +1536,7 @@ while (received_messages < num_remotes - 1) {
  *     T. Isaac, C. Burstedde, L. C. Wilcox and O. Ghattas
  * for unbalanced_version = 1 (also unbalanced forests possible).
  *
- * verion 3 with top-down search
+ * version 3 with top-down search
  * for unbalanced_version = -1
  */
 void
@@ -1557,7 +1557,7 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
     /* If profiling is enabled, we measure the runtime of ghost_create */
     forest->profile->ghost_runtime = -sc_MPI_Wtime ();
     /* DO NOT DELETE THE FOLLOWING line.
-     * even if you do not want this output. It fixes a bug that occured on JUQUEEN, where the
+     * even if you do not want this output. It fixes a bug that occurred on JUQUEEN, where the
      * runtimes were computed to 0.
      * Only delete the line, if you know what you are doing. */
     t8_global_productionf ("Start ghost at %f  %f\n", sc_MPI_Wtime (),
@@ -1604,7 +1604,7 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
     /* Start sending the remote elements */
     send_info = t8_forest_ghost_send_start (forest, ghost, &requests);
 
-    /* Reveive the ghost elements from the remote processes */
+    /* Receive the ghost elements from the remote processes */
     t8_forest_ghost_receive (forest, ghost);
 
     /* End sending the remote elements */
@@ -1638,7 +1638,7 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
       forest->profile->ghosts_shipped = 0;
     }
     /* DO NOT DELETE THE FOLLOWING line.
-     * even if you do not want this output. It fixes a bug that occured on JUQUEEN, where the
+     * even if you do not want this output. It fixes a bug that occurred on JUQUEEN, where the
      * runtimes were computed to 0.
      * Only delete the line, if you know what you are doing. */
     t8_global_productionf ("End ghost at %f  %f\n", sc_MPI_Wtime (),

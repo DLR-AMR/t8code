@@ -28,9 +28,10 @@
 #define T8_GEOMETRY_LINEAR_HXX
 
 #include <t8.h>
-#include <t8_geometry/t8_geometry_base.hxx>
+#include <t8_geometry/t8_geometry_with_vertices.hxx>
+#include <t8_geometry/t8_geometry_with_vertices.h>
 
-struct t8_geometry_linear:public t8_geometry_w_vertices
+struct t8_geometry_linear:public t8_geometry_with_vertices
 {
 public:
 
@@ -41,7 +42,7 @@ public:
   /* Base constructor with no arguments. We need this since it
    * is called from derived class constructors.
    * Sets dimension and name to invalid values. */
-                      t8_geometry_linear ():t8_geometry_w_vertices ()
+                      t8_geometry_linear ():t8_geometry_with_vertices ()
   {
   }
 
@@ -70,12 +71,12 @@ public:
    * \param [out] jacobian    The jacobian at \a ref_coords. Array of size dimension x 3. Indices 3*i, 3*i+1, 3*i+2
    *                          correspond to the i-th column of the jacobian (Entry 3*i + j is del f_j/del x_i).
    */
-  virtual void        t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
-                                                t8_gloidx_t gtreeid,
-                                                const double *ref_coords,
-                                                double *jacobian) const;
+  virtual void        t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
+                                                 t8_gloidx_t gtreeid,
+                                                 const double *ref_coords,
+                                                 double *jacobian) const;
 
-  /* Load tree data is inherited from t8_geometry_w_vertices. */
+  /* Load tree data is inherited from t8_geometry_with_vertices. */
 
 };
 

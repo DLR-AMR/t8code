@@ -176,7 +176,7 @@ t8_geom_handler_find_geometry_non_sorted (t8_geometry_handler_t *geom_handler,
   for (found_index = 0;
        found_index < t8_geom_handler_get_num_geometries (geom_handler);
        ++found_index) {
-    /* Get the pointer to this geoemtry */
+    /* Get the pointer to this geometry */
     const void         *pgeom =
       sc_array_index (&geom_handler->registered_geometries, found_index);
     /* Compare this geometry's name with the given name. */
@@ -228,7 +228,7 @@ t8_geom_handler_commit (t8_geometry_handler_t *geom_handler)
     geom_handler->active_geometry =
       *(t8_geometry_c **)
       sc_array_index (&geom_handler->registered_geometries, 0);
-      t8_debugf ("Commiting geom handler. Set '%s' as active geometry.\n",
+      t8_debugf ("Committing geom handler. Set '%s' as active geometry.\n",
        geom_handler->active_geometry->t8_geom_get_name());
     /* *INDENT-ON* */
   }
@@ -370,7 +370,7 @@ t8_geometry_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
   /* Evaluate the jacobian. */
   /* *INDENT-OFF* */
   geom_handler->active_geometry->
-    t8_geom_evalute_jacobian (cmesh, geom_handler->active_tree, ref_coords,
+    t8_geom_evaluate_jacobian (cmesh, geom_handler->active_tree, ref_coords,
                               jacobian);
   /* *INDENT-ON* */
 }

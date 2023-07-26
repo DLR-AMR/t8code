@@ -132,11 +132,11 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
 }
 
 void
-t8_geometry_occ::t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
-                                           t8_gloidx_t gtreeid,
-                                           const double
-                                           *ref_coords,
-                                           double *jacobian_out) const
+t8_geometry_occ::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
+                                            t8_gloidx_t gtreeid,
+                                            const double
+                                            *ref_coords,
+                                            double *jacobian_out) const
 {
   double              h = 1e-9;
   double              in1[3], in2[3];
@@ -167,7 +167,7 @@ inline void
 t8_geometry_occ::t8_geom_load_tree_data (t8_cmesh_t cmesh,
                                          t8_gloidx_t gtreeid)
 {
-  t8_geometry_w_vertices::t8_geom_load_tree_data (cmesh, gtreeid);
+  t8_geometry_with_vertices::t8_geom_load_tree_data (cmesh, gtreeid);
   edges = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
                                                 T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY,
                                                 gtreeid);
@@ -586,7 +586,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
                                   face_parameters,
                                   2, 2, interpolated_surface_parameters);
 
-    /* Iterate over each edge to seach for parameter displacements */
+    /* Iterate over each edge to search for parameter displacements */
     for (int i_edge = 0; i_edge < num_edges; ++i_edge) {
       if (edges[i_edge] > 0) {
         /* The edges of a quad point in direction of ref_coord (1 - i_edge / 2).

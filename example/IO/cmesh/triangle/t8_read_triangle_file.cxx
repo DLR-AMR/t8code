@@ -55,7 +55,7 @@ t8_read_triangle_file_build_cmesh (const char *prefix, int do_dup,
       }
       t8_cmesh_destroy (&cmesh_part);
     }
-    t8_debugf ("Succesfully constructed cmesh from %s files.\n", prefix);
+    t8_debugf ("Successfully constructed cmesh from %s files.\n", prefix);
     t8_debugf ("cmesh has:\n\t%lli triangles\n",
                (long long) t8_cmesh_get_num_trees (cmesh));
     snprintf (fileprefix, BUFSIZ, "%s_t8_triangle", prefix);
@@ -68,7 +68,7 @@ t8_read_triangle_file_build_cmesh (const char *prefix, int do_dup,
     t8_cmesh_destroy (&cmesh);
   }
   else {
-    t8_debugf ("An error occured while reading %s files.\n", prefix);
+    t8_debugf ("An error occurred while reading %s files.\n", prefix);
   }
   fflush (stdout);
 

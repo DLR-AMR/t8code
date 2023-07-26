@@ -115,7 +115,7 @@ t8_linear_face_descendant (t8_element_t *elem, t8_element_t *tmp,
   }
 }
 
-/*Recursivly check the first and last descendant along a face*/
+/*Recursively check the first and last descendant along a face*/
 void
 t8_recursive_face_desendant (t8_element_t *elem, t8_element_t *test,
                              t8_element_t *tmp, t8_element_t *child,

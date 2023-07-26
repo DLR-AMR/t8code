@@ -136,7 +136,7 @@ const t8_geometry_c *t8_geom_handler_get_unique_geometry (const
  * and return it.
  * \param [in] geom_handler A committed geometry handler.
  * \param [in] name         The name of a geometry.
- * \return                  A pointer to the geomery or NULL if it was not found.
+ * \return                  A pointer to the geometry or NULL if it was not found.
  */
 t8_geometry_c      *t8_geom_handler_find_geometry (const
                                                    t8_geometry_handler_t
