@@ -113,9 +113,15 @@ t8_geometry_squared_disk::t8_geom_evaluate (t8_cmesh_t cmesh,
  * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
  */
 void
-t8_geometry_triangulated_spherical_surface::
-t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
-                  const double *ref_coords, double out_coords[3]) const
+t8_geometry_triangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t
+                                                              cmesh,
+                                                              t8_gloidx_t
+                                                              gtreeid,
+                                                              const double
+                                                              *ref_coords,
+                                                              double
+                                                              out_coords[3])
+  const
 {
   double              n[3];     /* Normal vector. */
   double              r[3];     /* Radial vector. */
