@@ -132,7 +132,8 @@ main (int argc, char **argv)
   char                usage[BUFSIZ], help[BUFSIZ];
   int                 sreturn;
   int                 partition;
-  int                 vtk_file_type;
+  int                 vtk_file_type_int;
+  vtk_file_type_t     vtk_file_type;
 
   snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS> <ARGUMENTS>\n\t%s -h\t"
             "for a brief overview of all options.",
@@ -163,11 +164,11 @@ main (int argc, char **argv)
                       "Number of values per cell stored in the vtk-file.");
   sc_options_add_bool (opt, 'p', "partition", &partition, 0,
                        "If set, partition the cmesh uniformly.");
-  sc_options_add_int (opt, 't', "type_of_file", &vtk_file_type, -1,
+  sc_options_add_int (opt, 't', "type_of_file", &vtk_file_type_int, -1,
                       "Set the type of the data in the file.\n"
                       "\t\t\t\t\t0 for vtkUnstructuredGrid \n"
                       "\t\t\t\t\t1 for vtkPolyData\n"
-                      "\t\t\t\t\t2 for pvtu. Currently not working with -p");
+                      "\t\t\t\t\t2 for pvtu.");
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
 
@@ -179,6 +180,20 @@ main (int argc, char **argv)
     return 1;
   }
   else {
+    switch (vtk_file_type_int) {
+    case 0:
+      vtk_file_type = VTK_UNSTRUCTURED_FILE;
+      break;
+    case 1:
+      vtk_file_type = VTK_POLYDATA_FILE;
+      break;
+    case 2:
+      vtk_file_type = VTK_PARALLEL_UNSTRUCTURED_FILE;
+      break;
+    default:
+      vtk_file_type = VTK_FILE_ERROR;
+      break;
+    }
     t8_forest_construct_from_vtk (vtk_file, sc_MPI_COMM_WORLD, num_keys,
                                   partition, (vtk_file_type_t) vtk_file_type,
                                   out_file);

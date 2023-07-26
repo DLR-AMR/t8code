@@ -45,6 +45,7 @@ T8_EXTERN_C_BEGIN ();
  * \param [in]  write_level If true, the refinement level is written for each element.
  * \param [in]  write_element_id If true, the global element id is written for each element.
  * \param [in]  curved_flag If true, write the elements as curved element types from vtk.
+ * \param [in]  write_ghosts If true, write ghost elements. 
  * \param [in]  num_data  Number of user defined double valued data fields to write.
  * \param [in]  data      Array of t8_vtk_data_field_t of length \a num_data
  *                        providing the user defined per element data.
@@ -63,6 +64,7 @@ void                t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
                                                       const int
                                                       write_element_id,
                                                       const int curved_flag,
+                                                      const int write_ghosts,
                                                       const int num_data,
                                                       t8_vtk_data_field_t
                                                       *data);

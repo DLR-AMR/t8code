@@ -141,7 +141,6 @@ t8_read_poly (const char *filename, vtkDataSet * grid)
     t8_errorf ("Could not read file.\n");
     return read_successfull;
   }
-  t8_debugf ("[D] read %i cells\n", grid->GetNumberOfCells ());
   tri_filter->SetInputData (poly_data);
   /* PolyVertex to vertex */
   tri_filter->PassVertsOn ();

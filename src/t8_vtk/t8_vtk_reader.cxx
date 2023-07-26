@@ -20,8 +20,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_cmesh_vtk_writer.h>        /* To set tree vertices */
-
 #include "t8_vtk_reader.hxx"
 #include "t8_vtk_unstructured.hxx"
 #include "t8_vtk_polydata.hxx"
@@ -129,9 +127,13 @@ t8_file_to_vtkGrid (const char *filename,
   SC_CHECK_MPI (mpiret);
   T8_ASSERT (filename != NULL);
   T8_ASSERT (0 <= main_proc && main_proc < mpisize);
-  /* Read the file and set the pointer to the vtkGrid */
-  if (!partition || mpirank == main_proc
-      || vtk_file_type >= VTK_PARALLEL_UNSTRUCTURED_FILE) {
+  /* Read the file and set the pointer to the vtkGrid
+   * We read the file if:
+   * - We do not use a partitioned read, every process reads the vtk-file, or if
+   * - We use a partitioned read for a non-parallel filetype and the main-process reaches the code-block, or if
+   * - We use a parallel file-type and use a partitioned read, every proc reads its chunk of the files. 
+   */
+  if (!partition || mpirank == main_proc || vtk_file_type & VTK_PARALLEL_FILE) {
     switch (vtk_file_type) {
     case VTK_UNSTRUCTURED_FILE:
       main_proc_read_successful = t8_read_unstructured (filename, vtkGrid);
@@ -164,7 +166,7 @@ t8_file_to_vtkGrid (const char *filename,
       t8_errorf ("Filetype not supported.\n");
       break;
     }
-    if (partition && vtk_file_type < VTK_PARALLEL_UNSTRUCTURED_FILE) {
+    if (partition && vtk_file_type & VTK_SERIAL_FILE) {
       /* Communicate the success/failure of the reading process. */
       sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc,
                     comm);
@@ -172,14 +174,14 @@ t8_file_to_vtkGrid (const char *filename,
     }
   }
   if (partition) {
-    if (vtk_file_type < VTK_PARALLEL_UNSTRUCTURED_FILE) {
+    if (vtk_file_type & VTK_SERIAL_FILE) {
       sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc,
                     comm);
     }
     else {
       int                 recv_buf;
-      sc_MPI_Allreduce (&main_proc_read_successful, &recv_buf, 1, sc_MPI_INT,
-                        sc_MPI_LOR, comm);
+      sc_MPI_Allreduce (&main_proc_read_successful, &recv_buf, 1,
+                        sc_MPI_INT, sc_MPI_LOR, comm);
       main_proc_read_successful = (vtk_read_success_t) recv_buf;
     }
   }
@@ -221,8 +223,8 @@ t8_get_dimension (vtkSmartPointer < vtkDataSet > vtkGrid)
 
 /**
  * Iterate over all cells of a vtkDataset and construct a cmesh representing
- * The vtkGrid. Each cell in the vtkDataSet becomes a tree in the cmesh. This 
- * function construct a cmesh on a single process. 
+ * the vtkGrid. Each cell in the vtkDataSet becomes a tree in the cmesh. This 
+ * function constructs a cmesh on a single process. 
  * 
  * \param[in] vtkGrid       The vtkGrid that gets tranlated
  * \param[in, out] cmesh    An empty cmesh that is filled with the data. 
@@ -299,8 +301,8 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > vtkGrid,
       const t8_gloidx_t   cell_id = cell_it->GetCellId ();
       vtkDataArray       *data = cell_data->GetArray (dtype);
       data->GetTuple (cell_id, tuples[dtype]);
-      t8_cmesh_set_attribute (cmesh, tree_id, t8_get_package_id (), dtype + 1,
-                              tuples[dtype], data_size[dtype], 0);
+      t8_cmesh_set_attribute (cmesh, tree_id, t8_get_package_id (),
+                              dtype + 1, tuples[dtype], data_size[dtype], 0);
     }
     tree_id++;
   }
@@ -352,7 +354,7 @@ t8_vtk_partition (t8_cmesh_t cmesh, const int mpirank,
   else {
     last_tree = first_tree + num_trees - 1;
   }
-  const int           set_face_knowledge = 3;   /* Exoect face connection of local and ghost trees. */
+  const int           set_face_knowledge = 3;   /* Expect face connection of local and ghost trees. */
   t8_cmesh_set_partition_range (cmesh, set_face_knowledge, first_tree,
                                 last_tree);
   t8_shmem_array_destroy (&offsets);
@@ -404,7 +406,12 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet > vtkGrid,
       t8_vtk_partition (cmesh, mpirank, mpisize, num_trees, dim, comm);
   }
 
-  /* Translation of vtkGrid to cmesh */
+  /* Translation of vtkGrid to cmesh 
+   * We translate the file if:
+   * - We do not use a partitioned read, every process has read the vtk-file and shall now translate it, or if
+   * - We use a partitioned read for a non-parallel filetype and the main-process reaches the code-block, or if
+   * - We use a parallel file-type and use a partitioned read, every proc translates its chunk of the grid. 
+   */
   if (!partition || mpirank == main_proc || distributed_grid) {
     t8_vtk_iterate_cells (vtkGrid, cmesh, first_tree, comm);
   }
@@ -531,7 +538,7 @@ t8_vtk_reader_cmesh (const char *filename, const int partition,
     t8_vtk_reader (filename, partition, main_proc, comm, vtk_file_type);
   if (vtkGrid != NULL) {
     const int           distributed_grid =
-      (vtk_file_type >= VTK_PARALLEL_UNSTRUCTURED_FILE) && partition;
+      (vtk_file_type & VTK_PARALLEL_FILE) && partition;
     t8_cmesh_t          cmesh =
       t8_vtkGrid_to_cmesh (vtkGrid, partition, main_proc, distributed_grid,
                            comm);
