@@ -139,7 +139,7 @@ t8_shmem_array_init (t8_shmem_array_t *parray, size_t elem_size,
   T8_ASSERT (parray != NULL);
 
   if (sc_shmem_get_type (comm) == SC_SHMEM_NOT_SET) {
-    /* Set the shmem type to the best availble. */
+    /* Set the shmem type to the best available. */
     t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
   }
   array = *parray = T8_ALLOC_ZERO (t8_shmem_array_struct_t, 1);

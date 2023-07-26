@@ -21,7 +21,7 @@
 */
 
 /** \file t8_forest_iterate.h
- * We define variuos routines to iterate through (parts of) a forest and execute
+ * We define various routines to iterate through (parts of) a forest and execute
  * callback functions on the leaf elements,
  */
 

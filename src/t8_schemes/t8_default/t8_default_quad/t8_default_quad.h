@@ -62,7 +62,7 @@ typedef p4est_quadrant_t t8_pquad_t;
   do { T8_ASSERT ((dim) == 2 || (dim) == 3);                    \
        (quad)->pad8 = (int8_t) (dim); } while (0)
 
-/** Set the direction of the third demension. */
+/** Set the direction of the third dimension. */
 #define T8_QUAD_SET_TNORMAL(quad,normal)                        \
   do { T8_ASSERT ((normal) >= 0 && (normal) < 3);               \
        (quad)->pad16 = (int16_t) (normal); } while (0)

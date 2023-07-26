@@ -164,7 +164,7 @@ int                 t8_forest_is_committed (t8_forest_t forest);
  * \param [in] forest   The forest to consider.
  * \return              True if \a forest has no elements which are inside each other.
  * \note This function is collective, but only checks local overlapping on each process.
- * \see t8_forest_partition_test_boundery_element if you also want to test for 
+ * \see t8_forest_partition_test_boundary_element if you also want to test for 
  * global overlap across the process boundaries.
  */
 int                 t8_forest_no_overlap (t8_forest_t forest);
@@ -208,10 +208,10 @@ void                t8_forest_set_cmesh (t8_forest_t forest,
 void                t8_forest_set_scheme (t8_forest_t forest,
                                           t8_scheme_cxx_t *scheme);
 
-/** Set the initial refinement level to be used when \b forest is commited.
+/** Set the initial refinement level to be used when \b forest is committed.
  * \param [in,out] forest      The forest whose level will be set.
  * \param [in]     level       The initial refinement level of \b forest, when
- *                             it is commited.
+ *                             it is committed.
  * \note This setting cannot be combined with any of the derived forest methods
  * (\ref t8_forest_set_copy, \ref t8_forest_set_adapt, \ref t8_forest_set_partition,
  * and \ref t8_forest_set_balance) and overwrites any of these settings.
@@ -220,7 +220,7 @@ void                t8_forest_set_scheme (t8_forest_t forest,
  */
 void                t8_forest_set_level (t8_forest_t forest, int level);
 
-/** Set a forest as source for copying on commiting.
+/** Set a forest as source for copying on committing.
  * By default, the forest takes ownership of the source \b from such that it will
  * be destroyed on calling \ref t8_forest_commit.  To keep ownership of \b
  * from, call \ref t8_forest_ref before passing it into this function.
@@ -236,7 +236,7 @@ void                t8_forest_set_level (t8_forest_t forest, int level);
 void                t8_forest_set_copy (t8_forest_t forest,
                                         const t8_forest_t from);
 
-/** Set a source forest with an adapt function to be adapted on commiting.
+/** Set a source forest with an adapt function to be adapted on committing.
  * By default, the forest takes ownership of the source \b set_from such that it
  * will be destroyed on calling \ref t8_forest_commit. To keep ownership of \b
  * set_from, call \ref t8_forest_ref before passing it into this function.
@@ -248,7 +248,7 @@ void                t8_forest_set_copy (t8_forest_t forest,
  *                          referencing \b set_from.
  *                          If NULL, a previously (or later) set forest will
  *                          be taken (\ref t8_forest_set_partition, \ref t8_forest_set_balance).
- * \param [in] adapt_fn     The adapt function used on commiting.
+ * \param [in] adapt_fn     The adapt function used on committing.
  * \param [in] recursive    A flag specifying whether adaptation is to be done recursively
  *                          or not. If the value is zero, adaptation is not recursive
  *                          and it is recursive otherwise.
@@ -304,7 +304,7 @@ void                t8_forest_set_user_function (t8_forest_t forest,
 t8_generic_function_pointer t8_forest_get_user_function (t8_forest_t forest);
 
 /** Set a source forest to be partitioned during commit.
- * The partitioning is done according to the SFC and each rank is assinged
+ * The partitioning is done according to the SFC and each rank is assigned
  * the same (maybe +1) number of elements.
  * \param [in, out] forest  The forest.
  * \param [in]      set_from A second forest that should be partitioned.
@@ -319,7 +319,7 @@ t8_generic_function_pointer t8_forest_get_user_function (t8_forest_t forest);
  * t8_forest_set_balance. The order in which these operations are executed is always
  * 1) Adapt 2) Balance 3) Partition
  * If \ref t8_forest_set_balance is called with the \a no_repartition parameter set as
- * false, it is not neccessary to call \ref t8_forest_set_partition additionally.
+ * false, it is not necessary to call \ref t8_forest_set_partition additionally.
  * \note This setting may not be combined with \ref t8_forest_set_copy and overwrites
  * this setting.
  */
@@ -343,7 +343,7 @@ void                t8_forest_set_partition (t8_forest_t forest,
  *                          If this behaviour is not desired, \a no_repartition should be
  *                          set to true.
  *                          If \a no_repartition is false, an additional call of \ref t8_forest_set_partition is not
- *                          neccessary.
+ *                          necessary.
  * \note This setting can be combined with \ref t8_forest_set_adapt and \ref
  * t8_forest_set_balance. The order in which these operations are executed is always
  * 1) Adapt 2) Balance 3) Partition.
@@ -398,7 +398,7 @@ void                t8_forest_commit (t8_forest_t forest);
 /** Return the maximum allowed refinement level for any element in a forest.
  * \param [in]  forest    A forest.
  * \return                The maximum level of refinement that is allowed for
- *                        an element in this forest. It is guarenteed that any tree
+ *                        an element in this forest. It is guaranteed that any tree
  *                        in \a forest can be refined this many times and it is not
  *                        allowed to refine further.
  * \a forest must be committed before calling this function.

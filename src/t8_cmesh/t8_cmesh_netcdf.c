@@ -112,7 +112,7 @@ t8_cmesh_init_ugrid_namespace_context (t8_cmesh_netcdf_ugrid_namespace_t
     namespace_conv->var_Mesh_elem_tree_id = "Mesh2_face_tree_id";
     namespace_conv->var_Mesh_elem_node = "Mesh2_face_nodes";
     namespace_conv->att_elem_shape_type = "face_shape_type";
-    namespace_conv->att_elem_node_connectivity = "face_node_conectivity";
+    namespace_conv->att_elem_node_connectivity = "face_node_connectivity";
     namespace_conv->att_elem_tree_id = "face_tree_id";
     namespace_conv->att_elem_node = "Mesh2_node_x Mesh2_node_y Mesh2_node_z";
 
@@ -307,7 +307,7 @@ t8_cmesh_write_netcdf_coordinate_variables (t8_cmesh_netcdf_context_t
 #endif
 }
 
-/* Define NetCDF-dimesnions */
+/* Define NetCDF-dimensions */
 static void
 t8_cmesh_write_netcdf_dimensions (t8_cmesh_netcdf_context_t * context,
                                   t8_cmesh_netcdf_ugrid_namespace_t
@@ -869,7 +869,7 @@ t8_cmesh_write_netcdf_data (t8_cmesh_t cmesh,
 #endif
 }
 
-/* Funcation that writes user-defined data to user-defined variables, if some were passed */
+/* Function that writes user-defined data to user-defined variables, if some were passed */
 /* It is only possible to write exactly one value per element per variable */
 static void
 t8_cmesh_write_user_netcdf_data (t8_cmesh_t cmesh,
@@ -1058,7 +1058,7 @@ t8_cmesh_write_netcdf_file (t8_cmesh_t cmesh,
 #endif
 }
 
-/* Function that gets called if a cmesh schould be written in NetCDF-Format */
+/* Function that gets called if a cmesh should be written in NetCDF-Format */
 void
 t8_cmesh_write_netcdf (t8_cmesh_t cmesh, const char *file_prefix,
                        const char *file_title, int dim,
@@ -1081,13 +1081,13 @@ t8_cmesh_write_netcdf (t8_cmesh_t cmesh, const char *file_prefix,
   retval = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (retval);
 
-  /* Prevent the single file to be overwritten if more proceses are involved */
+  /* Prevent the single file to be overwritten if more processes are involved */
   if (mpisize > 1) {
-    /* Create the NetCDF-Filname for each process */
+    /* Create the NetCDF-Filename for each process */
     snprintf (file_name, BUFSIZ, "%s_rank_%d.nc", file_prefix, mpirank);
   }
   else {
-    /* Create the NetCDF-Filname */
+    /* Create the NetCDF-Filename */
     snprintf (file_name, BUFSIZ, "%s.nc", file_prefix);
   }
 

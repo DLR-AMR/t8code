@@ -110,8 +110,8 @@ T8_EXTERN_C_BEGIN ();
  *             // Vertices of the last tree
  *             t8_cmesh_set_tree_vertices (cmesh, x, [pointerToVerticesOfTree(x+1)] , [numberOfVerticesTree(x+1)]);
  *
- * 6. Definition of the face neighboors between the different trees
- *             // List of all face neighboor connections
+ * 6. Definition of the face neighbors between the different trees
+ *             // List of all face neighbor connections
  *             t8_cmesh_set_join (cmesh, [treeId1], [treeId2], [faceIdInTree1], [faceIdInTree2], [orientation]);
  *             t8_cmesh_set_join (cmesh, [treeId1], [treeId2], [faceIdInTree1], [faceIdInTree2], [orientation]);
  *                   .

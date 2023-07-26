@@ -26,27 +26,33 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #define T8_VTK_TEST_NUM_PROCS 2
 
 /**
- * This is currently a place-holder for a propper cmesh_vtk_reader-test.
+ * This is currently a place-holder for a proper cmesh_vtk_reader-test.
  * The function is not implemented yet and therefore we do not provide a proper
  * test yet. A proper test would compare the read files with a reference-cmesh. 
  * 
  */
+const vtk_file_type_t gtest_vtk_filetypes[VTK_NUM_TYPES] = {
+  VTK_FILE_ERROR,
+  VTK_UNSTRUCTURED_FILE,
+  VTK_POLYDATA_FILE,
+  VTK_PARALLEL_UNSTRUCTURED_FILE,
+  VTK_PARALLEL_POLYDATA_FILE
+};
 
 /* *INDENT-OFF* */
-class vtk_reader : public testing::TestWithParam<std::tuple<vtk_file_type_t, int, int>>{
+class vtk_reader : public testing::TestWithParam<std::tuple<int, int, int>>{
   protected:
     void SetUp() override{
-      int mpisize;
       int mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
       SC_CHECK_MPI (mpiret);
       if (mpisize > T8_VTK_TEST_NUM_PROCS) {
         GTEST_SKIP ();
       } 
-      file_type = std::get<0>(GetParam());
-      file = (int)file_type + 1;
+      file = std::get<0>(GetParam());
+      file_type = gtest_vtk_filetypes[file];
       partition = std::get<1>(GetParam());
       main_proc = std::get<2>(GetParam());
-      if(file_type == VTK_PARALLEL_UNSTRUCTURED_FILE && partition){
+      if((file_type & VTK_PARALLEL_POLYDATA_FILE )&& partition){
         GTEST_SKIP();
       }
     }
@@ -54,6 +60,7 @@ class vtk_reader : public testing::TestWithParam<std::tuple<vtk_file_type_t, int
     vtk_file_type_t file_type;
     int partition;
     int main_proc;
+    int mpisize;
     const char* failing_files[5] = {
       "no_file",
       "non-existing-file.vtu",
@@ -100,9 +107,16 @@ TEST_P (vtk_reader, vtk_to_cmesh_success)
                          sc_MPI_COMM_WORLD,
                          file_type);
   if (file_type != VTK_FILE_ERROR) {
-    EXPECT_FALSE (cmesh == NULL);
     if (!partition || main_proc == mpirank) {
-      EXPECT_EQ (num_trees[file], t8_cmesh_get_num_local_trees (cmesh));
+      EXPECT_FALSE (cmesh == NULL);
+      if (file_type == VTK_PARALLEL_UNSTRUCTURED_FILE && partition) {
+        t8_gloidx_t         local_num_trees =
+          t8_cmesh_get_num_local_trees (cmesh);
+        EXPECT_EQ (num_trees[file] / mpisize, local_num_trees);
+      }
+      else {
+        EXPECT_EQ (num_trees[file], t8_cmesh_get_num_local_trees (cmesh));
+      }
     }
     t8_cmesh_destroy (&cmesh);
   }
@@ -136,8 +150,8 @@ TEST_P (vtk_reader, vtk_to_pointSet)
 /* Currently does not work for parallel files. Replace with VTK_NUM_TYPES as soon
  * as reading and constructing cmeshes from parallel files is enabled. */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_vtk_reader, vtk_reader,testing::Combine (
-                          testing::Range (VTK_FILE_ERROR, VTK_NUM_TYPES),
+                          testing::Range (VTK_FILE_ERROR + 1, (int)VTK_NUM_TYPES),
                           testing::Values (0, 1),
-                          testing::Range (0,T8_VTK_TEST_NUM_PROCS)
+                          testing::Range (0, T8_VTK_TEST_NUM_PROCS)
                           ));
 /* *INDENT-ON* */

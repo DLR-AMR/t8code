@@ -72,13 +72,13 @@ T8_EXTERN_C_BEGIN ();
  *      iterate over the elements of that tree
  *          execute an element dependent part to write in the file.
  * In order to simplify writing this code, we put all the parts that are
- * repetetive in the function
+ * repetitive in the function
  *  t8_forest_vtk_write_cell_data.
  * This function accepts a callback function, which is then executed for
  * each element. The callback function is defined below.
  */
 /* TODO: As soon as we have element iterators we should restructure this concept
- * appropiately. */
+ * appropriately. */
 typedef enum
 {
   T8_VTK_KERNEL_INIT,
@@ -500,7 +500,7 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
                                   const int curved_flag, const int num_data,
                                   t8_vtk_data_field_t *data)
 {
-  /*Check assertions: forest and fileprefix are not NULL and forest is commited */
+  /*Check assertions: forest and fileprefix are not NULL and forest is committed */
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (forest->committed);
@@ -773,7 +773,7 @@ t8_forest_vtk_cells_vertices_kernel (t8_forest_t forest,
     if (freturn <= 0) {
       return 0;
     }
-    /* We switch of the colum control of the surrounding function
+    /* We switch of the column control of the surrounding function
      * by keeping the columns value constant. */
     *columns = 1;
   }
@@ -1142,7 +1142,7 @@ t8_forest_vtk_write_cell_data (t8_forest_t forest, FILE *vtufile,
     data = udata;
   }
 
-  /* Call the kernel in initilization modus to possibly initialize the
+  /* Call the kernel in initialization modus to possibly initialize the
    * data pointer */
   kernel (NULL, 0, NULL, 0, NULL, NULL, 0, NULL, NULL, &data,
           T8_VTK_KERNEL_INIT);
@@ -1605,7 +1605,7 @@ t8_forest_vtk_write_file (t8_forest_t forest, const char *fileprefix,
   /* write the point data */
   if (!t8_forest_vtk_write_points
       (forest, vtufile, write_ghosts, num_data, data)) {
-    /* writings points was not succesful */
+    /* writings points was not successful */
     goto t8_forest_vtk_failure;
   }
   /* write the cell data */

@@ -33,8 +33,8 @@ These functions write a file in the NetCDF-format which represents the given 2D-
 #define ERR(e) {t8_global_productionf("Error: %s\n", nc_strerror(e)); exit(ERRCODE);}
 #else
 /* Macros usually defined in 'netcdf.h' */
-#ifndef NC_CHUNCKED
-#define NC_CHUNCKED 0
+#ifndef NC_CHUNKED
+#define NC_CHUNKED 0
 #endif
 #endif
 #ifndef NC_CONTIGUOUS
@@ -132,7 +132,7 @@ t8_forest_init_ugrid_namespace_context (t8_forest_netcdf_ugrid_namespace_t
     namespace_conv->var_Mesh_elem_tree_id = "Mesh2_face_tree_id";
     namespace_conv->var_Mesh_elem_node = "Mesh2_face_nodes";
     namespace_conv->att_elem_shape_type = "face_shape_type";
-    namespace_conv->att_elem_node_connectivity = "face_node_conectivity";
+    namespace_conv->att_elem_node_connectivity = "face_node_connectivity";
     namespace_conv->att_elem_tree_id = "face_tree_id";
     namespace_conv->att_elem_node = "Mesh2_node_x Mesh2_node_y Mesh2_node_z";
 
@@ -157,7 +157,7 @@ t8_forest_init_ugrid_namespace_context (t8_forest_netcdf_ugrid_namespace_t
   }
 }
 
-/* Define NetCDF-dimesnions */
+/* Define NetCDF-dimensions */
 static void
 t8_forest_write_netcdf_dimensions (t8_forest_netcdf_context_t * context,
                                    t8_forest_netcdf_ugrid_namespace_t
@@ -468,7 +468,7 @@ t8_forest_write_netcdf_data (t8_forest_t forest,
   for (ltree_id = 0; ltree_id < num_local_trees; ltree_id++) {
     num_local_tree_elem = t8_forest_get_tree_num_elements (forest, ltree_id);
     tree_class = t8_forest_get_tree_class (forest, ltree_id);
-    /* Computing the local tree offest */
+    /* Computing the local tree offset */
     local_tree_offset = t8_forest_get_tree_element_offset (forest, ltree_id);
     /* Iterate over all local elements in the local tree */
     for (local_elem_id = 0; local_elem_id < num_local_tree_elem;
@@ -699,7 +699,7 @@ t8_forest_write_user_netcdf_vars (t8_forest_netcdf_context_t * context,
                                   sc_MPI_Comm comm)
 {
 #if T8_WITH_NETCDF
-/* Check wheter user-defined variables should be written */
+/* Check whether user-defined variables should be written */
   if (num_extern_netcdf_vars > 0 && ext_variables != NULL) {
     int                 retval, i;
     int                 mpirank, mpisize;
@@ -862,7 +862,7 @@ t8_forest_write_netcdf_coordinate_data (t8_forest_t forest,
   for (ltree_id = 0; ltree_id < num_local_trees; ltree_id++) {
     num_local_tree_elem = t8_forest_get_tree_num_elements (forest, ltree_id);
     tree_class = t8_forest_get_tree_class (forest, ltree_id);
-    /* Computing the local tree offest */
+    /* Computing the local tree offset */
     local_tree_offset = t8_forest_get_tree_element_offset (forest, ltree_id);
 
     for (local_elem_id = 0; local_elem_id < num_local_tree_elem;
@@ -947,7 +947,7 @@ t8_forest_write_netcdf_coordinate_data (t8_forest_t forest,
 #endif
 }
 
-/* Funcation that writes user-defined data to user-defined variables, if some were passed */
+/* Function that writes user-defined data to user-defined variables, if some were passed */
 /* It is only possible to write exactly one value per element per variable */
 static void
 t8_forest_write_user_netcdf_data (t8_forest_t forest,
@@ -1142,7 +1142,7 @@ t8_forest_write_netcdf_file (t8_forest_t forest,
 #endif
 }
 
-/* Function that gets called if a forest schould be written in NetCDF-Format. This function is somehow an extended version which allows the user to decide if contiguous or chunked storage should used and whether the MPI ranks write independetly or collectively. */
+/* Function that gets called if a forest should be written in NetCDF-Format. This function is somehow an extended version which allows the user to decide if contiguous or chunked storage should used and whether the MPI ranks write independently or collectively. */
 void
 t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix,
                             const char *file_title, int dim,
@@ -1157,7 +1157,7 @@ t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix,
   T8_ASSERT (file_prefix != NULL);
   char                file_name[BUFSIZ];
 
-  /* Create the NetCDF-Filname */
+  /* Create the NetCDF-Filename */
   snprintf (file_name, BUFSIZ, "%s.nc", file_prefix);
 
 #if !T8_WITH_NETCDF_PAR
@@ -1171,7 +1171,7 @@ t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix,
   retval = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (retval);
 
-  /** \note This prevents the single file to be overwritten if more proceses are involved,
+  /** \note This prevents the single file to be overwritten if more processes are involved,
    * in a configuration which does not feature parallel netCDF routines!
    * Otherwise, if several processes try to write in the same file,
    * the result will be an HDF-5 error. Now, each process will create its own
@@ -1183,7 +1183,7 @@ t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix,
    * make use of a parallel netCDF/HDF-5 configuration
    */
   if (mpisize > 1) {
-    /* Create the NetCDF-Filname for each process */
+    /* Create the NetCDF-Filename for each process */
     snprintf (file_name, BUFSIZ, "%s_rank_%d.nc", file_prefix, mpirank);
     t8_global_productionf
       ("Note: The program is executed in parallel, but the netCDF Usage is serial.\nThis is not advisable, you may want to either execute the program with only one MPI rank or use a parallel netCDF/HDF-5 configuration\n");
