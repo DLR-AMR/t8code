@@ -745,11 +745,11 @@ die_ele:
  * \param [in,out]  parameters      The parameters to be corrected.
  */
 static void
-t8_correct_closed_geometry_parametric (const int geometry_dim,
-                                       const int geometry_index,
-                                       const int num_face_nodes,
-                                       const t8_geometry_occ_c * geometry_occ,
-                                       double *parameters)
+t8_cmesh_correct_closed_geometry_parametric (const int geometry_dim,
+                                             const int geometry_index,
+                                             const int num_face_nodes,
+                                             const t8_geometry_occ_c *
+                                             geometry_occ, double *parameters)
 {
   switch (geometry_dim) {
     /* Check for closed U parameter in case of an edge. */
@@ -1356,10 +1356,10 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
               /* Corrects the parameters on the surface if it is closed to prevent disorted elements. */
               if (occ_geometry->t8_geom_check_if_surface_is_U_closed(surface_index)
                   || occ_geometry->t8_geom_check_if_surface_is_V_closed(surface_index)) {
-                t8_correct_closed_geometry_parametric(2, surface_index,
-                                                      num_face_nodes,
-                                                      occ_geometry,
-                                                      parameters);
+                t8_cmesh_correct_closed_geometry_parametric(2, surface_index,
+                                                            num_face_nodes,
+                                                            occ_geometry,
+                                                            parameters);
               }
               t8_cmesh_set_attribute (cmesh, 
                                       tree_count, 
@@ -1512,8 +1512,8 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
 
               /* Corrects the parameters on the edge if it is closed to prevent disorted elements. */
               if (occ_geometry->t8_geom_is_edge_closed(edge_geometry_tag)) {
-                t8_correct_closed_geometry_parametric(1, edge_geometry_tag,
-                                                      2, occ_geometry, parameters);
+                t8_cmesh_correct_closed_geometry_parametric(1, edge_geometry_tag,
+                                                            2, occ_geometry, parameters);
               }
 
               t8_cmesh_set_attribute (cmesh, 
@@ -1587,8 +1587,8 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
               /* Corrects the parameters on the surface if it is closed to prevent disorted elements. */
               if (occ_geometry->t8_geom_check_if_surface_is_U_closed(edge_geometry_tag)
                   || occ_geometry->t8_geom_check_if_surface_is_V_closed(edge_geometry_tag)) {
-                t8_correct_closed_geometry_parametric(2, edge_geometry_tag,
-                                                      2, occ_geometry, parameters);
+                t8_cmesh_correct_closed_geometry_parametric(2, edge_geometry_tag,
+                                                            2, occ_geometry, parameters);
               }
 
               t8_cmesh_set_attribute (cmesh, 
