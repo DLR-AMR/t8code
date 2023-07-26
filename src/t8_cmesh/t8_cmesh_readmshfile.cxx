@@ -794,56 +794,52 @@ t8_cmesh_correct_closed_geometry_parametric (const int geometry_dim,
 
     /* Check for closed U parameter and closed V parameter in case of a surface. */
   case 2:
-    /* Only correct the U parameter if the surface is closed in U. */
+    /* Only correct the surface parameters if they are closed */
     if (geometry_occ->t8_geom_check_if_surface_is_U_closed (geometry_index) ||
         geometry_occ->t8_geom_check_if_surface_is_V_closed (geometry_index)) {
-      /* Initialy set is_V_closed flag to true. */
-      bool                is_V_closed = true;
       /* Get the parametric bounds of the closed geometry
        * surface -> [Umin, Umax, Vmin, Vmax]
        */
       double              parametric_bounds[4];
-      /* Get the parametric surface bounds. */
       geometry_occ->t8_geom_get_face_parametric_bounds (geometry_index,
                                                         parametric_bounds);
-      /* Switch is_V_closed flag to false, if surface is closed in the U parameter. */
-      if (geometry_occ->t8_geom_check_if_surface_is_U_closed (geometry_index)) {
-        is_V_closed = false;
-      }
       /* Check the upper an the lower parametric bound. */
       for (int bound = 0; bound < 2; ++bound) {
         /* Iterate over every corner node of the tree. */
         for (int i_nodes = 0; i_nodes < num_face_nodes; ++i_nodes) {
-          /* Check if one of the U parameters lies on one of the parametric bounds. */
-          if (std::abs (parameters[i_nodes * 2 + (is_V_closed ? 1 : 0)] -
-                        parametric_bounds[bound + (is_V_closed ? 2 : 0)]) <=
-              T8_PRECISION_EPS) {
-            /* Iterate over every corner node of the tree again. */
-            for (int j_nodes = 0; j_nodes < num_face_nodes; ++j_nodes) {
-              /* Search for a U parameter that is non of the parametric bounds. To check
-               * whether the tree is closer to the lower or the upper parametric bound.
-               */
-              if (std::abs (parameters[j_nodes * 2 + (is_V_closed ? 1 : 0)] -
-                            parametric_bounds[bound +
-                                              (is_V_closed ? 2 : 0)]) >
-                  T8_PRECISION_EPS
-                  && std::abs (parameters[j_nodes * 2 + (is_V_closed ? 1 : 0)]
-                               - parametric_bounds[((bound + 1) % 2) +
-                                                   (is_V_closed ? 2 : 0)]) >
-                  T8_PRECISION_EPS) {
-                /* Now check if the difference of the parameters of both nodes are bigger than the half parametric range.
-                 * In this case, the parameter at i_nodes has to be changed to the other parametric bound ((bound + 1) % 2).
+          /* Iterate over both parameters. 0 stands for the U parameter an 1 for the V parameter. */
+          for (int param_dim = 0; param_dim < 2; ++param_dim) {
+            /* Check if one of the U parameters lies on one of the parametric bounds. */
+            if (std::abs (parameters[i_nodes * 2 + (param_dim ? 1 : 0)] -
+                          parametric_bounds[bound + (param_dim ? 2 : 0)]) <=
+                T8_PRECISION_EPS) {
+              /* Iterate over every corner node of the tree again. */
+              for (int j_nodes = 0; j_nodes < num_face_nodes; ++j_nodes) {
+                /* Search for a U parameter that is non of the parametric bounds. To check
+                 * whether the tree is closer to the lower or the upper parametric bound.
                  */
-                if (std::abs
-                    (parameters[j_nodes * 2 + (is_V_closed ? 1 : 0)] -
-                     parameters[i_nodes * 2 + (is_V_closed ? 1 : 0)]) >
-                    ((parametric_bounds[1 + (is_V_closed ? 2 : 0)] -
-                      parametric_bounds[0 + (is_V_closed ? 2 : 0)]) / 2)) {
-                  /* Switch to the other parametric bound. */
-                  parameters[i_nodes * 2 + (is_V_closed ? 1 : 0)] =
-                    parametric_bounds[((bound + 1) % 2) +
-                                      (is_V_closed ? 2 : 0)];
-                  break;
+                if (std::abs (parameters[j_nodes * 2 + (param_dim ? 1 : 0)] -
+                              parametric_bounds[bound +
+                                                (param_dim ? 2 : 0)]) >
+                    T8_PRECISION_EPS
+                    && std::abs (parameters[j_nodes * 2 + (param_dim ? 1 : 0)]
+                                 - parametric_bounds[((bound + 1) % 2) +
+                                                     (param_dim ? 2 : 0)]) >
+                    T8_PRECISION_EPS) {
+                  /* Now check if the difference of the parameters of both nodes are bigger than the half parametric range.
+                   * In this case, the parameter at i_nodes has to be changed to the other parametric bound ((bound + 1) % 2).
+                   */
+                  if (std::abs
+                      (parameters[j_nodes * 2 + (param_dim ? 1 : 0)] -
+                       parameters[i_nodes * 2 + (param_dim ? 1 : 0)]) >
+                      ((parametric_bounds[1 + (param_dim ? 2 : 0)] -
+                        parametric_bounds[0 + (param_dim ? 2 : 0)]) / 2)) {
+                    /* Switch to the other parametric bound. */
+                    parameters[i_nodes * 2 + (param_dim ? 1 : 0)] =
+                      parametric_bounds[((bound + 1) % 2) +
+                                        (param_dim ? 2 : 0)];
+                    break;
+                  }
                 }
               }
             }
