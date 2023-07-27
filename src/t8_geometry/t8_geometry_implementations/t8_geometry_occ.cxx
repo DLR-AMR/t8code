@@ -139,11 +139,11 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
 }
 
 void
-t8_geometry_occ::t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
-                                           t8_gloidx_t gtreeid,
-                                           const double
-                                           *ref_coords,
-                                           double *jacobian_out) const
+t8_geometry_occ::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
+                                            t8_gloidx_t gtreeid,
+                                            const double
+                                            *ref_coords,
+                                            double *jacobian_out) const
 {
   double              h = 1e-9;
   double              in1[3], in2[3];
@@ -174,7 +174,7 @@ inline void
 t8_geometry_occ::t8_geom_load_tree_data (t8_cmesh_t cmesh,
                                          t8_gloidx_t gtreeid)
 {
-  t8_geometry_w_vertices::t8_geom_load_tree_data (cmesh, gtreeid);
+  t8_geometry_with_vertices::t8_geom_load_tree_data (cmesh, gtreeid);
   edges = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
                                                 T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY,
                                                 gtreeid);
@@ -1063,6 +1063,22 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh,
 
 /* Our indent skript has huge problems with c++ */
 /* *INDENT-OFF* */
+int
+t8_geometry_occ::t8_geom_is_line(const int curve_index) const
+{
+  const Handle_Geom_Curve curve  = t8_geom_get_occ_curve(curve_index);
+  const GeomAdaptor_Curve curve_adaptor (curve);
+  return curve_adaptor.GetType() == GeomAbs_Line;
+}
+
+int
+t8_geometry_occ::t8_geom_is_plane(const int surface_index) const
+{
+  const Handle_Geom_Surface surface = t8_geom_get_occ_surface (surface_index);
+  const GeomAdaptor_Surface surface_adaptor (surface);
+  return surface_adaptor.GetType() == GeomAbs_Plane;
+}
+
 const gp_Pnt
 t8_geometry_occ::t8_geom_get_occ_point (const int index) const
 {

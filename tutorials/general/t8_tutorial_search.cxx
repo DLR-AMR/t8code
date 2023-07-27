@@ -30,7 +30,7 @@
  * count the number of particles it contains.
  * 
  * How you can experiment here:
- *    - Load the generated vtu files with paraview and add a threshhold to the 
+ *    - Load the generated vtu files with paraview and add a threshold to the
  *      "Number of particles" field to display the elements with 1 or more particles.
  *      This shows you the distribution of the particles in the domain and which elements
  *      contain particles.
@@ -170,7 +170,7 @@ t8_tutorial_search_callback (t8_forest_t forest,
  * of this element.
  * In our example this is the case if the particle is inside the element.
  * The additional input parameter 'is_leaf' will be true if the given element is a leaf
- * element (= an actual element in our forst, not a 'virtual' element in the hierarchy).
+ * element (= an actual element in our forest, not a 'virtual' element in the hierarchy).
  * If the element is a leaf and the particle is contained in it, then we will increase
  * a counter for this element by one.
  * These counters are provided in an sc_array as user data of the input forest.

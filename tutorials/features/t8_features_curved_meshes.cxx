@@ -377,8 +377,8 @@ main (int argc, char **argv)
   const char         *fileprefix = NULL;        /* The prefix of the msh and brep file */
   int                 level;           /** Uniform refinement level of the forest */
   int                 rlevel_plane;    /** Refinement level of the plane moving through the mesh */
-  int                 rlevel_dorsal;   /** Refinement level of the dorsal side fo the naca profile */
-  int                 rlevel_ventral;  /** Refinement level of the ventral side fo the naca profile */
+  int                 rlevel_dorsal;   /** Refinement level of the dorsal side for the naca profile */
+  int                 rlevel_ventral;  /** Refinement level of the ventral side for the naca profile */
   int                 geometry;         /** Activates the geometry refinement mode */
   int                 plane;           /** Activates the plane refinement mode */
   int                 steps;           /** The amount of time steps the plane makes */

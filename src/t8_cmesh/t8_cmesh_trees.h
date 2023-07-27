@@ -38,9 +38,9 @@ T8_EXTERN_C_BEGIN ();
  *
  * The layout is the same for replicated and partitioned meshes.
  * Each process stores a meta array of data arrays. In the replicated case this meta
- * array has only one entry wheras in the partitioned case there is one data array for
+ * array has only one entry whereas in the partitioned case there is one data array for
  * each processor from which local trees were received in the last partition step
- * (and only one meta array if the cmesh arised from a partitioned commit).
+ * (and only one meta array if the cmesh arose from a partitioned commit).
  *
  * Each dara arrays stores the local trees, the ghosts, face neighbor information
  * of the ghosts, face neihbor information of the trees and the attributes of the trees.
@@ -216,7 +216,7 @@ void                t8_cmesh_trees_start_part (t8_cmesh_trees_t trees,
  * number of tree attributes  was set and their total size (per tree)
  * stored temporarily in the att_offset variable
  * we grow the part array by the needed amount of memory and set the
- * offsets appropiately.
+ * offsets appropriately.
  * The workflow should be: call \ref t8_cmesh_trees_start_part,
  * set tree and ghost classes maually via \ref t8_cmesh_trees_add_tree
  * and \ref t8_cmesh_trees_add_ghost, call
@@ -323,7 +323,7 @@ t8_ctree_t          t8_cmesh_trees_get_tree_ext (t8_cmesh_trees_t trees,
                                                  t8_locidx_t **face_neigh,
                                                  int8_t **ttf);
 
-/** Return the face neigbor of a tree at a given face and return the tree_to_face info
+/** Return the face neighbor of a tree at a given face and return the tree_to_face info
  * \param [in]      trees The trees structure where the tree is to be looked up.
  * \param [in]      ltreeid  The local id of the tree.
  * \param [in]      face  A face of the tree.
@@ -495,7 +495,7 @@ int8_t              t8_cmesh_tree_to_face_encode (const int dimension,
  * \param [in]        tree_to_face A tree-to-face value
  * \param [out]       face      On output filled with the stored face value.
  * \param [out]       orientation On output filled with the stored orientation value.
- * \note This function is the invers operation of \ref t8_cmesh_tree_to_face_encode
+ * \note This function is the inverse operation of \ref t8_cmesh_tree_to_face_encode
  * If F = t8_eclass_max_num_faces[dimension], we get
  *  orientation = tree_to_face / F
  *  face = tree_to_face % F
@@ -515,7 +515,7 @@ void                t8_cmesh_tree_to_face_decode (const int dimension,
 void                t8_cmesh_trees_print (t8_cmesh_t cmesh,
                                           t8_cmesh_trees_t trees);
 
-/** Brodcast an existing valid trees structure from a root rank to
+/** Broadcast an existing valid trees structure from a root rank to
  * all other ranks.
  * The trees structure must belong to cmeshes whose meta_information is
  * already set. \ref t8_cmesh_bcast.
@@ -537,7 +537,7 @@ void                t8_cmesh_trees_bcast (t8_cmesh_t cmesh_in, int root,
  * \return          True if the face connections are consistent,
  *                  False if not.
  */
-int                 t8_cmesh_trees_is_face_consistend (t8_cmesh_t cmesh,
+int                 t8_cmesh_trees_is_face_consistent (t8_cmesh_t cmesh,
                                                        t8_cmesh_trees_t
                                                        trees);
 

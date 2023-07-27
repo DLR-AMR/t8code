@@ -54,7 +54,7 @@ typedef struct t8_cprofile t8_cprofile_t;       /* Defined below */
 #define T8_CMESH_GEOMETRY_ATTRIBUTE_KEY   1     /* Used to store the name of a tree's geometry. */
 #define T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY    2    /* Used to store which edge is linked to which geometry */
 #define T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY    3 /* Used to store edge parameters */
-#define T8_CMESH_OCC_FACE_ATTRIBUTE_KEY T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + T8_ECLASS_MAX_EDGES        /* Used to store wich face is linked to which surface */
+#define T8_CMESH_OCC_FACE_ATTRIBUTE_KEY T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + T8_ECLASS_MAX_EDGES        /* Used to store which face is linked to which surface */
 #define T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY T8_CMESH_OCC_FACE_ATTRIBUTE_KEY + 1  /* Used to store face parameters */
 #define T8_CMESH_NEXT_POSSIBLE_KEY T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY + T8_ECLASS_MAX_FACES     /* The next free value for a t8code attribute key */
 
@@ -87,7 +87,7 @@ typedef struct t8_cmesh
 
   int                 set_partition; /**< If nonzero the cmesh is partitioned.
                                             If zero each process has the whole cmesh. */
-  int                 face_knowledge;  /**< If partitioned the level of face knowledge that is expected. \ref t8_mesh_set_partioned;
+  int                 face_knowledge;  /**< If partitioned the level of face knowledge that is expected. \ref t8_mesh_set_partitioned;
                             see \ref t8_cmesh_set_partition.
 */
   /* TODO: Define a maximum allowed refinemet level */
@@ -158,7 +158,7 @@ typedef struct t8_cghost
   t8_eclass_t         eclass; /**< The eclass of this ghost. */
   size_t              neigh_offset; /** Offset to the array of face neighbors of this ghost.
                                         This count has to be added to the address of the ghost to get its face neighbors. */
-  size_t              att_offset;    /**< Adding this offset to the adress of the ghost
+  size_t              att_offset;    /**< Adding this offset to the address of the ghost
                                        yields the array of attribute_info entries */
   /* TODO: Could be a size_t */
   int                 num_attributes; /**< The number of attributes at this ghost */
@@ -191,9 +191,9 @@ typedef struct t8_ctree
   /* TODO: The local id of a tree should be clear from context, the entry can
    *       be optimized out. */
   t8_eclass_t         eclass; /**< The eclass of this tree. */
-  size_t              neigh_offset;  /**< Adding this offset to the adress of the tree
+  size_t              neigh_offset;  /**< Adding this offset to the address of the tree
                                        yields the array of face_neighbor entries */
-  size_t              att_offset;    /**< Adding this offset to the adress of the tree
+  size_t              att_offset;    /**< Adding this offset to the address of the tree
                                        yields the array of attribute_info entries */
   /* TODO: Could be a size_t */
   int                 num_attributes; /**< The number of attributes at this tree */
@@ -204,11 +204,11 @@ t8_ctree_struct_t;
  *  The attributes of each are stored in a key-value storage, where the key consists
  *  of the two entries (package_id,key) both being integers.
  *  The package_id serves to identify the application layer that added the attribute
- *  and the key identifies the attribute whithin that application layer.
+ *  and the key identifies the attribute within that application layer.
  *
  *  All attribute info objects of one tree are stored in an array and adding
- *  a tree's att_offset entry to the tree's adress yields this array.
- *  The attributes themselfes are stored in an array directly behind the array of
+ *  a tree's att_offset entry to the tree's address yields this array.
+ *  The attributes themselves are stored in an array directly behind the array of
  *  the attribute infos.
  */
 typedef struct t8_attribute_info
@@ -216,11 +216,11 @@ typedef struct t8_attribute_info
   int                 package_id;
                         /**< The identifier of the application layer that added this attribute */
   int                 key;
-                 /**< The (tree unique) key of the attribute whithin this AL. */
+                 /**< The (tree unique) key of the attribute within this AL. */
   size_t              attribute_offset;
                               /**< The offset of the attribute data from the first
                     attribute info of the tree.
-                    (Thus, the attribute is stored at adress tree + tree->att_offset + attribute_offset) */
+                    (Thus, the attribute is stored at address tree + tree->att_offset + attribute_offset) */
   /* TODO: eventually remove the size */
   size_t              attribute_size;
                             /**< The size in bytes of the attribute */

@@ -27,7 +27,7 @@
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <bitset>
 
-#define MAX_NUM_ELEMETS 32      /* number of digits for binary representation */
+#define MAX_NUM_ELEMENTS 32     /* number of digits for binary representation */
 
 /* In this test, a uniform forest with x many elements is given. 
  * There are 2^x many ways to remove these x elements. After removing the elements,
@@ -95,7 +95,7 @@ protected:
  */
 struct t8_elements
 {
-  std::bitset < MAX_NUM_ELEMETS > remove;
+  std::bitset < MAX_NUM_ELEMENTS > remove;
 };
 
 /** Remove every element with local_id i if the i`th bit in 
@@ -152,13 +152,13 @@ t8_adapt_forest (t8_forest_t forest_from,
 TEST_P (forest_permute, test_permute_hole)
 {
   /* number of instances/permutations */
-  const t8_locidx_t   num_elments =
+  const t8_locidx_t   num_elements =
     t8_forest_get_tree_num_elements (forest, 0);
-  T8_ASSERT (num_elments < MAX_NUM_ELEMETS);
-  const uint32_t      num_permutation = 1 << num_elments;
+  T8_ASSERT (num_elements < MAX_NUM_ELEMENTS);
+  const uint32_t      num_permutation = 1 << num_elements;
 
   for (uint32_t permutation = 1; permutation < num_permutation; permutation++) {
-    std::bitset < MAX_NUM_ELEMETS > remove (permutation);
+    std::bitset < MAX_NUM_ELEMENTS > remove (permutation);
 
     /* *INDENT-OFF* */
     struct t8_elements  data { remove };
@@ -171,7 +171,7 @@ TEST_P (forest_permute, test_permute_hole)
 
     /* check if the correct number of elements got removed */
     t8_locidx_t         element_count = 0;
-    for (t8_locidx_t ridx = 0; ridx < MAX_NUM_ELEMETS; ridx++) {
+    for (t8_locidx_t ridx = 0; ridx < MAX_NUM_ELEMENTS; ridx++) {
       if (remove[ridx] == 1) {
         element_count++;
       }

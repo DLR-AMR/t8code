@@ -52,10 +52,10 @@ protected:
 /* *INDENT-ON* */
 
 static void
-test_cmesh_commited (t8_cmesh_t cmesh)
+test_cmesh_committed (t8_cmesh_t cmesh)
 {
   ASSERT_TRUE (t8_cmesh_is_committed (cmesh)) << "Cmesh commit failed.";
-  ASSERT_TRUE (t8_cmesh_trees_is_face_consistend (cmesh, cmesh->trees)) <<
+  ASSERT_TRUE (t8_cmesh_trees_is_face_consistent (cmesh, cmesh->trees)) <<
     "Cmesh face consistency failed.";
 }
 
@@ -71,7 +71,7 @@ TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate)
   t8_cmesh_t          cmesh_partition_new2;
   t8_shmem_array_t    offset_concentrate;
 
-  test_cmesh_commited (cmesh_original);
+  test_cmesh_committed (cmesh_original);
 
   mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
   SC_CHECK_MPI (mpiret);
@@ -84,7 +84,7 @@ TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate)
                                     t8_scheme_new_default_cxx ());
     t8_cmesh_commit (cmesh_partition, sc_MPI_COMM_WORLD);
 
-    test_cmesh_commited (cmesh_partition);
+    test_cmesh_committed (cmesh_partition);
     cmesh_original = cmesh_partition;
   }
 
@@ -110,7 +110,7 @@ TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate)
     t8_cmesh_set_partition_offsets (cmesh_partition_new2, offset_concentrate);
     /* Commit the cmesh and test if successful */
     t8_cmesh_commit (cmesh_partition_new2, sc_MPI_COMM_WORLD);
-    test_cmesh_commited (cmesh_partition_new2);
+    test_cmesh_committed (cmesh_partition_new2);
 
     /* Switch the rolls of the cmeshes */
     cmesh_partition_new1 = cmesh_partition_new2;

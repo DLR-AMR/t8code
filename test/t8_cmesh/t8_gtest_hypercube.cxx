@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* This gtest checks whether a cmesh of a hypercube is commited and wheter for each tree is face consistent in respect to 
+/* This gtest checks whether a cmesh of a hypercube is committed and whether for each tree is face consistent in respect to
  * the creation of the cmesh with or without broadcast/ partition. */
 
 #include <gtest/gtest.h>
@@ -50,14 +50,14 @@ protected:
   int               partition;
 };
 
-/* Test wheater the created cmesh of a hypercube is commited and its are face consistend. Test will fail, if one of these ist false. */
+/* Test wheater the created cmesh of a hypercube is committed and its are face consistent. Test will fail, if one of these is false. */
 TEST_P (cmesh_hypercube_trees, check_cmesh_and_its_trees) {
   
     EXPECT_TRUE(t8_cmesh_is_committed (cmesh));
-    EXPECT_TRUE(t8_cmesh_trees_is_face_consistend (cmesh, cmesh->trees));
+    EXPECT_TRUE(t8_cmesh_trees_is_face_consistent (cmesh, cmesh->trees));
 }
 
 /* Use the testing range for eclass with [T8_ECLASS_ZERO, T8_ECLASS_COUNT]. For the generation of the cmesh with or withaout broadcast
- * the booleans 0 and 1 are used. Analogue with patition. */
+ * the booleans 0 and 1 are used. Analogue with partition. */
 INSTANTIATE_TEST_SUITE_P(t8_gtest_hypercube, cmesh_hypercube_trees, testing::Combine(testing::Range(T8_ECLASS_ZERO, T8_ECLASS_COUNT),testing::Values(0,1),testing::Values(0,1)));
 /* *INDENT-ON* */

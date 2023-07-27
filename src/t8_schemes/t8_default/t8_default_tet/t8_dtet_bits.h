@@ -87,7 +87,7 @@ void                t8_dtet_copy (const t8_dtet_t *t, t8_dtet_t *dest);
 /** Compare two tets in their linear order.
  * \param [in] t1 Tetrahedron one.
  * \param [in] t2 Tetrahedron two.
- * \return        Returns negativ if t1 < t2, zero if t1 = t2, positive if t1 > t2
+ * \return        Returns negative if t1 < t2, zero if t1 = t2, positive if t1 > t2
  */
 int                 t8_dtet_compare (const t8_dtet_t *t1,
                                      const t8_dtet_t *t2);
@@ -184,7 +184,7 @@ void                t8_dtet_children_at_face (const t8_dtet_t *tet,
  * \param [in]  face    Then number of the face.
  * \param [in]  face_child  The child number of a child of the face tetrahedron.
  * \return              The face number of the face of a child of \a tetrahedron
- *                      that conincides with \a face_child.
+ *                      that coincides with \a face_child.
  */
 int                 t8_dtet_face_child_face (const t8_dtet_t *tet,
                                              int face, int face_child);
