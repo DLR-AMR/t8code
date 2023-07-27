@@ -100,7 +100,7 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree,
       printed = 0;
       for (idata = num_scalars; idata < num_data; idata++) {
         SC_CHECK_ABORT (data[idata].type == T8_VTK_VECTOR,
-                        "vtk data missmatch. After scalar fields only vector"
+                        "vtk data mismatch. After scalar fields only vector"
                         " fields are allowed.");
         sreturn =
           snprintf (description, BUFSIZ, "%s_%s", data[idata].description,
@@ -213,7 +213,7 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree,
       printed = 0;
       for (idata = num_scalars; idata < num_data; idata++) {
         SC_CHECK_ABORT (data[idata].type == T8_VTK_VECTOR,
-                        "vtk data missmatch. After scalar fields only vector"
+                        "vtk data mismatch. After scalar fields only vector"
                         " fields are allowed.");
         printed +=
           snprintf (vtkCellVectorString + printed, BUFSIZ - printed, "%s%s",
@@ -275,7 +275,7 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree,
 
   sreturn = snprintf (filename_cpy, BUFSIZ, "%s", filename);
   if (sreturn >= BUFSIZ) {
-    /* The filname was truncated */
+    /* The Filename was truncated */
     /* Note: gcc >= 7.1 prints a warning if we 
      * do not check the return value of snprintf. */
     t8_debugf ("Warning: Truncated vtk file name cpy to '%s'\n",

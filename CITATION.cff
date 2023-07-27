@@ -81,7 +81,7 @@ message: >-
   metadata from this file.
 keywords:
   - Adaptive-Mesh-Refinement
-  - High-Peformance-Computing
+  - High-Performance-Computing
   - Parallel-Computing
 abstract: >-
   t8code is a C/C++ library to

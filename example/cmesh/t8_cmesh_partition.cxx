@@ -53,7 +53,7 @@ t8_random_partition (int level)
 
   t8_cmesh_init (&cmesh_part);
 
-  /* We still need acces to cmesh later */
+  /* We still need access to cmesh later */
   t8_cmesh_ref (cmesh);
   t8_cmesh_set_derive (cmesh_part, cmesh);
   t8_cmesh_set_partition_offsets (cmesh_part,
@@ -113,7 +113,7 @@ t8_partition (int level, int partition_from)
   t8_cmesh_vtk_write_file (cmesh, file, 1.);
 
   t8_cmesh_init (&cmesh_part);
-  /* We still need acces to cmesh later */
+  /* We still need access to cmesh later */
   t8_cmesh_ref (cmesh);
   t8_cmesh_set_derive (cmesh_part, cmesh);
   t8_cmesh_set_partition_uniform (cmesh_part, level,

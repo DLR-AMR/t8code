@@ -619,7 +619,7 @@ t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp,
       line_modify = line;
       /* Since the tags are stored before the node indices, we need to
        * skip them first. But since the number of them is unknown and the
-       * lenght (in characters) of them, we have to skip one by one. */
+       * length (in characters) of them, we have to skip one by one. */
       for (i = 0; i < 3 + num_tags; i++) {
         T8_ASSERT (strcmp (line_modify, "\0"));
         /* move line_modify to the next word in the line */
@@ -1194,8 +1194,8 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                   }
                 }
               }
-              /* Abort if not all nodes are on the surface */
-              if (!all_nodes_on_surface)
+              /* Abort if not all nodes are on the surface or if the surface is a plane */
+              if (!all_nodes_on_surface || occ_geometry->t8_geom_is_plane(surface_index))
               {
                 continue;
               }
@@ -1369,6 +1369,13 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                   edge_nodes[i_edge_node].entity_dim = 1;
                 }
               }
+
+              /* Abort if the edge is a line */
+              if (occ_geometry->t8_geom_is_line(edge_geometry_tag))
+              {
+                continue;
+              }
+
               edge_geometries[i_tree_edges] = edge_geometry_tag;
               tree_is_linked = 1;
               parameters[0] = edge_nodes[0].parameters[0];
@@ -1432,6 +1439,13 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                   edge_nodes[i_edge_node].entity_dim = 2;
                 }
               }
+
+              /* Abort if the edge is a line */
+              if (occ_geometry->t8_geom_is_line(edge_geometry_tag))
+              {
+                continue;
+              }
+
               edge_geometries[i_tree_edges + t8_eclass_num_edges[eclass]] = edge_geometry_tag;
               tree_is_linked = 1;
               parameters[0] = edge_nodes[0].parameters[0];
@@ -1688,7 +1702,7 @@ t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh,
        gtree_it++) {
     /* We get the class of the current tree.
      * Since we know that the trees were put into the stash in order
-     * of their tree id's, we can just read the correspoding entry from
+     * of their tree id's, we can just read the corresponding entry from
      * the stash.
      * !WARNING: This does not work in general to find the class of a tree
      *    since the order in which the trees are added to the stash is arbitrary.
@@ -1831,7 +1845,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
 
   /* initialize cmesh structure */
   t8_cmesh_init (&cmesh);
-  /* Setting the dimension by hand is neccessary for partitioned
+  /* Setting the dimension by hand is necessary for partitioned
    * commit, since there are process without any trees. So the cmesh would
    * not know its dimension on these processes. */
   t8_cmesh_set_dimension (cmesh, dim);
@@ -1933,7 +1947,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
   }
 
   if (partition) {
-    /* Communicate whether main proc read the cmesh succesful.
+    /* Communicate whether main proc read the cmesh successful.
      * If the main process failed then it called this Bcast already and
      * terminated. If it was successful, it calls the Bcast now. */
     sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc, comm);

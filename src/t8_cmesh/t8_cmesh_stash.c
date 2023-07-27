@@ -267,7 +267,7 @@ t8_stash_bcast_attributes (sc_array_t *attributes, int root, sc_MPI_Comm comm)
     att = (t8_stash_attribute_struct_t *) sc_array_index (attributes, iatt);
     att_size += att->attr_size;
   }
-  /* Allocat buffer */
+  /* Allocate buffer */
   buffer = T8_ALLOC_ZERO (char, att_size);
   /* Copy all attributes to send buffer */
   if (mpirank == root) {

@@ -31,7 +31,7 @@
 
 /* This program tests the `t8_set_join_by_vertices` routine by reading in
  * a given mesh file, retrieving the vertices and building the face
- * connectivity. The results are then compared to the connectivty information from
+ * connectivity. The results are then compared to the connectivity information from
  * `cmesh` object. If there a differences they are printed to stdout.
  */
 

@@ -75,9 +75,9 @@ struct data_per_element
 
 /* In this function we first allocate a new uniformly refined forest at given
  * refinement level. Then a second forest is created, where user data for the
- * adaption call (cf. step 3) is registered.  The second forest inherts all
+ * adaption call (cf. step 3) is registered.  The second forest inherits all
  * properties of the first ("root") forest and deallocates it. The final
- * adapted and commited forest is returned back to the calling scope. */
+ * adapted and committed forest is returned back to the calling scope. */
 static t8_forest_t
 t8_step6_build_forest (sc_MPI_Comm comm, int dim, int level)
 {
@@ -361,7 +361,7 @@ t8_step6_output_data_to_vtu (t8_forest_t forest,
   /* The name of the field as should be written to the file. */
   strcpy (vtk_data[0].description, "height");
   vtk_data[0].data = heights;
-  /* Copy the elment's volumes from our data array to the output array. */
+  /* Copy the element's volumes from our data array to the output array. */
   for (t8_locidx_t ielem = 0; ielem < num_elements; ++ielem) {
     heights[ielem] = data[ielem].height;
   }
