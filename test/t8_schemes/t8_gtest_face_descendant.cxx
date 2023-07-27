@@ -105,7 +105,7 @@ t8_linear_face_descendant (const t8_element_t *elem,
 
       ts->t8_element_first_descendant_face (elem, jface, face_desc, ilevel);
       /* Compare the manually computed child with the result of t8_element_first_descendant_face. */
-      ASSERT_FALSE (ts->t8_element_compare (face__desc,
+      ASSERT_FALSE (ts->t8_element_compare (face_desc,
                                             manual_face_desc)) <<
         "Wrong first descendant face\n";
     }
@@ -149,7 +149,7 @@ t8_recursive_face_descendant (t8_element_t *elem, t8_element_t *face_desc,
   int                 num_children = ts->t8_element_num_children (elem);
   for (int ichild = 0; ichild < num_children; ichild++) {
     ts->t8_element_child (elem, ichild, child);
-    t8_recursive_face_desendant (child, face_desc, manual_face_desc, elem, ts,
+    t8_recursive_face_descendant (child, face_desc, manual_face_desc, elem, ts,
                                  maxlvl);
     ts->t8_element_parent (child, elem);
   }
