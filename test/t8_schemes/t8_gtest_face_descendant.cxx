@@ -50,25 +50,25 @@ protected:
 
 /* Computes manually the test_child_id-th child. */
 void
-t8_face_descendant_test_child (t8_element_t *tmp, t8_element_t *test,
-                               t8_element_t *elem, t8_eclass_scheme_c *ts,
-                               int face, int level, int ilevel,
+t8_face_descendant_test_child (t8_element_t *face_desc,
+                               const t8_element_t *elem, t8_eclass_scheme_c *ts,
+                               int face, int level_elem,  int ilevel,
                                int num_children, int test_child_id)
 {
 
-  int                *child_indices = T8_ALLOC (int, num_children);
+  int                *child_indices = T8_ALLOC (int, num_children);             
 
   t8_element_t      **children = T8_ALLOC (t8_element_t *, num_children);
   ts->t8_element_new (num_children, children);
 
-  ts->t8_element_copy (elem, tmp);
-  for (int klevel = level; klevel < ilevel; klevel++) {
+  ts->t8_element_copy (elem, face_desc);
+  for (int klevel = level_elem; klevel < ilevel; klevel++) {
     /* Compute child_id of the test_child_id-th child. */
-    ts->t8_element_children_at_face (tmp, face, children, num_children,
+    ts->t8_element_children_at_face (face_desc, face, children, num_children,
                                      child_indices);
     int                 child_id = child_indices[test_child_id];
 
-    ts->t8_element_child (tmp, child_id, tmp);
+    ts->t8_element_child (face_desc, child_id, face_desc);
   }
   ts->t8_element_destroy (num_children, children);
   T8_FREE (children);
@@ -77,50 +77,50 @@ t8_face_descendant_test_child (t8_element_t *tmp, t8_element_t *test,
 
 /* Check the linear first and last descendants of an element along all faces. */
 void
-t8_linear_face_descendant (t8_element_t *elem, t8_element_t *tmp,
-                           t8_element_t *test, t8_eclass_scheme_c *ts,
+t8_linear_face_descendant (const t8_element_t *elem, t8_element_t *manual_face_desc,
+                           t8_element_t *face_desc, t8_eclass_scheme_c *ts,
                            int maxlvl)
 {
 
-  int                 level = ts->t8_element_level (elem);
+  int                 level_elem = ts->t8_element_level (elem);
   int                 num_faces;
 
   num_faces = ts->t8_element_num_faces (elem);
 
   /* Testing the linear first descendant. */
-  ts->t8_element_copy (elem, tmp);
-  for (int ilevel = level + 1; ilevel < maxlvl; ilevel++) {
+  ts->t8_element_copy (elem, manual_face_desc);
+  for (int ilevel = level_elem + 1; ilevel < maxlvl; ilevel++) {
     for (int jface = 0; jface < num_faces; jface++) {
 
       /* Number of children of the first descendant of the previous level. */
       int                 num_children =
-        ts->t8_element_num_face_children (tmp, jface);
-      t8_face_descendant_test_child (tmp, test, elem, ts, jface, level,
+        ts->t8_element_num_face_children (manual_face_desc, jface);
+      t8_face_descendant_test_child (manual_face_desc, elem, ts, jface, level_elem,
                                      ilevel, num_children, 0);
 
-      ts->t8_element_first_descendant_face (elem, jface, test, ilevel);
+      ts->t8_element_first_descendant_face (elem, jface, face_desc, ilevel);
       /* Compare the manually computed child with the result of t8_element_first_descendant_face. */
-      ASSERT_FALSE (ts->t8_element_compare (test,
-                                            tmp)) <<
+      ASSERT_FALSE (ts->t8_element_compare (face__desc,
+                                            manual_face_desc)) <<
         "Wrong first descendant face\n";
     }
   }
 
   /* Testing the linar last descendant. */
-  ts->t8_element_copy (elem, tmp);
-  for (int ilevel = level + 1; ilevel < maxlvl; ilevel++) {
+  ts->t8_element_copy (elem, manual_face_desc);
+  for (int ilevel = level_elem + 1; ilevel < maxlvl; ilevel++) {
     for (int jface = 0; jface < num_faces; jface++) {
 
       /* Number of children of the last descendant of the previous level. */
       int                 num_children =
-        ts->t8_element_num_face_children (tmp, jface);
-      t8_face_descendant_test_child (tmp, test, elem, ts, jface, level,
+        ts->t8_element_num_face_children (manual_face_desc, jface);
+      t8_face_descendant_test_child (manual_face_desc, elem, ts, jface, level_elem,
                                      ilevel, num_children, num_children - 1);
 
       /* Compare the manuall computed child with the result of t8_element_last_descendant_face. */
-      ts->t8_element_last_descendant_face (elem, jface, test, ilevel);
-      ASSERT_FALSE (ts->t8_element_compare (test,
-                                            tmp)) <<
+      ts->t8_element_last_descendant_face (elem, jface, face_desc, ilevel);
+      ASSERT_FALSE (ts->t8_element_compare (face_desc,
+                                            manual_face_desc)) <<
         "Wrong last descendant face\n";
     }
   }
@@ -128,8 +128,8 @@ t8_linear_face_descendant (t8_element_t *elem, t8_element_t *tmp,
 
 /*Recursivly check the first and last descendant along a face for all childs. */
 void
-t8_recursive_face_desendant (t8_element_t *elem, t8_element_t *test,
-                             t8_element_t *tmp, t8_element_t *child,
+t8_recursive_face_descendant (t8_element_t *elem, t8_element_t *face_desc,
+                             t8_element_t *manual_face_desc, t8_element_t *child,
                              t8_eclass_scheme_c *ts, int maxlvl)
 {
   int                 level = ts->t8_element_level (elem);
@@ -137,12 +137,12 @@ t8_recursive_face_desendant (t8_element_t *elem, t8_element_t *test,
   if (level == maxlvl)
     return;
 
-  t8_linear_face_descendant (elem, tmp, test, ts, maxlvl);
+  t8_linear_face_descendant (elem, manual_face_desc, face_desc, ts, maxlvl);
 
   int                 num_children = ts->t8_element_num_children (elem);
   for (int ichild = 0; ichild < num_children; ichild++) {
     ts->t8_element_child (elem, ichild, child);
-    t8_recursive_face_desendant (child, test, tmp, elem, ts, maxlvl);
+    t8_recursive_face_desendant (child, face_desc, manual_face_desc, elem, ts, maxlvl);
     ts->t8_element_parent (child, elem);
   }
 }
@@ -173,7 +173,7 @@ TEST_P (class_descendant, t8_check_face_desc)
 
   /* Check for correct parent-child relation */
   t8_linear_face_descendant (element, child, test, ts, maxlvl);
-  t8_recursive_face_desendant (element, test, tmp, child, ts, maxlvl);
+  t8_recursive_face_descendant (element, test, tmp, child, ts, maxlvl);
 
   /* Destroy element */
   ts->t8_element_destroy (1, &element);
