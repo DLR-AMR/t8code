@@ -740,7 +740,7 @@ die_ele:
  *                                  1 for edges, 2 for surfaces.
  * \param [in]      geometry_index  The index of the geometry.
  * \param [in]      num_face_nodes  The number of the nodes of the surface.
- *                                  NULL of the geometry is an edge.
+ *                                  NULL if the geometry is an edge.
  * \param [in]      geometry_occ    The occ_geometry.
  * \param [in,out]  parameters      The parameters to be corrected.
  */
