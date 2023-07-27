@@ -193,7 +193,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
 {
   T8_ASSERT (active_tree_class == T8_ECLASS_TRIANGLE);
 
-  t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
+  const t8_locidx_t   ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
   const int           num_edges = t8_eclass_num_edges[active_tree_class];
   gp_Pnt              pnt, converted_edge_surface_pnt,
     interpolated_edge_surface_pnt, interpolated_surface_pnt;
@@ -453,7 +453,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
 {
   T8_ASSERT (active_tree_class == T8_ECLASS_QUAD);
 
-  t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
+  const t8_locidx_t   ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
   const int           num_edges = t8_eclass_num_edges[active_tree_class];
   gp_Pnt              pnt;
   Handle_Geom_Curve   curve;
@@ -699,7 +699,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh,
                                    active_tree_vertices, ref_coords,
                                    out_coords);
 
-  t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
+  const t8_locidx_t   ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
   const int           num_edges = t8_eclass_num_edges[active_tree_class];
   const int           num_faces = t8_eclass_num_faces[active_tree_class];
   double              interpolated_coords[3],
