@@ -479,7 +479,7 @@ main (int argc, char **argv)
   sc_options_add_int (opt, 't', "trees", &trees, 512,
                       "Number of trees the forest will contain. The default is 512.");
   sc_options_add_int (opt, 'o', "output", &output, 0,
-                      "Specify if mesh should be outputed.\n"
+                      "Specify if mesh should be outputted.\n"
                       "\t\t\t\t     If yes, the forest contains only one tree.\n"
                       "\t\t\t\t\t1 - visual output\n"
                       "\t\t\t\t\t0 - no visual output (default)");

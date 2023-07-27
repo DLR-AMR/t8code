@@ -122,10 +122,10 @@ public:
    * dim 1: J = (0)   dim 2: J = (0 1)  dim 3: J = (0 1 0)
    *            (0)              (0 0)             (0 0 1)
    */
-  virtual void        t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
-                                                t8_gloidx_t gtreeid,
-                                                const double *ref_coords,
-                                                double *jacobian) const;
+  virtual void        t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
+                                                 t8_gloidx_t gtreeid,
+                                                 const double *ref_coords,
+                                                 double *jacobian) const;
 
   /** Update a possible internal data buffer for per tree data.
    * This function is called before the first coordinates in a new tree are

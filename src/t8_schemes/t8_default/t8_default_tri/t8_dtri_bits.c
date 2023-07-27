@@ -126,7 +126,7 @@ t8_dtri_compare (const t8_dtri_t *t1, const t8_dtri_t *t2)
     T8_ASSERT (t1->level != t2->level || t8_dtri_is_equal (t1, t2));
     return t1->level - t2->level;
   }
-  /* return negativ if id1 < id2, zero if id1 = id2, positive if id1 > id2 */
+  /* return negative if id1 < id2, zero if id1 = id2, positive if id1 > id2 */
   return id1 < id2 ? -1 : id1 != id2;
 }
 
@@ -793,7 +793,7 @@ t8_dtri_nearest_common_ancestor (const t8_dtri_t *t1,
     t2_type_at_l = compute_type_ext (t2, r_level, t2_type_at_l, r_level + 1);
   }
   T8_ASSERT (r_level >= 0);
-  /* Construct the ancestor of the first triangle at this leve */
+  /* Construct the ancestor of the first triangle at this level */
   t8_dtri_ancestor (t1, r_level, r);
 }
 
@@ -1146,7 +1146,7 @@ t8_dtri_is_inside_root (t8_dtri_t *t)
 int
 t8_dtri_is_root_boundary (const t8_dtri_t *t, int face)
 {
-  /* Dependend on the type and the face we have to check
+  /* Dependent on the type and the face we have to check
    * different conditions */
 #ifndef T8_DTRI_TO_DTET
   switch (t->type) {
@@ -1401,7 +1401,7 @@ t8_dtri_linear_id_corner_desc (const t8_dtri_t *t, int corner, int level)
 #else
   case 2:
     /* For tets, the first corner descnendant arises from always taking the n-th
-     * child, where n is the local child id corrensponding to Bey-id corner. */
+     * child, where n is the local child id corresponding to Bey-id corner. */
     child_id = t8_dtet_parenttype_beyid_to_Iloc[t->type][corner];
     break;
 #endif

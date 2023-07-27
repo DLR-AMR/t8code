@@ -59,7 +59,7 @@
  *            since we have level l+1 elements in the inner sphere, level l elements in the middle and level l+1 elements
  *            outside. This may not be the case for very small initial refinement levels levels or with different radius thresholds (why don't you try it out?).
  *            Therefore, in this example we will apply the adaptation two times, resulting in level l+2 elements
- *            in the inner sphere, level l elements in the middle and level l - 2 element in the outher sphere
+ *            in the inner sphere, level l elements in the middle and level l - 2 element in the outer sphere
  *            (and probably some, but not many, level l-1 and level l+1 elements in between).
  *            This forest will be unbalanced and we will then apply the balance routine to it.
  *            Note that balance changes the local number of elements and thus may also change the load balance
@@ -75,7 +75,7 @@
  *    Ghost:
  *         - We actually print the ghost elements in the vtu files and you can look at them.
  *           Ghost elements have treeid = -1 in the vtu files. To view the ghosts of a single process (say process 1)
- *           you can set a threshhold on mpirank to view only the elements of process 1 and then set a threshold
+ *           you can set a threshold on mpirank to view only the elements of process 1 and then set a threshold
  *           on treeid to only view those elements with treeid = -1.
  *    Balance:
  *         - View the unbalanced and balanced forest vtu files and compare them.
@@ -98,7 +98,7 @@ T8_EXTERN_C_BEGIN ();
   /* So far we have seen t8_forest_new_* functions to create forests.
    * These directly returned a new forest.
    * However, t8code offers us more control over the creation of forests.
-   * For example we can control wether or not a forest should have a ghost layer,
+   * For example we can control whether or not a forest should have a ghost layer,
    * be balanced/partitioned from another forest, etc.
    * 
    * Usually, there are three steps involved in creating a forest:

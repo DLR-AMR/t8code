@@ -114,7 +114,7 @@ t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
  *                          \a polygons_x * \a polygons_z * \a polygons_y many 
  *                          sub-hypercubes of class \a eclass.
  * \note \a boundary must point to an array with 3*8 (3D), 3*4 (2D), 3*2 (1D), or 3 (0D) entries.
- * \note Every sub-hypercube contains diffrent number of trees depending on \a eclass.
+ * \note Every sub-hypercube contains different number of trees depending on \a eclass.
  * \note If \a eclass == T8_ECLASS_VERTEX, _LINE, _QUAD or _HEX every sub-hypercube contains
  *  one tree, if _TRIANGLE or _PRISM two trees and if _TET six trees.
  *  This is done in the same way as in \see t8_cmesh_new_hypercube.
@@ -124,7 +124,7 @@ t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
  *      
  *    c--f--h--d     The hypercube defined by the boundary coordinates
  *    |  |  |  |     is first split into 3 sub-hypercubes. The sub-hypercubes
- *    |  |  |  |     are ordert from left to right (and top to bottom).
+ *    |  |  |  |     are ordered from left to right (and top to bottom).
  *    a--e--g--b     Coordinates e,f,g,h are (1,0,0),(1,2,0),(2,0,0),(2,2,0).
  * 
  *    c--f--h--d     Each sub-hypercube is the split into 2 triangle roots.
@@ -145,7 +145,7 @@ t8_cmesh_t          t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass,
  * \param [in]  comm            The mpi communicator to be used.
  * \param [in]  do_partition    If non-zero create a partitioned cmesh.
  * \param [in]  periodic        If non-zero create a periodic cmesh in each direction
- * \return                      A comitted cmesh consisting of 6 Tets, 6 prism and 4 hex. 
+ * \return                      A committed cmesh consisting of 6 Tets, 6 prism and 4 hex.
  *                              Together, they form a cube.
 */
 t8_cmesh_t          t8_cmesh_new_hypercube_hybrid (sc_MPI_Comm comm,
@@ -228,7 +228,7 @@ t8_cmesh_t          t8_cmesh_new_prism_cake_funny_oriented (sc_MPI_Comm comm);
   */
 t8_cmesh_t          t8_cmesh_new_prism_geometry (sc_MPI_Comm comm);
 
-/** Create a partitoned cmesh of quads whose local trees are given by an
+/** Create a partitioned cmesh of quads whose local trees are given by an
  * num_x by num_y brick connectivity from p4est
  * or a num_x by num_y by num_z brick connectivity from p8est.
  * num_x and num_y and num_z can be different for different MPI ranks.

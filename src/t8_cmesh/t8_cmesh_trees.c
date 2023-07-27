@@ -37,7 +37,7 @@ struct t8_key_id_pair
 };
 
 /* The hash function for the global to local hash table.
- * We hash the globa_id */
+ * We hash the global_id */
 static unsigned
 t8_cmesh_trees_glo_lo_hash_func (const void *v, const void *u)
 {
@@ -231,7 +231,7 @@ t8_cmesh_trees_start_part (t8_cmesh_trees_t trees, int proc,
  * number of tree attributes  was set and their total size (per tree)
  * stored temporarily in the att_offset variable
  * we grow the part array by the needed amount of memory and set the
- * offsets appropiately */
+ * offsets appropriately */
 /* The workflow can be: call start_part, set tree and ghost classes maually, call
  * init_attributes, call finish_part, successively call add_attributes
  * and also set all face neighbors (TODO: write function)*/
@@ -779,7 +779,7 @@ t8_cmesh_trees_compare_keyattr (const void *A1, const void *A2)
   }
 }
 
-/* The size of the attribute is not returned, but would be accesible */
+/* The size of the attribute is not returned, but would be accessible */
 void               *
 t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_locidx_t ltree_id,
                               int package_id, int key, size_t *size,
@@ -886,7 +886,7 @@ t8_cmesh_tree_to_face_encode (const int dimension, const t8_locidx_t face,
  * \param [in]        tree_to_face A tree-to-face value
  * \param [out]       face      On output filled with the stored face value.
  * \param [out]       orientation On output filled with the stored orientation value.
- * \note This function is the invers operation of \ref t8_cmesh_tree_to_face_encode
+ * \note This function is the inverse operation of \ref t8_cmesh_tree_to_face_encode
  * If F = t8_eclass_max_num_faces[dimension], we get
  *  orientation = tree_to_face / F
  *  face = tree_to_face % F
@@ -1067,7 +1067,7 @@ t8_cmesh_trees_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
  * then tree2 must list tree1 as neighbor at face j with ttf entries (or, face i).
  */
 int
-t8_cmesh_trees_is_face_consistend (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
+t8_cmesh_trees_is_face_consistent (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
 {
   t8_locidx_t         ltree, lghost;
   t8_ctree_t          tree1;
@@ -1111,7 +1111,7 @@ t8_cmesh_trees_is_face_consistend (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
       }
 #ifdef T8_ENABLE_DEBUG
       if (ret != 1) {
-        t8_debugf ("Face connection missmatch at tree %i face %i\n", ltree,
+        t8_debugf ("Face connection mismatch at tree %i face %i\n", ltree,
                    iface);
       }
 #endif
@@ -1154,7 +1154,7 @@ t8_cmesh_trees_is_face_consistend (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
       }
 #ifdef T8_ENABLE_DEBUG
       if (ret != 1) {
-        t8_debugf ("Face connection missmatch at ghost %i face %i\n",
+        t8_debugf ("Face connection mismatch at ghost %i face %i\n",
                    lghost, iface);
       }
 #endif

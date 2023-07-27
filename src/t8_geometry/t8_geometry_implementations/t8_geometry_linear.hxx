@@ -71,10 +71,10 @@ public:
    * \param [out] jacobian    The jacobian at \a ref_coords. Array of size dimension x 3. Indices 3*i, 3*i+1, 3*i+2
    *                          correspond to the i-th column of the jacobian (Entry 3*i + j is del f_j/del x_i).
    */
-  virtual void        t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
-                                                t8_gloidx_t gtreeid,
-                                                const double *ref_coords,
-                                                double *jacobian) const;
+  virtual void        t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
+                                                 t8_gloidx_t gtreeid,
+                                                 const double *ref_coords,
+                                                 double *jacobian) const;
 
   /* Load tree data is inherited from t8_geometry_with_vertices. */
 

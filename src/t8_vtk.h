@@ -35,7 +35,7 @@
 
 #define T8_VTK_LOCIDX "Int32"
 /* TODO: Paraview has troubles with Int64, so we switch to Int32 and be careful.
- *       Investigate this further. See also vtk makro VTK_USE_64BIT_IDS */
+ *       Investigate this further. See also vtk macro VTK_USE_64BIT_IDS */
 #define T8_VTK_GLOIDX "Int32"
 
 /* TODO: these macros need to be set by configure */

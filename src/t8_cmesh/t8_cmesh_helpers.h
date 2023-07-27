@@ -34,7 +34,7 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/** Sets the face connectivity information of an un-commited \cmesh based on a list of tree vertices.
+/** Sets the face connectivity information of an un-committed \cmesh based on a list of tree vertices.
  * \param[in,out]   cmesh         Pointer to a t8code cmesh object. If set to NULL this argument is ignored.
  * \param[in]       ntrees        Number of coarse mesh elements resp. trees.
  * \param[in]       vertices      List of per element vertices with dimensions [ntrees,T8_ECLASS_MAX_CORNERS,T8_ECLASS_MAX_DIM].
@@ -45,7 +45,7 @@ T8_EXTERN_C_BEGIN ();
                                   testing purposes. The dimension of \a connectivity are [ntrees,T8_ECLASS_MAX_FACES,3].
                                   For each element and each face the following is stored:
                                       neighbor_tree_id, neighbor_dual_face_id, orientation
- * \param[in]       do_both_directions Compute the connectivty from both neighboring sides. Takes much longer to compute.
+ * \param[in]       do_both_directions Compute the connectivity from both neighboring sides. Takes much longer to compute.
 
   \warning This routine might be too expensive for very large meshes. In this case, consider to use a fully featured mesh generator.
 

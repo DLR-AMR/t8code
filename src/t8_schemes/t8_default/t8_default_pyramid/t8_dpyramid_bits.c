@@ -61,7 +61,7 @@ compute_cubeid (const t8_dpyramid_t *p, const int level)
  * \param [in]  known_level The level where we already know the type of \a p
  * \return      t8_dpyramid_type_t The type of \a p at level \a level.
  * 
- * CARFULL: This computation assumes that the shape of the element does not switch between \a known_level
+ * WARNING: This computation assumes that the shape of the element does not switch between \a known_level
  *          and \a level. 
  */
 static t8_dpyramid_type_t
@@ -80,7 +80,7 @@ compute_type_same_shape_ext (const t8_dpyramid_t *p, const int level,
   }
   if (level == 0) {
     /*Type of the root pyra */
-    return T8_DPYRAMID_ROOT_TPYE;
+    return T8_DPYRAMID_ROOT_TYPE;
   }
   for (int i = known_level; i > level; i--) {
     const t8_dpyramid_cube_id_t cube_id = compute_cubeid (p, i);
@@ -98,7 +98,7 @@ compute_type_same_shape_ext (const t8_dpyramid_t *p, const int level,
  * \param         level 
  * \return        The type of \a p at \a level
  * 
- * CAREFUL: This computation assumes that the shape of the element does not switch between \a known_level
+ * WARNING: This computation assumes that the shape of the element does not switch between \a known_level
  *          and \a level.
  */
 t8_dpyramid_type_t
@@ -492,7 +492,7 @@ t8_dpyramid_get_level (const t8_dpyramid_t *p)
 /**
  * Computes the local index of a pyramid and updates its current global index. 
  * for further computation of init_linear_id. For each sibling that is a predecessor
- * the number of pyramids or tets on the level used in init_linear_id is substracted from
+ * the number of pyramids or tets on the level used in init_linear_id is subtracted from
  * the id. 
  * 
  * \\param[in, out] id       The current id that will be updated
@@ -542,7 +542,7 @@ t8_dpyramid_init_linear_id (t8_dpyramid_t *p, const int level,
   p->pyramid.x = 0;
   p->pyramid.y = 0;
   p->pyramid.z = 0;
-  t8_dpyramid_type_t  type = T8_DPYRAMID_ROOT_TPYE;     /*This is the type of the root pyramid */
+  t8_dpyramid_type_t  type = T8_DPYRAMID_ROOT_TYPE;     /*This is the type of the root pyramid */
   for (int i = 1; i <= level; i++) {
     const int           offset_expo = T8_DPYRAMID_MAXLEVEL - i;
     p_sum1 >>= 3;
@@ -992,7 +992,7 @@ t8_dpyramid_is_inside_root (const t8_dpyramid_t *p)
              && p->pyramid.level <= T8_DPYRAMID_MAXLEVEL);
   /*Check, if p is root pyramid */
   if (p->pyramid.level == 0) {
-    return p->pyramid.type == T8_DPYRAMID_ROOT_TPYE && p->pyramid.x == 0
+    return p->pyramid.type == T8_DPYRAMID_ROOT_TYPE && p->pyramid.x == 0
       && p->pyramid.y == 0 && p->pyramid.z == 0;
   }
   /*Check, if all coordinates are in the limit set by the length of root */
@@ -1351,7 +1351,7 @@ t8_dpyramid_extrude_face (const t8_element_t *face, t8_dpyramid_t *p,
     p->pyramid.x = ((int64_t) q->x * T8_DPYRAMID_ROOT_LEN) / P4EST_ROOT_LEN;
     p->pyramid.y = ((int64_t) q->y * T8_DPYRAMID_ROOT_LEN) / P4EST_ROOT_LEN;
     p->pyramid.z = 0;
-    p->pyramid.type = T8_DPYRAMID_ROOT_TPYE;
+    p->pyramid.type = T8_DPYRAMID_ROOT_TYPE;
     p->pyramid.level = q->level;
     p->switch_shape_at_level = -1;
     return root_face;
@@ -1463,7 +1463,7 @@ t8_dpyramid_child (const t8_dpyramid_t *elem, const int child_id,
       t8_dpyramid_parenttype_Iloc_to_type[elem->pyramid.type][child_id];
     if (t8_dpyramid_shape (child) == T8_ECLASS_TET) {
       /* Use the level to set switch_shape_at_level, because the function has to be callable
-       * wich elem = child */
+       * which elem = child */
       child->switch_shape_at_level = child->pyramid.level;
     }
     else {
@@ -1894,7 +1894,7 @@ t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t *pyra1,
     return;
   }
   else {
-    /* Both elements are a tet. The ancestor can be at a level befor any of the
+    /* Both elements are a tet. The ancestor can be at a level before any of the
      * elementes switches the shape from a tet to a pyra. If one of the tets switches
      * the shape, both tets have to switch the shape. */
     T8_ASSERT (t8_dpyramid_shape (pyra1) == T8_ECLASS_TET);
@@ -1932,7 +1932,7 @@ t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t *pyra1,
 
     /* We iterate over the levels and check if the types of both tets match and 
      * stop at that level.
-     * The loop is interupted, if we get to a level where one element switches 
+     * The loop is interrupted, if we get to a level where one element switches
      * the shape.*/
     T8_ASSERT (0 < pyra1->switch_shape_at_level
                && pyra1->switch_shape_at_level <= T8_DPYRAMID_MAXLEVEL);
@@ -1993,7 +1993,7 @@ t8_dpyramid_is_valid (const t8_dpyramid_t *p)
     && p->pyramid.type < T8_DPYRAMID_NUM_TYPES;
 
   if (p->pyramid.level == 0) {
-    is_valid = is_valid && (p->pyramid.type == T8_DPYRAMID_ROOT_TPYE);
+    is_valid = is_valid && (p->pyramid.type == T8_DPYRAMID_ROOT_TYPE);
   }
   if (t8_dpyramid_shape (p) == T8_ECLASS_TET) {
     is_valid = is_valid && (p->switch_shape_at_level > 0);
