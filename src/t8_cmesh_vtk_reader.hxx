@@ -46,7 +46,7 @@ T8_EXTERN_C_BEGIN ();
  * \param[in] main_proc     The main reading processor
  * \param[in] comm          An mpi-communicator
  * \param[in] vtk_file_type A vtk-filetype that is readable by t8code. 
- * \return                  A commited cmesh.       
+ * \return                  A committed cmesh.
  */
 t8_cmesh_t          t8_cmesh_vtk_reader (const char *filename,
                                          const int partition,

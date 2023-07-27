@@ -318,7 +318,7 @@ t8_default_scheme_tri_c::t8_element_extrude_face (const t8_element_t *face,
    *      x--x
    *      f_2
    *
-   * Boundary triangles are alway of type 0.
+   * Boundary triangles are always of type 0.
    * We have to scale the coordinates since the root triangle may
    * have a different scale than the root line.
    */

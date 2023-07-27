@@ -165,14 +165,14 @@ t8_element_array_init_copy (t8_element_array_t *element_array,
 
     size = scheme->t8_element_size ();
     for (ielem = 0; ielem < num_elements; ielem++) {
-      /* data is of incomplete type, we thus have to manually set the adress
+      /* data is of incomplete type, we thus have to manually set the address
        * of the ielem-th t8_element */
       element = (const t8_element_t *) (((char *) data) + ielem * size);
       T8_ASSERT (scheme->t8_element_is_valid (element));
     }
   }
 #endif
-  /* Allocate enogh memory for the new elements */
+  /* Allocate enough memory for the new elements */
   sc_array_init_size (array, scheme->t8_element_size (), num_elements);
   /* Copy the elements in data */
   memcpy (array->array, data, num_elements * array->elem_size);

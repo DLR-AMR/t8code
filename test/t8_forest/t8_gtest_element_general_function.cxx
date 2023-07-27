@@ -32,7 +32,7 @@
 
 /*
  * In this file we test whether the t8_element_general_function
- * function behaves correcly.
+ * function behaves correctly.
  * For tri, tet and prism elements of the default scheme, the type should
  * get written to the output data.
  * For the other element types nothing should happen.

@@ -729,7 +729,7 @@ t8_forest_commit (t8_forest_t forest)
     forest->do_ghost = 0;
   }
 #ifdef T8_ENABLE_DEBUG
-  t8_forest_partition_test_boundery_element (forest);
+  t8_forest_partition_test_boundary_element (forest);
 #endif
 }
 
@@ -1465,15 +1465,6 @@ t8_forest_write_vtk_ext (t8_forest_t forest,
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (forest->committed);
-
-#if !T8_WITH_VTK
-  if (write_curved) {
-    t8_errorf
-      ("WARNING: t8code is not linked against VTK. "
-       "Export of curved elements not yet available with the inbuild function.\n");
-    return 0;
-  }
-#endif
 
 #if T8_WITH_VTK
   if (do_not_use_API && write_curved) {

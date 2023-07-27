@@ -56,7 +56,7 @@ t8_dvertex_child (const t8_dvertex_t *v, t8_dvertex_t *child)
 {
   T8_ASSERT (v->level < T8_DVERTEX_MAXLEVEL);
 
-  /* The childs level */
+  /* The children level */
   child->level = v->level + 1;
 }
 

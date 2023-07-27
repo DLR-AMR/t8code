@@ -618,7 +618,7 @@ t8_cmesh_refine_tree (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
 }
 
 /* Set the class for each child of a given ghost in cmesh_from.
- * The number of childs that stay a ghost on this process depends on the
+ * The number of children that stay a ghost on this process depends on the
  * faces of the ghost connected to local trees. */
 static void
 t8_cmesh_refine_initghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
@@ -700,7 +700,7 @@ t8_cmesh_refine_count_ghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
    *                   |0 1|
    *                     - -
    *                    f_2
-   * where the numbers inside refer to the chlid_ids of the quad.
+   * where the numbers inside refer to the child_ids of the quad.
    * The lookup table then gives:  0 -> 0,2
    *                               1 -> 1,3
    *                               2 -> 0,1
@@ -781,7 +781,7 @@ t8_cmesh_refine (t8_cmesh_t cmesh)
   T8_ASSERT (cmesh->set_refine_level == 1);     /* levels bigger than 1 are not yet implemented */
 
   if (cmesh->set_from->set_partition && cmesh->set_from->first_tree_shared) {
-    SC_ABORT ("Refining a partioned cmesh with shared first trees "
+    SC_ABORT ("Refining a partitioned cmesh with shared first trees "
               "is not implemented yet.\n");
   }
 

@@ -94,7 +94,7 @@ extern const int    t8_dtet_face_child_id_by_type[6][4][4];
 extern const int    t8_dtet_face_corner[4][3];
 
 /** For each combination parent_type, type with parent_type != type,
- * provide the face number of the face of a tet that lies whithin a face of
+ * provide the face number of the face of a tet that lies within a face of
  * the parent. For each combination there is exactly one of these faces.
  * If parent_type = type then there are multiple faces and thus this case
  * is not covered here.

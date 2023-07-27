@@ -142,7 +142,7 @@ typedef struct t8_tree
 {
   t8_element_array_t  elements;              /**< locally stored elements */
   t8_eclass_t         eclass;                /**< The element class of this tree */
-  /* TODO: We will need the *_desc variables later for shure. */
+  /* TODO: We will need the *_desc variables later for sure. */
   t8_element_t       *first_desc,            /**< first local descendant */
                      *last_desc;             /**< last local descendant */
   t8_locidx_t         elements_offset;      /**< cumulative sum over earlier
@@ -201,10 +201,10 @@ typedef struct t8_forest_ghost
                                                            i such that the tree is in ghost_trees[i]
                                                          */
   sc_hash_t          *process_offsets;  /* Given a process, return the first ghost tree and
-                                           whithin it the first element of that process. */
+                                           within it the first element of that process. */
   sc_hash_array_t    *remote_ghosts;    /* array of local trees that have ghost elements for another process.
                                            for each tree an array of t8_element_t * of the local ghost elements.
-                                           Also an array of t8_locidx_t of the local indices of these elements whithin the tree.
+                                           Also an array of t8_locidx_t of the local indices of these elements within the tree.
                                            It is a hash table, hashed with the rank of a remote process.
                                            Sorted within each process by linear id.
                                          */

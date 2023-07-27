@@ -50,7 +50,7 @@ T8_EXTERN_C_BEGIN ();
  *                  family. 
  * \note            The check works for complete and incomplete forests.
  *                  In the case of complete forests, the scheme based element 
- *                  funktion \see t8_element_is_family is recommended.
+ *                  function \see t8_element_is_family is recommended.
  * \note            If the element with id \a el_considered is not the first
  *                  family member, return 0. Therefore, if \return is x > 0, 
  *                  the first x elements in \a elements form a family.
@@ -166,7 +166,7 @@ void                t8_forest_compute_elements_offset (t8_forest_t forest);
 /** Return an element of a tree.
  * \param [in]  tree  The tree.
  * \param [in]  elem_in_tree The index of the element within the tree.
- * \return      Returns the elemen with index \a elem_in_tree of the
+ * \return      Returns the element with index \a elem_in_tree of the
  *              element array of \a tree.
  */
 t8_element_t       *t8_forest_get_tree_element (t8_tree_t tree,

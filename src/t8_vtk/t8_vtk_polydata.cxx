@@ -119,11 +119,11 @@ t8_read_poly (const char *filename, vtkDataSet * grid)
   /* Prepare the poly-data for the translation from vtk to t8code.
    * We split all polygons (which are not supported by t8code) to
    * triangles, vertices and lines. */
-  const vtk_read_success_t read_successfull =
+  const vtk_read_success_t read_successful =
     t8_read_poly_ext (filename, poly_data);
-  if (!read_successfull) {
+  if (!read_successful) {
     t8_errorf ("Could not read file.\n");
-    return read_successfull;
+    return read_successful;
   }
   tri_filter->SetInputData (poly_data);
   /* PolyVertex to vertex */
@@ -132,6 +132,6 @@ t8_read_poly (const char *filename, vtkDataSet * grid)
   tri_filter->PassLinesOn ();
   tri_filter->Update ();
   grid->DeepCopy (vtkDataSet::SafeDownCast (tri_filter->GetOutput ()));
-  return read_successfull;
+  return read_successful;
 }
 #endif /* T8_WITH_VTK */
