@@ -809,34 +809,33 @@ t8_cmesh_correct_closed_geometry_parametric (const int geometry_dim,
           /* Iterate over every corner node of the tree. */
           for (int i_nodes = 0; i_nodes < num_face_nodes; ++i_nodes) {
             /* Check if one of the U parameters lies on one of the parametric bounds. */
-            if (std::abs (parameters[i_nodes * 2 + (param_dim ? 1 : 0)] -
-                          parametric_bounds[bound + (param_dim ? 2 : 0)]) <=
+            if (std::abs (parameters[2 * i_nodes + param_dim] -
+                          parametric_bounds[bound + 2 * param_dim]) <=
                 T8_PRECISION_EPS) {
               /* Iterate over every corner node of the tree again. */
               for (int j_nodes = 0; j_nodes < num_face_nodes; ++j_nodes) {
                 /* Search for a U parameter that is non of the parametric bounds. To check
                  * whether the tree is closer to the lower or the upper parametric bound.
                  */
-                if (std::abs (parameters[j_nodes * 2 + (param_dim ? 1 : 0)] -
+                if (std::abs (parameters[2 * j_nodes + param_dim] -
                               parametric_bounds[bound +
-                                                (param_dim ? 2 : 0)]) >
+                                                2 * param_dim]) >
                     T8_PRECISION_EPS
-                    && std::abs (parameters[j_nodes * 2 + (param_dim ? 1 : 0)]
+                    && std::abs (parameters[2 * j_nodes + param_dim]
                                  - parametric_bounds[((bound + 1) % 2) +
-                                                     (param_dim ? 2 : 0)]) >
+                                                     2 * param_dim]) >
                     T8_PRECISION_EPS) {
                   /* Now check if the difference of the parameters of both nodes are bigger than the half parametric range.
                    * In this case, the parameter at i_nodes has to be changed to the other parametric bound ((bound + 1) % 2).
                    */
                   if (std::abs
-                      (parameters[j_nodes * 2 + (param_dim ? 1 : 0)] -
-                       parameters[i_nodes * 2 + (param_dim ? 1 : 0)]) >
-                      ((parametric_bounds[1 + (param_dim ? 2 : 0)] -
-                        parametric_bounds[0 + (param_dim ? 2 : 0)]) / 2)) {
+                      (parameters[2 * j_nodes + param_dim] -
+                       parameters[2 * i_nodes + param_dim]) >
+                      ((parametric_bounds[1 + 2 * param_dim] -
+                        parametric_bounds[0 + 2 * param_dim]) / 2)) {
                     /* Switch to the other parametric bound. */
-                    parameters[i_nodes * 2 + (param_dim ? 1 : 0)] =
-                      parametric_bounds[((bound + 1) % 2) +
-                                        (param_dim ? 2 : 0)];
+                    parameters[2 * i_nodes + param_dim] =
+                      parametric_bounds[((bound + 1) % 2) + 2 * param_dim];
                     break;
                   }
                 }
