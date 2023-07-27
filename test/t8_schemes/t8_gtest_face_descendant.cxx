@@ -149,8 +149,8 @@ t8_recursive_face_descendant (t8_element_t *elem, t8_element_t *face_desc,
   int                 num_children = ts->t8_element_num_children (elem);
   for (int ichild = 0; ichild < num_children; ichild++) {
     ts->t8_element_child (elem, ichild, child);
-    t8_recursive_face_descendant (child, face_desc, manual_face_desc, elem, ts,
-                                 maxlvl);
+    t8_recursive_face_descendant (child, face_desc, manual_face_desc, elem,
+                                  ts, maxlvl);
     ts->t8_element_parent (child, elem);
   }
 }
