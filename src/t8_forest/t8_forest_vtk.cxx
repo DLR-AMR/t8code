@@ -655,10 +655,10 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
     dataArray->SetVoidArray (data[idata].data,
                              num_elements * num_components, 1);
     if (num_components == 1) {
-      unstructuredGrid->GetCellData ()->SetScalars (dataArray);
+      unstructuredGrid->GetCellData ()->AddArray (dataArray);
     }
     else {
-      unstructuredGrid->GetCellData ()->SetVectors (dataArray);
+      unstructuredGrid->GetCellData ()->AddArray (dataArray);
 
     }
   }
