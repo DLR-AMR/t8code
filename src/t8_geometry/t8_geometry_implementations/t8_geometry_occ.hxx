@@ -343,6 +343,19 @@ private:
                              t8_gloidx_t gtreeid,
                              const double *ref_coords,
                              double out_coords[3]) const;
+  
+  /**
+   * Map a point in the reference space $$[0,1]^3$$ to $$\mathbb R^3$$. Only for tet trees.
+   * \param [in]  cmesh      The cmesh in which the point lies.
+   * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
+   * \param [in]  ref_coords  Array of 3 entries, specifying a point in [0,1]^3.
+   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   */
+  void
+  t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh,
+                            t8_gloidx_t gtreeid,
+                            const double *ref_coords,
+                            double out_coords[3]) const;
 
   /**
    * Map a point in the reference space $$[0,1]^3$$ to $$\mathbb R^3$$. Only for hex trees.

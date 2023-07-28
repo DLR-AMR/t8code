@@ -131,6 +131,9 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
     t8_geometry_occ::t8_geom_evaluate_occ_hex (cmesh, gtreeid, ref_coords,
                                                out_coords);
     break;
+  case T8_ECLASS_TET:
+    t8_geometry_occ::t8_geom_evaluate_occ_tet (cmesh, gtreeid, ref_coords,
+                                               out_coords);
   default:
     SC_ABORTF ("Error: Curved %s geometry not yet implemented. \n",
                t8_eclass_to_string[active_tree_class]);
@@ -684,6 +687,15 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
       }
     }
   }
+}
+
+void
+t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh,
+                                           t8_gloidx_t gtreeid,
+                                           const double *ref_coords,
+                                           double out_coords[3]) const
+{
+
 }
 
 void
