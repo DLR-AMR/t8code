@@ -139,7 +139,7 @@ t8_file_to_vtkGrid (const char *filename,
       main_proc_read_successful = t8_read_unstructured (filename, vtkGrid);
       break;
     case VTK_POLYDATA_FILE:
-      main_proc_read_successful = t8_read_poly (filename, vtkGrid);
+      main_proc_read_successful = t8_read_polyData (filename, vtkGrid);
       break;
     case VTK_PARALLEL_UNSTRUCTURED_FILE:
       if (!partition) {
@@ -147,7 +147,7 @@ t8_file_to_vtkGrid (const char *filename,
       }
       else {
         main_proc_read_successful =
-          t8_read_parallel (filename, vtkGrid, comm);
+          t8_read_parallel_unstructured (filename, vtkGrid, comm);
         break;
       }
       break;
@@ -226,7 +226,7 @@ t8_get_dimension (vtkSmartPointer < vtkDataSet > vtkGrid)
  * the vtkGrid. Each cell in the vtkDataSet becomes a tree in the cmesh. This 
  * function constructs a cmesh on a single process. 
  * 
- * \param[in] vtkGrid       The vtkGrid that gets tranlated
+ * \param[in] vtkGrid       The vtkGrid that gets translated
  * \param[in, out] cmesh    An empty cmesh that is filled with the data. 
  * \param[in] first_tree    The global id of the first tree. Will be the global id of the first tree on this proc. 
  * \param[in] comm          A communicator. 

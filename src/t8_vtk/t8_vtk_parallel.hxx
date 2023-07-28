@@ -39,9 +39,10 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  *                 by the pieces read on this proc. 
  * \returns        non-zero on success, zero if the reading failed. 
  */
-vtk_read_success_t  t8_read_parallel (const char *filename,
-                                      vtkSmartPointer < vtkDataSet > grid,
-                                      sc_MPI_Comm comm);
+vtk_read_success_t  t8_read_parallel_unstructured (const char *filename,
+                                                   vtkSmartPointer <
+                                                   vtkDataSet > grid,
+                                                   sc_MPI_Comm comm);
 
 /**
  * Given a filename to a parallel vtk file (for example .pvtp) and its data files, 
@@ -53,8 +54,8 @@ vtk_read_success_t  t8_read_parallel (const char *filename,
  * \returns        non-zero on success, zero if the reading failed. 
  */
 vtk_read_success_t  t8_read_parallel_polyData (const char *filename,
-                                           vtkSmartPointer < vtkDataSet >
-                                           grid, sc_MPI_Comm comm);
+                                               vtkSmartPointer < vtkDataSet >
+                                               grid, sc_MPI_Comm comm);
 
 #endif /* T8_WITH_VTK */
 #endif /* T8_VTK_PARALLEL_HXX */
