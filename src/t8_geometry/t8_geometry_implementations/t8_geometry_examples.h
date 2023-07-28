@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_geometry_cubed_sphere.h
+/** \file t8_geometry_examples.h
  * This header provides the C interface to create a cubed_sphere geometry.
  */
 

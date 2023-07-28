@@ -24,13 +24,6 @@
 #include <t8_geometry/t8_geometry_helpers.h>
 #include <t8_vec.h>
 
-/**
- * Map the faces of a unit square to a disk.
- * \param [in]  cmesh      The cmesh in which the point lies.
- * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
- * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
- * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
- */
 void
 t8_geometry_squared_disk::t8_geom_evaluate (t8_cmesh_t cmesh,
                                             t8_gloidx_t gtreeid,
@@ -39,8 +32,11 @@ t8_geometry_squared_disk::t8_geom_evaluate (t8_cmesh_t cmesh,
 {
   double              n[3];     /* Normal vector. */
   double              r[3];     /* Radial vector. */
-  double              s[3];     /* Vector on the sphere. */
-  double              p[3];     /* Vector on the plane. */
+  double              s[3];     /* Radial vector for the corrected coordinates. */
+  double              p[3];     /* Vector on the plane resp. quad. */
+
+  const double        x = ref_coords[0];
+  const double        y = ref_coords[1];
 
   t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
   double             *tree_vertices =
@@ -68,35 +64,38 @@ t8_geometry_squared_disk::t8_geom_evaluate (t8_cmesh_t cmesh,
     n[1] = n[1] / norm;
   }
 
-  r[0] = tree_vertices[0];
-  r[1] = tree_vertices[1];
-
   {
+    /* Radial vector parallel to one of the tilted edges of the quad. */
+    r[0] = tree_vertices[0];
+    r[1] = tree_vertices[1];
+
     /* Normalize vector `r`. */
     const double        norm = sqrt (r[0] * r[0] + r[1] * r[1]);
     r[0] = r[0] / norm;
     r[1] = r[1] / norm;
   }
 
-  double              corr_ref_coords[3];
+  { 
+    double              corr_ref_coords[3];
 
-  const double        x = ref_coords[0];
-  const double        y = ref_coords[1];
+    /* Correction in order to rectify elements near the corners. */
+    corr_ref_coords[0] = tan (0.5 * M_PI * (x - 0.5)) * 0.5 + 0.5;
+    corr_ref_coords[1] = y;
+    corr_ref_coords[2] = 0.0;
 
-  /* Correction in order to rectify elements near the corners. */
-  corr_ref_coords[0] = tan (0.5 * M_PI * (x - 0.5)) * 0.5 + 0.5;
-  corr_ref_coords[1] = y;
-  corr_ref_coords[2] = 0.0;
+    /* Compute and normalize vector `s`. */
+    t8_geom_linear_interpolation (corr_ref_coords, tree_vertices, 3, 2, s);
 
-  t8_geom_linear_interpolation (corr_ref_coords, tree_vertices, 3, 2, s);
-
-  const double        R =
-    (p[0] * n[0] + p[1] * n[1]) / (r[0] * n[0] + r[1] * n[1]);
+    const double        norm = sqrt (s[0] * s[0] + s[1] * s[1]);
+    s[0] = s[0] / norm;
+    s[1] = s[1] / norm;
+  }
 
   {
-    const double        norm = sqrt (s[0] * s[0] + s[1] * s[1]);
+    const double        out_radius =
+      (p[0] * n[0] + p[1] * n[1]) / (r[0] * n[0] + r[1] * n[1]);
 
-    const double        blend = y * R / norm;   /* y \in [0,1] */
+    const double        blend = y * out_radius;   /* y \in [0,1] */
     const double        dnelb = 1.0 - y;
 
     out_coords[0] = dnelb * p[0] + blend * s[0];

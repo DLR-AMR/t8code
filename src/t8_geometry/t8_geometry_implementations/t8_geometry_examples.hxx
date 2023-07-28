@@ -46,6 +46,21 @@ public:
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   *
+   * This routine expects an input mesh of five squares looking like this:
+   *
+   *      +----------+
+   *      |\___1____/|
+   *      | |      | |
+   *      |4|  0   |2|
+   *      | |______| |
+   *      |/   3    \|
+   *      +----------+
+   *
+   * The central quad (id = 0) is mapped as is, while the outer edges of
+   * other four quads are stretched onto a circle with a radius determined by
+   * the four outer corners (denoted by "+") in the schematic above.
+   *
    */
   void                t8_geom_evaluate (t8_cmesh_t cmesh,
                                         t8_gloidx_t gtreeid,
@@ -66,7 +81,7 @@ public:
   void                t8_geom_load_tree_data (t8_cmesh_t cmesh,
                                               t8_gloidx_t gtreeid)
   {
-    /* Do nothing */
+    SC_ABORT_NOT_REACHED ();
   }
 };
 
