@@ -556,15 +556,6 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
   vtkSmartPointer < t8_vtk_gloidx_array_type_t > vtk_element_id =
     vtkSmartPointer < t8_vtk_gloidx_array_type_t >::New ();
 
-/*
- * We need the dataArray for writing double valued user defined data in the vtu files.
- * We want to write num_data many timesteps/arrays.
- * We need num_data many vtkDoubleArrays, so we need to allocate storage.
- * Later we call the constructor with: dataArrays[idata]=vtkDoubleArray::New()
- */
-  vtkDoubleArray    **dataArrays;
-  dataArrays = T8_ALLOC (vtkDoubleArray *, num_data);
-
   const t8_locidx_t   num_local_trees =
     t8_forest_get_num_local_trees (forest);
 
@@ -654,30 +645,25 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
    * We differentiate between scalar and vector data.
    */
   for (int idata = 0; idata < num_data; idata++) {
-    dataArrays[idata] = vtkDoubleArray::New ();
+    vtkSmartPointer < vtkDoubleArray > dataArray =
+      vtkSmartPointer < vtkDoubleArray >::New ();
     const int           num_components =
       data[idata].type == T8_VTK_SCALAR ? 1 : 3;
-    dataArrays[idata]->SetName (data[idata].description);       /* Set the name of the array */
-    dataArrays[idata]->SetNumberOfTuples (num_elements);        /* We want number of tuples=number of elements */
-    dataArrays[idata]->SetNumberOfComponents (num_components);  /* Each tuples has 3 values */
-    dataArrays[idata]->SetVoidArray (data[idata].data,
-                                     num_elements * num_components, 1);
+    dataArray->SetName (data[idata].description);       /* Set the name of the array */
+    dataArray->SetNumberOfTuples (num_elements);        /* We want number of tuples=number of elements */
+    dataArray->SetNumberOfComponents (num_components);  /* Each tuples has 3 values */
+    dataArray->SetVoidArray (data[idata].data,
+                             num_elements * num_components, 1);
     if (num_components == 1) {
-      unstructuredGrid->GetCellData ()->SetScalars (dataArrays[idata]);
+      unstructuredGrid->GetCellData ()->SetScalars (dataArray);
     }
     else {
-      unstructuredGrid->GetCellData ()->SetVectors (dataArrays[idata]);
+      unstructuredGrid->GetCellData ()->SetVectors (dataArray);
 
     }
-  }
-
-  /* We have to free the allocated memory for the cellTypes Array and the other arrays we allocated memory for. */
-  for (int idata = 0; idata < num_data; idata++) {
-    dataArrays[idata]->Delete ();
   }
 
   T8_FREE (cellTypes);
-  T8_FREE (dataArrays);
 }
 #endif
 
