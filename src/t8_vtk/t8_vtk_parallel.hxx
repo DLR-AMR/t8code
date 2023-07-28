@@ -52,7 +52,7 @@ vtk_read_success_t  t8_read_parallel (const char *filename,
  *                 by the pieces read on this proc. 
  * \returns        non-zero on success, zero if the reading failed. 
  */
-vtk_read_success_t  t8_read_parallel_poly (const char *filename,
+vtk_read_success_t  t8_read_parallel_polyData (const char *filename,
                                            vtkSmartPointer < vtkDataSet >
                                            grid, sc_MPI_Comm comm);
 

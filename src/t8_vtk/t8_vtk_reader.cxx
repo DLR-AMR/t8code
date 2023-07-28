@@ -153,11 +153,11 @@ t8_file_to_vtkGrid (const char *filename,
       break;
     case VTK_PARALLEL_POLYDATA_FILE:
       if (!partition) {
-        main_proc_read_successful = t8_read_poly (filename, vtkGrid);
+        main_proc_read_successful = t8_read_polyData (filename, vtkGrid);
       }
       else {
         main_proc_read_successful =
-          t8_read_parallel_poly (filename, vtkGrid, comm);
+          t8_read_parallel_polyData (filename, vtkGrid, comm);
         break;
       }
       break;
