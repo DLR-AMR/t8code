@@ -31,56 +31,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <vtkAppendPolyData.h>
 
 /**
- * Merge the vtkUnstructuredGrids comming from a vtkXMLPReader into a single
- * vtkUnstructuredGrid. 
- * 
- * \param[in] reader        An vtkXMLPReader
- * \param[in, out] grid     On input an empty DataSet, on output the DataSet representing the merged pieces assigned to the reader
- * \param[in] first_piece   The index of the first piece to read by \a reader
- * \param[in] last_piece    The (not included) index of the last piece to read by \a reader
- */
-static void
-merge_unstructured (vtkSmartPointer < vtkXMLPDataReader > reader,
-                    vtkSmartPointer < vtkDataSet > grid,
-                    const int first_piece, const int last_piece)
-{
-  vtkNew < vtkAppendFilter > append;
-  const int           total_num_pieces = last_piece - first_piece + 1;
-  for (int ipiece = first_piece; ipiece < last_piece; ipiece++) {
-    reader->UpdatePiece (ipiece, total_num_pieces, 0);
-    append->AddInputData (reader->GetOutputAsDataSet ());
-  }
-  /* Merge all read grids together */
-  append->MergePointsOn ();
-  append->Update ();
-  grid->ShallowCopy (append->GetOutput ());
-}
-
-/**
- * Merge the vtkPolyData comming from a vtkXMLPPolyDataReader into a single
- * vtkDataSet. 
- * 
- * \param[in] reader        An vtkXMLPPolyDataReader
- * \param[in, out] grid     On input an empty DataSet, on output the DataSet representing the merged pieces assigned to the reader
- * \param[in] first_piece   The index of the first piece to read by \a reader
- * \param[in] last_piece    The (not included) index of the last piece to read by \a reader
- */
-static void
-merge_polydata (vtkSmartPointer < vtkXMLPPolyDataReader > reader,
-                vtkSmartPointer < vtkDataSet > grid, const int first_piece,
-                const int last_piece)
-{
-  vtkNew < vtkAppendPolyData > append;
-  const int           total_num_pieces = last_piece - first_piece + 1;
-  for (int ipiece = first_piece; ipiece < last_piece; ipiece++) {
-    reader->UpdatePiece (ipiece, total_num_pieces, 0);
-    append->AddInputData (reader->GetOutput ());
-  }
-  append->Update ();
-  grid->ShallowCopy (append->GetOutput ());
-}
-
-/**
  * Setup the reader on each process
  * 
  * \param[in] filename          The filename of the parallel file to read
@@ -150,7 +100,8 @@ setup_reader (const char *filename,
 
 vtk_read_success_t
 t8_read_parallel_polyData (const char *filename,
-                       vtkSmartPointer < vtkDataSet > grid, sc_MPI_Comm comm)
+                           vtkSmartPointer < vtkDataSet > grid,
+                           sc_MPI_Comm comm)
 {
   /* Setup parallel reader. */
   vtkSmartPointer < vtkXMLPPolyDataReader > reader =
@@ -165,9 +116,17 @@ t8_read_parallel_polyData (const char *filename,
   if (read_status == read_failure) {
     return read_status;
   }
-  /* Read the pieces if there are any pieces to read on this proc. */
+  /* Read the pieces if there are any pieces to read on this proc. 
+   * Merge the output of multiple pieces into one grid */
   if (first_piece < last_piece) {
-    merge_polydata (reader, grid, first_piece, last_piece);
+    vtkNew < vtkAppendPolyData > append;
+    const int           total_num_pieces = last_piece - first_piece + 1;
+    for (int ipiece = first_piece; ipiece < last_piece; ipiece++) {
+      reader->UpdatePiece (ipiece, total_num_pieces, 0);
+      append->AddInputData (reader->GetOutput ());
+    }
+    append->Update ();
+    grid->ShallowCopy (append->GetOutput ());
   }
   else {
     /* Initialize the grid, but don't construct any cells. 
@@ -178,8 +137,9 @@ t8_read_parallel_polyData (const char *filename,
 }
 
 vtk_read_success_t
-t8_read_parallel_unstructured (const char *filename, vtkSmartPointer < vtkDataSet > grid,
-                  sc_MPI_Comm comm)
+t8_read_parallel_unstructured (const char *filename,
+                               vtkSmartPointer < vtkDataSet > grid,
+                               sc_MPI_Comm comm)
 {
   /* Setup parallel reader. */
   vtkSmartPointer < vtkXMLPUnstructuredGridReader > reader =
@@ -194,9 +154,19 @@ t8_read_parallel_unstructured (const char *filename, vtkSmartPointer < vtkDataSe
   if (read_status == read_failure) {
     return read_status;
   }
-  /* Read the pieces if there are any pieces to read on this proc. */
+  /* Read the pieces if there are any pieces to read on this proc. 
+   * Merge the output of multiple pieces into one grid */
   if (first_piece < last_piece) {
-    merge_unstructured (reader, grid, first_piece, last_piece);
+    vtkNew < vtkAppendFilter > append;
+    const int           total_num_pieces = last_piece - first_piece + 1;
+    for (int ipiece = first_piece; ipiece < last_piece; ipiece++) {
+      reader->UpdatePiece (ipiece, total_num_pieces, 0);
+      append->AddInputData (reader->GetOutputAsDataSet ());
+    }
+    /* Merge all read grids together */
+    append->MergePointsOn ();
+    append->Update ();
+    grid->ShallowCopy (append->GetOutput ());
   }
   else {
     /* Initialize the grid, but don't construct any cells. 
