@@ -315,7 +315,7 @@ t8_cmesh_t          t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees,
                                                const int do_partition,
                                                sc_MPI_Comm comm);
 
-/** Construct a cubed disk of given radius.
+/** Construct a squared disk of given radius.
  * \param [in] radius        Radius of the sphere.
  * \param [in] comm          The MPI communicator used to commit the cmesh
  * \return                   A cmesh representing the spherical surface.
