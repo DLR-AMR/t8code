@@ -701,6 +701,33 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh,
   t8_geom_compute_linear_geometry (active_tree_class,
                                    active_tree_vertices, ref_coords,
                                    out_coords);
+
+  const int           num_edges = t8_eclass_num_edges[active_tree_class];
+
+  /* Check each edge for a geometry. */
+  for (int i_edge = 0; i_edge < num_edges; ++i_edge) {
+    /* We have to check for curves as well as surfaces. Linked curves are stored 
+     * in the first half of the array, surfaces in the second. 
+     * If a curve is connected to this edge we have to also check, 
+     * if a surface is connected to at least one of the two adjacent faces.
+     */
+    if (edges[i_edge] > 0 || edges[i_edge + num_edges] > 0) {
+      /* Check if only a surface or a curve is present. Abort if both is true. */
+      T8_ASSERT (!(edges[i_edge] > 0) != !(edges[i_edge + num_edges] > 0));
+
+      /* 
+       *             _0
+       *          _- / \
+       *       EX   /   \
+       *    _-     EX    \
+       *  1 --__  /       EX
+       *   \    -/-__      \
+       *   EX   /    EX__   \
+       *     \ /         --__\
+       *      2------ EX -----3
+       */
+    }
+  }
 }
 
 void
