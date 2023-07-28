@@ -8,7 +8,7 @@
 
 t8code (spoken as "tetcode") is a C/C++ library to manage parallel adaptive meshes with various element types.
 t8code uses a collection (a forest) of multiple connected adaptive space-trees in parallel and scales to at least one million MPI ranks and over 1 Trillion mesh elements.
-It is licensed under the GNU General Public License 2.0 or later. Copyright (c) 2015 the developers.
+It is licensed under the GNU General Public License 2.0 or later. Copyright (c) 2023 the developers.
 
 t8code is intended to be used as a thirdparty library for numerical simulation codes or any other applications that require meshes.
 
@@ -80,6 +80,17 @@ make doxygen
 and then find the generated files in the `/doc` subfolder.
 
 You can also find the documentation of our releases on the [t8code website](https://dlr-amr.github.io/t8code/pages/documentation.html).
+
+### Julia Wrapper
+
+We offer [T8code.jl](https://github.com/DLR-AMR/T8code.jl) - an official
+[Julia](https://julialang.org/) package allowing to call t8code routines from
+the [Julia](https://julialang.org/) programming language. From within a Julia
+session do
+```julia
+julia> import Pkg; Pkg.add(["T8code", "MPI"])
+```
+to install the package on your system.
 
 ### Publications
   
