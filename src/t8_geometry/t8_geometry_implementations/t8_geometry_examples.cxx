@@ -75,7 +75,7 @@ t8_geometry_squared_disk::t8_geom_evaluate (t8_cmesh_t cmesh,
     r[1] = r[1] / norm;
   }
 
-  { 
+  {
     double              corr_ref_coords[3];
 
     /* Correction in order to rectify elements near the corners. */
@@ -95,7 +95,7 @@ t8_geometry_squared_disk::t8_geom_evaluate (t8_cmesh_t cmesh,
     const double        out_radius =
       (p[0] * n[0] + p[1] * n[1]) / (r[0] * n[0] + r[1] * n[1]);
 
-    const double        blend = y * out_radius;   /* y \in [0,1] */
+    const double        blend = y * out_radius; /* y \in [0,1] */
     const double        dnelb = 1.0 - y;
 
     out_coords[0] = dnelb * p[0] + blend * s[0];
