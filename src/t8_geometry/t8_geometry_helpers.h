@@ -76,6 +76,25 @@ void                t8_geom_linear_interpolation (const double *coefficients,
                                                   int interpolation_dim,
                                                   double *evaluated_function);
 
+/** Triangular interpolation between 3 points (triangle) or 4 points (tetrahedron) using barycentric coordinates.
+ * \param [in]    coefficients        An array of size \a interpolation_dim giving the coefficients used for the interpolation
+ * \param [in]    corner_values       An array of size 
+                                                       3 * \a corner_value_dim for \a interpolation_dim == 2 or
+                                                       4 * \a corner_value_dim for \a interpolation_dim == 3, 
+                                                       giving the function values of the triangle/tetrahedron for each corner (in zorder)
+ * \param [in]    corner_value_dim    The dimension of the \a corner_values.
+ * \param [in]    interpolation_dim   The dimension of the interpolation (2 for triangle, 3 for tetrahedron)
+ * \param [out]   evaluated_function  An array of size \a corner_value_dim, on output the result of the interpolation.
+ */
+void                t8_geom_triangular_interpolation (const double
+                                                      *coefficients,
+                                                      const double
+                                                      *corner_values,
+                                                      int corner_value_dim,
+                                                      int interpolation_dim,
+                                                      double
+                                                      *evaluated_function);
+
 /** Copies the vertex coordinates of a tree face in zorder into a separate array.
  * \param [in]    tree_class     The eclass of the tree.
  * \param [in]    tree_vertices  Array with the tree vertex coordinates.
@@ -99,6 +118,39 @@ void                t8_geom_get_edge_vertices (t8_eclass_t tree_class,
                                                const double *tree_vertices,
                                                int edge_index, int dim,
                                                double *edge_vertices);
+
+/** Calculates a point of intersection in a triangular reference space. The intersection is the extension
+ * of a straight line passing through a reference point and the opposite vertex of the edge.
+ *     /|\
+ *    / | \     o -> reference point
+ *   /  o  \    x -> intersection point
+ *  /   |   \
+ * /____x____\
+ * \param [in]    edge_index        Index of the edge, the intersection lies on.
+ * \param [in]    ref_coords        Array containing the coordinates of the reference point.
+ * \param [out]   ref_intersection  Coordinates of the intersection point.
+ */
+void                t8_geom_get_ref_intersection (int edge_index,
+                                                  const double *ref_coords,
+                                                  double ref_intersection[2]);
+
+/** Calculates the scaling factor for edge displacement along a triangular tree face
+ *  depending on the position of the global reference point.
+ * \param [in]    edge_index          Index of the edge, whose displacement should be scaled.
+ * \param [in]    tree_vertices       Array with the tree vertex coordinates.
+ * \param [in]    glob_intersection   Array containing the coordinates of the intersection point
+ *                                    of a line drawn from the opposite vertex through the
+ *                                    glob_ref_point onto the edge with edge_index.
+ * \param [in]    glob_ref_point      Array containing the coordinates of the reference point
+ *                                    mapped into the global space.
+ */
+double              t8_geom_get_triangle_scaling_factor (int edge_index,
+                                                         const double
+                                                         *tree_vertices,
+                                                         const double
+                                                         *glob_intersection,
+                                                         const double
+                                                         *glob_ref_point);
 
 T8_EXTERN_C_END ();
 

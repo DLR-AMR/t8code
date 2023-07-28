@@ -48,10 +48,10 @@
 
 /* In this example is the use of the netcdf feature exemplary displayed.
 * We show how to write out a forest in the netCDF format and how to create additional (integer/double) netCDF variables which hold element data.
-* There are mainly two funcitons implemented in 'src/t8_forest_netcdf.cxx' which allow the creation of netCDF file containing the data for a forest in the style of the UGRID conventions.
+* There are mainly two functions implemented in 'src/t8_forest_netcdf.cxx' which allow the creation of netCDF file containing the data for a forest in the style of the UGRID conventions.
 * The first function is: 't8_forest_write_netcdf_ext()'; it allows to choose which variable storage and access scheme should be used (e.g. {NC_CONTIGUOUS; NC_CHUNKED}x{NC_INDEPENDENT; NC_COLLECTIVE}).
 * The second function is: 't8_forest_write_netcdf()' uses default values (NC_CONTIGUOUS, NC_INDEPENDENT).
-* If the extended function is used and NC_CHUNKED is chosen: Curently, the chunksize which is chosen is the netCDF default (this means -> nc_def_var_chunking(..., NULL) receives a NULL-pointer as the 'size_t* chunksizesp' parameter)
+* If the extended function is used and NC_CHUNKED is chosen: Currently, the chunksize which is chosen is the netCDF default (this means -> nc_def_var_chunking(..., NULL) receives a NULL-pointer as the 'size_t* chunksizesp' parameter)
 */
 T8_EXTERN_C_BEGIN ();
 
@@ -138,10 +138,10 @@ t8_example_netcdf_adapt (t8_forest_t forest)
 /** Function that times the duration of writing out the netCDF File, given a specific variable storage and access pattern 
 * \param [in] forest The forest to save in a netCDF file (using UGRID conventions).
 * \param [in] comm The MPI communicator to use.
-* \param [in] netcdf_var_storage_mode Choose if chunked or contiguous storage should be used (possible Options: NC_CONTIGUOUS, NC_CHUNCKED).
+* \param [in] netcdf_var_storage_mode Choose if chunked or contiguous storage should be used (possible Options: NC_CONTIGUOUS, NC_CHUNKED).
 * \param [in] netcdf_var_mpi_access Choose if the netCDF write operations should be performed independently or collectively by the MPI ranks (possible Options: NC_INDEPENDENT, NC_COLLECTIVE).
 * \param [in] title Hold the title of the netCDF file which is stored inside the netCDF file as a global attribute.
-* \param [in] num_additonal_vars The number of additional user-variables to write out.
+* \param [in] num_additional_vars The number of additional user-variables to write out.
 * \param [in] ext_vars A pointer to an array which holds \a num_additional_vars which should be written out in addition to the 'forest NetCDF variables'
 * \note It is assumed that each user-variable in \a ext_vars holds one value for each element in the mesh/forest. If no additional variables should be written in the netCDF file, set \a num_additional_vars equal to zero and pass a NULL-pointer as \a ext_vars.
 */

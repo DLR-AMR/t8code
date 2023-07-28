@@ -65,6 +65,7 @@ typedef enum
   T8_GEOM_CIRCLE,
   T8_GEOM_3D,
   T8_GEOM_MOVING,
+  T8_GEOM_OCC_TRIANGLE,
   T8_GEOM_OCC_CURVE_CUBE,
   T8_GEOM_OCC_SURFACE_CUBES,
   T8_GEOM_OCC_SURFACE_CYLINDER,
@@ -112,10 +113,10 @@ public:
   }
 
   /* Jacobian, not implemented. */
-  void                t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
-                                                t8_gloidx_t gtreeid,
-                                                const double *ref_coords,
-                                                double *jacobian) const
+  void                t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
+                                                 t8_gloidx_t gtreeid,
+                                                 const double *ref_coords,
+                                                 double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -178,10 +179,10 @@ public:
   }
 
   /* Jacobian, not implemented. */
-  void                t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
-                                                t8_gloidx_t gtreeid,
-                                                const double *ref_coords,
-                                                double *jacobian) const
+  void                t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
+                                                 t8_gloidx_t gtreeid,
+                                                 const double *ref_coords,
+                                                 double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -220,10 +221,10 @@ public:
   }
 
   /* Jacobian, not implemented. */
-  void                t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
-                                                t8_gloidx_t gtreeid,
-                                                const double *ref_coords,
-                                                double *jacobian) const
+  void                t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
+                                                 t8_gloidx_t gtreeid,
+                                                 const double *ref_coords,
+                                                 double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -288,10 +289,10 @@ public:
   }
 
   /* Jacobian, not implemented. */
-  void                t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
-                                                t8_gloidx_t gtreeid,
-                                                const double *ref_coords,
-                                                double *jacobian) const
+  void                t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
+                                                 t8_gloidx_t gtreeid,
+                                                 const double *ref_coords,
+                                                 double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -355,10 +356,10 @@ public:
   }
 
   /* Jacobian, not implemented. */
-  void                t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
-                                                t8_gloidx_t gtreeid,
-                                                const double *ref_coords,
-                                                double *jacobian) const
+  void                t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
+                                                 t8_gloidx_t gtreeid,
+                                                 const double *ref_coords,
+                                                 double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -407,10 +408,10 @@ public:
   }
 
   /* Jacobian, not implemented. */
-  void                t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
-                                                t8_gloidx_t gtreeid,
-                                                const double *ref_coords,
-                                                double *jacobian) const
+  void                t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
+                                                 t8_gloidx_t gtreeid,
+                                                 const double *ref_coords,
+                                                 double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -472,7 +473,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
   t8_cmesh_t          cmesh;
   char                vtuname[BUFSIZ];
   t8_geometry_c      *geometry;
-  /* geoemtry_sincos is used for T8_GEOM_TWO_GEOMETRIES */
+  /* geometry_sincos is used for T8_GEOM_TWO_GEOMETRIES */
   t8_geometry_c      *geometry_sincos;
   int                 uniform_level;
   double              time = 0; /* used for moving geometry */
@@ -564,6 +565,69 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
     snprintf (vtuname, BUFSIZ, "forest_moving_lvl_%i", level);
     break;
+  case T8_GEOM_OCC_TRIANGLE:
+    {
+#if T8_WITH_OCC
+      t8_global_productionf
+        ("Creating uniform level %i forests with an occ triangle geometry.\n",
+         level);
+
+      /* Constructing a triangle with one curved edge (f2) */
+      Handle_Geom_BSplineCurve occ_curve;
+      TColgp_Array1OfPnt  point_array (1, 3);
+      TopoDS_Shape        shape;
+
+      /* Define knots along the bsplines. */
+      point_array (1) = gp_Pnt (0.0, 0.0, 0.0);
+      point_array (2) = gp_Pnt (0.4, 1.3, 0.0);
+      point_array (3) = gp_Pnt (1.0, 2.0, 0.0);
+
+      /* Generate bsplines from arrays. */
+      occ_curve = GeomAPI_PointsToBSpline (point_array).Curve ();
+
+      /* Fill shape with bsplines so that we can create a geometry with this shape. */
+      shape = BRepBuilderAPI_MakeEdge (occ_curve).Edge ();
+
+      /* Create an occ geometry. */
+      t8_geometry_occ    *geometry_occ =
+        new t8_geometry_occ (3, shape, "occ curve dim=3");
+
+      /* The arrays indicate which face/edge carries a geometry. 
+       * 0 means no geometry and any other number indicates the position of the geometry 
+       * in the global geometry array. Here edge 1 carries the created occ_curve. */
+      int                 faces[1] = { 0 };
+      int                 edges[6] = { 0, 1, 0, 0, 0, 0 };
+      /* Create tree 0 */
+      t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
+      double              vertices[9] = {
+        0.0, 0.0, 0.0,
+        2.0, 0.0, 0.0,
+        1.0, 2.0, 0.0
+      };
+      t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 3);
+
+      /* The valid parameter range for bsplines is [0, 1]. Therefore, we define the parameter range accordingly. */
+      double              parameters_edge[2] = { 0, 1 };
+
+      /* Give the tree information about its curves and the parameters of the vertices. 
+       * Each parameter set is given to the tree via its attribute key + the edge or face index it corresponds with. */
+      t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (),
+                              T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces,
+                              1 * sizeof (int), 0);
+      t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (),
+                              T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges,
+                              6 * sizeof (int), 0);
+      t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (),
+                              T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + 1,
+                              parameters_edge, 2 * sizeof (double), 0);
+
+      geometry = geometry_occ;
+      snprintf (vtuname, BUFSIZ, "forest_occ_triangle_lvl_%i", level);
+      break;
+#else /* !T8_WITH_OCC */
+      SC_ABORTF ("OCC not linked");
+#endif /* T8_WITH_OCC */
+    }
   case T8_GEOM_OCC_CURVE_CUBE:
     {
 #if T8_WITH_OCC
@@ -627,7 +691,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
         0, 1, 1,
         1, 1, 1
       };
-      t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 24);
+      t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 8);
 
       /* The valid parameter range for bsplines is [0, 1]. We defined the bsplines in such a way, 
        * that parameter 0 and 1 resemble the two vertices of the connected edge. */
@@ -741,7 +805,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
         -0.2, -0.2, 1.2,        // Point (1, 1) from array
         1.0, -0.2, 0.8          // Point (3, 1) from array
       };
-      t8_cmesh_set_tree_vertices (cmesh, 0, vertices0, 24);
+      t8_cmesh_set_tree_vertices (cmesh, 0, vertices0, 8);
 
       /* The valid parameter range for bspline surfaces is [0, 1]^2. We defined the bspline surface in such a way, 
        * that parameters 0, 0.5 and 1 resemble the vertices of the connected surface. */
@@ -776,7 +840,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
         1.0, -0.2, 0.8,         /* Point (3, 1) from array */
         2.2, -0.2, 1.2          /* Point (5, 1) from array */
       };
-      t8_cmesh_set_tree_vertices (cmesh, 1, vertices1, 24);
+      t8_cmesh_set_tree_vertices (cmesh, 1, vertices1, 8);
 
       /* The valid parameter range for bspline surfaces is [0, 1]^2. We defined the bspline surface in such a way, 
        *  that parameters 0, 0.5 and 1 resemble the vertices of the connected surface. */
@@ -894,7 +958,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
         vertices[i * 24 + 21] = cos (i * 2 * M_PI / num) * radius_inner;
         vertices[i * 24 + 22] = sin (i * 2 * M_PI / num) * radius_inner;
         vertices[i * 24 + 23] = 1;
-        t8_cmesh_set_tree_vertices (cmesh, i, vertices + i * 24, 24);
+        t8_cmesh_set_tree_vertices (cmesh, i, vertices + i * 24, 8);
 
         /* Create corresponding parameters for the cylinders. 
          * The parameter range of the cylinders is u ∈ [0, 2 * M_PI] and v ∈ ]inf, -inf[ */
@@ -908,7 +972,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
         parameters[i * 8 + 7] = -1;
 
         /* Give the trees information about their surfaces and the parameters of the vertices. 
-         * Each parameter set is given to the tree via its attribute key + the edge or face index it corresponds with. 
+         * Each parameter set is given to the tree via its attribute key + face index it corresponds with. 
          * We can use the same edges and faces array, because we link the surface to the same faces on every tree.*/
         t8_cmesh_set_attribute (cmesh, i, t8_get_package_id (),
                                 T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces,
@@ -1058,9 +1122,10 @@ main (int argc, char **argv)
                       "\t\t    The mesh will not be uniform. Instead it is refined at the domain boundary.\n"
                       "\t\t5 - A cube that is distorted in z-direction with one 3D cube tree.\n"
                       "\t\t6 - A moving mesh consisting of a single 2D quad tree.\n"
-                      "\t\t7 - A cube with two occ curves as edges.\n"
-                      "\t\t8 - Two cubes with one occ surface as face.\n"
-                      "\t\t9 - A hollow cylinder with a occ surface on the in- and outside.\n");
+                      "\t\t7 - A curved triangle with an occ curve.\n"
+                      "\t\t8 - A cube with two occ curves as edges.\n"
+                      "\t\t9 - Two cubes with one occ surface as face.\n"
+                      "\t\t10 - A hollow cylinder with a occ surface on the in- and outside.\n");
 
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);

@@ -619,7 +619,7 @@ t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp,
       line_modify = line;
       /* Since the tags are stored before the node indices, we need to
        * skip them first. But since the number of them is unknown and the
-       * lenght (in characters) of them, we have to skip one by one. */
+       * length (in characters) of them, we have to skip one by one. */
       for (i = 0; i < 3 + num_tags; i++) {
         T8_ASSERT (strcmp (line_modify, "\0"));
         /* move line_modify to the next word in the line */
@@ -732,6 +732,126 @@ die_ele:
   t8_cmesh_destroy (&cmesh);
   return -1;
 }
+
+#if T8_WITH_OCC
+/** Corrects the parameters on closed geometries to prevent disorted elements.
+ * \param [in]      geometry_dim    The dimension of the geometry.
+ *                                  1 for edges, 2 for surfaces.
+ * \param [in]      geometry_index  The index of the geometry.
+ * \param [in]      num_face_nodes  The number of the nodes of the surface.
+ *                                  NULL if the geometry is an edge.
+ * \param [in]      geometry_occ    The occ_geometry.
+ * \param [in,out]  parameters      The parameters to be corrected.
+ */
+static void
+t8_cmesh_correct_parameters_on_closed_geometry (const int geometry_dim,
+                                                const int geometry_index,
+                                                const int num_face_nodes,
+                                                const t8_geometry_occ_c *
+                                                geometry_occ,
+                                                double *parameters)
+{
+  switch (geometry_dim) {
+    /* Check for closed U parameter in case of an edge. */
+  case 1:
+    /* Only correct the U parameter if the edge is closed. */
+    if (geometry_occ->t8_geom_is_edge_closed (geometry_index)) {
+      /* Get the parametric bounds of the closed geometry 
+       * edge    -> [Umin, Umax]
+       */
+      double              parametric_bounds[2];
+      /* Get the parametric edge bounds. */
+      geometry_occ->t8_geom_get_edge_parametric_bounds (geometry_index,
+                                                        parametric_bounds);
+      /* Check the upper an the lower parametric bound. */
+      for (int bound = 0; bound < 2; ++bound) {
+        /* Iterate over both nodes of the edge. */
+        for (int i_nodes = 0; i_nodes < 2; ++i_nodes) {
+          /* Check if one of the U parameters lies on one of the parametric bounds. */
+          if (std::abs (parameters[i_nodes] - parametric_bounds[bound]) <=
+              T8_PRECISION_EPS) {
+            /* Check the U parameter of the other node ((i_node + 1) % 2) to find out
+             * to which parametric bound the tree is closer.
+             */
+            if (std::abs (parameters[(i_nodes + 1) % 2] -
+                          parametric_bounds[bound]) > T8_PRECISION_EPS) {
+              /* Now check if the difference of the parameters of both nodes are bigger than the half parametric range.
+               * In this case, the parameter at i_nodes has to be changed to the other parametric bound ((bound + 1) % 2).
+               */
+              if (std::abs
+                  (parameters[(i_nodes + 1) % 2] - parameters[i_nodes]) >
+                  ((parametric_bounds[1] - parametric_bounds[0]) / 2)) {
+                /* Switch to the other parametric bound. */
+                parameters[i_nodes] = parametric_bounds[(bound + 1) % 2];
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+    break;
+
+    /* Check for closed U parameter and closed V parameter in case of a surface. */
+  case 2:
+    /* Iterate over both parameters. 0 stands for the U parameter an 1 for the V parameter. */
+    for (int param_dim = 0; param_dim < 2; ++param_dim) {
+      /* Only correct the surface parameters if they are closed */
+      if (geometry_occ->t8_geom_is_surface_closed (geometry_index, param_dim)) {
+        /* Get the parametric bounds of the closed geometry
+         * surface -> [Umin, Umax, Vmin, Vmax]
+         */
+        double              parametric_bounds[4];
+        geometry_occ->t8_geom_get_face_parametric_bounds (geometry_index,
+                                                          parametric_bounds);
+        /* Check the upper an the lower parametric bound. */
+        for (int bound = 0; bound < 2; ++bound) {
+          /* Iterate over every corner node of the tree. */
+          for (int i_nodes = 0; i_nodes < num_face_nodes; ++i_nodes) {
+            /* Check if one of the U parameters lies on one of the parametric bounds. */
+            if (std::abs (parameters[2 * i_nodes + param_dim] -
+                          parametric_bounds[bound + 2 * param_dim]) <=
+                T8_PRECISION_EPS) {
+              /* Iterate over every corner node of the tree again. */
+              for (int j_nodes = 0; j_nodes < num_face_nodes; ++j_nodes) {
+                /* Search for a U parameter that is non of the parametric bounds. To check
+                 * whether the tree is closer to the lower or the upper parametric bound.
+                 */
+                if (std::abs (parameters[2 * j_nodes + param_dim] -
+                              parametric_bounds[bound +
+                                                2 * param_dim]) >
+                    T8_PRECISION_EPS
+                    && std::abs (parameters[2 * j_nodes + param_dim]
+                                 - parametric_bounds[((bound + 1) % 2) +
+                                                     2 * param_dim]) >
+                    T8_PRECISION_EPS) {
+                  /* Now check if the difference of the parameters of both nodes are bigger than the half parametric range.
+                   * In this case, the parameter at i_nodes has to be changed to the other parametric bound ((bound + 1) % 2).
+                   */
+                  if (std::abs
+                      (parameters[2 * j_nodes + param_dim] -
+                       parameters[2 * i_nodes + param_dim]) >
+                      ((parametric_bounds[1 + 2 * param_dim] -
+                        parametric_bounds[0 + 2 * param_dim]) / 2)) {
+                    /* Switch to the other parametric bound. */
+                    parameters[2 * i_nodes + param_dim] =
+                      parametric_bounds[((bound + 1) % 2) + 2 * param_dim];
+                    break;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    break;
+  default:
+    SC_ABORT_NOT_REACHED ();
+    break;
+  }
+}
+#endif /* T8_WITH_OCC */
 
 /* fp should be set after the Nodes section, right before the tree section.
  * If vertex_indices is not NULL, it is allocated and will store
@@ -980,9 +1100,9 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
           T8_ASSERT (t8_geom_is_occ(occ_geometry_base));
           const t8_geometry_occ_c *occ_geometry = dynamic_cast<const t8_geometry_occ_c *> (occ_geometry_base);
           /* Check for right element class */
-          if (eclass != T8_ECLASS_HEX && eclass != T8_ECLASS_QUAD)
+          if (eclass != T8_ECLASS_TRIANGLE && eclass != T8_ECLASS_QUAD && eclass != T8_ECLASS_HEX)
           {
-            t8_errorf("%s element detected. The occ geometry currently only supports quad and hex elements.", 
+            t8_errorf("%s element detected. The occ geometry currently only supports quad, tri and hex elements.", 
                       t8_eclass_to_string[eclass]);
             goto die_ele;
           }
@@ -1181,8 +1301,9 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                     if (occ_geometry->t8_geom_is_edge_on_face(face_nodes[i_face_nodes].entity_tag, surface_index))
                     {
                       occ_geometry->t8_geom_edge_parameter_to_face_parameters(face_nodes[i_face_nodes].entity_tag,
-                                                                              surface_index,
+                                                                              surface_index, num_face_nodes,
                                                                               face_nodes[i_face_nodes].parameters[0],
+                                                                              NULL,
                                                                               face_nodes[i_face_nodes].parameters);
                       face_nodes[i_face_nodes].entity_dim = 2;
                     }
@@ -1194,8 +1315,8 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                   }
                 }
               }
-              /* Abort if not all nodes are on the surface */
-              if (!all_nodes_on_surface)
+              /* Abort if not all nodes are on the surface or if the surface is a plane */
+              if (!all_nodes_on_surface || occ_geometry->t8_geom_is_plane(surface_index))
               {
                 continue;
               }
@@ -1225,6 +1346,16 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                 parameters[i_face_nodes * 2] = face_nodes[i_face_nodes].parameters[0];
                 parameters[i_face_nodes * 2 + 1] = face_nodes[i_face_nodes].parameters[1];
               }
+              /* Corrects the parameters on the surface if it is closed to prevent disorted elements. */
+              for (int param_dim = 0; param_dim < 2; ++param_dim) {
+                if (occ_geometry->t8_geom_is_surface_closed(surface_index, param_dim)) {
+                  t8_cmesh_correct_parameters_on_closed_geometry (2, surface_index,
+                                                              num_face_nodes,
+                                                              occ_geometry,
+                                                              parameters);
+                }
+              }
+
               t8_cmesh_set_attribute (cmesh, 
                                       tree_count, 
                                       t8_get_package_id(), 
@@ -1369,10 +1500,24 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                   edge_nodes[i_edge_node].entity_dim = 1;
                 }
               }
+
+              /* Abort if the edge is a line */
+              if (occ_geometry->t8_geom_is_line(edge_geometry_tag))
+              {
+                continue;
+              }
+
               edge_geometries[i_tree_edges] = edge_geometry_tag;
               tree_is_linked = 1;
               parameters[0] = edge_nodes[0].parameters[0];
               parameters[1] = edge_nodes[1].parameters[0];
+
+              /* Corrects the parameters on the edge if it is closed to prevent disorted elements. */
+              if (occ_geometry->t8_geom_is_edge_closed(edge_geometry_tag)) {
+                t8_cmesh_correct_parameters_on_closed_geometry (1, edge_geometry_tag,
+                                                            2, occ_geometry, parameters);
+              }
+
               t8_cmesh_set_attribute (cmesh, 
                                       tree_count, 
                                       t8_get_package_id(), 
@@ -1425,19 +1570,37 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                 /* If the node lies on an edge we have to do the same */
                 if (edge_nodes[i_edge_node].entity_dim == 1)
                 {
+                  const int num_face_nodes = t8_eclass_num_vertices[eclass];
                   occ_geometry->t8_geom_edge_parameter_to_face_parameters(edge_nodes[i_edge_node].entity_tag,
-                                                                          edge_geometry_tag,
+                                                                          edge_geometry_tag, num_face_nodes,
                                                                           edge_nodes[i_edge_node].parameters[0],
+                                                                          parameters,
                                                                           edge_nodes[i_edge_node].parameters);
                   edge_nodes[i_edge_node].entity_dim = 2;
                 }
               }
+
+              /* Abort if the edge is a line */
+              if (occ_geometry->t8_geom_is_line(edge_geometry_tag))
+              {
+                continue;
+              }
+
               edge_geometries[i_tree_edges + t8_eclass_num_edges[eclass]] = edge_geometry_tag;
               tree_is_linked = 1;
               parameters[0] = edge_nodes[0].parameters[0];
               parameters[1] = edge_nodes[0].parameters[1];
               parameters[2] = edge_nodes[1].parameters[0];
               parameters[3] = edge_nodes[1].parameters[1];
+
+              /* Corrects the parameters on the surface if it is closed to prevent disorted elements. */
+              for (int param_dim = 0; param_dim < 2; ++param_dim) {
+                if (occ_geometry->t8_geom_is_surface_closed(edge_geometry_tag, param_dim)) {
+                  t8_cmesh_correct_parameters_on_closed_geometry (2, edge_geometry_tag,
+                                                              2, occ_geometry, parameters);
+                }
+              }
+
               t8_cmesh_set_attribute (cmesh, 
                                       tree_count, 
                                       t8_get_package_id(), 
@@ -1688,7 +1851,7 @@ t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh,
        gtree_it++) {
     /* We get the class of the current tree.
      * Since we know that the trees were put into the stash in order
-     * of their tree id's, we can just read the correspoding entry from
+     * of their tree id's, we can just read the corresponding entry from
      * the stash.
      * !WARNING: This does not work in general to find the class of a tree
      *    since the order in which the trees are added to the stash is arbitrary.
@@ -1831,7 +1994,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
 
   /* initialize cmesh structure */
   t8_cmesh_init (&cmesh);
-  /* Setting the dimension by hand is neccessary for partitioned
+  /* Setting the dimension by hand is necessary for partitioned
    * commit, since there are process without any trees. So the cmesh would
    * not know its dimension on these processes. */
   t8_cmesh_set_dimension (cmesh, dim);
@@ -1933,7 +2096,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
   }
 
   if (partition) {
-    /* Communicate whether main proc read the cmesh succesful.
+    /* Communicate whether main proc read the cmesh successful.
      * If the main process failed then it called this Bcast already and
      * terminated. If it was successful, it calls the Bcast now. */
     sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc, comm);

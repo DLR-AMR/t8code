@@ -34,7 +34,7 @@
 #define T8_DPYRAMID_NUM_TYPES 8
 
 /** The type of the root pyramid*/
-#define T8_DPYRAMID_ROOT_TPYE 6
+#define T8_DPYRAMID_ROOT_TYPE 6
 
 /** The first type of pyramids in the shape of a pyramid*/
 #define T8_DPYRAMID_FIRST_TYPE 6

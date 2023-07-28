@@ -729,7 +729,7 @@ t8_forest_commit (t8_forest_t forest)
     forest->do_ghost = 0;
   }
 #ifdef T8_ENABLE_DEBUG
-  t8_forest_partition_test_boundery_element (forest);
+  t8_forest_partition_test_boundary_element (forest);
 #endif
 }
 

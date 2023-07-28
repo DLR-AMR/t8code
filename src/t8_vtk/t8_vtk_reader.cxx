@@ -229,7 +229,8 @@ t8_get_dimension (vtkSmartPointer < vtkDataSet > vtkGrid)
  * \param[in] vtkGrid       The vtkGrid that gets translated
  * \param[in, out] cmesh    An empty cmesh that is filled with the data. 
  * \param[in] first_tree    The global id of the first tree. Will be the global id of the first tree on this proc. 
- * \param[in] comm          A communicator. 
+ * \param[in] comm        A communicator. 
+ * \return  The number of elements that have been read by the process.
  */
 
 static void

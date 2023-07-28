@@ -52,7 +52,7 @@ import traceback
 vertices_by_type = {3:2, 5:3, 9:4, 10:4, 12:8, 13:6, 14:5}
 
 # This dictionary gives the element type in .msh format, given
-# an elemen type in the .su2 format
+# an element type in the .su2 format
 su2_type_to_msh_type = {3:1, 5:2, 9:3, 10:4, 12:5, 13:6, 14:7}
 
 def read_dimension (opened_file, line):
@@ -260,4 +260,4 @@ if __name__ == "__main__":
     traceback.print_tb(tb) # Fixed format
    
   except IOError as error:
-    print 'An IO-error occured.\n\t', error
+    print 'An IO-error occurred.\n\t', error

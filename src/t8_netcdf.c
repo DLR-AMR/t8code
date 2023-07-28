@@ -54,7 +54,7 @@ t8_netcdf_create_integer_var (const char *var_name, const char *var_long_name,
 {
 #if T8_WITH_NETCDF
   t8_netcdf_variable_type_t var_type;
-  /* Check wheter 32-bit (4-byte) integer or 64-bit integer data sholud be written */
+  /* Check whether 32-bit (4-byte) integer or 64-bit integer data sholud be written */
   var_type = (var_data->elem_size > 4) ? T8_NETCDF_INT64 : T8_NETCDF_INT;
   return t8_netcdf_create_var (var_type, var_name, var_long_name, var_unit,
                                var_data);

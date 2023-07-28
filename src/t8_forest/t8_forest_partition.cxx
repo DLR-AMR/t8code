@@ -163,7 +163,7 @@ t8_forest_partition_test_desc (t8_forest_t forest)
 #endif
 
 void
-t8_forest_partition_test_boundery_element (const t8_forest_t forest)
+t8_forest_partition_test_boundary_element (const t8_forest_t forest)
 {
 #ifdef T8_ENABLE_DEBUG
   T8_ASSERT (t8_forest_is_committed (forest));
@@ -173,19 +173,19 @@ t8_forest_partition_test_boundery_element (const t8_forest_t forest)
     return;
   }
   /* Get the local number of elements of the first tree of process rank + 1.
-   * If a rank contains no trees, its local_tree_num_elemets is set to 0. */
+   * If a rank contains no trees, its local_tree_num_elements is set to 0. */
   int                 mpirank_from;
   int                 mpirank_to;
   int                 mpiret;
   sc_MPI_Request      request;
   sc_MPI_Status       status;
-  t8_locidx_t         local_tree_num_elemets;
-  t8_locidx_t         local_tree_num_elemets_my;
+  t8_locidx_t         local_tree_num_elements;
+  t8_locidx_t         local_tree_num_elements_my;
   if (t8_forest_get_num_local_trees (forest) > 0) {
-    local_tree_num_elemets_my = t8_forest_get_tree_num_elements (forest, 0);
+    local_tree_num_elements_my = t8_forest_get_tree_num_elements (forest, 0);
   }
   else {
-    local_tree_num_elemets_my = 0;
+    local_tree_num_elements_my = 0;
   }
   if (forest->mpirank == 0) {
     mpirank_from = forest->mpirank + 1;
@@ -199,10 +199,10 @@ t8_forest_partition_test_boundery_element (const t8_forest_t forest)
     mpirank_from = forest->mpirank + 1;
     mpirank_to = forest->mpirank - 1;
   }
-  mpiret = sc_MPI_Irecv (&local_tree_num_elemets, 1, T8_MPI_LOCIDX,
+  mpiret = sc_MPI_Irecv (&local_tree_num_elements, 1, T8_MPI_LOCIDX,
                          mpirank_from, 0, forest->mpicomm, &request);
   SC_CHECK_MPI (mpiret);
-  mpiret = sc_MPI_Send (&local_tree_num_elemets_my, 1, T8_MPI_LOCIDX,
+  mpiret = sc_MPI_Send (&local_tree_num_elements_my, 1, T8_MPI_LOCIDX,
                         mpirank_to, 0, forest->mpicomm);
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Wait (&request, &status);
@@ -228,7 +228,7 @@ t8_forest_partition_test_boundery_element (const t8_forest_t forest)
   }
   /* The first tree on process rank+1 may be shared but empty. 
    * Thus, the first descendant id of rank+1 is not of the first local tree. */
-  if (local_tree_num_elemets == 0) {
+  if (local_tree_num_elements == 0) {
     /* check if first not shared tree of process rank+1 contains elements */
     return;
   }
@@ -1327,7 +1327,7 @@ t8_forest_partition (t8_forest_t forest)
     forest->profile->partition_runtime = sc_MPI_Wtime ();
 
     /* DO NOT DELETE THE FOLLOWING line.
-     * even if you do not want this output. It fixes a bug that occured on JUQUEEN, where the
+     * even if you do not want this output. It fixes a bug that occurred on JUQUEEN, where the
      * runtimes were computed to 0.
      * Only delete the line, if you know what you are doing. */
     t8_global_productionf ("Start partition %f %f\n", sc_MPI_Wtime (),
@@ -1361,7 +1361,7 @@ t8_forest_partition (t8_forest_t forest)
       forest->profile->partition_runtime;
 
     /* DO NOT DELETE THE FOLLOWING line.
-     * even if you do not want this output. It fixes a bug that occured on JUQUEEN, where the
+     * even if you do not want this output. It fixes a bug that occurred on JUQUEEN, where the
      * runtimes were computed to 0.
      * Only delete the line, if you know what you are doing. */
     t8_global_productionf ("End partition %f %f\n", sc_MPI_Wtime (),
