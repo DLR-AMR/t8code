@@ -2583,13 +2583,7 @@ t8_cmesh_new_pyramid_cake (sc_MPI_Comm comm, int num_of_pyra)
   t8_cmesh_init (&cmesh);
   for (i = 0; i < num_of_pyra; i++) {
     t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_PYRAMID);
-  }
-
-  for (i = 0; i < num_of_pyra; i++) {
-    t8_cmesh_set_join (cmesh, i, (i == (num_of_pyra - 1) ? 0 : i + 1), 0, 1,
-                       0);
-  }
-  for (i = 0; i < num_of_pyra; i++) {
+    t8_cmesh_set_join (cmesh, i, (i == (num_of_pyra - 1) ? 0 : i + 1), 0, 1, 0);
     t8_cmesh_set_tree_vertices (cmesh, i, vertices + i * 15, 5);
   }
   t8_cmesh_commit (cmesh, comm);
