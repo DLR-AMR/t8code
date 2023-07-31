@@ -33,6 +33,7 @@
 #include <t8_geometry/t8_geometry_with_vertices.hxx>
 #include <t8_geometry/t8_geometry_with_vertices.h>
 #include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.h>
 
 #if T8_WITH_OCC
 
@@ -261,20 +262,75 @@ public:
                                            const int face_index, 
                                            double* face_params) const;
 
-  /** Converts the parameter of an occ edge to the corresponding parameters on an occ face.
-   *  The edge has to lie on the face.
-   * \param [in]  edge_index     The index of the occ edge.
-   * \param [in]  face_index     The index of the occ face.
+  /** Converts the parameters of an occ edge to the corresponding parameters on an occ face.
+   * The edge has to lie on the face.
+   * For the conversion of edge parameters of mesh elements to topological face parameters of a closed surface, it is additionally
+   * checked, whether the conversion was correct, to prevent disorted elements. 
+   * \param [in]  edge_index     The index of the occ edge, which parameters should be converted to face parameters.
+   * \param [in]  face_index     The index of the occ face, on to which the edge parameters should be converted.
+   * \param [in]  num_face_nodes The number of the face nodes of the evaluated element. Only needed for closed surface check, otherwise NULL.
    * \param [in]  edge_param     The parameter on the edge.
+   * \param [in]  surface_param  The parameters of the surface nodes.
+   *                             When provided, there are additional checks for closed geometries.
+   *                             If there are no surface parameter
+   *                             to pass in to the function, you can pass NULL.
    * \param [out] face_params    The corresponding parameters on the face.
    */   
   void
   t8_geom_edge_parameter_to_face_parameters(const int edge_index, 
-                                            const int face_index, 
+                                            const int face_index,
+                                            const int num_face_nodes,
                                             const double edge_param, 
+                                            const double* surface_params,
                                             double* face_params) const;
+  
+  /** Finds the parametric bounds of an occ face.
+   * \param [in]  face_index   The index of the occ face.
+   * \param [out] bounds          The parametric bounds of the occ face.
+   */   
+  void
+  t8_geom_get_face_parametric_bounds(const int surface_index,
+                                        double *bounds) const;
+
+  /** Finds the parametric bounds of an occ edge.
+   * \param [in]  edge_index   The index of the occ edge.
+   * \param [out] bounds       The parametric bounds of the occ edge.
+   */  
+  void
+  t8_geom_get_edge_parametric_bounds(const int edge_index,
+                                     double *bounds) const;
+  
+  /** Checks if an edge is closed in its U parameter.
+   * \param [in]  edge_index   The index of the closed edge.
+   * \return                   1 if edge is closed in U. 0 if edge is not closed in U.
+   */
+  int
+  t8_geom_is_edge_closed (int edge_index) const;
+
+  /** Checks if a surface is closed in its U parameter or V parameter.
+   * \param [in]  geometry_index   The index of the closed geometry.
+   * \param [in]  parameter        The parameter, which should be check for closeness.
+   *                               0 stands for the U parameter and 1 for the V parameter. 
+   * \return                       1 if geometry is closed in U. 0 if geometry is not closed in U.
+   */
+  int
+  t8_geom_is_surface_closed (int geometry_index,
+                             int parameter) const;
 
 private:
+  /**
+   * Map a point in the reference space $$[0,1]^2$$ to $$\mathbb R^3$$. Only for triangle trees.
+   * \param [in]  cmesh      The cmesh in which the point lies.
+   * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
+   * \param [in]  ref_coords  Array of 2 entries, specifying a point in [0,1]^2.
+   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   */
+  void
+  t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
+                                 t8_gloidx_t gtreeid,
+                                 const double *ref_coords,
+                                 double out_coords[3]) const;
+
   /**
    * Map a point in the reference space $$[0,1]^2$$ to $$\mathbb R^3$$. Only for quad trees.
    * \param [in]  cmesh      The cmesh in which the point lies.
