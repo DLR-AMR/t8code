@@ -14,3 +14,4 @@ include example/common/Makefile.am
 include example/version/Makefile.am
 
 include example/standalone_scheme/Makefile.am
+include example/remove/Makefile.am
