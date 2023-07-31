@@ -660,6 +660,7 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
       for (int i = 0; i < num_elements; i++)
       {
         dataArray->InsertNextValue(data[idata].data[i]);
+        t8_productionf("[D] data: %f\n", data[idata].data[i]);
       }
       unstructuredGrid->GetCellData ()->AddArray (dataArray);
     }
