@@ -657,14 +657,14 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
     dataArrays[idata] = vtkDoubleArray::New ();
     if (data[idata].type == T8_VTK_SCALAR) {
       dataArrays[idata]->SetName (data[idata].description);     /* Set the name of the array */
-      dataArrays[idata]->SetVoidArray (data[idata].data, num_elements, 1);      /* We write the data in the array from the input array */
+      dataArrays[idata]->SetArray (data[idata].data, num_elements, 1);  /* We write the data in the array from the input array */
       unstructuredGrid->GetCellData ()->AddArray (dataArrays[idata]);   /* We add the array to the cell data object */
     }
     else {
       dataArrays[idata]->SetName (data[idata].description);     /* Set the name of the array */
       dataArrays[idata]->SetNumberOfTuples (num_elements);      /* We want number of tuples=number of elements */
       dataArrays[idata]->SetNumberOfComponents (3);     /* Each tuples has 3 values */
-      dataArrays[idata]->SetVoidArray (data[idata].data, num_elements * 3, 1);  /*  */
+      dataArrays[idata]->SetArray (data[idata].data, num_elements * 3, 1);      /*  */
       unstructuredGrid->GetCellData ()->SetVectors (dataArrays[idata]); /*  */
     }
   }
