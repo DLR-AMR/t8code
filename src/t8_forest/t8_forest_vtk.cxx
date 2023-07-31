@@ -649,6 +649,7 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
       vtkSmartPointer < vtkDoubleArray >::New ();
     const int           num_components =
       data[idata].type == T8_VTK_SCALAR ? 1 : 3;
+    t8_productionf ("[D] num_components: %i\n", num_components);
     dataArray->SetName (data[idata].description);       /* Set the name of the array */
     dataArray->SetNumberOfTuples (num_elements);        /* We want number of tuples=number of elements */
     dataArray->SetNumberOfComponents (num_components);
