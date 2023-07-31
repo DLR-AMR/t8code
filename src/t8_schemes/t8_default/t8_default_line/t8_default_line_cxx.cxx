@@ -217,7 +217,7 @@ t8_default_scheme_line_c::t8_element_boundary_face (const t8_element_t *elem,
   T8_ASSERT (boundary_scheme->t8_element_is_valid (boundary));
   T8_ASSERT (0 <= face && face < T8_DLINE_FACES);
 
-  /* Since each vertex is the same, we just construc a vertex of the same level
+  /* Since each vertex is the same, we just construct a vertex of the same level
    * as elem. */
   t8_dvertex_init_linear_id ((t8_dvertex_t *) boundary,
                              t8_element_level (elem), 0);

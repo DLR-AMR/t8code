@@ -22,7 +22,6 @@
 
 #include <sc_statistics.h>
 #include <t8_cmesh.h>
-#include <t8_cmesh_vtk_writer.h>
 #include <t8_cmesh/t8_cmesh_geometry.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_refcount.h>
@@ -111,7 +110,7 @@ t8_cmesh_is_committed (t8_cmesh_t cmesh)
 
 #ifdef T8_ENABLE_DEBUG
     /* TODO: check more conditions that must always hold after commit */
-    if ((!t8_cmesh_trees_is_face_consistend (cmesh, cmesh->trees)) ||
+    if ((!t8_cmesh_trees_is_face_consistent (cmesh, cmesh->trees)) ||
         (!t8_cmesh_no_negative_volume (cmesh))
         || (!t8_cmesh_check_trees_per_eclass (cmesh))) {
       is_checking = 0;
@@ -242,7 +241,7 @@ t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh,
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 
   if (cmesh->tree_offsets != NULL && cmesh->tree_offsets != tree_offsets) {
-    /* We overwrite a previouly set offset array, so
+    /* We overwrite a previously set offset array, so
      * we need to free its memory first. */
     t8_shmem_array_destroy (&cmesh->tree_offsets);
   }
@@ -469,35 +468,6 @@ t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_gloidx_t gtree_id,
 #endif
 }
 
-/* Compute erg = v_1 . v_2
- * the 3D scalar product.
- */
-static double
-t8_cmesh_tree_vertices_dot (double *v_1, double *v_2)
-{
-  double              erg = 0;
-  int                 i;
-
-  for (i = 0; i < 3; i++) {
-    erg += v_1[i] * v_2[i];
-  }
-  return erg;
-}
-
-/* Compute erg = v_1 x v_2
- * the 3D cross product.
- */
-static void
-t8_cmesh_tree_vertices_cross (double *v_1, double *v_2, double *erg)
-{
-  int                 i;
-
-  for (i = 0; i < 3; i++) {
-    erg[i] = v_1[(i + 1) % 3] * v_2[(i + 2) % 3]
-      - v_1[(i + 2) % 3] * v_2[(i + 1) % 3];
-  }
-}
-
 /* Given a set of vertex coordinates for a tree of a given eclass.
  * Query whether the geometric volume of the tree with this coordinates
  * would be negative.
@@ -557,9 +527,9 @@ t8_cmesh_tree_vertices_negative_volume (t8_eclass_t eclass,
     v_j[i] = vertices[3 * j + i] - vertices[i];
   }
   /* compute cross = v_1 x v_2 */
-  t8_cmesh_tree_vertices_cross (v_1, v_2, cross);
+  t8_vec_cross (v_1, v_2, cross);
   /* Compute sc_prod = <v_j, cross> */
-  sc_prod = t8_cmesh_tree_vertices_dot (v_j, cross);
+  sc_prod = t8_vec_dot (v_j, cross);
 
   T8_ASSERT (sc_prod != 0);
   return eclass == T8_ECLASS_TET ? sc_prod > 0 : sc_prod < 0;
@@ -749,7 +719,7 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
   } meta_info;
 
   /* TODO: BUG: running with two processes and a cmesh of one T8_ECLASS_LINE,
-   *       then on both processes the face_neigbors and vertices arrays of
+   *       then on both processes the face_neighbors and vertices arrays of
    *       the single tree point to the same physical memory.
    *       (face_neighbors on both processes are equal and vertices on both
    *        processes are equal)
@@ -781,7 +751,7 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
      * classes that we cannot know of on the receiving process.
      * Geometries must therefore be added after broadcasting. */
     SC_CHECK_ABORT (cmesh_in->geometry_handler == NULL,
-                    "Error: Broadcasting a cmesh with registerd geometries is not possible.\n"
+                    "Error: Broadcasting a cmesh with registered geometries is not possible.\n"
                     "We recommend to broadcast first and register the geometries after.\n");
     memcpy (&meta_info.cmesh, cmesh_in, sizeof (*cmesh_in));
     for (iclass = 0; iclass < T8_ECLASS_COUNT; iclass++) {
@@ -880,7 +850,7 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
   int                 mpisize, mpiret;
   idx_t               idx_mpisize;
-  idx_t               ncon = 1, elemens;
+  idx_t               ncon = 1, elements;
   idx_t               volume, *partition, ipart, newpart;
   int                 num_faces, iface, count_face;
   idx_t              *xadj, *adjncy;
@@ -890,7 +860,7 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   t8_locidx_t         neigh_id;
   t8_ctree_t          tree;
 
-  /* cmesh must be commited and not partitioned */
+  /* cmesh must be committed and not partitioned */
   T8_ASSERT (cmesh->committed);
   T8_ASSERT (!cmesh->set_partition);
 
@@ -898,8 +868,8 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   idx_mpisize = mpisize;
   SC_CHECK_MPI (mpiret);
 
-  elemens = cmesh->num_trees;
-  T8_ASSERT ((t8_locidx_t) elemens == cmesh->num_trees);
+  elements = cmesh->num_trees;
+  T8_ASSERT ((t8_locidx_t) elements == cmesh->num_trees);
 
   /* Count the number of tree-to-tree connections via a face */
   num_faces = 0;
@@ -916,7 +886,7 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
    * xadj[treeid] = offset of the tree in adjncy
    * adjncy[xadj[treeid]]...adjncy[xadj[treeid]-1] are the trees with which
    * the tree has a face connection */
-  xadj = T8_ALLOC_ZERO (idx_t, elemens + 1);
+  xadj = T8_ALLOC_ZERO (idx_t, elements + 1);
   adjncy = T8_ALLOC (idx_t, num_faces);
 
   /* fill xadj and adjncy arrays */
@@ -932,16 +902,16 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   }
 
   /* partition stores the new partition number for each element */
-  partition = T8_ALLOC (idx_t, elemens);
+  partition = T8_ALLOC (idx_t, elements);
   /* partition the elements in mpisize many partitions */
   success =
-    METIS_PartGraphRecursive (&elemens, &ncon, xadj, adjncy, NULL, NULL, NULL,
-                              &idx_mpisize, NULL, NULL, NULL, &volume,
+    METIS_PartGraphRecursive (&elements, &ncon, xadj, adjncy, NULL, NULL,
+                              NULL, &idx_mpisize, NULL, NULL, NULL, &volume,
                               partition);
   T8_ASSERT (success == METIS_OK);
   /* memory to store the new treeid of a tree */
   new_number = T8_ALLOC (t8_locidx_t, cmesh->num_trees);
-  /* Store the number of trees pinter partition */
+  /* Store the number of trees pointer partition */
   tree_per_part = T8_ALLOC_ZERO (t8_locidx_t, mpisize);
   /* Store the treeid offset of each partition. */
   tree_per_part_off = T8_ALLOC_ZERO (t8_locidx_t, mpisize + 1);
@@ -1359,7 +1329,7 @@ t8_cmesh_translate_coordinates (const double *coords_in, double *coords_out,
  *       to use attributes. Before we stored a list of vertex coordinates in the cmesh and each tree indexed into this list.
  *       Now each tree carries the coordinates of its vertices.
  *       This function translates from the first approached to the second
- *       and was introduced to avoid rewritting the already existing cmesh_new... functions below.
+ *       and was introduced to avoid rewriting the already existing cmesh_new... functions below.
  *       It would be nice to eventually rewrite these functions correctly.
  */
 void

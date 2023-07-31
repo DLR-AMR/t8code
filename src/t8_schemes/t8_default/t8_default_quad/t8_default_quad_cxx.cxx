@@ -203,8 +203,10 @@ t8_default_scheme_quad_c::t8_element_child (const t8_element_t *elem,
   r->x = childid & 0x01 ? (q->x | shift) : q->x;
   r->y = childid & 0x02 ? (q->y | shift) : q->y;
   r->level = q->level + 1;
-  T8_ASSERT (p4est_quadrant_is_parent (q, r));
 
+  if (q != r) {
+    T8_ASSERT (p4est_quadrant_is_parent (q, r));
+  }
   t8_element_copy_surround (q, r);
 }
 
@@ -378,7 +380,7 @@ t8_default_scheme_quad_c::t8_element_children_at_face (const t8_element_t
    *
    *      x - - x - - x           This picture shows a refined quadrant
    *      |     |     |           with child_ids and the label for the faces.
-   *      | 2   | 3   |           For examle for face 2 (bottom face) we see
+   *      | 2   | 3   |           For example for face 2 (bottom face) we see
    * 0    x - - x - - x   1       first_child = 0 and second_child = 1.
    *      |     |     |
    *      | 0   | 1   |

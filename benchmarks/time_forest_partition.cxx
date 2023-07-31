@@ -175,12 +175,11 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
                               int no_vtk, double x_min_max[2], double T,
                               double delta_t, int do_ghost, int do_balance)
 {
-  t8_cmesh_t          cmesh_partition;
   char                forest_vtu[BUFSIZ], cmesh_vtu[BUFSIZ];
   adapt_data_t        adapt_data;
   t8_forest_t         forest, forest_adapt, forest_partition;
   double              t;
-  int                 partition_cmesh;
+  int                 cmesh_is_partitioned;
   int                 time_step;
   double              adapt_time = 0, ghost_time = 0, partition_time =
     0, new_time = 0, total_time = 0, balance_time = 0;
@@ -204,26 +203,10 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
   sc_stats_init (&times[5], "total");
   total_time -= sc_MPI_Wtime ();
 
-  partition_cmesh = t8_cmesh_is_partitioned (cmesh);
-  if (partition_cmesh) {
-    /* Set up cmesh_partition to be a repartition of cmesh. */
-    t8_cmesh_init (&cmesh_partition);
-    t8_cmesh_set_derive (cmesh_partition, cmesh);
-    /* The new cmesh is partitioned according to a uniform init_level refinement */
-    t8_cmesh_set_partition_uniform (cmesh_partition, init_level,
-                                    t8_scheme_new_default_cxx ());
-    t8_cmesh_set_profiling (cmesh_partition, 1);
-    t8_cmesh_commit (cmesh_partition, comm);
-  }
-  else {
-    /* Use cmesh_partition as the original replicated cmesh */
-    cmesh_partition = cmesh;
-  }
-
-  cmesh_partition = cmesh;
+  cmesh_is_partitioned = t8_cmesh_is_partitioned (cmesh);
   /* Initialize forest and set cmesh */
   t8_forest_init (&forest);
-  t8_forest_set_cmesh (forest, cmesh_partition, comm);
+  t8_forest_set_cmesh (forest, cmesh, comm);
   /* Set the element scheme */
   t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
   /* Set the initial refinement level */
@@ -287,7 +270,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
                                cmesh_vtu, 1.0);
       t8_debugf ("Wrote partitioned forest and cmesh\n");
     }
-    if (partition_cmesh) {
+    if (cmesh_is_partitioned) {
       /* Print runtimes and statistics of forest and cmesh partition */
       t8_cmesh_print_profile (t8_forest_get_cmesh (forest_partition));
     }
@@ -319,7 +302,8 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
 t8_cmesh_t
 t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim,
                              const char *cmesh_file, int num_files,
-                             sc_MPI_Comm comm, int init_level, int stride)
+                             sc_MPI_Comm comm, int init_level, int stride,
+                             int use_occ)
 {
   t8_cmesh_t          cmesh;
   t8_cmesh_t          cmesh_partition;
@@ -328,10 +312,19 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim,
   T8_ASSERT (msh_file == NULL || cmesh_file == NULL);
 
   if (msh_file != NULL) {
+    if (use_occ) {
+      partition = 0;
+      t8_global_productionf
+        ("The cmesh is not partitioned due to the usage of the curved mesh option. \n"
+         "Timing will not be comparable to non-curved meshes. \n");
+    }
+    else {
+      partition = 1;
+    }
     /* Create a cmesh from the given mesh files */
     cmesh =
-      t8_cmesh_from_msh_file ((char *) msh_file, 0, comm, mesh_dim, 0, 0);
-    partition = 1;
+      t8_cmesh_from_msh_file ((char *) msh_file, partition, comm, mesh_dim, 0,
+                              use_occ);
   }
   else {
     T8_ASSERT (cmesh_file != NULL);
@@ -351,6 +344,7 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim,
     t8_cmesh_set_derive (cmesh_partition, cmesh);
     t8_cmesh_set_partition_uniform (cmesh_partition, init_level,
                                     t8_scheme_new_default_cxx ());
+    t8_cmesh_set_profiling (cmesh_partition, 1);
     t8_cmesh_commit (cmesh_partition, comm);
     return cmesh_partition;
   }
@@ -363,7 +357,7 @@ main (int argc, char *argv[])
   int                 mpiret, mpisize;
   int                 first_argc;
   int                 level, level_diff;
-  int                 help = 0, no_vtk, do_ghost, do_balance;
+  int                 help = 0, no_vtk, do_ghost, do_balance, use_occ;
   int                 dim, num_files;
   int                 test_tet, test_linear_cylinder, test_occ_cylinder;
   int                 stride;
@@ -373,7 +367,7 @@ main (int argc, char *argv[])
   t8_cmesh_t          cmesh;
   const char         *mshfileprefix, *cmeshfileprefix;
   const char         *vtu_prefix;
-  double              x_min_max[2];     /* At position 0 the minumum x-coordinate,
+  double              x_min_max[2];     /* At position 0 the minimum x-coordinate,
                                            at position 1 the maximum x-coordinate. */
 
   /* Initialize MPI, sc, p4est and t8code */
@@ -453,6 +447,8 @@ main (int argc, char *argv[])
                          "Create ghost elements.");
   sc_options_add_switch (opt, 'b', "balance", &do_balance,
                          "Establish a 2:1 balance in the forest.");
+  sc_options_add_switch (opt, 'z', "use_occ", &use_occ,
+                         "If used, meshes will be curved to original geometries (msh- and brep-files necessary).");
 
   /* parse command line options */
   first_argc = sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT,
@@ -466,7 +462,8 @@ main (int argc, char *argv[])
       || T <= 0 || test_tet + test_linear_cylinder + test_occ_cylinder > 1
       || (cmesh_level >= 0 && (!test_linear_cylinder && !test_occ_cylinder))
       || ((mshfileprefix != NULL || cmeshfileprefix != NULL)
-          && (test_linear_cylinder || test_occ_cylinder || test_tet))) {
+          && (test_linear_cylinder || test_occ_cylinder || test_tet))
+      || (mshfileprefix == NULL && use_occ)) {
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
     return 1;
   }
@@ -486,7 +483,8 @@ main (int argc, char *argv[])
     t8_global_productionf ("Using delta_t = %f\n", delta_t);
     if (mshfileprefix != NULL) {
       cmesh = t8_time_forest_create_cmesh (mshfileprefix, dim, NULL, -1,
-                                           sc_MPI_COMM_WORLD, level, stride);
+                                           sc_MPI_COMM_WORLD, level, stride,
+                                           use_occ);
       vtu_prefix = mshfileprefix;
     }
     else if (test_tet) {
@@ -510,7 +508,7 @@ main (int argc, char *argv[])
       T8_ASSERT (cmeshfileprefix != NULL);
       cmesh = t8_time_forest_create_cmesh (NULL, -1, cmeshfileprefix,
                                            num_files, sc_MPI_COMM_WORLD,
-                                           level, stride);
+                                           level, stride, use_occ);
       vtu_prefix = cmeshfileprefix;
     }
     t8_time_forest_cmesh_mshfile (cmesh, vtu_prefix,

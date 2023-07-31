@@ -54,7 +54,7 @@ main (int argc, char **argv)
   /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
   t8_init (SC_LP_PRODUCTION);
 
-  /* Padd hypercube with given element class. */
+  /* Add hypercube with given element class. */
   t8_cmesh_t          cmesh =
     t8_cmesh_new_hypercube_pad (T8_ECLASS_HEX, sc_MPI_COMM_WORLD,
                                 boundary_coords, 3, 3, 3);

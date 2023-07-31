@@ -180,7 +180,7 @@ t8_test_ghost_refine_and_partition (t8_cmesh_t cmesh, const int level,
       const double        radius = 0.2;
       const double        band_width = 2;
       /* If levelset refinement is used, we need to set the user data
-       * pointer of the forest apropriately */
+       * pointer of the forest appropriately */
       t8_test_ghost_set_levelset_data (forest, level, max_level, midpoint,
                                        radius, band_width);
     }
@@ -391,7 +391,7 @@ main (int argc, char **argv)
                       "refine-level",
                       &refine_levels, 0,
                       "Refine <INT> times every third element in the uniform forest before creating the ghost layer."
-                      "Default ist 0 (no refinement).");
+                      "Default is 0 (no refinement).");
   /* Change the refinement rule -R */
   sc_options_add_int (opt, 'R',
                       "refine-method",

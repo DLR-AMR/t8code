@@ -43,7 +43,7 @@ T8_EXTERN_C_BEGIN ();
  *
  *      local trees                           ghost trees
  *
- * For the funcions in this header an argument lghost_tree always
+ * For the functions in this header an argument lghost_tree always
  * means a number 0 <= lghost_tree < num_ghost_trees - 1
  */
 
@@ -144,7 +144,7 @@ t8_locidx_t         t8_forest_ghost_remote_first_elem (t8_forest_t forest,
  */
 void                t8_forest_ghost_ref (t8_forest_ghost_t ghost);
 
-/** Descrease the reference count of a ghost structure.
+/** Decrease the reference count of a ghost structure.
  * If the counter reaches zero, the ghost structure is destroyed.
  * See also \ref t8_forest_ghost_destroy, which is to be preferred when it is
  * known that the last reference to a cmesh is deleted.

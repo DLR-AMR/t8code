@@ -376,7 +376,7 @@ t8_cmesh_partition_alternative_sendrange (t8_cmesh_t cmesh,
   else {
     /* Check the last tree and maybe the second last tree.
      * If we do not send our last tree, we have to check the second last one.
-     * This while loop is executed once for the last tree and, if unsuccessfull
+     * This while loop is executed once for the last tree and, if unsuccessful
      * once for the second last tree. */
     while (last_tree >= first_tree && count < 2 && flag == 0) {
       count++;
@@ -436,7 +436,7 @@ t8_cmesh_partition_alternative_sendrange (t8_cmesh_t cmesh,
       t8_offset_in_range (t8_offset_last (cmesh_from->mpirank, offset_from),
                           *send_first, offset_from)
       && ret == cmesh_from->num_local_trees - 1) {
-    /* Substract one if our last tree already belonged to send_first,
+    /* Subtract one if our last tree already belonged to send_first,
      * and we counted this last tree. */
     ret--;
   }
@@ -657,7 +657,7 @@ t8_cmesh_send_ghost (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
       /* This neighbor will not be send to p */
       continue;
     }
-    /* If the receiving rank is the sending rank, we definetely send the ghost */
+    /* If the receiving rank is the sending rank, we definitely send the ghost */
     if (p == cmesh_from->mpirank) {
       return 1;
     }
@@ -855,7 +855,7 @@ t8_cmesh_partition_copy_data (char *send_buffer, t8_cmesh_t cmesh,
       last_offset = attr_info->attribute_offset;
       last_size = attr_info->attribute_size;
 
-      /* set new attribtue data offsets */
+      /* set new attribute data offsets */
       for (iz = 1; iz < (size_t) tree_cpy->num_attributes; iz++) {
         attr_info++;
         attr_info->attribute_offset = last_offset + last_size;
@@ -1730,7 +1730,7 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
   num_ghosts = 0;
   for (iproc = 0; iproc < (int) cmesh->trees->from_proc->elem_count; iproc++) {
     recv_part = t8_cmesh_trees_get_part (cmesh->trees, iproc);
-    /* Assing new local ids to the ghosts of this part, also set ghost_to_proc */
+    /* Assign new local ids to the ghosts of this part, also set ghost_to_proc */
     t8_partition_new_ghost_ids (cmesh, recv_part, num_ghosts, iproc);
     /* We need to do this in a second loop, since all the tree_to_proc entries have
      * to be set before. This is because we may be accessing any tree in the new cmesh.  */

@@ -37,7 +37,7 @@
  * 
  * Example:
  * x = 3
- * instances - bianry representation
+ * instances - binary representation
  *      0    -  0 0
  *      1    -  0 1
  *      2    -  1 0
@@ -150,7 +150,7 @@ TEST_P (local_tree, test_empty_local_tree)
     ASSERT_TRUE (!forest->incomplete_trees);
 
     t8_forest_ref (forest);
-    /* Do adapt and partition in seperate steps */
+    /* Do adapt and partition in separate steps */
     t8_forest_t         forest_adapt_b =
       t8_adapt_forest (forest, t8_adapt_remove, 1, 0, &data);
     ASSERT_TRUE (forest_adapt_b->incomplete_trees);
