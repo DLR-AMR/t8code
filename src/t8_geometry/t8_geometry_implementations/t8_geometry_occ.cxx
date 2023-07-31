@@ -944,9 +944,6 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh,
             orthogonal_direction_of_edge_on_face = 1;
             break;
           }
-          /* Convert global tree id to local tree id, for receiving cmesh attributes. */
-          t8_locidx_t         ltreeid =
-            t8_cmesh_get_local_id (cmesh, gtreeid);
           /* Retrieve parameters of nodes und curve */
           const double       *curve_parameters =
             (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
