@@ -77,7 +77,7 @@ t8_face_descendant_test_child (t8_element_t *face_desc,
 }
 
 /* Check the linear first and last descendants of an element along all faces. 
-For the test the descendants are computed manaully by t8_face_descendant_test_child and 
+For the test the descendants are computed manually by t8_face_descendant_test_child and 
 by the scheme implementation t8_element_first_descendant for the first descendants over the levels.
 Next to the t8_element_first_descendant check, the function t8_element_last_descendant is checked the same way. */
 void
@@ -111,7 +111,7 @@ t8_linear_face_descendant (const t8_element_t *elem,
     }
   }
 
-  /* Testing the linar last descendant. */
+  /* Testing the linear last descendant. */
   ts->t8_element_copy (elem, manual_face_desc);
   for (int ilevel = level_elem + 1; ilevel < maxlvl; ilevel++) {
     for (int jface = 0; jface < num_faces; jface++) {
@@ -132,7 +132,7 @@ t8_linear_face_descendant (const t8_element_t *elem,
   }
 }
 
-/*Recursivly check the first and last descendant along a face for all childs with the help of the previous test t8_linear_face_descendant. */
+/*Recursively check the first and last descendant along a face for all children with the help of the previous test t8_linear_face_descendant. */
 void
 t8_recursive_face_descendant (t8_element_t *elem, t8_element_t *face_desc,
                               t8_element_t *manual_face_desc,
