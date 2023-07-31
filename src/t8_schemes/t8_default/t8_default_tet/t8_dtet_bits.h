@@ -45,7 +45,7 @@ void                t8_dtet_compute_coords (const t8_dtet_t *elem, int vertex,
                                             t8_dtet_coord_t coordinates[3]);
 
 /** Compute the coordinates of a vertex of a tetrahedron when the 
- * tree (level 0 tetrahedron) is embedded in [0,1]^3.
+ * tree (level 0 tetrahedron) is embedded in \f( [0,1]^3 \f).
  * \param [in] elem         Input tetrahedron.
  * \param [in] vertex       The number of the vertex.
  * \param [out] coordinates An array of 3 double that
@@ -56,10 +56,10 @@ void                t8_dtet_compute_vertex_ref_coords (const t8_dtet_t *elem,
                                                        double coordinates[3]);
 
 /** Convert a point in the reference space of a tet element to a point in the
- *  reference space of the tree (level 0) embedded in [0,1]^3.
+ *  reference space of the tree (level 0) embedded in \f( [0,1]^3 \f).
  * \param [in]  elem       Input tetrahedron.
  * \param [in]  ref_coords The reference coordinates inside the
- *                         tet element [0,1]^2
+ *                         tet element \f( [0,1]^2 \f)
  * \param [out] out_coords An array of 3 doubles that will be filled with the
  *                         reference coordinates in the tree of the tet.
  */
