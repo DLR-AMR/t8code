@@ -25,8 +25,6 @@
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
-/*TODO: Delete GTEST_SKIP in TEST_P t8_check_face_desc if t8_prism_children_at_face is fixed. */
-
 /* *INDENT-OFF* */
 class class_descendant:public testing::TestWithParam <t8_eclass_t > {
 protected:
@@ -163,9 +161,6 @@ TEST_P (class_descendant, t8_check_face_desc)
 #else
   const int           maxlvl = 4;
 #endif
-  if ((int) eclass == (int) T8_ECLASS_PRISM) {
-    GTEST_SKIP ();
-  }
   t8_element_t       *element;
   t8_element_t       *child;
   t8_element_t       *test;
