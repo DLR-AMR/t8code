@@ -663,9 +663,11 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
       unstructuredGrid->GetCellData ()->AddArray (dataArray);
     }
     else {
-      for (int i = 0; i < num_elements * num_components; i++)
+      for (int i = 0; i < num_elements; i++)
       {
-        dataArray->InsertNextValue(data[idata].data[3 * i]);
+        for(int j = 0; j < num_components; j++){
+          dataArray->InsertNextValue(data[idata].data[i * num_components + j]);
+        }
       }
       unstructuredGrid->GetCellData ()->AddArray (dataArray);
     }
