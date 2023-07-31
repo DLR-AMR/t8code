@@ -94,7 +94,7 @@ t8_test_search_all_fn (t8_forest_t forest,
     EXPECT_FALSE (ts->t8_element_compare (element,
                                           test_element)) <<
       "Element and index passed to search callback do not match.";
-    EXPECT_EQ (ltreeid, test_ltreeid) << "Tree missmatch in search.";
+    EXPECT_EQ (ltreeid, test_ltreeid) << "Tree mismatch in search.";
   }
   return 1;
 }
@@ -108,7 +108,7 @@ t8_test_search_query_all_fn (t8_forest_t forest,
                              t8_locidx_t tree_leaf_index, void *query,
                              size_t query_index)
 {
-  /* The query callback is allways called with a query */
+  /* The query callback is always called with a query */
   EXPECT_TRUE (query !=
                NULL) << "query callback must be called with query argument.";
   /* The query is an int with value 42 (see below) */
@@ -135,7 +135,7 @@ t8_test_search_query_all_fn (t8_forest_t forest,
     EXPECT_FALSE (ts->t8_element_compare (element,
                                           test_element)) <<
       "Element and index passed to search callback do not match.";
-    EXPECT_EQ (ltreeid, test_ltreeid) << "Tree missmatch in search.";
+    EXPECT_EQ (ltreeid, test_ltreeid) << "Tree mismatch in search.";
   }
   return 1;
 }
@@ -171,7 +171,7 @@ TEST_P (forest_search, test_search_one_query_matches_all)
   /* Check whether matched_leafs entries are all 1 */
   for (t8_locidx_t ielement = 0; ielement < num_elements; ++ielement) {
     ASSERT_TRUE (*(int *) t8_sc_array_index_locidx (&matched_leafs, ielement))
-      << "Search did not match all leafs. First missmatch at leaf " <<
+      << "Search did not match all leafs. First mismatch at leaf " <<
       ielement;
   }
 

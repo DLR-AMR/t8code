@@ -184,7 +184,7 @@ t8_advect_element_set_phi_adapt (const t8_advect_problem_t * problem,
 }
 
 /* Adapt the forest. We refine if the level-set function is close to zero
- * and coarsen if it is larger than a given threshhold. */
+ * and coarsen if it is larger than a given threshold. */
 static int
 t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
                  t8_locidx_t ltree_id, t8_locidx_t lelement_id,
@@ -502,7 +502,6 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
     el_hang->fluxes[face][i] =
       t8_advect_flux_upwind (problem, phi_plus, phi_minus, ltreeid,
                              face_children[i], child_face);
-    // if (a == 1) printf  ("%i %i %f\n",face, i, el_hang->fluxes[face][i]);
     /* Set the flux of the neighbor element */
     dual_face = el_hang->dual_faces[face][i];
     if (!adapted_or_partitioned && !neigh_is_ghost) {
@@ -511,7 +510,6 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
         /* We need to allocate the fluxes */
         neigh_data->fluxes[dual_face] = T8_ALLOC (double, 1);
       }
-      // printf ("face %i neigh %i df %i\n", face, neigh_id, dual_face);
       SC_CHECK_ABORT (dual_face < neigh_data->num_faces, "num\n");
       // SC_CHECK_ABORT (neigh_data->num_neighbors[dual_face] == 1, "entry\n");
       neigh_data->num_neighbors[dual_face] = 1;
@@ -590,7 +588,7 @@ t8_advect_compute_element_data (t8_advect_problem_t * problem,
  * If elements are coarsened, the parent gets the average phi value of the children.
  */
 /* outgoing are the old elements and incoming the new ones */
-/* TODO: If coarsening, weight the phi vaules by volume of the children:
+/* TODO: If coarsening, weight the phi values by volume of the children:
  *       phi_E = sum (phi_Ei *vol(E_i)/vol(E))
  *       Similar formula for refining?
  */
@@ -616,7 +614,7 @@ t8_advect_replace (t8_forest_t forest_old,
   problem = (t8_advect_problem_t *) t8_forest_get_user_data (forest_new);
   T8_ASSERT (forest_old == problem->forest);
   T8_ASSERT (forest_new == problem->forest_adapt);
-  /* Get pointers to the element datas */
+  /* Get pointers to the element data */
   first_incoming_data =
     first_incoming + t8_forest_get_tree_element_offset (forest_new,
                                                         which_tree);
@@ -1037,7 +1035,7 @@ t8_advect_problem_init (t8_cmesh_t cmesh,
     sc_stats_init (&problem->stats[i], advect_stat_names[i]);
   }
 
-  /* Contruct uniform forest with ghosts */
+  /* Construct uniform forest with ghosts */
   default_scheme = t8_scheme_new_default_cxx ();
 
   problem->forest =
@@ -1586,7 +1584,6 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
           problem->stats[ADVECT_DUMMY].count = 1;
         }
         /* Compute time step */
-        //      printf ("advance %i\n", ielement);
         t8_advect_advance_element (problem, lelement);
       }
     }

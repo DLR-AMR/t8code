@@ -38,9 +38,9 @@
  * How you can experiment here:
  *  - Use Paraview to visualize the output files.
  *  - Execute this program with different numbers of processes.
- *  - Change the inital refinement level.
+ *  - Change the initial refinement level.
  *  - Use a different cmesh (See step1).
- *  - Look into t8_forest.h and try to get different informations about the 
+ *  - Look into t8_forest.h and try to get different information about the
  *    forest (for example the number of local trees).
  */
 

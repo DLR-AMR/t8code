@@ -32,6 +32,7 @@
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_element_cxx.hxx>
+#include <t8_element_c_interface.h>
 #include <t8_cmesh/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_geometry/t8_geometry_base.hxx>
@@ -92,7 +93,7 @@ t8_forest_is_incomplete_family (const t8_forest_t forest,
     const t8_element_t *element_temp =
       t8_forest_get_tree_element (tree, el_considered - 1);
     int                 level_temp = tscheme->t8_element_level (element_temp);
-    /* Only elements with higher or equal level then level of current consideret 
+    /* Only elements with higher or equal level then level of current considered
      * element, can get potentially be overlapped. */
     if (level_temp >= level_current) {
       /* Compare ancestors */
@@ -239,7 +240,7 @@ t8_forest_get_maxlevel (t8_forest_t forest)
 int
 t8_forest_min_nonempty_level (t8_cmesh_t cmesh, t8_scheme_cxx_t *scheme)
 {
-  int                 level, min_num_childs, maxlevel;
+  int                 level, min_num_children, maxlevel;
   t8_eclass_scheme_c *ts;
   int                 eclass;
   t8_element_t       *element;
@@ -249,9 +250,9 @@ t8_forest_min_nonempty_level (t8_cmesh_t cmesh, t8_scheme_cxx_t *scheme)
     return 0;
   }
 
-  /* Compute the minumum number of children for a tree in the cmesh */
+  /* Compute the minimum number of children for a tree in the cmesh */
   /* Also compute the maximum possible level */
-  min_num_childs = 100;
+  min_num_children = 100;
   maxlevel = 100;
   for (eclass = T8_ECLASS_ZERO; eclass < T8_ECLASS_COUNT; eclass++) {
     if (cmesh->num_trees_per_eclass[eclass] > 0) {
@@ -259,8 +260,8 @@ t8_forest_min_nonempty_level (t8_cmesh_t cmesh, t8_scheme_cxx_t *scheme)
       /* Compute the number of children of the root tree. */
       ts->t8_element_new (1, &element);
       ts->t8_element_set_linear_id (element, 0, 0);
-      min_num_childs =
-        SC_MIN (min_num_childs, ts->t8_element_num_children (element));
+      min_num_children =
+        SC_MIN (min_num_children, ts->t8_element_num_children (element));
       ts->t8_element_destroy (1, &element);
       /* Compute the minimum possible maximum refinement level */
       maxlevel = SC_MIN (maxlevel, ts->t8_element_maxlevel ());
@@ -273,7 +274,7 @@ t8_forest_min_nonempty_level (t8_cmesh_t cmesh, t8_scheme_cxx_t *scheme)
    */
   level =
     ceil (log (cmesh->mpisize / (double) cmesh->num_trees) /
-          log (min_num_childs));
+          log (min_num_children));
   return level;
 }
 
@@ -330,17 +331,15 @@ t8_forest_no_overlap (t8_forest_t forest)
   int                 has_overlap_local_global;
   int                 mpiret =
     sc_MPI_Allreduce (&has_overlap_local, &has_overlap_local_global,
-                      1, MPI_INT, sc_MPI_MAX, forest->mpicomm);
+                      1, sc_MPI_INT, sc_MPI_MAX, forest->mpicomm);
   SC_CHECK_MPI (mpiret);
 
   T8_ASSERT (has_overlap_local_global == 0 || has_overlap_local_global == 1);
   if (has_overlap_local_global) {
     T8_ASSERT (has_overlap_local == 1);
-    //t8_debugf ("[IL] no_overlap end 1 \n");
     return 0;
   }
 #endif
-//t8_debugf ("[IL] no_overlap end 2 \n");
   return 1;
 }
 
@@ -485,17 +484,14 @@ t8_forest_element_diam (t8_forest_t forest, t8_locidx_t ltreeid,
   return 2 * dist / num_corners;
 }
 
-/* Compute the center of mass of an element.
- * The center of mass of a polygon with vertices x_1, ... , x_n
- * is given by   1/n * (x_1 + ... + x_n)
- */
+/* Compute the center of mass of an element. We can use the element reference
+ * coordinates of the centroid.*/
 void
 t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
                             const t8_element_t *element, double *coordinates)
 {
-  double              corner_coords[3];
-  int                 num_corners, icorner;
   t8_eclass_t         tree_class;
+  t8_element_shape_t  element_shape;
   t8_eclass_scheme_c *ts;
 
   T8_ASSERT (t8_forest_is_committed (forest));
@@ -505,19 +501,12 @@ t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
   ts = t8_forest_get_eclass_scheme (forest, tree_class);
   T8_ASSERT (ts->t8_element_is_valid (element));
 
-  /* initialize the centroid with 0 */
-  memset (coordinates, 0, 3 * sizeof (double));
-  /* get the number of corners of element */
-  num_corners = ts->t8_element_num_corners (element);
-  for (icorner = 0; icorner < num_corners; icorner++) {
-    /* For each corner, add its coordinates to the centroids coordinates. */
-    t8_forest_element_coordinate (forest, ltreeid, element, icorner,
-                                  corner_coords);
-    /* coordinates = coordinates + corner_coords */
-    t8_vec_axpy (corner_coords, coordinates, 1);
-  }
-  /* Divide each coordinate by num_corners */
-  t8_vec_ax (coordinates, 1. / num_corners);
+  /* Get the element class and calculate the centroid using its element
+   * reference coordinates */
+  element_shape = t8_element_shape (ts, element);
+  t8_forest_element_from_ref_coords (forest, ltreeid, element,
+                                     t8_element_centroid_ref_coords
+                                     [element_shape], coordinates, NULL);
 }
 
 /* Compute the length of the line from one corner to a second corner in an element */
@@ -1177,7 +1166,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
       t8_vec_axpy (corner_vertices[0], center, -1);
       /* Compute the dot-product of normal and center */
       c_n = t8_vec_dot (center, normal);
-      /* if c_n is positiv, the computed normal points inwards, so we have to reverse it */
+      /* if c_n is positive, the computed normal points inwards, so we have to reverse it */
       if (c_n > 0) {
         norm = -norm;
       }
@@ -2687,12 +2676,12 @@ t8_forest_element_find_owner_ext (t8_forest_t forest,
           /* reset guess */
           guess = last_guess;
           if (reached_bound > 0) {
-            /* The upper bound was reached, we ommit all empty
+            /* The upper bound was reached, we omit all empty
              * ranks from the search. */
             upper_bound = last_guess;
           }
           else {
-            /* The lower bound was reached, we ommit all empty
+            /* The lower bound was reached, we omit all empty
              * ranks from the search. */
             lower_bound = last_guess;
           }

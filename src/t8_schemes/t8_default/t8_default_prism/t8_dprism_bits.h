@@ -48,8 +48,8 @@ int                 t8_dprism_get_level (const t8_dprism_t *p);
  */
 void                t8_dprism_copy (const t8_dprism_t *p, t8_dprism_t *dest);
 
-/** Compare two elements. returns negativ if p1 < p2, zero if p1 equals p2
- *  and positiv if p1 > p2.
+/** Compare two elements. returns negative if p1 < p2, zero if p1 equals p2
+ *  and positive if p1 > p2.
  *  If p2 is a copy of p1 then the elements are equal.
  */
 int                 t8_dprism_compare (const t8_dprism_t *p1,
@@ -134,7 +134,7 @@ int                 t8_dprism_is_root_boundary (const t8_dprism_t *p,
  *  that is the triangle of level 0, anchor node (0,0)
  *  and type 0.
  *  \param [in]     p Input prism.
- *  \return true    If \a p lies inside of the root pris.
+ *  \return true    If \a p lies inside of the root prism.
  */
 int                 t8_dprism_is_inside_root (t8_dprism_t *p);
 
@@ -218,7 +218,7 @@ void                t8_dprism_children_at_face (const t8_dprism_t *p,
  * \param [in]  face    The number of the face.
  * \param [in]  face_child  The child number of a child of the face prism.
  * \return              The face number of the face of a child of \a p
- *                      that conincides with \a face_child.
+ *                      that coincides with \a face_child.
  */
 int                 t8_dprism_face_child_face (const t8_dprism_t *elem,
                                                int face, int face_child);

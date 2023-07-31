@@ -181,7 +181,7 @@ t8_dprism_nearest_common_ancestor (const t8_dprism_t *p1,
 
   /* if the line and the triangle don't have the same level,
    * we compute the ancestor of the one with larger level at the
-   * minumum level of the two. */
+   * minimum level of the two. */
   if (r->tri.level != r->line.level) {
     level = SC_MIN (r->tri.level, r->line.level);
     if (r->tri.level > r->line.level) {
@@ -504,7 +504,7 @@ t8_dprism_successor (const t8_dprism_t *p, t8_dprism_t *succ, int level)
   }
   /*The next prism is one plane up, local_tri_id = 0 */
   else if ((prism_child_id + 1) % T8_DTRI_CHILDREN == 0) {
-    /*parent is computed with succ, cause there are the updated datas */
+    /*parent is computed with succ, cause there are the updated data */
     t8_dprism_parent (succ, succ);
     t8_dprism_child (succ, prism_child_id + 1, succ);
   }
@@ -585,7 +585,7 @@ t8_dprism_vertex_ref_coords (const t8_dprism_t *elem, const int vertex,
   T8_ASSERT (t8_dprism_is_valid (elem));
   T8_ASSERT (vertex >= 0 && vertex < 6);
 
-  /* Compute the integere coordinates in [0, root_len]^3 */
+  /* Compute the integer coordinates in [0, root_len]^3 */
   t8_dprism_vertex_coords (elem, vertex, coords_int);
 
   /* Divide by the root length. */

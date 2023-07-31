@@ -40,13 +40,13 @@ then
 fi
 
 # All valid file suffixes.
-# Seperated by '|' in order to be directly used
+# Separated by '|' in order to be directly used
 # as a regex in the find command.
 
 suffixes="c|cxx|h|hxx"
 
 # Find all files with the appropriate suffix in the 
 # src/ example/ test/ and tutorials/ subfolder.
-files=`find ../src ../example ../test ../tutorials -regextype egrep -iregex ".*\.($suffixes)"`
+files=`find ../src ../example ../test ../tutorials ../benchmarks -regextype egrep -iregex ".*\.($suffixes)"`
 
 echo $files

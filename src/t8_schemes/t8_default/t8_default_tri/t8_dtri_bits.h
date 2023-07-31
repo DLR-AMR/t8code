@@ -42,7 +42,7 @@ void                t8_dtri_copy (const t8_dtri_t *t, t8_dtri_t *dest);
 /** Compare two triangle in their linear order.
  * \param [in] t1 Triangle one.
  * \param [in] t2 Triangle two.
- * \return        Returns negativ if t1 < t2, zero if t1 = t2, positive if t1 > t2
+ * \return        Returns negative if t1 < t2, zero if t1 = t2, positive if t1 > t2
  */
 int                 t8_dtri_compare (const t8_dtri_t *t1,
                                      const t8_dtri_t *t2);
@@ -182,7 +182,7 @@ void                t8_dtri_children_at_face (const t8_dtri_t *tri,
  * \param [in]  face    Then number of the face.
  * \param [in]  face_child  The child number of a child of the face triangle.
  * \return              The face number of the face of a child of \a triangle
- *                      that conincides with \a face_child.
+ *                      that coincides with \a face_child.
  */
 int                 t8_dtri_face_child_face (const t8_dtri_t *triangle,
                                              int face, int face_child);

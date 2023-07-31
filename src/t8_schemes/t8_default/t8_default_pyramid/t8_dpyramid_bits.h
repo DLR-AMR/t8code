@@ -145,8 +145,8 @@ int                 t8_dpyramid_extrude_face (const t8_element_t *face,
                                               t8_dpyramid_t *p,
                                               const int root_face);
 
-/** Compare two elements. returns negativ if p1 < p2, zero if p1 equals p2
- *  and positiv if p1 > p2.
+/** Compare two elements. returns negative if p1 < p2, zero if p1 equals p2
+ *  and positive if p1 > p2.
  *  If p2 is a copy of p1 then the elements are equal.
  * \param[in] p1    A pyramid
  * \param[in] p2    Another pyramid
@@ -155,7 +155,7 @@ int                 t8_dpyramid_extrude_face (const t8_element_t *face,
 int                 t8_dpyramid_compare (const t8_dpyramid_t *p1,
                                          const t8_dpyramid_t *p2);
 
-/** Check wether a collection of 10 pyramids is a family in Morton order.
+/** Check whether a collection of 10 pyramids is a family in Morton order.
  * \param [in]  fam A collection of pyramids
  * \return      Nonzero if \a fam is a family of pyramids
  */
@@ -205,7 +205,7 @@ int                 t8_dpyramid_tet_boundary (const t8_dpyramid_t *p,
  * of the tree face. If not the return value is arbitrary
  * \param [in] elem     pyramid
  * \param [in] face     a face of \a elem
- * \return              See discription
+ * \return              See description
  */
 int                 t8_dpyramid_tree_face (const t8_dpyramid_t *p,
                                            const int face);
