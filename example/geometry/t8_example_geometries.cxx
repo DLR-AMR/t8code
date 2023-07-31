@@ -93,7 +93,7 @@ public:
    * models the rectangle [0,2] x [0,1].
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f( [0,1]^2 \f).
+   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f$ [0,1]^2 \f$.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
    */
   void                t8_geom_evaluate (t8_cmesh_t cmesh,
@@ -130,7 +130,7 @@ public:
   }
 };
 
-/** This geometry maps the unit square \f( [0,1]^2 \f) to the moebius strip.
+/** This geometry maps the unit square \f$ [0,1]^2 \f$ to the moebius strip.
  * The unit square can be modelled with any cmesh (consisting of any number of trees).
  * 
  * It inherits from the w_vertices geometry since we use the tree's vertex coordinates.
@@ -145,10 +145,10 @@ public:
   }
 
   /**
-   * Map a point in a point in \f( [0,1]^2 \f) to the moebius band.
+   * Map a point in a point in \f$ [0,1]^2 \f$ to the moebius band.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f( [0,1]^2 \f).
+   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f$ [0,1]^2 \f$.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
    */
   void                t8_geom_evaluate (t8_cmesh_t cmesh,
@@ -207,7 +207,7 @@ public:
    * Map a reference point in the unit square to a cylinder.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f( [0,1]^dimension \f).
+   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f$ [0,1]^\mathrm{dim} \f$.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
    */
   void                t8_geom_evaluate (t8_cmesh_t cmesh,
@@ -239,7 +239,7 @@ public:
 };
 
 /**
- * This geometry map a unit square \f( [0,1]^2 \f) cmesh to a circle with midpoint 0
+ * This geometry map a unit square \f$ [0,1]^2 \f$ cmesh to a circle with midpoint 0
  * and radius 1.
  * This geometry massively distorts elements near the boundary and should not be
  * used for actual numerical experiments.
@@ -258,7 +258,7 @@ public:
    * Map a reference point in the unit square to a circle.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f( [0,1]^2 \f).
+   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f$ [0,1]^2 \f$.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
    */
   void                t8_geom_evaluate (t8_cmesh_t cmesh,
@@ -300,7 +300,7 @@ public:
   /* Load tree data is inherited from vertices geometry. */
 };
 
-/* This geometry rotates \f( [0,1]^2 \f) with time around the origin.
+/* This geometry rotates \f$ [0,1]^2 \f$ with time around the origin.
  * The rotation direction is reversed after 2 seconds.
  * Additionally, the z coordinate is modifyied according to the
  * sincos function and multiplied with the current time.
@@ -324,7 +324,7 @@ public:
    * Map a reference point in the unit square to a square distorted with time.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f( [0,1]^2 \f).
+   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f$ [0,1]^2 \f$.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
    */
   void                t8_geom_evaluate (t8_cmesh_t cmesh,
@@ -376,7 +376,7 @@ protected:
   const double       *ptime;    /* Time pointer to outside time variable */
 };
 
-/** Map the unit cube \f( [0,1]^3 \f) onto a cube that is distorted
+/** Map the unit cube \f$ [0,1]^3 \f$ onto a cube that is distorted
  * in z direction.
  * Can be used with 1 tree unit cube cmesh only.
  */
@@ -392,7 +392,7 @@ public:
    * Map a reference point in the unit cube to a cube distorted in the z axis.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f( [0,1]^3 \f).
+   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f$ [0,1]^3 \f$.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
    */
   void                t8_geom_evaluate (t8_cmesh_t cmesh,

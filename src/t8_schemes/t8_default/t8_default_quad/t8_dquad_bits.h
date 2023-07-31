@@ -33,9 +33,9 @@
 T8_EXTERN_C_BEGIN ();
 
 /** Convert a point in the reference space of a quad element to a point in the
- *  reference space of the tree (level 0) embedded in \f( [0,1]^2 \f).
+ *  reference space of the tree (level 0) embedded in \f$ [0,1]^2 \f$.
  * \param [in]  elem       Input quad.
- * \param [in]  ref_coords The reference coordinate on the quad \f( [0,1]^2 \f)
+ * \param [in]  ref_coords The reference coordinate on the quad \f$ [0,1]^2 \f$
  * \param [out] out_coords An array of 1 double that
  * 		                     will be filled with the reference coordinates
  *                         of the point on the quad.

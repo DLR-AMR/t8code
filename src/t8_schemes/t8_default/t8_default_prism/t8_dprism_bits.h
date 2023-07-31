@@ -306,7 +306,7 @@ void                t8_dprism_vertex_coords (const t8_dprism_t *elem,
                                              int vertex, int coords[3]);
 
 /** Compute the reference coordinates of a vertex of a prism when the 
- * tree (level 0) is embedded in \f( [0,1]^3 \f).
+ * tree (level 0) is embedded in \f$ [0,1]^3 \f$.
  * \param [in] elem         Input prism.
  * \param [in] vertex       The number of the vertex.
  * \param [out] coordinates An array of 3 double that
@@ -317,10 +317,10 @@ void                t8_dprism_vertex_ref_coords (const t8_dprism_t *elem,
                                                  double coords[3]);
 
 /** Convert a point in the reference space of a prism element to a point in the
- *  reference space of the tree (level 0) embedded in \f( [0,1]^3 \f).
+ *  reference space of the tree (level 0) embedded in \f$ [0,1]^3 \f$.
  * \param [in]  elem       Input prism.
  * \param [in]  ref_coords The reference coordinates inside the
- *                         prism element \f( [0,1]^3 \f)
+ *                         prism element \f$ [0,1]^3 \f$
  * \param [out] out_coords An array of 3 doubles that will be filled with the
  *                         reference coordinates in the tree of the prism.
  */

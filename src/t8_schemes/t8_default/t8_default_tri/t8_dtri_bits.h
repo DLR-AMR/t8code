@@ -77,7 +77,7 @@ void                t8_dtri_compute_coords (const t8_dtri_t *elem,
                                             t8_dtri_coord_t coordinates[2]);
 
 /** Compute the reference coordinates of a vertex of a triangle when the 
- * tree (level 0 triangle) is embedded in \f( [0,1]^2 \f).
+ * tree (level 0 triangle) is embedded in \f$ [0,1]^2 \f$.
  * \param [in] elem         Input triangle.
  * \param [in] vertex       The number of the vertex.
  * \param [out] coordinates An array of 2 double that
@@ -88,10 +88,10 @@ void                t8_dtri_compute_vertex_ref_coords (const t8_dtri_t *elem,
                                                        double coordinates[2]);
 
 /** Convert a point in the reference space of a triangle element to a point in
- *  the reference space of the tree (level 0) embedded in \f( [0,1]^2 \f).
+ *  the reference space of the tree (level 0) embedded in \f$ [0,1]^2 \f$.
  * \param [in]  elem       Input triangle.
  * \param [in]  ref_coords The reference coordinates inside the
- *                         triangle element \f( [0,1]^2 \f)
+ *                         triangle element \f$ [0,1]^2 \f$
  * \param [out] out_coords An array of 2 doubles that will be filled with the
  *                         reference coordinates in the tree of the triangle.
  */
