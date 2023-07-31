@@ -2555,13 +2555,12 @@ t8_cmesh_new_pyramid_cake (sc_MPI_Comm comm, int num_of_pyra)
   int                 i, j;
   double             *vertices = T8_ALLOC (double, num_of_pyra * 5 * 3);
   t8_cmesh_t          cmesh;
-  double              degrees = 360. / num_of_pyra;
-  if (vertices)
-    T8_ASSERT (num_of_pyra > 2);
+  const double        degrees = 360. / num_of_pyra;
+  T8_ASSERT (num_of_pyra > 2);
 
   for (i = 0; i < num_of_pyra; i++) {
     for (j = 0; j < 5; j++) {
-      //Get the edges at the unit circle
+      /* Get the edges at the unit circle */
       if (j == 4) {
         vertices[i * 5 * 3 + j * 3] = 0;
         vertices[i * 5 * 3 + j * 3 + 1] = 0;
@@ -2623,7 +2622,7 @@ t8_cmesh_new_long_brick_pyramid (sc_MPI_Comm comm, int num_cubes)
     for (j = 0; j < 3; j++) {
       t8_cmesh_set_tree_class (cmesh, i * 3 + j, T8_ECLASS_PYRAMID);
     }
-    //in-cube face connection 
+    /* in-cube face connection */
     if (i % 2 == 0) {
       t8_cmesh_set_join (cmesh, i * 3, i * 3 + 1, 3, 2, 0);
       t8_cmesh_set_join (cmesh, i * 3 + 1, i * 3 + 2, 0, 1, 0);
@@ -2635,7 +2634,7 @@ t8_cmesh_new_long_brick_pyramid (sc_MPI_Comm comm, int num_cubes)
       t8_cmesh_set_join (cmesh, i * 3 + 2, i * 3, 2, 3, 0);
     }
   }
-  //over cube face connection 
+  /* over cube face connection */
   for (i = 0; i < num_cubes - 1; i++) {
     if (i % 2 == 0) {
       t8_cmesh_set_join (cmesh, i * 3, (i + 1) * 3, 2, 0, 0);
@@ -2645,7 +2644,7 @@ t8_cmesh_new_long_brick_pyramid (sc_MPI_Comm comm, int num_cubes)
       t8_cmesh_set_join (cmesh, i * 3 + 1, (i + 1) * 3 + 2, 4, 4, 0);
     }
   }
-  //vertices 
+  /* vertices */ 
   for (i = 0; i < num_cubes; i++) {
     vertices[0] = 1;
     vertices[1] = 3;
