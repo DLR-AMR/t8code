@@ -663,6 +663,8 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
         t8_productionf("[D] data: %f\n", data[idata].data[i]);
       }
       unstructuredGrid->GetCellData ()->AddArray (dataArray);
+      unstructuredGrid->GetCellData ()->SetActiveScalars (data[idata].description);
+
     }
     else {
       for (int i = 0; i < num_elements; i++)
