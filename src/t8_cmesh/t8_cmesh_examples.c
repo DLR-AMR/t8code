@@ -2558,25 +2558,25 @@ t8_cmesh_new_pyramid_cake (sc_MPI_Comm comm, int num_of_pyra)
   const double        degrees = 360. / num_of_pyra;
   T8_ASSERT (num_of_pyra > 2);
 
-  for (i = 0; i < num_of_pyra; i++) {
-    for (j = 0; j < 5; j++) {
+for (current_pyra= 0; current_pyra< num_of_pyra; i++) {
+    for (current_face = 0; current_face < 5; current_face++) {
       /* Get the edges at the unit circle */
-      if (j == 4) {
-        vertices[i * 5 * 3 + j * 3] = 0;
-        vertices[i * 5 * 3 + j * 3 + 1] = 0;
-        vertices[i * 5 * 3 + j * 3 + 2] = 0;
+      if (current_face == 4) {
+        vertices[current_pyra* 5 * 3 + current_face * 3] = 0;
+        vertices[current_pyra* 5 * 3 + current_face * 3 + 1] = 0;
+        vertices[current_pyra* 5 * 3 + current_face * 3 + 2] = 0;
       }
-      else if (j == 1 || j == 3) {
-        vertices[i * 5 * 3 + j * 3] = cos (i * degrees * M_PI / 180);
-        vertices[i * 5 * 3 + j * 3 + 1] = sin (i * degrees * M_PI / 180);
-        vertices[i * 5 * 3 + j * 3 + 2] = (j == 3 ? 0.5 : -0.5);
+      else if (current_face == 1 || current_face == 3) {
+        vertices[current_pyra* 5 * 3 + current_face * 3] = cos (current_pyra* degrees * M_PI / 180);
+        vertices[current_pyra* 5 * 3 + current_face * 3 + 1] = sin (current_pyra* degrees * M_PI / 180);
+        vertices[current_pyra* 5 * 3 + current_face * 3 + 2] = (current_face == 3 ? 0.5 : -0.5);
       }
-      else if (j == 0 || j == 2) {
-        vertices[i * 5 * 3 + j * 3] =
-          cos ((i * degrees + degrees) * M_PI / 180);
-        vertices[i * 5 * 3 + j * 3 + 1] =
-          sin ((i * degrees + degrees) * M_PI / 180);
-        vertices[i * 5 * 3 + j * 3 + 2] = (j == 2 ? 0.5 : -0.5);
+      else if (current_face == 0 || current_face == 2) {
+        vertices[current_pyra* 5 * 3 + current_face * 3] =
+          cos ((current_pyra* degrees + degrees) * M_PI / 180);
+        vertices[current_pyra* 5 * 3 + current_face * 3 + 1] =
+          sin ((current_pyra* degrees + degrees) * M_PI / 180);
+        vertices[current_pyra* 5 * 3 + current_face * 3 + 2] = (current_face == 2 ? 0.5 : -0.5);
       }
     }
   }
@@ -2612,61 +2612,61 @@ t8_cmesh_new_long_brick_pyramid (sc_MPI_Comm comm, int num_cubes)
   t8_cmesh_t          cmesh;
   T8_ASSERT (num_cubes > 0);
   t8_cmesh_init (&cmesh);
-  for (i = 0; i < num_cubes; i++) {
-    for (j = 0; j < 3; j++) {
-      t8_cmesh_set_tree_class (cmesh, i * 3 + j, T8_ECLASS_PYRAMID);
+  for (current_cube = 0; current_cube < num_cubes; current_cube++) {
+    for (current_face = 0; current_face < 3; current_face++) {
+      t8_cmesh_set_tree_class (cmesh, current_cube * 3 + current_face, T8_ECLASS_PYRAMID);
     }
     /* in-cube face connection */
-    if (i % 2 == 0) {
-      t8_cmesh_set_join (cmesh, i * 3, i * 3 + 1, 3, 2, 0);
-      t8_cmesh_set_join (cmesh, i * 3 + 1, i * 3 + 2, 0, 1, 0);
-      t8_cmesh_set_join (cmesh, i * 3 + 2, i * 3, 2, 0, 0);
+    if (current_cube % 2 == 0) {
+      t8_cmesh_set_join (cmesh, current_cube * 3, current_cube * 3 + 1, 3, 2, 0);
+      t8_cmesh_set_join (cmesh, current_cube * 3 + 1, current_cube * 3 + 2, 0, 1, 0);
+      t8_cmesh_set_join (cmesh, current_cube * 3 + 2, current_cube * 3, 2, 0, 0);
     }
     else {
-      t8_cmesh_set_join (cmesh, i * 3, i * 3 + 1, 2, 2, 0);
-      t8_cmesh_set_join (cmesh, i * 3 + 1, i * 3 + 2, 1, 0, 0);
-      t8_cmesh_set_join (cmesh, i * 3 + 2, i * 3, 2, 3, 0);
+      t8_cmesh_set_join (cmesh, current_cube * 3, current_cube * 3 + 1, 2, 2, 0);
+      t8_cmesh_set_join (cmesh, current_cube * 3 + 1, current_cube * 3 + 2, 1, 0, 0);
+      t8_cmesh_set_join (cmesh, current_cube * 3 + 2, current_cube * 3, 2, 3, 0);
     }
   }
   /* over cube face connection */
-  for (i = 0; i < num_cubes - 1; i++) {
-    if (i % 2 == 0) {
-      t8_cmesh_set_join (cmesh, i * 3, (i + 1) * 3, 2, 0, 0);
-      t8_cmesh_set_join (cmesh, i * 3 + 1, (i + 1) * 3 + 2, 3, 3, 0);
+  for (current_cube = 0; current_cube < num_cubes - 1; current_cube++) {
+    if (current_cube % 2 == 0) {
+      t8_cmesh_set_join (cmesh, current_cube * 3, (current_cube + 1) * 3, 2, 0, 0);
+      t8_cmesh_set_join (cmesh, current_cube * 3 + 1, (current_cube + 1) * 3 + 2, 3, 3, 0);
     }
     else {
-      t8_cmesh_set_join (cmesh, i * 3 + 1, (i + 1) * 3 + 2, 4, 4, 0);
+      t8_cmesh_set_join (cmesh, current_cube * 3 + 1, (current_cube + 1) * 3 + 2, 4, 4, 0);
     }
   }
   /* vertices */ 
-  for (i = 0; i < num_cubes; i++) {
+  for (current_cube = 0; current_cube < num_cubes; current_cube++) {
     vertices[0] = 1;
     vertices[1] = 3;
     vertices[2] = 0;
     vertices[3] = 2;
-    vertices[4] = i % 2 == 0 ? 7 : 5;
+    vertices[4] = current_cube % 2 == 0 ? 7 : 5;
     t8_cmesh_new_translate_vertices_to_attributes (vertices,
                                                    vertices_coords,
                                                    attr_vertices, 5);
-    t8_cmesh_set_tree_vertices (cmesh, i * 3, attr_vertices, 5);
-    vertices[0] = i % 2 == 0 ? 0 : 2;
-    vertices[1] = i % 2 == 0 ? 2 : 3;
-    vertices[2] = i % 2 == 0 ? 4 : 6;
-    vertices[3] = i % 2 == 0 ? 6 : 7;
+    t8_cmesh_set_tree_vertices (cmesh, current_cube * 3, attr_vertices, 5);
+    vertices[0] = current_cube % 2 == 0 ? 0 : 2;
+    vertices[1] = current_cube % 2 == 0 ? 2 : 3;
+    vertices[2] = current_cube % 2 == 0 ? 4 : 6;
+    vertices[3] = current_cube % 2 == 0 ? 6 : 7;
     t8_cmesh_new_translate_vertices_to_attributes (vertices,
                                                    vertices_coords,
                                                    attr_vertices, 5);
-    t8_cmesh_set_tree_vertices (cmesh, i * 3 + 1, attr_vertices, 5);
-    vertices[0] = i % 2 == 0 ? 1 : 0;
-    vertices[1] = i % 2 == 0 ? 0 : 2;
-    vertices[2] = i % 2 == 0 ? 5 : 4;
-    vertices[3] = i % 2 == 0 ? 4 : 6;
+    t8_cmesh_set_tree_vertices (cmesh, current_cube * 3 + 1, attr_vertices, 5);
+    vertices[0] = current_cube % 2 == 0 ? 1 : 0;
+    vertices[1] = current_cube % 2 == 0 ? 0 : 2;
+    vertices[2] = current_cube % 2 == 0 ? 5 : 4;
+    vertices[3] = current_cube % 2 == 0 ? 4 : 6;
     t8_cmesh_new_translate_vertices_to_attributes (vertices,
                                                    vertices_coords,
                                                    attr_vertices, 5);
-    t8_cmesh_set_tree_vertices (cmesh, i * 3 + 2, attr_vertices, 5);
-    for (j = 0; j < 8; j++) {
-      vertices_coords[j * 3 + 1] += 1;
+    t8_cmesh_set_tree_vertices (cmesh, current_cube * 3 + 2, attr_vertices, 5);
+    for (current_face = 0; current_face < 8; current_face++) {
+      vertices_coords[current_face * 3 + 1] += 1;
     }
 
   }
