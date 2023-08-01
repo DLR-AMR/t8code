@@ -653,27 +653,18 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
     dataArray->SetName (data[idata].description);       /* Set the name of the array */
     dataArray->SetNumberOfTuples (num_elements);        /* We want number of tuples=number of elements */
     dataArray->SetNumberOfComponents (num_components);
-    //dataArray->SetArray (data[idata].data, num_elements * num_components, 1);
+    dataArray->SetArray (data[idata].data, num_elements * num_components, 1);
 
     /* *INDENT-OFF* */
     if (num_components == 1) {
-      for (int i = 0; i < num_elements; i++)
-      {
-        dataArray->InsertNextValue(data[idata].data[i]);
-        t8_productionf("[D] data: %f\n", data[idata].data[i]);
-      }
       unstructuredGrid->GetCellData ()->AddArray (dataArray);
       unstructuredGrid->GetCellData ()->SetActiveScalars (data[idata].description);
 
     }
     else {
-      for (int i = 0; i < num_elements; i++)
-      {
-        for(int j = 0; j < num_components; j++){
-          dataArray->InsertNextValue(data[idata].data[i * num_components + j]);
-        }
-      }
       unstructuredGrid->GetCellData ()->AddArray (dataArray);
+      unstructuredGrid->GetCellData ()->SetActiveScalars (data[idata].description);
+
     }
     /* *INDENT-ON* */
   }
