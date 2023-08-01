@@ -95,7 +95,77 @@ t8_check_not_inside_root (t8_element_t *element, t8_element_t *neigh,
     T8_FREE (children);
     T8_FREE (child_indices);
   }
+}
 
+void
+t8_test_face_neighbor_inside (int num_faces, t8_element_t *element,
+                              t8_element_t *child, t8_element_t *neigh,
+                              t8_eclass_scheme_c *ts)
+{
+  int                 face_num;
+  int                 check;
+
+  for (int iface = 0; iface < num_faces; iface++) {
+    /* Compute the neighbors neighbor along a given face and check, if the result is the
+     * original element. */
+    ts->t8_element_face_neighbor_inside (child, neigh, iface, &face_num);
+    ts->t8_element_face_neighbor_inside (neigh, element, face_num, &check);
+
+    EXPECT_EQ (ts->t8_element_compare (child, element),
+               0) << "Got a false neighbor.";
+    EXPECT_EQ (check, iface) << "Wrong face.";
+  }
+}
+
+int
+t8_test_get_middle_child (t8_eclass_t eclass, int ilevel,
+                          t8_element_t *element, t8_element_t *child,
+                          t8_eclass_scheme_c *ts)
+{
+  /* Get the child number of the child in the middle of the element, depending of the shape of the element. */
+  switch (eclass) {
+  case T8_ECLASS_VERTEX:
+
+    return 0;
+  case T8_ECLASS_LINE:
+
+    return 0;
+  case T8_ECLASS_QUAD:
+    /* There are no inner childs in level one refinement. The test starts with level two, because this is the first level, inner childs existing.
+       The thrid child of level one child 0 is one of four middle childs in level two. */
+    ts->t8_element_child (element, 0, child);
+    ts->t8_element_copy (child, element);
+    return 3;
+  case T8_ECLASS_TRIANGLE:
+
+    return 3;
+  case T8_ECLASS_HEX:
+    /* There are no inner childs in level one refinement. The test starts with level two, because this is the first level, inner childs existing.
+       The thrid child of level one child 4 is one of eight middle childs in level two. */
+    ts->t8_element_child (element, 4, child);
+    ts->t8_element_copy (child, element);
+    return 3;
+  case T8_ECLASS_TET:
+    return 4;
+  case T8_ECLASS_PRISM:
+    /* There are no inner childs in level one refinement. The test starts with level two, because this is the first level, inner childs existing.
+       The last child of level one child 4 is one of eight middle childs in level two. */
+    ts->t8_element_child (element, 4, child);
+    ts->t8_element_copy (child, element);
+    return 7;
+  case T8_ECLASS_PYRAMID:
+
+    /* Pyramid Type 6. */
+    if (ilevel % 2 == 1) {
+      return 8;
+    }
+    /* Pyramid Type 7. */
+    else {
+      return 3;
+    }
+  default:
+    return 0;
+  }
 }
 
 /* First "simple" check. First, the neighbors of the root-pyramid at level 0 are computed
@@ -104,16 +174,41 @@ t8_check_not_inside_root (t8_element_t *element, t8_element_t *neigh,
  * this pyramid. Then, the same is done for all of the children of the type six pyramid. */
 TEST_P (face_neigh, face_check_easy)
 {
-  int                 face_num;
-  int                 num_faces;
-  int                 check;
-  if ((int) eclass == (int) T8_ECLASS_PRISM) {
-    GTEST_SKIP ();
-  }
+#ifdef T8_ENABLE_DEBUG
+  const int           maxlvl = 3;
+#else
+  const int           maxlvl = 4;
+#endif
+  int                 middle_child_id;
+
+  // if ((int) eclass == (int) T8_ECLASS_PRISM ) {
+  //   GTEST_SKIP ();
+  // }
 
   /* Are the neighbors of the element realy outside?. */
   t8_check_not_inside_root (element, neigh, child, ts);
+
+  for (int ilevel = 1; ilevel <= maxlvl; ilevel++) {
+
+    middle_child_id =
+      t8_test_get_middle_child (eclass, ilevel, element, child, ts);
+
+    ts->t8_element_child (element, middle_child_id, child);
+    int                 num_faces = ts->t8_element_num_faces (child);
+    t8_test_face_neighbor_inside (num_faces, element, child, neigh, ts);
+
+    int                 num_children = ts->t8_element_num_children (element);
+    /* Face neighbor check for all children of the element. */
+    for (int ichild = 0; ichild < num_children; ichild++) {
+
+      ts->t8_element_child (element, ichild, child);
+      int                 num_faces = ts->t8_element_num_faces (child);
+      t8_test_face_neighbor_inside (num_faces, element, child, neigh, ts);
+      ts->t8_element_parent (child, element);
+    }
+  }
 }
+
 
 /* *INDENT-OFF* */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_face_neigh, face_neigh,testing::Range(T8_ECLASS_VERTEX, T8_ECLASS_COUNT));
