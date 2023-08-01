@@ -32,18 +32,21 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/** Convert a point in the reference space of a quad element to a point in the
+/** Convert points in the reference space of a quad element to points in the
  *  reference space of the tree (level 0) embedded in \f$ [0,1]^2 \f$.
  * \param [in]  elem       Input quad.
- * \param [in]  ref_coords The reference coordinate on the quad \f$ [0,1]^2 \f$
- * \param [out] out_coords An array of 1 double that
+ * \param [in]  ref_coords The reference coordinates in the quad
+ *                         (\a num_coords times \f$ [0,1]^2 \f$)
+ * \param [in]  num_coords Number of coordinates to evaluate
+ * \param [out] out_coords An array of \a num_coords x 2 x double that
  * 		                     will be filled with the reference coordinates
- *                         of the point on the quad.
+ *                         of the points on the quad.
  */
 void                t8_dquad_compute_reference_coords (const t8_dquad_t *
                                                        elem,
                                                        const double
                                                        *ref_coords,
+                                                       const int num_coords,
                                                        double *out_coords);
 
 T8_EXTERN_C_END ();
