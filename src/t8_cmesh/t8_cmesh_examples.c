@@ -2552,13 +2552,13 @@ t8_cmesh_t
 t8_cmesh_new_pyramid_cake (sc_MPI_Comm comm, int num_of_pyra)
 {
   
-  int                 i, j;
+  int                 current_pyra, current_face;
   double             *vertices = T8_ALLOC (double, num_of_pyra * 5 * 3);
   t8_cmesh_t          cmesh;
   const double        degrees = 360. / num_of_pyra;
   T8_ASSERT (num_of_pyra > 2);
 
-for (current_pyra= 0; current_pyra< num_of_pyra; i++) {
+for (current_pyra= 0; current_pyra< num_of_pyra; current_pyra++) {
     for (current_face = 0; current_face < 5; current_face++) {
       /* Get the edges at the unit circle */
       if (current_face == 4) {
@@ -2581,10 +2581,10 @@ for (current_pyra= 0; current_pyra< num_of_pyra; i++) {
     }
   }
   t8_cmesh_init (&cmesh);
-  for (i = 0; i < num_of_pyra; i++) {
-    t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_PYRAMID);
-    t8_cmesh_set_join (cmesh, i, (i == (num_of_pyra - 1) ? 0 : i + 1), 0, 1, 0);
-    t8_cmesh_set_tree_vertices (cmesh, i, vertices + i * 15, 5);
+  for (current_pyra = 0; current_pyra < num_of_pyra; current_pyra++) {
+    t8_cmesh_set_tree_class (cmesh, current_pyra, T8_ECLASS_PYRAMID);
+    t8_cmesh_set_join (cmesh, current_pyra, (current_pyra == (num_of_pyra - 1) ? 0 : current_pyra + 1), 0, 1, 0);
+    t8_cmesh_set_tree_vertices (cmesh, current_pyra, vertices + current_pyra * 15, 5);
   }
   t8_cmesh_commit (cmesh, comm);
   T8_FREE (vertices);
@@ -2608,7 +2608,7 @@ t8_cmesh_new_long_brick_pyramid (sc_MPI_Comm comm, int num_cubes)
   };
   t8_locidx_t         vertices[5];
   double              attr_vertices[15];
-  int                 i, j;
+  int                 current_cube, current_face;
   t8_cmesh_t          cmesh;
   T8_ASSERT (num_cubes > 0);
   t8_cmesh_init (&cmesh);
