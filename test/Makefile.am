@@ -36,7 +36,7 @@ t8code_googletest_programs = \
   test/t8_data/t8_gtest_shmem \
   test/t8_forest/t8_gtest_half_neighbors \
   test/t8_forest/t8_gtest_find_owner \
-  test/t8_schemes/t8_gtest_pyra_face_descendant \
+  test/t8_schemes/t8_gtest_face_descendant \
   test/t8_geometry/t8_gtest_point_inside \
   test/t8_forest/t8_gtest_user_data \
   test/t8_forest/t8_gtest_transform \
@@ -185,9 +185,9 @@ test_t8_forest_t8_gtest_find_owner_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_forest/t8_gtest_find_owner.cxx
 
-test_t8_schemes_t8_gtest_pyra_face_descendant_SOURCES = \
+test_t8_schemes_t8_gtest_face_descendant_SOURCES = \
   test/t8_gtest_main.cxx \
-  test/t8_schemes/t8_gtest_pyra_face_descendant.cxx
+  test/t8_schemes/t8_gtest_face_descendant.cxx
 
 test_t8_geometry_t8_gtest_point_inside_SOURCES = \
   test/t8_gtest_main.cxx \
@@ -370,9 +370,9 @@ test_t8_forest_t8_gtest_find_owner_LDADD = $(t8_gtest_target_ld_add)
 test_t8_forest_t8_gtest_find_owner_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_forest_t8_gtest_find_owner_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
-test_t8_schemes_t8_gtest_pyra_face_descendant_LDADD = $(t8_gtest_target_ld_add)
-test_t8_schemes_t8_gtest_pyra_face_descendant_LDFLAGS = $(t8_gtest_target_ld_flags)
-test_t8_schemes_t8_gtest_pyra_face_descendant_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+test_t8_schemes_t8_gtest_face_descendant_LDADD = $(t8_gtest_target_ld_add)
+test_t8_schemes_t8_gtest_face_descendant_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_schemes_t8_gtest_face_descendant_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
 test_t8_geometry_t8_gtest_point_inside_LDADD = $(t8_gtest_target_ld_add)
 test_t8_geometry_t8_gtest_point_inside_LDFLAGS = $(t8_gtest_target_ld_flags)
@@ -454,7 +454,7 @@ test_t8_gtest_vtk_linkage_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_data_t8_gtest_shmem_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_t8_gtest_half_neighbors_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_t8_gtest_find_owner_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
-test_t8_schemes_t8_gtest_pyra_face_descendant_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_schemes_t8_gtest_face_descendant_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_geometry_t8_gtest_point_inside_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_t8_gtest_user_data_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_t8_gtest_transform_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
