@@ -702,6 +702,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh,
                                    active_tree_vertices, ref_coords,
                                    out_coords);
 
+  const t8_locidx_t   ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
   const int           num_edges = t8_eclass_num_edges[active_tree_class];
   const int           num_faces = t8_eclass_num_faces[active_tree_class];
 
@@ -719,13 +720,13 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh,
       /* 
        *             _0
        *          _- / \
-       *       EX   /   \
-       *    _-     EX    \
-       *  1 --__  /       EX
+       *       E0   /   \
+       *    _-     E1    \
+       *  1 --__  /       E2
        *   \    -/-__      \
-       *   EX   /    EX__   \
+       *   E3   /    E4__   \
        *     \ /         --__\
-       *      2------ EX -----3
+       *      2------ E5 -----3
        */
     }
   }
@@ -748,6 +749,47 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh,
        *     \ / F0      --__\
        *      2---------------3
        */
+
+      const double       *surface_parameters =
+        (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
+                                           T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY
+                                           + i_faces,
+                                           ltreeid);
+      T8_ASSERT (surface_parameters != NULL);
+      /* Iterate over each edge of face */
+      for (int i_face_edge = 0; i_face_edge < 3; ++i_face_edge) {
+        /* Check if curve is present */
+        if (edges[t8_face_edge_to_tree_edge_n[active_tree_class][i_faces]
+                  [i_face_edge]] > 0) {
+          t8_eclass_t         face_eclass = T8_ECLASS_TRIANGLE;
+          /* Calculate the intersection point for the face edge in reference space */
+          double              ref_intersection[2];
+          t8_geom_get_ref_intersection (i_face_edge, ref_coords,
+                                        ref_intersection);
+          /* Converting ref_intersection on edge to global_intersection on face */
+          double              glob_intersection[3];
+          int                 face_verts[3];
+          double             *active_face_vertices;
+          /* Save numbers of face vertices in face_verts array */
+          for (int tree_vertex = 0; tree_vertex < 3; ++tree_vertex) {
+            face_verts[tree_vertex] =
+              t8_face_vertex_to_tree_vertex[active_tree_class][i_faces]
+              [tree_vertex];
+          }
+          /* Save coordinates of each vertex of the active face in active_face_vertices */
+          for (int tree_vertex = 0; tree_vertex < 3; ++tree_vertex) {
+            for (int vertex_coord = 0; vertex_coord < 3; ++vertex_coord) {
+              active_face_vertices[3 * tree_vertex + vertex_coord] =
+                active_tree_vertices[3 * face_verts[tree_vertex] +
+                                     vertex_coord];
+            }
+          }
+          t8_geom_compute_linear_geometry (face_eclass,
+                                           active_face_vertices,
+                                           ref_intersection,
+                                           glob_intersection);
+        }
+      }
     }
   }
 }
@@ -944,7 +986,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh,
             orthogonal_direction_of_edge_on_face = 1;
             break;
           }
-          /* Retrieve parameters of nodes und curve */
+          /* Retrieve parameters of nodes on curve */
           const double       *curve_parameters =
             (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
                                                T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY
