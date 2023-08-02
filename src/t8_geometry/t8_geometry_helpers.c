@@ -33,24 +33,24 @@ t8_geom_linear_interpolation (const double *coefficients,
                               double *evaluated_function)
 {
   double              temp[3] = { 0 };
-  for (int i = 0; i < corner_value_dim; i++) {
-    temp[i] = corner_values[0 * corner_value_dim + i] * (1 - coefficients[0])   /* x=0 y=0 z=0 */
-      +corner_values[1 * corner_value_dim + i] * coefficients[0];       /* x=1 y=0 z=0 */
+  for (int dim = 0; dim < corner_value_dim; dim++) {
+    temp[dim] = corner_values[0 * corner_value_dim + dim] * (1 - coefficients[0])       /* x=0 y=0 z=0 */
+      +corner_values[1 * corner_value_dim + dim] * coefficients[0];     /* x=1 y=0 z=0 */
     if (interpolation_dim > 1) {
-      temp[i] *= (1 - coefficients[1]);
-      temp[i] += (corner_values[2 * corner_value_dim + i] * (1 - coefficients[0])       /* x=0 y=1 z=0 */
-                  +corner_values[3 * corner_value_dim + i] * coefficients[0])   /* x=1 y=1 z=0 */
+      temp[dim] *= (1 - coefficients[1]);
+      temp[dim] += (corner_values[2 * corner_value_dim + dim] * (1 - coefficients[0])   /* x=0 y=1 z=0 */
+                    +corner_values[3 * corner_value_dim + dim] * coefficients[0])       /* x=1 y=1 z=0 */
         *coefficients[1];
       if (interpolation_dim == 3) {
-        temp[i] *= (1 - coefficients[2]);
-        temp[i] += (corner_values[4 * corner_value_dim + i] * (1 - coefficients[0]) * (1 - coefficients[1])     /* x=0 y=0 z=1 */
-                    +corner_values[5 * corner_value_dim + i] * coefficients[0] * (1 - coefficients[1])  /* x=1 y=0 z=1 */
-                    +corner_values[6 * corner_value_dim + i] * (1 - coefficients[0]) * coefficients[1]  /* x=0 y=1 z=1 */
-                    +corner_values[7 * corner_value_dim + i] * coefficients[0] * coefficients[1])       /* x=1 y=1 z=1 */
+        temp[dim] *= (1 - coefficients[2]);
+        temp[dim] += (corner_values[4 * corner_value_dim + dim] * (1 - coefficients[0]) * (1 - coefficients[1]) /* x=0 y=0 z=1 */
+                      +corner_values[5 * corner_value_dim + dim] * coefficients[0] * (1 - coefficients[1])      /* x=1 y=0 z=1 */
+                      +corner_values[6 * corner_value_dim + dim] * (1 - coefficients[0]) * coefficients[1]      /* x=0 y=1 z=1 */
+                      +corner_values[7 * corner_value_dim + dim] * coefficients[0] * coefficients[1])   /* x=1 y=1 z=1 */
           *coefficients[2];
       }
     }
-    evaluated_function[i] = temp[i];
+    evaluated_function[dim] = temp[dim];
   }
 }
 
@@ -67,22 +67,23 @@ t8_geom_triangular_interpolation (const double *coefficients,
    */
   double              temp[3] = { 0 };
 
-  for (int i = 0; i < corner_value_dim; i++) {
-    temp[i] = (corner_values[corner_value_dim + i] -    /* (p2 - p1) * ref_coords */
-               corner_values[i]) * coefficients[0] + (interpolation_dim ==
-                                                      3
-                                                      ? (corner_values
-                                                         [3 *
-                                                          corner_value_dim +
-                                                          i] -
-                                                         corner_values[2 *
-                                                                       corner_value_dim
-                                                                       + i])
-                                                      * coefficients[1]
-                                                      : 0.)     /* (p4 - p3) * ref_coords */
-      +(corner_values[2 * corner_value_dim + i] - corner_values[corner_value_dim + i]) * coefficients[interpolation_dim - 1]    /* (p3 - p2) * ref_coords */
-      +corner_values[i];        /* p1 */
-    evaluated_function[i] = temp[i];
+  for (int dim = 0; dim < corner_value_dim; dim++) {
+    temp[dim] = (corner_values[corner_value_dim + dim] -        /* (p2 - p1) * ref_coords */
+                 corner_values[dim]) * coefficients[0] + (interpolation_dim ==
+                                                          3
+                                                          ? (corner_values
+                                                             [3 *
+                                                              corner_value_dim
+                                                              + dim] -
+                                                             corner_values[2 *
+                                                                           corner_value_dim
+                                                                           +
+                                                                           dim])
+                                                          * coefficients[1]
+                                                          : 0.) /* (p4 - p3) * ref_coords */
+      +(corner_values[2 * corner_value_dim + dim] - corner_values[corner_value_dim + dim]) * coefficients[interpolation_dim - 1]        /* (p3 - p2) * ref_coords */
+      +corner_values[dim];      /* p1 */
+    evaluated_function[dim] = temp[dim];
   }
 }
 
@@ -92,22 +93,22 @@ t8_geom_compute_linear_geometry (t8_eclass_t tree_class,
                                  const double *ref_coords,
                                  double out_coords[3])
 {
-  int                 i;
+  int                 dim;
   int                 dimension = t8_eclass_to_dimension[tree_class];
   /* Compute the coordinates, depending on the shape of the element */
   switch (tree_class) {
   case T8_ECLASS_VERTEX:
     /* A vertex has exactly one corner, and we already know its coordinates, since they are
      * the same as the trees coordinates. */
-    for (i = 0; i < 3; i++) {
-      out_coords[i] = tree_vertices[i];
+    for (dim = 0; dim < 3; dim++) {
+      out_coords[dim] = tree_vertices[dim];
     }
     break;
   case T8_ECLASS_LINE:
-    for (i = 0; i < 3; i++) {
-      out_coords[i] =
-        (tree_vertices[3 + i] -
-         tree_vertices[i]) * ref_coords[0] + tree_vertices[i];
+    for (dim = 0; dim < 3; dim++) {
+      out_coords[dim] =
+        (tree_vertices[3 + dim] -
+         tree_vertices[dim]) * ref_coords[0] + tree_vertices[dim];
     }
     break;
   case T8_ECLASS_TRIANGLE:
@@ -121,16 +122,16 @@ t8_geom_compute_linear_geometry (t8_eclass_t tree_class,
       /* Prisminterpolation, via height, and triangle */
       /* Get a triangle at the specific height */
       double              tri_vertices[9];
-      for (i = 0; i < 9; i++) {
-        tri_vertices[i] =
-          (tree_vertices[9 + i] -
-           tree_vertices[i]) * ref_coords[2] + tree_vertices[i];
+      for (int coord = 0; coord < 9; coord++) {
+        tri_vertices[coord] =
+          (tree_vertices[9 + coord] -
+           tree_vertices[coord]) * ref_coords[2] + tree_vertices[coord];
       }
-      for (i = 0; i < 3; i++) {
-        out_coords[i] =
-          (tri_vertices[3 + i] - tri_vertices[i]) * ref_coords[0] +
-          (tri_vertices[6 + i] - tri_vertices[3 + i]) * ref_coords[1]
-          + tri_vertices[i];
+      for (dim = 0; dim < 3; dim++) {
+        out_coords[dim] =
+          (tri_vertices[3 + dim] - tri_vertices[dim]) * ref_coords[0] +
+          (tri_vertices[6 + dim] - tri_vertices[3 + dim]) * ref_coords[1]
+          + tri_vertices[dim];
       }
     }
     break;
@@ -152,26 +153,27 @@ t8_geom_compute_linear_geometry (t8_eclass_t tree_class,
       /*In this case, the vertex is the tip of the parent pyramid and we don't have to compute
        * anything.*/
       if (ref_coords[0] == 1. && ref_coords[1] == 1. && ref_coords[2] == 1.) {
-        for (i = 0; i < 3; i++) {
-          out_coords[i] = tree_vertices[12 + i];
+        for (dim = 0; dim < 3; dim++) {
+          out_coords[dim] = tree_vertices[12 + dim];
         }
         break;
       }
       /* Project vertex_coord onto x-y-plane */
-      for (i = 0; i < 3; i++) {
-        ray[i] = 1 - ref_coords[i];
+      for (dim = 0; dim < 3; dim++) {
+        ray[dim] = 1 - ref_coords[dim];
       }
       lambda = ref_coords[2] / ray[2];
-      for (i = 0; i < 2; i++) {
+      for (dim = 0; dim < 2; dim++) {
         /*Compute coords of vertex in the plane */
-        quad_coords[i] = ref_coords[i] - lambda * ray[i];
-        length += (1 - quad_coords[i]) * (1 - quad_coords[i]);
+        quad_coords[dim] = ref_coords[dim] - lambda * ray[dim];
+        length += (1 - quad_coords[dim]) * (1 - quad_coords[dim]);
       }
       length += 1;
       /*compute the ratio */
-      for (i = 0; i < 3; i++) {
+      for (dim = 0; dim < 3; dim++) {
         length2 +=
-          (ref_coords[i] - quad_coords[i]) * (ref_coords[i] - quad_coords[i]);
+          (ref_coords[dim] - quad_coords[dim]) * (ref_coords[dim] -
+                                                  quad_coords[dim]);
       }
       lambda = sqrt (length2) / sqrt (length);
 
@@ -179,8 +181,9 @@ t8_geom_compute_linear_geometry (t8_eclass_t tree_class,
       t8_geom_linear_interpolation ((const double *) quad_coords,
                                     tree_vertices, 3, 2, out_coords);
       /*Project it back */
-      for (i = 0; i < 3; i++) {
-        out_coords[i] += (tree_vertices[12 + i] - out_coords[i]) * lambda;
+      for (dim = 0; dim < 3; dim++) {
+        out_coords[dim] +=
+          (tree_vertices[12 + dim] - out_coords[dim]) * lambda;
       }
       break;
     }
