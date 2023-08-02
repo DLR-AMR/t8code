@@ -119,6 +119,8 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
                                    const int num_coords,
                                    double out_coords[3]) const
 {
+  if (num_coords != 1)
+    SC_ABORT ("Error: Batch computation of geometry not yet supported.");
   switch (active_tree_class) {
   case T8_ECLASS_TRIANGLE:
     t8_geometry_occ::t8_geom_evaluate_occ_triangle (cmesh, gtreeid,
@@ -144,8 +146,11 @@ t8_geometry_occ::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
                                             t8_gloidx_t gtreeid,
                                             const double
                                             *ref_coords,
+                                            const int num_coords,
                                             double *jacobian_out) const
 {
+  if (num_coords != 1)
+    SC_ABORT ("Error: Batch computation of geometry not yet supported.");
   double              h = 1e-9;
   double              in1[3], in2[3];
   double              out1[3], out2[3];

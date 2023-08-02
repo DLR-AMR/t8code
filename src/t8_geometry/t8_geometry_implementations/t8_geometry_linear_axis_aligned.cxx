@@ -48,6 +48,8 @@ t8_geometry_linear_axis_aligned::t8_geom_evaluate (t8_cmesh_t cmesh,
                                                    const int num_coords,
                                                    double out_coords[3]) const
 {
+  if (num_coords != 1)
+    SC_ABORT ("Error: Batch computation of geometry not yet supported.");
   t8_geom_compute_linear_axis_aligned_geometry (active_tree_class,
                                                 active_tree_vertices,
                                                 ref_coords, out_coords);
