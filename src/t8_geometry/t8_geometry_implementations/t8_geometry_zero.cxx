@@ -38,47 +38,31 @@ t8_geometry_zero::~t8_geometry_zero ()
   T8_FREE ((char *) name);
 }
 
-/**
- * Map a point in the reference space \f$ [0,1]^\mathrm{dim} \to \mathbb{R}^3 \f$.
- * \param [in]  cmesh      The cmesh in which the point lies.
- * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
- * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f$ [0,1]^\mathrm{dim} \f$.
- * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
- */
-/* *INDENT-OFF* */
-/* Indent has trouble with the const keyword at the end */
 void
 t8_geometry_zero::t8_geom_evaluate (t8_cmesh_t cmesh,
                                     t8_gloidx_t gtreeid,
                                     const double *ref_coords,
-                                    double out_coords[3]) const
-/* *INDENT-ON* */
+                                    const int num_coords,
+                                    double *out_coords) const
 {
   /* Set the out_coords to 0 */
-  out_coords[0] = 0;
-  out_coords[1] = 0;
-  out_coords[2] = 0;
+  for (int coord = 0; coord < num_coords; coord++) {
+    out_coords[0 + num_coords * T8_ECLASS_MAX_DIM] = 0;
+    out_coords[1 + num_coords * T8_ECLASS_MAX_DIM] = 0;
+    out_coords[2 + num_coords * T8_ECLASS_MAX_DIM] = 0;
+  }
 }
 
-/**
- * Compute the jacobian of the \a t8_geom_evaluate map at a point in the reference space \f$ [0,1]^\mathrm{dim} \f$.
- * \param [in]  cmesh      The cmesh in which the point lies.
- * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
- * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f$ [0,1]^\mathrm{dim} \f$.
- * \param [out] jacobian    The jacobian at \a ref_coords. Array of size dimension x 3. Indices 3*i, 3*i+1, 3*i+2
- *                          correspond to the i-th column of the jacobian (Entry 3*i + j is del f_j/del x_i).
- */
-/* *INDENT-OFF* */
-/* Indent has trouble with the const keyword at the end */
 void
 t8_geometry_zero::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
-                                            t8_gloidx_t gtreeid,
-                                            const double
-                                            *ref_coords, double *jacobian) const
-/* *INDENT-ON* */
+                                             t8_gloidx_t gtreeid,
+                                             const double
+                                             *ref_coords,
+                                             const int num_coords,
+                                             double *jacobian) const
 {
   /* Set the jacobian to 0 */
-  memset (jacobian, 0, sizeof (double) * 3 * dimension);
+  memset (jacobian, 0, sizeof (double) * 3 * dimension * num_coords);
 }
 
 inline void
