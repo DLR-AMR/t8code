@@ -94,13 +94,17 @@ public:
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f$ [0,1]^2 \f$.
+   * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
    */
   void                t8_geom_evaluate (t8_cmesh_t cmesh,
                                         t8_gloidx_t gtreeid,
                                         const double *ref_coords,
+                                        const int num_coords,
                                         double out_coords[3]) const
   {
+    if (num_coords != 1)
+      SC_ABORT ("Error: Batch computation of geometry not yet supported.");
     double              x = ref_coords[0];
     if                  (gtreeid == 1) {
       /* Translate ref coordinates by +1 in x direction for the second tree. */
@@ -116,6 +120,7 @@ public:
   void                t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
                                                  t8_gloidx_t gtreeid,
                                                  const double *ref_coords,
+                                                 const int num_coords,
                                                  double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
@@ -149,13 +154,17 @@ public:
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f$ [0,1]^2 \f$.
+   * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
    */
   void                t8_geom_evaluate (t8_cmesh_t cmesh,
                                         t8_gloidx_t gtreeid,
                                         const double *ref_coords,
+                                        const int num_coords,
                                         double out_coords[3]) const
   {
+    if (num_coords != 1)
+      SC_ABORT ("Error: Batch computation of geometry not yet supported.");
     double              t;
     double              phi;
 
@@ -182,6 +191,7 @@ public:
   void                t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
                                                  t8_gloidx_t gtreeid,
                                                  const double *ref_coords,
+                                                 const int num_coords,
                                                  double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
@@ -208,13 +218,17 @@ public:
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
    */
   void                t8_geom_evaluate (t8_cmesh_t cmesh,
                                         t8_gloidx_t gtreeid,
                                         const double *ref_coords,
+                                        const int num_coords,
                                         double out_coords[3]) const
   {
+    if (num_coords != 1)
+      SC_ABORT ("Error: Batch computation of geometry not yet supported.");
     out_coords[0] = cos (ref_coords[0] * 2 * M_PI);
     out_coords[1] = ref_coords[1];
     out_coords[2] = sin (ref_coords[0] * 2 * M_PI);
@@ -224,6 +238,7 @@ public:
   void                t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
                                                  t8_gloidx_t gtreeid,
                                                  const double *ref_coords,
+                                                 const int num_coords,
                                                  double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
@@ -259,13 +274,17 @@ public:
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f$ [0,1]^2 \f$.
+   * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
    */
   void                t8_geom_evaluate (t8_cmesh_t cmesh,
                                         t8_gloidx_t gtreeid,
                                         const double *ref_coords,
+                                        const int num_coords,
                                         double out_coords[3]) const
   {
+    if (num_coords != 1)
+      SC_ABORT ("Error: Batch computation of geometry not yet supported.");
     double              x;
     double              y;
 
@@ -292,6 +311,7 @@ public:
   void                t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
                                                  t8_gloidx_t gtreeid,
                                                  const double *ref_coords,
+                                                 const int num_coords,
                                                  double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
@@ -325,13 +345,17 @@ public:
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f$ [0,1]^2 \f$.
+   * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
    */
   void                t8_geom_evaluate (t8_cmesh_t cmesh,
                                         t8_gloidx_t gtreeid,
                                         const double *ref_coords,
+                                        const int num_coords,
                                         double out_coords[3]) const
   {
+    if (num_coords != 1)
+      SC_ABORT ("Error: Batch computation of geometry not yet supported.");
     double              x = ref_coords[0] - .5;
     double              y = ref_coords[1] - .5;
     const double        time = *ptime;
@@ -359,6 +383,7 @@ public:
   void                t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
                                                  t8_gloidx_t gtreeid,
                                                  const double *ref_coords,
+                                                 const int num_coords,
                                                  double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
@@ -393,13 +418,17 @@ public:
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f$ [0,1]^3 \f$.
+   * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
    */
   void                t8_geom_evaluate (t8_cmesh_t cmesh,
                                         t8_gloidx_t gtreeid,
                                         const double *ref_coords,
+                                        const int num_coords,
                                         double out_coords[3]) const
   {
+    if (num_coords != 1)
+      SC_ABORT ("Error: Batch computation of geometry not yet supported.");
     out_coords[0] = ref_coords[0];
     out_coords[1] = ref_coords[1];
     out_coords[2] = ref_coords[2] * (0.8 +
@@ -411,6 +440,7 @@ public:
   void                t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
                                                  t8_gloidx_t gtreeid,
                                                  const double *ref_coords,
+                                                 const int num_coords,
                                                  double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
