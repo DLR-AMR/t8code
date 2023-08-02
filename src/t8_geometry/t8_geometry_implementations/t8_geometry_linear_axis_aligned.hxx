@@ -57,27 +57,31 @@ public:
 
   /**
    * Map a point in the reference space \f$ [0,1]^\mathrm{dim} \to \mathbb{R}^3 \f$.
-   * \param [in]  cmesh      The cmesh in which the point lies.
-   * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  cmesh       The cmesh in which the point lies.
+   * \param [in]  gtreeid     The global tree (of the cmesh) in which the reference point is.
+   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
    */
   virtual void        t8_geom_evaluate (t8_cmesh_t cmesh,
                                         t8_gloidx_t gtreeid,
                                         const double *ref_coords,
+                                        const int num_coords,
                                         double out_coords[3]) const;
 
   /**
    * Compute the jacobian of the \a t8_geom_evaluate map at a point in the reference space \f$ [0,1]^\mathrm{dim} \f$.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f$ [0,1]^\mathrm{dim} \f$.
-   * \param [out] jacobian    The jacobian at \a ref_coords. Array of size dimension x 3. Indices 3*i, 3*i+1, 3*i+2
+   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [out] jacobian    The jacobian at \a ref_coords. Array of size \a num_coords x dimension x 3. Indices 3*i, 3*i+1, 3*i+2
    *                          correspond to the i-th column of the jacobian (Entry 3*i + j is del f_j/del x_i).
    */
   virtual void        t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
                                                  t8_gloidx_t gtreeid,
                                                  const double *ref_coords,
+                                                 const int num_coords,
                                                  double *jacobian) const;
 };
 

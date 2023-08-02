@@ -267,7 +267,7 @@ t8_test_geometry_occ (double *rot_vec,
                      rotated_test_ref_coords, rotation_origin, 8);
   for (int i_coord = 0; i_coord < 8; ++i_coord) {
     t8_geometry_evaluate (cmesh, 0, rotated_test_ref_coords + i_coord * 3,
-                          out_coords);
+                          1, out_coords);
     EXPECT_NEAR (out_coords[0], test_return_coords[0 + i_coord * 3], tol);
     EXPECT_NEAR (out_coords[1], test_return_coords[1 + i_coord * 3], tol);
     EXPECT_NEAR (out_coords[2], test_return_coords[2 + i_coord * 3], tol);

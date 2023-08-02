@@ -41,44 +41,28 @@ t8_geometry_linear_axis_aligned::~t8_geometry_linear_axis_aligned ()
   T8_FREE ((char *) name);
 }
 
-/**
- * Map a point in the reference space \f$ [0,1]^\mathrm{dim} \to \mathbb{R}^3 \f$.
- * \param [in]  cmesh      The cmesh in which the point lies.
- * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
- * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f$ [0,1]^\mathrm{dim} \f$.
- * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
- */
-/* *INDENT-OFF* */
-/* indent adds second const */
 void
 t8_geometry_linear_axis_aligned::t8_geom_evaluate (t8_cmesh_t cmesh,
-                                      t8_gloidx_t gtreeid,
-                                      const double *ref_coords,
-                                      double out_coords[3]) const
-/* *INDENT-ON* */
+                                                   t8_gloidx_t gtreeid,
+                                                   const double *ref_coords,
+                                                   const int num_coords,
+                                                   double out_coords[3]) const
 {
   t8_geom_compute_linear_axis_aligned_geometry (active_tree_class,
                                                 active_tree_vertices,
                                                 ref_coords, out_coords);
 }
 
-/**
- * Compute the jacobian of the \a t8_geom_evaluate map at a point in the reference space \f$ [0,1]^\mathrm{dim} \f$.
- * \param [in]  cmesh      The cmesh in which the point lies.
- * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
- * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f$ [0,1]^\mathrm{dim} \f$.
- * \param [out] jacobian    The jacobian at \a ref_coords. Array of size dimension x 3. Indices 3*i, 3*i+1, 3*i+2
- *                          correspond to the i-th column of the jacobian (Entry 3*i + j is del f_j/del x_i).
- */
-/* *INDENT-OFF* */
-/* indent adds second const */
 void
 t8_geometry_linear_axis_aligned::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
-                                              t8_gloidx_t gtreeid,
-                                              const double
-                                              *ref_coords,
-                                              double *jacobian) const
-/* *INDENT-ON* */
+                                                            t8_gloidx_t
+                                                            gtreeid,
+                                                            const double
+                                                            *ref_coords,
+                                                            const int
+                                                            num_coords,
+                                                            double *jacobian)
+  const
 {
   SC_ABORT ("Not implemented.");
 }

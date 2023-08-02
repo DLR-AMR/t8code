@@ -116,6 +116,7 @@ void
 t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
                                    t8_gloidx_t gtreeid,
                                    const double *ref_coords,
+                                   const int num_coords,
                                    double out_coords[3]) const
 {
   switch (active_tree_class) {

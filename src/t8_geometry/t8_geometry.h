@@ -146,6 +146,7 @@ t8_geometry_c      *t8_geom_handler_find_geometry (const
 void                t8_geometry_evaluate (t8_cmesh_t cmesh,
                                           t8_gloidx_t gtreeid,
                                           const double *ref_coords,
+                                          const int num_coords,
                                           double *out_coords);
 
 void                t8_geometry_jacobian (t8_cmesh_t cmesh,
