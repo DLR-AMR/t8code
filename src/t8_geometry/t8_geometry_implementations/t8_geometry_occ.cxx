@@ -434,10 +434,10 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
         /* Calculate displacement between points on curve and point on linear curve.
          * Then scale it and add the scaled displacement to the result. */
         for (int dim = 0; dim < 3; ++dim) {
-          double              displacement =
+          const double        displacement =
             pnt.Coord (dim + 1) - glob_intersection[dim];
-          double              scaled_displacement =
-            displacement * pow (scaling_factor, 2);
+          const double        scaled_displacement =
+            displacement * scaling_factor * scaling_factor;
           out_coords[dim] += scaled_displacement;
         }
       }
