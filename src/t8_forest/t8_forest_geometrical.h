@@ -59,6 +59,7 @@ void                t8_forest_element_coordinate (t8_forest_t forest,
  * \param [in]      ltreeid           The forest local id of the tree in which the element is.
  * \param [in]      element           The element.
  * \param [in]      ref_coord         The reference coordinates of the point inside the element.
+ * \param [in]      num_coords        The number of coordinate sets in ref_coord (dimension x double).
  * \param [out]     coords_out        On input an allocated array to store 3 doubles, on output
  *                                    the x, y and z coordinates of the point inside the domain.
  * \param [in]      stretch_factors   An element-wise array with d (dimension) doubles per element, 
@@ -72,6 +73,7 @@ void                t8_forest_element_from_ref_coords (t8_forest_t forest,
                                                        *element,
                                                        const double
                                                        *ref_coord,
+                                                       const int num_coords,
                                                        double *coords_out,
                                                        sc_array_t
                                                        *stretch_factors);

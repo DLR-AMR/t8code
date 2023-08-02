@@ -228,7 +228,7 @@ t8_forest_vtk_get_element_nodes (t8_forest_t forest, t8_locidx_t ltreeid,
   const double       *ref_coords =
     t8_forest_vtk_point_to_element_ref_coords[element_shape]
     [vertex];
-  t8_forest_element_from_ref_coords (forest, ltreeid, element, ref_coords,
+  t8_forest_element_from_ref_coords (forest, ltreeid, element, ref_coords, 1,
                                      out_coords, stretch_factors);
 }
 

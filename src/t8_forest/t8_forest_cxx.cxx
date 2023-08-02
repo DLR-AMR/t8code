@@ -508,7 +508,7 @@ t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
   element_shape = t8_element_shape (ts, element);
   t8_forest_element_from_ref_coords (forest, ltreeid, element,
                                      t8_element_centroid_ref_coords
-                                     [element_shape], coordinates, NULL);
+                                     [element_shape], 1, coordinates, NULL);
 }
 
 /* Compute the length of the line from one corner to a second corner in an element */

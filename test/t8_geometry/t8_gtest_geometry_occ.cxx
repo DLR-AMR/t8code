@@ -400,7 +400,7 @@ TEST (t8_gtest_geometry_occ, jacobian)
     0, 0, 1
   };
   cmesh = t8_create_occ_hypercube (rot_vec, -1, -1, NULL);
-  t8_geometry_jacobian (cmesh, 0, ref_coords, jacobian);
+  t8_geometry_jacobian (cmesh, 0, ref_coords, 1, jacobian);
   for (int i = 0; i < 9; ++i) {
     EXPECT_FLOAT_EQ (jacobian[i], jacobian_expect[i]);
   }
