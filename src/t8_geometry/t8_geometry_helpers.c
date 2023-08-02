@@ -209,8 +209,9 @@ t8_geom_compute_linear_axis_aligned_geometry (t8_eclass_t tree_class,
     /* The two vertices of a line must have two matching coordinates to be
      * axis-aligned. A quad needs one matching coordinate. */
     int                 n_equal_coords = 0;
-    for (int dim = 0; dim < 3; ++dim) {
-      if (abs (tree_vertices[dim] - tree_vertices[3 + dim]) <= SC_EPS) {
+    for (int dim = 0; dim < T8_ECLASS_MAX_DIM; ++dim) {
+      if (abs (tree_vertices[dim] - tree_vertices[T8_ECLASS_MAX_DIM + dim]) <=
+          SC_EPS) {
         ++n_equal_coords;
       }
     }
@@ -222,15 +223,20 @@ t8_geom_compute_linear_axis_aligned_geometry (t8_eclass_t tree_class,
     }
   }
 #endif /* T8_ENABLE_DEBUG */
-
+  const int           dimension = t8_eclass_get_dimension (tree_class);
   /* Compute vector between both points */
   double              vector[3];
-  t8_vec_diff (tree_vertices + 3, tree_vertices, vector);
+  t8_vec_diff (tree_vertices + T8_ECLASS_MAX_DIM, tree_vertices, vector);
 
   /* Compute the coordinates of the reference point. */
-  for (int dim = 0; dim < 3; ++dim) {
-    out_coords[dim] = tree_vertices[dim];
-    out_coords[dim] += ref_coords[dim] * vector[dim];
+  for (int coord = 0; coord < num_coords; ++coord) {
+    const int           offset_tree_dim = coord * dimension;
+    const int           offset_domain_dim = coord * T8_ECLASS_MAX_DIM;
+    for (int dim = 0; dim < T8_ECLASS_MAX_DIM; ++dim) {
+      out_coords[offset_tree_dim + dim] = tree_vertices[dim];
+      out_coords[offset_tree_dim + dim] +=
+        ref_coords[offset_tree_dim] * vector[dim];
+    }
   }
 }
 
