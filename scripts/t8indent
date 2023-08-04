@@ -85,6 +85,11 @@ fi
 if test -z "$INDENT" ; then
 	INDENT=`which indent`
 fi
+if test -z "$INDENT" ; then
+  echo "Could not find indent. Please install indent."
+  echo "On Debian/Ubuntu: sudo apt-get install indent"
+  exit 1
+fi
 
 for arg in "$@" ; do
   if [ "x$arg" == "x-o" ]; then
