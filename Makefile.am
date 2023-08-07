@@ -120,6 +120,12 @@ maintainer-clean-local:
 README: README.md
 	pandoc -f markdown -t plain --wrap=none $< -o $@
 
+# We are not using a NEWS file. However, autotools forces us
+# to use a NEWS file. With this rule, we trick autotools in thinking that the
+# CITATION.cff file is a NEWS file.
+NEWS: CITATION.cff
+	pandoc -f markdown -t plain --wrap=none $< -o $@
+
 gtest:
 	-make check
 	@grep "gtest" test/t8_gtest_main.log
