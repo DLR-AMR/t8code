@@ -491,7 +491,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
     /* Iterate over each edge to search for parameter displacements */
     for (int i_edge = 0; i_edge < num_edges; ++i_edge) {
       if (edges[i_edge] > 0) {
-        /* The edges of a quad point in direction of ref_coord (1 - i_edge / 2).
+        /* The edges of a quad point in direction of ref_coord (1 - i_edge >> 1).
          *
          *     2 -------E3------- 3
          *     |                  |
@@ -503,7 +503,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
          *     0 -------E2------- 1    x-- x
          *        
          */
-        const int           edge_orthogonal_direction = (i_edge / 2);
+        const int           edge_orthogonal_direction = (i_edge >> 1);
         const int           edge_direction = 1 - edge_orthogonal_direction;
         /* Retrieve edge parameters and interpolate */
         const double       *edge_parameters =
@@ -558,7 +558,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
             converted_edge_surface_parameters[dim]
             - interpolated_edge_surface_parameters[dim];
           double              scaled_displacement;
-          if (i_edge % 2 == 0) {
+          if (i_edge & 1) {
             scaled_displacement =
               displacement * (1 - ref_coords[edge_orthogonal_direction]);
           }
@@ -598,7 +598,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
         T8_ASSERT (!(edges[i_edge] > 0)
                    || !(edges[i_edge + num_edges] > 0));
 
-        /* The edges of a quad point in direction of ref_coord (1 - i_edge / 2).
+        /* The edges of a quad point in direction of ref_coord (1 - i_edge >> 1).
          *
          *     2 -------E3------- 3
          *     |                  |
@@ -610,7 +610,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
          *     0 -------E2------- 1    x-- x
          *        
          */
-        const int           edge_orthogonal_direction = (i_edge / 2);
+        const int           edge_orthogonal_direction = (i_edge >> 1);
         const int           edge_direction = 1 - edge_orthogonal_direction;
         double              temp_edge_vertices[2 * 3];
 
@@ -677,7 +677,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
           const double        displacement = pnt.Coord (dim + 1)
             - interpolated_coords[dim];
           double              scaled_displacement;
-          if (i_edge % 2 == 0) {
+          if (i_edge & 1) {
             scaled_displacement =
               displacement * (1 - ref_coords[edge_orthogonal_direction]);
           }
@@ -729,7 +729,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh,
       T8_ASSERT (!(edges[i_edge] > 0) != !(edges[i_edge + num_edges] > 0));
 
       /* Interpolate coordinates between edge vertices. Due to the indices i_edge of the edges, the edges point in
-       * direction of ref_coord i_edge / 4. Therefore, we can use ref_coords[i_edge / 4] for the interpolation.              
+       * direction of ref_coord i_edge >> 2. Therefore, we can use ref_coords[i_edge >> 2] for the interpolation.
        *          6 -------E3------- 7
        *         /|                 /|
        *       E5 |               E7 |
@@ -745,7 +745,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh,
        *     0 -------E0------- 1
        *        
        */
-      const int           edge_direction = i_edge / 4;
+      const int           edge_direction = i_edge >> 2;
       /* Save the edge vertices temporarily. */
 
       t8_geom_get_edge_vertices (active_tree_class,
@@ -817,7 +817,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh,
 
       /* *INDENT-OFF* */
       double scaling_factor = 0;
-      switch (i_edge % 4) {
+      switch (i_edge & (4 - 1)) {
       case 0:
         scaling_factor = (1 - ref_coords[(edge_direction + 1) % 3]) 
                        * (1 - ref_coords[(edge_direction + 2) % 3]);
@@ -850,7 +850,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh,
     if (faces[i_faces] > 0) {
       /* Allocate some variables and save the normal direction of the face and the face vertices 
        * in a separate array for later usage. */
-      const int           face_normal_direction = i_faces / 2;
+      const int           face_normal_direction = i_faces >> 1;
       t8_geom_get_face_vertices (T8_ECLASS_HEX,
                                  active_tree_vertices,
                                  i_faces, 3, temp_face_vertices);
@@ -871,7 +871,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh,
         if (edges[t8_face_edge_to_tree_edge[i_faces][i_face_edge]] > 0) {
           /* Calculating some indices */
           const int           edge_direction =
-            t8_face_edge_to_tree_edge[i_faces][i_face_edge] / 4;
+            t8_face_edge_to_tree_edge[i_faces][i_face_edge] >> 2;
           int                 orthogonal_direction_of_edge_on_face = 0;
           switch (edge_direction + face_normal_direction) {
           case 1:
@@ -935,7 +935,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh,
           curve->D0 (interpolated_curve_param, pnt);
 
           /* Calculate the displacement generated by the presence of the curve */
-          if (i_face_edge % 2 == 0) {
+          if (i_face_edge & 1) {
             for (int dim = 0; dim <= 2; ++dim) {
               face_displacement_from_edges[dim]
                 += (1 - ref_coords[orthogonal_direction_of_edge_on_face])
@@ -960,7 +960,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh,
           /* Calculate the displacement between the interpolated parameters on the surface 
            * and the parameters on the surface converted from the parameter of the curve
            * and scale them with the corresponding ref coord */
-          if (i_face_edge % 2 == 0) {
+          if (i_face_edge & 1) {
             for (int dim = 0; dim < 2; ++dim) {
               surface_parameter_displacement_from_edges[dim]
                 += (1 - ref_coords[orthogonal_direction_of_edge_on_face])
@@ -1041,7 +1041,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh,
 
       /* Compute the displacement between surface and interpolated coords, scale them with the appropriate ref_coord 
        * and add them to the out_coords. */
-      if (i_faces % 2 == 0) {
+      if (i_faces & 1) {
         out_coords[0]
           += (pnt.X () - interpolated_coords[0])
           * (1 - ref_coords[face_normal_direction]);
