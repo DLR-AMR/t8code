@@ -2553,6 +2553,11 @@ t8_cmesh_new_pyramid_cake (sc_MPI_Comm comm, int num_of_pyra)
   double             *vertices = T8_ALLOC (double, num_of_pyra * 5 * 3);
   t8_cmesh_t          cmesh;
   const double        degrees = 360. / num_of_pyra;
+  int                 dim = t8_eclass_to_dimension[T8_ECLASS_PYRAMID];
+  int                 mpirank, mpiret;
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim);
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
   T8_ASSERT (num_of_pyra > 2);
 
   for (current_pyra = 0; current_pyra < num_of_pyra; current_pyra++) {
@@ -2590,6 +2595,7 @@ t8_cmesh_new_pyramid_cake (sc_MPI_Comm comm, int num_of_pyra)
     t8_cmesh_set_tree_vertices (cmesh, current_pyra,
                                 vertices + current_pyra * 15, 5);
   }
+  t8_cmesh_register_geometry (cmesh, linear_geom);
   t8_cmesh_commit (cmesh, comm);
   T8_FREE (vertices);
 
