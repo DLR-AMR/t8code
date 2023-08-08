@@ -243,7 +243,7 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet >vtkGrid,
   t8_gloidx_t         tree_id = first_tree;
 
   vtkCellIterator    *cell_it;
-  vtkSmartPointer < vtkPoints > points;
+  vtkSmartPointer < vtkPoints >points;
   vtkSmartPointer < vtkCellData > cell_data = vtkGrid->GetCellData ();
   const int           max_cell_points = vtkGrid->GetMaxCellSize ();
 
@@ -427,8 +427,7 @@ vtkSmartPointer < vtkPointSet >
 t8_vtkGrid_to_vtkPointSet (vtkSmartPointer < vtkDataSet >vtkGrid)
 {
   /* Set points */
-  vtkSmartPointer < vtkPoints > points =
-    vtkSmartPointer < vtkPoints >::New ();
+  vtkSmartPointer < vtkPoints >points = vtkSmartPointer < vtkPoints >::New ();
   const vtkIdType     num_points = vtkGrid->GetNumberOfPoints ();
   points->SetDataType (VTK_DOUBLE);
   points->SetNumberOfPoints (num_points);

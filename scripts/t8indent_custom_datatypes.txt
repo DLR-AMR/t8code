@@ -43,3 +43,4 @@ t8_vtk_data_field_t
 vtk_file_type_t
 vtk_read_success_t
 vtkDataSet
+vtkPoints
