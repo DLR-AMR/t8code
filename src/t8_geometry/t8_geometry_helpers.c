@@ -233,8 +233,8 @@ t8_geom_compute_linear_axis_aligned_geometry (t8_eclass_t tree_class,
     const int           offset_tree_dim = coord * dimension;
     const int           offset_domain_dim = coord * T8_ECLASS_MAX_DIM;
     for (int dim = 0; dim < T8_ECLASS_MAX_DIM; ++dim) {
-      out_coords[offset_tree_dim + dim] = tree_vertices[dim];
-      out_coords[offset_tree_dim + dim] +=
+      out_coords[offset_domain_dim + dim] = tree_vertices[dim];
+      out_coords[offset_domain_dim + dim] +=
         ref_coords[offset_tree_dim] * vector[dim];
     }
   }
