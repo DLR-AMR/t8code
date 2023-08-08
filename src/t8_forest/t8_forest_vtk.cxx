@@ -263,7 +263,7 @@ t8_forest_element_to_vtk_cell (t8_forest_t forest,
                                vtkSmartPointer < t8_vtk_gloidx_array_type_t >
                                vtk_element_id)
 {
-  vtkSmartPointer < vtkCell > pvtkCell = NULL;
+  vtkSmartPointer < vtkCell >pvtkCell = NULL;
 
   const t8_element_shape_t element_shape = scheme->t8_element_shape (element);
   const int           num_node =

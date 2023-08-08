@@ -46,3 +46,4 @@ vtkDataSet
 vtkPoints
 vtkCellArray
 t8_vtk_gloidx_array_type
+vtkCell
