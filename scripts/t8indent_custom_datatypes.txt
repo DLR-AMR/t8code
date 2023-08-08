@@ -79,3 +79,4 @@ vtkCellIterator
 vtkCellData
 vtkDataArray
 vtkPointSet
+vtkCellDataToPointData

@@ -444,7 +444,7 @@ t8_vtkGrid_to_vtkPointSet (vtkSmartPointer < vtkDataSet >vtkGrid)
   cloud->SetPoints (points);
 
   /* Map cell data to point data */
-  vtkSmartPointer < vtkCellDataToPointData > c2p =
+  vtkSmartPointer < vtkCellDataToPointData >c2p =
     vtkCellDataToPointData::New ();
   c2p->PassCellDataOff ();
   c2p->SetInputData (vtkGrid);
