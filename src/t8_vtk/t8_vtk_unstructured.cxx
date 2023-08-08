@@ -72,7 +72,7 @@ t8_read_unstructured (const char *filename,
     return read_success;
   }
   else if (strcmp (extension, "pvtu") == 0) {
-    vtkSmartPointer < vtkXMLPUnstructuredGridReader > reader =
+    vtkSmartPointer < vtkXMLPUnstructuredGridReader >reader =
       vtkSmartPointer < vtkXMLPUnstructuredGridReader >::New ();
     if (!reader->CanReadFile (filename)) {
       t8_errorf ("Unable to read file.\n");

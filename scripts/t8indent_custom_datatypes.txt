@@ -64,3 +64,4 @@ vtkQuadraticTetra
 vtkQuadraticWedge
 vtkQuadraticPyramid
 vtkXMLUnstructuredGridReader
+vtkXMLPUnstructuredGridReader

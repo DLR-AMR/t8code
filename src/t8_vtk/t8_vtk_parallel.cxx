@@ -142,7 +142,7 @@ t8_read_parallel_unstructured (const char *filename,
                                sc_MPI_Comm comm)
 {
   /* Setup parallel reader. */
-  vtkSmartPointer < vtkXMLPUnstructuredGridReader > reader =
+  vtkSmartPointer < vtkXMLPUnstructuredGridReader >reader =
     vtkSmartPointer < vtkXMLPUnstructuredGridReader >::New ();
 
   vtk_read_success_t  read_status = read_failure;
