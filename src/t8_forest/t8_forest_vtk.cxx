@@ -237,6 +237,7 @@ t8_forest_vtk_get_element_nodes (t8_forest_t forest, t8_locidx_t ltreeid,
  * the data related to the element (not element_data). 
  * 
  */
+/* *INDENT-OFF* */
 static void
 t8_forest_element_to_vtk_cell (t8_forest_t forest,
                                const t8_element_t *element,
@@ -254,14 +255,11 @@ t8_forest_element_to_vtk_cell (t8_forest_t forest,
                                int *cellTypes,
                                vtkSmartPointer < vtkPoints >points,
                                vtkSmartPointer < vtkCellArray >cellArray,
-                               vtkSmartPointer < t8_vtk_gloidx_array_type_t >
-                               vtk_treeid,
-                               vtkSmartPointer < t8_vtk_gloidx_array_type_t >
-                               vtk_mpirank,
-                               vtkSmartPointer < t8_vtk_gloidx_array_type_t >
-                               vtk_level,
-                               vtkSmartPointer < t8_vtk_gloidx_array_type_t >
-                               vtk_element_id)
+                               vtkSmartPointer < t8_vtk_gloidx_array_type_t >vtk_treeid,
+                               vtkSmartPointer < t8_vtk_gloidx_array_type_t >vtk_mpirank,
+                               vtkSmartPointer < t8_vtk_gloidx_array_type_t >vtk_level,
+                               vtkSmartPointer < t8_vtk_gloidx_array_type_t >vtk_element_id)
+/* *INDENT-ON* */
 {
   vtkSmartPointer < vtkCell >pvtkCell = NULL;
 
@@ -548,13 +546,13 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
    * metadata if wanted. 
    */
 
-  vtkSmartPointer < t8_vtk_gloidx_array_type_t > vtk_treeid =
+  vtkSmartPointer < t8_vtk_gloidx_array_type_t >vtk_treeid =
     vtkSmartPointer < t8_vtk_gloidx_array_type_t >::New ();
-  vtkSmartPointer < t8_vtk_gloidx_array_type_t > vtk_mpirank =
+  vtkSmartPointer < t8_vtk_gloidx_array_type_t >vtk_mpirank =
     vtkSmartPointer < t8_vtk_gloidx_array_type_t >::New ();
-  vtkSmartPointer < t8_vtk_gloidx_array_type_t > vtk_level =
+  vtkSmartPointer < t8_vtk_gloidx_array_type_t >vtk_level =
     vtkSmartPointer < t8_vtk_gloidx_array_type_t >::New ();
-  vtkSmartPointer < t8_vtk_gloidx_array_type_t > vtk_element_id =
+  vtkSmartPointer < t8_vtk_gloidx_array_type_t >vtk_element_id =
     vtkSmartPointer < t8_vtk_gloidx_array_type_t >::New ();
 
 /*
