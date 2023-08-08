@@ -80,3 +80,4 @@ vtkCellData
 vtkDataArray
 vtkPointSet
 vtkCellDataToPointData
+vtkCellTypes
