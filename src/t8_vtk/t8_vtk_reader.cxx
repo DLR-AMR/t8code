@@ -439,7 +439,7 @@ t8_vtkGrid_to_vtkPointSet (vtkSmartPointer < vtkDataSet >vtkGrid)
   }
   points->Modified ();
   T8_ASSERT (points->GetNumberOfPoints () == num_points);
-  vtkSmartPointer < vtkPointSet > cloud =
+  vtkSmartPointer < vtkPointSet >cloud =
     vtkSmartPointer < vtkPointSet >::New ();
   cloud->SetPoints (points);
 

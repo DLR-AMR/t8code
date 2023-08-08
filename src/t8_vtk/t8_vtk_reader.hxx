@@ -62,8 +62,11 @@ t8_cmesh_t          t8_vtkGrid_to_cmesh (vtkSmartPointer <
  * \param[in] vtkGrid A pointer to a vtkDataSet
  * \return A pointer to a vtkPointSet 
  */
-vtkSmartPointer < vtkPointSet >
-t8_vtkGrid_to_vtkPointSet (vtkSmartPointer < vtkDataSet >vtkGrid);
+/* *INDENT-OFF* */
+vtkSmartPointer < vtkPointSet >t8_vtkGrid_to_vtkPointSet (vtkSmartPointer 
+                                                         < vtkDataSet >
+                                                         vtkGrid);
+/* *INDENT-ON* */
 
 /**
  * Given a filename to a vtkUnstructuredGrid or vtkPolyData read the file and
@@ -102,10 +105,12 @@ vtkSmartPointer < vtkDataSet >t8_vtk_reader (const char *filename,
  * \param[in] vtk_file_type A vtk-filetype that is readable by t8code. 
  * \return                  Pointer to vtkDataSet      
  */
-vtkSmartPointer < vtkPointSet >
-t8_vtk_reader_pointSet (const char *filename, const int partition,
-                        const int main_proc, sc_MPI_Comm comm,
-                        const vtk_file_type_t vtk_file_type);
+vtkSmartPointer < vtkPointSet >t8_vtk_reader_pointSet (const char *filename,
+                                                       const int partition,
+                                                       const int main_proc,
+                                                       sc_MPI_Comm comm,
+                                                       const vtk_file_type_t
+                                                       vtk_file_type);
 
 #endif
 
