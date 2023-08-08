@@ -40,7 +40,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * \param[in] comm              The Communicator to use. 
  * \return vtk_read_success_t 
  */
-static              vtk_read_success_t
+static vtk_read_success_t
 setup_reader (const char *filename,
               vtkSmartPointer < vtkXMLPDataReader > reader,
               int *first_piece, int *last_piece, sc_MPI_Comm comm)

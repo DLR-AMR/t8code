@@ -34,7 +34,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <vtkTriangleFilter.h>
 #include <vtkSmartPointer.h>
 
-static              vtk_read_success_t
+static vtk_read_success_t
 t8_read_poly_ext (const char *filename, vtkSmartPointer < vtkPolyData > grid)
 {
   char                tmp[BUFSIZ];
