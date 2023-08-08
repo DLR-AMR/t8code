@@ -223,7 +223,7 @@ t8_geom_compute_linear_axis_aligned_geometry (t8_eclass_t tree_class,
     }
   }
 #endif /* T8_ENABLE_DEBUG */
-  const int           dimension = t8_eclass_get_dimension (tree_class);
+  const int           dimension = t8_eclass_to_dimension[tree_class];
   /* Compute vector between both points */
   double              vector[3];
   t8_vec_diff (tree_vertices + T8_ECLASS_MAX_DIM, tree_vertices, vector);
