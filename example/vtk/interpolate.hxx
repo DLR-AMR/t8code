@@ -151,6 +151,10 @@ class MeshAdapter
             return forest_adapt;
         }
 
+        sc_array_t * get_point_id_per_element(t8_locidx_t ielem){
+            return points_per_element[ielem];
+        }
+
         void SetElements();
 
         void SetPointIds();
@@ -221,6 +225,8 @@ class MeshAdapter
         sc_array_t*       element_points_adapt;
         sc_array_t**      average;
         sc_array_t**      average_adapt;
+        sc_array_t**      points_per_element;
+        sc_array_t**      id_swapper; 
     };
 
 /* *INDENT-ON* */

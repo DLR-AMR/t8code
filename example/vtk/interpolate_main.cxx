@@ -152,7 +152,7 @@ t8_itertate_replace_pointids (t8_forest_t forest_old,
         if (t8_forest_element_point_inside
             (forest_new, which_tree, elem, vtk_point, 0.001)) {
           int                *new_point_id =
-            (int *) sc_array_push (index[ielem]);
+            (int *) sc_array_push (inter->get_point_id_per_element (ielem));
           *new_point_id = ipoint_id;
           ielem_point_in->num_points++;
           break;
@@ -160,7 +160,7 @@ t8_itertate_replace_pointids (t8_forest_t forest_old,
       }
     }
     sc_array_destroy (point_indices);
-
+#if 0
     /* Update ielem_ins offset */
     for (t8_locidx_t ielem = 1; ielem < num_incoming; ielem++) {
       element_point_t    *ielem_point_in =
@@ -173,28 +173,33 @@ t8_itertate_replace_pointids (t8_forest_t forest_old,
         ielem_point_in_prev->offset + ielem_point_in_prev->num_points;
     }
     /* Update point_ids. */
-    if (t8_shmem_array_start_writing (inter->GetPointIDs ())) {
-      for (t8_locidx_t ielem = 0; ielem < num_incoming; ielem++) {
-        element_point_t    *ielem_point_in =
-          inter->get_element_point (inter->GetElementPointsAdapt (),
-                                    first_incoming_data + ielem);
-        // t8_debugf("[D] write from: %i to %i\n", ielem_point_in->offset, ielem_point_in->offset + ielem_point_in->num_points);
-        for (int ipoint = 0; ipoint < ielem_point_in->num_points; ipoint++) {
-          int                *point_index =
-            (int *) t8_shmem_array_index_for_writing (inter->GetPointIDs (),
-                                                      ipoint +
-                                                      ielem_point_in->offset);
-          *point_index = *((int *) sc_array_index_int (index[ielem], ipoint));
-        }
+    //if (t8_shmem_array_start_writing (inter->GetPointIDs ())) {
+    for (t8_locidx_t ielem = 0; ielem < num_incoming; ielem++) {
+      element_point_t    *ielem_point_in =
+        inter->get_element_point (inter->GetElementPointsAdapt (),
+                                  first_incoming_data + ielem);
+      // t8_debugf("[D] write from: %i to %i\n", ielem_point_in->offset, ielem_point_in->offset + ielem_point_in->num_points);
+      t8_locidx_t         element_index =
+        t8_forest_get_tree_element_offset (forest_new, which_tree) + ielem;
+      for (int ipoint = 0; ipoint < ielem_point_in->num_points; ipoint++) {
+        sc_array_t         *points_per_elem =
+          adapter->get_point_id_per_element (element_index);
+        int                *new_point =
+          (int *) sc_array_push (points_per_elem);
+        *new_point = *((int *) sc_array_index_int (index[ielem], ipoint));
+        /*int                *point_index =
+           (int *) t8_shmem_array_index_for_writing (inter->GetPointIDs (),
+           ipoint +
+           ielem_point_in->offset);
+           *point_index = *((int *) sc_array_index_int (index[ielem], ipoint)); */
       }
     }
-    t8_shmem_array_end_writing (inter->GetPointIDs ());
+#endif
+    //t8_shmem_array_end_writing (inter->GetPointIDs ());
 
     for (int ielem = 0; ielem < num_incoming; ielem++) {
-      sc_array_destroy (index[ielem]);
+      sc_array_destroy (inter->get_point_id_per_element (ielem));
     }
-
-    T8_FREE (index);
   }
   else {
     /* point-ids array stays the same. Offset of element_in is set to the
