@@ -2599,6 +2599,11 @@ t8_cmesh_new_pyramid_cake (sc_MPI_Comm comm, int num_of_pyra)
 t8_cmesh_t
 t8_cmesh_new_long_brick_pyramid (sc_MPI_Comm comm, int num_cubes)
 {
+  t8_cmesh_t          cmesh;
+  int                 current_cube, current_pyra_in_current_cube;
+  t8_locidx_t         vertices[5];
+  double              attr_vertices[15];
+  int                 mpirank, mpiret;
   double              vertices_coords[24] = {
     0, 0, 0,
     1, 0, 0,
@@ -2609,10 +2614,10 @@ t8_cmesh_new_long_brick_pyramid (sc_MPI_Comm comm, int num_cubes)
     0, 1, 1,
     1, 1, 1
   };
-  t8_locidx_t         vertices[5];
-  double              attr_vertices[15];
-  int                 current_cube, current_pyra_in_current_cube;
-  t8_cmesh_t          cmesh;
+  int                 dim = t8_eclass_to_dimension[T8_ECLASS_PYRAMID];
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim);
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
   T8_ASSERT (num_cubes > 0);
   t8_cmesh_init (&cmesh);
   for (current_cube = 0; current_cube < num_cubes; current_cube++) {
@@ -2687,8 +2692,8 @@ t8_cmesh_new_long_brick_pyramid (sc_MPI_Comm comm, int num_cubes)
          current_pyra_in_current_cube++) {
       vertices_coords[current_pyra_in_current_cube * 3 + 1] += 1;
     }
-
   }
+  t8_cmesh_register_geometry (cmesh, linear_geom);
   t8_cmesh_commit (cmesh, comm);
   return cmesh;
 }
