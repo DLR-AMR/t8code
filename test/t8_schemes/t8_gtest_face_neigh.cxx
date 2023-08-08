@@ -161,11 +161,11 @@ t8_test_get_middle_child (t8_eclass_t eclass, int ilevel,
   case T8_ECLASS_PYRAMID:
     {
       t8_dpyramid_t      *pyramid = (t8_dpyramid_t *) element;
-      /* Pyramid Type 6. */
+      /* middle_child_id of Pyramid Type 6. */
       if (pyramid->pyramid.type == T8_DPYRAMID_FIRST_TYPE) {
         return 8;
       }
-      /* Pyramid Type 7. */
+      /* middle_child_id of Pyramid Type 7. */
       else {
         return 3;
       }
@@ -175,10 +175,10 @@ t8_test_get_middle_child (t8_eclass_t eclass, int ilevel,
   }
 }
 
-/* First "simple" check. First, the neighbors of the root-pyramid at level 0 are computed
- * which should all lie outside. Then, the child of type 7 is constructed and it is checked,
- * if if all neighbors are computed correctly. The same is done for the child of type six of
- * this pyramid. Then, the same is done for all of the children of the type six pyramid. */
+/* First "simple" check. First, the neighbors of the root-element at level 0 are computed
+ * which should all lie outside. Then, the child is constructed and it is checked,
+ * if if all neighbors are computed correctly. Then, the same is done for all of the children. 
+ * The same is done until level maxlvl. */
 TEST_P (face_neigh, face_check_easy)
 {
   int                 middle_child_id;
@@ -188,10 +188,12 @@ TEST_P (face_neigh, face_check_easy)
 
   for (int ilevel = 1; ilevel <= maxlvl; ilevel++) {
 
+    /* Get a child in the middle of the element on level ilevel. */
     middle_child_id =
       t8_test_get_middle_child (eclass, ilevel, element, child, ts);
 
     ts->t8_element_child (element, middle_child_id, child);
+    /* Test the neighbors at all faces of the child. */
     int                 num_faces = ts->t8_element_num_faces (child);
     t8_test_face_neighbor_inside (num_faces, element, child, neigh, ts);
 
