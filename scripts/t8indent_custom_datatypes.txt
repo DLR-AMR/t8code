@@ -44,3 +44,4 @@ vtk_file_type_t
 vtk_read_success_t
 vtkDataSet
 vtkPoints
+vtkCellArray

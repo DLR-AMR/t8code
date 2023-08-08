@@ -253,7 +253,7 @@ t8_forest_element_to_vtk_cell (t8_forest_t forest,
                                long int *point_id,
                                int *cellTypes,
                                vtkSmartPointer < vtkPoints >points,
-                               vtkSmartPointer < vtkCellArray > cellArray,
+                               vtkSmartPointer < vtkCellArray >cellArray,
                                vtkSmartPointer < t8_vtk_gloidx_array_type_t >
                                vtk_treeid,
                                vtkSmartPointer < t8_vtk_gloidx_array_type_t >
@@ -510,7 +510,7 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
   const t8_gloidx_t   offset = t8_forest_get_first_local_element_id (forest);
   t8_gloidx_t         elem_id = offset;
 
-  vtkSmartPointer < vtkCellArray > cellArray =
+  vtkSmartPointer < vtkCellArray >cellArray =
     vtkSmartPointer < vtkCellArray >::New ();
 
   vtkSmartPointer < vtkPoints >points = vtkSmartPointer < vtkPoints >::New ();
