@@ -76,3 +76,5 @@ vtkXMLPPolyDataReader
 vtkTriangleFilter
 vtkIdType
 vtkCellIterator
+vtkCellData
+

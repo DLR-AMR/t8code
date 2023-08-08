@@ -244,7 +244,7 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet >vtkGrid,
 
   vtkCellIterator    *cell_it;
   vtkSmartPointer < vtkPoints >points;
-  vtkSmartPointer < vtkCellData > cell_data = vtkGrid->GetCellData ();
+  vtkSmartPointer < vtkCellData >cell_data = vtkGrid->GetCellData ();
   const int           max_cell_points = vtkGrid->GetMaxCellSize ();
 
   T8_ASSERT (max_cell_points >= 0);
