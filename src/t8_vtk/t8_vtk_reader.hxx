@@ -48,8 +48,8 @@ T8_EXTERN_C_BEGIN ();
  * \param[in] comm The communicator. 
  * \return t8_cmesh_t 
  */
-t8_cmesh_t          t8_vtkGrid_to_cmesh (vtkSmartPointer <
-                                         vtkDataSet >vtkGrid,
+t8_cmesh_t          t8_vtkGrid_to_cmesh (vtkSmartPointer
+                                         < vtkDataSet >vtkGrid,
                                          const int partition,
                                          const int main_proc,
                                          const int distributed_grid,
