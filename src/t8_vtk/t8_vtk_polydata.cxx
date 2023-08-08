@@ -56,14 +56,14 @@ t8_read_poly_ext (const char *filename, vtkSmartPointer < vtkPolyData >grid)
   /* Read the file depending on the extension. Not all readers have
    * a built-in check if the file is readable. */
   if (strcmp (extension, "ply") == 0) {
-    vtkNew < vtkPLYReader > reader;
+    vtkNew < vtkPLYReader >reader;
     reader->SetFileName (filename);
     reader->Update ();
     grid->ShallowCopy (vtkDataSet::SafeDownCast (reader->GetOutput ()));
     return read_success;
   }
   else if (strcmp (extension, "vtp") == 0) {
-    vtkNew < vtkXMLPolyDataReader > reader;
+    vtkNew < vtkXMLPolyDataReader >reader;
     reader->SetFileName (filename);
     if (!reader->CanReadFile (filename)) {
       t8_errorf ("Unable to read file %s.\n", filename);
@@ -74,14 +74,14 @@ t8_read_poly_ext (const char *filename, vtkSmartPointer < vtkPolyData >grid)
     return read_success;
   }
   else if (strcmp (extension, "obj") == 0) {
-    vtkNew < vtkOBJReader > reader;
+    vtkNew < vtkOBJReader >reader;
     reader->SetFileName (filename);
     reader->Update ();
     grid->ShallowCopy (vtkDataSet::SafeDownCast (reader->GetOutput ()));
     return read_success;
   }
   else if (strcmp (extension, "stl") == 0) {
-    vtkNew < vtkSTLReader > reader;
+    vtkNew < vtkSTLReader >reader;
     reader->SetFileName (filename);
     reader->Update ();
     grid->ShallowCopy (vtkDataSet::SafeDownCast (reader->GetOutput ()));
@@ -100,14 +100,14 @@ t8_read_poly_ext (const char *filename, vtkSmartPointer < vtkPolyData >grid)
     return read_success;
   }
   else if (strcmp (extension, "g") == 0) {
-    vtkNew < vtkBYUReader > reader;
+    vtkNew < vtkBYUReader >reader;
     reader->SetGeometryFileName (filename);
     reader->Update ();
     grid->ShallowCopy (vtkDataSet::SafeDownCast (reader->GetOutput ()));
     return read_failure;
   }
   else if (strcmp (extension, "pvtp") == 0) {
-    vtkSmartPointer < vtkXMLPPolyDataReader > reader =
+    vtkSmartPointer < vtkXMLPPolyDataReader >reader =
       vtkSmartPointer < vtkXMLPPolyDataReader >::New ();
     if (!reader->CanReadFile (filename)) {
       t8_errorf ("Unable to read file.\n");

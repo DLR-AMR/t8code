@@ -104,7 +104,7 @@ t8_read_parallel_polyData (const char *filename,
                            sc_MPI_Comm comm)
 {
   /* Setup parallel reader. */
-  vtkSmartPointer < vtkXMLPPolyDataReader > reader =
+  vtkSmartPointer < vtkXMLPPolyDataReader >reader =
     vtkSmartPointer < vtkXMLPPolyDataReader >::New ();
 
   vtk_read_success_t  read_status = read_failure;

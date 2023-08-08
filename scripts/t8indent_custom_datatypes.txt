@@ -67,3 +67,9 @@ vtkXMLUnstructuredGridReader
 vtkXMLPUnstructuredGridReader
 vtkUnstructuredGrid
 vtkPolyData
+vtkPLYReader
+vtkXMLPolyDataReader
+vtkOBJReader
+vtkSTLReader
+vtkBYUReader
+vtkXMLPPolyDataReader
