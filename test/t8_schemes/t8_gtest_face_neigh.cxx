@@ -51,6 +51,12 @@ protected:
   t8_scheme_cxx      *scheme;
   t8_eclass_scheme_c *ts;
   t8_eclass_t        eclass;
+
+#ifdef T8_ENABLE_DEBUG
+  const int           maxlvl = 3;
+#else
+  const int           maxlvl = 4;
+#endif
 };
 /* *INDENT-ON* */
 
@@ -174,11 +180,6 @@ t8_test_get_middle_child (t8_eclass_t eclass, int ilevel,
  * this pyramid. Then, the same is done for all of the children of the type six pyramid. */
 TEST_P (face_neigh, face_check_easy)
 {
-#ifdef T8_ENABLE_DEBUG
-  const int           maxlvl = 3;
-#else
-  const int           maxlvl = 4;
-#endif
   int                 middle_child_id;
 
   // if ((int) eclass == (int) T8_ECLASS_PRISM ) {
@@ -207,6 +208,42 @@ TEST_P (face_neigh, face_check_easy)
       ts->t8_element_parent (child, element);
     }
   }
+}
+
+void
+t8_recursive_check_diff (t8_element_t *element, t8_element_t *child,
+                         t8_element_t *neigh, t8_eclass_scheme_c *ts,
+                         int maxlvl, int level)
+{
+
+  T8_ASSERT (level <= maxlvl && maxlvl <= ts->t8_element_maxlevel () - 1);
+  if (level == maxlvl) {
+    return;
+  }
+
+  /* Compute the neighbors neighbor along a given face and check, if the result is the
+   * original element. */
+  int                 num_faces = ts->t8_element_num_faces (element);
+
+  t8_test_face_neighbor_inside (num_faces, child, element, neigh, ts);
+
+  int                 num_children = ts->t8_element_num_children (child);
+  for (int ichild = 0; ichild < num_children; ichild++) {
+    ts->t8_element_child (element, ichild, child);
+    t8_recursive_check_diff (child, element, neigh, ts, maxlvl, level + 1);
+    ts->t8_element_parent (child, element);
+  }
+}
+
+/* Recursively check, if all neighbors are computed correct up to a given level. */
+TEST_P (face_neigh, recursive_check_diff)
+{
+  int                 level = 1;
+  int                 middle_child_id =
+    t8_test_get_middle_child (eclass, level, element, child, ts);
+  ts->t8_element_child (element, middle_child_id, child);
+
+  t8_recursive_check_diff (child, element, neigh, ts, maxlvl, level);
 }
 
 
