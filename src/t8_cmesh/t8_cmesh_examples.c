@@ -299,7 +299,11 @@ t8_cmesh_new_pyramid_deformed (sc_MPI_Comm comm)
     2, 2, 0,
     3, 3, sqrt (3)
   };
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
+  
   t8_cmesh_init (&cmesh);
+  /* Use linear geometry */
+  t8_cmesh_register_geometry (cmesh, linear_geom);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_PYRAMID);
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 5);
   t8_cmesh_commit (cmesh, comm);
