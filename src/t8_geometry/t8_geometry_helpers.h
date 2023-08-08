@@ -44,7 +44,7 @@ void                t8_geom_compute_linear_geometry (t8_eclass_t tree_class,
                                                      *tree_vertices,
                                                      const double *ref_coords,
                                                      const int num_coords,
-                                                     double out_coords[3]);
+                                                     double *out_coords);
 
 /** Compute the linear, axis-aligned geometry of a tree at a given reference coordinate.
  *  This function is faster than \ref t8_geom_compute_linear_geometry, but only works
