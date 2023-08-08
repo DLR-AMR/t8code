@@ -74,3 +74,4 @@ vtkSTLReader
 vtkBYUReader
 vtkXMLPPolyDataReader
 vtkTriangleFilter
+vtkIdType
