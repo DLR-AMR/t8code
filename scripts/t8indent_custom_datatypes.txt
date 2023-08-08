@@ -81,3 +81,4 @@ vtkDataArray
 vtkPointSet
 vtkCellDataToPointData
 vtkCellTypes
+vtkUnsignedCharArray

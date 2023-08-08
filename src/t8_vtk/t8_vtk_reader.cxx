@@ -201,7 +201,7 @@ t8_get_dimension (vtkSmartPointer < vtkDataSet >vtkGrid)
   vtkSmartPointer < vtkCellTypes >cell_type_of_each_cell =
     vtkSmartPointer < vtkCellTypes >::New ();
   vtkGrid->GetCellTypes (cell_type_of_each_cell);
-  vtkSmartPointer < vtkUnsignedCharArray > cell_types =
+  vtkSmartPointer < vtkUnsignedCharArray >cell_types =
     cell_type_of_each_cell->GetCellTypesArray ();
   int                 max_cell_type = -1;
   const vtkIdType     num_types = cell_types->GetNumberOfTuples ();
