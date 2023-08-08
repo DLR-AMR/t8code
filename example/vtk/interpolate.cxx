@@ -534,6 +534,12 @@ MeshAdapter::Adapt (t8_forest_adapt_t adaptCallback,
       points_per_element[ielem]->elem_count;
     memcpy (&set_point_ids[dest], points_per_element[ielem]->array,
             num_points_per_elem * sizeof (int));
+    t8_debugf ("[D] elem %i\n", ielem);
+    for (int iid = 0; iid < num_points_per_elem; iid++) {
+      t8_debugf ("[D] point-id: %i\n",
+                 *(int *) sc_array_index_int (points_per_element[ielem],
+                                              iid));
+    }
     dest += num_points_per_elem;
   }
 
@@ -544,14 +550,14 @@ MeshAdapter::Adapt (t8_forest_adapt_t adaptCallback,
     (element_point_t *) sc_array_index_int (element_points_adapt, 0);
   first_elem->offset = 0;
 
-  int                 mpisize;
+  int                 mpisize = 0;
   int                 mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
   int                 mpirank;
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
 
-  if (mpisize > 0) {
+  if (mpisize > 1) {
     t8_shmem_array_t    offsets;
     t8_shmem_array_init (&offsets, sizeof (int), mpisize, comm);
 
@@ -571,8 +577,11 @@ MeshAdapter::Adapt (t8_forest_adapt_t adaptCallback,
       ielem_point_in_prev->offset + ielem_point_in_prev->num_points;
     ielem_point_in->num_points = points_per_element[ielem]->elem_count;
   }
-
+  for (int ielem = adapt_num_elems - 1; ielem >= 0; ielem--) {
+    sc_array_destroy (points_per_element[ielem]);
+  }
   T8_FREE (set_point_ids);
+  T8_FREE (points_per_element);
 
   /* Set forest to forest_adapt and delete all data from forest. */
   t8_forest_unref (&forest);
