@@ -25,6 +25,8 @@
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_element_c_interface.h>
 
+#include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h>
+
 /* *INDENT-OFF* */
 class face_neigh:public testing::TestWithParam <t8_eclass_t > {
 protected:
@@ -131,10 +133,8 @@ t8_test_get_middle_child (t8_eclass_t eclass, int ilevel,
   /* Get the child number of the child in the middle of the element, depending of the shape of the element. */
   switch (eclass) {
   case T8_ECLASS_VERTEX:
-
     return 0;
   case T8_ECLASS_LINE:
-
     return 0;
   case T8_ECLASS_QUAD:
     /* There are no inner childs in level one refinement. The test starts with level two, because this is the first level, inner childs existing.
@@ -143,7 +143,6 @@ t8_test_get_middle_child (t8_eclass_t eclass, int ilevel,
     ts->t8_element_copy (child, element);
     return 3;
   case T8_ECLASS_TRIANGLE:
-
     return 3;
   case T8_ECLASS_HEX:
     /* There are no inner childs in level one refinement. The test starts with level two, because this is the first level, inner childs existing.
@@ -152,7 +151,7 @@ t8_test_get_middle_child (t8_eclass_t eclass, int ilevel,
     ts->t8_element_copy (child, element);
     return 3;
   case T8_ECLASS_TET:
-    return 4;
+    return 3;
   case T8_ECLASS_PRISM:
     /* There are no inner childs in level one refinement. The test starts with level two, because this is the first level, inner childs existing.
        The last child of level one child 4 is one of eight middle childs in level two. */
@@ -160,14 +159,16 @@ t8_test_get_middle_child (t8_eclass_t eclass, int ilevel,
     ts->t8_element_copy (child, element);
     return 7;
   case T8_ECLASS_PYRAMID:
-
-    /* Pyramid Type 6. */
-    if (ilevel % 2 == 1) {
-      return 8;
-    }
-    /* Pyramid Type 7. */
-    else {
-      return 3;
+    {
+      t8_dpyramid_t      *pyramid = (t8_dpyramid_t *) element;
+      /* Pyramid Type 6. */
+      if (pyramid->pyramid.type == T8_DPYRAMID_FIRST_TYPE) {
+        return 8;
+      }
+      /* Pyramid Type 7. */
+      else {
+        return 3;
+      }
     }
   default:
     return 0;
@@ -181,10 +182,6 @@ t8_test_get_middle_child (t8_eclass_t eclass, int ilevel,
 TEST_P (face_neigh, face_check_easy)
 {
   int                 middle_child_id;
-
-  // if ((int) eclass == (int) T8_ECLASS_PRISM ) {
-  //   GTEST_SKIP ();
-  // }
 
   /* Are the neighbors of the element realy outside?. */
   t8_check_not_inside_root (element, neigh, child, ts);
