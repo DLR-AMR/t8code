@@ -131,7 +131,7 @@ t8_read_polyData (const char *filename, vtkDataSet *grid)
   vtkSmartPointer < vtkPolyData >poly_data =
     vtkSmartPointer < vtkPolyData >::New ();
   vtkSmartPointer < vtkPolyData >triangulated;
-  vtkNew < vtkTriangleFilter > tri_filter;
+  vtkNew < vtkTriangleFilter >tri_filter;
   /* Prepare the poly-data for the translation from vtk to t8code.
    * We split all polygons (which are not supported by t8code) to
    * triangles, vertices and lines. */
