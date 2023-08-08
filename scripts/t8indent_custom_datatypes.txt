@@ -45,3 +45,4 @@ vtk_read_success_t
 vtkDataSet
 vtkPoints
 vtkCellArray
+t8_vtk_gloidx_array_type
