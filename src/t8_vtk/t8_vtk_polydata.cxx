@@ -35,7 +35,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <vtkSmartPointer.h>
 
 static vtk_read_success_t
-t8_read_poly_ext (const char *filename, vtkSmartPointer < vtkPolyData > grid)
+t8_read_poly_ext (const char *filename, vtkSmartPointer < vtkPolyData >grid)
 {
   char                tmp[BUFSIZ];
   char               *extension;
@@ -128,9 +128,9 @@ t8_read_poly_ext (const char *filename, vtkSmartPointer < vtkPolyData > grid)
 vtk_read_success_t
 t8_read_polyData (const char *filename, vtkDataSet *grid)
 {
-  vtkSmartPointer < vtkPolyData > poly_data =
+  vtkSmartPointer < vtkPolyData >poly_data =
     vtkSmartPointer < vtkPolyData >::New ();
-  vtkSmartPointer < vtkPolyData > triangulated;
+  vtkSmartPointer < vtkPolyData >triangulated;
   vtkNew < vtkTriangleFilter > tri_filter;
   /* Prepare the poly-data for the translation from vtk to t8code.
    * We split all polygons (which are not supported by t8code) to

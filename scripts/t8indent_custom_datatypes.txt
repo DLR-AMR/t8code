@@ -66,3 +66,4 @@ vtkQuadraticPyramid
 vtkXMLUnstructuredGridReader
 vtkXMLPUnstructuredGridReader
 vtkUnstructuredGrid
+vtkPolyData
