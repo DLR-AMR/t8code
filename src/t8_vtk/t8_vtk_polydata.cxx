@@ -126,7 +126,7 @@ t8_read_poly_ext (const char *filename, vtkSmartPointer < vtkPolyData > grid)
 }
 
 vtk_read_success_t
-t8_read_polyData (const char *filename, vtkDataSet * grid)
+t8_read_polyData (const char *filename, vtkDataSet *grid)
 {
   vtkSmartPointer < vtkPolyData > poly_data =
     vtkSmartPointer < vtkPolyData >::New ();

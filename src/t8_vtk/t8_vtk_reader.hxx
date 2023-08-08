@@ -48,8 +48,9 @@ T8_EXTERN_C_BEGIN ();
  * \param[in] comm The communicator. 
  * \return t8_cmesh_t 
  */
-t8_cmesh_t          t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet >
-                                         vtkGrid, const int partition,
+t8_cmesh_t          t8_vtkGrid_to_cmesh (vtkSmartPointer <
+                                         vtkDataSet >vtkGrid,
+                                         const int partition,
                                          const int main_proc,
                                          const int distributed_grid,
                                          sc_MPI_Comm comm);
@@ -62,8 +63,8 @@ t8_cmesh_t          t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet >
  * \return A pointer to a vtkPointSet 
  */
 vtkSmartPointer < vtkPointSet > t8_vtkGrid_to_vtkPointSet (vtkSmartPointer <
-                                                           vtkDataSet >
-                                                           vtkGrid);
+                                                           vtkDataSet
+                                                           >vtkGrid);
 
 /**
  * Given a filename to a vtkUnstructuredGrid or vtkPolyData read the file and
@@ -78,12 +79,12 @@ vtkSmartPointer < vtkPointSet > t8_vtkGrid_to_vtkPointSet (vtkSmartPointer <
  * \param[in] vtk_file_type A vtk-filetype that is readable by t8code. 
  * \return                  Pointer to vtkDataSet
  */
-vtkSmartPointer < vtkDataSet > t8_vtk_reader (const char *filename,
-                                              const int partition,
-                                              const int main_proc,
-                                              sc_MPI_Comm comm,
-                                              const vtk_file_type_t
-                                              vtk_file_type);
+vtkSmartPointer < vtkDataSet >t8_vtk_reader (const char *filename,
+                                             const int partition,
+                                             const int main_proc,
+                                             sc_MPI_Comm comm,
+                                             const vtk_file_type_t
+                                             vtk_file_type);
 
 /**
  * Given a filename to a vtkUnstructuredGrid or vtkPolyData read the file and

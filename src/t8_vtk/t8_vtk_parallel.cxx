@@ -100,7 +100,7 @@ setup_reader (const char *filename,
 
 vtk_read_success_t
 t8_read_parallel_polyData (const char *filename,
-                           vtkSmartPointer < vtkDataSet > grid,
+                           vtkSmartPointer < vtkDataSet >grid,
                            sc_MPI_Comm comm)
 {
   /* Setup parallel reader. */
@@ -138,7 +138,7 @@ t8_read_parallel_polyData (const char *filename,
 
 vtk_read_success_t
 t8_read_parallel_unstructured (const char *filename,
-                               vtkSmartPointer < vtkDataSet > grid,
+                               vtkSmartPointer < vtkDataSet >grid,
                                sc_MPI_Comm comm)
 {
   /* Setup parallel reader. */

@@ -30,7 +30,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 vtk_read_success_t
 t8_read_unstructured (const char *filename,
-                      vtkSmartPointer < vtkDataSet > grid)
+                      vtkSmartPointer < vtkDataSet >grid)
 {
   char                tmp[BUFSIZ], *extension;
   strcpy (tmp, filename);
