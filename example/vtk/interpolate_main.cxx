@@ -104,11 +104,7 @@ t8_itertate_replace_pointids (t8_forest_t forest_old,
   else if (refine == 1) {
     /* New offsets and new num_points for each ielem_in */
 
-    /* Temporary array to hold the point-ids for ielem_in */
-    sc_array_t        **index = T8_ALLOC (sc_array_t *, num_incoming);
     for (t8_locidx_t ielem = 0; ielem < num_incoming; ielem++) {
-      index[ielem] = sc_array_new (sizeof (int));
-
       element_point_t    *ielem_point_in =
         inter->get_element_point (inter->GetElementPointsAdapt (),
                                   first_incoming_data + ielem);
@@ -145,7 +141,7 @@ t8_itertate_replace_pointids (t8_forest_t forest_old,
                                          first_incoming + ielem);
         element_point_t    *ielem_point_in =
           inter->get_element_point (inter->GetElementPointsAdapt (),
-                                    first_incoming + ielem);
+                                    first_incoming_data + ielem);
         double             *vtk_point =
           (double *) t8_shmem_array_index (inter->GetVTKPoints (),
                                            3 * ipoint_id);
@@ -160,6 +156,16 @@ t8_itertate_replace_pointids (t8_forest_t forest_old,
       }
     }
     sc_array_destroy (point_indices);
+    for (int ielem = 1; ielem < num_incoming; ielem++) {
+      element_point_t    *ielem_point_in =
+        inter->get_element_point (inter->GetElementPointsAdapt (),
+                                  first_incoming_data + ielem);
+      element_point_t    *ielem_point_in_prev =
+        inter->get_element_point (inter->GetElementPointsAdapt (),
+                                  first_incoming_data + ielem - 1);
+
+      ielem_point_in->offset += ielem_point_in_prev->offset;
+    }
   }
   else {
     /* point-ids array stays the same. Offset of element_in is set to the

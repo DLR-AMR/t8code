@@ -568,15 +568,15 @@ MeshAdapter::Adapt (t8_forest_adapt_t adaptCallback,
   }
   first_elem->num_points = points_per_element[0]->elem_count;
   /* Update ielem_ins offset */
-  for (t8_locidx_t ielem = 1; ielem < adapt_num_elems; ielem++) {
-    element_point_t    *ielem_point_in =
-      get_element_point (GetElementPointsAdapt (), ielem);
-    const element_point_t *ielem_point_in_prev =
-      get_element_point (GetElementPointsAdapt (), ielem - 1);
-    ielem_point_in->offset =
-      ielem_point_in_prev->offset + ielem_point_in_prev->num_points;
-    ielem_point_in->num_points = points_per_element[ielem]->elem_count;
-  }
+  /*for (t8_locidx_t ielem = 1; ielem < adapt_num_elems; ielem++) {
+     element_point_t    *ielem_point_in =
+     get_element_point (GetElementPointsAdapt (), ielem);
+     const element_point_t *ielem_point_in_prev =
+     get_element_point (GetElementPointsAdapt (), ielem - 1);
+     ielem_point_in->offset =
+     ielem_point_in_prev->offset + ielem_point_in_prev->num_points;
+     ielem_point_in->num_points = points_per_element[ielem]->elem_count;
+     } */
   for (int ielem = adapt_num_elems - 1; ielem >= 0; ielem--) {
     sc_array_destroy (points_per_element[ielem]);
   }
