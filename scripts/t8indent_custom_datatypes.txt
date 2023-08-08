@@ -45,6 +45,9 @@ vtk_read_success_t
 vtkDataSet
 vtkPoints
 vtkCellArray
+vtkTypeInt32Array
+vtkTypeInt64Array
+t8_vtk_locidx_array_type_t
 t8_vtk_gloidx_array_type
 vtkCell
 vtkVertex
