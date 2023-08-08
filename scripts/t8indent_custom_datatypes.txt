@@ -77,4 +77,4 @@ vtkTriangleFilter
 vtkIdType
 vtkCellIterator
 vtkCellData
-
+vtkDataArray
