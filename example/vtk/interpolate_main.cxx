@@ -148,7 +148,8 @@ t8_itertate_replace_pointids (t8_forest_t forest_old,
         if (t8_forest_element_point_inside
             (forest_new, which_tree, elem, vtk_point, 0.001)) {
           int                *new_point_id =
-            (int *) sc_array_push (inter->get_point_id_per_element (ielem));
+            (int *) sc_array_push (inter->get_point_id_per_element
+                                   (first_incoming_data + ielem));
           *new_point_id = ipoint_id;
           ielem_point_in->num_points++;
           break;
@@ -164,7 +165,16 @@ t8_itertate_replace_pointids (t8_forest_t forest_old,
         inter->get_element_point (inter->GetElementPointsAdapt (),
                                   first_incoming_data + ielem - 1);
 
-      ielem_point_in->offset += ielem_point_in_prev->offset;
+      ielem_point_in->offset += ielem_point_in_prev->num_points;
+    }
+    t8_debugf ("[D] iterate replace result:\n");
+    for (int ielem = 0; ielem < num_incoming; ielem++) {
+      element_point_t    *ielem_point_in =
+        inter->get_element_point (inter->GetElementPointsAdapt (),
+                                  first_incoming_data + ielem);
+      t8_debugf ("[D] elem: %i, num_points: %i, offset: %i\n",
+                 first_incoming_data + ielem, ielem_point_in->num_points,
+                 ielem_point_in->offset);
     }
   }
   else {

@@ -454,6 +454,8 @@ MeshAdapter::SetElements ()
         *(get_element_point_offset (element_points, ielem));
       const int           num_points =
         *(get_element_num_points (element_points, ielem));
+      t8_debugf ("[D] ielem: %i, offset: %i, num_points: %i\n", ielem, offset,
+                 num_points);
       for (int ipoint = offset; ipoint < offset + num_points; ipoint++) {
         const int           ipoint_id =
           *((int *) t8_shmem_array_index (point_ids, ipoint));
