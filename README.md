@@ -81,6 +81,17 @@ and then find the generated files in the `/doc` subfolder.
 
 You can also find the documentation of our releases on the [t8code website](https://dlr-amr.github.io/t8code/pages/documentation.html).
 
+### Julia Wrapper
+
+We offer [T8code.jl](https://github.com/DLR-AMR/T8code.jl) - an official
+[Julia](https://julialang.org/) package allowing to call t8code routines from
+the [Julia](https://julialang.org/) programming language. From within a Julia
+session do
+```julia
+julia> import Pkg; Pkg.add(["T8code", "MPI"])
+```
+to install the package on your system.
+
 ### Publications
   
   An (incomplete) list of publications related to t8code:
