@@ -59,7 +59,7 @@ typedef struct
  * offset points to a location in point_ids where the ids of the vtk_points inside
  * of this element starts. num_points defines how many points are inside. 
  * We ensure in t8_forest_iterate_replace, that the correct point-ids are
- * in correct memeory-location. 
+ * in correct memory-location. 
 */
 
 /* *INDENT-OFF* */
@@ -207,14 +207,14 @@ class MeshAdapter
          */
         int GetDimensionCell(vtkSmartPointer<vtkDataSet> dataSet);
 
-        /* Defines the maximal refinment level if automatic is not used */
+        /* Defines the maximal refinement level if automatic is not used */
         int levelMaximum = 3;
 
         /* Store the pointer to the MPI communicator used by t8code calls */
         sc_MPI_Comm m_iComm;
 
         t8_shmem_array_t  vtk_points;               /* Coordinates of the vtk points as a linear array 3 * num_points*/
-        t8_shmem_array_t* point_data;               /* Array of shared memeory arrays, holding the point-data*/
+        t8_shmem_array_t* point_data;               /* Array of shared memory arrays, holding the point-data*/
         t8_shmem_array_t  point_ids;                /* An array holding point ids*/
         int               num_data;                 /* Number of data-arrays. */
         int               num_global_points;        /* Global number of points. */

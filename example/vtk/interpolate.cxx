@@ -773,7 +773,7 @@ MeshAdapter::partition ()
 
   for (int idata = num_data - 1; idata >= 0; idata--) {
     sc_array_t         *idata_array = average[idata];
-    sc_array_t         *idata_partion = partition_data[idata];
+    sc_array_t         *idata_partition = partition_data[idata];
     for (t8_locidx_t ielem = num_local_elements - 1; ielem >= 0; ielem--) {
       element_data_t     *ielem_data =
         (element_data_t *) sc_array_index_int (idata_array, ielem);
@@ -781,8 +781,8 @@ MeshAdapter::partition ()
     }
 
     sc_array_destroy (idata_array);
-    idata_array = idata_partion;
-    idata_partion = NULL;
+    idata_array = idata_partition;
+    idata_partition = NULL;
   }
   T8_FREE (average);
   average = partition_data;

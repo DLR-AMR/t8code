@@ -104,7 +104,7 @@ t8_itertate_replace_pointids (t8_forest_t forest_old,
   else if (refine == 1) {
     /* New offsets and new num_points for each ielem_in */
 
-    /* Tempory array to hold the point-ids for ielem_in */
+    /* Temporary array to hold the point-ids for ielem_in */
     sc_array_t        **index = T8_ALLOC (sc_array_t *, num_incoming);
     for (t8_locidx_t ielem = 0; ielem < num_incoming; ielem++) {
       index[ielem] = sc_array_new (sizeof (int));
@@ -266,7 +266,7 @@ main (int argc, char **argv)
     t8_vtk_reader
     ("/localdata1/knap_da/projects/t8code/t8code/test/testfiles/test_vtk_tri.vtu",
      1, 0, comm, VTK_UNSTRUCTURED_FILE);
-  t8_debugf ("[D] read successfull\n");
+  t8_debugf ("[D] read successful\n");
   t8_pipeline (vtk_grid, comm);
   sc_finalize ();
   return 0;
