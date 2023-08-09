@@ -111,3 +111,4 @@ gp_Dir
 GeomAbs_Line
 GeomAbs_Plane
 TopTools_ListOfShape
+TopTools_IndexedMapOfShape
