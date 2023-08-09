@@ -94,3 +94,4 @@ TopoDS_Edge
 TopoDS_Face
 TopoDS_Shell
 TopoDS_Solid
+TopoDS_Wire
