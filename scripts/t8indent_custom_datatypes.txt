@@ -119,3 +119,4 @@ TColgp_Array2OfPnt
 BRepPrimAPI_MakePrism
 BRepBuilderAPI_MakeFace
 BRepBuilderAPI_MakeEdge
+BRepPrimAPI_MakePrism
