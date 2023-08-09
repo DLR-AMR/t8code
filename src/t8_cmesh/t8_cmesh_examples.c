@@ -288,6 +288,28 @@ t8_cmesh_new_hex (sc_MPI_Comm comm)
   return cmesh;
 }
 
+t8_cmesh_t
+t8_cmesh_new_pyramid_deformed (sc_MPI_Comm comm)
+{
+  t8_cmesh_t          cmesh;
+  double              vertices[15] = {
+    -1, -2, 0.5,
+    2, -1, 0,
+    -1, 2, -0.5,
+    2, 2, 0,
+    3, 3, sqrt (3)
+  };
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
+
+  t8_cmesh_init (&cmesh);
+  /* Use linear geometry */
+  t8_cmesh_register_geometry (cmesh, linear_geom);
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_PYRAMID);
+  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 5);
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
+}
+
 static t8_cmesh_t
 t8_cmesh_new_pyramid (sc_MPI_Comm comm)
 {
@@ -2523,6 +2545,165 @@ t8_cmesh_new_full_hybrid (sc_MPI_Comm comm)
 
   t8_cmesh_set_tree_vertices (cmesh, 3, vertices, 6);
 
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
+}
+
+t8_cmesh_t
+t8_cmesh_new_pyramid_cake (sc_MPI_Comm comm, int num_of_pyra)
+{
+
+  int                 current_pyra, pyra_vertices;
+  double             *vertices = T8_ALLOC (double, num_of_pyra * 5 * 3);
+  t8_cmesh_t          cmesh;
+  const double        degrees = 360. / num_of_pyra;
+  int                 dim = t8_eclass_to_dimension[T8_ECLASS_PYRAMID];
+  int                 mpirank, mpiret;
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim);
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  T8_ASSERT (num_of_pyra > 2);
+
+  for (current_pyra = 0; current_pyra < num_of_pyra; current_pyra++) {
+    for (pyra_vertices = 0; pyra_vertices < 5; pyra_vertices++) {
+      /* Get the edges at the unit circle */
+      if (pyra_vertices == 4) {
+        vertices[current_pyra * 5 * 3 + pyra_vertices * 3] = 0;
+        vertices[current_pyra * 5 * 3 + pyra_vertices * 3 + 1] = 0;
+        vertices[current_pyra * 5 * 3 + pyra_vertices * 3 + 2] = 0;
+      }
+      else if (pyra_vertices == 1 || pyra_vertices == 3) {
+        vertices[current_pyra * 5 * 3 + pyra_vertices * 3] =
+          cos (current_pyra * degrees * M_PI / 180);
+        vertices[current_pyra * 5 * 3 + pyra_vertices * 3 + 1] =
+          sin (current_pyra * degrees * M_PI / 180);
+        vertices[current_pyra * 5 * 3 + pyra_vertices * 3 + 2] =
+          (pyra_vertices == 3 ? 0.5 : -0.5);
+      }
+      else if (pyra_vertices == 0 || pyra_vertices == 2) {
+        vertices[current_pyra * 5 * 3 + pyra_vertices * 3] =
+          cos ((current_pyra * degrees + degrees) * M_PI / 180);
+        vertices[current_pyra * 5 * 3 + pyra_vertices * 3 + 1] =
+          sin ((current_pyra * degrees + degrees) * M_PI / 180);
+        vertices[current_pyra * 5 * 3 + pyra_vertices * 3 + 2] =
+          (pyra_vertices == 2 ? 0.5 : -0.5);
+      }
+    }
+  }
+  t8_cmesh_init (&cmesh);
+  for (current_pyra = 0; current_pyra < num_of_pyra; current_pyra++) {
+    t8_cmesh_set_tree_class (cmesh, current_pyra, T8_ECLASS_PYRAMID);
+    t8_cmesh_set_join (cmesh, current_pyra,
+                       (current_pyra ==
+                        (num_of_pyra - 1) ? 0 : current_pyra + 1), 0, 1, 0);
+    t8_cmesh_set_tree_vertices (cmesh, current_pyra,
+                                vertices + current_pyra * 15, 5);
+  }
+  t8_cmesh_register_geometry (cmesh, linear_geom);
+  t8_cmesh_commit (cmesh, comm);
+  T8_FREE (vertices);
+
+  return cmesh;
+}
+
+t8_cmesh_t
+t8_cmesh_new_long_brick_pyramid (sc_MPI_Comm comm, int num_cubes)
+{
+  t8_cmesh_t          cmesh;
+  int                 current_cube, current_pyra_in_current_cube;
+  t8_locidx_t         vertices[5];
+  double              attr_vertices[15];
+  int                 mpirank, mpiret;
+  double              vertices_coords[24] = {
+    0, 0, 0,
+    1, 0, 0,
+    0, 1, 0,
+    1, 1, 0,
+    0, 0, 1,
+    1, 0, 1,
+    0, 1, 1,
+    1, 1, 1
+  };
+  int                 dim = t8_eclass_to_dimension[T8_ECLASS_PYRAMID];
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim);
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  T8_ASSERT (num_cubes > 0);
+  t8_cmesh_init (&cmesh);
+  for (current_cube = 0; current_cube < num_cubes; current_cube++) {
+    for (current_pyra_in_current_cube = 0; current_pyra_in_current_cube < 3;
+         current_pyra_in_current_cube++) {
+      t8_cmesh_set_tree_class (cmesh,
+                               current_cube * 3 +
+                               current_pyra_in_current_cube,
+                               T8_ECLASS_PYRAMID);
+    }
+    /* in-cube face connection */
+    if (current_cube % 2 == 0) {
+      t8_cmesh_set_join (cmesh, current_cube * 3, current_cube * 3 + 1, 3, 2,
+                         0);
+      t8_cmesh_set_join (cmesh, current_cube * 3 + 1, current_cube * 3 + 2, 0,
+                         1, 0);
+      t8_cmesh_set_join (cmesh, current_cube * 3 + 2, current_cube * 3, 2, 0,
+                         0);
+    }
+    else {
+      t8_cmesh_set_join (cmesh, current_cube * 3, current_cube * 3 + 1, 2, 2,
+                         0);
+      t8_cmesh_set_join (cmesh, current_cube * 3 + 1, current_cube * 3 + 2, 1,
+                         0, 0);
+      t8_cmesh_set_join (cmesh, current_cube * 3 + 2, current_cube * 3, 2, 3,
+                         0);
+    }
+  }
+  /* over cube face connection */
+  for (current_cube = 0; current_cube < num_cubes - 1; current_cube++) {
+    if (current_cube % 2 == 0) {
+      t8_cmesh_set_join (cmesh, current_cube * 3, (current_cube + 1) * 3, 2,
+                         0, 0);
+      t8_cmesh_set_join (cmesh, current_cube * 3 + 1,
+                         (current_cube + 1) * 3 + 2, 3, 3, 0);
+    }
+    else {
+      t8_cmesh_set_join (cmesh, current_cube * 3 + 1,
+                         (current_cube + 1) * 3 + 2, 4, 4, 0);
+    }
+  }
+  /* vertices */
+  for (current_cube = 0; current_cube < num_cubes; current_cube++) {
+    vertices[0] = 1;
+    vertices[1] = 3;
+    vertices[2] = 0;
+    vertices[3] = 2;
+    vertices[4] = current_cube % 2 == 0 ? 7 : 5;
+    t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                   vertices_coords,
+                                                   attr_vertices, 5);
+    t8_cmesh_set_tree_vertices (cmesh, current_cube * 3, attr_vertices, 5);
+    vertices[0] = current_cube % 2 == 0 ? 0 : 2;
+    vertices[1] = current_cube % 2 == 0 ? 2 : 3;
+    vertices[2] = current_cube % 2 == 0 ? 4 : 6;
+    vertices[3] = current_cube % 2 == 0 ? 6 : 7;
+    t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                   vertices_coords,
+                                                   attr_vertices, 5);
+    t8_cmesh_set_tree_vertices (cmesh, current_cube * 3 + 1, attr_vertices,
+                                5);
+    vertices[0] = current_cube % 2 == 0 ? 1 : 0;
+    vertices[1] = current_cube % 2 == 0 ? 0 : 2;
+    vertices[2] = current_cube % 2 == 0 ? 5 : 4;
+    vertices[3] = current_cube % 2 == 0 ? 4 : 6;
+    t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                   vertices_coords,
+                                                   attr_vertices, 5);
+    t8_cmesh_set_tree_vertices (cmesh, current_cube * 3 + 2, attr_vertices,
+                                5);
+    for (current_pyra_in_current_cube = 0; current_pyra_in_current_cube < 8;
+         current_pyra_in_current_cube++) {
+      vertices_coords[current_pyra_in_current_cube * 3 + 1] += 1;
+    }
+  }
+  t8_cmesh_register_geometry (cmesh, linear_geom);
   t8_cmesh_commit (cmesh, comm);
   return cmesh;
 }
