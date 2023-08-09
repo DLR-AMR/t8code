@@ -118,3 +118,4 @@ GeomAPI_PointsToBSplineSurface
 TColgp_Array2OfPnt
 BRepPrimAPI_MakePrism
 BRepBuilderAPI_MakeFace
+BRepBuilderAPI_MakeEdge
