@@ -136,7 +136,7 @@ TEST_P (vtk_reader, vtk_to_pointSet)
 {
 #if T8_WITH_VTK
   if (file_type != VTK_FILE_ERROR) {
-    vtkSmartPointer < vtkPointSet > points =
+    vtkSmartPointer < vtkPointSet >points =
       t8_vtk_reader_pointSet (test_files[file], partition, main_proc,
                               sc_MPI_COMM_WORLD, file_type);
     int                 test_points = points->GetNumberOfPoints ();
