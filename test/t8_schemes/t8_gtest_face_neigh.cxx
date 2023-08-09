@@ -137,24 +137,24 @@ t8_test_get_middle_child (t8_eclass_t eclass, int ilevel,
   case T8_ECLASS_LINE:
     return 0;
   case T8_ECLASS_QUAD:
-    /* There are no inner childs in level one refinement. The test starts with level two, because this is the first level, inner childs existing.
-       The thrid child of level one child 0 is one of four middle childs in level two. */
+    /* There are no inner children in level one refinement. The test starts with level two, because this is the first level, inner children exists.
+       The third child of level one child 0 is one of four middle children in level two. */
     ts->t8_element_child (element, 0, child);
     ts->t8_element_copy (child, element);
     return 3;
   case T8_ECLASS_TRIANGLE:
     return 3;
   case T8_ECLASS_HEX:
-    /* There are no inner childs in level one refinement. The test starts with level two, because this is the first level, inner childs existing.
-       The thrid child of level one child 4 is one of eight middle childs in level two. */
+    /* There are no inner children in level one refinement. The test starts with level two, because this is the first level, inner children existing.
+       The third child of level one child 4 is one of eight middle children in level two. */
     ts->t8_element_child (element, 4, child);
     ts->t8_element_copy (child, element);
     return 3;
   case T8_ECLASS_TET:
     return 3;
   case T8_ECLASS_PRISM:
-    /* There are no inner childs in level one refinement. The test starts with level two, because this is the first level, inner childs existing.
-       The last child of level one child 4 is one of eight middle childs in level two. */
+    /* There are no inner children in level one refinement. The test starts with level two, because this is the first level, inner children existing.
+       The last child of level one child 4 is one of eight middle children in level two. */
     ts->t8_element_child (element, 4, child);
     ts->t8_element_copy (child, element);
     return 7;
@@ -183,7 +183,7 @@ TEST_P (face_neigh, face_check_easy)
 {
   int                 middle_child_id;
 
-  /* Are the neighbors of the element realy outside?. */
+  /* Are the neighbors of the element really outside?. */
   t8_check_not_inside_root (element, neigh, child, ts);
 
   for (int ilevel = 1; ilevel <= maxlvl; ilevel++) {
