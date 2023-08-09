@@ -122,23 +122,23 @@ t8_geom_compute_linear_geometry (t8_eclass_t tree_class,
     break;
   case T8_ECLASS_PRISM:
     {
+      double              tri_vertices[9];
+      double              line_vertices[6];
       for (coord = 0; coord < num_coords; coord++) {
         const int           offset_tree_dim = coord * dimension;
         const int           offset_domain_dim = coord * T8_ECLASS_MAX_DIM;
         /* Prisminterpolation, via height and triangle */
         /* Get a triangle at the specific height */
-        double              tri_vertices[9];
         for (int tri_vertex = 0; tri_vertex < 3; tri_vertex++) {
           /* Vertices of each edge have to be linear in memory */
-          double              temp_vertices[6];
-          memcpy (temp_vertices,
+          memcpy (line_vertices,
                   tree_vertices + tri_vertex * T8_ECLASS_MAX_DIM,
                   T8_ECLASS_MAX_DIM * sizeof (double));
-          memcpy (temp_vertices + 3,
+          memcpy (line_vertices + 3,
                   tree_vertices + (tri_vertex + 3) * T8_ECLASS_MAX_DIM,
                   T8_ECLASS_MAX_DIM * sizeof (double));
           t8_geom_linear_interpolation (ref_coords + offset_tree_dim + 2,
-                                        temp_vertices, T8_ECLASS_MAX_DIM, 1,
+                                        line_vertices, T8_ECLASS_MAX_DIM, 1,
                                         tri_vertices +
                                         tri_vertex * T8_ECLASS_MAX_DIM);
         }
