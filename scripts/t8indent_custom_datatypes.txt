@@ -88,3 +88,4 @@ vtkUnsignedCharArray
 t8_vtk_data_type_t
 BRep_Builder
 TopoDS_Shape
+TopoDS_CompSolid
