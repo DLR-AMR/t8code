@@ -90,3 +90,4 @@ BRep_Builder
 TopoDS_Shape
 TopoDS_CompSolid
 TopoDS_Compound
+TopoDS_Edge
