@@ -162,34 +162,43 @@ t8_geom_compute_linear_geometry (t8_eclass_t tree_class,
     break;
   case T8_ECLASS_PYRAMID:
     {
+      double              base_coords[2];
+      double              vec[3];
       for (coord = 0; coord < num_coords; coord++) {
         const int           offset_tree_dim = coord * dimension;
         const int           offset_domain_dim = coord * T8_ECLASS_MAX_DIM;
-        double              base_coords[2];
-        double              vec[3];
         /* Pyramid interpolation. After projecting the point onto the base,
-         * we use a bilinear interpolation, to do a quad interpolation on the base
+         * we use a bilinear interpolation to do a quad interpolation on the base
          * and then we interpolate via the height to the top vertex */
         /* Project point on base */
-        for (dim = 0; dim < 2; dim++) {
-          base_coords[dim] =
-            ref_coords[offset_tree_dim + dim] / (1. -
-                                                 ref_coords[offset_tree_dim +
-                                                            2]);
+
+        if (ref_coords[offset_tree_dim + 2] != 1.) {
+          for (dim = 0; dim < 2; dim++) {
+            base_coords[dim] =
+              1 - (1 - ref_coords[offset_tree_dim + dim]) / (1 -
+                                                             ref_coords
+                                                             [offset_tree_dim
+                                                              + 2]);
+          }
+        }
+        else {
+          for (dim = 0; dim < T8_ECLASS_MAX_DIM; dim++) {
+            out_coords[offset_domain_dim + dim] =
+              tree_vertices[4 * T8_ECLASS_MAX_DIM + dim];
+          }
+          continue;
         }
         /* Get a quad interpolation of the base */
         t8_geom_linear_interpolation (base_coords,
                                       tree_vertices, T8_ECLASS_MAX_DIM, 2,
                                       out_coords + offset_domain_dim);
         /* Get vector from base to pyramid tip */
-        t8_vec_diff (out_coords + offset_domain_dim,
-                     tree_vertices + 4 * T8_ECLASS_MAX_DIM, vec);
-        /* Linear interpolation on vector. */
-        t8_geom_linear_interpolation (ref_coords + offset_tree_dim + 2, vec,
-                                      T8_ECLASS_MAX_DIM, 1, vec);
+        t8_vec_diff (tree_vertices + 4 * T8_ECLASS_MAX_DIM,
+                     out_coords + offset_domain_dim, vec);
         /* Add vector to base */
         for (dim = 0; dim < 3; dim++) {
-          out_coords[offset_domain_dim + dim] += vec[dim];
+          out_coords[offset_domain_dim + dim] +=
+            vec[dim] * ref_coords[offset_tree_dim + 2];
         }
       }
       break;
