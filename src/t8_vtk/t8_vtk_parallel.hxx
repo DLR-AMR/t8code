@@ -55,9 +55,11 @@ vtk_read_success_t  t8_read_parallel_unstructured (const char *filename,
  *                 by the pieces read on this proc. 
  * \returns        non-zero on success, zero if the reading failed. 
  */
+/* *INDENT-OFF* */
 vtk_read_success_t  t8_read_parallel_polyData (const char *filename,
                                                vtkSmartPointer < vtkDataSet >
                                                grid, sc_MPI_Comm comm);
+/* *INDENT-ON* */
 
 #endif /* T8_WITH_VTK */
 #endif /* T8_VTK_PARALLEL_HXX */

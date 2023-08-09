@@ -100,11 +100,11 @@ setup_reader (const char *filename,
 
 vtk_read_success_t
 t8_read_parallel_polyData (const char *filename,
-                           vtkSmartPointer < vtkDataSet > grid,
+                           vtkSmartPointer < vtkDataSet >grid,
                            sc_MPI_Comm comm)
 {
   /* Setup parallel reader. */
-  vtkSmartPointer < vtkXMLPPolyDataReader > reader =
+  vtkSmartPointer < vtkXMLPPolyDataReader >reader =
     vtkSmartPointer < vtkXMLPPolyDataReader >::New ();
 
   vtk_read_success_t  read_status = read_failure;
@@ -138,11 +138,11 @@ t8_read_parallel_polyData (const char *filename,
 
 vtk_read_success_t
 t8_read_parallel_unstructured (const char *filename,
-                               vtkSmartPointer < vtkDataSet > grid,
+                               vtkSmartPointer < vtkDataSet >grid,
                                sc_MPI_Comm comm)
 {
   /* Setup parallel reader. */
-  vtkSmartPointer < vtkXMLPUnstructuredGridReader > reader =
+  vtkSmartPointer < vtkXMLPUnstructuredGridReader >reader =
     vtkSmartPointer < vtkXMLPUnstructuredGridReader >::New ();
 
   vtk_read_success_t  read_status = read_failure;

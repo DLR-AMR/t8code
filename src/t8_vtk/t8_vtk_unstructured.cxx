@@ -30,7 +30,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 vtk_read_success_t
 t8_read_unstructured (const char *filename,
-                      vtkSmartPointer < vtkDataSet > grid)
+                      vtkSmartPointer < vtkDataSet >grid)
 {
   char                tmp[BUFSIZ], *extension;
   strcpy (tmp, filename);
@@ -48,7 +48,7 @@ t8_read_unstructured (const char *filename,
 
   /* Chose the vtk-Reader according to the file-ending and read the file */
   if (strcmp (extension, "vtu") == 0) {
-    vtkSmartPointer < vtkXMLUnstructuredGridReader > reader =
+    vtkSmartPointer < vtkXMLUnstructuredGridReader >reader =
       vtkSmartPointer < vtkXMLUnstructuredGridReader >::New ();
     if (!reader->CanReadFile (filename)) {
       t8_errorf ("Unable to read file.\n");
@@ -72,7 +72,7 @@ t8_read_unstructured (const char *filename,
     return read_success;
   }
   else if (strcmp (extension, "pvtu") == 0) {
-    vtkSmartPointer < vtkXMLPUnstructuredGridReader > reader =
+    vtkSmartPointer < vtkXMLPUnstructuredGridReader >reader =
       vtkSmartPointer < vtkXMLPUnstructuredGridReader >::New ();
     if (!reader->CanReadFile (filename)) {
       t8_errorf ("Unable to read file.\n");
