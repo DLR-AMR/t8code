@@ -97,3 +97,4 @@ TopoDS_Solid
 TopoDS_Wire
 TopoDS_Vertex
 Handle_Geom_Curve
+Handle_Geom_Surface
