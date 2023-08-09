@@ -109,3 +109,4 @@ gp_Vec
 gp_Ax2
 gp_Dir
 GeomAbs_Line
+GeomAbs_Plane
