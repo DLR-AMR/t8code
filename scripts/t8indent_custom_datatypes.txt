@@ -101,3 +101,4 @@ Handle_Geom_Surface
 Handle_Geom_BSplineCurve
 Handle_Geom_BSplineSurface
 GeomAdaptor_Curve
+GeomAdaptor_Surface
