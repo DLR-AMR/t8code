@@ -113,3 +113,4 @@ GeomAbs_Plane
 TopTools_ListOfShape
 TopTools_IndexedMapOfShape
 TopTools_IndexedDataMapOfShapeListOfShape
+GeomAPI_PointsToBSpline
