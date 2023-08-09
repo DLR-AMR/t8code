@@ -91,7 +91,7 @@ void
 t8_geom_compute_linear_geometry (t8_eclass_t tree_class,
                                  const double *tree_vertices,
                                  const double *ref_coords,
-                                 const int num_coords, double out_coords[3])
+                                 const int num_coords, double *out_coords)
 {
   int                 dim;
   int                 coord;
@@ -125,13 +125,22 @@ t8_geom_compute_linear_geometry (t8_eclass_t tree_class,
       for (coord = 0; coord < num_coords; coord++) {
         const int           offset_tree_dim = coord * dimension;
         const int           offset_domain_dim = coord * T8_ECLASS_MAX_DIM;
-        /* Prisminterpolation, via height, and triangle */
+        /* Prisminterpolation, via height and triangle */
         /* Get a triangle at the specific height */
         double              tri_vertices[9];
-        for (dim = 0; dim < 3; dim++) {
+        for (int tri_vertex = 0; tri_vertex < 3; tri_vertex++) {
+          /* Vertices of each edge have to be linear in memory */
+          double              temp_vertices[6];
+          memcpy (temp_vertices,
+                  tree_vertices + tri_vertex * T8_ECLASS_MAX_DIM,
+                  T8_ECLASS_MAX_DIM * sizeof (double));
+          memcpy (temp_vertices + 3,
+                  tree_vertices + (tri_vertex + 3) * T8_ECLASS_MAX_DIM,
+                  T8_ECLASS_MAX_DIM * sizeof (double));
           t8_geom_linear_interpolation (ref_coords + offset_tree_dim + 2,
-                                        tree_vertices, T8_ECLASS_MAX_DIM, 1,
-                                        tri_vertices);
+                                        temp_vertices, T8_ECLASS_MAX_DIM, 1,
+                                        tri_vertices +
+                                        tri_vertex * T8_ECLASS_MAX_DIM);
         }
         t8_geom_triangular_interpolation (ref_coords + offset_tree_dim,
                                           tri_vertices, T8_ECLASS_MAX_DIM, 2,
