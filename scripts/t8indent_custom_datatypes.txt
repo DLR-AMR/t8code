@@ -106,3 +106,4 @@ Standard_Real
 gp_Pnt
 gp_Pnt2d
 gp_Vec
+gp_Ax2
