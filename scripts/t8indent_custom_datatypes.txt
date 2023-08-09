@@ -104,4 +104,5 @@ GeomAdaptor_Curve
 GeomAdaptor_Surface
 Standard_Real
 gp_Pnt
+gp_Pnt2d
 gp_Vec
