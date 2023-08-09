@@ -91,3 +91,4 @@ TopoDS_Shape
 TopoDS_CompSolid
 TopoDS_Compound
 TopoDS_Edge
+TopoDS_Face
