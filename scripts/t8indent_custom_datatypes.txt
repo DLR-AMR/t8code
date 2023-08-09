@@ -115,3 +115,4 @@ TopTools_IndexedMapOfShape
 TopTools_IndexedDataMapOfShapeListOfShape
 GeomAPI_PointsToBSpline
 GeomAPI_PointsToBSplineSurface
+TColgp_Array2OfPnt
