@@ -108,3 +108,4 @@ gp_Pnt2d
 gp_Vec
 gp_Ax2
 gp_Dir
+GeomAbs_Line
