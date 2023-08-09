@@ -655,10 +655,13 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
         if (edges[i_edge] > 0) {
           /* Get curve */
           T8_ASSERT (edges[i_edge] <= occ_shape_edge_map.Size ());
+          /* Infinite indent loop */
+          /* *INDENT-OFF* */
           curve =
-            BRep_Tool::Curve (TopoDS::
-                              Edge (occ_shape_edge_map.
-                                    FindKey (edges[i_edge])), first, last);
+            BRep_Tool::
+            Curve (TopoDS::Edge (occ_shape_edge_map.FindKey (edges[i_edge])),
+                   first, last);
+          /* *INDENT-ON* */
 
           /* Check if curve are valid */
           T8_ASSERT (!curve.IsNull ());
