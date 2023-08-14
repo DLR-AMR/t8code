@@ -85,7 +85,7 @@ t8_cmesh_t          t8_cmesh_new_from_class (t8_eclass_t eclass,
                                              sc_MPI_Comm comm);
 
 t8_cmesh_t          t8_cmesh_new_multi_class_3D (sc_MPI_Comm comm);
-
+t8_cmesh_t          t8_cmesh_new_hybrid_cubes (sc_MPI_Comm comm);
 /** Construct a hypercube forest from one primitive tree class.
  * \param [in] eclass       This element class determines the dimension and
  *                          the number of trees needed to construct a cube.
