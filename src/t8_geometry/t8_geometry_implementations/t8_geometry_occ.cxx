@@ -707,34 +707,214 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh,
   const int           num_edges = t8_eclass_num_edges[active_tree_class];
   const int           num_faces = t8_eclass_num_faces[active_tree_class];
   gp_Pnt              pnt;
-  Handle_Geom_Surface surface;
+  double              edge_vertices[2 * 3],
+    interpolated_curve_param, interpolated_surface_params[2], cur_delta[3];
   double              interpolated_surface_parameters[2],
-    interpolated_coords[3], temp_face_vertices[T8_ECLASS_MAX_CORNERS_2D * 3];
+    interpolated_coords[3];
+  Handle_Geom_Curve   curve;
+  Handle_Geom_Surface surface;
+  Standard_Real       first, last;
 
   /* Check each edge for a geometry. */
-  // for (int i_edge = 0; i_edge < num_edges; ++i_edge) {
-  //   /* We have to check for curves as well as surfaces. Linked curves are stored 
-  //    * in the first half of the array, surfaces in the second. 
-  //    * If a curve is connected to this edge we have to also check, 
-  //    * if a surface is connected to at least one of the two adjacent faces.
-  //    */
-  //   if (edges[i_edge] > 0 || edges[i_edge + num_edges] > 0) {
-  //     /* Check if only a surface or a curve is present. Abort if both is true. */
-  //     T8_ASSERT (!(edges[i_edge] > 0) != !(edges[i_edge + num_edges] > 0));
+  for (int i_edge = 0; i_edge < num_edges; ++i_edge) {
+    /* We have to check for curves as well as surfaces. Linked curves are stored 
+     * in the first half of the array, surfaces in the second. 
+     * If a curve is connected to this edge we have to also check, 
+     * if a surface is connected to at least one of the two adjacent faces.
+     */
+    if (edges[i_edge] > 0 || edges[i_edge + num_edges] > 0) {
+      /* Check if only a surface or a curve is present. Abort if both is true. */
+      T8_ASSERT (!(edges[i_edge] > 0) != !(edges[i_edge + num_edges] > 0));
 
-  //     /* 
-  //      *             _0
-  //      *          _- / \
-  //      *       E0   /   \
-  //      *    _-     E1    \
-  //      *  1 --__  /       E2
-  //      *   \    -/-__      \
-  //      *   E3   /    E4__   \
-  //      *     \ /         --__\
-  //      *      2------ E5 -----3
-  //      */
-  //   }
-  // }
+      /* 
+       *             _0
+       *          _- / \
+       *       E0   /   \
+       *    _-     E1    \
+       *  1 --__  /       E2
+       *   \    -/-__      \
+       *   E3   /    E4__   \
+       *     \ /         --__\
+       *      2------ E5 -----3
+       */
+
+      /* Save the edge vertices */
+      t8_geom_get_edge_vertices (active_tree_class,
+                                 active_tree_vertices,
+                                 i_edge, 3, edge_vertices);
+
+      /* Get the interpolation coefficients for the current edge */
+      double              interpolation_coeff;
+      switch (i_edge) {
+      case 0:
+      case 1:
+      case 2:
+        interpolation_coeff = ref_coords[0];
+        break;
+      case 3:
+      case 4:
+        interpolation_coeff = ref_coords[2];
+        break;
+      case 5:
+        interpolation_coeff = ref_coords[1];
+        break;
+      default:
+        SC_ABORT_NOT_REACHED ();
+        break;
+      }
+
+      /* Iterpolate between the edge vertices with the interpolation_coeff of the current edge */
+      t8_geom_linear_interpolation (&interpolation_coeff,
+                                    edge_vertices, 3, 1, interpolated_coords);
+
+      /* Retrieve edge parameters of the current edge */
+      const double       *edge_parameters =
+        (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
+                                           T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY
+                                           + i_edge,
+                                           ltreeid);
+      T8_ASSERT (edge_parameters != NULL);
+
+      /* Iterpolate between the parameters of the current edge. Same procidure as above.
+       * Curves have only one parameter u, surfaces have two, u and v.
+       * Therefore, we have to distinguish if the edge has a curve or surface linked to it. */
+      if (edges[i_edge] > 0) {
+        /* Linear interpolation between parameters */
+        t8_geom_linear_interpolation (&interpolation_coeff,
+                                      edge_parameters, 1, 1,
+                                      &interpolated_curve_param);
+
+        /* *INDENT-OFF* */
+        T8_ASSERT (edges[i_edge] <= occ_shape_edge_map.Size ());
+        curve =
+          BRep_Tool::Curve (TopoDS::Edge (occ_shape_edge_map.FindKey (edges[i_edge])),
+                                                                       first, last);
+        /* *INDENT-ON* */
+
+        /* Check if curve are valid */
+        T8_ASSERT (!curve.IsNull ());
+
+        /* Calculate point on curve with interpolated parameters. */
+        curve->D0 (interpolated_curve_param, pnt);
+      }
+      else {
+        /* Linear interpolation between parameters */
+        t8_geom_linear_interpolation (&interpolation_coeff,
+                                      edge_parameters, 2, 1,
+                                      interpolated_surface_params);
+
+        T8_ASSERT (edges[i_edge + num_edges] <= occ_shape_face_map.Size ());
+        surface =
+          BRep_Tool::Surface (TopoDS::Face
+                              (occ_shape_face_map.FindKey
+                               (edges[i_edge + num_edges])));
+
+        /* Check if surface is valid */
+        T8_ASSERT (!surface.IsNull ());
+
+        /* Compute point on surface with interpolated parameters */
+        surface->D0 (interpolated_surface_params[0],
+                     interpolated_surface_params[1], pnt);
+      }
+      /* Compute displacement between vertex interpolation and curve evaluation with interpolated parameters */
+      cur_delta[0] = pnt.X () - interpolated_coords[0];
+      cur_delta[1] = pnt.Y () - interpolated_coords[1];
+      cur_delta[2] = pnt.Z () - interpolated_coords[2];
+
+      /* Scaling along the orthogonals of each edge */
+      double              scaling_factor;
+
+      switch (i_edge) {
+      case 0:
+        if (ref_coords[2] >= ref_coords[0] && ref_coords[1] == 0        // criteria edge 1
+            || ref_coords[2] >= ref_coords[0] && ref_coords[2] <= ref_coords[1] // criteria edge 2
+            || ref_coords[0] == 1 && ref_coords[1] == 0 // criteria edge 3
+            || ref_coords[2] <= ref_coords[1] && ref_coords[0] == 1     // criteria edge 4
+          ) {
+          scaling_factor = 0;
+        }
+        else {
+          scaling_factor = (1 - ref_coords[1]) * (1 - ref_coords[2]);
+        }
+        break;
+      case 1:
+        if (ref_coords[1] == 0 && ref_coords[2] == 0    // criteria edge 0
+            || ref_coords[2] >= ref_coords[0] && ref_coords[2] <= ref_coords[1] // criteria edge 2
+            || ref_coords[0] == 1 && ref_coords[1] == 0 // criteria edge 3
+            || ref_coords[0] == 1 && ref_coords[2] == 1 // criteria edge 5
+          ) {
+          scaling_factor = 0;
+        }
+        else {
+          scaling_factor =
+            (1 - (ref_coords[0] - ref_coords[2])) * (1 - ref_coords[1]);
+        }
+        break;
+      case 2:
+        if (ref_coords[1] == 0 && ref_coords[2] == 0    // criteria edge 0
+            || ref_coords[2] >= ref_coords[0] && ref_coords[1] == 0     // criteria edge 1
+            || ref_coords[2] <= ref_coords[1] && ref_coords[0] == 1     // criteria edge 4
+            || ref_coords[0] == 1 && ref_coords[2] == 1 // criteria edge 5
+          ) {
+          scaling_factor = 0;
+        }
+        else {
+          scaling_factor =
+            (1 - (ref_coords[0]) - ref_coords[1]) * (1 -
+                                                     (ref_coords[0] -
+                                                      ref_coords[2]));
+        }
+        break;
+      case 3:
+        if (ref_coords[1] == 0 && ref_coords[2] == 0    // criteria edge 0
+            || ref_coords[2] >= ref_coords[0] && ref_coords[1] == 0     // criteria edge 1
+            || ref_coords[2] <= ref_coords[1] && ref_coords[0] == 1     // criteria edge 4
+            || ref_coords[0] == 1 && ref_coords[2] == 1 // criteria edge 5
+          ) {
+          scaling_factor = 0;
+        }
+        else {
+          scaling_factor = ref_coords[0] * (1 - ref_coords[1]);
+        }
+        break;
+      case 4:
+        if (ref_coords[1] == 0 && ref_coords[2] == 0    // criteria edge 0
+            || ref_coords[2] >= ref_coords[0] && ref_coords[2] <= ref_coords[1] // criteria edge 2
+            || ref_coords[0] == 1 && ref_coords[1] == 0 // criteria edge 3
+            || ref_coords[0] == 1 && ref_coords[2] == 1 // criteria edge 5
+          ) {
+          scaling_factor = 0;
+        }
+        else {
+          scaling_factor =
+            (1 - (ref_coords[1] - ref_coords[2])) * ref_coords[0];
+        }
+        break;
+      case 5:
+        if (ref_coords[2] >= ref_coords[0] && ref_coords[1] == 0        // criteria edge 1
+            || ref_coords[2] >= ref_coords[0] && ref_coords[2] <= ref_coords[1] // criteria edge 2
+            || ref_coords[0] == 1 && ref_coords[1] == 0 // criteria edge 3
+            || ref_coords[2] <= ref_coords[1] && ref_coords[0] == 1     // criteria edge 4
+          ) {
+          scaling_factor = 0;
+        }
+        else {
+          scaling_factor = ref_coords[0] * ref_coords[2];
+        }
+        break;
+      default:
+        SC_ABORT_NOT_REACHED ();
+        break;
+      }
+
+      t8_global_productionf ("i_edge: %d\n", i_edge);
+
+      /* out_coord correction */
+      out_coords[0] += cur_delta[0] * scaling_factor;
+      out_coords[1] += cur_delta[1] * scaling_factor;
+      out_coords[2] += cur_delta[2] * scaling_factor;
+    }
+  }
 
   /* Iterate over each face to calculate the displacements generated */
   for (int i_faces = 0; i_faces < num_faces; ++i_faces) {
@@ -771,7 +951,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh,
       const double       *ref_opposite_vertex =
         t8_element_corner_ref_coords[active_tree_class][i_faces];
 
-      /* Calculate the normal of the face */
+      /* Safe the normal of the face */
       double              normal[3];
 
       switch (i_faces) {
@@ -823,9 +1003,9 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh,
        * If ref_coord is equal to ref_opposite_vertex, the intersection
        * is the first coordinate of the ref_face_vertices. */
       double              face_intersection[3];
-      if (ref_coords[0] == ref_opposite_vertex[0]
-          && ref_coords[1] == ref_opposite_vertex[1]
-          && ref_coords[2] == ref_opposite_vertex[2]) {
+      if (ref_coords[0] - ref_opposite_vertex[0] <= T8_PRECISION_EPS
+          && ref_coords[1] - ref_opposite_vertex[1] <= T8_PRECISION_EPS
+          && ref_coords[2] - ref_opposite_vertex[2] <= T8_PRECISION_EPS) {
         for (int dim = 0; dim < 3; ++dim) {
           face_intersection[dim] = ref_face_vertex_coords[dim];
         }
@@ -930,7 +1110,6 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh,
       out_coords[2]
         += (pnt.Z () -
             interpolated_coords[2]) * (scaling_factor * scaling_factor);
-
     }
   }
 }
