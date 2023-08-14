@@ -209,7 +209,8 @@ int                 t8_dprism_ancestor_id (t8_dprism_t *p, int level);
 void                t8_dprism_children_at_face (const t8_dprism_t *p,
                                                 int face,
                                                 t8_dprism_t **children,
-                                                int num_children);
+                                                int num_children,
+                                                int *child_indices);
 
 /** Given a face of a prism and a child number of a child of that face, return the face number
  * of the child of the prism that matches the child face.

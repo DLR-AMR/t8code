@@ -237,6 +237,7 @@ t8_forest_vtk_get_element_nodes (t8_forest_t forest, t8_locidx_t ltreeid,
  * the data related to the element (not element_data). 
  * 
  */
+/* *INDENT-OFF* */
 static void
 t8_forest_element_to_vtk_cell (t8_forest_t forest,
                                const t8_element_t *element,
@@ -252,18 +253,15 @@ t8_forest_element_to_vtk_cell (t8_forest_t forest,
                                const int elem_id,
                                long int *point_id,
                                int *cellTypes,
-                               vtkSmartPointer < vtkPoints > points,
-                               vtkSmartPointer < vtkCellArray > cellArray,
-                               vtkSmartPointer < t8_vtk_gloidx_array_type_t >
-                               vtk_treeid,
-                               vtkSmartPointer < t8_vtk_gloidx_array_type_t >
-                               vtk_mpirank,
-                               vtkSmartPointer < t8_vtk_gloidx_array_type_t >
-                               vtk_level,
-                               vtkSmartPointer < t8_vtk_gloidx_array_type_t >
-                               vtk_element_id)
+                               vtkSmartPointer < vtkPoints >points,
+                               vtkSmartPointer < vtkCellArray >cellArray,
+                               vtkSmartPointer < t8_vtk_gloidx_array_type_t >vtk_treeid,
+                               vtkSmartPointer < t8_vtk_gloidx_array_type_t >vtk_mpirank,
+                               vtkSmartPointer < t8_vtk_gloidx_array_type_t >vtk_level,
+                               vtkSmartPointer < t8_vtk_gloidx_array_type_t >vtk_element_id)
+/* *INDENT-ON* */
 {
-  vtkSmartPointer < vtkCell > pvtkCell = NULL;
+  vtkSmartPointer < vtkCell >pvtkCell = NULL;
 
   const t8_element_shape_t element_shape = scheme->t8_element_shape (element);
   const int           num_node =
@@ -400,7 +398,7 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix,
    * and the cells(cellTypes and which points belong to this cell) 
    */
 
-  vtkSmartPointer < vtkUnstructuredGrid > unstructuredGrid =
+  vtkSmartPointer < vtkUnstructuredGrid >unstructuredGrid =
     vtkSmartPointer < vtkUnstructuredGrid >::New ();
   t8_forest_to_vtkUnstructuredGrid (forest, unstructuredGrid, write_treeid,
                                     write_mpirank, write_level,
@@ -489,16 +487,18 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix,
 }
 
 #if T8_WITH_VTK
+/* *INDENT-OFF* */
 void
 t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
-                                  vtkSmartPointer < vtkUnstructuredGrid >
-                                  unstructuredGrid, const int write_treeid,
+                                  vtkSmartPointer < vtkUnstructuredGrid >unstructuredGrid,
+                                  const int write_treeid,
                                   const int write_mpirank,
                                   const int write_level,
                                   const int write_element_id,
                                   const int write_ghosts,
                                   const int curved_flag, const int num_data,
                                   t8_vtk_data_field_t *data)
+/* *INDENT-ON* */
 {
   /*Check assertions: forest and fileprefix are not NULL and forest is committed */
   T8_ASSERT (forest != NULL);
@@ -510,11 +510,10 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
   const t8_gloidx_t   offset = t8_forest_get_first_local_element_id (forest);
   t8_gloidx_t         elem_id = offset;
 
-  vtkSmartPointer < vtkCellArray > cellArray =
+  vtkSmartPointer < vtkCellArray >cellArray =
     vtkSmartPointer < vtkCellArray >::New ();
 
-  vtkSmartPointer < vtkPoints > points =
-    vtkSmartPointer < vtkPoints >::New ();
+  vtkSmartPointer < vtkPoints >points = vtkSmartPointer < vtkPoints >::New ();
 
   int                 ghosts = write_ghosts;
   if (forest->ghosts == NULL || forest->ghosts->num_ghosts_elements == 0) {
@@ -547,13 +546,13 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
    * metadata if wanted. 
    */
 
-  vtkSmartPointer < t8_vtk_gloidx_array_type_t > vtk_treeid =
+  vtkSmartPointer < t8_vtk_gloidx_array_type_t >vtk_treeid =
     vtkSmartPointer < t8_vtk_gloidx_array_type_t >::New ();
-  vtkSmartPointer < t8_vtk_gloidx_array_type_t > vtk_mpirank =
+  vtkSmartPointer < t8_vtk_gloidx_array_type_t >vtk_mpirank =
     vtkSmartPointer < t8_vtk_gloidx_array_type_t >::New ();
-  vtkSmartPointer < t8_vtk_gloidx_array_type_t > vtk_level =
+  vtkSmartPointer < t8_vtk_gloidx_array_type_t >vtk_level =
     vtkSmartPointer < t8_vtk_gloidx_array_type_t >::New ();
-  vtkSmartPointer < t8_vtk_gloidx_array_type_t > vtk_element_id =
+  vtkSmartPointer < t8_vtk_gloidx_array_type_t >vtk_element_id =
     vtkSmartPointer < t8_vtk_gloidx_array_type_t >::New ();
 
 /*

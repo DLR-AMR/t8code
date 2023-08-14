@@ -26,8 +26,6 @@
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone_cxx.hxx>
 
-/*TODO: Delete GTEST_SKIP in TEST_P t8_check_face_desc if t8_prism_children_at_face is fixed. */
-
 /* *INDENT-OFF* */
 class class_descendant:public testing::TestWithParam <t8_eclass_t > {
 protected:
