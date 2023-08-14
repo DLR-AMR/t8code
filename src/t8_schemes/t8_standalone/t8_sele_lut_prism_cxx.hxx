@@ -80,4 +80,148 @@ constexpr int8_t t8_type_vertex_dim_to_binary<T8_ECLASS_PRISM>[1 << T8_ELEMENT_N
 };
 
 
+template<>
+constexpr int8_t t8_sele_lut_face_internal<T8_ECLASS_PRISM>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PRISM]][T8_ELEMENT_NUM_FACES[T8_ECLASS_PRISM]] = {
+  {0,1,0,0,0},
+  {0,1,0,0,0}
+};
+template<>
+constexpr int8_t t8_sele_lut_type_face_to_typebit<T8_ECLASS_PRISM>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PRISM]][T8_ELEMENT_NUM_FACES[T8_ECLASS_PRISM]] = {
+  {-1,0,-1,-1,-1},
+  {-1,0,-1,-1,-1}
+};
+
+template<>
+constexpr int8_t t8_sele_lut_type_face_to_sign<T8_ECLASS_PRISM>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PRISM]][T8_ELEMENT_NUM_FACES[T8_ECLASS_PRISM]] = {
+  {1,0,-1,-1,1},
+  {1,0,-1,-1,1}
+};
+
+template<>
+constexpr int8_t t8_sele_lut_type_face_to_facenormal_dim<T8_ECLASS_PRISM>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PRISM]][T8_ELEMENT_NUM_FACES[T8_ECLASS_PRISM]] = {
+  {0,-1,1,2,2},
+  {1,-1,0,2,2}
+};
+template<>
+constexpr int8_t t8_sele_lut_type_face_to_tree_face<T8_ECLASS_PRISM>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PRISM]][T8_ELEMENT_MAX_NUM_FACES[T8_ECLASS_PRISM]]={
+  {0,1,2,3,4},
+  {-1,-1,-1,3,4}
+};
+
+template<>
+constexpr int8_t t8_sele_lut_type_face_to_neighface<T8_ECLASS_PRISM>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PRISM]][T8_ELEMENT_MAX_NUM_FACES[T8_ECLASS_PRISM]]={
+  {2,1,0,4,3},
+  {2,1,0,4,3}
+};
+
+template<>
+constexpr int8_t t8_sele_lut_type_cubeid_face_to_parentface<T8_ECLASS_PRISM>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PRISM]][1<<T8_ELEMENT_DIM[T8_ECLASS_PRISM]][T8_ELEMENT_MAX_NUM_FACES[T8_ECLASS_PRISM]]={
+{
+  {-1,1,2,3,-1},
+  {0,-1,2,3,-1},
+  {-1,-1,-1,3,-1},
+  {0,1,-1,3,-1},
+  {-1,1,2,-1,4},
+  {0,-1,2,-1,4},
+  {-1,-1,-1,-1,4},
+  {0,1,-1,-1,4}
+},
+{
+  {-1,1,2,3,-1},
+  {-1,-1,-1,3,-1},
+  {0,-1,2,3,-1},
+  {0,1,-1,3,-1},
+  {-1,1,2,-1,4},
+  {-1,-1,-1,-1,4},
+  {0,-1,2,-1,4},
+  {0,1,-1,-1,4}
+}
+};
+
+template<>
+constexpr int8_t t8_sele_lut_type_childid_face_to_childface<T8_ECLASS_PRISM>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PRISM]][1<<T8_ELEMENT_DIM[T8_ECLASS_PRISM]][T8_ELEMENT_MAX_NUM_FACES[T8_ECLASS_PRISM]]={
+{
+  {-1,1,2,3,-1},
+  {0,-1,2,3,-1},
+  {-1,-1,-1,3,-1},
+  {0,1,-1,3,-1},
+  {-1,1,2,-1,4},
+  {0,-1,2,-1,4},
+  {-1,-1,-1,-1,4},
+  {0,1,-1,-1,4}
+},
+{
+  {-1,1,2,3,-1},
+  {-1,-1,-1,3,-1},
+  {0,-1,2,3,-1},
+  {0,1,-1,3,-1},
+  {-1,1,2,-1,4},
+  {-1,-1,-1,-1,4},
+  {0,-1,2,-1,4},
+  {0,1,-1,-1,4}
+}
+};
+
+template<>
+constexpr int8_t t8_sele_lut_type_face_to_is_1_boundary<T8_ECLASS_PRISM>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PRISM]][T8_ELEMENT_MAX_NUM_FACES[T8_ECLASS_PRISM]]={
+  {1,0,0,0,1},
+  {1,0,0,0,1}
+};
+
+template<>
+constexpr int8_t t8_sele_lut_type_face_to_last_facechilds_cubeid<T8_ECLASS_PRISM>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PRISM]][T8_ELEMENT_MAX_NUM_FACES[T8_ECLASS_PRISM]]={
+  {7, 7, 5, 3, 7},
+  {7, 7, 6, 3, 7}
+};
+
+template<>
+constexpr int8_t t8_sele_lut_type_face_facechildid_to_childid<T8_ECLASS_PRISM>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PRISM]][T8_ELEMENT_MAX_NUM_FACES[T8_ECLASS_PRISM]][T8_ELEMENT_MAX_NUM_FACECHILDREN[T8_ECLASS_PRISM]]={
+{
+  {1,3,5,7},
+  {0,3,4,7},
+  {0,1,4,5},
+  {0,1,2,3},
+  {4,5,6,7}
+},
+{
+  {2,3,6,7},
+  {0,3,4,7},
+  {0,2,4,6},
+  {0,1,2,3},
+  {4,5,6,7}
+}
+};
+
+template<>
+constexpr int8_t t8_sele_lut_rootface_dim_to_facedim<T8_ECLASS_PRISM>[T8_ELEMENT_NUM_FACES[T8_ECLASS_PRISM]][T8_ELEMENT_DIM[T8_ECLASS_PRISM]]={
+  {-1,0,1},
+  {0,0,1},
+  {0,-1,1},
+  {0,1,-1},
+  {0,1,-1}
+};
+template<>
+constexpr int8_t t8_sele_lut_rootface_eq_to_faceeq<T8_ECLASS_PRISM>[T8_ELEMENT_NUM_FACES[T8_ECLASS_PRISM]][T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PRISM]]={
+  {-1},
+  {-1},
+  {-1},
+  {0},
+  {0}
+};
+
+template<>
+constexpr int8_t t8_sele_lut_type_rootface_to_face<T8_ECLASS_PRISM>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PRISM]][T8_ELEMENT_NUM_FACES[T8_ECLASS_PRISM]]={
+  {0,1,2,3,4},
+  {-1,-1,-1,3,4}
+};
+
+template<>
+constexpr t8_eclass_t t8_sele_lut_rootface_to_eclass<T8_ECLASS_PRISM>[T8_ELEMENT_NUM_FACES[T8_ECLASS_PRISM]]={
+  T8_ECLASS_QUAD,
+  T8_ECLASS_QUAD,
+  T8_ECLASS_QUAD,
+  T8_ECLASS_TRIANGLE,
+  T8_ECLASS_TRIANGLE
+};
+
 #endif /* T8_SELE_LUT_PRISM_HXX */

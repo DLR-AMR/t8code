@@ -53,7 +53,7 @@ t8_standalone_scheme_c<eclass_T>::t8_element_maxlevel (void) const {
 template<t8_eclass_t eclass_T>
 t8_eclass_t
 t8_standalone_scheme_c<eclass_T>::t8_element_child_eclass (int childid) const {
-  SC_ABORT("This function is not implemented yet.\n");
+  SC_ABORT("This function should not be needed with the current approach to eclass vs shape.\n");
   return T8_ECLASS_ZERO; /* suppresses compiler warning */
 }
 
@@ -140,8 +140,13 @@ template<t8_eclass_t eclass_T>
 int
 t8_standalone_scheme_c<eclass_T>::t8_element_num_face_children (const t8_element_t *elem,
                                                   int face) const {
-  SC_ABORT("This function is not implemented yet.\n");
-  return 0;
+  T8_ASSERT(t8_element_is_valid(elem));
+  // Not true anymore for 4D with pyramids as faces
+  if constexpr(eclass_T == T8_ECLASS_VERTEX){
+    return 0;
+  }else{
+    return 1<<(T8_ELEMENT_DIM[eclass_T]-1);
+  }
 }
 
 template<t8_eclass_t eclass_T>
@@ -248,7 +253,7 @@ t8_standalone_scheme_c<eclass_T>::t8_element_children_at_face (const t8_element_
                                                   t8_element_t *children[],
                                                   int num_children,
                                                   int *child_indices) const {
-  SC_ABORT("This function is not implemented yet.\n");
+  t8_sele_children_at_face<eclass_T>((const t8_standalone_element_t<eclass_T> *)elem, face, (t8_standalone_element_t<eclass_T>**)children, num_children, child_indices);
 }
 
 template<t8_eclass_t eclass_T>
@@ -256,24 +261,23 @@ int
 t8_standalone_scheme_c<eclass_T>::t8_element_face_child_face (const t8_element_t *elem,
                                                 int face,
                                                 int face_child) const {
-  SC_ABORT("This function is not implemented yet.\n");
-  return 0;
+  return t8_sele_face_child_face<eclass_T>((const t8_standalone_element_t<eclass_T> *)elem, face, face_child);
 }
 
 template<t8_eclass_t eclass_T>
 int
 t8_standalone_scheme_c<eclass_T>::t8_element_face_parent_face (const t8_element_t *elem,
-                                                  int face) const {
-  SC_ABORT("This function is not implemented yet.\n");
-  return 0;
+                                                  int face) const 
+{
+  return t8_sele_face_parent_face<eclass_T>((const t8_standalone_element_t<eclass_T> *)elem, face);
 }
 
 template<t8_eclass_t eclass_T>
 int
 t8_standalone_scheme_c<eclass_T>::t8_element_tree_face (const t8_element_t *elem,
                                           int face) const {
-  SC_ABORT("This function is not implemented yet.\n");
-  return 0;
+  return t8_sele_tree_face((const t8_standalone_element_t<eclass_T>*)elem, face);
+
 }
 
 template<t8_eclass_t eclass_T>
@@ -283,7 +287,9 @@ t8_standalone_scheme_c<eclass_T>::t8_element_transform_face (const t8_element_t 
                                                 int orientation,
                                                 int sign,
                                                 int is_smaller_face) const {
-  SC_ABORT("This function is not implemented yet.\n");
+  t8_sele_transform_face<eclass_T>((const t8_standalone_element_t<eclass_T>*)elem1,
+                         (t8_standalone_element_t<eclass_T>*)elem2,
+                         orientation, sign, is_smaller_face);
 }
 
 template<t8_eclass_t eclass_T>
@@ -293,7 +299,31 @@ t8_standalone_scheme_c<eclass_T>::t8_element_extrude_face (const t8_element_t *f
                                               *face_scheme,
                                               t8_element_t *elem,
                                               int root_face) const {
-  SC_ABORT("This function is not implemented yet.\n");
+//  T8_ASSERT(t8_eclass_scheme is correct)
+  t8_eclass_t face_eclass = T8_ECLASS_ZERO;
+  if constexpr(eclass_T == T8_ECLASS_VERTEX) SC_ABORT_NOT_REACHED();
+  if constexpr(eclass_T == T8_ECLASS_LINE) face_eclass=T8_ECLASS_VERTEX;
+  if constexpr(eclass_T == T8_ECLASS_QUAD) face_eclass=T8_ECLASS_LINE;
+  if constexpr(eclass_T == T8_ECLASS_HEX) face_eclass=T8_ECLASS_QUAD;
+  if constexpr(T8_ELEMENT_NUM_EQUATIONS[eclass_T]){
+    face_eclass = t8_sele_lut_rootface_to_eclass<eclass_T>[root_face];
+  }
+  if (face_eclass == T8_ECLASS_VERTEX){
+    return t8_sele_extrude_face<eclass_T, T8_ECLASS_VERTEX>((const t8_standalone_element_t<T8_ECLASS_VERTEX>*)face,
+                        (t8_standalone_element_t<eclass_T>*)elem, root_face);
+  }
+  if (face_eclass == T8_ECLASS_LINE){
+    return t8_sele_extrude_face<eclass_T, T8_ECLASS_LINE>((const t8_standalone_element_t<T8_ECLASS_LINE>*)face,
+                        (t8_standalone_element_t<eclass_T>*)elem, root_face);
+  }
+  if (face_eclass == T8_ECLASS_TRIANGLE){
+    return t8_sele_extrude_face<eclass_T, T8_ECLASS_TRIANGLE>((const t8_standalone_element_t<T8_ECLASS_TRIANGLE>*)face,
+                        (t8_standalone_element_t<eclass_T>*)elem, root_face);
+  }
+  if (face_eclass == T8_ECLASS_QUAD){
+    return t8_sele_extrude_face<eclass_T, T8_ECLASS_QUAD>((const t8_standalone_element_t<T8_ECLASS_QUAD>*)face,
+                        (t8_standalone_element_t<eclass_T>*)elem, root_face);
+  }
   return 0;
 }
 
@@ -304,7 +334,36 @@ t8_standalone_scheme_c<eclass_T>::t8_element_boundary_face (const t8_element_t *
                                               t8_element_t *boundary,
                                               const t8_eclass_scheme_c
                                               *boundary_scheme) const {
-  SC_ABORT("This function is not implemented yet.\n");
+//  T8_ASSERT(t8_eclass_scheme is correct)
+  int root_face = t8_element_tree_face(elem, face);
+  t8_eclass_t face_eclass = T8_ECLASS_ZERO;
+  if constexpr(eclass_T == T8_ECLASS_VERTEX) SC_ABORT_NOT_REACHED();
+  if constexpr(eclass_T == T8_ECLASS_LINE) face_eclass=T8_ECLASS_VERTEX;
+  if constexpr(eclass_T == T8_ECLASS_QUAD) face_eclass=T8_ECLASS_LINE;
+  if constexpr(eclass_T == T8_ECLASS_HEX) face_eclass=T8_ECLASS_QUAD;
+  if constexpr(T8_ELEMENT_NUM_EQUATIONS[eclass_T]){
+    face_eclass = t8_sele_lut_rootface_to_eclass<eclass_T>[root_face];
+  }
+  if (face_eclass == T8_ECLASS_VERTEX){
+    t8_debugf("call t8_sele_boundary_face with face_eclass = T8_ECLASS_VERTEX\n");
+    t8_sele_boundary_face<eclass_T, T8_ECLASS_VERTEX>((const t8_standalone_element_t<eclass_T>*)elem, root_face,
+                        (t8_standalone_element_t<T8_ECLASS_VERTEX>*)boundary);
+  }
+  if (face_eclass == T8_ECLASS_LINE){
+    t8_debugf("call t8_sele_boundary_face with face_eclass = T8_ECLASS_LINE\n");
+    t8_sele_boundary_face<eclass_T, T8_ECLASS_LINE>((const t8_standalone_element_t<eclass_T>*)elem, root_face,
+                        (t8_standalone_element_t<T8_ECLASS_LINE>*)boundary);
+  }
+  if (face_eclass == T8_ECLASS_TRIANGLE){
+    t8_debugf("call t8_sele_boundary_face with face_eclass = T8_ECLASS_TRIANGLE\n");
+    t8_sele_boundary_face<eclass_T, T8_ECLASS_TRIANGLE>((const t8_standalone_element_t<eclass_T>*)elem, root_face,
+                        (t8_standalone_element_t<T8_ECLASS_TRIANGLE>*)boundary);
+  }
+  if (face_eclass == T8_ECLASS_QUAD){
+    t8_debugf("call t8_sele_boundary_face with face_eclass = T8_ECLASS_QUAD\n");
+    t8_sele_boundary_face<eclass_T, T8_ECLASS_QUAD>((const t8_standalone_element_t<eclass_T>*)elem, root_face,
+                        (t8_standalone_element_t<T8_ECLASS_QUAD>*)boundary);
+  }
 }
 
 template<t8_eclass_t eclass_T>
@@ -313,8 +372,9 @@ t8_standalone_scheme_c<eclass_T>::t8_element_first_descendant_face (const t8_ele
                                                       *elem, int face,
                                                       t8_element_t
                                                       *first_desc,
-                                                      int level) const {
-  SC_ABORT("This function is not implemented yet.\n");
+                                                      int level) const 
+{
+  t8_sele_first_descendant_face((const t8_standalone_element_t<eclass_T>*)elem, face, (t8_standalone_element_t<eclass_T>*)first_desc, level);
 }
 
 template<t8_eclass_t eclass_T>
@@ -324,7 +384,7 @@ t8_standalone_scheme_c<eclass_T>::t8_element_last_descendant_face (const t8_elem
                                                       t8_element_t
                                                       *last_desc,
                                                       int level) const {
-  SC_ABORT("This function is not implemented yet.\n");
+  t8_sele_last_descendant_face((const t8_standalone_element_t<eclass_T>*)elem, face, (t8_standalone_element_t<eclass_T>*)last_desc, level);
 }
 
 template<t8_eclass_t eclass_T>
@@ -338,9 +398,9 @@ t8_standalone_scheme_c<eclass_T>::t8_element_boundary (const t8_element_t *elem,
 template<t8_eclass_t eclass_T>
 int
 t8_standalone_scheme_c<eclass_T>::t8_element_is_root_boundary (const t8_element_t *elem,
-                                                  int face) const {
-  SC_ABORT("This function is not implemented yet.\n");
-  return 0;
+                                                  int face) const 
+{
+  return t8_sele_is_root_boundary<eclass_T>((const t8_standalone_element_t<eclass_T> *)elem, face);
 }
 
 template<t8_eclass_t eclass_T>
@@ -350,8 +410,7 @@ t8_standalone_scheme_c<eclass_T>::t8_element_face_neighbor_inside (const t8_elem
                                                       t8_element_t *neigh,
                                                       int face,
                                                       int *neigh_face) const {
-  SC_ABORT("This function is not implemented yet.\n");
-  return 0;
+  return t8_sele_face_neighbor<eclass_T>((const t8_standalone_element_t<eclass_T> *)elem, (t8_standalone_element_t<eclass_T> *)neigh, face, neigh_face);
 }
 
 template<t8_eclass_t eclass_T>
@@ -454,7 +513,7 @@ t8_standalone_scheme_c<eclass_T>::t8_element_count_leafs_from_root (int level) c
     t8_linearidx_t      eight_to_l = 1LL << (3 * level);
     return ((eight_to_l << 2) - two_to_l) / 3;
   }
-  return 1 << (level * T8_ELEMENT_DIM[eclass_T]);
+  return 1LL << (level * T8_ELEMENT_DIM[eclass_T]);
 }
 
 template<t8_eclass_t eclass_T>
@@ -476,8 +535,9 @@ t8_standalone_scheme_c<eclass_T>::t8_element_is_valid (const t8_element_t *elem)
 template<t8_eclass_t eclass_T>
 void
 t8_standalone_scheme_c<eclass_T>::t8_element_debug_print (const t8_element_t *elem) const {
-  T8_ASSERT(t8_element_is_valid(elem));
+//  T8_ASSERT(t8_element_is_valid(elem));
   t8_sele_debug_print<eclass_T>((const t8_standalone_element_t<eclass_T> *)elem);
+  T8_ASSERT(t8_element_is_valid(elem));
 }
 #endif
 

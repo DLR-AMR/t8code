@@ -21,6 +21,7 @@
 */
 
 #include "t8_sele_bits_cxx.hxx"
+#include <iostream>
 
 /*********GETTER******/
 
@@ -34,7 +35,11 @@ t8_element_coord_t  t8_sele_get_len(t8_element_level_t level)
 template<t8_eclass_t eclass_T>
 t8_element_coord_t  t8_sele_get_root_len()
 {
-  return 1 << T8_ELEMENT_MAXLEVEL[eclass_T];
+  if constexpr (eclass_T == T8_ECLASS_VERTEX){
+    return 0;
+  } else{
+    return 1 << T8_ELEMENT_MAXLEVEL[eclass_T];
+  }
 }
 
 template<t8_eclass_t eclass_T>
@@ -101,6 +106,12 @@ int
 t8_sele_num_faces (const t8_standalone_element_t<eclass_T> *p)
 {
   T8_ASSERT (0 <= p->level && p->level <= T8_ELEMENT_MAXLEVEL[eclass_T]);
+  if constexpr(eclass_T==T8_ECLASS_PYRAMID){
+    if(t8_sele_shape(p)==T8_ECLASS_PYRAMID){
+      return 5;
+    }
+    return 4;
+  }
   return T8_ELEMENT_NUM_FACES[eclass_T];
 }
 
@@ -169,7 +180,7 @@ t8_sele_compute_type_at_level (const t8_standalone_element_t<eclass_T> *p, int l
  * \param[in]       shift Number of bits to set to zero
  */
 template<t8_eclass_t eclass_T>
-static void
+static inline void
 t8_sele_cut_coordinates (t8_standalone_element_t<eclass_T> *p, const int shift)
 {
   T8_ASSERT (0 <= shift && shift <= T8_ELEMENT_MAXLEVEL[eclass_T]);
@@ -218,14 +229,13 @@ int
 t8_sele_is_valid (const t8_standalone_element_t<eclass_T> *p)
 {
   int                 is_valid;
-  const t8_element_coord_t max_coord = ((uint64_t)2 * (uint64_t)t8_sele_get_root_len<eclass_T>) - 1;
+  const t8_element_coord_t max_coord = ((uint64_t)2 * (uint64_t)t8_sele_get_root_len<eclass_T>()) - 1;
 
   /*Check the level */
   is_valid = 0 <= p->level && p->level <= T8_ELEMENT_MAXLEVEL[eclass_T];
-
   /*Check coordinates, we allow a boundary layer around the root-pyramid */
   for (int i = 0; i < T8_ELEMENT_DIM[eclass_T]; i++) {
-    is_valid = is_valid && - (int64_t)t8_sele_get_root_len<eclass_T> <= p->coords[i]
+    is_valid = is_valid && - (int64_t)t8_sele_get_root_len<eclass_T>() <= p->coords[i]
       && p->coords[i] <= max_coord;
   }
 
@@ -343,10 +353,13 @@ t8_sele_is_inside_root (const t8_standalone_element_t<eclass_T> *p)
 {
   t8_standalone_element_t<eclass_T> anc;
   t8_sele_ancestor_equation(p,0,&anc);
+
+  /**Check that we are in the correct cube*/
   for(int idim = 0; idim < T8_ELEMENT_DIM[eclass_T]; idim++){
-    if (p->x[idim]) return 0;
+    if (anc.coords[idim]) return 0;
   }
-  return p->type == 0;
+//  t8_debugf("anc.type %i\n", anc.type);
+  return anc.type == 0;
 }
 
 template<t8_eclass_t eclass_T>
@@ -467,7 +480,9 @@ t8_sele_ancestor_equation (const t8_standalone_element_t<eclass_T> *el, const in
                       t8_standalone_element_t<eclass_T> *anc)
 {
   T8_ASSERT (0 <= level && level <= el->level);
-  t8_sele_copy (el, anc);
+  if(el!=anc){
+    t8_sele_copy (el, anc);
+  }
   if (el->level == level) {
     return;
   }
@@ -484,11 +499,34 @@ t8_sele_ancestor_equation (const t8_standalone_element_t<eclass_T> *el, const in
 }
 
 template<t8_eclass_t eclass_T>
-static int
-t8_sele_nca_level (const t8_standalone_element_t<eclass_T> *el1, const t8_standalone_element_t<eclass_T> *el2)
+int
+t8_sele_equal (const t8_standalone_element_t<eclass_T> *el1,
+               const t8_standalone_element_t<eclass_T> *el2)
 {
-  SC_ABORT ("Not implemented.");
-  return 0;
+  if (el1->level != el2->level)return 0;
+  for(int idim = 0; idim<T8_ELEMENT_DIM[eclass_T];idim++){
+    if(el1->coords[idim]!=el2->coords[idim]) return 0;
+  }
+  return el1->type == el2->type;
+}
+
+template<t8_eclass_t eclass_T>
+static inline int
+t8_sele_cube_ancestor_level(const t8_standalone_element_t<eclass_T> *el1,
+                                     const t8_standalone_element_t<eclass_T> *el2)
+{
+  t8_element_coord_t maxexclor = 0;
+  int level_inv;
+  for(int idim=0; idim<T8_ELEMENT_DIM[eclass_T];idim++){
+    maxexclor |= (el1->coords[idim] ^ el2->coords[idim]); 
+  }
+
+  level_inv = SC_LOG2_32 (maxexclor) + 1;
+  T8_ASSERT (level_inv <= T8_ELEMENT_MAXLEVEL[eclass_T]);
+
+  int min_value = SC_MIN (T8_ELEMENT_MAXLEVEL[eclass_T] - level_inv,
+                             (int) SC_MIN (el1->level, el2->level));
+  return min_value;
 }
 
 template<t8_eclass_t eclass_T>
@@ -497,9 +535,22 @@ t8_sele_nearest_common_ancestor (const t8_standalone_element_t<eclass_T> *el1,
                                      const t8_standalone_element_t<eclass_T> *el2,
                                      t8_standalone_element_t<eclass_T> *nca)
 {
-  const t8_element_level_t nca_level = t8_sele_nca_level (el1, el2);
-  t8_sele_ancestor_equation (el1, nca_level, nca);
+  t8_standalone_element_t<eclass_T> nca2;
+  int cube_anc_level = t8_sele_cube_ancestor_level<eclass_T> (el1, el2);
+  int real_level = cube_anc_level;
+  if constexpr(T8_ELEMENT_NUM_EQUATIONS[eclass_T]){
+    t8_element_type_t<eclass_T> anc_type, anc2_type;
+    do{
+      anc_type = t8_sele_compute_type_at_level(el1,real_level);
+      anc2_type = t8_sele_compute_type_at_level(el2,real_level);
+      real_level --;
+    }
+    while (anc_type != anc2_type);
+    real_level++;/* we subtracted once too much*/
+  }
+  t8_sele_ancestor_equation(el1,real_level,nca);
 }
+
 
 /*******Linear id stuff *************/
 template<t8_eclass_t eclass_T>
@@ -518,7 +569,7 @@ t8_sele_num_descendants_at_leveldiff (const t8_standalone_element_t<eclass_T> *e
      return ((eight_to_l << 1) + two_to_l) / 3;
     }
   }
-  return 1 <<( T8_ELEMENT_DIM[eclass_T] * leveldiff);
+  return 1LL <<( T8_ELEMENT_DIM[eclass_T] * leveldiff);
 }
 
 template<t8_eclass_t eclass_T>
@@ -667,4 +718,581 @@ t8_sele_vertex_reference_coords (const t8_standalone_element_t<eclass_T> *elem,
   coords[0] = coords_int[0] / (double) t8_sele_get_root_len<eclass_T> ();
   coords[1] = coords_int[1] / (double) t8_sele_get_root_len<eclass_T> ();
   coords[2] = coords_int[2] / (double) t8_sele_get_root_len<eclass_T> ();
+}
+
+
+
+/**Face connection**/
+template<t8_eclass_t eclass_T>
+int
+t8_sele_face_neighbor (const t8_standalone_element_t<eclass_T> *elem,
+                                        t8_standalone_element_t<eclass_T> *neigh,
+                                        int face, int *neigh_face) 
+{
+  t8_sele_copy(elem, neigh);
+
+  if constexpr(T8_ELEMENT_NUM_EQUATIONS[eclass_T]){
+    int internal_face = t8_sele_lut_face_internal<eclass_T>[elem->type.to_ulong()][face];
+    if (internal_face){
+      /**Determine typebit*/
+      int typebit = t8_sele_lut_type_face_to_typebit<eclass_T>[elem->type.to_ulong()][face];
+      /**Change typebit*/
+      neigh->type.flip(typebit);
+      *neigh_face = t8_sele_lut_type_face_to_neighface<eclass_T>[elem->type.to_ulong()][face];
+      return t8_sele_is_inside_root(neigh);
+    }
+  }
+
+  /**Face is external, so a cube face*/
+  /**Determine facenormal dimension*/
+  int facenormal_dim, sign;
+  /**Determine sign and adapt coordinate*/
+  if constexpr(T8_ELEMENT_NUM_EQUATIONS[eclass_T]){
+    sign = t8_sele_lut_type_face_to_sign<eclass_T>[elem->type.to_ulong()][face];
+    facenormal_dim = t8_sele_lut_type_face_to_facenormal_dim<eclass_T>[elem->type.to_ulong()][face];
+    T8_ASSERT(facenormal_dim != -1);
+  }else{
+    sign = face % 2 ? 1 : -1;
+    facenormal_dim = face/2;
+  }
+
+  /**Adapt coordinates*/
+  t8_element_coord_t length = t8_sele_get_len<eclass_T>(elem->level);
+  t8_debugf("length: %i, sign:%i\n", length, sign);
+
+  t8_debugf("neigh_coords[%i]: %i\n", facenormal_dim, neigh->coords[facenormal_dim]);
+  neigh->coords[facenormal_dim] += length * sign;
+  t8_debugf("neigh_coords[%i]: %i\n", facenormal_dim, neigh->coords[facenormal_dim]);
+
+  /**Adapt typebits*/
+  if constexpr(T8_ELEMENT_NUM_EQUATIONS[eclass_T]){
+    for(size_t ieq=0; ieq<T8_ELEMENT_NUM_EQUATIONS[eclass_T];ieq++){
+      /**For all neighboring typebits, change typebit*/
+      if(t8_type_edge_equations<eclass_T>[ieq][0] == facenormal_dim || t8_type_edge_equations<eclass_T>[ieq][1] == facenormal_dim){
+        neigh->type.flip(ieq); /*ASSERT that flip is in correct direction */
+      }
+    }
+  }
+  if constexpr(!T8_ELEMENT_NUM_EQUATIONS[eclass_T]){
+    *neigh_face = face ^ 1;
+  }else {
+    *neigh_face = t8_sele_lut_type_face_to_neighface<eclass_T>[elem->type.to_ulong()][face];
+  }
+  /**check inside root*/
+  return t8_sele_is_inside_root(neigh);
+}
+
+template<t8_eclass_t eclass_T>
+int t8_sele_face_parent_face(const t8_standalone_element_t<eclass_T> * elem, const int face){
+  if (elem->level == 0) return -1;
+  if constexpr(!T8_ELEMENT_NUM_EQUATIONS[eclass_T]){
+    if ((unsigned int)(face % 2) != ((elem->coords[face/2])>>(T8_ELEMENT_MAXLEVEL[eclass_T] - elem->level))%2){
+      return -1;
+    }
+    return face;
+  }else{
+    t8_cube_id_t cube_id = t8_sele_compute_cubeid<eclass_T>(elem, elem->level);
+    return t8_sele_lut_type_cubeid_face_to_parentface<eclass_T>[elem->type.to_ulong()][cube_id][face];
+  }
+}
+
+template<t8_eclass_t eclass_T>
+int
+t8_sele_face_normal_dim (const t8_standalone_element_t<eclass_T> * elem, const int face){
+  if constexpr(!T8_ELEMENT_NUM_EQUATIONS[eclass_T]){
+    return face/2;
+  }else{
+    return t8_sele_lut_type_face_to_facenormal_dim<eclass_T>[elem->type.to_ulong()][face];
+  }
+}
+template<t8_eclass_t eclass_T>
+int
+t8_sele_face_internal (const t8_standalone_element_t<eclass_T> * elem, const int face){
+  if constexpr(!T8_ELEMENT_NUM_EQUATIONS[eclass_T]){
+    return 0;
+  }else{
+    return t8_sele_lut_face_internal<eclass_T>[elem->type.to_ulong()][face];
+  }
+}
+
+template<t8_eclass_t eclass_T>
+int
+t8_sele_face_is_1_boundary (const t8_standalone_element_t<eclass_T> * elem, const int face){
+  if constexpr(!T8_ELEMENT_NUM_EQUATIONS[eclass_T]){
+    return face%2;
+  }else{
+    return t8_sele_lut_type_face_to_is_1_boundary<eclass_T>[elem->type.to_ulong()][face];
+  }
+}
+  
+template<t8_eclass_t eclass_T>
+int
+t8_sele_is_root_boundary(const t8_standalone_element_t<eclass_T> * elem, int face)
+{
+  if(!t8_sele_face_internal(elem, face)){
+    int dimid = t8_sele_face_normal_dim (elem, face);
+    if(t8_sele_face_is_1_boundary(elem, face)){
+      // a_d must be full of 1s up to level l
+      t8_element_coord_t coord_offset =
+        t8_sele_get_root_len<eclass_T> () - t8_sele_get_len<eclass_T> (elem->level);
+      if(elem->coords[dimid] != coord_offset){
+        return 0;
+      }
+      // all edges containing dimid must be fulfilled with x_d-a_d >= x_j-a_j or x_j-a_j <= x_d-a_d
+      if constexpr(T8_ELEMENT_NUM_EQUATIONS[eclass_T]){
+        for(int ieq=0; ieq < T8_ELEMENT_NUM_EQUATIONS[eclass_T]; ieq++){
+          if(t8_type_edge_equations<eclass_T>[ieq][0] == dimid){
+            if(elem->type[ieq]){
+              return 0;
+            }
+          }else if (t8_type_edge_equations<eclass_T>[ieq][1] == dimid){
+            if(!elem->type[ieq]){
+              return 0;
+            }
+          }
+        }
+      }
+
+    }else{
+      //zeroboundary
+      // x_d must be full of 0s up to level l
+      if(elem->coords[dimid] != 0){
+        return 0;
+      }
+      // all edges containing dimid must be fulfilled with x_d-a_d <= x_j-a_j or x_j-a_j >= x_d-a_d
+      if constexpr(T8_ELEMENT_NUM_EQUATIONS[eclass_T]){
+        for(int ieq=0; ieq < T8_ELEMENT_NUM_EQUATIONS[eclass_T]; ieq++){
+          if(t8_type_edge_equations<eclass_T>[ieq][0] == dimid){
+            if(!elem->type[ieq]){
+              return 0;
+            }
+          }else if (t8_type_edge_equations<eclass_T>[ieq][1] == dimid){
+            if(elem->type[ieq]){
+              return 0;
+            }
+          }
+        }
+      }
+    }
+  }else{
+    // internalface
+    // get graph edge e (or ieq) = (xi,xj)
+    // ai = aj is necessary and sufficient
+    if constexpr(T8_ELEMENT_NUM_EQUATIONS[eclass_T]){
+      int ieq = t8_sele_lut_type_face_to_typebit<eclass_T>[elem->type.to_ulong()][face];
+      if(elem->coords[t8_type_edge_equations<eclass_T>[ieq][0]] != elem->coords[t8_type_edge_equations<eclass_T>[ieq][1]]){
+        return 0;
+      }
+    }else{
+      SC_ABORT("Cubes should not have internal faces!\n");
+    }
+  }
+  return 1;
+}
+
+template<t8_eclass_t eclass_T>
+void
+t8_sele_first_descendant_face(const t8_standalone_element_t<eclass_T>* elem, int face, t8_standalone_element_t<eclass_T>* first_desc, int level){
+//  t8_debugf("compute first_desc_face for type %i along face %i at level %i for elem:\n", elem->type.to_ulong(), face, level);
+  t8_sele_debug_print<eclass_T>(elem);
+  first_desc->level=level;
+  if constexpr(T8_ELEMENT_NUM_EQUATIONS[eclass_T]){
+    first_desc->type = elem->type; /**TODO: Check if this is always true! */
+  }
+  for (int idim=0; idim < T8_ELEMENT_DIM[eclass_T]; idim++){
+    first_desc->coords[idim] = elem->coords[idim];
+  }
+  int face_is_1_boundary;
+  if constexpr(!T8_ELEMENT_NUM_EQUATIONS[eclass_T]){
+    face_is_1_boundary = face%2;
+  }else{
+    face_is_1_boundary = t8_sele_lut_type_face_to_is_1_boundary<eclass_T>[elem->type.to_ulong()][face];
+  }
+
+
+  if (face_is_1_boundary){//the face is a xi=1 boundary
+    int facenormal_dim;
+    if constexpr(!T8_ELEMENT_NUM_EQUATIONS[eclass_T]){
+      facenormal_dim = face/2;
+    }else{
+      facenormal_dim = t8_sele_lut_type_face_to_facenormal_dim<eclass_T>[elem->type.to_ulong()][face];
+      T8_ASSERT(facenormal_dim != -1);
+    }
+//    t8_debugf("type: %i, face:%i, facenormal_dim: %i\n", elem->type.to_ulong(),face, facenormal_dim);
+    t8_element_coord_t coord_offset =
+      t8_sele_get_len<eclass_T> (elem->level) - t8_sele_get_len<eclass_T> (level);
+
+    first_desc->coords[facenormal_dim] += coord_offset;
+  }
+}
+
+template<t8_eclass_t eclass_T>
+void
+t8_sele_last_descendant_face(const t8_standalone_element_t<eclass_T>* elem, int face, t8_standalone_element_t<eclass_T>* last_desc, int level){
+  last_desc->level=level;
+  t8_element_coord_t coord_offset = t8_sele_get_len<eclass_T> (elem->level) - t8_sele_get_len<eclass_T> (level);
+//  t8_debugf("t8_sele_last_descendant_face with offset %i\n", coord_offset);
+  
+  if constexpr(T8_ELEMENT_NUM_EQUATIONS[eclass_T]){
+    last_desc->type = elem->type; /**TODO: Check if this is always true! */
+  }
+
+  for (int idim=0; idim < T8_ELEMENT_DIM[eclass_T]; idim++){
+    int multiplier = 1;
+    if constexpr(!T8_ELEMENT_NUM_EQUATIONS[eclass_T]){
+      if (idim == face/2){
+        multiplier = face%2;
+      }
+    }else{
+      t8_cube_id_t cube_id = t8_sele_lut_type_face_to_last_facechilds_cubeid<eclass_T>[elem->type.to_ulong()][face];
+      multiplier = (cube_id & (1<<idim))>>idim; // = cubeid[idim];
+    }
+    last_desc->coords[idim] = elem->coords[idim] + multiplier * coord_offset;
+  }
+//  t8_debugf("Computed last descendant face:\n");
+  //t8_sele_debug_print<eclass_T>(elem);
+}
+
+
+template<t8_eclass_t eclass_T>
+void
+t8_sele_children_at_face(const t8_standalone_element_t<eclass_T> *elem, int face, t8_standalone_element_t<eclass_T> **children, int num_face_children, int *child_indices)
+{
+  int allocated_indices =0;
+  if (child_indices == NULL){
+    child_indices = T8_ALLOC_ZERO(int,num_face_children);
+    allocated_indices = 1;
+  }
+  int face_sign, face_dim, face_dim_inv;
+  if constexpr(!T8_ELEMENT_NUM_EQUATIONS[eclass_T]){
+    face_sign = face%2;
+    face_dim = face/2;
+    face_dim_inv = T8_ELEMENT_DIM[eclass_T] - face_dim;
+  }
+
+  for(int ifacechild=0; ifacechild<num_face_children; ifacechild++){
+    if constexpr(!T8_ELEMENT_NUM_EQUATIONS[eclass_T]){
+      t8_element_coord_t first_part, face_part, last_part;
+      /* ifacechild aaaabb, iface = x, then childid = aaaaxbb*/
+      first_part = (ifacechild >> face_dim) << (face_dim + 1);
+      last_part = ifacechild & ((1<<face_dim) - 1);
+      face_part = face_sign << face_dim;
+      child_indices[ifacechild] = first_part + face_part + last_part;
+
+    }else{
+      child_indices[ifacechild] = t8_sele_lut_type_face_facechildid_to_childid<eclass_T>[elem->type.to_ulong()][face][ifacechild];
+//      t8_debugf("looked up child index %i for type %i, face %i, ifacechild %i\n", child_indices[ifacechild], elem->type.to_ulong(), face, ifacechild);
+    }
+
+
+  }
+  for(int ifacechild=0; ifacechild<num_face_children; ifacechild++){
+    t8_sele_child(elem, child_indices[ifacechild], children[ifacechild]);
+  }
+  if(allocated_indices){
+    T8_FREE(child_indices);
+  }
+
+}
+
+
+template<t8_eclass_t eclass_T>
+int                 t8_sele_face_child_face (const t8_standalone_element_t<eclass_T> *p,
+                                                 const int face,
+                                                 const int face_child)
+{
+  if constexpr(!T8_ELEMENT_NUM_EQUATIONS[eclass_T]){
+    return face;
+  }else{
+    int child_id = t8_sele_lut_type_face_facechildid_to_childid<eclass_T>[p->type.to_ulong()][face][face_child];
+    return t8_sele_lut_type_childid_face_to_childface<eclass_T>[p->type.to_ulong()][child_id][face];
+  }
+}
+
+template<t8_eclass_t eclass_T>
+int t8_sele_tree_face(const t8_standalone_element_t<eclass_T> * elem, const int face){
+  if constexpr(!T8_ELEMENT_NUM_EQUATIONS[eclass_T]){
+    return face;
+  }else{
+    return t8_sele_lut_type_face_to_tree_face<eclass_T>[elem->type.to_ulong()][face];
+  }
+}
+
+template<t8_eclass_t eclass_T>
+void t8_sele_transform_face(const t8_standalone_element_t<eclass_T> * elem1,
+                            t8_standalone_element_t<eclass_T> * elem2,
+                            int orientation, int sign, int is_smaller_face)
+{
+  if constexpr(eclass_T == T8_ECLASS_VERTEX){
+    return;
+  }
+  int level = elem1->level;
+  if constexpr(eclass_T == T8_ECLASS_LINE){
+    t8_sele_copy<eclass_T>(elem1,elem2);
+    if (orientation){
+      t8_element_coord_t total_length = 1<<T8_ELEMENT_MAXLEVEL[eclass_T];
+      t8_element_coord_t refined_length = 1<<(T8_ELEMENT_MAXLEVEL[eclass_T]-level);
+      elem2->coords[0] =  total_length - refined_length - elem2->coords[0];
+    }
+    return;
+  }
+  if constexpr(eclass_T == T8_ECLASS_QUAD){
+    t8_standalone_element_t<eclass_T> tmp;
+    if (sign) {
+      /* The tree faces have the same topological orientation, and
+      * thus we have to perform a coordinate switch. */
+      /* We use p as storage, since elem1 and elem2 are allowed to
+      * point to the same quad */
+      t8_sele_copy<eclass_T> (elem1, &tmp);
+      tmp.coords[0] = elem1->coords[1];
+      tmp.coords[1] = elem1->coords[0];
+    }
+    else {
+      t8_sele_copy<eclass_T> (elem1, &tmp);
+    }
+
+    /*
+    * The faces of the root quadrant are enumerated like this:
+    *
+    *   v_2      v_3
+    *     x -->-- x
+    *     |       |
+    *     ^       ^
+    *     |       |
+    *     x -->-- x
+    *   v_0      v_1
+    *
+    * Orientation is the corner number of the bigger face that coincides
+    * with the corner v_0 of the smaller face.
+    */
+    /* If this face is not smaller, switch the orientation:
+    *  sign = 0   sign = 1
+    *  0 -> 0     0 -> 0
+    *  1 -> 2     1 -> 1
+    *  2 -> 1     2 -> 2
+    *  3 -> 3     3 -> 3
+    */
+    if (!is_smaller_face && (orientation == 1 || orientation == 2) && !sign) {
+      orientation = 3 - orientation;
+    }
+    t8_element_coord_t root_len = t8_sele_get_root_len<eclass_T>();
+    t8_element_coord_t h = t8_sele_get_len<eclass_T>(elem1->level);
+    switch (orientation) {
+    case 0:                      /* Nothing to do */
+      elem2->coords[0] = tmp.coords[0];
+      elem2->coords[1] = tmp.coords[1];
+      break;
+    case 1:
+      elem2->coords[0] = root_len - tmp.coords[1] - h;
+      elem2->coords[1] = tmp.coords[0];
+      break;
+    case 2:
+      elem2->coords[0] = tmp.coords[1];
+      elem2->coords[1] = root_len - tmp.coords[0] - h;
+      break;
+    case 3:
+      elem2->coords[0] = root_len - tmp.coords[0] - h;
+      elem2->coords[1] = root_len - tmp.coords[1] - h;
+      break;
+    default:
+      SC_ABORT_NOT_REACHED ();
+    }
+    elem2->level = tmp.level;
+    return;
+  }
+  if constexpr(eclass_T == T8_ECLASS_TRIANGLE){
+    T8_ASSERT (0 <= orientation && orientation <= 2);
+    t8_element_coord_t  h = t8_sele_get_len<eclass_T> (elem1->level);
+
+    // copy elem1 in tmp so that results can directly be set in elem2
+    t8_standalone_element_t<eclass_T> tmp;
+    t8_sele_copy<eclass_T> (elem1, &tmp);
+
+    /*
+    * The corners of the triangle are enumerated like this
+    *        type 0                    type 1
+    *      also root tree
+    *         v_2                     v_1  v_2
+    *         x                         x--x
+    *        /|                         | /
+    *       / |                         |/
+    *      x--x                         x
+    *    v_0  v_1                      v_0
+    *
+    */
+    if (sign) {
+      /* The tree faces have the same topological orientation, and
+      * thus we have to perform a coordinate switch. */
+      if (elem1->type == 0) {
+        tmp.coords[1] = elem1->coords[0] - elem1->coords[1];
+      }
+      else {
+        tmp.coords[1] = elem1->coords[0] - elem1->coords[1] - h;
+      }
+    }
+
+    if (!is_smaller_face && orientation != 0 && !sign) {
+      /* Translate orientation if triangle1 is not on the smaller face.
+      *  sign = 0  sign = 1
+      *  0 -> 0    0 -> 0
+      *  1 -> 2    1 -> 1
+      *  2 -> 1    2 -> 2
+      */
+      orientation = 3 - orientation;
+    }
+
+    elem2->level=tmp.level;
+    elem2->type=tmp.type;
+    switch (orientation) {
+    case 0:
+      t8_sele_copy<eclass_T> (&tmp, elem2);
+      break;
+    case 1:
+      elem2->coords[0] = t8_sele_get_root_len<eclass_T>() - h - tmp.coords[1];
+      if (tmp.type == 0) {
+        elem2->coords[1] = tmp.coords[0] - tmp.coords[1];
+      }
+      else {
+        elem2->coords[1] = tmp.coords[0] - tmp.coords[1] - h;
+      }
+      break;
+    case 2:
+      if (tmp.type == 0) {
+        elem2->coords[0] = t8_sele_get_root_len<eclass_T>() - h + tmp.coords[1] - tmp.coords[0];
+      }
+      else {
+        elem2->coords[0] = t8_sele_get_root_len<eclass_T>() + tmp.coords[1] - tmp.coords[0];
+      }
+      elem2->coords[1] = t8_sele_get_root_len<eclass_T>() - h - tmp.coords[0];
+      break;
+    default:
+      SC_ABORT_NOT_REACHED ();
+    }
+  }
+}
+
+template<t8_eclass_t eclass_T, t8_eclass_t face_eclass_T>
+void t8_sele_boundary_face(const t8_standalone_element_t<eclass_T> * elem, const int root_face,
+                          t8_standalone_element_t<face_eclass_T>* boundary)
+{
+  if constexpr(T8_ELEMENT_DIM[face_eclass_T] >= T8_ELEMENT_DIM[eclass_T]){
+    return;
+  }
+
+  boundary->level = elem->level;
+  for (int idim = 0; idim < T8_ELEMENT_DIM[eclass_T]; idim++){
+    t8_debugf("consider dimension idim %i\n", idim);
+    int ifacedim;
+    if constexpr(!T8_ELEMENT_NUM_EQUATIONS[eclass_T]){
+      int facenormal_dim = root_face / 2;
+      if (idim == facenormal_dim) {
+        ifacedim = -1;
+      }else if (idim > facenormal_dim){
+        ifacedim = idim - 1;
+      }else{
+        ifacedim = idim;
+      }
+    }else{
+      ifacedim = t8_sele_lut_rootface_dim_to_facedim<eclass_T>[root_face][idim];
+    }
+    t8_debugf("found ifacedim %i\n", ifacedim);
+    if(ifacedim != -1){
+      if constexpr(face_eclass_T != T8_ECLASS_VERTEX && T8_ELEMENT_DIM[face_eclass_T] < T8_ELEMENT_DIM[eclass_T]){
+        t8_debugf("set boundary coords %i\n", ifacedim);
+        boundary->coords[ifacedim] = elem->coords[idim] << (T8_ELEMENT_MAXLEVEL[face_eclass_T]-T8_ELEMENT_MAXLEVEL[eclass_T]);
+        t8_debugf("to %i\n", boundary->coords[ifacedim]);
+      }else{
+        SC_ABORT_NOT_REACHED();
+      }
+    }
+  }
+  if constexpr(T8_ELEMENT_NUM_EQUATIONS[eclass_T]){
+    for (int ieq = 0; ieq < T8_ELEMENT_NUM_EQUATIONS[eclass_T]; ieq++){
+      t8_debugf("consider equation ieq %i\n", ieq);
+      int ifaceeq = t8_sele_lut_rootface_eq_to_faceeq<eclass_T>[root_face][ieq];
+      t8_debugf("found ifaceeq %i\n", ifaceeq);
+
+      if (ifaceeq != -1){
+        t8_debugf("boundarytype size: %i, elemtype size: %i\n", boundary->type.size(), elem->type.size());
+        boundary->type[ifaceeq] = elem->type[ieq];
+        t8_debugf("set type[%i] = %i\n", ifaceeq, boundary->type[ifaceeq]);
+      }
+    }
+  }
+}
+
+template<t8_eclass_t eclass_T, t8_eclass_t face_eclass_T>
+int t8_sele_extrude_face(const t8_standalone_element_t<face_eclass_T> * face,
+                          t8_standalone_element_t<eclass_T>* elem, int root_face)
+{
+  /** Loop over elemdim, get corresponding facedim and set elem coord accordingly 
+   * If elemdim is faceboundary, find out if 0 or 1 boundary
+   */
+  T8_ASSERT(0<=face->level && face->level <= T8_ELEMENT_MAXLEVEL[eclass_T]);
+  if constexpr(T8_ELEMENT_DIM[face_eclass_T] >= T8_ELEMENT_DIM[eclass_T]){
+    return -1;
+  }
+
+  elem->level = face->level;
+  t8_element_coord_t h = t8_sele_get_root_len<eclass_T>() - t8_sele_get_len<eclass_T>(elem->level);
+  for (int idim = 0; idim < T8_ELEMENT_DIM[eclass_T]; idim++){
+    int ifacedim;
+    if constexpr(!T8_ELEMENT_NUM_EQUATIONS[eclass_T]){
+      int facenormal_dim = root_face / 2;
+      if (idim == facenormal_dim) {
+        ifacedim = -1;
+      }else if (idim > facenormal_dim){
+        ifacedim = idim - 1;
+      }else{
+        ifacedim = idim;
+      }
+    }else{
+      ifacedim = t8_sele_lut_rootface_dim_to_facedim<eclass_T>[root_face][idim];
+    }
+    if(ifacedim != -1){
+      if constexpr(face_eclass_T != T8_ECLASS_VERTEX && T8_ELEMENT_DIM[face_eclass_T] < T8_ELEMENT_DIM[eclass_T]){
+        t8_debugf("shift right by %i\n", (T8_ELEMENT_MAXLEVEL[face_eclass_T] - T8_ELEMENT_MAXLEVEL[eclass_T]));
+        elem->coords[idim] = face->coords[ifacedim] >> (T8_ELEMENT_MAXLEVEL[face_eclass_T] - T8_ELEMENT_MAXLEVEL[eclass_T]);
+      }else{
+        SC_ABORT_NOT_REACHED();
+      }
+    }else{
+      int root_type = 0; //TODO: Make other root_types possible
+      int is_1_boundary;
+      if constexpr(!T8_ELEMENT_NUM_EQUATIONS[eclass_T]){
+        is_1_boundary = root_face % 2;
+      }else{
+        is_1_boundary = t8_sele_lut_type_face_to_is_1_boundary<eclass_T>[root_type][root_face];
+      } 
+      if(is_1_boundary){
+        t8_debugf("set to h\n");
+        elem->coords[idim] = h;
+      }else{
+        elem->coords[idim] = 0;
+      }
+    }
+    t8_debugf("set elem->coords[%i] to %i\n",idim, elem->coords[idim]);
+  }
+  if constexpr(!T8_ELEMENT_NUM_EQUATIONS[eclass_T]){
+    return root_face;
+  }else{
+    t8_element_type_t<eclass_T> root_type = 0;
+    elem->type = root_type;
+    for (int ieq = 0; ieq < T8_ELEMENT_NUM_EQUATIONS[eclass_T]; ieq++){
+      int ifaceeq = t8_sele_lut_rootface_eq_to_faceeq<eclass_T>[root_face][ieq];
+      if(ifaceeq != -1){
+        elem->type[ieq] = face->type[ifaceeq];
+      }
+    }
+    /** Set those typebits, that are connected to the face_normaldim of root_face*/
+    for (int ieq = 0; ieq < T8_ELEMENT_NUM_EQUATIONS[eclass_T]; ieq++){
+      int facenormal_dim = t8_sele_lut_type_face_to_facenormal_dim<eclass_T>[root_type.to_ulong()][root_face];
+      if (t8_type_edge_equations<eclass_T>[ieq][0] == facenormal_dim){
+        elem->type[ieq] = !t8_sele_lut_type_face_to_is_1_boundary<eclass_T>[root_type.to_ulong()][root_face];
+      }else if (t8_type_edge_equations<eclass_T>[ieq][1] == facenormal_dim){
+        elem->type[ieq] = t8_sele_lut_type_face_to_is_1_boundary<eclass_T>[root_type.to_ulong()][root_face];
+      }
+    }
+    return t8_sele_lut_type_rootface_to_face<eclass_T>[elem->type.to_ulong()][root_face];
+  }
 }

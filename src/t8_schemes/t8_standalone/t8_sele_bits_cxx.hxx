@@ -75,6 +75,7 @@ template<t8_eclass_t eclass_T>
 void                t8_sele_children (const t8_standalone_element_t<eclass_T> *p,
                                           t8_standalone_element_t<eclass_T> **c);
 
+
 /** Given a pyramid and a face, compute all children touching this face
  * \param [in] p                  Input pyramid
  * \param [in] face               The face to compute the childran at
@@ -122,33 +123,6 @@ template<t8_eclass_t eclass_T>
 int                 t8_sele_get_face_corner (const t8_standalone_element_t<eclass_T> *pyra,
                                                  int face, int corner);
 
-/** Given a boundary element and a facenumber of this element, compute the boundary face
- * \param[in] p                   Input pyramid
- * \param[in] face                The face number of an element
- * \param[in, out] boundary       The boundary face
- */
-template<t8_eclass_t eclass_T>
-void                t8_sele_boundary_face (const t8_standalone_element_t<eclass_T> *p,
-                                               const int face,
-                                               t8_element_t *boundary);
-
-/** Given a boundary face inside the root pyramids's face construct
- *  the element inside the root pyramid that has the given face as a
- *  face.
- * \param [in] face     A face element.
- * \param [in,out] p    An allocated element. The entries will be filled with
- *                      the data of the element that has \a face as a face and
- *                      lies within the root tree.
- * \param [in] root_face The index of the face of the root tree in which \a face
- *                      lies.
- * \return              The face number of the face of \a p that coincides
- *                      with \a face.
- */
-template<t8_eclass_t eclass_T>
-int                 t8_sele_extrude_face (const t8_element_t *face,
-                                              t8_standalone_element_t<eclass_T> *p,
-                                              const int root_face);
-
 /** Compare two elements. returns negativ if p1 < p2, zero if p1 equals p2
  *  and positiv if p1 > p2.
  *  If p2 is a copy of p1 then the elements are equal.
@@ -177,17 +151,22 @@ int                 t8_sele_is_root_boundary (const t8_standalone_element_t<ecla
                                                   const int face);
 
 /** Compute the neighbor of p along a given face and the number of the dual face if
- * the neighbor is inside the root pyramid. Return 0 if the neighbor is not inside, 1 ow.
+ * the neighbor is inside the root pyramid.
  * \param[in] p                 Input pyramid
  * \param[in, out] neigh        The neighbor of \a p
  * \param[in] face              The face of \a p along which \a neigh is computed
  * \param [in, out] neigh_face  The dual face
  */
 template<t8_eclass_t eclass_T>
-int                 t8_sele_face_neighbor_inside (const t8_standalone_element_t<eclass_T> *p,
+int                 t8_sele_face_neighbor (const t8_standalone_element_t<eclass_T> *p,
                                                       t8_standalone_element_t<eclass_T> *neigh,
                                                       const int face,
                                                       int *neigh_face);
+
+template<t8_eclass_t eclass_T>
+void
+t8_sele_children_at_face(const t8_standalone_element_t<eclass_T> elem, int face, t8_standalone_element_t<eclass_T> **children, int num_children, int *child_indices);
+
 
 /** Compute the position of the ancestor of this child at level \a level within
  * its siblings.
@@ -343,8 +322,21 @@ int                 t8_sele_max_num_faces (const t8_standalone_element_t<eclass_
  * \return          the facenumber of the parent of \a elem matching \a face or -1
  */
 template<t8_eclass_t eclass_T>
-int                 t8_sele_face_parent_face (const t8_standalone_element_t<eclass_T> *elem,
-                                                  const int face);
+int t8_sele_face_parent_face(const t8_standalone_element_t<eclass_T> * elem, const int face);
+
+template<t8_eclass_t eclass_T>
+void t8_sele_transform_face(const t8_standalone_element_t<eclass_T> * elem1,
+                            t8_standalone_element_t<eclass_T> * elem2,
+                            int orientation, int sign, int smaller_faces);
+
+template<t8_eclass_t eclass_T, t8_eclass_t face_eclass_T>
+void t8_sele_boundary_face(const t8_standalone_element_t<eclass_T> * elem, const int face,
+                          t8_standalone_element_t<face_eclass_T>* boundary);
+
+template<t8_eclass_t eclass_T, t8_eclass_t face_eclass_T>
+int t8_sele_extrude_face(const t8_standalone_element_t<face_eclass_T> * face,
+                          t8_standalone_element_t<eclass_T>* elem, int root_face);
+
 
 /** Return the child-id of the ancestor of p at level level
  * \param [in] p    Input pyramid
