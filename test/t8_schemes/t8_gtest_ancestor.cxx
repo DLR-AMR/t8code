@@ -30,7 +30,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone_cxx.hxx>
-#include "integral_constant_typelist.hpp"
 
 /* *INDENT-OFF* */
 template <typename T>
