@@ -532,7 +532,7 @@ t8_cmesh_tree_vertices_negative_volume (t8_eclass_t eclass,
   sc_prod = t8_vec_dot (v_j, cross);
 
   T8_ASSERT (sc_prod != 0);
-  return eclass == T8_ECLASS_TET ? sc_prod > 0 : sc_prod < 0;
+  return sc_prod < 0;
 }
 
 #ifdef T8_ENABLE_DEBUG

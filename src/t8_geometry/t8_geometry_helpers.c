@@ -68,20 +68,10 @@ t8_geom_triangular_interpolation (const double *coefficients,
   double              temp[3] = { 0 };
 
   for (int i = 0; i < corner_value_dim; i++) {
-    temp[i] = (corner_values[corner_value_dim + i] -    /* (p2 - p1) * ref_coords */
-               corner_values[i]) * coefficients[0] + (interpolation_dim ==
-                                                      3
-                                                      ? (corner_values
-                                                         [3 *
-                                                          corner_value_dim +
-                                                          i] -
-                                                         corner_values[2 *
-                                                                       corner_value_dim
-                                                                       + i])
-                                                      * coefficients[1]
-                                                      : 0.)     /* (p4 - p3) * ref_coords */
-      +(corner_values[2 * corner_value_dim + i] - corner_values[corner_value_dim + i]) * coefficients[interpolation_dim - 1]    /* (p3 - p2) * ref_coords */
-      +corner_values[i];        /* p1 */
+    temp[i] = corner_values[i] /* p0 */
+    + (corner_values[1*corner_value_dim + i] - corner_values[i]) * coefficients[0] /* x = (p1 - p0) * ref_coords */
+    + (corner_values[2 * corner_value_dim + i] - corner_values[corner_value_dim + i]) * coefficients[1]  /* y = (p2 - p1) * ref_coords */
+    + (interpolation_dim == 3  ? (corner_values[3 *corner_value_dim +i] -corner_values[2 * corner_value_dim + i])* coefficients[2]: 0.);    /* if tet, z = (p3 - p2) */
     evaluated_function[i] = temp[i];
   }
 }
