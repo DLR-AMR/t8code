@@ -22,6 +22,7 @@
 
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
+#include <t8_schemes/t8_standalone/t8_standalone_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_ghost.h>
@@ -48,7 +49,7 @@ protected:
   void SetUp () override {
     cmesh_id = GetParam();
 
-    scheme = t8_scheme_new_default_cxx ();
+    scheme = t8_scheme_new_standalone_cxx ();
     /* Construct a cmesh */
     cmesh = t8_test_create_cmesh (cmesh_id);
   }

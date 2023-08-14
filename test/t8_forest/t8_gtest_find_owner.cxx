@@ -27,7 +27,7 @@
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_cxx.h>
 #include <t8_forest/t8_forest_types.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone_cxx.hxx>
 #include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_partition.h>
@@ -39,7 +39,7 @@ protected:
   void SetUp () override {
     eclass = GetParam();
 
-    default_scheme = t8_scheme_new_default_cxx ();
+    default_scheme = t8_scheme_new_standalone_cxx ();
     /* Construct a coarse mesh of one tree */
     cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
   }

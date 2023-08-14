@@ -35,6 +35,7 @@
 #include <t8_forest/t8_forest_cxx.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone_cxx.hxx>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
 
@@ -47,7 +48,7 @@ protected:
 
     t8_debugf ("\n\n\nTesting eclass %s with level %i",
                            t8_eclass_to_string[eclass],level);
-    default_scheme = t8_scheme_new_default_cxx ();
+    default_scheme = t8_scheme_new_standalone_cxx ();
       /* Construct a coarse mesh of one tree */
     cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
 

@@ -24,16 +24,28 @@
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone_cxx.hxx>
 
 /* This program tests the descendant function of an element. */
 
 /* *INDENT-OFF* */
-class class_schemes_descendant:public testing::TestWithParam <t8_eclass_t> {
+class class_schemes_descendant:public testing::TestWithParam < std::tuple<t8_eclass , int> > {
 protected:
   void SetUp () override {
-    eclass = GetParam ();
-
-    scheme = t8_scheme_new_default_cxx ();
+    auto params = GetParam();
+    eclass = std::get<0>(params);
+    int scheme_param = std::get<1>(params);
+    switch (scheme_param){
+      case 0:
+        scheme = t8_scheme_new_default_cxx();
+        break;
+      case 1:
+        scheme = t8_scheme_new_standalone_cxx();
+        break;
+      default:
+        SC_ABORT("wrong scheme parameter!\n");
+    }
+    t8_debugf("Creating scheme for eclass %i, schemepara: %i\n",eclass, scheme_param);
     ts = scheme->eclass_schemes[eclass];
     ts->t8_element_new (1, &elem);
     ts->t8_element_new (1, &desc);
@@ -157,6 +169,6 @@ TEST_P(class_schemes_descendant, test_recursive_descendant){
     t8_large_step_descendant (elem, desc, test, ts, maxlvl);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_descendant, class_schemes_descendant,
-                        testing::Range(T8_ECLASS_ZERO, T8_ECLASS_COUNT));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_descendant, class_schemes_descendant,testing::Combine(
+                        testing::Range(T8_ECLASS_ZERO, T8_ECLASS_COUNT), testing::Range(0,2)));
 /* *INDENT-ON* */

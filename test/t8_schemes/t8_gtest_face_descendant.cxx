@@ -24,6 +24,7 @@
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone_cxx.hxx>
 
 /*TODO: Delete GTEST_SKIP in TEST_P t8_check_face_desc if t8_prism_children_at_face is fixed. */
 
@@ -33,7 +34,7 @@ protected:
   void SetUp () override {
     eclass = GetParam();
 
-    scheme = t8_scheme_new_default_cxx ();
+    scheme = t8_scheme_new_standalone_cxx ();
     /* Get scheme for eclass */
     ts = scheme->eclass_schemes[eclass];
   }
@@ -62,12 +63,15 @@ t8_face_descendant_test_child (t8_element_t *face_desc,
   t8_element_t      **children = T8_ALLOC (t8_element_t *, num_children);
   ts->t8_element_new (num_children, children);
 
+
   ts->t8_element_copy (elem, face_desc);
   for (int klevel = level_elem; klevel < ilevel; klevel++) {
     /* Compute child_id of the test_child_id-th child. */
+    ASSERT_EQ(ts->t8_element_num_face_children(face_desc,face), num_children);
     ts->t8_element_children_at_face (face_desc, face, children, num_children,
                                      child_indices);
     int                 child_id = child_indices[test_child_id];
+
 
     ts->t8_element_child (face_desc, child_id, face_desc);
   }
@@ -163,9 +167,6 @@ TEST_P (class_descendant, t8_check_face_desc)
 #else
   const int           maxlvl = 4;
 #endif
-  if ((int) eclass == (int) T8_ECLASS_PRISM) {
-    GTEST_SKIP ();
-  }
   t8_element_t       *element;
   t8_element_t       *child;
   t8_element_t       *test;

@@ -26,6 +26,7 @@
 
 #include <gtest/gtest.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone_cxx.hxx>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
@@ -39,7 +40,7 @@ TEST (user_data, test_user_data)
   /* Build a forest */
   t8_cmesh_t          cmesh =
     t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, 0, 0, 0);
-  t8_scheme_cxx_t    *scheme = t8_scheme_new_default_cxx ();
+  t8_scheme_cxx_t    *scheme = t8_scheme_new_standalone_cxx ();
   t8_forest_t         forest =
     t8_forest_new_uniform (cmesh, scheme, 1, 0, sc_MPI_COMM_WORLD);
   /* Define user data */

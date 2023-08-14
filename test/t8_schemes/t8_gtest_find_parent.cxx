@@ -23,6 +23,7 @@
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone_cxx.hxx>
 
 /* *INDENT-OFF* */
 class class_find_parent:public testing::TestWithParam <t8_eclass_t > {
@@ -30,7 +31,7 @@ protected:
   void SetUp () override {
     eclass = GetParam();
 
-    scheme = t8_scheme_new_default_cxx ();
+    scheme = t8_scheme_new_standalone_cxx ();
     /* Get scheme for eclass */
     ts = scheme->eclass_schemes[eclass];
 
