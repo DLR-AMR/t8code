@@ -40,7 +40,6 @@
 #include <gp_Pnt.hxx>
 #include <TColgp_Array1OfPnt.hxx>
 #include <TColgp_Array2OfPnt.hxx>
-#include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepPrimAPI_MakePrism.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
