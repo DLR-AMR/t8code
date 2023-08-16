@@ -286,6 +286,15 @@ t8_forest_balance (t8_forest_t forest, int repartition)
   t8_forest_copy_trees (forest, forest_temp, 1);
   /* TODO: Also copy ghost elements if ghost creation is set */
 
+  /* t8_forest_copy_trees computes copies first/last descendant, but this is computed again outside */
+  int number_of_trees = forest->trees->elem_count;
+  for (int jt = 0; jt < number_of_trees; jt++) {
+    t8_tree_t tree = (t8_tree_t) t8_sc_array_index_locidx (forest->trees, jt);
+    t8_eclass_scheme_c *eclass_scheme = forest->scheme_cxx->eclass_schemes[tree->eclass];
+    eclass_scheme->t8_element_destroy(1,&tree->first_desc);
+    eclass_scheme->t8_element_destroy(1,&tree->last_desc);
+  }
+
   t8_log_indent_pop ();
   t8_global_productionf
     ("Done t8_forest_balance with %lli global elements.\n",
