@@ -471,6 +471,7 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
           else {
             /* elem_old got removed */
             el_removed = 1;
+            ts->t8_element_destroy (1, &elem_parent);
           }
         }
         else if (level_old > level_new) {
@@ -521,6 +522,7 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
           else {
             /* elem_old got removed */
             el_removed = 1;
+            ts->t8_element_destroy (1, &elem_parent);
           }
         }
         else {

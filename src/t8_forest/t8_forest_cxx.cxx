@@ -1452,7 +1452,7 @@ t8_forest_compute_desc (t8_forest_t forest)
       T8_ASSERT (forest->incomplete_trees);
       itree->first_desc = NULL;
       itree->last_desc = NULL;
-      break;
+      continue;
     }
     /* get the eclass scheme associated to tree */
     ts = forest->scheme_cxx->eclass_schemes[itree->eclass];
@@ -1763,11 +1763,6 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
     if (copy_elements) {
       t8_element_array_copy (&tree->elements, &fromtree->elements);
       tree->elements_offset = fromtree->elements_offset;
-      /* Copy the first and last descendant */
-      eclass_scheme->t8_element_new (1, &tree->first_desc);
-      eclass_scheme->t8_element_copy (fromtree->first_desc, tree->first_desc);
-      eclass_scheme->t8_element_new (1, &tree->last_desc);
-      eclass_scheme->t8_element_copy (fromtree->last_desc, tree->last_desc);
     }
     else {
       t8_element_array_truncate (&tree->elements);
@@ -3013,8 +3008,6 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest,
                                                   lower_bound, upper_bound,
                                                   first_desc, last_desc);
     }
-    ts->t8_element_destroy (1, &first_face_desc);
-    ts->t8_element_destroy (1, &last_face_desc);
     ts->t8_element_destroy (num_children, face_children);
     T8_FREE (face_children);
   }

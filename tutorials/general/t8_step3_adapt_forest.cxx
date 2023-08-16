@@ -142,7 +142,7 @@ t8_step3_adapt_forest (t8_forest_t forest)
   };
 
   t8_forest_init (&forest_adapt);
-  t8_forest_set_adapt (forest_adapt, NULL, t8_step3_adapt_callback, 0);
+  t8_forest_set_adapt (forest_adapt, forest, t8_step3_adapt_callback, 0);
   t8_forest_set_ghost (forest_adapt, 1, T8_GHOST_FACES);
   t8_forest_set_balance (forest_adapt, forest, 1);
   t8_forest_set_user_data (forest_adapt, &adapt_data);
