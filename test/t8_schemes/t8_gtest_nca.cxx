@@ -315,9 +315,9 @@ TEST_P (nca, recursive_check_higher_level)
       }
     }
     else {
-  ts->t8_element_destroy (1, &parent_a);
-  ts->t8_element_destroy (1, &parent_b);
-  ts->t8_element_destroy (1, &correct_nca_high_level);
+      ts->t8_element_destroy (1, &parent_a);
+      ts->t8_element_destroy (1, &parent_b);
+      ts->t8_element_destroy (1, &correct_nca_high_level);
       GTEST_SKIP ();
     }
   }

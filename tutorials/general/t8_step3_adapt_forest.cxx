@@ -147,8 +147,9 @@ t8_step3_adapt_forest (t8_forest_t forest)
   t8_forest_set_balance (forest_adapt, forest, 1);
   t8_forest_set_user_data (forest_adapt, &adapt_data);
   t8_forest_commit (forest_adapt);
-    return forest_adapt;
+  return forest_adapt;
 }
+
 /* Print the local and global number of elements of a forest. */
 void
 t8_step3_print_forest_information (t8_forest_t forest)
@@ -233,12 +234,11 @@ t8_step3_main (int argc, char **argv)
    * forest will take ownership of the old forest and destroy it.
    * Note that the adapted forest is a new forest, though. */
 
-  memory_usage(1);
-  for (int i= 0; i<1000; i++){
+  memory_usage (1);
+  for (int i = 0; i < 1000; i++) {
     forest = t8_step3_adapt_forest (forest);
-    memory_usage(1);
+    memory_usage (1);
   }
-
 
   /*
    *  Output.
