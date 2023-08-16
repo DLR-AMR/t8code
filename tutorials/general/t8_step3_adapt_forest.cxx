@@ -58,6 +58,7 @@
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>     /* default refinement scheme. */
 #include <t8_vec.h>             /* Basic operations on 3D vectors. */
 #include <tutorials/general/t8_step3.h>
+#include "memory_usage.h"
 
 T8_EXTERN_C_BEGIN ();
 
@@ -93,6 +94,7 @@ t8_step3_adapt_callback (t8_forest_t forest,
                          const int is_family,
                          const int num_elements, t8_element_t *elements[])
 {
+  return 0;
   /* Our adaptation criterion is to look at the midpoint coordinates of the current element and if
    * they are inside a sphere around a given midpoint we refine, if they are outside, we coarsen. */
   double              centroid[3];      /* Will hold the element midpoint. */
@@ -128,38 +130,25 @@ t8_step3_adapt_callback (t8_forest_t forest,
   return 0;
 }
 
-/* Adapt a forest according to our t8_step3_adapt_callback function.
- * This will create a new forest and return it. */
 t8_forest_t
 t8_step3_adapt_forest (t8_forest_t forest)
 {
   t8_forest_t         forest_adapt;
+
   struct t8_step3_adapt_data adapt_data = {
     {0.5, 0.5, 1},              /* Midpoints of the sphere. */
     0.2,                        /* Refine if inside this radius. */
     0.4                         /* Coarsen if outside this radius. */
   };
 
-  /* Check that forest is a committed, that is valid and usable, forest. */
-  T8_ASSERT (t8_forest_is_committed (forest));
-
-  /* Create a new forest that is adapted from \a forest with our adaptation callback.
-   * We provide the adapt_data as user data that is stored as the used_data pointer of the
-   * new forest (see also t8_forest_set_user_data).
-   * The 0, 0 arguments are flags that control
-   *   recursive  -    If non-zero adaptation is recursive, thus if an element is adapted the children
-   *                   or parents are plugged into the callback again recursively until the forest does not
-   *                   change any more. If you use this you should ensure that refinement will stop eventually.
-   *                   One way is to check the element's level against a given maximum level.
-   *   do_face_ghost - If non-zero additionally a layer of ghost elements is created for the forest.
-   *                   We will discuss ghost in later steps of the tutorial.
-   */
-  forest_adapt =
-    t8_forest_new_adapt (forest, t8_step3_adapt_callback, 0, 0, &adapt_data);
-
-  return forest_adapt;
+  t8_forest_init (&forest_adapt);
+  t8_forest_set_adapt (forest_adapt, NULL, t8_step3_adapt_callback, 0);
+  t8_forest_set_ghost (forest_adapt, 1, T8_GHOST_FACES);
+  t8_forest_set_balance (forest_adapt, forest, 1);
+  t8_forest_set_user_data (forest_adapt, &adapt_data);
+  t8_forest_commit (forest_adapt);
+    return forest_adapt;
 }
-
 /* Print the local and global number of elements of a forest. */
 void
 t8_step3_print_forest_information (t8_forest_t forest)
@@ -201,7 +190,7 @@ t8_step3_main (int argc, char **argv)
   /* Initialize the sc library, has to happen before we initialize t8code. */
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
-  t8_init (SC_LP_PRODUCTION);
+  t8_init (SC_LP_ESSENTIAL);
 
   /* Print a message on the root process. */
   t8_global_productionf (" [step3] \n");
@@ -243,7 +232,13 @@ t8_step3_main (int argc, char **argv)
   /* Adapt the forest. We can reuse the forest variable, since the new adapted
    * forest will take ownership of the old forest and destroy it.
    * Note that the adapted forest is a new forest, though. */
-  forest = t8_step3_adapt_forest (forest);
+
+  memory_usage(1);
+  for (int i= 0; i<1000; i++){
+    forest = t8_step3_adapt_forest (forest);
+    memory_usage(1);
+  }
+
 
   /*
    *  Output.
