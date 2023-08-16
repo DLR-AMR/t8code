@@ -159,6 +159,7 @@ t8_forest_partition_test_desc (t8_forest_t forest)
     T8_ASSERT (ts->t8_element_get_linear_id (elem_desc, level) >=
                first_desc_id);
   }
+  ts->t8_element_destroy (1, &elem_desc);
 }
 #endif
 

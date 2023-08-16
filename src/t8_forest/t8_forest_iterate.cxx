@@ -375,6 +375,7 @@ t8_forest_search_tree (t8_forest_t forest, t8_locidx_t ltreeid,
   if (queries != NULL) {
     sc_array_destroy (active_queries);
   }
+  ts->t8_element_destroy (1, &nca);
 }
 
 void
