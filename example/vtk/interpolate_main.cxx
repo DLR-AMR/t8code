@@ -122,9 +122,6 @@ t8_itertate_replace_pointids (t8_forest_t forest_old,
     const int           num_outgoing_points = elem_point_out->num_points;
     const int           offset_outgoing = elem_point_out->offset;
 
-    t8_debugf ("[D] offset: %i, num_outgoing points: %i\n", offset_outgoing,
-               num_outgoing_points);
-
     /* Fill the array with the point_ids of elem_out.
      * we pop the id from the list as soon as it is insed of ielem_in */
     sc_array_t         *point_indices =
@@ -135,7 +132,6 @@ t8_itertate_replace_pointids (t8_forest_t forest_old,
                                         t8_shmem_array_index
                                         (inter->GetPointIDs (),
                                          ipoint + offset_outgoing));
-      t8_debugf ("[D] point_id: %i\n", ipoint_id);
       int                *point_id =
         (int *) sc_array_index_int (point_indices, ipoint);
 
@@ -144,7 +140,6 @@ t8_itertate_replace_pointids (t8_forest_t forest_old,
 
     for (int ipoint = 0; ipoint < num_outgoing_points; ipoint++) {
       /* Ensures that no points is associated twice. */
-      t8_debugf ("[D] check %i elems\n", num_incoming);
       const int           ipoint_id = *((int *) sc_array_pop (point_indices));
       for (t8_locidx_t ielem = 0; ielem < num_incoming; ielem++) {
         t8_element_t       *elem =
@@ -164,10 +159,6 @@ t8_itertate_replace_pointids (t8_forest_t forest_old,
           *new_point_id = ipoint_id;
           ielem_point_in->num_points++;
           break;
-        }
-        else {
-          t8_debugf ("[D] point not inside tree %i, elem %i\n", which_tree,
-                     first_incoming + ielem);
         }
       }
     }
@@ -205,15 +196,6 @@ t8_itertate_replace_pointids (t8_forest_t forest_old,
       memcpy (new_elems, current_ids,
               sizeof (int) * elem_point_out->num_points);
     }
-  }
-  t8_debugf ("[D] iterate replace result:\n");
-  for (int ielem = 0; ielem < num_incoming; ielem++) {
-    element_point_t    *ielem_point_in =
-      inter->get_element_point (inter->GetElementPointsAdapt (),
-                                first_incoming_data + ielem);
-    t8_debugf ("[D] elem: %i, num_points: %i, offset: %i\n",
-               first_incoming_data + ielem, ielem_point_in->num_points,
-               ielem_point_in->offset);
   }
 }
 
@@ -265,7 +247,8 @@ main (int argc, char **argv)
 
   vtkSmartPointer < vtkDataSet >vtk_grid = t8_vtk_reader
     //("/group/HPC/Projects/visplore/Examples/GAIA/gaia-parallel_0.pvtu",
-    ("/localdata1/knap_da/projects/t8code/t8code/test/testfiles/test_vtk_tri.vtu", 1, 0, comm, VTK_UNSTRUCTURED_FILE);
+    ("/localdata1/knap_da/projects/t8code/t8code/test/testfiles/test_vtk_tri.vtu",
+     1, 0, comm, VTK_UNSTRUCTURED_FILE);
   t8_debugf ("[D] read successful\n");
   t8_pipeline (vtk_grid, comm);
   sc_finalize ();

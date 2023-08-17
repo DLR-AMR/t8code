@@ -377,11 +377,9 @@ MeshAdapter::MeshAdapter (vtkSmartPointer < vtkDataSet >input,
 
     if (mpisize > 0) {
       t8_shmem_array_t    offsets;      /* Offsets of the point-ids */
-      t8_shmem_array_init (&offsets, sizeof (int), mpisize, comm);
-
+      t8_shmem_array_init (&offsets, sizeof (int), mpisize + 1, comm);
       t8_shmem_array_prefix (&points_inside, offsets, 1, sc_MPI_INT,
                              sc_MPI_SUM, comm);
-
       first_elem->offset = *(int *) t8_shmem_array_index (offsets, mpirank);
       t8_shmem_array_destroy (&offsets);
     }
@@ -488,8 +486,6 @@ MeshAdapter::SetElements ()
         *(get_element_point_offset (element_points, ielem));
       const int           num_points =
         *(get_element_num_points (element_points, ielem));
-      t8_debugf ("[D] ielem: %i, offset: %i, num_points: %i\n", ielem, offset,
-                 num_points);
       for (int ipoint = offset; ipoint < offset + num_points; ipoint++) {
         const int           ipoint_id =
           *((int *) t8_shmem_array_index (point_ids, ipoint));
@@ -570,12 +566,6 @@ MeshAdapter::Adapt (t8_forest_adapt_t adaptCallback,
       points_per_element[ielem]->elem_count;
     memcpy (&set_point_ids[dest], points_per_element[ielem]->array,
             num_points_per_elem * sizeof (int));
-    t8_debugf ("[D] elem %i\n", ielem);
-    for (int iid = 0; iid < num_points_per_elem; iid++) {
-      t8_debugf ("[D] point-id: %i\n",
-                 *(int *) sc_array_index_int (points_per_element[ielem],
-                                              iid));
-    }
     dest += num_points_per_elem;
   }
 
