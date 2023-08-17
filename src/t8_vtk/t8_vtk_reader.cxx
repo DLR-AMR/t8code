@@ -35,6 +35,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <vtkUnstructuredGrid.h>
 #include <vtkUnstructuredGridReader.h>
 #include <vtkXMLUnstructuredGridReader.h>
+#include <vtkXMLPUnstructuredGridReader.h>
+#include <vtkXMLPPolyDataReader.h>
 #include <vtkPolyData.h>
 #include <vtkBYUReader.h>
 #include <vtkOBJReader.h>
@@ -111,7 +113,7 @@ t8_cmesh_correct_volume (double *tree_vertices, t8_eclass_t eclass)
 
 vtk_read_success_t
 t8_file_to_vtkGrid (const char *filename,
-                    vtkSmartPointer < vtkDataSet > vtkGrid,
+                    vtkSmartPointer < vtkDataSet >vtkGrid,
                     const int partition, const int main_proc,
                     sc_MPI_Comm comm, const vtk_file_type_t vtk_file_type)
 {
@@ -137,7 +139,7 @@ t8_file_to_vtkGrid (const char *filename,
       main_proc_read_successful = t8_read_unstructured (filename, vtkGrid);
       break;
     case VTK_POLYDATA_FILE:
-      main_proc_read_successful = t8_read_poly (filename, vtkGrid);
+      main_proc_read_successful = t8_read_polyData (filename, vtkGrid);
       break;
     case VTK_PARALLEL_UNSTRUCTURED_FILE:
       if (!partition) {
@@ -145,7 +147,17 @@ t8_file_to_vtkGrid (const char *filename,
       }
       else {
         main_proc_read_successful =
-          t8_read_parallel (filename, vtkGrid, comm);
+          t8_read_parallel_unstructured (filename, vtkGrid, comm);
+        break;
+      }
+      break;
+    case VTK_PARALLEL_POLYDATA_FILE:
+      if (!partition) {
+        main_proc_read_successful = t8_read_polyData (filename, vtkGrid);
+      }
+      else {
+        main_proc_read_successful =
+          t8_read_parallel_polyData (filename, vtkGrid, comm);
         break;
       }
       break;
@@ -183,13 +195,13 @@ t8_file_to_vtkGrid (const char *filename,
  * \return The dimension of \a vtkGrid. 
  */
 int
-t8_get_dimension (vtkSmartPointer < vtkDataSet > vtkGrid)
+t8_get_dimension (vtkSmartPointer < vtkDataSet >vtkGrid)
 {
   /* This array contains the type of each cell */
-  vtkSmartPointer < vtkCellTypes > cell_type_of_each_cell =
+  vtkSmartPointer < vtkCellTypes >cell_type_of_each_cell =
     vtkSmartPointer < vtkCellTypes >::New ();
   vtkGrid->GetCellTypes (cell_type_of_each_cell);
-  vtkSmartPointer < vtkUnsignedCharArray > cell_types =
+  vtkSmartPointer < vtkUnsignedCharArray >cell_types =
     cell_type_of_each_cell->GetCellTypesArray ();
   int                 max_cell_type = -1;
   const vtkIdType     num_types = cell_types->GetNumberOfTuples ();
@@ -214,15 +226,15 @@ t8_get_dimension (vtkSmartPointer < vtkDataSet > vtkGrid)
  * the vtkGrid. Each cell in the vtkDataSet becomes a tree in the cmesh. This 
  * function constructs a cmesh on a single process. 
  * 
- * \param[in] vtkGrid The vtkGrid that gets translated
- * \param[in, out] cmesh   An empty cmesh that is filled with the data.
+ * \param[in] vtkGrid       The vtkGrid that gets translated
+ * \param[in, out] cmesh    An empty cmesh that is filled with the data. 
  * \param[in] first_tree    The global id of the first tree. Will be the global id of the first tree on this proc. 
  * \param[in] comm        A communicator. 
  * \return  The number of elements that have been read by the process.
  */
 
 static void
-t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > vtkGrid,
+t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet >vtkGrid,
                       t8_cmesh_t cmesh,
                       const t8_gloidx_t first_tree, sc_MPI_Comm comm)
 {
@@ -231,8 +243,8 @@ t8_vtk_iterate_cells (vtkSmartPointer < vtkDataSet > vtkGrid,
   t8_gloidx_t         tree_id = first_tree;
 
   vtkCellIterator    *cell_it;
-  vtkSmartPointer < vtkPoints > points;
-  vtkSmartPointer < vtkCellData > cell_data = vtkGrid->GetCellData ();
+  vtkSmartPointer < vtkPoints >points;
+  vtkSmartPointer < vtkCellData >cell_data = vtkGrid->GetCellData ();
   const int           max_cell_points = vtkGrid->GetMaxCellSize ();
 
   T8_ASSERT (max_cell_points >= 0);
@@ -351,7 +363,7 @@ t8_vtk_partition (t8_cmesh_t cmesh, const int mpirank,
 }
 
 t8_cmesh_t
-t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet > vtkGrid,
+t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet >vtkGrid,
                      const int partition, const int main_proc,
                      const int distributed_grid, sc_MPI_Comm comm)
 {
@@ -412,15 +424,14 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer < vtkDataSet > vtkGrid,
 }
 
 vtkSmartPointer < vtkPointSet >
-t8_vtkGrid_to_vtkPointSet (vtkSmartPointer < vtkDataSet > vtkGrid)
+t8_vtkGrid_to_vtkPointSet (vtkSmartPointer < vtkDataSet >vtkGrid)
 {
   /* Set points */
   if (vtkGrid == NULL) {
     t8_debugf ("[D] Empty vtkGrid on this proc\n");
     return NULL;
   }
-  vtkSmartPointer < vtkPoints > points =
-    vtkSmartPointer < vtkPoints >::New ();
+  vtkSmartPointer < vtkPoints >points = vtkSmartPointer < vtkPoints >::New ();
   const vtkIdType     num_points = vtkGrid->GetNumberOfPoints ();
   points->SetDataType (VTK_DOUBLE);
   points->SetNumberOfPoints (num_points);
@@ -432,12 +443,12 @@ t8_vtkGrid_to_vtkPointSet (vtkSmartPointer < vtkDataSet > vtkGrid)
   }
   points->Modified ();
   T8_ASSERT (points->GetNumberOfPoints () == num_points);
-  vtkSmartPointer < vtkPointSet > cloud =
+  vtkSmartPointer < vtkPointSet >cloud =
     vtkSmartPointer < vtkPointSet >::New ();
   cloud->SetPoints (points);
 
   /* Map cell data to point data */
-  vtkSmartPointer < vtkCellDataToPointData > c2p =
+  vtkSmartPointer < vtkCellDataToPointData >c2p =
     vtkCellDataToPointData::New ();
   c2p->PassCellDataOff ();
   c2p->SetInputData (vtkGrid);
@@ -465,7 +476,7 @@ t8_vtk_reader (const char *filename, const int partition,
   T8_ASSERT (filename != NULL);
   vtk_read_success_t  main_proc_read_successful = read_failure;
 
-  vtkSmartPointer < vtkDataSet > vtkGrid = NULL;
+  vtkSmartPointer < vtkDataSet >vtkGrid = NULL;
   switch (vtk_file_type) {
   case VTK_UNSTRUCTURED_FILE:
     vtkGrid = vtkSmartPointer < vtkUnstructuredGrid >::New ();
@@ -475,6 +486,9 @@ t8_vtk_reader (const char *filename, const int partition,
     break;
   case VTK_PARALLEL_UNSTRUCTURED_FILE:
     vtkGrid = vtkSmartPointer < vtkUnstructuredGrid >::New ();
+    break;
+  case VTK_PARALLEL_POLYDATA_FILE:
+    vtkGrid = vtkSmartPointer < vtkPolyData >::New ();
     break;
   default:
     t8_errorf ("Filetype is not supported.\n");
@@ -504,7 +518,7 @@ t8_vtk_reader_pointSet (const char *filename,
                         sc_MPI_Comm comm, const vtk_file_type_t vtk_file_type)
 {
 #if T8_WITH_VTK
-  vtkSmartPointer < vtkDataSet > vtkGrid =
+  vtkSmartPointer < vtkDataSet >vtkGrid =
     t8_vtk_reader (filename, partition, main_proc, comm, vtk_file_type);
   return t8_vtkGrid_to_vtkPointSet (vtkGrid);
 #else
@@ -523,7 +537,7 @@ t8_vtk_reader_cmesh (const char *filename, const int partition,
                      const vtk_file_type_t vtk_file_type)
 {
 #if T8_WITH_VTK
-  vtkSmartPointer < vtkDataSet > vtkGrid =
+  vtkSmartPointer < vtkDataSet >vtkGrid =
     t8_vtk_reader (filename, partition, main_proc, comm, vtk_file_type);
   if (vtkGrid != NULL) {
     const int           distributed_grid =

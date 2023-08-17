@@ -165,9 +165,9 @@ main (int argc, char **argv)
                        "If set, partition the cmesh uniformly.");
   sc_options_add_int (opt, 't', "type_of_file", &vtk_file_type_int, -1,
                       "Set the type of the data in the file.\n"
-                      "\t\t\t\t\t0 for vtkUnstructuredGrid \n"
-                      "\t\t\t\t\t1 for vtkPolyData\n"
-                      "\t\t\t\t\t2 for pvtu.");
+                      "\t\t\t\t\t0 for vtkUnstructuredGrid,\n"
+                      "\t\t\t\t\t1 for vtkPolyData,\n"
+                      "\t\t\t\t\t2 for pvtu,\n" "\t\t\t\t\t3 for pvtp.");
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
 
@@ -188,6 +188,9 @@ main (int argc, char **argv)
       break;
     case 2:
       vtk_file_type = VTK_PARALLEL_UNSTRUCTURED_FILE;
+      break;
+    case 3:
+      vtk_file_type = VTK_PARALLEL_POLYDATA_FILE;
       break;
     default:
       vtk_file_type = VTK_FILE_ERROR;

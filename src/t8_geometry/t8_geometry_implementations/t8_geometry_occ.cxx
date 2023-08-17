@@ -1124,8 +1124,8 @@ int
 t8_geometry_occ::t8_geom_get_common_edge (const int vertex1_index, 
                                           const int vertex2_index) const
 {
-  auto collection1 = occ_shape_vertex2edge_map.FindFromIndex(vertex1_index);
-  auto collection2 = occ_shape_vertex2edge_map.FindFromIndex(vertex2_index);
+  const TopTools_ListOfShape collection1 = occ_shape_vertex2edge_map.FindFromIndex(vertex1_index);
+  const TopTools_ListOfShape collection2 = occ_shape_vertex2edge_map.FindFromIndex(vertex2_index);
 
   for (auto edge1 = collection1.begin(); edge1 != collection1.end(); ++edge1)
   {
@@ -1144,8 +1144,8 @@ int
 t8_geometry_occ::t8_geom_get_common_face (const int edge1_index, 
                                           const int edge2_index) const
 {
-  auto collection1 = occ_shape_edge2face_map.FindFromIndex(edge1_index);
-  auto collection2 = occ_shape_edge2face_map.FindFromIndex(edge2_index);
+  const TopTools_ListOfShape collection1 = occ_shape_edge2face_map.FindFromIndex(edge1_index);
+  const TopTools_ListOfShape collection2 = occ_shape_edge2face_map.FindFromIndex(edge2_index);
 
   for (auto face1 = collection1.begin(); face1 != collection1.end(); ++face1)
   {
@@ -1164,7 +1164,7 @@ int
 t8_geometry_occ::t8_geom_is_vertex_on_edge (const int vertex_index, 
                                             const int edge_index) const
 {
-  auto collection = occ_shape_vertex2edge_map.FindFromIndex(vertex_index);
+  const TopTools_ListOfShape collection = occ_shape_vertex2edge_map.FindFromIndex(vertex_index);
   return collection.Contains(occ_shape_edge_map.FindKey(edge_index));
 }
 
@@ -1172,7 +1172,7 @@ int
 t8_geometry_occ::t8_geom_is_edge_on_face (const int edge_index, 
                                           const int face_index) const
 {
-  auto collection = occ_shape_edge2face_map.FindFromIndex(edge_index);
+  const TopTools_ListOfShape collection = occ_shape_edge2face_map.FindFromIndex(edge_index);
   return collection.Contains(occ_shape_face_map.FindKey(face_index));
 }
 
@@ -1180,10 +1180,10 @@ int
 t8_geometry_occ::t8_geom_is_vertex_on_face (const int vertex_index, 
                                             const int face_index) const
 {
-  auto edge_collection = occ_shape_vertex2edge_map.FindFromIndex(vertex_index);
+  const TopTools_ListOfShape edge_collection = occ_shape_vertex2edge_map.FindFromIndex(vertex_index);
   for (auto edge = edge_collection.begin(); edge != edge_collection.end(); ++edge)
   {
-    auto face_collection = occ_shape_edge2face_map.FindFromKey(*edge);
+    const TopTools_ListOfShape face_collection = occ_shape_edge2face_map.FindFromKey(*edge);
     if (face_collection.Contains(occ_shape_face_map.FindKey(face_index)))
     {
       return 1;

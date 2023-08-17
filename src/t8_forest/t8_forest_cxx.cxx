@@ -2012,6 +2012,8 @@ t8_forest_element_face_neighbor (t8_forest_t forest,
       neighbor_scheme->t8_element_extrude_face (face_element,
                                                 boundary_scheme, neigh,
                                                 tree_neigh_face);
+    /* Free the face_element */
+    boundary_scheme->t8_element_destroy (1, &face_element);
 
     return global_neigh_id;
   }

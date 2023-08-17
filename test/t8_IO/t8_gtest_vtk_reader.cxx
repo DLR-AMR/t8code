@@ -45,6 +45,8 @@ class vtk_reader : public testing::TestWithParam<std::tuple<int, int, int>>{
     void SetUp() override{
       int mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
       SC_CHECK_MPI (mpiret);
+      mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
+      SC_CHECK_MPI (mpiret);
       if (mpisize > T8_VTK_TEST_NUM_PROCS) {
         GTEST_SKIP ();
       } 
@@ -52,15 +54,15 @@ class vtk_reader : public testing::TestWithParam<std::tuple<int, int, int>>{
       file_type = gtest_vtk_filetypes[file];
       partition = std::get<1>(GetParam());
       main_proc = std::get<2>(GetParam());
-      if((file_type & VTK_PARALLEL_POLYDATA_FILE )&& partition){
-        GTEST_SKIP();
-      }
+      distributed = (file_type & VTK_PARALLEL_FILE) && partition;
     }
     int file;
     vtk_file_type_t file_type;
     int partition;
+    int distributed; 
     int main_proc;
     int mpisize;
+    int mpirank;
     const char* failing_files[5] = {
       "no_file",
       "non-existing-file.vtu",
@@ -68,14 +70,15 @@ class vtk_reader : public testing::TestWithParam<std::tuple<int, int, int>>{
       "non-existing-file.pvtu",
       "non-existing-file.pvtp"
     };
-    const char* test_files[4] = {
+    const char* test_files[5] = {
       "no_file",
       "test/testfiles/test_vtk_tri.vtu",
       "test/testfiles/test_vtk_cube.vtp",
-      "test/testfiles/test_parallel_file.pvtu"
+      "test/testfiles/test_parallel_file.pvtu",
+      "test/testfiles/test_polydata.pvtp"
     };
-    const int num_points[4] = {0, 121, 24, 6144};
-    const int num_trees[4] = {0, 200, 12, 1024};
+    const int num_points[5] = {0, 121, 24, 6144, 900};
+    const int num_trees[5] = {0, 200, 12, 1024, 1680};
 };
 /* *INDENT-ON* */
 
@@ -95,10 +98,6 @@ TEST_P (vtk_reader, vtk_to_cmesh_fail)
 TEST_P (vtk_reader, vtk_to_cmesh_success)
 {
 #if T8_WITH_VTK
-  /*TODO: Implement reader for parallel polydata. Delete this if-block */
-  if (file_type == VTK_PARALLEL_POLYDATA_FILE) {
-    GTEST_SKIP ();
-  }
   int                 mpirank;
   int                 mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
@@ -107,15 +106,20 @@ TEST_P (vtk_reader, vtk_to_cmesh_success)
                          sc_MPI_COMM_WORLD,
                          file_type);
   if (file_type != VTK_FILE_ERROR) {
-    if (!partition || main_proc == mpirank) {
-      EXPECT_FALSE (cmesh == NULL);
-      if (file_type == VTK_PARALLEL_UNSTRUCTURED_FILE && partition) {
-        t8_gloidx_t         local_num_trees =
-          t8_cmesh_get_num_local_trees (cmesh);
-        EXPECT_EQ (num_trees[file] / mpisize, local_num_trees);
+    EXPECT_FALSE (cmesh == NULL);
+    const int           test_num_trees = t8_cmesh_get_num_local_trees (cmesh);
+    if (distributed) {
+      /* In this testcase the cmesh should be distributed equally. */
+      EXPECT_EQ (num_trees[file] / mpisize, test_num_trees);
+    }
+    else {
+      if (!partition || main_proc == mpirank) {
+        /* The proc has the complete cmesh */
+        EXPECT_EQ (num_trees[file], test_num_trees);
       }
       else {
-        EXPECT_EQ (num_trees[file], t8_cmesh_get_num_local_trees (cmesh));
+        /* Every other proc should be empty. */
+        EXPECT_EQ (0, test_num_trees);
       }
     }
     t8_cmesh_destroy (&cmesh);
@@ -131,16 +135,25 @@ TEST_P (vtk_reader, vtk_to_cmesh_success)
 TEST_P (vtk_reader, vtk_to_pointSet)
 {
 #if T8_WITH_VTK
-  /*TODO: Implement reader for parallel polydata. Delete this if-block */
-  if (file_type == VTK_PARALLEL_POLYDATA_FILE) {
-    GTEST_SKIP ();
-  }
   if (file_type != VTK_FILE_ERROR) {
-    vtkSmartPointer < vtkPointSet > points =
-      t8_vtk_reader_pointSet (test_files[file], 0, 0,
+    vtkSmartPointer < vtkPointSet >points =
+      t8_vtk_reader_pointSet (test_files[file], partition, main_proc,
                               sc_MPI_COMM_WORLD, file_type);
     int                 test_points = points->GetNumberOfPoints ();
-    EXPECT_EQ (num_points[file], test_points);
+    if (distributed) {
+      /* The points should be distributed equally in this case. */
+      EXPECT_EQ (num_points[file] / mpisize, test_points);
+    }
+    else {
+      if (!partition || main_proc == mpirank) {
+        /* The proc has all points. */
+        EXPECT_EQ (num_points[file], test_points);
+      }
+      else {
+        /* Every other proc should have no points. */
+        EXPECT_EQ (0, test_points);
+      }
+    }
   }
 #else
 #endif
