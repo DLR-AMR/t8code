@@ -2162,7 +2162,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
     }
     if (gneigh_treeid < 0) {
       /* There exists no face neighbor across this face, we return with this info */
-      neigh_scheme->t8_element_destroy (1, neighbor_leafs);
+      neigh_scheme->t8_element_destroy (num_children_at_face, neighbor_leafs);
       T8_FREE (neighbor_leafs);
       T8_FREE (*dual_faces);
       *dual_faces = NULL;
@@ -3079,6 +3079,8 @@ t8_forest_element_owners_bounds (t8_forest_t forest, t8_gloidx_t gtreeid,
   *upper =
     t8_forest_element_find_owner_ext (forest, gtreeid, last_desc, eclass,
                                       *lower, *upper, *upper, 1);
+  ts->t8_element_destroy (1, &first_desc);
+  ts->t8_element_destroy (1, &last_desc);
 }
 
 void
@@ -3269,6 +3271,7 @@ t8_forest_element_has_leaf_desc (t8_forest_t forest, t8_gloidx_t gtreeid,
       }
     }
   }
+  ts->t8_element_destroy (1, &last_desc);
   return 0;
 }
 
