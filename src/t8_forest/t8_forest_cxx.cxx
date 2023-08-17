@@ -1452,7 +1452,7 @@ t8_forest_compute_desc (t8_forest_t forest)
       T8_ASSERT (forest->incomplete_trees);
       itree->first_desc = NULL;
       itree->last_desc = NULL;
-      break;
+      continue;
     }
     /* get the eclass scheme associated to tree */
     ts = forest->scheme_cxx->eclass_schemes[itree->eclass];
