@@ -148,6 +148,7 @@ TEST_P (forest_half_neighbors, test_half_neighbors)
           T8_FREE (child_ids);
           T8_FREE (neighbor_face_children);
         }
+        neigh_scheme->t8_element_destroy (1, &neighbor);
         neigh_scheme->t8_element_destroy (num_face_neighs, half_neighbors);
         T8_FREE (half_neighbors);
       }

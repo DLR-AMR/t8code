@@ -242,9 +242,9 @@ TEST_P (nca, recursive_check)
   int                 num_children;
   num_children = ts->t8_element_num_children (correct_nca);
   int                 i, j;
-  ts->t8_element_new (1, &parent_a);
-  ts->t8_element_new (1, &parent_b);
   if (num_children > 1) {
+    ts->t8_element_new (1, &parent_a);
+    ts->t8_element_new (1, &parent_b);
     ts->t8_element_child (correct_nca, 0, parent_a);
     ts->t8_element_child (correct_nca, 1, parent_b);
     for (i = 0; i < num_children - 1; i++) {
@@ -315,6 +315,9 @@ TEST_P (nca, recursive_check_higher_level)
       }
     }
     else {
+      ts->t8_element_destroy (1, &parent_a);
+      ts->t8_element_destroy (1, &parent_b);
+      ts->t8_element_destroy (1, &correct_nca_high_level);
       GTEST_SKIP ();
     }
   }
