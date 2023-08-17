@@ -1582,8 +1582,8 @@ t8_forest_free_trees (t8_forest_t forest)
     }
     t8_element_array_reset (&tree->elements);
     /* destroy first and last descendant */
-    t8_eclass_t         eclass = t8_forest_get_tree_class (forest, jt);
-    t8_eclass_scheme_c *scheme = forest->scheme_cxx->eclass_schemes[eclass];
+   const t8_eclass_t         eclass = t8_forest_get_tree_class (forest, jt);
+    const t8_eclass_scheme_c *scheme = forest->scheme_cxx->eclass_schemes[eclass];
     t8_element_destroy (scheme, 1, &tree->first_desc);
     t8_element_destroy (scheme, 1, &tree->last_desc);
   }
