@@ -226,7 +226,6 @@ class MeshAdapter
         sc_array_t**      average;
         sc_array_t**      average_adapt;
         sc_array_t**      points_per_element;
-        sc_array_t**      id_swapper; 
     };
 
 /* *INDENT-ON* */

@@ -100,6 +100,13 @@ t8_itertate_replace_pointids (t8_forest_t forest_old,
 
     /* Allocate and copy point_ids array */
     memcpy (elem_point_in, elem_point_out, sizeof (element_point_t));
+    const void         *current_ids =
+      t8_shmem_array_get_array (inter->GetPointIDs ());
+    sc_array_t         *elem_point_ids =
+      inter->get_point_id_per_element (first_incoming_data);
+    sc_array_push_count (elem_point_ids, elem_point_out->num_points);
+    memcpy (elem_point_ids->array, current_ids,
+            sizeof (int) * elem_point_out->num_points);
   }
   else if (refine == 1) {
     /* New offsets and new num_points for each ielem_in */
@@ -115,6 +122,9 @@ t8_itertate_replace_pointids (t8_forest_t forest_old,
     const int           num_outgoing_points = elem_point_out->num_points;
     const int           offset_outgoing = elem_point_out->offset;
 
+    t8_debugf ("[D] offset: %i, num_outgoing points: %i\n", offset_outgoing,
+               num_outgoing_points);
+
     /* Fill the array with the point_ids of elem_out.
      * we pop the id from the list as soon as it is insed of ielem_in */
     sc_array_t         *point_indices =
@@ -125,7 +135,7 @@ t8_itertate_replace_pointids (t8_forest_t forest_old,
                                         t8_shmem_array_index
                                         (inter->GetPointIDs (),
                                          ipoint + offset_outgoing));
-
+      t8_debugf ("[D] point_id: %i\n", ipoint_id);
       int                *point_id =
         (int *) sc_array_index_int (point_indices, ipoint);
 
@@ -134,6 +144,7 @@ t8_itertate_replace_pointids (t8_forest_t forest_old,
 
     for (int ipoint = 0; ipoint < num_outgoing_points; ipoint++) {
       /* Ensures that no points is associated twice. */
+      t8_debugf ("[D] check %i elems\n", num_incoming);
       const int           ipoint_id = *((int *) sc_array_pop (point_indices));
       for (t8_locidx_t ielem = 0; ielem < num_incoming; ielem++) {
         t8_element_t       *elem =
@@ -154,6 +165,10 @@ t8_itertate_replace_pointids (t8_forest_t forest_old,
           ielem_point_in->num_points++;
           break;
         }
+        else {
+          t8_debugf ("[D] point not inside tree %i, elem %i\n", which_tree,
+                     first_incoming + ielem);
+        }
       }
     }
     sc_array_destroy (point_indices);
@@ -165,16 +180,8 @@ t8_itertate_replace_pointids (t8_forest_t forest_old,
         inter->get_element_point (inter->GetElementPointsAdapt (),
                                   first_incoming_data + ielem - 1);
 
-      ielem_point_in->offset += ielem_point_in_prev->num_points;
-    }
-    t8_debugf ("[D] iterate replace result:\n");
-    for (int ielem = 0; ielem < num_incoming; ielem++) {
-      element_point_t    *ielem_point_in =
-        inter->get_element_point (inter->GetElementPointsAdapt (),
-                                  first_incoming_data + ielem);
-      t8_debugf ("[D] elem: %i, num_points: %i, offset: %i\n",
-                 first_incoming_data + ielem, ielem_point_in->num_points,
-                 ielem_point_in->offset);
+      ielem_point_in->offset =
+        ielem_point_in_prev->offset + ielem_point_in_prev->num_points;
     }
   }
   else {
@@ -183,19 +190,37 @@ t8_itertate_replace_pointids (t8_forest_t forest_old,
      * total of points in the coarsend array. */
     elem_point_in->offset = elem_point_out->offset;
     elem_point_in->num_points = 0;
+    const void         *current_ids =
+      t8_shmem_array_get_array (inter->GetPointIDs ());
+    sc_array_t         *elem_point_ids =
+      inter->get_point_id_per_element (first_incoming_data);
     for (int ielem = 0; ielem < num_outgoing; ielem++) {
       element_point_t    *ielem_point_out =
         inter->get_element_point (inter->GetElementPoints (),
                                   first_outgoing_data + ielem);
 
       elem_point_in->num_points += ielem_point_out->num_points;
+      void               *new_elems =
+        sc_array_push_count (elem_point_ids, elem_point_out->num_points);
+      memcpy (new_elems, current_ids,
+              sizeof (int) * elem_point_out->num_points);
     }
+  }
+  t8_debugf ("[D] iterate replace result:\n");
+  for (int ielem = 0; ielem < num_incoming; ielem++) {
+    element_point_t    *ielem_point_in =
+      inter->get_element_point (inter->GetElementPointsAdapt (),
+                                first_incoming_data + ielem);
+    t8_debugf ("[D] elem: %i, num_points: %i, offset: %i\n",
+               first_incoming_data + ielem, ielem_point_in->num_points,
+               ielem_point_in->offset);
   }
 }
 
 static void
 t8_pipeline (vtkSmartPointer < vtkDataSet > data, sc_MPI_Comm comm)
 {
+
   MeshAdapter         test = MeshAdapter (data, comm);
   t8_debugf ("[D] Constructed class\n");
 
@@ -238,10 +263,9 @@ main (int argc, char **argv)
   sc_init (comm, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
-  vtkSmartPointer < vtkDataSet > vtk_grid =
-    t8_vtk_reader
-    ("/localdata1/knap_da/projects/t8code/t8code/test/testfiles/test_vtk_tri.vtu",
-     1, 0, comm, VTK_UNSTRUCTURED_FILE);
+  vtkSmartPointer < vtkDataSet > vtk_grid = t8_vtk_reader
+    //("/group/HPC/Projects/visplore/Examples/GAIA/gaia-parallel_0.pvtu",
+    ("/localdata1/knap_da/projects/t8code/t8code/test/testfiles/test_vtk_tri.vtu", 1, 0, comm, VTK_UNSTRUCTURED_FILE);
   t8_debugf ("[D] read successful\n");
   t8_pipeline (vtk_grid, comm);
   sc_finalize ();
