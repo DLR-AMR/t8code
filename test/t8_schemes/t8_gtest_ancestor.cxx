@@ -97,6 +97,7 @@ TEST_P (ancestor, root_recursive_check)
   ts->t8_element_new (1, &parent);
   ts->t8_element_copy (correct_anc, parent);
   t8_recursive_ancestor (correct_anc, desc_a, parent, check, ts, max_lvl);
+  ts->t8_element_destroy (1, &parent);
 }
 
 TEST_P (ancestor, multi_level_recursive_check)
@@ -118,6 +119,8 @@ TEST_P (ancestor, multi_level_recursive_check)
     ts->t8_element_copy (correct_anc_high_level, parent);
     t8_recursive_ancestor (correct_anc, desc_a, parent, check, ts, i);
   }
+  ts->t8_element_destroy (1, &parent);
+  ts->t8_element_destroy (1, &correct_anc_high_level);
 }
 
 /* *INDENT-OFF* */

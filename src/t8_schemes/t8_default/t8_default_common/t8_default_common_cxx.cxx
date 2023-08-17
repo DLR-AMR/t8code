@@ -51,6 +51,7 @@ static void         t8_default_mempool_free (sc_mempool_t * ts_context,
 t8_default_scheme_common_c::~t8_default_scheme_common_c ()
 {
   T8_ASSERT (ts_context != NULL);
+  SC_ASSERT (((sc_mempool_t *) ts_context)->elem_count == 0);
   sc_mempool_destroy ((sc_mempool_t *) ts_context);
 }
 
