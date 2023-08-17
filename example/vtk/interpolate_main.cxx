@@ -218,7 +218,7 @@ t8_itertate_replace_pointids (t8_forest_t forest_old,
 }
 
 static void
-t8_pipeline (vtkSmartPointer < vtkDataSet > data, sc_MPI_Comm comm)
+t8_pipeline (vtkSmartPointer < vtkDataSet >data, sc_MPI_Comm comm)
 {
 
   MeshAdapter         test = MeshAdapter (data, comm);
@@ -243,7 +243,7 @@ t8_pipeline (vtkSmartPointer < vtkDataSet > data, sc_MPI_Comm comm)
   for (int i = 0; i < 4; i++) {
     test.Adapt (t8_adapt_callback_non_empty, t8_itertate_replace_pointids);
 
-    //test.partition ();
+    test.partition ();
     test.SetElements ();
     char                fileprefix[12];
     snprintf (fileprefix, BUFSIZ, "%s_%i", filename, i + 1);
@@ -263,7 +263,7 @@ main (int argc, char **argv)
   sc_init (comm, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
-  vtkSmartPointer < vtkDataSet > vtk_grid = t8_vtk_reader
+  vtkSmartPointer < vtkDataSet >vtk_grid = t8_vtk_reader
     //("/group/HPC/Projects/visplore/Examples/GAIA/gaia-parallel_0.pvtu",
     ("/localdata1/knap_da/projects/t8code/t8code/test/testfiles/test_vtk_tri.vtu", 1, 0, comm, VTK_UNSTRUCTURED_FILE);
   t8_debugf ("[D] read successful\n");
