@@ -1731,6 +1731,7 @@ t8_forest_last_tree_shared (t8_forest_t forest)
 /* Allocate memory for trees and set their values as in from.
  * For each tree allocate enough element memory to fit the elements of from.
  * If copy_elements is true, copy the elements of from into the element memory.
+ * Do not copy the first and last desc for each tree, as this is done outside in commit
  */
 void
 t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
@@ -1763,11 +1764,6 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
     if (copy_elements) {
       t8_element_array_copy (&tree->elements, &fromtree->elements);
       tree->elements_offset = fromtree->elements_offset;
-      /* Copy the first and last descendant */
-      eclass_scheme->t8_element_new (1, &tree->first_desc);
-      eclass_scheme->t8_element_copy (fromtree->first_desc, tree->first_desc);
-      eclass_scheme->t8_element_new (1, &tree->last_desc);
-      eclass_scheme->t8_element_copy (fromtree->last_desc, tree->last_desc);
     }
     else {
       t8_element_array_truncate (&tree->elements);
