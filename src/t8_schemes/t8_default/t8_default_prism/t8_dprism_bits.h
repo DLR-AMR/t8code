@@ -329,7 +329,8 @@ void                t8_dprism_compute_reference_coords (const t8_dprism_t
                                                         *elem,
                                                         const double
                                                         *ref_coords,
-                                                        const int num_coords,
+                                                        const size_t
+                                                        num_coords,
                                                         double *out_coords);
 
 /** Computes the linear position of a prism in an uniform grid.

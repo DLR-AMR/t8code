@@ -664,7 +664,7 @@ t8_default_scheme_hex_c::t8_element_reference_coords (const t8_element_t
                                                       *elem,
                                                       const double
                                                       *ref_coords,
-                                                      const int num_coords,
+                                                      const size_t num_coords,
                                                       double *out_coords)
   const
 {

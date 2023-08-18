@@ -26,15 +26,15 @@
 void
 t8_dhex_compute_reference_coords (const t8_dhex_t * elem,
                                   const double *ref_coords,
-                                  const int num_coords, double *out_coords)
+                                  const size_t num_coords, double *out_coords)
 {
   const p8est_quadrant_t *q1 = (const p8est_quadrant_t *) elem;
 
   /* Get the length of the quadrant */
   const p4est_qcoord_t len = P8EST_QUADRANT_LEN (q1->level);
 
-  for (int coord = 0; coord < num_coords; ++coord) {
-    const int           offset = 3 * coord;
+  for (size_t coord = 0; coord < num_coords; ++coord) {
+    const size_t        offset = 3 * coord;
     /* Compute the x, y and z coordinates of the point depending on the
      * reference coordinates */
     out_coords[offset + 0] = q1->x + ref_coords[offset + 0] * len;

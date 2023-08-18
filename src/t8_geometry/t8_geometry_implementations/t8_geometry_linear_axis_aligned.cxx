@@ -45,7 +45,7 @@ void
 t8_geometry_linear_axis_aligned::t8_geom_evaluate (t8_cmesh_t cmesh,
                                                    t8_gloidx_t gtreeid,
                                                    const double *ref_coords,
-                                                   const int num_coords,
+                                                   const size_t num_coords,
                                                    double out_coords[3]) const
 {
   t8_geom_compute_linear_axis_aligned_geometry (active_tree_class,
@@ -60,7 +60,7 @@ t8_geometry_linear_axis_aligned::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
                                                             gtreeid,
                                                             const double
                                                             *ref_coords,
-                                                            const int
+                                                            const size_t
                                                             num_coords,
                                                             double *jacobian)
   const

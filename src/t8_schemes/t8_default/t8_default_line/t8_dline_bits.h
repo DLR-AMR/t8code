@@ -259,8 +259,10 @@ void                t8_dline_vertex_ref_coords (const t8_dline_t *elem,
 void                t8_dline_compute_reference_coords (const t8_dline_t *elem,
                                                        const double
                                                        *ref_coords,
-                                                       const int num_coords,
-                                                       const int skip_coords,
+                                                       const size_t
+                                                       num_coords,
+                                                       const size_t
+                                                       skip_coords,
                                                        double *out_coords);
 
 /** Computes the linear position of a line in an uniform grid.
