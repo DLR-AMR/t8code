@@ -209,7 +209,8 @@ void                t8_dvertex_compute_reference_coords (const t8_dvertex_t
                                                          *elem,
                                                          const double
                                                          *ref_coords,
-                                                         const int num_coords,
+                                                         const size_t
+                                                         num_coords,
                                                          double *out_coords);
 
 /** Computes the linear position of a vertex in an uniform grid.
