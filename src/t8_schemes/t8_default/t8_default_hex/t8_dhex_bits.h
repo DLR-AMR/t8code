@@ -45,7 +45,7 @@ T8_EXTERN_C_BEGIN ();
 void                t8_dhex_compute_reference_coords (const t8_dhex_t * elem,
                                                       const double
                                                       *ref_coords,
-                                                      const int num_coords,
+                                                      const size_t num_coords,
                                                       double *out_coords);
 
 T8_EXTERN_C_END ();

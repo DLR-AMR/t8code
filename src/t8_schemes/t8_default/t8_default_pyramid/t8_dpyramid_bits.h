@@ -386,7 +386,7 @@ void                t8_dpyramid_compute_reference_coords (const t8_dpyramid_t
                                                           *elem,
                                                           const double
                                                           *ref_coords,
-                                                          const int
+                                                          const size_t
                                                           num_coords,
                                                           double *out_coords);
 

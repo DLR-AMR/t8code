@@ -176,7 +176,8 @@ t8_dvertex_vertex_ref_coords (const t8_dvertex_t *elem, const int vertex,
 void
 t8_dvertex_compute_reference_coords (const t8_dvertex_t *elem,
                                      const double *ref_coords,
-                                     const int num_coords, double *out_coords)
+                                     const size_t num_coords,
+                                     double *out_coords)
 {
   T8_ASSERT (abs (ref_coords[0]) <= T8_PRECISION_EPS);
   T8_ASSERT (t8_dvertex_is_valid (elem));

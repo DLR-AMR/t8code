@@ -26,7 +26,8 @@
 void
 t8_dquad_compute_reference_coords (const t8_dquad_t * elem,
                                    const double *ref_coords,
-                                   const int num_coords, double *out_coords)
+                                   const size_t num_coords,
+                                   double *out_coords)
 {
   const p4est_quadrant_t *q1 = (const p4est_quadrant_t *) elem;
 

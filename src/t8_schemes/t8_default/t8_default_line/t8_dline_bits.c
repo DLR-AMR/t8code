@@ -352,8 +352,9 @@ t8_dline_vertex_ref_coords (const t8_dline_t *elem, const int vertex,
 void
 t8_dline_compute_reference_coords (const t8_dline_t *elem,
                                    const double *ref_coords,
-                                   const int num_coords,
-                                   const int skip_coords, double *out_coords)
+                                   const size_t num_coords,
+                                   const size_t skip_coords,
+                                   double *out_coords)
 {
   T8_ASSERT (t8_dline_is_valid (elem));
   for (int coord = 0; coord < num_coords; ++coord) {

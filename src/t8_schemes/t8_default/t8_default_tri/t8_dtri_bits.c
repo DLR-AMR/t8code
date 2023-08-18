@@ -378,9 +378,9 @@ t8_dtri_compute_vertex_ref_coords (const t8_dtri_t *elem, const int vertex,
 void
 t8_dtri_compute_reference_coords (const t8_dtri_t *elem,
                                   const double *ref_coords,
-                                  const int num_coords,
+                                  const size_t num_coords,
 #ifndef T8_DTRI_TO_DTET
-                                  const int skip_coords,
+                                  const size_t skip_coords,
 #endif
                                   double *out_coords)
 {
