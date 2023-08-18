@@ -433,7 +433,7 @@ void
 t8_forest_element_from_ref_coords (t8_forest_t forest, t8_locidx_t ltreeid,
                                    const t8_element_t *element,
                                    const double *ref_coords,
-                                   const int num_coords,
+                                   const size_t num_coords,
                                    double *coords_out,
                                    sc_array_t *stretch_factors)
 {

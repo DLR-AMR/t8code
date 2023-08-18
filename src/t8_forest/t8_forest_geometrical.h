@@ -73,7 +73,8 @@ void                t8_forest_element_from_ref_coords (t8_forest_t forest,
                                                        *element,
                                                        const double
                                                        *ref_coord,
-                                                       const int num_coords,
+                                                       const size_t
+                                                       num_coords,
                                                        double *coords_out,
                                                        sc_array_t
                                                        *stretch_factors);
