@@ -43,7 +43,7 @@ void                t8_geom_compute_linear_geometry (t8_eclass_t tree_class,
                                                      const double
                                                      *tree_vertices,
                                                      const double *ref_coords,
-                                                     const int num_coords,
+                                                     const size_t num_coords,
                                                      double *out_coords);
 
 /** Compute the linear, axis-aligned geometry of a tree at a given reference coordinate.
@@ -61,7 +61,7 @@ void                t8_geom_compute_linear_axis_aligned_geometry (t8_eclass_t
                                                                   *tree_vertices,
                                                                   const double
                                                                   *ref_coords,
-                                                                  const int
+                                                                  const size_t
                                                                   num_coords,
                                                                   double
                                                                   *out_coords);
