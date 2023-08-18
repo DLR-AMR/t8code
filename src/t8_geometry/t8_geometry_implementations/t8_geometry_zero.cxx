@@ -42,7 +42,7 @@ void
 t8_geometry_zero::t8_geom_evaluate (t8_cmesh_t cmesh,
                                     t8_gloidx_t gtreeid,
                                     const double *ref_coords,
-                                    const int num_coords,
+                                    const size_t num_coords,
                                     double *out_coords) const
 {
   /* Set the out_coords to 0 */
@@ -58,7 +58,7 @@ t8_geometry_zero::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
                                              t8_gloidx_t gtreeid,
                                              const double
                                              *ref_coords,
-                                             const int num_coords,
+                                             const size_t num_coords,
                                              double *jacobian) const
 {
   /* Set the jacobian to 0 */

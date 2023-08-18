@@ -62,7 +62,7 @@ public:
   virtual void        t8_geom_evaluate (t8_cmesh_t cmesh,
                                         t8_gloidx_t gtreeid,
                                         const double *ref_coords,
-                                        const int num_coords,
+                                        const size_t num_coords,
                                         double out_coords[3]) const;
 
   /**
@@ -77,7 +77,7 @@ public:
   virtual void        t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
                                                  t8_gloidx_t gtreeid,
                                                  const double *ref_coords,
-                                                 const int num_coords,
+                                                 const size_t num_coords,
                                                  double *jacobian) const;
 
   /* Load tree data is inherited from t8_geometry_with_vertices. */
