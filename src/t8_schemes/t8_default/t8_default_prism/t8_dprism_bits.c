@@ -597,7 +597,8 @@ t8_dprism_vertex_ref_coords (const t8_dprism_t *elem, const int vertex,
 void
 t8_dprism_compute_reference_coords (const t8_dprism_t *elem,
                                     const double *ref_coords,
-                                    const int num_coords, double *out_coords)
+                                    const size_t num_coords,
+                                    double *out_coords)
 {
   T8_ASSERT (t8_dprism_is_valid (elem));
   T8_ASSERT (elem->line.level == elem->tri.level);
