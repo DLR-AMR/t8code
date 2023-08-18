@@ -222,7 +222,7 @@ t8_pipeline (vtkSmartPointer < vtkDataSet >data, sc_MPI_Comm comm)
 
   test.WritePVTU (first_data, data_name, types);
 
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 6; i++) {
     test.Adapt (t8_adapt_callback_non_empty, t8_itertate_replace_pointids);
 
     test.partition ();
@@ -242,15 +242,18 @@ main (int argc, char **argv)
   mpiret = sc_MPI_Init (&argc, &argv);
   sc_MPI_Comm         comm = sc_MPI_COMM_WORLD;
   SC_CHECK_MPI (mpiret);
-  sc_init (comm, 1, 1, NULL, SC_LP_ESSENTIAL);
+  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
   vtkSmartPointer < vtkDataSet >vtk_grid = t8_vtk_reader
-    //("/group/HPC/Projects/visplore/Examples/GAIA/gaia-parallel_0.pvtu",
-    ("/localdata1/knap_da/projects/t8code/t8code/test/testfiles/test_vtk_tri.vtu",
+    ("/group/HPC/Projects/visplore/Examples/GAIA/gaia-parallel_0.pvtu",
+     //("/localdata1/knap_da/projects/t8code/t8code/test/testfiles/test_vtk_tri.vtu",
      1, 0, comm, VTK_UNSTRUCTURED_FILE);
   t8_debugf ("[D] read successful\n");
   t8_pipeline (vtk_grid, comm);
   sc_finalize ();
+
+  mpiret = sc_MPI_Finalize ();
+  SC_CHECK_MPI (mpiret);
   return 0;
 }

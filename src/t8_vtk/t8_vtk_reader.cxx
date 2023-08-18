@@ -454,6 +454,7 @@ t8_vtkGrid_to_vtkPointSet (vtkSmartPointer < vtkDataSet >vtkGrid)
   c2p->SetInputData (vtkGrid);
   c2p->Update ();
   cloud->DeepCopy (c2p->GetOutput ());
+  c2p->Delete ();
   //cloud->DeepCopy (vtkPointSet::SafeDownCast (c2p->GetOutput ()));
   return cloud;
 }
