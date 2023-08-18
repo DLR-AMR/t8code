@@ -33,8 +33,8 @@ t8_dquad_compute_reference_coords (const t8_dquad_t * elem,
 
   const p4est_qcoord_t h = P4EST_QUADRANT_LEN (q1->level);
 
-  for (int coord = 0; coord < num_coords; ++coord) {
-    const int           offset = coord * 2;
+  for (size_t coord = 0; coord < num_coords; ++coord) {
+    const size_t        offset = coord * 2;
     out_coords[offset + 0] = q1->x + ref_coords[offset + 0] * h;
     out_coords[offset + 1] = q1->y + ref_coords[offset + 1] * h;
 

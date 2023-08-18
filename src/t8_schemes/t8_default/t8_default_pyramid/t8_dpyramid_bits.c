@@ -1753,8 +1753,8 @@ t8_dpyramid_compute_reference_coords (const t8_dpyramid_t *elem,
   if (t8_dpyramid_shape (elem) == T8_ECLASS_PYRAMID) {
     const t8_dpyramid_coord_t length = T8_DPYRAMID_LEN (elem->pyramid.level);
 
-    for (int coord = 0; coord < num_coords; ++coord) {
-      const int           offset = coord * 3;
+    for (size_t coord = 0; coord < num_coords; ++coord) {
+      const size_t        offset = coord * 3;
       out_coords[offset + 0] = elem->pyramid.x;
       out_coords[offset + 1] = elem->pyramid.y;
       out_coords[offset + 2] = elem->pyramid.z;
