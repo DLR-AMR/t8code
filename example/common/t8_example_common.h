@@ -31,7 +31,7 @@
 #define T8_EXAMPLE_COMMON_H
 
 #include <t8.h>
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
 
 /** A levelset function in 3+1 space dimensions. */
 typedef double      (*t8_example_level_set_fn) (const double[3], double,
@@ -238,13 +238,20 @@ void                t8_flow_incomp_cube_flow (const double x[3], double t,
                                               double x_out[3]);
 
 /** 2d flow around a circle with radius R = 1 and
- * constant inflow with x-speed U = 1. */
+ * constant inflow with x-speed U = 1. 
+ * See https://doi.org/10.13140/RG.2.2.34714.11203 */
 void                t8_flow_around_circle (const double x[3], double t,
                                            double x_out[3]);
 
 void                t8_flow_stokes_flow_sphere_shell (const double x[3],
                                                       double t,
                                                       double x_out[3]);
+
+void                t8_flow_around_circle_with_angular_velocity (const double
+                                                                 x[3],
+                                                                 double t,
+                                                                 double
+                                                                 x_out[]);
 
 T8_EXTERN_C_END ();
 

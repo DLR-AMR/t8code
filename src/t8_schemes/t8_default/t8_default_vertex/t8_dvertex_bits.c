@@ -56,7 +56,7 @@ t8_dvertex_child (const t8_dvertex_t *v, t8_dvertex_t *child)
 {
   T8_ASSERT (v->level < T8_DVERTEX_MAXLEVEL);
 
-  /* The childs level */
+  /* The children level */
   child->level = v->level + 1;
 }
 
@@ -103,8 +103,8 @@ t8_dvertex_childrenpv (const t8_dvertex_t *v,
 int
 t8_dvertex_is_familypv (const t8_dvertex_t *f[])
 {
-  /* A vertex is always a family */
-  return 1;
+  /* A vertex with level greater 0 is always a family */
+  return f[0]->level > 0;
 }
 
 int
@@ -156,7 +156,8 @@ t8_dvertex_last_descendant (const t8_dvertex_t *v, t8_dvertex_t *s, int level)
 }
 
 void
-t8_dvertex_vertex_coords (const t8_dvertex_t *elem, int vertex, int coords[])
+t8_dvertex_vertex_coords (const t8_dvertex_t *elem, const int vertex,
+                          int coords[])
 {
   T8_ASSERT (vertex == 0);
 
@@ -164,12 +165,22 @@ t8_dvertex_vertex_coords (const t8_dvertex_t *elem, int vertex, int coords[])
 }
 
 void
-t8_dvertex_vertex_ref_coords (const t8_dvertex_t *elem, int vertex,
+t8_dvertex_vertex_ref_coords (const t8_dvertex_t *elem, const int vertex,
                               double coords[])
 {
   T8_ASSERT (vertex == 0);
 
   coords[0] = 0;
+}
+
+void
+t8_dvertex_compute_reference_coords (const t8_dvertex_t *elem,
+                                     const double *ref_coords,
+                                     double *out_coords)
+{
+  T8_ASSERT (abs (ref_coords[0]) <= T8_PRECISION_EPS);
+  T8_ASSERT (t8_dvertex_is_valid (elem));
+  out_coords[0] = 0;
 }
 
 t8_linearidx_t

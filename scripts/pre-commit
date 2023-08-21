@@ -56,6 +56,13 @@ do
   then
     continue
   fi
+
+  status=`$TYPOS $file`
+  if ! [ -z "$status" ]; then
+    echo "File $file contains typos."
+    nocontinue=1
+  fi 
+
   # We only indent .c, .cxx, .h and .hxx files
 #-a ${file: -2} != ".h" ]
   FILE_ENDING="${file##*.}"

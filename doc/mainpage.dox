@@ -22,7 +22,7 @@
 
 /** \mainpage t8code - Parallel algorithms and data structures for tree-based adaptive mesh refinement with arbitrary element shapes. 
  *
- * \author Johannes Holke, David Knapp, Lukas Dreyer, Niklas Böing, Sandro Elsweijer, Ioannis Lilikakis, Veli Ünlü, Carsten Burstedde et. al.
+ * \author Johannes Holke, David Knapp, Lukas Dreyer, Niklas Böing, Sandro Elsweijer, Ioannis Lilikakis, Veli Ünlü, Carsten Burstedde, Johannes Markert et. al.
  * \copyright GNU General Public License version 2
  * (or, at your option, any later version)
  * 
@@ -35,11 +35,11 @@
  * t8code is intended to be used as a thirdparty library for numerical
  * simulation codes or any other applications that require meshes.
  *
- * The best place to start learning about t8code is the [Wiki](https://github.com/holke/t8code/wiki),
- * especially the [Installation Guide](https://github.com/holke/t8code/wiki/Installation) and the
- * [Tutorials](https://github.com/holke/t8code/wiki/Tutorial---Overview).
+ * The best place to start learning about t8code is the [Wiki](https://github.com/DLR-AMR/t8code/wiki),
+ * especially the [Installation Guide](https://github.com/DLR-AMR/t8code/wiki/Installation) and the
+ * [Tutorials](https://github.com/DLR-AMR/t8code/wiki/Tutorial---Overview).
  * 
- * You find the source code to t8code on [github](https://github.com/holke/t8code).
+ * You find the source code to t8code on [github](https://github.com/DLR-AMR/t8code).
  *
  * t8code supports the following element types (also different types in the same mesh):
  * 
@@ -70,6 +70,6 @@
  *   - pyramids are implemented via a pyramidal Morton code.
  *   - The code supports hybrid meshes including any of the above element types (of the same dimension).
  * 
- * You find more information on t8code in the [t8code Wiki](https://github.com/holke/t8code/wiki).
+ * You find more information on t8code in the [t8code Wiki](https://github.com/DLR-AMR/t8code/wiki).
  *
  */

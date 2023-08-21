@@ -21,6 +21,7 @@
 */
 
 /** \file t8_dline_bits.h
+ * Definitions of line-specific functions.
  */
 
 #ifndef T8_DLINE_BITS_H
@@ -45,8 +46,8 @@ int                 t8_dline_get_level (const t8_dline_t *l);
  */
 void                t8_dline_copy (const t8_dline_t *l, t8_dline_t *dest);
 
-/** Compare two elements. returns negativ if l1 < l2, zero if l1 equals l2
- *  and positiv if l1 > l2.
+/** Compare two elements. returns negative if l1 < l2, zero if l1 equals l2
+ *  and positive if l1 > l2.
  *  If l2 is a copy of l1 then the elements are equal.
  */
 int                 t8_dline_compare (const t8_dline_t *l1,
@@ -133,7 +134,7 @@ int                 t8_dline_child_id (const t8_dline_t *t);
  *                    t may point to the same quadrant as c[0].
  */
 void                t8_dline_childrenpv (const t8_dline_t *t,
-                                         t8_dline_t *c[]);
+                                         t8_dline_t *c[T8_DLINE_CHILDREN]);
 
 /** Check whether a collection of two lines is a family in Morton order.
  * \param [in]     f  An array of two lines.
@@ -179,7 +180,7 @@ void                t8_dline_successor (const t8_dline_t *l,
  *  Line of the respective tree neighbor that logically coincides with e
  *  but lies in the coordinate system of the neighbor tree.
  *  \param [in] elem1     The face element.
- *  \param [in,out] elem2 On return the face elment \a elem1 with respective
+ *  \param [in,out] elem2 On return the face element \a elem1 with respect
  *                        to the coordinate system of the other tree.
  *  \param [in] orientation The orientation of the tree-tree connection.
  *                        0 if vertex 0 of face 0 coincides with vertex 0 of face 1.
@@ -228,7 +229,7 @@ void                t8_dline_last_descendant (const t8_dline_t *l,
  * \param [out] coords   The coordinates of the computed vertex
  */
 void                t8_dline_vertex_coords (const t8_dline_t *elem,
-                                            int vertex, int coords[]);
+                                            const int vertex, int coords[]);
 
 /** Compute the coordinates of a vertex of a line when the 
  * tree (level 0 line) is embedded in [0,1]^1.
@@ -238,8 +239,21 @@ void                t8_dline_vertex_coords (const t8_dline_t *elem,
  * 		     will be filled with the reference coordinates of the vertex.
  */
 void                t8_dline_vertex_ref_coords (const t8_dline_t *elem,
-                                                int vertex,
+                                                const int vertex,
                                                 double coordinates[1]);
+
+/** Convert a point in the reference space of a line element to a point in the
+ *  reference space of the tree (level 0) embedded in [0,1]^1.
+ * \param [in]  elem       Input line.
+ * \param [in]  ref_coords The reference coordinate on the line [0, 1]^1
+ * \param [out] out_coords An array of 1 double that
+ * 		                     will be filled with the reference coordinates
+ *                         of the point on the line.
+ */
+void                t8_dline_compute_reference_coords (const t8_dline_t *elem,
+                                                       const double
+                                                       *ref_coords,
+                                                       double *out_coords);
 
 /** Computes the linear position of a line in an uniform grid.
  * \param [in] line  Line whose id will be computed.

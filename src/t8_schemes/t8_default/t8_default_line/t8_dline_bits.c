@@ -47,7 +47,7 @@ t8_dline_compare (const t8_dline_t *l1, const t8_dline_t *l2)
      * is considered smaller */
     return l1->level - l2->level;
   }
-  /* return negativ if id1 < id2, zero if id1 = id2, positive if id1 >
+  /* return negative if id1 < id2, zero if id1 = id2, positive if id1 >
      id2 */
   return id1 < id2 ? -1 : id1 != id2;
 }
@@ -88,11 +88,11 @@ t8_dline_child (const t8_dline_t *l, int childid, t8_dline_t *child)
 
   /* Compute the length of the child */
   h = T8_DLINE_LEN (l->level + 1);
-  /* If childid = 0 then the childs x coord is the same as l's,
+  /* If childid = 0 then the children x coord is the same as l's,
    * if childid = 1 then it is x + h.
    */
   child->x = l->x + (childid == 0 ? 0 : h);
-  /* The childs level */
+  /* The children level */
   child->level = l->level + 1;
 }
 
@@ -211,9 +211,7 @@ int
 t8_dline_is_familypv (const t8_dline_t *f[])
 {
   const int8_t        level = f[0]->level;
-  t8_dline_coord_t    len = T8_DLINE_LEN (level);
-
-  /*Check the level */
+  /* Check the level */
   if (level == 0 || level != f[1]->level) {
     return 0;
   }                             /* Check the parent */
@@ -222,7 +220,8 @@ t8_dline_is_familypv (const t8_dline_t *f[])
     return 0;
   }
 
-  /*Check the coordinate */
+  const t8_dline_coord_t len = T8_DLINE_LEN (level);
+  /* Check the coordinate */
   return (f[0]->x + len == f[1]->x);
 }
 
@@ -297,7 +296,7 @@ t8_dline_transform_face (const t8_dline_t *line1, t8_dline_t *line2,
      * 0 ---|_|------- N
      * N ---|_|------- 0
      *
-     * With N = 2^maxlvl the root lenght, |_| marks the line elements within their trees.
+     * With N = 2^maxlvl the root length, |_| marks the line elements within their trees.
      * Thus, the x-coordinate of line2 is given as N-line1.x - h.
      * Where h is the length of the line element.
      */
@@ -325,7 +324,8 @@ t8_dline_last_descendant (const t8_dline_t *l, t8_dline_t *s, int level)
 }
 
 void
-t8_dline_vertex_coords (const t8_dline_t *elem, int vertex, int coords[])
+t8_dline_vertex_coords (const t8_dline_t *elem, const int vertex,
+                        int coords[])
 {
   T8_ASSERT (vertex == 0 || vertex == 1);
   if (vertex == 0) {
@@ -337,16 +337,27 @@ t8_dline_vertex_coords (const t8_dline_t *elem, int vertex, int coords[])
 }
 
 void
-t8_dline_vertex_ref_coords (const t8_dline_t *elem, int vertex,
+t8_dline_vertex_ref_coords (const t8_dline_t *elem, const int vertex,
                             double coordinates[1])
 {
   /* we need to set and initial value to prevent compiler warning. */
   int                 coords_int = -1;
   T8_ASSERT (vertex == 0 || vertex == 1);
 
-  /* Compute integere coordinates and divide by root length. */
+  /* Compute integer coordinates and divide by root length. */
   t8_dline_vertex_coords (elem, vertex, &coords_int);
   coordinates[0] = coords_int / (double) T8_DLINE_ROOT_LEN;
+}
+
+void
+t8_dline_compute_reference_coords (const t8_dline_t *elem,
+                                   const double *ref_coords,
+                                   double *out_coords)
+{
+  T8_ASSERT (t8_dline_is_valid (elem));
+  out_coords[0] = elem->x;
+  out_coords[0] += T8_DLINE_LEN (elem->level) * ref_coords[0];
+  out_coords[0] /= (double) T8_DLINE_ROOT_LEN;
 }
 
 t8_linearidx_t

@@ -51,12 +51,13 @@ static void         t8_default_mempool_free (sc_mempool_t * ts_context,
 t8_default_scheme_common_c::~t8_default_scheme_common_c ()
 {
   T8_ASSERT (ts_context != NULL);
+  SC_ASSERT (((sc_mempool_t *) ts_context)->elem_count == 0);
   sc_mempool_destroy ((sc_mempool_t *) ts_context);
 }
 
 /** Compute the number of corners of a given element. */
 int
-t8_default_scheme_common_c::t8_element_num_corners (const t8_element_t *elem)
+t8_default_scheme_common_c::t8_element_num_corners (const t8_element_t *elem) const
 {
   /* use the lookup table of the eclasses.
    * Pyramids should implement their own version of this function. */
@@ -64,14 +65,14 @@ t8_default_scheme_common_c::t8_element_num_corners (const t8_element_t *elem)
 }
 
 void
-t8_default_scheme_common_c::t8_element_new (int length, t8_element_t **elem)
+t8_default_scheme_common_c::t8_element_new (int length, t8_element_t **elem) const
 {
   t8_default_mempool_alloc ((sc_mempool_t *) this->ts_context, length, elem);
 }
 
 void
 t8_default_scheme_common_c::t8_element_destroy (int length,
-                                                t8_element_t **elem)
+                                                t8_element_t **elem) const
 {
   t8_default_mempool_free ((sc_mempool_t *) this->ts_context, length, elem);
 }
@@ -107,7 +108,7 @@ t8_default_mempool_free (sc_mempool_t * ts_context, int length,
 }
 
 t8_element_shape_t
-t8_default_scheme_common_c::t8_element_shape (const t8_element_t *elem)
+t8_default_scheme_common_c::t8_element_shape (const t8_element_t *elem) const
 {
   return eclass;
 }
@@ -124,41 +125,38 @@ count_leafs_from_level (int element_level, int refinement_level,
 
 t8_gloidx_t
 t8_default_scheme_common_c::t8_element_count_leafs (const t8_element_t *t,
-                                                    int level)
+                                                    int level) const
 {
-#if T8_ENABLE_DEBUG
-  if (eclass == T8_ECLASS_PYRAMID) {
-    SC_ABORT
-      ("Cannot compute leaf count of pyramids via the default_common implementation");
-  }
-#endif
+
   int                 element_level = t8_element_level (t);
+  t8_element_shape_t  element_shape;
   int                 dim = t8_eclass_to_dimension[eclass];
+  element_shape = t8_element_shape (t);
+  if (element_shape == T8_ECLASS_PYRAMID) {
+    int                 level_diff = level - element_level;
+    return element_level > level ? 0 :
+      2 * sc_intpow64 (8, level_diff) - sc_intpow64 (6, level_diff);
+  }
   return count_leafs_from_level (element_level, level, dim);
 }
 
 /* Count the number of siblings.
  * The number of children is 2^dim for each element, except for pyramids.
  * TODO: For pyramids we will have to implement a standalone version in the pyramid scheme. */
-/* *INDENT-OFF* */
-/* Indent bug: indent adds an additional const */
 int
-t8_default_scheme_common_c::t8_element_num_siblings (const t8_element_t * elem) const
-/* *INDENT-ON* */
+t8_default_scheme_common_c::t8_element_num_siblings (const t8_element_t *elem) const
 {
   const int           dim = t8_eclass_to_dimension[eclass];
+  T8_ASSERT (eclass != T8_ECLASS_PYRAMID);
   return sc_intpow (2, dim);
 }
 
 t8_gloidx_t
-t8_default_scheme_common_c::t8_element_count_leafs_from_root (int level)
+t8_default_scheme_common_c::t8_element_count_leafs_from_root (int level) const
 {
-#if T8_ENABLE_DEBUG
   if (eclass == T8_ECLASS_PYRAMID) {
-    SC_ABORT
-      ("Cannot compute leaf count of pyramids via the default_common implementation");
+    return 2 * sc_intpow64u (8, level) - sc_intpow64u (6, level);
   }
-#endif
   int                 dim = t8_eclass_to_dimension[eclass];
   return count_leafs_from_level (0, level, dim);
 }
@@ -167,7 +165,7 @@ void
 t8_default_scheme_common_c::t8_element_general_function (const t8_element_t
                                                          *elem,
                                                          const void *indata,
-                                                         void *outdata)
+                                                         void *outdata) const
 {
   /* This function is intentionally left blank. */
 }

@@ -47,10 +47,11 @@ on:
 
 jobs:
   indent:
-    runs-on: ubuntu-latest
+    if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
+    runs-on: ubuntu-20.04
     timeout-minutes: 10
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v3
     - name: Install indent
       run: sudo apt-get update && sudo apt-get install clang-format
     - name: Indentation check

@@ -27,6 +27,7 @@
  * TODO: document this file
  */
 
+#include <t8_version.h>
 #include <t8_eclass.h>
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_trees.h>
@@ -210,14 +211,6 @@ t8_cmesh_load_tree_attributes (t8_cmesh_t cmesh, FILE *fp)
       T8_SAVE_CHECK_CLOSE (ret == 2, fp);
       /* We currently only support vertices as attributes.
        * Those have t8 package id and key 0 */
-#if 0
-      /* TODO: We cannot check if the attribute package id is t8_get_package_id,
-       *       since this id can change from program to program.
-       *       As soon as we allow multiple attributes to be saved and loaded,
-       *       we need a mechanism to check for the attributes that are vertices */
-      T8_SAVE_CHECK_CLOSE (att_struct.package_id == t8_get_package_id ()
-                           && att_struct.key == 0, fp);
-#endif
       T8_SAVE_CHECK_CLOSE (att_struct.package_id > 0
                            && att_struct.key == 0, fp);
       /* TODO: We set the package id to match the one of t8code manually.
@@ -412,7 +405,7 @@ t8_cmesh_save_header (t8_cmesh_t cmesh, FILE *fp)
   T8_ASSERT (fp != NULL);
   ret =
     fprintf (fp, "This is %s, file format version %u.\n\n",
-             t8_get_version_string (), T8_CMESH_FORMAT);
+             t8_get_package_string (), T8_CMESH_FORMAT);
   T8_SAVE_CHECK_CLOSE (ret > 0, fp);
 
   /* Write 0 for replicated and 1 for partitioned cmesh */
@@ -802,7 +795,7 @@ t8_cmesh_load_bigger_nonloading (int mpirank, int mpisize,
   switch (mode) {
   case T8_LOAD_SIMPLE:
     /* In simple mode, the first num_files processes load the cmesh and
-     * the rest is empty, this the next bigger nonloading rank is allways
+     * the rest is empty, this the next bigger nonloading rank is always
      * rank mpisize. */
     next_bigger_nonloading = mpisize;
     break;

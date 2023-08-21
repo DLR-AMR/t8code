@@ -155,7 +155,7 @@ t8_offset_consistent (int mpisize, const t8_shmem_array_t offset_shmem,
     }
   }
   ret &= (offset[mpisize] == num_trees);
-  t8_debugf ("Offset is %s %i\n", ret ? "consistend." : "not consistend!",
+  t8_debugf ("Offset is %s %i\n", ret ? "consistent." : "not consistent!",
              i - 1);
   return ret;
 }
@@ -225,7 +225,7 @@ t8_offset_first_owner_of_tree (int mpisize, t8_gloidx_t gtree,
       proc_temp--;
     }
   }
-  /* We are now one nonempty proccess below the smallest process having the tree */
+  /* We are now one nonempty process below the smallest process having the tree */
   if (proc_temp >= -1) {
     proc_temp++;
     while (t8_offset_empty (proc_temp, offset)) {
@@ -317,7 +317,7 @@ t8_offset_last_owner_of_tree (int mpisize, t8_gloidx_t gtree,
       proc_temp++;
     }
   }
-  /* We are now one nonempty proccess above the biggest process having the tree */
+  /* We are now one nonempty process above the biggest process having the tree */
   if (proc_temp <= mpisize) {
     proc_temp--;
     while (t8_offset_empty (proc_temp, offset)) {
@@ -468,7 +468,7 @@ t8_offset_sendsto (int proca, int procb, const t8_gloidx_t *t8_offset_from,
                         procb, t8_offset_to)
     && !t8_offset_empty (procb, t8_offset_from);
   if (proca == procb && keeps_first) {
-    /* If proca = procb and the first tree is kept, we definetely send */
+    /* If proca = procb and the first tree is kept, we definitely send */
     return 1;
   }
   proca_first = t8_offset_first (proca, t8_offset_from) +
@@ -569,16 +569,3 @@ t8_offset_print (t8_shmem_array_t offset, sc_MPI_Comm comm)
   t8_debugf ("Offsets = %s\n", buf);
 #endif
 }
-
-#if 0
-/* TODO: Do we need this function? */
-/* Determine whether a given global tree id is in the range of a given
- * process without considering the first tree if it is shared */
-int
-t8_offset_in_range_wofirstshared (t8_gloidx_t tree_id, int proc,
-                                  t8_gloidx_t *offset)
-{
-  return t8_offset_first (proc, offset) + (offset[proc] < 0) <= tree_id
-    && tree_id <= t8_offset_last (proc, offset);
-}
-#endif

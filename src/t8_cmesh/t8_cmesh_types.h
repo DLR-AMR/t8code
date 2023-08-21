@@ -47,22 +47,16 @@ typedef struct t8_cprofile t8_cprofile_t;       /* Defined below */
  *       and whether a combination is currently supported,
  *       and provide informative error messages both in debug and non-debug.
  */
-#if 0
-/** Bitfield to designate the operations done on the cmesh created. */
-typedef enum t8_cmesh_from
-{
-  T8_CMESH_FROM_NONE = 0,
-  T8_CMESH_FROM = 0x01,
-  T8_CMESH_REFINE = 0x02,
-  T8_CMESH_PARTITION = 0x04,
-}
-t8_cmesh_from_t;
-#endif
 
-/* Definitions for attribute identifiers that are reserved 
- * for a special purpose. */
-#define T8_CMESH_VERTICES_ATTRIBUTE_KEY 0       /* Used to store vertex coordinates. */
-#define T8_CMESH_GEOMETRY_ATTRIBUTE_KEY 1       /* Used to store the name of a tree's geometry. */
+/* Definitions for attribute identifiers that are reserved for a special purpose. 
+ * T8_CMESH_NEXT_POSSIBLE_KEY is the first unused key, hence it can be repurposed for different attributes.*/
+#define T8_CMESH_VERTICES_ATTRIBUTE_KEY   0     /* Used to store vertex coordinates. */
+#define T8_CMESH_GEOMETRY_ATTRIBUTE_KEY   1     /* Used to store the name of a tree's geometry. */
+#define T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY    2    /* Used to store which edge is linked to which geometry */
+#define T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY    3 /* Used to store edge parameters */
+#define T8_CMESH_OCC_FACE_ATTRIBUTE_KEY T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + T8_ECLASS_MAX_EDGES        /* Used to store which face is linked to which surface */
+#define T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY T8_CMESH_OCC_FACE_ATTRIBUTE_KEY + 1  /* Used to store face parameters */
+#define T8_CMESH_NEXT_POSSIBLE_KEY T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY + T8_ECLASS_MAX_FACES     /* The next free value for a t8code attribute key */
 
 /** This structure holds the connectivity data of the coarse mesh.
  *  It can either be replicated, then each process stores a copy of the whole
@@ -93,7 +87,7 @@ typedef struct t8_cmesh
 
   int                 set_partition; /**< If nonzero the cmesh is partitioned.
                                             If zero each process has the whole cmesh. */
-  int                 face_knowledge;  /**< If partitioned the level of face knowledge that is expected. \ref t8_mesh_set_partioned;
+  int                 face_knowledge;  /**< If partitioned the level of face knowledge that is expected. \ref t8_mesh_set_partitioned;
                             see \ref t8_cmesh_set_partition.
 */
   /* TODO: Define a maximum allowed refinemet level */
@@ -105,9 +99,6 @@ typedef struct t8_cmesh
                                                 the scheme that describes the refinement pattern. See \ref t8_cmesh_set_partition. */
   int8_t              set_partition_level; /**< Non-negative if the cmesh should be partitioned from an already existing cmesh
                                          with an assumed \a level uniform mesh underneath. */
-#if 0
-  t8_cmesh_from_t     from_method;      /* TODO: Document */
-#endif
   struct t8_cmesh    *set_from; /**< If this cmesh shall be derived from an
                                   existing cmesh by copy or more elaborate
                                   modification, we store a pointer to this
@@ -131,8 +122,9 @@ typedef struct t8_cmesh
 
   t8_cmesh_trees_t    trees; /**< structure that holds all local trees and ghosts */
 
-  t8_gloidx_t         first_tree; /**< The global index of the first local tree
-                                       on this process. Zero if the cmesh is not partitioned. -1 if this processor is empty. */
+  t8_gloidx_t         first_tree; /**< The global index of the first local tree on this process. 
+                                       Zero if the cmesh is not partitioned. -1 if this processor is empty.
+                                       See also https://github.com/DLR-AMR/t8code/wiki/Tree-indexing */
   int8_t              first_tree_shared;/**< If partitioned true if the first tree on this process is also the last tree on the next process.
                                              Always zero if num_local_trees = 0 */
 
@@ -166,7 +158,7 @@ typedef struct t8_cghost
   t8_eclass_t         eclass; /**< The eclass of this ghost. */
   size_t              neigh_offset; /** Offset to the array of face neighbors of this ghost.
                                         This count has to be added to the address of the ghost to get its face neighbors. */
-  size_t              att_offset;    /**< Adding this offset to the adress of the ghost
+  size_t              att_offset;    /**< Adding this offset to the address of the ghost
                                        yields the array of attribute_info entries */
   /* TODO: Could be a size_t */
   int                 num_attributes; /**< The number of attributes at this ghost */
@@ -180,18 +172,18 @@ t8_cghost_struct_t;
  * ttf % F is the face number and ttf / F is the orientation. (\ref t8_eclass_max_num_faces)
  * The orientation is determined as follows.  Let my_face and other_face
  * be the two face numbers of the connecting trees.
- * We chose a master_face from them as follows: Either both trees have the same
- * element class, then the face with the lower face number is the master_face or
+ * We chose a main_face from them as follows: Either both trees have the same
+ * element class, then the face with the lower face number is the main_face or
  * the trees belong to different classes in which case the face belonging to the
  * tree with the lower class according to the ordering
  * triangle < square,
  * hex < tet < prism < pyramid,
- * is the master_face.
- * Then the first face corner of the master_face connects to a face
- * corner in the other face.  The face
- * orientation is defined as the number of this corner.
+ * is the main_face.
+ * Then face corner 0 of the main_face connects to a face
+ * corner k in the other face.  The face orientation is defined as the number k.
  * If the classes are equal and my_face == other_face, treating
- * either of both faces as the master_face leads to the same result.
+ * either of both faces as the main_face leads to the same result.
+ * See https://arxiv.org/pdf/1611.02929.pdf for more details.
  */
 typedef struct t8_ctree
 {
@@ -199,9 +191,9 @@ typedef struct t8_ctree
   /* TODO: The local id of a tree should be clear from context, the entry can
    *       be optimized out. */
   t8_eclass_t         eclass; /**< The eclass of this tree. */
-  size_t              neigh_offset;  /**< Adding this offset to the adress of the tree
+  size_t              neigh_offset;  /**< Adding this offset to the address of the tree
                                        yields the array of face_neighbor entries */
-  size_t              att_offset;    /**< Adding this offset to the adress of the tree
+  size_t              att_offset;    /**< Adding this offset to the address of the tree
                                        yields the array of attribute_info entries */
   /* TODO: Could be a size_t */
   int                 num_attributes; /**< The number of attributes at this tree */
@@ -212,11 +204,11 @@ t8_ctree_struct_t;
  *  The attributes of each are stored in a key-value storage, where the key consists
  *  of the two entries (package_id,key) both being integers.
  *  The package_id serves to identify the application layer that added the attribute
- *  and the key identifies the attribute whithin that application layer.
+ *  and the key identifies the attribute within that application layer.
  *
  *  All attribute info objects of one tree are stored in an array and adding
- *  a tree's att_offset entry to the tree's adress yields this array.
- *  The attributes themselfes are stored in an array directly behind the array of
+ *  a tree's att_offset entry to the tree's address yields this array.
+ *  The attributes themselves are stored in an array directly behind the array of
  *  the attribute infos.
  */
 typedef struct t8_attribute_info
@@ -224,11 +216,11 @@ typedef struct t8_attribute_info
   int                 package_id;
                         /**< The identifier of the application layer that added this attribute */
   int                 key;
-                 /**< The (tree unique) key of the attribute whithin this AL. */
+                 /**< The (tree unique) key of the attribute within this AL. */
   size_t              attribute_offset;
                               /**< The offset of the attribute data from the first
                     attribute info of the tree.
-                    (Thus, the attribute is stored at adress tree + tree->att_offset + attribute_offset) */
+                    (Thus, the attribute is stored at address tree + tree->att_offset + attribute_offset) */
   /* TODO: eventually remove the size */
   size_t              attribute_size;
                             /**< The size in bytes of the attribute */
@@ -251,7 +243,7 @@ t8_cmesh_trees_struct_t;
 typedef struct t8_part_tree
 {
   char               *first_tree;       /* Stores the trees, the ghosts and the attributes.
-                                           The last 2*sizeof(t8_topidx) bytes store num_trees and num_ghosts */
+                                           The last 2*sizeof(t8_locidx) bytes store num_trees and num_ghosts */
   t8_locidx_t         first_tree_id;    /* local tree_id of the first tree. -1 if num_trees = 0 */
   t8_locidx_t         first_ghost_id;   /* TODO: document. -1 if num_ghost=0, 0 for the first part, (not num_local_trees!)
                                            0 <= first_ghost_id < num_ghosts */

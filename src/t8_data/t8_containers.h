@@ -165,7 +165,7 @@ t8_element_t       *t8_element_array_push_count (t8_element_array_t
 
 /** Return a given element in an array.
  * \param [in]  element_array Array of elements.
- * \param [in]  index The index of an element whithin the array.
+ * \param [in]  index The index of an element within the array.
  * \return            A pointer to the element stored at position \a index in
  *                    \a element_array.
  */
@@ -175,7 +175,7 @@ t8_element_t       *t8_element_array_index_locidx (t8_element_array_t
 
 /** Return a given element in an array.
  * \param [in]  element_array Array of elements.
- * \param [in]  index The index of an element whithin the array.
+ * \param [in]  index The index of an element within the array.
  * \return            A pointer to the element stored at position \a index in
  *                    \a element_array.
  */

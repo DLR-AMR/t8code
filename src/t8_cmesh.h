@@ -48,10 +48,6 @@ typedef struct t8_cmesh *t8_cmesh_t;
  */
 #include <t8_eclass.h>
 
-/* TODO: See above comment, when moving cmesh_new these get moved too. */
-#include <p4est_connectivity.h>
-#include <p8est_connectivity.h>
-
 /* TODO: make it legal to call cmesh_set functions multiple times,
  *       just overwrite the previous setting if no inconsistency can occur.
  *       edit: This should be achieved now.
@@ -220,27 +216,6 @@ void                t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh,
                                                     t8_scheme_cxx_t *ts);
 
 /* TODO: This function is no longer needed.  Scavenge documentation if helpful. */
-#if 0
-/* TODO: Currently cmesh_from needs to be partitioned as well.
- *       Change partition function such that it also accepts replicated cmesh_from */
-/** Set a cmesh to be partitioned from a second cmesh.
- *  This function can be used instead of \ref t8_cmesh_set_partition.
- *  There a two modes: Either a level is specified, than the new cmesh is partitioned
- *  according to an assumed uniform refinement of the old cmesh,
- *  or an array of tree offsets for each process is specified.
- *  In the latter case each process will get the local trees given by his offsets.
- *  For specification of the offset array see \ref t8_cmesh_types.h.
- * \param [in,out] cmesh       The cmesh to be partitioned.
- * \param [in] cmesh_from      The cmesh to start with.
- * \param [in] level           If >= 0 a uniform refinement of this level is taken
- *                             as reference for the partitioning.
- * \param [in] tree_offsets    If level < 0 then an array of global tree_id offsets
- *                             for each process can be specified here.
- *                             TODO: document flag for shared trees.
- */
-void                t8_cmesh_set_partition_given (t8_cmesh_t cmesh,
-                                                  t8_gloidx_t *tree_offsets);
-#endif
 
 /** Refine the cmesh to a given level.
  * Thus split each tree into x^level subtrees
@@ -253,7 +228,7 @@ void                t8_cmesh_set_refine (t8_cmesh_t cmesh, int level,
  * via \a t8_cmesh_set_tree_class, then the dimension is set automatically
  * to that of the inserted tree.
  * However, if the cmesh is constructed partitioned and the part on this process
- * is empty, it is neccessary to set the dimension by hand.
+ * is empty, it is necessary to set the dimension by hand.
  * \param [in,out]  cmesh The cmesh to be updated.
  * \param [in]      dim   The dimension to be set. Must satisfy 0 <= dim <= 3.
  * The cmesh must not be committed before calling this function.
@@ -275,7 +250,7 @@ void                t8_cmesh_set_tree_class (t8_cmesh_t cmesh,
  *  Attributes can be arbitrary data that is copied to an internal storage
  *  associated to the tree.
  *  Each application can set multiple attributes and attributes are distinguished
- *  by an interger key, where each application can use any integer as key.
+ *  by an integer key, where each application can use any integer as key.
  *
  * \param [in, out] cmesh       The cmesh to be updated.
  * \param [in]      gtree_id     The global id of the tree.
@@ -398,7 +373,7 @@ void                t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 /* If no geometry is registered and cmesh is modified from another cmesh then
  * the other cmesh's geometries are used.
  * \note If you need to use \ref t8_cmesh_bcast, then all geometries must be
- *       registerd \a after the bcast operation, not before.
+ *       registered \a after the bcast operation, not before.
  */
 void                t8_cmesh_register_geometry (t8_cmesh_t cmesh,
                                                 const t8_geometry_c
@@ -482,7 +457,7 @@ t8_locidx_t         t8_cmesh_get_num_local_trees (t8_cmesh_t cmesh);
 t8_locidx_t         t8_cmesh_get_num_ghosts (t8_cmesh_t cmesh);
 
 /** Return the global index of the first local tree of a cmesh.
- * If the cmesh is not partitioned this is allways 0.
+ * If the cmesh is not partitioned this is always 0.
  * \param [in] cmesh       The cmesh to be considered.
  * \return                 The global id of the first local tree in cmesh.
  * \a cmesh must be committed before calling this function.
@@ -517,7 +492,7 @@ int                 t8_cmesh_treeid_is_ghost (const t8_cmesh_t cmesh,
  * \param [in] cmesh       The cmesh to be considered.
  * \param [in] ltreeid     The local id of a ghost, satisfying \ref t8_cmesh_treeid_is_ghost,
  *                         thus num_trees <= \a ltreeid < num_trees + num_ghosts
- * \return                 The index of the ghost whithin all ghosts, thus an index
+ * \return                 The index of the ghost within all ghosts, thus an index
  *                         0 <= index < num_ghosts
  * \a cmesh must be committed before calling this function.
  */
@@ -600,6 +575,7 @@ t8_eclass_t         t8_cmesh_get_ghost_class (t8_cmesh_t cmesh,
  *                              If \a local_id < cmesh.num_local_trees then it is
  *                              a tree, otherwise a ghost.
  * \return                      The global id of the tree/ghost.
+ * \see https://github.com/DLR-AMR/t8code/wiki/Tree-indexing for more details about tree indexing.
  */
 t8_gloidx_t         t8_cmesh_get_global_id (t8_cmesh_t cmesh,
                                             t8_locidx_t local_id);
@@ -614,6 +590,7 @@ t8_gloidx_t         t8_cmesh_get_global_id (t8_cmesh_t cmesh,
  *                              if \a global_id corresponds to a ghost trees,
  *                              or negative if \a global_id neither matches a local
  *                              nor a ghost tree.
+ * \see https://github.com/DLR-AMR/t8code/wiki/Tree-indexing for more details about tree indexing.
  */
 t8_locidx_t         t8_cmesh_get_local_id (t8_cmesh_t cmesh,
                                            t8_gloidx_t global_id);
@@ -648,7 +625,7 @@ void                t8_cmesh_print_profile (t8_cmesh_t cmesh);
 
 /** Return a pointer to the vertex coordinates of a tree.
  * \param [in]    cmesh         The cmesh.
- * \param [in]    ltreeid       The id of a loca tree.
+ * \param [in]    ltreeid       The id of a local tree.
  * \return    If stored, a pointer to the vertex coordinates of \a tree.
  *            If no coordinates for this tree are found, NULL.
  */
@@ -735,7 +712,7 @@ void                t8_cmesh_unref (t8_cmesh_t *pcmesh);
  */
 void                t8_cmesh_destroy (t8_cmesh_t *pcmesh);
 
-/* Functions for construcing complete and committed cmeshes */
+/* Functions for constructing complete and committed cmeshes */
 
 t8_cmesh_t          t8_cmesh_new_testhybrid (sc_MPI_Comm comm);
 
@@ -765,16 +742,27 @@ void                t8_cmesh_translate_coordinates (const double *coords_in,
                                                     double translate[3]);
 
 /**TODO: Add proper documentation*/
-void                t8_cmesh_new_translate_vertices_to_attributes (t8_topidx_t
-                                                                   *
-                                                                   tvertices,
+void                t8_cmesh_new_translate_vertices_to_attributes (const
+                                                                   t8_locidx_t
+                                                                   *tvertices,
+                                                                   const
                                                                    double
                                                                    *vertices,
                                                                    double
                                                                    *attr_vertices,
-                                                                   int
+                                                                   const int
                                                                    num_vertices);
 
+/**
+ * \warning This function is only available in debug-modus and should only 
+ * be used in debug-modus.
+ * 
+ * Prints the vertices of each tree of each process
+ * 
+ * \param[in] cmesh   Source-cmesh, which trees get printed.
+ */
+void                t8_cmesh_debug_print_trees (const t8_cmesh_t cmesh,
+                                                sc_MPI_Comm comm);
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_H */

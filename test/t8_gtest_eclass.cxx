@@ -24,45 +24,64 @@
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 
-TEST (t8_gtest_eclass, eclassCountIs8)
+/* *INDENT-OFF* */
+class gtest_eclass : public testing::TestWithParam<int>{
+protected:
+  void SetUp() override {
+    ieclass = GetParam();
+  }
+  int ieclass;
+};
+/* *INDENT-ON* */
+
+TEST (gtest_eclass, eclassCountIs8)
 {
   EXPECT_EQ (T8_ECLASS_COUNT, 8);
 }
 
-TEST (t8_gtest_eclass, dimension)
+TEST (gtest_eclass, invalid_class)
 {
-  int                 eclass_dims[8] = { 0, 1, 2, 2, 3, 3, 3, 3 };
-
-  for (int eci = T8_ECLASS_ZERO; eci < T8_ECLASS_COUNT; ++eci) {
-    EXPECT_EQ (t8_eclass_to_dimension[eci], eclass_dims[eci]);
-  }
+  EXPECT_FALSE (t8_eclass_is_valid ((t8_eclass_t) T8_ECLASS_INVALID));
 }
 
-TEST (t8_gtest_eclass, valid_class)
+TEST_P (gtest_eclass, dimension)
 {
-  int                 eclass;
-  for (eclass = T8_ECLASS_ZERO; eclass < T8_ECLASS_COUNT; ++eclass) {
-    EXPECT_TRUE (t8_eclass_is_valid ((t8_eclass_t) eclass));
-  }
-  for (eclass = T8_ECLASS_COUNT; eclass <= T8_ECLASS_INVALID; ++eclass) {
-    EXPECT_FALSE (t8_eclass_is_valid ((t8_eclass_t) eclass));
-  }
-
+  const int           eclass_dims[8] = { 0, 1, 2, 2, 3, 3, 3, 3 };
+  EXPECT_EQ (t8_eclass_to_dimension[ieclass], eclass_dims[ieclass]);
 }
 
-TEST (t8_gtest_eclass, compare)
+TEST_P (gtest_eclass, valid_class)
 {
-  int                 eci, ecj;
-  for (eci = T8_ECLASS_ZERO; eci < T8_ECLASS_COUNT; ++eci) {
-    for (ecj = T8_ECLASS_ZERO; ecj < T8_ECLASS_COUNT; ++ecj) {
-      if (eci == ecj) {
-        EXPECT_FALSE (t8_eclass_compare
-                      ((t8_eclass_t) eci, (t8_eclass_t) ecj));
-      }
-      else if (t8_eclass_to_dimension[eci] == t8_eclass_to_dimension[ecj]) {
-        EXPECT_TRUE (t8_eclass_compare
-                     ((t8_eclass_t) eci, (t8_eclass_t) ecj));
-      }
+  EXPECT_TRUE (t8_eclass_is_valid ((t8_eclass_t) ieclass));
+}
+
+TEST_P (gtest_eclass, compare)
+{
+  for (int jeclass = T8_ECLASS_ZERO; jeclass < T8_ECLASS_COUNT; ++jeclass) {
+    if (ieclass == jeclass) {
+      EXPECT_FALSE (t8_eclass_compare
+                    ((t8_eclass_t) ieclass, (t8_eclass_t) jeclass));
+    }
+    else if (t8_eclass_to_dimension[ieclass] ==
+             t8_eclass_to_dimension[jeclass]) {
+      EXPECT_TRUE (t8_eclass_compare
+                   ((t8_eclass_t) ieclass, (t8_eclass_t) jeclass));
     }
   }
 }
+
+TEST_P (gtest_eclass, t8_to_vtk_corner_numbers)
+{
+  const int           num_vertices = t8_eclass_num_vertices[ieclass];
+  for (int ivertex = 0; ivertex < num_vertices; ivertex++) {
+    const int           vtk_corner_number =
+      t8_eclass_t8_to_vtk_corner_number[ieclass][ivertex];
+    const int           t8_corner_number =
+      t8_eclass_vtk_to_t8_corner_number[ieclass][vtk_corner_number];
+    EXPECT_EQ (ivertex, t8_corner_number);
+  }
+}
+
+INSTANTIATE_TEST_SUITE_P (t8_gtest_eclass, gtest_eclass,
+                          testing::Range ((int) T8_ECLASS_ZERO,
+                                          (int) T8_ECLASS_COUNT));

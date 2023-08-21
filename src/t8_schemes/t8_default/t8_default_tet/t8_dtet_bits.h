@@ -21,7 +21,7 @@
 */
 
 /** \file t8_dtet_bits.h
- * TODO: Document this.
+ * Definitions of tet-specific functions.
  * TODO: Run make doxygen and grep for files.
  *       Also document all arguments of functions.
  * TODO: Group the dtet_is functions together.
@@ -41,26 +41,39 @@ T8_EXTERN_C_BEGIN ();
  * \param [out] coordinates An array of 3 t8_dtet_coord_t that
  * 		     will be filled with the coordinates of the vertex.
  */
-void                t8_dtet_compute_coords (const t8_dtet_t *t, int vertex,
+void                t8_dtet_compute_coords (const t8_dtet_t *elem, int vertex,
                                             t8_dtet_coord_t coordinates[3]);
 
 /** Compute the coordinates of a vertex of a tetrahedron when the 
  * tree (level 0 tetrahedron) is embedded in [0,1]^3.
- * \param [in] t    Input tetrahedron.
- * \param [in] vertex The number of the vertex.
+ * \param [in] elem         Input tetrahedron.
+ * \param [in] vertex       The number of the vertex.
  * \param [out] coordinates An array of 3 double that
  * 		     will be filled with the reference coordinates of the vertex.
  */
-void                t8_dtet_compute_ref_coords (const t8_dtet_t *t,
-                                                int vertex,
-                                                double coordinates[3]);
+void                t8_dtet_compute_vertex_ref_coords (const t8_dtet_t *elem,
+                                                       int vertex,
+                                                       double coordinates[3]);
+
+/** Convert a point in the reference space of a tet element to a point in the
+ *  reference space of the tree (level 0) embedded in [0,1]^3.
+ * \param [in]  elem       Input tetrahedron.
+ * \param [in]  ref_coords The reference coordinates inside the
+ *                         tet element [0,1]^2
+ * \param [out] out_coords An array of 3 doubles that will be filled with the
+ *                         reference coordinates in the tree of the tet.
+ */
+void                t8_dtet_compute_reference_coords (const t8_dtet_t *elem,
+                                                      const double
+                                                      *ref_coords,
+                                                      double out_coords[3]);
 
 /** Compute the coordinates of the four vertices of a tetrahedron.
- * \param [in] t    Input tetrahedron.
+ * \param [in] elem         Input tetrahedron.
  * \param [out] coordinates An array of 4x3 t8_dtet_coord_t that
  * 		     will be filled with the coordinates of t's vertices.
  */
-void                t8_dtet_compute_all_coords (const t8_dtet_t *t,
+void                t8_dtet_compute_all_coords (const t8_dtet_t *elem,
                                                 t8_dtet_coord_t
                                                 coordinates[4][3]);
 
@@ -74,7 +87,7 @@ void                t8_dtet_copy (const t8_dtet_t *t, t8_dtet_t *dest);
 /** Compare two tets in their linear order.
  * \param [in] t1 Tetrahedron one.
  * \param [in] t2 Tetrahedron two.
- * \return        Returns negativ if t1 < t2, zero if t1 = t2, positive if t1 > t2
+ * \return        Returns negative if t1 < t2, zero if t1 = t2, positive if t1 > t2
  */
 int                 t8_dtet_compare (const t8_dtet_t *t1,
                                      const t8_dtet_t *t2);
@@ -112,7 +125,8 @@ void                t8_dtet_child (const t8_dtet_t *elem,
  * \param [in,out] c  Pointers to the 8 computed children in Morton order.
  *                    t may point to the same quadrant as c[0].
  */
-void                t8_dtet_childrenpv (const t8_dtet_t *t, t8_dtet_t *c[]);
+void                t8_dtet_childrenpv (const t8_dtet_t *t,
+                                        t8_dtet_t *c[T8_DTET_CHILDREN]);
 
 /** Check whether a collection of eight tetrahedra is a family in Morton order.
  * \param [in]     f  An array of eight tetrahedra.
@@ -170,7 +184,7 @@ void                t8_dtet_children_at_face (const t8_dtet_t *tet,
  * \param [in]  face    Then number of the face.
  * \param [in]  face_child  The child number of a child of the face tetrahedron.
  * \return              The face number of the face of a child of \a tetrahedron
- *                      that conincides with \a face_child.
+ *                      that coincides with \a face_child.
  */
 int                 t8_dtet_face_child_face (const t8_dtet_t *tet,
                                              int face, int face_child);
@@ -262,6 +276,22 @@ int                 t8_dtet_is_ancestor (const t8_dtet_t *t,
  * \note This id is not the Morton index.
  */
 t8_linearidx_t      t8_dtet_linear_id (const t8_dtet_t *t, int level);
+
+/**
+ * Same as init_linear_id, but we only consider the subtree. Used for computing the index of a
+ * tetrahedron lying in a pyramid
+ * \param [in, out] t   Existing triangle whose data will be filled
+ * \param id            Index to be considered
+ * \param start_level   The level of the root of the subtree
+ * \param end_level     Level of uniform grid to be considered
+ * \param parenttype    The type of the parent.
+ */
+void                t8_dtet_init_linear_id_with_level (t8_dtet_t *t,
+                                                       t8_linearidx_t id,
+                                                       int start_level,
+                                                       int end_level,
+                                                       t8_dtet_type_t
+                                                       parenttype);
 
 /** Initialize a tetrahedron as the tetrahedron with a given global id in a uniform
  *  refinement of a given level. *

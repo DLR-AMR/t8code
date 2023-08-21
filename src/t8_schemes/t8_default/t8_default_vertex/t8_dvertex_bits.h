@@ -21,6 +21,7 @@
 */
 
 /** \file t8_dvertex_bits.h
+ * Definitions of vertex-specific functions.
  */
 
 #ifndef T8_DVERTEX_BITS_H
@@ -45,8 +46,8 @@ int                 t8_dvertex_get_level (const t8_dvertex_t *v);
 void                t8_dvertex_copy (const t8_dvertex_t *v,
                                      t8_dvertex_t *dest);
 
-/** Compare two elements. returns negativ if l1 < l2, zero if l1 equals l2
- *  and positiv if l1 > l2.
+/** Compare two elements. returns negative if l1 < l2, zero if l1 equals l2
+ *  and positive if l1 > l2.
  *  If l2 is a copy of l1 then the elements are equal.
  */
 int                 t8_dvertex_compare (const t8_dvertex_t *l1,
@@ -109,7 +110,8 @@ void                t8_dvertex_sibling (const t8_dvertex_t *v, int sibid,
  *                    t may point to the same quadrant as c[0].
  */
 void                t8_dvertex_childrenpv (const t8_dvertex_t *t,
-                                           t8_dvertex_t *c[]);
+                                           t8_dvertex_t
+                                           *c[T8_DVERTEX_CHILDREN]);
 
 /** Check whether a collection of two vertexs is a family in Morton order.
  * \param [in]     f  An array of two vertexs.
@@ -147,7 +149,7 @@ void                t8_dvertex_init_linear_id (t8_dvertex_t *v, int level,
  *  vertex of the respective tree neighbor that logically coincides with e
  *  but lies in the coordinate system of the neighbor tree.
  *  \param [in] elem1     The face element.
- *  \param [in,out] elem2 On return the face elment \a elem1 with respective
+   *  \param [in,out] elem2 On return the face element \a elem1 with respect
  *                        to the coordinate system of the other tree.
  * \note For vertices this function is equivalent to copy.
  */
@@ -192,6 +194,18 @@ void                t8_dvertex_vertex_coords (const t8_dvertex_t *elem,
 void                t8_dvertex_vertex_ref_coords (const t8_dvertex_t *elem,
                                                   int vertex,
                                                   double coords[]);
+
+/** Compute the coordinates of a reference coordinate (always 0) inside the
+ * [0,1]^0 reference space.
+ * \param [in] elem         Vertex whose vertex is computed.
+ * \param [in] ref_coords   The reference coordinate inside the vertex (must be 0).
+ * \param [out] out_coords  The coordinates of the computed vertex, must have one entry (will be set to 0).
+ */
+void                t8_dvertex_compute_reference_coords (const t8_dvertex_t
+                                                         *elem,
+                                                         const double
+                                                         *ref_coords,
+                                                         double *out_coords);
 
 /** Computes the linear position of a vertex in an uniform grid.
  * \param [in] vertex  vertex whose id will be computed.

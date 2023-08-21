@@ -26,7 +26,8 @@
 #include <sc_refcount.h>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_element_cxx.hxx>
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_geometrical.h>
 #include <example/common/t8_example_common.h>
 
 T8_EXTERN_C_BEGIN ();
@@ -145,12 +146,9 @@ t8_common_adapt_level_set (t8_forest_t forest,
   /* Get the minimum and maximum x-coordinate from the user data pointer of forest */
   data = (t8_example_level_set_struct_t *) t8_forest_get_user_data (forest);
 
-  /* If maxlevel is exceeded, coarsen or do not refine */
+  /* If maxlevel is exceeded then coarsen */
   if (level > data->max_level && is_family) {
     return -1;
-  }
-  if (level >= data->max_level) {
-    return 0;
   }
   /* Refine at least until min level */
   if (level < data->min_level) {
@@ -171,32 +169,5 @@ t8_common_adapt_level_set (t8_forest_t forest,
   }
   return 0;
 }
-
-#if 0
-static int
-t8_basic_adapt (t8_forest_t forest, t8_locidx_t which_tree,
-                t8_eclass_scheme_c *ts,
-                int num_elements, t8_element_t *elements[])
-{
-  int                 level, mpirank, mpiret;
-  T8_ASSERT (num_elements == 1 || num_elements ==
-             ts->t8_element_num_children (elements[0]));
-  level = ts->t8_element_level (elements[0]);
-#if 0
-  if (num_elements > 1) {
-    /* Do coarsen here */
-    if (level > 0)
-      return -1;
-    return 0;
-  }
-#endif
-  mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
-  SC_CHECK_MPI (mpiret);
-  if (level < 5)
-    /* refine randomly if level is smaller 4 */
-    return (unsigned) ((mpirank + 1) * rand ()) % 2;
-  return 0;
-}
-#endif
 
 T8_EXTERN_C_END ();

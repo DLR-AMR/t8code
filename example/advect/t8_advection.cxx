@@ -22,15 +22,18 @@
 
 #include <sc_options.h>
 #include <sc_statistics.h>
-#include <t8_schemes/t8_default_cxx.hxx>
-#include <t8_forest.h>
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_io.h>
+#include <t8_forest/t8_forest_geometrical.h>
+#include <t8_forest/t8_forest_profiling.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_ghost.h>
 #include <example/common/t8_example_common.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh_readmshfile.h>
-#include <t8_cmesh_vtk.h>
+#include <t8_cmesh_vtk_writer.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_vec.h>
 
@@ -180,75 +183,8 @@ t8_advect_element_set_phi_adapt (const t8_advect_problem_t * problem,
     = phi;
 }
 
-#if 0
-/* Decide whether an element should be refined or coarsened to match the cfl number */
-/* TODO: use t8_advect_element_get_phi */
-static int
-t8_advect_adapt_cfl (t8_advect_problem_t * problem,
-                     t8_advect_element_data_t * elem_data)
-{
-  double              u[3], speed;
-  double              range = 0.2;
-
-  /* Compute the flow at this element */
-  problem->u (elem_data->midpoint, problem->t, u);
-  /* Compute the speed of the flow */
-  speed = t8_vec_norm (u);
-  speed = sqrt (speed);
-  if (speed * problem->delta_t / elem_data->vol <=
-      problem->cfl - range * problem->cfl) {
-    /* refine if the element is too large */
-    return 1;
-  }
-  else if (speed * problem->delta_t / elem_data->vol >
-           problem->cfl + range * problem->cfl) {
-    /* coarsen if the element is too small */
-    return -1;
-  }
-  return 0;
-}
-#endif
-
-#if 0
-/* estimate the absolute value of the gradient of phi at an element.
- * We compute the gradient as finite difference with the left and right
- * neighbor element and take the maximum (absolute value) of both values */
-/* TODO: use t8_advect_element_get_phi */
-static double
-t8_advect_gradient_phi (t8_advect_problem_t * problem,
-                        t8_advect_element_data_t * elem_data)
-{
-  t8_advect_element_data_t *neigh;
-  double              phi_neigh;
-  double              vol;
-  double              max_gradient = 0, gradient_abs;
-  int                 iface;
-
-  for (iface = 0; iface < 2; iface++) {
-    if (elem_data->num_neighbors[iface] >= 0) {
-      /* Get the neighbor element */
-      neigh = (t8_advect_element_data_t *)
-        t8_sc_array_index_locidx (problem->element_data,
-                                  elem_data->neighs[iface][0]);
-      /* Get the phi value of the neighbor */
-      phi_neigh = neigh->phi;
-      /* Compute the distance of the midpoints of the element and its neighbor */
-      /* |---x---|--x--|  (size of left element + size of right element)/2 */
-      vol = (elem_data->vol + neigh->vol) / 2;
-      /* compute the absolute value of the gradient */
-      gradient_abs = fabs ((phi_neigh - elem_data->phi) / vol);
-      /* compute the maximum */
-      max_gradient = SC_MAX (max_gradient, gradient_abs);
-    }
-    /* If there is no neighbor at this face (boundary element), we do not compute the
-     * gradient. If there is no neighbor at any face, the max_gradient is 0 */
-  }
-  return max_gradient;
-}
-#endif
-
 /* Adapt the forest. We refine if the level-set function is close to zero
- * and coarsen if it is larger than a given threshhold. */
+ * and coarsen if it is larger than a given threshold. */
 static int
 t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
                  t8_locidx_t ltree_id, t8_locidx_t lelement_id,
@@ -352,10 +288,7 @@ t8_advect_l_infty_rel (const t8_advect_problem_t * problem,
     ana_sol =
       analytical_sol (elem_data->midpoint, problem->t,
                       problem->udata_for_phi);
-#if 1
-    if (fabs (ana_sol) < distance)
-#endif
-    {
+    if (fabs (ana_sol) < distance) {
       /* Compute the error as the stored value at the midpoint of this element
        * minus the solution at this midpoint */
       phi = t8_advect_element_get_phi (problem, ielem);
@@ -394,10 +327,7 @@ t8_advect_l_2_rel (const t8_advect_problem_t * problem,
     ana_sol =
       analytical_sol (elem_data->midpoint, problem->t,
                       problem->udata_for_phi);
-#if 1
-    if (fabs (ana_sol) < distance)
-#endif
-    {
+    if (fabs (ana_sol) < distance) {
       count++;
       /* Compute the error as the stored value at the midpoint of this element
        * minus the solution at this midpoint */
@@ -500,34 +430,11 @@ t8_advect_flux_upwind (const t8_advect_problem_t * problem,
   /* Compute the dot-product of u and the normal vector */
   normal_times_u = t8_vec_dot (normal, u_at_face_center);
 
-#if 0
-  /* Output, mainly for debugging */
-  t8_debugf ("[advect] face %i\n", face);
-  t8_debugf ("[advect] normal %f %f %f\n", normal[0], normal[1], normal[2]);
-  t8_debugf ("[advect] face center %f %f %f\n", face_center[0],
-             face_center[1], face_center[2]);
-  t8_debugf ("[advect] u %f %f %f\n", u_at_face_center[0],
-             u_at_face_center[1], u_at_face_center[2]);
-  t8_debugf ("[advect] norm t u: %f\n", normal_times_u);
-  t8_debugf ("[advect] area %f\n", area);
-  t8_debugf ("[advect] phi+ %f\n", el_plus_phi);
-  t8_debugf ("[advect] phi- %f\n", el_minus_phi);
-#endif
-
   if (normal_times_u >= 0) {
-#if 0
-    /* u flows out of the element_plus */
-    t8_debugf ("[advect] out flux: %f\n",
-               -el_plus_phi * normal_times_u * area);
-#endif
     return -el_plus_phi * normal_times_u * area;
   }
   else {
     /* u flows into the element_plus */
-#if 0
-    t8_debugf ("[advect] in flux: %f\n",
-               -el_minus_phi * normal_times_u * area);
-#endif
     return -el_minus_phi * normal_times_u * area;
   }
 }
@@ -595,7 +502,6 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
     el_hang->fluxes[face][i] =
       t8_advect_flux_upwind (problem, phi_plus, phi_minus, ltreeid,
                              face_children[i], child_face);
-    // if (a == 1) printf  ("%i %i %f\n",face, i, el_hang->fluxes[face][i]);
     /* Set the flux of the neighbor element */
     dual_face = el_hang->dual_faces[face][i];
     if (!adapted_or_partitioned && !neigh_is_ghost) {
@@ -604,7 +510,6 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
         /* We need to allocate the fluxes */
         neigh_data->fluxes[dual_face] = T8_ALLOC (double, 1);
       }
-      // printf ("face %i neigh %i df %i\n", face, neigh_id, dual_face);
       SC_CHECK_ABORT (dual_face < neigh_data->num_faces, "num\n");
       // SC_CHECK_ABORT (neigh_data->num_neighbors[dual_face] == 1, "entry\n");
       neigh_data->num_neighbors[dual_face] = 1;
@@ -636,73 +541,6 @@ t8_advect_boundary_set_phi (const t8_advect_problem_t * problem,
   *boundary_phi = t8_advect_element_get_phi (problem, ielement);
 }
 
-#if 0
-static double
-t8_advect_lax_friedrich_alpha (const t8_advect_problem_t * problem,
-                               const t8_advect_element_data_t *
-                               el_data_plus,
-                               const t8_advect_element_data_t * el_data_minus)
-{
-  double              alpha;
-  double              dist, u_plus[3], u_minus[3];
-
-  /* We compute alpha as the derivative of u at the midpoint between
-   * the cells */
-
-  /* The distance between the two cells is the sum of their length divided by two */
-
-  dist = (el_data_plus->vol + el_data_minus->vol) / 2.;
-  /* Approximate the derivative of u */
-
-  problem->u (el_data_plus->midpoint, problem->t, u_plus);
-  problem->u (el_data_minus->midpoint, problem->t, u_minus);
-  /* in 1D we are only interested in the first coordinate of u */
-  alpha = fabs ((u_plus[0] - u_minus[0]) / dist);
-
-  return alpha;
-}
-
-static double
-t8_advect_flux_lax_friedrich_1d (const t8_advect_problem_t * problem,
-                                 const t8_advect_element_data_t *
-                                 el_data_plus,
-                                 const t8_advect_element_data_t *
-                                 el_data_minus)
-{
-  double              alpha = 0;        /* TODO: Choose alpha according to a reasonable criterion */
-  double              x_j_half[3];
-  int                 idim;
-  double              u_at_x_j_half[3];
-  double              phi_sum, phi_diff;
-
-  /*
-   *    | --x-- | --x-- |   Two elements, midpoints marked with 'x'
-   *       x_j     x_j+1
-   *          x_j_half
-   */
-  /* Compute x_j_half */
-  for (idim = 0; idim < 3; idim++) {
-    x_j_half[idim] =
-      (el_data_plus->midpoint[idim] -
-       (idim == 0 ? el_data_plus->vol / 2 : 0));
-  }
-
-  /* Compute u at the interval boundary. */
-  problem->u (x_j_half, problem->t, u_at_x_j_half);
-
-  /* Compute the sum of both phi values */
-  phi_sum = el_data_minus->phi + el_data_plus->phi;
-  /* Compute the difference of both */
-  phi_diff = el_data_plus->phi - el_data_minus->phi;
-
-  /* Compute alpha */
-  alpha =
-    t8_advect_lax_friedrich_alpha (problem, el_data_plus, el_data_minus);
-  /* in 1D only the first coordinate of u is interesting */
-  return .5 * (u_at_x_j_half[0] * phi_sum - alpha * phi_diff);
-}
-#endif
-
 static void
 t8_advect_advance_element (t8_advect_problem_t * problem,
                            t8_locidx_t lelement)
@@ -728,11 +566,6 @@ t8_advect_advance_element (t8_advect_problem_t * problem,
   }
   /* Phi^t = dt/dx * (f_(j-1/2) - f_(j+1/2)) + Phi^(t-1) */
   elem->phi_new = (problem->delta_t / elem->vol) * flux_sum + phi;
-#if 0
-  t8_debugf
-    ("[advect] advance el with delta_t %f vol %f phi %f  flux %f to %f\n",
-     problem->delta_t, elem->vol, phi, flux_sum, elem->phi_new);
-#endif
 }
 
 /* Compute element midpoint and vol and store at element_data field. */
@@ -755,7 +588,7 @@ t8_advect_compute_element_data (t8_advect_problem_t * problem,
  * If elements are coarsened, the parent gets the average phi value of the children.
  */
 /* outgoing are the old elements and incoming the new ones */
-/* TODO: If coarsening, weight the phi vaules by volume of the children:
+/* TODO: If coarsening, weight the phi values by volume of the children:
  *       phi_E = sum (phi_Ei *vol(E_i)/vol(E))
  *       Similar formula for refining?
  */
@@ -764,6 +597,7 @@ t8_advect_replace (t8_forest_t forest_old,
                    t8_forest_t forest_new,
                    t8_locidx_t which_tree,
                    t8_eclass_scheme_c *ts,
+                   int refine,
                    int num_outgoing,
                    t8_locidx_t first_outgoing,
                    int num_incoming, t8_locidx_t first_incoming)
@@ -780,7 +614,7 @@ t8_advect_replace (t8_forest_t forest_old,
   problem = (t8_advect_problem_t *) t8_forest_get_user_data (forest_new);
   T8_ASSERT (forest_old == problem->forest);
   T8_ASSERT (forest_new == problem->forest_adapt);
-  /* Get pointers to the element datas */
+  /* Get pointers to the element data */
   first_incoming_data =
     first_incoming + t8_forest_get_tree_element_offset (forest_new,
                                                         which_tree);
@@ -795,7 +629,8 @@ t8_advect_replace (t8_forest_t forest_old,
 
   /* Get the old phi value (used in the cases with num_outgoing = 1) */
   phi_old = t8_advect_element_get_phi (problem, first_outgoing_data);
-  if (num_incoming == num_outgoing && num_incoming == 1) {
+  if (refine == 0) {
+    T8_ASSERT (num_incoming == num_outgoing && num_incoming == 1);
     /* The element is not changed, copy phi and vol */
     memcpy (elem_data_in, elem_data_out, sizeof (t8_advect_element_data_t));
     t8_advect_element_set_phi_adapt (problem, first_incoming_data, phi_old);
@@ -813,7 +648,8 @@ t8_advect_replace (t8_forest_t forest_old,
       elem_data_in->neighs[iface] = NULL;
     }
   }
-  else if (num_outgoing == 1) {
+  else if (refine == 1) {
+    T8_ASSERT (num_outgoing == 1);
     T8_ASSERT (num_incoming == 1 << problem->dim);
     /* The old element is refined, we copy the phi values and compute the new midpoints */
     for (i = 0; i < num_incoming; i++) {
@@ -843,6 +679,7 @@ t8_advect_replace (t8_forest_t forest_old,
   }
   else {
     double              phi = 0;
+    T8_ASSERT (refine = -1);
     T8_ASSERT (num_outgoing == 1 << problem->dim && num_incoming == 1);
     /* The old elements form a family which is coarsened. We compute the average
      * phi value and set it as the new phi value */
@@ -1091,14 +928,22 @@ t8_advect_problem_partition (t8_advect_problem_t * problem, int measure_time)
 
 static t8_cmesh_t
 t8_advect_create_cmesh (sc_MPI_Comm comm, int cube_type,
-                        const char *mshfile, int level, int dim)
+                        const char *mshfile, int level, int dim,
+                        int use_occ_geometry)
 {
   if (mshfile != NULL) {
     /* Load from .msh file and partition */
     t8_cmesh_t          cmesh, cmesh_partition;
     T8_ASSERT (mshfile != NULL);
 
-    cmesh = t8_cmesh_from_msh_file (mshfile, 1, comm, dim, 0);
+    cmesh =
+      t8_cmesh_from_msh_file (mshfile, 0, comm, dim, 0, use_occ_geometry);
+    /* The partitioning of the occ geometry is not yet available */
+    if (use_occ_geometry) {
+      t8_productionf ("cmesh was not partitioned. Partitioning is not yet "
+                      "available with the curved geometry\n");
+      return cmesh;
+    }
     /* partition this cmesh according to the initial refinement level */
     t8_cmesh_init (&cmesh_partition);
     t8_cmesh_set_partition_uniform (cmesh_partition, level,
@@ -1119,10 +964,6 @@ t8_advect_create_cmesh (sc_MPI_Comm comm, int cube_type,
       return t8_cmesh_new_hypercube ((t8_eclass_t) cube_type, comm, 0, 0, 1);
     }
   }
-#if 0
-  /* Unit square with 6 trees (2 quads, 4 triangles) */
-  return t8_cmesh_new_periodic_hybrid (comm);
-#endif
 }
 
 static              t8_flow_function_3d_fn
@@ -1141,6 +982,8 @@ t8_advect_choose_flow (int flow_arg)
     return t8_flow_around_circle;
   case 6:
     return t8_flow_stokes_flow_sphere_shell;
+  case 7:
+    return t8_flow_around_circle_with_angular_velocity;
   default:
     SC_ABORT ("Wrong argument for flow parameter.\n");
   }
@@ -1192,7 +1035,7 @@ t8_advect_problem_init (t8_cmesh_t cmesh,
     sc_stats_init (&problem->stats[i], advect_stat_names[i]);
   }
 
-  /* Contruct uniform forest with ghosts */
+  /* Construct uniform forest with ghosts */
   default_scheme = t8_scheme_new_default_cxx ();
 
   problem->forest =
@@ -1405,12 +1248,6 @@ t8_advect_write_vtk (t8_advect_problem_t * problem)
   else {
     t8_errorf ("[Advect] Error writing to files %s\n", fileprefix);
   }
-#if 0
-  /* Write the cmesh as vtk file */
-  snprintf (fileprefix + strlen (fileprefix), BUFSIZ - strlen (fileprefix),
-            "_cmesh");
-  t8_cmesh_vtk_write_file (problem->forest->cmesh, fileprefix, 1);
-#endif
   /* clean-up */
   T8_FREE (u_and_phi_array[0]);
   T8_FREE (u_and_phi_array[1]);
@@ -1607,14 +1444,16 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                   neigh_scheme->t8_element_level (neighs[ineigh]);
               }
 
+              T8_ASSERT (neighs != NULL
+                         || elem_data->num_neighbors[iface] == 0);
+              if (neighs != NULL) {
+                /* *INDENT-OFF* */
+                neigh_scheme->t8_element_destroy (elem_data->num_neighbors[iface],
+                                                  neighs);
+                /* *INDENT-ON* */
 
-
-              /* *INDENT-OFF* */
-              neigh_scheme->t8_element_destroy (elem_data->num_neighbors[iface],
-                                                neighs);
-              /* *INDENT-ON* */
-
-              T8_FREE (neighs);
+                T8_FREE (neighs);
+              }
 
               /* Allocate flux storage */
               elem_data->fluxes[iface] =
@@ -1652,15 +1491,9 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                 /* This is a boundary */
                 neigh_index = -1;
               }
-#if 0
-              flux =
-                t8_advect_flux_lax_friedrich_1d (problem, plus_data,
-                                                 minus_data);
-#else
               flux =
                 t8_advect_flux_upwind_1d (problem, lelement, neigh_index,
                                           iface);
-#endif
               elem_data->fluxes[iface][0] = flux;
               elem_data->flux_valid[iface] = 1;
             }
@@ -1751,7 +1584,6 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
           problem->stats[ADVECT_DUMMY].count = 1;
         }
         /* Compute time step */
-        //      printf ("advance %i\n", ielement);
         t8_advect_advance_element (problem, lelement);
       }
     }
@@ -1759,16 +1591,9 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     /* Store the advanced phi value in each element */
     t8_advect_project_element_data (problem);
     solve_time += sc_MPI_Wtime ();
-#if 0
-    /* test adapt, adapt and balance 3 times during the whole computation */
-    if (adapt && time_steps / 3 > 0
-        && problem->num_time_steps % (time_steps / 3) == (time_steps / 3) - 1)
-#else
     if (maxlevel > level) {
       /* Adapt the mesh after adapt_freq time steps */
-      if (problem->num_time_steps % adapt_freq == adapt_freq - 1)
-#endif
-      {
+      if (problem->num_time_steps % adapt_freq == adapt_freq - 1) {
         adapted_or_partitioned = 1;
         t8_advect_problem_adapt (problem, 1);
         t8_advect_problem_partition (problem, 1);
@@ -1848,7 +1673,7 @@ main (int argc, char *argv[])
   int                 level, reflevel, dim, cube_type, dummy_op;
   int                 parsed, helpme, no_vtk, vtk_freq, adapt_freq;
   int                 volume_refine;
-  int                 flow_arg;
+  int                 flow_arg, use_occ_geometry;
   double              T, cfl, band_width;
   t8_levelset_sphere_data_t ls_data;
   /* brief help message */
@@ -1881,7 +1706,14 @@ main (int argc, char *argv[])
                       "\t\t\tIt reverses direction at t = 0.5.\n"
                       "\t\t4 - 2D rotation around (0.5,0.5).\n"
                       "\t\t5 - 2D flow around circle at (0.5,0.5)"
-                      "with radius 0.15.\n)");
+                      "with radius 0.15.\n"
+                      "\t\t6 - A solution to the stokes equation on a spherical shell.\n"
+                      "\t\t7 - Flow past a rotating cylinder of radius of 0.5"
+                      " around the z-axis. This flow is defined for a specific"
+                      " mesh, which can be generated with Gmsh and the .geo"
+                      " files 't8_advection_generate_channel.geo' and"
+                      " 't8_advection_generate_channel_2d.geo'. These meshes"
+                      " can also be used with the curved geometry.\n");
   sc_options_add_int (opt, 'l', "level", &level, 0,
                       "The minimum refinement level of the mesh.");
   sc_options_add_int (opt, 'r', "rlevel", &reflevel, 0,
@@ -1893,13 +1725,17 @@ main (int argc, char *argv[])
                       "\t\t3 - triangle\n\t\t4 - hexahedron\n"
                       "\t\t5 - tetrahedron\n\t\t6 - prism\n"
                       "\t\t7 - triangle/quad (hybrid 2d).\n"
-                      "\t\t8 - tet/hex/prism (hybrid 3d).");
+                      "\t\t8 - tet/hex/prism (hybrid 3d).\n");
   sc_options_add_string (opt, 'f', "mshfile", &mshfile, NULL,
                          "If specified, the cmesh is constructed from a .msh file with "
                          "the given prefix.\n\t\t\t\t     The files must end in .msh "
                          "and be in ASCII format version 2. -d must be specified.");
   sc_options_add_int (opt, 'd', "dim", &dim, -1,
                       "In combination with -f: The dimension of the mesh. 1 <= d <= 3.");
+
+  sc_options_add_switch (opt, 'O', "occ", &use_occ_geometry,
+                         "In combination with -f: Use the occ geometry, only viable if a "
+                         ".brep file of the same name is present.");
 
   sc_options_add_double (opt, 'T', "end-time", &T, 1,
                          "The duration of the simulation. Default: 1");
@@ -1909,7 +1745,7 @@ main (int argc, char *argv[])
   sc_options_add_double (opt, 'b', "band-width", &band_width,
                          1,
                          "Control the width of the refinement band around\n"
-                         " the zero level-set. Default 1.");
+                         "\t\t\t\t     the zero level-set. Default 1.");
 
   sc_options_add_int (opt, 'a', "adapt-freq", &adapt_freq, 1,
                       "Controls how often the mesh is readapted. "
@@ -1944,7 +1780,7 @@ main (int argc, char *argv[])
   sc_options_add_int (opt, 'V', "volume-refine", &volume_refine, -1,
                       "Refine elements close to the 0 level-set only "
                       "if their volume is smaller than the l+V-times refined\n"
-                      " smallest element int the mesh.");
+                      "\t\t\t\t     smallest element int the mesh.");
 
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
@@ -1953,7 +1789,7 @@ main (int argc, char *argv[])
     t8_global_essentialf ("%s\n", help);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-  else if (parsed >= 0 && 1 <= flow_arg && flow_arg <= 6 && 0 <= level
+  else if (parsed >= 0 && 1 <= flow_arg && flow_arg <= 7 && 0 <= level
            && 0 <= reflevel && 0 <= vtk_freq
            && ((mshfile != NULL && 0 < dim && dim <= 3)
                || (1 <= cube_type && cube_type <= 8)) && band_width >= 0) {
@@ -1986,7 +1822,7 @@ main (int argc, char *argv[])
 
     cmesh =
       t8_advect_create_cmesh (sc_MPI_COMM_WORLD, cube_type,
-                              mshfile, level, dim);
+                              mshfile, level, dim, use_occ_geometry);
     u = t8_advect_choose_flow (flow_arg);
     if (!no_vtk) {
       t8_cmesh_vtk_write_file (cmesh, "advection_cmesh", 1.0);

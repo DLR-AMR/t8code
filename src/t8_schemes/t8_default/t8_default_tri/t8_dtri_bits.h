@@ -21,6 +21,7 @@
 */
 
 /** \file t8_dtri_bits.h
+ * Definitions of triangle-specific functions.
  */
 
 #ifndef T8_DTRI_BITS_H
@@ -41,7 +42,7 @@ void                t8_dtri_copy (const t8_dtri_t *t, t8_dtri_t *dest);
 /** Compare two triangle in their linear order.
  * \param [in] t1 Triangle one.
  * \param [in] t2 Triangle two.
- * \return        Returns negativ if t1 < t2, zero if t1 = t2, positive if t1 > t2
+ * \return        Returns negative if t1 < t2, zero if t1 = t2, positive if t1 > t2
  */
 int                 t8_dtri_compare (const t8_dtri_t *t1,
                                      const t8_dtri_t *t2);
@@ -66,31 +67,45 @@ void                t8_dtri_ancestor (const t8_dtri_t *t, int level,
                                       t8_dtri_t *ancestor);
 
 /** Compute the coordinates of a vertex of a triangle.
- * \param [in] t    Input triangle.
+ * \param [in] elem         Input triangle.
+ * \param [in] vertex       The number of the vertex.
  * \param [out] coordinates An array of 2 t8_dtri_coord_t that
- * 		     will be filled with the coordinates of the vertex.
- * \param [in] vertex The number of the vertex.
+ * 		        will be filled with the coordinates of the vertex.
  */
-void                t8_dtri_compute_coords (const t8_dtri_t *t, int vertex,
+void                t8_dtri_compute_coords (const t8_dtri_t *elem,
+                                            const int vertex,
                                             t8_dtri_coord_t coordinates[2]);
 
 /** Compute the reference coordinates of a vertex of a triangle when the 
  * tree (level 0 triangle) is embedded in [0,1]^2.
- * \param [in] t    Input triangle.
- * \param [in] vertex The number of the vertex.
+ * \param [in] elem         Input triangle.
+ * \param [in] vertex       The number of the vertex.
  * \param [out] coordinates An array of 2 double that
  * 		     will be filled with the reference coordinates of the vertex.
  */
-void                t8_dtri_compute_ref_coords (const t8_dtri_t *t,
-                                                int vertex,
-                                                double coordinates[2]);
+void                t8_dtri_compute_vertex_ref_coords (const t8_dtri_t *elem,
+                                                       const int vertex,
+                                                       double coordinates[2]);
+
+/** Convert a point in the reference space of a triangle element to a point in
+ *  the reference space of the tree (level 0) embedded in [0,1]^2.
+ * \param [in]  elem       Input triangle.
+ * \param [in]  ref_coords The reference coordinates inside the
+ *                         triangle element [0,1]^2
+ * \param [out] out_coords An array of 2 doubles that will be filled with the
+ *                         reference coordinates in the tree of the triangle.
+ */
+void                t8_dtri_compute_reference_coords (const t8_dtri_t *elem,
+                                                      const double
+                                                      *ref_coords,
+                                                      double out_coords[2]);
 
 /** Compute the coordinates of the four vertices of a triangle.
- * \param [in] t    Input triangle.
+ * \param [in] elem         Input triangle.
  * \param [out] coordinates An array of 4x3 t8_dtri_coord_t that
  * 		     will be filled with the coordinates of t's vertices.
  */
-void                t8_dtri_compute_all_coords (const t8_dtri_t *t,
+void                t8_dtri_compute_all_coords (const t8_dtri_t *elem,
                                                 t8_dtri_coord_t
                                                 coordinates[3][2]);
 
@@ -108,7 +123,8 @@ void                t8_dtri_child (const t8_dtri_t *t,
  * \param [in,out] c  Pointers to the 4 computed children in Morton order.
  *                    t may point to the same quadrant as c[0].
  */
-void                t8_dtri_childrenpv (const t8_dtri_t *t, t8_dtri_t *c[]);
+void                t8_dtri_childrenpv (const t8_dtri_t *t,
+                                        t8_dtri_t *c[T8_DTRI_CHILDREN]);
 
 /** Check whether a collection of eight triangles is a family in Morton order.
  * \param [in]     f  An array of eight triangles.
@@ -166,7 +182,7 @@ void                t8_dtri_children_at_face (const t8_dtri_t *tri,
  * \param [in]  face    Then number of the face.
  * \param [in]  face_child  The child number of a child of the face triangle.
  * \return              The face number of the face of a child of \a triangle
- *                      that conincides with \a face_child.
+ *                      that coincides with \a face_child.
  */
 int                 t8_dtri_face_child_face (const t8_dtri_t *triangle,
                                              int face, int face_child);
@@ -285,6 +301,22 @@ int                 t8_dtri_is_ancestor (const t8_dtri_t *t,
  * \note This id is not the Morton index.
  */
 t8_linearidx_t      t8_dtri_linear_id (const t8_dtri_t *t, int level);
+
+/**
+ * Same as init_linear_id, but we only consider the subtree. Used for computing the index of a
+ * tetrahedron lying in a pyramid
+ * \param [in, out] t   Existing triangle whose data will be filled
+ * \param [in] id            Index to be considered
+ * \param [in] start_level   The level of the root of the subtree
+ * \param [in] end_level     Level of uniform grid to be considered
+ * \param [in] parenttype    The type of the parent.
+ */
+void                t8_dtri_init_linear_id_with_level (t8_dtri_t *t,
+                                                       t8_linearidx_t id,
+                                                       const int start_level,
+                                                       const int end_level,
+                                                       t8_dtri_type_t
+                                                       parenttype);
 
 /** Initialize a triangle as the triangle with a given global id in a uniform
  *  refinement of a given level. *
