@@ -38,7 +38,7 @@ BreakBeforeBinaryOperators: All
 BreakBeforeBraces: Custom
 BreakBeforeTernaryOperators: 'true'
 BreakInheritanceList: AfterColon
-ColumnLimit: '80'
+ColumnLimit: '120'
 ConstructorInitializerAllOnOneLineOrOnePerLine: 'false'
 ConstructorInitializerIndentWidth: '2'
 ContinuationIndentWidth: '2'
