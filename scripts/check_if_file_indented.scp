@@ -26,7 +26,7 @@
 # We have to use the --dry-run argument, so that clang-format does not change
 # anything. -Werror produces an error if the file is not indented cerrctly.
 # The --style=file arguments tells clang-format to look for a *.clang-format file.
-FORMAT_OPTIONS="--dry-run --Werror --style=file"
+FORMAT_OPTIONS="--dry-run --Werror --style=file:scripts/.clang-format"
 
 
 FORMAT=`which clang-format 2> /dev/null`
