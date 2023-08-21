@@ -38,19 +38,23 @@
  */
 
 /* *INDENT-OFF* */
-class forest_commit:public testing::TestWithParam <int> {
-protected:
-  void SetUp () override {
-    cmesh_id = GetParam();
+class forest_commit: public testing::TestWithParam<int> {
+ protected:
+  void
+  SetUp () override
+  {
+    cmesh_id = GetParam ();
 
     /* Construct a cmesh */
     cmesh = t8_test_create_cmesh (cmesh_id);
   }
-  void TearDown () override {
-      t8_cmesh_destroy (&cmesh);
+  void
+  TearDown () override
+  {
+    t8_cmesh_destroy (&cmesh);
   }
-  int                 cmesh_id;
-  t8_cmesh_t          cmesh;
+  int cmesh_id;
+  t8_cmesh_t cmesh;
 };
 /* *INDENT-ON* */
 
@@ -58,23 +62,20 @@ protected:
  * tree is refined and no other elements. This results in a highly
  * imbalanced forest. */
 static int
-t8_test_adapt_balance (t8_forest_t forest, t8_forest_t forest_from,
-                       t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                       t8_eclass_scheme_c *ts, const int is_family,
-                       const int num_elements, t8_element_t *elements[])
+t8_test_adapt_balance (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
+                       t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
-  T8_ASSERT (!is_family || (is_family && num_elements ==
-                            ts->t8_element_num_children (elements[0])));
+  T8_ASSERT (!is_family || (is_family && num_elements == ts->t8_element_num_children (elements[0])));
 
-  int                 level = ts->t8_element_level (elements[0]);
+  int level = ts->t8_element_level (elements[0]);
 
   /* we set a maximum refinement level as forest user data */
-  int                 maxlevel = *(int *) t8_forest_get_user_data (forest);
+  int maxlevel = *(int *) t8_forest_get_user_data (forest);
   if (level >= maxlevel) {
     /* Do not refine after the maxlevel */
     return 0;
   }
-  int                 child_id = ts->t8_element_child_id (elements[0]);
+  int child_id = ts->t8_element_child_id (elements[0]);
   if (child_id == 1) {
     return 1;
   }
@@ -85,7 +86,7 @@ t8_test_adapt_balance (t8_forest_t forest, t8_forest_t forest_from,
 static t8_forest_t
 t8_test_forest_commit_abp (t8_forest_t forest, int maxlevel)
 {
-  t8_forest_t         forest_ada_bal_par;
+  t8_forest_t forest_ada_bal_par;
 
   /* Adapt, balance and partition the uniform forest */
   t8_forest_init (&forest_ada_bal_par);
@@ -103,9 +104,9 @@ t8_test_forest_commit_abp (t8_forest_t forest, int maxlevel)
 static t8_forest_t
 t8_test_forest_commit_abp_3step (t8_forest_t forest, int maxlevel)
 {
-  t8_forest_t         forest_adapt;
-  t8_forest_t         forest_balance;
-  t8_forest_t         forest_partition;
+  t8_forest_t forest_adapt;
+  t8_forest_t forest_balance;
+  t8_forest_t forest_partition;
 
   t8_forest_init (&forest_adapt);
   t8_forest_init (&forest_balance);
@@ -130,33 +131,31 @@ t8_test_forest_commit_abp_3step (t8_forest_t forest, int maxlevel)
 TEST_P (forest_commit, test_forest_commit)
 {
 
-  t8_forest_t         forest;
-  t8_forest_t         forest_ada_bal_part;
-  t8_forest_t         forest_abp_3part;
+  t8_forest_t forest;
+  t8_forest_t forest_ada_bal_part;
+  t8_forest_t forest_abp_3part;
 
 #ifdef T8_ENABLE_DEBUG
-  int                 level_step = 2;
+  int level_step = 2;
 #else
-  int                 level_step = 3;
+  int level_step = 3;
 #endif
 
   t8_debugf ("Testing forest commit with cmesh_id = %i\n", cmesh_id);
 
-  t8_scheme_cxx_t    *scheme = t8_scheme_new_default_cxx ();
+  t8_scheme_cxx_t *scheme = t8_scheme_new_default_cxx ();
 
   /* Compute the first level, such that no process is empty */
-  int                 min_level =
-    t8_forest_min_nonempty_level (cmesh, scheme);
+  int min_level = t8_forest_min_nonempty_level (cmesh, scheme);
   /* Use one level with empty processes */
   min_level = SC_MAX (min_level - 1, 0);
   for (int level = min_level; level < min_level + level_step; level++) {
     t8_debugf ("Testing forest commit level %i\n", level);
-    int                 maxlevel = level + level_step;
+    int maxlevel = level + level_step;
     /* ref the cmesh since we reuse it */
     t8_cmesh_ref (cmesh);
     /* Create a uniformly refined forest */
-    forest = t8_forest_new_uniform (cmesh, scheme, level, 1,
-                                    sc_MPI_COMM_WORLD);
+    forest = t8_forest_new_uniform (cmesh, scheme, level, 1, sc_MPI_COMM_WORLD);
     /* We need to use forest twice, so we ref it */
     t8_forest_ref (forest);
     /* Adapt, balance and partition the forest */
@@ -164,20 +163,15 @@ TEST_P (forest_commit, test_forest_commit)
     /* Adapt, balance and partition the forest using three separate steps */
     forest_abp_3part = t8_test_forest_commit_abp_3step (forest, maxlevel);
 
-    ASSERT_TRUE (t8_forest_is_equal
-                 (forest_abp_3part,
-                  forest_ada_bal_part)) << "The forests are not equal";
+    ASSERT_TRUE (t8_forest_is_equal (forest_abp_3part, forest_ada_bal_part)) << "The forests are not equal";
     t8_scheme_cxx_ref (scheme);
     t8_forest_unref (&forest_ada_bal_part);
     t8_forest_unref (&forest_abp_3part);
-
   }
   t8_scheme_cxx_unref (&scheme);
   t8_debugf ("Done testing forest commit.");
 }
 
-
-
 /* *INDENT-OFF* */
-INSTANTIATE_TEST_SUITE_P (t8_gtest_forest_commit, forest_commit,testing::Range(0, t8_get_number_of_all_testcases ()));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_forest_commit, forest_commit, testing::Range (0, t8_get_number_of_all_testcases ()));
 /* *INDENT-ON* */

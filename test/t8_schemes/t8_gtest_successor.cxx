@@ -26,10 +26,12 @@
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
 /* *INDENT-OFF* */
-class class_successor:public testing::TestWithParam <t8_eclass_t > {
-protected:
-  void SetUp () override {
-    eclass = GetParam();
+class class_successor: public testing::TestWithParam<t8_eclass_t> {
+ protected:
+  void
+  SetUp () override
+  {
+    eclass = GetParam ();
 
     scheme = t8_scheme_new_default_cxx ();
     ts = scheme->eclass_schemes[eclass];
@@ -41,7 +43,9 @@ protected:
 
     ts->t8_element_set_linear_id (element, 0, 0);
   }
-  void TearDown () override {
+  void
+  TearDown () override
+  {
     ts->t8_element_destroy (1, &element);
     ts->t8_element_destroy (1, &successor);
     ts->t8_element_destroy (1, &child);
@@ -51,11 +55,11 @@ protected:
   }
   t8_eclass_t eclass;
   t8_eclass_scheme_c *ts;
-  t8_scheme_cxx      *scheme;
-  t8_element_t       *element;
-  t8_element_t       *successor;
-  t8_element_t       *child;
-  t8_element_t       *last;
+  t8_scheme_cxx *scheme;
+  t8_element_t *element;
+  t8_element_t *successor;
+  t8_element_t *child;
+  t8_element_t *last;
 };
 /* *INDENT-ON* */
 
@@ -64,30 +68,23 @@ protected:
  * each child, the successor is checked.
  */
 static void
-t8_recursive_successor (t8_element_t *element, t8_element_t *successor,
-                        t8_element_t *child,
-                        t8_element_t *last, t8_eclass_scheme_c *ts,
-                        const int maxlvl)
+t8_recursive_successor (t8_element_t *element, t8_element_t *successor, t8_element_t *child, t8_element_t *last,
+                        t8_eclass_scheme_c *ts, const int maxlvl)
 {
-  const int           level = ts->t8_element_level (element);
-  ASSERT_TRUE (ts->t8_element_level (element) <= maxlvl
-               && maxlvl <= ts->t8_element_maxlevel () - 1);
-  const int           num_children = ts->t8_element_num_children (element);
+  const int level = ts->t8_element_level (element);
+  ASSERT_TRUE (ts->t8_element_level (element) <= maxlvl && maxlvl <= ts->t8_element_maxlevel () - 1);
+  const int num_children = ts->t8_element_num_children (element);
   if (level == maxlvl - 1) {
     /* Check, if the successor of the last recursion is the first child of
      * of this element.
      */
     ts->t8_element_child (element, 0, child);
-    ASSERT_TRUE (!ts->t8_element_compare (child,
-                                          successor)) <<
-      "Wrong Successor, Case1.\n";
+    ASSERT_TRUE (!ts->t8_element_compare (child, successor)) << "Wrong Successor, Case1.\n";
     /*Check if the successor in this element is computed correctly */
     for (int ichild = 1; ichild < num_children; ichild++) {
       ts->t8_element_successor (child, successor, maxlvl);
       ts->t8_element_child (element, ichild, child);
-      ASSERT_TRUE (!ts->t8_element_compare (child,
-                                            successor)) <<
-        "Wrong Successor, Case2.\n";
+      ASSERT_TRUE (!ts->t8_element_compare (child, successor)) << "Wrong Successor, Case2.\n";
     }
     /*If the iterator is the last element, the test can finish */
     if (!ts->t8_element_compare (last, child)) {
@@ -113,23 +110,19 @@ t8_recursive_successor (t8_element_t *element, t8_element_t *successor,
  * maximum level are computed. The successor runs through all these children.
  */
 static void
-t8_deep_successor (t8_element_t *element, t8_element_t *successor,
-                   t8_element_t *child, t8_eclass_scheme_c *ts)
+t8_deep_successor (t8_element_t *element, t8_element_t *successor, t8_element_t *child, t8_eclass_scheme_c *ts)
 {
-  int                 maxlvl = ts->t8_element_maxlevel ();
-  int                 num_children = ts->t8_element_num_children (element);
+  int maxlvl = ts->t8_element_maxlevel ();
+  int num_children = ts->t8_element_num_children (element);
 
   for (int ichild = 0; ichild < num_children; ichild++) {
     ts->t8_element_child (element, ichild, child);
     /* Go to the children at maximum level. */
-    const int           num_children_child =
-      ts->t8_element_num_children (child);
+    const int num_children_child = ts->t8_element_num_children (child);
     for (int jchild = 0; jchild < num_children_child; jchild++) {
       ts->t8_element_child (child, jchild, element);
       /* Check the computation of the successor. */
-      ASSERT_TRUE (!ts->t8_element_compare (element,
-                                            successor)) <<
-        "Wrong Successor at Maxlvl.\n";
+      ASSERT_TRUE (!ts->t8_element_compare (element, successor)) << "Wrong Successor at Maxlvl.\n";
       /* Compute the next successor. */
       ts->t8_element_successor (successor, successor, maxlvl);
     }
@@ -140,9 +133,9 @@ t8_deep_successor (t8_element_t *element, t8_element_t *successor,
 TEST_P (class_successor, test_recursive_and_deep_successor)
 {
 #ifdef T8_ENABLE_DEBUG
-  const int           maxlvl = 3;
+  const int maxlvl = 3;
 #else
-  const int           maxlvl = 4;
+  const int maxlvl = 4;
 #endif
 
   /* Test at lower level. */
@@ -157,7 +150,6 @@ TEST_P (class_successor, test_recursive_and_deep_successor)
   t8_deep_successor (element, successor, last, ts);
 }
 
-
 /* *INDENT-OFF* */
-INSTANTIATE_TEST_SUITE_P (t8_gtest_successor, class_successor,testing::Range(T8_ECLASS_LINE, T8_ECLASS_COUNT));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_successor, class_successor, testing::Range (T8_ECLASS_LINE, T8_ECLASS_COUNT));
 /* *INDENT-ON* */

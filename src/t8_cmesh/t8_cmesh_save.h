@@ -40,8 +40,7 @@
  * The cmesh can be loaded with more processes than it was saved and the
  * mode controls, which of the processes open files and distribute the data.
  */
-typedef enum t8_load_mode
-{
+typedef enum t8_load_mode {
   T8_LOAD_FIRST = 0,
   /** In simple mode, the first n processes load the file */
   T8_LOAD_SIMPLE = T8_LOAD_FIRST,

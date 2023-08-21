@@ -42,18 +42,12 @@
  */
 TEST (t8_point_inside, test_point_inside_specific_triangle)
 {
-  t8_cmesh_t          cmesh;
+  t8_cmesh_t cmesh;
 
-  double              vertices[9] = {
-    0., 0., 0.,
-    1., 0., 0.,
-    1., 1., 0.
-  };
-  double              test_point[3] = {
-    0.3, 0.3, 1
-  };
-  const double        tolerance = 1e-12;        /* Numerical tolerance that we allow for the point inside check */
-  t8_geometry_c      *linear_geom = new t8_geometry_linear (2);
+  double vertices[9] = { 0., 0., 0., 1., 0., 0., 1., 1., 0. };
+  double test_point[3] = { 0.3, 0.3, 1 };
+  const double tolerance = 1e-12; /* Numerical tolerance that we allow for the point inside check */
+  t8_geometry_c *linear_geom = new t8_geometry_linear (2);
 
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
@@ -62,9 +56,7 @@ TEST (t8_point_inside, test_point_inside_specific_triangle)
   t8_cmesh_register_geometry (cmesh, linear_geom);
 
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
-  t8_forest_t         forest =
-    t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 0, 0,
-                           sc_MPI_COMM_WORLD);
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 0, 0, sc_MPI_COMM_WORLD);
 
   if (t8_forest_get_local_num_elements (forest) <= 0) {
     /* Skip empty forests (can occur when executed in parallel) */
@@ -72,13 +64,10 @@ TEST (t8_point_inside, test_point_inside_specific_triangle)
     GTEST_SKIP ();
   }
 
-  t8_element_t       *element = t8_forest_get_element (forest, 0, NULL);
+  t8_element_t *element = t8_forest_get_element (forest, 0, NULL);
 
-  const int           point_is_inside =
-    t8_forest_element_point_inside (forest, 0, element, test_point,
-                                    tolerance);
-  ASSERT_FALSE (point_is_inside) <<
-    "The point is wrongly detected as inside the triangle.";
+  const int point_is_inside = t8_forest_element_point_inside (forest, 0, element, test_point, tolerance);
+  ASSERT_FALSE (point_is_inside) << "The point is wrongly detected as inside the triangle.";
   t8_forest_unref (&forest);
 }
 
@@ -90,19 +79,12 @@ TEST (t8_point_inside, test_point_inside_specific_triangle)
  */
 TEST (t8_point_inside, test_point_inside_specific_quad)
 {
-  t8_cmesh_t          cmesh;
+  t8_cmesh_t cmesh;
 
-  double              vertices[12] = {
-    0., 0., 0.,
-    1., 0., 0.,
-    0., 1., 0.,
-    1., 1., 0.
-  };
-  double              test_point[3] = {
-    0.3, 0.3, 1
-  };
-  const double        tolerance = 1e-12;        /* Numerical tolerance that we allow for the point inside check */
-  t8_geometry_c      *linear_geom = new t8_geometry_linear (2);
+  double vertices[12] = { 0., 0., 0., 1., 0., 0., 0., 1., 0., 1., 1., 0. };
+  double test_point[3] = { 0.3, 0.3, 1 };
+  const double tolerance = 1e-12; /* Numerical tolerance that we allow for the point inside check */
+  t8_geometry_c *linear_geom = new t8_geometry_linear (2);
 
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
@@ -111,9 +93,7 @@ TEST (t8_point_inside, test_point_inside_specific_quad)
   t8_cmesh_register_geometry (cmesh, linear_geom);
 
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
-  t8_forest_t         forest =
-    t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 0, 0,
-                           sc_MPI_COMM_WORLD);
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 0, 0, sc_MPI_COMM_WORLD);
 
   if (t8_forest_get_local_num_elements (forest) <= 0) {
     /* Skip empty forests (can occur when executed in parallel) */
@@ -121,111 +101,97 @@ TEST (t8_point_inside, test_point_inside_specific_quad)
     GTEST_SKIP ();
   }
 
-  t8_element_t       *element = t8_forest_get_element (forest, 0, NULL);
+  t8_element_t *element = t8_forest_get_element (forest, 0, NULL);
 
-  const int           point_is_inside =
-    t8_forest_element_point_inside (forest, 0,
-                                    element, test_point, tolerance);
+  const int point_is_inside = t8_forest_element_point_inside (forest, 0, element, test_point, tolerance);
 
-  ASSERT_FALSE (point_is_inside) <<
-    "The point is wrongly detected as inside the quad.";
+  ASSERT_FALSE (point_is_inside) << "The point is wrongly detected as inside the quad.";
 
   t8_forest_unref (&forest);
 }
 
 /* *INDENT-OFF* */
-class geometry_point_inside:public testing::TestWithParam <std::tuple<t8_eclass,int>>{
-protected:
-  void SetUp () override {
-    eclass = std::get<0>(GetParam());
-    level = std::get<1>(GetParam());
+class geometry_point_inside: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
+ protected:
+  void
+  SetUp () override
+  {
+    eclass = std::get<0> (GetParam ());
+    level = std::get<1> (GetParam ());
 
     /* Construct a cube coarse mesh */
     cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
   }
-  void TearDown () override {
-
+  void
+  TearDown () override
+  {
   }
-  t8_eclass_t         eclass;
-  int                 level;
-  t8_cmesh_t          cmesh;
-
+  t8_eclass_t eclass;
+  int level;
+  t8_cmesh_t cmesh;
 };
 /* *INDENT-ON* */
 
 TEST_P (geometry_point_inside, test_point_inside)
 {
 
-  double              test_point[3];
-  double              element_vertices[T8_ECLASS_MAX_CORNERS][3];
-  const double        barycentric_range_lower_bound = 0.1;      /* Must be > 0 */
-  const double        barycentric_range_upper_bound = 1.1;      /* Should be > 1 */
+  double test_point[3];
+  double element_vertices[T8_ECLASS_MAX_CORNERS][3];
+  const double barycentric_range_lower_bound = 0.1; /* Must be > 0 */
+  const double barycentric_range_upper_bound = 1.1; /* Should be > 1 */
   /* Numerical tolerance that we allow in the point inside check */
-  const double        tolerance = 1e-12;
-  const int           num_points_to_generate = 64;      /* Desired number of test points per element. 
+  const double tolerance = 1e-12;
+  const int num_points_to_generate = 64; /* Desired number of test points per element. 
                                                          * The actual number is computed to be close to this and
                                                          * will always be >= 2^num_corners (thus >= 128 for hex). */
 
-  t8_debugf
-    ("Testing eclass %s, uniform level %i with approx. %i points per element.\n",
-     t8_eclass_to_string[eclass], level, num_points_to_generate);
-  t8_scheme_cxx_t    *default_scheme = t8_scheme_new_default_cxx ();
+  t8_debugf ("Testing eclass %s, uniform level %i with approx. %i points per element.\n", t8_eclass_to_string[eclass],
+             level, num_points_to_generate);
+  t8_scheme_cxx_t *default_scheme = t8_scheme_new_default_cxx ();
 
   /* We translate the coordinates of the cmesh to create a non-standard case.
    * In particular, we want the 1D and 2D elements to move outside of axis
    * perpendicular planes. We do this to detect possible errors in the point
    * finding function that may be biased towards certrain coordinate axis.
    */
-  double             *const tree_vertices =
-    t8_cmesh_get_tree_vertices (cmesh, 0);
-  const int           num_vertices = t8_eclass_num_vertices[eclass];
+  double *const tree_vertices = t8_cmesh_get_tree_vertices (cmesh, 0);
+  const int num_vertices = t8_eclass_num_vertices[eclass];
   /* Translate all points by the same vector to move the element a bit. */
-  double              translate_all_points[3] = { -0.1, 0.3, 0.15 };
-  t8_cmesh_translate_coordinates (tree_vertices, tree_vertices,
-                                  num_vertices, translate_all_points);
+  double translate_all_points[3] = { -0.1, 0.3, 0.15 };
+  t8_cmesh_translate_coordinates (tree_vertices, tree_vertices, num_vertices, translate_all_points);
   /* Translate points 0 and 1 (if it exists) extra in order to move the 2D elements
    * and 3D faces outside of axis perpendicular planes. */
-  double              translate_points_0_1[3] = { 0.1, -0.1, 0.3 };
-  t8_cmesh_translate_coordinates (tree_vertices, tree_vertices, 1,
-                                  translate_points_0_1);
+  double translate_points_0_1[3] = { 0.1, -0.1, 0.3 };
+  t8_cmesh_translate_coordinates (tree_vertices, tree_vertices, 1, translate_points_0_1);
   if (num_vertices > 2) {
-    t8_cmesh_translate_coordinates (tree_vertices + 3, tree_vertices + 3, 1,
-                                    translate_points_0_1);
+    t8_cmesh_translate_coordinates (tree_vertices + 3, tree_vertices + 3, 1, translate_points_0_1);
   }
 
   /* Build a uniform forest */
-  t8_forest_t         forest =
-    t8_forest_new_uniform (cmesh, default_scheme, level, 1,
-                           sc_MPI_COMM_WORLD);
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, default_scheme, level, 1, sc_MPI_COMM_WORLD);
 
-  const t8_locidx_t   num_trees = t8_forest_get_num_local_trees (forest);
+  const t8_locidx_t num_trees = t8_forest_get_num_local_trees (forest);
 
   for (t8_locidx_t itree = 0; itree < num_trees; ++itree) {
     t8_log_indent_push ();
-    const t8_locidx_t   num_elements =
-      t8_forest_get_tree_num_elements (forest, itree);
+    const t8_locidx_t num_elements = t8_forest_get_tree_num_elements (forest, itree);
     /* Get the associated eclass scheme */
-    const t8_eclass_t   tree_class = t8_forest_get_tree_class (forest, itree);
-    const t8_eclass_scheme_c *eclass_scheme =
-      t8_forest_get_eclass_scheme (forest, tree_class);
+    const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
+    const t8_eclass_scheme_c *eclass_scheme = t8_forest_get_eclass_scheme (forest, tree_class);
     for (t8_locidx_t ielement = 0; ielement < num_elements; ++ielement) {
 
       /* Get a pointer to the element */
-      const t8_element_t *element =
-        t8_forest_get_element_in_tree (forest, itree, ielement);
+      const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
 
       /* Compute the corner coordinates of the element */
-      const int           num_corners =
-        eclass_scheme->t8_element_num_corners (element);
+      const int num_corners = eclass_scheme->t8_element_num_corners (element);
       /* For each corner get its coordinates */
       for (int icorner = 0; icorner < num_corners; ++icorner) {
-        t8_forest_element_coordinate (forest, 0, element,
-                                      icorner, element_vertices[icorner]);
+        t8_forest_element_coordinate (forest, 0, element, icorner, element_vertices[icorner]);
       }
 
       /* Allocate the barycentric coordinates */
-      double             *barycentric_coordinates =
-        T8_ALLOC (double, num_corners);
+      double *barycentric_coordinates = T8_ALLOC (double, num_corners);
 
       /* Fill the barycentric coordinates with test values */
       /* 1-Sum 0 0 0  ... start
@@ -252,53 +218,45 @@ TEST_P (geometry_point_inside, test_point_inside)
        * number of points that we generate.
        */
       /* Compute the number of steps needed */
-      int                 num_steps =
-        pow (num_points_to_generate, 1. / (num_corners - 1));
+      int num_steps = pow (num_points_to_generate, 1. / (num_corners - 1));
       if (num_steps <= 1) {
         /* Correct to at least 2 steps in order to prevent division by 0 */
         num_steps = 2;
       }
       /* Corrected number of points due to possible rounding errors in pow */
-      const int           num_points = sc_intpow (num_steps, num_corners - 1);
-      double              step =
-        (barycentric_range_upper_bound -
-         barycentric_range_lower_bound) / (num_steps - 1);
+      const int num_points = sc_intpow (num_steps, num_corners - 1);
+      double step = (barycentric_range_upper_bound - barycentric_range_lower_bound) / (num_steps - 1);
       //t8_debugf ("step size %g, steps %i, points %i (corners %i)\n", step,
       //           num_steps, num_points, num_corners);
-      int                 num_in = 0;
-      double              dampening;
+      int num_in = 0;
+      double dampening;
 
       /* For each test point, build coordinates and test whether it
        * is correctly detected to be in/outside the element. */
       for (int ipoint = 0; ipoint < num_points; ++ipoint) {
-        double              Sum = 0;
-        int                 point_is_inside = 1;
+        double Sum = 0;
+        int point_is_inside = 1;
 
         /* Set the coordinates of the test point to 0 */
         for (int icoord = 0; icoord < 3; ++icoord) {
           test_point[icoord] = 0;
         }
         for (int icorner = 0; icorner < num_corners - 1; ++icorner) {
-          int                 this_step =
-            (ipoint / sc_intpow (num_steps, icorner)) % num_steps;
+          int this_step = (ipoint / sc_intpow (num_steps, icorner)) % num_steps;
 
           /* Set barycentric coordinates */
-          barycentric_coordinates[icorner] =
-            barycentric_range_lower_bound + this_step * step;
+          barycentric_coordinates[icorner] = barycentric_range_lower_bound + this_step * step;
           dampening = (1 - Sum) * (1 - Sum);
           barycentric_coordinates[icorner] *= dampening;
           Sum += barycentric_coordinates[icorner];
 
           /* Construct the actual test point from the barycentric coordinate */
           for (int icoord = 0; icoord < 3; ++icoord) {
-            test_point[icoord] +=
-              barycentric_coordinates[icorner] *
-              element_vertices[icorner][icoord];
+            test_point[icoord] += barycentric_coordinates[icorner] * element_vertices[icorner][icoord];
           }
 
           /* The point is inside if and only if all barycentric coordinates are >= 0. */
-          point_is_inside = point_is_inside
-            && barycentric_coordinates[icorner] >= 0;
+          point_is_inside = point_is_inside && barycentric_coordinates[icorner] >= 0;
         }
 
         /* Ensure that sum over all bar. coordinates is 1 */
@@ -306,43 +264,38 @@ TEST_P (geometry_point_inside, test_point_inside)
 
         /* Add this last barycentric coordinate to the test point */
         for (int icoord = 0; icoord < 3; ++icoord) {
-          test_point[icoord] += barycentric_coordinates[num_corners - 1]
-            * element_vertices[num_corners - 1][icoord];
+          test_point[icoord] += barycentric_coordinates[num_corners - 1] * element_vertices[num_corners - 1][icoord];
         }
         /* The point is inside if and only if all barycentric coordinates are >= 0. */
-        point_is_inside = point_is_inside
-          && barycentric_coordinates[num_corners - 1] >= 0;
+        point_is_inside = point_is_inside && barycentric_coordinates[num_corners - 1] >= 0;
 
         num_in += point_is_inside ? 1 : 0;
 
         /* We now check whether the point inside function correctly sees whether
          * the point is inside the element or not. */
-        int                 point_is_recognized_as_inside =
-          t8_forest_element_point_inside (forest, 0, element,
-                                          test_point, tolerance);
+        int point_is_recognized_as_inside = t8_forest_element_point_inside (forest, 0, element, test_point, tolerance);
 
-        ASSERT_EQ (!point_is_recognized_as_inside, !point_is_inside) <<
-          "Testing point #" << ipoint << "(" << test_point[0] << "," <<
-          test_point[1] << "," << test_point[2] << ") should " <<
-          (point_is_inside ? "" : "not") << "be inside the " <<
-          t8_eclass_to_string[eclass] <<
-          " element, but is not detected as such.";
-      }                         /* End loop over points. */
-      t8_debugf ("%i (%.2f%%) test points are inside the element\n", num_in,
-                 (100.0 * num_in) / num_points);
+        ASSERT_EQ (!point_is_recognized_as_inside, !point_is_inside)
+          << "Testing point #" << ipoint << "(" << test_point[0] << "," << test_point[1] << "," << test_point[2]
+          << ") should " << (point_is_inside ? "" : "not") << "be inside the " << t8_eclass_to_string[eclass]
+          << " element, but is not detected as such.";
+      } /* End loop over points. */
+      t8_debugf ("%i (%.2f%%) test points are inside the element\n", num_in, (100.0 * num_in) / num_points);
       T8_FREE (barycentric_coordinates);
-    }                           /* End loop over elements */
-  }                             /* End loop over trees */
+    } /* End loop over elements */
+  }   /* End loop over trees */
   t8_forest_unref (&forest);
   t8_log_indent_pop ();
 }
 
 #if T8_ENABLE_LESS_TESTS
-  /* *INDENT-OFF* */
-  INSTANTIATE_TEST_SUITE_P (t8_gtest_point_inside, geometry_point_inside,testing::Combine(testing::Range(T8_ECLASS_LINE, T8_ECLASS_COUNT), testing::Range(0,4)));
-  /* *INDENT-ON* */
+/* *INDENT-OFF* */
+INSTANTIATE_TEST_SUITE_P (t8_gtest_point_inside, geometry_point_inside,
+                          testing::Combine (testing::Range (T8_ECLASS_LINE, T8_ECLASS_COUNT), testing::Range (0, 4)));
+/* *INDENT-ON* */
 #else
-  /* *INDENT-OFF* */
-  INSTANTIATE_TEST_SUITE_P (t8_gtest_point_inside, geometry_point_inside,testing::Combine(testing::Range(T8_ECLASS_LINE, T8_ECLASS_COUNT), testing::Range(0,6)));
-  /* *INDENT-ON* */
+/* *INDENT-OFF* */
+INSTANTIATE_TEST_SUITE_P (t8_gtest_point_inside, geometry_point_inside,
+                          testing::Combine (testing::Range (T8_ECLASS_LINE, T8_ECLASS_COUNT), testing::Range (0, 6)));
+/* *INDENT-ON* */
 #endif

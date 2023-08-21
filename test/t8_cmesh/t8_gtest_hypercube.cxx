@@ -30,34 +30,41 @@
 
 /* *INDENT-OFF* */
 /* Create class for parameterized Test with multiple test parameters */
-class cmesh_hypercube_trees : public testing::TestWithParam<std::tuple<t8_eclass,int,int>>{
-protected:
+class cmesh_hypercube_trees: public testing::TestWithParam<std::tuple<t8_eclass, int, int>> {
+ protected:
   /* SetUp the test parameters (eclass, bcast and partition) and define the test value cmesh. */
-  void SetUp() override {
-    eclass = std::get<0>(GetParam());
-    bcast = std::get<1>(GetParam());
-    partition = std::get<2>(GetParam());
+  void
+  SetUp () override
+  {
+    eclass = std::get<0> (GetParam ());
+    bcast = std::get<1> (GetParam ());
+    partition = std::get<2> (GetParam ());
 
-    cmesh = t8_cmesh_new_hypercube(eclass, sc_MPI_COMM_WORLD, bcast, partition, 0);
+    cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, bcast, partition, 0);
   }
-  void TearDown() override {
-    t8_cmesh_unref(&cmesh);
+  void
+  TearDown () override
+  {
+    t8_cmesh_unref (&cmesh);
   }
 
-  t8_cmesh_t        cmesh;
-  t8_eclass         eclass;
-  int               bcast;
-  int               partition;
+  t8_cmesh_t cmesh;
+  t8_eclass eclass;
+  int bcast;
+  int partition;
 };
 
 /* Test wheater the created cmesh of a hypercube is committed and its are face consistent. Test will fail, if one of these is false. */
-TEST_P (cmesh_hypercube_trees, check_cmesh_and_its_trees) {
-  
-    EXPECT_TRUE(t8_cmesh_is_committed (cmesh));
-    EXPECT_TRUE(t8_cmesh_trees_is_face_consistent (cmesh, cmesh->trees));
+TEST_P (cmesh_hypercube_trees, check_cmesh_and_its_trees)
+{
+
+  EXPECT_TRUE (t8_cmesh_is_committed (cmesh));
+  EXPECT_TRUE (t8_cmesh_trees_is_face_consistent (cmesh, cmesh->trees));
 }
 
 /* Use the testing range for eclass with [T8_ECLASS_ZERO, T8_ECLASS_COUNT]. For the generation of the cmesh with or withaout broadcast
  * the booleans 0 and 1 are used. Analogue with partition. */
-INSTANTIATE_TEST_SUITE_P(t8_gtest_hypercube, cmesh_hypercube_trees, testing::Combine(testing::Range(T8_ECLASS_ZERO, T8_ECLASS_COUNT),testing::Values(0,1),testing::Values(0,1)));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_hypercube, cmesh_hypercube_trees,
+                          testing::Combine (testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT), testing::Values (0, 1),
+                                            testing::Values (0, 1)));
 /* *INDENT-ON* */

@@ -41,10 +41,8 @@ T8_EXTERN_C_BEGIN ();
  * \param [in]     num_vertices The number of verticess in \a vertices. Must
  *                              match the number of corners of the tree.
  */
-void                t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh,
-                                                t8_locidx_t ltree_id,
-                                                double *vertices,
-                                                int num_vertices);
+void
+t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, t8_locidx_t ltree_id, double *vertices, int num_vertices);
 
 T8_EXTERN_C_END ();
 
