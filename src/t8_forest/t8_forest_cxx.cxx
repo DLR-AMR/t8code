@@ -423,7 +423,6 @@ t8_forest_element_diam (t8_forest_t forest, t8_locidx_t ltreeid, const t8_elemen
 
   /* We approximate the diameter as twice the average of the distances
    * from the vertices to the centroid. */
-
   num_corners = ts->t8_element_num_corners (element);
 
   /* Compute the centroid */
@@ -435,6 +434,7 @@ t8_forest_element_diam (t8_forest_t forest, t8_locidx_t ltreeid, const t8_elemen
     /* Compute the distance to the midpoint */
     dist += t8_vec_dist (coordinates, centroid);
   }
+
   /* We approximate the diameter as twice the average of the distances
    * from the vertices to the centroid. */
   return 2 * dist / num_corners;
@@ -554,17 +554,17 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid, const t8_elem
     double coordinates[3][3];
     t8_eclass_scheme_c *ts;
     /* We use this formula for computing the surface area for a parallelogram
-       * (we use parallelogram as approximation for the element).
-       *
-       *  A = | det (v_1*v_1 v_1*v_2) |
-       *      |     (v_2*v_1 v_2*v_2) |
-       * v_1
-       *  x --- x
-       *  |     |
-       *  |     |
-       *  x --- x
-       * 0       v_2
-       */
+     * (we use parallelogram as approximation for the element).
+     *
+     *  A = | det (v_1*v_1 v_1*v_2) |
+     *      |     (v_2*v_1 v_2*v_2) |
+     * v_1
+     *  x --- x
+     *  |     |
+     *  |     |
+     *  x --- x
+     * 0       v_2
+     */
     /* Compute the faces meeting at vertex 0 */
     ts = t8_forest_get_eclass_scheme (forest, T8_ECLASS_QUAD);
     face_a = ts->t8_element_get_corner_face (element, 0, 0);
@@ -584,17 +584,17 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid, const t8_elem
     double coordinates[3][3];
     int i;
     /* We use the same formula as for quads but divide the result in half.
-       *    v_2
-       *    x
-       *   /  \
-       *  x -- x
-       * 0     v_1
-       *  A = | det (v_1*v_1 v_1*v_2) |
-       *      |     (v_2*v_1 v_2*v_2) |
-       *
-       * This is not an approximation as in the quad case, since a
-       * triangle always spans a parallelogram.
-       */
+     *    v_2
+     *    x
+     *   /  \
+     *  x -- x
+     * 0     v_1
+     *  A = | det (v_1*v_1 v_1*v_2) |
+     *      |     (v_2*v_1 v_2*v_2) |
+     *
+     * This is not an approximation as in the quad case, since a
+     * triangle always spans a parallelogram.
+     */
     for (i = 0; i < 3; i++) {
       t8_forest_element_coordinate (forest, ltreeid, element, i, coordinates[i]);
     }
@@ -602,12 +602,12 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid, const t8_elem
   } break;
   case T8_ECLASS_TET: {
     /* We compute the volume as a sixth of the determinant of the
-       * three vectors of the corners minus the forth vector.
-       * Let the corners be a, b, c, and d.
-       * V = 1/6 |det (a-d,b-d,c-d)|
-       * This can be rewritten as
-       * V = |(a-d)*((b-d) x (c-d))|/6
-       */
+     * three vectors of the corners minus the forth vector.
+     * Let the corners be a, b, c, and d.
+     * V = 1/6 |det (a-d,b-d,c-d)|
+     * This can be rewritten as
+     * V = |(a-d)*((b-d) x (c-d))|/6
+     */
     double coordinates[4][3];
     int i;
 
@@ -620,8 +620,8 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid, const t8_elem
   } break;
   case T8_ECLASS_HEX: {
     /* We compute the volume as the determinant of the three vectors
-       * from corner 0 to 1, to 2, to 4 (in Z-order).
-       */
+     * from corner 0 to 1, to 2, to 4 (in Z-order).
+     */
     double coordinates[4][3], cross[3];
     int i;
 
@@ -645,8 +645,7 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid, const t8_elem
   case T8_ECLASS_PRISM:
 
   {
-    /* We divide the prism into 3 tetrahdra and compute their
-       * volumes. */
+    /* We divide the prism into 3 tetrahdra and compute their volumes. */
     double coordinates[4][3], volume;
 
     /* The first tetrahedron has prism vertices 0, 1, 2, and 4 */
@@ -681,7 +680,7 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid, const t8_elem
     t8_forest_element_coordinate (forest, ltreeid, element, 4, coordinates[3]);
     volume = t8_forest_element_tet_volume (coordinates);
 
-    /*The second tetrahedron has pyra vertices 0, 3, 2 and 4 */
+    /* The second tetrahedron has pyra vertices 0, 3, 2 and 4 */
 
     t8_forest_element_coordinate (forest, ltreeid, element, 2, coordinates[1]);
 
@@ -947,19 +946,19 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
     double norm;
 
     /* We approximate the normal vector via this geometric construction:
-       *
-       *    x ---- x V
-       *    |      |
-       *    |   C  |-->N
-       *    |      |
-       *    x ---- x 0
-       *
-       *   Since V,C in R^3, we need N perpendicular to V and N in space (C,V)
-       *   This N is given by N = C - <C,V>/<V,V> V
-       *   <.,.> being the dot product.
-       *   Since in general the corner is not 0, we consider the affine problem
-       *   with corner vectoy V_a and V_b, and shift it by -V_a.
-       */
+     *
+     *    x ---- x V
+     *    |      |
+     *    |   C  |-->N
+     *    |      |
+     *    x ---- x 0
+     *
+     *   Since V,C in R^3, we need N perpendicular to V and N in space (C,V)
+     *   This N is given by N = C - <C,V>/<V,V> V
+     *   <.,.> being the dot product.
+     *   Since in general the corner is not 0, we consider the affine problem
+     *   with corner vectoy V_a and V_b, and shift it by -V_a.
+     */
     /* Compute the two endnotes of the face line */
     corner_a = ts->t8_element_get_face_corner (element, face, 0);
     corner_b = ts->t8_element_get_face_corner (element, face, 1);
@@ -1027,7 +1026,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
 #endif
   case T8_ECLASS_TRIANGLE: {
     /* We construct the normal as the cross product of two spanning
-       * vectors for the triangle*/
+     * vectors for the triangle*/
     int corner, i;
     double corner_vertices[3][3], center[3];
     double norm, c_n;
@@ -1043,7 +1042,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
     t8_vec_axpy (corner_vertices[0], corner_vertices[2], -1);
 
     /* Compute the cross product of the two,
-       * and the norm of the cross product */
+     * and the norm of the cross product */
     t8_vec_cross (corner_vertices[1], corner_vertices[2], normal);
     norm = t8_vec_norm (normal);
     T8_ASSERT (norm > 1e-14);
@@ -1169,11 +1168,11 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t
   }
   case T8_ECLASS_LINE: {
     /* A point p is inside a line that is defined by the edge nodes
-       * p_0 and p_1
-       * if and only if the linear system
-       * (p_1 - p_0)x = p - p_0
-       * has a solution x with 0 <= x <= 1
-       */
+     * p_0 and p_1
+     * if and only if the linear system
+     * (p_1 - p_0)x = p - p_0
+     * has a solution x with 0 <= x <= 1
+     */
     double p_0[3], v[3], b[3];
     double x = 0; /* Initialized to prevent compiler warning. */
     int i;
@@ -1188,13 +1187,13 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t
     t8_vec_axpyz (p_0, point, b, -1);
 
     /* So x is the solution to
-       * vx = b.
-       * We can compute it as
-       * x = b[i] / v[i]
-       * if any v[i] is not 0.
-       *
-       * Otherwise the line is degenerated (which should not happen).
-       */
+     * vx = b.
+     * We can compute it as
+     * x = b[i] / v[i]
+     * if any v[i] is not 0.
+     *
+     * Otherwise the line is degenerated (which should not happen).
+     */
     for (i = 0; i < 3; ++i) {
       if (v[i] != 0) {
         x = b[i] / v[i];
@@ -1210,10 +1209,10 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t
       return 0;
     }
     /* we can check whether x gives us a solution by
-       * checking whether
-       *  vx = b
-       * is actually true.
-       */
+     * checking whether
+     *  vx = b
+     * is actually true.
+     */
     t8_vec_ax (v, x);
     if (t8_vec_dist (v, b) > tolerance) {
       /* Point does not lie on the line. */
@@ -1245,8 +1244,7 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t
       /* If not, check whether the point is inside the second triangle. */
       point_inside = t8_triangle_point_inside (p_1, p_2, p_3, point, tolerance);
     }
-    /* point_inside is true if the point was inside the first or second triangle.
-       * Otherwise it is false. */
+    /* point_inside is true if the point was inside the first or second triangle. Otherwise it is false. */
     return point_inside;
   }
   case T8_ECLASS_TRIANGLE: {
@@ -1295,8 +1293,7 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t
         return 0;
       }
     }
-    /* For all faces the dot product with the outer normal is <= 0.
-     * The point is inside the element. */
+    /* For all faces the dot product with the outer normal is <= 0. The point is inside the element. */
     return 1;
   default:
     SC_ABORT_NOT_REACHED ();
@@ -1343,8 +1340,7 @@ t8_forest_compute_desc (t8_forest_t forest)
   }
 }
 
-/* Create the elements on this process given a uniform partition
- * of the coarse mesh. */
+/* Create the elements on this process given a uniform partition of the coarse mesh. */
 void
 t8_forest_populate (t8_forest_t forest)
 {
@@ -1423,15 +1419,13 @@ t8_forest_populate (t8_forest_t forest)
     }
   }
   forest->local_num_elements = count_elements;
-  /* TODO: if no tree has pyramid type we can optimize this to
-   * global_num_elements = global_num_trees * 2^(dim*level)
-   */
+  /* TODO: if no tree has pyramid type we can optimize this to global_num_elements = global_num_trees * 2^(dim*level) */
   t8_forest_comm_global_num_elements (forest);
   /* TODO: figure out global_first_position, global_first_quadrant without comm */
 }
 
-/* return nonzero if the first tree of a forest is shared with a smaller
- * process, or if the last tree is shared with a bigger process.
+/* Return nonzero if the first tree of a forest is shared with a smaller process,
+ * or if the last tree is shared with a bigger process.
  * Which operation is performed is switched with the first_or_last parameter.
  * first_or_last = 0  --> the first tree
  * first_or_last = 1  --> the last tree
@@ -1735,8 +1729,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const 
     return ltreeid + t8_forest_get_first_local_tree_id (forest);
   }
   else {
-    /* The neighbor does not lie inside the current tree. The content of neigh
-     * is undefined right now. */
+    /* The neighbor does not lie inside the current tree. The content of neigh is undefined right now. */
     t8_eclass_scheme_c *boundary_scheme, *neighbor_scheme;
     t8_eclass_t neigh_eclass, boundary_class;
     t8_element_t *face_element;
@@ -1751,8 +1744,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const 
     int F, sign;
 
     cmesh = forest->cmesh;
-    /* Get the scheme associated to the element class of the
-     * boundary element. */
+    /* Get the scheme associated to the element class of the boundary element. */
     /* Compute the face of elem_tree at which the face connection is. */
     tree_face = ts->t8_element_tree_face (elem, face);
     /* compute coarse tree id */
@@ -1817,8 +1809,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const 
     else {
 
       T8_ASSERT (eclass_compare == 0);
-      /* Check if the face of the current tree has a smaller index then
-       * the face of the neighbor tree. */
+      /* Check if the face of the current tree has a smaller index then the face of the neighbor tree. */
       is_smaller = tree_face <= tree_neigh_face;
     }
     /* We now transform the face element to the other tree. */
@@ -2001,7 +1992,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8
       T8_ASSERT (lghost_treeid >= 0);
     }
     /* TODO: Maybe we do not need to compute the owners. It suffices to know
-     *       whether the neighbor is owned by mpirank or not. */
+     * whether the neighbor is owned by mpirank or not. */
 
     if (!different_owners) {
       /* The face neighbors belong to the same process, we thus need to determine
@@ -2015,8 +2006,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8
         element_index = t8_forest_bin_search_lower (element_array, neigh_id, forest->maxlevel);
         /* Get the element */
         ancestor = t8_forest_ghost_get_element (forest, lghost_treeid, element_index);
-        /* Add the number of ghost elements on previous ghost trees and the number
-         * of local elements. */
+        /* Add the number of ghost elements on previous ghost trees and the number of local elements. */
         element_index += t8_forest_ghost_get_tree_element_offset (forest, lghost_treeid);
         element_index += t8_forest_get_local_num_elements (forest);
         T8_ASSERT (forest->local_num_elements <= element_index
@@ -2034,9 +2024,8 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8
         element_index += t8_forest_get_tree_element_offset (forest, lneigh_treeid);
       }
       if (neigh_scheme->t8_element_compare (ancestor, neighbor_leafs[0]) < 0) {
-        /* ancestor is a real ancestor, and thus the neighbor is either the
-         * parent or grandparent of the half neighbors. we can return it and
-         * the indices. */
+        /* ancestor is a real ancestor, and thus the neighbor is either the parent
+         * or the grandparent of the half neighbors. We can return it and the indices. */
         /* We need to determine the dual face */
         if (neigh_scheme->t8_element_level (ancestor) == ts->t8_element_level (leaf)) {
           /* The ancestor is the same-level neighbor of leaf */
@@ -2084,18 +2073,15 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8
     for (ineigh = 0; ineigh < num_children_at_face; ineigh++) {
       /* Compute the linear id at maxlevel of the neighbor leaf */
       neigh_id = neigh_scheme->t8_element_get_linear_id (neighbor_leafs[ineigh], forest->maxlevel);
-      /* Get a pointer to the element array in which the neighbor lies and search
-       * for the element's index in this array.
-       * This is either the local leaf array of the local tree or the corresponding leaf array
-       * in the ghost structure */
+      /* Get a pointer to the element array in which the neighbor lies and search for the element's index in this array.
+       * This is either the local leaf array of the local tree or the corresponding leaf array in the ghost structure */
       if (owners[ineigh] == forest->mpirank) {
         /* The neighbor is a local leaf */
         element_array = t8_forest_get_tree_element_array (forest, lneigh_treeid);
         /* Find the index of the neighbor in the array */
         element_indices[ineigh] = t8_forest_bin_search_lower (element_array, neigh_id, forest->maxlevel);
         T8_ASSERT (element_indices[ineigh] >= 0);
-        /* We have to add the tree's element offset to the index found to get
-         * the actual local element id */
+        /* We have to add the tree's element offset to the index found to get the actual local element id */
         element_indices[ineigh] += t8_forest_get_tree_element_offset (forest, lneigh_treeid);
 #if T8_ENABLE_DEBUG
         /* We check whether the element is really the element at this local id */
@@ -2272,8 +2258,7 @@ t8_forest_element_check_owner (t8_forest_t forest, t8_element_t *element, t8_glo
 
 /* The data that we use as key in the binary owner search.
  * It contains the linear id of the element that we look for and
- * a pointer to the forest, we also store the index of the biggest
- * owner process.
+ * a pointer to the forest, we also store the index of the biggest owner process.
  */
 struct find_owner_data_t
 {
@@ -2378,22 +2363,19 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid, t8_el
         /* skip empty processes */
         if ((empty_dir == -1 && guess <= lower_bound) || (empty_dir == +1 && guess >= upper_bound)) {
           /* We look for smaller processes until guess = lower_bound,
-           * and then look for greater processes
-           * or vice versa. */
-          /* we reached the top or bottom bound */
+           * and then look for greater processes or vice versa. */
+          /* We reached the top or bottom bound */
           reached_bound = empty_dir > 0 ? 1 : -1;
           /* change direction */
           empty_dir *= -1;
           /* reset guess */
           guess = last_guess;
           if (reached_bound > 0) {
-            /* The upper bound was reached, we omit all empty
-             * ranks from the search. */
+            /* The upper bound was reached, we omit all empty ranks from the search. */
             upper_bound = last_guess;
           }
           else {
-            /* The lower bound was reached, we omit all empty
-             * ranks from the search. */
+            /* The lower bound was reached, we omit all empty ranks from the search. */
             lower_bound = last_guess;
           }
         }
@@ -2412,8 +2394,7 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid, t8_el
       else {
         current_id = first_descs[guess];
         if (current_first_tree == gtreeid && element_desc_id < current_id) {
-          /* This guess has gtreeid as first tree
-           * we compare the first descendant */
+          /* This guess has gtreeid as first tree, we compare the first descendant */
           /* look further left */
           empty_dir = -1;
           upper_bound = guess - 1;
@@ -2434,8 +2415,7 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid, t8_el
           else {
             current_id = first_descs[next_nonempty];
             if (current_first_tree == gtreeid && current_id <= element_desc_id) {
-              /* The next process has gtreeid as first tree
-               * we compare the first descendants */
+              /* The next process has gtreeid as first tree, we compare the first descendants */
               /* The process we look for is >= guess + 1
                * look further right */
               empty_dir = +1;
@@ -2531,8 +2511,7 @@ t8_forest_element_find_owner_old (t8_forest_t forest, t8_gloidx_t gtreeid, t8_el
 
   /* The first owner of the tree may not have the tree as its first tree and
    * thus its first_descendant entry may not relate to this tree.
-   * We thus check by hand if this process owns the element and exclude it
-   * from the array. */
+   * We thus check by hand if this process owns the element and exclude it from the array. */
   proc = *(int *) sc_array_index (owners_of_tree, 0);
   if (owners_of_tree->elem_count == 1) {
     /* There is only this proc as possible owner. */
@@ -2543,9 +2522,8 @@ t8_forest_element_find_owner_old (t8_forest_t forest, t8_gloidx_t gtreeid, t8_el
     return proc;
   }
   else {
-    /* Get the next owning process. Its first descendant is in fact an element
-     * of the tree. If it is bigger than the descendant we look for, then
-     * proc is the owning process of element. */
+    /* Get the next owning process. Its first descendant is in fact an element of the tree. 
+     * If it is bigger than the descendant we look for, then proc is the owning process of element. */
     proc_next = *(int *) sc_array_index (owners_of_tree, 1);
     if (*(t8_linearidx_t *) t8_shmem_array_index (forest->global_first_desc, (size_t) proc_next)
         > element_desc_lin_id) {
@@ -2560,8 +2538,10 @@ t8_forest_element_find_owner_old (t8_forest_t forest, t8_gloidx_t gtreeid, t8_el
   sc_array_init_view (&owners_of_tree_wo_first, owners_of_tree, 1, owners_of_tree->elem_count - 1);
   /* We binary search in the owners array for the process that owns the element. */
   find_owner_data.forest = forest;
-  find_owner_data.last_owner
-    = *(int *) sc_array_index (&owners_of_tree_wo_first, owners_of_tree_wo_first.elem_count - 1);
+  /* clang-format off */
+  find_owner_data.last_owner = *(int *) sc_array_index (&owners_of_tree_wo_first,
+                                                        owners_of_tree_wo_first.elem_count - 1);
+  /* clang-format on */
   find_owner_data.linear_id = element_desc_lin_id;
 
   proc_index = sc_array_bsearch (&owners_of_tree_wo_first, &find_owner_data, t8_forest_element_find_owner_compare);
@@ -2581,11 +2561,9 @@ t8_forest_element_find_owner_old (t8_forest_t forest, t8_gloidx_t gtreeid, t8_el
 }
 
 /* Recursively find all owners of descendants of a given element that touch a given face.
- * We do this by constructing the first and last possible descendants of the element that
- * touch the face. If those belong to different processes, we construct all children
- * of the element that touch the face.
- * We pass those children to the recursion in order of their linear id to be sure
- * that we add owners in ascending order.
+ * We do this by constructing the first and last possible descendants of the element that touch the face.
+ * If those belong to different processes, we construct all children of the element that touch the face.
+ * We pass those children to the recursion in order of their linear id to be sure that we add owners in ascending order.
  * first_desc/last_desc should either point to the first/last descendant of element or be NULL
  */
 static void
@@ -2664,8 +2642,7 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest, t8_gloidx_t gtre
   }
   else {
     T8_ASSERT (ts->t8_element_level (element) < t8_forest_get_maxlevel (forest));
-    /* This element has different owners, we have to create its face
-     * children and continue with the recursion. */
+    /* This element has different owners, we have to create its face children and continue with the recursion. */
     num_children = ts->t8_element_num_face_children (element, face);
     /* allocate memory */
     face_children = T8_ALLOC (t8_element_t *, num_children);
@@ -2789,15 +2766,16 @@ t8_forest_element_owners_at_neigh_face (t8_forest_t forest, t8_locidx_t ltreeid,
   T8_ASSERT (T8_ECLASS_ZERO <= neigh_class && neigh_class < T8_ECLASS_COUNT);
   neigh_scheme = t8_forest_get_eclass_scheme (forest, neigh_class);
   neigh_scheme->t8_element_new (1, &face_neighbor);
-  neigh_tree
-    = t8_forest_element_face_neighbor (forest, ltreeid, element, face_neighbor, neigh_scheme, face, &dual_face);
+  /* clang-format off */
+  neigh_tree = t8_forest_element_face_neighbor (forest, ltreeid, element, face_neighbor,
+                                                neigh_scheme, face, &dual_face);
+  /* clang-format on */
   if (neigh_tree >= 0) {
     /* There is a face neighbor */
     t8_forest_element_owners_at_face (forest, neigh_tree, face_neighbor, neigh_class, dual_face, owners);
   }
   else {
-    /* There is no face neighbor, we indicate this by setting the
-     * array to 0 */
+    /* There is no face neighbor, we indicate this by setting the array to 0 */
     sc_array_resize (owners, 0);
   }
   neigh_scheme->t8_element_destroy (1, &face_neighbor);
@@ -2817,8 +2795,7 @@ t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t forest, t8_locidx_t l
     /* There is no owner or it is unique */
     return;
   }
-  /* Find out the eclass of the face neighbor tree and allocate memory for
-   * the neighbor element */
+  /* Find out the eclass of the face neighbor tree and allocate memory for the neighbor element */
   neigh_class = t8_forest_element_neighbor_eclass (forest, ltreeid, element, face);
   neigh_scheme = t8_forest_get_eclass_scheme (forest, neigh_class);
   neigh_scheme->t8_element_new (1, &face_neighbor);
@@ -2849,8 +2826,7 @@ t8_forest_element_has_leaf_desc (t8_forest_t forest, t8_gloidx_t gtreeid, const 
 
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  /* Compute the linear id of the last descendant of element at
-   * forest maxlevel.
+  /* Compute the linear id of the last descendant of element at forest maxlevel.
    * We then check whether the forest has any element with id between
    * the id of element and the id of the last descendant */
   /* TODO: element interface function t8_element_last_desc_id */
@@ -2885,8 +2861,7 @@ t8_forest_element_has_leaf_desc (t8_forest_t forest, t8_gloidx_t gtreeid, const 
     }
   }
   if (forest->ghosts != NULL) {
-    /* Check if the tree is a ghost tree and if so, check its elements
-     * as well */
+    /* Check if the tree is a ghost tree and if so, check its elements as well */
     ghost_treeid = t8_forest_ghost_get_ghost_treeid (forest, gtreeid);
     if (ghost_treeid >= 0) {
       /* The tree is a ghost tree */

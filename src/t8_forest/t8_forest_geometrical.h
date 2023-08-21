@@ -81,8 +81,7 @@ t8_forest_element_from_ref_coords (t8_forest_t forest, t8_locidx_t ltreeid, cons
 void
 t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, double *coordinates);
 
-/** Compute the diameter of an element if a geometry
- * for this tree is registered in the forest's cmesh.
+/** Compute the diameter of an element if a geometry for this tree is registered in the forest's cmesh.
  * This is only an approximation.
  * \param [in]      forest     The forest.
  * \param [in]      ltree_id   The forest local id of the tree in which the element is.
@@ -94,8 +93,7 @@ t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const t8_el
 double
 t8_forest_element_diam (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element);
 
-/** Compute the volume of an element if a geometry
- * for this tree is registered in the forest's cmesh.
+/** Compute the volume of an element if a geometry for this tree is registered in the forest's cmesh.
  * This is only an approximation.
  * \param [in]      forest     The forest.
  * \param [in]      ltree_id   The forest local id of the tree in which the element is.
@@ -108,8 +106,7 @@ t8_forest_element_diam (t8_forest_t forest, t8_locidx_t ltreeid, const t8_elemen
 double
 t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element);
 
-/** Compute the area of an element's face if a geometry
- * for this tree is registered in the forest's cmesh.
+/** Compute the area of an element's face if a geometry for this tree is registered in the forest's cmesh.
  * Currently implemented for 2D elements only.
  * This is only an approximation.
  * \param [in]      forest     The forest.
@@ -135,8 +132,7 @@ void
 t8_forest_element_face_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int face,
                                  double centroid[3]);
 
-/** Compute the normal vector of an element's face if a geometry
- * for this tree is registered in the forest's cmesh.
+/** Compute the normal vector of an element's face if a geometry for this tree is registered in the forest's cmesh.
  * Currently implemented for 2D elements only.
  * \param [in]      forest     The forest.
  * \param [in]      ltree_id   The forest local id of the tree in which the element is.
@@ -148,6 +144,7 @@ t8_forest_element_face_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const 
 void
 t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int face,
                                double normal[3]);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_FOREST_GEOMETRICAL_H */

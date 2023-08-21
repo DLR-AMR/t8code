@@ -173,9 +173,7 @@ t8_forest_set_copy (t8_forest_t forest, const t8_forest_t set_from)
   T8_ASSERT (set_from != NULL);
 
   forest->set_from = set_from;
-  /* Set the from_method to COPY. This overwrites any previous setting
-   * of ADAPT, PARTITION, or BALANCE */
-
+  /* Set the from_method to COPY. This overwrites any previous setting of ADAPT, PARTITION, or BALANCE */
   forest->from_method = T8_FOREST_FROM_COPY;
 
   /* Overwrite any previous setting */
@@ -383,22 +381,20 @@ t8_forest_refines_irregular (t8_forest_t forest)
   t8_eclass_scheme_c *tscheme;
   /* Iterate over all eclasses */
   for (int_eclass = (int) T8_ECLASS_ZERO; int_eclass < (int) T8_ECLASS_COUNT; int_eclass++) {
-    /* If the forest has trees of the current eclass, check if elements of this
-     * eclass refine irregular. */
+    /* If the forest has trees of the current eclass, check if elements of this eclass refine irregular. */
     if (forest->cmesh->num_local_trees_per_eclass[int_eclass] > 0) {
       tscheme = t8_forest_get_eclass_scheme_before_commit (forest, (t8_eclass_t) int_eclass);
       irregular = irregular || t8_element_refines_irregular (tscheme);
     }
   }
-  /* Combine the process-local results via a logic or and distribute the
-   * result over all procs (in the communicator).*/
+  /* Combine the process-local results via a logic or and distribute the result over all procs (in the communicator).*/
   mpiret = sc_MPI_Allreduce (&irregular, &irregular_all_procs, 1, sc_MPI_INT, sc_MPI_LOR, forest->mpicomm);
   SC_CHECK_MPI (mpiret);
 
   return irregular_all_procs;
 }
 
-/**Algorithm to populate a forest, if any tree refines irregularly.
+/** Algorithm to populate a forest, if any tree refines irregularly.
  * Create the elements on this process given a uniform partition
  * of the coarse mesh. We can not use the function t8_forest_populate, because
  * it assumes a regular refinement for all trees.
@@ -719,8 +715,7 @@ t8_forest_get_num_ghosts (t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  /* Return the number of ghost elements, or 0 if no ghost structure
-   * existst. */
+  /* Return the number of ghost elements, or 0 if no ghost structure exists. */
   if (forest->ghosts == NULL) {
     return 0;
   }
@@ -957,8 +952,7 @@ t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id, t8_locidx_t 
     return t8_element_array_index_locidx (&tree->elements, lelement_id - tree->elements_offset);
   }
   /* The element was not found.
-   * This case is covered by the first if and should therefore
-   * never happen. */
+   * This case is covered by the first if and should therefore never happen. */
   SC_ABORT_NOT_REACHED ();
   return NULL;
 }

@@ -147,16 +147,14 @@ t8_forest_ghost_ref (t8_forest_ghost_t ghost);
  * \param [in,out]  pghost      On input, the ghost structure pointed to must
  *                              exist with positive reference count.
  *                              If the reference count reaches zero, the ghost
- *                              structure is destroyed and this pointer is set
- *                              to NULL.
+ *                              structure is destroyed and this pointer is set to NULL.
  *                              Otherwise, the pointer is not changed.
  */
 void
 t8_forest_ghost_unref (t8_forest_ghost_t *pghost);
 
 /** Verify that a ghost structure has only one reference left and destroy it.
- * This function is preferred over \ref t8_ghost_unref when it is known
- * that the last reference is to be deleted.
+ * This function is preferred over \ref t8_ghost_unref when it is known that the last reference is to be deleted.
  * \param [in,out]  pghost     This ghost structure must have a reference count of one.
  *                             It can be in any state (committed or not).
  *                             Then it effectively calls \ref t8_forest_ghost_unref.

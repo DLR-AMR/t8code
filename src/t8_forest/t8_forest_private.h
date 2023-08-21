@@ -71,8 +71,8 @@ t8_forest_populate (t8_forest_t forest);
 /** Return the eclass scheme of a given element class associated to a forest.
  * This function does not check whether the given forest is committed, use with
  * caution and only if you are sure that the eclass_scheme was set.
- * \param [in]      forest.     A nearly committed forest.
- * \param [in]      eclass.     An element class.
+ * \param [in]      forest     A nearly committed forest.
+ * \param [in]      eclass     An element class.
  * \return          The eclass scheme of \a eclass associated to forest.
  * \see t8_forest_set_scheme
  * \note  The forest is not required to have trees of class \a eclass.
@@ -179,16 +179,16 @@ t8_forest_get_tree_element_array (t8_forest_t forest, t8_locidx_t ltreeid);
 
 /** Find the owner process of a given element, deprecated version.
  * Use t8_forest_element_find_owner instead.
- * \param [in]    forest  The forest.
- * \param [in]    gtreeid The global id of the tree in which the element lies.
- * \param [in]    element The element to look for.
- * \param [in]    eclass  The element class of the tree \a gtreeid.
+ * \param [in]     forest  The forest.
+ * \param [in]     gtreeid The global id of the tree in which the element lies.
+ * \param [in]     element The element to look for.
+ * \param [in]     eclass  The element class of the tree \a gtreeid.
  * \param [in,out] all_owners_of_tree If not NULL, a sc_array of integers.
- *                        If the element count is zero then on output all owners
- *                        of the tree are stored.
- *                        If the element count is non-zero then it is assumed to
- *                        be filled with all owners of the tree.
- * \return                The mpirank of the process that owns \a element.
+ *                         If the element count is zero then on output all owners
+ *                         of the tree are stored.
+ *                         If the element count is non-zero then it is assumed to
+ *                         be filled with all owners of the tree.
+ * \return                 The mpirank of the process that owns \a element.
  * \note The element must exist in the forest.
  * \note \a forest must be committed before calling this function.
  */
@@ -262,28 +262,27 @@ t8_forest_element_check_owner (t8_forest_t forest, t8_element_t *element, t8_glo
 
 /** Find all owner processes that own descendant of a given element that
  * touch a given face. The element does not need to be a local element.
- * \param [in]    forest  The forest.
- * \param [in]    gtreeid The global id of the tree in which the element lies.
- * \param [in]    element The element to look for.
- * \param [in]    eclass  The element class of the tree \a gtreeid.
- * \param [in]    face    A face of \a element.
+ * \param [in]     forest  The forest.
+ * \param [in]     gtreeid The global id of the tree in which the element lies.
+ * \param [in]     element The element to look for.
+ * \param [in]     eclass  The element class of the tree \a gtreeid.
+ * \param [in]     face    A face of \a element.
  * \param [in,out] owners  On input an array of integers. Its first and second entry
- *                        are taken as lower and upper bounds for the owner processes.
- *                        If empty, then no bounds are taken.
- *                        On output it stores
- *                        all owners of descendants of \a elem that touch \a face
- *                        in ascending order.
+ *                         are taken as lower and upper bounds for the owner processes.
+ *                         If empty, then no bounds are taken.
+ *                         On output it stores
+ *                         all owners of descendants of \a elem that touch \a face
+ *                         in ascending order.
  */
 void
 t8_forest_element_owners_at_face (t8_forest_t forest, t8_gloidx_t gtreeid, const t8_element_t *element,
                                   t8_eclass_t eclass, int face, sc_array_t *owners);
 
-/** Constant time algorithm to compute lower and upper bounds for the owner
- * processes of a given element.
- ** \param [in]    forest  The forest.
- * \param [in]    gtreeid The global id of the tree in which the element lies.
- * \param [in]    element The element to look for.
- * \param [in]    eclass  The element class of the tree \a gtreeid.
+/** Constant time algorithm to compute lower and upper bounds for the owner processes of a given element.
+ * \param [in]     forest  The forest.
+ * \param [in]     gtreeid The global id of the tree in which the element lies.
+ * \param [in]     element The element to look for.
+ * \param [in]     eclass  The element class of the tree \a gtreeid.
  * \param [in,out] lower   On input a known lower bound for the owner process,
  *                         on output a (better) bound.
  * \param [in,out] upper   On input a known upper bound for the owner process,
@@ -301,11 +300,11 @@ t8_forest_element_owners_bounds (t8_forest_t forest, t8_gloidx_t gtreeid, const 
 
 /** Constant time algorithm to compute lower and upper bounds for the owner
  * processes of the face leafs of a given element.
- * \param [in]    forest  The forest.
- * \param [in]    gtreeid The global id of the tree in which the element lies.
- * \param [in]    element The element to look for.
- * \param [in]    eclass  The element class of the tree \a gtreeid.
- * \param [in]    face    The face of \a element to consider.
+ * \param [in]     forest  The forest.
+ * \param [in]     gtreeid The global id of the tree in which the element lies.
+ * \param [in]     element The element to look for.
+ * \param [in]     eclass  The element class of the tree \a gtreeid.
+ * \param [in]     face    The face of \a element to consider.
  * \param [in,out] lower   On input a known lower bound for the owner process,
  *                         on output a (better) bound.
  * \param [in,out] upper   On input a known upper bound for the owner process,
@@ -321,17 +320,17 @@ t8_forest_element_owners_at_face_bounds (t8_forest_t forest, t8_gloidx_t gtreeid
 
 /** Find all owner processes that own descendant of a face neighbor of a
  *  given local element that touch the given face.
- * \param [in]    forest  The forest.
- * \param [in]    ltreeid The local id of the tree in which the element lies.
- * \param [in]    element The element, whose neighbor's face owners should be computed.
- * \param [in]    face    A face of \a element.
+ * \param [in]     forest  The forest.
+ * \param [in]     ltreeid The local id of the tree in which the element lies.
+ * \param [in]     element The element, whose neighbor's face owners should be computed.
+ * \param [in]     face    A face of \a element.
  * \param [in,out] owners  On input an array of integers. Its first and second entry
- *                        are taken as lower and upper bounds for the owner processes.
- *                        If empty, then no bounds are taken.
- *                        On output it stores all owners of descendants of the neighbor of
- *                        \a elem across \a face
- *                        that touch this face. If the neighbor element does not
- *                        exist, owners will be empty.
+ *                         are taken as lower and upper bounds for the owner processes.
+ *                         If empty, then no bounds are taken.
+ *                         On output it stores all owners of descendants of the neighbor of
+ *                         \a elem across \a face
+ *                         that touch this face. If the neighbor element does not
+ *                         exist, owners will be empty.
  * This is equivalent to calling t8_forest_element_face_neighbor and
  * t8_forest_element_owners_at_face for the resulting neighbor.
  * \note \a forest must be committed before calling this function.
@@ -343,10 +342,10 @@ t8_forest_element_owners_at_neigh_face (t8_forest_t forest, t8_locidx_t ltreeid,
 /** Constant time algorithm to find bounds for the owner processes
  *  that own descendant of a face neighbor of a
  *  given local element that touch the given face.
- * \param [in]    forest  The forest.
- * \param [in]    ltreeid The local id of the tree in which the element lies.
- * \param [in]    element The element, whose neighbor's face owners should be computed.
- * \param [in]    face    A face of \a element.
+ * \param [in]     forest  The forest.
+ * \param [in]     ltreeid The local id of the tree in which the element lies.
+ * \param [in]     element The element, whose neighbor's face owners should be computed.
+ * \param [in]     face    A face of \a element.
  * \param [in,out] lower   On input a known lower bound for the owner process,
  *                         on output a (better) bound.
  * \param [in,out] upper   On input a known upper bound for the owner process,
@@ -363,18 +362,18 @@ t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t forest, t8_locidx_t l
                                                int face, int *lower, int *upper);
 
 /** Construct all face neighbors of half size of a given element.
- * \param [in]    forest The forest.
- * \param [in]    ltreeid The local tree id of the tree in which the element is.
- * \param [in]    elem    The element of which to construct the neighbors.
+ * \param [in]     forest  The forest.
+ * \param [in]     ltreeid The local tree id of the tree in which the element is.
+ * \param [in]     elem    The element of which to construct the neighbors.
  * \param [in,out] neighs An array of allocated elements of the correct element class.
  *                        On output the face neighbors of \a elem across \a face of one
  *                        bigger refinement level are stored.
- * \param [in]    neigh_scheme The eclass scheme of the neighbors.
- * \param [in]    face    The number of the face of \a elem.
- * \param [in]    num_neighs The number of allocated element in \a neighs. Must match the
- *                        number of face neighbors of one bigger refinement level.
- * \param [out]   dual_face If not NULL, on output the face id's of the neighboring elements' faces.
- * \return                The global id of the tree in which the neighbors are.
+ * \param [in]     neigh_scheme The eclass scheme of the neighbors.
+ * \param [in]     face    The number of the face of \a elem.
+ * \param [in]     num_neighs The number of allocated element in \a neighs. Must match the
+ *                         number of face neighbors of one bigger refinement level.
+ * \param [out]    dual_face If not NULL, on output the face id's of the neighboring elements' faces.
+ * \return                 The global id of the tree in which the neighbors are.
  *        -1 if there exists no neighbor across that face.
  */
 t8_gloidx_t

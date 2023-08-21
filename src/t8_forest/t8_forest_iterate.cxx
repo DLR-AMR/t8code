@@ -36,8 +36,7 @@ typedef struct
 } t8_forest_child_type_query_t;
 
 /* This is the function that we call in sc_split_array to determine for an
- * element E that is a descendant of an element e, of which of e's children,
- * E is a descendant. */
+ * element E that is a descendant of an element e, of which of e's children, E is a descendant. */
 static size_t
 t8_forest_determine_child_type (sc_array_t *leaf_elements, size_t index, void *data)
 {
@@ -47,8 +46,7 @@ t8_forest_determine_child_type (sc_array_t *leaf_elements, size_t index, void *d
   /* Get a pointer to the element */
   element = (t8_element_t *) t8_sc_array_index_locidx (leaf_elements, index);
   T8_ASSERT (query_data->level < query_data->ts->t8_element_level (element));
-  /* Compute the element's ancestor id at the stored level and return it
-   * as the element's type */
+  /* Compute the element's ancestor id at the stored level and return it as the element's type */
   return query_data->ts->t8_element_ancestor_id (element, query_data->level + 1);
 }
 
@@ -119,12 +117,10 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
 #endif
 
   /* Call the callback function element, we pass -index - 1 as index to indicate
-   * element is not a leaf, if it returns true, we continue with the
-   * top-down recursion */
+   * element is not a leaf, if it returns true, we continue with the top-down recursion */
   if (callback (forest, ltreeid, element, face, user_data, -tree_lindex_of_first_leaf - 1)) {
     /* Enter the recursion */
-    /* We compute all face children of E, compute their leaf arrays and
-     * call iterate_faces */
+    /* We compute all face children of E, compute their leaf arrays and call iterate_faces */
     /* allocate the memory to store the face children */
     num_face_children = ts->t8_element_num_face_children (element, face);
     face_children = T8_ALLOC (t8_element_t *, num_face_children);
@@ -211,8 +207,7 @@ t8_forest_search_recursion (t8_forest_t forest, t8_locidx_t ltreeid, t8_eclass_t
 
   is_leaf = 0;
   if (elem_count == 1) {
-    /* There is only one leaf left, we check whether it is the same as element
-     * and if so call the callback function */
+    /* There is only one leaf left, we check whether it is the same as element and if so call the callback function */
     leaf = t8_element_array_index_locidx (leaf_elements, 0);
 
     SC_CHECK_ABORT (ts->t8_element_level (element) <= ts->t8_element_level (leaf),
@@ -246,8 +241,7 @@ t8_forest_search_recursion (t8_forest_t forest, t8_locidx_t ltreeid, t8_eclass_t
     query_ret = query_fn (forest, ltreeid, element, is_leaf, leaf_elements, tree_lindex_of_first_leaf, current_query,
                           query_index);
     if (!is_leaf && query_ret) {
-      /* If element is not a leaf and this query returned true, we add this
-       * query to the new active queries */
+      /* If element is not a leaf and this query returned true, we add this query to the new active queries */
       *(size_t *) sc_array_push (new_active_queries) = query_index;
     }
   }
@@ -263,8 +257,7 @@ t8_forest_search_recursion (t8_forest_t forest, t8_locidx_t ltreeid, t8_eclass_t
   }
 
   /* Enter the recursion (the element is definitely not a leaf at this point) */
-  /* We compute all children of E, compute their leaf arrays and
-   * call search_recursion */
+  /* We compute all children of E, compute their leaf arrays and call search_recursion */
   /* allocate the memory to store the children */
   num_children = ts->t8_element_num_children (element);
   children = T8_ALLOC (t8_element_t *, num_children);
