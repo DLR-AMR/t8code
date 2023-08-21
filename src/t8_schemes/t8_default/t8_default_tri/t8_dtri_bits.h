@@ -37,15 +37,16 @@ T8_EXTERN_C_BEGIN ();
  * \param [in,out] dest Existing triangle whose data will be
  *                      filled with the data of \a t. *
  */
-void                t8_dtri_copy (const t8_dtri_t *t, t8_dtri_t *dest);
+void
+t8_dtri_copy (const t8_dtri_t *t, t8_dtri_t *dest);
 
 /** Compare two triangle in their linear order.
  * \param [in] t1 Triangle one.
  * \param [in] t2 Triangle two.
  * \return        Returns negative if t1 < t2, zero if t1 = t2, positive if t1 > t2
  */
-int                 t8_dtri_compare (const t8_dtri_t *t1,
-                                     const t8_dtri_t *t2);
+int
+t8_dtri_compare (const t8_dtri_t *t1, const t8_dtri_t *t2);
 
 /** Compute the parent of a triangle.
  * \param [in]  elem Input triangle.
@@ -53,7 +54,8 @@ int                 t8_dtri_compare (const t8_dtri_t *t1,
  *                  be filled with the data of elem's parent.
  * \note \a elem may point to the same triangle as \a parent.
  */
-void                t8_dtri_parent (const t8_dtri_t *t, t8_dtri_t *parent);
+void
+t8_dtri_parent (const t8_dtri_t *t, t8_dtri_t *parent);
 
 /** Compute the ancestor of a triangle at a given level.
  * \param [in]  t   Input triangle.
@@ -63,8 +65,8 @@ void                t8_dtri_parent (const t8_dtri_t *t, t8_dtri_t *parent);
  *                  level \a level.
  * \note The triangle \a ancestor may point to the same triangle as \a t.
  */
-void                t8_dtri_ancestor (const t8_dtri_t *t, int level,
-                                      t8_dtri_t *ancestor);
+void
+t8_dtri_ancestor (const t8_dtri_t *t, int level, t8_dtri_t *ancestor);
 
 /** Compute the coordinates of a vertex of a triangle.
  * \param [in] elem         Input triangle.
@@ -72,9 +74,8 @@ void                t8_dtri_ancestor (const t8_dtri_t *t, int level,
  * \param [out] coordinates An array of 2 t8_dtri_coord_t that
  * 		        will be filled with the coordinates of the vertex.
  */
-void                t8_dtri_compute_coords (const t8_dtri_t *elem,
-                                            const int vertex,
-                                            t8_dtri_coord_t coordinates[2]);
+void
+t8_dtri_compute_coords (const t8_dtri_t *elem, const int vertex, t8_dtri_coord_t coordinates[2]);
 
 /** Compute the reference coordinates of a vertex of a triangle when the 
  * tree (level 0 triangle) is embedded in [0,1]^2.
@@ -83,9 +84,8 @@ void                t8_dtri_compute_coords (const t8_dtri_t *elem,
  * \param [out] coordinates An array of 2 double that
  * 		     will be filled with the reference coordinates of the vertex.
  */
-void                t8_dtri_compute_vertex_ref_coords (const t8_dtri_t *elem,
-                                                       const int vertex,
-                                                       double coordinates[2]);
+void
+t8_dtri_compute_vertex_ref_coords (const t8_dtri_t *elem, const int vertex, double coordinates[2]);
 
 /** Convert a point in the reference space of a triangle element to a point in
  *  the reference space of the tree (level 0) embedded in [0,1]^2.
@@ -95,19 +95,16 @@ void                t8_dtri_compute_vertex_ref_coords (const t8_dtri_t *elem,
  * \param [out] out_coords An array of 2 doubles that will be filled with the
  *                         reference coordinates in the tree of the triangle.
  */
-void                t8_dtri_compute_reference_coords (const t8_dtri_t *elem,
-                                                      const double
-                                                      *ref_coords,
-                                                      double out_coords[2]);
+void
+t8_dtri_compute_reference_coords (const t8_dtri_t *elem, const double *ref_coords, double out_coords[2]);
 
 /** Compute the coordinates of the four vertices of a triangle.
  * \param [in] elem         Input triangle.
  * \param [out] coordinates An array of 4x3 t8_dtri_coord_t that
  * 		     will be filled with the coordinates of t's vertices.
  */
-void                t8_dtri_compute_all_coords (const t8_dtri_t *elem,
-                                                t8_dtri_coord_t
-                                                coordinates[3][2]);
+void
+t8_dtri_compute_all_coords (const t8_dtri_t *elem, t8_dtri_coord_t coordinates[3][2]);
 
 /** Compute the childid-th child in Morton order of a triangle.
  * \param [in] t    Input triangle.
@@ -115,22 +112,23 @@ void                t8_dtri_compute_all_coords (const t8_dtri_t *elem,
  * \param [out] child  Existing triangle whose data will be filled
  * 		    with the date of t's childid-th child.
  */
-void                t8_dtri_child (const t8_dtri_t *t,
-                                   int childid, t8_dtri_t *child);
+void
+t8_dtri_child (const t8_dtri_t *t, int childid, t8_dtri_t *child);
 
 /** Compute the 4 children of a triangle, array version.
  * \param [in]     t  Input triangle.
  * \param [in,out] c  Pointers to the 4 computed children in Morton order.
  *                    t may point to the same quadrant as c[0].
  */
-void                t8_dtri_childrenpv (const t8_dtri_t *t,
-                                        t8_dtri_t *c[T8_DTRI_CHILDREN]);
+void
+t8_dtri_childrenpv (const t8_dtri_t *t, t8_dtri_t *c[T8_DTRI_CHILDREN]);
 
 /** Check whether a collection of eight triangles is a family in Morton order.
  * \param [in]     f  An array of eight triangles.
  * \return            Nonzero if \a f is a family of triangles.
  */
-int                 t8_dtri_is_familypv (const t8_dtri_t *f[]);
+int
+t8_dtri_is_familypv (const t8_dtri_t *f[]);
 
 /** Compute a specific sibling of a triangle.
  * \param [in]     elem  Input triangle.
@@ -138,8 +136,8 @@ int                 t8_dtri_is_familypv (const t8_dtri_t *f[]);
  *                    with the data of sibling no. sibling_id of elem.
  * \param [in]     sibid The id of the sibling computed, 0..7 in Bey order.
  */
-void                t8_dtri_sibling (const t8_dtri_t *elem,
-                                     int sibid, t8_dtri_t *sibling);
+void
+t8_dtri_sibling (const t8_dtri_t *elem, int sibid, t8_dtri_t *sibling);
 
 /** Compute the face neighbor of a triangle.
  * \param [in]     t      Input triangle.
@@ -147,8 +145,8 @@ void                t8_dtri_sibling (const t8_dtri_t *elem,
  * \param [in,out] n      Existing triangle whose data will be filled.
  * \note \a t may point to the same triangle as \a n.
  */
-int                 t8_dtri_face_neighbour (const t8_dtri_t *t, int face,
-                                            t8_dtri_t *n);
+int
+t8_dtri_face_neighbour (const t8_dtri_t *t, int face, t8_dtri_t *n);
 
 /** Computes the nearest common ancestor of two triangles in the same tree.
  * \param [in]     t1 First input triangle.
@@ -156,9 +154,8 @@ int                 t8_dtri_face_neighbour (const t8_dtri_t *t, int face,
  * \param [in,out] r Existing triangle whose data will be filled.
  * \note \a t1, \a t2, \a r may point to the same quadrant.
  */
-void                t8_dtri_nearest_common_ancestor (const t8_dtri_t *t1,
-                                                     const t8_dtri_t *t2,
-                                                     t8_dtri_t *r);
+void
+t8_dtri_nearest_common_ancestor (const t8_dtri_t *t1, const t8_dtri_t *t2, t8_dtri_t *r);
 
 /** Given a triangle and a face of the triangle, compute all children of
  * the triangle that touch the face.
@@ -170,11 +167,8 @@ void                t8_dtri_nearest_common_ancestor (const t8_dtri_t *t1,
  * \param [in] num_children The number of triangles in \a children. Must match
  *                      the number of children that touch \a face.
  */
-void                t8_dtri_children_at_face (const t8_dtri_t *tri,
-                                              int face,
-                                              t8_dtri_t *children[],
-                                              int num_children,
-                                              int *child_indices);
+void
+t8_dtri_children_at_face (const t8_dtri_t *tri, int face, t8_dtri_t *children[], int num_children, int *child_indices);
 
 /** Given a face of a triangle and a child number of a child of that face, return the face number
  * of the child of the triangle that matches the child face.
@@ -184,8 +178,8 @@ void                t8_dtri_children_at_face (const t8_dtri_t *tri,
  * \return              The face number of the face of a child of \a triangle
  *                      that coincides with \a face_child.
  */
-int                 t8_dtri_face_child_face (const t8_dtri_t *triangle,
-                                             int face, int face_child);
+int
+t8_dtri_face_child_face (const t8_dtri_t *triangle, int face, int face_child);
 
 /** Given a face of an triangle return the face number
  * of the parent of the triangle that matches the triangle's face. Or return -1 if
@@ -196,8 +190,8 @@ int                 t8_dtri_face_child_face (const t8_dtri_t *triangle,
  * \return              If \a face of \a elem is also a face of \a elem's parent,
  *                      the face number of this face. Otherwise -1.
  */
-int                 t8_dtri_face_parent_face (const t8_dtri_t *triangle,
-                                              int face);
+int
+t8_dtri_face_parent_face (const t8_dtri_t *triangle, int face);
 
 /** Given a triangle and a face of this triangle. If the face lies on the
  *  tree boundary, return the face number of the tree face.
@@ -209,7 +203,8 @@ int                 t8_dtri_face_parent_face (const t8_dtri_t *triangle,
  *         Any arbitrary integer if \a t is not at a tree boundary.
  * \note For boundary triangles, this function is the inverse of \ref t8_dtri_root_face_to_face
  */
-int                 t8_dtri_tree_face (t8_dtri_t *t, int face);
+int
+t8_dtri_tree_face (t8_dtri_t *t, int face);
 
 /** Given a triangle and a face of the root triangle. If the triangle lies on the
  *  tree boundary, return the corresponding face number of the triangle.
@@ -221,7 +216,8 @@ int                 t8_dtri_tree_face (t8_dtri_t *t, int face);
  *         Any arbitrary integer if \a t is not at a tree boundary.
  * \note For boundary triangles, this function is the inverse of \ref t8_dtri_tree_face
  */
-int                 t8_dtri_root_face_to_face (t8_dtri_t *t, int root_face);
+int
+t8_dtri_root_face_to_face (t8_dtri_t *t, int root_face);
 
 /** Suppose we have two trees that share a common triangle f.
  *  Given a triangle e that is a subface of f in one of the trees
@@ -244,10 +240,9 @@ int                 t8_dtri_root_face_to_face (t8_dtri_t *t, int root_face);
  *                        defined in relation to the smaller face.
  * \note \a trianglein and \a triangle2 may point to the same element.
  */
-void                t8_dtri_transform_face (const t8_dtri_t *trianglein,
-                                            t8_dtri_t *triangle2,
-                                            int orientation, int sign,
-                                            int is_smaller_face);
+void
+t8_dtri_transform_face (const t8_dtri_t *trianglein, t8_dtri_t *triangle2, int orientation, int sign,
+                        int is_smaller_face);
 
 /** Test if a triangle lies inside of the root triangle,
  *  that is the triangle of level 0, anchor node (0,0)
@@ -255,44 +250,46 @@ void                t8_dtri_transform_face (const t8_dtri_t *trianglein,
  *  \param [in]     t Input triangle.
  *  \return true    If \a t lies inside of the root triangle.
  */
-int                 t8_dtri_is_inside_root (t8_dtri_t *t);
+int
+t8_dtri_is_inside_root (t8_dtri_t *t);
 
 /** Compute whether a given triangle shares a given face with its root tree.
  * \param [in] t        The input triangle.
  * \param [in] face     A face of \a t.
  * \return              True if \a face is a subface of the triangle's root element.
  */
-int                 t8_dtri_is_root_boundary (const t8_dtri_t *t, int face);
+int
+t8_dtri_is_root_boundary (const t8_dtri_t *t, int face);
 
 /** Test if two triangles have the same coordinates, type and level.
  * \return true if \a t1 describes the same triangle as \a t2.
  */
-int                 t8_dtri_is_equal (const t8_dtri_t *t1,
-                                      const t8_dtri_t *t2);
+int
+t8_dtri_is_equal (const t8_dtri_t *t1, const t8_dtri_t *t2);
 
 /** Test if two triangles are siblings.
  * \param [in] t1 First triangle to be tested.
  * \param [in] t2 Second triangle to be tested.
  * \return true if \a t1 is equal to or a sibling of \a t2. *
  */
-int                 t8_dtri_is_sibling (const t8_dtri_t *t1,
-                                        const t8_dtri_t *t2);
+int
+t8_dtri_is_sibling (const t8_dtri_t *t1, const t8_dtri_t *t2);
 
 /** Test if a triangle is the parent of another triangle.
  * \param [in] t triangle to be tested.
  * \param [in] c Possible child triangle.
  * \return true if \a t is the parent of \a c.
  */
-int                 t8_dtri_is_parent (const t8_dtri_t *t,
-                                       const t8_dtri_t *c);
+int
+t8_dtri_is_parent (const t8_dtri_t *t, const t8_dtri_t *c);
 
 /** Test if a triangle is an ancestor of another triangle.
  * \param [in] t triangle to be tested.
  * \param [in] c Descendent triangle.
  * \return true if \a t is equal to or an ancestor of \a c.
  */
-int                 t8_dtri_is_ancestor (const t8_dtri_t *t,
-                                         const t8_dtri_t *c);
+int
+t8_dtri_is_ancestor (const t8_dtri_t *t, const t8_dtri_t *c);
 
 /** Computes the linear position of a triangle in a uniform grid.
  * \param [in] t  triangle whose id will be computed.
@@ -300,7 +297,8 @@ int                 t8_dtri_is_ancestor (const t8_dtri_t *t,
  * \return Returns the linear position of this triangle on a grid of level \a level.
  * \note This id is not the Morton index.
  */
-t8_linearidx_t      t8_dtri_linear_id (const t8_dtri_t *t, int level);
+t8_linearidx_t
+t8_dtri_linear_id (const t8_dtri_t *t, int level);
 
 /**
  * Same as init_linear_id, but we only consider the subtree. Used for computing the index of a
@@ -311,12 +309,9 @@ t8_linearidx_t      t8_dtri_linear_id (const t8_dtri_t *t, int level);
  * \param [in] end_level     Level of uniform grid to be considered
  * \param [in] parenttype    The type of the parent.
  */
-void                t8_dtri_init_linear_id_with_level (t8_dtri_t *t,
-                                                       t8_linearidx_t id,
-                                                       const int start_level,
-                                                       const int end_level,
-                                                       t8_dtri_type_t
-                                                       parenttype);
+void
+t8_dtri_init_linear_id_with_level (t8_dtri_t *t, t8_linearidx_t id, const int start_level, const int end_level,
+                                   t8_dtri_type_t parenttype);
 
 /** Initialize a triangle as the triangle with a given global id in a uniform
  *  refinement of a given level. *
@@ -324,13 +319,14 @@ void                t8_dtri_init_linear_id_with_level (t8_dtri_t *t,
  * \param [in] id     Index to be considered.
  * \param [in] level  level of uniform grid to be considered.
  */
-void                t8_dtri_init_linear_id (t8_dtri_t *t, t8_linearidx_t id,
-                                            int level);
+void
+t8_dtri_init_linear_id (t8_dtri_t *t, t8_linearidx_t id, int level);
 
 /** Initialize a triangle as the root triangle (type 0 at level 0)
  * \param [in,out] t Existing triangle whose data will be filled.
  */
-void                t8_dtri_init_root (t8_dtri_t *t);
+void
+t8_dtri_init_root (t8_dtri_t *t);
 
 /** Computes the successor of a triangle in a uniform grid of level \a level.
  * \param [in] t  triangle whose id will be computed.
@@ -338,8 +334,8 @@ void                t8_dtri_init_root (t8_dtri_t *t);
  *                data of t's successor on level \a level.
  * \param [in] level level of uniform grid to be considered.
  */
-void                t8_dtri_successor (const t8_dtri_t *t, t8_dtri_t *s,
-                                       int level);
+void
+t8_dtri_successor (const t8_dtri_t *t, t8_dtri_t *s, int level);
 
 /** Compute the first descendant of a triangle at a given level. This is the descendant of
  * the triangle in a uniform maxlevel refinement that has the smaller id.
@@ -348,8 +344,8 @@ void                t8_dtri_successor (const t8_dtri_t *t, t8_dtri_t *s,
  * \param [out] s       Existing triangle whose data will be filled with the data
  *                      of t's first descendant.
  */
-void                t8_dtri_first_descendant (const t8_dtri_t *t,
-                                              t8_dtri_t *s, int level);
+void
+t8_dtri_first_descendant (const t8_dtri_t *t, t8_dtri_t *s, int level);
 
 /** Compute the last descendant of a triangle at a given level. This is the descendant of
  * the triangle in a uniform maxlevel refinement that has the biggest id.
@@ -358,8 +354,8 @@ void                t8_dtri_first_descendant (const t8_dtri_t *t,
  * \param [out] s       Existing triangle whose data will be filled with the data
  *                      of t's last descendant.
  */
-void                t8_dtri_last_descendant (const t8_dtri_t *t,
-                                             t8_dtri_t *s, int level);
+void
+t8_dtri_last_descendant (const t8_dtri_t *t, t8_dtri_t *s, int level);
 
 /** Compute the descendant of a triangle in a given corner.
  * \param [in] t        Triangle whose descendant is computed.
@@ -369,9 +365,8 @@ void                t8_dtri_last_descendant (const t8_dtri_t *t,
  * \param [in]  level   The refinement level of the descendant. Must be greater or
  *                      equal to \a t's level.
  */
-void                t8_dtri_corner_descendant (const t8_dtri_t *t,
-                                               t8_dtri_t *s, int corner,
-                                               int level);
+void
+t8_dtri_corner_descendant (const t8_dtri_t *t, t8_dtri_t *s, int corner, int level);
 
 /** Computes the predecessor of a triangle in a uniform grid of level \a level.
  * \param [in] t  triangle whose id will be computed.
@@ -379,8 +374,8 @@ void                t8_dtri_corner_descendant (const t8_dtri_t *t,
  *                data of t's predecessor on level \a level.
  * \param [in] level level of uniform grid to be considered.
  */
-void                t8_dtri_predecessor (const t8_dtri_t *t, t8_dtri_t *s,
-                                         int level);
+void
+t8_dtri_predecessor (const t8_dtri_t *t, t8_dtri_t *s, int level);
 
 /** Compute the position of the ancestor of this child at level \a level within
  * its siblings.
@@ -388,20 +383,23 @@ void                t8_dtri_predecessor (const t8_dtri_t *t, t8_dtri_t *s,
  * \param [in] level level to be considered.
  * \return Returns its child id in 0..3
  */
-int                 t8_dtri_ancestor_id (const t8_dtri_t *t, int level);
+int
+t8_dtri_ancestor_id (const t8_dtri_t *t, int level);
 
 /** Compute the position of the ancestor of this child at level \a level within
  * its siblings.
  * \param [in] t  triangle to be considered.
  * \return Returns its child id in 0..3
  */
-int                 t8_dtri_child_id (const t8_dtri_t *t);
+int
+t8_dtri_child_id (const t8_dtri_t *t);
 
 /** Return the level of a triangle.
  * \param [in] t  triangle to be considered.
  * \return        The level of \a t.
  */
-int                 t8_dtri_get_level (const t8_dtri_t *t);
+int
+t8_dtri_get_level (const t8_dtri_t *t);
 
 /** Query whether all entries of a triangle are in valid ranges.
  * \param [in] t  triangle to be considered.
@@ -409,18 +407,21 @@ int                 t8_dtri_get_level (const t8_dtri_t *t);
  *                function on \a t.
  *                False otherwise.
  */
-int                 t8_dtri_is_valid (const t8_dtri_t *t);
+int
+t8_dtri_is_valid (const t8_dtri_t *t);
 
 /** Print a triangle
  * \param [in] t  triangle to be considered.
  */
-void                t8_dtri_debug_print (const t8_dtri_t *t);
+void
+t8_dtri_debug_print (const t8_dtri_t *t);
 
 #ifdef T8_ENABLE_DEBUG
 /** Set sensible default values for a triangle.
  * \param [in,out] t A triangle.
  */
-void                t8_dtri_init (t8_dtri_t *t);
+void
+t8_dtri_init (t8_dtri_t *t);
 #endif
 
 T8_EXTERN_C_END ();

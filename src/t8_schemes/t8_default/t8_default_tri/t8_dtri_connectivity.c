@@ -22,35 +22,21 @@
 
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.h>
 
-const int           t8_dtri_cid_type_to_parenttype[4][2] = {
-  {0, 1},
-  {0, 0},
-  {1, 1},
-  {0, 1}
-};
+const int t8_dtri_cid_type_to_parenttype[4][2] = { { 0, 1 }, { 0, 0 }, { 1, 1 }, { 0, 1 } };
 
 /* In dependence of a type x give the type of
  * the child with Bey number y */
-const int           t8_dtri_type_of_child[2][4] = {
-  {0, 0, 0, 1},
-  {1, 1, 1, 0}
-};
+const int t8_dtri_type_of_child[2][4] = { { 0, 0, 0, 1 }, { 1, 1, 1, 0 } };
 
 /* in dependence of a type x give the type of
  * the child with Morton number y */
-const int           t8_dtri_type_of_child_morton[2][4] = {
-  {0, 0, 1, 0},
-  {1, 0, 1, 1}
-};
+const int t8_dtri_type_of_child_morton[2][4] = { { 0, 0, 1, 0 }, { 1, 0, 1, 1 } };
 
 /* Line b, row I gives the Bey child-id of
  * a Tet with Parent type b and local morton index I */
-const int           t8_dtri_index_to_bey_number[2][4] = {
-  {0, 1, 3, 2},
-  {0, 3, 1, 2}
-};
+const int t8_dtri_index_to_bey_number[2][4] = { { 0, 1, 3, 2 }, { 0, 3, 1, 2 } };
 
-const int           t8_dtri_beyid_to_vertex[4] = { 0, 1, 2, 1 };
+const int t8_dtri_beyid_to_vertex[4] = { 0, 1, 2, 1 };
 
 /* TODO: We us the next two tables after each other.
  *       We should replace this operation by a new table
@@ -60,41 +46,18 @@ const int           t8_dtri_beyid_to_vertex[4] = { 0, 1, 2, 1 };
 
 /* Line b, row c gives the Bey child-id of
  * a Tet with type b and cubeid c */
-const int           t8_dtri_type_cid_to_beyid[2][4] = {
-  {0, 1, 3, 2},
-  {0, 3, 1, 2}
-};
+const int t8_dtri_type_cid_to_beyid[2][4] = { { 0, 1, 3, 2 }, { 0, 3, 1, 2 } };
 
 /* Line b, row id gives the local index of
  * a Tet with type b and Bey child number id */
-const int           t8_dtri_parenttype_beyid_to_Iloc[2][4] = {
-  {0, 1, 3, 2},
-  {0, 2, 3, 1}
-};
+const int t8_dtri_parenttype_beyid_to_Iloc[2][4] = { { 0, 1, 3, 2 }, { 0, 2, 3, 1 } };
 
-const int           t8_dtri_type_cid_to_Iloc[2][4] = {
-  {0, 1, 1, 3},
-  {0, 2, 2, 3}
-};
+const int t8_dtri_type_cid_to_Iloc[2][4] = { { 0, 1, 1, 3 }, { 0, 2, 2, 3 } };
 
-const int           t8_dtri_parenttype_Iloc_to_type[2][4] = {
-  {0, 0, 1, 0},
-  {1, 0, 1, 1}
-};
+const int t8_dtri_parenttype_Iloc_to_type[2][4] = { { 0, 0, 1, 0 }, { 1, 0, 1, 1 } };
 
-const int           t8_dtri_parenttype_Iloc_to_cid[2][4] = {
-  {0, 1, 1, 3},
-  {0, 2, 2, 3}
-};
+const int t8_dtri_parenttype_Iloc_to_cid[2][4] = { { 0, 1, 1, 3 }, { 0, 2, 2, 3 } };
 
-const int           t8_dtri_face_corner[3][2] = {
-  {1, 2},
-  {0, 2},
-  {0, 1}
-};
+const int t8_dtri_face_corner[3][2] = { { 1, 2 }, { 0, 2 }, { 0, 1 } };
 
-const int           t8_dtri_corner_face[3][2] = {
-  {1, 2},
-  {0, 2},
-  {0, 1}
-};
+const int t8_dtri_corner_face[3][2] = { { 1, 2 }, { 0, 2 }, { 0, 1 } };

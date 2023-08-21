@@ -33,20 +33,17 @@
 static t8_cmesh_t
 t8_cmesh_from_tetgen (const char *prefix, int do_partition)
 {
-  t8_cmesh_t          cmesh;
-  char                fileprefix[BUFSIZ];
-  int                 mpirank, mpiret;
+  t8_cmesh_t cmesh;
+  char fileprefix[BUFSIZ];
+  int mpirank, mpiret;
 
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
 
-  cmesh =
-    t8_cmesh_from_tetgen_file ((char *) prefix, do_partition,
-                               sc_MPI_COMM_WORLD, 0);
+  cmesh = t8_cmesh_from_tetgen_file ((char *) prefix, do_partition, sc_MPI_COMM_WORLD, 0);
   if (cmesh != NULL) {
     t8_debugf ("Successfully constructed cmesh from %s files.\n", prefix);
-    t8_debugf ("cmesh has:\n\t%lli tetrahedra\n",
-               (long long) t8_cmesh_get_num_trees (cmesh));
+    t8_debugf ("cmesh has:\n\t%lli tetrahedra\n", (long long) t8_cmesh_get_num_trees (cmesh));
     snprintf (fileprefix, BUFSIZ, "%s_t8_tetgen_%04d", prefix, mpirank);
     if (!t8_cmesh_vtk_write_file (cmesh, fileprefix, 1.)) {
       t8_debugf ("Wrote to file %s\n", fileprefix);
@@ -64,8 +61,8 @@ t8_cmesh_from_tetgen (const char *prefix, int do_partition)
 static void
 t8_forest_from_cmesh (t8_cmesh_t cmesh, int level, const char *prefix)
 {
-  t8_forest_t         forest;
-  char                fileprefix[BUFSIZ];
+  t8_forest_t forest;
+  char fileprefix[BUFSIZ];
 
   t8_debugf ("Construct Forest from Tetmesh\n");
   t8_forest_init (&forest);
@@ -73,8 +70,7 @@ t8_forest_from_cmesh (t8_cmesh_t cmesh, int level, const char *prefix)
   t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
   t8_forest_set_level (forest, level);
   t8_forest_commit (forest);
-  t8_debugf ("Committed forest. Has %i elements.\n",
-             t8_forest_get_local_num_elements (forest));
+  t8_debugf ("Committed forest. Has %i elements.\n", t8_forest_get_local_num_elements (forest));
   snprintf (fileprefix, BUFSIZ, "%s_t8_tetgen_forest", prefix);
   t8_forest_write_vtk (forest, fileprefix);
   t8_debugf ("Wrote to file %s\n", fileprefix);
@@ -84,20 +80,21 @@ t8_forest_from_cmesh (t8_cmesh_t cmesh, int level, const char *prefix)
 int
 main (int argc, char *argv[])
 {
-  int                 mpiret, parsed, partition, level;
-  sc_options_t       *opt;
-  const char         *prefix;
-  char                usage[BUFSIZ];
-  char                help[BUFSIZ];
-  int                 sreturn;
+  int mpiret, parsed, partition, level;
+  sc_options_t *opt;
+  const char *prefix;
+  char usage[BUFSIZ];
+  char help[BUFSIZ];
+  int sreturn;
 
-  snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS> <ARGUMENTS>",
-            basename (argv[0]));
+  snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS> <ARGUMENTS>", basename (argv[0]));
   sreturn = snprintf (help, BUFSIZ,
                       "This program reads a collection of .node, .ele and "
                       ".neigh files created by the TETGEN program and constructs a "
-                      "t8code coarse mesh from them.\nAll three files must have the same prefix.\n\n%s\n\nExample: %s -f A1\nTo open the files A1.node, A1.ele and "
-                      "A1.neigh.\n", usage, basename (argv[0]));
+                      "t8code coarse mesh from them.\nAll three files must have the same prefix.\n\n%s\n\nExample: %s "
+                      "-f A1\nTo open the files A1.node, A1.ele and "
+                      "A1.neigh.\n",
+                      usage, basename (argv[0]));
 
   if (sreturn >= BUFSIZ) {
     /* The help message was truncated */
@@ -113,20 +110,20 @@ main (int argc, char *argv[])
   t8_init (SC_LP_DEFAULT);
 
   opt = sc_options_new (argv[0]);
-  sc_options_add_string (opt, 'f', "prefix", &prefix, "", "The prefix of the"
+  sc_options_add_string (opt, 'f', "prefix", &prefix, "",
+                         "The prefix of the"
                          "tetgen files.");
-  sc_options_add_bool (opt, 'p', "Partition", &partition, 0, "If true"
+  sc_options_add_bool (opt, 'p', "Partition", &partition, 0,
+                       "If true"
                        "the generated cmesh is partitioned.");
-  parsed =
-    sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
+  parsed = sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (parsed < 0 || strcmp (prefix, "") == 0) {
     fprintf (stderr, "%s", help);
     return 1;
   }
   else {
     level = 0;
-    t8_forest_from_cmesh (t8_cmesh_from_tetgen (prefix, partition), level,
-                          prefix);
+    t8_forest_from_cmesh (t8_cmesh_from_tetgen (prefix, partition), level, prefix);
     sc_options_print_summary (t8_get_package_id (), SC_LP_PRODUCTION, opt);
   }
 

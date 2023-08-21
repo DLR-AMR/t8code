@@ -24,10 +24,10 @@
 
 struct t8_mesh
 {
-  int                 t8_mesh_dummy;
+  int t8_mesh_dummy;
 };
 
-t8_mesh_t          *
+t8_mesh_t *
 t8_mesh_new (int dimension, t8_gloidx_t Kglobal, t8_locidx_t Klocal)
 {
   return NULL;

@@ -5,8 +5,8 @@ int
 main (int argc, char **argv)
 {
 
-  int                 mpiret;
-  sc_MPI_Comm         mpic;
+  int mpiret;
+  sc_MPI_Comm mpic;
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -17,7 +17,7 @@ main (int argc, char **argv)
 
   ::testing::InitGoogleTest (&argc, argv);
 
-  int                 retval = RUN_ALL_TESTS ();
+  int retval = RUN_ALL_TESTS ();
 
   sc_finalize ();
   mpiret = sc_MPI_Finalize ();

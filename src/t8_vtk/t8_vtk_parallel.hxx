@@ -40,10 +40,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * \returns        non-zero on success, zero if the reading failed. 
  */
 /* *INDENT-OFF* */
-vtk_read_success_t  t8_read_parallel_unstructured (const char *filename,
-                                                   vtkSmartPointer
-                                                   < vtkDataSet > grid,
-                                                   sc_MPI_Comm comm);
+vtk_read_success_t
+t8_read_parallel_unstructured (const char *filename, vtkSmartPointer<vtkDataSet> grid, sc_MPI_Comm comm);
 /* *INDENT-ON* */
 
 /**
@@ -56,9 +54,8 @@ vtk_read_success_t  t8_read_parallel_unstructured (const char *filename,
  * \returns        non-zero on success, zero if the reading failed. 
  */
 /* *INDENT-OFF* */
-vtk_read_success_t  t8_read_parallel_polyData (const char *filename,
-                                               vtkSmartPointer < vtkDataSet >
-                                               grid, sc_MPI_Comm comm);
+vtk_read_success_t
+t8_read_parallel_polyData (const char *filename, vtkSmartPointer<vtkDataSet> grid, sc_MPI_Comm comm);
 /* *INDENT-ON* */
 
 #endif /* T8_WITH_VTK */

@@ -47,7 +47,7 @@ T8_EXTERN_C_BEGIN ();
 /* redefine types */
 #define t8_dtri_coord_t t8_dtet_coord_t
 #define t8_dtri_type_t t8_dtet_type_t
-#define t8_dtri_t       t8_dtet_t
+#define t8_dtri_t t8_dtet_t
 #define t8_dtri_cube_id_t t8_dtet_cube_id_t
 
 /* external variables */
@@ -100,7 +100,7 @@ T8_EXTERN_C_BEGIN ();
 #define t8_dtri_corner_descendant t8_dtet_corner_descendant
 #define t8_dtri_predecessor t8_dtet_predecessor
 #define t8_dtri_ancestor_id t8_dtet_ancestor_id
-#define t8_dtri_child_id  t8_dtet_child_id
+#define t8_dtri_child_id t8_dtet_child_id
 #define t8_dtri_get_level t8_dtet_get_level
 #define t8_dtri_is_valid t8_dtet_is_valid
 #define t8_dtri_init t8_dtet_init

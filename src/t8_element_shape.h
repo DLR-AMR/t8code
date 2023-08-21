@@ -38,8 +38,7 @@ T8_EXTERN_C_BEGIN ();
 typedef t8_eclass_t t8_element_shape_t;
 
 /** The MPI datatype used for t8_element_shape_t */
-#define T8_MPI_ELEMENT_SHAPE_TYPE (T8_ASSERT (sizeof (int) == sizeof (t8_element_shape_t)),\
-  sc_MPI_INT)
+#define T8_MPI_ELEMENT_SHAPE_TYPE (T8_ASSERT (sizeof (int) == sizeof (t8_element_shape_t)), sc_MPI_INT)
 
 /** The maximum number of boundary faces an element class can have. */
 #define T8_ELEMENT_SHAPE_MAX_FACES 6
@@ -47,26 +46,31 @@ typedef t8_eclass_t t8_element_shape_t;
 #define T8_ELEMENT_SHAPE_MAX_CORNERS 8
 
 /* Maximum possible number of corner nodes of an element in a specific dimension */
-extern const int    t8_element_shape_max_num_corner[T8_ECLASS_MAX_DIM + 1];
+extern const int t8_element_shape_max_num_corner[T8_ECLASS_MAX_DIM + 1];
 
 /** The number of codimension-one boundaries of an element class. */
-int                 t8_element_shape_num_faces (int element_shape);
+int
+t8_element_shape_num_faces (int element_shape);
 
 /** For each dimension the maximum possible number of faces of an element_shape of that dimension. */
-int                 t8_element_shape_max_num_faces (int element_shape);
+int
+t8_element_shape_max_num_faces (int element_shape);
 
 /** The number of vertices of an element class. */
-int                 t8_element_shape_num_vertices (int element_shape);
+int
+t8_element_shape_num_vertices (int element_shape);
 
 /** The vtk cell type for the element_shape */
-int                 t8_element_shape_vtk_type (int element_shape);
+int
+t8_element_shape_vtk_type (int element_shape);
 
 /** Maps the t8code corner number of the element to the vtk corner number */
-int                 t8_element_shape_vtk_corner_number (int element_shape,
-                                                        int index);
+int
+t8_element_shape_vtk_corner_number (int element_shape, int index);
 
 /** For each element_shape, the name of this class as a string */
-const char         *t8_element_shape_to_string (int element_shape);
+const char *
+t8_element_shape_to_string (int element_shape);
 
 /** Compare two element_shapees of the same dimension
  *  as necessary for face neighbor orientation.
@@ -77,10 +81,8 @@ const char         *t8_element_shape_to_string (int element_shape);
  *  \return 0 if the element_shapees are equal, 1 if element_shape1 > element_shape2
  *            and -1 if element_shape1 < element_shape2
  */
-int                 t8_element_shape_compare (t8_element_shape_t
-                                              element_shape1,
-                                              t8_element_shape_t
-                                              element_shape2);
+int
+t8_element_shape_compare (t8_element_shape_t element_shape1, t8_element_shape_t element_shape2);
 
 T8_EXTERN_C_END ();
 
