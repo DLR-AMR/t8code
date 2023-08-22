@@ -4,6 +4,9 @@
 [![t8code tests serial](https://github.com/DLR-AMR/t8code/actions/workflows/tests_t8code_serial.yml/badge.svg)](https://github.com/DLR-AMR/t8code/actions/workflows/tests_t8code_serial.yml)
 [![t8code tests parallel](https://github.com/DLR-AMR/t8code/actions/workflows/tests_t8code_parallel.yml/badge.svg)](https://github.com/DLR-AMR/t8code/actions/workflows/tests_t8code_parallel.yml)
 
+<p align="center">
+  <img width="300px" src=t8code_logo.png>
+</p>
 ### Introduction
 
 t8code (spoken as "tetcode") is a C/C++ library to manage parallel adaptive meshes with various element types.
