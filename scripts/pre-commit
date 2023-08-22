@@ -34,6 +34,17 @@
 # This is the indent script in the project's directory
 CHECK_INDENT=./scripts/check_if_file_indented.scp
 
+TYPOS=`which typos 2> /dev/null`
+
+if [ -z "$TYPOS" ]
+then
+  # Exit if the spell checking script was not found
+  echo "ERROR: typos not found."
+  echo "Please install typos."
+  echo "See https://github.com/crate-ci/typos#install"
+  exit 1
+fi
+
 if git rev-parse --verify HEAD >/dev/null 2>&1
 then
 	against=HEAD
