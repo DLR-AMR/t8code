@@ -37,7 +37,6 @@
  * After these two forests are created, we check for equality.
  */
 
-/* *INDENT-OFF* */
 class forest_commit: public testing::TestWithParam<int> {
  protected:
   void
@@ -56,7 +55,6 @@ class forest_commit: public testing::TestWithParam<int> {
   int cmesh_id;
   t8_cmesh_t cmesh;
 };
-/* *INDENT-ON* */
 
 /* Adapt a forest such that always the first child of a
  * tree is refined and no other elements. This results in a highly
@@ -172,6 +170,4 @@ TEST_P (forest_commit, test_forest_commit)
   t8_debugf ("Done testing forest commit.");
 }
 
-/* *INDENT-OFF* */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_forest_commit, forest_commit, testing::Range (0, t8_get_number_of_all_testcases ()));
-/* *INDENT-ON* */

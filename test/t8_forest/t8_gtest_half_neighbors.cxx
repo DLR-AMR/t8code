@@ -32,7 +32,6 @@
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
 
-/* *INDENT-OFF* */
 class forest_half_neighbors: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
  protected:
   void
@@ -52,7 +51,6 @@ class forest_half_neighbors: public testing::TestWithParam<std::tuple<t8_eclass,
   t8_scheme_cxx_t *default_scheme;
   t8_element_t *neighbor;
 };
-/* *INDENT-ON* */
 
 #if 0
 /* Depending on an integer i create a different cmesh.
@@ -136,7 +134,5 @@ TEST_P (forest_half_neighbors, test_half_neighbors)
   sc_array_reset (&owners);
 }
 
-/* *INDENT-OFF* */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_half_neighbors, forest_half_neighbors,
                           testing::Combine (testing::Range (T8_ECLASS_VERTEX, T8_ECLASS_COUNT), testing::Range (0, 3)));
-/* *INDENT-ON* */

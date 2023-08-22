@@ -42,7 +42,6 @@
  *  - Add a test for different schemes as soon as they are implemented
  */
 
-/* *INDENT-OFF* */
 class forest_element_function: public testing::TestWithParam<std::tuple<t8_eclass, int> > {
  protected:
   void
@@ -68,7 +67,6 @@ class forest_element_function: public testing::TestWithParam<std::tuple<t8_eclas
   t8_eclass_scheme_c *class_scheme;
   t8_forest_t forest;
 };
-/* *INDENT-ON* */
 
 TEST_P (forest_element_function, test_element_general_function)
 {
@@ -105,7 +103,5 @@ TEST_P (forest_element_function, test_element_general_function)
   } /* End of element loop */
 }
 
-/* *INDENT-OFF* */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_element_general_function, forest_element_function,
                           testing::Combine (testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT), testing::Range (0, 6)));
-/* *INDENT-ON* */

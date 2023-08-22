@@ -42,7 +42,6 @@
  * in a second test, we store the element's linear id in the data array.
  */
 
-/* *INDENT-OFF* */
 class forest_ghost_exchange: public testing::TestWithParam<int> {
  protected:
   void
@@ -64,7 +63,6 @@ class forest_ghost_exchange: public testing::TestWithParam<int> {
   t8_scheme_cxx_t *scheme;
   t8_cmesh_t cmesh;
 };
-/* *INDENT-ON* */
 
 static int
 t8_test_exchange_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
@@ -196,7 +194,5 @@ TEST_P (forest_ghost_exchange, test_ghost_exchange)
   }
 }
 
-/* *INDENT-OFF* */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_exchange, forest_ghost_exchange,
                           testing::Range (0, t8_get_number_of_all_testcases ()));
-/* *INDENT-ON* */
