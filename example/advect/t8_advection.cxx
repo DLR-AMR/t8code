@@ -302,8 +302,7 @@ t8_advect_l_2_rel (const t8_advect_problem_t *problem, t8_example_level_set_fn a
     ana_sol = analytical_sol (elem_data->midpoint, problem->t, problem->udata_for_phi);
     if (fabs (ana_sol) < distance) {
       count++;
-      /* Compute the error as the stored value at the midpoint of this element
-       * minus the solution at this midpoint */
+      /* Compute the error as the stored value at the midpoint of this element minus the solution at this midpoint */
       phi = t8_advect_element_get_phi (problem, ielem);
       diff = fabs (phi - ana_sol);
       el_error = diff * diff * elem_data->vol;
@@ -316,8 +315,7 @@ t8_advect_l_2_rel (const t8_advect_problem_t *problem, t8_example_level_set_fn a
   /* Compute the maximum of the error among all processes */
   sc_MPI_Allreduce (&error, &global_error, 2, sc_MPI_DOUBLE, sc_MPI_SUM, problem->comm);
 
-  /* Return the relative error, that is the l_infty error divided by
-   * the l_infty norm of the analytical solution */
+  /* Return the relative error, that is the l_infty error divided by the l_infty norm of the analytical solution */
   return sqrt (global_error[0]) / sqrt (global_error[1]);
 }
 
@@ -353,8 +351,7 @@ t8_advect_flux_upwind_1d (const t8_advect_problem_t *problem, const t8_locidx_t 
   }
   else {
     /* we have inflow */
-    /* el_minus may be negative, in this case, el_plus is at the boundary
-     * and we use phi = 0. */
+    /* el_minus may be negative, in this case, el_plus is at the boundary and we use phi = 0. */
     phi = el_minus >= 0 ? t8_advect_element_get_phi (problem, el_minus) : 0;
   }
   return u_at_x_j_half[0] * phi;
@@ -452,9 +449,11 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t *problem, t8_locidx_t i
     neigh_data = (t8_advect_element_data_t *) t8_sc_array_index_locidx (problem->element_data, neigh_id);
     neigh_is_ghost = neigh_id >= t8_forest_get_local_num_elements (problem->forest);
     phi_minus = t8_advect_element_get_phi (problem, neigh_id);
+    /* clang-format off */
     /* Compute the flux */
-    el_hang->fluxes[face][i]
-      = t8_advect_flux_upwind (problem, phi_plus, phi_minus, ltreeid, face_children[i], child_face);
+    el_hang->fluxes[face][i] = t8_advect_flux_upwind (problem, phi_plus, phi_minus, ltreeid,
+                                                      face_children[i], child_face);
+    /* clang-format on */
     /* Set the flux of the neighbor element */
     dual_face = el_hang->dual_faces[face][i];
     if (!adapted_or_partitioned && !neigh_is_ghost) {
@@ -484,8 +483,7 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t *problem, t8_locidx_t i
 
 /* If an element is at the domain boundary, we encode boundary conditions
  * by setting a phi value for an imaginative neighbor element.
- * We currently set the phi value
- * to the value of the element itself. */
+ * We currently set the phi value to the value of the element itself. */
 static void
 t8_advect_boundary_set_phi (const t8_advect_problem_t *problem, t8_locidx_t ielement, double *boundary_phi)
 {
@@ -558,8 +556,10 @@ t8_advect_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
   first_incoming_data = first_incoming + t8_forest_get_tree_element_offset (forest_new, which_tree);
   first_outgoing_data = first_outgoing + t8_forest_get_tree_element_offset (forest_old, which_tree);
   elem_data_out = (t8_advect_element_data_t *) t8_sc_array_index_locidx (problem->element_data, first_outgoing_data);
-  elem_data_in
-    = (t8_advect_element_data_t *) t8_sc_array_index_locidx (problem->element_data_adapt, first_incoming_data);
+  /* clang-format off */
+  elem_data_in = (t8_advect_element_data_t *) t8_sc_array_index_locidx (problem->element_data_adapt,
+                                                                        first_incoming_data);
+  /* clang-format on */
 
   /* Get the old phi value (used in the cases with num_outgoing = 1) */
   phi_old = t8_advect_element_get_phi (problem, first_outgoing_data);
@@ -686,9 +686,7 @@ t8_advect_problem_adapt (t8_advect_problem_t *problem, int measure_time)
   /* Set the adapt function */
   t8_forest_set_adapt (problem->forest_adapt, problem->forest, t8_advect_adapt, 0);
   if (problem->maxlevel - problem->level > 1) {
-    /* We also want to balance the forest
-     * if the difference in refinement levels is
-     * greater 1 */
+    /* We also want to balance the forest if the difference in refinement levels is greater 1 */
     t8_forest_set_balance (problem->forest_adapt, NULL, 1);
     did_balance = 1;
   }
@@ -725,8 +723,7 @@ t8_advect_problem_adapt (t8_advect_problem_t *problem, int measure_time)
   problem->phi_values_adapt = sc_array_new_count ((problem->dummy_op ? 2 : 1) * sizeof (double), num_elems_p_ghosts);
   /* We now call iterate_replace in which we interpolate the new element data.
    * It is necessary that the old and new forest only differ by at most one level.
-   * We guarantee this by calling adapt non-recursively and calling balance without
-   * repartitioning. */
+   * We guarantee this by calling adapt non-recursively and calling balance without repartitioning. */
   replace_time = -sc_MPI_Wtime ();
   t8_forest_iterate_replace (problem->forest_adapt, problem->forest, t8_advect_replace);
   replace_time += sc_MPI_Wtime ();
