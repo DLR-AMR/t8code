@@ -7,6 +7,7 @@
 <p align="center">
   <img width="300px" src=t8code_logo.png>
 </p>
+
 ### Introduction
 
 t8code (spoken as "tetcode") is a C/C++ library to manage parallel adaptive meshes with various element types.
