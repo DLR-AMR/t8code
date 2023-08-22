@@ -708,9 +708,10 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh,
   const int           num_faces = t8_eclass_num_faces[active_tree_class];
   gp_Pnt              pnt;
   double              edge_vertices[2 * 3],
+    temp_face_vertices[T8_ECLASS_MAX_CORNERS_2D * 3],
     interpolated_curve_param, interpolated_surface_params[2], cur_delta[3];
   double              interpolated_surface_parameters[2],
-    interpolated_coords[3], temp_face_vertices[T8_ECLASS_MAX_CORNERS_2D * 3];
+    interpolated_coords[3];
   Handle_Geom_Curve   curve;
   Handle_Geom_Surface surface;
   Standard_Real       first, last;
@@ -774,12 +775,12 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh,
                                     edge_vertices, 3, 1, interpolated_coords);
 
       /* Retrieve edge parameters of the current edge */
-      const double       *edge_parameters =
+      const double       *parameters =
         (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
                                            T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY
                                            + i_edge,
                                            ltreeid);
-      T8_ASSERT (edge_parameters != NULL);
+      T8_ASSERT (parameters != NULL);
 
       /* Iterpolate between the parameters of the current edge. Same procidure as above.
        * Curves have only one parameter u, surfaces have two, u and v.
@@ -787,7 +788,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh,
       if (edges[i_edge] > 0) {
         /* Linear interpolation between parameters */
         t8_geom_linear_interpolation (&interpolation_coeff,
-                                      edge_parameters, 1, 1,
+                                      parameters, 1, 1,
                                       &interpolated_curve_param);
 
         /* *INDENT-OFF* */
@@ -806,7 +807,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh,
       else {
         /* Linear interpolation between parameters */
         t8_geom_linear_interpolation (&interpolation_coeff,
-                                      edge_parameters, 2, 1,
+                                      parameters, 2, 1,
                                       interpolated_surface_params);
 
         T8_ASSERT (edges[i_edge + num_edges] <= occ_shape_face_map.Size ());
@@ -827,96 +828,83 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh,
       cur_delta[1] = pnt.Y () - interpolated_coords[1];
       cur_delta[2] = pnt.Z () - interpolated_coords[2];
 
-      /* Scaling along the orthogonals of each edge */
-      double              scaling_factor;
+      /* Save the max ref_coord range and the othogonal ref_coords for each edge
+       * and determine the scaling_factor along the neighboring faces with these informations. */
+      double              scaling_factor_neigh_face_1 = 0,
+        scaling_factor_neigh_face_2 = 0;
+      double              orthogonal_direction[2];
+      double              max_orthogonal_direction[2];
 
       switch (i_edge) {
       case 0:
-        if (ref_coords[2] >= ref_coords[0] && ref_coords[1] == 0        // criteria edge 1
-            || ref_coords[2] >= ref_coords[0] && ref_coords[2] <= ref_coords[1] // criteria edge 2
-            || ref_coords[0] == 1 && ref_coords[1] == 0 // criteria edge 3
-            || ref_coords[2] <= ref_coords[1] && ref_coords[0] == 1     // criteria edge 4
-          ) {
-          scaling_factor = 0;
-        }
-        else {
-          scaling_factor = (1 - ref_coords[1]) * (1 - ref_coords[2]);
-        }
+        orthogonal_direction[0] = ref_coords[1];        // face 2
+        max_orthogonal_direction[0] = ref_coords[0];
+        orthogonal_direction[1] = ref_coords[2];        // face 3
+        max_orthogonal_direction[1] = ref_coords[0];
         break;
       case 1:
-        if (ref_coords[1] == 0 && ref_coords[2] == 0    // criteria edge 0
-            || ref_coords[2] >= ref_coords[0] && ref_coords[2] <= ref_coords[1] // criteria edge 2
-            || ref_coords[0] == 1 && ref_coords[1] == 0 // criteria edge 3
-            || ref_coords[0] == 1 && ref_coords[2] == 1 // criteria edge 5
-          ) {
-          scaling_factor = 0;
-        }
-        else {
-          scaling_factor =
-            (1 - (ref_coords[0] - ref_coords[2])) * (1 - ref_coords[1]);
-        }
+        orthogonal_direction[0] = ref_coords[1];        // face 1
+        max_orthogonal_direction[0] = ref_coords[0];
+        orthogonal_direction[1] = ref_coords[0] - ref_coords[2];        // face 3
+        max_orthogonal_direction[1] = ref_coords[0];
         break;
       case 2:
-        if (ref_coords[1] == 0 && ref_coords[2] == 0    // criteria edge 0
-            || ref_coords[2] >= ref_coords[0] && ref_coords[1] == 0     // criteria edge 1
-            || ref_coords[2] <= ref_coords[1] && ref_coords[0] == 1     // criteria edge 4
-            || ref_coords[0] == 1 && ref_coords[2] == 1 // criteria edge 5
-          ) {
-          scaling_factor = 0;
-        }
-        else {
-          scaling_factor =
-            (1 - (ref_coords[0]) - ref_coords[1]) * (1 -
-                                                     (ref_coords[0] -
-                                                      ref_coords[2]));
-        }
+        orthogonal_direction[0] = ref_coords[0] - ref_coords[1];        // face 1
+        max_orthogonal_direction[0] = ref_coords[0];
+        orthogonal_direction[1] = ref_coords[0] - ref_coords[2];        // face 2
+        max_orthogonal_direction[1] = ref_coords[0];
         break;
       case 3:
-        if (ref_coords[1] == 0 && ref_coords[2] == 0    // criteria edge 0
-            || ref_coords[2] >= ref_coords[0] && ref_coords[1] == 0     // criteria edge 1
-            || ref_coords[2] <= ref_coords[1] && ref_coords[0] == 1     // criteria edge 4
-            || ref_coords[0] == 1 && ref_coords[2] == 1 // criteria edge 5
-          ) {
-          scaling_factor = 0;
-        }
-        else {
-          scaling_factor = ref_coords[0] * (1 - ref_coords[1]);
-        }
+        orthogonal_direction[0] = ref_coords[1];        // face 0
+        max_orthogonal_direction[0] = ref_coords[2];
+        orthogonal_direction[1] = 1 - ref_coords[0];    // face 3
+        max_orthogonal_direction[1] = 1 - ref_coords[2];
         break;
       case 4:
-        if (ref_coords[1] == 0 && ref_coords[2] == 0    // criteria edge 0
-            || ref_coords[2] >= ref_coords[0] && ref_coords[2] <= ref_coords[1] // criteria edge 2
-            || ref_coords[0] == 1 && ref_coords[1] == 0 // criteria edge 3
-            || ref_coords[0] == 1 && ref_coords[2] == 1 // criteria edge 5
-          ) {
-          scaling_factor = 0;
-        }
-        else {
-          scaling_factor =
-            (1 - (ref_coords[1] - ref_coords[2])) * ref_coords[0];
-        }
+        orthogonal_direction[0] = ref_coords[2] - ref_coords[1];        // face 0
+        max_orthogonal_direction[0] = ref_coords[2];
+        orthogonal_direction[1] = 1 - ref_coords[0];    // face 2
+        max_orthogonal_direction[1] = 1 - ref_coords[2];
         break;
       case 5:
-        if (ref_coords[2] >= ref_coords[0] && ref_coords[1] == 0        // criteria edge 1
-            || ref_coords[2] >= ref_coords[0] && ref_coords[2] <= ref_coords[1] // criteria edge 2
-            || ref_coords[0] == 1 && ref_coords[1] == 0 // criteria edge 3
-            || ref_coords[2] <= ref_coords[1] && ref_coords[0] == 1     // criteria edge 4
-          ) {
-          scaling_factor = 0;
-        }
-        else {
-          scaling_factor = ref_coords[0] * ref_coords[2];
-        }
+        orthogonal_direction[0] = 1 - ref_coords[2];    // face 0
+        max_orthogonal_direction[0] = 1 - ref_coords[1];
+        orthogonal_direction[1] = 1 - ref_coords[0];    // face 1
+        max_orthogonal_direction[1] = 1 - ref_coords[1];
         break;
       default:
         SC_ABORT_NOT_REACHED ();
         break;
       }
 
+      if (max_orthogonal_direction[0] == 0
+          || max_orthogonal_direction[0] == 1) {
+        scaling_factor_neigh_face_1 = 0;
+      }
+      else {
+        scaling_factor_neigh_face_1 =
+          1 - (orthogonal_direction[0] / max_orthogonal_direction[0]);
+      }
+
+      if (max_orthogonal_direction[1] == 0
+          || max_orthogonal_direction[1] == 1) {
+        scaling_factor_neigh_face_2 = 0;
+      }
+      else {
+        scaling_factor_neigh_face_2 =
+          1 - (orthogonal_direction[1] / max_orthogonal_direction[1]);
+      }
+
       /* out_coord correction */
-      out_coords[0] += cur_delta[0] * scaling_factor;
-      out_coords[1] += cur_delta[1] * scaling_factor;
-      out_coords[2] += cur_delta[2] * scaling_factor;
+      out_coords[0] +=
+        cur_delta[0] * scaling_factor_neigh_face_1 *
+        scaling_factor_neigh_face_2;
+      out_coords[1] +=
+        cur_delta[1] * scaling_factor_neigh_face_1 *
+        scaling_factor_neigh_face_2;
+      out_coords[2] +=
+        cur_delta[2] * scaling_factor_neigh_face_1 *
+        scaling_factor_neigh_face_2;
     }
   }
 
@@ -1064,14 +1052,13 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh,
         if (edges[t8_face_edge_to_tree_edge_n[active_tree_class][i_faces]
                   [i_face_edge]] > 0) {
 
-          /* Save the edge vertices in a separate array for later usage. */
-          for (int i_edge_vertex = 0; i_edge_vertex < 2; ++i_edge_vertex) {
+          /* Save the face vertices in a separate array for later usage. */
+          for (int i_face_vertex = 0; i_face_vertex < 3; ++i_face_vertex) {
             for (int i_dim = 0; i_dim < 3; ++i_dim) {
               const int           i_tree_vertex =
-                t8_edge_vertex_to_tree_vertex_n[active_tree_class]
-                [t8_face_edge_to_tree_edge_n[active_tree_class][i_faces]
-                 [i_face_edge]][i_edge_vertex];
-              edge_vertices[i_edge_vertex * 3 + i_dim] =
+                t8_face_vertex_to_tree_vertex[active_tree_class][i_faces]
+                [i_face_vertex];
+              temp_face_vertices[i_face_vertex * 3 + i_dim] =
                 active_tree_vertices[i_tree_vertex * 3 + i_dim];
             }
           }
@@ -1086,10 +1073,13 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh,
                                                [i_face_edge],
                                                ltreeid);
           T8_ASSERT (curve_parameters != NULL);
+          /* Save the tree edge */
+          int                 i_tree_edge =
+            t8_face_edge_to_tree_edge_n[active_tree_class][i_faces]
+            [i_face_edge];
           /* Get the interpolation coefficients for the current edge */
           double              interpolation_coeff;
-          switch (t8_face_edge_to_tree_edge_n[active_tree_class][i_faces]
-                  [i_face_edge]) {
+          switch (i_tree_edge) {
           case 0:
           case 1:
           case 2:
@@ -1106,6 +1096,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh,
             SC_ABORT_NOT_REACHED ();
             break;
           }
+
           /* Interpolate linearly between the parameters of the two nodes on the curve */
           t8_geom_linear_interpolation (&interpolation_coeff,
                                         curve_parameters, 1, 1,
@@ -1118,11 +1109,15 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh,
             for (int i_dim = 0; i_dim < 2; ++i_dim) {
               const int           i_tree_vertex =
                 t8_edge_vertex_to_tree_vertex_n[active_tree_class]
-                [i_face_edge][i_edge_vertex];
+                [i_tree_edge][i_edge_vertex];
               edge_parameters_on_face[i_edge_vertex * 2 + i_dim] =
                 surface_parameters[i_tree_vertex * 2 + i_dim];
             }
           }
+          // t8_geom_get_face_vertices ((t8_eclass_t)
+          //                            t8_eclass_face_types[active_tree_class]
+          //                            [i_faces], surface_parameters,
+          //                            i_face_edge, 2, edge_parameters_on_face);
           t8_geom_linear_interpolation (&interpolation_coeff,
                                         edge_parameters_on_face, 2, 1,
                                         interpolated_surface_parameters_on_edge);
@@ -1134,11 +1129,15 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh,
             for (int i_dim = 0; i_dim < 3; ++i_dim) {
               const int           i_tree_vertex =
                 t8_edge_vertex_to_tree_vertex_n[active_tree_class]
-                [i_face_edge][i_edge_vertex];
+                [i_tree_edge][i_edge_vertex];
               edge_vertices_on_face[i_edge_vertex * 3 + i_dim] =
                 active_tree_vertices[i_tree_vertex * 3 + i_dim];
             }
           }
+          // t8_geom_get_face_vertices ((t8_eclass_t)
+          //                            t8_eclass_face_types[active_tree_class]
+          //                            [i_faces], temp_face_vertices,
+          //                            i_face_edge, 3, edge_vertices_on_face);
           t8_geom_linear_interpolation (&interpolation_coeff,
                                         edge_vertices_on_face, 3, 1,
                                         interpolated_edge_coordinates);
@@ -1158,17 +1157,89 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh,
           /* Calculate point on curve with interpolated parameters */
           curve->D0 (interpolated_curve_param, pnt);
 
-          t8_global_productionf ("pnt: [%f, %f, %f]\n", pnt.Coord (1),
-                                 pnt.Coord (2), pnt.Coord (3));
-          t8_global_productionf
-            ("interpolated_edge_coordinates: [%f, %f, %f]\n",
-             interpolated_edge_coordinates[0],
-             interpolated_edge_coordinates[1],
-             interpolated_edge_coordinates[2]);
+          /* Scaling */
+          double              scaling_factor = 0;
+          double              orthogonal_direction_on_face;
+          double              max_orthogonal_direction_on_face;
+
+          switch (i_faces) {
+          case 0:
+            if (i_tree_edge == 3) {
+              orthogonal_direction_on_face = ref_coords[1];
+              max_orthogonal_direction_on_face = ref_coords[2];
+            }
+            if (i_tree_edge == 4) {
+              orthogonal_direction_on_face = ref_coords[2] - ref_coords[1];
+              max_orthogonal_direction_on_face = ref_coords[2];
+            }
+            if (i_tree_edge == 5) {
+              orthogonal_direction_on_face = 1 - ref_coords[2];
+              max_orthogonal_direction_on_face = 1 - ref_coords[1];
+            }
+            break;
+          case 1:
+            if (i_tree_edge == 1) {
+              orthogonal_direction_on_face = ref_coords[1];
+              max_orthogonal_direction_on_face = ref_coords[0];
+            }
+            if (i_tree_edge == 2) {
+              orthogonal_direction_on_face = ref_coords[0] - ref_coords[1];
+              max_orthogonal_direction_on_face = ref_coords[0];
+            }
+            if (i_tree_edge == 5) {
+              orthogonal_direction_on_face = 1 - ref_coords[0];
+              max_orthogonal_direction_on_face = 1 - ref_coords[1];
+            }
+            break;
+          case 2:
+            if (i_tree_edge == 0) {
+              orthogonal_direction_on_face = ref_coords[1];
+              max_orthogonal_direction_on_face = ref_coords[0];
+            }
+            if (i_tree_edge == 2) {
+              orthogonal_direction_on_face = ref_coords[0] - ref_coords[2];
+              max_orthogonal_direction_on_face = ref_coords[0];
+            }
+            if (i_tree_edge == 4) {
+              orthogonal_direction_on_face = 1 - ref_coords[0];
+              max_orthogonal_direction_on_face = 1 - ref_coords[2];
+            }
+            break;
+          case 3:
+            if (i_tree_edge == 0) {
+              orthogonal_direction_on_face = ref_coords[2];
+              max_orthogonal_direction_on_face = ref_coords[0];
+            }
+            if (i_tree_edge == 1) {
+              orthogonal_direction_on_face = ref_coords[0] - ref_coords[2];
+              max_orthogonal_direction_on_face = ref_coords[0];
+            }
+            if (i_tree_edge == 3) {
+              orthogonal_direction_on_face = 1 - ref_coords[0];
+              max_orthogonal_direction_on_face = 1 - ref_coords[2];
+            }
+            break;
+          default:
+            SC_ABORT_NOT_REACHED ();
+            break;
+          }
+
+          if (max_orthogonal_direction_on_face == 0
+              || max_orthogonal_direction_on_face == 1) {
+            scaling_factor = 0;
+          }
+          else {
+            scaling_factor =
+              1 -
+              (orthogonal_direction_on_face /
+               max_orthogonal_direction_on_face);
+          }
+
           /* Calculate the displacement generated by the presence of the curve */
           for (int dim = 0; dim < 3; ++dim) {
             face_displacement_from_edges[dim] +=
-              (pnt.Coord (dim + 1) - interpolated_edge_coordinates[dim]);
+              (pnt.Coord (dim + 1) -
+               interpolated_edge_coordinates[dim]) * scaling_factor;
           }
           /* Convert the interpolated parameter of the curve into the corresponding parameters on the surface */
           const int           num_face_nodes =
@@ -1183,7 +1254,9 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh,
           for (int dim = 0; dim < 2; ++dim) {
             surface_parameter_displacement_from_edges[dim]
               += (surface_parameters_from_curve[dim]
-                  - interpolated_surface_parameters_on_edge[dim]);
+                  -
+                  interpolated_surface_parameters_on_edge[dim]) *
+              scaling_factor;
           }
         }
       }
