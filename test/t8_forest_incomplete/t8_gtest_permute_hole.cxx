@@ -58,7 +58,6 @@
  * Note, this test runs only on one rank.
  */
 
-/* *INDENT-OFF* */
 class forest_permute: public testing::TestWithParam<t8_eclass_t> {
  protected:
   void
@@ -89,7 +88,6 @@ class forest_permute: public testing::TestWithParam<t8_eclass_t> {
   t8_forest_t forest;
   t8_cmesh_t cmesh;
 };
-/* *INDENT-ON* */
 
 /** This structure contains a bitset with all 
  *  elements to be removed.
@@ -148,12 +146,10 @@ TEST_P (forest_permute, test_permute_hole)
   for (uint32_t permutation = 1; permutation < num_permutation; permutation++) {
     std::bitset<MAX_NUM_ELEMENTS> remove (permutation);
 
-    /* *INDENT-OFF* */
     struct t8_elements data
     {
       remove
     };
-    /* *INDENT-ON* */
 
     t8_forest_ref (forest);
     /* Remove elements for every 0 bit in \a removes */
@@ -179,6 +175,4 @@ TEST_P (forest_permute, test_permute_hole)
   }
 }
 
-/* *INDENT-OFF* */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_permute_hole, forest_permute, testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT));
-/* *INDENT-ON* */

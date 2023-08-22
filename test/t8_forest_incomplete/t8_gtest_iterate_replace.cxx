@@ -34,7 +34,6 @@
  * t8_forest_iterate_replace if it is passed the correct values.
  */
 
-/* *INDENT-OFF* */
 class forest_iterate: public testing::TestWithParam<int> {
  protected:
   void
@@ -54,7 +53,6 @@ class forest_iterate: public testing::TestWithParam<int> {
   int cmesh_id;
   t8_forest_t forest;
 };
-/* *INDENT-ON* */
 
 /** This structure contains an array with all return values of all
  * callback function calls in the adaptation process of a forest.
@@ -220,12 +218,10 @@ TEST_P (forest_iterate, test_iterate_replace)
     for (t8_locidx_t elidx = 0; elidx < num_elements; elidx++) {
       adapt_callbacks[elidx] = -3;
     }
-    /* *INDENT-OFF* */
     struct t8_return_data data
     {
       adapt_callbacks
     };
-    /* *INDENT-ON* */
 
     t8_forest_ref (forest);
     t8_forest_t forest_adapt;
@@ -243,7 +239,5 @@ TEST_P (forest_iterate, test_iterate_replace)
   }
 }
 
-/* *INDENT-OFF* */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_iterate_replace, forest_iterate,
                           testing::Range (0, t8_get_number_of_all_testcases ()));
-/* *INDENT-ON* */

@@ -53,7 +53,6 @@
  * The two resulting forests must be equal.
  */
 
-/* *INDENT-OFF* */
 class local_tree: public testing::TestWithParam<t8_eclass_t> {
  protected:
   void
@@ -78,7 +77,6 @@ class local_tree: public testing::TestWithParam<t8_eclass_t> {
   t8_eclass_t eclass;
   t8_forest_t forest;
 };
-/* *INDENT-ON* */
 
 /** This structure contains a bitset with all 
  * local trees on all processes to be removed.
@@ -132,12 +130,10 @@ TEST_P (local_tree, test_empty_local_tree)
     /* Remove all local elements for every process \a remove[rank] == 0 */
     std::bitset<MAX_NUM_RANKS> remove (instances);
 
-    /* *INDENT-OFF* */
     struct t8_trees_to_remove data
     {
       remove
     };
-    /* *INDENT-ON* */
 
     t8_forest_ref (forest);
     /* Do adapt and partition in one step */
@@ -160,6 +156,4 @@ TEST_P (local_tree, test_empty_local_tree)
   }
 }
 
-/* *INDENT-OFF* */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_empty_local_tree, local_tree, testing::Range (T8_ECLASS_LINE, T8_ECLASS_COUNT));
-/* *INDENT-ON* */

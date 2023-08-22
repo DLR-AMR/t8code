@@ -36,7 +36,6 @@
  * Note, that each rank has its own local/global tree. No trees are shared.
  */
 
-/* *INDENT-OFF* */
 class recursive_tree: public testing::TestWithParam<t8_eclass_t> {
  protected:
   void
@@ -70,7 +69,6 @@ class recursive_tree: public testing::TestWithParam<t8_eclass_t> {
   t8_forest_t forest;
   t8_forest_t forest_base;
 };
-/* *INDENT-ON* */
 
 /** Remove every element except last and first of a family. */
 static int
@@ -143,6 +141,4 @@ TEST_P (recursive_tree, test_recursive)
   ASSERT_TRUE (t8_forest_is_equal (forest, forest_base));
 }
 
-/* *INDENT-OFF* */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_recursive, recursive_tree, testing::Range (T8_ECLASS_LINE, T8_ECLASS_COUNT));
-/* *INDENT-ON* */
