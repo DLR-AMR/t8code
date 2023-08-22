@@ -56,7 +56,7 @@ typedef struct t8_cprofile t8_cprofile_t; /* Defined below */
 #define T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY 3 /* Used to store edge parameters */
 #define T8_CMESH_OCC_FACE_ATTRIBUTE_KEY \
   T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY \
-    + T8_ECLASS_MAX_EDGES /* Used to store which face is linked to which surface */
+  +T8_ECLASS_MAX_EDGES /* Used to store which face is linked to which surface */
 #define T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY \
   T8_CMESH_OCC_FACE_ATTRIBUTE_KEY + 1 /* Used to store face parameters */
 #define T8_CMESH_NEXT_POSSIBLE_KEY \
@@ -101,19 +101,19 @@ typedef struct t8_cmesh
                                            refinement pattern. See \ref t8_cmesh_set_refine. */
   t8_scheme_cxx_t *set_partition_scheme; /**< If the cmesh is to be partitioned according to a uniform level,
                                                 the scheme that describes the refinement pattern. See \ref t8_cmesh_set_partition. */
-  int8_t set_partition_level; /**< Non-negative if the cmesh should be partitioned from an already existing cmesh
+  int8_t set_partition_level;  /**< Non-negative if the cmesh should be partitioned from an already existing cmesh
                                          with an assumed \a level uniform mesh underneath. */
-  struct t8_cmesh *set_from;  /**< If this cmesh shall be derived from an
+  struct t8_cmesh *set_from;   /**< If this cmesh shall be derived from an
                                   existing cmesh by copy or more elaborate
                                   modification, we store a pointer to this
                                   other cmesh here. */
-  int mpirank;                /**< Number of this MPI process. */
-  int mpisize;                /**< Number of MPI processes. */
-  t8_refcount_t rc;           /**< The reference count of the cmesh. */
-  t8_gloidx_t num_trees;      /**< The global number of trees */
-  t8_locidx_t
-    num_local_trees; /**< If partitioned the number of trees on this process. Otherwise the global number of trees. */
-  t8_locidx_t num_ghosts; /**< If partitioned the number of neighbor trees
+  int mpirank;                 /**< Number of this MPI process. */
+  int mpisize;                 /**< Number of MPI processes. */
+  t8_refcount_t rc;            /**< The reference count of the cmesh. */
+  t8_gloidx_t num_trees;       /**< The global number of trees */
+  t8_locidx_t num_local_trees; /**< If partitioned the number of trees on this process. 
+                                    Otherwise the global number of trees. */
+  t8_locidx_t num_ghosts;      /**< If partitioned the number of neighbor trees
                                     owned by different processes. */
   /* TODO: wouldnt a local num_trees_per_eclass be better?
    *       only as an additional info. we need the global count. i.e. for forest_maxlevel computation.
@@ -127,12 +127,11 @@ typedef struct t8_cmesh
 
   t8_cmesh_trees_t trees; /**< structure that holds all local trees and ghosts */
 
-  t8_gloidx_t first_tree; /**< The global index of the first local tree on this process. 
+  t8_gloidx_t first_tree;   /**< The global index of the first local tree on this process. 
                                        Zero if the cmesh is not partitioned. -1 if this processor is empty.
                                        See also https://github.com/DLR-AMR/t8code/wiki/Tree-indexing */
-  int8_t
-    first_tree_shared; /**< If partitioned true if the first tree on this process is also the last tree on the next process.
-                                             Always zero if num_local_trees = 0 */
+  int8_t first_tree_shared; /**< If partitioned true if the first tree on this process is also the last tree 
+                                  on the next process. Always zero if num_local_trees = 0 */
 
   t8_shmem_array_t tree_offsets; /**< If partitioned for each process the global index of its first local tree
                                         or -(first local tree) - 1

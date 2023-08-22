@@ -167,7 +167,12 @@ static t8_cmesh_t
 t8_cmesh_new_line (sc_MPI_Comm comm)
 {
   t8_cmesh_t cmesh;
-  double vertices[6] = { 0, 0, 0, 1, 0, 0 };
+  /* clang-format off */
+  double vertices[6] = { 
+    0, 0, 0, 
+    1, 0, 0 
+  };
+  /* clang-format on */
   t8_geometry_c *linear_geom = t8_geometry_linear_new (1);
 
   t8_cmesh_init (&cmesh);
@@ -183,7 +188,13 @@ static t8_cmesh_t
 t8_cmesh_new_tri (sc_MPI_Comm comm)
 {
   t8_cmesh_t cmesh;
-  double vertices[9] = { 0, 0, 0, 1, 0, 0, 1, 1, 0 };
+  /* clang-format off */
+  double vertices[9] = { 
+    0, 0, 0, 
+    1, 0, 0, 
+    1, 1, 0 
+  };
+  /* clang-format on */
   t8_geometry_c *linear_geom = t8_geometry_linear_new (2);
 
   t8_cmesh_init (&cmesh);
@@ -199,7 +210,14 @@ static t8_cmesh_t
 t8_cmesh_new_tet (sc_MPI_Comm comm)
 {
   t8_cmesh_t cmesh;
-  double vertices[12] = { 1, 1, 1, 1, -1, -1, -1, 1, -1, -1, -1, 1 };
+  /* clang-format off */
+  double vertices[12] = { 
+    1, 1, 1, 
+    1, -1, -1, 
+    -1, 1, -1, 
+    -1, -1, 1 
+  };
+  /* clang-format on */
   t8_geometry_c *linear_geom = t8_geometry_linear_new (3);
 
   t8_cmesh_init (&cmesh);
@@ -215,9 +233,14 @@ static t8_cmesh_t
 t8_cmesh_new_quad (sc_MPI_Comm comm)
 {
   t8_cmesh_t cmesh;
+  /* clang-format off */
   double vertices[12] = {
-    0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0,
+    0, 0, 0, 
+    1, 0, 0, 
+    0, 1, 0, 
+    1, 1, 0,
   };
+  /* clang-format on */
   t8_geometry_c *linear_geom = t8_geometry_linear_new (2);
 
   t8_cmesh_init (&cmesh);
@@ -233,7 +256,18 @@ static t8_cmesh_t
 t8_cmesh_new_hex (sc_MPI_Comm comm)
 {
   t8_cmesh_t cmesh;
-  double vertices[24] = { 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1 };
+  /* clang-format off */
+  double vertices[24] = { 
+    0, 0, 0, 
+    1, 0, 0, 
+    0, 1, 0, 
+    1, 1, 0, 
+    0, 0, 1, 
+    1, 0, 1, 
+    0, 1, 1, 
+    1, 1, 1 
+  };
+  /* clang-format on */
   t8_geometry_c *linear_geom = t8_geometry_linear_new (3);
 
   t8_cmesh_init (&cmesh);
@@ -249,7 +283,15 @@ t8_cmesh_t
 t8_cmesh_new_pyramid_deformed (sc_MPI_Comm comm)
 {
   t8_cmesh_t cmesh;
-  double vertices[15] = { -1, -2, 0.5, 2, -1, 0, -1, 2, -0.5, 2, 2, 0, 3, 3, sqrt (3) };
+  /* clang-format off */
+  double vertices[15] = { 
+    -1, -2, 0.5, 
+    2, -1, 0, 
+    -1, 2, -0.5, 
+    2, 2, 0, 
+    3, 3, sqrt (3) 
+  };
+  /* clang-format on */
   t8_geometry_c *linear_geom = t8_geometry_linear_new (3);
 
   t8_cmesh_init (&cmesh);
@@ -265,7 +307,15 @@ static t8_cmesh_t
 t8_cmesh_new_pyramid (sc_MPI_Comm comm)
 {
   t8_cmesh_t cmesh;
-  double vertices[15] = { -1, -1, 0, 1, -1, 0, -1, 1, 0, 1, 1, 0, 0, 0, sqrt (2) };
+  /* clang-format off */
+  double vertices[15] = { 
+    -1, -1, 0, 
+    1, -1, 0, 
+    -1, 1, 0, 
+    1, 1, 0, 
+    0, 0, sqrt (2) 
+  };
+  /* clang-format on */
   t8_geometry_c *linear_geom = t8_geometry_linear_new (3);
 
   t8_cmesh_init (&cmesh);
@@ -281,7 +331,17 @@ static t8_cmesh_t
 t8_cmesh_new_prism (sc_MPI_Comm comm)
 {
   t8_cmesh_t cmesh;
-  double vertices[18] = { 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1 };
+  /* clang-format off */
+  double vertices[18] = { 
+    0, 0, 0, 
+    1, 0, 0, 
+    1, 1, 0, 
+    0, 0, 1, 
+    1, 0, 1, 
+    1, 1, 1 
+  };
+  /* clang-format on */
+
   t8_geometry_c *linear_geom = t8_geometry_linear_new (3);
 
   t8_cmesh_init (&cmesh);
@@ -347,10 +407,29 @@ t8_cmesh_new_hypercube_hybrid (sc_MPI_Comm comm, int do_partition, int periodic)
   t8_locidx_t vertices[8];
   double vertices_coords_temp[24];
   double attr_vertices[24];
+  /* clang-format off */
   double null_vec[3] = { 0, 0, 0 };
-  double shift[7][3] = { { 0.5, 0, 0 },   { 0, 0.5, 0 },     { 0, 0, 0.5 },  { 0.5, 0.5 },
-                         { 0.5, 0, 0.5 }, { 0.5, 0.5, 0.5 }, { 0, 0.5, 0.5 } };
-  double vertices_coords[24] = { 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1 };
+  double shift[7][3] = { 
+    { 0.5, 0, 0 },   
+    { 0, 0.5, 0 },     
+    { 0, 0, 0.5 },  
+    { 0.5, 0.5 },
+    { 0.5, 0, 0.5 }, 
+    { 0.5, 0.5, 0.5 }, 
+    { 0, 0.5, 0.5 } 
+  };
+  double vertices_coords[24] = { 
+    0, 0, 0, 
+    1, 0, 0, 
+    0, 1, 0, 
+    1, 1, 0,
+    0, 0, 1, 
+    1, 0, 1,
+    0, 1, 1, 
+    1, 1, 1 
+  };
+  /* clang-format on */
+
   t8_geometry_c *linear_geom = t8_geometry_linear_new (3);
 
   t8_cmesh_init (&cmesh);
@@ -540,7 +619,19 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
   t8_locidx_t vertices[8];
   double attr_vertices[24];
   int mpirank, mpiret;
-  const double vertices_coords[24] = { 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1 };
+  /* clang-format off */
+  const double vertices_coords[24] = { 
+    0, 0, 0, 
+    1, 0, 0, 
+    0, 1, 0, 
+    1, 1, 0, 
+    0, 0, 1, 
+    1, 0, 1, 
+    0, 1, 1,
+    1, 1, 1 
+  };
+  /* clang-format on */
+
   int dim = t8_eclass_to_dimension[eclass];
   t8_geometry_c *linear_geom = t8_geometry_linear_new (dim);
 
@@ -1292,8 +1383,15 @@ t8_cmesh_t
 t8_cmesh_new_periodic_line_more_trees (sc_MPI_Comm comm)
 {
   t8_cmesh_t cmesh;
+  /* clang-format off */
+  double vertices[12] = { 
+    0, 0, 0, 
+    0.2, 0, 0, 
+    0.6, 0, 0, 
+    1, 0, 0 
+  };
+  /* clang-format on */
 
-  double vertices[12] = { 0, 0, 0, 0.2, 0, 0, 0.6, 0, 0, 1, 0, 0 };
   t8_geometry_c *linear_geom = t8_geometry_linear_new (1);
 
   t8_cmesh_init (&cmesh);
@@ -1315,7 +1413,17 @@ t8_cmesh_new_periodic_line_more_trees (sc_MPI_Comm comm)
 t8_cmesh_t
 t8_cmesh_new_periodic_tri (sc_MPI_Comm comm)
 {
-  double vertices[18] = { 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0 };
+  /* clang-format off */
+  double vertices[18] = { 
+    0, 0, 0, 
+    1, 0, 0, 
+    1, 1, 0, 
+    0, 0, 0, 
+    1, 1, 0, 
+    0, 1, 0 
+  };
+  /* clang-format on */
+
   t8_cmesh_t cmesh;
   t8_geometry_c *linear_geom = t8_geometry_linear_new (2);
 
@@ -1337,15 +1445,30 @@ t8_cmesh_new_periodic_tri (sc_MPI_Comm comm)
 t8_cmesh_t
 t8_cmesh_new_periodic_hybrid (sc_MPI_Comm comm)
 {
+  /* clang-format off */
   double vertices[60] = {                                        /* Just all vertices of all trees. partly duplicated */
-                          0,   0,   0,                           /* tree 0, triangle */
-                          0.5, 0,   0, 0.5, 0.5, 0, 0,   0,   0, /* tree 1, triangle */
-                          0.5, 0.5, 0, 0,   0.5, 0, 0.5, 0,   0, /* tree 2, quad */
-                          1,   0,   0, 0.5, 0.5, 0, 1,   0.5, 0, 0,   0.5, 0, /* tree 3, quad */
-                          0.5, 0.5, 0, 0,   1,   0, 0.5, 1,   0, 0.5, 0.5, 0, /* tree 4, triangle */
-                          1,   0.5, 0, 1,   1,   0, 0.5, 0.5, 0,              /* tree 5, triangle */
-                          1,   1,   0, 0.5, 1,   0
+    0, 0, 0,              /* tree 0, triangle */
+    0.5, 0, 0, 
+    0.5, 0.5, 0, 
+    0, 0, 0,              /* tree 1, triangle */
+    0.5, 0.5, 0, 
+    0, 0.5, 0,
+    0.5, 0, 0,            /* tree 2, quad */
+    1, 0, 0, 0.5, 
+    0.5, 0, 1, 0.5, 
+    0, 0, 0.5, 0,         /* tree 3, quad */
+    0.5, 0.5, 0, 
+    0, 1, 0, 
+    0.5, 1, 0, 
+    0.5, 0.5, 0,          /* tree 4, triangle */
+    1, 0.5, 0, 
+    1, 1, 0, 
+    0.5, 0.5, 0,          /* tree 5, triangle */
+    1, 1, 0, 
+    0.5, 1, 0
   };
+  /* clang-format on */
+
   t8_cmesh_t cmesh;
   t8_geometry_c *linear_geom = t8_geometry_linear_new (2);
 
@@ -1405,7 +1528,19 @@ t8_cmesh_new_periodic (sc_MPI_Comm comm, int dim)
 {
   t8_cmesh_t cmesh;
   t8_eclass_t tree_class;
-  double vertices[24] = { 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1 };
+  /* clang-format off */
+  double vertices[24] = { 
+    0, 0, 0, 
+    1, 0, 0, 
+    0, 1, 0, 
+    1, 1, 0, 
+    0, 0, 1, 
+    1, 0, 1, 
+    0, 1, 1, 
+    1, 1, 1 
+  };
+  /* clang-format on */
+
   t8_geometry_c *linear_geom = t8_geometry_linear_new (dim);
 
   T8_ASSERT (dim == 1 || dim == 2 || dim == 3);
@@ -1464,7 +1599,17 @@ t8_cmesh_t
 t8_cmesh_new_line_zigzag (sc_MPI_Comm comm)
 {
   int i;
-  double vertices[18] = { 1, 2, 0, 2, 4, 1, 1, 1, 2, 2, 4, 1, 1, 1, 2, 3, 2, 5 };
+  /* clang-format off */
+  double vertices[18] = { 
+    1, 2, 0, 
+    2, 4, 1, 
+    1, 1, 2, 
+    2, 4, 1, 
+    1, 1, 2, 
+    3, 2, 5 
+  };
+  /* clang-format on */
+
   t8_cmesh_t cmesh;
   t8_geometry_c *linear_geom = t8_geometry_linear_new (1);
 
@@ -1544,7 +1689,17 @@ t8_cmesh_t
 t8_cmesh_new_prism_deformed (sc_MPI_Comm comm)
 {
   t8_cmesh_t cmesh;
-  double vertices[18] = { -1, -0.5, 0.25, 1, 0, 0, 1, 1, 0, 0, 0, 0.75, 1.25, 0, 1, 2, 2, 2 };
+  /* clang-format off */
+  double vertices[18] = {
+    -1, -0.5, 0.25, 
+    1, 0, 0, 
+    1, 1, 0, 
+    0, 0, 0.75, 
+    1.25, 0, 1, 
+    2, 2, 2 
+  };
+  /* clang-format on */
+
   t8_geometry_c *linear_geom = t8_geometry_linear_new (3);
 
   t8_cmesh_init (&cmesh);
@@ -1827,8 +1982,15 @@ t8_cmesh_new_tet_orientation_test (sc_MPI_Comm comm)
 {
   t8_cmesh_t cmesh;
   int i;
+  /* clang-format off */
+  double vertices_coords[12] = { 
+    0, 0, 0, 
+    1, 0, 0, 
+    1, 0, 1, 
+    1, 1, 1 
+  };
+  /* clang-format on */
 
-  double vertices_coords[12] = { 0, 0, 0, 1, 0, 0, 1, 0, 1, 1, 1, 1 };
   double translated_coords[12];
   double translate[3] = { 1, 0, 0 };
   const t8_gloidx_t num_trees = 24;
@@ -1892,12 +2054,9 @@ t8_cmesh_new_tet_orientation_test (sc_MPI_Comm comm)
   /* Set the coordinates. Each tet is just a translated version of
    * the root tet */
   for (i = 0; i < num_trees; i++) {
-    /* *INDENT-OFF* */
-    /* Indent fails at '!!' */
     translate[0] = (i & 1) + 2 * !!(i & 8);
     translate[1] = !!(i & 2) + 2 * !!(i & 16);
     translate[2] = !!(i & 4) + 2 * !!(i & 32);
-    /* *INDENT-ON* */
     t8_debugf ("%i  %.0f %.0f %.0f\n", i, translate[0], translate[1], translate[2]);
     t8_cmesh_translate_coordinates (vertices_coords, translated_coords, 4, translate);
     t8_cmesh_set_tree_vertices (cmesh, i, translated_coords, 4);
@@ -2359,7 +2518,19 @@ t8_cmesh_new_long_brick_pyramid (sc_MPI_Comm comm, int num_cubes)
   t8_locidx_t vertices[5];
   double attr_vertices[15];
   int mpirank, mpiret;
-  double vertices_coords[24] = { 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1 };
+  /* clang-format off */
+  double vertices_coords[24] = { 
+    0, 0, 0, 
+    1, 0, 0, 
+    0, 1, 0, 
+    1, 1, 0, 
+    0, 0, 1, 
+    1, 0, 1, 
+    0, 1, 1, 
+    1, 1, 1 
+  };
+  /* clang-format on */
+
   int dim = t8_eclass_to_dimension[T8_ECLASS_PYRAMID];
   t8_geometry_c *linear_geom = t8_geometry_linear_new (dim);
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
@@ -2432,10 +2603,19 @@ t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees, const int set_attributes, cons
   const t8_geometry_c *linear_geom = t8_geometry_linear_new (3);
   t8_cmesh_register_geometry (cmesh, linear_geom);
 
+  /* clang-format off */
   /* Vertices of first cube in row. */
   double vertices[24] = {
-    0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1,
+    0, 0, 0, 
+    1, 0, 0, 
+    0, 1, 0, 
+    1, 1, 0, 
+    0, 0, 1, 
+    1, 0, 1, 
+    0, 1, 1, 
+    1, 1, 1
   };
+  /* clang-format on */
 
   /* Set each tree in cmesh. */
   for (t8_locidx_t tree_id = 0; tree_id < num_trees; tree_id++) {
