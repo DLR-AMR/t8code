@@ -324,8 +324,7 @@ t8_cmesh_save_trees (t8_cmesh_t cmesh, FILE *fp)
       /* TODO: We currently do not support saving of attributes different
        * to the tree vertices */
       fclose (fp);
-      t8_errorf ("We do not support saving cmeshes with trees that "
-                 "have attributes different to the tree vertices.\n");
+      t8_errorf ("We do not support saving cmeshes with trees that have attributes different to the tree vertices.\n");
       return 0;
     }
     ret = fprintf (fp, "num_attributes %i\nSize of attributes %zd\n\n", tree->num_attributes,
