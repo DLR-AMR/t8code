@@ -24,7 +24,6 @@
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 
-/* *INDENT-OFF* */
 class gtest_eclass: public testing::TestWithParam<int> {
  protected:
   void
@@ -34,7 +33,6 @@ class gtest_eclass: public testing::TestWithParam<int> {
   }
   int ieclass;
 };
-/* *INDENT-ON* */
 
 TEST (gtest_eclass, eclassCountIs8)
 {
