@@ -33,7 +33,6 @@
  * passed.
  */
 
-/* *INDENT-OFF* */
 class t8_cmesh_partition_class: public testing::TestWithParam<int> {
  protected:
   void
@@ -51,7 +50,6 @@ class t8_cmesh_partition_class: public testing::TestWithParam<int> {
   int cmesh_id;
   t8_cmesh_t cmesh_original;
 };
-/* *INDENT-ON* */
 
 static void
 test_cmesh_committed (t8_cmesh_t cmesh)
@@ -102,9 +100,11 @@ TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate)
   for (int irank = 0; irank < mpisize; irank++) {
     t8_cmesh_init (&cmesh_partition_new2);
     t8_cmesh_set_derive (cmesh_partition_new2, cmesh_partition_new1);
+    /* clang-format off */
     /* Create an offset array where each tree resides on irank */
-    offset_concentrate
-      = t8_cmesh_offset_concentrate (irank, sc_MPI_COMM_WORLD, t8_cmesh_get_num_trees (cmesh_partition));
+    offset_concentrate = t8_cmesh_offset_concentrate (irank, sc_MPI_COMM_WORLD,
+                                                      t8_cmesh_get_num_trees (cmesh_partition));
+    /* clang-format on */
     /* Set the new cmesh to be partitioned according to that offset */
     t8_cmesh_set_partition_offsets (cmesh_partition_new2, offset_concentrate);
     /* Commit the cmesh and test if successful */

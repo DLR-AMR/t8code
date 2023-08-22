@@ -24,8 +24,7 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 
-/* Test for one tree*/
-/* *INDENT-OFF* */
+/* Test for one tree */
 class cmesh_face_boundary_one_tree: public testing::TestWithParam<t8_eclass> {
  protected:
   void
@@ -134,9 +133,8 @@ TEST_P (cmesh_face_boundary_two_trees, check_face_is_boundary_two_trees)
   t8_test_compute_parallel_bounds (sc_MPI_COMM_WORLD, &first_tree, &last_tree);
 
   for (int iface = 0; iface < num_faces; ++iface) {
-    /* For each face of the eclass we construct one cmesh having
-         * this face as a connecting face.
-         * Once partitioned and once replicated */
+    /* For each face of the eclass we construct one cmesh having this face as a connecting face.
+     * Once partitioned and once replicated */
     t8_cmesh_init (&cmesh);
     t8_cmesh_set_tree_class (cmesh, 0, eclass);
     t8_cmesh_set_tree_class (cmesh, 1, eclass);
@@ -146,7 +144,7 @@ TEST_P (cmesh_face_boundary_two_trees, check_face_is_boundary_two_trees)
 
     if (do_partition) {
       /* Set the cmesh to be partitioned.
-           * We do it in such a way that each process has one local and one ghost tree. */
+       * We do it in such a way that each process has one local and one ghost tree. */
       t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
     }
     t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
@@ -166,7 +164,7 @@ TEST_P (cmesh_face_boundary_two_trees, check_face_is_boundary_two_trees)
       }
       else {
         /* checkface == iface 
-             * Thus, tree 0 is connected to tree 1 across this face */
+         * Thus, tree 0 is connected to tree 1 across this face */
         t8_locidx_t face_neighbor;
         int dual_face = -1, orientation = -1;
         /* Check that tree 0 face is not a boundary */
@@ -183,7 +181,7 @@ TEST_P (cmesh_face_boundary_two_trees, check_face_is_boundary_two_trees)
         ASSERT_FALSE (t8_cmesh_tree_face_is_boundary (cmesh, 1, checkface))
           << "Face is wrongly detected as a boundary.";
         /* Reset the dual face and orientation to catch false positives (when the get_face_neighbor
-             * function does not touch dual_face and orientation) */
+         * function does not touch dual_face and orientation) */
         dual_face = orientation = -1;
         /* Compute the face neighbor info */
         t8_debugf ("Checking face neighbor of local tree 1 across face %i.\n", checkface);
@@ -200,4 +198,3 @@ TEST_P (cmesh_face_boundary_two_trees, check_face_is_boundary_two_trees)
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_face_boundary, cmesh_face_boundary_two_trees,
                           testing::Combine (testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT), testing::Values (0, 1)));
-/* *INDENT-ON* */

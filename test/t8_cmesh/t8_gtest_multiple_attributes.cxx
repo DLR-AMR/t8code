@@ -40,7 +40,6 @@ t8_cmesh_partition_cmesh (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   return cmesh_partition;
 }
 
-/* *INDENT-OFF* */
 class cmesh_multiple_attributes: public testing::TestWithParam<int> {
  protected:
   void
@@ -152,4 +151,3 @@ TEST_P (cmesh_multiple_attributes, multiple_attributes)
 
 /* Test for different number of trees. */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_multiple_attributes, cmesh_multiple_attributes, testing::Range (1, 4));
-/* *INDENT-ON* */

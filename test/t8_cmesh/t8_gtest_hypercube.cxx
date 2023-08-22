@@ -28,7 +28,6 @@
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include <t8_cmesh/t8_cmesh_examples.h>
 
-/* *INDENT-OFF* */
 /* Create class for parameterized Test with multiple test parameters */
 class cmesh_hypercube_trees: public testing::TestWithParam<std::tuple<t8_eclass, int, int>> {
  protected:
@@ -67,4 +66,3 @@ TEST_P (cmesh_hypercube_trees, check_cmesh_and_its_trees)
 INSTANTIATE_TEST_SUITE_P (t8_gtest_hypercube, cmesh_hypercube_trees,
                           testing::Combine (testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT), testing::Values (0, 1),
                                             testing::Values (0, 1)));
-/* *INDENT-ON* */
