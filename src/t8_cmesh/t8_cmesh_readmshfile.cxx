@@ -38,16 +38,22 @@
 #define T8_NUM_GMSH_ELEM_CLASSES 15
 /* look-up table to translate the gmsh tree class to a t8code tree class.
  */
+/* clang-format off */
 const t8_eclass_t t8_msh_tree_type_to_eclass[T8_NUM_GMSH_ELEM_CLASSES + 1] = {
-  T8_ECLASS_COUNT,                                                  /* 0 is not valid */
-  T8_ECLASS_LINE,                                                   /* 1 */
-  T8_ECLASS_TRIANGLE, T8_ECLASS_QUAD, T8_ECLASS_TET, T8_ECLASS_HEX, /* 5 */
-  T8_ECLASS_PRISM, T8_ECLASS_PYRAMID,                               /* 7 This is the last first order tree type,
-                                   except the Point, which is type 15 */
+  T8_ECLASS_COUNT,     /* 0 is not valid */
+  T8_ECLASS_LINE,      /* 1 */
+  T8_ECLASS_TRIANGLE, 
+  T8_ECLASS_QUAD, 
+  T8_ECLASS_TET, 
+  T8_ECLASS_HEX,        /* 5 */
+  T8_ECLASS_PRISM, 
+  T8_ECLASS_PYRAMID,    /* 7 This is the last first order tree type, except the Point, which is type 15 */
   /* We do not support type 8 to 14 */
-  T8_ECLASS_COUNT, T8_ECLASS_COUNT, T8_ECLASS_COUNT, T8_ECLASS_COUNT, T8_ECLASS_COUNT, T8_ECLASS_COUNT, T8_ECLASS_COUNT,
-  T8_ECLASS_VERTEX /* 15 */
+  T8_ECLASS_COUNT, T8_ECLASS_COUNT, T8_ECLASS_COUNT, T8_ECLASS_COUNT, 
+  T8_ECLASS_COUNT, T8_ECLASS_COUNT, T8_ECLASS_COUNT,
+  T8_ECLASS_VERTEX      /* 15 */
 };
+/* clang-format on */
 
 /* translate the msh file vertex number to the t8code vertex number.
  * See also http://gmsh.info/doc/texinfo/gmsh.html#Node-ordering */
@@ -997,11 +1003,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
           *(long **) sc_array_push (*vertex_indices) = stored_indices;
         }
 
-        /* The following code contains many long function names and some c++, 
-         * which gets unreadable when limited to 80 characters. We therefore
-         * deactivate the automatic indentation.
-         * TODO: Indent after switching to other indentation rules */
-        /* *INDENT-OFF* */
         if (!use_occ_geometry) {
           /* Set the geometry of the tree to be linear.
            * If we use an occ geometry, we set the geometry in accordance,
@@ -1349,8 +1350,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
                 /* Some error checking */
                 if (edge_nodes[i_edge_node].entity_dim == 2
                     && edge_nodes[i_edge_node].entity_tag != edge_geometry_tag) {
-                  t8_global_errorf ("Error: Node %i should lie on a specific face, "
-                                    "but it lies on another face.\n",
+                  t8_global_errorf ("Error: Node %i should lie on a specific face, but it lies on another face.\n",
                                     edge_nodes[i_edge_node].index);
                   goto die_ele;
                 }
@@ -1437,7 +1437,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
           SC_ABORTF ("OCC not linked");
 #endif /* T8_WITH_OCC */
         }
-        /* *INDENT-ON* */
       }
     }
   }
@@ -1806,8 +1805,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition, sc_MPI_Comm comm,
     case 2:
       if (use_occ_geometry) {
         fclose (file);
-        t8_errorf ("WARNING: The occ geometry is only supported for msh files of "
-                   "version 4\n");
+        t8_errorf ("WARNING: The occ geometry is only supported for msh files of version 4\n");
         t8_cmesh_destroy (&cmesh);
         if (partition) {
           /* Communicate to the other processes that reading failed. */

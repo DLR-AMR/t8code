@@ -120,8 +120,6 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees, int nu
         t8_cmesh_set_tree_class (
           cmesh, (i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees,
           T8_ECLASS_HEX);
-
-        /* *INDENT-OFF* */
         const int current_tree_vertices
           = ((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24;
         vertices[current_tree_vertices + 0]
@@ -160,7 +158,6 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees, int nu
         vertices[current_tree_vertices + 21] = cos (i_tangential_trees * dphi) * (radius_inner + i_radial_trees * dr);
         vertices[current_tree_vertices + 22] = sin (i_tangential_trees * dphi) * (radius_inner + i_radial_trees * dr);
         vertices[current_tree_vertices + 23] = -0.5 + (i_axial_trees + 1) * dh;
-        /* *INDENT-ON* */
 
         t8_cmesh_set_tree_vertices (
           cmesh, (i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees,
@@ -173,7 +170,6 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees, int nu
           /* Calculate parameters if cell lies on boundary */
           const int current_tree_parameters = (i_tangential_trees * num_axial_trees + i_axial_trees) * 8;
           if (i_radial_trees == 0 || i_radial_trees == num_radial_trees - 1) {
-            /* *INDENT-OFF* */
             parameters[current_tree_parameters + 0] = (i_tangential_trees + 1) * dphi;
             parameters[current_tree_parameters + 1] = 0.5 - i_axial_trees * dh;
             parameters[current_tree_parameters + 2] = i_tangential_trees * dphi;
@@ -182,7 +178,6 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees, int nu
             parameters[current_tree_parameters + 5] = 0.5 + -(i_axial_trees + 1) * dh;
             parameters[current_tree_parameters + 6] = i_tangential_trees * dphi;
             parameters[current_tree_parameters + 7] = 0.5 - (i_axial_trees + 1) * dh;
-            /* *INDENT-ON* */
           }
           int edges[24] = { 0 };
 
