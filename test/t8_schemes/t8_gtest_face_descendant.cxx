@@ -25,7 +25,6 @@
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
-/* *INDENT-OFF* */
 class class_descendant: public testing::TestWithParam<t8_eclass_t> {
  protected:
   void
@@ -47,7 +46,6 @@ class class_descendant: public testing::TestWithParam<t8_eclass_t> {
   t8_scheme_cxx *scheme;
   t8_eclass_scheme_c *ts;
 };
-/* *INDENT-ON* */
 
 /* Computes manually the test_child_id to calculate the descendant with this id on level ilevel.  */
 void
@@ -171,7 +169,5 @@ TEST_P (class_descendant, t8_check_face_desc)
   ts->t8_element_destroy (1, &tmp);
 }
 
-/* *INDENT-OFF* */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_element_face_descendant, class_descendant,
                           testing::Range (T8_ECLASS_VERTEX, T8_ECLASS_COUNT));
-/* *INDENT-ON* */

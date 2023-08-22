@@ -29,7 +29,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
-/* *INDENT-OFF* */
 class nca: public testing::TestWithParam<t8_eclass> {
  protected:
   void
@@ -63,8 +62,6 @@ class nca: public testing::TestWithParam<t8_eclass> {
   t8_eclass_scheme_c *ts;
   t8_eclass_t eclass;
 };
-
-/* *INDENT-ON* */
 
 /**
  * Test the nca for the children of the root-element

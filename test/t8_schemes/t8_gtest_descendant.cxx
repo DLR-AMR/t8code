@@ -27,7 +27,6 @@
 
 /* This program tests the descendant function of an element. */
 
-/* *INDENT-OFF* */
 class class_schemes_descendant: public testing::TestWithParam<t8_eclass_t> {
  protected:
   void
@@ -158,4 +157,3 @@ TEST_P (class_schemes_descendant, test_recursive_descendant)
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_descendant, class_schemes_descendant,
                           testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT));
-/* *INDENT-ON* */

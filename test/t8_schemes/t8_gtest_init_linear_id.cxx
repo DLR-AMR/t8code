@@ -27,7 +27,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <sc_functions.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 
-/* *INDENT-OFF* */
 class linear_id: public testing::TestWithParam<t8_eclass> {
  protected:
   void
@@ -58,7 +57,6 @@ class linear_id: public testing::TestWithParam<t8_eclass> {
   sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
 };
 
-/* *INDENT-ON* */
 static int
 t8_test_init_linear_id_refine_everything (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
                                           t8_locidx_t lelement_id, t8_eclass_scheme_c *ts, const int is_family,
@@ -67,7 +65,6 @@ t8_test_init_linear_id_refine_everything (t8_forest_t forest, t8_forest_t forest
   return 1;
 }
 
-/* *INDENT-OFF* */
 /* Iterate over the leafs of a uniformly refined forest and check the id*/
 TEST_P (linear_id, uniform_forest)
 {
@@ -149,7 +146,5 @@ TEST_P (linear_id, id_at_other_level)
     }
   }
 }
-
-/* *INDENT-ON* */
 
 INSTANTIATE_TEST_SUITE_P (t8_test_init_linear_id, linear_id, testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT));
