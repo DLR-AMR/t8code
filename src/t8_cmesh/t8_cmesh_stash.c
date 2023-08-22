@@ -123,11 +123,8 @@ t8_stash_add_facejoin (t8_stash_t stash, t8_gloidx_t gid1, t8_gloidx_t gid2, int
    * the two ids */
   sjoin->face1 = gid1 <= gid2 ? face1 : face2;
   sjoin->face2 = gid1 <= gid2 ? face2 : face1;
-  ;
   sjoin->id1 = gid1 <= gid2 ? gid1 : gid2;
-  ;
   sjoin->id2 = gid1 <= gid2 ? gid2 : gid1;
-  ;
   sjoin->orientation = orientation;
 }
 
