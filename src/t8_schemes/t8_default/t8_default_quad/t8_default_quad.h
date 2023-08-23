@@ -74,7 +74,7 @@ typedef p4est_quadrant_t t8_pquad_t;
   } while (0)
 
 /** Provide an implementation for the quadrilateral element class. */
-t8_eclass_scheme_t *
+t8_eclass_scheme_t*
 t8_default_scheme_new_quad (void);
 
 #endif /* !T8_DEFAULT_QUAD_H */
