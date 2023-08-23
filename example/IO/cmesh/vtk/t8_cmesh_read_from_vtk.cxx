@@ -128,9 +128,7 @@ main (int argc, char **argv)
   int vtk_file_type_int;
   vtk_file_type_t vtk_file_type;
 
-  snprintf (usage, BUFSIZ,
-            "Usage:\t%s <OPTIONS> <ARGUMENTS>\n\t%s -h\t"
-            "for a brief overview of all options.",
+  snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS> <ARGUMENTS>\n\t%s -h\t for a brief overview of all options.",
             basename (argv[0]), basename (argv[0]));
   sreturn = snprintf (help, BUFSIZ,
                       "This program reads a .vtk-file and constructs a mesh representing the given Data."

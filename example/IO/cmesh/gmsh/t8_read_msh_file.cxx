@@ -115,13 +115,11 @@ main (int argc, char *argv[])
 
   snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS> <ARGUMENTS>", basename (argv[0]));
   sreturn = snprintf (help, BUFSIZ,
-                      "This program reads a .msh file "
-                      "created by the GMSH program and constructs a "
-                      "t8code coarse mesh from them.\n\n%s\n\nExample: %s -f A1\nTo open the file A1.msh."
-                      "\n\nThe default dimension of the mesh to read is 2. Since the "
-                      ".msh format stores elements of all (lower) dimensions "
-                      "the user must provide the argument for a different dimension by hand, if "
-                      "desired.\n",
+                      "This program reads a .msh file created by the GMSH program and constructs a t8code coarse mesh "
+                      "from them.\n\n%s\n\nExample: %s -f A1\nTo open the file A1.msh."
+                      "\n\nThe default dimension of the mesh to read is 2. Since the .msh format stores elements of "
+                      "all (lower) dimensions the user must provide the argument for a different dimension by hand, "
+                      "if desired.\n",
                       usage, basename (argv[0]));
 
   if (sreturn >= BUFSIZ) {
@@ -142,17 +140,11 @@ main (int argc, char *argv[])
 
   opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'h', "help", &helpme, "Display a short help message.");
-  sc_options_add_string (opt, 'f', "prefix", &prefix, "",
-                         "The prefix of the"
-                         "tetgen files.");
-  sc_options_add_switch (opt, 'p', "partition", &partition,
-                         "If true "
-                         "the generated cmesh is repartitioned uniformly.");
+  sc_options_add_string (opt, 'f', "prefix", &prefix, "", "The prefix of the tetgen files.");
+  sc_options_add_switch (opt, 'p', "partition", &partition, "If true the generated cmesh is repartitioned uniformly.");
   sc_options_add_int (opt, 'd', "dim", &dim, 2, "The dimension of the mesh");
   sc_options_add_int (opt, 'm', "master", &master, -1,
-                      "If specified, the "
-                      "mesh is partitioned and all elements reside on process with "
-                      "rank master.");
+                      "If specified, the mesh is partitioned and all elements reside on process with "rank master.");
   parsed = sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (helpme) {
     /* display help message and usage */
