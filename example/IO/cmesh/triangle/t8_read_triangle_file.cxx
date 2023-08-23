@@ -82,11 +82,9 @@ main (int argc, char *argv[])
 
   snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS> <ARGUMENTS>", basename (argv[0]));
   sreturn = snprintf (help, BUFSIZ,
-                      "This program reads a collection of .node, .ele and "
-                      ".neigh files created by the TRIANGLE program and constructs a "
-                      "t8code coarse mesh from them.\nAll three files must have the same prefix.\n\n%s\n\nExample: %s "
-                      "-f A1\nTo open the files A1.node, A1.ele and "
-                      "A1.neigh.\n",
+                      "This program reads a collection of .node, .ele and .neigh files created by the TRIANGLE program "
+                      "and constructs a t8code coarse mesh from them.\nAll three files must have the same prefix."
+                      "\n\n%s\n\nExample: %s -f A1\nTo open the files A1.node, A1.ele and A1.neigh.\n",
                       usage, basename (argv[0]));
 
   if (sreturn >= BUFSIZ) {
@@ -103,12 +101,8 @@ main (int argc, char *argv[])
   t8_init (SC_LP_DEFAULT);
 
   opt = sc_options_new (argv[0]);
-  sc_options_add_string (opt, 'f', "prefix", &prefix, "",
-                         "The prefix of the"
-                         " triangle files.");
-  sc_options_add_bool (opt, 'p', "Partition", &partition, 0,
-                       "If true"
-                       " the generated cmesh is partitioned.");
+  sc_options_add_string (opt, 'f', "prefix", &prefix, "", "The prefix of the triangle files.");
+  sc_options_add_bool (opt, 'p', "Partition", &partition, 0, "If true the generated cmesh is partitioned.");
   parsed = sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (parsed < 0 || strcmp (prefix, "") == 0) {
     fprintf (stderr, "%s\n", help);
