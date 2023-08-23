@@ -198,8 +198,7 @@ main (int argc, char **argv)
   sc_options_add_switch (opt, 'b', "balance", &do_balance, "Establish a 2:1 balance in the forest.");
   sc_options_add_int (opt, 'c', "cube", &cube, 0, "cube = 1 -> use the hypercube mesh and visual output.");
   sc_options_add_int (opt, 'e', "elements", &eclass_int, 6,
-                      "This option specifies"
-                      " the type of elements to use.\n"
+                      "This option specifies the type of elements to use.\n"
                       "\t\t5 - tetrahedron\n\t\t6 - prism");
 
   parsed = sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);

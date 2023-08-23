@@ -177,9 +177,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix, sc_MPI_C
   double adapt_time = 0, ghost_time = 0, partition_time = 0, new_time = 0, total_time = 0, balance_time = 0;
   sc_statinfo_t times[6];
 
-  t8_global_productionf ("Committed cmesh with"
-                         " %lli global trees.\n",
-                         (long long) t8_cmesh_get_num_trees (cmesh));
+  t8_global_productionf ("Committed cmesh with %lli global trees.\n", (long long) t8_cmesh_get_num_trees (cmesh));
 
   /* If the input cmesh is partitioned then we use a partitioned cmehs
    * and also repartition it in each timestep (happens automatically in
@@ -370,59 +368,42 @@ main (int argc, char *argv[])
   sc_options_add_switch (opt, 'h', "help", &help, "Display a short help message.");
   sc_options_add_switch (opt, 'o', "no-vtk", &no_vtk, "Do not write vtk output.");
   sc_options_add_string (opt, 'f', "mshfile", &mshfileprefix, NULL,
-                         "If specified, the cmesh is constructed from a .msh file with "
-                         "the given prefix. The files must end in .msh and be "
-                         "created with gmsh.");
+                         "If specified, the cmesh is constructed from a .msh file with the given prefix. "
+                         "The files must end in .msh and be created with gmsh.");
   sc_options_add_int (opt, 'd', "dim", &dim, 2, "Together with -f: The dimension of the coarse mesh. 2 or 3.");
   sc_options_add_string (opt, 'c', "cmeshfile", &cmeshfileprefix, NULL,
-                         "If specified, the cmesh is constructed from a collection "
-                         "of cmesh files. Created with t8_cmesh_save."
-                         "The number of files must then be specified with the -n "
-                         "option.");
+                         "If specified, the cmesh is constructed from a collection of cmesh files. "
+                         "Created with t8_cmesh_save. The number of files must then be specified with the -n option.");
   sc_options_add_int (opt, 'n', "nfiles", &num_files, -1,
-                      "If the -c option is used, the number of cmesh files must "
-                      "be specified as an argument here. If n=1 then the cmesh "
-                      "will be replicated throughout the test.");
+                      "If the -c option is used, the number of cmesh files must be specified as an argument here. "
+                      "If n=1 then the cmesh will be replicated throughout the test.");
   sc_options_add_int (opt, 's', "stride", &stride, 16,
-                      "If -c and -n are used, only every s-th MPI rank will "
-                      "read a .cmesh file (file number: rank/s). Default is 16.");
+                      "If -c and -n are used, only every s-th MPI rank will read a .cmesh file (file number: rank/s)."
+                      "Default is 16.");
   sc_options_add_switch (opt, 't', "test-tet", &test_tet,
                          "Use a cmesh that tests all tet face-to-face connections."
-                         " If this option is used -o is enabled automatically."
-                         " Not allowed with -f and -c.");
+                         " If this option is used -o is enabled automatically. Not allowed with -f and -c.");
   sc_options_add_switch (opt, 'L', "test-linear-cylinder", &test_linear_cylinder,
                          "Use a linear cmesh to compare linear and occ geometry performance."
-                         " If this option is used -o is enabled automatically."
-                         " Not allowed with -f and -c.");
+                         " If this option is used -o is enabled automatically. Not allowed with -f and -c.");
   sc_options_add_switch (opt, 'O', "test-occ-cylinder", &test_occ_cylinder,
                          "Use a occ cmesh to compare linear and occ geometry performance."
-                         " If this option is used -o is enabled automatically."
-                         " Not allowed with -f and -c.");
-  sc_options_add_int (opt, 'l', "level", &level, 0,
-                      "The initial uniform "
-                      "refinement level of the forest.");
+                         " If this option is used -o is enabled automatically. Not allowed with -f and -c.");
+  sc_options_add_int (opt, 'l', "level", &level, 0, "The initial uniform refinement level of the forest.");
   sc_options_add_int (opt, 'r', "rlevel", &level_diff, 1,
-                      "The number of levels that the forest is refined "
-                      "from the initial level.");
+                      "The number of levels that the forest is refined from the initial level.");
   sc_options_add_int (opt, '\0', "cmesh-level", &cmesh_level, -1,
-                      "Starting level of the linear or occ cmesh, default is 0."
-                      " Only viable with -L or -O.");
-  sc_options_add_double (opt, 'x', "xmin", x_min_max, 0,
-                         "The minimum x coordinate "
-                         "in the mesh.");
-  sc_options_add_double (opt, 'X', "xmax", x_min_max + 1, 1,
-                         "The maximum x coordinate "
-                         "in the mesh.");
+                      "Starting level of the linear or occ cmesh, default is 0. Only viable with -L or -O.");
+  sc_options_add_double (opt, 'x', "xmin", x_min_max, 0, "The minimum x coordinate in the mesh.");
+  sc_options_add_double (opt, 'X', "xmax", x_min_max + 1, 1, "The maximum x coordinate in the mesh.");
   sc_options_add_double (opt, 'T', "time", &T, 1,
-                         "The simulated time span."
-                         "We simulate the time from 0 to T. T has to be > 0.");
+                         "The simulated time span. We simulate the time from 0 to T. T has to be > 0.");
   sc_options_add_double (opt, 'D', "delta_t", &delta_t, 0.08,
-                         "The time step in each simulation step. "
-                         "Deprecated, use -C instead.");
+                         "The time step in each simulation step. Deprecated, use -C instead.");
   /* CFL number. delta_t = CFL * 0.64 / 2^level */
   sc_options_add_double (opt, 'C', "cfl", &cfl, 0,
-                         "The CFL number. If specified, then delta_t is set to "
-                         "CFL * 0.64 / 2^level. Overwrites any other delta_t setting.");
+                         "The CFL number. If specified, then delta_t is set to CFL * 0.64 / 2^level. "
+                         "Overwrites any other delta_t setting.");
   sc_options_add_switch (opt, 'g', "ghost", &do_ghost, "Create ghost elements.");
   sc_options_add_switch (opt, 'b', "balance", &do_balance, "Establish a 2:1 balance in the forest.");
   sc_options_add_switch (opt, 'z', "use_occ", &use_occ,
