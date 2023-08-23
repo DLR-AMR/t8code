@@ -35,7 +35,6 @@ const vtk_file_type_t gtest_vtk_filetypes[VTK_NUM_TYPES]
   = { VTK_FILE_ERROR, VTK_UNSTRUCTURED_FILE, VTK_POLYDATA_FILE, VTK_PARALLEL_UNSTRUCTURED_FILE,
       VTK_PARALLEL_POLYDATA_FILE };
 
-/* *INDENT-OFF* */
 class vtk_reader: public testing::TestWithParam<std::tuple<int, int, int>> {
  protected:
   void
@@ -68,7 +67,6 @@ class vtk_reader: public testing::TestWithParam<std::tuple<int, int, int>> {
   const int num_points[5] = { 0, 121, 24, 6144, 900 };
   const int num_trees[5] = { 0, 200, 12, 1024, 1680 };
 };
-/* *INDENT-ON* */
 
 /* All readers should fail properly with a non-existing file. */
 TEST_P (vtk_reader, vtk_to_cmesh_fail)
@@ -141,10 +139,8 @@ TEST_P (vtk_reader, vtk_to_pointSet)
 #endif
 }
 
-/* *INDENT-OFF* */
 /* Currently does not work for parallel files. Replace with VTK_NUM_TYPES as soon
  * as reading and constructing cmeshes from parallel files is enabled. */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_vtk_reader, vtk_reader,
                           testing::Combine (testing::Range (VTK_FILE_ERROR + 1, (int) VTK_NUM_TYPES),
                                             testing::Values (0, 1), testing::Range (0, T8_VTK_TEST_NUM_PROCS)));
-/* *INDENT-ON* */
