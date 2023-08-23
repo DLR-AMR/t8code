@@ -94,8 +94,7 @@ t8_dprism_parent (const t8_dprism_t *p, t8_dprism_t *parent);
  */
 void
 t8_dprism_first_descendant (const t8_dprism_t *p, t8_dprism_t *desc, int level);
-/** Compute the position of the ancestor of this child at level \a level within
- * its siblings.
+/** Compute the position of the ancestor of this child at level \a level within its siblings.
  * \param [in] p  prism to be considered.
  * \return Returns its child id in 0 - 7
  */
@@ -103,8 +102,8 @@ int
 t8_dprism_child_id (const t8_dprism_t *p);
 
 /** Check whether a collection of eight prism is a family in Morton order.
- * \param [in]     fam  An array of eight prism.
- * \return            Nonzero if \a fam is a family of prism.
+ * \param [in] fam  An array of eight prism.
+ * \return          Nonzero if \a fam is a family of prism.
  */
 int
 t8_dprism_is_familypv (t8_dprism_t **fam);
@@ -128,14 +127,12 @@ t8_dprism_boundary_face (const t8_dprism_t *p, int face, t8_element_t *boundary)
 /** Compute whether a given prism shares a given face with its root tree.
  * \param [in] p        The input prism.
  * \param [in] face     A face of \a p.
- * \return              True if \a face is a subface of the triangle's root element.
+ * \return              True if \a face is a subface of the prisms's root element.
  */
 int
 t8_dprism_is_root_boundary (const t8_dprism_t *p, int face);
 
-/** Test if a prism lies inside of the root prism,
- *  that is the triangle of level 0, anchor node (0,0)
- *  and type 0.
+/** Test if a prism lies inside of the root prism, that is the prism of level 0, anchor node (0,0) and type 0.
  *  \param [in]     p Input prism.
  *  \return true    If \a p lies inside of the root prism.
  */
@@ -143,10 +140,9 @@ int
 t8_dprism_is_inside_root (t8_dprism_t *p);
 
 /** Compute the childid-th child in Morton order of a prism.
- * \param [in] p    Input prism.
- * \param [in] childid The id of the child, in 0 - 7, in Morton order.
- * \param [in,out] child  Existing prism whose data will be filled
- * 		    with the date of p's childid-th child.
+ * \param [in] p          Input prism.
+ * \param [in] childid    The id of the child, in 0 - 7, in Morton order.
+ * \param [in,out] child  Existing prism whose data will be filled with the date of p's childid-th child.
  */
 void
 t8_dprism_child (const t8_dprism_t *p, int childid, t8_dprism_t *child);
@@ -165,6 +161,7 @@ t8_dprism_face_shape (const t8_dprism_t *p, int face);
   * \return     Number of Children at \a face*/
 int
 t8_dprism_num_face_children (const t8_dprism_t *p, int face);
+
 /** Compute the face neighbor of a prism.
  * \param [in]     p      Input prism.
  * \param [in]     face   The face across which to generate the neighbor.
@@ -176,11 +173,10 @@ int
 t8_dprism_face_neighbour (const t8_dprism_t *p, int face, t8_dprism_t *neigh);
 
 /** Return the corner number of a prism corresponding to a given face corner.
-  * \param [in] p   Input prism.
-  * \param [in] face The face number.
-  * \param [in] corner A corner of \a face
-  * \return         The corner index of \a p corresponding to the \a corner-th
-  *                 corner of \a face.
+  * \param [in] p       Input prism.
+  * \param [in] face    The face number.
+  * \param [in] corner  A corner of \a face
+  * \return             The corner index of \a p corresponding to the \a corner-th corner of \a face.
   */
 int
 t8_dprism_get_face_corner (const t8_dprism_t *p, int face, int corner);
@@ -193,8 +189,7 @@ t8_dprism_get_face_corner (const t8_dprism_t *p, int face, int corner);
 void
 t8_dprism_childrenpv (const t8_dprism_t *p, int length, t8_dprism_t *c[]);
 
-/** Compute the position of the ancestor of this child at level \a level within
- * its siblings.
+/** Compute the position of the ancestor of this child at level \a level within its siblings.
  * \param [in] p  prism to be considered.
  * \param [in] level level to be considered.
  * \return Returns its child id in 0..7
@@ -202,88 +197,75 @@ t8_dprism_childrenpv (const t8_dprism_t *p, int length, t8_dprism_t *c[]);
 int
 t8_dprism_ancestor_id (t8_dprism_t *p, int level);
 
-/** Given a prism and a face of the prism, compute all children of
- * the prism that touch the face.
- * \param [in] p      The prism.
- * \param [in] face     A face of \a p.
- * \param [in,out] children Allocated prism, in which the children of \a p
- *                      that share a face with \a face are stored.
- *                      They will be stored in order of their child_id.
- * \param [in] num_children The number of prisms in \a children. Must match
- *                      the number of children that touch \a face.
+/** Given a prism and a face of the prism, compute all children of the prism that touch the face.
+ * \param [in] p            The prism.
+ * \param [in] face         A face of \a p.
+ * \param [in,out] children Allocated prism, in which the children of \a p that share a face with \a face are stored.
+ *                          They will be stored in order of their child_id.
+ * \param [in] num_children The number of prisms in \a children. Must match the number of children that touch \a face.
  */
 void
 t8_dprism_children_at_face (const t8_dprism_t *p, int face, t8_dprism_t **children, int num_children,
                             int *child_indices);
 
-/** Given a face of a prism and a child number of a child of that face, return the face number
- * of the child of the prism that matches the child face.
- * \param [in]  elem    The prism.
- * \param [in]  face    The number of the face.
+/** Given a face of a prism and a child number of a child of that face, return the face number of the child of the 
+ * prism that matches the child face.
+ * \param [in]  elem        The prism.
+ * \param [in]  face        The number of the face.
  * \param [in]  face_child  The child number of a child of the face prism.
- * \return              The face number of the face of a child of \a p
- *                      that coincides with \a face_child.
+ * \return                  The face number of the face of a child of \a p that coincides with \a face_child.
  */
 int
 t8_dprism_face_child_face (const t8_dprism_t *elem, int face, int face_child);
 
-/** Given a face of a prism return the face number
- * of the parent of the prism that matches the prism's face. Or return -1 if
- * no face of the parent matches the face.
-
- * \param [in]  prism    The prism.
+/** Given a face of a prism return the face number of the parent of the prism that matches the prism's face. 
+ * Or return -1 if no face of the parent matches the face.
+ * \param [in]  prism   The prism.
  * \param [in]  face    Then number of the face.
- * \return              If \a face of \a prism is also a face of \a prism's parent,
- *                      the face number of this face. Otherwise -1.
+ * \return              If \a face of \a prism is also a face of \a prism's parent, the face number of this face. 
+ *                      Otherwise -1.
  */
 int
 t8_dprism_face_parent_face (const t8_dprism_t *prism, int face);
 
-/** Given a prism and a face of this prism. If the face lies on the
- *  tree boundary, return the face number of the tree face.
- *  If not the return value is arbitrary.
- * \param [in] p        The prism.
- * \param [in] face     The index of a face of \a elem.
- * \return The index of the tree face that \a face is a subface of, if
- *         \a face is on a tree boundary.
- *         Any arbitrary integer if \a is not at a tree boundary.
+/** Given a prism and a face of this prism. If the face lies on the tree boundary, return the face number of the tree 
+ * face. If not the return value is arbitrary.
+ * \param [in] p    The prism.
+ * \param [in] face The index of a face of \a elem.
+ * \return          The index of the tree face that \a face is a subface of, if \a face is on a tree boundary.
+ *                  Any arbitrary integer if \a is not at a tree boundary.
  */
 int
 t8_dprism_tree_face (const t8_dprism_t *p, int face);
 
-/** Given a prism and a face of the root prism. If the prism lies on the
- *  tree boundary, return the corresponding face number of the prism.
- *  If not the return value is arbitrary.
- * \param [in] p        The prism.
- * \param [in] face     The index of a face of the root element.
- * \return The index of the face of \a p that is a subface of \a face, if
- *         \a p is on the tree boundary.
- *         Any arbitrary integer if \a p is not at a tree boundary.
+/** Given a prism and a face of the root prism. If the prism lies on the tree boundary, return the corresponding face 
+ * number of the prism. If not the return value is arbitrary.
+ * \param [in] p    The prism.
+ * \param [in] face The index of a face of the root element.
+ * \return          The index of the face of \a p that is a subface of \a face, if \a p is on the tree boundary.
+ *                  Any arbitrary integer if \a p is not at a tree boundary.
  * \note For boundary prism, this function is the inverse of \ref t8_dprism_tree_face
  */
 int
 t8_dprism_root_face_to_face (const t8_dprism_t *p, int root_face);
 
-/** Given a boundary face inside a root tree's face construct
- *  the element inside the root tree that has the given face as a
- *  face.
- * \param [in] face     A face element.
- * \param [in,out] elem An allocated element. The entries will be filled with
- *                      the data of the element that has \a face as a face and
- *                      lies within the root tree.
- * \param [in] root_face The index of the face of the root tree in which \a face
- *                      lies.
+/** Given a boundary face inside a root tree's face construct the element inside the root tree that has the given face 
+ * as a face.
+ * \param [in] face       A face element.
+ * \param [in,out] elem   An allocated element. The entries will be filled with
+ *                        the data of the element that has \a face as a face and
+ *                        lies within the root tree.
+ * \param [in] root_face  The index of the face of the root tree in which \a face lies.
  */
 void
 t8_dprism_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_face);
 
-/** Compute the last descendant of a prism at a given level. This is the descendant of
- * the prism in a uniform level refinement that has the largest id.
- * \param [in] p        Prism whose descendant is computed.
- * \param [out] s       Existing prism whose data will be filled with the data
- *                      of \a p's last descendant on level \a level.
- * \param [in] level    The refinement level. Must be greater than \a p's refinement
- *                      level.
+/** Compute the last descendant of a prism at a given level. This is the descendant of the prism in a uniform level 
+ * refinement that has the largest id.
+ * \param [in] p      Prism whose descendant is computed.
+ * \param [out] s     Existing prism whose data will be filled with the data
+ *                    of \a p's last descendant on level \a level.
+ * \param [in] level  The refinement level. Must be greater than \a p's refinement level.
  */
 void
 t8_dprism_last_descendant (const t8_dprism_t *p, t8_dprism_t *s, int level);
@@ -302,45 +284,40 @@ t8_dprism_corner_descendant (const t8_dprism_t *p, t8_dprism_t *s, int corner, i
 /** Compute the coordinates of a vertex of a prism.
  * \param [in] elem         Input prism.
  * \param [in] vertex       The number of the vertex.
- * \param [out] coordinates An array of 3 t8_dprism_coord_t that
- * 		     will be filled with the coordinates of the vertex.
+ * \param [out] coordinates An array of 3 t8_dprism_coord_t that will be filled with the coordinates of the vertex.
  */
 void
 t8_dprism_vertex_coords (const t8_dprism_t *elem, int vertex, int coords[3]);
 
-/** Compute the reference coordinates of a vertex of a prism when the 
- * tree (level 0) is embedded in [0,1]^3.
+/** Compute the reference coordinates of a vertex of a prism when the tree (level 0) is embedded in [0,1]^3.
  * \param [in] elem         Input prism.
  * \param [in] vertex       The number of the vertex.
- * \param [out] coordinates An array of 3 double that
- * 		     will be filled with the reference coordinates of the vertex.
+ * \param [out] coordinates An array of 3 double that will be filled with the reference coordinates of the vertex.
  */
 void
 t8_dprism_vertex_ref_coords (const t8_dprism_t *elem, int vertex, double coords[3]);
 
-/** Convert a point in the reference space of a prism element to a point in the
- *  reference space of the tree (level 0) embedded in [0,1]^3.
- * \param [in]  elem       Input prism.
- * \param [in]  ref_coords The reference coordinates inside the
- *                         prism element [0,1]^3
- * \param [out] out_coords An array of 3 doubles that will be filled with the
- *                         reference coordinates in the tree of the prism.
+/** Convert a point in the reference space of a prism element to a point in the reference space of the tree (level 0) 
+ * embedded in [0,1]^3.
+ * \param [in]  elem        Input prism.
+ * \param [in]  ref_coords  The reference coordinates inside the prism element [0,1]^3
+ * \param [out] out_coords  An array of 3 doubles that will be filled with the reference coordinates in the tree of the 
+ *                          prism.
  */
 void
 t8_dprism_compute_reference_coords (const t8_dprism_t *elem, const double *ref_coords, double *out_coords);
 
 /** Computes the linear position of a prism in an uniform grid.
  * \param [in] p  Prism whose id will be computed.
- * \return Returns the linear position of this prism on a grid.
+ * \return        Returns the linear position of this prism on a grid.
  */
 t8_linearidx_t
 t8_dprism_linear_id (const t8_dprism_t *p, int level);
 
-/** Query whether all entries of a prism are in valid ranges.
- * A prism is valid if and only if its triangle and line member are valid.
+/** Query whether all entries of a prism are in valid ranges. A prism is valid if and only if its triangle and 
+ * line member are valid.
  * \param [in] p  prism to be considered.
- * \return        True, if \a p is a valid prism and it is safe to call any
- *                function in this file on \a p.
+ * \return        True, if \a p is a valid prism and it is safe to call any function in this file on \a p.
  *                False otherwise.
  */
 int
