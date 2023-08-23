@@ -224,10 +224,8 @@ t8_shmem_array_get_gloidx_array (t8_shmem_array_t array);
  * \param [in]          array   The t8_shmem_array
  * \return              The data of \a array as t8_gloidx_t pointer.
  */
-/* *INDENT-OFF* */
 t8_gloidx_t *
 t8_shmem_array_get_gloidx_array_for_writing (t8_shmem_array_t array);
-/* *INDENT-ON* */
 
 /** Return an entry of a shared memory array that stores t8_gloidx_t.
  * \param [in]          array   The t8_shmem_array
