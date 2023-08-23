@@ -241,16 +241,14 @@ main (int argc, char **argv)
   sc_options_add_int (opt, 'x', "x-dim", &x_dim, 0, "Number of brick mesh cells in x direction.");
   sc_options_add_int (opt, 'y', "y-dim", &y_dim, 0, "Number of brick mesh cells in y direction.");
   sc_options_add_int (opt, 'z', "z-dim", &z_dim, 0,
-                      "Number of brick mesh cells in z direction."
-                      " If specified, then the mesh is automatically 3d.");
+                      "Number of brick mesh cells in z direction. If specified, then the mesh is automatically 3d.");
   sc_options_add_int (opt, 'p', "periodic", &periodic, 0,
-                      "Periodicity of brick mesh. A three (two) digit decimal"
-                      " number zyx. If digit i is nonzero then the representative"
+                      "Periodicity of brick mesh. A three (two) digit decimal number zyx. " #"If digit i is nonzero "
+                      "then the representative"
                       " coordinate direction of the brick mesh is periodic.");
   sc_options_add_int (opt, 'e', "elements", &eclass_int, 2,
-                      "If neither -f nor -x,-y,-z are used a cubical mesh is"
-                      " generated. This option specifies"
-                      " the type of elements to use.\n"
+                      "If neither -f nor -x,-y,-z are used a cubical mesh is generated. "
+                      "This option specifies the type of elements to use.\n"
                       "\t\t0 - vertex\n\t\t1 - line\n\t\t2 - quad\n"
                       "\t\t3 - triangle\n\t\t4 - hexahedron\n"
                       "\t\t5 - tetrahedron\n\t\t6 - prism\n\t\t7 - pyramid");
@@ -270,9 +268,7 @@ main (int argc, char **argv)
   }
   else {
     if (x_dim == 0 && !strcmp (prefix, "")) {
-      t8_global_productionf ("Testing ghost on a hypercube cmesh with %s "
-                             "elements\n",
-                             t8_eclass_to_string[eclass_int]);
+      t8_global_productionf ("Testing ghost on a hypercube cmesh with %s elements\n", t8_eclass_to_string[eclass_int]);
       t8_test_fiterate_hypercube ((t8_eclass_t) eclass_int, level, sc_MPI_COMM_WORLD, no_vtk);
     }
     else if (x_dim > 0) {
@@ -285,9 +281,7 @@ main (int argc, char **argv)
       x_per = periodic % 10;
       y_per = periodic / 10 % 10;
       z_per = periodic / 100 % 10;
-      t8_global_productionf ("Testing ghost on a %i x %i x %i brick "
-                             "mesh in %iD\n",
-                             x_dim, y_dim, z_dim, dim);
+      t8_global_productionf ("Testing ghost on a %i x %i x %i brick mesh in %iD\n", x_dim, y_dim, z_dim, dim);
       t8_test_fiterate_brick (dim, x_dim, y_dim, z_dim, x_per, y_per, z_per, level, sc_MPI_COMM_WORLD, no_vtk);
     }
     else {
