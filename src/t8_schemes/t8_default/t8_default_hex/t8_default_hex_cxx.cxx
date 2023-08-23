@@ -39,7 +39,6 @@ t8_default_scheme_hex_c::t8_element_maxlevel (void) const
   return HEX_REFINE_MAXLEVEL;
 }
 
-/* *INDENT-OFF* */
 t8_eclass_t
 t8_default_scheme_hex_c::t8_element_child_eclass (int childid) const
 {
@@ -47,7 +46,6 @@ t8_default_scheme_hex_c::t8_element_child_eclass (int childid) const
 
   return T8_ECLASS_HEX;
 }
-/* *INDENT-ON* */
 
 int
 t8_default_scheme_hex_c::t8_element_level (const t8_element_t *elem) const
@@ -360,7 +358,7 @@ t8_default_scheme_hex_c::t8_element_extrude_face (const t8_element_t *face, cons
   return root_face;
 }
 
-/** Construct the first descendant of an element that touches a given face.   */
+/** Construct the first descendant of an element that touches a given face. */
 void
 t8_default_scheme_hex_c::t8_element_first_descendant_face (const t8_element_t *elem, int face, t8_element_t *first_desc,
                                                            int level) const
@@ -438,7 +436,6 @@ void
 t8_default_scheme_hex_c::t8_element_boundary (const t8_element_t *elem, int min_dim, int length,
                                               t8_element_t **boundary) const
 {
-
   SC_ABORT ("Not implemented\n");
 }
 
@@ -636,11 +633,8 @@ t8_default_scheme_hex_c::t8_element_init (int length, t8_element_t *elem, int ne
 }
 
 #ifdef T8_ENABLE_DEBUG
-/* *INDENT-OFF* */
-/* indent bug, indent adds a second "const" modifier */
 int
 t8_default_scheme_hex_c::t8_element_is_valid (const t8_element_t *elem) const
-/* *INDENT-ON* */
 {
   /* TODO: additional checks? do we set pad8 or similar?
    */
