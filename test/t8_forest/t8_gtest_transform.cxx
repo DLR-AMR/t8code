@@ -38,7 +38,6 @@
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
 
-/* *INDENT-OFF* */
 class forest_transform: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
  protected:
   void
@@ -70,7 +69,6 @@ class forest_transform: public testing::TestWithParam<std::tuple<t8_eclass, int>
   t8_forest_t forest;
   int level;
 };
-/* *INDENT-ON* */
 
 static void
 t8_test_transform_element (t8_eclass_scheme_c *ts, const t8_element_t *elem, t8_eclass_t eclass)
@@ -178,8 +176,6 @@ TEST_P (forest_transform, test_forest_transform_elements)
   }
 }
 
-/* *INDENT-OFF* */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_forest_transform, forest_transform,
                           testing::Combine (testing::Range (T8_ECLASS_QUAD, T8_ECLASS_TRIANGLE),
                                             testing::Range (0, 6)));
-/* *INDENT-ON* */

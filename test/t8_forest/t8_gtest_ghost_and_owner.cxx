@@ -35,7 +35,6 @@
  * element is in face the owner that is stored in the ghost layer.
   */
 
-/* *INDENT-OFF* */
 class forest_ghost_owner: public testing::TestWithParam<int> {
  protected:
   void
@@ -57,7 +56,6 @@ class forest_ghost_owner: public testing::TestWithParam<int> {
   t8_cmesh_t cmesh;
   t8_scheme_cxx_t *scheme;
 };
-/* *INDENT-ON* */
 
 static int
 t8_test_gao_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
@@ -143,7 +141,5 @@ TEST_P (forest_ghost_owner, test_ghost_owner)
   }
 }
 
-/* *INDENT-OFF* */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_and_owner, forest_ghost_owner,
                           testing::Range (0, t8_get_number_of_all_testcases ()));
-/* *INDENT-ON* */

@@ -28,7 +28,6 @@
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
-/* *INDENT-OFF* */
 class forest_search: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
  protected:
   void
@@ -53,7 +52,6 @@ class forest_search: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
   t8_forest_t forest;
   t8_scheme_cxx_t *default_scheme;
 };
-/* *INDENT-ON* */
 
 /* A search function that matches all elements.
  * This function assumes that the forest user pointer is an sc_array
@@ -153,7 +151,5 @@ TEST_P (forest_search, test_search_one_query_matches_all)
   sc_array_reset (&queries);
 }
 
-/* *INDENT-OFF* */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_search, forest_search,
                           testing::Combine (testing::Range (T8_ECLASS_VERTEX, T8_ECLASS_COUNT), testing::Range (0, 6)));
-/* *INDENT-ON* */

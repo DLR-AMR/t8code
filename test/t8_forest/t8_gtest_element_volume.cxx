@@ -36,7 +36,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /* Construct a forest of a hypercube with volume 1. If the element are refined uniformly
  * all elements have volume 1/global_num_elements. */
-/* *INDENT-OFF* */
+
 class t8_forest_volume: public testing::TestWithParam<std::tuple<t8_eclass_t, int>> {
  protected:
   void
@@ -59,7 +59,6 @@ class t8_forest_volume: public testing::TestWithParam<std::tuple<t8_eclass_t, in
   int level;
 };
 
-/* *INDENT-ON* */
 /**
  * Compute the volume of a pyramid descending of a root-pyramid with volume 1/3
  * Pyramids need a special handling of the control-volume computation, because
