@@ -40,14 +40,12 @@ t8_default_scheme_vertex_c::t8_element_level (const t8_element_t *elem) const
   return t8_dvertex_get_level ((const t8_dvertex_t *) elem);
 }
 
-/* *INDENT-OFF* */
 t8_eclass_t
 t8_default_scheme_vertex_c::t8_element_child_eclass (int childid) const
 {
   T8_ASSERT (childid == 0);
   return T8_ECLASS_VERTEX;
 }
-/* *INDENT-ON* */
 
 void
 t8_default_scheme_vertex_c::t8_element_copy (const t8_element_t *source, t8_element_t *dest) const
@@ -284,11 +282,8 @@ t8_default_scheme_vertex_c::t8_element_reference_coords (const t8_element_t *ele
 }
 
 #ifdef T8_ENABLE_DEBUG
-/* *INDENT-OFF* */
-/* indent bug, indent adds a second "const" modifier */
 int
 t8_default_scheme_vertex_c::t8_element_is_valid (const t8_element_t *elem) const
-/* *INDENT-ON* */
 
 {
   return t8_dvertex_is_valid ((const t8_dvertex_t *) elem);
