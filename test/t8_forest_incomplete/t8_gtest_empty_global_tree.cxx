@@ -36,7 +36,6 @@
  * The two resulting forests must be equal.
  * */
 
-/* *INDENT-OFF* */
 class global_tree: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
  protected:
   void
@@ -58,7 +57,6 @@ class global_tree: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
   t8_eclass_t eclass;
   t8_forest_t forest;
 };
-/* *INDENT-ON* */
 
 /** Removes all elements of local trees if they belong to the corresponding
  *  global trees which are defined by the current testcase of test. */
@@ -169,7 +167,5 @@ TEST_P (global_tree, test_empty_global_tree)
   t8_forest_unref (&forest_adapt_b);
 }
 
-/* *INDENT-OFF* */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_empty_global_tree, global_tree,
                           testing::Combine (testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT), testing::Range (0, 6)));
-/* *INDENT-ON* */
