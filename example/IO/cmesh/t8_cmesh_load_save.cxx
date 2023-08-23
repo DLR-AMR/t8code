@@ -98,11 +98,10 @@ main (int argc, char **argv)
             "for a brief overview of all options.",
             basename (argv[0]), basename (argv[0]));
   sreturn = snprintf (help, BUFSIZ,
-                      "This program has two modes. With argument -f <file> -d <dim> it creates a cmesh, "
-                      "from the file <file>.msh, saves it to a collection of files and loads it again.\n"
-                      "If the -l <string> and -n <num> arguments are given, the cmesh stored "
-                      "in the num files string_0000.cmesh,... ,string_num-1.cmesh are read on n processes "
-                      "and distributed among all processes.\n\n%s\n",
+                      "This program has two modes. With argument -f <file> -d <dim> it creates a cmesh, from the "
+                      "file <file>.msh, saves it to a collection of files and loads it again.\n If the -l <string> and"
+                      " -n <num> arguments are given, the cmesh stored in the num files string_0000.cmesh,... ,"
+                      "string_num-1.cmesh are read on n processes and distributed among all processes.\n\n%s\n",
                       usage);
 
   if (sreturn >= BUFSIZ) {
@@ -120,9 +119,7 @@ main (int argc, char **argv)
 
   opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'h', "help", &helpme, "Display a short help message.");
-  sc_options_add_string (opt, 'l', "load", &loadfile, "",
-                         "The prefix of the"
-                         " .cmesh file to load.");
+  sc_options_add_string (opt, 'l', "load", &loadfile, "", "The prefix of the .cmesh file to load.");
   sc_options_add_int (opt, 'n', "num-files", &n, -1, "The total number of .cmesh files.");
   sc_options_add_switch (opt, 'o', "no-vtk", &no_vtk, "Do not write vtk output.");
   sc_options_add_string (opt, 'f', "msh-file", &meshfile, "", "The prefix of the .msh file.");
