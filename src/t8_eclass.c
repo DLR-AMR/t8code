@@ -22,7 +22,6 @@
 
 #include <t8_eclass.h>
 
-/* *INDENT-OFF* */
 const int t8_eclass_to_dimension[T8_ECLASS_COUNT] = { 0, 1, 2, 2, 3, 3, 3, 3 };
 
 const int t8_eclass_num_faces[T8_ECLASS_COUNT] = { 0, 2, 4, 3, 6, 4, 5, 5 };
@@ -176,7 +175,6 @@ const int t8_eclass_boundary_count[T8_ECLASS_COUNT][T8_ECLASS_COUNT] = {
 
 const char *t8_eclass_to_string[T8_ECLASS_COUNT]
   = { "Vertex", "Line", "Quad", "Triangle", "Hex", "Tet", "Prism", "Pyramid" };
-/* *INDENT-ON* */
 
 int
 t8_eclass_count_boundary (t8_eclass_t theclass, int min_dim, int *per_eclass)
