@@ -327,20 +327,17 @@ main (int argc, char **argv)
                          "Prefix of a"
                          " .msh file.");
   /* dimension of .msh file (if -f is given) -d */
-  sc_options_add_int (opt, 'd', "dim", &dim, 2,
-                      "If a .msh file "
-                      "is read, the dimension must be specified.");
+  sc_options_add_int (opt, 'd', "dim", &dim, 2, "If a .msh file is read, the dimension must be specified.");
   /* if given, create brick cmesh with x,y(,z) many quads/cubes. -x, -y, -z */
   sc_options_add_int (opt, 'x', "x-dim", &x_dim, 0, "Number of brick mesh cells in x direction.");
   sc_options_add_int (opt, 'y', "y-dim", &y_dim, 0, "Number of brick mesh cells in y direction.");
   sc_options_add_int (opt, 'z', "z-dim", &z_dim, 0,
-                      "Number of brick mesh cells in z direction."
-                      " If specified, then the mesh is automatically 3d.");
+                      "Number of brick mesh cells in z direction. If specified, then the mesh is automatically 3d.");
   /* If brick mesh is generated, define periodicity. -p */
   sc_options_add_int (opt, 'p', "periodic", &periodic, 0,
-                      "Periodicity of brick mesh. A three (two) digit decimal"
-                      " number zyx. If digit i is nonzero then the representative"
-                      " coordinate direction of the brick mesh is periodic.");
+                      "Periodicity of brick mesh. A three (two) digit decimal number zyx. "
+                      "If digit i is nonzero then the representative coordinate direction of the brick mesh is "
+                      "periodic.");
   /* Use a cmesh that tests all tet-to-tet face-connections */
   sc_options_add_switch (opt, 't', "test-tet", &test_tet, "Use a cmesh that tests all tet face-to-face connections.");
   /* Provide a refinement level for every third element, -r */
@@ -361,9 +358,7 @@ main (int argc, char **argv)
                       "\t\t3 - Top-down search, for unbalanced forests (default).");
   /* Use a hypercube mesh -e */
   sc_options_add_int (opt, 'e', "elements", &eclass_int, 2,
-                      "If neither -f nor -x,-y,-z, or -t are used, a cubical mesh is"
-                      " generated. This option specifies"
-                      " the type of elements to use.\n"
+                      "If neither -f nor -x,-y,-z, or -t are used, a cubical mesh is the type of elements to use.\n"
                       "\t\t0 - vertex\n\t\t1 - line\n\t\t2 - quad\n"
                       "\t\t3 - triangle\n\t\t4 - hexahedron\n"
                       "\t\t5 - tetrahedron\n\t\t6 - prism\n\t\t7 - pyramid\n"
@@ -394,8 +389,7 @@ main (int argc, char **argv)
     /* Setup coarse mesh and start computation */
     if (x_dim == 0 && !strcmp (prefix, "") && test_tet == 0) {
       /* If neither of -x, -f, -t are given, we use a hypercube mesh */
-      t8_global_productionf ("Testing ghost on a hypercube cmesh with %s "
-                             "elements\n",
+      t8_global_productionf ("Testing ghost on a hypercube cmesh with %s elements\n",
                              eclass_int < T8_ECLASS_COUNT ? t8_eclass_to_string[eclass_int] : "hybrid");
       t8_test_ghost_hypercube ((t8_eclass_t) eclass_int, level, sc_MPI_COMM_WORLD, ghost_version, max_level, no_vtk,
                                refine_method);
@@ -414,9 +408,7 @@ main (int argc, char **argv)
       x_per = periodic % 10;
       y_per = periodic / 10 % 10;
       z_per = periodic / 100 % 10;
-      t8_global_productionf ("Testing ghost on a %i x %i x %i brick "
-                             "mesh in %iD\n",
-                             x_dim, y_dim, z_dim, dim);
+      t8_global_productionf ("Testing ghost on a %i x %i x %i brick mesh in %iD\n", x_dim, y_dim, z_dim, dim);
       t8_test_ghost_brick (dim, x_dim, y_dim, z_dim, x_per, y_per, z_per, level, sc_MPI_COMM_WORLD, ghost_version,
                            max_level, no_vtk, refine_method);
     }
