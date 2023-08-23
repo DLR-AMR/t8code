@@ -335,9 +335,8 @@ main (int argc, char **argv)
                       "Number of brick mesh cells in z direction. If specified, then the mesh is automatically 3d.");
   /* If brick mesh is generated, define periodicity. -p */
   sc_options_add_int (opt, 'p', "periodic", &periodic, 0,
-                      "Periodicity of brick mesh. A three (two) digit decimal number zyx. "
-                      "If digit i is nonzero then the representative coordinate direction of the brick mesh is "
-                      "periodic.");
+                      "Periodicity of brick mesh. A three (two) digit decimal number zyx. If digit i is nonzero then "
+                      "the representative coordinate direction of the brick mesh is periodic.");
   /* Use a cmesh that tests all tet-to-tet face-connections */
   sc_options_add_switch (opt, 't', "test-tet", &test_tet, "Use a cmesh that tests all tet face-to-face connections.");
   /* Provide a refinement level for every third element, -r */
