@@ -26,7 +26,6 @@
 /* This Test test the shared memory for mpi. It includes tests for initialization and finalizing, the type, the communicator,
  * the element size and count of the shared memory  */
 
-/* *INDENT-OFF* */
 #define T8_TEST_SHMEM_NUM_COMMS 2
 
 class shmem: public testing::TestWithParam<std::tuple<int, sc_MPI_Comm, int>> {
@@ -364,4 +363,3 @@ INSTANTIATE_TEST_SUITE_P (t8_gtest_shmem, shmem,
                           testing::Combine (testing::Range (0, T8_TEST_SHMEM_NUM_COMMS),
                                             testing::Values (sc_MPI_COMM_WORLD, sc_MPI_COMM_SELF),
                                             testing::Range ((int) SC_SHMEM_BASIC, (int) SC_SHMEM_NUM_TYPES)));
-/* *INDENT-ON* */
