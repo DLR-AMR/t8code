@@ -43,10 +43,8 @@ t8_default_scheme_quad_c::t8_element_maxlevel (void) const
   return P4EST_QMAXLEVEL;
 }
 
-/* *INDENT-OFF* */
 t8_eclass_t
 t8_default_scheme_quad_c::t8_element_child_eclass (int childid) const
-/* *INDENT-ON* */
 
 {
   T8_ASSERT (0 <= childid && childid < P4EST_CHILDREN);
@@ -568,7 +566,7 @@ t8_default_scheme_quad_c::t8_element_first_descendant_face (const t8_element_t *
   p4est_quadrant_corner_descendant (q, desc, first_face_corner, level);
 }
 
-/** Construct the last descendant of an element that touches a given face.   */
+/** Construct the last descendant of an element that touches a given face. */
 void
 t8_default_scheme_quad_c::t8_element_last_descendant_face (const t8_element_t *elem, int face, t8_element_t *last_desc,
                                                            int level) const
@@ -766,11 +764,8 @@ t8_default_scheme_quad_c::t8_element_refines_irregular () const
 }
 
 #ifdef T8_ENABLE_DEBUG
-/* *INDENT-OFF* */
-/* indent bug, indent adds a second "const" modifier */
 int
 t8_default_scheme_quad_c::t8_element_is_valid (const t8_element_t *elem) const
-/* *INDENT-ON* */
 {
   /* TODO: additional checks? do we set pad8 or similar?
    */
