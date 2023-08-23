@@ -161,7 +161,7 @@ t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm);
  *                              how much information is required on face connections,
  *                              specified by \ref t8_cmesh_set_join.
  *                              0: Expect face connection of local trees.
-                                1: In addition, expect face connection from
+ *                              1: In addition, expect face connection from
  *                                 ghost trees to local trees.
  *                              2: In addition, expect face connection between
  *                                 ghost trees.
@@ -193,8 +193,8 @@ t8_cmesh_set_partition_range (t8_cmesh_t cmesh, int set_face_knowledge, t8_gloid
  * If instead \ref t8_cmesh_set_partition_range was called and the cmesh is
  * derived then the offset array is constructed during commit.
  * \param [in,out] cmesh        The cmesh to be updated.
- * \param [in] tree_offsets    An array of global tree_id offsets
- *                             for each process can be specified here.
+ * \param [in] tree_offsets     An array of global tree_id offsets
+ *                              for each process can be specified here.
  *                             TODO: document flag for shared trees.
  */
 void
@@ -204,11 +204,11 @@ t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh, t8_shmem_array_t tree_offsets)
  * table is derived from an assumed uniform refinement of a given level.
  * This call is only valid when the cmesh is not yet committed via a call
  * to \ref t8_cmesh_commit.
- * \param [in,out] cmesh        The cmesh to be updated.
- * \param [in]     element_level The refinement_level.
- * \param [in]     ts           The element scheme describing the refinement pattern.
- *                              We take ownership. This can be prevented by
- *                              referencing \b ts before calling this function.
+ * \param [in,out] cmesh          The cmesh to be updated.
+ * \param [in]     element_level  The refinement_level.
+ * \param [in]     ts             The element scheme describing the refinement pattern.
+ *                                We take ownership. This can be prevented by
+ *                                referencing \b ts before calling this function.
  */
 void
 t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, int element_level, t8_scheme_cxx_t *ts);
@@ -251,7 +251,7 @@ t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, t8_eclass_t tre
  *  by an integer key, where each application can use any integer as key.
  *
  * \param [in, out] cmesh       The cmesh to be updated.
- * \param [in]      gtree_id     The global id of the tree.
+ * \param [in]      gtree_id    The global id of the tree.
  * \param [in]      package_id  Unique identifier of a valid software package. \see sc_package_register
  * \param [in]      key         An integer key used to identify this attribute under all
  *                              attributes with the same package_id.
@@ -273,7 +273,7 @@ t8_cmesh_set_attribute (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int package_id, 
 
 /** Store a string as an attribute at a tree in a cmesh.
  * \param [in, out] cmesh       The cmesh to be updated.
- * \param [in]      gtree_id     The global id of the tree.
+ * \param [in]      gtree_id    The global id of the tree.
  * \param [in]      package_id  Unique identifier of a valid software package. \see sc_package_register
  * \param [in]      key         An integer key used to identify this attribute under all
  *                              attributes with the same package_id.
@@ -301,9 +301,9 @@ t8_cmesh_set_join (t8_cmesh_t cmesh, t8_gloidx_t gtree1, t8_gloidx_t gtree2, int
 
 /** Enable or disable profiling for a cmesh. If profiling is enabled, runtimes
  * and statistics are collected during cmesh_commit.
- * \param [in,out] cmesh        The cmesh to be updated.
- * \param [in]     set_profiling If true, profiling will be enabled, if false
- *                              disabled.
+ * \param [in,out] cmesh          The cmesh to be updated.
+ * \param [in]     set_profiling  If true, profiling will be enabled, if false
+ *                                disabled.
  *
  * Profiling is disabled by default.
  * The cmesh must not be committed before calling this function.
@@ -548,7 +548,7 @@ t8_cmesh_get_tree_class (t8_cmesh_t cmesh, t8_locidx_t ltree_id);
 
 /** Query whether a face of a local tree or ghost is at the domain boundary.
  * \param [in]    cmesh         The cmesh to be considered.
- * \param [in]    ltree_id       The local id of a tree.
+ * \param [in]    ltree_id      The local id of a tree.
  * \param [in]    face          The number of a face of the tree.
  * \return                      True if the face is at the domain boundary.
  *                              False otherwise.
