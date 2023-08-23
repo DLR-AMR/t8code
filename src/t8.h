@@ -149,7 +149,6 @@ t8_get_package_id (void);
 void
 t8_logv (int category, int priority, const char *fmt, va_list ap);
 
-/* *INDENT-OFF* */
 /** Logging function parametrized by local/global category and priority.
  * \param [in] category     Either SC_LC_NORMAL for outputting on every rank
  *                          or SC_LC_GLOBAL for outputting on the root rank.
@@ -252,8 +251,6 @@ t8_errorf (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)))
 #endif
   ;
-
-/* *INDENT-ON* */
 
 /** Register t8code with libsc and print version and variable information.
  * \param [in] log_threshold Declared in sc.h.  SC_LP_DEFAULT is fine.
