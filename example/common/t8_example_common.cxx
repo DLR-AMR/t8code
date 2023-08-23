@@ -70,8 +70,7 @@ t8_common_within_levelset (t8_forest_t forest, t8_locidx_t ltreeid, t8_element_t
 
   T8_ASSERT (band_width >= 0);
   if (band_width == 0) {
-    /* If bandwidth = 0, we only refine the elements that are intersected by the
-     * zero level-set */
+    /* If bandwidth = 0, we only refine the elements that are intersected by the zero level-set */
     int num_corners = ts->t8_element_num_corners (element);
     int sign = 1, icorner;
     double coords[3];
