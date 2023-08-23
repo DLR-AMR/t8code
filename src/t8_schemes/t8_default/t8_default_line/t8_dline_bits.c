@@ -47,8 +47,7 @@ t8_dline_compare (const t8_dline_t *l1, const t8_dline_t *l2)
      * is considered smaller */
     return l1->level - l2->level;
   }
-  /* return negative if id1 < id2, zero if id1 = id2, positive if id1 >
-     id2 */
+  /* return negative if id1 < id2, zero if id1 = id2, positive if id1 > id2 */
   return id1 < id2 ? -1 : id1 != id2;
 }
 
