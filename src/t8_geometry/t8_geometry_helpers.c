@@ -64,9 +64,7 @@ t8_geom_triangular_interpolation (const double *coefficients, const double *corn
 
   for (int i = 0; i < corner_value_dim; i++) {
     temp[i]
-      = (corner_values[corner_value_dim + i] - /* (p2 - p1) * ref_coords */
-         corner_values[i])
-          * coefficients[0]
+      = (corner_values[corner_value_dim + i] - corner_values[i]) * coefficients[0] /* (p2 - p1) * ref_coords */
         + (interpolation_dim == 3
              ? (corner_values[3 * corner_value_dim + i] - corner_values[2 * corner_value_dim + i]) * coefficients[1]
              : 0.) /* (p4 - p3) * ref_coords */
@@ -170,8 +168,7 @@ t8_geom_compute_linear_axis_aligned_geometry (t8_eclass_t tree_class, const doub
                                               const double *ref_coords, double out_coords[3])
 {
   if (tree_class != T8_ECLASS_LINE && tree_class != T8_ECLASS_QUAD && tree_class != T8_ECLASS_HEX) {
-    SC_ABORT ("Linear geometry coordinate computation is only supported for "
-              "lines/quads/hexes.");
+    SC_ABORT ("Linear geometry coordinate computation is only supported for lines/quads/hexes.");
   }
 #if T8_ENABLE_DEBUG
   /* Check if vertices are axis-aligned */

@@ -210,11 +210,9 @@ t8_geom_handler_commit (t8_geometry_handler_t *geom_handler)
    */
   if (t8_geom_handler_get_num_geometries (geom_handler) == 1) {
     /* Set the active geometry to the only geometry. */
-    /* *INDENT-OFF* */
     geom_handler->active_geometry = *(t8_geometry_c **) sc_array_index (&geom_handler->registered_geometries, 0);
     t8_debugf ("Committing geom handler. Set '%s' as active geometry.\n",
                geom_handler->active_geometry->t8_geom_get_name ());
-    /* *INDENT-ON* */
   }
   else {
     /* Sort the geometry array. */
@@ -337,7 +335,5 @@ t8_geometry_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_c
   t8_geom_handler_update_tree (geom_handler, cmesh, gtreeid);
 
   /* Evaluate the jacobian. */
-  /* *INDENT-OFF* */
   geom_handler->active_geometry->t8_geom_evaluate_jacobian (cmesh, geom_handler->active_tree, ref_coords, jacobian);
-  /* *INDENT-ON* */
 }
