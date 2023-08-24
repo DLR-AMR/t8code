@@ -52,10 +52,10 @@ jobs:
     timeout-minutes: 10
     steps:
     - uses: actions/checkout@v3
+    - name: Install indent
+      run: sudo apt-get update && sudo apt-get install clang-format-15
     - name: Indentation check
-      uses: jidicula/clang-format-action@v4.11.0
-      with: 
-        clang-format-version: '16'
+      run: cd scripts/ && ./check_if_all_files_indented.scp > indent_script.out
     - name: Archive script output
     # Do this regardess of the result of the previous step.
     # We especially want to upload the result when the check fails.

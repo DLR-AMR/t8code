@@ -35,7 +35,7 @@ if [ -z "$FORMAT" ]
 then
   # Exit if the spell checking script was not found
   echo "ERROR: clang-format not found."
-  echo "Please install clang-format version 16.0.xyz"
+  echo "Please install clang-format version 15.0.xyz"
   echo "See https://github.com/ssciwr/clang-format-wheel"
   exit 1
 fi
@@ -46,12 +46,12 @@ VERSION=`echo $CLANG_VERSION_STRING | cut -d " " -f 3`
 MAJOR=`echo $VERSION | cut -d. -f1`
 MINOR=`echo $VERSION | cut -d. -f2`
 
-if [[ "$MAJOR" != "16" ]]; then
-  echo "Please install clang-format version 16.0.xyz"
+if [[ "$MAJOR" != "15" ]]; then
+  echo "Please install clang-format version 15.0.xyz"
   exit 1
 fi
 if [[ $MINOR != "0" ]]; then
-  echo "Please install clang-format version 16.0.xyz"
+  echo "Please install clang-format version 15.0.xyz"
   exit 1
 fi
 
