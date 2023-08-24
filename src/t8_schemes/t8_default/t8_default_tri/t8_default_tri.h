@@ -31,8 +31,8 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/** Provide an implementation for the triangle element class.
- * It is written as a self-contained library in the t8_dtri_* files.
+/** Provide an implementation for the triangle element class. It is written as a self-contained library in the 
+ * t8_dtri_* files.
  */
 t8_eclass_scheme_t *
 t8_default_scheme_new_tri (void);

@@ -56,11 +56,9 @@ compute_cubeid (const t8_dtri_t *t, int level)
   return id;
 }
 
-/* A routine to compute the type of t's ancestor of level "level",
- * if its type at an intermediate level is already known.
- * If "level" equals t's level then t's type is returned.
- * It is not allowed to call this function with "level" greater than t->level.
- * This method runs in O(t->level - level).
+/* A routine to compute the type of t's ancestor of level "level", if its type at an intermediate level is already 
+ * known. If "level" equals t's level then t's type is returned. It is not allowed to call this function with "level" 
+ * greater than t->level. This method runs in O(t->level - level).
  */
 static t8_dtri_type_t
 compute_type_ext (const t8_dtri_t *t, int level, t8_dtri_type_t known_type, int known_level)
@@ -87,10 +85,9 @@ compute_type_ext (const t8_dtri_t *t, int level, t8_dtri_type_t known_type, int 
   return type;
 }
 
-/* A routine to compute the type of t's ancestor of level "level".
- * If "level" equals t's level then t's type is returned.
- * It is not allowed to call this function with "level" greater than t->level.
- * This method runs in O(t->level - level).
+/* A routine to compute the type of t's ancestor of level "level". If "level" equals t's level then t's type is 
+ * returned. It is not allowed to call this function with "level" greater than t->level. This method runs in 
+ * O(t->level - level).
  */
 static t8_dtri_type_t
 compute_type (const t8_dtri_t *t, int level)
@@ -120,8 +117,7 @@ t8_dtri_compare (const t8_dtri_t *t1, const t8_dtri_t *t2)
   id1 = t8_dtri_linear_id (t1, maxlvl);
   id2 = t8_dtri_linear_id (t2, maxlvl);
   if (id1 == id2) {
-    /* The linear ids are the same, the triangle with the smaller level
-     * is considered smaller */
+    /* The linear ids are the same, the triangle with the smaller level is considered smaller */
     T8_ASSERT (t1->level != t2->level || t8_dtri_is_equal (t1, t2));
     return t1->level - t2->level;
   }
@@ -289,9 +285,8 @@ t8_dtri_ancestor (const t8_dtri_t *t, int level, t8_dtri_t *ancestor)
 void
 t8_dtri_compute_coords (const t8_dtri_t *elem, const int vertex, t8_dtri_coord_t coordinates[T8_DTRI_DIM])
 {
-  /* Calculate the vertex coordinates of a triangle/tetrahedron in
-   * relation to its orientation. Orientations are described here:
-   * https://doi.org/10.1137/15M1040049
+  /* Calculate the vertex coordinates of a triangle/tetrahedron in relation to its orientation. Orientations are 
+   * described here: https://doi.org/10.1137/15M1040049
    * 1---------------------2
    * |   orientation     /  2
    * |       1         /  / |
@@ -1291,7 +1286,6 @@ t8_dtri_is_ancestor (const t8_dtri_t *t, const t8_dtri_t *c)
      * n2         y  z  z  x  x  y
      * dir3       z  y  x  z  y  x
      */
-    /* *INDENT-OFF* */
     n1 = type_t / 2 == 0 ? c->x - t->x : /* type(t) is 0 or 1 */
            type_t / 2 == 2 ? c->z - t->z
                            : c->y - t->y;      /* type(t) is (4 or 5) or (2 or 3) */
@@ -1302,7 +1296,6 @@ t8_dtri_is_ancestor (const t8_dtri_t *t, const t8_dtri_t *c)
              type_t % 3 == 0 ? c->z - t->z
                              : c->y - t->y; /* type(t) is (0 or 3) or (1 or 4) */
     sign = (type_t % 2 == 0) ? 1 : -1;
-    /* *INDENT-ON* */
 
     type_t += 6; /* We need to compute modulo six and want
                                    to avoid negative numbers when subtracting from type_t. */
