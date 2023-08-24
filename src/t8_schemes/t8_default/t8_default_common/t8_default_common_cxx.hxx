@@ -106,7 +106,8 @@ class t8_default_scheme_common_c: public t8_eclass_scheme_c {
    *                      whose entries will be filled with the coordinates of \a vertex.
    */
   virtual void
-  t8_element_vertex_coords (const t8_element_t *elem, int vertex, int coords[]) const = 0;
+  t8_element_vertex_coords (const t8_element_t *elem, int vertex, int coords[]) const
+    = 0;
 
   /** Convert a point in the reference space of an element to a point in the
    *  reference space of the tree.
@@ -118,7 +119,8 @@ class t8_default_scheme_common_c: public t8_eclass_scheme_c {
    */
   virtual void
   t8_element_reference_coords (const t8_element_t *elem, const double *ref_coords, const void *user_data,
-                               double *out_coords) const = 0;
+                               double *out_coords) const
+    = 0;
 
   /** Get the integer coordinates of the anchor node of an element.
    * The default scheme implements the Morton type SFCs. In these SFCs the
@@ -131,7 +133,8 @@ class t8_default_scheme_common_c: public t8_eclass_scheme_c {
    * \param [out] anchor The integer coordinates of the anchor node in the cube [0,1]^(dL)
    */
   virtual void
-  t8_element_anchor (const t8_element_t *elem, int anchor[3]) const = 0;
+  t8_element_anchor (const t8_element_t *elem, int anchor[3]) const
+    = 0;
 };
 
 #endif /* !T8_DEFAULT_COMMON_CXX_HXX */
