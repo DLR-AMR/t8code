@@ -243,7 +243,7 @@ main (int argc, char **argv)
   sc_options_add_int (opt, 'z', "z-dim", &z_dim, 0,
                       "Number of brick mesh cells in z direction. If specified, then the mesh is automatically 3d.");
   sc_options_add_int (opt, 'p', "periodic", &periodic, 0,
-                      "Periodicity of brick mesh. A three (two) digit decimal number zyx. " #"If digit i is nonzero "
+                      "Periodicity of brick mesh. A three (two) digit decimal number zyx. If digit i is nonzero "
                       "then the representative"
                       " coordinate direction of the brick mesh is periodic.");
   sc_options_add_int (opt, 'e', "elements", &eclass_int, 2,
