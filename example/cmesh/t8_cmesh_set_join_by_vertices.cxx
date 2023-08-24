@@ -159,9 +159,7 @@ main (int argc, char **argv)
 {
   char usage[BUFSIZ];
   /* brief help message */
-  int sreturnA = snprintf (usage, BUFSIZ,
-                           "Usage:\t%s <OPTIONS>\n\t%s -h\t"
-                           "for a brief overview of all options.",
+  int sreturnA = snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS>\n\t%s -h\t for a brief overview of all options.",
                            basename (argv[0]), basename (argv[0]));
 
   char help[BUFSIZ];

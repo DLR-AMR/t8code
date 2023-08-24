@@ -159,13 +159,10 @@ main (int argc, char **argv)
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
-  t8_global_essentialf ("This program creates a coarse mesh that is partitioned "
-                        "across the processes.\n"
-                        "The coarse mesh consists of six trees.\nTrees 0,1,2 are "
-                        "assigned to process 0.\nTrees 3,4,5 to process 1.\n"
-                        "The remaining processes do not have any trees.\n"
-                        "If called with only 1 process, the coarse mesh is not "
-                        "partitioned.\n");
+  t8_global_essentialf (
+    "This program creates a coarse mesh that is partitioned across the processes.\n The coarse mesh consists of six "
+    "trees.\nTrees 0,1,2 are assigned to process 0.\nTrees 3,4,5 to process 1.\n The remaining processes do not have "
+    "any trees.\n If called with only 1 process, the coarse mesh is not partitioned.\n");
 
   t8_cmesh_create_partitioned (sc_MPI_COMM_WORLD);
 
