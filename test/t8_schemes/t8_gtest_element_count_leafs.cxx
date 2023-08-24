@@ -32,7 +32,7 @@
  */
 
 /* Tests whether the leaf count for one additional level matches the number of children */
-/* *INDENT-OFF* */
+
 class class_element_leafs: public testing::TestWithParam<t8_eclass> {
  protected:
   void
@@ -51,7 +51,6 @@ class class_element_leafs: public testing::TestWithParam<t8_eclass> {
   t8_eclass_scheme_c *class_scheme;
   t8_scheme_cxx_t *ts = t8_scheme_new_default_cxx ();
 };
-/* *INDENT-ON* */
 
 TEST_P (class_element_leafs, test_element_count_leafs_root)
 {
@@ -131,7 +130,5 @@ TEST_P (class_element_leafs, test_element_count_leafs_one_level)
   class_scheme->t8_element_destroy (1, &element);
 }
 
-/* *INDENT-OFF* */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_element_count_leafs, class_element_leafs,
                           testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT));
-/* *INDENT-ON* */

@@ -25,7 +25,6 @@
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
-/* *INDENT-OFF* */
 class class_successor: public testing::TestWithParam<t8_eclass_t> {
  protected:
   void
@@ -61,7 +60,6 @@ class class_successor: public testing::TestWithParam<t8_eclass_t> {
   t8_element_t *child;
   t8_element_t *last;
 };
-/* *INDENT-ON* */
 
 /* Check the computation of the successor recursively. Iterate through the elements
  * via DFS. On the given maxlvl-1 the children are computeted iteratively. For
@@ -150,6 +148,4 @@ TEST_P (class_successor, test_recursive_and_deep_successor)
   t8_deep_successor (element, successor, last, ts);
 }
 
-/* *INDENT-OFF* */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_successor, class_successor, testing::Range (T8_ECLASS_LINE, T8_ECLASS_COUNT));
-/* *INDENT-ON* */

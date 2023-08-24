@@ -27,7 +27,6 @@
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_connectivity.h>
 
-/* *INDENT-OFF* */
 class face_neigh: public testing::Test {
  protected:
   void
@@ -57,7 +56,6 @@ class face_neigh: public testing::Test {
   t8_eclass_scheme_c *ts;
   t8_eclass_t eclass = T8_ECLASS_PYRAMID;
 };
-/* *INDENT-ON* */
 
 /* Compute all children along all faces. Compute their neighbors along the face,
  * check, if the children have root contact, and if the neighbors are outside of the

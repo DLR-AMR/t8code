@@ -24,7 +24,6 @@
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
-/* *INDENT-OFF* */
 class class_find_parent: public testing::TestWithParam<t8_eclass_t> {
  protected:
   void
@@ -61,7 +60,6 @@ class class_find_parent: public testing::TestWithParam<t8_eclass_t> {
   t8_element_t *child;
   t8_element_t *test_parent;
 };
-/* *INDENT-ON* */
 
 static void
 t8_recursive_child_find_parent (t8_element_t *element, t8_element_t *child, t8_element_t *test_parent,
@@ -102,6 +100,4 @@ TEST_P (class_find_parent, t8_compute_child_find_parent)
   t8_recursive_child_find_parent (element, child, test_parent, ts, 0, maxlvl);
 }
 
-/* *INDENT-OFF* */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_find_parent, class_find_parent, testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT));
-/* *INDENT-ON* */

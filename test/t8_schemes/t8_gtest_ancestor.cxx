@@ -30,7 +30,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
-/* *INDENT-OFF* */
 class ancestor: public testing::TestWithParam<t8_eclass> {
  protected:
   void
@@ -62,7 +61,6 @@ class ancestor: public testing::TestWithParam<t8_eclass> {
   t8_eclass_scheme_c *ts;
   t8_eclass_t eclass;
 };
-/* *INDENT-ON* */
 
 /*Test root and parent*/
 static void
@@ -120,6 +118,4 @@ TEST_P (ancestor, multi_level_recursive_check)
   ts->t8_element_destroy (1, &correct_anc_high_level);
 }
 
-/* *INDENT-OFF* */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_ancestor, ancestor, testing::Values (T8_ECLASS_PYRAMID));
-/* *INDENT-ON* */
