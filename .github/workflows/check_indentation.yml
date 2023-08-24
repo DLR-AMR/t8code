@@ -53,7 +53,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Install indent
-      run: sudo apt-get update && sudo apt-get install clang-format-10
+      run: sudo apt-get update && sudo apt-get install clang-format
     - name: Indentation check
       run: cd scripts/ && ./check_if_all_files_indented.scp > indent_script.out
     - name: Archive script output
