@@ -144,7 +144,7 @@ main (int argc, char *argv[])
   sc_options_add_switch (opt, 'p', "partition", &partition, "If true the generated cmesh is repartitioned uniformly.");
   sc_options_add_int (opt, 'd', "dim", &dim, 2, "The dimension of the mesh");
   sc_options_add_int (opt, 'm', "master", &master, -1,
-                      "If specified, the mesh is partitioned and all elements reside on process with "rank master.");
+                      "If specified, the mesh is partitioned and all elements reside on process with rank master.");
   parsed = sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (helpme) {
     /* display help message and usage */
