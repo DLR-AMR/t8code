@@ -492,7 +492,7 @@ struct t8_default_scheme_tet_c: public t8_default_scheme_common_c
   virtual void
   t8_element_general_function (const t8_element_t *elem, const void *indata, void *outdata) const;
 
-  /** Compute the coordinates of a given element vertex inside a reference treethat is embedded into [0,1]^d 
+  /** Compute the coordinates of a given element vertex inside a reference tree that is embedded into [0,1]^d 
    * (d = dimension).
    *   \param [in] elem    The element to be considered.
    *   \param [in] vertex  The id of the vertex whose coordinates shall be computed.
