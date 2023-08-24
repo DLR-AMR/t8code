@@ -49,11 +49,11 @@ struct t8_default_scheme_prism_c: public t8_default_scheme_common_c
   ~t8_default_scheme_prism_c ();
 
   /** Allocate memory for an array of prisms and initialize them.
-   * \param [in] length   The number of prism elements to be allocated.
-   * \param [in,out] elems On input an array of \b length many unallocated
-   *                      element pointers.
-   *                      On output all these pointers will point to an allocated
-   *                      and initialized element.
+   * \param [in] length     The number of prism elements to be allocated.
+   * \param [in,out] elems  On input an array of \b length many unallocated
+   *                        element pointers.
+   *                        On output all these pointers will point to an allocated
+   *                        and initialized element.
    * \note Not every element that is created in t8code will be created by a call
    * to this function. However, if an element is not created using \ref t8_element_new,
    * then it is guaranteed that \ref t8_element_init is called on it.
@@ -69,13 +69,13 @@ struct t8_default_scheme_prism_c: public t8_default_scheme_common_c
   t8_element_new (int length, t8_element_t **elem) const;
 
   /** Initialize an array of allocated prism elements.
-   * \param [in] length   The number of prism elements to be initialized.
-   * \param [in,out] elems On input an array of \b length many allocated
-   *                       elements.
+   * \param [in] length     The number of prism elements to be initialized.
+   * \param [in,out] elems  On input an array of \b length many allocated
+   *                        elements.
    * \param [in] called_new True if the elements in \a elem were created by a call
-   *                       to \ref t8_element_new. False if no element in \a elem
-   *                       was created in this way. The case that only some elements
-   *                       were created by \ref t8_element_new should never occur.
+   *                        to \ref t8_element_new. False if no element in \a elem
+   *                        was created in this way. The case that only some elements
+   *                        were created by \ref t8_element_new should never occur.
    * \note In debugging mode, an element that was passed to \ref t8_element_init
    * must pass \ref t8_element_is_valid.
    * \note If an element was created by \ref t8_element_new then \ref t8_element_init
@@ -103,9 +103,9 @@ struct t8_default_scheme_prism_c: public t8_default_scheme_common_c
 
   /** Copy all entries of \b source to \b dest. \b dest must be an existing
    *  element. No memory is allocated by this function.
-   * \param [in] source The element whose entries will be copied to \b dest.
+   * \param [in] source   The element whose entries will be copied to \b dest.
    * \param [in,out] dest This element's entries will be overwritten with the
-   *                    entries of \b source.
+   *                      entries of \b source.
    * \note \a source and \a dest may point to the same element.
    */
   virtual void
@@ -114,38 +114,32 @@ struct t8_default_scheme_prism_c: public t8_default_scheme_common_c
   /** Compare two elements.
    * \param [in] elem1  The first element.
    * \param [in] elem2  The second element.
-   * \return       negative if elem1 < elem2, zero if elem1 equals elem2
-   *               and positive if elem1 > elem2.
-   *  If elem2 is a copy of elem1 then the elements are equal.
+   * \return            negative if elem1 < elem2, zero if elem1 equals elem2
+   *                    and positive if elem1 > elem2. If elem2 is a copy of elem1 then the elements are equal.
    */
   virtual int
   t8_element_compare (const t8_element_t *elem1, const t8_element_t *elem2) const;
 
   /** Compute the parent of a given element \b elem and store it in \b parent.
-   *  \b parent needs to be an existing element. No memory is allocated by this function.
-   *  \b elem and \b parent can point to the same element, then the entries of
-   *  \b elem are overwritten by the ones of its parent.
-   * \param [in] elem   The element whose parent will be computed.
+   * \b parent needs to be an existing element. No memory is allocated by this function.
+   * \b elem and \b parent can point to the same element, then the entries of
+   * \b elem are overwritten by the ones of its parent.
+   * \param [in] elem       The element whose parent will be computed.
    * \param [in,out] parent This element's entries will be overwritten by those
-   *                    of \b elem's parent.
-   *                    The storage for this element must exist
-   *                    and match the element class of the parent.
-   *                    For a pyramid, for example, it may be either a
-   *                    tetrahedron or a pyramid depending on \b elem's childid.
+   *                        of \b elem's parent. The storage for this element must exist and match the element class of 
+   *                        the parent. For a pyramid, for example, it may be either a tetrahedron or a pyramid depending on \b elem's childid.
    */
   virtual void
   t8_element_parent (const t8_element_t *elem, t8_element_t *parent) const;
 
   /** Compute a specific sibling of a given prism element \b elem and store it in \b sibling.
-   *  \b sibling needs to be an existing element. No memory is allocated by this function.
-   *  \b elem and \b sibling can point to the same element, then the entries of
-   *  \b elem are overwritten by the ones of its \b sibid -th sibling.
-   * \param [in] elem   The element whose sibling will be computed.
-   * \param [in] sibid  The id of the sibling computed.
-   * \param [in,out] sibling This element's entries will be overwritten by those
-   *                    of \b elem's sibid-th sibling.
-   *                    The storage for this element must exist
-   *                    and match the element class of the sibling.
+   * \b sibling needs to be an existing element. No memory is allocated by this function.
+   * \b elem and \b sibling can point to the same element, then the entries of
+   * \b elem are overwritten by the ones of its \b sibid -th sibling.
+   * \param [in] elem         The element whose sibling will be computed.
+   * \param [in] sibid        The id of the sibling computed.
+   * \param [in,out] sibling  This element's entries will be overwritten by those of \b elem's sibid-th sibling.
+   *                          The storage for this element must exist and match the element class of the sibling.
    */
   virtual void
   t8_element_sibling (const t8_element_t *elem, int sibid, t8_element_t *sibling) const
@@ -206,8 +200,8 @@ struct t8_default_scheme_prism_c: public t8_default_scheme_common_c
   }
 
   /** Return the type of each child in the ordering of the implementation.
-   * \param [in] childid  Must be between 0 and the number of children (exclusive).
-   *                      The number of children is defined in \a t8_element_num_children.
+   * \param [in] childid  Must be between 0 and the number of children (exclusive). The number of children is defined 
+   *                      in \a t8_element_num_children.
    * \return              The type for the given child.
    */
   virtual t8_eclass_t
@@ -218,12 +212,10 @@ struct t8_default_scheme_prism_c: public t8_default_scheme_common_c
   }
 
   /** Construct the child element of a given number.
-   * \param [in] elem     This must be a valid element, bigger than maxlevel.
-   * \param [in] childid  The number of the child to construct.
-   * \param [in,out] child        The storage for this element must exist
-   *                              and match the element class of the child.
-   *                              On output, a valid element.
-   * It is valid to call this function with elem = child.
+   * \param [in] elem       This must be a valid element, bigger than maxlevel.
+   * \param [in] childid    The number of the child to construct.
+   * \param [in,out] child  The storage for this element must exist and match the element class of the child.
+   *                        On output, a valid element. It is valid to call this function with elem = child.
    * \see t8_element_child_eclass
    */
   virtual void
@@ -250,8 +242,7 @@ struct t8_default_scheme_prism_c: public t8_default_scheme_common_c
   virtual int
   t8_element_child_id (const t8_element_t *elem) const;
 
-  /** Compute the ancestor id of an element, that is the child id
-   * at a given level.
+  /** Compute the ancestor id of an element, that is the child id at a given level.
    * \param [in] elem     This must be a valid element.
    * \param [in] level    A refinement level. Must satisfy \a level < elem.level
    * \return              The child_id of \a elem in regard to its \a level ancestor.
@@ -268,15 +259,12 @@ struct t8_default_scheme_prism_c: public t8_default_scheme_common_c
   virtual int
   t8_element_is_family (t8_element_t **fam) const;
 
-  /** Compute the nearest common ancestor of two elements. That is,
-   * the element with highest level that still has both given elements as
-   * descendants.
+  /** Compute the nearest common ancestor of two elements. That is, the element with highest level that still has 
+   * both given elements as descendants.
    * \param [in] elem1    The first of the two input elements.
    * \param [in] elem2    The second of the two input elements.
-   * \param [in,out] nca  The storage for this element must exist
-   *                      and match the element class of the child.
-   *                      On output the unique nearest common ancestor of
-   *                      \b elem1 and \b elem2.
+   * \param [in,out] nca  The storage for this element must exist and match the element class of the child.
+   *                      On output the unique nearest common ancestor of \b elem1 and \b elem2.
    */
   virtual void
   t8_element_nca (const t8_element_t *elem1, const t8_element_t *elem2, t8_element_t *nca) const;
@@ -289,18 +277,15 @@ struct t8_default_scheme_prism_c: public t8_default_scheme_common_c
   virtual t8_element_shape_t
   t8_element_face_shape (const t8_element_t *elem, int face) const;
 
-  /** Given an element and a face of the element, compute all children of
-   * the element that touch the face.
-   * \param [in] elem     The element.
-   * \param [in] face     A face of \a elem.
-   * \param [in,out] children Allocated elements, in which the children of \a elem
-   *                      that share a face with \a face are stored.
-   *                      They will be stored in order of their linear id.
-   * \param [in] num_children The number of elements in \a children. Must match
-   *                      the number of children that touch \a face.
-   *                      \ref t8_element_num_face_children
-   * \param [in,out] child_indices If not NULL, an array of num_children integers must be given,
-   *                      on output its i-th entry is the child_id of the i-th face_child.
+  /** Given an element and a face of the element, compute all children of the element that touch the face.
+   * \param [in] elem         The element.
+   * \param [in] face         A face of \a elem.
+   * \param [in,out] children Allocated elements, in which the children of \a elem that share a face with \a face 
+   *                          are stored. They will be stored in order of their linear id.
+   * \param [in] num_children The number of elements in \a children. Must match the number of children that touch \a face.
+   *                          \ref t8_element_num_face_children
+   * \param [in,out] child_indices If not NULL, an array of num_children integers must be given, on output its i-th 
+   *                               entry is the child_id of the i-th face_child.
    * It is valid to call this function with elem = children[0].
    */
   virtual void
@@ -318,28 +303,24 @@ struct t8_default_scheme_prism_c: public t8_default_scheme_common_c
        elem    face  face_child    Returns the face number f
      \endverbatim
 
-   * \param [in]  elem    The element.
-   * \param [in]  face    Then number of the face.
-   * \param [in]  face_child A number 0 <= \a face_child < num_face_children,
-   *                      specifying a child of \a elem that shares a face with \a face.
-   *                      These children are counted in linear order. This coincides with
-   *                      the order of children from a call to \ref t8_element_children_at_face.
-   * \return              The face number of the face of a child of \a elem
-   *                      that coincides with \a face_child.
+   * \param [in]  elem        The element.
+   * \param [in]  face        Then number of the face.
+   * \param [in]  face_child  A number 0 <= \a face_child < num_face_children, specifying a child of \a elem that shares 
+   *                          a face with \a face. These children are counted in linear order. This coincides with the 
+   *                          order of children from a call to \ref t8_element_children_at_face.
+   * \return                  The face number of the face of a child of \a elem that coincides with \a face_child.
    */
   virtual int
   t8_element_face_child_face (const t8_element_t *elem, int face, int face_child) const;
 
-  /** Given a face of an element return the face number
-     * of the parent of the element that matches the element's face. Or return -1 if
-     * no face of the parent matches the face.
-
-     * \param [in]  elem    The element.
-     * \param [in]  face    Then number of the face.
-     * \return              If \a face of \a elem is also a face of \a elem's parent,
-     *                      the face number of this face. Otherwise -1.
-     * \note For the root element this function always returns \a face.
-     */
+  /** Given a face of an element return the face number of the parent of the element that matches the element's face. 
+   * Or return -1 if no face of the parent matches the face.
+   * \param [in]  elem    The element.
+   * \param [in]  face    Then number of the face.
+   * \return              If \a face of \a elem is also a face of \a elem's parent,
+   *                      the face number of this face. Otherwise -1.
+   * \note For the root element this function always returns \a face.
+   */
   virtual int
   t8_element_face_parent_face (const t8_element_t *elem, int face) const;
 
@@ -348,8 +329,7 @@ struct t8_default_scheme_prism_c: public t8_default_scheme_common_c
    *  If not the return value is arbitrary.
    * \param [in] elem     The element.
    * \param [in] face     The index of a face of \a elem.
-   * \return The index of the tree face that \a face is a subface of, if
-   *         \a face is on a tree boundary.
+   * \return The index of the tree face that \a face is a subface of, if \a face is on a tree boundary.
    *         Any arbitrary integer if \a is not at a tree boundary.
    */
   virtual int
@@ -478,8 +458,7 @@ struct t8_default_scheme_prism_c: public t8_default_scheme_common_c
    *  given linear id in a uniform refinement.
    * \param [in,out] elem The element whose entries will be set.
    * \param [in] level    The level of the uniform refinement to consider.
-   * \param [in] id       The linear id.
-   *                      id must fulfil 0 <= id < 'number of leafs in the uniform refinement'
+   * \param [in] id       The linear id. id must fulfil 0 <= id < 'number of leafs in the uniform refinement'
    */
   virtual void
   t8_element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id) const;
@@ -495,8 +474,7 @@ struct t8_default_scheme_prism_c: public t8_default_scheme_common_c
 
   /** Compute the first descendant of a given element.
    * \param [in] elem     The element whose descendant is computed.
-   * \param [out] desc    The first element in a uniform refinement of \a elem
-   *                      of the given level.
+   * \param [out] desc    The first element in a uniform refinement of \a elem of the given level.
    * \param [in] level    The level, at which the descendant is computed.
    */
   virtual void
@@ -504,8 +482,7 @@ struct t8_default_scheme_prism_c: public t8_default_scheme_common_c
 
   /** Compute the last descendant of a given element.
    * \param [in] elem     The element whose descendant is computed.
-   * \param [out] desc    The last element in a uniform refinement of \a elem
-   *                      of the given level.
+   * \param [out] desc    The last element in a uniform refinement of \a elem of the given level.
    * \param [in] level    The level, at which the descendant is computed.
    */
   virtual void
@@ -519,42 +496,35 @@ struct t8_default_scheme_prism_c: public t8_default_scheme_common_c
   virtual void
   t8_element_successor (const t8_element_t *t, t8_element_t *s, int level) const;
 
-  /** Get the integer coordinates of the anchor node of an element.
-   * The default scheme implements the Morton type SFCs. In these SFCs the
-   * elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and 
-   * L the maximum refinement level. 
-   * All element vertices have integer coordinates in this cube and the anchor
-   * node is the first of all vertices (index 0). It also has the lowest x,y and z
-   * coordinates.
+  /** Get the integer coordinates of the anchor node of an element. The default scheme implements the Morton type SFCs.
+   * In these SFCs the elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and  L the maximum 
+   * refinement level.  All element vertices have integer coordinates in this cube and the anchor node is the first of
+   * all vertices (index 0). It also has the lowest x,y and z coordinates.
    * \param [in] elem   The element.
    * \param [out] anchor The integer coordinates of the anchor node in the cube [0,1]^(dL)
    */
   virtual void
   t8_element_anchor (const t8_element_t *elem, int anchor[3]) const;
 
-  /** Compute the root length of a given element, that is the length of
-   * its level 0 ancestor.
+  /** Compute the root length of a given element, that is the length of its level 0 ancestor.
    * \param [in] elem     The element whose root length should be computed.
    * \return              The root length of \a elem
    */
   virtual int
   t8_element_root_len (const t8_element_t *elem) const;
 
-  /** Compute the integer coordinates of a given element vertex.
-   * The default scheme implements the Morton type SFCs. In these SFCs the
-   * elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and 
-   * L the maximum refinement level. 
-   * All element vertices have integer coordinates in this cube.
-   *   \param [in] t      The element to be considered.
-   *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
-   *   \param [out] coords An array of at least as many integers as the element's dimension
-   *                      whose entries will be filled with the coordinates of \a vertex.
+  /** Compute the integer coordinates of a given element vertex. The default scheme implements the Morton type SFCs. 
+   * In these SFCs the elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and L the maximum 
+   * refinement level. All element vertices have integer coordinates in this cube.
+   *   \param [in] t        The element to be considered.
+   *   \param [in] vertex   The id of the vertex whose coordinates shall be computed.
+   *   \param [out] coords  An array of at least as many integers as the element's dimension whose entries will be 
+   *                        filled with the coordinates of \a vertex.
    */
   virtual void
   t8_element_vertex_coords (const t8_element_t *t, int vertex, int coords[]) const;
 
-  /** The tetrahedron schemes uses the general function to return the type of
-   * a tetrahedron.
+  /** The tetrahedron schemes uses the general function to return the type of a tetrahedron.
    *  \param [in] elem An valid element
    *  \param [in] indata Is ignored. Can be NULL.
    *  \param [out] outdata Pointer to an int8_t. The type of \a elem will be stored here.
@@ -563,19 +533,17 @@ struct t8_default_scheme_prism_c: public t8_default_scheme_common_c
   virtual void
   t8_element_general_function (const t8_element_t *elem, const void *indata, void *outdata) const;
 
-  /** Compute the coordinates of a given element vertex inside a reference tree
-   *  that is embedded into [0,1]^d (d = dimension).
-   *   \param [in] elem   The element to be considered.
-   *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
-   *   \param [out] coords An array of at least as many doubles as the element's dimension
-   *                      whose entries will be filled with the coordinates of \a vertex.
+  /** Compute the coordinates of a given element vertex inside a reference tree that is embedded into 
+   * [0,1]^d (d = dimension).
+   *   \param [in] elem     The element to be considered.
+   *   \param [in] vertex   The id of the vertex whose coordinates shall be computed.
+   *   \param [out] coords  An array of at least as many doubles as the element's dimension
+   *                        whose entries will be filled with the coordinates of \a vertex.
    */
   virtual void
   t8_element_vertex_reference_coords (const t8_element_t *elem, const int vertex, double coords[]) const;
 
-  /** Convert a point in the reference space of an element to a point in the
-   *  reference space of the tree.
-   * 
+  /** Convert a point in the reference space of an element to a point in the reference space of the tree.
    * \param [in] elem         The element.
    * \param [in] coords_input The coordinates of the point in the reference space of the element.
    * \param [in] user_data    User data.
@@ -587,7 +555,7 @@ struct t8_default_scheme_prism_c: public t8_default_scheme_common_c
 
   /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
    * Returns false otherwise.
-   * * \return           0, because prisms refine regularly
+   * \return           0, because prisms refine regularly
    */
   virtual int
   t8_element_refines_irregular (void) const;

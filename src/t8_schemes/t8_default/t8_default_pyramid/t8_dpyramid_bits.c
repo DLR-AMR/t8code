@@ -49,10 +49,7 @@ compute_cubeid (const t8_dpyramid_t *p, const int level)
 }
 
 /**
- * 
- *
- * Starting from a level where the type of \a p is known compute the type
- * of \a p at level \a level
+ * Starting from a level where the type of \a p is known compute the type of \a p at level \a level
  * 
  * \param [in]  p           Input pyramid
  * \param [in]  level       The level at which we want to know the type of \a p. Must be lower than the level of \a p
@@ -87,14 +84,11 @@ compute_type_same_shape_ext (const t8_dpyramid_t *p, const int level, const t8_d
 }
 
 /**
- * Compute the type of a pyramid at \a level.
- * Pay attention, this function assumes that the shape of the element does not switch. 
- * 
- * 
+ * Compute the type of a pyramid at \a level.Pay attention, this function assumes that the shape of the element does 
+ * not switch. 
  * \param         p 
  * \param         level 
  * \return        The type of \a p at \a level
- * 
  * WARNING: This computation assumes that the shape of the element does not switch between \a known_level
  *          and \a level.
  */
@@ -107,7 +101,6 @@ compute_type_same_shape (const t8_dpyramid_t *p, const int level)
 
 /**
  * Set the \a shift last bits of every coordinate to zero. 
- * 
  * \param[in, out]  p     Input pyramid
  * \param[in]       shift Number of bits to set to zero
  */
@@ -121,9 +114,8 @@ t8_dpyramid_cut_coordinates (t8_dpyramid_t *p, const int shift)
 }
 
 /**
- * Compute if the tetrahedron \a tet lies inside a pyramid  with coordinates given by \a check.
- * Both pyramids of type 6 and 7 are tested, hence the type of \a check does not have to be set.
- * 
+ * Compute if the tetrahedron \a tet lies inside a pyramid  with coordinates given by \a check. Both pyramids of type 6
+ * and 7 are tested, hence the type of \a check does not have to be set.
  * \param tet     Input pyramid in the shape of a tetrahedron 
  * \param check   Input pyramid, candidate where \a tet could lie in.
  * \return int    the type of the pyramid where tet is inside, or 0 if it does not lie in a pyramid given by the coordinates of \a check.
@@ -172,13 +164,12 @@ t8_dpyramid_is_inside_pyra (const t8_dpyramid_t *tet, const t8_dpyramid_t *check
 }
 
 /**
- * The i first bits give the anchor coordinate for a possible ancestor of level i
- * for tet.
+ * The i first bits give the anchor coordinate for a possible ancestor of level i for tet.
  * We can store the last tetrahedra ancestor in anc.
- * \param[in] tet     Inpute pyramid in the shape of a tet
- * \param[in] level   the maximal level to check whether \a tet lies in a pyramid
- * \param[in] anc     Can be NULL or an allocated element. If allocated, it will be filled with the data of the last tetrahedral ancestor 
- * \return      0, if the pyramid is insed of a tetrahedron*/
+ * \param[in] tet   Inpute pyramid in the shape of a tet
+ * \param[in] level the maximal level to check whether \a tet lies in a pyramid
+ * \param[in] anc   Can be NULL or an allocated element. If allocated, it will be filled with the data of the last tetrahedral ancestor 
+ * \return          0, if the pyramid is insed of a tetrahedron*/
 static int
 t8_dpyramid_is_inside_tet (const t8_dpyramid_t *tet, const int level, t8_dpyramid_t *anc)
 {
@@ -212,7 +203,6 @@ t8_dpyramid_is_inside_tet (const t8_dpyramid_t *tet, const int level, t8_dpyrami
 
 /**
  * Smallest level at which an anc of \a tet has the shape of a tetrahedron
- * 
  * \param[in] tet The input element
  * \return The level of the last ancestor with the shape of a tetrahedron  
  */
@@ -247,12 +237,9 @@ t8_dpyramid_compute_switch_shape_at_level (const t8_dpyramid_t *tet)
 }
 
 /**
- * Sets the field switch_shape_at_level for \a p. \a p has to have the shape
- * of a tetrahedron. 
- * switch_shape_at_level is set to the lowest level at which the ancestor of \a p
- * still has the shape of a tetrahedron. switch_shape_at_level is set to -1 for
- * pyramidal shaped elements.
- * 
+ * Sets the field switch_shape_at_level for \a p. \a p has to have the shape of a tetrahedron. switch_shape_at_level
+ * is set to the lowest level at which the ancestor of \a p still has the shape of a tetrahedron. switch_shape_at_level
+ * is set to -1 for pyramidal shaped elements.
  * \param p       Input element, whose switch_shape_at_level will be set.
  */
 static void
@@ -431,15 +418,13 @@ t8_dpyramid_get_level (const t8_dpyramid_t *p)
 }
 
 /**
- * Computes the local index of a pyramid and updates its current global index. 
- * for further computation of init_linear_id. For each sibling that is a predecessor
- * the number of pyramids or tets on the level used in init_linear_id is subtracted from
- * the id. 
- * 
- * \\param[in, out] id       The current id that will be updated
- * \\param[in] type          The type of the current pyramid
- * \\param[in] pyra          Number of pyramids to shift 
- * \\param[in] tet           Number of tets to shift
+ * Computes the local index of a pyramid and updates its current global index. for further computation of 
+ * init_linear_id. For each sibling that is a predecessor the number of pyramids or tets on the level used in 
+ * init_linear_id is subtracted from the id. 
+ * \param[in, out] id       The current id that will be updated
+ * \param[in] type          The type of the current pyramid
+ * \param[in] pyra          Number of pyramids to shift 
+ * \param[in] tet           Number of tets to shift
  * \return int              The local-id of the child
  */
 static int
@@ -498,9 +483,8 @@ t8_dpyramid_init_linear_id (t8_dpyramid_t *p, const int level, t8_linearidx_t id
       T8_ASSERT (p->switch_shape_at_level == t8_dpyramid_compute_switch_shape_at_level (p));
       return;
     }
-    /* The local index depends on the alternating number of predecessors
-     * caused by switching between pyramids and tetrahedrons, which have
-     * a different number of children.*/
+    /* The local index depends on the alternating number of predecessors caused by switching between pyramids and 
+     * tetrahedrons, which have a different number of children.*/
     const t8_linearidx_t local_index = t8_dpyramid_update_index (&id, type, 2 * p_sum1 - p_sum2, p_sum1);
     const t8_dpyramid_cube_id_t cube_id = t8_dpyramid_parenttype_Iloc_to_cid[type][local_index];
     T8_ASSERT (cube_id >= 0);
@@ -599,7 +583,6 @@ t8_dpyramid_linear_id (const t8_dpyramid_t *p, const int level)
 
 /**
  * Compute the face-neighbor of p. This function does not allocate memory for the neighbor.
- * 
  * \param[in] p               Input element
  * \param[in] face            A face of \a p
  * \param[in, out] neigh      Allocated memory, will be filled with the data of the neighbor of \a p along the given \a face.
@@ -799,7 +782,6 @@ t8_dpyramid_face_parent_face (const t8_dpyramid_t *elem, const int face)
 
 /**
  *  Check if anc-face is connecting to a tet or to a pyra 
- * 
  * \param[in] p       Input pyramid
  * \param[in] face    Face of an ancestor of \a p
  * \return            return non-zero if anc-face is connecting to a tet
@@ -947,9 +929,8 @@ t8_dpyramid_first_descendant (const t8_dpyramid_t *p, t8_dpyramid_t *desc, const
   T8_ASSERT (p->pyramid.x <= desc->pyramid.x && p->pyramid.y <= desc->pyramid.y && p->pyramid.z <= desc->pyramid.z);
 }
 
-/** Compute the descendant at a corner of a tet up to a given level.
- *  You can not use the tetrahedron algorithm here, because it depends on the linear-id
- *  computation of a tet, which is different to the linear id for pyramids. 
+/** Compute the descendant at a corner of a tet up to a given level. You can not use the tetrahedron algorithm here, 
+ * because it depends on the linear-id computation of a tet, which is different to the linear id for pyramids. 
  *  \param[in] p        Input pyramd
  *  \param[in, out] d   Allocated element to fill with the data of element laying in the corner \a corner of \a p
  *  \param[in] corner   A corner of \a p
@@ -1184,8 +1165,7 @@ t8_dpyramid_boundary_face (const t8_dpyramid_t *p, const int face, t8_element_t 
       }
     }
     else {
-      /*Boundary is given by a tet-surface. The cases are ordered by root-face-
-       * enumeration*/
+      /*Boundary is given by a tet-surface. The cases are ordered by root-face-enumeration*/
       if ((face == 1 && p->pyramid.type == 0) || (face == 2 && p->pyramid.type == 2)) {
         t->x = p->pyramid.y * T8_DTRI_ROOT_BY_DPYRAMID_ROOT;
         t->type = p->pyramid.type == 0 ? 1 : 0;
@@ -1343,7 +1323,7 @@ t8_dpyramid_children_at_face (const t8_dpyramid_t *p, const int face, t8_dpyrami
   T8_ASSERT (num_children == T8_DPYRAMID_FACE_CHILDREN);
   T8_ASSERT (0 <= face && face < T8_DPYRAMID_FACES);
   if (t8_dpyramid_shape (p) == T8_ECLASS_TET) {
-    /*Use tet-algo */
+    /* Use tet-algo */
     t8_dtet_t **tet_children = T8_ALLOC (t8_dtet_t *, T8_DTET_FACE_CHILDREN);
     for (int i = 0; i < T8_DTET_FACE_CHILDREN; i++) {
       tet_children[i] = T8_ALLOC (t8_dtet_t, 1);
@@ -1607,7 +1587,6 @@ t8_dpyramid_compute_reference_coords (const t8_dpyramid_t *elem, const double *r
 
 /**
  * Compute the ancestor of \a pyra on level \a level.
- * 
  * \param[in]       pyra    Input pyramid
  * \param[in]       level   The level at which we want to compute \a anc
  * \param[in, out]  anc     Allocated input element which will be filled by the data of the anc of \a pyra at level \a level
@@ -1667,10 +1646,8 @@ t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t *pyra1, const t8_dpyram
   }
   /* both elements have the shape of a pyramid, hence the nca */
   else if (t8_dpyramid_shape (pyra1) == T8_ECLASS_PYRAMID && t8_dpyramid_shape (pyra2) == T8_ECLASS_PYRAMID) {
-    /* The following computations are necessary to find the 
-     * first ancestors of pyra1 and pyra2 with the same type. We 
-     * have already computed the level at which they have the same
-     * coordinate, but the type could be different. */
+    /* The following computations are necessary to find the irst ancestors of pyra1 and pyra2 with the same type. We 
+     * have already computed the level at which they have the same coordinate, but the type could be different. */
     t8_dpyramid_coord_t maxclor;
     t8_dpyramid_type_t p1_type_at_level; /* type of pyra1 at level */
     t8_dpyramid_type_t p2_type_at_level; /* type of pyra2 at level */
@@ -1683,10 +1660,8 @@ t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t *pyra1, const t8_dpyram
     /* This is the highest possible level. The coordinates are the same,
      * but the types can be different.*/
     /* the level of the cube where pyra1 and pyra2 have the same coords */
-    /* *INDENT-OFF* */
     const int cube_level
       = SC_MIN (T8_DPYRAMID_MAXLEVEL - level, (int) SC_MIN (pyra1->pyramid.level, pyra2->pyramid.level));
-    /* *INDENT-ON* */
     /* the level of the nca */
     int real_level = cube_level;
     p1_type_at_level = compute_type_same_shape (pyra1, cube_level);
@@ -1729,10 +1704,8 @@ t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t *pyra1, const t8_dpyram
     /* Cube level is the highest possible level where the nca can be. the coordinates
      * match at the level, but the type can be different.*/
     /* the level of the cube where pyra1 and pyra2 have the same coords */
-    /* *INDENT-OFF* */
     const int cube_level
       = SC_MIN (T8_DPYRAMID_MAXLEVEL - level, (int) SC_MIN (pyra1->pyramid.level, pyra2->pyramid.level));
-    /* *INDENT-ON* */
     int real_level = cube_level; /* the level of the nca */
     t8_dpyramid_ancestor (pyra1, real_level, &pyra1_anc);
     t8_dpyramid_ancestor (pyra2, real_level, &pyra2_anc);
@@ -1742,10 +1715,8 @@ t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t *pyra1, const t8_dpyram
     T8_ASSERT (pyra1->switch_shape_at_level == t8_dpyramid_compute_switch_shape_at_level (pyra1));
     T8_ASSERT (pyra2->switch_shape_at_level == t8_dpyramid_compute_switch_shape_at_level (pyra2));
 
-    /* We iterate over the levels and check if the types of both tets match and 
-     * stop at that level.
-     * The loop is interrupted, if we get to a level where one element switches
-     * the shape.*/
+    /* We iterate over the levels and check if the types of both tets match and stop at that level.
+     * The loop is interrupted, if we get to a level where one element switches the shape.*/
     T8_ASSERT (0 < pyra1->switch_shape_at_level && pyra1->switch_shape_at_level <= T8_DPYRAMID_MAXLEVEL);
     T8_ASSERT (0 < pyra2->switch_shape_at_level && pyra2->switch_shape_at_level <= T8_DPYRAMID_MAXLEVEL);
     while (p1_type_at_level != p2_type_at_level && real_level >= pyra1->switch_shape_at_level
