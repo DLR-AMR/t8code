@@ -270,11 +270,10 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid, t8_l
       T8_ASSERT (!is_family || ts->t8_element_is_family (fam));
     }
 #endif
-    /* clang-format off */
     if (is_family
         && forest->set_adapt_fn (forest, forest->set_from, ltreeid, lelement_id, ts, is_family,
-                                 num_elements_to_adapt_callback, fam) == -1) {
-      /* clang-format on */
+                                 num_elements_to_adapt_callback, fam)
+             == -1) {
       /* Coarsen the element */
       *el_inserted -= (t8_locidx_t) (num_elements_to_adapt_callback - 1);
       /* remove num_elements_to_adapt_callback - 1 elements from the array */

@@ -2538,10 +2538,8 @@ t8_forest_element_find_owner_old (t8_forest_t forest, t8_gloidx_t gtreeid, t8_el
   sc_array_init_view (&owners_of_tree_wo_first, owners_of_tree, 1, owners_of_tree->elem_count - 1);
   /* We binary search in the owners array for the process that owns the element. */
   find_owner_data.forest = forest;
-  /* clang-format off */
-  find_owner_data.last_owner = *(int *) sc_array_index (&owners_of_tree_wo_first,
-                                                        owners_of_tree_wo_first.elem_count - 1);
-  /* clang-format on */
+  find_owner_data.last_owner
+    = *(int *) sc_array_index (&owners_of_tree_wo_first, owners_of_tree_wo_first.elem_count - 1);
   find_owner_data.linear_id = element_desc_lin_id;
 
   proc_index = sc_array_bsearch (&owners_of_tree_wo_first, &find_owner_data, t8_forest_element_find_owner_compare);

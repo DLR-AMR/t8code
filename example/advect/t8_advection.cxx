@@ -449,11 +449,9 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t *problem, t8_locidx_t i
     neigh_data = (t8_advect_element_data_t *) t8_sc_array_index_locidx (problem->element_data, neigh_id);
     neigh_is_ghost = neigh_id >= t8_forest_get_local_num_elements (problem->forest);
     phi_minus = t8_advect_element_get_phi (problem, neigh_id);
-    /* clang-format off */
     /* Compute the flux */
-    el_hang->fluxes[face][i] = t8_advect_flux_upwind (problem, phi_plus, phi_minus, ltreeid,
-                                                      face_children[i], child_face);
-    /* clang-format on */
+    el_hang->fluxes[face][i]
+      = t8_advect_flux_upwind (problem, phi_plus, phi_minus, ltreeid, face_children[i], child_face);
     /* Set the flux of the neighbor element */
     dual_face = el_hang->dual_faces[face][i];
     if (!adapted_or_partitioned && !neigh_is_ghost) {
@@ -556,10 +554,8 @@ t8_advect_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
   first_incoming_data = first_incoming + t8_forest_get_tree_element_offset (forest_new, which_tree);
   first_outgoing_data = first_outgoing + t8_forest_get_tree_element_offset (forest_old, which_tree);
   elem_data_out = (t8_advect_element_data_t *) t8_sc_array_index_locidx (problem->element_data, first_outgoing_data);
-  /* clang-format off */
-  elem_data_in = (t8_advect_element_data_t *) t8_sc_array_index_locidx (problem->element_data_adapt,
-                                                                        first_incoming_data);
-  /* clang-format on */
+  elem_data_in
+    = (t8_advect_element_data_t *) t8_sc_array_index_locidx (problem->element_data_adapt, first_incoming_data);
 
   /* Get the old phi value (used in the cases with num_outgoing = 1) */
   phi_old = t8_advect_element_get_phi (problem, first_outgoing_data);
@@ -1279,9 +1275,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u, t8_example_level_se
 
               T8_ASSERT (neighs != NULL || elem_data->num_neighbors[iface] == 0);
               if (neighs != NULL) {
-                /* *INDENT-OFF* */
                 neigh_scheme->t8_element_destroy (elem_data->num_neighbors[iface], neighs);
-                /* *INDENT-ON* */
 
                 T8_FREE (neighs);
               }

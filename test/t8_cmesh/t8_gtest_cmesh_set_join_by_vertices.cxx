@@ -362,7 +362,6 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
   }
 }
 
-/* *INDENT-OFF* */
 class t8_cmesh_set_join_by_vertices_class: public testing::TestWithParam<int> {
  protected:
   void
@@ -395,7 +394,6 @@ class t8_cmesh_set_join_by_vertices_class: public testing::TestWithParam<int> {
   int cmesh_id;
   t8_cmesh_t cmesh = NULL;
 };
-/* *INDENT-ON* */
 
 TEST_P (t8_cmesh_set_join_by_vertices_class, test_cmesh_set_join_by_vertices_parametrized)
 {
