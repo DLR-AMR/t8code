@@ -1286,16 +1286,15 @@ t8_dtri_is_ancestor (const t8_dtri_t *t, const t8_dtri_t *c)
      * n2         y  z  z  x  x  y
      * dir3       z  y  x  z  y  x
      */
-    n1 = type_t / 2 == 0 ? c->x - t->x : /* type(t) is 0 or 1 */
-           type_t / 2 == 2 ? c->z - t->z
-                           : c->y - t->y;      /* type(t) is (4 or 5) or (2 or 3) */
-    n2 = (type_t + 1) / 2 == 2 ? c->x - t->x : /* type(t) is 3 or 4 */
-           (type_t + 1) / 2 == 1 ? c->z - t->z
-                                 : c->y - t->y; /* type(t) is (1 or 2) or (0 or 5) */
-    dir3 = type_t % 3 == 2 ? c->x - t->x :      /* type(t) is 2 or 5 */
-             type_t % 3 == 0 ? c->z - t->z
-                             : c->y - t->y; /* type(t) is (0 or 3) or (1 or 4) */
+    /* clang-format off */
+    n1 = type_t / 2 == 0 ? c->x - t->x :                      /* type(t) is 0 or 1 */
+           type_t / 2 == 2 ? c->z - t->z : c->y - t->y;       /* type(t) is (4 or 5) or (2 or 3) */
+    n2 = (type_t + 1) / 2 == 2 ? c->x - t->x :                /* type(t) is 3 or 4 */
+           (type_t + 1) / 2 == 1 ? c->z - t->z : c->y - t->y; /* type(t) is (1 or 2) or (0 or 5) */
+    dir3 = type_t % 3 == 2 ? c->x - t->x :                    /* type(t) is 2 or 5 */
+             type_t % 3 == 0 ? c->z - t->z : c->y - t->y;     /* type(t) is (0 or 3) or (1 or 4) */
     sign = (type_t % 2 == 0) ? 1 : -1;
+    /* clang-format on */
 
     type_t += 6; /* We need to compute modulo six and want
                                    to avoid negative numbers when subtracting from type_t. */

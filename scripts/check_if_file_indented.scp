@@ -31,6 +31,35 @@ FORMAT_OPTIONS="--dry-run --Werror --style=file"
 
 FORMAT=`which clang-format 2> /dev/null`
 
+if [ -z "$FORMAT" ]
+then
+  # Exit if the spell checking script was not found
+  echo "ERROR: clang-format not found."
+  echo "Please install clang-format version 16.0.6"
+  echo "See https://github.com/ssciwr/clang-format-wheel"
+  exit 1
+fi
+
+CLANG_VERSION_STRING=`$FORMAT --version`
+
+VERSION=`echo $CLANG_VERSION_STRING | cut -d " " -f 3`
+MAJOR=`echo $VERSION | cut -d. -f1`
+MINOR=`echo $VERSION | cut -d. -f2`
+PATCH=`echo $VERSION | cut -d. -f3`
+
+if [[ "$MAJOR" != "16" ]]; then
+  echo "Please install clang-format version 16.0.6"
+  exit 1
+fi
+if [[ $MINOR != "0" ]]; then
+  echo "Please install clang-format version 16.0.6"
+  exit 1
+fi
+if [[ $PATCH != "6" ]]; then
+  echo "Please install clang-format version 16.0.6"
+  exit 1
+fi
+
 # Check if first argument given
 if [ ${1-x} = x ]
 then

@@ -34,7 +34,7 @@ T8_EXTERN_C_BEGIN ();
 /** Provide an implementation for the tetrahedral element class.
  * It is written as a self-contained library in the t8_dtet_* files.
  */
-t8_eclass_scheme_t *
+t8_eclass_scheme_t*
 t8_default_scheme_new_tet (void);
 
 T8_EXTERN_C_END ();

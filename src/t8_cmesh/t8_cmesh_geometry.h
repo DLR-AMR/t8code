@@ -39,7 +39,7 @@ T8_EXTERN_C_BEGIN ();
  * \param [in] gtreeid A global tree in \a cmesh.
  * \return            The name of the tree's geometry or NULL if no geometry is set for this tree.
  */
-const char *
+const char*
 t8_cmesh_get_tree_geom_name (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 
 T8_EXTERN_C_END ();
