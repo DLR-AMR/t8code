@@ -27,10 +27,8 @@
 #include <t8_eclass.h>
 #include <t8_cmesh/t8_cmesh_testcases.h>
 
-/* Test if a cmesh is committed properly and perform the
- * face consistency check. */
+/* Test if a cmesh is committed properly and perform the face consistency check. */
 
-/* *INDENT-OFF* */
 class cmesh_copy_equality: public testing::TestWithParam<int> {
  protected:
   void
@@ -78,4 +76,3 @@ TEST_P (cmesh_copy_equality, check_equality_of_copied_cmesh_with_original)
 /* Test all cmeshes over all different inputs we get through their id */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_copy, cmesh_copy_equality,
                           testing::Range (0, t8_get_number_of_all_testcases ()));
-/* *INDENT-ON* */

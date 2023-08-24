@@ -34,8 +34,7 @@
  * meshes provided by t8code and p4est. The general idea is a follows: We first
  * retrieve all tree vertices from a given cmesh, construct the connectivity
  * array from these tree vertices with `t8_set_join_by_vertices` and then
- * compare the results again with the information given by
- * `t8_cmesh_get_face_neighbor`.
+ * compare the results again with the information given by `t8_cmesh_get_face_neighbor`.
  */
 
 static void
@@ -363,7 +362,6 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
   }
 }
 
-/* *INDENT-OFF* */
 class t8_cmesh_set_join_by_vertices_class: public testing::TestWithParam<int> {
  protected:
   void
@@ -396,7 +394,6 @@ class t8_cmesh_set_join_by_vertices_class: public testing::TestWithParam<int> {
   int cmesh_id;
   t8_cmesh_t cmesh = NULL;
 };
-/* *INDENT-ON* */
 
 TEST_P (t8_cmesh_set_join_by_vertices_class, test_cmesh_set_join_by_vertices_parametrized)
 {

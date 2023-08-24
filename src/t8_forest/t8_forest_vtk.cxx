@@ -81,7 +81,7 @@ T8_EXTERN_C_BEGIN ();
  * appropriately. */
 typedef enum { T8_VTK_KERNEL_INIT, T8_VTK_KERNEL_EXECUTE, T8_VTK_KERNEL_CLEANUP } T8_VTK_KERNEL_MODUS;
 
-/* Callback function prototype for writing cell data.
+/** Callback function prototype for writing cell data.
  * The function is executed for each element.
  * The callback can run in three different modi:
  *  INIT    - Called once, to (possibly) initialize the data pointer
@@ -163,8 +163,7 @@ const double t8_forest_vtk_point_to_element_ref_coords[T8_ECLASS_COUNT][T8_FORES
 
 #endif
 
-/* 
- * depending on whether we want to write curved or non-curved elements
+/* depending on whether we want to write curved or non-curved elements
  * we need the right number of points, so we choose the right lookup table
  */
 #if T8_WITH_VTK
@@ -193,10 +192,8 @@ t8_forest_vtk_get_element_nodes (t8_forest_t forest, t8_locidx_t ltreeid, const 
 
 /**
  * Translate a single element from the forest into a vtkCell and fill the vtkArrays with
- * the data related to the element (not element_data). 
- * 
+ * the data related to the element (not element_data).
  */
-/* *INDENT-OFF* */
 static void
 t8_forest_element_to_vtk_cell (
   t8_forest_t forest, const t8_element_t *element, t8_eclass_scheme_c *scheme, const t8_locidx_t itree,
@@ -205,7 +202,6 @@ t8_forest_element_to_vtk_cell (
   int *cellTypes, vtkSmartPointer<vtkPoints> points, vtkSmartPointer<vtkCellArray> cellArray,
   vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_treeid, vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_mpirank,
   vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_level, vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_element_id)
-/* *INDENT-ON* */
 {
   vtkSmartPointer<vtkCell> pvtkCell = NULL;
 
@@ -292,7 +288,6 @@ t8_forest_element_to_vtk_cell (
    * To get the element id, we have to add the local id in the tree 
    * plus theo
    */
-  /* *INDENT-OFF* */
   if (curved_flag == 0) {
     cellTypes[elem_id - offset] = t8_eclass_vtk_type[element_shape];
   }
@@ -317,7 +312,6 @@ t8_forest_element_to_vtk_cell (
   if (write_element_id == 1) {
     vtk_element_id->InsertNextValue (elem_id);
   }
-  /* *INDENT-ON* */
 }
 #endif
 
@@ -351,27 +345,27 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix, co
 
   vtkSmartPointer<vtkXMLPUnstructuredGridWriter> pwriterObj = vtkSmartPointer<vtkXMLPUnstructuredGridWriter>::New ();
   /*
- * Get/Set whether the appended data section is base64 encoded. 
- * If encoded, reading and writing will be slower, but the file 
- * will be fully valid XML and text-only. 
- * If not encoded, the XML specification will be violated, 
- * but reading and writing will be fast. The default is to do the encoding.
- * Documentation: https://vtk.org/doc/release/5.0/html/a02260.html#z3560_2
- */
+   * Get/Set whether the appended data section is base64 encoded. 
+   * If encoded, reading and writing will be slower, but the file 
+   * will be fully valid XML and text-only. 
+   * If not encoded, the XML specification will be violated, 
+   * but reading and writing will be fast. The default is to do the encoding.
+   * Documentation: https://vtk.org/doc/release/5.0/html/a02260.html#z3560_2
+   */
   pwriterObj->EncodeAppendedDataOff ();
 
   /* We set the filename of the pvtu file. The filenames of the vtu files
- * are given based on the name of the pvtu file and the process number.
- */
+   * are given based on the name of the pvtu file and the process number.
+   */
   pwriterObj->SetFileName (mpifilename);
 
-/*
- * Since we want to write multiple files, the processes 
- * have to communicate. Therefore, we define the communicator
- * vtk_comm and set it as the communicator. 
- * We have to set a controller for the pwriterObj, 
- * therefore we define the controller vtk_mpi_ctrl.
- */
+  /*
+   * Since we want to write multiple files, the processes 
+   * have to communicate. Therefore, we define the communicator
+   * vtk_comm and set it as the communicator. 
+   * We have to set a controller for the pwriterObj, 
+   * therefore we define the controller vtk_mpi_ctrl.
+   */
 #if T8_ENABLE_MPI
   vtkSmartPointer<vtkMPICommunicator> vtk_comm = vtkSmartPointer<vtkMPICommunicator>::New ();
   vtkMPICommunicatorOpaqueComm vtk_opaque_comm (&forest->mpicomm);
@@ -383,15 +377,15 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix, co
   pwriterObj->SetController (vtk_mpi_ctrl);
 #endif
   /*
- * We set the number of pieces as the number of mpi processes,
- * since we want to write a file for each process. We also
- * need to define a Start and EndPiece for the current
- * process. Then we can set the inputData for the writer:
- * We want to write the unstructured Grid, update the writer
- * and then write.
- * 
- * Note: We could write more than one file per process here, if desired.
- */
+   * We set the number of pieces as the number of mpi processes,
+   * since we want to write a file for each process. We also
+   * need to define a Start and EndPiece for the current
+   * process. Then we can set the inputData for the writer:
+   * We want to write the unstructured Grid, update the writer
+   * and then write.
+   * 
+   * Note: We could write more than one file per process here, if desired.
+   */
   pwriterObj->SetNumberOfPieces (forest->mpisize);
   pwriterObj->SetStartPiece (forest->mpirank);
   pwriterObj->SetEndPiece (forest->mpirank);
@@ -418,13 +412,11 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix, co
 }
 
 #if T8_WITH_VTK
-/* *INDENT-OFF* */
 void
 t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
                                   const int write_treeid, const int write_mpirank, const int write_level,
                                   const int write_element_id, const int write_ghosts, const int curved_flag,
                                   const int num_data, t8_vtk_data_field_t *data)
-/* *INDENT-ON* */
 {
   /*Check assertions: forest and fileprefix are not NULL and forest is committed */
   T8_ASSERT (forest != NULL);
@@ -476,11 +468,11 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest, vtkSmartPointer<vtkUnstruc
   vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_element_id = vtkSmartPointer<t8_vtk_gloidx_array_type_t>::New ();
 
   /*
- * We need the dataArray for writing double valued user defined data in the vtu files.
- * We want to write num_data many timesteps/arrays.
- * We need num_data many vtkDoubleArrays, so we need to allocate storage.
- * Later we call the constructor with: dataArrays[idata]=vtkDoubleArray::New()
- */
+   * We need the dataArray for writing double valued user defined data in the vtu files.
+   * We want to write num_data many timesteps/arrays.
+   * We need num_data many vtkDoubleArrays, so we need to allocate storage.
+   * Later we call the constructor with: dataArrays[idata]=vtkDoubleArray::New()
+   */
   vtkDoubleArray **dataArrays;
   dataArrays = T8_ALLOC (vtkDoubleArray *, num_data);
 
@@ -489,11 +481,11 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest, vtkSmartPointer<vtkUnstruc
   /* We iterate over all local trees*/
   for (t8_locidx_t itree = 0; itree < num_local_trees; itree++) {
     /* 
- * We get the current tree, the scheme for this tree
- * and the number of elements in this tree. We need the vertices of
- * the tree to get the coordinates of the elements later. We need
- * the number of elements in this tree to iterate over all of them.
- */
+     * We get the current tree, the scheme for this tree
+     * and the number of elements in this tree. We need the vertices of
+     * the tree to get the coordinates of the elements later. We need
+     * the number of elements in this tree to iterate over all of them.
+     */
     t8_eclass_scheme_c *scheme = t8_forest_get_eclass_scheme (forest, t8_forest_get_tree_class (forest, itree));
     const t8_locidx_t elems_in_tree = t8_forest_get_tree_num_elements (forest, itree);
     /* We iterate over all elements in the tree */
@@ -530,7 +522,6 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest, vtkSmartPointer<vtkUnstruc
   unstructuredGrid->SetPoints (points);
   unstructuredGrid->SetCells (cellTypes, cellArray);
 
-  /* *INDENT-OFF* */
   if (write_treeid) {
     vtk_treeid->SetName ("treeid");
     unstructuredGrid->GetCellData ()->AddArray (vtk_treeid);
@@ -547,7 +538,6 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest, vtkSmartPointer<vtkUnstruc
     vtk_element_id->SetName ("element_id");
     unstructuredGrid->GetCellData ()->AddArray (vtk_element_id);
   }
-  /* *INDENT-ON* */
 
   /* Write the user defined data fields. 
    * For that we iterate over the idata, set the name, the array
@@ -1109,9 +1099,10 @@ t8_forest_vtk_write_cells (t8_forest_t forest, FILE *vtufile, const int write_tr
   if (freturn <= 0) {
     goto t8_forest_vtk_cell_failure;
   }
-
-  freturn
-    = fprintf (vtufile, "      <CellData Scalars =\"%s%s\">\n", "treeid,mpirank,level", (write_element_id ? "id" : ""));
+  /* clang-format off */
+  freturn = fprintf (vtufile, "      <CellData Scalars =\"%s%s\">\n", "treeid,mpirank,level",
+                     (write_element_id ? "id" : ""));
+  /* clang-format on */
   if (freturn <= 0) {
     goto t8_forest_vtk_cell_failure;
   }

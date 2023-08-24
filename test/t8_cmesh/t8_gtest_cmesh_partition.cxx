@@ -33,7 +33,6 @@
  * passed.
  */
 
-/* *INDENT-OFF* */
 class t8_cmesh_partition_class: public testing::TestWithParam<int> {
  protected:
   void
@@ -51,7 +50,6 @@ class t8_cmesh_partition_class: public testing::TestWithParam<int> {
   int cmesh_id;
   t8_cmesh_t cmesh_original;
 };
-/* *INDENT-ON* */
 
 static void
 test_cmesh_committed (t8_cmesh_t cmesh)

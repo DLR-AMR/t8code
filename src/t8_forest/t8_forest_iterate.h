@@ -22,7 +22,7 @@
 
 /** \file t8_forest_iterate.h
  * We define various routines to iterate through (parts of) a forest and execute
- * callback functions on the leaf elements,
+ * callback functions on the leaf elements.
  */
 
 /* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest_iterate */

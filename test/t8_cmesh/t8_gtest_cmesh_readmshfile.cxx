@@ -47,13 +47,12 @@ t8_supported_msh_file (t8_cmesh_t cmesh)
   const int number_elements = 4;
   const t8_eclass_t elem_type = T8_ECLASS_TRIANGLE;
 
-  /* *INDENT-OFF* */
   int vertex[6][2] = { { 0, 0 }, { 2, 0 }, { 4, 0 }, { 1, 2 }, { 3, 2 }, { 2, 4 } };
 
   int elements[4][3] = { { 0, 1, 3 }, { 1, 4, 3 }, { 1, 2, 4 }, { 3, 4, 5 } };
 
   int face_neigh_elem[4][3] = { { 1, -1, -1 }, { 3, 0, 2 }, { -1, 1, -1 }, { -1, -1, 1 } };
-  /* *INDENT-ON* */
+
   ASSERT_FALSE (cmesh == NULL) << "Reading cmesh failed.";
 
   /* Checks if the cmesh was committed. */

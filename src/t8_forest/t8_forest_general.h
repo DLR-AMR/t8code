@@ -38,8 +38,7 @@ typedef struct t8_forest *t8_forest_t;
 typedef struct t8_tree *t8_tree_t;
 
 /** This type controls, which neighbors count as ghost elements.
- * Currently, we support face-neighbors. Vertex and edge neighbors
- * will eventually be added. */
+ * Currently, we support face-neighbors. Vertex and edge neighbors will eventually be added. */
 typedef enum {
   T8_GHOST_NONE = 0, /**< Do not create ghost layer. */
   T8_GHOST_FACES,    /**< Consider all face (codimension 1) neighbors. */
@@ -59,8 +58,7 @@ T8_EXTERN_C_BEGIN ();
  * This is used by the replace routine which can be called after adapt,
  * when the elements of an existing, valid
  * forest are changed. The callback allows the user to make changes to the elements
- * of the new forest that are either refined, coarsened or the same as elements in the
- * old forest.
+ * of the new forest that are either refined, coarsened or the same as elements in the old forest.
  *
  * \param [in] forest_old      The forest that is adapted
  * \param [in] forest_new      The forest that is newly constructed from \a forest_old
@@ -107,8 +105,8 @@ typedef void (*t8_forest_replace_t) (t8_forest_t forest_old, t8_forest_t forest_
  * \param [in] elements     Pointers to a family or, if \a is_family is zero,
  *                          pointer to one element.
  * \return 1 if the first entry in \a elements should be refined,
- *         -1 if the family \a elements shall be coarsened,
- *         -2 if the first entry in \a elements should be removed,
+ *        -1 if the family \a elements shall be coarsened,
+ *        -2 if the first entry in \a elements should be removed,
  *         0 else.
  */
 /* TODO: Do we really need the forest argument? Since the forest is not committed yet it
@@ -404,18 +402,18 @@ int
 t8_forest_get_maxlevel (t8_forest_t forest);
 
 /** Return the number of process local elements in the forest.
-  * \param [in]  forest    A forest.
-  * \return                The number of elements on this process in \a forest.
+ * \param [in]  forest    A forest.
+ * \return                The number of elements on this process in \a forest.
  * \a forest must be committed before calling this function.
-  */
+ */
 t8_locidx_t
 t8_forest_get_local_num_elements (t8_forest_t forest);
 
 /** Return the number of global elements in the forest.
-  * \param [in]  forest    A forest.
-  * \return                The number of elements (summed over all processes) in \a forest.
+ * \param [in]  forest    A forest.
+ * \return                The number of elements (summed over all processes) in \a forest.
  * \a forest must be committed before calling this function.
-  */
+ */
 t8_gloidx_t
 t8_forest_get_global_num_elements (t8_forest_t forest);
 
@@ -430,8 +428,8 @@ t8_locidx_t
 t8_forest_get_num_ghosts (t8_forest_t forest);
 
 /** Return the element class of a forest local tree.
- *  \param [in] forest    The forest.
- *  \param [in] ltreeid   The local id of a tree in \a forest.
+ * \param [in] forest    The forest.
+ * \param [in] ltreeid   The local id of a tree in \a forest.
  * \return  The element class of the tree \a ltreeid.
  * \a forest must be committed before calling this function.
  */
@@ -450,10 +448,9 @@ t8_forest_get_eclass (t8_forest_t forest, t8_locidx_t ltreeid);
 t8_locidx_t
 t8_forest_get_local_id (t8_forest_t forest, t8_gloidx_t gtreeid);
 
-/** Given the local id of a tree in a forest, compute the tree's local id
- * in the associated cmesh.
- *  \param [in] forest    The forest.
- *  \param [in] ltreeid   The local id of a tree or ghost in the forest.
+/** Given the local id of a tree in a forest, compute the tree's local id in the associated cmesh.
+ * \param [in] forest    The forest.
+ * \param [in] ltreeid   The local id of a tree or ghost in the forest.
  * \return  The local id of the tree in the cmesh associated with the forest.
  * \a forest must be committed before calling this function.
  * \note For forest local trees, this is the inverse function of \ref t8_forest_cmesh_ltreeid_to_ltreeid.
@@ -462,10 +459,9 @@ t8_forest_get_local_id (t8_forest_t forest, t8_gloidx_t gtreeid);
 t8_locidx_t
 t8_forest_ltreeid_to_cmesh_ltreeid (t8_forest_t forest, t8_locidx_t ltreeid);
 
-/** Given the local id of a tree in the coarse mesh of a forest, compute
- * the tree's local id in the forest.
- *  \param [in] forest    The forest.
- *  \param [in] ltreeid   The local id of a tree in the coarse mesh of \a forest.
+/** Given the local id of a tree in the coarse mesh of a forest, compute the tree's local id in the forest.
+ * \param [in] forest    The forest.
+ * \param [in] ltreeid   The local id of a tree in the coarse mesh of \a forest.
  * \return  The local id of the tree in the forest. -1 if the tree is not forest local.
  * \a forest must be committed before calling this function.
  * \note For forest local trees, this is the inverse function of \ref t8_forest_ltreeid_to_cmesh_ltreeid.
@@ -474,12 +470,10 @@ t8_forest_ltreeid_to_cmesh_ltreeid (t8_forest_t forest, t8_locidx_t ltreeid);
 t8_locidx_t
 t8_forest_cmesh_ltreeid_to_ltreeid (t8_forest_t forest, t8_locidx_t lctreeid);
 
-/** Given the local id of a tree in a forest, return the coarse tree of the
- * cmesh that corresponds to this tree.
+/** Given the local id of a tree in a forest, return the coarse tree of the cmesh that corresponds to this tree.
  * \param [in] forest     The forest.
  * \param [in] ltreeid    The local id of a tree in the forest.
- * \return                The coarse tree that matches the forest tree with local
- *                        id \a ltreeid.
+ * \return                The coarse tree that matches the forest tree with local id \a ltreeid.
  */
 t8_ctree_t
 t8_forest_get_coarse_tree (t8_forest_t forest, t8_locidx_t ltreeid);
@@ -793,7 +787,7 @@ t8_forest_new_uniform (t8_cmesh_t cmesh, t8_scheme_cxx_t *scheme, const int leve
  * \param [in]    user_data   If not NULL, the user data pointer of the forest is set to this value.
  * \return        A new forest that is adapted from \a forest_from.
  * \note This is equivalent to calling \ref t8_forest_init, \ref t8_forest_set_adapt,
- * \red t8_forest_set_ghost, and \ref t8_forest_commit
+ * \ref t8_forest_set_ghost, and \ref t8_forest_commit
  */
 /* TODO: make user_data const. */
 t8_forest_t
@@ -820,6 +814,7 @@ t8_forest_ref (t8_forest_t forest);
  */
 void
 t8_forest_unref (t8_forest_t *pforest);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_FOREST_GENERAL_H */

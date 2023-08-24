@@ -164,21 +164,23 @@ typedef struct t8_profile
   t8_locidx_t partition_elements_recv;    /**< The number of elements this process has
                                                   received from other in the last partition call. */
   size_t partition_bytes_sent;            /**< The total number of bytes sent to other processes in the
-                                                 last partition call. */
+                                                  last partition call. */
   int partition_procs_sent;               /**< The number of different processes this process has send
-                                            local elements to in the last partition call. */
+                                                  local elements to in the last partition call. */
   t8_locidx_t ghosts_shipped;             /**< The number of ghost elements this process has sent to other processes. */
-  t8_locidx_t ghosts_received; /**< The number of ghost elements this process has received from other processes. */
-  int ghosts_remotes; /**< The number of processes this process have sent ghost elements to (and received from). */
-  int balance_rounds; /**< The number of iterations during balance. */
-  double
-    adapt_runtime; /**< The runtime of the last call to \a t8_forest_adapt (not counting adaptation in t8_forest_balance). */
-  double
-    partition_runtime; /**< The runtime of  the last call to \a t8_cmesh_partition (not countint partition in t8_forest_balance). */
-  double ghost_runtime;   /**< The runtime of the last call to \a t8_forest_ghost_create. */
-  double ghost_waittime;  /**< Amount of synchronisation time in ghost. */
-  double balance_runtime; /**< The runtime of the last call to \a t8_forest_balance. */
-  double commit_runtime;  /**< The runtime of the last call to \a t8_cmesh_commit. */
+  t8_locidx_t ghosts_received;            /**< The number of ghost elements this process has received from
+                                                  other processes. */
+  int ghosts_remotes;                     /**< The number of processes this process have sent ghost elements to
+                                                  (and received from). */
+  int balance_rounds;                     /**< The number of iterations during balance. */
+  double adapt_runtime;     /**< The runtime of the last call to \a t8_forest_adapt (not counting adaptation
+                                                  in t8_forest_balance). */
+  double partition_runtime; /**< The runtime of the last call to \a t8_cmesh_partition (not count in
+                                                  partition in t8_forest_balance). */
+  double ghost_runtime;     /**< The runtime of the last call to \a t8_forest_ghost_create. */
+  double ghost_waittime;    /**< Amount of synchronisation time in ghost. */
+  double balance_runtime;   /**< The runtime of the last call to \a t8_forest_balance. */
+  double commit_runtime;    /**< The runtime of the last call to \a t8_cmesh_commit. */
 
 } t8_profile_struct_t;
 
@@ -191,24 +193,22 @@ typedef struct t8_forest_ghost
   t8_locidx_t num_remote_elements; /**< The count of local elements that are ghost to another process. */
 
   t8_ghost_type_t ghost_type;           /**< Describes which neighbors are considered ghosts. */
-  sc_array_t *ghost_trees;              /* ghost tree data:
-                                           global_id.
-                                           eclass.
-                                           elements. In linear id order */
-  sc_hash_t *global_tree_to_ghost_tree; /* Indexes into ghost_trees.
-                                                           Given a global tree id I give the index
-                                                           i such that the tree is in ghost_trees[i]
-                                                         */
-  sc_hash_t *process_offsets;           /* Given a process, return the first ghost tree and
-                                           within it the first element of that process. */
-  sc_hash_array_t *remote_ghosts;       /* array of local trees that have ghost elements for another process.
-                                           for each tree an array of t8_element_t * of the local ghost elements.
-                                           Also an array of t8_locidx_t of the local indices of these elements within the tree.
-                                           It is a hash table, hashed with the rank of a remote process.
-                                           Sorted within each process by linear id.
-                                         */
-  sc_array_t *remote_processes;         /* The ranks of the processes for which local elements are ghost.
-                                           Array of int's. */
+  sc_array_t *ghost_trees;              /**< ghost tree data:
+                                                global_id.
+                                                eclass.
+                                                elements. In linear id order */
+  sc_hash_t *global_tree_to_ghost_tree; /**< Indexes into ghost_trees.
+                                                Given a global tree id I give the index
+                                                i such that the tree is in ghost_trees[i] */
+  sc_hash_t *process_offsets;           /**< Given a process, return the first ghost tree and
+                                                within it the first element of that process. */
+  sc_hash_array_t *remote_ghosts;       /**< array of local trees that have ghost elements for another process.
+                                                for each tree an array of t8_element_t * of the local ghost elements.
+                                                Also an array of t8_locidx_t of the local indices of these elements
+                                                within the tree. It is a hash table, hashed with the rank of a remote
+                                                process. Sorted within each process by linear id. */
+  sc_array_t *remote_processes;         /**< The ranks of the processes for which local elements are ghost.
+                                                Array of int's. */
 
   sc_mempool_t *glo_tree_mempool;
   sc_mempool_t *proc_offset_mempool;

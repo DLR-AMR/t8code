@@ -30,9 +30,8 @@
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
-/* For each tree that we send elements from to
- * other processes, we send this information to the
- * other process */
+/* For each tree that we send elements from to other processes,
+ * we send this information to the other process */
 typedef struct
 {
   t8_gloidx_t gtree_id; /* The global id of that tree */ /* TODO: we could optimize this out */
@@ -40,24 +39,21 @@ typedef struct
   t8_locidx_t num_elements;                              /* The number of elements from this tree that were sent */
 } t8_forest_partition_tree_info_t;
 
-/* Given the element offset array and a rank, return the first
- * local element id of this rank */
+/* Given the element offset array and a rank, return the first local element id of this rank */
 static t8_gloidx_t
 t8_forest_partition_first_element (const t8_gloidx_t *offset, int rank)
 {
   return offset[rank];
 }
 
-/* Given the element offset array and a rank, return the last
- * local element id of this rank */
+/* Given the element offset array and a rank, return the last local element id of this rank */
 static t8_gloidx_t
 t8_forest_partition_last_element (const t8_gloidx_t *offset, int rank)
 {
   return offset[rank + 1] - 1;
 }
 
-/* Query whether a given process is assigned no elements in
- * an offset array */
+/* Query whether a given process is assigned no elements in an offset array */
 static int
 t8_forest_partition_empty (const t8_gloidx_t *offset, int rank)
 {
@@ -77,8 +73,7 @@ t8_forest_compute_first_local_element_id (t8_forest_t forest)
 
   /* Convert local_num_elements to t8_gloidx_t */
   local_num_elements = forest->local_num_elements;
-  /* MPI Scan over local_num_elements lead the global index of the first
-   * local element */
+  /* MPI Scan over local_num_elements lead the global index of the first local element */
   sc_MPI_Scan (&local_num_elements, &first_element, 1, T8_MPI_GLOIDX, sc_MPI_SUM, forest->mpicomm);
   /* MPI_Scan is inklusive, thus it counts our own data.
    * Therefore, we have to subtract it again */
@@ -211,8 +206,7 @@ t8_forest_partition_test_boundary_element (const t8_forest_t forest)
   }
   const t8_gloidx_t global_tree_id = t8_shmem_array_get_gloidx (forest->tree_offsets, forest->mpirank + 1);
   if (global_tree_id >= 0) {
-    /* The first tree on process rank+1 is not shared with current rank,
-     * nothing to do */
+    /* The first tree on process rank+1 is not shared with current rank, nothing to do */
     return;
   }
   /* The first tree on process rank+1 may be shared but empty. 
@@ -298,8 +292,7 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
     else {
       first_element = t8_forest_get_element_in_tree (forest, 0, 0);
     }
-    /* This process is not empty, the element was found, so we compute
-     * its first descendant. */
+    /* This process is not empty, the element was found, so we compute its first descendant. */
     if (first_element != NULL) {
       /* Get the eclass_scheme of the element. */
       ts = t8_forest_get_eclass_scheme (forest, t8_forest_get_tree_class (forest, 0));
@@ -348,7 +341,7 @@ t8_forest_partition_create_tree_offsets (t8_forest_t forest)
   T8_ASSERT (t8_forest_is_committed (forest));
 
   comm = forest->mpicomm;
-  /* *INDENT-OFF* */
+
   /* Calculate this process's tree offset */
   tree_offset = t8_forest_first_tree_shared (forest) ? -forest->first_local_tree - 1 : forest->first_local_tree;
   if (t8_forest_get_local_num_elements (forest) <= 0) {
@@ -360,7 +353,7 @@ t8_forest_partition_create_tree_offsets (t8_forest_t forest)
   else {
     is_empty = 0;
   }
-  /* *INDENT-ON* */
+
   if (forest->tree_offsets == NULL) {
     /* Set the shmem array type of comm */
     t8_shmem_init (comm);
@@ -407,8 +400,7 @@ t8_forest_partition_create_tree_offsets (t8_forest_t forest)
 }
 
 /* Calculate the new element_offset for forest from
- * the element in forest->set_from assuming a partition without
- * element weights */
+ * the element in forest->set_from assuming a partition without element weights */
 static void
 t8_forest_partition_compute_new_offset (t8_forest_t forest)
 {
@@ -435,8 +427,7 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
   if (t8_shmem_array_start_writing (forest->element_offsets)) {
     t8_gloidx_t *element_offsets = t8_shmem_array_get_gloidx_array_for_writing (forest->element_offsets);
     for (i = 0; i < mpisize; i++) {
-      /* Calculate the first element index for each process. We convert to doubles to
-       * prevent overflow */
+      /* Calculate the first element index for each process. We convert to doubles to prevent overflow */
       new_first_element_id = (((double) i * (long double) forest_from->global_num_elements) / (double) mpisize);
       T8_ASSERT (0 <= new_first_element_id && new_first_element_id < forest_from->global_num_elements);
       element_offsets[i] = new_first_element_id;
@@ -471,8 +462,7 @@ t8_forest_partition_recvrange (t8_forest_t forest, int *recv_first, int *recv_la
   first_element = t8_forest_partition_first_element (offset_new, forest->mpirank);
   last_element = t8_forest_partition_last_element (offset_new, forest->mpirank);
   if (last_element < first_element) {
-    /* There are no elements on this process and thus we cannot
-     * receive anything */
+    /* There are no elements on this process and thus we cannot receive anything */
     *recv_first = 0;
     *recv_last = -1;
     return;
@@ -589,8 +579,12 @@ t8_forest_partition_fill_buffer (t8_forest_t forest_from, char **send_buffer, in
   while (current_element <= last_element_send) {
     /* Get the first tree that we send elements from */
     tree = t8_forest_get_tree (forest_from, tree_id);
-    last_element_is_last_tree_element = t8_forest_partition_tree_first_last_el (
-      tree, tree_id, first_element_send, last_element_send, *current_tree, &first_tree_element, &last_tree_element);
+    /* clang-format off */
+    last_element_is_last_tree_element = t8_forest_partition_tree_first_last_el (tree, tree_id, first_element_send,
+                                                                                last_element_send, *current_tree,
+                                                                                &first_tree_element,
+                                                                                &last_tree_element);
+    /* clang-format on */
     /* We now know how many elements this tree will send */
     num_elements_send = last_tree_element - first_tree_element + 1;
     T8_ASSERT (num_elements_send >= 0);
@@ -600,8 +594,7 @@ t8_forest_partition_fill_buffer (t8_forest_t forest_from, char **send_buffer, in
     num_trees_send++;
     tree_id++;
   }
-  /* We calculate the total number of bytes that we need to allocate
-   * and allocate the buffer */
+  /* We calculate the total number of bytes that we need to allocate and allocate the buffer */
   /* The buffer consists of the number of trees, ... */
   byte_alloc = sizeof (t8_locidx_t);
   /* padding, ... */
@@ -718,16 +711,14 @@ t8_forest_partition_sendloop (t8_forest_t forest, const int send_first, const in
   /* Determine the number of requests for MPI communication. */
   *num_request_alloc = send_last - send_first + 1;
   if (*num_request_alloc < 0) {
-    /* If there are no processes to send to, this value could get
-     * negative */
+    /* If there are no processes to send to, this value could get negative */
     *num_request_alloc = 0;
     T8_ASSERT (send_last - send_first + 1 == 0);
   }
   *requests = T8_ALLOC (sc_MPI_Request, *num_request_alloc);
 
   /* Allocate memory for pointers to the send buffers */
-  /* We allocate zero in order to set unused pointers to NULL so that
-   * we can pass them to free */
+  /* We allocate zero in order to set unused pointers to NULL so that we can pass them to free */
   *send_buffer = T8_ALLOC_ZERO (char *, send_last - send_first + 1);
 
   /* Get the new and old offset array */
@@ -747,8 +738,7 @@ t8_forest_partition_sendloop (t8_forest_t forest, const int send_first, const in
       current_tree = 0;
     }
     else {
-      /* Otherwise, the first element we send is the new first element on the
-       * process */
+      /* Otherwise, the first element we send is the new first element on the process */
       gfirst_element_send = offset_to[iproc];
       first_element_send = gfirst_element_send - gfirst_local_element;
       /* assert for overflow error */
@@ -759,8 +749,7 @@ t8_forest_partition_sendloop (t8_forest_t forest, const int send_first, const in
       last_element_send = forest_from->local_num_elements - 1;
     }
     else {
-      /* Otherwise, the last element we send to proc is the last
-       * element on proc in the new partition. */
+      /* Otherwise, the last element we send to proc is the last element on proc in the new partition. */
       glast_element_send = offset_to[iproc + 1] - 1;
       last_element_send = glast_element_send - gfirst_local_element;
     }
@@ -768,16 +757,14 @@ t8_forest_partition_sendloop (t8_forest_t forest, const int send_first, const in
     if (num_elements_send < 0) {
       num_elements_send = 0;
     }
-    /* We now know the local indices of the first and last element that
-     * we send to proc. */
+    /* We now know the local indices of the first and last element that we send to proc. */
     buffer = *send_buffer + iproc - send_first;
     if (num_elements_send > 0) {
       if (iproc == forest->mpirank) {
         to_self = 1;
       }
       if (!send_data) {
-        /* Fill the buffer with the elements and calculate the next tree
-         * from which to send elements */
+        /* Fill the buffer with the elements and calculate the next tree from which to send elements */
         t8_forest_partition_fill_buffer (forest_from, buffer, &buffer_alloc, &current_tree, first_element_send,
                                          last_element_send);
       }
@@ -802,8 +789,7 @@ t8_forest_partition_sendloop (t8_forest_t forest, const int send_first, const in
       }
       if (!send_data && forest->profile != NULL) {
         if (iproc != forest->mpirank) {
-          /* If profiling is enabled we count the number of elements sent to
-           * other processes */
+          /* If profiling is enabled we count the number of elements sent to other processes */
           forest->profile->partition_elements_shipped += num_elements_send;
           /* The number of procs we send to */
           forest->profile->partition_procs_sent += 1;
@@ -814,8 +800,7 @@ t8_forest_partition_sendloop (t8_forest_t forest, const int send_first, const in
     }
     else {
       /* We do not send any elements to iproc (iproc is empty in new partition) */
-      /* Set the request to NULL, such that it is ignored when we wait for
-       * the requests to complete */
+      /* Set the request to NULL, such that it is ignored when we wait for the requests to complete */
       *(*requests + iproc - send_first) = sc_MPI_REQUEST_NULL;
     }
   }
@@ -900,8 +885,7 @@ t8_forest_partition_recv_message_data (t8_forest_t forest, sc_MPI_Comm comm, int
  *                          should be passed as this parameter.
  * \param [in]  byte_to_self If proc equals the rank of this process, the number of
  *                          bytes in the message.
- * It is important, that we receive the messages in order to properly fill the
- * forest->trees array.
+ * It is important, that we receive the messages in order to properly fill the forest->trees array.
  */
 static void
 t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm, int proc, sc_MPI_Status *status, int prev_recvd,
@@ -935,9 +919,11 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm, int proc
   if (proc != forest->mpirank) {
     /* allocate the receive buffer */
     recv_buffer = T8_ALLOC (char, recv_bytes);
+    /* clang-format off */
     /* receive the message */
-    mpiret
-      = sc_MPI_Recv (recv_buffer, recv_bytes, sc_MPI_BYTE, proc, T8_MPI_PARTITION_FOREST, comm, sc_MPI_STATUS_IGNORE);
+    mpiret = sc_MPI_Recv (recv_buffer, recv_bytes, sc_MPI_BYTE, proc, T8_MPI_PARTITION_FOREST,
+                          comm, sc_MPI_STATUS_IGNORE);
+    /* clang-format on */
     SC_CHECK_MPI (mpiret);
   }
   else {
@@ -972,8 +958,7 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm, int proc
         /* If there is a previous tree, we read it */
         T8_ASSERT (forest->trees->elem_count >= 2); /* We added one tree and the current tree */
         last_tree = (t8_tree_t) t8_sc_array_index_locidx (forest->trees, forest->trees->elem_count - 2);
-        /* The element offset is the offset of the previous tree plus the number of
-         * elements in the previous tree */
+        /* The element offset is the offset of the previous tree plus the number of elements in the previous tree */
         tree->elements_offset = last_tree->elements_offset + t8_forest_get_tree_element_count (last_tree);
       }
       else {
@@ -991,8 +976,7 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm, int proc
     }
     else {
       T8_ASSERT (itree == 0); /* This situation only happens for the first tree */
-      /* The tree is already present in the forest and we need to add elements
-       * to it */
+      /* The tree is already present in the forest and we need to add elements to it */
       T8_ASSERT (forest->last_local_tree == tree_info->gtree_id);
       /* Get a pointer to the tree */
       tree = t8_forest_get_tree (forest, forest->last_local_tree - forest->first_local_tree);
@@ -1028,8 +1012,7 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm, int proc
   }
   if (forest->profile != NULL) {
     if (proc != forest->mpirank) {
-      /* If profiling is enabled we count the number of elements received from
-       * other processes */
+      /* If profiling is enabled we count the number of elements received from other processes */
       forest->profile->partition_elements_recv += num_elements_recv;
     }
   }
@@ -1061,8 +1044,7 @@ t8_forest_partition_recvloop (t8_forest_t forest, int recv_first, int recv_last,
 
   /****     Actual communication    ****/
 
-  /* In order of their ranks, receive the trees and elements from
-   * the other processes. */
+  /* In order of their ranks, receive the trees and elements from the other processes. */
 
   num_receive = 0;
   prev_recvd = 0;
@@ -1096,8 +1078,7 @@ t8_forest_partition_recvloop (t8_forest_t forest, int recv_first, int recv_last,
   }
 }
 
-/* Partition a forest from forest->set_from and the element offsets
- * set in forest->element_offsets
+/* Partition a forest from forest->set_from and the element offsets set in forest->element_offsets
  */
 static void
 t8_forest_partition_given (t8_forest_t forest, const int send_data, const sc_array_t *data_in, sc_array_t *data_out)
@@ -1166,10 +1147,8 @@ t8_forest_partition_given (t8_forest_t forest, const int send_data, const sc_arr
   t8_debugf ("Done partition_given\n");
 }
 
-/* Populate a forest with the partitioned elements of
- * forest->set_from.
- * Currently the elements are distributed evenly (each element
- * has the same weight).
+/* Populate a forest with the partitioned elements of forest->set_from.
+ * Currently the elements are distributed evenly (each element has the same weight).
  */
 void
 t8_forest_partition (t8_forest_t forest)

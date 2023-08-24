@@ -173,6 +173,7 @@ t8_forest_balance (t8_forest_t forest, int repartition)
     forest->set_from->ghost_type = T8_GHOST_FACES;
     t8_forest_ghost_create_topdown (forest->set_from);
   }
+
   while (!done_global) {
     done = 1;
 

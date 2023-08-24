@@ -139,8 +139,8 @@ class t8_geometry_moebius: public t8_geometry_with_vertices {
    * Map a point in a point in [0,1]^2 to the moebius band.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^2.
-   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   * \param [in]  ref_coords Array of \a dimension many entries, specifying a point in [0,1]^2.
+   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords.
    */
   void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double out_coords[3]) const
@@ -148,9 +148,7 @@ class t8_geometry_moebius: public t8_geometry_with_vertices {
     double t;
     double phi;
 
-    /* Compute the linear coordinates (in [0,1]^2) of the reference vertex and store
-     * in out_coords. */
-    /* *INDENT-OFF* */
+    /* Compute the linear coordinates (in [0,1]^2) of the reference vertex and store in out_coords. */
     /* No idea why, but indent insert a lot of newlines here */
     t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, out_coords);
 
@@ -163,7 +161,6 @@ class t8_geometry_moebius: public t8_geometry_with_vertices {
     out_coords[0] = (1 - t * sin (phi / 2)) * cos (phi);
     out_coords[1] = (1 - t * sin (phi / 2)) * sin (phi);
     out_coords[2] = t * cos (phi / 2);
-    /* *INDENT-ON* */
   }
 
   /* Jacobian, not implemented. */
@@ -192,8 +189,8 @@ class t8_geometry_cylinder: public t8_geometry {
    * Map a reference point in the unit square to a cylinder.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
-   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   * \param [in]  ref_coords Array of \a dimension many entries, specifying a point in [0,1]^dimension.
+   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords.
    */
   void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double out_coords[3]) const
@@ -238,8 +235,8 @@ class t8_geometry_circle: public t8_geometry_with_vertices {
    * Map a reference point in the unit square to a circle.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^2.
-   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   * \param [in]  ref_coords Array of \a dimension many entries, specifying a point in [0,1]^2.
+   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords.
    */
   void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double out_coords[3]) const
@@ -247,10 +244,8 @@ class t8_geometry_circle: public t8_geometry_with_vertices {
     double x;
     double y;
 
-    /* Compute the linear coordinates (in [0,1]^2) of the reference vertex and store
-     * in out_coords. */
+    /* Compute the linear coordinates (in [0,1]^2) of the reference vertex and store in out_coords. */
 
-    /* *INDENT-OFF* */
     /* No idea why, but indent insert a lot of newlines here */
     t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, out_coords);
 
@@ -262,7 +257,6 @@ class t8_geometry_circle: public t8_geometry_with_vertices {
     out_coords[0] = x * sqrt (1 - y * y / 2);
     out_coords[1] = y * sqrt (1 - x * x / 2);
     out_coords[2] = 0;
-    /* *INDENT-ON* */
   }
 
   /* Jacobian, not implemented. */
@@ -296,8 +290,8 @@ class t8_geometry_moving: public t8_geometry {
    * Map a reference point in the unit square to a square distorted with time.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^2.
-   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   * \param [in]  ref_coords Array of \a dimension many entries, specifying a point in [0,1]^2.
+   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords.
    */
   void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double out_coords[3]) const
@@ -313,7 +307,6 @@ class t8_geometry_moving: public t8_geometry {
      * And then map this to [-0.5,-0.5]^2 */
     int sign = x < 0 ? 1 : -1;
     double rho = 0.5 - time / 10;
-    /* *INDENT-OFF* */
     x = sign * (1 - exp (-fabs (-x) / rho)) / (2 * (1 - exp (-0.5 / rho)));
     sign = y < 0 ? 1 : -1;
     y = sign * (1 - exp (-fabs (-y) / rho)) / (2 * (1 - exp (-0.5 / rho)));
@@ -322,7 +315,6 @@ class t8_geometry_moving: public t8_geometry {
     out_coords[0] = x * (cos (phi)) - y * sin (phi);
     out_coords[1] = y * (cos (phi)) + x * sin (phi);
     out_coords[2] = 0;
-    /* *INDENT-ON* */
   }
 
   /* Jacobian, not implemented. */
@@ -358,8 +350,8 @@ class t8_geometry_cube_zdistorted: public t8_geometry {
    * Map a reference point in the unit cube to a cube distorted in the z axis.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^3.
-   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   * \param [in]  ref_coords Array of \a dimension many entries, specifying a point in [0,1]^3.
+   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords.
    */
   void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double out_coords[3]) const
@@ -596,9 +588,9 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     t8_geometry_occ *geometry_occ = new t8_geometry_occ (3, shape, "occ curve dim=3");
 
     /* The arrays indicate which face/edge carries a geometry. 
-       * 0 means no geometry and any other number indicates the position of the geometry 
-       * in the global geometry array. Here edge 0 carries occ_curve0 and edge 3 carries occ_curve1.
-       * We add them in the next step. */
+     * 0 means no geometry and any other number indicates the position of the geometry 
+     * in the global geometry array. Here edge 0 carries occ_curve0 and edge 3 carries occ_curve1.
+     * We add them in the next step. */
     int faces[6] = { 0, 0, 0, 0, 0, 0 };
     int edges[24] = { 1, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
@@ -639,31 +631,31 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     TopoDS_Shape shape;
 
     /* Filling the 2D surface array with knots. The resulting surface resembles 
-       * a surface at the top (face 5) of the trees.
-       * Some of the knots have the same position as the vertices of the trees. 
-       * These knots are marked with the tree id and vertex index. 
-       * We also marked the direction of the u- and v-parameter.
-       *
-       *  x--> u-parameter
-       *  |
-       *  v v-parameter
-       *
-       *     point_array  1       2       3       4       5
-       *
-       *         1      t0_v6--------t0_v7&t1_v6--------t1_v7
-       *                  |               |               |
-       *                  |               |               |
-       *         2        | tree 0 face 5 | tree 1 face 5 |
-       *                  |               |               |
-       *                  |               |               |
-       *         3      t0_v4--------t0_v5&t1_v4--------t1_v5
-       *
-       * z-dir
-       *    X--> x-dir
-       *    |
-       *    v
-       *    y-dir
-       */
+     * a surface at the top (face 5) of the trees.
+     * Some of the knots have the same position as the vertices of the trees. 
+     * These knots are marked with the tree id and vertex index. 
+     * We also marked the direction of the u- and v-parameter.
+     *
+     *  x--> u-parameter
+     *  |
+     *  v v-parameter
+     *
+     *     point_array  1       2       3       4       5
+     *
+     *         1      t0_v6--------t0_v7&t1_v6--------t1_v7
+     *                  |               |               |
+     *                  |               |               |
+     *         2        | tree 0 face 5 | tree 1 face 5 |
+     *                  |               |               |
+     *                  |               |               |
+     *         3      t0_v4--------t0_v5&t1_v4--------t1_v5
+     *
+     * z-dir
+     *    X--> x-dir
+     *    |
+     *    v
+     *    y-dir
+     */
     point_array (1, 1) = gp_Pnt (-0.2, -0.2, 1.2);  // t0_v6
     point_array (2, 1) = gp_Pnt (0.5, 0.0, 1.0);
     point_array (3, 1) = gp_Pnt (1.0, -0.2, 0.8);  // t0_v7 & t1_v6
@@ -683,14 +675,14 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     point_array (5, 3) = gp_Pnt (2.2, 1.2, 1.2);  // t1_v5
 
     /* Generate bspline surface from array and fill shape with it
-       * so that we can create a geometry with this shape. */
+     * so that we can create a geometry with this shape. */
     occ_surface = GeomAPI_PointsToBSplineSurface (point_array).Surface ();
     shape = BRepBuilderAPI_MakeFace (occ_surface, 1e-6).Face ();
 
     /* The arrays indicate which face/edge carries a geometry. 
-       * 0 means no geometry and any other number indicates the position of the geometry 
-       * in the global geometry array. Here face 5 carries the surface, we add it in the next step. 
-       * There are no geometries linked to the edges, hence all entries are 0. */
+     * 0 means no geometry and any other number indicates the position of the geometry 
+     * in the global geometry array. Here face 5 carries the surface, we add it in the next step. 
+     * There are no geometries linked to the edges, hence all entries are 0. */
     int faces[6] = { 0, 0, 0, 0, 0, 1 };
     int edges[24] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
@@ -712,8 +704,8 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     double parameters0[8] = { 0, 0, 0.5, 0, 0, 1, 0.5, 1 };
 
     /* Give tree 0 information about its surface and the parameters of the vertices. 
-       * Each parameter set is given to the tree via its attribute key + the edge or face index it corresponds with. 
-       */
+     * Each parameter set is given to the tree via its attribute key + the edge or face index it corresponds with. 
+     */
     t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces, 6 * sizeof (int),
                             0);
     t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges, 24 * sizeof (int),
@@ -736,8 +728,8 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     double parameters1[8] = { 0.5, 0, 1, 0, 0.5, 1, 1, 1 };
 
     /* Give tree 1 information about its surface and the parameters of the vertices. 
-       *  Each parameter set is given to the tree via its attribute key + the edge or face index it corresponds with. 
-       *  We can use the same edges and faces array, because we link the surface to the same face on tree 1. */
+     *  Each parameter set is given to the tree via its attribute key + the edge or face index it corresponds with. 
+     *  We can use the same edges and faces array, because we link the surface to the same face on tree 1. */
     t8_cmesh_set_attribute (cmesh, 1, t8_get_package_id (), T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces, 6 * sizeof (int),
                             0);
     t8_cmesh_set_attribute (cmesh, 1, t8_get_package_id (), T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges, 24 * sizeof (int),
@@ -786,9 +778,9 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     shape = BRepAlgoAPI_Fuse (shape, BRepBuilderAPI_MakeFace (cylinder_inner, 1e-6).Face ());
 
     /* The arrays indicate which face/edge carries a geometry. 
-       * 0 means no geometry and any other number indicates the position of the geometry 
-       * in the global geometry array. Here face 0 carries the outer cylinder and face 1 carries the inner cylinder.
-       * We add them in the next step. The edges do not have any geometries, hence all entries are 0. */
+     * 0 means no geometry and any other number indicates the position of the geometry 
+     * in the global geometry array. Here face 0 carries the outer cylinder and face 1 carries the inner cylinder.
+     * We add them in the next step. The edges do not have any geometries, hence all entries are 0. */
     int faces[6] = { 1, 2, 0, 0, 0, 0 };
     int edges[24] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
@@ -796,7 +788,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     t8_geometry_occ *geometry_occ = new t8_geometry_occ (3, shape, "occ surface dim=3");
 
     /* Create corresponding trees and parameters. 
-       * Here we create num trees by a coordinate transformation from cylinder to cartesian coordinates. */
+     * Here we create num trees by a coordinate transformation from cylinder to cartesian coordinates. */
     int num = 4;
     double *vertices, *parameters;
     vertices = T8_ALLOC (double, num * 24);
@@ -831,7 +823,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
       t8_cmesh_set_tree_vertices (cmesh, i, vertices + i * 24, 8);
 
       /* Create corresponding parameters for the cylinders. 
-         * The parameter range of the cylinders is u ∈ [0, 2 * M_PI] and v ∈ ]inf, -inf[ */
+       * The parameter range of the cylinders is u ∈ [0, 2 * M_PI] and v ∈ ]inf, -inf[ */
       parameters[i * 8 + 0] = (i + 1) * 2 * M_PI / num;
       parameters[i * 8 + 1] = 0;
       parameters[i * 8 + 2] = i * 2 * M_PI / num;
@@ -842,8 +834,8 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
       parameters[i * 8 + 7] = -1;
 
       /* Give the trees information about their surfaces and the parameters of the vertices. 
-         * Each parameter set is given to the tree via its attribute key + face index it corresponds with. 
-         * We can use the same edges and faces array, because we link the surface to the same faces on every tree.*/
+       * Each parameter set is given to the tree via its attribute key + face index it corresponds with. 
+       * We can use the same edges and faces array, because we link the surface to the same faces on every tree.*/
       t8_cmesh_set_attribute (cmesh, i, t8_get_package_id (), T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces, 6 * sizeof (int),
                               1);
       t8_cmesh_set_attribute (cmesh, i, t8_get_package_id (), T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges, 24 * sizeof (int),

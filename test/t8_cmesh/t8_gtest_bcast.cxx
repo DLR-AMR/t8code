@@ -31,7 +31,6 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 
-/* *INDENT-OFF* */
 class cmesh_hypercube: public testing::TestWithParam<t8_eclass> {
  protected:
   void
@@ -58,4 +57,3 @@ TEST_P (cmesh_hypercube, bcast_equal_no_bcast)
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_bcast, cmesh_hypercube, testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT));
-/* *INDENT-ON* */
