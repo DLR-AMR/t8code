@@ -60,7 +60,7 @@ t8_element_shape_vtk_corner_number (int element_shape, int index)
 }
 
 /** For each element_shape, the name of this class as a string */
-const char *
+const char*
 t8_element_shape_to_string (int element_shape)
 {
   return t8_eclass_to_string[element_shape];

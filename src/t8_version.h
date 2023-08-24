@@ -64,19 +64,19 @@ T8_EXTERN_C_BEGIN ();
  * This string has the format "t8 version_number".
  * \return The version string of t8code.
  */
-const char *
+const char*
 t8_get_package_string ();
 
 /** Return the version number of t8code as a string.
  * \return The version number of t8code as a string.
  */
-const char *
+const char*
 t8_get_version_number ();
 
 /** Return the version point string.
  * \return The version point point string.
  */
-const char *
+const char*
 t8_get_version_point_string ();
 
 /** Return the major version number of t8code.
