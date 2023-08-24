@@ -512,7 +512,7 @@ t8_element_shape (const t8_eclass_scheme_c *ts, const t8_element_t *elem);
 
 /** Initialize the entries of an allocated element according to a
  *  given linear id in a uniform refinement.
- * \param [in] ts             Implementation of a class scheme.
+ * \param [in] ts       Implementation of a class scheme.
  * \param [in,out] elem The element whose entries will be set.
  * \param [in] level    The level of the uniform refinement to consider.
  * \param [in] id       The linear id.
@@ -523,7 +523,7 @@ t8_element_set_linear_id (const t8_eclass_scheme_c *ts, t8_element_t *elem, int 
 
 /** Compute the linear id of a given element in a hypothetical uniform
  * refinement of a given level.
- * \param [in] ts             Implementation of a class scheme.
+ * \param [in] ts       Implementation of a class scheme.
  * \param [in] elem     The element whose id we compute.
  * \param [in] level    The level of the uniform refinement to consider.
  * \return              The linear id of the element.
@@ -532,7 +532,7 @@ t8_linearidx_t
 t8_element_get_linear_id (const t8_eclass_scheme_c *ts, const t8_element_t *elem, int level);
 
 /** Compute the first descendant of a given element.
- * \param [in] ts             Implementation of a class scheme.
+ * \param [in] ts       Implementation of a class scheme.
  * \param [in] elem     The element whose descendant is computed.
  * \param [out] desc    The first element in a uniform refinement of \a elem
  *                      of the maximum possible level.
@@ -541,7 +541,7 @@ void
 t8_element_first_descendant (const t8_eclass_scheme_c *ts, const t8_element_t *elem, t8_element_t *desc, int level);
 
 /** Compute the last descendant of a given element.
- * \param [in] ts             Implementation of a class scheme.
+ * \param [in] ts       Implementation of a class scheme.
  * \param [in] elem     The element whose descendant is computed.
  * \param [out] desc    The last element in a uniform refinement of \a elem
  *                      of the maximum possible level.
@@ -550,17 +550,17 @@ void
 t8_element_last_descendant (const t8_eclass_scheme_c *ts, const t8_element_t *elem, t8_element_t *desc, int level);
 
 /** Construct the successor in a uniform refinement of a given element.
- * \param [in] ts             Implementation of a class scheme.
- * \param [in] elem1    The element whose successor should be constructed.
+ * \param [in] ts         Implementation of a class scheme.
+ * \param [in] elem1      The element whose successor should be constructed.
  * \param [in,out] elem2  The element whose entries will be set.
- * \param [in] level    The level of the uniform refinement to consider.
+ * \param [in] level      The level of the uniform refinement to consider.
  */
 void
 t8_element_successor (const t8_eclass_scheme_c *ts, const t8_element_t *elem1, t8_element_t *elem2, int level);
 
 /** Compute the root length of a given element, that is the length of
  * its level 0 ancestor.
- * \param [in] ts             Implementation of a class scheme.
+ * \param [in] ts       Implementation of a class scheme.
  * \param [in] elem     The element whose root length should be computed.
  * \return              The root length of \a elem
  */
@@ -569,10 +569,10 @@ t8_element_root_len (const t8_eclass_scheme_c *ts, const t8_element_t *elem);
 
 /** Compute the coordinates of a given element vertex inside a reference tree
  *  that is embedded into [0,1]^d (d = dimension).
- * \param [in] ts     Implementation of a class scheme.
- * \param [in] t      The element to be considered.
- * \param [in] vertex The id of the vertex whose coordinates shall be computed.
- * \param [out] coords An array of at least as many doubles as the element's dimension
+ * \param [in] ts       Implementation of a class scheme.
+ * \param [in] t        The element to be considered.
+ * \param [in] vertex   The id of the vertex whose coordinates shall be computed.
+ * \param [out] coords  An array of at least as many doubles as the element's dimension
  *                      whose entries will be filled with the coordinates of \a vertex.
  */
 void
@@ -619,10 +619,10 @@ t8_element_count_leafs_from_root (const t8_eclass_scheme_c *ts, int level);
 /** This function has no defined effect but each implementation is free to
  *  provide its own meaning of it. Thus this function can be used to compute or
  *  lookup very scheme implementation specific data.
- *  \param [in] ts      Implementation of a class scheme.
- *  \param [in] elem    An valid element
- *  \param [in] indata  Pointer to input data
- *  \param [out] outdata Pointer to output data.
+ *  \param [in] ts        Implementation of a class scheme.
+ *  \param [in] elem      An valid element
+ *  \param [in] indata    Pointer to input data
+ *  \param [out] outdata  Pointer to output data.
  *  For the correct usage of \a indata and \a outdata see the specific implementations
  *  of the scheme.
  *  For example the default scheme triangle and tetrahedron implementations use 
@@ -665,12 +665,10 @@ t8_element_debug_print (const t8_eclass_scheme_c *ts, const t8_element_t *elem);
 #endif
 
 /** Allocate memory for an array of elements of a given class and initialize them.
- * \param [in] ts             Implementation of a class scheme.
- * \param [in] length   The number of elements to be allocated.
- * \param [in,out] elems On input an array of \b length many unallocated
- *                      element pointers.
- *                      On output all these pointers will point to an allocated
- *                      and initialized element.
+ * \param [in] ts         Implementation of a class scheme.
+ * \param [in] length     The number of elements to be allocated.
+ * \param [in,out] elems  On input an array of \b length many unallocated element pointers.
+ *                        On output all these pointers will point to an allocated and initialized element.
  * \note Not every element that is created in t8code will be created by a call
  * to this function. However, if an element is not created using \ref t8_element_new,
  * then it is guaranteed that \ref t8_element_init is called on it.
@@ -686,12 +684,10 @@ void
 t8_element_new (const t8_eclass_scheme_c *ts, int length, t8_element_t **elems);
 
 /** Deallocate an array of elements.
- * \param [in] ts             Implementation of a class scheme.
- * \param [in] length   The number of elements in the array.
- * \param [in,out] elems On input an array of \b length many allocated
- *                      element pointers.
- *                      On output all these pointers will be freed.
- *                      \b elem itself will not be freed by this function.
+ * \param [in] ts         Implementation of a class scheme.
+ * \param [in] length     The number of elements in the array.
+ * \param [in,out] elems  On input an array of \b length many allocated element pointers. On output all these pointers
+ *                        will be freed. \b elem itself will not be freed by this function.
  */
 void
 t8_element_destroy (const t8_eclass_scheme_c *ts, int length, t8_element_t **elems);
