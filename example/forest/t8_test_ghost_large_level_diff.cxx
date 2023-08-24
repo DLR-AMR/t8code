@@ -119,11 +119,11 @@ t8_ghost_fractal_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t
  * ghost elements are computed.
  *
  * \param[in] prefix  The prefix to the meshfile
- * @param dim       Dimension of the mesh
- * @param level     Initial refinement level
- * @param refine    Number of levels the forest will be refined
- * @param no_vtk    Flag for vtk-output
- * @param comm      The MPI-communicator
+ * \param[in] dim       Dimension of the mesh
+ * \param[in] level     Initial refinement level
+ * \param[in] refine    Number of levels the forest will be refined
+ * \param[in] no_vtk    Flag for vtk-output
+ * \param[in] comm      The MPI-communicator
  */
 static void
 t8_ghost_large_level_diff (const char *prefix, int dim, int level, int refine, int no_vtk, sc_MPI_Comm comm)
@@ -206,16 +206,13 @@ main (int argc, char *argv[])
 
   snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS> <ARGUMENTS>", basename (argv[0]));
   sreturn = snprintf (help, BUFSIZ,
-                      "This program can read a .msh file "
-                      "created by the GMSH program and constructs a "
-                      "t8code coarse mesh from them. If no file is given, a prism-hypercube is created."
-                      " The mesh is refined adaptivly in a fractal pattern."
-                      "\n\n%s\n\nExample: %s -f A1 -l1 -r2 \nTo open the file A1.msh, with initial level 1"
-                      " and one refinement level."
-                      "\n\nThe default dimension of the mesh to read is 3. Since the "
-                      ".msh format stores elements of all (lower) dimensions "
-                      "the user must provide the argument for a different dimension by hand, if "
-                      "desired.\n",
+                      "This program can read a .msh file created by the GMSH program and constructs a t8code coarse "
+                      "mesh from them. If no file is given, a prism-hypercube is created. The mesh is refined "
+                      "adaptivly in a fractal pattern. \n\n%s\n\nExample: %s -f A1 -l1 -r2 \nTo open the file A1.msh, "
+                      "with initial level 1 and one refinement level."
+                      "\n\nThe default dimension of the mesh to read is 3. Since the .msh format stores elements of "
+                      "all (lower) dimensions the user must provide the argument for a different dimension by hand, "
+                      "if desired.\n",
                       usage, basename (argv[0]));
 
   if (sreturn >= BUFSIZ) {
@@ -237,14 +234,12 @@ main (int argc, char *argv[])
   opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'h', "help", &helpme, "Display a short help message:");
   sc_options_add_string (opt, 'f', "prefix", &prefix, NULL,
-                         "The prefix to the mesh-file. "
-                         "The file must end in .msh and be created with gmsh. "
+                         "The prefix to the mesh-file. The file must end in .msh and be created with gmsh. "
                          "If no file is given, a hypercube of prisms is created.");
   sc_options_add_int (opt, 'd', "dim", &dim, 3, "The dimension of the mesh.");
   sc_options_add_int (opt, 'l', "level", &level, 0, "The initial refinement level of the mesh.");
   sc_options_add_int (opt, 'r', "refine", &refine, 0,
-                      "The number of levels that the forest "
-                      "is refined from the initial level.");
+                      "The number of levels that the forest is refined from the initial level.");
   sc_options_add_switch (opt, 'o', "no-vtk", &no_vtk, "Suppress vtk output.");
   parsed = sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (helpme) {
