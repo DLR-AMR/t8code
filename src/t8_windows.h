@@ -39,14 +39,14 @@
  *
  * Source: https://github.com/arnavyc/getdelim/blob/0129a33c182b46e62b3137623a5569449fd3cc94/include/ay/getdelim.h
  */
-static              ssize_t
+static ssize_t
 getdelim (char **lineptr, size_t *n, int delimiter, FILE *stream)
 {
-  int                 initial_buffer_size = 1024;
-  int                 c;
-  size_t              pos;
-  size_t              new_size;
-  char               *new_ptr;
+  int initial_buffer_size = 1024;
+  int c;
+  size_t pos;
+  size_t new_size;
+  char *new_ptr;
 
   if (lineptr == NULL || stream == NULL || n == NULL) {
     return -1;
@@ -102,7 +102,7 @@ getdelim (char **lineptr, size_t *n, int delimiter, FILE *stream)
  *
  * Source: https://github.com/arnavyc/getdelim/blob/0129a33c182b46e62b3137623a5569449fd3cc94/include/ay/getdelim.h
  */
-static              ssize_t
+static ssize_t
 getline (char **lineptr, size_t *n, FILE *stream)
 {
   return getdelim (lineptr, n, '\n', stream);
@@ -112,11 +112,11 @@ getline (char **lineptr, size_t *n, FILE *stream)
  *
  * For a full description see https://linux.die.net/man/3/strsep
  */
-static char        *
+static char *
 strsep (char **stringp, const char *delim)
 {
-  char               *current;
-  char               *original = *stringp;
+  char *current;
+  char *original = *stringp;
 
   if (*stringp == NULL) {
     return NULL;

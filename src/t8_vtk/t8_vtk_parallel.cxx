@@ -41,12 +41,11 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * \return vtk_read_success_t 
  */
 static vtk_read_success_t
-setup_reader (const char *filename,
-              vtkSmartPointer < vtkXMLPDataReader > reader,
-              int *first_piece, int *last_piece, sc_MPI_Comm comm)
+setup_reader (const char *filename, vtkSmartPointer<vtkXMLPDataReader> reader, int *first_piece, int *last_piece,
+              sc_MPI_Comm comm)
 {
   /* Check if we can open the parallel file */
-  FILE               *first_check;
+  FILE *first_check;
   first_check = fopen (filename, "r");
   if (first_check == NULL) {
     t8_errorf ("Can not find the file %s\n", filename);
@@ -63,14 +62,14 @@ setup_reader (const char *filename,
   reader->UpdateInformation ();
 
   /*  Get the number of files to read. */
-  const int           total_num_pieces = reader->GetNumberOfPieces ();
+  const int total_num_pieces = reader->GetNumberOfPieces ();
   /* Get mpi size and rank */
-  int                 mpiret;
-  int                 mpisize;
+  int mpiret;
+  int mpisize;
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
 
-  int                 mpirank;
+  int mpirank;
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
 
@@ -86,10 +85,8 @@ setup_reader (const char *filename,
   else {
     *first_piece = total_num_pieces / mpisize * mpirank;
     *last_piece = *first_piece;
-    const int           prev_proc_first_piece =
-      total_num_pieces / mpisize * (mpirank - 1);
-    *last_piece +=
-      *first_piece == prev_proc_first_piece ? 0 : total_num_pieces / mpisize;
+    const int prev_proc_first_piece = total_num_pieces / mpisize * (mpirank - 1);
+    *last_piece += *first_piece == prev_proc_first_piece ? 0 : total_num_pieces / mpisize;
     if (*first_piece == total_num_pieces / mpisize * (mpisize - 1)) {
       /* Read the last chunk of data */
       *last_piece = total_num_pieces - *first_piece;
@@ -99,28 +96,24 @@ setup_reader (const char *filename,
 }
 
 vtk_read_success_t
-t8_read_parallel_polyData (const char *filename,
-                           vtkSmartPointer < vtkDataSet >grid,
-                           sc_MPI_Comm comm)
+t8_read_parallel_polyData (const char *filename, vtkSmartPointer<vtkDataSet> grid, sc_MPI_Comm comm)
 {
   /* Setup parallel reader. */
-  vtkSmartPointer < vtkXMLPPolyDataReader >reader =
-    vtkSmartPointer < vtkXMLPPolyDataReader >::New ();
+  vtkSmartPointer<vtkXMLPPolyDataReader> reader = vtkSmartPointer<vtkXMLPPolyDataReader>::New ();
 
-  vtk_read_success_t  read_status = read_failure;
+  vtk_read_success_t read_status = read_failure;
 
-  int                 first_piece = 0;
-  int                 last_piece = -1;
-  read_status =
-    setup_reader (filename, reader, &first_piece, &last_piece, comm);
+  int first_piece = 0;
+  int last_piece = -1;
+  read_status = setup_reader (filename, reader, &first_piece, &last_piece, comm);
   if (read_status == read_failure) {
     return read_status;
   }
   /* Read the pieces if there are any pieces to read on this proc. 
    * Merge the output of multiple pieces into one grid */
   if (first_piece < last_piece) {
-    vtkNew < vtkAppendPolyData > append;
-    const int           total_num_pieces = last_piece - first_piece + 1;
+    vtkNew<vtkAppendPolyData> append;
+    const int total_num_pieces = last_piece - first_piece + 1;
     for (int ipiece = first_piece; ipiece < last_piece; ipiece++) {
       reader->UpdatePiece (ipiece, total_num_pieces, 0);
       append->AddInputData (reader->GetOutput ());
@@ -137,28 +130,24 @@ t8_read_parallel_polyData (const char *filename,
 }
 
 vtk_read_success_t
-t8_read_parallel_unstructured (const char *filename,
-                               vtkSmartPointer < vtkDataSet >grid,
-                               sc_MPI_Comm comm)
+t8_read_parallel_unstructured (const char *filename, vtkSmartPointer<vtkDataSet> grid, sc_MPI_Comm comm)
 {
   /* Setup parallel reader. */
-  vtkSmartPointer < vtkXMLPUnstructuredGridReader >reader =
-    vtkSmartPointer < vtkXMLPUnstructuredGridReader >::New ();
+  vtkSmartPointer<vtkXMLPUnstructuredGridReader> reader = vtkSmartPointer<vtkXMLPUnstructuredGridReader>::New ();
 
-  vtk_read_success_t  read_status = read_failure;
+  vtk_read_success_t read_status = read_failure;
 
-  int                 first_piece = 0;
-  int                 last_piece = -1;
-  read_status =
-    setup_reader (filename, reader, &first_piece, &last_piece, comm);
+  int first_piece = 0;
+  int last_piece = -1;
+  read_status = setup_reader (filename, reader, &first_piece, &last_piece, comm);
   if (read_status == read_failure) {
     return read_status;
   }
   /* Read the pieces if there are any pieces to read on this proc. 
    * Merge the output of multiple pieces into one grid */
   if (first_piece < last_piece) {
-    vtkNew < vtkAppendFilter > append;
-    const int           total_num_pieces = last_piece - first_piece + 1;
+    vtkNew<vtkAppendFilter> append;
+    const int total_num_pieces = last_piece - first_piece + 1;
     for (int ipiece = first_piece; ipiece < last_piece; ipiece++) {
       reader->UpdatePiece (ipiece, total_num_pieces, 0);
       append->AddInputData (reader->GetOutputAsDataSet ());
