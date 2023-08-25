@@ -27,7 +27,7 @@
 /* The following three tests check whether t8code computes the correct
  * version.
  * The current version of t8code is
- *    1.4.0
+ *    1.5.0
  * If you increase the major or minor version number, you need to adjust these tests and
  * this comment. */
 
