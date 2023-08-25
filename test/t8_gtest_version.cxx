@@ -42,7 +42,7 @@ TEST (t8_gtest_version, major_version)
 TEST (t8_gtest_version, minor_version)
 {
   /* Change this number when you increase the minor version. */
-  const int minor_version = 4;
+  const int minor_version = 5;
 
   EXPECT_EQ (t8_get_version_minor (), minor_version);
 }
