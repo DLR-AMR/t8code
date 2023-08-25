@@ -347,7 +347,6 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
    */
   /* Tetrahedron 2 vertices */
   for (int itet = 0; itet < 3; itet++) {
-
     vertices[itet] = vertices[itet] + (itet == 0 ? 1 + 0.86 : 0);
     vertices[3 + itet] = vertices[6 + itet] + (itet == 0 ? 1 : 0);
     vertices[9 + itet] = vertices[9 + itet] + (itet == 0 ? 1 : 0);

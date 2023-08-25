@@ -142,11 +142,9 @@ t8_naca_geometry_refinement (t8_forest_t forest, const std::string &fileprefix, 
 {
   std::string forest_vtu;
   t8_forest_t forest_new;
-  /* *INDENT-OFF* */
   std::array<int, 4> geometries; /** The geometries we want to refine */
   std::array<int, 4> levels;     /** The refinement levels of the geometries */
-  /* *INDENT-ON* */
-  int n_geometries; /** The number of geometries we want to refine */
+  int n_geometries;              /** The number of geometries we want to refine */
   /* Generate the adapt data. We refine the geometries in the array geometries
    * to the levels specified in the array levels. The geometry indices can be visualized by opening
    * the brep file in the Gmsh GUI and turning on the visibility of surface/curve tags
@@ -417,8 +415,7 @@ main (int argc, char **argv)
   sc_options_add_int (opt, 'n', "timesteps", &steps, 10,
                       "How many steps the plane takes to move through the airfoil. Default: 10");
   sc_options_add_switch (opt, 'o', "occ", &occ,
-                         "Use the occ geometry. "
-                         "In the geometry mode this is enabled automatically.");
+                         "Use the occ geometry. In the geometry mode this is enabled automatically.");
   parsed = sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (helpme) {
     /* display help message and usage */
