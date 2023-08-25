@@ -48,7 +48,6 @@
 /* Check that the linear geometry for dimensions 0,1,2,3
  * has the correct name and dimension. */
 
-/* *INDENT-OFF* */
 class geometry: public testing::TestWithParam<int> {
  protected:
   void
@@ -58,7 +57,6 @@ class geometry: public testing::TestWithParam<int> {
   }
   int dim;
 };
-/* *INDENT-ON* */
 
 /* Check that the linear geometry for dimensions 0,1,2,3
  * has the correct name and dimension. */
@@ -163,9 +161,7 @@ TEST_P (geometry, cmesh_geometry_linear)
   t8_cmesh_destroy (&cmesh);
 }
 
-/* *INDENT-OFF* */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_geometry, geometry, testing::Range (0, 4));
-/* *INDENT-ON* */
 
 TEST (test_geometry, cmesh_geometry)
 {

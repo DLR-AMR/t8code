@@ -44,7 +44,11 @@ TEST (t8_point_inside, test_point_inside_specific_triangle)
 {
   t8_cmesh_t cmesh;
 
-  double vertices[9] = { 0., 0., 0., 1., 0., 0., 1., 1., 0. };
+  /* clang-format off */
+  double vertices[9] = { 0., 0., 0., 
+                         1., 0., 0., 
+                         1., 1., 0. };
+  /* clang-format on */
   double test_point[3] = { 0.3, 0.3, 1 };
   const double tolerance = 1e-12; /* Numerical tolerance that we allow for the point inside check */
   t8_geometry_c *linear_geom = new t8_geometry_linear (2);
@@ -81,7 +85,12 @@ TEST (t8_point_inside, test_point_inside_specific_quad)
 {
   t8_cmesh_t cmesh;
 
-  double vertices[12] = { 0., 0., 0., 1., 0., 0., 0., 1., 0., 1., 1., 0. };
+  /* clang-format off */
+  double vertices[12] = { 0., 0., 0., 
+                          1., 0., 0., 
+                          0., 1., 0., 
+                          1., 1., 0. };
+  /* clang-format on */
   double test_point[3] = { 0.3, 0.3, 1 };
   const double tolerance = 1e-12; /* Numerical tolerance that we allow for the point inside check */
   t8_geometry_c *linear_geom = new t8_geometry_linear (2);
@@ -179,7 +188,6 @@ TEST_P (geometry_point_inside, test_point_inside)
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
     const t8_eclass_scheme_c *eclass_scheme = t8_forest_get_eclass_scheme (forest, tree_class);
     for (t8_locidx_t ielement = 0; ielement < num_elements; ++ielement) {
-
       /* Get a pointer to the element */
       const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
 
@@ -289,13 +297,9 @@ TEST_P (geometry_point_inside, test_point_inside)
 }
 
 #if T8_ENABLE_LESS_TESTS
-/* *INDENT-OFF* */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_point_inside, geometry_point_inside,
                           testing::Combine (testing::Range (T8_ECLASS_LINE, T8_ECLASS_COUNT), testing::Range (0, 4)));
-/* *INDENT-ON* */
 #else
-/* *INDENT-OFF* */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_point_inside, geometry_point_inside,
                           testing::Combine (testing::Range (T8_ECLASS_LINE, T8_ECLASS_COUNT), testing::Range (0, 6)));
-/* *INDENT-ON* */
 #endif
