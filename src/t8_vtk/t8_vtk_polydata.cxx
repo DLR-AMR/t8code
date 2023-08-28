@@ -30,11 +30,12 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <vtkPolyDataReader.h>
 #include <vtkSTLReader.h>
 #include <vtkXMLPolyDataReader.h>
+#include <vtkXMLPPolyDataReader.h>
 #include <vtkTriangleFilter.h>
 #include <vtkSmartPointer.h>
 
-static              vtk_read_success_t
-t8_read_poly_ext (const char *filename, vtkSmartPointer < vtkPolyData > grid)
+static vtk_read_success_t
+t8_read_poly_ext (const char *filename, vtkSmartPointer < vtkPolyData >grid)
 {
   char                tmp[BUFSIZ];
   char               *extension;
@@ -55,14 +56,14 @@ t8_read_poly_ext (const char *filename, vtkSmartPointer < vtkPolyData > grid)
   /* Read the file depending on the extension. Not all readers have
    * a built-in check if the file is readable. */
   if (strcmp (extension, "ply") == 0) {
-    vtkNew < vtkPLYReader > reader;
+    vtkNew < vtkPLYReader >reader;
     reader->SetFileName (filename);
     reader->Update ();
     grid->ShallowCopy (vtkDataSet::SafeDownCast (reader->GetOutput ()));
     return read_success;
   }
   else if (strcmp (extension, "vtp") == 0) {
-    vtkNew < vtkXMLPolyDataReader > reader;
+    vtkNew < vtkXMLPolyDataReader >reader;
     reader->SetFileName (filename);
     if (!reader->CanReadFile (filename)) {
       t8_errorf ("Unable to read file %s.\n", filename);
@@ -73,14 +74,14 @@ t8_read_poly_ext (const char *filename, vtkSmartPointer < vtkPolyData > grid)
     return read_success;
   }
   else if (strcmp (extension, "obj") == 0) {
-    vtkNew < vtkOBJReader > reader;
+    vtkNew < vtkOBJReader >reader;
     reader->SetFileName (filename);
     reader->Update ();
     grid->ShallowCopy (vtkDataSet::SafeDownCast (reader->GetOutput ()));
     return read_success;
   }
   else if (strcmp (extension, "stl") == 0) {
-    vtkNew < vtkSTLReader > reader;
+    vtkNew < vtkSTLReader >reader;
     reader->SetFileName (filename);
     reader->Update ();
     grid->ShallowCopy (vtkDataSet::SafeDownCast (reader->GetOutput ()));
@@ -99,11 +100,23 @@ t8_read_poly_ext (const char *filename, vtkSmartPointer < vtkPolyData > grid)
     return read_success;
   }
   else if (strcmp (extension, "g") == 0) {
-    vtkNew < vtkBYUReader > reader;
+    vtkNew < vtkBYUReader >reader;
     reader->SetGeometryFileName (filename);
     reader->Update ();
     grid->ShallowCopy (vtkDataSet::SafeDownCast (reader->GetOutput ()));
     return read_failure;
+  }
+  else if (strcmp (extension, "pvtp") == 0) {
+    vtkSmartPointer < vtkXMLPPolyDataReader >reader =
+      vtkSmartPointer < vtkXMLPPolyDataReader >::New ();
+    if (!reader->CanReadFile (filename)) {
+      t8_errorf ("Unable to read file.\n");
+      return read_failure;
+    }
+    reader->SetFileName (filename);
+    reader->Update ();
+    grid->ShallowCopy (vtkDataSet::SafeDownCast (reader->GetOutput ()));
+    return read_success;
   }
   else {
     /* Return NULL if the reader is not used correctly. */
@@ -113,12 +126,12 @@ t8_read_poly_ext (const char *filename, vtkSmartPointer < vtkPolyData > grid)
 }
 
 vtk_read_success_t
-t8_read_poly (const char *filename, vtkDataSet * grid)
+t8_read_polyData (const char *filename, vtkDataSet *grid)
 {
-  vtkSmartPointer < vtkPolyData > poly_data =
+  vtkSmartPointer < vtkPolyData >poly_data =
     vtkSmartPointer < vtkPolyData >::New ();
-  vtkSmartPointer < vtkPolyData > triangulated;
-  vtkNew < vtkTriangleFilter > tri_filter;
+  vtkSmartPointer < vtkPolyData >triangulated;
+  vtkNew < vtkTriangleFilter >tri_filter;
   /* Prepare the poly-data for the translation from vtk to t8code.
    * We split all polygons (which are not supported by t8code) to
    * triangles, vertices and lines. */

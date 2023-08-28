@@ -356,8 +356,8 @@ TEST (t8_gtest_geometry_occ, linked_edges)
     0, M_PI / 2, 0,             // Edge 2
     0, M_PI, 0,                 // Edge 3
     M_PI / 2, 0, 0,             // Edge 4
-    0, M_PI, -M_PI / 2,         // Edge 5
-    -M_PI / 2, 0, 0,            // Edge 6
+    -M_PI / 2, 0, 0,            // Edge 5
+    0, M_PI, -M_PI / 2,         // Edge 6
     0, M_PI, M_PI / 2,          // Edge 7
     -M_PI / 2, M_PI / 2, M_PI / 2,      // Edge 8
     M_PI / 2, M_PI / 2, -M_PI / 2,      // Edge 9

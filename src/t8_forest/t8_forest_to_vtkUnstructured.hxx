@@ -54,9 +54,9 @@ T8_EXTERN_C_BEGIN ();
  * \return  True if successful, false if not (process local).
  * \note If t8code was not configured with vtk, use \ref t8_forest_vtk_write_file
  */
+/* *INDENT-OFF* */
 void                t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
-                                                      vtkSmartPointer <
-                                                      vtkUnstructuredGrid >
+                                                      vtkSmartPointer < vtkUnstructuredGrid >
                                                       unstructuredGrid,
                                                       const int write_treeid,
                                                       const int write_mpirank,
@@ -68,6 +68,7 @@ void                t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest,
                                                       const int num_data,
                                                       t8_vtk_data_field_t
                                                       *data);
+/* *INDENT-ON* */
 #endif
 
 T8_EXTERN_C_END ();

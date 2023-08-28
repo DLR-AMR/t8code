@@ -67,7 +67,7 @@ TEST (t8_gtest_vtk_linkage, t8_test_vtk_version_number)
 TEST (t8_gtest_vtk_linkage, t8_test_vtk_linkage)
 {
 #if T8_WITH_VTK
-  vtkNew < vtkUnstructuredGrid > unstructuredGrid;
+  vtkNew < vtkUnstructuredGrid >unstructuredGrid;
 
   t8_debugf ("Successfully created VTK unstructuredGrid object.\n");
 #else
