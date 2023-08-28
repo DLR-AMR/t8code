@@ -721,7 +721,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh,
       for (int i_edge_vertex = 0; i_edge_vertex < 2; ++i_edge_vertex) {
         for (int i_dim = 0; i_dim < 3; ++i_dim) {
           const int           i_tree_vertex =
-            t8_edge_vertex_to_tree_vertex_n[active_tree_class][i_edge]
+            t8_edge_vertex_to_tree_vertex[active_tree_class][i_edge]
             [i_edge_vertex];
           edge_vertices[i_edge_vertex * 3 + i_dim] =
             active_tree_vertices[i_tree_vertex * 3 + i_dim];
@@ -808,71 +808,18 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh,
 
       /* Save the max ref_coord range and the othogonal ref_coords for each edge
        * and determine the scaling_factor along the neighboring faces with these informations. */
-      double              scaling_factor_neigh_face_1 = 0,
-        scaling_factor_neigh_face_2 = 0;
-      double              orthogonal_direction[2];
-      double              max_orthogonal_direction[2];
-
-      switch (i_edge) {
-      case 0:
-        orthogonal_direction[0] = ref_coords[1];        // face 2
-        max_orthogonal_direction[0] = ref_coords[0];
-        orthogonal_direction[1] = ref_coords[2];        // face 3
-        max_orthogonal_direction[1] = ref_coords[0];
-        break;
-      case 1:
-        orthogonal_direction[0] = ref_coords[1];        // face 1
-        max_orthogonal_direction[0] = ref_coords[0];
-        orthogonal_direction[1] = ref_coords[0] - ref_coords[2];        // face 3
-        max_orthogonal_direction[1] = ref_coords[0];
-        break;
-      case 2:
-        orthogonal_direction[0] = ref_coords[0] - ref_coords[1];        // face 1
-        max_orthogonal_direction[0] = ref_coords[0];
-        orthogonal_direction[1] = ref_coords[0] - ref_coords[2];        // face 2
-        max_orthogonal_direction[1] = ref_coords[0];
-        break;
-      case 3:
-        orthogonal_direction[0] = ref_coords[1];        // face 0
-        max_orthogonal_direction[0] = ref_coords[2];
-        orthogonal_direction[1] = 1 - ref_coords[0];    // face 3
-        max_orthogonal_direction[1] = 1 - ref_coords[2];
-        break;
-      case 4:
-        orthogonal_direction[0] = ref_coords[2] - ref_coords[1];        // face 0
-        max_orthogonal_direction[0] = ref_coords[2];
-        orthogonal_direction[1] = 1 - ref_coords[0];    // face 2
-        max_orthogonal_direction[1] = 1 - ref_coords[2];
-        break;
-      case 5:
-        orthogonal_direction[0] = 1 - ref_coords[2];    // face 0
-        max_orthogonal_direction[0] = 1 - ref_coords[1];
-        orthogonal_direction[1] = 1 - ref_coords[0];    // face 1
-        max_orthogonal_direction[1] = 1 - ref_coords[1];
-        break;
-      default:
-        SC_ABORT_NOT_REACHED ();
-        break;
-      }
-
-      if (max_orthogonal_direction[0] == 0
-          || max_orthogonal_direction[0] == 1) {
-        scaling_factor_neigh_face_1 = 0;
-      }
-      else {
-        scaling_factor_neigh_face_1 =
-          1 - (orthogonal_direction[0] / max_orthogonal_direction[0]);
-      }
-
-      if (max_orthogonal_direction[1] == 0
-          || max_orthogonal_direction[1] == 1) {
-        scaling_factor_neigh_face_2 = 0;
-      }
-      else {
-        scaling_factor_neigh_face_2 =
-          1 - (orthogonal_direction[1] / max_orthogonal_direction[1]);
-      }
-
+      double              scaling_factor_neigh_face_1 =
+        t8_geom_get_scaling_factor_of_edge_on_face (i_edge,
+                                                    t8_edge_to_face
+                                                    [active_tree_class]
+                                                    [i_edge][0],
+                                                    ref_coords);
+      double              scaling_factor_neigh_face_2 =
+        t8_geom_get_scaling_factor_of_edge_on_face (i_edge,
+                                                    t8_edge_to_face
+                                                    [active_tree_class]
+                                                    [i_edge][1],
+                                                    ref_coords);
       /* out_coord correction */
       out_coords[0] +=
         cur_delta[0] * scaling_factor_neigh_face_1 *
@@ -1027,7 +974,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh,
       /* Iterate over each edge of face */
       for (int i_face_edge = 0; i_face_edge < 3; ++i_face_edge) {
         /* Check if curve is present */
-        if (edges[t8_face_edge_to_tree_edge_n[active_tree_class][i_faces]
+        if (edges[t8_face_edge_to_tree_edge[active_tree_class][i_faces]
                   [i_face_edge]] > 0) {
 
           /* Save the face vertices in a separate array for later usage. */
@@ -1040,21 +987,18 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh,
                 active_tree_vertices[i_tree_vertex * 3 + i_dim];
             }
           }
+          /* Save the tree edge */
+          int                 i_tree_edge =
+            t8_face_edge_to_tree_edge[active_tree_class][i_faces]
+            [i_face_edge];
 
           /* Retrieve parameters of nodes on curve */
           const double       *curve_parameters =
             (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
                                                T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY
-                                               +
-                                               t8_face_edge_to_tree_edge_n
-                                               [active_tree_class][i_faces]
-                                               [i_face_edge],
+                                               + i_tree_edge,
                                                ltreeid);
           T8_ASSERT (curve_parameters != NULL);
-          /* Save the tree edge */
-          int                 i_tree_edge =
-            t8_face_edge_to_tree_edge_n[active_tree_class][i_faces]
-            [i_face_edge];
           /* Get the interpolation coefficients for the current edge */
           double              interpolation_coeff;
           switch (i_tree_edge) {
@@ -1086,16 +1030,12 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh,
           for (int i_edge_vertex = 0; i_edge_vertex < 2; ++i_edge_vertex) {
             for (int i_dim = 0; i_dim < 2; ++i_dim) {
               const int           i_tree_vertex =
-                t8_edge_vertex_to_tree_vertex_n[active_tree_class]
+                t8_edge_vertex_to_tree_vertex[active_tree_class]
                 [i_tree_edge][i_edge_vertex];
               edge_parameters_on_face[i_edge_vertex * 2 + i_dim] =
                 surface_parameters[i_tree_vertex * 2 + i_dim];
             }
           }
-          // t8_geom_get_face_vertices ((t8_eclass_t)
-          //                            t8_eclass_face_types[active_tree_class]
-          //                            [i_faces], surface_parameters,
-          //                            i_face_edge, 2, edge_parameters_on_face);
           t8_geom_linear_interpolation (&interpolation_coeff,
                                         edge_parameters_on_face, 2, 1,
                                         interpolated_surface_parameters_on_edge);
@@ -1106,28 +1046,24 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh,
           for (int i_edge_vertex = 0; i_edge_vertex < 2; ++i_edge_vertex) {
             for (int i_dim = 0; i_dim < 3; ++i_dim) {
               const int           i_tree_vertex =
-                t8_edge_vertex_to_tree_vertex_n[active_tree_class]
+                t8_edge_vertex_to_tree_vertex[active_tree_class]
                 [i_tree_edge][i_edge_vertex];
               edge_vertices_on_face[i_edge_vertex * 3 + i_dim] =
                 active_tree_vertices[i_tree_vertex * 3 + i_dim];
             }
           }
-          // t8_geom_get_face_vertices ((t8_eclass_t)
-          //                            t8_eclass_face_types[active_tree_class]
-          //                            [i_faces], temp_face_vertices,
-          //                            i_face_edge, 3, edge_vertices_on_face);
           t8_geom_linear_interpolation (&interpolation_coeff,
                                         edge_vertices_on_face, 3, 1,
                                         interpolated_edge_coordinates);
           /* Retrieve the curve of the edge */
           T8_ASSERT (edges
-                     [t8_face_edge_to_tree_edge_n[active_tree_class][i_faces]
+                     [t8_face_edge_to_tree_edge[active_tree_class][i_faces]
                       [i_face_edge]]
                      <= occ_shape_edge_map.Size ());
           curve =
             BRep_Tool::Curve (TopoDS::Edge
                               (occ_shape_edge_map.FindKey
-                               (edges[t8_face_edge_to_tree_edge_n
+                               (edges[t8_face_edge_to_tree_edge
                                       [active_tree_class][i_faces]
                                       [i_face_edge]])), first, last);
           /* Check if curve is valid */
@@ -1136,82 +1072,10 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh,
           curve->D0 (interpolated_curve_param, pnt);
 
           /* Scaling */
-          double              scaling_factor = 0;
-          double              orthogonal_direction_on_face;
-          double              max_orthogonal_direction_on_face;
-
-          switch (i_faces) {
-          case 0:
-            if (i_tree_edge == 3) {
-              orthogonal_direction_on_face = ref_coords[1];
-              max_orthogonal_direction_on_face = ref_coords[2];
-            }
-            if (i_tree_edge == 4) {
-              orthogonal_direction_on_face = ref_coords[2] - ref_coords[1];
-              max_orthogonal_direction_on_face = ref_coords[2];
-            }
-            if (i_tree_edge == 5) {
-              orthogonal_direction_on_face = 1 - ref_coords[2];
-              max_orthogonal_direction_on_face = 1 - ref_coords[1];
-            }
-            break;
-          case 1:
-            if (i_tree_edge == 1) {
-              orthogonal_direction_on_face = ref_coords[1];
-              max_orthogonal_direction_on_face = ref_coords[0];
-            }
-            if (i_tree_edge == 2) {
-              orthogonal_direction_on_face = ref_coords[0] - ref_coords[1];
-              max_orthogonal_direction_on_face = ref_coords[0];
-            }
-            if (i_tree_edge == 5) {
-              orthogonal_direction_on_face = 1 - ref_coords[0];
-              max_orthogonal_direction_on_face = 1 - ref_coords[1];
-            }
-            break;
-          case 2:
-            if (i_tree_edge == 0) {
-              orthogonal_direction_on_face = ref_coords[1];
-              max_orthogonal_direction_on_face = ref_coords[0];
-            }
-            if (i_tree_edge == 2) {
-              orthogonal_direction_on_face = ref_coords[0] - ref_coords[2];
-              max_orthogonal_direction_on_face = ref_coords[0];
-            }
-            if (i_tree_edge == 4) {
-              orthogonal_direction_on_face = 1 - ref_coords[0];
-              max_orthogonal_direction_on_face = 1 - ref_coords[2];
-            }
-            break;
-          case 3:
-            if (i_tree_edge == 0) {
-              orthogonal_direction_on_face = ref_coords[2];
-              max_orthogonal_direction_on_face = ref_coords[0];
-            }
-            if (i_tree_edge == 1) {
-              orthogonal_direction_on_face = ref_coords[0] - ref_coords[2];
-              max_orthogonal_direction_on_face = ref_coords[0];
-            }
-            if (i_tree_edge == 3) {
-              orthogonal_direction_on_face = 1 - ref_coords[0];
-              max_orthogonal_direction_on_face = 1 - ref_coords[2];
-            }
-            break;
-          default:
-            SC_ABORT_NOT_REACHED ();
-            break;
-          }
-
-          if (max_orthogonal_direction_on_face == 0
-              || max_orthogonal_direction_on_face == 1) {
-            scaling_factor = 0;
-          }
-          else {
-            scaling_factor =
-              1 -
-              (orthogonal_direction_on_face /
-               max_orthogonal_direction_on_face);
-          }
+          double              scaling_factor =
+            t8_geom_get_scaling_factor_of_edge_on_face (i_tree_edge,
+                                                        i_faces,
+                                                        ref_coords);
 
           /* Calculate the displacement generated by the presence of the curve */
           for (int dim = 0; dim < 3; ++dim) {
@@ -1223,10 +1087,13 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh,
           const int           num_face_nodes =
             t8_eclass_num_vertices[active_tree_class];
           t8_geometry_occ::t8_geom_edge_parameter_to_face_parameters (edges
-                                                                      [t8_face_edge_to_tree_edge_n
-                                                                       [active_tree_class]
-                                                                       [i_faces]
-                                                                       [i_face_edge]], faces[i_faces], num_face_nodes, interpolated_curve_param, surface_parameters, surface_parameters_from_curve);
+                                                                      [i_tree_edge],
+                                                                      faces
+                                                                      [i_faces],
+                                                                      num_face_nodes,
+                                                                      interpolated_curve_param,
+                                                                      surface_parameters,
+                                                                      surface_parameters_from_curve);
           /* Calculate the displacement between the interpolated parameters on the surface 
            * and the parameters on the surface converted from the parameter of the curve */
           for (int dim = 0; dim < 2; ++dim) {

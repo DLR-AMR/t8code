@@ -152,6 +152,20 @@ double              t8_geom_get_triangle_scaling_factor (int edge_index,
                                                          const double
                                                          *glob_ref_point);
 
+/** Calculates the scaling factor for the displacement of an edge over a face of a tetrahedral element.
+ * \param [in]         edge_index          Index of the edge, whose displacement should be scaled.
+ * \param [in]         face_index          Index of the face, the displacement should be scaled on.
+ * \param [in]         ref_coords          Array containing the coordinates of the reference point..
+ * \return                                 The scaling factor of the edge displacement on the face
+ *                                         at the point of the reference coordinates.
+ */
+double              t8_geom_get_scaling_factor_of_edge_on_face (int
+                                                                edge_index,
+                                                                int
+                                                                face_index,
+                                                                const double
+                                                                *ref_coords);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_GEOMETRY_HELPERS_H! */

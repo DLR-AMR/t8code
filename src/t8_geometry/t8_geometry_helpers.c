@@ -417,3 +417,117 @@ t8_geom_get_triangle_scaling_factor (int edge_index,
   double              scaling_factor = dist_ref / dist_intersection;
   return scaling_factor;
 }
+
+double
+t8_geom_get_scaling_factor_of_edge_on_face (int i_edge,
+                                            int i_face,
+                                            const double *ref_coords)
+{
+  double              orthogonal_direction;
+  double              max_orthogonal_direction;
+  double              scaling_factor;
+
+  switch (i_edge) {
+  case 0:
+    switch (i_face) {
+    case 2:
+      orthogonal_direction = ref_coords[1];
+      max_orthogonal_direction = ref_coords[0];
+      break;
+    case 3:
+      orthogonal_direction = ref_coords[2];
+      max_orthogonal_direction = ref_coords[0];
+      break;
+    default:
+      SC_ABORT_NOT_REACHED ();
+      break;
+    }
+    break;
+  case 1:
+    switch (i_face) {
+    case 1:
+      orthogonal_direction = ref_coords[1];
+      max_orthogonal_direction = ref_coords[0];
+      break;
+    case 3:
+      orthogonal_direction = ref_coords[0] - ref_coords[2];
+      max_orthogonal_direction = ref_coords[0];
+      break;
+    default:
+      SC_ABORT_NOT_REACHED ();
+      break;
+    }
+    break;
+  case 2:
+    switch (i_face) {
+    case 1:
+      orthogonal_direction = ref_coords[0] - ref_coords[1];
+      max_orthogonal_direction = ref_coords[0];
+      break;
+    case 2:
+      orthogonal_direction = ref_coords[0] - ref_coords[2];
+      max_orthogonal_direction = ref_coords[0];
+      break;
+    default:
+      SC_ABORT_NOT_REACHED ();
+      break;
+    }
+    break;
+  case 3:
+    switch (i_face) {
+    case 0:
+      orthogonal_direction = ref_coords[1];
+      max_orthogonal_direction = ref_coords[2];
+      break;
+    case 3:
+      orthogonal_direction = 1 - ref_coords[0];
+      max_orthogonal_direction = 1 - ref_coords[2];
+      break;
+    default:
+      SC_ABORT_NOT_REACHED ();
+      break;
+    }
+    break;
+  case 4:
+    switch (i_face) {
+    case 0:
+      orthogonal_direction = ref_coords[2] - ref_coords[1];
+      max_orthogonal_direction = ref_coords[2];
+      break;
+    case 2:
+      orthogonal_direction = 1 - ref_coords[0];
+      max_orthogonal_direction = 1 - ref_coords[2];
+      break;
+    default:
+      SC_ABORT_NOT_REACHED ();
+      break;
+    }
+    break;
+  case 5:
+    switch (i_face) {
+    case 0:
+      orthogonal_direction = 1 - ref_coords[2];
+      max_orthogonal_direction = 1 - ref_coords[1];
+      break;
+    case 1:
+      orthogonal_direction = 1 - ref_coords[0];
+      max_orthogonal_direction = 1 - ref_coords[1];
+      break;
+    default:
+      SC_ABORT_NOT_REACHED ();
+      break;
+    }
+    break;
+  default:
+    SC_ABORT_NOT_REACHED ();
+    break;
+  }
+
+  if (max_orthogonal_direction == 0 || max_orthogonal_direction == 1) {
+    scaling_factor = 0;
+  }
+  else {
+    scaling_factor = 1 - (orthogonal_direction / max_orthogonal_direction);
+  }
+  return scaling_factor;
+}
