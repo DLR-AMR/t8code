@@ -401,6 +401,9 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer<vtkDataSet> vtkGrid, const int partition, c
 vtkSmartPointer<vtkPointSet>
 t8_vtkGrid_to_vtkPointSet (vtkSmartPointer<vtkDataSet> vtkGrid)
 {
+  if (vtkGrid == NULL) {
+    return NULL;
+  }
   /* Set points */
   vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New ();
   const vtkIdType num_points = vtkGrid->GetNumberOfPoints ();
