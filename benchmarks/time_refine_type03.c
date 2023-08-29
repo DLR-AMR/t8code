@@ -30,22 +30,20 @@
 #include <sc_statistics.h>
 #include <sc_options.h>
 
-#include <t8_forest/t8_forest_types.h>  /* TODO: This file should not be included from an application */
+#include <t8_forest/t8_forest_types.h> /* TODO: This file should not be included from an application */
 
-int                 max_ref_level = 0;
+int max_ref_level = 0;
 
 /* This function refines every element */
 static int
-t8_basic_adapt_refine_type (t8_forest_t forest, t8_locidx_t which_tree,
-                            t8_eclass_scheme_t * ts, const int is_family,
+t8_basic_adapt_refine_type (t8_forest_t forest, t8_locidx_t which_tree, t8_eclass_scheme_t *ts, const int is_family,
                             int num_elements, t8_element_t *elements[])
 {
-  int                 level;
-  int                 type;
-  int                 dim;
+  int level;
+  int type;
+  int dim;
 
-  T8_ASSERT (!is_family || num_elements ==
-             t8_eclass_num_children[ts->eclass]);
+  T8_ASSERT (!is_family || num_elements == t8_eclass_num_children[ts->eclass]);
 
   dim = t8_eclass_to_dimension[ts->eclass];
   level = t8_element_level (ts, elements[0]);
@@ -53,8 +51,7 @@ t8_basic_adapt_refine_type (t8_forest_t forest, t8_locidx_t which_tree,
     return 0;
   }
   /* get the type of the current element */
-  type = dim == 2 ? ((t8_dtri_t *) elements[0])->type :
-    ((t8_dtet_t *) elements[0])->type;
+  type = dim == 2 ? ((t8_dtri_t *) elements[0])->type : ((t8_dtet_t *) elements[0])->type;
   /* refine type 0 and 3 */
   if (type == 0 || type == 3) {
     return 1;
@@ -65,19 +62,17 @@ t8_basic_adapt_refine_type (t8_forest_t forest, t8_locidx_t which_tree,
 static void
 t8_timings_adapt_type (int start_l, int dim)
 {
-  t8_forest_t         forests[2];
-  t8_eclass_t         eclass;
-  sc_flopinfo_t       fi, snapshot;
-  sc_statinfo_t       stats[1];
-  long long           num_el;
+  t8_forest_t forests[2];
+  t8_eclass_t eclass;
+  sc_flopinfo_t fi, snapshot;
+  sc_statinfo_t stats[1];
+  long long num_el;
 
   t8_forest_init (&forests[0]);
 
   eclass = dim == 2 ? T8_ECLASS_TRIANGLE : T8_ECLASS_TET;
 
-  t8_forest_set_cmesh (forests[0],
-                       t8_cmesh_new_bigmesh (eclass, 512, sc_MPI_COMM_WORLD,
-                                             0), sc_MPI_COMM_WORLD);
+  t8_forest_set_cmesh (forests[0], t8_cmesh_new_bigmesh (eclass, 512, sc_MPI_COMM_WORLD, 0), sc_MPI_COMM_WORLD);
   t8_forest_set_scheme (forests[0], t8_scheme_new_default ());
   t8_forest_set_level (forests[0], start_l);
   t8_forest_commit (forests[0]);
@@ -105,10 +100,10 @@ t8_timings_adapt_type (int start_l, int dim)
 int
 main (int argc, char **argv)
 {
-  int                 mpiret, mpisize;
-  int                 start_level, end_level, dim;
-  int                 first_argc;
-  sc_options_t       *opt;
+  int mpiret, mpisize;
+  int start_level, end_level, dim;
+  int first_argc;
+  sc_options_t *opt;
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -121,15 +116,12 @@ main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
 
   opt = sc_options_new (argv[0]);
-  sc_options_add_int (opt, 's', "slevel", &start_level, 0,
-                      "initial refine level");
+  sc_options_add_int (opt, 's', "slevel", &start_level, 0, "initial refine level");
   sc_options_add_int (opt, 'e', "elevel", &end_level, 0,
                       "Final refine level: greater or equal to initial refine level");
   sc_options_add_int (opt, 'd', "dim", &dim, 2, "dimension: 2 or 3");
-  first_argc = sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT,
-                                 opt, argc, argv);
-  if (first_argc < 0 || first_argc != argc
-      || 2 > dim || dim > 3 || end_level < start_level) {
+  first_argc = sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT, opt, argc, argv);
+  if (first_argc < 0 || first_argc != argc || 2 > dim || dim > 3 || end_level < start_level) {
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
     return 1;
   }

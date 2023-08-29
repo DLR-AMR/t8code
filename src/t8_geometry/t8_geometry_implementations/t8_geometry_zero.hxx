@@ -32,10 +32,9 @@
 #include <t8.h>
 #include <t8_geometry/t8_geometry_base.hxx>
 
-struct t8_geometry_zero:public t8_geometry
+struct t8_geometry_zero: public t8_geometry
 {
-public:
-
+ public:
   /* Basic constructor that sets the dimension and the name
    * to "t8_geom_zero_{dimension}" */
   t8_geometry_zero (int dimension);
@@ -43,7 +42,7 @@ public:
   /** The destructor. 
    * Clears the allocated memory.
    */
-                      virtual ~ t8_geometry_zero ();
+  virtual ~t8_geometry_zero ();
 
   /**
    * Map a point in the reference space \f$ [0,1]^\mathrm{dim} \to \mathbb{R}^3 \f$.
@@ -53,10 +52,8 @@ public:
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
    * \note All entries in out_coords will be set to 0.
    */
-  virtual void        t8_geom_evaluate (t8_cmesh_t cmesh,
-                                        t8_gloidx_t gtreeid,
-                                        const double *ref_coords,
-                                        double out_coords[3]) const;
+  virtual void
+  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double out_coords[3]) const;
 
   /**
    * Compute the jacobian of the \a t8_geom_evaluate map at a point in the reference space \f$ [0,1]^\mathrm{dim} \f$.
@@ -67,10 +64,8 @@ public:
    *                          correspond to the i-th column of the jacobian (Entry 3*i + j is del f_j/del x_i).
    * \note All entries in \a jacobian will be set to zero.
    */
-  virtual void        t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
-                                                 t8_gloidx_t gtreeid,
-                                                 const double *ref_coords,
-                                                 double *jacobian) const;
+  virtual void
+  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double *jacobian) const;
 
   /** Update a possible internal data buffer for per tree data.
    * This function is called before the first coordinates in a new tree are
@@ -79,8 +74,8 @@ public:
    * \param [in]  cmesh      The cmesh.
    * \param [in]  gtreeid    The global tree.
    */
-  virtual inline void t8_geom_load_tree_data (t8_cmesh_t cmesh,
-                                              t8_gloidx_t gtreeid);
+  virtual inline void
+  t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 };
 
 #endif /* !T8_GEOMETRY_ZERO_HXX! */

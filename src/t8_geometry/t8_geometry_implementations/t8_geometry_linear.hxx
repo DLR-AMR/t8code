@@ -31,10 +31,9 @@
 #include <t8_geometry/t8_geometry_with_vertices.hxx>
 #include <t8_geometry/t8_geometry_with_vertices.h>
 
-struct t8_geometry_linear:public t8_geometry_with_vertices
+struct t8_geometry_linear: public t8_geometry_with_vertices
 {
-public:
-
+ public:
   /* Basic constructor that sets the dimension and the name
    * to "t8_geom_linear_{dimension}" */
   t8_geometry_linear (int dimension);
@@ -42,14 +41,14 @@ public:
   /* Base constructor with no arguments. We need this since it
    * is called from derived class constructors.
    * Sets dimension and name to invalid values. */
-                      t8_geometry_linear ():t8_geometry_with_vertices ()
+  t8_geometry_linear (): t8_geometry_with_vertices ()
   {
   }
 
   /** The destructor. 
    * Clears the allocated memory.
    */
-  virtual ~           t8_geometry_linear ();
+  virtual ~t8_geometry_linear ();
 
   /**
    * Map a point in the reference space \f$ [0,1]^\mathrm{dim} \to \mathbb{R}^3 \f$.
@@ -58,10 +57,8 @@ public:
    * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f$ [0,1]^\mathrm{dim} \f$.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
    */
-  virtual void        t8_geom_evaluate (t8_cmesh_t cmesh,
-                                        t8_gloidx_t gtreeid,
-                                        const double *ref_coords,
-                                        double out_coords[3]) const;
+  virtual void
+  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double out_coords[3]) const;
 
   /**
    * Compute the jacobian of the \a t8_geom_evaluate map at a point in the reference space \f$ [0,1]^\mathrm{dim} \f$.
@@ -71,13 +68,10 @@ public:
    * \param [out] jacobian    The jacobian at \a ref_coords. Array of size dimension x 3. Indices 3*i, 3*i+1, 3*i+2
    *                          correspond to the i-th column of the jacobian (Entry 3*i + j is del f_j/del x_i).
    */
-  virtual void        t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
-                                                 t8_gloidx_t gtreeid,
-                                                 const double *ref_coords,
-                                                 double *jacobian) const;
+  virtual void
+  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double *jacobian) const;
 
   /* Load tree data is inherited from t8_geometry_with_vertices. */
-
 };
 
 #endif /* !T8_GEOMETRY_LINEAR_HXX! */
