@@ -32,10 +32,9 @@
 #include <t8.h>
 #include <t8_geometry/t8_geometry_base.hxx>
 
-struct t8_geometry_zero:public t8_geometry
+struct t8_geometry_zero: public t8_geometry
 {
-public:
-
+ public:
   /* Basic constructor that sets the dimension and the name
    * to "t8_geom_zero_{dimension}" */
   t8_geometry_zero (int dimension);
@@ -43,7 +42,7 @@ public:
   /** The destructor. 
    * Clears the allocated memory.
    */
-                      virtual ~ t8_geometry_zero ();
+  virtual ~t8_geometry_zero ();
 
   /**
    * Map a point in the reference space \f$ [0,1]^\mathrm{dim} \to \mathbb{R}^3 \f$.
@@ -83,8 +82,8 @@ public:
    * \param [in]  cmesh      The cmesh.
    * \param [in]  gtreeid    The global tree.
    */
-  virtual inline void t8_geom_load_tree_data (t8_cmesh_t cmesh,
-                                              t8_gloidx_t gtreeid);
+  virtual inline void
+  t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 };
 
 #endif /* !T8_GEOMETRY_ZERO_HXX! */

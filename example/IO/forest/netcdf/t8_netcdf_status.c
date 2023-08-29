@@ -27,18 +27,16 @@ static void
 t8_check_netcdf_compilation ()
 {
 #ifdef T8_WITH_NETCDF
-  t8_global_productionf
-    ("This version of t8code is compiled with netcdf support.\n");
+  t8_global_productionf ("This version of t8code is compiled with netcdf support.\n");
 #else
-  t8_global_productionf
-    ("This version of t8code is not compiled with netcdf support.\n");
+  t8_global_productionf ("This version of t8code is not compiled with netcdf support.\n");
 #endif
 }
 
 int
 main (int argc, char **argv)
 {
-  int                 mpiret;
+  int mpiret;
 
   /* Initialize MPI */
   mpiret = sc_MPI_Init (&argc, &argv);

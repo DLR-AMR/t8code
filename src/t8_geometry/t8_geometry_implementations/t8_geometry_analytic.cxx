@@ -22,13 +22,9 @@
 
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx>
 
-t8_geometry_analytic::t8_geometry_analytic (int dim, const char *name_in,
-                                            t8_geom_analytic_fn analytical,
-                                            t8_geom_analytic_jacobian_fn
-                                            jacobian_in,
-                                            t8_geom_load_tree_data_fn
-                                            load_tree_data_in,
-                                            const void *user_data_in)
+t8_geometry_analytic::t8_geometry_analytic (int dim, const char *name_in, t8_geom_analytic_fn analytical,
+                                            t8_geom_analytic_jacobian_fn jacobian_in,
+                                            t8_geom_load_tree_data_fn load_tree_data_in, const void *user_data_in)
 {
   T8_ASSERT (0 <= dim && dim <= 3);
 
@@ -75,8 +71,7 @@ t8_geometry_analytic::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
 }
 
 void
-t8_geometry_analytic::t8_geom_load_tree_data (t8_cmesh_t cmesh,
-                                              t8_gloidx_t gtreeid)
+t8_geometry_analytic::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 {
   if (load_tree_data != NULL) {
     /* Load tree data if a loading function was provided. */
@@ -89,10 +84,9 @@ t8_geometry_analytic::t8_geom_load_tree_data (t8_cmesh_t cmesh,
 }
 
 void
-t8_geom_load_tree_data_vertices (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
-                                 const void **vertices_out)
+t8_geom_load_tree_data_vertices (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const void **vertices_out)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
-  t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
+  t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
   *vertices_out = t8_cmesh_get_tree_vertices (cmesh, ltreeid);
 }

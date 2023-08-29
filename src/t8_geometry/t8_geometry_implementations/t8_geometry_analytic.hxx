@@ -70,14 +70,11 @@ typedef void        (*t8_geom_analytic_jacobian_fn) (t8_cmesh_t cmesh,
                                                      const void *user_data);
 
 /* TODO: Document. */
-typedef void        (*t8_geom_load_tree_data_fn) (t8_cmesh_t cmesh,
-                                                  t8_gloidx_t gtreeid,
-                                                  const void **tree_data);
+typedef void (*t8_geom_load_tree_data_fn) (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const void **tree_data);
 
-struct t8_geometry_analytic:public t8_geometry
+struct t8_geometry_analytic: public t8_geometry
 {
-public:
-
+ public:
   /**
    * Constructor with analytical and jacobian functions.
    * \param [in] dimension  The dimension of this geometry.
@@ -86,16 +83,14 @@ public:
    * \param [in] jacobian   The jacobian of \a analytical.
    * \param [in] load_tree_data The function that is used to load a tree's data.
    */
-  t8_geometry_analytic (int dimension, const char *name,
-                        t8_geom_analytic_fn analytical,
-                        t8_geom_analytic_jacobian_fn jacobian,
-                        t8_geom_load_tree_data_fn load_tree_data,
+  t8_geometry_analytic (int dimension, const char *name, t8_geom_analytic_fn analytical,
+                        t8_geom_analytic_jacobian_fn jacobian, t8_geom_load_tree_data_fn load_tree_data,
                         const void *user_data);
 
   /** The destructor. 
    * Clears the allocated memory.
    */
-                      virtual ~ t8_geometry_analytic ()
+  virtual ~t8_geometry_analytic ()
   {
     /* Nothing to do */
   }
@@ -140,32 +135,31 @@ public:
    * \param [in]  cmesh      The cmesh.
    * \param [in]  gtreeid    The global tree.
    */
-  virtual void        t8_geom_load_tree_data (t8_cmesh_t cmesh,
-                                              t8_gloidx_t gtreeid);
+  virtual void
+  t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 
-  inline const void  *t8_geom_analytic_get_user_data ()
+  inline const void *
+  t8_geom_analytic_get_user_data ()
   {
     return user_data;
   }
 
-private:
+ private:
   t8_geom_analytic_fn analytical_function; /**< The given analytical function. */
 
-  t8_geom_analytic_jacobian_fn jacobian;   /**< Its jacobian. */
+  t8_geom_analytic_jacobian_fn jacobian; /**< Its jacobian. */
 
   t8_geom_load_tree_data_fn load_tree_data; /**< The function to load the tree data. */
 
-  const void         *tree_data;        /** Tree data pointer that can be set in \a load_tree_data and 
+  const void *tree_data; /** Tree data pointer that can be set in \a load_tree_data and 
                                            is passed onto \a analytical_function and \a jacobian. */
 
-  const void         *user_data;        /** Additional user data pointer that can be set in constructor
+  const void *user_data; /** Additional user data pointer that can be set in constructor
                                          * and modified via \ref t8_geom_analytic_get_user_data. */
 };
 
 /* TODO: Document */
-void                t8_geom_load_tree_data_vertices (t8_cmesh_t cmesh,
-                                                     t8_gloidx_t gtreeid,
-                                                     const void
-                                                     **vertices_out);
+void
+t8_geom_load_tree_data_vertices (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const void **vertices_out);
 
 #endif /* !T8_GEOMETRY_ANALYTICAL_HXX! */

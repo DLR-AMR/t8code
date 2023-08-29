@@ -35,8 +35,8 @@
  *    from t8_cmesh.h to create a different cmesh.
  */
 
-#include <t8.h>                 /* General t8code header, always include this. */
-#include <t8_cmesh.h>           /* cmesh definition and basic interface. */
+#include <t8.h>                         /* General t8code header, always include this. */
+#include <t8_cmesh.h>                   /* cmesh definition and basic interface. */
 #include <t8_cmesh_vtk_writer.h>        /* cmesh-writer interface. */
 #include <t8_cmesh/t8_cmesh_examples.h> /* A collection of exemplary cmeshes */
 
@@ -47,7 +47,7 @@
 static t8_cmesh_t
 t8_step1_build_tetcube_coarse_mesh (sc_MPI_Comm comm)
 {
-  t8_cmesh_t          cmesh;
+  t8_cmesh_t cmesh;
 
   /* Build a coarse mesh of 6 tetrahedral trees that form a cube.
    * You can modify the first parameter to build a cube with different
@@ -91,12 +91,12 @@ t8_step1_destroy_cmesh (t8_cmesh_t cmesh)
 int
 main (int argc, char **argv)
 {
-  int                 mpiret;
-  t8_cmesh_t          cmesh;
+  int mpiret;
+  t8_cmesh_t cmesh;
   /* The prefix for our output files. */
-  const char          prefix[BUFSIZ] = "t8_step1_tetcube";
-  t8_locidx_t         local_num_trees;
-  t8_gloidx_t         global_num_trees;
+  const char prefix[BUFSIZ] = "t8_step1_tetcube";
+  t8_locidx_t local_num_trees;
+  t8_gloidx_t global_num_trees;
 
   /* Initialize MPI. This has to happen before we initialize sc or t8code. */
   mpiret = sc_MPI_Init (&argc, &argv);
@@ -110,10 +110,8 @@ main (int argc, char **argv)
 
   /* Print a message on the root process. */
   t8_global_productionf (" [step1] \n");
-  t8_global_productionf
-    (" [step1] Hello, this is the step1 example of t8code.\n");
-  t8_global_productionf
-    (" [step1] In this example we build our first coarse mesh and output it to vtu files.\n");
+  t8_global_productionf (" [step1] Hello, this is the step1 example of t8code.\n");
+  t8_global_productionf (" [step1] In this example we build our first coarse mesh and output it to vtu files.\n");
   t8_global_productionf (" [step1] \n");
 
   /* Build the coarse mesh */
@@ -122,13 +120,10 @@ main (int argc, char **argv)
   local_num_trees = t8_cmesh_get_num_local_trees (cmesh);
   global_num_trees = t8_cmesh_get_num_trees (cmesh);
   t8_global_productionf (" [step1] Created coarse mesh.\n");
-  t8_global_productionf (" [step1] Local number of trees:\t%i\n",
-                         local_num_trees);
-  t8_global_productionf (" [step1] Global number of trees:\t%li\n",
-                         global_num_trees);
+  t8_global_productionf (" [step1] Local number of trees:\t%i\n", local_num_trees);
+  t8_global_productionf (" [step1] Global number of trees:\t%li\n", global_num_trees);
   t8_step1_write_cmesh_vtk (cmesh, prefix);
-  t8_global_productionf (" [step1] Wrote coarse mesh to vtu files: %s*\n",
-                         prefix);
+  t8_global_productionf (" [step1] Wrote coarse mesh to vtu files: %s*\n", prefix);
   t8_step1_destroy_cmesh (cmesh);
   t8_global_productionf (" [step1] Destroyed coarse mesh.\n");
 

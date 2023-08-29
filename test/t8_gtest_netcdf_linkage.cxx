@@ -37,22 +37,18 @@ TEST (t8_gtest_netcdf_linkage, test_linking_with_netcdf)
 {
 #if T8_WITH_NETCDF
 
-/* Create an in-memory netcdf file. This file will not be stored on
+  /* Create an in-memory netcdf file. This file will not be stored on
  * the disk. */
-  int                 ncid;
-  int                 nc_error = nc_create ("FileName", NC_DISKLESS, &ncid);
+  int ncid;
+  int nc_error = nc_create ("FileName", NC_DISKLESS, &ncid);
 
   /* Check for error */
-  ASSERT_EQ (nc_error,
-             NC_NOERR) << "netcdf error when creating in memory file: " <<
-    nc_strerror (nc_error);
+  ASSERT_EQ (nc_error, NC_NOERR) << "netcdf error when creating in memory file: " << nc_strerror (nc_error);
 
   /* Close the file */
   nc_error = nc_close (ncid);
   /* Check for error */
-  ASSERT_EQ (nc_error,
-             NC_NOERR) << "netcdf error when closing in memory file: " <<
-    nc_strerror (nc_error);
+  ASSERT_EQ (nc_error, NC_NOERR) << "netcdf error when closing in memory file: " << nc_strerror (nc_error);
 
   t8_debugf ("Successfully created and closed in memory netcdf file.\n");
 #else
