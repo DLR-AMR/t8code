@@ -26,28 +26,27 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.h>
 
 void
-t8_geom_linear_interpolation (const double *coefficients,
-                              const double *corner_values,
-                              const int corner_value_dim,
-                              const int interpolation_dim,
-                              double *evaluated_function)
+t8_geom_linear_interpolation (const double *coefficients, const double *corner_values, const int corner_value_dim,
+                              const int interpolation_dim, double *evaluated_function)
 {
-  double              temp[3] = { 0 };
+  double temp[3] = { 0 };
   for (int dim = 0; dim < corner_value_dim; dim++) {
-    temp[dim] = corner_values[0 * corner_value_dim + dim] * (1 - coefficients[0])       /* x=0 y=0 z=0 */
-      +corner_values[1 * corner_value_dim + dim] * coefficients[0];     /* x=1 y=0 z=0 */
+    temp[dim] = corner_values[0 * corner_value_dim + dim] * (1 - coefficients[0]) /* x=0 y=0 z=0 */
+                + corner_values[1 * corner_value_dim + dim] * coefficients[0];    /* x=1 y=0 z=0 */
     if (interpolation_dim > 1) {
       temp[dim] *= (1 - coefficients[1]);
-      temp[dim] += (corner_values[2 * corner_value_dim + dim] * (1 - coefficients[0])   /* x=0 y=1 z=0 */
-                    +corner_values[3 * corner_value_dim + dim] * coefficients[0])       /* x=1 y=1 z=0 */
-        *coefficients[1];
+      temp[dim] += (corner_values[2 * corner_value_dim + dim] * (1 - coefficients[0]) /* x=0 y=1 z=0 */
+                    + corner_values[3 * corner_value_dim + dim] * coefficients[0])    /* x=1 y=1 z=0 */
+                   * coefficients[1];
       if (interpolation_dim == 3) {
         temp[dim] *= (1 - coefficients[2]);
-        temp[dim] += (corner_values[4 * corner_value_dim + dim] * (1 - coefficients[0]) * (1 - coefficients[1]) /* x=0 y=0 z=1 */
-                      +corner_values[5 * corner_value_dim + dim] * coefficients[0] * (1 - coefficients[1])      /* x=1 y=0 z=1 */
-                      +corner_values[6 * corner_value_dim + dim] * (1 - coefficients[0]) * coefficients[1]      /* x=0 y=1 z=1 */
-                      +corner_values[7 * corner_value_dim + dim] * coefficients[0] * coefficients[1])   /* x=1 y=1 z=1 */
-          *coefficients[2];
+        temp[dim]
+          += (corner_values[4 * corner_value_dim + dim] * (1 - coefficients[0])
+                * (1 - coefficients[1])                                                             /* x=0 y=0 z=1 */
+              + corner_values[5 * corner_value_dim + dim] * coefficients[0] * (1 - coefficients[1]) /* x=1 y=0 z=1 */
+              + corner_values[6 * corner_value_dim + dim] * (1 - coefficients[0]) * coefficients[1] /* x=0 y=1 z=1 */
+              + corner_values[7 * corner_value_dim + dim] * coefficients[0] * coefficients[1])      /* x=1 y=1 z=1 */
+             * coefficients[2];
       }
     }
     evaluated_function[dim] = temp[dim];
@@ -55,11 +54,8 @@ t8_geom_linear_interpolation (const double *coefficients,
 }
 
 void
-t8_geom_triangular_interpolation (const double *coefficients,
-                                  const double *corner_values,
-                                  const int corner_value_dim,
-                                  const int interpolation_dim,
-                                  double *evaluated_function)
+t8_geom_triangular_interpolation (const double *coefficients, const double *corner_values, const int corner_value_dim,
+                                  const int interpolation_dim, double *evaluated_function)
 {
   /* The algorithm is able to calculate any point in a triangle or tetrahedron using barycentric coordinates.
    * All points are calculated by the sum of each corner point (e.g. p1 -> corner point 1) multiplied by a
@@ -68,141 +64,111 @@ t8_geom_triangular_interpolation (const double *coefficients,
   double temp[3] = { 0 };
 
   for (int dim = 0; dim < corner_value_dim; dim++) {
-    temp[dim] = (corner_values[corner_value_dim + dim] -        /* (p2 - p1) * ref_coords */
-                 corner_values[dim]) * coefficients[0] + (interpolation_dim ==
-                                                          3
-                                                          ? (corner_values
-                                                             [3 *
-                                                              corner_value_dim
-                                                              + dim] -
-                                                             corner_values[2 *
-                                                                           corner_value_dim
-                                                                           +
-                                                                           dim])
-                                                          * coefficients[1]
-                                                          : 0.) /* (p4 - p3) * ref_coords */
-      +(corner_values[2 * corner_value_dim + dim] - corner_values[corner_value_dim + dim]) * coefficients[interpolation_dim - 1]        /* (p3 - p2) * ref_coords */
-      +corner_values[dim];      /* p1 */
+    temp[dim]
+      = (corner_values[corner_value_dim + dim] - /* (p2 - p1) * ref_coords */
+         corner_values[dim])
+          * coefficients[0]
+        + (interpolation_dim == 3
+             ? (corner_values[3 * corner_value_dim + dim] - corner_values[2 * corner_value_dim + dim]) * coefficients[1]
+             : 0.) /* (p4 - p3) * ref_coords */
+        + (corner_values[2 * corner_value_dim + dim] - corner_values[corner_value_dim + dim])
+            * coefficients[interpolation_dim - 1] /* (p3 - p2) * ref_coords */
+        + corner_values[dim];                     /* p1 */
     evaluated_function[dim] = temp[dim];
   }
 }
 
 void
-t8_geom_compute_linear_geometry (t8_eclass_t tree_class,
-                                 const double *tree_vertices,
-                                 const double *ref_coords,
+t8_geom_compute_linear_geometry (t8_eclass_t tree_class, const double *tree_vertices, const double *ref_coords,
                                  const size_t num_coords, double *out_coords)
 {
-  int                 dim;
-  size_t              coord;
-  const int           dimension = t8_eclass_to_dimension[tree_class];
+  int dim;
+  size_t coord;
+  const int dimension = t8_eclass_to_dimension[tree_class];
   /* Compute the coordinates, depending on the shape of the element */
   switch (tree_class) {
   case T8_ECLASS_VERTEX:
     /* A vertex has exactly one corner, and we already know its coordinates, since they are
      * the same as the trees coordinates. */
     for (coord = 0; coord < num_coords; coord++) {
-      const size_t        offset_domain_dim = coord * T8_ECLASS_MAX_DIM;
+      const size_t offset_domain_dim = coord * T8_ECLASS_MAX_DIM;
       for (dim = 0; dim < T8_ECLASS_MAX_DIM; dim++) {
-        out_coords[offset_domain_dim + dim] =
-          tree_vertices[offset_domain_dim + dim];
+        out_coords[offset_domain_dim + dim] = tree_vertices[offset_domain_dim + dim];
       }
     }
     break;
   case T8_ECLASS_TRIANGLE:
   case T8_ECLASS_TET:
     for (coord = 0; coord < num_coords; coord++) {
-      const size_t        offset_tree_dim = coord * dimension;
-      const size_t        offset_domain_dim = coord * T8_ECLASS_MAX_DIM;
-      t8_geom_triangular_interpolation (ref_coords + offset_tree_dim,
-                                        tree_vertices, T8_ECLASS_MAX_DIM,
-                                        dimension,
+      const size_t offset_tree_dim = coord * dimension;
+      const size_t offset_domain_dim = coord * T8_ECLASS_MAX_DIM;
+      t8_geom_triangular_interpolation (ref_coords + offset_tree_dim, tree_vertices, T8_ECLASS_MAX_DIM, dimension,
                                         out_coords + offset_domain_dim);
     }
     break;
-  case T8_ECLASS_PRISM:
-    {
-      double              tri_vertices[9];
-      double              line_vertices[6];
-      for (coord = 0; coord < num_coords; coord++) {
-        const size_t        offset_tree_dim = coord * dimension;
-        const size_t        offset_domain_dim = coord * T8_ECLASS_MAX_DIM;
-        /* Prisminterpolation, via height and triangle */
-        /* Get a triangle at the specific height */
-        for (int tri_vertex = 0; tri_vertex < 3; tri_vertex++) {
-          /* Vertices of each edge have to be linear in memory */
-          memcpy (line_vertices,
-                  tree_vertices + tri_vertex * T8_ECLASS_MAX_DIM,
-                  T8_ECLASS_MAX_DIM * sizeof (double));
-          memcpy (line_vertices + 3,
-                  tree_vertices + (tri_vertex + 3) * T8_ECLASS_MAX_DIM,
-                  T8_ECLASS_MAX_DIM * sizeof (double));
-          t8_geom_linear_interpolation (ref_coords + offset_tree_dim + 2,
-                                        line_vertices, T8_ECLASS_MAX_DIM, 1,
-                                        tri_vertices +
-                                        tri_vertex * T8_ECLASS_MAX_DIM);
-        }
-        t8_geom_triangular_interpolation (ref_coords + offset_tree_dim,
-                                          tri_vertices, T8_ECLASS_MAX_DIM, 2,
-                                          out_coords + offset_domain_dim);
+  case T8_ECLASS_PRISM: {
+    double tri_vertices[9];
+    double line_vertices[6];
+    for (coord = 0; coord < num_coords; coord++) {
+      const size_t offset_tree_dim = coord * dimension;
+      const size_t offset_domain_dim = coord * T8_ECLASS_MAX_DIM;
+      /* Prisminterpolation, via height and triangle */
+      /* Get a triangle at the specific height */
+      for (int tri_vertex = 0; tri_vertex < 3; tri_vertex++) {
+        /* Vertices of each edge have to be linear in memory */
+        memcpy (line_vertices, tree_vertices + tri_vertex * T8_ECLASS_MAX_DIM, T8_ECLASS_MAX_DIM * sizeof (double));
+        memcpy (line_vertices + 3, tree_vertices + (tri_vertex + 3) * T8_ECLASS_MAX_DIM,
+                T8_ECLASS_MAX_DIM * sizeof (double));
+        t8_geom_linear_interpolation (ref_coords + offset_tree_dim + 2, line_vertices, T8_ECLASS_MAX_DIM, 1,
+                                      tri_vertices + tri_vertex * T8_ECLASS_MAX_DIM);
       }
+      t8_geom_triangular_interpolation (ref_coords + offset_tree_dim, tri_vertices, T8_ECLASS_MAX_DIM, 2,
+                                        out_coords + offset_domain_dim);
     }
-    break;
+  } break;
   case T8_ECLASS_LINE:
   case T8_ECLASS_QUAD:
   case T8_ECLASS_HEX:
     for (coord = 0; coord < num_coords; coord++) {
-      const size_t        offset_tree_dim = coord * dimension;
-      const size_t        offset_domain_dim = coord * T8_ECLASS_MAX_DIM;
-      t8_geom_linear_interpolation (ref_coords + offset_tree_dim,
-                                    tree_vertices, T8_ECLASS_MAX_DIM,
-                                    dimension,
+      const size_t offset_tree_dim = coord * dimension;
+      const size_t offset_domain_dim = coord * T8_ECLASS_MAX_DIM;
+      t8_geom_linear_interpolation (ref_coords + offset_tree_dim, tree_vertices, T8_ECLASS_MAX_DIM, dimension,
                                     out_coords + offset_domain_dim);
     }
     break;
-  case T8_ECLASS_PYRAMID:
-    {
-      double              base_coords[2];
-      double              vec[3];
-      for (coord = 0; coord < num_coords; coord++) {
-        const size_t        offset_tree_dim = coord * dimension;
-        const size_t        offset_domain_dim = coord * T8_ECLASS_MAX_DIM;
-        /* Pyramid interpolation. After projecting the point onto the base,
+  case T8_ECLASS_PYRAMID: {
+    double base_coords[2];
+    double vec[3];
+    for (coord = 0; coord < num_coords; coord++) {
+      const size_t offset_tree_dim = coord * dimension;
+      const size_t offset_domain_dim = coord * T8_ECLASS_MAX_DIM;
+      /* Pyramid interpolation. After projecting the point onto the base,
          * we use a bilinear interpolation to do a quad interpolation on the base
          * and then we interpolate via the height to the top vertex */
-        /* Project point on base */
+      /* Project point on base */
 
-        if (ref_coords[offset_tree_dim + 2] != 1.) {
-          for (dim = 0; dim < 2; dim++) {
-            base_coords[dim] =
-              1 - (1 - ref_coords[offset_tree_dim + dim]) / (1 -
-                                                             ref_coords
-                                                             [offset_tree_dim
-                                                              + 2]);
-          }
-        }
-        else {
-          for (dim = 0; dim < T8_ECLASS_MAX_DIM; dim++) {
-            out_coords[offset_domain_dim + dim] =
-              tree_vertices[4 * T8_ECLASS_MAX_DIM + dim];
-          }
-          continue;
-        }
-        /* Get a quad interpolation of the base */
-        t8_geom_linear_interpolation (base_coords,
-                                      tree_vertices, T8_ECLASS_MAX_DIM, 2,
-                                      out_coords + offset_domain_dim);
-        /* Get vector from base to pyramid tip */
-        t8_vec_diff (tree_vertices + 4 * T8_ECLASS_MAX_DIM,
-                     out_coords + offset_domain_dim, vec);
-        /* Add vector to base */
-        for (dim = 0; dim < 3; dim++) {
-          out_coords[offset_domain_dim + dim] +=
-            vec[dim] * ref_coords[offset_tree_dim + 2];
+      if (ref_coords[offset_tree_dim + 2] != 1.) {
+        for (dim = 0; dim < 2; dim++) {
+          base_coords[dim] = 1 - (1 - ref_coords[offset_tree_dim + dim]) / (1 - ref_coords[offset_tree_dim + 2]);
         }
       }
-      break;
+      else {
+        for (dim = 0; dim < T8_ECLASS_MAX_DIM; dim++) {
+          out_coords[offset_domain_dim + dim] = tree_vertices[4 * T8_ECLASS_MAX_DIM + dim];
+        }
+        continue;
+      }
+      /* Get a quad interpolation of the base */
+      t8_geom_linear_interpolation (base_coords, tree_vertices, T8_ECLASS_MAX_DIM, 2, out_coords + offset_domain_dim);
+      /* Get vector from base to pyramid tip */
+      t8_vec_diff (tree_vertices + 4 * T8_ECLASS_MAX_DIM, out_coords + offset_domain_dim, vec);
+      /* Add vector to base */
+      for (dim = 0; dim < 3; dim++) {
+        out_coords[offset_domain_dim + dim] += vec[dim] * ref_coords[offset_tree_dim + 2];
+      }
     }
+    break;
+  }
     /* Project vertex_coord onto x-y-plane */
     for (i = 0; i < 3; i++) {
       ray[i] = 1 - ref_coords[i];
@@ -228,18 +194,15 @@ t8_geom_compute_linear_geometry (t8_eclass_t tree_class,
     }
     break;
   }
-  default:
-    SC_ABORT ("Linear geometry coordinate computation is only supported for "
-              "vertices/lines/triangles/tets/quads/prisms/hexes/pyramids.");
-  }
+default:
+  SC_ABORT ("Linear geometry coordinate computation is only supported for "
+            "vertices/lines/triangles/tets/quads/prisms/hexes/pyramids.");
+}
 }
 
 void
-t8_geom_compute_linear_axis_aligned_geometry (t8_eclass_t tree_class,
-                                              const double *tree_vertices,
-                                              const double *ref_coords,
-                                              const size_t num_coords,
-                                              double out_coords[3])
+t8_geom_compute_linear_axis_aligned_geometry (t8_eclass_t tree_class, const double *tree_vertices,
+                                              const double *ref_coords, const size_t num_coords, double out_coords[3])
 {
   if (tree_class != T8_ECLASS_LINE && tree_class != T8_ECLASS_QUAD && tree_class != T8_ECLASS_HEX) {
     SC_ABORT ("Linear geometry coordinate computation is only supported for lines/quads/hexes.");
@@ -249,10 +212,9 @@ t8_geom_compute_linear_axis_aligned_geometry (t8_eclass_t tree_class,
   if (tree_class == T8_ECLASS_LINE || tree_class == T8_ECLASS_QUAD) {
     /* The two vertices of a line must have two matching coordinates to be
      * axis-aligned. A quad needs one matching coordinate. */
-    int                 n_equal_coords = 0;
+    int n_equal_coords = 0;
     for (int dim = 0; dim < T8_ECLASS_MAX_DIM; ++dim) {
-      if (abs (tree_vertices[dim] - tree_vertices[T8_ECLASS_MAX_DIM + dim]) <=
-          SC_EPS) {
+      if (abs (tree_vertices[dim] - tree_vertices[T8_ECLASS_MAX_DIM + dim]) <= SC_EPS) {
         ++n_equal_coords;
       }
     }
@@ -264,19 +226,18 @@ t8_geom_compute_linear_axis_aligned_geometry (t8_eclass_t tree_class,
     }
   }
 #endif /* T8_ENABLE_DEBUG */
-  const int           dimension = t8_eclass_to_dimension[tree_class];
+  const int dimension = t8_eclass_to_dimension[tree_class];
   /* Compute vector between both points */
-  double              vector[3];
+  double vector[3];
   t8_vec_diff (tree_vertices + T8_ECLASS_MAX_DIM, tree_vertices, vector);
 
   /* Compute the coordinates of the reference point. */
   for (size_t coord = 0; coord < num_coords; ++coord) {
-    const size_t        offset_tree_dim = coord * dimension;
-    const size_t        offset_domain_dim = coord * T8_ECLASS_MAX_DIM;
+    const size_t offset_tree_dim = coord * dimension;
+    const size_t offset_domain_dim = coord * T8_ECLASS_MAX_DIM;
     for (int dim = 0; dim < T8_ECLASS_MAX_DIM; ++dim) {
       out_coords[offset_domain_dim + dim] = tree_vertices[dim];
-      out_coords[offset_domain_dim + dim] +=
-        ref_coords[offset_tree_dim] * vector[dim];
+      out_coords[offset_domain_dim + dim] += ref_coords[offset_tree_dim] * vector[dim];
     }
   }
 }

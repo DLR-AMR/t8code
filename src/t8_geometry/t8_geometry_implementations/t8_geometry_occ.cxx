@@ -200,8 +200,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh, t8_gloidx_t gt
    */
 
   /* Linear mapping from ref_coords to out_coords */
-  t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices,
-                                   ref_coords, 1, out_coords);
+  t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, 1, out_coords);
 
   /* Check if face has a linked geometry */
   if (*faces > 0) {
@@ -226,10 +225,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh, t8_gloidx_t gt
         t8_geom_get_ref_intersection (i_edge, ref_coords, ref_intersection);
 
         /* Converting ref_intersection to global_intersection */
-        double              glob_intersection[3];
-        t8_geom_compute_linear_geometry (active_tree_class,
-                                         active_tree_vertices,
-                                         ref_intersection, 1,
+        double glob_intersection[3];
+        t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_intersection, 1,
                                          glob_intersection);
         /* Get parameters of the current edge if the edge is curved */
         const double *edge_parameters = (double *) t8_cmesh_get_attribute (
@@ -312,10 +309,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh, t8_gloidx_t gt
         t8_geom_get_ref_intersection (i_edge, ref_coords, ref_intersection);
 
         /* Converting ref_intersection to global_intersection */
-        double              glob_intersection[3];
-        t8_geom_compute_linear_geometry (active_tree_class,
-                                         active_tree_vertices,
-                                         ref_intersection, 1,
+        double glob_intersection[3];
+        t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_intersection, 1,
                                          glob_intersection);
 
         if (edges[i_edge] > 0) {
@@ -573,9 +568,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
   T8_ASSERT (active_tree_class == T8_ECLASS_HEX);
 
   /* Compute coordinates via trilinear interpolation */
-  t8_geom_compute_linear_geometry (active_tree_class,
-                                   active_tree_vertices, ref_coords,
-                                   1, out_coords);
+  t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, 1, out_coords);
 
   const t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
   const int num_edges = t8_eclass_num_edges[active_tree_class];
