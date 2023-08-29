@@ -53,11 +53,9 @@ struct t8_geometry_zero: public t8_geometry
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
    * \note All entries in out_coords will be set to 0.
    */
-  virtual void        t8_geom_evaluate (t8_cmesh_t cmesh,
-                                        t8_gloidx_t gtreeid,
-                                        const double *ref_coords,
-                                        const size_t num_coords,
-                                        double out_coords[3]) const;
+  virtual void
+  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                    double out_coords[3]) const;
 
   /**
    * Compute the jacobian of the \a t8_geom_evaluate map at a point in the reference space \f$ [0,1]^\mathrm{dim} \f$.
@@ -69,11 +67,9 @@ struct t8_geometry_zero: public t8_geometry
    *                          correspond to the i-th column of the jacobian (Entry 3*i + j is del f_j/del x_i).
    * \note All entries in \a jacobian will be set to zero.
    */
-  virtual void        t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
-                                                 t8_gloidx_t gtreeid,
-                                                 const double *ref_coords,
-                                                 const size_t num_coords,
-                                                 double *jacobian) const;
+  virtual void
+  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                             double *jacobian) const;
 
   /** Update a possible internal data buffer for per tree data.
    * This function is called before the first coordinates in a new tree are

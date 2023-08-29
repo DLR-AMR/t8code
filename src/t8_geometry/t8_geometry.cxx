@@ -288,8 +288,7 @@ t8_geom_handler_update_tree (t8_geometry_handler_t *geom_handler, t8_cmesh_t cme
 }
 
 void
-t8_geometry_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
-                      const double *ref_coords, const size_t num_coords,
+t8_geometry_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
                       double *out_coords)
 {
   double start_wtime = 0; /* Used for profiling. */
@@ -312,9 +311,7 @@ t8_geometry_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
   T8_ASSERT (geom_handler->active_geometry != NULL);
 
   /* Evaluate the geometry. */
-  geom_handler->active_geometry->t8_geom_evaluate (cmesh,
-                                                   geom_handler->active_tree,
-                                                   ref_coords, num_coords,
+  geom_handler->active_geometry->t8_geom_evaluate (cmesh, geom_handler->active_tree, ref_coords, num_coords,
                                                    out_coords);
 
   if (cmesh->profile != NULL) {
@@ -326,8 +323,7 @@ t8_geometry_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
 }
 
 void
-t8_geometry_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
-                      const double *ref_coords, const int num_coords,
+t8_geometry_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const int num_coords,
                       double *jacobian)
 {
   /* The cmesh must be committed */
@@ -343,8 +339,7 @@ t8_geometry_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
 
   /* Evaluate the jacobian. */
   /* *INDENT-OFF* */
-  geom_handler->active_geometry->
-    t8_geom_evaluate_jacobian (cmesh, geom_handler->active_tree, ref_coords, num_coords,
-                              jacobian);
+  geom_handler->active_geometry->t8_geom_evaluate_jacobian (cmesh, geom_handler->active_tree, ref_coords, num_coords,
+                                                            jacobian);
   /* *INDENT-ON* */
 }

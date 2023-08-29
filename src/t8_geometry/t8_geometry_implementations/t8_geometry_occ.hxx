@@ -106,10 +106,7 @@ struct t8_geometry_occ: public t8_geometry_with_vertices
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
    */
   virtual void
-  t8_geom_evaluate (t8_cmesh_t cmesh,
-                    t8_gloidx_t gtreeid,
-                    const double *ref_coords,
-                    const size_t num_coords,
+  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
                     double out_coords[3]) const;
 
   /**
@@ -122,12 +119,8 @@ struct t8_geometry_occ: public t8_geometry_with_vertices
    *                          correspond to the i-th column of the jacobian (Entry 3*i + j is del f_j/del x_i).
    */
   virtual void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
-                            t8_gloidx_t gtreeid,
-                            const double *ref_coords,
-                            const size_t num_coords,
-                            double *jacobian) const;
-
+  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                             double *jacobian) const;
 
   /** Update a possible internal data buffer for per tree data.
    * This function is called before the first coordinates in a new tree are

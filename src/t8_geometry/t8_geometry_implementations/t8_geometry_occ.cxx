@@ -106,11 +106,8 @@ t8_geometry_occ::t8_geometry_occ (int dim, const TopoDS_Shape occ_shape, const c
 }
 
 void
-t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
-                                   t8_gloidx_t gtreeid,
-                                   const double *ref_coords,
-                                   const size_t num_coords,
-                                   double out_coords[3]) const
+t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
+                                   const size_t num_coords, double out_coords[3]) const
 {
   if (num_coords != 1)
     SC_ABORT ("Error: Batch computation of geometry not yet supported.");
@@ -130,18 +127,14 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
 }
 
 void
-t8_geometry_occ::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
-                                            t8_gloidx_t gtreeid,
-                                            const double
-                                            *ref_coords,
-                                            const size_t num_coords,
-                                            double *jacobian_out) const
+t8_geometry_occ::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
+                                            const size_t num_coords, double *jacobian_out) const
 {
   if (num_coords != 1)
     SC_ABORT ("Error: Batch computation of geometry not yet supported.");
-  double              h = 1e-9;
-  double              in1[3], in2[3];
-  double              out1[3], out2[3];
+  double h = 1e-9;
+  double in1[3], in2[3];
+  double out1[3], out2[3];
   for (int dim = 0; dim < 3; ++dim) {
     memcpy (in1, ref_coords, sizeof (double) * 3);
     memcpy (in2, ref_coords, sizeof (double) * 3);
@@ -367,10 +360,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh, t8_gloidx_t gt
         /* Calculate displacement between points on curve and point on linear curve.
          * Then scale it and add the scaled displacement to the result. */
         for (int dim = 0; dim < 3; ++dim) {
-          const double        displacement =
-            pnt.Coord (dim + 1) - glob_intersection[dim];
-          const double        scaled_displacement =
-            displacement * scaling_factor * scaling_factor;
+          const double displacement = pnt.Coord (dim + 1) - glob_intersection[dim];
+          const double scaled_displacement = displacement * scaling_factor * scaling_factor;
           out_coords[dim] += scaled_displacement;
         }
       }
