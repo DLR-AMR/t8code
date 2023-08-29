@@ -28,10 +28,10 @@ t8_refcount_init (t8_refcount_t *rc)
   sc_refcount_init (rc, t8_get_package_id ());
 }
 
-t8_refcount_t      *
+t8_refcount_t *
 t8_refcount_new (void)
 {
-  t8_refcount_t      *rc;
+  t8_refcount_t *rc;
 
   rc = T8_ALLOC (t8_refcount_t, 1);
   t8_refcount_init (rc);

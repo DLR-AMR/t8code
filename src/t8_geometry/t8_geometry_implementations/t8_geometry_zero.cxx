@@ -25,8 +25,8 @@
 t8_geometry_zero::t8_geometry_zero (int dim)
 {
   T8_ASSERT (0 <= dim && dim <= 3);
-  size_t              num_chars = 100;
-  char               *name_tmp = T8_ALLOC (char, num_chars);
+  size_t num_chars = 100;
+  char *name_tmp = T8_ALLOC (char, num_chars);
 
   snprintf (name_tmp, num_chars, "t8_geom_zero_%i", dim);
   name = name_tmp;
@@ -39,11 +39,8 @@ t8_geometry_zero::~t8_geometry_zero ()
 }
 
 void
-t8_geometry_zero::t8_geom_evaluate (t8_cmesh_t cmesh,
-                                    t8_gloidx_t gtreeid,
-                                    const double *ref_coords,
-                                    const size_t num_coords,
-                                    double *out_coords) const
+t8_geometry_zero::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
+                                    const size_t num_coords, double *out_coords) const
 {
   /* Set the out_coords to 0 */
   for (size_t coord = 0; coord < num_coords; coord++) {
@@ -54,20 +51,15 @@ t8_geometry_zero::t8_geom_evaluate (t8_cmesh_t cmesh,
 }
 
 void
-t8_geometry_zero::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
-                                             t8_gloidx_t gtreeid,
-                                             const double
-                                             *ref_coords,
-                                             const size_t num_coords,
-                                             double *jacobian) const
+t8_geometry_zero::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
+                                             const size_t num_coords, double *jacobian) const
 {
   /* Set the jacobian to 0 */
   memset (jacobian, 0, sizeof (double) * 3 * dimension * num_coords);
 }
 
 inline void
-t8_geometry_zero::t8_geom_load_tree_data (t8_cmesh_t cmesh,
-                                          t8_gloidx_t gtreeid)
+t8_geometry_zero::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 {
   /* Do nothing. */
 }

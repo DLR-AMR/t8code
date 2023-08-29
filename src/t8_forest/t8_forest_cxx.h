@@ -21,8 +21,7 @@
 */
 
 /** \file t8_forest_cxx.h
- * We define the forest routines that need access to the
- * c++ element interface.
+ * We define the forest routines that need access to the c++ element interface.
  */
 
 /* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest_cxx */
