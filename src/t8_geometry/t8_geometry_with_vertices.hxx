@@ -35,13 +35,12 @@
 
 T8_EXTERN_C_BEGIN ();
 
-class               t8_geometry_with_vertices:public t8_geometry
-{
-public:
+class t8_geometry_with_vertices: public t8_geometry {
+ public:
   /* Basic constructor that sets the dimension, the name, and the name for the attribute. */
-  t8_geometry_with_vertices (int dimension, const char *name,
-                             const char *attribute_name = NULL)
-:  t8_geometry (dimension, name, attribute_name) {
+  t8_geometry_with_vertices (int dimension, const char *name, const char *attribute_name = NULL)
+    : t8_geometry (dimension, name, attribute_name)
+  {
     active_tree_vertices = NULL;
     active_tree = -1;
   }
@@ -49,7 +48,7 @@ public:
   /* Base constructor with no arguments. We need this since it
    * is called from derived class constructors.
    * Sets dimension and name to invalid values. */
-  t8_geometry_with_vertices ():t8_geometry_with_vertices (-1, "Invalid")
+  t8_geometry_with_vertices (): t8_geometry_with_vertices (-1, "Invalid")
   {
     active_tree_vertices = NULL;
     active_tree = -1;
@@ -60,7 +59,8 @@ public:
    * and providing an implementation
    * for the destructor ensures that the
    * destructor of the child class will be executed. */
-  virtual ~ t8_geometry_with_vertices () {
+  virtual ~t8_geometry_with_vertices ()
+  {
   }
 
   /** Update a possible internal data buffer for per tree data.
@@ -71,13 +71,13 @@ public:
    * \param [in]  cmesh      The cmesh.
    * \param [in]  gtreeid    The global tree.
    */
-  virtual void        t8_geom_load_tree_data (t8_cmesh_t cmesh,
-                                              t8_gloidx_t gtreeid);
+  virtual void
+  t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 
-protected:
-  t8_gloidx_t         active_tree;      /*< The tree of which currently vertices are loaded. */
-  t8_eclass_t         active_tree_class;        /*< The class of the currently active tree. */
-  const double       *active_tree_vertices;     /*< The vertices of the currently active tree. */
+ protected:
+  t8_gloidx_t active_tree;            /*< The tree of which currently vertices are loaded. */
+  t8_eclass_t active_tree_class;      /*< The class of the currently active tree. */
+  const double *active_tree_vertices; /*< The vertices of the currently active tree. */
 };
 
 T8_EXTERN_C_END ();

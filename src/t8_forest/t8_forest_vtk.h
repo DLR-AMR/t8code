@@ -55,18 +55,11 @@ T8_EXTERN_C_BEGIN ();
  * \return  True if successful, false if not (process local).
  * \note If t8code was not configured with vtk, use \ref t8_forest_vtk_write_file
  */
-int                 t8_forest_vtk_write_file_via_API (t8_forest_t forest,
-                                                      const char *fileprefix,
-                                                      const int write_treeid,
-                                                      const int write_mpirank,
-                                                      const int write_level,
-                                                      const int
-                                                      write_element_id,
-                                                      const int curved_flag,
-                                                      const int write_ghosts,
-                                                      const int num_data,
-                                                      t8_vtk_data_field_t
-                                                      *data);
+int
+t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix, const int write_treeid,
+                                  const int write_mpirank, const int write_level, const int write_element_id,
+                                  const int curved_flag, const int write_ghosts, const int num_data,
+                                  t8_vtk_data_field_t *data);
 
 /** Write the forest in .pvtu file format. Writes one .vtu file per
  * process and a meta .pvtu file.
@@ -88,15 +81,10 @@ int                 t8_forest_vtk_write_file_via_API (t8_forest_t forest,
  *                        must come first in the array.
  * \return  True if successful, false if not (process local).
  */
-int                 t8_forest_vtk_write_file (t8_forest_t forest,
-                                              const char *fileprefix,
-                                              const int write_treeid,
-                                              const int write_mpirank,
-                                              const int write_level,
-                                              const int write_element_id,
-                                              int write_ghosts,
-                                              const int num_data,
-                                              t8_vtk_data_field_t *data);
+int
+t8_forest_vtk_write_file (t8_forest_t forest, const char *fileprefix, const int write_treeid, const int write_mpirank,
+                          const int write_level, const int write_element_id, int write_ghosts, const int num_data,
+                          t8_vtk_data_field_t *data);
 
 T8_EXTERN_C_END ();
 
