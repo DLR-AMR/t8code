@@ -35,18 +35,16 @@ T8_EXTERN_C_BEGIN ();
 
 struct t8_geometry
 {
-public:
-
+ public:
   /* Basic constructor that sets the dimension, the name, and the name for the attribute. */
-  t8_geometry (int dimension, const char *name, const char *attribute_name =
-               NULL)
-:  dimension (dimension), name (name) {
+  t8_geometry (int dimension, const char *name, const char *attribute_name = NULL): dimension (dimension), name (name)
+  {
   }
 
   /* Base constructor with no arguments. We need this since it
    * is called from derived class constructors.
    * Sets dimension and name to invalid values. */
-  t8_geometry         ():t8_geometry (-1, "Invalid")
+  t8_geometry (): t8_geometry (-1, "Invalid")
   {
   }
 
@@ -55,7 +53,8 @@ public:
    * and providing an implementation
    * for the destructor ensures that the
    * destructor of the child class will be executed. */
-  virtual ~ t8_geometry () {
+  virtual ~t8_geometry ()
+  {
   }
 
   /**
@@ -94,14 +93,16 @@ public:
    * \param [in]  cmesh      The cmesh.
    * \param [in]  gtreeid    The global tree.
    */
-  virtual void        t8_geom_load_tree_data (t8_cmesh_t cmesh,
-                                              t8_gloidx_t gtreeid) = 0;
+  virtual void
+  t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
+    = 0;
 
   /**
    * Get the dimension of this geometry.
    * \return The dimension.
    */
-  inline int          t8_geom_get_dimension () const
+  inline int
+  t8_geom_get_dimension () const
   {
     return dimension;
   }
@@ -110,18 +111,18 @@ public:
    * Get the name of this geometry.
    * \return The name.
    */
-  inline const char  *t8_geom_get_name () const
+  inline const char *
+  t8_geom_get_name () const
   {
     return name;
   }
 
-protected:
+ protected:
+  int dimension;
+  /**< The dimension of reference space for which this is a geometry. */
 
-  int                 dimension;
-                 /**< The dimension of reference space for which this is a geometry. */
-
-  const char         *name;
-                    /**< The name of this geometry. */
+  const char *name;
+  /**< The name of this geometry. */
 };
 
 T8_EXTERN_C_END ();

@@ -25,8 +25,8 @@
 t8_geometry_zero::t8_geometry_zero (int dim)
 {
   T8_ASSERT (0 <= dim && dim <= 3);
-  size_t              num_chars = 100;
-  char               *name_tmp = T8_ALLOC (char, num_chars);
+  size_t num_chars = 100;
+  char *name_tmp = T8_ALLOC (char, num_chars);
 
   snprintf (name_tmp, num_chars, "t8_geom_zero_%i", dim);
   name = name_tmp;
@@ -66,8 +66,7 @@ t8_geometry_zero::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
 }
 
 inline void
-t8_geometry_zero::t8_geom_load_tree_data (t8_cmesh_t cmesh,
-                                          t8_gloidx_t gtreeid)
+t8_geometry_zero::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 {
   /* Do nothing. */
 }

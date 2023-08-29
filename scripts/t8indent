@@ -4,7 +4,7 @@
 # t8code is a C library to manage a collection (a forest) of multiple
 # connected adaptive space-trees of general element classes in parallel.
 #
-# Copyright (C) 2015 the developers
+# Copyright (C) 2023 the developers
 #
 # t8code is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,70 +20,44 @@
 # along with t8code; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-
-# This is the GNU style for indent 2.2.9 (according to man page)
-#
-#"$INDENT" \
-#    -nbad -bap -nbc -bbo -bl -bli2 -bls -ncdb -nce -cp1 -cs -di2 \
-#    -ndj -nfc1 -nfca -hnl -i2 -ip5 -lp -pcs -nprs -psl -saf -sai \
-#    -saw -nsc -nsob
-#    "$@"
-
-# This is our modification
-#
-# blank line after procedure body
-# braces indent 0 (or do you want -bl2 here and -bl below?)
-# braces to right of control statements (or do you want -bl here?)
-# no tabs
-# put the return type of a function on a separate line
-# swallow optional blank lines
-INDENT_BASE_OPTIONS="-bap -bli0 -br -nut -psl -sob -di20"
-
-# Indent has problems with user defined data types
-# and some other data types (i.e. size_t).
-# We can tell indent manually which datatypes we defined and use.
-# For t8code these datatypes are listed in scripts/t8indent_custom_datatypes.txt
-# If you encounter an indenting problem with a (user defined)
-# type, add it to the file.
-#
-# Example without -T t8_cmesh_t:
-#   static	t8_cmesh_t
-#   afunction (int aparameter) {
-#
-# Note the undesired whitespaces between 'static' and 't8_cmesh_t'.
-#
-# Example with -T t8_cmesh_t:
-#   static t8_cmesh_t
-#   afunction (int aparameter) {
-
-# Get the path of the file t8indent_custom_datatypes.txt in the
-# /scripts subfolder of the repo.
-
-repo_main_dir=`git rev-parse --show-toplevel`
-additional_data_types_file="${repo_main_dir}/scripts/t8indent_custom_datatypes.txt"
+# We use clang-format to indent our code. There are different base styles
+# available, but we use a modification. The options for this modification
+# are located in the .clang-format file.
+# We have to use the -i argument, so that clang-format directly alters the
+# files instead of printing the changes to stdout. The --style=file
+# arguments tells clang-format to look for a *.clang-format file.
+FORMAT_OPTIONS="-i --style=file"
 
 
-if [ ! -f $additional_data_types_file ]
+FORMAT=`which clang-format 2> /dev/null`
+
+if [ -z "$FORMAT" ]
 then
-  echo Error: File $additional_data_types_file does not exist. >&2
-  echo Exiting because of error.
+  # Exit if the spell checking script was not found
+  echo "ERROR: clang-format not found."
+  echo "Please install clang-format version 16.0.xyz"
+  echo "See https://github.com/ssciwr/clang-format-wheel"
   exit 1
 fi
 
-T8CODE_ADDITIONAL_DATATYPES=
-for x in `cat ${additional_data_types_file}`
-do
-  T8CODE_ADDITIONAL_DATATYPES="$T8CODE_ADDITIONAL_DATATYPES -T $x"
-done
+CLANG_VERSION_STRING=`$FORMAT --version`
 
-INDENT_OPTIONS="$INDENT_BASE_OPTIONS $T8CODE_ADDITIONAL_DATATYPES"
+VERSION=`echo $CLANG_VERSION_STRING | cut -d " " -f 3`
+MAJOR=`echo $VERSION | cut -d. -f1`
+MINOR=`echo $VERSION | cut -d. -f2`
+PATCH=`echo $VERSION | cut -d. -f3`
 
-INDENT=`which gnuindent 2> /dev/null`
-if test -z "$INDENT" ; then
-	INDENT=`which gindent`
+if [[ "$MAJOR" != "16" ]]; then
+  echo "Please install clang-format version 16.0.6"
+  exit 1
 fi
-if test -z "$INDENT" ; then
-	INDENT=`which indent`
+if [[ $MINOR != "0" ]]; then
+  echo "Please install clang-format version 16.0.6"
+  exit 1
+fi
+if [[ $PATCH != "6" ]]; then
+  echo "Please install clang-format version 16.0.6"
+  exit 1
 fi
 
 for arg in "$@" ; do
@@ -93,8 +67,8 @@ for arg in "$@" ; do
 done
 if [ -z "$WANTSOUT" ]; then
   for NAME in "$@" ; do
-    $INDENT $INDENT_OPTIONS "$NAME"
+    $FORMAT $FORMAT_OPTIONS "$NAME"
   done
 else
-  $INDENT $INDENT_OPTIONS $@
+  $FORMAT $FORMAT_OPTIONS $@
 fi

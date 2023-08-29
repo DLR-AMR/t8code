@@ -45,14 +45,12 @@ t8_cmesh_register_geometry (t8_cmesh_t cmesh, const t8_geometry_c *geometry)
 }
 
 void
-t8_cmesh_set_tree_geometry (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
-                            const char *geom_name)
+t8_cmesh_set_tree_geometry (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const char *geom_name)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   /* Add the name of the geometry as an attribute to the tree.
    * We will copy the string. */
-  t8_cmesh_set_attribute_string (cmesh, gtreeid, t8_get_package_id (),
-                                 T8_CMESH_GEOMETRY_ATTRIBUTE_KEY, geom_name);
+  t8_cmesh_set_attribute_string (cmesh, gtreeid, t8_get_package_id (), T8_CMESH_GEOMETRY_ATTRIBUTE_KEY, geom_name);
 }
 
 const t8_geometry_c *
@@ -69,14 +67,13 @@ t8_cmesh_get_tree_geometry (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
      */
     return t8_geom_handler_get_unique_geometry (geom_handler);
   }
-  const char         *geom_name =
-    t8_cmesh_get_tree_geom_name (cmesh, gtreeid);
+  const char *geom_name = t8_cmesh_get_tree_geom_name (cmesh, gtreeid);
   T8_ASSERT (geom_name != NULL);
   /* Find this geometry in the handler. */
   return t8_geom_handler_find_geometry (geom_handler, geom_name);
 }
 
-const char         *
+const char *
 t8_cmesh_get_tree_geom_name (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
@@ -86,30 +83,24 @@ t8_cmesh_get_tree_geom_name (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
   if (t8_geom_handler_get_num_geometries (geom_handler) == 1) {
     /* There is only one geometry registered in this cmesh, so we assume
      * that this geometry is used for all trees. */
-    const t8_geometry_c *geom =
-      t8_geom_handler_get_unique_geometry (geom_handler);
+    const t8_geometry_c *geom = t8_geom_handler_get_unique_geometry (geom_handler);
 #ifdef T8_ENABLE_DEBUG
     /* In debug mode, get the tree's geometry anyways and check that it is either
      * NULL or the name of the unique geometry. */
 
-    t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
+    t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
     /* Look up the name of the geometry in the attributes. */
-    const char         *geom_name =
-      (const char *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
-                                             T8_CMESH_GEOMETRY_ATTRIBUTE_KEY,
-                                             ltreeid);
-    T8_ASSERT (geom_name == NULL
-               || !strcmp (geom_name, geom->t8_geom_get_name ()));
+    const char *geom_name
+      = (const char *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_GEOMETRY_ATTRIBUTE_KEY, ltreeid);
+    T8_ASSERT (geom_name == NULL || !strcmp (geom_name, geom->t8_geom_get_name ()));
 #endif /* T8_ENABLE_DEBUG */
     return geom->t8_geom_get_name ();
   }
 
-  t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
+  t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
   /* Look up the name of the geometry in the attributes. */
-  const char         *geom_name =
-    (const char *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
-                                           T8_CMESH_GEOMETRY_ATTRIBUTE_KEY,
-                                           ltreeid);
+  const char *geom_name
+    = (const char *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_GEOMETRY_ATTRIBUTE_KEY, ltreeid);
   T8_ASSERT (geom_name != NULL);
   return geom_name;
 }

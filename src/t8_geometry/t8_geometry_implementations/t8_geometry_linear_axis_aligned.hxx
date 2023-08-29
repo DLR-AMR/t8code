@@ -32,12 +32,12 @@
 #include <t8_geometry/t8_geometry_with_vertices.hxx>
 #include <t8_geometry/t8_geometry_with_vertices.h>
 
-struct t8_geometry_linear_axis_aligned:public t8_geometry_with_vertices
+struct t8_geometry_linear_axis_aligned: public t8_geometry_with_vertices
 {
-public:
+ public:
   /* *INDENT-OFF* */
   /* indent does not know what a con- or destructor is */
-  
+
   /* Basic constructor that sets the dimension and the name
    * to "t8_geom_linear_axis_aligned_{dim}" */
   t8_geometry_linear_axis_aligned (int dim);
@@ -45,9 +45,10 @@ public:
   /* Base constructor with no arguments. We need this since it
    * is called from derived class constructors.
    * Sets dimension and name to invalid values. */
-     
-     
-  t8_geometry_linear_axis_aligned ():t8_geometry_with_vertices () {}
+
+  t8_geometry_linear_axis_aligned (): t8_geometry_with_vertices ()
+  {
+  }
 
   /** The destructor. 
    * Clears the allocated memory.

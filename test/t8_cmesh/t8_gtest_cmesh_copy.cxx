@@ -27,15 +27,15 @@
 #include <t8_eclass.h>
 #include <t8_cmesh/t8_cmesh_testcases.h>
 
-/* Test if a cmesh is committed properly and perform the
- * face consistency check. */
+/* Test if a cmesh is committed properly and perform the face consistency check. */
 
-/* *INDENT-OFF* */
-class cmesh_copy_equality : public testing::TestWithParam<int>{
-protected:
-  void SetUp() override {
-    cmesh_id = GetParam();
-    
+class cmesh_copy_equality: public testing::TestWithParam<int> {
+ protected:
+  void
+  SetUp () override
+  {
+    cmesh_id = GetParam ();
+
     cmesh_original = t8_test_create_cmesh (cmesh_id);
     /* Set up the cmesh copy */
     t8_cmesh_init (&cmesh_copy);
@@ -44,31 +44,35 @@ protected:
     t8_cmesh_set_derive (cmesh_copy, cmesh_original);
     t8_cmesh_commit (cmesh_copy, sc_MPI_COMM_WORLD);
   }
-  void TearDown() override {
-    t8_cmesh_unref(&cmesh_original);
-    t8_cmesh_unref(&cmesh_copy);
+  void
+  TearDown () override
+  {
+    t8_cmesh_unref (&cmesh_original);
+    t8_cmesh_unref (&cmesh_copy);
   }
 
-  t8_cmesh_t        cmesh_original;
-  t8_cmesh_t        cmesh_copy;
-  int               cmesh_id;
+  t8_cmesh_t cmesh_original;
+  t8_cmesh_t cmesh_copy;
+  int cmesh_id;
 };
 
 /* Test wheater the original cmaeh and its copy are committed and face consistent. Test will fail, if one of these is false. */
-TEST_P (cmesh_copy_equality, check_cmeshes_and_their_trees) {
-  
-    EXPECT_TRUE(t8_cmesh_is_committed (cmesh_original));
-    EXPECT_TRUE(t8_cmesh_is_committed (cmesh_copy));
-    EXPECT_TRUE(t8_cmesh_trees_is_face_consistent (cmesh_original, cmesh_original->trees));
-    EXPECT_TRUE(t8_cmesh_trees_is_face_consistent (cmesh_copy, cmesh_copy->trees));
+TEST_P (cmesh_copy_equality, check_cmeshes_and_their_trees)
+{
+
+  EXPECT_TRUE (t8_cmesh_is_committed (cmesh_original));
+  EXPECT_TRUE (t8_cmesh_is_committed (cmesh_copy));
+  EXPECT_TRUE (t8_cmesh_trees_is_face_consistent (cmesh_original, cmesh_original->trees));
+  EXPECT_TRUE (t8_cmesh_trees_is_face_consistent (cmesh_copy, cmesh_copy->trees));
 }
 
 /* Test the equality of the original and copied cmeshs*/
-TEST_P (cmesh_copy_equality, check_equality_of_copied_cmesh_with_original) {
+TEST_P (cmesh_copy_equality, check_equality_of_copied_cmesh_with_original)
+{
 
-    EXPECT_TRUE (t8_cmesh_is_equal (cmesh_original, cmesh_copy));
+  EXPECT_TRUE (t8_cmesh_is_equal (cmesh_original, cmesh_copy));
 }
 
 /* Test all cmeshes over all different inputs we get through their id */
-INSTANTIATE_TEST_SUITE_P(t8_gtest_cmesh_copy, cmesh_copy_equality, testing::Range(0, t8_get_number_of_all_testcases ()));
-/* *INDENT-ON* */
+INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_copy, cmesh_copy_equality,
+                          testing::Range (0, t8_get_number_of_all_testcases ()));
