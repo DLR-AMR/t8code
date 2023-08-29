@@ -833,12 +833,9 @@ t8_update_box_face_edges (const int dim, const double *box_corners, double *box_
   T8_ASSERT (-1 < face && face < t8_eclass_num_faces[eclass]);
   const int num_face_edges = eclass == T8_ECLASS_QUAD ? 1 : 4;
   for (int face_edge = 0; face_edge < num_face_edges; face_edge++) {
-    const int           edge =
-      t8_face_edge_to_tree_edge[eclass][face][face_edge];
-    const double       *v_1 =
-      box_corners + (t8_edge_vertex_to_tree_vertex[eclass][edge][0] * 3);
-    const double       *v_2 =
-      box_corners + (t8_edge_vertex_to_tree_vertex[eclass][edge][1] * 3);
+    const int edge = t8_face_edge_to_tree_edge[eclass][face][face_edge];
+    const double *v_1 = box_corners + (t8_edge_vertex_to_tree_vertex[eclass][edge][0] * 3);
+    const double *v_2 = box_corners + (t8_edge_vertex_to_tree_vertex[eclass][edge][1] * 3);
     /* Get the direction vector between v_1 and v_2 and store it in box_dir. */
     t8_vec_axpyz (v_1, v_2, box_dir + (edge * 3), -1.0);
     /* Get number of quads or hexs along current edge. */

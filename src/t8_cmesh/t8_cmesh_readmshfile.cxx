@@ -1188,7 +1188,9 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
                 }
                 else /* 3D */
                 {
-                  edge_geometries[t8_face_edge_to_tree_edge[eclass][i_tree_faces][i_face_edges] + t8_eclass_num_edges[eclass]] = -1;
+                  edge_geometries[t8_face_edge_to_tree_edge[eclass][i_tree_faces][i_face_edges]
+                                  + t8_eclass_num_edges[eclass]]
+                    = -1;
                 }
               }
               /* We retrieve the parameters of the nodes and give them to the tree */
@@ -1279,16 +1281,12 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
             /* If we have found a curve we can look for the parameters */
             if (edge_geometry_dim == 1) {
               /* Check if adjacent faces carry a surface and if this edge lies on the surface */
-              for (int i_adjacent_face = 0; i_adjacent_face < 2; ++i_adjacent_face)
-              {
-                if (face_geometries[t8_edge_to_face[eclass][i_tree_edges][i_adjacent_face]] > 0)
-                {
-                  if (!occ_geometry->t8_geom_is_edge_on_face(edge_geometry_tag, 
-                                                             face_geometries[t8_edge_to_face[eclass][i_tree_edges]
-                                                                                            [i_adjacent_face]]))
-                  {
-                    t8_global_errorf("Error: Adjacent edge and face of a tree carry "
-                                     "incompatible geometries.\n");
+              for (int i_adjacent_face = 0; i_adjacent_face < 2; ++i_adjacent_face) {
+                if (face_geometries[t8_edge_to_face[eclass][i_tree_edges][i_adjacent_face]] > 0) {
+                  if (!occ_geometry->t8_geom_is_edge_on_face (
+                        edge_geometry_tag, face_geometries[t8_edge_to_face[eclass][i_tree_edges][i_adjacent_face]])) {
+                    t8_global_errorf ("Error: Adjacent edge and face of a tree carry "
+                                      "incompatible geometries.\n");
                     goto die_ele;
                   }
                 }

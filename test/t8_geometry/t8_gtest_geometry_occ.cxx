@@ -311,19 +311,19 @@ TEST (t8_gtest_geometry_occ, linked_edges)
                                           0.9499697383, 0.8472575225, 0.7998496263 };
   /* clang-format on */
 
-  double              curve_rot_vecs[36] = {
-    0, 0, 0,                    // Edge 0
-    0, -M_PI / 2, 0,            // Edge 1
-    0, M_PI / 2, 0,             // Edge 2
-    0, M_PI, 0,                 // Edge 3
-    M_PI / 2, 0, 0,             // Edge 4
-    -M_PI / 2, 0, 0,            // Edge 5
-    0, M_PI, -M_PI / 2,         // Edge 6
-    0, M_PI, M_PI / 2,          // Edge 7
-    -M_PI / 2, M_PI / 2, M_PI / 2,      // Edge 8
-    M_PI / 2, M_PI / 2, -M_PI / 2,      // Edge 9
-    M_PI / 2, -M_PI / 2, 0,     // Edge 10
-    -M_PI / 2, -M_PI / 2, 0,    // Edge 11
+  double curve_rot_vecs[36] = {
+    0,         0,         0,          // Edge 0
+    0,         -M_PI / 2, 0,          // Edge 1
+    0,         M_PI / 2,  0,          // Edge 2
+    0,         M_PI,      0,          // Edge 3
+    M_PI / 2,  0,         0,          // Edge 4
+    -M_PI / 2, 0,         0,          // Edge 5
+    0,         M_PI,      -M_PI / 2,  // Edge 6
+    0,         M_PI,      M_PI / 2,   // Edge 7
+    -M_PI / 2, M_PI / 2,  M_PI / 2,   // Edge 8
+    M_PI / 2,  M_PI / 2,  -M_PI / 2,  // Edge 9
+    M_PI / 2,  -M_PI / 2, 0,          // Edge 10
+    -M_PI / 2, -M_PI / 2, 0,          // Edge 11
   };
   double curve_parameters[24] = {
     0, 1,  // Edge 0
