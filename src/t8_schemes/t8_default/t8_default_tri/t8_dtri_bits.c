@@ -368,9 +368,7 @@ t8_dtri_compute_vertex_ref_coords (const t8_dtri_t *elem, const int vertex, doub
 }
 
 void
-t8_dtri_compute_reference_coords (const t8_dtri_t *elem,
-                                  const double *ref_coords,
-                                  const size_t num_coords,
+t8_dtri_compute_reference_coords (const t8_dtri_t *elem, const double *ref_coords, const size_t num_coords,
 #ifndef T8_DTRI_TO_DTET
                                   const size_t skip_coords,
 #endif
@@ -417,9 +415,9 @@ t8_dtri_compute_reference_coords (const t8_dtri_t *elem,
   for (size_t coord = 0; coord < num_coords; ++coord) {
     /* offset defines, how many coordinates to skip in an iteration. */
 #ifndef T8_DTRI_TO_DTET
-    const size_t        offset = (2 + skip_coords) * coord;
+    const size_t offset = (2 + skip_coords) * coord;
 #else
-    const size_t        offset = 3 * coord;
+    const size_t offset = 3 * coord;
 #endif
     out_coords[offset + 0] = elem->x;
     out_coords[offset + 1] = elem->y;

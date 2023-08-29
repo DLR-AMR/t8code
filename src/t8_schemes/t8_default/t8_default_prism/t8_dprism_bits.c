@@ -562,9 +562,7 @@ t8_dprism_vertex_ref_coords (const t8_dprism_t *elem, const int vertex, double c
 }
 
 void
-t8_dprism_compute_reference_coords (const t8_dprism_t *elem,
-                                    const double *ref_coords,
-                                    const size_t num_coords,
+t8_dprism_compute_reference_coords (const t8_dprism_t *elem, const double *ref_coords, const size_t num_coords,
                                     double *out_coords)
 {
   T8_ASSERT (t8_dprism_is_valid (elem));

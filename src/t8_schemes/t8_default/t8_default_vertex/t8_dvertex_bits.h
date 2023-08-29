@@ -206,13 +206,9 @@ t8_dvertex_vertex_ref_coords (const t8_dvertex_t *elem, int vertex, double coord
  * 		                     will be filled with the reference coordinates
  *                         of the points on the vertex (will be set to 0).
  */
-void                t8_dvertex_compute_reference_coords (const t8_dvertex_t
-                                                         *elem,
-                                                         const double
-                                                         *ref_coords,
-                                                         const size_t
-                                                         num_coords,
-                                                         double *out_coords);
+void
+t8_dvertex_compute_reference_coords (const t8_dvertex_t *elem, const double *ref_coords, const size_t num_coords,
+                                     double *out_coords);
 
 /** Computes the linear position of a vertex in an uniform grid.
  * \param [in] vertex  vertex whose id will be computed.

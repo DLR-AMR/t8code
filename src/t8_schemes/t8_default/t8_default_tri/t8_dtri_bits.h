@@ -97,13 +97,9 @@ t8_dtri_compute_vertex_ref_coords (const t8_dtri_t *elem, const int vertex, doub
  * 		                     will be filled with the reference coordinates
  *                         of the points on the triangle.
  */
-void                t8_dtri_compute_reference_coords (const t8_dtri_t *elem,
-                                                      const double
-                                                      *ref_coords,
-                                                      const size_t num_coords,
-                                                      const size_t
-                                                      skip_coords,
-                                                      double *out_coords);
+void
+t8_dtri_compute_reference_coords (const t8_dtri_t *elem, const double *ref_coords, const size_t num_coords,
+                                  const size_t skip_coords, double *out_coords);
 
 /** Compute the coordinates of the four vertices of a triangle.
  * \param [in] elem         Input triangle.

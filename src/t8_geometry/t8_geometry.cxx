@@ -288,8 +288,7 @@ t8_geom_handler_update_tree (t8_geometry_handler_t *geom_handler, t8_cmesh_t cme
 }
 
 void
-t8_geometry_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
-                      const double *ref_coords, const size_t num_coords,
+t8_geometry_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
                       double *out_coords)
 {
   double start_wtime = 0; /* Used for profiling. */

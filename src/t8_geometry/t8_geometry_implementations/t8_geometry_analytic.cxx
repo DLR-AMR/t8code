@@ -40,11 +40,8 @@ t8_geometry_analytic::t8_geometry_analytic (int dim, const char *name_in, t8_geo
 /* *INDENT-OFF* */
 /* Indent has trouble with the const keyword at the end */
 void
-t8_geometry_analytic::t8_geom_evaluate (t8_cmesh_t cmesh,
-                                        t8_gloidx_t gtreeid,
-                                        const double *ref_coords,
-                                        const size_t num_coords,
-                                        double out_coords[3]) const
+t8_geometry_analytic::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
+                                        const size_t num_coords, double out_coords[3]) const
 /* *INDENT-ON* */
 
 {
@@ -55,12 +52,8 @@ t8_geometry_analytic::t8_geom_evaluate (t8_cmesh_t cmesh,
 /* *INDENT-OFF* */
 /* Indent has trouble with the const keyword at the end */
 void
-t8_geometry_analytic::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
-                                                t8_gloidx_t gtreeid,
-                                                const double
-                                                *ref_coords,
-                                                const size_t num_coords,
-                                                double *jacobian_out) const
+t8_geometry_analytic::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
+                                                 const size_t num_coords, double *jacobian_out) const
 /* *INDENT-ON* */
 
 {

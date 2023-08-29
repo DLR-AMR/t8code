@@ -355,13 +355,9 @@ t8_dpyramid_vertex_reference_coords (const t8_dpyramid_t *elem, const int vertex
  * 		                     will be filled with the reference coordinates
  *                         of the points on the pyramid.
  */
-void                t8_dpyramid_compute_reference_coords (const t8_dpyramid_t
-                                                          *elem,
-                                                          const double
-                                                          *ref_coords,
-                                                          const size_t
-                                                          num_coords,
-                                                          double *out_coords);
+void
+t8_dpyramid_compute_reference_coords (const t8_dpyramid_t *elem, const double *ref_coords, const size_t num_coords,
+                                      double *out_coords);
 
 /**
  * Compute the nearest common ancestor of two elements

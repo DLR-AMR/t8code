@@ -62,11 +62,9 @@ t8_dtet_compute_vertex_ref_coords (const t8_dtet_t *elem, int vertex, double coo
  * 		                     will be filled with the reference coordinates
  *                         of the points on the tet.
  */
-void                t8_dtet_compute_reference_coords (const t8_dtet_t *elem,
-                                                      const double
-                                                      *ref_coords,
-                                                      const size_t num_coords,
-                                                      double *out_coords);
+void
+t8_dtet_compute_reference_coords (const t8_dtet_t *elem, const double *ref_coords, const size_t num_coords,
+                                  double *out_coords);
 
 /** Compute the coordinates of the four vertices of a tetrahedron.
  * \param [in] elem         Input tetrahedron.

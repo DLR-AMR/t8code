@@ -627,11 +627,10 @@ struct t8_eclass_scheme
    * \param [out] out_coords  The coordinates of the points in the
    *                          reference space of the tree.
    */
-  virtual void        t8_element_reference_coords (const t8_element_t *elem,
-                                                   const double *ref_coords,
-                                                   const size_t num_coords,
-                                                   double *out_coords)
-    const = 0;
+  virtual void
+  t8_element_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
+                               double *out_coords) const
+    = 0;
 
   /* TODO: deactivate */
   /** Return a pointer to a t8_element in an array indexed by a size_t.

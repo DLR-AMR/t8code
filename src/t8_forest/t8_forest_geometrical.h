@@ -65,17 +65,10 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id, const t8
  *                                    The array must be of length forest->local_num_elements * d.
  *                                    If NULL, no stretching is applied.
  */
-void                t8_forest_element_from_ref_coords (t8_forest_t forest,
-                                                       t8_locidx_t ltreeid,
-                                                       const t8_element_t
-                                                       *element,
-                                                       const double
-                                                       *ref_coord,
-                                                       const size_t
-                                                       num_coords,
-                                                       double *coords_out,
-                                                       sc_array_t
-                                                       *stretch_factors);
+void
+t8_forest_element_from_ref_coords (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+                                   const double *ref_coord, const size_t num_coords, double *coords_out,
+                                   sc_array_t *stretch_factors);
 
 /** Compute the coordinates of the centroid of an element if a geometry
  * for this tree is registered in the forest's cmesh.
