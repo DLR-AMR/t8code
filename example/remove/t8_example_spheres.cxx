@@ -31,32 +31,25 @@ T8_EXTERN_C_BEGIN ();
 
 struct t8_adapt_data
 {
-  const int           num_spheres;
-  const double        spheres_radius_inner;
-  const double        spheres_radius_outer;
-  const double       *midpoints;
+  const int num_spheres;
+  const double spheres_radius_inner;
+  const double spheres_radius_outer;
+  const double *midpoints;
 };
 
 /* Refine, if element is within a given radius. */
 static int
-t8_adapt_callback_refine (t8_forest_t forest,
-                          t8_forest_t forest_from,
-                          t8_locidx_t which_tree,
-                          t8_locidx_t lelement_id,
-                          t8_eclass_scheme_c *ts,
-                          const int is_family,
-                          const int num_elements, t8_element_t *elements[])
+t8_adapt_callback_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
+                          t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
-  const struct t8_adapt_data *adapt_data =
-    (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
+  const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
   T8_ASSERT (adapt_data != NULL);
 
-  double              centroid[3];
+  double centroid[3];
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
 
   for (int i = 0; i < adapt_data->num_spheres; i++) {
-    const double        dist =
-      t8_vec_dist (adapt_data->midpoints + (i * 3), centroid);
+    const double dist = t8_vec_dist (adapt_data->midpoints + (i * 3), centroid);
     if (dist < adapt_data->spheres_radius_outer) {
       return 1;
     }
@@ -66,24 +59,17 @@ t8_adapt_callback_refine (t8_forest_t forest,
 
 /* Remove, element if it is within a given radius. */
 static int
-t8_adapt_callback_remove (t8_forest_t forest,
-                          t8_forest_t forest_from,
-                          t8_locidx_t which_tree,
-                          t8_locidx_t lelement_id,
-                          t8_eclass_scheme_c *ts,
-                          const int is_family,
-                          const int num_elements, t8_element_t *elements[])
+t8_adapt_callback_remove (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
+                          t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
-  const struct t8_adapt_data *adapt_data =
-    (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
+  const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
   T8_ASSERT (adapt_data != NULL);
 
-  double              centroid[3];
+  double centroid[3];
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
 
   for (int i = 0; i < adapt_data->num_spheres; i++) {
-    const double        dist =
-      t8_vec_dist (adapt_data->midpoints + (i * 3), centroid);
+    const double dist = t8_vec_dist (adapt_data->midpoints + (i * 3), centroid);
     if (dist < adapt_data->spheres_radius_inner) {
       return -2;
     }
@@ -102,18 +88,15 @@ t8_adapt_callback_remove (t8_forest_t forest,
  * the thickness of the refined surface of the spheres.
  */
 static void
-t8_construct_spheres (const int initial_level,
-                      const double radius_inner,
-                      const double radius_outer,
+t8_construct_spheres (const int initial_level, const double radius_inner, const double radius_outer,
                       const t8_eclass_t eclass, const char **vtuname)
 {
-  t8_cmesh_t          cmesh;
-  t8_forest_t         forest;
+  t8_cmesh_t cmesh;
+  t8_forest_t forest;
 
   if (eclass != 0) {
-    T8_ASSERT (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_TRIANGLE
-               || eclass == T8_ECLASS_HEX || eclass == T8_ECLASS_TET
-               || eclass == T8_ECLASS_PRISM || eclass == T8_ECLASS_PYRAMID);
+    T8_ASSERT (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_HEX
+               || eclass == T8_ECLASS_TET || eclass == T8_ECLASS_PRISM || eclass == T8_ECLASS_PYRAMID);
     cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
   }
   else {
@@ -122,25 +105,14 @@ t8_construct_spheres (const int initial_level,
 
   /* On each face of a cube, a sphere rises halfway in. 
    * Its center is therefore the center of the corresponding surface. */
-  const int           num_spheres = 6;
-  double              midpoints[6 * 3] = {
-    1.0, 0.5, 0.5,
-    0.5, 1.0, 0.5,
-    0.5, 0.5, 1.0,
-    0.0, 0.5, 0.5,
-    0.5, 0.0, 0.5,
-    0.5, 0.5, 0.0
-  };
-  struct t8_adapt_data adapt_data =
-    { num_spheres, radius_inner, radius_outer, midpoints };
+  const int num_spheres = 6;
+  double midpoints[6 * 3]
+    = { 1.0, 0.5, 0.5, 0.5, 1.0, 0.5, 0.5, 0.5, 1.0, 0.0, 0.5, 0.5, 0.5, 0.0, 0.5, 0.5, 0.5, 0.0 };
+  struct t8_adapt_data adapt_data = { num_spheres, radius_inner, radius_outer, midpoints };
 
-  forest = t8_forest_new_uniform
-    (cmesh, t8_scheme_new_default_cxx (), initial_level, 0,
-     sc_MPI_COMM_WORLD);
-  forest =
-    t8_forest_new_adapt (forest, t8_adapt_callback_refine, 0, 0, &adapt_data);
-  forest =
-    t8_forest_new_adapt (forest, t8_adapt_callback_remove, 0, 0, &adapt_data);
+  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), initial_level, 0, sc_MPI_COMM_WORLD);
+  forest = t8_forest_new_adapt (forest, t8_adapt_callback_refine, 0, 0, &adapt_data);
+  forest = t8_forest_new_adapt (forest, t8_adapt_callback_remove, 0, 0, &adapt_data);
 
   t8_forest_write_vtk (forest, *vtuname);
   t8_debugf ("Output to %s\n", *vtuname);
@@ -151,50 +123,45 @@ t8_construct_spheres (const int initial_level,
 int
 main (int argc, char **argv)
 {
-  char                usage[BUFSIZ];
+  char usage[BUFSIZ];
   /* brief help message */
-  int                 sreturnA = snprintf (usage, BUFSIZ,
-                                           "Usage:\t%s <OPTIONS>\n\t%s -h\t"
-                                           "for a brief overview of all options.",
-                                           basename (argv[0]),
-                                           basename (argv[0]));
+  int sreturnA = snprintf (usage, BUFSIZ,
+                           "Usage:\t%s <OPTIONS>\n\t%s -h\t"
+                           "for a brief overview of all options.",
+                           basename (argv[0]), basename (argv[0]));
 
-  char                help[BUFSIZ];
+  char help[BUFSIZ];
   /* long help message */
-  int                 sreturnB = snprintf (help, BUFSIZ,
-                                           "Create a cube in which \n"
-                                           "6 half-spheres are removed, each on one side.\n\n%s\n",
-                                           usage);
+  int sreturnB = snprintf (help, BUFSIZ,
+                           "Create a cube in which \n"
+                           "6 half-spheres are removed, each on one side.\n\n%s\n",
+                           usage);
 
   if (sreturnA > BUFSIZ || sreturnB > BUFSIZ) {
     /* The usage string or help message was truncated */
     /* Note: gcc >= 7.1 prints a warning if we 
      * do not check the return value of snprintf. */
-    t8_debugf
-      ("Warning: Truncated usage string and help message to '%s' and '%s'\n",
-       usage, help);
+    t8_debugf ("Warning: Truncated usage string and help message to '%s' and '%s'\n", usage, help);
   }
 
-  int                 mpiret = sc_MPI_Init (&argc, &argv);
+  int mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
 
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
   /* Parameter for t8_construct_fractal and command line */
-  int                 initial_level;
-  double              radius_inner;
-  double              radius_outer;
-  int                 eclass_int;
-  const char         *vtuname[BUFSIZ];
-  int                 helpme;
+  int initial_level;
+  double radius_inner;
+  double radius_outer;
+  int eclass_int;
+  const char *vtuname[BUFSIZ];
+  int helpme;
 
   /* initialize command line argument parser */
-  sc_options_t       *opt = sc_options_new (argv[0]);
-  sc_options_add_switch (opt, 'h', "help", &helpme,
-                         "Display a short help message.");
-  sc_options_add_int (opt, 'l', "initial level", &initial_level, 4,
-                      "Initial uniform refinement level. Default is 4.");
+  sc_options_t *opt = sc_options_new (argv[0]);
+  sc_options_add_switch (opt, 'h', "help", &helpme, "Display a short help message.");
+  sc_options_add_int (opt, 'l', "initial level", &initial_level, 4, "Initial uniform refinement level. Default is 4.");
   sc_options_add_double (opt, 'i', "inner radius", &radius_inner, 0.45,
                          "Inner radius of sphere shells. Default is 0.45.");
   sc_options_add_double (opt, 'o', "outer radius", &radius_outer, 0.5,
@@ -206,22 +173,19 @@ main (int argc, char **argv)
                       "\t\t\t\t\t3 - triangle\n"
                       "\t\t\t\t\t4 - hexahedron\n"
                       "\t\t\t\t\t5 - tetrahedron\n"
-                      "\t\t\t\t\t6 - prism\n" "\t\t7 - pyramid");
-  sc_options_add_string (opt, 'p', "output path", vtuname,
-                         "t8_example_spheres", "Path of outputfiles.\n");
+                      "\t\t\t\t\t6 - prism\n"
+                      "\t\t7 - pyramid");
+  sc_options_add_string (opt, 'p', "output path", vtuname, "t8_example_spheres", "Path of outputfiles.\n");
 
-  int                 parsed =
-    sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
+  int parsed = sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (helpme) {
     /* display help message and usage */
     t8_global_productionf ("%s\n", help);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-  else if (parsed >= 0 && 0 <= initial_level &&
-           radius_inner <= radius_outer && radius_inner >= 0 &&
-           (eclass_int > 1 || eclass_int < 8 || eclass_int == 0)) {
-    t8_construct_spheres (initial_level, radius_inner, radius_outer,
-                          (t8_eclass_t) eclass_int, vtuname);
+  else if (parsed >= 0 && 0 <= initial_level && radius_inner <= radius_outer && radius_inner >= 0
+           && (eclass_int > 1 || eclass_int < 8 || eclass_int == 0)) {
+    t8_construct_spheres (initial_level, radius_inner, radius_outer, (t8_eclass_t) eclass_int, vtuname);
   }
   else {
     /* wrong usage */

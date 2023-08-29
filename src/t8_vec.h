@@ -38,7 +38,7 @@ T8_EXTERN_C_BEGIN ();
 static inline double
 t8_vec_norm (const double vec[3])
 {
-  double              norm = 0;
+  double norm = 0;
 
   for (int i = 0; i < 3; i++) {
     norm += vec[i] * vec[i];
@@ -55,7 +55,7 @@ t8_vec_norm (const double vec[3])
 static inline double
 t8_vec_dist (const double vec_x[3], const double vec_y[3])
 {
-  double              dist = 0;
+  double dist = 0;
 
   for (int i = 0; i < 3; i++) {
     dist += SC_SQR (vec_x[i] - vec_y[i]);
@@ -97,8 +97,7 @@ t8_vec_axy (const double vec_x[3], double vec_y[3], const double alpha)
  * \note It is possible that vec_x = vec_y on input to overwrite x
  */
 static inline void
-t8_vec_axb (const double vec_x[3], double vec_y[3], const double alpha,
-            const double b)
+t8_vec_axb (const double vec_x[3], double vec_y[3], const double alpha, const double b)
 {
   for (int i = 0; i < 3; i++) {
     vec_y[i] = alpha * vec_x[i] + b;
@@ -125,8 +124,7 @@ t8_vec_axpy (const double vec_x[3], double vec_y[3], const double alpha)
  * \param [out] vec_z  On output set \a to vec_y + \a alpha * \a vec_x
  */
 static inline void
-t8_vec_axpyz (const double vec_x[3], const double vec_y[3], double vec_z[3],
-              const double alpha)
+t8_vec_axpyz (const double vec_x[3], const double vec_y[3], double vec_z[3], const double alpha)
 {
   for (int i = 0; i < 3; i++) {
     vec_z[i] = vec_y[i] + alpha * vec_x[i];
@@ -141,7 +139,7 @@ t8_vec_axpyz (const double vec_x[3], const double vec_y[3], double vec_z[3],
 static inline double
 t8_vec_dot (const double vec_x[3], const double vec_y[3])
 {
-  double              dot = 0;
+  double dot = 0;
 
   for (int i = 0; i < 3; i++) {
     dot += vec_x[i] * vec_y[i];
@@ -158,9 +156,7 @@ static inline void
 t8_vec_cross (const double vec_x[3], const double vec_y[3], double cross[3])
 {
   for (int i = 0; i < 3; i++) {
-    cross[i] =
-      vec_x[(i + 1) % 3] * vec_y[(i + 2) % 3] -
-      vec_x[(i + 2) % 3] * vec_y[(i + 1) % 3];
+    cross[i] = vec_x[(i + 1) % 3] * vec_y[(i + 2) % 3] - vec_x[(i + 2) % 3] * vec_y[(i + 1) % 3];
   }
 }
 

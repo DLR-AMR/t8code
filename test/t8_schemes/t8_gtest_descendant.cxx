@@ -27,10 +27,11 @@
 
 /* This program tests the descendant function of an element. */
 
-/* *INDENT-OFF* */
-class class_schemes_descendant:public testing::TestWithParam <t8_eclass_t> {
-protected:
-  void SetUp () override {
+class class_schemes_descendant: public testing::TestWithParam<t8_eclass_t> {
+ protected:
+  void
+  SetUp () override
+  {
     eclass = GetParam ();
 
     scheme = t8_scheme_new_default_cxx ();
@@ -40,35 +41,36 @@ protected:
     ts->t8_element_new (1, &test);
     ts->t8_element_set_linear_id (elem, 0, 0);
   }
-  void TearDown () override {
+  void
+  TearDown () override
+  {
     ts->t8_element_destroy (1, &elem);
     ts->t8_element_destroy (1, &desc);
     ts->t8_element_destroy (1, &test);
     t8_scheme_cxx_unref (&scheme);
   }
 #ifdef T8_ENABLE_DEBUG
-  const int           maxlvl = 3;
+  const int maxlvl = 3;
 #else
-  const int           maxlvl = 4;
+  const int maxlvl = 4;
 #endif
 
-  t8_scheme_cxx      *scheme;
+  t8_scheme_cxx *scheme;
   t8_eclass_scheme_c *ts;
-  t8_eclass_t                 eclass;
-  t8_element_t       *elem;
-  t8_element_t       *desc;
-  t8_element_t       *test;
+  t8_eclass_t eclass;
+  t8_element_t *elem;
+  t8_element_t *desc;
+  t8_element_t *test;
 };
 
 /* Test recursively if the first and last descendant of an element is
  * computed correctly. Only the descendant of elem->level + 1 is tested. 
  */
-static void 
-t8_recursive_descendant(t8_element_t *elem, t8_element_t *desc,
-                         t8_element_t *test, t8_eclass_scheme_c *ts,
-                         int maxlvl){
-  const int              num_children = ts->t8_element_num_children (elem);
-  const int              level = ts->t8_element_level (elem);
+static void
+t8_recursive_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *test, t8_eclass_scheme_c *ts, int maxlvl)
+{
+  const int num_children = ts->t8_element_num_children (elem);
+  const int level = ts->t8_element_level (elem);
   for (int ichild = 0; ichild < num_children; ichild++) {
     ts->t8_element_child (elem, ichild, desc);
     /* first child == first descendant. */
@@ -91,12 +93,10 @@ t8_recursive_descendant(t8_element_t *elem, t8_element_t *desc,
 /* Test, if the first descendant of an element is computed correctly over a range
  * of levels. 
  */
- static void
-t8_deep_first_descendant (t8_element_t *elem, t8_element_t *desc,
-                          t8_element_t *test, t8_eclass_scheme_c *ts,
-                          int level)
+static void
+t8_deep_first_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *test, t8_eclass_scheme_c *ts, int level)
 {
-  const int               elem_level = ts->t8_element_level (elem);
+  const int elem_level = ts->t8_element_level (elem);
   ts->t8_element_copy (elem, test);
 
   for (int ilevel = elem_level; ilevel < level; ilevel++) {
@@ -104,19 +104,17 @@ t8_deep_first_descendant (t8_element_t *elem, t8_element_t *desc,
     ts->t8_element_copy (desc, test);
   }
   ts->t8_element_first_descendant (elem, test, level);
-  ASSERT_TRUE(!ts->t8_element_compare (desc, test)) << "Wrong deep first descendant.\n";
+  ASSERT_TRUE (!ts->t8_element_compare (desc, test)) << "Wrong deep first descendant.\n";
 }
 
 /* Test, if the last descendant of an element is computed correctly over a range
  * of levels.
  */
 static void
-t8_deep_last_descendant (t8_element_t *elem, t8_element_t *desc,
-                         t8_element_t *test, t8_eclass_scheme_c *ts,
-                         int level)
+t8_deep_last_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *test, t8_eclass_scheme_c *ts, int level)
 {
   ts->t8_element_copy (elem, test);
-  
+
   /* Compute the correct element. */
   for (int ilevel = ts->t8_element_level (elem); ilevel < level; ilevel++) {
     const int num_children = ts->t8_element_num_children (test);
@@ -125,20 +123,19 @@ t8_deep_last_descendant (t8_element_t *elem, t8_element_t *desc,
   }
   /* Check for equality. */
   ts->t8_element_last_descendant (elem, test, level);
-  ASSERT_TRUE(!ts->t8_element_compare (desc, test)) << "Wrong deep last descendant.\n";
+  ASSERT_TRUE (!ts->t8_element_compare (desc, test)) << "Wrong deep last descendant.\n";
 }
 
 /* Test if the first and last descendant of an element are computed correctly.
  * The level between the element and the descendant is larger or equal to one.
  */
 static void
-t8_large_step_descendant (t8_element_t *elem, t8_element_t *desc,
-                          t8_element_t *test, t8_eclass_scheme_c *ts,
+t8_large_step_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *test, t8_eclass_scheme_c *ts,
                           int maxlvl)
 {
   for (int ilevel = ts->t8_element_level (elem); ilevel < maxlvl; ilevel++) {
-    
-    const int             num_children = ts->t8_element_num_children (elem);
+
+    const int num_children = ts->t8_element_num_children (elem);
     /* Use these functions to perform the actual test. */
     t8_deep_first_descendant (elem, desc, test, ts, maxlvl);
     t8_deep_last_descendant (elem, desc, test, ts, maxlvl);
@@ -150,13 +147,13 @@ t8_large_step_descendant (t8_element_t *elem, t8_element_t *desc,
   }
 }
 
-TEST_P(class_schemes_descendant, test_recursive_descendant){
-    t8_recursive_descendant (elem, desc, test, ts, maxlvl);
-    t8_deep_first_descendant (elem, desc, test, ts, ts->t8_element_maxlevel ());
-    t8_deep_last_descendant (elem, desc, test, ts, ts->t8_element_maxlevel ());
-    t8_large_step_descendant (elem, desc, test, ts, maxlvl);
+TEST_P (class_schemes_descendant, test_recursive_descendant)
+{
+  t8_recursive_descendant (elem, desc, test, ts, maxlvl);
+  t8_deep_first_descendant (elem, desc, test, ts, ts->t8_element_maxlevel ());
+  t8_deep_last_descendant (elem, desc, test, ts, ts->t8_element_maxlevel ());
+  t8_large_step_descendant (elem, desc, test, ts, maxlvl);
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_descendant, class_schemes_descendant,
-                        testing::Range(T8_ECLASS_ZERO, T8_ECLASS_COUNT));
-/* *INDENT-ON* */
+                          testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT));

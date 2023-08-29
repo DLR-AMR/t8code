@@ -34,7 +34,8 @@
 
 T8_EXTERN_C_BEGIN ();
 /* TODO: comment */
-void                t8_forest_adapt (t8_forest_t forest);
+void
+t8_forest_adapt (t8_forest_t forest);
 
 T8_EXTERN_C_END ();
 
