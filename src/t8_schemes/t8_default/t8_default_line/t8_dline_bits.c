@@ -340,15 +340,12 @@ t8_dline_vertex_ref_coords (const t8_dline_t *elem, const int vertex, double coo
 }
 
 void
-t8_dline_compute_reference_coords (const t8_dline_t *elem,
-                                   const double *ref_coords,
-                                   const size_t num_coords,
-                                   const size_t skip_coords,
-                                   double *out_coords)
+t8_dline_compute_reference_coords (const t8_dline_t *elem, const double *ref_coords, const size_t num_coords,
+                                   const size_t skip_coords, double *out_coords)
 {
   T8_ASSERT (t8_dline_is_valid (elem));
   for (size_t coord = 0; coord < num_coords; ++coord) {
-    const size_t        offset = coord * skip_coords;
+    const size_t offset = coord * skip_coords;
     out_coords[offset] = elem->x;
     out_coords[offset] += T8_DLINE_LEN (elem->level) * ref_coords[coord];
     out_coords[offset] /= (double) T8_DLINE_ROOT_LEN;

@@ -308,13 +308,9 @@ t8_dprism_vertex_ref_coords (const t8_dprism_t *elem, int vertex, double coords[
  * 		                     will be filled with the reference coordinates
  *                         of the points on the prism.
  */
-void                t8_dprism_compute_reference_coords (const t8_dprism_t
-                                                        *elem,
-                                                        const double
-                                                        *ref_coords,
-                                                        const size_t
-                                                        num_coords,
-                                                        double *out_coords);
+void
+t8_dprism_compute_reference_coords (const t8_dprism_t *elem, const double *ref_coords, const size_t num_coords,
+                                    double *out_coords);
 
 /** Computes the linear position of a prism in an uniform grid.
  * \param [in] p  Prism whose id will be computed.

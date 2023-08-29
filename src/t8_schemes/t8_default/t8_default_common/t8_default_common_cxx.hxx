@@ -119,11 +119,10 @@ class t8_default_scheme_common_c: public t8_eclass_scheme_c {
    * \param [out] out_coords  The coordinates of the points in the
    *                          reference space of the tree.
    */
-  virtual void        t8_element_reference_coords (const t8_element_t *elem,
-                                                   const double *ref_coords,
-                                                   const size_t num_coords,
-                                                   double *out_coords)
-    const = 0;
+  virtual void
+  t8_element_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
+                               double *out_coords) const
+    = 0;
 
   /** Get the integer coordinates of the anchor node of an element.
    * The default scheme implements the Morton type SFCs. In these SFCs the

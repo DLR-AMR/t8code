@@ -1554,9 +1554,7 @@ t8_dpyramid_vertex_reference_coords (const t8_dpyramid_t *elem, const int vertex
 }
 
 void
-t8_dpyramid_compute_reference_coords (const t8_dpyramid_t *elem,
-                                      const double *ref_coords,
-                                      const size_t num_coords,
+t8_dpyramid_compute_reference_coords (const t8_dpyramid_t *elem, const double *ref_coords, const size_t num_coords,
                                       double *out_coords)
 {
   T8_ASSERT (ref_coords != NULL);
@@ -1565,7 +1563,7 @@ t8_dpyramid_compute_reference_coords (const t8_dpyramid_t *elem,
     const t8_dpyramid_coord_t length = T8_DPYRAMID_LEN (elem->pyramid.level);
 
     for (size_t coord = 0; coord < num_coords; ++coord) {
-      const size_t        offset = coord * 3;
+      const size_t offset = coord * 3;
       out_coords[offset + 0] = elem->pyramid.x;
       out_coords[offset + 1] = elem->pyramid.y;
       out_coords[offset + 2] = elem->pyramid.z;
@@ -1576,10 +1574,8 @@ t8_dpyramid_compute_reference_coords (const t8_dpyramid_t *elem,
         out_coords[offset + 2] += ref_coords[offset + 2] * length;
       }
       else {
-        out_coords[offset + 0] +=
-          (ref_coords[offset + 0] - ref_coords[offset + 2]) * length;
-        out_coords[offset + 1] +=
-          (ref_coords[offset + 1] - ref_coords[offset + 2]) * length;
+        out_coords[offset + 0] += (ref_coords[offset + 0] - ref_coords[offset + 2]) * length;
+        out_coords[offset + 1] += (ref_coords[offset + 1] - ref_coords[offset + 2]) * length;
         out_coords[offset + 2] += (1 - ref_coords[offset + 2]) * length;
       }
 
@@ -1590,8 +1586,7 @@ t8_dpyramid_compute_reference_coords (const t8_dpyramid_t *elem,
     }
   }
   else {
-    t8_dtet_compute_reference_coords (&(elem->pyramid), ref_coords,
-                                      num_coords, out_coords);
+    t8_dtet_compute_reference_coords (&(elem->pyramid), ref_coords, num_coords, out_coords);
   }
 }
 

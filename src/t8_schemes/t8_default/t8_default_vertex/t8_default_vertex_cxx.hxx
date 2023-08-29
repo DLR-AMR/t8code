@@ -602,11 +602,9 @@ struct t8_default_scheme_vertex_c: public t8_default_scheme_common_c
    * \param [out] out_coords  The coordinates of the points in the
    *                          reference space of the tree.
    */
-  virtual void        t8_element_reference_coords (const t8_element_t *elem,
-                                                   const double *ref_coords,
-                                                   const size_t num_coords,
-                                                   double *out_coords)
-    const;
+  virtual void
+  t8_element_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
+                               double *out_coords) const;
 
   /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
    * Returns false otherwise.

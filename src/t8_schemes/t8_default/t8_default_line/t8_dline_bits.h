@@ -261,14 +261,9 @@ t8_dline_vertex_ref_coords (const t8_dline_t *elem, const int vertex, double coo
  * 		                     will be filled with the reference coordinates
  *                         of the points on the line.
  */
-void                t8_dline_compute_reference_coords (const t8_dline_t *elem,
-                                                       const double
-                                                       *ref_coords,
-                                                       const size_t
-                                                       num_coords,
-                                                       const size_t
-                                                       skip_coords,
-                                                       double *out_coords);
+void
+t8_dline_compute_reference_coords (const t8_dline_t *elem, const double *ref_coords, const size_t num_coords,
+                                   const size_t skip_coords, double *out_coords);
 
 /** Computes the linear position of a line in an uniform grid.
  * \param [in] line  Line whose id will be computed.
