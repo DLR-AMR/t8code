@@ -5,3 +5,7 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+    ignore:
+      # ignore all crate-ci/typos patch updates
+      - dependency-name: "crate-ci/typos"
+        update-types: ["version-update:semver-patch"]
