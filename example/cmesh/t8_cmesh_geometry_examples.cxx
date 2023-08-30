@@ -22,11 +22,11 @@
 
 /* Show-case several cmesh examples with curvilinear geometries. */
 
-#include <t8.h>                 /* General t8code header, always include this. */
-#include <t8_cmesh.h>           /* cmesh definition and basic interface. */
-#include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>     /* default refinement scheme. */
-#include <t8_cmesh_vtk_writer.h>        /* write file in vtu file */
+#include <t8.h>                                     /* General t8code header, always include this. */
+#include <t8_cmesh.h>                               /* cmesh definition and basic interface. */
+#include <t8_forest/t8_forest_general.h>            /* forest definition and basic interface. */
+#include <t8_schemes/t8_default/t8_default_cxx.hxx> /* default refinement scheme. */
+#include <t8_cmesh_vtk_writer.h>                    /* write file in vtu file */
 #include <t8_forest/t8_forest_io.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 
@@ -38,7 +38,7 @@ main (int argc, char **argv)
    */
 
   /* Initialize MPI. This has to happen before we initialize sc or t8code. */
-  int                 mpiret = sc_MPI_Init (&argc, &argv);
+  int mpiret = sc_MPI_Init (&argc, &argv);
   /* Error check the MPI return value. */
   SC_CHECK_MPI (mpiret);
 
@@ -48,31 +48,27 @@ main (int argc, char **argv)
   t8_init (SC_LP_PRODUCTION);
 
   /* We will use MPI_COMM_WORLD as a communicator. */
-  sc_MPI_Comm         comm = sc_MPI_COMM_WORLD;
+  sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
 
   /*
    * Creation of several meshes and storing them to disk.
    */
 
   {
-    const char         *prefix_cmesh = "t8_squared_disk_cmesh";
-    const char         *prefix_forest = "t8_squared_disk_forest";
+    const char *prefix_cmesh = "t8_squared_disk_cmesh";
+    const char *prefix_forest = "t8_squared_disk_forest";
 
-    const int           uniform_level = 5;
-    const double        radius = 1.0;
+    const int uniform_level = 5;
+    const double radius = 1.0;
 
-    t8_cmesh_t          cmesh = t8_cmesh_new_squared_disk (radius, comm);
+    t8_cmesh_t cmesh = t8_cmesh_new_squared_disk (radius, comm);
 
-    t8_forest_t         forest =
-      t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (),
-                             uniform_level,
-                             0, comm);
+    t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), uniform_level, 0, comm);
 
     t8_cmesh_vtk_write_file (cmesh, prefix_cmesh, 1.0);
     t8_global_productionf ("Wrote %s.\n", prefix_cmesh);
 
-    t8_forest_write_vtk_ext (forest, prefix_forest, 1, 1, 1, 1, 0, 1, 0, 0,
-                             NULL);
+    t8_forest_write_vtk_ext (forest, prefix_forest, 1, 1, 1, 1, 0, 1, 0, 0, NULL);
     t8_global_productionf ("Wrote %s.\n\n", prefix_forest);
 
     t8_forest_unref (&forest);

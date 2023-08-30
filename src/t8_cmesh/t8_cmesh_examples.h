@@ -319,8 +319,8 @@ t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees, const int set_attributes, cons
  * \param [in] comm          The MPI communicator used to commit the cmesh
  * \return                   A cmesh representing the spherical surface.
  */
-t8_cmesh_t          t8_cmesh_new_squared_disk (const double radius,
-                                               sc_MPI_Comm comm);
+t8_cmesh_t
+t8_cmesh_new_squared_disk (const double radius, sc_MPI_Comm comm);
 
 T8_EXTERN_C_END ();
 

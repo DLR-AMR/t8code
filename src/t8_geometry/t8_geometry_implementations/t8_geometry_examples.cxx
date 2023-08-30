@@ -25,22 +25,19 @@
 #include <t8_vec.h>
 
 void
-t8_geometry_squared_disk::t8_geom_evaluate (t8_cmesh_t cmesh,
-                                            t8_gloidx_t gtreeid,
-                                            const double *ref_coords,
+t8_geometry_squared_disk::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
                                             double out_coords[3]) const
 {
-  double              n[3];     /* Normal vector. */
-  double              r[3];     /* Radial vector. */
-  double              s[3];     /* Radial vector for the corrected coordinates. */
-  double              p[3];     /* Vector on the plane resp. quad. */
+  double n[3]; /* Normal vector. */
+  double r[3]; /* Radial vector. */
+  double s[3]; /* Radial vector for the corrected coordinates. */
+  double p[3]; /* Vector on the plane resp. quad. */
 
-  const double        x = ref_coords[0];
-  const double        y = ref_coords[1];
+  const double x = ref_coords[0];
+  const double y = ref_coords[1];
 
-  t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
-  double             *tree_vertices =
-    t8_cmesh_get_tree_vertices (cmesh, ltreeid);
+  t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
+  double *tree_vertices = t8_cmesh_get_tree_vertices (cmesh, ltreeid);
 
   t8_geom_linear_interpolation (ref_coords, tree_vertices, 3, 2, p);
 
@@ -55,11 +52,11 @@ t8_geometry_squared_disk::t8_geom_evaluate (t8_cmesh_t cmesh,
 
   /* Four squares framing the central one. */
   {
-    const double        center_ref[3] = { 0.5, 0.5, 0.0 };
+    const double center_ref[3] = { 0.5, 0.5, 0.0 };
     t8_geom_linear_interpolation (center_ref, tree_vertices, 3, 2, n);
 
     /* Normalize vector `n`. */
-    const double        norm = sqrt (n[0] * n[0] + n[1] * n[1]);
+    const double norm = sqrt (n[0] * n[0] + n[1] * n[1]);
     n[0] = n[0] / norm;
     n[1] = n[1] / norm;
   }
@@ -70,13 +67,13 @@ t8_geometry_squared_disk::t8_geom_evaluate (t8_cmesh_t cmesh,
     r[1] = tree_vertices[1];
 
     /* Normalize vector `r`. */
-    const double        norm = sqrt (r[0] * r[0] + r[1] * r[1]);
+    const double norm = sqrt (r[0] * r[0] + r[1] * r[1]);
     r[0] = r[0] / norm;
     r[1] = r[1] / norm;
   }
 
   {
-    double              corr_ref_coords[3];
+    double corr_ref_coords[3];
 
     /* Correction in order to rectify elements near the corners. */
     corr_ref_coords[0] = tan (0.5 * M_PI * (x - 0.5)) * 0.5 + 0.5;
@@ -86,17 +83,16 @@ t8_geometry_squared_disk::t8_geom_evaluate (t8_cmesh_t cmesh,
     /* Compute and normalize vector `s`. */
     t8_geom_linear_interpolation (corr_ref_coords, tree_vertices, 3, 2, s);
 
-    const double        norm = sqrt (s[0] * s[0] + s[1] * s[1]);
+    const double norm = sqrt (s[0] * s[0] + s[1] * s[1]);
     s[0] = s[0] / norm;
     s[1] = s[1] / norm;
   }
 
   {
-    const double        out_radius =
-      (p[0] * n[0] + p[1] * n[1]) / (r[0] * n[0] + r[1] * n[1]);
+    const double out_radius = (p[0] * n[0] + p[1] * n[1]) / (r[0] * n[0] + r[1] * n[1]);
 
-    const double        blend = y * out_radius; /* y \in [0,1] */
-    const double        dnelb = 1.0 - y;
+    const double blend = y * out_radius; /* y \in [0,1] */
+    const double dnelb = 1.0 - y;
 
     out_coords[0] = dnelb * p[0] + blend * s[0];
     out_coords[1] = dnelb * p[1] + blend * s[1];
@@ -111,12 +107,12 @@ t8_geometry_destroy (t8_geometry_c **geom)
 {
   T8_ASSERT (geom != NULL);
 
-  delete             *geom;
+  delete *geom;
   *geom = NULL;
 }
 
 /* Satisfy the C interface from t8_geometry_linear.h. */
-t8_geometry_c      *
+t8_geometry_c *
 t8_geometry_squared_disk_new ()
 {
   t8_geometry_squared_disk *geom = new t8_geometry_squared_disk ();

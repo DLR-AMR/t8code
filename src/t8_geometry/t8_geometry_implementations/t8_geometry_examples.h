@@ -35,12 +35,14 @@ T8_EXTERN_C_BEGIN ();
 /** Destroy a geometry object.
  * \param [in,out] geom   A pointer to a geometry object. Set to NULL on output.
  */
-void                t8_geometry_destroy (t8_geometry_c **geom);
+void
+t8_geometry_destroy (t8_geometry_c **geom);
 
 /** Create a new squared_disk geometry.
  * \return          A pointer to an allocated geometry struct.
  */
-t8_geometry_c      *t8_geometry_squared_disk_new ();
+t8_geometry_c *
+t8_geometry_squared_disk_new ();
 
 T8_EXTERN_C_END ();
 
