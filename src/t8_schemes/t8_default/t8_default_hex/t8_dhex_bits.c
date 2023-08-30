@@ -24,9 +24,7 @@
 #include <p8est_bits.h>
 
 void
-t8_dhex_compute_reference_coords (const t8_dhex_t * elem,
-                                  const double *ref_coords,
-                                  double *out_coords)
+t8_dhex_compute_reference_coords (const t8_dhex_t *elem, const double *ref_coords, double *out_coords)
 {
   const p8est_quadrant_t *q1 = (const p8est_quadrant_t *) elem;
 

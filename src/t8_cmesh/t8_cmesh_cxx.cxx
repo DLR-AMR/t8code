@@ -32,15 +32,11 @@
  */
 
 void
-t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
-                         t8_scheme_cxx_t *ts,
-                         t8_gloidx_t *first_local_tree,
-                         t8_gloidx_t *child_in_tree_begin,
-                         t8_gloidx_t *last_local_tree,
-                         t8_gloidx_t *child_in_tree_end,
+t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *ts, t8_gloidx_t *first_local_tree,
+                         t8_gloidx_t *child_in_tree_begin, t8_gloidx_t *last_local_tree, t8_gloidx_t *child_in_tree_end,
                          int8_t *first_tree_shared)
 {
-  int                 is_empty;
+  int is_empty;
 
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->committed);
@@ -56,32 +52,29 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
     *child_in_tree_end = 0;
   }
 
-  t8_gloidx_t         global_num_children;
-  t8_gloidx_t         first_global_child;
-  t8_gloidx_t         child_in_tree_begin_temp;
-  t8_gloidx_t         last_global_child;
-  t8_gloidx_t         children_per_tree = 0;
+  t8_gloidx_t global_num_children;
+  t8_gloidx_t first_global_child;
+  t8_gloidx_t child_in_tree_begin_temp;
+  t8_gloidx_t last_global_child;
+  t8_gloidx_t children_per_tree = 0;
 #ifdef T8_ENABLE_DEBUG
-  t8_gloidx_t         prev_last_tree = -1;
+  t8_gloidx_t prev_last_tree = -1;
 #endif
-  int                 tree_class;
+  int tree_class;
   t8_eclass_scheme_c *tree_scheme;
 
   /* Compute the number of children on level in each tree */
   global_num_children = 0;
-  for (tree_class = T8_ECLASS_ZERO; tree_class < T8_ECLASS_COUNT;
-       ++tree_class) {
+  for (tree_class = T8_ECLASS_ZERO; tree_class < T8_ECLASS_COUNT; ++tree_class) {
     /* We iterate over each element class and get the number of children for this
      * tree class.
      */
     if (cmesh->num_trees_per_eclass[tree_class] > 0) {
       tree_scheme = ts->eclass_schemes[tree_class];
       T8_ASSERT (tree_scheme != NULL);
-      children_per_tree =
-        tree_scheme->t8_element_count_leafs_from_root (level);
+      children_per_tree = tree_scheme->t8_element_count_leafs_from_root (level);
       T8_ASSERT (children_per_tree >= 0);
-      global_num_children +=
-        cmesh->num_trees_per_eclass[tree_class] * children_per_tree;
+      global_num_children += cmesh->num_trees_per_eclass[tree_class] * children_per_tree;
     }
   }
   T8_ASSERT (children_per_tree != 0);
@@ -98,35 +91,27 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
      * (total_num_children * p) / P
      * We cast to long double and double first to prevent integer overflow.
      */
-    first_global_child =
-      ((long double) global_num_children *
-       cmesh->mpirank) / (double) cmesh->mpisize;
+    first_global_child = ((long double) global_num_children * cmesh->mpirank) / (double) cmesh->mpisize;
   }
   if (cmesh->mpirank != cmesh->mpisize - 1) {
-    last_global_child =
-      ((long double) global_num_children *
-       (cmesh->mpirank + 1)) / (double) cmesh->mpisize;
+    last_global_child = ((long double) global_num_children * (cmesh->mpirank + 1)) / (double) cmesh->mpisize;
   }
   else {
     last_global_child = global_num_children;
   }
 
-  T8_ASSERT (0 <= first_global_child
-             && first_global_child <= global_num_children);
-  T8_ASSERT (0 <= last_global_child
-             && last_global_child <= global_num_children);
+  T8_ASSERT (0 <= first_global_child && first_global_child <= global_num_children);
+  T8_ASSERT (0 <= last_global_child && last_global_child <= global_num_children);
 
   *first_local_tree = first_global_child / children_per_tree;
-  child_in_tree_begin_temp =
-    first_global_child - *first_local_tree * children_per_tree;
+  child_in_tree_begin_temp = first_global_child - *first_local_tree * children_per_tree;
   if (child_in_tree_begin != NULL) {
     *child_in_tree_begin = child_in_tree_begin_temp;
   }
 
   *last_local_tree = (last_global_child - 1) / children_per_tree;
 
-  is_empty = *first_local_tree >= *last_local_tree
-    && first_global_child >= last_global_child;
+  is_empty = *first_local_tree >= *last_local_tree && first_global_child >= last_global_child;
   if (first_tree_shared != NULL) {
 #ifdef T8_ENABLE_DEBUG
     prev_last_tree = (first_global_child - 1) / children_per_tree;
@@ -146,8 +131,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
   }
   if (child_in_tree_end != NULL) {
     if (*last_local_tree > 0) {
-      *child_in_tree_end =
-        last_global_child - *last_local_tree * children_per_tree;
+      *child_in_tree_end = last_global_child - *last_local_tree * children_per_tree;
     }
     else {
       *child_in_tree_end = last_global_child;
@@ -165,5 +149,4 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
 
     *last_local_tree = *first_local_tree - 1;
   }
-
 }

@@ -38,15 +38,12 @@ T8_EXTERN_C_BEGIN ();
  * The user data of forest must an integer set to the maximum refinement level.
  */
 int
-t8_common_adapt_balance (t8_forest_t forest, t8_forest_t forest_from,
-                         t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                         t8_eclass_scheme_c *ts, const int is_family,
-                         const int num_elements, t8_element_t *elements[])
+t8_common_adapt_balance (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
+                         t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
-  int                 level;
-  int                 maxlevel, child_id;
-  T8_ASSERT (!is_family || num_elements ==
-             ts->t8_element_num_children (elements[0]));
+  int level;
+  int maxlevel, child_id;
+  T8_ASSERT (!is_family || num_elements == ts->t8_element_num_children (elements[0]));
   level = ts->t8_element_level (elements[0]);
 
   /* we set a maximum refinement level as forest user data */
@@ -65,22 +62,18 @@ t8_common_adapt_balance (t8_forest_t forest, t8_forest_t forest_from,
 }
 
 int
-t8_common_within_levelset (t8_forest_t forest, t8_locidx_t ltreeid,
-                           t8_element_t *element,
-                           t8_eclass_scheme_c *ts,
-                           t8_example_level_set_fn levelset,
-                           double band_width, double t, void *udata)
+t8_common_within_levelset (t8_forest_t forest, t8_locidx_t ltreeid, t8_element_t *element, t8_eclass_scheme_c *ts,
+                           t8_example_level_set_fn levelset, double band_width, double t, void *udata)
 {
-  double              elem_midpoint[3], elem_diam;
-  double              value;
+  double elem_midpoint[3], elem_diam;
+  double value;
 
   T8_ASSERT (band_width >= 0);
   if (band_width == 0) {
-    /* If bandwidth = 0, we only refine the elements that are intersected by the
-     * zero level-set */
-    int                 num_corners = ts->t8_element_num_corners (element);
-    int                 sign = 1, icorner;
-    double              coords[3];
+    /* If bandwidth = 0, we only refine the elements that are intersected by the zero level-set */
+    int num_corners = ts->t8_element_num_corners (element);
+    int sign = 1, icorner;
+    double coords[3];
 
     /* Compute LS function at first corner */
     t8_forest_element_coordinate (forest, ltreeid, element, 0, coords);
@@ -90,13 +83,10 @@ t8_common_within_levelset (t8_forest_t forest, t8_locidx_t ltreeid,
     sign = value > 0 ? 1 : -(value < 0);
     /* iterate over all corners */
     for (icorner = 1; icorner < num_corners; icorner++) {
-      t8_forest_element_coordinate (forest, ltreeid, element,
-                                    icorner, coords);
+      t8_forest_element_coordinate (forest, ltreeid, element, icorner, coords);
       /* compute the level-set function at this corner */
       value = levelset (coords, t, udata);
-      if ((value > 0 && sign <= 0)
-          || (value == 0 && sign != 0)
-          || (value < 0 && sign >= 0)) {
+      if ((value > 0 && sign <= 0) || (value == 0 && sign != 0) || (value < 0 && sign >= 0)) {
         /* The sign of the LS function changes across the element, we refine it */
         return 1;
       }
@@ -125,20 +115,15 @@ t8_common_within_levelset (t8_forest_t forest, t8_locidx_t ltreeid,
  */
 /* TODO: Currently the band_width control is not working yet. */
 int
-t8_common_adapt_level_set (t8_forest_t forest,
-                           t8_forest_t forest_from,
-                           t8_locidx_t which_tree,
-                           t8_locidx_t lelement_id,
-                           t8_eclass_scheme_c *ts,
-                           const int is_family,
-                           const int num_elements, t8_element_t *elements[])
+t8_common_adapt_level_set (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
+                           t8_eclass_scheme_c *ts, const int is_family, const int num_elements,
+                           t8_element_t *elements[])
 {
   t8_example_level_set_struct_t *data;
-  int                 within_band;
-  int                 level;
+  int within_band;
+  int level;
 
-  T8_ASSERT (!is_family || num_elements ==
-             ts->t8_element_num_children (elements[0]));
+  T8_ASSERT (!is_family || num_elements == ts->t8_element_num_children (elements[0]));
 
   data = (t8_example_level_set_struct_t *) t8_forest_get_user_data (forest);
   level = ts->t8_element_level (elements[0]);
@@ -154,10 +139,8 @@ t8_common_adapt_level_set (t8_forest_t forest,
   if (level < data->min_level) {
     return 1;
   }
-  within_band =
-    t8_common_within_levelset (forest_from, which_tree, elements[0],
-                               ts, data->L,
-                               data->band_width / 2, data->t, data->udata);
+  within_band = t8_common_within_levelset (forest_from, which_tree, elements[0], ts, data->L, data->band_width / 2,
+                                           data->t, data->udata);
   if (within_band && level < data->max_level) {
     /* The element can be refined and lies inside the refinement region */
     return 1;

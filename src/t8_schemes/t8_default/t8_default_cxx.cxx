@@ -36,10 +36,10 @@
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
-t8_scheme_cxx_t    *
+t8_scheme_cxx_t *
 t8_scheme_new_default_cxx (void)
 {
-  t8_scheme_cxx_t    *s;
+  t8_scheme_cxx_t *s;
 
   s = T8_ALLOC_ZERO (t8_scheme_cxx_t, 1);
   t8_refcount_init (&s->rc);
@@ -79,7 +79,7 @@ t8_eclass_scheme_is_default (t8_eclass_scheme_c *ts)
     /* TODO: Add pyramid as soon as pyramid scheme is implemented */
     /* TODO: Add a test for this function */
   }
-  return 0;                     /* Default return value false */
+  return 0; /* Default return value false */
 }
 
 T8_EXTERN_C_END ();

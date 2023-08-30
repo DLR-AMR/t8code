@@ -4,6 +4,10 @@
 [![t8code tests serial](https://github.com/DLR-AMR/t8code/actions/workflows/tests_t8code_serial.yml/badge.svg)](https://github.com/DLR-AMR/t8code/actions/workflows/tests_t8code_serial.yml)
 [![t8code tests parallel](https://github.com/DLR-AMR/t8code/actions/workflows/tests_t8code_parallel.yml/badge.svg)](https://github.com/DLR-AMR/t8code/actions/workflows/tests_t8code_parallel.yml)
 
+<p align="center">
+  <img width="300px" src=t8code_logo.png>
+</p>
+
 ### Introduction
 
 t8code (spoken as "tetcode") is a C/C++ library to manage parallel adaptive meshes with various element types.
@@ -80,6 +84,17 @@ make doxygen
 and then find the generated files in the `/doc` subfolder.
 
 You can also find the documentation of our releases on the [t8code website](https://dlr-amr.github.io/t8code/pages/documentation.html).
+
+### Julia Wrapper
+
+We offer [T8code.jl](https://github.com/DLR-AMR/T8code.jl) - an official
+[Julia](https://julialang.org/) package allowing to call t8code routines from
+the [Julia](https://julialang.org/) programming language. From within a Julia
+session do
+```julia
+julia> import Pkg; Pkg.add(["T8code", "MPI"])
+```
+to install the package on your system.
 
 ### Publications
   

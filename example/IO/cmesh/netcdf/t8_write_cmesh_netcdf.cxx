@@ -29,7 +29,11 @@
 #include <netcdf.h>
 /* Standard netcdf error function */
 #define ERRCODE 2
-#define ERR(e) {t8_global_productionf("Error: %s\n", nc_strerror(e)); exit(ERRCODE);}
+#define ERR(e) \
+  { \
+    t8_global_productionf ("Error: %s\n", nc_strerror (e)); \
+    exit (ERRCODE); \
+  }
 #endif
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
@@ -41,16 +45,16 @@
 void
 t8_example_netcdf_write_cmesh (sc_MPI_Comm comm)
 {
-  t8_cmesh_t          cmesh;
-  t8_nc_int32_t      *var_rank;
-  sc_array_t         *var_ranks;
-  sc_array_t         *var_random_values;
-  double             *random_values;
+  t8_cmesh_t cmesh;
+  t8_nc_int32_t *var_rank;
+  sc_array_t *var_ranks;
+  sc_array_t *var_random_values;
+  double *random_values;
   t8_netcdf_variable_t *ext_var_mpirank;
   t8_netcdf_variable_t *ext_var_random_values;
-  int                 mpiret;
-  int                 mpirank;
-  int                 j;
+  int mpiret;
+  int mpirank;
+  int j;
 
   /* Receive the process-local MPI rank */
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
@@ -60,8 +64,7 @@ t8_example_netcdf_write_cmesh (sc_MPI_Comm comm)
   cmesh = t8_cmesh_new_hypercube_hybrid (comm, 1, 0);
 
   /* Number of process-local elements */
-  t8_global_productionf ("Number of local trees on process %d : %d\n",
-                         mpirank, t8_cmesh_get_num_local_trees (cmesh));
+  t8_global_productionf ("Number of local trees on process %d : %d\n", mpirank, t8_cmesh_get_num_local_trees (cmesh));
 
   /* *Example user-defined NetCDF variable, mpirank* */
   /* Allocate the data which lays on the several processes */
@@ -74,15 +77,10 @@ t8_example_netcdf_write_cmesh (sc_MPI_Comm comm)
   }
 
   /* Create a new sc_array_t which provides the data for the NetCDF variables, in this case the mpirank each element lays on */
-  var_ranks =
-    sc_array_new_data (var_rank, sizeof (t8_nc_int32_t),
-                       t8_cmesh_get_num_local_trees (cmesh));
+  var_ranks = sc_array_new_data (var_rank, sizeof (t8_nc_int32_t), t8_cmesh_get_num_local_trees (cmesh));
 
   /* Create an integer NetCDF variable; parameters are (name of the variable, descriptive long name of the variable, description of the data's unit, pointer to sc_array_t which provides the data) */
-  ext_var_mpirank =
-    t8_netcdf_create_integer_var ("mpirank",
-                                  "Mpirank which the element lays on",
-                                  "integer", var_ranks);
+  ext_var_mpirank = t8_netcdf_create_integer_var ("mpirank", "Mpirank which the element lays on", "integer", var_ranks);
 
   /* *Example user-defined NetCDF variable, random values* */
   /* Create random values */
@@ -92,25 +90,20 @@ t8_example_netcdf_write_cmesh (sc_MPI_Comm comm)
     random_values[j] = rand () / (double) rand ();
   }
   /* Create a new sc_array_t which provides the data for the NetCDF variables, in this case just random values */
-  var_random_values =
-    sc_array_new_data (random_values, sizeof (double),
-                       t8_cmesh_get_num_local_trees (cmesh));
+  var_random_values = sc_array_new_data (random_values, sizeof (double), t8_cmesh_get_num_local_trees (cmesh));
 
   /* Create a double NetCDF variable; parameters are (name of the variable, descriptive long name of the variable, description of the data's unit (i.e. degrees Celsius), pointer to sc_array_t which provides the data) */
-  ext_var_random_values =
-    t8_netcdf_create_double_var ("random_values", "Random values in [0,10)",
-                                 "double", var_random_values);
+  ext_var_random_values
+    = t8_netcdf_create_double_var ("random_values", "Random values in [0,10)", "double", var_random_values);
 
   /* Create an array of pointers to extern NetCDF-variables, further extern NetCDF-Variables could be created and appended to the array */
-  t8_netcdf_variable_t *ext_vars[2] =
-    { ext_var_mpirank, ext_var_random_values };
+  t8_netcdf_variable_t *ext_vars[2] = { ext_var_mpirank, ext_var_random_values };
 
   /* Name of the NetCDF-File */
-  const char         *mesh_name = "T8_Example_NetCDF_Cmesh";
+  const char *mesh_name = "T8_Example_NetCDF_Cmesh";
 
   /* Write the cmesh to NetCDF */
-  t8_cmesh_write_netcdf (cmesh, mesh_name, "Example 3D parallel cmesh", 3, 2,
-                         ext_vars, comm);
+  t8_cmesh_write_netcdf (cmesh, mesh_name, "Example 3D parallel cmesh", 3, 2, ext_vars, comm);
 
 #if T8_WITH_NETCDF
   t8_global_productionf ("NetCDF output of the cmesh has been written.\n");
@@ -135,7 +128,7 @@ t8_example_netcdf_write_cmesh (sc_MPI_Comm comm)
 int
 main (int argc, char **argv)
 {
-  int                 mpiret;
+  int mpiret;
 
   /* Initialize MPI */
   mpiret = sc_MPI_Init (&argc, &argv);
