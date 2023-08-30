@@ -23,6 +23,7 @@
 #include <t8_fortran_interface/t8_fortran_interface.h>
 #include <t8_element_c_interface.h>
 #include <t8_schemes/t8_default.h>
+#include <t8_cmesh/t8_cmesh_examples.h>
 
 /* Wrapper around sc_init (...), t8_init (...) */
 void
