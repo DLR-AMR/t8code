@@ -30,14 +30,14 @@ T8_EXTERN_C_BEGIN ();
 void
 t8_scheme_cxx_destroy (t8_scheme_cxx_t *s)
 {
-  int                 t;
+  int t;
 
   T8_ASSERT (s != NULL);
   T8_ASSERT (s->rc.refcount == 0);
 
   for (t = 0; t < T8_ECLASS_COUNT; ++t) {
     if (s->eclass_schemes[t] != NULL) {
-      delete              s->eclass_schemes[t];
+      delete s->eclass_schemes[t];
     }
   }
   T8_FREE (s);
@@ -51,7 +51,7 @@ t8_eclass_scheme::t8_element_size () const
 }
 
 /* Default implementation for array_index */
-t8_element_t       *
+t8_element_t *
 t8_eclass_scheme::t8_element_array_index (sc_array_t *array, size_t it) const
 {
   T8_ASSERT (it < array->elem_count);

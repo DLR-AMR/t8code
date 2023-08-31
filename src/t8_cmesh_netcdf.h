@@ -41,12 +41,9 @@ T8_EXTERN_C_BEGIN ();
  * \param [in]  ext_variables An array of pointers of the herein before mentioned user-defined variables (if none, set it to NULL).
  * \param [in]  comm The sc_MPI_Communicator to use.
  */
-void                t8_cmesh_write_netcdf (t8_cmesh_t cmesh,
-                                           const char *file_prefix,
-                                           const char *file_title, int dim,
-                                           int num_extern_netcdf_vars,
-                                           t8_netcdf_variable_t *
-                                           variables[], sc_MPI_Comm comm);
+void
+t8_cmesh_write_netcdf (t8_cmesh_t cmesh, const char *file_prefix, const char *file_title, int dim,
+                       int num_extern_netcdf_vars, t8_netcdf_variable_t *variables[], sc_MPI_Comm comm);
 
 T8_EXTERN_C_END ();
 

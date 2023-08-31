@@ -48,11 +48,9 @@ T8_EXTERN_C_BEGIN ();
  * \param[in] vtk_file_type A vtk-filetype that is readable by t8code. 
  * \return                  A committed cmesh.
  */
-t8_cmesh_t          t8_cmesh_vtk_reader (const char *filename,
-                                         const int partition,
-                                         const int main_proc,
-                                         sc_MPI_Comm comm,
-                                         const vtk_file_type_t vtk_file_type);
+t8_cmesh_t
+t8_cmesh_vtk_reader (const char *filename, const int partition, const int main_proc, sc_MPI_Comm comm,
+                     const vtk_file_type_t vtk_file_type);
 
 T8_EXTERN_C_END ();
 

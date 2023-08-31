@@ -31,64 +31,48 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * test yet. A proper test would compare the read files with a reference-cmesh. 
  * 
  */
-const vtk_file_type_t gtest_vtk_filetypes[VTK_NUM_TYPES] = {
-  VTK_FILE_ERROR,
-  VTK_UNSTRUCTURED_FILE,
-  VTK_POLYDATA_FILE,
-  VTK_PARALLEL_UNSTRUCTURED_FILE,
-  VTK_PARALLEL_POLYDATA_FILE
-};
+const vtk_file_type_t gtest_vtk_filetypes[VTK_NUM_TYPES]
+  = { VTK_FILE_ERROR, VTK_UNSTRUCTURED_FILE, VTK_POLYDATA_FILE, VTK_PARALLEL_UNSTRUCTURED_FILE,
+      VTK_PARALLEL_POLYDATA_FILE };
 
-/* *INDENT-OFF* */
-class vtk_reader : public testing::TestWithParam<std::tuple<int, int, int>>{
-  protected:
-    void SetUp() override{
-      int mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
-      SC_CHECK_MPI (mpiret);
-      mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
-      SC_CHECK_MPI (mpiret);
-      if (mpisize > T8_VTK_TEST_NUM_PROCS) {
-        GTEST_SKIP ();
-      } 
-      file = std::get<0>(GetParam());
-      file_type = gtest_vtk_filetypes[file];
-      partition = std::get<1>(GetParam());
-      main_proc = std::get<2>(GetParam());
-      distributed = (file_type & VTK_PARALLEL_FILE) && partition;
+class vtk_reader: public testing::TestWithParam<std::tuple<int, int, int>> {
+ protected:
+  void
+  SetUp () override
+  {
+    int mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
+    SC_CHECK_MPI (mpiret);
+    if (mpisize > T8_VTK_TEST_NUM_PROCS) {
+      GTEST_SKIP ();
     }
-    int file;
-    vtk_file_type_t file_type;
-    int partition;
-    int distributed; 
-    int main_proc;
-    int mpisize;
-    int mpirank;
-    const char* failing_files[5] = {
-      "no_file",
-      "non-existing-file.vtu",
-      "non-existing-file.vtp",
-      "non-existing-file.pvtu",
-      "non-existing-file.pvtp"
-    };
-    const char* test_files[5] = {
-      "no_file",
-      "test/testfiles/test_vtk_tri.vtu",
-      "test/testfiles/test_vtk_cube.vtp",
-      "test/testfiles/test_parallel_file.pvtu",
-      "test/testfiles/test_polydata.pvtp"
-    };
-    const int num_points[5] = {0, 121, 24, 6144, 900};
-    const int num_trees[5] = {0, 200, 12, 1024, 1680};
+    file = std::get<0> (GetParam ());
+    file_type = gtest_vtk_filetypes[file];
+    partition = std::get<1> (GetParam ());
+    main_proc = std::get<2> (GetParam ());
+    distributed = (file_type & VTK_PARALLEL_FILE) && partition;
+  }
+  int file;
+  vtk_file_type_t file_type;
+  int partition;
+  int distributed;
+  int main_proc;
+  int mpisize;
+  int mpirank;
+  const char* failing_files[5] = { "no_file", "non-existing-file.vtu", "non-existing-file.vtp",
+                                   "non-existing-file.pvtu", "non-existing-file.pvtp" };
+  const char* test_files[5] = { "no_file", "test/testfiles/test_vtk_tri.vtu", "test/testfiles/test_vtk_cube.vtp",
+                                "test/testfiles/test_parallel_file.pvtu", "test/testfiles/test_polydata.pvtp" };
+  const int num_points[5] = { 0, 121, 24, 6144, 900 };
+  const int num_trees[5] = { 0, 200, 12, 1024, 1680 };
 };
-/* *INDENT-ON* */
 
 /* All readers should fail properly with a non-existing file. */
 TEST_P (vtk_reader, vtk_to_cmesh_fail)
 {
 #if T8_WITH_VTK
-  t8_cmesh_t          cmesh =
-    t8_cmesh_vtk_reader (failing_files[file], 0, main_proc, sc_MPI_COMM_WORLD,
-                         file_type);
+  t8_cmesh_t cmesh = t8_cmesh_vtk_reader (failing_files[file], 0, main_proc, sc_MPI_COMM_WORLD, file_type);
   EXPECT_TRUE (cmesh == NULL);
 #else
 #endif
@@ -98,16 +82,13 @@ TEST_P (vtk_reader, vtk_to_cmesh_fail)
 TEST_P (vtk_reader, vtk_to_cmesh_success)
 {
 #if T8_WITH_VTK
-  int                 mpirank;
-  int                 mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
+  int mpirank;
+  int mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
-  t8_cmesh_t          cmesh =
-    t8_cmesh_vtk_reader (test_files[file], partition, main_proc,
-                         sc_MPI_COMM_WORLD,
-                         file_type);
+  t8_cmesh_t cmesh = t8_cmesh_vtk_reader (test_files[file], partition, main_proc, sc_MPI_COMM_WORLD, file_type);
   if (file_type != VTK_FILE_ERROR) {
     EXPECT_FALSE (cmesh == NULL);
-    const int           test_num_trees = t8_cmesh_get_num_local_trees (cmesh);
+    const int test_num_trees = t8_cmesh_get_num_local_trees (cmesh);
     if (distributed) {
       /* In this testcase the cmesh should be distributed equally. */
       EXPECT_EQ (num_trees[file] / mpisize, test_num_trees);
@@ -136,10 +117,9 @@ TEST_P (vtk_reader, vtk_to_pointSet)
 {
 #if T8_WITH_VTK
   if (file_type != VTK_FILE_ERROR) {
-    vtkSmartPointer < vtkPointSet >points =
-      t8_vtk_reader_pointSet (test_files[file], partition, main_proc,
-                              sc_MPI_COMM_WORLD, file_type);
-    int                 test_points = points->GetNumberOfPoints ();
+    vtkSmartPointer<vtkPointSet> points
+      = t8_vtk_reader_pointSet (test_files[file], partition, main_proc, sc_MPI_COMM_WORLD, file_type);
+    int test_points = points->GetNumberOfPoints ();
     if (distributed) {
       /* The points should be distributed equally in this case. */
       EXPECT_EQ (num_points[file] / mpisize, test_points);
@@ -159,12 +139,8 @@ TEST_P (vtk_reader, vtk_to_pointSet)
 #endif
 }
 
-/* *INDENT-OFF* */
 /* Currently does not work for parallel files. Replace with VTK_NUM_TYPES as soon
  * as reading and constructing cmeshes from parallel files is enabled. */
-INSTANTIATE_TEST_SUITE_P (t8_gtest_vtk_reader, vtk_reader,testing::Combine (
-                          testing::Range (VTK_FILE_ERROR + 1, (int)VTK_NUM_TYPES),
-                          testing::Values (0, 1),
-                          testing::Range (0, T8_VTK_TEST_NUM_PROCS)
-                          ));
-/* *INDENT-ON* */
+INSTANTIATE_TEST_SUITE_P (t8_gtest_vtk_reader, vtk_reader,
+                          testing::Combine (testing::Range (VTK_FILE_ERROR + 1, (int) VTK_NUM_TYPES),
+                                            testing::Values (0, 1), testing::Range (0, T8_VTK_TEST_NUM_PROCS)));
