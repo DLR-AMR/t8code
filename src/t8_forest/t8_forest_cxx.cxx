@@ -1209,7 +1209,7 @@ t8_triangle_point_inside (const double p_0[3], const double v[3], const double w
  * \param[in] point_on_face   A point on the plane
  * \param[in] face_normal     The normal of the face
  * \param[in] point           The point to check
- * \return                0 if the point is outside, 1 otherwise.                   
+ * \return                    0 if the point is outside, 1 otherwise.                   
  */
 static int
 t8_plane_point_inside (const double point_on_face[3], const double face_normal[3], const double point[3])
@@ -1226,9 +1226,9 @@ t8_plane_point_inside (const double point_on_face[3], const double face_normal[3
   return 1;
 }
 
-int
-t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                const double *points, const double tolerance)
+void
+t8_forest_element_point_batch_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+                                      const double *points, int num_points, int *is_inside, const double tolerance)
 {
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
   t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, tree_class);
@@ -1251,7 +1251,10 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t
     t8_forest_element_coordinate (forest, ltreeid, element, 0, vertex_coords);
     /* Check whether the point and the vertex are within tolerance distance
        * to each other */
-    return t8_vertex_point_inside (vertex_coords, points, tolerance);
+    for (int ipoint = 0; ipoint < num_points; ipoint++) {
+      is_inside[ipoint] = t8_vertex_point_inside (vertex_coords, &points[ipoint * 3], tolerance);
+    }
+    return;
   }
   case T8_ECLASS_LINE: {
     /* A point p is inside a line that is defined by the edge nodes
@@ -1268,13 +1271,14 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t
     t8_forest_element_coordinate (forest, ltreeid, element, 1, v);
     /* v = p_1 - p_0 */
     t8_vec_axpy (p_0, v, -1);
-
-    return t8_line_point_inside (p_0, v, points, tolerance);
+    for (int ipoint = 0; ipoint < num_points; ipoint++) {
+      is_inside[ipoint] = t8_line_point_inside (p_0, v, &points[ipoint * 3], tolerance);
+    }
+    return;
   }
   case T8_ECLASS_QUAD: {
     /* We divide the quad in two triangles and use the triangle check. */
     double p_0[3], p_1[3], p_2[3], p_3[3];
-    int point_inside = 0;
     /* Compute the vertex coordinates of the quad */
     t8_forest_element_coordinate (forest, ltreeid, element, 0, p_0);
     t8_forest_element_coordinate (forest, ltreeid, element, 1, p_1);
@@ -1294,18 +1298,21 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t
     /* w = w - p_0 = p_2 - p_0 */
     t8_vec_axpyz (p_0, p_2, w, -1);
     /* Check whether the point is inside the first triangle. */
-    point_inside = t8_triangle_point_inside (p_0, v, w, points, tolerance);
-
-    if (!point_inside) {
-      /* If not, check whether the point is inside the second triangle. */
-      /* v = v - p_0 = p_1 - p_0 */
-      t8_vec_axpyz (p_1, p_2, v, -1);
-      /* w = w - p_0 = p_2 - p_0 */
-      t8_vec_axpyz (p_1, p_3, w, -1);
-      point_inside = t8_triangle_point_inside (p_1, v, w, points, tolerance);
+    for (int ipoint = 0; ipoint < num_points; ipoint++) {
+      is_inside[ipoint] = t8_triangle_point_inside (p_0, v, w, &points[ipoint * 3], tolerance);
     }
-    /* point_inside is true if the point was inside the first or second triangle. Otherwise it is false. */
-    return point_inside;
+    /* If not, check whether the point is inside the second triangle. */
+    /* v = v - p_0 = p_1 - p_0 */
+    t8_vec_axpyz (p_1, p_2, v, -1);
+    /* w = w - p_0 = p_2 - p_0 */
+    t8_vec_axpyz (p_1, p_3, w, -1);
+    for (int ipoint = 0; ipoint < num_points; ipoint++) {
+      if (!is_inside[ipoint]) {
+        /* point_inside is true if the point was inside the first or second triangle. Otherwise it is false. */
+        is_inside[ipoint] = t8_triangle_point_inside (p_1, v, w, &points[ipoint * 3], tolerance);
+      }
+    }
+    return;
   }
   case T8_ECLASS_TRIANGLE: {
     double p_0[3], p_1[3], p_2[3];
@@ -1321,7 +1328,10 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t
     /* w = w - p_0 = p_2 - p_0 */
     t8_vec_axpyz (p_0, p_2, w, -1);
 
-    return t8_triangle_point_inside (p_0, v, w, points, tolerance);
+    for (int ipoint = 0; ipoint < num_points; ipoint++) {
+      is_inside[ipoint] = t8_triangle_point_inside (p_0, v, w, &points[ipoint * 3], tolerance);
+    }
+    return;
   }
   case T8_ECLASS_TET:
   case T8_ECLASS_HEX:
@@ -1343,6 +1353,10 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t
      **/
 
     const int num_faces = ts->t8_element_num_faces (element);
+    /* Assume that every point is inside of the element */
+    for (int ipoint = 0; ipoint < num_points; ipoint++) {
+      is_inside[ipoint] = 1;
+    }
     for (int iface = 0; iface < num_faces; ++iface) {
       double face_normal[3];
       /* Compute the outer normal n of the face */
@@ -1351,17 +1365,28 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t
       const int afacecorner = ts->t8_element_get_face_corner (element, iface, 0);
       double point_on_face[3];
       t8_forest_element_coordinate (forest, ltreeid, element, afacecorner, point_on_face);
-
-      const int is_inside = t8_plane_point_inside (point_on_face, face_normal, points);
-      if (is_inside == 0) {
-        return is_inside;
+      for (int ipoint = 0; ipoint < num_points; ipoint++) {
+        const int is_inside_iface = t8_plane_point_inside (point_on_face, face_normal, &points[ipoint * 3]);
+        if (is_inside_iface == 0) {
+          /* Point is on the outside of face iface. Update is_inside */
+          is_inside[ipoint] = 0;
+        }
       }
     }
-    return 1;
+    return;
   }
   default:
     SC_ABORT_NOT_REACHED ();
   }
+}
+
+int
+t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+                                const double point[3], const double tolerance)
+{
+  int is_inside = 0;
+  t8_forest_element_point_batch_inside (forest, ltreeid, element, point, 1, &is_inside, tolerance);
+  return is_inside;
 }
 
 /* For each tree in a forest compute its first and last descendant */
