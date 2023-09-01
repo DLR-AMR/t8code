@@ -160,32 +160,6 @@ t8_itertate_replace_pointids (t8_forest_t forest_old,
       }
 
     }
-
-    int total_num_points = 0;
-    for(t8_locidx_t ielem = 0; ielem < num_incoming; ielem++){
-      element_point_t    *ielem_point_in =
-        inter->get_element_point (inter->GetElementPointsAdapt (),
-                                  first_incoming_data + ielem);
-      total_num_points += ielem_point_in->num_points;
-    }
-    T8_ASSERT(num_outgoing_points == total_num_points);
-#if 0
-    for (int ipoint = 0; ipoint < num_outgoing_points; ipoint++) {
-      /* Ensures that no points is associated twice. */
-      const int           ipoint_id = *((int *) sc_array_pop (point_indices));
-      for (t8_locidx_t ielem = 0; ielem < num_incoming; ielem++) {
-        
-        
-        /*if (t8_forest_element_point_inside
-            (forest_new, which_tree, elem, vtk_point, 0.001)) {
-          
-          break;
-        }*/
-      }
-    }
-#endif
-   
-
     T8_FREE (point_indices);
     T8_FREE(point_coords);
     T8_FREE(point_inside);
