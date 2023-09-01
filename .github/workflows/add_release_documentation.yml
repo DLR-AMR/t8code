@@ -61,7 +61,7 @@ jobs:
 
     - name: Install dependencies
       if: ${{ env.MINOR_RELEASE == 'true' }}
-      run: sudo apt-get install libz-dev doxygen
+      run: sudo apt-get install libz-dev doxygen-latex
     - name: init submodules
       if: ${{ env.MINOR_RELEASE == 'true' }}
       run: |

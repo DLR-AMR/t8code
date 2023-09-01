@@ -48,7 +48,7 @@ jobs:
     - name: Install zlib
       run: sudo apt-get install libz-dev
     - name: Install doxygen
-      run: sudo apt-get install doxygen
+      run: sudo apt-get install doxygen-latex
     - name: init submodules
       run: git submodule init
     - name: update submodules

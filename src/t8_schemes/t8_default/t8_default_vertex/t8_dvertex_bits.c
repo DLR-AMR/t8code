@@ -169,11 +169,14 @@ t8_dvertex_vertex_ref_coords (const t8_dvertex_t *elem, const int vertex, double
 }
 
 void
-t8_dvertex_compute_reference_coords (const t8_dvertex_t *elem, const double *ref_coords, double *out_coords)
+t8_dvertex_compute_reference_coords (const t8_dvertex_t *elem, const double *ref_coords, const size_t num_coords,
+                                     double *out_coords)
 {
   T8_ASSERT (abs (ref_coords[0]) <= T8_PRECISION_EPS);
   T8_ASSERT (t8_dvertex_is_valid (elem));
-  out_coords[0] = 0;
+  for (size_t coord = 0; coord < num_coords; ++coord) {
+    out_coords[coord] = 0;
+  }
 }
 
 t8_linearidx_t

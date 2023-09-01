@@ -107,8 +107,10 @@ t8_geometry_occ::t8_geometry_occ (int dim, const TopoDS_Shape occ_shape, const c
 
 void
 t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                   double out_coords[3]) const
+                                   const size_t num_coords, double out_coords[3]) const
 {
+  if (num_coords != 1)
+    SC_ABORT ("Error: Batch computation of geometry not yet supported.");
   switch (active_tree_class) {
   case T8_ECLASS_TRIANGLE:
     t8_geometry_occ::t8_geom_evaluate_occ_triangle (cmesh, gtreeid, ref_coords, out_coords);
@@ -126,8 +128,10 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const 
 
 void
 t8_geometry_occ::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                            double *jacobian_out) const
+                                            const size_t num_coords, double *jacobian_out) const
 {
+  if (num_coords != 1)
+    SC_ABORT ("Error: Batch computation of geometry not yet supported.");
   double h = 1e-9;
   double in1[3], in2[3];
   double out1[3], out2[3];
@@ -145,8 +149,8 @@ t8_geometry_occ::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreei
       in1[dim] -= 0.5 * h;
       in2[dim] += 0.5 * h;
     }
-    t8_geometry_occ::t8_geom_evaluate (cmesh, gtreeid, in1, out1);
-    t8_geometry_occ::t8_geom_evaluate (cmesh, gtreeid, in2, out2);
+    t8_geometry_occ::t8_geom_evaluate (cmesh, gtreeid, in1, 1, out1);
+    t8_geometry_occ::t8_geom_evaluate (cmesh, gtreeid, in2, 1, out2);
     for (int dim2 = 0; dim2 < 3; ++dim2) {
       jacobian_out[dim * 3 + dim2] = (out2[dim2] - out1[dim2]) / h;
     }
@@ -196,7 +200,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh, t8_gloidx_t gt
    */
 
   /* Linear mapping from ref_coords to out_coords */
-  t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, out_coords);
+  t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, 1, out_coords);
 
   /* Check if face has a linked geometry */
   if (*faces > 0) {
@@ -222,7 +226,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh, t8_gloidx_t gt
 
         /* Converting ref_intersection to global_intersection */
         double glob_intersection[3];
-        t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_intersection, glob_intersection);
+        t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_intersection, 1,
+                                         glob_intersection);
         /* Get parameters of the current edge if the edge is curved */
         const double *edge_parameters = (double *) t8_cmesh_get_attribute (
           cmesh, t8_get_package_id (), T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_edge, ltreeid);
@@ -305,7 +310,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh, t8_gloidx_t gt
 
         /* Converting ref_intersection to global_intersection */
         double glob_intersection[3];
-        t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_intersection, glob_intersection);
+        t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_intersection, 1,
+                                         glob_intersection);
 
         if (edges[i_edge] > 0) {
           /* Linear interpolation between parameters */
@@ -356,8 +362,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh, t8_gloidx_t gt
         /* Calculate displacement between points on curve and point on linear curve.
          * Then scale it and add the scaled displacement to the result. */
         for (int dim = 0; dim < 3; ++dim) {
-          double displacement = pnt.Coord (dim + 1) - glob_intersection[dim];
-          double scaled_displacement = displacement * pow (scaling_factor, 2);
+          const double displacement = pnt.Coord (dim + 1) - glob_intersection[dim];
+          const double scaled_displacement = displacement * scaling_factor * scaling_factor;
           out_coords[dim] += scaled_displacement;
         }
       }
@@ -562,7 +568,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
   T8_ASSERT (active_tree_class == T8_ECLASS_HEX);
 
   /* Compute coordinates via trilinear interpolation */
-  t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, out_coords);
+  t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, 1, out_coords);
 
   const t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
   const int num_edges = t8_eclass_num_edges[active_tree_class];

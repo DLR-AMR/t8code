@@ -109,16 +109,18 @@ class t8_default_scheme_common_c: public t8_eclass_scheme_c {
   t8_element_vertex_coords (const t8_element_t *elem, int vertex, int coords[]) const
     = 0;
 
-  /** Convert a point in the reference space of an element to a point in the
+  /** Convert points in the reference space of an element to points in the
    *  reference space of the tree.
    * 
    * \param [in] elem         The element.
-   * \param [in] coords_input The coordinates of the point in the reference space of the element.
-   * \param [in] user_data    User data.
-   * \param [out] out_coords  The coordinates of the point in the reference space of the tree.
+   * \param [in] coords_input The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
+   *                          in the reference space of the element.
+   * \param [in] num_coords   Number of \f$ dim\f$-sized coordinates to evaluate.
+   * \param [out] out_coords  The coordinates of the points in the
+   *                          reference space of the tree.
    */
   virtual void
-  t8_element_reference_coords (const t8_element_t *elem, const double *ref_coords, const void *user_data,
+  t8_element_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
                                double *out_coords) const
     = 0;
 
