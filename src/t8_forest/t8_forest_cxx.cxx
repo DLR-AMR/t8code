@@ -1065,14 +1065,95 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
   }
 }
 
-/* Query whether a point lies inside a linear triangle defined by the tree 
- * vertices p_0, p_1, p_2.
+/**
+ * Check if a point lies inside a vertex
+ * 
+ * \param[in] vertex_coords The coordinates of the vertex
+ * \param[in] point         The coordinates of the point to check
+ * \param[in] tolerance     A double > 0 defining the tolerance
+ * \return                  0 if the point is outside, 1 otherwise.  
  */
 static int
-t8_triangle_point_inside (const double p_0[3], const double p_1[3], const double p_2[3], const double point[3],
+t8_vertex_point_inside (const double vertex_coords[3], const double point[3], const double tolerance)
+{
+  T8_ASSERT (tolerance > 0);
+  if (t8_vec_dist (vertex_coords, point) > tolerance) {
+    return 0;
+  }
+  return 1;
+}
+
+/**
+ * Check if a point is inside a line that is defined by a starting point \a p_0
+ * and a vector \a vec
+ * 
+ * \param[in] p_0         Starting point of the line
+ * \param[in] vec         Direction of the line (not normalized)
+ * \param[in] point       The coordinates of the point to check
+ * \param[in] tolerance   A double > 0 defining the tolerance
+ * \return                0 if the point is outside, 1 otherwise.  
+ */
+static int
+t8_line_point_inside (const double *p_0, const double *vec, const double *point, const double tolerance)
+{
+  T8_ASSERT (tolerance > 0);
+  double b[3];
+  /* b = p - p_0 */
+  t8_vec_axpyz (p_0, point, b, -1);
+  double x = 0; /* Initialized to prevent compiler warning. */
+  int i;
+  /* So x is the solution to
+  * vx = b.
+  * We can compute it as
+  * x = b[i] / v[i]
+  * if any v[i] is not 0.
+  *
+  * Otherwise the line is degenerated (which should not happen).
+  */
+  for (i = 0; i < 3; ++i) {
+    if (vec[i] != 0) {
+      x = b[i] / vec[i];
+      break; /* found a non-zero coordinate. We can stop now. */
+    }
+  }
+
+  /* If i == 3 here, then v = 0 and hence the line is degenerated. */
+  SC_CHECK_ABORT (i < 3, "Degenerated line element. Both endpoints are the same.");
+
+  if (x < -tolerance || x > 1 + tolerance) {
+    /* x is not an admissible solution. */
+    return 0;
+  }
+
+  /* we can check whether x gives us a solution by
+     * checking whether
+     *  vx = b
+     * is actually true.
+     */
+  double vec_check[3] = { vec[0], vec[1], vec[2] };
+  t8_vec_ax (vec_check, x);
+  if (t8_vec_dist (vec_check, b) > tolerance) {
+    /* Point does not lie on the line. */
+    return 0;
+  }
+  /* The point is on the line. */
+  return 1;
+}
+
+/**
+ * Check if a point is inside of a triangle described by a point \a p_0 and two vectors \a v and \a w. 
+ * 
+ * \param[in] p_0         The first vertex of a triangle
+ * \param[in] v           The vector from p_0 to p_1 (second vertex in the triangle)
+ * \param[in] w           The vector from p_0 to p_2 (second vertex in the triangle)
+ * \param[in] point       The coordinates of the point to check
+ * \param[in] tolerance   A double > 0 defining the tolerance
+ * \return                0 if the point is outside, 1 otherwise.  
+ */
+static int
+t8_triangle_point_inside (const double p_0[3], const double v[3], const double w[3], const double point[3],
                           const double tolerance)
 {
-
   /* A point p is inside the triangle that is spanned
    * by the vectors p_0 p_1 p_2 if and only if the linear system
    * (p_1 - p_0)x + (p_2 - p_0)y = p - p_0
@@ -1083,15 +1164,9 @@ t8_triangle_point_inside (const double p_0[3], const double p_1[3], const double
    *
    *  | v w e_3 | with v = p_1 - p_0, w = p_2 - p_0, and e_3 = (0 0 1)^t (third unit vector)
    */
+
   T8_ASSERT (tolerance > 0); /* negative values and zero are not allowed */
-
-  double b[3], v[3], w[3];
-  double x, y, z;
-
-  /* v = v - p_0 = p_1 - p_0 */
-  t8_vec_axpyz (p_0, p_1, v, -1);
-  /* w = w - p_0 = p_2 - p_0 */
-  t8_vec_axpyz (p_0, p_2, w, -1);
+  double b[3];
   /* b = p - p_0 */
   t8_vec_axpyz (p_0, point, b, -1);
 
@@ -1103,10 +1178,8 @@ t8_triangle_point_inside (const double p_0[3], const double p_1[3], const double
   /* x = det (b w e_3) / d
    * y = det (v b e_3) / d
    */
-  x = b[0] * w[1] - b[1] * w[0];
-  x /= det_vwe3;
-  y = v[0] * b[1] - v[1] * b[0];
-  y /= det_vwe3;
+  const double x = (b[0] * w[1] - b[1] * w[0]) / det_vwe3;
+  const double y = (v[0] * b[1] - v[1] * b[0]) / det_vwe3;
 
   if (x < -tolerance || y < -tolerance || x + y > 1 + tolerance) {
     /* The solution is not admissible.
@@ -1121,13 +1194,35 @@ t8_triangle_point_inside (const double p_0[3], const double p_1[3], const double
    * this may actually break.
    * If it breaks, it will break in the z coordinate of the result.
    */
-  z = v[2] * x + w[2] * y;
+  const double z = v[2] * x + w[2] * y;
   /* Must match the last coordinate of b = p - p_0 */
   if (fabs (z - b[2]) > tolerance) {
     /* Does not match. Point lies outside. */
     return 0;
   }
   /* All checks passed. Point lies inside. */
+  return 1;
+}
+
+/** Check if a point lays on the inner side of a plane of bilinearly interpolated volume element. 
+ * the plane is described by a point an the normal of the face. 
+ * \param[in] point_on_face   A point on the plane
+ * \param[in] face_normal     The normal of the face
+ * \param[in] point           The point to check
+ * \return                0 if the point is outside, 1 otherwise.                   
+ */
+static int
+t8_plane_point_inside (const double point_on_face[3], const double face_normal[3], const double point[3])
+{
+  /* Set x = x - p */
+  double pof[3] = { point_on_face[0], point_on_face[1], point_on_face[2] };
+  t8_vec_axpy (point, pof, -1);
+  /* Compute <x-p,n> */
+  const double dot_product = t8_vec_dot (pof, face_normal);
+  if (dot_product < 0) {
+    /* The point is outside of the plane */
+    return 0;
+  }
   return 1;
 }
 
@@ -1138,12 +1233,6 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
   t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, tree_class);
   const t8_element_shape_t element_shape = ts->t8_element_shape (element);
-  const int num_faces = ts->t8_element_num_faces (element);
-  int iface;
-  int afacecorner;
-  double face_normal[3];
-  double dot_product;
-  double point_on_face[3];
 
 #if T8_ENABLE_DEBUG
   /* Check whether the provided geometry is linear */
@@ -1162,10 +1251,7 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t
     t8_forest_element_coordinate (forest, ltreeid, element, 0, vertex_coords);
     /* Check whether the point and the vertex are within tolerance distance
        * to each other */
-    if (t8_vec_dist (vertex_coords, points) > tolerance) {
-      return 0;
-    }
-    return 1;
+    return t8_vertex_point_inside (vertex_coords, points, tolerance);
   }
   case T8_ECLASS_LINE: {
     /* A point p is inside a line that is defined by the edge nodes
@@ -1174,9 +1260,7 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t
      * (p_1 - p_0)x = p - p_0
      * has a solution x with 0 <= x <= 1
      */
-    double p_0[3], v[3], b[3];
-    double x = 0; /* Initialized to prevent compiler warning. */
-    int i;
+    double p_0[3], v[3];
 
     /* Compute the vertex coordinates of the line */
     t8_forest_element_coordinate (forest, ltreeid, element, 0, p_0);
@@ -1184,43 +1268,8 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t
     t8_forest_element_coordinate (forest, ltreeid, element, 1, v);
     /* v = p_1 - p_0 */
     t8_vec_axpy (p_0, v, -1);
-    /* b = p - p_0 */
-    t8_vec_axpyz (p_0, points, b, -1);
 
-    /* So x is the solution to
-     * vx = b.
-     * We can compute it as
-     * x = b[i] / v[i]
-     * if any v[i] is not 0.
-     *
-     * Otherwise the line is degenerated (which should not happen).
-     */
-    for (i = 0; i < 3; ++i) {
-      if (v[i] != 0) {
-        x = b[i] / v[i];
-        break; /* found a non-zero coordinate. We can stop now. */
-      }
-    }
-
-    /* If i == 3 here, then v = 0 and hence the line is degenerated. */
-    SC_CHECK_ABORT (i < 3, "Degenerated line element. Both endpoints are the same.");
-
-    if (x < -tolerance || x > 1 + tolerance) {
-      /* x is not an admissible solution. */
-      return 0;
-    }
-    /* we can check whether x gives us a solution by
-     * checking whether
-     *  vx = b
-     * is actually true.
-     */
-    t8_vec_ax (v, x);
-    if (t8_vec_dist (v, b) > tolerance) {
-      /* Point does not lie on the line. */
-      return 0;
-    }
-    /* The point is on the line. */
-    return 1;
+    return t8_line_point_inside (p_0, v, points, tolerance);
   }
   case T8_ECLASS_QUAD: {
     /* We divide the quad in two triangles and use the triangle check. */
@@ -1238,12 +1287,22 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t
       t8_debugf ("WARNING: Testing if point is inside a quad that is not coplanar. This test will be inaccurate.\n");
     }
 #endif
+    double v[3];
+    double w[3];
+    /* v = v - p_0 = p_1 - p_0 */
+    t8_vec_axpyz (p_0, p_1, v, -1);
+    /* w = w - p_0 = p_2 - p_0 */
+    t8_vec_axpyz (p_0, p_2, w, -1);
     /* Check whether the point is inside the first triangle. */
-    point_inside = t8_triangle_point_inside (p_0, p_1, p_2, points, tolerance);
+    point_inside = t8_triangle_point_inside (p_0, v, w, points, tolerance);
 
     if (!point_inside) {
       /* If not, check whether the point is inside the second triangle. */
-      point_inside = t8_triangle_point_inside (p_1, p_2, p_3, points, tolerance);
+      /* v = v - p_0 = p_1 - p_0 */
+      t8_vec_axpyz (p_1, p_2, v, -1);
+      /* w = w - p_0 = p_2 - p_0 */
+      t8_vec_axpyz (p_1, p_3, w, -1);
+      point_inside = t8_triangle_point_inside (p_1, v, w, points, tolerance);
     }
     /* point_inside is true if the point was inside the first or second triangle. Otherwise it is false. */
     return point_inside;
@@ -1255,14 +1314,19 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t
     t8_forest_element_coordinate (forest, ltreeid, element, 0, p_0);
     t8_forest_element_coordinate (forest, ltreeid, element, 1, p_1);
     t8_forest_element_coordinate (forest, ltreeid, element, 2, p_2);
+    double v[3];
+    double w[3];
+    /* v = v - p_0 = p_1 - p_0 */
+    t8_vec_axpyz (p_0, p_1, v, -1);
+    /* w = w - p_0 = p_2 - p_0 */
+    t8_vec_axpyz (p_0, p_2, w, -1);
 
-    return t8_triangle_point_inside (p_0, p_1, p_2, points, tolerance);
+    return t8_triangle_point_inside (p_0, v, w, points, tolerance);
   }
   case T8_ECLASS_TET:
   case T8_ECLASS_HEX:
   case T8_ECLASS_PRISM:
-  case T8_ECLASS_PYRAMID:
-
+  case T8_ECLASS_PYRAMID: {
     /* For bilinearly interpolated volume elements, a point is inside an element
      * if and only if it lies on the inner side of each face.
      * The inner side is defined as the side where the outside normal vector does not
@@ -1278,24 +1342,23 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t
      *  <x - p, n> >= 0
      **/
 
-    for (iface = 0; iface < num_faces; ++iface) {
+    const int num_faces = ts->t8_element_num_faces (element);
+    for (int iface = 0; iface < num_faces; ++iface) {
+      double face_normal[3];
       /* Compute the outer normal n of the face */
       t8_forest_element_face_normal (forest, ltreeid, element, iface, face_normal);
       /* Compute a point x on the face */
-      afacecorner = ts->t8_element_get_face_corner (element, iface, 0);
+      const int afacecorner = ts->t8_element_get_face_corner (element, iface, 0);
+      double point_on_face[3];
       t8_forest_element_coordinate (forest, ltreeid, element, afacecorner, point_on_face);
 
-      /* Set x = x - p */
-      t8_vec_axpy (points, point_on_face, -1);
-      /* Compute <x-p,n> */
-      dot_product = t8_vec_dot (point_on_face, face_normal);
-      if (dot_product < 0) {
-        /* The point is outside of the element */
-        return 0;
+      const int is_inside = t8_plane_point_inside (point_on_face, face_normal, points);
+      if (is_inside == 0) {
+        return is_inside;
       }
     }
-    /* For all faces the dot product with the outer normal is <= 0. The point is inside the element. */
     return 1;
+  }
   default:
     SC_ABORT_NOT_REACHED ();
   }
