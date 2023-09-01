@@ -559,7 +559,14 @@ MeshAdapter::Adapt (t8_forest_adapt_t adaptCallback,
   }
 
   /* Set the Replace Callback */
+  double start, end;
+  sc_MPI_Barrier(comm);
+  start = sc_MPI_Wtime();
   t8_forest_iterate_replace (forest_adapt, forest, replaceCallback);
+  sc_MPI_Barrier(comm);
+  end = sc_MPI_Wtime();
+
+  t8_productionf("[D] iterate_replace: %f\n", end-start);
   int                 local_num_points = 0;
   for (int ielem = 0; ielem < adapt_num_elems; ielem++) {
     local_num_points += points_per_element[ielem]->elem_count;

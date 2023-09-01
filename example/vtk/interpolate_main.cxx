@@ -124,45 +124,62 @@ t8_itertate_replace_pointids (t8_forest_t forest_old,
 
     /* Fill the array with the point_ids of elem_out.
      * we pop the id from the list as soon as it is insed of ielem_in */
-    sc_array_t         *point_indices =
-      sc_array_new_count (sizeof (int), num_outgoing_points);
+    int *point_indices = T8_ALLOC(int, num_outgoing_points);
 
     for (int ipoint = 0; ipoint < num_outgoing_points; ipoint++) {
-      const int           ipoint_id = *((int *)
-                                        t8_shmem_array_index
-                                        (inter->GetPointIDs (),
+      const int           ipoint_id = *((int *)t8_shmem_array_index(inter->GetPointIDs (),
                                          ipoint + offset_outgoing));
-      int                *point_id =
-        (int *) sc_array_index_int (point_indices, ipoint);
-
-      *point_id = ipoint_id;
+      point_indices[ipoint] = ipoint_id;
     }
 
-    for (int ipoint = 0; ipoint < num_outgoing_points; ipoint++) {
-      /* Ensures that no points is associated twice. */
-      const int           ipoint_id = *((int *) sc_array_pop (point_indices));
-      for (t8_locidx_t ielem = 0; ielem < num_incoming; ielem++) {
-        t8_element_t       *elem =
+    int *point_inside = T8_ALLOC_ZERO(int, num_outgoing_points);
+    double *point_coords = T8_ALLOC(double, 3 * num_outgoing_points);
+
+    for(t8_locidx_t ielem = 0; ielem < num_incoming; ielem++)
+    {
+      t8_element_t       *elem =
           t8_forest_get_element_in_tree (forest_new, which_tree,
                                          first_incoming + ielem);
         element_point_t    *ielem_point_in =
           inter->get_element_point (inter->GetElementPointsAdapt (),
                                     first_incoming_data + ielem);
-        double             *vtk_point =
-          (double *) t8_shmem_array_index (inter->GetVTKPoints (),
-                                           3 * ipoint_id);
-        if (t8_forest_element_point_inside
-            (forest_new, which_tree, elem, vtk_point, 0.001)) {
+      for(int ipoint = 0; ipoint < num_outgoing_points; ipoint++){
+        point_coords[3*ipoint] =
+          *(double *) t8_shmem_array_index (inter->GetVTKPoints (), 3 * point_indices[ipoint]);
+      }
+       t8_forest_element_point_batch_inside(forest_new, which_tree, elem, point_coords, num_outgoing_points, point_inside, 0.0000001);
+      for(int ipoint = 0; ipoint<num_outgoing_points; ipoint++){
+        if(point_inside[ipoint] == 1)
+        {
           int                *new_point_id =
             (int *) sc_array_push (inter->get_point_id_per_element
                                    (first_incoming_data + ielem));
-          *new_point_id = ipoint_id;
+          *new_point_id = point_indices[ipoint];
           ielem_point_in->num_points++;
-          break;
         }
       }
+
     }
-    sc_array_destroy (point_indices);
+#if 0
+    for (int ipoint = 0; ipoint < num_outgoing_points; ipoint++) {
+      /* Ensures that no points is associated twice. */
+      const int           ipoint_id = *((int *) sc_array_pop (point_indices));
+      for (t8_locidx_t ielem = 0; ielem < num_incoming; ielem++) {
+        
+        
+        /*if (t8_forest_element_point_inside
+            (forest_new, which_tree, elem, vtk_point, 0.001)) {
+          
+          break;
+        }*/
+      }
+    }
+#endif
+   
+
+    T8_FREE (point_indices);
+    T8_FREE(point_coords);
+    T8_FREE(point_inside);
     for (int ielem = 1; ielem < num_incoming; ielem++) {
       element_point_t    *ielem_point_in =
         inter->get_element_point (inter->GetElementPointsAdapt (),
