@@ -144,22 +144,31 @@ t8_itertate_replace_pointids (t8_forest_t forest_old,
           inter->get_element_point (inter->GetElementPointsAdapt (),
                                     first_incoming_data + ielem);
       for(int ipoint = 0; ipoint < num_outgoing_points; ipoint++){
-        point_coords[3*ipoint] =
-          *(double *) t8_shmem_array_index (inter->GetVTKPoints (), 3 * point_indices[ipoint]);
+        double *point = (double *) t8_shmem_array_index (inter->GetVTKPoints (), 3 * point_indices[ipoint]);
+        for(int icoord = 0; icoord < 3; icoord++){
+          point_coords[3*ipoint + icoord] = point[icoord];
+        }
       }
-       t8_forest_element_point_batch_inside(forest_new, which_tree, elem, point_coords, num_outgoing_points, point_inside, 0.0000001);
+      t8_forest_element_point_batch_inside(forest_new, which_tree, elem, point_coords, num_outgoing_points, point_inside, 0.001);
       for(int ipoint = 0; ipoint<num_outgoing_points; ipoint++){
         if(point_inside[ipoint] == 1)
         {
-          int                *new_point_id =
-            (int *) sc_array_push (inter->get_point_id_per_element
-                                   (first_incoming_data + ielem));
+          int *new_point_id = (int *) sc_array_push (inter->get_point_id_per_element (first_incoming_data + ielem));
           *new_point_id = point_indices[ipoint];
           ielem_point_in->num_points++;
         }
       }
 
     }
+
+    int total_num_points = 0;
+    for(t8_locidx_t ielem = 0; ielem < num_incoming; ielem++){
+      element_point_t    *ielem_point_in =
+        inter->get_element_point (inter->GetElementPointsAdapt (),
+                                  first_incoming_data + ielem);
+      total_num_points += ielem_point_in->num_points;
+    }
+    T8_ASSERT(num_outgoing_points == total_num_points);
 #if 0
     for (int ipoint = 0; ipoint < num_outgoing_points; ipoint++) {
       /* Ensures that no points is associated twice. */
