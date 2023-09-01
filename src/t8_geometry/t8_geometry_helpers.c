@@ -142,11 +142,10 @@ t8_geom_compute_linear_geometry (t8_eclass_t tree_class, const double *tree_vert
     for (coord = 0; coord < num_coords; coord++) {
       const size_t offset_tree_dim = coord * dimension;
       const size_t offset_domain_dim = coord * T8_ECLASS_MAX_DIM;
-      /* Pyramid interpolation. After projecting the point onto the base,
-         * we use a bilinear interpolation to do a quad interpolation on the base
-         * and then we interpolate via the height to the top vertex */
-      /* Project point on base */
+      /* Pyramid interpolation. After projecting the point onto the base, we use a bilinear interpolation to do a quad
+       * interpolation on the base and then we interpolate via the height to the top vertex  */
 
+      /* Project point on base */
       if (ref_coords[offset_tree_dim + 2] != 1.) {
         for (dim = 0; dim < 2; dim++) {
           base_coords[dim] = 1 - (1 - ref_coords[offset_tree_dim + dim]) / (1 - ref_coords[offset_tree_dim + 2]);
@@ -169,35 +168,10 @@ t8_geom_compute_linear_geometry (t8_eclass_t tree_class, const double *tree_vert
     }
     break;
   }
-    /* Project vertex_coord onto x-y-plane */
-    for (i = 0; i < 3; i++) {
-      ray[i] = 1 - ref_coords[i];
-    }
-    lambda = ref_coords[2] / ray[2];
-    for (i = 0; i < 2; i++) {
-      /*Compute coords of vertex in the plane */
-      quad_coords[i] = ref_coords[i] - lambda * ray[i];
-      length += (1 - quad_coords[i]) * (1 - quad_coords[i]);
-    }
-    length += 1;
-    /*compute the ratio */
-    for (i = 0; i < 3; i++) {
-      length2 += (ref_coords[i] - quad_coords[i]) * (ref_coords[i] - quad_coords[i]);
-    }
-    lambda = sqrt (length2) / sqrt (length);
-
-    /*Interpolate on quad */
-    t8_geom_linear_interpolation ((const double *) quad_coords, tree_vertices, 3, 2, out_coords);
-    /*Project it back */
-    for (i = 0; i < 3; i++) {
-      out_coords[i] += (tree_vertices[12 + i] - out_coords[i]) * lambda;
-    }
-    break;
+  default:
+    SC_ABORT ("Linear geometry coordinate computation is only supported for "
+              "vertices/lines/triangles/tets/quads/prisms/hexes/pyramids.");
   }
-default:
-  SC_ABORT ("Linear geometry coordinate computation is only supported for "
-            "vertices/lines/triangles/tets/quads/prisms/hexes/pyramids.");
-}
 }
 
 void
