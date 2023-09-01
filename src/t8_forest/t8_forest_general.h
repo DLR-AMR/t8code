@@ -759,7 +759,7 @@ t8_forest_iterate (t8_forest_t forest);
  */
 int
 t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                const double point[3], const double tolerance);
+                                const double *points, const double tolerance);
 
 /* TODO: if set level and partition/adapt/balance all give NULL, then
  * refine uniformly and partition/adapt/balance the unfiform forest. */

@@ -1133,7 +1133,7 @@ t8_triangle_point_inside (const double p_0[3], const double p_1[3], const double
 
 int
 t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                const double point[3], const double tolerance)
+                                const double *points, const double tolerance)
 {
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
   t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, tree_class);
@@ -1162,7 +1162,7 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t
     t8_forest_element_coordinate (forest, ltreeid, element, 0, vertex_coords);
     /* Check whether the point and the vertex are within tolerance distance
        * to each other */
-    if (t8_vec_dist (vertex_coords, point) > tolerance) {
+    if (t8_vec_dist (vertex_coords, points) > tolerance) {
       return 0;
     }
     return 1;
@@ -1185,7 +1185,7 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t
     /* v = p_1 - p_0 */
     t8_vec_axpy (p_0, v, -1);
     /* b = p - p_0 */
-    t8_vec_axpyz (p_0, point, b, -1);
+    t8_vec_axpyz (p_0, points, b, -1);
 
     /* So x is the solution to
      * vx = b.
@@ -1239,11 +1239,11 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t
     }
 #endif
     /* Check whether the point is inside the first triangle. */
-    point_inside = t8_triangle_point_inside (p_0, p_1, p_2, point, tolerance);
+    point_inside = t8_triangle_point_inside (p_0, p_1, p_2, points, tolerance);
 
     if (!point_inside) {
       /* If not, check whether the point is inside the second triangle. */
-      point_inside = t8_triangle_point_inside (p_1, p_2, p_3, point, tolerance);
+      point_inside = t8_triangle_point_inside (p_1, p_2, p_3, points, tolerance);
     }
     /* point_inside is true if the point was inside the first or second triangle. Otherwise it is false. */
     return point_inside;
@@ -1256,7 +1256,7 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t
     t8_forest_element_coordinate (forest, ltreeid, element, 1, p_1);
     t8_forest_element_coordinate (forest, ltreeid, element, 2, p_2);
 
-    return t8_triangle_point_inside (p_0, p_1, p_2, point, tolerance);
+    return t8_triangle_point_inside (p_0, p_1, p_2, points, tolerance);
   }
   case T8_ECLASS_TET:
   case T8_ECLASS_HEX:
@@ -1286,7 +1286,7 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t
       t8_forest_element_coordinate (forest, ltreeid, element, afacecorner, point_on_face);
 
       /* Set x = x - p */
-      t8_vec_axpy (point, point_on_face, -1);
+      t8_vec_axpy (points, point_on_face, -1);
       /* Compute <x-p,n> */
       dot_product = t8_vec_dot (point_on_face, face_normal);
       if (dot_product < 0) {
