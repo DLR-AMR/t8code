@@ -1103,10 +1103,10 @@ t8_line_point_inside (const double *p_0, const double *vec, const double *point,
   double x = 0; /* Initialized to prevent compiler warning. */
   int i;
   /* So x is the solution to
-  * vx = b.
+  * vec * x = b.
   * We can compute it as
-  * x = b[i] / v[i]
-  * if any v[i] is not 0.
+  * x = b[i] / vec[i]
+  * if any vec[i] is not 0.
   *
   * Otherwise the line is degenerated (which should not happen).
   */
@@ -1117,7 +1117,7 @@ t8_line_point_inside (const double *p_0, const double *vec, const double *point,
     }
   }
 
-  /* If i == 3 here, then v = 0 and hence the line is degenerated. */
+  /* If i == 3 here, then vec = 0 and hence the line is degenerated. */
   SC_CHECK_ABORT (i < 3, "Degenerated line element. Both endpoints are the same.");
 
   if (x < -tolerance || x > 1 + tolerance) {
@@ -1127,7 +1127,7 @@ t8_line_point_inside (const double *p_0, const double *vec, const double *point,
 
   /* we can check whether x gives us a solution by
      * checking whether
-     *  vx = b
+     *  vec * x = b
      * is actually true.
      */
   double vec_check[3] = { vec[0], vec[1], vec[2] };
@@ -1155,8 +1155,8 @@ t8_triangle_point_inside (const double p_0[3], const double v[3], const double w
                           const double tolerance)
 {
   /* A point p is inside the triangle that is spanned
-   * by the vectors p_0 p_1 p_2 if and only if the linear system
-   * (p_1 - p_0)x + (p_2 - p_0)y = p - p_0
+   * by the point p_0 and vectors v and w if and only if the linear system
+   * vx + wy = point - p_0
    * has a solution with 0 <= x,y and x + y <= 1.
    *
    * We check whether such a solution exists by computing
@@ -1167,7 +1167,7 @@ t8_triangle_point_inside (const double p_0[3], const double v[3], const double w
 
   T8_ASSERT (tolerance > 0); /* negative values and zero are not allowed */
   double b[3];
-  /* b = p - p_0 */
+  /* b = point - p_0 */
   t8_vec_axpyz (p_0, point, b, -1);
 
   /* Let d = det (v w e_3) */
@@ -1204,8 +1204,8 @@ t8_triangle_point_inside (const double p_0[3], const double v[3], const double w
   return 1;
 }
 
-/** Check if a point lays on the inner side of a plane of bilinearly interpolated volume element. 
- * the plane is described by a point an the normal of the face. 
+/** Check if a point lays on the inner side of a plane of a bilinearly interpolated volume element. 
+ * the plane is described by a point and the normal of the face. 
  * \param[in] point_on_face   A point on the plane
  * \param[in] face_normal     The normal of the face
  * \param[in] point           The point to check
@@ -1220,7 +1220,7 @@ t8_plane_point_inside (const double point_on_face[3], const double face_normal[3
   /* Compute <x-p,n> */
   const double dot_product = t8_vec_dot (pof, face_normal);
   if (dot_product < 0) {
-    /* The point is outside of the plane */
+    /* The point is on the wrong side of the plane */
     return 0;
   }
   return 1;
