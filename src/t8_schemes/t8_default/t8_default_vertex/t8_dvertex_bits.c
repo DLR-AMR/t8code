@@ -56,13 +56,12 @@ t8_dvertex_child (const t8_dvertex_t *v, t8_dvertex_t *child)
 {
   T8_ASSERT (v->level < T8_DVERTEX_MAXLEVEL);
 
-  /* The childs level */
+  /* The children level */
   child->level = v->level + 1;
 }
 
 void
-t8_dvertex_nearest_common_ancestor (const t8_dvertex_t *v1,
-                                    const t8_dvertex_t *v2, t8_dvertex_t *r)
+t8_dvertex_nearest_common_ancestor (const t8_dvertex_t *v1, const t8_dvertex_t *v2, t8_dvertex_t *r)
 {
   /* The nca is the one of the two vertices with smaller level */
   r->level = SC_MIN (v1->level, v2->level);
@@ -91,8 +90,7 @@ t8_dvertex_sibling (const t8_dvertex_t *v, int sibid, t8_dvertex_t *s)
 }
 
 void
-t8_dvertex_childrenpv (const t8_dvertex_t *v,
-                       t8_dvertex_t *c[T8_DVERTEX_CHILDREN])
+t8_dvertex_childrenpv (const t8_dvertex_t *v, t8_dvertex_t *c[T8_DVERTEX_CHILDREN])
 {
   T8_ASSERT (v->level < T8_DVERTEX_MAXLEVEL);
 
@@ -139,8 +137,7 @@ t8_dvertex_transform_face (const t8_dvertex_t *vertex1, t8_dvertex_t *vertex2)
 }
 
 void
-t8_dvertex_first_descendant (const t8_dvertex_t *v, t8_dvertex_t *s,
-                             int level)
+t8_dvertex_first_descendant (const t8_dvertex_t *v, t8_dvertex_t *s, int level)
 {
   T8_ASSERT (level >= v->level && level <= T8_DVERTEX_MAXLEVEL);
 
@@ -156,8 +153,7 @@ t8_dvertex_last_descendant (const t8_dvertex_t *v, t8_dvertex_t *s, int level)
 }
 
 void
-t8_dvertex_vertex_coords (const t8_dvertex_t *elem, const int vertex,
-                          int coords[])
+t8_dvertex_vertex_coords (const t8_dvertex_t *elem, const int vertex, int coords[])
 {
   T8_ASSERT (vertex == 0);
 
@@ -165,8 +161,7 @@ t8_dvertex_vertex_coords (const t8_dvertex_t *elem, const int vertex,
 }
 
 void
-t8_dvertex_vertex_ref_coords (const t8_dvertex_t *elem, const int vertex,
-                              double coords[])
+t8_dvertex_vertex_ref_coords (const t8_dvertex_t *elem, const int vertex, double coords[])
 {
   T8_ASSERT (vertex == 0);
 
@@ -174,9 +169,7 @@ t8_dvertex_vertex_ref_coords (const t8_dvertex_t *elem, const int vertex,
 }
 
 void
-t8_dvertex_compute_reference_coords (const t8_dvertex_t *elem,
-                                     const double *ref_coords,
-                                     double *out_coords)
+t8_dvertex_compute_reference_coords (const t8_dvertex_t *elem, const double *ref_coords, double *out_coords)
 {
   T8_ASSERT (abs (ref_coords[0]) <= T8_PRECISION_EPS);
   T8_ASSERT (t8_dvertex_is_valid (elem));

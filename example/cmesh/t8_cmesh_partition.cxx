@@ -34,10 +34,10 @@
 static void
 t8_random_partition (int level)
 {
-  t8_cmesh_t          cmesh, cmesh_part, cmesh_part2;
-  char                file[BUFSIZ];
+  t8_cmesh_t cmesh, cmesh_part, cmesh_part2;
+  char file[BUFSIZ];
   p8est_connectivity_t *conn;
-  int                 mpirank, mpiret, mpisize;
+  int mpirank, mpiret, mpisize;
 
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
@@ -53,13 +53,11 @@ t8_random_partition (int level)
 
   t8_cmesh_init (&cmesh_part);
 
-  /* We still need acces to cmesh later */
+  /* We still need access to cmesh later */
   t8_cmesh_ref (cmesh);
   t8_cmesh_set_derive (cmesh_part, cmesh);
   t8_cmesh_set_partition_offsets (cmesh_part,
-                                  t8_cmesh_offset_random
-                                  (sc_MPI_COMM_WORLD,
-                                   t8_cmesh_get_num_trees (cmesh), 1, 0));
+                                  t8_cmesh_offset_random (sc_MPI_COMM_WORLD, t8_cmesh_get_num_trees (cmesh), 1, 0));
   t8_cmesh_commit (cmesh_part, sc_MPI_COMM_WORLD);
 
   if (mpisize > 1 && 1) {
@@ -68,9 +66,7 @@ t8_random_partition (int level)
     t8_cmesh_ref (cmesh_part);
     t8_cmesh_set_derive (cmesh_part2, cmesh_part);
     t8_cmesh_set_partition_offsets (cmesh_part2,
-                                    t8_cmesh_offset_random
-                                    (sc_MPI_COMM_WORLD,
-                                     t8_cmesh_get_num_trees (cmesh), 1, 0));
+                                    t8_cmesh_offset_random (sc_MPI_COMM_WORLD, t8_cmesh_get_num_trees (cmesh), 1, 0));
     t8_cmesh_commit (cmesh_part2, sc_MPI_COMM_WORLD);
 
     snprintf (file, BUFSIZ, "t8_brick_partition_random2");
@@ -96,10 +92,10 @@ t8_random_partition (int level)
 static void
 t8_partition (int level, int partition_from)
 {
-  t8_cmesh_t          cmesh, cmesh_part, cmesh_part2;
-  char                file[BUFSIZ];
+  t8_cmesh_t cmesh, cmesh_part, cmesh_part2;
+  char file[BUFSIZ];
   p4est_connectivity_t *conn;
-  int                 mpirank, mpiret, mpisize;
+  int mpirank, mpiret, mpisize;
 
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
@@ -113,11 +109,10 @@ t8_partition (int level, int partition_from)
   t8_cmesh_vtk_write_file (cmesh, file, 1.);
 
   t8_cmesh_init (&cmesh_part);
-  /* We still need acces to cmesh later */
+  /* We still need access to cmesh later */
   t8_cmesh_ref (cmesh);
   t8_cmesh_set_derive (cmesh_part, cmesh);
-  t8_cmesh_set_partition_uniform (cmesh_part, level,
-                                  t8_scheme_new_default_cxx ());
+  t8_cmesh_set_partition_uniform (cmesh_part, level, t8_scheme_new_default_cxx ());
   t8_cmesh_commit (cmesh_part, sc_MPI_COMM_WORLD);
   if (mpisize > 1 && 1) {
     t8_cmesh_init (&cmesh_part2);
@@ -125,9 +120,7 @@ t8_partition (int level, int partition_from)
     t8_cmesh_ref (cmesh_part);
     t8_cmesh_set_derive (cmesh_part2, cmesh_part);
     t8_cmesh_set_partition_offsets (cmesh_part2,
-                                    t8_cmesh_offset_concentrate
-                                    (1, sc_MPI_COMM_WORLD,
-                                     t8_cmesh_get_num_trees (cmesh)));
+                                    t8_cmesh_offset_concentrate (1, sc_MPI_COMM_WORLD, t8_cmesh_get_num_trees (cmesh)));
     t8_cmesh_commit (cmesh_part2, sc_MPI_COMM_WORLD);
     snprintf (file, BUFSIZ, "t8_brick_partition2");
     t8_cmesh_vtk_write_file (cmesh_part2, file, 1.0);
@@ -146,8 +139,8 @@ t8_partition (int level, int partition_from)
 int
 main (int argc, char **argv)
 {
-  int                 mpiret, loop;
-  int                 level;
+  int mpiret, loop;
+  int level;
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);

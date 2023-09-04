@@ -30,6 +30,7 @@
 
 #include <t8.h>
 #include <t8_geometry/t8_geometry.h>
+#include <t8_geometry/t8_geometry_with_vertices.h>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -39,14 +40,15 @@ T8_EXTERN_C_BEGIN ();
  *                  struct, as if the t8_geometry_linear_axis_aligned
  *                  (int dimension) constructor was called.
  */
-t8_geometry_c      *t8_geometry_linear_axis_aligned_new (int dim);
+t8_geometry_c *
+t8_geometry_linear_axis_aligned_new (int dim);
 
 /** Destroy a linear, axis-aligned geometry that was created with
  * \ref t8_geometry_linear_axis_aligned_new.
  * \param [in,out] geom A linear, axis-aligned geometry. Set to NULL on output.
  */
-void                t8_geometry_linear_axis_aligned_destroy (t8_geometry_c
-                                                             **geom);
+void
+t8_geometry_linear_axis_aligned_destroy (t8_geometry_c **geom);
 
 T8_EXTERN_C_END ();
 

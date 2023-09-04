@@ -29,23 +29,14 @@ int
 main (int argc, char **argv)
 {
   /* The prefix for our output files. */
-  const char          prefix[BUFSIZ] = "t8_cmesh_hypercube_pad";
-  t8_locidx_t         local_num_trees;
-  t8_gloidx_t         global_num_trees;
+  const char prefix[BUFSIZ] = "t8_cmesh_hypercube_pad";
+  t8_locidx_t local_num_trees;
+  t8_gloidx_t global_num_trees;
 
-  const double        boundary_coords[24] = {
-    1, 0, 0,
-    4, 0, 0,
-    0, 6, 0,
-    5, 5, 0,
-    -1, -2, 8,
-    9, 0, 10,
-    0, 8, 9,
-    10, 10, 10
-  };
+  const double boundary_coords[24] = { 1, 0, 0, 4, 0, 0, 0, 6, 0, 5, 5, 0, -1, -2, 8, 9, 0, 10, 0, 8, 9, 10, 10, 10 };
 
   /* Initialize MPI. This has to happen before we initialize sc or t8code. */
-  int                 mpiret = sc_MPI_Init (&argc, &argv);
+  int mpiret = sc_MPI_Init (&argc, &argv);
   /* Error check the MPI return value. */
   SC_CHECK_MPI (mpiret);
 
@@ -54,19 +45,15 @@ main (int argc, char **argv)
   /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
   t8_init (SC_LP_PRODUCTION);
 
-  /* Padd hypercube with given element class. */
-  t8_cmesh_t          cmesh =
-    t8_cmesh_new_hypercube_pad (T8_ECLASS_HEX, sc_MPI_COMM_WORLD,
-                                boundary_coords, 3, 3, 3);
+  /* Add hypercube with given element class. */
+  t8_cmesh_t cmesh = t8_cmesh_new_hypercube_pad (T8_ECLASS_HEX, sc_MPI_COMM_WORLD, boundary_coords, 3, 3, 3);
 
   /* Compute local and global number of trees. */
   local_num_trees = t8_cmesh_get_num_local_trees (cmesh);
   global_num_trees = t8_cmesh_get_num_trees (cmesh);
   t8_global_productionf (" [step1] Created coarse mesh.\n");
-  t8_global_productionf (" [step1] Local number of trees:\t%i\n",
-                         local_num_trees);
-  t8_global_productionf (" [step1] Global number of trees:\t%li\n",
-                         global_num_trees);
+  t8_global_productionf (" [step1] Local number of trees:\t%i\n", local_num_trees);
+  t8_global_productionf (" [step1] Global number of trees:\t%li\n", global_num_trees);
 
   t8_cmesh_vtk_write_file (cmesh, prefix, 1.0);
 

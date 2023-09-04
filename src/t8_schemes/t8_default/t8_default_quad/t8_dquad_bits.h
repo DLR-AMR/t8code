@@ -40,11 +40,8 @@ T8_EXTERN_C_BEGIN ();
  * 		                     will be filled with the reference coordinates
  *                         of the point on the quad.
  */
-void                t8_dquad_compute_reference_coords (const t8_dquad_t *
-                                                       elem,
-                                                       const double
-                                                       *ref_coords,
-                                                       double *out_coords);
+void
+t8_dquad_compute_reference_coords (const t8_dquad_t *elem, const double *ref_coords, double *out_coords);
 
 T8_EXTERN_C_END ();
 

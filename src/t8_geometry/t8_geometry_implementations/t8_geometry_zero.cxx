@@ -25,8 +25,8 @@
 t8_geometry_zero::t8_geometry_zero (int dim)
 {
   T8_ASSERT (0 <= dim && dim <= 3);
-  size_t              num_chars = 100;
-  char               *name_tmp = T8_ALLOC (char, num_chars);
+  size_t num_chars = 100;
+  char *name_tmp = T8_ALLOC (char, num_chars);
 
   snprintf (name_tmp, num_chars, "t8_geom_zero_%i", dim);
   name = name_tmp;
@@ -48,9 +48,7 @@ t8_geometry_zero::~t8_geometry_zero ()
 /* *INDENT-OFF* */
 /* Indent has trouble with the const keyword at the end */
 void
-t8_geometry_zero::t8_geom_evaluate (t8_cmesh_t cmesh,
-                                    t8_gloidx_t gtreeid,
-                                    const double *ref_coords,
+t8_geometry_zero::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
                                     double out_coords[3]) const
 /* *INDENT-ON* */
 {
@@ -71,10 +69,8 @@ t8_geometry_zero::t8_geom_evaluate (t8_cmesh_t cmesh,
 /* *INDENT-OFF* */
 /* Indent has trouble with the const keyword at the end */
 void
-t8_geometry_zero::t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
-                                            t8_gloidx_t gtreeid,
-                                            const double
-                                            *ref_coords, double *jacobian) const
+t8_geometry_zero::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
+                                             double *jacobian) const
 /* *INDENT-ON* */
 {
   /* Set the jacobian to 0 */
@@ -82,8 +78,7 @@ t8_geometry_zero::t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
 }
 
 inline void
-t8_geometry_zero::t8_geom_load_tree_data (t8_cmesh_t cmesh,
-                                          t8_gloidx_t gtreeid)
+t8_geometry_zero::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 {
   /* Do nothing. */
 }

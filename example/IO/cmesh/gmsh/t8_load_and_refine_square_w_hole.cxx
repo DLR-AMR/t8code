@@ -47,7 +47,7 @@ t8_vec3_dot (double *v1, double *v2)
 static void
 t8_vec3_xmay (double *x, double alpha, double *y)
 {
-  int                 i;
+  int i;
   for (i = 0; i < 3; i++) {
     x[i] -= alpha * y[i];
   }
@@ -56,12 +56,11 @@ t8_vec3_xmay (double *x, double alpha, double *y)
 /* Compute the coordinates of the midpoint
  * and a measure for the length of a  triangle or square */
 static void
-t8_midpoint (t8_forest_t forest, t8_locidx_t which_tree,
-             t8_eclass_scheme_c *ts,
-             t8_element_t *element, double elem_mid_point[3], double *h)
+t8_midpoint (t8_forest_t forest, t8_locidx_t which_tree, t8_eclass_scheme_c *ts, t8_element_t *element,
+             double elem_mid_point[3], double *h)
 {
-  double             *corner[3];
-  int                 i, j;
+  double *corner[3];
+  int i, j;
 
   /* We compute the midpoint as mean of all vertices */
   /* We compute the size as the medium distance of a vertex to the
@@ -72,7 +71,7 @@ t8_midpoint (t8_forest_t forest, t8_locidx_t which_tree,
     corner[0] = T8_ALLOC (double, 3);
     corner[1] = T8_ALLOC (double, 3);
     /* We approximate the midpoint of a square as the middle of
-     * the diagonale from vertex 0 to vertex 3 */
+     * the diagonal from vertex 0 to vertex 3 */
     /* Get the coordinates of the elements  0-th vertex */
     t8_forest_element_coordinate (forest, which_tree, element, 0, corner[0]);
     /* Get the coordinates of the elements  3rd vertex */
@@ -96,8 +95,7 @@ t8_midpoint (t8_forest_t forest, t8_locidx_t which_tree,
     for (i = 0; i < 3; i++) {
       corner[i] = T8_ALLOC (double, 3);
       /* Get the coordinates of the elements  i-th vertex */
-      t8_forest_element_coordinate (forest, which_tree, element,
-                                    i, corner[i]);
+      t8_forest_element_coordinate (forest, which_tree, element, i, corner[i]);
       /* At a third of the vertex coordinates to the midpoint coordinates */
       for (j = 0; j < 3; j++) {
         elem_mid_point[j] += corner[i][j] / 3.;
@@ -116,14 +114,12 @@ t8_midpoint (t8_forest_t forest, t8_locidx_t which_tree,
 }
 
 static int
-t8_load_refine_adapt (t8_forest_t forest, t8_forest_t forest_from,
-                      t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                      t8_eclass_scheme_c *ts, const int is_family,
-                      const int num_elements, t8_element_t *elements[])
+t8_load_refine_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
+                      t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
-  int                 level;
-  double              elem_midpoint[3];
-  double              h;
+  int level;
+  double elem_midpoint[3];
+  double h;
 
   t8_midpoint (forest_from, which_tree, ts, elements[0], elem_midpoint, &h);
 
@@ -134,15 +130,13 @@ t8_load_refine_adapt (t8_forest_t forest, t8_forest_t forest_from,
   }
   /* Refine along the outside boundary.
    * The factors in front of h control the width of the refinement region */
-  if (ts->eclass == T8_ECLASS_QUAD && (fabs (elem_midpoint[0]) > 2 - 0.7 * h
-                                       || fabs (elem_midpoint[1]) >
-                                       2 - 0.8 * h)) {
+  if (ts->eclass == T8_ECLASS_QUAD
+      && (fabs (elem_midpoint[0]) > 2 - 0.7 * h || fabs (elem_midpoint[1]) > 2 - 0.8 * h)) {
     return 1;
   }
   /* Refine along the inner boundary.
    * The factor in front of h controls the width of the refinement region. */
-  if (ts->eclass == T8_ECLASS_TRIANGLE &&
-      t8_vec3_dot (elem_midpoint, elem_midpoint) < 1 + 5 * h) {
+  if (ts->eclass == T8_ECLASS_TRIANGLE && t8_vec3_dot (elem_midpoint, elem_midpoint) < 1 + 5 * h) {
     return 1;
   }
 
@@ -152,12 +146,11 @@ t8_load_refine_adapt (t8_forest_t forest, t8_forest_t forest_from,
 void
 t8_load_refine_build_forest (t8_cmesh_t cmesh, sc_MPI_Comm comm, int level)
 {
-  t8_forest_t         forest, forest_adapt;
-  t8_cmesh_t          cmesh_partition;
+  t8_forest_t forest, forest_adapt;
+  t8_cmesh_t cmesh_partition;
 
   t8_cmesh_init (&cmesh_partition);
-  t8_cmesh_set_partition_uniform (cmesh_partition, level,
-                                  t8_scheme_new_default_cxx ());
+  t8_cmesh_set_partition_uniform (cmesh_partition, level, t8_scheme_new_default_cxx ());
   t8_cmesh_set_derive (cmesh_partition, cmesh);
   t8_cmesh_commit (cmesh_partition, comm);
 
@@ -175,8 +168,7 @@ t8_load_refine_build_forest (t8_cmesh_t cmesh, sc_MPI_Comm comm, int level)
 }
 
 t8_cmesh_t
-t8_load_refine_load_cmesh (const char *mshfile_prefix,
-                           sc_MPI_Comm comm, int dim)
+t8_load_refine_load_cmesh (const char *mshfile_prefix, sc_MPI_Comm comm, int dim)
 {
   return t8_cmesh_from_msh_file (mshfile_prefix, 1, comm, dim, 0, 0);
 }
@@ -184,8 +176,8 @@ t8_load_refine_load_cmesh (const char *mshfile_prefix,
 int
 main (int argc, char *argv[])
 {
-  t8_cmesh_t          cmesh;
-  int                 mpiret;
+  t8_cmesh_t cmesh;
+  int mpiret;
 
   /* Initialize MPI, sc and t8code */
   mpiret = sc_MPI_Init (&argc, &argv);
@@ -194,9 +186,7 @@ main (int argc, char *argv[])
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEBUG);
 
-  cmesh =
-    t8_load_refine_load_cmesh ("circlesquare_hybrid_hole",
-                               sc_MPI_COMM_WORLD, 2);
+  cmesh = t8_load_refine_load_cmesh ("circlesquare_hybrid_hole", sc_MPI_COMM_WORLD, 2);
   t8_load_refine_build_forest (cmesh, sc_MPI_COMM_WORLD, 1);
 
   sc_finalize ();

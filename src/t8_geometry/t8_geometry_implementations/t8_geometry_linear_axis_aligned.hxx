@@ -29,14 +29,15 @@
 #define T8_GEOMETRY_LINEAR_AXIS_ALIGNED_HXX
 
 #include <t8.h>
-#include <t8_geometry/t8_geometry_base.hxx>
+#include <t8_geometry/t8_geometry_with_vertices.hxx>
+#include <t8_geometry/t8_geometry_with_vertices.h>
 
-struct t8_geometry_linear_axis_aligned:public t8_geometry_w_vertices
+struct t8_geometry_linear_axis_aligned: public t8_geometry_with_vertices
 {
-public:
+ public:
   /* *INDENT-OFF* */
   /* indent does not know what a con- or destructor is */
-  
+
   /* Basic constructor that sets the dimension and the name
    * to "t8_geom_linear_axis_aligned_{dim}" */
   t8_geometry_linear_axis_aligned (int dim);
@@ -44,9 +45,10 @@ public:
   /* Base constructor with no arguments. We need this since it
    * is called from derived class constructors.
    * Sets dimension and name to invalid values. */
-     
-     
-  t8_geometry_linear_axis_aligned ():t8_geometry_w_vertices () {}
+
+  t8_geometry_linear_axis_aligned (): t8_geometry_with_vertices ()
+  {
+  }
 
   /** The destructor. 
    * Clears the allocated memory.
@@ -58,7 +60,8 @@ public:
    * Get the type of this geometry.
    * \return The type.
    */
-  inline t8_geometry_type_t t8_geom_get_type () const
+  inline t8_geometry_type_t
+  t8_geom_get_type () const
   {
     return T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED;
   };
@@ -70,10 +73,8 @@ public:
    * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in $$[0,1]^dimension$$.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
    */
-  virtual void        t8_geom_evaluate (t8_cmesh_t cmesh,
-                                        t8_gloidx_t gtreeid,
-                                        const double *ref_coords,
-                                        double out_coords[3]) const;
+  virtual void
+  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double out_coords[3]) const;
 
   /**
    * Compute the jacobian of the \a t8_geom_evaluate map at a point in the reference space $$[0,1]^dimension$$.
@@ -83,10 +84,8 @@ public:
    * \param [out] jacobian    The jacobian at \a ref_coords. Array of size dimension x 3. Indices 3*i, 3*i+1, 3*i+2
    *                          correspond to the i-th column of the jacobian (Entry 3*i + j is del f_j/del x_i).
    */
-  virtual void        t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
-                                                t8_gloidx_t gtreeid,
-                                                const double *ref_coords,
-                                                double *jacobian) const;
+  virtual void
+  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double *jacobian) const;
 };
 
 #endif /* !T8_GEOMETRY_LINEAR_AXIS_ALIGNED_HXX! */

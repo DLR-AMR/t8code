@@ -30,18 +30,16 @@
 #include <sc_statistics.h>
 #include <sc_options.h>
 
-#include <t8_forest/t8_forest_types.h>  /* TODO: This file should not be included from an application */
+#include <t8_forest/t8_forest_types.h> /* TODO: This file should not be included from an application */
 /* This function refines every element */
 static int
-t8_basic_adapt_refine (t8_forest_t forest, t8_locidx_t which_tree,
-                       t8_eclass_scheme_t * ts, const int is_family,
+t8_basic_adapt_refine (t8_forest_t forest, t8_locidx_t which_tree, t8_eclass_scheme_t *ts, const int is_family,
                        const int num_elements, t8_element_t *elements[])
 {
 #if 0
   int                 level;
 #endif
-  T8_ASSERT (!is_family || num_elements ==
-             t8_eclass_num_children[ts->eclass]);
+  T8_ASSERT (!is_family || num_elements == t8_eclass_num_children[ts->eclass]);
 #if 0
   level = t8_element_level (ts, elements[0]);
   /* coarsen */
@@ -56,8 +54,7 @@ t8_basic_adapt_refine (t8_forest_t forest, t8_locidx_t which_tree,
 
 /* This function coarsens each element */
 static int
-t8_basic_adapt_coarsen (t8_forest_t forest, t8_locidx_t which_tree,
-                        t8_eclass_scheme_t * ts, const int is_family,
+t8_basic_adapt_coarsen (t8_forest_t forest, t8_locidx_t which_tree, t8_eclass_scheme_t *ts, const int is_family,
                         int num_elements, t8_element_t *elements[])
 {
   if (is_family) {
@@ -69,11 +66,11 @@ t8_basic_adapt_coarsen (t8_forest_t forest, t8_locidx_t which_tree,
 static void
 t8_timings_adapt (int start_l, int end_l, int runs, int dim)
 {
-  t8_forest_t        *forests;
-  int                 li, num_levels, cur_for, run;
-  t8_eclass_t         eclass;
-  sc_flopinfo_t       fi, snapshot;
-  sc_statinfo_t       stats[1];
+  t8_forest_t *forests;
+  int li, num_levels, cur_for, run;
+  t8_eclass_t eclass;
+  sc_flopinfo_t fi, snapshot;
+  sc_statinfo_t stats[1];
 
   num_levels = end_l - start_l + 1;
   T8_ASSERT (num_levels > 0);
@@ -84,13 +81,11 @@ t8_timings_adapt (int start_l, int end_l, int runs, int dim)
   t8_forest_init (&forests[0]);
 
   eclass = dim == 2 ? T8_ECLASS_TRIANGLE : T8_ECLASS_TET;
-/*
+  /*
   t8_forest_set_cmesh (forests[0],
                        t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0), 0);
 */
-  t8_forest_set_cmesh (forests[0],
-                       t8_cmesh_new_bigmesh (eclass, 512, sc_MPI_COMM_WORLD,
-                                             0), sc_MPI_COMM_WORLD);
+  t8_forest_set_cmesh (forests[0], t8_cmesh_new_bigmesh (eclass, 512, sc_MPI_COMM_WORLD, 0), sc_MPI_COMM_WORLD);
   t8_forest_set_scheme (forests[0], t8_scheme_new_default ());
   t8_forest_set_level (forests[0], start_l);
   t8_forest_commit (forests[0]);
@@ -100,14 +95,12 @@ t8_timings_adapt (int start_l, int end_l, int runs, int dim)
   for (run = 0, cur_for = 1; run < runs; run++) {
     for (li = 1; li < num_levels; li++, cur_for++) {
       t8_forest_init (&forests[cur_for]);
-      t8_forest_set_adapt (forests[cur_for], forests[cur_for - 1],
-                           t8_basic_adapt_refine, 0);
+      t8_forest_set_adapt (forests[cur_for], forests[cur_for - 1], t8_basic_adapt_refine, 0);
       t8_forest_commit (forests[cur_for]);
     }
     for (li = 1; li < num_levels; li++, cur_for++) {
       t8_forest_init (&forests[cur_for]);
-      t8_forest_set_adapt (forests[cur_for], forests[cur_for - 1],
-                           t8_basic_adapt_coarsen, 0);
+      t8_forest_set_adapt (forests[cur_for], forests[cur_for - 1], t8_basic_adapt_coarsen, 0);
       t8_forest_commit (forests[cur_for]);
     }
   }
@@ -120,32 +113,28 @@ t8_timings_adapt (int start_l, int end_l, int runs, int dim)
 
   sc_stats_compute (sc_MPI_COMM_WORLD, 1, stats);
   sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, 1, stats, 1, 1);
-
 }
 
 void
 t8_timings_new (int level, int dim)
 {
-  t8_forest_t         forest;
-  t8_eclass_t         eclass;
-  sc_flopinfo_t       fi, snapshot;
-  sc_statinfo_t       stats[1];
+  t8_forest_t forest;
+  t8_eclass_t eclass;
+  sc_flopinfo_t fi, snapshot;
+  sc_statinfo_t stats[1];
 
   T8_ASSERT (level >= 0);
   T8_ASSERT (dim == 2 || dim == 3);
 
   eclass = dim == 2 ? T8_ECLASS_TRIANGLE : T8_ECLASS_TET;
 
-  t8_global_productionf ("=P= Starting forest_new with %.0f elements.\n",
-                         512 * pow (2, dim * level));
+  t8_global_productionf ("=P= Starting forest_new with %.0f elements.\n", 512 * pow (2, dim * level));
 
   sc_flops_start (&fi);
   sc_flops_snap (&fi, &snapshot);
 
   t8_forest_init (&forest);
-  t8_forest_set_cmesh (forest,
-                       t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0,
-                                               0, 0), sc_MPI_COMM_WORLD);
+  t8_forest_set_cmesh (forest, t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0), sc_MPI_COMM_WORLD);
   t8_forest_set_scheme (forest, t8_scheme_new_default ());
   t8_forest_set_level (forest, level);
   t8_forest_commit (forest);
@@ -164,11 +153,11 @@ t8_timings_new (int level, int dim)
 int
 main (int argc, char **argv)
 {
-  int                 mpiret, mpisize;
-  int                 start_level, end_level, dim;
-  int                 first_argc;
-  int                 use_refine, use_new;
-  sc_options_t       *opt;
+  int mpiret, mpisize;
+  int start_level, end_level, dim;
+  int first_argc;
+  int use_refine, use_new;
+  sc_options_t *opt;
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -181,8 +170,7 @@ main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
 
   opt = sc_options_new (argv[0]);
-  sc_options_add_int (opt, 's', "slevel", &start_level, 0,
-                      "initial refine level");
+  sc_options_add_int (opt, 's', "slevel", &start_level, 0, "initial refine level");
   sc_options_add_int (opt, 'e', "elevel", &end_level, 0,
                       "Final refine level: greater or equal to initial refine level");
   sc_options_add_int (opt, 'd', "dim", &dim, 2, "dimension: 2 or 3");
@@ -191,15 +179,13 @@ main (int argc, char **argv)
   sc_options_add_switch (opt, 'n', "new", &use_new,
                          "Time new with start_level - If this is given -r has to be switched on by hand if desired.");
 
-  first_argc = sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT,
-                                 opt, argc, argv);
+  first_argc = sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT, opt, argc, argv);
 
   if (end_level < start_level) {
     end_level = start_level;
   }
 
-  if (first_argc < 0 || first_argc != argc
-      || 2 > dim || dim > 3 || (use_refine && end_level < start_level)) {
+  if (first_argc < 0 || first_argc != argc || 2 > dim || dim > 3 || (use_refine && end_level < start_level)) {
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
     return 1;
   }

@@ -33,8 +33,8 @@
 static void
 t8_read_msh_file_vtk (t8_cmesh_t cmesh, const char *prefix)
 {
-  int                 mpirank, mpiret;
-  char                fileprefix[BUFSIZ];
+  int mpirank, mpiret;
+  char fileprefix[BUFSIZ];
 
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
@@ -54,8 +54,8 @@ t8_read_msh_file_vtk (t8_cmesh_t cmesh, const char *prefix)
 static t8_cmesh_t
 t8_read_msh_partition (t8_cmesh_t cmesh, const char *prefix)
 {
-  t8_cmesh_t          p_mesh;
-  char                vtk_prefix[BUFSIZ];
+  t8_cmesh_t p_mesh;
+  char vtk_prefix[BUFSIZ];
 
   t8_cmesh_init (&p_mesh);
   t8_cmesh_set_derive (p_mesh, cmesh);
@@ -76,24 +76,19 @@ t8_read_msh_partition (t8_cmesh_t cmesh, const char *prefix)
  *              file alone. The other processes will not hold any trees then.
  */
 static t8_cmesh_t
-t8_read_msh_file_build_cmesh (const char *prefix, int do_partition, int dim,
-                              int master)
+t8_read_msh_file_build_cmesh (const char *prefix, int do_partition, int dim, int master)
 {
-  t8_cmesh_t          cmesh;
-  int                 partitioned_read;
+  t8_cmesh_t cmesh;
+  int partitioned_read;
 
   /* If the master argument is positive, then we read the cmesh
    * only on the master rank and is directly partitioned. */
   partitioned_read = master >= 0;
-  cmesh =
-    t8_cmesh_from_msh_file ((char *) prefix, partitioned_read,
-                            sc_MPI_COMM_WORLD, dim, master, 0);
+  cmesh = t8_cmesh_from_msh_file ((char *) prefix, partitioned_read, sc_MPI_COMM_WORLD, dim, master, 0);
   if (cmesh != NULL) {
-    t8_global_productionf
-      ("Succesfully constructed cmesh from %s.msh file.\n", prefix);
-    t8_global_productionf
-      ("cmesh is of dimension %i and has %lli elements.\n", dim,
-       (long long) t8_cmesh_get_num_trees (cmesh));
+    t8_global_productionf ("Successfully constructed cmesh from %s.msh file.\n", prefix);
+    t8_global_productionf ("cmesh is of dimension %i and has %lli elements.\n", dim,
+                           (long long) t8_cmesh_get_num_trees (cmesh));
     t8_read_msh_file_vtk (cmesh, prefix);
     if (do_partition) {
       cmesh = t8_read_msh_partition (cmesh, prefix);
@@ -101,8 +96,7 @@ t8_read_msh_file_build_cmesh (const char *prefix, int do_partition, int dim,
     return cmesh;
   }
   else {
-    t8_global_productionf ("An error occured while reading %s.msh file.\n",
-                           prefix);
+    t8_global_productionf ("An error occurred while reading %s.msh file.\n", prefix);
     return NULL;
   }
 }
@@ -110,25 +104,23 @@ t8_read_msh_file_build_cmesh (const char *prefix, int do_partition, int dim,
 int
 main (int argc, char *argv[])
 {
-  int                 mpiret, parsed, partition, dim, master, mpisize;
-  int                 helpme;
-  sc_options_t       *opt;
-  const char         *prefix;
-  char                usage[BUFSIZ];
-  char                help[BUFSIZ];
-  t8_cmesh_t          cmesh;
-  int                 sreturn;
+  int mpiret, parsed, partition, dim, master, mpisize;
+  int helpme;
+  sc_options_t *opt;
+  const char *prefix;
+  char usage[BUFSIZ];
+  char help[BUFSIZ];
+  t8_cmesh_t cmesh;
+  int sreturn;
 
-  snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS> <ARGUMENTS>",
-            basename (argv[0]));
+  snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS> <ARGUMENTS>", basename (argv[0]));
   sreturn = snprintf (help, BUFSIZ,
-                      "This program reads a .msh file "
-                      "created by the GMSH program and constructs a "
-                      "t8code coarse mesh from them.\n\n%s\n\nExample: %s -f A1\nTo open the file A1.msh."
-                      "\n\nThe default dimension of the mesh to read is 2. Since the "
-                      ".msh format stores elements of all (lower) dimensions "
-                      "the user must provide the argument for a different dimension by hand, if "
-                      "desired.\n", usage, basename (argv[0]));
+                      "This program reads a .msh file created by the GMSH program and constructs a t8code coarse mesh "
+                      "from them.\n\n%s\n\nExample: %s -f A1\nTo open the file A1.msh."
+                      "\n\nThe default dimension of the mesh to read is 2. Since the .msh format stores elements of "
+                      "all (lower) dimensions the user must provide the argument for a different dimension by hand, "
+                      "if desired.\n",
+                      usage, basename (argv[0]));
 
   if (sreturn >= BUFSIZ) {
     /* The help message was truncated */
@@ -147,25 +139,19 @@ main (int argc, char *argv[])
   SC_CHECK_MPI (mpiret);
 
   opt = sc_options_new (argv[0]);
-  sc_options_add_switch (opt, 'h', "help", &helpme,
-                         "Display a short help message.");
-  sc_options_add_string (opt, 'f', "prefix", &prefix, "", "The prefix of the"
-                         "tetgen files.");
-  sc_options_add_switch (opt, 'p', "partition", &partition, "If true "
-                         "the generated cmesh is repartitioned uniformly.");
+  sc_options_add_switch (opt, 'h', "help", &helpme, "Display a short help message.");
+  sc_options_add_string (opt, 'f', "prefix", &prefix, "", "The prefix of the tetgen files.");
+  sc_options_add_switch (opt, 'p', "partition", &partition, "If true the generated cmesh is repartitioned uniformly.");
   sc_options_add_int (opt, 'd', "dim", &dim, 2, "The dimension of the mesh");
-  sc_options_add_int (opt, 'm', "master", &master, -1, "If specified, the "
-                      "mesh is partitioned and all elements reside on process with "
-                      "rank master.");
-  parsed =
-    sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
+  sc_options_add_int (opt, 'm', "master", &master, -1,
+                      "If specified, the mesh is partitioned and all elements reside on process with rank master.");
+  parsed = sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (helpme) {
     /* display help message and usage */
     t8_global_productionf ("%s\n", help);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-  else if (parsed < 0 || strcmp (prefix, "") == 0 || 0 > dim || dim > 3
-           || master < -1 || master >= mpisize) {
+  else if (parsed < 0 || strcmp (prefix, "") == 0 || 0 > dim || dim > 3 || master < -1 || master >= mpisize) {
     /* wrong usage */
     t8_global_productionf ("\n\t ERROR: Wrong usage.\n\n");
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);

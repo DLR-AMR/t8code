@@ -35,7 +35,8 @@
 T8_EXTERN_C_BEGIN ();
 
 /* TODO: implement */
-void                t8_forest_save (t8_forest_t forest);
+void
+t8_forest_save (t8_forest_t forest);
 
 /** Write the forest in a parallel vtu format. Extended version.
  * See \ref t8_forest_write_vtk for the standard version of this function.
@@ -71,18 +72,11 @@ void                t8_forest_save (t8_forest_t forest);
  * \return  True if successful, false if not (process local).
  * See also \ref t8_forest_write_vtk .
  */
-int                 t8_forest_write_vtk_ext (t8_forest_t forest,
-                                             const char *fileprefix,
-                                             const int write_treeid,
-                                             const int write_mpirank,
-                                             const int write_level,
-                                             const int write_element_id,
-                                             const int write_ghosts,
-                                             const int write_curved,
-                                             const int stretched_flag,
-                                             int do_not_use_API,
-                                             const int num_data,
-                                             t8_vtk_data_field_t *data);
+int
+t8_forest_write_vtk_ext (t8_forest_t forest, const char *fileprefix, const int write_treeid, const int write_mpirank,
+                         const int write_level, const int write_element_id, const int write_ghosts,
+                         const int write_curved, const int stretched_flag, int do_not_use_API, const int num_data,
+                         t8_vtk_data_field_t *data);
 
 /** Write the forest in a parallel vtu format. Writes one master
  * .pvtu file and each process writes in its own .vtu file.
@@ -99,8 +93,8 @@ int                 t8_forest_write_vtk_ext (t8_forest_t forest,
  *                                      fileprefix_r.vtu.
  * \return  True if successful, false if not (process local).
  */
-int                 t8_forest_write_vtk (t8_forest_t forest,
-                                         const char *fileprefix);
+int
+t8_forest_write_vtk (t8_forest_t forest, const char *fileprefix);
 T8_EXTERN_C_END ();
 
 #endif /* !T8_FOREST_IO_H */

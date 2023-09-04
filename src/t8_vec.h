@@ -35,7 +35,16 @@ T8_EXTERN_C_BEGIN ();
  * \param [in] vec  A 3D vector.
  * \return          The norm of \a vec.
  */
-double              t8_vec_norm (const double vec[3]);
+static inline double
+t8_vec_norm (const double vec[3])
+{
+  double norm = 0;
+
+  for (int i = 0; i < 3; i++) {
+    norm += vec[i] * vec[i];
+  }
+  return sqrt (norm);
+}
 
 /** Euclidean distance of X and Y.
  * \param [in]  vec_x  A 3D vector.
@@ -43,22 +52,41 @@ double              t8_vec_norm (const double vec[3]);
  * \return             The euclidean distance.
  *                     Equivalent to norm (X-Y).
  */
-double              t8_vec_dist (const double vec_x[3],
-                                 const double vec_y[3]);
+static inline double
+t8_vec_dist (const double vec_x[3], const double vec_y[3])
+{
+  double dist = 0;
+
+  for (int i = 0; i < 3; i++) {
+    dist += SC_SQR (vec_x[i] - vec_y[i]);
+  }
+  return sqrt (dist);
+}
 
 /** Compute X = alpha * X
  * \param [in,out] vec_x  A 3D vector. On output set to \a alpha * \a vec_x.
  * \param [in]     alpha  A factor.
  */
-void                t8_vec_ax (double vec_x[3], const double alpha);
+static inline void
+t8_vec_ax (double vec_x[3], const double alpha)
+{
+  for (int i = 0; i < 3; i++) {
+    vec_x[i] *= alpha;
+  }
+}
 
 /** Compute Y = alpha * X
  * \param [in]  vec_x  A 3D vector.
  * \param [out] vec_z  On output set to \a alpha * \a vec_x.
  * \param [in]  alpha  A factor.
  */
-void                t8_vec_axy (const double vec_x[3], double vec_y[3],
-                                const double alpha);
+static inline void
+t8_vec_axy (const double vec_x[3], double vec_y[3], const double alpha)
+{
+  for (int i = 0; i < 3; i++) {
+    vec_y[i] = vec_x[i] * alpha;
+  }
+}
 
 /** Y = alpha * X + b
  * \param [in]  vec_x  A 3D vector.
@@ -68,8 +96,13 @@ void                t8_vec_axy (const double vec_x[3], double vec_y[3],
  * \param [in]  b      An offset.
  * \note It is possible that vec_x = vec_y on input to overwrite x
  */
-void                t8_vec_axb (const double vec_x[3], double vec_y[3],
-                                const double alpha, const double b);
+static inline void
+t8_vec_axb (const double vec_x[3], double vec_y[3], const double alpha, const double b)
+{
+  for (int i = 0; i < 3; i++) {
+    vec_y[i] = alpha * vec_x[i] + b;
+  }
+}
 
 /** Y = Y + alpha * X
  * \param [in]  vec_x  A 3D vector.
@@ -77,40 +110,68 @@ void                t8_vec_axb (const double vec_x[3], double vec_y[3],
  *                      On output set \a to vec_y + \a alpha * \a vec_x
  * \param [in]  alpha  A factor.
  */
-void                t8_vec_axpy (const double vec_x[3], double vec_y[3],
-                                 const double alpha);
+static inline void
+t8_vec_axpy (const double vec_x[3], double vec_y[3], const double alpha)
+{
+  for (int i = 0; i < 3; i++) {
+    vec_y[i] += alpha * vec_x[i];
+  }
+}
 
 /** Z = Y + alpha * X
  * \param [in]  vec_x  A 3D vector.
  * \param [in]  vec_y  A 3D vector.
  * \param [out] vec_z  On output set \a to vec_y + \a alpha * \a vec_x
  */
-void                t8_vec_axpyz (const double vec_x[3],
-                                  const double vec_y[3], double vec_z[3],
-                                  const double alpha);
+static inline void
+t8_vec_axpyz (const double vec_x[3], const double vec_y[3], double vec_z[3], const double alpha)
+{
+  for (int i = 0; i < 3; i++) {
+    vec_z[i] = vec_y[i] + alpha * vec_x[i];
+  }
+}
 
 /** Dot product of X and Y.
  * \param [in]  vec_x  A 3D vector.
  * \param [in]  vec_y  A 3D vector.
  * \return             The dot product \a vec_x * \a vec_y
  */
-double              t8_vec_dot (const double vec_x[3], const double vec_y[3]);
+static inline double
+t8_vec_dot (const double vec_x[3], const double vec_y[3])
+{
+  double dot = 0;
+
+  for (int i = 0; i < 3; i++) {
+    dot += vec_x[i] * vec_y[i];
+  }
+  return dot;
+}
 
 /** Cross product of X and Y
  * \param [in]  vec_x  A 3D vector.
  * \param [in]  vec_y  A 3D vector.
  * \param [out] cross  On output, the cross product of \a vec_x and \a vec_y.
  */
-void                t8_vec_cross (const double vec_x[3],
-                                  const double vec_y[3], double cross[3]);
+static inline void
+t8_vec_cross (const double vec_x[3], const double vec_y[3], double cross[3])
+{
+  for (int i = 0; i < 3; i++) {
+    cross[i] = vec_x[(i + 1) % 3] * vec_y[(i + 2) % 3] - vec_x[(i + 2) % 3] * vec_y[(i + 1) % 3];
+  }
+}
 
 /** Compute the difference of two vectors.
  * \param [in]  vec_x  A 3D vector.
  * \param [in]  vec_y  A 3D vector.
  * \param [out] diff   On output, the difference of \a vec_x and \a vec_y.
  */
-void                t8_vec_diff (const double vec_x[3],
-                                 const double vec_y[3], double diff[3]);
+static inline void
+t8_vec_diff (const double vec_x[3], const double vec_y[3], double diff[3])
+{
+  for (int i = 0; i < 3; i++) {
+    diff[i] = vec_x[i] - vec_y[i];
+  }
+}
 
 T8_EXTERN_C_END ();
 
