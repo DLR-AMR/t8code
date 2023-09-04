@@ -1145,7 +1145,7 @@ t8_line_point_inside (const double *p_0, const double *vec, const double *point,
  * 
  * \param[in] p_0         The first vertex of a triangle
  * \param[in] v           The vector from p_0 to p_1 (second vertex in the triangle)
- * \param[in] w           The vector from p_0 to p_2 (second vertex in the triangle)
+ * \param[in] w           The vector from p_0 to p_2 (third vertex in the triangle)
  * \param[in] point       The coordinates of the point to check
  * \param[in] tolerance   A double > 0 defining the tolerance
  * \return                0 if the point is outside, 1 otherwise.  
