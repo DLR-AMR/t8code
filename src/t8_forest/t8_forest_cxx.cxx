@@ -1342,15 +1342,13 @@ t8_forest_element_point_batch_inside (t8_forest_t forest, t8_locidx_t ltreeid, c
      * The inner side is defined as the side where the outside normal vector does not
      * point to.
      * The point is on this inner side if and only if the scalar product of
-     * a point on the plane minus the point
-     *                with
-     * the outer normal of the face
+     * a point on the plane minus the point with the outer normal of the face
      * is >= 0.
      *
      * In other words, let p be the point to check, n the outer normal and x a point
      * on the plane, then p is on the inner side if and only if
      *  <x - p, n> >= 0
-     **/
+     */
 
     const int num_faces = ts->t8_element_num_faces (element);
     /* Assume that every point is inside of the element */
