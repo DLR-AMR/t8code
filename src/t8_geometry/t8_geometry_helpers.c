@@ -523,7 +523,9 @@ t8_geom_get_scaling_factor_of_edge_on_face (int i_edge,
     break;
   }
 
-  if (max_orthogonal_direction == 0 || max_orthogonal_direction == 1) {
+  if (max_orthogonal_direction <= T8_PRECISION_EPS
+      || sqrt ((max_orthogonal_direction - 1) *
+               (max_orthogonal_direction - 1)) <= T8_PRECISION_EPS) {
     scaling_factor = 0;
   }
   else {
