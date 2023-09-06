@@ -633,7 +633,9 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
        * have to multiplied with the inversed (1 - ref_coord) 
        * coordinate. All edges which satisfy i_edge % 4 == 1 have to multiplied with one 
        * inversed ref_coord and so forth...
-       * An exception are edge 5 and 6, which have to be switched */
+       * An exception are edge 5 and 6, which have to be switched because they do not follow that rule.
+       * Edges which are located at ref_coord[i] = 0 have to be multiplied with (1 - ref_coord[i]) and if the
+       * edge is located at ref_coord[i] = 1 it has to be multiplied with ref_coord[i]. */
 
       /* *INDENT-OFF* */
       double scaling_factor = 0;
