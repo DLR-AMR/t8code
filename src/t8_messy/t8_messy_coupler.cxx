@@ -1328,8 +1328,8 @@ t8_messy_write_forest (t8_forest_t forest, const char *prefix,
   }
 
   /** CHTODO: Set curved flag to zero */
-  t8_forest_vtk_write_file_via_API (forest, prefix, 1, 1, 1, 1, 0, num_data_out,
-                               vtk_data);
+  //t8_forest_vtk_write_file_via_API (forest, prefix, 1, 1, 1, 1, 0, num_data_out,
+  //                             vtk_data);
 
   T8_FREE (vtk_data);
 
