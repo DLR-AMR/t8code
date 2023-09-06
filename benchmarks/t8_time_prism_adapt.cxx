@@ -35,16 +35,14 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 
 static int
-t8_basic_adapt_refine_type (t8_forest_t forest, t8_forest_t forest_from,
-                            t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                            t8_eclass_scheme_c *ts, const int is_family,
+t8_basic_adapt_refine_type (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
+                            t8_locidx_t lelement_id, t8_eclass_scheme_c *ts, const int is_family,
                             const int num_elements, t8_element_t *elements[])
 {
-  int                 level;
-  int                 type;
+  int level;
+  int type;
 
-  T8_ASSERT (!is_family || num_elements ==
-             ts->t8_element_num_children (elements[0]));
+  T8_ASSERT (!is_family || num_elements == ts->t8_element_num_children (elements[0]));
 
   level = ts->t8_element_level (elements[0]);
   if (level >= *(int *) t8_forest_get_user_data (forest)) {
@@ -60,16 +58,14 @@ t8_basic_adapt_refine_type (t8_forest_t forest, t8_forest_t forest_from,
 }
 
 static int
-t8_basic_adapt_refine_tet (t8_forest_t forest, t8_forest_t forest_from,
-                           t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                           t8_eclass_scheme_c *ts, const int is_family,
-                           const int num_elements, t8_element_t *elements[])
+t8_basic_adapt_refine_tet (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
+                           t8_eclass_scheme_c *ts, const int is_family, const int num_elements,
+                           t8_element_t *elements[])
 {
-  int                 level;
-  int                 type;
+  int level;
+  int type;
 
-  T8_ASSERT (!is_family || num_elements ==
-             ts->t8_element_num_children (elements[0]));
+  T8_ASSERT (!is_family || num_elements == ts->t8_element_num_children (elements[0]));
 
   level = ts->t8_element_level (elements[0]);
   if (level >= *(int *) t8_forest_get_user_data (forest)) {
@@ -82,31 +78,25 @@ t8_basic_adapt_refine_tet (t8_forest_t forest, t8_forest_t forest_from,
     return 1;
   }
   return 0;
-
 }
 
 static void
-t8_time_refine (int start_level, int end_level, int create_forest, int cube,
-                int adapt, int do_balance, t8_eclass_t eclass)
+t8_time_refine (int start_level, int end_level, int create_forest, int cube, int adapt, int do_balance,
+                t8_eclass_t eclass)
 {
-  t8_forest_t         forest, forest_adapt, forest_partition;
-  sc_flopinfo_t       fi, snapshot;
-  sc_statinfo_t       stats[1];
-  char                vtuname[BUFSIZ];
+  t8_forest_t forest, forest_adapt, forest_partition;
+  sc_flopinfo_t fi, snapshot;
+  sc_statinfo_t stats[1];
+  char vtuname[BUFSIZ];
 
   T8_ASSERT (eclass == T8_ECLASS_PRISM || eclass == T8_ECLASS_TET);
   t8_forest_init (&forest);
 
   if (cube == 0) {
-    t8_forest_set_cmesh (forest,
-                         t8_cmesh_new_bigmesh (eclass, 512,
-                                               sc_MPI_COMM_WORLD),
-                         sc_MPI_COMM_WORLD);
+    t8_forest_set_cmesh (forest, t8_cmesh_new_bigmesh (eclass, 512, sc_MPI_COMM_WORLD), sc_MPI_COMM_WORLD);
   }
   else {
-    t8_forest_set_cmesh (forest,
-                         t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0,
-                                                 0, 0), sc_MPI_COMM_WORLD);
+    t8_forest_set_cmesh (forest, t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0), sc_MPI_COMM_WORLD);
   }
   t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
   t8_forest_set_level (forest, start_level);
@@ -116,8 +106,7 @@ t8_time_refine (int start_level, int end_level, int create_forest, int cube,
   sc_flops_shot (&fi, &snapshot);
   sc_stats_set1 (&stats[0], snapshot.iwtime, "New");
   if (cube == 1) {
-    snprintf (vtuname, BUFSIZ, "forest_hypercube_%s",
-              t8_eclass_to_string[eclass]);
+    snprintf (vtuname, BUFSIZ, "forest_hypercube_%s", t8_eclass_to_string[eclass]);
     t8_forest_write_vtk (forest, vtuname);
     t8_debugf ("Output to %s\n", vtuname);
   }
@@ -128,12 +117,10 @@ t8_time_refine (int start_level, int end_level, int create_forest, int cube,
 
     t8_forest_set_profiling (forest_adapt, 1);
     if (eclass == T8_ECLASS_PRISM) {
-      t8_forest_set_adapt (forest_adapt, forest,
-                           t8_basic_adapt_refine_type, 1);
+      t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt_refine_type, 1);
     }
     else {
-      t8_forest_set_adapt (forest_adapt, forest,
-                           t8_basic_adapt_refine_tet, 1);
+      t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt_refine_tet, 1);
     }
     forest_partition = forest_adapt;
     /* partition the adapted forest */
@@ -147,8 +134,7 @@ t8_time_refine (int start_level, int end_level, int create_forest, int cube,
     t8_forest_commit (forest_partition);
     t8_forest_print_profile (forest_partition);
     if (cube == 1) {
-      snprintf (vtuname, BUFSIZ, "forest_hypercube_adapt_%s",
-                t8_eclass_to_string[eclass]);
+      snprintf (vtuname, BUFSIZ, "forest_hypercube_adapt_%s", t8_eclass_to_string[eclass]);
       t8_forest_write_vtk (forest_partition, vtuname);
       t8_debugf ("Output to %s\n", vtuname);
     }
@@ -165,18 +151,18 @@ t8_time_refine (int start_level, int end_level, int create_forest, int cube,
 int
 main (int argc, char **argv)
 {
-  int                 mpiret;
-  sc_options_t       *opt;
-  char                usage[BUFSIZ];
-  char                help[BUFSIZ];
-  int                 create_forest;
-  int                 start_level = 0, end_level = 1, cube = 0, adapt =
-    0, do_balance = 0, eclass_int;
-  int                 parsed, helpme;
-  int                 sreturnA, sreturnB;
+  int mpiret;
+  sc_options_t *opt;
+  char usage[BUFSIZ];
+  char help[BUFSIZ];
+  int create_forest;
+  int start_level = 0, end_level = 1, cube = 0, adapt = 0, do_balance = 0, eclass_int;
+  int parsed, helpme;
+  int sreturnA, sreturnB;
 
   /* brief help message */
-  sreturnA = snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS>\n\t%s -h\t"
+  sreturnA = snprintf (usage, BUFSIZ,
+                       "Usage:\t%s <OPTIONS>\n\t%s -h\t"
                        "for a brief overview of all options.",
                        basename (argv[0]), basename (argv[0]));
 
@@ -193,9 +179,7 @@ main (int argc, char **argv)
     /* The usage string or help message was truncated */
     /* Note: gcc >= 7.1 prints a warning if we 
      * do not check the return value of snprintf. */
-    t8_debugf
-      ("Warning: Truncated usage string and help message to '%s' and '%s'\n",
-       usage, help);
+    t8_debugf ("Warning: Truncated usage string and help message to '%s' and '%s'\n", usage, help);
   }
 
   mpiret = sc_MPI_Init (&argc, &argv);
@@ -206,28 +190,20 @@ main (int argc, char **argv)
 
   /* initialize command line argument parser */
   opt = sc_options_new (argv[0]);
-  sc_options_add_switch (opt, 'h', "help", &helpme,
-                         "Display a short help message.");
-  sc_options_add_int (opt, 's', "slevel", &start_level, 0,
-                      "initial refine level");
+  sc_options_add_switch (opt, 'h', "help", &helpme, "Display a short help message.");
+  sc_options_add_int (opt, 's', "slevel", &start_level, 0, "initial refine level");
   sc_options_add_int (opt, 'f', "flevel", &end_level, 0,
                       "Final refine level: greater or equal to initial refine level");
-  sc_options_add_int (opt, 'a', "adapt", &adapt, 0,
-                      "adapt = 1 -> adaptive refining is used");
-  sc_options_add_switch (opt, 'b', "balance", &do_balance,
-                         "Establish a 2:1 balance in the forest.");
-  sc_options_add_int (opt, 'c', "cube", &cube, 0,
-                      "cube = 1 -> use the hypercube mesh and visual output.");
+  sc_options_add_int (opt, 'a', "adapt", &adapt, 0, "adapt = 1 -> adaptive refining is used");
+  sc_options_add_switch (opt, 'b', "balance", &do_balance, "Establish a 2:1 balance in the forest.");
+  sc_options_add_int (opt, 'c', "cube", &cube, 0, "cube = 1 -> use the hypercube mesh and visual output.");
   sc_options_add_int (opt, 'e', "elements", &eclass_int, 6,
-                      "This option specifies"
-                      " the type of elements to use.\n"
+                      "This option specifies the type of elements to use.\n"
                       "\t\t5 - tetrahedron\n\t\t6 - prism");
 
-  parsed =
-    sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
+  parsed = sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (end_level < start_level) {
-    t8_debugf
-      ("Wrong usage of end and start level, end level set to start level + 1\n");
+    t8_debugf ("Wrong usage of end and start level, end level set to start level + 1\n");
     end_level = start_level;
   }
   if (end_level == start_level) {
@@ -239,11 +215,9 @@ main (int argc, char **argv)
     t8_global_productionf ("%s\n", help);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-  else if (parsed >= 0 && 0 <= start_level && start_level <= end_level
-           && (eclass_int == 5 || eclass_int == 6)) {
+  else if (parsed >= 0 && 0 <= start_level && start_level <= end_level && (eclass_int == 5 || eclass_int == 6)) {
     create_forest = 1;
-    t8_time_refine (start_level, end_level, create_forest, cube, adapt,
-                    do_balance, (t8_eclass_t) eclass_int);
+    t8_time_refine (start_level, end_level, create_forest, cube, adapt, do_balance, (t8_eclass_t) eclass_int);
   }
   else {
     /* wrong usage */

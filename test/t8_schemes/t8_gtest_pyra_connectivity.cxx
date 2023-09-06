@@ -35,16 +35,15 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  */
 TEST (pyramid_connectivity, cid_type_to_parenttype_check)
 {
-  int                 cid = 0;
-  t8_dpyramid_type_t  parent_type;
-  t8_dpyramid_type_t  pyra_parent_type;
-  t8_dpyramid_type_t  type;
+  int cid = 0;
+  t8_dpyramid_type_t parent_type;
+  t8_dpyramid_type_t pyra_parent_type;
+  t8_dpyramid_type_t type;
   /* iterate over all pyramid-types */
-  for (type = T8_DPYRAMID_ROOT_TPYE; type <= T8_DPYRAMID_SECOND_TYPE; type++) {
+  for (type = T8_DPYRAMID_ROOT_TYPE; type <= T8_DPYRAMID_SECOND_TYPE; type++) {
     /* iterate over all cube-ids */
     for (cid = 0; cid < 8; cid++) {
-      pyra_parent_type =
-        t8_dpyramid_type_cid_to_parenttype[type - T8_DPYRAMID_ROOT_TPYE][cid];
+      pyra_parent_type = t8_dpyramid_type_cid_to_parenttype[type - T8_DPYRAMID_ROOT_TYPE][cid];
       parent_type = t8_dpyramid_cid_type_to_parenttype[cid][type];
       EXPECT_EQ (parent_type, pyra_parent_type);
     }
@@ -59,36 +58,30 @@ TEST (pyramid_connectivity, cid_type_to_parenttype_check)
  */
 TEST (pyramid_connectivity, cid_type_parenttype)
 {
-  int                 cid;      /* The cube-ids of the children */
-  t8_dpyramid_type_t  type;     /* The types of the children */
-  t8_dpyramid_type_t  check_type;
-  t8_locidx_t         max_Iloc;
+  int cid;                 /* The cube-ids of the children */
+  t8_dpyramid_type_t type; /* The types of the children */
+  t8_dpyramid_type_t check_type;
+  t8_locidx_t max_Iloc;
 
-  for (t8_dpyramid_type_t p_type = 0; p_type <= T8_DPYRAMID_SECOND_TYPE;
-       p_type++) {
+  for (t8_dpyramid_type_t p_type = 0; p_type <= T8_DPYRAMID_SECOND_TYPE; p_type++) {
     /* Number of children depends on the parent-type */
-    max_Iloc =
-      p_type <
-      T8_DPYRAMID_ROOT_TPYE ? T8_DTET_CHILDREN : T8_DPYRAMID_CHILDREN;
+    max_Iloc = p_type < T8_DPYRAMID_ROOT_TYPE ? T8_DTET_CHILDREN : T8_DPYRAMID_CHILDREN;
     for (t8_locidx_t Iloc = 0; Iloc < max_Iloc; Iloc++) {
       type = t8_dpyramid_parenttype_Iloc_to_type[p_type][Iloc];
       cid = t8_dpyramid_parenttype_Iloc_to_cid[p_type][Iloc];
       /*Look-up of parent-type depends on the parent-type and the type of the element itself */
-      if (p_type < T8_DPYRAMID_ROOT_TPYE) {
+      if (p_type < T8_DPYRAMID_ROOT_TYPE) {
         check_type = t8_dpyramid_cid_type_to_parenttype[cid][type];
       }
       else {
-        if (type < T8_DPYRAMID_ROOT_TPYE) {
+        if (type < T8_DPYRAMID_ROOT_TYPE) {
           check_type = t8_dtet_type_cid_to_pyramid_parenttype[type][cid];
         }
         else {
-          check_type =
-            t8_dpyramid_type_cid_to_parenttype[type -
-                                               T8_DPYRAMID_FIRST_TYPE][cid];
+          check_type = t8_dpyramid_type_cid_to_parenttype[type - T8_DPYRAMID_FIRST_TYPE][cid];
         }
       }
       EXPECT_EQ (check_type, p_type);
     }
   }
-
 }

@@ -35,39 +35,39 @@ T8_EXTERN_C_BEGIN ();
 #define T8_DTET_DIM (3)
 
 /** Store the type of parent for each (cube-id,type) combination. */
-extern const int    t8_dtet_cid_type_to_parenttype[8][6];
+extern const int t8_dtet_cid_type_to_parenttype[8][6];
 
 /** Store the type of child for each (type,child number) combination,
   * where child number is the number in Bey order. */
-extern const int    t8_dtet_type_of_child[6][8];
+extern const int t8_dtet_type_of_child[6][8];
 
 /** Store the type of child for each (type,child number) combination,
   * where child number is the number in Morton order. */
-extern const int    t8_dtet_type_of_child_morton[6][8];
+extern const int t8_dtet_type_of_child_morton[6][8];
 
 /** Store the Bey child number for each (Parent type,Morton child number) combination. */
-extern const int    t8_dtet_index_to_bey_number[6][8];
+extern const int t8_dtet_index_to_bey_number[6][8];
 
 /** The anchor node of a child of a tetrahedron T is the convex combination
  *  of T's anchor node x_0 and another node x_i of T.
  *  This array gives the index i in dependence of the Bey
  *  child id. */
-extern const int    t8_dtet_beyid_to_vertex[8];
+extern const int t8_dtet_beyid_to_vertex[8];
 
 /** Store the Bey child number for each (type,cube-id) combination. */
-extern const int    t8_dtet_type_cid_to_beyid[6][8];
+extern const int t8_dtet_type_cid_to_beyid[6][8];
 
 /** Store the local index for each (parenttype,Bey child number) combination. */
-extern const int    t8_dtet_parenttype_beyid_to_Iloc[6][8];
+extern const int t8_dtet_parenttype_beyid_to_Iloc[6][8];
 
 /** Store the local index for each (type,cube-id) combination. */
-extern const int    t8_dtet_type_cid_to_Iloc[6][8];
+extern const int t8_dtet_type_cid_to_Iloc[6][8];
 
 /** Store the type for each (parenttype,local Index) combination. */
-extern const int    t8_dtet_parenttype_Iloc_to_type[6][8];
+extern const int t8_dtet_parenttype_Iloc_to_type[6][8];
 
 /** Store the cube-id for each (parenttype,local Index) combination. */
-extern const int    t8_dtet_parenttype_Iloc_to_cid[6][8];
+extern const int t8_dtet_parenttype_Iloc_to_cid[6][8];
 
 /** Store for each (type, face_index) the combination (category, type)
  *  of the respective boundary triangle.
@@ -76,7 +76,7 @@ extern const int    t8_dtet_parenttype_Iloc_to_cid[6][8];
  * from the parent. \see t8_default_scheme_tet_c::t8_element_boundary.
  * Invalid inpute values are represented by -1.
  */
-extern const int    t8_dtet_type_face_to_boundary[6][4][2];
+extern const int t8_dtet_type_face_to_boundary[6][4][2];
 
 /** Store for each (type, face_index) the child_ids of the children of a tet of
  * the given type that share the given face.
@@ -84,14 +84,14 @@ extern const int    t8_dtet_type_face_to_boundary[6][4][2];
  * a subface of face 3 of this tetrahedron.
  * The order of the children is given by the 2-dimensional TM-order on the face.
  */
-extern const int    t8_dtet_face_child_id_by_type[6][4][4];
+extern const int t8_dtet_face_child_id_by_type[6][4][4];
 
 /** Store the indices of the corner of each face of a tetrahedron.
  * face_corner[f][0] is always the lowest corner index of that face.
  * The other 2 corner are given in counterclockwise order as seen from
  * outside of the tet.
  */
-extern const int    t8_dtet_face_corner[4][3];
+extern const int t8_dtet_face_corner[4][3];
 
 /** For each combination parent_type, type with parent_type != type,
  * provide the face number of the face of a tet that lies within a face of
@@ -106,7 +106,7 @@ extern const int    t8_dtet_face_corner[4][3];
  * We also store -1 for the parent_type = type combination.
  * \see t8_dtet_face_parent_face
  */
-extern const int    t8_dtet_parent_type_type_to_face[6][6];
+extern const int t8_dtet_parent_type_type_to_face[6][6];
 T8_EXTERN_C_END ();
 
 #endif /* T8_DTET_CONNECTIVITY_H */
