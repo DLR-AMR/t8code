@@ -43,19 +43,6 @@
 #include <Geom_Curve.hxx>
 #include <Geom_Surface.hxx>
 
-#endif /* T8_WITH_OCC */
-
-/** The vertices of each edge of a hexahedron. Used in the occ geometry. */
-extern const int t8_edge_vertex_to_tree_vertex[T8_ECLASS_MAX_EDGES][2];
-
-/** The faces connected to each edge. */
-extern const int t8_edge_to_face[T8_ECLASS_MAX_EDGES][2];
-
-/** The edges of a face to the edges of a tree */
-extern const int t8_face_edge_to_tree_edge[T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_EDGES_2D];
-
-#if T8_WITH_OCC
-
 /**
  * Definition of an occ geometry function.
  * This function maps reference coordinates to physical
