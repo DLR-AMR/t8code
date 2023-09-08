@@ -1586,7 +1586,7 @@ t8_dpyramid_compute_reference_coords (const t8_dpyramid_t *elem, const double *r
     }
     for (coord = 0; coord < num_coords; ++coord) {
       const size_t offset = coord * 3;
-      /*scale the coordinates onto the reference cube */
+      /* Scale the coordinates onto the reference cube */
       out_coords[offset + 0] /= (double) T8_DPYRAMID_ROOT_LEN;
       out_coords[offset + 1] /= (double) T8_DPYRAMID_ROOT_LEN;
       out_coords[offset + 2] /= (double) T8_DPYRAMID_ROOT_LEN;
