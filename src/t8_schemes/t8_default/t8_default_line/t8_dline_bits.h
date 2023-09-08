@@ -250,7 +250,7 @@ t8_dline_vertex_ref_coords (const t8_dline_t *elem, const int vertex, double coo
 /** Convert a point in the reference space of a line element to a point in the
  *  reference space of the tree (level 0) embedded in [0,1]^1.
  * \param [in]  elem       Input line.
- * \param [in]  ref_coords The reference coordinate on the line [0, 1]^1
+ * \param [in]  ref_coords The reference coordinate on the line \f$ [0,1]^1 \f$
  * \param [out] out_coords An array of 1 double that
  * 		                     will be filled with the reference coordinates
  *                         of the point on the line.

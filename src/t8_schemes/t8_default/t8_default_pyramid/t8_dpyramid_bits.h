@@ -337,7 +337,7 @@ t8_dpyramid_shape (const t8_dpyramid_t *p);
 void
 t8_dpyramid_successor (const t8_dpyramid_t *elem, t8_dpyramid_t *s, const int level);
 
-/** Compute the reference coordinates of a vertex of a pyramid when the tree (level 0 triangle) is embedded in [0,1]^3.
+/** Compute the reference coordinates of a vertex of a pyramid when the tree (level 0 triangle) is embedded in \f$ [0,1]^3 \f$.
  * \param [in] elem    Input pyramid.
  * \param [in] vertex The number of the vertex.
  * \param [out] coordinates An array of 3 double that will be filled with the reference coordinates of the vertex.
@@ -346,11 +346,12 @@ void
 t8_dpyramid_vertex_reference_coords (const t8_dpyramid_t *elem, const int vertex, double coords[]);
 
 /** Convert a point in the reference space of a pyramid element to a point in
- *  the reference space of the tree (level 0) embedded in [0,1]^3.
+ *  the reference space of the tree (level 0) embedded in \f$ [0,1]^3 \f$.
  * \param [in]  elem       Input pyramid.
- * \param [in]  ref_coords The reference coordinates inside the pyramid element [0,1]^3
- * \param [out] out_coords An array of 3 doubles that will be filled with the reference coordinates in the tree of 
- *                          the pyramid.
+ * \param [in]  ref_coords The reference coordinates inside the
+ *                         pyramid element \f$ [0,1]^3 \f$
+ * \param [out] out_coords An array of 3 doubles that will be filled with the
+ *                         reference coordinates in the tree of the pyramid.
  */
 void
 t8_dpyramid_compute_reference_coords (const t8_dpyramid_t *elem, const double *ref_coords, double *out_coords);

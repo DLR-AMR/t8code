@@ -90,8 +90,8 @@ class t8_geometry_sincos: public t8_geometry {
    * models the rectangle [0,2] x [0,1].
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^2.
-   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   * \param [in]  ref_coords Array of \a dimension many entries, specifying a point in \f$ [0,1]^2 \f$.
+   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords.
    */
   void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double out_coords[3]) const
@@ -122,7 +122,7 @@ class t8_geometry_sincos: public t8_geometry {
   }
 };
 
-/** This geometry maps the unit square [0,1]^2 to the moebius strip.
+/** This geometry maps the unit square \f$ [0,1]^2 \f$ to the moebius strip.
  * The unit square can be modelled with any cmesh (consisting of any number of trees).
  * 
  * It inherits from the w_vertices geometry since we use the tree's vertex coordinates.
@@ -136,10 +136,10 @@ class t8_geometry_moebius: public t8_geometry_with_vertices {
   }
 
   /**
-   * Map a point in a point in [0,1]^2 to the moebius band.
+   * Map a point in a point in \f$ [0,1]^2 \f$ to the moebius band.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords Array of \a dimension many entries, specifying a point in [0,1]^2.
+   * \param [in]  ref_coords Array of \a dimension many entries, specifying a point in \f$ [0,1]^2 \f$.
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords.
    */
   void
@@ -189,7 +189,7 @@ class t8_geometry_cylinder: public t8_geometry {
    * Map a reference point in the unit square to a cylinder.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords Array of \a dimension many entries, specifying a point in [0,1]^dimension.
+   * \param [in]  ref_coords Array of \a dimension many entries, specifying a point in \f$ [0,1]^\mathrm{dim} \f$.
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords.
    */
   void
@@ -217,7 +217,7 @@ class t8_geometry_cylinder: public t8_geometry {
 };
 
 /**
- * This geometry map a unit square [0,1]^2 cmesh to a circle with midpoint 0
+ * This geometry map a unit square \f$ [0,1]^2 \f$ cmesh to a circle with midpoint 0
  * and radius 1.
  * This geometry massively distorts elements near the boundary and should not be
  * used for actual numerical experiments.
@@ -235,7 +235,7 @@ class t8_geometry_circle: public t8_geometry_with_vertices {
    * Map a reference point in the unit square to a circle.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords Array of \a dimension many entries, specifying a point in [0,1]^2.
+   * \param [in]  ref_coords Array of \a dimension many entries, specifying a point in \f$ [0,1]^2 \f$.
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords.
    */
   void
@@ -269,7 +269,7 @@ class t8_geometry_circle: public t8_geometry_with_vertices {
   /* Load tree data is inherited from vertices geometry. */
 };
 
-/* This geometry rotates [0,1]^2 with time around the origin.
+/* This geometry rotates \f$ [0,1]^2 \f$ with time around the origin.
  * The rotation direction is reversed after 2 seconds.
  * Additionally, the z coordinate is modifyied according to the
  * sincos function and multiplied with the current time.
@@ -290,7 +290,7 @@ class t8_geometry_moving: public t8_geometry {
    * Map a reference point in the unit square to a square distorted with time.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords Array of \a dimension many entries, specifying a point in [0,1]^2.
+   * \param [in]  ref_coords Array of \a dimension many entries, specifying a point in \f$ [0,1]^2 \f$.
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords.
    */
   void
@@ -336,7 +336,7 @@ class t8_geometry_moving: public t8_geometry {
   const double *ptime; /* Time pointer to outside time variable */
 };
 
-/** Map the unit cube [0,1]^3 onto a cube that is distorted
+/** Map the unit cube \f$ [0,1]^3 \f$ onto a cube that is distorted
  * in z direction.
  * Can be used with 1 tree unit cube cmesh only.
  */
@@ -350,7 +350,7 @@ class t8_geometry_cube_zdistorted: public t8_geometry {
    * Map a reference point in the unit cube to a cube distorted in the z axis.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords Array of \a dimension many entries, specifying a point in [0,1]^3.
+   * \param [in]  ref_coords Array of \a dimension many entries, specifying a point in \f$ [0,1]^3 \f$.
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords.
    */
   void
@@ -699,7 +699,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     };
     t8_cmesh_set_tree_vertices (cmesh, 0, vertices0, 8);
 
-    /* The valid parameter range for bspline surfaces is [0, 1]^2. We defined the bspline surface in such a way, 
+    /* The valid parameter range for bspline surfaces is [0,1]^2. We defined the bspline surface in such a way, 
        * that parameters 0, 0.5 and 1 resemble the vertices of the connected surface. */
     double parameters0[8] = { 0, 0, 0.5, 0, 0, 1, 0.5, 1 };
 
@@ -723,8 +723,8 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     };
     t8_cmesh_set_tree_vertices (cmesh, 1, vertices1, 8);
 
-    /* The valid parameter range for bspline surfaces is [0, 1]^2. We defined the bspline surface in such a way, 
-       *  that parameters 0, 0.5 and 1 resemble the vertices of the connected surface. */
+    /* The valid parameter range for bspline surfaces is [0,1]^2. We defined the bspline surface in such a way,
+     * that parameters 0, 0.5 and 1 resemble the vertices of the connected surface. */
     double parameters1[8] = { 0.5, 0, 1, 0, 0.5, 1, 1, 1 };
 
     /* Give tree 1 information about its surface and the parameters of the vertices. 
