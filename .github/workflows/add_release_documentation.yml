@@ -55,7 +55,7 @@ jobs:
 #
     - name: checkout
       if: ${{ env.MINOR_RELEASE == 'true' }}
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         path: t8code
 
@@ -108,7 +108,7 @@ jobs:
 # upload documentation
     - name: Checkout t8code-website repo
       if: ${{ env.MINOR_RELEASE == 'true' }}
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         ref: ${{ github.head_ref }}
         fetch-depth: 0
