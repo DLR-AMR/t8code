@@ -91,9 +91,9 @@ jobs:
     - name: check_diff
       run: |
         cd t8code-website
-        git diff --quiet || echo "::set-output name=commit_new_doc::true"
+        git diff --quiet || echo "{COMMIT_NEW_DOC}={true}" >> $GITHUB_OUTPUT
     - name: Commit and push files
-      if: steps.check_diff.outputs.commit_new_doc == 'true'
+      if: env.COMMIT_NEW_DOC == 'true'
       run: |
         cd t8code-website
         git config --local user.email "t8ddy.bot@gmail.com"
