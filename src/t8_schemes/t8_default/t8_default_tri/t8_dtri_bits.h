@@ -83,16 +83,23 @@ t8_dtri_compute_coords (const t8_dtri_t *elem, const int vertex, t8_dtri_coord_t
 void
 t8_dtri_compute_vertex_ref_coords (const t8_dtri_t *elem, const int vertex, double coordinates[2]);
 
-/** Convert a point in the reference space of a triangle element to a point in
- *  the reference space of the tree (level 0) embedded in \f$ [0,1]^2 \f$.
+/** Convert points in the reference space of a tri element to points in the
+ *  reference space of the tree (level 0) embedded in \f$ [0,1]^2 \f$.
  * \param [in]  elem       Input triangle.
- * \param [in]  ref_coords The reference coordinates inside the
- *                         triangle element \f$ [0,1]^2 \f$
- * \param [out] out_coords An array of 2 doubles that will be filled with the
- *                         reference coordinates in the tree of the triangle.
+ * \param [in]  ref_coords The reference coordinates in the triangle
+ *                         (\a num_coords times \f$ [0,1]^2 \f$)
+ * \param [in]  num_coords Number of coordinates to evaluate
+ * \param [in]  skip_coords Only used for batch computation of prisms.
+ *                          In all other cases 0.
+ *                          Skip coordinates in the \a ref_coords and
+ *                          \a out_coords array.
+ * \param [out] out_coords An array of \a num_coords x 2 x double that
+ * 		                     will be filled with the reference coordinates
+ *                         of the points on the triangle.
  */
 void
-t8_dtri_compute_reference_coords (const t8_dtri_t *elem, const double *ref_coords, double out_coords[2]);
+t8_dtri_compute_reference_coords (const t8_dtri_t *elem, const double *ref_coords, const size_t num_coords,
+                                  const size_t skip_coords, double *out_coords);
 
 /** Compute the coordinates of the four vertices of a triangle.
  * \param [in] elem         Input triangle.

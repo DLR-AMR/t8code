@@ -32,16 +32,19 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/** Convert a point in the reference space of a hex element to a point in the
+/** Convert points in the reference space of a hex element to points in the
  *  reference space of the tree (level 0) embedded in \f$ [0,1]^3 \f$.
  * \param [in]  elem       Input hex.
- * \param [in]  ref_coords The reference coordinate on the hex \f$ [0,1]^3 \f$
- * \param [out] out_coords An array of 1 double that
+ * \param [in]  ref_coords The reference coordinates in the hex
+ *                         (\a num_coords times \f$ [0,1]^3 \f$)
+ * \param [in]  num_coords Number of coordinates to evaluate
+ * \param [out] out_coords An array of \a num_coords x 3 x double that
  * 		                     will be filled with the reference coordinates
- *                         of the point on the hex.
+ *                         of the points on the hex.
  */
 void
-t8_dhex_compute_reference_coords (const t8_dhex_t *elem, const double *ref_coords, double *out_coords);
+t8_dhex_compute_reference_coords (const t8_dhex_t *elem, const double *ref_coords, const size_t num_coords,
+                                  double *out_coords);
 
 T8_EXTERN_C_END ();
 
