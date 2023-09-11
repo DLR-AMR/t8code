@@ -44,7 +44,7 @@ jobs:
 #
 # Setup and bootstrap
 #
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Install zlib
       run: sudo apt-get install libz-dev
     - name: Install doxygen
@@ -75,7 +75,7 @@ jobs:
 
 # upload documentation
     - name: Checkout t8code-website repo
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         ref: ${{ github.head_ref }}
         fetch-depth: 0
