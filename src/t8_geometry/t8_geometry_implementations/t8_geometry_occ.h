@@ -31,15 +31,6 @@
 #include <t8_geometry/t8_geometry.h>
 #include <t8_geometry/t8_geometry_with_vertices.h>
 
-/* The vertices of each edge of a hexahedron. Used in the occ geometry. */
-extern const int t8_edge_vertex_to_tree_vertex[T8_ECLASS_MAX_EDGES][2];
-
-/* The faces connected to each edge. */
-extern const int t8_edge_to_face[T8_ECLASS_MAX_EDGES][2];
-
-/* The edges connected to a face */
-extern const int t8_face_to_edge[T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_EDGES];
-
 /** This typedef holds virtual functions for a particular geometry.
  * We need it so that we can use t8_geometry_occ_c pointers in .c files
  * without them seeing the actual C++ code (and then not compiling)

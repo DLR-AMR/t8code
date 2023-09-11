@@ -1561,25 +1561,28 @@ t8_dpyramid_compute_reference_coords (const t8_dpyramid_t *elem, const double *r
   T8_ASSERT (t8_dpyramid_is_valid (elem));
   if (t8_dpyramid_shape (elem) == T8_ECLASS_PYRAMID) {
     const t8_dpyramid_coord_t length = T8_DPYRAMID_LEN (elem->pyramid.level);
-
-    for (size_t coord = 0; coord < num_coords; ++coord) {
+    size_t coord;
+    for (coord = 0; coord < num_coords; ++coord) {
       const size_t offset = coord * 3;
       out_coords[offset + 0] = elem->pyramid.x;
       out_coords[offset + 1] = elem->pyramid.y;
       out_coords[offset + 2] = elem->pyramid.z;
 
-      if (elem->pyramid.type == T8_DPYRAMID_FIRST_TYPE) {
-        out_coords[offset + 0] += ref_coords[offset + 0] * length;
-        out_coords[offset + 1] += ref_coords[offset + 1] * length;
-        out_coords[offset + 2] += ref_coords[offset + 2] * length;
+      out_coords[offset + 0] += ref_coords[offset + 0] * length;
+      out_coords[offset + 1] += ref_coords[offset + 1] * length;
+      out_coords[offset + 2] += ref_coords[offset + 2] * length;
+    }
+    if (elem->pyramid.type == T8_DPYRAMID_SECOND_TYPE) {
+      for (coord = 0; coord < num_coords; ++coord) {
+        const size_t offset = coord * 3;
+        out_coords[offset + 0] -= ref_coords[offset + 2] * length;
+        out_coords[offset + 1] -= ref_coords[offset + 2] * length;
+        out_coords[offset + 2] += (1 - 2 * ref_coords[offset + 2]) * length;
       }
-      else {
-        out_coords[offset + 0] += (ref_coords[offset + 0] - ref_coords[offset + 2]) * length;
-        out_coords[offset + 1] += (ref_coords[offset + 1] - ref_coords[offset + 2]) * length;
-        out_coords[offset + 2] += (1 - ref_coords[offset + 2]) * length;
-      }
-
-      /*scale the coordinates onto the reference cube */
+    }
+    for (coord = 0; coord < num_coords; ++coord) {
+      const size_t offset = coord * 3;
+      /* Scale the coordinates onto the reference cube */
       out_coords[offset + 0] /= (double) T8_DPYRAMID_ROOT_LEN;
       out_coords[offset + 1] /= (double) T8_DPYRAMID_ROOT_LEN;
       out_coords[offset + 2] /= (double) T8_DPYRAMID_ROOT_LEN;
