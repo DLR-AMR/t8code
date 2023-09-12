@@ -1582,10 +1582,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                   {
                     t8_global_errorf("Error: Node %i should lie on an edge which lies on a face, "
                                      "but the edge does not lie on that face.\n", edge_nodes[i_edge_node].index);
-                    t8_global_productionf("entity_dim_0: %d, entity_tag_0: %d\n", edge_nodes[0].entity_dim, edge_nodes[0].entity_tag);
-                    t8_global_productionf("entity_dim_1: %d, entity_tag_1: %d\n", edge_nodes[1].entity_dim, edge_nodes[1].entity_tag);
-                    t8_global_productionf("coords_0: [%f, %f, %f]\n", edge_nodes[0].coordinates[0], edge_nodes[0].coordinates[1], edge_nodes[0].coordinates[2]);
-                    t8_global_productionf("coords_1: [%f, %f, %f]\n", edge_nodes[1].coordinates[0], edge_nodes[1].coordinates[1], edge_nodes[1].coordinates[2]);
                     goto die_ele;
                   }
                 }
