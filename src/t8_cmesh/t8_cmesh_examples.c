@@ -22,9 +22,12 @@
 
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
+#include <t8_cmesh/t8_cmesh_helpers.h>
 #include <t8_cmesh/t8_cmesh_geometry.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_examples.h>
 #include <t8_vec.h>
+#include <t8_mat.h>
 #include <t8_eclass.h>
 
 /* TODO: In p4est a tree edge is joined with itself to denote a domain boundary.
@@ -833,9 +836,9 @@ t8_update_box_face_edges (const int dim, const double *box_corners, double *box_
   T8_ASSERT (-1 < face && face < t8_eclass_num_faces[eclass]);
   const int num_face_edges = eclass == T8_ECLASS_QUAD ? 1 : 4;
   for (int face_edge = 0; face_edge < num_face_edges; face_edge++) {
-    const int edge = t8_face_edge_to_tree_edge_n[eclass][face][face_edge];
-    const double *v_1 = box_corners + (t8_edge_vertex_to_tree_vertex_n[eclass][edge][0] * 3);
-    const double *v_2 = box_corners + (t8_edge_vertex_to_tree_vertex_n[eclass][edge][1] * 3);
+    const int edge = t8_face_edge_to_tree_edge[eclass][face][face_edge];
+    const double *v_1 = box_corners + (t8_edge_vertex_to_tree_vertex[eclass][edge][0] * 3);
+    const double *v_2 = box_corners + (t8_edge_vertex_to_tree_vertex[eclass][edge][1] * 3);
     /* Get the direction vector between v_1 and v_2 and store it in box_dir. */
     t8_vec_axpyz (v_1, v_2, box_dir + (edge * 3), -1.0);
     /* Get number of quads or hexs along current edge. */
@@ -2652,6 +2655,86 @@ t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees, const int set_attributes, cons
     t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
   }
 
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
+}
+
+t8_cmesh_t
+t8_cmesh_new_squared_disk (const double radius, sc_MPI_Comm comm)
+{
+  /* Initialization of the mesh */
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+
+  const double ri = 0.5 * radius;
+  const double ro = radius;
+
+  const double xi = ri / M_SQRT2;
+  const double yi = ri / M_SQRT2;
+
+  const double xo = ro / M_SQRT2;
+  const double yo = ro / M_SQRT2;
+
+  const int ntrees = 5; /* Number of cmesh elements resp. trees. */
+  const int nverts = 4; /* Number of vertices per cmesh element. */
+
+  /* Arrays for the face connectivity computations via vertices. */
+  double all_verts[ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM];
+  t8_eclass_t all_eclasses[ntrees];
+
+  t8_geometry_c *geometry = t8_geometry_squared_disk_new ();
+  t8_cmesh_register_geometry (cmesh, geometry);
+
+  /* Defitition of the tree class. */
+  for (int itree = 0; itree < ntrees; itree++) {
+    t8_cmesh_set_tree_class (cmesh, itree, T8_ECLASS_QUAD);
+    all_eclasses[itree] = T8_ECLASS_QUAD;
+  }
+
+  /* Central quad. */
+  {
+    const double vertices[4][3] = { { -xi, -yi, 0.0 }, { xi, -yi, 0.0 }, { -xi, yi, 0.0 }, { xi, yi, 0.0 } };
+
+    t8_cmesh_set_tree_vertices (cmesh, 0, (double *) vertices, 4);
+
+    /* itree = 0; */
+    for (int ivert = 0; ivert < nverts; ivert++) {
+      for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
+        all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, 0, ivert, icoord)]
+          = vertices[ivert][icoord];
+      }
+    }
+  }
+
+  /* Four quads framing the central quad. */
+  {
+    const double vertices[4][3] = { { -xi, yi, 0.0 }, { xi, yi, 0.0 }, { -xo, yo, 0.0 }, { xo, yo, 0.0 } };
+
+    for (int itree = 1; itree < ntrees; itree++) {
+      double rot_mat[3][3];
+      double rot_vertices[4][3];
+
+      t8_mat_init_zrot (rot_mat, (itree - 1) * 0.5 * M_PI);
+
+      for (int i = 0; i < 4; i++) {
+        t8_mat_mult_vec (rot_mat, &(vertices[i][0]), &(rot_vertices[i][0]));
+      }
+
+      t8_cmesh_set_tree_vertices (cmesh, itree, (double *) rot_vertices, 4);
+
+      for (int ivert = 0; ivert < nverts; ivert++) {
+        for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
+          all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree, ivert, icoord)]
+            = rot_vertices[ivert][icoord];
+        }
+      }
+    }
+  }
+
+  /* Face connectivity. */
+  t8_cmesh_set_join_by_vertices (cmesh, ntrees, all_eclasses, all_verts, NULL, 0);
+
+  /* Commit the mesh */
   t8_cmesh_commit (cmesh, comm);
   return cmesh;
 }
