@@ -41,15 +41,11 @@
 #include <TopoDS_Face.hxx>
 #include <Standard_Version.hxx>
 
-<<<<<<< HEAD const int t8_interpolation_coefficient_tet_edge[6] = { 0, 0, 0, 2, 2, 1 };
+const int t8_interpolation_coefficient_tet_edge[6] = { 0, 0, 0, 2, 2, 1 };
 
-  const int t8_face_ref_coords_tet[4][2]
-  = { { 2, 1 }, { 0, 1 }, { 0, 1 }, { 0, 2 } };
+const int t8_face_ref_coords_tet[4][2] = { { 2, 1 }, { 0, 1 }, { 0, 1 }, { 0, 2 } };
 
 t8_geometry_occ::t8_geometry_occ (int dim, const char *fileprefix, const char *name_in)
-=======
-t8_geometry_occ::t8_geometry_occ (int dim, const char *fileprefix, const char *name_in)
->>>>>>> upstream/main
 {
   T8_ASSERT (0 <= dim && dim <= 3);
 
@@ -347,13 +343,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh, t8_gloidx_t gt
         /* Calculate displacement between points on curve and point on linear curve.
          * Then scale it and add the scaled displacement to the result. */
         for (int dim = 0; dim < 3; ++dim) {
-<<<<<<< HEAD
           double displacement = pnt.Coord (dim + 1) - glob_intersection[dim];
           double scaled_displacement = displacement * (scaling_factor * scaling_factor);
-=======
-          double displacement = pnt.Coord (dim + 1) - glob_intersection[dim];
-          double scaled_displacement = displacement * pow (scaling_factor, 2);
->>>>>>> upstream/main
           out_coords[dim] += scaled_displacement;
         }
       }
@@ -552,7 +543,6 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
 }
 
 void
-<<<<<<< HEAD
 t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
                                            double out_coords[3]) const
 {
@@ -802,9 +792,6 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
 
 void
 t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-=======
-t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
->>>>>>> upstream/main
                                            double out_coords[3]) const
 {
   T8_ASSERT (active_tree_class == T8_ECLASS_HEX);
@@ -964,21 +951,11 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
             orthogonal_direction_of_edge_on_face = 1;
             break;
           }
-<<<<<<< HEAD
           /* Retrieve parameters of nodes on curve */
           const double *curve_parameters = (double *) t8_cmesh_get_attribute (
             cmesh, t8_get_package_id (),
             T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + t8_face_edge_to_tree_edge[T8_ECLASS_HEX][i_faces][i_face_edge],
             ltreeid);
-=======
-          /* Convert global tree id to local tree id, for receiving cmesh attributes. */
-          t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
-          /* Retrieve parameters of nodes und curve */
-          const double *curve_parameters = (double *) t8_cmesh_get_attribute (
-            cmesh, t8_get_package_id (),
-            T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + t8_face_edge_to_tree_edge[T8_ECLASS_HEX][i_faces][i_face_edge],
-            ltreeid);
->>>>>>> upstream/main
           T8_ASSERT (curve_parameters != NULL);
           /* Interpolate linearly between the parameters of the two nodes on the curve */
           t8_geom_linear_interpolation (&ref_coords[edge_direction], curve_parameters, 1, 1, &interpolated_curve_param);
@@ -1022,17 +999,10 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
             }
           }
           /* Convert the interpolated parameter of the curve into the corresponding parameters on the surface */
-<<<<<<< HEAD
           const int num_face_nodes = t8_eclass_num_vertices[t8_eclass_face_types[active_tree_class][i_faces]];
           t8_geometry_occ::t8_geom_edge_parameter_to_face_parameters (
             edges[t8_face_edge_to_tree_edge[T8_ECLASS_HEX][i_faces][i_face_edge]], faces[i_faces], num_face_nodes,
             interpolated_curve_param, surface_parameters, surface_parameters_from_curve);
-=======
-          const int num_face_nodes = t8_eclass_num_vertices[active_tree_class];
-          t8_geometry_occ::t8_geom_edge_parameter_to_face_parameters (
-            edges[t8_face_edge_to_tree_edge[T8_ECLASS_HEX][i_faces][i_face_edge]], faces[i_faces], num_face_nodes,
-            interpolated_curve_param, surface_parameters, surface_parameters_from_curve);
->>>>>>> upstream/main
 
           /* Calculate the displacement between the interpolated parameters on the surface 
            * and the parameters on the surface converted from the parameter of the curve
