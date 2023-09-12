@@ -24,8 +24,7 @@
 #include <p8est_bits.h>
 
 void
-t8_dhex_compute_reference_coords (const t8_dhex_t * elem,
-                                  const double *ref_coords,
+t8_dhex_compute_reference_coords (const t8_dhex_t *elem, const double *ref_coords, const size_t num_coords,
                                   double *out_coords)
 {
   const p8est_quadrant_t *q1 = (const p8est_quadrant_t *) elem;
@@ -33,15 +32,18 @@ t8_dhex_compute_reference_coords (const t8_dhex_t * elem,
   /* Get the length of the quadrant */
   const p4est_qcoord_t len = P8EST_QUADRANT_LEN (q1->level);
 
-  /* Compute the x, y and z coordinates of the point depending on the
-   * reference coordinates */
-  out_coords[0] = q1->x + ref_coords[0] * len;
-  out_coords[1] = q1->y + ref_coords[1] * len;
-  out_coords[2] = q1->z + ref_coords[2] * len;
+  for (size_t coord = 0; coord < num_coords; ++coord) {
+    const size_t offset = 3 * coord;
+    /* Compute the x, y and z coordinates of the point depending on the
+     * reference coordinates */
+    out_coords[offset + 0] = q1->x + ref_coords[offset + 0] * len;
+    out_coords[offset + 1] = q1->y + ref_coords[offset + 1] * len;
+    out_coords[offset + 2] = q1->z + ref_coords[offset + 2] * len;
 
-  /* We divide the integer coordinates by the root length of the hex
-   * to obtain the reference coordinates. */
-  out_coords[0] /= (double) P8EST_ROOT_LEN;
-  out_coords[1] /= (double) P8EST_ROOT_LEN;
-  out_coords[2] /= (double) P8EST_ROOT_LEN;
+    /* We divide the integer coordinates by the root length of the hex
+     * to obtain the reference coordinates. */
+    out_coords[offset + 0] /= (double) P8EST_ROOT_LEN;
+    out_coords[offset + 1] /= (double) P8EST_ROOT_LEN;
+    out_coords[offset + 2] /= (double) P8EST_ROOT_LEN;
+  }
 }

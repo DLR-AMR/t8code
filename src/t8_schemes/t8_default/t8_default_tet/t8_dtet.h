@@ -61,28 +61,27 @@
 #define T8_DTRI_ROOT_BY_DTET_ROOT (1 << (T8_DTRI_MAXLEVEL - T8_DTET_MAXLEVEL))
 
 /** The type of a tetrahedron designates its position relative to the surrounding cube. */
-typedef int8_t      t8_dtet_type_t;
+typedef int8_t t8_dtet_type_t;
 
 /** The coordinates of a tetrahedron are integers relative to the maximum refinement. */
-typedef int32_t     t8_dtet_coord_t;
+typedef int32_t t8_dtet_coord_t;
 
 /** This data type stores a tetrahedron. */
 typedef struct t8_dtet
 {
 #ifdef T8_ENABLE_DEBUG
   /* TODO: enum to int8??? #defines ?? */
-  int8_t              eclass_int8;
+  int8_t eclass_int8;
 #endif
   /** The refinement level of the tetrahedron relative to the root at level 0. */
-  int8_t              level;
+  int8_t level;
 
   /** Type of the tetrahedron in 0, ..., 5. */
-  t8_dtet_type_t      type;
+  t8_dtet_type_t type;
 
-  t8_dtet_coord_t     x;        /**< The x integer coordinate of the anchor node. */
-  t8_dtet_coord_t     y;        /**< The y integer coordinate of the anchor node. */
-  t8_dtet_coord_t     z;        /**< The z integer coordinate of the anchor node. */
-}
-t8_dtet_t;
+  t8_dtet_coord_t x; /**< The x integer coordinate of the anchor node. */
+  t8_dtet_coord_t y; /**< The y integer coordinate of the anchor node. */
+  t8_dtet_coord_t z; /**< The z integer coordinate of the anchor node. */
+} t8_dtet_t;
 
 #endif /* T8_DTET_H */

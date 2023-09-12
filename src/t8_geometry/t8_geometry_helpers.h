@@ -38,11 +38,9 @@ T8_EXTERN_C_BEGIN ();
  * \param [in]    ref_coords     The reference coordinates of the point.
  * \param [out]   out_coords     The output coordinates.
  */
-void                t8_geom_compute_linear_geometry (t8_eclass_t tree_class,
-                                                     const double
-                                                     *tree_vertices,
-                                                     const double *ref_coords,
-                                                     double out_coords[3]);
+void
+t8_geom_compute_linear_geometry (t8_eclass_t tree_class, const double *tree_vertices, const double *ref_coords,
+                                 double out_coords[3]);
 
 /** Compute the linear, axis-aligned geometry of a tree at a given reference coordinate.
  *  This function is faster than \ref t8_geom_compute_linear_geometry, but only works
@@ -52,15 +50,9 @@ void                t8_geom_compute_linear_geometry (t8_eclass_t tree_class,
  * \param [in]    ref_coords     The reference coordinates of the point.
  * \param [out]   out_coords     The output coordinates.
  */
-void                t8_geom_compute_linear_axis_aligned_geometry (t8_eclass_t
-                                                                  tree_class,
-                                                                  const double
-                                                                  *tree_vertices,
-                                                                  const double
-                                                                  *ref_coords,
-                                                                  double
-                                                                  out_coords
-                                                                  [3]);
+void
+t8_geom_compute_linear_axis_aligned_geometry (t8_eclass_t tree_class, const double *tree_vertices,
+                                              const double *ref_coords, double out_coords[3]);
 
 /** Interpolates linearly between 2, bilinearly between 4 or trilineraly between 8 points.
  * \param [in]    coefficients        An array of size at least dim giving the coefficients used for the interpolation
@@ -70,11 +62,9 @@ void                t8_geom_compute_linear_axis_aligned_geometry (t8_eclass_t
  * \param [in]    interpolation_dim   The dimension of the interpolation (1 for linear, 2 for bilinear, 3 for trilinear)
  * \param [out]   evaluated_function  An array of size \a corner_value_dim, on output the result of the interpolation.
  */
-void                t8_geom_linear_interpolation (const double *coefficients,
-                                                  const double *corner_values,
-                                                  int corner_value_dim,
-                                                  int interpolation_dim,
-                                                  double *evaluated_function);
+void
+t8_geom_linear_interpolation (const double *coefficients, const double *corner_values, int corner_value_dim,
+                              int interpolation_dim, double *evaluated_function);
 
 /** Triangular interpolation between 3 points (triangle) or 4 points (tetrahedron) using barycentric coordinates.
  * \param [in]    coefficients        An array of size \a interpolation_dim giving the coefficients used for the interpolation
@@ -86,14 +76,9 @@ void                t8_geom_linear_interpolation (const double *coefficients,
  * \param [in]    interpolation_dim   The dimension of the interpolation (2 for triangle, 3 for tetrahedron)
  * \param [out]   evaluated_function  An array of size \a corner_value_dim, on output the result of the interpolation.
  */
-void                t8_geom_triangular_interpolation (const double
-                                                      *coefficients,
-                                                      const double
-                                                      *corner_values,
-                                                      int corner_value_dim,
-                                                      int interpolation_dim,
-                                                      double
-                                                      *evaluated_function);
+void
+t8_geom_triangular_interpolation (const double *coefficients, const double *corner_values, int corner_value_dim,
+                                  int interpolation_dim, double *evaluated_function);
 
 /** Copies the vertex coordinates of a tree face in zorder into a separate array.
  * \param [in]    tree_class     The eclass of the tree.
@@ -102,10 +87,9 @@ void                t8_geom_triangular_interpolation (const double
  * \param [in]    dim            The dimension of the face vertices.
  * \param [out]   face_vertices  Coordinates of the face vertices in zorder.
  */
-void                t8_geom_get_face_vertices (t8_eclass_t tree_class,
-                                               const double *tree_vertices,
-                                               int face_index, int dim,
-                                               double *face_vertices);
+void
+t8_geom_get_face_vertices (t8_eclass_t tree_class, const double *tree_vertices, int face_index, int dim,
+                           double *face_vertices);
 
 /** Copies the vertex coordinates of a tree edge in zorder into a separate array.
  * \param [in]    tree_class     The eclass of the tree.
@@ -114,10 +98,9 @@ void                t8_geom_get_face_vertices (t8_eclass_t tree_class,
  * \param [in]    dim            The dimension of the edge vertices.
  * \param [out]   edge_vertices  Coordinates of the edge vertices in zorder.
  */
-void                t8_geom_get_edge_vertices (t8_eclass_t tree_class,
-                                               const double *tree_vertices,
-                                               int edge_index, int dim,
-                                               double *edge_vertices);
+void
+t8_geom_get_edge_vertices (t8_eclass_t tree_class, const double *tree_vertices, int edge_index, int dim,
+                           double *edge_vertices);
 
 /** Calculates a point of intersection in a triangular reference space. The intersection is the extension
  * of a straight line passing through a reference point and the opposite vertex of the edge.
@@ -130,9 +113,8 @@ void                t8_geom_get_edge_vertices (t8_eclass_t tree_class,
  * \param [in]    ref_coords        Array containing the coordinates of the reference point.
  * \param [out]   ref_intersection  Coordinates of the intersection point.
  */
-void                t8_geom_get_ref_intersection (int edge_index,
-                                                  const double *ref_coords,
-                                                  double ref_intersection[2]);
+void
+t8_geom_get_ref_intersection (int edge_index, const double *ref_coords, double ref_intersection[2]);
 
 /** Calculates the scaling factor for edge displacement along a triangular tree face
  *  depending on the position of the global reference point.
@@ -144,13 +126,9 @@ void                t8_geom_get_ref_intersection (int edge_index,
  * \param [in]    glob_ref_point      Array containing the coordinates of the reference point
  *                                    mapped into the global space.
  */
-double              t8_geom_get_triangle_scaling_factor (int edge_index,
-                                                         const double
-                                                         *tree_vertices,
-                                                         const double
-                                                         *glob_intersection,
-                                                         const double
-                                                         *glob_ref_point);
+double
+t8_geom_get_triangle_scaling_factor (int edge_index, const double *tree_vertices, const double *glob_intersection,
+                                     const double *glob_ref_point);
 
 /** Calculates the scaling factor for the displacement of an edge over a face of a tetrahedral element.
  * \param [in]         edge_index          Index of the edge, whose displacement should be scaled.
@@ -159,12 +137,8 @@ double              t8_geom_get_triangle_scaling_factor (int edge_index,
  * \return                                 The scaling factor of the edge displacement on the face
  *                                         at the point of the reference coordinates.
  */
-double              t8_geom_get_scaling_factor_of_edge_on_face (int
-                                                                edge_index,
-                                                                int
-                                                                face_index,
-                                                                const double
-                                                                *ref_coords);
+double
+t8_geom_get_scaling_factor_of_edge_on_face (int edge_index, int face_index, const double *ref_coords);
 
 /** Calculates the face intersection of a ray passing trough the reference coordinates and the
  *  opposite vertex of that face for a tetrahedron. The coordinates of the face intersection are
@@ -174,11 +148,8 @@ double              t8_geom_get_scaling_factor_of_edge_on_face (int
  * \param [out]        face_intersection   Three dimensional array containing the intersection point on the face
  *                                         in reference space.
  */
-void                t8_geom_get_tet_face_intersection (const int face_index,
-                                                       const double
-                                                       *ref_coords,
-                                                       double
-                                                       face_intersection[3]);
+void
+t8_geom_get_tet_face_intersection (const int face_index, const double *ref_coords, double face_intersection[3]);
 
 T8_EXTERN_C_END ();
 

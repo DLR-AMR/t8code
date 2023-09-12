@@ -40,14 +40,15 @@ T8_EXTERN_C_BEGIN ();
  *                  struct, as if the t8_geometry_linear_axis_aligned
  *                  (int dimension) constructor was called.
  */
-t8_geometry_c      *t8_geometry_linear_axis_aligned_new (int dim);
+t8_geometry_c *
+t8_geometry_linear_axis_aligned_new (int dim);
 
 /** Destroy a linear, axis-aligned geometry that was created with
  * \ref t8_geometry_linear_axis_aligned_new.
  * \param [in,out] geom A linear, axis-aligned geometry. Set to NULL on output.
  */
-void                t8_geometry_linear_axis_aligned_destroy (t8_geometry_c
-                                                             **geom);
+void
+t8_geometry_linear_axis_aligned_destroy (t8_geometry_c **geom);
 
 #if T8_ENABLE_DEBUG
 /** Query whether a given geometry is \ref t8_geometry_linear_axis_aligned.
@@ -56,8 +57,8 @@ void                t8_geometry_linear_axis_aligned_destroy (t8_geometry_c
  *             type \ref t8_geometry_linear_axis_aligned.
  * \note       This function is currently only available in debug mode.
  */
-int                 t8_geom_is_linear_axis_aligned (const t8_geometry_c
-                                                    *geometry);
+int
+t8_geom_is_linear_axis_aligned (const t8_geometry_c *geometry);
 #endif
 
 T8_EXTERN_C_END ();

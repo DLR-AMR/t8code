@@ -43,7 +43,7 @@ t8_geom_get_dimension (const t8_geometry_c *geom)
  * \param [in]  geom  A geometry.
  * \return            The name of \a geom.
  */
-const char         *
+const char *
 t8_geom_get_name (const t8_geometry_c *geom)
 {
   T8_ASSERT (geom != NULL);

@@ -44,11 +44,11 @@ jobs:
 #
 # Setup and bootstrap
 #
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Install zlib
       run: sudo apt-get install libz-dev
     - name: Install doxygen
-      run: sudo apt-get install doxygen
+      run: sudo apt-get install doxygen-latex
     - name: init submodules
       run: git submodule init
     - name: update submodules
@@ -75,7 +75,7 @@ jobs:
 
 # upload documentation
     - name: Checkout t8code-website repo
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         ref: ${{ github.head_ref }}
         fetch-depth: 0
@@ -91,9 +91,9 @@ jobs:
     - name: check_diff
       run: |
         cd t8code-website
-        git diff --quiet || echo "::set-output name=commit_new_doc::true"
+        git diff --quiet || echo "{COMMIT_NEW_DOC}={true}" >> $GITHUB_OUTPUT
     - name: Commit and push files
-      if: steps.check_diff.outputs.commit_new_doc == 'true'
+      if: env.COMMIT_NEW_DOC == 'true'
       run: |
         cd t8code-website
         git config --local user.email "t8ddy.bot@gmail.com"

@@ -32,7 +32,8 @@ T8_EXTERN_C_BEGIN ();
 
 /** This is the main program of this example.
  */
-int                 t8_tutorial_build_cmesh_main (int argc, char **argv);
+int
+t8_tutorial_build_cmesh_main (int argc, char **argv);
 
 T8_EXTERN_C_END ();
 
