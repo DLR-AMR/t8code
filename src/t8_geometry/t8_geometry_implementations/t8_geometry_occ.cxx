@@ -43,12 +43,6 @@
 
 const int           t8_interpolation_coefficient_tet_edge[6] =
   { 0, 0, 0, 2, 2, 1 };
-const int           t8_face_normal_tet[4][3] = {
-  {-1, 0, 0},
-  {1, 0, -1},
-  {0, -1, 1},
-  {0, 1, 0}
-};
 
 const int           t8_face_ref_coords_tet[4][2] = {
   {2, 1},
@@ -857,66 +851,11 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh,
         surface_parameter_displacement_from_edges[2] = { 0 },
         surface_parameters_from_curve[2] = { 0 };
 
-      /* Safe reference corner coordinates of the current face */
-      double              ref_face_vertex_coords[9];
-      for (int i_face_vertex = 0; i_face_vertex < 3; ++i_face_vertex) {
-        for (int dim = 0; dim < 3; ++dim) {
-          const int           i_tree_vertex =
-            t8_face_vertex_to_tree_vertex[active_tree_class][i_faces]
-            [i_face_vertex];
-          ref_face_vertex_coords[i_face_vertex * 3 + dim]
-            = t8_element_corner_ref_coords[active_tree_class][i_tree_vertex]
-            [dim];
-        }
-      }
-
-      /* Save the opposite vertex of the face in reference space.
-       * Reminder: Opposite vertex of a face has the same index as the face. */
-      const double       *ref_opposite_vertex =
-        t8_element_corner_ref_coords[active_tree_class][i_faces];
-
-      /* Safe the normal of the current face */
-      double              normal[3];
-      for (int dim = 0; dim < 3; ++dim) {
-        normal[dim] = t8_face_normal_tet[i_faces][dim];
-      }
-
-      /* Calculate the vector from the opposite vertex to the
-       * reference coordinate in reference space */
-      double              vector[3];
-      for (int dim = 0; dim < 3; ++dim) {
-        vector[dim] = ref_coords[dim] - ref_opposite_vertex[dim];
-      }
-
-      /* Calculate t to get the point on the ray (extension of vector), which lies on the face.
-       * The vector will later be multiplied by t to get the exact distance from the opposite vertex to the face intersection. 
-       * t = ((point on face - point on vector) * normal of face) / (vector * normal of face) */
-      double              denominator = 0;
-      double              numerator = 0;
-      for (int dim = 0; dim < 3; ++dim) {
-        denominator +=
-          (ref_face_vertex_coords[dim] -
-           ref_opposite_vertex[dim]) * normal[dim];
-        numerator += vector[dim] * normal[dim];
-      }
-      double              t = denominator / numerator;
-
-      /* Calculate face intersection by scaling vector with t.
-       * If the reference coordinate is equal to the opposite vertex,
-       * the intersection is equal to one of the ref_face_vertex_coords. */
+      /* Safe the face intersection of a ray passing trough the reference coordinate
+       * and the opposite vertex of the face */
       double              face_intersection[3];
-      if (ref_coords[0] == ref_opposite_vertex[0]
-          && ref_coords[1] == ref_opposite_vertex[1]
-          && ref_coords[2] == ref_opposite_vertex[2]) {
-        for (int dim = 0; dim < 3; ++dim) {
-          face_intersection[dim] = ref_face_vertex_coords[dim];
-        }
-      }
-      else {
-        for (int dim = 0; dim < 3; ++dim) {
-          face_intersection[dim] = ref_opposite_vertex[dim] + vector[dim] * t;
-        }
-      }
+      t8_geom_get_tet_face_intersection (i_faces,
+                                         ref_coords, face_intersection);
 
       /* Turn 3D face_intersection into 2D coordinates on current face 
        * for parameter interpolation */
@@ -1043,6 +982,12 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh,
        * the opposite vertex of the face to the face_intersection. */
       double              dist_ref_coords;
       double              dist_face_intersection;
+
+      /* Save the opposite vertex of the face in reference space.
+       * Reminder: Opposite vertex of a face has the same index as the face. */
+      const double       *ref_opposite_vertex =
+        t8_element_corner_ref_coords[active_tree_class][i_faces];
+
       dist_ref_coords =
         sqrt ((ref_opposite_vertex[0] -
                ref_coords[0]) * (ref_opposite_vertex[0] - ref_coords[0])

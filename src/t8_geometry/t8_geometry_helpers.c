@@ -538,3 +538,76 @@ t8_geom_get_scaling_factor_of_edge_on_face (int i_edge,
   }
   return scaling_factor;
 }
+
+void
+t8_geom_get_tet_face_intersection (const int face_index,
+                                   const double *ref_coords,
+                                   double face_intersection[3])
+{
+  /* Lookup table for normals of tetrahedron faces */
+  const int           t8_face_normal_tet[4][3] = {
+    {-1, 0, 0},
+    {1, 0, -1},
+    {0, -1, 1},
+    {0, 1, 0}
+  };
+
+  /* Safe reference corner coordinates of the current face */
+  double              ref_face_vertex_coords[9];
+  for (int i_face_vertex = 0; i_face_vertex < 3; ++i_face_vertex) {
+    for (int dim = 0; dim < 3; ++dim) {
+      const int           i_tree_vertex =
+        t8_face_vertex_to_tree_vertex[T8_ECLASS_TET][face_index]
+        [i_face_vertex];
+      ref_face_vertex_coords[i_face_vertex * 3 + dim]
+        = t8_element_corner_ref_coords[T8_ECLASS_TET][i_tree_vertex]
+        [dim];
+    }
+  }
+
+  /* Save the opposite vertex of the face in reference space.
+   * Reminder: Opposite vertex of a face has the same index as the face. */
+  const double       *ref_opposite_vertex =
+    t8_element_corner_ref_coords[T8_ECLASS_TET][face_index];
+
+  /* Safe the normal of the current face */
+  double              normal[3];
+  for (int dim = 0; dim < 3; ++dim) {
+    normal[dim] = t8_face_normal_tet[face_index][dim];
+  }
+
+  /* Calculate the vector from the opposite vertex to the
+   * reference coordinate in reference space */
+  double              vector[3];
+  for (int dim = 0; dim < 3; ++dim) {
+    vector[dim] = ref_coords[dim] - ref_opposite_vertex[dim];
+  }
+
+  /* Calculate t to get the point on the ray (extension of vector), which lies on the face.
+   * The vector will later be multiplied by t to get the exact distance from the opposite vertex to the face intersection. 
+   * t = ((point on face - point on vector) * normal of face) / (vector * normal of face) */
+  double              denominator = 0;
+  double              numerator = 0;
+  for (int dim = 0; dim < 3; ++dim) {
+    denominator +=
+      (ref_face_vertex_coords[dim] - ref_opposite_vertex[dim]) * normal[dim];
+    numerator += vector[dim] * normal[dim];
+  }
+  double              t = denominator / numerator;
+
+  /* Calculate face intersection by scaling vector with t.
+   * If the reference coordinate is equal to the opposite vertex,
+   * the intersection is equal to one of the ref_face_vertex_coords. */
+  if (ref_coords[0] == ref_opposite_vertex[0]
+      && ref_coords[1] == ref_opposite_vertex[1]
+      && ref_coords[2] == ref_opposite_vertex[2]) {
+    for (int dim = 0; dim < 3; ++dim) {
+      face_intersection[dim] = ref_face_vertex_coords[dim];
+    }
+  }
+  else {
+    for (int dim = 0; dim < 3; ++dim) {
+      face_intersection[dim] = ref_opposite_vertex[dim] + vector[dim] * t;
+    }
+  }
+}
