@@ -423,13 +423,15 @@ t8_geom_get_scaling_factor_of_edge_on_face (int i_edge,
                                             int i_face,
                                             const double *ref_coords)
 {
+  /* Safe the orthogonal direction and the maximum of that direction
+   * of a tetrahedron edge in reference space on one of the neighbouring faces. */
   double              orthogonal_direction;
   double              max_orthogonal_direction;
   double              scaling_factor;
 
-  switch (i_edge) {
+  switch (i_edge) {             /* Check for edge of tetrahedron */
   case 0:
-    switch (i_face) {
+    switch (i_face) {           /* Check for neighbouring face of edge 0 */
     case 2:
       orthogonal_direction = ref_coords[1];
       max_orthogonal_direction = ref_coords[0];
@@ -444,7 +446,7 @@ t8_geom_get_scaling_factor_of_edge_on_face (int i_edge,
     }
     break;
   case 1:
-    switch (i_face) {
+    switch (i_face) {           /* Check for neighbouring face of edge 1 */
     case 1:
       orthogonal_direction = ref_coords[1];
       max_orthogonal_direction = ref_coords[0];
@@ -459,7 +461,7 @@ t8_geom_get_scaling_factor_of_edge_on_face (int i_edge,
     }
     break;
   case 2:
-    switch (i_face) {
+    switch (i_face) {           /* Check for neighbouring face of edge 2 */
     case 1:
       orthogonal_direction = ref_coords[0] - ref_coords[1];
       max_orthogonal_direction = ref_coords[0];
@@ -474,7 +476,7 @@ t8_geom_get_scaling_factor_of_edge_on_face (int i_edge,
     }
     break;
   case 3:
-    switch (i_face) {
+    switch (i_face) {           /* Check for neighbouring face of edge 3 */
     case 0:
       orthogonal_direction = ref_coords[1];
       max_orthogonal_direction = ref_coords[2];
@@ -489,7 +491,7 @@ t8_geom_get_scaling_factor_of_edge_on_face (int i_edge,
     }
     break;
   case 4:
-    switch (i_face) {
+    switch (i_face) {           /* Check for neighbouring face of edge 4 */
     case 0:
       orthogonal_direction = ref_coords[2] - ref_coords[1];
       max_orthogonal_direction = ref_coords[2];
@@ -504,7 +506,7 @@ t8_geom_get_scaling_factor_of_edge_on_face (int i_edge,
     }
     break;
   case 5:
-    switch (i_face) {
+    switch (i_face) {           /* Check for neighbouring face of edge 5 */
     case 0:
       orthogonal_direction = 1 - ref_coords[2];
       max_orthogonal_direction = 1 - ref_coords[1];
@@ -523,6 +525,11 @@ t8_geom_get_scaling_factor_of_edge_on_face (int i_edge,
     break;
   }
 
+  /* If the maximum orthogonal direction is 0 or 1. The referece coordinate lies on
+   * one of the edge nodes and the scaling factor is therefore 0, because the displacement
+   * at the nodes is always 0.
+   * Else, the scaling factor is determined by 1 subtracted by the relation of the orthogonal direction
+   * to the maximum orthogonal direction. */
   if (max_orthogonal_direction == 0 || max_orthogonal_direction == 1) {
     scaling_factor = 0;
   }
