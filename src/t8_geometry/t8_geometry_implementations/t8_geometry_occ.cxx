@@ -555,8 +555,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
   const int num_edges = t8_eclass_num_edges[active_tree_class];
   const int num_faces = t8_eclass_num_faces[active_tree_class];
   gp_Pnt pnt;
-  double edge_vertices[2 * 3], temp_edge_vertices[2 * 3], temp_face_vertices[T8_ECLASS_MAX_CORNERS_2D * 3],
-    interpolated_curve_param, interpolated_surface_params[2], cur_delta[3];
+  double temp_edge_vertices[2 * 3], temp_face_vertices[T8_ECLASS_MAX_CORNERS_2D * 3], interpolated_curve_param,
+    interpolated_surface_params[2], cur_delta[3];
   double interpolated_surface_parameters[2], interpolated_coords[3];
   Handle_Geom_Curve curve;
   Handle_Geom_Surface surface;
@@ -674,8 +674,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
 
       /* Allocate some variables and save the face vertices for later usage */
       t8_geom_get_face_vertices (active_tree_class, active_tree_vertices, i_faces, 3, temp_face_vertices);
-      double face_displacement_from_edges[3] = { 0 }, surface_parameter_displacement_from_edges[2] = { 0 },
-             surface_parameters_from_curve[2] = { 0 };
+      double face_displacement_from_edges[3] = { 0 };
 
       /* Safe the face intersection of a ray passing trough the reference coordinate
        * and the opposite vertex of the face */
