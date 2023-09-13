@@ -93,13 +93,13 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const 
     SC_ABORT ("Error: Batch computation of geometry not yet supported.");
   switch (active_tree_class) {
   case T8_ECLASS_TRIANGLE:
-    t8_geometry_occ::t8_geom_evaluate_occ_triangle (cmesh, gtreeid, ref_coords, out_coords);
+    t8_geometry_occ::t8_geom_evaluate_occ_triangle (cmesh, gtreeid, ref_coords, 1, out_coords);
     break;
   case T8_ECLASS_QUAD:
-    t8_geometry_occ::t8_geom_evaluate_occ_quad (cmesh, gtreeid, ref_coords, out_coords);
+    t8_geometry_occ::t8_geom_evaluate_occ_quad (cmesh, gtreeid, ref_coords, 1, out_coords);
     break;
   case T8_ECLASS_HEX:
-    t8_geometry_occ::t8_geom_evaluate_occ_hex (cmesh, gtreeid, ref_coords, out_coords);
+    t8_geometry_occ::t8_geom_evaluate_occ_hex (cmesh, gtreeid, ref_coords, 1, out_coords);
     break;
   default:
     SC_ABORTF ("Error: Curved %s geometry not yet implemented. \n", t8_eclass_to_string[active_tree_class]);
