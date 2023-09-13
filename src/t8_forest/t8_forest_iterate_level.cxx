@@ -27,53 +27,22 @@
 #include <t8_element_cxx.hxx>
 #include <oneapi/tbb/concurrent_unordered_map.h>
 
-typedef struct t8_adapt_data
+typedef struct t8_level_graph_element_data
 {
-  std::unordered_map<int, t8_element_t* > **level;
+  t8_element_t* element;
+  int* ids_existing_elements;
+  int parent_id;
+  int *children_id;
 
-} t8_adapt_data;
+} t8_level_graph_element_data;
 
-int
-t8_adapt_callback_new_graph (t8_forest_t forest,
-                         t8_forest_t forest_from,
-                         t8_locidx_t which_tree,
-                         t8_locidx_t lelement_id,
-                         t8_eclass_scheme_c *ts,
-                         const int is_family,
-                         const int num_elements, t8_element_t *elements[])
+typedef struct t8_adapt_data_level_graph
 {
-  return -1;
-}
+  std::unordered_map<int, t8_level_graph_element_data* > **level_graph;
+  int max_children = 10;
+  int *ids_forest;
 
-void
-t8_forest_replace_new_graph (t8_forest_t forest_old,
-                   t8_forest_t forest_new,
-                   t8_locidx_t which_tree,
-                   t8_eclass_scheme_c *ts,
-                   int refine,
-                   int num_outgoing,
-                   t8_locidx_t first_outgoing,
-                   int num_incoming, t8_locidx_t first_incoming)
-{
-  //TODO: Verbessern: Doppeltes hinzufuegen bei mehrfachem 0
-  if( refine == -1 || refine == 0 )
-  {
-    //TODO: get existing levelgraph
-    std::unordered_map<int, t8_element_t* > **levels = ((struct t8_adapt_data *) t8_forest_get_user_data (forest_new))->level;
-    for (t8_locidx_t i = 0; i < num_outgoing; i++) {
-      t8_element_t *elem = t8_forest_get_element_in_tree(forest_old, which_tree, first_outgoing + i);
-      t8_element_t *elem_graph;
-      ts->t8_element_new (1, &elem_graph);
-      t8_element_copy(ts, elem, elem_graph);
-      int level = t8_element_level( ts, elem );
-      //TODO: Calculate id
-      int id = 0;
-
-      //add new values to levelgraph
-      levels[level]->insert( std::make_pair(id, elem_graph) );
-    }
-  }
-}
+} t8_adapt_data_level_graph;
 
 void
 t8_forest_replace (t8_forest_t forest_old,
@@ -85,32 +54,53 @@ t8_forest_replace (t8_forest_t forest_old,
                    t8_locidx_t first_outgoing,
                    int num_incoming, t8_locidx_t first_incoming)
 { 
-  if( refine == -1 )
-  {
-    for (t8_locidx_t i = 0; i < num_outgoing; i++) {
-      std::unordered_map<int, t8_element_t* > **levels = ((struct t8_adapt_data *) t8_forest_get_user_data (forest_new))->level;
-      //TODO: Calculate id
-      int id = 0;
+  std::unordered_map<int, t8_level_graph_element_data* > **levels = ((struct t8_adapt_data_level_graph *) t8_forest_get_user_data (forest_new))->level_graph;
 
-      //add new values to levelgraph
-      //levels[level]->insert( std::make_pair(id, elem_graph) );
-    }
-  }
-  else if( refine == 1 )
+  int ids[t8_forest_get_local_num_elements( forest_new )];
+  t8_adapt_data_level_graph *data_old = ((struct t8_adapt_data_level_graph *) t8_forest_get_user_data( forest_old ));
+  int children_id[num_incoming];
+
+  const int old_id = data_old->ids_forest[first_outgoing];
+  if( refine == 1 )
   {
-    //TODO: get existing levelgraph
+    int level;
     for (t8_locidx_t i = 0; i < num_incoming; i++) {
-      std::unordered_map<int, t8_element_t* > **levels = ((struct t8_adapt_data *) t8_forest_get_user_data (forest_new))->level;
+      int id = (old_id * data_old->max_children ) + i;
       t8_element_t *elem = t8_forest_get_element_in_tree(forest_new, which_tree, first_incoming + i);
-      t8_element_t *elem_graph;
-      ts->t8_element_new (1, &elem_graph);
-      t8_element_copy(ts, elem, elem_graph);
-      int level = t8_element_level( ts, elem );
-      //TODO: Calculate id
-      int id = 0;
+      level = t8_element_level( ts, elem );
 
       //add new values to levelgraph
-      levels[level]->erase(id);
+      t8_level_graph_element_data *elem_data;
+      //TODO: Set id
+      elem_data->element = elem;
+      elem_data->children_id = NULL;
+      elem_data->parent_id = old_id;
+
+      //set new id array
+      ids[first_incoming + i] = id;
+      children_id[i] = id;
+
+      levels[level]->insert( std::make_pair(id, elem_data) );
+    }
+    //set children_id of parent element - array
+    (((*levels)[level-1])[old_id])->children_id = children_id;
+  }
+  else if( refine == -1 )
+  {
+    t8_element_t *elem = t8_forest_get_element_in_tree(forest_old, which_tree, first_outgoing);
+    int level = t8_element_level( ts, elem );
+
+    std::unordered_map<int, t8_level_graph_element_data* > **levels = ((struct t8_adapt_data_level_graph *) t8_forest_get_user_data (forest_new))->level_graph;
+    
+    //todo: id
+    ids[first_incoming] = (*levels[level+1])[old_id]->parent_id;
+    ((*levels[level])[ids[first_incoming]])->children_id = NULL;
+
+    for (t8_locidx_t i = 0; i < num_outgoing; i++) {
+      int id = old_id + i;
+
+      //erase elements from level graph
+      levels[level+1]->erase(id);
     }
   }
   /*else if( refine == 0 ) do nothing */
@@ -134,4 +124,45 @@ t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn,
   t8_forest_commit (forest_new);
 
   return forest_new;
+}
+
+t8_forest_t
+new_level_graph( t8_cmesh_t cmesh, t8_forest_t forest, int level, t8_scheme_cxx_t *scheme )
+{
+  forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
+  int max_level = t8_forest_get_maxlevel( forest );
+
+  int ids[t8_forest_get_local_num_elements( forest )];
+
+  //tbb::concurrent_unordered_map
+  std::unordered_map<int, t8_level_graph_element_data* > *levels_array[max_level];
+  std::unordered_map<int, t8_level_graph_element_data* > **levels = levels_array;
+
+  for( int i_max_level = 0; i_max_level < max_level; i_max_level++ )
+  {
+    levels[i_max_level] = new std::unordered_map<int, t8_level_graph_element_data*>();
+  }
+  t8_locidx_t itree, ielem;
+  for( itree = 0, ielem = 0; itree < t8_forest_get_num_local_trees( forest ); itree++ )
+  {
+    for( t8_locidx_t ielem_tree = 0; ielem_tree < t8_forest_get_local_num_elements( forest ); ielem_tree, ielem++ )
+    {
+      t8_level_graph_element_data *elem_data;
+      //hier weiter machen - level graph von element auf user-defined element umstellen
+      elem_data->element = t8_forest_get_element_in_tree( forest, itree, ielem_tree );
+      elem_data->parent_id = NULL;
+      elem_data->children_id = NULL;
+
+      levels[0]->insert( std::make_pair( ielem, elem_data ) );
+
+      ids[ ielem ] = ielem;
+    }
+  }
+  t8_adapt_data_level_graph *data = T8_ALLOC (t8_adapt_data_level_graph, 1);
+  data->level_graph = levels;
+  data->ids_forest = ids;
+
+  t8_forest_set_user_data(forest, data);
+
+  return forest;
 }
