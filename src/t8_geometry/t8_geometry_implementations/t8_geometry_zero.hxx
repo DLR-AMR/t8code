@@ -50,7 +50,7 @@ struct t8_geometry_zero: public t8_geometry
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
    * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
-   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    * \note All entries in out_coords will be set to 0.
    */
   virtual void

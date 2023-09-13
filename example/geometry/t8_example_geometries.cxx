@@ -92,11 +92,11 @@ class t8_geometry_sincos: public t8_geometry {
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
    * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
-   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords.
+   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double *out_coords) const
+                    double out_coords[3]) const
   {
     if (num_coords != 1)
       SC_ABORT ("Error: Batch computation of geometry not yet supported.");
@@ -146,11 +146,11 @@ class t8_geometry_moebius: public t8_geometry_with_vertices {
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
    * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
-   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords.
+   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double *out_coords) const
+                    double out_coords[3]) const
   {
     if (num_coords != 1)
       SC_ABORT ("Error: Batch computation of geometry not yet supported.");
@@ -201,11 +201,11 @@ class t8_geometry_cylinder: public t8_geometry {
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
    * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
-   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords.
+   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double *out_coords) const
+                    double out_coords[3]) const
   {
     if (num_coords != 1)
       SC_ABORT ("Error: Batch computation of geometry not yet supported.");
@@ -252,11 +252,11 @@ class t8_geometry_circle: public t8_geometry_with_vertices {
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
    * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
-   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords.
+   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double *out_coords) const
+                    double out_coords[3]) const
   {
     if (num_coords != 1)
       SC_ABORT ("Error: Batch computation of geometry not yet supported.");
@@ -312,11 +312,11 @@ class t8_geometry_moving: public t8_geometry {
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
    * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
-   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords.
+   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double *out_coords) const
+                    double out_coords[3]) const
   {
     if (num_coords != 1)
       SC_ABORT ("Error: Batch computation of geometry not yet supported.");
@@ -377,11 +377,11 @@ class t8_geometry_cube_zdistorted: public t8_geometry {
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
    * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
-   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords.
+   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double *out_coords) const
+                    double out_coords[3]) const
   {
     if (num_coords != 1)
       SC_ABORT ("Error: Batch computation of geometry not yet supported.");
