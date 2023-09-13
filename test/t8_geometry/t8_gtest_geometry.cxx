@@ -145,7 +145,7 @@ TEST_P (geometry, cmesh_geometry_linear)
     point[2] = (double) rand () / RAND_MAX;
 
     /* Evaluate the geometry */
-    t8_geometry_evaluate (cmesh, 0, point, point_mapped);
+    t8_geometry_evaluate (cmesh, 0, point, 1, point_mapped);
     /* Check that the first dim coordinates are the same */
     int idim;
     for (idim = 0; idim < dim; ++idim) {

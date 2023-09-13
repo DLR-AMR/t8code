@@ -43,8 +43,9 @@ class t8_geometry_squared_disk: public t8_geometry {
    * Map five quads to a disk.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
-   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying a point in /f$ [0,1]^\mathrm{dim} /f$.
+   * \param [in]  num_coords  The number of points to map.
+   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    *
    * This routine expects an input mesh of five squares looking like this:
    *
@@ -62,11 +63,13 @@ class t8_geometry_squared_disk: public t8_geometry {
    *
    */
   void
-  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double out_coords[3]) const;
+  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                    double out_coords[3]) const;
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double *jacobian) const
+  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                             double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }

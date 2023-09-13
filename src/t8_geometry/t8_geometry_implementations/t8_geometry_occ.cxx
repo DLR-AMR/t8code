@@ -87,17 +87,19 @@ t8_geometry_occ::t8_geometry_occ (int dim, const TopoDS_Shape occ_shape, const c
 
 void
 t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                   double out_coords[3]) const
+                                   const size_t num_coords, double *out_coords) const
 {
+  if (num_coords != 1)
+    SC_ABORT ("Error: Batch computation of geometry not yet supported.");
   switch (active_tree_class) {
   case T8_ECLASS_TRIANGLE:
-    t8_geometry_occ::t8_geom_evaluate_occ_triangle (cmesh, gtreeid, ref_coords, out_coords);
+    t8_geometry_occ::t8_geom_evaluate_occ_triangle (cmesh, gtreeid, ref_coords, 1, out_coords);
     break;
   case T8_ECLASS_QUAD:
-    t8_geometry_occ::t8_geom_evaluate_occ_quad (cmesh, gtreeid, ref_coords, out_coords);
+    t8_geometry_occ::t8_geom_evaluate_occ_quad (cmesh, gtreeid, ref_coords, 1, out_coords);
     break;
   case T8_ECLASS_HEX:
-    t8_geometry_occ::t8_geom_evaluate_occ_hex (cmesh, gtreeid, ref_coords, out_coords);
+    t8_geometry_occ::t8_geom_evaluate_occ_hex (cmesh, gtreeid, ref_coords, 1, out_coords);
     break;
   default:
     SC_ABORTF ("Error: Curved %s geometry not yet implemented. \n", t8_eclass_to_string[active_tree_class]);
@@ -106,8 +108,10 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const 
 
 void
 t8_geometry_occ::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                            double *jacobian_out) const
+                                            const size_t num_coords, double *jacobian_out) const
 {
+  if (num_coords != 1)
+    SC_ABORT ("Error: Batch computation of geometry not yet supported.");
   double h = 1e-9;
   double in1[3], in2[3];
   double out1[3], out2[3];
@@ -125,8 +129,8 @@ t8_geometry_occ::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreei
       in1[dim] -= 0.5 * h;
       in2[dim] += 0.5 * h;
     }
-    t8_geometry_occ::t8_geom_evaluate (cmesh, gtreeid, in1, out1);
-    t8_geometry_occ::t8_geom_evaluate (cmesh, gtreeid, in2, out2);
+    t8_geometry_occ::t8_geom_evaluate (cmesh, gtreeid, in1, 1, out1);
+    t8_geometry_occ::t8_geom_evaluate (cmesh, gtreeid, in2, 1, out2);
     for (int dim2 = 0; dim2 < 3; ++dim2) {
       jacobian_out[dim * 3 + dim2] = (out2[dim2] - out1[dim2]) / h;
     }
@@ -145,7 +149,7 @@ t8_geometry_occ::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 
 void
 t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                                double out_coords[3]) const
+                                                const size_t num_coords, double *out_coords) const
 {
   T8_ASSERT (active_tree_class == T8_ECLASS_TRIANGLE);
 
@@ -336,8 +340,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh, t8_gloidx_t gt
         /* Calculate displacement between points on curve and point on linear curve.
          * Then scale it and add the scaled displacement to the result. */
         for (int dim = 0; dim < 3; ++dim) {
-          double displacement = pnt.Coord (dim + 1) - glob_intersection[dim];
-          double scaled_displacement = displacement * pow (scaling_factor, 2);
+          const double displacement = pnt.Coord (dim + 1) - glob_intersection[dim];
+          const double scaled_displacement = displacement * scaling_factor * scaling_factor;
           out_coords[dim] += scaled_displacement;
         }
       }
@@ -347,7 +351,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh, t8_gloidx_t gt
 
 void
 t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                            double out_coords[3]) const
+                                            const size_t num_coords, double *out_coords) const
 {
   T8_ASSERT (active_tree_class == T8_ECLASS_QUAD);
 
@@ -537,7 +541,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
 
 void
 t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                           double out_coords[3]) const
+                                           const size_t num_coords, double *out_coords) const
 {
   T8_ASSERT (active_tree_class == T8_ECLASS_HEX);
 
