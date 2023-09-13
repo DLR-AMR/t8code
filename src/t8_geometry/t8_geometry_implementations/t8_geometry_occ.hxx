@@ -71,7 +71,7 @@ struct t8_geometry_occ: public t8_geometry_with_vertices
   }
 
   /**
-   * Map a point in the reference space \f$ [0,1]^\mathrm{dim} \to \mathbb{R}^3 \f$.
+   * Maps points in the reference space \f$ [0,1]^\mathrm{dim} \to \mathbb{R}^3 \f$.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
@@ -267,37 +267,40 @@ struct t8_geometry_occ: public t8_geometry_with_vertices
 
  private:
   /**
-   * Map a point in the reference space \f$ [0,1]^2 \f$ to \f$ \mathbb{R}^3 \f$. Only for triangle trees.
+   * Maps points in the reference space \f$ [0,1]^2 \f$ to \f$ \mathbb{R}^3 \f$. Only for triangle trees.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of 2 entries, specifying a point in \f$ [0,1]^2 \f$.
+   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
   t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                 double out_coords[3]) const;
+                                 const size_t num_coords, double *out_coords) const;
 
   /**
-   * Map a point in the reference space \f$ [0,1]^2 \f$ to \f$ \mathbb{R}^3 \f$. Only for quad trees.
+   * Maps points in the reference space \f$ [0,1]^2 \f$ to \f$ \mathbb{R}^3 \f$. Only for quad trees.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of 2 entries, specifying a point in \f$ [0,1]^2 \f$.
+   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                             double out_coords[3]) const;
+  t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                             double *out_coords) const;
 
   /**
-   * Map a point in the reference space \f$ \f$ [0,1]^3 \f$ \f$ to \f$ \mathbb{R}^3 \f$. Only for hex trees.
+   * Maps points in the reference space \f$ \f$ [0,1]^3 \f$ \f$ to \f$ \mathbb{R}^3 \f$. Only for hex trees.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of 3 entries, specifying a point in \f$ [0,1]^3 \f$.
+   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                            double out_coords[3]) const;
+  t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                            double *out_coords) const;
 
   const int *edges;                                /**< The linked edges of the currently active tree. */
   const int *faces;                                /**< The linked faces of the currently active tree. */

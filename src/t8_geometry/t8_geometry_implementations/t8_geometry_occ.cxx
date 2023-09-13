@@ -149,7 +149,7 @@ t8_geometry_occ::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 
 void
 t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                                double out_coords[3]) const
+                                                const size_t num_coords, double *out_coords) const
 {
   T8_ASSERT (active_tree_class == T8_ECLASS_TRIANGLE);
 
@@ -351,7 +351,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh, t8_gloidx_t gt
 
 void
 t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                            double out_coords[3]) const
+                                            const size_t num_coords, double *out_coords) const
 {
   T8_ASSERT (active_tree_class == T8_ECLASS_QUAD);
 
@@ -541,7 +541,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
 
 void
 t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                           double out_coords[3]) const
+                                           const size_t num_coords, double *out_coords) const
 {
   T8_ASSERT (active_tree_class == T8_ECLASS_HEX);
 
