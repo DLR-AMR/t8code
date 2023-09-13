@@ -43,7 +43,8 @@ class t8_geometry_squared_disk: public t8_geometry {
    * Map five quads to a disk.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
+   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying a point in /f$ [0,1]^\mathrm{dim} /f$.
+   * \param [in]  num_coords  The number of points to map.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
    *
    * This routine expects an input mesh of five squares looking like this:
