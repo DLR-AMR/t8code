@@ -84,7 +84,7 @@ class t8_geometry_sincos: public t8_geometry {
   }
 
   /**
-   * Map a point in  a point (x,y) in R^2 
+   * Maps points (x,y) in R^2 
    * to the point (x,y, 0.2 * sin(2PI X) * cos(2PI Y)).
    * It is specifically designed to work on two tree cmeshes and 
    * models the rectangle [0,2] x [0,1].
@@ -141,7 +141,7 @@ class t8_geometry_moebius: public t8_geometry_with_vertices {
   }
 
   /**
-   * Map a point in a point in \f$ [0,1]^2 \f$ to the moebius band.
+   * Maps points in \f$ [0,1]^2 \f$ to the moebius band.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
