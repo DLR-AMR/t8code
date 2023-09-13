@@ -25,6 +25,7 @@
 #include <t8_cmesh/t8_cmesh_helpers.h>
 #include <t8_cmesh/t8_cmesh_geometry.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_examples.h>
 #include <t8_vec.h>
 #include <t8_mat.h>
@@ -1194,7 +1195,7 @@ t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
 
 t8_cmesh_t
 t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass, sc_MPI_Comm comm, const double *boundary, t8_locidx_t polygons_x,
-                            t8_locidx_t polygons_y, t8_locidx_t polygons_z)
+                            t8_locidx_t polygons_y, t8_locidx_t polygons_z, int use_axis_aligned)
 {
   SC_CHECK_ABORT (eclass != T8_ECLASS_PYRAMID, "Pyramids are not yet supported.");
   const int dim = t8_eclass_to_dimension[eclass];
@@ -1215,9 +1216,16 @@ t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass, sc_MPI_Comm comm, const do
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
 
-  /* We use standard linear geometry */
-  const t8_geometry_c *linear_geom = t8_geometry_linear_new (dim);
-  t8_cmesh_register_geometry (cmesh, linear_geom);
+  if (use_axis_aligned && (eclass == T8_ECLASS_HEX || eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_LINE)) {
+    /* We use axis aligned geometries */
+    const t8_geometry_c *axis_aligned_geom = t8_geometry_linear_axis_aligned_new (dim);
+    t8_cmesh_register_geometry (cmesh, axis_aligned_geom);
+  }
+  else {
+    /* We use standard linear geometry */
+    const t8_geometry_c *linear_geom = t8_geometry_linear_new (dim);
+    t8_cmesh_register_geometry (cmesh, linear_geom);
+  }
 
   /* Number of trees inside each polygon of given eclass. */
   const t8_locidx_t num_trees_for_single_hypercube[T8_ECLASS_COUNT] = { 1, 1, 1, 2, 1, 6, 2, -1 };
