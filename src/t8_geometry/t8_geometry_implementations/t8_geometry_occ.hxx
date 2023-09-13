@@ -56,7 +56,6 @@
 typedef void (*t8_geom_occ_fn) (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double out_coords[3],
                                 const void *tree_data);
 
-/* *INDENT-OFF* */
 struct t8_geometry_occ: public t8_geometry_with_vertices
 {
  public:
@@ -320,7 +319,6 @@ struct t8_geometry_occ: public t8_geometry_with_vertices
   TopTools_IndexedDataMapOfShapeListOfShape
     occ_shape_edge2face_map; /**< Maps all TopoDS_Edge of shape to all its connected TopoDS_Face */
 };
-/* *INDENT-ON* */
 
 #endif /* T8_WITH_OCC */
 
