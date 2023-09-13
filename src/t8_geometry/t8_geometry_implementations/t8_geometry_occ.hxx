@@ -43,19 +43,6 @@
 #include <Geom_Curve.hxx>
 #include <Geom_Surface.hxx>
 
-/**
- * Definition of an occ geometry function.
- * This function maps reference coordinates to physical
- * coordinates regarding the occ geometries linked to the cells edges and faces.
- * \param [in]  cmesh       The cmesh.
- * \param [in]  gtreeid     The global tree (of the cmesh) in which the reference point is.
- * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f$ [0,1]^\mathrm{dim} \f$.
- * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
- * \param [in]  tree_data   The data of the current tree as loaded by a \ref t8_geom_load_tree_data_fn.
- */
-typedef void (*t8_geom_occ_fn) (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double out_coords[3],
-                                const void *tree_data);
-
 struct t8_geometry_occ: public t8_geometry_with_vertices
 {
  public:
@@ -84,25 +71,29 @@ struct t8_geometry_occ: public t8_geometry_with_vertices
   }
 
   /**
-   * Map a point in the reference space \f$ [0,1]^\mathrm{dim} \to \mathbb{R}^3 \f$.
+   * Maps points in the reference space \f$ [0,1]^\mathrm{dim} \to \mathbb{R}^3 \f$.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f$ [0,1]^\mathrm{dim} \f$.
-   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   virtual void
-  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double out_coords[3]) const;
+  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                    double *out_coords) const;
 
   /**
    * Compute the jacobian of the \a t8_geom_evaluate map at a point in the reference space \f$ [0,1]^\mathrm{dim} \f$.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f$ [0,1]^\mathrm{dim} \f$.
-   * \param [out] jacobian    The jacobian at \a ref_coords. Array of size \f$ \mathrm{dim} \cdot 3 \f$. Indices \f$ 3 \cdot i\f$ , \f$ 3 \cdot i+1 \f$ , \f$ 3 \cdot i+2 \f$
-   *                          correspond to the \f$ i \f$-th column of the jacobian (Entry \f$ 3 \cdot i + j \f$ is \f$ \frac{\partial f_j}{\partial x_i} \f$).
+   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [out] jacobian    The jacobian at \a ref_coords. Array of size \a num_coords x dimension x 3. Indices \f$ 3 \cdot i\f$ , \f$ 3 \cdot i+1 \f$ , \f$ 3 \cdot i+2 \f$
+   *                          correspond to the \f$ i \f$-th column of the jacobian  (Entry \f$ 3 \cdot i + j \f$ is \f$ \frac{\partial f_j}{\partial x_i} \f$).
    */
   virtual void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double *jacobian) const;
+  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                             double *jacobian) const;
 
   /** Update a possible internal data buffer for per tree data.
    * This function is called before the first coordinates in a new tree are
@@ -276,37 +267,40 @@ struct t8_geometry_occ: public t8_geometry_with_vertices
 
  private:
   /**
-   * Map a point in the reference space \f$ [0,1]^2 \f$ to \f$ \mathbb{R}^3 \f$. Only for triangle trees.
+   * Maps points in the reference space \f$ [0,1]^2 \f$ to \f$ \mathbb{R}^3 \f$. Only for triangle trees.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of 2 entries, specifying a point in \f$ [0,1]^2 \f$.
-   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
   t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                 double out_coords[3]) const;
+                                 const size_t num_coords, double *out_coords) const;
 
   /**
-   * Map a point in the reference space \f$ [0,1]^2 \f$ to \f$ \mathbb{R}^3 \f$. Only for quad trees.
+   * Maps points in the reference space \f$ [0,1]^2 \f$ to \f$ \mathbb{R}^3 \f$. Only for quad trees.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of 2 entries, specifying a point in \f$ [0,1]^2 \f$.
-   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                             double out_coords[3]) const;
+  t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                             double *out_coords) const;
 
   /**
-   * Map a point in the reference space \f$ \f$ [0,1]^3 \f$ \f$ to \f$ \mathbb{R}^3 \f$. Only for hex trees.
+   * Maps points in the reference space \f$ \f$ [0,1]^3 \f$ \f$ to \f$ \mathbb{R}^3 \f$. Only for hex trees.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of 3 entries, specifying a point in \f$ [0,1]^3 \f$.
-   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                            double out_coords[3]) const;
+  t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                            double *out_coords) const;
 
   const int *edges;                                /**< The linked edges of the currently active tree. */
   const int *faces;                                /**< The linked faces of the currently active tree. */

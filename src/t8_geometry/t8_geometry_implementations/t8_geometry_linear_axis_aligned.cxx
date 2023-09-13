@@ -40,31 +40,19 @@ t8_geometry_linear_axis_aligned::~t8_geometry_linear_axis_aligned ()
   T8_FREE ((char *) name);
 }
 
-/**
- * Map a point in the reference space \f$ [0,1]^\mathrm{dim} \to \mathbb{R}^3 \f$.
- * \param [in]  cmesh      The cmesh in which the point lies.
- * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
- * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f$ [0,1]^\mathrm{dim} \f$.
- * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
- */
 void
 t8_geometry_linear_axis_aligned::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                                   double out_coords[3]) const
+                                                   const size_t num_coords, double *out_coords) const
 {
+  if (num_coords != 1)
+    SC_ABORT ("Error: Batch computation of geometry not yet supported.");
   t8_geom_compute_linear_axis_aligned_geometry (active_tree_class, active_tree_vertices, ref_coords, out_coords);
 }
 
-/**
- * Compute the jacobian of the \a t8_geom_evaluate map at a point in the reference space \f$ [0,1]^\mathrm{dim} \f$.
- * \param [in]  cmesh      The cmesh in which the point lies.
- * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
- * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f$ [0,1]^\mathrm{dim} \f$.
- * \param [out] jacobian    The jacobian at \a ref_coords. Array of size \f$ \mathrm{dim} \cdot 3 \f$. Indices \f$ 3 \cdot i\f$ , \f$ 3 \cdot i+1 \f$ , \f$ 3 \cdot i+2 \f$
- *                          correspond to the \f$ i \f$-th column of the jacobian (Entry \f$ 3 \cdot i + j \f$ is \f$ \frac{\partial f_j}{\partial x_i} \f$).
- */
 void
 t8_geometry_linear_axis_aligned::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
-                                                            const double *ref_coords, double *jacobian) const
+                                                            const double *ref_coords, const size_t num_coords,
+                                                            double *jacobian) const
 {
   SC_ABORT ("Not implemented.");
 }
