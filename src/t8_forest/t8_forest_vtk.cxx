@@ -551,6 +551,7 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest, vtkSmartPointer<vtkUnstruc
     dataArrays[idata]->SetNumberOfTuples (num_elements);       /* We want number of tuples=number of elements */
     dataArrays[idata]->SetNumberOfComponents (num_components); /* Each tuples has 3 values */
     dataArrays[idata]->SetVoidArray (data[idata].data, num_elements * num_components, 1);
+    unstructuredGrid->GetCellData ()->AddArray (dataArrays[idata]);
     if (num_components == 1) {
       unstructuredGrid->GetCellData ()->SetScalars (dataArrays[idata]);
     }
