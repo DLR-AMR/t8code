@@ -35,9 +35,6 @@
 struct t8_geometry_linear_axis_aligned: public t8_geometry_with_vertices
 {
  public:
-  /* *INDENT-OFF* */
-  /* indent does not know what a con- or destructor is */
-
   /* Basic constructor that sets the dimension and the name
    * to "t8_geom_linear_axis_aligned_{dim}" */
   t8_geometry_linear_axis_aligned (int dim);
@@ -54,7 +51,6 @@ struct t8_geometry_linear_axis_aligned: public t8_geometry_with_vertices
    * Clears the allocated memory.
    */
   virtual ~t8_geometry_linear_axis_aligned ();
-  /* *INDENT-ON* */
 
   /**
    * Maps points in the reference space \f$ [0,1]^\mathrm{dim} \to \mathbb{R}^3 \f$.
