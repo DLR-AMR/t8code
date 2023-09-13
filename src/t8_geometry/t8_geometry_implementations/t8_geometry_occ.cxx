@@ -87,7 +87,7 @@ t8_geometry_occ::t8_geometry_occ (int dim, const TopoDS_Shape occ_shape, const c
 
 void
 t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                   const size_t num_coords, double out_coords[3]) const
+                                   const size_t num_coords, double *out_coords) const
 {
   if (num_coords != 1)
     SC_ABORT ("Error: Batch computation of geometry not yet supported.");

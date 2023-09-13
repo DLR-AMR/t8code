@@ -67,7 +67,7 @@ struct t8_geometry
    */
   virtual void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double out_coords[3]) const
+                    double *out_coords) const
     = 0;
 
   /**

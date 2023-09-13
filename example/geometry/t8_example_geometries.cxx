@@ -96,7 +96,7 @@ class t8_geometry_sincos: public t8_geometry {
    */
   void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double out_coords[3]) const
+                    double *out_coords) const
   {
     if (num_coords != 1)
       SC_ABORT ("Error: Batch computation of geometry not yet supported.");
@@ -150,7 +150,7 @@ class t8_geometry_moebius: public t8_geometry_with_vertices {
    */
   void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double out_coords[3]) const
+                    double *out_coords) const
   {
     if (num_coords != 1)
       SC_ABORT ("Error: Batch computation of geometry not yet supported.");
@@ -205,7 +205,7 @@ class t8_geometry_cylinder: public t8_geometry {
    */
   void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double out_coords[3]) const
+                    double *out_coords) const
   {
     if (num_coords != 1)
       SC_ABORT ("Error: Batch computation of geometry not yet supported.");
@@ -256,7 +256,7 @@ class t8_geometry_circle: public t8_geometry_with_vertices {
    */
   void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double out_coords[3]) const
+                    double *out_coords) const
   {
     if (num_coords != 1)
       SC_ABORT ("Error: Batch computation of geometry not yet supported.");
@@ -316,7 +316,7 @@ class t8_geometry_moving: public t8_geometry {
    */
   void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double out_coords[3]) const
+                    double *out_coords) const
   {
     if (num_coords != 1)
       SC_ABORT ("Error: Batch computation of geometry not yet supported.");
@@ -381,7 +381,7 @@ class t8_geometry_cube_zdistorted: public t8_geometry {
    */
   void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double out_coords[3]) const
+                    double *out_coords) const
   {
     if (num_coords != 1)
       SC_ABORT ("Error: Batch computation of geometry not yet supported.");

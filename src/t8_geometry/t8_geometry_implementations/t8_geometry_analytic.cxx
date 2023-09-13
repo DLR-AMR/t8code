@@ -39,7 +39,7 @@ t8_geometry_analytic::t8_geometry_analytic (int dim, const char *name_in, t8_geo
 
 void
 t8_geometry_analytic::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                        const size_t num_coords, double out_coords[3]) const
+                                        const size_t num_coords, double *out_coords) const
 {
   T8_ASSERT (analytical_function != NULL);
   analytical_function (cmesh, gtreeid, ref_coords, num_coords, out_coords, tree_data, user_data);
