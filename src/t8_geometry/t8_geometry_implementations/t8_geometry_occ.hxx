@@ -43,19 +43,6 @@
 #include <Geom_Curve.hxx>
 #include <Geom_Surface.hxx>
 
-/**
- * Definition of an occ geometry function.
- * This function maps reference coordinates to physical
- * coordinates regarding the occ geometries linked to the cells edges and faces.
- * \param [in]  cmesh       The cmesh.
- * \param [in]  gtreeid     The global tree (of the cmesh) in which the reference point is.
- * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f$ [0,1]^\mathrm{dim} \f$.
- * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
- * \param [in]  tree_data   The data of the current tree as loaded by a \ref t8_geom_load_tree_data_fn.
- */
-typedef void (*t8_geom_occ_fn) (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double out_coords[3],
-                                const void *tree_data);
-
 /* *INDENT-OFF* */
 struct t8_geometry_occ: public t8_geometry_with_vertices
 {
