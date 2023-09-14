@@ -260,9 +260,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh, t8_gloidx_t gt
       }
       /* Retrieve surface */
       T8_ASSERT (*faces <= occ_shape_face_map.Size ());
-      /* *INDENT-OFF* */
       surface = BRep_Tool::Surface (TopoDS::Face (occ_shape_face_map.FindKey (*faces)));
-      /* *INDENT-ON* */
       /* Check if surface is valid */
       T8_ASSERT (!surface.IsNull ());
 
@@ -305,9 +303,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh, t8_gloidx_t gt
           }
           /* Retrieve curve */
           T8_ASSERT (edges[i_edge] <= occ_shape_face_map.Size ());
-          /* *INDENT-OFF* */
           curve = BRep_Tool::Curve (TopoDS::Edge (occ_shape_edge_map.FindKey (edges[i_edge])), first, last);
-          /* *INDENT-ON* */
           /* Check if curve is valid */
           T8_ASSERT (!curve.IsNull ());
 
@@ -404,9 +400,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
         T8_ASSERT (edge_parameters != NULL);
         T8_ASSERT (edges[i_edge] <= occ_shape_edge_map.Size ());
 
-        /* *INDENT-OFF* */
         curve = BRep_Tool::Curve (TopoDS::Edge (occ_shape_edge_map.FindKey (edges[i_edge])), first, last);
-        /* *INDENT-ON* */
 
         /* Check if curve is valid */
         T8_ASSERT (!curve.IsNull ());
@@ -498,10 +492,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
           double interpolated_curve_parameter;
           t8_geom_linear_interpolation (&ref_coords[edge_direction], parameters, 1, 1, &interpolated_curve_parameter);
 
-          /* *INDENT-OFF* */
           T8_ASSERT (edges[i_edge] <= occ_shape_edge_map.Size ());
           curve = BRep_Tool::Curve (TopoDS::Edge (occ_shape_edge_map.FindKey (edges[i_edge])), first, last);
-          /* *INDENT-ON* */
 
           /* Check if curve are valid */
           T8_ASSERT (!curve.IsNull ());
@@ -604,10 +596,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
         /* Linear interpolation between parameters */
         t8_geom_linear_interpolation (&ref_coords[edge_direction], parameters, 1, 1, &interpolated_curve_param);
 
-        /* *INDENT-OFF* */
         T8_ASSERT (edges[i_edge] <= occ_shape_edge_map.Size ());
         curve = BRep_Tool::Curve (TopoDS::Edge (occ_shape_edge_map.FindKey (edges[i_edge])), first, last);
-        /* *INDENT-ON* */
 
         /* Check if curve are valid */
         T8_ASSERT (!curve.IsNull ());
@@ -643,7 +633,6 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
        * Edges which are located at ref_coord[i] = 0 have to be multiplied with (1 - ref_coord[i]) and if the
        * edge is located at ref_coord[i] = 1 it has to be multiplied with ref_coord[i]. */
 
-      /* *INDENT-OFF* */
       double scaling_factor = 0;
       const int temp_i_edge = i_edge == 5 ? 6 : i_edge == 6 ? 5 : i_edge;
       switch (temp_i_edge % 4) {
@@ -660,7 +649,6 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
         scaling_factor = ref_coords[(edge_direction + 1) % 3] * ref_coords[(edge_direction + 2) % 3];
         break;
       }
-      /* *INDENT-ON* */
 
       /* Add edge displacements to out_coords */
       out_coords[0] += cur_delta[0] * scaling_factor;
@@ -816,11 +804,9 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
         interpolated_surface_params[dim] += surface_parameter_displacement_from_edges[dim];
       }
 
-      /* *INDENT-OFF* */
       /* Retrieve the surface of the edge */
       T8_ASSERT (faces[i_faces] <= occ_shape_face_map.Size ());
       surface = BRep_Tool::Surface (TopoDS::Face (occ_shape_face_map.FindKey (faces[i_faces])));
-      /* *INDENT-ON* */
 
       /* Check if surface is valid */
       T8_ASSERT (!surface.IsNull ());
@@ -844,8 +830,6 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
   }
 }
 
-/* Our indent skript has huge problems with c++ */
-/* *INDENT-OFF* */
 int
 t8_geometry_occ::t8_geom_is_line (const int curve_index) const
 {
@@ -1075,8 +1059,6 @@ t8_geometry_occ::t8_geom_is_surface_closed (int geometry_index, int parameter) c
     break;
   }
 }
-
-/* *INDENT-ON* */
 
 /* This part should be callable from C */
 T8_EXTERN_C_BEGIN ();
