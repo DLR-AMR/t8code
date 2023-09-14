@@ -58,26 +58,26 @@ struct t8_geometry
   }
 
   /**
-   * Map a point in the reference space \f$ [0,1]^\mathrm{dim} \to \mathbb{R}^3 \f$.
+   * Maps points in the reference space \f$ [0,1]^\mathrm{dim} \to \mathbb{R}^3 \f$.
    * \param [in]  cmesh       The cmesh in which the point lies.
    * \param [in]  gtreeid     The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
    * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
-   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   virtual void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double out_coords[3]) const
+                    double *out_coords) const
     = 0;
 
   /**
    * Compute the jacobian of the \a t8_geom_evaluate map at a point in the reference space \f$ [0,1]^\mathrm{dim} \f$.
    * \param [in]  cmesh      The cmesh in which the point lies.
-   * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
+   * \param [in]  glreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
    * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
-   * \param [out] jacobian    The jacobian at \a ref_coords. Array of size \a num_coords x dimension x 3. Indices 3*i, 3*i+1, 3*i+2
-   *                          correspond to the i-th column of the jacobian (Entry 3*i + j is del f_j/del x_i).
+   * \param [out] jacobian    The jacobian at \a ref_coords. Array of size \a num_coords x dimension x 3. Indices \f$ 3 \cdot i\f$ , \f$ 3 \cdot i+1 \f$ , \f$ 3 \cdot i+2 \f$
+   *                          correspond to the \f$ i \f$-th column of the jacobian  (Entry \f$ 3 \cdot i + j \f$ is \f$ \frac{\partial f_j}{\partial x_i} \f$).
    */
   virtual void
   t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,

@@ -22,9 +22,13 @@
 
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
+#include <t8_cmesh/t8_cmesh_helpers.h>
 #include <t8_cmesh/t8_cmesh_geometry.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_examples.h>
 #include <t8_vec.h>
+#include <t8_mat.h>
 #include <t8_eclass.h>
 
 /* TODO: In p4est a tree edge is joined with itself to denote a domain boundary.
@@ -833,9 +837,9 @@ t8_update_box_face_edges (const int dim, const double *box_corners, double *box_
   T8_ASSERT (-1 < face && face < t8_eclass_num_faces[eclass]);
   const int num_face_edges = eclass == T8_ECLASS_QUAD ? 1 : 4;
   for (int face_edge = 0; face_edge < num_face_edges; face_edge++) {
-    const int edge = t8_face_edge_to_tree_edge_n[eclass][face][face_edge];
-    const double *v_1 = box_corners + (t8_edge_vertex_to_tree_vertex_n[eclass][edge][0] * 3);
-    const double *v_2 = box_corners + (t8_edge_vertex_to_tree_vertex_n[eclass][edge][1] * 3);
+    const int edge = t8_face_edge_to_tree_edge[eclass][face][face_edge];
+    const double *v_1 = box_corners + (t8_edge_vertex_to_tree_vertex[eclass][edge][0] * 3);
+    const double *v_2 = box_corners + (t8_edge_vertex_to_tree_vertex[eclass][edge][1] * 3);
     /* Get the direction vector between v_1 and v_2 and store it in box_dir. */
     t8_vec_axpyz (v_1, v_2, box_dir + (edge * 3), -1.0);
     /* Get number of quads or hexs along current edge. */
@@ -881,12 +885,13 @@ t8_resize_box (const int dim, double *box_corners, const double *box_dir, const 
  * \param [in] boundary     The boundary vertices of \a cmesh.
  * \param [in] quads_x      The number of quads along the x-axis.
  * \param [in] quads_y      The number of quads along the y-axis.
+ * \param [in] use_axis_aligned_geom Flag if cmesh uses the axis_aligned_geometry. Only available for T8_ECLASS_QUAD
  * \note each quad of \a quads_x * \a quads_y quads in \a boundary contains one
  * tree of \a eclass T8_ECLASS_QUAD or two of T8_ECLASS_TRIANGLE.
  */
 static void
 t8_cmesh_set_vertices_2D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const double *boundary, const t8_locidx_t quads_x,
-                          const t8_locidx_t quads_y)
+                          const t8_locidx_t quads_y, const int use_axis_aligned_geom)
 {
   T8_ASSERT (!t8_cmesh_is_committed (cmesh));
   T8_ASSERT (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_TRIANGLE);
@@ -937,21 +942,28 @@ t8_cmesh_set_vertices_2D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
   for (t8_locidx_t quad_y_id = 0; quad_y_id < quads_y; quad_y_id++) {
     for (t8_locidx_t quad_x_id = 0; quad_x_id < quads_x; quad_x_id++) {
 
-      t8_vec_axy (box, vertices, 1.0);                /* Vertex 0 */
-      t8_vec_axpyz (box, box_dir, vertices + 6, 1.0); /* Vertex 2 */
+      if (use_axis_aligned_geom && eclass == T8_ECLASS_QUAD) {
+        t8_vec_axy (box, vertices, 1.0);                /* Vertex 0*/
+        t8_vec_axpyz (box, box_dir, vertices + 9, 1.0); /* Vertex 3 */
+      }
+      else {
+        t8_vec_axy (box, vertices, 1.0);                /* Vertex 0 */
+        t8_vec_axpyz (box, box_dir, vertices + 6, 1.0); /* Vertex 2 */
 
-      /* Reduce box along x axis */
-      t8_resize_box (2, box, box_dir, 0, 1, box_quads);
-      t8_update_box_face_edges (2, box, box_dir, 0, box_quads);
+        /* Reduce box along x axis */
+        t8_resize_box (2, box, box_dir, 0, 1, box_quads);
+        t8_update_box_face_edges (2, box, box_dir, 0, box_quads);
 
-      t8_vec_axy (box, vertices + 3, 1.0);            /* Vertex 1 */
-      t8_vec_axpyz (box, box_dir, vertices + 9, 1.0); /* Vertex 3 */
+        t8_vec_axy (box, vertices + 3, 1.0);            /* Vertex 1 */
+        t8_vec_axpyz (box, box_dir, vertices + 9, 1.0); /* Vertex 3 */
+      }
 
       /* Map vertices of current quad on to respective trees inside. */
       if (eclass == T8_ECLASS_QUAD) {
         /* No mapping is required. */
         const t8_locidx_t tree_id = quad_y_id * quads_x + quad_x_id;
-        t8_cmesh_set_tree_vertices (cmesh, tree_id, vertices, 4);
+        t8_cmesh_set_tree_vertices (cmesh, tree_id, vertices,
+                                    (use_axis_aligned_geom && eclass == T8_ECLASS_QUAD) ? 2 : 4);
       }
       else {
         T8_ASSERT (eclass == T8_ECLASS_TRIANGLE);
@@ -994,12 +1006,13 @@ t8_cmesh_set_vertices_2D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
  * \param [in] hexs_x       The number of hexs along the x-axis.
  * \param [in] hexs_y       The number of hexs along the y-axis.
  * \param [in] hexs_z       The number of hexs along the z-axis.
+ * \param [in] use_axis_aligned_geom Flag if cmesh uses the axis aligned_geometry. Only available for T8_ECLASS_QUAD
  * \note each hex of \a hexs_x * \a hexs_y * \a hexs_z hexs in \a boundary 
  * contains several trees of class \a eclass.
  */
 static void
 t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const double *boundary, const t8_locidx_t hexs_x,
-                          const t8_locidx_t hexs_y, const t8_locidx_t hexs_z)
+                          const t8_locidx_t hexs_y, const t8_locidx_t hexs_z, const int use_axis_aligned_geom)
 {
   T8_ASSERT (!t8_cmesh_is_committed (cmesh));
   /* x axes */
@@ -1075,36 +1088,42 @@ t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
   for (t8_locidx_t hex_z_id = 0; hex_z_id < hexs_z; hex_z_id++) {
     for (t8_locidx_t hex_y_id = 0; hex_y_id < hexs_y; hex_y_id++) {
       for (t8_locidx_t hex_x_id = 0; hex_x_id < hexs_x; hex_x_id++) {
+        if (use_axis_aligned_geom && eclass == T8_ECLASS_HEX) {
+          t8_vec_axy (box, vertices, 1.0);                      /* Vertex 0 */
+          t8_vec_axpyz (box, box_dir + 12, vertices + 21, 1.0); /* Vertex 7 */
+        }
+        else {
+          t8_vec_axy (box, vertices, 1.0);                     /* Vertex 0 */
+          t8_vec_axpyz (box, box_dir + 12, vertices + 6, 1.0); /* Vertex 2 */
 
-        t8_vec_axy (box, vertices, 1.0);                     /* Vertex 0 */
-        t8_vec_axpyz (box, box_dir + 12, vertices + 6, 1.0); /* Vertex 2 */
+          /* Reduce box along z axis and face 4. */
+          t8_resize_box (3, box, box_dir, 4, 1, box_hexs);
+          t8_update_box_face_edges (3, box, box_dir, 4, box_hexs);
 
-        /* Reduce box along z axis and face 4. */
-        t8_resize_box (3, box, box_dir, 4, 1, box_hexs);
-        t8_update_box_face_edges (3, box, box_dir, 4, box_hexs);
+          t8_vec_axy (box, vertices + 12, 1.0);                 /* Vertex 4 */
+          t8_vec_axpyz (box, box_dir + 12, vertices + 18, 1.0); /* Vertex 6 */
 
-        t8_vec_axy (box, vertices + 12, 1.0);                 /* Vertex 4 */
-        t8_vec_axpyz (box, box_dir + 12, vertices + 18, 1.0); /* Vertex 6 */
+          /* Reduce box along x axis and face 0. */
+          t8_resize_box (3, box, box_dir, 0, 1, box_hexs);
+          t8_update_box_face_edges (3, box, box_dir, 0, box_hexs);
 
-        /* Reduce box along x axis and face 0. */
-        t8_resize_box (3, box, box_dir, 0, 1, box_hexs);
-        t8_update_box_face_edges (3, box, box_dir, 0, box_hexs);
+          t8_vec_axy (box, vertices + 15, 1.0);                 /* Vertex 5 */
+          t8_vec_axpyz (box, box_dir + 12, vertices + 21, 1.0); /* Vertex 7 */
 
-        t8_vec_axy (box, vertices + 15, 1.0);                 /* Vertex 5 */
-        t8_vec_axpyz (box, box_dir + 12, vertices + 21, 1.0); /* Vertex 7 */
+          /* Increase box along z axis and and face 4 */
+          t8_resize_box (3, box, box_dir, 4, -1, box_hexs);
+          t8_update_box_face_edges (3, box, box_dir, 4, box_hexs);
 
-        /* Increase box along z axis and and face 4 */
-        t8_resize_box (3, box, box_dir, 4, -1, box_hexs);
-        t8_update_box_face_edges (3, box, box_dir, 4, box_hexs);
-
-        t8_vec_axy (box, vertices + 3, 1.0);                 /* Vertex 1 */
-        t8_vec_axpyz (box, box_dir + 12, vertices + 9, 1.0); /* Vertex 3 */
+          t8_vec_axy (box, vertices + 3, 1.0);                 /* Vertex 1 */
+          t8_vec_axpyz (box, box_dir + 12, vertices + 9, 1.0); /* Vertex 3 */
+        }
 
         /* Map vertices of current hex on to respective trees inside. */
         const t8_locidx_t hex_id = hex_z_id * hexs_y * hexs_x + hex_y_id * hexs_x + hex_x_id;
         if (eclass == T8_ECLASS_HEX) {
           /* No mapping is required. */
-          t8_cmesh_set_tree_vertices (cmesh, hex_id, vertices, 8);
+          t8_cmesh_set_tree_vertices (cmesh, hex_id, vertices,
+                                      (use_axis_aligned_geom && eclass == T8_ECLASS_HEX) ? 2 : 8);
         }
         else if (eclass == T8_ECLASS_TET) {
           const t8_locidx_t tree_id_0 = hex_id * 6;
@@ -1191,7 +1210,7 @@ t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
 
 t8_cmesh_t
 t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass, sc_MPI_Comm comm, const double *boundary, t8_locidx_t polygons_x,
-                            t8_locidx_t polygons_y, t8_locidx_t polygons_z)
+                            t8_locidx_t polygons_y, t8_locidx_t polygons_z, const int use_axis_aligned_geom)
 {
   SC_CHECK_ABORT (eclass != T8_ECLASS_PYRAMID, "Pyramids are not yet supported.");
   const int dim = t8_eclass_to_dimension[eclass];
@@ -1212,9 +1231,16 @@ t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass, sc_MPI_Comm comm, const do
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
 
-  /* We use standard linear geometry */
-  const t8_geometry_c *linear_geom = t8_geometry_linear_new (dim);
-  t8_cmesh_register_geometry (cmesh, linear_geom);
+  if (use_axis_aligned_geom && (eclass == T8_ECLASS_HEX || eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_LINE)) {
+    /* We use axis aligned geometries */
+    const t8_geometry_c *axis_aligned_geom = t8_geometry_linear_axis_aligned_new (dim);
+    t8_cmesh_register_geometry (cmesh, axis_aligned_geom);
+  }
+  else {
+    /* We use standard linear geometry */
+    const t8_geometry_c *linear_geom = t8_geometry_linear_new (dim);
+    t8_cmesh_register_geometry (cmesh, linear_geom);
+  }
 
   /* Number of trees inside each polygon of given eclass. */
   const t8_locidx_t num_trees_for_single_hypercube[T8_ECLASS_COUNT] = { 1, 1, 1, 2, 1, 6, 2, -1 };
@@ -1228,11 +1254,11 @@ t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass, sc_MPI_Comm comm, const do
   /* Set the vertices of all trees. */
   if (dim == 3) {
     T8_ASSERT (eclass == T8_ECLASS_HEX || eclass == T8_ECLASS_TET || eclass == T8_ECLASS_PRISM);
-    t8_cmesh_set_vertices_3D (cmesh, eclass, boundary, polygons_x, polygons_y, polygons_z);
+    t8_cmesh_set_vertices_3D (cmesh, eclass, boundary, polygons_x, polygons_y, polygons_z, use_axis_aligned_geom);
   }
   else if (dim == 2) {
     T8_ASSERT (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_TRIANGLE);
-    t8_cmesh_set_vertices_2D (cmesh, eclass, boundary, polygons_x, polygons_y);
+    t8_cmesh_set_vertices_2D (cmesh, eclass, boundary, polygons_x, polygons_y, use_axis_aligned_geom);
   }
   else if (dim == 1) {
     T8_ASSERT (eclass == T8_ECLASS_LINE);
@@ -2652,6 +2678,86 @@ t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees, const int set_attributes, cons
     t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
   }
 
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
+}
+
+t8_cmesh_t
+t8_cmesh_new_squared_disk (const double radius, sc_MPI_Comm comm)
+{
+  /* Initialization of the mesh */
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+
+  const double ri = 0.5 * radius;
+  const double ro = radius;
+
+  const double xi = ri / M_SQRT2;
+  const double yi = ri / M_SQRT2;
+
+  const double xo = ro / M_SQRT2;
+  const double yo = ro / M_SQRT2;
+
+  const int ntrees = 5; /* Number of cmesh elements resp. trees. */
+  const int nverts = 4; /* Number of vertices per cmesh element. */
+
+  /* Arrays for the face connectivity computations via vertices. */
+  double all_verts[ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM];
+  t8_eclass_t all_eclasses[ntrees];
+
+  t8_geometry_c *geometry = t8_geometry_squared_disk_new ();
+  t8_cmesh_register_geometry (cmesh, geometry);
+
+  /* Defitition of the tree class. */
+  for (int itree = 0; itree < ntrees; itree++) {
+    t8_cmesh_set_tree_class (cmesh, itree, T8_ECLASS_QUAD);
+    all_eclasses[itree] = T8_ECLASS_QUAD;
+  }
+
+  /* Central quad. */
+  {
+    const double vertices[4][3] = { { -xi, -yi, 0.0 }, { xi, -yi, 0.0 }, { -xi, yi, 0.0 }, { xi, yi, 0.0 } };
+
+    t8_cmesh_set_tree_vertices (cmesh, 0, (double *) vertices, 4);
+
+    /* itree = 0; */
+    for (int ivert = 0; ivert < nverts; ivert++) {
+      for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
+        all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, 0, ivert, icoord)]
+          = vertices[ivert][icoord];
+      }
+    }
+  }
+
+  /* Four quads framing the central quad. */
+  {
+    const double vertices[4][3] = { { -xi, yi, 0.0 }, { xi, yi, 0.0 }, { -xo, yo, 0.0 }, { xo, yo, 0.0 } };
+
+    for (int itree = 1; itree < ntrees; itree++) {
+      double rot_mat[3][3];
+      double rot_vertices[4][3];
+
+      t8_mat_init_zrot (rot_mat, (itree - 1) * 0.5 * M_PI);
+
+      for (int i = 0; i < 4; i++) {
+        t8_mat_mult_vec (rot_mat, &(vertices[i][0]), &(rot_vertices[i][0]));
+      }
+
+      t8_cmesh_set_tree_vertices (cmesh, itree, (double *) rot_vertices, 4);
+
+      for (int ivert = 0; ivert < nverts; ivert++) {
+        for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
+          all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree, ivert, icoord)]
+            = rot_vertices[ivert][icoord];
+        }
+      }
+    }
+  }
+
+  /* Face connectivity. */
+  t8_cmesh_set_join_by_vertices (cmesh, ntrees, all_eclasses, all_verts, NULL, 0);
+
+  /* Commit the mesh */
   t8_cmesh_commit (cmesh, comm);
   return cmesh;
 }

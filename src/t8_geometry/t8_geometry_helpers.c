@@ -236,7 +236,7 @@ t8_geom_get_edge_vertices (const t8_eclass_t tree_class, const double *tree_vert
   T8_ASSERT (t8_eclass_to_dimension[tree_class] == 3);
   for (int i_edge_vertex = 0; i_edge_vertex < 2; ++i_edge_vertex) {
     for (int i_dim = 0; i_dim < dim; ++i_dim) {
-      const int i_tree_vertex = t8_edge_vertex_to_tree_vertex[edge_index][i_edge_vertex];
+      const int i_tree_vertex = t8_edge_vertex_to_tree_vertex[tree_class][edge_index][i_edge_vertex];
       edge_vertices[i_edge_vertex * dim + i_dim] = tree_vertices[i_tree_vertex * dim + i_dim];
     }
   }
