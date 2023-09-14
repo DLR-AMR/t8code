@@ -70,7 +70,7 @@ TEST (t8_point_inside, test_point_inside_specific_triangle)
 
   t8_element_t *element = t8_forest_get_element (forest, 0, NULL);
 
-  const int point_is_inside = t8_forest_element_point_inside (forest, 0, element, test_point, tolerance);
+  const int point_is_inside = t8_forest_element_point_inside (forest, 0, element, test_point, 0, tolerance);
   ASSERT_FALSE (point_is_inside) << "The point is wrongly detected as inside the triangle.";
   t8_forest_unref (&forest);
 }
@@ -112,7 +112,7 @@ TEST (t8_point_inside, test_point_inside_specific_quad)
 
   t8_element_t *element = t8_forest_get_element (forest, 0, NULL);
 
-  const int point_is_inside = t8_forest_element_point_inside (forest, 0, element, test_point, tolerance);
+  const int point_is_inside = t8_forest_element_point_inside (forest, 0, element, test_point, 0, tolerance);
 
   ASSERT_FALSE (point_is_inside) << "The point is wrongly detected as inside the quad.";
 
@@ -120,16 +120,34 @@ TEST (t8_point_inside, test_point_inside_specific_quad)
 }
 
 /* *INDENT-OFF* */
-class geometry_point_inside: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
+class geometry_point_inside: public testing::TestWithParam<std::tuple<t8_eclass, int, int>> {
  protected:
   void
   SetUp () override
   {
     eclass = std::get<0> (GetParam ());
     level = std::get<1> (GetParam ());
+    use_axis_aligned_geom = std::get<2> (GetParam ());
 
     /* Construct a cube coarse mesh */
-    cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
+    if (use_axis_aligned_geom && (eclass == T8_ECLASS_LINE || eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX)) {
+      /* clang-format off */
+      const double boundaries[24] = { 
+        0, 0, 0, 
+        1, 0, 0, 
+        0, 1, 0, 
+        1, 1, 0, 
+        0, 0, 1, 
+        1, 0, 1, 
+        0, 1, 1,
+        1, 1, 1 
+      };
+      /* clang-format on */
+      cmesh = t8_cmesh_new_hypercube_pad (eclass, sc_MPI_COMM_WORLD, boundaries, 1, 1, 1, use_axis_aligned_geom);
+    }
+    else {
+      cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
+    }
   }
   void
   TearDown () override
@@ -137,6 +155,7 @@ class geometry_point_inside: public testing::TestWithParam<std::tuple<t8_eclass,
   }
   t8_eclass_t eclass;
   int level;
+  int use_axis_aligned_geom;
   t8_cmesh_t cmesh;
 };
 /* *INDENT-ON* */
@@ -284,7 +303,7 @@ TEST_P (geometry_point_inside, test_point_inside)
       /* We now check whether the point inside function correctly sees whether
          * the point is inside the element or not. */
       t8_forest_element_point_batch_inside (forest, 0, element, test_point, num_points, point_is_recognized_as_inside,
-                                            tolerance);
+                                            use_axis_aligned_geom, tolerance);
       for (int ipoint = 0; ipoint < num_points; ipoint++) {
         ASSERT_EQ (!point_is_recognized_as_inside[ipoint], !point_is_inside[ipoint])
           << "Testing point #" << ipoint << "(" << test_point[0] << "," << test_point[1] << "," << test_point[2]
@@ -307,5 +326,6 @@ INSTANTIATE_TEST_SUITE_P (t8_gtest_point_inside, geometry_point_inside,
                           testing::Combine (testing::Range (T8_ECLASS_LINE, T8_ECLASS_COUNT), testing::Range (0, 4)));
 #else
 INSTANTIATE_TEST_SUITE_P (t8_gtest_point_inside, geometry_point_inside,
-                          testing::Combine (testing::Range (T8_ECLASS_LINE, T8_ECLASS_COUNT), testing::Range (0, 6)));
+                          testing::Combine (testing::Range (T8_ECLASS_LINE, T8_ECLASS_COUNT), testing::Range (0, 6),
+                                            testing::Range (0, 1)));
 #endif
