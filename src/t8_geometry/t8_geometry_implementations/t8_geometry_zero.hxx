@@ -23,7 +23,7 @@
 /** \file t8_geometry_zero.hxx
  * This geometry implements the t8_geometry interface and maps
  * all points to 0.
- * This geometry servers for testing and debugging purposes.
+ * This geometry serves for testing and debugging purposes.
  */
 
 #ifndef T8_GEOMETRY_ZERO_HXX
@@ -35,8 +35,13 @@
 struct t8_geometry_zero: public t8_geometry
 {
  public:
-  /* Basic constructor that sets the dimension and the name
-   * to "t8_geom_zero_{dimension}" */
+  /**
+   * Constructor of the zero geometry with a given dimension. The geometry
+   * is viable with all tree types. This geometry maps all points to zero and
+   * is meant for debugging purposes.
+   * Sets the dimension and the name to "t8_geom_zero_{dim}"
+   * \param [in] dim  0 <= \a dimension <= 3. The dimension.
+   */
   t8_geometry_zero (int dimension);
 
   /** The destructor. 
