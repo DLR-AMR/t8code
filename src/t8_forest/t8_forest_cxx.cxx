@@ -1249,7 +1249,7 @@ t8_forest_element_point_batch_inside (t8_forest_t forest, t8_locidx_t ltreeid, c
 
     /*Geometry is fully described by v_min and v_max*/
     t8_forest_element_coordinate (forest, ltreeid, element, 0, v_min);
-    t8_forest_element_coordinate (forest, ltreeid, element, 0, v_max);
+    t8_forest_element_coordinate (forest, ltreeid, element, 1, v_max);
 
     for (int ipoint = 0; ipoint < num_points; ipoint++) {
       /* A point is inside if it is inbetween the x/y/z-coordinates of v_min and v_max */
@@ -1258,6 +1258,7 @@ t8_forest_element_point_batch_inside (t8_forest_t forest, t8_locidx_t ltreeid, c
           v_min[1] <= points[ipoint * 3 + 1] && points[ipoint * 3 + 1] <= v_max[1] && /* check y-coordinate*/
           v_min[2] <= points[ipoint * 3 + 2] && points[ipoint * 3 + 2] <= v_max[2];   /* check z-coordinate*/
     }
+    return;
   }
   switch (element_shape) {
   case T8_ECLASS_VERTEX: {
