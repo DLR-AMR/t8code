@@ -35,11 +35,14 @@
 struct t8_geometry_linear_axis_aligned: public t8_geometry_with_vertices
 {
  public:
-  /* *INDENT-OFF* */
-  /* indent does not know what a con- or destructor is */
-
-  /* Basic constructor that sets the dimension and the name
-   * to "t8_geom_linear_axis_aligned_{dim}" */
+  /**
+   * Constructor of the linear, axis-aligned geometry with a given dimension.
+   * The geometry is only viable for the line/quad/hex tree types and uses two
+   * vertices (min and max coords) per tree. The vertices are saved via
+   * the \ref t8_cmesh_set_tree_vertices function. Sets the dimension and the
+   * name to "t8_geom_linear_axis_aligned_{dim}"
+   * \param [in] dim  0 <= \a dimension <= 3. The dimension.
+   */
   t8_geometry_linear_axis_aligned (int dim);
 
   /* Base constructor with no arguments. We need this since it
@@ -54,7 +57,6 @@ struct t8_geometry_linear_axis_aligned: public t8_geometry_with_vertices
    * Clears the allocated memory.
    */
   virtual ~t8_geometry_linear_axis_aligned ();
-  /* *INDENT-ON* */
 
   /**
    * Maps points in the reference space \f$ [0,1]^\mathrm{dim} \to \mathbb{R}^3 \f$.

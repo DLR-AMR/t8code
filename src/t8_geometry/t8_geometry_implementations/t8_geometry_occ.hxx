@@ -47,20 +47,33 @@ struct t8_geometry_occ: public t8_geometry_with_vertices
 {
  public:
   /**
-   * Constructor of the occ geometry class.
-   * \param [in] dimension  The dimension of this geometry.
+   * Constructor of the occ geometry with a given dimension. The geometry
+   * is currently viable with quad/hex and triangle trees. Tets will be supported soon.
+   * The geometry uses as many vertices as the tree type has, as well as
+   * additional geometry information, which is extracted from a .brep file.
+   * The vertices are saved via the \ref t8_cmesh_set_tree_vertices function.
+   * Since the internals of this geometry are finely tuned to the .brep file
+   * it is recommended to only use it with the \ref t8_cmesh_readmshfile function.
+   * \param [in] dim        The dimension of this geometry.
    * \param [in] fileprefix Prefix of a .brep file from which to extract an occ geometry.
    * \param [in] name       The name to give this geometry.
    */
-  t8_geometry_occ (int dimension, const char *fileprefix, const char *name);
+  t8_geometry_occ (int dim, const char *fileprefix, const char *name);
 
   /**
-   * Constructor of the occ geometry class.
-   * \param [in] dimension  The dimension of this geometry.
+   * Constructor of the occ geometry with a given dimension. The geometry
+   * is currently viable with quad/hex and triangle trees. Tets will be supported soon.
+   * The geometry uses as many vertices as the tree type has, as well as
+   * additional geometry information, which is given via the \a occ_shape.
+   * The vertices are saved via the \ref t8_cmesh_set_tree_vertices function.
+   * This constructor can be used in short scripts or in combination with a
+   * mesh generator, to omit the file IO of the 
+   * \ref t8_geometry_occ (int dim, const char *fileprefix, const char *name) constructor.
+   * \param [in] dim        The dimension of this geometry.
    * \param [in] occ_shape  Occ shape geometry.
    * \param [in] name       The name to give this geometry.
    */
-  t8_geometry_occ (int dimension, const TopoDS_Shape occ_shape, const char *name);
+  t8_geometry_occ (int dim, const TopoDS_Shape occ_shape, const char *name);
 
   /** The destructor. 
    * Clears the allocated memory.

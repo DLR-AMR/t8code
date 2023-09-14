@@ -123,13 +123,11 @@ extern const int t8_eclass_num_edges[T8_ECLASS_COUNT];
 /** The vtk cell type for the eclass */
 extern const int t8_eclass_vtk_type[T8_ECLASS_COUNT];
 
-/* *INDENT-OFF* */
 /** Map the vtk corner number to the t8 corner number */
 extern const int t8_eclass_vtk_to_t8_corner_number[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS];
 
 /** Map the t8code corner number to the vtk corner number */
 extern const int t8_eclass_t8_to_vtk_corner_number[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS];
-/* *INDENT-ON* */
 
 /** For each of the element classes, list the type of the faces. */
 extern const int t8_eclass_face_types[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES];
