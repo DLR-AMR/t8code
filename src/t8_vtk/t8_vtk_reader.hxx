@@ -59,10 +59,8 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer<vtkDataSet> vtkGrid, const int partition, c
  * \param[in] vtkGrid A pointer to a vtkDataSet
  * \return A pointer to a vtkPointSet 
  */
-/* *INDENT-OFF* */
 vtkSmartPointer<vtkPointSet>
 t8_vtkGrid_to_vtkPointSet (vtkSmartPointer<vtkDataSet> vtkGrid);
-/* *INDENT-ON* */
 
 /**
  * Given a filename to a vtkUnstructuredGrid or vtkPolyData read the file and

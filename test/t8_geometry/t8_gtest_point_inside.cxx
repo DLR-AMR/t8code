@@ -119,7 +119,6 @@ TEST (t8_point_inside, test_point_inside_specific_quad)
   t8_forest_unref (&forest);
 }
 
-/* *INDENT-OFF* */
 class geometry_point_inside: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
  protected:
   void
@@ -139,7 +138,6 @@ class geometry_point_inside: public testing::TestWithParam<std::tuple<t8_eclass,
   int level;
   t8_cmesh_t cmesh;
 };
-/* *INDENT-ON* */
 
 TEST_P (geometry_point_inside, test_point_inside)
 {
