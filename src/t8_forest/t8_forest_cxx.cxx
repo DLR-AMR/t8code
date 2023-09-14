@@ -1228,7 +1228,8 @@ t8_plane_point_inside (const double point_on_face[3], const double face_normal[3
 
 void
 t8_forest_element_point_batch_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                      const double *points, int num_points, int *is_inside, const double tolerance)
+                                      const double *points, int num_points, int *is_inside,
+                                      const int geom_is_axis_aligned, const double tolerance)
 {
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
   t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, tree_class);
@@ -1242,7 +1243,22 @@ t8_forest_element_point_batch_inside (t8_forest_t forest, t8_locidx_t ltreeid, c
   const t8_geometry_c *geometry = t8_cmesh_get_tree_geometry (cmesh, cgtreeid);
   T8_ASSERT (t8_geom_is_linear (geometry));
 #endif
+  if (geom_is_axis_aligned) {
+    double v_min[3];
+    double v_max[3];
 
+    /*Geometry is fully described by v_min and v_max*/
+    t8_forest_element_coordinate (forest, ltreeid, element, 0, v_min);
+    t8_forest_element_coordinate (forest, ltreeid, element, 0, v_max);
+
+    for (int ipoint = 0; ipoint < num_points; ipoint++) {
+      /* A point is inside if it is inbetween the x/y/z-coordinates of v_min and v_max */
+      is_inside[ipoint]
+        = v_min[0] <= points[ipoint * 3] && points[ipoint * 3] <= v_max[0] &&         /* check x-coordinate*/
+          v_min[1] <= points[ipoint * 3 + 1] && points[ipoint * 3 + 1] <= v_max[1] && /* check y-coordinate*/
+          v_min[2] <= points[ipoint * 3 + 2] && points[ipoint * 3 + 2] <= v_max[2];   /* check z-coordinate*/
+    }
+  }
   switch (element_shape) {
   case T8_ECLASS_VERTEX: {
     /* A point is 'inside' a vertex if they have the same coordinates */
@@ -1380,10 +1396,11 @@ t8_forest_element_point_batch_inside (t8_forest_t forest, t8_locidx_t ltreeid, c
 
 int
 t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                const double point[3], const double tolerance)
+                                const double point[3], const int geom_is_axis_aligned, const double tolerance)
 {
   int is_inside = 0;
-  t8_forest_element_point_batch_inside (forest, ltreeid, element, point, 1, &is_inside, tolerance);
+  t8_forest_element_point_batch_inside (forest, ltreeid, element, point, 1, &is_inside, geom_is_axis_aligned,
+                                        tolerance);
   return is_inside;
 }
 
