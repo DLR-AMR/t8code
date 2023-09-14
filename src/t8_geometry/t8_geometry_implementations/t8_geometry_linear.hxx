@@ -34,9 +34,14 @@
 struct t8_geometry_linear: public t8_geometry_with_vertices
 {
  public:
-  /* Basic constructor that sets the dimension and the name
-   * to "t8_geom_linear_{dimension}" */
-  t8_geometry_linear (int dimension);
+  /** 
+   * Constructor of the linear geometry with a given dimension. The geometry
+   * is viable with all tree types and uses as many vertices as the tree type has.
+   * The vertices are saved via the \ref t8_cmesh_set_tree_vertices function.
+   * Sets the dimension and the name to "t8_geom_linear_{dim}"
+   * \param [in] dim  0 <= \a dimension <= 3. The dimension.
+   */
+  t8_geometry_linear (int dim);
 
   /* Base constructor with no arguments. We need this since it
    * is called from derived class constructors.
