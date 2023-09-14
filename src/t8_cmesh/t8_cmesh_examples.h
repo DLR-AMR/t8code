@@ -106,6 +106,8 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
  *                          Only required if \a eclass is 2D or 3D.
  * \param [in] polygons_z   The number of polygons along the z-axis.
  *                          Only required if \a eclass is 3D.
+ * \param [in] use_axis_aligned_geom  Flag if cmesh uses the axis aligned_geometry. Only available for 
+ *                                    T8_ECLASS_LINE/QUAD/HEX
  * \return                  A committed t8_cmesh structure with 
  *                          \a polygons_x * \a polygons_z * \a polygons_y many 
  *                          sub-hypercubes of class \a eclass.
