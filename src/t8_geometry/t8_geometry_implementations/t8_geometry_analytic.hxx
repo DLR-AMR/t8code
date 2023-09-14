@@ -69,14 +69,16 @@ struct t8_geometry_analytic: public t8_geometry
 {
  public:
   /**
-   * Constructor with analytical and jacobian functions.
-   * \param [in] dimension  The dimension of this geometry.
+   * Constructor of the analytic geometry with a given dimension. The geometry
+   * is viable with all tree types and uses a user-provided analytic and
+   * jacobian function. The actual mappings are done by these functions.
+   * \param [in] dim        The dimension of this geometry.
    * \param [in] name       The name to give this geometry.
    * \param [in] analytical The analytical function to use for this geometry.
    * \param [in] jacobian   The jacobian of \a analytical.
    * \param [in] load_tree_data The function that is used to load a tree's data.
    */
-  t8_geometry_analytic (int dimension, const char *name, t8_geom_analytic_fn analytical,
+  t8_geometry_analytic (int dim, const char *name, t8_geom_analytic_fn analytical,
                         t8_geom_analytic_jacobian_fn jacobian, t8_geom_load_tree_data_fn load_tree_data,
                         const void *user_data);
 
