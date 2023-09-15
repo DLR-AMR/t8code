@@ -91,7 +91,7 @@ extern const int t8_face_vertex_to_tree_vertex[T8_ECLASS_COUNT][T8_ECLASS_MAX_FA
 
 /** For each eclass and each face f the entry i gives the edge number
  * of f's i-th edge within all edges of the tree. */
-extern const int t8_face_edge_to_tree_edge_n[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_EDGES_2D];
+extern const int t8_face_edge_to_tree_edge[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_EDGES_2D];
 
 /** For each eclass, each face f and the face vertex v, we get the edge number
  *  of the tree which is incident to vertex v but not part of f. */
@@ -99,11 +99,11 @@ extern const int t8_face_to_edge_neighbor[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES][
 
 /** For each eclass and each edge e the entry i gives the vertex number
  * of e's i-th vertex within all vertices of the tree. */
-extern const int t8_edge_vertex_to_tree_vertex_n[T8_ECLASS_COUNT][T8_ECLASS_MAX_EDGES][2];
+extern const int t8_edge_vertex_to_tree_vertex[T8_ECLASS_COUNT][T8_ECLASS_MAX_EDGES][2];
 
 /** For each eclass and each edge e the entry i gives the face number
  * of e's i-th incident face within all faces of the tree. */
-extern const int t8_edge_to_face_n[T8_ECLASS_COUNT][T8_ECLASS_MAX_EDGES][2];
+extern const int t8_edge_to_face[T8_ECLASS_COUNT][T8_ECLASS_MAX_EDGES][2];
 
 /** Each face is either 0 or 1 oriented, depending on the order of its vertices.
  * We say a face is 0 oriented, if its normal vector points inwards,
@@ -123,13 +123,11 @@ extern const int t8_eclass_num_edges[T8_ECLASS_COUNT];
 /** The vtk cell type for the eclass */
 extern const int t8_eclass_vtk_type[T8_ECLASS_COUNT];
 
-/* *INDENT-OFF* */
 /** Map the vtk corner number to the t8 corner number */
 extern const int t8_eclass_vtk_to_t8_corner_number[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS];
 
 /** Map the t8code corner number to the vtk corner number */
 extern const int t8_eclass_t8_to_vtk_corner_number[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS];
-/* *INDENT-ON* */
 
 /** For each of the element classes, list the type of the faces. */
 extern const int t8_eclass_face_types[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES];

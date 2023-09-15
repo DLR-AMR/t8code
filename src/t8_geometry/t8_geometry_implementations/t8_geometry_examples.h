@@ -1,9 +1,9 @@
 /*
   This file is part of t8code.
   t8code is a C library to manage a collection (a forest) of multiple
-  connected adaptive space-trees of general element types in parallel.
+  connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2023 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,27 +20,30 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* In this test we create an occ gp_Pnt object.
- * The purpose of this test is to check whether t8code successfully links
- * against occ.
- * If t8code was not configured with --with-occ then this test
- * does nothing and is always passed.
+/** \file t8_geometry_examples.h
+ * This header provides the C interface to create a cubed_sphere geometry.
  */
 
+#ifndef T8_GEOMETRY_EXAMPLES_H
+#define T8_GEOMETRY_EXAMPLES_H
+
 #include <t8.h>
-#include <gtest/gtest.h>
-#if T8_WITH_OCC
-#include <gp_Pnt.hxx>
-#endif
+#include <t8_geometry/t8_geometry.h>
 
-/* Check whether we can successfully execute VTK code */
-TEST (t8_test_occ_linkage, test_gp_Pnt)
-{
-#if T8_WITH_OCC
+T8_EXTERN_C_BEGIN ();
 
-  EXPECT_NO_THROW (gp_Pnt pnt = gp_Pnt (); pnt.SetX (1););
-  t8_global_productionf ("Successfully created occ gp_Pnt object.\n");
-#else
-  t8_global_productionf ("This version of t8code is not compiled with occ support.\n");
-#endif
-}
+/** Destroy a geometry object.
+ * \param [in,out] geom   A pointer to a geometry object. Set to NULL on output.
+ */
+void
+t8_geometry_destroy (t8_geometry_c **geom);
+
+/** Create a new squared_disk geometry.
+ * \return          A pointer to an allocated geometry struct.
+ */
+t8_geometry_c *
+t8_geometry_squared_disk_new ();
+
+T8_EXTERN_C_END ();
+
+#endif /* T8_GEOMETRY_EXAMPLE_H */
