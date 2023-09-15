@@ -28,14 +28,14 @@
 #define T8_GEOMETRY_EXAMPLES_HXX
 
 #include <t8.h>
-#include <t8_geometry/t8_geometry_base.hxx>
+#include <t8_geometry/t8_geometry_with_vertices.hxx>
 
 /** This geometry maps five quads to a disk.
  */
-class t8_geometry_squared_disk: public t8_geometry {
+class t8_geometry_squared_disk: public t8_geometry_with_vertices {
  public:
   /* Basic constructor that sets the dimension and the name. */
-  t8_geometry_squared_disk (): t8_geometry (2, "t8_squared_disk")
+  t8_geometry_squared_disk (): t8_geometry_with_vertices (2, "t8_squared_disk")
   {
   }
 
@@ -64,7 +64,7 @@ class t8_geometry_squared_disk: public t8_geometry {
    */
   void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double out_coords[3]) const;
+                    double *out_coords) const;
 
   /* Jacobian, not implemented. */
   void
@@ -74,13 +74,7 @@ class t8_geometry_squared_disk: public t8_geometry {
     SC_ABORT_NOT_REACHED ();
   }
 
-  /* Load tree data is empty since we have no tree data.
-   * We need to provide an implementation anyways. */
-  void
-  t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
-  {
-    SC_ABORT_NOT_REACHED ();
-  }
+  /* Load tree data is inherited from t8_geometry_with_vertices. */
 };
 
 #endif /* T8_GEOMETRY_EXAMPLES_HXX */
