@@ -374,17 +374,27 @@ t8_geom_get_triangle_scaling_factor (int edge_index, const double *tree_vertices
 }
 
 double
-t8_geom_get_scaling_factor_of_edge_on_face (int i_edge, int i_face, const double *ref_coords)
+t8_geom_get_scaling_factor_of_edge_on_face (const int edge, const int face, const double *ref_coords)
 {
-  /* Safe the orthogonal direction and the maximum of that direction
-   * of a tetrahedron edge in reference space on one of the neighbouring faces. */
+  /* Save the orthogonal direction and the maximum of that direction
+   * of a tetrahedron edge in reference space on one of the neighbouring faces. 
+   *           /|
+   *          / |
+   *         /  |
+   *        /   |
+   *       /    |--edge
+   *      /   --|--face
+   *     /      |
+   *    /    <~~| orthogonal direction
+   *   /<----o--| maximum othogonal direction
+   *  /_________|*/
   double orthogonal_direction;
   double max_orthogonal_direction;
   double scaling_factor;
 
-  switch (i_edge) { /* Check for edge of tetrahedron */
+  switch (edge) { /* Check for edge of tetrahedron */
   case 0:
-    switch (i_face) { /* Check for neighbouring face of edge 0 */
+    switch (face) { /* Check for neighbouring face of edge 0 */
     case 2:
       orthogonal_direction = ref_coords[1];
       max_orthogonal_direction = ref_coords[0];
@@ -399,7 +409,7 @@ t8_geom_get_scaling_factor_of_edge_on_face (int i_edge, int i_face, const double
     }
     break;
   case 1:
-    switch (i_face) { /* Check for neighbouring face of edge 1 */
+    switch (face) { /* Check for neighbouring face of edge 1 */
     case 1:
       orthogonal_direction = ref_coords[1];
       max_orthogonal_direction = ref_coords[0];
@@ -414,7 +424,7 @@ t8_geom_get_scaling_factor_of_edge_on_face (int i_edge, int i_face, const double
     }
     break;
   case 2:
-    switch (i_face) { /* Check for neighbouring face of edge 2 */
+    switch (face) { /* Check for neighbouring face of edge 2 */
     case 1:
       orthogonal_direction = ref_coords[0] - ref_coords[1];
       max_orthogonal_direction = ref_coords[0];
@@ -429,7 +439,7 @@ t8_geom_get_scaling_factor_of_edge_on_face (int i_edge, int i_face, const double
     }
     break;
   case 3:
-    switch (i_face) { /* Check for neighbouring face of edge 3 */
+    switch (face) { /* Check for neighbouring face of edge 3 */
     case 0:
       orthogonal_direction = ref_coords[1];
       max_orthogonal_direction = ref_coords[2];
@@ -444,7 +454,7 @@ t8_geom_get_scaling_factor_of_edge_on_face (int i_edge, int i_face, const double
     }
     break;
   case 4:
-    switch (i_face) { /* Check for neighbouring face of edge 4 */
+    switch (face) { /* Check for neighbouring face of edge 4 */
     case 0:
       orthogonal_direction = ref_coords[2] - ref_coords[1];
       max_orthogonal_direction = ref_coords[2];
@@ -459,7 +469,7 @@ t8_geom_get_scaling_factor_of_edge_on_face (int i_edge, int i_face, const double
     }
     break;
   case 5:
-    switch (i_face) { /* Check for neighbouring face of edge 5 */
+    switch (face) { /* Check for neighbouring face of edge 5 */
     case 0:
       orthogonal_direction = 1 - ref_coords[2];
       max_orthogonal_direction = 1 - ref_coords[1];
@@ -478,10 +488,10 @@ t8_geom_get_scaling_factor_of_edge_on_face (int i_edge, int i_face, const double
     break;
   }
 
-  /* If the maximum orthogonal direction is 0 or 1. The reference coordinate lies on
+  /* If the maximum orthogonal direction is 0 or 1, the reference coordinate lies on
    * one of the edge nodes and the scaling factor is therefore 0, because the displacement
    * at the nodes is always 0.
-   * Else, the scaling factor is determined by 1 subtracted by the relation of the orthogonal direction
+   * In all other cases the scaling factor is determined with one minus the relation of the orthogonal direction
    * to the maximum orthogonal direction. */
   if (max_orthogonal_direction == 0 || max_orthogonal_direction == 1) {
     scaling_factor = 0;
@@ -493,28 +503,25 @@ t8_geom_get_scaling_factor_of_edge_on_face (int i_edge, int i_face, const double
 }
 
 void
-t8_geom_get_tet_face_intersection (const int face_index, const double *ref_coords, double face_intersection[3])
+t8_geom_get_tet_face_intersection (const int face, const double *ref_coords, double face_intersection[3])
 {
-  /* Lookup table for normals of tetrahedron faces */
-  const int t8_face_normal_tet[4][3] = { { -1, 0, 0 }, { 1, 0, -1 }, { 0, -1, 1 }, { 0, 1, 0 } };
-
-  /* Safe reference corner coordinates of the current face */
+  /* Save reference corner coordinates of the current face */
   double ref_face_vertex_coords[9];
   for (int i_face_vertex = 0; i_face_vertex < 3; ++i_face_vertex) {
     for (int dim = 0; dim < 3; ++dim) {
-      const int i_tree_vertex = t8_face_vertex_to_tree_vertex[T8_ECLASS_TET][face_index][i_face_vertex];
+      const int i_tree_vertex = t8_face_vertex_to_tree_vertex[T8_ECLASS_TET][face][i_face_vertex];
       ref_face_vertex_coords[i_face_vertex * 3 + dim] = t8_element_corner_ref_coords[T8_ECLASS_TET][i_tree_vertex][dim];
     }
   }
 
   /* Save the opposite vertex of the face in reference space.
-   * Reminder: Opposite vertex of a face has the same index as the face. */
-  const double *ref_opposite_vertex = t8_element_corner_ref_coords[T8_ECLASS_TET][face_index];
+   * Opposite vertex of a face has the same index as the face. */
+  const double *ref_opposite_vertex = t8_element_corner_ref_coords[T8_ECLASS_TET][face];
 
-  /* Safe the normal of the current face */
+  /* Save the normal of the current face */
   double normal[3];
   for (int dim = 0; dim < 3; ++dim) {
-    normal[dim] = t8_face_normal_tet[face_index][dim];
+    normal[dim] = t8_face_normal_tet[face][dim];
   }
 
   /* Calculate the vector from the opposite vertex to the

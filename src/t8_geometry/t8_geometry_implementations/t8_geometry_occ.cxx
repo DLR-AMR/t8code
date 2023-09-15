@@ -547,7 +547,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
   T8_ASSERT (active_tree_class == T8_ECLASS_TET);
 
   /* Compute linear coordinates via triangular interpolation (barycentric coordinates) */
-  t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, out_coords);
+  t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, 1, out_coords);
 
   const t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
   const int num_edges = t8_eclass_num_edges[active_tree_class];
