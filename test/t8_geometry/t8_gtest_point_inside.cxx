@@ -141,8 +141,6 @@ class geometry_point_inside: public testing::TestWithParam<std::tuple<t8_eclass,
 
 TEST_P (geometry_point_inside, test_point_inside)
 {
-
-  double test_point[3];
   double element_vertices[T8_ECLASS_MAX_CORNERS][3];
   const double barycentric_range_lower_bound = 0.1; /* Must be > 0 */
   const double barycentric_range_upper_bound = 1.1; /* Should be > 1 */
@@ -231,6 +229,9 @@ TEST_P (geometry_point_inside, test_point_inside)
       }
       /* Corrected number of points due to possible rounding errors in pow */
       const int num_points = sc_intpow (num_steps, num_corners - 1);
+      double *test_point = T8_ALLOC (double, num_points * 3);
+      int *point_is_inside = T8_ALLOC (int, num_points);
+      int *point_is_recognized_as_inside = T8_ALLOC (int, num_points);
       double step = (barycentric_range_upper_bound - barycentric_range_lower_bound) / (num_steps - 1);
       //t8_debugf ("step size %g, steps %i, points %i (corners %i)\n", step,
       //           num_steps, num_points, num_corners);
@@ -241,11 +242,11 @@ TEST_P (geometry_point_inside, test_point_inside)
        * is correctly detected to be in/outside the element. */
       for (int ipoint = 0; ipoint < num_points; ++ipoint) {
         double Sum = 0;
-        int point_is_inside = 1;
+        point_is_inside[ipoint] = 1;
 
         /* Set the coordinates of the test point to 0 */
         for (int icoord = 0; icoord < 3; ++icoord) {
-          test_point[icoord] = 0;
+          test_point[ipoint * 3 + icoord] = 0;
         }
         for (int icorner = 0; icorner < num_corners - 1; ++icorner) {
           int this_step = (ipoint / sc_intpow (num_steps, icorner)) % num_steps;
@@ -258,11 +259,11 @@ TEST_P (geometry_point_inside, test_point_inside)
 
           /* Construct the actual test point from the barycentric coordinate */
           for (int icoord = 0; icoord < 3; ++icoord) {
-            test_point[icoord] += barycentric_coordinates[icorner] * element_vertices[icorner][icoord];
+            test_point[ipoint * 3 + icoord] += barycentric_coordinates[icorner] * element_vertices[icorner][icoord];
           }
 
           /* The point is inside if and only if all barycentric coordinates are >= 0. */
-          point_is_inside = point_is_inside && barycentric_coordinates[icorner] >= 0;
+          point_is_inside[ipoint] = point_is_inside[ipoint] && barycentric_coordinates[icorner] >= 0;
         }
 
         /* Ensure that sum over all bar. coordinates is 1 */
@@ -270,24 +271,29 @@ TEST_P (geometry_point_inside, test_point_inside)
 
         /* Add this last barycentric coordinate to the test point */
         for (int icoord = 0; icoord < 3; ++icoord) {
-          test_point[icoord] += barycentric_coordinates[num_corners - 1] * element_vertices[num_corners - 1][icoord];
+          test_point[ipoint * 3 + icoord]
+            += barycentric_coordinates[num_corners - 1] * element_vertices[num_corners - 1][icoord];
         }
         /* The point is inside if and only if all barycentric coordinates are >= 0. */
-        point_is_inside = point_is_inside && barycentric_coordinates[num_corners - 1] >= 0;
+        point_is_inside[ipoint] = point_is_inside[ipoint] && barycentric_coordinates[num_corners - 1] >= 0;
 
         num_in += point_is_inside ? 1 : 0;
-
-        /* We now check whether the point inside function correctly sees whether
+      }
+      /* We now check whether the point inside function correctly sees whether
          * the point is inside the element or not. */
-        int point_is_recognized_as_inside = t8_forest_element_point_inside (forest, 0, element, test_point, tolerance);
-
-        ASSERT_EQ (!point_is_recognized_as_inside, !point_is_inside)
+      t8_forest_element_point_batch_inside (forest, 0, element, test_point, num_points, point_is_recognized_as_inside,
+                                            tolerance);
+      for (int ipoint = 0; ipoint < num_points; ipoint++) {
+        ASSERT_EQ (!point_is_recognized_as_inside[ipoint], !point_is_inside[ipoint])
           << "Testing point #" << ipoint << "(" << test_point[0] << "," << test_point[1] << "," << test_point[2]
-          << ") should " << (point_is_inside ? "" : "not") << "be inside the " << t8_eclass_to_string[eclass]
+          << ") should " << (point_is_inside[ipoint] ? "" : "not") << "be inside the " << t8_eclass_to_string[eclass]
           << " element, but is not detected as such.";
       } /* End loop over points. */
       t8_debugf ("%i (%.2f%%) test points are inside the element\n", num_in, (100.0 * num_in) / num_points);
       T8_FREE (barycentric_coordinates);
+      T8_FREE (test_point);
+      T8_FREE (point_is_inside);
+      T8_FREE (point_is_recognized_as_inside);
     } /* End loop over elements */
   }   /* End loop over trees */
   t8_forest_unref (&forest);
