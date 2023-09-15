@@ -952,6 +952,8 @@ t8_cmesh_set_vertices_2D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
       t8_vec_axy (box, vertices + 3, 1.0);            /* Vertex 1 */
       t8_vec_axpyz (box, box_dir, vertices + 9, 1.0); /* Vertex 3 */
       if (use_axis_aligned_geom && eclass == T8_ECLASS_QUAD) {
+        /* Copy vertex 3 into the place of vertex 1. The box-procedure has to be done to compute 
+         * vertex 3 correctly. */
         memcpy (vertices, vertices + 9, 3 * sizeof (double));
       }
 #if T8_ENABLE_DEBUG
@@ -1115,6 +1117,8 @@ t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
         t8_vec_axpyz (box, box_dir + 12, vertices + 9, 1.0); /* Vertex 3 */
 
         if (use_axis_aligned_geom && eclass == T8_ECLASS_HEX) {
+          /* Copy vertex 7 into the place of vertex 1. The box-procedure has to be done to compute 
+         * vertex 7 correctly. */
           memcpy (vertices + 3, vertices + 21, 3 * sizeof (double));
         }
 #if T8_ENABLE_DEBUG
