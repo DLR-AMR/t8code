@@ -1254,10 +1254,12 @@ t8_forest_element_point_batch_inside (t8_forest_t forest, t8_locidx_t ltreeid, c
 
     for (int ipoint = 0; ipoint < num_points; ipoint++) {
       /* A point is inside if it is inbetween the x/y/z-coordinates of v_min and v_max */
-      is_inside[ipoint]
-        = v_min[0] <= points[ipoint * 3] && points[ipoint * 3] <= v_max[0] &&         /* check x-coordinate*/
-          v_min[1] <= points[ipoint * 3 + 1] && points[ipoint * 3 + 1] <= v_max[1] && /* check y-coordinate*/
-          v_min[2] <= points[ipoint * 3 + 2] && points[ipoint * 3 + 2] <= v_max[2];   /* check z-coordinate*/
+      is_inside[ipoint] = v_min[0] - tolerance <= points[ipoint * 3] && points[ipoint * 3] <= v_max[0] + tolerance
+                          && /* check x-coordinate*/
+                          v_min[1] - tolerance <= points[ipoint * 3 + 1]
+                          && points[ipoint * 3 + 1] <= v_max[1] + tolerance && /* check y-coordinate*/
+                          v_min[2] - tolerance <= points[ipoint * 3 + 2]
+                          && points[ipoint * 3 + 2] <= v_max[2] + tolerance; /* check z-coordinate*/
     }
     return;
   }

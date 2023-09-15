@@ -185,7 +185,7 @@ TEST_P (geometry_point_inside, test_point_inside)
                              ? 2
                              : t8_eclass_num_vertices[eclass];
   /* Translate all points by the same vector to move the element a bit. */
-  double translate_all_points[3] = { 1, 0, 0 };
+  double translate_all_points[3] = { -0.1, 0.3, 0.15 };
   t8_cmesh_translate_coordinates (tree_vertices, tree_vertices, num_vertices, translate_all_points);
   /* Translate points 0 and 1 (if it exists) extra in order to move the 2D elements
    * and 3D faces outside of axis perpendicular planes. */
