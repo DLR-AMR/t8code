@@ -91,9 +91,9 @@ jobs:
     - name: check_diff
       run: |
         cd t8code-website
-        git diff --quiet || echo "{COMMIT_NEW_DOC}={true}" >> $GITHUB_OUTPUT
+        if [ ! -z "$(git status --porcelain --untracked-files=no )" ]; then echo "COMMIT_NEW_DOC=true" >> $GITHUB_ENV; fi
     - name: Commit and push files
-      if: env.COMMIT_NEW_DOC == 'true'
+      if: ${{ env.COMMIT_NEW_DOC == 'true' }}
       run: |
         cd t8code-website
         git config --local user.email "t8ddy.bot@gmail.com"
@@ -101,4 +101,4 @@ jobs:
         git add content/doc/dev/
         git commit -m "Add newest documentation"
         git push --force-with-lease
-        
+

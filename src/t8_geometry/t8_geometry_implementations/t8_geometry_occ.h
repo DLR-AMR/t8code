@@ -39,16 +39,24 @@ typedef struct t8_geometry_occ t8_geometry_occ_c;
 
 T8_EXTERN_C_BEGIN ();
 
-/** Create a new occ geometry of a given dimension.
- * \param [in] dimension  0 <= \a dimension <= 3. The dimension.
+/**
+ * Create a new occ geometry with a given dimension. The geometry
+ * is currently viable with quad/hex and triangle trees. Tets will be supported soon.
+ * The geometry uses as many vertices as the tree type has, as well as
+ * additional geometry information, which is extracted from a .brep file.
+ * The vertices are saved via the \ref t8_cmesh_set_tree_vertices function.
+ * Since the internals of this geometry are finely tuned to the .brep file
+ * it is recommended to only use it with the \ref t8_cmesh_readmshfile function.
+ * \param [in] dim        0 <= \a dimension <= 3. The dimension.
  * \param [in] fileprefix Prefix of a .brep file from which to extract an occ geometry.
  * \param [in] name       The name to give this geometry.
  * \return                A pointer to an allocated t8_geometry_occ struct, as
- *                        if the t8_geometry_occ (int dimension, const char *fileprefix, const char *name) 
+ *                        if the \ref t8_geometry_occ (int dim, const *char fileprefix, 
+ *                        const char *name) 
  *                        constructor was called.
  */
 t8_geometry_occ_c *
-t8_geometry_occ_new (int dimension, const char *fileprefix, const char *name_in);
+t8_geometry_occ_new (int dim, const char *fileprefix, const char *name_in);
 
 /** Destroy a occ geometry that was created with \ref t8_geometry_occ_new.
  * \param [in,out] geom A occ geometry. Set to NULL on output.

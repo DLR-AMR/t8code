@@ -39,18 +39,18 @@ t8_geometry_analytic::t8_geometry_analytic (int dim, const char *name_in, t8_geo
 
 void
 t8_geometry_analytic::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                        double out_coords[3]) const
+                                        const size_t num_coords, double *out_coords) const
 {
   T8_ASSERT (analytical_function != NULL);
-  analytical_function (cmesh, gtreeid, ref_coords, out_coords, tree_data, user_data);
+  analytical_function (cmesh, gtreeid, ref_coords, num_coords, out_coords, tree_data, user_data);
 }
 
 void
 t8_geometry_analytic::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                                 double *jacobian_out) const
+                                                 const size_t num_coords, double *jacobian_out) const
 {
   T8_ASSERT (jacobian != NULL);
-  jacobian (cmesh, gtreeid, ref_coords, jacobian_out, tree_data, user_data);
+  jacobian (cmesh, gtreeid, ref_coords, num_coords, jacobian_out, tree_data, user_data);
 }
 
 void

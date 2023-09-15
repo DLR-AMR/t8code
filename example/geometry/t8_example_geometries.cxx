@@ -84,18 +84,22 @@ class t8_geometry_sincos: public t8_geometry {
   }
 
   /**
-   * Map a point in  a point (x,y) in R^2 
+   * Maps points (x,y) in R^2 
    * to the point (x,y, 0.2 * sin(2PI X) * cos(2PI Y)).
    * It is specifically designed to work on two tree cmeshes and 
    * models the rectangle [0,2] x [0,1].
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords Array of \a dimension many entries, specifying a point in \f$ [0,1]^2 \f$.
-   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords.
+   * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
+   * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double out_coords[3]) const
+  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                    double out_coords[3]) const
   {
+    if (num_coords != 1)
+      SC_ABORT ("Error: Batch computation of geometry not yet supported.");
     double x = ref_coords[0];
     if (gtreeid == 1) {
       /* Translate ref coordinates by +1 in x direction for the second tree. */
@@ -108,7 +112,8 @@ class t8_geometry_sincos: public t8_geometry {
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double *jacobian) const
+  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                             double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -136,21 +141,25 @@ class t8_geometry_moebius: public t8_geometry_with_vertices {
   }
 
   /**
-   * Map a point in a point in \f$ [0,1]^2 \f$ to the moebius band.
+   * Maps points in \f$ [0,1]^2 \f$ to the moebius band.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords Array of \a dimension many entries, specifying a point in \f$ [0,1]^2 \f$.
-   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords.
+   * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
+   * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double out_coords[3]) const
+  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                    double out_coords[3]) const
   {
+    if (num_coords != 1)
+      SC_ABORT ("Error: Batch computation of geometry not yet supported.");
     double t;
     double phi;
 
     /* Compute the linear coordinates (in [0,1]^2) of the reference vertex and store in out_coords. */
     /* No idea why, but indent insert a lot of newlines here */
-    t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, out_coords);
+    t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, 1, out_coords);
 
     /* At first, we map x from [0,1] to [-.5,.5]
      * and y to [0, 2*PI] */
@@ -165,7 +174,8 @@ class t8_geometry_moebius: public t8_geometry_with_vertices {
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double *jacobian) const
+  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                             double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -189,12 +199,16 @@ class t8_geometry_cylinder: public t8_geometry {
    * Map a reference point in the unit square to a cylinder.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords Array of \a dimension many entries, specifying a point in \f$ [0,1]^\mathrm{dim} \f$.
-   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords.
+   * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
+   * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double out_coords[3]) const
+  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                    double out_coords[3]) const
   {
+    if (num_coords != 1)
+      SC_ABORT ("Error: Batch computation of geometry not yet supported.");
     out_coords[0] = cos (ref_coords[0] * 2 * M_PI);
     out_coords[1] = ref_coords[1];
     out_coords[2] = sin (ref_coords[0] * 2 * M_PI);
@@ -202,7 +216,8 @@ class t8_geometry_cylinder: public t8_geometry {
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double *jacobian) const
+  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                             double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -235,19 +250,23 @@ class t8_geometry_circle: public t8_geometry_with_vertices {
    * Map a reference point in the unit square to a circle.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords Array of \a dimension many entries, specifying a point in \f$ [0,1]^2 \f$.
-   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords.
+   * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
+   * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double out_coords[3]) const
+  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                    double out_coords[3]) const
   {
+    if (num_coords != 1)
+      SC_ABORT ("Error: Batch computation of geometry not yet supported.");
     double x;
     double y;
 
     /* Compute the linear coordinates (in [0,1]^2) of the reference vertex and store in out_coords. */
 
     /* No idea why, but indent insert a lot of newlines here */
-    t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, out_coords);
+    t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, 1, out_coords);
 
     /* We now remap the coords to match the square [-1,1]^2 */
     x = out_coords[0] * 2 - 1;
@@ -261,7 +280,8 @@ class t8_geometry_circle: public t8_geometry_with_vertices {
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double *jacobian) const
+  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                             double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -290,12 +310,16 @@ class t8_geometry_moving: public t8_geometry {
    * Map a reference point in the unit square to a square distorted with time.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords Array of \a dimension many entries, specifying a point in \f$ [0,1]^2 \f$.
-   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords.
+   * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
+   * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double out_coords[3]) const
+  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                    double out_coords[3]) const
   {
+    if (num_coords != 1)
+      SC_ABORT ("Error: Batch computation of geometry not yet supported.");
     double x = ref_coords[0] - .5;
     double y = ref_coords[1] - .5;
     const double time = *ptime;
@@ -319,7 +343,8 @@ class t8_geometry_moving: public t8_geometry {
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double *jacobian) const
+  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                             double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -350,12 +375,16 @@ class t8_geometry_cube_zdistorted: public t8_geometry {
    * Map a reference point in the unit cube to a cube distorted in the z axis.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords Array of \a dimension many entries, specifying a point in \f$ [0,1]^3 \f$.
-   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords.
+   * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
+   * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double out_coords[3]) const
+  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                    double out_coords[3]) const
   {
+    if (num_coords != 1)
+      SC_ABORT ("Error: Batch computation of geometry not yet supported.");
     out_coords[0] = ref_coords[0];
     out_coords[1] = ref_coords[1];
     out_coords[2] = ref_coords[2] * (0.8 + 0.2 * sin (ref_coords[0] * 2 * M_PI) * cos (ref_coords[1] * 2 * M_PI));
@@ -363,7 +392,8 @@ class t8_geometry_cube_zdistorted: public t8_geometry {
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double *jacobian) const
+  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                             double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }

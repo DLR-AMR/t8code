@@ -91,17 +91,19 @@ t8_geometry_occ::t8_geometry_occ (int dim, const TopoDS_Shape occ_shape, const c
 
 void
 t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                   double out_coords[3]) const
+                                   const size_t num_coords, double *out_coords) const
 {
+  if (num_coords != 1)
+    SC_ABORT ("Error: Batch computation of geometry not yet supported.");
   switch (active_tree_class) {
   case T8_ECLASS_TRIANGLE:
-    t8_geometry_occ::t8_geom_evaluate_occ_triangle (cmesh, gtreeid, ref_coords, out_coords);
+    t8_geometry_occ::t8_geom_evaluate_occ_triangle (cmesh, gtreeid, ref_coords, 1, out_coords);
     break;
   case T8_ECLASS_QUAD:
-    t8_geometry_occ::t8_geom_evaluate_occ_quad (cmesh, gtreeid, ref_coords, out_coords);
+    t8_geometry_occ::t8_geom_evaluate_occ_quad (cmesh, gtreeid, ref_coords, 1, out_coords);
     break;
   case T8_ECLASS_HEX:
-    t8_geometry_occ::t8_geom_evaluate_occ_hex (cmesh, gtreeid, ref_coords, out_coords);
+    t8_geometry_occ::t8_geom_evaluate_occ_hex (cmesh, gtreeid, ref_coords, 1, out_coords);
     break;
   case T8_ECLASS_TET:
     t8_geometry_occ::t8_geom_evaluate_occ_tet (cmesh, gtreeid, ref_coords, out_coords);
@@ -113,8 +115,10 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const 
 
 void
 t8_geometry_occ::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                            double *jacobian_out) const
+                                            const size_t num_coords, double *jacobian_out) const
 {
+  if (num_coords != 1)
+    SC_ABORT ("Error: Batch computation of geometry not yet supported.");
   double h = 1e-9;
   double in1[3], in2[3];
   double out1[3], out2[3];
@@ -132,8 +136,8 @@ t8_geometry_occ::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreei
       in1[dim] -= 0.5 * h;
       in2[dim] += 0.5 * h;
     }
-    t8_geometry_occ::t8_geom_evaluate (cmesh, gtreeid, in1, out1);
-    t8_geometry_occ::t8_geom_evaluate (cmesh, gtreeid, in2, out2);
+    t8_geometry_occ::t8_geom_evaluate (cmesh, gtreeid, in1, 1, out1);
+    t8_geometry_occ::t8_geom_evaluate (cmesh, gtreeid, in2, 1, out2);
     for (int dim2 = 0; dim2 < 3; ++dim2) {
       jacobian_out[dim * 3 + dim2] = (out2[dim2] - out1[dim2]) / h;
     }
@@ -152,7 +156,7 @@ t8_geometry_occ::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 
 void
 t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                                double out_coords[3]) const
+                                                const size_t num_coords, double *out_coords) const
 {
   T8_ASSERT (active_tree_class == T8_ECLASS_TRIANGLE);
 
@@ -183,7 +187,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh, t8_gloidx_t gt
    */
 
   /* Linear mapping from ref_coords to out_coords */
-  t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, out_coords);
+  t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, 1, out_coords);
 
   /* Check if face has a linked geometry */
   if (*faces > 0) {
@@ -209,7 +213,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh, t8_gloidx_t gt
 
         /* Converting ref_intersection to global_intersection */
         double glob_intersection[3];
-        t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_intersection, glob_intersection);
+        t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_intersection, 1,
+                                         glob_intersection);
         /* Get parameters of the current edge if the edge is curved */
         const double *edge_parameters = (double *) t8_cmesh_get_attribute (
           cmesh, t8_get_package_id (), T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_edge, ltreeid);
@@ -262,9 +267,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh, t8_gloidx_t gt
       }
       /* Retrieve surface */
       T8_ASSERT (*faces <= occ_shape_face_map.Size ());
-      /* *INDENT-OFF* */
       surface = BRep_Tool::Surface (TopoDS::Face (occ_shape_face_map.FindKey (*faces)));
-      /* *INDENT-ON* */
       /* Check if surface is valid */
       T8_ASSERT (!surface.IsNull ());
 
@@ -292,7 +295,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh, t8_gloidx_t gt
 
         /* Converting ref_intersection to global_intersection */
         double glob_intersection[3];
-        t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_intersection, glob_intersection);
+        t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_intersection, 1,
+                                         glob_intersection);
 
         if (edges[i_edge] > 0) {
           /* Linear interpolation between parameters */
@@ -306,9 +310,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh, t8_gloidx_t gt
           }
           /* Retrieve curve */
           T8_ASSERT (edges[i_edge] <= occ_shape_face_map.Size ());
-          /* *INDENT-OFF* */
           curve = BRep_Tool::Curve (TopoDS::Edge (occ_shape_edge_map.FindKey (edges[i_edge])), first, last);
-          /* *INDENT-ON* */
           /* Check if curve is valid */
           T8_ASSERT (!curve.IsNull ());
 
@@ -343,8 +345,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh, t8_gloidx_t gt
         /* Calculate displacement between points on curve and point on linear curve.
          * Then scale it and add the scaled displacement to the result. */
         for (int dim = 0; dim < 3; ++dim) {
-          double displacement = pnt.Coord (dim + 1) - glob_intersection[dim];
-          double scaled_displacement = displacement * (scaling_factor * scaling_factor);
+          const double displacement = pnt.Coord (dim + 1) - glob_intersection[dim];
+          const double scaled_displacement = displacement * scaling_factor * scaling_factor;
           out_coords[dim] += scaled_displacement;
         }
       }
@@ -354,7 +356,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh, t8_gloidx_t gt
 
 void
 t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                            double out_coords[3]) const
+                                            const size_t num_coords, double *out_coords) const
 {
   T8_ASSERT (active_tree_class == T8_ECLASS_QUAD);
 
@@ -405,9 +407,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
         T8_ASSERT (edge_parameters != NULL);
         T8_ASSERT (edges[i_edge] <= occ_shape_edge_map.Size ());
 
-        /* *INDENT-OFF* */
         curve = BRep_Tool::Curve (TopoDS::Edge (occ_shape_edge_map.FindKey (edges[i_edge])), first, last);
-        /* *INDENT-ON* */
 
         /* Check if curve is valid */
         T8_ASSERT (!curve.IsNull ());
@@ -499,10 +499,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
           double interpolated_curve_parameter;
           t8_geom_linear_interpolation (&ref_coords[edge_direction], parameters, 1, 1, &interpolated_curve_parameter);
 
-          /* *INDENT-OFF* */
           T8_ASSERT (edges[i_edge] <= occ_shape_edge_map.Size ());
           curve = BRep_Tool::Curve (TopoDS::Edge (occ_shape_edge_map.FindKey (edges[i_edge])), first, last);
-          /* *INDENT-ON* */
 
           /* Check if curve are valid */
           T8_ASSERT (!curve.IsNull ());
@@ -791,12 +789,12 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
 
 void
 t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                           double out_coords[3]) const
+                                           const size_t num_coords, double *out_coords) const
 {
   T8_ASSERT (active_tree_class == T8_ECLASS_HEX);
 
   /* Compute coordinates via trilinear interpolation */
-  t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, out_coords);
+  t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, 1, out_coords);
 
   const t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
   const int num_edges = t8_eclass_num_edges[active_tree_class];
@@ -852,10 +850,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
         /* Linear interpolation between parameters */
         t8_geom_linear_interpolation (&ref_coords[edge_direction], parameters, 1, 1, &interpolated_curve_param);
 
-        /* *INDENT-OFF* */
         T8_ASSERT (edges[i_edge] <= occ_shape_edge_map.Size ());
         curve = BRep_Tool::Curve (TopoDS::Edge (occ_shape_edge_map.FindKey (edges[i_edge])), first, last);
-        /* *INDENT-ON* */
 
         /* Check if curve are valid */
         T8_ASSERT (!curve.IsNull ());
@@ -891,7 +887,6 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
        * Edges which are located at ref_coord[i] = 0 have to be multiplied with (1 - ref_coord[i]) and if the
        * edge is located at ref_coord[i] = 1 it has to be multiplied with ref_coord[i]. */
 
-      /* *INDENT-OFF* */
       double scaling_factor = 0;
       const int temp_i_edge = i_edge == 5 ? 6 : i_edge == 6 ? 5 : i_edge;
       switch (temp_i_edge % 4) {
@@ -908,7 +903,6 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
         scaling_factor = ref_coords[(edge_direction + 1) % 3] * ref_coords[(edge_direction + 2) % 3];
         break;
       }
-      /* *INDENT-ON* */
 
       /* Add edge displacements to out_coords */
       out_coords[0] += cur_delta[0] * scaling_factor;
@@ -1062,11 +1056,9 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
         interpolated_surface_params[dim] += surface_parameter_displacement_from_edges[dim];
       }
 
-      /* *INDENT-OFF* */
       /* Retrieve the surface of the edge */
       T8_ASSERT (faces[i_faces] <= occ_shape_face_map.Size ());
       surface = BRep_Tool::Surface (TopoDS::Face (occ_shape_face_map.FindKey (faces[i_faces])));
-      /* *INDENT-ON* */
 
       /* Check if surface is valid */
       T8_ASSERT (!surface.IsNull ());
@@ -1090,8 +1082,6 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
   }
 }
 
-/* Our indent skript has huge problems with c++ */
-/* *INDENT-OFF* */
 int
 t8_geometry_occ::t8_geom_is_line (const int curve_index) const
 {
@@ -1321,8 +1311,6 @@ t8_geometry_occ::t8_geom_is_surface_closed (int geometry_index, int parameter) c
     break;
   }
 }
-
-/* *INDENT-ON* */
 
 /* This part should be callable from C */
 T8_EXTERN_C_BEGIN ();
