@@ -168,6 +168,9 @@ t8_geometry_triangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh, 
   /* The next three code blocks straighten out the elements near the triangle
    * corners by averaging the rectification with all three corners. */
 
+  /* We average over the three corners of the triangle. */
+  const double avg_factor = 1.0 / 3.0;
+
   /* First triangle corner. */
   {
     double u[3]; /* Position vector. */
@@ -212,9 +215,9 @@ t8_geometry_triangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh, 
 
       const double norm = sqrt (p[0] * p[0] + p[1] * p[1] + p[2] * p[2]);
       const double R
-        = (p[0] * n[0] + p[1] * n[1] + p[2] * n[2]) / (r[0] * n[0] + r[1] * n[1] + r[2] * n[2]) / norm * (1. / 3.);
+        = (p[0] * n[0] + p[1] * n[1] + p[2] * n[2]) / (r[0] * n[0] + r[1] * n[1] + r[2] * n[2]) / norm * avg_factor;
 
-      /* Note, in `R` there already is the factor `1/3` included. */
+      /* Note, in `R` there already is the avg. factor `1/3` included. */
       out_coords[offset + 0] = out_coords[offset + 0] + R * p[0];
       out_coords[offset + 1] = out_coords[offset + 1] + R * p[1];
       out_coords[offset + 2] = out_coords[offset + 2] + R * p[2];
@@ -265,9 +268,9 @@ t8_geometry_triangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh, 
 
       const double norm = sqrt (p[0] * p[0] + p[1] * p[1] + p[2] * p[2]);
       const double R
-        = (p[0] * n[0] + p[1] * n[1] + p[2] * n[2]) / (r[0] * n[0] + r[1] * n[1] + r[2] * n[2]) / norm * (1. / 3.);
+        = (p[0] * n[0] + p[1] * n[1] + p[2] * n[2]) / (r[0] * n[0] + r[1] * n[1] + r[2] * n[2]) / norm * avg_factor;
 
-      /* Note, in `R` there already is the factor `1/3` included. */
+      /* Note, in `R` there already is the avg. factor `1/3` included. */
       out_coords[offset + 0] = out_coords[offset + 0] + R * p[0];
       out_coords[offset + 1] = out_coords[offset + 1] + R * p[1];
       out_coords[offset + 2] = out_coords[offset + 2] + R * p[2];
@@ -318,12 +321,12 @@ t8_geometry_triangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh, 
 
       const double norm = sqrt (p[0] * p[0] + p[1] * p[1] + p[2] * p[2]);
       const double R
-        = (p[0] * n[0] + p[1] * n[1] + p[2] * n[2]) / (r[0] * n[0] + r[1] * n[1] + r[2] * n[2]) / norm * (1. / 3.);
+        = (p[0] * n[0] + p[1] * n[1] + p[2] * n[2]) / (r[0] * n[0] + r[1] * n[1] + r[2] * n[2]) / norm * avg_factor;
 
-      /* Note, in `R` there already is the factor `1/3` included. */
-      out_coords[0] = out_coords[0] + R * p[0];
-      out_coords[1] = out_coords[1] + R * p[1];
-      out_coords[2] = out_coords[2] + R * p[2];
+      /* Note, in `R` there already is the avg. factor `1/3` included. */
+      out_coords[offset + 0] = out_coords[offset + 0] + R * p[0];
+      out_coords[offset + 1] = out_coords[offset + 1] + R * p[1];
+      out_coords[offset + 2] = out_coords[offset + 2] + R * p[2];
     }
   }
 }
