@@ -944,6 +944,9 @@ t8_cmesh_set_vertices_2D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
       memcpy (vertices, box, 3 * sizeof (double));    /* Vertex 0 */
       t8_vec_axpyz (box, box_dir, vertices + 6, 1.0); /* Vertex 2 */
 
+      memcpy (vertices, box, 3 * sizeof (double));    /* Vertex 0 */
+      t8_vec_axpyz (box, box_dir, vertices + 6, 1.0); /* Vertex 2 */
+
       /* Reduce box along x axis */
       t8_resize_box (2, box, box_dir, 0, 1, box_quads);
       t8_update_box_face_edges (2, box, box_dir, 0, box_quads);
@@ -951,8 +954,15 @@ t8_cmesh_set_vertices_2D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
       t8_vec_axy (box, vertices + 3, 1.0);            /* Vertex 1 */
       t8_vec_axpyz (box, box_dir, vertices + 9, 1.0); /* Vertex 3 */
       if (use_axis_aligned_geom && eclass == T8_ECLASS_QUAD) {
+        /* Copy vertex 3 into the place of vertex 1. The box-procedure has to be done to compute 
+         * vertex 3 correctly. */
         memcpy (vertices + 3, vertices + 9, 3 * sizeof (double));
       }
+#if T8_ENABLE_DEBUG
+      else if (use_axis_aligned_geom && eclass != T8_ECLASS_QUAD) {
+        SC_ABORTF ("Axis aligned geometry is not available for eclass %s!\n", t8_eclass_to_string[eclass]);
+      }
+#endif
 
       /* Map vertices of current quad on to respective trees inside. */
       if (eclass == T8_ECLASS_QUAD) {
@@ -1106,9 +1116,17 @@ t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
 
         t8_vec_axy (box, vertices + 3, 1.0);                 /* Vertex 1 */
         t8_vec_axpyz (box, box_dir + 12, vertices + 9, 1.0); /* Vertex 3 */
+
         if (use_axis_aligned_geom && eclass == T8_ECLASS_HEX) {
+          /* Copy vertex 7 into the place of vertex 1. The box-procedure has to be done to compute 
+         * vertex 7 correctly. */
           memcpy (vertices + 3, vertices + 21, 3 * sizeof (double));
         }
+#if T8_ENABLE_DEBUG
+        else if (use_axis_aligned_geom && eclass != T8_ECLASS_HEX) {
+          SC_ABORTF ("Axis aligned geometry is not available for eclass %s!\n", t8_eclass_to_string[eclass]);
+        }
+#endif
 
         /* Map vertices of current hex on to respective trees inside. */
         const t8_locidx_t hex_id = hex_z_id * hexs_y * hexs_x + hex_y_id * hexs_x + hex_x_id;
@@ -1227,6 +1245,12 @@ t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass, sc_MPI_Comm comm, const do
     const t8_geometry_c *axis_aligned_geom = t8_geometry_linear_axis_aligned_new (dim);
     t8_cmesh_register_geometry (cmesh, axis_aligned_geom);
   }
+#if T8_ENABLE_DEBUG
+  else if (use_axis_aligned_geom
+           && !(eclass == T8_ECLASS_HEX || eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_LINE)) {
+    SC_ABORTF ("Axis aligned geometry is not available for eclass %s!\n", t8_eclass_to_string[eclass]);
+  }
+#endif
   else {
     /* We use standard linear geometry */
     const t8_geometry_c *linear_geom = t8_geometry_linear_new (dim);
