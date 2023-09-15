@@ -24,6 +24,7 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_geometry.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
 #include <t8_refcount.h>
 #include <t8_data/t8_shmem.h>
 #include <t8_vec.h>
@@ -533,7 +534,14 @@ t8_cmesh_no_negative_volume (t8_cmesh_t cmesh)
     if (vertices != NULL) {
       /* Vertices are set */
       eclass = t8_cmesh_get_tree_class (cmesh, itree);
-      ret = t8_cmesh_tree_vertices_negative_volume (eclass, vertices, t8_eclass_num_vertices[eclass]);
+      const t8_gloidx_t gtree_id = t8_cmesh_get_global_id (cmesh, itree);
+      if (t8_geom_is_linear_axis_aligned (t8_cmesh_get_tree_geometry (cmesh, gtree_id))) {
+        /* Tree has negative volume if the diagonal goes from v_max to v_min and not vice versa */
+        ret = vertices[3] < vertices[0] && vertices[4] < vertices[1] && vertices[5] < vertices[2];
+      }
+      else {
+        ret = t8_cmesh_tree_vertices_negative_volume (eclass, vertices, t8_eclass_num_vertices[eclass]);
+      }
       if (ret) {
         t8_debugf ("Detected negative volume in tree %li\n", (long) itree);
       }
