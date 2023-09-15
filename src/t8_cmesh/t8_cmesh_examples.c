@@ -954,7 +954,7 @@ t8_cmesh_set_vertices_2D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
       if (use_axis_aligned_geom && eclass == T8_ECLASS_QUAD) {
         /* Copy vertex 3 into the place of vertex 1. The box-procedure has to be done to compute 
          * vertex 3 correctly. */
-        memcpy (vertices, vertices + 9, 3 * sizeof (double));
+        memcpy (vertices + 3, vertices + 9, 3 * sizeof (double));
       }
 #if T8_ENABLE_DEBUG
       else if (use_axis_aligned_geom && eclass != T8_ECLASS_QUAD) {
