@@ -159,7 +159,7 @@ class t8_geometry_moebius: public t8_geometry_with_vertices {
 
     /* Compute the linear coordinates (in [0,1]^2) of the reference vertex and store in out_coords. */
     /* No idea why, but indent insert a lot of newlines here */
-    t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, out_coords);
+    t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, 1, out_coords);
 
     /* At first, we map x from [0,1] to [-.5,.5]
      * and y to [0, 2*PI] */
@@ -266,7 +266,7 @@ class t8_geometry_circle: public t8_geometry_with_vertices {
     /* Compute the linear coordinates (in [0,1]^2) of the reference vertex and store in out_coords. */
 
     /* No idea why, but indent insert a lot of newlines here */
-    t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, out_coords);
+    t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, 1, out_coords);
 
     /* We now remap the coords to match the square [-1,1]^2 */
     x = out_coords[0] * 2 - 1;
