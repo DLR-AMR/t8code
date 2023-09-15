@@ -1245,6 +1245,12 @@ t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass, sc_MPI_Comm comm, const do
     const t8_geometry_c *axis_aligned_geom = t8_geometry_linear_axis_aligned_new (dim);
     t8_cmesh_register_geometry (cmesh, axis_aligned_geom);
   }
+#if T8_ENABLE_DEBUG
+  else if (use_axis_aligned_geom
+           && !(eclass == T8_ECLASS_HEX || eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_LINE)) {
+    SC_ABORTF ("Axis aligned geometry is not available for eclass %s!\n", t8_eclass_to_string[eclass]);
+  }
+#endif
   else {
     /* We use standard linear geometry */
     const t8_geometry_c *linear_geom = t8_geometry_linear_new (dim);
