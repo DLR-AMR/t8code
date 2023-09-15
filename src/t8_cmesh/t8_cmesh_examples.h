@@ -322,6 +322,14 @@ t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees, const int set_attributes, cons
 t8_cmesh_t
 t8_cmesh_new_squared_disk (const double radius, sc_MPI_Comm comm);
 
+/** Construct a triangulated spherical surface of given radius.
+ * \param [in] radius        Radius of the sphere.
+ * \param [in] comm          The MPI communicator used to commit the cmesh
+ * \return                   A cmesh representing the spherical surface.
+ */
+t8_cmesh_t
+t8_cmesh_new_triangulated_spherical_surface (const double radius, sc_MPI_Comm comm);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_EXAMPLES */

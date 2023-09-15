@@ -113,6 +113,221 @@ t8_geometry_squared_disk::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreei
   }
 }
 
+/**
+ * Map the faces of an oktaeder to a spherical surface.
+ * \param [in]  cmesh      The cmesh in which the point lies.
+ * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
+ * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
+ * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+ */
+void
+t8_geometry_triangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
+                                                              const double *ref_coords, const size_t num_coords,
+                                                              double *out_coords) const
+{
+  double n[3]; /* Normal vector of the current triangle. */
+  double r[3]; /* Radial vector through one of triangle's corners. */
+  double p[3]; /* Position vector on the triangle plane. */
+
+  t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
+  double *tree_vertices = t8_cmesh_get_tree_vertices (cmesh, ltreeid);
+
+  n[0] = tree_vertices[0] + tree_vertices[3] + tree_vertices[6];
+  n[1] = tree_vertices[1] + tree_vertices[4] + tree_vertices[7];
+  n[2] = tree_vertices[2] + tree_vertices[5] + tree_vertices[8];
+
+  {
+    /* Normalize vector `n`. */
+    const double norm = sqrt (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]);
+    n[0] = n[0] / norm;
+    n[1] = n[1] / norm;
+    n[2] = n[2] / norm;
+  }
+
+  r[0] = tree_vertices[0];
+  r[1] = tree_vertices[1];
+  r[2] = tree_vertices[2];
+
+  {
+    /* Normalize vector `r`. */
+    const double norm = sqrt (r[0] * r[0] + r[1] * r[1] + r[2] * r[2]);
+    r[0] = r[0] / norm;
+    r[1] = r[1] / norm;
+    r[2] = r[2] / norm;
+  }
+
+  /* Init output coordinates with zeros. */
+  for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
+    const size_t offset = 3 * i_coord;
+
+    out_coords[offset + 0] = 0.0;
+    out_coords[offset + 1] = 0.0;
+    out_coords[offset + 2] = 0.0;
+  }
+
+  /* The next three code blocks straighten out the elements near the triangle
+   * corners by averaging the rectification with all three corners. */
+
+  /* First triangle corner. */
+  {
+    double u[3]; /* Position vector. */
+    double v[3]; /* First triangle side. */
+    double w[3]; /* Second triangle side. */
+
+    u[0] = tree_vertices[0];
+    u[1] = tree_vertices[1];
+    u[2] = tree_vertices[2];
+
+    v[0] = tree_vertices[3 + 0] - u[0];
+    v[1] = tree_vertices[3 + 1] - u[1];
+    v[2] = tree_vertices[3 + 2] - u[2];
+
+    w[0] = tree_vertices[6 + 0] - u[0];
+    w[1] = tree_vertices[6 + 1] - u[1];
+    w[2] = tree_vertices[6 + 2] - u[2];
+
+    /* Reference coordinates from this particular triangle corner. */
+    const double u_ref[3] = { 0.0, 0.0, 0.0 };
+    const double v_ref[3] = { 1.0, 0.0, 0.0 };
+    const double w_ref[3] = { -1.0, 1.0, 0.0 };
+
+    for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
+      const size_t offset = 3 * i_coord;
+
+      const double x = ref_coords[offset + 0];
+      const double y = ref_coords[offset + 1];
+
+      /* Compute local triangle coordinate. */
+      const double vv = u_ref[0] + x * v_ref[0] + y * w_ref[0];
+      const double ww = u_ref[1] + x * v_ref[1] + y * w_ref[1];
+
+      /* Correction in order to rectify elements near the corners. */
+      const double vv_corr = tan (0.5 * M_PI * (vv - 0.5)) * 0.5 + 0.5;
+      const double ww_corr = tan (0.5 * M_PI * (ww - 0.5)) * 0.5 + 0.5;
+
+      /* Compute and apply the corrected mapping. */
+      p[0] = u[0] + vv_corr * v[0] + ww_corr * w[0];
+      p[1] = u[1] + vv_corr * v[1] + ww_corr * w[1];
+      p[2] = u[2] + vv_corr * v[2] + ww_corr * w[2];
+
+      const double norm = sqrt (p[0] * p[0] + p[1] * p[1] + p[2] * p[2]);
+      const double R
+        = (p[0] * n[0] + p[1] * n[1] + p[2] * n[2]) / (r[0] * n[0] + r[1] * n[1] + r[2] * n[2]) / norm * (1. / 3.);
+
+      /* Note, in `R` there already is the factor `1/3` included. */
+      out_coords[offset + 0] = out_coords[offset + 0] + R * p[0];
+      out_coords[offset + 1] = out_coords[offset + 1] + R * p[1];
+      out_coords[offset + 2] = out_coords[offset + 2] + R * p[2];
+    }
+  }
+
+  /* Second triangle corner. */
+  {
+    double u[3]; /* Position vector. */
+    double v[3]; /* First triangle side. */
+    double w[3]; /* Second triangle side. */
+
+    u[0] = tree_vertices[6 + 0];
+    u[1] = tree_vertices[6 + 1];
+    u[2] = tree_vertices[6 + 2];
+
+    v[0] = tree_vertices[0 + 0] - u[0];
+    v[1] = tree_vertices[0 + 1] - u[1];
+    v[2] = tree_vertices[0 + 2] - u[2];
+
+    w[0] = tree_vertices[3 + 0] - u[0];
+    w[1] = tree_vertices[3 + 1] - u[1];
+    w[2] = tree_vertices[3 + 2] - u[2];
+
+    /* Reference coordinates from this particular triangle corner. */
+    const double u_ref[3] = { 1.0, 0.0, 0.0 };
+    const double v_ref[3] = { -1.0, 1.0, 0.0 };
+    const double w_ref[3] = { 0.0, -1.0, 0.0 };
+
+    for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
+      const size_t offset = 3 * i_coord;
+
+      const double x = ref_coords[offset + 0];
+      const double y = ref_coords[offset + 1];
+
+      /* Compute local triangle coordinate. */
+      const double vv = u_ref[0] + x * v_ref[0] + y * w_ref[0];
+      const double ww = u_ref[1] + x * v_ref[1] + y * w_ref[1];
+
+      /* Correction in order to rectify elements near the corners. */
+      const double vv_corr = tan (0.5 * M_PI * (vv - 0.5)) * 0.5 + 0.5;
+      const double ww_corr = tan (0.5 * M_PI * (ww - 0.5)) * 0.5 + 0.5;
+
+      /* Compute and apply the corrected mapping. */
+      p[0] = u[0] + vv_corr * v[0] + ww_corr * w[0];
+      p[1] = u[1] + vv_corr * v[1] + ww_corr * w[1];
+      p[2] = u[2] + vv_corr * v[2] + ww_corr * w[2];
+
+      const double norm = sqrt (p[0] * p[0] + p[1] * p[1] + p[2] * p[2]);
+      const double R
+        = (p[0] * n[0] + p[1] * n[1] + p[2] * n[2]) / (r[0] * n[0] + r[1] * n[1] + r[2] * n[2]) / norm * (1. / 3.);
+
+      /* Note, in `R` there already is the factor `1/3` included. */
+      out_coords[offset + 0] = out_coords[offset + 0] + R * p[0];
+      out_coords[offset + 1] = out_coords[offset + 1] + R * p[1];
+      out_coords[offset + 2] = out_coords[offset + 2] + R * p[2];
+    }
+  }
+
+  /* Third triangle corner. */
+  {
+    double u[3]; /* Position vector. */
+    double v[3]; /* First triangle side. */
+    double w[3]; /* Second triangle side. */
+
+    u[0] = tree_vertices[3 + 0];
+    u[1] = tree_vertices[3 + 1];
+    u[2] = tree_vertices[3 + 2];
+
+    v[0] = tree_vertices[6 + 0] - u[0];
+    v[1] = tree_vertices[6 + 1] - u[1];
+    v[2] = tree_vertices[6 + 2] - u[2];
+
+    w[0] = tree_vertices[0 + 0] - u[0];
+    w[1] = tree_vertices[0 + 1] - u[1];
+    w[2] = tree_vertices[0 + 2] - u[2];
+
+    /* Reference coordinates from this particular triangle corner. */
+    const double u_ref[3] = { 0.0, 1.0, 0.0 };
+    const double v_ref[3] = { 0.0, -1.0, 0.0 };
+    const double w_ref[3] = { 1.0, 0.0, 0.0 };
+
+    for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
+      const size_t offset = 3 * i_coord;
+
+      const double x = ref_coords[offset + 0];
+      const double y = ref_coords[offset + 1];
+
+      /* Compute local triangle coordinate. */
+      const double vv = u_ref[0] + x * v_ref[0] + y * w_ref[0];
+      const double ww = u_ref[1] + x * v_ref[1] + y * w_ref[1];
+
+      /* Correction in order to rectify elements near the corners. */
+      const double vv_corr = tan (0.5 * M_PI * (vv - 0.5)) * 0.5 + 0.5;
+      const double ww_corr = tan (0.5 * M_PI * (ww - 0.5)) * 0.5 + 0.5;
+
+      /* Compute and apply the corrected mapping. */
+      p[0] = u[0] + vv_corr * v[0] + ww_corr * w[0];
+      p[1] = u[1] + vv_corr * v[1] + ww_corr * w[1];
+      p[2] = u[2] + vv_corr * v[2] + ww_corr * w[2];
+
+      const double norm = sqrt (p[0] * p[0] + p[1] * p[1] + p[2] * p[2]);
+      const double R
+        = (p[0] * n[0] + p[1] * n[1] + p[2] * n[2]) / (r[0] * n[0] + r[1] * n[1] + r[2] * n[2]) / norm * (1. / 3.);
+
+      /* Note, in `R` there already is the factor `1/3` included. */
+      out_coords[0] = out_coords[0] + R * p[0];
+      out_coords[1] = out_coords[1] + R * p[1];
+      out_coords[2] = out_coords[2] + R * p[2];
+    }
+  }
+}
+
 T8_EXTERN_C_BEGIN ();
 
 void
@@ -129,6 +344,13 @@ t8_geometry_c *
 t8_geometry_squared_disk_new ()
 {
   t8_geometry_squared_disk *geom = new t8_geometry_squared_disk ();
+  return (t8_geometry_c *) geom;
+}
+
+t8_geometry_c *
+t8_geometry_triangulated_spherical_surface_new ()
+{
+  t8_geometry_triangulated_spherical_surface *geom = new t8_geometry_triangulated_spherical_surface ();
   return (t8_geometry_c *) geom;
 }
 
