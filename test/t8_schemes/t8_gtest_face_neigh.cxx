@@ -28,10 +28,12 @@
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h>
 
 /* *INDENT-OFF* */
-class face_neigh:public testing::TestWithParam <t8_eclass_t > {
-protected:
-  void SetUp () override {
-    eclass = GetParam();
+class face_neigh: public testing::TestWithParam<t8_eclass_t> {
+ protected:
+  void
+  SetUp () override
+  {
+    eclass = GetParam ();
     scheme = t8_scheme_new_default_cxx ();
 
     ts = scheme->eclass_schemes[eclass];
@@ -41,34 +43,35 @@ protected:
     ts->t8_element_set_linear_id (element, 0, 0);
   }
 
-  void TearDown () override {
+  void
+  TearDown () override
+  {
     ts->t8_element_destroy (1, &element);
     ts->t8_element_destroy (1, &child);
     ts->t8_element_destroy (1, &neigh);
     t8_scheme_cxx_unref (&scheme);
   }
-  t8_element_t       *element;
-  t8_element_t       *child;
-  t8_element_t       *neigh;
-  t8_scheme_cxx      *scheme;
+  t8_element_t *element;
+  t8_element_t *child;
+  t8_element_t *neigh;
+  t8_scheme_cxx *scheme;
   t8_eclass_scheme_c *ts;
-  t8_eclass_t        eclass;
+  t8_eclass_t eclass;
 
 #ifdef T8_ENABLE_DEBUG
-  const int           maxlvl = 3;
+  const int maxlvl = 3;
 #else
-  const int           maxlvl = 4;
+  const int maxlvl = 4;
 #endif
 };
 /* *INDENT-ON* */
 
 void
-t8_test_face_neighbor_inside (int num_faces, t8_element_t *element,
-                              t8_element_t *child, t8_element_t *neigh,
+t8_test_face_neighbor_inside (int num_faces, t8_element_t *element, t8_element_t *child, t8_element_t *neigh,
                               t8_eclass_scheme_c *ts)
 {
-  int                 face_num;
-  int                 check;
+  int face_num;
+  int check;
 
   for (int iface = 0; iface < num_faces; iface++) {
     /* Compute the neighbors neighbor along a given face and check, if the result is the
@@ -76,15 +79,13 @@ t8_test_face_neighbor_inside (int num_faces, t8_element_t *element,
     ts->t8_element_face_neighbor_inside (child, neigh, iface, &face_num);
     ts->t8_element_face_neighbor_inside (neigh, element, face_num, &check);
 
-    EXPECT_EQ (ts->t8_element_compare (child, element),
-               0) << "Got a false neighbor.";
+    EXPECT_EQ (ts->t8_element_compare (child, element), 0) << "Got a false neighbor.";
     EXPECT_EQ (check, iface) << "Wrong face.";
   }
 }
 
 int
-t8_test_get_middle_child (t8_eclass_t eclass, int ilevel,
-                          t8_element_t *element, t8_element_t *child,
+t8_test_get_middle_child (t8_eclass_t eclass, int ilevel, t8_element_t *element, t8_element_t *child,
                           t8_eclass_scheme_c *ts)
 {
   /* Get the child number of the child in the middle of the element, depending of the shape of the element. */
@@ -115,18 +116,17 @@ t8_test_get_middle_child (t8_eclass_t eclass, int ilevel,
     ts->t8_element_child (element, 4, child);
     ts->t8_element_copy (child, element);
     return 7;
-  case T8_ECLASS_PYRAMID:
-    {
-      t8_dpyramid_t      *pyramid = (t8_dpyramid_t *) element;
-      /* middle_child_id of Pyramid Type 6. */
-      if (pyramid->pyramid.type == T8_DPYRAMID_FIRST_TYPE) {
-        return 8;
-      }
-      /* middle_child_id of Pyramid Type 7. */
-      else {
-        return 3;
-      }
+  case T8_ECLASS_PYRAMID: {
+    t8_dpyramid_t *pyramid = (t8_dpyramid_t *) element;
+    /* middle_child_id of Pyramid Type 6. */
+    if (pyramid->pyramid.type == T8_DPYRAMID_FIRST_TYPE) {
+      return 8;
     }
+    /* middle_child_id of Pyramid Type 7. */
+    else {
+      return 3;
+    }
+  }
   default:
     return 0;
   }
@@ -140,32 +140,28 @@ t8_test_get_middle_child (t8_eclass_t eclass, int ilevel,
 /* Compute all children along all faces. Compute their neighbors along the face,
  * check, if the children have root contact, and if the neighbors are outside of the
  * root. */
-TEST_P(face_neigh, check_not_inside_root){
+TEST_P (face_neigh, check_not_inside_root)
+{
   /* Are the neighbors of the element really outside?. */
-  
-  const int           num_faces = ts->t8_element_num_faces (element);
+
+  const int num_faces = ts->t8_element_num_faces (element);
 
   for (int iface = 0; iface < num_faces; iface++) {
 
-    const int           num_children =
-      ts->t8_element_num_face_children (element, iface);
-    int                *child_indices = T8_ALLOC (int, num_children);
-    t8_element_t      **children = T8_ALLOC (t8_element_t *, num_children);
+    const int num_children = ts->t8_element_num_face_children (element, iface);
+    int *child_indices = T8_ALLOC (int, num_children);
+    t8_element_t **children = T8_ALLOC (t8_element_t *, num_children);
     ts->t8_element_new (num_children, children);
-    ts->t8_element_children_at_face (element, iface, children, num_children,
-                                     child_indices);
+    ts->t8_element_children_at_face (element, iface, children, num_children, child_indices);
 
     for (int jchild = 0; jchild < num_children; jchild++) {
 
-      const int           child_id = child_indices[jchild];
-      const int           face_contact =
-        ts->t8_element_face_child_face (element, iface, jchild);
+      const int child_id = child_indices[jchild];
+      const int face_contact = ts->t8_element_face_child_face (element, iface, jchild);
 
       ts->t8_element_child (element, child_id, child);
-      int                 face_num;
-      int                 inside =
-        ts->t8_element_face_neighbor_inside (child, neigh, face_contact,
-                                             &face_num);
+      int face_num;
+      int inside = ts->t8_element_face_neighbor_inside (child, neigh, face_contact, &face_num);
 
       ASSERT_EQ (inside, 0);
 
@@ -180,25 +176,24 @@ TEST_P(face_neigh, check_not_inside_root){
 
 TEST_P (face_neigh, face_check_easy)
 {
-  int                 middle_child_id;
+  int middle_child_id;
 
   for (int ilevel = 1; ilevel <= maxlvl; ilevel++) {
 
     /* Get a child in the middle of the element on level ilevel. */
-    middle_child_id =
-      t8_test_get_middle_child (eclass, ilevel, element, child, ts);
+    middle_child_id = t8_test_get_middle_child (eclass, ilevel, element, child, ts);
 
     ts->t8_element_child (element, middle_child_id, child);
     /* Test the neighbors at all faces of the child. */
-    int                 num_faces = ts->t8_element_num_faces (child);
+    int num_faces = ts->t8_element_num_faces (child);
     t8_test_face_neighbor_inside (num_faces, element, child, neigh, ts);
 
-    int                 num_children = ts->t8_element_num_children (element);
+    int num_children = ts->t8_element_num_children (element);
     /* Face neighbor check for all children of the element. */
     for (int ichild = 0; ichild < num_children; ichild++) {
 
       ts->t8_element_child (element, ichild, child);
-      int                 num_faces = ts->t8_element_num_faces (child);
+      int num_faces = ts->t8_element_num_faces (child);
       t8_test_face_neighbor_inside (num_faces, element, child, neigh, ts);
       ts->t8_element_parent (child, element);
     }
@@ -206,8 +201,7 @@ TEST_P (face_neigh, face_check_easy)
 }
 
 void
-t8_recursive_check_diff (t8_element_t *element, t8_element_t *child,
-                         t8_element_t *neigh, t8_eclass_scheme_c *ts,
+t8_recursive_check_diff (t8_element_t *element, t8_element_t *child, t8_element_t *neigh, t8_eclass_scheme_c *ts,
                          int maxlvl, int level)
 {
 
@@ -218,11 +212,11 @@ t8_recursive_check_diff (t8_element_t *element, t8_element_t *child,
 
   /* Compute the neighbors neighbor along a given face and check, if the result is the
    * original element. */
-  int                 num_faces = ts->t8_element_num_faces (element);
+  int num_faces = ts->t8_element_num_faces (element);
 
   t8_test_face_neighbor_inside (num_faces, child, element, neigh, ts);
 
-  int                 num_children = ts->t8_element_num_children (child);
+  int num_children = ts->t8_element_num_children (child);
   for (int ichild = 0; ichild < num_children; ichild++) {
     ts->t8_element_child (element, ichild, child);
     t8_recursive_check_diff (child, element, neigh, ts, maxlvl, level + 1);
@@ -233,15 +227,13 @@ t8_recursive_check_diff (t8_element_t *element, t8_element_t *child,
 /* Recursively check, if all neighbors are computed correct up to a given level. */
 TEST_P (face_neigh, recursive_check_diff)
 {
-  int                 level = 1;
-  int                 middle_child_id =
-    t8_test_get_middle_child (eclass, level, element, child, ts);
+  int level = 1;
+  int middle_child_id = t8_test_get_middle_child (eclass, level, element, child, ts);
   ts->t8_element_child (element, middle_child_id, child);
 
   t8_recursive_check_diff (child, element, neigh, ts, maxlvl, level);
 }
 
-
 /* *INDENT-OFF* */
-INSTANTIATE_TEST_SUITE_P (t8_gtest_face_neigh, face_neigh,testing::Range(T8_ECLASS_VERTEX, T8_ECLASS_COUNT));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_face_neigh, face_neigh, testing::Range (T8_ECLASS_VERTEX, T8_ECLASS_COUNT));
 /* *INDENT-ON* */
