@@ -33,6 +33,7 @@ typedef struct t8_level_graph_element_data
   int* ids_existing_elements;
   int parent_id;
   int *children_id;
+  void *data;
 
 } t8_level_graph_element_data;
 
@@ -131,38 +132,55 @@ new_level_graph( t8_cmesh_t cmesh, t8_forest_t forest, int level, t8_scheme_cxx_
 {
   forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
   int max_level = t8_forest_get_maxlevel( forest );
+  printf("1\n");
 
   int ids[t8_forest_get_local_num_elements( forest )];
+  printf("2\n");
 
   //tbb::concurrent_unordered_map
   std::unordered_map<int, t8_level_graph_element_data* > *levels_array[max_level];
   std::unordered_map<int, t8_level_graph_element_data* > **levels = levels_array;
 
+  printf("3\n");
   for( int i_max_level = 0; i_max_level < max_level; i_max_level++ )
   {
     levels[i_max_level] = new std::unordered_map<int, t8_level_graph_element_data*>();
   }
+  printf("4\n");
   t8_locidx_t itree, ielem;
   for( itree = 0, ielem = 0; itree < t8_forest_get_num_local_trees( forest ); itree++ )
   {
-    for( t8_locidx_t ielem_tree = 0; ielem_tree < t8_forest_get_local_num_elements( forest ); ielem_tree, ielem++ )
+    printf("5\n");
+    printf("Itree: %i\n", itree);
+    for( t8_locidx_t ielem_tree = 0; ielem_tree < t8_forest_get_local_num_elements( forest ); ielem_tree++, ielem++ )
     {
-      t8_level_graph_element_data *elem_data;
+      printf("6\n");
+      printf("Ielem_tree: %i\n", ielem_tree);
+      t8_level_graph_element_data *elem_data = T8_ALLOC (t8_level_graph_element_data, 1);;
+      printf("6.1\n");
       //hier weiter machen - level graph von element auf user-defined element umstellen
       elem_data->element = t8_forest_get_element_in_tree( forest, itree, ielem_tree );
+      printf("6.2\n");
       elem_data->parent_id = NULL;
+      printf("6.3\n");
       elem_data->children_id = NULL;
+      printf("6.4\n");
 
       levels[0]->insert( std::make_pair( ielem, elem_data ) );
+      printf("6.5\n");
 
       ids[ ielem ] = ielem;
+      printf("6.6\n");
     }
   }
+  printf("7\n");
   t8_adapt_data_level_graph *data = T8_ALLOC (t8_adapt_data_level_graph, 1);
   data->level_graph = levels;
   data->ids_forest = ids;
+  printf("8\n");
 
   t8_forest_set_user_data(forest, data);
+  printf("9\n");
 
   return forest;
 }
