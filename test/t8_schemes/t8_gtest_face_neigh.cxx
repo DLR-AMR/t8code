@@ -62,49 +62,6 @@ protected:
 };
 /* *INDENT-ON* */
 
-/* Compute all children along all faces. Compute their neighbors along the face,
- * check, if the children have root contact, and if the neighbors are outside of the
- * root. */
-void
-t8_check_not_inside_root (t8_element_t *element, t8_element_t *neigh,
-                          t8_element_t *child, t8_eclass_scheme_c *ts)
-{
-
-  const int           num_faces = ts->t8_element_num_faces (element);
-
-  for (int iface = 0; iface < num_faces; iface++) {
-
-    const int           num_children =
-      ts->t8_element_num_face_children (element, iface);
-    int                *child_indices = T8_ALLOC (int, num_children);
-    t8_element_t      **children = T8_ALLOC (t8_element_t *, num_children);
-    ts->t8_element_new (num_children, children);
-    ts->t8_element_children_at_face (element, iface, children, num_children,
-                                     child_indices);
-
-    for (int jchild = 0; jchild < num_children; jchild++) {
-
-      const int           child_id = child_indices[jchild];
-      const int           face_contact =
-        ts->t8_element_face_child_face (element, iface, jchild);
-
-      ts->t8_element_child (element, child_id, child);
-      int                 face_num;
-      int                 inside =
-        ts->t8_element_face_neighbor_inside (child, neigh, face_contact,
-                                             &face_num);
-
-      ASSERT_EQ (inside, 0);
-
-      inside = ts->t8_element_tree_face (child, face_contact);
-      ASSERT_EQ (inside, iface);
-    }
-    ts->t8_element_destroy (num_children, children);
-    T8_FREE (children);
-    T8_FREE (child_indices);
-  }
-}
-
 void
 t8_test_face_neighbor_inside (int num_faces, t8_element_t *element,
                               t8_element_t *child, t8_element_t *neigh,
@@ -175,16 +132,55 @@ t8_test_get_middle_child (t8_eclass_t eclass, int ilevel,
   }
 }
 
-/* First "simple" check. First, the neighbors of the root-element at level 0 are computed
+/* First two "simple" checks. First, the neighbors of the root-element at level 0 are computed
  * which should all lie outside. Then, the child is constructed and it is checked,
  * if if all neighbors are computed correctly. Then, the same is done for all of the children. 
  * The same is done until level maxlvl. */
+
+/* Compute all children along all faces. Compute their neighbors along the face,
+ * check, if the children have root contact, and if the neighbors are outside of the
+ * root. */
+TEST_P(face_neigh, check_not_inside_root){
+  /* Are the neighbors of the element really outside?. */
+  
+  const int           num_faces = ts->t8_element_num_faces (element);
+
+  for (int iface = 0; iface < num_faces; iface++) {
+
+    const int           num_children =
+      ts->t8_element_num_face_children (element, iface);
+    int                *child_indices = T8_ALLOC (int, num_children);
+    t8_element_t      **children = T8_ALLOC (t8_element_t *, num_children);
+    ts->t8_element_new (num_children, children);
+    ts->t8_element_children_at_face (element, iface, children, num_children,
+                                     child_indices);
+
+    for (int jchild = 0; jchild < num_children; jchild++) {
+
+      const int           child_id = child_indices[jchild];
+      const int           face_contact =
+        ts->t8_element_face_child_face (element, iface, jchild);
+
+      ts->t8_element_child (element, child_id, child);
+      int                 face_num;
+      int                 inside =
+        ts->t8_element_face_neighbor_inside (child, neigh, face_contact,
+                                             &face_num);
+
+      ASSERT_EQ (inside, 0);
+
+      inside = ts->t8_element_tree_face (child, face_contact);
+      ASSERT_EQ (inside, iface);
+    }
+    ts->t8_element_destroy (num_children, children);
+    T8_FREE (children);
+    T8_FREE (child_indices);
+  }
+}
+
 TEST_P (face_neigh, face_check_easy)
 {
   int                 middle_child_id;
-
-  /* Are the neighbors of the element really outside?. */
-  t8_check_not_inside_root (element, neigh, child, ts);
 
   for (int ilevel = 1; ilevel <= maxlvl; ilevel++) {
 
