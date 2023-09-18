@@ -61,13 +61,12 @@
  *  This is useful to convert boundary coordinates from prism to triangle. */
 #define T8_DPRISM_ROOT_BY_DLINE_ROOT (1 << (T8_DLINE_MAXLEVEL - T8_DPRISM_MAXLEVEL))
 
-typedef int32_t     t8_dprism_coord_t;
+typedef int32_t t8_dprism_coord_t;
 
 typedef struct t8_dprism
 {
-  t8_dline_t          line;     /*z coordinate + level */
-  t8_dtri_t           tri;      /*x,y coordinate + level + type */
-}
-t8_dprism_t;
+  t8_dline_t line; /*z coordinate + level */
+  t8_dtri_t tri;   /*x,y coordinate + level + type */
+} t8_dprism_t;
 
 #endif /* T8_DPRISM_H */

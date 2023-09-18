@@ -47,13 +47,12 @@
 /** The length of a line at a given level in integer coordinates. */
 #define T8_DLINE_LEN(l) (1 << (T8_DLINE_MAXLEVEL - (l)))
 
-typedef int32_t     t8_dline_coord_t;
+typedef int32_t t8_dline_coord_t;
 
 typedef struct t8_dline
 {
-  int8_t              level;
-  t8_dline_coord_t    x;
-}
-t8_dline_t;
+  int8_t level;
+  t8_dline_coord_t x;
+} t8_dline_t;
 
 #endif /* T8_DLINE_H */
