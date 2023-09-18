@@ -59,17 +59,16 @@ T8_EXTERN_C_BEGIN ();
  *  This is useful to convert boundary coordinates from tri to line. */
 #define T8_DLINE_ROOT_BY_DTRI_ROOT (1 << (T8_DLINE_MAXLEVEL - T8_DTRI_MAXLEVEL))
 
-typedef int8_t      t8_dtri_type_t;
-typedef int32_t     t8_dtri_coord_t;
+typedef int8_t t8_dtri_type_t;
+typedef int32_t t8_dtri_coord_t;
 
 typedef struct t8_dtri
 {
-  int8_t              level;
-  t8_dtri_type_t      type;
-  t8_dtri_coord_t     x, y;
-  t8_dtri_coord_t     n;
-}
-t8_dtri_t;
+  int8_t level;
+  t8_dtri_type_t type;
+  t8_dtri_coord_t x, y;
+  t8_dtri_coord_t n;
+} t8_dtri_t;
 
 T8_EXTERN_C_END ();
 

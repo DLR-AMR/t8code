@@ -46,10 +46,10 @@
  */
 typedef struct
 {
-  double              c_min, c_max;     /* constants that define the thickness of the refinement region */
-  double              normal[3];        /* normal vector to the plane E */
-  int                 base_level;       /* A given level that is not coarsend further, see -l argument */
-  int                 max_level;        /* A max level that is not refined further, see -L argument */
+  double c_min, c_max; /* constants that define the thickness of the refinement region */
+  double normal[3];    /* normal vector to the plane E */
+  int base_level;      /* A given level that is not coarsend further, see -l argument */
+  int max_level;       /* A max level that is not refined further, see -L argument */
 } adapt_data_t;
 
 /* Simple 3 dimensional vector product */
@@ -64,7 +64,7 @@ t8_vec3_dot (double *v1, double *v2)
 static void
 t8_vec3_xmay (double *x, double alpha, double *y)
 {
-  int                 i;
+  int i;
   for (i = 0; i < 3; i++) {
     x[i] -= alpha * y[i];
   }
@@ -100,18 +100,15 @@ t8_anchor_element (t8_forest_t forest, t8_locidx_t which_tree,
 /* refine the forest in a band, given by a plane E and two constants
  * c_min, c_max. We refine the cells in the band c_min*E, c_max*E */
 static int
-t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from,
-               t8_locidx_t which_tree, t8_locidx_t lelement_id,
-               t8_eclass_scheme_c *ts, const int is_family,
-               const int num_elements, t8_element_t *elements[])
+t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
+               t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
-  int                 level, base_level, max_level;
-  double              elem_midpoint[3];
-  double             *normal;
-  adapt_data_t       *adapt_data;
+  int level, base_level, max_level;
+  double elem_midpoint[3];
+  double *normal;
+  adapt_data_t *adapt_data;
 
-  T8_ASSERT (!is_family || num_elements ==
-             ts->t8_element_num_children (elements[0]));
+  T8_ASSERT (!is_family || num_elements == ts->t8_element_num_children (elements[0]));
   level = ts->t8_element_level (elements[0]);
   /* Get the minimum and maximum x-coordinate from the user data pointer of forest */
   adapt_data = (adapt_data_t *) t8_forest_get_user_data (forest);
@@ -119,8 +116,7 @@ t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from,
   base_level = adapt_data->base_level;
   max_level = adapt_data->max_level;
   /* Compute the coordinates of the anchor node. */
-  t8_forest_element_centroid (forest_from, which_tree, elements[0],
-                              elem_midpoint);
+  t8_forest_element_centroid (forest_from, which_tree, elements[0], elem_midpoint);
 
   /* Calculate elem_midpoint - c_min n */
   t8_vec3_xmay (elem_midpoint, adapt_data->c_min, normal);
@@ -133,8 +129,7 @@ t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from,
      * check if it is to the left of c_max*E */
 
     /* set elem_midpoint to the original anchor - c_max*normal */
-    t8_vec3_xmay (elem_midpoint, adapt_data->c_max - adapt_data->c_min,
-                  normal);
+    t8_vec3_xmay (elem_midpoint, adapt_data->c_max - adapt_data->c_min, normal);
     if (t8_vec3_dot (elem_midpoint, normal) <= 0) {
       if (level < max_level) {
         /* We do refine if level smaller 1+base level and the anchor is
@@ -160,7 +155,7 @@ t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from,
 static void
 t8_vec3_normalize (double *v)
 {
-  double              norm = sqrt (t8_vec3_dot (v, v));
+  double norm = sqrt (t8_vec3_dot (v, v));
 
   v[0] /= norm;
   v[1] /= norm;
@@ -170,25 +165,19 @@ t8_vec3_normalize (double *v)
 /* Create a cmesh from a .msh files uniform level 0
  * partitioned. */
 static void
-t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
-                              sc_MPI_Comm comm, int init_level, int max_level,
-                              int no_vtk, double x_min_max[2], double T,
-                              double delta_t, int do_ghost, int do_balance)
+t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix, sc_MPI_Comm comm, int init_level, int max_level,
+                              int no_vtk, double x_min_max[2], double T, double delta_t, int do_ghost, int do_balance)
 {
-  t8_cmesh_t          cmesh_partition;
-  char                forest_vtu[BUFSIZ], cmesh_vtu[BUFSIZ];
-  adapt_data_t        adapt_data;
-  t8_forest_t         forest, forest_adapt, forest_partition;
-  double              t;
-  int                 partition_cmesh;
-  int                 time_step;
-  double              adapt_time = 0, ghost_time = 0, partition_time =
-    0, new_time = 0, total_time = 0, balance_time = 0;
-  sc_statinfo_t       times[6];
+  char forest_vtu[BUFSIZ], cmesh_vtu[BUFSIZ];
+  adapt_data_t adapt_data;
+  t8_forest_t forest, forest_adapt, forest_partition;
+  double t;
+  int cmesh_is_partitioned;
+  int time_step;
+  double adapt_time = 0, ghost_time = 0, partition_time = 0, new_time = 0, total_time = 0, balance_time = 0;
+  sc_statinfo_t times[6];
 
-  t8_global_productionf ("Committed cmesh with"
-                         " %lli global trees.\n",
-                         (long long) t8_cmesh_get_num_trees (cmesh));
+  t8_global_productionf ("Committed cmesh with %lli global trees.\n", (long long) t8_cmesh_get_num_trees (cmesh));
 
   /* If the input cmesh is partitioned then we use a partitioned cmehs
    * and also repartition it in each timestep (happens automatically in
@@ -204,26 +193,10 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
   sc_stats_init (&times[5], "total");
   total_time -= sc_MPI_Wtime ();
 
-  partition_cmesh = t8_cmesh_is_partitioned (cmesh);
-  if (partition_cmesh) {
-    /* Set up cmesh_partition to be a repartition of cmesh. */
-    t8_cmesh_init (&cmesh_partition);
-    t8_cmesh_set_derive (cmesh_partition, cmesh);
-    /* The new cmesh is partitioned according to a uniform init_level refinement */
-    t8_cmesh_set_partition_uniform (cmesh_partition, init_level,
-                                    t8_scheme_new_default_cxx ());
-    t8_cmesh_set_profiling (cmesh_partition, 1);
-    t8_cmesh_commit (cmesh_partition, comm);
-  }
-  else {
-    /* Use cmesh_partition as the original replicated cmesh */
-    cmesh_partition = cmesh;
-  }
-
-  cmesh_partition = cmesh;
+  cmesh_is_partitioned = t8_cmesh_is_partitioned (cmesh);
   /* Initialize forest and set cmesh */
   t8_forest_init (&forest);
-  t8_forest_set_cmesh (forest, cmesh_partition, comm);
+  t8_forest_set_cmesh (forest, cmesh, comm);
   /* Set the element scheme */
   t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
   /* Set the initial refinement level */
@@ -278,16 +251,13 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
 
     /* Set the vtu output name */
     if (!no_vtk) {
-      snprintf (forest_vtu, BUFSIZ, "%s_forest_partition_%03d", vtu_prefix,
-                time_step);
-      snprintf (cmesh_vtu, BUFSIZ, "%s_cmesh_partition_%03d", vtu_prefix,
-                time_step);
+      snprintf (forest_vtu, BUFSIZ, "%s_forest_partition_%03d", vtu_prefix, time_step);
+      snprintf (cmesh_vtu, BUFSIZ, "%s_cmesh_partition_%03d", vtu_prefix, time_step);
       t8_forest_write_vtk (forest_partition, forest_vtu);
-      t8_cmesh_vtk_write_file (t8_forest_get_cmesh (forest_partition),
-                               cmesh_vtu, 1.0);
+      t8_cmesh_vtk_write_file (t8_forest_get_cmesh (forest_partition), cmesh_vtu, 1.0);
       t8_debugf ("Wrote partitioned forest and cmesh\n");
     }
-    if (partition_cmesh) {
+    if (cmesh_is_partitioned) {
       /* Print runtimes and statistics of forest and cmesh partition */
       t8_cmesh_print_profile (t8_forest_get_cmesh (forest_partition));
     }
@@ -317,29 +287,33 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
  * must be specified. If cmesh_file is NULL, the cmesh is loaded from the .msh
  * file and mesh_dim must be specified. */
 t8_cmesh_t
-t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim,
-                             const char *cmesh_file, int num_files,
-                             sc_MPI_Comm comm, int init_level, int stride)
+t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim, const char *cmesh_file, int num_files,
+                             sc_MPI_Comm comm, int init_level, int stride, int use_occ)
 {
-  t8_cmesh_t          cmesh;
-  t8_cmesh_t          cmesh_partition;
-  int                 partition;
+  t8_cmesh_t cmesh;
+  t8_cmesh_t cmesh_partition;
+  int partition;
 
   T8_ASSERT (msh_file == NULL || cmesh_file == NULL);
 
   if (msh_file != NULL) {
+    if (use_occ) {
+      partition = 0;
+      t8_global_productionf ("The cmesh is not partitioned due to the usage of the curved mesh option. \n"
+                             "Timing will not be comparable to non-curved meshes. \n");
+    }
+    else {
+      partition = 1;
+    }
     /* Create a cmesh from the given mesh files */
-    cmesh =
-      t8_cmesh_from_msh_file ((char *) msh_file, 0, comm, mesh_dim, 0, 0);
-    partition = 1;
+    cmesh = t8_cmesh_from_msh_file ((char *) msh_file, partition, comm, mesh_dim, 0, use_occ);
   }
   else {
     T8_ASSERT (cmesh_file != NULL);
     SC_CHECK_ABORT (num_files > 0, "Must specify valid number of files.\n");
     /* Load the cmesh from the stored files and evenly distribute it
      * among all ranks */
-    cmesh = t8_cmesh_load_and_distribute (cmesh_file, num_files, comm,
-                                          T8_LOAD_STRIDE, stride);
+    cmesh = t8_cmesh_load_and_distribute (cmesh_file, num_files, comm, T8_LOAD_STRIDE, stride);
     /* Partition only if more than 1 input file */
     partition = num_files > 1;
   }
@@ -349,8 +323,8 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim,
     /* partition the cmesh uniformly */
     t8_cmesh_init (&cmesh_partition);
     t8_cmesh_set_derive (cmesh_partition, cmesh);
-    t8_cmesh_set_partition_uniform (cmesh_partition, init_level,
-                                    t8_scheme_new_default_cxx ());
+    t8_cmesh_set_partition_uniform (cmesh_partition, init_level, t8_scheme_new_default_cxx ());
+    t8_cmesh_set_profiling (cmesh_partition, 1);
     t8_cmesh_commit (cmesh_partition, comm);
     return cmesh_partition;
   }
@@ -360,20 +334,20 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim,
 int
 main (int argc, char *argv[])
 {
-  int                 mpiret, mpisize;
-  int                 first_argc;
-  int                 level, level_diff;
-  int                 help = 0, no_vtk, do_ghost, do_balance;
-  int                 dim, num_files;
-  int                 test_tet, test_linear_cylinder, test_occ_cylinder;
-  int                 stride;
-  int                 cmesh_level;
-  double              T, delta_t, cfl;
-  sc_options_t       *opt;
-  t8_cmesh_t          cmesh;
-  const char         *mshfileprefix, *cmeshfileprefix;
-  const char         *vtu_prefix;
-  double              x_min_max[2];     /* At position 0 the minimum x-coordinate,
+  int mpiret, mpisize;
+  int first_argc;
+  int level, level_diff;
+  int help = 0, no_vtk, do_ghost, do_balance, use_occ;
+  int dim, num_files;
+  int test_tet, test_linear_cylinder, test_occ_cylinder;
+  int stride;
+  int cmesh_level;
+  double T, delta_t, cfl;
+  sc_options_t *opt;
+  t8_cmesh_t cmesh;
+  const char *mshfileprefix, *cmeshfileprefix;
+  const char *vtu_prefix;
+  double x_min_max[2]; /* At position 0 the minimum x-coordinate,
                                            at position 1 the maximum x-coordinate. */
 
   /* Initialize MPI, sc, p4est and t8code */
@@ -391,82 +365,61 @@ main (int argc, char *argv[])
   /* Setup for command line options */
   opt = sc_options_new (argv[0]);
 
-  sc_options_add_switch (opt, 'h', "help", &help,
-                         "Display a short help message.");
-  sc_options_add_switch (opt, 'o', "no-vtk", &no_vtk,
-                         "Do not write vtk output.");
+  sc_options_add_switch (opt, 'h', "help", &help, "Display a short help message.");
+  sc_options_add_switch (opt, 'o', "no-vtk", &no_vtk, "Do not write vtk output.");
   sc_options_add_string (opt, 'f', "mshfile", &mshfileprefix, NULL,
-                         "If specified, the cmesh is constructed from a .msh file with "
-                         "the given prefix. The files must end in .msh and be "
-                         "created with gmsh.");
-  sc_options_add_int (opt, 'd', "dim", &dim, 2,
-                      "Together with -f: The dimension of the coarse mesh. 2 or 3.");
+                         "If specified, the cmesh is constructed from a .msh file with the given prefix. "
+                         "The files must end in .msh and be created with gmsh.");
+  sc_options_add_int (opt, 'd', "dim", &dim, 2, "Together with -f: The dimension of the coarse mesh. 2 or 3.");
   sc_options_add_string (opt, 'c', "cmeshfile", &cmeshfileprefix, NULL,
-                         "If specified, the cmesh is constructed from a collection "
-                         "of cmesh files. Created with t8_cmesh_save."
-                         "The number of files must then be specified with the -n "
-                         "option.");
+                         "If specified, the cmesh is constructed from a collection of cmesh files. "
+                         "Created with t8_cmesh_save. The number of files must then be specified with the -n option.");
   sc_options_add_int (opt, 'n', "nfiles", &num_files, -1,
-                      "If the -c option is used, the number of cmesh files must "
-                      "be specified as an argument here. If n=1 then the cmesh "
-                      "will be replicated throughout the test.");
+                      "If the -c option is used, the number of cmesh files must be specified as an argument here. "
+                      "If n=1 then the cmesh will be replicated throughout the test.");
   sc_options_add_int (opt, 's', "stride", &stride, 16,
-                      "If -c and -n are used, only every s-th MPI rank will "
-                      "read a .cmesh file (file number: rank/s). Default is 16.");
+                      "If -c and -n are used, only every s-th MPI rank will read a .cmesh file (file number: rank/s)."
+                      "Default is 16.");
   sc_options_add_switch (opt, 't', "test-tet", &test_tet,
                          "Use a cmesh that tests all tet face-to-face connections."
-                         " If this option is used -o is enabled automatically."
-                         " Not allowed with -f and -c.");
-  sc_options_add_switch (opt, 'L', "test-linear-cylinder",
-                         &test_linear_cylinder,
+                         " If this option is used -o is enabled automatically. Not allowed with -f and -c.");
+  sc_options_add_switch (opt, 'L', "test-linear-cylinder", &test_linear_cylinder,
                          "Use a linear cmesh to compare linear and occ geometry performance."
-                         " If this option is used -o is enabled automatically."
-                         " Not allowed with -f and -c.");
+                         " If this option is used -o is enabled automatically. Not allowed with -f and -c.");
   sc_options_add_switch (opt, 'O', "test-occ-cylinder", &test_occ_cylinder,
                          "Use a occ cmesh to compare linear and occ geometry performance."
-                         " If this option is used -o is enabled automatically."
-                         " Not allowed with -f and -c.");
-  sc_options_add_int (opt, 'l', "level", &level, 0,
-                      "The initial uniform "
-                      "refinement level of the forest.");
+                         " If this option is used -o is enabled automatically. Not allowed with -f and -c.");
+  sc_options_add_int (opt, 'l', "level", &level, 0, "The initial uniform refinement level of the forest.");
   sc_options_add_int (opt, 'r', "rlevel", &level_diff, 1,
-                      "The number of levels that the forest is refined "
-                      "from the initial level.");
+                      "The number of levels that the forest is refined from the initial level.");
   sc_options_add_int (opt, '\0', "cmesh-level", &cmesh_level, -1,
-                      "Starting level of the linear or occ cmesh, default is 0."
-                      " Only viable with -L or -O.");
-  sc_options_add_double (opt, 'x', "xmin", x_min_max, 0,
-                         "The minimum x coordinate " "in the mesh.");
-  sc_options_add_double (opt, 'X', "xmax", x_min_max + 1, 1,
-                         "The maximum x coordinate " "in the mesh.");
+                      "Starting level of the linear or occ cmesh, default is 0. Only viable with -L or -O.");
+  sc_options_add_double (opt, 'x', "xmin", x_min_max, 0, "The minimum x coordinate in the mesh.");
+  sc_options_add_double (opt, 'X', "xmax", x_min_max + 1, 1, "The maximum x coordinate in the mesh.");
   sc_options_add_double (opt, 'T', "time", &T, 1,
-                         "The simulated time span."
-                         "We simulate the time from 0 to T. T has to be > 0.");
+                         "The simulated time span. We simulate the time from 0 to T. T has to be > 0.");
   sc_options_add_double (opt, 'D', "delta_t", &delta_t, 0.08,
-                         "The time step in each simulation step. "
-                         "Deprecated, use -C instead.");
+                         "The time step in each simulation step. Deprecated, use -C instead.");
   /* CFL number. delta_t = CFL * 0.64 / 2^level */
   sc_options_add_double (opt, 'C', "cfl", &cfl, 0,
-                         "The CFL number. If specified, then delta_t is set to "
-                         "CFL * 0.64 / 2^level. Overwrites any other delta_t setting.");
-  sc_options_add_switch (opt, 'g', "ghost", &do_ghost,
-                         "Create ghost elements.");
-  sc_options_add_switch (opt, 'b', "balance", &do_balance,
-                         "Establish a 2:1 balance in the forest.");
+                         "The CFL number. If specified, then delta_t is set to CFL * 0.64 / 2^level. "
+                         "Overwrites any other delta_t setting.");
+  sc_options_add_switch (opt, 'g', "ghost", &do_ghost, "Create ghost elements.");
+  sc_options_add_switch (opt, 'b', "balance", &do_balance, "Establish a 2:1 balance in the forest.");
+  sc_options_add_switch (opt, 'z', "use_occ", &use_occ,
+                         "If used, meshes will be curved to original geometries (msh- and brep-files necessary).");
 
   /* parse command line options */
-  first_argc = sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT,
-                                 opt, argc, argv);
+  first_argc = sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT, opt, argc, argv);
   /* check for wrong usage of arguments */
   if (first_argc < 0 || first_argc != argc || dim < 2 || dim > 3
-      || (cmeshfileprefix == NULL && mshfileprefix == NULL
-          && test_tet == 0 && test_occ_cylinder == 0
+      || (cmeshfileprefix == NULL && mshfileprefix == NULL && test_tet == 0 && test_occ_cylinder == 0
           && test_linear_cylinder == 0)
-      || stride <= 0 || (num_files - 1) * stride >= mpisize || cfl < 0
-      || T <= 0 || test_tet + test_linear_cylinder + test_occ_cylinder > 1
+      || stride <= 0 || (num_files - 1) * stride >= mpisize || cfl < 0 || T <= 0
+      || test_tet + test_linear_cylinder + test_occ_cylinder > 1
       || (cmesh_level >= 0 && (!test_linear_cylinder && !test_occ_cylinder))
-      || ((mshfileprefix != NULL || cmeshfileprefix != NULL)
-          && (test_linear_cylinder || test_occ_cylinder || test_tet))) {
+      || ((mshfileprefix != NULL || cmeshfileprefix != NULL) && (test_linear_cylinder || test_occ_cylinder || test_tet))
+      || (mshfileprefix == NULL && use_occ)) {
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
     return 1;
   }
@@ -485,8 +438,7 @@ main (int argc, char *argv[])
     }
     t8_global_productionf ("Using delta_t = %f\n", delta_t);
     if (mshfileprefix != NULL) {
-      cmesh = t8_time_forest_create_cmesh (mshfileprefix, dim, NULL, -1,
-                                           sc_MPI_COMM_WORLD, level, stride);
+      cmesh = t8_time_forest_create_cmesh (mshfileprefix, dim, NULL, -1, sc_MPI_COMM_WORLD, level, stride, use_occ);
       vtu_prefix = mshfileprefix;
     }
     else if (test_tet) {
@@ -497,25 +449,17 @@ main (int argc, char *argv[])
       if (cmesh_level < 0) {
         cmesh_level = 0;
       }
-      cmesh =
-        t8_cmesh_new_hollow_cylinder (sc_MPI_COMM_WORLD,
-                                      4 * sc_intpow (2, cmesh_level),
-                                      sc_intpow (2, cmesh_level),
-                                      sc_intpow (2, cmesh_level),
-                                      test_occ_cylinder);
-      test_linear_cylinder ? vtu_prefix =
-        "test_linear_cylinder" : vtu_prefix = "test_occ_cylinder";
+      cmesh = t8_cmesh_new_hollow_cylinder (sc_MPI_COMM_WORLD, 4 * sc_intpow (2, cmesh_level),
+                                            sc_intpow (2, cmesh_level), sc_intpow (2, cmesh_level), test_occ_cylinder);
+      test_linear_cylinder ? vtu_prefix = "test_linear_cylinder" : vtu_prefix = "test_occ_cylinder";
     }
     else {
       T8_ASSERT (cmeshfileprefix != NULL);
-      cmesh = t8_time_forest_create_cmesh (NULL, -1, cmeshfileprefix,
-                                           num_files, sc_MPI_COMM_WORLD,
-                                           level, stride);
+      cmesh
+        = t8_time_forest_create_cmesh (NULL, -1, cmeshfileprefix, num_files, sc_MPI_COMM_WORLD, level, stride, use_occ);
       vtu_prefix = cmeshfileprefix;
     }
-    t8_time_forest_cmesh_mshfile (cmesh, vtu_prefix,
-                                  sc_MPI_COMM_WORLD, level,
-                                  level + level_diff, no_vtk, x_min_max, T,
+    t8_time_forest_cmesh_mshfile (cmesh, vtu_prefix, sc_MPI_COMM_WORLD, level, level + level_diff, no_vtk, x_min_max, T,
                                   delta_t, do_ghost, do_balance);
   }
   sc_options_destroy (opt);

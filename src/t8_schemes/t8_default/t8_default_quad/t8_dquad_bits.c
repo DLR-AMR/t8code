@@ -24,17 +24,19 @@
 #include <p4est_bits.h>
 
 void
-t8_dquad_compute_reference_coords (const t8_dquad_t * elem,
-                                   const double *ref_coords,
+t8_dquad_compute_reference_coords (const t8_dquad_t *elem, const double *ref_coords, const size_t num_coords,
                                    double *out_coords)
 {
   const p4est_quadrant_t *q1 = (const p4est_quadrant_t *) elem;
 
   const p4est_qcoord_t h = P4EST_QUADRANT_LEN (q1->level);
 
-  out_coords[0] = q1->x + ref_coords[0] * h;
-  out_coords[1] = q1->y + ref_coords[1] * h;
+  for (size_t coord = 0; coord < num_coords; ++coord) {
+    const size_t offset = coord * 2;
+    out_coords[offset + 0] = q1->x + ref_coords[offset + 0] * h;
+    out_coords[offset + 1] = q1->y + ref_coords[offset + 1] * h;
 
-  out_coords[0] /= (double) P4EST_ROOT_LEN;
-  out_coords[1] /= (double) P4EST_ROOT_LEN;
+    out_coords[offset + 0] /= (double) P4EST_ROOT_LEN;
+    out_coords[offset + 1] /= (double) P4EST_ROOT_LEN;
+  }
 }

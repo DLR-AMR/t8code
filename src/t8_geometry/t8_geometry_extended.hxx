@@ -37,20 +37,29 @@ T8_EXTERN_C_BEGIN ();
  * from reference space to physical space, the extended geometry
  * also provides functions to compute the volume of an element,
  * face normals, etc... */
-struct t8_geometry_extended:t8_geometry
+struct t8_geometry_extended: t8_geometry
 {
-public:
-
+ public:
   /* TODO: Properly define these functions. */
-  virtual double      t8_geom_element_volume () = 0;
+  virtual double
+  t8_geom_element_volume ()
+    = 0;
 
-  virtual void        t8_geom_element_centroid () = 0;
+  virtual void
+  t8_geom_element_centroid ()
+    = 0;
 
-  virtual void        t8_geom_face_area () = 0;
+  virtual void
+  t8_geom_face_area ()
+    = 0;
 
-  virtual void        t8_geom_face_centroid () = 0;
+  virtual void
+  t8_geom_face_centroid ()
+    = 0;
 
-  virtual void        t8_geom_face_normal () = 0;
+  virtual void
+  t8_geom_face_normal ()
+    = 0;
 };
 
 T8_EXTERN_C_END ();

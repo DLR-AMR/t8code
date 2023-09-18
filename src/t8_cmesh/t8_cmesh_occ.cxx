@@ -47,140 +47,129 @@
 #endif
 
 t8_cmesh_t
-t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
-                              int num_axial_trees, int num_radial_trees,
+t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees, int num_axial_trees, int num_radial_trees,
                               int with_occ_geometry)
 {
   /* Create the cmesh and the geometry */
-  t8_cmesh_t          cmesh;
+  t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_profiling (cmesh, 1);
 
   if (with_occ_geometry) {
 #if T8_WITH_OCC
     /* Create the two occ cylinder surfaces */
-    const double        radius_inner = 0.25;
-    const double        radius_outer = 0.5;
-    const gp_Pnt        origin (0, 0, 0);
-    const gp_Dir        z_dir (0, 0, 1);
-    const gp_Ax2        axis (origin, z_dir);
-    const gp_Vec        height (0, 0, 1);
-    const gp_Circ       circle_outer (axis, radius_outer);
-    const gp_Circ       circle_inner (axis, radius_inner);
+    const double radius_inner = 0.25;
+    const double radius_outer = 0.5;
+    const gp_Pnt origin (0, 0, 0);
+    const gp_Dir z_dir (0, 0, 1);
+    const gp_Ax2 axis (origin, z_dir);
+    const gp_Vec height (0, 0, 1);
+    const gp_Circ circle_outer (axis, radius_outer);
+    const gp_Circ circle_inner (axis, radius_inner);
     BRepBuilderAPI_MakeEdge make_outer_edge (circle_outer);
-    const TopoDS_Edge   edge_outer = make_outer_edge.Edge ();
-    const TopoDS_Face   face_outer =
-      TopoDS::Face (BRepPrimAPI_MakePrism (edge_outer, height));
-    const Handle_Geom_Surface cylinder_outer =
-      BRep_Tool::Surface (face_outer);
+    const TopoDS_Edge edge_outer = make_outer_edge.Edge ();
+    const TopoDS_Face face_outer = TopoDS::Face (BRepPrimAPI_MakePrism (edge_outer, height));
+    const Handle_Geom_Surface cylinder_outer = BRep_Tool::Surface (face_outer);
     BRepBuilderAPI_MakeEdge make_inner_edge (circle_inner);
-    const TopoDS_Edge   edge_inner = make_inner_edge.Edge ();
-    const TopoDS_Face   face_inner =
-      TopoDS::Face (BRepPrimAPI_MakePrism (edge_inner, height));
-    const Handle_Geom_Surface cylinder_inner =
-      BRep_Tool::Surface (face_inner);
+    const TopoDS_Edge edge_inner = make_inner_edge.Edge ();
+    const TopoDS_Face face_inner = TopoDS::Face (BRepPrimAPI_MakePrism (edge_inner, height));
+    const Handle_Geom_Surface cylinder_inner = BRep_Tool::Surface (face_inner);
 
     /* Fill a shape with cylinders and register an occ geometry with this shape. */
-    TopoDS_Shape        shape;
+    TopoDS_Shape shape;
     shape = BRepBuilderAPI_MakeFace (cylinder_outer, 1e-6).Face ();
-    shape =
-      BRepAlgoAPI_Fuse (shape,
-                        BRepBuilderAPI_MakeFace (cylinder_inner,
-                                                 1e-6).Face ());
-    t8_geometry_occ    *geometry_occ =
-      new t8_geometry_occ (3, shape, "occ surface dim=3");
+    shape = BRepAlgoAPI_Fuse (shape, BRepBuilderAPI_MakeFace (cylinder_inner, 1e-6).Face ());
+    t8_geometry_occ *geometry_occ = new t8_geometry_occ (3, shape, "occ surface dim=3");
 
     t8_cmesh_register_geometry (cmesh, geometry_occ);
 
-#else /* !T8_WITH_OCC */
+#else  /* !T8_WITH_OCC */
     SC_ABORTF ("OCC not linked");
 #endif /* T8_WITH_OCC */
   }
   else {
-    t8_geometry_c      *geometry_linear = t8_geometry_linear_new (3);
+    t8_geometry_c *geometry_linear = t8_geometry_linear_new (3);
     t8_cmesh_register_geometry (cmesh, geometry_linear);
   }
 
 #if T8_WITH_OCC
   /* Save the indices of the cylinders inside the shape for later usage. 
    * The indices start with 1 and are in the same order as we put in the cylinders. */
-  int                 cylinder_outer_index = 1, cylinder_inner_index = 2;
+  int cylinder_outer_index = 1, cylinder_inner_index = 2;
 #endif /* T8_WITH_OCC */
 
   /* Start the construction of the actual cylindrical cmesh. We are going to use three loops
    * to iterate over the three dimensions of cylinder coordinates. */
-  const double        radius_outer = 0.5, radius_inner = 0.25;
-  const double        dr = (radius_outer - radius_inner) / num_radial_trees;
-  const double        dphi = 2.0 * M_PI / num_tangential_trees;
-  const double        dh = 1.0 / num_axial_trees;
+  const double radius_outer = 0.5, radius_inner = 0.25;
+  const double dr = (radius_outer - radius_inner) / num_radial_trees;
+  const double dphi = 2.0 * M_PI / num_tangential_trees;
+  const double dh = 1.0 / num_axial_trees;
   /* Allocate memory for saving the node coordinates 
    * and in case of usage of the occ geometry, the node parameters */
-  double             *vertices;
-  vertices =
-    T8_ALLOC (double,
-              num_tangential_trees * num_axial_trees * num_radial_trees * 24);
+  double *vertices;
+  vertices = T8_ALLOC (double, num_tangential_trees *num_axial_trees *num_radial_trees * 24);
 #if T8_WITH_OCC
-  double             *parameters;
-  parameters = T8_ALLOC (double, num_tangential_trees * num_axial_trees * 8);
+  double *parameters;
+  parameters = T8_ALLOC (double, num_tangential_trees *num_axial_trees * 8);
 #endif /* T8_WITH_OCC */
 
   /* Compute vertex coordinates and parameters */
-  for (int i_tangential_trees = 0; i_tangential_trees < num_tangential_trees;
-       ++i_tangential_trees) {
-    for (int i_axial_trees = 0; i_axial_trees < num_axial_trees;
-         ++i_axial_trees) {
-      for (int i_radial_trees = 0; i_radial_trees < num_radial_trees;
-           ++i_radial_trees) {
-        t8_cmesh_set_tree_class (cmesh,
-                                 (i_tangential_trees * num_axial_trees +
-                                  i_axial_trees) * num_radial_trees +
-                                 i_radial_trees, T8_ECLASS_HEX);
-
-        /* *INDENT-OFF* */
-        const int current_tree_vertices = ((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24;
-        vertices[current_tree_vertices + 0] = cos ((i_tangential_trees + 1) * dphi) * (radius_inner + (i_radial_trees + 1) * dr);
-        vertices[current_tree_vertices + 1] = sin ((i_tangential_trees + 1) * dphi) * (radius_inner + (i_radial_trees + 1) * dr);
+  for (int i_tangential_trees = 0; i_tangential_trees < num_tangential_trees; ++i_tangential_trees) {
+    for (int i_axial_trees = 0; i_axial_trees < num_axial_trees; ++i_axial_trees) {
+      for (int i_radial_trees = 0; i_radial_trees < num_radial_trees; ++i_radial_trees) {
+        t8_cmesh_set_tree_class (
+          cmesh, (i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees,
+          T8_ECLASS_HEX);
+        const int current_tree_vertices
+          = ((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24;
+        vertices[current_tree_vertices + 0]
+          = cos ((i_tangential_trees + 1) * dphi) * (radius_inner + (i_radial_trees + 1) * dr);
+        vertices[current_tree_vertices + 1]
+          = sin ((i_tangential_trees + 1) * dphi) * (radius_inner + (i_radial_trees + 1) * dr);
         vertices[current_tree_vertices + 2] = -0.5 + i_axial_trees * dh;
-        vertices[current_tree_vertices + 3] = cos ((i_tangential_trees + 1) * dphi) * (radius_inner + i_radial_trees * dr);
-        vertices[current_tree_vertices + 4] = sin ((i_tangential_trees + 1) * dphi) * (radius_inner + i_radial_trees * dr);
+        vertices[current_tree_vertices + 3]
+          = cos ((i_tangential_trees + 1) * dphi) * (radius_inner + i_radial_trees * dr);
+        vertices[current_tree_vertices + 4]
+          = sin ((i_tangential_trees + 1) * dphi) * (radius_inner + i_radial_trees * dr);
         vertices[current_tree_vertices + 5] = -0.5 + i_axial_trees * dh;
-        vertices[current_tree_vertices + 6] = cos (i_tangential_trees * dphi) * (radius_inner + (i_radial_trees + 1) * dr);
-        vertices[current_tree_vertices + 7] = sin (i_tangential_trees * dphi) * (radius_inner + (i_radial_trees + 1) * dr);
+        vertices[current_tree_vertices + 6]
+          = cos (i_tangential_trees * dphi) * (radius_inner + (i_radial_trees + 1) * dr);
+        vertices[current_tree_vertices + 7]
+          = sin (i_tangential_trees * dphi) * (radius_inner + (i_radial_trees + 1) * dr);
         vertices[current_tree_vertices + 8] = -0.5 + i_axial_trees * dh;
         vertices[current_tree_vertices + 9] = cos (i_tangential_trees * dphi) * (radius_inner + i_radial_trees * dr);
         vertices[current_tree_vertices + 10] = sin (i_tangential_trees * dphi) * (radius_inner + i_radial_trees * dr);
         vertices[current_tree_vertices + 11] = -0.5 + i_axial_trees * dh;
-        vertices[current_tree_vertices + 12] = cos ((i_tangential_trees + 1) * dphi) * (radius_inner + (i_radial_trees + 1) * dr);
-        vertices[current_tree_vertices + 13] = sin ((i_tangential_trees + 1) * dphi) * (radius_inner + (i_radial_trees + 1) * dr);
+        vertices[current_tree_vertices + 12]
+          = cos ((i_tangential_trees + 1) * dphi) * (radius_inner + (i_radial_trees + 1) * dr);
+        vertices[current_tree_vertices + 13]
+          = sin ((i_tangential_trees + 1) * dphi) * (radius_inner + (i_radial_trees + 1) * dr);
         vertices[current_tree_vertices + 14] = -0.5 + (i_axial_trees + 1) * dh;
-        vertices[current_tree_vertices + 15] = cos ((i_tangential_trees + 1) * dphi) * (radius_inner + i_radial_trees * dr);
-        vertices[current_tree_vertices + 16] = sin ((i_tangential_trees + 1) * dphi) * (radius_inner + i_radial_trees * dr);
+        vertices[current_tree_vertices + 15]
+          = cos ((i_tangential_trees + 1) * dphi) * (radius_inner + i_radial_trees * dr);
+        vertices[current_tree_vertices + 16]
+          = sin ((i_tangential_trees + 1) * dphi) * (radius_inner + i_radial_trees * dr);
         vertices[current_tree_vertices + 17] = -0.5 + (i_axial_trees + 1) * dh;
-        vertices[current_tree_vertices + 18] = cos (i_tangential_trees * dphi) * (radius_inner + (i_radial_trees + 1) * dr);
-        vertices[current_tree_vertices + 19] = sin (i_tangential_trees * dphi) * (radius_inner + (i_radial_trees + 1) * dr);
+        vertices[current_tree_vertices + 18]
+          = cos (i_tangential_trees * dphi) * (radius_inner + (i_radial_trees + 1) * dr);
+        vertices[current_tree_vertices + 19]
+          = sin (i_tangential_trees * dphi) * (radius_inner + (i_radial_trees + 1) * dr);
         vertices[current_tree_vertices + 20] = -0.5 + (i_axial_trees + 1) * dh;
         vertices[current_tree_vertices + 21] = cos (i_tangential_trees * dphi) * (radius_inner + i_radial_trees * dr);
         vertices[current_tree_vertices + 22] = sin (i_tangential_trees * dphi) * (radius_inner + i_radial_trees * dr);
         vertices[current_tree_vertices + 23] = -0.5 + (i_axial_trees + 1) * dh;
-        /* *INDENT-ON* */
 
-        t8_cmesh_set_tree_vertices (cmesh,
-                                    (i_tangential_trees * num_axial_trees +
-                                     i_axial_trees) * num_radial_trees +
-                                    i_radial_trees,
-                                    vertices +
-                                    ((i_tangential_trees * num_axial_trees +
-                                      i_axial_trees) * num_radial_trees +
-                                     i_radial_trees) * 24, 24);
+        t8_cmesh_set_tree_vertices (
+          cmesh, (i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees,
+          vertices + ((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24,
+          24);
 
         /* Assign parameters if occ is enabled */
 #if T8_WITH_OCC
         if (with_occ_geometry) {
           /* Calculate parameters if cell lies on boundary */
-          const int           current_tree_parameters =
-            (i_tangential_trees * num_axial_trees + i_axial_trees) * 8;
+          const int current_tree_parameters = (i_tangential_trees * num_axial_trees + i_axial_trees) * 8;
           if (i_radial_trees == 0 || i_radial_trees == num_radial_trees - 1) {
-          /* *INDENT-OFF* */
             parameters[current_tree_parameters + 0] = (i_tangential_trees + 1) * dphi;
             parameters[current_tree_parameters + 1] = 0.5 - i_axial_trees * dh;
             parameters[current_tree_parameters + 2] = i_tangential_trees * dphi;
@@ -189,160 +178,108 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
             parameters[current_tree_parameters + 5] = 0.5 + -(i_axial_trees + 1) * dh;
             parameters[current_tree_parameters + 6] = i_tangential_trees * dphi;
             parameters[current_tree_parameters + 7] = 0.5 - (i_axial_trees + 1) * dh;
-          /* *INDENT-ON* */
           }
-          int                 edges[24] = { 0 };
+          int edges[24] = { 0 };
 
-          const int           current_tree =
-            (i_tangential_trees * num_axial_trees +
-             i_axial_trees) * num_radial_trees + i_radial_trees;
+          const int current_tree
+            = (i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees;
           /* If geometry on both sides of cell */
           if (num_radial_trees == 1) {
             /* Assign occ geometries to the corresponding faces */
-            int                 faces[6] = { 0 };
+            int faces[6] = { 0 };
             faces[0] = cylinder_outer_index;
             faces[1] = cylinder_inner_index;
 
             /* Assign attributes to cmesh cells */
-            t8_cmesh_set_attribute (cmesh,
-                                    current_tree, t8_get_package_id (),
-                                    T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces,
+            t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (), T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces,
                                     6 * sizeof (int), 0);
-            t8_cmesh_set_attribute (cmesh,
-                                    current_tree, t8_get_package_id (),
-                                    T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges,
+            t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (), T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges,
                                     24 * sizeof (int), 0);
-            t8_cmesh_set_attribute (cmesh,
-                                    current_tree, t8_get_package_id (),
-                                    T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY
-                                    + 0,
-                                    parameters +
-                                    current_tree_parameters,
-                                    8 * sizeof (double), 1);
             t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (),
-                                    T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY
-                                    + 1, parameters + current_tree_parameters,
-                                    8 * sizeof (double), 1);
+                                    T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY + 0,
+                                    parameters + current_tree_parameters, 8 * sizeof (double), 1);
+            t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (),
+                                    T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY + 1,
+                                    parameters + current_tree_parameters, 8 * sizeof (double), 1);
           }
           /* If geometry only on face 1 */
           else if (i_radial_trees == 0) {
             /* Assign occ geometries to the corresponding faces */
-            int                 faces[6] = { 0 };
+            int faces[6] = { 0 };
             faces[1] = cylinder_inner_index;
 
             /* Assign attributes to cmesh cells */
-            t8_cmesh_set_attribute (cmesh,
-                                    current_tree, t8_get_package_id (),
-                                    T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces,
+            t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (), T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces,
                                     6 * sizeof (int), 0);
-            t8_cmesh_set_attribute (cmesh,
-                                    current_tree, t8_get_package_id (),
-                                    T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges,
+            t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (), T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges,
                                     24 * sizeof (int), 0);
-            t8_cmesh_set_attribute (cmesh,
-                                    current_tree, t8_get_package_id (),
-                                    T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY
-                                    + 1,
-                                    parameters +
-                                    current_tree_parameters,
-                                    8 * sizeof (double), 1);
+            t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (),
+                                    T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY + 1,
+                                    parameters + current_tree_parameters, 8 * sizeof (double), 1);
           }
           /* If geometry only on face 0 */
           else if (i_radial_trees == num_radial_trees - 1) {
             /* Assign occ geometries to the corresponding faces */
-            int                 faces[6] = { 0 };
+            int faces[6] = { 0 };
             faces[0] = cylinder_outer_index;
 
             /* Assign attributes to cmesh cells */
-            t8_cmesh_set_attribute (cmesh,
-                                    current_tree, t8_get_package_id (),
-                                    T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces,
+            t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (), T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces,
                                     6 * sizeof (int), 0);
-            t8_cmesh_set_attribute (cmesh,
-                                    current_tree, t8_get_package_id (),
-                                    T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges,
+            t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (), T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges,
                                     24 * sizeof (int), 0);
-            t8_cmesh_set_attribute (cmesh,
-                                    current_tree, t8_get_package_id (),
-                                    T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY
-                                    + 0,
-                                    parameters +
-                                    current_tree_parameters,
-                                    8 * sizeof (double), 1);
+            t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (),
+                                    T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY + 0,
+                                    parameters + current_tree_parameters, 8 * sizeof (double), 1);
           }
           /* If there is no geometry */
           else {
             /* Assign occ geometries to the corresponding faces */
-            int                 faces[6] = { 0 };
+            int faces[6] = { 0 };
 
             /* Assign attributes to cmesh cells */
-            t8_cmesh_set_attribute (cmesh,
-                                    current_tree, t8_get_package_id (),
-                                    T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces,
+            t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (), T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces,
                                     6 * sizeof (int), 0);
-            t8_cmesh_set_attribute (cmesh,
-                                    current_tree, t8_get_package_id (),
-                                    T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges,
+            t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (), T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges,
                                     24 * sizeof (int), 0);
           }
         }
 #endif /* T8_WITH_OCC */
         /* Join radial neighbors */
         if (i_radial_trees > 0) {
-          t8_cmesh_set_join (cmesh,
-                             (i_tangential_trees * num_axial_trees +
-                              i_axial_trees) * num_radial_trees +
-                             i_radial_trees - 1,
-                             (i_tangential_trees * num_axial_trees +
-                              i_axial_trees) * num_radial_trees +
-                             i_radial_trees, 0, 1, 0);
+          t8_cmesh_set_join (
+            cmesh, (i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees - 1,
+            (i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees, 0, 1, 0);
         }
       }
 
       /* Join axial neighbors */
       if (i_axial_trees > 0) {
-        for (int i_radial_trees = 0; i_radial_trees < num_radial_trees;
-             ++i_radial_trees) {
-          t8_cmesh_set_join (cmesh,
-                             (i_tangential_trees * num_axial_trees +
-                              i_axial_trees - 1) * num_radial_trees +
-                             i_radial_trees,
-                             (i_tangential_trees * num_axial_trees +
-                              i_axial_trees) * num_radial_trees +
-                             i_radial_trees, 5, 4, 0);
+        for (int i_radial_trees = 0; i_radial_trees < num_radial_trees; ++i_radial_trees) {
+          t8_cmesh_set_join (
+            cmesh, (i_tangential_trees * num_axial_trees + i_axial_trees - 1) * num_radial_trees + i_radial_trees,
+            (i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees, 5, 4, 0);
         }
       }
     }
   }
 
   /* Join tangential neighbors of seam */
-  for (int i_axial_trees = 0; i_axial_trees < num_axial_trees;
-       ++i_axial_trees) {
-    for (int i_radial_trees = 0; i_radial_trees < num_radial_trees;
-         ++i_radial_trees) {
-      t8_cmesh_set_join (cmesh,
-                         (num_axial_trees +
-                          i_axial_trees) * num_radial_trees + i_radial_trees,
-                         ((num_tangential_trees - 1) * num_axial_trees +
-                          i_axial_trees) * num_radial_trees + i_radial_trees,
-                         2, 3, 0);
+  for (int i_axial_trees = 0; i_axial_trees < num_axial_trees; ++i_axial_trees) {
+    for (int i_radial_trees = 0; i_radial_trees < num_radial_trees; ++i_radial_trees) {
+      t8_cmesh_set_join (
+        cmesh, (num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees,
+        ((num_tangential_trees - 1) * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees, 2, 3, 0);
     }
   }
 
   /* Join all other tangential neighbors */
-  for (int i_tangential_trees = 1; i_tangential_trees < num_tangential_trees;
-       ++i_tangential_trees) {
-    for (int i_axial_trees = 0; i_axial_trees < num_axial_trees;
-         ++i_axial_trees) {
-      for (int i_radial_trees = 0; i_radial_trees < num_radial_trees;
-           ++i_radial_trees) {
-        t8_cmesh_set_join (cmesh,
-                           ((i_tangential_trees - 1) * num_axial_trees +
-                            i_axial_trees) * num_radial_trees +
-                           i_radial_trees,
-                           (i_tangential_trees * num_axial_trees +
-                            i_axial_trees) * num_radial_trees +
-                           i_radial_trees, 2, 3, 0);
+  for (int i_tangential_trees = 1; i_tangential_trees < num_tangential_trees; ++i_tangential_trees) {
+    for (int i_axial_trees = 0; i_axial_trees < num_axial_trees; ++i_axial_trees) {
+      for (int i_radial_trees = 0; i_radial_trees < num_radial_trees; ++i_radial_trees) {
+        t8_cmesh_set_join (
+          cmesh, ((i_tangential_trees - 1) * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees,
+          (i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees, 2, 3, 0);
       }
     }
   }

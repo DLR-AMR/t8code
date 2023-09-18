@@ -69,45 +69,41 @@
 static void
 test_with_cmesh (t8_cmesh_t cmesh)
 {
-  t8_locidx_t         ntrees = t8_cmesh_get_num_local_trees (cmesh);
+  t8_locidx_t ntrees = t8_cmesh_get_num_local_trees (cmesh);
 
   t8_global_productionf ("ntrees = %d.\n", ntrees);
 
   /* Arrays for the face connectivity computations via vertices. */
-  double             *all_verts =
-    T8_ALLOC (double, ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM);
-  t8_eclass_t        *all_eclasses = T8_ALLOC (t8_eclass_t, ntrees);
+  double *all_verts = T8_ALLOC (double, ntrees *T8_ECLASS_MAX_CORNERS *T8_ECLASS_MAX_DIM);
+  t8_eclass_t *all_eclasses = T8_ALLOC (t8_eclass_t, ntrees);
 
   /* Retrieve all tree vertices and element classes and store them into arrays. */
   for (t8_locidx_t itree = 0; itree < ntrees; itree++) {
-    t8_eclass_t         eclass = t8_cmesh_get_tree_class (cmesh, itree);
+    t8_eclass_t eclass = t8_cmesh_get_tree_class (cmesh, itree);
     all_eclasses[itree] = eclass;
 
-    const double       *vertices = t8_cmesh_get_tree_vertices (cmesh, itree);
+    const double *vertices = t8_cmesh_get_tree_vertices (cmesh, itree);
 
-    const int           nverts = t8_eclass_num_vertices[eclass];
+    const int nverts = t8_eclass_num_vertices[eclass];
 
     for (int ivert = 0; ivert < nverts; ivert++) {
       for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
-        all_verts[T8_3D_TO_1D
-                  (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree,
-                   ivert, icoord)]
+        all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree, ivert, icoord)]
           = vertices[T8_2D_TO_1D (nverts, T8_ECLASS_MAX_DIM, ivert, icoord)];
       }
     }
   }
 
-  sc_flopinfo_t       fi, snapshot;
-  sc_statinfo_t       stats[1];
+  sc_flopinfo_t fi, snapshot;
+  sc_statinfo_t stats[1];
 
   /* Start timer */
   sc_flops_start (&fi);
   sc_flops_snap (&fi, &snapshot);
 
   /* Compute face connectivity. */
-  const int           do_both_directions = 0;
-  t8_cmesh_set_join_by_vertices (NULL, ntrees, all_eclasses, all_verts,
-                                 NULL, do_both_directions);
+  const int do_both_directions = 0;
+  t8_cmesh_set_join_by_vertices (NULL, ntrees, all_eclasses, all_verts, NULL, do_both_directions);
 
   /* Measure passed time. */
   sc_flops_shot (&fi, &snapshot);
@@ -124,70 +120,60 @@ test_with_cmesh (t8_cmesh_t cmesh)
 int
 main (int argc, char **argv)
 {
-  char                usage[BUFSIZ];
+  char usage[BUFSIZ];
   /* brief help message */
-  int                 sreturnA = snprintf (usage, BUFSIZ,
-                                           "Usage:\t%s <OPTIONS>\n\t%s -h\t"
-                                           "for a brief overview of all options.",
-                                           basename (argv[0]),
-                                           basename (argv[0]));
+  int sreturnA = snprintf (usage, BUFSIZ,
+                           "Usage:\t%s <OPTIONS>\n\t%s -h\t"
+                           "for a brief overview of all options.",
+                           basename (argv[0]), basename (argv[0]));
 
-  char                help[BUFSIZ];
+  char help[BUFSIZ];
   /* long help message */
-  int                 sreturnB = snprintf (help, BUFSIZ,
-                                           "Profile `t8_cmesh_set_join_by_vertices` via given mesh file.\n\n%s\n",
-                                           usage);
+  int sreturnB = snprintf (help, BUFSIZ, "Profile `t8_cmesh_set_join_by_vertices` via given mesh file.\n\n%s\n", usage);
 
   if (sreturnA > BUFSIZ || sreturnB > BUFSIZ) {
     /* The usage string or help message was truncated */
     /* Note: gcc >= 7.1 prints a warning if we 
      * do not check the return value of snprintf. */
-    t8_debugf
-      ("Warning: Truncated usage string and help message to '%s' and '%s'\n",
-       usage, help);
+    t8_debugf ("Warning: Truncated usage string and help message to '%s' and '%s'\n", usage, help);
   }
 
-  int                 mpiret = sc_MPI_Init (&argc, &argv);
+  int mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
 
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
-  int                 helpme;
+  int helpme;
 
-  const char         *meshfile;
+  const char *meshfile;
 
   /* initialize command line argument parser */
-  sc_options_t       *opt = sc_options_new (argv[0]);
-  sc_options_add_switch (opt, 'h', "help", &helpme,
-                         "Display a short help message.");
-  sc_options_add_string (opt, 'f', "fileprefix", &meshfile, NULL,
-                         "File prefix of the mesh file (without .msh)");
+  sc_options_t *opt = sc_options_new (argv[0]);
+  sc_options_add_switch (opt, 'h', "help", &helpme, "Display a short help message.");
+  sc_options_add_string (opt, 'f', "fileprefix", &meshfile, NULL, "File prefix of the mesh file (without .msh)");
 
-  int                 parsed =
-    sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
+  int parsed = sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
 
   if (parsed >= 0 && meshfile != NULL) {
     t8_global_productionf ("meshfile = %s\n", meshfile);
 
-    const int           dim = 3;
-    const int           main_proc = 0;
-    const int           partition = 0;
-    const int           use_occ_geometry = 0;
+    const int dim = 3;
+    const int main_proc = 0;
+    const int partition = 0;
+    const int use_occ_geometry = 0;
 
-    t8_cmesh_t          cmesh;
+    t8_cmesh_t cmesh;
 
     {
-      sc_flopinfo_t       fi, snapshot;
-      sc_statinfo_t       stats[1];
+      sc_flopinfo_t fi, snapshot;
+      sc_statinfo_t stats[1];
 
       /* Start timer */
       sc_flops_start (&fi);
       sc_flops_snap (&fi, &snapshot);
 
-      cmesh = t8_cmesh_from_msh_file (meshfile, partition,
-                                      sc_MPI_COMM_WORLD, dim, main_proc,
-                                      use_occ_geometry);
+      cmesh = t8_cmesh_from_msh_file (meshfile, partition, sc_MPI_COMM_WORLD, dim, main_proc, use_occ_geometry);
 
       /* Measure passed time. */
       sc_flops_shot (&fi, &snapshot);
@@ -200,7 +186,6 @@ main (int argc, char **argv)
     test_with_cmesh (cmesh);
 
     t8_cmesh_unref (&cmesh);
-
   }
   else {
     /* Display help message and usage. */

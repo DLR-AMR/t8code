@@ -4,7 +4,7 @@
 #  t8code is a C library to manage a collection (a forest) of multiple
 #  connected adaptive space-trees of general element classes in parallel.
 #
-#  Copyright (C) 2015 the developers
+#  Copyright (C) 2023 the developers
 #
 #  t8code is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -32,9 +32,18 @@
 #
 
 # This is the indent script in the project's directory
-INDENT=./scripts/t8indent
-# This is the script to remove duplicate const after indent (bug of indent)
-REMOVE_D_CONST=./scripts/remove_double_const.scp
+CHECK_INDENT=./scripts/check_if_file_indented.scp
+
+TYPOS=`which typos 2> /dev/null`
+
+if [ -z "$TYPOS" ]
+then
+  # Exit if the spell checking script was not found
+  echo "ERROR: typos not found."
+  echo "Please install typos."
+  echo "See https://github.com/crate-ci/typos#install"
+  exit 1
+fi
 
 if git rev-parse --verify HEAD >/dev/null 2>&1
 then
@@ -49,8 +58,6 @@ exec 1>&2
 
 
 nocontinue=0
-# create a temporary file
-TMP_FILE=`mktemp`
 for file in `git diff --cached --name-only`
 do
   # only indent existing files, this is necessary since if we rename or delete
@@ -60,19 +67,20 @@ do
   then
     continue
   fi
+
+  status=`$TYPOS $file`
+  if ! [ -z "$status" ]; then
+    echo "File $file contains typos."
+    nocontinue=1
+  fi 
+
   # We only indent .c, .cxx, .h and .hxx files
 #-a ${file: -2} != ".h" ]
   FILE_ENDING="${file##*.}"
   if [ $FILE_ENDING = "c" -o $FILE_ENDING = "h" -o $FILE_ENDING = "cxx" -o $FILE_ENDING = "hxx" ]
   then
     echo "Checking file $file"
-    # indent the source file and store temporarily
-    $INDENT -o $TMP_FILE $file 
-    # For .cxx files we need to correct a bug in indent
-    $REMOVE_D_CONST $TMP_FILE
-    # Check whether the indented file and the original differ
-    # We are only interested in the exit status of diff so we throw away its output.
-    diff -q $TMP_FILE $file > /dev/null
+    $CHECK_INDENT $file > /dev/null 2>&1
     status=$?
     if test $status -ne 0 
     then
