@@ -1245,7 +1245,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
                 edge_geometry_tag = edge_nodes[1].entity_tag;
               }
             }
-            //t8_global_productionf("edge_geometry_dim: %d; first_vertex: %d second_vertex: %d\n", edge_geometry_dim, edge_nodes[0].entity_dim, edge_nodes[1].entity_dim);
             /* If both nodes are on two different faces we can skip this edge. */
             if (edge_nodes[0].entity_dim == 2 && edge_nodes[1].entity_dim == 2
                 && edge_nodes[0].entity_tag != edge_nodes[1].entity_tag) {
@@ -1374,7 +1373,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
             /* If we have found a surface we can look for the parameters. 
              * If the edge is locked for edges on surfaces we have to skip this edge */
             else if (edge_geometry_dim == 2 && edge_geometries[i_tree_edges + num_edges] >= 0) {
-              //t8_global_productionf("edge_geometry_dim: %d, edge_geometry_tag: %d\n", edge_geometry_dim, edge_geometry_tag);
               /* If the node lies on a geometry with a different dimension we try to retrieve the parameters */
               for (int i_edge_node = 0; i_edge_node < 2; ++i_edge_node) {
                 /* Some error checking */
