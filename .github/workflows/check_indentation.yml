@@ -53,7 +53,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Install indent
-      run: pip install clang-format=17.0.1
+      run: pip install clang-format==17.0.1
     - name: Indentation check
       run: cd scripts/ && ./check_if_all_files_indented.scp &2>1 > indent_script_output.txt
     - name: Archive script output
