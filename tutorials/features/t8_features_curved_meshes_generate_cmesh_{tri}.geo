@@ -94,7 +94,7 @@ Merge "airfoil_windtunnel_triangles.brep";
 
 /* We want a triangle mesh and therefore have to use the right meshing algorithms.
  * Here we use the Frontal-Delaunay 2D meshing algorithm. Feel free to experiment here.
- * The recombination of elements has to be deactivated, in order to recieve a triangular mesh.
+ * The recombination of elements has to be deactivated, in order to receive a triangular mesh.
  * The following algorithms are available with Gmsh 4.11.0:
  *
  * 2D mesh algorithms:             1: MeshAdapt, 2: Automatic, 3: Initial mesh only, 
