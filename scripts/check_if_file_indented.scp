@@ -47,16 +47,16 @@ MAJOR=`echo $VERSION | cut -d. -f1`
 MINOR=`echo $VERSION | cut -d. -f2`
 PATCH=`echo $VERSION | cut -d. -f3`
 
-if [[ "$MAJOR" != "16" ]]; then
-  echo "Please install clang-format version 16.0.6"
+if [[ "$MAJOR" != "17" ]]; then
+  echo "Please install clang-format version 17.0.1"
   exit 1
 fi
 if [[ $MINOR != "0" ]]; then
-  echo "Please install clang-format version 16.0.6"
+  echo "Please install clang-format version 17.0.1"
   exit 1
 fi
-if [[ $PATCH != "6" ]]; then
-  echo "Please install clang-format version 16.0.6"
+if [[ $PATCH != "1" ]]; then
+  echo "Please install clang-format version 17.0.1"
   exit 1
 fi
 
