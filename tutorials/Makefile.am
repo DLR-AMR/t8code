@@ -17,8 +17,10 @@ bin_PROGRAMS += \
 	tutorials/features/t8_features_curved_meshes
 
 dist_t8data_DATA += \
-  tutorials/features/t8_features_curved_meshes_generate_cmesh.geo \
-  tutorials/features/t8_features_curved_meshes_generate_cmesh_2d.geo
+  tutorials/features/t8_features_curved_meshes_generate_cmesh_hex.geo \
+  tutorials/features/t8_features_curved_meshes_generate_cmesh_quad.geo \
+  tutorials/features/t8_features_curved_meshes_generate_cmesh_tet.geo \
+  tutorials/features/t8_features_curved_meshes_generate_cmesh_tri.geo
 
 tutorials_general_t8_step0_helloworld_SOURCES = \
 	tutorials/general/t8_step0_helloworld.cxx

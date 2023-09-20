@@ -91,8 +91,10 @@ AC_CONFIG_LINKS([test/testfiles/test_polydata.pvtp:test/testfiles/test_polydata.
 AC_CONFIG_LINKS([test/testfiles/test_polydata_0.vtp:test/testfiles/test_polydata_0.vtp])
 AC_CONFIG_LINKS([test/testfiles/test_polydata_1.vtp:test/testfiles/test_polydata_1.vtp])
 AC_CONFIG_LINKS([example/IO/cmesh/gmsh/circlesquare_hybrid_hole.msh:example/IO/cmesh/gmsh/circlesquare_hybrid_hole.msh])
-AC_CONFIG_FILES([tutorials/features/t8_features_curved_meshes_generate_cmesh.geo:tutorials/features/t8_features_curved_meshes_generate_cmesh.geo])
-AC_CONFIG_FILES([tutorials/features/t8_features_curved_meshes_generate_cmesh_2d.geo:tutorials/features/t8_features_curved_meshes_generate_cmesh_2d.geo])
+AC_CONFIG_FILES([tutorials/features/t8_features_curved_meshes_generate_cmesh_hex.geo:tutorials/features/t8_features_curved_meshes_generate_cmesh_hex.geo])
+AC_CONFIG_FILES([tutorials/features/t8_features_curved_meshes_generate_cmesh_quad.geo:tutorials/features/t8_features_curved_meshes_generate_cmesh_quad.geo])
+AC_CONFIG_FILES([tutorials/features/t8_features_curved_meshes_generate_cmesh_tet.geo:tutorials/features/t8_features_curved_meshes_generate_cmesh_tet.geo])
+AC_CONFIG_FILES([tutorials/features/t8_features_curved_meshes_generate_cmesh_tri.geo:tutorials/features/t8_features_curved_meshes_generate_cmesh_tri.geo])
 AC_CONFIG_FILES([example/advect/t8_advection_generate_channel.geo:example/advect/t8_advection_generate_channel.geo])
 AC_CONFIG_FILES([example/advect/t8_advection_generate_channel_2d.geo:example/advect/t8_advection_generate_channel_2d.geo])
 
