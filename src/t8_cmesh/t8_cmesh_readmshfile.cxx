@@ -1173,7 +1173,9 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
                   }
                 }
               }
-              /* Abort if not all nodes are on the surface or if the surface is a plane */
+              /* Elements an linear geometries do not have to be curved. Hence, linking them to
+               * a geometry results in unnecessary overhead. Therefore we can abort if the found
+               * surface is a plane */
               if (!all_nodes_on_surface || occ_geometry->t8_geom_is_plane (surface_index)) {
                 continue;
               }
@@ -1275,8 +1277,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
               continue;
             }
 
-            //t8_global_productionf("edge_geometries[tree_edge + num_edges]: [%d, %d, %d, %d, %d, %d]\n", edge_geometries[6], edge_geometries[7], edge_geometries[8], edge_geometries[9], edge_geometries[10], edge_geometries[11]);
-
             /* If both nodes are on a vertex we still got no edge. 
              * But we can look if both vertices share an edge and use this edge. 
              * If not we can skip this edge. */
@@ -1351,7 +1351,9 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
                 }
               }
 
-              /* Abort if the edge is a line */
+              /* Elements an linear geometries do not have to be curved. Hence, linking them to
+               * a geometry results in unnecessary overhead. Therefore we can abort if the found
+               * curve is a line */
               if (occ_geometry->t8_geom_is_line (edge_geometry_tag)) {
                 continue;
               }
@@ -1416,7 +1418,9 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
                 }
               }
 
-              /* Abort if the edge is a line */
+              /* Elements an linear geometries do not have to be curved. Hence, linking them to
+               * a geometry results in unnecessary overhead. Therefore we can abort if the found
+               * surface is a plane */
               if (occ_geometry->t8_geom_is_plane (edge_geometry_tag)) {
                 continue;
               }

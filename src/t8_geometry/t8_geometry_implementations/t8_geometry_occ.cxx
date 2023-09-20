@@ -106,7 +106,7 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const 
     t8_geometry_occ::t8_geom_evaluate_occ_hex (cmesh, gtreeid, ref_coords, 1, out_coords);
     break;
   case T8_ECLASS_TET:
-    t8_geometry_occ::t8_geom_evaluate_occ_tet (cmesh, gtreeid, ref_coords, out_coords);
+    t8_geometry_occ::t8_geom_evaluate_occ_tet (cmesh, gtreeid, ref_coords, 1, out_coords);
     break;
   default:
     SC_ABORTF ("Error: Curved %s geometry not yet implemented. \n", t8_eclass_to_string[active_tree_class]);
@@ -542,7 +542,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
 
 void
 t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                           double out_coords[3]) const
+                                           const size_t num_coords, double out_coords[3]) const
 {
   T8_ASSERT (active_tree_class == T8_ECLASS_TET);
 
@@ -598,7 +598,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
         cmesh, t8_get_package_id (), T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_edge, ltreeid);
       T8_ASSERT (parameters != NULL);
 
-      /* Iterpolate between the parameters of the current edge. Same procidure as above.
+      /* Interpolate between the parameters of the current edge. Same procedure as above.
        * Curves have only one parameter u, surfaces have two, u and v.
        * Therefore, we have to distinguish if the edge has a curve or surface linked to it. */
       if (edges[i_edge] > 0) { /* Check for linked curves */
@@ -674,7 +674,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_tet (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
       t8_geom_get_face_vertices (active_tree_class, active_tree_vertices, i_faces, 3, temp_face_vertices);
       double face_displacement_from_edges[3] = { 0 };
 
-      /* Safe the face intersection of a ray passing trough the reference coordinate
+      /* Save the face intersection of a ray passing trough the reference coordinate
        * and the opposite vertex of the face */
       double face_intersection[3];
       t8_geom_get_tet_face_intersection (i_faces, ref_coords, face_intersection);
