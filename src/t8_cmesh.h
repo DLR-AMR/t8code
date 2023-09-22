@@ -464,7 +464,7 @@ t8_gloidx_t
 t8_cmesh_get_first_treeid (t8_cmesh_t cmesh);
 
 /* TODO: Comment */
-const t8_geometry_c *
+t8_geometry_c *
 t8_cmesh_get_tree_geometry (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 
 /** Query whether a given t8_locidx_t belongs to a local tree of a cmesh.
