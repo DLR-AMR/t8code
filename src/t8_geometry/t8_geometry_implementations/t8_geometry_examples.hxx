@@ -74,6 +74,14 @@ class t8_geometry_squared_disk: public t8_geometry {
     SC_ABORT_NOT_REACHED ();
   }
 
+  void
+  t8_geom_point_batch_inside_element (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+                                      const double *points, const int num_points, int *is_inside,
+                                      const double tolerance)
+  {
+    SC_ABORTF ("Function not yet implemented");
+  }
+
   /* Load tree data is empty since we have no tree data.
    * We need to provide an implementation anyways. */
   void

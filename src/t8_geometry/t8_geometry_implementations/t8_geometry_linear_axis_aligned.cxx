@@ -56,6 +56,32 @@ t8_geometry_linear_axis_aligned::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8
   SC_ABORT ("Not implemented.");
 }
 
+void
+t8_geometry_linear_axis_aligned::t8_geom_point_batch_inside_element (t8_forest_t forest, t8_locidx_t ltreeid,
+                                                                     const t8_element_t *element, const double *points,
+                                                                     const int num_points, int *is_inside,
+                                                                     const double tolerance)
+{
+  double v_min[3];
+  double v_max[3];
+
+  /*Geometry is fully described by v_min and v_max*/
+  t8_forest_element_coordinate (forest, ltreeid, element, 0, v_min);
+  t8_forest_element_coordinate (forest, ltreeid, element, 1, v_max);
+
+  for (int ipoint = 0; ipoint < num_points; ipoint++) {
+    /* A point is inside if it is inbetween the x/y/z-coordinates of v_min and v_max */
+    /* check x-coordinate */
+    /* check y-coordinate */
+    /* check z-coordinate */
+    is_inside[ipoint]
+      = v_min[0] - tolerance <= points[ipoint * 3] && points[ipoint * 3] <= v_max[0] + tolerance
+        && v_min[1] - tolerance <= points[ipoint * 3 + 1] && points[ipoint * 3 + 1] <= v_max[1] + tolerance
+        && v_min[2] - tolerance <= points[ipoint * 3 + 2] && points[ipoint * 3 + 2] <= v_max[2] + tolerance;
+  }
+  return;
+}
+
 T8_EXTERN_C_BEGIN ();
 
 /* Satisfy the C interface from t8_geometry_linear_axis_aligned.h.

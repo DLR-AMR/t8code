@@ -29,6 +29,7 @@
 #define T8_GEOMETRY_WITH_VERTICES_HXX
 
 #include <t8_cmesh.h>
+#include <t8_forest/t8_forest.h>
 #include <t8_geometry/t8_geometry_base.hxx>
 #include <t8_geometry/t8_geometry_base.h>
 #include <t8_geometry/t8_geometry_with_vertices.h>
@@ -61,6 +62,23 @@ class t8_geometry_with_vertices: public t8_geometry {
    * destructor of the child class will be executed. */
   virtual ~t8_geometry_with_vertices ()
   {
+  }
+
+  /**
+   * \param[in] forest            The forest of the element.
+   * \param[in] ltreeid           The local tree id of the element's tree
+   * \param[in] element           The element
+   * \param[in] points            points to check
+   * \param[in] num_points        Number of points to check
+   * \param[in, out] is_inside    Array to fill with flags wether the point is inside or not
+   * \param[in] tolerance         Tolerance of the inside-check
+   */
+  virtual void
+  t8_geom_point_batch_inside_element (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+                                      const double *points, const int num_points, int *is_inside,
+                                      const double tolerance)
+  {
+    SC_ABORTF ("Function not yet implemented");
   }
 
   /** Update a possible internal data buffer for per tree data.

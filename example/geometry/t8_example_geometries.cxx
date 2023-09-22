@@ -118,6 +118,14 @@ class t8_geometry_sincos: public t8_geometry {
     SC_ABORT_NOT_REACHED ();
   }
 
+  void
+  t8_geom_point_batch_inside_element (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+                                      const double *points, const int num_points, int *is_inside,
+                                      const double tolerance)
+  {
+    SC_ABORTF ("Function not yet implemented");
+  }
+
   /* Load tree data is empty since we have no tree data.
    * We need to provide an implementation anyways. */
   void
@@ -212,6 +220,14 @@ class t8_geometry_cylinder: public t8_geometry {
     out_coords[0] = cos (ref_coords[0] * 2 * M_PI);
     out_coords[1] = ref_coords[1];
     out_coords[2] = sin (ref_coords[0] * 2 * M_PI);
+  }
+
+  void
+  t8_geom_point_batch_inside_element (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+                                      const double *points, const int num_points, int *is_inside,
+                                      const double tolerance)
+  {
+    SC_ABORTF ("Function not yet implemented");
   }
 
   /* Jacobian, not implemented. */
@@ -341,6 +357,14 @@ class t8_geometry_moving: public t8_geometry {
     out_coords[2] = 0;
   }
 
+  void
+  t8_geom_point_batch_inside_element (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+                                      const double *points, const int num_points, int *is_inside,
+                                      const double tolerance)
+  {
+    SC_ABORTF ("Function not yet implemented");
+  }
+
   /* Jacobian, not implemented. */
   void
   t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
@@ -388,6 +412,14 @@ class t8_geometry_cube_zdistorted: public t8_geometry {
     out_coords[0] = ref_coords[0];
     out_coords[1] = ref_coords[1];
     out_coords[2] = ref_coords[2] * (0.8 + 0.2 * sin (ref_coords[0] * 2 * M_PI) * cos (ref_coords[1] * 2 * M_PI));
+  }
+
+  void
+  t8_geom_point_batch_inside_element (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+                                      const double *points, const int num_points, int *is_inside,
+                                      const double tolerance)
+  {
+    SC_ABORTF ("Function not yet implemented");
   }
 
   /* Jacobian, not implemented. */
