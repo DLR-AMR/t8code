@@ -70,7 +70,7 @@ class t8_geometry_with_vertices: public t8_geometry {
    * \param[in] element           The element
    * \param[in] points            points to check
    * \param[in] num_points        Number of points to check
-   * \param[in, out] is_inside    Array to fill with flags wether the point is inside or not
+   * \param[in, out] is_inside    Array to fill with flags whether the point is inside or not
    * \param[in] tolerance         Tolerance of the inside-check
    */
   virtual void
