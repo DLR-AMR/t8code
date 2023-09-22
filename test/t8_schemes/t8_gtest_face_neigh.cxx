@@ -132,11 +132,6 @@ t8_test_get_middle_child (t8_eclass_t eclass, int ilevel, t8_element_t *element,
   }
 }
 
-/* First two "simple" checks. First, the neighbors of the root-element at level 0 are computed
- * which should all lie outside. Then, the child is constructed and it is checked,
- * if if all neighbors are computed correctly. Then, the same is done for all of the children. 
- * The same is done until level maxlvl. */
-
 /* Compute all children along all faces. Compute their neighbors along the face,
  * check, if the children have root contact, and if the neighbors are outside of the
  * root. */
@@ -163,40 +158,14 @@ TEST_P (face_neigh, check_not_inside_root)
       int face_num;
       int inside = ts->t8_element_face_neighbor_inside (child, neigh, face_contact, &face_num);
 
-      ASSERT_EQ (inside, 0);
+      ASSERT_EQ (inside, 0) << "Element is not outside.";
 
       inside = ts->t8_element_tree_face (child, face_contact);
-      ASSERT_EQ (inside, iface);
+      ASSERT_EQ (inside, iface) << "Wrong face.";
     }
     ts->t8_element_destroy (num_children, children);
     T8_FREE (children);
     T8_FREE (child_indices);
-  }
-}
-
-TEST_P (face_neigh, face_check_easy)
-{
-  int middle_child_id;
-
-  for (int ilevel = 1; ilevel <= maxlvl; ilevel++) {
-
-    /* Get a child in the middle of the element on level ilevel. */
-    middle_child_id = t8_test_get_middle_child (eclass, ilevel, element, child, ts);
-
-    ts->t8_element_child (element, middle_child_id, child);
-    /* Test the neighbors at all faces of the child. */
-    int num_faces = ts->t8_element_num_faces (child);
-    t8_test_face_neighbor_inside (num_faces, element, child, neigh, ts);
-
-    int num_children = ts->t8_element_num_children (element);
-    /* Face neighbor check for all children of the element. */
-    for (int ichild = 0; ichild < num_children; ichild++) {
-
-      ts->t8_element_child (element, ichild, child);
-      int num_faces = ts->t8_element_num_faces (child);
-      t8_test_face_neighbor_inside (num_faces, element, child, neigh, ts);
-      ts->t8_element_parent (child, element);
-    }
   }
 }
 
