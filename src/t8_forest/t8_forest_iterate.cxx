@@ -234,6 +234,8 @@ t8_forest_search_recursion (t8_forest_t forest, t8_locidx_t ltreeid, t8_eclass_t
   if (!is_leaf && num_active > 0) {
     /* Initialize the new active query array */
     new_active_queries = sc_array_new (sizeof (size_t));
+  }
+  if (num_active > 0) {
     active_queries_matches = T8_ALLOC (int, num_active);
   }
 
@@ -241,8 +243,7 @@ t8_forest_search_recursion (t8_forest_t forest, t8_locidx_t ltreeid, t8_eclass_t
             active_queries_matches, num_active);
 
   for (iactive = 0; iactive < num_active; iactive++) {
-    int ret_val = active_queries_matches[iactive];
-    if (is_leaf && ret_val) {
+    if (!is_leaf && active_queries_matches[iactive]) {
       size_t query_index = *(size_t *) sc_array_index (active_queries, iactive);
       *(size_t *) sc_array_push (new_active_queries) = query_index;
     }
