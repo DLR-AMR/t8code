@@ -159,7 +159,7 @@ class t8_geometry_moebius: public t8_geometry_with_vertices {
 
     /* Compute the linear coordinates (in [0,1]^2) of the reference vertex and store in out_coords. */
     /* No idea why, but indent insert a lot of newlines here */
-    t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, out_coords);
+    t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, 1, out_coords);
 
     /* At first, we map x from [0,1] to [-.5,.5]
      * and y to [0, 2*PI] */
@@ -266,7 +266,7 @@ class t8_geometry_circle: public t8_geometry_with_vertices {
     /* Compute the linear coordinates (in [0,1]^2) of the reference vertex and store in out_coords. */
 
     /* No idea why, but indent insert a lot of newlines here */
-    t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, out_coords);
+    t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, 1, out_coords);
 
     /* We now remap the coords to match the square [-1,1]^2 */
     x = out_coords[0] * 2 - 1;
@@ -833,7 +833,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
       vertices[i * 24 + 4] = sin ((i + 1) * 2 * M_PI / num) * radius_inner;
       vertices[i * 24 + 5] = 0;
       vertices[i * 24 + 6] = cos (i * 2 * M_PI / num) * radius_outer;
-      vertices[i * 24 + 7] = sin ((i) *2 * M_PI / num) * radius_outer;
+      vertices[i * 24 + 7] = sin ((i) * 2 * M_PI / num) * radius_outer;
       vertices[i * 24 + 8] = 0;
       vertices[i * 24 + 9] = cos (i * 2 * M_PI / num) * radius_inner;
       vertices[i * 24 + 10] = sin (i * 2 * M_PI / num) * radius_inner;
@@ -845,7 +845,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
       vertices[i * 24 + 16] = sin ((i + 1) * 2 * M_PI / num) * radius_inner;
       vertices[i * 24 + 17] = 1;
       vertices[i * 24 + 18] = cos (i * 2 * M_PI / num) * radius_outer;
-      vertices[i * 24 + 19] = sin ((i) *2 * M_PI / num) * radius_outer;
+      vertices[i * 24 + 19] = sin ((i) * 2 * M_PI / num) * radius_outer;
       vertices[i * 24 + 20] = 1;
       vertices[i * 24 + 21] = cos (i * 2 * M_PI / num) * radius_inner;
       vertices[i * 24 + 22] = sin (i * 2 * M_PI / num) * radius_inner;
