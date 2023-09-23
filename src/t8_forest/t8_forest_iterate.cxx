@@ -175,18 +175,6 @@ t8_forest_search_recursion (t8_forest_t forest, t8_locidx_t ltreeid, t8_eclass_t
                             t8_locidx_t tree_lindex_of_first_leaf, t8_forest_search_query_fn search_fn,
                             t8_forest_search_query_fn query_fn, sc_array_t *queries, sc_array_t *active_queries)
 {
-  t8_element_t *leaf, **children;
-  int num_children, ichild;
-  size_t *split_offsets, indexa, indexb;
-  t8_element_array_t child_leafs;
-  size_t elem_count;
-  size_t num_active;
-  int ret, query_ret, is_leaf;
-  void *current_query;
-  size_t iactive;
-  sc_array_t *new_active_queries = NULL;
-  int *active_queries_matches = NULL;
-
   /* Assertions to check for necessary requirements */
   /* The forest must be committed */
   T8_ASSERT (t8_forest_is_committed (forest));
@@ -195,21 +183,21 @@ t8_forest_search_recursion (t8_forest_t forest, t8_locidx_t ltreeid, t8_eclass_t
   /* If we have queries, we also must have a query function */
   T8_ASSERT ((queries == NULL) == (query_fn == NULL));
 
-  elem_count = t8_element_array_get_count (leaf_elements);
+  const size_t elem_count = t8_element_array_get_count (leaf_elements);
   if (elem_count == 0) {
     /* There are no leafs left, so we have nothing to do */
     return;
   }
-  num_active = queries == NULL ? 0 : active_queries->elem_count;
+  const size_t num_active = queries == NULL ? 0 : active_queries->elem_count;
   if (queries != NULL && num_active == 0) {
     /* There are no queries left. We stop the recursion */
     return;
   }
 
-  is_leaf = 0;
+  int is_leaf = 0;
   if (elem_count == 1) {
     /* There is only one leaf left, we check whether it is the same as element and if so call the callback function */
-    leaf = t8_element_array_index_locidx (leaf_elements, 0);
+    const t8_element_t *leaf = t8_element_array_index_locidx (leaf_elements, 0);
 
     SC_CHECK_ABORT (ts->t8_element_level (element) <= ts->t8_element_level (leaf),
                     "Search: element level greater than leaf level\n");
@@ -220,7 +208,8 @@ t8_forest_search_recursion (t8_forest_t forest, t8_locidx_t ltreeid, t8_eclass_t
     }
   }
   /* Call the callback function for the element */
-  ret = search_fn (forest, ltreeid, element, is_leaf, leaf_elements, tree_lindex_of_first_leaf, NULL, NULL, NULL, 0);
+  const int ret
+    = search_fn (forest, ltreeid, element, is_leaf, leaf_elements, tree_lindex_of_first_leaf, NULL, NULL, NULL, 0);
 
   if (!ret) {
     /* The function returned false. We abort the recursion */
@@ -230,11 +219,12 @@ t8_forest_search_recursion (t8_forest_t forest, t8_locidx_t ltreeid, t8_eclass_t
   /* Check the queries.
    * If the current element is not a leaf, we store the queries that
    * return true in order to pass them on to the children of the element. */
-
+  sc_array_t *new_active_queries = NULL;
   if (!is_leaf && num_active > 0) {
     /* Initialize the new active query array */
     new_active_queries = sc_array_new (sizeof (size_t));
   }
+  int *active_queries_matches = NULL;
   if (num_active > 0) {
     active_queries_matches = T8_ALLOC (int, num_active);
   }
@@ -242,7 +232,7 @@ t8_forest_search_recursion (t8_forest_t forest, t8_locidx_t ltreeid, t8_eclass_t
   query_fn (forest, ltreeid, element, is_leaf, leaf_elements, tree_lindex_of_first_leaf, queries, active_queries,
             active_queries_matches, num_active);
 
-  for (iactive = 0; iactive < num_active; iactive++) {
+  for (size_t iactive = 0; iactive < num_active; iactive++) {
     if (!is_leaf && active_queries_matches[iactive]) {
       size_t query_index = *(size_t *) sc_array_index (active_queries, iactive);
       *(size_t *) sc_array_push (new_active_queries) = query_index;
@@ -264,20 +254,21 @@ t8_forest_search_recursion (t8_forest_t forest, t8_locidx_t ltreeid, t8_eclass_t
   /* Enter the recursion (the element is definitely not a leaf at this point) */
   /* We compute all children of E, compute their leaf arrays and call search_recursion */
   /* allocate the memory to store the children */
-  num_children = ts->t8_element_num_children (element);
-  children = T8_ALLOC (t8_element_t *, num_children);
+  const int num_children = ts->t8_element_num_children (element);
+  t8_element_t **children = T8_ALLOC (t8_element_t *, num_children);
   ts->t8_element_new (num_children, children);
   /* Memory for the indices that split the leaf_elements array */
-  split_offsets = T8_ALLOC (size_t, num_children + 1);
+  size_t *split_offsets = T8_ALLOC (size_t, num_children + 1);
   /* Compute the children */
   ts->t8_element_children (element, num_children, children);
   /* Split the leafs array in portions belonging to the children of element */
   t8_forest_split_array (element, leaf_elements, split_offsets);
-  for (ichild = 0; ichild < num_children; ichild++) {
+  for (int ichild = 0; ichild < num_children; ichild++) {
     /* Check if there are any leaf elements for this child */
-    indexa = split_offsets[ichild];     /* first leaf of this child */
-    indexb = split_offsets[ichild + 1]; /* first leaf of next child */
+    size_t indexa = split_offsets[ichild];     /* first leaf of this child */
+    size_t indexb = split_offsets[ichild + 1]; /* first leaf of next child */
     if (indexa < indexb) {
+      t8_element_array_t child_leafs;
       /* There exist leafs of this child in leaf_elements,
        * we construct an array of these leafs */
       t8_element_array_init_view (&child_leafs, leaf_elements, indexa, indexb - indexa);
