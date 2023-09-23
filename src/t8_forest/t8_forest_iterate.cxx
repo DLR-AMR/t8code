@@ -183,8 +183,9 @@ t8_forest_search_recursion (t8_forest_t forest, t8_locidx_t ltreeid, t8_eclass_t
   size_t num_active;
   int ret, query_ret, is_leaf;
   void *current_query;
-  size_t iactive, query_index;
+  size_t iactive;
   sc_array_t *new_active_queries = NULL;
+  int *active_queries_matches = NULL;
 
   /* Assertions to check for necessary requirements */
   /* The forest must be committed */
@@ -219,7 +220,7 @@ t8_forest_search_recursion (t8_forest_t forest, t8_locidx_t ltreeid, t8_eclass_t
     }
   }
   /* Call the callback function for the element */
-  ret = search_fn (forest, ltreeid, element, is_leaf, leaf_elements, tree_lindex_of_first_leaf, NULL, 0);
+  ret = search_fn (forest, ltreeid, element, is_leaf, leaf_elements, tree_lindex_of_first_leaf, NULL, NULL, NULL, 0);
 
   if (!ret) {
     /* The function returned false. We abort the recursion */
@@ -233,18 +234,21 @@ t8_forest_search_recursion (t8_forest_t forest, t8_locidx_t ltreeid, t8_eclass_t
   if (!is_leaf && num_active > 0) {
     /* Initialize the new active query array */
     new_active_queries = sc_array_new (sizeof (size_t));
+    active_queries_matches = T8_ALLOC (int, num_active);
   }
-  /* Call the query function for all active queries */
-  for (iactive = 0; iactive < num_active; ++iactive) {
-    query_index = *(size_t *) sc_array_index (active_queries, iactive);
-    current_query = sc_array_index (queries, query_index);
-    query_ret = query_fn (forest, ltreeid, element, is_leaf, leaf_elements, tree_lindex_of_first_leaf, current_query,
-                          query_index);
-    if (!is_leaf && query_ret) {
-      /* If element is not a leaf and this query returned true, we add this query to the new active queries */
+
+  query_fn (forest, ltreeid, element, is_leaf, leaf_elements, tree_lindex_of_first_leaf, queries, active_queries,
+            active_queries_matches, num_active);
+
+  for (iactive = 0; iactive < num_active; iactive++) {
+    int ret_val = active_queries_matches[iactive];
+    if (is_leaf && ret_val) {
+      size_t query_index = *(size_t *) sc_array_index (active_queries, iactive);
       *(size_t *) sc_array_push (new_active_queries) = query_index;
     }
   }
+  T8_FREE (active_queries_matches);
+
   if (is_leaf) {
     /* The element was a leaf. We abort the recursion. */
     return;

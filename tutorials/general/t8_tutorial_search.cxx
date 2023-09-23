@@ -148,7 +148,7 @@ typedef struct
 static int
 t8_tutorial_search_callback (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, const int is_leaf,
                              t8_element_array_t *leaf_elements, t8_locidx_t tree_leaf_index, void *query,
-                             size_t query_index)
+                             sc_array_t *query_indices, int *query_matches, const size_t num_active_queries)
 {
   T8_ASSERT (query == NULL);
 
@@ -173,11 +173,22 @@ t8_tutorial_search_callback (t8_forest_t forest, t8_locidx_t ltreeid, const t8_e
 static int
 t8_tutorial_search_query_callback (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
                                    const int is_leaf, t8_element_array_t *leaf_elements, t8_locidx_t tree_leaf_index,
-                                   void *query, size_t query_index)
+                                   void *query, sc_array_t *query_indices, int *query_matches,
+                                   const size_t num_active_queries)
 {
   int particle_is_inside_element;
   /* Cast the query pointer to a particle pointer. */
-  t8_tutorial_search_particle_t *particle = (t8_tutorial_search_particle_t *) query;
+  //t8_tutorial_search_particle_t *particle = (t8_tutorial_search_particle_t *) query;
+  /* extract the coordinates of the particle struct */
+  double *coords = T8_ALLOC (double, 3 * num_active_queries);
+  for (size_t particle_iter = 0; particle_iter < num_active_queries; particle_iter++) {
+    const size_t particle_id = *(size_t *) sc_array_index_int (query_indices, particle_iter);
+    t8_tutorial_search_particle_t *particle
+      = (t8_tutorial_search_particle_t *) sc_array_index ((sc_array_t *) query, particle_id);
+    coords[3 * particle_iter] = particle->coordinates[0];
+    coords[3 * particle_iter + 1] = particle->coordinates[1];
+    coords[3 * particle_iter + 2] = particle->coordinates[2];
+  }
   /* Numerical tolerance for the is inside element check. */
   const double tolerance = 1e-8;
   /* Get the user data pointer that stores the number of particles per element
@@ -190,28 +201,26 @@ t8_tutorial_search_query_callback (t8_forest_t forest, t8_locidx_t ltreeid, cons
   T8_ASSERT (particles_per_element != NULL);
   T8_ASSERT (query != NULL);
 
-  /* Test whether this particle is inside this element. */
-  particle_is_inside_element
-    = t8_forest_element_point_inside (forest, ltreeid, element, particle->coordinates, tolerance);
-  if (particle_is_inside_element) {
-    if (is_leaf) {
-      /* The particle is inside and this element is a leaf element.
+  /* Test whether the particles are inside this element. */
+  t8_forest_element_point_batch_inside (forest, ltreeid, element, coords, num_active_queries, query_matches, tolerance);
+  T8_FREE (coords);
+  for (size_t matches_id = 0; matches_id < num_active_queries; matches_id++)
+    if (query_matches[matches_id]) {
+      if (is_leaf) {
+        /* The particle is inside and this element is a leaf element.
        * We mark the particle for being inside the partition and we increase
        * the particles_per_element counter of this element. */
-      /* In order to find the index of the element inside the array, we compute the
+        /* In order to find the index of the element inside the array, we compute the
        * index of the first element of this tree plus the index of the element within
        * the tree. */
-      t8_locidx_t element_index = t8_forest_get_tree_element_offset (forest, ltreeid) + tree_leaf_index;
-      particle->is_inside_partition = 1;
-      *(double *) t8_sc_array_index_locidx (particles_per_element, element_index) += 1;
+        t8_locidx_t element_index = t8_forest_get_tree_element_offset (forest, ltreeid) + tree_leaf_index;
+        size_t particle_id = *(size_t *) sc_array_index_int (query_indices, matches_id);
+        t8_tutorial_search_particle_t *particle
+          = (t8_tutorial_search_particle_t *) sc_array_index ((sc_array_t *) query, particle_id);
+        particle->is_inside_partition = 1;
+        *(double *) t8_sc_array_index_locidx (particles_per_element, element_index) += 1;
+      }
     }
-    /* The particles is inside the element. This query should remain active.
-     * If this element is not a leaf the search will continue with its children. */
-    return 1;
-  }
-  /* The particle is not inside the element. Deactivate this query.
-   * If no active queries are left, the search will stop for this element and its children. */
-  return 0;
 }
 
 /* Write the forest to vtu files and also write the particles_per_element
