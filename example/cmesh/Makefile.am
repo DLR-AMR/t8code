@@ -6,7 +6,7 @@ bin_PROGRAMS += \
   example/cmesh/t8_cmesh_partition \
   example/cmesh/t8_cmesh_create_partitioned \
   example/cmesh/t8_cmesh_refine \
-  example/cmesh/t8_cmesh_hybrid_new
+  example/cmesh/t8_cmesh_hybrid_new \
   example/cmesh/t8_cmesh_set_join_by_vertices \
   example/cmesh/t8_cmesh_geometry_examples \
   example/cmesh/t8_cmesh_hypercube_pad
