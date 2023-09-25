@@ -227,6 +227,7 @@ t8_forest_search_recursion (t8_forest_t forest, t8_locidx_t ltreeid, t8_eclass_t
     }
     int *active_queries_matches = NULL;
     active_queries_matches = T8_ALLOC (int, num_active);
+    T8_ASSERT (query_fn != NULL);
     query_fn (forest, ltreeid, element, is_leaf, leaf_elements, tree_lindex_of_first_leaf, queries, active_queries,
               active_queries_matches, num_active);
 
