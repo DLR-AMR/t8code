@@ -28,7 +28,6 @@
 # The --style=file arguments tells clang-format to look for a *.clang-format file.
 FORMAT_OPTIONS="--dry-run --Werror --style=file"
 
-
 FORMAT=`which clang-format 2> /dev/null`
 
 if [ -z "$FORMAT" ]
@@ -47,16 +46,8 @@ MAJOR=`echo $VERSION | cut -d. -f1`
 MINOR=`echo $VERSION | cut -d. -f2`
 PATCH=`echo $VERSION | cut -d. -f3`
 
-if [[ "$MAJOR" != "17" ]]; then
-  echo "Please install clang-format version 16.0.6"
-  exit 1
-fi
-if [[ $MINOR != "0" ]]; then
-  echo "Please install clang-format version 16.0.6"
-  exit 1
-fi
-if [[ $PATCH != "1" ]]; then
-  echo "Please install clang-format version 16.0.6"
+if [[ "$MAJOR" != "17" || $MINOR != "0" || $PATCH != "1" ]]; then
+  echo "Please install clang-format version 17.0.1"
   exit 1
 fi
 
