@@ -27,11 +27,11 @@
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtet.h>
 #include <t8_schemes/t8_default/t8_default_prism/t8_dprism.h>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h>
-#include <t8_forest.h>
+#include <t8_forest/t8_forest.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh/t8_cmesh_partition.h>
 #include <t8_cmesh_readmshfile.h>
-#include <t8_cmesh_vtk.h>
+#include <t8_cmesh_vtk_writer.h>
 #include <sc_statistics.h>
 
 static int
