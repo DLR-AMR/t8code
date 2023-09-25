@@ -65,7 +65,8 @@ T8_EXTERN_C_BEGIN ();
  *                              to be set to a committed cmesh and its set_refine_level
  *                              entry has to be positive.
  */
-void                t8_cmesh_refine (t8_cmesh_t cmesh);
+void
+t8_cmesh_refine (t8_cmesh_t cmesh);
 
 T8_EXTERN_C_END ();
 

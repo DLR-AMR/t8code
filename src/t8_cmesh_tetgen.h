@@ -52,21 +52,15 @@ T8_EXTERN_C_BEGIN ();
  *                        cmesh is partitioned or not. Currently it is always replicated.
  * \param [in] comm       The mpi communicator to be used.
  * \param [in] do_dup     Whether \a comm should be duplicated by cmesh.
- * \return                A ommited, replicated cmesh constructed from the info
+ * \return                A committed, replicated cmesh constructed from the info
  *                        in the TETGEN files.
  */
-t8_cmesh_t          t8_cmesh_from_tetgen_file (char *fileprefix,
-                                               int partition,
-                                               sc_MPI_Comm comm, int do_dup);
+t8_cmesh_t
+t8_cmesh_from_tetgen_file (char *fileprefix, int partition, sc_MPI_Comm comm, int do_dup);
 
-t8_cmesh_t          t8_cmesh_from_tetgen_file_time (char *fileprefix,
-                                                    int partition,
-                                                    sc_MPI_Comm comm,
-                                                    int do_dup,
-                                                    sc_flopinfo_t * fi,
-                                                    sc_flopinfo_t * snapshot,
-                                                    sc_statinfo_t * stats,
-                                                    int statentry);
+t8_cmesh_t
+t8_cmesh_from_tetgen_file_time (char *fileprefix, int partition, sc_MPI_Comm comm, int do_dup, sc_flopinfo_t *fi,
+                                sc_flopinfo_t *snapshot, sc_statinfo_t *stats, int statentry);
 
 T8_EXTERN_C_END ();
 

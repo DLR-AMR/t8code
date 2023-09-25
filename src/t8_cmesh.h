@@ -66,7 +66,8 @@ T8_EXTERN_C_BEGIN ();
  * \param [in,out] pcmesh       On input, this pointer must be non-NULL.
  *                              On return, this pointer set to the new cmesh.
  */
-void                t8_cmesh_init (t8_cmesh_t *pcmesh);
+void
+t8_cmesh_init (t8_cmesh_t *pcmesh);
 
 /** Check whether a cmesh is not NULL, initialized and not committed.
  * In addition, it asserts that the cmesh is consistent as much as possible.
@@ -76,7 +77,8 @@ void                t8_cmesh_init (t8_cmesh_t *pcmesh);
  *                              but not \ref t8_cmesh_commit.
  *                              False otherwise.
  */
-int                 t8_cmesh_is_initialized (t8_cmesh_t cmesh);
+int
+t8_cmesh_is_initialized (t8_cmesh_t cmesh);
 
 /** Check whether a cmesh is not NULL, initialized and committed.
  * In addition, it asserts that the cmesh is consistent as much as possible.
@@ -86,7 +88,8 @@ int                 t8_cmesh_is_initialized (t8_cmesh_t cmesh);
  *                              as well as \ref t8_cmesh_commit.
  *                              False otherwise.
  */
-int                 t8_cmesh_is_committed (t8_cmesh_t cmesh);
+int
+t8_cmesh_is_committed (t8_cmesh_t cmesh);
 
 #ifdef T8_ENABLE_DEBUG
 /** After a cmesh is committed, check whether all trees in a cmesh do have positive volume.
@@ -97,7 +100,8 @@ int                 t8_cmesh_is_committed (t8_cmesh_t cmesh);
  *                              was called, do have positive geometric volume.
  *                              False otherwise.
  */
-int                 t8_cmesh_no_negative_volume (t8_cmesh_t cmesh);
+int
+t8_cmesh_no_negative_volume (t8_cmesh_t cmesh);
 #endif
 
 /** Given a set of vertex coordinates for a tree of a given eclass.
@@ -114,10 +118,8 @@ int                 t8_cmesh_no_negative_volume (t8_cmesh_t cmesh);
  * coordinates does have negative volume.
  */
 /* TODO: write a test for this function */
-int                 t8_cmesh_tree_vertices_negative_volume (t8_eclass_t
-                                                            eclass,
-                                                            double *vertices,
-                                                            int num_vertices);
+int
+t8_cmesh_tree_vertices_negative_volume (t8_eclass_t eclass, double *vertices, int num_vertices);
 
 /* TODO: Currently it is not possible to destroy set_from before
  *       cmesh is destroyed. */
@@ -134,8 +136,8 @@ int                 t8_cmesh_tree_vertices_negative_volume (t8_eclass_t
  *                              after which \a from is no longer remembered.
  *                              Other than that the from object is not changed.
  */
-void                t8_cmesh_set_derive (t8_cmesh_t cmesh,
-                                         t8_cmesh_t set_from);
+void
+t8_cmesh_set_derive (t8_cmesh_t cmesh, t8_cmesh_t set_from);
 
 /** Allocate a shared memory array to store the tree offsets of a cmesh.
  * \param [in]      mpisize The number of processes.
@@ -145,7 +147,8 @@ void                t8_cmesh_set_derive (t8_cmesh_t cmesh,
  * \return          A t8_shmem_array struct that stores \a mpisize + 1 t8_gloidx_t entries.
  * \see t8_shmem.h
  */
-t8_shmem_array_t    t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm);
+t8_shmem_array_t
+t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm);
 
 /** Declare if the cmesh is understood as a partitioned cmesh and specify
  * the processor local tree range.
@@ -158,7 +161,7 @@ t8_shmem_array_t    t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm);
  *                              how much information is required on face connections,
  *                              specified by \ref t8_cmesh_set_join.
  *                              0: Expect face connection of local trees.
-                                1: In addition, expect face connection from
+ *                              1: In addition, expect face connection from
  *                                 ghost trees to local trees.
  *                              2: In addition, expect face connection between
  *                                 ghost trees.
@@ -177,12 +180,9 @@ t8_shmem_array_t    t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm);
  * \see t8_cmesh_set_partition_offset \see t8_cmesh_set_partition_uniform
  * \note A value of \a set_face_knowledge other than -1 or 3 is not yet supported.
  */
-void                t8_cmesh_set_partition_range (t8_cmesh_t cmesh,
-                                                  int set_face_knowledge,
-                                                  t8_gloidx_t
-                                                  first_local_tree,
-                                                  t8_gloidx_t
-                                                  last_local_tree);
+void
+t8_cmesh_set_partition_range (t8_cmesh_t cmesh, int set_face_knowledge, t8_gloidx_t first_local_tree,
+                              t8_gloidx_t last_local_tree);
 
 /* TODO: It is currently not possible to call this function for a non derived
  *       cmesh. Investigate. */
@@ -193,27 +193,25 @@ void                t8_cmesh_set_partition_range (t8_cmesh_t cmesh,
  * If instead \ref t8_cmesh_set_partition_range was called and the cmesh is
  * derived then the offset array is constructed during commit.
  * \param [in,out] cmesh        The cmesh to be updated.
- * \param [in] tree_offsets    An array of global tree_id offsets
- *                             for each process can be specified here.
+ * \param [in] tree_offsets     An array of global tree_id offsets
+ *                              for each process can be specified here.
  *                             TODO: document flag for shared trees.
  */
-void                t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh,
-                                                    t8_shmem_array_t
-                                                    tree_offsets);
+void
+t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh, t8_shmem_array_t tree_offsets);
 
 /** Declare if the cmesh is understood as a partitioned cmesh where the partition
  * table is derived from an assumed uniform refinement of a given level.
  * This call is only valid when the cmesh is not yet committed via a call
  * to \ref t8_cmesh_commit.
- * \param [in,out] cmesh        The cmesh to be updated.
- * \param [in]     element_level The refinement_level.
- * \param [in]     ts           The element scheme describing the refinement pattern.
- *                              We take ownership. This can be prevented by
- *                              referencing \b ts before calling this function.
+ * \param [in,out] cmesh          The cmesh to be updated.
+ * \param [in]     element_level  The refinement_level.
+ * \param [in]     ts             The element scheme describing the refinement pattern.
+ *                                We take ownership. This can be prevented by
+ *                                referencing \b ts before calling this function.
  */
-void                t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh,
-                                                    int element_level,
-                                                    t8_scheme_cxx_t *ts);
+void
+t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, int element_level, t8_scheme_cxx_t *ts);
 
 /* TODO: This function is no longer needed.  Scavenge documentation if helpful. */
 
@@ -221,19 +219,20 @@ void                t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh,
  * Thus split each tree into x^level subtrees
  * TODO: implement */
 /* If level = 0  then no refinement is performed */
-void                t8_cmesh_set_refine (t8_cmesh_t cmesh, int level,
-                                         t8_scheme_cxx_t *scheme);
+void
+t8_cmesh_set_refine (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *scheme);
 
 /** Set the dimension of a cmesh. If any tree is inserted to the cmesh
  * via \a t8_cmesh_set_tree_class, then the dimension is set automatically
  * to that of the inserted tree.
  * However, if the cmesh is constructed partitioned and the part on this process
- * is empty, it is neccessary to set the dimension by hand.
+ * is empty, it is necessary to set the dimension by hand.
  * \param [in,out]  cmesh The cmesh to be updated.
  * \param [in]      dim   The dimension to be set. Must satisfy 0 <= dim <= 3.
  * The cmesh must not be committed before calling this function.
  */
-void                t8_cmesh_set_dimension (t8_cmesh_t cmesh, int dim);
+void
+t8_cmesh_set_dimension (t8_cmesh_t cmesh, int dim);
 
 /** Set the class of a tree in the cmesh.
  * It is not allowed to call this function after \ref t8_cmesh_commit.
@@ -242,18 +241,17 @@ void                t8_cmesh_set_dimension (t8_cmesh_t cmesh, int dim);
  * \param [in]     tree_id      The global number of the tree.
  * \param [in]     tree_class   The element class of this tree.
  */
-void                t8_cmesh_set_tree_class (t8_cmesh_t cmesh,
-                                             t8_gloidx_t gtree_id,
-                                             t8_eclass_t tree_class);
+void
+t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, t8_eclass_t tree_class);
 
 /** Store an attribute at a tree in a cmesh.
  *  Attributes can be arbitrary data that is copied to an internal storage
  *  associated to the tree.
  *  Each application can set multiple attributes and attributes are distinguished
- *  by an interger key, where each application can use any integer as key.
+ *  by an integer key, where each application can use any integer as key.
  *
  * \param [in, out] cmesh       The cmesh to be updated.
- * \param [in]      gtree_id     The global id of the tree.
+ * \param [in]      gtree_id    The global id of the tree.
  * \param [in]      package_id  Unique identifier of a valid software package. \see sc_package_register
  * \param [in]      key         An integer key used to identify this attribute under all
  *                              attributes with the same package_id.
@@ -269,15 +267,13 @@ void                t8_cmesh_set_tree_class (t8_cmesh_t cmesh,
  *                              In both cases a copy of the data is used by t8_code after t8_cmesh_commit.
  * \note If an attribute with the given package_id and key already exists, then it will get overwritten.
  */
-void                t8_cmesh_set_attribute (t8_cmesh_t cmesh,
-                                            t8_gloidx_t gtree_id,
-                                            int package_id, int key,
-                                            void *data, size_t data_size,
-                                            int data_persists);
+void
+t8_cmesh_set_attribute (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int package_id, int key, void *data, size_t data_size,
+                        int data_persists);
 
 /** Store a string as an attribute at a tree in a cmesh.
  * \param [in, out] cmesh       The cmesh to be updated.
- * \param [in]      gtree_id     The global id of the tree.
+ * \param [in]      gtree_id    The global id of the tree.
  * \param [in]      package_id  Unique identifier of a valid software package. \see sc_package_register
  * \param [in]      key         An integer key used to identify this attribute under all
  *                              attributes with the same package_id.
@@ -286,10 +282,8 @@ void                t8_cmesh_set_attribute (t8_cmesh_t cmesh,
  * \note You can also use \ref t8_cmesh_set_attribute, but we recommend using this
  *       specialized function for strings.
  */
-void                t8_cmesh_set_attribute_string (t8_cmesh_t cmesh,
-                                                   t8_gloidx_t gtree_id,
-                                                   int package_id, int key,
-                                                   const char *string);
+void
+t8_cmesh_set_attribute_string (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int package_id, int key, const char *string);
 
 /** Insert a face-connection between two trees in a cmesh.
  * \param [in,out] cmesh        The cmesh to be updated.
@@ -302,22 +296,21 @@ void                t8_cmesh_set_attribute_string (t8_cmesh_t cmesh,
  *                              for all element classes.
  * TODO: document orientation
  */
-void                t8_cmesh_set_join (t8_cmesh_t cmesh, t8_gloidx_t gtree1,
-                                       t8_gloidx_t gtree2, int face1,
-                                       int face2, int orientation);
+void
+t8_cmesh_set_join (t8_cmesh_t cmesh, t8_gloidx_t gtree1, t8_gloidx_t gtree2, int face1, int face2, int orientation);
 
 /** Enable or disable profiling for a cmesh. If profiling is enabled, runtimes
  * and statistics are collected during cmesh_commit.
- * \param [in,out] cmesh        The cmesh to be updated.
- * \param [in]     set_profiling If true, profiling will be enabled, if false
- *                              disabled.
+ * \param [in,out] cmesh          The cmesh to be updated.
+ * \param [in]     set_profiling  If true, profiling will be enabled, if false
+ *                                disabled.
  *
  * Profiling is disabled by default.
  * The cmesh must not be committed before calling this function.
  * \see t8_cmesh_print_profile
  */
-void                t8_cmesh_set_profiling (t8_cmesh_t cmesh,
-                                            int set_profiling);
+void
+t8_cmesh_set_profiling (t8_cmesh_t cmesh, int set_profiling);
 
 /* returns true if cmesh_a equals cmesh_b */
 /* TODO: document
@@ -331,14 +324,15 @@ void                t8_cmesh_set_profiling (t8_cmesh_t cmesh,
  *                              Orders, sequences, equivalences?
  * This function works on committed and uncommitted cmeshes.
  */
-int                 t8_cmesh_is_equal (t8_cmesh_t cmesh_a,
-                                       t8_cmesh_t cmesh_b);
+int
+t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b);
 
 /** Check whether a cmesh is empty on all processes.
  * \param [in]  cmesh           A committed cmesh.
  * \return                      True (non-zero) if and only if the cmesh has trees at all.
  */
-int                 t8_cmesh_is_empty (t8_cmesh_t cmesh);
+int
+t8_cmesh_is_empty (t8_cmesh_t cmesh);
 
 /** Broadcast a cmesh structure that exists only on one process to all
  *  processes in the cmesh's communicator.
@@ -358,13 +352,14 @@ int                 t8_cmesh_is_empty (t8_cmesh_t cmesh);
  * \note It is illegal to broadcast a cmesh with a registered geometry (\ref t8_cmesh_register_geometry).
  *       All geometries must be registered after the broadcast (You can set tree attributes before bcast, though).
  */
-t8_cmesh_t          t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root,
-                                    sc_MPI_Comm comm);
+t8_cmesh_t
+t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm);
 
 #ifdef T8_WITH_METIS
 /* TODO: document this. */
 /* TODO: think about making this a pre-commit set_reorder function. */
-void                t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm);
+void
+t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 
 /* TODO: think about a sensible interface for a parmetis reordering. */
 #endif
@@ -373,11 +368,10 @@ void                t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 /* If no geometry is registered and cmesh is modified from another cmesh then
  * the other cmesh's geometries are used.
  * \note If you need to use \ref t8_cmesh_bcast, then all geometries must be
- *       registerd \a after the bcast operation, not before.
+ *       registered \a after the bcast operation, not before.
  */
-void                t8_cmesh_register_geometry (t8_cmesh_t cmesh,
-                                                const t8_geometry_c
-                                                *geometry);
+void
+t8_cmesh_register_geometry (t8_cmesh_t cmesh, const t8_geometry_c *geometry);
 
 /** Set the geometry for a tree, thus specify which geometry to use for this tree.
  * \param [in] cmesh     A non-committed cmesh.
@@ -385,9 +379,8 @@ void                t8_cmesh_register_geometry (t8_cmesh_t cmesh,
  * \param [in] geom_name The name of the geometry to use for this tree.
  * See also \ref t8_cmesh_get_tree_geometry
  */
-void                t8_cmesh_set_tree_geometry (t8_cmesh_t cmesh,
-                                                t8_gloidx_t gtreeid,
-                                                const char *geom_name);
+void
+t8_cmesh_set_tree_geometry (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const char *geom_name);
 
 /** After allocating and adding properties to a cmesh, finish its construction.
  * TODO: this function is MPI collective.
@@ -395,23 +388,24 @@ void                t8_cmesh_set_tree_geometry (t8_cmesh_t cmesh,
  *                              (TODO: or bcast) and
  *                              specialized with t8_cmesh_set_* calls first (?).
  */
-void                t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm);
+void
+t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 
 /* TODO: Document */
 /* Currently, it is only legal to save cmeshes that use the linear geometry. */
-int                 t8_cmesh_save (t8_cmesh_t cmesh, const char *fileprefix);
+int
+t8_cmesh_save (t8_cmesh_t cmesh, const char *fileprefix);
 
 /* TODO: Document */
-t8_cmesh_t          t8_cmesh_load (const char *filename, sc_MPI_Comm comm);
+t8_cmesh_t
+t8_cmesh_load (const char *filename, sc_MPI_Comm comm);
 
 /* TODO: Document */
 /* procs_per_node is only relevant in mode==JUQUEEN.
  *  num_files = 1 => replicated cmesh is constructed */
-t8_cmesh_t          t8_cmesh_load_and_distribute (const char *fileprefix,
-                                                  int num_files,
-                                                  sc_MPI_Comm comm,
-                                                  t8_load_mode_t mode,
-                                                  int procs_per_node);
+t8_cmesh_t
+t8_cmesh_load_and_distribute (const char *fileprefix, int num_files, sc_MPI_Comm comm, t8_load_mode_t mode,
+                              int procs_per_node);
 
 /** Check whether a given MPI communicator assigns the same rank and mpisize
   * as stored in a cmesh.
@@ -422,8 +416,8 @@ t8_cmesh_t          t8_cmesh_load_and_distribute (const char *fileprefix,
   *                         False otherwise.
   * \a cmesh must be committed before calling this function.
   * */
-int                 t8_cmesh_comm_is_valid (t8_cmesh_t cmesh,
-                                            sc_MPI_Comm comm);
+int
+t8_cmesh_comm_is_valid (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 
 /** Query whether a committed cmesh is partitioned or replicated.
  * \param [in] cmesh       A committed cmesh.
@@ -431,14 +425,16 @@ int                 t8_cmesh_comm_is_valid (t8_cmesh_t cmesh,
  *                         False otherwise.
  * \a cmesh must be committed before calling this function.
  */
-int                 t8_cmesh_is_partitioned (t8_cmesh_t cmesh);
+int
+t8_cmesh_is_partitioned (t8_cmesh_t cmesh);
 
 /** Return the global number of trees in a cmesh.
  * \param [in] cmesh       The cmesh to be considered.
  * \return                 The number of trees associated to \a cmesh.
  * \a cmesh must be committed before calling this function.
  */
-t8_gloidx_t         t8_cmesh_get_num_trees (t8_cmesh_t cmesh);
+t8_gloidx_t
+t8_cmesh_get_num_trees (t8_cmesh_t cmesh);
 
 /** Return the number of local trees of a cmesh.
  *  If the cmesh is not partitioned this is equivalent to \ref t8_cmesh_get_num_trees.
@@ -446,7 +442,8 @@ t8_gloidx_t         t8_cmesh_get_num_trees (t8_cmesh_t cmesh);
  * \return                 The number of local trees of the cmesh.
  * \a cmesh must be committed before calling this function.
  */
-t8_locidx_t         t8_cmesh_get_num_local_trees (t8_cmesh_t cmesh);
+t8_locidx_t
+t8_cmesh_get_num_local_trees (t8_cmesh_t cmesh);
 
 /** Return the number of ghost trees of a cmesh.
  *  If the cmesh is not partitioned this is equivalent to \ref t8_cmesh_get_num_trees.
@@ -454,19 +451,21 @@ t8_locidx_t         t8_cmesh_get_num_local_trees (t8_cmesh_t cmesh);
  * \return                 The number of ghost trees of the cmesh.
  * \a cmesh must be committed before calling this function.
  */
-t8_locidx_t         t8_cmesh_get_num_ghosts (t8_cmesh_t cmesh);
+t8_locidx_t
+t8_cmesh_get_num_ghosts (t8_cmesh_t cmesh);
 
 /** Return the global index of the first local tree of a cmesh.
- * If the cmesh is not partitioned this is allways 0.
+ * If the cmesh is not partitioned this is always 0.
  * \param [in] cmesh       The cmesh to be considered.
  * \return                 The global id of the first local tree in cmesh.
  * \a cmesh must be committed before calling this function.
  */
-t8_gloidx_t         t8_cmesh_get_first_treeid (t8_cmesh_t cmesh);
+t8_gloidx_t
+t8_cmesh_get_first_treeid (t8_cmesh_t cmesh);
 
 /* TODO: Comment */
-const t8_geometry_c *t8_cmesh_get_tree_geometry (t8_cmesh_t cmesh,
-                                                 t8_gloidx_t gtreeid);
+const t8_geometry_c *
+t8_cmesh_get_tree_geometry (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 
 /** Query whether a given t8_locidx_t belongs to a local tree of a cmesh.
  * \param [in] cmesh       The cmesh to be considered.
@@ -475,8 +474,8 @@ const t8_geometry_c *t8_cmesh_get_tree_geometry (t8_cmesh_t cmesh,
  *                         False if not.
  * \a cmesh must be committed before calling this function.
  */
-int                 t8_cmesh_treeid_is_local_tree (const t8_cmesh_t cmesh,
-                                                   const t8_locidx_t ltreeid);
+int
+t8_cmesh_treeid_is_local_tree (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid);
 
 /** Query whether a given t8_locidx_t belongs to a ghost of a cmesh.
  * \param [in] cmesh       The cmesh to be considered.
@@ -485,19 +484,19 @@ int                 t8_cmesh_treeid_is_local_tree (const t8_cmesh_t cmesh,
  *                         False if not.
  * \a cmesh must be committed before calling this function.
  */
-int                 t8_cmesh_treeid_is_ghost (const t8_cmesh_t cmesh,
-                                              const t8_locidx_t ltreeid);
+int
+t8_cmesh_treeid_is_ghost (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid);
 
 /** Given a local tree id that belongs to a ghost, return the index of the ghost.
  * \param [in] cmesh       The cmesh to be considered.
  * \param [in] ltreeid     The local id of a ghost, satisfying \ref t8_cmesh_treeid_is_ghost,
  *                         thus num_trees <= \a ltreeid < num_trees + num_ghosts
- * \return                 The index of the ghost whithin all ghosts, thus an index
+ * \return                 The index of the ghost within all ghosts, thus an index
  *                         0 <= index < num_ghosts
  * \a cmesh must be committed before calling this function.
  */
-t8_locidx_t         t8_cmesh_ltreeid_to_ghostid (const t8_cmesh_t cmesh,
-                                                 const t8_locidx_t ltreeid);
+t8_locidx_t
+t8_cmesh_ltreeid_to_ghostid (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid);
 
 /* TODO: Replace this iterator with a new one that does not need the
  *        treeid to be part of the ctree struct */
@@ -508,7 +507,8 @@ t8_locidx_t         t8_cmesh_ltreeid_to_ghostid (const t8_cmesh_t cmesh,
  *                              If \a cmesh has no local trees, NULL is returned.
  * \a cmesh must be committed before calling this function.
  */
-t8_ctree_t          t8_cmesh_get_first_tree (t8_cmesh_t cmesh);
+t8_ctree_t
+t8_cmesh_get_first_tree (t8_cmesh_t cmesh);
 
 /* TODO: should this function behave like first_tree if tree argument is NULL? */
 /** Given a local tree in a cmesh return a pointer to the next local tree.
@@ -520,8 +520,8 @@ t8_ctree_t          t8_cmesh_get_first_tree (t8_cmesh_t cmesh);
  * * \a cmesh must be committed before calling this function.
  * TODO: If we run over tree numbers only, don't use ctree_t in API if possible.
  */
-t8_ctree_t          t8_cmesh_get_next_tree (t8_cmesh_t cmesh,
-                                            t8_ctree_t tree);
+t8_ctree_t
+t8_cmesh_get_next_tree (t8_cmesh_t cmesh, t8_ctree_t tree);
 
 /** Return a pointer to a given local tree.
  * \param [in]     cmesh        The cmesh to be queried.
@@ -532,8 +532,8 @@ t8_ctree_t          t8_cmesh_get_next_tree (t8_cmesh_t cmesh,
  * calling this function.
  * \a cmesh must be committed before calling this function.
  */
-t8_ctree_t          t8_cmesh_get_tree (t8_cmesh_t cmesh,
-                                       t8_locidx_t ltree_id);
+t8_ctree_t
+t8_cmesh_get_tree (t8_cmesh_t cmesh, t8_locidx_t ltree_id);
 
 /** Return the eclass of a given local tree.
  * TODO: Should we refer to indices or consequently use ctree_t?
@@ -543,20 +543,19 @@ t8_ctree_t          t8_cmesh_get_tree (t8_cmesh_t cmesh,
  * TODO: Call tree ids ltree_id or gtree_id etc. instead of tree_id.
  * \a cmesh must be committed before calling this function.
  */
-t8_eclass_t         t8_cmesh_get_tree_class (t8_cmesh_t cmesh,
-                                             t8_locidx_t ltree_id);
+t8_eclass_t
+t8_cmesh_get_tree_class (t8_cmesh_t cmesh, t8_locidx_t ltree_id);
 
 /** Query whether a face of a local tree or ghost is at the domain boundary.
  * \param [in]    cmesh         The cmesh to be considered.
- * \param [in]    ltree_id       The local id of a tree.
+ * \param [in]    ltree_id      The local id of a tree.
  * \param [in]    face          The number of a face of the tree.
  * \return                      True if the face is at the domain boundary.
  *                              False otherwise.
  * \a cmesh must be committed before calling this function.
  */
-int                 t8_cmesh_tree_face_is_boundary (t8_cmesh_t cmesh,
-                                                    t8_locidx_t ltree_id,
-                                                    int face);
+int
+t8_cmesh_tree_face_is_boundary (t8_cmesh_t cmesh, t8_locidx_t ltree_id, int face);
 
 /** Return the eclass of a given local ghost.
  * TODO: Should we refer to indices or consequently use cghost_t?
@@ -566,8 +565,8 @@ int                 t8_cmesh_tree_face_is_boundary (t8_cmesh_t cmesh,
  * \return                      The eclass of the given ghost.
  * \a cmesh must be committed before calling this function.
  */
-t8_eclass_t         t8_cmesh_get_ghost_class (t8_cmesh_t cmesh,
-                                              t8_locidx_t lghost_id);
+t8_eclass_t
+t8_cmesh_get_ghost_class (t8_cmesh_t cmesh, t8_locidx_t lghost_id);
 
 /** Return the global id of a given local tree or ghost.
  * \param [in]    cmesh         The cmesh to be considered.
@@ -577,8 +576,8 @@ t8_eclass_t         t8_cmesh_get_ghost_class (t8_cmesh_t cmesh,
  * \return                      The global id of the tree/ghost.
  * \see https://github.com/DLR-AMR/t8code/wiki/Tree-indexing for more details about tree indexing.
  */
-t8_gloidx_t         t8_cmesh_get_global_id (t8_cmesh_t cmesh,
-                                            t8_locidx_t local_id);
+t8_gloidx_t
+t8_cmesh_get_global_id (t8_cmesh_t cmesh, t8_locidx_t local_id);
 
 /** Return the local id of a give global tree.
  * \param [in]    cmesh         The cmesh.
@@ -592,8 +591,8 @@ t8_gloidx_t         t8_cmesh_get_global_id (t8_cmesh_t cmesh,
  *                              nor a ghost tree.
  * \see https://github.com/DLR-AMR/t8code/wiki/Tree-indexing for more details about tree indexing.
  */
-t8_locidx_t         t8_cmesh_get_local_id (t8_cmesh_t cmesh,
-                                           t8_gloidx_t global_id);
+t8_locidx_t
+t8_cmesh_get_local_id (t8_cmesh_t cmesh, t8_gloidx_t global_id);
 
 /** Given a local tree id and a face number, get information about the face neighbor tree.
  * \param [in]      cmesh     The cmesh to be considered.
@@ -609,11 +608,9 @@ t8_locidx_t         t8_cmesh_get_local_id (t8_cmesh_t cmesh,
  *       Thus, a negative return value does not necessarily mean that this is a domain boundary.
  *       To find out whether a tree is a domain boundary or not \see t8_cmesh_tree_face_is_boundary.
  */
-t8_locidx_t         t8_cmesh_get_face_neighbor (const t8_cmesh_t cmesh,
-                                                const t8_locidx_t ltreeid,
-                                                const int face,
-                                                int *dual_face,
-                                                int *orientation);
+t8_locidx_t
+t8_cmesh_get_face_neighbor (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid, const int face, int *dual_face,
+                            int *orientation);
 
 /** Print the collected statistics from a cmesh profile.
  * \param [in]    cmesh         The cmesh.
@@ -621,7 +618,8 @@ t8_locidx_t         t8_cmesh_get_face_neighbor (const t8_cmesh_t cmesh,
  * \a cmesh must be committed before calling this function.
  * \see t8_cmesh_set_profiling
  */
-void                t8_cmesh_print_profile (t8_cmesh_t cmesh);
+void
+t8_cmesh_print_profile (t8_cmesh_t cmesh);
 
 /** Return a pointer to the vertex coordinates of a tree.
  * \param [in]    cmesh         The cmesh.
@@ -629,8 +627,8 @@ void                t8_cmesh_print_profile (t8_cmesh_t cmesh);
  * \return    If stored, a pointer to the vertex coordinates of \a tree.
  *            If no coordinates for this tree are found, NULL.
  */
-double             *t8_cmesh_get_tree_vertices (t8_cmesh_t cmesh,
-                                                t8_locidx_t ltreeid);
+double *
+t8_cmesh_get_tree_vertices (t8_cmesh_t cmesh, t8_locidx_t ltreeid);
 
 /** Return the attribute pointer of a tree.
  * \param [in]     cmesh        The cmesh.
@@ -643,9 +641,8 @@ double             *t8_cmesh_get_tree_vertices (t8_cmesh_t cmesh,
  * \a cmesh must be committed before calling this function.
  * \see t8_cmesh_set_attribute
  */
-void               *t8_cmesh_get_attribute (t8_cmesh_t cmesh,
-                                            int package_id, int key,
-                                            t8_locidx_t ltree_id);
+void *
+t8_cmesh_get_attribute (t8_cmesh_t cmesh, int package_id, int key, t8_locidx_t ltree_id);
 
 /** Return the shared memory array storing the partition table of
  * a partitioned cmesh.
@@ -655,7 +652,8 @@ void               *t8_cmesh_get_attribute (t8_cmesh_t cmesh,
  *                              the partition array is not stored in \a cmesh.
  * \a cmesh must be committed before calling this function.
  */
-t8_shmem_array_t    t8_cmesh_get_partition_table (t8_cmesh_t cmesh);
+t8_shmem_array_t
+t8_cmesh_get_partition_table (t8_cmesh_t cmesh);
 
 /* TODO: remove get_ when there is no risk of confusion? Convention?
  *       Update: use get throughout for access functions that do not change the object.
@@ -674,13 +672,10 @@ t8_shmem_array_t    t8_cmesh_get_partition_table (t8_cmesh_t cmesh);
  *                                 same as \a last_local_tree on the next process.
  * \a cmesh must be committed before calling this function. 
  */
-void                t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
-                                             t8_scheme_cxx_t *ts,
-                                             t8_gloidx_t *first_local_tree,
-                                             t8_gloidx_t *child_in_tree_begin,
-                                             t8_gloidx_t *last_local_tree,
-                                             t8_gloidx_t *child_in_tree_end,
-                                             int8_t *first_tree_shared);
+void
+t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *ts, t8_gloidx_t *first_local_tree,
+                         t8_gloidx_t *child_in_tree_begin, t8_gloidx_t *last_local_tree, t8_gloidx_t *child_in_tree_end,
+                         int8_t *first_tree_shared);
 
 /**
  * Calculate the section of a uniform hybrid forest for the current rank
@@ -697,25 +692,17 @@ void                t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
  *                                 same as \a last_local_tree on the next process.
  * \param [in] comm         The communicator 
  */
-void                t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh,
-                                                    int level,
-                                                    t8_scheme_cxx_t *scheme,
-                                                    t8_gloidx_t
-                                                    *first_local_tree,
-                                                    t8_gloidx_t
-                                                    *child_in_tree_begin,
-                                                    t8_gloidx_t
-                                                    *last_local_tree,
-                                                    t8_gloidx_t
-                                                    *child_in_tree_end,
-                                                    int8_t *first_tree_shared,
-                                                    sc_MPI_Comm comm);
+void
+t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *scheme, t8_gloidx_t *first_local_tree,
+                                t8_gloidx_t *child_in_tree_begin, t8_gloidx_t *last_local_tree,
+                                t8_gloidx_t *child_in_tree_end, int8_t *first_tree_shared, sc_MPI_Comm comm);
 
 /** Increase the reference counter of a cmesh.
  * \param [in,out] cmesh        On input, this cmesh must exist with positive
  *                              reference count.  It may be in any state.
  */
-void                t8_cmesh_ref (t8_cmesh_t cmesh);
+void
+t8_cmesh_ref (t8_cmesh_t cmesh);
 
 /** Decrease the reference counter of a cmesh.
  * If the counter reaches zero, this cmesh is destroyed.
@@ -729,7 +716,8 @@ void                t8_cmesh_ref (t8_cmesh_t cmesh);
  *                              Otherwise, the pointer is not changed and
  *                              the cmesh is not modified in other ways.
  */
-void                t8_cmesh_unref (t8_cmesh_t *pcmesh);
+void
+t8_cmesh_unref (t8_cmesh_t *pcmesh);
 
 /** Verify that a coarse mesh has only one reference left and destroy it.
  * This function is preferred over \ref t8_cmesh_unref when it is known
@@ -739,11 +727,13 @@ void                t8_cmesh_unref (t8_cmesh_t *pcmesh);
  *                              Then it effectively calls \ref t8_cmesh_unref.
  * \param [in]      comm        A mpi communicator that is valid with \a cmesh.
  */
-void                t8_cmesh_destroy (t8_cmesh_t *pcmesh);
+void
+t8_cmesh_destroy (t8_cmesh_t *pcmesh);
 
-/* Functions for construcing complete and committed cmeshes */
+/* Functions for constructing complete and committed cmeshes */
 
-t8_cmesh_t          t8_cmesh_new_testhybrid (sc_MPI_Comm comm);
+t8_cmesh_t
+t8_cmesh_new_testhybrid (sc_MPI_Comm comm);
 
 /** Compute y = ax + b on an array of doubles, interpreting
  * each 3 as one vector x 
@@ -753,10 +743,8 @@ t8_cmesh_t          t8_cmesh_new_testhybrid (sc_MPI_Comm comm);
  * \param[in]   alpha             Scaling factor for the vectors
  * \param[in]   b                 Translation of the vectors.*/
 
-void                t8_cmesh_coords_axb (const double *coords_in,
-                                         double *coords_out,
-                                         int num_vertices,
-                                         double alpha, const double b[3]);
+void
+t8_cmesh_coords_axb (const double *coords_in, double *coords_out, int num_vertices, double alpha, const double b[3]);
 
 /** Compute y = x + translate on an array of doubles, interpreting 
  * each 3 as one vector x
@@ -765,20 +753,13 @@ void                t8_cmesh_coords_axb (const double *coords_in,
  * \param[in]   num_vertices      The number of vertices/vectors
  * \param[in]   translate         Translation of the vectors.
  */
-void                t8_cmesh_translate_coordinates (const double *coords_in,
-                                                    double *coords_out,
-                                                    int num_vertices,
-                                                    double translate[3]);
+void
+t8_cmesh_translate_coordinates (const double *coords_in, double *coords_out, int num_vertices, double translate[3]);
 
 /**TODO: Add proper documentation*/
-void                t8_cmesh_new_translate_vertices_to_attributes (t8_locidx_t
-                                                                   *tvertices,
-                                                                   double
-                                                                   *vertices,
-                                                                   double
-                                                                   *attr_vertices,
-                                                                   int
-                                                                   num_vertices);
+void
+t8_cmesh_new_translate_vertices_to_attributes (const t8_locidx_t *tvertices, const double *vertices,
+                                               double *attr_vertices, const int num_vertices);
 
 /**
  * \warning This function is only available in debug-modus and should only 
@@ -788,8 +769,8 @@ void                t8_cmesh_new_translate_vertices_to_attributes (t8_locidx_t
  * 
  * \param[in] cmesh   Source-cmesh, which trees get printed.
  */
-void                t8_cmesh_debug_print_trees (const t8_cmesh_t cmesh,
-                                                sc_MPI_Comm comm);
+void
+t8_cmesh_debug_print_trees (const t8_cmesh_t cmesh, sc_MPI_Comm comm);
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_H */

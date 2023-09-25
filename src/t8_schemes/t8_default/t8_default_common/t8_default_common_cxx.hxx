@@ -31,28 +31,28 @@
 
 /* Macro to check whether a pointer (VAR) to a base class, comes from an
  * implementation of a child class (TYPE). */
-#define T8_COMMON_IS_TYPE(VAR, TYPE) \
-  ((dynamic_cast<TYPE> (VAR)) != NULL)
+#define T8_COMMON_IS_TYPE(VAR, TYPE) ((dynamic_cast<TYPE> (VAR)) != NULL)
 
-class               t8_default_scheme_common_c:public t8_eclass_scheme_c
-{
-public:
+class t8_default_scheme_common_c: public t8_eclass_scheme_c {
+ public:
   /** Destructor for all default schemes */
-  virtual ~ t8_default_scheme_common_c ();
+  virtual ~t8_default_scheme_common_c ();
 
   /** Compute the number of corners of a given element. */
-  virtual int         t8_element_num_corners (const t8_element_t *elem) const;
+  virtual int
+  t8_element_num_corners (const t8_element_t *elem) const;
 
   /** Allocate space for a bunch of elements. */
-  virtual void        t8_element_new (int length, t8_element_t **elem) const;
+  virtual void
+  t8_element_new (int length, t8_element_t **elem) const;
 
   /** Deallocate space for a bunch of elements. */
-  virtual void        t8_element_destroy (int length,
-                                          t8_element_t **elem) const;
+  virtual void
+  t8_element_destroy (int length, t8_element_t **elem) const;
 
   /** Return the shape of an element */
-  virtual t8_element_shape_t t8_element_shape (const t8_element_t *elem)
-    const;
+  virtual t8_element_shape_t
+  t8_element_shape (const t8_element_t *elem) const;
 
   /** Count how many leaf descendants of a given uniform level an element would produce.
    * \param [in] t     The element to be checked.
@@ -62,8 +62,8 @@ public:
    * Each default element (except pyramids) refines into 2^{dim * (level - level(t))}
    * children.
    */
-  virtual t8_gloidx_t t8_element_count_leafs (const t8_element_t *t,
-                                              int level) const;
+  virtual t8_gloidx_t
+  t8_element_count_leafs (const t8_element_t *t, int level) const;
 
   /** Compute the number of siblings of an element. That is the number of 
    * Children of its parent.
@@ -71,15 +71,16 @@ public:
    * \return          The number of siblings of \a element.
    * Note that this number is >= 1, since we count the element itself as a sibling.
    */
-  virtual int         t8_element_num_siblings (const t8_element_t *elem)
-    const;
+  virtual int
+  t8_element_num_siblings (const t8_element_t *elem) const;
 
   /** Count how many leaf descendants of a given uniform level the root element will produce.
    * \param [in] level A refinement level.
    * \return The value of \ref t8_element_count_leafs if the input element
    *      is the root (level 0) element.
    */
-  virtual t8_gloidx_t t8_element_count_leafs_from_root (int level) const;
+  virtual t8_gloidx_t
+  t8_element_count_leafs_from_root (int level) const;
 
   /** The common implementation of the general function for the default scheme
    * has no effect. This function literally does nothing.
@@ -91,23 +92,37 @@ public:
    * \note Calling this function has no effect. See the specialized implementations in
    * t8_default_tri_cxx.hxx, t8_default_tet_cxx.hxx and t8_default_prism_cxx.hxx.
    */
-  virtual void        t8_element_general_function (const t8_element_t *elem,
-                                                   const void *indata,
-                                                   void *outdata) const;
+  virtual void
+  t8_element_general_function (const t8_element_t *elem, const void *indata, void *outdata) const;
 
   /** Compute the integer coordinates of a given element vertex.
    * The default scheme implements the Morton type SFCs. In these SFCs the
    * elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and 
    * L the maximum refinement level. 
    * All element vertices have integer coordinates in this cube.
-   *   \param [in] t      The element to be considered.
-   *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
+   *   \param [in] elem    The element.
+   *   \param [in] vertex  The id of the vertex whose coordinates shall be computed.
    *   \param [out] coords An array of at least as many integers as the element's dimension
    *                      whose entries will be filled with the coordinates of \a vertex.
    */
-  virtual void        t8_element_vertex_coords (const t8_element_t *t,
-                                                int vertex,
-                                                int coords[]) const = 0;
+  virtual void
+  t8_element_vertex_coords (const t8_element_t *elem, int vertex, int coords[]) const
+    = 0;
+
+  /** Convert points in the reference space of an element to points in the
+   *  reference space of the tree.
+   * 
+   * \param [in] elem         The element.
+   * \param [in] coords_input The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
+   *                          in the reference space of the element.
+   * \param [in] num_coords   Number of \f$ dim\f$-sized coordinates to evaluate.
+   * \param [out] out_coords  The coordinates of the points in the
+   *                          reference space of the tree.
+   */
+  virtual void
+  t8_element_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
+                               double *out_coords) const
+    = 0;
 
   /** Get the integer coordinates of the anchor node of an element.
    * The default scheme implements the Morton type SFCs. In these SFCs the
@@ -119,8 +134,9 @@ public:
    * \param [in] elem   The element.
    * \param [out] anchor The integer coordinates of the anchor node in the cube [0,1]^(dL)
    */
-  virtual void        t8_element_anchor (const t8_element_t *elem,
-                                         int anchor[3]) const = 0;
+  virtual void
+  t8_element_anchor (const t8_element_t *elem, int anchor[3]) const
+    = 0;
 };
 
 #endif /* !T8_DEFAULT_COMMON_CXX_HXX */

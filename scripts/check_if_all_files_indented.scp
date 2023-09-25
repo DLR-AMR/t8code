@@ -4,7 +4,7 @@
 #  t8code is a C library to manage a collection (a forest) of multiple
 #  connected adaptive space-trees of general element classes in parallel.
 #
-#  Copyright (C) 2015 the developers
+#  Copyright (C) 2023 the developers
 #
 #  t8code is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -32,8 +32,14 @@
 #
 if [ `basename $PWD` != scripts ]
 then
-  echo ERROR: Must be executed from within the scripts/ subfolder. 2>&1
-  exit 1
+  if [ -d scripts ]
+  then
+    # The directory stack is automatically reset on script exit.
+    pushd scripts/ > /dev/null
+  else
+    echo ERROR: scripts/ directory not found.
+    exit 1
+  fi
 fi
 
 # Find all files with the appropriate suffix.
@@ -48,7 +54,7 @@ do
   # file before checking for indentation.
   if [ -f $file ]
   then
-    ./check_if_file_indented.scp $file
+    ./check_if_file_indented.scp $file > /dev/null 2>&1
     status=$?
     if test $status -ne 0
     then

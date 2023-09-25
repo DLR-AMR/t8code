@@ -31,28 +31,30 @@
 #ifndef T8_STEP3_H
 #define T8_STEP3_H
 
-#include <t8.h>                 /* General t8code header, always include this. */
-#include <t8_forest.h>          /* forest definition and basic interface. */
+#include <t8.h>                          /* General t8code header, always include this. */
+#include <t8_forest/t8_forest_general.h> /* forest definition and basic interface. */
 
 T8_EXTERN_C_BEGIN ();
 
 /** This is the main program of this example. It creates a coarse mesh and a forest,
  *  adapts the forest and writes some output.
  */
-int                 t8_step3_main (int argc, char **argv);
+int
+t8_step3_main (int argc, char **argv);
 
 /* Functions used for other examples are below. */
 
 /** Print the local and global number of elements of a forest. */
-void                t8_step3_print_forest_information (t8_forest_t forest);
+void
+t8_step3_print_forest_information (t8_forest_t forest);
 
 /* This is our own defined data that we will pass on to the
  * adaptation callback. */
 struct t8_step3_adapt_data
 {
-  double              midpoint[3];      /* The midpoint of our sphere. */
-  double              refine_if_inside_radius;  /* if an element's center is smaller than this value, we refine the element. */
-  double              coarsen_if_outside_radius;        /* if an element's center is larger this value, we coarsen its family. */
+  double midpoint[3];               /* The midpoint of our sphere. */
+  double refine_if_inside_radius;   /* if an element's center is smaller than this value, we refine the element. */
+  double coarsen_if_outside_radius; /* if an element's center is larger this value, we coarsen its family. */
 };
 
 /** Adapt a forest according to our t8_step3_adapt_callback function.
@@ -61,7 +63,8 @@ struct t8_step3_adapt_data
  * \param [in] forest   A committed forest.
  * \return              A new forest that arises from the input \a forest via adaptation.
  */
-t8_forest_t         t8_step3_adapt_forest (t8_forest_t forest);
+t8_forest_t
+t8_step3_adapt_forest (t8_forest_t forest);
 
 /* The adaptation callback function. This will refine elements inside of a given sphere
  * and coarsen the elements outside of a given sphere.
@@ -69,14 +72,9 @@ t8_forest_t         t8_step3_adapt_forest (t8_forest_t forest);
  * via t8_forest_set_user_data before calling this function.
  * See t8_step3.cxx for more details.
  */
-int                 t8_step3_adapt_callback (t8_forest_t forest,
-                                             t8_forest_t forest_from,
-                                             t8_locidx_t which_tree,
-                                             t8_locidx_t lelement_id,
-                                             t8_eclass_scheme_c *ts,
-                                             const int is_family,
-                                             const int num_elements,
-                                             t8_element_t *elements[]);
+int
+t8_step3_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
+                         t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[]);
 
 T8_EXTERN_C_END ();
 

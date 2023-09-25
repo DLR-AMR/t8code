@@ -26,7 +26,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_geometrical.h>
 
 /**
  * This file tests the volume-computation of elements.
@@ -35,26 +36,29 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /* Construct a forest of a hypercube with volume 1. If the element are refined uniformly
  * all elements have volume 1/global_num_elements. */
-/* *INDENT-OFF* */
-class t8_forest_volume:public testing::TestWithParam <std::tuple<t8_eclass_t, int>> {
-    protected:
-        void SetUp () override{
-            eclass = std::get<0> (GetParam ());
-            level = std::get<1> (GetParam ());
-            scheme = t8_scheme_new_default_cxx ();
-            t8_cmesh_t cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
-            forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
-        }
-        void TearDown () override {
-            t8_forest_unref (&forest);
-        }
-    t8_forest_t forest;
-    t8_scheme_cxx * scheme;
-    t8_eclass_t eclass;
-    int level;
+
+class t8_forest_volume: public testing::TestWithParam<std::tuple<t8_eclass_t, int>> {
+ protected:
+  void
+  SetUp () override
+  {
+    eclass = std::get<0> (GetParam ());
+    level = std::get<1> (GetParam ());
+    scheme = t8_scheme_new_default_cxx ();
+    t8_cmesh_t cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
+    forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
+  }
+  void
+  TearDown () override
+  {
+    t8_forest_unref (&forest);
+  }
+  t8_forest_t forest;
+  t8_scheme_cxx *scheme;
+  t8_eclass_t eclass;
+  int level;
 };
 
-/* *INDENT-ON* */
 /**
  * Compute the volume of a pyramid descending of a root-pyramid with volume 1/3
  * Pyramids need a special handling of the control-volume computation, because
@@ -73,7 +77,7 @@ class t8_forest_volume:public testing::TestWithParam <std::tuple<t8_eclass_t, in
 double
 pyramid_control_volume (t8_dpyramid_t *pyra)
 {
-  double              control_volume = 1.0 / 3.0;
+  double control_volume = 1.0 / 3.0;
   /* Both pyramids and tets have 1/8th of the parents volume, if the shape does not switch. */
   control_volume /= 1 << ((pyra->pyramid.level) * 3);
   /* Ancestors switch the shape. A tetrahedron has a 1/16th of its parents volume. 
@@ -89,26 +93,19 @@ pyramid_control_volume (t8_dpyramid_t *pyra)
 TEST_P (t8_forest_volume, volume_check)
 {
   /* Compute the global number of elements */
-  const t8_gloidx_t   global_num_elements =
-    t8_forest_get_global_num_elements (forest);
+  const t8_gloidx_t global_num_elements = t8_forest_get_global_num_elements (forest);
   /* Vertices have a volume of 0. */
-  const double        control_volume =
-    (eclass == T8_ECLASS_VERTEX) ? 0.0 : (1.0 / global_num_elements);
+  const double control_volume = (eclass == T8_ECLASS_VERTEX) ? 0.0 : (1.0 / global_num_elements);
 
-  const t8_locidx_t   local_num_trees =
-    t8_forest_get_num_local_trees (forest);
+  const t8_locidx_t local_num_trees = t8_forest_get_num_local_trees (forest);
   /* Iterate over all elements. */
   for (t8_locidx_t itree = 0; itree < local_num_trees; itree++) {
-    const t8_locidx_t   tree_elements =
-      t8_forest_get_tree_num_elements (forest, itree);
+    const t8_locidx_t tree_elements = t8_forest_get_tree_num_elements (forest, itree);
     for (t8_locidx_t ielement = 0; ielement < tree_elements; ielement++) {
-      const t8_element_t *element =
-        t8_forest_get_element_in_tree (forest, itree, ielement);
-      const double        volume =
-        t8_forest_element_volume (forest, itree, element);
+      const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      const double volume = t8_forest_element_volume (forest, itree, element);
       if (eclass == T8_ECLASS_PYRAMID) {
-        const double        shape_volume =
-          pyramid_control_volume ((t8_dpyramid_t *) element);
+        const double shape_volume = pyramid_control_volume ((t8_dpyramid_t *) element);
         EXPECT_NEAR (volume, shape_volume, epsilon);
       }
       else {
@@ -119,6 +116,4 @@ TEST_P (t8_forest_volume, volume_check)
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_element_volume, t8_forest_volume,
-                          testing::Combine (testing::Range (T8_ECLASS_ZERO,
-                                                            T8_ECLASS_COUNT),
-                                            testing::Range (0, 4)));
+                          testing::Combine (testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT), testing::Range (0, 4)));
