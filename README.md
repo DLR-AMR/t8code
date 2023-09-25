@@ -94,7 +94,7 @@ Note that we strive to be a friendly, inclusive open-source
 community and ask all members of our community to adhere to our
 [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md). 
 
-To get in touch, [open an issue](https://github.com/trixi-framework/Trixi.jl/issues/new)
+To get in touch, [open an issue](https://github.com/DLR-AMR/t8code/issues/new)
 or write an email to one of the principal developers.
 
 ### Julia wrapper
