@@ -60,9 +60,10 @@ class forest_search: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
  */
 static int
 t8_test_search_all_fn (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, const int is_leaf,
-                       t8_element_array_t *leaf_elements, t8_locidx_t tree_leaf_index, void *query, size_t query_index)
+                       t8_element_array_t *leaf_elements, t8_locidx_t tree_leaf_index, void *queries,
+                       sc_array_t *query_indices, int *query_matches, const size_t num_active_queries)
 {
-  EXPECT_TRUE (query == NULL) << "Search callback must not be called with query argument.";
+  EXPECT_TRUE (queries == NULL) << "Search callback must not be called with query argument.";
 
   sc_array_t *matched_leafs = (sc_array_t *) t8_forest_get_user_data (forest);
   if (is_leaf) {
@@ -87,30 +88,37 @@ t8_test_search_all_fn (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element
 
 static int
 t8_test_search_query_all_fn (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, const int is_leaf,
-                             t8_element_array_t *leaf_elements, t8_locidx_t tree_leaf_index, void *query,
-                             size_t query_index)
+                             t8_element_array_t *leaf_elements, t8_locidx_t tree_leaf_index, void *queries,
+                             sc_array_t *query_indices, int *query_matches, const size_t num_active_queries)
 {
-  /* The query callback is always called with a query */
-  EXPECT_TRUE (query != NULL) << "query callback must be called with query argument.";
-  /* The query is an int with value 42 (see below) */
-  EXPECT_EQ (*(int *) query, 42) << "Wrong query argument passed to query callback.";
-  /* The query index gives the position of the query in the queries array
-   * of the calling search forest_search. Since there is only one query in the
-   * array in this test, the index must always be 0. */
-  EXPECT_EQ ((int) query_index, 0) << "Wrong query index passed to query callback.";
-  if (is_leaf) {
-    /* Test whether tree_leaf_index is actually the index of the element */
-    t8_locidx_t test_ltreeid;
-    t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
-    t8_eclass_scheme_c *ts;
-    ts = t8_forest_get_eclass_scheme (forest, tree_class);
+  EXPECT_TRUE (queries != NULL) << "query callback must be called with queries argument. ";
+  EXPECT_EQ (num_active_queries, (long unsigned int) 1) << "Wrong number of active queries passed to query callback.";
+  for (size_t iquery = 0; iquery < num_active_queries; iquery++) {
+    void *query = sc_array_index_int ((sc_array_t *) queries, iquery);
+    /* The query callback is always called with a query */
+    EXPECT_TRUE (query != NULL) << "query " << iquery << " is NULL.";
+    /* The query is an int with value 42 (see below) */
+    EXPECT_EQ (*(int *) query, 42) << "Wrong query argument passed to query callback.";
+    /* The query index gives the position of the query in the queries array
+    * of the calling search forest_search. Since there is only one query in the
+    * array in this test, the index must always be 0. */
+    //EXPECT_EQ ((int) query_index, 0) << "Wrong query index passed to query callback.";
+    if (is_leaf) {
+      /* Test whether tree_leaf_index is actually the index of the element */
+      t8_locidx_t test_ltreeid;
+      t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
+      t8_eclass_scheme_c *ts;
+      ts = t8_forest_get_eclass_scheme (forest, tree_class);
 
-    t8_locidx_t tree_offset = t8_forest_get_tree_element_offset (forest, ltreeid);
-    t8_element_t *test_element = t8_forest_get_element (forest, tree_offset + tree_leaf_index, &test_ltreeid);
-    EXPECT_FALSE (ts->t8_element_compare (element, test_element))
-      << "Element and index passed to search callback do not match.";
-    EXPECT_EQ (ltreeid, test_ltreeid) << "Tree mismatch in search.";
+      t8_locidx_t tree_offset = t8_forest_get_tree_element_offset (forest, ltreeid);
+      t8_element_t *test_element = t8_forest_get_element (forest, tree_offset + tree_leaf_index, &test_ltreeid);
+      EXPECT_FALSE (ts->t8_element_compare (element, test_element))
+        << "Element and index passed to search callback do not match.";
+      EXPECT_EQ (ltreeid, test_ltreeid) << "Tree mismatch in search.";
+    }
+    query_matches[iquery] = 1;
   }
+
   return 1;
 }
 
