@@ -117,7 +117,7 @@ typedef int (*t8_forest_adapt_t) (t8_forest_t forest, t8_forest_t forest_from, t
 
 /** Create a new forest with reference count one.
  * This forest needs to be specialized with the t8_forest_set_* calls.
- * Currently it is manatory to either call the functions \ref
+ * Currently, it is mandatory to either call the functions \ref
  * t8_forest_set_mpicomm, \ref t8_forest_set_cmesh, and \ref t8_forest_set_scheme,
  * or to call one of \ref t8_forest_set_copy, \ref t8_forest_set_adapt, or
  * \ref t8_forest_set_partition.  It is illegal to mix these calls, or to
@@ -305,8 +305,8 @@ t8_forest_get_user_function (t8_forest_t forest);
  *                          referencing \b set_from.
  *                          If NULL, a previously (or later) set forest will
  *                          be taken (\ref t8_forest_set_adapt, \ref t8_forest_set_balance).
- * \param [in]      set_for_coarsening CURRENTLY DISABLED. If true, then the partitions
- *                          are choose such that coarsening an element once is a process local
+ * \param [in]      set_for_coarsening If true, then the partitions
+ *                          are chosen such that coarsening an element once is a process local
  *                          operation.
  * \note This setting can be combined with \ref t8_forest_set_adapt and \ref
  * t8_forest_set_balance. The order in which these operations are executed is always

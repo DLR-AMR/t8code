@@ -399,6 +399,359 @@ t8_forest_partition_create_tree_offsets (t8_forest_t forest)
   }
 }
 
+/* Find the owner of a given element. */
+static int
+t8_forest_partition_owner_of_element (int mpisize, t8_gloidx_t gelement, const t8_gloidx_t *offset)
+{
+  /* Tree offsets are stored similar enough that we can exploit their function */
+  /* In the element offset logic, an element cannot be owned by more than one process,
+   * thus any owner must be the unique owner. */
+  return t8_offset_any_owner_of_tree (mpisize, gelement, offset);
+}
+
+/** Correct the calculated 'uniform' partition such that no element families are split by partition boundaries */
+static void
+t8_forest_partition_for_coarsening_correction (t8_forest_t forest)
+{
+  T8_ASSERT (forest->set_for_coarsening != 0);
+  T8_ASSERT (t8_forest_is_initialized (forest));
+  T8_ASSERT (forest->element_offsets != NULL);
+  T8_ASSERT (forest->set_from != NULL);
+  T8_ASSERT (forest->set_from->element_offsets != NULL);
+
+  t8_forest_t forest_from = forest->set_from;
+  int mpiret, mpirank;
+
+  t8_eclass_scheme_c *tree_scheme;
+  t8_element_t **elements;
+  t8_element_t *element;
+
+  t8_gloidx_t previous_first_global_elem_id, previous_local_elem_id;
+  t8_locidx_t count_local_elems, count_elems_in_tree, tree_local_element_id;
+  t8_locidx_t local_elem_start, local_elem_end;
+
+  size_t num_siblings;
+  int element_child_id;
+
+  t8_locidx_t flag_perform_correction = 1;
+  int flag_is_possibly_a_family, flag_family_not_process_local;
+
+  /* Get the rank within the communicator */
+  mpiret = sc_MPI_Comm_rank (forest_from->mpicomm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+
+  /* Initialize the shmem array for the partition-for-coarsening case holding the adjustments we need to perform */
+  t8_shmem_array_t partition_correction;
+  t8_shmem_array_init (&partition_correction, sizeof (t8_gloidx_t), forest_from->mpisize + 1, forest_from->mpicomm);
+
+  /* Initialize a shmem array for indicating if all ranks could decide whether the partition boundaries had be adjusted or not */
+  t8_shmem_array_t perform_correction_again;
+  t8_shmem_array_init (&perform_correction_again, sizeof (t8_locidx_t), forest_from->mpisize, forest_from->mpicomm);
+
+  /* A counter variable for the amount of correction on this rank */
+  int count_corrections;
+  /* Variable specifying the size of the corrections array */
+  int size_local_corrections = 2;
+
+  /* Create a local arra holding the correction for the partitions */
+  t8_gloidx_t *local_corrections = T8_ALLOC (t8_gloidx_t, size_local_corrections);
+
+  /* Eventually we need to perform more than one iteration per variable. However, this is rather unlikely, because it is only the case
+   * when the process holding the new boundary only has a view of elements covering the middle elements of possible family which seems to be a family */
+  while (flag_perform_correction != 0) {
+    /* Rest the flag for applying the correction */
+    flag_perform_correction = 0;
+
+    /* Reset the counter for the corrections */
+    count_corrections = 0;
+
+    /* Reset the flag that the possible family is not process-local */
+    flag_family_not_process_local = 0;
+
+    /* Since the first rank in the communicator will start with the element with the global index zero, we do not have to adjust this value
+     * Therefore, in order to be compliant to the element offsets array, we start on this rank zero with a correction value of zero */
+    if (mpirank == 0) {
+      /* Set a zero as correction value */
+      local_corrections[count_corrections] = 0;
+
+      /* Increment the counter for corrections */
+      ++count_corrections;
+    }
+
+    /* Get the newly calculated offset array */
+    const t8_gloidx_t *current_offsets = t8_shmem_array_get_gloidx_array (forest->element_offsets);
+
+    /* Check the current offsets for whether a family is divided between process boundaries or not.
+     * Therefore, we only check the inner boundaries. The new_first_element_id for the first rank is always zero and
+     * the element-offset-value at position 'mpisize' is also always fixed to the global number of elements */
+    for (int i = 1; i < forest_from->mpisize; ++i) {
+      /* If the partition offset is a 'real' element_id from the forest, we can search for the process containing the element_id
+       * Otherwise, we skip the correction and leave the partition boundary as it is */
+      if (current_offsets[i] < t8_forest_get_global_num_elements (forest_from)) {
+        /* Check to which process the first element of the new boundaries belongs to concerning the forest_from */
+        if (mpirank
+            == t8_forest_partition_owner_of_element (forest_from->mpisize, current_offsets[i],
+                                                     t8_shmem_array_get_gloidx_array (forest_from->element_offsets))) {
+          /* Reset the flag that the possible family is not process-local */
+          flag_family_not_process_local = 0;
+
+          /* Check if the correction array is capable of holding another correction, if not, we will reallocate the array */
+          if (count_corrections + 1 > size_local_corrections) {
+            /* Enlarge the capacity of the array by doubling it */
+            size_local_corrections *= 2;
+
+            /* Reallocate the array */
+            local_corrections = T8_REALLOC (local_corrections, t8_gloidx_t, size_local_corrections);
+          }
+
+          /** Check process-local if this element belongs to a family which would be ripped apart by the new boundaries **/
+          /* Get the global element offset from forest_from for this rank */
+          previous_first_global_elem_id = t8_shmem_array_get_gloidx (forest_from->element_offsets, mpirank);
+
+          /* Reset the count of local elements */
+          count_local_elems = 0;
+
+          /* Calculate the local element id of the boundary element */
+          previous_local_elem_id = current_offsets[i] - previous_first_global_elem_id;
+
+          T8_ASSERT (previous_local_elem_id >= 0
+                     && previous_local_elem_id < t8_forest_get_local_num_elements (forest_from));
+
+          /* Iterate through the trees in order to find the local tree holding the element */
+          for (t8_locidx_t t_id = 0; t_id < t8_forest_get_num_local_trees (forest_from); ++t_id) {
+            /* Add the count of elements */
+            count_local_elems += t8_forest_get_tree_num_elements (forest_from, t_id);
+
+            /* Check when we first reach the tree, which cannot hold the element anymore (because of the element's id) */
+            if (previous_local_elem_id < count_local_elems) {
+              /** We have reached the tree holding the element **/
+              /* Get the eclass of the tree */
+              tree_scheme = t8_forest_get_eclass_scheme (forest_from, t8_forest_get_tree_class (forest_from, t_id));
+
+              /* Get the amount of elements in the tree */
+              count_elems_in_tree = t8_forest_get_tree_num_elements (forest_from, t_id);
+
+              /* Adjust the local_element_id to the tree level (local element id within the tree) */
+              tree_local_element_id = previous_local_elem_id - (count_local_elems - count_elems_in_tree);
+
+              /* Get the actual element from the tree */
+              element = t8_forest_get_element_in_tree (forest_from, t_id, tree_local_element_id);
+
+              /* Get the number of possible siblings for this element */
+              num_siblings = tree_scheme->t8_element_num_siblings (element);
+
+              /* Get the child id of this partition-boundary element */
+              element_child_id = tree_scheme->t8_element_child_id (element);
+
+              /* If the child_id of the element is zero, it is the first element of a (possible) family. 
+               * This means that the elements on this process will possibly start with a new family of elements. 
+               * This ensures without further testing, that no (possible) family of elements which is present at this boundary is split between this and the preceding rank */
+              if (element_child_id == 0) {
+                /* In this case, we do not need to adjust the parallel partition. For the correction, we save a zero */
+                local_corrections[count_corrections] = 0;
+
+                /* Increment the counter of corrections */
+                ++count_corrections;
+              }
+              /* When it would be the last child of a possible family, the partition-boundary will be adjusted by +1 without actual performing a check if the possible family is in fact a 'real' family of elements */
+              else if ((size_t) element_child_id == num_siblings - 1) {
+                /* Adjust the boundary by +1. This ensures without any further testing that no family is ripped apart at this boundary */
+                local_corrections[count_corrections] = 1;
+
+                /* Increment the counter of corrections */
+                ++count_corrections;
+              }
+              /* If both conditions above are not true, our boundary will be in the middle of a possible family */
+              else {
+                /* Check if the possible family is completely process-local */
+                if (!(tree_local_element_id + num_siblings - element_child_id - 1 < (size_t) count_elems_in_tree
+                      && tree_local_element_id - element_child_id >= 0)) {
+                  /* If not, set the flag that not all elements of the possible family are process-local */
+                  flag_family_not_process_local = 1;
+                }
+
+                /* The local start of the possible family */
+                local_elem_start
+                  = (tree_local_element_id - element_child_id >= 0 ? tree_local_element_id - element_child_id : 0);
+
+                /* The local end of the possible family */
+                local_elem_end
+                  = (tree_local_element_id + num_siblings - 1 - element_child_id < (size_t) count_elems_in_tree
+                       ? tree_local_element_id + num_siblings - 1 - element_child_id
+                       : count_elems_in_tree - 1);
+
+                /* Now we build an element array of the family. The element siblings which are not process-local are going to be computed 
+               * Therefore, the 'is_family' function-call indicates whether the process-local view of the elements potentially form a family or not */
+                elements = T8_ALLOC (t8_element_t *, num_siblings);
+
+                /* Calculate the number of non-process-local elements before the actual partition-boundary element */
+                int num_non_local_elems_before_boundary = element_child_id - (tree_local_element_id - local_elem_start);
+
+                /* If there are eventually some non process-local elements belonging to the possible family, we will compute them (such that they comply to being a family) */
+                if (num_non_local_elems_before_boundary > 0) {
+                  /* Allocate and initialize new elements */
+                  tree_scheme->t8_element_new (num_non_local_elems_before_boundary, elements);
+
+                  /* Compute previous elements of the family which are not process-local */
+                  for (int prev_elem_ids = 0; prev_elem_ids < num_non_local_elems_before_boundary; ++prev_elem_ids) {
+                    /* Compute the sibling */
+                    tree_scheme->t8_element_sibling (element, prev_elem_ids, elements[prev_elem_ids]);
+                  }
+                }
+
+                /* Get all process local elements of the possible family */
+                for (t8_locidx_t lelem_id = local_elem_start, local_elem_counter = num_non_local_elems_before_boundary;
+                     lelem_id <= local_elem_end; ++lelem_id, ++local_elem_counter) {
+                  /* Get all process-local elements */
+                  elements[local_elem_counter] = t8_forest_get_element_in_tree (forest_from, t_id, lelem_id);
+                }
+
+                /* Calculate the number of non-process-local elements of the possible family after the partition-boundary */
+                int num_non_local_elems_after_boundary
+                  = ((int) num_siblings) - 1 - element_child_id - (local_elem_end - tree_local_element_id);
+
+                /* If there are succeeding elements (which are not process-local) of the potential family, they will be computed */
+                if (num_non_local_elems_after_boundary > 0) {
+                  /* Allocate and initialize new elements */
+                  tree_scheme->t8_element_new (num_non_local_elems_after_boundary,
+                                               &elements[num_siblings - num_non_local_elems_after_boundary]);
+
+                  /* Compute succeeding elements of the possible family which are not process-local */
+                  for (size_t post_elem_ids = num_siblings - num_non_local_elems_after_boundary;
+                       post_elem_ids < num_siblings; ++post_elem_ids) {
+                    /* Compute the sibling */
+                    tree_scheme->t8_element_sibling (element, post_elem_ids, elements[post_elem_ids]);
+                  }
+                }
+
+                /* Check if all process-local elements possibly belonging to this potential family, actually would form a family of elements */
+                flag_is_possibly_a_family = tree_scheme->t8_element_is_family (elements);
+
+                /* Check if the process-local are a (possible) family */
+                if (flag_is_possibly_a_family != 0) {
+                  /* If the family is not completely process-local, we set the flag for antoher round of corrections */
+                  if (flag_family_not_process_local != 0) {
+
+                    if (element_child_id <= ((int) num_siblings) - element_child_id) {
+                      /* In case the beginning of the possible family is nearer */
+                      /* We will set the new boundary to the first non-local element of this possible famils (towards the beginning of this family) */
+                      local_corrections[count_corrections] = (t8_gloidx_t) (num_non_local_elems_before_boundary > 0
+                                                                              ? num_non_local_elems_before_boundary - 1
+                                                                              : 0)
+                                                             - element_child_id;
+                    }
+                    else {
+                      /* In case the uniform boundary is nearer to the beginning of the next family */
+                      /* We will set the new boundary to the first non-local element of this possible family (towards the beginning of the next family) */
+                      local_corrections[count_corrections]
+                        = (t8_gloidx_t) ((int) num_siblings) - element_child_id - num_non_local_elems_after_boundary;
+                    }
+
+                    /* Indicate that antother rank has to check the adjusted partition boundary */
+                    flag_perform_correction = 1;
+                  }
+                  else {
+                    /* If the family was completely process-local */
+                    /* Set the local corections to the nearer end of the (possible) family (either to the beginning or the element after the (possible) family) */
+                    local_corrections[count_corrections]
+                      = (t8_gloidx_t) (element_child_id <= ((int) num_siblings) - element_child_id
+                                         ? -element_child_id
+                                         : ((int) num_siblings) - element_child_id);
+                  }
+
+                  /* Increment the counter of corrections */
+                  ++count_corrections;
+                }
+                else {
+                  /* If the process-local elements of the possible show, that this is not a 'real' family, we can keep the partition boundary as it is */
+                  /* Set a zero into the correction */
+                  local_corrections[count_corrections] = 0;
+
+                  /* Increment the counter of corrections */
+                  ++count_corrections;
+                }
+
+                /* Free the allocated elements which were not process-local */
+                if (flag_family_not_process_local != 0) {
+                  /* If some elements of the possible family preceding to 'element' had been created */
+                  if (num_non_local_elems_before_boundary > 0) {
+                    /* Deallocate the computed elements */
+                    tree_scheme->t8_element_destroy (num_non_local_elems_before_boundary, elements);
+                  }
+
+                  /* If some elements of the possible family succeeding to 'element' had been created */
+                  if (num_non_local_elems_after_boundary > 0) {
+                    /* Deallocate the computed elements */
+                    tree_scheme->t8_element_destroy (num_non_local_elems_after_boundary,
+                                                     &elements[num_siblings - num_non_local_elems_after_boundary]);
+                  }
+                }
+
+                /* Free the allocated element array */
+                T8_FREE (elements);
+              }
+
+              /* We break the for-loop since we have found the boundary element we were looking for */
+              break;
+            }
+          }
+        }
+      }
+      else {
+        /* Only the process with the corresponding boundary is allowed to set the correction */
+        if ((mpirank == i)) {
+          /* If the partition is not a 'real' element id. In case, for example if the last rank does not contain any elements */
+          local_corrections[count_corrections] = 0;
+          ++count_corrections;
+        }
+      }
+    }
+
+    /* Perform an Allgatherv in order to get the calculated corrections on each rank */
+    t8_shmem_array_allgatherv (local_corrections, count_corrections, T8_MPI_GLOIDX, partition_correction, T8_MPI_GLOIDX,
+                               forest_from->mpicomm);
+
+    /* Apply the correction to the current partition offsets */
+    if (t8_shmem_array_start_writing (forest->element_offsets)) {
+      /* Get the partition offset array */
+      t8_gloidx_t *element_offsets = t8_shmem_array_get_gloidx_array_for_writing (forest->element_offsets);
+
+      /* Get the partition correction array */
+      const t8_gloidx_t *offset_correction = t8_shmem_array_get_gloidx_array (partition_correction);
+
+      /* Apply the calculated correction to each partition boundary */
+      for (int i = 0; i < forest_from->mpisize; ++i) {
+        /* Adjust the element offsets */
+        element_offsets[i] += offset_correction[i];
+      }
+    }
+
+    /* End of writing to the element offsets */
+    t8_shmem_array_end_writing (forest->element_offsets);
+
+    /* Perform an Allgather operation on the flag_perform_correction in order to check if we need another iteration */
+    t8_shmem_array_allgather (&flag_perform_correction, 1, T8_MPI_LOCIDX, perform_correction_again, 1, T8_MPI_LOCIDX);
+
+    /* Reset the flag */
+    flag_perform_correction = 0;
+
+    /* Get a pointer to the array holding the flags */
+    t8_locidx_t *perform_correction_ptr = (t8_locidx_t *) t8_shmem_array_get_array (perform_correction_again);
+
+    /* Check if another iteration has to be performed by adding up the flags */
+    for (int fi = 0; fi < forest_from->mpisize; ++fi) {
+      flag_perform_correction += perform_correction_ptr[fi];
+    }
+  }
+
+  /* Free the allocated array of local corrections */
+  T8_FREE (local_corrections);
+
+  /* Free the allocated shared memory arrays */
+  t8_shmem_array_destroy (&partition_correction);
+  t8_shmem_array_destroy (&perform_correction_again);
+}
+
 /* Calculate the new element_offset for forest from
  * the element in forest->set_from assuming a partition without element weights */
 static void
@@ -421,31 +774,33 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
   t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
   /* Initialize the shmem array */
   t8_shmem_array_init (&forest->element_offsets, sizeof (t8_gloidx_t), forest->mpisize + 1, comm);
+  /* Get the size of the communicator */
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
 
+  /* Enable writing for the shared memory array */
   if (t8_shmem_array_start_writing (forest->element_offsets)) {
+    /* Get a t8_gloidx_t pointer to the array */
     t8_gloidx_t *element_offsets = t8_shmem_array_get_gloidx_array_for_writing (forest->element_offsets);
+    /* Iterate over all ranks within the communicator in order to calculate an equal partition of the elements */
     for (i = 0; i < mpisize; i++) {
       /* Calculate the first element index for each process. We convert to doubles to prevent overflow */
       new_first_element_id = (((double) i * (long double) forest_from->global_num_elements) / (double) mpisize);
       T8_ASSERT (0 <= new_first_element_id && new_first_element_id < forest_from->global_num_elements);
+      /* Save the calculated global index of the first local element for this process */
       element_offsets[i] = new_first_element_id;
     }
+    /* Save the number of global elements as well within the element offset table as the last entry */
     element_offsets[forest->mpisize] = forest->global_num_elements;
   }
+  /* Disable the writing to the array */
   t8_shmem_array_end_writing (forest->element_offsets);
-}
 
-/* Find the owner of a given element.
- */
-static int
-t8_forest_partition_owner_of_element (int mpisize, t8_gloidx_t gelement, const t8_gloidx_t *offset)
-{
-  /* Tree offsets are stored similar enough that we can exploit their function */
-  /* In the element offset logic, an element cannot be owned by more than one
-   * process, thus any owner must be the unique owner. */
-  return t8_offset_any_owner_of_tree (mpisize, gelement, offset);
+  /* In case the partition-for-coarsening flag is set */
+  if (forest->set_for_coarsening != 0) {
+    /* Correct the equal partition between the ranks if a family of elements is split across process boundaries */
+    t8_forest_partition_for_coarsening_correction (forest);
+  }
 }
 
 /* Compute the first and last rank that we need to receive elements from */
@@ -1156,7 +1511,7 @@ t8_forest_partition (t8_forest_t forest)
   t8_forest_t forest_from;
   int create_offset_from = 0;
 
-  t8_global_productionf ("Enter  forest partition.\n");
+  t8_global_productionf ("Enter forest partition.\n");
   t8_log_indent_push ();
   T8_ASSERT (t8_forest_is_initialized (forest));
   forest_from = forest->set_from;
