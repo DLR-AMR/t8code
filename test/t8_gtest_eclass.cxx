@@ -77,4 +77,32 @@ TEST_P (gtest_eclass, t8_to_vtk_corner_numbers)
   }
 }
 
+TEST (gtest_eclass, eclass_order)
+{
+  /* 2D order of eclasses */
+  EXPECT_EQ (t8_eclass_compare (T8_ECLASS_TRIANGLE, T8_ECLASS_QUAD), -1);
+  EXPECT_EQ (t8_eclass_compare (T8_ECLASS_QUAD, T8_ECLASS_TRIANGLE), 1);
+
+  /* 3d order of eclasses */
+  /* TET < HEX < PRISM < PYRAMID */
+  EXPECT_EQ (t8_eclass_compare (T8_ECLASS_TET, T8_ECLASS_HEX), -1);
+  EXPECT_EQ (t8_eclass_compare (T8_ECLASS_TET, T8_ECLASS_PRISM), -1);
+  EXPECT_EQ (t8_eclass_compare (T8_ECLASS_TET, T8_ECLASS_PYRAMID), -1);
+
+  EXPECT_EQ (t8_eclass_compare (T8_ECLASS_HEX, T8_ECLASS_PRISM), -1);
+  EXPECT_EQ (t8_eclass_compare (T8_ECLASS_HEX, T8_ECLASS_PYRAMID), -1);
+
+  EXPECT_EQ (t8_eclass_compare (T8_ECLASS_PRISM, T8_ECLASS_PYRAMID), -1);
+
+  /* PYRAMID > PRISM > HEX > TET */
+  EXPECT_EQ (t8_eclass_compare (T8_ECLASS_PYRAMID, T8_ECLASS_PRISM), 1);
+  EXPECT_EQ (t8_eclass_compare (T8_ECLASS_PYRAMID, T8_ECLASS_HEX), 1);
+  EXPECT_EQ (t8_eclass_compare (T8_ECLASS_PYRAMID, T8_ECLASS_TET), 1);
+
+  EXPECT_EQ (t8_eclass_compare (T8_ECLASS_PRISM, T8_ECLASS_HEX), 1);
+  EXPECT_EQ (t8_eclass_compare (T8_ECLASS_PRISM, T8_ECLASS_TET), 1);
+
+  EXPECT_EQ (t8_eclass_compare (T8_ECLASS_HEX, T8_ECLASS_TET), 1);
+}
+
 INSTANTIATE_TEST_SUITE_P (t8_gtest_eclass, gtest_eclass, testing::Range ((int) T8_ECLASS_ZERO, (int) T8_ECLASS_COUNT));
