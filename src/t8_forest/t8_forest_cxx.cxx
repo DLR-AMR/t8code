@@ -446,7 +446,6 @@ t8_forest_element_diam (t8_forest_t forest, t8_locidx_t ltreeid, const t8_elemen
 void
 t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, double *coordinates)
 {
-  double corner_coords[3];
   t8_eclass_scheme_c *ts;
 
   T8_ASSERT (t8_forest_is_committed (forest));
@@ -457,11 +456,11 @@ t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const t8_el
   T8_ASSERT (ts->t8_element_is_valid (element));
 
   /* Initialize the centroid with (0, 0, 0). */
-  memset (coordinates, 0, 3 * sizeof (double));
   /* Get the number of corners of the element. */
-  int num_corners = ts->t8_element_num_corners (element);
+  const int num_corners = ts->t8_element_num_corners (element);
   for (int icorner = 0; icorner < num_corners; icorner++) {
     /* For each corner, add its coordinates to the centroids coordinates. */
+    double corner_coords[3] = { 0.0 };
     t8_forest_element_coordinate (forest, ltreeid, element, icorner, corner_coords);
     /* coordinates = coordinates + corner_coords */
     t8_vec_axpy (corner_coords, coordinates, 1);
