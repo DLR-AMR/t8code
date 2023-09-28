@@ -36,19 +36,21 @@ t8_geometry_squared_disk::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreei
   double s[3]; /* Radial vector for the corrected coordinates. */
   double p[3]; /* Vector on the plane resp. quad. */
 
-  const double x = ref_coords[0];
-  const double y = ref_coords[1];
-
   t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
   double *tree_vertices = t8_cmesh_get_tree_vertices (cmesh, ltreeid);
 
-  t8_geom_linear_interpolation (ref_coords, tree_vertices, 3, 2, p);
-
   /* Center square. */
   if (gtreeid == 0) {
-    out_coords[0] = p[0];
-    out_coords[1] = p[1];
-    out_coords[2] = 0.0;
+
+    for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
+      size_t offset = 3 * i_coord;
+
+      t8_geom_linear_interpolation (ref_coords + offset, tree_vertices, 3, 2, p);
+
+      out_coords[offset + 0] = p[0];
+      out_coords[offset + 1] = p[1];
+      out_coords[offset + 2] = 0.0;
+    }
 
     return;
   }
@@ -75,31 +77,39 @@ t8_geometry_squared_disk::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreei
     r[1] = r[1] / norm;
   }
 
-  {
-    double corr_ref_coords[3];
+  for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
+    size_t offset = 3 * i_coord;
 
-    /* Correction in order to rectify elements near the corners. */
-    corr_ref_coords[0] = tan (0.5 * M_PI * (x - 0.5)) * 0.5 + 0.5;
-    corr_ref_coords[1] = y;
-    corr_ref_coords[2] = 0.0;
+    const double x = ref_coords[offset + 0];
+    const double y = ref_coords[offset + 1];
 
-    /* Compute and normalize vector `s`. */
-    t8_geom_linear_interpolation (corr_ref_coords, tree_vertices, 3, 2, s);
+    {
+      double corr_ref_coords[3];
 
-    const double norm = sqrt (s[0] * s[0] + s[1] * s[1]);
-    s[0] = s[0] / norm;
-    s[1] = s[1] / norm;
-  }
+      /* Correction in order to rectify elements near the corners. */
+      corr_ref_coords[0] = tan (0.5 * M_PI * (x - 0.5)) * 0.5 + 0.5;
+      corr_ref_coords[1] = y;
+      corr_ref_coords[2] = 0.0;
 
-  {
+      /* Compute and normalize vector `s`. */
+      t8_geom_linear_interpolation (corr_ref_coords, tree_vertices, 3, 2, s);
+
+      const double norm = sqrt (s[0] * s[0] + s[1] * s[1]);
+      s[0] = s[0] / norm;
+      s[1] = s[1] / norm;
+    }
+
+    t8_geom_linear_interpolation (ref_coords + offset, tree_vertices, 3, 2, p);
+
+    /* Compute intersection of line with a plane. */
     const double out_radius = (p[0] * n[0] + p[1] * n[1]) / (r[0] * n[0] + r[1] * n[1]);
 
     const double blend = y * out_radius; /* y \in [0,1] */
     const double dnelb = 1.0 - y;
 
-    out_coords[0] = dnelb * p[0] + blend * s[0];
-    out_coords[1] = dnelb * p[1] + blend * s[1];
-    out_coords[2] = 0.0;
+    out_coords[offset + 0] = dnelb * p[0] + blend * s[0];
+    out_coords[offset + 1] = dnelb * p[1] + blend * s[1];
+    out_coords[offset + 2] = 0.0;
   }
 }
 

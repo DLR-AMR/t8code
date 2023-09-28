@@ -222,7 +222,7 @@ t8_eclass_compare (t8_eclass_t eclass1, t8_eclass_t eclass2)
       return eclass2 == T8_ECLASS_PYRAMID ? -1 : 1;
     default:
       T8_ASSERT (eclass1 == T8_ECLASS_PYRAMID);
-      return -1;
+      return 1;
     }
   }
 }
