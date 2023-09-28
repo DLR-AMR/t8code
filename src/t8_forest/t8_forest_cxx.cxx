@@ -456,11 +456,11 @@ t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const t8_el
   T8_ASSERT (ts->t8_element_is_valid (element));
 
   /* Initialize the centroid with (0, 0, 0). */
+  double corner_coords[3] = { 0.0 };
   /* Get the number of corners of the element. */
   const int num_corners = ts->t8_element_num_corners (element);
   for (int icorner = 0; icorner < num_corners; icorner++) {
     /* For each corner, add its coordinates to the centroids coordinates. */
-    double corner_coords[3] = { 0.0 };
     t8_forest_element_coordinate (forest, ltreeid, element, icorner, corner_coords);
     /* coordinates = coordinates + corner_coords */
     t8_vec_axpy (corner_coords, coordinates, 1);
