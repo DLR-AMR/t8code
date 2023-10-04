@@ -196,7 +196,7 @@ t8_default_scheme_line_c::t8_element_first_descendant_face (const t8_element_t *
   T8_ASSERT (0 <= face && face < T8_DLINE_FACES);
 
   T8_ASSERT (0 <= level && level <= T8_DLINE_MAXLEVEL);
-  /* The first descandant at the face is the first desc of elem if face = 0.
+  /* The first descendant at the face is the first desc of elem if face = 0.
    * If face = 1 it is the last desc of elem. */
   if (face == 0) {
     t8_dline_first_descendant ((const t8_dline_t *) elem, (t8_dline_t *) first_desc, level);
