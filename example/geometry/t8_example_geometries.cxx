@@ -833,7 +833,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
       vertices[i * 24 + 4] = sin ((i + 1) * 2 * M_PI / num) * radius_inner;
       vertices[i * 24 + 5] = 0;
       vertices[i * 24 + 6] = cos (i * 2 * M_PI / num) * radius_outer;
-      vertices[i * 24 + 7] = sin ((i) *2 * M_PI / num) * radius_outer;
+      vertices[i * 24 + 7] = sin ((i) * 2 * M_PI / num) * radius_outer;
       vertices[i * 24 + 8] = 0;
       vertices[i * 24 + 9] = cos (i * 2 * M_PI / num) * radius_inner;
       vertices[i * 24 + 10] = sin (i * 2 * M_PI / num) * radius_inner;
@@ -845,7 +845,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
       vertices[i * 24 + 16] = sin ((i + 1) * 2 * M_PI / num) * radius_inner;
       vertices[i * 24 + 17] = 1;
       vertices[i * 24 + 18] = cos (i * 2 * M_PI / num) * radius_outer;
-      vertices[i * 24 + 19] = sin ((i) *2 * M_PI / num) * radius_outer;
+      vertices[i * 24 + 19] = sin ((i) * 2 * M_PI / num) * radius_outer;
       vertices[i * 24 + 20] = 1;
       vertices[i * 24 + 21] = cos (i * 2 * M_PI / num) * radius_inner;
       vertices[i * 24 + 22] = sin (i * 2 * M_PI / num) * radius_inner;

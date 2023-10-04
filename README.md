@@ -85,7 +85,19 @@ and then find the generated files in the `/doc` subfolder.
 
 You can also find the documentation of our releases on the [t8code website](https://dlr-amr.github.io/t8code/pages/documentation.html).
 
-### Julia Wrapper
+### License and contributing
+t8code is licensed under GPLv2 (see [COPYING](COPYING)). We appreciate
+contributions from the community and refer to [CONTRIBUTING.md](CONTRIBUTING.md)
+for more details.
+
+Note that we strive to be a friendly, inclusive open-source
+community and ask all members of our community to adhere to our
+[`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md). 
+
+To get in touch, [open an issue](https://github.com/DLR-AMR/t8code/issues/new)
+or write an email to one of the principal developers.
+
+### Julia wrapper
 
 We offer [T8code.jl](https://github.com/DLR-AMR/T8code.jl) - an official
 [Julia](https://julialang.org/) package allowing to call t8code routines from
