@@ -153,7 +153,6 @@ t8_forest_replace (t8_forest_t forest_old,
   {
     int level;
     for (t8_locidx_t i = 0; i < num_incoming; i++) {
-      // TODO id wird falsch berechnet
       int id = (old_id * data_old->max_children ) + i;
       t8_element_t *elem = t8_forest_get_element_in_tree(forest_new, which_tree, first_incoming + i);
       level = t8_element_level( ts, elem );
@@ -161,7 +160,6 @@ t8_forest_replace (t8_forest_t forest_old,
       //add new values to levelgraph
       t8_level_graph_element_data *elem_data;
       elem_data = T8_ALLOC (t8_level_graph_element_data, 1);
-      //TODO: Set id
       elem_data->element = elem;
       elem_data->children_id = NULL;
       elem_data->parent_id = old_id;
@@ -170,7 +168,6 @@ t8_forest_replace (t8_forest_t forest_old,
       ids[ t8_forest_get_tree_element_offset (forest_new, which_tree) + first_incoming + i] = id;
       children_id[i] = id;
       (levels[level+1])[0];
-      
 
       levels[level]->insert( std::make_pair(id, elem_data) );
     }
@@ -182,9 +179,12 @@ t8_forest_replace (t8_forest_t forest_old,
     int level = t8_element_level( ts, elem );
     int new_id = ( old_id - ( old_id % max_children ) ) / max_children;
     
-    ids[first_incoming] = new_id;
+    ids[t8_forest_get_tree_element_offset (forest_new, which_tree) + first_incoming] = new_id;
   }
-  /*else if( refine == 0 ) do nothing */
+  else /*if( refine == 0 ) */
+  {
+    ids[t8_forest_get_tree_element_offset (forest_new, which_tree) + first_incoming] = old_id;
+  }
 
   //set user data
   level_graph_data->level_graph = levels;
