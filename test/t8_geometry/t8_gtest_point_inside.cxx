@@ -37,15 +37,15 @@
 =======
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx>
 #include <t8_forest/t8_forest_vtk.h>
->>>>>>> c4633209... Use the geometry as an argument to pass to hypercube_pad
+  >>>>>>> c4633209... Use the geometry as an argument to pass to hypercube_pad
 
-/* In this test we define a triangle in the x-y plane
+  /* In this test we define a triangle in the x-y plane
  * and a point that lies in a triangle that is parallel
  * to this triangle on the z-axis.
  * The point must be correctly identified as lying outside
  * of the triangle.
  */
-TEST (t8_point_inside, test_point_inside_specific_triangle)
+  TEST (t8_point_inside, test_point_inside_specific_triangle)
 {
   t8_cmesh_t cmesh;
 
