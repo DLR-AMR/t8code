@@ -54,7 +54,6 @@ t8_geometry_linear_axis_aligned_new (int dim);
 void
 t8_geometry_linear_axis_aligned_destroy (t8_geometry_c **geom);
 
-#if T8_ENABLE_DEBUG
 /** Query whether a given geometry is \ref t8_geometry_linear_axis_aligned.
  * \param [in] geometry   A geometry.
  * \return     True (non-zero) if and only if the geometry is of 
@@ -63,7 +62,6 @@ t8_geometry_linear_axis_aligned_destroy (t8_geometry_c **geom);
  */
 int
 t8_geom_is_linear_axis_aligned (const t8_geometry_c *geometry);
-#endif
 
 T8_EXTERN_C_END ();
 
