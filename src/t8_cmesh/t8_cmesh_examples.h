@@ -30,6 +30,7 @@
 #include <t8_cmesh.h>
 #include <p4est_connectivity.h>
 #include <p8est_connectivity.h>
+#include <t8_cmesh/t8_cmesh_geometry.h>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -106,8 +107,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
  *                          Only required if \a eclass is 2D or 3D.
  * \param [in] polygons_z   The number of polygons along the z-axis.
  *                          Only required if \a eclass is 3D.
- * \param [in] use_axis_aligned_geom  Flag if cmesh uses the axis aligned_geometry. Only available for 
- *                                    T8_ECLASS_LINE/QUAD/HEX
+ * \param [in] geometry     The geometry to use. If the geometry is axis_aligned only two points per tree are stored
  * \return                  A committed t8_cmesh structure with 
  *                          \a polygons_x * \a polygons_z * \a polygons_y many 
  *                          sub-hypercubes of class \a eclass.
@@ -134,7 +134,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
  */
 t8_cmesh_t
 t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass, sc_MPI_Comm comm, const double *boundary, t8_locidx_t polygons_x,
-                            t8_locidx_t polygons_y, t8_locidx_t polygons_z, const int use_axis_aligned_geom);
+                            t8_locidx_t polygons_y, t8_locidx_t polygons_z, const t8_geometry_c *geometry);
 
 /** Hybercube with 6 Tets, 6 Prism, 4 Hex. 
  * \param [in]  comm            The mpi communicator to be used.
