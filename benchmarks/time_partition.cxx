@@ -122,7 +122,7 @@ t8_time_brick_refine_half (int x, int y, int x_periodix, int y_periodic,
 
 #if 1
 /* add x*mpirank to all of the x-coordinates of a tree in cmesh.
- * This is usefull to separate the disjoint parts visually. */
+ * This is useful to separate the disjoint parts visually. */
 void
 t8_time_cmesh_translate_coordinates (t8_cmesh_t cmesh, double x, sc_MPI_Comm comm)
 {
