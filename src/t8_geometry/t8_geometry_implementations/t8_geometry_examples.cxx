@@ -373,34 +373,38 @@ t8_geometry_quadrangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh
     r[2] = r[2] / norm;
   }
 
-  {
-    double corr_ref_coords[3]; /* Corrected reference coordinates. */
+  for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
+    const size_t offset = 3 * i_coord;
 
-    const double x = ref_coords[0];
-    const double y = ref_coords[1];
-    const double z = ref_coords[2];
+    {
+      double corr_ref_coords[3]; /* Corrected reference coordinates. */
 
-    /* Correction in order to rectify elements near the corners. */
-    corr_ref_coords[0] = tan (0.5 * M_PI * (x - 0.5)) * 0.5 + 0.5;
-    corr_ref_coords[1] = tan (0.5 * M_PI * (y - 0.5)) * 0.5 + 0.5;
-    corr_ref_coords[2] = z;
+      const double x = ref_coords[offset + 0];
+      const double y = ref_coords[offset + 1];
+      const double z = ref_coords[offset + 2];
 
-    t8_geom_linear_interpolation (corr_ref_coords, tree_vertices, 3, 2, p);
+      /* Correction in order to rectify elements near the corners. */
+      corr_ref_coords[0] = tan (0.5 * M_PI * (x - 0.5)) * 0.5 + 0.5;
+      corr_ref_coords[1] = tan (0.5 * M_PI * (y - 0.5)) * 0.5 + 0.5;
+      corr_ref_coords[2] = z;
+
+      t8_geom_linear_interpolation (corr_ref_coords, tree_vertices, 3, 2, p);
+    }
+
+    const double R = (p[0] * n[0] + p[1] * n[1] + p[2] * n[2]) / (r[0] * n[0] + r[1] * n[1] + r[2] * n[2]);
+
+    {
+      /* Normalize vector `p`. */
+      const double norm = sqrt (p[0] * p[0] + p[1] * p[1] + p[2] * p[2]);
+      p[0] = p[0] / norm;
+      p[1] = p[1] / norm;
+      p[2] = p[2] / norm;
+    }
+
+    out_coords[offset + 0] = R * p[0];
+    out_coords[offset + 1] = R * p[1];
+    out_coords[offset + 2] = R * p[2];
   }
-
-  const double R = (p[0] * n[0] + p[1] * n[1] + p[2] * n[2]) / (r[0] * n[0] + r[1] * n[1] + r[2] * n[2]);
-
-  {
-    /* Normalize vector `p`. */
-    const double norm = sqrt (p[0] * p[0] + p[1] * p[1] + p[2] * p[2]);
-    p[0] = p[0] / norm;
-    p[1] = p[1] / norm;
-    p[2] = p[2] / norm;
-  }
-
-  out_coords[0] = R * p[0];
-  out_coords[1] = R * p[1];
-  out_coords[2] = R * p[2];
 }
 
 T8_EXTERN_C_BEGIN ();
