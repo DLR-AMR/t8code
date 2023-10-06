@@ -143,6 +143,26 @@ main (int argc, char **argv)
     t8_forest_unref (&forest);
   }
 
+  {
+    const char *prefix_cmesh = "t8_quadrangulated_spherical_surface_cmesh";
+    const char *prefix_forest = "t8_quadrangulated_spherical_surface_forest";
+
+    const int uniform_level = 5;
+    const double radius = 1.0;
+
+    t8_cmesh_t cmesh = t8_cmesh_new_quadrangulated_spherical_surface (radius, comm);
+
+    t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), uniform_level, 0, comm);
+
+    t8_cmesh_vtk_write_file (cmesh, prefix_cmesh, 1.0);
+    t8_global_productionf ("Wrote %s.\n", prefix_cmesh);
+
+    t8_write_forest_to_vtu (forest, prefix_forest);
+    t8_global_productionf ("Wrote %s.\n\n", prefix_forest);
+
+    t8_forest_unref (&forest);
+  }
+
   /* More examples will be added soon. */
 
   t8_global_productionf ("Done!\n");
