@@ -56,6 +56,12 @@ t8_geometry_triangulated_spherical_surface_new ();
 t8_geometry_c *
 t8_geometry_quadrangulated_spherical_surface_new ();
 
+/** Create a new cubed_spherical_shell geometry.
+ * \return          A pointer to an allocated geometry struct.
+ */
+t8_geometry_c *
+t8_geometry_cubed_spherical_shell_new ();
+
 T8_EXTERN_C_END ();
 
 #endif /* T8_GEOMETRY_EXAMPLE_H */
