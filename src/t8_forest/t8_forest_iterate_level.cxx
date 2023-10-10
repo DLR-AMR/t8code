@@ -330,13 +330,17 @@ new_level_graph( t8_cmesh_t cmesh, t8_forest_t forest, int level, t8_scheme_cxx_
     T8_FREE( adapt_level_graph_data );
   }
 
-  /*for( int ilevel = level; ilevel >= 0; ilevel-- )
+  for( int ilevel = level; ilevel >= 0; ilevel-- )
   {
     int i = (levels[ilevel])->size();
     printf("Level %i size: %i\n", ilevel, i );
     for( auto x : *levels[ilevel] )
       printf( "%i ,", x.first );
-  }*/
+  }
+
+  t8_adapt_data_level_graph *tmp = ((struct t8_adapt_data_level_graph *) t8_forest_get_user_data (forest_adapt));
+  tmp->level_graph = levels;
+
   //set user_data->level_graph
   t8_forest_unref( &forest_adapt );
   return forest;
