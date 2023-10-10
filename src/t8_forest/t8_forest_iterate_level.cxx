@@ -31,8 +31,6 @@ typedef struct t8_level_graph_element_data
 {
   t8_element_t* element;
   int* ids_existing_elements;
-  int parent_id;
-  int *children_id;
   void *data;
 
 } t8_level_graph_element_data;
@@ -87,9 +85,18 @@ t8_forest_new_levelgraph_replace (t8_forest_t forest_old,
   t8_adapt_data_level_graph *old_level_graph = (struct t8_adapt_data_level_graph *) t8_forest_get_user_data (forest_old);
   t8_adapt_data_level_graph *level_graph_data = (struct t8_adapt_data_level_graph *) t8_forest_get_user_data (forest_new);
 
+  //printf( "id_old_offset: %i\n", id_old_offset );
+  //printf( "old_id: %i\n", old_level_graph->ids_forest[id_old_offset] );
   int id_old = old_level_graph->ids_forest[id_old_offset];
   int *new_ids = level_graph_data->ids_forest;
   int level;
+
+      /*for( int ilev = 0; ilev <= 4; ilev++ )
+      {
+        printf("\n \n 4 Level %i\n", ilev );
+        for( auto x : ( *(((struct t8_adapt_data_level_graph *) t8_forest_get_user_data (forest_old))->level_graph)[ilev]) )
+          printf( "%i ,", x.first );
+      }*/
 
   std::unordered_map<int, t8_level_graph_element_data* > **levels = ((struct t8_adapt_data_level_graph *) t8_forest_get_user_data (forest_old))->level_graph;
   if( refine == 1 )
@@ -98,20 +105,23 @@ t8_forest_new_levelgraph_replace (t8_forest_t forest_old,
     int max_children = 10;
     int num_siblings = get_number_siblings( t8_forest_get_eclass( forest_old, which_tree ) );
     
+    //printf("--------------------------------------------------------------");
     for( int ielem = 0; ielem < num_incoming; ielem++ )
     {
       t8_element_t *elem_new = t8_forest_get_element_in_tree(forest_new, which_tree, first_incoming + ielem);
       level = t8_element_level( ts, elem_new );
+      //printf("Level: %i\n", level);
 
       t8_level_graph_element_data *elem_data;
       elem_data = T8_ALLOC (t8_level_graph_element_data, 1);
       elem_data->element = elem_new;
-      elem_data->parent_id = NULL;
 
       int id_new = id_old * max_children + ielem;
+      //printf( "id_new: %i\n", id_new );
+      //printf( "old_id: %i\n", id_old );
       levels[level]->insert( std::make_pair(id_new, elem_data) );
 
-      new_ids[id_new_offset + ielem] = id_new;  
+      new_ids[id_new_offset + ielem] = id_new;
     }
   }
 
@@ -161,12 +171,9 @@ t8_forest_replace (t8_forest_t forest_old,
       t8_level_graph_element_data *elem_data;
       elem_data = T8_ALLOC (t8_level_graph_element_data, 1);
       elem_data->element = elem;
-      elem_data->children_id = NULL;
-      elem_data->parent_id = old_id;
       
       //set new id array
       ids[ t8_forest_get_tree_element_offset (forest_new, which_tree) + first_incoming + i] = id;
-      children_id[i] = id;
       (levels[level+1])[0];
 
       levels[level]->insert( std::make_pair(id, elem_data) );
@@ -242,8 +249,6 @@ new_level_graph( t8_cmesh_t cmesh, t8_forest_t forest, int level, t8_scheme_cxx_
     {
       t8_level_graph_element_data *elem_data = T8_ALLOC (t8_level_graph_element_data, 1);;
       elem_data->element = t8_forest_get_element_in_tree( forest, itree, ielem_tree );
-      elem_data->parent_id = NULL;
-      elem_data->children_id = NULL;
 
       levels[0]->insert( std::make_pair( ielem, elem_data ) );
       ids[count++] = ielem;
@@ -257,7 +262,6 @@ new_level_graph( t8_cmesh_t cmesh, t8_forest_t forest, int level, t8_scheme_cxx_
 
   t8_forest_t forest_adapt;
   t8_forest_t forest_adapt2;
-  t8_forest_t forest_adapt3;
 
   if( level > 0 )
   {
@@ -271,41 +275,61 @@ new_level_graph( t8_cmesh_t cmesh, t8_forest_t forest, int level, t8_scheme_cxx_
     t8_forest_set_user_data( forest_adapt, level_graph_data );
 
     t8_forest_iterate_replace (forest_adapt, forest, t8_forest_new_levelgraph_replace);
+    int *adapt_ids;
+    t8_adapt_data_level_graph *adapt_level_graph_data;
 
-    /*for( int ilevel=1; ilevel<level; ilevel++ )
+    for( int ilevel=1; ilevel<level; ilevel++ )
     {
+      /*for( int ilev = 0; ilev <= 3; ilev++ )
+      {
+        int i = (levels[ilevel])->size();
+        printf("\n \n 1 Level %i\n", ilev );
+        for( auto x : ( *(((struct t8_adapt_data_level_graph *) t8_forest_get_user_data (forest_adapt))->level_graph)[ilev]) )
+          printf( "%i ,", x.first );
+      }*/
+
+      /*printf( "\n ids_forest 1:\n" );
+      for( int j=0; j<64; j++ )
+        printf( "%i, ", ((struct t8_adapt_data_level_graph *) t8_forest_get_user_data (forest_adapt))->ids_forest[j] );*/
+
       t8_forest_ref (forest_adapt);
       forest_adapt2 = t8_adapt_forest (forest_adapt, t8_new_levelgraph_adapt_callback, 0, 0, NULL);
-      t8_adapt_data_level_graph *adapt_level_graph_data = T8_ALLOC (t8_adapt_data_level_graph, 1);
-      int adapt_ids[t8_forest_get_global_num_elements( forest_adapt2 )];
-      adapt_level_graph_data->ids_forest = adapt_ids;
-      t8_forest_set_user_data( forest_adapt2, adapt_level_graph_data );
-
-      t8_forest_iterate_replace (forest_adapt2, forest_adapt, t8_forest_new_levelgraph_replace2);
-      
-      //t8_forest_ref (forest_adapt2);
-      //t8_forest_set_copy(forest_adapt, forest_adapt2);
-      forest_adapt = forest_adapt2;
-    }*/
-
-    t8_forest_ref (forest_adapt);
-      forest_adapt2 = t8_adapt_forest (forest_adapt, t8_new_levelgraph_adapt_callback, 0, 0, NULL);
-      t8_adapt_data_level_graph *adapt_level_graph_data = T8_ALLOC (t8_adapt_data_level_graph, 1);
-      int adapt_ids[t8_forest_get_global_num_elements( forest_adapt2 )];
+      adapt_level_graph_data = T8_ALLOC (t8_adapt_data_level_graph, 1);
+      adapt_ids = T8_ALLOC( int, t8_forest_get_global_num_elements( forest_adapt2 ) );
       adapt_level_graph_data->ids_forest = adapt_ids;
       t8_forest_set_user_data( forest_adapt2, adapt_level_graph_data );
 
       t8_forest_iterate_replace (forest_adapt2, forest_adapt, t8_forest_new_levelgraph_replace);
-    
-      t8_forest_ref (forest_adapt2);
-      forest_adapt3 = t8_adapt_forest (forest_adapt2, t8_new_levelgraph_adapt_callback, 0, 0, NULL);
-      t8_adapt_data_level_graph *adapt_level_graph_data2 = T8_ALLOC (t8_adapt_data_level_graph, 1);
-      int adapt_ids2[t8_forest_get_global_num_elements( forest_adapt3 )];
-      adapt_level_graph_data2->ids_forest = adapt_ids2;
-      t8_forest_set_user_data( forest_adapt3, adapt_level_graph_data2 );
+      
+      //t8_forest_ref (forest_adapt2);
+      //t8_forest_set_copy(forest_adapt, forest_adapt2);
+      /*for( int ilev = 0; ilev <= 3; ilev++ )
+      {
+        int i = (levels[ilevel])->size();
+        printf("\n \n 2 Level %i\n", ilev );
+        for( auto x : ( *(((struct t8_adapt_data_level_graph *) t8_forest_get_user_data (forest_adapt2))->level_graph)[ilev]) )
+          printf( "%i ,", x.first );
+      }*/
+      /*printf( "\n ids_forest 2:\n" );
+      for( int j=0; j<64; j++ )
+        printf( "%i, ", ((struct t8_adapt_data_level_graph *) t8_forest_get_user_data (forest_adapt2))->ids_forest[j] );*/
+      forest_adapt = forest_adapt2;
 
-      t8_forest_iterate_replace (forest_adapt3, forest_adapt2, t8_forest_new_levelgraph_replace);    
+      /*for( int ilev = 0; ilev <= 3; ilev++ )
+      {
+        printf("\n \n 3 Level %i \n", ilev );
+        for( auto x : ( *(((struct t8_adapt_data_level_graph *) t8_forest_get_user_data (forest_adapt))->level_graph)[ilev]) )
+          printf( "%i ,", x.first );
+      }*/
+
+      /*printf( "\n ids_forest 3:\n" );
+      for( int j=0; j<64; j++ )
+        printf( "%i, ", ((struct t8_adapt_data_level_graph *) t8_forest_get_user_data (forest_adapt))->ids_forest[j] );*/
+    }
+    T8_FREE( adapt_ids );
+    T8_FREE( adapt_level_graph_data );
   }
+
   /*for( int ilevel = level; ilevel >= 0; ilevel-- )
   {
     int i = (levels[ilevel])->size();
@@ -313,6 +337,7 @@ new_level_graph( t8_cmesh_t cmesh, t8_forest_t forest, int level, t8_scheme_cxx_
     for( auto x : *levels[ilevel] )
       printf( "%i ,", x.first );
   }*/
-
+  //set user_data->level_graph
+  t8_forest_unref( &forest_adapt );
   return forest;
 }
