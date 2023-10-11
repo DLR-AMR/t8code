@@ -338,6 +338,18 @@ t8_cmesh_new_triangulated_spherical_surface (const double radius, sc_MPI_Comm co
 t8_cmesh_t
 t8_cmesh_new_quadrangulated_spherical_surface (const double radius, sc_MPI_Comm comm);
 
+/** Construct a spherical shell discretized by prisms of given inner radius and thickness.
+ * \param [in] inner_radius       Radius of the inner side of the shell.
+ * \param [in] shell_thickness    Thickness of the shell.
+ * \param [in] num_levels         Refinement level per patch in longitudinal and latitudinal direction.
+ * \param [in] num_layers         Number of layers of the shell.
+ * \param [in] comm               The MPI communicator used to commit the cmesh
+ * \return                        A cmesh representing the spherical surface.
+ */
+t8_cmesh_t
+t8_cmesh_new_prismed_spherical_shell (const double inner_radius, const double shell_thickness, const int num_levels,
+                                      const int num_layers, sc_MPI_Comm comm);
+
 /** Construct a cubed spherical shell of given inner radius and thickness.
  * \param [in] inner_radius       Radius of the inner side of the shell.
  * \param [in] shell_thickness    Thickness of the shell.
