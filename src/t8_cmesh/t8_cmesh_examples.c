@@ -2831,8 +2831,10 @@ t8_pyra_shift_vertices_along_face (double *vertices, const int face)
   int v_3 = -1;
   int v_4 = -1;
   if (face != 4) {
-    v_3 = t8_face_vertex_to_tree_vertex[T8_ECLASS_PYRAMID][face + 1][0];
-    v_4 = t8_face_vertex_to_tree_vertex[T8_ECLASS_PYRAMID][face + 1][1];
+    int counterface = face;
+    counterface += ((face % 2) == 0) ? 1 : -1;
+    v_3 = t8_face_vertex_to_tree_vertex[T8_ECLASS_PYRAMID][counterface][0];
+    v_4 = t8_face_vertex_to_tree_vertex[T8_ECLASS_PYRAMID][counterface][1];
   }
 
   if (face == 4) {
@@ -2846,7 +2848,6 @@ t8_pyra_shift_vertices_along_face (double *vertices, const int face)
   t8_vec_axpyz (vertices + 3 * v_2, vertices + 3 * v_0, span_vec_1, -1.0);
 
   double normal[3];
-  t8_vec_cross (span_vec_0, span_vec_1, normal);
   t8_vec_cross (span_vec_0, span_vec_1, normal);
   const double norm = t8_vec_norm (normal);
   T8_ASSERT (norm > 1e-14);
@@ -2862,11 +2863,11 @@ t8_pyra_shift_vertices_along_face (double *vertices, const int face)
 
   /* we want the normal facing from v_3 to the face */
   t8_vec_ax (normal, n_p > 0 ? 1. / norm : -1. / norm);
-  const double dist_0 = fabs (n_p) / norm;
+  const double dist_0 = t8_vec_dist (vertices + 3 * v_0, vertices + 3 * v_3);
 
   t8_vec_axpyz (vertices + 3 * v_4, vertices + 3 * v_0, tmp, -1.0);
   n_p = t8_vec_dot (tmp, normal);
-  const double dist_1 = (face == 4) ? 0 : fabs (n_p) / norm;
+  const double dist_1 = (face == 4) ? 0 : t8_vec_dist (vertices + 3 * v_0, vertices + 3 * v_3);
 
   if (face != 4) {
     memcpy (vertices + 3 * v_3, vertices + 3 * v_0, 3 * sizeof (double));
