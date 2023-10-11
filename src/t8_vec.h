@@ -200,9 +200,9 @@ t8_vec_orthogonal_through_point (const double v_0[3], const double v_1[3], const
 
 #if T8_ENABLE_DEBUG
   for (int i = 0; i < 3; i++) {
-    if (line[i] != 0) {
+    if (line[i] != 0 && p[i] != v_0[i]) {
       const double lambda_debug = (p[i] * line[i] - v_0[i] * line[i]) / (line[i] * line[i]);
-      T8_ASSERT (lambda == lambda_debug);
+      T8_ASSERT (fabs (lambda - lambda_debug) < T8_PRECISION_EPS);
     }
   }
 #endif

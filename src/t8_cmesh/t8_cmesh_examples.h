@@ -322,6 +322,9 @@ t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees, const int set_attributes, cons
 t8_cmesh_t
 t8_cmesh_new_squared_disk (const double radius, sc_MPI_Comm comm);
 
+t8_cmesh_t
+t8_cmesh_new_two_trees_face_orientation (const t8_eclass_t eclass, const int face_num, const int orientation,
+                                         sc_MPI_Comm comm);
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_EXAMPLES */

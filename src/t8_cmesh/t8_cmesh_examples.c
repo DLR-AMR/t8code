@@ -150,130 +150,75 @@ t8_cmesh_new_from_p8est (p8est_connectivity_t *conn, sc_MPI_Comm comm, int do_pa
   return t8_cmesh_new_from_p4est_ext (conn, 3, comm, do_partition, 0);
 }
 
-static t8_cmesh_t
-t8_cmesh_new_vertex (sc_MPI_Comm comm)
+/**
+ * Construct the coordinates of all vertices of a single tree inside the unit-cube
+ * 
+ * @param eclass 
+ * @param vertices 
+ */
+static void
+vertices_single_tree (const t8_eclass_t eclass, double *vertices)
 {
-  t8_cmesh_t cmesh;
-  double vertices[3] = { 0, 0, 0 };
-  t8_geometry_c *linear_geom = t8_geometry_linear_new (0);
-
-  t8_cmesh_init (&cmesh);
-  /* Use linear geometry */
-  t8_cmesh_register_geometry (cmesh, linear_geom);
-  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_VERTEX);
-  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 1);
-  return cmesh;
-}
-
-static t8_cmesh_t
-t8_cmesh_new_line (sc_MPI_Comm comm)
-{
-  t8_cmesh_t cmesh;
   /* clang-format off */
-  double vertices[6] = { 
-    0, 0, 0, 
-    1, 0, 0 
-  };
-  /* clang-format on */
-  t8_geometry_c *linear_geom = t8_geometry_linear_new (1);
-
-  t8_cmesh_init (&cmesh);
-  /* Use linear geometry */
-  t8_cmesh_register_geometry (cmesh, linear_geom);
-  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_LINE);
-  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 2);
-  return cmesh;
-}
-
-static t8_cmesh_t
-t8_cmesh_new_tri (sc_MPI_Comm comm)
-{
-  t8_cmesh_t cmesh;
-  /* clang-format off */
-  double vertices[9] = { 
-    0, 0, 0, 
-    1, 0, 0, 
-    1, 1, 0 
-  };
-  /* clang-format on */
-  t8_geometry_c *linear_geom = t8_geometry_linear_new (2);
-
-  t8_cmesh_init (&cmesh);
-  /* Use linear geometry */
-  t8_cmesh_register_geometry (cmesh, linear_geom);
-  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
-  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 3);
-  return cmesh;
-}
-
-static t8_cmesh_t
-t8_cmesh_new_tet (sc_MPI_Comm comm)
-{
-  t8_cmesh_t cmesh;
-  /* clang-format off */
-  double vertices[12] = { 
-    1, 1, 1, 
-    1, -1, -1, 
-    -1, 1, -1, 
-    -1, -1, 1 
-  };
-  /* clang-format on */
-  t8_geometry_c *linear_geom = t8_geometry_linear_new (3);
-
-  t8_cmesh_init (&cmesh);
-  /* Use linear geometry */
-  t8_cmesh_register_geometry (cmesh, linear_geom);
-  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TET);
-  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 4);
-  return cmesh;
-}
-
-static t8_cmesh_t
-t8_cmesh_new_quad (sc_MPI_Comm comm)
-{
-  t8_cmesh_t cmesh;
-  /* clang-format off */
-  double vertices[12] = {
-    0, 0, 0, 
-    1, 0, 0, 
-    0, 1, 0, 
-    1, 1, 0,
-  };
-  /* clang-format on */
-  t8_geometry_c *linear_geom = t8_geometry_linear_new (2);
-
-  t8_cmesh_init (&cmesh);
-  /* Use linear geometry */
-  t8_cmesh_register_geometry (cmesh, linear_geom);
-  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
-  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 4);
-  return cmesh;
-}
-
-static t8_cmesh_t
-t8_cmesh_new_hex (sc_MPI_Comm comm)
-{
-  t8_cmesh_t cmesh;
-  /* clang-format off */
-  double vertices[24] = { 
+  const double vertices_coords[24] = { 
     0, 0, 0, 
     1, 0, 0, 
     0, 1, 0, 
     1, 1, 0, 
     0, 0, 1, 
     1, 0, 1, 
-    0, 1, 1, 
+    0, 1, 1,
     1, 1, 1 
   };
   /* clang-format on */
-  t8_geometry_c *linear_geom = t8_geometry_linear_new (3);
 
-  t8_cmesh_init (&cmesh);
-  /* Use linear geometry */
-  t8_cmesh_register_geometry (cmesh, linear_geom);
-  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
-  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 8);
-  return cmesh;
+  switch (eclass) {
+  case T8_ECLASS_VERTEX:
+    /* v_0*/
+    memcpy (vertices, vertices_coords, 3 * sizeof (double));
+    break;
+  case T8_ECLASS_LINE:
+    /* v_0, v_1*/
+    memcpy (vertices, vertices_coords, 6 * sizeof (double));
+    break;
+  case T8_ECLASS_TRIANGLE:
+    /* v_0 - v_1*/
+    memcpy (vertices, vertices_coords, 6 * sizeof (double));
+    /* v_2*/
+    memcpy (vertices + 6, vertices_coords + 9, 3 * sizeof (double));
+    break;
+  case T8_ECLASS_QUAD:
+    /* v_0 - v_3*/
+    memcpy (vertices, vertices_coords, 12 * sizeof (double));
+    break;
+  case T8_ECLASS_TET:
+    /* v_0*/
+    memcpy (vertices, vertices_coords + 21, 3 * sizeof (double));
+    /* v_1 - v_2*/
+    memcpy (vertices + 3, vertices_coords + 3, 6 * sizeof (double));
+    /* v_3*/
+    memcpy (vertices + 9, vertices_coords + 12, 3 * sizeof (double));
+    break;
+  case T8_ECLASS_HEX:
+    /* v_0 - v_8*/
+    memcpy (vertices, vertices_coords, 24 * sizeof (double));
+    break;
+  case T8_ECLASS_PYRAMID:
+    /* v_0 - v_3*/
+    memcpy (vertices, vertices_coords, 12 * sizeof (double));
+    /* v_4*/
+    memcpy (vertices + 12, vertices_coords + 21, 3 * sizeof (double));
+    break;
+  case T8_ECLASS_PRISM:
+    /* v_0 - v_2*/
+    memcpy (vertices, vertices_coords, 9 * sizeof (double));
+    /* v_3 - v_5*/
+    memcpy (vertices + 9, vertices_coords + 12, 9 * sizeof (double));
+    break;
+  default:
+    SC_ABORT ("Invalid eclass\n");
+    return;
+  }
 }
 
 t8_cmesh_t
@@ -300,88 +245,24 @@ t8_cmesh_new_pyramid_deformed (sc_MPI_Comm comm)
   return cmesh;
 }
 
-static t8_cmesh_t
-t8_cmesh_new_pyramid (sc_MPI_Comm comm)
-{
-  t8_cmesh_t cmesh;
-  /* clang-format off */
-  double vertices[15] = { 
-    -1, -1, 0, 
-    1, -1, 0, 
-    -1, 1, 0, 
-    1, 1, 0, 
-    0, 0, sqrt (2) 
-  };
-  /* clang-format on */
-  t8_geometry_c *linear_geom = t8_geometry_linear_new (3);
-
-  t8_cmesh_init (&cmesh);
-  /* Use linear geometry */
-  t8_cmesh_register_geometry (cmesh, linear_geom);
-  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_PYRAMID);
-  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 15);
-  return cmesh;
-}
-
-static t8_cmesh_t
-t8_cmesh_new_prism (sc_MPI_Comm comm)
-{
-  t8_cmesh_t cmesh;
-  /* clang-format off */
-  double vertices[18] = { 
-    0, 0, 0, 
-    1, 0, 0, 
-    1, 1, 0, 
-    0, 0, 1, 
-    1, 0, 1, 
-    1, 1, 1 
-  };
-  /* clang-format on */
-
-  t8_geometry_c *linear_geom = t8_geometry_linear_new (3);
-
-  t8_cmesh_init (&cmesh);
-  /* Use linear geometry */
-  t8_cmesh_register_geometry (cmesh, linear_geom);
-  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_PRISM);
-  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 6);
-  return cmesh;
-}
-
 t8_cmesh_t
-t8_cmesh_new_from_class (t8_eclass_t eclass, sc_MPI_Comm comm)
+t8_cmesh_new_from_class (const t8_eclass_t eclass, sc_MPI_Comm comm)
 {
   t8_cmesh_t cmesh;
-  switch (eclass) {
-  case T8_ECLASS_VERTEX:
-    cmesh = t8_cmesh_new_vertex (comm);
-    break;
-  case T8_ECLASS_LINE:
-    cmesh = t8_cmesh_new_line (comm);
-    break;
-  case T8_ECLASS_TRIANGLE:
-    cmesh = t8_cmesh_new_tri (comm);
-    break;
-  case T8_ECLASS_QUAD:
-    cmesh = t8_cmesh_new_quad (comm);
-    break;
-  case T8_ECLASS_TET:
-    cmesh = t8_cmesh_new_tet (comm);
-    break;
-  case T8_ECLASS_HEX:
-    cmesh = t8_cmesh_new_hex (comm);
-    break;
-  case T8_ECLASS_PYRAMID:
-    cmesh = t8_cmesh_new_pyramid (comm);
-    break;
-  case T8_ECLASS_PRISM:
-    cmesh = t8_cmesh_new_prism (comm);
-    break;
-  default:
-    SC_ABORT ("Invalid eclass\n");
-    return NULL;
-  }
+  const int num_vertices = t8_eclass_num_vertices[eclass];
+  /* Get the vertices of the tree*/
+  double *vertices = T8_ALLOC (double, num_vertices * 3);
+  vertices_single_tree (eclass, vertices);
+  /* Dimension of the class */
+  const int dim = t8_eclass_to_dimension[eclass];
+  t8_geometry_c *linear_geom = t8_geometry_linear_new (dim);
+  /* Construct cmesh */
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_register_geometry (cmesh, linear_geom);
+  t8_cmesh_set_tree_class (cmesh, 0, eclass);
+  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, num_vertices);
   t8_cmesh_commit (cmesh, comm);
+  T8_FREE (vertices);
   return cmesh;
 }
 
@@ -2730,6 +2611,329 @@ t8_cmesh_new_squared_disk (const double radius, sc_MPI_Comm comm)
   t8_cmesh_set_join_by_vertices (cmesh, ntrees, all_eclasses, all_verts, NULL, 0);
 
   /* Commit the mesh */
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
+}
+
+static void
+t8_line_shift_vertices_along_face (double *vertices, const int face)
+{
+  const int v_0 = face;
+  const int v_1 = 1 - face;
+  double vec[3];
+  t8_vec_axpyz (vertices + 3 * v_0, vertices + 3 * v_1, vec, -1.0);
+  t8_vec_axpy (vec, vertices, 1.0);
+  t8_vec_axpy (vec, vertices + 3, 1.0);
+}
+
+static void
+t8_tri_shift_vertices_along_face (double *vertices, const int face)
+{
+  const int v_0 = t8_face_vertex_to_tree_vertex[T8_ECLASS_TET][face][0];
+  const int v_1 = t8_face_vertex_to_tree_vertex[T8_ECLASS_TET][face][1];
+  const int v_2 = face;
+  double ortho[3];
+  t8_vec_orthogonal_through_point (vertices + 3 * v_0, vertices + 3 * v_1, vertices + 3 * v_2, ortho);
+  double tmp[3];
+  memcpy (tmp, vertices + 3 * v_2, 3 * sizeof (double));
+  memcpy (vertices + 3 * v_2, vertices + 3 * v_1, 3 * sizeof (double));
+  memcpy (vertices + 3 * v_1, vertices + 3 * v_0, 3 * sizeof (double));
+
+  t8_vec_axpyz (ortho, tmp, vertices + 3 * v_0, 2.0);
+}
+
+static void
+t8_quad_shift_vertices_along_face (double *vertices, const int face)
+{
+  /* v_0 and v_1 define mirror face*/
+  const int v_0 = t8_face_vertex_to_tree_vertex[T8_ECLASS_QUAD][face][0];
+  const int v_1 = t8_face_vertex_to_tree_vertex[T8_ECLASS_QUAD][face][1];
+  /* v_2 and v_3 will be set to the other vertices. */
+  int v_2 = -1;
+  int v_3 = -1;
+  /* Compute the vertex number of the two vertices not on the face. */
+  for (int check_vertex = 0; check_vertex < 4; check_vertex++) {
+    if (check_vertex != v_0 && check_vertex != v_1) {
+      if (v_2 == -1) {
+        v_2 = check_vertex;
+      }
+      else {
+        v_3 = check_vertex;
+      }
+    }
+  }
+  /* Check that v_2 and v_3 have been set*/
+  T8_ASSERT (v_2 != -1);
+  T8_ASSERT (v_3 != -1);
+#if T8_ENABLE_DEBUG
+  /* Check that every vertex is used exactly once. */
+  int every_vertex_set[4] = { 0 };
+  every_vertex_set[v_0] += 1;
+  every_vertex_set[v_1] += 1;
+  every_vertex_set[v_2] += 1;
+  every_vertex_set[v_3] += 1;
+  for (int i = 0; i < 4; i++) {
+    T8_ASSERT (every_vertex_set[i] == 1);
+  }
+#endif
+  /* Compute the orthogonals from v_2 and v_3 to the face. */
+  double ortho_0[3];
+  t8_vec_orthogonal_through_point (vertices + 3 * v_0, vertices + 3 * v_1, vertices + 3 * v_2, ortho_0);
+
+  double ortho_1[3];
+  t8_vec_orthogonal_through_point (vertices + 3 * v_0, vertices + 3 * v_1, vertices + 3 * v_3, ortho_1);
+
+  /* Shift along ortho 0 */
+  t8_vec_axpy (ortho_0, vertices + 3 * v_0, 1.0);
+  t8_vec_axpy (ortho_0, vertices + 3 * v_2, 1.0);
+  /* Shift along ortho 1 */
+  t8_vec_axpy (ortho_1, vertices + 3 * v_1, 1.0);
+  t8_vec_axpy (ortho_1, vertices + 3 * v_3, 1.0);
+}
+
+static void
+t8_tet_shift_vertices_along_face (double *vertices, const int face)
+{
+  /* v_0, v_1 and v_2 define mirror face*/
+  const int v_0 = t8_face_vertex_to_tree_vertex[T8_ECLASS_TET][face][0];
+  const int v_1 = t8_face_vertex_to_tree_vertex[T8_ECLASS_TET][face][1];
+  const int v_2 = t8_face_vertex_to_tree_vertex[T8_ECLASS_TET][face][2];
+  const int v_3 = face;
+
+  double span_vec_0[3];
+  double span_vec_1[3];
+
+  t8_vec_axpyz (vertices + 3 * v_1, vertices + 3 * v_0, span_vec_0, -1.0);
+  t8_vec_axpyz (vertices + 3 * v_2, vertices + 3 * v_0, span_vec_1, -1.0);
+
+  double normal[3];
+  t8_vec_cross (span_vec_0, span_vec_1, normal);
+  t8_vec_cross (span_vec_0, span_vec_1, normal);
+  const double norm = t8_vec_norm (normal);
+  T8_ASSERT (norm > 1e-14);
+  double tmp[3];
+  t8_vec_axpyz (vertices + 3 * v_3, vertices + 3 * v_0, tmp, -1.0);
+  double n_p = t8_vec_dot (tmp, normal);
+
+  /* we want the normal facing from v_3 to the face */
+  t8_vec_ax (normal, n_p > 0 ? 1. / norm : -1. / norm);
+
+  const double dist = fabs (n_p) / norm;
+  t8_vec_axpyz (vertices + 3 * v_3, normal, tmp, 2 * dist);
+
+  /* TODO: maybe reorder vertices to avoid negative volume */
+  memcpy (vertices + 3 * v_3, tmp, 3 * sizeof (double));
+}
+
+static void
+t8_hex_shift_vertices_along_face (double *vertices, const int face)
+{
+  /* v_0-v_3 define mirror face*/
+  const int v_0 = t8_face_vertex_to_tree_vertex[T8_ECLASS_HEX][face][0];
+  const int v_1 = t8_face_vertex_to_tree_vertex[T8_ECLASS_HEX][face][1];
+  const int v_2 = t8_face_vertex_to_tree_vertex[T8_ECLASS_HEX][face][2];
+  const int v_3 = t8_face_vertex_to_tree_vertex[T8_ECLASS_HEX][face][3];
+  /* v_4-v_7 will be set to the other vertices. */
+  int v_4 = -1;
+  int v_5 = -1;
+  int v_6 = -1;
+  int v_7 = -1;
+
+  /* Compute the vertex number of the two vertices not on the face. */
+  for (int check_vertex = 0; check_vertex < 8; check_vertex++) {
+    if (check_vertex != v_0 && check_vertex != v_1 && check_vertex != v_2 && check_vertex != v_3) {
+      if (v_4 == -1) {
+        v_4 = check_vertex;
+      }
+      else if (v_5 == -1) {
+        v_5 = check_vertex;
+      }
+      else if (v_6 == -1) {
+        v_6 = check_vertex;
+      }
+      else {
+        v_7 = check_vertex;
+      }
+    }
+  }
+  /* Check that v_2 and v_3 have been set*/
+  T8_ASSERT (v_4 != -1);
+  T8_ASSERT (v_5 != -1);
+  T8_ASSERT (v_6 != -1);
+  T8_ASSERT (v_7 != -1);
+
+#if T8_ENABLE_DEBUG
+  /* Check that every vertex is used exactly once. */
+  int every_vertex_set[8] = { 0 };
+  every_vertex_set[v_0] += 1;
+  every_vertex_set[v_1] += 1;
+  every_vertex_set[v_2] += 1;
+  every_vertex_set[v_3] += 1;
+  every_vertex_set[v_4] += 1;
+  every_vertex_set[v_5] += 1;
+  every_vertex_set[v_6] += 1;
+  every_vertex_set[v_7] += 1;
+  for (int i = 0; i < 8; i++) {
+    T8_ASSERT (every_vertex_set[i] == 1);
+  }
+#endif
+  double span_vec_0[3];
+  double span_vec_1[3];
+
+  t8_vec_axpyz (vertices + 3 * v_1, vertices + 3 * v_0, span_vec_0, -1.0);
+  t8_vec_axpyz (vertices + 3 * v_2, vertices + 3 * v_0, span_vec_1, -1.0);
+  /*We approximate the normal be the normal of the tri v_0 v_1 v_2*/
+
+  double normal[3];
+  t8_vec_cross (span_vec_0, span_vec_1, normal);
+  t8_vec_cross (span_vec_0, span_vec_1, normal);
+  const double norm = t8_vec_norm (normal);
+  T8_ASSERT (norm > 1e-14);
+  double tmp[3];
+  t8_vec_axpyz (vertices + 3 * v_4, vertices + 3 * v_0, tmp, -1.0);
+  double n_p = t8_vec_dot (tmp, normal);
+
+  /* we want the normal facing from v_4 to the face */
+  t8_vec_ax (normal, n_p > 0 ? 1. / norm : -1. / norm);
+  const double dist_0 = fabs (n_p) / norm;
+
+  t8_vec_axpyz (vertices + 3 * v_5, vertices + 3 * v_0, tmp, -1.0);
+  n_p = t8_vec_dot (tmp, normal);
+  const double dist_1 = fabs (n_p) / norm;
+  t8_vec_axpyz (vertices + 3 * v_6, vertices + 3 * v_0, tmp, -1.0);
+  n_p = t8_vec_dot (tmp, normal);
+  const double dist_2 = fabs (n_p) / norm;
+  t8_vec_axpyz (vertices + 3 * v_7, vertices + 3 * v_0, tmp, -1.0);
+  n_p = t8_vec_dot (tmp, normal);
+  const double dist_3 = fabs (n_p) / norm;
+
+  memcpy (vertices + 3 * v_4, vertices + 3 * v_0, 3 * sizeof (double));
+  t8_vec_axpy (normal, vertices + 3 * v_0, dist_0);
+
+  memcpy (vertices + 3 * v_5, vertices + 3 * v_1, 3 * sizeof (double));
+  t8_vec_axpy (normal, vertices + 3 * v_1, dist_1);
+
+  memcpy (vertices + 3 * v_6, vertices + 3 * v_2, 3 * sizeof (double));
+  t8_vec_axpy (normal, vertices + 3 * v_2, dist_2);
+
+  memcpy (vertices + 3 * v_7, vertices + 3 * v_3, 3 * sizeof (double));
+  t8_vec_axpy (normal, vertices + 3 * v_3, dist_3);
+}
+
+static void
+t8_pyra_shift_vertices_along_face (double *vertices, const int face)
+{
+  /* v_0-v_3 define mirror face*/
+  const int v_0 = t8_face_vertex_to_tree_vertex[T8_ECLASS_PYRAMID][face][0];
+  const int v_1 = t8_face_vertex_to_tree_vertex[T8_ECLASS_PYRAMID][face][1];
+  const int v_2 = t8_face_vertex_to_tree_vertex[T8_ECLASS_PYRAMID][face][2];
+  int v_3 = -1;
+  int v_4 = -1;
+  if (face != 4) {
+    v_3 = t8_face_vertex_to_tree_vertex[T8_ECLASS_PYRAMID][face + 1][0];
+    v_4 = t8_face_vertex_to_tree_vertex[T8_ECLASS_PYRAMID][face + 1][1];
+  }
+
+  if (face == 4) {
+    v_3 = t8_face_vertex_to_tree_vertex[T8_ECLASS_QUAD][face][3];
+    v_4 = 5;
+  }
+  double span_vec_0[3];
+  double span_vec_1[3];
+
+  t8_vec_axpyz (vertices + 3 * v_1, vertices + 3 * v_0, span_vec_0, -1.0);
+  t8_vec_axpyz (vertices + 3 * v_2, vertices + 3 * v_0, span_vec_1, -1.0);
+
+  double normal[3];
+  t8_vec_cross (span_vec_0, span_vec_1, normal);
+  t8_vec_cross (span_vec_0, span_vec_1, normal);
+  const double norm = t8_vec_norm (normal);
+  T8_ASSERT (norm > 1e-14);
+  double tmp[3];
+  if (face != 4) {
+    t8_vec_axpyz (vertices + 3 * v_3, vertices + 3 * v_0, tmp, -1.0);
+  }
+  else {
+    t8_vec_axpyz (vertices + 3 * v_4, vertices + 3 * v_0, tmp, -1.0);
+  }
+
+  double n_p = t8_vec_dot (tmp, normal);
+
+  /* we want the normal facing from v_3 to the face */
+  t8_vec_ax (normal, n_p > 0 ? 1. / norm : -1. / norm);
+  const double dist_0 = fabs (n_p) / norm;
+
+  t8_vec_axpyz (vertices + 3 * v_4, vertices + 3 * v_0, tmp, -1.0);
+  n_p = t8_vec_dot (tmp, normal);
+  const double dist_1 = (face == 4) ? 0 : fabs (n_p) / norm;
+
+  if (face != 4) {
+    memcpy (vertices + 3 * v_3, vertices + 3 * v_0, 3 * sizeof (double));
+    t8_vec_axpy (normal, vertices + 3 * v_0, dist_0);
+
+    memcpy (vertices + 3 * v_4, vertices + 3 * v_1, 3 * sizeof (double));
+    t8_vec_axpy (normal, vertices + 3 * v_1, dist_1);
+  }
+  else {
+    /*Todo: shuffle v_0 - v_3 to avoid negative volume */
+    t8_vec_axpy (normal, vertices + 3 * v_4, 2 + dist_1);
+  }
+}
+
+static void
+t8_cmesh_mirror_tree_along_face (double *vertices, const t8_eclass_t eclass, const int face)
+{
+  switch (eclass) {
+  case T8_ECLASS_VERTEX:
+    return;
+  case T8_ECLASS_LINE:
+    t8_line_shift_vertices_along_face (vertices, face);
+    return;
+  case T8_ECLASS_TRIANGLE:
+    t8_tri_shift_vertices_along_face (vertices, face);
+    return;
+  case T8_ECLASS_QUAD:
+    t8_quad_shift_vertices_along_face (vertices, face);
+    return;
+  case T8_ECLASS_TET:
+    t8_tet_shift_vertices_along_face (vertices, face);
+    return;
+  case T8_ECLASS_HEX:
+    t8_hex_shift_vertices_along_face (vertices, face);
+    return;
+  case T8_ECLASS_PYRAMID:
+    t8_pyra_shift_vertices_along_face (vertices, face);
+    return;
+  case T8_ECLASS_PRISM:
+
+  default:
+    SC_ABORT ("Not yet implemented.");
+    return;
+  }
+}
+
+t8_cmesh_t
+t8_cmesh_new_two_trees_face_orientation (const t8_eclass_t eclass, const int face_num, const int orientation,
+                                         sc_MPI_Comm comm)
+{
+  t8_cmesh_t cmesh;
+  const int num_vertices = t8_eclass_num_vertices[eclass];
+  /* Get the vertices of the tree*/
+  double *vertices = T8_ALLOC (double, num_vertices * 3);
+  vertices_single_tree (eclass, vertices);
+  /* Dimension of the class */
+  const int dim = t8_eclass_to_dimension[eclass];
+  t8_geometry_c *linear_geom = t8_geometry_linear_new (dim);
+  /* Construct cmesh */
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_register_geometry (cmesh, linear_geom);
+  /* Two trees of the same class */
+  t8_cmesh_set_tree_class (cmesh, 0, eclass);
+  t8_cmesh_set_tree_class (cmesh, 1, eclass);
+  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, num_vertices);
+  /* Shift vertices along a face given by the normal of the face*/
+  t8_cmesh_mirror_tree_along_face (vertices, eclass, face_num);
+  t8_cmesh_set_tree_vertices (cmesh, 1, vertices, num_vertices);
   t8_cmesh_commit (cmesh, comm);
   return cmesh;
 }
