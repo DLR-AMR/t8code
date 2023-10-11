@@ -132,29 +132,13 @@ t8_geometry_triangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh, 
   t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
   double *tree_vertices = t8_cmesh_get_tree_vertices (cmesh, ltreeid);
 
-  n[0] = tree_vertices[0] + tree_vertices[3] + tree_vertices[6];
-  n[1] = tree_vertices[1] + tree_vertices[4] + tree_vertices[7];
-  n[2] = tree_vertices[2] + tree_vertices[5] + tree_vertices[8];
-
-  {
-    /* Normalize vector `n`. */
-    const double norm = sqrt (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]);
-    n[0] = n[0] / norm;
-    n[1] = n[1] / norm;
-    n[2] = n[2] / norm;
-  }
+  t8_vec_tri_normal (tree_vertices, tree_vertices + 3, tree_vertices + 6, n);
+  t8_vec_normalize (n);
 
   r[0] = tree_vertices[0];
   r[1] = tree_vertices[1];
   r[2] = tree_vertices[2];
-
-  {
-    /* Normalize vector `r`. */
-    const double norm = sqrt (r[0] * r[0] + r[1] * r[1] + r[2] * r[2]);
-    r[0] = r[0] / norm;
-    r[1] = r[1] / norm;
-    r[2] = r[2] / norm;
-  }
+  t8_vec_normalize (r);
 
   /* Init output coordinates with zeros. */
   for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {

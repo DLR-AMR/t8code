@@ -77,7 +77,7 @@ class t8_geometry_squared_disk: public t8_geometry_with_vertices {
   /* Load tree data is inherited from t8_geometry_with_vertices. */
 };
 
-/** This geometry maps the faces of an oktaeder to a spherical surface.
+/** This geometry maps the faces of an octahedron/icasohedron to a spherical surface.
  */
 class t8_geometry_triangulated_spherical_surface: public t8_geometry_with_vertices {
  public:
@@ -87,17 +87,15 @@ class t8_geometry_triangulated_spherical_surface: public t8_geometry_with_vertic
   }
 
   /**
-   * Map the faces of an oktaeder to a spherical surface.
+   * Map the faces of an octahedron/icasohedron to a spherical surface.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying a point in /f$ [0,1]^\mathrm{dim} /f$.
    * \param [in]  num_coords  The number of points to map.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    *
-   * This routine expects an input mesh of eight triangles arranged into an
-   * oktaeder. That is two pyramids glued together at their quadratic bases.
-   * The z-axis goes through the the pyramid's peak and the x- and y-axis
-   * are aligned with the basis' diagonals.
+   * This routine expects an input mesh of triangles arranged into an
+   * octahedron/icasohedron.
    *
    */
   void
