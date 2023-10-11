@@ -274,7 +274,7 @@ TEST (t8_gtest_vec, orthogonal_through_point)
     double ortho[3];
     t8_vec_orthogonal_through_point (v_0, coords[i], point, ortho);
     for (int j = 0; j < 3; j++) {
-      EXPECT_NEAR (ortho[j], -point[j], epsilon);
+      EXPECT_NEAR (ortho[j], point[j], epsilon);
     }
   }
 }

@@ -2634,12 +2634,13 @@ t8_tri_shift_vertices_along_face (double *vertices, const int face)
   const int v_2 = face;
   double ortho[3];
   t8_vec_orthogonal_through_point (vertices + 3 * v_0, vertices + 3 * v_1, vertices + 3 * v_2, ortho);
+
   double tmp[3];
   memcpy (tmp, vertices + 3 * v_2, 3 * sizeof (double));
   memcpy (vertices + 3 * v_2, vertices + 3 * v_1, 3 * sizeof (double));
   memcpy (vertices + 3 * v_1, vertices + 3 * v_0, 3 * sizeof (double));
 
-  t8_vec_axpyz (ortho, tmp, vertices + 3 * v_0, 2.0);
+  t8_vec_axpyz (ortho, tmp, vertices + 3 * v_0, -2.0);
 }
 
 static void

@@ -188,26 +188,19 @@ t8_vec_orthogonal_through_point (const double v_0[3], const double v_1[3], const
   double line[3];
   /* Compute the direction of the line */
   t8_vec_axpyz (v_0, v_1, line, -1.0);
-  int i;
-  /* Find a non-zero axis*/
-  for (i = 0; i < 3; i++) {
-    if (line[i] != 0) {
-      break;
-    }
-  }
-  /* Solve the equation (v_0 + lambda * dir - p)\dot dir = 0 */
-  const double lambda = (p[i] * line[i] - v_0[i] * line[i]) / (line[i] * line[i]);
 
-#if T8_ENABLE_DEBUG
+  /* Solve the equation (v_0 + lambda * dir - p)\dot dir = 0 */
+  double numerator = 0.0;
+  double denominator = t8_vec_dot (line, line);
   for (int i = 0; i < 3; i++) {
-    if (line[i] != 0 && p[i] != v_0[i]) {
-      const double lambda_debug = (p[i] * line[i] - v_0[i] * line[i]) / (line[i] * line[i]);
-      T8_ASSERT (fabs (lambda - lambda_debug) < T8_PRECISION_EPS);
-    }
+    numerator += p[i] * line[i] - v_0[i] * line[i];
   }
-#endif
-  t8_vec_axpyz (line, v_0, orthogonal, lambda);
-  t8_vec_axpy (p, orthogonal, -1.0);
+
+  const double lambda = numerator / denominator;
+
+  double tmp[3];
+  t8_vec_axpyz (line, v_0, tmp, lambda);
+  t8_vec_axpyz (tmp, p, orthogonal, -1.0);
 }
 
 T8_EXTERN_C_END ();
