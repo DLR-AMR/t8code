@@ -253,3 +253,28 @@ TEST (t8_gtest_vec, cross)
     EXPECT_NEAR (cross[i], e1[i], epsilon);
   }
 }
+
+TEST (t8_gtest_vec, orthogonal_through_point)
+{
+  /* clang-format off */
+  const double coords[6][3] = 
+    {
+      {1, 0, 0},
+      {-1, 0, 0},
+      {0, 1, 0},
+      {0, -1, 0},
+      {0, 0, 1},
+      {0, 0, -1},
+    };
+  /* clang-format on */
+  const double v_0[3] = { 0, 0, 0 };
+  for (int i = 0; i < 6; i++) {
+    double point[3];
+    memcpy (point, coords[(i + 2) % 6], 3 * sizeof (double));
+    double ortho[3];
+    t8_vec_orthogonal_through_point (v_0, coords[i], point, ortho);
+    for (int j = 0; j < 3; j++) {
+      EXPECT_NEAR (ortho[j], -point[j], epsilon);
+    }
+  }
+}

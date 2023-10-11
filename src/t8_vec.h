@@ -173,6 +173,43 @@ t8_vec_diff (const double vec_x[3], const double vec_y[3], double diff[3])
   }
 }
 
+/**
+ * Compute the orthogonal to a vector running through a point. 
+ * A line is given by l(t) = a + \lambda *dir, with dir as the vector from \a v_0 to \a v_1
+ * The orthogonal faces from the point to the line. 
+ * \param[in] v_0 refers to "a" in the line definition and is the starting point of the line
+ * \param[in] v_1 second point to define the line
+ * \param[in] p   point to check
+ * \param[in, out] orthogonal On input a 3D vec on output the orthogonal pointing from \a p to the vec. 
+ */
+static inline void
+t8_vec_orthogonal_through_point (const double v_0[3], const double v_1[3], const double p[3], double orthogonal[3])
+{
+  double line[3];
+  /* Compute the direction of the line */
+  t8_vec_axpyz (v_0, v_1, line, -1.0);
+  int i;
+  /* Find a non-zero axis*/
+  for (i = 0; i < 3; i++) {
+    if (line[i] != 0) {
+      break;
+    }
+  }
+  /* Solve the equation (v_0 + lambda * dir - p)\dot dir = 0 */
+  const double lambda = (p[i] * line[i] - v_0[i] * line[i]) / (line[i] * line[i]);
+
+#if T8_ENABLE_DEBUG
+  for (int i = 0; i < 3; i++) {
+    if (line[i] != 0) {
+      const double lambda_debug = (p[i] * line[i] - v_0[i] * line[i]) / (line[i] * line[i]);
+      T8_ASSERT (lambda == lambda_debug);
+    }
+  }
+#endif
+  t8_vec_axpyz (line, v_0, orthogonal, lambda);
+  t8_vec_axpy (p, orthogonal, -1.0);
+}
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_VEC_H! */
