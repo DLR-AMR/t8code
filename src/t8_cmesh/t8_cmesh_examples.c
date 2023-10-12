@@ -2819,7 +2819,7 @@ t8_cmesh_new_triangulated_spherical_surface_icasohedron (const double radius, sc
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
 
-  t8_geometry_c *geometry = t8_geometry_triangulated_spherical_surface_new ();
+  t8_geometry_c *geometry = t8_geometry_spherical_surface_new ();
 
   t8_cmesh_register_geometry (cmesh, geometry); /* Use linear geometry */
 
@@ -3117,7 +3117,7 @@ t8_cmesh_new_prismed_spherical_shell (const double inner_radius, const double sh
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
 
-  t8_geometry_c *geometry = t8_geometry_prismed_spherical_shell_new ();
+  t8_geometry_c *geometry = t8_geometry_spherical_shell_new ();
   t8_cmesh_register_geometry (cmesh, geometry);
 
   /* Here is what we do: Construct a 3D cmesh from a 2D forest. */
@@ -3131,7 +3131,7 @@ t8_cmesh_new_prismed_spherical_shell (const double inner_radius, const double sh
   sc_MPI_Comm_split (comm, mpi_rank, mpi_rank, &local_comm);
 
   /* Create 2D quadrangulated spherical surface of given refinement level per patch. */
-  t8_forest_t forest = t8_forest_new_uniform (t8_cmesh_new_triangulated_spherical_surface_octahedron (inner_radius, local_comm),
+  t8_forest_t forest = t8_forest_new_uniform (t8_cmesh_new_triangulated_spherical_surface_icasohedron (inner_radius, local_comm),
                                               t8_scheme_new_default_cxx (), num_levels, 0, local_comm);
 
   t8_locidx_t num_local_elements = t8_forest_get_local_num_elements (forest);
