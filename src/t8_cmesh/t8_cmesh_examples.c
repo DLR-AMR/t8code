@@ -2839,7 +2839,7 @@ t8_pyra_shift_vertices_along_face (double *vertices, const int face)
 
   if (face == 4) {
     v_3 = t8_face_vertex_to_tree_vertex[T8_ECLASS_QUAD][face][3];
-    v_4 = 5;
+    v_4 = 4;
   }
   double span_vec_0[3];
   double span_vec_1[3];
@@ -2867,7 +2867,8 @@ t8_pyra_shift_vertices_along_face (double *vertices, const int face)
 
   t8_vec_axpyz (vertices + 3 * v_4, vertices + 3 * v_0, tmp, -1.0);
   n_p = t8_vec_dot (tmp, normal);
-  const double dist_1 = (face == 4) ? 0 : t8_vec_dist (vertices + 3 * v_0, vertices + 3 * v_3);
+  const double dist_1 = (face == 4) ? t8_vec_dist (vertices + 3 * v_0, vertices + 3 * v_4)
+                                    : t8_vec_dist (vertices + 3 * v_0, vertices + 3 * v_3);
 
   if (face != 4) {
     memcpy (vertices + 3 * v_3, vertices + 3 * v_0, 3 * sizeof (double));
@@ -2877,8 +2878,15 @@ t8_pyra_shift_vertices_along_face (double *vertices, const int face)
     t8_vec_axpy (normal, vertices + 3 * v_1, dist_1);
   }
   else {
+
     /*Todo: shuffle v_0 - v_3 to avoid negative volume */
-    t8_vec_axpy (normal, vertices + 3 * v_4, 2 + dist_1);
+    memcpy (tmp, vertices + 3 * v_0, 3 * sizeof (double));
+    memcpy (vertices + 3 * v_0, vertices + 3 * v_1, 3 * sizeof (double));
+    memcpy (vertices + 3 * v_1, vertices + 3 * v_2, 3 * sizeof (double));
+    memcpy (vertices + 3 * v_2, vertices + 3 * v_3, 3 * sizeof (double));
+    memcpy (vertices + 3 * v_3, tmp, 3 * sizeof (double));
+
+    t8_vec_axpy (normal, vertices + 3 * v_4, 2 * dist_1);
   }
 }
 
@@ -2937,5 +2945,6 @@ t8_cmesh_new_two_trees_face_orientation (const t8_eclass_t eclass, const int fac
   t8_cmesh_mirror_tree_along_face (vertices, eclass, face_num);
   t8_cmesh_set_tree_vertices (cmesh, 1, vertices, num_vertices);
   t8_cmesh_commit (cmesh, comm);
+  T8_FREE (vertices);
   return cmesh;
 }
