@@ -2613,6 +2613,14 @@ t8_cmesh_new_squared_disk (const double radius, sc_MPI_Comm comm)
   return cmesh;
 }
 
+/**
+ * Shift the vertices of a line along the line through a given face
+ * 
+ * \param[in, out] vertices On input the vertices of the original element, on output the vertices of the shifted element
+ * \param[in] face facenumber to shift the vertices by
+ * \param[in] orientation rotate the element to enforce the orientation given by this parameter
+ * \return The facenumber of the new element touching the original element
+ */
 static int
 t8_line_shift_vertices_along_face (double *vertices, const int face, const int orientation)
 {
@@ -2625,6 +2633,12 @@ t8_line_shift_vertices_along_face (double *vertices, const int face, const int o
   return (face + 1) % 2;
 }
 
+/**
+ * Swap to vectors
+ * 
+ * \param[in, out] vec_0 
+ * \param[in, out] vec_1 
+ */
 static void
 t8_swap_vec (double vec_0[3], double vec_1[3])
 {
@@ -2633,24 +2647,46 @@ t8_swap_vec (double vec_0[3], double vec_1[3])
   memcpy (vec_1, tmp, 3 * sizeof (double));
 }
 
+/**
+ * Shift the vertices of a tri along the tri through a given face
+ * 
+ * \param[in, out] vertices On input the vertices of the original element, on output the vertices of the shifted element
+ * \param[in] face facenumber to shift the vertices by
+ * \param[in] orientation rotate the element to enforce the orientation given by this parameter
+ * \return The facenumber of the new element touching the original element
+ */
 static int
 t8_tri_shift_vertices_along_face (double *vertices, const int face, const int orientation)
 {
+  /* Get the vertices of face */
   const int v_0 = t8_face_vertex_to_tree_vertex[T8_ECLASS_TET][face][0];
   const int v_1 = t8_face_vertex_to_tree_vertex[T8_ECLASS_TET][face][1];
+  /* The vertex on the opposite of the face*/
   const int v_2 = face;
   double ortho[3];
+
+  /* Compute the normal from the face through v_2 */
   t8_vec_orthogonal_through_point (vertices + 3 * v_0, vertices + 3 * v_1, vertices + 3 * v_2, ortho);
 
   double tmp[3];
   memcpy (tmp, vertices + 3 * v_2, 3 * sizeof (double));
+  /* Update v_0 & v_1 according to the orientation */
   if (orientation == 1) {
     t8_swap_vec (vertices + 3 * v_0, vertices + 3 * v_1);
   }
+  /* Update v_2*/
   t8_vec_axpyz (ortho, tmp, vertices + 3 * v_2, -2.0);
   return face;
 }
 
+/**
+ * Shift the vertices of a quad along the quad through a given face
+ * 
+ * \param[in, out] vertices On input the vertices of the original element, on output the vertices of the shifted element
+ * \param[in] face facenumber to shift the vertices by
+ * \param[in] orientation rotate the element to enforce the orientation given by this parameter
+ * \return The facenumber of the new element touching the original element
+ */
 static int
 t8_quad_shift_vertices_along_face (double *vertices, const int face, const int orientation)
 {
@@ -2698,14 +2734,25 @@ t8_quad_shift_vertices_along_face (double *vertices, const int face, const int o
   /* Shift along ortho 1 */
   t8_vec_axpy (ortho_1, vertices + 3 * v_1, -1.0);
   t8_vec_axpy (ortho_1, vertices + 3 * v_3, -1.0);
+
+  /* update vertices for orientation */
   if (orientation == 1) {
     t8_swap_vec (vertices + 3 * v_0, vertices + 3 * v_1);
     t8_swap_vec (vertices + 3 * v_2, vertices + 3 * v_3);
   }
+  /* Compute the face-number of the opposing face */
   const int face_correction = (face % 2 == 0) ? 1 : -1;
   return face + face_correction;
 }
 
+/**
+ * Shift the vertices of a tet along the tet through a given face
+ * 
+ * \param[in, out] vertices On input the vertices of the original element, on output the vertices of the shifted element
+ * \param[in] face facenumber to shift the vertices by
+ * \param[in] orientation rotate the element to enforce the orientation given by this parameter
+ * \return The facenumber of the new element touching the original element
+ */
 static int
 t8_tet_shift_vertices_along_face (double *vertices, const int face, const int orientation)
 {
@@ -2717,10 +2764,9 @@ t8_tet_shift_vertices_along_face (double *vertices, const int face, const int or
 
   double span_vec_0[3];
   double span_vec_1[3];
-
+  /* Compute the normal based on the vecs given by v_1v_0 and v_2v_0*/
   t8_vec_axpyz (vertices + 3 * v_1, vertices + 3 * v_0, span_vec_0, -1.0);
   t8_vec_axpyz (vertices + 3 * v_2, vertices + 3 * v_0, span_vec_1, -1.0);
-
   double normal[3];
   t8_vec_cross (span_vec_0, span_vec_1, normal);
   const double norm = t8_vec_norm (normal);
@@ -2728,13 +2774,12 @@ t8_tet_shift_vertices_along_face (double *vertices, const int face, const int or
   double tmp[3];
   t8_vec_axpyz (vertices + 3 * v_3, vertices + 3 * v_0, tmp, -1.0);
   double n_p = t8_vec_dot (tmp, normal);
-
   /* we want the normal facing from v_3 to the face */
   t8_vec_ax (normal, n_p > 0 ? 1. / norm : -1. / norm);
 
+  /* Shift v_3 */
   const double dist = fabs (n_p) / norm;
   t8_vec_axpyz (normal, vertices + 3 * v_3, tmp, 2 * dist);
-
   memcpy (vertices + 3 * v_3, tmp, 3 * sizeof (double));
 
   /* Reorder vertices to avoid negative volume */
@@ -2749,6 +2794,14 @@ t8_tet_shift_vertices_along_face (double *vertices, const int face, const int or
   return face;
 }
 
+/**
+ * Shift the vertices of a hex along the hex through a given face
+ * 
+ * \param[in, out] vertices On input the vertices of the original element, on output the vertices of the shifted element
+ * \param[in] face facenumber to shift the vertices by
+ * \param[in] orientation rotate the element to enforce the orientation given by this parameter
+ * \return The facenumber of the new element touching the original element
+ */
 static int
 t8_hex_shift_vertices_along_face (double *vertices, const int face, const int orientation)
 {
@@ -2821,6 +2874,7 @@ t8_hex_shift_vertices_along_face (double *vertices, const int face, const int or
   t8_vec_ax (normal, n_p > 0 ? 1. / norm : -1. / norm);
   const double dist_0 = fabs (n_p) / norm;
 
+  /* Shift the element */
   t8_vec_axpyz (vertices + 3 * v_5, vertices + 3 * v_0, tmp, -1.0);
   n_p = t8_vec_dot (tmp, normal);
   const double dist_1 = fabs (n_p) / norm;
@@ -2856,9 +2910,19 @@ t8_hex_shift_vertices_along_face (double *vertices, const int face, const int or
   return face + face_correction;
 }
 
+/**
+ * Shift the vertices of a pyra along the pyra through a given face
+ * 
+ * \param[in, out] vertices On input the vertices of the original element, on output the vertices of the shifted element
+ * \param[in] face facenumber to shift the vertices by
+ * \param[in] orientation rotate the element to enforce the orientation given by this parameter
+ * \return The facenumber of the new element touching the original element
+ */
 static int
 t8_pyra_shift_vertices_along_face (double *vertices, const int face, const int orientation)
 {
+  /* for faces 0-3 we shift the element along the normal of the face. 
+   * for face 4 we flip the pyramid and reorder the vertices to correct the negative volume of a flipped pyramid. */
   /* v_0-v_3 define mirror face*/
   const int v_0 = t8_face_vertex_to_tree_vertex[T8_ECLASS_PYRAMID][face][0];
   const int v_1 = t8_face_vertex_to_tree_vertex[T8_ECLASS_PYRAMID][face][1];
@@ -2866,6 +2930,7 @@ t8_pyra_shift_vertices_along_face (double *vertices, const int face, const int o
   int v_3 = -1;
   int v_4 = -1;
   if (face != 4) {
+    /* The opposing face is given by v_3 and v_4*/
     int counterface = face;
     counterface += ((face % 2) == 0) ? 1 : -1;
     v_3 = t8_face_vertex_to_tree_vertex[T8_ECLASS_PYRAMID][counterface][0];
@@ -2878,7 +2943,7 @@ t8_pyra_shift_vertices_along_face (double *vertices, const int face, const int o
   }
   double span_vec_0[3];
   double span_vec_1[3];
-
+  /* Computation of the normal */
   t8_vec_axpyz (vertices + 3 * v_1, vertices + 3 * v_0, span_vec_0, -1.0);
   t8_vec_axpyz (vertices + 3 * v_2, vertices + 3 * v_0, span_vec_1, -1.0);
 
@@ -2917,6 +2982,8 @@ t8_pyra_shift_vertices_along_face (double *vertices, const int face, const int o
     t8_swap_vec (vertices + 3 * v_2, vertices + 3 * v_1);
     t8_vec_axpy (normal, vertices + 3 * v_4, dist_1);
   }
+
+  /* Correction w.r.t. orientation is different for face 0-3 and face 4*/
   if (face != 4) {
     double vec_0[3];
     double vec_1[3];
@@ -2929,25 +2996,29 @@ t8_pyra_shift_vertices_along_face (double *vertices, const int face, const int o
     }
     t8_vec_axpyz (vec_0, vertices + 3 * v_3, vertices + 3 * v_0, 1.0);
     t8_vec_axpyz (vec_1, vertices + 3 * v_4, vertices + 3 * v_1, 1.0);
+    const int face_correction = (face % 2 == 0) ? 1 : -1;
+    return face + face_correction;
   }
   else {
     for (int i = 0; i < orientation; i++) {
       t8_swap_vec (vertices + 3 * v_0, vertices + 3 * v_1);
       t8_swap_vec (vertices + 3 * v_1, vertices + 3 * v_3);
       t8_swap_vec (vertices + 3 * v_2, vertices + 3 * v_3);
+      return face;
     }
-  }
-  if (face != 4) {
-    const int face_correction = (face % 2 == 0) ? 1 : -1;
-    return face + face_correction;
-  }
-  else {
-    return face;
   }
 }
 
+/**
+ * Shift the vertices of an element along the element through a given face
+ * 
+ * \param[in, out] vertices On input the vertices of the original element, on output the vertices of the shifted element
+ * \param[in] face facenumber to shift the vertices by
+ * \param[in] orientation rotate the element to enforce the orientation given by this parameter
+ * \return The facenumber of the new element touching the original element
+ */
 static int
-t8_cmesh_mirror_tree_along_face (double *vertices, const t8_eclass_t eclass, const int face, const int orientation)
+t8_cmesh_shift_tree_along_face (double *vertices, const t8_eclass_t eclass, const int face, const int orientation)
 {
   switch (eclass) {
   case T8_ECLASS_VERTEX:
@@ -2992,7 +3063,7 @@ t8_cmesh_new_two_trees_face_orientation (const t8_eclass_t eclass, const int fac
   t8_cmesh_set_tree_class (cmesh, 1, eclass);
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices, num_vertices);
   /* Shift vertices along a face given by the normal of the face*/
-  const int other_face = t8_cmesh_mirror_tree_along_face (vertices, eclass, face_num, orientation);
+  const int other_face = t8_cmesh_shift_tree_along_face (vertices, eclass, face_num, orientation);
   t8_cmesh_set_tree_vertices (cmesh, 1, vertices, num_vertices);
   t8_cmesh_set_join (cmesh, 0, 1, face_num, other_face, orientation);
   t8_cmesh_commit (cmesh, comm);
