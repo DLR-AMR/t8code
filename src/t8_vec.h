@@ -46,6 +46,19 @@ t8_vec_norm (const double vec[3])
   return sqrt (norm);
 }
 
+/** Normalize the given vector.
+ * \param [in,out] vec  A 3D vector.
+ */
+static inline void
+t8_vec_normalize (double vec[3])
+{
+  const double norm = t8_vec_norm (vec);
+
+  vec[0] = vec[0] / norm;
+  vec[1] = vec[1] / norm;
+  vec[2] = vec[2] / norm;
+}
+
 /** Euclidean distance of X and Y.
  * \param [in]  vec_x  A 3D vector.
  * \param [in]  vec_y  A 3D vector.
@@ -171,6 +184,29 @@ t8_vec_diff (const double vec_x[3], const double vec_y[3], double diff[3])
   for (int i = 0; i < 3; i++) {
     diff[i] = vec_x[i] - vec_y[i];
   }
+}
+
+/** Compute the normal of a triangle given by its three vertices.
+ * \param [in]  p1  A 3D vector.
+ * \param [in]  p2  A 3D vector.
+ * \param [in]  p3  A 3D vector.
+ * \param [out] Normal vector of the triangle. (Not necessarily of length 1!)
+ */
+static inline void
+t8_vec_tri_normal (const double p1[3], const double p2[3], const double p3[3], double normal[3])
+{
+  double a[3]; /* First triangle side. */
+  double b[3]; /* Second triangle side. */
+
+  a[0] = p2[0] - p1[0];
+  a[1] = p2[1] - p1[1];
+  a[2] = p2[2] - p1[2];
+
+  b[0] = p3[0] - p1[0];
+  b[1] = p3[1] - p1[1];
+  b[2] = p3[2] - p1[2];
+
+  t8_vec_cross (a, b, normal);
 }
 
 T8_EXTERN_C_END ();
