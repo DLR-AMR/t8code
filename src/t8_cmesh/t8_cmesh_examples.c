@@ -192,12 +192,10 @@ vertices_single_tree (const t8_eclass_t eclass, double *vertices)
     memcpy (vertices, vertices_coords, 12 * sizeof (double));
     break;
   case T8_ECLASS_TET:
-    /* v_0*/
-    memcpy (vertices, vertices_coords + 21, 3 * sizeof (double));
-    /* v_1 - v_2*/
-    memcpy (vertices + 3, vertices_coords + 3, 6 * sizeof (double));
+    /* v_0 - v_2*/
+    memcpy (vertices + 3, vertices_coords, 9 * sizeof (double));
     /* v_3*/
-    memcpy (vertices + 9, vertices_coords + 12, 3 * sizeof (double));
+    memcpy (vertices + 0, vertices_coords + 21, 3 * sizeof (double));
     break;
   case T8_ECLASS_HEX:
     /* v_0 - v_8*/
@@ -2709,7 +2707,6 @@ t8_tet_shift_vertices_along_face (double *vertices, const int face)
 
   double normal[3];
   t8_vec_cross (span_vec_0, span_vec_1, normal);
-  t8_vec_cross (span_vec_0, span_vec_1, normal);
   const double norm = t8_vec_norm (normal);
   T8_ASSERT (norm > 1e-14);
   double tmp[3];
@@ -2720,10 +2717,14 @@ t8_tet_shift_vertices_along_face (double *vertices, const int face)
   t8_vec_ax (normal, n_p > 0 ? 1. / norm : -1. / norm);
 
   const double dist = fabs (n_p) / norm;
-  t8_vec_axpyz (vertices + 3 * v_3, normal, tmp, 2 * dist);
+  t8_vec_axpyz (normal, vertices + 3 * v_3, tmp, 2 * dist);
 
-  /* TODO: maybe reorder vertices to avoid negative volume */
   memcpy (vertices + 3 * v_3, tmp, 3 * sizeof (double));
+
+  /* Reorder vertices to avoid negative volume */
+  memcpy (tmp, vertices + 3 * v_1, 3 * sizeof (double));
+  memcpy (vertices + 3 * v_1, vertices + 3 * v_2, 3 * sizeof (double));
+  memcpy (vertices + 3 * v_2, tmp, 3 * sizeof (double));
 }
 
 static void
