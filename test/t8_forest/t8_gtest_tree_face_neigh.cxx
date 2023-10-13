@@ -46,14 +46,10 @@ class tree_face_neigh: public testing::TestWithParam<t8_eclass_t> {
     if (eclass == T8_ECLASS_PRISM) {
       GTEST_SKIP ();
     }
-    scheme = t8_scheme_new_default_cxx ();
   }
   void
   TearDown () override
   {
-    if (eclass != T8_ECLASS_PRISM) {
-      t8_scheme_cxx_unref (&scheme);
-    }
   }
   t8_eclass_t eclass;
   t8_scheme_cxx_t *scheme;
@@ -62,32 +58,42 @@ class tree_face_neigh: public testing::TestWithParam<t8_eclass_t> {
 
 TEST_P (tree_face_neigh, t8_forest_neigh_face_test)
 {
-  t8_eclass_scheme_c *ts = scheme->eclass_schemes[eclass];
   for (int face = 0; face < t8_eclass_num_faces[eclass]; face++) {
     const int face_type = t8_eclass_face_types[eclass][face];
     const int num_vertices = t8_eclass_num_vertices[face_type];
     for (int orientation = 0; orientation < num_vertices; orientation++) {
+      t8_debugf ("[D] ------------------Test: %s face %i orientation %i -----------------\n",
+                 t8_eclass_to_string[eclass], face, orientation);
       char fileprefix[BUFSIZ];
       t8_cmesh_t cmesh = t8_cmesh_new_two_trees_face_orientation (eclass, face, orientation, sc_MPI_COMM_WORLD);
-      t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, 0, 0, comm);
+      t8_forest_t forest;
+      scheme = t8_scheme_new_default_cxx ();
+      t8_forest_init (&forest);
+      t8_forest_set_level (forest, 0);
+      t8_forest_set_cmesh (forest, cmesh, comm);
+      t8_forest_set_scheme (forest, scheme);
+      t8_forest_commit (forest);
       t8_element_t *elem = t8_forest_get_element_in_tree (forest, 0, 0);
 
       const int face_class = t8_eclass_face_types[eclass][face];
+      t8_eclass_scheme_c *ts = scheme->eclass_schemes[eclass];
       t8_eclass_scheme_c *face_scheme = scheme->eclass_schemes[face_class];
       t8_element_t *t0_face;
       t8_element_t *t1_face;
       const int num_face_children = ts->t8_element_num_face_children (elem, face);
       face_scheme->t8_element_new (1, &t0_face);
       face_scheme->t8_element_new (1, &t1_face);
-      t8_element_t **children;
+      t8_element_t **children = T8_ALLOC (t8_element_t *, num_face_children);
       t8_element_t *face_elem;
       ts->t8_element_new (num_face_children, children);
       ts->t8_element_new (1, &face_elem);
-
       ts->t8_element_children_at_face (elem, face, children, num_face_children, NULL);
       const int num_face_vertices = t8_eclass_num_vertices[face_class];
+
       for (int ichild = 0; ichild < num_face_children; ichild++) {
-        ts->t8_element_boundary_face (children[ichild], face, t0_face, face_scheme);
+        t8_debugf ("[D] nfc: %i, ichild %i\n", num_face_children, ichild);
+        const int child_face = ts->t8_element_face_child_face (elem, face, ichild);
+        ts->t8_element_boundary_face (children[ichild], child_face, t0_face, face_scheme);
         t8_locidx_t *face_neighbor;
         int8_t *ttf;
         (void) t8_cmesh_trees_get_tree_ext (cmesh->trees, 0, &face_neighbor, &ttf);
@@ -109,7 +115,7 @@ TEST_P (tree_face_neigh, t8_forest_neigh_face_test)
         face_scheme->t8_element_transform_face (t0_face, t1_face, ttf[face] / F, sign, is_smaller);
         const int neigh_face = ts->t8_element_extrude_face (t1_face, face_scheme, face_elem, tree_neigh_face);
         for (int ivertex = 0; ivertex < num_face_vertices; ivertex++) {
-          int t0_face_vertex = t8_face_vertex_to_tree_vertex[eclass][face][ivertex];
+          int t0_face_vertex = t8_face_vertex_to_tree_vertex[eclass][child_face][ivertex];
           int t1_face_vertex = t8_face_vertex_to_tree_vertex[eclass][neigh_face][ivertex];
           double t0_face_vertex_coords[3];
           double t1_face_vertex_coords[3];
@@ -124,11 +130,11 @@ TEST_P (tree_face_neigh, t8_forest_neigh_face_test)
       face_scheme->t8_element_destroy (1, &t1_face);
       ts->t8_element_destroy (num_face_children, children);
       ts->t8_element_destroy (1, &face_elem);
+      T8_FREE (children);
 
       //snprintf (fileprefix, BUFSIZ, "%s_face_%i_%i", t8_eclass_to_string[eclass], face, orientation);
       //t8_cmesh_vtk_write_file (cmesh, fileprefix, 1.0);
       t8_forest_unref (&forest);
-      t8_cmesh_destroy (&cmesh);
     }
   }
 }
