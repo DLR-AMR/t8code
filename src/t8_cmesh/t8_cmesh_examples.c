@@ -2666,7 +2666,7 @@ t8_cmesh_new_squared_disk (const double radius, sc_MPI_Comm comm)
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
 
-  const double ri = 0.5 * radius;
+  const double ri = 0.6 * radius;
   const double ro = radius;
 
   const double xi = ri / M_SQRT2;
@@ -2675,7 +2675,7 @@ t8_cmesh_new_squared_disk (const double radius, sc_MPI_Comm comm)
   const double xo = ro / M_SQRT2;
   const double yo = ro / M_SQRT2;
 
-  const int ntrees = 5; /* Number of cmesh elements resp. trees. */
+  const int ntrees = 4*3; /* Number of cmesh elements resp. trees. */
   const int nverts = 4; /* Number of vertices per cmesh element. */
 
   /* Arrays for the face connectivity computations via vertices. */
@@ -2691,44 +2691,38 @@ t8_cmesh_new_squared_disk (const double radius, sc_MPI_Comm comm)
     all_eclasses[itree] = T8_ECLASS_QUAD;
   }
 
-  /* Central quad. */
-  {
-    const double vertices[4][3] = { { -xi, -yi, 0.0 }, { xi, -yi, 0.0 }, { -xi, yi, 0.0 }, { xi, yi, 0.0 } };
+  const double vertices_mid[4][3] = { { 0.0, 0.0, 0.0 }, { xi, 0.0, 0.0 }, { 0.0, yi, 0.0 }, { xi, yi, 0.0 } };
+  const double vertices_top[4][3] = { { 0.0, yi, 0.0 }, { xi, yi, 0.0 }, { 0.0, yo, 0.0 }, { xo, yo, 0.0 } };
+  const double vertices_bot[4][3] = { { xi, 0.0, 0.0 }, { xi, yi, 0.0 }, { xo, 0.0, 0.0 }, { xo, yo, 0.0 } };
 
-    t8_cmesh_set_tree_vertices (cmesh, 0, (double *) vertices, 4);
+  int itree = 0;
+  for (int iturn = 0; iturn < 4; iturn++) {
+    double rot_mat[3][3];
+    double rot_vertices_mid[4][3];
+    double rot_vertices_top[4][3];
+    double rot_vertices_bot[4][3];
 
-    /* itree = 0; */
+    t8_mat_init_zrot (rot_mat, -iturn * 0.5 * M_PI);
+
+    for (int i = 0; i < 4; i++) {
+      t8_mat_mult_vec (rot_mat, &(vertices_mid[i][0]), &(rot_vertices_mid[i][0]));
+      t8_mat_mult_vec (rot_mat, &(vertices_top[i][0]), &(rot_vertices_top[i][0]));
+      t8_mat_mult_vec (rot_mat, &(vertices_bot[i][0]), &(rot_vertices_bot[i][0]));
+    }
+
+    t8_cmesh_set_tree_vertices (cmesh, itree + 0, (double *) rot_vertices_mid, 4);
+    t8_cmesh_set_tree_vertices (cmesh, itree + 1, (double *) rot_vertices_top, 4);
+    t8_cmesh_set_tree_vertices (cmesh, itree + 2, (double *) rot_vertices_bot, 4);
+
     for (int ivert = 0; ivert < nverts; ivert++) {
       for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
-        all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, 0, ivert, icoord)]
-          = vertices[ivert][icoord];
+        all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree+0, ivert, icoord)] = rot_vertices_mid[ivert][icoord];
+        all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree+1, ivert, icoord)] = rot_vertices_top[ivert][icoord];
+        all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree+2, ivert, icoord)] = rot_vertices_bot[ivert][icoord];
       }
     }
-  }
 
-  /* Four quads framing the central quad. */
-  {
-    const double vertices[4][3] = { { -xi, yi, 0.0 }, { xi, yi, 0.0 }, { -xo, yo, 0.0 }, { xo, yo, 0.0 } };
-
-    for (int itree = 1; itree < ntrees; itree++) {
-      double rot_mat[3][3];
-      double rot_vertices[4][3];
-
-      t8_mat_init_zrot (rot_mat, (itree - 1) * 0.5 * M_PI);
-
-      for (int i = 0; i < 4; i++) {
-        t8_mat_mult_vec (rot_mat, &(vertices[i][0]), &(rot_vertices[i][0]));
-      }
-
-      t8_cmesh_set_tree_vertices (cmesh, itree, (double *) rot_vertices, 4);
-
-      for (int ivert = 0; ivert < nverts; ivert++) {
-        for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
-          all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree, ivert, icoord)]
-            = rot_vertices[ivert][icoord];
-        }
-      }
-    }
+    itree = itree + 3;
   }
 
   /* Face connectivity. */

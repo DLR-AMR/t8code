@@ -40,8 +40,7 @@ t8_geometry_squared_disk::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreei
   double *tree_vertices = t8_cmesh_get_tree_vertices (cmesh, ltreeid);
 
   /* Center square. */
-  if (gtreeid == 0) {
-
+  if (gtreeid % 3 == 0) {
     for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
       size_t offset = 3 * i_coord;
 
@@ -51,14 +50,14 @@ t8_geometry_squared_disk::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreei
       out_coords[offset + 1] = p[1];
       out_coords[offset + 2] = 0.0;
     }
-
+    
     return;
   }
 
-  /* Four squares framing the central one. */
   {
-    const double center_ref[3] = { 0.5, 0.5, 0.0 };
-    t8_geom_linear_interpolation (center_ref, tree_vertices, 3, 2, n);
+    n[0] = tree_vertices[0 + 0];
+    n[1] = tree_vertices[0 + 1];
+    n[2] = tree_vertices[0 + 2];
 
     /* Normalize vector `n`. */
     const double norm = sqrt (n[0] * n[0] + n[1] * n[1]);
@@ -67,9 +66,9 @@ t8_geometry_squared_disk::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreei
   }
 
   {
-    /* Radial vector parallel to one of the tilted edges of the quad. */
-    r[0] = tree_vertices[0];
-    r[1] = tree_vertices[1];
+    r[0] = tree_vertices[9 + 0];
+    r[1] = tree_vertices[9 + 1];
+    r[2] = tree_vertices[9 + 2];
 
     /* Normalize vector `r`. */
     const double norm = sqrt (r[0] * r[0] + r[1] * r[1]);
@@ -80,15 +79,15 @@ t8_geometry_squared_disk::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreei
   for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
     size_t offset = 3 * i_coord;
 
-    const double x = ref_coords[offset + 0];
-    const double y = ref_coords[offset + 1];
+    const double x_ref = ref_coords[offset + 0];
+    const double y_ref = ref_coords[offset + 1];
 
     {
       double corr_ref_coords[3];
 
       /* Correction in order to rectify elements near the corners. */
-      corr_ref_coords[0] = tan (0.5 * M_PI * (x - 0.5)) * 0.5 + 0.5;
-      corr_ref_coords[1] = y;
+      corr_ref_coords[0] = tan (0.25*M_PI * x_ref);
+      corr_ref_coords[1] = y_ref;
       corr_ref_coords[2] = 0.0;
 
       /* Compute and normalize vector `s`. */
@@ -102,13 +101,10 @@ t8_geometry_squared_disk::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreei
     t8_geom_linear_interpolation (ref_coords + offset, tree_vertices, 3, 2, p);
 
     /* Compute intersection of line with a plane. */
-    const double out_radius = (p[0] * n[0] + p[1] * n[1]) / (r[0] * n[0] + r[1] * n[1]);
+    const double R = (p[0] * n[0] + p[1] * n[1]) / (r[0] * n[0] + r[1] * n[1]);
 
-    const double blend = y * out_radius; /* y \in [0,1] */
-    const double dnelb = 1.0 - y;
-
-    out_coords[offset + 0] = dnelb * p[0] + blend * s[0];
-    out_coords[offset + 1] = dnelb * p[1] + blend * s[1];
+    out_coords[offset + 0] = (1.0 - y_ref) * p[0] + y_ref * R * s[0];
+    out_coords[offset + 1] = (1.0 - y_ref) * p[1] + y_ref * R * s[1];
     out_coords[offset + 2] = 0.0;
   }
 }
