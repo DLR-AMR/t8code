@@ -59,12 +59,16 @@ class tree_face_neigh: public testing::TestWithParam<t8_eclass_t> {
 TEST_P (tree_face_neigh, t8_forest_neigh_face_test)
 {
   for (int face = 0; face < t8_eclass_num_faces[eclass]; face++) {
-    char fileprefix[BUFSIZ];
-    t8_cmesh_t cmesh = t8_cmesh_new_two_trees_face_orientation (eclass, face, 0, sc_MPI_COMM_WORLD);
+    const int face_type = t8_eclass_face_types[eclass][face];
+    const int num_vertices = t8_eclass_num_vertices[face_type];
+    for (int orientation = 0; orientation < num_vertices; orientation++) {
+      char fileprefix[BUFSIZ];
+      t8_cmesh_t cmesh = t8_cmesh_new_two_trees_face_orientation (eclass, face, orientation, sc_MPI_COMM_WORLD);
 
-    snprintf (fileprefix, BUFSIZ, "%s_face_%i", t8_eclass_to_string[eclass], face);
-    t8_cmesh_vtk_write_file (cmesh, fileprefix, 1.0);
-    t8_cmesh_destroy (&cmesh);
+      snprintf (fileprefix, BUFSIZ, "%s_face_%i_%i", t8_eclass_to_string[eclass], face, orientation);
+      t8_cmesh_vtk_write_file (cmesh, fileprefix, 1.0);
+      t8_cmesh_destroy (&cmesh);
+    }
   }
 }
 

@@ -2614,7 +2614,7 @@ t8_cmesh_new_squared_disk (const double radius, sc_MPI_Comm comm)
 }
 
 static void
-t8_line_shift_vertices_along_face (double *vertices, const int face)
+t8_line_shift_vertices_along_face (double *vertices, const int face, const int orientation)
 {
   const int v_0 = face;
   const int v_1 = 1 - face;
@@ -2625,7 +2625,15 @@ t8_line_shift_vertices_along_face (double *vertices, const int face)
 }
 
 static void
-t8_tri_shift_vertices_along_face (double *vertices, const int face)
+t8_swap_vec (double vec_0[3], double vec_1[3])
+{
+  const double tmp[3] = { vec_0[0], vec_0[1], vec_0[2] };
+  memcpy (vec_0, vec_1, 3 * sizeof (double));
+  memcpy (vec_1, tmp, 3 * sizeof (double));
+}
+
+static void
+t8_tri_shift_vertices_along_face (double *vertices, const int face, const int orientation)
 {
   const int v_0 = t8_face_vertex_to_tree_vertex[T8_ECLASS_TET][face][0];
   const int v_1 = t8_face_vertex_to_tree_vertex[T8_ECLASS_TET][face][1];
@@ -2635,14 +2643,14 @@ t8_tri_shift_vertices_along_face (double *vertices, const int face)
 
   double tmp[3];
   memcpy (tmp, vertices + 3 * v_2, 3 * sizeof (double));
-  memcpy (vertices + 3 * v_2, vertices + 3 * v_1, 3 * sizeof (double));
-  memcpy (vertices + 3 * v_1, vertices + 3 * v_0, 3 * sizeof (double));
-
-  t8_vec_axpyz (ortho, tmp, vertices + 3 * v_0, -2.0);
+  if (orientation == 1) {
+    t8_swap_vec (vertices + 3 * v_0, vertices + 3 * v_1);
+  }
+  t8_vec_axpyz (ortho, tmp, vertices + 3 * v_2, -2.0);
 }
 
 static void
-t8_quad_shift_vertices_along_face (double *vertices, const int face)
+t8_quad_shift_vertices_along_face (double *vertices, const int face, const int orientation)
 {
   /* v_0 and v_1 define mirror face*/
   const int v_0 = t8_face_vertex_to_tree_vertex[T8_ECLASS_QUAD][face][0];
@@ -2688,10 +2696,14 @@ t8_quad_shift_vertices_along_face (double *vertices, const int face)
   /* Shift along ortho 1 */
   t8_vec_axpy (ortho_1, vertices + 3 * v_1, 1.0);
   t8_vec_axpy (ortho_1, vertices + 3 * v_3, 1.0);
+  if (orientation == 1) {
+    t8_swap_vec (vertices + 3 * v_0, vertices + 3 * v_1);
+    t8_swap_vec (vertices + 3 * v_2, vertices + 3 * v_3);
+  }
 }
 
 static void
-t8_tet_shift_vertices_along_face (double *vertices, const int face)
+t8_tet_shift_vertices_along_face (double *vertices, const int face, const int orientation)
 {
   /* v_0, v_1 and v_2 define mirror face*/
   const int v_0 = t8_face_vertex_to_tree_vertex[T8_ECLASS_TET][face][0];
@@ -2725,10 +2737,15 @@ t8_tet_shift_vertices_along_face (double *vertices, const int face)
   memcpy (tmp, vertices + 3 * v_1, 3 * sizeof (double));
   memcpy (vertices + 3 * v_1, vertices + 3 * v_2, 3 * sizeof (double));
   memcpy (vertices + 3 * v_2, tmp, 3 * sizeof (double));
+
+  for (int i = 0; i < orientation; i++) {
+    t8_swap_vec (vertices + 3 * v_0, vertices + 3 * v_1);
+    t8_swap_vec (vertices + 3 * v_1, vertices + 3 * v_2);
+  }
 }
 
 static void
-t8_hex_shift_vertices_along_face (double *vertices, const int face)
+t8_hex_shift_vertices_along_face (double *vertices, const int face, const int orientation)
 {
   /* v_0-v_3 define mirror face*/
   const int v_0 = t8_face_vertex_to_tree_vertex[T8_ECLASS_HEX][face][0];
@@ -2820,10 +2837,20 @@ t8_hex_shift_vertices_along_face (double *vertices, const int face)
 
   memcpy (vertices + 3 * v_7, vertices + 3 * v_3, 3 * sizeof (double));
   t8_vec_axpy (normal, vertices + 3 * v_3, dist_3);
+
+  for (int i = 0; i < orientation; i++) {
+    t8_swap_vec (vertices + 3 * v_0, vertices + 3 * v_1);
+    t8_swap_vec (vertices + 3 * v_1, vertices + 3 * v_3);
+    t8_swap_vec (vertices + 3 * v_2, vertices + 3 * v_3);
+
+    t8_swap_vec (vertices + 3 * v_4, vertices + 3 * v_5);
+    t8_swap_vec (vertices + 3 * v_5, vertices + 3 * v_7);
+    t8_swap_vec (vertices + 3 * v_6, vertices + 3 * v_7);
+  }
 }
 
 static void
-t8_pyra_shift_vertices_along_face (double *vertices, const int face)
+t8_pyra_shift_vertices_along_face (double *vertices, const int face, const int orientation)
 {
   /* v_0-v_3 define mirror face*/
   const int v_0 = t8_face_vertex_to_tree_vertex[T8_ECLASS_PYRAMID][face][0];
@@ -2839,7 +2866,7 @@ t8_pyra_shift_vertices_along_face (double *vertices, const int face)
   }
 
   if (face == 4) {
-    v_3 = t8_face_vertex_to_tree_vertex[T8_ECLASS_QUAD][face][3];
+    v_3 = t8_face_vertex_to_tree_vertex[T8_ECLASS_PYRAMID][face][3];
     v_4 = 4;
   }
   double span_vec_0[3];
@@ -2879,41 +2906,55 @@ t8_pyra_shift_vertices_along_face (double *vertices, const int face)
     t8_vec_axpy (normal, vertices + 3 * v_1, dist_1);
   }
   else {
+    /* Swap v2 and v1 for positive volume */
+    t8_swap_vec (vertices + 3 * v_2, vertices + 3 * v_1);
+    t8_vec_axpy (normal, vertices + 3 * v_4, dist_1);
+  }
+  if (face != 4) {
+    double vec_0[3];
+    double vec_1[3];
+    t8_vec_axpyz (vertices + 3 * v_3, vertices + 3 * v_0, vec_0, -1.0);
+    t8_vec_axpyz (vertices + 3 * v_4, vertices + 3 * v_1, vec_1, -1.0);
 
-    /*Todo: shuffle v_0 - v_3 to avoid negative volume */
-    memcpy (tmp, vertices + 3 * v_0, 3 * sizeof (double));
-    memcpy (vertices + 3 * v_0, vertices + 3 * v_1, 3 * sizeof (double));
-    memcpy (vertices + 3 * v_1, vertices + 3 * v_2, 3 * sizeof (double));
-    memcpy (vertices + 3 * v_2, vertices + 3 * v_3, 3 * sizeof (double));
-    memcpy (vertices + 3 * v_3, tmp, 3 * sizeof (double));
-
-    t8_vec_axpy (normal, vertices + 3 * v_4, 2 * dist_1);
+    for (int i = 0; i < orientation; i++) {
+      t8_swap_vec (vertices + 3 * v_3, vertices + 3 * v_4);
+      t8_swap_vec (vertices + 3 * v_3, vertices + 3 * v_2);
+    }
+    t8_vec_axpyz (vec_0, vertices + 3 * v_3, vertices + 3 * v_0, 1.0);
+    t8_vec_axpyz (vec_1, vertices + 3 * v_4, vertices + 3 * v_1, 1.0);
+  }
+  else {
+    for (int i = 0; i < orientation; i++) {
+      t8_swap_vec (vertices + 3 * v_0, vertices + 3 * v_1);
+      t8_swap_vec (vertices + 3 * v_1, vertices + 3 * v_3);
+      t8_swap_vec (vertices + 3 * v_2, vertices + 3 * v_3);
+    }
   }
 }
 
 static void
-t8_cmesh_mirror_tree_along_face (double *vertices, const t8_eclass_t eclass, const int face)
+t8_cmesh_mirror_tree_along_face (double *vertices, const t8_eclass_t eclass, const int face, const int orientation)
 {
   switch (eclass) {
   case T8_ECLASS_VERTEX:
     return;
   case T8_ECLASS_LINE:
-    t8_line_shift_vertices_along_face (vertices, face);
+    t8_line_shift_vertices_along_face (vertices, face, orientation);
     return;
   case T8_ECLASS_TRIANGLE:
-    t8_tri_shift_vertices_along_face (vertices, face);
+    t8_tri_shift_vertices_along_face (vertices, face, orientation);
     return;
   case T8_ECLASS_QUAD:
-    t8_quad_shift_vertices_along_face (vertices, face);
+    t8_quad_shift_vertices_along_face (vertices, face, orientation);
     return;
   case T8_ECLASS_TET:
-    t8_tet_shift_vertices_along_face (vertices, face);
+    t8_tet_shift_vertices_along_face (vertices, face, orientation);
     return;
   case T8_ECLASS_HEX:
-    t8_hex_shift_vertices_along_face (vertices, face);
+    t8_hex_shift_vertices_along_face (vertices, face, orientation);
     return;
   case T8_ECLASS_PYRAMID:
-    t8_pyra_shift_vertices_along_face (vertices, face);
+    t8_pyra_shift_vertices_along_face (vertices, face, orientation);
     return;
   case T8_ECLASS_PRISM:
 
@@ -2943,7 +2984,7 @@ t8_cmesh_new_two_trees_face_orientation (const t8_eclass_t eclass, const int fac
   t8_cmesh_set_tree_class (cmesh, 1, eclass);
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices, num_vertices);
   /* Shift vertices along a face given by the normal of the face*/
-  t8_cmesh_mirror_tree_along_face (vertices, eclass, face_num);
+  t8_cmesh_mirror_tree_along_face (vertices, eclass, face_num, orientation);
   t8_cmesh_set_tree_vertices (cmesh, 1, vertices, num_vertices);
   t8_cmesh_commit (cmesh, comm);
   T8_FREE (vertices);
