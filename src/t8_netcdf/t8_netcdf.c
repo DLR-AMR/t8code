@@ -21,7 +21,7 @@
 */
 
 #include <t8.h>
-#include <t8_netcdf.h>
+#include <t8_netcdf/t8_netcdf.h>
 
 /* Create an extern NetCDF variable */
 t8_netcdf_variable_t *

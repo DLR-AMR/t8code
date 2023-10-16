@@ -58,7 +58,7 @@ These functions write a file in the NetCDF-format which represents the given 2D-
 #include <t8_element_cxx.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
-#include <t8_forest_netcdf.h>
+#include <t8_netcdf/t8_forest_netcdf.h>
 #include <t8_element_shape.h>
 
 T8_EXTERN_C_BEGIN ();

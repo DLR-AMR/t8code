@@ -43,12 +43,12 @@
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
-#include <t8_forest_netcdf.h>
-#include <t8_netcdf.h>
+#include <t8_netcdf/t8_forest_netcdf.h>
+#include <t8_netcdf/t8_netcdf.h>
 
 /* In this example is the use of the netcdf feature exemplary displayed.
 * We show how to write out a forest in the netCDF format and how to create additional (integer/double) netCDF variables which hold element data.
-* There are mainly two functions implemented in 'src/t8_forest_netcdf.cxx' which allow the creation of netCDF file containing the data for a forest in the style of the UGRID conventions.
+* There are mainly two functions implemented in 'src/t8_netcdf/t8_forest_netcdf.cxx' which allow the creation of netCDF file containing the data for a forest in the style of the UGRID conventions.
 * The first function is: 't8_forest_write_netcdf_ext()'; it allows to choose which variable storage and access scheme should be used (e.g. {NC_CONTIGUOUS; NC_CHUNKED}x{NC_INDEPENDENT; NC_COLLECTIVE}).
 * The second function is: 't8_forest_write_netcdf()' uses default values (NC_CONTIGUOUS, NC_INDEPENDENT).
 * If the extended function is used and NC_CHUNKED is chosen: Currently, the chunksize which is chosen is the netCDF default (this means -> nc_def_var_chunking(..., NULL) receives a NULL-pointer as the 'size_t* chunksizesp' parameter)
