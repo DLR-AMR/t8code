@@ -2838,6 +2838,7 @@ t8_hex_shift_vertices_along_face (double *vertices, const int face, const int or
   T8_ASSERT (v_5 != -1);
   T8_ASSERT (v_6 != -1);
   T8_ASSERT (v_7 != -1);
+  const int v[8] = { v_0, v_1, v_2, v_3, v_4, v_5, v_6, v_7 };
 
 #if T8_ENABLE_DEBUG
   /* Check that every vertex is used exactly once. */
@@ -2851,6 +2852,7 @@ t8_hex_shift_vertices_along_face (double *vertices, const int face, const int or
   every_vertex_set[v_6] += 1;
   every_vertex_set[v_7] += 1;
   for (int i = 0; i < 8; i++) {
+    t8_debugf ("[D] %i: %i %f %f %f\n", i, v[i], vertices[3 * v[i]], vertices[3 * v[i] + 1], vertices[3 * v[i] + 2]);
     T8_ASSERT (every_vertex_set[i] == 1);
   }
 #endif
@@ -2898,15 +2900,18 @@ t8_hex_shift_vertices_along_face (double *vertices, const int face, const int or
   t8_vec_axpy (normal, vertices + 3 * v_3, dist_3);
 
   for (int i = 0; i < orientation; i++) {
-    t8_swap_vec (vertices + 3 * v_0, vertices + 3 * v_1);
-    t8_swap_vec (vertices + 3 * v_1, vertices + 3 * v_3);
-    t8_swap_vec (vertices + 3 * v_2, vertices + 3 * v_3);
+    t8_swap_vec (vertices + 3 * v_1, vertices + 3 * v_0);
+    t8_swap_vec (vertices + 3 * v_2, vertices + 3 * v_1);
+    t8_swap_vec (vertices + 3 * v_3, vertices + 3 * v_2);
 
-    t8_swap_vec (vertices + 3 * v_4, vertices + 3 * v_5);
-    t8_swap_vec (vertices + 3 * v_5, vertices + 3 * v_7);
-    t8_swap_vec (vertices + 3 * v_6, vertices + 3 * v_7);
+    t8_swap_vec (vertices + 3 * v_5, vertices + 3 * v_4);
+    t8_swap_vec (vertices + 3 * v_6, vertices + 3 * v_5);
+    t8_swap_vec (vertices + 3 * v_7, vertices + 3 * v_6);
   }
   const int face_correction = (face % 2 == 0) ? 1 : -1;
+  for (int i = 0; i < 8; i++) {
+    t8_debugf ("[D] %i: %i %f %f %f\n", i, v[i], vertices[3 * v[i]], vertices[3 * v[i] + 1], vertices[3 * v[i] + 2]);
+  }
   return face + face_correction;
 }
 
@@ -3004,8 +3009,8 @@ t8_pyra_shift_vertices_along_face (double *vertices, const int face, const int o
       t8_swap_vec (vertices + 3 * v_0, vertices + 3 * v_1);
       t8_swap_vec (vertices + 3 * v_1, vertices + 3 * v_3);
       t8_swap_vec (vertices + 3 * v_2, vertices + 3 * v_3);
-      return face;
     }
+    return face;
   }
 }
 

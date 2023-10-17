@@ -118,7 +118,8 @@ TEST_P (tree_face_neigh, t8_forest_neigh_face_test)
         for (int ivertex = 0; ivertex < num_face_vertices; ivertex++) {
           /* Compute the coordinates of all vertices touching the face of both elements*/
           int t0_face_vertex = t8_face_vertex_to_tree_vertex[eclass][child_face][ivertex];
-          int t1_face_vertex = t8_face_vertex_to_tree_vertex[eclass][neigh_face][ivertex];
+          int t1_face_vertex
+            = t8_face_vertex_to_tree_vertex[eclass][neigh_face][(ivertex + orientation) % num_face_vertices];
           double t0_face_vertex_coords[3];
           double t1_face_vertex_coords[3];
           t8_forest_element_coordinate (forest, 0, children[ichild], t0_face_vertex, t0_face_vertex_coords);
