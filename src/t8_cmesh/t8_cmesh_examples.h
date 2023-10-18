@@ -314,6 +314,14 @@ t8_cmesh_new_long_brick_pyramid (sc_MPI_Comm comm, int num_cubes);
 t8_cmesh_t
 t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees, const int set_attributes, const int do_partition, sc_MPI_Comm comm);
 
+/** Construct a squared disk of given radius.
+ * \param [in] radius        Radius of the sphere.
+ * \param [in] comm          The MPI communicator used to commit the cmesh
+ * \return                   A cmesh representing the spherical surface.
+ */
+t8_cmesh_t
+t8_cmesh_new_squared_disk (const double radius, sc_MPI_Comm comm);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_EXAMPLES */

@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2023 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,23 +20,30 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_schemes/t8_default/t8_default_quad/t8_dquad_bits.h>
-#include <p4est_bits.h>
+/** \file t8_geometry_examples.h
+ * This header provides the C interface to create a cubed_sphere geometry.
+ */
 
+#ifndef T8_GEOMETRY_EXAMPLES_H
+#define T8_GEOMETRY_EXAMPLES_H
+
+#include <t8.h>
+#include <t8_geometry/t8_geometry.h>
+
+T8_EXTERN_C_BEGIN ();
+
+/** Destroy a geometry object.
+ * \param [in,out] geom   A pointer to a geometry object. Set to NULL on output.
+ */
 void
-t8_dquad_compute_reference_coords (const t8_dquad_t *elem, const double *ref_coords, const size_t num_coords,
-                                   double *out_coords)
-{
-  const p4est_quadrant_t *q1 = (const p4est_quadrant_t *) elem;
+t8_geometry_destroy (t8_geometry_c **geom);
 
-  const p4est_qcoord_t h = P4EST_QUADRANT_LEN (q1->level);
+/** Create a new squared_disk geometry.
+ * \return          A pointer to an allocated geometry struct.
+ */
+t8_geometry_c *
+t8_geometry_squared_disk_new ();
 
-  for (size_t coord = 0; coord < num_coords; ++coord) {
-    const size_t offset = coord * 2;
-    out_coords[offset + 0] = q1->x + ref_coords[offset + 0] * h;
-    out_coords[offset + 1] = q1->y + ref_coords[offset + 1] * h;
+T8_EXTERN_C_END ();
 
-    out_coords[offset + 0] /= (double) P4EST_ROOT_LEN;
-    out_coords[offset + 1] /= (double) P4EST_ROOT_LEN;
-  }
-}
+#endif /* T8_GEOMETRY_EXAMPLE_H */

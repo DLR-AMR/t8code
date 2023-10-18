@@ -55,13 +55,13 @@ jobs:
 #
     - name: checkout
       if: ${{ env.MINOR_RELEASE == 'true' }}
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         path: t8code
 
     - name: Install dependencies
       if: ${{ env.MINOR_RELEASE == 'true' }}
-      run: sudo apt-get install libz-dev doxygen
+      run: sudo apt-get install libz-dev doxygen-latex
     - name: init submodules
       if: ${{ env.MINOR_RELEASE == 'true' }}
       run: |
@@ -108,7 +108,7 @@ jobs:
 # upload documentation
     - name: Checkout t8code-website repo
       if: ${{ env.MINOR_RELEASE == 'true' }}
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         ref: ${{ github.head_ref }}
         fetch-depth: 0

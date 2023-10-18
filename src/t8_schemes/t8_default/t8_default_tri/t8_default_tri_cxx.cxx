@@ -503,10 +503,10 @@ t8_default_scheme_tri_c::t8_element_vertex_reference_coords (const t8_element_t 
 
 void
 t8_default_scheme_tri_c::t8_element_reference_coords (const t8_element_t *elem, const double *ref_coords,
-                                                      const void *user_data, double *out_coords) const
+                                                      const size_t num_coords, double *out_coords) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
-  t8_dtri_compute_reference_coords ((const t8_dtri_t *) elem, ref_coords, out_coords);
+  t8_dtri_compute_reference_coords ((const t8_dtri_t *) elem, ref_coords, num_coords, 0, out_coords);
 }
 
 int

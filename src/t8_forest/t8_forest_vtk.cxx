@@ -187,7 +187,7 @@ t8_forest_vtk_get_element_nodes (t8_forest_t forest, t8_locidx_t ltreeid, const 
   const t8_eclass_scheme_c *scheme = t8_forest_get_eclass_scheme (forest, tree_class);
   const t8_element_shape_t element_shape = scheme->t8_element_shape (element);
   const double *ref_coords = t8_forest_vtk_point_to_element_ref_coords[element_shape][vertex];
-  t8_forest_element_from_ref_coords (forest, ltreeid, element, ref_coords, out_coords, stretch_flag);
+  t8_forest_element_from_ref_coords (forest, ltreeid, element, ref_coords, 1, out_coords, stretch_flag);
 }
 
 /**
@@ -551,12 +551,7 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest, vtkSmartPointer<vtkUnstruc
     dataArrays[idata]->SetNumberOfTuples (num_elements);       /* We want number of tuples=number of elements */
     dataArrays[idata]->SetNumberOfComponents (num_components); /* Each tuples has 3 values */
     dataArrays[idata]->SetVoidArray (data[idata].data, num_elements * num_components, 1);
-    if (num_components == 1) {
-      unstructuredGrid->GetCellData ()->SetScalars (dataArrays[idata]);
-    }
-    else {
-      unstructuredGrid->GetCellData ()->SetVectors (dataArrays[idata]);
-    }
+    unstructuredGrid->GetCellData ()->AddArray (dataArrays[idata]);
   }
 
   /* We have to free the allocated memory for the cellTypes Array and the other arrays we allocated memory for. */

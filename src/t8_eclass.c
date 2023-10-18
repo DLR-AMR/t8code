@@ -39,9 +39,8 @@ const int t8_face_vertex_to_tree_vertex[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES][T8
   { { 0, 2, 4 }, { 1, 3, 4 }, { 0, 1, 4 }, { 2, 3, 4 }, { 0, 1, 2, 3 } }                              /* pyramid */
 };
 
-/* TODO: tet, prism, pyramid 
- *       remove suffix _n if issue #446 is solved */
-const int t8_face_edge_to_tree_edge_n[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_EDGES_2D] = {
+/* TODO: tet, prism, pyramid */
+const int t8_face_edge_to_tree_edge[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_EDGES_2D] = {
   { { -1 } },                                                                                             /* vertex */
   { { 0 } },                                                                                              /* line */
   { { 0 }, { 1 }, { 2 }, { 3 } },                                                                         /* quad */
@@ -64,9 +63,8 @@ const int t8_face_to_edge_neighbor[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES][T8_ECLA
   { { -1 } },                                                                                             /* pyramid */
 };
 
-/* TODO: tet, prism, pyramid
- *       remove suffix _n if issue #446 is solved */
-const int t8_edge_vertex_to_tree_vertex_n[T8_ECLASS_COUNT][T8_ECLASS_MAX_EDGES][2] = {
+/* TODO: tet, prism, pyramid */
+const int t8_edge_vertex_to_tree_vertex[T8_ECLASS_COUNT][T8_ECLASS_MAX_EDGES][2] = {
   { { -1 } },                                 /* vertex */
   { { 0 }, { 1 } },                           /* line */
   { { 0, 2 }, { 1, 3 }, { 0, 1 }, { 2, 3 } }, /* quad */
@@ -88,9 +86,8 @@ const int t8_edge_vertex_to_tree_vertex_n[T8_ECLASS_COUNT][T8_ECLASS_MAX_EDGES][
   { { -1 } },   /* pyramid */
 };
 
-/* TODO: tet, prism, pyramid
- *       remove suffix _n if issue #446 is solved */
-const int t8_edge_to_face_n[T8_ECLASS_COUNT][T8_ECLASS_MAX_EDGES][2] = {
+/* TODO: tet, prism, pyramid */
+const int t8_edge_to_face[T8_ECLASS_COUNT][T8_ECLASS_MAX_EDGES][2] = {
   { { -1 } },                     /* vertex */
   { { 0 } },                      /* line */
   { { 0 }, { 1 }, { 2 }, { 3 } }, /* quad */
@@ -223,7 +220,7 @@ t8_eclass_compare (t8_eclass_t eclass1, t8_eclass_t eclass2)
       return eclass2 == T8_ECLASS_PYRAMID ? -1 : 1;
     default:
       T8_ASSERT (eclass1 == T8_ECLASS_PYRAMID);
-      return -1;
+      return 1;
     }
   }
 }

@@ -1188,7 +1188,8 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
                 }
                 else /* 3D */
                 {
-                  edge_geometries[t8_face_edge_to_tree_edge[i_tree_faces][i_face_edges] + t8_eclass_num_edges[eclass]]
+                  edge_geometries[t8_face_edge_to_tree_edge[eclass][i_tree_faces][i_face_edges]
+                                  + t8_eclass_num_edges[eclass]]
                     = -1;
                 }
               }
@@ -1214,8 +1215,8 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
           /* Then we look for geometries linked to the edges */
           for (int i_tree_edges = 0; i_tree_edges < num_edges; ++i_tree_edges) {
             if (t8_eclass_to_dimension[eclass] == 3) {
-              edge_nodes[0] = tree_nodes[t8_edge_vertex_to_tree_vertex[i_tree_edges][0]];
-              edge_nodes[1] = tree_nodes[t8_edge_vertex_to_tree_vertex[i_tree_edges][1]];
+              edge_nodes[0] = tree_nodes[t8_edge_vertex_to_tree_vertex[eclass][i_tree_edges][0]];
+              edge_nodes[1] = tree_nodes[t8_edge_vertex_to_tree_vertex[eclass][i_tree_edges][1]];
             }
             else {
               edge_nodes[0] = tree_nodes[t8_face_vertex_to_tree_vertex[eclass][i_tree_edges][0]];
@@ -1281,9 +1282,9 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
             if (edge_geometry_dim == 1) {
               /* Check if adjacent faces carry a surface and if this edge lies on the surface */
               for (int i_adjacent_face = 0; i_adjacent_face < 2; ++i_adjacent_face) {
-                if (face_geometries[t8_edge_to_face[i_tree_edges][i_adjacent_face]] > 0) {
+                if (face_geometries[t8_edge_to_face[eclass][i_tree_edges][i_adjacent_face]] > 0) {
                   if (!occ_geometry->t8_geom_is_edge_on_face (
-                        edge_geometry_tag, face_geometries[t8_edge_to_face[i_tree_edges][i_adjacent_face]])) {
+                        edge_geometry_tag, face_geometries[t8_edge_to_face[eclass][i_tree_edges][i_adjacent_face]])) {
                     t8_global_errorf ("Error: Adjacent edge and face of a tree carry "
                                       "incompatible geometries.\n");
                     goto die_ele;

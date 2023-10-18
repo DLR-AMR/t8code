@@ -157,10 +157,12 @@ t8_geometry_c *
 t8_geom_handler_find_geometry (const t8_geometry_handler_t *geom_handler, const char *name);
 
 void
-t8_geometry_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double *out_coords);
+t8_geometry_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                      double *out_coords);
 
 void
-t8_geometry_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double *jacobian);
+t8_geometry_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                      double *jacobian);
 
 t8_geometry_type_t
 t8_geometry_get_type (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);

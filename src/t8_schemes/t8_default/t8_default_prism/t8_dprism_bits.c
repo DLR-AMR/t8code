@@ -562,14 +562,15 @@ t8_dprism_vertex_ref_coords (const t8_dprism_t *elem, const int vertex, double c
 }
 
 void
-t8_dprism_compute_reference_coords (const t8_dprism_t *elem, const double *ref_coords, double *out_coords)
+t8_dprism_compute_reference_coords (const t8_dprism_t *elem, const double *ref_coords, const size_t num_coords,
+                                    double *out_coords)
 {
   T8_ASSERT (t8_dprism_is_valid (elem));
   T8_ASSERT (elem->line.level == elem->tri.level);
   /*Compute x and y coordinate */
-  t8_dtri_compute_reference_coords (&elem->tri, ref_coords, out_coords);
+  t8_dtri_compute_reference_coords (&elem->tri, ref_coords, num_coords, 1, out_coords);
   /*Compute z coordinate */
-  t8_dline_compute_reference_coords (&elem->line, ref_coords + 2, out_coords + 2);
+  t8_dline_compute_reference_coords (&elem->line, ref_coords + 2, num_coords, 2, out_coords + 2);
 }
 
 t8_linearidx_t
@@ -592,9 +593,7 @@ t8_dprism_linear_id (const t8_dprism_t *p, int level)
   }
 
   lines_at_level = sc_intpow64u (T8_DLINE_CHILDREN, level - 1);
-  /* *INDENT-OFF* */
   prism_shift = (T8_DPRISM_CHILDREN / T8_DLINE_CHILDREN) * sc_intpow64u (T8_DPRISM_CHILDREN, level - 1);
-  /* *INDENT-ON* */
   tri_id = t8_dtri_linear_id (&p->tri, level);
   line_id = t8_dline_linear_id (&p->line, level);
   for (i = 0; i < level; i++) {

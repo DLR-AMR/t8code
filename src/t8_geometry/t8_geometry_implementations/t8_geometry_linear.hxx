@@ -34,9 +34,14 @@
 struct t8_geometry_linear: public t8_geometry_with_vertices
 {
  public:
-  /* Basic constructor that sets the dimension and the name
-   * to "t8_geom_linear_{dimension}" */
-  t8_geometry_linear (int dimension);
+  /** 
+   * Constructor of the linear geometry with a given dimension. The geometry
+   * is viable with all tree types and uses as many vertices as the tree type has.
+   * The vertices are saved via the \ref t8_cmesh_set_tree_vertices function.
+   * Sets the dimension and the name to "t8_geom_linear_{dim}"
+   * \param [in] dim  0 <= \a dimension <= 3. The dimension.
+   */
+  t8_geometry_linear (int dim);
 
   /* Base constructor with no arguments. We need this since it
    * is called from derived class constructors.
@@ -61,25 +66,29 @@ struct t8_geometry_linear: public t8_geometry_with_vertices
   };
 
   /**
-   * Map a point in the reference space $$[0,1]^dimension$$ to $$\mathbb R^3$$
-   * \param [in]  cmesh      The cmesh in which the point lies.
-   * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
-   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   * Maps points in the reference space \f$ [0,1]^\mathrm{dim} \to \mathbb{R}^3 \f$.
+   * \param [in]  cmesh       The cmesh in which the point lies.
+   * \param [in]  gtreeid     The global tree (of the cmesh) in which the reference point is.
+   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   virtual void
-  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double out_coords[3]) const;
+  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                    double *out_coords) const;
 
   /**
-   * Compute the jacobian of the \a t8_geom_evaluate map at a point in the reference space $$[0,1]^dimension$$.
+   * Compute the jacobian of the \a t8_geom_evaluate map at a point in the reference space \f$ [0,1]^\mathrm{dim} \f$.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
-   * \param [out] jacobian    The jacobian at \a ref_coords. Array of size dimension x 3. Indices 3*i, 3*i+1, 3*i+2
-   *                          correspond to the i-th column of the jacobian (Entry 3*i + j is del f_j/del x_i).
+   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [out] jacobian    The jacobian at \a ref_coords. Array of size \a num_coords x dimension x 3. Indices \f$ 3 \cdot i\f$ , \f$ 3 \cdot i+1 \f$ , \f$ 3 \cdot i+2 \f$
+   *                          correspond to the \f$ i \f$-th column of the jacobian  (Entry \f$ 3 \cdot i + j \f$ is \f$ \frac{\partial f_j}{\partial x_i} \f$).
    */
   virtual void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, double *jacobian) const;
+  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                             double *jacobian) const;
 
   /* Load tree data is inherited from t8_geometry_with_vertices. */
 };
