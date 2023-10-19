@@ -2097,6 +2097,8 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8
         /* Find the index in element_array of the leaf ancestor of the first neighbor.
          * This is either the neighbor itself or its parent, or its grandparent */
         element_index = t8_forest_bin_search_lower (element_array, neigh_id, forest->maxlevel);
+        T8_ASSERT (element_index >= 0);
+
         /* Get the element */
         ancestor = t8_forest_ghost_get_element (forest, lghost_treeid, element_index);
         /* Add the number of ghost elements on previous ghost trees and the number of local elements. */
