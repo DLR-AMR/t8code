@@ -37,18 +37,18 @@ on:
 jobs:
   update_dev_doc:
 
-    runs-on: ubuntu-20.04
-    
+    runs-on: ubuntu-22.04
+
     timeout-minutes: 10
     steps:
 #
 # Setup and bootstrap
 #
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v4
     - name: Install zlib
       run: sudo apt-get install libz-dev
     - name: Install doxygen
-      run: sudo apt-get install doxygen
+      run: sudo apt-get install doxygen-latex
     - name: init submodules
       run: git submodule init
     - name: update submodules
@@ -75,7 +75,7 @@ jobs:
 
 # upload documentation
     - name: Checkout t8code-website repo
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         ref: ${{ github.head_ref }}
         fetch-depth: 0
@@ -88,7 +88,12 @@ jobs:
         rm -rf doc/dev/*
         mkdir -p doc/dev
         cp -r ../../build_debug/doc/html/* doc/dev/
+    - name: check_diff
+      run: |
+        cd t8code-website
+        if [ ! -z "$(git status --porcelain --untracked-files=no )" ]; then echo "COMMIT_NEW_DOC=true" >> $GITHUB_ENV; fi
     - name: Commit and push files
+      if: ${{ env.COMMIT_NEW_DOC == 'true' }}
       run: |
         cd t8code-website
         git config --local user.email "t8ddy.bot@gmail.com"
@@ -96,3 +101,4 @@ jobs:
         git add content/doc/dev/
         git commit -m "Add newest documentation"
         git push --force-with-lease
+

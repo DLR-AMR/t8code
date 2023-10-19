@@ -38,17 +38,18 @@
  * How you can experiment here:
  *  - Use Paraview to visualize the output files.
  *  - Execute this program with different numbers of processes.
- *  - Change the inital refinement level.
+ *  - Change the initial refinement level.
  *  - Use a different cmesh (See step1).
- *  - Look into t8_forest.h and try to get different informations about the 
+ *  - Look into t8_forest.h and try to get different information about the
  *    forest (for example the number of local trees).
  */
 
-#include <t8.h>                 /* General t8code header, always include this. */
-#include <t8_cmesh.h>           /* cmesh definition and basic interface. */
-#include <t8_cmesh/t8_cmesh_examples.h> /* A collection of exemplary cmeshes */
-#include <t8_forest.h>          /* forest definition and basic interface. */
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>     /* default refinement scheme. */
+#include <t8.h>                                     /* General t8code header, always include this. */
+#include <t8_cmesh.h>                               /* cmesh definition and basic interface. */
+#include <t8_cmesh/t8_cmesh_examples.h>             /* A collection of exemplary cmeshes */
+#include <t8_forest/t8_forest_general.h>            /* forest definition and general interface. */
+#include <t8_forest/t8_forest_io.h>                 /* forest io interface. */
+#include <t8_schemes/t8_default/t8_default_cxx.hxx> /* default refinement scheme. */
 
 /* Builds cmesh of 2 prisms that build up a unit cube. 
  * See step1 for a detailed description.
@@ -58,12 +59,11 @@
 static t8_cmesh_t
 t8_step2_build_prismcube_coarse_mesh (sc_MPI_Comm comm)
 {
-  t8_cmesh_t          cmesh;
+  t8_cmesh_t cmesh;
 
   /* Build a coarse mesh of 2 prism trees that form a cube. */
   cmesh = t8_cmesh_new_hypercube (T8_ECLASS_PRISM, comm, 0, 0, 0);
-  t8_global_productionf
-    (" [step2] Constructed coarse mesh with 2 prism trees.\n");
+  t8_global_productionf (" [step2] Constructed coarse mesh with 2 prism trees.\n");
 
   return cmesh;
 }
@@ -79,8 +79,8 @@ t8_step2_build_prismcube_coarse_mesh (sc_MPI_Comm comm)
 static t8_forest_t
 t8_step2_build_uniform_forest (sc_MPI_Comm comm, t8_cmesh_t cmesh, int level)
 {
-  t8_forest_t         forest;
-  t8_scheme_cxx_t    *scheme;
+  t8_forest_t forest;
+  t8_scheme_cxx_t *scheme;
 
   /* Create the refinement scheme. */
   scheme = t8_scheme_new_default_cxx ();
@@ -119,16 +119,16 @@ t8_step2_destroy_forest (t8_forest_t forest)
 int
 main (int argc, char **argv)
 {
-  int                 mpiret;
-  sc_MPI_Comm         comm;
-  t8_cmesh_t          cmesh;
-  t8_forest_t         forest;
+  int mpiret;
+  sc_MPI_Comm comm;
+  t8_cmesh_t cmesh;
+  t8_forest_t forest;
   /* The prefix for our output files. */
-  const char         *prefix = "t8_step2_uniform_forest";
+  const char *prefix = "t8_step2_uniform_forest";
   /* The uniform refinement level of the forest. */
-  const int           level = 3;
-  t8_locidx_t         local_num_elements;
-  t8_gloidx_t         global_num_elements;
+  const int level = 3;
+  t8_locidx_t local_num_elements;
+  t8_gloidx_t global_num_elements;
 
   /* Initialize MPI. This has to happen before we initialize sc or t8code. */
   mpiret = sc_MPI_Init (&argc, &argv);
@@ -142,10 +142,8 @@ main (int argc, char **argv)
 
   /* Print a message on the root process. */
   t8_global_productionf (" [step2] \n");
-  t8_global_productionf
-    (" [step2] Hello, this is the step2 example of t8code.\n");
-  t8_global_productionf
-    (" [step2] In this example we build our first uniform forest and output it to vtu files.\n");
+  t8_global_productionf (" [step2] Hello, this is the step2 example of t8code.\n");
+  t8_global_productionf (" [step2] In this example we build our first uniform forest and output it to vtu files.\n");
   t8_global_productionf (" [step2] \n");
 
   /* We will use MPI_COMM_WORLD as a communicator. */
@@ -163,15 +161,12 @@ main (int argc, char **argv)
   /* Print information on the forest. */
   t8_global_productionf (" [step2] Created uniform forest.\n");
   t8_global_productionf (" [step2] Refinement level:\t\t\t%i\n", level);
-  t8_global_productionf (" [step2] Local number of elements:\t\t%i\n",
-                         local_num_elements);
-  t8_global_productionf (" [step2] Global number of elements:\t%li\n",
-                         global_num_elements);
+  t8_global_productionf (" [step2] Local number of elements:\t\t%i\n", local_num_elements);
+  t8_global_productionf (" [step2] Global number of elements:\t%li\n", global_num_elements);
 
   /* Write forest to vtu files. */
   t8_step2_write_forest_vtk (forest, prefix);
-  t8_global_productionf (" [step2] Wrote forest to vtu files:\t%s*\n",
-                         prefix);
+  t8_global_productionf (" [step2] Wrote forest to vtu files:\t%s*\n", prefix);
 
   /* Destroy the forest. */
   t8_step2_destroy_forest (forest);

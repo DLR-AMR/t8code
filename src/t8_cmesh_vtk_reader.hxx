@@ -27,41 +27,30 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #ifndef T8_CMESH_VTK_READER
 #define T8_CMESH_VTK_READER
 
-#include <t8_cmesh.h>
-
-#if T8_WITH_VTK
-#include <vtkSmartPointer.h>
-#include <vtkCellData.h>
-#include <vtkDataSet.h>
-#endif
+#include <t8_vtk/t8_vtk_reader.hxx>
 
 T8_EXTERN_C_BEGIN ();
-/**
- * Enumerator for all types of files readable by t8code. 
- */
-typedef enum vtk_file_type
-{
-  VTK_FILE_ERROR = -1,          /*For Testing purpose. */
-  VTK_UNSTRUCTURED_FILE = 0,
-  VTK_POLYDATA_FILE = 1
-} vtk_file_type_t;
 
 /**
- * Construct a cmesh given a filename refering to a vtk-file either containing an
- * unstructured grid, or vtk-polydata, most likely constructed by vtk. 
+ * Given a filename to a vtkUnstructuredGrid or vtkPolyData read the file and
+ * construct a cmesh. This is a two stage process. First the file is read and
+ * stored in a vtkDataSet using \a t8_vtk_reader and \a t8_file_to_vtkGrid. 
+ * In the second stage a cmesh is constructed from the vtkDataSet using \a t8_vtkGrid_to_cmesh. 
+ * 
+ * Both stages use the vtk-library, therefore the function is only available if 
+ * t8code is linked against VTK. 
+ * 
  * 
  * \param[in] filename      The name of the file
  * \param[in] partition     Flag if the constructed mesh should be partitioned
  * \param[in] main_proc     The main reading processor
  * \param[in] comm          An mpi-communicator
  * \param[in] vtk_file_type A vtk-filetype that is readable by t8code. 
- * \return                  A commited cmesh.       
+ * \return                  A committed cmesh.
  */
-t8_cmesh_t          t8_cmesh_vtk_reader (const char *filename,
-                                         const int partition,
-                                         const int main_proc,
-                                         sc_MPI_Comm comm,
-                                         const vtk_file_type_t vtk_file_type);
+t8_cmesh_t
+t8_cmesh_vtk_reader (const char *filename, const int partition, const int main_proc, sc_MPI_Comm comm,
+                     const vtk_file_type_t vtk_file_type);
 
 T8_EXTERN_C_END ();
 

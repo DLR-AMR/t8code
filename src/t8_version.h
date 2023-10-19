@@ -52,10 +52,10 @@
 /* In order to convert a macro to a string, we
  * need to pass it through these two helper macros. */
 #define T8_STRINGIFY(arg) #arg
-#define T8_STRINGIFY_MIDDLE(arg) T8_STRINGIFY(arg)
+#define T8_STRINGIFY_MIDDLE(arg) T8_STRINGIFY (arg)
 
 /** The T8_VERSION_POINT macro as a string */
-#define T8_VERSION_POINT_STRING T8_STRINGIFY_MIDDLE(T8_VERSION_POINT)
+#define T8_VERSION_POINT_STRING T8_STRINGIFY_MIDDLE (T8_VERSION_POINT)
 
 /* call this after including all headers */
 T8_EXTERN_C_BEGIN ();
@@ -64,27 +64,32 @@ T8_EXTERN_C_BEGIN ();
  * This string has the format "t8 version_number".
  * \return The version string of t8code.
  */
-const char         *t8_get_package_string ();
+const char*
+t8_get_package_string ();
 
 /** Return the version number of t8code as a string.
  * \return The version number of t8code as a string.
  */
-const char         *t8_get_version_number ();
+const char*
+t8_get_version_number ();
 
 /** Return the version point string.
  * \return The version point point string.
  */
-const char         *t8_get_version_point_string ();
+const char*
+t8_get_version_point_string ();
 
 /** Return the major version number of t8code.
  * \return The major version number of t8code.
  */
-int                 t8_get_version_major ();
+int
+t8_get_version_major ();
 
 /** Return the minor version number of t8code.
  * \return The minor version number of t8code.
  */
-int                 t8_get_version_minor ();
+int
+t8_get_version_minor ();
 
 /** Return the patch version number of t8code.
  * \return The patch version unmber of t8code. negative on error.
@@ -93,7 +98,8 @@ int                 t8_get_version_minor ();
  *  This computation may result in an error or an invalid patch number.
  *  In that case a negative patch version is returned.
  */
-int                 t8_get_version_patch ();
+int
+t8_get_version_patch ();
 
 /* call this at the end of a header file to match T8_EXTERN_C_BEGIN (). */
 T8_EXTERN_C_END ();

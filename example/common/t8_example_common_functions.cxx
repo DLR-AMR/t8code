@@ -58,7 +58,7 @@ t8_scalar3d_project_x (const double x[3], double t)
 double
 t8_scalar3d_exp_distribution (const double x[3], double t)
 {
-  double              dummy, X;
+  double dummy, X;
 
   /* Get fractional part of t. t is thus periodically
    * mapped to the unit interval */
@@ -80,7 +80,7 @@ t8_scalar3d_step_function (const double x[3], double t)
 double
 t8_scalar3d_almost_step_function (const double x[3], double t)
 {
-  double              eps = 0.1;
+  double eps = 0.1;
 
   /* interpolate in [0.25-eps,0.25+eps] */
   if (0.25 - eps < x[0] && x[0] < 0.25) {
@@ -134,14 +134,14 @@ t8_scalar3d_sphere (const double x[3], double M[3], double radius)
 double
 t8_scalar3d_sphere_75_radius (const double x[3], double t)
 {
-  double              M[3] = { 0, 0, 0 };
+  double M[3] = { 0, 0, 0 };
   return t8_scalar3d_sphere (x, M, 0.75);
 }
 
 double
 t8_scalar3d_sphere_05_midpoint_375_radius (const double x[3], double t)
 {
-  double              M[3] = { 0.5, 0.5, 0.5 };
+  double M[3] = { 0.5, 0.5, 0.5 };
 
   return t8_scalar3d_sphere (x, M, 0.375);
 }
@@ -149,7 +149,7 @@ t8_scalar3d_sphere_05_midpoint_375_radius (const double x[3], double t)
 double
 t8_scalar3d_sphere_03_midpoint_25_radius (const double x[3], double t)
 {
-  double              M[3] = { 0.3, 0.3, 0.3 };
+  double M[3] = { 0.3, 0.3, 0.3 };
 
   return t8_scalar3d_sphere (x, M, 0.25);
 }
@@ -157,7 +157,7 @@ t8_scalar3d_sphere_03_midpoint_25_radius (const double x[3], double t)
 double
 t8_scalar3d_sphere_05_0z_midpoint_375_radius (const double x[3], double t)
 {
-  double              M[3] = { 0.5, 0.5, 0 };
+  double M[3] = { 0.5, 0.5, 0 };
 
   return t8_scalar3d_sphere (x, M, 0.375);
 }
@@ -194,7 +194,7 @@ t8_flow_constant_one_xyz_vec (const double x[3], double t, double x_out[3])
 void
 t8_flow_rotation_2d (const double x_in[3], double t, double x_out[3])
 {
-  double              x = x_in[0], y = x_in[1];
+  double x = x_in[0], y = x_in[1];
 
   x -= 0.5;
   y -= 0.5;
@@ -233,8 +233,8 @@ t8_incomp_cube_df_sin (double x)
 void
 t8_flow_incomp_cube_flow (const double x[3], double t, double x_out[3])
 {
-  double              (*f) (double) = t8_incomp_cube_f_sin;
-  double              (*df) (double) = t8_incomp_cube_df_sin;
+  double (*f) (double) = t8_incomp_cube_f_sin;
+  double (*df) (double) = t8_incomp_cube_df_sin;
 
   x_out[0] = f (x[0]) * (df (x[1]) - df (x[2]));
   x_out[1] = -1. * f (x[1]) * df (x[0]);
@@ -269,13 +269,10 @@ t8_flow_2d_polar_coords (const double x[3], double polar[2])
  *
  */
 static void
-t8_flow_2d_cart_coords (const double polar_values[2],
-                        const double polar_coords[2], double cart[2])
+t8_flow_2d_cart_coords (const double polar_values[2], const double polar_coords[2], double cart[2])
 {
-  cart[0] = cos (polar_coords[1]) * polar_values[0]
-    - sin (polar_coords[1]) * polar_values[1];
-  cart[1] = sin (polar_coords[1]) * polar_values[0]
-    + cos (polar_coords[1]) * polar_values[1];
+  cart[0] = cos (polar_coords[1]) * polar_values[0] - sin (polar_coords[1]) * polar_values[1];
+  cart[1] = sin (polar_coords[1]) * polar_values[0] + cos (polar_coords[1]) * polar_values[1];
 }
 
 /* 2d flow around a circle with radius R = 1 and
@@ -283,9 +280,9 @@ t8_flow_2d_cart_coords (const double polar_values[2],
 void
 t8_flow_around_circle (const double x[3], double t, double x_out[3])
 {
-  double              polar[2];
-  double              polar_speed[2];
-  const double        R = 0.15;
+  double polar[2];
+  double polar_speed[2];
+  const double R = 0.15;
 
   t8_vec_axb (x, x_out, 1, -0.5);
   /* Set the z-coordinate to zero */
@@ -313,34 +310,25 @@ t8_flow_around_circle (const double x[3], double t, double x_out[3])
  */
 
 static void
-t8_flow_stokes_sphere_alpha_beta (double R_1, double R_2, double gamma, int m,
-                                  double *alpha, double *beta)
+t8_flow_stokes_sphere_alpha_beta (double R_1, double R_2, double gamma, int m, double *alpha, double *beta)
 {
   /* We define two constants alpha and beta */
-  *alpha =
-    gamma * (m + 1) * (pow (R_1, -3) - pow (R_2, -3)) / (pow (R_1, -m - 4) -
-                                                         pow (R_2, -m - 4));
-  *beta =
-    -3 * gamma * (pow (R_1, m + 1) - pow (R_2, m + 1)) / (pow (R_1, m + 4) -
-                                                          pow (R_2, m + 4));
-
+  *alpha = gamma * (m + 1) * (pow (R_1, -3) - pow (R_2, -3)) / (pow (R_1, -m - 4) - pow (R_2, -m - 4));
+  *beta = -3 * gamma * (pow (R_1, m + 1) - pow (R_2, m + 1)) / (pow (R_1, m + 4) - pow (R_2, m + 4));
 }
 
 /* A component of the flow that depends on the inner radius R_2, the outer radius R_1,
  * a constant gamma, and a control parameter m with m != -1, m != -4 */
 static double
-t8_flow_stokes_sphere_g_component (double radius, double alpha, double beta,
-                                   double gamma, int m)
+t8_flow_stokes_sphere_g_component (double radius, double alpha, double beta, double gamma, int m)
 {
   T8_ASSERT (m != -1 && m != -4);
 
-  return -2 / (radius * radius) * (-alpha / (m + 1) * pow (radius, -m - 1) +
-                                   beta / 3 * pow (radius, 3) + gamma);
+  return -2 / (radius * radius) * (-alpha / (m + 1) * pow (radius, -m - 1) + beta / 3 * pow (radius, 3) + gamma);
 }
 
 static double
-t8_flow_stokes_sphere_f_component (double radius, double alpha, double beta,
-                                   int m)
+t8_flow_stokes_sphere_f_component (double radius, double alpha, double beta, int m)
 {
   return alpha * pow (radius, -m - 3) + beta * radius;
 }
@@ -348,13 +336,13 @@ t8_flow_stokes_sphere_f_component (double radius, double alpha, double beta,
 void
 t8_flow_stokes_flow_sphere_shell (const double x[3], double t, double x_out[])
 {
-  double              radius;
-  double              theta, phi;
-  double              alpha, beta;
-  double              vel_r;
-  double              vel_theta;
-  double              vel_phi;
-  const double        r_1 = .5, r_2 = 1, gamma = 1, m = 3;
+  double radius;
+  double theta, phi;
+  double alpha, beta;
+  double vel_r;
+  double vel_theta;
+  double vel_phi;
+  const double r_1 = .5, r_2 = 1, gamma = 1, m = 3;
 
   /* translate unit cube to cube centered around origin */
   ((double *) x)[0] -= 0.5;
@@ -379,38 +367,29 @@ t8_flow_stokes_flow_sphere_shell (const double x[3], double t, double x_out[])
   /* Compute alpha and beta */
   t8_flow_stokes_sphere_alpha_beta (r_1, r_2, gamma, m, &alpha, &beta);
   /* Compute radial velocity and theta velocity */
-  vel_r =
-    t8_flow_stokes_sphere_g_component (radius, alpha, beta, gamma,
-                                       m) * cos (theta);
-  vel_theta =
-    t8_flow_stokes_sphere_f_component (radius, alpha, beta, m) * sin (theta);
+  vel_r = t8_flow_stokes_sphere_g_component (radius, alpha, beta, gamma, m) * cos (theta);
+  vel_theta = t8_flow_stokes_sphere_f_component (radius, alpha, beta, m) * sin (theta);
   /* Set phi velocity */
   vel_phi = 0;
 
   /* Compute euclidean coordinates */
-  x_out[0] =
-    vel_r * sin (theta) * cos (phi) + vel_theta * cos (theta) * cos (phi)
-    - vel_phi * sin (phi);
-  x_out[1] =
-    vel_r * sin (theta) * sin (phi) + vel_theta * cos (theta) * sin (phi) +
-    vel_phi * cos (phi);
+  x_out[0] = vel_r * sin (theta) * cos (phi) + vel_theta * cos (theta) * cos (phi) - vel_phi * sin (phi);
+  x_out[1] = vel_r * sin (theta) * sin (phi) + vel_theta * cos (theta) * sin (phi) + vel_phi * cos (phi);
   x_out[2] = vel_r * cos (theta) - vel_theta * cos (theta);
 }
 
 void
-t8_flow_around_circle_with_angular_velocity (const double x[3], double t,
-                                             double x_out[])
+t8_flow_around_circle_with_angular_velocity (const double x[3], double t, double x_out[])
 {
-  const double        radius = 0.5;
-  const double        omega = 1.5 * M_PI;
+  const double radius = 0.5;
+  const double omega = 1.5 * M_PI;
   // convert to polar coordinates
-  const double        r = sqrt (x[0] * x[0] + x[1] * x[1]);
-  const double        theta = atan2 (x[1], x[0]);
+  const double r = sqrt (x[0] * x[0] + x[1] * x[1]);
+  const double theta = atan2 (x[1], x[0]);
 
   //calculate flow
-  const double        u_r = (1 - (radius * radius) / (r * r)) * cos (theta);
-  const double        u_theta =
-    -(1 + (radius * radius) / (r * r)) * sin (theta) - omega / (2 * M_PI * r);
+  const double u_r = (1 - (radius * radius) / (r * r)) * cos (theta);
+  const double u_theta = -(1 + (radius * radius) / (r * r)) * sin (theta) - omega / (2 * M_PI * r);
 
   // convert back to Cartesian
   x_out[0] = cos (theta) * u_r - sin (theta) * u_theta;

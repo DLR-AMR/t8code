@@ -76,10 +76,20 @@ echo "o---------------------------------------"
 echo "| Copying files"
 echo "o---------------------------------------"
 
+AC_CONFIG_LINKS([test/testfiles/test_cube_unstructured_1.inp:test/testfiles/test_cube_unstructured_1.inp])
+AC_CONFIG_LINKS([test/testfiles/test_cube_unstructured_2.inp:test/testfiles/test_cube_unstructured_2.inp])
 AC_CONFIG_LINKS([test/testfiles/test_msh_file_vers2_ascii.msh:test/testfiles/test_msh_file_vers2_ascii.msh])
 AC_CONFIG_LINKS([test/testfiles/test_msh_file_vers2_bin.msh:test/testfiles/test_msh_file_vers2_bin.msh])
 AC_CONFIG_LINKS([test/testfiles/test_msh_file_vers4_ascii.msh:test/testfiles/test_msh_file_vers4_ascii.msh])
 AC_CONFIG_LINKS([test/testfiles/test_msh_file_vers4_bin.msh:test/testfiles/test_msh_file_vers4_bin.msh])
+AC_CONFIG_LINKS([test/testfiles/test_vtk_tri.vtu:test/testfiles/test_vtk_tri.vtu])
+AC_CONFIG_LINKS([test/testfiles/test_vtk_cube.vtp:test/testfiles/test_vtk_cube.vtp])
+AC_CONFIG_LINKS([test/testfiles/test_parallel_file.pvtu:test/testfiles/test_parallel_file.pvtu])
+AC_CONFIG_LINKS([test/testfiles/test_parallel_file_0.vtu:test/testfiles/test_parallel_file_0.vtu])
+AC_CONFIG_LINKS([test/testfiles/test_parallel_file_1.vtu:test/testfiles/test_parallel_file_1.vtu])
+AC_CONFIG_LINKS([test/testfiles/test_polydata.pvtp:test/testfiles/test_polydata.pvtp])
+AC_CONFIG_LINKS([test/testfiles/test_polydata_0.vtp:test/testfiles/test_polydata_0.vtp])
+AC_CONFIG_LINKS([test/testfiles/test_polydata_1.vtp:test/testfiles/test_polydata_1.vtp])
 AC_CONFIG_LINKS([example/IO/cmesh/gmsh/circlesquare_hybrid_hole.msh:example/IO/cmesh/gmsh/circlesquare_hybrid_hole.msh])
 AC_CONFIG_FILES([tutorials/features/t8_features_curved_meshes_generate_cmesh.geo:tutorials/features/t8_features_curved_meshes_generate_cmesh.geo])
 AC_CONFIG_FILES([tutorials/features/t8_features_curved_meshes_generate_cmesh_2d.geo:tutorials/features/t8_features_curved_meshes_generate_cmesh_2d.geo])

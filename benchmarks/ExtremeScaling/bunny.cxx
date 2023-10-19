@@ -26,7 +26,7 @@
 #include <t8_cmesh_tetgen.h>
 #include <t8_cmesh_vtk_writer.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <p8est.h>
 #include <p8est_connectivity.h>
@@ -37,9 +37,8 @@
 
 typedef struct
 {
-  double              xm, xM, ym, yM, zm, zM;
-}
-box_t;
+  double xm, xM, ym, yM, zm, zM;
+} box_t;
 
 #if 0
 
@@ -87,24 +86,24 @@ bunny_refine (p8est_t * p8est, p4est_topidx_t which_tree,
 int
 main (int argc, char **argv)
 {
-  int                 mpiret;
-  int                 mpirank;
-  const char         *argbasename;
-/* char                afilename[BUFSIZ]; */
-  p4est_topidx_t      tnum_flips;
-  p8est_tets_t       *ptg;
+  int mpiret;
+  int mpirank;
+  const char *argbasename;
+  /* char                afilename[BUFSIZ]; */
+  p4est_topidx_t tnum_flips;
+  p8est_tets_t *ptg;
   p8est_connectivity_t *connectivity;
-  sc_MPI_Comm         mpicomm;
+  sc_MPI_Comm mpicomm;
 #if 0
   box_t               Box_ex1;
 #endif
-  sc_flopinfo_t       fi, snapshot;
-  sc_statinfo_t       stats[9];
+  sc_flopinfo_t fi, snapshot;
+  sc_statinfo_t stats[9];
 
-  t8_cmesh_t          cmesh_p8, cmesh_t8;
-  t8_forest_t         forest_p8, forest_t8;
+  t8_cmesh_t cmesh_p8, cmesh_t8;
+  t8_forest_t forest_p8, forest_t8;
 
-  const int           level = 4;
+  const int level = 4;
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -141,15 +140,12 @@ main (int argc, char **argv)
   sc_flops_snap (&fi, &snapshot);
 
   SC_CHECK_ABORTF (ptg != NULL, "Failed to read tetgen %s", argbasename);
-  P4EST_GLOBAL_STATISTICSF ("Read %d nodes and %d tets %s attributes\n",
-                            (int) ptg->nodes->elem_count / 3,
-                            (int) ptg->tets->elem_count / 4,
-                            ptg->tet_attributes != NULL ? "with" : "without");
+  P4EST_GLOBAL_STATISTICSF ("Read %d nodes and %d tets %s attributes\n", (int) ptg->nodes->elem_count / 3,
+                            (int) ptg->tets->elem_count / 4, ptg->tet_attributes != NULL ? "with" : "without");
 
   /* flip orientation to right-handed */
   tnum_flips = p8est_tets_make_righthanded (ptg);
-  P4EST_GLOBAL_STATISTICSF ("Performed %ld orientation flip(s)\n",
-                            (long) tnum_flips);
+  P4EST_GLOBAL_STATISTICSF ("Performed %ld orientation flip(s)\n", (long) tnum_flips);
 
   sc_flops_shot (&fi, &snapshot);
   sc_stats_set1 (&stats[1], snapshot.iwtime, "Right handed");
@@ -162,8 +158,7 @@ main (int argc, char **argv)
     connectivity = NULL;
   }
   sc_flops_snap (&fi, &snapshot);
-  connectivity =
-    p8est_connectivity_bcast (connectivity, 0, sc_MPI_COMM_WORLD);
+  connectivity = p8est_connectivity_bcast (connectivity, 0, sc_MPI_COMM_WORLD);
 
   sc_flops_shot (&fi, &snapshot);
   sc_stats_set1 (&stats[2], snapshot.iwtime, "Bcast");
@@ -175,8 +170,7 @@ main (int argc, char **argv)
   sc_flops_shot (&fi, &snapshot);
   sc_stats_set1 (&stats[3], snapshot.iwtime, "Connectivity complete");
 
-  P4EST_GLOBAL_LDEBUGF ("Connectivity has %ld edges and %ld corners\n",
-                        (long) connectivity->num_edges,
+  P4EST_GLOBAL_LDEBUGF ("Connectivity has %ld edges and %ld corners\n", (long) connectivity->num_edges,
                         (long) connectivity->num_corners);
   sc_flops_snap (&fi, &snapshot);
 
@@ -213,17 +207,16 @@ main (int argc, char **argv)
   // p8est_refine (p8est, 0,bunny_refine, NULL);
   // p8est_refine (p8est, 0,bunny_refine, NULL);
 
-//  sc_flops_shot (&fi, &snapshot);
-//  sc_stats_set1 (&stats[5], snapshot.iwtime, "Refine 1 times");
+  //  sc_flops_shot (&fi, &snapshot);
+  //  sc_stats_set1 (&stats[5], snapshot.iwtime, "Refine 1 times");
 
-/*
+  /*
   snprintf (afilename, BUFSIZ, "%s", "read_tetgen");
   p8est_vtk_write_file (p8est, NULL, afilename);
 */
 
   sc_flops_snap (&fi, &snapshot);
-  cmesh_t8 =
-    t8_cmesh_from_tetgen_file ((char *) argbasename, 0, sc_MPI_COMM_WORLD, 0);
+  cmesh_t8 = t8_cmesh_from_tetgen_file ((char *) argbasename, 0, sc_MPI_COMM_WORLD, 0);
   t8_cmesh_unref (&cmesh_t8);
   sc_flops_shot (&fi, &snapshot);
   sc_stats_set1 (&stats[5], snapshot.iwtime, "t8 cmesh from tetgen");
