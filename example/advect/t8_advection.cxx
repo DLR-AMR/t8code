@@ -1601,7 +1601,7 @@ main (int argc, char *argv[])
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else if (parsed >= 0 && 1 <= flow_arg && flow_arg <= 7 && 0 <= level && 0 <= reflevel && 0 <= vtk_freq
-           && ((mshfile != NULL && 0 < dim && dim <= 3) || (1 <= cube_type && cube_type <= 8)) && band_width >= 0) {
+           && ((mshfile != NULL && 0 < dim && dim <= 3) || (1 <= cube_type && cube_type <= 9)) && band_width >= 0) {
     t8_cmesh_t cmesh;
     t8_flow_function_3d_fn u;
 
