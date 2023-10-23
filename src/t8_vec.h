@@ -173,6 +173,36 @@ t8_vec_diff (const double vec_x[3], const double vec_y[3], double diff[3])
   }
 }
 
+/**
+ * Compute the orthogonal to a vector running through a point. 
+ * A line is given by l(t) = a + \lambda *dir, with dir as the vector from \a v_0 to \a v_1
+ * The orthogonal faces from the point to the line. 
+ * \param[in] v_0 refers to "a" in the line definition and is the starting point of the line
+ * \param[in] v_1 second point to define the line
+ * \param[in] p   point to check
+ * \param[in, out] orthogonal On input a 3D vec on output the orthogonal pointing from \a p to the vec. 
+ */
+static inline void
+t8_vec_orthogonal_through_point (const double v_0[3], const double v_1[3], const double p[3], double orthogonal[3])
+{
+  double line[3];
+  /* Compute the direction of the line */
+  t8_vec_axpyz (v_0, v_1, line, -1.0);
+
+  /* Solve the equation (v_0 + lambda * dir - p)\dot dir = 0 */
+  double numerator = 0.0;
+  double denominator = t8_vec_dot (line, line);
+  for (int i = 0; i < 3; i++) {
+    numerator += p[i] * line[i] - v_0[i] * line[i];
+  }
+
+  const double lambda = numerator / denominator;
+
+  double tmp[3];
+  t8_vec_axpyz (line, v_0, tmp, lambda);
+  t8_vec_axpyz (tmp, p, orthogonal, -1.0);
+}
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_VEC_H! */
