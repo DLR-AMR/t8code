@@ -163,6 +163,15 @@ t8_basic_hybrid (int level, int endlvl, int do_vtk, t8_eclass_t eclass, int num_
     return;
   }
 
+  mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  if (part) {
+    t8_cmesh_init (&cmesh_partition);
+    t8_cmesh_set_derive (cmesh_partition, cmesh);
+    t8_cmesh_set_partition_uniform (cmesh_partition, level, t8_scheme_new_default_cxx ());
+    t8_cmesh_commit (cmesh_partition, sc_MPI_COMM_WORLD);
+    cmesh = cmesh_partition;
+  }
   snprintf (cmesh_file, BUFSIZ, "cmesh_hybrid");
   snprintf (vtuname, BUFSIZ, "cmesh_hybrid");
   if (mesh != 4) {
@@ -173,16 +182,6 @@ t8_basic_hybrid (int level, int endlvl, int do_vtk, t8_eclass_t eclass, int num_
     else {
       t8_debugf ("Error in output\n");
     }
-  }
-
-  mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
-  SC_CHECK_MPI (mpiret);
-  if (part) {
-    t8_cmesh_init (&cmesh_partition);
-    t8_cmesh_set_derive (cmesh_partition, cmesh);
-    t8_cmesh_set_partition_uniform (cmesh_partition, level, t8_scheme_new_default_cxx ());
-    t8_cmesh_commit (cmesh_partition, sc_MPI_COMM_WORLD);
-    cmesh = cmesh_partition;
   }
 
   t8_debugf ("[D] start forest\n");

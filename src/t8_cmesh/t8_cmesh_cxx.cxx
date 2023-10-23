@@ -50,6 +50,7 @@ t8_cmesh_uniform_set_return_parameters_to_empty (t8_gloidx_t *first_local_tree, 
                                                  t8_gloidx_t *last_local_tree, t8_gloidx_t *child_in_tree_end,
                                                  int8_t *first_tree_shared)
 {
+  t8_debugf ("[D] proc is empty\n");
   *first_local_tree = *last_local_tree = -1;
   if (child_in_tree_begin != NULL) {
     *child_in_tree_begin = -1;
@@ -311,6 +312,7 @@ t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *sc
   t8_debugf ("Into t8_cmesh_uniform_bounds_hybrid.\n");
 
   if (t8_cmesh_is_empty (cmesh)) {
+    t8_debugf ("[D] cmesh_uniform_bounds_hybrid is empty\n");
     t8_cmesh_uniform_set_return_parameters_to_empty (first_local_tree, child_in_tree_begin, last_local_tree,
                                                      child_in_tree_end, first_tree_shared);
     return;
@@ -356,6 +358,7 @@ t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *sc
     /* Compute the first and last element of this process. Then loop over
      * all trees to find the trees in which these are contained.
      * We cast to long double and double to prevent overflow. */
+    /* cmesh is replicated, therefore the computation of local_num_children equals the global number of children*/
     const t8_gloidx_t first_child
       = t8_cmesh_get_first_element_of_process (cmesh->mpirank, cmesh->mpisize, local_num_children);
     const t8_gloidx_t last_child
@@ -390,6 +393,7 @@ t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *sc
         /* This process is empty. We needed to identify the 'first_local_tree' since it is the 
          * first local tree of the next process, which we store in this case.
          */
+        t8_debugf ("[D] lc < fc\n");
         t8_cmesh_uniform_set_return_parameters_to_empty (first_local_tree, child_in_tree_begin, last_local_tree,
                                                          child_in_tree_end, first_tree_shared);
         return;
@@ -412,7 +416,7 @@ t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *sc
     }
     /* If we reach this part, we do not have any trees - the cmesh is empty */
     T8_ASSERT (num_trees == 0);
-
+    t8_debugf ("[D] cmesh is empty\n");
     t8_cmesh_uniform_set_return_parameters_to_empty (first_local_tree, child_in_tree_begin, last_local_tree,
                                                      child_in_tree_end, first_tree_shared);
     return;

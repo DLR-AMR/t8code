@@ -130,11 +130,13 @@ t8_offset_consistent (int mpisize, const t8_shmem_array_t offset_shmem, t8_gloid
   const t8_gloidx_t *offset = t8_shmem_array_get_gloidx_array (offset_shmem);
 
   ret = offset[0] == 0;
+  t8_debugf ("[D] init ret: %i\n", ret);
   last_tree = t8_offset_last (0, offset); /* stores the last tree of process i-1 */
   for (i = 1; i < mpisize && ret; i++) {
     if (t8_offset_empty (i, offset)) {
       /* If the process is empty, then its first tree must not be shared */
       ret &= offset[i] >= 0;
+      t8_debugf ("[LD] offset empty, proc: %i ret = %i\n", i, ret);
     }
     else {
       /* If the process is not empty its first local tree must be bigger or
@@ -142,12 +144,15 @@ t8_offset_consistent (int mpisize, const t8_shmem_array_t offset_shmem, t8_gloid
        * Equality must only hold, when the first tree is shared, thus offset[i] < 0 */
       if (offset[i] < 0) {
         ret &= t8_offset_first (i, offset) == last_tree;
+        t8_debugf ("[LD] shared tree, offset first == last_tree proc: %iret = %i\n", i, ret);
       }
       else {
         ret &= t8_offset_first (i, offset) > last_tree;
+        t8_debugf ("[LD] shared tree, offset_first > last_tree proc: %i ret = %i\n", i, ret);
       }
       last_tree = t8_offset_last (i, offset);
       ret &= (last_tree <= num_trees);
+      t8_debugf ("[LD] last_tree <= num_trees proc: %i ret = %i\n", i, ret);
     }
   }
   ret &= (offset[mpisize] == num_trees);
