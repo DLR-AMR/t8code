@@ -74,7 +74,7 @@ const double t8_element_centroid_ref_coords[T8_ECLASS_COUNT][3] = {
   { 2. / 3., 1. / 3., 0 },   /* T8_ECLASS_TRIANGLE */
   { 0.5, 0.5, 0.5 },         /* T8_ECLASS_HEX */
   { 0.75, 0.25, 0.5 },       /* T8_ECLASS_TET */
-  { 1. / 3., 2. / 3., 0.5 }, /* T8_ECLASS_PRISM */
+  { 2. / 3., 1. / 3., 0.5 }, /* T8_ECLASS_PRISM */
   { 0.6, 0.6, 0.2 }          /* T8_ECLASS_PYRAMID */
 };
 
