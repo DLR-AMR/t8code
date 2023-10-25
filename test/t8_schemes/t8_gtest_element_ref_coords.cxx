@@ -110,7 +110,6 @@ t8_adapt_callback_with_test (t8_forest_t forest, t8_forest_t forest_from, t8_loc
   double batch_coords
     [T8_ECLASS_MAX_CORNERS
      * T8_ECLASS_MAX_DIM]; /** reference coordinates of the element vertices computed by \ref t8_get_batch_coords_for_element_type */
-  char message[BUFSIZ];
 
   /* compare results of the two different way to obtain tree ref coords */
   const t8_element_shape_t shape = ts->t8_element_shape (elements[0]);
