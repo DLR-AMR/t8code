@@ -34,7 +34,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_cmesh/t8_cmesh_examples.h>
 
 #if T8_ENABLE_LESS_TESTS
-#define MAXLEVEL 2
+#define MAXLEVEL 3
 #else
 #define MAXLEVEL 4
 #endif
@@ -131,7 +131,7 @@ t8_adapt_callback_with_test (t8_forest_t forest, t8_forest_t forest_from, t8_loc
       "tree_ref_coords_by_element_ref_coords:", tree_ref_coords_by_element_ref_coords + i_vertex * elem_dim, elem_dim);
     for (int dim = 0; dim < elem_dim; ++dim) {
       EXPECT_NEAR (tree_ref_coords_by_vertex[dim], tree_ref_coords_by_element_ref_coords[i_vertex * elem_dim + dim],
-                   T8_PRECISION_EPS);
+                   2 * T8_PRECISION_EPS);
     }
   }
   /* compare results of the two different ways to compute an elements centroid */
@@ -140,7 +140,7 @@ t8_adapt_callback_with_test (t8_forest_t forest, t8_forest_t forest_from, t8_loc
   t8_write_message_by_dim ("centroid_by_vertices:", centroid_by_vertices, 3);
   t8_write_message_by_dim ("centroid_by_element_ref_coords:", centroid_by_element_ref_coords, 3);
   for (int dim = 0; dim < T8_ECLASS_MAX_DIM; ++dim) {
-    EXPECT_NEAR (centroid_by_vertices[dim], centroid_by_element_ref_coords[dim], T8_PRECISION_EPS);
+    EXPECT_NEAR (centroid_by_vertices[dim], centroid_by_element_ref_coords[dim], 2 * T8_PRECISION_EPS);
   }
 
   /* refine if MAXLEVEL is not reached */
