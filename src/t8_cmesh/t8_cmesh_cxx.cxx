@@ -396,6 +396,7 @@ t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *sc
         t8_debugf ("[D] lc < fc\n");
         t8_cmesh_uniform_set_return_parameters_to_empty (first_local_tree, child_in_tree_begin, last_local_tree,
                                                          child_in_tree_end, first_tree_shared);
+        *first_local_tree = 0;
         return;
       }
       /* Check if the last element is on the current tree */
@@ -482,7 +483,8 @@ t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *sc
     if (!cmesh->first_tree_shared && t8_cmesh_get_global_id (cmesh, 0) == 0) {
       /* If our first tree is 0 and not shared, then we need to send to all processes
        * below the start process. Even if their partition is empty. */
-      send_first = 0;
+      t8_debugf("LLL: Would have set send_first to 0, instead: %i", send_first_nonempty);
+      send_first = send_first_nonempty;
     }
     else {
       send_first = send_first_nonempty;
@@ -802,8 +804,30 @@ t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *sc
     }   /* End loop over processes */
   }     /* if (pure_local_trees > 0) */
 
+  const t8_gloidx_t first_element_index_of_current_proc
+        = t8_cmesh_get_first_element_of_process (cmesh->mpirank, data.num_procs, data.global_num_elements);
+  const t8_gloidx_t last_element_index_of_current_proc
+        = t8_cmesh_get_first_element_of_process (cmesh->mpirank + 1, data.num_procs, data.global_num_elements) - 1;
+
+  if(first_element_index_of_current_proc > last_element_index_of_current_proc){
+    expect_start_message = 0;
+    expect_end_message = 0;
+    *first_local_tree = 0;
+    *last_local_tree = -1;
+    *first_tree_shared = 0;
+    if (child_in_tree_begin != NULL) {
+      *child_in_tree_begin = -1;
+    }
+    if (child_in_tree_end != NULL) {
+      *child_in_tree_end = - 1;
+    }
+    num_received_end_messages++;
+    num_received_start_messages++;
+  }
+
   /* Post the receives. */
   if (expect_start_message) {
+    t8_debugf("expect start message\n");
     const int num_entries = 2;
     t8_gloidx_t *message = T8_ALLOC (t8_gloidx_t, num_entries);
     mpiret = sc_MPI_Recv (message, num_entries, T8_MPI_GLOIDX, sc_MPI_ANY_SOURCE, T8_MPI_CMESH_UNIFORM_BOUNDS_START,
