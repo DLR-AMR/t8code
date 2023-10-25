@@ -538,7 +538,7 @@ t8_dprism_vertex_coords (const t8_dprism_t *elem, const int vertex, int coords[3
   T8_ASSERT (elem->line.level == elem->tri.level);
   /*Compute x and y coordinate */
   t8_dtri_compute_coords (&elem->tri, vertex % 3, coords);
-  /*Compute z coordinatecoords[0] *= T8_DPRISM_ROOT_BY_DTRI_ROOT; */
+  /*Compute z coordinate coords[0] *= T8_DPRISM_ROOT_BY_DTRI_ROOT; */
   t8_dline_vertex_coords (&elem->line, vertex / 3, &coords[2]);
   coords[0] /= T8_DPRISM_ROOT_BY_DTRI_ROOT;
   coords[1] /= T8_DPRISM_ROOT_BY_DTRI_ROOT;
