@@ -798,7 +798,7 @@ t8_forest_get_num_ghost_trees (t8_forest_t forest)
 }
 
 t8_locidx_t
-t8_forest_get_num_local_trees (t8_forest_t forest)
+t8_forest_get_num_local_trees (const t8_forest_t forest)
 {
   t8_locidx_t num_trees;
 

@@ -558,7 +558,7 @@ t8_forest_get_first_local_tree_id (t8_forest_t forest);
  * \return          The number of local trees of that forest.
  */
 t8_locidx_t
-t8_forest_get_num_local_trees (t8_forest_t forest);
+t8_forest_get_num_local_trees (const t8_forest_t forest);
 
 /** Return the number of ghost trees of a given forest.
  * \param [in]      forest      The forest.
