@@ -821,8 +821,10 @@ t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *sc
     if (child_in_tree_end != NULL) {
       *child_in_tree_end = - 1;
     }
+#ifdef T8_ENABLE_DEBUG
     num_received_end_messages++;
     num_received_start_messages++;
+#endif
   }
 
   /* Post the receives. */
