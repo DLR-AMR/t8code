@@ -197,7 +197,7 @@ t8_forest_compute_maxlevel (t8_forest_t forest)
 
 /* Return the maximum level of a forest */
 int
-t8_forest_get_maxlevel (t8_forest_t forest)
+t8_forest_get_maxlevel (const t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (forest->maxlevel >= 0);

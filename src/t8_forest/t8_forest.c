@@ -80,7 +80,7 @@ t8_forest_is_initialized (t8_forest_t forest)
 }
 
 int
-t8_forest_is_committed (t8_forest_t forest)
+t8_forest_is_committed (const t8_forest_t forest)
 {
   if (!(forest != NULL && t8_refcount_is_active (&forest->rc) && forest->committed)) {
     return 0;
@@ -306,7 +306,7 @@ t8_forest_set_user_data (t8_forest_t forest, void *data)
 }
 
 void *
-t8_forest_get_user_data (t8_forest_t forest)
+t8_forest_get_user_data (const t8_forest_t forest)
 {
   return forest->user_data;
 }
@@ -779,7 +779,7 @@ t8_forest_get_mpicomm (t8_forest_t forest)
 }
 
 t8_gloidx_t
-t8_forest_get_first_local_tree_id (t8_forest_t forest)
+t8_forest_get_first_local_tree_id (const t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 

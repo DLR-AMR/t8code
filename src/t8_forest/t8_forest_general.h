@@ -272,7 +272,7 @@ t8_forest_set_user_data (t8_forest_t forest, void *data);
  * \see t8_forest_set_user_data
  */
 void *
-t8_forest_get_user_data (t8_forest_t forest);
+t8_forest_get_user_data (const t8_forest_t forest);
 
 /** Set the user function pointer of a forest. This can i.e. be used to pass user defined
  * functions to the adapt routine.
@@ -285,7 +285,7 @@ t8_forest_get_user_data (t8_forest_t forest);
  * \see t8_forest_get_user_function
  */
 void
-t8_forest_set_user_function (t8_forest_t forest, t8_generic_function_pointer functrion);
+t8_forest_set_user_function (t8_forest_t forest, t8_generic_function_pointer function);
 
 /** Return the user function pointer associated with a forest.
  * \param [in]     forest   The forest.
@@ -294,7 +294,7 @@ t8_forest_set_user_function (t8_forest_t forest, t8_generic_function_pointer fun
  * \see t8_forest_set_user_function
  */
 t8_generic_function_pointer
-t8_forest_get_user_function (t8_forest_t forest);
+t8_forest_get_user_function (const t8_forest_t forest);
 
 /** Set a source forest to be partitioned during commit.
  * The partitioning is done according to the SFC and each rank is assigned
@@ -399,7 +399,7 @@ t8_forest_commit (t8_forest_t forest);
  * the minimum of all maxlevels of the element classes in this forest.
  */
 int
-t8_forest_get_maxlevel (t8_forest_t forest);
+t8_forest_get_maxlevel (const t8_forest_t forest);
 
 /** Return the number of process local elements in the forest.
  * \param [in]  forest    A forest.
@@ -551,7 +551,7 @@ t8_forest_get_mpicomm (t8_forest_t forest);
  * \return                      The global id of the first local tree in \a forest.
  */
 t8_gloidx_t
-t8_forest_get_first_local_tree_id (t8_forest_t forest);
+t8_forest_get_first_local_tree_id (const t8_forest_t forest);
 
 /** Return the number of local trees of a given forest.
  * \param [in]      forest      The forest.
@@ -565,7 +565,7 @@ t8_forest_get_num_local_trees (const t8_forest_t forest);
  * \return          The number of ghost trees of that forest.
  */
 t8_locidx_t
-t8_forest_get_num_ghost_trees (t8_forest_t forest);
+t8_forest_get_num_ghost_trees (const t8_forest_t forest);
 
 /** Return the number of global trees of a given forest.
  * \param [in]      forest      The forest.
