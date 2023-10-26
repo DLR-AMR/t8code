@@ -21,8 +21,9 @@
 */
 
 #include <t8_cmesh.h>
-#include <t8_cmesh_vtk.h>
-#include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_cmesh_vtk_writer.h>
+#include <t8_cmesh/t8_cmesh_examples.h>
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
 /* TODO: rename this file to t8_something */
 
@@ -31,7 +32,7 @@
 static void
 t8_refine_hybrid (int level)
 {
-  t8_cmesh_t          cmesh, cmesh_refine;
+  t8_cmesh_t cmesh, cmesh_refine;
 
   t8_global_productionf ("Enter refine_hybrid\n");
   t8_cmesh_init (&cmesh);
@@ -53,7 +54,7 @@ t8_refine_hybrid (int level)
 static void
 t8_refine_cube (t8_eclass_t eclass, int level)
 {
-  t8_cmesh_t          cmesh, cmesh_refine;
+  t8_cmesh_t cmesh, cmesh_refine;
 
   t8_global_productionf ("Enter refine_cube\n");
   cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
@@ -70,7 +71,7 @@ t8_refine_cube (t8_eclass_t eclass, int level)
 static void
 t8_refine_p4est (int level)
 {
-  t8_cmesh_t          cmesh, cmesh_refine;
+  t8_cmesh_t cmesh, cmesh_refine;
   p4est_connectivity_t *conn;
 
   t8_global_productionf ("Enter refine_p4est\n");
@@ -88,7 +89,7 @@ t8_refine_p4est (int level)
 int
 main (int argc, char **argv)
 {
-  int                 mpiret, level;
+  int mpiret, level;
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);

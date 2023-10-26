@@ -1,5 +1,26 @@
 #!/usr/bin/python
 
+#  This file is part of t8code.
+#  t8code is a C library to manage a collection (a forest) of multiple
+#  connected adaptive space-trees of general element classes in parallel.
+#
+#  Copyright (C) 2023 the developers
+#
+#  t8code is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  t8code is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with t8code; if not, write to the Free Software Foundation, Inc.,
+#  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+
 # This script translates the su2 mesh format into the .gmsh
 # mesh format. Both in ASCII.
 
@@ -31,7 +52,7 @@ import traceback
 vertices_by_type = {3:2, 5:3, 9:4, 10:4, 12:8, 13:6, 14:5}
 
 # This dictionary gives the element type in .msh format, given
-# an elemen type in the .su2 format
+# an element type in the .su2 format
 su2_type_to_msh_type = {3:1, 5:2, 9:3, 10:4, 12:5, 13:6, 14:7}
 
 def read_dimension (opened_file, line):
@@ -239,4 +260,4 @@ if __name__ == "__main__":
     traceback.print_tb(tb) # Fixed format
    
   except IOError as error:
-    print 'An IO-error occured.\n\t', error
+    print 'An IO-error occurred.\n\t', error

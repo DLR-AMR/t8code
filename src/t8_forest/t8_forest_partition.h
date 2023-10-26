@@ -30,17 +30,19 @@
 #define T8_FOREST_PARTITION_H
 
 #include <t8.h>
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
 
 T8_EXTERN_C_BEGIN ();
 /* TODO: document */
-void                t8_forest_partition (t8_forest_t forest);
+void
+t8_forest_partition (t8_forest_t forest);
 
 /** Create the element_offset array of a partitioned forest.
  * \param [in,out]  forest The forest.
  * \a forest must be committed before calling this function.
  */
-void                t8_forest_partition_create_offsets (t8_forest_t forest);
+void
+t8_forest_partition_create_offsets (t8_forest_t forest);
 
 /** If \ref t8_forest_partition_create_offsets was already called,
  * compute for a given rank the next greater rank that is not empty.
@@ -50,15 +52,15 @@ void                t8_forest_partition_create_offsets (t8_forest_t forest);
  *                         elements on \a q. If such a \a q does not exist,
  *                         returns mpisize.
  */
-int                 t8_forest_partition_next_nonempty_rank (t8_forest_t
-                                                            forest, int rank);
+int
+t8_forest_partition_next_nonempty_rank (t8_forest_t forest, int rank);
 
 /** Create the array of global_first_descendant ids of a partitioned forest.
  * \param [in,out]  forest The forest.
  * \a forest must be committed before calling this function.
  */
-void                t8_forest_partition_create_first_desc (t8_forest_t
-                                                           forest);
+void
+t8_forest_partition_create_first_desc (t8_forest_t forest);
 
 /** Create the array tree offsets of a partitioned forest.
  * This arrays stores at position p the global id of the first tree of this process.
@@ -66,17 +68,25 @@ void                t8_forest_partition_create_first_desc (t8_forest_t
  * \param [in,out]  forest  The forest.
  * \a forest must be committed before calling this function.
  */
-void                t8_forest_partition_create_tree_offsets (t8_forest_t
-                                                             forest);
+void
+t8_forest_partition_create_tree_offsets (t8_forest_t forest);
 
 /* TODO: document */
 /* data_in has length forest_from->num_local_elements
  * data_out   --  --  forest_to->num_local_elements
  */
-void                t8_forest_partition_data (t8_forest_t forest_from,
-                                              t8_forest_t forest_to,
-                                              const sc_array_t * data_in,
-                                              sc_array_t * data_out);
+void
+t8_forest_partition_data (t8_forest_t forest_from, t8_forest_t forest_to, const sc_array_t *data_in,
+                          sc_array_t *data_out);
+
+/** Test if the last descendant of the last element of current rank has
+ * a smaller linear id than the stored first descendant of rank+1.
+ * If this is not the case, elements overlap.
+ * \param [in]  forest  The forest.
+ * \note \a forest must be committed before calling this function.
+ */
+void
+t8_forest_partition_test_boundary_element (const t8_forest_t forest);
 
 T8_EXTERN_C_END ();
 

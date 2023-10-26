@@ -26,9 +26,7 @@ name: Mattermost_message
 
 # Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events on the feature-CI_mattermost_messages, develop or main branch
-  push:
-    branches: [ feature-CI_mattermost_messages, develop, main ]
+  # Triggers the workflow on pull request events on the feature-CI_mattermost_messages, develop or main branch
   pull_request:
     branches: [ feature-CI_mattermost_messages, develop, main ]
     types: [ opened, synchronize, reopened, closed]
@@ -38,8 +36,9 @@ on:
   
   
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  send_mm_message:
+    if: github.repository == 'DLR-AMR/t8code'
+    runs-on: ubuntu-20.04
     steps:
       - name: merge
         uses: Mitigram/gh-action-mattermost@main
@@ -63,10 +62,10 @@ jobs:
           url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
           text: Pull request ${{ github.event.number }} has been ${{ github.event.action }}. See ${{ github.event.pull_request.html_url }} for more details.
 # trigger this part of the workflow, when something new is pushed into a pull request.
-      - name: synchronize
-        uses: Mitigram/gh-action-mattermost@main
-        if: github.event.action == 'synchronize'
-        with:
-          username: t8y
-          url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
-          text: Updated Pull-Request ${{ github.event.number }}. See ${{ github.event.pull_request.html_url }} for more details.
+#      - name: synchronize
+#        uses: Mitigram/gh-action-mattermost@main
+#        if: github.event.action == 'synchronize'
+#        with:
+#          username: t8y
+#          url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
+#          text: Updated Pull-Request ${{ github.event.number }}. See ${{ github.event.pull_request.html_url }} for more details.

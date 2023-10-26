@@ -21,8 +21,8 @@
 */
 
 /** \file t8_forest_iterate.h
- * We define variuos routines to iterate through (parts of) a forest and execute
- * callback functions on the leaf elements,
+ * We define various routines to iterate through (parts of) a forest and execute
+ * callback functions on the leaf elements.
  */
 
 /* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest_iterate */
@@ -31,15 +31,10 @@
 #define T8_FOREST_ITERATE_H
 
 #include <t8.h>
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
 
-typedef int         (*t8_forest_iterate_face_fn) (t8_forest_t forest,
-                                                  t8_locidx_t ltreeid,
-                                                  const t8_element_t *
-                                                  element, int face,
-                                                  void *user_data,
-                                                  t8_locidx_t
-                                                  tree_leaf_index);
+typedef int (*t8_forest_iterate_face_fn) (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+                                          int face, void *user_data, t8_locidx_t tree_leaf_index);
 
 /*
  * forest          the forest
@@ -57,24 +52,15 @@ typedef int         (*t8_forest_iterate_face_fn) (t8_forest_t forest,
  *                 if \a query is NULL: true if and only if the search should continue with the
  *                 children of \a element and the queries should be performed for this element.
  */
-typedef int         (*t8_forest_search_query_fn) (t8_forest_t forest,
-                                                  t8_locidx_t ltreeid,
-                                                  const t8_element_t *
-                                                  element,
-                                                  const int is_leaf,
-                                                  t8_element_array_t *
-                                                  leaf_elements,
-                                                  t8_locidx_t
-                                                  tree_leaf_index,
-                                                  void *query,
-                                                  size_t query_index);
+typedef int (*t8_forest_search_query_fn) (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+                                          const int is_leaf, t8_element_array_t *leaf_elements,
+                                          t8_locidx_t tree_leaf_index, void *query, size_t query_index);
 
 T8_EXTERN_C_BEGIN ();
 
 /* TODO: Document */
-void                t8_forest_split_array (const t8_element_t * element,
-                                           t8_element_array_t * leaf_elements,
-                                           size_t * offsets);
+void
+t8_forest_split_array (const t8_element_t *element, t8_element_array_t *leaf_elements, size_t *offsets);
 
 /* TODO: comment */
 /* Iterate over all leafs of an element that touch a given face of the element */
@@ -84,16 +70,10 @@ void                t8_forest_split_array (const t8_element_t * element,
  * - (index + 1) */
 /* Top-down iteration and callback is called on each intermediate level.
  * If it returns false, the current element is not traversed further */
-void                t8_forest_iterate_faces (t8_forest_t forest,
-                                             t8_locidx_t ltreeid,
-                                             const t8_element_t * element,
-                                             int face,
-                                             t8_element_array_t *
-                                             leaf_elements, void *user_data,
-                                             t8_locidx_t
-                                             tree_lindex_of_first_leaf,
-                                             t8_forest_iterate_face_fn
-                                             callback);
+void
+t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int face,
+                         t8_element_array_t *leaf_elements, void *user_data, t8_locidx_t tree_lindex_of_first_leaf,
+                         t8_forest_iterate_face_fn callback);
 
 /* Perform a top-down search of the forest, executing a callback on each
  * intermediate element. The search will enter each tree at least once.
@@ -101,12 +81,11 @@ void                t8_forest_iterate_faces (t8_forest_t forest,
  * are not further searched.
  * To pass user data to the search_fn function use \ref t8_forest_set_user_data
  */
-void                t8_forest_search (t8_forest_t forest,
-                                      t8_forest_search_query_fn search_fn,
-                                      t8_forest_search_query_fn query_fn,
-                                      sc_array_t * queries);
+void
+t8_forest_search (t8_forest_t forest, t8_forest_search_query_fn search_fn, t8_forest_search_query_fn query_fn,
+                  sc_array_t *queries);
 
-/** Given two forest where the elemnts in one forest are either direct children or
+/** Given two forest where the elements in one forest are either direct children or
  * parents of the elements in the other forest
  * compare the two forests and for each refined element or coarsened
  * family in the old one, call a callback function providing the local indices
@@ -117,10 +96,8 @@ void                t8_forest_search (t8_forest_t forest,
  * \note To pass a user pointer to \a replace_fn use \ref t8_forest_set_user_data
  * and \ref t8_forest_get_user_data.
  */
-void                t8_forest_iterate_replace (t8_forest_t forest_new,
-                                               t8_forest_t forest_old,
-                                               t8_forest_replace_t
-                                               replace_fn);
+void
+t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_forest_replace_t replace_fn);
 
 T8_EXTERN_C_END ();
 

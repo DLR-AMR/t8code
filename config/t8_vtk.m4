@@ -10,7 +10,7 @@ dnl   -lvtkIOXML-9.0 -lvtkCommonExecutionModel-9.0 -lvtkCommonDataModel-9.0
 dnl   -lvtkCommonCore-9.0 -lvtkzlib-9.0"
 dnl
 AC_DEFUN([T8_CHECK_VTK], [
-
+	AC_MSG_CHECKING([for VTK library])
 T8_ARG_WITH([vtk_version_number],
   [vtk library version number --with-vtk_version_number=<MAJOR.MINOR>, defaults to 9.0 if not provided],
   [VTK_VERSION_MANUALLY_PROVIDED])
@@ -30,10 +30,11 @@ T8_ARG_WITH([vtk],
       AC_DEFINE_UNQUOTED([VTK_VERSION_USED], "$t8_vtk_version", [VTK version t8code is linked against])
     ])
 
-    T8_VTK_LIBS="-lvtkIOXML-$t8_vtk_version -lvtkCommonExecutionModel-$t8_vtk_version \
--lvtkCommonDataModel-$t8_vtk_version -lvtkIOXMLParser-$t8_vtk_version \
--lvtkIOParallelXML-$t8_vtk_version -lvtkParallelMPI-$t8_vtk_version \
--lvtkCommonCore-$t8_vtk_version -lvtkzlib-$t8_vtk_version"
+    T8_VTK_LIBS="-lvtkIOXML-$t8_vtk_version -lvtkCommonExecutionModel-$t8_vtk_version \   
+    -lvtkCommonDataModel-$t8_vtk_version -lvtkIOGeometry-$t8_vtk_version -lvtkIOXMLParser-$t8_vtk_version \
+    -lvtkIOParallelXML-$t8_vtk_version -lvtkIOPLY-$t8_vtk_version -lvtkParallelMPI-$t8_vtk_version \
+    -lvtkFiltersCore-$t8_vtk_version -lvtksys-$t8_vtk_version \
+    -lvtkCommonCore-$t8_vtk_version -lvtkzlib-$t8_vtk_version -lvtkIOLegacy-$t8_vtk_version"
     if test "x$T8_WITH_VTK" != xyes ; then
       T8_VTK_LIBS="$T8_WITH_VTK"
       dnl AC_MSG_ERROR([Please provide --with-vtk without arguments])

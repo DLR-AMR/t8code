@@ -1,29 +1,55 @@
 #! /bin/bash
 
-# This is the GNU style for indent 2.2.9 (according to man page)
+# This file is part of t8code.
+# t8code is a C library to manage a collection (a forest) of multiple
+# connected adaptive space-trees of general element classes in parallel.
 #
-#"$INDENT" \
-#    -nbad -bap -nbc -bbo -bl -bli2 -bls -ncdb -nce -cp1 -cs -di2 \
-#    -ndj -nfc1 -nfca -hnl -i2 -ip5 -lp -pcs -nprs -psl -saf -sai \
-#    -saw -nsc -nsob
-#    "$@"
-
-# This is our modification
+# Copyright (C) 2023 the developers
 #
-# blank line after procedure body
-# braces indent 0 (or do you want -bl2 here and -bl below?)
-# braces to right of control statements (or do you want -bl here?)
-# no tabs
-# put the return type of a function on a separate line
-# swallow optional blank lines
-INDENT_OPTIONS="-bap -bli0 -br -nut -psl -sob -di20"
+# t8code is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# t8code is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with t8code; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-INDENT=`which gnuindent 2> /dev/null`
-if test -z "$INDENT" ; then
-	INDENT=`which gindent`
+# We use clang-format to indent our code. There are different base styles
+# available, but we use a modification. The options for this modification
+# are located in the .clang-format file.
+# We have to use the -i argument, so that clang-format directly alters the
+# files instead of printing the changes to stdout. The --style=file
+# arguments tells clang-format to look for a *.clang-format file.
+FORMAT_OPTIONS="-i --style=file"
+
+
+FORMAT=`which clang-format 2> /dev/null`
+
+if [ -z "$FORMAT" ]
+then
+  # Exit if the spell checking script was not found
+  echo "ERROR: clang-format not found."
+  echo "Please install clang-format version 16.0.xyz"
+  echo "See https://github.com/ssciwr/clang-format-wheel"
+  exit 1
 fi
-if test -z "$INDENT" ; then
-	INDENT=`which indent`
+
+CLANG_VERSION_STRING=`$FORMAT --version`
+
+VERSION=`echo $CLANG_VERSION_STRING | cut -d " " -f 3`
+MAJOR=`echo $VERSION | cut -d. -f1`
+MINOR=`echo $VERSION | cut -d. -f2`
+PATCH=`echo $VERSION | cut -d. -f3`
+
+if [[ "$MAJOR" != "17" || $MINOR != "0" || $PATCH != "1" ]]; then
+  echo "Please install clang-format version 17.0.1"
+  exit 1
 fi
 
 for arg in "$@" ; do
@@ -33,8 +59,8 @@ for arg in "$@" ; do
 done
 if [ -z "$WANTSOUT" ]; then
   for NAME in "$@" ; do
-    $INDENT $INDENT_OPTIONS "$NAME"
+    $FORMAT $FORMAT_OPTIONS "$NAME"
   done
 else
-  $INDENT $INDENT_OPTIONS $@
+  $FORMAT $FORMAT_OPTIONS $@
 fi
