@@ -40,7 +40,6 @@ class t8_cmesh_partition_class: public testing::TestWithParam<int> {
   {
     cmesh_id = GetParam ();
     cmesh_original = t8_test_create_cmesh (cmesh_id);
-    t8_debugf ("[D] is partitioned: %i\n", cmesh_original->set_partition);
   }
 
   int cmesh_id;
