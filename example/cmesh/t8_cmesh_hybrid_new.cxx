@@ -97,23 +97,6 @@ t8_basic_cake_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t w
   }
 }
 
-static int
-t8_basic_only_pyramid (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                       t8_eclass_scheme_c *ts, int is_family, int num_elements, t8_element_t *elements[])
-{
-  int level;
-  level = ts->t8_element_level (elements[0]);
-  if (level >= *(int *) t8_forest_get_user_data (forest)) {
-    return 0;
-  }
-  else if (ts->t8_element_shape (elements[0]) == T8_ECLASS_PYRAMID) {
-    return 1;
-  }
-  else {
-    return 0;
-  }
-}
-
 static void
 t8_basic_hybrid (int level, int endlvl, int do_vtk, t8_eclass_t eclass, int num_elements, int mesh, int balance,
                  const char *prefix, int part)
@@ -257,18 +240,14 @@ main (int argc, char **argv)
   int level, endlvl, helpme, do_vtk, eclass_int, mesh, elements, balance, part;
   t8_eclass_t eclass;
   sc_options_t *opt;
-  char usage[BUFSIZ];
   char help[BUFSIZ];
   const char *file;
 
-  /* brief help message */
-  snprintf (usage, BUFSIZ,
-            "Usage:\t%s <OPTIONS>\n\t%s -h\t"
-            "for a brief overview of all options.",
-            basename (argv[0]), basename (argv[0]));
-
   /* long help message */
-  snprintf (help, BUFSIZ, "ADD EXAMPLE DESCRIPTION.\n\n%s\n", usage);
+  snprintf (help, BUFSIZ, "ADD EXAMPLE DESCRIPTION.\n\n"
+                          "Usage:\t%s <OPTIONS>\n\t%s -h\t"
+                          "for a brief overview of all options.\n",
+                          basename (argv[0]), basename (argv[0]));
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
 
