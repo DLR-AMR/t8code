@@ -62,6 +62,10 @@ struct t8_scheme_cxx
  */
 extern const double t8_element_corner_ref_coords[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS][3];
 
+/** This array holds the reference coordinates of the centroid of each element.
+ *  It can e.g. be used with the \ref t8_element_reference_coords function.
+ *  Usage: t8_element_centroid_ref_coords[eclass][dimension]
+ */
 extern const double t8_element_centroid_ref_coords[T8_ECLASS_COUNT][3];
 
 /** Increase the reference counter of a scheme.
