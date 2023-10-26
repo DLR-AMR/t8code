@@ -176,7 +176,7 @@ t8_geom_compute_linear_geometry (t8_eclass_t tree_class, const double *tree_vert
 
 void
 t8_geom_compute_linear_axis_aligned_geometry (t8_eclass_t tree_class, const double *tree_vertices,
-                                              const double *ref_coords, const size_t num_coords, double out_coords[3])
+                                              const double *ref_coords, const size_t num_coords, double *out_coords)
 {
   if (tree_class != T8_ECLASS_LINE && tree_class != T8_ECLASS_QUAD && tree_class != T8_ECLASS_HEX) {
     SC_ABORT ("Linear geometry coordinate computation is only supported for lines/quads/hexes.");
