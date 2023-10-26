@@ -592,7 +592,7 @@ t8_forest_global_tree_id (t8_forest_t forest, t8_locidx_t ltreeid);
  * \a forest must be committed before calling this function.
  */
 t8_tree_t
-t8_forest_get_tree (t8_forest_t forest, t8_locidx_t ltree_id);
+t8_forest_get_tree (const t8_forest_t forest, const t8_locidx_t ltree_id);
 
 /** Return a pointer to the vertex coordinates of a tree.
  * \param [in]    forest        The forest.

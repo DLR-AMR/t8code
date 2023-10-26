@@ -843,7 +843,7 @@ t8_forest_global_tree_id (t8_forest_t forest, t8_locidx_t ltreeid)
  * forest is only partially committed. Thus, we cannot check whether the
  * forest is committed here. */
 t8_tree_t
-t8_forest_get_tree (t8_forest_t forest, t8_locidx_t ltree_id)
+t8_forest_get_tree (const t8_forest_t forest, const t8_locidx_t ltree_id)
 {
   T8_ASSERT (forest->trees != NULL);
   T8_ASSERT (0 <= ltree_id && ltree_id < t8_forest_get_num_local_trees (forest));
