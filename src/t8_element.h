@@ -56,6 +56,10 @@ struct t8_scheme_cxx
   t8_eclass_scheme_c *eclass_schemes[T8_ECLASS_COUNT];
 };
 
+/** This array holds the reference coordinates of each vertex of each element.
+ *  It can e.g. be used with the \ref t8_element_reference_coords function.
+ *  Usage: t8_element_corner_ref_coords[eclass][vertex][dimension]
+ */
 extern const double t8_element_corner_ref_coords[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS][3];
 
 extern const double t8_element_centroid_ref_coords[T8_ECLASS_COUNT][3];
