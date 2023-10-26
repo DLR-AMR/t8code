@@ -407,7 +407,7 @@ t8_forest_get_maxlevel (const t8_forest_t forest);
  * \a forest must be committed before calling this function.
  */
 t8_locidx_t
-t8_forest_get_local_num_elements (t8_forest_t forest);
+t8_forest_get_local_num_elements (const t8_forest_t forest);
 
 /** Return the number of global elements in the forest.
  * \param [in]  forest    A forest.
@@ -415,7 +415,7 @@ t8_forest_get_local_num_elements (t8_forest_t forest);
  * \a forest must be committed before calling this function.
  */
 t8_gloidx_t
-t8_forest_get_global_num_elements (t8_forest_t forest);
+t8_forest_get_global_num_elements (const t8_forest_t forest);
 
 /** Return the number of ghost elements of a forest.
  * \param [in]      forest      The forest.
@@ -425,7 +425,7 @@ t8_forest_get_global_num_elements (t8_forest_t forest);
  * \a forest must be committed before calling this function.
  */
 t8_locidx_t
-t8_forest_get_num_ghosts (t8_forest_t forest);
+t8_forest_get_num_ghosts (const t8_forest_t forest);
 
 /** Return the element class of a forest local tree.
  * \param [in] forest    The forest.
@@ -434,7 +434,7 @@ t8_forest_get_num_ghosts (t8_forest_t forest);
  * \a forest must be committed before calling this function.
  */
 t8_eclass_t
-t8_forest_get_eclass (t8_forest_t forest, t8_locidx_t ltreeid);
+t8_forest_get_eclass (const t8_forest_t forest, const t8_locidx_t ltreeid);
 
 /** Given a global tree id compute the forest local id of this tree.
  * If the tree is a local tree, then the local id is between 0 and the number
@@ -446,7 +446,7 @@ t8_forest_get_eclass (t8_forest_t forest, t8_locidx_t ltreeid);
  * \see https://github.com/DLR-AMR/t8code/wiki/Tree-indexing for more details about tree indexing.
  */
 t8_locidx_t
-t8_forest_get_local_id (t8_forest_t forest, t8_gloidx_t gtreeid);
+t8_forest_get_local_id (const t8_forest_t forest, const t8_gloidx_t gtreeid);
 
 /** Given the local id of a tree in a forest, compute the tree's local id in the associated cmesh.
  * \param [in] forest    The forest.
@@ -544,7 +544,7 @@ t8_forest_partition_cmesh (t8_forest_t forest, sc_MPI_Comm comm, int set_profili
  * \a forest must be committed before calling this function.
  */
 sc_MPI_Comm
-t8_forest_get_mpicomm (t8_forest_t forest);
+t8_forest_get_mpicomm (const t8_forest_t forest);
 
 /** Return the global id of the first local tree of a forest.
  * \param [in]      forest      The forest.
@@ -572,7 +572,7 @@ t8_forest_get_num_ghost_trees (const t8_forest_t forest);
  * \return          The number of global trees of that forest.
  */
 t8_gloidx_t
-t8_forest_get_num_global_trees (t8_forest_t forest);
+t8_forest_get_num_global_trees (const t8_forest_t forest);
 
 /** Return the global id of a local tree or a ghost tree.
  * \param [in]      forest      The forest.
@@ -583,7 +583,7 @@ t8_forest_get_num_global_trees (t8_forest_t forest);
  * \see https://github.com/DLR-AMR/t8code/wiki/Tree-indexing for more details about tree indexing.
  */
 t8_gloidx_t
-t8_forest_global_tree_id (t8_forest_t forest, t8_locidx_t ltreeid);
+t8_forest_global_tree_id (const t8_forest_t forest, const t8_locidx_t ltreeid);
 
 /** Return a pointer to a tree in a forest.
  * \param [in]      forest      The forest.
@@ -610,7 +610,7 @@ t8_forest_get_tree_vertices (t8_forest_t forest, t8_locidx_t ltreeid);
  *                              of this tree.
  */
 t8_element_array_t *
-t8_forest_tree_get_leafs (t8_forest_t forest, t8_locidx_t ltree_id);
+t8_forest_tree_get_leafs (const t8_forest_t forest, const t8_locidx_t ltree_id);
 
 /** Return a cmesh associated to a forest.
  * \param [in]      forest      The forest.
@@ -659,7 +659,7 @@ t8_forest_get_tree_num_elements (t8_forest_t forest, t8_locidx_t ltreeid);
  * \note \a forest must be committed before calling this function.
  */
 t8_locidx_t
-t8_forest_get_tree_element_offset (t8_forest_t forest, t8_locidx_t ltreeid);
+t8_forest_get_tree_element_offset (const t8_forest_t forest, const t8_locidx_t ltreeid);
 
 /** Return the number of elements of a tree.
  * \param [in]      tree       A tree in a forest.
@@ -674,7 +674,7 @@ t8_forest_get_tree_element_count (t8_tree_t tree);
  * \return                    The element class of the tree with local id \a ltreeid.
  */
 t8_eclass_t
-t8_forest_get_tree_class (t8_forest_t forest, t8_locidx_t ltreeid);
+t8_forest_get_tree_class (const t8_forest_t forest, const t8_locidx_t ltreeid);
 
 /** Compute the global index of the first local element of a forest.
  * This function is collective.
@@ -692,7 +692,7 @@ t8_forest_get_first_local_element_id (t8_forest_t forest);
  * \see t8_forest_set_scheme
  */
 t8_scheme_cxx_t *
-t8_forest_get_scheme (t8_forest_t forest);
+t8_forest_get_scheme (const t8_forest_t forest);
 
 /** Return the eclass scheme of a given element class associated to a forest.
  * \param [in]      forest.     A committed forest.
