@@ -325,7 +325,7 @@ t8_cmesh_new_pyramid (sc_MPI_Comm comm)
   /* Use linear geometry */
   t8_cmesh_register_geometry (cmesh, linear_geom);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_PYRAMID);
-  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 15);
+  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 5);
   t8_cmesh_commit (cmesh, comm);
   return cmesh;
 }
