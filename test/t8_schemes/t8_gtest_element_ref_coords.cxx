@@ -34,9 +34,9 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_cmesh/t8_cmesh_examples.h>
 
 #if T8_ENABLE_LESS_TESTS
-#define MAXLEVEL 3
-#else
 #define MAXLEVEL 4
+#else
+#define MAXLEVEL 5
 #endif
 
 void
@@ -164,7 +164,7 @@ TEST_P (class_ref_coords, t8_check_elem_ref_coords)
 {
   t8_locidx_t itree, ielement;
   /* Generate a uniform forest for each level up to MAXLEVEL and partition it */
-  for (int level = 0; level < MAXLEVEL; ++level) {
+  for (int level = 0; level <= MAXLEVEL; ++level) {
     forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0, sc_MPI_COMM_WORLD);
     t8_forest_init (&forest_partition);
     t8_forest_set_partition (forest_partition, forest, 0);
