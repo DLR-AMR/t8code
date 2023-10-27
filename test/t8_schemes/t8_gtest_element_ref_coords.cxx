@@ -40,7 +40,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #endif
 
 void
-t8_element_centroid_by_vertex_coords (t8_forest_t forest, t8_eclass_scheme_c *ts, t8_locidx_t ltreeid,
+t8_element_centroid_by_vertex_coords (const t8_forest_t forest, const t8_eclass_scheme_c *ts, const t8_locidx_t ltreeid,
                                       const t8_element_t *element, double *coordinates)
 {
   double vertex_ref_coords[3], vertex_out_coords[3];
@@ -91,12 +91,9 @@ t8_write_message_by_dim (const char *message, const T *array, const int dim)
   t8_debugf ("%s\n", buffer.str ().c_str ());
 }
 
-/* To save an iterate, we will test the ref coords and centroid right in the adapt callback itself. 
- * Refines as long as the MAXLEVEL is not reached. */
 int
-t8_adapt_callback_with_test (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                             t8_locidx_t lelement_id, t8_eclass_scheme_c *ts, const int is_family,
-                             const int num_elements, t8_element_t *elements[])
+t8_test_coords (const t8_forest_t forest, const t8_locidx_t ltree_id, const t8_element_t *element,
+                const t8_eclass_scheme_c *ts)
 {
   double tree_ref_coords_by_vertex
     [3]; /** reference coordinates of the element vertices computed by \ref t8_element_vertex_reference_coords */
@@ -112,7 +109,7 @@ t8_adapt_callback_with_test (t8_forest_t forest, t8_forest_t forest_from, t8_loc
      * T8_ECLASS_MAX_DIM]; /** reference coordinates of the element vertices computed by \ref t8_get_batch_coords_for_element_type */
 
   /* compare results of the two different way to obtain tree ref coords */
-  const t8_element_shape_t shape = ts->t8_element_shape (elements[0]);
+  const t8_element_shape_t shape = ts->t8_element_shape (element);
   const int num_vertices = t8_eclass_num_vertices[shape];
   const int elem_dim = t8_eclass_to_dimension[shape];
   t8_get_batch_coords_for_element_type (shape, batch_coords);
@@ -120,9 +117,9 @@ t8_adapt_callback_with_test (t8_forest_t forest, t8_forest_t forest_from, t8_loc
   t8_debugf ("with num_vertices %i\n", num_vertices);
   t8_debugf ("and elem_dim %i\n", elem_dim);
 
-  ts->t8_element_reference_coords (elements[0], batch_coords, num_vertices, tree_ref_coords_by_element_ref_coords);
+  ts->t8_element_reference_coords (element, batch_coords, num_vertices, tree_ref_coords_by_element_ref_coords);
   for (int i_vertex = 0; i_vertex < num_vertices; ++i_vertex) {
-    ts->t8_element_vertex_reference_coords (elements[0], i_vertex, tree_ref_coords_by_vertex);
+    ts->t8_element_vertex_reference_coords (element, i_vertex, tree_ref_coords_by_vertex);
     t8_debugf ("Checking vertex %i\n", i_vertex);
     t8_write_message_by_dim ("with the batch coords:", batch_coords, elem_dim);
     t8_write_message_by_dim ("tree_ref_coords_by_vertex:", tree_ref_coords_by_vertex, elem_dim);
@@ -134,19 +131,15 @@ t8_adapt_callback_with_test (t8_forest_t forest, t8_forest_t forest_from, t8_loc
     }
   }
   /* compare results of the two different ways to compute an elements centroid */
-  t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid_by_element_ref_coords);
-  t8_element_centroid_by_vertex_coords (forest_from, ts, which_tree, elements[0], centroid_by_vertices);
+  t8_forest_element_centroid (forest, ltree_id, element, centroid_by_element_ref_coords);
+  t8_element_centroid_by_vertex_coords (forest, ts, ltree_id, element, centroid_by_vertices);
   t8_write_message_by_dim ("centroid_by_vertices:", centroid_by_vertices, 3);
   t8_write_message_by_dim ("centroid_by_element_ref_coords:", centroid_by_element_ref_coords, 3);
   for (int dim = 0; dim < T8_ECLASS_MAX_DIM; ++dim) {
     EXPECT_NEAR (centroid_by_vertices[dim], centroid_by_element_ref_coords[dim], 2 * T8_PRECISION_EPS);
   }
 
-  /* refine if MAXLEVEL is not reached */
-  if (ts->t8_element_level (elements[0]) >= MAXLEVEL) {
-    return 0;
-  }
-  return 1;
+  return 0;
 }
 
 class class_ref_coords: public testing::TestWithParam<t8_eclass> {
@@ -156,27 +149,39 @@ class class_ref_coords: public testing::TestWithParam<t8_eclass> {
   {
     eclass = GetParam ();
     cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
-    forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 0, 0, sc_MPI_COMM_WORLD);
   }
   void
   TearDown () override
   {
-    t8_forest_unref (&forest);
+    t8_cmesh_unref (&cmesh);
   }
   t8_eclass_t eclass;
   t8_cmesh_t cmesh;
-  t8_forest_t forest;
+  t8_forest_t forest, forest_partition;
 };
 
 TEST_P (class_ref_coords, t8_check_elem_ref_coords)
 {
+  t8_locidx_t itree, ielement;
+  /* Generate a uniform forest for each level up to MAXLEVEL and partition it */
   for (int level = 0; level < MAXLEVEL; ++level) {
-    t8_forest_t forest_new;
-    t8_forest_init (&forest_new);
-    t8_forest_set_adapt (forest_new, forest, t8_adapt_callback_with_test, 0);
-    t8_forest_set_partition (forest_new, forest, 0);
-    t8_forest_commit (forest_new);
-    forest = forest_new;
+    forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0, sc_MPI_COMM_WORLD);
+    t8_forest_init (&forest_partition);
+    t8_forest_set_partition (forest_partition, forest, 0);
+    t8_forest_commit (forest_partition);
+    forest = forest_partition;
+    /* Check the reference coordinates of each element in each tree */
+    for (itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {
+      const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
+      const t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, tree_class);
+      for (ielement = 0; ielement < t8_forest_get_tree_num_elements (forest, itree); ielement++) {
+        t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
+        t8_test_coords (forest, itree, element, ts);
+      }
+    }
+    /* Increase cmesh ref counter to not loose it during t8_forest_unref */
+    t8_cmesh_ref (cmesh);
+    t8_forest_unref (&forest);
   }
 }
 
