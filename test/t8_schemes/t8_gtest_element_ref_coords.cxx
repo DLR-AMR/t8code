@@ -48,7 +48,7 @@ t8_element_centroid_by_vertex_coords (const t8_forest_t forest, const t8_eclass_
   t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
 
   /* Initialize the centroid with (0, 0, 0). */
-  memset (coordinates, 0, 3 * sizeof (double));
+  std::fill_n (coordinates, 3, 0);
   /* Get the number of corners of the element. */
   const int num_vertices = ts->t8_element_num_corners (element);
   for (int i_vertex = 0; i_vertex < num_vertices; i_vertex++) {
