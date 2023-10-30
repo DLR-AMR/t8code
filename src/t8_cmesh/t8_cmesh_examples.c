@@ -2763,7 +2763,6 @@ t8_cmesh_new_triangulated_spherical_surface (const double radius, sc_MPI_Comm co
     all_eclasses[itree] = T8_ECLASS_TRIANGLE;
   }
 
-  const double r = radius; /* Only for readability. */
 
   double vertices_top[3][3] = { { r, 0.0, 0.0 }, { 0.0, r, 0.0 }, { 0.0, 0.0, r } };
 
