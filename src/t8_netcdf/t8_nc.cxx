@@ -81,9 +81,6 @@ struct t8_nc_data
   int num_global_attributes { 0 };  //!< The total number of global attributes given within the netCDF file
   int id_unlimited_dim { -1 };      //!< The dimension ID of an unlimited dimension (mostly 'Time'-coordinate)
 
-  /* Information about the global coordinate system */
-  //cmc_global_coordinate_system_t coordinates{nullptr};
-
   /* Saves corresponding data to each inquired data variable */
   std::vector<t8_geo_var_t> vars;  //!< A vector holding all variables which has been read from the netCDF file
 
@@ -92,7 +89,6 @@ struct t8_nc_data
   std::vector<std::string> dimension_names;
 
   /* A status flag of the current mode the struct is in */
-  //CMC_NC_STATUS status{STATUS_UNDEFINED};
   bool use_distributed_data {
     false
   };  //!< A flag whether or not the data is/will be distributed among several processes
@@ -102,8 +98,6 @@ struct t8_nc_data
     t8_nc_par_reading_distribution::T8_NC_PAR_DISTRIBUTION_UNDEFINED
   };  //!< Defines the way the netCDF data is read in parallel
   std::vector<int> reading_distribution_num_procs_per_dims;
-  //data_distribution_t data_distribution{DISTRIBUTION_UNDEFINED};
-  //std::vector<int> distribution_offsets;
 
   int
   get_ncid () const;  //!< Return the id of the corresponding netCDF file
@@ -287,8 +281,6 @@ t8_nc_inquire_dimensions_data (t8_nc_data_t nc_data)
     if (nc_data->coord_dim_ids[coord_id] != T8_NC_NOT_CONSIDERED) {
       /* Coordinate variables have a concerning coordinate dimension; the name of the dimension coincides with the name of the variable and is only dependent on "its own dimension" */
       /* Get the ID of the coordinate variable */
-      t8_global_productionf ("VAriable hat name: %s\n",
-                             nc_data->dimension_names[nc_data->coord_dim_ids[coord_id]].c_str ());
       err = nc_inq_varid (nc_data->get_ncid (), nc_data->dimension_names[nc_data->coord_dim_ids[coord_id]].c_str (),
                           &(nc_data->coord_var_ids[coord_id]));
       t8_nc_check_err (err);
@@ -301,8 +293,7 @@ t8_nc_inquire_dimensions_data (t8_nc_data_t nc_data)
       nc_data->coordinates[coord_id] = t8_nc_create_geo_variable (
         nc_data->dimension_names[nc_data->coord_dim_ids[coord_id]].c_str (), static_cast<t8_geo_data_type> (var_type),
         nc_data->dimension_sizes[nc_data->coord_dim_ids[coord_id]]);
-      std::cout << "num elems: " << nc_data->dimension_sizes[nc_data->coord_dim_ids[coord_id]]
-                << " var type: " << var_type << std::endl;
+
       /* Read in the data from the coordinate variable */
       err = nc_get_var (nc_data->get_ncid (), nc_data->coord_var_ids[coord_id],
                         t8_nc_geo_variable_get_data_ptr (nc_data->coordinates[coord_id]));
@@ -369,6 +360,8 @@ t8_nc_constrain_dimensions_to_given_hyperslab (t8_nc_data_t nc_data, const size_
         /* Only a part of the coordinate dimension is considered */
         t8_nc_geo_variable_crop_data_to_selection (nc_data->coordinates[t8_coord_ids::T8_LON], start_ptr[dims],
                                                    start_ptr[dims] + count_ptr[dims] - 1);
+        /* Set the coordinate length correspondingly */
+        nc_data->coord_lengths[t8_coord_ids::T8_LON] = count_ptr[dims];
       }
     }
     else if (current_dim_id == nc_data->coord_dim_ids[t8_coord_ids::T8_LAT]) {
@@ -376,6 +369,8 @@ t8_nc_constrain_dimensions_to_given_hyperslab (t8_nc_data_t nc_data, const size_
         /* Only a part of the coordinate dimension is considered */
         t8_nc_geo_variable_crop_data_to_selection (nc_data->coordinates[t8_coord_ids::T8_LAT], start_ptr[dims],
                                                    start_ptr[dims] + count_ptr[dims] - 1);
+        /* Set the coordinate length correspondingly */
+        nc_data->coord_lengths[t8_coord_ids::T8_LAT] = count_ptr[dims];
       }
     }
     else if (current_dim_id == nc_data->coord_dim_ids[t8_coord_ids::T8_LEV]) {
@@ -383,6 +378,8 @@ t8_nc_constrain_dimensions_to_given_hyperslab (t8_nc_data_t nc_data, const size_
         /* Only a part of the coordinate dimension is considered */
         t8_nc_geo_variable_crop_data_to_selection (nc_data->coordinates[t8_coord_ids::T8_LEV], start_ptr[dims],
                                                    start_ptr[dims] + count_ptr[dims] - 1);
+        /* Set the coordinate length correspondingly */
+        nc_data->coord_lengths[t8_coord_ids::T8_LEV] = count_ptr[dims];
       }
     }
     else if (current_dim_id == nc_data->coord_dim_ids[t8_coord_ids::T8_TIME]) {
@@ -390,6 +387,8 @@ t8_nc_constrain_dimensions_to_given_hyperslab (t8_nc_data_t nc_data, const size_
         /* Only a part of the coordinate dimension is considered */
         t8_nc_geo_variable_crop_data_to_selection (nc_data->coordinates[t8_coord_ids::T8_TIME], start_ptr[dims],
                                                    start_ptr[dims] + count_ptr[dims] - 1);
+        /* Set the coordinate length correspondingly */
+        nc_data->coord_lengths[t8_coord_ids::T8_TIME] = count_ptr[dims];
       }
     }
   }
@@ -1049,11 +1048,11 @@ t8_nc_construct_mesh (t8_nc_data_t nc_data, const int dimensionality, const enum
   /* Inquire the coordinate dimension data */
   t8_nc_inquire_dimensions_data (nc_data);
 
-  /* Reorder the coordinates */
-  //t8_nc_apply_default_diemnsion_coordinate_ordering(nc_data);
-
   /* Deallocate the netCDF specific variable data (which was allocated in 't8_nc_inquire_variables') and is not used anymore */
   t8_nc_deallocate_var_specific_data (nc_data);
+
+  /* The mesh has to be built hereafter */
+  /* .................................. */
 
 #endif
 }
@@ -1082,6 +1081,12 @@ t8_nc_construct_mesh_for_variables (t8_nc_data_t nc_data, const int num_variable
 
   /* Inquire the variable's data */
   t8_nc_inquire_variables_data (nc_data, start_ptr, count_ptr);
+
+  /* Deallocate the netCDF specific variable data (which was allocated in 't8_nc_inquire_variables') and is not used anymore */
+  t8_nc_deallocate_var_specific_data (nc_data);
+
+  /* The mesh has to be built hereafter */
+  /* .................................. */
 
 #endif
 }
