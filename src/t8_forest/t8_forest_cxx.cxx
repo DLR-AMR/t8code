@@ -411,16 +411,20 @@ t8_forest_element_from_ref_coords (t8_forest_t forest, t8_locidx_t ltreeid, cons
     double *stretch_factors
       = (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_PATCH_STRETCH_FACTORS_KEY, ltreeid);
     T8_ASSERT (stretch_factors != NULL);
-    double stretched_ref_coords[3];
-    for (int dim = 0; dim < tree_dim; ++dim) {
-      stretched_ref_coords[dim] = 0.5 + ((ref_coords[dim] - 0.5) * stretch_factors[dim]);
+    double stretched_ref_coords[T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM];
+    for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
+      for (int dim = 0; dim < tree_dim; ++dim) {
+        stretched_ref_coords[i_coord * tree_dim + dim]
+          = 0.5 + ((ref_coords[i_coord * tree_dim + dim] - 0.5) * stretch_factors[dim]);
+      }
     }
-    scheme->t8_element_reference_coords (element, stretched_ref_coords, NULL, tree_ref_coords);
+
+    scheme->t8_element_reference_coords (element, stretched_ref_coords, num_coords, tree_ref_coords);
   }
   else {
-    scheme->t8_element_reference_coords (element, ref_coords, NULL, tree_ref_coords);
+    scheme->t8_element_reference_coords (element, ref_coords, num_coords, tree_ref_coords);
   }
-  t8_geometry_evaluate (cmesh, gtreeid, tree_ref_coords, coords_out);
+  t8_geometry_evaluate (cmesh, gtreeid, tree_ref_coords, num_coords, coords_out);
 }
 
 /* Compute the diameter of an element. */
