@@ -39,6 +39,36 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #define MAX_LEVEL_REF_COORD_TEST 4
 #endif
 
+/**
+ * Writes a the contents of an array into a string.
+ * @tparam T The type of the array.
+ * \param [in,out] message The message which is followed by the contents of the array.
+ * \param [in,out] array The array to write.
+ * \param [in,out] dim The dimension of the array.
+ * \return The string containing the message and the array.
+ */
+template <typename T>
+std::string
+t8_write_message_by_dim (const char *message, const T *array, const int dim)
+{
+  std::ostringstream buffer;
+  buffer.precision (10);
+  buffer.setf (std::ios::fixed);
+  buffer << message;
+  for (int i_dim = 0; i_dim < dim; ++i_dim) {
+    buffer << " " << array[i_dim];
+  }
+  return buffer.str ();
+}
+
+/**
+ * Computes the centroid of an element by computing the coordinates of the vertices and computing the mean of them.
+ * \param [in] forest The forest.
+ * \param [in] ts The element class scheme.
+ * \param [in] ltreeid The local tree id.
+ * \param [in] element The element.
+ * \param [out] coordinates The coordinates of the centroid.
+ */
 void
 t8_element_centroid_by_vertex_coords (const t8_forest_t forest, const t8_eclass_scheme_c *ts, const t8_locidx_t ltreeid,
                                       const t8_element_t *element, double *coordinates)
@@ -65,6 +95,11 @@ t8_element_centroid_by_vertex_coords (const t8_forest_t forest, const t8_eclass_
   t8_vec_ax (coordinates, 1. / num_vertices);
 }
 
+/**
+ * Computes the reference coordinates of the vertices of an element.
+ * \param [in] shape The element shape.
+ * \param [out] batch_coords The batch coordinates of the vertices for the element shape.
+ */
 void
 t8_get_batch_coords_for_element_type (const t8_element_shape_t shape, double *batch_coords)
 {
@@ -77,21 +112,76 @@ t8_get_batch_coords_for_element_type (const t8_element_shape_t shape, double *ba
   }
 }
 
-template <typename T>
-void
-t8_write_message_by_dim (const char *message, const T *array, const int dim)
+/**
+ * Generates additional info for the reference coordinates test.
+ * \param [in] shape The shape of the element.
+ * \param [in] i_vertex The vertex index.
+ * \param [in] elem_dim The dimension of the element.
+ * \param [in] batch_coords The input batch coordinates.
+ * \param [in] tree_ref_coords_by_vertex The reference coordinates of the vertex computed by \ref t8_element_vertex_reference_coords.
+ * \param [in] tree_ref_coords_by_element_ref_coords The reference coordinates of the vertex computed by \ref t8_element_reference_coords.
+ * \return The additional info.
+ */
+std::string
+t8_generate_additional_info_ref_coords (const t8_element_shape_t shape, const int i_vertex, const int elem_dim,
+                                        const double *batch_coords, const double *tree_ref_coords_by_vertex,
+                                        const double *tree_ref_coords_by_element_ref_coords)
 {
-  std::ostringstream buffer;
-  buffer.precision (6);
-  buffer.setf (std::ios::fixed);
-  buffer << message;
-  for (int i_dim = 0; i_dim < dim; ++i_dim) {
-    buffer << " " << array[i_dim];
-  }
-  t8_debugf ("%s\n", buffer.str ().c_str ());
+  std::ostringstream add_info;
+  add_info << "Test failed for element shape " << t8_eclass_to_string[shape];
+  add_info << " on vertex " << i_vertex << std::endl;
+  add_info << t8_write_message_by_dim ("with the batch coords:", batch_coords, elem_dim) << std::endl;
+  add_info << t8_write_message_by_dim ("tree_ref_coords_by_vertex:", tree_ref_coords_by_vertex, elem_dim) << std::endl;
+  add_info << t8_write_message_by_dim (
+    "tree_ref_coords_by_element_ref_coords:", tree_ref_coords_by_element_ref_coords + i_vertex * elem_dim, elem_dim);
+  return add_info.str ();
 }
 
-int
+/**
+ * Generates additional info for the centroid test.
+ * \param [in] shape The shape of the element.
+ * \param [in] centroid_by_vertices The centroid computed by \ref t8_element_vertex_reference_coords -> \ref t8_geometry_evaluate -> mean of all results.
+ * \param [in] centroid_by_element_ref_coords The centroid computed by \ref t8_forest_element_centroid (uses \ref t8_element_reference_coords) -> \ref t8_geometry_evaluate.
+ * \return The additional info.
+ */
+std::string
+t8_generate_additional_info_centroid (const t8_element_shape_t shape, const double *centroid_by_vertices,
+                                      const double *centroid_by_element_ref_coords)
+{
+  std::ostringstream add_info;
+  add_info << "Test failed for element shape " << t8_eclass_to_string[shape] << std::endl;
+  add_info << t8_write_message_by_dim ("centroid_by_vertices:", centroid_by_vertices, 3) << std::endl;
+  add_info << t8_write_message_by_dim ("centroid_by_element_ref_coords:", centroid_by_element_ref_coords, 3);
+  return add_info.str ();
+}
+
+/**
+ * Compares two arrays of doubles with a given tolerance.
+ * \param [in] array1 The first array to compare.
+ * \param [in] array2 The second array to compare.
+ * \param [in] dim    The dimension of the arrays.
+ * \param [in] tol    The tolerance.
+ * \return True if the arrays are equal, false otherwise.
+ */
+const bool
+t8_compare_arrays (const double *array1, const double *array2, const int dim, const double tol)
+{
+  for (int i_dim = 0; i_dim < dim; ++i_dim) {
+    if (std::abs (array1[i_dim] - array2[i_dim]) > tol) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tests the reference coordinates of an element.
+ * \param [in] forest The forest.
+ * \param [in] ltree_id The local tree id.
+ * \param [in] element The element.
+ * \param [in] ts The element class scheme.
+ */
+void
 t8_test_coords (const t8_forest_t forest, const t8_locidx_t ltree_id, const t8_element_t *element,
                 const t8_eclass_scheme_c *ts)
 {
@@ -113,33 +203,22 @@ t8_test_coords (const t8_forest_t forest, const t8_locidx_t ltree_id, const t8_e
   const int num_vertices = t8_eclass_num_vertices[shape];
   const int elem_dim = t8_eclass_to_dimension[shape];
   t8_get_batch_coords_for_element_type (shape, batch_coords);
-  t8_debugf ("Testing for shape %s\n", t8_eclass_to_string[shape]);
-  t8_debugf ("with num_vertices %i\n", num_vertices);
-  t8_debugf ("and elem_dim %i\n", elem_dim);
 
   ts->t8_element_reference_coords (element, batch_coords, num_vertices, tree_ref_coords_by_element_ref_coords);
   for (int i_vertex = 0; i_vertex < num_vertices; ++i_vertex) {
     ts->t8_element_vertex_reference_coords (element, i_vertex, tree_ref_coords_by_vertex);
-    t8_debugf ("Checking vertex %i\n", i_vertex);
-    t8_write_message_by_dim ("with the batch coords:", batch_coords, elem_dim);
-    t8_write_message_by_dim ("tree_ref_coords_by_vertex:", tree_ref_coords_by_vertex, elem_dim);
-    t8_write_message_by_dim (
-      "tree_ref_coords_by_element_ref_coords:", tree_ref_coords_by_element_ref_coords + i_vertex * elem_dim, elem_dim);
-    for (int dim = 0; dim < elem_dim; ++dim) {
-      EXPECT_NEAR (tree_ref_coords_by_vertex[dim], tree_ref_coords_by_element_ref_coords[i_vertex * elem_dim + dim],
-                   2 * T8_PRECISION_EPS);
-    }
+    EXPECT_TRUE (t8_compare_arrays (tree_ref_coords_by_vertex,
+                                    tree_ref_coords_by_element_ref_coords + i_vertex * elem_dim, elem_dim,
+                                    2 * T8_PRECISION_EPS))
+      << t8_generate_additional_info_ref_coords (shape, i_vertex, elem_dim, batch_coords, tree_ref_coords_by_vertex,
+                                                 tree_ref_coords_by_element_ref_coords);
   }
-  /* compare results of the two different ways to compute an elements centroid */
+  /* Compare results of the two different ways to compute an elements centroid */
   t8_forest_element_centroid (forest, ltree_id, element, centroid_by_element_ref_coords);
   t8_element_centroid_by_vertex_coords (forest, ts, ltree_id, element, centroid_by_vertices);
-  t8_write_message_by_dim ("centroid_by_vertices:", centroid_by_vertices, 3);
-  t8_write_message_by_dim ("centroid_by_element_ref_coords:", centroid_by_element_ref_coords, 3);
-  for (int dim = 0; dim < T8_ECLASS_MAX_DIM; ++dim) {
-    EXPECT_NEAR (centroid_by_vertices[dim], centroid_by_element_ref_coords[dim], 2 * T8_PRECISION_EPS);
-  }
-
-  return 0;
+  EXPECT_TRUE (
+    t8_compare_arrays (centroid_by_vertices, centroid_by_element_ref_coords, T8_ECLASS_MAX_DIM, 2 * T8_PRECISION_EPS))
+    << t8_generate_additional_info_centroid (shape, centroid_by_vertices, centroid_by_element_ref_coords);
 }
 
 class class_ref_coords: public testing::TestWithParam<std::tuple<t8_eclass_t, int>> {
