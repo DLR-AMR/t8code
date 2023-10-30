@@ -68,7 +68,7 @@ main (int argc, char **argv)
     t8_cmesh_vtk_write_file (cmesh, prefix_cmesh, 1.0);
     t8_global_productionf ("Wrote %s.\n", prefix_cmesh);
 
-    t8_forest_write_vtk_ext (forest, prefix_forest, 1, 1, 1, 1, 0, 1, 0, 0, NULL);
+    t8_forest_write_vtk_ext (forest, prefix_forest, 1, 1, 1, 1, 0, 1, 0, 0, 0, NULL);
     t8_global_productionf ("Wrote %s.\n\n", prefix_forest);
 
     t8_forest_unref (&forest);
