@@ -2766,7 +2766,7 @@ t8_cmesh_new_triangulated_spherical_surface (const double radius, sc_MPI_Comm co
 
   double vertices_top[3][3] = { { radius, 0.0, 0.0 }, { 0.0, radius, 0.0 }, { 0.0, 0.0, radius } };
 
-  double vertices_bot[3][3] = { { r, 0.0, 0.0 }, { 0.0, r, 0.0 }, { 0.0, 0.0, -r } };
+  double vertices_bot[3][3] = { { radius, 0.0, 0.0 }, { 0.0, radius, 0.0 }, { 0.0, 0.0, -radius } };
 
   int itree = -1;
   for (int turn = 0; turn < ntrees / 2; turn++) {
