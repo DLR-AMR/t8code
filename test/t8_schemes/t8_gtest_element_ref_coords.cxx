@@ -40,7 +40,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #endif
 
 /**
- * Writes a the contents of an array into a string.
+ * Writes the contents of an array into a string.
  * @tparam T The type of the array.
  * \param [in,out] message The message which is followed by the contents of the array.
  * \param [in,out] array The array to write.
