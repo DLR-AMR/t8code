@@ -20,6 +20,7 @@ t8code_googletest_programs = \
   test/t8_cmesh/t8_gtest_hypercube \
   test/t8_cmesh/t8_gtest_cmesh_copy \
   test/t8_schemes/t8_gtest_element_count_leafs \
+  test/t8_schemes/t8_gtest_element_ref_coords \
   test/t8_geometry/t8_gtest_geometry \
   test/t8_schemes/t8_gtest_descendant \
   test/t8_schemes/t8_gtest_find_parent \
@@ -124,6 +125,10 @@ test_t8_cmesh_t8_gtest_cmesh_set_join_by_vertices_SOURCES = \
 test_t8_schemes_t8_gtest_element_count_leafs_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_schemes/t8_gtest_element_count_leafs.cxx
+
+test_t8_schemes_t8_gtest_element_ref_coords_SOURCES = \
+  test/t8_gtest_main.cxx \
+  test/t8_schemes/t8_gtest_element_ref_coords.cxx
 
 test_t8_geometry_t8_gtest_geometry_SOURCES = \
   test/t8_gtest_main.cxx \
@@ -310,6 +315,10 @@ test_t8_schemes_t8_gtest_element_count_leafs_LDADD = $(t8_gtest_target_ld_add)
 test_t8_schemes_t8_gtest_element_count_leafs_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_schemes_t8_gtest_element_count_leafs_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
+test_t8_schemes_t8_gtest_element_ref_coords_LDADD = $(t8_gtest_target_ld_add)
+test_t8_schemes_t8_gtest_element_ref_coords_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_schemes_t8_gtest_element_ref_coords_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+
 test_t8_geometry_t8_gtest_geometry_LDADD = $(t8_gtest_target_ld_add)
 test_t8_geometry_t8_gtest_geometry_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_geometry_t8_gtest_geometry_CPPFLAGS = $(t8_gtest_target_cpp_flags)
@@ -439,6 +448,7 @@ test_t8_cmesh_t8_gtest_hypercube_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_cmesh_copy_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_cmesh_set_join_by_vertices_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_element_count_leafs_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_schemes_t8_gtest_element_ref_coords_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_geometry_t8_gtest_geometry_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_descendant_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_find_parent_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)

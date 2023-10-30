@@ -469,21 +469,19 @@ void
 t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, double *coordinates)
 {
   t8_eclass_scheme_c *ts;
-  t8_element_shape_t element_shape;
-  double corner_coords[3] = { 0.0 };
 
   T8_ASSERT (t8_forest_is_committed (forest));
 
   /* Get the tree's eclass and scheme. */
-  t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
+  const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
   ts = t8_forest_get_eclass_scheme (forest, tree_class);
   T8_ASSERT (ts->t8_element_is_valid (element));
 
   /* Get the element class and calculate the centroid using its element
    * reference coordinates */
-  element_shape = t8_element_shape (ts, element);
-  t8_forest_element_from_ref_coords (forest, ltreeid, element, t8_element_centroid_ref_coords[element_shape],
-                                     coordinates, 0);
+  const t8_element_shape_t element_shape = t8_element_shape (ts, element);
+  t8_forest_element_from_ref_coords (forest, ltreeid, element, t8_element_centroid_ref_coords[element_shape], 1,
+                                     coordinates, NULL);
 }
 
 /* Compute the length of the line from one corner to a second corner in an element */
