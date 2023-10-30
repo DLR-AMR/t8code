@@ -9,6 +9,7 @@ geometryincludedir = $(includedir)/t8_geometry
 geometryimplincludedir = $(geometryincludedir)/t8_geometry_implementations
 schemesdefaultincludedir = $(includedir)/t8_schemes/t8_default
 vtkincludedir = $(includedir)/t8_vtk
+netcdfincludedir = $(includedir)/t8_netcdf
 defaultcommonincludedir = $(schemesdefaultincludedir)/t8_default_common
 defaultvertexincludedir = $(schemesdefaultincludedir)/t8_default_vertex
 defaultlineincludedir = $(schemesdefaultincludedir)/t8_default_line
@@ -31,10 +32,7 @@ libt8_installed_headers = \
   src/t8_vec.h \
   src/t8_version.h \
   src/t8_vtk.h \
-  src/t8_netcdf/t8_cmesh_netcdf.h \
-  src/t8_netcdf/t8_forest_netcdf.h \
-  src/t8_element_shape.h \
-  src/t8_netcdf/t8_netcdf.h
+  src/t8_element_shape.h
 libt8_installed_headers_cmesh = \
   src/t8_cmesh/t8_cmesh_testcases.h \
   src/t8_cmesh/t8_cmesh_save.h \
@@ -75,6 +73,12 @@ libt8_installed_headers_geometry_impl = \
 libt8_installed_headers_vtk = \
   src/t8_vtk/t8_vtk_reader.hxx \
   src/t8_vtk/t8_vtk_types.h
+libt8_installed_headers_netcdf = \
+  src/t8_netcdf/t8_nc_data.hxx \
+  src/t8_netcdf/t8_nc.h \
+  src/t8_netcdf/t8_cmesh_netcdf.h \
+  src/t8_netcdf/t8_forest_netcdf.h \
+  src/t8_netcdf/t8_netcdf.h
 libt8_installed_headers_schemes_default =
 libt8_installed_headers_default_common =
 libt8_installed_headers_default_vertex =
@@ -107,7 +111,6 @@ libt8_compiled_sources = \
   src/t8_cmesh/t8_cmesh_vtk_writer.c src/t8_cmesh/t8_cmesh_stash.c \
   src/t8_cmesh/t8_cmesh_vtk_reader.cxx \
   src/t8_cmesh/t8_cmesh_save.c \
-  src/t8_cmesh/t8_cmesh_netcdf.c \
   src/t8_cmesh/t8_cmesh_trees.c src/t8_cmesh/t8_cmesh_commit.c \
   src/t8_cmesh/t8_cmesh_partition.c src/t8_cmesh/t8_cmesh_refine.cxx \
   src/t8_cmesh/t8_cmesh_copy.c src/t8_data/t8_shmem.c \
@@ -132,14 +135,17 @@ libt8_compiled_sources = \
   src/t8_forest/t8_forest_ghost.cxx src/t8_forest/t8_forest_iterate.cxx \
   src/t8_version.c \
   src/t8_vtk.c src/t8_forest/t8_forest_balance.cxx \
-  src/t8_forest/t8_forest_netcdf.cxx \
   src/t8_element_shape.c \
-  src/t8_netcdf/t8_netcdf.c \
   src/t8_cmesh/t8_cmesh_testcases.c \
   src/t8_vtk/t8_vtk_polydata.cxx \
   src/t8_vtk/t8_vtk_unstructured.cxx \
   src/t8_vtk/t8_vtk_parallel.cxx \
-  src/t8_vtk/t8_vtk_reader.cxx
+  src/t8_vtk/t8_vtk_reader.cxx \
+  src/t8_netcdf/t8_nc.cxx \
+  src/t8_netcdf/t8_nc_data.cxx \
+  src/t8_cmesh/t8_cmesh_netcdf.c \
+  src/t8_forest/t8_forest_netcdf.cxx \
+  src/t8_netcdf/t8_netcdf.c 
 
 
 # this variable is used for headers that are not publicly installed
@@ -167,6 +173,7 @@ dist_geometryinclude_HEADERS = $(libt8_installed_headers_geometry)
 dist_geometryimplinclude_HEADERS = $(libt8_installed_headers_geometry_impl)
 dist_schemesdefaultinclude_HEADERS = $(libt8_installed_headers_schemes_default)
 dist_vtkinclude_HEADERS = $(libt8_installed_headers_vtk)
+dist_netcdfinclude_HEADERS = $(libt8_installed_headers_netcdf)
 dist_defaultcommoninclude_HEADERS = $(libt8_installed_headers_default_common)
 dist_defaultvertexinclude_HEADERS = $(libt8_installed_headers_default_vertex)
 dist_defaultlineinclude_HEADERS = $(libt8_installed_headers_default_line)
