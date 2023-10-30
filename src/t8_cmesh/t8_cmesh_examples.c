@@ -357,7 +357,7 @@ t8_cmesh_new_prism (sc_MPI_Comm comm)
 }
 
 t8_cmesh_t
-t8_cmesh_new_from_class (t8_eclass_t eclass, sc_MPI_Comm comm)
+t8_cmesh_new_from_class (const t8_eclass_t eclass, const sc_MPI_Comm comm)
 {
   switch (eclass) {
   case T8_ECLASS_VERTEX:
