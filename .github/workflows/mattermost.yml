@@ -58,10 +58,9 @@ jobs:
           message_build: 1
         run: |
           echo "{\"text\":\"Pull request ${{ github.event.number }} has been ${{ github.event.action }}. See ${{ github.event.pull_request.html_url }} for more details.\"}" > mattermost.json
-    if: env.message_build == '1'
-    steps:
       - name: send_message
-      - uses: mattermost/action-mattermost-notify@master
+        if: ${{ env.message_build == 1 }}
+        uses: mattermost/action-mattermost-notify@master
         env:
           MATTERMOST_WEBHOOK_URL: ${{secrets.MATTERMOST_WEBHOOK_URL }}
           MATTERMOST_USERNAME: t8y
