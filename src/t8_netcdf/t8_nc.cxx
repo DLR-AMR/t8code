@@ -22,13 +22,17 @@
 
 #include "t8_netcdf/t8_nc.h"
 #include <t8_netcdf/t8_nc_data.hxx>
+#include <t8_netcdf/t8_nc_mesh.h>
 #include <array>
 #include <vector>
 #include <algorithm>
 #include <numeric>
 
-/* An enumerator for arraya indices of at most four dimensional geo-spatial (and temporal) data */
+/* An enumerator for array indices of at most four dimensional geo-spatial (and temporal) data */
 enum t8_coord_ids { T8_COORD_ID_UNDEFINED = -1, T8_LON = 0, T8_LAT = 1, T8_LEV = 2, T8_TIME = 3, T8_NUM_COORD_IDS = 4 };
+
+/* A macro for an internal error corresponding to netCDF functionality */
+#define T8_NC_ERR_CODE -1
 
 /* Define a default value for not considered information */
 #define T8_NC_NOT_CONSIDERED -1
@@ -54,6 +58,10 @@ struct t8_nc_data
     for (auto iter { vars.begin () }; iter != vars.end (); ++iter) {
       /* Deallocate the variable */
       t8_nc_destroy_geo_variable (*iter);
+    }
+    if (mesh != nullptr) {
+      /* Deallocate the constructed mesh */
+      t8_nc_mesh_destroy (mesh);
     }
   };
 
@@ -83,6 +91,9 @@ struct t8_nc_data
 
   /* Saves corresponding data to each inquired data variable */
   std::vector<t8_geo_var_t> vars;  //!< A vector holding all variables which has been read from the netCDF file
+
+  t8_nc_mesh_t mesh { nullptr };  //!< A variable holding the constructed forest corresponding to the netCDF data
+  //int dimensionality{-1}; //!< The actual dimensionality of the data
 
   /* These variables save all dimension names and sizes */
   std::vector<size_t> dimension_sizes {};
@@ -187,6 +198,83 @@ t8_nc_inquire_general_information (t8_nc_data_t nc_data)
   int err = nc_inq (nc_data->get_ncid (), &(nc_data->num_dimensions), &(nc_data->num_variables),
                     &(nc_data->num_global_attributes), &(nc_data->id_unlimited_dim));
   t8_nc_check_err (err);
+#endif
+}
+
+static t8_nc_data_ordering
+t8_nc_geo_variable_get_ordering_from_linear_axis_ordering (const std::vector<int>& axis_ordering)
+{
+#ifdef T8_WITH_NETCDF
+  /* Only 2D and 3D geo-spatial data variables are supported for the data layout */
+  T8_ASSERT (axis_ordering.size () == 2 || axis_ordering.size () == 3);
+
+  /* Declare a variable holding the computed layout/ordering */
+  t8_nc_data_ordering data_layout;
+
+  /* Check the dimensionality of the axis ordering */
+  if (axis_ordering.size () == 2) {
+    switch (axis_ordering[0]) {
+    case t8_coord_ids::T8_LON:
+      if (axis_ordering[1] == t8_coord_ids::T8_LAT) {
+        data_layout = t8_nc_data_ordering::T8_2D_LON_LAT;
+      }
+      else {
+        data_layout = t8_nc_data_ordering::T8_2D_LON_LEV;
+      }
+      break;
+    case t8_coord_ids::T8_LAT:
+      if (axis_ordering[1] == t8_coord_ids::T8_LON) {
+        data_layout = t8_nc_data_ordering::T8_2D_LAT_LON;
+      }
+      else {
+        data_layout = t8_nc_data_ordering::T8_2D_LAT_LEV;
+      }
+      break;
+    case t8_coord_ids::T8_LEV:
+      if (axis_ordering[1] == t8_coord_ids::T8_LAT) {
+        data_layout = t8_nc_data_ordering::T8_2D_LEV_LAT;
+      }
+      else {
+        data_layout = t8_nc_data_ordering::T8_2D_LEV_LON;
+      }
+      break;
+    default:
+      t8_errorf ("No geo-spatial coordinate was found in the axis ordering's first position.\n");
+    }
+  }
+  else if (axis_ordering.size () == 3) {
+    switch (axis_ordering[0]) {
+    case t8_coord_ids::T8_LON:
+      if (axis_ordering[1] == t8_coord_ids::T8_LAT) {
+        data_layout = t8_nc_data_ordering::T8_3D_LON_LAT_LEV;
+      }
+      else {
+        data_layout = t8_nc_data_ordering::T8_3D_LON_LEV_LAT;
+      }
+      break;
+    case t8_coord_ids::T8_LAT:
+      if (axis_ordering[1] == t8_coord_ids::T8_LON) {
+        data_layout = t8_nc_data_ordering::T8_3D_LAT_LON_LEV;
+      }
+      else {
+        data_layout = t8_nc_data_ordering::T8_3D_LAT_LEV_LON;
+      }
+      break;
+    case t8_coord_ids::T8_LEV:
+      if (axis_ordering[1] == t8_coord_ids::T8_LON) {
+        data_layout = t8_nc_data_ordering::T8_3D_LEV_LON_LAT;
+      }
+      else {
+        data_layout = t8_nc_data_ordering::T8_3D_LEV_LAT_LON;
+      }
+      break;
+    default:
+      t8_errorf ("No geo-spatial coordinate was found in the axis ordering's first position.\n");
+    }
+  }
+
+  /* Return the computed layout/ordering of the data */
+  return data_layout;
 #endif
 }
 
@@ -896,6 +984,10 @@ t8_nc_inquire_variables_data (t8_nc_data_t nc_data, const size_t* start_ptr, con
 
       /* Save the axis ordering */
       nc_var_data->axis_ordering = std::move (axis_ordering);
+
+      /* Get the data ordering (enumerator) corresponding to this axis ordering */
+      t8_nc_geo_variable_set_data_ordering_scheme (
+        *iter, t8_nc_geo_variable_get_ordering_from_linear_axis_ordering (nc_var_data->axis_ordering));
     }
     else {
       /* Get the netCDF specific variable data of the first variable (which has already stored the axis ordering) */
@@ -904,6 +996,10 @@ t8_nc_inquire_variables_data (t8_nc_data_t nc_data, const size_t* start_ptr, con
 
       /* Copy the axis ordering */
       nc_var_data->axis_ordering = nc_first_var_data->axis_ordering;
+
+      /* Copy the data ordering */
+      t8_nc_geo_variable_set_data_ordering_scheme (
+        *iter, t8_nc_geo_variable_get_data_ordering_scheme (*iter_to_first_variable));
     }
 
     /* Check if we are in the first iteration. In this case the (local) hyperslab of a variable needs to be calculated otherwise just copied */
@@ -1009,6 +1105,14 @@ t8_nc_inquire_variables_data (t8_nc_data_t nc_data, const size_t* start_ptr, con
     t8_nc_check_err (err);
 
     t8_global_productionf ("The data of variable %s has been inquired.\n", t8_nc_geo_variable_get_name (*iter));
+
+    /* Store the axis ordering of the data */
+    if (iter == iter_to_first_variable) {
+      /* In case of the first variable, the data ordering has to be computed */
+    }
+    else {
+      /* Since all variables are defined on the same hyperslab the data ordering should coincide with the ordering of the first variable and therefore, can just be copied */
+    }
   }
 
 #endif
@@ -1022,6 +1126,68 @@ t8_nc_deallocate_var_specific_data (t8_nc_data_t nc_data)
       delete static_cast<t8_netcdf_var_data*> (t8_nc_geo_variable_get_user_data (*iter));
     }
   }
+}
+
+static void
+t8_nc_build_initial_mesh (t8_nc_data_t nc_data, const enum t8_nc_geo_mesh_type mesh_type,
+                          const enum t8_nc_geo_mesh_form mesh_form, const enum t8_nc_geo_mesh_elements mesh_elems)
+{
+#ifdef T8_WITH_NETCDF
+  /* Variable for the dimensionality of the mesh */
+  int count_considered_dims = 0;
+
+  /* Determine the dimensionality of the data */
+  for (auto iter { nc_data->coord_lengths.begin () }; iter != nc_data->coord_lengths.end (); ++iter) {
+    /* Check if the coordinate dimension is considered at all */
+    if (*iter > 1) {
+      /* Count all dimensions with length greater than one */
+      ++count_considered_dims;
+    }
+  }
+
+  /* Allocate a new 't8_nc_mesh' struct which will hold the constructed mesh */
+  nc_data->mesh = t8_nc_mesh_create ();
+
+  /* Save the dimensionality of the mesh to be constructed */
+  t8_nc_mesh_set_dimensionality (nc_data->mesh, count_considered_dims);
+
+  /* Set the data ordering within the 'nc_mesh' struct (this corresponds to the axis ordering of the variables which is equal for all variables) */
+  t8_nc_mesh_set_data_ordering_scheme (nc_data->mesh,
+                                       t8_nc_geo_variable_get_data_ordering_scheme (nc_data->vars.front ()));
+
+  /* Set the dimension lengths of the data */
+  t8_nc_mesh_set_longitude_length (nc_data->mesh, static_cast<int> (nc_data->coord_lengths[t8_coord_ids::T8_LON]));
+  t8_nc_mesh_set_latitude_length (nc_data->mesh, static_cast<int> (nc_data->coord_lengths[t8_coord_ids::T8_LAT]));
+  t8_nc_mesh_set_vertical_length (nc_data->mesh, static_cast<int> (nc_data->coord_lengths[t8_coord_ids::T8_LEV]));
+
+  /* Declare a forest variable */
+  t8_forest_t forest;
+
+  /* Check first which mesh form should be built (Currently, only a rectangular mesh is possible) */
+  switch (mesh_form) {
+  case t8_nc_geo_mesh_form::T8_NC_RECTANGULAR:
+    /* In case a rectangular mesh should be built */
+    /* Check the type of the mesh which is about to be built */
+    switch (mesh_type) {
+    case t8_nc_geo_mesh_type::T8_NC_EMBEDDED_MESH:
+      /* In case an embedded mesh has been chosen (embedding the geo-spatial domain into a larger mesh) */
+      forest = t8_nc_build_initial_rectangular_embedded_minimal_mesh (nc_data->mesh, nc_data->comm);
+      break;
+    case t8_nc_geo_mesh_type::T8_NC_CONGRUENT_MESH:
+      /* In case a 'congruent' mesh has been chosen (resembling only and fully the geo-spatial domain of the data) */
+
+      break;
+    default:
+      t8_errorf ("A not supported mesh type has been selected for the geo-spatial netCDF data. Please, choose either "
+                 "an 'embedded' or a 'congruent' mesh type.\n");
+    }
+    break;
+  case t8_nc_geo_mesh_form::T8_NC_SPHERICAL:
+    t8_errorf ("Building a spherical mesh is not yet implemented. Please, choose a 'rectangular' mesh.\n");
+    break;
+  }
+
+#endif
 }
 
 /**
@@ -1085,8 +1251,8 @@ t8_nc_construct_mesh_for_variables (t8_nc_data_t nc_data, const int num_variable
   /* Deallocate the netCDF specific variable data (which was allocated in 't8_nc_inquire_variables') and is not used anymore */
   t8_nc_deallocate_var_specific_data (nc_data);
 
-  /* The mesh has to be built hereafter */
-  /* .................................. */
+  /* Build the initial mesh */
+  t8_nc_build_initial_mesh (nc_data, mesh_type, mesh_form, mesh_elems);
 
 #endif
 }

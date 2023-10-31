@@ -66,6 +66,10 @@ struct t8_geo_var
     nullptr
   };  //!< A convenience variable which may be used if the data is transformed/adapted/partitioned etc.
 
+  t8_nc_data_ordering data_ordering {
+    t8_nc_data_ordering::T8_LAYOUT_UNDEFINED
+  };  //!< An enumerator indicating the layout and ordering of the data
+
   t8_universal_type_t
     missing_value;  //!< A value indicating that no 'real' value exists at this position (this value is just a placeholder for a missing value)
   t8_universal_type_t add_offset { 0 };    //!< Indicating the offset of the data if it was shifted
@@ -276,4 +280,16 @@ t8_nc_geo_variable_crop_data_to_selection (t8_geo_var_t var, const size_t start_
 
   /* Switch both variable internal array, such that only the cropped one remains */
   t8_nc_geo_variable_switch_data (var);
+}
+
+void
+t8_nc_geo_variable_set_data_ordering_scheme (t8_geo_var_t var, const t8_nc_data_ordering data_ordering)
+{
+  var->data_ordering = data_ordering;
+}
+
+t8_nc_data_ordering
+t8_nc_geo_variable_get_data_ordering_scheme (t8_geo_var_t var)
+{
+  return var->data_ordering;
 }

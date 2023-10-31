@@ -26,9 +26,6 @@ enum t8_nc_par_reading_distribution { T8_NC_PAR_DISTRIBUTION_UNDEFINED = 0, T8_N
 /* Opaque pointer typedef for the netCDF data struct */
 typedef struct t8_nc_data* t8_nc_data_t;
 
-/* A macro for an internal error corresponding to netCDF functionality */
-#define T8_NC_ERR_CODE -1
-
 /**
  * \brief This function opens a netCDF given a specific @var mode (serial or parallel)
  * and allocates a @struct t8_nc_data to which a pointer is returned

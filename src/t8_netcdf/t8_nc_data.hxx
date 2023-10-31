@@ -55,6 +55,27 @@ enum t8_geo_data_layout {
   T8_GEO_DATA_POINTS
 };
 
+/* An enumerator for data ordering */
+enum t8_nc_data_ordering {
+  T8_LAYOUT_UNDEFINED = -1,
+  T8_2D_LAT_LON,
+  T8_2D_LON_LAT,
+  T8_2D_LAT_LEV,
+  T8_2D_LEV_LAT,
+  T8_2D_LON_LEV,
+  T8_2D_LEV_LON,
+  _INTERN_ID_END_CARTESIAN_2D,
+  T8_3D_LAT_LON_LEV,
+  T8_3D_LAT_LEV_LON,
+  T8_3D_LEV_LAT_LON,
+  T8_3D_LEV_LON_LAT,
+  T8_3D_LON_LEV_LAT,
+  T8_3D_LON_LAT_LEV,
+  _INTERN_ID_END_CARTESIAN_3D,
+  T8_2D_SFC,
+  T8_3D_SFC
+};
+
 /* Pointer typedef for geo-spatial variables */
 typedef struct t8_geo_var* t8_geo_var_t;
 
@@ -148,6 +169,12 @@ t8_nc_geo_variable_crop_data_to_selection (t8_geo_var_t var, const size_t start_
 
 void
 t8_nc_geo_variable_allocate_data (t8_geo_var_t var, const t8_geo_data_type type, const size_t num_elements);
+
+void
+t8_nc_geo_variable_set_data_ordering_scheme (t8_geo_var_t var, const t8_nc_data_ordering data_ordering);
+
+t8_nc_data_ordering
+t8_nc_geo_variable_get_data_ordering_scheme (t8_geo_var_t var);
 
 #ifdef T8_WITH_NETCDF
 t8_geo_data_type

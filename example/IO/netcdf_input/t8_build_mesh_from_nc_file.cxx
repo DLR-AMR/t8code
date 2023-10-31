@@ -31,7 +31,7 @@ main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
 
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-  t8_init (SC_LP_DEBUG);
+  t8_init (SC_LP_PRODUCTION);
 
   t8_global_essentialf ("NetCDF Input Example\n");
 
@@ -50,7 +50,7 @@ main (int argc, char **argv)
   const size_t start_ptr[3] = { 0, 0, 0 };     //Example netCDF File
   const size_t count_ptr[3] = { 1, 73, 144 };  //Example netCDF File
 
-  const enum t8_nc_geo_mesh_type mesh_type = T8_NC_CONGRUENT_MESH;
+  const enum t8_nc_geo_mesh_type mesh_type = T8_NC_EMBEDDED_MESH;
   const enum t8_nc_geo_mesh_form mesh_form = T8_NC_RECTANGULAR;
   const enum t8_nc_geo_mesh_elements mesh_elems = T8_NC_QUAD_ELEMENTS;
 
