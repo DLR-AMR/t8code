@@ -60,9 +60,9 @@ jobs:
         run: |
           echo message_build=1 >> $GITHUB_ENV &&
           echo "{\"text\":\"Pull request ${{ github.event.number }} has been ${{ github.event.action }}. See ${{ github.event.pull_request.html_url }} for more details.\"}" > mattermost.json
-      # if a message has been written send the message to the mattermost-channel described in the secrets
       - name: debug_after_build
         run: echo ${{ env.message_build }}
+      # if a message has been written send the message to the mattermost-channel described in the secrets
       - name: send_message
         if: ${{ env.message_build == 1 }}
         uses: mattermost/action-mattermost-notify@master
