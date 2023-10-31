@@ -27,7 +27,7 @@ name: Mattermost_message
 # Controls when the workflow will run
 on:
   # Triggers the workflow on pull request events on the feature-CI_mattermost_messages, develop or main branch
-  pull_request:
+  pull_request_target:
     branches: [ feature-CI_mattermost_messages, develop, main ]
     types: [ opened, synchronize, reopened, closed]
 
@@ -38,7 +38,6 @@ env:
   
 jobs:
   send_mm_message:
-    if: github.repository == 'DLR-AMR/t8code'
     runs-on: ubuntu-20.04
     steps:
       - name: Merge_message
