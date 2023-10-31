@@ -33,7 +33,8 @@ on:
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-  
+env:
+  message_build: 0  
   
 jobs:
   send_mm_message:
@@ -42,17 +43,27 @@ jobs:
     steps:
       - name: Merge_message
         if: github.event.action == 'closed' && github.event.pull_request.merged == true
+        env:
+          message_build: 1
         run: |
           echo "{\"text\":\"Pull request ${{ github.event.number }} has been merged. See ${{ github.event.pull_request.html_url }} for more details.\"}" > mattermost.json
       - name: push_message
         if: github.event_name == 'push' && github.event.action != 'closed'
+        env:
+          message_build: 1
         run: |
           echo "{\"text\":\"github.event.pusher.name }} pushed into ${{ github.event.ref }}. See ${{ github.event.compare }} for more details.\"}" > mattermost.json
       - name: pull_request_message
         if: github.event_name == 'pull_request' && github.event.action != 'synchronize' && github.event.action != 'closed'
+        env:
+          message_build: 1
         run: |
           echo "{\"text\":\"Pull request ${{ github.event.number }} has been ${{ github.event.action }}. See ${{ github.event.pull_request.html_url }} for more details.\"}" > mattermost.json
+    if: env.message_build == '1'
+    steps:
+      - name: send_message
       - uses: mattermost/action-mattermost-notify@master
         env:
           MATTERMOST_WEBHOOK_URL: ${{secrets.MATTERMOST_WEBHOOK_URL }}
           MATTERMOST_USERNAME: t8y
+        
