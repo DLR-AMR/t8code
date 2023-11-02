@@ -1399,6 +1399,14 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
 
   t8_global_productionf ("Into t8_forest_ghost with %i local elements.\n", t8_forest_get_local_num_elements (forest));
 
+  /* In parallel, check forest for deleted elements. The ghost algorithm currently
+  * does not work on forests with deleted elements.
+  * See also: https://github.com/DLR-AMR/t8code/issues/825
+  * See also the test case: TODO Add a test case that currently fails. */
+  SC_CHECK_ABORT (
+    !forest->incomplete_trees || forest->mpisize == 1,
+    "ERROR: Cannot compute ghost layer for forest with deleted elements (incomplete trees/holes in the mesh).\n");
+
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of ghost_create */
     forest->profile->ghost_runtime = -sc_MPI_Wtime ();
