@@ -1401,6 +1401,7 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
 
   /* In parallel, check forest for deleted elements. The ghost algorithm currently
   * does not work on forests with deleted elements.
+  * See also: https://github.com/DLR-AMR/t8code/issues/825
   * See also the test case: TODO Add a test case that currently fails. */
   SC_CHECK_ABORT (
     !forest->incomplete_trees || forest->mpisize == 1,
