@@ -83,7 +83,9 @@ typedef struct t8_forest
   int dimension;               /**< Dimension inferred from \b cmesh. */
   int incomplete_trees;        /**< Flag to check whether the forest has (potential) incomplete trees.
                                              A tree is incomplete if an element has been removed from it.
-                                             Once an element got removed, the flag sets to 1 (true) and stays. */
+                                             Once an element got removed, the flag sets to 1 (true) and stays. 
+                                             For a committed forest this flag is either true on all ranks or
+                                             false on all ranks. */
 
   t8_forest_t set_from;           /**< Temporarily store source forest. */
   t8_forest_from_t from_method;   /**< Method to derive from \b set_from. */
