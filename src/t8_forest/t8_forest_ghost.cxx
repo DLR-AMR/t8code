@@ -1404,7 +1404,7 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
   * See also the test case: TODO Add a test case that currently fails. */
   SC_CHECK_ABORT (
     !forest->incomplete_trees || forest->mpisize == 1,
-    "ERROR: Cannot compute Ghost layer for forest with deleted elements (incomplete trees/holes in the mesh).\n");
+    "ERROR: Cannot compute ghost layer for forest with deleted elements (incomplete trees/holes in the mesh).\n");
 
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of ghost_create */
