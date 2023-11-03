@@ -508,7 +508,7 @@ t8_cmesh_tree_vertices_negative_volume (t8_eclass_t eclass, double *vertices, in
   sc_prod = t8_vec_dot (v_j, cross);
 
   T8_ASSERT (sc_prod != 0);
-  return sc_prod < 0;
+  return eclass == T8_ECLASS_TET ? sc_prod > 0 : sc_prod < 0;
 }
 
 #ifdef T8_ENABLE_DEBUG
@@ -533,7 +533,7 @@ t8_cmesh_no_negative_volume (t8_cmesh_t cmesh)
     if (vertices != NULL) {
       /* Vertices are set */
       eclass = t8_cmesh_get_tree_class (cmesh, itree);
-      ret = 0;//t8_cmesh_tree_vertices_negative_volume (eclass, vertices, t8_eclass_num_vertices[eclass]);
+      ret = t8_cmesh_tree_vertices_negative_volume (eclass, vertices, t8_eclass_num_vertices[eclass]);
       if (ret) {
         t8_debugf ("Detected negative volume in tree %li\n", (long) itree);
       }

@@ -63,12 +63,18 @@ t8_geom_triangular_interpolation (const double *coefficients, const double *corn
    */
   double temp[3] = { 0 };
 
-  for (int i = 0; i < corner_value_dim; i++) {
-    temp[i] = corner_values[i] /* p0 */
-    + (corner_values[1*corner_value_dim + i] - corner_values[i]) * coefficients[0] /* x = (p1 - p0) * ref_coords */
-    + (corner_values[2 * corner_value_dim + i] - corner_values[corner_value_dim + i]) * coefficients[1]  /* y = (p2 - p1) * ref_coords */
-    + (interpolation_dim == 3  ? (corner_values[3 *corner_value_dim +i] -corner_values[2 * corner_value_dim + i])* coefficients[2]: 0.);    /* if tet, z = (p3 - p2) */
-    evaluated_function[i] = temp[i];
+  for (int i_dim = 0; i_dim < corner_value_dim; i_dim++) {
+    temp[i_dim] = (corner_values[corner_value_dim + i_dim] - /* (p2 - p1) * ref_coords */
+                   corner_values[i_dim])
+                    * coefficients[0]
+                  + (interpolation_dim == 3
+                       ? (corner_values[3 * corner_value_dim + i_dim] - corner_values[2 * corner_value_dim + i_dim])
+                           * coefficients[1]
+                       : 0.) /* (p4 - p3) * ref_coords */
+                  + (corner_values[2 * corner_value_dim + i_dim] - corner_values[corner_value_dim + i_dim])
+                      * coefficients[interpolation_dim - 1] /* (p3 - p2) * ref_coords */
+                  + corner_values[i_dim];                   /* p1 */
+    evaluated_function[i_dim] = temp[i_dim];
   }
 }
 
