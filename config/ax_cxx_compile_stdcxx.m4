@@ -417,10 +417,10 @@ namespace cxx11
       using nullary_t = decltype(nullary);
       using unary_t = decltype(unary);
       const auto higher1st = [](nullary_t f){ return f(); };
-      const auto higher2nd = [unary](nullary_t f1){
+      const auto highersecond = [unary](nullary_t f1){
         return [unary, f1](unary_t f2){ return f2(unary(f1())); };
       };
-      return higher1st(nullary) + higher2nd(nullary)(unary);
+      return higher1st(nullary) + highersecond(nullary)(unary);
     }
 
   }
