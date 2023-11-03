@@ -86,6 +86,7 @@ class forest_ghost_exchange_holes: public testing::Test {
     if(comm != sc_MPI_COMM_NULL){
       sc_MPI_Comm_free(&comm);
     }
+    sc_MPI_Barrier(sc_MPI_COMM_WORLD);
   }
   sc_MPI_Comm comm;
   t8_scheme_cxx_t *scheme;
