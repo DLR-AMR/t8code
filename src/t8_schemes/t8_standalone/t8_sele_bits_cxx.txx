@@ -696,13 +696,14 @@ template <t8_eclass_t eclass_T>
 void
 t8_sele_vertex_reference_coords (const t8_standalone_element_t<eclass_T> *elem, const int vertex, double coords[])
 {
-  int coords_int[3]; //coords also always has size 3
+  if constexpr(eclass_T == T8_ECLASS_VERTEX)return;
+  int coords_int[T8_ELEMENT_DIM[eclass_T]];
   T8_ASSERT (0 <= vertex && vertex < T8_ELEMENT_NUM_CORNERS[eclass_T]);
   t8_sele_compute_coords (elem, vertex, coords_int);
   /*scale the coordinates onto the reference cube */
-  coords[0] = coords_int[0] / (double) t8_sele_get_root_len<eclass_T> ();
-  coords[1] = coords_int[1] / (double) t8_sele_get_root_len<eclass_T> ();
-  coords[2] = coords_int[2] / (double) t8_sele_get_root_len<eclass_T> ();
+  for(int i = 0; i < T8_ELEMENT_DIM[eclass_T]; i++){
+    coords[i] = coords_int[i] / (double) t8_sele_get_root_len<eclass_T> ();
+  }
 }
 
 /**Face connection**/
