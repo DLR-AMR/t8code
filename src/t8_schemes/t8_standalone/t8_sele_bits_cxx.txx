@@ -696,7 +696,7 @@ template <t8_eclass_t eclass_T>
 void
 t8_sele_vertex_reference_coords (const t8_standalone_element_t<eclass_T> *elem, const int vertex, double coords[])
 {
-  int coords_int[T8_ELEMENT_DIM[eclass_T]];
+  int coords_int[3]; //coords also always has size 3
   T8_ASSERT (0 <= vertex && vertex < T8_ELEMENT_NUM_CORNERS[eclass_T]);
   t8_sele_compute_coords (elem, vertex, coords_int);
   /*scale the coordinates onto the reference cube */
@@ -967,15 +967,11 @@ t8_sele_children_at_face (const t8_standalone_element_t<eclass_T> *elem, int fac
     child_indices = T8_ALLOC_ZERO (int, num_face_children);
     allocated_indices = 1;
   }
-  int face_sign, face_dim, face_dim_inv;
   if constexpr (!T8_ELEMENT_NUM_EQUATIONS[eclass_T]) {
+    int face_sign, face_dim;
     face_sign = face % 2;
     face_dim = face / 2;
-    face_dim_inv = T8_ELEMENT_DIM[eclass_T] - face_dim;
-  }
-
-  for (int ifacechild = 0; ifacechild < num_face_children; ifacechild++) {
-    if constexpr (!T8_ELEMENT_NUM_EQUATIONS[eclass_T]) {
+    for (int ifacechild = 0; ifacechild < num_face_children; ifacechild++) {
       t8_element_coord_t first_part, face_part, last_part;
       /* ifacechild aaaabb, iface = x, then childid = aaaaxbb*/
       first_part = (ifacechild >> face_dim) << (face_dim + 1);
@@ -983,7 +979,9 @@ t8_sele_children_at_face (const t8_standalone_element_t<eclass_T> *elem, int fac
       face_part = face_sign << face_dim;
       child_indices[ifacechild] = first_part + face_part + last_part;
     }
-    else {
+  }
+  else {
+    for (int ifacechild = 0; ifacechild < num_face_children; ifacechild++) {
       child_indices[ifacechild]
         = t8_sele_lut_type_face_facechildid_to_childid<eclass_T>[elem->type.to_ulong ()][face][ifacechild];
       //      t8_debugf("looked up child index %i for type %i, face %i, ifacechild %i\n", child_indices[ifacechild], elem->type.to_ulong(), face, ifacechild);
@@ -1274,12 +1272,12 @@ t8_sele_extrude_face (const t8_standalone_element_t<face_eclass_T> *face, t8_sta
       }
     }
     else {
-      int root_type = 0;  //TODO: Make other root_types possible
       int is_1_boundary;
       if constexpr (!T8_ELEMENT_NUM_EQUATIONS[eclass_T]) {
         is_1_boundary = root_face % 2;
       }
       else {
+        int root_type = 0;  //TODO: Make other root_types possible
         is_1_boundary = t8_sele_lut_type_face_to_is_1_boundary<eclass_T>[root_type][root_face];
       }
       if (is_1_boundary) {
