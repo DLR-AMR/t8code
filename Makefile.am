@@ -71,6 +71,7 @@ DISTCLEANFILES += \
 # non-recursive build
 include src/Makefile.am
 include src/t8_schemes/t8_default/Makefile.am
+include src/t8_schemes/t8_standalone/Makefile.am
 include test/Makefile.am
 include example/Makefile.am
 include tutorials/Makefile.am
