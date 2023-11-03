@@ -1175,7 +1175,7 @@ t8_nc_build_initial_mesh (t8_nc_data_t nc_data, const enum t8_nc_geo_mesh_type m
       break;
     case t8_nc_geo_mesh_type::T8_NC_CONGRUENT_MESH:
       /* In case a 'congruent' mesh has been chosen (resembling only and fully the geo-spatial domain of the data) */
-
+      forest = t8_nc_build_initial_rectangular_congruent_mesh (nc_data->mesh, nc_data->comm);
       break;
     default:
       t8_errorf ("A not supported mesh type has been selected for the geo-spatial netCDF data. Please, choose either "

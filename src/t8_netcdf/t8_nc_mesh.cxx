@@ -3,14 +3,22 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_c_interface.h>
+#include <t8_schemes/t8_default/t8_default_quad/t8_default_quad_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_hex/t8_default_hex_cxx.hxx>
 #include <t8_element_c_interface.h>
 #include <p4est.h>
 #include <p8est.h>
+#include <array>
+#include <vector>
+#include <utility>
 #include <algorithm>
 #include <numeric>
 
 /* Define a macro for an internal error */
 #define T8_NC_MESH_ERR -1
+
+/* A nc_mesh internal ordering of the geo-spatial dimensions */
+enum nc_mesh_coord_id { lon = 0, lat = 1, lev = 2, num_coords = 3 };
 
 struct t8_nc_mesh
 {
@@ -20,9 +28,11 @@ struct t8_nc_mesh
   int initial_refinement_level { 0 };
   t8_nc_data_ordering data_ordering { t8_nc_data_ordering::T8_LAYOUT_UNDEFINED };
   t8_forest_t forest { nullptr };
-  int longitude_length { 0 };
-  int latitude_length { 0 };
-  int vertical_length { 0 };
+  //int longitude_length { 0 };
+  //int latitude_length { 0 };
+  //int vertical_length { 0 };
+  std::array<int, nc_mesh_coord_id::num_coords> coord_lengths { 0, 0, 0 };
+  std::array<int, nc_mesh_coord_id::num_coords> congruent_mesh_num_trees_per_dimension { 0, 0, 0 };
 };
 
 t8_nc_mesh_t
@@ -43,7 +53,8 @@ void
 t8_nc_mesh_set_longitude_length (t8_nc_mesh_t mesh, const int lon_length)
 {
 #ifdef T8_WITH_NETCDF
-  mesh->longitude_length = lon_length;
+  //mesh->longitude_length = lon_length;
+  mesh->coord_lengths[nc_mesh_coord_id::lon] = lon_length;
 #endif
 }
 
@@ -51,7 +62,8 @@ void
 t8_nc_mesh_set_latitude_length (t8_nc_mesh_t mesh, const int lat_length)
 {
 #ifdef T8_WITH_NETCDF
-  mesh->latitude_length = lat_length;
+  //mesh->latitude_length = lat_length;
+  mesh->coord_lengths[nc_mesh_coord_id::lat] = lat_length;
 #endif
 }
 
@@ -59,7 +71,8 @@ void
 t8_nc_mesh_set_vertical_length (t8_nc_mesh_t mesh, const int vert_length)
 {
 #ifdef T8_WITH_NETCDF
-  mesh->vertical_length = vert_length;
+  //mesh->vertical_length = vert_length;
+  mesh->coord_lengths[nc_mesh_coord_id::lev] = vert_length;
 #endif
 }
 
@@ -84,8 +97,9 @@ t8_nc_mesh_calculate_rectangular_embedded_initial_refinement_level (t8_nc_mesh_t
 {
 #ifdef T8_WITH_NETCDF
   /* Get the size of the 'longest' dimension of the data */
-  const int max_elem_per_direction
-    = std::max (nc_mesh->longitude_length, std::max (nc_mesh->latitude_length, nc_mesh->vertical_length));
+  const int max_elem_per_direction = std::max (
+    nc_mesh->coord_lengths[nc_mesh_coord_id::lon],
+    std::max (nc_mesh->coord_lengths[nc_mesh_coord_id::lat], nc_mesh->coord_lengths[nc_mesh_coord_id::lev]));
   /* Calculate the induced initial refinement level needed in order to build an embedding mesh */
   return static_cast<int> (std::ceil (std::log2 (max_elem_per_direction) + std::numeric_limits<double>::epsilon ()));
 #endif
@@ -226,8 +240,8 @@ t8_nc_mesh_all_elements_outside_rectangular_reference_geo_domain (t8_nc_mesh_t n
   /* Check the location of the element */
   for (int elem_id { 0 }; elem_id < num_elements; ++elem_id) {
     if (t8_nc_mesh_elem_inside_specific_rectangular_reference_geo_domain (
-          elements[elem_id], ts, nc_mesh, 0, nc_mesh->longitude_length, 0, nc_mesh->latitude_length, 0,
-          nc_mesh->vertical_length)) {
+          elements[elem_id], ts, nc_mesh, 0, nc_mesh->coord_lengths[nc_mesh_coord_id::lon], 0,
+          nc_mesh->coord_lengths[nc_mesh_coord_id::lat], 0, nc_mesh->coord_lengths[nc_mesh_coord_id::lev])) {
       /* If at least one element of the family lies within the "lat x lon x lev"-mesh */
       return false;
     }
@@ -325,12 +339,167 @@ t8_nc_build_initial_rectangular_embedded_minimal_mesh (t8_nc_mesh_t nc_mesh, sc_
   t8_global_productionf ("The data ordering is: %d and im: %d\n", nc_mesh->data_ordering, nc_mesh->dimensionality);
   /* Coarsen the mesh outside of the actual geo-spatial domain and save the coarsened forest */
   nc_mesh->forest = t8_nc_mesh_coarsen_rectangular_embedded_uniform_mesh (nc_mesh, forest);
-  t8_global_productionf ("lon length: %d, lat length: %d, lev length: %d\n", nc_mesh->longitude_length,
-                         nc_mesh->latitude_length, nc_mesh->vertical_length);
+
   t8_global_productionf ("The coarsened embedded rectangular mesh contains %ld elements.\n",
                          t8_forest_get_global_num_elements (nc_mesh->forest));
 
   /* Return the forest */
   return nc_mesh->forest;
+#endif
+}
+
+static int
+int_pow (int base, int exponent)
+{
+#ifdef T8_WITH_NETCDF
+  T8_ASSERT (exponent >= 0);
+  /* Declare the result variable */
+  int result = 1;
+
+  /* Perform exponentiation by squaring */
+  while (true) {
+    /* Check whether the (current) exponent is odd */
+    if (exponent & 1) {
+      /* Multiply the base */
+      result *= base;
+    }
+    /* Halve the exponent */
+    exponent >>= 1;
+    /* Check whether the exponentiation continues */
+    if (!exponent) {
+      break;
+    }
+    /* Square the base */
+    base *= base;
+  }
+  /* Return the result of the integer exponentiation */
+  return result;
+#endif
+}
+
+static std::pair<std::vector<int>, int>
+t8_nc_congruate_mesh_calculate_minimum_number_of_trees (t8_nc_mesh_t nc_mesh)
+{
+#ifdef T8_WITH_NETCDF
+  T8_ASSERT (nc_mesh->dimensionality == 2 || nc_mesh->dimensionality == 3);
+
+  /* Default schemes for quadrilaterals and hexahedrons */
+  t8_default_scheme_quad_c scheme_quad;
+  t8_default_scheme_hex_c scheme_hex;
+  t8_eclass_scheme_c* scheme_eclass;
+  t8_element_t* representing_elem[1];
+
+  /* Vector holding the number of trees per dimension */
+  std::vector<int> num_procs_per_dimension;
+  num_procs_per_dimension.reserve (nc_mesh_coord_id::num_coords);
+
+  if (nc_mesh->dimensionality == 2) {
+    /* Set the quadrilateral scheme */
+    scheme_eclass = static_cast<t8_eclass_scheme_c*> (&scheme_quad);
+  }
+  else {
+    /* Set the hexahedral scheme */
+    scheme_eclass = static_cast<t8_eclass_scheme_c*> (&scheme_hex);
+  }
+
+  /* Create a single representation of an element which will be used within the mesh */
+  t8_element_new (scheme_eclass, 1, representing_elem);
+  /* Get the number of children this element refines to */
+  const int num_children = t8_element_num_children (scheme_eclass, representing_elem[0]);
+
+  t8_global_productionf ("Num children is %d\n", num_children);
+
+  std::vector<int> max_refinement_level_per_tree_per_dimension;
+  max_refinement_level_per_tree_per_dimension.reserve (nc_mesh->dimensionality);
+
+  for (auto coord_iter { nc_mesh->coord_lengths.begin () }; coord_iter != nc_mesh->coord_lengths.end (); ++coord_iter) {
+    if (*coord_iter > 1) {
+      bool continue_ctree_computation = true;
+      int ref_lvl = 0;
+
+      /* Check how many equally refined trees would fully cover the domain in the given coordinate dimension */
+      while (continue_ctree_computation) {
+        if (*coord_iter % static_cast<int> (int_pow (num_children, ref_lvl + 1)) == 0) {
+          /* If the trees would be refined to the current ref_lvl + 1, they would cover the whole domain.
+           * Therefore, we check if a further refined trees would still cover the domain (in this coordinate dimension) */
+          /* Increment the refinement level */
+          ++ref_lvl;
+        }
+        else {
+          /* The domain would not be fully covered by trees of the same size refined to the level ref_lvl + 1 */
+          continue_ctree_computation = false;
+          /* Store the computed refinement level of the trees */
+          max_refinement_level_per_tree_per_dimension.push_back (ref_lvl);
+          t8_global_productionf ("ref lvl is: %d\n", ref_lvl);
+        }
+      }
+    }
+  }
+
+  /* Get the maximum possible refinement level for trees of the congruent mesh for the geo-spatial data */
+  auto iter_min_element = std::min_element (max_refinement_level_per_tree_per_dimension.begin (),
+                                            max_refinement_level_per_tree_per_dimension.end ());
+
+  /* Get the minimum initial refinement level for the trees */
+  const int initial_refinement_level
+    = (iter_min_element != max_refinement_level_per_tree_per_dimension.end () ? *iter_min_element : T8_NC_MESH_ERR);
+
+  /* Destroy the representing element */
+  t8_element_destroy (scheme_eclass, 1, representing_elem);
+
+  /* Save the initial refinement level (of each tree) within the nc_mesh struct */
+  nc_mesh->initial_refinement_level = initial_refinement_level;
+
+  /* Check if the amount of data points is actually divisible by num_children */
+  if (initial_refinement_level) {
+    /* Calculate the number of trees per dimension given the minimum initial refinement level */
+    for (auto coord_iter { nc_mesh->coord_lengths.begin () }; coord_iter != nc_mesh->coord_lengths.end ();
+         ++coord_iter) {
+      if (*coord_iter != 0) {
+        num_procs_per_dimension.push_back (*coord_iter / int_pow (num_children, initial_refinement_level));
+      }
+      else {
+        num_procs_per_dimension.push_back (0);
+      }
+    }
+  }
+  else {
+    /* In case the data points are not divisible by num_children, each data point has to became it's own tree */
+    std::copy (nc_mesh->coord_lengths.begin (), nc_mesh->coord_lengths.end (),
+               std::back_inserter (num_procs_per_dimension));
+
+/* Print a message indicating that this is not optimal */
+#ifdef T8_ENABLE_DEBUG
+    t8_global_productionf ("The dimensions of the data are suboptimal for creating a congruent mesh, since the "
+                           "dimension lengths are not a multiple of the amount of children an element has. This means, "
+                           "that each data point becomes it's own tree in order to model the domain congruently. "
+                           "Therefore, the mesh' elements cannot be coarsened beyond this initial data diemnsions.\n");
+#endif
+  }
+
+  /* Return the number of trees per dimension needed as a vector and the initial refinement level for those trees */
+  return std::make_pair (num_procs_per_dimension, initial_refinement_level);
+#endif
+}
+
+t8_forest_t
+t8_nc_build_initial_rectangular_congruent_mesh (t8_nc_mesh_t nc_mesh, sc_MPI_Comm comm)
+{
+#ifdef T8_WITH_NETCDF
+  /* It is (currently) only possible to build a 2D or 3D mesh */
+  T8_ASSERT (nc_mesh->dimensionality == 2 || nc_mesh->dimensionality == 3);
+
+  /* Get the number of trees per dimension as well as the initial refinement level*/
+  std::pair<std::vector<int>, int> congruent_mesh_specifications
+    = t8_nc_congruate_mesh_calculate_minimum_number_of_trees (nc_mesh);
+
+  t8_global_productionf ("The mesh should consist if trees:\nlon: %d, lat: %d, lev: %d\n",
+                         congruent_mesh_specifications.first[nc_mesh_coord_id::lon],
+                         congruent_mesh_specifications.first[nc_mesh_coord_id::lat],
+                         congruent_mesh_specifications.first[nc_mesh_coord_id::lev]);
+  t8_global_productionf ("The initial refienment level is: %d\n", congruent_mesh_specifications.second);
+
+  return nc_mesh->forest;
+
 #endif
 }
