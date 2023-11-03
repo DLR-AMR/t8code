@@ -43,7 +43,7 @@ test_adapt_holes (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which
   if (fabs (coordinates[1]) < eps)
     return 1;  // refine the lowest row
   if (fabs (coordinates[1] - 0.25) < eps)
-    return -2;  // refine the lowest row
+    return -2;  // delete the higher row in the lower quadrants
   return 0;
 }
 
