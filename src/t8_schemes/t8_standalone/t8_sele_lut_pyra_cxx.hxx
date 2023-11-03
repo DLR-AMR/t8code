@@ -23,7 +23,7 @@
 #ifndef T8_SELE_LUT_PYRA_HXX
 #define T8_SELE_LUT_PYRA_HXX
 // PYRAS
-
+// clang-format off
 
 /** The first type of pyramids in the shape of a pyramid*/
 #define T8_DPYRAMID_FIRST_PYRA_TYPE 0
@@ -333,5 +333,5 @@ constexpr t8_eclass_t t8_sele_lut_rootface_to_eclass<T8_ECLASS_PYRAMID>[T8_ELEME
   T8_ECLASS_TRIANGLE,
   T8_ECLASS_QUAD
 };
-
+// clang-format on
 #endif /* T8_SELE_LUT_PYRA_HXX */

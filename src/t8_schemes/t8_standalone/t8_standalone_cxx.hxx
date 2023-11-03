@@ -29,22 +29,22 @@
 #include <t8_schemes/t8_standalone/t8_standalone_element_cxx.hxx>
 
 /** Return the standalone element implementation of t8code. */
-t8_scheme_cxx_t    *
+t8_scheme_cxx_t *
 t8_scheme_new_standalone_cxx (void)
 {
-  t8_scheme_cxx_t    *s;
+  t8_scheme_cxx_t *s;
 
   s = T8_ALLOC_ZERO (t8_scheme_cxx_t, 1);
   t8_refcount_init (&s->rc);
 
-  s->eclass_schemes[T8_ECLASS_VERTEX]   = new t8_standalone_scheme_c <T8_ECLASS_VERTEX> ();
-  s->eclass_schemes[T8_ECLASS_LINE]     = new t8_standalone_scheme_c <T8_ECLASS_LINE> ();
-  s->eclass_schemes[T8_ECLASS_QUAD]     = new t8_standalone_scheme_c <T8_ECLASS_QUAD> ();
-  s->eclass_schemes[T8_ECLASS_HEX]      = new t8_standalone_scheme_c <T8_ECLASS_HEX> ();
-  s->eclass_schemes[T8_ECLASS_TRIANGLE] = new t8_standalone_scheme_c <T8_ECLASS_TRIANGLE> ();
-  s->eclass_schemes[T8_ECLASS_TET]      = new t8_standalone_scheme_c <T8_ECLASS_TET> ();
-  s->eclass_schemes[T8_ECLASS_PRISM]    = new t8_standalone_scheme_c <T8_ECLASS_PRISM> ();
-  s->eclass_schemes[T8_ECLASS_PYRAMID]  = new t8_standalone_scheme_c <T8_ECLASS_PYRAMID> ();
+  s->eclass_schemes[T8_ECLASS_VERTEX] = new t8_standalone_scheme_c<T8_ECLASS_VERTEX> ();
+  s->eclass_schemes[T8_ECLASS_LINE] = new t8_standalone_scheme_c<T8_ECLASS_LINE> ();
+  s->eclass_schemes[T8_ECLASS_QUAD] = new t8_standalone_scheme_c<T8_ECLASS_QUAD> ();
+  s->eclass_schemes[T8_ECLASS_HEX] = new t8_standalone_scheme_c<T8_ECLASS_HEX> ();
+  s->eclass_schemes[T8_ECLASS_TRIANGLE] = new t8_standalone_scheme_c<T8_ECLASS_TRIANGLE> ();
+  s->eclass_schemes[T8_ECLASS_TET] = new t8_standalone_scheme_c<T8_ECLASS_TET> ();
+  s->eclass_schemes[T8_ECLASS_PRISM] = new t8_standalone_scheme_c<T8_ECLASS_PRISM> ();
+  s->eclass_schemes[T8_ECLASS_PYRAMID] = new t8_standalone_scheme_c<T8_ECLASS_PYRAMID> ();
 
   return s;
 }

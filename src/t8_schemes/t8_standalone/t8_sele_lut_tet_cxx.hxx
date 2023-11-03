@@ -24,7 +24,7 @@
 #define T8_SELE_LUT_TET_HXX
 // TETS
 
-
+// clang-format off
 template<>
 constexpr int8_t t8_element_type_Iloc_to_childtype<T8_ECLASS_TET>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_TET]][T8_ELEMENT_NUM_CHILDREN[T8_ECLASS_TET]] = {
   {0, 0, 1, 5, 0, 2, 6, 0},
@@ -492,5 +492,5 @@ constexpr t8_eclass_t t8_sele_lut_rootface_to_eclass<T8_ECLASS_TET>[T8_ELEMENT_N
   T8_ECLASS_TRIANGLE,
   T8_ECLASS_TRIANGLE
 };
-
+// clang-format on
 #endif /* T8_SELE_LUT_TET_HXX */
