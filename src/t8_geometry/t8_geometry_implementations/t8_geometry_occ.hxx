@@ -43,57 +43,37 @@
 #include <Geom_Curve.hxx>
 #include <Geom_Surface.hxx>
 
-#endif /* T8_WITH_OCC */
-
-/** The vertices of each edge of a hexahedron. Used in the occ geometry. */
-extern const int    t8_edge_vertex_to_tree_vertex[T8_ECLASS_MAX_EDGES][2];
-
-/** The faces connected to each edge. */
-extern const int    t8_edge_to_face[T8_ECLASS_MAX_EDGES][2];
-
-/** The edges of a face to the edges of a tree */
-extern const int
-     t8_face_edge_to_tree_edge[T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_EDGES_2D];
-
-#if T8_WITH_OCC
-
-/**
- * Definition of an occ geometry function.
- * This function maps reference coordinates to physical
- * coordinates regarding the occ geometries linked to the cells edges and faces.
- * \param [in]  cmesh       The cmesh.
- * \param [in]  gtreeid     The global tree (of the cmesh) in which the reference point is.
- * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
- * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
- * \param [in]  tree_data   The data of the current tree as loaded by a \ref t8_geom_load_tree_data_fn.
- */
-typedef void        (*t8_geom_occ_fn) (t8_cmesh_t cmesh,
-                                       t8_gloidx_t gtreeid,
-                                       const double *ref_coords,
-                                       double out_coords[3],
-                                       const void *tree_data);
-
-/* *INDENT-OFF* */
-struct t8_geometry_occ:public t8_geometry_with_vertices
+struct t8_geometry_occ: public t8_geometry_with_vertices
 {
-public:
-
+ public:
   /**
-   * Constructor of the occ geometry class.
-   * \param [in] dimension  The dimension of this geometry.
+   * Constructor of the occ geometry with a given dimension. The geometry
+   * is currently viable with quad/hex and triangle trees. Tets will be supported soon.
+   * The geometry uses as many vertices as the tree type has, as well as
+   * additional geometry information, which is extracted from a .brep file.
+   * The vertices are saved via the \ref t8_cmesh_set_tree_vertices function.
+   * Since the internals of this geometry are finely tuned to the .brep file
+   * it is recommended to only use it with the \ref t8_cmesh_readmshfile function.
+   * \param [in] dim        The dimension of this geometry.
    * \param [in] fileprefix Prefix of a .brep file from which to extract an occ geometry.
    * \param [in] name       The name to give this geometry.
    */
-  t8_geometry_occ (int dimension, const char *fileprefix, const char *name);
+  t8_geometry_occ (int dim, const char *fileprefix, const char *name);
 
   /**
-   * Constructor of the occ geometry class.
-   * \param [in] dimension  The dimension of this geometry.
+   * Constructor of the occ geometry with a given dimension. The geometry
+   * is currently viable with quad/hex and triangle trees. Tets will be supported soon.
+   * The geometry uses as many vertices as the tree type has, as well as
+   * additional geometry information, which is given via the \a occ_shape.
+   * The vertices are saved via the \ref t8_cmesh_set_tree_vertices function.
+   * This constructor can be used in short scripts or in combination with a
+   * mesh generator, to omit the file IO of the 
+   * \ref t8_geometry_occ (int dim, const char *fileprefix, const char *name) constructor.
+   * \param [in] dim        The dimension of this geometry.
    * \param [in] occ_shape  Occ shape geometry.
    * \param [in] name       The name to give this geometry.
    */
-  t8_geometry_occ (int dimension, const TopoDS_Shape occ_shape, 
-                   const char *name);
+  t8_geometry_occ (int dim, const TopoDS_Shape occ_shape, const char *name);
 
   /** The destructor. 
    * Clears the allocated memory.
@@ -104,32 +84,29 @@ public:
   }
 
   /**
-   * Map a point in the reference space $$[0,1]^dimension$$ to $$\mathbb R^3$$
+   * Maps points in the reference space \f$ [0,1]^\mathrm{dim} \to \mathbb{R}^3 \f$.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
-   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   virtual void
-  t8_geom_evaluate (t8_cmesh_t cmesh,
-                    t8_gloidx_t gtreeid,
-                    const double *ref_coords,
-                    double out_coords[3]) const;
+  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                    double *out_coords) const;
 
   /**
-   * Compute the jacobian of the \a t8_geom_evaluate map at a point in the reference space $$[0,1]^dimension$$.
+   * Compute the jacobian of the \a t8_geom_evaluate map at a point in the reference space \f$ [0,1]^\mathrm{dim} \f$.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
-   * \param [out] jacobian    The jacobian at \a ref_coords. Array of size dimension x 3. Indices 3*i, 3*i+1, 3*i+2
-   *                          correspond to the i-th column of the jacobian (Entry 3*i + j is del f_j/del x_i).
+   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [out] jacobian    The jacobian at \a ref_coords. Array of size \a num_coords x dimension x 3. Indices \f$ 3 \cdot i\f$ , \f$ 3 \cdot i+1 \f$ , \f$ 3 \cdot i+2 \f$
+   *                          correspond to the \f$ i \f$-th column of the jacobian  (Entry \f$ 3 \cdot i + j \f$ is \f$ \frac{\partial f_j}{\partial x_i} \f$).
    */
   virtual void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh,
-                            t8_gloidx_t gtreeid,
-                            const double *ref_coords,
-                            double *jacobian) const;
-
+  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                             double *jacobian) const;
 
   /** Update a possible internal data buffer for per tree data.
    * This function is called before the first coordinates in a new tree are
@@ -138,31 +115,30 @@ public:
    * \param [in]  cmesh      The cmesh.
    * \param [in]  gtreeid    The global tree.
    */
-  virtual void 
-  t8_geom_load_tree_data (t8_cmesh_t cmesh,
-                          t8_gloidx_t gtreeid);
+  virtual void
+  t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 
   /** Check if a occ_curve is a line.
    * \param [in] curve_index      The index of the occ_curve.
    * \return                      1 if curve is a line, 0 if curve is not a line.
    */
   int
-  t8_geom_is_line(const int curve_index) const;
+  t8_geom_is_line (const int curve_index) const;
 
   /** Check if a occ_surface is a plane.
    * \param [in] surface_index      The index of the occ_surface.
    * \return                        1 if surface is a plane linear, 0 if surface is not a plane.
    */
   int
-  t8_geom_is_plane(const int surface_index) const;
-  
+  t8_geom_is_plane (const int surface_index) const;
+
   /** Get an occ point from the occ_shape.
    * \param [in] index      The index of the point in the occ_shape.
    * \return                The occ point.
    */
   const gp_Pnt
   t8_geom_get_occ_point (const int index) const;
-  
+
   /** Get an occ curve from the occ_shape.
    * \param [in] index      The index of the curve in the occ_shape.
    * \return                The occ curve.
@@ -181,19 +157,19 @@ public:
    * \return                The occ_shape_vertex_map.
    */
   const TopTools_IndexedMapOfShape
-  t8_geom_get_occ_shape_vertex_map() const;
+  t8_geom_get_occ_shape_vertex_map () const;
 
   /** Get the occ_shape_edge2face_map.
    * \return                The occ_shape_edge_map.
    */
   const TopTools_IndexedMapOfShape
-  t8_geom_get_occ_shape_edge_map() const;
+  t8_geom_get_occ_shape_edge_map () const;
 
   /** Get the occ_shape_face_map.
    * \return                The occ_shape_face_map.
    */
   const TopTools_IndexedMapOfShape
-  t8_geom_get_occ_shape_face_map() const;
+  t8_geom_get_occ_shape_face_map () const;
 
   /** Check if two occ points share a common occ edge.
    * \param [in]  vertex1_index  The index of the first occ point.
@@ -201,8 +177,7 @@ public:
    * \return                    Index of the shared edge. 0 if there is no shared edge.
    */
   int
-  t8_geom_get_common_edge (const int vertex1_index, 
-                           const int vertex2_index) const;
+  t8_geom_get_common_edge (const int vertex1_index, const int vertex2_index) const;
 
   /** Check if two occ edges share a common occ face.
    * \param [in]  edge1_index    The index of the first occ edge.
@@ -210,8 +185,7 @@ public:
    * \return                    Index of the shared face. 0 if there is no shared face.
    */
   int
-  t8_geom_get_common_face (const int edge1_index, 
-                           const int edge2_index) const;
+  t8_geom_get_common_face (const int edge1_index, const int edge2_index) const;
 
   /** Check if a occ vertex lies on an occ edge.
    * \param [in]  vertex_index   The index of the occ vertex.
@@ -219,8 +193,7 @@ public:
    * \return                    1 if vertex lies on edge, otherwise 0.
    */
   int
-  t8_geom_is_vertex_on_edge (const int vertex_index, 
-                             const int edge_index) const;
+  t8_geom_is_vertex_on_edge (const int vertex_index, const int edge_index) const;
 
   /** Check if a occ vertex lies on an occ edge.
    * \param [in]  edge_index     The index of the occ vertex.
@@ -228,8 +201,7 @@ public:
    * \return                    1 if vertex lies on edge, otherwise 0.
    */
   int
-  t8_geom_is_edge_on_face (const int edge_index, 
-                           const int face_index) const;
+  t8_geom_is_edge_on_face (const int edge_index, const int face_index) const;
 
   /** Check if a occ vertex lies on an occ face.
    * \param [in]  vertex_index   The index of the occ vertex.
@@ -237,8 +209,7 @@ public:
    * \return                    1 if vertex lies on face, otherwise 0.
    */
   int
-  t8_geom_is_vertex_on_face (const int vertex_index, 
-                             const int face_index) const;
+  t8_geom_is_vertex_on_face (const int vertex_index, const int face_index) const;
 
   /** Retrieves the parameter of an occ vertex on an occ edge.
    *  The vertex has to lie on the edge.
@@ -247,20 +218,16 @@ public:
    * \param [out] edge_param     The parameter of the vertex on the edge.
    */
   void
-  t8_geom_get_parameter_of_vertex_on_edge(const int vertex_index, 
-                                          const int edge_index, 
-                                          double* edge_param) const;
+  t8_geom_get_parameter_of_vertex_on_edge (const int vertex_index, const int edge_index, double *edge_param) const;
 
   /** Retrieves the parameters of an occ vertex on a occ face.
    *  The vertex has to lie on the face.
    * \param [in]  vertex_index   The index of the occ vertex.
    * \param [in]  face_index     The index of the occ face.
    * \param [out] face_params    The parameters of the vertex on the face.
-   */                                   
-  void 
-  t8_geom_get_parameters_of_vertex_on_face(const int vertex_index, 
-                                           const int face_index, 
-                                           double* face_params) const;
+   */
+  void
+  t8_geom_get_parameters_of_vertex_on_face (const int vertex_index, const int face_index, double *face_params) const;
 
   /** Converts the parameters of an occ edge to the corresponding parameters on an occ face.
    * The edge has to lie on the face.
@@ -275,31 +242,26 @@ public:
    *                             If there are no surface parameter
    *                             to pass in to the function, you can pass NULL.
    * \param [out] face_params    The corresponding parameters on the face.
-   */   
+   */
   void
-  t8_geom_edge_parameter_to_face_parameters(const int edge_index, 
-                                            const int face_index,
-                                            const int num_face_nodes,
-                                            const double edge_param, 
-                                            const double* surface_params,
-                                            double* face_params) const;
-  
+  t8_geom_edge_parameter_to_face_parameters (const int edge_index, const int face_index, const int num_face_nodes,
+                                             const double edge_param, const double *surface_params,
+                                             double *face_params) const;
+
   /** Finds the parametric bounds of an occ face.
    * \param [in]  face_index   The index of the occ face.
    * \param [out] bounds          The parametric bounds of the occ face.
-   */   
+   */
   void
-  t8_geom_get_face_parametric_bounds(const int surface_index,
-                                        double *bounds) const;
+  t8_geom_get_face_parametric_bounds (const int surface_index, double *bounds) const;
 
   /** Finds the parametric bounds of an occ edge.
    * \param [in]  edge_index   The index of the occ edge.
    * \param [out] bounds       The parametric bounds of the occ edge.
-   */  
+   */
   void
-  t8_geom_get_edge_parametric_bounds(const int edge_index,
-                                     double *bounds) const;
-  
+  t8_geom_get_edge_parametric_bounds (const int edge_index, double *bounds) const;
+
   /** Checks if an edge is closed in its U parameter.
    * \param [in]  edge_index   The index of the closed edge.
    * \return                   1 if edge is closed in U. 0 if edge is not closed in U.
@@ -314,59 +276,56 @@ public:
    * \return                       1 if geometry is closed in U. 0 if geometry is not closed in U.
    */
   int
-  t8_geom_is_surface_closed (int geometry_index,
-                             int parameter) const;
+  t8_geom_is_surface_closed (int geometry_index, int parameter) const;
 
-private:
+ private:
   /**
-   * Map a point in the reference space $$[0,1]^2$$ to $$\mathbb R^3$$. Only for triangle trees.
+   * Maps points in the reference space \f$ [0,1]^2 \f$ to \f$ \mathbb{R}^3 \f$. Only for triangle trees.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of 2 entries, specifying a point in [0,1]^2.
-   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
-                                 t8_gloidx_t gtreeid,
-                                 const double *ref_coords,
-                                 double out_coords[3]) const;
+  t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
+                                 const size_t num_coords, double *out_coords) const;
 
   /**
-   * Map a point in the reference space $$[0,1]^2$$ to $$\mathbb R^3$$. Only for quad trees.
+   * Maps points in the reference space \f$ [0,1]^2 \f$ to \f$ \mathbb{R}^3 \f$. Only for quad trees.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of 2 entries, specifying a point in [0,1]^2.
-   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
-                             t8_gloidx_t gtreeid,
-                             const double *ref_coords,
-                             double out_coords[3]) const;
+  t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                             double *out_coords) const;
 
   /**
-   * Map a point in the reference space $$[0,1]^3$$ to $$\mathbb R^3$$. Only for hex trees.
+   * Maps points in the reference space \f$ \f$ [0,1]^3 \f$ \f$ to \f$ \mathbb{R}^3 \f$. Only for hex trees.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of 3 entries, specifying a point in [0,1]^3.
-   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh,
-                            t8_gloidx_t gtreeid,
-                            const double *ref_coords,
-                            double out_coords[3]) const;
+  t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                            double *out_coords) const;
 
-  const int                                  *edges;                      /**< The linked edges of the currently active tree. */
-  const int                                  *faces;                      /**< The linked faces of the currently active tree. */
-  TopoDS_Shape                                occ_shape;                  /**< Occ geometry */
-  TopTools_IndexedMapOfShape                  occ_shape_vertex_map;       /**< Map of all TopoDS_Vertex in shape. */
-  TopTools_IndexedMapOfShape                  occ_shape_edge_map;         /**< Map of all TopoDS_Edge in shape. */
-  TopTools_IndexedMapOfShape                  occ_shape_face_map;         /**< Map of all TopoDS_Face in shape. */
-  TopTools_IndexedDataMapOfShapeListOfShape   occ_shape_vertex2edge_map;  /**< Maps all TopoDS_Vertex of shape to all its connected TopoDS_Edge */
-  TopTools_IndexedDataMapOfShapeListOfShape   occ_shape_edge2face_map;    /**< Maps all TopoDS_Edge of shape to all its connected TopoDS_Face */
+  const int *edges;                                /**< The linked edges of the currently active tree. */
+  const int *faces;                                /**< The linked faces of the currently active tree. */
+  TopoDS_Shape occ_shape;                          /**< Occ geometry */
+  TopTools_IndexedMapOfShape occ_shape_vertex_map; /**< Map of all TopoDS_Vertex in shape. */
+  TopTools_IndexedMapOfShape occ_shape_edge_map;   /**< Map of all TopoDS_Edge in shape. */
+  TopTools_IndexedMapOfShape occ_shape_face_map;   /**< Map of all TopoDS_Face in shape. */
+  TopTools_IndexedDataMapOfShapeListOfShape
+    occ_shape_vertex2edge_map; /**< Maps all TopoDS_Vertex of shape to all its connected TopoDS_Edge */
+  TopTools_IndexedDataMapOfShapeListOfShape
+    occ_shape_edge2face_map; /**< Maps all TopoDS_Edge of shape to all its connected TopoDS_Face */
 };
-/* *INDENT-ON* */
 
 #endif /* T8_WITH_OCC */
 

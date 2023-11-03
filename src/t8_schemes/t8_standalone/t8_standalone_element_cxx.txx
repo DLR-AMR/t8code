@@ -492,7 +492,7 @@ template<t8_eclass_t eclass_T>
 void
 t8_standalone_scheme_c<eclass_T>::t8_element_reference_coords (const t8_element_t *elem,
                                                   const double *ref_coords,
-                                                  const void *user_data,
+                                                  const size_t num_coords,
                                                   double *out_coords)
   const {
   SC_ABORT("This function is not implemented yet.\n");

@@ -53,52 +53,46 @@
  * The two resulting forests must be equal.
  */
 
-/* *INDENT-OFF* */
-class local_tree:public testing::TestWithParam <t8_eclass_t> {
-protected:
-  void SetUp () override {
-    eclass = GetParam();
+class local_tree: public testing::TestWithParam<t8_eclass_t> {
+ protected:
+  void
+  SetUp () override
+  {
+    eclass = GetParam ();
     sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &MPI_size);
-    
-    forest = 
-      t8_forest_new_uniform (t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD),
-                             t8_scheme_new_default_cxx (),
-                             MPI_size, 0, sc_MPI_COMM_WORLD);  
+
+    forest = t8_forest_new_uniform (t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD), t8_scheme_new_default_cxx (),
+                                    MPI_size, 0, sc_MPI_COMM_WORLD);
 
     if (MPI_size == 1 || MPI_size > MAX_NUM_RANKS) {
       GTEST_SKIP ();
-    } 
+    }
   }
-  void TearDown () override {
+  void
+  TearDown () override
+  {
     t8_forest_unref (&forest);
   }
-  int                 MPI_size;
-  t8_eclass_t         eclass;
-  t8_forest_t         forest;
+  int MPI_size;
+  t8_eclass_t eclass;
+  t8_forest_t forest;
 };
-/* *INDENT-ON* */
 
 /** This structure contains a bitset with all 
  * local trees on all processes to be removed.
  */
 struct t8_trees_to_remove
 {
-  std::bitset < MAX_NUM_RANKS > remove;
+  std::bitset<MAX_NUM_RANKS> remove;
 };
 
 /** Remove every element of rank i if the i`th bit in 
  * the current instance \a remove is 0. */
 static int
-t8_adapt_remove (t8_forest_t forest,
-                 t8_forest_t forest_from,
-                 t8_locidx_t which_tree,
-                 t8_locidx_t lelement_id,
-                 t8_eclass_scheme_c *ts,
-                 const int is_family,
-                 const int num_elements, t8_element_t *elements[])
+t8_adapt_remove (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
+                 t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
-  struct t8_trees_to_remove *trees_to_remove =
-    (struct t8_trees_to_remove *) t8_forest_get_user_data (forest);
+  struct t8_trees_to_remove *trees_to_remove = (struct t8_trees_to_remove *) t8_forest_get_user_data (forest);
   if (trees_to_remove->remove[forest_from->mpirank] == 0) {
     return -2;
   }
@@ -106,11 +100,9 @@ t8_adapt_remove (t8_forest_t forest,
 }
 
 t8_forest_t
-t8_adapt_forest (t8_forest_t forest_from,
-                 t8_forest_adapt_t adapt_fn,
-                 int do_adapt, int do_partition, void *user_data)
+t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn, int do_adapt, int do_partition, void *user_data)
 {
-  t8_forest_t         forest_new;
+  t8_forest_t forest_new;
 
   t8_forest_init (&forest_new);
   if (do_adapt) {
@@ -133,26 +125,25 @@ t8_adapt_forest (t8_forest_t forest_from,
 TEST_P (local_tree, test_empty_local_tree)
 {
   /* Number of instances/testcases */
-  const uint32_t      num_instances = 1 << MPI_size;
+  const uint32_t num_instances = 1 << MPI_size;
   for (uint32_t instances = 1; instances < num_instances - 1; instances++) {
     /* Remove all local elements for every process \a remove[rank] == 0 */
-    std::bitset < MAX_NUM_RANKS > remove (instances);
+    std::bitset<MAX_NUM_RANKS> remove (instances);
 
-    /* *INDENT-OFF* */
-    struct t8_trees_to_remove    data { remove };
-    /* *INDENT-ON* */
+    struct t8_trees_to_remove data
+    {
+      remove
+    };
 
     t8_forest_ref (forest);
     /* Do adapt and partition in one step */
-    t8_forest_t         forest_adapt_a =
-      t8_adapt_forest (forest, t8_adapt_remove, 1, 1, &data);
+    t8_forest_t forest_adapt_a = t8_adapt_forest (forest, t8_adapt_remove, 1, 1, &data);
     ASSERT_TRUE (forest_adapt_a->incomplete_trees);
     ASSERT_TRUE (!forest->incomplete_trees);
 
     t8_forest_ref (forest);
     /* Do adapt and partition in separate steps */
-    t8_forest_t         forest_adapt_b =
-      t8_adapt_forest (forest, t8_adapt_remove, 1, 0, &data);
+    t8_forest_t forest_adapt_b = t8_adapt_forest (forest, t8_adapt_remove, 1, 0, &data);
     ASSERT_TRUE (forest_adapt_b->incomplete_trees);
     ASSERT_TRUE (!forest->incomplete_trees);
     forest_adapt_b = t8_adapt_forest (forest_adapt_b, NULL, 0, 1, NULL);
@@ -165,6 +156,4 @@ TEST_P (local_tree, test_empty_local_tree)
   }
 }
 
-/* *INDENT-OFF* */
-INSTANTIATE_TEST_SUITE_P (t8_gtest_empty_local_tree, local_tree, testing::Range(T8_ECLASS_LINE, T8_ECLASS_COUNT));
-/* *INDENT-ON* */
+INSTANTIATE_TEST_SUITE_P (t8_gtest_empty_local_tree, local_tree, testing::Range (T8_ECLASS_LINE, T8_ECLASS_COUNT));

@@ -38,16 +38,14 @@
 TEST (user_data, test_user_data)
 {
   /* Build a forest */
-  t8_cmesh_t          cmesh =
-    t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, 0, 0, 0);
-  t8_scheme_cxx_t    *scheme = t8_scheme_new_standalone_cxx ();
-  t8_forest_t         forest =
-    t8_forest_new_uniform (cmesh, scheme, 1, 0, sc_MPI_COMM_WORLD);
+  t8_cmesh_t cmesh = t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, 0, 0, 0);
+  t8_scheme_cxx_t *scheme = t8_scheme_new_standalone_cxx ();
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, 1, 0, sc_MPI_COMM_WORLD);
   /* Define user data */
-  double              data = 42.42;
-  double             *get_data;
-  int                 data2 = 42;
-  int                *get_data2;
+  double data = 42.42;
+  double *get_data;
+  int data2 = 42;
+  int *get_data2;
 
   /* Set user data of forest */
   t8_forest_set_user_data (forest, (void *) &data);
@@ -98,36 +96,30 @@ t8_test_function_second (void)
 TEST (user_data, test_user_function)
 {
   /* Build a forest */
-  t8_cmesh_t          cmesh =
-    t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, 0, 0, 0);
-  t8_scheme_cxx_t    *scheme = t8_scheme_new_default_cxx ();
-  t8_forest_t         forest =
-    t8_forest_new_uniform (cmesh, scheme, 1, 0, sc_MPI_COMM_WORLD);
+  t8_cmesh_t cmesh = t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, 0, 0, 0);
+  t8_scheme_cxx_t *scheme = t8_scheme_new_default_cxx ();
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, 1, 0, sc_MPI_COMM_WORLD);
 
-  double              (*funpointer) (int);
-  void                (*funpointer_second) (void);
+  double (*funpointer) (int);
+  void (*funpointer_second) (void);
 
   /* Set the t8_test_function_42 as user function pointer. */
-  t8_forest_set_user_function (forest, (void (*)(void)) &t8_test_function_42);
+  t8_forest_set_user_function (forest, (void (*) (void)) & t8_test_function_42);
   /* Retrieve the function pointer from the forest. */
-  funpointer = (double (*)(int)) t8_forest_get_user_function (forest);
+  funpointer = (double (*) (int)) t8_forest_get_user_function (forest);
 
   /* Check whether the function pointer is correct. */
-  ASSERT_EQ (funpointer, &t8_test_function_42) <<
-    "Forest returned wrong user function pointer.";
+  ASSERT_EQ (funpointer, &t8_test_function_42) << "Forest returned wrong user function pointer.";
   /* Additionally call the function and check correct return value. */
-  ASSERT_EQ (funpointer (0), 42.42) <<
-    "Forest function pointer returned wrong result.";
+  ASSERT_EQ (funpointer (0), 42.42) << "Forest function pointer returned wrong result.";
 
   /* Overwrite the function user pointer with a second function. */
-  t8_forest_set_user_function (forest,
-                               (void (*)(void)) &t8_test_function_second);
+  t8_forest_set_user_function (forest, (void (*) (void)) & t8_test_function_second);
   /* Retrieve the function pointer from the forest. */
-  funpointer_second = (void (*)(void)) t8_forest_get_user_function (forest);
+  funpointer_second = (void (*) (void)) t8_forest_get_user_function (forest);
 
   /* Check whether the function pointer is correct. */
-  ASSERT_EQ (funpointer_second, &t8_test_function_second) <<
-    "Forest returned wrong user function pointer.";
+  ASSERT_EQ (funpointer_second, &t8_test_function_second) << "Forest returned wrong user function pointer.";
 
   /* clean up */
   t8_forest_unref (&forest);

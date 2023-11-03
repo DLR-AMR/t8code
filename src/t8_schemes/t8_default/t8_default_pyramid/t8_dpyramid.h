@@ -28,7 +28,7 @@
 #define T8_DPYRAMID_ROOT_LEN (1 << (T8_DPYRAMID_MAXLEVEL))
 
 /** The length of a pyramid at a given level in integer coordinates */
-#define T8_DPYRAMID_LEN(l) (1 << (T8_DPYRAMID_MAXLEVEL- (l)))
+#define T8_DPYRAMID_LEN(l) (1 << (T8_DPYRAMID_MAXLEVEL - (l)))
 
 /** The number of types of a pyramid */
 #define T8_DPYRAMID_NUM_TYPES 8
@@ -44,10 +44,10 @@
 
 /** The length of a triangle divided by the length of a pyramid.
  * This is useful to convert boundary coordinates from pyra to tri*/
-#define T8_DTRI_ROOT_BY_DPYRAMID_ROOT (1 <<(T8_DTRI_MAXLEVEL - T8_DPYRAMID_MAXLEVEL))
+#define T8_DTRI_ROOT_BY_DPYRAMID_ROOT (1 << (T8_DTRI_MAXLEVEL - T8_DPYRAMID_MAXLEVEL))
 
 /** The coordinates of a pyramid are integers relative to the maximum refinement. */
-typedef int32_t     t8_dpyramid_coord_t;
+typedef int32_t t8_dpyramid_coord_t;
 
 /** The type of pyramid in 0, ...,7. The first 6 types describe tetrahedra.
  * Type 6 is an upward facing pyramid.
@@ -63,9 +63,8 @@ typedef int8_t t8_dpyramid_type_t;
  */
 typedef struct t8_dpyramid
 {
-  t8_dtet_t           pyramid;  /* Coordinates, level and type */
-  int8_t              switch_shape_at_level;
-}
-t8_dpyramid_t;
+  t8_dtet_t pyramid; /* Coordinates, level and type */
+  int8_t switch_shape_at_level;
+} t8_dpyramid_t;
 
 #endif /* T8_DPYRAMID_H */

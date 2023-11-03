@@ -31,7 +31,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone_cxx.hxx>
 
-/* *INDENT-OFF* */
 template <typename T>
 class ancestor:public testing::Test{
 public:
@@ -65,8 +64,6 @@ protected:
     t8_eclass_scheme_c *ts;
 };
 
-/* *INDENT-ON* */
-
 
 
 
@@ -77,13 +74,12 @@ protected:
 /*Test root and parent*/
 template<t8_eclass_t eclass_T>
 static void
-t8_recursive_ancestor (t8_element_t *element, t8_element_t *child,
-                       t8_element_t *parent, t8_element_t *test_anc,
+t8_recursive_ancestor (t8_element_t *element, t8_element_t *child, t8_element_t *parent, t8_element_t *test_anc,
                        t8_eclass_scheme_c *ts, const int maxlvl)
 {
-  int                 num_children, i;
-  int                 level = ts->t8_element_level (parent);
-  int                 elem_lvl = ts->t8_element_level (element);
+  int num_children, i;
+  int level = ts->t8_element_level (parent);
+  int elem_lvl = ts->t8_element_level (element);
   T8_ASSERT (level >= elem_lvl);
   num_children = ts->t8_element_num_children (parent);
   if (level == maxlvl) {
@@ -117,9 +113,7 @@ using myTypes = ::testing::Types<std::integral_constant<t8_eclass_t, T8_ECLASS_V
 
 //integral_constant_typelist_t<t8_eclass_t,T8_ECLASS_VERTEX,T8_ECLASS_PYRAMID> myTypes;
 
-/* *INDENT-OFF* */
 TYPED_TEST_SUITE (ancestor, myTypes);
-/* *INDENT-ON* */
 
 
 TYPED_TEST (ancestor, root_recursive_check)
@@ -141,7 +135,7 @@ TYPED_TEST (ancestor, multi_level_recursive_check)
   this->ts->t8_element_new (1, &parent);
   this->ts->t8_element_new (1, &correct_anc_high_level);
 
-  t8_gloidx_t         leafs_on_level;
+  t8_gloidx_t leafs_on_level;
   for (i = recursion_depth; i < max_lvl; i++) {
     leafs_on_level =
       this->ts->t8_element_count_leafs (this->correct_anc, i - recursion_depth);
@@ -150,5 +144,7 @@ TYPED_TEST (ancestor, multi_level_recursive_check)
     this->ts->t8_element_copy (correct_anc_high_level, parent);
     t8_recursive_ancestor<this->eclass_param()> (this->correct_anc, this->desc_a, parent, this->check, this->ts, i);
   }
+  this->ts->t8_element_destroy (1, &parent);
+  this->ts->t8_element_destroy (1, &correct_anc_high_level);
 }
 

@@ -1213,9 +1213,9 @@ void t8_sele_boundary_face(const t8_standalone_element_t<eclass_T> * elem, const
       t8_debugf("found ifaceeq %i\n", ifaceeq);
 
       if (ifaceeq != -1){
-        t8_debugf("boundarytype size: %i, elemtype size: %i\n", boundary->type.size(), elem->type.size());
+        t8_debugf("boundarytype size: %li, elemtype size: %li\n", boundary->type.size(), elem->type.size());
         boundary->type[ifaceeq] = elem->type[ieq];
-        t8_debugf("set type[%i] = %i\n", ifaceeq, boundary->type[ifaceeq]);
+//        t8_debugf("set type[%i] = %i\n", ifaceeq, boundary->type[ifaceeq]);
       }
     }
   }

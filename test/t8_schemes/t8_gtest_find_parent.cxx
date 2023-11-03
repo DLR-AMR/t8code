@@ -25,11 +25,12 @@
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone_cxx.hxx>
 
-/* *INDENT-OFF* */
-class class_find_parent:public testing::TestWithParam <t8_eclass_t > {
-protected:
-  void SetUp () override {
-    eclass = GetParam();
+class class_find_parent: public testing::TestWithParam<t8_eclass_t> {
+ protected:
+  void
+  SetUp () override
+  {
+    eclass = GetParam ();
 
     scheme = t8_scheme_new_standalone_cxx ();
     /* Get scheme for eclass */
@@ -42,7 +43,9 @@ protected:
 
     ts->t8_element_set_linear_id (element, 0, 0);
   }
-  void TearDown () override {
+  void
+  TearDown () override
+  {
     /* Destroy element */
     ts->t8_element_destroy (1, &element);
     ts->t8_element_destroy (1, &child);
@@ -51,25 +54,22 @@ protected:
     /* Destroy scheme */
     t8_scheme_cxx_unref (&scheme);
   }
-  t8_eclass_t           eclass;
-  t8_scheme_cxx         *scheme;
-  t8_eclass_scheme_c    *ts;
-  t8_element_t          *element;
-  t8_element_t          *child;
-  t8_element_t          *test_parent;
+  t8_eclass_t eclass;
+  t8_scheme_cxx *scheme;
+  t8_eclass_scheme_c *ts;
+  t8_element_t *element;
+  t8_element_t *child;
+  t8_element_t *test_parent;
 };
-/* *INDENT-ON* */
 
 static void
-t8_recursive_child_find_parent (t8_element_t *element, t8_element_t *child,
-                                t8_element_t *test_parent,
-                                t8_eclass_scheme_c *ts, int level,
-                                const int maxlvl)
+t8_recursive_child_find_parent (t8_element_t *element, t8_element_t *child, t8_element_t *test_parent,
+                                t8_eclass_scheme_c *ts, int level, const int maxlvl)
 {
   T8_ASSERT (level <= maxlvl && maxlvl <= ts->t8_element_maxlevel () - 1);
 
   /* Get number of children */
-  const int           num_children = ts->t8_element_num_children (element);
+  const int num_children = ts->t8_element_num_children (element);
   /* Get child and test_parent, to check if test_parent = parent of child */
   if (level == maxlvl)
     return;
@@ -80,11 +80,9 @@ t8_recursive_child_find_parent (t8_element_t *element, t8_element_t *child,
     ts->t8_element_parent (child, test_parent);
     /* If its equal, call child_find_parent, to check if parent-child relation
      * is correct in next level until maxlvl is reached*/
-    ASSERT_TRUE (!ts->t8_element_compare (element, test_parent))
-      << "Computed child_parent is not the parent.";
+    ASSERT_TRUE (!ts->t8_element_compare (element, test_parent)) << "Computed child_parent is not the parent.";
 
-    t8_recursive_child_find_parent (child, element, test_parent, ts,
-                                    level + 1, maxlvl);
+    t8_recursive_child_find_parent (child, element, test_parent, ts, level + 1, maxlvl);
     /* After the check we know the parent-function is correct for this child.
      * Therefore we can use it to recompute the element*/
     ts->t8_element_parent (child, element);
@@ -94,15 +92,13 @@ t8_recursive_child_find_parent (t8_element_t *element, t8_element_t *child,
 TEST_P (class_find_parent, t8_compute_child_find_parent)
 {
 #ifdef T8_ENABLE_LESS_TESTS
-  const int           maxlvl = 4;
+  const int maxlvl = 4;
 #else
-  const int           maxlvl = 6;
+  const int maxlvl = 6;
 #endif
 
   /* Check for correct parent-child relation */
   t8_recursive_child_find_parent (element, child, test_parent, ts, 0, maxlvl);
 }
 
-/* *INDENT-OFF* */
-INSTANTIATE_TEST_SUITE_P (t8_gtest_find_parent, class_find_parent,testing::Range(T8_ECLASS_ZERO, T8_ECLASS_COUNT));
-/* *INDENT-ON* */
+INSTANTIATE_TEST_SUITE_P (t8_gtest_find_parent, class_find_parent, testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT));

@@ -48,12 +48,13 @@ T8_EXTERN_C_BEGIN ();
  */
 
 /* TODO: comment */
-void                t8_forest_ghost_init (t8_forest_ghost_t *pghost,
-                                          t8_ghost_type_t ghost_type);
+void
+t8_forest_ghost_init (t8_forest_ghost_t *pghost, t8_ghost_type_t ghost_type);
 
 /* TODO: document */
 /* returns 0 if ghost structure doesnt exist */
-t8_locidx_t         t8_forest_ghost_num_trees (t8_forest_t forest);
+t8_locidx_t
+t8_forest_ghost_num_trees (const t8_forest_t forest);
 
 /** Return the element offset of a ghost tree.
  * \param [in]      forest      The forest with constructed ghost layer.
@@ -61,15 +62,12 @@ t8_locidx_t         t8_forest_ghost_num_trees (t8_forest_t forest);
  * \return                      The element offset of this ghost tree.
  * \note forest must be committed before calling this function.
  */
-t8_locidx_t         t8_forest_ghost_get_tree_element_offset (t8_forest_t
-                                                             forest,
-                                                             t8_locidx_t
-                                                             lghost_tree);
+t8_locidx_t
+t8_forest_ghost_get_tree_element_offset (t8_forest_t forest, t8_locidx_t lghost_tree);
 
 /* TODO: document */
-t8_locidx_t         t8_forest_ghost_tree_num_elements (t8_forest_t forest,
-                                                       t8_locidx_t
-                                                       lghost_tree);
+t8_locidx_t
+t8_forest_ghost_tree_num_elements (t8_forest_t forest, t8_locidx_t lghost_tree);
 
 /** Get a pointer to the ghost element array of a ghost tree.
  * \param [in]  forest    The forest. Ghost layer must exist.
@@ -77,9 +75,8 @@ t8_locidx_t         t8_forest_ghost_tree_num_elements (t8_forest_t forest,
  * \return                A pointer to the array of ghost elements of the tree.
  * \a forest must be committed before calling this function.
  */
-t8_element_array_t *t8_forest_ghost_get_tree_elements (t8_forest_t forest,
-                                                       t8_locidx_t
-                                                       lghost_tree);
+t8_element_array_t *
+t8_forest_ghost_get_tree_elements (const t8_forest_t forest, const t8_locidx_t lghost_tree);
 
 /** Given a global tree compute the ghost local tree id of it.
  * \param [in]  forest    The forest. Ghost layer must exist.
@@ -90,12 +87,12 @@ t8_element_array_t *t8_forest_ghost_get_tree_elements (t8_forest_t forest,
  * \a forest must be committed before calling this function.
  * \see https://github.com/DLR-AMR/t8code/wiki/Tree-indexing for more details about tree indexing.
  */
-t8_locidx_t         t8_forest_ghost_get_ghost_treeid (t8_forest_t forest,
-                                                      t8_gloidx_t gtreeid);
+t8_locidx_t
+t8_forest_ghost_get_ghost_treeid (t8_forest_t forest, t8_gloidx_t gtreeid);
 
 /* TODO: document */
-t8_eclass_t         t8_forest_ghost_get_tree_class (t8_forest_t forest,
-                                                    t8_locidx_t lghost_tree);
+t8_eclass_t
+t8_forest_ghost_get_tree_class (const t8_forest_t forest, const t8_locidx_t lghost_tree);
 
 /** Given a local ghost tree compute the global tree id of it.
  * \param [in]  forest    The forest. Ghost layer must exist.
@@ -104,22 +101,20 @@ t8_eclass_t         t8_forest_ghost_get_tree_class (t8_forest_t forest,
  * \a forest must be committed before calling this function.
  * \see https://github.com/DLR-AMR/t8code/wiki/Tree-indexing for more details about tree indexing.
  */
-t8_gloidx_t         t8_forest_ghost_get_global_treeid (t8_forest_t forest,
-                                                       t8_locidx_t
-                                                       lghost_tree);
+t8_gloidx_t
+t8_forest_ghost_get_global_treeid (const t8_forest_t forest, const t8_locidx_t lghost_tree);
 
 /* TODO: document */
-t8_element_t       *t8_forest_ghost_get_element (t8_forest_t forest,
-                                                 t8_locidx_t lghost_tree,
-                                                 t8_locidx_t lelement);
+t8_element_t *
+t8_forest_ghost_get_element (t8_forest_t forest, t8_locidx_t lghost_tree, t8_locidx_t lelement);
 
 /** Return the array of remote ranks.
  * \param [in] forest   A forest with constructed ghost layer.
  * \param [in,out] num_remotes On output the number of remote ranks is stored here.
  * \return              The array of remote ranks in ascending order.
  */
-int                *t8_forest_ghost_get_remotes (t8_forest_t forest,
-                                                 int *num_remotes);
+int *
+t8_forest_ghost_get_remotes (t8_forest_t forest, int *num_remotes);
 
 /** Return the first local ghost tree of a remote rank.
  * \param [in] forest   A forest with constructed ghost layer.
@@ -127,22 +122,23 @@ int                *t8_forest_ghost_get_remotes (t8_forest_t forest,
  * \return              The ghost tree id of the first ghost tree that stores ghost
  *                      elements of \a remote.
  */
-t8_locidx_t         t8_forest_ghost_remote_first_tree (t8_forest_t forest,
-                                                       int remote);
+t8_locidx_t
+t8_forest_ghost_remote_first_tree (t8_forest_t forest, int remote);
 
 /** Return the local index of the first ghost element that belongs to a given remote rank.
  * \param [in] forest   A forest with constructed ghost layer.
  * \param [in] remote   A remote rank of the ghost layer in \a forest.
  * \return              The index i in the ghost elements of the first element of rank \a remote
  */
-t8_locidx_t         t8_forest_ghost_remote_first_elem (t8_forest_t forest,
-                                                       int remote);
+t8_locidx_t
+t8_forest_ghost_remote_first_elem (t8_forest_t forest, int remote);
 
 /** Increase the reference count of a ghost structure.
  * \param [in,out]  ghost     On input, this ghost structure must exist with
  *                            positive reference count.
  */
-void                t8_forest_ghost_ref (t8_forest_ghost_t ghost);
+void
+t8_forest_ghost_ref (t8_forest_ghost_t ghost);
 
 /** Decrease the reference count of a ghost structure.
  * If the counter reaches zero, the ghost structure is destroyed.
@@ -151,27 +147,28 @@ void                t8_forest_ghost_ref (t8_forest_ghost_t ghost);
  * \param [in,out]  pghost      On input, the ghost structure pointed to must
  *                              exist with positive reference count.
  *                              If the reference count reaches zero, the ghost
- *                              structure is destroyed and this pointer is set
- *                              to NULL.
+ *                              structure is destroyed and this pointer is set to NULL.
  *                              Otherwise, the pointer is not changed.
  */
-void                t8_forest_ghost_unref (t8_forest_ghost_t *pghost);
+void
+t8_forest_ghost_unref (t8_forest_ghost_t *pghost);
 
 /** Verify that a ghost structure has only one reference left and destroy it.
- * This function is preferred over \ref t8_ghost_unref when it is known
- * that the last reference is to be deleted.
+ * This function is preferred over \ref t8_ghost_unref when it is known that the last reference is to be deleted.
  * \param [in,out]  pghost     This ghost structure must have a reference count of one.
  *                             It can be in any state (committed or not).
  *                             Then it effectively calls \ref t8_forest_ghost_unref.
  */
-void                t8_forest_ghost_destroy (t8_forest_ghost_t *pghost);
+void
+t8_forest_ghost_destroy (t8_forest_ghost_t *pghost);
 
 /** Create one layer of ghost elements for a forest.
  * \see t8_forest_set_ghost
  * \param [in,out]    forest     The forest.
  * \a forest must be committed before calling this function.
  */
-void                t8_forest_ghost_create (t8_forest_t forest);
+void
+t8_forest_ghost_create (t8_forest_t forest);
 
 /** Create one layer of ghost elements for a forest.
  * This version only works with balanced forests and is the original
@@ -181,10 +178,12 @@ void                t8_forest_ghost_create (t8_forest_t forest);
  * \a forest must be committed before calling this function.
  * \note The user should prefer \ref t8_forest_ghost_create even for balanced forests.
  */
-void                t8_forest_ghost_create_balanced_only (t8_forest_t forest);
+void
+t8_forest_ghost_create_balanced_only (t8_forest_t forest);
 
 /* experimental version using the ghost_v3 algorithm */
-void                t8_forest_ghost_create_topdown (t8_forest_t forest);
+void
+t8_forest_ghost_create_topdown (t8_forest_t forest);
 
 T8_EXTERN_C_END ();
 

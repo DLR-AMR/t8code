@@ -80,7 +80,7 @@ main (int argc, char **argv)
 
   const char         *prefix_uniform = "uniform_forest";
   const char         *prefix_adapt1 = "adapted_forest";
-  const char         *prefix_adapt2 = "multi_adapted_forest";
+//  const char         *prefix_adapt2 = "multi_adapted_forest";
   const char         *prefix_cmesh = "cmesh";
 
 

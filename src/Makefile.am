@@ -66,10 +66,12 @@ libt8_installed_headers_geometry_impl = \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx \
+  src/t8_geometry/t8_geometry_implementations/t8_geometry_examples.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_occ.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx \
+  src/t8_geometry/t8_geometry_implementations/t8_geometry_examples.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx 
 libt8_installed_headers_vtk = \
   src/t8_vtk/t8_vtk_reader.hxx \
@@ -126,6 +128,7 @@ libt8_compiled_sources = \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.cxx \
+  src/t8_geometry/t8_geometry_implementations/t8_geometry_examples.cxx \
   src/t8_forest/t8_forest_partition.cxx src/t8_forest/t8_forest_cxx.cxx \
   src/t8_forest/t8_forest_private.c src/t8_forest/t8_forest_vtk.cxx \
   src/t8_forest/t8_forest_ghost.cxx src/t8_forest/t8_forest_iterate.cxx \

@@ -122,22 +122,20 @@ t8_time_brick_refine_half (int x, int y, int x_periodix, int y_periodic,
 
 #if 1
 /* add x*mpirank to all of the x-coordinates of a tree in cmesh.
- * This is usefull to separate the disjoint parts visually. */
+ * This is useful to separate the disjoint parts visually. */
 void
-t8_time_cmesh_translate_coordinates (t8_cmesh_t cmesh, double x,
-                                     sc_MPI_Comm comm)
+t8_time_cmesh_translate_coordinates (t8_cmesh_t cmesh, double x, sc_MPI_Comm comm)
 {
-  double             *vertices;
-  t8_locidx_t         itree;
-  int                 ivertex, mpiret, mpirank;
-  t8_eclass_t         eclass;
+  double *vertices;
+  t8_locidx_t itree;
+  int ivertex, mpiret, mpirank;
+  t8_eclass_t eclass;
 
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
   for (itree = 0; itree < t8_cmesh_get_num_local_trees (cmesh); itree++) {
     /* loop over all trees and get a pointer to their vertices */
-    vertices = (double *)
-      t8_cmesh_get_attribute (cmesh, t8_get_package_id (), 0, itree);
+    vertices = (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), 0, itree);
     eclass = t8_cmesh_get_tree_class (cmesh, itree);
     for (ivertex = 0; ivertex < t8_eclass_num_vertices[eclass]; ivertex++) {
       /* For each tree vertex, translate its x-coordinate */
@@ -150,14 +148,13 @@ t8_time_cmesh_translate_coordinates (t8_cmesh_t cmesh, double x,
  * partitioned. Repartition it by shipping 43% of each processes quadrants to
  * the next process. */
 void
-t8_time_cmesh_partition_brick (int x, int y, int z, sc_MPI_Comm comm,
-                               int no_vtk)
+t8_time_cmesh_partition_brick (int x, int y, int z, sc_MPI_Comm comm, int no_vtk)
 {
-  t8_cmesh_t          cmesh;
-  t8_cmesh_t          cmesh_partition;
-  t8_shmem_array_t    new_partition;
+  t8_cmesh_t cmesh;
+  t8_cmesh_t cmesh_partition;
+  t8_shmem_array_t new_partition;
 
-  t8_cprofile_t      *profile;
+  t8_cprofile_t *profile;
 
   /* Create a disjoint brick cmesh with x time y trees on each process */
   cmesh = t8_cmesh_new_disjoint_bricks (x, y, z, 1, 1, 1, comm);
@@ -184,14 +181,14 @@ t8_time_cmesh_partition_brick (int x, int y, int z, sc_MPI_Comm comm,
   /* commit (= partition) the second cmesh */
   t8_cmesh_commit (cmesh_partition, comm);
   t8_global_productionf ("Partitioned cmesh with"
-                         " %lli global trees.\n", (long long)
-                         t8_cmesh_get_num_trees (cmesh_partition));
+                         " %lli global trees.\n",
+                         (long long) t8_cmesh_get_num_trees (cmesh_partition));
   /* Print run times and statistics */
   t8_cmesh_print_profile (cmesh_partition);
 
   /* vtk output */
   if (!no_vtk) {
-    int                 mpirank, mpiret;
+    int mpirank, mpiret;
 
     mpiret = sc_MPI_Comm_rank (comm, &mpirank);
     SC_CHECK_MPI (mpiret);
@@ -205,13 +202,13 @@ t8_time_cmesh_partition_brick (int x, int y, int z, sc_MPI_Comm comm,
 int
 main (int argc, char *argv[])
 {
-  int                 mpiret;
-  int                 first_argc;
-  int                 x_dim, y_dim, z_dim;
-  int                 no_vtk = 0;
-  int                 help = 0;
-  int                 dim;
-  sc_options_t       *opt;
+  int mpiret;
+  int first_argc;
+  int x_dim, y_dim, z_dim;
+  int no_vtk = 0;
+  int help = 0;
+  int dim;
+  sc_options_t *opt;
 
   /* Initialize MPI, sc, p4est and t8code */
   mpiret = sc_MPI_Init (&argc, &argv);
@@ -224,26 +221,21 @@ main (int argc, char *argv[])
   /* Setup for command line options */
   opt = sc_options_new (argv[0]);
 
-  sc_options_add_int (opt, 'x', "x-dim", &x_dim, 1,
-                      "Number of mesh cells in x direction.");
-  sc_options_add_int (opt, 'y', "y-dim", &y_dim, 1,
-                      "Number of mesh cells in y direction.");
+  sc_options_add_int (opt, 'x', "x-dim", &x_dim, 1, "Number of mesh cells in x direction.");
+  sc_options_add_int (opt, 'y', "y-dim", &y_dim, 1, "Number of mesh cells in y direction.");
   sc_options_add_int (opt, 'z', "z-dim", &z_dim, 0,
                       "Number of mesh cells in z direction."
                       " If specified, then the mesh is automatically 3d.");
   sc_options_add_int (opt, 'd', "dim", &dim, 2,
                       "The dimension of the coarse mesh."
                       " 2 for a quadmesh (z is ignored) and 3 for a hexmesh.");
-  sc_options_add_switch (opt, 'h', "help", &help,
-                         "Display a short help message.");
+  sc_options_add_switch (opt, 'h', "help", &help, "Display a short help message.");
   sc_options_add_switch (opt, 'o', "no-vtk", &no_vtk, "Disable vtk output");
 
   /* parse command line options */
-  first_argc = sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT,
-                                 opt, argc, argv);
+  first_argc = sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT, opt, argc, argv);
   /* check for wrong usage of arguments */
-  if (first_argc < 0 || first_argc != argc
-      || x_dim <= 0 || y_dim <= 0 || dim < 2 || dim > 3) {
+  if (first_argc < 0 || first_argc != argc || x_dim <= 0 || y_dim <= 0 || dim < 2 || dim > 3) {
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
     return 1;
   }
@@ -261,11 +253,8 @@ main (int argc, char *argv[])
       dim = 3;
     }
     /* Execute this part of the code if all options are correctly set */
-    t8_global_productionf
-      ("Starting with x-dim = %i, y-dim = %i z-dim = %i\n", x_dim, y_dim,
-       z_dim);
-    t8_time_cmesh_partition_brick (x_dim, y_dim, z_dim, sc_MPI_COMM_WORLD,
-                                   no_vtk);
+    t8_global_productionf ("Starting with x-dim = %i, y-dim = %i z-dim = %i\n", x_dim, y_dim, z_dim);
+    t8_time_cmesh_partition_brick (x_dim, y_dim, z_dim, sc_MPI_COMM_WORLD, no_vtk);
   }
   sc_options_destroy (opt);
   sc_finalize ();
