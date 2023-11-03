@@ -68,19 +68,24 @@ class forest_ghost_exchange_holes: public testing::Test {
 
     sc_MPI_Comm_split(sc_MPI_COMM_WORLD, color, key, &comm);
 
-    sc_MPI_Comm_size(comm, &size);
-    t8_debugf("New size is: %i", size);
+    if(comm != sc_MPI_COMM_NULL){
+        sc_MPI_Comm_size(comm, &size);
+        t8_debugf("\nNew size is: %i\n\n", size);
+        scheme = t8_scheme_new_default_cxx ();
+        /* Construct a cmesh */
+        cmesh = t8_cmesh_new_hypercube (T8_ECLASS_QUAD, comm, 0, 0, 0);
+    }else{
+        t8_debugf("\nThis proc has comm NULL \n\n");
+    }
 
-
-    scheme = t8_scheme_new_default_cxx ();
-    /* Construct a cmesh */
-    cmesh = t8_cmesh_new_hypercube (T8_ECLASS_QUAD, comm, 0, 0, 0);
   }
   void
   TearDown () override
   {
     //cmesh and scheme are freed taken and freed by forest
-    sc_MPI_Comm_free(&comm);
+    if(comm != sc_MPI_COMM_NULL){
+      sc_MPI_Comm_free(&comm);
+    }
   }
   sc_MPI_Comm comm;
   t8_scheme_cxx_t *scheme;
@@ -89,9 +94,11 @@ class forest_ghost_exchange_holes: public testing::Test {
 
 TEST_F (forest_ghost_exchange_holes, errorTest)
 {
-  int level = 1;
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 1, comm);
-  forest = t8_forest_new_adapt (forest, test_adapt_holes, 0, 1, NULL);
-  forest = t8_forest_new_adapt (forest, test_adapt_holes, 0, 1, NULL);
-  t8_forest_unref(&forest);
+  if(comm != sc_MPI_COMM_NULL){
+    int level = 1;
+    t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 1, comm);
+    forest = t8_forest_new_adapt (forest, test_adapt_holes, 0, 1, NULL);
+    forest = t8_forest_new_adapt (forest, test_adapt_holes, 0, 1, NULL);
+    t8_forest_unref(&forest);
+  }
 }
