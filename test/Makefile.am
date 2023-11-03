@@ -248,8 +248,7 @@ test_t8_forest_incomplete_t8_gtest_empty_global_tree_SOURCES = \
 t8_gtest_target_ld_add = $(LDADD) test/libgtest.la
 t8_gtest_target_ld_flags = $(AM_LDFLAGS) -pthread
 t8_gtest_target_cpp_flags = $(AM_CPPFLAGS) -I$(top_srcdir)/thirdparty/googletest-mpi/ \
-  -pthread \
-  -std=c++11
+  -pthread
 #flags to add when we compile with mpi
 t8_gtest_target_mpi_cpp_flags = -DGTEST_HAS_MPI=0
 
@@ -501,7 +500,7 @@ endif
 # Build Googletest library
 check_LTLIBRARIES = test/libgtest.la
 test_libgtest_la_SOURCES = thirdparty/googletest-mpi/gtest/gtest-all.cc
-test_libgtest_la_CPPFLAGS = -I$(top_srcdir)/thirdparty/googletest-mpi -std=c++11
+test_libgtest_la_CPPFLAGS = -I$(top_srcdir)/thirdparty/googletest-mpi
 # If we did not configure t8code with MPI we need to build Googletest
 # without MPI support.
 if !T8_ENABLE_MPI
