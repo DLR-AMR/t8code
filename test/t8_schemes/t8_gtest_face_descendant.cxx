@@ -59,14 +59,12 @@ t8_face_descendant_test_child (t8_element_t *face_desc, const t8_element_t *elem
   t8_element_t **children = T8_ALLOC (t8_element_t *, num_children);
   ts->t8_element_new (num_children, children);
 
-
   ts->t8_element_copy (elem, face_desc);
   for (int klevel = level_elem; klevel < ilevel; klevel++) {
     /* Compute child_id of the test_child_id-th child. */
-    ASSERT_EQ(ts->t8_element_num_face_children(face_desc,face), num_children);
+    ASSERT_EQ (ts->t8_element_num_face_children (face_desc, face), num_children);
     ts->t8_element_children_at_face (face_desc, face, children, num_children, child_indices);
     int child_id = child_indices[test_child_id];
-
 
     ts->t8_element_child (face_desc, child_id, face_desc);
   }

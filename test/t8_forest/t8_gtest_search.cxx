@@ -29,15 +29,15 @@
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone_cxx.hxx>
 
-class forest_search:public testing::TestWithParam <std::tuple<t8_eclass,int>> {
+class forest_search: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
  protected:
   void
   SetUp () override
   {
-    eclass = std::get<0>(GetParam());
-    level = std::get<1>(GetParam());
+    eclass = std::get<0> (GetParam ());
+    level = std::get<1> (GetParam ());
 
-    default_scheme = t8_scheme_new_standalone_cxx();
+    default_scheme = t8_scheme_new_standalone_cxx ();
     /* Construct a cube coarse mesh */
     cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
     /* Build a uniform forest */

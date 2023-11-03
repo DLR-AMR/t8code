@@ -39,15 +39,15 @@
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
 
-class forest_transform:public testing::TestWithParam <std::tuple<t8_eclass,int>> {
+class forest_transform: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
  protected:
   void
-  SetUp () override {
-    eclass = std::get<0>(GetParam());
-    level  = std::get<1>(GetParam());
+  SetUp () override
+  {
+    eclass = std::get<0> (GetParam ());
+    level = std::get<1> (GetParam ());
 
-    t8_debugf ("\n\n\nTesting eclass %s with level %i",
-                           t8_eclass_to_string[eclass],level);
+    t8_debugf ("\n\n\nTesting eclass %s with level %i", t8_eclass_to_string[eclass], level);
     default_scheme = t8_scheme_new_standalone_cxx ();
     /* Construct a coarse mesh of one tree */
     cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);

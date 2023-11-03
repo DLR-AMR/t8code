@@ -30,39 +30,41 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone_cxx.hxx>
 
-class nca:public testing::TestWithParam < std::tuple<t8_eclass , int> > {
-protected:
-    void SetUp () override {
-        auto params = GetParam();
-        eclass = std::get<0>(params);
-        int scheme_param = std::get<1>(params);
-        switch (scheme_param){
-          case 0:
-            scheme = t8_scheme_new_default_cxx();
-            break;
-          case 1:
-            scheme = t8_scheme_new_standalone_cxx();
-            break;
-          default:
-            SC_ABORT("wrong scheme parameter!\n");
-        }
-        ts = scheme->eclass_schemes[eclass];
-        ts->t8_element_new (1, &correct_nca);
-        ts->t8_element_new (1, &desc_a);
-        ts->t8_element_new (1, &desc_b);
-        ts->t8_element_new (1, &check);
-        ts->t8_element_set_linear_id (correct_nca, 0, 0); 
-          
-    }   
-    void TearDown () override {
-        ts->t8_element_destroy (1, &correct_nca);
-        ts->t8_element_destroy (1, &desc_a);
-        ts->t8_element_destroy (1, &desc_b);
-        ts->t8_element_destroy (1, &check);
-        t8_scheme_cxx_unref (&scheme);
-  
+class nca: public testing::TestWithParam<std::tuple<t8_eclass, int> > {
+ protected:
+  void
+  SetUp () override
+  {
+    auto params = GetParam ();
+    eclass = std::get<0> (params);
+    int scheme_param = std::get<1> (params);
+    switch (scheme_param) {
+    case 0:
+      scheme = t8_scheme_new_default_cxx ();
+      break;
+    case 1:
+      scheme = t8_scheme_new_standalone_cxx ();
+      break;
+    default:
+      SC_ABORT ("wrong scheme parameter!\n");
     }
-    /* correct_nca  -> the nearest common ancestor that we check for
+    ts = scheme->eclass_schemes[eclass];
+    ts->t8_element_new (1, &correct_nca);
+    ts->t8_element_new (1, &desc_a);
+    ts->t8_element_new (1, &desc_b);
+    ts->t8_element_new (1, &check);
+    ts->t8_element_set_linear_id (correct_nca, 0, 0);
+  }
+  void
+  TearDown () override
+  {
+    ts->t8_element_destroy (1, &correct_nca);
+    ts->t8_element_destroy (1, &desc_a);
+    ts->t8_element_destroy (1, &desc_b);
+    ts->t8_element_destroy (1, &check);
+    t8_scheme_cxx_unref (&scheme);
+  }
+  /* correct_nca  -> the nearest common ancestor that we check for
     * desc_a       -> a descendant of correct_nca
     * desc_b       -> another descendant of correct_nca, different from desc_a
     * check        -> the computed nca of desc_a and desc_b, should be equal to correct_nca
@@ -317,5 +319,5 @@ TEST_P (nca, recursive_check_higher_level)
   ts->t8_element_destroy (1, &correct_nca_high_level);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_nca, nca, testing::Combine(
-                          testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT), testing::Range(0,2)));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_nca, nca,
+                          testing::Combine (testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT), testing::Range (0, 2)));
