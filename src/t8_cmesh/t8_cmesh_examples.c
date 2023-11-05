@@ -1978,6 +1978,165 @@ t8_cmesh_new_disjoint_bricks (t8_gloidx_t num_x, t8_gloidx_t num_y, t8_gloidx_t 
   return cmesh;
 }
 
+/* This function is similar to the t8_cmesh_new_disjoint_bricks despite the fact the the cmesh is not partitioned (based on the specified amnount of bricks per dimension) */
+t8_cmesh_t
+t8_cmesh_new_brick_wall (t8_gloidx_t num_x, t8_gloidx_t num_y, t8_gloidx_t num_z, sc_MPI_Comm comm)
+{
+  T8_ASSERT (num_x >= 0 && num_y >= 0 && num_z >= 0);
+
+  /* Determine the dimension of the cmesh */
+  const int dim = (num_z > 0) ? 3 : 2;
+
+  /* Define the element type */
+  const t8_eclass_t elem_type = (dim == 2) ? T8_ECLASS_QUAD : T8_ECLASS_HEX;
+
+  /* Determine the number of trees */
+  const t8_gloidx_t num_trees = (dim == 2) ? num_x * num_y : num_x * num_y * num_z;
+
+  /* Size of the array containing the boundary vertices of the hypercube to be built */
+  const int size_boundary_vertices_array = (dim == 2) ? 3 * 4 : 3 * 8;
+
+  /* Declare the array (for the 2D as well as 3D case) */
+  const double boundary_vertices[3 * 8] = { 0.0,
+                                            0.0,
+                                            0.0,
+                                            (double) num_x,
+                                            0.0,
+                                            0.0,
+                                            0.0,
+                                            (double) num_y,
+                                            0.0,
+                                            (double) num_x,
+                                            (double) num_y,
+                                            0.0,
+                                            0.0,
+                                            0.0,
+                                            (double) num_z,
+                                            (double) num_x,
+                                            0.0,
+                                            (double) num_z,
+                                            0.0,
+                                            (double) num_y,
+                                            (double) num_z,
+                                            (double) num_x,
+                                            (double) num_y,
+                                            (double) num_z };
+
+  return t8_cmesh_new_hypercube_pad (elem_type, comm, boundary_vertices, num_x, num_y, num_z);
+
+#if 0
+  /* Declare a variable holding the constructed cmesh */
+  t8_cmesh_t cmesh;
+
+  /* Create a new linear geometry based on the dimension */
+  t8_geometry_c *linear_geom = t8_geometry_linear_new (dim);
+
+  /* Initialize the cmesh */
+  t8_cmesh_init (&cmesh);
+
+  /* Use linear geometry */
+  t8_cmesh_register_geometry (cmesh, linear_geom);
+
+  /* Determine the number of trees */
+  const t8_gloidx_t num_trees = (dim == 2) ? num_x * num_y : num_x * num_y * num_z;
+
+  /* Define the element type */
+  const t8_eclass_t elem_type = (dim == 2) ? T8_ECLASS_QUAD : T8_ECLASS_HEX;
+
+  /* Define the number of vertives per elem */
+  const int num_vertices = t8_eclass_num_vertices[elem_type];
+
+  /* declare an double array of vertices holding the vertex coordinates of each element */
+  double vertices[num_vertices];
+
+  /* Initialize the vertices-array for the first element */
+  vertices[0] = 
+  vertices[1] = 
+  vertices[2] = 
+  vertices[3] = 
+  if (dim == 3)
+  {
+    vertices[4] = 
+    vertices[5] = 
+    vertices[6] = 
+    vertices[7] = 
+  }
+
+  /* Iterate over all trees and set their class and vertices */
+  for (t8_gloidx_t tree_id = 0; tree_id < num_trees; ++tree_id)
+  {
+    /* Set the tree class */
+    t8_cmesh_set_tree_class(cmesh, tree_id, elem_type);
+
+    /* Shift the vertices for this tree */
+
+    /* Set the vertices for this tree */
+    t8_cmesh_set_tree_vertices (cmesh, tree_id, vertices, 4);
+  }
+
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
+  t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_TRIANGLE);
+  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 3);
+  t8_cmesh_set_tree_vertices (cmesh, 1, vertices + 9, 3);
+  t8_cmesh_set_join (cmesh, 0, 1, 1, 2, 0);
+  t8_cmesh_set_join (cmesh, 0, 1, 0, 1, 0);
+  t8_cmesh_set_join (cmesh, 0, 1, 2, 0, 1);
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
+
+#endif
+
+#if 0
+  p4est_connectivity_t *my_brick = NULL; /* pre-initialized to prevent compiler warning */
+  p8est_connectivity_t *my_brick_3d = NULL;
+  t8_cmesh_t cmesh;
+  t8_gloidx_t num_trees;
+  int dim;
+
+  /* Set the dimension to 3 if num_z > 0 and 2 otherwise. */
+  if (num_z > 0) {
+    dim = 3;
+  }
+  else {
+    dim = 2;
+  }
+
+  /* Calculate the number of trees within the mesh*/
+  num_trees = num_x * num_y;
+  if (dim == 3) {
+    num_trees *= num_z;
+  }
+
+  /* Create a p4est brick connectivity on the process with num_x times num_y elements */
+  if (num_trees > 0) {
+    if (dim == 2) {
+      my_brick = p4est_connectivity_new_brick (num_x, num_y, x_periodic, y_periodic);
+    }
+    else {
+      my_brick_3d = p8est_connectivity_new_brick (num_x, num_y, num_z, x_periodic, y_periodic, z_periodic);
+    }
+  }
+  else {
+    if (dim == 2) {
+      my_brick = p4est_connectivity_new (0, 0, 0, 0);
+    }
+    else {
+      my_brick_3d = p8est_connectivity_new (0, 0, 0, 0, 0, 0);
+    }
+  }
+
+  if (dim == 2) {
+    cmesh = t8_cmesh_new_from_p4est_ext ((void *) my_brick, dim, comm, 0, 0);
+    p4est_connectivity_destroy (my_brick);
+  }
+  else {
+    cmesh = t8_cmesh_new_from_p4est_ext ((void *) my_brick_3d, dim, comm, 0, 0);
+    p8est_connectivity_destroy (my_brick_3d);
+  }
+  return cmesh;
+#endif
+}
+
 /* Construct a tetrahedral cmesh that has all possible face to face
  * connections and orientations. */
 t8_cmesh_t

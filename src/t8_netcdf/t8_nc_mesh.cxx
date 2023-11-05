@@ -6,6 +6,7 @@
 #include <t8_schemes/t8_default/t8_default_quad/t8_default_quad_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_hex/t8_default_hex_cxx.hxx>
 #include <t8_element_c_interface.h>
+#include <t8_forest/t8_forest_io.h>
 #include <p4est.h>
 #include <p8est.h>
 #include <array>
@@ -417,9 +418,12 @@ t8_nc_congruate_mesh_calculate_minimum_number_of_trees (t8_nc_mesh_t nc_mesh)
       bool continue_ctree_computation = true;
       int ref_lvl = 0;
 
+      /* Make a box out of the dimension length */
+      const int coord_box = int_pow (*coord_iter, nc_mesh->dimensionality);
+
       /* Check how many equally refined trees would fully cover the domain in the given coordinate dimension */
       while (continue_ctree_computation) {
-        if (*coord_iter % static_cast<int> (int_pow (num_children, ref_lvl + 1)) == 0) {
+        if (coord_box % static_cast<int> (int_pow (num_children, ref_lvl + 1)) == 0) {
           /* If the trees would be refined to the current ref_lvl + 1, they would cover the whole domain.
            * Therefore, we check if a further refined trees would still cover the domain (in this coordinate dimension) */
           /* Increment the refinement level */
@@ -455,8 +459,10 @@ t8_nc_congruate_mesh_calculate_minimum_number_of_trees (t8_nc_mesh_t nc_mesh)
     /* Calculate the number of trees per dimension given the minimum initial refinement level */
     for (auto coord_iter { nc_mesh->coord_lengths.begin () }; coord_iter != nc_mesh->coord_lengths.end ();
          ++coord_iter) {
-      if (*coord_iter != 0) {
-        num_procs_per_dimension.push_back (*coord_iter / int_pow (num_children, initial_refinement_level));
+      if (*coord_iter > 0) {
+        /* Determine the number of trees for this dimension */
+        num_procs_per_dimension.push_back (
+          *coord_iter / std::pow (int_pow (num_children, initial_refinement_level), 1.0 / nc_mesh->dimensionality));
       }
       else {
         num_procs_per_dimension.push_back (0);
@@ -493,11 +499,22 @@ t8_nc_build_initial_rectangular_congruent_mesh (t8_nc_mesh_t nc_mesh, sc_MPI_Com
   std::pair<std::vector<int>, int> congruent_mesh_specifications
     = t8_nc_congruate_mesh_calculate_minimum_number_of_trees (nc_mesh);
 
-  t8_global_productionf ("The mesh should consist if trees:\nlon: %d, lat: %d, lev: %d\n",
+  t8_global_productionf ("The mesh should consist of trees:\nlon: %d, lat: %d, lev: %d\n",
                          congruent_mesh_specifications.first[nc_mesh_coord_id::lon],
                          congruent_mesh_specifications.first[nc_mesh_coord_id::lat],
                          congruent_mesh_specifications.first[nc_mesh_coord_id::lev]);
-  t8_global_productionf ("The initial refienment level is: %d\n", congruent_mesh_specifications.second);
+  t8_global_productionf ("The initial refinement level is: %d\n", congruent_mesh_specifications.second);
+
+  /* Build the cmesh accordingly to the calculated number of trees */
+  t8_cmesh_t cmesh = t8_cmesh_new_brick_wall (congruent_mesh_specifications.first[nc_mesh_coord_id::lon],
+                                              congruent_mesh_specifications.first[nc_mesh_coord_id::lat],
+                                              congruent_mesh_specifications.first[nc_mesh_coord_id::lev], comm);
+
+  /* Create a new uniform forest with the former calculated initial refinement level */
+  nc_mesh->forest
+    = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), congruent_mesh_specifications.second, 0, comm);
+
+  t8_forest_write_vtk (nc_mesh->forest, "Example_congruent_forest");
 
   return nc_mesh->forest;
 
