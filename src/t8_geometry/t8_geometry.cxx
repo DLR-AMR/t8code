@@ -294,6 +294,8 @@ t8_geometry_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_c
   double start_wtime = 0; /* Used for profiling. */
   /* The cmesh must be committed */
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
+/* The geometries do not expect the in- and output vector to be the same */ #
+  T8_ASSERT (ref_coords != out_coords);
   /* Get the geometry handler of the cmesh. */
   t8_geometry_handler_t *geom_handler = cmesh->geometry_handler;
   /* The handler must be committed. */
