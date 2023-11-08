@@ -2174,8 +2174,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8
         /* We check whether the element is really the element at this local id */
         {
           t8_locidx_t check_ltreeid;
-          t8_element_t *check_element;
-          check_element = t8_forest_get_element (forest, element_indices[ineigh], &check_ltreeid);
+          const t8_element_t *check_element = t8_forest_get_element (forest, element_indices[ineigh], &check_ltreeid);
           T8_ASSERT (check_ltreeid == lneigh_treeid);
           T8_ASSERT (!neigh_scheme->t8_element_compare (check_element, neighbor_leafs[ineigh]));
         }
@@ -2213,7 +2212,7 @@ void
 t8_forest_print_all_leaf_neighbors (t8_forest_t forest)
 {
   t8_locidx_t ltree, ielem;
-  t8_element_t *leaf, **neighbor_leafs;
+  t8_element_t **neighbor_leafs;
   int iface, num_neighbors, ineigh;
   t8_eclass_t eclass;
   t8_eclass_scheme_c *ts, *neigh_scheme;
@@ -2237,7 +2236,7 @@ t8_forest_print_all_leaf_neighbors (t8_forest_t forest)
   }
   for (ielem = 0; ielem < t8_forest_get_local_num_elements (forest); ielem++) {
     /* Get a pointer to the ielem-th element, its eclass, treeid and scheme */
-    leaf = t8_forest_get_element (forest, ielem, &ltree);
+    const t8_element_t *leaf = t8_forest_get_element (forest, ielem, &ltree);
     eclass = t8_forest_get_tree_class (forest, ltree);
     ts = t8_forest_get_eclass_scheme (forest, eclass);
     /* Iterate over all faces */
