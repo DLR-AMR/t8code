@@ -215,7 +215,7 @@ jobs:
     - name: make install
       run: cd build_serial_release && make install -j
     - name: make check
-      run: cd build_serial_release && make check -j V=0 CFLAGS="$CFLAGS_var_release -Werror" CXXFLAGS="$CXXFLAGS_var_release -Werror"
+      run: cd build_serial_release && make check -j8 V=0 CFLAGS="$CFLAGS_var_release -Werror" CXXFLAGS="$CXXFLAGS_var_release -Werror"
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v3
@@ -238,7 +238,7 @@ jobs:
     - name: make install
       run: cd build_serial_debug && make install -j
     - name: make check
-      run: cd build_serial_debug && make check -j V=0 CFLAGS="$CFLAGS_var_debug -Werror" CXXFLAGS="$CXXFLAGS_var_debug -Werror"
+      run: cd build_serial_debug && make check -j8 V=0 CFLAGS="$CFLAGS_var_debug -Werror" CXXFLAGS="$CXXFLAGS_var_debug -Werror"
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v3
