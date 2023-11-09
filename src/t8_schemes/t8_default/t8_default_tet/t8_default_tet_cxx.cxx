@@ -463,7 +463,7 @@ t8_default_scheme_tet_c::t8_element_root_len (const t8_element_t *elem) const
 }
 
 void
-t8_default_scheme_tet_c::t8_element_vertex_coords (const t8_element_t *elem, int vertex, int coords[]) const
+t8_default_scheme_tet_c::t8_element_vertex_integer_coords (const t8_element_t *elem, int vertex, int coords[]) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   t8_dtet_compute_coords ((const t8_default_tet_t *) elem, vertex, coords);

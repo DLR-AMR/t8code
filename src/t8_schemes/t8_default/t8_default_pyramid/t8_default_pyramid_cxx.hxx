@@ -514,7 +514,7 @@ struct t8_default_scheme_pyramid_c: public t8_default_scheme_common_c
    *                      whose entries will be filled with the coordinates of \a vertex.
    */
   virtual void
-  t8_element_vertex_coords (const t8_element_t *t, int vertex, int coords[]) const;
+  t8_element_vertex_integer_coords (const t8_element_t *t, int vertex, int coords[]) const;
 
   /** The tetrahedron schemes uses the general function to return the type of a tetrahedron.
    *  \param [in] elem An valid element

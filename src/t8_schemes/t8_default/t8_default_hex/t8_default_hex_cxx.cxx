@@ -550,7 +550,7 @@ t8_default_scheme_hex_c::t8_element_root_len (const t8_element_t *elem) const
 }
 
 void
-t8_default_scheme_hex_c::t8_element_vertex_coords (const t8_element_t *elem, int vertex, int coords[]) const
+t8_default_scheme_hex_c::t8_element_vertex_integer_coords (const t8_element_t *elem, int vertex, int coords[]) const
 {
   const p8est_quadrant_t *q1 = (const p8est_quadrant_t *) elem;
   int len;
@@ -574,7 +574,7 @@ t8_default_scheme_hex_c::t8_element_vertex_reference_coords (const t8_element_t 
   T8_ASSERT (0 <= vertex && vertex < 8);
 
   int coords_int[3];
-  t8_element_vertex_coords (elem, vertex, coords_int);
+  t8_element_vertex_integer_coords (elem, vertex, coords_int);
 
   /* We divide the integer coordinates by the root length of the hex
    * to obtain the reference coordinates. */
