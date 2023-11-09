@@ -320,7 +320,6 @@ t8_forest_is_equal (t8_forest_t forest_a, t8_forest_t forest_b)
   t8_locidx_t elems_in_tree_a, elems_in_tree_b;
   t8_locidx_t ielem;
   t8_locidx_t itree;
-  t8_element_t *elem_a, *elem_b;
   t8_eclass_scheme_c *ts_a, *ts_b;
 
   T8_ASSERT (t8_forest_is_committed (forest_a));
@@ -349,8 +348,8 @@ t8_forest_is_equal (t8_forest_t forest_a, t8_forest_t forest_b)
     }
     for (ielem = 0; ielem < elems_in_tree_a; ielem++) {
       /* Get pointers to both elements */
-      elem_a = t8_forest_get_element_in_tree (forest_a, itree, ielem);
-      elem_b = t8_forest_get_element_in_tree (forest_b, itree, ielem);
+      const t8_element_t *elem_a = t8_forest_get_element_in_tree (forest_a, itree, ielem);
+      const t8_element_t *elem_b = t8_forest_get_element_in_tree (forest_b, itree, ielem);
       /* check for equality */
       if (ts_a->t8_element_compare (elem_a, elem_b)) {
         /* The elements are not equal */

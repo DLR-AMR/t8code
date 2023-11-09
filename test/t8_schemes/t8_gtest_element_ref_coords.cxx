@@ -252,7 +252,7 @@ TEST_P (class_ref_coords, t8_check_elem_ref_coords)
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
     const t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, tree_class);
     for (ielement = 0; ielement < t8_forest_get_tree_num_elements (forest, itree); ielement++) {
-      t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
       t8_test_coords (forest, itree, element, ts);
     }
   }
