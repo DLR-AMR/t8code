@@ -563,10 +563,13 @@ t8_advect_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
     /* The element is not changed, copy phi and vol */
     memcpy (elem_data_in, elem_data_out, sizeof (t8_advect_element_data_t));
     t8_advect_element_set_phi_adapt (problem, first_incoming_data, phi_old);
+#if T8_ENABLE_DEBUG
     /* Get a pointer to the new element */
     const t8_element_t *element = t8_forest_get_element_in_tree (problem->forest_adapt, which_tree, first_incoming);
-    /* Set the neighbor entries to uninitialized */
+    /* Debug check number of faces */
     T8_ASSERT (elem_data_in->num_faces == ts->t8_element_num_faces (element));
+#endif
+    /* Set the neighbor entries to uninitialized */
     for (iface = 0; iface < elem_data_in->num_faces; iface++) {
       elem_data_in->num_neighbors[iface] = 0;
       elem_data_in->flux_valid[iface] = -1;
