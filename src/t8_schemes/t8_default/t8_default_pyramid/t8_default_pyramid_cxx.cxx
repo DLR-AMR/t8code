@@ -352,7 +352,7 @@ t8_default_scheme_pyramid_c::t8_element_anchor (const t8_element_t *elem, int an
 }
 
 void
-t8_default_scheme_pyramid_c::t8_element_vertex_coords (const t8_element_t *t, int vertex, int coords[]) const
+t8_default_scheme_pyramid_c::t8_element_vertex_integer_coords (const t8_element_t *t, int vertex, int coords[]) const
 {
   T8_ASSERT (t8_element_is_valid (t));
   t8_dpyramid_compute_coords ((const t8_dpyramid_t *) t, vertex, coords);
