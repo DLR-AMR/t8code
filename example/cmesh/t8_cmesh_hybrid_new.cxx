@@ -144,7 +144,7 @@ t8_basic_cake_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t w
  * \param[in] mesh The mesh to use. 
  * \param[in] balance A flag if the forest should be balanced
  * \param[in] prefix if \a do_vtk is set, the prefix of the vtk-output
- * \param[in] part A flag if the forest should be partitioned
+ * \param[in] part A flag if the cmesh should be partitioned
  */
 static void
 t8_basic_hybrid (int level, int endlvl, int do_vtk, t8_eclass_t eclass, int num_elements, int mesh, int balance,
