@@ -34,6 +34,21 @@
 #include <t8_cmesh_vtk_writer.h>
 #include <sc_statistics.h>
 
+/**
+ * Adaptation criterion for a forest containing hexahedra, tetrahedra, prisms and/or pryramids. 
+ * Refines every second element, except for pyramids. 
+ * Refines every pyramid
+ * 
+ * \param [in] forest the forest
+ * \param [in] forest_from 
+ * \param [in] which_tree The local id of the tree
+ * \param [in] lelement_id the local id of the element
+ * \param [in] ts the scheme to use
+ * \param [in] is_family flag, if the \a elements form a family
+ * \param [in] num_elements number of elements
+ * \param [in] elements A single element or a collection of \a num_elements
+ * \return int 
+ */
 static int
 t8_basic_hybrid_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
                         t8_eclass_scheme_c *ts, int is_family, int num_elements, t8_element_t *elements[])
@@ -244,10 +259,11 @@ main (int argc, char **argv)
   const char *file;
 
   /* long help message */
-  snprintf (help, BUFSIZ, "ADD EXAMPLE DESCRIPTION.\n\n"
-                          "Usage:\t%s <OPTIONS>\n\t%s -h\t"
-                          "for a brief overview of all options.\n",
-                          basename (argv[0]), basename (argv[0]));
+  snprintf (help, BUFSIZ,
+            "ADD EXAMPLE DESCRIPTION.\n\n"
+            "Usage:\t%s <OPTIONS>\n\t%s -h\t"
+            "for a brief overview of all options.\n",
+            basename (argv[0]), basename (argv[0]));
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
 
