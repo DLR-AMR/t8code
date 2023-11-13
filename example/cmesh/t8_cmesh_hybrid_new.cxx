@@ -150,21 +150,18 @@ static void
 t8_basic_hybrid (int level, int endlvl, int do_vtk, t8_eclass_t eclass, int num_elements, int mesh, int balance,
                  const char *prefix, int part)
 {
-  t8_forest_t forest, forest_adapt, forest_partition;
-  t8_cmesh_t cmesh, cmesh_partition;
-  char vtuname[BUFSIZ], cmesh_file[BUFSIZ];
-  int mpirank, mpiret;
-  double new_time = 0, adapt_time = 0, ghost_time = 0, partition_time = 0, total_time = 0, balance_time = 0;
+  /* Create and initialize timing stats */
   sc_statinfo_t times[6];
-  int procs_sent, balance_rounds;
-  t8_locidx_t ghost_sent;
   sc_stats_init (&times[0], "new");
   sc_stats_init (&times[1], "adapt");
   sc_stats_init (&times[2], "ghost");
   sc_stats_init (&times[3], "partition");
   sc_stats_init (&times[4], "balance");
   sc_stats_init (&times[5], "total");
-  total_time -= sc_MPI_Wtime ();
+  double total_time = -sc_MPI_Wtime ();
+
+  t8_cmesh_t cmesh;
+  /* Create the cmesh */
   switch (mesh) {
   case 0:
     t8_global_productionf ("Constructing cake mesh with %i pyramids.\n", num_elements);
@@ -195,15 +192,19 @@ t8_basic_hybrid (int level, int endlvl, int do_vtk, t8_eclass_t eclass, int num_
     return;
   }
 
-  mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
-  SC_CHECK_MPI (mpiret);
   if (part) {
+    /* Partition the cmesh */
+    t8_cmesh_t cmesh_partition;
     t8_cmesh_init (&cmesh_partition);
     t8_cmesh_set_derive (cmesh_partition, cmesh);
     t8_cmesh_set_partition_uniform (cmesh_partition, level, t8_scheme_new_default_cxx ());
     t8_cmesh_commit (cmesh_partition, sc_MPI_COMM_WORLD);
     cmesh = cmesh_partition;
   }
+
+  /* Save the cmesh (except for big cmeshes) and create vtk output if the flag is set. */
+  char vtuname[BUFSIZ];
+  char cmesh_file[BUFSIZ];
   snprintf (cmesh_file, BUFSIZ, "cmesh_hybrid");
   snprintf (vtuname, BUFSIZ, "cmesh_hybrid");
   if (mesh != 4) {
@@ -216,60 +217,72 @@ t8_basic_hybrid (int level, int endlvl, int do_vtk, t8_eclass_t eclass, int num_
     }
   }
 
-  t8_debugf ("[D] start forest\n");
+  /* Create the forest and measure the time needed for the initial refinement*/
+  t8_forest_t forest;
   t8_forest_init (&forest);
   t8_forest_set_profiling (forest, 1);
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
   t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
   t8_forest_set_level (forest, level);
-  new_time -= sc_MPI_Wtime ();
+  double new_time = -sc_MPI_Wtime ();
   t8_forest_commit (forest);
   new_time += sc_MPI_Wtime ();
+
   if (do_vtk) {
+    /* write the initially refined forest into a vtu-file*/
     snprintf (vtuname, BUFSIZ, "forest_hybrid");
     t8_forest_write_vtk (forest, vtuname);
-    t8_debugf ("[D] output to %s\n", vtuname);
   }
+
+  /* Initialize the adapted forest*/
+  t8_forest_t forest_adapt;
   t8_forest_init (&forest_adapt);
   t8_forest_set_user_data (forest_adapt, &endlvl);
   t8_forest_set_profiling (forest_adapt, 1);
+
+  /* Set the adaptation criterion to use. */
   if (eclass == T8_ECLASS_PYRAMID) {
-    t8_debugf ("Use cake-adapt\n");
     t8_forest_set_adapt (forest_adapt, forest, t8_basic_cake_refine, 1);
   }
   else {
     t8_forest_set_adapt (forest_adapt, forest, t8_basic_hybrid_refine, 1);
   }
-  //t8_forest_set_ghost_ext(forest_adapt, 1, T8_GHOST_FACES, 2);
-  adapt_time -= sc_MPI_Wtime ();
+  /* Measure the time needed to adapt */
+  double adapt_time = -sc_MPI_Wtime ();
   t8_forest_commit (forest_adapt);
   adapt_time += sc_MPI_Wtime ();
-  //t8_debugf ("Successfully adapted forest.\n");
-  //snprintf (vtuname, BUFSIZ, "forest_hybrid_refine");
-  //t8_forest_write_vtk (forest_adapt, vtuname);
-  //t8_debugf ("Output to %s\n", vtuname);
-  //t8_forest_unref(&forest_adapt);
-  /* Ensure that the correct forest is passed to unref later */
 
+  /* Initialize the partitioned forest */
+  t8_forest_t forest_partition;
   t8_forest_init (&forest_partition);
   t8_forest_set_partition (forest_partition, forest_adapt, 0);
+
+  /* We want to compute the ghosts, too */
   t8_forest_set_ghost (forest_partition, 1, T8_GHOST_FACES);
   if (balance) {
+    /* If set, the forest should be balanced */
     t8_forest_set_balance (forest_partition, forest_adapt, 1);
   }
+  /* Use the profiling algorithm to measure the time needed and also how many ghost elements are sent, 
+   *  how many procs we sent to and how many rounds we need to balance the forest. */
   t8_forest_set_profiling (forest_partition, 1);
   t8_forest_commit (forest_partition);
+
+  /* Write vtk-output*/
   if (do_vtk) {
     snprintf (vtuname, BUFSIZ, "forest_hybrid_partition");
     t8_forest_write_vtk (forest_partition, vtuname);
-    t8_debugf ("Output to %s\n", vtuname);
   }
-  t8_forest_print_profile (forest_partition);
-  partition_time += t8_forest_profile_get_partition_time (forest_partition, &procs_sent);
-  ghost_time += t8_forest_profile_get_ghost_time (forest_partition, &ghost_sent);
-  balance_time += t8_forest_profile_get_balance_time (forest_partition, &balance_rounds);
   total_time += sc_MPI_Wtime ();
+  int procs_sent;         /* Procs we sent to during forest_partition */
+  int balance_rounds;     /* Number of balance rounds */
+  t8_locidx_t ghost_sent; /* Number of ghost-elements we sent */
+  t8_forest_print_profile (forest_partition);
+  const double partition_time = t8_forest_profile_get_partition_time (forest_partition, &procs_sent);
+  const double ghost_time = t8_forest_profile_get_ghost_time (forest_partition, &ghost_sent);
+  const double balance_time = t8_forest_profile_get_balance_time (forest_partition, &balance_rounds);
 
+  /* Accumulate the timings over all procs and print the stats */
   sc_stats_accumulate (&times[0], new_time);
   sc_stats_accumulate (&times[1], adapt_time);
   sc_stats_accumulate (&times[2], ghost_time);
