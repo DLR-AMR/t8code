@@ -133,6 +133,19 @@ t8_basic_cake_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t w
   }
 }
 
+/**
+ * Creates a cmesh and forest using this cmesh and times all high-level algorithms (new, adapt, ghost, partition, ...)
+ * 
+ * \param[in] level The initial level of forest
+ * \param[in] endlvl The maximal level of the forest
+ * \param[in] do_vtk Flag, if vtk-output should be produced
+ * \param[in] eclass if \a mesh is set to use bigmesh or new_from_class the eclass to use in this cmesh
+ * \param[in] num_elements if \a mesh is set to use bigmesh or new_long_brick_pyramid the number of elements to use in the this cmesh
+ * \param[in] mesh The mesh to use. 
+ * \param[in] balance A flag if the forest should be balanced
+ * \param[in] prefix if \a do_vtk is set, the prefix of the vtk-output
+ * \param[in] part A flag if the forest should be partitioned
+ */
 static void
 t8_basic_hybrid (int level, int endlvl, int do_vtk, t8_eclass_t eclass, int num_elements, int mesh, int balance,
                  const char *prefix, int part)
