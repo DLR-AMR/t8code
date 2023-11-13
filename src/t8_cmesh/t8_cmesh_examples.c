@@ -953,12 +953,12 @@ t8_cmesh_set_vertices_2D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
       /* Map vertices of current quad on to respective trees inside. */
       if (eclass == T8_ECLASS_QUAD) {
         /* No mapping is required. */
-        const t8_locidx_t tree_id = quad_y_id * quads_x + quad_x_id;
+        const t8_gloidx_t tree_id = quad_y_id * quads_x + quad_x_id;
         t8_cmesh_set_tree_vertices (cmesh, tree_id, vertices, 4);
       }
       else {
         T8_ASSERT (eclass == T8_ECLASS_TRIANGLE);
-        const t8_locidx_t tree_id = (quad_y_id * quads_x + quad_x_id) * 2;
+        const t8_gloidx_t tree_id = (quad_y_id * quads_x + quad_x_id) * 2;
         double vertices_triangle[9];
         for (int i = 0; i < 3; i++) {
           vertices_triangle[i] = vertices[i];
@@ -1104,13 +1104,13 @@ t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
         t8_vec_axpyz (box, box_dir + 12, vertices + 9, 1.0); /* Vertex 3 */
 
         /* Map vertices of current hex on to respective trees inside. */
-        const t8_locidx_t hex_id = hex_z_id * hexs_y * hexs_x + hex_y_id * hexs_x + hex_x_id;
+        const t8_gloidx_t hex_id = hex_z_id * hexs_y * hexs_x + hex_y_id * hexs_x + hex_x_id;
         if (eclass == T8_ECLASS_HEX) {
           /* No mapping is required. */
           t8_cmesh_set_tree_vertices (cmesh, hex_id, vertices, 8);
         }
         else if (eclass == T8_ECLASS_TET) {
-          const t8_locidx_t tree_id_0 = hex_id * 6;
+          const t8_gloidx_t tree_id_0 = hex_id * 6;
           double vertices_tet[12];
           for (int i = 0; i < 3; i++) {
             vertices_tet[i] = vertices[i];
@@ -1147,7 +1147,7 @@ t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
         }
         else {
           T8_ASSERT (eclass == T8_ECLASS_PRISM);
-          const t8_locidx_t tree_id_0 = hex_id * 2;
+          const t8_gloidx_t tree_id_0 = hex_id * 2;
           double vertices_prism[18];
           for (int i = 0; i < 3; i++) {
             vertices_prism[i] = vertices[i];
@@ -1255,7 +1255,7 @@ t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass, sc_MPI_Comm comm, const do
     /* Set second vertex to lower end of line + line_dir */
     t8_vec_axpyz (vertices + 3, boundary, line_dir, 1.0);
 
-    for (t8_locidx_t tree_x = 0; tree_x < polygons_x; tree_x++) {
+    for (t8_gloidx_t tree_x = 0; tree_x < polygons_x; tree_x++) {
       t8_cmesh_set_tree_vertices (cmesh, tree_x, vertices, 2);
       /* Update vertices for next tree */
       t8_vec_axy (vertices, vertices + 3, 1.0);
