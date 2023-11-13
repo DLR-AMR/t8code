@@ -80,17 +80,35 @@ t8_basic_hybrid_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t
   }
 }
 
+/**
+ * An adaptation criterion to refine a forest. Specialized for a "cake" of pyramids (t8_cmesh_new_pyramid_cake)
+ * For non-pyramid-elements it refines every element. For a pyramid all type 6 pyramids and all type (0|2|4)-tets
+ * are refined. 
+ * 
+ * \param [in] forest the forest
+ * \param [in] forest_from 
+ * \param [in] which_tree The local id of the tree
+ * \param [in] lelement_id the local id of the element
+ * \param [in] ts the scheme to use
+ * \param [in] is_family flag, if the \a elements form a family
+ * \param [in] num_elements number of elements
+ * \param [in] elements A single element or a collection of \a num_elements
+ * \return int
+ */
 static int
 t8_basic_cake_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
                       t8_eclass_scheme_c *ts, int is_family, int num_elements, t8_element_t *elements[])
 {
   int level, type;
+  /*If the level is equal or higher than given by the user do not refine*/
   level = ts->t8_element_level (elements[0]);
   if (level >= *(int *) t8_forest_get_user_data (forest)) {
     return 0;
   }
   else {
     int32_t h = T8_DPYRAMID_LEN (level);
+    /* If the shape of element is a tet or a pyramid refine type 6 pyras and type (0|2|4) tets
+     * Refine every other shape. */
     switch (ts->t8_element_shape (elements[0])) {
     case T8_ECLASS_TET:
       type = ((t8_dtet_t *) elements[0])->type;
