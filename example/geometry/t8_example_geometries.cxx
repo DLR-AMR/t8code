@@ -84,15 +84,15 @@ class t8_geometry_sincos: public t8_geometry {
   }
 
   /**
-   * Map a point in  a point (x,y) in R^2 
+   * Maps points (x,y) in R^2 
    * to the point (x,y, 0.2 * sin(2PI X) * cos(2PI Y)).
    * It is specifically designed to work on two tree cmeshes and 
    * models the rectangle [0,2] x [0,1].
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f$ [0,1]^2 \f$.
-   * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
-   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
+   * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
@@ -141,12 +141,12 @@ class t8_geometry_moebius: public t8_geometry_with_vertices {
   }
 
   /**
-   * Map a point in a point in \f$ [0,1]^2 \f$ to the moebius band.
+   * Maps points in \f$ [0,1]^2 \f$ to the moebius band.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f$ [0,1]^2 \f$.
-   * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
-   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
+   * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
@@ -199,9 +199,9 @@ class t8_geometry_cylinder: public t8_geometry {
    * Map a reference point in the unit square to a cylinder.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f$ [0,1]^\mathrm{dim} \f$.
-   * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
-   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
+   * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
@@ -250,9 +250,9 @@ class t8_geometry_circle: public t8_geometry_with_vertices {
    * Map a reference point in the unit square to a circle.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f$ [0,1]^2 \f$.
-   * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
-   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
+   * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
@@ -310,9 +310,9 @@ class t8_geometry_moving: public t8_geometry {
    * Map a reference point in the unit square to a square distorted with time.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f$ [0,1]^2 \f$.
-   * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
-   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
+   * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
@@ -375,9 +375,9 @@ class t8_geometry_cube_zdistorted: public t8_geometry {
    * Map a reference point in the unit cube to a cube distorted in the z axis.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in \f$ [0,1]^3 \f$.
-   * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
-   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
+   * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
@@ -833,7 +833,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
       vertices[i * 24 + 4] = sin ((i + 1) * 2 * M_PI / num) * radius_inner;
       vertices[i * 24 + 5] = 0;
       vertices[i * 24 + 6] = cos (i * 2 * M_PI / num) * radius_outer;
-      vertices[i * 24 + 7] = sin ((i) *2 * M_PI / num) * radius_outer;
+      vertices[i * 24 + 7] = sin ((i) * 2 * M_PI / num) * radius_outer;
       vertices[i * 24 + 8] = 0;
       vertices[i * 24 + 9] = cos (i * 2 * M_PI / num) * radius_inner;
       vertices[i * 24 + 10] = sin (i * 2 * M_PI / num) * radius_inner;
@@ -845,7 +845,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
       vertices[i * 24 + 16] = sin ((i + 1) * 2 * M_PI / num) * radius_inner;
       vertices[i * 24 + 17] = 1;
       vertices[i * 24 + 18] = cos (i * 2 * M_PI / num) * radius_outer;
-      vertices[i * 24 + 19] = sin ((i) *2 * M_PI / num) * radius_outer;
+      vertices[i * 24 + 19] = sin ((i) * 2 * M_PI / num) * radius_outer;
       vertices[i * 24 + 20] = 1;
       vertices[i * 24 + 21] = cos (i * 2 * M_PI / num) * radius_inner;
       vertices[i * 24 + 22] = sin (i * 2 * M_PI / num) * radius_inner;

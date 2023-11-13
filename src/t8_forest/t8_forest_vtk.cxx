@@ -139,7 +139,7 @@ const double t8_forest_vtk_point_to_element_ref_coords[T8_ECLASS_COUNT][T8_FORES
         { 0, 0.5, 0 },  { -1, -1, -1 }, { -1, -1, -1 }, { -1, -1, -1 }, { -1, -1, -1 }, { -1, -1, -1 }, { -1, -1, -1 },
         { -1, -1, -1 }, { -1, -1, -1 }, { -1, -1, -1 }, { -1, -1, -1 }, { -1, -1, -1 }, { -1, -1, -1 } },
       { /* T8_ECLASS_TRIANGLE */
-        { 0, 0, 0 },    { 0, 1, 0 },    { 1, 1, 0 },    { 0, 0.5, 0 },  { 0.5, 1, 0 },  { 0.5, 0.5, 0 }, { -1, -1, -1 },
+        { 0, 0, 0 },    { 1, 0, 0 },    { 1, 1, 0 },    { 0, 0.5, 0 },  { 0.5, 1, 0 },  { 0.5, 0.5, 0 }, { -1, -1, -1 },
         { -1, -1, -1 }, { -1, -1, -1 }, { -1, -1, -1 }, { -1, -1, -1 }, { -1, -1, -1 }, { -1, -1, -1 },  { -1, -1, -1 },
         { -1, -1, -1 }, { -1, -1, -1 }, { -1, -1, -1 }, { -1, -1, -1 }, { -1, -1, -1 }, { -1, -1, -1 } },
       { /* T8_ECLASS_HEX */
@@ -152,7 +152,7 @@ const double t8_forest_vtk_point_to_element_ref_coords[T8_ECLASS_COUNT][T8_FORES
         { -1, -1, -1 },  { -1, -1, -1 },    { -1, -1, -1 },  { -1, -1, -1 }, { -1, -1, -1 },
         { -1, -1, -1 },  { -1, -1, -1 },    { -1, -1, -1 },  { -1, -1, -1 }, { -1, -1, -1 } },
       { /* T8_ECLASS_PRISM */
-        { 0, 0, 0 },   { 0, 1, 0 },     { 1, 1, 0 },    { 0, 0, 1 },    { 0, 1, 1 },     { 1, 1, 1 },   { 0, 0.5, 0 },
+        { 0, 0, 0 },   { 1, 0, 0 },     { 1, 1, 0 },    { 0, 0, 1 },    { 1, 0, 1 },     { 1, 1, 1 },   { 0, 0.5, 0 },
         { 0.5, 1, 0 }, { 0.5, 0.5, 0 }, { 0, 0.5, 1 },  { 0.5, 1, 1 },  { 0.5, 0.5, 1 }, { 0, 0, 0.5 }, { 0, 1, 0.5 },
         { 1, 1, 0.5 }, { -1, -1, -1 },  { -1, -1, -1 }, { -1, -1, -1 }, { -1, -1, -1 },  { -1, -1, -1 } },
       { /* T8_ECLASS_PYRAMID */
@@ -551,12 +551,7 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest, vtkSmartPointer<vtkUnstruc
     dataArrays[idata]->SetNumberOfTuples (num_elements);       /* We want number of tuples=number of elements */
     dataArrays[idata]->SetNumberOfComponents (num_components); /* Each tuples has 3 values */
     dataArrays[idata]->SetVoidArray (data[idata].data, num_elements * num_components, 1);
-    if (num_components == 1) {
-      unstructuredGrid->GetCellData ()->SetScalars (dataArrays[idata]);
-    }
-    else {
-      unstructuredGrid->GetCellData ()->SetVectors (dataArrays[idata]);
-    }
+    unstructuredGrid->GetCellData ()->AddArray (dataArrays[idata]);
   }
 
   /* We have to free the allocated memory for the cellTypes Array and the other arrays we allocated memory for. */

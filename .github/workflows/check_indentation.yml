@@ -51,11 +51,11 @@ jobs:
     runs-on: ubuntu-20.04
     timeout-minutes: 10
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Install indent
-      run: pip install clang-format
+      run: pip install clang-format==17.0.1
     - name: Indentation check
-      run: cd scripts/ && ./check_if_all_files_indented.scp > indent_script.out
+      run: cd scripts/ && ./check_if_all_files_indented.scp &2>1 > indent_script_output.txt
     - name: Archive script output
     # Do this regardess of the result of the previous step.
     # We especially want to upload the result when the check fails.
