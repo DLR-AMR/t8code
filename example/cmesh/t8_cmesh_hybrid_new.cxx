@@ -54,11 +54,13 @@ t8_basic_hybrid_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t
                         t8_eclass_scheme_c *ts, int is_family, int num_elements, t8_element_t *elements[])
 {
   int level, id;
+  /*If the level is equal or higher than given by the user do not refine*/
   level = ts->t8_element_level (elements[0]);
   if (level >= *(int *) t8_forest_get_user_data (forest)) {
     return 0;
   }
   else {
+    /*Refine every second element */
     switch (ts->t8_element_shape (elements[0])) {
     case T8_ECLASS_HEX:
       id = ts->t8_element_child_id (elements[0]);
@@ -70,6 +72,7 @@ t8_basic_hybrid_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t
       id = ts->t8_element_child_id (elements[0]);
       return id % 2 == 0 ? 1 : 0;
     case T8_ECLASS_PYRAMID:
+      /* Refine every element. */
       return 1;
     default:
       return 1;
