@@ -26,6 +26,7 @@ t8code_googletest_programs = \
   test/t8_schemes/t8_gtest_find_parent \
   test/t8_cmesh/t8_gtest_cmesh_face_is_boundary \
   test/t8_cmesh/t8_gtest_cmesh_partition \
+  test/t8_cmesh/t8_gtest_cmesh_set_partition_offsets \
   test/t8_cmesh/t8_gtest_cmesh_set_join_by_vertices \
   test/t8_forest/t8_gtest_element_volume \
   test/t8_cmesh/t8_gtest_multiple_attributes \
@@ -149,6 +150,10 @@ test_t8_cmesh_t8_gtest_cmesh_face_is_boundary_SOURCES = \
 test_t8_cmesh_t8_gtest_cmesh_partition_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_cmesh/t8_gtest_cmesh_partition.cxx
+
+test_t8_cmesh_t8_gtest_cmesh_set_partition_offsets_SOURCES = \
+  test/t8_gtest_main.cxx \
+  test/t8_cmesh/t8_gtest_cmesh_set_partition_offsets.cxx
   
 test_t8_forest_t8_gtest_element_volume_SOURCES = \
   test/t8_gtest_main.cxx \
@@ -339,6 +344,10 @@ test_t8_cmesh_t8_gtest_cmesh_partition_LDADD = $(t8_gtest_target_ld_add)
 test_t8_cmesh_t8_gtest_cmesh_partition_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_cmesh_t8_gtest_cmesh_partition_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
+test_t8_cmesh_t8_gtest_cmesh_set_partition_offsets_LDADD = $(t8_gtest_target_ld_add)
+test_t8_cmesh_t8_gtest_cmesh_set_partition_offsets_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_cmesh_t8_gtest_cmesh_set_partition_offsets_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+
 test_t8_forest_t8_gtest_element_volume_LDADD = $(t8_gtest_target_ld_add)
 test_t8_forest_t8_gtest_element_volume_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_forest_t8_gtest_element_volume_CPPFLAGS = $(t8_gtest_target_cpp_flags)
@@ -454,6 +463,7 @@ test_t8_schemes_t8_gtest_descendant_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_find_parent_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_cmesh_face_is_boundary_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_cmesh_partition_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_cmesh_t8_gtest_cmesh_set_partition_offsets_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_t8_gtest_element_volume_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_multiple_attributes_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_successor_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
