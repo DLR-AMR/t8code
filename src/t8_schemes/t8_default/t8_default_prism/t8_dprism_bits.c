@@ -389,13 +389,6 @@ t8_dprism_tree_face (const t8_dprism_t *p, int face)
   return face;
 }
 
-int
-t8_dprism_root_face_to_face (const t8_dprism_t *p, int root_face)
-{
-  T8_ASSERT (0 <= root_face && root_face < T8_DPRISM_FACES);
-  return root_face;
-}
-
 void
 t8_dprism_extrude_face (const t8_element_t *face, t8_element_t *elem, const int root_face)
 {
