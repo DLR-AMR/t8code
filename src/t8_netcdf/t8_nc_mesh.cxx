@@ -29,9 +29,7 @@ struct t8_nc_mesh
   int initial_refinement_level { 0 };
   t8_nc_data_ordering data_ordering { t8_nc_data_ordering::T8_LAYOUT_UNDEFINED };
   t8_forest_t forest { nullptr };
-  //int longitude_length { 0 };
-  //int latitude_length { 0 };
-  //int vertical_length { 0 };
+
   std::array<int, nc_mesh_coord_id::num_coords> coord_lengths { 0, 0, 0 };
   std::array<int, nc_mesh_coord_id::num_coords> congruent_mesh_num_trees_per_dimension { 0, 0, 0 };
 };
@@ -224,13 +222,13 @@ t8_nc_mesh_elem_inside_specific_rectangular_reference_geo_domain (const t8_eleme
 }
 
 /**
- * @brief Function determining whether the element (respectively the family of elements) lies completely outside of the geo mesh
+ * \brief Function determining whether the element (respectively the family of elements) lies completely outside of the geo mesh
  * 
- * @param adapt_data The adapt_data from the forest which will be adapted
- * @param num_elements The amount of elements passed to the current call of the adapt function
- * @param elements Pointer to the corresponding element(s of the family) 
- * @return true If all elements are outside of the geo mesh
- * @return false If at least one element is inside of the geo mesh
+ * \param adapt_data The adapt_data from the forest which will be adapted
+ * \param num_elements The amount of elements passed to the current call of the adapt function
+ * \param elements Pointer to the corresponding element(s of the family) 
+ * \return true If all elements are outside of the geo mesh
+ * \return false If at least one element is inside of the geo mesh
  */
 static inline bool
 t8_nc_mesh_all_elements_outside_rectangular_reference_geo_domain (t8_nc_mesh_t nc_mesh, t8_eclass_scheme_c* ts,
@@ -349,6 +347,14 @@ t8_nc_build_initial_rectangular_embedded_minimal_mesh (t8_nc_mesh_t nc_mesh, sc_
 #endif
 }
 
+/**
+ * \brief Using integer exponentiation by squaring
+ * 
+ * \param base The base value to be exponentiated
+ * \param exponent The exponent
+ * \return int The resulting value is the integer resulting from (base)^(exponent)
+ * TODO: maybe check for overflow during computation
+ */
 static int
 int_pow (int base, int exponent)
 {
@@ -378,6 +384,13 @@ int_pow (int base, int exponent)
 #endif
 }
 
+/**
+ * \brief This function calculates the minimum uniform refinement level for the forest resulting from the congruent cmesh.
+ *        The vector within the pair hold the number of trees per dimension of the congruent cmesh
+ * 
+ * \param [in] nc_mesh The struct holding the current information about the mesh which is ought to be built
+ * \return std::pair<std::vector<int>, int> A pair consisiting of a vector holding the amount of trees per dimension and the initial refinement level (for all trees)
+ */
 static std::pair<std::vector<int>, int>
 t8_nc_congruate_mesh_calculate_minimum_number_of_trees (t8_nc_mesh_t nc_mesh)
 {
@@ -408,8 +421,6 @@ t8_nc_congruate_mesh_calculate_minimum_number_of_trees (t8_nc_mesh_t nc_mesh)
   /* Get the number of children this element refines to */
   const int num_children = t8_element_num_children (scheme_eclass, representing_elem[0]);
 
-  t8_global_productionf ("Num children is %d\n", num_children);
-
   std::vector<int> max_refinement_level_per_tree_per_dimension;
   max_refinement_level_per_tree_per_dimension.reserve (nc_mesh->dimensionality);
 
@@ -434,7 +445,6 @@ t8_nc_congruate_mesh_calculate_minimum_number_of_trees (t8_nc_mesh_t nc_mesh)
           continue_ctree_computation = false;
           /* Store the computed refinement level of the trees */
           max_refinement_level_per_tree_per_dimension.push_back (ref_lvl);
-          t8_global_productionf ("ref lvl is: %d\n", ref_lvl);
         }
       }
     }

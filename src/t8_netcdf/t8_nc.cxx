@@ -1151,7 +1151,7 @@ t8_nc_build_initial_mesh (t8_nc_data_t nc_data, const enum t8_nc_geo_mesh_type m
   /* Save the dimensionality of the mesh to be constructed */
   t8_nc_mesh_set_dimensionality (nc_data->mesh, count_considered_dims);
 
-  /* Set the data ordering within the 'nc_mesh' struct (this corresponds to the axis ordering of the variables which is equal for all variables) */
+  /* Set the data ordering within the 'nc_mesh' struct (this corresponds to the axis ordering of the variables; which is equal for all variables) */
   t8_nc_mesh_set_data_ordering_scheme (nc_data->mesh,
                                        t8_nc_geo_variable_get_data_ordering_scheme (nc_data->vars.front ()));
 
@@ -1185,6 +1185,8 @@ t8_nc_build_initial_mesh (t8_nc_data_t nc_data, const enum t8_nc_geo_mesh_type m
   case t8_nc_geo_mesh_form::T8_NC_SPHERICAL:
     t8_errorf ("Building a spherical mesh is not yet implemented. Please, choose a 'rectangular' mesh.\n");
     break;
+  default:
+    t8_errorf ("The shape of the cmesh has not been specified.\n");
   }
 
 #endif
