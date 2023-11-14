@@ -104,7 +104,7 @@ t8_nc_mesh_calculate_rectangular_embedded_initial_refinement_level (t8_nc_mesh_t
 #endif
 }
 
-t8_forest_t
+void
 t8_nc_build_initial_rectangular_embedded_uniform_mesh (t8_nc_mesh_t nc_mesh, sc_MPI_Comm comm)
 {
 #ifdef T8_WITH_NETCDF
@@ -132,9 +132,6 @@ t8_nc_build_initial_rectangular_embedded_uniform_mesh (t8_nc_mesh_t nc_mesh, sc_
 
   /* Save the initial forest */
   nc_mesh->forest = initial_forest;
-
-  /* Return the forest */
-  return initial_forest;
 #endif
 }
 
@@ -328,22 +325,19 @@ t8_nc_mesh_coarsen_rectangular_embedded_uniform_mesh (t8_nc_mesh_t nc_mesh, t8_f
   return forest;
 }
 
-t8_forest_t
+void
 t8_nc_build_initial_rectangular_embedded_minimal_mesh (t8_nc_mesh_t nc_mesh, sc_MPI_Comm comm)
 {
 #ifdef T8_WITH_NETCDF
   /* Obtain the uniform embedded rectangular mesh */
-  t8_forest_t forest = t8_nc_build_initial_rectangular_embedded_uniform_mesh (nc_mesh, comm);
+  t8_nc_build_initial_rectangular_embedded_uniform_mesh (nc_mesh, comm);
 
   t8_global_productionf ("The data ordering is: %d and im: %d\n", nc_mesh->data_ordering, nc_mesh->dimensionality);
   /* Coarsen the mesh outside of the actual geo-spatial domain and save the coarsened forest */
-  nc_mesh->forest = t8_nc_mesh_coarsen_rectangular_embedded_uniform_mesh (nc_mesh, forest);
+  nc_mesh->forest = t8_nc_mesh_coarsen_rectangular_embedded_uniform_mesh (nc_mesh, nc_mesh->forest);
 
   t8_global_productionf ("The coarsened embedded rectangular mesh contains %ld elements.\n",
                          t8_forest_get_global_num_elements (nc_mesh->forest));
-
-  /* Return the forest */
-  return nc_mesh->forest;
 #endif
 }
 
@@ -498,7 +492,7 @@ t8_nc_congruate_mesh_calculate_minimum_number_of_trees (t8_nc_mesh_t nc_mesh)
 #endif
 }
 
-t8_forest_t
+void
 t8_nc_build_initial_rectangular_congruent_mesh (t8_nc_mesh_t nc_mesh, sc_MPI_Comm comm)
 {
 #ifdef T8_WITH_NETCDF
@@ -525,8 +519,5 @@ t8_nc_build_initial_rectangular_congruent_mesh (t8_nc_mesh_t nc_mesh, sc_MPI_Com
     = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), congruent_mesh_specifications.second, 0, comm);
 
   t8_forest_write_vtk (nc_mesh->forest, "Example_congruent_forest");
-
-  return nc_mesh->forest;
-
 #endif
 }

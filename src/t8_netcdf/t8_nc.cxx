@@ -1160,9 +1160,6 @@ t8_nc_build_initial_mesh (t8_nc_data_t nc_data, const enum t8_nc_geo_mesh_type m
   t8_nc_mesh_set_latitude_length (nc_data->mesh, static_cast<int> (nc_data->coord_lengths[t8_coord_ids::T8_LAT]));
   t8_nc_mesh_set_vertical_length (nc_data->mesh, static_cast<int> (nc_data->coord_lengths[t8_coord_ids::T8_LEV]));
 
-  /* Declare a forest variable */
-  t8_forest_t forest;
-
   /* Check first which mesh form should be built (Currently, only a rectangular mesh is possible) */
   switch (mesh_form) {
   case t8_nc_geo_mesh_form::T8_NC_RECTANGULAR:
@@ -1171,11 +1168,11 @@ t8_nc_build_initial_mesh (t8_nc_data_t nc_data, const enum t8_nc_geo_mesh_type m
     switch (mesh_type) {
     case t8_nc_geo_mesh_type::T8_NC_EMBEDDED_MESH:
       /* In case an embedded mesh has been chosen (embedding the geo-spatial domain into a larger mesh) */
-      forest = t8_nc_build_initial_rectangular_embedded_minimal_mesh (nc_data->mesh, nc_data->comm);
+      t8_nc_build_initial_rectangular_embedded_minimal_mesh (nc_data->mesh, nc_data->comm);
       break;
     case t8_nc_geo_mesh_type::T8_NC_CONGRUENT_MESH:
       /* In case a 'congruent' mesh has been chosen (resembling only and fully the geo-spatial domain of the data) */
-      forest = t8_nc_build_initial_rectangular_congruent_mesh (nc_data->mesh, nc_data->comm);
+      t8_nc_build_initial_rectangular_congruent_mesh (nc_data->mesh, nc_data->comm);
       break;
     default:
       t8_errorf ("A not supported mesh type has been selected for the geo-spatial netCDF data. Please, choose either "

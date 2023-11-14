@@ -49,7 +49,7 @@ main (int argc, char **argv)
 
   const size_t start_ptr[3] = { 0, 0, 0 };  //Example netCDF File
   //const size_t count_ptr[3] = { 1, 73, 144 };  //Example netCDF File
-  const size_t count_ptr[3] = { 1, 64, 114 };  //Test count ptr
+  const size_t count_ptr[3] = { 1, 64, 96 };  //Test count ptr
 
   const enum t8_nc_geo_mesh_type mesh_type = T8_NC_CONGRUENT_MESH;
   const enum t8_nc_geo_mesh_form mesh_form = T8_NC_RECTANGULAR;

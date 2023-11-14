@@ -13,13 +13,13 @@ t8_nc_mesh_create ();
 void
 t8_nc_mesh_destroy (t8_nc_mesh_t mesh);
 
-t8_forest_t
+void
 t8_nc_build_initial_rectangular_embedded_minimal_mesh (t8_nc_mesh_t mesh, sc_MPI_Comm comm);
 
-t8_forest_t
+void
 t8_nc_build_initial_rectangular_embedded_uniform_mesh (t8_nc_mesh_t mesh, sc_MPI_Comm comm);
 
-t8_forest_t
+void
 t8_nc_build_initial_rectangular_congruent_mesh (t8_nc_mesh_t nc_mesh, sc_MPI_Comm comm);
 
 void
