@@ -81,74 +81,14 @@ t8_basic_hybrid_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t
 }
 
 /**
- * An adaptation criterion to refine a forest. Specialized for a "cake" of pyramids (t8_cmesh_new_pyramid_cake)
- * For non-pyramid-elements it refines every element. For a pyramid all type 6 pyramids and all type (0|2|4)-tets
- * are refined. 
- * 
- * \param [in] forest the forest
- * \param [in] forest_from 
- * \param [in] which_tree The local id of the tree
- * \param [in] lelement_id the local id of the element
- * \param [in] ts the scheme to use
- * \param [in] is_family flag, if the \a elements form a family
- * \param [in] num_elements number of elements
- * \param [in] elements A single element or a collection of \a num_elements
- * \return int
- */
-static int
-t8_basic_cake_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                      t8_eclass_scheme_c *ts, int is_family, int num_elements, t8_element_t *elements[])
-{
-  int level, type;
-  /*If the level is equal or higher than given by the user do not refine*/
-  level = ts->t8_element_level (elements[0]);
-  if (level >= *(int *) t8_forest_get_user_data (forest)) {
-    return 0;
-  }
-  else {
-    int32_t h = T8_DPYRAMID_LEN (level);
-    /* If the shape of element is a tet or a pyramid refine type 6 pyras and type (0|2|4) tets
-     * Refine every other shape. */
-    switch (ts->t8_element_shape (elements[0])) {
-    case T8_ECLASS_TET:
-      type = ((t8_dtet_t *) elements[0])->type;
-      if (type == 0 || type == 2 || type == 4) {
-        return 1;
-      }
-      else {
-        return 0;
-      }
-    case T8_ECLASS_PYRAMID:
-
-      if (!(((t8_dpyramid_t *) elements[0])->pyramid.x & h)) {
-        type = ((t8_dpyramid_t *) elements[0])->pyramid.type;
-        return type == 6 ? 1 : 0;
-      }
-      else {
-        return 0;
-      }
-    default:
-      return 1;
-    }
-  }
-}
-
-/**
  * Creates a cmesh and forest using this cmesh and times all high-level algorithms (new, adapt, ghost, partition, ...)
  * 
  * \param[in] level The initial level of forest
  * \param[in] endlvl The maximal level of the forest
  * \param[in] do_vtk Flag, if vtk-output should be produced
- * \param[in] eclass if \a mesh is set to use bigmesh or new_from_class the eclass to use in this cmesh
- * \param[in] num_elements if \a mesh is set to use bigmesh or new_long_brick_pyramid the number of elements to use in the this cmesh
- * \param[in] mesh The mesh to use. 
- * \param[in] balance A flag if the forest should be balanced
- * \param[in] prefix if \a do_vtk is set, the prefix of the vtk-output
- * \param[in] part A flag if the cmesh should be partitioned
  */
 static void
-t8_basic_hybrid (int level, int endlvl, int do_vtk, t8_eclass_t eclass, int num_elements, int mesh, int balance,
-                 const char *prefix, int part)
+t8_basic_hybrid (const int level, int endlvl, const int do_vtk)
 {
   /* Create and initialize timing stats */
   sc_statinfo_t times[6];
@@ -156,65 +96,33 @@ t8_basic_hybrid (int level, int endlvl, int do_vtk, t8_eclass_t eclass, int num_
   sc_stats_init (&times[1], "adapt");
   sc_stats_init (&times[2], "ghost");
   sc_stats_init (&times[3], "partition");
-  sc_stats_init (&times[4], "balance");
-  sc_stats_init (&times[5], "total");
+  sc_stats_init (&times[4], "total");
   double total_time = -sc_MPI_Wtime ();
 
   t8_cmesh_t cmesh;
   /* Create the cmesh */
-  switch (mesh) {
-  case 0:
-    t8_global_productionf ("Constructing cake mesh with %i pyramids.\n", num_elements);
-    cmesh = t8_cmesh_new_pyramid_cake (sc_MPI_COMM_WORLD, num_elements);
-    break;
-  case 1:
-    t8_global_productionf ("Constructing full hybrid mesh.\n");
-    cmesh = t8_cmesh_new_full_hybrid (sc_MPI_COMM_WORLD);
-    break;
-  case 2:
-    t8_global_productionf ("Constructing long brick out of %i pyramids.\n", num_elements);
-    cmesh = t8_cmesh_new_long_brick_pyramid (sc_MPI_COMM_WORLD, num_elements);
-    break;
-  case 3:
-    t8_global_productionf ("Constructing mesh from: %s.\n", prefix);
-    cmesh = t8_cmesh_from_msh_file ((char *) prefix, 0, sc_MPI_COMM_WORLD, 3, 0, 0);
-    break;
-  case 4:
-    t8_global_productionf ("Constructing bigmesh with %i elements.\n", num_elements);
-    cmesh = t8_cmesh_new_bigmesh (eclass, num_elements, sc_MPI_COMM_WORLD);
-    break;
-  case 5:
-    t8_global_productionf ("Constructing a single %s.\n", t8_eclass_to_string[eclass]);
-    cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
-    break;
-  default:
-    SC_ABORT ("NO CMESH");
-    return;
-  }
+  t8_global_productionf ("Constructing full hybrid mesh.\n");
+  cmesh = t8_cmesh_new_full_hybrid (sc_MPI_COMM_WORLD);
 
-  if (part) {
-    /* Partition the cmesh */
-    t8_cmesh_t cmesh_partition;
-    t8_cmesh_init (&cmesh_partition);
-    t8_cmesh_set_derive (cmesh_partition, cmesh);
-    t8_cmesh_set_partition_uniform (cmesh_partition, level, t8_scheme_new_default_cxx ());
-    t8_cmesh_commit (cmesh_partition, sc_MPI_COMM_WORLD);
-    cmesh = cmesh_partition;
-  }
+  /* Partition the cmesh */
+  t8_cmesh_t cmesh_partition;
+  t8_cmesh_init (&cmesh_partition);
+  t8_cmesh_set_derive (cmesh_partition, cmesh);
+  t8_cmesh_set_partition_uniform (cmesh_partition, level, t8_scheme_new_default_cxx ());
+  t8_cmesh_commit (cmesh_partition, sc_MPI_COMM_WORLD);
+  cmesh = cmesh_partition;
 
-  /* Save the cmesh (except for big cmeshes) and create vtk output if the flag is set. */
+  /* Save the cmesh and create vtk output if the flag is set. */
   char vtuname[BUFSIZ];
   char cmesh_file[BUFSIZ];
   snprintf (cmesh_file, BUFSIZ, "cmesh_hybrid");
   snprintf (vtuname, BUFSIZ, "cmesh_hybrid");
-  if (mesh != 4) {
-    t8_cmesh_save (cmesh, cmesh_file);
-    if (t8_cmesh_vtk_write_file (cmesh, vtuname, 1.0) == 0) {
-      t8_debugf ("Output to %s\n", vtuname);
-    }
-    else {
-      t8_debugf ("Error in output\n");
-    }
+  t8_cmesh_save (cmesh, cmesh_file);
+  if (t8_cmesh_vtk_write_file (cmesh, vtuname, 1.0) == 0) {
+    t8_debugf ("Output to %s\n", vtuname);
+  }
+  else {
+    t8_debugf ("Error in output\n");
   }
 
   /* Create the forest and measure the time needed for the initial refinement*/
@@ -241,12 +149,8 @@ t8_basic_hybrid (int level, int endlvl, int do_vtk, t8_eclass_t eclass, int num_
   t8_forest_set_profiling (forest_adapt, 1);
 
   /* Set the adaptation criterion to use. */
-  if (eclass == T8_ECLASS_PYRAMID) {
-    t8_forest_set_adapt (forest_adapt, forest, t8_basic_cake_refine, 1);
-  }
-  else {
-    t8_forest_set_adapt (forest_adapt, forest, t8_basic_hybrid_refine, 1);
-  }
+  t8_forest_set_adapt (forest_adapt, forest, t8_basic_hybrid_refine, 1);
+
   /* Measure the time needed to adapt */
   double adapt_time = -sc_MPI_Wtime ();
   t8_forest_commit (forest_adapt);
@@ -259,10 +163,6 @@ t8_basic_hybrid (int level, int endlvl, int do_vtk, t8_eclass_t eclass, int num_
 
   /* We want to compute the ghosts, too */
   t8_forest_set_ghost (forest_partition, 1, T8_GHOST_FACES);
-  if (balance) {
-    /* If set, the forest should be balanced */
-    t8_forest_set_balance (forest_partition, forest_adapt, 1);
-  }
   /* Use the profiling algorithm to measure the time needed and also how many ghost elements are sent, 
    *  how many procs we sent to and how many rounds we need to balance the forest. */
   t8_forest_set_profiling (forest_partition, 1);
@@ -275,22 +175,19 @@ t8_basic_hybrid (int level, int endlvl, int do_vtk, t8_eclass_t eclass, int num_
   }
   total_time += sc_MPI_Wtime ();
   int procs_sent;         /* Procs we sent to during forest_partition */
-  int balance_rounds;     /* Number of balance rounds */
   t8_locidx_t ghost_sent; /* Number of ghost-elements we sent */
   t8_forest_print_profile (forest_partition);
   const double partition_time = t8_forest_profile_get_partition_time (forest_partition, &procs_sent);
   const double ghost_time = t8_forest_profile_get_ghost_time (forest_partition, &ghost_sent);
-  const double balance_time = t8_forest_profile_get_balance_time (forest_partition, &balance_rounds);
 
   /* Accumulate the timings over all procs and print the stats */
   sc_stats_accumulate (&times[0], new_time);
   sc_stats_accumulate (&times[1], adapt_time);
   sc_stats_accumulate (&times[2], ghost_time);
   sc_stats_accumulate (&times[3], partition_time);
-  sc_stats_accumulate (&times[4], balance_time);
-  sc_stats_accumulate (&times[5], total_time);
-  sc_stats_compute (sc_MPI_COMM_WORLD, 6, times);
-  sc_stats_print (t8_get_package_id (), SC_LP_ESSENTIAL, 6, times, 1, 1);
+  sc_stats_accumulate (&times[4], total_time);
+  sc_stats_compute (sc_MPI_COMM_WORLD, 5, times);
+  sc_stats_print (t8_get_package_id (), SC_LP_ESSENTIAL, 5, times, 1, 1);
 
   t8_forest_unref (&forest_partition);
 }
@@ -298,12 +195,12 @@ t8_basic_hybrid (int level, int endlvl, int do_vtk, t8_eclass_t eclass, int num_
 int
 main (int argc, char **argv)
 {
-  int mpiret, parsed;
-  int level, endlvl, helpme, do_vtk, eclass_int, mesh, elements, balance, part;
-  t8_eclass_t eclass;
+  int level;
+  int endlvl;
+  int helpme;
+  int do_vtk;
   sc_options_t *opt;
   char help[BUFSIZ];
-  const char *file;
 
   /* long help message */
   snprintf (help, BUFSIZ,
@@ -311,7 +208,7 @@ main (int argc, char **argv)
             "Usage:\t%s <OPTIONS>\n\t%s -h\t"
             "for a brief overview of all options.\n",
             basename (argv[0]), basename (argv[0]));
-  mpiret = sc_MPI_Init (&argc, &argv);
+  int mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
 
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
@@ -322,37 +219,15 @@ main (int argc, char **argv)
   sc_options_add_int (opt, 'l', "level", &level, 0, "The refinement level of the mesh.");
   sc_options_add_int (opt, 'f', "final-level", &endlvl, 1, "The final refinement level of the mesh.");
   sc_options_add_switch (opt, 'v', "vtk", &do_vtk, "Enable vtk-output.");
-  sc_options_add_switch (opt, 'b', "balance", &balance, "Enable balance");
-  sc_options_add_switch (opt, 'p', "partition", &part, "Enable cmesh-partition");
-  sc_options_add_int (opt, 'e', "element", &eclass_int, 4,
-                      "Given an element-class, the program will "
-                      " construct a single element of this class. Is ignored, if the option cake is chosen."
-                      "The type of elements to use.\n"
-                      "\t\t4 - hexahedron\n"
-                      "\t\t5 - tetrahedron\n\t\t6 - prism\n\t\t7 - pyramid");
-  sc_options_add_int (opt, 'm', "mesh", &mesh, 5,
-                      "A mesh to choose from."
-                      " The meshes to chose from are: \n"
-                      "\t\t0 - cake of pyramids\n\t\t1 - hybrid mesh with all 3D elements"
-                      "\n\t\t2 - a long row of bricks out of pyramids"
-                      "\n\t\t3 - user-specific mesh-file"
-                      "\n\t\t4 - construct multiple elements of class given by -e"
-                      "\n\t\t5 - a single element of class -e");
-  sc_options_add_int (opt, 'n', "num_elements", &elements, 3,
-                      "The number of elements to use"
-                      " if a m0 or m4 is build. Has to be larger than 2.");
-  sc_options_add_string (opt, 'g', "mshfile", &file, "NULL", "Prefix of the msh-file.");
 
-  parsed = sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT, opt, argc, argv);
+  const int parsed = sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT, opt, argc, argv);
   if (helpme) {
     /* display help message and usage */
     t8_global_productionf ("%s\n", help);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-  else if (parsed >= 0 && 0 <= level && 4 <= eclass_int && eclass_int < T8_ECLASS_COUNT && elements >= 2 && 0 <= mesh
-           && mesh < 6) {
-    eclass = (t8_eclass_t) eclass_int;
-    t8_basic_hybrid (level, endlvl, do_vtk, eclass, elements, mesh, balance, file, part);
+  else if (parsed >= 0 && 0 <= level) {
+    t8_basic_hybrid (level, endlvl, do_vtk);
   }
   else {
     /* wrong usage */
