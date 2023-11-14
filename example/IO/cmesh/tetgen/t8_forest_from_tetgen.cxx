@@ -40,7 +40,7 @@ t8_cmesh_from_tetgen (const char *prefix, int do_partition)
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
 
-  cmesh = t8_cmesh_from_tetgen_file ((char *) prefix, do_partition, sc_MPI_COMM_WORLD, 0);
+  cmesh = t8_cmesh_from_tetgen_file ((char *) prefix, do_partition, sc_MPI_COMM_WORLD);
   if (cmesh != NULL) {
     t8_debugf ("Successfully constructed cmesh from %s files.\n", prefix);
     t8_debugf ("cmesh has:\n\t%lli tetrahedra\n", (long long) t8_cmesh_get_num_trees (cmesh));

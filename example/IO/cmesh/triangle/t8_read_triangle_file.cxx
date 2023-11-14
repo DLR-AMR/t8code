@@ -28,7 +28,7 @@
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
 void
-t8_read_triangle_file_build_cmesh (const char *prefix, int do_dup, int do_partition)
+t8_read_triangle_file_build_cmesh (const char *prefix, int do_partition)
 {
   t8_cmesh_t cmesh;
   char fileprefix[BUFSIZ];
@@ -37,7 +37,7 @@ t8_read_triangle_file_build_cmesh (const char *prefix, int do_dup, int do_partit
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
 
-  cmesh = t8_cmesh_from_triangle_file ((char *) prefix, do_partition, sc_MPI_COMM_WORLD, do_dup);
+  cmesh = t8_cmesh_from_triangle_file ((char *) prefix, do_partition, sc_MPI_COMM_WORLD);
 
   if (cmesh != NULL) {
     if (do_partition) {
@@ -110,7 +110,7 @@ main (int argc, char *argv[])
     return 1;
   }
   else {
-    t8_read_triangle_file_build_cmesh (prefix, 0, partition);
+    t8_read_triangle_file_build_cmesh (prefix, partition);
     sc_options_print_summary (t8_get_package_id (), SC_LP_PRODUCTION, opt);
   }
 

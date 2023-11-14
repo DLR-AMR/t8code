@@ -30,7 +30,7 @@
 #include <sc_options.h>
 
 void
-t8_read_tetgen_file_build_cmesh (const char *prefix, int do_dup, int do_partition)
+t8_read_tetgen_file_build_cmesh (const char *prefix, int do_partition)
 {
   t8_cmesh_t cmesh;
   int mpirank, mpiret;
@@ -41,8 +41,7 @@ t8_read_tetgen_file_build_cmesh (const char *prefix, int do_dup, int do_partitio
   SC_CHECK_MPI (mpiret);
 
   sc_flops_start (&fi);
-  cmesh = t8_cmesh_from_tetgen_file_time ((char *) prefix, do_partition, sc_MPI_COMM_WORLD, do_dup, &fi, &snapshot,
-                                          stats, 0);
+  cmesh = t8_cmesh_from_tetgen_file_time ((char *) prefix, do_partition, sc_MPI_COMM_WORLD, &fi, &snapshot, stats, 0);
   if (cmesh != NULL) {
     t8_debugf ("Successfully constructed cmesh from %s files.\n", prefix);
     t8_debugf ("cmesh has:\n\t%lli tetrahedra %li local\n", (long long) t8_cmesh_get_num_trees (cmesh),
@@ -97,7 +96,7 @@ main (int argc, char *argv[])
     return 1;
   }
   else {
-    t8_read_tetgen_file_build_cmesh (prefix, 0, partition);
+    t8_read_tetgen_file_build_cmesh (prefix, partition);
     sc_options_print_summary (t8_get_package_id (), SC_LP_PRODUCTION, opt);
   }
 
