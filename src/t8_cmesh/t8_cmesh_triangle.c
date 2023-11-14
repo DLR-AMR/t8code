@@ -441,9 +441,8 @@ die_neigh:
   return -1;
 }
 
-/* TODO: remove do_dup argument */
 static t8_cmesh_t
-t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_Comm comm, int do_dup, int dim)
+t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_Comm comm, int dim)
 {
   int mpirank, mpisize, mpiret;
   t8_cmesh_t cmesh;
@@ -524,7 +523,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_C
 }
 
 static t8_cmesh_t
-t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix, int partition, sc_MPI_Comm comm, int do_dup, int dim,
+t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix, int partition, sc_MPI_Comm comm, int dim,
                                             sc_flopinfo_t *fi, sc_flopinfo_t *snapshot, sc_statinfo_t *stats,
                                             int statindex)
 {
@@ -607,21 +606,20 @@ t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix, int partition, sc_
 }
 
 t8_cmesh_t
-t8_cmesh_from_triangle_file (char *fileprefix, int partition, sc_MPI_Comm comm, int do_dup)
+t8_cmesh_from_triangle_file (char *fileprefix, int partition, sc_MPI_Comm comm)
 {
-  return t8_cmesh_from_tetgen_or_triangle_file (fileprefix, partition, comm, do_dup, 2);
+  return t8_cmesh_from_tetgen_or_triangle_file (fileprefix, partition, comm, 2);
 }
 
 t8_cmesh_t
-t8_cmesh_from_tetgen_file_time (char *fileprefix, int partition, sc_MPI_Comm comm, int do_dup, sc_flopinfo_t *fi,
+t8_cmesh_from_tetgen_file_time (char *fileprefix, int partition, sc_MPI_Comm comm, sc_flopinfo_t *fi,
                                 sc_flopinfo_t *snapshot, sc_statinfo_t *stats, int statentry)
 {
-  return t8_cmesh_from_tetgen_or_triangle_file_time (fileprefix, partition, comm, do_dup, 3, fi, snapshot, stats,
-                                                     statentry);
+  return t8_cmesh_from_tetgen_or_triangle_file_time (fileprefix, partition, comm, 3, fi, snapshot, stats, statentry);
 }
 
 t8_cmesh_t
-t8_cmesh_from_tetgen_file (char *fileprefix, int partition, sc_MPI_Comm comm, int do_dup)
+t8_cmesh_from_tetgen_file (char *fileprefix, int partition, sc_MPI_Comm comm)
 {
-  return t8_cmesh_from_tetgen_or_triangle_file (fileprefix, partition, comm, do_dup, 3);
+  return t8_cmesh_from_tetgen_or_triangle_file (fileprefix, partition, comm, 3);
 }
