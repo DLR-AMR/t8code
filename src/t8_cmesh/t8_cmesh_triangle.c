@@ -75,7 +75,7 @@ t8_cmesh_triangle_read_next_line (char **line, size_t *n, FILE *fp)
  * On success the index of the first node is returned (0 or 1).
  * On failure -1 is returned. */
 static int
-t8_cmesh_triangle_read_nodes (t8_cmesh_t cmesh, char *filename, double **vertices, long *num_corners, int dim)
+t8_cmesh_triangle_read_nodes (t8_cmesh_t cmesh,const char *filename, double **vertices, long *num_corners, int dim)
 {
   FILE *fp;
   char *line = (char *) malloc (1024);
@@ -170,7 +170,7 @@ die_node:
  *       in this list.
  */
 static int
-t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset, char *filename, double *vertices, int dim
+t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset, const char *filename, double *vertices, int dim
 #ifdef T8_ENABLE_DEBUG
                              ,
                              long num_vertices
@@ -292,7 +292,7 @@ die_ele:
  * On success 0 is returned.
  * On failure -1 is returned. */
 static int
-t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset, char *filename, int dim)
+t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset, const char *filename, int dim)
 {
   FILE *fp;
   char *line = (char *) malloc (1024);
@@ -442,14 +442,12 @@ die_neigh:
 }
 
 static t8_cmesh_t
-t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_Comm comm, int dim)
+t8_cmesh_from_tetgen_or_triangle_file (const char *fileprefix, const int partition, sc_MPI_Comm comm, const int dim)
 {
   int mpirank, mpisize, mpiret;
   t8_cmesh_t cmesh;
   double *vertices;
   long num_vertices;
-  t8_gloidx_t first_tree, last_tree;
-
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
@@ -457,13 +455,12 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_C
 
   cmesh = NULL;
   if (mpirank == 0 || partition) {
-    int retval, corner_offset;
     char current_file[BUFSIZ];
 
     t8_cmesh_init (&cmesh);
     /* read .node file */
     snprintf (current_file, BUFSIZ, "%s.node", fileprefix);
-    retval = t8_cmesh_triangle_read_nodes (cmesh, current_file, &vertices, &num_vertices, dim);
+    int retval = t8_cmesh_triangle_read_nodes (cmesh, current_file, &vertices, &num_vertices, dim);
     if (retval != 0 && retval != 1) {
       t8_global_errorf ("Error while parsing file %s.\n", current_file);
       t8_cmesh_unref (&cmesh);
@@ -471,7 +468,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_C
     }
     else {
       /* read .ele file */
-      corner_offset = retval;
+      int corner_offset = retval;
       snprintf (current_file, BUFSIZ, "%s.ele", fileprefix);
       retval = t8_cmesh_triangle_read_eles (cmesh, corner_offset, current_file, vertices, dim
 #ifdef T8_ENABLE_DEBUG
@@ -496,9 +493,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_C
     }
     T8_ASSERT (cmesh != NULL);
   }
-  /* TODO: broadcasting NULL does not work. We need a way to tell the
-   *       other processes if something went wrong. */
-  /* This broadcasts the NULL pointer if anything went wrong */
+   /* This broadcasts the NULL pointer if anything went wrong */
   if (!partition) {
     cmesh = t8_cmesh_bcast (cmesh, 0, comm);
   }
@@ -509,8 +504,8 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_C
     /* We need to set the geometry after the broadcast. */
     t8_cmesh_register_geometry (cmesh, linear_geom);
     if (partition) {
-      first_tree = (mpirank * cmesh->num_trees) / mpisize;
-      last_tree = ((mpirank + 1) * cmesh->num_trees) / mpisize - 1;
+      t8_gloidx_t first_tree = (mpirank * cmesh->num_trees) / mpisize;
+      t8_gloidx_t last_tree = ((mpirank + 1) * cmesh->num_trees) / mpisize - 1;
       t8_debugf ("Partition range [%lli,%lli]\n", (long long) first_tree, (long long) last_tree);
       t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
     }
@@ -519,7 +514,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_C
 }
 
 static t8_cmesh_t
-t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix, int partition, sc_MPI_Comm comm, int dim,
+t8_cmesh_from_tetgen_or_triangle_file_time (const char *fileprefix, int partition, sc_MPI_Comm comm, int dim,
                                             sc_flopinfo_t *fi, sc_flopinfo_t *snapshot, sc_statinfo_t *stats,
                                             int statindex)
 {
