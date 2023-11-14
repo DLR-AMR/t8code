@@ -251,7 +251,17 @@ t8_cmesh_t
 t8_cmesh_new_disjoint_bricks (t8_gloidx_t num_x, t8_gloidx_t num_y, t8_gloidx_t num_z, int x_periodic, int y_periodic,
                               int z_periodic, sc_MPI_Comm comm);
 
-/* Creates a brick wall of quads or hex */
+/**
+ * \brief This function is similar to the function \see t8_cmesh_new_disjoint_bricks despite the fact the the cmesh is not partitioned (based on the specified amnount of bricks per dimension).
+ *  A mesh of quadrilaterals in 2D (if \var num_z <= 0) or hexahedrons in 3D is built based on the given dimension sizes
+ * 
+ * \param [in] num_x The number of trees in x direction for this rank. Must be >= 0.
+ * \param [in] num_y The number of trees in y direction for this rank. Must be >= 0.
+ * \param [in] num_z The number of trees in z direction for this rank. Must be >= 0.
+ * \param [in] comm The MPI communicator used to commit the cmesh.
+ * \return t8_cmesh_t A committed cmesh. The global trees
+ *                    form a \a num_x by \a num_y (by \a num_z) 'brick wall'.
+ */
 t8_cmesh_t
 t8_cmesh_new_brick_wall (t8_gloidx_t num_x, t8_gloidx_t num_y, t8_gloidx_t num_z, sc_MPI_Comm comm);
 
