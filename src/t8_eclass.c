@@ -117,7 +117,7 @@ const int t8_eclass_face_orientation[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES] = {
   { 0, 1, 1, 0, 0, 1 },      /* hex */
   { 0, 1, 0, 1, -1, -1 },    /* tet */
   { 1, 0, 1, 0, 1, -1 },     /* prism */
-  { 0, 1, 0, 1, 0, -1 }      /* pyramid */
+  { 0, 1, 1, 0, 0, -1 }      /* pyramid */
 };
 
 const int t8_eclass_num_vertices[T8_ECLASS_COUNT] = { 1, 2, 4, 3, 8, 4, 6, 5 };

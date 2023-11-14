@@ -197,7 +197,7 @@ t8_forest_compute_maxlevel (t8_forest_t forest)
 
 /* Return the maximum level of a forest */
 int
-t8_forest_get_maxlevel (t8_forest_t forest)
+t8_forest_get_maxlevel (const t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (forest->maxlevel >= 0);
@@ -447,27 +447,19 @@ void
 t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, double *coordinates)
 {
   t8_eclass_scheme_c *ts;
-  double corner_coords[3] = { 0.0 };
 
   T8_ASSERT (t8_forest_is_committed (forest));
 
   /* Get the tree's eclass and scheme. */
-  t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
+  const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
   ts = t8_forest_get_eclass_scheme (forest, tree_class);
   T8_ASSERT (ts->t8_element_is_valid (element));
 
-  /* Initialize the centroid with (0, 0, 0). */
-  memset (coordinates, 0, 3 * sizeof (double));
-  /* Get the number of corners of the element. */
-  const int num_corners = ts->t8_element_num_corners (element);
-  for (int icorner = 0; icorner < num_corners; icorner++) {
-    /* For each corner, add its coordinates to the centroids coordinates. */
-    t8_forest_element_coordinate (forest, ltreeid, element, icorner, corner_coords);
-    /* coordinates = coordinates + corner_coords */
-    t8_vec_axpy (corner_coords, coordinates, 1);
-  }
-  /* Divide each coordinate by num_corners */
-  t8_vec_ax (coordinates, 1. / num_corners);
+  /* Get the element class and calculate the centroid using its element
+   * reference coordinates */
+  const t8_element_shape_t element_shape = t8_element_shape (ts, element);
+  t8_forest_element_from_ref_coords (forest, ltreeid, element, t8_element_centroid_ref_coords[element_shape], 1,
+                                     coordinates, NULL);
 }
 
 /* Compute the length of the line from one corner to a second corner in an element */
@@ -2097,6 +2089,8 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8
         /* Find the index in element_array of the leaf ancestor of the first neighbor.
          * This is either the neighbor itself or its parent, or its grandparent */
         element_index = t8_forest_bin_search_lower (element_array, neigh_id, forest->maxlevel);
+        T8_ASSERT (element_index >= 0);
+
         /* Get the element */
         ancestor = t8_forest_ghost_get_element (forest, lghost_treeid, element_index);
         /* Add the number of ghost elements on previous ghost trees and the number of local elements. */
