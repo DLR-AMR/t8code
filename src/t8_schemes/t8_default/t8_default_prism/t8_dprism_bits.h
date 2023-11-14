@@ -258,7 +258,7 @@ t8_dprism_root_face_to_face (const t8_dprism_t *p, int root_face);
  * \param [in] root_face  The index of the face of the root tree in which \a face lies.
  */
 void
-t8_dprism_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_face);
+t8_dprism_extrude_face (const t8_element_t *face, t8_element_t *elem, const int root_face);
 
 /** Compute the last descendant of a prism at a given level. This is the descendant of the prism in a uniform level 
  * refinement that has the largest id.
