@@ -452,7 +452,7 @@ t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, t8_eclass_t tre
  * coordinates does have negative volume.
  */
 int
-t8_cmesh_tree_vertices_negative_volume (t8_eclass_t eclass, double *vertices, int num_vertices)
+t8_cmesh_tree_vertices_negative_volume (const t8_eclass_t eclass, const double *vertices, const int num_vertices)
 {
   double v_1[3], v_2[3], v_j[3], cross[3], sc_prod;
   int i, j;

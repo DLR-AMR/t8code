@@ -85,7 +85,7 @@ class tree_vertices_negative_volume: public testing::TestWithParam<t8_eclass> {
   {
     eclass = GetParam ();
     num_vertices = t8_eclass_num_vertices[eclass];
-    get_pos_vol_vertices_ids (eclass, vertices_ids);
+    get_vertices_ids (eclass, vertices_ids);
   }
   void
   TearDown () override

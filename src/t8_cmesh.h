@@ -119,7 +119,7 @@ t8_cmesh_no_negative_volume (t8_cmesh_t cmesh);
  */
 /* TODO: write a test for this function */
 int
-t8_cmesh_tree_vertices_negative_volume (t8_eclass_t eclass, double *vertices, int num_vertices);
+t8_cmesh_tree_vertices_negative_volume (const t8_eclass_t eclass, const double *vertices, const int num_vertices);
 
 /* TODO: Currently it is not possible to destroy set_from before
  *       cmesh is destroyed. */
