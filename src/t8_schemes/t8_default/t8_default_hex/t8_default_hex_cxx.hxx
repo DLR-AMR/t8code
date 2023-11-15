@@ -516,14 +516,6 @@ struct t8_default_scheme_hex_c: public t8_default_scheme_common_c
   virtual void
   t8_element_anchor (const t8_element_t *elem, int anchor[3]) const;
 
-  /** Compute the root length of a given element, that is the length of
-   * its level 0 ancestor.
-   * \param [in] elem     The element whose root length should be computed.
-   * \return              The root length of \a elem
-   */
-  virtual int
-  t8_element_root_len (const t8_element_t *elem) const;
-
   /** Compute the integer coordinates of a given element vertex.
    * The default scheme implements the Morton type SFCs. In these SFCs the
    * elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and 
