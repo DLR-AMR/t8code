@@ -400,7 +400,7 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from, int *send
 
 /* A much faster version to compute the receive range */
 static void
-t8_cmesh_partition_alternative_recvrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from, int *recv_first, int *recv_last)
+t8_cmesh_partition_recvrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from, int *recv_first, int *recv_last)
 {
   t8_gloidx_t first_tree, last_tree;
   const t8_gloidx_t *offset_to;
@@ -1250,7 +1250,7 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from
   if (cmesh_from->set_partition) {
     T8_ASSERT (cmesh_from->tree_offsets != NULL);
     from_offsets = t8_shmem_array_get_gloidx_array (cmesh_from->tree_offsets);
-    t8_cmesh_partition_alternative_recvrange (cmesh, (t8_cmesh_t) cmesh_from, &recv_first, &recv_last);
+    t8_cmesh_partition_recvrange (cmesh, (t8_cmesh_t) cmesh_from, &recv_first, &recv_last);
 #if T8_ENABLE_DEBUG
     if (recv_first <= recv_last) {
       T8_ASSERT (fr == recv_first);
