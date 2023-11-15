@@ -674,12 +674,6 @@ t8_default_scheme_quad_c::t8_element_anchor (const t8_element_t *elem, int coord
   T8_QUAD_SET_TDIM (q, 2);
 }
 
-int
-t8_default_scheme_quad_c::t8_element_root_len (const t8_element_t *elem) const
-{
-  return P4EST_ROOT_LEN;
-}
-
 void
 t8_default_scheme_quad_c::t8_element_vertex_coords (const t8_element_t *elem, int vertex, int coords[]) const
 {
