@@ -139,6 +139,17 @@ t8_offset_in_range (const t8_gloidx_t tree_id, const int proc, const t8_gloidx_t
 int
 t8_offset_any_owner_of_tree (const int mpisize, const t8_gloidx_t gtree, const t8_gloidx_t *offset);
 
+/** Find any process that has a given tree as local tree.
+ * \param [in] mpisize    The number of MPI ranks, also the number of entries in \a offset minus 1.
+ * \param [in] start_proc    The mpirank to start the search with. 
+ * \param [in] gtree      The global id of a tree.
+ * \param [in] offset     The partition to be considered.
+ * \return                An MPI rank that has \a gtree as a local tree.
+ */
+int
+t8_offset_any_owner_of_tree_ext (const int mpisize, const int start_proc, const t8_gloidx_t gtree,
+                                 const t8_gloidx_t *offset);
+
 /** Find the smallest process that has a given tree as local tree.
  * To increase the runtime, an arbitrary process having this tree as local tree
  * can be passed as an argument.

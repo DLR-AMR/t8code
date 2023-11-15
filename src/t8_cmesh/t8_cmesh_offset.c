@@ -162,23 +162,21 @@ t8_offset_in_range (const t8_gloidx_t tree_id, const int proc, const t8_gloidx_t
   return t8_offset_first (proc, offset) <= tree_id && tree_id <= t8_offset_last (proc, offset);
 }
 
-/* Find any owner of a given tree.
- * TODO: In most cases the search should start with the current mpirank
- *       to optimize runtime.
- */
 int
-t8_offset_any_owner_of_tree (const int mpisize, const t8_gloidx_t gtree, const t8_gloidx_t *offset)
+t8_offset_any_owner_of_tree_ext (const int mpisize, const int start_proc, const t8_gloidx_t gtree,
+                                 const t8_gloidx_t *offset)
 {
-  int proc, range[2], found;
+  int proc = start_proc;
+  int range[2] = { 0, mpisize - 1 };
 
   range[0] = 0;
   range[1] = mpisize - 1;
   /* find any process that owns the tree with a binary search */
-  found = 0;
+  int found = 0;
   while (!found) {
-    proc = (range[0] + range[1]) / 2;
     if (t8_offset_in_range (gtree, proc, offset)) {
       found = 1;
+      break;
     }
     else if (t8_offset_last (proc, offset) < gtree) {
       /* look further right */
@@ -187,8 +185,16 @@ t8_offset_any_owner_of_tree (const int mpisize, const t8_gloidx_t gtree, const t
     else {
       range[1] = proc - 1;
     }
+    proc = (range[0] + range[1]) / 2;
   }
   return proc;
+}
+/* Find any owner of a given tree.
+ */
+int
+t8_offset_any_owner_of_tree (const int mpisize, const t8_gloidx_t gtree, const t8_gloidx_t *offset)
+{
+  return t8_offset_any_owner_of_tree_ext (mpisize, (0 + mpisize) / 2, gtree, offset);
 }
 
 /* Find the smallest process that owns a given tree.
