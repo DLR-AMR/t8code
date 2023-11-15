@@ -80,7 +80,6 @@ t8_ghost_neighbor_test (t8_eclass_t eclass, sc_MPI_Comm comm, int hybrid)
 
   /* Iterate over all faces and create the face neighbor */
 
-  t8_debugf ("root len = %i\n", elem_scheme->t8_element_root_len (elem));
   for (i = 0; i < t8_eclass_num_faces[elem_eclass]; i++) {
     /* Get the eclass of the face neighbor's tree */
     neighbor_class = t8_forest_element_neighbor_eclass (forest, treeid, elem, i);
