@@ -231,13 +231,6 @@ t8_default_scheme_pyramid_c::t8_element_level (const t8_element_t *elem) const
   return t8_dpyramid_get_level ((const t8_dpyramid_t *) elem);
 }
 
-int
-t8_default_scheme_pyramid_c::t8_element_root_len (const t8_element_t *elem) const
-{
-  T8_ASSERT (t8_element_is_valid (elem));
-  return T8_DPYRAMID_ROOT_LEN;
-}
-
 void
 t8_default_scheme_pyramid_c::t8_element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id) const
 {
