@@ -42,6 +42,7 @@ class gtest_default_scheme: public testing::TestWithParam<t8_eclass_t> {
   void
   SetUp () override
   {
+    /* Construct every eclass scheme explixitly */
     const t8_eclass_t eclass = GetParam ();
     switch (eclass) {
     case T8_ECLASS_VERTEX:
@@ -82,6 +83,7 @@ class gtest_default_scheme: public testing::TestWithParam<t8_eclass_t> {
 
 TEST_P (gtest_default_scheme, is_default)
 {
+  /* TODO: Implement an EXPECT_FALSE check for non-default schemes */
   EXPECT_TRUE (t8_eclass_scheme_is_default (eclass_scheme));
 }
 
