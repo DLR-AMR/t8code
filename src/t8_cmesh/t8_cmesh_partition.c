@@ -309,8 +309,7 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from, int *send
       else {
         /* Compute the next bigger process that has first_tree as local tree in
          * the new partition. */
-        sendfirst
-          = t8_offset_next_owner_of_tree (cmesh->mpisize, first_tree, offset_to, sendfirst);
+        sendfirst = t8_offset_next_owner_of_tree (cmesh->mpisize, first_tree, offset_to, sendfirst);
       }
     }
     T8_ASSERT (flag == 1); /* We must have found the process by now */
@@ -348,8 +347,7 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from, int *send
         }
         else {
           /* Compute next smaller process that has last_tree as local tree */
-          sendlast
-            = t8_offset_prev_owner_of_tree (cmesh->mpisize, last_tree, offset_to, sendlast);
+          sendlast = t8_offset_prev_owner_of_tree (cmesh->mpisize, last_tree, offset_to, sendlast);
         }
       }
       /* If we did not found the alternative send here, then all procs
