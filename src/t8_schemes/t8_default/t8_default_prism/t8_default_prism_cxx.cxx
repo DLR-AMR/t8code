@@ -381,13 +381,6 @@ t8_default_scheme_prism_c::t8_element_anchor (const t8_element_t *elem, int anch
   anchor[2] = prism->line.x / T8_DLINE_ROOT_LEN * T8_DPRISM_ROOT_LEN;
 }
 
-int
-t8_default_scheme_prism_c::t8_element_root_len (const t8_element_t *elem) const
-{
-  T8_ASSERT (t8_element_is_valid (elem));
-  return T8_DPRISM_ROOT_LEN;
-}
-
 void
 t8_default_scheme_prism_c::t8_element_vertex_coords (const t8_element_t *elem, int vertex, int coords[]) const
 {
