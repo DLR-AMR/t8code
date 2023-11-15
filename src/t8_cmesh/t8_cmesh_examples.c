@@ -40,8 +40,8 @@
  * \param [in] comm The MPi communicator to use for the partition
  */
 static void
-t8_cmesh_examples_compute_and_set_partition_range (t8_cmesh_t cmesh, const int num_trees, const int set_face_knowledge,
-                                                   sc_MPI_Comm comm)
+t8_cmesh_examples_compute_and_set_partition_range (t8_cmesh_t cmesh, const t8_gloidx_t num_trees,
+                                                   const int set_face_knowledge, sc_MPI_Comm comm)
 {
   int mpirank, mpisize, mpiret;
 
@@ -155,7 +155,7 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm, int set_part
       SC_CHECK_MPI (mpiret);
 
       /* First_tree and last_tree are the first and last trees of conn plus the offset */
-      const t8_gloidx_t num_local_trees = _T8_CMESH_P48_CONN (num_trees);
+      t8_gloidx_t num_local_trees = _T8_CMESH_P48_CONN (num_trees);
 
       /* First process-local tree-id */
       const t8_gloidx_t first_tree = offset;
@@ -169,7 +169,9 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm, int set_part
 #ifdef T8_ENABLE_DEBUG
       t8_gloidx_t num_global_trees;
       /* The global number of trees is the sum over all numbers of trees in conn on each process */
-      sc_MPI_Allreduce (&num_local_trees, &num_global_trees, 1, T8_MPI_GLOIDX, sc_MPI_SUM, comm);
+      mpiret = sc_MPI_Allreduce (&num_local_trees, &num_global_trees, 1, T8_MPI_GLOIDX, sc_MPI_SUM, comm);
+      SC_CHECK_MPI (mpiret);
+
       t8_debugf ("Generating partitioned cmesh from connectivity\n"
                  "Has %li global and %li local trees.\n",
                  num_global_trees, num_local_trees);
