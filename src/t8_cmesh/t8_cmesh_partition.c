@@ -402,10 +402,7 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from, int *send
 static void
 t8_cmesh_partition_recvrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from, int *recv_first, int *recv_last)
 {
-  t8_gloidx_t first_tree, last_tree;
-  const t8_gloidx_t *offset_to;
-  const t8_gloidx_t *offset_from;
-  int alternative_recvfirst, alternative_recvlast;
+  int recvfirst, recvlast;
   int some_owner = -1; /* Passes as argument to first/last owner functions */
 
   if (cmesh->num_local_trees == 0) {
@@ -421,27 +418,27 @@ t8_cmesh_partition_recvrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from, int *recv
     *recv_last = cmesh_from->mpirank;
     return;
   }
-  offset_to = t8_shmem_array_get_gloidx_array (cmesh->tree_offsets);
-  offset_from = t8_shmem_array_get_gloidx_array (cmesh_from->tree_offsets);
+  const t8_gloidx_t *offset_to = t8_shmem_array_get_gloidx_array (cmesh->tree_offsets);
+  const t8_gloidx_t *offset_from = t8_shmem_array_get_gloidx_array (cmesh_from->tree_offsets);
   /* Get the new first local tree */
-  first_tree = t8_cmesh_get_first_treeid (cmesh);
+  const t8_gloidx_t first_tree = t8_cmesh_get_first_treeid (cmesh);
   if (t8_offset_in_range (first_tree, cmesh->mpirank, offset_from)) {
     /* It it already was a local tree then we received it from ourselves
      * and are thus the first process we receive from */
-    alternative_recvfirst = cmesh->mpirank;
+    recvfirst = cmesh->mpirank;
   }
   else {
     /* Otherwise the first process we receive from is the smallest process that
      * had our new first tree as a local tree. */
     some_owner = -1;
-    alternative_recvfirst = t8_offset_first_owner_of_tree (cmesh->mpisize, first_tree, offset_from, &some_owner);
+    recvfirst = t8_offset_first_owner_of_tree (cmesh->mpisize, first_tree, offset_from, &some_owner);
   }
   /* Get the new last local tree */
-  last_tree = t8_offset_last (cmesh->mpirank, offset_to);
+  const t8_gloidx_t last_tree = t8_offset_last (cmesh->mpirank, offset_to);
   if (t8_offset_in_range (last_tree, cmesh->mpirank, offset_from)) {
     /* We had our last local tree as a local tree before and thus
      * we are the last process that we receive from */
-    alternative_recvlast = cmesh->mpirank;
+    recvlast = cmesh->mpirank;
   }
   else {
     /* We receive from the smallest process that had our new last local tree
@@ -451,10 +448,10 @@ t8_cmesh_partition_recvrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from, int *recv
        * otherwise we have to reset it */
       some_owner = -1;
     }
-    alternative_recvlast = t8_offset_first_owner_of_tree (cmesh->mpisize, last_tree, offset_from, &some_owner);
+    recvlast = t8_offset_first_owner_of_tree (cmesh->mpisize, last_tree, offset_from, &some_owner);
   }
-  *recv_first = alternative_recvfirst;
-  *recv_last = alternative_recvlast;
+  *recv_first = recvfirst;
+  *recv_last = recvlast;
 }
 
 /* Compute the number of bytes that need to be allocated in the send buffer
