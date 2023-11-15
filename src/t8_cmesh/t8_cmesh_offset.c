@@ -232,9 +232,8 @@ t8_offset_first_owner_of_tree (const int mpisize, const t8_gloidx_t gtree, const
     T8_ASSERT (t8_offset_in_range (gtree, proc_temp, offset));
   }
   else {
-    /* TODO: This should never happen */
-    T8_ASSERT (1 == 0);
-    proc_temp = proc;
+    /* This should never happen */
+    SC_ABORT ("ERROR: proc_temp ran out of bounds");
   }
   proc = proc_temp;
   return proc;
@@ -319,9 +318,8 @@ t8_offset_last_owner_of_tree (const int mpisize, const t8_gloidx_t gtree, const 
     T8_ASSERT (t8_offset_in_range (gtree, proc_temp, offset));
   }
   else {
-    /* TODO: This should never happen */
-    T8_ASSERT (1 == 0);
-    proc_temp = proc;
+    /* This should never happen */
+    SC_ABORT ("ERROR: proc_temp ran out of bounds");
   }
   proc = proc_temp;
   return proc;
