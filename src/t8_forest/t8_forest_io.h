@@ -32,7 +32,7 @@
 #include <t8_vtk.h>
 T8_EXTERN_C_BEGIN ();
 
-/* TODO: implement */ 
+/* TODO: implement */
 void
 t8_forest_save (t8_forest_t forest);
 

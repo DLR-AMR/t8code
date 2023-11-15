@@ -613,13 +613,6 @@ t8_default_scheme_quad_c::t8_element_boundary_face (const t8_element_t *elem, in
   l->x = ((face >> 1 ? q->x : q->y) * ((int64_t) T8_DLINE_ROOT_LEN) / P4EST_ROOT_LEN);
 }
 
-void
-t8_default_scheme_quad_c::t8_element_boundary (const t8_element_t *elem, int min_dim, int length,
-                                               t8_element_t **boundary) const
-{
-  SC_ABORT ("Not implemented\n");
-}
-
 int
 t8_default_scheme_quad_c::t8_element_is_root_boundary (const t8_element_t *elem, int face) const
 {
