@@ -432,13 +432,6 @@ t8_default_scheme_hex_c::t8_element_boundary_face (const t8_element_t *elem, int
   T8_ASSERT (!p8est_quadrant_is_extended (q) || p4est_quadrant_is_extended (b));
 }
 
-void
-t8_default_scheme_hex_c::t8_element_boundary (const t8_element_t *elem, int min_dim, int length,
-                                              t8_element_t **boundary) const
-{
-  SC_ABORT ("Not implemented\n");
-}
-
 int
 t8_default_scheme_hex_c::t8_element_is_root_boundary (const t8_element_t *elem, int face) const
 {

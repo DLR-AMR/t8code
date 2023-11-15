@@ -428,10 +428,6 @@ struct t8_default_scheme_hex_c: public t8_default_scheme_common_c
   t8_element_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
                             const t8_eclass_scheme_c *boundary_scheme) const;
 
-  /** Construct all codimension-one boundary elements of a given element. */
-  virtual void
-  t8_element_boundary (const t8_element_t *elem, int min_dim, int length, t8_element_t **boundary) const;
-
   /** Compute whether a given element shares a given face with its root tree.
    * \param [in] elem     The input element.
    * \param [in] face     A face of \a elem.
