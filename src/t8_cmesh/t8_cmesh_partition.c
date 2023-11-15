@@ -246,16 +246,9 @@ t8_cmesh_gather_treecount_nocommit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   t8_cmesh_gather_treecount_ext (cmesh, comm, 0);
 }
 
-/* TODO: currently this function is unused.
- *        Also it better fits to cmesh_offset.c/h */
-
-/* TODO: deprecated, can be removed */
-
-/* TODO: deprecated. Can be removed */
-
 /* A much faster version to compute the sendrange */
 static t8_locidx_t
-t8_cmesh_partition_alternative_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from, int *send_first, int *send_last)
+t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from, int *send_first, int *send_last)
 {
   t8_gloidx_t first_tree = t8_cmesh_get_first_treeid (cmesh_from), last_tree;
   t8_gloidx_t ret;
@@ -995,7 +988,7 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from, int *num_r
 
   sc_array_init (&send_as_ghost, sizeof (t8_locidx_t));
 
-  range_end = t8_cmesh_partition_alternative_sendrange (cmesh, (t8_cmesh_t) cmesh_from, send_first, send_last);
+  range_end = t8_cmesh_partition_sendrange (cmesh, (t8_cmesh_t) cmesh_from, send_first, send_last);
 
   offset_to = t8_shmem_array_get_gloidx_array (cmesh->tree_offsets);
   if (cmesh_from->set_partition) {
