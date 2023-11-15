@@ -392,7 +392,7 @@ t8_cmesh_new_from_class (const t8_eclass_t eclass, const sc_MPI_Comm comm)
 }
 
 t8_cmesh_t
-t8_cmesh_new_empty (sc_MPI_Comm comm, int do_partition, int dimension)
+t8_cmesh_new_empty (sc_MPI_Comm comm, const int do_partition, const int dimension)
 {
   t8_cmesh_t cmesh;
 
