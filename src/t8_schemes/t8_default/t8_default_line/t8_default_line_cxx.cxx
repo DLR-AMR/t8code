@@ -304,13 +304,6 @@ t8_default_scheme_line_c::t8_element_reference_coords (const t8_element_t *elem,
   t8_dline_compute_reference_coords ((const t8_dline_t *) elem, ref_coords, num_coords, 0, out_coords);
 }
 
-int
-t8_default_scheme_line_c::t8_element_root_len (const t8_element_t *elem) const
-{
-  T8_ASSERT (t8_element_is_valid (elem));
-  return T8_DLINE_ROOT_LEN;
-}
-
 t8_linearidx_t
 t8_default_scheme_line_c::t8_element_get_linear_id (const t8_element_t *elem, int level) const
 {
