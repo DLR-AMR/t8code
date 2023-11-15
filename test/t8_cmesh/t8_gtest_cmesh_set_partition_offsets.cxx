@@ -27,13 +27,14 @@
 #include "t8_cmesh/t8_cmesh_partition.h"
 #include <t8_cmesh/t8_cmesh_testcases.h>
 
-/* We create a cmesh, partition it and repartition it several times.
- * At the end we result in the same partition as at the beginning and we
- * compare this cmesh with the initial one. If they are equal the test is
- * passed.
+/* At the time of this writing (November 15 2023) t8_cmesh_offset_concentrate
+ * has a comment stating it does not work with non-derived cmeshes.
+ * We write the tests in this file to check this.
  */
 
-TEST (t8_cmesh_set_partition_offsets, test_set_offsets)
+/* call t8_cmesh_offset_concentrate for non-derived cmesh 
+ * and destroy it before commit. */
+TEST (t8_cmesh_set_partition_offsets, test_set_offsets_nocommit)
 {
   t8_cmesh_t cmesh;
   const t8_gloidx_t num_trees = 1;
@@ -50,6 +51,40 @@ TEST (t8_cmesh_set_partition_offsets, test_set_offsets)
 
   /* Set the partition offsets */
   t8_cmesh_set_partition_offsets (cmesh, shmem_array);
+  /* Destroy the cmesh */
+  t8_cmesh_unref (&cmesh);
+}
+
+/* call t8_cmesh_offset_concentrate for non-derived cmesh 
+ * and commit it. */
+TEST (t8_cmesh_set_partition_offsets, test_set_offsets_commit)
+{
+  t8_cmesh_t cmesh;
+  const t8_gloidx_t num_trees = 1;
+  const int main_process = 0;
+  sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
+  /* Build a valid offset array. For this test it is onlt necessary that 
+   * the array corresponds to any valid partition.
+   * We use the offset_concentrate function to build an offset array for a partition
+   * that concentrates all trees at one process. */
+  t8_shmem_init (comm);
+  t8_shmem_array_t shmem_array = t8_cmesh_offset_concentrate (main_process, comm, num_trees);
+
+  /* Initialize the cmesh */
+  t8_cmesh_init (&cmesh);
+
+  /* Set the partition offsets */
+  t8_cmesh_set_partition_offsets (cmesh, shmem_array);
+
+  /* Specify a dimension */
+  t8_cmesh_set_dimension (cmesh, 0);
+
+  /* Set class for the trees */
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_VERTEX);
+
+  /* Commit the cmesh */
+  t8_cmesh_commit (cmesh, comm);
+
   /* Destroy the cmesh */
   t8_cmesh_unref (&cmesh);
 }
