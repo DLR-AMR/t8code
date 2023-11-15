@@ -377,8 +377,7 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from, int *send
   t8_gloidx_t ret = t8_offset_last (*send_first, offset_to) - cmesh_from->first_tree;
   /* If there are actually more trees on send_first than we have, we need to send
    * all our local trees to send_first */
-  ret = SC_MIN (ret, cmesh_from->num_local_trees);
-
+  ret = SC_MIN (ret, cmesh_from->num_local_trees - 1);
   if (cmesh_from->mpirank != *send_first
       && t8_offset_in_range (t8_offset_last (cmesh_from->mpirank, offset_from), *send_first, offset_from)
       && ret == cmesh_from->num_local_trees - 1) {
@@ -400,7 +399,8 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from, int *send
 static void
 t8_cmesh_partition_recvrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from, int *recv_first, int *recv_last)
 {
-  int recvfirst, recvlast;
+  int recvfirst;
+  int recvlast;
   int some_owner = -1; /* Passes as argument to first/last owner functions */
 
   if (cmesh->num_local_trees == 0) {
