@@ -457,18 +457,6 @@ struct t8_default_scheme_vertex_c: public t8_default_scheme_common_c
     return; /* prevents compiler warning */
   }
 
-  /** Construct all codimension-one boundary elements of a given element.
-   * \param [in] elem     The input element.
-   * \param [in] face     A face of \a elem.
-   * \return              True if \a face is a subface of the element's root element.
-   */
-  virtual void
-  t8_element_boundary (const t8_element_t *elem, int min_dim, int length, t8_element_t **boundary) const
-  {
-    SC_ABORT ("Not implemented.\n");
-    return; /* prevents compiler warning */
-  }
-
   /** Compute whether a given element shares a given face with its root tree.
    * \param [in] elem     The input element.
    * \param [in] face     A face of \a elem.
