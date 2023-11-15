@@ -453,24 +453,6 @@ void
 t8_element_last_descendant_face (const t8_eclass_scheme_c *ts, const t8_element_t *elem, int face,
                                  t8_element_t *last_desc, int level);
 
-/* TODO:  Do we need this function at all?
- *        If not remove it. If so, what to do with prisms and pyramids?
- *        Here the boundary elements are of different eclasses, so we cannot
- *        store them in an array...
- */
-/** Construct all codimension-one boundary elements of a given element.
- * \param [in] ts       Implementation of a class scheme.
- * \param [in] elem     The input element.
- * \param [in] face     A face of \a elem.
- * \return              True if \a face is a subface of the element's root element.
- */
-/* void        t8_element_boundary (t8_eclass_scheme_c *ts,
- *                                  const t8_element_t *elem,
- *                                  int min_dim,
- *                                  int length,
- *                                  t8_element_t **boundary) = 0;
- */
-
 /** Compute whether a given element shares a given face with its root tree.
  * \param [in] ts       Implementation of a class scheme.
  * \param [in] elem     The input element.
