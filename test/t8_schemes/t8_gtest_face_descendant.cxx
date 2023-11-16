@@ -24,6 +24,7 @@
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone_cxx.hxx>
 
 class class_descendant: public testing::TestWithParam<t8_eclass_t> {
  protected:
@@ -32,7 +33,7 @@ class class_descendant: public testing::TestWithParam<t8_eclass_t> {
   {
     eclass = GetParam ();
 
-    scheme = t8_scheme_new_default_cxx ();
+    scheme = t8_scheme_new_standalone_cxx ();
     /* Get scheme for eclass */
     ts = scheme->eclass_schemes[eclass];
   }
@@ -61,6 +62,7 @@ t8_face_descendant_test_child (t8_element_t *face_desc, const t8_element_t *elem
   ts->t8_element_copy (elem, face_desc);
   for (int klevel = level_elem; klevel < ilevel; klevel++) {
     /* Compute child_id of the test_child_id-th child. */
+    ASSERT_EQ (ts->t8_element_num_face_children (face_desc, face), num_children);
     ts->t8_element_children_at_face (face_desc, face, children, num_children, child_indices);
     int child_id = child_indices[test_child_id];
 

@@ -26,6 +26,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <sc_functions.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
+#include <t8_schemes/t8_standalone/t8_standalone_cxx.hxx>
 
 class linear_id: public testing::TestWithParam<t8_eclass> {
  protected:
@@ -33,7 +34,7 @@ class linear_id: public testing::TestWithParam<t8_eclass> {
   SetUp () override
   {
     eclass = GetParam ();
-    scheme = t8_scheme_new_default_cxx ();
+    scheme = t8_scheme_new_standalone_cxx ();
     ts = scheme->eclass_schemes[eclass];
     ts->t8_element_new (1, &element);
     ts->t8_element_new (1, &child);

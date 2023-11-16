@@ -27,6 +27,7 @@
 #include <t8_forest/t8_forest_cxx.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone_cxx.hxx>
 #include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_partition.h>
@@ -40,9 +41,9 @@ class forest_half_neighbors: public testing::TestWithParam<std::tuple<t8_eclass,
     eclass = std::get<0> (GetParam ());
     cmesh_type = std::get<1> (GetParam ());
 
-    default_scheme = t8_scheme_new_default_cxx ();
     /* Construct a coarse mesh of one tree */
     cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
+    default_scheme = t8_scheme_new_standalone_cxx ();
   }
 
   t8_eclass_t eclass;

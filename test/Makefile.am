@@ -24,6 +24,8 @@ t8code_googletest_programs = \
   test/t8_geometry/t8_gtest_geometry \
   test/t8_schemes/t8_gtest_descendant \
   test/t8_schemes/t8_gtest_find_parent \
+  test/t8_schemes/t8_gtest_parent_child_face \
+  test/t8_schemes/t8_gtest_boundary_extrude \
   test/t8_cmesh/t8_gtest_cmesh_face_is_boundary \
   test/t8_cmesh/t8_gtest_cmesh_partition \
   test/t8_cmesh/t8_gtest_cmesh_set_join_by_vertices \
@@ -141,6 +143,14 @@ test_t8_schemes_t8_gtest_descendant_SOURCES = \
 test_t8_schemes_t8_gtest_find_parent_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_schemes/t8_gtest_find_parent.cxx
+  
+test_t8_schemes_t8_gtest_parent_child_face_SOURCES = \
+  test/t8_gtest_main.cxx \
+  test/t8_schemes/t8_gtest_parent_child_face.cxx
+
+test_t8_schemes_t8_gtest_boundary_extrude_SOURCES = \
+  test/t8_gtest_main.cxx \
+  test/t8_schemes/t8_gtest_boundary_extrude.cxx
 
 test_t8_cmesh_t8_gtest_cmesh_face_is_boundary_SOURCES = \
   test/t8_gtest_main.cxx \
@@ -238,8 +248,7 @@ test_t8_forest_incomplete_t8_gtest_empty_global_tree_SOURCES = \
 t8_gtest_target_ld_add = $(LDADD) test/libgtest.la
 t8_gtest_target_ld_flags = $(AM_LDFLAGS) -pthread
 t8_gtest_target_cpp_flags = $(AM_CPPFLAGS) -I$(top_srcdir)/thirdparty/googletest-mpi/ \
-  -pthread \
-  -std=c++11
+  -pthread
 #flags to add when we compile with mpi
 t8_gtest_target_mpi_cpp_flags = -DGTEST_HAS_MPI=0
 
@@ -330,6 +339,14 @@ test_t8_schemes_t8_gtest_descendant_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 test_t8_schemes_t8_gtest_find_parent_LDADD = $(t8_gtest_target_ld_add)
 test_t8_schemes_t8_gtest_find_parent_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_schemes_t8_gtest_find_parent_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+
+test_t8_schemes_t8_gtest_parent_child_face_LDADD = $(t8_gtest_target_ld_add)
+test_t8_schemes_t8_gtest_parent_child_face_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_schemes_t8_gtest_parent_child_face_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+
+test_t8_schemes_t8_gtest_boundary_extrude_LDADD = $(t8_gtest_target_ld_add)
+test_t8_schemes_t8_gtest_boundary_extrude_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_schemes_t8_gtest_boundary_extrude_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
 test_t8_cmesh_t8_gtest_cmesh_face_is_boundary_LDADD = $(t8_gtest_target_ld_add)
 test_t8_cmesh_t8_gtest_cmesh_face_is_boundary_LDFLAGS = $(t8_gtest_target_ld_flags)
@@ -452,6 +469,8 @@ test_t8_schemes_t8_gtest_element_ref_coords_CPPFLAGS += $(t8_gtest_target_mpi_cp
 test_t8_geometry_t8_gtest_geometry_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_descendant_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_find_parent_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_schemes_t8_gtest_parent_child_face_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_schemes_t8_gtest_boundary_extrude_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_cmesh_face_is_boundary_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_cmesh_partition_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_t8_gtest_element_volume_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
@@ -481,7 +500,7 @@ endif
 # Build Googletest library
 check_LTLIBRARIES = test/libgtest.la
 test_libgtest_la_SOURCES = thirdparty/googletest-mpi/gtest/gtest-all.cc
-test_libgtest_la_CPPFLAGS = -I$(top_srcdir)/thirdparty/googletest-mpi -std=c++11
+test_libgtest_la_CPPFLAGS = -I$(top_srcdir)/thirdparty/googletest-mpi
 # If we did not configure t8code with MPI we need to build Googletest
 # without MPI support.
 if !T8_ENABLE_MPI

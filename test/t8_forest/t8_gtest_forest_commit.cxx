@@ -24,7 +24,7 @@
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone_cxx.hxx>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
 #include "t8_cmesh/t8_cmesh_testcases.h"
@@ -141,7 +141,7 @@ TEST_P (forest_commit, test_forest_commit)
 
   t8_debugf ("Testing forest commit with cmesh_id = %i\n", cmesh_id);
 
-  t8_scheme_cxx_t *scheme = t8_scheme_new_default_cxx ();
+  t8_scheme_cxx_t *scheme = t8_scheme_new_standalone_cxx ();
 
   /* Compute the first level, such that no process is empty */
   int min_level = t8_forest_min_nonempty_level (cmesh, scheme);

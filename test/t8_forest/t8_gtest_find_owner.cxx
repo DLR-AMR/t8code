@@ -27,7 +27,7 @@
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_cxx.h>
 #include <t8_forest/t8_forest_types.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone_cxx.hxx>
 #include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_partition.h>
@@ -40,7 +40,7 @@ class forest_find_owner: public testing::TestWithParam<t8_eclass> {
   {
     eclass = GetParam ();
 
-    default_scheme = t8_scheme_new_default_cxx ();
+    default_scheme = t8_scheme_new_standalone_cxx ();
     /* Construct a coarse mesh of one tree */
     cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
   }
@@ -160,10 +160,6 @@ TEST_P (forest_find_owner, find_multiple_owners)
     t8_debugf ("%s\n", buffer);
     sc_array_truncate (&owners);
   }
-#ifdef T8_ENABLE_DEBUG
-  /* write vtk file in debug mode */
-  t8_forest_write_vtk (forest, "test_owners_forest");
-#endif
   ts->t8_element_destroy (1, &root_element);
   t8_forest_unref (&forest);
   sc_array_reset (&owners);

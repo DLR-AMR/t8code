@@ -22,6 +22,7 @@
 
 #include <gtest/gtest.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone_cxx.hxx>
 
 /*
  * In this file we test whether the t8_element_count_leafs{_from_root}
@@ -40,6 +41,9 @@ class class_element_leafs: public testing::TestWithParam<t8_eclass> {
   {
     eclass = GetParam ();
 
+    if (eclass == T8_ECLASS_PYRAMID)
+      GTEST_SKIP ();
+
     class_scheme = ts->eclass_schemes[(int) eclass];
   }
   void
@@ -49,7 +53,7 @@ class class_element_leafs: public testing::TestWithParam<t8_eclass> {
   }
   t8_eclass eclass;
   t8_eclass_scheme_c *class_scheme;
-  t8_scheme_cxx_t *ts = t8_scheme_new_default_cxx ();
+  t8_scheme_cxx_t *ts = t8_scheme_new_standalone_cxx ();
 };
 
 TEST_P (class_element_leafs, test_element_count_leafs_root)

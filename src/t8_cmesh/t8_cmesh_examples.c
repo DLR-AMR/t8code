@@ -198,6 +198,65 @@ t8_cmesh_new_from_p8est (p8est_connectivity_t *conn, sc_MPI_Comm comm, int do_pa
   return t8_cmesh_new_from_p4est_ext (conn, 3, comm, do_partition, 0);
 }
 
+t8_cmesh_t
+t8_cmesh_new_multi_class_3D (sc_MPI_Comm comm)
+{
+  t8_cmesh_t          cmesh;
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
+  t8_cmesh_init (&cmesh);
+  /* Use linear geometry for all trees*/
+  t8_cmesh_register_geometry (cmesh, linear_geom);
+
+
+  double              hex_vertices[24] = {
+    0, 0, 0, 
+    1, 0, 0, 
+    0, 1, 0, 
+    1, 1, 0, 
+    0, 0, 1, 
+    1, 0, 1, 
+    0, 1, 1, 
+    1, 1, 1 
+  };
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
+  t8_cmesh_set_tree_vertices (cmesh, 0, hex_vertices, 24);
+
+  double              prism_vertices[18] = {
+    1.5, 0, 0, 
+    2.5, 0, 0, 
+    2.5, 1, 0, 
+    1.5, 0, 1, 
+    2.5, 0, 1, 
+    2.5, 1, 1 
+  };
+  t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_PRISM);
+  t8_cmesh_set_tree_vertices (cmesh, 1, prism_vertices, 18);
+
+  double              pyra_vertices[15] = {
+    3, 0, 0, 
+    4, 0, 0, 
+    3, 1, 0, 
+    4, 1, 0, 
+    4, 1, 1
+  };
+  t8_cmesh_set_tree_class (cmesh, 2, T8_ECLASS_PYRAMID);
+  t8_cmesh_set_tree_vertices (cmesh, 2, pyra_vertices, 15);
+
+  double              tet_vertices[12] = {
+    4.5, 0, 0, 
+    5.5, 0, 0, 
+    5.5, 1, 0, 
+    5.5, 1, 1
+  };
+  t8_cmesh_set_tree_class (cmesh, 3, T8_ECLASS_TET);
+  t8_cmesh_set_tree_vertices (cmesh, 3, tet_vertices, 12);
+
+
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
+}
+
+
 static t8_cmesh_t
 t8_cmesh_new_vertex (sc_MPI_Comm comm)
 {
@@ -360,6 +419,9 @@ t8_cmesh_new_pyramid (sc_MPI_Comm comm)
   t8_cmesh_t cmesh;
   /* clang-format off */
   double vertices[15] = { 
+  /* Change for different pyramid
+    -1, -1, 0, 1, -1, 0, -1, 1, 0, 1, 1, 0, 1, 1, 2
+  */
     -1, -1, 0, 
     1, -1, 0, 
     -1, 1, 0, 
@@ -451,7 +513,74 @@ t8_cmesh_new_empty (sc_MPI_Comm comm, const int do_partition, const int dimensio
 }
 
 t8_cmesh_t
-t8_cmesh_new_hypercube_hybrid (sc_MPI_Comm comm, int do_partition, int periodic)
+t8_cmesh_new_hybrid_cubes(sc_MPI_Comm comm){
+  t8_cmesh_t cmesh;
+  t8_locidx_t         vertices[8];
+  double              attr_vertices[24];
+  double              vertices_coords[24] = {
+    0, 0, 0,
+    1, 0, 0,
+    0, 1, 0,
+    1, 1, 0,
+    0, 0, 1,
+    1, 0, 1,
+    0, 1, 1,
+    1, 1, 1
+  };
+
+  t8_cmesh_init (&cmesh);
+
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
+  t8_cmesh_register_geometry (cmesh, linear_geom);
+
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_PYRAMID);
+  t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_TET);
+  t8_cmesh_set_tree_class (cmesh, 2, T8_ECLASS_HEX);
+
+  vertices[0] = 0;
+  vertices[1] = 1;
+  vertices[2] = 2;
+  vertices[3] = 3;
+  vertices[4] = 7;
+  t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                 vertices_coords,
+                                                 attr_vertices, 5);
+  t8_cmesh_set_tree_vertices (cmesh, 0, attr_vertices, 5);
+
+  vertices[0] = 0;
+  vertices[1] = 1;
+  vertices[2] = 7;
+  vertices[3] = 5;
+  t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                 vertices_coords,
+                                                 attr_vertices, 4);
+  t8_cmesh_set_tree_vertices (cmesh, 1, attr_vertices, 4);
+
+
+
+  double              cube_vertices_coords[24] = {
+    0, 0, -1,
+    1, 0, -1,
+    0, 1, -1,
+    1, 1, -1,
+    0, 0, 0,
+    1, 0, 0,
+    0, 1, 0,
+    1, 1, 0
+  };
+
+  t8_cmesh_set_tree_vertices (cmesh, 2, cube_vertices_coords, 8);
+
+  t8_cmesh_set_join (cmesh, 0, 1, 2, 3, 0);
+  t8_cmesh_set_join (cmesh, 0, 2, 4, 5, 0);
+
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
+}
+
+t8_cmesh_t
+t8_cmesh_new_hypercube_hybrid (sc_MPI_Comm comm, int do_partition,
+                               int periodic)
 {
   int i;
   t8_cmesh_t cmesh;
@@ -763,7 +892,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
       t8_cmesh_set_tree_vertices (cmesh, 1, attr_vertices, 3);
       if (periodic) {
         t8_cmesh_set_join (cmesh, 0, 1, 0, 1, 0);
-        t8_cmesh_set_join (cmesh, 0, 1, 2, 0, 0);
+        t8_cmesh_set_join (cmesh, 0, 1, 2, 0, 1);
       }
       break;
     case T8_ECLASS_TET:
