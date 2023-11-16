@@ -96,7 +96,7 @@ t8_linear_face_descendant (const t8_element_t *elem, t8_element_t *manual_face_d
 
       ts->t8_element_first_descendant_face (elem, jface, face_desc, ilevel);
       /* Compare the manually computed child with the result of t8_element_first_descendant_face. */
-      ASSERT_FALSE (ts->t8_element_compare (face_desc, manual_face_desc)) << "Wrong first descendant face\n";
+      ASSERT_TRUE (ts->t8_element_equal (face_desc, manual_face_desc)) << "Wrong first descendant face\n";
     }
   }
 
@@ -112,7 +112,7 @@ t8_linear_face_descendant (const t8_element_t *elem, t8_element_t *manual_face_d
 
       /* Compare the manuall computed child with the result of t8_element_last_descendant_face. */
       ts->t8_element_last_descendant_face (elem, jface, face_desc, ilevel);
-      ASSERT_FALSE (ts->t8_element_compare (face_desc, manual_face_desc)) << "Wrong last descendant face\n";
+      ASSERT_TRUE (ts->t8_element_equal (face_desc, manual_face_desc)) << "Wrong last descendant face\n";
     }
   }
 }

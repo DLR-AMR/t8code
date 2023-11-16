@@ -105,7 +105,7 @@ t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
          elidx < ts->t8_element_num_children (parent) && elidx + first_outgoing < tree_num_elements_old; elidx++) {
       child = t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing + elidx);
       ts->t8_element_parent (child, parent_compare);
-      if (!ts->t8_element_compare (parent, parent_compare)) {
+      if (ts->t8_element_equal (parent, parent_compare)) {
         family_size++;
       }
     }

@@ -76,12 +76,12 @@ t8_recursive_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *t
     /* first child == first descendant. */
     if (ichild == 0) {
       ts->t8_element_first_descendant (elem, test, level + 1);
-      ASSERT_TRUE (!ts->t8_element_compare (desc, test)) << "wrong first descendant.\n";
+      ASSERT_TRUE (ts->t8_element_equal (desc, test)) << "wrong first descendant.\n";
     }
     /* last child == last descendant. */
     else if (ichild == num_children - 1) {
       ts->t8_element_last_descendant (elem, test, level + 1);
-      ASSERT_TRUE (!ts->t8_element_compare (desc, test)) << "Wrong last descendant.\n";
+      ASSERT_TRUE (ts->t8_element_equal (desc, test)) << "Wrong last descendant.\n";
     }
     else if (level > maxlvl) {
       t8_recursive_descendant (desc, elem, test, ts, maxlvl);
@@ -104,7 +104,7 @@ t8_deep_first_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *
     ts->t8_element_copy (desc, test);
   }
   ts->t8_element_first_descendant (elem, test, level);
-  ASSERT_TRUE (!ts->t8_element_compare (desc, test)) << "Wrong deep first descendant.\n";
+  ASSERT_TRUE (ts->t8_element_equal (desc, test)) << "Wrong deep first descendant.\n";
 }
 
 /* Test, if the last descendant of an element is computed correctly over a range
@@ -123,7 +123,7 @@ t8_deep_last_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *t
   }
   /* Check for equality. */
   ts->t8_element_last_descendant (elem, test, level);
-  ASSERT_TRUE (!ts->t8_element_compare (desc, test)) << "Wrong deep last descendant.\n";
+  ASSERT_TRUE (ts->t8_element_equal (desc, test)) << "Wrong deep last descendant.\n";
 }
 
 /* Test if the first and last descendant of an element are computed correctly.
