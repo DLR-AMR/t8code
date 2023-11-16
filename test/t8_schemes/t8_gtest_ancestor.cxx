@@ -26,6 +26,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 */
 
 #include <gtest/gtest.h>
+#include <test/t8_gtest_custom_assertion.hxx>
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
@@ -78,10 +79,9 @@ t8_recursive_ancestor (t8_element_t *element, t8_element_t *child, t8_element_t 
   for (i = 0; i < num_children; i++) {
     ts->t8_element_child (parent, i, child);
     t8_dpyramid_ancestor ((t8_dpyramid_t *) child, level, (t8_dpyramid_t *) test_anc);
-    SC_CHECK_ABORT (ts->t8_element_equal (parent, test_anc), "Computed ancestor is not equal to the parent\n");
+    EXPECT_ELEM_EQ (ts, parent, test_anc);
     t8_dpyramid_ancestor ((t8_dpyramid_t *) child, elem_lvl, (t8_dpyramid_t *) test_anc);
-    SC_CHECK_ABORT (ts->t8_element_equal (element, test_anc),
-                    "Computed ancestor is not equal to the correct ancestor\n");
+    EXPECT_ELEM_EQ (ts, element, test_anc);
     t8_recursive_ancestor (element, parent, child, test_anc, ts, maxlvl);
     ts->t8_element_parent (child, parent);
   }

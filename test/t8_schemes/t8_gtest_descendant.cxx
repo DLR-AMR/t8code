@@ -24,6 +24,7 @@
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <test/t8_gtest_custom_assertion.hxx>
 
 /* This program tests the descendant function of an element. */
 
@@ -76,12 +77,12 @@ t8_recursive_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *t
     /* first child == first descendant. */
     if (ichild == 0) {
       ts->t8_element_first_descendant (elem, test, level + 1);
-      ASSERT_TRUE (ts->t8_element_equal (desc, test)) << "wrong first descendant.\n";
+      EXPECT_ELEM_EQ (ts, desc, test);
     }
     /* last child == last descendant. */
     else if (ichild == num_children - 1) {
       ts->t8_element_last_descendant (elem, test, level + 1);
-      ASSERT_TRUE (ts->t8_element_equal (desc, test)) << "Wrong last descendant.\n";
+      EXPECT_ELEM_EQ (ts, desc, test);
     }
     else if (level > maxlvl) {
       t8_recursive_descendant (desc, elem, test, ts, maxlvl);
@@ -104,7 +105,7 @@ t8_deep_first_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *
     ts->t8_element_copy (desc, test);
   }
   ts->t8_element_first_descendant (elem, test, level);
-  ASSERT_TRUE (ts->t8_element_equal (desc, test)) << "Wrong deep first descendant.\n";
+  EXPECT_ELEM_EQ (ts, desc, test);
 }
 
 /* Test, if the last descendant of an element is computed correctly over a range
@@ -123,7 +124,7 @@ t8_deep_last_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *t
   }
   /* Check for equality. */
   ts->t8_element_last_descendant (elem, test, level);
-  ASSERT_TRUE (ts->t8_element_equal (desc, test)) << "Wrong deep last descendant.\n";
+  EXPECT_ELEM_EQ (ts, desc, test);
 }
 
 /* Test if the first and last descendant of an element are computed correctly.

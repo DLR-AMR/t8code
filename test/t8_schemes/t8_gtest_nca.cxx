@@ -76,7 +76,7 @@ TEST_P (nca, nca_check_shallow)
   for (i = 0; i < num_children - 1; i++) {
     ts->t8_element_child (correct_nca, i, desc_a);
     for (j = i + 1; j < num_children; j++) {
-      ts->t8_element_child (correct_nca, 1, desc_b);
+      ts->t8_element_child (correct_nca, j, desc_b);
       /*Compute the nca */
       ts->t8_element_nca (desc_a, desc_b, check);
       /*expect equality */
@@ -122,7 +122,7 @@ TEST_P (nca, nca_check_deep)
           }
           else {
             /* Expect equality of correct_nca and check for every other class */
-            EXPECT_TRUE ((ts->t8_element_equal (correct_nca, check)));
+            EXPECT_ELEM_EQ (ts, correct_nca, check);
           }
         }
       }
@@ -289,8 +289,8 @@ TEST_P (nca, recursive_check_higher_level)
           }
           else {
             ts->t8_element_nca (parent_a, parent_b, check);
-            EXPECT_TRUE ((ts->t8_element_equal (parent_a, check)));
-            EXPECT_TRUE ((ts->t8_element_equal (parent_b, check)));
+            EXPECT_ELEM_EQ (ts, parent_a, check);
+            EXPECT_ELEM_EQ (ts, parent_b, check);
           }
         }
       }
