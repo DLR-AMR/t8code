@@ -213,8 +213,6 @@ t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh, t8_shmem_array_t tree_offsets)
 void
 t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, int element_level, t8_scheme_cxx_t *ts);
 
-/* TODO: This function is no longer needed.  Scavenge documentation if helpful. */
-
 /** Refine the cmesh to a given level.
  * Thus split each tree into x^level subtrees
  * TODO: implement */

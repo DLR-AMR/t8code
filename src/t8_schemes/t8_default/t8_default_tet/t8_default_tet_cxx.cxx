@@ -364,14 +364,6 @@ t8_default_scheme_tet_c::t8_element_boundary_face (const t8_element_t *elem, int
   }
 }
 
-void
-t8_default_scheme_tet_c::t8_element_boundary (const t8_element_t *elem, int min_dim, int length,
-                                              t8_element_t **boundary) const
-{
-  T8_ASSERT (t8_element_is_valid (elem));
-  SC_ABORT ("Not implemented\n");
-}
-
 int
 t8_default_scheme_tet_c::t8_element_is_root_boundary (const t8_element_t *elem, int face) const
 {

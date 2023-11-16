@@ -268,7 +268,7 @@ t8_init (int log_threshold);
  * \return           A void * pointing to entry \a it in \a array.
  */
 void *
-t8_sc_array_index_locidx (sc_array_t *array, t8_locidx_t it);
+t8_sc_array_index_locidx (const sc_array_t *array, const t8_locidx_t it);
 
 /** Return a pointer to an array element indexed by a t8_gloidx_t.
  * \param [in] index needs to be in [0]..[elem_count-1].
