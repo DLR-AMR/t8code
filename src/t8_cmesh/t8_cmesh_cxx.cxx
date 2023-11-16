@@ -282,9 +282,10 @@ t8_cmesh_determine_partition (sc_array_t *first_element_tree, size_t pure_local_
 /* TODO: Shared trees, binary search in offset-array to avoid recv_any,
  * use partition_given to partition the cmesh*/
 void
-t8_cmesh_uniform_bounds_hybrid (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *scheme, t8_gloidx_t *first_local_tree,
-                                t8_gloidx_t *child_in_tree_begin, t8_gloidx_t *last_local_tree,
-                                t8_gloidx_t *child_in_tree_end, int8_t *first_tree_shared, sc_MPI_Comm comm)
+t8_cmesh_uniform_bounds_hybrid (const t8_cmesh_t cmesh, const int level, const t8_scheme_cxx_t *scheme,
+                                t8_gloidx_t *first_local_tree, t8_gloidx_t *child_in_tree_begin,
+                                t8_gloidx_t *last_local_tree, t8_gloidx_t *child_in_tree_end, int8_t *first_tree_shared,
+                                sc_MPI_Comm comm)
 {
   T8_ASSERT (cmesh != NULL);
 #ifdef T8_ENABLE_DEBUG
