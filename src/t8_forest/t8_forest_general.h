@@ -166,7 +166,7 @@ t8_forest_no_overlap (t8_forest_t forest);
  * \param [in] forest_b The second forest.
  * \return              True if \a forest_a and \a forest_b do have the same
  *                      number of local trees and each local tree has the same
- *                      elements, that is \ref t8_element_compare returns false
+ *                      elements, that is \ref t8_element_equal returns true
  *                      for each pair of elements of \a forest_a and \a forest_b.
  * \note This function is not collective. It only returns the state on the current
  * rank.

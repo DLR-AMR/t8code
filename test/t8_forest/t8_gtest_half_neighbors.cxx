@@ -21,6 +21,8 @@
 */
 
 #include <gtest/gtest.h>
+#include <test/t8_gtest_custom_assertion.hxx>
+
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
 #include <t8_forest/t8_forest_general.h>
@@ -116,9 +118,8 @@ TEST_P (forest_half_neighbors, test_half_neighbors)
                                                      child_ids);
           /* Check that the children at face of the neighbor are the half neighbors of the element */
           for (int ineigh = 0; ineigh < num_face_neighs; ineigh++) {
-            ASSERT_TRUE (!neigh_scheme->t8_element_compare (neighbor_face_children[ineigh], half_neighbors[ineigh]))
-              << "Half neighbor " << ineigh << " at face " << face << "is not equal to child" << ineigh
-              << "of the neighbor element.\n";
+            EXPECT_ELEM_EQ (neigh_scheme, neighbor_face_children[ineigh], half_neighbors[ineigh])
+              << "ineigh = " << ineigh << " face = " << face;
           }
           neigh_scheme->t8_element_destroy (num_face_neighs, neighbor_face_children);
           T8_FREE (child_ids);
