@@ -26,6 +26,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 */
 
 #include <gtest/gtest.h>
+#include <test/t8_gtest_custom_assertion.hxx>
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
@@ -75,11 +76,11 @@ TEST_P (nca, nca_check_shallow)
   for (i = 0; i < num_children - 1; i++) {
     ts->t8_element_child (correct_nca, i, desc_a);
     for (j = i + 1; j < num_children; j++) {
-      ts->t8_element_child (correct_nca, j, desc_b);
+      ts->t8_element_child (correct_nca, 1, desc_b);
       /*Compute the nca */
       ts->t8_element_nca (desc_a, desc_b, check);
       /*expect equality */
-      EXPECT_TRUE ((ts->t8_element_equal (correct_nca, check)));
+      EXPECT_ELEM_EQ (ts, check, correct_nca);
     }
   }
 }

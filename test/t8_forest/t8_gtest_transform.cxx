@@ -133,8 +133,7 @@ t8_test_transform_element (t8_eclass_scheme_c *ts, const t8_element_t *elem, t8_
     for (int itimes = 0; itimes < 4; itimes++) {
       ts->t8_element_transform_face (transform, transform, 1, 0, 0);
     }
-    ASSERT_TRUE (ts->t8_element_equal (elem, transform))
-      << "Elements are not equal. Quad. 4 times or 1 not smaller.";
+    ASSERT_TRUE (ts->t8_element_equal (elem, transform)) << "Elements are not equal. Quad. 4 times or 1 not smaller.";
     /* or = 1 sign = 0, then or = 3 sign = 0, then ori = 1 sign = 0 */
     ts->t8_element_transform_face (transform, transform, 1, 0, 1);
     ts->t8_element_transform_face (transform, transform, 3, 0, 1);

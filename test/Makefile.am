@@ -2,6 +2,8 @@
 #Non-recursive Makefile.am in test
 #Included from toplevel directory
 
+t8code_googletest_installed_headers = test/t8_gtest_custom_assertion.hxx
+
 t8code_googletest_programs = \
   test/t8_gtest_cmesh_bcast \
   test/t8_schemes/t8_gtest_nca \
