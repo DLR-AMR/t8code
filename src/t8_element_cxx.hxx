@@ -720,7 +720,7 @@ struct t8_eclass_scheme
  * \param[in, out] debug_string The string to fill. 
  */
   virtual void
-  t8_element_to_string (const t8_element_t *elem, char *debug_string) const
+  t8_element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const
     = 0;
 #endif
 

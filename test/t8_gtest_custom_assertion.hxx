@@ -49,8 +49,8 @@ element_equality (const char *ts_expr, const char *elem_1_expr, const char *elem
 #if T8_ENABLE_DEBUG
     char elem_1_string[BUFSIZ];
     char elem_2_string[BUFSIZ];
-    ts->t8_element_to_string (elem_1, elem_1_string);
-    ts->t8_element_to_string (elem_2, elem_2_string);
+    ts->t8_element_to_string (elem_1, elem_1_string, BUFSIZ);
+    ts->t8_element_to_string (elem_2, elem_2_string, BUFSIZ);
     return testing::AssertionFailure () << elem_1_expr << " " << elem_1_string << " is not equal to \n"
                                         << elem_2_expr << " " << elem_2_string << " given scheme " << ts_expr;
 #else

@@ -544,7 +544,7 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
   * \param [in]        elem  The element to print
   */
   virtual void
-  t8_element_to_string (const t8_element_t *elem, char *debug_string) const;
+  t8_element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const;
 #endif
 };
 

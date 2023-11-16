@@ -422,11 +422,13 @@ t8_default_scheme_pyramid_c::t8_element_is_valid (const t8_element_t *elem) cons
 }
 
 void
-t8_default_scheme_pyramid_c::t8_element_to_string (const t8_element_t *elem, char *debug_string) const
+t8_default_scheme_pyramid_c::t8_element_to_string (const t8_element_t *elem, char *debug_string,
+                                                   const int string_size) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (debug_string != NULL);
   t8_dpyramid_t *pyra = (t8_dpyramid_t *) elem;
-  snprintf (debug_string, BUFSIZ, "x: %i, y: %i, z: %i, type: %i, level: %i, switch_shape_at_level: %i",
+  snprintf (debug_string, string_size, "x: %i, y: %i, z: %i, type: %i, level: %i, switch_shape_at_level: %i",
             pyra->pyramid.x, pyra->pyramid.y, pyra->pyramid.x, pyra->pyramid.type, pyra->pyramid.level,
             pyra->switch_shape_at_level);
 }

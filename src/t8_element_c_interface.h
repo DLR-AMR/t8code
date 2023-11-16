@@ -661,7 +661,8 @@ t8_element_debug_print (const t8_eclass_scheme_c *ts, const t8_element_t *elem);
  * \param[in, out] debug_string The string to fill. 
  */
 void
-t8_element_to_string (const t8_eclass_scheme_c *ts, const t8_element_t *elem, char *debug_string);
+t8_element_to_string (const t8_eclass_scheme_c *ts, const t8_element_t *elem, char *debug_string,
+                      const int string_size);
 #endif
 
 /** Allocate memory for an array of elements of a given class and initialize them.

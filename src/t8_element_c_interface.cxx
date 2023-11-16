@@ -432,11 +432,12 @@ t8_element_debug_print (const t8_eclass_scheme_c *ts, const t8_element_t *elem)
 }
 
 void
-t8_element_to_string (const t8_eclass_scheme_c *ts, const t8_element_t *elem, char *debug_string)
+t8_element_to_string (const t8_eclass_scheme_c *ts, const t8_element_t *elem, char *debug_string, const int string_size)
 {
   T8_ASSERT (ts != NULL);
+  T8_ASSERT (debug_string != NULL);
 
-  ts->t8_element_to_string (elem, debug_string);
+  ts->t8_element_to_string (elem, debug_string, string_size);
 }
 #endif
 

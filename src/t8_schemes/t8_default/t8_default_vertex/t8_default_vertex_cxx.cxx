@@ -296,11 +296,13 @@ t8_default_scheme_vertex_c::t8_element_is_valid (const t8_element_t *elem) const
 }
 
 void
-t8_default_scheme_vertex_c::t8_element_to_string (const t8_element_t *elem, char *debug_string) const
+t8_default_scheme_vertex_c::t8_element_to_string (const t8_element_t *elem, char *debug_string,
+                                                  const int string_size) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (debug_string != NULL);
   t8_dvertex_t *vertex = (t8_dvertex_t *) elem;
-  snprintf (debug_string, BUFSIZ, "level: %i", vertex->level);
+  snprintf (debug_string, string_size, "level: %i", vertex->level);
 }
 #endif
 
