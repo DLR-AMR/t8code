@@ -166,6 +166,7 @@ t8_default_scheme_common_c::t8_element_debug_print (const t8_element_t *elem) co
 {
   char debug_string[BUFSIZ];
   t8_element_to_string (elem, debug_string, BUFSIZ);
+  t8_debugf ("%s\n", debug_string);
 }
 #endif
 
