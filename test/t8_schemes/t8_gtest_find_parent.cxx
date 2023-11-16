@@ -23,6 +23,7 @@
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <test/t8_gtest_custom_assertion.hxx>
 
 class class_find_parent: public testing::TestWithParam<t8_eclass_t> {
  protected:
@@ -79,7 +80,7 @@ t8_recursive_child_find_parent (t8_element_t *element, t8_element_t *child, t8_e
     ts->t8_element_parent (child, test_parent);
     /* If its equal, call child_find_parent, to check if parent-child relation
      * is correct in next level until maxlvl is reached*/
-    ASSERT_TRUE (ts->t8_element_equal (element, test_parent)) << "Computed child_parent is not the parent.";
+    EXPECT_ELEM_EQ (ts, element, test_parent);
 
     t8_recursive_child_find_parent (child, element, test_parent, ts, level + 1, maxlvl);
     /* After the check we know the parent-function is correct for this child.

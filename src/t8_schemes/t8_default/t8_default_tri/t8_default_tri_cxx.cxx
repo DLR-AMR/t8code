@@ -522,10 +522,13 @@ t8_default_scheme_tri_c::t8_element_is_valid (const t8_element_t *t) const
 }
 
 void
-t8_default_scheme_tri_c::t8_element_debug_print (const t8_element_t *t) const
+t8_default_scheme_tri_c::t8_element_to_string (const t8_element_t *elem, char *debug_string,
+                                               const int string_size) const
 {
-  T8_ASSERT (t8_element_is_valid (t));
-  t8_dtri_debug_print ((const t8_dtri_t *) t);
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (debug_string != NULL);
+  t8_dtri_t *tri = (t8_dtri_t *) elem;
+  snprintf (debug_string, string_size, "x: %i, y: %i, type: %i, level: %i", tri->x, tri->y, tri->type, tri->level);
 }
 #endif
 

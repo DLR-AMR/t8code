@@ -77,7 +77,6 @@ t8_default_scheme_hex_c::t8_element_equal (const t8_element_t *elem1, const t8_e
   return p8est_quadrant_is_equal ((const p8est_quadrant_t *) elem1, (const p8est_quadrant_t *) elem2);
 }
 
-
 void
 t8_default_scheme_hex_c::t8_element_parent (const t8_element_t *elem, t8_element_t *parent) const
 {
@@ -643,11 +642,13 @@ t8_default_scheme_hex_c::t8_element_is_valid (const t8_element_t *elem) const
 }
 
 void
-t8_default_scheme_hex_c::t8_element_debug_print (const t8_element_t *elem) const
+t8_default_scheme_hex_c::t8_element_to_string (const t8_element_t *elem, char *debug_string,
+                                               const int string_size) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (debug_string != NULL);
   p8est_quadrant_t *hex = (p8est_quadrant_t *) elem;
-  p8est_quadrant_print (SC_LP_DEBUG, hex);
+  snprintf (debug_string, string_size, "x: %i, y: %i, z: %i, level: %i", hex->x, hex->y, hex->z, hex->level);
 }
 #endif
 

@@ -62,7 +62,7 @@ t8_dprism_compare (const t8_dprism_t *p1, const t8_dprism_t *p2);
 * \param [in] elem2  The second element.
 * \return            1 if the elements are equal, 0 if they are not equal
 */
-int 
+int
 t8_dprism_equal (const t8_dprism_t *elem1, const t8_dprism_t *elem2);
 
 /** Initialize a prism as the prism with a given global id in a uniform
@@ -335,13 +335,6 @@ t8_dprism_linear_id (const t8_dprism_t *p, int level);
  */
 int
 t8_dprism_is_valid (const t8_dprism_t *p);
-
-/**
- * Print the coordinates, the level and the type of a prism.
- * \param [in] p  prism to be considered.
- */
-void
-t8_dprism_debug_print (const t8_dprism_t *p);
 
 T8_EXTERN_C_END ();
 

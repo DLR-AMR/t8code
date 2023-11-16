@@ -26,6 +26,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 */
 
 #include <gtest/gtest.h>
+#include <test/t8_gtest_custom_assertion.hxx>
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
@@ -79,7 +80,7 @@ TEST_P (nca, nca_check_shallow)
       /*Compute the nca */
       ts->t8_element_nca (desc_a, desc_b, check);
       /*expect equality */
-      EXPECT_TRUE ((ts->t8_element_equal (correct_nca, check)));
+      EXPECT_ELEM_EQ (ts, check, correct_nca);
     }
   }
 }
@@ -121,7 +122,7 @@ TEST_P (nca, nca_check_deep)
           }
           else {
             /* Expect equality of correct_nca and check for every other class */
-            EXPECT_TRUE ((ts->t8_element_equal (correct_nca, check)));
+            EXPECT_ELEM_EQ (ts, correct_nca, check);
           }
         }
       }
@@ -288,8 +289,8 @@ TEST_P (nca, recursive_check_higher_level)
           }
           else {
             ts->t8_element_nca (parent_a, parent_b, check);
-            EXPECT_TRUE ((ts->t8_element_equal (parent_a, check)));
-            EXPECT_TRUE ((ts->t8_element_equal (parent_b, check)));
+            EXPECT_ELEM_EQ (ts, parent_a, check);
+            EXPECT_ELEM_EQ (ts, parent_b, check);
           }
         }
       }

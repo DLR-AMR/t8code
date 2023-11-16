@@ -712,6 +712,16 @@ struct t8_eclass_scheme
   virtual void
   t8_element_debug_print (const t8_element_t *elem) const
     = 0;
+
+  /**
+ * \brief Fill a string with readable information about the element
+ * 
+ * \param[in] elem The element to translate into human-readable information
+ * \param[in, out] debug_string The string to fill. 
+ */
+  virtual void
+  t8_element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const
+    = 0;
 #endif
 
   /** Allocate memory for an array of elements of a given class and initialize them.

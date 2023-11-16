@@ -65,7 +65,6 @@ t8_default_scheme_line_c::t8_element_equal (const t8_element_t *elem1, const t8_
   return t8_dline_equal ((const t8_dline_t *) elem1, (const t8_dline_t *) elem2);
 }
 
-
 void
 t8_default_scheme_line_c::t8_element_parent (const t8_element_t *elem, t8_element_t *parent) const
 {
@@ -407,10 +406,13 @@ t8_default_scheme_line_c::t8_element_is_valid (const t8_element_t *elem) const
 }
 
 void
-t8_default_scheme_line_c::t8_element_debug_print (const t8_element_t *elem) const
+t8_default_scheme_line_c::t8_element_to_string (const t8_element_t *elem, char *debug_string,
+                                                const int string_size) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
-  t8_dline_debug_print ((const t8_dline_t *) elem);
+  T8_ASSERT (debug_string != NULL);
+  t8_dline_t *line = (t8_dline_t *) elem;
+  snprintf (debug_string, string_size, "x: %i, level: %i", line->x, line->level);
 }
 #endif
 
