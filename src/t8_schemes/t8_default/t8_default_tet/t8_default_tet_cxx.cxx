@@ -64,7 +64,6 @@ t8_default_scheme_tet_c::t8_element_equal (const t8_element_t *elem1, const t8_e
   return t8_dtet_equal ((const t8_dtet_t *) elem1, (const t8_dtet_t *) elem2);
 }
 
-
 void
 t8_default_scheme_tet_c::t8_element_parent (const t8_element_t *elem, t8_element_t *parent) const
 {
@@ -513,10 +512,12 @@ t8_default_scheme_tet_c::t8_element_is_valid (const t8_element_t *t) const
 }
 
 void
-t8_default_scheme_tet_c::t8_element_debug_print (const t8_element_t *t) const
+t8_default_scheme_tet_c::t8_element_to_string (const t8_element_t *elem, char *debug_string) const
 {
-  T8_ASSERT (t8_element_is_valid (t));
-  t8_dtet_debug_print ((const t8_dtet_t *) t);
+  T8_ASSERT (t8_element_is_valid (elem));
+  t8_dtet_t *tet = (t8_dtet_t *) elem;
+  snprintf (debug_string, BUFSIZ, "x: %i, y: %i, z: %i, type: %i, level: %i", tet->x, tet->y, tet->z, tet->type,
+            tet->level);
 }
 #endif
 

@@ -430,6 +430,14 @@ t8_element_debug_print (const t8_eclass_scheme_c *ts, const t8_element_t *elem)
 
   return ts->t8_element_debug_print (elem);
 }
+
+void
+t8_element_to_string (const t8_eclass_scheme_c *ts, const t8_element_t *elem, char *debug_string)
+{
+  T8_ASSERT (ts != NULL);
+
+  ts->t8_element_to_string (elem, debug_string);
+}
 #endif
 
 void

@@ -296,10 +296,11 @@ t8_default_scheme_vertex_c::t8_element_is_valid (const t8_element_t *elem) const
 }
 
 void
-t8_default_scheme_vertex_c::t8_element_debug_print (const t8_element_t *elem) const
+t8_default_scheme_vertex_c::t8_element_to_string (const t8_element_t *elem, char *debug_string) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
-  t8_dvertex_debug_print ((const t8_dvertex_t *) elem);
+  t8_dvertex_t *vertex = (t8_dvertex_t *) elem;
+  snprintf (debug_string, BUFSIZ, "level: %i", vertex->level);
 }
 #endif
 

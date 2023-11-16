@@ -43,10 +43,10 @@ t8_dprism_copy (const t8_dprism_t *p, t8_dprism_t *dest)
   T8_ASSERT (dest->line.level == dest->tri.level);
 }
 
-int 
-t8_dprism_equal (const t8_dprism_t *elem1, const t8_dprism_t *elem2) 
+int
+t8_dprism_equal (const t8_dprism_t *elem1, const t8_dprism_t *elem2)
 {
-  return t8_dline_equal(&elem1->line, &elem2->line) && t8_dtri_equal(&elem1->tri, &elem2->tri);
+  return t8_dline_equal (&elem1->line, &elem2->line) && t8_dtri_equal (&elem1->tri, &elem2->tri);
 }
 
 int
@@ -634,11 +634,4 @@ t8_dprism_is_valid (const t8_dprism_t *p)
   const t8_dtri_t *tri = &p->tri;
   const int same_level = line->level == tri->level;
   return t8_dtri_is_valid (tri) && t8_dline_is_valid (line) && same_level;
-}
-
-void
-t8_dprism_debug_print (const t8_dprism_t *p)
-{
-  t8_dtri_debug_print (&p->tri);
-  t8_dline_debug_print (&p->line);
 }

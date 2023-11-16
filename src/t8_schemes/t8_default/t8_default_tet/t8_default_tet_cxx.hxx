@@ -550,7 +550,7 @@ struct t8_default_scheme_tet_c: public t8_default_scheme_common_c
   * \param [in]        elem  The element to print
   */
   virtual void
-  t8_element_debug_print (const t8_element_t *elem) const;
+  t8_element_to_string (const t8_element_t *elem, char *debug_string) const;
 #endif
 };
 

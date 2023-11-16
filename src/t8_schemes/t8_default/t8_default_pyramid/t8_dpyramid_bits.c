@@ -383,10 +383,11 @@ t8_dpyramid_copy (const t8_dpyramid_t *source, t8_dpyramid_t *dest)
   memcpy (dest, source, sizeof (t8_dpyramid_t));
 }
 
-int 
-t8_dpyramid_equal (const t8_dpyramid_t *elem1, const t8_dpyramid_t *elem2) 
+int
+t8_dpyramid_equal (const t8_dpyramid_t *elem1, const t8_dpyramid_t *elem2)
 {
-  return t8_dtet_equal(&elem1->pyramid, &elem2->pyramid) && elem1->switch_shape_at_level == elem2->switch_shape_at_level;
+  return t8_dtet_equal (&elem1->pyramid, &elem2->pyramid)
+         && elem1->switch_shape_at_level == elem2->switch_shape_at_level;
 }
 
 int
@@ -1784,11 +1785,4 @@ t8_dpyramid_is_valid (const t8_dpyramid_t *p)
   }
 
   return is_valid;
-}
-
-void
-t8_dpyramid_debug_print (const t8_dpyramid_t *p)
-{
-  t8_debugf ("x: %i, y: %i, z: %i, type %i, level: %i, switches_shape_at_level: %i\n", p->pyramid.x, p->pyramid.y,
-             p->pyramid.z, p->pyramid.type, p->pyramid.level, p->switch_shape_at_level);
 }

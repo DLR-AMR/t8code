@@ -160,4 +160,13 @@ t8_default_scheme_common_c::t8_element_general_function (const t8_element_t *ele
   /* This function is intentionally left blank. */
 }
 
+#if T8_ENABLE_DEBUG
+void
+t8_default_scheme_common_c::t8_element_debug_print (const t8_element_t *elem) const
+{
+  char debug_string[BUFSIZ];
+  t8_element_to_string (elem, debug_string);
+}
+#endif
+
 T8_EXTERN_C_END ();

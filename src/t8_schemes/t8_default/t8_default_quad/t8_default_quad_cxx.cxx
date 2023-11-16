@@ -100,7 +100,6 @@ t8_default_scheme_quad_c::t8_element_equal (const t8_element_t *elem1, const t8_
   return p4est_quadrant_is_equal ((const p4est_quadrant_t *) elem1, (const p4est_quadrant_t *) elem2);
 }
 
-
 void
 t8_default_scheme_quad_c::t8_element_parent (const t8_element_t *elem, t8_element_t *parent) const
 {
@@ -773,11 +772,11 @@ t8_default_scheme_quad_c::t8_element_is_valid (const t8_element_t *elem) const
 }
 
 void
-t8_default_scheme_quad_c::t8_element_debug_print (const t8_element_t *elem) const
+t8_default_scheme_quad_c::t8_element_to_string (const t8_element_t *elem, char *debug_string) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   p4est_quadrant_t *quad = (p4est_quadrant_t *) elem;
-  p4est_quadrant_print (SC_LP_DEBUG, quad);
+  snprintf (debug_string, BUFSIZ, "x: %i, y: %i, level: %i", quad->x, quad->y, quad->level);
 }
 #endif
 
