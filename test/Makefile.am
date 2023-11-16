@@ -26,6 +26,7 @@ t8code_googletest_programs = \
   test/t8_geometry/t8_gtest_geometry \
   test/t8_schemes/t8_gtest_descendant \
   test/t8_schemes/t8_gtest_find_parent \
+  test/t8_schemes/t8_gtest_equal \
   test/t8_cmesh/t8_gtest_cmesh_face_is_boundary \
   test/t8_cmesh/t8_gtest_cmesh_partition \
   test/t8_cmesh/t8_gtest_cmesh_set_join_by_vertices \
@@ -144,6 +145,10 @@ test_t8_schemes_t8_gtest_descendant_SOURCES = \
 test_t8_schemes_t8_gtest_find_parent_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_schemes/t8_gtest_find_parent.cxx
+
+test_t8_schemes_t8_gtest_equal_SOURCES = \
+  test/t8_gtest_main.cxx \
+  test/t8_schemes/t8_gtest_equal.cxx
 
 test_t8_cmesh_t8_gtest_cmesh_face_is_boundary_SOURCES = \
   test/t8_gtest_main.cxx \
@@ -338,6 +343,10 @@ test_t8_schemes_t8_gtest_find_parent_LDADD = $(t8_gtest_target_ld_add)
 test_t8_schemes_t8_gtest_find_parent_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_schemes_t8_gtest_find_parent_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
+test_t8_schemes_t8_gtest_equal_LDADD = $(t8_gtest_target_ld_add)
+test_t8_schemes_t8_gtest_equal_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_schemes_t8_gtest_equal_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+
 test_t8_cmesh_t8_gtest_cmesh_face_is_boundary_LDADD = $(t8_gtest_target_ld_add)
 test_t8_cmesh_t8_gtest_cmesh_face_is_boundary_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_cmesh_t8_gtest_cmesh_face_is_boundary_CPPFLAGS = $(t8_gtest_target_cpp_flags)
@@ -464,6 +473,7 @@ test_t8_schemes_t8_gtest_element_ref_coords_CPPFLAGS += $(t8_gtest_target_mpi_cp
 test_t8_geometry_t8_gtest_geometry_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_descendant_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_find_parent_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_schemes_t8_gtest_equal_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_cmesh_face_is_boundary_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_cmesh_partition_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_t8_gtest_element_volume_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
