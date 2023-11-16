@@ -71,6 +71,13 @@ t8_default_scheme_hex_c::t8_element_compare (const t8_element_t *elem1, const t8
   return p8est_quadrant_compare ((const p8est_quadrant_t *) elem1, (const p8est_quadrant_t *) elem2);
 }
 
+int
+t8_default_scheme_hex_c::t8_element_equal (const t8_element_t *elem1, const t8_element_t *elem2) const
+{
+  return p8est_quadrant_is_equal ((const p8est_quadrant_t *) elem1, (const p8est_quadrant_t *) elem2);
+}
+
+
 void
 t8_default_scheme_hex_c::t8_element_parent (const t8_element_t *elem, t8_element_t *parent) const
 {

@@ -383,6 +383,12 @@ t8_dpyramid_copy (const t8_dpyramid_t *source, t8_dpyramid_t *dest)
   memcpy (dest, source, sizeof (t8_dpyramid_t));
 }
 
+int 
+t8_dpyramid_equal (const t8_dpyramid_t *elem1, const t8_dpyramid_t *elem2) 
+{
+  return t8_dtet_equal(&elem1->pyramid, &elem2->pyramid) && elem1->switch_shape_at_level == elem2->switch_shape_at_level;
+}
+
 int
 t8_dpyramid_compare (const t8_dpyramid_t *p1, const t8_dpyramid_t *p2)
 {

@@ -51,6 +51,12 @@ t8_dline_compare (const t8_dline_t *l1, const t8_dline_t *l2)
   return id1 < id2 ? -1 : id1 != id2;
 }
 
+int
+t8_dline_equal (const t8_dline_t *l1, const t8_dline_t *l2)
+{
+  return (l1->level == l2->level && l1->x == l2->x);
+}
+
 void
 t8_dline_parent (const t8_dline_t *l, t8_dline_t *parent)
 {

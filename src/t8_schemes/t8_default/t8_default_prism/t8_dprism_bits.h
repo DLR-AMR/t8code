@@ -57,6 +57,14 @@ t8_dprism_copy (const t8_dprism_t *p, t8_dprism_t *dest);
 int
 t8_dprism_compare (const t8_dprism_t *p1, const t8_dprism_t *p2);
 
+/** Check if two elements are equal.
+* \param [in] elem1  The first element.
+* \param [in] elem2  The second element.
+* \return            1 if the elements are equal, 0 if they are not equal
+*/
+int 
+t8_dprism_equal (const t8_dprism_t *elem1, const t8_dprism_t *elem2);
+
 /** Initialize a prism as the prism with a given global id in a uniform
  *  refinement of a given level. *
  * \param [in,out] p  Existing prism whose data will be filled.

@@ -48,6 +48,14 @@ t8_dtri_copy (const t8_dtri_t *t, t8_dtri_t *dest);
 int
 t8_dtri_compare (const t8_dtri_t *t1, const t8_dtri_t *t2);
 
+/** Check if two elements are equal.
+* \param [in] elem1  The first element.
+* \param [in] elem2  The second element.
+* \return            1 if the elements are equal, 0 if they are not equal
+*/
+int
+t8_dtri_equal (const t8_dtri_t *elem1, const t8_dtri_t *elem2);
+
 /** Compute the parent of a triangle.
  * \param [in]  elem Input triangle.
  * \param [in,out] parent Existing triangle whose data will be filled with the data of elem's parent.

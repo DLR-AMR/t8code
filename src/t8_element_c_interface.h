@@ -83,7 +83,7 @@ t8_element_level (const t8_eclass_scheme_c *ts, const t8_element_t *elem);
 void
 t8_element_copy (const t8_eclass_scheme_c *ts, const t8_element_t *source, t8_element_t *dest);
 
-/** Compare two elements.
+/** Compare two elements with respect to the scheme.
  * \param [in] ts     Implementation of a class scheme.
  * \param [in] elem1  The first element.
  * \param [in] elem2  The second element.
@@ -93,6 +93,15 @@ t8_element_copy (const t8_eclass_scheme_c *ts, const t8_element_t *source, t8_el
  */
 int
 t8_element_compare (const t8_eclass_scheme_c *ts, const t8_element_t *elem1, const t8_element_t *elem2);
+
+/** Check if two elements are equal.
+ * \param [in] ts     Implementation of a class scheme.
+ * \param [in] elem1  The first element.
+ * \param [in] elem2  The second element.
+ * \return            1 if the elements are equal, 0 if they are not equal
+ */
+int
+t8_element_equal (const t8_eclass_scheme_c *ts, const t8_element_t *elem1, const t8_element_t *elem2);
 
 /** Compute the parent of a given element \b elem and store it in \b parent.
  *  \b parent needs to be an existing element. No memory is allocated by this function.

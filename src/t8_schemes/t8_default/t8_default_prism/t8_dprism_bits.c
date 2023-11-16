@@ -43,6 +43,12 @@ t8_dprism_copy (const t8_dprism_t *p, t8_dprism_t *dest)
   T8_ASSERT (dest->line.level == dest->tri.level);
 }
 
+int 
+t8_dprism_equal (const t8_dprism_t *elem1, const t8_dprism_t *elem2) 
+{
+  return t8_dline_equal(&elem1->line, &elem2->line) && t8_dtri_equal(&elem1->tri, &elem2->tri);
+}
+
 int
 t8_dprism_compare (const t8_dprism_t *p1, const t8_dprism_t *p2)
 {

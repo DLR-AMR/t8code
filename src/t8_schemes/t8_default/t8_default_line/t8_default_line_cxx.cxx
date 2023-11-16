@@ -59,6 +59,13 @@ t8_default_scheme_line_c::t8_element_compare (const t8_element_t *elem1, const t
   return t8_dline_compare ((const t8_dline_t *) elem1, (const t8_dline_t *) elem2);
 }
 
+int
+t8_default_scheme_line_c::t8_element_equal (const t8_element_t *elem1, const t8_element_t *elem2) const
+{
+  return t8_dline_equal ((const t8_dline_t *) elem1, (const t8_dline_t *) elem2);
+}
+
+
 void
 t8_default_scheme_line_c::t8_element_parent (const t8_element_t *elem, t8_element_t *parent) const
 {

@@ -121,6 +121,13 @@ t8_default_scheme_pyramid_c::t8_element_compare (const t8_element_t *elem1, cons
   return t8_dpyramid_compare ((const t8_dpyramid_t *) elem1, (const t8_dpyramid_t *) elem2);
 }
 
+int
+t8_default_scheme_pyramid_c::t8_element_equal (const t8_element_t *elem1, const t8_element_t *elem2) const
+{
+  return t8_dpyramid_equal ((const t8_dpyramid_t *) elem1, (const t8_dpyramid_t *) elem2);
+}
+
+
 void
 t8_default_scheme_pyramid_c::t8_element_copy (const t8_element_t *source, t8_element_t *dest) const
 {

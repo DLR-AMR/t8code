@@ -61,6 +61,12 @@ t8_default_scheme_vertex_c::t8_element_compare (const t8_element_t *elem1, const
   return t8_dvertex_compare ((const t8_dvertex_t *) elem1, (const t8_dvertex_t *) elem2);
 }
 
+int
+t8_default_scheme_vertex_c::t8_element_equal (const t8_element_t *elem1, const t8_element_t *elem2) const
+{
+  return t8_dvertex_equal ((const t8_dvertex_t *) elem1, (const t8_dvertex_t *) elem2);
+}
+
 void
 t8_default_scheme_vertex_c::t8_element_parent (const t8_element_t *elem, t8_element_t *parent) const
 {

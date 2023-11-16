@@ -106,6 +106,20 @@ t8_dtri_copy (const t8_dtri_t *t, t8_dtri_t *dest)
 }
 
 int
+t8_dtri_equal (const t8_dtri_t *elem1, const t8_dtri_t *elem2)
+{
+  return (elem1->level == elem2->level 
+          && elem1->type == elem2->type
+          && elem1->x == elem2->x
+          && elem1->y == elem2->y 
+#ifdef T8_DTRI_TO_DTET
+          && elem1->z == elem2->z
+#endif
+          );
+
+}
+
+int
 t8_dtri_compare (const t8_dtri_t *t1, const t8_dtri_t *t2)
 {
   int maxlvl;

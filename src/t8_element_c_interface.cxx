@@ -86,6 +86,14 @@ t8_element_compare (const t8_eclass_scheme_c *ts, const t8_element_t *elem1, con
   return ts->t8_element_compare (elem1, elem2);
 }
 
+int
+t8_element_equal (const t8_eclass_scheme_c *ts, const t8_element_t *elem1, const t8_element_t *elem2)
+{
+  T8_ASSERT (ts != NULL);
+
+  return ts->t8_element_equal (elem1, elem2);
+}
+
 void
 t8_element_parent (const t8_eclass_scheme_c *ts, const t8_element_t *elem, t8_element_t *parent)
 {
