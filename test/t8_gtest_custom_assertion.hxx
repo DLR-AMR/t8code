@@ -30,12 +30,12 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 /**
  * \brief Test two elements for equality and print the elements if they aren't equal
  * 
- * \param ts_expr The name of the scheme \a ts
- * \param elem_1_expr The name of the first element \a elem_1
- * \param elem_2_expr The name of the second element \a elem_2
- * \param ts The scheme to use to check the equality
- * \param elem_1 The element to compare with \a elem_2
- * \param elem_2 the element to compare with \a elem_1
+ * \param[in] ts_expr The name of the scheme \a ts
+ * \param[in] elem_1_expr The name of the first element \a elem_1
+ * \param[in] elem_2_expr The name of the second element \a elem_2
+ * \param[in] ts The scheme to use to check the equality
+ * \param[in] elem_1 The element to compare with \a elem_2
+ * \param[in] elem_2 the element to compare with \a elem_1
  * \return testing::AssertionResult 
  */
 testing::AssertionResult
