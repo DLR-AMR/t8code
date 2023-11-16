@@ -957,7 +957,7 @@ t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id, t8_locidx_t 
   return NULL;
 }
 
-t8_element_t *
+const t8_element_t *
 t8_forest_get_element_in_tree (t8_forest_t forest, t8_locidx_t ltreeid, t8_locidx_t leid_in_tree)
 {
   t8_tree_t tree;
