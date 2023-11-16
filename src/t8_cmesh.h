@@ -678,7 +678,10 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *ts, t8_gl
                          int8_t *first_tree_shared);
 
 /**
- * Calculate the section of a uniform hybrid forest for the current rank
+ * Calculate the section of a uniform hybrid forest for the current rank. Need for hybrid meshes, especially 
+ * meshes where not all elements refine into 1:2^dim manner. The section is calculated without assuming such refinement
+ * and each process computes its number of elements on the given \var level communicates the number to other processes
+ * and the correct section is computed based on this information. 
  * 
  * \param [in] cmesh        The cmesh to be considered.
  * \param [in] level        The uniform refinement level to be created.
