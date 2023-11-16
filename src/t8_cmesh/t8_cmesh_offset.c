@@ -194,7 +194,7 @@ t8_offset_any_owner_of_tree_ext (const int mpisize, const int start_proc, const 
 int
 t8_offset_any_owner_of_tree (const int mpisize, const t8_gloidx_t gtree, const t8_gloidx_t *offset)
 {
-  return t8_offset_any_owner_of_tree_ext (mpisize, (0 + mpisize) / 2, gtree, offset);
+  return t8_offset_any_owner_of_tree_ext (mpisize, (mpisize - 1) / 2, gtree, offset);
 }
 
 /* Find the smallest process that owns a given tree.
