@@ -84,8 +84,6 @@ class TestDFS : public testing::TestWithParam<t8_eclass_t> {
     dfs_test_teardown();
   }
 
-  virtual ~TestDFS() = default;
-
   t8_scheme_cxx *scheme;
   t8_eclass_t eclass;
   t8_eclass_scheme_c *ts;
