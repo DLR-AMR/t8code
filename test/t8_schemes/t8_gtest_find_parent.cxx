@@ -27,8 +27,8 @@
 #include "t8_gtest_scheme_helper.hxx"
 
 class class_find_parent: public TestDFS{
-  void
-  check_element () override
+  virtual void
+  check_element ()
   {
     const int num_children = ts->t8_element_num_children (element);
     for (int ichild = 0; ichild < num_children; ichild++) {

@@ -34,7 +34,7 @@ class TestDFS : public testing::TestWithParam<t8_eclass_t> {
 /** recursive tests check something for all descendants of a starting element upto maxlevel
 */
   virtual void
-  check_element (const t8_element_t *elem) = 0;
+  check_element (const t8_element_t *elem){};
 
   /** recursive depth first search to iterate over all descendants of elem up to maxlvl */
   void
@@ -47,7 +47,6 @@ class TestDFS : public testing::TestWithParam<t8_eclass_t> {
     check_element (element);
 
     if (ts->t8_element_level (element) < maxlvl) {
-      t8_debugf ("iterate over children:\n");
       /* iterate over all children */
       int num_children = ts->t8_element_num_children (element);
       for (int ichild = 0; ichild < num_children; ichild++) {
