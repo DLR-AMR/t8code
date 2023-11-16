@@ -246,7 +246,7 @@ t8_cmesh_gather_treecount_nocommit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   t8_cmesh_gather_treecount_ext (cmesh, comm, 0);
 }
 
-/* A much faster version to compute the sendrange */
+/* A fast way to compute the sendrange */
 static t8_locidx_t
 t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from, int *send_first, int *send_last)
 {
@@ -395,7 +395,7 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from, int *send
   return (t8_locidx_t) ret;
 }
 
-/* A much faster version to compute the receive range */
+/* A fast way to compute the receive range */
 static void
 t8_cmesh_partition_recvrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from, int *recv_first, int *recv_last)
 {
