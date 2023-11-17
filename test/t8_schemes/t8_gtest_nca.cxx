@@ -29,6 +29,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <test/t8_gtest_macros.hxx>
 
 class nca: public testing::TestWithParam<t8_eclass> {
  protected:
@@ -308,4 +309,4 @@ TEST_P (nca, recursive_check_higher_level)
   ts->t8_element_destroy (1, &correct_nca_high_level);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_nca, nca, testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_nca, nca, AllEclasses);

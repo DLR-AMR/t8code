@@ -25,6 +25,7 @@
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_element_c_interface.h>
+#include <test/t8_gtest_macros.hxx>
 
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h>
 
@@ -205,5 +206,5 @@ TEST_P (face_neigh, recursive_check_diff)
 }
 
 /* *INDENT-OFF* */
-INSTANTIATE_TEST_SUITE_P (t8_gtest_face_neigh, face_neigh, testing::Range (T8_ECLASS_VERTEX, T8_ECLASS_COUNT));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_face_neigh, face_neigh, AllEclasses);
 /* *INDENT-ON* */

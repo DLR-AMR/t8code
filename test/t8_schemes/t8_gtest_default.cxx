@@ -36,6 +36,7 @@
 #include <t8_schemes/t8_default/t8_default_tet/t8_default_tet_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_prism/t8_default_prism_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid_cxx.hxx>
+#include <test/t8_gtest_macros.hxx>
 
 class gtest_default_scheme: public testing::TestWithParam<t8_eclass_t> {
  protected:
@@ -87,5 +88,4 @@ TEST_P (gtest_default_scheme, is_default)
   EXPECT_TRUE (t8_eclass_scheme_is_default (eclass_scheme));
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_default_scheme, gtest_default_scheme,
-                          testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_default_scheme, gtest_default_scheme, AllEclasses);

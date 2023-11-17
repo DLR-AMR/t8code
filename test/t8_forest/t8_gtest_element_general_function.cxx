@@ -29,6 +29,7 @@
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
+#include <test/t8_gtest_macros.hxx>
 
 /*
  * In this file we test whether the t8_element_general_function
@@ -104,4 +105,4 @@ TEST_P (forest_element_function, test_element_general_function)
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_element_general_function, forest_element_function,
-                          testing::Combine (testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT), testing::Range (0, 6)));
+                          testing::Combine (AllEclasses, testing::Range (0, 6)));
