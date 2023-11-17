@@ -37,24 +37,23 @@ class class_test_boundary_extrude: public TestDFS{
     const int num_faces = ts->t8_element_num_faces (element);
     for (int iface = 0; iface < num_faces; iface++) {
       /* Iterate over all faces that are also root faces and determine the face element */
-      if (!ts->t8_element_is_root_boundary (element, iface))
-        continue;
+      if (ts->t8_element_is_root_boundary (element, iface))
+        /* Get face scheme */
+        const int tree_face = ts->t8_element_tree_face (element, iface);
+        const t8_eclass_t face_eclass = (t8_eclass_t) t8_eclass_face_types[eclass][tree_face];
+        const t8_eclass_scheme_c *face_ts = scheme->eclass_schemes[face_eclass];
 
-      /* Get face scheme */
-      const int tree_face = ts->t8_element_tree_face (element, iface);
-      const t8_eclass_t face_eclass = (t8_eclass_t) t8_eclass_face_types[eclass][tree_face];
-      const t8_eclass_scheme_c *face_ts = scheme->eclass_schemes[face_eclass];
+        t8_element_t *boundary;
+        face_ts->t8_element_new (1, &boundary);
 
-      t8_element_t *boundary;
-      face_ts->t8_element_new (1, &boundary);
+        ts->t8_element_boundary_face (element, iface, boundary, face_ts);
 
-      ts->t8_element_boundary_face (element, iface, boundary, face_ts);
+        ts->t8_element_extrude_face (boundary, face_ts, check, tree_face);
 
-      ts->t8_element_extrude_face (boundary, face_ts, check, tree_face);
+        EXPECT_ELEM_EQ (ts, element, check);
 
-      EXPECT_ELEM_EQ (ts, element, check);
-
-      face_ts->t8_element_destroy (1, &boundary);
+        face_ts->t8_element_destroy (1, &boundary);
+      }
     }
   }
  protected:
