@@ -48,7 +48,7 @@ class TestDFS : public testing::TestWithParam<t8_eclass_t> {
 
     if (ts->t8_element_level (element) < maxlvl) {
       /* iterate over all children */
-      int num_children = ts->t8_element_num_children (element);
+      const int num_children = ts->t8_element_num_children (element);
       for (int ichild = 0; ichild < num_children; ichild++) {
         ts->t8_element_child (element, ichild, element);
         check_recursive_dfs_to_max_lvl ();
