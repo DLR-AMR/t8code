@@ -27,7 +27,7 @@
 #include "t8_gtest_dfs_base.hxx"
 #include <test/t8_gtest_macros.hxx>
 
-class class_find_parent: public TestDFS{
+class class_find_parent: public TestDFS {
   virtual void
   check_element ()
   {
@@ -37,17 +37,18 @@ class class_find_parent: public TestDFS{
       /* Compute parent of child */
       ts->t8_element_parent (child, test_parent);
       /* Check that it is equal to the original element */
-      EXPECT_ELEM_EQ (ts, element, test_parent);    }
+      EXPECT_ELEM_EQ (ts, element, test_parent);
+    }
   }
+
  protected:
   void
   SetUp () override
   {
-    dfs_test_setup();
+    dfs_test_setup ();
     /* Get element and initialize it */
     ts->t8_element_new (1, &child);
     ts->t8_element_new (1, &test_parent);
-
   }
   void
   TearDown () override
@@ -57,7 +58,7 @@ class class_find_parent: public TestDFS{
     ts->t8_element_destroy (1, &test_parent);
 
     /* Destroy DFS test */
-    dfs_test_teardown();
+    dfs_test_teardown ();
   }
   t8_element_t *child;
   t8_element_t *test_parent;
@@ -70,7 +71,7 @@ TEST_P (class_find_parent, t8_compute_child_find_parent)
 #else
   const int maxlvl = 6;
 #endif
-  check_recursive_dfs_to_max_lvl(maxlvl);
+  check_recursive_dfs_to_max_lvl (maxlvl);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_find_parent, class_find_parent, AllImplementations);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_find_parent, class_find_parent, AllEclasses);

@@ -193,5 +193,4 @@ TEST_P (forest_ghost_exchange, test_ghost_exchange)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_exchange, forest_ghost_exchange,
-                          testing::Range (0, t8_get_number_of_all_testcases ()));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_exchange, forest_ghost_exchange, AllCmeshs);

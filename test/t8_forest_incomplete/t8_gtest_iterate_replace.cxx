@@ -238,5 +238,4 @@ TEST_P (forest_iterate, test_iterate_replace)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_iterate_replace, forest_iterate,
-                          testing::Range (0, t8_get_number_of_all_testcases ()));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_iterate_replace, forest_iterate, AllCmeshs);

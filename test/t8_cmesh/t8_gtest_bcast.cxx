@@ -56,4 +56,4 @@ TEST_P (cmesh_hypercube, bcast_equal_no_bcast)
   EXPECT_TRUE (t8_cmesh_is_equal (cmesh_bcast, cmesh_check));
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_bcast, cmesh_hypercube, testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_bcast, cmesh_hypercube, AllEclasses);

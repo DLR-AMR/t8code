@@ -147,4 +147,4 @@ TEST_P (linear_id, id_at_other_level)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_test_init_linear_id, linear_id, testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT));
+INSTANTIATE_TEST_SUITE_P (t8_test_init_linear_id, linear_id, AllEclasses);

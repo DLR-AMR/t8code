@@ -168,4 +168,4 @@ TEST_P (global_tree, test_empty_global_tree)
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_empty_global_tree, global_tree,
-                          testing::Combine (testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT), testing::Range (0, 6)));
+                          testing::Combine (AllEclasses, testing::Range (0, 6)));

@@ -151,5 +151,4 @@ TEST_P (forest_search, test_search_one_query_matches_all)
   sc_array_reset (&queries);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_search, forest_search,
-                          testing::Combine (testing::Range (T8_ECLASS_VERTEX, T8_ECLASS_COUNT), testing::Range (0, 6)));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_search, forest_search, testing::Combine (AllEclasses, testing::Range (0, 6)));

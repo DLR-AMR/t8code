@@ -205,5 +205,5 @@ TEST_P (face_neigh, recursive_check_diff)
 }
 
 /* *INDENT-OFF* */
-INSTANTIATE_TEST_SUITE_P (t8_gtest_face_neigh, face_neigh, testing::Range (T8_ECLASS_VERTEX, T8_ECLASS_COUNT));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_face_neigh, face_neigh, AllEclasses);
 /* *INDENT-ON* */

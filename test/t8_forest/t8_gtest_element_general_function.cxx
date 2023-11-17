@@ -104,4 +104,4 @@ TEST_P (forest_element_function, test_element_general_function)
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_element_general_function, forest_element_function,
-                          testing::Combine (testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT), testing::Range (0, 6)));
+                          testing::Combine (AllEclasses, testing::Range (0, 6)));

@@ -170,5 +170,4 @@ TEST_P (class_descendant, t8_check_face_desc)
   ts->t8_element_destroy (1, &tmp);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_element_face_descendant, class_descendant,
-                          testing::Range (T8_ECLASS_VERTEX, T8_ECLASS_COUNT));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_element_face_descendant, class_descendant, AllEclasses);

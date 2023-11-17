@@ -130,5 +130,4 @@ TEST_P (class_element_leafs, test_element_count_leafs_one_level)
   class_scheme->t8_element_destroy (1, &element);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_element_count_leafs, class_element_leafs,
-                          testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_element_count_leafs, class_element_leafs, AllEclasses);

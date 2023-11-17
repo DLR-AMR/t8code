@@ -170,4 +170,4 @@ TEST_P (forest_commit, test_forest_commit)
   t8_debugf ("Done testing forest commit.");
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_forest_commit, forest_commit, testing::Range (0, t8_get_number_of_all_testcases ()));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_forest_commit, forest_commit, AllCmeshs);

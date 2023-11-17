@@ -175,4 +175,4 @@ TEST_P (forest_permute, test_permute_hole)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_permute_hole, forest_permute, testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_permute_hole, forest_permute, AllEclasses);

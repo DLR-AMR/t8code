@@ -260,5 +260,4 @@ TEST_P (class_ref_coords, t8_check_elem_ref_coords)
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_element_ref_coords, class_ref_coords,
-                          testing::Combine (testing::Range (T8_ECLASS_VERTEX, T8_ECLASS_COUNT),
-                                            testing::Range (0, MAX_LEVEL_REF_COORD_TEST + 1)));
+                          testing::Combine (AllEclasses, testing::Range (0, MAX_LEVEL_REF_COORD_TEST + 1)));

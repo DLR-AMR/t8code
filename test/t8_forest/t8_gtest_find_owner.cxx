@@ -169,4 +169,4 @@ TEST_P (forest_find_owner, find_multiple_owners)
   sc_array_reset (&owners);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_find_owner, forest_find_owner, testing::Range (T8_ECLASS_VERTEX, T8_ECLASS_COUNT));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_find_owner, forest_find_owner, AllEclasses);
