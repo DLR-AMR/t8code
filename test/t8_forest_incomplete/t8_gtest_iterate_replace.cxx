@@ -27,6 +27,7 @@
 #include <t8_forest/t8_forest.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <test/t8_gtest_macros.hxx>
 
 /* In this test, we first adapt a forest and store every callback return value.
  * In the next step, we call t8_forest_iterate_replace. Instead of interpolating

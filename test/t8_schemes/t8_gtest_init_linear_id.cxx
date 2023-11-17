@@ -26,6 +26,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <sc_functions.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
+#include <test/t8_gtest_macros.hxx>
 
 class linear_id: public testing::TestWithParam<t8_eclass> {
  protected:

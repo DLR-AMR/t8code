@@ -26,15 +26,16 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_vec.h>
+#include <test/t8_gtest_macros.hxx>
 
-class gtest_eclass: public testing::TestWithParam<int> {
+class gtest_eclass: public testing::TestWithParam<t8_eclass_t> {
  protected:
   void
   SetUp () override
   {
     ieclass = GetParam ();
   }
-  int ieclass;
+  t8_eclass_t ieclass;
 };
 
 TEST (gtest_eclass, eclassCountIs8)

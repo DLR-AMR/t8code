@@ -22,6 +22,7 @@
 
 #include <gtest/gtest.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <test/t8_gtest_macros.hxx>
 
 /*
  * In this file we test whether the t8_element_count_leafs{_from_root}

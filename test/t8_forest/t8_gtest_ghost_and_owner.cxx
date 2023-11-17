@@ -28,6 +28,7 @@
 #include <t8_forest/t8_forest_private.h>
 #include <t8_cmesh.h>
 #include "t8_cmesh/t8_cmesh_testcases.h"
+#include <test/t8_gtest_macros.hxx>
 
 /* This test program tests the forest ghost layer.
  * We adapt a forest and create its ghost layer. Afterwards, we

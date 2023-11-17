@@ -25,6 +25,7 @@
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_element_c_interface.h>
+#include <test/t8_gtest_macros.hxx>
 
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h>
 

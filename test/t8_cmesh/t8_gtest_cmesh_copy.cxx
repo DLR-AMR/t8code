@@ -26,6 +26,7 @@
 #include "t8_cmesh/t8_cmesh_partition.h"
 #include <t8_eclass.h>
 #include <t8_cmesh/t8_cmesh_testcases.h>
+#include <test/t8_gtest_macros.hxx>
 
 /* Test if a cmesh is committed properly and perform the face consistency check. */
 

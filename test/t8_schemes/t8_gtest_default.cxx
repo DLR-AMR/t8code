@@ -36,6 +36,7 @@
 #include <t8_schemes/t8_default/t8_default_tet/t8_default_tet_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_prism/t8_default_prism_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid_cxx.hxx>
+#include <test/t8_gtest_macros.hxx>
 
 class gtest_default_scheme: public testing::TestWithParam<t8_eclass_t> {
  protected:
