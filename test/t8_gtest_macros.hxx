@@ -20,8 +20,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_gtest_custom_assertion.cxx
-* Provide customized GoogleTest functions for improved error-output
+/** \file t8_gtest_macros.hxx
+* Provide macros for instantiating parameterized tests
 */
 
 #include <gtest/gtest.h>
