@@ -246,17 +246,6 @@ t8_dprism_face_parent_face (const t8_dprism_t *prism, int face);
 int
 t8_dprism_tree_face (const t8_dprism_t *p, int face);
 
-/** Given a prism and a face of the root prism. If the prism lies on the tree boundary, return the corresponding face 
- * number of the prism. If not the return value is arbitrary.
- * \param [in] p    The prism.
- * \param [in] face The index of a face of the root element.
- * \return          The index of the face of \a p that is a subface of \a face, if \a p is on the tree boundary.
- *                  Any arbitrary integer if \a p is not at a tree boundary.
- * \note For boundary prism, this function is the inverse of \ref t8_dprism_tree_face
- */
-int
-t8_dprism_root_face_to_face (const t8_dprism_t *p, int root_face);
-
 /** Given a boundary face inside a root tree's face construct the element inside the root tree that has the given face 
  * as a face.
  * \param [in] face       A face element.
@@ -266,7 +255,7 @@ t8_dprism_root_face_to_face (const t8_dprism_t *p, int root_face);
  * \param [in] root_face  The index of the face of the root tree in which \a face lies.
  */
 void
-t8_dprism_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_face);
+t8_dprism_extrude_face (const t8_element_t *face, t8_element_t *elem, const int root_face);
 
 /** Compute the last descendant of a prism at a given level. This is the descendant of the prism in a uniform level 
  * refinement that has the largest id.
