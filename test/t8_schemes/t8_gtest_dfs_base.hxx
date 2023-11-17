@@ -29,19 +29,20 @@
 
 class TestDFS : public testing::TestWithParam<t8_eclass_t> {
  public:
-/** recursive tests check something for all descendants of a starting element upto maxlevel
+/** recursive tests check something for all descendants of a starting element (currently only root) upto maxlevel
 */
   virtual void
   check_element (const t8_element_t *elem){};
 
   /** recursive depth first search to iterate over all descendants of elem up to max_dfs_recursion_level */
   void
-  check_recursive_dfs_to_max_lvl (int max_dfs_recursion_level)
+  check_recursive_dfs_to_max_lvl (const int max_dfs_recursion_level)
   {
     int level = ts->t8_element_level (element);
     ASSERT_LE (level, max_dfs_recursion_level);
     ASSERT_LT (max_dfs_recursion_level, ts->t8_element_maxlevel ());
 
+    /** call the implementation of the specific test*/
     check_element (element);
 
     if (ts->t8_element_level (element) < max_dfs_recursion_level) {
