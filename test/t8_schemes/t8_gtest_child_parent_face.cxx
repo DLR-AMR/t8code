@@ -68,8 +68,6 @@ class class_child_parent_face: public TestDFS {
     /* Destroy DFS test */
     dfs_test_teardown ();
   }
-  t8_element_t *child;
-  t8_element_t *test_parent;
 };
 
 TEST_P (class_child_parent_face, t8_recursive_dfs_child_parent_face)
