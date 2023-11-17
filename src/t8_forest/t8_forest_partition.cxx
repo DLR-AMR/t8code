@@ -253,7 +253,6 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
 {
   sc_MPI_Comm comm;
   t8_linearidx_t local_first_desc;
-  t8_element_t *first_element = NULL;
   t8_element_t *first_desc = NULL;
   t8_eclass_scheme_c *ts;
 
@@ -280,6 +279,7 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
     local_first_desc = 0;
   }
   else {
+    const t8_element_t *first_element = NULL;
     /* Get a pointer to the first local element. */
     if (forest->incomplete_trees) {
       for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {

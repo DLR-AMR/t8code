@@ -21,6 +21,7 @@
 */
 
 #include <gtest/gtest.h>
+#include <test/t8_gtest_custom_assertion.hxx>
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_element_c_interface.h>
@@ -79,8 +80,8 @@ t8_test_face_neighbor_inside (int num_faces, t8_element_t *element, t8_element_t
     ts->t8_element_face_neighbor_inside (child, neigh, iface, &face_num);
     ts->t8_element_face_neighbor_inside (neigh, element, face_num, &check);
 
-    EXPECT_EQ (ts->t8_element_compare (child, element), 0) << "Got a false neighbor.";
-    EXPECT_EQ (check, iface) << "Wrong face.";
+    EXPECT_TRUE (ts->t8_element_equal (child, element)) << "Got a false neighbor.";
+    EXPECT_ELEM_EQ (ts, child, element);
   }
 }
 

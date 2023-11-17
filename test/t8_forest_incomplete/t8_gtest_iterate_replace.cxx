@@ -95,17 +95,16 @@ t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
     ASSERT_EQ (num_incoming, 1);
 
     /* Begin check family */
-    t8_element_t *parent = t8_forest_get_element_in_tree (forest_new, which_tree, first_incoming);
-    t8_element_t *child;
+    const t8_element_t *parent = t8_forest_get_element_in_tree (forest_new, which_tree, first_incoming);
     t8_element_t *parent_compare;
     ts->t8_element_new (1, &parent_compare);
     int family_size = 1;
     t8_locidx_t tree_num_elements_old = t8_forest_get_tree_num_elements (forest_old, which_tree);
     for (t8_locidx_t elidx = 1;
          elidx < ts->t8_element_num_children (parent) && elidx + first_outgoing < tree_num_elements_old; elidx++) {
-      child = t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing + elidx);
+      const t8_element_t *child = t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing + elidx);
       ts->t8_element_parent (child, parent_compare);
-      if (!ts->t8_element_compare (parent, parent_compare)) {
+      if (ts->t8_element_equal (parent, parent_compare)) {
         family_size++;
       }
     }
@@ -128,7 +127,7 @@ t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
   /* Element got refined. */
   if (refine == 1) {
     ASSERT_EQ (num_outgoing, 1);
-    t8_element_t *element = t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing);
+    const t8_element_t *element = t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing);
     const t8_locidx_t family_size = ts->t8_element_num_children (element);
     ASSERT_EQ (num_incoming, family_size);
   }

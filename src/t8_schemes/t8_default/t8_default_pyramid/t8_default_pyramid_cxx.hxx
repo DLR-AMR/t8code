@@ -113,6 +113,15 @@ struct t8_default_scheme_pyramid_c: public t8_default_scheme_common_c
   virtual int
   t8_element_compare (const t8_element_t *elem1, const t8_element_t *elem2) const;
 
+  /** Check if two elements are equal.
+  * \param [in] ts     Implementation of a class scheme.
+  * \param [in] elem1  The first element.
+  * \param [in] elem2  The second element.
+  * \return            1 if the elements are equal, 0 if they are not equal
+  */
+  virtual int
+  t8_element_equal (const t8_element_t *elem1, const t8_element_t *elem2) const;
+
   /** Compute the parent of a given element \b elem and store it in \b parent.
    * \b parent needs to be an existing element. No memory is allocated by this function.
    * \b elem and \b parent can point to the same element, then the entries of
@@ -570,7 +579,7 @@ struct t8_default_scheme_pyramid_c: public t8_default_scheme_common_c
   * \param [in]        elem  The element to print
   */
   virtual void
-  t8_element_debug_print (const t8_element_t *elem) const;
+  t8_element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const;
 #endif
 };
 

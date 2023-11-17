@@ -127,6 +127,16 @@ struct t8_eclass_scheme
   t8_element_compare (const t8_element_t *elem1, const t8_element_t *elem2) const
     = 0;
 
+  /** Check if two elements are equal.
+  * \param [in] ts     Implementation of a class scheme.
+  * \param [in] elem1  The first element.
+  * \param [in] elem2  The second element.
+  * \return            1 if the elements are equal, 0 if they are not equal
+  */
+  virtual int
+  t8_element_equal (const t8_element_t *elem1, const t8_element_t *elem2) const
+    = 0;
+
   /** Compute the parent of a given element \b elem and store it in \b parent.
    *  \b parent needs to be an existing element. No memory is allocated by this function.
    *  \b elem and \b parent can point to the same element, then the entries of
@@ -701,6 +711,16 @@ struct t8_eclass_scheme
  */
   virtual void
   t8_element_debug_print (const t8_element_t *elem) const
+    = 0;
+
+  /**
+ * \brief Fill a string with readable information about the element
+ * 
+ * \param[in] elem The element to translate into human-readable information
+ * \param[in, out] debug_string The string to fill. 
+ */
+  virtual void
+  t8_element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const
     = 0;
 #endif
 

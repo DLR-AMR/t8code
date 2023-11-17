@@ -100,6 +100,12 @@ t8_default_scheme_prism_c::t8_element_compare (const t8_element_t *elem1, const 
   return t8_dprism_compare ((const t8_dprism_t *) elem1, (const t8_dprism_t *) elem2);
 }
 
+int
+t8_default_scheme_prism_c::t8_element_equal (const t8_element_t *elem1, const t8_element_t *elem2) const
+{
+  return t8_dprism_equal ((const t8_dprism_t *) elem1, (const t8_dprism_t *) elem2);
+}
+
 void
 t8_default_scheme_prism_c::t8_element_parent (const t8_element_t *elem, t8_element_t *parent) const
 {
@@ -446,11 +452,16 @@ t8_default_scheme_prism_c::t8_element_is_valid (const t8_element_t *elem) const
 }
 
 void
-t8_default_scheme_prism_c::t8_element_debug_print (const t8_element_t *elem) const
+t8_default_scheme_prism_c::t8_element_to_string (const t8_element_t *elem, char *debug_string,
+                                                 const int string_size) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
-  t8_dprism_debug_print ((const t8_dprism_t *) elem);
+  T8_ASSERT (debug_string != NULL);
+  t8_dprism_t *prism = (t8_dprism_t *) elem;
+  snprintf (debug_string, string_size, "x: %i, y: %i, z: %i, type: %i, level: %i", prism->tri.x, prism->tri.y,
+            prism->line.x, prism->tri.type, prism->tri.level);
 }
+
 #endif /* T8_ENABLE_DEBUG */
 
 /* Constructor */
