@@ -37,7 +37,7 @@ class class_test_boundary_extrude: public TestDFS{
     const int num_faces = ts->t8_element_num_faces (element);
     for (int iface = 0; iface < num_faces; iface++) {
       /* Iterate over all faces that are also root faces and determine the face element */
-      if (ts->t8_element_is_root_boundary (element, iface))
+      if (ts->t8_element_is_root_boundary (element, iface)){
         /* Get face scheme */
         const int tree_face = ts->t8_element_tree_face (element, iface);
         const t8_eclass_t face_eclass = (t8_eclass_t) t8_eclass_face_types[eclass][tree_face];
