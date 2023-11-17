@@ -27,6 +27,9 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <gtest/gtest.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
+#ifndef CUSTOM_ASSERTION_HXX
+#define CUSTOM_ASSERTION_HXX
+
 /**
  * \brief Test two elements for equality and print the elements if they aren't equal
  * 
@@ -61,3 +64,5 @@ element_equality (const char *ts_expr, const char *elem_1_expr, const char *elem
 }
 
 #define EXPECT_ELEM_EQ(scheme, elem1, elem2) EXPECT_PRED_FORMAT3 (element_equality, (scheme), (elem1), (elem2))
+
+#endif /* CUSTOM_ASSERTION_HXX */
