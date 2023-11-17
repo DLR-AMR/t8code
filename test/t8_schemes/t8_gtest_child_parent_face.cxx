@@ -29,7 +29,7 @@
 
 class class_child_parent_face: public TestDFS {
   virtual void
-  check_element (const t8_element_t *elem)
+  check_element ()
   {
     const int num_faces = ts->t8_element_num_faces (elem);
     for (int iface = 0; iface < num_faces; iface++) {
