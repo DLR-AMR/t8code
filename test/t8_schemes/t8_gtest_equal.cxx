@@ -24,7 +24,8 @@
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
-#include "t8_gtest_scheme_helper.hxx"
+#include <test/t8_gtest_macros.hxx>
+#include "t8_gtest_dfs_base.hxx"
 
 class class_test_equal: public TestDFS{
   virtual void
@@ -33,12 +34,19 @@ class class_test_equal: public TestDFS{
     const int num_children = ts->t8_element_num_children (element);
     for (int ichild1 = 0; ichild1 < num_children; ichild1++) {
       ts->t8_element_child (element, ichild1, child1);
+      /* the child must be different than its parent */
       EXPECT_FALSE(ts->t8_element_equal(element, child1));
       for (int ichild2 = 0; ichild2 < num_children; ichild2++) {
-        EXPECT_FALSE(ts->t8_element_equal(element, child1));
+        /* the child must be different than its parent */
+        EXPECT_FALSE(ts->t8_element_equal(element, child2));
         ts->t8_element_child (element, ichild2, child2);
-        int equal = ts->t8_element_equal(child1, child2);
+        const int equal = ts->t8_element_equal(child1, child2);
+        /* The children must be equal if and only if their indices are equal. */
         EXPECT_EQ(equal, ichild1 == ichild2);
+        /* t8_element_equal should compute the same as t8_element_compare, 
+         * when we only check if compare has 0 as result. */
+        const int compare_equal = !ts->t8_element_compare(child1, child2);
+        EXPECT_EQ(equal, compare_equal);
       }
     }
   }
@@ -68,7 +76,12 @@ class class_test_equal: public TestDFS{
 
 TEST_P (class_test_equal, test_equal_dfs)
 {
-  check_recursive_dfs_to_max_lvl();
+#ifdef T8_ENABLE_LESS_TESTS
+  const int maxlvl = 4;
+#else
+  const int maxlvl = 6;
+#endif
+  check_recursive_dfs_to_max_lvl(maxlvl);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_equal, AllImplementations);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_equal, AllEclasses);
