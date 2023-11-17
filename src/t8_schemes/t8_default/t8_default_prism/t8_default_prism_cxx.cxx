@@ -229,6 +229,8 @@ t8_default_scheme_prism_c::t8_element_extrude_face (const t8_element_t *face, co
   T8_ASSERT (0 <= root_face && root_face < T8_DPRISM_FACES);
   t8_dprism_extrude_face (face, elem, root_face);
   T8_ASSERT (t8_element_is_valid (elem));
+  /* Only the corner-children of an element touch the face, and their face-numbers coincide with the face-numbers
+   * of the root element. Therefore we can directly return the root_face*/
   return root_face;
 }
 
