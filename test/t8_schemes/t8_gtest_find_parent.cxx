@@ -24,7 +24,8 @@
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
-#include "t8_gtest_scheme_helper.hxx"
+#include "t8_gtest_dfs_base.hxx"
+#include <test/t8_gtest_macros.hxx>
 
 class class_find_parent: public TestDFS{
   virtual void
@@ -64,7 +65,12 @@ class class_find_parent: public TestDFS{
 
 TEST_P (class_find_parent, t8_compute_child_find_parent)
 {
-  check_recursive_dfs_to_max_lvl();
+#ifdef T8_ENABLE_LESS_TESTS
+  const int maxlvl = 4;
+#else
+  const int maxlvl = 6;
+#endif
+  check_recursive_dfs_to_max_lvl(maxlvl);
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_find_parent, class_find_parent, AllImplementations);

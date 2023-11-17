@@ -27,8 +27,6 @@
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
-#define AllImplementations testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT)
-
 class TestDFS : public testing::TestWithParam<t8_eclass_t> {
  public:
 /** recursive tests check something for all descendants of a starting element upto maxlevel
@@ -36,22 +34,22 @@ class TestDFS : public testing::TestWithParam<t8_eclass_t> {
   virtual void
   check_element (const t8_element_t *elem){};
 
-  /** recursive depth first search to iterate over all descendants of elem up to maxlvl */
+  /** recursive depth first search to iterate over all descendants of elem up to max_dfs_recursion_level */
   void
-  check_recursive_dfs_to_max_lvl ()
+  check_recursive_dfs_to_max_lvl (int max_dfs_recursion_level)
   {
     int level = ts->t8_element_level (element);
-    ASSERT_LE (level, maxlvl);
-    ASSERT_LT (maxlvl, ts->t8_element_maxlevel ());
+    ASSERT_LE (level, max_dfs_recursion_level);
+    ASSERT_LT (max_dfs_recursion_level, ts->t8_element_maxlevel ());
 
     check_element (element);
 
-    if (ts->t8_element_level (element) < maxlvl) {
+    if (ts->t8_element_level (element) < max_dfs_recursion_level) {
       /* iterate over all children */
       const int num_children = ts->t8_element_num_children (element);
       for (int ichild = 0; ichild < num_children; ichild++) {
         ts->t8_element_child (element, ichild, element);
-        check_recursive_dfs_to_max_lvl ();
+        check_recursive_dfs_to_max_lvl (max_dfs_recursion_level);
         ts->t8_element_parent (element, element);
       }
     }
@@ -88,8 +86,6 @@ class TestDFS : public testing::TestWithParam<t8_eclass_t> {
   t8_eclass_t eclass;
   t8_eclass_scheme_c *ts;
   t8_element_t *element;
-
-  const int maxlvl = 4;
 };
 
 #endif /*T8_GTEST_SCHEME_HELPER_H*/
