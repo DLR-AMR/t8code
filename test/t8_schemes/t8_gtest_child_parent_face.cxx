@@ -31,19 +31,19 @@ class class_child_parent_face: public TestDFS {
   virtual void
   check_element ()
   {
-    const int num_faces = ts->t8_element_num_faces (elem);
+    const int num_faces = ts->t8_element_num_faces (element);
     for (int iface = 0; iface < num_faces; iface++) {
       /* Iterate over all faces and determine the facechildren*/
-      const int num_face_children = ts->t8_element_num_face_children (elem, iface);
+      const int num_face_children = ts->t8_element_num_face_children (element, iface);
       t8_element_t **children;
       children = T8_ALLOC (t8_element_t *, num_face_children);
       ts->t8_element_new (num_face_children, children);
 
-      ts->t8_element_children_at_face (elem, iface, children, num_face_children, NULL);
+      ts->t8_element_children_at_face (element, iface, children, num_face_children, NULL);
 
       for (int ifacechild = 0; ifacechild < num_face_children; ifacechild++) {
         /* Iterate over those children and determine the childface corresponding to the parentface */
-        int childface = ts->t8_element_face_child_face (elem, iface, ifacechild);
+        int childface = ts->t8_element_face_child_face (element, iface, ifacechild);
         ASSERT_NE (childface, -1);
         /* Determine the parentface corresponding to the childface */
         int parentface = ts->t8_element_face_parent_face (children[ifacechild], childface);
