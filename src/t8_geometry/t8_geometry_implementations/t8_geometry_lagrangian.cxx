@@ -21,8 +21,8 @@
 */
 
 #include <t8_geometry/t8_geometry_base.hxx>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_mapping.hxx>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_mapping.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_lagrangian.hxx>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_lagrangian.h>
 #include <t8_eclass.h>
 
 finite_element::finite_element (int dimension, const char *name): t8_geometry_with_vertices (dimension, name)
