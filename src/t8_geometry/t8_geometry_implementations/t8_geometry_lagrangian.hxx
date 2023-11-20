@@ -34,8 +34,9 @@
 #include <t8_geometry/t8_geometry_with_vertices.hxx>
 #include <t8_geometry/t8_geometry_with_vertices.h>
 
-/* Abstract class for the mapping with Lagrange basis functions */
-class finite_element: public t8_geometry_with_vertices {
+/* Abstract struct for the mapping with Lagrange basis functions */
+struct t8_geometry_lagrange: public t8_geometry_with_vertices
+{
  public:
   /** 
    * Constructor of the element geometry obtained by finite element mapping. The geometry
@@ -44,7 +45,7 @@ class finite_element: public t8_geometry_with_vertices {
    * \param [in] dimension  0 <= \a dimension <= 3. Element dimension in the parametric space.
    * \param [in] name       Element name.
    */
-  finite_element (int dimension, const char *name);
+  t8_geometry_lagrange (int dimension, const char *name);
 
   /**
    * Maps points in the reference space \f$ [0,1]^\mathrm{dim} \to \mathbb{R}^3 \f$.
@@ -78,9 +79,9 @@ class finite_element: public t8_geometry_with_vertices {
 };
 
 /* Three-node linear triangle */
-class T3: public finite_element {
+class T3: public t8_geometry_lagrange {
  public:
-  T3 (): finite_element (2, "Triangle-3")
+  T3 (): t8_geometry_lagrange (2, "Triangle-3")
   {
   }
 
@@ -89,9 +90,9 @@ class T3: public finite_element {
 };
 
 /* Six-node quadratic triangle */
-class T6: public finite_element {
+class T6: public t8_geometry_lagrange {
  public:
-  T6 (): finite_element (2, "Triangle-6")
+  T6 (): t8_geometry_lagrange (2, "Triangle-6")
   {
   }
 
@@ -100,9 +101,9 @@ class T6: public finite_element {
 };
 
 /* Four-node bilinear quadrilateral */
-class Q4: public finite_element {
+class Q4: public t8_geometry_lagrange {
  public:
-  Q4 (): finite_element (2, "Quadrilateral-4")
+  Q4 (): t8_geometry_lagrange (2, "Quadrilateral-4")
   {
   }
 
