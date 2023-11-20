@@ -91,3 +91,40 @@ Q4::basis (const double *ref_coords) const
   std::vector<double> basis_functions = { (1 - xi) * (1 - eta), xi * (1 - eta), eta * (1 - xi), xi * eta };
   return basis_functions;
 };
+
+T8_EXTERN_C_BEGIN ();
+
+/* Satisfy the C interface from t8_geometry_lagrange.h.
+ * Create a new geometry with given dimension. */
+t8_geometry_c *
+t8_geometry_lagrange_new (int dimension)
+{
+  t8_geometry_lagrange *geom = new t8_geometry_lagrange (dimension);
+  return (t8_geometry_c *) geom;
+}
+
+void
+t8_geometry_lagrange_destroy (t8_geometry_c **geom)
+{
+  T8_ASSERT (geom != NULL);
+  T8_ASSERT (t8_geom_is_lagrange (*geom));
+
+  delete *geom;
+  *geom = NULL;
+}
+
+#if T8_ENABLE_DEBUG
+int
+t8_geom_is_lagrange (const t8_geometry_c *geometry)
+{
+  /* Try to dynamic cast the geometry into Lagrange geometry. This is only successful if
+   * geometry pointed to a t8_geometry_lagrange.
+   * If successful, then is_lagrange_geom will be true.
+   */
+  const int is_lagrange_geom = (dynamic_cast<const t8_geometry_lagrange *> (geometry) != NULL);
+
+  return is_lagrange_geom;
+}
+#endif
+
+T8_EXTERN_C_END ();
