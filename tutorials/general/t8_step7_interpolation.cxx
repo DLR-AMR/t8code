@@ -22,7 +22,7 @@
 
 /* This file is part of the step7 example of t8code.
  * Showcase how to interpolate/project data during adaptation of a mesh.
- * Uses a single datapoint on each, that is replicated during refinement, and averaged during coarsening.
+ * Uses a single datapoint on each element, that is replicated during refinement, and averaged during coarsening.
  * Implementation of the t8_forest_replace callback, t8_forest_adapt callback
  */
 
