@@ -37,18 +37,17 @@ t8_geometry_lagrange::t8_geometry_lagrange (int dimension, const char *name)
  */
 void
 t8_geometry_lagrange::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                        const size_t num_coords, double out_coords[3]) const
+                                        const size_t num_coords, double *out_coords) const
 {
   if (num_coords != 1)
     SC_ABORT ("Error: Batch computation of geometry not yet supported.");
 
-  short DIM = 3; /* the geometry is always embedded into R^3 */
   auto basis_functions = basis (ref_coords);
   int n_vertex = basis_functions.size (); /* or: t8_eclass_num_vertices[active_tree_class]; */
-  for (int i_component = 0; i_component < DIM; i_component++) {
+  for (int i_component = 0; i_component < T8_ECLASS_MAX_DIM; i_component++) {
     double inner_product = 0;
     for (int j_vertex = 0; j_vertex < n_vertex; j_vertex++) {
-      double coordinate = active_tree_vertices[j_vertex * DIM + i_component];
+      double coordinate = active_tree_vertices[j_vertex * T8_ECLASS_MAX_DIM + i_component];
       double basis_function = basis_functions[j_vertex];
       inner_product += basis_function * coordinate;
     }

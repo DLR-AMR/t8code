@@ -40,10 +40,11 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
  public:
   /** 
    * Constructor of the element geometry obtained by finite element mapping. The geometry
-   * is viable with all tree types and uses as many vertices as the tree type has.
+   * is viable with all tree types and uses as many vertices as the number of Lagrange basis
+   * functions used for the mapping.
    * The vertices are saved via the \ref t8_cmesh_set_tree_vertices function.
    * \param [in] dimension  0 <= \a dimension <= 3. Element dimension in the parametric space.
-   * \param [in] name       Element name.
+   * \param [in] name       Name of the geometry.
    */
   t8_geometry_lagrange (int dimension, const char *name);
 
@@ -57,7 +58,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
    */
   void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double out_coords[3]) const;
+                    double *out_coords) const;
 
   /**
    * Compute the jacobian of the \a t8_geom_evaluate map at a point in the reference space \f$ [0,1]^\mathrm{dim} \f$.
