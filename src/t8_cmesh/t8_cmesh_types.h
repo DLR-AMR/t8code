@@ -54,8 +54,9 @@ typedef struct t8_cprofile t8_cprofile_t; /* Defined below */
 #define T8_CMESH_GEOMETRY_ATTRIBUTE_KEY 1            /* Used to store the name of a tree's geometry. */
 #define T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY 2            /* Used to store which edge is linked to which geometry */
 #define T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY 3 /* Used to store edge parameters */
+#define T8_CMESH_LAGRANGE_POLY_DEGREE 4              /* Used to store the polynomial degree of the Lagrange geometry */
 #define T8_CMESH_OCC_FACE_ATTRIBUTE_KEY \
-  T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY \
+  T8_CMESH_LAGRANGE_POLY_DEGREE \
   +T8_ECLASS_MAX_EDGES /* Used to store which face is linked to which surface */
 #define T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY \
   T8_CMESH_OCC_FACE_ATTRIBUTE_KEY + 1 /* Used to store face parameters */

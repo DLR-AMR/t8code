@@ -21,6 +21,7 @@
 */
 
 #include <t8_geometry/t8_geometry_base.hxx>
+#include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_lagrangian.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_lagrangian.h>
 #include <t8_eclass.h>
@@ -41,18 +42,7 @@ t8_geometry_lagrange::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, c
 {
   if (num_coords != 1)
     SC_ABORT ("Error: Batch computation of geometry not yet supported.");
-
-  auto basis_functions = basis (ref_coords);
-  int n_vertex = basis_functions.size (); /* or: t8_eclass_num_vertices[active_tree_class]; */
-  for (int i_component = 0; i_component < T8_ECLASS_MAX_DIM; i_component++) {
-    double inner_product = 0;
-    for (int j_vertex = 0; j_vertex < n_vertex; j_vertex++) {
-      double coordinate = active_tree_vertices[j_vertex * T8_ECLASS_MAX_DIM + i_component];
-      double basis_function = basis_functions[j_vertex];
-      inner_product += basis_function * coordinate;
-    }
-    out_coords[i_component] = inner_product;
-  }
+  t8_geometry_lagrange::interpolate (ref_coords, out_coords);
 }
 
 void
@@ -62,17 +52,61 @@ t8_geometry_lagrange::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t g
   SC_ABORT_NOT_REACHED ();
 };
 
+inline void
+t8_geometry_lagrange::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
+{
+  t8_geometry_with_vertices::t8_geom_load_tree_data (cmesh, gtreeid);
+  degree = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE, gtreeid);
+  T8_ASSERT (degree != NULL);
+}
+
+void
+t8_geometry_lagrange::interpolate (const double *point, double *out_point) const
+{
+  auto basis_functions = t8_geometry_lagrange::compute_basis (point);
+  int n_vertex = basis_functions.size ();
+  for (int i_component = 0; i_component < T8_ECLASS_MAX_DIM; i_component++) {
+    double inner_product = 0;
+    for (int j_vertex = 0; j_vertex < n_vertex; j_vertex++) {
+      double coordinate = active_tree_vertices[j_vertex * T8_ECLASS_MAX_DIM + i_component];
+      double basis_function = basis_functions[j_vertex];
+      inner_product += basis_function * coordinate;
+    }
+    out_point[i_component] = inner_product;
+  }
+}
+
+/* Evaluates the basis function of the current tree type at a point */
 const std::vector<double>
-T3::basis (const double *ref_coords) const
+t8_geometry_lagrange::compute_basis (const double *ref_coords) const
+{
+  switch (active_tree_class) {
+  case T8_ECLASS_TRIANGLE:
+    switch (*degree) {
+    case 2:
+      return t8_geometry_lagrange::t6_basis (ref_coords);
+    }
+  case T8_ECLASS_QUAD:
+    switch (*degree) {
+    case 1:
+      return t8_geometry_lagrange::q4_basis (ref_coords);
+    }
+  default:
+    SC_ABORTF ("Error: %s geometry not yet implemented. \n", t8_eclass_to_string[active_tree_class]);
+  }
+}
+
+const std::vector<double>
+t8_geometry_lagrange::t3_basis (const double *ref_coords) const
 {
   double xi = ref_coords[0];
   double eta = ref_coords[1];
   std::vector<double> basis_functions = { 1 - xi, xi - eta, eta };
   return basis_functions;
-};
+}
 
 const std::vector<double>
-T6::basis (const double *ref_coords) const
+t8_geometry_lagrange::t6_basis (const double *ref_coords) const
 {
   double xi = ref_coords[0];
   double eta = ref_coords[1];
@@ -81,10 +115,10 @@ T6::basis (const double *ref_coords) const
         -eta + 2 * eta * eta,          4 * xi - 4 * eta - 4 * xi * xi + 4 * xi * eta,
         -4 * eta * eta + 4 * xi * eta, 4 * eta - 4 * xi * eta };
   return basis_functions;
-};
+}
 
 const std::vector<double>
-Q4::basis (const double *ref_coords) const
+t8_geometry_lagrange::q4_basis (const double *ref_coords) const
 {
   double xi = ref_coords[0];
   double eta = ref_coords[1];

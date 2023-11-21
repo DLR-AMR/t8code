@@ -31,6 +31,7 @@
 #include <vector>
 
 #include <t8.h>
+#include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_geometry/t8_geometry_with_vertices.hxx>
 #include <t8_geometry/t8_geometry_with_vertices.h>
 
@@ -73,43 +74,34 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
   t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
                              double *jacobian) const;
 
-  virtual const std::vector<double>
-  basis (const double *ref_coords) const = 0;
+  /** Update a possible internal data buffer for per tree data.
+   * This function is called before the first coordinates in a new tree are
+   * evaluated. You can use it for example to load the polynomial degree of the 
+   * Lagrange basis into an internal buffer (as is done in the Lagrange geometry).
+   * \param [in]  cmesh      The cmesh.
+   * \param [in]  gtreeid    The global tree.
+   */
+  virtual void
+  t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 
-  /* Load tree data is inherited from t8_geometry_with_vertices. */
-};
+ private:
+  const std::vector<double>
+  compute_basis (const double *ref_point) const;
 
-/* Three-node linear triangle */
-class T3: public t8_geometry_lagrange {
- public:
-  T3 (): t8_geometry_lagrange (2, "Triangle-3")
-  {
-  }
+  void
+  interpolate (const double *point, double *out_point) const;
 
   const std::vector<double>
-  basis (const double *ref_coords) const override;
-};
-
-/* Six-node quadratic triangle */
-class T6: public t8_geometry_lagrange {
- public:
-  T6 (): t8_geometry_lagrange (2, "Triangle-6")
-  {
-  }
+  t3_basis (const double *ref_coords) const;
 
   const std::vector<double>
-  basis (const double *ref_coords) const override;
-};
-
-/* Four-node bilinear quadrilateral */
-class Q4: public t8_geometry_lagrange {
- public:
-  Q4 (): t8_geometry_lagrange (2, "Quadrilateral-4")
-  {
-  }
+  t6_basis (const double *ref_coords) const;
 
   const std::vector<double>
-  basis (const double *ref_coords) const override;
+  q4_basis (const double *ref_coords) const;
+
+  /* Polynomial degree of the interpolation. */
+  const int *degree;
 };
 
 #endif /* !T8_GEOMETRY_MAPPING_HXX! */
