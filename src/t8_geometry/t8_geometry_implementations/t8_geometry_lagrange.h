@@ -20,13 +20,13 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_geometry_mapping.h
+/** \file t8_geometry_lagrange.h
  * This header provides the C interface to create a geometry mapped with
  * Lagrange finite element basis functions.
  */
 
-#ifndef T8_GEOMETRY_MAPPING_H
-#define T8_GEOMETRY_MAPPING_H
+#ifndef T8_GEOMETRY_LAGRANGE_H
+#define T8_GEOMETRY_LAGRANGE_H
 
 #include <t8.h>
 #include <t8_geometry/t8_geometry.h>
