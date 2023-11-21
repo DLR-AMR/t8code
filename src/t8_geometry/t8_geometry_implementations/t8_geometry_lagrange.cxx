@@ -26,9 +26,20 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.h>
 #include <t8_eclass.h>
 
-t8_geometry_lagrange::t8_geometry_lagrange (int dimension, const char *name)
-  : t8_geometry_with_vertices (dimension, name)
+t8_geometry_lagrange::t8_geometry_lagrange (int dim): t8_geometry_with_vertices (dim, "")
 {
+  T8_ASSERT (0 <= dim && dim <= 3);
+  size_t num_chars = 100;
+  char *name_tmp = T8_ALLOC (char, num_chars);
+
+  snprintf (name_tmp, num_chars, "t8_geom_lagrange_%i", dim);
+  name = name_tmp;
+  dimension = dim;
+}
+
+t8_geometry_lagrange::~t8_geometry_lagrange ()
+{
+  T8_FREE ((char *) name);
 }
 
 /**

@@ -20,12 +20,12 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_geometry_mapping.hxx
+/** \file t8_geometry_lagrange.hxx
  * TODO: Add description
  */
 
-#ifndef T8_GEOMETRY_MAPPING_HXX
-#define T8_GEOMETRY_MAPPING_HXX
+#ifndef T8_GEOMETRY_LAGRANGE_HXX
+#define T8_GEOMETRY_LAGRANGE_HXX
 
 #include <string>
 #include <vector>
@@ -40,14 +40,22 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
 {
  public:
   /** 
-   * Constructor of the element geometry obtained by finite element mapping. The geometry
-   * is viable with all tree types and uses as many vertices as the number of Lagrange basis
-   * functions used for the mapping.
+   * Constructor of the Lagrange geometry with a given dimension. The geometry
+   * is compatible with all tree types and uses as many vertices as the number of Lagrange
+   * basis functions used for the mapping.
    * The vertices are saved via the \ref t8_cmesh_set_tree_vertices function.
-   * \param [in] dimension  0 <= \a dimension <= 3. Element dimension in the parametric space.
-   * \param [in] name       Name of the geometry.
+   * \param [in] dim  0 <= \a dim <= 3. Element dimension in the parametric space.
    */
-  t8_geometry_lagrange (int dimension, const char *name);
+  t8_geometry_lagrange (int dim);
+
+  /* Base constructor with no arguments. We need this since it
+   * is called from derived class constructors.
+   * Sets dimension and name to invalid values. */
+  t8_geometry_lagrange (): t8_geometry_with_vertices ()
+  {
+  }
+
+  virtual ~t8_geometry_lagrange ();
 
   /**
    * Maps points in the reference space \f$ [0,1]^\mathrm{dim} \to \mathbb{R}^3 \f$.

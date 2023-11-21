@@ -36,7 +36,7 @@ T8_EXTERN_C_BEGIN ();
 
 /**
  * Create a new Lagrange geometry of a given dimension.
- * The geometry is is viable with all tree types and uses as many vertices
+ * The geometry is compatible with all tree types and uses as many vertices
  * as the number of Lagrange basis functions used for the mapping.
  * The vertices are saved via the \ref t8_cmesh_set_tree_vertices function.
  * Sets the dimension and the name to "t8_geom_lagrange_{dim}"
