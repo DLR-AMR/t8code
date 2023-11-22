@@ -94,6 +94,12 @@ t8_default_scheme_quad_c::t8_element_compare (const t8_element_t *elem1, const t
   return p4est_quadrant_compare ((const p4est_quadrant_t *) elem1, (const p4est_quadrant_t *) elem2);
 }
 
+int
+t8_default_scheme_quad_c::t8_element_equal (const t8_element_t *elem1, const t8_element_t *elem2) const
+{
+  return p4est_quadrant_is_equal ((const p4est_quadrant_t *) elem1, (const p4est_quadrant_t *) elem2);
+}
+
 void
 t8_default_scheme_quad_c::t8_element_parent (const t8_element_t *elem, t8_element_t *parent) const
 {
@@ -613,13 +619,6 @@ t8_default_scheme_quad_c::t8_element_boundary_face (const t8_element_t *elem, in
   l->x = ((face >> 1 ? q->x : q->y) * ((int64_t) T8_DLINE_ROOT_LEN) / P4EST_ROOT_LEN);
 }
 
-void
-t8_default_scheme_quad_c::t8_element_boundary (const t8_element_t *elem, int min_dim, int length,
-                                               t8_element_t **boundary) const
-{
-  SC_ABORT ("Not implemented\n");
-}
-
 int
 t8_default_scheme_quad_c::t8_element_is_root_boundary (const t8_element_t *elem, int face) const
 {
@@ -773,11 +772,13 @@ t8_default_scheme_quad_c::t8_element_is_valid (const t8_element_t *elem) const
 }
 
 void
-t8_default_scheme_quad_c::t8_element_debug_print (const t8_element_t *elem) const
+t8_default_scheme_quad_c::t8_element_to_string (const t8_element_t *elem, char *debug_string,
+                                                const int string_size) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (debug_string != NULL);
   p4est_quadrant_t *quad = (p4est_quadrant_t *) elem;
-  p4est_quadrant_print (SC_LP_DEBUG, quad);
+  snprintf (debug_string, string_size, "x: %i, y: %i, level: %i", quad->x, quad->y, quad->level);
 }
 #endif
 
