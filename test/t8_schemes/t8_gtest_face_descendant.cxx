@@ -24,6 +24,8 @@
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <test/t8_gtest_custom_assertion.hxx>
+#include <test/t8_gtest_macros.hxx>
 
 class class_descendant: public testing::TestWithParam<t8_eclass_t> {
  protected:
@@ -96,7 +98,7 @@ t8_linear_face_descendant (const t8_element_t *elem, t8_element_t *manual_face_d
 
       ts->t8_element_first_descendant_face (elem, jface, face_desc, ilevel);
       /* Compare the manually computed child with the result of t8_element_first_descendant_face. */
-      ASSERT_FALSE (ts->t8_element_compare (face_desc, manual_face_desc)) << "Wrong first descendant face\n";
+      EXPECT_ELEM_EQ (ts, face_desc, manual_face_desc);
     }
   }
 
@@ -112,7 +114,7 @@ t8_linear_face_descendant (const t8_element_t *elem, t8_element_t *manual_face_d
 
       /* Compare the manuall computed child with the result of t8_element_last_descendant_face. */
       ts->t8_element_last_descendant_face (elem, jface, face_desc, ilevel);
-      ASSERT_FALSE (ts->t8_element_compare (face_desc, manual_face_desc)) << "Wrong last descendant face\n";
+      EXPECT_ELEM_EQ (ts, face_desc, manual_face_desc);
     }
   }
 }
@@ -169,5 +171,4 @@ TEST_P (class_descendant, t8_check_face_desc)
   ts->t8_element_destroy (1, &tmp);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_element_face_descendant, class_descendant,
-                          testing::Range (T8_ECLASS_VERTEX, T8_ECLASS_COUNT));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_element_face_descendant, class_descendant, AllEclasses);

@@ -253,7 +253,6 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
 {
   sc_MPI_Comm comm;
   t8_linearidx_t local_first_desc;
-  t8_element_t *first_element = NULL;
   t8_element_t *first_desc = NULL;
   t8_eclass_scheme_c *ts;
 
@@ -280,6 +279,7 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
     local_first_desc = 0;
   }
   else {
+    const t8_element_t *first_element = NULL;
     /* Get a pointer to the first local element. */
     if (forest->incomplete_trees) {
       for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {
@@ -440,12 +440,13 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
 /* Find the owner of a given element.
  */
 static int
-t8_forest_partition_owner_of_element (int mpisize, t8_gloidx_t gelement, const t8_gloidx_t *offset)
+t8_forest_partition_owner_of_element (const int mpisize, const int mpirank, const t8_gloidx_t gelement,
+                                      const t8_gloidx_t *offset)
 {
   /* Tree offsets are stored similar enough that we can exploit their function */
   /* In the element offset logic, an element cannot be owned by more than one
    * process, thus any owner must be the unique owner. */
-  return t8_offset_any_owner_of_tree (mpisize, gelement, offset);
+  return t8_offset_any_owner_of_tree_ext (mpisize, mpirank, gelement, offset);
 }
 
 /* Compute the first and last rank that we need to receive elements from */
@@ -468,8 +469,8 @@ t8_forest_partition_recvrange (t8_forest_t forest, int *recv_first, int *recv_la
     return;
   }
   /* Calculate the first and last process we receive from */
-  *recv_first = t8_forest_partition_owner_of_element (forest->mpisize, first_element, offset_old);
-  *recv_last = t8_forest_partition_owner_of_element (forest->mpisize, last_element, offset_old);
+  *recv_first = t8_forest_partition_owner_of_element (forest->mpisize, forest->mpirank, first_element, offset_old);
+  *recv_last = t8_forest_partition_owner_of_element (forest->mpisize, forest->mpirank, last_element, offset_old);
 }
 
 /* Compute the first and last rank that we need to send elements to */
@@ -497,8 +498,8 @@ t8_forest_partition_sendrange (t8_forest_t forest, int *send_first, int *send_la
   first_element = t8_forest_partition_first_element (offset_old, forest->mpirank);
   last_element = t8_forest_partition_last_element (offset_old, forest->mpirank);
   /* Calculate the first and last process we send to */
-  *send_first = t8_forest_partition_owner_of_element (forest->mpisize, first_element, offset_new);
-  *send_last = t8_forest_partition_owner_of_element (forest->mpisize, last_element, offset_new);
+  *send_first = t8_forest_partition_owner_of_element (forest->mpisize, forest->mpirank, first_element, offset_new);
+  *send_last = t8_forest_partition_owner_of_element (forest->mpisize, forest->mpirank, last_element, offset_new);
 }
 
 /* Given a tree and its local id, the first and last element id that we need to send to a proc
