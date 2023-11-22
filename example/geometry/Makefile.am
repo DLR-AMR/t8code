@@ -3,11 +3,7 @@
 # Included from toplevel directory
 
 bin_PROGRAMS += \
-	example/geometry/t8_example_geometries \
-	example/geometry/t8_puma_patches
+	example/geometry/t8_example_geometries
 
 example_geometry_t8_example_geometries_SOURCES = \
 	example/geometry/t8_example_geometries.cxx
-
-example_geometry_t8_puma_patches_SOURCES = \
-	example/geometry/t8_puma_patches.cxx

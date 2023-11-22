@@ -349,7 +349,7 @@ t8_step6_output_data_to_vtu (t8_forest_t forest, struct data_per_element *data, 
     const int write_element_id = 1;
     const int write_ghosts = 0;
     t8_forest_write_vtk_ext (forest, prefix, write_treeid, write_mpirank, write_level, write_element_id, write_ghosts,
-                             0, 0, 0, num_data, vtk_data);
+                             0, 0, num_data, vtk_data);
   }
 
   T8_FREE (heights);

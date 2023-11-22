@@ -226,7 +226,7 @@ t8_tutorial_search_vtk (t8_forest_t forest, sc_array *particles_per_element, con
   strcpy (vtk_data.description, "Number of particles");
   vtk_data.type = T8_VTK_SCALAR;
   /* Write vtu files with our user define number of particles data. */
-  t8_forest_write_vtk_ext (forest, prefix, 1, 1, 1, 1, 0, 0, 0, 0, 1, &vtk_data);
+  t8_forest_write_vtk_ext (forest, prefix, 1, 1, 1, 1, 0, 0, 0, 1, &vtk_data);
 
   t8_global_productionf (" [search] Wrote forest and number of particles per element to %s*\n", prefix);
 }

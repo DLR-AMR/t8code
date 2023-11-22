@@ -47,23 +47,20 @@ T8_EXTERN_C_BEGIN ();
  * \param [in]  write_level If true, the refinement level is written for each element.
  * \param [in]  write_element_id If true, the global element id is written for each element.
  * \param [in]  curved_flag If true, write the elements as curved element types from vtk.
- * \param [in]  stretch_flag If true, stretch elements according to the stretch factors.
  * \param [in]  write_ghosts If true, write out ghost elements as well.
  * \param [in]  num_data  Number of user defined double valued data fields to write.
  * \param [in]  data      Array of t8_vtk_data_field_t of length \a num_data
  *                        providing the user defined per element data.
  *                        If scalar and vector fields are used, all scalar fields
  *                        must come first in the array.
- * \param [in] stretch_factors sc_array_t with length num_local_elements. Used to stretch elements
- *                             according to the stretch factors.
  * \return  True if successful, false if not (process local).
  * \note If t8code was not configured with vtk, use \ref t8_forest_vtk_write_file
  */
 int
 t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix, const int write_treeid,
                                   const int write_mpirank, const int write_level, const int write_element_id,
-                                  const int curved_flag, const int stretch_flag, const int write_ghosts,
-                                  const int num_data, t8_vtk_data_field_t *data);
+                                  const int curved_flag, const int write_ghosts, const int num_data,
+                                  t8_vtk_data_field_t *data);
 
 /** Write the forest in .pvtu file format. Writes one .vtu file per
  * process and a meta .pvtu file.

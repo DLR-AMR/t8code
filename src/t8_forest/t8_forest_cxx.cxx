@@ -392,9 +392,9 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id, const t8
 }
 
 void
-t8_forest_element_from_ref_coords (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                   const double *ref_coords, const size_t num_coords, double *coords_out,
-                                   const int stretch_elements)
+t8_forest_element_from_ref_coords_ext (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+                                       const double *ref_coords, const size_t num_coords, double *coords_out,
+                                       const double *stretch_factors)
 {
   double tree_ref_coords[3] = { 0 };
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
@@ -402,15 +402,12 @@ t8_forest_element_from_ref_coords (t8_forest_t forest, t8_locidx_t ltreeid, cons
   const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
   const t8_gloidx_t gtreeid = t8_forest_global_tree_id (forest, ltreeid);
 
-  if (stretch_elements) {
+  if (stretch_factors != NULL) {
 #if T8_ENABLE_DEBUG
     const t8_geometry_type_t geom_type = t8_geometry_get_type (cmesh, gtreeid);
     T8_ASSERT (geom_type == T8_GEOMETRY_TYPE_LINEAR || geom_type == T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED);
 #endif /* T8_ENABLE_DEBUG */
     const int tree_dim = t8_eclass_to_dimension[tree_class];
-    double *stretch_factors
-      = (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_PATCH_STRETCH_FACTORS_KEY, ltreeid);
-    T8_ASSERT (stretch_factors != NULL);
     double stretched_ref_coords[T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM];
     for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
       for (int dim = 0; dim < tree_dim; ++dim) {
@@ -481,7 +478,7 @@ t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const t8_el
    * reference coordinates */
   const t8_element_shape_t element_shape = t8_element_shape (ts, element);
   t8_forest_element_from_ref_coords (forest, ltreeid, element, t8_element_centroid_ref_coords[element_shape], 1,
-                                     coordinates, 0);
+                                     coordinates);
 }
 
 /* Compute the length of the line from one corner to a second corner in an element */

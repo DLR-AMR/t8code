@@ -1361,16 +1361,15 @@ t8_forest_compute_elements_offset (t8_forest_t forest)
 int
 t8_forest_write_vtk_ext (t8_forest_t forest, const char *fileprefix, const int write_treeid, const int write_mpirank,
                          const int write_level, const int write_element_id, const int write_ghosts,
-                         const int write_curved, const int stretched_flag, int do_not_use_API, const int num_data,
-                         t8_vtk_data_field_t *data)
+                         const int write_curved, int do_not_use_API, const int num_data, t8_vtk_data_field_t *data)
 {
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (forest->committed);
 
 #if T8_WITH_VTK
-  if (!do_not_use_API && stretched_flag) {
-    t8_errorf ("WARNING: Export of stretched elements not yet available with the inbuild function. "
+  if (do_not_use_API && write_curved) {
+    t8_errorf ("WARNING: Export of curved elements not yet available with the inbuild function. "
                "Using the VTK API instead.\n");
     do_not_use_API = 0;
   }
@@ -1383,20 +1382,14 @@ t8_forest_write_vtk_ext (t8_forest_t forest, const char *fileprefix, const int w
                "Please link to VTK.\n"
                "Using the inbuild function to write out uncurved elements instead.\n");
   }
-  if (stretched_flag) {
-    t8_errorf ("WARNING: Export of stretched elements not yet available with the inbuild function. "
-               "Please link to VTK.\n"
-               "Using the inbuild function to write out unstretched elements instead.\n");
-  }
   do_not_use_API = 1;
 #endif
   if (!do_not_use_API) {
     return t8_forest_vtk_write_file_via_API (forest, fileprefix, write_treeid, write_mpirank, write_level,
-                                             write_element_id, write_ghosts, write_curved, stretched_flag, num_data,
-                                             data);
+                                             write_element_id, write_ghosts, write_curved, num_data, data);
   }
   else {
-    T8_ASSERT (!write_curved && !stretched_flag);
+    T8_ASSERT (!write_curved);
     return t8_forest_vtk_write_file (forest, fileprefix, write_treeid, write_mpirank, write_level, write_element_id,
                                      write_ghosts, num_data, data);
   }
@@ -1405,7 +1398,7 @@ t8_forest_write_vtk_ext (t8_forest_t forest, const char *fileprefix, const int w
 int
 t8_forest_write_vtk (t8_forest_t forest, const char *fileprefix)
 {
-  return t8_forest_write_vtk_ext (forest, fileprefix, 1, 1, 1, 1, 0, 0, 0, 0, 0, NULL);
+  return t8_forest_write_vtk_ext (forest, fileprefix, 1, 1, 1, 1, 0, 0, 0, 0, NULL);
 }
 
 t8_forest_t

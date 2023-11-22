@@ -970,7 +970,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
 
   /* Write to vtk. We use the extended vtk function to export a curved vtk mesh.
    * This is only viable if you link to vtk. */
-  t8_forest_write_vtk_ext (forest, vtuname, 1, 1, 1, 1, 0, 1, 0, 0, 0, NULL);
+  t8_forest_write_vtk_ext (forest, vtuname, 1, 1, 1, 1, 0, 1, 0, 0, NULL);
   /* Output */
   t8_global_productionf ("Wrote forest to vtu files %s.*\n", vtuname);
   if (geom_type == T8_GEOM_CIRCLE) {

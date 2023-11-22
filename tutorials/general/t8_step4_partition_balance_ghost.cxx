@@ -268,7 +268,7 @@ t8_step4_main (int argc, char **argv)
   t8_global_productionf (" [step4] Repartitioned forest and built ghost layer.\n");
   t8_step3_print_forest_information (forest);
   /* Write forest to vtu files. */
-  t8_forest_write_vtk_ext (forest, prefix_partition_ghost, 1, 1, 1, 1, 1, 0, 0, 1, 0, NULL);
+  t8_forest_write_vtk_ext (forest, prefix_partition_ghost, 1, 1, 1, 1, 1, 0, 1, 0, NULL);
 
   /*
    * Balance

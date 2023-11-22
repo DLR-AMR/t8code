@@ -58,8 +58,8 @@ T8_EXTERN_C_BEGIN ();
 void
 t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
                                   const int write_treeid, const int write_mpirank, const int write_level,
-                                  const int write_element_id, const int curved_flag, const int stretch_flag,
-                                  const int write_ghosts, const int num_data, t8_vtk_data_field_t *data);
+                                  const int write_element_id, const int curved_flag, const int write_ghosts,
+                                  const int num_data, t8_vtk_data_field_t *data);
 
 #endif
 

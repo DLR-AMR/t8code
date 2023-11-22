@@ -581,10 +581,8 @@ t8_advect_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
 #if T8_ENABLE_DEBUG
     /* Ensure that the number of incoming elements matches the
      * number of children of the outgoing element. */
-    const t8_element_t *element_outgoing =
-      t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing);
-    const int           num_children =
-      ts->t8_element_num_children (element_outgoing);
+    const t8_element_t *element_outgoing = t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing);
+    const int num_children = ts->t8_element_num_children (element_outgoing);
     T8_ASSERT (num_incoming == num_children);
 #endif
     /* The old element is refined, we copy the phi values and compute the new midpoints */
@@ -595,7 +593,7 @@ t8_advect_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
       t8_advect_compute_element_data (problem, elem_data_in + i, element, which_tree, ts);
       t8_advect_element_set_phi_adapt (problem, first_incoming_data + i, phi_old);
       /* Set the neighbor entries to uninitialized */
-      const int           num_new_faces = ts->t8_element_num_faces (element);
+      const int num_new_faces = ts->t8_element_num_faces (element);
       elem_data_in[i].num_faces = num_new_faces;
       for (iface = 0; iface < num_new_faces; iface++) {
         elem_data_in[i].num_neighbors[iface] = 0;
@@ -615,10 +613,8 @@ t8_advect_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
 #if T8_ENABLE_DEBUG
     /* Ensure that the number of outgoing elements matches the
      * number of siblings of the first outgoing element. */
-    const t8_element_t *element_outgoing =
-      t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing);
-    const int           num_siblings =
-      ts->t8_element_num_siblings (element_outgoing);
+    const t8_element_t *element_outgoing = t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing);
+    const int num_siblings = ts->t8_element_num_siblings (element_outgoing);
     T8_ASSERT (num_outgoing == num_siblings);
 #endif
     /* The old elements form a family which is coarsened. We compute the average
@@ -1117,7 +1113,7 @@ t8_advect_write_vtk (t8_advect_problem_t *problem)
   /* Write filename */
   snprintf (fileprefix, BUFSIZ, "advection_%03i", problem->vtk_count);
   /* Write vtk files */
-  if (t8_forest_write_vtk_ext (problem->forest, fileprefix, 1, 1, 1, 1, 0, 0, 0, 0, 4, vtk_data)) {
+  if (t8_forest_write_vtk_ext (problem->forest, fileprefix, 1, 1, 1, 1, 0, 0, 0, 4, vtk_data)) {
     t8_debugf ("[Advect] Wrote pvtu to files %s\n", fileprefix);
   }
   else {
