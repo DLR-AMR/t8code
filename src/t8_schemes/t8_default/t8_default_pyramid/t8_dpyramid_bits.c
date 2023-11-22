@@ -1401,7 +1401,7 @@ t8_dpyramid_get_face_corner (const t8_dpyramid_t *pyra, int face, int corner)
     return t8_dtet_face_corner[face][corner];
   }
   else {
-    int corner_number = t8_dpyramid_face_corner[pyra->pyramid.type-6][face][corner];
+    const int corner_number = t8_dpyramid_face_corner[pyra->pyramid.type-T8_DPYRAMID_FIRST_TYPE][face][corner];
     T8_ASSERT (0 <= corner_number && corner_number < T8_DPYRAMID_FACES);
     return corner_number;
   }
