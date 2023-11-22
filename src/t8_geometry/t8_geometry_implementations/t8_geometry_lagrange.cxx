@@ -45,7 +45,7 @@ t8_geometry_lagrange::~t8_geometry_lagrange ()
 /**
  * Finite element mapping.
  * For linear elements, it gives the same result as
- * t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, num_coords, out_coords);
+ * \ref t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, num_coords, out_coords);
  */
 void
 t8_geometry_lagrange::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
@@ -74,13 +74,13 @@ t8_geometry_lagrange::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtre
 void
 t8_geometry_lagrange::interpolate (const double *point, double *out_point) const
 {
-  auto basis_functions = t8_geometry_lagrange::compute_basis (point);
-  int n_vertex = basis_functions.size ();
+  const auto basis_functions = t8_geometry_lagrange::compute_basis (point);
+  const int n_vertex = basis_functions.size ();
   for (int i_component = 0; i_component < T8_ECLASS_MAX_DIM; i_component++) {
     double inner_product = 0;
     for (int j_vertex = 0; j_vertex < n_vertex; j_vertex++) {
-      double coordinate = active_tree_vertices[j_vertex * T8_ECLASS_MAX_DIM + i_component];
-      double basis_function = basis_functions[j_vertex];
+      const double coordinate = active_tree_vertices[j_vertex * T8_ECLASS_MAX_DIM + i_component];
+      const double basis_function = basis_functions[j_vertex];
       inner_product += basis_function * coordinate;
     }
     out_point[i_component] = inner_product;
@@ -110,18 +110,18 @@ t8_geometry_lagrange::compute_basis (const double *ref_coords) const
 const std::vector<double>
 t8_geometry_lagrange::t3_basis (const double *ref_coords) const
 {
-  double xi = ref_coords[0];
-  double eta = ref_coords[1];
-  std::vector<double> basis_functions = { 1 - xi, xi - eta, eta };
+  const double xi = ref_coords[0];
+  const double eta = ref_coords[1];
+  const std::vector<double> basis_functions = { 1 - xi, xi - eta, eta };
   return basis_functions;
 }
 
 const std::vector<double>
 t8_geometry_lagrange::t6_basis (const double *ref_coords) const
 {
-  double xi = ref_coords[0];
-  double eta = ref_coords[1];
-  std::vector<double> basis_functions
+  const double xi = ref_coords[0];
+  const double eta = ref_coords[1];
+  const std::vector<double> basis_functions
     = { 1 - 3 * xi + 2 * xi * xi,      -xi + eta + 2 * xi * xi + 2 * eta * eta - 4 * xi * eta,
         -eta + 2 * eta * eta,          4 * xi - 4 * eta - 4 * xi * xi + 4 * xi * eta,
         -4 * eta * eta + 4 * xi * eta, 4 * eta - 4 * xi * eta };
@@ -131,9 +131,9 @@ t8_geometry_lagrange::t6_basis (const double *ref_coords) const
 const std::vector<double>
 t8_geometry_lagrange::q4_basis (const double *ref_coords) const
 {
-  double xi = ref_coords[0];
-  double eta = ref_coords[1];
-  std::vector<double> basis_functions = { (1 - xi) * (1 - eta), xi * (1 - eta), eta * (1 - xi), xi * eta };
+  const double xi = ref_coords[0];
+  const double eta = ref_coords[1];
+  const std::vector<double> basis_functions = { (1 - xi) * (1 - eta), xi * (1 - eta), eta * (1 - xi), xi * eta };
   return basis_functions;
 };
 
