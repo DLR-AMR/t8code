@@ -31,12 +31,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <test/t8_gtest_macros.hxx>
 
 /**
- * This file tests the volume-computation of elements.
+ * This file tests the face normal computation of elements.
  */
-#define epsilon 1e-9
-
-/* Construct a forest of a hypercube with volume 1. If the element are refined uniformly
- * all elements have volume 1/global_num_elements. */
 
 class class_forest_face_normal: public testing::TestWithParam<std::tuple<t8_eclass_t, int>> {
  protected:
@@ -63,6 +59,9 @@ class class_forest_face_normal: public testing::TestWithParam<std::tuple<t8_ecla
 
 TEST_P (class_forest_face_normal, back_and_forth)
 {
+  /** Iterate over all elements of a uniformly refined forest. For all faceneighbors elements, if they are local,
+    * check if their facenormal is the negative of the corresponding facenormal of the neighbor elements.
+    */
   const t8_locidx_t local_num_trees = t8_forest_get_num_local_trees (forest);
   /* Iterate over all elements. */
   for (t8_locidx_t itree = 0; itree < local_num_trees; itree++) {
@@ -77,7 +76,6 @@ TEST_P (class_forest_face_normal, back_and_forth)
         /* Compute facenormal */
         double face_normal[3] = {0,0,0};
         t8_forest_element_face_normal(forest,itree,element,iface,face_normal);
-//        t8_debugf("ielement: %i, normal: %f, %f, %f\n", ielement, face_normal[0], face_normal[1], face_normal[2]);
 
         /* Get all face neighbors */
 
@@ -102,9 +100,9 @@ TEST_P (class_forest_face_normal, back_and_forth)
 
           t8_element_t *neigh_elem = t8_forest_get_element(forest, neigh_ids[ineigh], &ineightree);
           t8_forest_element_face_normal(forest, ineightree, neigh_elem, dual_faces[ineigh], neigh_face_normal);
-          EXPECT_NEAR(face_normal[0], -neigh_face_normal[0], epsilon);
-          EXPECT_NEAR(face_normal[1], -neigh_face_normal[1], epsilon);
-          EXPECT_NEAR(face_normal[2], -neigh_face_normal[2], epsilon);
+          EXPECT_NEAR(face_normal[0], -neigh_face_normal[0], 10*T8_PRECISION_EPS);
+          EXPECT_NEAR(face_normal[1], -neigh_face_normal[1], 10*T8_PRECISION_EPS);
+          EXPECT_NEAR(face_normal[2], -neigh_face_normal[2], 10*T8_PRECISION_EPS);
         }
 
         if(num_neighbors > 0) {
