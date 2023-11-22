@@ -96,7 +96,10 @@ TEST_P (class_forest_face_normal, back_and_forth)
 
         for(int ineigh = 0; ineigh < num_neighbors; ineigh++){
           double neigh_face_normal[3];
-          int ineightree;
+          t8_locidx_t ineightree;
+          /* Skip ghost elements, because those can't be passed to t8_forest_element_face_normal */
+          if (neigh_ids[ineigh] >= t8_forest_get_local_num_elements(forest))continue;
+
           t8_element_t *neigh_elem = t8_forest_get_element(forest, neigh_ids[ineigh], &ineightree);
           t8_forest_element_face_normal(forest, ineightree, neigh_elem, dual_faces[ineigh], neigh_face_normal);
           EXPECT_NEAR(face_normal[0], -neigh_face_normal[0], epsilon);
