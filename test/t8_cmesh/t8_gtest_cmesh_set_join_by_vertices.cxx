@@ -27,6 +27,7 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh/t8_cmesh_helpers.h>
 #include <t8_cmesh/t8_cmesh_testcases.h>
+#include <test/t8_gtest_macros.hxx>
 
 #include <p8est_geometry.h>
 
@@ -401,5 +402,4 @@ TEST_P (t8_cmesh_set_join_by_vertices_class, test_cmesh_set_join_by_vertices_par
 }
 
 /* Test all cmeshes over all different inputs we get through their id */
-INSTANTIATE_TEST_SUITE_P (t8_cmesh_set_join_by_vertices, t8_cmesh_set_join_by_vertices_class,
-                          testing::Range (0, t8_get_number_of_all_testcases ()));
+INSTANTIATE_TEST_SUITE_P (t8_cmesh_set_join_by_vertices, t8_cmesh_set_join_by_vertices_class, AllCmeshs);

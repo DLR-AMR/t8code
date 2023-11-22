@@ -136,7 +136,7 @@ t8_step6_create_element_data (t8_forest_t forest)
 
     /* Loop over all local elements in the tree. */
     for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
-      t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
 
       /* Pointer to our current element data struct. */
       struct data_per_element *edat = &element_data[current_index];
@@ -194,7 +194,7 @@ t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_d
 
     /* Loop over all local elements in the tree. */
     for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
-      t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
 
       /* Gather center point of the 3x3 stencil. */
       stencil[1][1] = element_data[current_index].height;
