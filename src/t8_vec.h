@@ -46,6 +46,19 @@ t8_vec_norm (const double vec[3])
   return sqrt (norm);
 }
 
+/** Normalize a vector.
+ * \param [in,out] vec  A 3D vector.
+ */
+static inline void
+t8_vec_normalize (double vec[3])
+{
+  const double norm = t8_vec_norm (vec);
+
+  for (int i = 0; i < 3; i++) {
+    vec[i] = vec[i] / norm;
+  }
+}
+
 /** Euclidean distance of X and Y.
  * \param [in]  vec_x  A 3D vector.
  * \param [in]  vec_y  A 3D vector.
