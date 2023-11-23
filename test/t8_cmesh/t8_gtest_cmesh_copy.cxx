@@ -37,8 +37,8 @@ class cmesh_copy_equality: public testing::TestWithParam<all_cmeshes_with_num_el
   SetUp () override
   {
     cmesh_gen = GetParam ();
-    cmesh_gen.create_cmesh();
-    cmesh_original = cmesh_gen.get_cmesh();
+    cmesh_gen.create_cmesh ();
+    cmesh_original = cmesh_gen.get_cmesh ();
     /* Set up the cmesh copy */
     t8_cmesh_init (&cmesh_copy);
     /* We need the original cmesh later, so we ref it */
@@ -74,9 +74,8 @@ TEST_P (cmesh_copy_equality, check_equality_of_copied_cmesh_with_original)
   EXPECT_TRUE (t8_cmesh_is_equal (cmesh_original, cmesh_copy));
 }
 
-
 /* Test all cmeshes over all different inputs we get through their id */
-INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_copy, cmesh_copy_equality, 
-                          ::testing::Range (all_cmeshes_with_num_elem(0, sc_MPI_COMM_WORLD, 1),
-                                            all_cmeshes_with_num_elem(0, sc_MPI_COMM_WORLD, 5), 
-                                            all_cmeshes_with_num_elem(0, sc_MPI_COMM_WORLD, 1)));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_copy, cmesh_copy_equality,
+                          ::testing::Range (all_cmeshes_with_num_elem (0, sc_MPI_COMM_WORLD, 1),
+                                            all_cmeshes_with_num_elem (0, sc_MPI_COMM_WORLD, 5),
+                                            all_cmeshes_with_num_elem (0, sc_MPI_COMM_WORLD, 1)));
