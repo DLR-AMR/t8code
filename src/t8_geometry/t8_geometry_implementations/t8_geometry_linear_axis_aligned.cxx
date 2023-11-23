@@ -71,7 +71,7 @@ void
 t8_geometry_linear_axis_aligned_destroy (t8_geometry_c **geom)
 {
   T8_ASSERT (geom != NULL);
-  T8_ASSERT (t8_geom_is_linear_axis_aligned (*geom));
+  T8_ASSERT ((*geom)->t8_geom_get_type () == T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED);
 
   delete *geom;
   *geom = NULL;
@@ -89,5 +89,4 @@ t8_geom_is_linear_axis_aligned (const t8_geometry_c *geometry)
 
   return is_linear_axis_aligned_geom;
 }
-
 T8_EXTERN_C_END ();

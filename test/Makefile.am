@@ -33,6 +33,7 @@ t8code_googletest_programs = \
   test/t8_forest/t8_gtest_element_volume \
   test/t8_cmesh/t8_gtest_multiple_attributes \
   test/t8_schemes/t8_gtest_successor \
+  test/t8_schemes/t8_gtest_boundary_extrude \
   test/t8_forest/t8_gtest_search \
   test/t8_gtest_netcdf_linkage \
   test/t8_forest/t8_gtest_element_general_function \
@@ -169,6 +170,10 @@ test_t8_cmesh_t8_gtest_multiple_attributes_SOURCES = \
 test_t8_schemes_t8_gtest_successor_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_schemes/t8_gtest_successor.cxx
+
+test_t8_schemes_t8_gtest_boundary_extrude_SOURCES = \
+  test/t8_gtest_main.cxx \
+  test/t8_schemes/t8_gtest_boundary_extrude.cxx
 
 test_t8_forest_t8_gtest_search_SOURCES = \
   test/t8_gtest_main.cxx \
@@ -367,6 +372,10 @@ test_t8_schemes_t8_gtest_successor_LDADD = $(t8_gtest_target_ld_add)
 test_t8_schemes_t8_gtest_successor_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_schemes_t8_gtest_successor_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
+test_t8_schemes_t8_gtest_boundary_extrude_LDADD = $(t8_gtest_target_ld_add)
+test_t8_schemes_t8_gtest_boundary_extrude_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_schemes_t8_gtest_boundary_extrude_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+
 test_t8_forest_t8_gtest_search_LDADD = $(t8_gtest_target_ld_add)
 test_t8_forest_t8_gtest_search_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_forest_t8_gtest_search_CPPFLAGS = $(t8_gtest_target_cpp_flags)
@@ -479,6 +488,7 @@ test_t8_cmesh_t8_gtest_cmesh_partition_CPPFLAGS += $(t8_gtest_target_mpi_cpp_fla
 test_t8_forest_t8_gtest_element_volume_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_multiple_attributes_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_successor_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_schemes_t8_gtest_boundary_extrude_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_t8_gtest_search_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_gtest_netcdf_linkage_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_t8_gtest_element_general_function_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
