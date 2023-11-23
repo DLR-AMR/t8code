@@ -42,23 +42,18 @@ t8_geometry_lagrange::~t8_geometry_lagrange ()
   T8_FREE ((char *) name);
 }
 
-/**
- * Finite element mapping.
- * For linear elements, it gives the same result as
- * \ref t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, num_coords, out_coords);
- */
 void
 t8_geometry_lagrange::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                        const size_t num_coords, double *out_coords) const
+                                        const size_t num_points, double *out_coords) const
 {
-  if (num_coords != 1)
+  if (num_points != 1)
     SC_ABORT ("Error: Batch computation of geometry not yet supported.");
-  t8_geometry_lagrange::interpolate (ref_coords, out_coords);
+  t8_geometry_lagrange::map (ref_coords, out_coords);
 }
 
 void
 t8_geometry_lagrange::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                                 const size_t num_coords, double *jacobian) const
+                                                 const size_t num_points, double *jacobian) const
 {
   SC_ABORT_NOT_REACHED ();
 };
@@ -72,9 +67,9 @@ t8_geometry_lagrange::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtre
 }
 
 void
-t8_geometry_lagrange::interpolate (const double *point, double *out_point) const
+t8_geometry_lagrange::map (const double *ref_point, double *mapped_point) const
 {
-  const auto basis_functions = t8_geometry_lagrange::compute_basis (point);
+  const auto basis_functions = t8_geometry_lagrange::compute_basis (ref_point);
   const int n_vertex = basis_functions.size ();
   for (int i_component = 0; i_component < T8_ECLASS_MAX_DIM; i_component++) {
     double inner_product = 0;
@@ -83,11 +78,10 @@ t8_geometry_lagrange::interpolate (const double *point, double *out_point) const
       const double basis_function = basis_functions[j_vertex];
       inner_product += basis_function * coordinate;
     }
-    out_point[i_component] = inner_product;
+    mapped_point[i_component] = inner_product;
   }
 }
 
-/* Evaluates the basis function of the current tree type at a point */
 const std::vector<double>
 t8_geometry_lagrange::compute_basis (const double *ref_coords) const
 {
@@ -103,24 +97,25 @@ t8_geometry_lagrange::compute_basis (const double *ref_coords) const
       return t8_geometry_lagrange::q4_basis (ref_coords);
     }
   default:
-    SC_ABORTF ("Error: %s geometry not yet implemented. \n", t8_eclass_to_string[active_tree_class]);
+    SC_ABORTF ("Error: Lagrange geometry for degree %i %s not yet implemented. \n", *degree,
+               t8_eclass_to_string[active_tree_class]);
   }
 }
 
 const std::vector<double>
-t8_geometry_lagrange::t3_basis (const double *ref_coords) const
+t8_geometry_lagrange::t3_basis (const double *ref_point) const
 {
-  const double xi = ref_coords[0];
-  const double eta = ref_coords[1];
+  const double xi = ref_point[0];
+  const double eta = ref_point[1];
   const std::vector<double> basis_functions = { 1 - xi, xi - eta, eta };
   return basis_functions;
 }
 
 const std::vector<double>
-t8_geometry_lagrange::t6_basis (const double *ref_coords) const
+t8_geometry_lagrange::t6_basis (const double *ref_point) const
 {
-  const double xi = ref_coords[0];
-  const double eta = ref_coords[1];
+  const double xi = ref_point[0];
+  const double eta = ref_point[1];
   const std::vector<double> basis_functions
     = { 1 - 3 * xi + 2 * xi * xi,      -xi + eta + 2 * xi * xi + 2 * eta * eta - 4 * xi * eta,
         -eta + 2 * eta * eta,          4 * xi - 4 * eta - 4 * xi * xi + 4 * xi * eta,
@@ -129,10 +124,10 @@ t8_geometry_lagrange::t6_basis (const double *ref_coords) const
 }
 
 const std::vector<double>
-t8_geometry_lagrange::q4_basis (const double *ref_coords) const
+t8_geometry_lagrange::q4_basis (const double *ref_point) const
 {
-  const double xi = ref_coords[0];
-  const double eta = ref_coords[1];
+  const double xi = ref_point[0];
+  const double eta = ref_point[1];
   const std::vector<double> basis_functions = { (1 - xi) * (1 - eta), xi * (1 - eta), eta * (1 - xi), xi * eta };
   return basis_functions;
 };
