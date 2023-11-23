@@ -83,7 +83,7 @@ t8_element_level (const t8_eclass_scheme_c *ts, const t8_element_t *elem);
 void
 t8_element_copy (const t8_eclass_scheme_c *ts, const t8_element_t *source, t8_element_t *dest);
 
-/** Compare two elements.
+/** Compare two elements with respect to the scheme.
  * \param [in] ts     Implementation of a class scheme.
  * \param [in] elem1  The first element.
  * \param [in] elem2  The second element.
@@ -93,6 +93,15 @@ t8_element_copy (const t8_eclass_scheme_c *ts, const t8_element_t *source, t8_el
  */
 int
 t8_element_compare (const t8_eclass_scheme_c *ts, const t8_element_t *elem1, const t8_element_t *elem2);
+
+/** Check if two elements are equal.
+ * \param [in] ts     Implementation of a class scheme.
+ * \param [in] elem1  The first element.
+ * \param [in] elem2  The second element.
+ * \return            1 if the elements are equal, 0 if they are not equal
+ */
+int
+t8_element_equal (const t8_eclass_scheme_c *ts, const t8_element_t *elem1, const t8_element_t *elem2);
 
 /** Compute the parent of a given element \b elem and store it in \b parent.
  *  \b parent needs to be an existing element. No memory is allocated by this function.
@@ -453,24 +462,6 @@ void
 t8_element_last_descendant_face (const t8_eclass_scheme_c *ts, const t8_element_t *elem, int face,
                                  t8_element_t *last_desc, int level);
 
-/* TODO:  Do we need this function at all?
- *        If not remove it. If so, what to do with prisms and pyramids?
- *        Here the boundary elements are of different eclasses, so we cannot
- *        store them in an array...
- */
-/** Construct all codimension-one boundary elements of a given element.
- * \param [in] ts       Implementation of a class scheme.
- * \param [in] elem     The input element.
- * \param [in] face     A face of \a elem.
- * \return              True if \a face is a subface of the element's root element.
- */
-/* void        t8_element_boundary (t8_eclass_scheme_c *ts,
- *                                  const t8_element_t *elem,
- *                                  int min_dim,
- *                                  int length,
- *                                  t8_element_t **boundary) = 0;
- */
-
 /** Compute whether a given element shares a given face with its root tree.
  * \param [in] ts       Implementation of a class scheme.
  * \param [in] elem     The input element.
@@ -662,6 +653,16 @@ t8_element_is_valid (const t8_eclass_scheme_c *ts, const t8_element_t *elem);
  */
 void
 t8_element_debug_print (const t8_eclass_scheme_c *ts, const t8_element_t *elem);
+
+/**
+ * \brief Fill a string with readable information about the element
+ * 
+ * \param[in] elem The element to translate into human-readable information
+ * \param[in, out] debug_string The string to fill. 
+ */
+void
+t8_element_to_string (const t8_eclass_scheme_c *ts, const t8_element_t *elem, char *debug_string,
+                      const int string_size);
 #endif
 
 /** Allocate memory for an array of elements of a given class and initialize them.

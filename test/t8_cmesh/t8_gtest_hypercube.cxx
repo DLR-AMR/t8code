@@ -27,6 +27,7 @@
 #include <t8_cmesh.h>
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include <t8_cmesh/t8_cmesh_examples.h>
+#include <test/t8_gtest_macros.hxx>
 
 /* Create class for parameterized Test with multiple test parameters */
 class cmesh_hypercube_trees: public testing::TestWithParam<std::tuple<t8_eclass, int, int>> {
@@ -64,5 +65,4 @@ TEST_P (cmesh_hypercube_trees, check_cmesh_and_its_trees)
 /* Use the testing range for eclass with [T8_ECLASS_ZERO, T8_ECLASS_COUNT]. For the generation of the cmesh with or withaout broadcast
  * the booleans 0 and 1 are used. Analogue with partition. */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_hypercube, cmesh_hypercube_trees,
-                          testing::Combine (testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT), testing::Values (0, 1),
-                                            testing::Values (0, 1)));
+                          testing::Combine (AllEclasses, testing::Values (0, 1), testing::Values (0, 1)));

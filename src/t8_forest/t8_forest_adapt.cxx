@@ -63,7 +63,7 @@ t8_forest_is_family_callback (t8_eclass_scheme_c *ts, const int num_elements, t8
 
   for (int iter = 0; iter < num_elements; iter++) {
     ts->t8_element_parent (elements[iter], element_parent_compare);
-    if (ts->t8_element_compare (element_parent, element_parent_compare)) {
+    if (!ts->t8_element_equal (element_parent, element_parent_compare)) {
       ts->t8_element_destroy (1, &element_parent);
       ts->t8_element_destroy (1, &element_parent_compare);
       return 0;
@@ -73,7 +73,7 @@ t8_forest_is_family_callback (t8_eclass_scheme_c *ts, const int num_elements, t8
   if (num_elements < ts->t8_element_num_siblings (elements[0])) {
     for (int iter = num_elements; iter < num_elements; iter++) {
       ts->t8_element_parent (elements[iter], element_parent_compare);
-      if (!ts->t8_element_compare (element_parent, element_parent_compare)) {
+      if (ts->t8_element_equal (element_parent, element_parent_compare)) {
         ts->t8_element_destroy (1, &element_parent);
         ts->t8_element_destroy (1, &element_parent_compare);
         return 0;
@@ -155,7 +155,7 @@ t8_forest_pos (t8_forest_t forest, t8_eclass_scheme_c *ts, t8_element_array_t *t
       break;
     }
     ts->t8_element_parent (element_compare, element_parent_compare);
-    if (ts->t8_element_compare (element_parent, element_parent_compare)) {
+    if (!ts->t8_element_equal (element_parent, element_parent_compare)) {
       break;
     }
   }
