@@ -391,16 +391,35 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id, const t8
 }
 
 void
-t8_forest_element_from_ref_coords (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                   const double *ref_coords, const size_t num_coords, double *coords_out,
-                                   sc_array_t *stretch_factors)
+t8_forest_element_from_ref_coords_ext (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+                                       const double *ref_coords, const size_t num_coords, double *coords_out,
+                                       const double *stretch_factors)
 {
   double tree_ref_coords[3] = { 0 };
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
   const t8_eclass_scheme_c *scheme = t8_forest_get_eclass_scheme (forest, tree_class);
-  scheme->t8_element_reference_coords (element, ref_coords, num_coords, tree_ref_coords);
   const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
   const t8_gloidx_t gtreeid = t8_forest_global_tree_id (forest, ltreeid);
+
+  if (stretch_factors != NULL) {
+#if T8_ENABLE_DEBUG
+    const t8_geometry_type_t geom_type = t8_geometry_get_type (cmesh, gtreeid);
+    T8_ASSERT (geom_type == T8_GEOMETRY_TYPE_LINEAR || geom_type == T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED);
+#endif /* T8_ENABLE_DEBUG */
+    const int tree_dim = t8_eclass_to_dimension[tree_class];
+    double stretched_ref_coords[T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM];
+    for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
+      for (int dim = 0; dim < tree_dim; ++dim) {
+        stretched_ref_coords[i_coord * tree_dim + dim]
+          = 0.5 + ((ref_coords[i_coord * tree_dim + dim] - 0.5) * stretch_factors[dim]);
+      }
+    }
+
+    scheme->t8_element_reference_coords (element, stretched_ref_coords, num_coords, tree_ref_coords);
+  }
+  else {
+    scheme->t8_element_reference_coords (element, ref_coords, num_coords, tree_ref_coords);
+  }
   t8_geometry_evaluate (cmesh, gtreeid, tree_ref_coords, num_coords, coords_out);
 }
 
@@ -458,7 +477,7 @@ t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const t8_el
    * reference coordinates */
   const t8_element_shape_t element_shape = t8_element_shape (ts, element);
   t8_forest_element_from_ref_coords (forest, ltreeid, element, t8_element_centroid_ref_coords[element_shape], 1,
-                                     coordinates, NULL);
+                                     coordinates);
 }
 
 /* Compute the length of the line from one corner to a second corner in an element */
@@ -1236,8 +1255,7 @@ t8_forest_element_point_batch_inside (t8_forest_t forest, t8_locidx_t ltreeid, c
   const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
   const t8_locidx_t cltreeid = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
   const t8_gloidx_t cgtreeid = t8_cmesh_get_global_id (cmesh, cltreeid);
-  const t8_geometry_c *geometry = t8_cmesh_get_tree_geometry (cmesh, cgtreeid);
-  T8_ASSERT (t8_geom_is_linear (geometry));
+  T8_ASSERT (t8_geometry_get_type (cmesh, cgtreeid) == T8_GEOMETRY_TYPE_LINEAR);
 #endif
 
   switch (element_shape) {
