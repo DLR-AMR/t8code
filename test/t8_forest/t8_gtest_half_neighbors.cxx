@@ -33,6 +33,7 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
+#include <test/t8_gtest_macros.hxx>
 
 class forest_half_neighbors: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
  protected:
@@ -136,4 +137,4 @@ TEST_P (forest_half_neighbors, test_half_neighbors)
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_half_neighbors, forest_half_neighbors,
-                          testing::Combine (testing::Range (T8_ECLASS_VERTEX, T8_ECLASS_COUNT), testing::Range (0, 3)));
+                          testing::Combine (AllEclasses, testing::Range (0, 3)));

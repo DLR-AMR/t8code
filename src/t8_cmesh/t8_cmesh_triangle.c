@@ -181,7 +181,7 @@ t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset, char *filename
   char *line = (char *) malloc (1024);
   size_t linen = 1024;
   t8_locidx_t num_elems, tit;
-  t8_locidx_t triangle, triangle_offset = 0;
+  t8_gloidx_t triangle, triangle_offset = 0;
   long temp_triangle;
   long tcorners[4]; /* in 2d only the first 3 values are needed */
   int retval;

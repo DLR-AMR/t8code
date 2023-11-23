@@ -25,6 +25,7 @@
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
+#include <test/t8_gtest_macros.hxx>
 
 /* This program tests the descendant function of an element. */
 
@@ -156,5 +157,4 @@ TEST_P (class_schemes_descendant, test_recursive_descendant)
   t8_large_step_descendant (elem, desc, test, ts, maxlvl);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_descendant, class_schemes_descendant,
-                          testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_descendant, class_schemes_descendant, AllEclasses);
