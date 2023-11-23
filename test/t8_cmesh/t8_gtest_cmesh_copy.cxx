@@ -27,17 +27,18 @@
 #include <t8_eclass.h>
 #include <t8_cmesh/t8_cmesh_testcases.h>
 #include <test/t8_gtest_macros.hxx>
+#include "test/t8_cmesh_generator/t8_gtest_cmesh_generator.hxx"
 
 /* Test if a cmesh is committed properly and perform the face consistency check. */
 
-class cmesh_copy_equality: public testing::TestWithParam<int> {
+class cmesh_copy_equality: public testing::TestWithParam<all_cmeshes_with_num_elem> {
  protected:
   void
   SetUp () override
   {
-    cmesh_id = GetParam ();
-
-    cmesh_original = t8_test_create_cmesh (cmesh_id);
+    cmesh_gen = GetParam ();
+    cmesh_gen.create_cmesh();
+    cmesh_original = cmesh_gen.get_cmesh();
     /* Set up the cmesh copy */
     t8_cmesh_init (&cmesh_copy);
     /* We need the original cmesh later, so we ref it */
@@ -54,13 +55,12 @@ class cmesh_copy_equality: public testing::TestWithParam<int> {
 
   t8_cmesh_t cmesh_original;
   t8_cmesh_t cmesh_copy;
-  int cmesh_id;
+  all_cmeshes_with_num_elem cmesh_gen;
 };
 
 /* Test wheater the original cmaeh and its copy are committed and face consistent. Test will fail, if one of these is false. */
 TEST_P (cmesh_copy_equality, check_cmeshes_and_their_trees)
 {
-
   EXPECT_TRUE (t8_cmesh_is_committed (cmesh_original));
   EXPECT_TRUE (t8_cmesh_is_committed (cmesh_copy));
   EXPECT_TRUE (t8_cmesh_trees_is_face_consistent (cmesh_original, cmesh_original->trees));
@@ -74,5 +74,9 @@ TEST_P (cmesh_copy_equality, check_equality_of_copied_cmesh_with_original)
   EXPECT_TRUE (t8_cmesh_is_equal (cmesh_original, cmesh_copy));
 }
 
+
 /* Test all cmeshes over all different inputs we get through their id */
-INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_copy, cmesh_copy_equality, AllCmeshs);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_copy, cmesh_copy_equality, 
+                          ::testing::Range (all_cmeshes_with_num_elem(0, sc_MPI_COMM_WORLD, 1),
+                                            all_cmeshes_with_num_elem(0, sc_MPI_COMM_WORLD, 5), 
+                                            all_cmeshes_with_num_elem(0, sc_MPI_COMM_WORLD, 1)));
