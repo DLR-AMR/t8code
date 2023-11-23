@@ -41,6 +41,7 @@ typedef struct
   std::vector<double[3]> coordinates;/* The corners of our cell. */
   int num_corners;
   std::vector<t8_locidx_t> *intersection_cell_indices;
+  std::vector<t8_locidx_t> *intersection_cell_treeid;
   double volume_cell;
   double volume_intersection_cells;
 
@@ -109,6 +110,7 @@ t8_tutorial_search_query_callback (t8_forest_t forest, t8_locidx_t ltreeid, cons
         t8_locidx_t element_index = t8_forest_get_tree_element_offset (forest, ltreeid) + tree_leaf_index;
         //add index of the cell to 
         corners_of_cell->intersection_cell_indices->push_back( element_index );
+        corners_of_cell->intersection_cell_treeid->push_back( ltreeid );
       }
       /* The particles is inside the element. This query should remain active.
        * If this element is not a leaf the search will continue with its children. */
@@ -122,10 +124,11 @@ t8_tutorial_search_query_callback (t8_forest_t forest, t8_locidx_t ltreeid, cons
 
 
 void 
-cell_intersection( t8_forest_t forest1, t8_forest_t forest2, t8_element_t *elem1, t8_element_t *elem1 )
+cell_intersection( t8_forest_t forest1, t8_forest_t forest2, t8_element_t *elem1, t8_element_t *elem2 )
 {
 //t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id, const t8_element_t *element, int corner_number,
 //                              double *coordinates)
+//ltree_id in t8_cell_corners_t -> uebergeben
 
 }
 
@@ -140,9 +143,9 @@ cell_intersection( t8_forest_t forest1, t8_forest_t forest2, t8_element_t *elem1
  * neighbor.
  */
 void 
-point_cloud_to_mesh( std::vector<double[3]> points )
+point_cloud_to_volume( std::vector<double[3]> points )
 {
-
+  // triangulation https://www.kiv.zcu.cz/site/documents/verejne/vyzkum/publikace/technicke-zpravy/2002/tr-2002-02.pdf
 }
 
 static sc_array *
@@ -156,7 +159,6 @@ t8_build_corners( t8_forest_t forest )
     for (t8_locidx_t ielem_tree = 0; ielem_tree < num_elem; ielem_tree++, ielem++) {
       t8_cell_corners_t *corner
         = (t8_cell_corners_t *) sc_array_index_int (corners, ielem);
-      
     }
   }
 }
