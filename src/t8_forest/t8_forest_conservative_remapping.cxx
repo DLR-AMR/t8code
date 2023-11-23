@@ -123,12 +123,14 @@ t8_tutorial_search_query_callback (t8_forest_t forest, t8_locidx_t ltreeid, cons
 }
 
 
-void 
+void //rueckgabewert anpassen oder als pointer uebergeben - Punktwolke
 cell_intersection( t8_forest_t forest1, t8_forest_t forest2, t8_element_t *elem1, t8_element_t *elem2 )
 {
 //t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id, const t8_element_t *element, int corner_number,
 //                              double *coordinates)
 //ltree_id in t8_cell_corners_t -> uebergeben
+
+//Eckpunkte des Schnittes zurueckgeben
 
 }
 
