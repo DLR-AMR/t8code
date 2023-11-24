@@ -30,15 +30,17 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 
-/* This test is executed on a subcommunicator of exactly 2 procs, because it demonstrates a configuration that is currently not working
+/* This test is executed on a subcommunicator of exactly 2 procs, because it demonstrates a configuration that is currently not working. See https://github.com/DLR-AMR/t8code/issues/825.
  * A partitioned square of uniform refinement level 1 is adapted once, where only the lower half is refined.
  * Then the mesh is adapted again, where only the upper half of the lower elements is deleted.
- * Now, no element actually has a face connection to an existing element on the other proc, but they send a message anyway.
+ * Now, no element actually has a face connection to an existing element on the other proc, thus the Ghost structure should be empty.
+ * Within the bug discussed in https://github.com/DLR-AMR/t8code/issues/825 they send a message anyway.
+ * Once, https://github.com/DLR-AMR/t8code/issues/825 is resolved, no messages should be send and the test should pass.
  */
 
 
-/* refine elements, whose y coordinate is 0, so that the lowest row is refined
- * delete elements, whose y coordniate is 0.25, so that the second row is deleted
+/* refine elements, whose lower left y coordinate is 0, so that the lowest row is refined
+ * delete elements, whose lower left y coordniate is 0.25, so that the second row is deleted
  */
 static int
 test_adapt_holes (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
