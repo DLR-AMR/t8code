@@ -25,13 +25,12 @@
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include "t8_cmesh/t8_cmesh_partition.h"
 #include <t8_eclass.h>
-#include <t8_cmesh/t8_cmesh_testcases.h>
 #include <test/t8_gtest_macros.hxx>
 #include "test/t8_cmesh_generator/t8_gtest_cmesh_generator.hxx"
 
 /* Test if a cmesh is committed properly and perform the face consistency check. */
 
-class cmesh_copy_equality: public testing::TestWithParam<all_cmeshes_with_num_elem> {
+class cmesh_copy_equality: public testing::TestWithParam<generate_all_cmeshes> {
  protected:
   void
   SetUp () override
@@ -55,7 +54,7 @@ class cmesh_copy_equality: public testing::TestWithParam<all_cmeshes_with_num_el
 
   t8_cmesh_t cmesh_original;
   t8_cmesh_t cmesh_copy;
-  all_cmeshes_with_num_elem cmesh_gen;
+  generate_all_cmeshes cmesh_gen;
 };
 
 /* Test wheater the original cmaeh and its copy are committed and face consistent. Test will fail, if one of these is false. */
@@ -76,6 +75,5 @@ TEST_P (cmesh_copy_equality, check_equality_of_copied_cmesh_with_original)
 
 /* Test all cmeshes over all different inputs we get through their id */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_copy, cmesh_copy_equality,
-                          ::testing::Range (all_cmeshes_with_num_elem (0, sc_MPI_COMM_WORLD, 1),
-                                            all_cmeshes_with_num_elem (0, sc_MPI_COMM_WORLD, 5),
-                                            all_cmeshes_with_num_elem (0, sc_MPI_COMM_WORLD, 1)));
+                          ::testing::Range (generate_all_cmeshes (), generate_all_cmeshes ().get_last (),
+                                            generate_all_cmeshes ()));

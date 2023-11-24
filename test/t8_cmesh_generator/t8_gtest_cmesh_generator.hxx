@@ -29,98 +29,92 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #define T8_GTEST_CMESH_GENERATOR_HXX
 
 #include <t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_examples.h>
 #include <vector>
+#include "test/t8_cmesh_generator/t8_gtest_cmesh_generator_cxx.hxx"
 
-#ifdef T8_ENABLE_LESS_TESTS
-#define MAX_NUM_TREES 5
-#else
-#define MAX_NUM_TREES 10
+T8_EXTERN_C_BEGIN ();
 
-#endif
-
-/* A function creating a cmesh getting a communicator and a number of elements to create */
-typedef t8_cmesh_t (*t8_cmesh_w_num_elem_create) (sc_MPI_Comm comm, int num_elems);
-
-/* List of all functions that have a num_elems-parameter*/
-const std::vector<t8_cmesh_w_num_elem_create> cmeshes_with_num_elems
-  = { t8_cmesh_new_long_brick_pyramid, t8_cmesh_new_prism_cake, t8_cmesh_new_pyramid_cake };
-
-class all_cmeshes_with_num_elem {
+struct generate_all_cmeshes
+{
  public:
-  /* Constructor */
-  all_cmeshes_with_num_elem (int creator, sc_MPI_Comm comm, int num_elems)
-    : num_elems (num_elems), current_creator (creator), create_func (cmeshes_with_num_elems[creator]), comm (comm)
+  generate_all_cmeshes (): current_cmesh_type (CMESH_ZERO)
   {
+    generator = cmesh_generator_init ();
+  };
+
+  generate_all_cmeshes (const int cmesh_type): current_cmesh_type (cmesh_type)
+  {
+    generator = cmesh_generator_init ();
   }
 
-  //all_cmeshes_with_num_elem() : num_elems(1), current_creator(0), create_func(cmeshes_with_num_elems[0]),
-  //comm(sc_MPI_COMM_WORLD){}
-
-  /* Copy-Constructor */
-  all_cmeshes_with_num_elem (const all_cmeshes_with_num_elem &other)
-    : num_elems (other.num_elems), current_creator (other.current_creator), create_func (other.create_func),
-      comm (other.comm), cmesh (NULL)
+  generate_all_cmeshes (const int cmesh_type, cmesh_generator_cxx *gen)
   {
+    cmesh_generator_cxx_ref (gen);
+    generator = gen;
+    current_cmesh_type = cmesh_type;
   }
 
-  /* overloading the < operator for gtest-ranges */
+  generate_all_cmeshes (const generate_all_cmeshes &other): current_cmesh_type (other.current_cmesh_type)
+  {
+    cmesh_generator_cxx_ref (other.generator);
+    generator = other.generator;
+  };
+
   bool
-  operator< (const all_cmeshes_with_num_elem &other)
+  operator< (const generate_all_cmeshes &other)
   {
-    if (current_creator == other.current_creator) {
-      return num_elems < other.num_elems;
+    if (current_cmesh_type == other.current_cmesh_type) {
+      return generator->generators[current_cmesh_type] < other.generator->generators[current_cmesh_type];
     }
     else {
-      return current_creator < other.current_creator;
+      return current_cmesh_type < other.current_cmesh_type;
     }
   }
 
-  /* The next cmesh is the cmesh with on more element until max_num_trees is reached,
-     * then we go to the next constructor. */
-  all_cmeshes_with_num_elem
-  operator+ (const all_cmeshes_with_num_elem &step)
+  generate_all_cmeshes
+  get_last ()
   {
-    if (num_elems + step.num_elems > MAX_NUM_TREES) {
-      num_elems = (num_elems + step.num_elems) % (MAX_NUM_TREES + 1);
-      current_creator++;
-    }
-    else {
-      num_elems += step.num_elems;
-    }
-    if (current_creator > 0 && num_elems <= 2)
-      num_elems = 3;
-    return all_cmeshes_with_num_elem (current_creator, comm, num_elems);
+    const cmesh_types_t last = CMESH_NUM_TYPES;
+    generate_all_cmeshes tmp = generate_all_cmeshes (last);
+    tmp.generator->generators[last]->set_last ();
+    return tmp;
   }
 
-  /* To save memory, the cmesh is not created by default */
+  generate_all_cmeshes
+  operator+ (const generate_all_cmeshes &step)
+  {
+    if (generator->generators[current_cmesh_type]->is_at_last ()) {
+      current_cmesh_type++;
+    }
+    else {
+      generate_all_cmeshes tmp = generate_all_cmeshes (current_cmesh_type);
+      generator->generators[current_cmesh_type]->get_step (tmp.generator->generators[current_cmesh_type]);
+      generator->generators[current_cmesh_type]
+        = *generator->generators[current_cmesh_type] + *tmp.generator->generators[current_cmesh_type];
+    }
+    return generate_all_cmeshes (current_cmesh_type, generator);
+  }
+
   void
   create_cmesh ()
   {
-    cmesh = create_func (comm, num_elems);
+    generator->generators[current_cmesh_type]->create_cmesh ();
   }
 
-  /* The cmesh is referenced and returned */
   t8_cmesh_t
   get_cmesh ()
   {
-    t8_cmesh_ref (cmesh);
-    return cmesh;
+    return generator->generators[current_cmesh_type]->get_cmesh ();
   }
 
-  /* Destruktor */
-  ~all_cmeshes_with_num_elem ()
+  ~generate_all_cmeshes ()
   {
-    /* unref the cmesh only if it has been created */
-    if (cmesh != NULL) {
-      t8_cmesh_unref (&cmesh);
-    }
   }
-  int num_elems;
-  int current_creator;
-  t8_cmesh_w_num_elem_create create_func;
-  sc_MPI_Comm comm;
-  t8_cmesh_t cmesh = NULL;
+
+  int current_cmesh_type = (int) CMESH_ZERO;
+  cmesh_generator_cxx *generator;
 };
+
+T8_EXTERN_C_END ();
 
 #endif /* T8_GTEST_CMESH_GENERATOR_HXX */
