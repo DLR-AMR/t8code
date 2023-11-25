@@ -541,13 +541,6 @@ t8_default_scheme_hex_c::t8_element_anchor (const t8_element_t *elem, int coord[
   coord[2] = q->z;
 }
 
-int
-t8_default_scheme_hex_c::t8_element_root_len (const t8_element_t *elem) const
-{
-  T8_ASSERT (t8_element_is_valid (elem));
-  return P8EST_ROOT_LEN;
-}
-
 void
 t8_default_scheme_hex_c::t8_element_vertex_coords (const t8_element_t *elem, int vertex, int coords[]) const
 {
