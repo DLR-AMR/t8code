@@ -531,13 +531,6 @@ struct t8_default_scheme_line_c: public t8_default_scheme_common_c
     SC_ABORT ("This function is not implemented yet.\n");
     return; /* suppresses compiler warning */
   }
-  /** Compute the root length of a given element, that is the length of
-   * its level 0 ancestor.
-   * \param [in] elem     The element whose root length should be computed.
-   * \return              The root length of \a elem
-   */
-  virtual int
-  t8_element_root_len (const t8_element_t *elem) const;
 
   /** Compute the integer coordinates of a given element vertex.
    * The default scheme implements the Morton type SFCs. In these SFCs the
