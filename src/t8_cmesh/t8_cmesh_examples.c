@@ -1161,11 +1161,9 @@ t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
          * vertex 7 correctly. */
           memcpy (vertices + 3, vertices + 21, 3 * sizeof (double));
         }
-#if T8_ENABLE_DEBUG
         else if (use_axis_aligned_geom && eclass != T8_ECLASS_HEX) {
           SC_ABORTF ("Axis aligned geometry is not available for eclass %s!\n", t8_eclass_to_string[eclass]);
         }
-#endif
 
         /* Map vertices of current hex on to respective trees inside. */
         const t8_gloidx_t hex_id = hex_z_id * hexs_y * hexs_x + hex_y_id * hexs_x + hex_x_id;
