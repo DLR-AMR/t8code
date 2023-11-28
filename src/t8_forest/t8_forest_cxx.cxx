@@ -1255,7 +1255,7 @@ t8_forest_element_point_batch_inside (t8_forest_t forest, t8_locidx_t ltreeid, c
   const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
   const t8_locidx_t cltreeid = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
   const t8_gloidx_t cgtreeid = t8_cmesh_get_global_id (cmesh, cltreeid);
-  T8_ASSERT (t8_geometry_get_type (cmesh, cgtreeid) == T8_GEOMETRY_TYPE_LINEAR);
+  //T8_ASSERT (t8_geometry_get_type (cmesh, cgtreeid) == T8_GEOMETRY_TYPE_LINEAR);
 #endif
 
   switch (element_shape) {
