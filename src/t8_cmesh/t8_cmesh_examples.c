@@ -998,11 +998,9 @@ t8_cmesh_set_vertices_2D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
          * vertex 3 correctly. */
         memcpy (vertices + 3, vertices + 9, 3 * sizeof (double));
       }
-#if T8_ENABLE_DEBUG
       else if (use_axis_aligned_geom && eclass != T8_ECLASS_QUAD) {
         SC_ABORTF ("Axis aligned geometry is not available for eclass %s!\n", t8_eclass_to_string[eclass]);
       }
-#endif
 
       /* Map vertices of current quad on to respective trees inside. */
       if (eclass == T8_ECLASS_QUAD) {
