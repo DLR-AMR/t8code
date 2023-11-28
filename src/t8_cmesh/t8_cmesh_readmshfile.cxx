@@ -1830,7 +1830,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition, sc_MPI_Comm comm,
     }
     /* close the file and free the memory for the nodes */
     fclose (file);
-    t8_cmesh_msh_file_find_neighbors (cmesh, vertex_indices);
+    //t8_cmesh_msh_file_find_neighbors (cmesh, vertex_indices);
     if (vertices != NULL) {
       sc_hash_destroy (vertices);
     }
