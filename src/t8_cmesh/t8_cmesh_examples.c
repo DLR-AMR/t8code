@@ -1006,8 +1006,7 @@ t8_cmesh_set_vertices_2D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
       if (eclass == T8_ECLASS_QUAD) {
         /* No mapping is required. */
         const t8_gloidx_t tree_id = quad_y_id * quads_x + quad_x_id;
-        t8_cmesh_set_tree_vertices (cmesh, tree_id, vertices,
-                                    (use_axis_aligned_geom ? 2 : 4);
+        t8_cmesh_set_tree_vertices (cmesh, tree_id, vertices, use_axis_aligned_geom ? 2 : 4);
       }
       else {
         T8_ASSERT (eclass == T8_ECLASS_TRIANGLE);
@@ -1169,8 +1168,7 @@ t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
         const t8_gloidx_t hex_id = hex_z_id * hexs_y * hexs_x + hex_y_id * hexs_x + hex_x_id;
         if (eclass == T8_ECLASS_HEX) {
           /* No mapping is required. */
-          t8_cmesh_set_tree_vertices (cmesh, hex_id, vertices,
-                                      (use_axis_aligned_geom && eclass == T8_ECLASS_HEX) ? 2 : 8);
+          t8_cmesh_set_tree_vertices (cmesh, hex_id, vertices, use_axis_aligned_geom ? 2 : 8);
         }
         else if (eclass == T8_ECLASS_TET) {
           const t8_gloidx_t tree_id_0 = hex_id * 6;
