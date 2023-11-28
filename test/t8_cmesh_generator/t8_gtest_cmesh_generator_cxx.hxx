@@ -40,7 +40,7 @@ typedef enum cmesh_types {
 
 class cmesh_generator_cxx {
  public:
-  cmesh_generator_cxx ()
+  cmesh_generator_cxx (): current_generator (CMESH_ZERO)
   {
     generators = T8_ALLOC_ZERO (cmesh_generator *, CMESH_NUM_TYPES);
     t8_refcount_init (&rc);
@@ -106,15 +106,15 @@ class cmesh_generator_cxx {
   cmesh_generator_cxx
   operator+ (const cmesh_generator_cxx &step)
   {
-    cmesh_generator_cxx *tmp = new cmesh_generator_cxx (*this);
+    cmesh_generator_cxx tmp (*this);
     if (generators[current_generator]->is_at_last ()) {
-      tmp->current_generator++;
-      tmp->generators[current_generator]->set_first ();
+      tmp.current_generator++;
+      tmp.generators[current_generator]->set_first ();
     }
     else {
-      tmp->generators[current_generator]->addition (step.generators[current_generator]);
+      tmp.generators[current_generator]->addition (step.generators[current_generator]);
     }
-    return *tmp;
+    return tmp;
   }
 
   void
@@ -132,7 +132,7 @@ class cmesh_generator_cxx {
     }
   }
 
-  int current_generator = (int) CMESH_ZERO;
+  int current_generator;
   sc_refcount_t rc;
   cmesh_generator **generators;
 };

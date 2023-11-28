@@ -28,12 +28,12 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 struct cmesh_generator
 {
  public:
-  cmesh_generator (int creator, sc_MPI_Comm comm): current_creator (creator), comm (comm), cmesh (NULL) {};
-
   cmesh_generator (): current_creator (0), comm (sc_MPI_COMM_WORLD), cmesh (NULL) {};
 
+  cmesh_generator (int creator, sc_MPI_Comm comm): current_creator (creator), comm (comm), cmesh (NULL) {};
+
   cmesh_generator (const cmesh_generator &other)
-    : current_creator (other.current_creator), comm (other.comm), cmesh (NULL) {};
+    : current_creator (other.current_creator), num_trees (other.num_trees), comm (other.comm), cmesh (NULL) {};
 
   virtual bool
   operator< (const cmesh_generator &other)
