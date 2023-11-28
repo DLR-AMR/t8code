@@ -77,16 +77,4 @@ t8_geometry_linear_axis_aligned_destroy (t8_geometry_c **geom)
   *geom = NULL;
 }
 
-int
-t8_geom_is_linear_axis_aligned (const t8_geometry_c *geometry)
-{
-  /* Try to dynamic cast the geometry into linear, axis-aligned geometry. 
-   * This is only successful if geometry pointed to a 
-   * t8_geometry_linear_axis_aligned.
-   * If successful, then is_linear_geom will be true.
-   */
-  const int is_linear_axis_aligned_geom = (dynamic_cast<const t8_geometry_linear_axis_aligned *> (geometry) != NULL);
-
-  return is_linear_axis_aligned_geom;
-}
 T8_EXTERN_C_END ();
