@@ -48,57 +48,40 @@ const std::vector<t8_cmesh_w_comm> cmeshes_with_comm = { t8_cmesh_new_periodic_t
 struct all_cmeshes_with_comm: public cmesh_generator
 {
  public:
-  /* Constructor */
-  all_cmeshes_with_comm (int creator, sc_MPI_Comm comm): create_func (cmeshes_with_comm[creator])
-  {
-  }
-
-  all_cmeshes_with_comm (): create_func (cmeshes_with_comm[0])
-  {
-  }
-
-  /* Copy-Constructor */
-  all_cmeshes_with_comm (const all_cmeshes_with_comm &other): create_func (other.create_func)
-  {
-  }
-
   /* overloading the < operator for gtest-ranges */
   bool
-  operator< (const all_cmeshes_with_comm &other)
+  operator< (const cmesh_generator &other)
   {
     return current_creator < other.current_creator;
   }
 
   /* The next cmesh is the cmesh with on more element until max_num_trees is reached,
      * then we go to the next constructor. */
-  all_cmeshes_with_comm
-  operator+ (const all_cmeshes_with_comm &step)
+  void
+  addition (const cmesh_generator *step)
   {
-    current_creator += step.current_creator;
-    return all_cmeshes_with_comm (current_creator, comm);
+    current_creator += step->current_creator;
+    T8_ASSERT ((unsigned long int) current_creator < cmeshes_with_comm.size ());
   }
 
   /* To save memory, the cmesh is not created by default */
   void
   create_cmesh ()
   {
-    cmesh = create_func (comm);
+    cmesh = cmeshes_with_comm[current_creator](comm);
   }
 
   void
-  get_step (all_cmeshes_with_comm *step)
+  get_step (cmesh_generator *step)
   {
     step->current_creator = 1;
     step->comm = sc_MPI_COMM_WORLD;
   }
 
   void
-  get_first (all_cmeshes_with_comm *first)
+  set_first ()
   {
-    first->current_creator = 0;
-    first->comm = sc_MPI_COMM_WORLD;
-    first->cmesh = NULL;
-    first->create_func = cmeshes_with_comm[0];
+    current_creator = 0;
   }
 
   void
@@ -121,8 +104,6 @@ struct all_cmeshes_with_comm: public cmesh_generator
       t8_cmesh_unref (&cmesh);
     }
   }
-
-  t8_cmesh_w_comm create_func = cmeshes_with_comm[0];
 };
 
 T8_EXTERN_C_END ();

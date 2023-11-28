@@ -42,25 +42,9 @@ const std::vector<t8_cmesh_w_num_elem_create> cmeshes_with_num_trees
 struct all_cmeshes_with_num_elem: cmesh_generator
 {
  public:
-  /* Constructor */
-  all_cmeshes_with_num_elem (int creator, sc_MPI_Comm comm, int num_trees)
-    : num_trees (num_trees), create_func (cmeshes_with_num_trees[creator])
-  {
-  }
-
-  all_cmeshes_with_num_elem (): num_trees (1), create_func (cmeshes_with_num_trees[0])
-  {
-  }
-
-  /* Copy-Constructor */
-  all_cmeshes_with_num_elem (const all_cmeshes_with_num_elem &other)
-    : num_trees (other.num_trees), create_func (other.create_func)
-  {
-  }
-
   /* overloading the < operator for gtest-ranges */
   bool
-  operator< (const all_cmeshes_with_num_elem &other)
+  operator< (const cmesh_generator &other)
   {
     if (current_creator == other.current_creator) {
       return num_trees < other.num_trees;
@@ -72,30 +56,31 @@ struct all_cmeshes_with_num_elem: cmesh_generator
 
   /* The next cmesh is the cmesh with on more element until max_num_trees is reached,
      * then we go to the next constructor. */
-  all_cmeshes_with_num_elem
-  operator+ (const all_cmeshes_with_num_elem &step)
+  void
+  addition (const cmesh_generator *step)
   {
-    if (num_trees + step.num_trees > MAX_NUM_TREES) {
-      num_trees = (num_trees + step.num_trees) % (MAX_NUM_TREES + 1);
+    if (num_trees + step->num_trees > MAX_NUM_TREES) {
+      num_trees = (num_trees + step->num_trees) % (MAX_NUM_TREES + 1);
       current_creator++;
+      T8_ASSERT ((unsigned long int) current_creator < cmeshes_with_num_trees.size ());
     }
     else {
-      num_trees += step.num_trees;
+      num_trees += step->num_trees;
     }
-    if (current_creator > 0 && num_trees <= 2)
+    if (current_creator > 0 && num_trees <= 2) {
       num_trees = 3;
-    return all_cmeshes_with_num_elem (current_creator, comm, num_trees);
+    }
   }
 
   /* To save memory, the cmesh is not created by default */
   void
   create_cmesh ()
   {
-    cmesh = create_func (comm, num_trees);
+    cmesh = cmeshes_with_num_trees[current_creator](comm, num_trees);
   }
 
   void
-  get_step (all_cmeshes_with_num_elem *step)
+  get_step (cmesh_generator *step)
   {
     step->current_creator = 0;
     step->comm = sc_MPI_COMM_WORLD;
@@ -104,13 +89,10 @@ struct all_cmeshes_with_num_elem: cmesh_generator
   }
 
   void
-  get_first (all_cmeshes_with_num_elem *first)
+  set_first ()
   {
-    first->current_creator = 0;
-    first->comm = sc_MPI_COMM_WORLD;
-    first->cmesh = NULL;
-    first->num_trees = 1;
-    first->create_func = cmeshes_with_num_trees[0];
+    current_creator = 0;
+    num_trees = 1;
   }
 
   void
@@ -133,8 +115,6 @@ struct all_cmeshes_with_num_elem: cmesh_generator
       t8_cmesh_unref (&cmesh);
     }
   }
-  int num_trees = 1;
-  t8_cmesh_w_num_elem_create create_func = cmeshes_with_num_trees[0];
 };
 
 T8_EXTERN_C_END ();

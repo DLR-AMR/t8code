@@ -38,56 +38,103 @@ typedef enum cmesh_types {
   CMESH_NUM_TYPES = 2
 } cmesh_types_t;
 
-typedef struct cmesh_generator_t
-{
-  sc_refcount_t rc;
+class cmesh_generator_cxx {
+ public:
+  cmesh_generator_cxx ()
+  {
+    generators = T8_ALLOC_ZERO (cmesh_generator *, CMESH_NUM_TYPES);
+    t8_refcount_init (&rc);
 
-  cmesh_generator *generators[CMESH_NUM_TYPES];
-} cmesh_generator_cxx;
+    generators[CMESH_WITH_COMM] = new all_cmeshes_with_comm ();
+    generators[CMESH_WITH_NUM_TREES] = new all_cmeshes_with_num_elem ();
+  }
 
-cmesh_generator_cxx *
-cmesh_generator_init (void)
-{
-  cmesh_generator_cxx *gen = T8_ALLOC_ZERO (cmesh_generator_cxx, 1);
-  t8_refcount_init (&gen->rc);
+  /* Avoid code duplication here*/
+  cmesh_generator_cxx (int generator)
+  {
+    T8_ASSERT (generator < (int) CMESH_NUM_TYPES);
+    generators = T8_ALLOC_ZERO (cmesh_generator *, CMESH_NUM_TYPES);
+    t8_refcount_init (&rc);
 
-  gen->generators[CMESH_WITH_COMM] = new all_cmeshes_with_comm ();
-  gen->generators[CMESH_WITH_NUM_TREES] = new all_cmeshes_with_num_elem ();
-  return gen;
-};
+    generators[CMESH_WITH_COMM] = new all_cmeshes_with_comm ();
+    generators[CMESH_WITH_NUM_TREES] = new all_cmeshes_with_num_elem ();
+    current_generator = generator;
+  }
 
-void
-cmesh_generator_cxx_destroy (cmesh_generator_cxx *gen)
-{
-  for (int igen = CMESH_ZERO; igen < CMESH_NUM_TYPES; igen++) {
-    if (gen->generators[igen] != NULL) {
-      delete gen->generators[igen];
+  cmesh_generator_cxx (cmesh_generator_cxx &other): current_generator (other.current_generator)
+  {
+    T8_ASSERT (other.generators != NULL);
+    sc_refcount_ref (&other.rc);
+
+    generators = other.generators;
+  }
+
+  void
+  cmesh_generator_cxx_destroy ()
+  {
+    for (int igen = CMESH_ZERO; igen < CMESH_NUM_TYPES; igen++) {
+      if (generators != NULL) {
+        delete generators[igen];
+      }
+    }
+    T8_FREE (generators);
+  }
+
+  void
+  create_cmesh ()
+  {
+    generators[current_generator]->create_cmesh ();
+  }
+
+  t8_cmesh_t
+  get_cmesh ()
+  {
+    return generators[current_generator]->get_cmesh ();
+  }
+
+  bool
+  operator< (const cmesh_generator_cxx &other)
+  {
+    if (current_generator == other.current_generator) {
+      return generators[current_generator] < other.generators[current_generator];
+    }
+    else {
+      return current_generator < other.current_generator;
     }
   }
-  T8_FREE (gen);
-};
 
-void
-cmesh_generator_cxx_ref (cmesh_generator_cxx *gen)
-{
-  T8_ASSERT (gen != NULL);
-
-  sc_refcount_ref (&gen->rc);
-};
-
-void
-cmesh_generator_cxx_unref (cmesh_generator_cxx **pgen)
-{
-  cmesh_generator_cxx *gen;
-
-  T8_ASSERT (pgen != NULL);
-  gen = *pgen;
-  T8_ASSERT (gen != NULL);
-
-  if (sc_refcount_unref (&gen->rc)) {
-    cmesh_generator_cxx_destroy (gen);
-    *pgen = NULL;
+  cmesh_generator_cxx
+  operator+ (const cmesh_generator_cxx &step)
+  {
+    cmesh_generator_cxx *tmp = new cmesh_generator_cxx (*this);
+    if (generators[current_generator]->is_at_last ()) {
+      tmp->current_generator++;
+      tmp->generators[current_generator]->set_first ();
+    }
+    else {
+      tmp->generators[current_generator]->addition (step.generators[current_generator]);
+    }
+    return *tmp;
   }
+
+  void
+  set_last ()
+  {
+    current_generator = CMESH_NUM_TYPES - 1;
+    generators[current_generator]->set_last ();
+  }
+
+  ~cmesh_generator_cxx ()
+  {
+    T8_ASSERT (generators != NULL);
+    if (sc_refcount_unref (&rc)) {
+      cmesh_generator_cxx_destroy ();
+    }
+  }
+
+  int current_generator = (int) CMESH_ZERO;
+  sc_refcount_t rc;
+  cmesh_generator **generators;
 };
 
 T8_EXTERN_C_END ();

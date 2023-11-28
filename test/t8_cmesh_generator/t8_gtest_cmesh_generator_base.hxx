@@ -39,8 +39,8 @@ struct cmesh_generator
   operator< (const cmesh_generator &other)
     = 0;
 
-  virtual cmesh_generator
-  operator+ (const cmesh_generator &step)
+  virtual void
+  addition (const cmesh_generator *step)
     = 0;
 
   virtual void
@@ -48,7 +48,7 @@ struct cmesh_generator
     = 0;
 
   virtual void
-  get_first (cmesh_generator *first)
+  set_first ()
     = 0;
 
   virtual void
@@ -74,6 +74,7 @@ struct cmesh_generator
   virtual ~cmesh_generator () {};
 
   int current_creator = 0;
+  int num_trees = 1;
   sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
   t8_cmesh_t cmesh = NULL;
 };
