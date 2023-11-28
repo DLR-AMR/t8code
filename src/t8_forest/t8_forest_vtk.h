@@ -47,6 +47,7 @@ T8_EXTERN_C_BEGIN ();
  * \param [in]  write_level If true, the refinement level is written for each element.
  * \param [in]  write_element_id If true, the global element id is written for each element.
  * \param [in]  curved_flag If true, write the elements as curved element types from vtk.
+ * \param [in]  write_ghosts If true, write out ghost elements as well.
  * \param [in]  num_data  Number of user defined double valued data fields to write.
  * \param [in]  data      Array of t8_vtk_data_field_t of length \a num_data
  *                        providing the user defined per element data.
