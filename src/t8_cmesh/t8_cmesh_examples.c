@@ -1007,7 +1007,7 @@ t8_cmesh_set_vertices_2D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
         /* No mapping is required. */
         const t8_gloidx_t tree_id = quad_y_id * quads_x + quad_x_id;
         t8_cmesh_set_tree_vertices (cmesh, tree_id, vertices,
-                                    (use_axis_aligned_geom && eclass == T8_ECLASS_QUAD) ? 2 : 4);
+                                    (use_axis_aligned_geom ? 2 : 4);
       }
       else {
         T8_ASSERT (eclass == T8_ECLASS_TRIANGLE);
