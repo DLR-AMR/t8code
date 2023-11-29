@@ -41,7 +41,21 @@
  * We will test all numbers of trees from 0 to the maximum. */
 #define T8_TEST_PARTITION_OFFSET_MAX_TREE_NUM 100
 
-class cmesh_set_partition_offsets: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
+/* The tests that do not commit the cmesh iterate over the number of trees,
+ * hence we have a TestWithParam with one int. */
+class cmesh_set_partition_offsets_nocommit: public testing::TestWithParam<int> {
+ protected:
+  void
+  SetUp () override
+  {
+    inum_trees = GetParam ();
+  }
+  t8_gloidx_t inum_trees;
+};
+
+/* The tests that do commit the cmesh iterate over eclasses and the number of 
+ * tress, hence they have a TestWithParam with eclass and int. */
+class cmesh_set_partition_offsets_commit: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
  protected:
   void
   SetUp () override
@@ -55,10 +69,13 @@ class cmesh_set_partition_offsets: public testing::TestWithParam<std::tuple<t8_e
 
 /* call t8_cmesh_offset_concentrate for non-derived cmesh 
  * and destroy it before commit. */
-TEST_P (cmesh_set_partition_offsets, test_set_offsets_nocommit)
+TEST_P (cmesh_set_partition_offsets_nocommit, test_set_offsets)
 {
   t8_cmesh_t cmesh;
   const int main_process = 0;
+
+  t8_debugf ("Testing t8_cmesh_set_partition_offset (no commit) with %li trees.\n", inum_trees);
+
   /* Build a valid offset array. For this test it is onlt necessary that 
    * the array corresponds to any valid partition.
    * We use the offset_concentrate function to build an offset array for a partition
@@ -77,11 +94,15 @@ TEST_P (cmesh_set_partition_offsets, test_set_offsets_nocommit)
 
 /* call t8_cmesh_offset_concentrate for non-derived cmesh 
  * and commit it. */
-TEST_P (cmesh_set_partition_offsets, test_set_offsets_commit)
+TEST_P (cmesh_set_partition_offsets_commit, test_set_offsets)
 {
   t8_cmesh_t cmesh;
   const int main_process = 0;
   sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
+
+  t8_debugf ("Testing t8_cmesh_set_partition_offset (with commit) with %li trees of class %s.\n", inum_trees,
+             t8_eclass_to_string[ieclass]);
+
   /* Build a valid offset array. For this test it is only necessary that 
    * the array corresponds to any valid partition.
    * We use the offset_concentrate function to build an offset array for a partition
@@ -131,6 +152,11 @@ TEST_P (cmesh_set_partition_offsets, test_set_offsets_commit)
   t8_cmesh_unref (&cmesh);
 }
 
+/* Make atest suite that iterates over all tree counts from 0 to the maximum. */
+INSTANTIATE_TEST_SUITE_P (t8_cmesh_set_partition_offsets_nocommit, cmesh_set_partition_offsets_nocommit,
+                          testing::Range (0, T8_TEST_PARTITION_OFFSET_MAX_TREE_NUM + 1));
+
 /* Make atest suite that iterates over all classes and a tree count from 0 to the maximum. */
-INSTANTIATE_TEST_SUITE_P (t8_cmesh_set_partition_offsets, cmesh_set_partition_offsets,
-                          testing::Combine (AllEclasses, testing::Values (0, T8_TEST_PARTITION_OFFSET_MAX_TREE_NUM)));
+INSTANTIATE_TEST_SUITE_P (t8_cmesh_set_partition_offsets_commit, cmesh_set_partition_offsets_commit,
+                          testing::Combine (AllEclasses,
+                                            testing::Range (0, T8_TEST_PARTITION_OFFSET_MAX_TREE_NUM + 1)));
