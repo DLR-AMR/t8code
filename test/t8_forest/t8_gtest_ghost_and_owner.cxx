@@ -28,6 +28,7 @@
 #include <t8_forest/t8_forest_private.h>
 #include <t8_cmesh.h>
 #include "t8_cmesh/t8_cmesh_testcases.h"
+#include <test/t8_gtest_macros.hxx>
 
 /* This test program tests the forest ghost layer.
  * We adapt a forest and create its ghost layer. Afterwards, we
@@ -141,5 +142,4 @@ TEST_P (forest_ghost_owner, test_ghost_owner)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_and_owner, forest_ghost_owner,
-                          testing::Range (0, t8_get_number_of_all_testcases ()));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_and_owner, forest_ghost_owner, AllCmeshs);

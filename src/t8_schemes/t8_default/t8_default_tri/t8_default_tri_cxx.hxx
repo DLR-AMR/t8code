@@ -114,6 +114,15 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
   virtual int
   t8_element_compare (const t8_element_t *elem1, const t8_element_t *elem2) const;
 
+  /** Check if two elements are equal.
+  * \param [in] ts     Implementation of a class scheme.
+  * \param [in] elem1  The first element.
+  * \param [in] elem2  The second element.
+  * \return            1 if the elements are equal, 0 if they are not equal
+  */
+  virtual int
+  t8_element_equal (const t8_element_t *elem1, const t8_element_t *elem2) const;
+
   /** Compute the parent of a given element \b elem and store it in \b parent.
    * \b parent needs to be an existing element. No memory is allocated by this function.
    * \b elem and \b parent can point to the same element, then the entries of
@@ -451,13 +460,6 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
   virtual void
   t8_element_anchor (const t8_element_t *elem, int anchor[3]) const;
 
-  /** Compute the root length of a given element, that is the length of its level 0 ancestor.
-   * \param [in] elem     The element whose root length should be computed.
-   * \return              The root length of \a elem
-   */
-  virtual int
-  t8_element_root_len (const t8_element_t *elem) const;
-
   /** Compute the integer coordinates of a given element vertex. The default scheme implements the Morton type SFCs. 
    * In these SFCs the elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and L the maximum 
    * refinement level. All element vertices have integer coordinates in this cube.
@@ -535,7 +537,7 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
   * \param [in]        elem  The element to print
   */
   virtual void
-  t8_element_debug_print (const t8_element_t *elem) const;
+  t8_element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const;
 #endif
 };
 

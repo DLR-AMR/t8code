@@ -32,6 +32,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_forest/t8_forest.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
+#include <test/t8_gtest_macros.hxx>
 
 #if T8_ENABLE_LESS_TESTS
 #define MAX_LEVEL_REF_COORD_TEST 3
@@ -260,5 +261,4 @@ TEST_P (class_ref_coords, t8_check_elem_ref_coords)
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_element_ref_coords, class_ref_coords,
-                          testing::Combine (testing::Range (T8_ECLASS_VERTEX, T8_ECLASS_COUNT),
-                                            testing::Range (0, MAX_LEVEL_REF_COORD_TEST + 1)));
+                          testing::Combine (AllEclasses, testing::Range (0, MAX_LEVEL_REF_COORD_TEST + 1)));

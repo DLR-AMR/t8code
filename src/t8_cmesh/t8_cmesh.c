@@ -545,13 +545,13 @@ t8_cmesh_no_negative_volume (t8_cmesh_t cmesh)
 #endif
 
 void
-t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, t8_locidx_t ltree_id, double *vertices, int num_vertices)
+t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, double *vertices, int num_vertices)
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (vertices != NULL);
   T8_ASSERT (!cmesh->committed);
 
-  t8_stash_add_attribute (cmesh->stash, ltree_id, t8_get_package_id (), T8_CMESH_VERTICES_ATTRIBUTE_KEY,
+  t8_stash_add_attribute (cmesh->stash, gtree_id, t8_get_package_id (), T8_CMESH_VERTICES_ATTRIBUTE_KEY,
                           3 * num_vertices * sizeof (double), (void *) vertices, 1);
 }
 

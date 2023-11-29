@@ -21,12 +21,14 @@
 */
 
 #include <gtest/gtest.h>
+#include <test/t8_gtest_custom_assertion.hxx>
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <test/t8_gtest_macros.hxx>
 
 class forest_search: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
  protected:
@@ -78,8 +80,8 @@ t8_test_search_all_fn (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element
     *(int *) t8_sc_array_index_locidx (matched_leafs, tree_offset + tree_leaf_index) = 1;
     /* Test whether tree_leaf_index is actually the index of the element */
     test_element = t8_forest_get_element (forest, tree_offset + tree_leaf_index, &test_ltreeid);
-    EXPECT_FALSE (ts->t8_element_compare (element, test_element))
-      << "Element and index passed to search callback do not match.";
+
+    EXPECT_ELEM_EQ (ts, element, test_element);
     EXPECT_EQ (ltreeid, test_ltreeid) << "Tree mismatch in search.";
   }
   return 1;
@@ -107,8 +109,7 @@ t8_test_search_query_all_fn (t8_forest_t forest, t8_locidx_t ltreeid, const t8_e
 
     t8_locidx_t tree_offset = t8_forest_get_tree_element_offset (forest, ltreeid);
     t8_element_t *test_element = t8_forest_get_element (forest, tree_offset + tree_leaf_index, &test_ltreeid);
-    EXPECT_FALSE (ts->t8_element_compare (element, test_element))
-      << "Element and index passed to search callback do not match.";
+    EXPECT_ELEM_EQ (ts, element, test_element);
     EXPECT_EQ (ltreeid, test_ltreeid) << "Tree mismatch in search.";
   }
   return 1;
@@ -151,5 +152,4 @@ TEST_P (forest_search, test_search_one_query_matches_all)
   sc_array_reset (&queries);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_search, forest_search,
-                          testing::Combine (testing::Range (T8_ECLASS_VERTEX, T8_ECLASS_COUNT), testing::Range (0, 6)));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_search, forest_search, testing::Combine (AllEclasses, testing::Range (0, 6)));

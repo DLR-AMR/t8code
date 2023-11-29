@@ -27,6 +27,7 @@
 #include <t8_forest/t8_forest.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <test/t8_gtest_macros.hxx>
 
 /* In this test, we first adapt a forest and store every callback return value.
  * In the next step, we call t8_forest_iterate_replace. Instead of interpolating
@@ -104,7 +105,7 @@ t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
          elidx < ts->t8_element_num_children (parent) && elidx + first_outgoing < tree_num_elements_old; elidx++) {
       const t8_element_t *child = t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing + elidx);
       ts->t8_element_parent (child, parent_compare);
-      if (!ts->t8_element_compare (parent, parent_compare)) {
+      if (ts->t8_element_equal (parent, parent_compare)) {
         family_size++;
       }
     }
@@ -238,5 +239,4 @@ TEST_P (forest_iterate, test_iterate_replace)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_iterate_replace, forest_iterate,
-                          testing::Range (0, t8_get_number_of_all_testcases ()));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_iterate_replace, forest_iterate, AllCmeshs);
