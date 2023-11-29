@@ -36,6 +36,8 @@
  * with trees of the same eclass, set the offset array and commit the cmesh.
  * We will iterate through all eclasses and all tree counts up to a given maximum.
  */
+/* TODO: Currently only the offset t8_cmesh_offset_concentrate is tested.
+ *       We can extend this test case to check for different offset arrays.  */
 
 /* The maximum number of trees for a cmesh to test with.
  * We will test all numbers of trees from 0 to the maximum. */
