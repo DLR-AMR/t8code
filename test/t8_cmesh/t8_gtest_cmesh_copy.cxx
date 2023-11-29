@@ -76,7 +76,7 @@ TEST_P (cmesh_copy_equality, check_equality_of_copied_cmesh_with_original)
 
 /* TODO: I am not happy about this. Can we use something else than a global variable? */
 cmesh_generator first (0);
-cmesh_generator last (1);
+cmesh_generator last ((first.get_last ()));
 cmesh_generator step (0);
 
 /* Test all cmeshes over all different inputs we get through their id */

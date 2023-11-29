@@ -62,12 +62,12 @@ class all_cmeshes_with_num_trees: public cmesh_creator {
   addition (const std::shared_ptr<cmesh_creator> step)
   {
     if (num_trees + step->num_trees > MAX_NUM_TREES) {
-      num_trees = (num_trees + step->num_trees) % (MAX_NUM_TREES + 1);
+      num_trees = 1;
       current_creator++;
       T8_ASSERT ((unsigned long int) current_creator < cmeshes_with_num_trees.size ());
     }
     else {
-      num_trees += step->num_trees;
+      num_trees += 1;
     }
     if (current_creator > 0 && num_trees <= 2) {
       num_trees = 3;

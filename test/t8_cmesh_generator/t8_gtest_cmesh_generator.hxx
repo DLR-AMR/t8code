@@ -155,11 +155,13 @@ class cmesh_generator {
    * Set the object to the last creator of the last generator
    * 
    */
-  void
-  set_last ()
+  cmesh_generator
+  get_last ()
   {
-    current_generator = CMESH_NUM_TYPES - 1;
-    generators[current_generator]->set_last ();
+    cmesh_generator tmp;
+    tmp.current_generator = CMESH_NUM_TYPES - 1;
+    tmp.generators[current_generator]->set_last ();
+    return tmp;
   }
 
   /**
