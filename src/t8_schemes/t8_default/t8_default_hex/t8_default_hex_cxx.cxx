@@ -71,6 +71,12 @@ t8_default_scheme_hex_c::t8_element_compare (const t8_element_t *elem1, const t8
   return p8est_quadrant_compare ((const p8est_quadrant_t *) elem1, (const p8est_quadrant_t *) elem2);
 }
 
+int
+t8_default_scheme_hex_c::t8_element_equal (const t8_element_t *elem1, const t8_element_t *elem2) const
+{
+  return p8est_quadrant_is_equal ((const p8est_quadrant_t *) elem1, (const p8est_quadrant_t *) elem2);
+}
+
 void
 t8_default_scheme_hex_c::t8_element_parent (const t8_element_t *elem, t8_element_t *parent) const
 {
@@ -432,13 +438,6 @@ t8_default_scheme_hex_c::t8_element_boundary_face (const t8_element_t *elem, int
   T8_ASSERT (!p8est_quadrant_is_extended (q) || p4est_quadrant_is_extended (b));
 }
 
-void
-t8_default_scheme_hex_c::t8_element_boundary (const t8_element_t *elem, int min_dim, int length,
-                                              t8_element_t **boundary) const
-{
-  SC_ABORT ("Not implemented\n");
-}
-
 int
 t8_default_scheme_hex_c::t8_element_is_root_boundary (const t8_element_t *elem, int face) const
 {
@@ -542,13 +541,6 @@ t8_default_scheme_hex_c::t8_element_anchor (const t8_element_t *elem, int coord[
   coord[2] = q->z;
 }
 
-int
-t8_default_scheme_hex_c::t8_element_root_len (const t8_element_t *elem) const
-{
-  T8_ASSERT (t8_element_is_valid (elem));
-  return P8EST_ROOT_LEN;
-}
-
 void
 t8_default_scheme_hex_c::t8_element_vertex_coords (const t8_element_t *elem, int vertex, int coords[]) const
 {
@@ -643,11 +635,13 @@ t8_default_scheme_hex_c::t8_element_is_valid (const t8_element_t *elem) const
 }
 
 void
-t8_default_scheme_hex_c::t8_element_debug_print (const t8_element_t *elem) const
+t8_default_scheme_hex_c::t8_element_to_string (const t8_element_t *elem, char *debug_string,
+                                               const int string_size) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (debug_string != NULL);
   p8est_quadrant_t *hex = (p8est_quadrant_t *) elem;
-  p8est_quadrant_print (SC_LP_DEBUG, hex);
+  snprintf (debug_string, string_size, "x: %i, y: %i, z: %i, level: %i", hex->x, hex->y, hex->z, hex->level);
 }
 #endif
 

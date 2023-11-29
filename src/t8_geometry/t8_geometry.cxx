@@ -345,3 +345,23 @@ t8_geometry_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_c
                                                             jacobian);
   /* *INDENT-ON* */
 }
+
+t8_geometry_type_t
+t8_geometry_get_type (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
+{
+  /* The cmesh must be committed */
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  /* Get the geometry handler of the cmesh of the forest. */
+  t8_geometry_handler_t *geom_handler = cmesh->geometry_handler;
+  /* The handler must be committed. */
+  T8_ASSERT (t8_geom_handler_is_committed (geom_handler));
+
+  /* Detect whether we call this function for the first time in a row for 
+   * this tree and if so update the active tree and geometry. */
+  t8_geom_handler_update_tree (geom_handler, cmesh, gtreeid);
+
+  /* Return the type. */
+  /* *INDENT-OFF* */
+  return geom_handler->active_geometry->t8_geom_get_type ();
+  /* *INDENT-ON* */
+}

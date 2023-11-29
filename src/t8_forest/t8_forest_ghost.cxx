@@ -458,7 +458,7 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int remote_ran
     int elem_count = t8_element_array_get_count (&remote_tree->elements);
     for (ielem = 0; ielem < elem_count - 1; ielem++) {
       test_el = t8_element_array_index_int (&remote_tree->elements, ielem);
-      SC_CHECK_ABORTF (ts->t8_element_compare (test_el, elem), "Local element %i already in remote ghosts at pos %i\n",
+      SC_CHECK_ABORTF (!ts->t8_element_equal (test_el, elem), "Local element %i already in remote ghosts at pos %i\n",
                        element_index, ielem);
     }
   }
