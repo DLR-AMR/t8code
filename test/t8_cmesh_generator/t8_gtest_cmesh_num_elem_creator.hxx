@@ -100,7 +100,7 @@ class all_cmeshes_with_num_trees: public cmesh_creator {
   {
     return (long unsigned int) current_creator == cmeshes_with_num_trees.size () - 1 && num_trees == MAX_NUM_TREES;
   }
-  /* Destruktor */
+  /* Destructor */
   ~all_cmeshes_with_num_trees ()
   {
     /* unref the cmesh only if it has been created */

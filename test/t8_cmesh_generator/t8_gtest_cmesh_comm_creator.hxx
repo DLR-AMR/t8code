@@ -92,7 +92,7 @@ class all_cmeshes_with_comm: public cmesh_creator {
     return (long unsigned int) current_creator == cmeshes_with_comm.size () - 1;
   }
 
-  /* Destruktor */
+  /* Destructor */
   ~all_cmeshes_with_comm ()
   {
     /* unref the cmesh only if it has been created */
