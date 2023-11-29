@@ -59,7 +59,7 @@ typedef struct t8_cprofile t8_cprofile_t; /* Defined below */
   +T8_ECLASS_MAX_EDGES /* Used to store which face is linked to which surface */
 #define T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY \
   T8_CMESH_OCC_FACE_ATTRIBUTE_KEY + 1 /* Used to store face parameters */
-#define T8_CMESH_LAGRANGE_POLY_DEGREE T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY + T8_ECLASS_MAX_FACES + 1
+#define T8_CMESH_LAGRANGE_POLY_DEGREE T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY + T8_ECLASS_MAX_FACES
 #define T8_CMESH_NEXT_POSSIBLE_KEY \
   T8_CMESH_LAGRANGE_POLY_DEGREE + 1 /* The next free value for a t8code attribute key */
 
