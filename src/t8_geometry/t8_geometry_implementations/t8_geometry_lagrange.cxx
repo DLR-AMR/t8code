@@ -153,18 +153,4 @@ t8_geometry_lagrange_destroy (t8_geometry_c **geom)
   *geom = NULL;
 }
 
-#if T8_ENABLE_DEBUG
-int
-t8_geom_is_lagrange (const t8_geometry_c *geometry)
-{
-  /* Try to dynamic cast the geometry into Lagrange geometry. This is only successful if
-   * geometry pointed to a t8_geometry_lagrange.
-   * If successful, then is_lagrange_geom will be true.
-   */
-  const int is_lagrange_geom = (dynamic_cast<const t8_geometry_lagrange *> (geometry) != NULL);
-
-  return is_lagrange_geom;
-}
-#endif
-
 T8_EXTERN_C_END ();

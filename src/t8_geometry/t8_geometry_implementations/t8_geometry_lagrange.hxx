@@ -61,6 +61,16 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
   virtual ~t8_geometry_lagrange ();
 
   /**
+   * Get the type of this geometry.
+   * \return The type.
+   */
+  inline t8_geometry_type_t
+  t8_geom_get_type () const
+  {
+    return T8_GEOMETRY_TYPE_LAGRANGE;
+  };
+
+  /**
    * Maps points from the reference space to the physical space \f$ \mathbb{R}^3 \f$.
    * For linear elements, it gives the same result as \ref t8_geom_compute_linear_geometry.
    * \param [in]  cmesh       The cmesh in which the point lies.

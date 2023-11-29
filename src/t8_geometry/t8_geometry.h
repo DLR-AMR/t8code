@@ -39,6 +39,8 @@ typedef enum t8_geometry_type {
   T8_GEOMETRY_TYPE_LINEAR,
   /** The linear, axis aligned geometry uses only 2 vertices, since it is axis aligned. */
   T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED,
+  /** ... . */
+  T8_GEOMETRY_TYPE_LAGRANGE,
   /** The analytic geometry uses a user-defined analytic function to map into the physical domain. */
   T8_GEOMETRY_TYPE_ANALYTIC,
   /** The OCC geometry uses OCC CAD shapes to map trees exactly to the underlying CAD model. */
