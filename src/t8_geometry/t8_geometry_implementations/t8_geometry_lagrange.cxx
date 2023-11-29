@@ -48,7 +48,7 @@ t8_geometry_lagrange::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, c
 {
   if (num_points != 1)
     SC_ABORT ("Error: Batch computation of geometry not yet supported.");
-  t8_geometry_lagrange::map (ref_coords, out_coords);
+  t8_geometry_lagrange::t8_geom_map (ref_coords, out_coords);
 }
 
 void
@@ -67,9 +67,9 @@ t8_geometry_lagrange::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtre
 }
 
 void
-t8_geometry_lagrange::map (const double *ref_point, double *mapped_point) const
+t8_geometry_lagrange::t8_geom_map (const double *ref_point, double *mapped_point) const
 {
-  const auto basis_functions = t8_geometry_lagrange::compute_basis (ref_point);
+  const auto basis_functions = t8_geometry_lagrange::t8_geom_compute_basis (ref_point);
   const int n_vertex = basis_functions.size ();
   for (int i_component = 0; i_component < T8_ECLASS_MAX_DIM; i_component++) {
     double inner_product = 0;
@@ -83,18 +83,18 @@ t8_geometry_lagrange::map (const double *ref_point, double *mapped_point) const
 }
 
 const std::vector<double>
-t8_geometry_lagrange::compute_basis (const double *ref_coords) const
+t8_geometry_lagrange::t8_geom_compute_basis (const double *ref_coords) const
 {
   switch (active_tree_class) {
   case T8_ECLASS_TRIANGLE:
     switch (*degree) {
     case 2:
-      return t8_geometry_lagrange::t6_basis (ref_coords);
+      return t8_geometry_lagrange::t8_geom_t6_basis (ref_coords);
     }
   case T8_ECLASS_QUAD:
     switch (*degree) {
     case 1:
-      return t8_geometry_lagrange::q4_basis (ref_coords);
+      return t8_geometry_lagrange::t8_geom_q4_basis (ref_coords);
     }
   default:
     SC_ABORTF ("Error: Lagrange geometry for degree %i %s not yet implemented. \n", *degree,
@@ -103,7 +103,7 @@ t8_geometry_lagrange::compute_basis (const double *ref_coords) const
 }
 
 const std::vector<double>
-t8_geometry_lagrange::t3_basis (const double *ref_point) const
+t8_geometry_lagrange::t8_geom_t3_basis (const double *ref_point) const
 {
   const double xi = ref_point[0];
   const double eta = ref_point[1];
@@ -112,7 +112,7 @@ t8_geometry_lagrange::t3_basis (const double *ref_point) const
 }
 
 const std::vector<double>
-t8_geometry_lagrange::t6_basis (const double *ref_point) const
+t8_geometry_lagrange::t8_geom_t6_basis (const double *ref_point) const
 {
   const double xi = ref_point[0];
   const double eta = ref_point[1];
@@ -124,7 +124,7 @@ t8_geometry_lagrange::t6_basis (const double *ref_point) const
 }
 
 const std::vector<double>
-t8_geometry_lagrange::q4_basis (const double *ref_point) const
+t8_geometry_lagrange::t8_geom_q4_basis (const double *ref_point) const
 {
   const double xi = ref_point[0];
   const double eta = ref_point[1];

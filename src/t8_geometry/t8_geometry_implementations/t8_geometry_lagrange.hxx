@@ -112,7 +112,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
    * \param [in]  ref_point  Array of \a dimension entries, specifying the point in the reference space.
    */
   const std::vector<double>
-  compute_basis (const double *ref_point) const;
+  t8_geom_compute_basis (const double *ref_point) const;
 
   /**
    * Map a point from the reference space to the physical space.
@@ -123,13 +123,13 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
    * where \f$ \vec{\xi} \f$ is the point in the reference space to be mapped, \f$ \mathbf{x} \f$ is the mapped point we search,
    * \f$ \psi_i(\vec{\xi}) \f$ are the basis functions associated with the vertices, and \f$ \mathbf{x}_i \f$ are the
    * vertices of the current tree in the physical space.
-   * The basis functions are specific to the tree type, see e.g. \ref t6_basis.
+   * The basis functions are specific to the tree type, see e.g. \ref t8_geom_t6_basis.
    * The vertices of the current tree were set with \ref t8_cmesh_set_tree_vertices.
    * \param [in]  ref_point     Array of \a dimension entries, specifying the coordinates of \f$ \vec{\xi} \f$.
    * \param [out] mapped_point  Array of 3 entries, specifying the coordinates of \f$ \mathbf{x} \f$.
    */
   void
-  map (const double *ref_point, double *mapped_point) const;
+  t8_geom_map (const double *ref_point, double *mapped_point) const;
 
   /**
    * Basis functions of a 3-node triangle element.
@@ -148,7 +148,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
    * \return  Basis functions evaluated at the reference point.
    */
   const std::vector<double>
-  t3_basis (const double *ref_point) const;
+  t8_geom_t3_basis (const double *ref_point) const;
 
   /**
    * Basis functions of a 6-node triangle element.
@@ -167,7 +167,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
    * \return  Basis functions evaluated at the reference point.
    */
   const std::vector<double>
-  t6_basis (const double *ref_point) const;
+  t8_geom_t6_basis (const double *ref_point) const;
 
   /**
    * Basis functions of a 4-node quadrilateral element.
@@ -186,7 +186,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
    * \return  Basis functions evaluated at the reference point.
    */
   const std::vector<double>
-  q4_basis (const double *ref_point) const;
+  t8_geom_q4_basis (const double *ref_point) const;
 
   /** Polynomial degree of the interpolation. */
   const int *degree;
