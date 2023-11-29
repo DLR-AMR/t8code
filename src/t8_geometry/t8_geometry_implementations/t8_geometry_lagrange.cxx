@@ -147,7 +147,7 @@ void
 t8_geometry_lagrange_destroy (t8_geometry_c **geom)
 {
   T8_ASSERT (geom != NULL);
-  T8_ASSERT (t8_geom_is_lagrange (*geom));
+  T8_ASSERT ((*geom)->t8_geom_get_type () == T8_GEOMETRY_TYPE_LAGRANGE);
 
   delete *geom;
   *geom = NULL;
