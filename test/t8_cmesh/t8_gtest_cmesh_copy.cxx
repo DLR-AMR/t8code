@@ -26,11 +26,11 @@
 #include "t8_cmesh/t8_cmesh_partition.h"
 #include <t8_eclass.h>
 #include <test/t8_gtest_macros.hxx>
-#include "test/t8_cmesh_generator/t8_gtest_cmesh_generator_cxx.hxx"
+#include "test/t8_cmesh_generator/t8_gtest_cmesh_generator.hxx"
 
 /* Test if a cmesh is committed properly and perform the face consistency check. */
 
-class cmesh_copy_equality: public testing::TestWithParam<cmesh_generator_cxx> {
+class cmesh_copy_equality: public testing::TestWithParam<cmesh_generator> {
  protected:
   void
   SetUp () override
@@ -50,11 +50,12 @@ class cmesh_copy_equality: public testing::TestWithParam<cmesh_generator_cxx> {
   {
     t8_cmesh_unref (&cmesh_original);
     t8_cmesh_unref (&cmesh_copy);
+    cmesh_gen.unref_cmesh ();
   }
 
   t8_cmesh_t cmesh_original;
   t8_cmesh_t cmesh_copy;
-  cmesh_generator_cxx cmesh_gen;
+  cmesh_generator cmesh_gen;
 };
 
 /* Test wheater the original cmaeh and its copy are committed and face consistent. Test will fail, if one of these is false. */
@@ -73,8 +74,8 @@ TEST_P (cmesh_copy_equality, check_equality_of_copied_cmesh_with_original)
   EXPECT_TRUE (t8_cmesh_is_equal (cmesh_original, cmesh_copy));
 }
 
-cmesh_generator_cxx first (0);
-cmesh_generator_cxx last (1);
-cmesh_generator_cxx step (0);
+cmesh_generator first (0);
+cmesh_generator last (1);
+cmesh_generator step (0);
 /* Test all cmeshes over all different inputs we get through their id */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_copy, cmesh_copy_equality, ::testing::Range (::first, ::last, ::step));

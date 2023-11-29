@@ -20,12 +20,12 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#ifndef T8_GTEST_CMESH_COMM_GENERATOR_HXX
-#define T8_GTEST_CMESH_COMM_GENERATOR_HXX
+#ifndef T8_GTEST_CMESH_COMM_CREATOR_HXX
+#define T8_GTEST_CMESH_COMM_CREATOR_HXX
 
 #include <vector>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include "test/t8_cmesh_generator/t8_gtest_cmesh_generator_base.hxx"
+#include "test/t8_cmesh_generator/t8_gtest_cmesh_creator_base.hxx"
 
 T8_EXTERN_C_BEGIN ();
 /* A function creating a cmesh getting a communicator */
@@ -45,12 +45,15 @@ const std::vector<t8_cmesh_w_comm> cmeshes_with_comm = { t8_cmesh_new_periodic_t
                                                          t8_cmesh_new_hybrid_gate_deformed,
                                                          t8_cmesh_new_full_hybrid };
 
-struct all_cmeshes_with_comm: public cmesh_generator
-{
+/**
+ * A class to generate all cmeshes using only a communicator
+ * 
+ */
+class all_cmeshes_with_comm: public cmesh_creator {
  public:
   /* overloading the < operator for gtest-ranges */
   bool
-  operator< (const cmesh_generator &other)
+  operator< (const cmesh_creator &other)
   {
     return current_creator < other.current_creator;
   }
@@ -58,9 +61,9 @@ struct all_cmeshes_with_comm: public cmesh_generator
   /* The next cmesh is the cmesh with on more element until max_num_trees is reached,
      * then we go to the next constructor. */
   void
-  addition (const cmesh_generator *step)
+  addition (const std::shared_ptr<cmesh_creator> step)
   {
-    current_creator += step->current_creator;
+    current_creator += 1;
     T8_ASSERT ((unsigned long int) current_creator < cmeshes_with_comm.size ());
   }
 
@@ -69,13 +72,6 @@ struct all_cmeshes_with_comm: public cmesh_generator
   create_cmesh ()
   {
     cmesh = cmeshes_with_comm[current_creator](comm);
-  }
-
-  void
-  get_step (cmesh_generator *step)
-  {
-    step->current_creator = 1;
-    step->comm = sc_MPI_COMM_WORLD;
   }
 
   void
@@ -90,7 +86,7 @@ struct all_cmeshes_with_comm: public cmesh_generator
     current_creator = cmeshes_with_comm.size () - 1;
   }
 
-  int
+  bool
   is_at_last ()
   {
     return (long unsigned int) current_creator == cmeshes_with_comm.size () - 1;
@@ -108,4 +104,4 @@ struct all_cmeshes_with_comm: public cmesh_generator
 
 T8_EXTERN_C_END ();
 
-#endif /* T8_GTEST_CMESH_COMM_GENERATOR_HXX */
+#endif /* T8_GTEST_CMESH_COMM_CREATOR_HXX */

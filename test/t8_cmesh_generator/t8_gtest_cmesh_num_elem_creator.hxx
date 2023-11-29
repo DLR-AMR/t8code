@@ -20,31 +20,33 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#ifndef T8_GTEST_CMESH_NUM_ELEM_GENERATOR_HXX
-#define T8_GTEST_CMESH_NUM_ELEM_GENERATOR_HXX
+#ifndef T8_GTEST_CMESH_NUM_ELEM_CREATOR_HXX
+#define T8_GTEST_CMESH_NUM_ELEM_CREATOR_HXX
 
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <vector>
-#include "test/t8_cmesh_generator/t8_gtest_cmesh_generator_base.hxx"
+#include "test/t8_cmesh_generator/t8_gtest_cmesh_creator_base.hxx"
 
 T8_EXTERN_C_BEGIN ();
 
 #define MAX_NUM_TREES 5
 
 /* A function creating a cmesh getting a communicator and a number of elements to create */
-typedef t8_cmesh_t (*t8_cmesh_w_num_elem_create) (sc_MPI_Comm comm, int num_trees);
+typedef t8_cmesh_t (*t8_cmesh_with_num_trees) (sc_MPI_Comm comm, int num_trees);
 
 /* List of all functions that have a num_trees-parameter*/
-const std::vector<t8_cmesh_w_num_elem_create> cmeshes_with_num_trees
+const std::vector<t8_cmesh_with_num_trees> cmeshes_with_num_trees
   = { t8_cmesh_new_long_brick_pyramid, t8_cmesh_new_prism_cake, t8_cmesh_new_pyramid_cake };
 
-struct all_cmeshes_with_num_elem: cmesh_generator
-{
+/**
+ * A class that creates all cmeshes using a number of trees and a communicator
+ */
+class all_cmeshes_with_num_trees: public cmesh_creator {
  public:
   /* overloading the < operator for gtest-ranges */
   bool
-  operator< (const cmesh_generator &other)
+  operator< (const cmesh_creator &other)
   {
     if (current_creator == other.current_creator) {
       return num_trees < other.num_trees;
@@ -57,7 +59,7 @@ struct all_cmeshes_with_num_elem: cmesh_generator
   /* The next cmesh is the cmesh with on more element until max_num_trees is reached,
      * then we go to the next constructor. */
   void
-  addition (const cmesh_generator *step)
+  addition (const std::shared_ptr<cmesh_creator> step)
   {
     if (num_trees + step->num_trees > MAX_NUM_TREES) {
       num_trees = (num_trees + step->num_trees) % (MAX_NUM_TREES + 1);
@@ -80,15 +82,6 @@ struct all_cmeshes_with_num_elem: cmesh_generator
   }
 
   void
-  get_step (cmesh_generator *step)
-  {
-    step->current_creator = 0;
-    step->comm = sc_MPI_COMM_WORLD;
-    step->cmesh = NULL;
-    step->num_trees = 1;
-  }
-
-  void
   set_first ()
   {
     current_creator = 0;
@@ -102,13 +95,13 @@ struct all_cmeshes_with_num_elem: cmesh_generator
     num_trees = MAX_NUM_TREES;
   }
 
-  int
+  bool
   is_at_last ()
   {
     return (long unsigned int) current_creator == cmeshes_with_num_trees.size () - 1 && num_trees == MAX_NUM_TREES;
   }
   /* Destruktor */
-  ~all_cmeshes_with_num_elem ()
+  ~all_cmeshes_with_num_trees ()
   {
     /* unref the cmesh only if it has been created */
     if (cmesh != NULL) {
@@ -119,4 +112,4 @@ struct all_cmeshes_with_num_elem: cmesh_generator
 
 T8_EXTERN_C_END ();
 
-#endif /* T8_GTEST_CMESH_NUM_ELEM_GENERATOR_HXX */
+#endif /* T8_GTEST_CMESH_NUM_ELEM_CREATOR_HXX */
