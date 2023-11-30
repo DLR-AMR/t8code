@@ -80,12 +80,9 @@ t8_forest_element_from_ref_coords_ext (t8_forest_t forest, t8_locidx_t ltreeid, 
  * \param [out]     coords_out        On input an allocated array to store 3 doubles, on output
  *                                    the x, y and z coordinates of the point inside the domain.
  */
-inline void
+void
 t8_forest_element_from_ref_coords (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                   const double *ref_coords, const size_t num_coords, double *coords_out)
-{
-  t8_forest_element_from_ref_coords_ext (forest, ltreeid, element, ref_coords, num_coords, coords_out, NULL);
-}
+                                   const double *ref_coords, const size_t num_coords, double *coords_out);
 
 /** Compute the coordinates of the centroid of an element if a geometry
  * for this tree is registered in the forest's cmesh.
