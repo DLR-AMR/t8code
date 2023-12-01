@@ -56,7 +56,7 @@ t8_geometry_lagrange::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t g
                                                  const size_t num_points, double *jacobian) const
 {
   SC_ABORT_NOT_REACHED ();
-};
+}
 
 inline void
 t8_geometry_lagrange::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
@@ -130,7 +130,7 @@ t8_geometry_lagrange::t8_geom_q4_basis (const double *ref_point) const
   const double eta = ref_point[1];
   const std::vector<double> basis_functions = { (1 - xi) * (1 - eta), xi * (1 - eta), eta * (1 - xi), xi * eta };
   return basis_functions;
-};
+}
 
 T8_EXTERN_C_BEGIN ();
 
