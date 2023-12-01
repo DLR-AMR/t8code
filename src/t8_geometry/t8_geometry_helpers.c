@@ -324,6 +324,7 @@ t8_geom_get_ref_intersection (int edge_index, const double *ref_coords, double r
     else if (ref_coords[1] == ref_opposite_vertex[1]) {
       ref_intersection[0] = 0;
       ref_intersection[1] = 1;
+      break;
     }
     else {
       /* intersectionX = (x1y2-y1x2)(x3-x4)-(x1-x2)(x3y4-y3x4)

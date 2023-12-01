@@ -302,7 +302,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh, t8_gloidx_t gt
             t8_geom_linear_interpolation (&ref_intersection[0], parameters, 1, 1, &interpolated_curve_parameter);
           }
           /* Retrieve curve */
-          T8_ASSERT (edges[i_edge] <= occ_shape_face_map.Size ());
+          T8_ASSERT (edges[i_edge] <= occ_shape_edge_map.Size ());
           curve = BRep_Tool::Curve (TopoDS::Edge (occ_shape_edge_map.FindKey (edges[i_edge])), first, last);
           /* Check if curve is valid */
           T8_ASSERT (!curve.IsNull ());
