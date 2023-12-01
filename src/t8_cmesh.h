@@ -184,8 +184,6 @@ void
 t8_cmesh_set_partition_range (t8_cmesh_t cmesh, int set_face_knowledge, t8_gloidx_t first_local_tree,
                               t8_gloidx_t last_local_tree);
 
-/* TODO: It is currently not possible to call this function for a non derived
- *       cmesh. Investigate. */
 /** Declare if the cmesh is understood as a partitioned cmesh and specify
  * the first local tree for each process.
  * This call is only valid when the cmesh is not yet committed via a call
