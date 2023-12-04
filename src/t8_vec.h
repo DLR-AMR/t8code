@@ -52,7 +52,7 @@ t8_vec_norm (const double vec[3])
 static inline void
 t8_vec_normalize (double vec[3])
 {
-  const double norm = t8_vec_norm (vec);
+  const double inv_norm = 1.0 / t8_vec_norm (vec);
 
   for (int i = 0; i < 3; i++) {
     vec[i] = vec[i] / norm;
