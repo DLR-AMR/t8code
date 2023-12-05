@@ -385,7 +385,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
     T8_ASSERT (face_parameters != NULL);
 
     /* Interpolate between surface parameters */
-    for (int coord = 0; coord < num_coords; ++coord) {
+    for (size_t coord = 0; coord < num_coords; ++coord) {
 
       const int offset_3d = coord * 3;
       const int offset_2d = coord * 2;
@@ -395,7 +395,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
     }
 
     /* Iterate over each edge to search for parameter displacements */
-    for (size_t i_edge = 0; i_edge < num_edges; ++i_edge) {
+    for (int i_edge = 0; i_edge < num_edges; ++i_edge) {
       if (edges[i_edge] > 0) {
         /* The edges of a quad point in direction of ref_coord (1 - i_edge >> 1).
          *
