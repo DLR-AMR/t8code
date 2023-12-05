@@ -89,8 +89,6 @@ void
 t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
                                    const size_t num_coords, double *out_coords) const
 {
-  if (num_coords != 1)
-    SC_ABORT ("Error: Batch computation of geometry not yet supported.");
   switch (active_tree_class) {
   case T8_ECLASS_TRIANGLE:
     t8_geometry_occ::t8_geom_evaluate_occ_tri (cmesh, gtreeid, ref_coords, num_coords, out_coords);
@@ -159,7 +157,6 @@ t8_geometry_occ::t8_geom_evaluate_occ_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
   Handle_Geom_Curve curve;
   Handle_Geom_Surface surface;
   Standard_Real first, last;
-  double interpolated_surface_parameters[2];
 
   /*
    * Reference Space    |      Global Space
@@ -180,7 +177,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
    */
 
   /* Linear mapping from ref_coords to out_coords */
-  t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, 1, out_coords);
+  t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, num_coords, out_coords);
 
   /* Check if face has a linked geometry */
   if (*faces > 0) {
@@ -196,66 +193,76 @@ t8_geometry_occ::t8_geom_evaluate_occ_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
     T8_ASSERT (face_parameters != NULL);
 
     /* Retrieve surface_parameter in global space by triangular interpolation from ref_coords to global space */
-    t8_geom_triangular_interpolation (ref_coords, face_parameters, 2, 2, interpolated_surface_parameters);
+    for (int i_coord = 0; i_coord < num_coords; ++i_coord) {
+      const int offset_3d = i_coord * 3;
+      const int offset_2d = i_coord * 2;
+      /* We use the out coords as buffer for the surface parameters to
+       * avoid allocating dynamic memory */
+      t8_geom_triangular_interpolation (ref_coords + offset_2d, face_parameters, 2, 2, out_coords + offset_3d);
+    }
 
     /* Check every edge and search for edge displacement */
     for (int i_edge = 0; i_edge < num_edges; i_edge++) {
       if (edges[i_edge] > 0) {
-        double ref_intersection[2];
-        t8_geom_get_ref_intersection (i_edge, ref_coords, ref_intersection);
+        for (int i_coord = 0; i_coord < num_coords; ++i_coord) {
+          const int offset_3d = i_coord * 3;
+          const int offset_2d = i_coord * 2;
+          double ref_intersection[2];
+          t8_geom_get_ref_intersection (i_edge, ref_coords + offset_2d, ref_intersection);
 
-        /* Converting ref_intersection to global_intersection */
-        double glob_intersection[3];
-        t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_intersection, 1,
-                                         glob_intersection);
-        /* Get parameters of the current edge if the edge is curved */
-        const double *edge_parameters = (double *) t8_cmesh_get_attribute (
-          cmesh, t8_get_package_id (), T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_edge, ltreeid);
-        T8_ASSERT (edge_parameters != NULL);
+          /* Converting ref_intersection to global_intersection */
+          double glob_intersection[3];
+          t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_intersection, num_coords,
+                                           glob_intersection);
+          /* Get parameters of the current edge if the edge is curved */
+          const double *edge_parameters = (double *) t8_cmesh_get_attribute (
+            cmesh, t8_get_package_id (), T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_edge, ltreeid);
+          T8_ASSERT (edge_parameters != NULL);
 
-        /* Linear interpolation between parameters */
-        double interpolated_curve_parameter;
+          /* Linear interpolation between parameters */
+          double interpolated_curve_parameter;
 
-        if (i_edge == 0) {
-          t8_geom_linear_interpolation (&ref_intersection[1], edge_parameters, 1, 1, &interpolated_curve_parameter);
-        }
-        else {
-          t8_geom_linear_interpolation (&ref_intersection[0], edge_parameters, 1, 1, &interpolated_curve_parameter);
-        }
+          if (i_edge == 0) {
+            t8_geom_linear_interpolation (&ref_intersection[1], edge_parameters, 1, 1, &interpolated_curve_parameter);
+          }
+          else {
+            t8_geom_linear_interpolation (&ref_intersection[0], edge_parameters, 1, 1, &interpolated_curve_parameter);
+          }
 
-        /* Convert edge parameter to surface parameters */
-        double converted_edge_surface_parameters[2];
-        const int num_face_nodes = t8_eclass_num_vertices[active_tree_class];
+          /* Convert edge parameter to surface parameters */
+          double converted_edge_surface_parameters[2];
+          const int num_face_nodes = t8_eclass_num_vertices[active_tree_class];
 
-        t8_geometry_occ::t8_geom_edge_parameter_to_face_parameters (edges[i_edge], *faces, num_face_nodes,
-                                                                    interpolated_curve_parameter, face_parameters,
-                                                                    converted_edge_surface_parameters);
+          t8_geometry_occ::t8_geom_edge_parameter_to_face_parameters (edges[i_edge], *faces, num_face_nodes,
+                                                                      interpolated_curve_parameter, face_parameters,
+                                                                      converted_edge_surface_parameters);
 
-        /* Interpolate between the surface parameters of the current edge */
-        double edge_surface_parameters[4], interpolated_edge_surface_parameters[2];
+          /* Interpolate between the surface parameters of the current edge */
+          double edge_surface_parameters[4], interpolated_edge_surface_parameters[2];
 
-        t8_geom_get_face_vertices (active_tree_class, face_parameters, i_edge, 2, edge_surface_parameters);
+          t8_geom_get_face_vertices (active_tree_class, face_parameters, i_edge, 2, edge_surface_parameters);
 
-        if (i_edge == 0) {
-          t8_geom_linear_interpolation (&ref_intersection[1], edge_surface_parameters, 2, 1,
-                                        interpolated_edge_surface_parameters);
-        }
-        else {
-          t8_geom_linear_interpolation (&ref_intersection[0], edge_surface_parameters, 2, 1,
-                                        interpolated_edge_surface_parameters);
-        }
+          if (i_edge == 0) {
+            t8_geom_linear_interpolation (&ref_intersection[1], edge_surface_parameters, 2, 1,
+                                          interpolated_edge_surface_parameters);
+          }
+          else {
+            t8_geom_linear_interpolation (&ref_intersection[0], edge_surface_parameters, 2, 1,
+                                          interpolated_edge_surface_parameters);
+          }
 
-        /* Determine the scaling factor by calculating the distances from the opposite vertex
-         * to the glob_intersection and to the reference point */
-        double scaling_factor
-          = t8_geom_get_triangle_scaling_factor (i_edge, active_tree_vertices, glob_intersection, out_coords);
+          /* Determine the scaling factor by calculating the distances from the opposite vertex
+          * to the glob_intersection and to the reference point */
+          double scaling_factor = t8_geom_get_triangle_scaling_factor (i_edge, active_tree_vertices, glob_intersection,
+                                                                       out_coords + offset_3d);
 
-        /* Calculate parameter displacement and add it to the surface parameters */
-        for (int dim = 0; dim < 2; ++dim) {
-          const double displacement
-            = converted_edge_surface_parameters[dim] - interpolated_edge_surface_parameters[dim];
-          const double scaled_displacement = displacement * scaling_factor;
-          interpolated_surface_parameters[dim] += scaled_displacement;
+          /* Calculate parameter displacement and add it to the surface parameters */
+          for (int dim = 0; dim < 2; ++dim) {
+            const double displacement
+              = converted_edge_surface_parameters[dim] - interpolated_edge_surface_parameters[dim];
+            const double scaled_displacement = displacement * scaling_factor;
+            out_coords[dim + offset_3d] += scaled_displacement;
+          }
         }
       }
       /* Retrieve surface */
@@ -264,11 +271,15 @@ t8_geometry_occ::t8_geom_evaluate_occ_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
       /* Check if surface is valid */
       T8_ASSERT (!surface.IsNull ());
 
-      /* Evaluate surface and save result */
-      surface->D0 (interpolated_surface_parameters[0], interpolated_surface_parameters[1], pnt);
+      for (int i_coord = 0; i_coord < num_coords; ++i_coord) {
+        const int offset_3d = i_coord * 3;
+        const int offset_2d = i_coord * 2;
+        /* Evaluate surface and save result */
+        surface->D0 (out_coords[offset_3d], out_coords[offset_3d + 1], pnt);
 
-      for (int dim = 0; dim < 3; ++dim) {
-        out_coords[dim] = pnt.Coord (dim + 1);
+        for (int dim = 0; dim < 3; ++dim) {
+          out_coords[dim + offset_3d] = pnt.Coord (dim + 1);
+        }
       }
     }
   }
@@ -349,7 +360,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
 
 void
 t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                            const int num_coords, double *out_coords) const
+                                            const size_t num_coords, double *out_coords) const
 {
   T8_ASSERT (active_tree_class == T8_ECLASS_QUAD);
 
@@ -579,7 +590,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
 
 void
 t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                           const int num_coords, double *out_coords) const
+                                           const size_t num_coords, double *out_coords) const
 {
   T8_ASSERT (active_tree_class == T8_ECLASS_HEX);
 
@@ -721,7 +732,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
         /* Check if curve is present */
         if (edges[t8_face_edge_to_tree_edge[T8_ECLASS_HEX][i_faces][i_face_edge]] > 0) {
           /* Calculating some indices */
-          const int edge_direction = t8_face_edge_to_tree_edge[i_faces][i_face_edge] >> 2;
+          const int edge_direction = t8_face_edge_to_tree_edge[T8_ECLASS_HEX][i_faces][i_face_edge] >> 2;
           int orthogonal_direction_of_edge_on_face = 0;
           switch (edge_direction + face_normal_direction) {
           case 1:

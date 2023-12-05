@@ -288,7 +288,7 @@ struct t8_geometry_occ: public t8_geometry_with_vertices
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
    */
   void
-  t8_geom_evaluate_occ_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const int num_coords,
+  t8_geom_evaluate_occ_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
                             double *out_coords) const;
 
   /**
