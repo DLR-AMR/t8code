@@ -292,65 +292,68 @@ t8_geometry_occ::t8_geom_evaluate_occ_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
         const double *parameters = (double *) t8_cmesh_get_attribute (
           cmesh, t8_get_package_id (), T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_edge, ltreeid);
         T8_ASSERT (parameters != NULL);
+        for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
+          const int offset_3d = i_coord * 3;
+          const int offset_2d = i_coord * 2;
+          double ref_intersection[2];
+          t8_geom_get_ref_intersection (i_edge, ref_coords + offset_2d, ref_intersection);
 
-        double ref_intersection[2];
-        t8_geom_get_ref_intersection (i_edge, ref_coords, ref_intersection);
+          /* Converting ref_intersection to global_intersection */
+          double glob_intersection[3];
+          t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_intersection, num_coords,
+                                           glob_intersection);
 
-        /* Converting ref_intersection to global_intersection */
-        double glob_intersection[3];
-        t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_intersection, 1,
-                                         glob_intersection);
+          if (edges[i_edge] > 0) {
+            /* Linear interpolation between parameters */
+            double interpolated_curve_parameter;
 
-        if (edges[i_edge] > 0) {
-          /* Linear interpolation between parameters */
-          double interpolated_curve_parameter;
+            if (i_edge == 0) {
+              t8_geom_linear_interpolation (&ref_intersection[1], parameters, 1, 1, &interpolated_curve_parameter);
+            }
+            else {
+              t8_geom_linear_interpolation (&ref_intersection[0], parameters, 1, 1, &interpolated_curve_parameter);
+            }
+            /* Retrieve curve */
+            T8_ASSERT (edges[i_edge] <= occ_shape_face_map.Size ());
+            curve = BRep_Tool::Curve (TopoDS::Edge (occ_shape_edge_map.FindKey (edges[i_edge])), first, last);
+            /* Check if curve is valid */
+            T8_ASSERT (!curve.IsNull ());
 
-          if (i_edge == 0) {
-            t8_geom_linear_interpolation (&ref_intersection[1], parameters, 1, 1, &interpolated_curve_parameter);
+            /* Calculate point on curve with interpolated parameters. */
+            curve->D0 (interpolated_curve_parameter, pnt);
           }
           else {
-            t8_geom_linear_interpolation (&ref_intersection[0], parameters, 1, 1, &interpolated_curve_parameter);
+            /* Linear interpolation between parameters */
+            double interpolated_surface_parameters[2];
+
+            if (i_edge == 0) {
+              t8_geom_linear_interpolation (&ref_intersection[1], parameters, 2, 1, interpolated_surface_parameters);
+            }
+            else {
+              t8_geom_linear_interpolation (&ref_intersection[0], parameters, 2, 1, interpolated_surface_parameters);
+            }
+
+            T8_ASSERT (edges[i_edge + num_edges] <= occ_shape_face_map.Size ());
+            surface = BRep_Tool::Surface (TopoDS::Face (occ_shape_face_map.FindKey (edges[i_edge + num_edges])));
+
+            /* Check if surface is valid */
+            T8_ASSERT (!surface.IsNull ());
+
+            /* Compute point on surface with interpolated parameters */
+            surface->D0 (interpolated_surface_parameters[0], interpolated_surface_parameters[1], pnt);
           }
-          /* Retrieve curve */
-          T8_ASSERT (edges[i_edge] <= occ_shape_face_map.Size ());
-          curve = BRep_Tool::Curve (TopoDS::Edge (occ_shape_edge_map.FindKey (edges[i_edge])), first, last);
-          /* Check if curve is valid */
-          T8_ASSERT (!curve.IsNull ());
+          /* Determine the scaling factor by calculating the distances from the opposite vertex
+          * to the glob_intersection and to the reference point */
+          double scaling_factor = t8_geom_get_triangle_scaling_factor (i_edge, active_tree_vertices, glob_intersection,
+                                                                       out_coords + offset_3d);
 
-          /* Calculate point on curve with interpolated parameters. */
-          curve->D0 (interpolated_curve_parameter, pnt);
-        }
-        else {
-          /* Linear interpolation between parameters */
-          double interpolated_surface_parameters[2];
-
-          if (i_edge == 0) {
-            t8_geom_linear_interpolation (&ref_intersection[1], parameters, 2, 1, interpolated_surface_parameters);
+          /* Calculate displacement between points on curve and point on linear curve.
+          * Then scale it and add the scaled displacement to the result. */
+          for (int dim = 0; dim < 3; ++dim) {
+            const double displacement = pnt.Coord (dim + 1) - glob_intersection[dim];
+            const double scaled_displacement = displacement * scaling_factor * scaling_factor;
+            out_coords[dim + offset_3d] += scaled_displacement;
           }
-          else {
-            t8_geom_linear_interpolation (&ref_intersection[0], parameters, 2, 1, interpolated_surface_parameters);
-          }
-
-          T8_ASSERT (edges[i_edge + num_edges] <= occ_shape_face_map.Size ());
-          surface = BRep_Tool::Surface (TopoDS::Face (occ_shape_face_map.FindKey (edges[i_edge + num_edges])));
-
-          /* Check if surface is valid */
-          T8_ASSERT (!surface.IsNull ());
-
-          /* Compute point on surface with interpolated parameters */
-          surface->D0 (interpolated_surface_parameters[0], interpolated_surface_parameters[1], pnt);
-        }
-        /* Determine the scaling factor by calculating the distances from the opposite vertex
-         * to the glob_intersection and to the reference point */
-        double scaling_factor
-          = t8_geom_get_triangle_scaling_factor (i_edge, active_tree_vertices, glob_intersection, out_coords);
-
-        /* Calculate displacement between points on curve and point on linear curve.
-         * Then scale it and add the scaled displacement to the result. */
-        for (int dim = 0; dim < 3; ++dim) {
-          const double displacement = pnt.Coord (dim + 1) - glob_intersection[dim];
-          const double scaled_displacement = displacement * scaling_factor * scaling_factor;
-          out_coords[dim] += scaled_displacement;
         }
       }
     }
