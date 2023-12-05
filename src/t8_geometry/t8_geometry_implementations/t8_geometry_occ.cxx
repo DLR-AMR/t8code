@@ -193,7 +193,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
     T8_ASSERT (face_parameters != NULL);
 
     /* Retrieve surface_parameter in global space by triangular interpolation from ref_coords to global space */
-    for (int i_coord = 0; i_coord < num_coords; ++i_coord) {
+    for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
       const int offset_3d = i_coord * 3;
       const int offset_2d = i_coord * 2;
       /* We use the out coords as buffer for the surface parameters to
@@ -204,7 +204,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
     /* Check every edge and search for edge displacement */
     for (int i_edge = 0; i_edge < num_edges; i_edge++) {
       if (edges[i_edge] > 0) {
-        for (int i_coord = 0; i_coord < num_coords; ++i_coord) {
+        for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
           const int offset_3d = i_coord * 3;
           const int offset_2d = i_coord * 2;
           double ref_intersection[2];
@@ -271,9 +271,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
       /* Check if surface is valid */
       T8_ASSERT (!surface.IsNull ());
 
-      for (int i_coord = 0; i_coord < num_coords; ++i_coord) {
+      for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
         const int offset_3d = i_coord * 3;
-        const int offset_2d = i_coord * 2;
         /* Evaluate surface and save result */
         surface->D0 (out_coords[offset_3d], out_coords[offset_3d + 1], pnt);
 
@@ -380,7 +379,6 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
     }
 #endif /* T8_ENABLE_DEBUG */
 
-    const int num_face_nodes = t8_eclass_num_vertices[active_tree_class];
     /* Retrieve surface parameters */
     const double *face_parameters = (double *) t8_cmesh_get_attribute (
       cmesh, t8_get_package_id (), T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY, ltreeid);
@@ -397,7 +395,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
     }
 
     /* Iterate over each edge to search for parameter displacements */
-    for (int i_edge = 0; i_edge < num_edges; ++i_edge) {
+    for (size_t i_edge = 0; i_edge < num_edges; ++i_edge) {
       if (edges[i_edge] > 0) {
         /* The edges of a quad point in direction of ref_coord (1 - i_edge >> 1).
          *
@@ -427,7 +425,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
         /* Check if curve is valid */
         T8_ASSERT (!curve.IsNull ());
 
-        for (int coord = 0; coord < num_coords; ++coord) {
+        for (size_t coord = 0; coord < num_coords; ++coord) {
           const int offset_3d = coord * 3;
           const int offset_2d = coord * 2;
           /* Interpolate between curve parameters and surface parameters of the same nodes */
@@ -466,7 +464,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
     T8_ASSERT (!surface.IsNull ());
 
     /* Evaluate surface and save result */
-    for (int coord = 0; coord < num_coords; ++coord) {
+    for (size_t coord = 0; coord < num_coords; ++coord) {
       const int offset_3d = coord * 3;
       surface->D0 (out_coords[offset_3d], out_coords[offset_3d + 1], pnt);
       for (int dim = 0; dim < 3; ++dim) {
@@ -478,7 +476,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
     /* No surface is linked to the face. We therefore use a bilinear
      * interpolation for the quad cell and add the edge displacements.
      * Iterate over each edge and check if it is linked. */
-    for (int coord = 0; coord < num_coords; ++coord) {
+    for (size_t coord = 0; coord < num_coords; ++coord) {
       const int offset_3d = coord * 3;
       const int offset_2d = coord * 2;
       t8_geom_linear_interpolation (ref_coords + offset_2d, active_tree_vertices, 3, 2, out_coords + offset_3d);
@@ -525,7 +523,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
           /* Check if curve are valid */
           T8_ASSERT (!curve.IsNull ());
 
-          for (int coord = 0; coord < num_coords; ++coord) {
+          for (size_t coord = 0; coord < num_coords; ++coord) {
             const int offset_3d = coord * 3;
             const int offset_2d = coord * 2;
             /* Linear interpolation between edge vertices */
@@ -558,7 +556,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
           /* Check if surface is valid */
           T8_ASSERT (!surface.IsNull ());
 
-          for (int coord = 0; coord < num_coords; ++coord) {
+          for (size_t coord = 0; coord < num_coords; ++coord) {
             const int offset_3d = coord * 3;
             const int offset_2d = coord * 2;
             /* Linear interpolation between edge vertices */
