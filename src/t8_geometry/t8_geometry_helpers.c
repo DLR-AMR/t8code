@@ -82,6 +82,10 @@ void
 t8_geom_compute_linear_geometry (t8_eclass_t tree_class, const double *tree_vertices, const double *ref_coords,
                                  const size_t num_coords, double *out_coords)
 {
+  double tri_vertices[9];
+  double line_vertices[6];
+  double base_coords[2];
+  double vec[3];
   int i_dim;
   size_t i_coord;
   const int dimension = t8_eclass_to_dimension[tree_class];
@@ -107,8 +111,6 @@ t8_geom_compute_linear_geometry (t8_eclass_t tree_class, const double *tree_vert
     }
     break;
   case T8_ECLASS_PRISM:
-    double tri_vertices[9];
-    double line_vertices[6];
     for (i_coord = 0; i_coord < num_coords; i_coord++) {
       const size_t offset_tree_dim = i_coord * dimension;
       const size_t offset_domain_dim = i_coord * T8_ECLASS_MAX_DIM;
@@ -137,8 +139,6 @@ t8_geom_compute_linear_geometry (t8_eclass_t tree_class, const double *tree_vert
     }
     break;
   case T8_ECLASS_PYRAMID:
-    double base_coords[2];
-    double vec[3];
     for (i_coord = 0; i_coord < num_coords; i_coord++) {
       const size_t offset_tree_dim = i_coord * dimension;
       const size_t offset_domain_dim = i_coord * T8_ECLASS_MAX_DIM;
