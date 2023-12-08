@@ -1596,6 +1596,10 @@ t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     /* Runtime = current_time - start_time */
     cmesh->profile->partition_runtime = sc_MPI_Wtime () - cmesh->profile->partition_runtime;
   }
+  /* Deactivate the active tree. Tree related data (such as vertices) might have been moved by the new partition and 
+   * has to be loaded again if needed. */
+  cmesh->geometry_handler->active_tree = -cmesh->num_local_trees - 1;
+
   t8_global_productionf ("Done cmesh partition\n");
 }
 
