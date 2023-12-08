@@ -29,6 +29,7 @@
 #define T8_CMESH_VERTEX_CONNECTIVITY_HXX
 
 #include <t8_cmesh.h>
+#include <t8_cmesh_vertex_conn_vertex_to_tree_c.hxx>
 
 typedef struct t8_cmesh_vertex_connectivity
 {
