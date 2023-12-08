@@ -44,6 +44,12 @@ t8_geometry_destroy (t8_geometry_c **geom);
 t8_geometry_c *
 t8_geometry_squared_disk_new ();
 
+/** Create a new triangulated_spherical_surface geometry.
+ * \return          A pointer to an allocated geometry struct.
+ */
+t8_geometry_c *
+t8_geometry_triangulated_spherical_surface_new ();
+
 T8_EXTERN_C_END ();
 
 #endif /* T8_GEOMETRY_EXAMPLE_H */
