@@ -151,6 +151,7 @@ t8_geom_handler_get_unique_geometry (const t8_geometry_handler_t *geom_handler);
  * partition-algorithm
  * 
  * \param[in,out] geom_handler The geometry handler, where the tree has to be deactivated.
+ * \note \a geom_handler must be committed before calling this function.
  */
 void
 t8_geom_handler_deactivate_tree (t8_geometry_handler_t *geom_handler);
