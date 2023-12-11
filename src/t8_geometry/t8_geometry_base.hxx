@@ -115,6 +115,14 @@ struct t8_geometry
     return name;
   }
 
+  /**
+   * Get the type of this geometry.
+   * \return The type.
+   */
+  virtual t8_geometry_type_t
+  t8_geom_get_type () const
+    = 0;
+
  protected:
   int dimension;
   /**< The dimension of reference space for which this is a geometry. */

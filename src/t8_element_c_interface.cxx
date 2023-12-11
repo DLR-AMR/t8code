@@ -373,14 +373,6 @@ t8_element_successor (const t8_eclass_scheme_c *ts, const t8_element_t *elem1, t
   ts->t8_element_successor (elem1, elem2, level);
 }
 
-int
-t8_element_root_len (const t8_eclass_scheme_c *ts, const t8_element_t *elem)
-{
-  T8_ASSERT (ts != NULL);
-
-  return ts->t8_element_root_len (elem);
-}
-
 void
 t8_element_vertex_reference_coords (const t8_eclass_scheme_c *ts, const t8_element_t *t, const int vertex,
                                     double coords[])

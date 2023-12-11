@@ -37,10 +37,10 @@ class class_test_equal: public TestDFS {
       /* the child must be different than its parent */
       EXPECT_FALSE (ts->t8_element_equal (element, child1));
       for (int ichild2 = 0; ichild2 < num_children; ichild2++) {
-        /* the child must be different than its parent */
-        EXPECT_FALSE (ts->t8_element_equal (element, child2));
         ts->t8_element_child (element, ichild2, child2);
-        const int equal = ts->t8_element_equal (child1, child2);
+        /* the child must be different than its parent */
+        EXPECT_FALSE(ts->t8_element_equal(element, child2));
+        const int equal = ts->t8_element_equal(child1, child2);
         /* The children must be equal if and only if their indices are equal. */
         EXPECT_EQ (equal, ichild1 == ichild2);
         /* t8_element_equal should compute the same as t8_element_compare, 

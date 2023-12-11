@@ -43,7 +43,7 @@ class TestDFS: public testing::TestWithParam<t8_eclass_t> {
     ASSERT_LT (max_dfs_recursion_level, ts->t8_element_maxlevel ());
 
     /** call the implementation of the specific test*/
-    check_element (element);
+    check_element ();
 
     if (ts->t8_element_level (element) < max_dfs_recursion_level) {
       /* iterate over all children */
