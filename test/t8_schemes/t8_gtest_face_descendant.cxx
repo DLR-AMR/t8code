@@ -28,8 +28,11 @@
 #include <test/t8_gtest_macros.hxx>
 #include "t8_gtest_dfs_base.hxx"
 
+/* compute the first/last descendant by iteratively taking the first/last child at each level*/
 static void
-t8_test_manual_first_last_face_descendant(t8_eclass_scheme_c *ts, t8_element_t * element, int iface, int desc_level, int last, t8_element_t *face_desc){
+t8_test_manual_first_last_face_descendant (const t8_eclass_scheme_c *ts, const t8_element_t *element, const int iface,
+                                           const int desc_level, const int last, t8_element_t *face_desc)
+{
   const int num_children_at_face = ts->t8_element_num_face_children(element, iface);
 
   int *child_indices = T8_ALLOC (int, num_children_at_face);
