@@ -63,5 +63,5 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: t8code indentation report
-        path: scripts/indent_script_output.txt
+        path: indent_script_output.txt
         
