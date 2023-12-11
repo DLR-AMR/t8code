@@ -32,7 +32,7 @@ class TestDFS: public testing::TestWithParam<t8_eclass_t> {
   /** recursive tests check something for all descendants of a starting element (currently only root) upto maxlevel
 */
   virtual void
-  check_element (const t8_element_t *elem) {};
+  check_element () {};
 
   /** recursive depth first search to iterate over all descendants of elem up to max_dfs_recursion_level */
   void
