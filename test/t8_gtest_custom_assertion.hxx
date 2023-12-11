@@ -26,6 +26,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <gtest/gtest.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_vec.h>
 
 #ifndef CUSTOM_ASSERTION_HXX
 #define CUSTOM_ASSERTION_HXX
@@ -64,5 +65,37 @@ element_equality (const char *ts_expr, const char *elem_1_expr, const char *elem
 }
 
 #define EXPECT_ELEM_EQ(scheme, elem1, elem2) EXPECT_PRED_FORMAT3 (element_equality, (scheme), (elem1), (elem2))
+
+/**
+ * \brief Test if two 3D vectors are equal with respect to a given precision
+ * 
+ * \param[in] vec_1_expr Name of the first vector
+ * \param[in] vec_2_expr Name of the second vector
+ * \param[in] precision_expr Name of the precision
+ * \param[in] vec_1 First vector to compare
+ * \param[in] vec_2 Second vector to compare
+ * \param[in] precision Test equality up to this prescision
+ * \return testing::AssertionResult 
+ */
+testing::AssertionResult
+vec_equality (const char *vec_1_expr, const char *vec_2_expr, const char *precision_expr, const double vec_1[3],
+              const double vec_2[3], const double precision)
+{
+  if (t8_vec_eq (vec_1, vec_2, precision)) {
+    return testing::AssertionSuccess ();
+  }
+  else {
+#if T8_ENABLE_DEBUG
+    return testing::AssertionFailure () << vec_1[0] << " " << vec_1[1] << " " << vec_1[2] << " " << vec_1_expr
+                                        << " is not equal to \n"
+                                        << vec_2[0] << " " << vec_2[1] << " " << vec_2[2] << " " << vec_2_expr << " \n"
+                                        << "Precision given by " << precision_expr << " " << precision;
+#else
+    return testing::AssertionFailure () << vec_1_expr << " is not equal to " << vec_2_expr;
+#endif
+  }
+}
+
+#define EXPECT_VEC_EQ(vec_1, vec_2, precision) EXPECT_PRED_FORMAT3 (vec_equality, (vec_1), (vec_2), (precision))
 
 #endif /* CUSTOM_ASSERTION_HXX */

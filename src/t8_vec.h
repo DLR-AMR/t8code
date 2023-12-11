@@ -55,7 +55,7 @@ t8_vec_normalize (double vec[3])
   const double inv_norm = 1.0 / t8_vec_norm (vec);
 
   for (int i = 0; i < 3; i++) {
-    vec[i]*= inv_norm;
+    vec[i] *= inv_norm;
   }
 }
 
@@ -184,6 +184,20 @@ t8_vec_diff (const double vec_x[3], const double vec_y[3], double diff[3])
   for (int i = 0; i < 3; i++) {
     diff[i] = vec_x[i] - vec_y[i];
   }
+}
+
+/**
+ * Check the equality of two vectors with respect to the euclidean norm. 
+ * 
+ * \param[in] vec_x 
+ * \param[in] vec_y 
+ * \param[in] precision 
+ * \return true, if the vectors are equal up to \a precision 
+ */
+static inline int
+t8_vec_eq (const double vec_x[3], const double vec_y[3], const double precision)
+{
+  return t8_vec_dist (vec_x, vec_y) < precision;
 }
 
 T8_EXTERN_C_END ();
