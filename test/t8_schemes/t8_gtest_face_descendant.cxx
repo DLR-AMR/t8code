@@ -33,16 +33,16 @@ static void
 t8_test_manual_first_last_face_descendant (const t8_eclass_scheme_c *ts, const t8_element_t *element, const int iface,
                                            const int desc_level, const int last, t8_element_t *face_desc)
 {
-  const int num_children_at_face = ts->t8_element_num_face_children(element, iface);
+  const int num_children_at_face = ts->t8_element_num_face_children (element, iface);
 
   int *child_indices = T8_ALLOC (int, num_children_at_face);
   t8_element_t **children = T8_ALLOC (t8_element_t *, num_children_at_face);
   ts->t8_element_new (num_children_at_face, children);
 
-  ts->t8_element_copy(element, face_desc);
-  const int level = ts->t8_element_level(element);
+  ts->t8_element_copy (element, face_desc);
+  const int level = ts->t8_element_level (element);
   for (int ilevel = level; ilevel < desc_level; ilevel++) {
-    EXPECT_EQ(ts->t8_element_num_face_children(element, iface), num_children_at_face);
+    EXPECT_EQ (ts->t8_element_num_face_children (element, iface), num_children_at_face);
     /* Compute child_id of the test_child_id-th child. */
     ts->t8_element_children_at_face (face_desc, iface, children, num_children_at_face, child_indices);
 
@@ -60,7 +60,7 @@ t8_test_manual_first_last_face_descendant (const t8_eclass_scheme_c *ts, const t
 
 class class_descendant: public TestDFS {
   virtual void
-  check_element()
+  check_element ()
   {
     /* Check the linear first and last descendants of an element along all faces. 
      * For the test the descendants are computed manually by t8_test_manual_first_last_face_descendant and 
@@ -91,17 +91,17 @@ class class_descendant: public TestDFS {
   void
   SetUp () override
   {
-    dfs_test_setup();
-    max_test_lvl = ts->t8_element_maxlevel();
-    ts->t8_element_new(1, &manual_face_desc);
-    ts->t8_element_new(1, &scheme_face_desc);
+    dfs_test_setup ();
+    max_test_lvl = ts->t8_element_maxlevel ();
+    ts->t8_element_new (1, &manual_face_desc);
+    ts->t8_element_new (1, &scheme_face_desc);
   }
   void
   TearDown () override
   {
-    ts->t8_element_destroy(1, &manual_face_desc);
-    ts->t8_element_destroy(1, &scheme_face_desc);
-    dfs_test_teardown();
+    ts->t8_element_destroy (1, &manual_face_desc);
+    ts->t8_element_destroy (1, &scheme_face_desc);
+    dfs_test_teardown ();
   }
   int max_test_lvl;
   t8_element_t *manual_face_desc;

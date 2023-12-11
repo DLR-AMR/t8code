@@ -27,12 +27,12 @@
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
-class TestDFS : public testing::TestWithParam<t8_eclass_t> {
+class TestDFS: public testing::TestWithParam<t8_eclass_t> {
  public:
-/** recursive tests check something for all descendants of a starting element (currently only root) upto maxlevel
+  /** recursive tests check something for all descendants of a starting element (currently only root) upto maxlevel
 */
   virtual void
-  check_element (const t8_element_t *elem){};
+  check_element (const t8_element_t *elem) {};
 
   /** recursive depth first search to iterate over all descendants of elem up to max_dfs_recursion_level */
   void
@@ -57,16 +57,16 @@ class TestDFS : public testing::TestWithParam<t8_eclass_t> {
   }
 
   void
-  dfs_test_setup()
+  dfs_test_setup ()
   {
-    scheme = t8_scheme_new_default_cxx();
+    scheme = t8_scheme_new_default_cxx ();
     eclass = GetParam ();
     ts = scheme->eclass_schemes[eclass];
     ts->t8_element_new (1, &element);
     ts->t8_element_set_linear_id (element, 0, 0);
   }
   void
-  dfs_test_teardown()
+  dfs_test_teardown ()
   {
     ts->t8_element_destroy (1, &element);
     t8_scheme_cxx_unref (&scheme);
@@ -75,12 +75,12 @@ class TestDFS : public testing::TestWithParam<t8_eclass_t> {
   void
   SetUp () override
   {
-    dfs_test_setup();
+    dfs_test_setup ();
   }
   void
   TearDown () override
   {
-    dfs_test_teardown();
+    dfs_test_teardown ();
   }
 
   t8_scheme_cxx *scheme;
