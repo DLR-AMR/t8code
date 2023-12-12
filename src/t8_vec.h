@@ -197,7 +197,7 @@ t8_vec_diff (const double vec_x[3], const double vec_y[3], double diff[3])
 static inline int
 t8_vec_eq (const double vec_x[3], const double vec_y[3], const double eps)
 {
-  return fabs (vec_x[0] - vec_y[0]) < eps && fabs (vec_x[1] - vec_y[1]) < eps && fabs (vec_x[1] - vec_y[1]) < eps;
+  return fabs (vec_x[0] - vec_y[0]) < eps && fabs (vec_x[1] - vec_y[1]) < eps && fabs (vec_x[2] - vec_y[2]) < eps;
 }
 
 T8_EXTERN_C_END ();
