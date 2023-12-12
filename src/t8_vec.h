@@ -187,17 +187,17 @@ t8_vec_diff (const double vec_x[3], const double vec_y[3], double diff[3])
 }
 
 /**
- * Check the equality of two vectors with respect to the euclidean norm. 
+ * Check the equality of two vectors elementwise 
  * 
  * \param[in] vec_x 
  * \param[in] vec_y 
- * \param[in] precision 
- * \return true, if the vectors are equal up to \a precision 
+ * \param[in] eps 
+ * \return true, if the vectors are equal up to \a eps 
  */
 static inline int
-t8_vec_eq (const double vec_x[3], const double vec_y[3], const double precision)
+t8_vec_eq (const double vec_x[3], const double vec_y[3], const double eps)
 {
-  return t8_vec_dist (vec_x, vec_y) < precision;
+  return fabs (vec_x[0] - vec_y[0]) < eps && fabs (vec_x[1] - vec_y[1]) < eps && fabs (vec_x[1] - vec_y[1]) < eps;
 }
 
 T8_EXTERN_C_END ();
