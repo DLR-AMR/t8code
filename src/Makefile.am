@@ -90,6 +90,7 @@ libt8_internal_headers = \
   src/t8_cmesh/t8_cmesh_types.h src/t8_cmesh/t8_cmesh_partition.h \
   src/t8_cmesh/t8_cmesh_refine.h src/t8_cmesh/t8_cmesh_copy.h \
   src/t8_cmesh/t8_cmesh_offset.h \
+  src/t8_cmesh/t8_cmesh_vertex_connectivity.hxx \
   src/t8_vtk/t8_vtk_polydata.hxx \
   src/t8_vtk/t8_vtk_unstructured.hxx \
   src/t8_vtk/t8_vtk_parallel.hxx \
