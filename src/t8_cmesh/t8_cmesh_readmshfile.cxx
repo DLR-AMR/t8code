@@ -1250,6 +1250,35 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
               continue;
             }
 
+            /* If one vertex lies on a geometry of a higher dim as the other, we have to check,
+             * if the geometry of lower dimension is on that geometry. */
+            {
+              int is_on_geom = 1;
+              for (int i_edge = 0; i_edge < 2; ++i_edge) {
+                if (edge_geometry_dim == 2 && edge_nodes[i_edge].entity_dim == 1) {
+                  if (!occ_geometry->t8_geom_is_edge_on_face (edge_nodes[i_edge].entity_tag, edge_geometry_tag)) {
+                    is_on_geom = 0;
+                    break;
+                  }
+                }
+                else if (edge_geometry_dim == 2 && edge_nodes[i_edge].entity_dim == 0) {
+                  if (!occ_geometry->t8_geom_is_vertex_on_face (edge_nodes[i_edge].entity_tag, edge_geometry_tag)) {
+                    is_on_geom = 0;
+                    break;
+                  }
+                }
+                else if (edge_geometry_dim == 1 && edge_nodes[i_edge].entity_dim == 0) {
+                  if (!occ_geometry->t8_geom_is_vertex_on_edge (edge_nodes[i_edge].entity_tag, edge_geometry_tag)) {
+                    is_on_geom = 0;
+                    break;
+                  }
+                }
+              }
+              if (!is_on_geom) {
+                continue;
+              }
+            }
+
             /* If both nodes are on a vertex we still got no edge. 
              * But we can look if both vertices share an edge and use this edge. 
              * If not we can skip this edge. */
