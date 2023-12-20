@@ -23,6 +23,7 @@
 #include <t8.h>                                     /* General t8code header, always include this. */
 #include <sc_options.h>                             /* CLI parser */
 #include <t8_cmesh.h>                               /* cmesh definition and basic interface. */
+#include <t8_cmesh_vtk_writer.h>
 #include <t8_forest/t8_forest_general.h>            /* forest definition and basic interface. */
 #include <t8_forest/t8_forest_io.h>                 /* save forest */
 #include <t8_forest/t8_forest_geometrical.h>        /* geometrical information of the forest */
@@ -36,9 +37,13 @@
 #include <utility>
 #include <vector>
 
-#define NUM_SPARKLES 10
+#define NUM_SPARKLES 60
+#define NUM_CONSTANT_SPARKLES 30
 #define LEVEL_SPARKLE 4
 #define NUM_ROUNDS 50
+
+
+  int first_changing_sparkle = 0;
 
 const std::unordered_map<t8_gloidx_t, int> tree_map
   = { { 0, 2 },  { 1, 0 },  { 2, 0 },  { 3, 0 },  { 4, 2 },  { 5, 0 },  { 6, 3 },
@@ -69,6 +74,11 @@ t8_adapt_sparcle_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locid
 {
   const int elem_level = ts->t8_element_level (elements[0]);
   const t8_gloidx_t gtreeid = t8_cmesh_get_global_id (t8_forest_get_cmesh (forest_from), which_tree);
+  
+  if (gtreeid == 18 || gtreeid == 19 || gtreeid == 17 || gtreeid == 16) {
+    return 0;
+  }
+  
   int is_inside = 0;
   for (auto sparkle : sparkles) {
     const double sparkle_array[3] = { sparkle.first, sparkle.second, 0 };
@@ -86,13 +96,14 @@ t8_adapt_sparcle_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locid
 int
 t8_generate_sparkles ()
 {
-  sparkles.clear ();
-  for (int i_sparkle = 0; i_sparkle < NUM_SPARKLES; ++i_sparkle) {
+  sparkles.resize (first_changing_sparkle);
+  for (int i_sparkle = first_changing_sparkle; i_sparkle < NUM_SPARKLES; ++i_sparkle) {
     std::pair<double, double> sparkle;
     sparkle.first = rand () / (double) RAND_MAX * 730.0 - 730 / 2.0;
     sparkle.second = rand () / (double) RAND_MAX * 730.0;
     sparkles.push_back (sparkle);
   }
+  first_changing_sparkle = NUM_CONSTANT_SPARKLES;
   return 0;
 }
 
@@ -112,6 +123,7 @@ main (int argc, char **argv)
   t8_forest_commit (forest_new);
   forest = forest_new;
   t8_forest_write_vtk_ext (forest, "christmas_card_0", 1, 1, 1, 1, 0, 1, 0, 0, NULL);
+  t8_cmesh_vtk_write_file (cmesh, "christmas_card_cmesh", 1.0);
   for (int rounds = 1; rounds < NUM_ROUNDS + 1; ++rounds) {
     t8_generate_sparkles ();
     t8_forest_init (&forest_new);
