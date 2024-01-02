@@ -108,8 +108,6 @@ void
 t8_geometry_occ::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
                                             const size_t num_coords, double *jacobian_out) const
 {
-  if (num_coords != 1)
-    SC_ABORT ("Error: Batch computation of geometry not yet supported.");
   double h = 1e-9;
   double in1[3], in2[3];
   double out1[3], out2[3];
@@ -596,14 +594,14 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
   T8_ASSERT (active_tree_class == T8_ECLASS_HEX);
 
   /* Compute coordinates via trilinear interpolation */
-  t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, 1, out_coords);
+  t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, num_coords, out_coords);
 
   const t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
   const int num_edges = t8_eclass_num_edges[active_tree_class];
   const int num_faces = t8_eclass_num_faces[active_tree_class];
-  double interpolated_coords[3], interpolated_curve_param, interpolated_surface_params[2], cur_delta[3];
+  double *interpolated_coords, *interpolated_curve_param, *interpolated_surface_params, cur_delta[3];
   gp_Pnt pnt;
-  double interpolation_coeffs[3], temp_face_vertices[T8_ECLASS_MAX_CORNERS_2D * 3], temp_edge_vertices[2 * 3];
+  double *interpolation_coeffs, temp_face_vertices[T8_ECLASS_MAX_CORNERS_2D * 3], temp_edge_vertices[2 * 3];
   Handle_Geom_Curve curve;
   Handle_Geom_Surface surface;
   Standard_Real first, last;
@@ -640,76 +638,87 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
 
       t8_geom_get_edge_vertices (active_tree_class, active_tree_vertices, i_edge, 3, temp_edge_vertices);
       /* Interpolate between them. */
-
-      t8_geom_linear_interpolation (&ref_coords[edge_direction], temp_edge_vertices, 3, 1, interpolated_coords);
+      for (size_t coord = 0; coord < num_coords; ++coord) {
+        const int offset_3d = coord * 3;
+        t8_geom_linear_interpolation (&ref_coords[edge_direction + offset_3d], temp_edge_vertices, 3, 1,
+                                      interpolated_coords + offset_3d);
+      }
       /* Interpolate parameters between edge vertices. Same procedure as above. */
       const double *parameters = (double *) t8_cmesh_get_attribute (
         cmesh, t8_get_package_id (), T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_edge, ltreeid);
       T8_ASSERT (parameters != NULL);
-      /* Curves have only one parameter u, surfaces have two, u and v.
-       * Therefore, we have to distinguish if the edge has a curve or surface linked to it. */
-      if (edges[i_edge] > 0) {
-        /* Linear interpolation between parameters */
-        t8_geom_linear_interpolation (&ref_coords[edge_direction], parameters, 1, 1, &interpolated_curve_param);
 
-        T8_ASSERT (edges[i_edge] <= occ_shape_edge_map.Size ());
-        curve = BRep_Tool::Curve (TopoDS::Edge (occ_shape_edge_map.FindKey (edges[i_edge])), first, last);
+      for (size_t coord = 0; coord < num_coords; ++coord) {
+        const int offset_1d = coord * 1;
+        const int offset_2d = coord * 2;
+        const int offset_3d = coord * 3;
+        /* Curves have only one parameter u, surfaces have two, u and v.
+        * Therefore, we have to distinguish if the edge has a curve or surface linked to it. */
+        if (edges[i_edge] > 0) {
+          /* Linear interpolation between parameters */
+          t8_geom_linear_interpolation (&ref_coords[edge_direction * offset_3d], parameters, 1, 1,
+                                        interpolated_curve_param + offset_1d);
 
-        /* Check if curve are valid */
-        T8_ASSERT (!curve.IsNull ());
+          T8_ASSERT (edges[i_edge] <= occ_shape_edge_map.Size ());
+          curve = BRep_Tool::Curve (TopoDS::Edge (occ_shape_edge_map.FindKey (edges[i_edge])), first, last);
 
-        /* Calculate point on curve with interpolated parameters. */
-        curve->D0 (interpolated_curve_param, pnt);
+          /* Check if curve are valid */
+          T8_ASSERT (!curve.IsNull ());
+
+          /* Calculate point on curve with interpolated parameters. */
+          curve->D0 (interpolated_curve_param[offset_1d], pnt);
+        }
+        else {
+          /* Linear interpolation between parameters */
+          t8_geom_linear_interpolation (&ref_coords[edge_direction + offset_3d], parameters, 2, 1,
+                                        interpolated_surface_params + offset_2d);
+
+          T8_ASSERT (edges[i_edge + num_edges] <= occ_shape_face_map.Size ());
+          surface = BRep_Tool::Surface (TopoDS::Face (occ_shape_face_map.FindKey (edges[i_edge + num_edges])));
+
+          /* Check if surface is valid */
+          T8_ASSERT (!surface.IsNull ());
+
+          /* Compute point on surface with interpolated parameters */
+          surface->D0 (interpolated_surface_params[offset_2d], interpolated_surface_params[offset_2d + 1], pnt);
+        }
+
+        /* Compute displacement between vertex interpolation and curve evaluation with interpolated parameters */
+        cur_delta[0] = pnt.X () - interpolated_coords[0];
+        cur_delta[1] = pnt.Y () - interpolated_coords[1];
+        cur_delta[2] = pnt.Z () - interpolated_coords[2];
+
+        /* Multiply curve displacement with corresponding ref coords.
+        * The edges are indexed so that all edges which satisfy i_edge % 4 == 0 
+        * have to multiplied with the inversed (1 - ref_coord) 
+        * coordinate. All edges which satisfy i_edge % 4 == 1 have to multiplied with one 
+        * inversed ref_coord and so forth...
+        * An exception are edge 5 and 6, which have to be switched because they do not follow that rule.
+        * Edges which are located at ref_coord[i] = 0 have to be multiplied with (1 - ref_coord[i]) and if the
+        * edge is located at ref_coord[i] = 1 it has to be multiplied with ref_coord[i]. */
+
+        double scaling_factor = 0;
+        const int temp_i_edge = i_edge == 5 ? 6 : i_edge == 6 ? 5 : i_edge;
+        switch (temp_i_edge % 4) {
+        case 0:
+          scaling_factor = (1 - ref_coords[(edge_direction + 1) % 3]) * (1 - ref_coords[(edge_direction + 2) % 3]);
+          break;
+        case 1:
+          scaling_factor = ref_coords[(edge_direction + 1) % 3] * (1 - ref_coords[(edge_direction + 2) % 3]);
+          break;
+        case 2:
+          scaling_factor = (1 - ref_coords[(edge_direction + 1) % 3]) * ref_coords[(edge_direction + 2) % 3];
+          break;
+        case 3:
+          scaling_factor = ref_coords[(edge_direction + 1) % 3] * ref_coords[(edge_direction + 2) % 3];
+          break;
+        }
+
+        /* Add edge displacements to out_coords */
+        out_coords[offset_3d] += cur_delta[0] * scaling_factor;
+        out_coords[offset_3d + 1] += cur_delta[1] * scaling_factor;
+        out_coords[offset_3d + 2] += cur_delta[2] * scaling_factor;
       }
-      else {
-        /* Linear interpolation between parameters */
-        t8_geom_linear_interpolation (&ref_coords[edge_direction], parameters, 2, 1, interpolated_surface_params);
-
-        T8_ASSERT (edges[i_edge + num_edges] <= occ_shape_face_map.Size ());
-        surface = BRep_Tool::Surface (TopoDS::Face (occ_shape_face_map.FindKey (edges[i_edge + num_edges])));
-
-        /* Check if surface is valid */
-        T8_ASSERT (!surface.IsNull ());
-
-        /* Compute point on surface with interpolated parameters */
-        surface->D0 (interpolated_surface_params[0], interpolated_surface_params[1], pnt);
-      }
-
-      /* Compute displacement between vertex interpolation and curve evaluation with interpolated parameters */
-      cur_delta[0] = pnt.X () - interpolated_coords[0];
-      cur_delta[1] = pnt.Y () - interpolated_coords[1];
-      cur_delta[2] = pnt.Z () - interpolated_coords[2];
-
-      /* Multiply curve displacement with corresponding ref coords.
-       * The edges are indexed so that all edges which satisfy i_edge % 4 == 0 
-       * have to multiplied with the inversed (1 - ref_coord) 
-       * coordinate. All edges which satisfy i_edge % 4 == 1 have to multiplied with one 
-       * inversed ref_coord and so forth...
-       * An exception are edge 5 and 6, which have to be switched because they do not follow that rule.
-       * Edges which are located at ref_coord[i] = 0 have to be multiplied with (1 - ref_coord[i]) and if the
-       * edge is located at ref_coord[i] = 1 it has to be multiplied with ref_coord[i]. */
-
-      double scaling_factor = 0;
-      const int temp_i_edge = i_edge == 5 ? 6 : i_edge == 6 ? 5 : i_edge;
-      switch (temp_i_edge % 4) {
-      case 0:
-        scaling_factor = (1 - ref_coords[(edge_direction + 1) % 3]) * (1 - ref_coords[(edge_direction + 2) % 3]);
-        break;
-      case 1:
-        scaling_factor = ref_coords[(edge_direction + 1) % 3] * (1 - ref_coords[(edge_direction + 2) % 3]);
-        break;
-      case 2:
-        scaling_factor = (1 - ref_coords[(edge_direction + 1) % 3]) * ref_coords[(edge_direction + 2) % 3];
-        break;
-      case 3:
-        scaling_factor = ref_coords[(edge_direction + 1) % 3] * ref_coords[(edge_direction + 2) % 3];
-        break;
-      }
-
-      /* Add edge displacements to out_coords */
-      out_coords[0] += cur_delta[0] * scaling_factor;
-      out_coords[1] += cur_delta[1] * scaling_factor;
-      out_coords[2] += cur_delta[2] * scaling_factor;
     }
   }
 
@@ -722,8 +731,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
       const int face_normal_direction = i_faces >> 1;
       t8_geom_get_face_vertices (T8_ECLASS_HEX, active_tree_vertices, i_faces, 3, temp_face_vertices);
 
-      double face_displacement_from_edges[3] = { 0 }, surface_parameter_displacement_from_edges[2] = { 0 },
-             surface_parameters_from_curve[2] = { 0 };
+      double *face_displacement_from_edges = { 0 }, *surface_parameter_displacement_from_edges = { 0 },
+             *surface_parameters_from_curve = { 0 };
       /* Retrieve surface parameters of nodes */
       const double *surface_parameters = (double *) t8_cmesh_get_attribute (
         cmesh, t8_get_package_id (), T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY + i_faces, ltreeid);
@@ -754,133 +763,155 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
             T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + t8_face_edge_to_tree_edge[T8_ECLASS_HEX][i_faces][i_face_edge],
             ltreeid);
           T8_ASSERT (curve_parameters != NULL);
-          /* Interpolate linearly between the parameters of the two nodes on the curve */
-          t8_geom_linear_interpolation (&ref_coords[edge_direction], curve_parameters, 1, 1, &interpolated_curve_param);
-          /* Do the same interpolation but with the surface parameters of the same two nodes as above */
-          double interpolated_surface_parameters_on_edge[2];
-          double edge_parameters_on_face[4];
-          t8_geom_get_face_vertices ((t8_eclass_t) t8_eclass_face_types[active_tree_class][i_faces], surface_parameters,
-                                     i_face_edge, 2, edge_parameters_on_face);
-          t8_geom_linear_interpolation (&ref_coords[edge_direction], edge_parameters_on_face, 2, 1,
-                                        interpolated_surface_parameters_on_edge);
-          /* Do the same interpolation but this time between the coordinates of the same two nodes as above */
-          double interpolated_edge_coordinates[3];
-          double edge_vertices_on_face[6];
-          t8_geom_get_face_vertices ((t8_eclass_t) t8_eclass_face_types[active_tree_class][i_faces], temp_face_vertices,
-                                     i_face_edge, 3, edge_vertices_on_face);
-          t8_geom_linear_interpolation (&ref_coords[edge_direction], edge_vertices_on_face, 3, 1,
-                                        interpolated_edge_coordinates);
+          for (size_t coord = 0; coord < num_coords; ++coord) {
+            const int offset_1d = coord * 1;
+            const int offset_2d = coord * 2;
+            const int offset_3d = coord * 3;
+            /* Interpolate linearly between the parameters of the two nodes on the curve */
+            t8_geom_linear_interpolation (&ref_coords[edge_direction + offset_3d], curve_parameters, 1, 1,
+                                          interpolated_curve_param + offset_2d);
+            /* Do the same interpolation but with the surface parameters of the same two nodes as above */
+            double *interpolated_surface_parameters_on_edge;
+            double edge_parameters_on_face[4];
+            t8_geom_get_face_vertices ((t8_eclass_t) t8_eclass_face_types[active_tree_class][i_faces],
+                                       surface_parameters, i_face_edge, 2, edge_parameters_on_face);
+            t8_geom_linear_interpolation (&ref_coords[edge_direction + offset_3d], edge_parameters_on_face, 2, 1,
+                                          interpolated_surface_parameters_on_edge + offset_2d);
+            /* Do the same interpolation but this time between the coordinates of the same two nodes as above */
+            double interpolated_edge_coordinates[3];
+            double edge_vertices_on_face[6];
+            t8_geom_get_face_vertices ((t8_eclass_t) t8_eclass_face_types[active_tree_class][i_faces],
+                                       temp_face_vertices, i_face_edge, 3, edge_vertices_on_face);
+            t8_geom_linear_interpolation (&ref_coords[edge_direction + offset_3d], edge_vertices_on_face, 3, 1,
+                                          interpolated_edge_coordinates + offset_3d);
 
-          /* Retrieve the curve of the edge */
-          T8_ASSERT (edges[t8_face_edge_to_tree_edge[T8_ECLASS_HEX][i_faces][i_face_edge]]
-                     <= occ_shape_edge_map.Size ());
-          curve = BRep_Tool::Curve (TopoDS::Edge (occ_shape_edge_map.FindKey (
-                                      edges[t8_face_edge_to_tree_edge[T8_ECLASS_HEX][i_faces][i_face_edge]])),
-                                    first, last);
-          /* Check if curve is valid */
-          T8_ASSERT (!curve.IsNull ());
-          /* Calculate point on curve with interpolated parameters */
-          curve->D0 (interpolated_curve_param, pnt);
+            /* Retrieve the curve of the edge */
+            T8_ASSERT (edges[t8_face_edge_to_tree_edge[T8_ECLASS_HEX][i_faces][i_face_edge]]
+                       <= occ_shape_edge_map.Size ());
+            curve = BRep_Tool::Curve (TopoDS::Edge (occ_shape_edge_map.FindKey (
+                                        edges[t8_face_edge_to_tree_edge[T8_ECLASS_HEX][i_faces][i_face_edge]])),
+                                      first, last);
+            /* Check if curve is valid */
+            T8_ASSERT (!curve.IsNull ());
+            /* Calculate point on curve with interpolated parameters */
+            curve->D0 (interpolated_curve_param[offset_1d], pnt);
 
-          /* Calculate the displacement generated by the presence of the curve */
-          if (i_face_edge & 1) {
-            for (int dim = 0; dim <= 2; ++dim) {
-              face_displacement_from_edges[dim] += (1 - ref_coords[orthogonal_direction_of_edge_on_face])
-                                                   * (pnt.Coord (dim + 1) - interpolated_edge_coordinates[dim]);
+            /* Calculate the displacement generated by the presence of the curve */
+            if (i_face_edge & 1) {
+              for (int dim = 0; dim <= 2; ++dim) {
+                face_displacement_from_edges[dim + offset_3d]
+                  += (1 - ref_coords[orthogonal_direction_of_edge_on_face + offset_3d])
+                     * (pnt.Coord (dim + 1) - interpolated_edge_coordinates[dim + offset_3d]);
+              }
             }
-          }
-          else {
-            for (int dim = 0; dim <= 2; ++dim) {
-              face_displacement_from_edges[dim] += (ref_coords[orthogonal_direction_of_edge_on_face])
-                                                   * (pnt.Coord (dim + 1) - interpolated_edge_coordinates[dim]);
+            else {
+              for (int dim = 0; dim <= 2; ++dim) {
+                face_displacement_from_edges[dim + offset_3d]
+                  += (ref_coords[orthogonal_direction_of_edge_on_face + offset_3d])
+                     * (pnt.Coord (dim + 1) - interpolated_edge_coordinates[dim + offset_3d]);
+              }
             }
-          }
-          /* Convert the interpolated parameter of the curve into the corresponding parameters on the surface */
-          const int num_face_nodes = t8_eclass_num_vertices[active_tree_class];
-          t8_geometry_occ::t8_geom_edge_parameter_to_face_parameters (
-            edges[t8_face_edge_to_tree_edge[T8_ECLASS_HEX][i_faces][i_face_edge]], faces[i_faces], num_face_nodes,
-            interpolated_curve_param, surface_parameters, surface_parameters_from_curve);
+            /* Convert the interpolated parameter of the curve into the corresponding parameters on the surface */
+            const int num_face_nodes = t8_eclass_num_vertices[active_tree_class];
+            t8_geometry_occ::t8_geom_edge_parameter_to_face_parameters (
+              edges[t8_face_edge_to_tree_edge[T8_ECLASS_HEX][i_faces][i_face_edge]], faces[i_faces], num_face_nodes,
+              interpolated_curve_param[offset_1d], surface_parameters, surface_parameters_from_curve);
 
-          /* Calculate the displacement between the interpolated parameters on the surface 
-           * and the parameters on the surface converted from the parameter of the curve
-           * and scale them with the corresponding ref coord */
-          if (i_face_edge & 1) {
-            for (int dim = 0; dim < 2; ++dim) {
-              surface_parameter_displacement_from_edges[dim]
-                += (1 - ref_coords[orthogonal_direction_of_edge_on_face])
-                   * (surface_parameters_from_curve[dim] - interpolated_surface_parameters_on_edge[dim]);
+            /* Calculate the displacement between the interpolated parameters on the surface 
+            * and the parameters on the surface converted from the parameter of the curve
+            * and scale them with the corresponding ref coord */
+            if (i_face_edge & 1) {
+              for (int dim = 0; dim < 2; ++dim) {
+                surface_parameter_displacement_from_edges[dim + offset_2d]
+                  += (1 - ref_coords[orthogonal_direction_of_edge_on_face + offset_3d])
+                     * (surface_parameters_from_curve[dim + offset_2d]
+                        - interpolated_surface_parameters_on_edge[dim + offset_2d]);
+              }
             }
-          }
-          else {
-            for (int dim = 0; dim < 2; ++dim) {
-              surface_parameter_displacement_from_edges[dim]
-                += ref_coords[orthogonal_direction_of_edge_on_face]
-                   * (surface_parameters_from_curve[dim] - interpolated_surface_parameters_on_edge[dim]);
+            else {
+              for (int dim = 0; dim < 2; ++dim) {
+                surface_parameter_displacement_from_edges[dim + offset_2d]
+                  += ref_coords[orthogonal_direction_of_edge_on_face + offset_3d]
+                     * (surface_parameters_from_curve[dim + offset_2d]
+                        - interpolated_surface_parameters_on_edge[dim + offset_2d]);
+              }
             }
           }
         }
       }
 
-      /* Do a bilinear interpolation between the nodes of the face and the parameters of the face */
-      interpolation_coeffs[0] = ref_coords[(face_normal_direction + 1) % 3];
-      interpolation_coeffs[1] = ref_coords[(face_normal_direction + 2) % 3];
-      /* The normal vectors of the faces 0, 1, 4, 5 of a hex point in the same direction
-       * as the corresponding axis (normal(f0) = (1, 0, 0)). The faces 2 and 3 are oriented
-       * in the other direction (normal(f2) = (0, -1, 0)). Therefore we have to switch two 
-       * vertices to change the orientation. Here we switch vertex 1 and 2. */
-      double temp_surface_parameters[8];
-      memcpy (temp_surface_parameters, surface_parameters, sizeof (double) * 8);
+      for (size_t coord = 0; coord < num_coords; ++coord) {
+        const int offset_2d = coord * 2;
+        const int offset_3d = coord * 3;
+        /* Do a bilinear interpolation between the nodes of the face and the parameters of the face */
+        interpolation_coeffs[offset_3d] = ref_coords[((face_normal_direction + 1) % 3) + offset_3d];
+        interpolation_coeffs[offset_3d + 1] = ref_coords[((face_normal_direction + 2) % 3) + offset_3d];
+        /* The normal vectors of the faces 0, 1, 4, 5 of a hex point in the same direction
+        * as the corresponding axis (normal(f0) = (1, 0, 0)). The faces 2 and 3 are oriented
+        * in the other direction (normal(f2) = (0, -1, 0)). Therefore we have to switch two 
+        * vertices to change the orientation. Here we switch vertex 1 and 2. */
+        double temp_surface_parameters[8];
+        memcpy (temp_surface_parameters, surface_parameters, sizeof (double) * 8);
 
-      if (face_normal_direction == 1) {
-        double temp;
-        /* Switch vertex coordinates */
+        if (face_normal_direction == 1) {
+          double temp;
+          /* Switch vertex coordinates */
+          for (int dim = 0; dim < 3; ++dim) {
+            temp = temp_face_vertices[1 * 3 + dim];
+            temp_face_vertices[1 * 3 + dim] = temp_face_vertices[2 * 3 + dim];
+            temp_face_vertices[2 * 3 + dim] = temp;
+          }
+          /* Switch vertex parameters */
+          for (int dim = 0; dim < 2; ++dim) {
+            temp = temp_surface_parameters[1 * 2 + dim];
+            temp_surface_parameters[1 * 2 + dim] = temp_surface_parameters[2 * 2 + dim];
+            temp_surface_parameters[2 * 2 + dim] = temp;
+          }
+        }
+        /* The actual bilinear interpolations */
+        t8_geom_linear_interpolation (interpolation_coeffs + offset_3d, temp_face_vertices, 3, 2,
+                                      interpolated_coords + offset_3d);
+        t8_geom_linear_interpolation (interpolation_coeffs + offset_3d, temp_surface_parameters, 2, 2,
+                                      interpolated_surface_params + offset_2d);
+
         for (int dim = 0; dim < 3; ++dim) {
-          temp = temp_face_vertices[1 * 3 + dim];
-          temp_face_vertices[1 * 3 + dim] = temp_face_vertices[2 * 3 + dim];
-          temp_face_vertices[2 * 3 + dim] = temp;
+          /* Correct the interpolated coordinates with the displacement generated by the linked edges */
+          interpolated_coords[dim + offset_3d] += face_displacement_from_edges[dim + offset_3d];
         }
-        /* Switch vertex parameters */
+
         for (int dim = 0; dim < 2; ++dim) {
-          temp = temp_surface_parameters[1 * 2 + dim];
-          temp_surface_parameters[1 * 2 + dim] = temp_surface_parameters[2 * 2 + dim];
-          temp_surface_parameters[2 * 2 + dim] = temp;
+          /* Correct the interpolated parameters with the parameter displacement generated by the edges */
+          interpolated_surface_params[dim + offset_2d] += surface_parameter_displacement_from_edges[dim + offset_2d];
         }
-      }
-      /* The actual bilinear interpolations */
-      t8_geom_linear_interpolation (interpolation_coeffs, temp_face_vertices, 3, 2, interpolated_coords);
-      t8_geom_linear_interpolation (interpolation_coeffs, temp_surface_parameters, 2, 2, interpolated_surface_params);
 
-      for (int dim = 0; dim < 3; ++dim) {
-        /* Correct the interpolated coordinates with the displacement generated by the linked edges */
-        interpolated_coords[dim] += face_displacement_from_edges[dim];
-      }
+        /* Retrieve the surface of the edge */
+        T8_ASSERT (faces[i_faces] <= occ_shape_face_map.Size ());
+        surface = BRep_Tool::Surface (TopoDS::Face (occ_shape_face_map.FindKey (faces[i_faces])));
 
-      for (int dim = 0; dim < 2; ++dim) {
-        /* Correct the interpolated parameters with the parameter displacement generated by the edges */
-        interpolated_surface_params[dim] += surface_parameter_displacement_from_edges[dim];
-      }
+        /* Check if surface is valid */
+        T8_ASSERT (!surface.IsNull ());
 
-      /* Retrieve the surface of the edge */
-      T8_ASSERT (faces[i_faces] <= occ_shape_face_map.Size ());
-      surface = BRep_Tool::Surface (TopoDS::Face (occ_shape_face_map.FindKey (faces[i_faces])));
+        /* Compute point on surface with interpolated parameters */
+        surface->D0 (interpolated_surface_params[offset_2d], interpolated_surface_params[offset_2d + 1], pnt);
 
-      /* Check if surface is valid */
-      T8_ASSERT (!surface.IsNull ());
-
-      /* Compute point on surface with interpolated parameters */
-      surface->D0 (interpolated_surface_params[0], interpolated_surface_params[1], pnt);
-
-      /* Compute the displacement between surface and interpolated coords, scale them with the appropriate ref_coord 
-       * and add them to the out_coords. */
-      if (i_faces & 1) {
-        out_coords[0] += (pnt.X () - interpolated_coords[0]) * (1 - ref_coords[face_normal_direction]);
-        out_coords[1] += (pnt.Y () - interpolated_coords[1]) * (1 - ref_coords[face_normal_direction]);
-        out_coords[2] += (pnt.Z () - interpolated_coords[2]) * (1 - ref_coords[face_normal_direction]);
-      }
-      else {
-        out_coords[0] += (pnt.X () - interpolated_coords[0]) * ref_coords[face_normal_direction];
-        out_coords[1] += (pnt.Y () - interpolated_coords[1]) * ref_coords[face_normal_direction];
-        out_coords[2] += (pnt.Z () - interpolated_coords[2]) * ref_coords[face_normal_direction];
+        /* Compute the displacement between surface and interpolated coords, scale them with the appropriate ref_coord 
+        * and add them to the out_coords. */
+        if (i_faces & 1) {
+          out_coords[offset_3d]
+            += (pnt.X () - interpolated_coords[offset_3d]) * (1 - ref_coords[face_normal_direction + offset_3d]);
+          out_coords[offset_3d + 1]
+            += (pnt.Y () - interpolated_coords[offset_3d + 1]) * (1 - ref_coords[face_normal_direction + offset_3d]);
+          out_coords[offset_3d + 2]
+            += (pnt.Z () - interpolated_coords[offset_3d + 2]) * (1 - ref_coords[face_normal_direction + offset_3d]);
+        }
+        else {
+          out_coords[offset_3d]
+            += (pnt.X () - interpolated_coords[offset_3d]) * ref_coords[face_normal_direction + offset_3d];
+          out_coords[offset_3d + 1]
+            += (pnt.Y () - interpolated_coords[offset_3d + 1]) * ref_coords[face_normal_direction + offset_3d];
+          out_coords[offset_3d + 2]
+            += (pnt.Z () - interpolated_coords[offset_3d + 2]) * ref_coords[face_normal_direction + offset_3d];
+        }
       }
     }
   }
