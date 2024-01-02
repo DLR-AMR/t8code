@@ -599,9 +599,9 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
   const t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
   const int num_edges = t8_eclass_num_edges[active_tree_class];
   const int num_faces = t8_eclass_num_faces[active_tree_class];
-  double interpolated_coords[3], interpolated_curve_param, *interpolated_surface_params, cur_delta[3];
+  double interpolated_coords[3], interpolated_curve_param, interpolated_surface_params[2], cur_delta[3];
   gp_Pnt pnt;
-  double *interpolation_coeffs, temp_face_vertices[T8_ECLASS_MAX_CORNERS_2D * 3], temp_edge_vertices[2 * 3];
+  double interpolation_coeffs[3], temp_face_vertices[T8_ECLASS_MAX_CORNERS_2D * 3], temp_edge_vertices[2 * 3];
   Handle_Geom_Curve curve;
   Handle_Geom_Surface surface;
   Standard_Real first, last;
@@ -649,8 +649,6 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
       T8_ASSERT (parameters != NULL);
 
       for (size_t coord = 0; coord < num_coords; ++coord) {
-        const int offset_1d = coord * 1;
-        const int offset_2d = coord * 2;
         const int offset_3d = coord * 3;
         /* Curves have only one parameter u, surfaces have two, u and v.
         * Therefore, we have to distinguish if the edge has a curve or surface linked to it. */
@@ -764,26 +762,25 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
             ltreeid);
           T8_ASSERT (curve_parameters != NULL);
           for (size_t coord = 0; coord < num_coords; ++coord) {
-            const int offset_1d = coord * 1;
             const int offset_2d = coord * 2;
             const int offset_3d = coord * 3;
             /* Interpolate linearly between the parameters of the two nodes on the curve */
             t8_geom_linear_interpolation (&ref_coords[edge_direction + offset_3d], curve_parameters, 1, 1,
                                           &interpolated_curve_param);
             /* Do the same interpolation but with the surface parameters of the same two nodes as above */
-            double *interpolated_surface_parameters_on_edge;
+            double interpolated_surface_parameters_on_edge[2];
             double edge_parameters_on_face[4];
             t8_geom_get_face_vertices ((t8_eclass_t) t8_eclass_face_types[active_tree_class][i_faces],
                                        surface_parameters, i_face_edge, 2, edge_parameters_on_face);
             t8_geom_linear_interpolation (&ref_coords[edge_direction + offset_3d], edge_parameters_on_face, 2, 1,
-                                          interpolated_surface_parameters_on_edge + offset_2d);
+                                          interpolated_surface_parameters_on_edge);
             /* Do the same interpolation but this time between the coordinates of the same two nodes as above */
             double interpolated_edge_coordinates[3];
             double edge_vertices_on_face[6];
             t8_geom_get_face_vertices ((t8_eclass_t) t8_eclass_face_types[active_tree_class][i_faces],
                                        temp_face_vertices, i_face_edge, 3, edge_vertices_on_face);
             t8_geom_linear_interpolation (&ref_coords[edge_direction + offset_3d], edge_vertices_on_face, 3, 1,
-                                          interpolated_edge_coordinates + offset_3d);
+                                          interpolated_edge_coordinates);
 
             /* Retrieve the curve of the edge */
             T8_ASSERT (edges[t8_face_edge_to_tree_edge[T8_ECLASS_HEX][i_faces][i_face_edge]]
@@ -869,9 +866,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
           }
         }
         /* The actual bilinear interpolations */
-        t8_geom_linear_interpolation (interpolation_coeffs + offset_3d, temp_face_vertices, 3, 2,
-                                      interpolated_coords + offset_3d);
-        t8_geom_linear_interpolation (interpolation_coeffs + offset_3d, temp_surface_parameters, 2, 2,
+        t8_geom_linear_interpolation (interpolation_coeffs, temp_face_vertices, 3, 2, interpolated_coords + offset_3d);
+        t8_geom_linear_interpolation (interpolation_coeffs, temp_surface_parameters, 2, 2,
                                       interpolated_surface_params + offset_2d);
 
         for (int dim = 0; dim < 3; ++dim) {
