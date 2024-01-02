@@ -22,6 +22,7 @@
 
 #include <gtest/gtest.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <test/t8_gtest_macros.hxx>
 
 /*
  * In this file we test whether the t8_element_count_leafs{_from_root}
@@ -130,5 +131,4 @@ TEST_P (class_element_leafs, test_element_count_leafs_one_level)
   class_scheme->t8_element_destroy (1, &element);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_element_count_leafs, class_element_leafs,
-                          testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_element_count_leafs, class_element_leafs, AllEclasses);

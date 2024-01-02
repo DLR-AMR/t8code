@@ -27,17 +27,33 @@
 #include "t8_gtest_dfs_base.hxx"
 #include <test/t8_gtest_macros.hxx>
 
-class class_find_parent: public TestDFS {
+class class_test_boundary_extrude: public TestDFS {
+  /* For elements that are on the face of the root element, check that creating the boundary element
+   * and extruding it results in the original element
+    */
   virtual void
   check_element ()
   {
-    const int num_children = ts->t8_element_num_children (element);
-    for (int ichild = 0; ichild < num_children; ichild++) {
-      ts->t8_element_child (element, ichild, child);
-      /* Compute parent of child */
-      ts->t8_element_parent (child, test_parent);
-      /* Check that it is equal to the original element */
-      EXPECT_ELEM_EQ (ts, element, test_parent);
+    const int num_faces = ts->t8_element_num_faces (element);
+    for (int iface = 0; iface < num_faces; iface++) {
+      /* Iterate over all faces that are also root faces and determine the face element */
+      if (ts->t8_element_is_root_boundary (element, iface)) {
+        /* Get face scheme */
+        const int tree_face = ts->t8_element_tree_face (element, iface);
+        const t8_eclass_t face_eclass = (t8_eclass_t) t8_eclass_face_types[eclass][tree_face];
+        const t8_eclass_scheme_c *face_ts = scheme->eclass_schemes[face_eclass];
+
+        t8_element_t *boundary;
+        face_ts->t8_element_new (1, &boundary);
+
+        ts->t8_element_boundary_face (element, iface, boundary, face_ts);
+
+        ts->t8_element_extrude_face (boundary, face_ts, check, tree_face);
+
+        EXPECT_ELEM_EQ (ts, element, check);
+
+        face_ts->t8_element_destroy (1, &boundary);
+      }
     }
   }
 
@@ -47,24 +63,21 @@ class class_find_parent: public TestDFS {
   {
     dfs_test_setup ();
     /* Get element and initialize it */
-    ts->t8_element_new (1, &child);
-    ts->t8_element_new (1, &test_parent);
+    ts->t8_element_new (1, &check);
   }
   void
   TearDown () override
   {
     /* Destroy element */
-    ts->t8_element_destroy (1, &child);
-    ts->t8_element_destroy (1, &test_parent);
+    ts->t8_element_destroy (1, &check);
 
     /* Destroy DFS test */
     dfs_test_teardown ();
   }
-  t8_element_t *child;
-  t8_element_t *test_parent;
+  t8_element_t *check;
 };
 
-TEST_P (class_find_parent, t8_compute_child_find_parent)
+TEST_P (class_test_boundary_extrude, test_boundary_extrude_dfs)
 {
 #ifdef T8_ENABLE_LESS_TESTS
   const int maxlvl = 4;
@@ -74,4 +87,4 @@ TEST_P (class_find_parent, t8_compute_child_find_parent)
   check_recursive_dfs_to_max_lvl (maxlvl);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_find_parent, class_find_parent, AllEclasses);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_boundary_extrude, AllEclasses);

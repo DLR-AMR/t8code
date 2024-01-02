@@ -125,6 +125,16 @@ class t8_geometry_sincos: public t8_geometry {
   {
     /* Do nothing */
   }
+
+  /**
+   * Get the type of this geometry.
+   * \return The type.
+   */
+  t8_geometry_type_t
+  t8_geom_get_type () const
+  {
+    return T8_GEOMETRY_TYPE_UNDEFINED;
+  }
 };
 
 /** This geometry maps the unit square \f$ [0,1]^2 \f$ to the moebius strip.
@@ -180,6 +190,16 @@ class t8_geometry_moebius: public t8_geometry_with_vertices {
     SC_ABORT_NOT_REACHED ();
   }
 
+  /**
+   * Get the type of this geometry.
+   * \return The type.
+   */
+  t8_geometry_type_t
+  t8_geom_get_type () const
+  {
+    return T8_GEOMETRY_TYPE_UNDEFINED;
+  }
+
   /* Load tree data is inherited from vertices geometry. */
 };
 
@@ -228,6 +248,16 @@ class t8_geometry_cylinder: public t8_geometry {
   t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
   {
     /* Do nothing */
+  }
+
+  /**
+   * Get the type of this geometry.
+   * \return The type.
+   */
+  t8_geometry_type_t
+  t8_geom_get_type () const
+  {
+    return T8_GEOMETRY_TYPE_UNDEFINED;
   }
 };
 
@@ -284,6 +314,16 @@ class t8_geometry_circle: public t8_geometry_with_vertices {
                              double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
+  }
+
+  /**
+   * Get the type of this geometry.
+   * \return The type.
+   */
+  t8_geometry_type_t
+  t8_geom_get_type () const
+  {
+    return T8_GEOMETRY_TYPE_UNDEFINED;
   }
 
   /* Load tree data is inherited from vertices geometry. */
@@ -357,6 +397,16 @@ class t8_geometry_moving: public t8_geometry {
     /* Do nothing */
   }
 
+  /**
+   * Get the type of this geometry.
+   * \return The type.
+   */
+  t8_geometry_type_t
+  t8_geom_get_type () const
+  {
+    return T8_GEOMETRY_TYPE_UNDEFINED;
+  }
+
  protected:
   const double *ptime; /* Time pointer to outside time variable */
 };
@@ -404,6 +454,16 @@ class t8_geometry_cube_zdistorted: public t8_geometry {
   t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
   {
     /* Do nothing */
+  }
+
+  /**
+   * Get the type of this geometry.
+   * \return The type.
+   */
+  t8_geometry_type_t
+  t8_geom_get_type () const
+  {
+    return T8_GEOMETRY_TYPE_UNDEFINED;
   }
 };
 

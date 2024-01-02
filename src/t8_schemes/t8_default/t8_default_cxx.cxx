@@ -74,10 +74,10 @@ t8_eclass_scheme_is_default (t8_eclass_scheme_c *ts)
     return T8_COMMON_IS_TYPE (ts, t8_default_scheme_tet_c *);
   case T8_ECLASS_PRISM:
     return T8_COMMON_IS_TYPE (ts, t8_default_scheme_prism_c *);
+  case T8_ECLASS_PYRAMID:
+    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_pyramid_c *);
   default:
     SC_ABORT_NOT_REACHED ();
-    /* TODO: Add pyramid as soon as pyramid scheme is implemented */
-    /* TODO: Add a test for this function */
   }
   return 0; /* Default return value false */
 }

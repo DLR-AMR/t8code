@@ -29,9 +29,7 @@
 #ifndef T8_FOREST_PROFILING_H
 #define T8_FOREST_PROFILING_H
 
-/*TODO: Check if all headers are needed */
 #include <sc_statistics.h>
-#include <t8_cmesh.h>
 T8_EXTERN_C_BEGIN ();
 
 /** Enable or disable profiling for a forest. If profiling is enabled, runtimes
