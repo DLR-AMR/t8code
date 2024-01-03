@@ -86,20 +86,15 @@ TEST_P (class_forest_face_normal, back_and_forth)
         int *dual_faces;
         t8_locidx_t *neigh_ids;
 
-
-        t8_forest_leaf_face_neighbors (forest, itree, element, &neighbors, iface, &dual_faces, &num_neighbors,
-                                       &neigh_ids, &neigh_scheme, forest_is_balanced);
+        t8_gloidx_t gneightree;
+        t8_forest_leaf_face_neighbors_ext (forest, itree, element, &neighbors, iface, &dual_faces, &num_neighbors,
+                                           &neigh_ids, &neigh_scheme, forest_is_balanced, &gneightree);
 
         /* Iterate and compute their facenormal */
-
         for(int ineigh = 0; ineigh < num_neighbors; ineigh++){
+          t8_locidx_t lneightree = t8_forest_get_local_or_ghost_id (forest, gneightree);
           double neigh_face_normal[3];
-          t8_locidx_t ineightree;
-          /* Skip ghost elements, because those can't be passed to t8_forest_element_face_normal */
-          if (neigh_ids[ineigh] >= t8_forest_get_local_num_elements(forest))continue;
-
-          t8_element_t *neigh_elem = t8_forest_get_element(forest, neigh_ids[ineigh], &ineightree);
-          t8_forest_element_face_normal(forest, ineightree, neigh_elem, dual_faces[ineigh], neigh_face_normal);
+          t8_forest_element_face_normal (forest, lneightree, neighbors[ineigh], dual_faces[ineigh], neigh_face_normal);
           EXPECT_NEAR(face_normal[0], -neigh_face_normal[0], 10*T8_PRECISION_EPS);
           EXPECT_NEAR(face_normal[1], -neigh_face_normal[1], 10*T8_PRECISION_EPS);
           EXPECT_NEAR(face_normal[2], -neigh_face_normal[2], 10*T8_PRECISION_EPS);
