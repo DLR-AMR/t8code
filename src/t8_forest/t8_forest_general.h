@@ -448,6 +448,21 @@ t8_forest_get_eclass (const t8_forest_t forest, const t8_locidx_t ltreeid);
 t8_locidx_t
 t8_forest_get_local_id (const t8_forest_t forest, const t8_gloidx_t gtreeid);
 
+/** Given a global tree id compute the forest local id of this tree.
+ * If the tree is a local tree, then the local id is between 0 and the number
+ * of local trees. If the tree is a ghost, then the local id is between num_local_trees and
+ * num_local_trees + num_ghost_trees.
+ * If the tree is neither a local tree nor a ghost tree, a negative number is returned.
+ * \param [in]      forest The forest.
+ * \param [in]      gtreeid The global id of a tree.
+ * \return                 The tree's local id in \a forest, if it is a local tree.
+ *                         num_local_trees + the ghosts id, if it is a ghost tree.
+ *                         A negative number if not.
+ * \see https://github.com/DLR-AMR/t8code/wiki/Tree-indexing for more details about tree indexing.
+ */
+t8_locidx_t
+t8_forest_get_local_or_ghost_id (const t8_forest_t forest, const t8_gloidx_t gtreeid);
+
 /** Given the local id of a tree in a forest, compute the tree's local id in the associated cmesh.
  * \param [in] forest    The forest.
  * \param [in] ltreeid   The local id of a tree or ghost in the forest.
