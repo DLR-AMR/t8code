@@ -67,15 +67,15 @@ TEST_P (class_forest_face_normal, back_and_forth)
   for (t8_locidx_t itree = 0; itree < local_num_trees; itree++) {
     const t8_locidx_t tree_elements = t8_forest_get_tree_num_elements (forest, itree);
     const t8_eclass_t tree_eclass = t8_forest_get_tree_class (forest, itree);
-    ASSERT_EQ(eclass, tree_eclass);
-    const t8_eclass_scheme_c* escheme = t8_forest_get_eclass_scheme(forest, tree_eclass);
+    ASSERT_EQ (eclass, tree_eclass);
+    const t8_eclass_scheme_c *escheme = t8_forest_get_eclass_scheme (forest, tree_eclass);
     for (t8_locidx_t ielement = 0; ielement < tree_elements; ielement++) {
       const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
-      const int num_faces = escheme->t8_element_num_faces(element);
-      for (int iface = 0; iface < num_faces; iface++){
+      const int num_faces = escheme->t8_element_num_faces (element);
+      for (int iface = 0; iface < num_faces; iface++) {
         /* Compute facenormal */
-        double face_normal[3] = {0,0,0};
-        t8_forest_element_face_normal(forest,itree,element,iface,face_normal);
+        double face_normal[3] = { 0, 0, 0 };
+        t8_forest_element_face_normal (forest, itree, element, iface, face_normal);
 
         /* Get all face neighbors */
 
@@ -91,16 +91,16 @@ TEST_P (class_forest_face_normal, back_and_forth)
                                            &neigh_ids, &neigh_scheme, forest_is_balanced, &gneightree);
 
         /* Iterate and compute their facenormal */
-        for(int ineigh = 0; ineigh < num_neighbors; ineigh++){
+        for (int ineigh = 0; ineigh < num_neighbors; ineigh++) {
           t8_locidx_t lneightree = t8_forest_get_local_or_ghost_id (forest, gneightree);
           double neigh_face_normal[3];
           t8_forest_element_face_normal (forest, lneightree, neighbors[ineigh], dual_faces[ineigh], neigh_face_normal);
-          EXPECT_NEAR(face_normal[0], -neigh_face_normal[0], 10*T8_PRECISION_EPS);
-          EXPECT_NEAR(face_normal[1], -neigh_face_normal[1], 10*T8_PRECISION_EPS);
-          EXPECT_NEAR(face_normal[2], -neigh_face_normal[2], 10*T8_PRECISION_EPS);
+          EXPECT_NEAR (face_normal[0], -neigh_face_normal[0], 10 * T8_PRECISION_EPS);
+          EXPECT_NEAR (face_normal[1], -neigh_face_normal[1], 10 * T8_PRECISION_EPS);
+          EXPECT_NEAR (face_normal[2], -neigh_face_normal[2], 10 * T8_PRECISION_EPS);
         }
 
-        if(num_neighbors > 0) {
+        if (num_neighbors > 0) {
           neigh_scheme->t8_element_destroy (num_neighbors, neighbors);
           T8_FREE (neigh_ids);
           T8_FREE (neighbors);
