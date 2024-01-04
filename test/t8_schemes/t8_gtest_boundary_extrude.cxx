@@ -27,7 +27,7 @@
 #include "t8_gtest_dfs_base.hxx"
 #include <test/t8_gtest_macros.hxx>
 
-class class_test_boundary_extrude: public TestDFS{
+class class_test_boundary_extrude: public TestDFS {
   /* For elements that are on the face of the root element, check that creating the boundary element
    * and extruding it results in the original element
     */
@@ -37,7 +37,7 @@ class class_test_boundary_extrude: public TestDFS{
     const int num_faces = ts->t8_element_num_faces (element);
     for (int iface = 0; iface < num_faces; iface++) {
       /* Iterate over all faces that are also root faces and determine the face element */
-      if (ts->t8_element_is_root_boundary (element, iface)){
+      if (ts->t8_element_is_root_boundary (element, iface)) {
         /* Get face scheme */
         const int tree_face = ts->t8_element_tree_face (element, iface);
         const t8_eclass_t face_eclass = (t8_eclass_t) t8_eclass_face_types[eclass][tree_face];
@@ -56,14 +56,14 @@ class class_test_boundary_extrude: public TestDFS{
       }
     }
   }
+
  protected:
   void
   SetUp () override
   {
-    dfs_test_setup();
+    dfs_test_setup ();
     /* Get element and initialize it */
     ts->t8_element_new (1, &check);
-
   }
   void
   TearDown () override
@@ -72,7 +72,7 @@ class class_test_boundary_extrude: public TestDFS{
     ts->t8_element_destroy (1, &check);
 
     /* Destroy DFS test */
-    dfs_test_teardown();
+    dfs_test_teardown ();
   }
   t8_element_t *check;
 };
@@ -83,9 +83,8 @@ TEST_P (class_test_boundary_extrude, test_boundary_extrude_dfs)
   const int maxlvl = 4;
 #else
   const int maxlvl = 6;
-#endif 
-  check_recursive_dfs_to_max_lvl(maxlvl);
+#endif
+  check_recursive_dfs_to_max_lvl (maxlvl);
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_boundary_extrude, AllEclasses);
-  

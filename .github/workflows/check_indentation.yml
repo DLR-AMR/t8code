@@ -55,7 +55,7 @@ jobs:
     - name: Install indent
       run: pip install clang-format==17.0.1
     - name: Indentation check
-      run: cd scripts/ && ./check_if_all_files_indented.scp &2>1 > indent_script_output.txt
+      run: cd scripts/ && ./check_if_all_files_indented.scp &> >(tee -a indent_script_output.txt)
     - name: Archive script output
     # Do this regardess of the result of the previous step.
     # We especially want to upload the result when the check fails.
@@ -63,5 +63,5 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: t8code indentation report
-        path: indent_script_output.txt
+        path: scripts/indent_script_output.txt
         
