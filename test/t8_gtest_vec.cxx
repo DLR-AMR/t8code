@@ -55,8 +55,8 @@ TEST (t8_gtest_vec, dist)
   const t8_test_vec arbitrary = { -.05, 3.14159, 42 };
   const double distzeroonetwothree = sqrt (1 + 4 + 9);
   const double distarbitraryonetwothree = 39.030830477;
-  EXPECT_VEC_EQ (zero, zero, T8_PRECISION_EPS);
-  EXPECT_VEC_EQ (onetwothree, onetwothree, T8_PRECISION_EPS);
+  EXPECT_VEC3_EQ (zero, zero, T8_PRECISION_EPS);
+  EXPECT_VEC3_EQ (onetwothree, onetwothree, T8_PRECISION_EPS);
   EXPECT_NEAR (t8_vec_dist (onetwothree, zero), distzeroonetwothree, epsilon);
   EXPECT_NEAR (t8_vec_dist (zero, onetwothree), distzeroonetwothree, epsilon);
   EXPECT_NEAR (t8_vec_dist (arbitrary, onetwothree), distarbitraryonetwothree, epsilon);
@@ -244,9 +244,9 @@ TEST (t8_gtest_vec, cross)
 
   /* e1 x e2 = e3 */
   t8_vec_cross (e1, e2, cross);
-  EXPECT_VEC_EQ (cross, e3, T8_PRECISION_EPS);
+  EXPECT_VEC3_EQ (cross, e3, T8_PRECISION_EPS);
 
   /* e2 x e3 = e1 */
   t8_vec_cross (e2, e3, cross);
-  EXPECT_VEC_EQ (cross, e1, T8_PRECISION_EPS);
+  EXPECT_VEC3_EQ (cross, e1, T8_PRECISION_EPS);
 }

@@ -78,8 +78,8 @@ element_equality (const char *ts_expr, const char *elem_1_expr, const char *elem
  * \return testing::AssertionResult 
  */
 testing::AssertionResult
-vec_equality (const char *vec_1_expr, const char *vec_2_expr, const char *precision_expr, const double vec_1[3],
-              const double vec_2[3], const double precision)
+vec3_equality (const char *vec_1_expr, const char *vec_2_expr, const char *precision_expr, const double vec_1[3],
+               const double vec_2[3], const double precision)
 {
   if (t8_vec_eq (vec_1, vec_2, precision)) {
     return testing::AssertionSuccess ();
@@ -96,6 +96,6 @@ vec_equality (const char *vec_1_expr, const char *vec_2_expr, const char *precis
   }
 }
 
-#define EXPECT_VEC_EQ(vec_1, vec_2, precision) EXPECT_PRED_FORMAT3 (vec_equality, (vec_1), (vec_2), (precision))
+#define EXPECT_VEC3_EQ(vec_1, vec_2, precision) EXPECT_PRED_FORMAT3 (vec3_equality, (vec_1), (vec_2), (precision))
 
 #endif /* CUSTOM_ASSERTION_HXX */
