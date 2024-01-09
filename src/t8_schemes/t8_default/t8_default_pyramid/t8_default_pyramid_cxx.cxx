@@ -24,6 +24,7 @@
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_tet/t8_default_tet_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.h>
+#include <t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.h>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h>
 
 typedef t8_dpyramid_t t8_default_pyramid_t;
@@ -443,23 +444,57 @@ t8_default_scheme_pyramid_c::~t8_default_scheme_pyramid_c ()
    * However we need to provide an implementation of the destructor
    * and hence this empty function. */
 }
+
 int
 t8_default_scheme_pyramid_c::t8_element_pack (const t8_element_t *elements, int count, void *send_buffer,
                                               int buffer_size, int *position, sc_MPI_Comm comm) const
 {
-  SC_ABORT ("Not yet implemented");
+  int mpiret;
+  t8_default_pyramid_t *pyramids = (t8_default_pyramid_t *) elements;
+  for (int ielem = 0; ielem < count; ielem++) {
+    mpiret = t8_dtet_element_pack (&pyramids[ielem].pyramid, 1, send_buffer, buffer_size, position, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Pack (&pyramids[ielem].switch_shape_at_level, 1, sc_MPI_INT8_T, send_buffer, buffer_size, position,
+                          comm);
+    SC_CHECK_MPI (mpiret);
+  }
+  return 0;
 }
+
 int
 t8_default_scheme_pyramid_c::t8_element_pack_size (int count, sc_MPI_Comm comm, int *pack_size) const
 {
-  SC_ABORT ("Not yet implemented");
+  int singlesize = 0;
+  int datasize = 0;
+  int mpiret;
+
+  mpiret = t8_dtet_element_pack_size (1, comm, &datasize);
+  SC_CHECK_MPI (mpiret);
+  singlesize += datasize;
+
+  mpiret = sc_MPI_Pack_size (1, sc_MPI_INT8_T, comm, &datasize);
+  SC_CHECK_MPI (mpiret);
+  singlesize += datasize;
+
+  *pack_size = count * singlesize;
+  return 0;
 }
 
 int
 t8_default_scheme_pyramid_c::t8_element_unpack (void *recvbuf, int buffer_size, int *position, t8_element_t *elements,
                                                 int count, sc_MPI_Comm comm) const
 {
-  SC_ABORT ("Not yet implemented");
+  int mpiret;
+  t8_default_pyramid_t *pyramids = (t8_default_pyramid_t *) elements;
+  for (int ielem = 0; ielem < count; ielem++) {
+    mpiret = t8_dtet_element_unpack (recvbuf, buffer_size, position, &pyramids[ielem].pyramid, 1, comm);
+    SC_CHECK_MPI (mpiret);
+
+    mpiret
+      = sc_MPI_Unpack (recvbuf, buffer_size, position, &pyramids[ielem].switch_shape_at_level, 1, sc_MPI_INT8_T, comm);
+    SC_CHECK_MPI (mpiret);
+  }
+  return 0;
 }
 
 T8_EXTERN_C_END ();

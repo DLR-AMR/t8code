@@ -569,19 +569,20 @@ int
 t8_default_scheme_tet_c::t8_element_pack (const t8_element_t *elements, int count, void *send_buffer, int buffer_size,
                                           int *position, sc_MPI_Comm comm) const
 {
-  SC_ABORT ("Not yet implemented");
+  return t8_dtet_element_pack ((const t8_dtet_t *) elements, count, send_buffer, buffer_size, position, comm);
 }
+
 int
 t8_default_scheme_tet_c::t8_element_pack_size (int count, sc_MPI_Comm comm, int *pack_size) const
 {
-  SC_ABORT ("Not yet implemented");
+  return t8_dtet_element_pack_size (count, comm, pack_size);
 }
 
 int
 t8_default_scheme_tet_c::t8_element_unpack (void *recvbuf, int buffer_size, int *position, t8_element_t *elements,
                                             int count, sc_MPI_Comm comm) const
 {
-  SC_ABORT ("Not yet implemented");
+  return t8_dtet_element_unpack (recvbuf, buffer_size, position, (t8_dtet_t *) elements, count, comm);
 }
 
 T8_EXTERN_C_END ();

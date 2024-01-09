@@ -378,6 +378,17 @@ t8_dtet_is_valid (const t8_dtet_t *t);
 void
 t8_dtet_init (t8_dtet_t *t);
 
+int
+t8_dtet_element_pack (const t8_dtet_t *elements, int count, void *send_buffer, int buffer_size, int *position,
+                      sc_MPI_Comm comm);
+
+int
+t8_dtet_element_pack_size (int count, sc_MPI_Comm comm, int *pack_size);
+
+int
+t8_dtet_element_unpack (void *recvbuf, int buffer_size, int *position, t8_dtet_t *elements, int count,
+                        sc_MPI_Comm comm);
+
 T8_EXTERN_C_END ();
 
 #endif /* T8_DTET_BITS_H */

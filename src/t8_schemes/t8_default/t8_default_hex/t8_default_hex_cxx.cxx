@@ -666,12 +666,17 @@ int
 t8_default_scheme_hex_c::t8_element_pack (const t8_element_t *elements, int count, void *send_buffer, int buffer_size,
                                           int *position, sc_MPI_Comm comm) const
 {
+  int mpiret;
   p8est_quadrant_t *quads = (p8est_quadrant_t *) elements;
   for (int ielem = 0; ielem < count; ielem++) {
-    sc_MPI_Pack (&(quads[ielem].x), 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
-    sc_MPI_Pack (&quads[ielem].y, 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
-    sc_MPI_Pack (&quads[ielem].z, 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
-    sc_MPI_Pack (&quads[ielem].level, 1, sc_MPI_INT8_T, send_buffer, buffer_size, position, comm);
+    mpiret = sc_MPI_Pack (&(quads[ielem].x), 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Pack (&quads[ielem].y, 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Pack (&quads[ielem].z, 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Pack (&quads[ielem].level, 1, sc_MPI_INT8_T, send_buffer, buffer_size, position, comm);
+    SC_CHECK_MPI (mpiret);
   }
   return 0;
 }
@@ -681,13 +686,22 @@ t8_default_scheme_hex_c::t8_element_pack_size (int count, sc_MPI_Comm comm, int 
 {
   int singlesize = 0;
   int datasize = 0;
-  sc_MPI_Pack_size (1, sc_MPI_INT, comm, &datasize);
+  int mpiret;
+
+  mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &datasize);
+  SC_CHECK_MPI (mpiret);
   singlesize += datasize;
-  sc_MPI_Pack_size (1, sc_MPI_INT, comm, &datasize);
+
+  mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &datasize);
+  SC_CHECK_MPI (mpiret);
   singlesize += datasize;
-  sc_MPI_Pack_size (1, sc_MPI_INT, comm, &datasize);
+
+  mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &datasize);
+  SC_CHECK_MPI (mpiret);
   singlesize += datasize;
-  sc_MPI_Pack_size (1, sc_MPI_INT8_T, comm, &datasize);
+
+  mpiret = sc_MPI_Pack_size (1, sc_MPI_INT8_T, comm, &datasize);
+  SC_CHECK_MPI (mpiret);
   singlesize += datasize;
 
   *pack_size = count * singlesize;
@@ -698,12 +712,17 @@ int
 t8_default_scheme_hex_c::t8_element_unpack (void *recvbuf, int buffer_size, int *position, t8_element_t *elements,
                                             int count, sc_MPI_Comm comm) const
 {
+  int mpiret;
   p8est_quadrant_t *quads = (p8est_quadrant_t *) elements;
   for (int ielem = 0; ielem < count; ielem++) {
-    sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem].x), 1, sc_MPI_INT, comm);
-    sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem].y), 1, sc_MPI_INT, comm);
-    sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem].z), 1, sc_MPI_INT, comm);
-    sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem].level), 1, sc_MPI_INT8_T, comm);
+    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem].x), 1, sc_MPI_INT, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem].y), 1, sc_MPI_INT, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem].z), 1, sc_MPI_INT, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem].level), 1, sc_MPI_INT8_T, comm);
+    SC_CHECK_MPI (mpiret);
   }
   return 0;
 }
