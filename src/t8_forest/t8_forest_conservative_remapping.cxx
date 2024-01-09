@@ -31,6 +31,7 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_iterate.h> 
+#include <t8_element_cxx.hxx>
 #include <vector>
 
 T8_EXTERN_C_BEGIN ();
@@ -38,8 +39,7 @@ T8_EXTERN_C_BEGIN ();
 /* Search query, a set of points. */
 typedef struct
 { 
-  std::vector<double[3]> coordinates;/* The corners of our cell. */
-  int num_corners;
+  std::vector<double*> coordinates;/* The corners of our cell. */
   std::vector<t8_locidx_t> *intersection_cell_indices;
   std::vector<t8_locidx_t> *intersection_cell_treeid;
   double volume_cell;
@@ -56,6 +56,20 @@ typedef struct
   //Liste (Anzahl Zellen Zielgitter) von dynamischen structuren fuer die Zell-IDs des Ursprungsgitters 
   
 } t8_search_user_data_t;
+
+static void
+t8_forest_get_element_nodes (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+                                 std::vector<double *> out_coords)
+{
+  const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
+  const t8_eclass_scheme_c *scheme = t8_forest_get_eclass_scheme (forest, tree_class);
+  const t8_element_shape_t element_shape = scheme->t8_element_shape (element);
+  for( size_t icorner = 0; icorner < element_shape; icorner++ )
+  {
+    const double *ref_coords = t8_element_corner_ref_coords[element_shape][icorner];
+    t8_forest_element_from_ref_coords (forest, ltreeid, element, ref_coords, 1, out_coords[icorner], NULL );
+  }
+}
 
 /*
  * The search callback.
@@ -102,7 +116,7 @@ t8_tutorial_search_query_callback (t8_forest_t forest, t8_locidx_t ltreeid, cons
   /* Numerical tolerance for the is_inside_element check. */
   const double tolerance = 1e-8;
 
-  for( int icorner = 0; icorner < corners_of_cell->num_corners ; icorner++ )
+  for( int icorner = 0; icorner < corners_of_cell->coordinates.size(); icorner++ )
   {
     corner_is_inside_element = t8_forest_element_point_inside (forest, ltreeid, element, corners_of_cell->coordinates[icorner], tolerance);
     if (corner_is_inside_element) {
@@ -153,7 +167,8 @@ point_cloud_to_volume( std::vector<double[3]> points )
 static sc_array *
 t8_build_corners( t8_forest_t forest )
 {
-  int itree, ielem;
+  int ielem;
+  t8_locidx_t itree;
   sc_array *corners = sc_array_new_count (sizeof (t8_cell_corners_t), t8_forest_get_global_num_elements( forest ));
   for (itree = 0, ielem = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {
     const t8_locidx_t num_elem = t8_forest_get_tree_num_elements (forest, itree);
@@ -161,14 +176,21 @@ t8_build_corners( t8_forest_t forest )
     for (t8_locidx_t ielem_tree = 0; ielem_tree < num_elem; ielem_tree++, ielem++) {
       t8_cell_corners_t *corner
         = (t8_cell_corners_t *) sc_array_index_int (corners, ielem);
+      auto element = t8_forest_get_element ( forest, ielem_tree, &itree);
+
+      //Calculate the corner elements of an element
+      t8_forest_get_element_nodes(forest, itree, element, corner->coordinates );
+      corner->volume_cell = t8_forest_element_volume( forest, itree, element );
     }
   }
+  return corners;
 }
 
 void
 t8_forest_conservative_remapping_planar( t8_forest_t forest_old, t8_forest_t forest_new )
 {
-  int itree, ielem;
+  int ielem;
+  t8_locidx_t itree;
   sc_array *corners = t8_build_corners(forest_new);
   //1) Iterieren ueber Zellen des neuen Forests
   for (itree = 0, ielem = 0; itree < t8_forest_get_num_local_trees (forest_new); itree++) {
