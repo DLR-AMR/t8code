@@ -123,6 +123,4 @@ TEST_P (class_test_pack, test_equal_dfs)
   check_recursive_dfs_to_max_lvl (maxlvl);
 }
 
-//INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_pack, AllEclasses);
-/* Currently only implemented for hexes */
-INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_pack, testing::Values (T8_ECLASS_HEX));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_pack, AllEclasses);
