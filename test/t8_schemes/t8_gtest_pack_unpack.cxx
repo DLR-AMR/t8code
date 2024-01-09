@@ -30,8 +30,6 @@
 /** Use DFS to check for all elements, if packing them, sending them to ourself and unpacking them results in the same element
  * Here, each element is sent individually.
  */
-/* TODO: Currently, MPI_Pack is not wrapped in the SC_library, so we use MPI_PACK directly and have to check if MPUI is available*/
-#if T8_ENABLE_MPI
 class class_test_pack: public TestDFS {
   virtual void
 
@@ -52,29 +50,33 @@ class class_test_pack: public TestDFS {
     mpiret = ts->t8_element_pack (element, count, sendbuf, pack_size, &position, comm);
     SC_CHECK_MPI (mpiret);
 
+    int recvBufferSize = pack_size;
+    char *recvbuf = T8_ALLOC (char, recvBufferSize);
+#if T8_ENABLE_MPI
     /* Send data */
     sc_MPI_Request request;
-    mpiret = sc_MPI_Isend (sendbuf, position, MPI_PACKED, rank, T8_PACK_TEST_TAG, comm, &request);
+    mpiret = sc_MPI_Isend (sendbuf, position, sc_MPI_PACKED, rank, T8_PACK_TEST_TAG, comm, &request);
     SC_CHECK_MPI (mpiret);
 
     /* Probe size and allocate */
     sc_MPI_Status status;
     sc_MPI_Probe (rank, T8_PACK_TEST_TAG, comm, &status);
-    int recvBufferSize = pack_size;
-    char *recvbuf = T8_ALLOC (char, recvBufferSize);
 
     /* receive data */
-    mpiret = sc_MPI_Recv (recvbuf, position, MPI_PACKED, rank, T8_PACK_TEST_TAG, comm, sc_MPI_STATUS_IGNORE);
+    mpiret = sc_MPI_Recv (recvbuf, position, sc_MPI_PACKED, rank, T8_PACK_TEST_TAG, comm, sc_MPI_STATUS_IGNORE);
     SC_CHECK_MPI (mpiret);
 
     /* Finalize non-blocking send communication */
     mpiret = sc_MPI_Wait (&request, sc_MPI_STATUS_IGNORE);
     SC_CHECK_MPI (mpiret);
     T8_FREE (sendbuf);
-
+#else
+    /* just copy the data, if we did not compile with MPI*/
+    mempcpy(recvbuf, sendbuf, pack_size);
+#endif
     /* Unpack data and free recvbuf */
     position = 0;
-    mpiret = ts->t8_element_unpack (recvbuf, pack_size, &position, element_compare, count, comm);
+    mpiret = ts->t8_element_unpack (recvbuf, recvBufferSize, &position, element_compare, count, comm);
     SC_CHECK_MPI (mpiret);
     T8_FREE (recvbuf);
 
@@ -122,5 +124,3 @@ TEST_P (class_test_pack, test_equal_dfs)
 //INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_pack, AllEclasses);
 /* Currently only implemented for hexes */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_pack, testing::Values (T8_ECLASS_HEX));
-
-#endif

@@ -25,8 +25,6 @@
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_hex/t8_default_hex_cxx.hxx>
 
-#include <mpi.h>
-
 #define HEX_LINEAR_MAXLEVEL P8EST_OLD_QMAXLEVEL
 #define HEX_REFINE_MAXLEVEL P8EST_OLD_QMAXLEVEL
 /* This is the ideal but currently not exposed in the overall interface. */
@@ -670,10 +668,10 @@ t8_default_scheme_hex_c::t8_element_pack (const t8_element_t *elements, int coun
 {
   p8est_quadrant_t *quads = (p8est_quadrant_t *) elements;
   for (int ielem = 0; ielem < count; ielem++) {
-    MPI_Pack (&(quads[ielem].x), 1, MPI_INT, send_buffer, buffer_size, position, comm);
-    MPI_Pack (&quads[ielem].y, 1, MPI_INT, send_buffer, buffer_size, position, comm);
-    MPI_Pack (&quads[ielem].z, 1, MPI_INT, send_buffer, buffer_size, position, comm);
-    MPI_Pack (&quads[ielem].level, 1, MPI_INT8_T, send_buffer, buffer_size, position, comm);
+    sc_MPI_Pack (&(quads[ielem].x), 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
+    sc_MPI_Pack (&quads[ielem].y, 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
+    sc_MPI_Pack (&quads[ielem].z, 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
+    sc_MPI_Pack (&quads[ielem].level, 1, sc_MPI_INT8_T, send_buffer, buffer_size, position, comm);
   }
   return 0;
 }
@@ -683,13 +681,13 @@ t8_default_scheme_hex_c::t8_element_pack_size (int count, sc_MPI_Comm comm, int 
 {
   int singlesize = 0;
   int datasize = 0;
-  MPI_Pack_size (1, MPI_INT, comm, &datasize);
+  sc_MPI_Pack_size (1, sc_MPI_INT, comm, &datasize);
   singlesize += datasize;
-  MPI_Pack_size (1, MPI_INT, comm, &datasize);
+  sc_MPI_Pack_size (1, sc_MPI_INT, comm, &datasize);
   singlesize += datasize;
-  MPI_Pack_size (1, MPI_INT, comm, &datasize);
+  sc_MPI_Pack_size (1, sc_MPI_INT, comm, &datasize);
   singlesize += datasize;
-  MPI_Pack_size (1, MPI_INT8_T, comm, &datasize);
+  sc_MPI_Pack_size (1, sc_MPI_INT8_T, comm, &datasize);
   singlesize += datasize;
 
   *pack_size = count * singlesize;
@@ -702,10 +700,10 @@ t8_default_scheme_hex_c::t8_element_unpack (void *recvbuf, int buffer_size, int 
 {
   p8est_quadrant_t *quads = (p8est_quadrant_t *) elements;
   for (int ielem = 0; ielem < count; ielem++) {
-    MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem].x), 1, MPI_INT, comm);
-    MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem].y), 1, MPI_INT, comm);
-    MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem].z), 1, MPI_INT, comm);
-    MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem].level), 1, MPI_INT8_T, comm);
+    sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem].x), 1, sc_MPI_INT, comm);
+    sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem].y), 1, sc_MPI_INT, comm);
+    sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem].z), 1, sc_MPI_INT, comm);
+    sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem].level), 1, sc_MPI_INT8_T, comm);
   }
   return 0;
 }
