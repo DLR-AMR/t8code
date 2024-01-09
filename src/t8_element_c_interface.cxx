@@ -448,3 +448,27 @@ t8_element_destroy (const t8_eclass_scheme_c *ts, int length, t8_element_t **ele
 
   ts->t8_element_destroy (length, elems);
 }
+
+int
+t8_element_pack (const t8_eclass_scheme_c *ts, const t8_element_t *elements, int count, void *send_buffer,
+                 int buffer_size, int *position, sc_MPI_Comm comm)
+{
+  T8_ASSERT (ts != NULL);
+
+  return ts->t8_element_pack (elements, count, send_buffer, buffer_size, position, comm);
+}
+
+int
+t8_element_pack_size (const t8_eclass_scheme_c *ts, int count, sc_MPI_Comm comm, int *pack_size)
+{
+  T8_ASSERT (ts != NULL);
+  return ts->t8_element_pack_size (count, comm, pack_size);
+}
+
+int
+t8_element_unpack (const t8_eclass_scheme_c *ts, void *recvbuf, int buffer_size, int *position, t8_element_t *elements,
+                   int count, sc_MPI_Comm comm)
+{
+  T8_ASSERT (ts != NULL);
+  return ts->t8_element_unpack (recvbuf, buffer_size, position, elements, count, comm);
+}
