@@ -184,7 +184,8 @@ t8_forest_vtk_get_element_nodes (t8_forest_t forest, t8_locidx_t ltreeid, const 
   const t8_eclass_scheme_c *scheme = t8_forest_get_eclass_scheme (forest, tree_class);
   const t8_element_shape_t element_shape = scheme->t8_element_shape (element);
   const double *ref_coords = t8_forest_vtk_point_to_element_ref_coords[element_shape][vertex];
-  t8_forest_element_from_ref_coords (forest, ltreeid, element, ref_coords, 1, out_coords);
+  const size_t num_coords = scheme->t8_element_num_corners (element);
+  t8_forest_element_from_ref_coords (forest, ltreeid, element, ref_coords, num_coords, out_coords);
 }
 
 /**

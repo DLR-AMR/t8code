@@ -395,7 +395,7 @@ t8_forest_element_from_ref_coords_ext (t8_forest_t forest, t8_locidx_t ltreeid, 
                                        const double *ref_coords, const size_t num_coords, double *coords_out,
                                        const double *stretch_factors)
 {
-  double tree_ref_coords[3] = { 0 };
+  double tree_ref_coords[3 * num_coords] = { 0 };
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
   const t8_eclass_scheme_c *scheme = t8_forest_get_eclass_scheme (forest, tree_class);
   const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
