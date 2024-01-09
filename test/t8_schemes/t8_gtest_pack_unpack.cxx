@@ -72,7 +72,7 @@ class class_test_pack: public TestDFS {
     T8_FREE (sendbuf);
 #else
     /* just copy the data, if we did not compile with MPI*/
-    mempcpy(recvbuf, sendbuf, pack_size);
+    mempcpy (recvbuf, sendbuf, pack_size);
 #endif
     /* Unpack data and free recvbuf */
     position = 0;
