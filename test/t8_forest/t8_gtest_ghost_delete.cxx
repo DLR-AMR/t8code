@@ -38,7 +38,6 @@
  * Once, https://github.com/DLR-AMR/t8code/issues/825 is resolved, no messages should be send and the test should pass.
  */
 
-
 /* refine elements, whose lower left y coordinate is 0, so that the lowest row is refined
  * delete elements, whose lower left y coordniate is 0.25, so that the second row is deleted
  */
@@ -79,12 +78,13 @@ class forest_ghost_exchange_holes: public testing::Test {
 
     if (comm != sc_MPI_COMM_NULL) {
       sc_MPI_Comm_size (comm, &size);
-      T8_ASSERT(size <= 2);
+      T8_ASSERT (size <= 2);
       scheme = t8_scheme_new_default_cxx ();
       /* Construct a cmesh */
       cmesh = t8_cmesh_new_hypercube (T8_ECLASS_QUAD, comm, 0, 0, 0);
-    }else{
-      T8_ASSERT(rank >= 2);
+    }
+    else {
+      T8_ASSERT (rank >= 2);
     }
   }
   void
@@ -108,12 +108,12 @@ TEST_F (forest_ghost_exchange_holes, errorTest)
   /* This test tests the functionality described in Issue: https://github.com/DLR-AMR/t8code/issues/825
   * Remove the GTEST_SKIP() macros when you start working on the issue.
   */
-  GTEST_SKIP(); 
+  GTEST_SKIP ();
   if (comm != sc_MPI_COMM_NULL) {
     const int level = 1;
     const int execute_ghost = 1;
-    t8_cmesh_ref(cmesh);
-    t8_scheme_cxx_ref(scheme);
+    t8_cmesh_ref (cmesh);
+    t8_scheme_cxx_ref (scheme);
     t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 1, comm);
     forest = t8_forest_new_adapt (forest, test_adapt_holes, 0, execute_ghost, NULL);
     forest = t8_forest_new_adapt (forest, test_adapt_holes, 0, execute_ghost, NULL);
