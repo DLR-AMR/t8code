@@ -565,4 +565,23 @@ t8_default_scheme_tet_c::~t8_default_scheme_tet_c ()
    * and hence this empty function. */
 }
 
+int
+t8_default_scheme_tet_c::t8_element_pack (const t8_element_t *elements, int count, void *send_buffer, int buffer_size,
+                                          int *position, sc_MPI_Comm comm) const
+{
+  SC_ABORT ("Not yet implemented");
+}
+int
+t8_default_scheme_tet_c::t8_element_pack_size (int count, sc_MPI_Comm comm, int *pack_size) const
+{
+  SC_ABORT ("Not yet implemented");
+}
+
+int
+t8_default_scheme_tet_c::t8_element_unpack (void *recvbuf, int buffer_size, int *position, t8_element_t *elements,
+                                            int count, sc_MPI_Comm comm) const
+{
+  SC_ABORT ("Not yet implemented");
+}
+
 T8_EXTERN_C_END ();
