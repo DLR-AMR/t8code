@@ -63,6 +63,7 @@ t8code_googletest_programs = \
   test/t8_forest_incomplete/t8_gtest_empty_local_tree \
   test/t8_forest_incomplete/t8_gtest_empty_global_tree \
   test/t8_schemes/t8_gtest_default \
+  test/t8_schemes/t8_gtest_pack_unpack \
   test/t8_schemes/t8_gtest_child_parent_face
 
 test_t8_IO_t8_gtest_vtk_reader_SOURCES = \
@@ -264,6 +265,10 @@ test_t8_forest_incomplete_t8_gtest_empty_global_tree_SOURCES = \
 test_t8_schemes_t8_gtest_default_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_schemes/t8_gtest_default.cxx  
+
+test_t8_schemes_t8_gtest_pack_unpack_SOURCES = \
+  test/t8_gtest_main.cxx \
+  test/t8_schemes/t8_gtest_pack_unpack.cxx  
 
 test_t8_schemes_t8_gtest_child_parent_face_SOURCES = \
   test/t8_gtest_main.cxx \
@@ -478,6 +483,10 @@ test_t8_schemes_t8_gtest_default_LDADD = $(t8_gtest_target_ld_add)
 test_t8_schemes_t8_gtest_default_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_schemes_t8_gtest_default_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
+test_t8_schemes_t8_gtest_pack_unpack_LDADD = $(t8_gtest_target_ld_add)
+test_t8_schemes_t8_gtest_pack_unpack_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_schemes_t8_gtest_pack_unpack_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+
 test_t8_schemes_t8_gtest_child_parent_face_LDADD = $(t8_gtest_target_ld_add)
 test_t8_schemes_t8_gtest_child_parent_face_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_schemes_t8_gtest_child_parent_face_CPPFLAGS = $(t8_gtest_target_cpp_flags)
@@ -535,6 +544,7 @@ test_t8_forest_incomplete_t8_gtest_iterate_replace_CPPFLAGS += $(t8_gtest_target
 test_t8_forest_incomplete_t8_gtest_empty_local_tree_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_incomplete_t8_gtest_empty_global_tree_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_default_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_schemes_t8_gtest_pack_unpack_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_child_parent_face_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 endif
 
