@@ -69,15 +69,17 @@ class class_test_pack: public TestDFS {
     /* Finalize non-blocking send communication */
     mpiret = sc_MPI_Wait (&request, sc_MPI_STATUS_IGNORE);
     SC_CHECK_MPI (mpiret);
-    T8_FREE (sendbuf);
 #else
     /* just copy the data, if we did not compile with MPI*/
     mempcpy (recvbuf, sendbuf, pack_size);
 #endif
-    /* Unpack data and free recvbuf */
+    /* Unpack data */
     position = 0;
     mpiret = ts->t8_element_unpack (recvbuf, recvBufferSize, &position, element_compare, count, comm);
     SC_CHECK_MPI (mpiret);
+
+    /* free buffers */
+    T8_FREE (sendbuf);
     T8_FREE (recvbuf);
 
     /* Check that data was sent and received correctly */
