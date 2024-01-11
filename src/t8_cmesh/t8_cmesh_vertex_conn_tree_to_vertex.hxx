@@ -67,14 +67,14 @@ typedef struct t8_cmesh_vertex_conn_tree_to_vertex
    * \note Cmesh must not be committed.
   */
   void
-  set_global_vertex_ids_of_tree_vertices (const t8_cmesh_t, const t8_locidx_t local_tree, const int *global_tree_vertex,
-                                          const int num_vertices);
+  set_global_vertex_ids_of_tree_vertices (const t8_cmesh_t, const t8_locidx_t local_tree,
+                                          const int *global_tree_vertices, const int num_vertices);
 
   t8_gloidx_t
-  get_global_vertex (const t8_cmesh_t, const t8_locidx_t local_tree, const int local_tree_vertex);
+  get_global_vertex (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int local_tree_vertex);
 
   const t8_gloidx_t *
-  get_global_vertices (const t8_cmesh_t, const t8_locidx_t local_tree, const int num_vertices);
+  get_global_vertices (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int num_vertices);
 
  private:
 } t8_cmesh_vertex_conn_tree_to_vertex_c;
