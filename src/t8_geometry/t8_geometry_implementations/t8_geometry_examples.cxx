@@ -355,6 +355,7 @@ t8_geometry_quadrangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh
                                                                 const double *ref_coords, const size_t num_coords,
                                                                 double *out_coords) const
 {
+  /* This routine works just fine for the quadrangulated spherical surface, too. */
   t8_geom_evaluate_cubed_sphere (cmesh, gtreeid, ref_coords, num_coords, out_coords);
 }
 
