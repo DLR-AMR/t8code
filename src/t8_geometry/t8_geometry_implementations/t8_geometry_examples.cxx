@@ -310,28 +310,14 @@ t8_geometry_quadrangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh
   const t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
   const double *tree_vertices = t8_cmesh_get_tree_vertices (cmesh, ltreeid);
 
-  {
-    const double center_ref[3] = { 0.5, 0.5, 0.0 };
-    t8_geom_linear_interpolation (center_ref, tree_vertices, 3, 2, n);
-
-    /* Normalize vector `n`. */
-    const double norm = sqrt (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]);
-    n[0] = n[0] / norm;
-    n[1] = n[1] / norm;
-    n[2] = n[2] / norm;
-  }
+  t8_geom_linear_interpolation (t8_element_centroid_ref_coords[T8_ECLASS_QUAD], tree_vertices, 3, 2, n);
+  t8_vec_normalize (n);
 
   r[0] = tree_vertices[0];
   r[1] = tree_vertices[1];
   r[2] = tree_vertices[2];
 
-  {
-    /* Normalize vector `r`. */
-    const double norm = sqrt (r[0] * r[0] + r[1] * r[1] + r[2] * r[2]);
-    r[0] = r[0] / norm;
-    r[1] = r[1] / norm;
-    r[2] = r[2] / norm;
-  }
+  t8_vec_normalize (r);
 
   for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
     const size_t offset = 3 * i_coord;
@@ -343,7 +329,11 @@ t8_geometry_quadrangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh
       const double y = ref_coords[offset + 1];
       const double z = ref_coords[offset + 2];
 
-      /* Correction in order to rectify elements near the corners. */
+      /* tldr: Correction in order to rectify elements near the corners. 
+       * This is necessary, since due to the transformation from the unit cube
+       * to the sphere elements near the face centers expand while near the
+       * corners they shrink. Following correction alleviates this.
+       */
       corr_ref_coords[0] = tan (0.5 * M_PI * (x - 0.5)) * 0.5 + 0.5;
       corr_ref_coords[1] = tan (0.5 * M_PI * (y - 0.5)) * 0.5 + 0.5;
       corr_ref_coords[2] = z;
@@ -353,13 +343,7 @@ t8_geometry_quadrangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh
 
     const double R = (p[0] * n[0] + p[1] * n[1] + p[2] * n[2]) / (r[0] * n[0] + r[1] * n[1] + r[2] * n[2]);
 
-    {
-      /* Normalize vector `p`. */
-      const double norm = sqrt (p[0] * p[0] + p[1] * p[1] + p[2] * p[2]);
-      p[0] = p[0] / norm;
-      p[1] = p[1] / norm;
-      p[2] = p[2] / norm;
-    }
+    t8_vec_normalize (p);
 
     out_coords[offset + 0] = R * p[0];
     out_coords[offset + 1] = R * p[1];
