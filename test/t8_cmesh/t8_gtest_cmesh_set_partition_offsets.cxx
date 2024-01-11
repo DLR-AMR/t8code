@@ -51,8 +51,21 @@ class cmesh_set_partition_offsets_nocommit: public testing::TestWithParam<t8_glo
   SetUp () override
   {
     inum_trees = GetParam ();
+
+    /* Initialize the cmesh */
+    t8_cmesh_init (&cmesh);
   }
+
+  void
+  TearDown () override
+  {
+    /* Destroy the cmesh */
+    t8_cmesh_unref (&cmesh);
+  }
+
   t8_gloidx_t inum_trees;
+  t8_cmesh_t cmesh;
+  const int main_process = 0;
 };
 
 /* The tests that do commit the cmesh iterate over eclasses and the number of 
@@ -64,17 +77,40 @@ class cmesh_set_partition_offsets_commit: public testing::TestWithParam<std::tup
   {
     ieclass = std::get<0> (GetParam ());
     inum_trees = std::get<1> (GetParam ());
+
+
+    /* Initialize the cmesh */
+    t8_cmesh_init (&cmesh);
+
+    /* Specify a dimension */
+    const int dim = t8_eclass_to_dimension[ieclass];
+    t8_cmesh_set_dimension (cmesh, dim);
+
+
+    /* Set class for the trees */
+    for (t8_gloidx_t itree = 0; itree < inum_trees; ++itree) {
+      t8_cmesh_set_tree_class (cmesh, itree, ieclass);
+    }
   }
+
+  void
+  TearDown () override
+  {
+    /* Destroy the cmesh */
+    t8_cmesh_unref (&cmesh);
+  }
+
   t8_eclass_t ieclass;
   t8_gloidx_t inum_trees;
+  t8_cmesh_t cmesh;
+  sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
+  const int main_process = 0;
 };
 
 /* call t8_cmesh_offset_concentrate for non-derived cmesh 
  * and destroy it before commit. */
 TEST_P (cmesh_set_partition_offsets_nocommit, test_set_offsets)
 {
-  t8_cmesh_t cmesh;
-  const int main_process = 0;
 
   t8_debugf ("Testing t8_cmesh_set_partition_offset (no commit) with %li trees.\n", inum_trees);
 
@@ -85,22 +121,15 @@ TEST_P (cmesh_set_partition_offsets_nocommit, test_set_offsets)
   t8_shmem_init (sc_MPI_COMM_WORLD);
   t8_shmem_array_t shmem_array = t8_cmesh_offset_concentrate (main_process, sc_MPI_COMM_WORLD, inum_trees);
 
-  /* Initialize the cmesh */
-  t8_cmesh_init (&cmesh);
 
   /* Set the partition offsets */
   t8_cmesh_set_partition_offsets (cmesh, shmem_array);
-  /* Destroy the cmesh */
-  t8_cmesh_unref (&cmesh);
 }
 
 /* call t8_cmesh_offset_concentrate for non-derived cmesh 
  * and commit it. */
 TEST_P (cmesh_set_partition_offsets_commit, test_set_offsets)
 {
-  t8_cmesh_t cmesh;
-  const int main_process = 0;
-  sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
 
   t8_debugf ("Testing t8_cmesh_set_partition_offset (with commit) with %li trees of class %s.\n", inum_trees,
              t8_eclass_to_string[ieclass]);
@@ -112,20 +141,8 @@ TEST_P (cmesh_set_partition_offsets_commit, test_set_offsets)
   t8_shmem_init (comm);
   t8_shmem_array_t shmem_array = t8_cmesh_offset_concentrate (main_process, comm, inum_trees);
 
-  /* Initialize the cmesh */
-  t8_cmesh_init (&cmesh);
-
   /* Set the partition offsets */
   t8_cmesh_set_partition_offsets (cmesh, shmem_array);
-
-  /* Specify a dimension */
-  const int dim = t8_eclass_to_dimension[ieclass];
-  t8_cmesh_set_dimension (cmesh, dim);
-
-  /* Set class for the trees */
-  for (int itree = 0; itree < inum_trees; ++itree) {
-    t8_cmesh_set_tree_class (cmesh, itree, ieclass);
-  }
 
   /* Commit the cmesh */
   t8_cmesh_commit (cmesh, comm);
@@ -146,12 +163,14 @@ TEST_P (cmesh_set_partition_offsets_commit, test_set_offsets)
   /* Compute the reference value, num_trees for mpirank main_process,
    * 0 on each other rank. */
   const t8_locidx_t expected_num_local_trees = mpirank == main_process ? inum_trees : 0;
+  
+  if (mpirank == main_process) {
+    /* Double check that no overflow from converting gloidx to locidx occured. */
+    ASSERT_EQ (expected_num_local_trees, inum_trees);
+  }
 
   EXPECT_EQ (num_local_trees, expected_num_local_trees);
   EXPECT_EQ (t8_cmesh_get_num_trees (cmesh), inum_trees);
-
-  /* Destroy the cmesh */
-  t8_cmesh_unref (&cmesh);
 }
 
 /* Make a test suite that iterates over all tree counts from 0 to the maximum. */
