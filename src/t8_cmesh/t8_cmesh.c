@@ -354,8 +354,7 @@ void
 t8_cmesh_set_attribute (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int package_id, int key, void *data, size_t data_size,
                         int data_persists)
 {
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (!cmesh->committed);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 
   t8_stash_add_attribute (cmesh->stash, gtree_id, package_id, key, data_size, data, !data_persists);
 }
@@ -363,8 +362,7 @@ t8_cmesh_set_attribute (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int package_id, 
 void
 t8_cmesh_set_attribute_string (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int package_id, int key, const char *string)
 {
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (!cmesh->committed);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 
   /* The size is the string's length + the terminating '\0' */
   size_t size = strlen (string) + 1;
