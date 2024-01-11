@@ -25,3 +25,17 @@
 /** \file t8_cmesh_conn_tree_to_vertex.cxx
  *  This file implements the routines for the t8_cmesh_conn_tree_to_vertex_c struct.
  */
+
+  /* Set all global vertex ids of a local tree. 
+   * \param[in] cmesh The considered cmesh
+   * \param[in] local_tree A local tree id of \a cmesh
+   * \param[in] global_vertex_id The ids of the global vertices in order of \a local_tree's vertices.
+   * \param[in] num_vertices Must match the number of vertices of \a local_tree
+   * 
+   * \note Cmesh must not be committed.
+  */
+  void
+  set_global_vertex_ids_of_tree_vertices (const t8_cmesh_t, const t8_locidx_t local_tree, const int *global_tree_vertex, const int num_vertices)
+  {
+
+  }
