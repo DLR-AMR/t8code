@@ -30,6 +30,8 @@ name: t8code tests linkage parallel release
 #       in the "key:" entries of the sc and p4est steps or set the variables
 #       SC_IGNORE_CACHE and P4EST_IGNORE_CACHE to 1 in the respective steps.
 
+env:
+  MAKEFLAGS: "-j2 V=0"
 
 on:
   push:
@@ -110,7 +112,7 @@ jobs:
       run: cd $SC_RELEASE && ../configure --enable-mpi --prefix=$PWD/install
       if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
     - name: sc build release
-      run: cd $SC_RELEASE && make -j V=0 && make -j V=0 install
+      run: cd $SC_RELEASE && make $MAKEFLAGS && make $MAKEFLAGS install
       if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
 #
 # P4EST
@@ -150,7 +152,7 @@ jobs:
       run: cd $P4EST_RELEASE && ../configure --enable-mpi --prefix=$PWD/install --with-sc=$SC_RELEASE/install
       if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     - name: p4est build release
-      run: cd $P4EST_RELEASE && make -j V=0 && make -j V=0 install
+      run: cd $P4EST_RELEASE && make $MAKEFLAGS && make $MAKEFLAGS install
       if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
 #  P4EST AND SC END
 #
@@ -188,11 +190,11 @@ jobs:
         name: config_netcdf_release_MPI.log
         path: build_netcdf/config.log
     - name: make
-      run: cd build_netcdf && make -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
+      run: cd build_netcdf && make $MAKEFLAGS CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
     - name: make install
-      run: cd build_netcdf && make install -j
+      run: cd build_netcdf && make install $MAKEFLAGS
     - name: make check
-      run: cd build_netcdf && make check -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
+      run: cd build_netcdf && make check $MAKEFLAGS CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
@@ -211,11 +213,11 @@ jobs:
         name: config_occ_release_MPI.log
         path: build_occ/config.log
     - name: make
-      run: cd build_occ && make -j V=0 CFLAGS="$CFLAGS_var -Werror -I/usr/include/opencascade" CXXFLAGS="$CXXFLAGS_var -Werror -I/usr/include/opencascade"
+      run: cd build_occ && make $MAKEFLAGS CFLAGS="$CFLAGS_var -Werror -I/usr/include/opencascade" CXXFLAGS="$CXXFLAGS_var -Werror -I/usr/include/opencascade"
     - name: make install
-      run: cd build_occ && make install -j
+      run: cd build_occ && make install $MAKEFLAGS
     - name: make check
-      run: cd build_occ && make check -j V=0 CFLAGS="$CFLAGS_var -Werror -I/usr/include/opencascade" CXXFLAGS="$CXXFLAGS_var -Werror -I/usr/include/opencascade"
+      run: cd build_occ && make check $MAKEFLAGS CFLAGS="$CFLAGS_var -Werror -I/usr/include/opencascade" CXXFLAGS="$CXXFLAGS_var -Werror -I/usr/include/opencascade"
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
@@ -234,11 +236,11 @@ jobs:
         name: config_vtk_release_MPI.log
         path: build_vtk/config.log
     - name: make
-      run: cd build_vtk && make -j V=0 CFLAGS="$CFLAGS_var -Werror -isystem/usr/local/include/vtk-9.1" CXXFLAGS="$CXXFLAGS_var -Werror -isystem/usr/local/include/vtk-9.1"
+      run: cd build_vtk && make $MAKEFLAGS CFLAGS="$CFLAGS_var -Werror -isystem/usr/local/include/vtk-9.1" CXXFLAGS="$CXXFLAGS_var -Werror -isystem/usr/local/include/vtk-9.1"
     - name: make install
-      run: cd build_vtk && make install -j
+      run: cd build_vtk && make install $MAKEFLAGS
     - name: make check
-      run: cd build_vtk && make check -j V=0 CFLAGS="$CFLAGS_var -Werror -isystem/usr/local/include/vtk-9.1" CXXFLAGS="$CXXFLAGS_var -Werror -isystem/usr/local/include/vtk-9.1"
+      run: cd build_vtk && make check $MAKEFLAGS CFLAGS="$CFLAGS_var -Werror -isystem/usr/local/include/vtk-9.1" CXXFLAGS="$CXXFLAGS_var -Werror -isystem/usr/local/include/vtk-9.1"
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
