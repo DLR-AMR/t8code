@@ -39,20 +39,19 @@ typedef struct t8_cmesh_vertex_conn_vertex_to_tree_c
    * have been set. 
    * Currently, \a cmesh has to be replicated. */
   void
-  set_vertex_to_tree_list ( const t8_cmesh_t cmesh );
+  set_vertex_to_tree_list (const t8_cmesh_t cmesh);
 
-  vector< t8_locidx_t >
-  get_tree_list_of_vertex( t8_gloidx_t vertex_id );
+  vector<t8_locidx_t>
+  get_tree_list_of_vertex (t8_gloidx_t vertex_id);
 
  private:
   /* Vector of vectors: For each vertex one list of trees */
-  vector<vector< t8_locidx_t >> vertex_to_tree_list;
+  vector<vector<t8_locidx_t>> vertex_to_tree_list;
 
   /* Setter functions */
   /* A single value is added to the vertex_to_tree_list */
   void
-  set_value_vertex_to_tree_list ( t8_gloidx_t vertex_id, t8_locidx_t treeid );
-
+  set_value_vertex_to_tree_list (t8_gloidx_t vertex_id, t8_locidx_t treeid);
 
 } t8_cmesh_vertex_conn_vertex_to_tree_c;
 
