@@ -54,6 +54,7 @@ t8code_googletest_programs = \
   test/t8_forest/t8_gtest_user_data \
   test/t8_forest/t8_gtest_transform \
   test/t8_forest/t8_gtest_ghost_exchange \
+  test/t8_forest/t8_gtest_ghost_delete \
   test/t8_forest/t8_gtest_ghost_and_owner \
   test/t8_IO/t8_gtest_vtk_reader \
   test/t8_forest_incomplete/t8_gtest_permute_hole \
@@ -61,7 +62,8 @@ t8code_googletest_programs = \
   test/t8_forest_incomplete/t8_gtest_iterate_replace \
   test/t8_forest_incomplete/t8_gtest_empty_local_tree \
   test/t8_forest_incomplete/t8_gtest_empty_global_tree \
-  test/t8_schemes/t8_gtest_default
+  test/t8_schemes/t8_gtest_default \
+  test/t8_schemes/t8_gtest_child_parent_face
 
 test_t8_IO_t8_gtest_vtk_reader_SOURCES = \
   test/t8_gtest_main.cxx \
@@ -231,6 +233,10 @@ test_t8_forest_t8_gtest_ghost_exchange_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_forest/t8_gtest_ghost_exchange.cxx
 
+test_t8_forest_t8_gtest_ghost_delete_SOURCES = \
+  test/t8_gtest_main.cxx \
+  test/t8_forest/t8_gtest_ghost_delete.cxx
+
 test_t8_forest_t8_gtest_ghost_and_owner_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_forest/t8_gtest_ghost_and_owner.cxx
@@ -258,6 +264,10 @@ test_t8_forest_incomplete_t8_gtest_empty_global_tree_SOURCES = \
 test_t8_schemes_t8_gtest_default_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_schemes/t8_gtest_default.cxx  
+
+test_t8_schemes_t8_gtest_child_parent_face_SOURCES = \
+  test/t8_gtest_main.cxx \
+  test/t8_schemes/t8_gtest_child_parent_face.cxx 
 
 #define ld and cpp flags for all targets
 t8_gtest_target_ld_add = $(LDADD) test/libgtest.la
@@ -432,6 +442,10 @@ test_t8_forest_t8_gtest_ghost_exchange_LDADD = $(t8_gtest_target_ld_add)
 test_t8_forest_t8_gtest_ghost_exchange_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_forest_t8_gtest_ghost_exchange_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
+test_t8_forest_t8_gtest_ghost_delete_LDADD = $(t8_gtest_target_ld_add)
+test_t8_forest_t8_gtest_ghost_delete_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_forest_t8_gtest_ghost_delete_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+
 test_t8_forest_t8_gtest_ghost_and_owner_LDADD = $(t8_gtest_target_ld_add)
 test_t8_forest_t8_gtest_ghost_and_owner_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_forest_t8_gtest_ghost_and_owner_CPPFLAGS = $(t8_gtest_target_cpp_flags)
@@ -464,6 +478,9 @@ test_t8_schemes_t8_gtest_default_LDADD = $(t8_gtest_target_ld_add)
 test_t8_schemes_t8_gtest_default_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_schemes_t8_gtest_default_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
+test_t8_schemes_t8_gtest_child_parent_face_LDADD = $(t8_gtest_target_ld_add)
+test_t8_schemes_t8_gtest_child_parent_face_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_schemes_t8_gtest_child_parent_face_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
 # If we did not configure t8code with MPI we need to build Googletest
 # without MPI support.
@@ -509,6 +526,7 @@ test_t8_geometry_t8_gtest_point_inside_CPPFLAGS += $(t8_gtest_target_mpi_cpp_fla
 test_t8_forest_t8_gtest_user_data_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_t8_gtest_transform_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_t8_gtest_ghost_exchange_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_forest_t8_gtest_ghost_delete_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_t8_gtest_ghost_and_owner_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_IO_t8_gtest_vtk_reader_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_incomplete_t8_gtest_permute_hole_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
@@ -517,6 +535,7 @@ test_t8_forest_incomplete_t8_gtest_iterate_replace_CPPFLAGS += $(t8_gtest_target
 test_t8_forest_incomplete_t8_gtest_empty_local_tree_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_incomplete_t8_gtest_empty_global_tree_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_default_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_schemes_t8_gtest_child_parent_face_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 endif
 
 # Build Googletest library

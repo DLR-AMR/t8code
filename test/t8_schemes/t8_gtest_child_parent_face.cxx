@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2023 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -27,33 +27,31 @@
 #include "t8_gtest_dfs_base.hxx"
 #include <test/t8_gtest_macros.hxx>
 
-class class_test_boundary_extrude: public TestDFS {
-  /* For elements that are on the face of the root element, check that creating the boundary element
-   * and extruding it results in the original element
-    */
+class class_child_parent_face: public TestDFS {
   virtual void
   check_element ()
   {
     const int num_faces = ts->t8_element_num_faces (element);
     for (int iface = 0; iface < num_faces; iface++) {
-      /* Iterate over all faces that are also root faces and determine the face element */
-      if (ts->t8_element_is_root_boundary (element, iface)) {
-        /* Get face scheme */
-        const int tree_face = ts->t8_element_tree_face (element, iface);
-        const t8_eclass_t face_eclass = (t8_eclass_t) t8_eclass_face_types[eclass][tree_face];
-        const t8_eclass_scheme_c *face_ts = scheme->eclass_schemes[face_eclass];
+      /* Iterate over all faces and determine the facechildren*/
+      const int num_face_children = ts->t8_element_num_face_children (element, iface);
+      t8_element_t **children;
+      children = T8_ALLOC (t8_element_t *, num_face_children);
+      ts->t8_element_new (num_face_children, children);
 
-        t8_element_t *boundary;
-        face_ts->t8_element_new (1, &boundary);
+      ts->t8_element_children_at_face (element, iface, children, num_face_children, NULL);
 
-        ts->t8_element_boundary_face (element, iface, boundary, face_ts);
-
-        ts->t8_element_extrude_face (boundary, face_ts, check, tree_face);
-
-        EXPECT_ELEM_EQ (ts, element, check);
-
-        face_ts->t8_element_destroy (1, &boundary);
+      for (int ifacechild = 0; ifacechild < num_face_children; ifacechild++) {
+        /* Iterate over those children and determine the childface corresponding to the parentface */
+        int childface = ts->t8_element_face_child_face (element, iface, ifacechild);
+        ASSERT_NE (childface, -1);
+        /* Determine the parentface corresponding to the childface */
+        int parentface = ts->t8_element_face_parent_face (children[ifacechild], childface);
+        /* Check, that this is equal to the face that we started with */
+        EXPECT_EQ (iface, parentface);
       }
+      ts->t8_element_destroy (num_face_children, children);
+      T8_FREE (children);
     }
   }
 
@@ -61,23 +59,18 @@ class class_test_boundary_extrude: public TestDFS {
   void
   SetUp () override
   {
+    /* Setup DFS test */
     dfs_test_setup ();
-    /* Get element and initialize it */
-    ts->t8_element_new (1, &check);
   }
   void
   TearDown () override
   {
-    /* Destroy element */
-    ts->t8_element_destroy (1, &check);
-
     /* Destroy DFS test */
     dfs_test_teardown ();
   }
-  t8_element_t *check;
 };
 
-TEST_P (class_test_boundary_extrude, test_boundary_extrude_dfs)
+TEST_P (class_child_parent_face, t8_recursive_dfs_child_parent_face)
 {
 #ifdef T8_ENABLE_LESS_TESTS
   const int maxlvl = 4;
@@ -87,4 +80,4 @@ TEST_P (class_test_boundary_extrude, test_boundary_extrude_dfs)
   check_recursive_dfs_to_max_lvl (maxlvl);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_boundary_extrude, AllEclasses);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_child_parent_face, class_child_parent_face, AllEclasses);
