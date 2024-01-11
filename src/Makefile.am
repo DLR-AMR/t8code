@@ -1,6 +1,6 @@
-# This file is part of t8code
-# Non-recursive Makefile.am in src
-# Included from toplevel directory
+#This file is part of t8code
+#Non - recursive Makefile.am in src
+#Included from toplevel directory
 
 cmeshincludedir = $(includedir)/t8_cmesh
 dataincludedir = $(includedir)/t8_data
@@ -132,6 +132,7 @@ libt8_compiled_sources = \
   src/t8_forest/t8_forest_partition.cxx src/t8_forest/t8_forest_cxx.cxx \
   src/t8_forest/t8_forest_private.c src/t8_forest/t8_forest_vtk.cxx \
   src/t8_forest/t8_forest_ghost.cxx src/t8_forest/t8_forest_iterate.cxx \
+  src/t8_forest/t8_forest_partition_for_coarsening.cxx \
   src/t8_version.c \
   src/t8_vtk.c src/t8_forest/t8_forest_balance.cxx \
   src/t8_forest/t8_forest_netcdf.cxx \
@@ -143,8 +144,7 @@ libt8_compiled_sources = \
   src/t8_vtk/t8_vtk_parallel.cxx \
   src/t8_vtk/t8_vtk_reader.cxx
 
-
-# this variable is used for headers that are not publicly installed
+#this variable is used for headers that are not publicly installed
 T8_CPPFLAGS =
 
 justlibs-local: src/libt8.la
