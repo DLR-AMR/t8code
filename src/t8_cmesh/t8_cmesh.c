@@ -372,6 +372,16 @@ t8_cmesh_set_attribute_string (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int packa
   t8_cmesh_set_attribute (cmesh, gtree_id, package_id, key, (void *) string, size, 0);
 }
 
+void
+t8_cmesh_set_attribute_gloidx_array (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int package_id, int key, t8_gloidx_t *data,
+                                     size_t data_count, int data_persists)
+{
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+
+  const size_t data_size = data_count * sizeof (*data);
+  t8_stash_add_attribute (cmesh->stash, gtree_id, package_id, key, data_size, (void *) data, !data_persists);
+}
+
 double *
 t8_cmesh_get_tree_vertices (t8_cmesh_t cmesh, t8_locidx_t ltreeid)
 {

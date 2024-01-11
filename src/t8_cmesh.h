@@ -277,9 +277,34 @@ t8_cmesh_set_attribute (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int package_id, 
  * \param [in]      string      The string to store as attribute.
  * \note You can also use \ref t8_cmesh_set_attribute, but we recommend using this
  *       specialized function for strings.
+ * \note If an attribute with the given package_id and key already exists, then it will get overwritten.
  */
 void
 t8_cmesh_set_attribute_string (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int package_id, int key, const char *string);
+
+/** Store an array of t8_gloidx_t as an attribute at a tree in a cmesh.
+ * \param [in, out] cmesh       The cmesh to be updated.
+ * \param [in]      gtree_id    The global id of the tree.
+ * \param [in]      package_id  Unique identifier of a valid software package. \see sc_package_register
+ * \param [in]      key         An integer key used to identify this attribute under all
+ *                              attributes with the same package_id.
+ *                              \a key must be a unique value for this tree and package_id.
+ * \param [in]      data        The array to store as attribute.
+ * \param [in]      data_count  The number of entries in \a data.
+ * \param [in]      data_persists This flag can be used to optimize memory. If true
+ *                              then t8code assumes that the attribute data is present at the
+ *                              memory that \a data points to when \ref t8_cmesh_commit is called
+ *                              (This is more memory efficient).
+ *                              If the flag is false an internal copy of the data is created
+ *                              immediately and this copy is used at commit.
+ *                              In both cases a copy of the data is used by t8_code after t8_cmesh_commit.
+ * \note You can also use \ref t8_cmesh_set_attribute, but we recommend using this
+ *       specialized function for arrays.
+ * \note If an attribute with the given package_id and key already exists, then it will get overwritten.
+ */
+void
+t8_cmesh_set_attribute_gloidx_array (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int package_id, int key, t8_gloidx_t *data,
+                                     size_t data_count, int data_persists);
 
 /** Insert a face-connection between two trees in a cmesh.
  * \param [in,out] cmesh        The cmesh to be updated.
