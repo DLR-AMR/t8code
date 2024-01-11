@@ -26,7 +26,7 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_geometry/t8_geometry_base.hxx>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_analytic.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx>
 #include <t8_geometry/t8_geometry_helpers.h>
@@ -67,6 +67,7 @@ typedef enum {
   T8_GEOM_OCC_CURVE_CUBE,
   T8_GEOM_OCC_SURFACE_CUBES,
   T8_GEOM_OCC_SURFACE_CYLINDER,
+  T8_GEOM_ANALYTIC_QUAD_TO_SPHERE,
   T8_GEOM_COUNT
 } t8_example_geom_type;
 
@@ -502,6 +503,23 @@ t8_geom_adapt_boundary (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t
   }
   /* All other elements remain unchanged. */
   return 0;
+}
+
+void quad_to_sphere_callback (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
+                            const size_t num_coords, double *out_coords, const void *tree_data,
+                            const void *user_data)
+{
+    for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
+      const size_t offset = 3 * i_coord;
+
+      const double radius = 1.0;
+      const double latitude = 2*M_PI*ref_coords[offset + 0];
+      const double longitude = ref_coords[offset + 1]*M_PI;
+
+      out_coords[offset + 0] = radius * sin (longitude) * cos (latitude);
+      out_coords[offset + 1] = radius * sin (longitude) * sin (latitude);
+      out_coords[offset + 2] = radius * cos (longitude);
+    }
 }
 
 static void
@@ -945,6 +963,17 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     SC_ABORTF ("OCC not linked");
 #endif /* T8_WITH_OCC */
   }
+  case T8_GEOM_ANALYTIC_QUAD_TO_SPHERE: {
+    t8_global_productionf ("Wrapping a quad aroud a sphere.\n");
+
+    geometry = t8_geometry_analytic_new (3, "geom_quad_to_sphere", quad_to_sphere_callback, NULL, NULL, NULL);
+    t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
+    t8_cmesh_set_join (cmesh, 0, 0, 1, 0, 0);
+
+    snprintf (vtuname, BUFSIZ, "forest_quad_to_sphere");
+    break;
+
+  }
   default:
     SC_ABORT_NOT_REACHED ();
   }
@@ -1063,7 +1092,8 @@ main (int argc, char **argv)
                       "\t\t7 - A curved triangle with an occ curve.\n"
                       "\t\t8 - A cube with two occ curves as edges.\n"
                       "\t\t9 - Two cubes with one occ surface as face.\n"
-                      "\t\t10 - A hollow cylinder with a occ surface on the in- and outside.\n");
+                      "\t\t10 - A hollow cylinder with a occ surface on the in- and outside.\n"
+                      "\t\t11 - A quad morphed into a sphere.\n");
 
   parsed = sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (helpme) {
