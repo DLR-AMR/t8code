@@ -267,7 +267,7 @@ t8_init (int log_threshold);
  * \return           A void * pointing to entry \a it in \a array.
  */
 void *
-t8_sc_array_index_locidx (sc_array_t *array, t8_locidx_t it);
+t8_sc_array_index_locidx (const sc_array_t *array, const t8_locidx_t it);
 
 /* call this at the end of a header file to match T8_EXTERN_C_BEGIN (). */
 T8_EXTERN_C_END ();

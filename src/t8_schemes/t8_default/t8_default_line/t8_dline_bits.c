@@ -51,6 +51,12 @@ t8_dline_compare (const t8_dline_t *l1, const t8_dline_t *l2)
   return id1 < id2 ? -1 : id1 != id2;
 }
 
+int
+t8_dline_equal (const t8_dline_t *l1, const t8_dline_t *l2)
+{
+  return (l1->level == l2->level && l1->x == l2->x);
+}
+
 void
 t8_dline_parent (const t8_dline_t *l, t8_dline_t *parent)
 {
@@ -345,9 +351,9 @@ t8_dline_compute_reference_coords (const t8_dline_t *elem, const double *ref_coo
 {
   T8_ASSERT (t8_dline_is_valid (elem));
   for (size_t coord = 0; coord < num_coords; ++coord) {
-    const size_t offset = coord * skip_coords;
+    const size_t offset = coord * (1 + skip_coords);
     out_coords[offset] = elem->x;
-    out_coords[offset] += T8_DLINE_LEN (elem->level) * ref_coords[coord];
+    out_coords[offset] += T8_DLINE_LEN (elem->level) * ref_coords[offset];
     out_coords[offset] /= (double) T8_DLINE_ROOT_LEN;
   }
 }
@@ -374,12 +380,6 @@ t8_dline_is_valid (const t8_dline_t *l)
   /* A line is valid if its level and its x coordinates are in the
    * correct bounds of the root three and its left and right neighbor */
   return 0 <= l->level && l->level <= T8_DLINE_MAXLEVEL && -T8_DLINE_ROOT_LEN <= l->x && l->x <= max_coord;
-}
-
-void
-t8_dline_debug_print (const t8_dline_t *l)
-{
-  t8_debugf ("x: %i, level: %i\n", l->x, l->level);
 }
 
 void

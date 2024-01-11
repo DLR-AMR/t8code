@@ -411,7 +411,7 @@ t8_advect_flux_upwind (const t8_advect_problem_t *problem, double el_plus_phi, d
 int a = 0;
 static double
 t8_advect_flux_upwind_hanging (const t8_advect_problem_t *problem, t8_locidx_t iel_hang, t8_locidx_t ltreeid,
-                               t8_element_t *element_hang, int face, int adapted_or_partitioned)
+                               const t8_element_t *element_hang, int face, int adapted_or_partitioned)
 {
   int i, num_face_children, child_face;
   t8_eclass_scheme_c *ts;
@@ -516,7 +516,7 @@ t8_advect_advance_element (t8_advect_problem_t *problem, t8_locidx_t lelement)
 /* Compute element midpoint and vol and store at element_data field. */
 static void
 t8_advect_compute_element_data (t8_advect_problem_t *problem, t8_advect_element_data_t *elem_data,
-                                t8_element_t *element, t8_locidx_t ltreeid, t8_eclass_scheme_c *ts)
+                                const t8_element_t *element, t8_locidx_t ltreeid, t8_eclass_scheme_c *ts)
 {
   /* Compute the midpoint coordinates of element */
   t8_forest_element_centroid (problem->forest, ltreeid, element, elem_data->midpoint);
@@ -541,7 +541,6 @@ t8_advect_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
   t8_advect_problem_t *problem;
   t8_advect_element_data_t *elem_data_in, *elem_data_out;
   t8_locidx_t first_incoming_data, first_outgoing_data;
-  t8_element_t *element;
   int i, iface;
   double phi_old;
 
@@ -564,10 +563,13 @@ t8_advect_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
     /* The element is not changed, copy phi and vol */
     memcpy (elem_data_in, elem_data_out, sizeof (t8_advect_element_data_t));
     t8_advect_element_set_phi_adapt (problem, first_incoming_data, phi_old);
+#if T8_ENABLE_DEBUG
     /* Get a pointer to the new element */
-    element = t8_forest_get_element_in_tree (problem->forest_adapt, which_tree, first_incoming);
-    /* Set the neighbor entries to uninitialized */
+    const t8_element_t *element = t8_forest_get_element_in_tree (problem->forest_adapt, which_tree, first_incoming);
+    /* Debug check number of faces */
     T8_ASSERT (elem_data_in->num_faces == ts->t8_element_num_faces (element));
+#endif
+    /* Set the neighbor entries to uninitialized */
     for (iface = 0; iface < elem_data_in->num_faces; iface++) {
       elem_data_in->num_neighbors[iface] = 0;
       elem_data_in->flux_valid[iface] = -1;
@@ -578,18 +580,25 @@ t8_advect_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
   }
   else if (refine == 1) {
     T8_ASSERT (num_outgoing == 1);
-    T8_ASSERT (num_incoming == 1 << problem->dim);
+#if T8_ENABLE_DEBUG
+    /* Ensure that the number of incoming elements matches the
+     * number of children of the outgoing element. */
+    const t8_element_t *element_outgoing = t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing);
+    const int num_children = ts->t8_element_num_children (element_outgoing);
+    T8_ASSERT (num_incoming == num_children);
+#endif
     /* The old element is refined, we copy the phi values and compute the new midpoints */
     for (i = 0; i < num_incoming; i++) {
       /* Get a pointer to the new element */
-      element = t8_forest_get_element_in_tree (problem->forest_adapt, which_tree, first_incoming + i);
+      const t8_element_t *element
+        = t8_forest_get_element_in_tree (problem->forest_adapt, which_tree, first_incoming + i);
       /* Compute midpoint and vol of the new element */
       t8_advect_compute_element_data (problem, elem_data_in + i, element, which_tree, ts);
       t8_advect_element_set_phi_adapt (problem, first_incoming_data + i, phi_old);
       /* Set the neighbor entries to uninitialized */
-      elem_data_in[i].num_faces = elem_data_out->num_faces;
-      T8_ASSERT (elem_data_in[i].num_faces == ts->t8_element_num_faces (element));
-      for (iface = 0; iface < elem_data_in[i].num_faces; iface++) {
+      const int num_new_faces = ts->t8_element_num_faces (element);
+      elem_data_in[i].num_faces = num_new_faces;
+      for (iface = 0; iface < num_new_faces; iface++) {
         elem_data_in[i].num_neighbors[iface] = 0;
         elem_data_in[i].flux_valid[iface] = -1;
         elem_data_in[i].dual_faces[iface] = NULL;
@@ -603,11 +612,18 @@ t8_advect_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
   else {
     double phi = 0;
     T8_ASSERT (refine = -1);
-    T8_ASSERT (num_outgoing == 1 << problem->dim && num_incoming == 1);
+    T8_ASSERT (num_incoming == 1);
+#if T8_ENABLE_DEBUG
+    /* Ensure that the number of outgoing elements matches the
+     * number of siblings of the first outgoing element. */
+    const t8_element_t *element_outgoing = t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing);
+    const int num_siblings = ts->t8_element_num_siblings (element_outgoing);
+    T8_ASSERT (num_outgoing == num_siblings);
+#endif
     /* The old elements form a family which is coarsened. We compute the average
      * phi value and set it as the new phi value */
     /* Get a pointer to the new element */
-    element = t8_forest_get_element_in_tree (problem->forest_adapt, which_tree, first_incoming);
+    const t8_element_t *element = t8_forest_get_element_in_tree (problem->forest_adapt, which_tree, first_incoming);
     /* Compute midpoint and vol of the new element */
     t8_advect_compute_element_data (problem, elem_data_in, element, which_tree, ts);
 
@@ -846,6 +862,9 @@ t8_advect_create_cmesh (sc_MPI_Comm comm, int cube_type, const char *mshfile, in
     else if (cube_type == 8) {
       return t8_cmesh_new_hypercube_hybrid (comm, 0, 1);
     }
+    else if (cube_type == 9) {
+      return t8_cmesh_new_hypercube (T8_ECLASS_PYRAMID, comm, 0, 0, 0);
+    }
     else {
       T8_ASSERT (T8_ECLASS_ZERO <= cube_type && cube_type < T8_ECLASS_COUNT);
       return t8_cmesh_new_hypercube ((t8_eclass_t) cube_type, comm, 0, 0, 1);
@@ -965,7 +984,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t *problem)
 {
   t8_locidx_t itree, ielement, idata;
   t8_locidx_t num_trees, num_elems_in_tree;
-  t8_element_t *element, **neighbors;
+  t8_element_t **neighbors;
   int iface, ineigh;
   t8_advect_element_data_t *elem_data;
   t8_eclass_scheme_c *ts, *neigh_scheme;
@@ -981,7 +1000,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t *problem)
     ts = t8_forest_get_eclass_scheme (problem->forest, t8_forest_get_tree_class (problem->forest, itree));
     num_elems_in_tree = t8_forest_get_tree_num_elements (problem->forest, itree);
     for (ielement = 0; ielement < num_elems_in_tree; ielement++, idata++) {
-      element = t8_forest_get_element_in_tree (problem->forest, itree, ielement);
+      const t8_element_t *element = t8_forest_get_element_in_tree (problem->forest, itree, ielement);
       elem_data = (t8_advect_element_data_t *) t8_sc_array_index_locidx (problem->element_data, idata);
       /* Initialize the element's midpoint and volume */
       t8_advect_compute_element_data (problem, elem_data, element, itree, ts);
@@ -1176,7 +1195,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u, t8_example_level_se
   int done = 0;
   int adapted_or_partitioned = 0;
   int dual_face;
-  t8_element_t *elem, **neighs;
+  t8_element_t **neighs;
   t8_eclass_scheme_c *neigh_scheme;
   double total_time, solve_time = 0;
   double ghost_exchange_time, ghost_waittime, neighbor_time, flux_time;
@@ -1249,7 +1268,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u, t8_example_level_se
         /* element loop */
         /* Get a pointer to the element data */
         elem_data = (t8_advect_element_data_t *) t8_sc_array_index_locidx (problem->element_data, lelement);
-        elem = t8_forest_get_element_in_tree (problem->forest, itree, ielement);
+        const t8_element_t *elem = t8_forest_get_element_in_tree (problem->forest, itree, ielement);
         num_faces = elem_data->num_faces;
         /* Compute left and right flux */
         for (iface = 0; iface < num_faces; iface++) {
@@ -1519,7 +1538,8 @@ main (int argc, char *argv[])
                       "\t\t3 - triangle\n\t\t4 - hexahedron\n"
                       "\t\t5 - tetrahedron\n\t\t6 - prism\n"
                       "\t\t7 - triangle/quad (hybrid 2d).\n"
-                      "\t\t8 - tet/hex/prism (hybrid 3d).\n");
+                      "\t\t8 - tet/hex/prism (hybrid 3d).\n"
+                      "\t\t9 - pyramid.\n");
   sc_options_add_string (opt, 'f', "mshfile", &mshfile, NULL,
                          "If specified, the cmesh is constructed from a .msh file with "
                          "the given prefix.\n\t\t\t\t     The files must end in .msh "
@@ -1580,7 +1600,7 @@ main (int argc, char *argv[])
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else if (parsed >= 0 && 1 <= flow_arg && flow_arg <= 7 && 0 <= level && 0 <= reflevel && 0 <= vtk_freq
-           && ((mshfile != NULL && 0 < dim && dim <= 3) || (1 <= cube_type && cube_type <= 8)) && band_width >= 0) {
+           && ((mshfile != NULL && 0 < dim && dim <= 3) || (1 <= cube_type && cube_type <= 9)) && band_width >= 0) {
     t8_cmesh_t cmesh;
     t8_flow_function_3d_fn u;
 
@@ -1593,7 +1613,7 @@ main (int argc, char *argv[])
         dim = 3;
         break;
       case 9:
-        dim = 2;
+        dim = 3;
         break;
       default:
         dim = t8_eclass_to_dimension[cube_type];

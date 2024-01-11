@@ -52,11 +52,11 @@ t8_write_forest_to_vtu (t8_forest_t forest, const char *prefix)
   vtk_data[0].data = diameters;
 
   /* Get the number of trees that have elements of this process. */
-  t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
+  const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
 
   /* Loop over all local trees in the forest. */
   for (t8_locidx_t itree = 0, current_index = 0; itree < num_local_trees; ++itree) {
-    t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+    const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
 
     /* Loop over all local elements in the tree and compute diameter estimate. */
     for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {

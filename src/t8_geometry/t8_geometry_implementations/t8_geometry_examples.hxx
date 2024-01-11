@@ -74,6 +74,16 @@ class t8_geometry_squared_disk: public t8_geometry_with_vertices {
     SC_ABORT_NOT_REACHED ();
   }
 
+  /**
+   * Get the type of this geometry.
+   * \return The type.
+   */
+  inline t8_geometry_type_t
+  t8_geom_get_type () const
+  {
+    return T8_GEOMETRY_TYPE_UNDEFINED;
+  };
+
   /* Load tree data is inherited from t8_geometry_with_vertices. */
 };
 
