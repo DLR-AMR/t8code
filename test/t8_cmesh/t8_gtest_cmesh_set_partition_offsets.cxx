@@ -45,7 +45,7 @@
 
 /* The tests that do not commit the cmesh iterate over the number of trees,
  * hence we have a TestWithParam with one int. */
-class cmesh_set_partition_offsets_nocommit: public testing::TestWithParam<int> {
+class cmesh_set_partition_offsets_nocommit: public testing::TestWithParam<t8_gloidx_t> {
  protected:
   void
   SetUp () override
@@ -57,7 +57,7 @@ class cmesh_set_partition_offsets_nocommit: public testing::TestWithParam<int> {
 
 /* The tests that do commit the cmesh iterate over eclasses and the number of 
  * tress, hence they have a TestWithParam with eclass and int. */
-class cmesh_set_partition_offsets_commit: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
+class cmesh_set_partition_offsets_commit: public testing::TestWithParam<std::tuple<t8_eclass, t8_gloidx_t>> {
  protected:
   void
   SetUp () override
@@ -156,9 +156,9 @@ TEST_P (cmesh_set_partition_offsets_commit, test_set_offsets)
 
 /* Make a test suite that iterates over all tree counts from 0 to the maximum. */
 INSTANTIATE_TEST_SUITE_P (t8_cmesh_set_partition_offsets_nocommit, cmesh_set_partition_offsets_nocommit,
-                          testing::Range (0, T8_TEST_PARTITION_OFFSET_MAX_TREE_NUM + 1));
+                          testing::Range<t8_gloidx_t> (0, T8_TEST_PARTITION_OFFSET_MAX_TREE_NUM + 1));
 
 /* Make a test suite that iterates over all classes and a tree count from 0 to the maximum. */
 INSTANTIATE_TEST_SUITE_P (t8_cmesh_set_partition_offsets_commit, cmesh_set_partition_offsets_commit,
                           testing::Combine (AllEclasses,
-                                            testing::Range (0, T8_TEST_PARTITION_OFFSET_MAX_TREE_NUM + 1)));
+                                            testing::Range<t8_gloidx_t> (0, T8_TEST_PARTITION_OFFSET_MAX_TREE_NUM + 1)));
