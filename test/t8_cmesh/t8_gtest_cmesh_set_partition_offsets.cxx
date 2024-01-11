@@ -154,11 +154,11 @@ TEST_P (cmesh_set_partition_offsets_commit, test_set_offsets)
   t8_cmesh_unref (&cmesh);
 }
 
-/* Make atest suite that iterates over all tree counts from 0 to the maximum. */
+/* Make a test suite that iterates over all tree counts from 0 to the maximum. */
 INSTANTIATE_TEST_SUITE_P (t8_cmesh_set_partition_offsets_nocommit, cmesh_set_partition_offsets_nocommit,
                           testing::Range (0, T8_TEST_PARTITION_OFFSET_MAX_TREE_NUM + 1));
 
-/* Make atest suite that iterates over all classes and a tree count from 0 to the maximum. */
+/* Make a test suite that iterates over all classes and a tree count from 0 to the maximum. */
 INSTANTIATE_TEST_SUITE_P (t8_cmesh_set_partition_offsets_commit, cmesh_set_partition_offsets_commit,
                           testing::Combine (AllEclasses,
                                             testing::Range (0, T8_TEST_PARTITION_OFFSET_MAX_TREE_NUM + 1)));
