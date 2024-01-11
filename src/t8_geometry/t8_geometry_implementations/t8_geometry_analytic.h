@@ -78,7 +78,9 @@ t8_geometry_analytic_destroy (t8_geometry_c **geom);
  * \return          A pointer to an allocated geometry struct.
  */
 t8_geometry_c *
-t8_geometry_analytic_new (int dim, const char *name, t8_geom_analytic_fn analytical, t8_geom_analytic_jacobian_fn jacobian, t8_geom_load_tree_data_fn load_tree_data, const void *user_data);
+t8_geometry_analytic_new (int dim, const char *name, t8_geom_analytic_fn analytical,
+                          t8_geom_analytic_jacobian_fn jacobian, t8_geom_load_tree_data_fn load_tree_data,
+                          const void *user_data);
 
 /**
  * Load vertex data from given tree. 
