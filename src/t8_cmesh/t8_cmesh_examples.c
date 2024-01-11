@@ -2854,7 +2854,7 @@ t8_cmesh_new_quadrangulated_spherical_surface (const double radius, sc_MPI_Comm 
 
   t8_geometry_c *geometry = t8_geometry_quadrangulated_spherical_surface_new ();
 
-  t8_cmesh_register_geometry (cmesh, geometry); /* Use linear geometry */
+  t8_cmesh_register_geometry (cmesh, geometry); /* Use spherical geometry */
 
   const int ntrees = 6; /* Number of cmesh elements resp. trees. */
   const int nverts = 4; /* Number of cmesh element vertices. */

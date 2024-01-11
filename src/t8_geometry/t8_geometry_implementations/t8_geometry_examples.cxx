@@ -307,8 +307,8 @@ t8_geometry_quadrangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh
   double r[3]; /* Radial vector. */
   double p[3]; /* Vector on the plane. */
 
-  t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
-  double *tree_vertices = t8_cmesh_get_tree_vertices (cmesh, ltreeid);
+  const t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
+  const double *tree_vertices = t8_cmesh_get_tree_vertices (cmesh, ltreeid);
 
   {
     const double center_ref[3] = { 0.5, 0.5, 0.0 };
