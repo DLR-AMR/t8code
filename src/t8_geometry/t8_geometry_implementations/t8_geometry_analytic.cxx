@@ -66,6 +66,24 @@ t8_geometry_analytic::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtre
   }
 }
 
+T8_EXTERN_C_BEGIN ();
+
+void
+t8_geometry_analytic_destroy (t8_geometry_c **geom)
+{
+  T8_ASSERT (geom != NULL);
+
+  delete *geom;
+  *geom = NULL;
+}
+
+t8_geometry_c *
+t8_geometry_analytic_new (int dim, const char *name, t8_geom_analytic_fn analytical, t8_geom_analytic_jacobian_fn jacobian, t8_geom_load_tree_data_fn load_tree_data, const void *user_data);
+{
+  t8_geometry_analytic *geom = new t8_geometry_analytic (dim, name, analytical, jacobian, load_tree_data, user_data);
+  return (t8_geometry_c *) geom;
+}
+
 void
 t8_geom_load_tree_data_vertices (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const void **vertices_out)
 {
@@ -73,3 +91,5 @@ t8_geom_load_tree_data_vertices (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const vo
   t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
   *vertices_out = t8_cmesh_get_tree_vertices (cmesh, ltreeid);
 }
+
+T8_EXTERN_C_END ();
