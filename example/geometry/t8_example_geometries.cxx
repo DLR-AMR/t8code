@@ -505,21 +505,21 @@ t8_geom_adapt_boundary (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t
   return 0;
 }
 
-void quad_to_sphere_callback (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                            const size_t num_coords, double *out_coords, const void *tree_data,
-                            const void *user_data)
+void
+quad_to_sphere_callback (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                         double *out_coords, const void *tree_data, const void *user_data)
 {
-    for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
-      const size_t offset = 3 * i_coord;
+  for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
+    const size_t offset = 3 * i_coord;
 
-      const double radius = 1.0;
-      const double latitude = 2*M_PI*ref_coords[offset + 0];
-      const double longitude = ref_coords[offset + 1]*M_PI;
+    const double radius = 1.0;
+    const double latitude = 2 * M_PI * ref_coords[offset + 0];
+    const double longitude = ref_coords[offset + 1] * M_PI;
 
-      out_coords[offset + 0] = radius * sin (longitude) * cos (latitude);
-      out_coords[offset + 1] = radius * sin (longitude) * sin (latitude);
-      out_coords[offset + 2] = radius * cos (longitude);
-    }
+    out_coords[offset + 0] = radius * sin (longitude) * cos (latitude);
+    out_coords[offset + 1] = radius * sin (longitude) * sin (latitude);
+    out_coords[offset + 2] = radius * cos (longitude);
+  }
 }
 
 static void
@@ -964,7 +964,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
 #endif /* T8_WITH_OCC */
   }
   case T8_GEOM_ANALYTIC_QUAD_TO_SPHERE: {
-    t8_global_productionf ("Wrapping a quad aroud a sphere.\n");
+    t8_global_productionf ("Wrapping a quad around a sphere.\n");
 
     geometry = t8_geometry_analytic_new (3, "geom_quad_to_sphere", quad_to_sphere_callback, NULL, NULL, NULL);
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
@@ -972,7 +972,6 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
 
     snprintf (vtuname, BUFSIZ, "forest_quad_to_sphere");
     break;
-
   }
   default:
     SC_ABORT_NOT_REACHED ();
