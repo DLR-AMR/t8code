@@ -78,14 +78,12 @@ class cmesh_set_partition_offsets_commit: public testing::TestWithParam<std::tup
     ieclass = std::get<0> (GetParam ());
     inum_trees = std::get<1> (GetParam ());
 
-
     /* Initialize the cmesh */
     t8_cmesh_init (&cmesh);
 
     /* Specify a dimension */
     const int dim = t8_eclass_to_dimension[ieclass];
     t8_cmesh_set_dimension (cmesh, dim);
-
 
     /* Set class for the trees */
     for (t8_gloidx_t itree = 0; itree < inum_trees; ++itree) {
@@ -120,7 +118,6 @@ TEST_P (cmesh_set_partition_offsets_nocommit, test_set_offsets)
    * that concentrates all trees at one process. */
   t8_shmem_init (sc_MPI_COMM_WORLD);
   t8_shmem_array_t shmem_array = t8_cmesh_offset_concentrate (main_process, sc_MPI_COMM_WORLD, inum_trees);
-
 
   /* Set the partition offsets */
   t8_cmesh_set_partition_offsets (cmesh, shmem_array);
@@ -163,9 +160,9 @@ TEST_P (cmesh_set_partition_offsets_commit, test_set_offsets)
   /* Compute the reference value, num_trees for mpirank main_process,
    * 0 on each other rank. */
   const t8_locidx_t expected_num_local_trees = mpirank == main_process ? inum_trees : 0;
-  
+
   if (mpirank == main_process) {
-    /* Double check that no overflow from converting gloidx to locidx occured. */
+    /* Double check that no overflow from converting gloidx to locidx occurred. */
     ASSERT_EQ (expected_num_local_trees, inum_trees);
   }
 
@@ -178,6 +175,6 @@ INSTANTIATE_TEST_SUITE_P (t8_cmesh_set_partition_offsets_nocommit, cmesh_set_par
                           testing::Range<t8_gloidx_t> (0, T8_TEST_PARTITION_OFFSET_MAX_TREE_NUM + 1));
 
 /* Make a test suite that iterates over all classes and a tree count from 0 to the maximum. */
-INSTANTIATE_TEST_SUITE_P (t8_cmesh_set_partition_offsets_commit, cmesh_set_partition_offsets_commit,
-                          testing::Combine (AllEclasses,
-                                            testing::Range<t8_gloidx_t> (0, T8_TEST_PARTITION_OFFSET_MAX_TREE_NUM + 1)));
+INSTANTIATE_TEST_SUITE_P (
+  t8_cmesh_set_partition_offsets_commit, cmesh_set_partition_offsets_commit,
+  testing::Combine (AllEclasses, testing::Range<t8_gloidx_t> (0, T8_TEST_PARTITION_OFFSET_MAX_TREE_NUM + 1)));
