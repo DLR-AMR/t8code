@@ -207,7 +207,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   sc_mempool_t *ghost_facejoin_mempool;
   t8_ghost_facejoin_t *ghost_facejoin = NULL, *temp_facejoin, **facejoin_pp;
   size_t joinfaces_it, iz;
-  t8_gloidx_t last_tree = cmesh->num_local_trees + cmesh->first_tree - 1, id1, id2;
+  t8_gloidx_t id1, id2;
   t8_locidx_t temp_local_id = 0;
   t8_locidx_t num_hashes;
   t8_gloidx_t *face_neigh_g, *face_neigh_g2;
@@ -251,6 +251,10 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   /* The first_tree and first_tree_shared entries must be set by now */
   T8_ASSERT (cmesh->first_tree >= 0);
   T8_ASSERT (cmesh->first_tree_shared >= 0);
+
+  /* Compute the global id of the cmeshes last_tree.
+   * This must happen after cmesh->first_tree is computed. */
+  const t8_gloidx_t last_tree = cmesh->num_local_trees + cmesh->first_tree - 1;
 
   num_hashes = cmesh->num_local_trees > 0 ? cmesh->num_local_trees : 10;
   ghost_facejoin_mempool = sc_mempool_new (sizeof (t8_ghost_facejoin_t));

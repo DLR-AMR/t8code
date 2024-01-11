@@ -28,6 +28,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
+#include <test/t8_gtest_macros.hxx>
 
 /**
  * This file tests the volume-computation of elements.
@@ -116,4 +117,4 @@ TEST_P (t8_forest_volume, volume_check)
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_element_volume, t8_forest_volume,
-                          testing::Combine (testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT), testing::Range (0, 4)));
+                          testing::Combine (AllEclasses, testing::Range (0, 4)));
