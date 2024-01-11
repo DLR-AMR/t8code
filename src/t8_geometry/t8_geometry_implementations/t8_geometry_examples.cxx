@@ -291,17 +291,9 @@ t8_geometry_triangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh, 
   }
 }
 
-/**
- * Map the faces of a unit cube to a spherical surface.
- * \param [in]  cmesh      The cmesh in which the point lies.
- * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
- * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
- * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
- */
-void
-t8_geometry_quadrangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
-                                                                const double *ref_coords, const size_t num_coords,
-                                                                double *out_coords) const
+static inline void
+t8_geom_evaluate_cubed_sphere (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                               double *out_coords)
 {
   double n[3]; /* Normal vector. */
   double r[3]; /* Radial vector. */
@@ -338,7 +330,7 @@ t8_geometry_quadrangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh
       corr_ref_coords[1] = tan (0.5 * M_PI * (y - 0.5)) * 0.5 + 0.5;
       corr_ref_coords[2] = z;
 
-      t8_geom_linear_interpolation (corr_ref_coords, tree_vertices, 3, 2, p);
+      t8_geom_linear_interpolation (corr_ref_coords, tree_vertices, 3, 3, p);
     }
 
     const double R = (p[0] * n[0] + p[1] * n[1] + p[2] * n[2]) / (r[0] * n[0] + r[1] * n[1] + r[2] * n[2]);
@@ -352,6 +344,21 @@ t8_geometry_quadrangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh
 }
 
 /**
+ * Map the faces of a unit cube to a spherical surface.
+ * \param [in]  cmesh      The cmesh in which the point lies.
+ * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
+ * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
+ * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+ */
+void
+t8_geometry_quadrangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
+                                                                const double *ref_coords, const size_t num_coords,
+                                                                double *out_coords) const
+{
+  t8_geom_evaluate_cubed_sphere (cmesh, gtreeid, ref_coords, num_coords, out_coords);
+}
+
+/**
  * Maps six hexaeders arranged into cube to a spherical shell.
  * \param [in]  cmesh      The cmesh in which the point lies.
  * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
@@ -362,68 +369,7 @@ void
 t8_geometry_cubed_spherical_shell::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
                                                      const size_t num_coords, double *out_coords) const
 {
-  double n[3]; /* Normal vector. */
-  double r[3]; /* Radial vector. */
-  double p[3]; /* Vector on the plane. */
-
-  t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
-  double *tree_vertices = t8_cmesh_get_tree_vertices (cmesh, ltreeid);
-
-  {
-    const double center_ref[3] = { 0.5, 0.5, 0.0 };
-    t8_geom_linear_interpolation (center_ref, tree_vertices, 3, 3, n);
-
-    /* Normalize vector `n`. */
-    const double norm = sqrt (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]);
-    n[0] = n[0] / norm;
-    n[1] = n[1] / norm;
-    n[2] = n[2] / norm;
-  }
-
-  r[0] = tree_vertices[0];
-  r[1] = tree_vertices[1];
-  r[2] = tree_vertices[2];
-
-  {
-    /* Normalize vector `r`. */
-    const double norm = sqrt (r[0] * r[0] + r[1] * r[1] + r[2] * r[2]);
-    r[0] = r[0] / norm;
-    r[1] = r[1] / norm;
-    r[2] = r[2] / norm;
-  }
-
-  for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
-    const size_t offset = 3 * i_coord;
-
-    {
-      double corr_ref_coords[3];
-
-      const double x = ref_coords[offset + 0];
-      const double y = ref_coords[offset + 1];
-      const double z = ref_coords[offset + 2];
-
-      /* Correction in order to rectify elements near the corners. */
-      corr_ref_coords[0] = tan (0.5 * M_PI * (x - 0.5)) * 0.5 + 0.5;
-      corr_ref_coords[1] = tan (0.5 * M_PI * (y - 0.5)) * 0.5 + 0.5;
-      corr_ref_coords[2] = z;
-
-      t8_geom_linear_interpolation (corr_ref_coords, tree_vertices, 3, 3, p);
-    }
-
-    const double R = (p[0] * n[0] + p[1] * n[1] + p[2] * n[2]) / (r[0] * n[0] + r[1] * n[1] + r[2] * n[2]);
-
-    {
-      /* Normalize vector `p`. */
-      const double norm = sqrt (p[0] * p[0] + p[1] * p[1] + p[2] * p[2]);
-      p[0] = p[0] / norm;
-      p[1] = p[1] / norm;
-      p[2] = p[2] / norm;
-    }
-
-    out_coords[offset + 0] = R * p[0];
-    out_coords[offset + 1] = R * p[1];
-    out_coords[offset + 2] = R * p[2];
-  }
+  t8_geom_evaluate_cubed_sphere (cmesh, gtreeid, ref_coords, num_coords, out_coords);
 }
 
 T8_EXTERN_C_BEGIN ();

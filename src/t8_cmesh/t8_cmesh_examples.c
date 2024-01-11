@@ -2962,11 +2962,11 @@ t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shel
   for (t8_locidx_t itree_quad = 0, current_index = 0; itree_quad < num_local_trees; ++itree_quad) {
 
     /* Get the number of elements of this tree. */
-    t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree_quad);
+    const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree_quad);
 
     /* Loop over all local elements in the tree. */
     for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
-      t8_element_t *element = t8_forest_get_element_in_tree (forest, itree_quad, ielement);
+      const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree_quad, ielement);
 
       /* Retrieve 2D element vertices. */
       double quad_vertices[4 * 3];
