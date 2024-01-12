@@ -46,18 +46,6 @@ typedef struct t8_cmesh_vertex_conn_tree_to_vertex
 {
  public:
   /* Setter functions */
-  /** Set the global vertex id of a local vertex of a local tree.
-   * \param[in] cmesh The considered cmesh
-   * \param[in] local_tree A local tree id of \a cmesh
-   * \param[in] local_tree_vertex A vertex of \a local_tree. 0 <= \a local_tree_vertex < NUM_VERTICES(\a local_tree)
-   * \param[in] global_vertex_id The id of the global vertex.
-   * 
-   * \note Cmesh must not be committed.
-  */
-  void
-  set_global_vertex_id_of_tree_vertex (const t8_cmesh_t, const t8_locidx_t local_tree, const int local_tree_vertex,
-                                       const int global_vertex_id);
-
   /** Set all global vertex ids of a local tree. 
    * \param[in] cmesh The considered cmesh
    * \param[in] local_tree A local tree id of \a cmesh
@@ -67,14 +55,14 @@ typedef struct t8_cmesh_vertex_conn_tree_to_vertex
    * \note Cmesh must not be committed.
   */
   void
-  set_global_vertex_ids_of_tree_vertices (const t8_cmesh_t, const t8_locidx_t local_tree,
-                                          const int *global_tree_vertices, const int num_vertices);
+  set_global_vertex_ids_of_tree_vertices (const t8_cmesh_t, const t8_gloidx_t global_tree,
+                                          const t8_gloidx_t *global_tree_vertices, const size_t num_vertices);
 
   t8_gloidx_t
   get_global_vertex (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int local_tree_vertex);
 
   const t8_gloidx_t *
-  get_global_vertices (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int num_vertices);
+  get_global_vertices (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const size_t num_vertices);
 
  private:
 } t8_cmesh_vertex_conn_tree_to_vertex_c;

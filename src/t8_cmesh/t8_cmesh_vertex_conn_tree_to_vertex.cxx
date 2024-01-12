@@ -21,6 +21,7 @@
 */
 
 #include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
 
 /** \file t8_cmesh_conn_tree_to_vertex.cxx
@@ -36,16 +37,37 @@
 * \note Cmesh must not be committed.
 */
 void
-set_global_vertex_ids_of_tree_vertices (const t8_cmesh_t cmesh, const t8_locidx_t local_tree,
-                                        const int *global_tree_vertex, const int num_vertices)
+t8_cmesh_vertex_conn_tree_to_vertex::set_global_vertex_ids_of_tree_vertices (const t8_cmesh_t cmesh, const t8_gloidx_t global_tree,
+                                        const t8_gloidx_t *global_tree_vertices, const size_t num_vertices)
+{
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+
+  /* TODO: we currently do not check whether the num_vertices argument
+   *       matches the number of vertices of the tree.
+   *       We cannot do it here, since this function call happens before commit,
+   *       thus we might not even know the eclass of the tree.
+   *       Maybe it is possible to check this during t8_cmesh_add_attributes?
+   */
+
+  /* We copy the data directly, hence set data_persiss to 0 */
+  const int data_persists = 0;
+  t8_cmesh_set_attribute_gloidx_array (cmesh, global_tree, t8_get_package_id (), T8_CMESH_GLOBAL_VERTICES_ATTRIBUTE_KEY, 
+                                       global_tree_vertices, num_vertices, data_persists);
+}
+
+
+const t8_gloidx_t *
+t8_cmesh_vertex_conn_tree_to_vertex::get_global_vertices (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const size_t num_vertices)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
 
+#if T8_ENABLE_DEBUG
+  /* Verify that num_vertices matches the number of tree vertices */
   const t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, local_tree);
   const int num_tree_vertices = t8_eclass_num_vertices[tree_class];
 
-  SC_CHECK_ABORTF (num_vertices == num_tree_vertices,
-                   "Number of global vertices at tree %i "
-                   "does not match number of tree vertices. %i != %i",
-                   local_tree, num_vertices, num_tree_vertices);
+  T8_ASSERT (num_vertices == num_tree_vertices);
+#endif
+
+  return t8_cmesh_get_attribute_gloidx_array (cmesh, t8_get_package_id (), T8_CMESH_GLOBAL_VERTICES_ATTRIBUTE_KEY, local_tree, num_vertices);
 }
