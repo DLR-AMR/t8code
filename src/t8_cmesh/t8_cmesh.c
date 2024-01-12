@@ -371,8 +371,8 @@ t8_cmesh_set_attribute_string (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int packa
 }
 
 void
-t8_cmesh_set_attribute_gloidx_array (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int package_id, int key, t8_gloidx_t *data,
-                                     size_t data_count, int data_persists)
+t8_cmesh_set_attribute_gloidx_array (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int package_id, int key,
+                                     const t8_gloidx_t *data, size_t data_count, int data_persists)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 
