@@ -404,6 +404,29 @@ t8_cmesh_get_attribute (t8_cmesh_t cmesh, int package_id, int key, t8_locidx_t l
   return t8_cmesh_trees_get_attribute (cmesh->trees, ltree_id, package_id, key, NULL, is_ghost);
 }
 
+/* Return the attribute pointer of a tree for a gloidx_t array.
+ * \param [in]     cmesh        The cmesh.
+ * \param [in]     package_id   The identifier of a valid software package. \see sc_package_register
+ * \param [in]     key          A key used to identify the attribute under all
+ *                              attributes of this tree with the same \a package_id.
+ * \param [in]     tree_id      The local number of the tree.
+ * \param [out]    data_count   The number of entries in the array that are requested. 
+ *                              This must be smaller or equal to the \a data_count parameter
+ *                              of the corresponding call to \ref t8_cmesh_set_attribute_gloidx_array
+ * \return         The attribute pointer of the tree \a ltree_id or NULL if the attribute is not found.
+ * \note \a cmesh must be committed before calling this function.
+ * \note No check is performed whether the attribute actually stored \a data_count many entries since
+ *       we do not store the number of data entries of the attribute array.
+ *       You can keep track of the data count yourself by using another attribute.
+ * \see t8_cmesh_set_attribute_gloidx_array
+ */
+t8_gloidx_t *
+t8_cmesh_get_attribute_gloidx_array (t8_cmesh_t cmesh, int package_id, int key, t8_locidx_t ltree_id, size_t data_count)
+{
+  T8_ASSERT (0 <= data_count);
+  return (t8_gloidx_t *) t8_cmesh_get_attribute (cmesh, package_id, key, ltree_id);
+}
+
 t8_shmem_array_t
 t8_cmesh_get_partition_table (t8_cmesh_t cmesh)
 {
