@@ -27,6 +27,7 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_examples.h>
+#include <t8_geometry/t8_geometry_with_vertices.hxx>
 #include <t8_vec.h>
 #include <t8_mat.h>
 #include <t8_eclass.h>
