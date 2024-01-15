@@ -21,7 +21,7 @@
 */
 
 /** \file t8_geometry_base.hxx
- * Implements the base pure virtual class t8_geometry which
+ * Implements the base pure virtual struct t8_geometry which
  * provides a general template for all geometries.
  */
 
