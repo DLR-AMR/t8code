@@ -137,6 +137,10 @@ class t8_default_scheme_common_c: public t8_eclass_scheme_c {
   virtual void
   t8_element_anchor (const t8_element_t *elem, int anchor[3]) const
     = 0;
+#if T8_ENABLE_DEBUG
+  virtual void
+  t8_element_debug_print (const t8_element_t *elem) const;
+#endif
 };
 
 #endif /* !T8_DEFAULT_COMMON_CXX_HXX */

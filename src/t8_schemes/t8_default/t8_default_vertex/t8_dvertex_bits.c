@@ -35,6 +35,12 @@ t8_dvertex_copy (const t8_dvertex_t *v, t8_dvertex_t *dest)
 }
 
 int
+t8_dvertex_equal (const t8_dvertex_t *elem1, const t8_dvertex_t *elem2)
+{
+  return elem1->level == elem2->level;
+}
+
+int
 t8_dvertex_compare (const t8_dvertex_t *v1, const t8_dvertex_t *v2)
 {
   /* The vertex with the smaller level

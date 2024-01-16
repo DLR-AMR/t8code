@@ -60,9 +60,6 @@ t8_cmesh_new_from_p4est (p4est_connectivity_t *conn, sc_MPI_Comm comm, int do_pa
 t8_cmesh_t
 t8_cmesh_new_from_p8est (p8est_connectivity_t *conn, sc_MPI_Comm comm, int do_partition);
 
-/* TODO: it could possibly be a problem that we do not set the dimension of
- * the cmesh. This could i.e. be difficult when we combine an empty cmesh with
- * a non-empty one. */
 /** Construct a cmesh that has no trees. We do not know a special use case,
  * this function is merely for debugging and to show the possibility.
  * \param [in]      comm       mpi communicator to be used with the new cmesh.
@@ -71,7 +68,7 @@ t8_cmesh_new_from_p8est (p8est_connectivity_t *conn, sc_MPI_Comm comm, int do_pa
  * \return                     A committed t8_cmesh structure that has no trees.
  */
 t8_cmesh_t
-t8_cmesh_new_empty (sc_MPI_Comm comm, int do_partition, int dimension);
+t8_cmesh_new_empty (sc_MPI_Comm comm, const int do_partition, const int dimension);
 
 /** Constructs a cmesh that consists only of one tree of a given element class.
  * \param [in]      eclass     The element class.
@@ -321,6 +318,14 @@ t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees, const int set_attributes, cons
  */
 t8_cmesh_t
 t8_cmesh_new_squared_disk (const double radius, sc_MPI_Comm comm);
+
+/** Construct a triangulated spherical surface of given radius.
+ * \param [in] radius        Radius of the sphere.
+ * \param [in] comm          The MPI communicator used to commit the cmesh
+ * \return                   A cmesh representing the spherical surface.
+ */
+t8_cmesh_t
+t8_cmesh_new_triangulated_spherical_surface (const double radius, sc_MPI_Comm comm);
 
 T8_EXTERN_C_END ();
 

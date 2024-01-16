@@ -100,6 +100,12 @@ t8_default_scheme_prism_c::t8_element_compare (const t8_element_t *elem1, const 
   return t8_dprism_compare ((const t8_dprism_t *) elem1, (const t8_dprism_t *) elem2);
 }
 
+int
+t8_default_scheme_prism_c::t8_element_equal (const t8_element_t *elem1, const t8_element_t *elem2) const
+{
+  return t8_dprism_equal ((const t8_dprism_t *) elem1, (const t8_dprism_t *) elem2);
+}
+
 void
 t8_default_scheme_prism_c::t8_element_parent (const t8_element_t *elem, t8_element_t *parent) const
 {
@@ -229,8 +235,11 @@ t8_default_scheme_prism_c::t8_element_extrude_face (const t8_element_t *face, co
   T8_ASSERT (0 <= root_face && root_face < T8_DPRISM_FACES);
   t8_dprism_extrude_face (face, elem, root_face);
   T8_ASSERT (t8_element_is_valid (elem));
-  /* TODO: Fix return value */
-  return t8_dprism_root_face_to_face ((const t8_dprism_t *) elem, root_face);
+  /* For the quad-faces of prisms it holds that only the corner-children touch the faces of the parent and
+   * their face-numbers coincide. 
+   * for the triangular-faces (bottom and top) the faces always have the same number and we can return the
+   * root face-number as well. */
+  return root_face;
 }
 
 int
@@ -381,13 +390,6 @@ t8_default_scheme_prism_c::t8_element_anchor (const t8_element_t *elem, int anch
   anchor[2] = prism->line.x / T8_DLINE_ROOT_LEN * T8_DPRISM_ROOT_LEN;
 }
 
-int
-t8_default_scheme_prism_c::t8_element_root_len (const t8_element_t *elem) const
-{
-  T8_ASSERT (t8_element_is_valid (elem));
-  return T8_DPRISM_ROOT_LEN;
-}
-
 void
 t8_default_scheme_prism_c::t8_element_vertex_coords (const t8_element_t *elem, int vertex, int coords[]) const
 {
@@ -446,11 +448,16 @@ t8_default_scheme_prism_c::t8_element_is_valid (const t8_element_t *elem) const
 }
 
 void
-t8_default_scheme_prism_c::t8_element_debug_print (const t8_element_t *elem) const
+t8_default_scheme_prism_c::t8_element_to_string (const t8_element_t *elem, char *debug_string,
+                                                 const int string_size) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
-  t8_dprism_debug_print ((const t8_dprism_t *) elem);
+  T8_ASSERT (debug_string != NULL);
+  t8_dprism_t *prism = (t8_dprism_t *) elem;
+  snprintf (debug_string, string_size, "x: %i, y: %i, z: %i, type: %i, level: %i", prism->tri.x, prism->tri.y,
+            prism->line.x, prism->tri.type, prism->tri.level);
 }
+
 #endif /* T8_ENABLE_DEBUG */
 
 /* Constructor */
