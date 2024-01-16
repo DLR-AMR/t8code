@@ -24,10 +24,10 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh/t8_cmesh_helpers.h>
 #include <t8_cmesh/t8_cmesh_geometry.h>
+#include <t8_geometry/t8_geometry_base.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_examples.h>
-#include <t8_geometry/t8_geometry_with_vertices.hxx>
 #include <t8_vec.h>
 #include <t8_mat.h>
 #include <t8_eclass.h>
@@ -1277,7 +1277,7 @@ t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass, sc_MPI_Comm comm, const do
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
 
-  const int is_axis_aligned = geometry->t8_geom_get_type () == T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED;
+  const int is_axis_aligned = t8_geom_get_type (geometry) == T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED;
 
   t8_cmesh_register_geometry (cmesh, geometry);
 
