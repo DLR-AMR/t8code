@@ -30,6 +30,7 @@
 
 #include <t8.h>
 #include <t8_cmesh.h>
+#include <t8_geometry/t8_geometry.h>
 
 T8_EXTERN_C_BEGIN ();
 
