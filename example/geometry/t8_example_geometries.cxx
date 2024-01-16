@@ -63,11 +63,11 @@ typedef enum {
   T8_GEOM_CIRCLE,
   T8_GEOM_3D,
   T8_GEOM_MOVING,
+  T8_GEOM_ANALYTIC_QUAD_TO_SPHERE,
   T8_GEOM_OCC_TRIANGLE,
   T8_GEOM_OCC_CURVE_CUBE,
   T8_GEOM_OCC_SURFACE_CUBES,
   T8_GEOM_OCC_SURFACE_CYLINDER,
-  T8_GEOM_ANALYTIC_QUAD_TO_SPHERE,
   T8_GEOM_COUNT
 } t8_example_geom_type;
 
@@ -607,6 +607,15 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
     snprintf (vtuname, BUFSIZ, "forest_moving_lvl_%i", level);
     break;
+  case T8_GEOM_ANALYTIC_QUAD_TO_SPHERE:
+    t8_global_productionf ("Wrapping a quad around a sphere.\n");
+
+    geometry = t8_geometry_analytic_new (3, "geom_quad_to_sphere", quad_to_sphere_callback, NULL, NULL, NULL);
+    t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
+    t8_cmesh_set_join (cmesh, 0, 0, 1, 0, 0);
+
+    snprintf (vtuname, BUFSIZ, "forest_quad_to_sphere");
+    break;
   case T8_GEOM_OCC_TRIANGLE: {
 #if T8_WITH_OCC
     t8_global_productionf ("Creating uniform level %i forests with an occ triangle geometry.\n", level);
@@ -963,16 +972,6 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     SC_ABORTF ("OCC not linked");
 #endif /* T8_WITH_OCC */
   }
-  case T8_GEOM_ANALYTIC_QUAD_TO_SPHERE: {
-    t8_global_productionf ("Wrapping a quad around a sphere.\n");
-
-    geometry = t8_geometry_analytic_new (3, "geom_quad_to_sphere", quad_to_sphere_callback, NULL, NULL, NULL);
-    t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
-    t8_cmesh_set_join (cmesh, 0, 0, 1, 0, 0);
-
-    snprintf (vtuname, BUFSIZ, "forest_quad_to_sphere");
-    break;
-  }
   default:
     SC_ABORT_NOT_REACHED ();
   }
@@ -1088,11 +1087,11 @@ main (int argc, char **argv)
                       "\t\t    The mesh will not be uniform. Instead it is refined at the domain boundary.\n"
                       "\t\t5 - A cube that is distorted in z-direction with one 3D cube tree.\n"
                       "\t\t6 - A moving mesh consisting of a single 2D quad tree.\n"
-                      "\t\t7 - A curved triangle with an occ curve.\n"
-                      "\t\t8 - A cube with two occ curves as edges.\n"
-                      "\t\t9 - Two cubes with one occ surface as face.\n"
-                      "\t\t10 - A hollow cylinder with a occ surface on the in- and outside.\n"
-                      "\t\t11 - A quad morphed into a sphere.\n");
+                      "\t\t7 - A quad morphed into a sphere.\n"
+                      "\t\t8 - A curved triangle with an occ curve.\n"
+                      "\t\t9 - A cube with two occ curves as edges.\n"
+                      "\t\t10 - Two cubes with one occ surface as face.\n"
+                      "\t\t11 - A hollow cylinder with a occ surface on the in- and outside.\n");
 
   parsed = sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (helpme) {
