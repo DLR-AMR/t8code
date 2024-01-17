@@ -8,7 +8,9 @@ bin_PROGRAMS += \
 example_vtk_interpolate_SOURCES = example/vtk/interpolate_main.cxx
 
 libt8_installed_headers += \
-  example/vtk/interpolate.hxx
+  example/vtk/interpolate.hxx \
+  example/vtk/Callbacks.h
 
 libt8_compiled_sources += \
-  example/vtk/interpolate.cxx
+  example/vtk/interpolate.cxx \
+  example/vtk/Callbacks.cxx

@@ -63,6 +63,7 @@ setup_reader (const char *filename, vtkSmartPointer<vtkXMLPDataReader> reader, i
 
   /*  Get the number of files to read. */
   const int total_num_pieces = reader->GetNumberOfPieces ();
+  t8_debugf ("[D] total_num_pieces: %i\n", total_num_pieces);
   /* Get mpi size and rank */
   int mpiret;
   int mpisize;
@@ -86,12 +87,14 @@ setup_reader (const char *filename, vtkSmartPointer<vtkXMLPDataReader> reader, i
     *first_piece = total_num_pieces / mpisize * mpirank;
     *last_piece = *first_piece;
     const int prev_proc_first_piece = total_num_pieces / mpisize * (mpirank - 1);
-    *last_piece += *first_piece == prev_proc_first_piece ? 0 : total_num_pieces / mpisize;
-    if (*first_piece == total_num_pieces / mpisize * (mpisize - 1)) {
+    t8_debugf ("ppfp: %i\n", prev_proc_first_piece);
+    *last_piece += (*first_piece == prev_proc_first_piece) ? 0 : total_num_pieces / mpisize - 1;
+    if (mpirank == (mpisize - 1)) {
       /* Read the last chunk of data */
-      *last_piece = total_num_pieces - *first_piece;
+      *last_piece = total_num_pieces - 1;
     }
   }
+  t8_debugf ("[D] last_piece: %i\n", *last_piece);
   return read_success;
 }
 
@@ -114,9 +117,9 @@ t8_read_parallel_polyData (const char *filename, vtkSmartPointer<vtkDataSet> gri
   if (first_piece < last_piece) {
     vtkNew<vtkAppendPolyData> append;
     const int total_num_pieces = last_piece - first_piece + 1;
-    for (int ipiece = first_piece; ipiece < last_piece; ipiece++) {
+    for (int ipiece = first_piece; ipiece <= last_piece; ipiece++) {
       reader->UpdatePiece (ipiece, total_num_pieces, 0);
-      append->AddInputData (reader->GetOutput ());
+      append->AddInputData (reader->GetOutput (ipiece));
     }
     append->Update ();
     grid->ShallowCopy (append->GetOutput ());
@@ -143,21 +146,32 @@ t8_read_parallel_unstructured (const char *filename, vtkSmartPointer<vtkDataSet>
   if (read_status == read_failure) {
     return read_status;
   }
+  int mpirank;
+  int mpiret = sc_MPI_Comm_rank(comm, &mpirank);
   /* Read the pieces if there are any pieces to read on this proc. 
    * Merge the output of multiple pieces into one grid */
-  if (first_piece < last_piece) {
+  t8_debugf ("[D] read from %i to %i\n", first_piece, last_piece);
+  if (mpirank == 0) {
     vtkNew<vtkAppendFilter> append;
     const int total_num_pieces = last_piece - first_piece + 1;
-    for (int ipiece = first_piece; ipiece < last_piece; ipiece++) {
+    //reader->SetupUpdateExtent(first_piece, total_num_pieces, 0);
+    /*for (int ipiece = first_piece; ipiece <= last_piece - 1; ipiece++) {
+
+      t8_debugf ("[D] read piece: %i\n", ipiece);
+      char filename[BUFSIZ];
+      reader->SetupUpdateExtent(ipiece, total_num_pieces, 0);
       reader->UpdatePiece (ipiece, total_num_pieces, 0);
+
       append->AddInputData (reader->GetOutputAsDataSet ());
-    }
+    }*/
     /* Merge all read grids together */
-    append->MergePointsOn ();
-    append->Update ();
-    grid->ShallowCopy (append->GetOutput ());
+    //append->MergePointsOn ();
+    //append->Update ();
+    reader->SetFileName (filename);
+    reader->Update();
+    grid->ShallowCopy (reader->GetOutput ());
   }
-  else {
+   else {
     /* Initialize the grid, but don't construct any cells. 
      * simplifies further processing of the grid on multiple procs. */
     grid->Initialize ();

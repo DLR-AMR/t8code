@@ -142,6 +142,7 @@ t8_file_to_vtkGrid (const char *filename, vtkSmartPointer<vtkDataSet> vtkGrid, c
         main_proc_read_successful = t8_read_unstructured (filename, vtkGrid);
       }
       else {
+        t8_debugf("[D] t8_read_parallel_unstructured\n");
         main_proc_read_successful = t8_read_parallel_unstructured (filename, vtkGrid, comm);
         break;
       }
