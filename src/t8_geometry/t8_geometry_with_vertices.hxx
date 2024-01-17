@@ -74,6 +74,16 @@ class t8_geometry_with_vertices: public t8_geometry {
   virtual void
   t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 
+  /**
+   * Get the type of this geometry.
+   * \return The type.
+   */
+  inline t8_geometry_type_t
+  t8_geom_get_type () const
+  {
+    return T8_GEOMETRY_TYPE_UNDEFINED;
+  };
+
  protected:
   t8_gloidx_t active_tree;            /*< The tree of which currently vertices are loaded. */
   t8_eclass_t active_tree_class;      /*< The class of the currently active tree. */
