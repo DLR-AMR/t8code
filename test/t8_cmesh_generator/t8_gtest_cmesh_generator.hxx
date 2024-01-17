@@ -113,7 +113,7 @@ class cmesh_generator {
   }
 
   /**
-   * Compare two cmesh_generator. If the current_generator is equl, the generators are compared. 
+   * Compare two cmesh_generator. If the current_generator is equal, the generators are compared. 
    * If not, the object with the smaller current_generator is considered smaller. 
    * 
    * \param[in] other the cmesh_generator to compare with.
