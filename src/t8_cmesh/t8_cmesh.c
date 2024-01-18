@@ -417,7 +417,8 @@ t8_cmesh_get_attribute (t8_cmesh_t cmesh, const int package_id, const int key, c
  * \see t8_cmesh_set_attribute_gloidx_array
  */
 t8_gloidx_t *
-t8_cmesh_get_attribute_gloidx_array (t8_cmesh_t cmesh, int package_id, int key, t8_locidx_t ltree_id, size_t data_count)
+t8_cmesh_get_attribute_gloidx_array (t8_cmesh_t cmesh, const int package_id, const int key, const t8_locidx_t ltree_id,
+                                     const size_t data_count)
 {
   T8_ASSERT (0 <= data_count);
   return (t8_gloidx_t *) t8_cmesh_get_attribute (cmesh, package_id, key, ltree_id);
