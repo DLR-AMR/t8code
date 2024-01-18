@@ -72,7 +72,8 @@ TEST (t8_point_inside, test_point_inside_specific_triangle)
 
   t8_element_t *element = t8_forest_get_element (forest, 0, NULL);
 
-  const int point_is_inside = t8_forest_element_point_inside (forest, 0, element, test_point, 0, tolerance);
+  int point_is_inside;
+  t8_forest_element_points_inside (forest, 0, element, test_point, 1, &point_is_inside, tolerance);
   ASSERT_FALSE (point_is_inside) << "The point is wrongly detected as inside the triangle.";
   t8_forest_unref (&forest);
 }
@@ -114,7 +115,8 @@ TEST (t8_point_inside, test_point_inside_specific_quad)
 
   t8_element_t *element = t8_forest_get_element (forest, 0, NULL);
 
-  const int point_is_inside = t8_forest_element_point_inside (forest, 0, element, test_point, 0, tolerance);
+  int point_is_inside;
+  t8_forest_element_points_inside (forest, 0, element, test_point, 1, &point_is_inside, tolerance);
 
   ASSERT_FALSE (point_is_inside) << "The point is wrongly detected as inside the quad.";
 
@@ -308,14 +310,8 @@ TEST_P (geometry_point_inside, test_point_inside)
       }
       /* We now check whether the point inside function correctly sees whether
          * the point is inside the element or not. */
-      if (eclass == T8_ECLASS_LINE || eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX) {
-        t8_forest_element_point_batch_inside (forest, 0, element, test_point, num_points, point_is_recognized_as_inside,
-                                              use_axis_aligned_geom, tolerance);
-      }
-      else {
-        t8_forest_element_point_batch_inside (forest, 0, element, test_point, num_points, point_is_recognized_as_inside,
-                                              0, tolerance);
-      }
+      t8_forest_element_points_inside (forest, 0, element, test_point, num_points, point_is_recognized_as_inside,
+                                       tolerance);
       for (int ipoint = 0; ipoint < num_points; ipoint++) {
         ASSERT_EQ (!point_is_recognized_as_inside[ipoint], !point_is_inside[ipoint])
           << "Testing point #" << ipoint << "(" << test_point[0] << "," << test_point[1] << "," << test_point[2]
