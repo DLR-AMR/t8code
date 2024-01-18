@@ -725,8 +725,8 @@ t8_cmesh_trees_compare_keyattr (const void *A1, const void *A2)
 
 /* The size of the attribute is not returned, but would be accessible */
 void *
-t8_cmesh_trees_get_attribute (const t8_cmesh_trees_t trees, t8_locidx_t ltree_id, int package_id, int key, size_t *size,
-                              int is_ghost)
+t8_cmesh_trees_get_attribute (const t8_cmesh_trees_t trees, const t8_locidx_t ltree_id, const int package_id,
+                              const int key, size_t *size, const int is_ghost)
 {
   int proc;
   t8_ctree_t tree;
