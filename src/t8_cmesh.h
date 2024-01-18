@@ -664,7 +664,7 @@ t8_cmesh_get_tree_vertices (t8_cmesh_t cmesh, t8_locidx_t ltreeid);
  * \see t8_cmesh_set_attribute
  */
 void *
-t8_cmesh_get_attribute (t8_cmesh_t cmesh, int package_id, int key, t8_locidx_t ltree_id);
+t8_cmesh_get_attribute (t8_cmesh_t cmesh, const int package_id, const int key, const t8_locidx_t ltree_id);
 
 /** Return the attribute pointer of a tree for a gloidx_t array.
  * \param [in]     cmesh        The cmesh.
