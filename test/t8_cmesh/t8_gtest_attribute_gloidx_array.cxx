@@ -90,13 +90,13 @@ TEST_P (cmesh_attribute_gloidx_array, check_values_data_not_persist)
 
   /* If we did not store any values, we except to get the NULL pointer back. */
   if (entries == NULL) {
-    EXPECT_TRUE (get_entries == NULL);
+    EXPECT_EQ (get_entries, nullptr);
     /* Number of entries must be < 0 in that case and we cannot continue the test otherwise. */
     ASSERT_EQ (num_entries, 0);
   }
   else {
     /* Otherwise it must not be NULL and we abort the test if it is. */
-    ASSERT_TRUE (get_entries != NULL);
+    ASSERT_NE (get_entries, nullptr);
   }
 
   /* Check for equality of the values. */
@@ -114,13 +114,13 @@ TEST_P (cmesh_attribute_gloidx_array, check_values_data_persist)
 
   /* If we did not store any values, we except to get the NULL pointer back. */
   if (entries == NULL) {
-    EXPECT_TRUE (get_entries == NULL);
+    EXPECT_EQ (get_entries, nullptr);
     /* Number of entries must be < 0 in that case and we cannot continue the test otherwise. */
     ASSERT_EQ (num_entries, 0);
   }
   else {
     /* Otherwise it must not be NULL and we abort the test if it is. */
-    ASSERT_TRUE (get_entries != NULL);
+    ASSERT_NE (get_entries, nullptr);
   }
 
   /* Check for equality of the values. */
