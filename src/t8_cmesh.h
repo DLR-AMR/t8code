@@ -306,7 +306,7 @@ t8_cmesh_set_attribute_string (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int packa
  */
 void
 t8_cmesh_set_attribute_gloidx_array (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int package_id, int key,
-                                     const t8_gloidx_t *data, size_t data_count, int data_persists);
+                                     const t8_gloidx_t *data, const size_t data_count, int data_persists);
 
 /** Insert a face-connection between two trees in a cmesh.
  * \param [in,out] cmesh        The cmesh to be updated.
@@ -684,7 +684,7 @@ t8_cmesh_get_attribute (t8_cmesh_t cmesh, int package_id, int key, t8_locidx_t l
  */
 t8_gloidx_t *
 t8_cmesh_get_attribute_gloidx_array (t8_cmesh_t cmesh, int package_id, int key, t8_locidx_t ltree_id,
-                                     size_t data_count);
+                                     const size_t data_count);
 
 /** Return the shared memory array storing the partition table of
  * a partitioned cmesh.
