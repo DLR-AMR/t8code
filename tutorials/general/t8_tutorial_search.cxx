@@ -189,10 +189,10 @@ t8_tutorial_search_query_callback (t8_forest_t forest, t8_locidx_t ltreeid, cons
   /* Ensure that the data is actually set. */
   T8_ASSERT (particles_per_element != NULL);
   T8_ASSERT (query != NULL);
-
+  const int num_particles = 1;
   /* Test whether this particle is inside this element. */
-  particle_is_inside_element
-    = t8_forest_element_point_inside (forest, ltreeid, element, particle->coordinates, tolerance);
+  t8_forest_element_points_inside (forest, ltreeid, element, particle->coordinates, num_particles,
+                                   &particle_is_inside_element, tolerance);
   if (particle_is_inside_element) {
     if (is_leaf) {
       /* The particle is inside and this element is a leaf element.
