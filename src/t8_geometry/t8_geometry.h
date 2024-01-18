@@ -143,7 +143,7 @@ t8_geom_handler_get_num_geometries (const t8_geometry_handler_t *geom_handler);
  * \note  Most cmeshes will have only one geometry and this function is an optimization
  *        for that special case. It is used for example in \ref t8_cmesh_get_tree_geometry.
  */
-t8_geometry_c *
+const t8_geometry_c *
 t8_geom_handler_get_unique_geometry (const t8_geometry_handler_t *geom_handler);
 
 /**

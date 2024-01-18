@@ -253,7 +253,7 @@ t8_geom_handler_get_num_geometries (const t8_geometry_handler_t *geom_handler)
   return geom_handler->registered_geometries.elem_count;
 }
 
-t8_geometry_c *
+const t8_geometry_c *
 t8_geom_handler_get_unique_geometry (const t8_geometry_handler_t *geom_handler)
 {
   T8_ASSERT (t8_geom_handler_is_committed (geom_handler));

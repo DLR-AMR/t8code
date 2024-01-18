@@ -102,7 +102,7 @@ struct t8_geometry_linear: public t8_geometry_with_vertices
   virtual void
   t8_geom_point_batch_inside_element (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
                                       const double *points, const int num_points, int *is_inside,
-                                      const double tolerance);
+                                      const double tolerance) const;
 
   /* Load tree data is inherited from t8_geometry_with_vertices. */
 };

@@ -53,7 +53,7 @@ t8_cmesh_set_tree_geometry (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const char *g
   t8_cmesh_set_attribute_string (cmesh, gtreeid, t8_get_package_id (), T8_CMESH_GEOMETRY_ATTRIBUTE_KEY, geom_name);
 }
 
-t8_geometry_c *
+const t8_geometry_c *
 t8_cmesh_get_tree_geometry (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));

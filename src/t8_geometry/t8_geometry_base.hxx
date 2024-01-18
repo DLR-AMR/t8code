@@ -115,8 +115,10 @@ struct t8_geometry
   virtual void
   t8_geom_point_batch_inside_element (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
                                       const double *points, const int num_points, int *is_inside,
-                                      const double tolerance)
-    = 0;
+                                      const double tolerance) const
+  {
+    SC_ABORTF ("Function not yet implemented");
+  };
 
   /** Query whether a single points lies inside an element. 
  * \param [in]      forest      The forest.
@@ -135,7 +137,7 @@ struct t8_geometry
  */
   inline int
   t8_geom_point_inside_element (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                const double *points, const int num_points, const double tolerance)
+                                const double *points, const int num_points, const double tolerance) const
   {
     int is_inside = 0;
     t8_geom_point_batch_inside_element (forest, ltreeid, element, points, 1, &is_inside, tolerance);

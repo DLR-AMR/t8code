@@ -1091,24 +1091,22 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
 
 void
 t8_forest_element_point_batch_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                      const double *points, int num_points, int *is_inside,
-                                      const int geom_is_axis_aligned, const double tolerance)
+                                      const double *points, int num_points, int *is_inside, const double tolerance)
 {
   /* Check whether the provided geometry is linear */
   const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
   const t8_locidx_t cltreeid = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
   const t8_gloidx_t cgtreeid = t8_cmesh_get_global_id (cmesh, cltreeid);
-  t8_geometry_c *geometry = t8_cmesh_get_tree_geometry (cmesh, cgtreeid);
+  const t8_geometry_c *geometry = t8_cmesh_get_tree_geometry (cmesh, cgtreeid);
   geometry->t8_geom_point_batch_inside_element (forest, ltreeid, element, points, num_points, is_inside, tolerance);
 }
 
 int
 t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                const double point[3], const int geom_is_axis_aligned, const double tolerance)
+                                const double point[3], const double tolerance)
 {
   int is_inside = 0;
-  t8_forest_element_point_batch_inside (forest, ltreeid, element, point, 1, &is_inside, geom_is_axis_aligned,
-                                        tolerance);
+  t8_forest_element_point_batch_inside (forest, ltreeid, element, point, 1, &is_inside, tolerance);
   return is_inside;
 }
 
