@@ -179,7 +179,7 @@ t8_cmesh_trees_init (t8_cmesh_trees_t *ptrees, int num_procs, t8_locidx_t num_tr
  * \return                    The part number \a proc of \a trees.
  */
 t8_part_tree_t
-t8_cmesh_trees_get_part (t8_cmesh_trees_t trees, int proc);
+t8_cmesh_trees_get_part (const t8_cmesh_trees_t trees, const int proc);
 
 /* !!! This does only allocate memory for the trees and ghosts
  *     not yet for the face data and the attributes. See below !!!
@@ -407,7 +407,7 @@ t8_cmesh_trees_init_attributes (t8_cmesh_trees_t trees, t8_locidx_t ltree_id, si
  *                    does not exist.
  */
 void *
-t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_locidx_t ltree_id, int package_id, int key, size_t *size,
+t8_cmesh_trees_get_attribute (const t8_cmesh_trees_t trees, t8_locidx_t ltree_id, int package_id, int key, size_t *size,
                               int is_ghost);
 
 /** Return the total size of all attributes stored at a specified tree.
@@ -441,7 +441,7 @@ t8_cmesh_trees_add_ghost_attribute (t8_cmesh_trees_t trees, int proc, t8_stash_a
  * \return            The number of parts in \a trees.
  */
 size_t
-t8_cmesh_trees_get_numproc (t8_cmesh_trees_t trees);
+t8_cmesh_trees_get_numproc (const t8_cmesh_trees_t trees);
 
 /** Compute the tree-to-face information given a face and orientation value
  *  of a face connection.
