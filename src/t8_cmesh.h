@@ -89,7 +89,7 @@ t8_cmesh_is_initialized (t8_cmesh_t cmesh);
  *                              False otherwise.
  */
 int
-t8_cmesh_is_committed (t8_cmesh_t cmesh);
+t8_cmesh_is_committed (const t8_cmesh_t cmesh);
 
 #ifdef T8_ENABLE_DEBUG
 /** After a cmesh is committed, check whether all trees in a cmesh do have positive volume.
@@ -664,7 +664,7 @@ t8_cmesh_get_tree_vertices (t8_cmesh_t cmesh, t8_locidx_t ltreeid);
  * \see t8_cmesh_set_attribute
  */
 void *
-t8_cmesh_get_attribute (t8_cmesh_t cmesh, const int package_id, const int key, const t8_locidx_t ltree_id);
+t8_cmesh_get_attribute (const t8_cmesh_t cmesh, const int package_id, const int key, const t8_locidx_t ltree_id);
 
 /** Return the attribute pointer of a tree for a gloidx_t array.
  * \param [in]     cmesh        The cmesh.
@@ -683,8 +683,8 @@ t8_cmesh_get_attribute (t8_cmesh_t cmesh, const int package_id, const int key, c
  * \see t8_cmesh_set_attribute_gloidx_array
  */
 t8_gloidx_t *
-t8_cmesh_get_attribute_gloidx_array (t8_cmesh_t cmesh, const int package_id, const int key, const t8_locidx_t ltree_id,
-                                     const size_t data_count);
+t8_cmesh_get_attribute_gloidx_array (const t8_cmesh_t cmesh, const int package_id, const int key,
+                                     const t8_locidx_t ltree_id, const size_t data_count);
 
 /** Return the shared memory array storing the partition table of
  * a partitioned cmesh.

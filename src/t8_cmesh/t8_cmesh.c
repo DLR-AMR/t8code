@@ -84,7 +84,7 @@ t8_cmesh_check_trees_per_eclass (t8_cmesh_t cmesh)
 #endif
 
 int
-t8_cmesh_is_committed (t8_cmesh_t cmesh)
+t8_cmesh_is_committed (const t8_cmesh_t cmesh)
 {
   static int is_checking = 0;
 
@@ -390,7 +390,7 @@ t8_cmesh_get_tree_vertices (t8_cmesh_t cmesh, t8_locidx_t ltreeid)
 }
 
 void *
-t8_cmesh_get_attribute (t8_cmesh_t cmesh, const int package_id, const int key, const t8_locidx_t ltree_id)
+t8_cmesh_get_attribute (const t8_cmesh_t cmesh, const int package_id, const int key, const t8_locidx_t ltree_id)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, ltree_id) || t8_cmesh_treeid_is_ghost (cmesh, ltree_id));
@@ -417,8 +417,8 @@ t8_cmesh_get_attribute (t8_cmesh_t cmesh, const int package_id, const int key, c
  * \see t8_cmesh_set_attribute_gloidx_array
  */
 t8_gloidx_t *
-t8_cmesh_get_attribute_gloidx_array (t8_cmesh_t cmesh, const int package_id, const int key, const t8_locidx_t ltree_id,
-                                     const size_t data_count)
+t8_cmesh_get_attribute_gloidx_array (const t8_cmesh_t cmesh, const int package_id, const int key,
+                                     const t8_locidx_t ltree_id, const size_t data_count)
 {
   T8_ASSERT (0 <= data_count);
   return (t8_gloidx_t *) t8_cmesh_get_attribute (cmesh, package_id, key, ltree_id);
