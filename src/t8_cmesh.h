@@ -684,7 +684,7 @@ t8_cmesh_get_attribute (t8_cmesh_t cmesh, int package_id, int key, t8_locidx_t l
  */
 t8_gloidx_t *
 t8_cmesh_get_attribute_gloidx_array (t8_cmesh_t cmesh, int package_id, int key, t8_locidx_t ltree_id,
-                                     size_t data_count);
+                                     const size_t data_count);
 
 /** Return the shared memory array storing the partition table of
  * a partitioned cmesh.
