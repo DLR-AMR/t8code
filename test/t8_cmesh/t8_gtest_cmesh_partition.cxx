@@ -26,6 +26,7 @@
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include "t8_cmesh/t8_cmesh_partition.h"
 #include <t8_cmesh/t8_cmesh_testcases.h>
+#include <test/t8_gtest_macros.hxx>
 
 /* We create a cmesh, partition it and repartition it several times.
  * At the end we result in the same partition as at the beginning and we
@@ -129,5 +130,4 @@ TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate)
 }
 
 /* Test all cmeshes over all different inputs we get through their id */
-INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_partition, t8_cmesh_partition_class,
-                          testing::Range (0, t8_get_number_of_all_testcases ()));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_partition, t8_cmesh_partition_class, AllCmeshs);

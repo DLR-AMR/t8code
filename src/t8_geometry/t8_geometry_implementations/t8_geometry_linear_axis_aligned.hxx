@@ -59,6 +59,16 @@ struct t8_geometry_linear_axis_aligned: public t8_geometry_with_vertices
   virtual ~t8_geometry_linear_axis_aligned ();
 
   /**
+   * Get the type of this geometry.
+   * \return The type.
+   */
+  inline t8_geometry_type_t
+  t8_geom_get_type () const
+  {
+    return T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED;
+  };
+
+  /**
    * Maps points in the reference space \f$ [0,1]^\mathrm{dim} \to \mathbb{R}^3 \f$.
    * \param [in]  cmesh       The cmesh in which the point lies.
    * \param [in]  gtreeid     The global tree (of the cmesh) in which the reference point is.

@@ -420,24 +420,10 @@ void
 t8_geometry_linear_destroy (t8_geometry_c **geom)
 {
   T8_ASSERT (geom != NULL);
-  T8_ASSERT (t8_geom_is_linear (*geom));
+  T8_ASSERT ((*geom)->t8_geom_get_type () == T8_GEOMETRY_TYPE_LINEAR);
 
   delete *geom;
   *geom = NULL;
 }
-
-#if T8_ENABLE_DEBUG
-int
-t8_geom_is_linear (const t8_geometry_c *geometry)
-{
-  /* Try to dynamic cast the geometry into linear geometry. This is only successful if
-   * geometry pointed to a t8_geometry_linear.
-   * If successful, then is_linear_geom will be true.
-   */
-  const int is_linear_geom = (dynamic_cast<const t8_geometry_linear *> (geometry) != NULL);
-
-  return is_linear_geom;
-}
-#endif
 
 T8_EXTERN_C_END ();
