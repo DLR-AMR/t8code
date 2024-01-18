@@ -33,7 +33,8 @@ class cmesh_attribute_gloidx_array: public testing::TestWithParam<int> {
   void
   SetUp () override
   {
-    num_entries = GetParam ();
+    num_entries = std::get<0> (GetParam ());
+    check_tree_id = std::get<1> (GetParam ());
 
     /* Build a cmesh with one QUAD tree and one TRIANGLE tree. */
     t8_cmesh_init (&cmesh);
@@ -77,40 +78,16 @@ class cmesh_attribute_gloidx_array: public testing::TestWithParam<int> {
 
   t8_cmesh_t cmesh;
   t8_locidx_t num_entries;
+  t8_locidx_t check_tree_id;
   t8_gloidx_t *entries;
   t8_gloidx_t *get_entries;
 };
 
 /** Check attribute values of cmeshes against reference values. */
-TEST_P (cmesh_attribute_gloidx_array, check_values_data_not_persist)
+TEST_P (cmesh_attribute_gloidx_array, check_values_data)
 {
-  const t8_locidx_t tree_id = 0;
-  get_entries = t8_cmesh_get_attribute_gloidx_array (cmesh, t8_get_package_id (), T8_CMESH_NEXT_POSSIBLE_KEY, tree_id,
-                                                     num_entries);
-
-  /* If we did not store any values, we except to get the NULL pointer back. */
-  if (entries == NULL) {
-    EXPECT_EQ (get_entries, nullptr);
-    /* Number of entries must be < 0 in that case and we cannot continue the test otherwise. */
-    ASSERT_EQ (num_entries, 0);
-  }
-  else {
-    /* Otherwise it must not be NULL and we abort the test if it is. */
-    ASSERT_NE (get_entries, nullptr);
-  }
-
-  /* Check for equality of the values. */
-  for (t8_locidx_t ientry = 0; ientry < num_entries; ++ientry) {
-    EXPECT_EQ (get_entries[ientry], ientry);
-  }
-}
-
-/** Check attribute values of cmeshes against reference values. */
-TEST_P (cmesh_attribute_gloidx_array, check_values_data_persist)
-{
-  const t8_locidx_t tree_id = 1;
-  get_entries = t8_cmesh_get_attribute_gloidx_array (cmesh, t8_get_package_id (), T8_CMESH_NEXT_POSSIBLE_KEY, tree_id,
-                                                     num_entries);
+  get_entries = t8_cmesh_get_attribute_gloidx_array (cmesh, t8_get_package_id (), T8_CMESH_NEXT_POSSIBLE_KEY,
+                                                     check_tree_id, num_entries);
 
   /* If we did not store any values, we except to get the NULL pointer back. */
   if (entries == NULL) {
@@ -132,4 +109,4 @@ TEST_P (cmesh_attribute_gloidx_array, check_values_data_persist)
 /* Test for different number of entries.
  * 0, 100, 200, ... T8_ATTRIBUTE_TEST_MAX_NUM_ENTRIES */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_attribute_gloidx_array, cmesh_attribute_gloidx_array,
-                          testing::Range (0, T8_ATTRIBUTE_TEST_MAX_NUM_ENTRIES + 1, 100));
+                          testing::Combine(testing::Range (0, T8_ATTRIBUTE_TEST_MAX_NUM_ENTRIES + 1, 100), testing::Range(0, 2));
