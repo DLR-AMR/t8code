@@ -28,7 +28,7 @@
 
 #define T8_ATTRIBUTE_TEST_MAX_NUM_ENTRIES 1000
 
-class cmesh_attribute_gloidx_array: public testing::TestWithParam<int> {
+class cmesh_attribute_gloidx_array: public testing::TestWithParam<std::tuple<int, int>> {
  protected:
   void
   SetUp () override
@@ -109,4 +109,5 @@ TEST_P (cmesh_attribute_gloidx_array, check_values_data)
 /* Test for different number of entries.
  * 0, 100, 200, ... T8_ATTRIBUTE_TEST_MAX_NUM_ENTRIES */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_attribute_gloidx_array, cmesh_attribute_gloidx_array,
-                          testing::Combine(testing::Range (0, T8_ATTRIBUTE_TEST_MAX_NUM_ENTRIES + 1, 100), testing::Range(0, 2));
+                          testing::Combine (testing::Range (0, T8_ATTRIBUTE_TEST_MAX_NUM_ENTRIES + 1, 100),
+                                            testing::Range (0, 2)));
