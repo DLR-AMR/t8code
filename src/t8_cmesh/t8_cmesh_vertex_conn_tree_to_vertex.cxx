@@ -37,8 +37,10 @@
 * \note Cmesh must not be committed.
 */
 void
-t8_cmesh_vertex_conn_tree_to_vertex::set_global_vertex_ids_of_tree_vertices (const t8_cmesh_t cmesh, const t8_gloidx_t global_tree,
-                                        const t8_gloidx_t *global_tree_vertices, const size_t num_vertices)
+t8_cmesh_vertex_conn_tree_to_vertex::set_global_vertex_ids_of_tree_vertices (const t8_cmesh_t cmesh,
+                                                                             const t8_gloidx_t global_tree,
+                                                                             const t8_gloidx_t *global_tree_vertices,
+                                                                             const int num_vertices)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 
@@ -51,13 +53,13 @@ t8_cmesh_vertex_conn_tree_to_vertex::set_global_vertex_ids_of_tree_vertices (con
 
   /* We copy the data directly, hence set data_persiss to 0 */
   const int data_persists = 0;
-  t8_cmesh_set_attribute_gloidx_array (cmesh, global_tree, t8_get_package_id (), T8_CMESH_GLOBAL_VERTICES_ATTRIBUTE_KEY, 
+  t8_cmesh_set_attribute_gloidx_array (cmesh, global_tree, t8_get_package_id (), T8_CMESH_GLOBAL_VERTICES_ATTRIBUTE_KEY,
                                        global_tree_vertices, num_vertices, data_persists);
 }
 
-
 const t8_gloidx_t *
-t8_cmesh_vertex_conn_tree_to_vertex::get_global_vertices (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const size_t num_vertices)
+t8_cmesh_vertex_conn_tree_to_vertex::get_global_vertices (const t8_cmesh_t cmesh, const t8_locidx_t local_tree,
+                                                          const int num_vertices)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
 
@@ -69,5 +71,23 @@ t8_cmesh_vertex_conn_tree_to_vertex::get_global_vertices (const t8_cmesh_t cmesh
   T8_ASSERT (num_vertices == num_tree_vertices);
 #endif
 
-  return t8_cmesh_get_attribute_gloidx_array (cmesh, t8_get_package_id (), T8_CMESH_GLOBAL_VERTICES_ATTRIBUTE_KEY, local_tree, num_vertices);
+  return t8_cmesh_get_attribute_gloidx_array (cmesh, t8_get_package_id (), T8_CMESH_GLOBAL_VERTICES_ATTRIBUTE_KEY,
+                                              local_tree, num_vertices);
+}
+
+t8_gloidx_t
+t8_cmesh_vertex_conn_tree_to_vertex::get_global_vertex (const t8_cmesh_t cmesh, const t8_locidx_t local_tree,
+                                                        const int local_tree_vertex, const int num_tree_vertices)
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+
+  /* Verify that local_tree_vertex is in fact a local vertex of the tree */
+  /* Note: We only perform this check in debugging mode.
+   *       In non-debugging mode, using a vertex index beyond the trees index allows
+   *       for a potential attacker to gain access to memory possibly not owned by the caller.
+   *       We do not check in non-debugging mode for (obvious) performance reasons. */
+  T8_ASSERT (0 <= local_tree_vertex);
+  T8_ASSERT (local_tree_vertex < num_tree_vertices);
+
+  return get_global_vertices (cmesh, local_tree, num_tree_vertices)[local_tree_vertex];
 }
