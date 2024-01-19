@@ -42,40 +42,6 @@
  * We make this definition public for interoperability of element classes.
  * We might want to put this into a private, scheme-specific header file.
  */
-typedef p4est_quadrant_t t8_pquad_t;
-
-/** Return the toplevel dimension. */
-#define T8_QUAD_GET_TDIM(quad) ((int) (quad)->pad8)
-
-/** Return the direction of the third dimension.
- * This is only valid to call if the toplevel dimension is three.
- */
-#define T8_QUAD_GET_TNORMAL(quad) (T8_ASSERT (T8_QUAD_GET_TDIM (quad) == 3), ((int) (quad)->pad16))
-
-/** Return the coordinate in the third dimension.
- * This is only valid to call if the toplevel dimension is three.
- */
-#define T8_QUAD_GET_TCOORD(quad) (T8_ASSERT (T8_QUAD_GET_TDIM (quad) == 3), ((int) (quad)->p.user_long))
-
-/** Set the toplevel dimension of a quadrilateral. */
-#define T8_QUAD_SET_TDIM(quad, dim) \
-  do { \
-    T8_ASSERT ((dim) == 2 || (dim) == 3); \
-    (quad)->pad8 = (int8_t) (dim); \
-  } while (0)
-
-/** Set the direction of the third dimension. */
-#define T8_QUAD_SET_TNORMAL(quad, normal) \
-  do { \
-    T8_ASSERT ((normal) >= 0 && (normal) < 3); \
-    (quad)->pad16 = (int16_t) (normal); \
-  } while (0)
-
-/** Set the coordinate in the third dimension. */
-#define T8_QUAD_SET_TCOORD(quad, coord) \
-  do { \
-    (quad)->p.user_long = (long) (coord); \
-  } while (0)
 
 struct t8_default_scheme_quad_c: public t8_default_scheme_common_c
 {
@@ -203,21 +169,6 @@ struct t8_default_scheme_quad_c: public t8_default_scheme_common_c
    * \return          The number of faces of \a elem.
    */
   virtual int
-  t8_element_num_faces (const t8_element_t *elem) const;
-
-  /** Compute the maximum number of faces of a given element and all of its
-   *  descendants.
-   * \param [in] elem The element.
-   * \return          The maximum number of faces of \a elem and its descendants.
-   */
-  virtual int
-  t8_element_max_num_faces (const t8_element_t *elem) const;
-
-  /** Return the number of children of an element when it is refined.
-   * \param [in] elem   The element whose number of children is returned.
-   * \return            The number of children of \a elem if it is to be refined.
-   */
-  virtual int
   t8_element_num_children (const t8_element_t *elem) const;
 
   /** Return the number of children of an element's face when the element is refined.
@@ -225,43 +176,7 @@ struct t8_default_scheme_quad_c: public t8_default_scheme_common_c
    * \param [in] face   A face of \a elem.
    * \return            The number of children of \a face if \a elem is to be refined.
    */
-  virtual int
-  t8_element_num_face_children (const t8_element_t *elem, int face) const;
-  /** Return the corner number of an element's face corner.
-   * \param [in] element  The element.
-   * \param [in] face     A face index for \a element.
-   * \param [in] corner   A corner index for the face 0 <= \a corner < num_face_corners.
-   * \return              The corner number of the \a corner-th vertex of \a face.
-   */
-  virtual int
-  t8_element_get_face_corner (const t8_element_t *element, int face, int corner) const;
 
-  /** Return the face numbers of the faces sharing an element's corner.
-   * \param [in] element  The element.
-   * \param [in] corner   A corner index for the face.
-   * \param [in] face     A face index for \a corner.
-   * \return              The face number of the \a face-th face at \a corner.
-   */
-  virtual int
-  t8_element_get_corner_face (const t8_element_t *element, int corner, int face) const;
-
-  /** Return the type of each child in the ordering of the implementation.
-   * \param [in] childid  Must be between 0 and the number of children (exclusive).
-   *                      The number of children is defined in \a t8_element_num_children.
-   * \return              The type for the given child.
-   */
-  virtual t8_eclass_t
-  t8_element_child_eclass (int childid) const;
-
-  /** Construct the child element of a given number.
-   * \param [in] elem     This must be a valid element, bigger than maxlevel.
-   * \param [in] childid  The number of the child to construct.
-   * \param [in,out] child        The storage for this element must exist
-   *                              and match the element class of the child.
-   *                              On output, a valid element.
-   * It is valid to call this function with elem = child.
-   * \see t8_element_child_eclass
-   */
   virtual void
   t8_element_child (const t8_element_t *elem, int childid, t8_element_t *child) const;
 
@@ -301,6 +216,60 @@ struct t8_default_scheme_quad_c: public t8_default_scheme_common_c
    * \return              Zero if \b fam is not a family, nonzero if it is.
    * \note level 0 elements do not form a family.
    */
+
+  /*...*/
+
+  virtual void
+  t8_element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id) const;
+
+  /** Compute the linear id of a given element in a hypothetical uniform
+   * refinement of a given level.
+   * \param [in] elem     The element whose id we compute.
+   * \param [in] level    The level of the uniform refinement to consider.
+   * \return              The linear id of the element.
+   */
+  virtual t8_linearidx_t
+  t8_element_get_linear_id (const t8_element_t *elem, int level) const;
+
+  /** Compute the first descendant of a given element.
+   * \param [in] elem     The element whose descendant is computed.
+   * \param [out] desc    The first element in a uniform refinement of \a elem
+   *                      of the given level.
+   * \param [in] level    The level, at which the descendant is computed.
+   */
+  virtual void
+  t8_element_first_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
+
+  /** Compute the last descendant of a given element.
+   * \param [in] elem     The element whose descendant is computed.
+   * \param [out] desc    The last element in a uniform refinement of \a elem
+   *                      of the given level.
+   * \param [in] level    The level, at which the descendant is computed.
+   */
+  virtual void
+  t8_element_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
+
+  /** Construct the successor in a uniform refinement of a given element.
+   * \param [in] elem1    The element whose successor should be constructed.
+   * \param [in,out] elem2  The element whose entries will be set.
+   * \param [in] level    The level of the uniform refinement to consider.
+   */
+  virtual void
+  t8_element_successor (const t8_element_t *t, t8_element_t *s, int level) const;
+
+  /** Get the integer coordinates of the anchor node of an element.
+   * The default scheme implements the Morton type SFCs. In these SFCs the
+   * elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and 
+   * L the maximum refinement level. 
+   * All element vertices have integer coordinates in this cube and the anchor
+   * node is the first of all vertices (index 0). It also has the lowest x,y and z
+   * coordinates.
+   * \param [in] elem   The element.
+   * \param [out] anchor The integer coordinates of the anchor node in the cube [0,1]^(dL)
+   */
+
+  /*---*/
+
   virtual int
   t8_element_is_family (t8_element_t **fam) const;
 
@@ -322,6 +291,100 @@ struct t8_default_scheme_quad_c: public t8_default_scheme_common_c
    * \param [in] face     A face of \a elem.
    * \return              The element shape of the face.
    */
+
+  /*******************************************************************
+ ************************ Geometry *********************************
+ *******************************************************************/
+  virtual void
+  t8_element_anchor (const t8_element_t *elem, int anchor[3]) const;
+
+  /** Compute the integer coordinates of a given element vertex.
+   * The default scheme implements the Morton type SFCs. In these SFCs the
+   * elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and 
+   * L the maximum refinement level. 
+   * All element vertices have integer coordinates in this cube.
+   *   \param [in] elem    The element to be considered.
+   *   \param [in] vertex  The id of the vertex whose coordinates shall be computed.
+   *   \param [out] coords An array of at least as many integers as the element's dimension
+   *                      whose entries will be filled with the coordinates of \a vertex.
+   */
+  virtual void
+  t8_element_vertex_coords (const t8_element_t *elem, int vertex, int coords[]) const;
+
+  /** Compute the coordinates of a given element vertex inside a reference tree
+   *  that is embedded into [0,1]^d (d = dimension).
+   *   \param [in] elem    The element.
+   *   \param [in] vertex  The id of the vertex whose coordinates shall be computed.
+   *   \param [out] coords An array of at least as many doubles as the element's dimension
+   *                      whose entries will be filled with the coordinates of \a vertex.
+   */
+  virtual void
+  t8_element_vertex_reference_coords (const t8_element_t *elem, const int vertex, double coords[]) const;
+
+  /** Convert points in the reference space of an element to points in the
+   *  reference space of the tree.
+   * 
+   * \param [in] elem         The element.
+   * \param [in] coords_input The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
+   *                          in the reference space of the element.
+   * \param [in] num_coords   Number of \f$ dim\f$-sized coordinates to evaluate.
+   * \param [out] out_coords  The coordinates of the points in the
+   *                          reference space of the tree.
+   */
+  virtual void
+  t8_element_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
+                               double *out_coords) const;
+
+  /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
+   * Returns false otherwise.
+   * * \return           0, because quads refine regularly
+   */
+
+  /*******************************************************************
+ ************************ facestuff *********************************
+ *******************************************************************/
+  virtual int
+  t8_element_num_faces (const t8_element_t *elem) const;
+
+  /** Compute the maximum number of faces of a given element and all of its
+   *  descendants.
+   * \param [in] elem The element.
+   * \return          The maximum number of faces of \a elem and its descendants.
+   */
+  virtual int
+  t8_element_max_num_faces (const t8_element_t *elem) const;
+
+  /** Return the number of children of an element when it is refined.
+   * \param [in] elem   The element whose number of children is returned.
+   * \return            The number of children of \a elem if it is to be refined.
+   */
+
+  virtual int
+  t8_element_num_face_children (const t8_element_t *elem, int face) const;
+  /** Return the corner number of an element's face corner.
+   * \param [in] element  The element.
+   * \param [in] face     A face index for \a element.
+   * \param [in] corner   A corner index for the face 0 <= \a corner < num_face_corners.
+   * \return              The corner number of the \a corner-th vertex of \a face.
+   */
+  virtual int
+  t8_element_get_face_corner (const t8_element_t *element, int face, int corner) const;
+
+  /** Return the face numbers of the faces sharing an element's corner.
+   * \param [in] element  The element.
+   * \param [in] corner   A corner index for the face.
+   * \param [in] face     A face index for \a corner.
+   * \return              The face number of the \a face-th face at \a corner.
+   */
+  virtual int
+  t8_element_get_corner_face (const t8_element_t *element, int corner, int face) const;
+
+  /** Return the type of each child in the ordering of the implementation.
+   * \param [in] childid  Must be between 0 and the number of children (exclusive).
+   *                      The number of children is defined in \a t8_element_num_children.
+   * \return              The type for the given child.
+   */
+
   virtual t8_element_shape_t
   t8_element_face_shape (const t8_element_t *elem, int face) const;
 
@@ -501,101 +564,20 @@ struct t8_default_scheme_quad_c: public t8_default_scheme_common_c
    * \param [in] id       The linear id.
    *                      id must fulfil 0 <= id < 'number of leafs in the uniform refinement'
    */
-  virtual void
-  t8_element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id) const;
 
-  /** Compute the linear id of a given element in a hypothetical uniform
-   * refinement of a given level.
-   * \param [in] elem     The element whose id we compute.
-   * \param [in] level    The level of the uniform refinement to consider.
-   * \return              The linear id of the element.
-   */
-  virtual t8_linearidx_t
-  t8_element_get_linear_id (const t8_element_t *elem, int level) const;
-
-  /** Compute the first descendant of a given element.
-   * \param [in] elem     The element whose descendant is computed.
-   * \param [out] desc    The first element in a uniform refinement of \a elem
-   *                      of the given level.
-   * \param [in] level    The level, at which the descendant is computed.
-   */
-  virtual void
-  t8_element_first_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
-
-  /** Compute the last descendant of a given element.
-   * \param [in] elem     The element whose descendant is computed.
-   * \param [out] desc    The last element in a uniform refinement of \a elem
-   *                      of the given level.
-   * \param [in] level    The level, at which the descendant is computed.
-   */
-  virtual void
-  t8_element_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
-
-  /** Construct the successor in a uniform refinement of a given element.
-   * \param [in] elem1    The element whose successor should be constructed.
-   * \param [in,out] elem2  The element whose entries will be set.
-   * \param [in] level    The level of the uniform refinement to consider.
-   */
-  virtual void
-  t8_element_successor (const t8_element_t *t, t8_element_t *s, int level) const;
-
-  /** Get the integer coordinates of the anchor node of an element.
-   * The default scheme implements the Morton type SFCs. In these SFCs the
-   * elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and 
-   * L the maximum refinement level. 
-   * All element vertices have integer coordinates in this cube and the anchor
-   * node is the first of all vertices (index 0). It also has the lowest x,y and z
-   * coordinates.
-   * \param [in] elem   The element.
-   * \param [out] anchor The integer coordinates of the anchor node in the cube [0,1]^(dL)
-   */
-  virtual void
-  t8_element_anchor (const t8_element_t *elem, int anchor[3]) const;
-
-  /** Compute the integer coordinates of a given element vertex.
-   * The default scheme implements the Morton type SFCs. In these SFCs the
-   * elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and 
-   * L the maximum refinement level. 
-   * All element vertices have integer coordinates in this cube.
-   *   \param [in] elem    The element to be considered.
-   *   \param [in] vertex  The id of the vertex whose coordinates shall be computed.
-   *   \param [out] coords An array of at least as many integers as the element's dimension
-   *                      whose entries will be filled with the coordinates of \a vertex.
-   */
-  virtual void
-  t8_element_vertex_coords (const t8_element_t *elem, int vertex, int coords[]) const;
-
-  /** Compute the coordinates of a given element vertex inside a reference tree
-   *  that is embedded into [0,1]^d (d = dimension).
-   *   \param [in] elem    The element.
-   *   \param [in] vertex  The id of the vertex whose coordinates shall be computed.
-   *   \param [out] coords An array of at least as many doubles as the element's dimension
-   *                      whose entries will be filled with the coordinates of \a vertex.
-   */
-  virtual void
-  t8_element_vertex_reference_coords (const t8_element_t *elem, const int vertex, double coords[]) const;
-
-  /** Convert points in the reference space of an element to points in the
-   *  reference space of the tree.
-   * 
-   * \param [in] elem         The element.
-   * \param [in] coords_input The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
-   *                          in the reference space of the element.
-   * \param [in] num_coords   Number of \f$ dim\f$-sized coordinates to evaluate.
-   * \param [out] out_coords  The coordinates of the points in the
-   *                          reference space of the tree.
-   */
-  virtual void
-  t8_element_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
-                               double *out_coords) const;
-
-  /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
-   * Returns false otherwise.
-   * * \return           0, because quads refine regularly
-   */
   virtual int
   t8_element_refines_irregular (void) const;
 
+  t8_linearidx_t
+  t8_hilbert_linear_id_recursive (t8_element_t *elem, const t8_linearidx_t id, const int level_diff) const;
+
+  void
+  t8_hilbert_init_linear_id_recursive (t8_element_t *elem, const int level_diff, t8_linearidx_t id) const;
+  void
+  t8_hilbert_root (t8_element_t *elem) const;
+
+  virtual t8_eclass_t
+  t8_element_child_eclass (int childid) const;
 #ifdef T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is
    *  safe to perform any of the above algorithms on it.

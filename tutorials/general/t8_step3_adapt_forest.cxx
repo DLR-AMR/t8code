@@ -88,9 +88,6 @@ int
 t8_step3_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
                          t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
-  /* Our adaptation criterion is to look at the midpoint coordinates of the current element and if
-   * they are inside a sphere around a given midpoint we refine, if they are outside, we coarsen. */
-  double centroid[3]; /* Will hold the element midpoint. */
   /* In t8_step3_adapt_forest we pass a t8_step3_adapt_data pointer as user data to the
    * t8_forest_new_adapt function. This pointer is stored as the used data of the new forest
    * and we can now access it with t8_forest_get_user_data (forest). */
@@ -104,11 +101,12 @@ t8_step3_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_
    */
   T8_ASSERT (adapt_data != NULL);
 
-  /* Compute the element's centroid coordinates. */
-  t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
+  double midpoint_in_ref[3] = { 0.5, 0.5, 0 };
+  double midpoint_in_coarse[3]; /* Will hold the element midpoint. */
+  ts->t8_element_reference_coords (elements[0], midpoint_in_ref, 1, midpoint_in_coarse);
 
   /* Compute the distance to our sphere midpoint. */
-  dist = t8_vec_dist (centroid, adapt_data->midpoint);
+  dist = t8_vec_dist (midpoint_in_coarse, adapt_data->midpoint);
   if (dist < adapt_data->refine_if_inside_radius) {
     /* Refine this element. */
     return 1;
@@ -129,7 +127,7 @@ t8_step3_adapt_forest (t8_forest_t forest)
 {
   t8_forest_t forest_adapt;
   struct t8_step3_adapt_data adapt_data = {
-    { 0.5, 0.5, 1 }, /* Midpoints of the sphere. */
+    { 0.5, 0.5, 0 }, /* Midpoints of the sphere. */
     0.2,             /* Refine if inside this radius. */
     0.4              /* Coarsen if outside this radius. */
   };
@@ -171,6 +169,24 @@ t8_step3_print_forest_information (t8_forest_t forest)
   t8_global_productionf (" [step3] Global number of elements:\t%li\n", global_num_elements);
 }
 
+static t8_forest_t
+t8_step3_partition_forest (t8_forest_t forest)
+{
+  t8_forest_t new_forest;
+
+  /* Check that forest is a committed, that is valid and usable, forest. */
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  /* Initialize */
+  t8_forest_init (&new_forest);
+
+  t8_forest_set_partition (new_forest, forest, 0);
+  /* Commit the forest, this step will perform the partitioning and ghost layer creation. */
+  t8_forest_commit (new_forest);
+
+  return new_forest;
+}
+
 int
 t8_step3_main (int argc, char **argv)
 {
@@ -181,6 +197,7 @@ t8_step3_main (int argc, char **argv)
   /* The prefix for our output files. */
   const char *prefix_uniform = "t8_step3_uniform_forest";
   const char *prefix_adapt = "t8_step3_adapted_forest";
+  const char *prefix_partition = "t8_step3_partitioned_forest";
   /* The uniform refinement level of the forest. */
   const int level = 3;
 
@@ -209,7 +226,7 @@ t8_step3_main (int argc, char **argv)
    */
 
   /* Build a cube cmesh with tet, hex, and prism trees. */
-  cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
+  cmesh = t8_cmesh_new_from_class (T8_ECLASS_QUAD, comm);
   t8_global_productionf (" [step3] Created coarse mesh.\n");
   forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0, comm);
 
@@ -230,6 +247,9 @@ t8_step3_main (int argc, char **argv)
    * forest will take ownership of the old forest and destroy it.
    * Note that the adapted forest is a new forest, though. */
   forest = t8_step3_adapt_forest (forest);
+  forest = t8_step3_adapt_forest (forest);
+  forest = t8_step3_adapt_forest (forest);
+  forest = t8_step3_adapt_forest (forest);
 
   /*
    *  Output.
@@ -242,6 +262,21 @@ t8_step3_main (int argc, char **argv)
   /* Write forest to vtu files. */
   t8_forest_write_vtk (forest, prefix_adapt);
   t8_global_productionf (" [step3] Wrote adapted forest to vtu files: %s*\n", prefix_adapt);
+
+  /* Partition */
+  forest = t8_step3_partition_forest (forest);
+
+  /*
+   *  Output.
+   */
+
+  /* Print information of our new forest. */
+  t8_global_productionf (" [step3] Partitioned forest.\n");
+  t8_step3_print_forest_information (forest);
+
+  /* Write forest to vtu files. */
+  t8_forest_write_vtk (forest, prefix_partition);
+  t8_global_productionf (" [step3] Wrote partitioned forest to vtu files: %s*\n", prefix_partition);
 
   /*
    * clean-up

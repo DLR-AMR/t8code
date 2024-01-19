@@ -38,6 +38,16 @@
  */
 typedef p8est_quadrant_t t8_phex_t;
 
+/** Return the toplevel dimension. */
+#define T8_QUAD_GET_TDIM(quad) ((int) (quad)->pad8)
+
+/** Set the toplevel dimension of a quadrilateral. */
+#define T8_QUAD_SET_TDIM(quad, dim) \
+  do { \
+    T8_ASSERT ((dim) == 2 || (dim) == 3); \
+    (quad)->pad8 = (int8_t) (dim); \
+  } while (0)
+
 struct t8_default_scheme_hex_c: public t8_default_scheme_common_c
 {
  public:

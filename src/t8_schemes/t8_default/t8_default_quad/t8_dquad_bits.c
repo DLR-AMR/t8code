@@ -21,22 +21,14 @@
 */
 
 #include <t8_schemes/t8_default/t8_default_quad/t8_dquad_bits.h>
-#include <p4est_bits.h>
 
-void
-t8_dquad_compute_reference_coords (const t8_dquad_t *elem, const double *ref_coords, const size_t num_coords,
-                                   double *out_coords)
-{
-  const p4est_quadrant_t *q1 = (const p4est_quadrant_t *) elem;
+const int8_t t8_hilbert_cubeid_type_to_parenttype[4][4]
+  = { { 1, 0, 2, 3 }, { 3, 1, 2, 0 }, { 0, 2, 1, 3 }, { 0, 1, 3, 2 } };
 
-  const p4est_qcoord_t h = P4EST_QUADRANT_LEN (q1->level);
+const int8_t t8_hilbert_type_Iloc_to_childcubeid[4][4]
+  = { { 0, 2, 3, 1 }, { 0, 1, 3, 2 }, { 3, 1, 0, 2 }, { 3, 2, 0, 1 } };
 
-  for (size_t coord = 0; coord < num_coords; ++coord) {
-    const size_t offset = coord * 2;
-    out_coords[offset + 0] = q1->x + ref_coords[offset + 0] * h;
-    out_coords[offset + 1] = q1->y + ref_coords[offset + 1] * h;
+const int8_t t8_hilbert_type_Iloc_to_childtype[4][4]
+  = { { 1, 0, 0, 3 }, { 0, 1, 1, 2 }, { 3, 2, 2, 1 }, { 2, 3, 3, 0 } };
 
-    out_coords[offset + 0] /= (double) P4EST_ROOT_LEN;
-    out_coords[offset + 1] /= (double) P4EST_ROOT_LEN;
-  }
-}
+const int8_t t8_hilbert_type_cubeid_to_Iloc[4][4] = { { 0, 3, 1, 2 }, { 0, 1, 3, 2 }, { 2, 1, 3, 0 }, { 2, 3, 1, 0 } };

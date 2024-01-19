@@ -32,19 +32,11 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/** Convert points in the reference space of a quad element to points in the
- *  reference space of the tree (level 0) embedded in \f$ [0,1]^2 \f$.
- * \param [in]  elem       Input quad.
- * \param [in]  ref_coords The reference coordinates in the quad
- *                         (\a num_coords times \f$ [0,1]^2 \f$)
- * \param [in]  num_coords Number of coordinates to evaluate
- * \param [out] out_coords An array of \a num_coords x 2 x double that
- * 		                     will be filled with the reference coordinates
- *                         of the points on the quad.
- */
-void
-t8_dquad_compute_reference_coords (const t8_dquad_t *elem, const double *ref_coords, const size_t num_coords,
-                                   double *out_coords);
+/** Store the type of parent for each (cube-id,type) combination. */
+extern const int8_t t8_hilbert_cubeid_type_to_parenttype[4][4];
+extern const int8_t t8_hilbert_type_Iloc_to_childcubeid[4][4];
+extern const int8_t t8_hilbert_type_Iloc_to_childtype[4][4];
+extern const int8_t t8_hilbert_type_cubeid_to_Iloc[4][4];
 
 T8_EXTERN_C_END ();
 

@@ -51,23 +51,6 @@
 #include <t8_forest/t8_forest_io.h>                 /* forest io interface. */
 #include <t8_schemes/t8_default/t8_default_cxx.hxx> /* default refinement scheme. */
 
-/* Builds cmesh of 2 prisms that build up a unit cube. 
- * See step1 for a detailed description.
- * \param [in] comm   MPI Communicator to use.
- * \return            The coarse mesh.
- */
-static t8_cmesh_t
-t8_step2_build_prismcube_coarse_mesh (sc_MPI_Comm comm)
-{
-  t8_cmesh_t cmesh;
-
-  /* Build a coarse mesh of 2 prism trees that form a cube. */
-  cmesh = t8_cmesh_new_hypercube (T8_ECLASS_PRISM, comm, 0, 0, 0);
-  t8_global_productionf (" [step2] Constructed coarse mesh with 2 prism trees.\n");
-
-  return cmesh;
-}
-
 /* Build a uniform forest on a cmesh 
  * using the default refinement scheme.
  * \param [in] comm   MPI Communicator to use.
@@ -89,7 +72,33 @@ t8_step2_build_uniform_forest (sc_MPI_Comm comm, t8_cmesh_t cmesh, int level)
 
   return forest;
 }
+static t8_forest_t
+t8_step2_partition (t8_forest_t forest)
+{
+  t8_forest_t new_forest;
 
+  /* Check that forest is a committed, that is valid and usable, forest. */
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  /* Initialize */
+  t8_forest_init (&new_forest);
+
+  /* Tell the new_forest that is should partition the existing forest.
+   * This will change the distribution of the forest elements among the processes
+   * in such a way that afterwards each process has the same number of elements
+   * (+- 1 if the number of elements is not divisible by the number of processes).
+   * 
+   * The third 0 argument is the flag 'partition_for_coarsening' which is currently not
+   * implemented. Once it is, this will ensure that a family of elements will not be split
+   * across multiple processes and thus one level coarsening is always possible (see also the
+   * comments on coarsening in t8_step3).
+   */
+  t8_forest_set_partition (new_forest, forest, 0);
+  /* Commit the forest, this step will perform the partitioning and ghost layer creation. */
+  t8_forest_commit (new_forest);
+
+  return new_forest;
+}
 /* Write vtk (or more accurately vtu) files of the forest.
  * \param [in] forest   A forest.
  * \param [in] prefix   A string that is used as a prefix of the output files.
@@ -126,7 +135,7 @@ main (int argc, char **argv)
   /* The prefix for our output files. */
   const char *prefix = "t8_step2_uniform_forest";
   /* The uniform refinement level of the forest. */
-  const int level = 3;
+  const int level = 5;
   t8_locidx_t local_num_elements;
   t8_gloidx_t global_num_elements;
 
@@ -149,10 +158,11 @@ main (int argc, char **argv)
   /* We will use MPI_COMM_WORLD as a communicator. */
   comm = sc_MPI_COMM_WORLD;
   /* Create the cmesh from step1 */
-  cmesh = t8_step2_build_prismcube_coarse_mesh (comm);
+  cmesh = t8_cmesh_new_from_class (T8_ECLASS_QUAD, comm);
 
   /* Build the uniform forest, it is automatically partitioned among the processes. */
   forest = t8_step2_build_uniform_forest (comm, cmesh, level);
+  forest = t8_step2_partition (forest);
   /* Get the local number of elements. */
   local_num_elements = t8_forest_get_local_num_elements (forest);
   /* Get the global number of elements. */
