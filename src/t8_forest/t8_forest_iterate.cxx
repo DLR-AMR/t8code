@@ -289,7 +289,7 @@ t8_forest_search_recursion (t8_forest_t forest, const t8_locidx_t ltreeid, t8_el
 /* Perform a top-down search in one tree of the forest */
 static void
 t8_forest_search_tree (t8_forest_t forest, t8_locidx_t ltreeid, t8_forest_search_query_fn search_fn,
-                       t8_forest_search_query_fn query_fn, sc_array_t *queries)
+                       t8_forest_search_query_fn query_fn, sc_array_t *queries, sc_array_t *active_queries)
 {
 
   /* Get the element class, scheme and leaf elements of this tree */
@@ -308,26 +308,9 @@ t8_forest_search_tree (t8_forest_t forest, t8_locidx_t ltreeid, t8_forest_search
   ts->t8_element_new (1, &nca);
   ts->t8_element_nca (first_el, last_el, nca);
 
-  /* If we have queries build a list of all active queries,
-   * thus all queries in the array */
-  sc_array_t *active_queries = NULL;
-  if (queries != NULL) {
-    size_t iquery;
-    size_t num_queries = queries->elem_count;
-    /* build an array and write 0, 1, 2, 3,... into it */
-    active_queries = sc_array_new_count (sizeof (size_t), num_queries);
-    for (iquery = 0; iquery < num_queries; ++iquery) {
-      *(size_t *) sc_array_index (active_queries, iquery) = iquery;
-    }
-  }
-
   /* Start the top-down search */
   t8_forest_search_recursion (forest, ltreeid, nca, ts, leaf_elements, 0, search_fn, query_fn, queries, active_queries);
 
-  /* Clean up the array of active queries */
-  if (queries != NULL) {
-    sc_array_destroy (active_queries);
-  }
   ts->t8_element_destroy (1, &nca);
 }
 
@@ -335,11 +318,25 @@ void
 t8_forest_search (t8_forest_t forest, t8_forest_search_query_fn search_fn, t8_forest_search_query_fn query_fn,
                   sc_array_t *queries)
 {
-  t8_locidx_t num_local_trees, itree;
+  /* If we have queries build a list of all active queries,
+   * thus all queries in the array */
+  sc_array_t *active_queries = NULL;
+  if (queries != NULL) {
+    const size_t num_queries = queries->elem_count;
+    /* build an array and write 0, 1, 2, 3,... into it */
+    active_queries = sc_array_new_count (sizeof (size_t), num_queries);
+    for (size_t iquery = 0; iquery < num_queries; ++iquery) {
+      *(size_t *) sc_array_index (active_queries, iquery) = iquery;
+    }
+  }
 
-  num_local_trees = t8_forest_get_num_local_trees (forest);
-  for (itree = 0; itree < num_local_trees; itree++) {
-    t8_forest_search_tree (forest, itree, search_fn, query_fn, queries);
+  const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
+  for (t8_locidx_t itree = 0; itree < num_local_trees; itree++) {
+    t8_forest_search_tree (forest, itree, search_fn, query_fn, queries, active_queries);
+  }
+
+  if (active_queries != NULL) {
+    sc_array_destroy (active_queries);
   }
 }
 
