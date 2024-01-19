@@ -45,6 +45,15 @@ t8_hilbert_compute_cubeid (const t8_hilbert_t *elem, int level)
   return cube_id;
 }
 
+static void
+t8_hilbert_root (t8_hilbert_t *hilbert)
+{
+  hilbert->x = 0;
+  hilbert->y = 0;
+  hilbert->level = 0;
+  hilbert->type = 0;
+}
+
 int
 t8_default_scheme_quad_c::t8_element_maxlevel (void) const
 {
@@ -223,18 +232,8 @@ t8_default_scheme_quad_c::t8_hilbert_linear_id_recursive (t8_element_t *elem, co
     parent_id += num_child_descendants;
   }
   parent_id += id;
-  t8_debugf ("lin %i\n", parent_id);
+  t8_debugf ("lin %li\n", parent_id);
   return t8_hilbert_linear_id_recursive (elem, parent_id, level_diff + 1);
-}
-
-void
-t8_default_scheme_quad_c::t8_hilbert_root (t8_element_t *elem) const
-{
-  t8_hilbert_t *hilbert = (t8_hilbert_t *) elem;
-  hilbert->x = 0;
-  hilbert->y = 0;
-  hilbert->level = 0;
-  hilbert->type = 0;
 }
 
 void
@@ -274,7 +273,7 @@ t8_default_scheme_quad_c::t8_hilbert_init_linear_id_recursive (t8_element_t *ele
 void
 t8_default_scheme_quad_c::t8_element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id) const
 {
-  t8_hilbert_root (elem);
+  t8_hilbert_root ((t8_hilbert_t *) elem);
   if (level == 0) {
     T8_ASSERT (id == 0);
     return;
@@ -479,7 +478,6 @@ t8_default_scheme_quad_c::t8_element_vertex_reference_coords (const t8_element_t
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= vertex && vertex < t8_element_num_corners (elem));
-  const t8_hilbert_t *hilbert = (const t8_hilbert_t *) elem;
 
   double ref_coords[2];
   ref_coords[0] = (vertex & 1 ? 1. : 0.);
@@ -515,9 +513,7 @@ t8_default_scheme_quad_c::t8_element_init (int length, t8_element_t *elem, int n
 {
 #ifdef T8_ENABLE_DEBUG
   if (!new_called) {
-    t8_hilbert_t *hilbert_elems = (t8_hilbert_t *) elem;
-    /* Set all values to 0 */
-    t8_hilbert_t *current = hilbert_elems;
+    t8_hilbert_t *current = (t8_hilbert_t *) elem;
     for (int ielem = 0; ielem < length; ielem++, current++) {
       t8_hilbert_root (current);
     }
