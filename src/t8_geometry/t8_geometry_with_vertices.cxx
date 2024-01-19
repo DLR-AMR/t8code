@@ -26,6 +26,7 @@
 
 #include <t8_geometry/t8_geometry_with_vertices.hxx>
 #include <t8_geometry/t8_geometry_with_vertices.h>
+#include <t8_vec.h>
 
 /* Load the coordinates of the newly active tree to the active_tree_vertices variable. */
 void
@@ -45,4 +46,60 @@ t8_geometry_with_vertices::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t
              || active_tree_class == T8_ECLASS_TET || active_tree_class == T8_ECLASS_QUAD
              || active_tree_class == T8_ECLASS_HEX || active_tree_class == T8_ECLASS_LINE
              || active_tree_class == T8_ECLASS_PRISM || active_tree_class == T8_ECLASS_PYRAMID);
+}
+
+int
+t8_geometry_with_vertices::t8_geom_tree_negative_volume (const t8_cmesh_t cmesh) const
+{
+  if (t8_eclass_to_dimension[active_tree_class] <= 2) {
+    /* Only three dimensional eclass do have a volume */
+    return 0;
+  }
+  const int num_vertices = t8_eclass_num_vertices[active_tree_class];
+  T8_ASSERT (active_tree_class == T8_ECLASS_TET || active_tree_class == T8_ECLASS_HEX
+             || active_tree_class == T8_ECLASS_PRISM || active_tree_class == T8_ECLASS_PYRAMID);
+
+  T8_ASSERT (num_vertices >= 4);
+  /*
+   *      6 ______  7  For Hexes and pyramids, if the vertex 4 is below the 0-1-2-3 plane,
+   *       /|     /     the volume is negative. This is the case if and only if
+   *    4 /_____5/|     the scalar product of v_4 with the cross product of v_1 and v_2 is
+   *      | | _ |_|     smaller 0:
+   *      | 2   | / 3   < v_4, v_1 x v_2 > < 0
+   *      |/____|/
+   *     0      1
+   *
+   *
+   *    For tets/prisms, if the vertex 3 is below/above the 0-1-2 plane, the volume
+   *    is negative. This is the case if and only if
+   *    the scalar product of v_3 with the cross product of v_1 and v_2 is
+   *    greater 0:
+   *
+   *    < v_3, v_1 x v_2 > > 0
+   *
+   */
+
+  /* build the vectors v_i as vertices_i - vertices_0 */
+  double v_1[3], v_2[3], v_j[3], cross[3], sc_prod;
+  int i, j;
+  if (active_tree_class == T8_ECLASS_TET || active_tree_class == T8_ECLASS_PRISM) {
+    /* In the tet/prism case, the third vector is v_3 */
+    j = 3;
+  }
+  else {
+    /* For pyramids and Hexes, the third vector is v_4 */
+    j = 4;
+  }
+  for (i = 0; i < 3; i++) {
+    v_1[i] = active_tree_vertices[3 + i] - active_tree_vertices[i];
+    v_2[i] = active_tree_vertices[6 + i] - active_tree_vertices[i];
+    v_j[i] = active_tree_vertices[3 * j + i] - active_tree_vertices[i];
+  }
+  /* compute cross = v_1 x v_2 */
+  t8_vec_cross (v_1, v_2, cross);
+  /* Compute sc_prod = <v_j, cross> */
+  sc_prod = t8_vec_dot (v_j, cross);
+
+  T8_ASSERT (sc_prod != 0);
+  return active_tree_class == T8_ECLASS_TET ? sc_prod > 0 : sc_prod < 0;
 }

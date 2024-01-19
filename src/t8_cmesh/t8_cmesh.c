@@ -519,34 +519,18 @@ t8_cmesh_tree_vertices_negative_volume (t8_eclass_t eclass, double *vertices, in
 int
 t8_cmesh_no_negative_volume (t8_cmesh_t cmesh)
 {
-  t8_locidx_t itree;
-  double *vertices;
-  t8_eclass_t eclass;
-  int ret, res = 0;
+  int res = 0;
 
   if (cmesh == NULL) {
     return 0;
   }
   /* Iterate over all trees, get their vertices and check the volume */
-  for (itree = 0; itree < cmesh->num_local_trees; itree++) {
-    vertices = t8_cmesh_get_tree_vertices (cmesh, itree);
-    ret = 1;
-    if (vertices != NULL) {
-      /* Vertices are set */
-      eclass = t8_cmesh_get_tree_class (cmesh, itree);
-      const t8_gloidx_t gtree_id = t8_cmesh_get_global_id (cmesh, itree);
-      if (t8_geom_is_linear_axis_aligned (t8_cmesh_get_tree_geometry (cmesh, gtree_id))) {
-        /* Tree has negative volume if the diagonal goes from v_max to v_min and not vice versa */
-        ret = vertices[3] < vertices[0] && vertices[4] < vertices[1] && vertices[5] < vertices[2];
-      }
-      else {
-        ret = t8_cmesh_tree_vertices_negative_volume (eclass, vertices, t8_eclass_num_vertices[eclass]);
-      }
-      if (ret) {
-        t8_debugf ("Detected negative volume in tree %li\n", (long) itree);
-      }
-      res |= ret; /* res is true if one ret value is true */
+  for (t8_locidx_t itree = 0; itree < cmesh->num_local_trees; itree++) {
+    const int ret = t8_geometry_tree_negative_volume (cmesh, itree);
+    if (ret) {
+      t8_debugf ("Detected negative volume in tree %li\n", (long) itree);
     }
+    res |= ret; /* res is true if one ret value is true */
   }
   return !res;
 }
@@ -1003,7 +987,7 @@ t8_cmesh_get_ghost_class (t8_cmesh_t cmesh, t8_locidx_t lghost_id)
 }
 
 t8_gloidx_t
-t8_cmesh_get_global_id (t8_cmesh_t cmesh, t8_locidx_t local_id)
+t8_cmesh_get_global_id (const t8_cmesh_t cmesh, const t8_locidx_t local_id)
 {
   T8_ASSERT (0 <= local_id && local_id < cmesh->num_ghosts + cmesh->num_local_trees);
   if (local_id < cmesh->num_local_trees) {

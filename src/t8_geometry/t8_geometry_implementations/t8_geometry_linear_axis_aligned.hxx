@@ -106,6 +106,15 @@ struct t8_geometry_linear_axis_aligned: public t8_geometry_with_vertices
   t8_geom_point_batch_inside_element (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
                                       const double *points, const int num_points, int *is_inside,
                                       const double tolerance) const;
+
+  /**
+   * Check if the currently active tree has a negative volume. 
+   * 
+   * \param[in] cmesh       The cmesh containing the tree to check
+   * \return                True (non-zero) if the tree with id \ref ltree_id has a negative volume. 0 otherwise.  
+   */
+  virtual int
+  t8_geom_tree_negative_volume (const t8_cmesh_t cmesh) const;
 };
 
 #endif /* !T8_GEOMETRY_LINEAR_AXIS_ALIGNED_HXX! */

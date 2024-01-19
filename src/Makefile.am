@@ -71,7 +71,8 @@ libt8_installed_headers_geometry_impl = \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_examples.hxx \
-  src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx 
+  src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx \
+  src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.h
 libt8_installed_headers_vtk = \
   src/t8_vtk/t8_vtk_reader.hxx \
   src/t8_vtk/t8_vtk_types.h

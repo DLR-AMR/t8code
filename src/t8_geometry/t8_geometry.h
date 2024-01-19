@@ -177,6 +177,16 @@ t8_geometry_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_c
 t8_geometry_type_t
 t8_geometry_get_type (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 
+/**
+ * Check if a tree has a negative volume
+ * 
+ * \param[in] cmesh       The cmesh containing the tree to check
+ * \param[in] ltree_id    The local id of the tree
+ * \return                True (non-zero) if the tree with id \ref ltree_id has a negative volume. 0 otherwise.  
+ */
+int
+t8_geometry_tree_negative_volume (const t8_cmesh_t cmesh, const t8_locidx_t ltree_id);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_GEOMETRY_H! */

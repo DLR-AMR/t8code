@@ -24,6 +24,7 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <test/t8_gtest_macros.hxx>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_zero.h>
 
 /* Test for one tree */
 class cmesh_face_boundary_one_tree: public testing::TestWithParam<t8_eclass> {
@@ -135,7 +136,10 @@ TEST_P (cmesh_face_boundary_two_trees, check_face_is_boundary_two_trees)
   for (int iface = 0; iface < num_faces; ++iface) {
     /* For each face of the eclass we construct one cmesh having this face as a connecting face.
      * Once partitioned and once replicated */
+    t8_geometry_c *zero_geom = t8_geometry_zero_new (t8_eclass_to_dimension[eclass]);
+
     t8_cmesh_init (&cmesh);
+    t8_cmesh_register_geometry (cmesh, zero_geom);
     t8_cmesh_set_tree_class (cmesh, 0, eclass);
     t8_cmesh_set_tree_class (cmesh, 1, eclass);
     /* Connect face iface of tree 0 with face iface of tree 1 with orientation 0 */
