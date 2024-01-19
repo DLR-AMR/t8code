@@ -24,12 +24,20 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_types.h>
 
-/* Test if multiple attributes are partitioned correctly. */
+/* Test the t8_cmesh_set_attribute_gloidx_array and t8_cmesh_get_attribute_gloidx_array functions.
+ * We create a cmesh with two trees and add an array with N entries to each tree.
+ * The first tree has data_persists = 0, the second data_persists = 1.
+ * Then we get the array and check whether it's entries are correct.
+ * We parametrize the test over the number of entries N and the treeid (0 or 1).
+ * Thus for each element count N, we do one test for the first tree and one for the second tree.
+ */
 
 #define T8_ATTRIBUTE_TEST_MAX_NUM_ENTRIES 1000
 
 class cmesh_attribute_gloidx_array: public testing::TestWithParam<std::tuple<int, int>> {
  protected:
+  /* in Setup we build a two tree cmesh, fill an array with entries
+   * and set the array as attribute for both trees with different data_persists settings. */
   void
   SetUp () override
   {
@@ -83,7 +91,7 @@ class cmesh_attribute_gloidx_array: public testing::TestWithParam<std::tuple<int
   t8_gloidx_t *get_entries;
 };
 
-/** Check attribute values of cmeshes against reference values. */
+/** Check attribute values of the trees against reference values. */
 TEST_P (cmesh_attribute_gloidx_array, check_values_data)
 {
   get_entries = t8_cmesh_get_attribute_gloidx_array (cmesh, t8_get_package_id (), T8_CMESH_NEXT_POSSIBLE_KEY,
@@ -106,7 +114,7 @@ TEST_P (cmesh_attribute_gloidx_array, check_values_data)
   }
 }
 
-/* Test for different number of entries.
+/* Test for different number of entries and trees 0 and 1.
  * 0, 100, 200, ... T8_ATTRIBUTE_TEST_MAX_NUM_ENTRIES */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_attribute_gloidx_array, cmesh_attribute_gloidx_array,
                           testing::Combine (testing::Range (0, T8_ATTRIBUTE_TEST_MAX_NUM_ENTRIES + 1, 100),
