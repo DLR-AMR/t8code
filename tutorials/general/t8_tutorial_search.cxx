@@ -146,9 +146,10 @@ typedef struct
  * looked at during the search process.
  */
 static int
-t8_tutorial_search_callback (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, const int is_leaf,
-                             t8_element_array_t *leaf_elements, t8_locidx_t tree_leaf_index, void *query,
-                             sc_array_t *query_indices, int *query_matches, const size_t num_active_queries)
+t8_tutorial_search_callback (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
+                             const int is_leaf, const t8_element_array_t *leaf_elements,
+                             const t8_locidx_t tree_leaf_index, void *query, sc_array_t *query_indices,
+                             int *query_matches, const size_t num_active_queries)
 {
   T8_ASSERT (query == NULL);
 
@@ -171,10 +172,10 @@ t8_tutorial_search_callback (t8_forest_t forest, t8_locidx_t ltreeid, const t8_e
  * These counters are provided in an sc_array as user data of the input forest.
  */
 static int
-t8_tutorial_search_query_callback (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                   const int is_leaf, t8_element_array_t *leaf_elements, t8_locidx_t tree_leaf_index,
-                                   void *query, sc_array_t *query_indices, int *query_matches,
-                                   const size_t num_active_queries)
+t8_tutorial_search_query_callback (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
+                                   const int is_leaf, const t8_element_array_t *leaf_elements,
+                                   const t8_locidx_t tree_leaf_index, void *query, sc_array_t *query_indices,
+                                   int *query_matches, const size_t num_active_queries)
 {
   /* Build an array of all particle-coords, necessary for t8_forest_element_point_batch_inside */
   double *coords = T8_ALLOC (double, 3 * num_active_queries);

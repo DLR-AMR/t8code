@@ -52,9 +52,9 @@ typedef int (*t8_forest_iterate_face_fn) (t8_forest_t forest, t8_locidx_t ltreei
  *                                if \a query is NULL: true if and only if the search should continue with the
  *                                children of \a element and the queries should be performed for this element.
  */
-typedef int (*t8_forest_search_query_fn) (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                          const int is_leaf, t8_element_array_t *leaf_elements,
-                                          t8_locidx_t tree_leaf_index, void *query, sc_array_t *query_indices,
+typedef int (*t8_forest_search_query_fn) (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
+                                          const int is_leaf, const t8_element_array_t *leaf_elements,
+                                          const t8_locidx_t tree_leaf_index, void *query, sc_array_t *query_indices,
                                           int *query_matches, const size_t num_active_queries);
 
 T8_EXTERN_C_BEGIN ();

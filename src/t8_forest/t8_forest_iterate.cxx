@@ -170,9 +170,9 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
  * the query function is not called for this element.
  */
 static void
-t8_forest_search_recursion (t8_forest_t forest, t8_locidx_t ltreeid, t8_eclass_t eclass, t8_element_t *element,
-                            t8_eclass_scheme_c *ts, t8_element_array_t *leaf_elements,
-                            t8_locidx_t tree_lindex_of_first_leaf, t8_forest_search_query_fn search_fn,
+t8_forest_search_recursion (t8_forest_t forest, const t8_locidx_t ltreeid, t8_element_t *element,
+                            const t8_eclass_scheme_c *ts, t8_element_array_t *leaf_elements,
+                            const t8_locidx_t tree_lindex_of_first_leaf, t8_forest_search_query_fn search_fn,
                             t8_forest_search_query_fn query_fn, sc_array_t *queries, sc_array_t *active_queries)
 {
   /* Assertions to check for necessary requirements */
@@ -273,7 +273,7 @@ t8_forest_search_recursion (t8_forest_t forest, t8_locidx_t ltreeid, t8_eclass_t
        * we construct an array of these leafs */
       t8_element_array_init_view (&child_leafs, leaf_elements, indexa, indexb - indexa);
       /* Enter the recursion */
-      t8_forest_search_recursion (forest, ltreeid, eclass, children[ichild], ts, &child_leafs,
+      t8_forest_search_recursion (forest, ltreeid, children[ichild], ts, &child_leafs,
                                   indexa + tree_lindex_of_first_leaf, search_fn, query_fn, queries, new_active_queries);
     }
   }
@@ -291,28 +291,26 @@ static void
 t8_forest_search_tree (t8_forest_t forest, t8_locidx_t ltreeid, t8_forest_search_query_fn search_fn,
                        t8_forest_search_query_fn query_fn, sc_array_t *queries)
 {
-  t8_eclass_t eclass;
-  t8_eclass_scheme_c *ts;
-  t8_element_t *nca, *first_el, *last_el;
-  t8_element_array_t *leaf_elements;
-  sc_array_t *active_queries = NULL;
 
   /* Get the element class, scheme and leaf elements of this tree */
-  eclass = t8_forest_get_eclass (forest, ltreeid);
-  ts = t8_forest_get_eclass_scheme (forest, eclass);
-  leaf_elements = t8_forest_tree_get_leafs (forest, ltreeid);
+  const t8_eclass_t eclass = t8_forest_get_eclass (forest, ltreeid);
+  const t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, eclass);
+  t8_element_array_t *leaf_elements = t8_forest_tree_get_leafs (forest, ltreeid);
 
   /* assert for empty tree */
   T8_ASSERT (t8_element_array_get_count (leaf_elements) >= 0);
   /* Get the first and last leaf of this tree */
-  first_el = t8_element_array_index_locidx (leaf_elements, 0);
-  last_el = t8_element_array_index_locidx (leaf_elements, t8_element_array_get_count (leaf_elements) - 1);
+  const t8_element_t *first_el = t8_element_array_index_locidx (leaf_elements, 0);
+  const t8_element_t *last_el
+    = t8_element_array_index_locidx (leaf_elements, t8_element_array_get_count (leaf_elements) - 1);
   /* Compute their nearest common ancestor */
+  t8_element_t *nca;
   ts->t8_element_new (1, &nca);
   ts->t8_element_nca (first_el, last_el, nca);
 
   /* If we have queries build a list of all active queries,
    * thus all queries in the array */
+  sc_array_t *active_queries = NULL;
   if (queries != NULL) {
     size_t iquery;
     size_t num_queries = queries->elem_count;
@@ -324,8 +322,7 @@ t8_forest_search_tree (t8_forest_t forest, t8_locidx_t ltreeid, t8_forest_search
   }
 
   /* Start the top-down search */
-  t8_forest_search_recursion (forest, ltreeid, eclass, nca, ts, leaf_elements, 0, search_fn, query_fn, queries,
-                              active_queries);
+  t8_forest_search_recursion (forest, ltreeid, nca, ts, leaf_elements, 0, search_fn, query_fn, queries, active_queries);
 
   /* Clean up the array of active queries */
   if (queries != NULL) {
