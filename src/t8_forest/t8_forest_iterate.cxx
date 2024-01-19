@@ -225,8 +225,7 @@ t8_forest_search_recursion (t8_forest_t forest, const t8_locidx_t ltreeid, t8_el
       /* Initialize the new active query array */
       new_active_queries = sc_array_new (sizeof (size_t));
     }
-    int *active_queries_matches = NULL;
-    active_queries_matches = T8_ALLOC (int, num_active);
+    int *active_queries_matches = T8_ALLOC (int, num_active);
     T8_ASSERT (query_fn != NULL);
     query_fn (forest, ltreeid, element, is_leaf, leaf_elements, tree_lindex_of_first_leaf, queries, active_queries,
               active_queries_matches, num_active);
@@ -265,8 +264,8 @@ t8_forest_search_recursion (t8_forest_t forest, const t8_locidx_t ltreeid, t8_el
   t8_forest_split_array (element, leaf_elements, split_offsets);
   for (int ichild = 0; ichild < num_children; ichild++) {
     /* Check if there are any leaf elements for this child */
-    size_t indexa = split_offsets[ichild];     /* first leaf of this child */
-    size_t indexb = split_offsets[ichild + 1]; /* first leaf of next child */
+    const size_t indexa = split_offsets[ichild];     /* first leaf of this child */
+    const size_t indexb = split_offsets[ichild + 1]; /* first leaf of next child */
     if (indexa < indexb) {
       t8_element_array_t child_leafs;
       /* There exist leafs of this child in leaf_elements,
