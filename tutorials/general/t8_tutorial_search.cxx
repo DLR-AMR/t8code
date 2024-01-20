@@ -107,15 +107,15 @@
  * 
  */
 
-#include <t8.h>                                     /* General t8code header, always include this. */
-#include <t8_cmesh.h>                               /* cmesh definition and basic interface. */
-#include <t8_cmesh/t8_cmesh_examples.h>             /* A collection of exemplary cmeshes */
-#include <t8_forest/t8_forest_general.h>            /* forest definition and basic interface. */
-#include <t8_forest/t8_forest_io.h>                 /* save forest */
-#include <t8_schemes/t8_default/t8_default_cxx.hxx> /* default refinement scheme. */
-#include <t8_vec.h>                                 /* Basic operations on 3D vectors. */
-#include <t8_forest/t8_forest_iterate.h>            /* For the search algorithm. */
-#include <tutorials/general/t8_step3.h>             /* Example forest adaptation from step 3 */
+#include <t8.h>                                             /* General t8code header, always include this. */
+#include <t8_cmesh.h>                                       /* cmesh definition and basic interface. */
+#include <t8_cmesh/t8_cmesh_examples.h>                     /* A collection of exemplary cmeshes */
+#include <t8_forest/t8_forest_general.h>                    /* forest definition and basic interface. */
+#include <t8_forest/t8_forest_io.h>                         /* save forest */
+#include <t8_schemes/t8_consecutive/t8_consecutive_cxx.hxx> /* consecutive refinement scheme. */
+#include <t8_vec.h>                                         /* Basic operations on 3D vectors. */
+#include <t8_forest/t8_forest_iterate.h>                    /* For the search algorithm. */
+#include <tutorials/general/t8_step3.h>                     /* Example forest adaptation from step 3 */
 
 /* Our search query, a particle together with a flag. */
 typedef struct
@@ -305,8 +305,8 @@ static sc_array *
 t8_tutorial_search_build_particles (size_t num_particles, unsigned int seed, sc_MPI_Comm comm)
 {
   /* Specify lower and upper bounds for the coordinates in each dimension. */
-  double boundary_low[3] = { 0.2, 0.3, 0.1 };
-  double boundary_high[3] = { 0.8, 0.75, 0.9 };
+  double boundary_low[3] = { 0.2, 0.3, 0.0 };
+  double boundary_high[3] = { 0.8, 0.75, 0.0 };
   int mpirank;
   int mpiret;
   sc_array *particles;
@@ -358,7 +358,7 @@ main (int argc, char **argv)
   t8_cmesh_t cmesh;
   t8_forest_t forest;
   /* The uniform refinement level of the forest. */
-  const int level = 5;
+  const int level = 4;
   /* The number of particles to generate. */
   const size_t num_particles = 2000;
   /* The seed for the random number generator. */
@@ -393,13 +393,14 @@ main (int argc, char **argv)
    */
 
   /* Build a cube cmesh with tet, hex, and prism trees. */
-  cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
+  cmesh = t8_cmesh_new_from_class (T8_ECLASS_QUAD, comm);
   /* Build a uniform forest on it. */
-  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0, comm);
+  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_consecutive_cxx (), level, 0, comm);
 
   /* Adapt the forest. We can reuse the forest variable, since the new adapted
    * forest will take ownership of the old forest and destroy it.
    * Note that the adapted forest is a new forest, though. */
+  forest = t8_step3_adapt_forest (forest);
   forest = t8_step3_adapt_forest (forest);
 
   /* Print information of our new forest. */

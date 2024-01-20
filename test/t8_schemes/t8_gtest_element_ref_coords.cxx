@@ -29,7 +29,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_eclass.h>
 #include <t8_vec.h>
 #include <t8_element_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_consecutive/t8_consecutive_cxx.hxx>
 #include <t8_forest/t8_forest.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <test/t8_gtest_macros.hxx>
@@ -231,7 +231,7 @@ class class_ref_coords: public testing::TestWithParam<std::tuple<t8_eclass_t, in
     const t8_eclass_t eclass = std::get<0> (params);
     const int level = std::get<1> (params);
     t8_cmesh_t cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
-    forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0, sc_MPI_COMM_WORLD);
+    forest = t8_forest_new_uniform (cmesh, t8_scheme_new_consecutive_cxx (), level, 0, sc_MPI_COMM_WORLD);
     t8_forest_init (&forest_partition);
     t8_forest_set_partition (forest_partition, forest, 0);
     t8_forest_commit (forest_partition);

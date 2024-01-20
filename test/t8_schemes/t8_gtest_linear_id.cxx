@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2023 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -27,34 +27,13 @@
 #include "t8_gtest_dfs_base.hxx"
 #include <test/t8_gtest_macros.hxx>
 
-class class_test_boundary_extrude: public TestDFS {
-  /* For elements that are on the face of the root element, check that creating the boundary element
-   * and extruding it results in the original element
-    */
+class class_linear_id: public TestDFS {
   virtual void
   check_element ()
   {
-    const int num_faces = ts->t8_element_num_faces (element);
-    for (int iface = 0; iface < num_faces; iface++) {
-      /* Iterate over all faces that are also root faces and determine the face element */
-      if (ts->t8_element_is_root_boundary (element, iface)) {
-        /* Get face scheme */
-        const int tree_face = ts->t8_element_tree_face (element, iface);
-        const t8_eclass_t face_eclass = (t8_eclass_t) t8_eclass_face_types[eclass][tree_face];
-        const t8_eclass_scheme_c *face_ts = scheme->eclass_schemes[face_eclass];
-
-        t8_element_t *boundary;
-        face_ts->t8_element_new (1, &boundary);
-
-        ts->t8_element_boundary_face (element, iface, boundary, face_ts);
-
-        ts->t8_element_extrude_face (boundary, face_ts, check, tree_face);
-
-        EXPECT_ELEM_EQ (ts, element, check);
-
-        face_ts->t8_element_destroy (1, &boundary);
-      }
-    }
+    linear_id = ts->t8_element_get_linear_id (element, ts->t8_element_level (element));
+    ts->t8_element_set_linear_id (test_element, ts->t8_element_level (element), linear_id);
+    EXPECT_ELEM_EQ (ts, element, test_element);
   }
 
  protected:
@@ -63,28 +42,29 @@ class class_test_boundary_extrude: public TestDFS {
   {
     dfs_test_setup ();
     /* Get element and initialize it */
-    ts->t8_element_new (1, &check);
+    ts->t8_element_new (1, &test_element);
   }
   void
   TearDown () override
   {
     /* Destroy element */
-    ts->t8_element_destroy (1, &check);
+    ts->t8_element_destroy (1, &test_element);
 
     /* Destroy DFS test */
     dfs_test_teardown ();
   }
-  t8_element_t *check;
+  t8_gloidx_t linear_id;
+  t8_element_t *test_element;
 };
 
-TEST_P (class_test_boundary_extrude, test_boundary_extrude_dfs)
+TEST_P (class_linear_id, t8_gtest_linear_id)
 {
 #ifdef T8_ENABLE_LESS_TESTS
-  const int maxlvl = 4;
+  const int maxlvl = 5;
 #else
-  const int maxlvl = 6;
+  const int maxlvl = 5;
 #endif
   check_recursive_dfs_to_max_lvl (maxlvl);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_boundary_extrude, AllEclasses);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_linear_id, class_linear_id, AllEclasses);

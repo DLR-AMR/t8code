@@ -23,7 +23,7 @@
 #include <gtest/gtest.h>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <t8_eclass.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_consecutive/t8_consecutive_cxx.hxx>
 #include <t8_element_c_interface.h>
 #include <test/t8_gtest_macros.hxx>
 
@@ -36,7 +36,7 @@ class face_neigh: public testing::TestWithParam<t8_eclass_t> {
   SetUp () override
   {
     eclass = GetParam ();
-    scheme = t8_scheme_new_default_cxx ();
+    scheme = t8_scheme_new_consecutive_cxx ();
 
     ts = scheme->eclass_schemes[eclass];
     ts->t8_element_new (1, &element);

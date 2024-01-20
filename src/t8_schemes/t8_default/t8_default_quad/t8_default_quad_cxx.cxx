@@ -29,7 +29,7 @@
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
-int
+static int
 t8_hilbert_compute_cubeid (const t8_hilbert_t *elem, int level)
 {
   if (level == 0) {

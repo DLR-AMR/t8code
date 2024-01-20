@@ -21,7 +21,7 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_consecutive/t8_consecutive_cxx.hxx>
 #include <test/t8_gtest_macros.hxx>
 
 /*
@@ -50,7 +50,7 @@ class class_element_leafs: public testing::TestWithParam<t8_eclass> {
   }
   t8_eclass eclass;
   t8_eclass_scheme_c *class_scheme;
-  t8_scheme_cxx_t *ts = t8_scheme_new_default_cxx ();
+  t8_scheme_cxx_t *ts = t8_scheme_new_consecutive_cxx ();
 };
 
 TEST_P (class_element_leafs, test_element_count_leafs_root)

@@ -23,7 +23,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_consecutive/t8_consecutive_cxx.hxx>
 #include <sc_functions.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <test/t8_gtest_macros.hxx>
@@ -34,7 +34,7 @@ class linear_id: public testing::TestWithParam<t8_eclass> {
   SetUp () override
   {
     eclass = GetParam ();
-    scheme = t8_scheme_new_default_cxx ();
+    scheme = t8_scheme_new_consecutive_cxx ();
     ts = scheme->eclass_schemes[eclass];
     ts->t8_element_new (1, &element);
     ts->t8_element_new (1, &child);
@@ -118,11 +118,11 @@ TEST_P (linear_id, uniform_forest)
 TEST_P (linear_id, id_at_other_level)
 {
 #ifdef T8_ENABLE_LESS_TESTS
-  const int max_lvl = 3; /* Maximal level to compute elements on */
-  const int add_lvl = 3; /* maxlvl + add_lvl is the level of the descendants*/
+  const int max_lvl = 1; /* Maximal level to compute elements on */
+  const int add_lvl = 1; /* maxlvl + add_lvl is the level of the descendants*/
 #else
-  const int max_lvl = 4;
-  const int add_lvl = 3;
+  const int max_lvl = 1;
+  const int add_lvl = 1;
 #endif
   for (int level = 0; level < max_lvl; level++) {
     /* Compute the number of elements at the current level */

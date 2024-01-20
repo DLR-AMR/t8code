@@ -29,7 +29,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_consecutive/t8_consecutive_cxx.hxx>
 
 class ancestor: public testing::TestWithParam<t8_eclass> {
  protected:
@@ -37,7 +37,7 @@ class ancestor: public testing::TestWithParam<t8_eclass> {
   SetUp () override
   {
     eclass = GetParam ();
-    scheme = t8_scheme_new_default_cxx ();
+    scheme = t8_scheme_new_consecutive_cxx ();
     ts = scheme->eclass_schemes[eclass];
     ts->t8_element_new (1, &correct_anc);
     ts->t8_element_new (1, &desc_a);

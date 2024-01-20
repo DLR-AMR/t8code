@@ -18,6 +18,11 @@ defaulthexincludedir = $(schemesdefaultincludedir)/t8_default_hex
 defaulttetincludedir = $(schemesdefaultincludedir)/t8_default_tet
 defaultprismincludedir = $(schemesdefaultincludedir)/t8_default_prism
 defaultpyramidincludedir = $(schemesdefaultincludedir)/t8_default_pyramid
+schemesconsecutiveincludedir = $(includedir)/t8_schemes/t8_consecutive
+consecutivecommonincludedir = $(schemesconsecutiveincludedir)/t8_consecutive_common
+consecutivequadincludedir = $(schemesconsecutiveincludedir)/t8_consecutive_quad
+
+
 
 libt8_generated_headers = src/t8_config.h
 libt8_installed_headers = \
@@ -178,5 +183,6 @@ dist_defaulthexinclude_HEADERS = $(libt8_installed_headers_default_hex)
 dist_defaulttetinclude_HEADERS = $(libt8_installed_headers_default_tet)
 dist_defaultprisminclude_HEADERS = $(libt8_installed_headers_default_prism)
 dist_defaultpyramidinclude_HEADERS = $(libt8_installed_headers_default_pyramid)
+dist_schemesconsecutiveinclude_HEADERS = $(libt8_installed_headers_schemes_consecutive)
 
 AM_CPPFLAGS += -I@top_srcdir@/src @T8_SC_CPPFLAGS@ @T8_P4EST_CPPFLAGS@
