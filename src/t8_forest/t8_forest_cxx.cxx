@@ -416,30 +416,13 @@ t8_forest_element_from_ref_coords_ext (t8_forest_t forest, t8_locidx_t ltreeid, 
           = 0.5 + ((ref_coords[i_coord * tree_dim + dim] - 0.5) * stretch_factors[dim]);
       }
     }
-
     scheme->t8_element_reference_coords (element, stretched_ref_coords, num_coords, tree_ref_coords);
   }
   else {
     scheme->t8_element_reference_coords (element, ref_coords, num_coords, tree_ref_coords);
   }
 
-  t8_global_productionf (
-    "tree_ref_coords:\n [%f, %f], [%f, %f], [%f, %f], [%f, %f]\n[%f, %f], [%f, %f], [%f, %f], [%f, %f]\n\n",
-    tree_ref_coords[0], tree_ref_coords[1], tree_ref_coords[2], tree_ref_coords[3], tree_ref_coords[4],
-    tree_ref_coords[5], tree_ref_coords[6], tree_ref_coords[7], tree_ref_coords[8], tree_ref_coords[9],
-    tree_ref_coords[10], tree_ref_coords[11], tree_ref_coords[12], tree_ref_coords[13], tree_ref_coords[14],
-    tree_ref_coords[15]);
-
   t8_geometry_evaluate (cmesh, gtreeid, tree_ref_coords, num_coords, coords_out);
-
-  t8_global_productionf ("out_coords:\n [%f, %f, %f], [%f, %f, %f], [%f, %f, %f], [%f, %f, %f]\n[%f, %f, %f], [%f, %f, "
-                         "%f], [%f, %f, %f], [%f, %f, %f]\n\n",
-                         coords_out[0], coords_out[1], coords_out[2], coords_out[3], coords_out[4], coords_out[5],
-                         coords_out[6], coords_out[7], coords_out[8], coords_out[9], coords_out[10], coords_out[11],
-                         coords_out[12], coords_out[13], coords_out[14], coords_out[15], coords_out[16], coords_out[17],
-                         coords_out[18], coords_out[19], coords_out[20], coords_out[21], coords_out[22],
-                         coords_out[23]);
-
   T8_FREE (tree_ref_coords);
 }
 
