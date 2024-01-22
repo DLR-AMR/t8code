@@ -2945,9 +2945,12 @@ t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shel
   t8_geometry_c *geometry = t8_geometry_cubed_spherical_shell_new ();
   t8_cmesh_register_geometry (cmesh, geometry);
 
-  const int two_to_nl = num_levels > 0 ? 1 << num_levels : 1; /* 2^num_levels */
-  const int ntrees = 6 * two_to_nl * two_to_nl * num_layers;  /* Number of cmesh elements resp. trees. */
-  const int nverts = 8;                                       /* Number of vertices per cmesh element. */
+  /* Square root of three. */
+  const double SQRT3 = 1.7320508075688772;
+
+  const int two_to_nl = 1 << num_levels; /* 2^num_levels */
+  const int ntrees = t8_eclass_num_faces[T8_ECLASS_HEX] * two_to_nl * two_to_nl * num_layers;  /* Number of cmesh cells. */
+  const int nverts = t8_eclass_num_vertices[T8_ECLASS_HEX]; /* Number of vertices per cmesh cell. */
 
   /* Arrays for the face connectivity computations via vertices. */
   double all_verts[ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM];
@@ -2996,8 +2999,8 @@ t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shel
 
       /* Transfer the coordinates from the 2D forest mesh to the 2D cmesh and stack hexes along radial direction. */
       for (int istack = 0; istack < num_layers; istack++) {
-        const double iscale = 1.0 + istack * shell_thickness / inner_radius / num_layers / T8_SQRT3;
-        const double oscale = 1.0 + (istack + 1) * shell_thickness / inner_radius / num_layers / T8_SQRT3;
+        const double iscale = 1.0 + istack * shell_thickness / inner_radius / num_layers / SQRT3;
+        const double oscale = 1.0 + (istack + 1) * shell_thickness / inner_radius / num_layers / SQRT3;
 
         double hex_vertices[8 * 3];
         for (int ivert = 0; ivert < 4; ivert++) {

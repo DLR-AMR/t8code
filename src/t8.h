@@ -116,9 +116,6 @@ typedef uint64_t t8_linearidx_t;
 /** Define precisions for computations */
 #define T8_PRECISION_EPS SC_EPS
 
-/** Cube squared. */
-#define T8_SQRT3 1.7320508075688772
-
 /** Access multidimensional data on one-dimensional C arrays. */
 #define T8_1D_TO_1D(nx, i) (i)
 #define T8_2D_TO_1D(nx, ny, i, j) ((i) * (ny) + (j))
