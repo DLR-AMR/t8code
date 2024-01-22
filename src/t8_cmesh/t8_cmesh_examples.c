@@ -2949,8 +2949,9 @@ t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shel
   const double SQRT3 = 1.7320508075688772;
 
   const int two_to_nl = 1 << num_levels; /* 2^num_levels */
-  const int ntrees = t8_eclass_num_faces[T8_ECLASS_HEX] * two_to_nl * two_to_nl * num_layers;  /* Number of cmesh cells. */
-  const int nverts = t8_eclass_num_vertices[T8_ECLASS_HEX]; /* Number of vertices per cmesh cell. */
+  const int ntrees
+    = t8_eclass_num_faces[T8_ECLASS_HEX] * two_to_nl * two_to_nl * num_layers; /* Number of cmesh cells. */
+  const int nverts = t8_eclass_num_vertices[T8_ECLASS_HEX];                    /* Number of vertices per cmesh cell. */
 
   /* Arrays for the face connectivity computations via vertices. */
   double all_verts[ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM];

@@ -286,8 +286,8 @@ t8_geometry_triangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh, 
 }
 
 static inline void
-t8_geom_evaluate_sphere (const double* active_tree_vertices, const int ndims, const double *ref_coords, const size_t num_coords,
-                               double *out_coords)
+t8_geom_evaluate_sphere (const double *active_tree_vertices, const int ndims, const double *ref_coords,
+                         const size_t num_coords, double *out_coords)
 {
   double n[3]; /* Normal vector. */
   double r[3]; /* Radial vector. */
