@@ -76,7 +76,8 @@ typedef enum {
  * 
  * This geometry does not provide a jacobian.
  */
-class t8_geometry_sincos: public t8_geometry {
+struct t8_geometry_sincos: public t8_geometry
+{
  public:
   /* Basic constructor that sets the dimension and the name. */
   t8_geometry_sincos (): t8_geometry (2, "t8_sincos_geometry")
@@ -146,7 +147,8 @@ class t8_geometry_sincos: public t8_geometry {
  * It inherits from the w_vertices geometry since we use the tree's vertex coordinates.
  * This geometry does not provide a jacobian.
  */
-class t8_geometry_moebius: public t8_geometry_with_vertices {
+struct t8_geometry_moebius: public t8_geometry_with_vertices
+{
  public:
   /* Basic constructor that sets the dimension and the name. */
   t8_geometry_moebius (): t8_geometry_with_vertices (2, "t8_moebius_geometry")
@@ -214,7 +216,8 @@ class t8_geometry_moebius: public t8_geometry_with_vertices {
  * 
  * This geometry does not provide a jacobian.
  */
-class t8_geometry_cylinder: public t8_geometry {
+struct t8_geometry_cylinder: public t8_geometry
+{
  public:
   /* Basic constructor that sets the dimension and the name. */
   t8_geometry_cylinder (): t8_geometry (2, "t8_cylinder_geometry")
@@ -277,7 +280,8 @@ class t8_geometry_cylinder: public t8_geometry {
  * 
  * This geometry does not provide a jacobian.
  */
-class t8_geometry_circle: public t8_geometry_with_vertices {
+struct t8_geometry_circle: public t8_geometry_with_vertices
+{
  public:
   /* Basic constructor that sets the dimension and the name. */
   t8_geometry_circle (): t8_geometry_with_vertices (2, "t8_circle_geometry")
@@ -350,7 +354,8 @@ class t8_geometry_circle: public t8_geometry_with_vertices {
  * The geometry can only be used with single tree cmeshes (unit square).
  */
 
-class t8_geometry_moving: public t8_geometry {
+struct t8_geometry_moving: public t8_geometry
+{
  public:
   /* Basic constructor that sets the dimension the name and the time pointer. */
   t8_geometry_moving (const double *time): t8_geometry (2, "t8_moving_geometry"), ptime (time)
@@ -428,7 +433,8 @@ class t8_geometry_moving: public t8_geometry {
  * in z direction.
  * Can be used with 1 tree unit cube cmesh only.
  */
-class t8_geometry_cube_zdistorted: public t8_geometry {
+struct t8_geometry_cube_zdistorted: public t8_geometry
+{
  public:
   /* Basic constructor that sets the dimension and the name. */
   t8_geometry_cube_zdistorted (): t8_geometry (3, "t8_cube_zdistorted_geometry")
