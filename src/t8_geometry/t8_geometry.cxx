@@ -368,7 +368,5 @@ t8_geometry_get_type (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
   t8_geom_handler_update_tree (geom_handler, cmesh, gtreeid);
 
   /* Return the type. */
-  /* *INDENT-OFF* */
   return geom_handler->active_geometry->t8_geom_get_type ();
-  /* *INDENT-ON* */
 }
