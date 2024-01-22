@@ -41,35 +41,37 @@
 /* This macro is called to check a condition and if not fulfilled
  * close the file and exit the function */
 #define T8_SAVE_CHECK_CLOSE(x, fp) \
-  if (!(x)) { t8_errorf ("file i/o error. Condition %s not fulfilled. "\
-              "Line %i in file %s\n", #x, __LINE__, __FILE__);\
-              fclose (fp); return 0;}
+  if (!(x)) { \
+    t8_errorf ("file i/o error. Condition %s not fulfilled. " \
+               "Line %i in file %s\n", \
+               #x, __LINE__, __FILE__); \
+    fclose (fp); \
+    return 0; \
+  }
 
 /* Write the neighbor data of all ghosts */
 static int
 t8_cmesh_save_ghost_neighbors (t8_cmesh_t cmesh, FILE *fp)
 {
-  t8_locidx_t         ighost;
-  t8_cghost_t         ghost;
-  t8_gloidx_t        *face_neigh;
-  int8_t             *ttf;
-  int                 iface, num_faces;
-  int                 ret;
-  char                buffer[BUFSIZ];
+  t8_locidx_t ighost;
+  t8_cghost_t ghost;
+  t8_gloidx_t *face_neigh;
+  int8_t *ttf;
+  int iface, num_faces;
+  int ret;
+  char buffer[BUFSIZ];
 
   ret = fprintf (fp, "\n--- Ghost neighbor section ---\n\n");
   T8_SAVE_CHECK_CLOSE (ret > 0, fp);
   for (ighost = 0; ighost < cmesh->num_ghosts; ighost++) {
     /* Reset the buffer */
     buffer[0] = '\0';
-    ghost = t8_cmesh_trees_get_ghost_ext (cmesh->trees, ighost, &face_neigh,
-                                          &ttf);
+    ghost = t8_cmesh_trees_get_ghost_ext (cmesh->trees, ighost, &face_neigh, &ttf);
     /* Iterate over all faces to write the face neighbor information */
     num_faces = t8_eclass_num_faces[ghost->eclass];
     for (iface = 0; iface < num_faces; iface++) {
-      snprintf (buffer + strlen (buffer), BUFSIZ - strlen (buffer),
-                "%lli %i%s", (long long) face_neigh[iface], ttf[iface],
-                iface == num_faces - 1 ? "" : ", ");
+      snprintf (buffer + strlen (buffer), BUFSIZ - strlen (buffer), "%lli %i%s", (long long) face_neigh[iface],
+                ttf[iface], iface == num_faces - 1 ? "" : ", ");
     }
     ret = fprintf (fp, "%s\n", buffer);
     T8_SAVE_CHECK_CLOSE (ret > 0, fp);
@@ -81,21 +83,20 @@ static int
 t8_cmesh_load_ghost_attributes (t8_cmesh_t cmesh, FILE *fp)
 {
 
-  t8_locidx_t         ighost;
-  t8_cghost_t         ghost;
-  t8_gloidx_t        *face_neigh;
-  int8_t             *ttf;
-  int                 iface, num_faces, ttf_entry;
-  long long           neigh;
-  int                 ret;
+  t8_locidx_t ighost;
+  t8_cghost_t ghost;
+  t8_gloidx_t *face_neigh;
+  int8_t *ttf;
+  int iface, num_faces, ttf_entry;
+  long long neigh;
+  int ret;
 
   ret = fscanf (fp, "\n--- Ghost neighbor section ---\n\n");
   T8_SAVE_CHECK_CLOSE (ret == 0, fp);
 
   for (ighost = 0; ighost < cmesh->num_ghosts; ighost++) {
     /* Get a pointer to the ghost */
-    ghost = t8_cmesh_trees_get_ghost_ext (cmesh->trees, ighost,
-                                          &face_neigh, &ttf);
+    ghost = t8_cmesh_trees_get_ghost_ext (cmesh->trees, ighost, &face_neigh, &ttf);
     /* Read the neighbor information */
     num_faces = t8_eclass_num_faces[ghost->eclass];
     for (iface = 0; iface < num_faces; iface++) {
@@ -111,9 +112,9 @@ t8_cmesh_load_ghost_attributes (t8_cmesh_t cmesh, FILE *fp)
 static int
 t8_cmesh_save_ghosts (t8_cmesh_t cmesh, FILE *fp)
 {
-  t8_locidx_t         ighost;
-  t8_cghost_t         ghost;
-  int                 ret;
+  t8_locidx_t ighost;
+  t8_cghost_t ghost;
+  int ret;
 
   ret = fprintf (fp, "\n--- Ghost section ---");
   T8_SAVE_CHECK_CLOSE (ret > 0, fp);
@@ -121,8 +122,7 @@ t8_cmesh_save_ghosts (t8_cmesh_t cmesh, FILE *fp)
   T8_SAVE_CHECK_CLOSE (ret > 0, fp);
   for (ighost = 0; ighost < cmesh->num_ghosts; ighost++) {
     ghost = t8_cmesh_trees_get_ghost (cmesh->trees, ighost);
-    ret = fprintf (fp, "treeid %lli\neclass %i\n\n",
-                   (long long) ghost->treeid, (int) ghost->eclass);
+    ret = fprintf (fp, "treeid %lli\neclass %i\n\n", (long long) ghost->treeid, (int) ghost->eclass);
     T8_SAVE_CHECK_CLOSE (ret > 0, fp);
   }
   return 1;
@@ -131,12 +131,12 @@ t8_cmesh_save_ghosts (t8_cmesh_t cmesh, FILE *fp)
 static int
 t8_cmesh_load_ghosts (t8_cmesh_t cmesh, FILE *fp)
 {
-  t8_locidx_t         ighost;
-  t8_cghost_t         ghost;
-  int                 ret;
-  int                 eclass;
-  long                num_ghosts;
-  long long           global_id;
+  t8_locidx_t ighost;
+  t8_cghost_t ghost;
+  int ret;
+  int eclass;
+  long num_ghosts;
+  long long global_id;
 
   ret = fscanf (fp, "\n--- Ghost section ---\n");
   T8_SAVE_CHECK_CLOSE (ret == 0, fp);
@@ -169,22 +169,21 @@ t8_cmesh_load_ghosts (t8_cmesh_t cmesh, FILE *fp)
 static int
 t8_cmesh_load_tree_attributes (t8_cmesh_t cmesh, FILE *fp)
 {
-  double             *vertices = NULL;
-  t8_locidx_t         itree;
-  long                treeid, neighbor;
-  t8_ctree_t          tree;
-  int                 att, i, num_vertices, num_faces, iface;
-  int                 ret, ttf_entry;
-  t8_locidx_t        *face_neighbors;
-  int8_t             *ttf;
+  double *vertices = NULL;
+  t8_locidx_t itree;
+  long treeid, neighbor;
+  t8_ctree_t tree;
+  int att, i, num_vertices, num_faces, iface;
+  int ret, ttf_entry;
+  t8_locidx_t *face_neighbors;
+  int8_t *ttf;
   t8_stash_attribute_struct_t att_struct;
 
   ret = fscanf (fp, "\n--- Tree attribute section ---\n");
   T8_SAVE_CHECK_CLOSE (ret == 0, fp);
   /* loop over all trees */
   for (itree = 0; itree < cmesh->num_local_trees; itree++) {
-    tree = t8_cmesh_trees_get_tree_ext (cmesh->trees, itree, &face_neighbors,
-                                        &ttf);
+    tree = t8_cmesh_trees_get_tree_ext (cmesh->trees, itree, &face_neighbors, &ttf);
     /* Allocate memory for the temporary vertices array.
      * This memory is reused for each tree */
     num_vertices = t8_eclass_num_vertices[tree->eclass];
@@ -206,21 +205,11 @@ t8_cmesh_load_tree_attributes (t8_cmesh_t cmesh, FILE *fp)
       /* Loop over all attributes of this tree that we need to read */
       /* Check whether this attribute really belongs to tree */
       T8_SAVE_CHECK_CLOSE (treeid == (long) itree, fp);
-      ret = fscanf (fp, "id %i\nkey %i\n", &att_struct.package_id,
-                    &att_struct.key);
+      ret = fscanf (fp, "id %i\nkey %i\n", &att_struct.package_id, &att_struct.key);
       T8_SAVE_CHECK_CLOSE (ret == 2, fp);
       /* We currently only support vertices as attributes.
        * Those have t8 package id and key 0 */
-#if 0
-      /* TODO: We cannot check if the attribute package id is t8_get_package_id,
-       *       since this id can change from program to program.
-       *       As soon as we allow multiple attributes to be saved and loaded,
-       *       we need a mechanism to check for the attributes that are vertices */
-      T8_SAVE_CHECK_CLOSE (att_struct.package_id == t8_get_package_id ()
-                           && att_struct.key == 0, fp);
-#endif
-      T8_SAVE_CHECK_CLOSE (att_struct.package_id > 0
-                           && att_struct.key == 0, fp);
+      T8_SAVE_CHECK_CLOSE (att_struct.package_id > 0 && att_struct.key == 0, fp);
       /* TODO: We set the package id to match the one of t8code manually.
        * See the comment above. */
       att_struct.package_id = t8_get_package_id ();
@@ -230,9 +219,7 @@ t8_cmesh_load_tree_attributes (t8_cmesh_t cmesh, FILE *fp)
       T8_SAVE_CHECK_CLOSE (ret == 1, fp);
       /* Read the vertices */
       for (i = 0; i < num_vertices; i++) {
-        ret =
-          fscanf (fp, "%lf %lf %lf\n", vertices + 3 * i, vertices + 3 * i + 1,
-                  vertices + 3 * i + 2);
+        ret = fscanf (fp, "%lf %lf %lf\n", vertices + 3 * i, vertices + 3 * i + 1, vertices + 3 * i + 2);
         T8_SAVE_CHECK_CLOSE (ret == 3, fp);
       }
       att_struct.attr_data = vertices;
@@ -249,16 +236,16 @@ t8_cmesh_load_tree_attributes (t8_cmesh_t cmesh, FILE *fp)
 static int
 t8_cmesh_save_tree_attribute (t8_cmesh_t cmesh, FILE *fp)
 {
-  double             *vertices;
-  t8_locidx_t         itree;
-  t8_ctree_t          tree;
-  int                 num_vertices;
-  int                 ret, i;
-  size_t              att_size;
-  t8_locidx_t        *face_neigh;
-  int8_t             *ttf;
-  int                 num_faces;
-  char                buffer[BUFSIZ] = "";
+  double *vertices;
+  t8_locidx_t itree;
+  t8_ctree_t tree;
+  int num_vertices;
+  int ret, i;
+  size_t att_size;
+  t8_locidx_t *face_neigh;
+  int8_t *ttf;
+  int num_faces;
+  char buffer[BUFSIZ] = "";
 
   ret = fprintf (fp, "\n--- Tree attribute section ---\n");
   T8_SAVE_CHECK_CLOSE (ret > 0, fp);
@@ -267,14 +254,12 @@ t8_cmesh_save_tree_attribute (t8_cmesh_t cmesh, FILE *fp)
     /* TODO: Currently we only support storing of the tree vertices as only attribute.
      *        This attribute has package id t8_get_package_id() and key 0.
      */
-    tree = t8_cmesh_trees_get_tree_ext (cmesh->trees, itree, &face_neigh,
-                                        &ttf);
+    tree = t8_cmesh_trees_get_tree_ext (cmesh->trees, itree, &face_neigh, &ttf);
     ret = fprintf (fp, "\ntree %li\n", (long) itree);
     /* Iterate over all faces to write the face neighbor information */
     num_faces = t8_eclass_num_faces[tree->eclass];
     for (i = 0; i < num_faces; i++) {
-      snprintf (buffer + strlen (buffer), BUFSIZ - strlen (buffer),
-                "%li %i%s", (long) face_neigh[i], ttf[i],
+      snprintf (buffer + strlen (buffer), BUFSIZ - strlen (buffer), "%li %i%s", (long) face_neigh[i], ttf[i],
                 i == num_faces - 1 ? "" : ", ");
     }
     ret = fprintf (fp, "Neighbors: %s\n", buffer);
@@ -283,9 +268,7 @@ t8_cmesh_save_tree_attribute (t8_cmesh_t cmesh, FILE *fp)
     T8_SAVE_CHECK_CLOSE (ret > 0, fp);
     num_vertices = t8_eclass_num_vertices[tree->eclass];
     /* Write the attributes that are vertices */
-    vertices = (double *) t8_cmesh_trees_get_attribute (cmesh->trees, itree,
-                                                        t8_get_package_id (),
-                                                        0, &att_size, 0);
+    vertices = (double *) t8_cmesh_trees_get_attribute (cmesh->trees, itree, t8_get_package_id (), 0, &att_size, 0);
     if (vertices != NULL) {
       /* We have an attribute that is stored with key 0, we treat it as tree vertices */
       num_vertices = t8_eclass_num_vertices[tree->eclass];
@@ -305,9 +288,8 @@ t8_cmesh_save_tree_attribute (t8_cmesh_t cmesh, FILE *fp)
       T8_ASSERT (strlen (buffer) == 0);
       for (i = 0; i < num_vertices; i++) {
         /* For each vertex, we write its three coordinates in a line */
-        snprintf (buffer + strlen (buffer), BUFSIZ - strlen (buffer),
-                  "%e %e %e\n", vertices[3 * i], vertices[3 * i + 1],
-                  vertices[3 * i + 2]);
+        snprintf (buffer + strlen (buffer), BUFSIZ - strlen (buffer), "%e %e %e\n", vertices[3 * i],
+                  vertices[3 * i + 1], vertices[3 * i + 2]);
       }
       fprintf (fp, "%s", buffer);
       /* Clear the buffer such that strlen returns 0 */
@@ -320,13 +302,12 @@ t8_cmesh_save_tree_attribute (t8_cmesh_t cmesh, FILE *fp)
 static int
 t8_cmesh_save_trees (t8_cmesh_t cmesh, FILE *fp)
 {
-  t8_locidx_t         itree;
-  t8_ctree_t          tree;
-  int                 ret;
+  t8_locidx_t itree;
+  t8_ctree_t tree;
+  int ret;
 
   T8_ASSERT (fp != NULL);
-  ret = fprintf (fp, "Total bytes for trees and ghosts %zd\n",
-                 t8_cmesh_trees_size (cmesh->trees));
+  ret = fprintf (fp, "Total bytes for trees and ghosts %zd\n", t8_cmesh_trees_size (cmesh->trees));
   T8_SAVE_CHECK_CLOSE (ret > 0, fp);
 
   ret = fprintf (fp, "\n--- Tree section ---");
@@ -343,15 +324,12 @@ t8_cmesh_save_trees (t8_cmesh_t cmesh, FILE *fp)
       /* TODO: We currently do not support saving of attributes different
        * to the tree vertices */
       fclose (fp);
-      t8_errorf ("We do not support saving cmeshes with trees that "
-                 "have attributes different to the tree vertices.\n");
+      t8_errorf ("We do not support saving cmeshes with trees that have attributes different to the tree vertices.\n");
       return 0;
     }
-    ret = fprintf (fp, "num_attributes %i\nSize of attributes %zd\n\n",
-                   tree->num_attributes,
+    ret = fprintf (fp, "num_attributes %i\nSize of attributes %zd\n\n", tree->num_attributes,
                    t8_cmesh_trees_attribute_size (tree));
     T8_SAVE_CHECK_CLOSE (ret > 0, fp);
-
   }
   return 1;
 }
@@ -361,21 +339,18 @@ t8_cmesh_save_trees (t8_cmesh_t cmesh, FILE *fp)
 static int
 t8_cmesh_load_trees (t8_cmesh_t cmesh, FILE *fp)
 {
-  size_t              bytes_for_trees, att_bytes;
-  t8_locidx_t         itree;
-  int                 eclass, num_atts;
-  int                 ret;
-  long                num_trees;
+  size_t bytes_for_trees, att_bytes;
+  t8_locidx_t itree;
+  int eclass, num_atts;
+  int ret;
+  long num_trees;
 
-  ret =
-    fscanf (fp, "Total bytes for trees and ghosts %zu\n", &bytes_for_trees);
-  T8_SAVE_CHECK_CLOSE (ret == 1, fp);   /* The bytes_for_trees data is currently not used */
+  ret = fscanf (fp, "Total bytes for trees and ghosts %zu\n", &bytes_for_trees);
+  T8_SAVE_CHECK_CLOSE (ret == 1, fp); /* The bytes_for_trees data is currently not used */
   ret = fscanf (fp, "\n--- Tree section ---\n");
   T8_SAVE_CHECK_CLOSE (ret == 0, fp);
-  t8_cmesh_trees_init (&cmesh->trees, 1, cmesh->num_local_trees,
-                       cmesh->num_ghosts);
-  t8_cmesh_trees_start_part (cmesh->trees, 0, 0, cmesh->num_local_trees, 0,
-                             cmesh->num_ghosts, 1);
+  t8_cmesh_trees_init (&cmesh->trees, 1, cmesh->num_local_trees, cmesh->num_ghosts);
+  t8_cmesh_trees_start_part (cmesh->trees, 0, 0, cmesh->num_local_trees, 0, cmesh->num_ghosts, 1);
   /* Read the number of trees to come and check for consistency */
   ret = fscanf (fp, "Trees %li\n", &num_trees);
   T8_SAVE_CHECK_CLOSE (ret == 1, fp);
@@ -390,13 +365,10 @@ t8_cmesh_load_trees (t8_cmesh_t cmesh, FILE *fp)
     /* After adding the tree, we set its face neighbors and face orientation */
     (void) t8_cmesh_trees_get_tree (cmesh->trees, itree);
     /* Check whether the number of attribute is really 1 */
-    ret =
-      fscanf (fp, "num_attributes %i\nSize of attributes %zu\n", &num_atts,
-              &att_bytes);
+    ret = fscanf (fp, "num_attributes %i\nSize of attributes %zu\n", &num_atts, &att_bytes);
     T8_SAVE_CHECK_CLOSE (ret == 2, fp);
     T8_SAVE_CHECK_CLOSE (num_atts == 1, fp);
-    T8_SAVE_CHECK_CLOSE (att_bytes == 3 * sizeof (double)
-                         * t8_eclass_num_vertices[eclass], fp);
+    T8_SAVE_CHECK_CLOSE (att_bytes == 3 * sizeof (double) * t8_eclass_num_vertices[eclass], fp);
     /* If there really is one attribute it must be the trees vertices and thus
      * we initialize the tree's attribute accordingly */
     t8_cmesh_trees_init_attributes (cmesh->trees, itree, 1, att_bytes);
@@ -407,13 +379,11 @@ t8_cmesh_load_trees (t8_cmesh_t cmesh, FILE *fp)
 static int
 t8_cmesh_save_header (t8_cmesh_t cmesh, FILE *fp)
 {
-  int                 ret;
-  int                 eclass;
+  int ret;
+  int eclass;
 
   T8_ASSERT (fp != NULL);
-  ret =
-    fprintf (fp, "This is %s, file format version %u.\n\n",
-             t8_get_package_string (), T8_CMESH_FORMAT);
+  ret = fprintf (fp, "This is %s, file format version %u.\n\n", t8_get_package_string (), T8_CMESH_FORMAT);
   T8_SAVE_CHECK_CLOSE (ret > 0, fp);
 
   /* Write 0 for replicated and 1 for partitioned cmesh */
@@ -440,18 +410,16 @@ t8_cmesh_save_header (t8_cmesh_t cmesh, FILE *fp)
   ret = fprintf (fp, "num_local_trees_per_eclass ");
   T8_SAVE_CHECK_CLOSE (ret > 0, fp);
   for (eclass = T8_ECLASS_ZERO; eclass < T8_ECLASS_COUNT; eclass++) {
-    ret =
-      fprintf (fp, "%li%s", (long) cmesh->num_local_trees_per_eclass[eclass],
-               eclass == T8_ECLASS_COUNT - 1 ? "\n" : ", ");
+    ret = fprintf (fp, "%li%s", (long) cmesh->num_local_trees_per_eclass[eclass],
+                   eclass == T8_ECLASS_COUNT - 1 ? "\n" : ", ");
     T8_SAVE_CHECK_CLOSE (ret > 0, fp);
   }
   /* Write the number of trees for each eclass */
   ret = fprintf (fp, "num_trees_per_eclass ");
   T8_SAVE_CHECK_CLOSE (ret > 0, fp);
   for (eclass = T8_ECLASS_ZERO; eclass < T8_ECLASS_COUNT; eclass++) {
-    ret =
-      fprintf (fp, "%lli%s", (long long) cmesh->num_trees_per_eclass[eclass],
-               eclass == T8_ECLASS_COUNT - 1 ? "\n" : ", ");
+    ret = fprintf (fp, "%lli%s", (long long) cmesh->num_trees_per_eclass[eclass],
+                   eclass == T8_ECLASS_COUNT - 1 ? "\n" : ", ");
     T8_SAVE_CHECK_CLOSE (ret > 0, fp);
   }
 
@@ -468,22 +436,19 @@ t8_cmesh_save_header (t8_cmesh_t cmesh, FILE *fp)
 static int
 t8_cmesh_load_header (t8_cmesh_t cmesh, FILE *fp)
 {
-  int                 file_format, save_rank, save_mpisize;
-  int                 ieclass;
-  int                 ret;
-  long long           global_num_trees, tree_per_class, first_local_tree;
-  long                local_num_trees, local_num_ghosts;
-  int                 first_shared;
+  int file_format, save_rank, save_mpisize;
+  int ieclass;
+  int ret;
+  long long global_num_trees, tree_per_class, first_local_tree;
+  long local_num_trees, local_num_ghosts;
+  int first_shared;
 
   /* Check whether the file was saved with the current file format */
-  ret =
-    fscanf (fp, "This is %*[^ ] %*[^ ] file format version %i.\n",
-            &file_format);
+  ret = fscanf (fp, "This is %*[^ ] %*[^ ] file format version %i.\n", &file_format);
   T8_SAVE_CHECK_CLOSE (ret == 1, fp);
   if (file_format != T8_CMESH_FORMAT) {
     /* The file was saved with an old format and we cannot read it any more */
-    t8_errorf
-      ("Input file is in an old format that we cannot read anymore.\n");
+    t8_errorf ("Input file is in an old format that we cannot read anymore.\n");
     fclose (fp);
     return 0;
   }
@@ -498,8 +463,7 @@ t8_cmesh_load_header (t8_cmesh_t cmesh, FILE *fp)
   T8_SAVE_CHECK_CLOSE (0 <= save_rank && save_rank < save_mpisize, fp);
   /* It does not make sense to load a cmesh on a rank smaller than the one that
    * saved it. */
-  T8_SAVE_CHECK_CLOSE (cmesh->mpirank <= save_rank
-                       && cmesh->mpisize <= save_mpisize, fp);
+  T8_SAVE_CHECK_CLOSE (cmesh->mpirank <= save_rank && cmesh->mpisize <= save_mpisize, fp);
   ret = fscanf (fp, "dim %i\n", &cmesh->dimension);
   T8_SAVE_CHECK_CLOSE (ret == 1, fp);
   /* Check if the read dimension is in the correct range */
@@ -507,9 +471,7 @@ t8_cmesh_load_header (t8_cmesh_t cmesh, FILE *fp)
   /* Since t8_gloidx_t and t8_locidx_t are integer datatypes that are not fixed,
    * we first read the tree numbers into fixed datatypes (long long for gloidx and
    * long for locidx) */
-  ret =
-    fscanf (fp, "num_trees %lli\nnum_local_trees %li\n", &global_num_trees,
-            &local_num_trees);
+  ret = fscanf (fp, "num_trees %lli\nnum_local_trees %li\n", &global_num_trees, &local_num_trees);
   T8_SAVE_CHECK_CLOSE (ret == 2, fp);
   T8_SAVE_CHECK_CLOSE (local_num_trees <= global_num_trees, fp);
   cmesh->num_trees = (t8_gloidx_t) global_num_trees;
@@ -517,8 +479,7 @@ t8_cmesh_load_header (t8_cmesh_t cmesh, FILE *fp)
   /* Read the number of ghost trees */
   ret = fscanf (fp, "num_ghosts %li\n", &local_num_ghosts);
   T8_SAVE_CHECK_CLOSE (ret == 1, fp);
-  T8_SAVE_CHECK_CLOSE (0 <= local_num_ghosts &&
-                       local_num_ghosts < cmesh->num_trees, fp);
+  T8_SAVE_CHECK_CLOSE (0 <= local_num_ghosts && local_num_ghosts < cmesh->num_trees, fp);
   cmesh->num_ghosts = local_num_ghosts;
 
   /* Read the number of local trees per eclass */
@@ -540,23 +501,21 @@ t8_cmesh_load_header (t8_cmesh_t cmesh, FILE *fp)
   /* Read the first local tree id and whether the first tree is shared */
   ret = fscanf (fp, "\nfirst_tree %lli\n", &first_local_tree);
   T8_SAVE_CHECK_CLOSE (ret == 1, fp);
-  T8_SAVE_CHECK_CLOSE (0 <= first_local_tree &&
-                       first_local_tree < global_num_trees, fp);
+  T8_SAVE_CHECK_CLOSE (0 <= first_local_tree && first_local_tree < global_num_trees, fp);
   cmesh->first_tree = first_local_tree;
   ret = fscanf (fp, "first_tree_shared %i\n", &first_shared);
   T8_SAVE_CHECK_CLOSE (ret == 1, fp);
   cmesh->first_tree_shared = first_shared;
-  T8_SAVE_CHECK_CLOSE (!cmesh->set_partition || cmesh->first_tree_shared == 0
-                       || cmesh->first_tree_shared == 1, fp);
+  T8_SAVE_CHECK_CLOSE (!cmesh->set_partition || cmesh->first_tree_shared == 0 || cmesh->first_tree_shared == 1, fp);
   return 1;
 }
 
 int
 t8_cmesh_save (t8_cmesh_t cmesh, const char *fileprefix)
 {
-  FILE               *fp;
-  char                filename[BUFSIZ];
-  int                 has_linear_geom = 0;
+  FILE *fp;
+  char filename[BUFSIZ];
+  int has_linear_geom = 0;
 
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   if (!cmesh->set_partition && cmesh->mpirank != 0) {
@@ -568,10 +527,8 @@ t8_cmesh_save (t8_cmesh_t cmesh, const char *fileprefix)
    * that this geometry is used for all trees. */
   if (t8_geom_handler_get_num_geometries (cmesh->geometry_handler) == 1) {
     /* Get the stored geometry and the linear geometry and compare their names. */
-    const t8_geometry_c *geom =
-      t8_geom_handler_get_unique_geometry (cmesh->geometry_handler);
-    t8_geometry_c      *linear_geom =
-      t8_geometry_linear_new (cmesh->dimension);
+    const t8_geometry_c *geom = t8_geom_handler_get_unique_geometry (cmesh->geometry_handler);
+    t8_geometry_c *linear_geom = t8_geometry_linear_new (cmesh->dimension);
 
     if (!strcmp (t8_geom_get_name (geom), t8_geom_get_name (linear_geom))) {
       /* The two geometries are equal. */
@@ -581,8 +538,7 @@ t8_cmesh_save (t8_cmesh_t cmesh, const char *fileprefix)
   }
   if (!has_linear_geom) {
     /* This cmesh does not have the linear geometry for all trees. */
-    t8_errorf
-      ("Error when saving cmesh. Cmesh does not have linear geometry.\n");
+    t8_errorf ("Error when saving cmesh. Cmesh does not have linear geometry.\n");
     return 0;
   }
 
@@ -636,9 +592,9 @@ t8_cmesh_save (t8_cmesh_t cmesh, const char *fileprefix)
 t8_cmesh_t
 t8_cmesh_load (const char *filename, sc_MPI_Comm comm)
 {
-  FILE               *fp;
-  t8_cmesh_t          cmesh;
-  int                 mpiret;
+  FILE *fp;
+  t8_cmesh_t cmesh;
+  int mpiret;
 
   /* Open the file in read mode */
   fp = fopen (filename, "r");
@@ -705,12 +661,11 @@ t8_cmesh_load (const char *filename, sc_MPI_Comm comm)
  * it stores the number of the file in file_to_load.
  */
 static int
-t8_cmesh_load_proc_loads (int mpirank, int mpisize, int num_files,
-                          sc_MPI_Comm comm, t8_load_mode_t mode,
+t8_cmesh_load_proc_loads (int mpirank, int mpisize, int num_files, sc_MPI_Comm comm, t8_load_mode_t mode,
                           int *file_to_load, int num_procs_per_node)
 {
-  sc_MPI_Comm         inter = sc_MPI_COMM_NULL, intra = sc_MPI_COMM_NULL;
-  int                 mpiret, interrank, intrarank, intersize;
+  sc_MPI_Comm inter = sc_MPI_COMM_NULL, intra = sc_MPI_COMM_NULL;
+  int mpiret, interrank, intrarank, intersize;
 
   if (num_procs_per_node <= 0 && mode == T8_LOAD_STRIDE) {
     t8_global_infof ("number of processes per node set to 16\n");
@@ -739,14 +694,13 @@ t8_cmesh_load_proc_loads (int mpirank, int mpisize, int num_files,
     /* Store internode and intranode communicator */
     sc_mpi_comm_get_node_comms (comm, &intra, &inter);
     /* Abort if we could not compute these communicators */
-    SC_CHECK_ABORT (intra != sc_MPI_COMM_NULL &&
-                    inter != sc_MPI_COMM_NULL,
-                    "Could not get proper internode "
-                    "and intranode communicators.\n");
+    SC_CHECK_ABORT (intra != sc_MPI_COMM_NULL && inter != sc_MPI_COMM_NULL, "Could not get proper internode "
+                                                                            "and intranode communicators.\n");
     mpiret = sc_MPI_Comm_size (inter, &intersize);
     SC_CHECK_MPI (mpiret);
     /* Check if the number of nodes is at least as big as the number of files */
-    SC_CHECK_ABORTF (intersize <= num_files, "Must have more compute nodes "
+    SC_CHECK_ABORTF (intersize <= num_files,
+                     "Must have more compute nodes "
                      "than files. %i nodes and %i fields are given.\n",
                      intersize, num_files);
     mpiret = sc_MPI_Comm_rank (inter, &interrank);
@@ -769,8 +723,7 @@ t8_cmesh_load_proc_loads (int mpirank, int mpisize, int num_files,
      * gain maximal efficiency. */
     SC_CHECK_ABORT (ceil (mpisize / (double) num_procs_per_node) >= num_files,
                     "Too many files for too few processes.\n");
-    if (mpirank % num_procs_per_node == 0
-        && mpirank / num_procs_per_node < num_files) {
+    if (mpirank % num_procs_per_node == 0 && mpirank / num_procs_per_node < num_files) {
       *file_to_load = mpirank / num_procs_per_node;
       return 1;
     }
@@ -790,20 +743,19 @@ t8_cmesh_load_proc_loads (int mpirank, int mpisize, int num_files,
  * the next bigger nonloading process.
  */
 static int
-t8_cmesh_load_bigger_nonloading (int mpirank, int mpisize,
-                                 int num_files, t8_load_mode_t mode,
-                                 sc_MPI_Comm comm, int num_procs_per_node)
+t8_cmesh_load_bigger_nonloading (int mpirank, int mpisize, int num_files, t8_load_mode_t mode, sc_MPI_Comm comm,
+                                 int num_procs_per_node)
 {
-  int                 next_bigger_nonloading;
-  sc_MPI_Comm         inter = sc_MPI_COMM_NULL, intra = sc_MPI_COMM_NULL;
-  sc_MPI_Group        intragroup, commgroup;
-  int                 mpiret, interrank, intrarank, intrasize, commrank;
-  int                 rankzero;
+  int next_bigger_nonloading;
+  sc_MPI_Comm inter = sc_MPI_COMM_NULL, intra = sc_MPI_COMM_NULL;
+  sc_MPI_Group intragroup, commgroup;
+  int mpiret, interrank, intrarank, intrasize, commrank;
+  int rankzero;
 
   switch (mode) {
   case T8_LOAD_SIMPLE:
     /* In simple mode, the first num_files processes load the cmesh and
-     * the rest is empty, this the next bigger nonloading rank is allways
+     * the rest is empty, this the next bigger nonloading rank is always
      * rank mpisize. */
     next_bigger_nonloading = mpisize;
     break;
@@ -833,9 +785,7 @@ t8_cmesh_load_bigger_nonloading (int mpirank, int mpisize,
       /* We can now transform the rank 0 of the intragroup to get
        * the correct rank in the commgroup */
       rankzero = 0;
-      mpiret =
-        sc_MPI_Group_translate_ranks (intragroup, 1, &rankzero, commgroup,
-                                      &commrank);
+      mpiret = sc_MPI_Group_translate_ranks (intragroup, 1, &rankzero, commgroup, &commrank);
       SC_CHECK_MPI (mpiret);
       /* We get the size of the intracommunicator */
       mpiret = sc_MPI_Group_size (intragroup, &intrasize);
@@ -848,7 +798,8 @@ t8_cmesh_load_bigger_nonloading (int mpirank, int mpisize,
     if (mpirank / num_procs_per_node < num_files - 1) {
       /* If we are in a multiple of 16, where a file was loaded,
        * the first process in the next group did load it. */
-      next_bigger_nonloading = mpirank - mpirank % num_procs_per_node + num_procs_per_node;     /* This is the next number divisible by
+      next_bigger_nonloading
+        = mpirank - mpirank % num_procs_per_node + num_procs_per_node; /* This is the next number divisible by
                                                                                                    num_procs_per_node */
     }
     else {
@@ -868,16 +819,15 @@ t8_cmesh_load_bigger_nonloading (int mpirank, int mpisize,
  * If N = 1, the cmesh is broadcasted and not partitioned.
  */
 t8_cmesh_t
-t8_cmesh_load_and_distribute (const char *fileprefix, int num_files,
-                              sc_MPI_Comm comm, t8_load_mode_t mode,
+t8_cmesh_load_and_distribute (const char *fileprefix, int num_files, sc_MPI_Comm comm, t8_load_mode_t mode,
                               int procs_per_node)
 {
-  t8_cmesh_t          cmesh;
-  char                buffer[BUFSIZ];
-  int                 mpiret, mpirank, mpisize;
-  int                 file_to_load;
-  int                 next_bigger_nonloading;
-  int                 did_load;
+  t8_cmesh_t cmesh;
+  char buffer[BUFSIZ];
+  int mpiret, mpirank, mpisize;
+  int file_to_load;
+  int next_bigger_nonloading;
+  int did_load;
 
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
@@ -902,8 +852,7 @@ t8_cmesh_load_and_distribute (const char *fileprefix, int num_files,
   else {
     /* More than one process loads a file */
 
-    if (t8_cmesh_load_proc_loads (mpirank, mpisize, num_files, comm,
-                                  mode, &file_to_load, procs_per_node)) {
+    if (t8_cmesh_load_proc_loads (mpirank, mpisize, num_files, comm, mode, &file_to_load, procs_per_node)) {
       T8_ASSERT (fileprefix != NULL);
       T8_ASSERT (0 <= file_to_load && file_to_load < num_files);
       snprintf (buffer, BUFSIZ, "%s_%04d.cmesh", fileprefix, file_to_load);
@@ -944,15 +893,12 @@ t8_cmesh_load_and_distribute (const char *fileprefix, int num_files,
     t8_cmesh_gather_treecount (cmesh, comm);
     if (!did_load) {
       /* Calculate the next bigger nonloading rank. */
-      next_bigger_nonloading =
-        t8_cmesh_load_bigger_nonloading (mpirank, mpisize, num_files, mode,
-                                         comm, procs_per_node);
+      next_bigger_nonloading
+        = t8_cmesh_load_bigger_nonloading (mpirank, mpisize, num_files, mode, comm, procs_per_node);
       /* Set the first tree of this process to the first tree of the next nonloading
        * rank */
-      cmesh->first_tree =
-        t8_offset_first (next_bigger_nonloading,
-                         t8_shmem_array_get_gloidx_array
-                         (cmesh->tree_offsets));
+      cmesh->first_tree
+        = t8_offset_first (next_bigger_nonloading, t8_shmem_array_get_gloidx_array (cmesh->tree_offsets));
     }
     /* Since we changed the first tree on some processes, we have to
      * regather the first trees on each process */

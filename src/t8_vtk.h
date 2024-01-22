@@ -23,7 +23,7 @@
 /** file t8_vtk.h
  * This header file collects macros that are needed for
  * the forest and cmesh vtk routines.
- * \see t8_forest_vtk.h \see t8_cmesh_vtk.h
+ * \see t8_forest_vtk.h \see t8_cmesh_vtk_writer.h \see t8_cmesh_vtk_reader.hxx
  */
 
 #ifndef T8_VTK_H
@@ -35,7 +35,7 @@
 
 #define T8_VTK_LOCIDX "Int32"
 /* TODO: Paraview has troubles with Int64, so we switch to Int32 and be careful.
- *       Investigate this further. See also vtk makro VTK_USE_64BIT_IDS */
+ *       Investigate this further. See also vtk macro VTK_USE_64BIT_IDS */
 #define T8_VTK_GLOIDX "Int32"
 
 /* TODO: these macros need to be set by configure */
@@ -60,18 +60,17 @@
 #endif
 
 /* TODO: Add support for integer data type. */
-typedef enum
-{
-  T8_VTK_SCALAR,                /* One double value per element */
-  T8_VTK_VECTOR                 /* 3 double values per element */
+typedef enum {
+  T8_VTK_SCALAR, /* One double value per element */
+  T8_VTK_VECTOR  /* 3 double values per element */
 } t8_vtk_data_type_t;
 
 typedef struct
 {
-  t8_vtk_data_type_t  type; /**< Describes of which type the data array is */
-  char                description[BUFSIZ];/**< String that describes the data. */
-  double             *data;
-                      /**< An array of length n*num_local_elements doubles with
+  t8_vtk_data_type_t type;  /**< Describes of which type the data array is */
+  char description[BUFSIZ]; /**< String that describes the data. */
+  double *data;
+  /**< An array of length n*num_local_elements doubles with
                       n = 1 if type = T8_VTK_SCALAR, n = 3 if type = T8_VTK_VECTOR */
 } t8_vtk_data_field_t;
 
@@ -83,10 +82,9 @@ T8_EXTERN_C_BEGIN ();
  * This function should only be called by one process.
  * Return 0 on success. */
 /* TODO: document */
-int                 t8_write_pvtu (const char *filename, int num_procs,
-                                   int write_tree, int write_rank,
-                                   int write_level, int write_id,
-                                   int num_data, t8_vtk_data_field_t *data);
+int
+t8_write_pvtu (const char *filename, int num_procs, int write_tree, int write_rank, int write_level, int write_id,
+               int num_data, t8_vtk_data_field_t *data);
 
 T8_EXTERN_C_END ();
 

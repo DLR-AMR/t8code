@@ -34,45 +34,45 @@ T8_EXTERN_C_BEGIN ();
 #define T8_DTRI_DIM (2)
 
 /** Store the type of parent for each (cube-id,type) combination. */
-extern const int    t8_dtri_cid_type_to_parenttype[4][2];
+extern const int t8_dtri_cid_type_to_parenttype[4][2];
 
 /** Store the type of child for each (type,child number) combination,
   * where child number is the number in Bey order. */
-extern const int    t8_dtri_type_of_child[2][4];
+extern const int t8_dtri_type_of_child[2][4];
 
 /** Store the type of child for each (type,child number) combination,
   * where child number is the number in Morton order. */
-extern const int    t8_dtri_type_of_child_morton[2][4];
+extern const int t8_dtri_type_of_child_morton[2][4];
 
 /** Store the Bey child number for each (Parent type,Morton child number) combination. */
-extern const int    t8_dtri_index_to_bey_number[2][4];
+extern const int t8_dtri_index_to_bey_number[2][4];
 
 /** The anchor node of a child of a triangle T is the convex combination
  *  of T's anchor node x_0 and another node x_i of T.
  *  This array gives the index i in dependence of the Bey
  *  child id. */
-extern const int    t8_dtri_beyid_to_vertex[4];
+extern const int t8_dtri_beyid_to_vertex[4];
 
 /** Store the Bey child number for each (type,cube-id) combination. */
-extern const int    t8_dtri_type_cid_to_beyid[2][4];
+extern const int t8_dtri_type_cid_to_beyid[2][4];
 
 /** Store the local index for each (parenttype,Bey child number) combination. */
-extern const int    t8_dtri_parenttype_beyid_to_Iloc[2][4];
+extern const int t8_dtri_parenttype_beyid_to_Iloc[2][4];
 
 /** Store the local index for each (type,cube-id) combination.*/
-extern const int    t8_dtri_type_cid_to_Iloc[2][4];
+extern const int t8_dtri_type_cid_to_Iloc[2][4];
 
 /** Store the type for each (parenttype,local Index) combination. */
-extern const int    t8_dtri_parenttype_Iloc_to_type[2][4];
+extern const int t8_dtri_parenttype_Iloc_to_type[2][4];
 
 /** Store the cube-id for each (parenttype,local Index) combination. */
-extern const int    t8_dtri_parenttype_Iloc_to_cid[2][4];
+extern const int t8_dtri_parenttype_Iloc_to_cid[2][4];
 
 /** Store the indices of the corner of each face of a triangle. */
-extern const int    t8_dtri_face_corner[3][2];
+extern const int t8_dtri_face_corner[3][2];
 
 /** Store the indices of the faces of each corner of a triangle. */
-extern const int    t8_dtri_corner_face[3][2];
+extern const int t8_dtri_corner_face[3][2];
 
 T8_EXTERN_C_END ();
 

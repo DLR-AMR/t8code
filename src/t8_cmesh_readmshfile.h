@@ -37,13 +37,7 @@
  */
 #define T8_CMESH_N_SUPPORTED_MSH_FILE_VERSIONS 2
 
-/* *INDENT-OFF* */
-const int
-t8_cmesh_supported_msh_file_versions[T8_CMESH_N_SUPPORTED_MSH_FILE_VERSIONS] = 
-{
-  2, 4
-};
-/* *INDENT-ON* */
+const int t8_cmesh_supported_msh_file_versions[T8_CMESH_N_SUPPORTED_MSH_FILE_VERSIONS] = { 2, 4 };
 
 /* put typedefs here */
 
@@ -62,18 +56,18 @@ t8_cmesh_supported_msh_file_versions[T8_CMESH_N_SUPPORTED_MSH_FILE_VERSIONS] =
  */
 typedef struct
 {
-  t8_locidx_t         index;
-  double              coordinates[3];
+  t8_locidx_t index;
+  double coordinates[3];
 } t8_msh_file_node_t;
 
 typedef struct
 {
-  t8_locidx_t         index;
-  double              coordinates[3];
-  double              parameters[2];
-  int                 parametric;
-  int                 entity_dim;
-  t8_locidx_t         entity_tag;
+  t8_locidx_t index;
+  double coordinates[3];
+  double parameters[2];
+  int parametric;
+  int entity_dim;
+  t8_locidx_t entity_tag;
 } t8_msh_file_node_parametric_t;
 
 T8_EXTERN_C_BEGIN ();
@@ -98,12 +92,9 @@ T8_EXTERN_C_BEGIN ();
  * \return        A committed cmesh holding the mesh of dimension \a dim in the
  *                specified .msh file.
  */
-/* *INDENT-OFF* */
 t8_cmesh_t
-t8_cmesh_from_msh_file (const char *fileprefix, int partition,
-                        sc_MPI_Comm comm, int dim, int master,
+t8_cmesh_from_msh_file (const char *fileprefix, int partition, sc_MPI_Comm comm, int dim, int master,
                         int use_occ_geometry);
-/* *INDENT-ON* */
 
 T8_EXTERN_C_END ();
 
