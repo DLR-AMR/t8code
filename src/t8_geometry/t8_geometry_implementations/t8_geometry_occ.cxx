@@ -267,7 +267,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
             displacement = converted_edge_surface_parameters[dim + offset_2d]
                            - interpolated_edge_surface_parameters[dim + offset_2d];
             scaled_displacement = displacement * scaling_factor;
-            interpolated_surface_parameters[dim + offset_3d] += scaled_displacement;
+            interpolated_surface_parameters[dim + offset_2d] += scaled_displacement;
           }
           /* Retrieve surface */
           T8_ASSERT (*faces <= occ_shape_face_map.Size ());
@@ -276,7 +276,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
           T8_ASSERT (!surface.IsNull ());
 
           /* Evaluate surface and save result */
-          surface->D0 (out_coords[offset_3d], out_coords[offset_3d + 1], pnt);
+          surface->D0 (interpolated_surface_parameters[offset_2d], interpolated_surface_parameters[offset_2d + 1], pnt);
 
           for (int dim = 0; dim < 3; ++dim) {
             out_coords[dim + offset_3d] = pnt.Coord (dim + 1);

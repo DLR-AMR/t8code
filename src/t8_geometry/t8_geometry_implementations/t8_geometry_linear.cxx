@@ -44,7 +44,12 @@ void
 t8_geometry_linear::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
                                       const size_t num_coords, double *out_coords) const
 {
-  t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, num_coords, out_coords);
+  for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
+    const int offset_2d = i_coord * 2;
+    const int offset_3d = i_coord * 3;
+    t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords + offset_2d, num_coords,
+                                     out_coords + offset_3d);
+  }
 }
 
 void
