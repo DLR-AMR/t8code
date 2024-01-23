@@ -151,20 +151,20 @@ t8_geometry_occ::t8_geom_evaluate_occ_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
 
   const t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
   const int num_edges = t8_eclass_num_edges[active_tree_class];
-  gp_Pnt pnt;
   Handle_Geom_Curve curve;
   Handle_Geom_Surface surface;
   Standard_Real first, last;
-  /* Allocate dynamic storage for later usage */
-  double *ref_intersection = T8_ALLOC (double, 2 * num_coords);
-  double *glob_intersection = T8_ALLOC (double, 3 * num_coords);
-  double *interpolated_curve_parameter = T8_ALLOC (double, num_coords);
-  double *converted_edge_surface_parameters = T8_ALLOC (double, 2 * num_coords);
-  double *interpolated_edge_surface_parameters = T8_ALLOC (double, 2 * num_coords);
-  double *displacement = T8_ALLOC (double, num_coords);
-  double *scaling_factor = T8_ALLOC (double, num_coords);
-  double *scaled_displacement = T8_ALLOC (double, num_coords);
-  double *interpolated_surface_parameters = T8_ALLOC (double, 2 * num_coords);
+  gp_Pnt pnt;
+  double displacement;
+  double scaling_factor;
+  double scaled_displacement;
+  /* Allocate storage for later usage. Storage depents on size of the batch. */
+  double ref_intersection[2 * num_coords];
+  double glob_intersection[3 * num_coords];
+  double interpolated_curve_parameter[num_coords];
+  double converted_edge_surface_parameters[2 * num_coords];
+  double interpolated_edge_surface_parameters[2 * num_coords];
+  double interpolated_surface_parameters[2 * num_coords];
 
   /*
    * Reference Space    |      Global Space
@@ -186,8 +186,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
 
   /* Linear mapping from ref_coords to out_coords for each reference point */
   for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
-    const int offset_3d = i_coord * 3;
     const int offset_2d = i_coord * 2;
+    const int offset_3d = i_coord * 3;
     t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords + offset_2d, num_coords,
                                      out_coords + offset_3d);
   }
@@ -206,11 +206,11 @@ t8_geometry_occ::t8_geom_evaluate_occ_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
 
     /* Retrieve surface_parameter for each reference point in global space by triangular interpolation from ref_coords to global space */
     for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
-      const int offset_3d = i_coord * 3;
       const int offset_2d = i_coord * 2;
       /* We use the out coords as buffer for the surface parameters to
        * avoid allocating extra dynamic memory */
-      t8_geom_triangular_interpolation (ref_coords + offset_2d, face_parameters, 2, 2, out_coords + offset_3d);
+      t8_geom_triangular_interpolation (ref_coords + offset_2d, face_parameters, 2, 2,
+                                        interpolated_surface_parameters + offset_2d);
     }
     /* Check every edge and search for edge displacement */
     for (int i_edge = 0; i_edge < num_edges; i_edge++) {
@@ -218,8 +218,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
         /* Calculate the intersections of straight lines from the opposite vertex of the current edge,
          * through each reference point, onto the current edge */
         for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
-          const int offset_3d = i_coord * 3;
           const int offset_2d = i_coord * 2;
+          const int offset_3d = i_coord * 3;
           t8_geom_get_ref_intersection (i_edge, ref_coords + offset_2d, ref_intersection + offset_2d);
           /* Converting ref_intersections to global_intersections by interpolation */
           t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_intersection + offset_2d,
@@ -243,7 +243,6 @@ t8_geometry_occ::t8_geom_evaluate_occ_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
             edges[i_edge], *faces, num_face_nodes, interpolated_curve_parameter[i_coord], face_parameters,
             converted_edge_surface_parameters + offset_2d);
         }
-        T8_FREE (interpolated_curve_parameter);
 
         double edge_surface_parameters[4];
         /* Get the surface parameters at the vertices of the current edge */
@@ -258,38 +257,30 @@ t8_geometry_occ::t8_geom_evaluate_occ_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
         /* Determine the scaling factor for each reference point by calculating the distances from the opposite vertex
          * to the glob_intersections and to the reference points */
         for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
-          const int offset_3d = i_coord * 3;
-          scaling_factor[i_coord] = t8_geom_get_triangle_scaling_factor (
-            i_edge, active_tree_vertices, glob_intersection + offset_3d, out_coords + offset_3d);
-        }
-
-        /* Calculate the parameter displacement for each reference point and add it to the surface parameters */
-        for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
-          const int offset_3d = i_coord * 3;
           const int offset_2d = i_coord * 2;
+          const int offset_3d = i_coord * 3;
+          scaling_factor = t8_geom_get_triangle_scaling_factor (i_edge, active_tree_vertices,
+                                                                glob_intersection + offset_3d, out_coords + offset_3d);
+
+          /* Calculate the parameter displacement for each reference point and add it to the surface parameters */
           for (int dim = 0; dim < 2; ++dim) {
-            displacement[i_coord] = converted_edge_surface_parameters[dim + offset_2d]
-                                    - interpolated_edge_surface_parameters[dim + offset_2d];
-            scaled_displacement[i_coord] = displacement[i_coord] * scaling_factor[i_coord];
-            out_coords[dim + offset_3d] += scaled_displacement[i_coord];
+            displacement = converted_edge_surface_parameters[dim + offset_2d]
+                           - interpolated_edge_surface_parameters[dim + offset_2d];
+            scaled_displacement = displacement * scaling_factor;
+            interpolated_surface_parameters[dim + offset_3d] += scaled_displacement;
           }
-        }
-        T8_FREE (converted_edge_surface_parameters);
-        T8_FREE (interpolated_edge_surface_parameters);
-      }
-      /* Retrieve surface */
-      T8_ASSERT (*faces <= occ_shape_face_map.Size ());
-      surface = BRep_Tool::Surface (TopoDS::Face (occ_shape_face_map.FindKey (*faces)));
-      /* Check if surface is valid */
-      T8_ASSERT (!surface.IsNull ());
+          /* Retrieve surface */
+          T8_ASSERT (*faces <= occ_shape_face_map.Size ());
+          surface = BRep_Tool::Surface (TopoDS::Face (occ_shape_face_map.FindKey (*faces)));
+          /* Check if surface is valid */
+          T8_ASSERT (!surface.IsNull ());
 
-      for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
-        const int offset_3d = i_coord * 3;
-        /* Evaluate surface and save result */
-        surface->D0 (out_coords[offset_3d], out_coords[offset_3d + 1], pnt);
+          /* Evaluate surface and save result */
+          surface->D0 (out_coords[offset_3d], out_coords[offset_3d + 1], pnt);
 
-        for (int dim = 0; dim < 3; ++dim) {
-          out_coords[dim + offset_3d] = pnt.Coord (dim + 1);
+          for (int dim = 0; dim < 3; ++dim) {
+            out_coords[dim + offset_3d] = pnt.Coord (dim + 1);
+          }
         }
       }
     }
@@ -320,28 +311,26 @@ t8_geometry_occ::t8_geom_evaluate_occ_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
         }
 
         for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
-          const int offset_3d = i_coord * 3;
           const int offset_2d = i_coord * 2;
+          const int offset_3d = i_coord * 3;
           if (edges[i_edge] > 0) {
             /* Interpolate between the curve parameters of the current edge with the ref_intersection of each reference point */
             t8_geom_linear_interpolation (&ref_intersection[(i_edge == 0) + offset_2d], parameters, 1, 1,
                                           interpolated_curve_parameter + i_coord);
             /* Retrieve curve */
-            T8_ASSERT (edges[i_edge] <= occ_shape_face_map.Size ());
+            T8_ASSERT (edges[i_edge] <= occ_shape_edge_map.Size ());
             curve = BRep_Tool::Curve (TopoDS::Edge (occ_shape_edge_map.FindKey (edges[i_edge])), first, last);
             /* Check if curve is valid */
             T8_ASSERT (!curve.IsNull ());
 
             /* Calculate point on curve with interpolated parameters. */
             curve->D0 (interpolated_curve_parameter[i_coord], pnt);
-            T8_FREE (interpolated_curve_parameter);
           }
           else {
             /* Interpolate between the surface parameters of the current edge with the ref_intersection of each reference point */
             t8_geom_linear_interpolation (&ref_intersection[(i_edge == 0) + offset_2d], parameters, 2, 1,
                                           interpolated_surface_parameters + offset_2d);
             T8_ASSERT (edges[i_edge + num_edges] <= occ_shape_face_map.Size ());
-            T8_FREE (ref_intersection);
             surface = BRep_Tool::Surface (TopoDS::Face (occ_shape_face_map.FindKey (edges[i_edge + num_edges])));
             /* Check if surface is valid */
             T8_ASSERT (!surface.IsNull ());
@@ -349,26 +338,20 @@ t8_geometry_occ::t8_geom_evaluate_occ_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
             /* Compute point on surface with interpolated parameters */
             surface->D0 (interpolated_surface_parameters[offset_2d], interpolated_surface_parameters[offset_2d + 1],
                          pnt);
-            T8_FREE (interpolated_surface_parameters);
           }
           /* Determine the scaling factor by calculating the distances from the opposite vertex
           * to the glob_intersection and to the reference point */
-          scaling_factor[i_coord] = t8_geom_get_triangle_scaling_factor (
-            i_edge, active_tree_vertices, glob_intersection + offset_3d, out_coords + offset_3d);
+          scaling_factor = t8_geom_get_triangle_scaling_factor (i_edge, active_tree_vertices,
+                                                                glob_intersection + offset_3d, out_coords + offset_3d);
 
           /* Calculate displacement between points on curve and point on linear curve.
            * Then scale it and add the scaled displacement to the result. */
           for (int dim = 0; dim < 3; ++dim) {
-            displacement[i_coord] = pnt.Coord (dim + 1) - glob_intersection[dim + offset_3d];
-            scaled_displacement[i_coord] = displacement[i_coord] * scaling_factor[i_coord];
-            out_coords[dim + offset_3d] += scaled_displacement[i_coord];
+            displacement = pnt.Coord (dim + 1) - glob_intersection[dim + offset_3d];
+            scaled_displacement = displacement * scaling_factor;
+            out_coords[dim + offset_3d] += scaled_displacement;
           }
         }
-        T8_FREE (glob_intersection);
-        T8_FREE (displacement);
-        T8_FREE (scaling_factor);
-        T8_FREE (scaled_displacement);
-        T8_FREE (interpolated_surface_parameters);
       }
     }
   }
@@ -403,7 +386,6 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
 
     /* Interpolate between surface parameters */
     for (size_t coord = 0; coord < num_coords; ++coord) {
-
       const int offset_3d = coord * 3;
       const int offset_2d = coord * 2;
       /* We use the out coords as buffer for the surface parameters to
@@ -539,7 +521,6 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
 
           /* Check if curve are valid */
           T8_ASSERT (!curve.IsNull ());
-
           for (size_t coord = 0; coord < num_coords; ++coord) {
             const int offset_3d = coord * 3;
             const int offset_2d = coord * 2;
