@@ -51,6 +51,8 @@ typedef int (*t8_forest_iterate_face_fn) (t8_forest_t forest, t8_locidx_t ltreei
  *                                the query of the i-th query index. 
  *                                if \a query is NULL: true if and only if the search should continue with the
  *                                children of \a element and the queries should be performed for this element.
+ * \param[in]                     The number of currently active queries. Does not have to be equal to query->elem_count,
+ *                                since some queries might have been deactivated from previous calls
  */
 typedef int (*t8_forest_search_query_fn) (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
                                           const int is_leaf, const t8_element_array_t *leaf_elements,
