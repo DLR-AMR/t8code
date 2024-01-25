@@ -101,10 +101,6 @@ t8_test_search_query_all_fn (t8_forest_t forest, t8_locidx_t ltreeid, const t8_e
     EXPECT_TRUE (query != NULL) << "query " << iquery << " is NULL.";
     /* The query is an int with value 42 (see below) */
     EXPECT_EQ (*(int *) query, 42) << "Wrong query argument passed to query callback.";
-    /* The query index gives the position of the query in the queries array
-    * of the calling search forest_search. Since there is only one query in the
-    * array in this test, the index must always be 0. */
-    //EXPECT_EQ ((int) query_index, 0) << "Wrong query index passed to query callback.";
     if (is_leaf) {
       /* Test whether tree_leaf_index is actually the index of the element */
       t8_locidx_t test_ltreeid;
