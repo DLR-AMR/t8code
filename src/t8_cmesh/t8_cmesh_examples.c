@@ -2866,3 +2866,69 @@ t8_cmesh_new_triangulated_spherical_surface (const double radius, sc_MPI_Comm co
   t8_cmesh_commit (cmesh, comm);
   return cmesh;
 }
+
+t8_cmesh_t
+t8_cmesh_new_quadrangulated_spherical_surface (const double radius, sc_MPI_Comm comm)
+{
+  /* Initialization of the mesh */
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+
+  t8_geometry_c *geometry = t8_geometry_quadrangulated_spherical_surface_new ();
+
+  t8_cmesh_register_geometry (cmesh, geometry); /* Use spherical geometry */
+
+  const int ntrees = 6; /* Number of cmesh elements resp. trees. */
+  const int nverts = 4; /* Number of cmesh element vertices. */
+
+  /* Arrays for the face connectivity computations via vertices. */
+  double all_verts[ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM];
+  t8_eclass_t all_eclasses[ntrees];
+
+  /* Defitition of the tree class. */
+  for (int itree = 0; itree < 6; itree++) {
+    t8_cmesh_set_tree_class (cmesh, itree, T8_ECLASS_QUAD);
+    all_eclasses[itree] = T8_ECLASS_QUAD;
+  }
+
+  const double _SQRT3 = 1.7320508075688772;
+  const double r = radius / _SQRT3;
+
+  const double vertices[4][3] = { { -r, -r, r }, { r, -r, r }, { -r, r, r }, { r, r, r } };
+
+  const double angles[] = { 0.0, 0.5 * M_PI, 0.5 * M_PI, M_PI, -0.5 * M_PI, -0.5 * M_PI };
+  const int rot_axis[] = { 0, 0, 1, 1, 0, 1 };
+
+  /* Set the vertices. */
+  for (int itree = 0; itree < ntrees; itree++) {
+    double rot_mat[3][3];
+    double rot_vertices[4][3];
+
+    if (rot_axis[itree] == 0) {
+      t8_mat_init_xrot (rot_mat, angles[itree]);
+    }
+    else {
+      t8_mat_init_yrot (rot_mat, angles[itree]);
+    }
+
+    for (int ivert = 0; ivert < nverts; ivert++) {
+      t8_mat_mult_vec (rot_mat, &(vertices[ivert][0]), &(rot_vertices[ivert][0]));
+    }
+
+    t8_cmesh_set_tree_vertices (cmesh, itree, (double *) rot_vertices, nverts);
+
+    for (int ivert = 0; ivert < nverts; ivert++) {
+      for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
+        all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree, ivert, icoord)]
+          = rot_vertices[ivert][icoord];
+      }
+    }
+  }
+
+  /* Face connectivity. */
+  t8_cmesh_set_join_by_vertices (cmesh, ntrees, all_eclasses, all_verts, NULL, 0);
+
+  /* Commit the mesh */
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
+}
