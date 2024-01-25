@@ -83,7 +83,7 @@ jobs:
       run: hash=`git rev-parse HEAD:sc` && echo sc_commit=$hash >> $GITHUB_ENV
     - name: Check cache for previous sc installation
       id: sc_cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           ${{ env.SC_DEBUG }}
@@ -175,7 +175,7 @@ jobs:
       run: hash=`git rev-parse HEAD:p4est` && echo p4est_commit=$hash >> $GITHUB_ENV
     - name: Check cache for previous p4est installation
       id: p4est_cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           ${{ env.P4EST_DEBUG }}
