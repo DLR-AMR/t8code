@@ -25,6 +25,7 @@
 #include <t8_refcount.h>
 
 #include <t8_schemes/t8_consecutive/t8_consecutive_quad/t8_hilbert_cxx.hxx>
+#include <t8_schemes/t8_consecutive/t8_consecutive_tri/t8_sierpinski_cxx.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -41,7 +42,7 @@ t8_scheme_new_consecutive_cxx (void)
   s->eclass_schemes[T8_ECLASS_LINE] = NULL;
   s->eclass_schemes[T8_ECLASS_QUAD] = new t8_consecutive_scheme_quad_c ();
   s->eclass_schemes[T8_ECLASS_HEX] = NULL;
-  s->eclass_schemes[T8_ECLASS_TRIANGLE] = NULL;
+  s->eclass_schemes[T8_ECLASS_TRIANGLE] = new t8_consecutive_scheme_tri_c ();
   s->eclass_schemes[T8_ECLASS_TET] = NULL;
   s->eclass_schemes[T8_ECLASS_PRISM] = NULL;
   s->eclass_schemes[T8_ECLASS_PYRAMID] = NULL;

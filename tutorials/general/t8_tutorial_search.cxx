@@ -305,8 +305,8 @@ static sc_array *
 t8_tutorial_search_build_particles (size_t num_particles, unsigned int seed, sc_MPI_Comm comm)
 {
   /* Specify lower and upper bounds for the coordinates in each dimension. */
-  double boundary_low[3] = { 0.2, 0.3, 0.0 };
-  double boundary_high[3] = { 0.8, 0.75, 0.0 };
+  double boundary_low[3] = { 0.3, 0.4, 0.0 };
+  double boundary_high[3] = { 0.7, 0.6, 0.0 };
   int mpirank;
   int mpiret;
   sc_array *particles;
@@ -358,7 +358,7 @@ main (int argc, char **argv)
   t8_cmesh_t cmesh;
   t8_forest_t forest;
   /* The uniform refinement level of the forest. */
-  const int level = 4;
+  const int level = 3;
   /* The number of particles to generate. */
   const size_t num_particles = 2000;
   /* The seed for the random number generator. */
@@ -393,7 +393,7 @@ main (int argc, char **argv)
    */
 
   /* Build a cube cmesh with tet, hex, and prism trees. */
-  cmesh = t8_cmesh_new_from_class (T8_ECLASS_QUAD, comm);
+  cmesh = t8_cmesh_new_periodic_hybrid (comm);
   /* Build a uniform forest on it. */
   forest = t8_forest_new_uniform (cmesh, t8_scheme_new_consecutive_cxx (), level, 0, comm);
 

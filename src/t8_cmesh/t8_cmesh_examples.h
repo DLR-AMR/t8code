@@ -329,6 +329,9 @@ t8_cmesh_new_squared_disk (const double radius, sc_MPI_Comm comm);
 t8_cmesh_t
 t8_cmesh_new_triangulated_spherical_surface (const double radius, sc_MPI_Comm comm);
 
+t8_cmesh_t
+t8_cmesh_new_square_hybrid (sc_MPI_Comm comm);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_EXAMPLES */

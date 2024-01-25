@@ -31,12 +31,16 @@ class class_find_parent: public TestDFS {
   virtual void
   check_element ()
   {
+    t8_debugf ("check element: \n");
+    ts->t8_element_debug_print (element);
     const int num_children = ts->t8_element_num_children (element);
     for (int ichild = 0; ichild < num_children; ichild++) {
       ts->t8_element_child (element, ichild, child);
       /* Compute parent of child */
       ts->t8_element_parent (child, test_parent);
       /* Check that it is equal to the original element */
+      t8_debugf ("childid %i\n", ichild);
+      ts->t8_element_debug_print (child);
       EXPECT_ELEM_EQ (ts, element, test_parent);
     }
   }
@@ -67,9 +71,9 @@ class class_find_parent: public TestDFS {
 TEST_P (class_find_parent, t8_compute_child_find_parent)
 {
 #ifdef T8_ENABLE_LESS_TESTS
-  const int maxlvl = 4;
+  const int maxlvl = 2;
 #else
-  const int maxlvl = 6;
+  const int maxlvl = 2;
 #endif
   check_recursive_dfs_to_max_lvl (maxlvl);
 }

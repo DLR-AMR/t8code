@@ -32,7 +32,7 @@
  * Together with the cmesh, we also need a refinement scheme. This scheme tells the
  * forest how elements of each shape (t8_eclass_t) are refined, what their neighbor
  * are etc.
- * The default scheme in t8_schemes/t8_default/t8_default_cxx.hxx provides an implementation for
+ * The default scheme in t8_schemes/t8_consecutive/t8_consecutive_cxx.hxx provides an implementation for
  * all element shapes that t8code supports (with pyramids currently under construction).
  * 
  * How you can experiment here:
@@ -44,12 +44,12 @@
  *    forest (for example the number of local trees).
  */
 
-#include <t8.h>                                     /* General t8code header, always include this. */
-#include <t8_cmesh.h>                               /* cmesh definition and basic interface. */
-#include <t8_cmesh/t8_cmesh_examples.h>             /* A collection of exemplary cmeshes */
-#include <t8_forest/t8_forest_general.h>            /* forest definition and general interface. */
-#include <t8_forest/t8_forest_io.h>                 /* forest io interface. */
-#include <t8_schemes/t8_default/t8_default_cxx.hxx> /* default refinement scheme. */
+#include <t8.h>                                             /* General t8code header, always include this. */
+#include <t8_cmesh.h>                                       /* cmesh definition and basic interface. */
+#include <t8_cmesh/t8_cmesh_examples.h>                     /* A collection of exemplary cmeshes */
+#include <t8_forest/t8_forest_general.h>                    /* forest definition and general interface. */
+#include <t8_forest/t8_forest_io.h>                         /* forest io interface. */
+#include <t8_schemes/t8_consecutive/t8_consecutive_cxx.hxx> /* default refinement scheme. */
 
 /* Build a uniform forest on a cmesh 
  * using the default refinement scheme.
@@ -66,7 +66,7 @@ t8_step2_build_uniform_forest (sc_MPI_Comm comm, t8_cmesh_t cmesh, int level)
   t8_scheme_cxx_t *scheme;
 
   /* Create the refinement scheme. */
-  scheme = t8_scheme_new_default_cxx ();
+  scheme = t8_scheme_new_consecutive_cxx ();
   /* Creat the uniform forest. */
   forest = t8_forest_new_uniform (cmesh, scheme, level, 0, comm);
 
@@ -147,7 +147,7 @@ main (int argc, char **argv)
   /* Initialize the sc library, has to happen before we initialize t8code. */
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
-  t8_init (SC_LP_PRODUCTION);
+  t8_init (SC_LP_DEBUG);
 
   /* Print a message on the root process. */
   t8_global_productionf (" [step2] \n");
@@ -158,7 +158,7 @@ main (int argc, char **argv)
   /* We will use MPI_COMM_WORLD as a communicator. */
   comm = sc_MPI_COMM_WORLD;
   /* Create the cmesh from step1 */
-  cmesh = t8_cmesh_new_from_class (T8_ECLASS_QUAD, comm);
+  cmesh = t8_cmesh_new_from_class (T8_ECLASS_TRIANGLE, comm);
 
   /* Build the uniform forest, it is automatically partitioned among the processes. */
   forest = t8_step2_build_uniform_forest (comm, cmesh, level);

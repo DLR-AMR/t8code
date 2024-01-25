@@ -1,6 +1,6 @@
-# This file is part of t8code
-# Non-recursive Makefile.am in src
-# Included from toplevel directory
+#This file is part of t8code
+#Non - recursive Makefile.am in src
+#Included from toplevel directory
 
 cmeshincludedir = $(includedir)/t8_cmesh
 dataincludedir = $(includedir)/t8_data
@@ -148,8 +148,7 @@ libt8_compiled_sources = \
   src/t8_vtk/t8_vtk_parallel.cxx \
   src/t8_vtk/t8_vtk_reader.cxx
 
-
-# this variable is used for headers that are not publicly installed
+#this variable is used for headers that are not publicly installed
 T8_CPPFLAGS =
 
 justlibs-local: src/libt8.la

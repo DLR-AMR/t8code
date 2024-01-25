@@ -207,10 +207,13 @@ t8_consecutive_scheme_common_c::t8_element_linear_id_recursive (t8_element_t *el
   const int childid = t8_element_child_id (elem);
   t8_element_parent (elem, elem);
 
+  t8_debugf ("childid %i\n", childid);
+
   t8_linearidx_t parent_id = 0;
   for (int ichild = 0; ichild < childid; ichild++) {
     t8_element_child (elem, ichild, elem);
     t8_linearidx_t num_child_descendants = t8_element_count_leafs (elem, level);
+    t8_debugf ("ichild: %i, num_child_descendants: %i\n", ichild, num_child_descendants);
     t8_element_parent (elem, elem);
     parent_id += num_child_descendants;
   }
@@ -245,7 +248,6 @@ t8_consecutive_scheme_common_c::t8_element_init_linear_id_recursive (t8_element_
   for (childindex = 0; childindex < t8_element_num_children (elem); childindex++) {
     t8_element_child (elem, childindex, elem);
     num_descendants_of_child = t8_element_count_leafs (elem, level);
-    t8_debugf ("num_desc_of_child: %i\n", num_descendants_of_child);
     t8_element_parent (elem, elem);
 
     sum_descendants_of_children_before += num_descendants_of_child;

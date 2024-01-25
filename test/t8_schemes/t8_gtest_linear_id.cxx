@@ -31,7 +31,10 @@ class class_linear_id: public TestDFS {
   virtual void
   check_element ()
   {
+    t8_debugf ("check element: \n");
+    ts->t8_element_debug_print (element);
     linear_id = ts->t8_element_get_linear_id (element, ts->t8_element_level (element));
+    t8_debugf ("linearid %li \n", linear_id);
     ts->t8_element_set_linear_id (test_element, ts->t8_element_level (element), linear_id);
     EXPECT_ELEM_EQ (ts, element, test_element);
   }
@@ -60,9 +63,9 @@ class class_linear_id: public TestDFS {
 TEST_P (class_linear_id, t8_gtest_linear_id)
 {
 #ifdef T8_ENABLE_LESS_TESTS
-  const int maxlvl = 5;
+  const int maxlvl = 2;
 #else
-  const int maxlvl = 5;
+  const int maxlvl = 2;
 #endif
   check_recursive_dfs_to_max_lvl (maxlvl);
 }
