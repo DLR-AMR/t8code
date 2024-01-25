@@ -28,6 +28,7 @@
 #include <t8_forest/t8_forest_private.h>
 #include <t8_cmesh.h>
 #include "t8_cmesh/t8_cmesh_testcases.h"
+#include <test/t8_gtest_macros.hxx>
 
 /* TODO: when this test works for all cmeshes remove if statement in test_cmesh_ghost_exchange_all () */
 
@@ -87,7 +88,6 @@ static void
 t8_test_ghost_exchange_data_id (t8_forest_t forest)
 {
   t8_eclass_scheme_c *ts;
-  t8_element_t *elem;
   size_t array_pos = 0;
   sc_array_t element_data;
 
@@ -102,7 +102,7 @@ t8_test_ghost_exchange_data_id (t8_forest_t forest)
     ts = t8_forest_get_eclass_scheme (forest, t8_forest_get_tree_class (forest, itree));
     for (t8_locidx_t ielem = 0; ielem < t8_forest_get_tree_num_elements (forest, itree); ielem++) {
       /* Get a pointer to this element */
-      elem = t8_forest_get_element_in_tree (forest, itree, ielem);
+      const t8_element_t *elem = t8_forest_get_element_in_tree (forest, itree, ielem);
       /* Compute the linear id of this element */
       t8_linearidx_t elem_id = ts->t8_element_get_linear_id (elem, ts->t8_element_level (elem));
       /* Store this id at the element's index in the array */
@@ -121,7 +121,7 @@ t8_test_ghost_exchange_data_id (t8_forest_t forest)
     ts = t8_forest_get_eclass_scheme (forest, t8_forest_ghost_get_tree_class (forest, itree));
     for (t8_locidx_t ielem = 0; ielem < t8_forest_ghost_tree_num_elements (forest, itree); ielem++) {
       /* Get a pointer to this ghost */
-      elem = t8_forest_ghost_get_element (forest, itree, ielem);
+      const t8_element_t *elem = t8_forest_ghost_get_element (forest, itree, ielem);
       /* Compute its ghost_id */
       t8_linearidx_t ghost_id = ts->t8_element_get_linear_id (elem, ts->t8_element_level (elem));
       /* Compare this id with the entry in the element_data array */
@@ -194,5 +194,4 @@ TEST_P (forest_ghost_exchange, test_ghost_exchange)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_exchange, forest_ghost_exchange,
-                          testing::Range (0, t8_get_number_of_all_testcases ()));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_exchange, forest_ghost_exchange, AllCmeshs);

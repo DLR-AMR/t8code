@@ -32,7 +32,8 @@
 
 /** This geometry maps five quads to a disk.
  */
-class t8_geometry_squared_disk: public t8_geometry_with_vertices {
+struct t8_geometry_squared_disk: public t8_geometry_with_vertices
+{
  public:
   /* Basic constructor that sets the dimension and the name. */
   t8_geometry_squared_disk (): t8_geometry_with_vertices (2, "t8_squared_disk")
@@ -74,12 +75,23 @@ class t8_geometry_squared_disk: public t8_geometry_with_vertices {
     SC_ABORT_NOT_REACHED ();
   }
 
+  /**
+   * Get the type of this geometry.
+   * \return The type.
+   */
+  inline t8_geometry_type_t
+  t8_geom_get_type () const
+  {
+    return T8_GEOMETRY_TYPE_UNDEFINED;
+  };
+
   /* Load tree data is inherited from t8_geometry_with_vertices. */
 };
 
 /** This geometry maps the faces of an oktaeder to a spherical surface.
  */
-class t8_geometry_triangulated_spherical_surface: public t8_geometry_with_vertices {
+struct t8_geometry_triangulated_spherical_surface: public t8_geometry_with_vertices
+{
  public:
   /* Basic constructor that sets the dimension and the name. */
   t8_geometry_triangulated_spherical_surface (): t8_geometry_with_vertices (2, "t8_triangulated_spherical_surface")
