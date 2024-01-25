@@ -2949,13 +2949,15 @@ t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shel
   const double SQRT3 = 1.7320508075688772;
 
   const int two_to_nl = 1 << num_levels; /* 2^num_levels */
-  const int ntrees
-    = t8_eclass_num_faces[T8_ECLASS_HEX] * two_to_nl * two_to_nl * num_layers; /* Number of cmesh cells. */
-  const int nverts = t8_eclass_num_vertices[T8_ECLASS_HEX];                    /* Number of vertices per cmesh cell. */
+
+  /* clang-format off */
+  const int ntrees = t8_eclass_num_faces[T8_ECLASS_HEX] * two_to_nl * two_to_nl * num_layers; /* Number of cmesh cells. */
+  const int nverts = t8_eclass_num_vertices[T8_ECLASS_HEX]; /* Number of vertices per cmesh cell. */
 
   /* Arrays for the face connectivity computations via vertices. */
-  double all_verts[ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM];
-  t8_eclass_t all_eclasses[ntrees];
+  double *all_verts = T8_ALLOC (double, ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM);
+  t8_eclass_t *all_eclasses = T8_ALLOC (t8_eclass_t, ntrees);
+  /* clang-format on */
 
   /* Defitition of the tree class. */
   for (int itree = 0; itree < ntrees; itree++) {
@@ -3025,14 +3027,19 @@ t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shel
     }
   }
 
-  /* Clean up. */
+  /* The 2D seed forest is not needed anymore. */
   t8_forest_unref (&forest);
   sc_MPI_Comm_free (&local_comm);
 
   /* Face connectivity. */
   t8_cmesh_set_join_by_vertices (cmesh, ntrees, all_eclasses, all_verts, NULL, 0);
 
+  /* Cleanup. */
+  T8_FREE (all_verts);
+  T8_FREE (all_eclasses);
+
   /* Commit the mesh */
   t8_cmesh_commit (cmesh, comm);
+
   return cmesh;
 }
