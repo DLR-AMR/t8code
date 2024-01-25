@@ -684,6 +684,15 @@ t8_element_new (const t8_eclass_scheme_c *ts, int length, t8_element_t **elems);
 void
 t8_element_destroy (const t8_eclass_scheme_c *ts, int length, t8_element_t **elems);
 
+int
+t8_element_pack (const t8_eclass_scheme_c *ts, const t8_element_t *elements, int count, void *send_buffer,
+                 int buffer_size, int *position, sc_MPI_Comm comm);
+int
+t8_element_pack_size (const t8_eclass_scheme_c *ts, int count, sc_MPI_Comm comm, int *pack_size);
+int
+t8_element_unpack (const t8_eclass_scheme_c *ts, void *recvbuf, int buffer_size, int *position, t8_element_t *elements,
+                   int count, sc_MPI_Comm comm);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_ELEMENT_C_INTERFACE_H */

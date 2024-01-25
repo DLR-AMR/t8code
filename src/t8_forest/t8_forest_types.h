@@ -73,9 +73,8 @@ typedef struct t8_forest
   int set_for_coarsening; /**< Change partition to allow
                                                      for one round of coarsening */
 
-  sc_MPI_Comm mpicomm; /**< MPI communicator to use. */
-  t8_cmesh_t cmesh;    /**< Coarse mesh to use. */
-  //t8_scheme_t        *scheme;        /**< Scheme for element types. */
+  sc_MPI_Comm mpicomm;         /**< MPI communicator to use. */
+  t8_cmesh_t cmesh;            /**< Coarse mesh to use. */
   t8_scheme_cxx_t *scheme_cxx; /**< Scheme for element types. */
   int maxlevel;                /**< The maximum allowed refinement level for elements in this forest. */
   int maxlevel_existing;       /**< If >= 0, the maximum occurring refinemnent level of a forest element. */

@@ -768,6 +768,18 @@ struct t8_eclass_scheme
   virtual void
   t8_element_destroy (int length, t8_element_t **elem) const
     = 0;
+
+  virtual int
+  t8_element_pack (const t8_element_t *elements, int count, void *send_buffer, int buffer_size, int *position,
+                   sc_MPI_Comm comm) const
+    = 0;
+  virtual int
+  t8_element_pack_size (int count, sc_MPI_Comm comm, int *pack_size) const
+    = 0;
+  virtual int
+  t8_element_unpack (void *recvbuf, int buffer_size, int *position, t8_element_t *elements, int count,
+                     sc_MPI_Comm comm) const
+    = 0;
 };
 
 /** Destroy an implementation of a particular element class. 

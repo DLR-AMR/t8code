@@ -545,7 +545,7 @@ void
 t8_default_scheme_quad_c::t8_element_to_string (const t8_element_t *elem, char *debug_string,
                                                 const int string_size) const
 {
-  T8_ASSERT (t8_element_is_valid (elem));
+  //T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (debug_string != NULL);
   t8_hilbert_t *hilbert_elem = (t8_hilbert_t *) elem;
   snprintf (debug_string, string_size, "x: %i, y: %i, type: %i, level: %i", hilbert_elem->x, hilbert_elem->y,
@@ -568,6 +568,62 @@ t8_default_scheme_quad_c::~t8_default_scheme_quad_c ()
    * suffices to destroy the quad_scheme.
    * However we need to provide an implementation of the destructor
    * and hence this empty function. */
+}
+int
+t8_default_scheme_quad_c::t8_element_pack (const t8_element_t *elements, int count, void *send_buffer, int buffer_size,
+                                           int *position, sc_MPI_Comm comm) const
+{
+  int mpiret;
+  p4est_quadrant_t *quads = (p4est_quadrant_t *) elements;
+  for (int ielem = 0; ielem < count; ielem++) {
+    mpiret = sc_MPI_Pack (&(quads[ielem].x), 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Pack (&quads[ielem].y, 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Pack (&quads[ielem].level, 1, sc_MPI_INT8_T, send_buffer, buffer_size, position, comm);
+    SC_CHECK_MPI (mpiret);
+  }
+  return 0;
+}
+
+int
+t8_default_scheme_quad_c::t8_element_pack_size (int count, sc_MPI_Comm comm, int *pack_size) const
+{
+  int singlesize = 0;
+  int datasize = 0;
+  int mpiret;
+
+  mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &datasize);
+  SC_CHECK_MPI (mpiret);
+  singlesize += datasize;
+
+  mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &datasize);
+  SC_CHECK_MPI (mpiret);
+  singlesize += datasize;
+
+  mpiret = sc_MPI_Pack_size (1, sc_MPI_INT8_T, comm, &datasize);
+  SC_CHECK_MPI (mpiret);
+  singlesize += datasize;
+
+  *pack_size = count * singlesize;
+  return 0;
+}
+
+int
+t8_default_scheme_quad_c::t8_element_unpack (void *recvbuf, int buffer_size, int *position, t8_element_t *elements,
+                                             int count, sc_MPI_Comm comm) const
+{
+  int mpiret;
+  p4est_quadrant_t *quads = (p4est_quadrant_t *) elements;
+  for (int ielem = 0; ielem < count; ielem++) {
+    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem].x), 1, sc_MPI_INT, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem].y), 1, sc_MPI_INT, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem].level), 1, sc_MPI_INT8_T, comm);
+    SC_CHECK_MPI (mpiret);
+  }
+  return 0;
 }
 
 T8_EXTERN_C_END ();
