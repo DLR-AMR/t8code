@@ -2937,8 +2937,10 @@ t8_cmesh_new_quadrangulated_spherical_surface (const double radius, sc_MPI_Comm 
 typedef t8_cmesh_t (t8_inner_sphere_creator_t) (const double inner_radius, sc_MPI_Comm comm);
 
 static t8_cmesh_t
-t8_cmesh_new_spherical_shell (t8_eclass_t eclass,t8_geometry_c *geometry, t8_inner_sphere_creator_t inner_sphere_creator, 
-const double inner_radius, const double shell_thickness, const int num_levels, const int num_layers, sc_MPI_Comm comm)
+t8_cmesh_new_spherical_shell (t8_eclass_t eclass, t8_geometry_c *geometry,
+                              t8_inner_sphere_creator_t inner_sphere_creator, const double inner_radius,
+                              const double shell_thickness, const int num_levels, const int num_layers,
+                              sc_MPI_Comm comm)
 {
   /* Initialization of the mesh */
   t8_cmesh_t cmesh;
@@ -3008,7 +3010,8 @@ const double inner_radius, const double shell_thickness, const int num_levels, c
         for (int ivert = 0; ivert < t8_eclass_num_vertices[eclass_2d]; ivert++) {
           for (int i = 0; i < 3; i++) {
             elem_vertices_3d[ivert * 3 + i] = iscale * elem_vertices_2d[ivert * 3 + i];
-            elem_vertices_3d[t8_eclass_num_vertices[eclass]/2 * 3 + ivert * 3 + i] = oscale * elem_vertices_2d[ivert * 3 + i];
+            elem_vertices_3d[t8_eclass_num_vertices[eclass] / 2 * 3 + ivert * 3 + i]
+              = oscale * elem_vertices_2d[ivert * 3 + i];
           }
         }
 
@@ -3047,14 +3050,16 @@ t8_cmesh_t
 t8_cmesh_new_prismed_spherical_shell (const double inner_radius, const double shell_thickness, const int num_levels,
                                       const int num_layers, sc_MPI_Comm comm)
 {
-  return t8_cmesh_new_spherical_shell (T8_ECLASS_PRISM, t8_geometry_prismed_spherical_shell_new (), t8_cmesh_new_triangulated_spherical_surface, 
-          inner_radius, shell_thickness, num_levels, num_layers, comm);
+  return t8_cmesh_new_spherical_shell (T8_ECLASS_PRISM, t8_geometry_prismed_spherical_shell_new (),
+                                       t8_cmesh_new_triangulated_spherical_surface, inner_radius, shell_thickness,
+                                       num_levels, num_layers, comm);
 }
 
 t8_cmesh_t
 t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shell_thickness, const int num_levels,
-                                      const int num_layers, sc_MPI_Comm comm)
+                                    const int num_layers, sc_MPI_Comm comm)
 {
-  return t8_cmesh_new_spherical_shell (T8_ECLASS_HEX, t8_geometry_cubed_spherical_shell_new (), t8_cmesh_new_quadrangulated_spherical_surface, 
-          inner_radius, shell_thickness, num_levels, num_layers, comm);
+  return t8_cmesh_new_spherical_shell (T8_ECLASS_HEX, t8_geometry_cubed_spherical_shell_new (),
+                                       t8_cmesh_new_quadrangulated_spherical_surface, inner_radius, shell_thickness,
+                                       num_levels, num_layers, comm);
 }

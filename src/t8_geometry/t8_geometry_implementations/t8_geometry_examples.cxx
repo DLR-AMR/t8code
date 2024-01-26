@@ -111,8 +111,8 @@ t8_geometry_squared_disk::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreei
 }
 
 static inline void
-t8_geom_evaluate_sphere_tri_prism (const double *active_tree_vertices, const t8_eclass_t eclass, const double *ref_coords,
-                         const size_t num_coords, double *out_coords)
+t8_geom_evaluate_sphere_tri_prism (const double *active_tree_vertices, const t8_eclass_t eclass,
+                                   const double *ref_coords, const size_t num_coords, double *out_coords)
 {
   double n[3]; /* Normal vector of the current triangle. For prisms along z-axis in reference space. */
   t8_vec_tri_normal (active_tree_vertices, active_tree_vertices + 3, active_tree_vertices + 6, n);
@@ -307,7 +307,8 @@ t8_geom_evaluate_sphere_tri_prism (const double *active_tree_vertices, const t8_
   }
 
   /* For triangles we are done. */
-  if (eclass == T8_ECLASS_TRIANGLE) return;
+  if (eclass == T8_ECLASS_TRIANGLE)
+    return;
 
   /* With this factor we compute the intersection of `r` and `p` (see further below). */
   const double denominator = 1.0 / (r[0] * n[0] + r[1] * n[1] + r[2] * n[2]);
@@ -359,7 +360,7 @@ t8_geometry_prismed_spherical_shell::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloi
 
 static inline void
 t8_geom_evaluate_sphere_quad_hex (const double *active_tree_vertices, const int ndims, const double *ref_coords,
-                         const size_t num_coords, double *out_coords)
+                                  const size_t num_coords, double *out_coords)
 {
   double n[3]; /* Normal vector. */
   double r[3]; /* Radial vector. */
