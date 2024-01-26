@@ -321,7 +321,7 @@ t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees, const int set_attributes, cons
 t8_cmesh_t
 t8_cmesh_new_squared_disk (const double radius, sc_MPI_Comm comm);
 
-/** Construct a triangulated spherical surface of given radius based on an octahedron.
+/** Construct a triangulated spherical surface of given radius: octahedron version.
  * \param [in] radius        Radius of the sphere.
  * \param [in] comm          The MPI communicator used to commit the cmesh
  * \return                   A cmesh representing the spherical surface.
@@ -329,7 +329,7 @@ t8_cmesh_new_squared_disk (const double radius, sc_MPI_Comm comm);
 t8_cmesh_t
 t8_cmesh_new_triangulated_spherical_surface_octahedron (const double radius, sc_MPI_Comm comm);
 
-/** Construct a triangulated spherical surface of given radius based on an icasohedron
+/** Construct a triangulated spherical surface of given radius: icasohedron version.
  * \param [in] radius        Radius of the sphere.
  * \param [in] comm          The MPI communicator used to commit the cmesh
  * \return                   A cmesh representing the spherical surface.
