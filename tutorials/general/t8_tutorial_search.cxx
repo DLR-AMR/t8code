@@ -116,6 +116,7 @@
 #include <t8_vec.h>                                         /* Basic operations on 3D vectors. */
 #include <t8_forest/t8_forest_iterate.h>                    /* For the search algorithm. */
 #include <tutorials/general/t8_step3.h>                     /* Example forest adaptation from step 3 */
+#include <tutorials/general/t8_step4.h>                     /* Example forest adaptation from step 3 */
 
 /* Our search query, a particle together with a flag. */
 typedef struct
@@ -350,6 +351,12 @@ t8_tutorial_search_build_particles (size_t num_particles, unsigned int seed, sc_
   return particles;
 }
 
+static void
+t8_tutorial_search_vtk_adapt (t8_forest_t forest, const char *prefix)
+{
+  t8_forest_write_vtk_ext (forest, prefix, 1, 1, 1, 1, 0, 0, 0, 0, NULL);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -374,9 +381,9 @@ main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
 
   /* Initialize the sc library, has to happen before we initialize t8code. */
-  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
+  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEBUG);
   /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the leg levels. */
-  t8_init (SC_LP_PRODUCTION);
+  t8_init (SC_LP_DEBUG);
 
   /* We will use MPI_COMM_WORLD as a communicator. */
   comm = sc_MPI_COMM_WORLD;
@@ -396,13 +403,44 @@ main (int argc, char **argv)
   cmesh = t8_cmesh_new_periodic_hybrid (comm);
   /* Build a uniform forest on it. */
   forest = t8_forest_new_uniform (cmesh, t8_scheme_new_consecutive_cxx (), level, 0, comm);
-
+  {
+    const char prefix[] = "uniform";
+    t8_tutorial_search_vtk_adapt (forest, prefix);
+  }
   /* Adapt the forest. We can reuse the forest variable, since the new adapted
    * forest will take ownership of the old forest and destroy it.
    * Note that the adapted forest is a new forest, though. */
-  forest = t8_step3_adapt_forest (forest);
-  forest = t8_step3_adapt_forest (forest);
+  forest = t8_step4_partition_for_coarsening (forest);
+  {
+    const char prefix[] = "first_pfc";
+    t8_tutorial_search_vtk_adapt (forest, prefix);
+  }
 
+  forest = t8_step3_adapt_forest (forest);
+  {
+    const char prefix[] = "first_adapt";
+    t8_tutorial_search_vtk_adapt (forest, prefix);
+  }
+
+  forest = t8_step4_partition_for_coarsening (forest);
+  {
+    const char prefix[] = "second_pfc";
+    t8_tutorial_search_vtk_adapt (forest, prefix);
+  }
+
+  forest = t8_step3_adapt_forest (forest);
+  {
+    const char prefix[] = "second_adapt";
+    t8_tutorial_search_vtk_adapt (forest, prefix);
+  }
+
+  forest = t8_step4_partition_for_coarsening (forest);
+  {
+    const char prefix[] = "third_pfc";
+    t8_tutorial_search_vtk_adapt (forest, prefix);
+  }
+  //  forest = t8_step3_adapt_forest (forest);
+  //  forest = t8_step4_partition_for_coarsening(forest);
   /* Print information of our new forest. */
   t8_global_productionf (" [search] Created an adapted forest with hybrid elements on a unit cube geometry.\n");
   t8_step3_print_forest_information (forest);

@@ -100,51 +100,41 @@ t8_step3_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_
    * did not get the NULL pointer from t8_forest_get_user_data.
    */
   T8_ASSERT (adapt_data != NULL);
-  t8_productionf ("element %i on tree %i \n", lelement_id, which_tree);
   for (int vertex = 0; vertex < ts->t8_element_num_corners (elements[0]); vertex++) {
     double corner_in_coarse[3] = { 0, 0, 0 }; /* Will hold the element midpoint. */
     t8_forest_element_coordinate (forest_from, which_tree, elements[0], vertex, corner_in_coarse);
     //    ts->t8_element_vertex_reference_coords (elements[0], vertex, corner_in_coarse);
     /* Compute the distance to our sphere midpoint. */
     dist = t8_vec_dist (corner_in_coarse, adapt_data->midpoint);
-    t8_productionf ("corner: %i, x: %f, y: %f, dist: %f\n", vertex, corner_in_coarse[0], corner_in_coarse[1], dist);
     if (dist < adapt_data->refine_if_inside_radius) {
       /* Refine this element. */
-      t8_productionf ("refine this element\n");
       return 1;
     }
   }
   if (!is_family) {
-    t8_productionf ("no family and all corners outside of radius\n");
     return 0;
   }
   for (int ielement = 1; ielement < num_elements; ielement++) {
-    t8_productionf ("check element %i for coarsening ", ielement);
     int num_corners_inside_coarsen_radius = 0;
     for (int vertex = 0; vertex < ts->t8_element_num_corners (elements[ielement]); vertex++) {
       double corner_in_coarse[3] = { 0, 0, 0 }; /* Will hold the element midpoint. */
       t8_forest_element_coordinate (forest_from, which_tree, elements[ielement], vertex, corner_in_coarse);
       /* Compute the distance to our sphere midpoint. */
       dist = t8_vec_dist (corner_in_coarse, adapt_data->midpoint);
-      t8_productionf ("corner: %i, x: %f, y: %f, dist: %f\n", vertex, corner_in_coarse[0], corner_in_coarse[1], dist);
       if (dist < adapt_data->refine_if_inside_radius) {
         /* another element needs to be refined, so we cannot coarsen the family */
-        t8_productionf ("another element %i needs to be refined, so we cannot coarsen the family ", ielement);
         return 0;
       }
       if (dist < adapt_data->coarsen_if_outside_radius) {
-        t8_productionf ("found corner %i inside corsening radius\n", vertex);
         num_corners_inside_coarsen_radius++;
       }
     }
     if (num_corners_inside_coarsen_radius * 2 > ts->t8_element_num_corners (elements[ielement])) {
       /* do not coarsen this family of elements, because the current element has too many vertices inside the coarsening radius. */
-      t8_productionf ("too many corners inside coarsening radius, dont do anything\n");
       return 0;
     }
   }
   /* coarsen this family of elements. */
-  t8_productionf ("all elements have enough corners outside coarsening radius\n");
   return -1;
 }
 

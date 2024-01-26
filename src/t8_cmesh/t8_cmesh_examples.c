@@ -1516,6 +1516,80 @@ t8_cmesh_new_periodic_hybrid (sc_MPI_Comm comm)
     0.5, 0, 0, 
     0.5, 0.5, 0, 
     
+    
+    0.5, 0.5, 0, 
+    1., 0.5, 0,
+    0.5, 0, 0,            /* tree 1, quad */
+    1., 0, 0,  
+
+    1, 0.5, 0, 
+    0.5, 0.5, 0,          /* tree 2, triangle */
+    1, 1, 0, 
+
+    1, 1, 0,              /* tree 3, triangle */
+    0.5, 0.5, 0,          
+    0.5, 1, 0, 
+
+    0.5, 1, 0, 
+    0.5, 0.5, 0, 
+    0, 1, 0, 
+    0, 0.5, 0,            /* tree 4, quad */
+
+    0.5, 0.5, 0,          /* tree 5, triangle */
+    0, 0.5, 0,
+    0, 0, 0,              
+  };
+  /* clang-format on */
+
+  t8_cmesh_t cmesh;
+  t8_geometry_c *linear_geom = t8_geometry_linear_new (2);
+
+  /*
+   *  This is how the cmesh looks like. The numbers are the tree numbers:
+   *
+   *   +---+---+
+   *   |   |3 /|
+   *   | 4 | / |
+   *   |   |/ 2|
+   *   +---+---+
+   *   |5 /|   |
+   *   | / | 1 |
+   *   |/0 |   |
+   *   +---+---+
+   */
+
+  t8_cmesh_init (&cmesh);
+  /* Use linear geometry */
+  t8_cmesh_register_geometry (cmesh, linear_geom);
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
+  t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_QUAD);
+  t8_cmesh_set_tree_class (cmesh, 2, T8_ECLASS_TRIANGLE);
+  t8_cmesh_set_tree_class (cmesh, 3, T8_ECLASS_TRIANGLE);
+  t8_cmesh_set_tree_class (cmesh, 4, T8_ECLASS_QUAD);
+  t8_cmesh_set_tree_class (cmesh, 5, T8_ECLASS_TRIANGLE);
+
+  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 3);
+  t8_cmesh_set_tree_vertices (cmesh, 1, vertices + 9, 4);
+  t8_cmesh_set_tree_vertices (cmesh, 2, vertices + 21, 3);
+  t8_cmesh_set_tree_vertices (cmesh, 3, vertices + 30, 3);
+  t8_cmesh_set_tree_vertices (cmesh, 4, vertices + 39, 4);
+  t8_cmesh_set_tree_vertices (cmesh, 5, vertices + 51, 3);
+
+  t8_cmesh_commit (cmesh, comm);
+
+  return cmesh;
+}
+
+#if 0
+t8_cmesh_t
+t8_cmesh_new_periodic_hybrid (sc_MPI_Comm comm)
+{
+  /* clang-format off */
+  double vertices[60] = {                                        /* Just all vertices of all trees. partly duplicated */
+    0, 0, 0,              /* tree 0, triangle */
+    0.5, 0, 0, 
+    0.5, 0.5, 0, 
+    
     0.5, 0.5, 0,          /* tree 1, triangle */
     0, 0.5, 0,
     0, 0, 0,              
@@ -1526,8 +1600,8 @@ t8_cmesh_new_periodic_hybrid (sc_MPI_Comm comm)
     1., 0.5, 0,
     
     0, 0.5, 0,         /* tree 3, quad */
-    0, 1, 0, 
     0.5, 0.5, 0, 
+    0, 1, 0, 
     0.5, 1, 0, 
 
     0.5, 0.5, 0,          /* tree 4, triangle */
@@ -1593,6 +1667,7 @@ t8_cmesh_new_periodic_hybrid (sc_MPI_Comm comm)
 
   return cmesh;
 }
+#endif
 
 t8_cmesh_t
 t8_cmesh_new_periodic (sc_MPI_Comm comm, int dim)

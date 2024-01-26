@@ -49,9 +49,6 @@ t8_sierpinski_implicit_type_at_level (const t8_sierpinski_t *sierpinski, int lev
     return T8_SIERPINSKI_ROOT_TYPE;
   T8_ASSERT (level > 0);
   const t8_sierpinski_coord_t length = T8_SIERPINSKI_LEN (level);
-  t8_debugf ("level %i\n");
-  t8_debugf ("x %i, xl %i, y %i, yl %i, all %i\n", sierpinski->x, sierpinski->x & length, sierpinski->y,
-             sierpinski->y & length, (sierpinski->x & length) ^ (sierpinski->y & length));
   return ((sierpinski->x & length) ^ (sierpinski->y & length)) ? 1 : 0;
 }
 int
@@ -164,7 +161,6 @@ t8_consecutive_scheme_tri_c::t8_element_child_id (const t8_element_t *elem) cons
   const int8_t cube_id = t8_sierpinski_compute_cubeid (sierpinski, sierpinski->level);
   int8_t parent_implicit_type = t8_sierpinski_implicit_type_at_level (sierpinski, sierpinski->level - 1);
   int childid = t8_sierpinski_parentimplicittype_cubeid_type_to_Iloc[parent_implicit_type][cube_id][sierpinski->type];
-  t8_debugf ("pit: %i, type: %i, cube_id: %i, childid: %i\n", parent_implicit_type, sierpinski->type, cube_id, childid);
   return childid;
 }
 
@@ -192,18 +188,12 @@ t8_consecutive_scheme_tri_c::t8_element_vertex_reference_coords (const t8_elemen
   ref_coords[0] = (vertex >= 1) ? 1. : 0.;
   ref_coords[1] = (vertex >= 2) ? 1. : 0.;
   t8_element_reference_coords (elem, ref_coords, 1, coords);
-  t8_debugf ("computed coords for element at vertex %i\n");
-  t8_element_debug_print (elem);
-  t8_debugf ("x = %f, y=%f\n", ref_coords[0], ref_coords[1]);
 }
 
 void
 t8_consecutive_scheme_tri_c::t8_element_reference_coords (const t8_element_t *el, const double *ref_coords,
                                                           const size_t num_coords, double *out_coords) const
 {
-  t8_debugf ("compute coords for element\n");
-  t8_element_debug_print (el);
-
   T8_ASSERT (t8_element_is_valid (el));
   const t8_sierpinski_t *elem = (const t8_sierpinski_t *) el;
   double a00, a01, a10, a11;
@@ -248,14 +238,12 @@ t8_consecutive_scheme_tri_c::t8_element_reference_coords (const t8_element_t *el
   }
 
   for (size_t ipoint = 0; ipoint < num_coords; ipoint++) {
-    t8_debugf ("at x=%f, y=%f\n", ref_coords[ipoint * 3 + 0], ref_coords[ipoint * 3 + 1]);
     out_coords[ipoint * 3 + 0]
       = (x + (a00 * ref_coords[ipoint * 3 + 0] + a01 * ref_coords[ipoint * 3 + 1]) * T8_SIERPINSKI_LEN (elem->level))
         / T8_SIERPINSKI_ROOT_LEN;
     out_coords[ipoint * 3 + 1]
       = (y + (a10 * ref_coords[ipoint * 3 + 0] + a11 * ref_coords[ipoint * 3 + 1]) * T8_SIERPINSKI_LEN (elem->level))
         / T8_SIERPINSKI_ROOT_LEN;
-    t8_debugf ("result x=%f, y=%f\n", out_coords[ipoint * 3 + 0], out_coords[ipoint * 3 + 1]);
   }
 }
 
@@ -328,6 +316,74 @@ t8_consecutive_scheme_tri_c::~t8_consecutive_scheme_tri_c ()
    * suffices to destroy the quad_scheme.
    * However we need to provide an implementation of the destructor
    * and hence this empty function. */
+}
+
+int
+t8_consecutive_scheme_tri_c::t8_element_pack (const t8_element_t *elements, int count, void *send_buffer,
+                                              int buffer_size, int *position, sc_MPI_Comm comm) const
+{
+  int mpiret;
+  t8_sierpinski_t *sierpinski = (t8_sierpinski_t *) elements;
+  for (int ielem = 0; ielem < count; ielem++) {
+    mpiret = sc_MPI_Pack (&(sierpinski[ielem].x), 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Pack (&(sierpinski[ielem].y), 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
+    t8_debugf ("packed y %f\n", sierpinski[ielem].y);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Pack (&(sierpinski[ielem].type), 1, sc_MPI_INT8_T, send_buffer, buffer_size, position, comm);
+    SC_CHECK_MPI (mpiret);
+
+    mpiret = sc_MPI_Pack (&(sierpinski[ielem].level), 1, sc_MPI_INT8_T, send_buffer, buffer_size, position, comm);
+    SC_CHECK_MPI (mpiret);
+  }
+  return 0;
+}
+
+int
+t8_consecutive_scheme_tri_c::t8_element_pack_size (int count, sc_MPI_Comm comm, int *pack_size) const
+{
+  int singlesize = 0;
+  int datasize = 0;
+  int mpiret;
+
+  mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &datasize);
+  SC_CHECK_MPI (mpiret);
+  singlesize += datasize;
+
+  mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &datasize);
+  SC_CHECK_MPI (mpiret);
+  singlesize += datasize;
+
+  mpiret = sc_MPI_Pack_size (1, sc_MPI_INT8_T, comm, &datasize);
+  SC_CHECK_MPI (mpiret);
+  singlesize += datasize;
+
+  mpiret = sc_MPI_Pack_size (1, sc_MPI_INT8_T, comm, &datasize);
+  SC_CHECK_MPI (mpiret);
+  singlesize += datasize;
+
+  *pack_size = count * singlesize;
+  return 0;
+}
+
+int
+t8_consecutive_scheme_tri_c::t8_element_unpack (void *recvbuf, int buffer_size, int *position, t8_element_t *elements,
+                                                int count, sc_MPI_Comm comm) const
+{
+  int mpiret;
+  t8_sierpinski_t *sierpinski = (t8_sierpinski_t *) elements;
+  for (int ielem = 0; ielem < count; ielem++) {
+    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(sierpinski[ielem].x), 1, sc_MPI_INT, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(sierpinski[ielem].y), 1, sc_MPI_INT, comm);
+    t8_debugf ("unpacked y %f\n", sierpinski[ielem].y);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(sierpinski[ielem].type), 1, sc_MPI_INT8_T, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(sierpinski[ielem].level), 1, sc_MPI_INT8_T, comm);
+    SC_CHECK_MPI (mpiret);
+  }
+  return 0;
 }
 
 T8_EXTERN_C_END ();
