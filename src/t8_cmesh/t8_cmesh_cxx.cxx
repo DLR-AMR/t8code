@@ -103,9 +103,10 @@ t8_cmesh_get_first_element_of_process (int process, int mpisize, t8_gloidx_t glo
 }
 
 void
-t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *ts, t8_gloidx_t *first_local_tree,
-                         t8_gloidx_t *child_in_tree_begin, t8_gloidx_t *last_local_tree, t8_gloidx_t *child_in_tree_end,
-                         int8_t *first_tree_shared)
+t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *ts,
+                                             t8_gloidx_t *first_local_tree, t8_gloidx_t *child_in_tree_begin,
+                                             t8_gloidx_t *last_local_tree, t8_gloidx_t *child_in_tree_end,
+                                             int8_t *first_tree_shared)
 {
   int is_empty;
 
@@ -136,6 +137,23 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *ts, t8_gl
 
   /* Compute the number of children on level in each tree */
   global_num_children = 0;
+#ifdef T8_ENABLE_DEBUG
+  t8_gloidx_t children_per_tree_check = 0;
+  for (tree_class = T8_ECLASS_ZERO; tree_class < T8_ECLASS_COUNT; ++tree_class) {
+    /* Get the number of children on level of the first tree class that is used*/
+    if (cmesh->num_trees_per_eclass[tree_class] > 0) {
+      children_per_tree_check = ts->eclass_schemes[tree_class]->t8_element_count_leafs_from_root (level);
+      break;
+    }
+  }
+  /* Compare it to the other used tree classes*/
+  for (tree_class = T8_ECLASS_ZERO; tree_class < T8_ECLASS_COUNT; ++tree_class) {
+    if (cmesh->num_trees_per_eclass[tree_class] > 0) {
+      T8_ASSERT (children_per_tree_check == ts->eclass_schemes[tree_class]->t8_element_count_leafs_from_root (level));
+    }
+  }
+
+#endif
   for (tree_class = T8_ECLASS_ZERO; tree_class < T8_ECLASS_COUNT; ++tree_class) {
     /* We iterate over each element class and get the number of children for this
      * tree class.
