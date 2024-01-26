@@ -41,14 +41,12 @@ class class_test_pack: public TestDFS {
 
     /* Compute pack size and allocate send buffer */
     int pack_size;
-    mpiret = ts->t8_element_MPI_Pack_size (count, comm, &pack_size);
-    SC_CHECK_MPI (mpiret);
+    ts->t8_element_MPI_Pack_size (count, comm, &pack_size);
 
     char *sendbuf = T8_ALLOC (char, pack_size);
 
     /* pack data */
-    mpiret = ts->t8_element_MPI_Pack (element, count, sendbuf, pack_size, &position, comm);
-    SC_CHECK_MPI (mpiret);
+    ts->t8_element_MPI_Pack (element, count, sendbuf, pack_size, &position, comm);
 
     int recvBufferSize = pack_size;
     char *recvbuf = T8_ALLOC (char, recvBufferSize);
@@ -75,8 +73,7 @@ class class_test_pack: public TestDFS {
 #endif
     /* Unpack data */
     position = 0;
-    mpiret = ts->t8_element_MPI_Unpack (recvbuf, recvBufferSize, &position, element_compare, count, comm);
-    SC_CHECK_MPI (mpiret);
+    ts->t8_element_MPI_Unpack (recvbuf, recvBufferSize, &position, element_compare, count, comm);
 
     /* free buffers */
     T8_FREE (sendbuf);
