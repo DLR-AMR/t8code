@@ -456,23 +456,16 @@ t8_geometry_squared_disk_new ()
 }
 
 t8_geometry_c *
-t8_geometry_spherical_surface_new ()
-{
-  t8_geometry_spherical_surface *geom = new t8_geometry_spherical_surface ();
-  return (t8_geometry_c *) geom;
-}
-
-t8_geometry_c *
-t8_geometry_spherical_shell_new ()
-{
-  t8_geometry_spherical_shell *geom = new t8_geometry_spherical_shell ();
-  return (t8_geometry_c *) geom;
-}
-
-t8_geometry_c *
 t8_geometry_triangulated_spherical_surface_new ()
 {
   t8_geometry_triangulated_spherical_surface *geom = new t8_geometry_triangulated_spherical_surface ();
+  return (t8_geometry_c *) geom;
+}
+
+t8_geometry_c *
+t8_geometry_prismed_spherical_shell_new ()
+{
+  t8_geometry_prismed_spherical_shell *geom = new t8_geometry_prismed_spherical_shell ();
   return (t8_geometry_c *) geom;
 }
 

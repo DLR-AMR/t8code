@@ -2875,7 +2875,7 @@ t8_cmesh_new_triangulated_spherical_surface_icasohedron (const double radius, sc
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
 
-  t8_geometry_c *geometry = t8_geometry_spherical_surface_new ();
+  t8_geometry_c *geometry = t8_geometry_triangulated_spherical_surface_new ();
 
   t8_cmesh_register_geometry (cmesh, geometry); /* Use linear geometry */
 
@@ -3080,9 +3080,6 @@ t8_cmesh_new_spherical_shell (t8_eclass_t eclass, t8_geometry_c *geometry,
 
   t8_cmesh_register_geometry (cmesh, geometry);
 
-  /* Square root of three. */
-  const double SQRT3 = 1.7320508075688772;
-
   /* Here is what we do: Construct a 3D cmesh from a 2D forest. */
 
   int mpi_rank;
@@ -3135,8 +3132,8 @@ t8_cmesh_new_spherical_shell (t8_eclass_t eclass, t8_geometry_c *geometry,
 
       /* Transfer the coordinates from the 2D forest mesh to the cmesh via stacking 3D elements along radial direction. */
       for (int istack = 0; istack < num_layers; istack++) {
-        const double iscale = 1.0 + istack * shell_thickness / inner_radius / num_layers / SQRT3;
-        const double oscale = 1.0 + (istack + 1) * shell_thickness / inner_radius / num_layers / SQRT3;
+        const double iscale = 1.0 + istack * shell_thickness / inner_radius / num_layers;
+        const double oscale = 1.0 + (istack + 1) * shell_thickness / inner_radius / num_layers;
 
         double elem_vertices_3d[T8_ECLASS_MAX_CORNERS * 3];
         for (int ivert = 0; ivert < t8_eclass_num_vertices[eclass_2d]; ivert++) {
