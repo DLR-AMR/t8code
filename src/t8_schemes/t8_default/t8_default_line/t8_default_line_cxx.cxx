@@ -492,8 +492,8 @@ t8_default_scheme_line_c::t8_element_MPI_Pack_size (int count, sc_MPI_Comm comm,
 }
 
 int
-t8_default_scheme_line_c::t8_element_MPI_Unpack (void *recvbuf, int buffer_size, int *position, t8_element_t *elements,
-                                                 int count, sc_MPI_Comm comm) const
+t8_default_scheme_line_c::t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position,
+                                                 t8_element_t *elements, const int count, sc_MPI_Comm comm) const
 {
   int mpiret;
   t8_default_line_t *lines = (t8_default_line_t *) elements;

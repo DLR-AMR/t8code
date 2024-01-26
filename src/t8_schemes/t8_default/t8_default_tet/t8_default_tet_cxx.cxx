@@ -579,8 +579,8 @@ t8_default_scheme_tet_c::t8_element_MPI_Pack_size (int count, sc_MPI_Comm comm, 
 }
 
 int
-t8_default_scheme_tet_c::t8_element_MPI_Unpack (void *recvbuf, int buffer_size, int *position, t8_element_t *elements,
-                                                int count, sc_MPI_Comm comm) const
+t8_default_scheme_tet_c::t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position,
+                                                t8_element_t *elements, const int count, sc_MPI_Comm comm) const
 {
   return t8_dtet_element_unpack (recvbuf, buffer_size, position, (t8_dtet_t *) elements, count, comm);
 }

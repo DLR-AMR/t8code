@@ -466,8 +466,8 @@ t8_element_MPI_Pack_size (const t8_eclass_scheme_c *ts, int count, sc_MPI_Comm c
 }
 
 int
-t8_element_MPI_Unpack (const t8_eclass_scheme_c *ts, void *recvbuf, int buffer_size, int *position,
-                       t8_element_t *elements, int count, sc_MPI_Comm comm)
+t8_element_MPI_Unpack (const t8_eclass_scheme_c *ts, void *recvbuf, const int buffer_size, int *position,
+                       t8_element_t *elements, const int count, sc_MPI_Comm comm)
 {
   T8_ASSERT (ts != NULL);
   return ts->t8_element_MPI_Unpack (recvbuf, buffer_size, position, elements, count, comm);

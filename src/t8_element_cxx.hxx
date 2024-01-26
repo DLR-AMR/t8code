@@ -800,7 +800,7 @@ struct t8_eclass_scheme
    * \param [in] comm MPI Communicator
   */
   virtual int
-  t8_element_MPI_Unpack (void *recvbuf, int buffer_size, int *position, t8_element_t *elements, int count,
+  t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t *elements, const int count,
                          sc_MPI_Comm comm) const
     = 0;
 };
