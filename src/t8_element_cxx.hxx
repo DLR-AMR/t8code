@@ -770,15 +770,15 @@ struct t8_eclass_scheme
     = 0;
 
   virtual int
-  t8_element_pack (const t8_element_t *elements, int count, void *send_buffer, int buffer_size, int *position,
-                   sc_MPI_Comm comm) const
+  t8_element_MPI_Pack (const t8_element_t *elements, int count, void *send_buffer, int buffer_size, int *position,
+                       sc_MPI_Comm comm) const
     = 0;
   virtual int
-  t8_element_pack_size (int count, sc_MPI_Comm comm, int *pack_size) const
+  t8_element_MPI_Pack_size (int count, sc_MPI_Comm comm, int *pack_size) const
     = 0;
   virtual int
-  t8_element_unpack (void *recvbuf, int buffer_size, int *position, t8_element_t *elements, int count,
-                     sc_MPI_Comm comm) const
+  t8_element_MPI_Unpack (void *recvbuf, int buffer_size, int *position, t8_element_t *elements, int count,
+                         sc_MPI_Comm comm) const
     = 0;
 };
 

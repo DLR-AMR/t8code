@@ -355,8 +355,8 @@ t8_default_scheme_vertex_c::~t8_default_scheme_vertex_c ()
    * and hence this empty function. */
 }
 int
-t8_default_scheme_vertex_c::t8_element_pack (const t8_element_t *elements, int count, void *send_buffer,
-                                             int buffer_size, int *position, sc_MPI_Comm comm) const
+t8_default_scheme_vertex_c::t8_element_MPI_Pack (const t8_element_t *elements, int count, void *send_buffer,
+                                                 int buffer_size, int *position, sc_MPI_Comm comm) const
 {
   int mpiret;
   t8_dvertex_t *vertices = (t8_dvertex_t *) elements;
@@ -368,7 +368,7 @@ t8_default_scheme_vertex_c::t8_element_pack (const t8_element_t *elements, int c
 }
 
 int
-t8_default_scheme_vertex_c::t8_element_pack_size (int count, sc_MPI_Comm comm, int *pack_size) const
+t8_default_scheme_vertex_c::t8_element_MPI_Pack_size (int count, sc_MPI_Comm comm, int *pack_size) const
 {
   int singlesize = 0;
   int datasize = 0;
@@ -383,8 +383,8 @@ t8_default_scheme_vertex_c::t8_element_pack_size (int count, sc_MPI_Comm comm, i
 }
 
 int
-t8_default_scheme_vertex_c::t8_element_unpack (void *recvbuf, int buffer_size, int *position, t8_element_t *elements,
-                                               int count, sc_MPI_Comm comm) const
+t8_default_scheme_vertex_c::t8_element_MPI_Unpack (void *recvbuf, int buffer_size, int *position,
+                                                   t8_element_t *elements, int count, sc_MPI_Comm comm) const
 {
   int mpiret;
   t8_dvertex_t *vertices = (t8_dvertex_t *) elements;
