@@ -30,6 +30,7 @@
 #include <t8_cmesh.h>
 #include <p4est_connectivity.h>
 #include <p8est_connectivity.h>
+#include <t8_cmesh/t8_cmesh_geometry.h>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -60,9 +61,6 @@ t8_cmesh_new_from_p4est (p4est_connectivity_t *conn, sc_MPI_Comm comm, int do_pa
 t8_cmesh_t
 t8_cmesh_new_from_p8est (p8est_connectivity_t *conn, sc_MPI_Comm comm, int do_partition);
 
-/* TODO: it could possibly be a problem that we do not set the dimension of
- * the cmesh. This could i.e. be difficult when we combine an empty cmesh with
- * a non-empty one. */
 /** Construct a cmesh that has no trees. We do not know a special use case,
  * this function is merely for debugging and to show the possibility.
  * \param [in]      comm       mpi communicator to be used with the new cmesh.
@@ -71,7 +69,7 @@ t8_cmesh_new_from_p8est (p8est_connectivity_t *conn, sc_MPI_Comm comm, int do_pa
  * \return                     A committed t8_cmesh structure that has no trees.
  */
 t8_cmesh_t
-t8_cmesh_new_empty (sc_MPI_Comm comm, int do_partition, int dimension);
+t8_cmesh_new_empty (sc_MPI_Comm comm, const int do_partition, const int dimension);
 
 /** Constructs a cmesh that consists only of one tree of a given element class.
  * \param [in]      eclass     The element class.
@@ -106,6 +104,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
  *                          Only required if \a eclass is 2D or 3D.
  * \param [in] polygons_z   The number of polygons along the z-axis.
  *                          Only required if \a eclass is 3D.
+ * \param [in] geometry     The geometry to use. If the geometry is axis_aligned only two points per tree are stored
  * \return                  A committed t8_cmesh structure with 
  *                          \a polygons_x * \a polygons_z * \a polygons_y many 
  *                          sub-hypercubes of class \a eclass.
@@ -132,7 +131,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
  */
 t8_cmesh_t
 t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass, sc_MPI_Comm comm, const double *boundary, t8_locidx_t polygons_x,
-                            t8_locidx_t polygons_y, t8_locidx_t polygons_z);
+                            t8_locidx_t polygons_y, t8_locidx_t polygons_z, const t8_geometry_c *geometry);
 
 /** Hybercube with 6 Tets, 6 Prism, 4 Hex. 
  * \param [in]  comm            The mpi communicator to be used.

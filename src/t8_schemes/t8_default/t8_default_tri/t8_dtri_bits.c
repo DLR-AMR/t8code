@@ -106,6 +106,16 @@ t8_dtri_copy (const t8_dtri_t *t, t8_dtri_t *dest)
 }
 
 int
+t8_dtri_equal (const t8_dtri_t *elem1, const t8_dtri_t *elem2)
+{
+  return (elem1->level == elem2->level && elem1->type == elem2->type && elem1->x == elem2->x && elem1->y == elem2->y
+#ifdef T8_DTRI_TO_DTET
+          && elem1->z == elem2->z
+#endif
+  );
+}
+
+int
 t8_dtri_compare (const t8_dtri_t *t1, const t8_dtri_t *t2)
 {
   int maxlvl;
@@ -425,8 +435,8 @@ t8_dtri_compute_reference_coords (const t8_dtri_t *elem, const double *ref_coord
     out_coords[offset + 2] = elem->z;
 #endif
 #ifndef T8_DTRI_TO_DTET
-    out_coords[offset + tri_orientation] += h * ref_coords[offset + 1];
-    out_coords[offset + 1 - tri_orientation] += h * ref_coords[offset + 0];
+    out_coords[offset + tri_orientation] += h * ref_coords[offset + 0];
+    out_coords[offset + 1 - tri_orientation] += h * ref_coords[offset + 1];
 #else
     out_coords[offset + tet_orientation0] += h * ref_coords[offset + 0];
     out_coords[offset + tet_orientation1] += h * ref_coords[offset + 1];
@@ -1696,16 +1706,6 @@ t8_dtri_is_valid (const t8_dtri_t *t)
   is_valid = is_valid && 0 <= t->type && t->type < T8_DTRI_NUM_TYPES;
 
   return is_valid;
-}
-
-void
-t8_dtri_debug_print (const t8_dtri_t *t)
-{
-#ifdef T8_DTRI_TO_DTET
-  t8_debugf ("x: %i, y: %i, z: %i, type: %i, level: %i\n", t->x, t->y, t->z, t->type, t->level);
-#else
-  t8_debugf ("x: %i, y: %i, type: %i, level: %i\n", t->x, t->y, t->type, t->level);
-#endif /* T8_DTRI_TO_DTET */
 }
 
 void

@@ -90,7 +90,7 @@ jobs:
         run: echo test_path=$PWD/test_path >> $GITHUB_ENV
       - name: Cache SC
         id: sc_cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             sc/build_test
