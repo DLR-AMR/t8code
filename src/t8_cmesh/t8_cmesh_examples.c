@@ -3176,21 +3176,21 @@ t8_cmesh_new_spherical_shell (t8_eclass_t eclass, t8_geometry_c *geometry,
 }
 
 t8_cmesh_t
-t8_cmesh_new_prismed_spherical_shell_icosahedron (const double inner_radius, const double shell_thickness, const int num_levels,
-                                      const int num_layers, sc_MPI_Comm comm)
+t8_cmesh_new_prismed_spherical_shell_icosahedron (const double inner_radius, const double shell_thickness,
+                                                  const int num_levels, const int num_layers, sc_MPI_Comm comm)
 {
   return t8_cmesh_new_spherical_shell (T8_ECLASS_PRISM, t8_geometry_prismed_spherical_shell_new (),
-                                       t8_cmesh_new_triangulated_spherical_surface_icasohedron, inner_radius, shell_thickness,
-                                       num_levels, num_layers, comm);
+                                       t8_cmesh_new_triangulated_spherical_surface_icasohedron, inner_radius,
+                                       shell_thickness, num_levels, num_layers, comm);
 }
 
 t8_cmesh_t
-t8_cmesh_new_prismed_spherical_shell_octahedron (const double inner_radius, const double shell_thickness, const int num_levels,
-                                      const int num_layers, sc_MPI_Comm comm)
+t8_cmesh_new_prismed_spherical_shell_octahedron (const double inner_radius, const double shell_thickness,
+                                                 const int num_levels, const int num_layers, sc_MPI_Comm comm)
 {
   return t8_cmesh_new_spherical_shell (T8_ECLASS_PRISM, t8_geometry_prismed_spherical_shell_new (),
-                                       t8_cmesh_new_triangulated_spherical_surface_octahedron, inner_radius, shell_thickness,
-                                       num_levels, num_layers, comm);
+                                       t8_cmesh_new_triangulated_spherical_surface_octahedron, inner_radius,
+                                       shell_thickness, num_levels, num_layers, comm);
 }
 
 t8_cmesh_t

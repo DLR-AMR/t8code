@@ -141,7 +141,6 @@ main (int argc, char **argv)
     t8_global_productionf ("Wrote %s.\n\n", prefix_forest);
 
     t8_forest_unref (&forest);
-
   }
 
   {

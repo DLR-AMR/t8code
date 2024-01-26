@@ -354,8 +354,8 @@ t8_cmesh_new_quadrangulated_spherical_surface (const double radius, sc_MPI_Comm 
  * \return                        A cmesh representing the spherical surface.
  */
 t8_cmesh_t
-t8_cmesh_new_prismed_spherical_shell_octahedron (const double inner_radius, const double shell_thickness, const int num_levels,
-                                      const int num_layers, sc_MPI_Comm comm);
+t8_cmesh_new_prismed_spherical_shell_octahedron (const double inner_radius, const double shell_thickness,
+                                                 const int num_levels, const int num_layers, sc_MPI_Comm comm);
 
 /** Construct a spherical shell discretized by prisms of given inner radius and thickness: icasohedron version.
  * \param [in] inner_radius       Radius of the inner side of the shell.
@@ -366,8 +366,8 @@ t8_cmesh_new_prismed_spherical_shell_octahedron (const double inner_radius, cons
  * \return                        A cmesh representing the spherical surface.
  */
 t8_cmesh_t
-t8_cmesh_new_prismed_spherical_shell_icosahedron (const double inner_radius, const double shell_thickness, const int num_levels,
-                                      const int num_layers, sc_MPI_Comm comm);
+t8_cmesh_new_prismed_spherical_shell_icosahedron (const double inner_radius, const double shell_thickness,
+                                                  const int num_levels, const int num_layers, sc_MPI_Comm comm);
 
 /** Construct a cubed spherical shell of given inner radius and thickness.
  * \param [in] inner_radius       Radius of the inner side of the shell.
