@@ -1721,6 +1721,7 @@ t8_dtri_init (t8_dtri_t *t)
 #endif
 }
 
+/* triangles (tets) are packed as x,y (,z) coordinates, type and level */
 void
 t8_dtri_element_pack (const t8_dtri_t *elements, int count, void *send_buffer, int buffer_size, int *position,
                       sc_MPI_Comm comm)
@@ -1744,6 +1745,7 @@ t8_dtri_element_pack (const t8_dtri_t *elements, int count, void *send_buffer, i
   }
 }
 
+/* triangles (tets) are packed as x,y (,z) coordinates, type and level */
 void
 t8_dtri_element_pack_size (int count, sc_MPI_Comm comm, int *pack_size)
 {
@@ -1775,6 +1777,7 @@ t8_dtri_element_pack_size (int count, sc_MPI_Comm comm, int *pack_size)
   *pack_size = count * singlesize;
 }
 
+/* triangles (tets) are packed as x,y (,z) coordinates, type and level */
 void
 t8_dtri_element_unpack (void *recvbuf, int buffer_size, int *position, t8_dtri_t *elements, int count, sc_MPI_Comm comm)
 {

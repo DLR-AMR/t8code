@@ -793,6 +793,7 @@ t8_default_scheme_quad_c::~t8_default_scheme_quad_c ()
    * and hence this empty function. */
 }
 
+/* each quad is packed as x,y coordinates and the level */
 void
 t8_default_scheme_quad_c::t8_element_MPI_Pack (const t8_element_t *elements, const int count, void *send_buffer,
                                                const int buffer_size, int *position, sc_MPI_Comm comm) const
@@ -809,6 +810,7 @@ t8_default_scheme_quad_c::t8_element_MPI_Pack (const t8_element_t *elements, con
   }
 }
 
+/* each quad is packed as x,y coordinates and the level */
 void
 t8_default_scheme_quad_c::t8_element_MPI_Pack_size (const int count, sc_MPI_Comm comm, int *pack_size) const
 {
@@ -831,6 +833,7 @@ t8_default_scheme_quad_c::t8_element_MPI_Pack_size (const int count, sc_MPI_Comm
   *pack_size = count * singlesize;
 }
 
+/* each quad is packed as x,y coordinates and the level */
 void
 t8_default_scheme_quad_c::t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position,
                                                  t8_element_t *elements, const int count, sc_MPI_Comm comm) const

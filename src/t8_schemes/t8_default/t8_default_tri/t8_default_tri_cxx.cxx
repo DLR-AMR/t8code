@@ -574,18 +574,22 @@ t8_default_scheme_tri_c::~t8_default_scheme_tri_c ()
    * and hence this empty function. */
 }
 
+/* use macro tri functionality */
 void
 t8_default_scheme_tri_c::t8_element_MPI_Pack (const t8_element_t *elements, const int count, void *send_buffer,
                                               const int buffer_size, int *position, sc_MPI_Comm comm) const
 {
   t8_dtri_element_pack ((const t8_dtri_t *) elements, count, send_buffer, buffer_size, position, comm);
 }
+
+/* use macro tri functionality */
 void
 t8_default_scheme_tri_c::t8_element_MPI_Pack_size (const int count, sc_MPI_Comm comm, int *pack_size) const
 {
   t8_dtri_element_pack_size (count, comm, pack_size);
 }
 
+/* use macro tri functionality */
 void
 t8_default_scheme_tri_c::t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position,
                                                 t8_element_t *elements, const int count, sc_MPI_Comm comm) const
