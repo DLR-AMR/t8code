@@ -777,7 +777,7 @@ struct t8_eclass_scheme
    * \param [in, out] position the position of the first byte that is not already packed
    * \param [in] comm MPI Communicator
   */
-  virtual int
+  virtual void
   t8_element_MPI_Pack (const t8_element_t *elements, const int count, void *send_buffer, int buffer_size, int *position,
                        sc_MPI_Comm comm) const
     = 0;
@@ -787,7 +787,7 @@ struct t8_eclass_scheme
    * \param [in] comm MPI Communicator
    * \param [out] pack_size upper bound on the message size
   */
-  virtual int
+  virtual void
   t8_element_MPI_Pack_size (const int count, sc_MPI_Comm comm, int *pack_size) const
     = 0;
 
@@ -799,7 +799,7 @@ struct t8_eclass_scheme
    * \param [in] count Number of elements to unpack
    * \param [in] comm MPI Communicator
   */
-  virtual int
+  virtual void
   t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t *elements, const int count,
                          sc_MPI_Comm comm) const
     = 0;

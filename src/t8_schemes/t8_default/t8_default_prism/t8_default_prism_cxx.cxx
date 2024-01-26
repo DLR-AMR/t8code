@@ -476,7 +476,7 @@ t8_default_scheme_prism_c::~t8_default_scheme_prism_c ()
    * However we need to provide an implementation of the destructor
    * and hence this empty function. */
 }
-int
+void
 t8_default_scheme_prism_c::t8_element_MPI_Pack (const t8_element_t *elements, const int count, void *send_buffer,
                                                 const int buffer_size, int *position, sc_MPI_Comm comm) const
 {
@@ -496,10 +496,9 @@ t8_default_scheme_prism_c::t8_element_MPI_Pack (const t8_element_t *elements, co
     mpiret = sc_MPI_Pack (&prisms[ielem].line.level, 1, sc_MPI_INT8_T, send_buffer, buffer_size, position, comm);
     SC_CHECK_MPI (mpiret);
   }
-  return 0;
 }
 
-int
+void
 t8_default_scheme_prism_c::t8_element_MPI_Pack_size (const int count, sc_MPI_Comm comm, int *pack_size) const
 {
   int singlesize = 0;
@@ -527,10 +526,9 @@ t8_default_scheme_prism_c::t8_element_MPI_Pack_size (const int count, sc_MPI_Com
   singlesize += datasize;
 
   *pack_size = count * singlesize;
-  return 0;
 }
 
-int
+void
 t8_default_scheme_prism_c::t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position,
                                                   t8_element_t *elements, const int count, sc_MPI_Comm comm) const
 {
@@ -549,7 +547,6 @@ t8_default_scheme_prism_c::t8_element_MPI_Unpack (void *recvbuf, const int buffe
     SC_CHECK_MPI (mpiret);
     prisms[ielem].line.level = prisms[ielem].tri.level;
   }
-  return 0;
 }
 
 T8_EXTERN_C_END ();

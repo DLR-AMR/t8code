@@ -565,24 +565,24 @@ t8_default_scheme_tet_c::~t8_default_scheme_tet_c ()
    * and hence this empty function. */
 }
 
-int
+void
 t8_default_scheme_tet_c::t8_element_MPI_Pack (const t8_element_t *elements, const int count, void *send_buffer,
                                               const int buffer_size, int *position, sc_MPI_Comm comm) const
 {
-  return t8_dtet_element_pack ((const t8_dtet_t *) elements, count, send_buffer, buffer_size, position, comm);
+  t8_dtet_element_pack ((const t8_dtet_t *) elements, count, send_buffer, buffer_size, position, comm);
 }
 
-int
+void
 t8_default_scheme_tet_c::t8_element_MPI_Pack_size (const int count, sc_MPI_Comm comm, int *pack_size) const
 {
-  return t8_dtet_element_pack_size (count, comm, pack_size);
+  t8_dtet_element_pack_size (count, comm, pack_size);
 }
 
-int
+void
 t8_default_scheme_tet_c::t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position,
                                                 t8_element_t *elements, const int count, sc_MPI_Comm comm) const
 {
-  return t8_dtet_element_unpack (recvbuf, buffer_size, position, (t8_dtet_t *) elements, count, comm);
+  t8_dtet_element_unpack (recvbuf, buffer_size, position, (t8_dtet_t *) elements, count, comm);
 }
 
 T8_EXTERN_C_END ();

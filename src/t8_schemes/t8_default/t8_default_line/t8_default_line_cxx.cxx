@@ -457,7 +457,7 @@ t8_default_scheme_line_c::~t8_default_scheme_line_c ()
    * and hence this empty function. */
 }
 
-int
+void
 t8_default_scheme_line_c::t8_element_MPI_Pack (const t8_element_t *elements, const int count, void *send_buffer,
                                                const int buffer_size, int *position, sc_MPI_Comm comm) const
 {
@@ -469,10 +469,9 @@ t8_default_scheme_line_c::t8_element_MPI_Pack (const t8_element_t *elements, con
     mpiret = sc_MPI_Pack (&lines[ielem].level, 1, sc_MPI_INT8_T, send_buffer, buffer_size, position, comm);
     SC_CHECK_MPI (mpiret);
   }
-  return 0;
 }
 
-int
+void
 t8_default_scheme_line_c::t8_element_MPI_Pack_size (const int count, sc_MPI_Comm comm, int *pack_size) const
 {
   int singlesize = 0;
@@ -488,10 +487,9 @@ t8_default_scheme_line_c::t8_element_MPI_Pack_size (const int count, sc_MPI_Comm
   singlesize += datasize;
 
   *pack_size = count * singlesize;
-  return 0;
 }
 
-int
+void
 t8_default_scheme_line_c::t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position,
                                                  t8_element_t *elements, const int count, sc_MPI_Comm comm) const
 {
@@ -503,7 +501,6 @@ t8_default_scheme_line_c::t8_element_MPI_Unpack (void *recvbuf, const int buffer
     mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(lines[ielem].level), 1, sc_MPI_INT8_T, comm);
     SC_CHECK_MPI (mpiret);
   }
-  return 0;
 }
 
 T8_EXTERN_C_END ();
