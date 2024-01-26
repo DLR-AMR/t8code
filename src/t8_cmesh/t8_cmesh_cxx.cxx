@@ -296,6 +296,77 @@ t8_cmesh_determine_partition (sc_array_t *first_element_tree, size_t pure_local_
 #endif
   return first_proc_adjusted;
 }
+void
+t8_cmesh_partition_from_unpartioned (t8_cmesh_t cmesh, const t8_gloidx_t local_num_children, const int level,
+                                     const t8_scheme_cxx_t *scheme, t8_gloidx_t *first_local_tree,
+                                     t8_gloidx_t *child_in_tree_begin, t8_gloidx_t *last_local_tree,
+                                     t8_gloidx_t *child_in_tree_end, int8_t *first_tree_shared)
+{
+  const t8_gloidx_t num_trees = t8_cmesh_get_num_trees (cmesh);
+  t8_debugf ("Cmesh is not partitioned.\n");
+  /* Compute the first and last element of this process. Then loop over
+     * all trees to find the trees in which these are contained.
+     * We cast to long double and double to prevent overflow. */
+  /* cmesh is replicated, therefore the computation of local_num_children equals the global number of children*/
+  const t8_gloidx_t first_child
+    = t8_cmesh_get_first_element_of_process (cmesh->mpirank, cmesh->mpisize, local_num_children);
+  const t8_gloidx_t last_child
+    = t8_cmesh_get_first_element_of_process (cmesh->mpirank + 1, cmesh->mpisize, local_num_children) - 1;
+  /* Can't we optimize this linear loop by using a binary search?
+     * -> No, we cannot. Since we need in any case compute the t8_element_count_leafs_from_root
+     *    for each tree.
+     */
+  t8_gloidx_t current_tree_element_offset = 0;
+  for (t8_gloidx_t igtree = 0; igtree < num_trees; ++igtree) {
+    const int ieclass = t8_cmesh_get_tree_class (cmesh, (t8_locidx_t) igtree);
+    const t8_eclass_scheme_c *tree_scheme = scheme->eclass_schemes[ieclass];
+    /* TODO: We can optimize by buffering the elem_in_tree value. Thus, if 
+         the computation is expensive (may be for non-morton-type schemes),
+         we do it only once. */
+    const t8_gloidx_t elem_in_tree = tree_scheme->t8_element_count_leafs_from_root (level);
+    /* Check if the first element is on the current tree */
+    if (current_tree_element_offset <= first_child && first_child < current_tree_element_offset + elem_in_tree) {
+      if (child_in_tree_begin != NULL) {
+        *child_in_tree_begin = first_child - current_tree_element_offset;
+      }
+      *first_local_tree = igtree;
+      /* If our first element is not the very first element in the tree, we share
+         * this tree with the previous process. */
+      if (first_tree_shared != NULL) {
+        *first_tree_shared = current_tree_element_offset < first_child ? 1 : 0;
+      }
+    }
+    if (last_child < first_child) {
+      /* This process is empty. We needed to identify the 'first_local_tree' since it is the 
+         * first local tree of the next process, which we store in this case.
+         */
+      t8_cmesh_uniform_set_return_parameters_to_empty (first_local_tree, child_in_tree_begin, last_local_tree,
+                                                       child_in_tree_end, first_tree_shared);
+      *first_local_tree = 0;
+      return;
+    }
+    /* Check if the last element is on the current tree */
+    if (current_tree_element_offset <= last_child && last_child < current_tree_element_offset + elem_in_tree) {
+      if (child_in_tree_end != NULL) {
+        *child_in_tree_end = last_child - current_tree_element_offset + 1;
+      }
+      *last_local_tree = igtree;
+
+      /* We have found the last tree and can immediately return,
+         * ending the for loop. */
+      T8_ASSERT (*first_local_tree <= *last_local_tree);
+      T8_ASSERT (0 <= *first_local_tree && *first_local_tree < num_trees);
+      T8_ASSERT (0 <= *last_local_tree && *last_local_tree < num_trees);
+      return;
+    }
+    current_tree_element_offset += elem_in_tree;
+  }
+  /* If we reach this part, we do not have any trees - the cmesh is empty */
+  T8_ASSERT (num_trees == 0);
+  t8_cmesh_uniform_set_return_parameters_to_empty (first_local_tree, child_in_tree_begin, last_local_tree,
+                                                   child_in_tree_end, first_tree_shared);
+  return;
+}
 
 /* TODO: Shared trees, binary search in offset-array to avoid recv_any,
  * use partition_given to partition the cmesh*/
@@ -357,69 +428,8 @@ t8_cmesh_uniform_bounds_hybrid (const t8_cmesh_t cmesh, const int level, const t
   /* If the initial cmesh is not partitioned, every process knows "everything" and we do not
    * need any communication.*/
   if (!cmesh->set_partition) {
-    const t8_gloidx_t num_trees = t8_cmesh_get_num_trees (cmesh);
-    t8_debugf ("Cmesh is not partitioned.\n");
-    /* Compute the first and last element of this process. Then loop over
-     * all trees to find the trees in which these are contained.
-     * We cast to long double and double to prevent overflow. */
-    /* cmesh is replicated, therefore the computation of local_num_children equals the global number of children*/
-    const t8_gloidx_t first_child
-      = t8_cmesh_get_first_element_of_process (cmesh->mpirank, cmesh->mpisize, local_num_children);
-    const t8_gloidx_t last_child
-      = t8_cmesh_get_first_element_of_process (cmesh->mpirank + 1, cmesh->mpisize, local_num_children) - 1;
-    /* Can't we optimize this linear loop by using a binary search?
-     * -> No, we cannot. Since we need in any case compute the t8_element_count_leafs_from_root
-     *    for each tree.
-     */
-    t8_gloidx_t current_tree_element_offset = 0;
-    for (t8_gloidx_t igtree = 0; igtree < num_trees; ++igtree) {
-      const int ieclass = t8_cmesh_get_tree_class (cmesh, (t8_locidx_t) igtree);
-      const t8_eclass_scheme_c *tree_scheme = scheme->eclass_schemes[ieclass];
-      /* TODO: We can optimize by buffering the elem_in_tree value. Thus, if 
-         the computation is expensive (may be for non-morton-type schemes),
-         we do it only once. */
-      const t8_gloidx_t elem_in_tree = tree_scheme->t8_element_count_leafs_from_root (level);
-      /* Check if the first element is on the current tree */
-      if (current_tree_element_offset <= first_child && first_child < current_tree_element_offset + elem_in_tree) {
-        if (child_in_tree_begin != NULL) {
-          *child_in_tree_begin = first_child - current_tree_element_offset;
-        }
-        *first_local_tree = igtree;
-        /* If our first element is not the very first element in the tree, we share
-         * this tree with the previous process. */
-        if (first_tree_shared != NULL) {
-          *first_tree_shared = current_tree_element_offset < first_child ? 1 : 0;
-        }
-      }
-      if (last_child < first_child) {
-        /* This process is empty. We needed to identify the 'first_local_tree' since it is the 
-         * first local tree of the next process, which we store in this case.
-         */
-        t8_cmesh_uniform_set_return_parameters_to_empty (first_local_tree, child_in_tree_begin, last_local_tree,
-                                                         child_in_tree_end, first_tree_shared);
-        *first_local_tree = 0;
-        return;
-      }
-      /* Check if the last element is on the current tree */
-      if (current_tree_element_offset <= last_child && last_child < current_tree_element_offset + elem_in_tree) {
-        if (child_in_tree_end != NULL) {
-          *child_in_tree_end = last_child - current_tree_element_offset + 1;
-        }
-        *last_local_tree = igtree;
-
-        /* We have found the last tree and can immediately return,
-         * ending the for loop. */
-        T8_ASSERT (*first_local_tree <= *last_local_tree);
-        T8_ASSERT (0 <= *first_local_tree && *first_local_tree < num_trees);
-        T8_ASSERT (0 <= *last_local_tree && *last_local_tree < num_trees);
-        return;
-      }
-      current_tree_element_offset += elem_in_tree;
-    }
-    /* If we reach this part, we do not have any trees - the cmesh is empty */
-    T8_ASSERT (num_trees == 0);
-    t8_cmesh_uniform_set_return_parameters_to_empty (first_local_tree, child_in_tree_begin, last_local_tree,
-                                                     child_in_tree_end, first_tree_shared);
+    t8_cmesh_partition_from_unpartioned (cmesh, local_num_children, level, scheme, first_local_tree,
+                                         child_in_tree_begin, last_local_tree, child_in_tree_end, first_tree_shared);
     return;
   }
 
