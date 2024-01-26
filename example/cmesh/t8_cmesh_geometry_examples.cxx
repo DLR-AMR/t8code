@@ -128,7 +128,7 @@ main (int argc, char **argv)
     const char *prefix_forest = "t8_triangulated_spherical_surface_forest";
 
     const int uniform_level = 5;
-    const double radius = 1.0;
+    const double radius = 42.0;
 
     t8_cmesh_t cmesh = t8_cmesh_new_triangulated_spherical_surface (radius, comm);
 
@@ -148,7 +148,7 @@ main (int argc, char **argv)
     const char *prefix_forest = "t8_quadrangulated_spherical_surface_forest";
 
     const int uniform_level = 5;
-    const double radius = 1.0;
+    const double radius = 42.0;
 
     t8_cmesh_t cmesh = t8_cmesh_new_quadrangulated_spherical_surface (radius, comm);
 
@@ -191,7 +191,7 @@ main (int argc, char **argv)
     const char *prefix_forest = "t8_prismed_spherical_shell_forest";
 
     const int uniform_level = 3;
-    const double inner_radius = T8_SQRT3;
+    constexpr double inner_radius = std::sqrt (3);
     const double shell_thickness = 0.2;
     const int num_levels = 2;
     const int num_layers = 1;
