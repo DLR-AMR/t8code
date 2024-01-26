@@ -147,6 +147,16 @@ const t8_geometry_c *
 t8_geom_handler_get_unique_geometry (const t8_geometry_handler_t *geom_handler);
 
 /**
+ * Deactivate the current active tree. Can be used to reload data, after it has been moved, for example by the
+ * partition-algorithm
+ * 
+ * \param[in,out] geom_handler The geometry handler, where the tree has to be deactivated.
+ * \note \a geom_handler must be committed before calling this function.
+ */
+void
+t8_geom_handler_deactivate_tree (t8_geometry_handler_t *geom_handler);
+
+/**
  * Given a geometry's name find that geometry in the geometry handler
  * and return it.
  * \param [in] geom_handler A committed geometry handler.

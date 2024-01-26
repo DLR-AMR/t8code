@@ -263,6 +263,13 @@ t8_geom_handler_get_unique_geometry (const t8_geometry_handler_t *geom_handler)
   return *(const t8_geometry_c **) sc_array_index_int (geometries, 0);
 }
 
+void
+t8_geom_handler_deactivate_tree (t8_geometry_handler_t *geom_handler)
+{
+  T8_ASSERT (t8_geom_handler_is_committed (geom_handler));
+  geom_handler->active_tree = -1;
+}
+
 static inline void
 t8_geom_handler_update_tree (t8_geometry_handler_t *geom_handler, t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 {
@@ -361,7 +368,5 @@ t8_geometry_get_type (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
   t8_geom_handler_update_tree (geom_handler, cmesh, gtreeid);
 
   /* Return the type. */
-  /* *INDENT-OFF* */
   return geom_handler->active_geometry->t8_geom_get_type ();
-  /* *INDENT-ON* */
 }

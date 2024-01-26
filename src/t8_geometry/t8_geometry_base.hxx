@@ -21,7 +21,7 @@
 */
 
 /** \file t8_geometry_base.hxx
- * Implements the base pure virtual class t8_geometry which
+ * Implements the base pure virtual struct t8_geometry which
  * provides a general template for all geometries.
  */
 
@@ -30,6 +30,7 @@
 
 #include <t8.h>
 #include <t8_cmesh.h>
+#include <t8_geometry/t8_geometry.h>
 
 T8_EXTERN_C_BEGIN ();
 
