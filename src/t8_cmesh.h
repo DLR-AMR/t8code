@@ -184,8 +184,6 @@ void
 t8_cmesh_set_partition_range (t8_cmesh_t cmesh, int set_face_knowledge, t8_gloidx_t first_local_tree,
                               t8_gloidx_t last_local_tree);
 
-/* TODO: It is currently not possible to call this function for a non derived
- *       cmesh. Investigate. */
 /** Declare if the cmesh is understood as a partitioned cmesh and specify
  * the first local tree for each process.
  * This call is only valid when the cmesh is not yet committed via a call
@@ -279,9 +277,36 @@ t8_cmesh_set_attribute (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int package_id, 
  * \param [in]      string      The string to store as attribute.
  * \note You can also use \ref t8_cmesh_set_attribute, but we recommend using this
  *       specialized function for strings.
+ * \note If an attribute with the given package_id and key already exists, then it will get overwritten.
  */
 void
 t8_cmesh_set_attribute_string (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int package_id, int key, const char *string);
+
+/** Store an array of t8_gloidx_t as an attribute at a tree in a cmesh.
+ * \param [in, out] cmesh       The cmesh to be updated.
+ * \param [in]      gtree_id    The global id of the tree.
+ * \param [in]      package_id  Unique identifier of a valid software package. \see sc_package_register
+ * \param [in]      key         An integer key used to identify this attribute under all
+ *                              attributes with the same package_id.
+ *                              \a key must be a unique value for this tree and package_id.
+ * \param [in]      data        The array to store as attribute.
+ * \param [in]      data_count  The number of entries in \a data.
+ * \param [in]      data_persists This flag can be used to optimize memory. If true
+ *                              then t8code assumes that the attribute data is present at the
+ *                              memory that \a data points to when \ref t8_cmesh_commit is called
+ *                              (This is more memory efficient).
+ *                              If the flag is false an internal copy of the data is created
+ *                              immediately and this copy is used at commit.
+ *                              In both cases a copy of the data is used by t8_code after t8_cmesh_commit.
+ * \note You can also use \ref t8_cmesh_set_attribute, but we recommend using this
+ *       specialized function for arrays.
+ * \note If an attribute with the given package_id and key already exists, then it will get overwritten.
+ * \note We do not store the number of data entries \a data_count of the attribute array.
+ *       You can keep track of the data count yourself by using another attribute.
+ */
+void
+t8_cmesh_set_attribute_gloidx_array (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int package_id, int key,
+                                     const t8_gloidx_t *data, const size_t data_count, int data_persists);
 
 /** Insert a face-connection between two trees in a cmesh.
  * \param [in,out] cmesh        The cmesh to be updated.
@@ -634,13 +659,32 @@ t8_cmesh_get_tree_vertices (t8_cmesh_t cmesh, t8_locidx_t ltreeid);
  * \param [in]     key          A key used to identify the attribute under all
  *                              attributes of this tree with the same \a package_id.
  * \param [in]     tree_id      The local number of the tree.
- * \param [out]    data_size    The size of the attribute in bytes.
  * \return         The attribute pointer of the tree \a ltree_id or NULL if the attribute is not found.
- * \a cmesh must be committed before calling this function.
+ * \note \a cmesh must be committed before calling this function.
  * \see t8_cmesh_set_attribute
  */
 void *
 t8_cmesh_get_attribute (t8_cmesh_t cmesh, int package_id, int key, t8_locidx_t ltree_id);
+
+/** Return the attribute pointer of a tree for a gloidx_t array.
+ * \param [in]     cmesh        The cmesh.
+ * \param [in]     package_id   The identifier of a valid software package. \see sc_package_register
+ * \param [in]     key          A key used to identify the attribute under all
+ *                              attributes of this tree with the same \a package_id.
+ * \param [in]     tree_id      The local number of the tree.
+ * \param [in]     data_count   The number of entries in the array that are requested. 
+ *                              This must be smaller or equal to the \a data_count parameter
+ *                              of the corresponding call to \ref t8_cmesh_set_attribute_gloidx_array
+ * \return         The attribute pointer of the tree \a ltree_id or NULL if the attribute is not found.
+ * \note \a cmesh must be committed before calling this function.
+ * \note No check is performed whether the attribute actually stored \a data_count many entries since
+ *       we do not store the number of data entries of the attribute array.
+ *       You can keep track of the data count yourself by using another attribute.
+ * \see t8_cmesh_set_attribute_gloidx_array
+ */
+t8_gloidx_t *
+t8_cmesh_get_attribute_gloidx_array (t8_cmesh_t cmesh, int package_id, int key, t8_locidx_t ltree_id,
+                                     const size_t data_count);
 
 /** Return the shared memory array storing the partition table of
  * a partitioned cmesh.

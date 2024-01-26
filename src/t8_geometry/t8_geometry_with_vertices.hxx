@@ -21,7 +21,7 @@
 */
 
 /** \file t8_geometry_with_vertices.hxx
- * Implements the inherited class t8_geometry_with_vertices, which can be 
+ * Implements the inherited struct t8_geometry_with_vertices, which can be 
  * used for geometries that use vertex coordinate information of the cmesh.
  */
 
@@ -35,7 +35,8 @@
 
 T8_EXTERN_C_BEGIN ();
 
-class t8_geometry_with_vertices: public t8_geometry {
+struct t8_geometry_with_vertices: public t8_geometry
+{
  public:
   /* Basic constructor that sets the dimension, the name, and the name for the attribute. */
   t8_geometry_with_vertices (int dimension, const char *name, const char *attribute_name = NULL)
@@ -73,6 +74,16 @@ class t8_geometry_with_vertices: public t8_geometry {
    */
   virtual void
   t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
+
+  /**
+   * Get the type of this geometry.
+   * \return The type.
+   */
+  inline t8_geometry_type_t
+  t8_geom_get_type () const
+  {
+    return T8_GEOMETRY_TYPE_UNDEFINED;
+  };
 
  protected:
   t8_gloidx_t active_tree;            /*< The tree of which currently vertices are loaded. */
