@@ -4,5 +4,6 @@
 	ignore = dirty
 [submodule "sc"]
 	path = sc
-	url = https://github.com/cburstedde/libsc.git
+	url = https://github.com/lukasdreyer/libsc.git
 	ignore = dirty
+	branch = feature-pack_unpack

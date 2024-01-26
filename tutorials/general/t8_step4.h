@@ -33,6 +33,7 @@
 #define T8_STEP4_H
 
 #include <t8.h>
+#include <t8_forest/t8_forest.h>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -41,6 +42,8 @@ T8_EXTERN_C_BEGIN ();
 int
 t8_step4_main (int argc, char **argv);
 
+t8_forest_t
+t8_step4_partition_for_coarsening (t8_forest_t forest);
 T8_EXTERN_C_END ();
 
 #endif /* !T8_STEP4_H */
