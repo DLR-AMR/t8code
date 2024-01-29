@@ -565,7 +565,7 @@ t8_cmesh_no_negative_volume (t8_cmesh_t cmesh)
       /* Vertices are set */
       eclass = t8_cmesh_get_tree_class (cmesh, itree);
       const t8_gloidx_t gtree_id = t8_cmesh_get_global_id (cmesh, itree);
-      if (t8_geom_is_linear_axis_aligned (t8_cmesh_get_tree_geometry (cmesh, gtree_id))) {
+      if (t8_geometry_get_type (cmesh, gtree_id) == T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED) {
         /* Tree has negative volume if the diagonal goes from v_max to v_min and not vice versa */
         ret = vertices[3] < vertices[0] && vertices[4] < vertices[1] && vertices[5] < vertices[2];
       }

@@ -1279,7 +1279,7 @@ t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass, sc_MPI_Comm comm, const do
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
 
-  const int is_axis_aligned = t8_geom_is_linear_axis_aligned (geometry);
+  const int is_axis_aligned = t8_geom_get_type (geometry) == T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED;
 
   t8_cmesh_register_geometry (cmesh, geometry);
 
