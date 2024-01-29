@@ -987,9 +987,6 @@ t8_cmesh_set_vertices_2D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
       memcpy (vertices, box, 3 * sizeof (double));    /* Vertex 0 */
       t8_vec_axpyz (box, box_dir, vertices + 6, 1.0); /* Vertex 2 */
 
-      memcpy (vertices, box, 3 * sizeof (double));    /* Vertex 0 */
-      t8_vec_axpyz (box, box_dir, vertices + 6, 1.0); /* Vertex 2 */
-
       /* Reduce box along x axis */
       t8_resize_box (2, box, box_dir, 0, 1, box_quads);
       t8_update_box_face_edges (2, box, box_dir, 0, box_quads);
