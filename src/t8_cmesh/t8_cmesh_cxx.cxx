@@ -69,13 +69,13 @@ t8_A_times_B_over_C_gloidx (t8_gloidx_t A, t8_gloidx_t B, t8_gloidx_t C)
 {
   const t8_gloidx_t a_over_c = A / C;
   const t8_gloidx_t a_o_c_times_b = a_over_c * B;
-  
+
   /* We check whether computing A/C * B will cause an overflow.
    * This can be achieved by checking if dividing the result by B
    * yields A/C again. */
   T8_ASSERT (a_over_c == 0 || a_o_c_times_b / a_over_c == B);
-  
-  return (t8_gloidx_t) (a_o_c_times_b  + (((long double) (A % C)) / C) * B);
+
+  return (t8_gloidx_t) (a_o_c_times_b + (((long double) (A % C)) / C) * B);
 }
 
 /* Version of t8_A_times_B_over_C where A is an integer.
