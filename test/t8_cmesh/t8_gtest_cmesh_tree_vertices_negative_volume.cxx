@@ -36,7 +36,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * \param[in, out] 8 ints on input, filled with the corner ids to use for i-th vertex of the element on output 
  */
 static void
-get_vertices_ids (t8_eclass_t eclass, int vertices_ids[T8_ECLASS_MAX_CORNERS])
+get_vertices_ids (const t8_eclass_t eclass, int vertices_ids[T8_ECLASS_MAX_CORNERS])
 {
   switch (eclass) {
   case T8_ECLASS_HEX:
@@ -104,7 +104,7 @@ TEST_P (tree_vertices_negative_volume, positive_volume)
     0, 0, 0, 
     1, 0, 0, 
     0, 1, 0, 
-    1, 1, 0, 
+    1, 1, 0,  
     0, 0, 1, 
     1, 0, 1, 
     0, 1, 1,
