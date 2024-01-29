@@ -175,7 +175,7 @@ struct t8_geometry_moebius: public t8_geometry_with_vertices
       const int offset_2d = i_coord * 2;
       /* Compute the linear coordinates (in [0,1]^2) of the reference vertex and store in out_coords. */
       /* No idea why, but indent insert a lot of newlines here */
-      t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords + offset_2d, num_coords,
+      t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords + offset_2d,
                                        out_coords + offset_3d);
 
       /* At first, we map x from [0,1] to [-.5,.5]
@@ -309,7 +309,7 @@ struct t8_geometry_circle: public t8_geometry_with_vertices
       const int offset_3d = i_coord * 3;
       const int offset_2d = i_coord * 2;
       /* No idea why, but indent insert a lot of newlines here */
-      t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords + offset_2d, num_coords,
+      t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords + offset_2d,
                                        out_coords + offset_3d);
 
       /* We now remap the coords to match the square [-1,1]^2 */

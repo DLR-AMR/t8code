@@ -80,14 +80,13 @@ t8_geom_triangular_interpolation (const double *coefficients, const double *corn
 
 void
 t8_geom_compute_linear_geometry (t8_eclass_t tree_class, const double *tree_vertices, const double *ref_coords,
-                                 const size_t num_coords, double *out_coords)
+                                 double *out_coords)
 {
   double tri_vertices[9];
   double line_vertices[6];
   double base_coords[2];
   double vec[3];
   int i_dim;
-  size_t i_coord;
   const int dimension = t8_eclass_to_dimension[tree_class];
   /* Compute the coordinates, depending on the shape of the element */
   switch (tree_class) {
