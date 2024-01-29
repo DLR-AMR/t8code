@@ -25,7 +25,7 @@
 #include <t8_element_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx>
-#include <t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 
@@ -35,19 +35,19 @@
 void
 t8_ghost_neighbor_test (t8_eclass_t eclass, sc_MPI_Comm comm, int hybrid)
 {
-  t8_cmesh_t          cmesh;
-  t8_forest_t         forest;
-  t8_element_t       *elem, *neigh;
-  t8_scheme_cxx_t    *scheme;
-  t8_eclass_scheme_c *elem_scheme, *neigh_scheme;
+  t8_cmesh_t cmesh;
+  t8_forest_t forest;
+  t8_element_t *elem, *neigh;
+  t8_scheme_cxx_t *scheme;
+  t8_eclass_scheme_c *neigh_scheme;
   t8_default_scheme_common_c *common_scheme;
-  int                 level = 1;
-  t8_locidx_t         element_id = 0, treeid;
-  t8_eclass_t         elem_eclass, neighbor_class;
-  int                 i;
-  t8_gloidx_t         ret;
-  int                 anchor_node[3];
-  int                 face_neigh;
+  int level = 1;
+  t8_locidx_t element_id = 0, treeid;
+  t8_eclass_t elem_eclass, neighbor_class;
+  int i;
+  t8_gloidx_t ret;
+  int anchor_node[3];
+  int face_neigh;
 
   if (hybrid) {
     eclass = T8_ECLASS_QUAD;
@@ -75,39 +75,29 @@ t8_ghost_neighbor_test (t8_eclass_t eclass, sc_MPI_Comm comm, int hybrid)
   elem = t8_forest_get_element (forest, element_id, &treeid);
   /* Get the scheme corresponding to the element. */
   elem_eclass = t8_forest_get_tree_class (forest, treeid);
-  elem_scheme = t8_forest_get_eclass_scheme (forest, elem_eclass);
   T8_ASSERT (elem != NULL);
 
-/* Iterate over all faces and create the face neighbor */
+  /* Iterate over all faces and create the face neighbor */
 
-  t8_debugf ("root len = %i\n", elem_scheme->t8_element_root_len (elem));
   for (i = 0; i < t8_eclass_num_faces[elem_eclass]; i++) {
     /* Get the eclass of the face neighbor's tree */
-    neighbor_class = t8_forest_element_neighbor_eclass (forest, treeid, elem,
-                                                        i);
+    neighbor_class = t8_forest_element_neighbor_eclass (forest, treeid, elem, i);
     /* Get the corresponding scheme and allocate the face neighbor */
     neigh_scheme = t8_forest_get_eclass_scheme (forest, neighbor_class);
     /* We expect this scheme to be the default scheme. Since we want to use
      * the anchor node information which is only implemented in that scheme,
      * it is crucial that we do not use any other scheme. */
-    common_scheme =
-      static_cast < t8_default_scheme_common_c * >(neigh_scheme);
+    common_scheme = static_cast<t8_default_scheme_common_c *> (neigh_scheme);
     T8_ASSERT (common_scheme != NULL);
     neigh_scheme->t8_element_new (1, &neigh);
 
-    ret =
-      t8_forest_element_face_neighbor (forest, 0, elem, neigh, neigh_scheme,
-                                       i, &face_neigh);
+    ret = t8_forest_element_face_neighbor (forest, 0, elem, neigh, neigh_scheme, i, &face_neigh);
     if (ret != -1) {
       /* Anchor is only implemented in the common scheme. */
       common_scheme->t8_element_anchor (neigh, anchor_node);
-      t8_debugf
-        ("neighbor of %i across face %i (in tree %li): (%i,%i,%i,%i)\n",
-         element_id, i,
-         ret, neigh_scheme->t8_element_level (neigh), anchor_node[0],
-         anchor_node[1],
-         t8_eclass_to_dimension[elem_eclass] > 2 ? anchor_node[2]
-         : -1);
+      t8_debugf ("neighbor of %i across face %i (in tree %li): (%i,%i,%i,%i)\n", element_id, i, ret,
+                 neigh_scheme->t8_element_level (neigh), anchor_node[0], anchor_node[1],
+                 t8_eclass_to_dimension[elem_eclass] > 2 ? anchor_node[2] : -1);
     }
     /* free the neighbors memory */
     neigh_scheme->t8_element_destroy (1, &neigh);
@@ -118,7 +108,7 @@ t8_ghost_neighbor_test (t8_eclass_t eclass, sc_MPI_Comm comm, int hybrid)
 int
 main (int argc, char **argv)
 {
-  int                 mpiret;
+  int mpiret;
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);

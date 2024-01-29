@@ -22,8 +22,7 @@
 
 #include <t8_element_shape.h>
 
-const int           t8_element_shape_max_num_corner[T8_ECLASS_MAX_DIM + 1] =
-  { 0, 2, 4, 8 };
+const int t8_element_shape_max_num_corner[T8_ECLASS_MAX_DIM + 1] = { 0, 2, 4, 8 };
 
 /** The number of codimension-one boundaries of an element class. */
 int
@@ -57,11 +56,11 @@ t8_element_shape_vtk_type (int element_shape)
 int
 t8_element_shape_vtk_corner_number (int element_shape, int index)
 {
-  return t8_eclass_vtk_corner_number[element_shape][index];
+  return t8_eclass_t8_to_vtk_corner_number[element_shape][index];
 }
 
 /** For each element_shape, the name of this class as a string */
-const char         *
+const char*
 t8_element_shape_to_string (int element_shape)
 {
   return t8_eclass_to_string[element_shape];
@@ -69,9 +68,7 @@ t8_element_shape_to_string (int element_shape)
 
 /* Currently t8_element_shape equals t8_eclass, if they will differ, this function has to be adapted. */
 int
-t8_element_shape_compare (t8_element_shape_t element_shape1,
-                          t8_element_shape_t element_shape2)
+t8_element_shape_compare (t8_element_shape_t element_shape1, t8_element_shape_t element_shape2)
 {
-  return t8_eclass_compare ((t8_eclass_t) element_shape1,
-                            (t8_eclass_t) element_shape2);
+  return t8_eclass_compare ((t8_eclass_t) element_shape1, (t8_eclass_t) element_shape2);
 }

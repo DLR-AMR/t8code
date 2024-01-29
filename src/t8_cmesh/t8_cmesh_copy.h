@@ -34,8 +34,8 @@
 
 T8_EXTERN_C_BEGIN ();
 
-void                t8_cmesh_copy (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
-                                   sc_MPI_Comm comm);
+void
+t8_cmesh_copy (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from, sc_MPI_Comm comm);
 
 T8_EXTERN_C_END ();
 
