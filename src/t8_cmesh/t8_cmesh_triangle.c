@@ -294,16 +294,16 @@ die_ele:
 static int
 t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset, char *filename, int dim)
 {
-  FILE               *fp;
-  char               *line = (char *) malloc (1024);
-  size_t              linen = 1024;
-  t8_locidx_t         element;
-  t8_locidx_t         num_elems;
-  t8_locidx_t        *tneighbors = NULL;
-  int                 retval;
-  int                 temp;
-  int                 num_read;
-  const int           num_faces = dim + 1;
+  FILE *fp;
+  char *line = (char *) malloc (1024);
+  size_t linen = 1024;
+  t8_locidx_t element;
+  t8_locidx_t num_elems;
+  t8_locidx_t *tneighbors = NULL;
+  int retval;
+  int temp;
+  int num_read;
+  const int num_faces = dim + 1;
 
   /* Open .neigh file and read face neighbor information */
   T8_ASSERT (filename != NULL);
@@ -363,39 +363,33 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset, char *filena
    * is sorted. */
   t8_stash_attribute_sort (cmesh->stash);
 
-  /* Finde the neighboring faces */
+  /* Find the neighboring faces */
   for (t8_locidx_t tit = 0; tit < num_elems; tit++) {
     for (t8_locidx_t tneigh = 0; tneigh < num_faces; tneigh++) {
-      t8_locidx_t         neighbor =
-        tneighbors[num_faces * tit + tneigh] - element_offset;
+      t8_locidx_t neighbor = tneighbors[num_faces * tit + tneigh] - element_offset;
       if (neighbor != -1 - element_offset && tit < neighbor) {
         /* Error tolerance for vertex coordinate equality.
          * We consider vertices to be equal if all their coordinates
          * are within this tolerance. Thus, A == B if |A[i] - B[i]| < tolerance
          * for all i = 0, 1 ,2 */
-        const double        tolerance = 1e-12;
+        const double tolerance = 1e-12;
 
-        int                 face1 = -1;
-        int                 face2 = -1;
+        int face1 = -1;
+        int face2 = -1;
 
-        double             *el_vertices1 =
-          (double *) t8_stash_get_attribute (cmesh->stash, tit);
-        double             *el_vertices2 =
-          (double *) t8_stash_get_attribute (cmesh->stash, neighbor);
+        double *el_vertices1 = (double *) t8_stash_get_attribute (cmesh->stash, tit);
+        double *el_vertices2 = (double *) t8_stash_get_attribute (cmesh->stash, neighbor);
 
         /* Get face number of element tit neighboring element neighbor.
-         * For every vertex i of element tit, check if ther exist a vertex 
+         * For every vertex i of element tit, check if there exists a vertex 
          * of element neighbor which is equal to it. If no such vertex exist, 
          * the index of i is the facenumber we are looking for. */
         for (int ivertex = 0; ivertex < num_faces; ivertex++) {
-          int                 vertex_count = 0;
+          int vertex_count = 0;
           for (int jvertex = 0; jvertex < num_faces; jvertex++) {
-            if (fabs (el_vertices1[3 * ivertex] - el_vertices2[3 * jvertex])
-                >= tolerance
-                || fabs (el_vertices1[3 * ivertex + 1] -
-                         el_vertices2[3 * jvertex + 1]) >= tolerance
-                || fabs (el_vertices1[3 * ivertex + 2] -
-                         el_vertices2[3 * jvertex + 2]) >= tolerance) {
+            if (fabs (el_vertices1[3 * ivertex] - el_vertices2[3 * jvertex]) >= tolerance
+                || fabs (el_vertices1[3 * ivertex + 1] - el_vertices2[3 * jvertex + 1]) >= tolerance
+                || fabs (el_vertices1[3 * ivertex + 2] - el_vertices2[3 * jvertex + 2]) >= tolerance) {
               vertex_count++;
             }
           }
@@ -409,14 +403,11 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset, char *filena
 
         /* Find the face number of triangle which is connected to tit */
         for (int ivertex = 0; ivertex < num_faces; ivertex++) {
-          int                 vertex_count = 0;
+          int vertex_count = 0;
           for (int jvertex = 0; jvertex < num_faces; jvertex++) {
-            if (fabs (el_vertices1[3 * jvertex] - el_vertices2[3 * ivertex])
-                >= tolerance
-                || fabs (el_vertices1[3 * jvertex + 1] -
-                         el_vertices2[3 * ivertex + 1]) >= tolerance
-                || fabs (el_vertices1[3 * jvertex + 2] -
-                         el_vertices2[3 * ivertex + 2]) >= tolerance) {
+            if (fabs (el_vertices1[3 * jvertex] - el_vertices2[3 * ivertex]) >= tolerance
+                || fabs (el_vertices1[3 * jvertex + 1] - el_vertices2[3 * ivertex + 1]) >= tolerance
+                || fabs (el_vertices1[3 * jvertex + 2] - el_vertices2[3 * ivertex + 2]) >= tolerance) {
               vertex_count++;
             }
           }
@@ -428,22 +419,19 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset, char *filena
         }
         T8_ASSERT (-1 < face2 && face2 < num_faces);
 
-        int                 orientation = -1;
-        int                 found_orientation = 0;
-        int                 firstvertex = face1 == 0 ? 1 : 0;
+        int orientation = -1;
+        int found_orientation = 0;
+        int firstvertex = face1 == 0 ? 1 : 0;
 
         for (int ivertex = 1; ivertex <= dim && !found_orientation; ivertex++) {
           /* The face with number k consists of the vertices with numbers
            * k+1, k+2, k+3 (mod 4) or k+1, k+2 (mod 3) in case of triangles.
            * In el_vertices are the coordinates of these vertices in order
            * v_0x v_0y v_0z v_1x v_1y ... */
-          int                 el_vertex = (face2 + ivertex) % num_faces;
-          if (fabs (el_vertices1[3 * firstvertex] -
-                    el_vertices2[3 * el_vertex]) < tolerance
-              && fabs (el_vertices1[3 * firstvertex + 1] -
-                       el_vertices2[3 * el_vertex + 1]) < tolerance
-              && fabs (el_vertices1[3 * firstvertex + 2] -
-                       el_vertices2[3 * el_vertex + 2]) < tolerance) {
+          int el_vertex = (face2 + ivertex) % num_faces;
+          if (fabs (el_vertices1[3 * firstvertex] - el_vertices2[3 * el_vertex]) < tolerance
+              && fabs (el_vertices1[3 * firstvertex + 1] - el_vertices2[3 * el_vertex + 1]) < tolerance
+              && fabs (el_vertices1[3 * firstvertex + 2] - el_vertices2[3 * el_vertex + 2]) < tolerance) {
 
             /* We identified the vertex (face2 + ivertex) % num_faces of the 
              * neighboring element as equivalent to the first vertex of face1.*/
@@ -469,38 +457,33 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset, char *filena
             else {
               switch (face2) {
               case 0:
-                T8_ASSERT (el_vertex == 1 || el_vertex == 2
-                           || el_vertex == 3);
+                T8_ASSERT (el_vertex == 1 || el_vertex == 2 || el_vertex == 3);
                 orientation = el_vertex - 1;
                 break;
               case 1:
-                T8_ASSERT (el_vertex == 0 || el_vertex == 2
-                           || el_vertex == 3);
+                T8_ASSERT (el_vertex == 0 || el_vertex == 2 || el_vertex == 3);
                 orientation = el_vertex == 0 ? 0 : el_vertex - 1;
                 break;
               case 2:
-                T8_ASSERT (el_vertex == 0 || el_vertex == 1
-                           || el_vertex == 3);
+                T8_ASSERT (el_vertex == 0 || el_vertex == 1 || el_vertex == 3);
                 orientation = el_vertex == 3 ? el_vertex - 1 : el_vertex;
                 break;
               default:
                 T8_ASSERT (face2 == 3);
-                T8_ASSERT (el_vertex == 0 || el_vertex == 1
-                           || el_vertex == 2);
+                T8_ASSERT (el_vertex == 0 || el_vertex == 1 || el_vertex == 2);
                 orientation = el_vertex;
                 break;
               }
             }
             T8_ASSERT (-1 < orientation && orientation < num_faces - 1);
-            found_orientation = 1;      /* We found an orientation and can stop the loop */
+            found_orientation = 1; /* We found an orientation and can stop the loop */
           }
         }
         if (!found_orientation) {
           /* We could not find an orientation */
-          t8_global_errorf
-            ("Could not detect the orientation of the face connection of elements %i and %i\n"
-             "across faces %i and %i when reading from file %s.\n", tit,
-             neighbor, face1, face2, filename);
+          t8_global_errorf ("Could not detect the orientation of the face connection of elements %i and %i\n"
+                            "across faces %i and %i when reading from file %s.\n",
+                            tit, neighbor, face1, face2, filename);
           goto die_neigh;
         }
         /* if tit !< neighbor then tit == neighbor,
