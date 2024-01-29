@@ -81,7 +81,7 @@ t8_basic_hybrid_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t
 }
 
 /**
- * Creates a cmesh and forest using this cmesh and times all high-level algorithms (new, adapt, ghost, partition, ...)
+ * Creates a cmesh and forest using this cmesh, executes all high-level algorithms (new, adapt, ghost, partition, ...) and measures their runtime
  * 
  * \param[in] level The initial level of forest
  * \param[in] endlvl The maximal level of the forest

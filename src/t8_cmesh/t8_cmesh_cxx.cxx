@@ -67,17 +67,15 @@ t8_cmesh_uniform_set_return_parameters_to_empty (t8_gloidx_t *first_local_tree, 
 static inline t8_gloidx_t
 t8_A_times_B_over_C_gloidx (t8_gloidx_t A, t8_gloidx_t B, t8_gloidx_t C)
 {
-#ifdef T8_ENABLE_DEBUG
-  {
-    /* We check whether computing A/C * B will cause an overflow.
-     * This can be achieved by checking if dividing the result by B
-     * yields A/C again. */
-    const t8_gloidx_t a_over_c = A / C;
-    const t8_gloidx_t a_o_c_times_b = a_over_c * B;
-    T8_ASSERT (a_over_c == 0 || a_o_c_times_b / a_over_c == B);
-  }
-#endif
-  return (t8_gloidx_t) ((A / C) * B + (((long double) (A % C)) / C) * B);
+  const t8_gloidx_t a_over_c = A / C;
+  const t8_gloidx_t a_o_c_times_b = a_over_c * B;
+  
+  /* We check whether computing A/C * B will cause an overflow.
+   * This can be achieved by checking if dividing the result by B
+   * yields A/C again. */
+  T8_ASSERT (a_over_c == 0 || a_o_c_times_b / a_over_c == B);
+  
+  return (t8_gloidx_t) (a_o_c_times_b  + (((long double) (A % C)) / C) * B);
 }
 
 /* Version of t8_A_times_B_over_C where A is an integer.
@@ -245,7 +243,7 @@ t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, int level, t8_sch
  * a (pure) local tree index, return the first process that
  * will have elements of this tree in a uniform partition. 
  * The data pointer must point to a valid t8_cmesh_partition_query_t,
- * storing the number of processe and the global number of elements. 
+ * storing the number of processes and the global number of elements. 
  * 
  * This function is used standalone and as callback of sc_array_split. */
 static size_t
@@ -278,13 +276,13 @@ t8_cmesh_determine_partition (sc_array_t *first_element_tree, size_t pure_local_
   t8_debugf ("[H] ptree %zd, first element %li, on proc %zd\n", pure_local_tree, element_index, first_proc_adjusted);
 
   /* Safety checks */
+#ifdef T8_ENABLE_DEBUG
   T8_ASSERT (0 <= first_proc_rank && (int) first_proc_rank < query_data->num_procs);
   T8_ASSERT (0 <= first_proc_adjusted);
   /* Check that the element lies in the partition of the computed proc. */
   T8_ASSERT (
     t8_cmesh_get_first_element_of_process (first_proc_rank, query_data->num_procs, query_data->global_num_elements)
     <= element_index);
-#ifdef T8_ENABLE_DEBUG
   if ((int) first_proc_rank != query_data->num_procs - 1) {
     T8_ASSERT (t8_cmesh_get_first_element_of_process (first_proc_rank + 1, query_data->num_procs,
                                                       query_data->global_num_elements)
@@ -440,7 +438,7 @@ t8_cmesh_uniform_bounds_hybrid (const t8_cmesh_t cmesh, const int level, const t
    */
   t8_shmem_array_t offset_array;
   t8_shmem_array_init (&offset_array, sizeof (t8_gloidx_t), cmesh->mpisize + 1, comm);
-  /* Fill the offset array for each process the global index of its first element in
+  /* Fill the offset array for each process with the global index of its first element in
    * the uniform partition.
    * (0, l_n_c_0, l_n_c_0 + l_n_c_1, l_n_c_0 + l_n_c_1 + l_n_c_2, ...) */
   t8_shmem_prefix (&local_num_children, offset_array, 1, T8_MPI_GLOIDX, sc_MPI_SUM);
@@ -452,7 +450,7 @@ t8_cmesh_uniform_bounds_hybrid (const t8_cmesh_t cmesh, const int level, const t
   SC_CHECK_ABORTF (0 <= data.global_num_elements && data.global_num_elements < T8_GLOIDX_MAX,
                    "Overflow in number of elements.\n");
 
-  /*Compute number of non-shared-trees and the local index of the first non-shared-tree */
+  /* Compute number of non-shared-trees and the local index of the first non-shared-tree */
   const int first_tree_shared_shift = cmesh->first_tree_shared ? 1 : 0;
   const t8_locidx_t pure_local_trees = cmesh->num_local_trees - first_tree_shared_shift;
   sc_array send_requests;
