@@ -66,7 +66,7 @@ T8_EXTERN_C_BEGIN ();
  *
  * Tree faces:
  *
- * The data of Tree faces looks for each tree (where F is the number of faces of the tree):
+ * For each tree the data of the tree faces (where F is the number of faces of the tree) looks like this:
  *
  * | Treeid1 Treeid2  ... TreeidF | ttf1 ttf2 ... ttfN | padding |
  *
