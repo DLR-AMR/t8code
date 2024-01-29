@@ -50,17 +50,30 @@ typedef struct t8_scheme_cxx t8_scheme_cxx_t;
 struct t8_scheme_cxx
 {
   /** Reference counter for this scheme. */
-  sc_refcount_t       rc;
+  sc_refcount_t rc;
 
   /** This array holds one virtual table per element class. */
   t8_eclass_scheme_c *eclass_schemes[T8_ECLASS_COUNT];
 };
 
+/** This array holds the reference coordinates of each vertex of each element.
+ *  It can e.g. be used with the \ref t8_element_reference_coords function.
+ *  Usage: t8_element_corner_ref_coords[eclass][vertex][dimension]
+ */
+extern const double t8_element_corner_ref_coords[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS][3];
+
+/** This array holds the reference coordinates of the centroid of each element.
+ *  It can e.g. be used with the \ref t8_element_reference_coords function.
+ *  Usage: t8_element_centroid_ref_coords[eclass][dimension]
+ */
+extern const double t8_element_centroid_ref_coords[T8_ECLASS_COUNT][3];
+
 /** Increase the reference counter of a scheme.
  * \param [in,out] scheme       On input, this scheme must be alive, that is,
  *                              exist with positive reference count.
  */
-void                t8_scheme_cxx_ref (t8_scheme_cxx_t *scheme);
+void
+t8_scheme_cxx_ref (t8_scheme_cxx_t *scheme);
 
 /** Decrease the reference counter of a scheme.
  * If the counter reaches zero, this scheme is destroyed.
@@ -71,10 +84,12 @@ void                t8_scheme_cxx_ref (t8_scheme_cxx_t *scheme);
  *                              Otherwise, the pointer is not changed and
  *                              the scheme is not modified in other ways.
  */
-void                t8_scheme_cxx_unref (t8_scheme_cxx_t **pscheme);
+void
+t8_scheme_cxx_unref (t8_scheme_cxx_t **pscheme);
 
 /* TODO: document, see t8_element_cxx.hxx */
-extern void         t8_scheme_cxx_destroy (t8_scheme_cxx_t *s);
+extern void
+t8_scheme_cxx_destroy (t8_scheme_cxx_t *s);
 
 T8_EXTERN_C_END ();
 

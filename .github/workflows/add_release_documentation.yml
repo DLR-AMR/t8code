@@ -38,8 +38,8 @@ on:
 jobs:
   add_release_doc:
 
-    runs-on: ubuntu-20.04
-    
+    runs-on: ubuntu-22.04
+
     timeout-minutes: 10
     steps:
 # check if release is at least a minor release
@@ -55,13 +55,13 @@ jobs:
 #
     - name: checkout
       if: ${{ env.MINOR_RELEASE == 'true' }}
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         path: t8code
 
     - name: Install dependencies
       if: ${{ env.MINOR_RELEASE == 'true' }}
-      run: sudo apt-get install libz-dev doxygen
+      run: sudo apt-get install libz-dev doxygen-latex
     - name: init submodules
       if: ${{ env.MINOR_RELEASE == 'true' }}
       run: |
@@ -108,7 +108,7 @@ jobs:
 # upload documentation
     - name: Checkout t8code-website repo
       if: ${{ env.MINOR_RELEASE == 'true' }}
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         ref: ${{ github.head_ref }}
         fetch-depth: 0
@@ -131,7 +131,7 @@ jobs:
         rm xx01
     - name: Create Pull Request at DLR-AMR/t8code-website
       if: ${{ env.MINOR_RELEASE == 'true' }}
-      uses: peter-evans/create-pull-request@v4
+      uses: peter-evans/create-pull-request@v5
       with:
         path: t8code-website
         title: Add documentation for t8code ${{ github.ref_name }}

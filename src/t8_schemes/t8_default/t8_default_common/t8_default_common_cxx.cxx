@@ -33,9 +33,8 @@ T8_EXTERN_C_BEGIN ();
  * \param [in]     length       Non-negative number of elements to allocate.
  * \param [in,out] elem         Array of correct size whose members are filled.
  */
-static void         t8_default_mempool_alloc (sc_mempool_t * ts_context,
-                                              int length,
-                                              t8_element_t **elem);
+static void
+t8_default_mempool_alloc (sc_mempool_t *ts_context, int length, t8_element_t **elem);
 
 /** This class independent function assumes an sc_mempool_t as context.
  * It is suitable as the elem_destroy callback in \ref t8_eclass_scheme_t.
@@ -44,13 +43,14 @@ static void         t8_default_mempool_alloc (sc_mempool_t * ts_context,
  * \param [in]     length       Non-negative number of elements to destroy.
  * \param [in,out] elem         Array whose members are returned to the mempool.
  */
-static void         t8_default_mempool_free (sc_mempool_t * ts_context,
-                                             int length, t8_element_t **elem);
+static void
+t8_default_mempool_free (sc_mempool_t *ts_context, int length, t8_element_t **elem);
 
 /* Destructor */
 t8_default_scheme_common_c::~t8_default_scheme_common_c ()
 {
   T8_ASSERT (ts_context != NULL);
+  SC_ASSERT (((sc_mempool_t *) ts_context)->elem_count == 0);
   sc_mempool_destroy ((sc_mempool_t *) ts_context);
 }
 
@@ -70,17 +70,15 @@ t8_default_scheme_common_c::t8_element_new (int length, t8_element_t **elem) con
 }
 
 void
-t8_default_scheme_common_c::t8_element_destroy (int length,
-                                                t8_element_t **elem) const
+t8_default_scheme_common_c::t8_element_destroy (int length, t8_element_t **elem) const
 {
   t8_default_mempool_free ((sc_mempool_t *) this->ts_context, length, elem);
 }
 
 static void
-t8_default_mempool_alloc (sc_mempool_t * ts_context, int length,
-                          t8_element_t **elem)
+t8_default_mempool_alloc (sc_mempool_t *ts_context, int length, t8_element_t **elem)
 {
-  int                 i;
+  int i;
 
   T8_ASSERT (ts_context != NULL);
   T8_ASSERT (0 <= length);
@@ -92,10 +90,9 @@ t8_default_mempool_alloc (sc_mempool_t * ts_context, int length,
 }
 
 static void
-t8_default_mempool_free (sc_mempool_t * ts_context, int length,
-                         t8_element_t **elem)
+t8_default_mempool_free (sc_mempool_t *ts_context, int length, t8_element_t **elem)
 {
-  int                 i;
+  int i;
 
   T8_ASSERT (ts_context != NULL);
   T8_ASSERT (0 <= length);
@@ -115,39 +112,33 @@ t8_default_scheme_common_c::t8_element_shape (const t8_element_t *elem) const
 /* Given an element's level and dimension, return the number of leafs it
  * produces at a given uniform refinement level */
 static inline t8_gloidx_t
-count_leafs_from_level (int element_level, int refinement_level,
-                        int dimension)
+count_leafs_from_level (int element_level, int refinement_level, int dimension)
 {
-  return element_level > refinement_level ? 0
-    : sc_intpow64 (2, dimension * (refinement_level - element_level));
+  return element_level > refinement_level ? 0 : sc_intpow64 (2, dimension * (refinement_level - element_level));
 }
 
 t8_gloidx_t
-t8_default_scheme_common_c::t8_element_count_leafs (const t8_element_t *t,
-                                                    int level) const
+t8_default_scheme_common_c::t8_element_count_leafs (const t8_element_t *t, int level) const
 {
 
-  int                 element_level = t8_element_level (t);
-  t8_element_shape_t  element_shape;
-  int                 dim = t8_eclass_to_dimension[eclass];
+  int element_level = t8_element_level (t);
+  t8_element_shape_t element_shape;
+  int dim = t8_eclass_to_dimension[eclass];
   element_shape = t8_element_shape (t);
   if (element_shape == T8_ECLASS_PYRAMID) {
-    int                 level_diff = level - element_level;
-    return element_level > level ? 0 :
-      2 * sc_intpow64 (8, level_diff) - sc_intpow64 (6, level_diff);
+    int level_diff = level - element_level;
+    return element_level > level ? 0 : 2 * sc_intpow64 (8, level_diff) - sc_intpow64 (6, level_diff);
   }
   return count_leafs_from_level (element_level, level, dim);
 }
 
 /* Count the number of siblings.
- * The number of children is 2^dim for each element, except for pyramids. */
-/* *INDENT-OFF* */
-/* Indent bug: indent adds an additional const */
+ * The number of children is 2^dim for each element, except for pyramids.
+ * TODO: For pyramids we will have to implement a standalone version in the pyramid scheme. */
 int
-t8_default_scheme_common_c::t8_element_num_siblings (const t8_element_t * elem) const
-/* *INDENT-ON* */
+t8_default_scheme_common_c::t8_element_num_siblings (const t8_element_t *elem) const
 {
-  const int           dim = t8_eclass_to_dimension[eclass];
+  const int dim = t8_eclass_to_dimension[eclass];
   T8_ASSERT (eclass != T8_ECLASS_PYRAMID);
   return sc_intpow (2, dim);
 }
@@ -158,17 +149,25 @@ t8_default_scheme_common_c::t8_element_count_leafs_from_root (int level) const
   if (eclass == T8_ECLASS_PYRAMID) {
     return 2 * sc_intpow64u (8, level) - sc_intpow64u (6, level);
   }
-  int                 dim = t8_eclass_to_dimension[eclass];
+  int dim = t8_eclass_to_dimension[eclass];
   return count_leafs_from_level (0, level, dim);
 }
 
 void
-t8_default_scheme_common_c::t8_element_general_function (const t8_element_t
-                                                         *elem,
-                                                         const void *indata,
+t8_default_scheme_common_c::t8_element_general_function (const t8_element_t *elem, const void *indata,
                                                          void *outdata) const
 {
   /* This function is intentionally left blank. */
 }
+
+#if T8_ENABLE_DEBUG
+void
+t8_default_scheme_common_c::t8_element_debug_print (const t8_element_t *elem) const
+{
+  char debug_string[BUFSIZ];
+  t8_element_to_string (elem, debug_string, BUFSIZ);
+  t8_debugf ("%s\n", debug_string);
+}
+#endif
 
 T8_EXTERN_C_END ();

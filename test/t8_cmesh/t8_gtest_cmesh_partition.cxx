@@ -26,6 +26,7 @@
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include "t8_cmesh/t8_cmesh_partition.h"
 #include <t8_cmesh/t8_cmesh_testcases.h>
+#include <test/t8_gtest_macros.hxx>
 
 /* We create a cmesh, partition it and repartition it several times.
  * At the end we result in the same partition as at the beginning and we
@@ -33,45 +34,44 @@
  * passed.
  */
 
-/* *INDENT-OFF* */
-class t8_cmesh_partition_class : public testing::TestWithParam<int>{
-protected:
-  void SetUp() override {
-    cmesh_id = GetParam();
+class t8_cmesh_partition_class: public testing::TestWithParam<int> {
+ protected:
+  void
+  SetUp () override
+  {
+    cmesh_id = GetParam ();
 
-    if(cmesh_id == 89 || (237 <= cmesh_id && cmesh_id <= 256)){
+    if (cmesh_id == 89 || (237 <= cmesh_id && cmesh_id <= 256)) {
       GTEST_SKIP ();
     }
 
     cmesh_original = t8_test_create_cmesh (cmesh_id);
   }
 
-  int                 cmesh_id;
-  t8_cmesh_t          cmesh_original;
+  int cmesh_id;
+  t8_cmesh_t cmesh_original;
 };
-/* *INDENT-ON* */
 
 static void
-test_cmesh_commited (t8_cmesh_t cmesh)
+test_cmesh_committed (t8_cmesh_t cmesh)
 {
   ASSERT_TRUE (t8_cmesh_is_committed (cmesh)) << "Cmesh commit failed.";
-  ASSERT_TRUE (t8_cmesh_trees_is_face_consistend (cmesh, cmesh->trees)) <<
-    "Cmesh face consistency failed.";
+  ASSERT_TRUE (t8_cmesh_trees_is_face_consistent (cmesh, cmesh->trees)) << "Cmesh face consistency failed.";
 }
 
 TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate)
 {
 
-  const int           level = 11;
-  int                 mpisize;
-  int                 mpiret;
-  int                 mpirank;
-  t8_cmesh_t          cmesh_partition;
-  t8_cmesh_t          cmesh_partition_new1;
-  t8_cmesh_t          cmesh_partition_new2;
-  t8_shmem_array_t    offset_concentrate;
+  const int level = 11;
+  int mpisize;
+  int mpiret;
+  int mpirank;
+  t8_cmesh_t cmesh_partition;
+  t8_cmesh_t cmesh_partition_new1;
+  t8_cmesh_t cmesh_partition_new2;
+  t8_shmem_array_t offset_concentrate;
 
-  test_cmesh_commited (cmesh_original);
+  test_cmesh_committed (cmesh_original);
 
   mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
   SC_CHECK_MPI (mpiret);
@@ -80,11 +80,10 @@ TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate)
     t8_cmesh_init (&cmesh_partition);
     t8_cmesh_set_derive (cmesh_partition, cmesh_original);
     /* Uniform partition according to level */
-    t8_cmesh_set_partition_uniform (cmesh_partition, level,
-                                    t8_scheme_new_default_cxx ());
+    t8_cmesh_set_partition_uniform (cmesh_partition, level, t8_scheme_new_default_cxx ());
     t8_cmesh_commit (cmesh_partition, sc_MPI_COMM_WORLD);
 
-    test_cmesh_commited (cmesh_partition);
+    test_cmesh_committed (cmesh_partition);
     cmesh_original = cmesh_partition;
   }
 
@@ -103,14 +102,13 @@ TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate)
     t8_cmesh_init (&cmesh_partition_new2);
     t8_cmesh_set_derive (cmesh_partition_new2, cmesh_partition_new1);
     /* Create an offset array where each tree resides on irank */
-    offset_concentrate =
-      t8_cmesh_offset_concentrate (irank, sc_MPI_COMM_WORLD,
-                                   t8_cmesh_get_num_trees (cmesh_partition));
+    offset_concentrate
+      = t8_cmesh_offset_concentrate (irank, sc_MPI_COMM_WORLD, t8_cmesh_get_num_trees (cmesh_partition));
     /* Set the new cmesh to be partitioned according to that offset */
     t8_cmesh_set_partition_offsets (cmesh_partition_new2, offset_concentrate);
     /* Commit the cmesh and test if successful */
     t8_cmesh_commit (cmesh_partition_new2, sc_MPI_COMM_WORLD);
-    test_cmesh_commited (cmesh_partition_new2);
+    test_cmesh_committed (cmesh_partition_new2);
 
     /* Switch the rolls of the cmeshes */
     cmesh_partition_new1 = cmesh_partition_new2;
@@ -122,18 +120,14 @@ TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate)
   for (int i = 0; i < 2; i++) {
     t8_cmesh_init (&cmesh_partition_new2);
     t8_cmesh_set_derive (cmesh_partition_new2, cmesh_partition_new1);
-    t8_cmesh_set_partition_uniform (cmesh_partition_new2, level,
-                                    t8_scheme_new_default_cxx ());
+    t8_cmesh_set_partition_uniform (cmesh_partition_new2, level, t8_scheme_new_default_cxx ());
     t8_cmesh_commit (cmesh_partition_new2, sc_MPI_COMM_WORLD);
     cmesh_partition_new1 = cmesh_partition_new2;
   }
-  ASSERT_TRUE (t8_cmesh_is_equal (cmesh_partition_new2, cmesh_partition)) <<
-    "Cmesh equality check failed.";
+  ASSERT_TRUE (t8_cmesh_is_equal (cmesh_partition_new2, cmesh_partition)) << "Cmesh equality check failed.";
   t8_cmesh_destroy (&cmesh_partition_new2);
   t8_cmesh_destroy (&cmesh_partition);
 }
 
 /* Test all cmeshes over all different inputs we get through their id */
-INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_partition, t8_cmesh_partition_class,
-                          testing::Range (0,
-                                          t8_get_number_of_all_testcases ()));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_partition, t8_cmesh_partition_class, AllCmeshs);

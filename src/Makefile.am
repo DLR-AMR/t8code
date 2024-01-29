@@ -8,6 +8,7 @@ forestincludedir = $(includedir)/t8_forest
 geometryincludedir = $(includedir)/t8_geometry
 geometryimplincludedir = $(geometryincludedir)/t8_geometry_implementations
 schemesdefaultincludedir = $(includedir)/t8_schemes/t8_default
+vtkincludedir = $(includedir)/t8_vtk
 defaultcommonincludedir = $(schemesdefaultincludedir)/t8_default_common
 defaultvertexincludedir = $(schemesdefaultincludedir)/t8_default_vertex
 defaultlineincludedir = $(schemesdefaultincludedir)/t8_default_line
@@ -39,6 +40,7 @@ libt8_installed_headers_cmesh = \
   src/t8_cmesh/t8_cmesh_save.h \
   src/t8_cmesh/t8_cmesh_examples.h \
   src/t8_cmesh/t8_cmesh_geometry.h \
+  src/t8_cmesh/t8_cmesh_helpers.h \
   src/t8_cmesh/t8_cmesh_occ.hxx
 libt8_installed_headers_data = \
   src/t8_data/t8_shmem.h src/t8_data/t8_containers.h
@@ -50,19 +52,29 @@ libt8_installed_headers_forest = \
   src/t8_forest/t8_forest_io.h \
   src/t8_forest/t8_forest_adapt.h \
   src/t8_forest/t8_forest_vtk.h \
+  src/t8_forest/t8_forest_to_vtkUnstructured.hxx \
   src/t8_forest/t8_forest_iterate.h src/t8_forest/t8_forest_partition.h
 libt8_installed_headers_geometry = \
   src/t8_geometry/t8_geometry.h \
   src/t8_geometry/t8_geometry_base.hxx \
   src/t8_geometry/t8_geometry_base.h \
+  src/t8_geometry/t8_geometry_with_vertices.hxx \
+  src/t8_geometry/t8_geometry_with_vertices.h \
   src/t8_geometry/t8_geometry_helpers.h
 libt8_installed_headers_geometry_impl = \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.h \
+  src/t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx \
+  src/t8_geometry/t8_geometry_implementations/t8_geometry_examples.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_occ.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx \
+  src/t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx \
+  src/t8_geometry/t8_geometry_implementations/t8_geometry_examples.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx 
+libt8_installed_headers_vtk = \
+  src/t8_vtk/t8_vtk_reader.hxx \
+  src/t8_vtk/t8_vtk_types.h
 libt8_installed_headers_schemes_default =
 libt8_installed_headers_default_common =
 libt8_installed_headers_default_vertex =
@@ -78,14 +90,15 @@ libt8_internal_headers = \
   src/t8_cmesh/t8_cmesh_types.h src/t8_cmesh/t8_cmesh_partition.h \
   src/t8_cmesh/t8_cmesh_refine.h src/t8_cmesh/t8_cmesh_copy.h \
   src/t8_cmesh/t8_cmesh_offset.h \
-  src/t8_cmesh/t8_cmesh_vtk_to_t8/t8_cmesh_vtk_polydata.hxx \
-  src/t8_cmesh/t8_cmesh_vtk_to_t8/t8_cmesh_vtk_unstructured.hxx \
-  src/t8_cmesh/t8_cmesh_vtk_to_t8/t8_vtk_types.h \
+  src/t8_vtk/t8_vtk_polydata.hxx \
+  src/t8_vtk/t8_vtk_unstructured.hxx \
+  src/t8_vtk/t8_vtk_parallel.hxx \
   src/t8_forest/t8_forest_cxx.h  \
   src/t8_forest/t8_forest_ghost.h \
   src/t8_forest/t8_forest_balance.h src/t8_forest/t8_forest_types.h \
   src/t8_forest/t8_forest_private.h \
-  src/t8_cmesh/t8_cmesh_vtk_to_t8/t8_cmesh_vtk_unstructured.hxx
+  src/t8_mat.h \
+  src/t8_windows.h
 libt8_compiled_sources = \
   src/t8.c src/t8_eclass.c src/t8_mesh.c \
   src/t8_element.c src/t8_element_cxx.cxx \
@@ -102,27 +115,33 @@ libt8_compiled_sources = \
   src/t8_cmesh/t8_cmesh_copy.c src/t8_data/t8_shmem.c \
   src/t8_cmesh/t8_cmesh_geometry.cxx \
   src/t8_cmesh/t8_cmesh_examples.c \
+  src/t8_cmesh/t8_cmesh_helpers.c \
   src/t8_data/t8_containers.cxx \
   src/t8_cmesh/t8_cmesh_offset.c src/t8_cmesh/t8_cmesh_readmshfile.cxx \
   src/t8_forest/t8_forest.c src/t8_forest/t8_forest_adapt.cxx \
   src/t8_geometry/t8_geometry.cxx \
   src/t8_geometry/t8_geometry_helpers.c \
   src/t8_geometry/t8_geometry_base.cxx \
+  src/t8_geometry/t8_geometry_with_vertices.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_analytic.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_occ.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.cxx \
+  src/t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.cxx \
+  src/t8_geometry/t8_geometry_implementations/t8_geometry_examples.cxx \
   src/t8_forest/t8_forest_partition.cxx src/t8_forest/t8_forest_cxx.cxx \
   src/t8_forest/t8_forest_private.c src/t8_forest/t8_forest_vtk.cxx \
   src/t8_forest/t8_forest_ghost.cxx src/t8_forest/t8_forest_iterate.cxx \
   src/t8_version.c \
-  src/t8_vtk.c src/t8_forest/t8_forest_balance.cxx src/t8_vec.c \
+  src/t8_vtk.c src/t8_forest/t8_forest_balance.cxx \
   src/t8_forest/t8_forest_netcdf.cxx \
   src/t8_element_shape.c \
   src/t8_netcdf.c \
   src/t8_cmesh/t8_cmesh_testcases.c \
-  src/t8_cmesh/t8_cmesh_vtk_to_t8/t8_cmesh_vtk_polydata.cxx \
-  src/t8_cmesh/t8_cmesh_vtk_to_t8/t8_cmesh_vtk_unstructured.cxx
+  src/t8_vtk/t8_vtk_polydata.cxx \
+  src/t8_vtk/t8_vtk_unstructured.cxx \
+  src/t8_vtk/t8_vtk_parallel.cxx \
+  src/t8_vtk/t8_vtk_reader.cxx
 
 
 # this variable is used for headers that are not publicly installed
@@ -136,7 +155,7 @@ src_libt8_la_SOURCES = \
 src_libt8_la_CPPFLAGS = $(AM_CPPFLAGS) $(T8_CPPFLAGS)
 ## This is the official API versioning scheme of libtool.  Please see:
 ## Read https://www.gnu.org/software/libtool/manual/libtool.html#Versioning
-src_libt8_la_LDFLAGS = -release $(VERSION) -version-info 2:0:0
+src_libt8_la_LDFLAGS = -version-info 2:0:0
 src_libt8_la_LIBADD = @T8_P4EST_LDADD@ @T8_SC_LDADD@
 LDADD += src/libt8.la @T8_P4EST_LDADD@ @T8_SC_LDADD@
 EXTRA_src_libt8_la_DEPENDENCIES = @T8_P4EST_LDADD@ @T8_SC_LDADD@
@@ -149,6 +168,7 @@ dist_forestinclude_HEADERS = $(libt8_installed_headers_forest)
 dist_geometryinclude_HEADERS = $(libt8_installed_headers_geometry)
 dist_geometryimplinclude_HEADERS = $(libt8_installed_headers_geometry_impl)
 dist_schemesdefaultinclude_HEADERS = $(libt8_installed_headers_schemes_default)
+dist_vtkinclude_HEADERS = $(libt8_installed_headers_vtk)
 dist_defaultcommoninclude_HEADERS = $(libt8_installed_headers_default_common)
 dist_defaultvertexinclude_HEADERS = $(libt8_installed_headers_default_vertex)
 dist_defaultlineinclude_HEADERS = $(libt8_installed_headers_default_line)

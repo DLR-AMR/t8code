@@ -50,13 +50,11 @@
 TEST (t8_gtest_vtk_linkage, t8_test_vtk_version_number)
 {
 #if T8_WITH_VTK
-  char                vtk_version[BUFSIZ];
-  snprintf (vtk_version, BUFSIZ, "%i.%i", VTK_MAJOR_VERSION,
-            VTK_MINOR_VERSION);
-  ASSERT_FALSE (strcmp (T8_VTK_VERSION_USED, vtk_version)) <<
-    "linked vtk version (" << vtk_version <<
-    ") does not equal the version t8code was configured with (" <<
-    T8_VTK_VERSION_USED << ").\n";
+  char vtk_version[BUFSIZ];
+  snprintf (vtk_version, BUFSIZ, "%i.%i", VTK_MAJOR_VERSION, VTK_MINOR_VERSION);
+  ASSERT_FALSE (strcmp (T8_VTK_VERSION_USED, vtk_version))
+    << "linked vtk version (" << vtk_version << ") does not equal the version t8code was configured with ("
+    << T8_VTK_VERSION_USED << ").\n";
   if (!strcmp (T8_VTK_VERSION_USED, vtk_version)) {
     t8_debugf ("Using vtk version %s.\n", vtk_version);
   }
@@ -67,7 +65,7 @@ TEST (t8_gtest_vtk_linkage, t8_test_vtk_version_number)
 TEST (t8_gtest_vtk_linkage, t8_test_vtk_linkage)
 {
 #if T8_WITH_VTK
-  vtkNew < vtkUnstructuredGrid > unstructuredGrid;
+  vtkNew<vtkUnstructuredGrid> unstructuredGrid;
 
   t8_debugf ("Successfully created VTK unstructuredGrid object.\n");
 #else

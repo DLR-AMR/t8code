@@ -29,10 +29,11 @@
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
+#include <test/t8_gtest_macros.hxx>
 
 /*
  * In this file we test whether the t8_element_general_function
- * function behaves correcly.
+ * function behaves correctly.
  * For tri, tet and prism elements of the default scheme, the type should
  * get written to the output data.
  * For the other element types nothing should happen.
@@ -42,42 +43,40 @@
  *  - Add a test for different schemes as soon as they are implemented
  */
 
- /* *INDENT-OFF* */
-class forest_element_function:public testing::TestWithParam <std::tuple<t8_eclass,int> > {
-protected:
-  void SetUp () override {
-    eclass = std::get<0>(GetParam());
-    level = std::get<1>(GetParam());
+class forest_element_function: public testing::TestWithParam<std::tuple<t8_eclass, int> > {
+ protected:
+  void
+  SetUp () override
+  {
+    eclass = std::get<0> (GetParam ());
+    level = std::get<1> (GetParam ());
 
     class_scheme = ts->eclass_schemes[eclass];
-    forest =
-        t8_forest_new_uniform (t8_cmesh_new_from_class
-                               (eclass, sc_MPI_COMM_WORLD), ts, level, 0,
-                               sc_MPI_COMM_WORLD);
+    forest
+      = t8_forest_new_uniform (t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD), ts, level, 0, sc_MPI_COMM_WORLD);
   }
-  void TearDown () override {
+  void
+  TearDown () override
+  {
     t8_scheme_cxx_ref (ts);
     t8_forest_unref (&forest);
     t8_scheme_cxx_unref (&ts);
   }
-  t8_eclass_t        eclass;
-  int                level;
-  t8_scheme_cxx_t    *ts = t8_scheme_new_default_cxx ();
+  t8_eclass_t eclass;
+  int level;
+  t8_scheme_cxx_t *ts = t8_scheme_new_default_cxx ();
   t8_eclass_scheme_c *class_scheme;
-  t8_forest_t        forest;
+  t8_forest_t forest;
 };
-/* *INDENT-ON* */
 
 TEST_P (forest_element_function, test_element_general_function)
 {
 
-  for (t8_locidx_t ielement = 0;
-       ielement < t8_forest_get_local_num_elements (forest); ++ielement) {
-    int8_t              outdata = -1;
-    int8_t              should_be = -1;
+  for (t8_locidx_t ielement = 0; ielement < t8_forest_get_local_num_elements (forest); ++ielement) {
+    int8_t outdata = -1;
+    int8_t should_be = -1;
     /* Get the element */
-    const t8_element_t *element =
-      t8_forest_get_element_in_tree (forest, 0, ielement);
+    const t8_element_t *element = t8_forest_get_element_in_tree (forest, 0, ielement);
     /* Call the general function */
     class_scheme->t8_element_general_function (element, NULL, &outdata);
     /* Check the value of outdata, depending on the eclass.
@@ -99,14 +98,11 @@ TEST_P (forest_element_function, test_element_general_function)
       should_be = ((t8_dpyramid_t *) element)->pyramid.type;
       break;
     }
-    ASSERT_EQ (outdata,
-               should_be) << "Wrong data computed for element " << ielement <<
-      " at eclass " << t8_eclass_to_string[eclass] << " and level " << level
-      << " (expecting " << should_be << ", got " << outdata << ")";
-  }                             /* End of element loop */
+    ASSERT_EQ (outdata, should_be) << "Wrong data computed for element " << ielement << " at eclass "
+                                   << t8_eclass_to_string[eclass] << " and level " << level << " (expecting "
+                                   << should_be << ", got " << outdata << ")";
+  } /* End of element loop */
 }
 
-
-/* *INDENT-OFF* */
-INSTANTIATE_TEST_SUITE_P (t8_gtest_element_general_function, forest_element_function,testing::Combine(testing::Range(T8_ECLASS_ZERO, T8_ECLASS_COUNT), testing::Range(0,6)));
-/* *INDENT-ON* */
+INSTANTIATE_TEST_SUITE_P (t8_gtest_element_general_function, forest_element_function,
+                          testing::Combine (AllEclasses, testing::Range (0, 6)));

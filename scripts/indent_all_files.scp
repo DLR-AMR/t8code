@@ -4,7 +4,7 @@
 #  t8code is a C library to manage a collection (a forest) of multiple
 #  connected adaptive space-trees of general element classes in parallel.
 #
-#  Copyright (C) 2015 the developers
+#  Copyright (C) 2023 the developers
 #
 #  t8code is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -31,8 +31,14 @@
 #
 if [ `basename $PWD` != scripts ]
 then
-  echo ERROR: Must be executed from whitin the scripts/ subfolder.
-  exit 1
+  if [ -d scripts ]
+  then
+    # The directory stack is automatically reset on script exit.
+    pushd scripts/ > /dev/null
+  else
+    echo ERROR: scripts/ directory not found.
+    exit 1
+  fi
 fi
 
 # Find all files with the appropriate suffix.
@@ -48,6 +54,7 @@ echo	$PWD/../src/
 echo	$PWD/../example/
 echo	$PWD/../test/
 echo	$PWD/../tutorials/
+echo	$PWD/../benchmarks/
 echo
 read -p "Are you sure? ('Y' or 'y' to continue)" -n 1 -r
 echo

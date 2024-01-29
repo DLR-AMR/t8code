@@ -32,22 +32,23 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
+#include <test/t8_gtest_macros.hxx>
 
-/* *INDENT-OFF* */
-class forest_find_owner:public testing::TestWithParam <t8_eclass > {
-protected:
-  void SetUp () override {
-    eclass = GetParam();
+class forest_find_owner: public testing::TestWithParam<t8_eclass> {
+ protected:
+  void
+  SetUp () override
+  {
+    eclass = GetParam ();
 
     default_scheme = t8_scheme_new_default_cxx ();
     /* Construct a coarse mesh of one tree */
     cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
   }
-  t8_eclass_t         eclass;
-  t8_cmesh_t          cmesh;
-  t8_scheme_cxx_t    *default_scheme;
+  t8_eclass_t eclass;
+  t8_cmesh_t cmesh;
+  t8_scheme_cxx_t *default_scheme;
 };
-/* *INDENT-ON* */
 
 #if 0
 /* Depending on an integer i create a different cmesh.
@@ -136,29 +137,26 @@ TEST_P (forest_find_owner, find_owner)
 
 TEST_P (forest_find_owner, find_multiple_owners)
 {
-  t8_element_t       *root_element;
-  sc_array_t          owners;
-  int                 level = 1;
-  char                buffer[BUFSIZ];
+  t8_element_t *root_element;
+  sc_array_t owners;
+  int level = 1;
+  char buffer[BUFSIZ];
 
   /* initialize the array of owners to store ints */
   sc_array_init (&owners, sizeof (int));
   /* Build a uniform forest */
-  t8_forest_t         forest =
-    t8_forest_new_uniform (cmesh, default_scheme, level, 0,
-                           sc_MPI_COMM_WORLD);
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, default_scheme, level, 0, sc_MPI_COMM_WORLD);
   t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, eclass);
   /* Construct the root element */
   ts->t8_element_new (1, &root_element);
   ts->t8_element_set_linear_id (root_element, 0, 0);
 
   for (int face = 0; face < t8_eclass_num_faces[eclass]; face++) {
-    t8_forest_element_owners_at_face (forest, 0, root_element, eclass, face,
-                                      &owners);
+    t8_forest_element_owners_at_face (forest, 0, root_element, eclass, face, &owners);
     snprintf (buffer, BUFSIZ, "Owners of root at face %i:", face);
     for (int iowner = 0; iowner < (int) owners.elem_count; iowner++) {
-      snprintf (buffer + strlen (buffer), BUFSIZ - strlen (buffer),
-                " %i,", *(int *) sc_array_index_int (&owners, iowner));
+      snprintf (buffer + strlen (buffer), BUFSIZ - strlen (buffer), " %i,",
+                *(int *) sc_array_index_int (&owners, iowner));
     }
     t8_debugf ("%s\n", buffer);
     sc_array_truncate (&owners);
@@ -172,6 +170,4 @@ TEST_P (forest_find_owner, find_multiple_owners)
   sc_array_reset (&owners);
 }
 
-/* *INDENT-OFF* */
-INSTANTIATE_TEST_SUITE_P (t8_gtest_find_owner, forest_find_owner,testing::Range(T8_ECLASS_VERTEX, T8_ECLASS_COUNT));
-/* *INDENT-ON* */
+INSTANTIATE_TEST_SUITE_P (t8_gtest_find_owner, forest_find_owner, AllEclasses);

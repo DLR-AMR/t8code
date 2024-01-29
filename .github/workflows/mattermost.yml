@@ -26,47 +26,45 @@ name: Mattermost_message
 
 # Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events on the feature-CI_mattermost_messages, develop or main branch
-  push:
-    branches: [ feature-CI_mattermost_messages, develop, main ]
+  # Triggers the workflow on pull request events on the feature-CI_mattermost_messages, develop or main branch
   pull_request:
     branches: [ feature-CI_mattermost_messages, develop, main ]
     types: [ opened, synchronize, reopened, closed]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-  
+env:
+  message_build: 0
   
 jobs:
   send_mm_message:
+    if: github.repository == 'DLR-AMR/t8code'
     runs-on: ubuntu-20.04
     steps:
-      - name: merge
-        uses: Mitigram/gh-action-mattermost@main
+      - name: debug_before_build
+        run: echo ${{ env.message_build}}
+      # build the message depending on different types of events and event actions. Message is written into mattermost.json
+      - name: Merge_message
         if: github.event.action == 'closed' && github.event.pull_request.merged == true
-        with: 
-          username: t8y
-          url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
-          text: Pull request ${{ github.event.number }} has been merged. See ${{ github.event.pull_request.html_url }} for more details.
-      - name: push  
-        uses: Mitigram/gh-action-mattermost@main
+        run: |
+          echo message_build=1 >> $GITHUB_ENV &&
+          echo "{\"text\":\"Pull request ${{ github.event.number }} has been merged. See ${{ github.event.pull_request.html_url }} for more details.\"}" > mattermost.json
+      - name: push_message
         if: github.event_name == 'push' && github.event.action != 'closed'
-        with: 
-          username: t8y
-          url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
-          text: ${{ github.event.pusher.name }} pushed into ${{ github.event.ref }}. See ${{ github.event.compare }} for more details.
-      - name: pull_request
-        uses: Mitigram/gh-action-mattermost@main
+        run: |
+          echo message_build=1 >> $GITHUB_ENV &&
+          echo "{\"text\":\"${{ github.event.pusher.name }} pushed into ${{ github.event.ref }}. See ${{ github.event.compare }} for more details.\"}" > mattermost.json
+      - name: pull_request_message
         if: github.event_name == 'pull_request' && github.event.action != 'synchronize' && github.event.action != 'closed'
-        with:
-          username: t8y
-          url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
-          text: Pull request ${{ github.event.number }} has been ${{ github.event.action }}. See ${{ github.event.pull_request.html_url }} for more details.
-# trigger this part of the workflow, when something new is pushed into a pull request.
-#      - name: synchronize
-#        uses: Mitigram/gh-action-mattermost@main
-#        if: github.event.action == 'synchronize'
-#        with:
-#          username: t8y
-#          url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
-#          text: Updated Pull-Request ${{ github.event.number }}. See ${{ github.event.pull_request.html_url }} for more details.
+        run: |
+          echo message_build=1 >> $GITHUB_ENV &&
+          echo "{\"text\":\"Pull request ${{ github.event.number }} has been ${{ github.event.action }}. See ${{ github.event.pull_request.html_url }} for more details.\"}" > mattermost.json
+      - name: debug_after_build
+        run: echo ${{ env.message_build }}
+      # if a message has been written send the message to the mattermost-channel described in the secrets
+      - name: send_message
+        if: ${{ env.message_build == 1 }}
+        uses: mattermost/action-mattermost-notify@master
+        env:
+          MATTERMOST_WEBHOOK_URL: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
+          MATTERMOST_USERNAME: t8y
