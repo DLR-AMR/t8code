@@ -31,6 +31,9 @@
 #include <t8_vec.h>
 #include <t8_mat.h>
 #include <t8_eclass.h>
+#include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_geometrical.h>
+#include <t8_schemes/t8_default/t8_default_c_interface.h> /* default refinement scheme. */
 
 /**
  * \brief This function calculates an 'equal' partition for the cmesh based on the \var number of trees supplied
@@ -2927,5 +2930,115 @@ t8_cmesh_new_quadrangulated_spherical_surface (const double radius, sc_MPI_Comm 
 
   /* Commit the mesh */
   t8_cmesh_commit (cmesh, comm);
+  return cmesh;
+}
+
+t8_cmesh_t
+t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shell_thickness, const int num_levels,
+                                    const int num_layers, sc_MPI_Comm comm)
+{
+  /* Initialization of the mesh */
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+
+  t8_geometry_c *geometry = t8_geometry_cubed_spherical_shell_new ();
+  t8_cmesh_register_geometry (cmesh, geometry);
+
+  /* Square root of three. */
+  const double SQRT3 = 1.7320508075688772;
+
+  const int two_to_nl = 1 << num_levels; /* 2^num_levels */
+
+  /* clang-format off */
+  const int ntrees = t8_eclass_num_faces[T8_ECLASS_HEX] * two_to_nl * two_to_nl * num_layers; /* Number of cmesh cells. */
+  const int nverts = t8_eclass_num_vertices[T8_ECLASS_HEX]; /* Number of vertices per cmesh cell. */
+
+  /* Arrays for the face connectivity computations via vertices. */
+  double *all_verts = T8_ALLOC (double, ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM);
+  t8_eclass_t *all_eclasses = T8_ALLOC (t8_eclass_t, ntrees);
+  /* clang-format on */
+
+  /* Defitition of the tree class. */
+  for (int itree = 0; itree < ntrees; itree++) {
+    t8_cmesh_set_tree_class (cmesh, itree, T8_ECLASS_HEX);
+    all_eclasses[itree] = T8_ECLASS_HEX;
+  }
+
+  /* Here is what we do: Construct a 3D cmesh from a 2D forest. */
+
+  int mpi_rank;
+  sc_MPI_Comm local_comm;
+
+  /* We create one local MPI communicator per rank in order to enforce local
+   * independent copies of the 2D forest. */
+  sc_MPI_Comm_rank (comm, &mpi_rank);
+  sc_MPI_Comm_split (comm, mpi_rank, mpi_rank, &local_comm);
+
+  /* Create 2D quadrangulated spherical surface of given refinement level per patch. */
+  t8_forest_t forest = t8_forest_new_uniform (t8_cmesh_new_quadrangulated_spherical_surface (inner_radius, local_comm),
+                                              t8_scheme_new_default_cxx (), num_levels, 0, local_comm);
+
+  /* Get the number of trees that have elements of this process. */
+  t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
+
+  /* Tree index of the to-be-created 3D cmesh. */
+  int itree = 0;
+  /* Loop over all local trees in the forest. */
+  for (t8_locidx_t itree_quad = 0, current_index = 0; itree_quad < num_local_trees; ++itree_quad) {
+
+    /* Get the number of elements of this tree. */
+    const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree_quad);
+
+    /* Loop over all local elements in the tree. */
+    for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
+      const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree_quad, ielement);
+
+      /* Retrieve 2D element vertices. */
+      double quad_vertices[4 * 3];
+      for (int ivert = 0; ivert < 4; ivert++) {
+        t8_forest_element_coordinate (forest, itree_quad, element, ivert, quad_vertices + ivert * 3);
+      }
+
+      /* Transfer the coordinates from the 2D forest mesh to the 2D cmesh and stack hexes along radial direction. */
+      for (int istack = 0; istack < num_layers; istack++) {
+        const double iscale = 1.0 + istack * shell_thickness / inner_radius / num_layers / SQRT3;
+        const double oscale = 1.0 + (istack + 1) * shell_thickness / inner_radius / num_layers / SQRT3;
+
+        double hex_vertices[8 * 3];
+        for (int ivert = 0; ivert < 4; ivert++) {
+          for (int i = 0; i < 3; i++) {
+            hex_vertices[0 + ivert * 3 + i] = iscale * quad_vertices[ivert * 3 + i];
+            hex_vertices[4 * 3 + ivert * 3 + i] = oscale * quad_vertices[ivert * 3 + i];
+          }
+        }
+
+        t8_cmesh_set_tree_vertices (cmesh, itree, hex_vertices, nverts);
+
+        for (int ivert = 0; ivert < nverts; ivert++) {
+          for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
+            all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree, ivert, icoord)]
+              = hex_vertices[ivert * 3 + icoord];
+          }
+        }
+
+        itree++;
+      }
+    }
+  }
+
+  /* The 2D seed forest is not needed anymore. */
+  t8_forest_unref (&forest);
+  sc_MPI_Comm_free (&local_comm);
+
+  /* Face connectivity. */
+  t8_cmesh_set_join_by_vertices (cmesh, ntrees, all_eclasses, all_verts, NULL, 0);
+
+  /* Cleanup. */
+  T8_FREE (all_verts);
+  T8_FREE (all_eclasses);
+
+  /* Commit the mesh */
+  t8_cmesh_commit (cmesh, comm);
+
   return cmesh;
 }

@@ -285,17 +285,9 @@ t8_geometry_triangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh, 
   }
 }
 
-/**
- * Map the faces of a unit cube to a spherical surface.
- * \param [in]  cmesh      The cmesh in which the point lies.
- * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
- * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
- * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
- */
-void
-t8_geometry_quadrangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
-                                                                const double *ref_coords, const size_t num_coords,
-                                                                double *out_coords) const
+static inline void
+t8_geom_evaluate_sphere (const double *active_tree_vertices, const int ndims, const double *ref_coords,
+                         const size_t num_coords, double *out_coords)
 {
   double n[3]; /* Normal vector. */
   double r[3]; /* Radial vector. */
@@ -329,7 +321,7 @@ t8_geometry_quadrangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh
       corr_ref_coords[1] = tan (0.5 * M_PI * (y - 0.5)) * 0.5 + 0.5;
       corr_ref_coords[2] = z;
 
-      t8_geom_linear_interpolation (corr_ref_coords, active_tree_vertices, 3, 2, p);
+      t8_geom_linear_interpolation (corr_ref_coords, active_tree_vertices, 3, ndims, p);
     }
 
     const double R = (p[0] * n[0] + p[1] * n[1] + p[2] * n[2]) / (r[0] * n[0] + r[1] * n[1] + r[2] * n[2]);
@@ -340,6 +332,36 @@ t8_geometry_quadrangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh
     out_coords[offset + 1] = R * p[1];
     out_coords[offset + 2] = R * p[2];
   }
+}
+
+/**
+ * Map the faces of a unit cube to a spherical surface.
+ * \param [in]  cmesh      The cmesh in which the point lies.
+ * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
+ * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
+ * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+ */
+void
+t8_geometry_quadrangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
+                                                                const double *ref_coords, const size_t num_coords,
+                                                                double *out_coords) const
+{
+  /* This routine works just fine for the quadrangulated spherical surface, too. */
+  t8_geom_evaluate_sphere (active_tree_vertices, 2, ref_coords, num_coords, out_coords);
+}
+
+/**
+ * Maps six hexaeders arranged into cube to a spherical shell.
+ * \param [in]  cmesh      The cmesh in which the point lies.
+ * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
+ * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
+ * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+ */
+void
+t8_geometry_cubed_spherical_shell::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
+                                                     const size_t num_coords, double *out_coords) const
+{
+  t8_geom_evaluate_sphere (active_tree_vertices, 3, ref_coords, num_coords, out_coords);
 }
 
 T8_EXTERN_C_BEGIN ();
@@ -372,6 +394,13 @@ t8_geometry_c *
 t8_geometry_quadrangulated_spherical_surface_new ()
 {
   t8_geometry_quadrangulated_spherical_surface *geom = new t8_geometry_quadrangulated_spherical_surface ();
+  return (t8_geometry_c *) geom;
+}
+
+t8_geometry_c *
+t8_geometry_cubed_spherical_shell_new ()
+{
+  t8_geometry_cubed_spherical_shell *geom = new t8_geometry_cubed_spherical_shell ();
   return (t8_geometry_c *) geom;
 }
 
