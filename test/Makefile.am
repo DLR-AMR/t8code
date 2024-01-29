@@ -41,6 +41,7 @@ t8code_googletest_programs = \
   test/t8_cmesh/t8_gtest_cmesh_set_join_by_vertices \
   test/t8_forest/t8_gtest_element_volume \
   test/t8_cmesh/t8_gtest_multiple_attributes \
+  test/t8_cmesh/t8_gtest_attribute_gloidx_array \
   test/t8_schemes/t8_gtest_successor \
   test/t8_schemes/t8_gtest_boundary_extrude \
   test/t8_forest/t8_gtest_search \
@@ -182,6 +183,10 @@ test_t8_forest_t8_gtest_element_volume_SOURCES = \
 test_t8_cmesh_t8_gtest_multiple_attributes_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_cmesh/t8_gtest_multiple_attributes.cxx
+
+test_t8_cmesh_t8_gtest_attribute_gloidx_array_SOURCES = \
+  test/t8_gtest_main.cxx \
+  test/t8_cmesh/t8_gtest_attribute_gloidx_array.cxx
 
 test_t8_schemes_t8_gtest_successor_SOURCES = \
   test/t8_gtest_main.cxx \
@@ -399,6 +404,10 @@ test_t8_cmesh_t8_gtest_multiple_attributes_LDADD = $(t8_gtest_target_ld_add)
 test_t8_cmesh_t8_gtest_multiple_attributes_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_cmesh_t8_gtest_multiple_attributes_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
+test_t8_cmesh_t8_gtest_attribute_gloidx_array_LDADD = $(t8_gtest_target_ld_add)
+test_t8_cmesh_t8_gtest_attribute_gloidx_array_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_cmesh_t8_gtest_attribute_gloidx_array_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+
 test_t8_schemes_t8_gtest_successor_LDADD = $(t8_gtest_target_ld_add)
 test_t8_schemes_t8_gtest_successor_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_schemes_t8_gtest_successor_CPPFLAGS = $(t8_gtest_target_cpp_flags)
@@ -530,6 +539,7 @@ test_t8_cmesh_t8_gtest_cmesh_partition_CPPFLAGS += $(t8_gtest_target_mpi_cpp_fla
 test_t8_cmesh_t8_gtest_cmesh_set_partition_offsets_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_t8_gtest_element_volume_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_multiple_attributes_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_cmesh_t8_gtest_attribute_gloidx_array_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_successor_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_boundary_extrude_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_t8_gtest_search_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
