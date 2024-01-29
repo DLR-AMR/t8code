@@ -185,12 +185,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
    */
 
   /* Linear mapping from ref_coords to out_coords for each reference point */
-  for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
-    const int offset_2d = i_coord * 2;
-    const int offset_3d = i_coord * 3;
-    t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords + offset_2d,
-                                     out_coords + offset_3d);
-  }
+  t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, num_coords, out_coords);
+
   /* Check if face has a linked geometry */
   if (*faces > 0) {
 #ifdef T8_ENABLE_DEBUG
@@ -221,10 +217,11 @@ t8_geometry_occ::t8_geom_evaluate_occ_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
           const int offset_2d = i_coord * 2;
           const int offset_3d = i_coord * 3;
           t8_geom_get_ref_intersection (i_edge, ref_coords + offset_2d, ref_intersection + offset_2d);
-          /* Converting ref_intersections to global_intersections by interpolation */
-          t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_intersection + offset_2d,
-                                           glob_intersection + offset_3d);
         }
+        /* Converting ref_intersections to global_intersections by interpolation */
+        t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_intersection, num_coords,
+                                         glob_intersection);
+
         /* Get parameters of the current edge if the edge is curved */
         const double *edge_parameters = (double *) t8_cmesh_get_attribute (
           cmesh, t8_get_package_id (), T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_edge, ltreeid);
@@ -303,12 +300,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
           t8_geom_get_ref_intersection (i_edge, ref_coords + offset_2d, ref_intersection + offset_2d);
         }
         /* Converting ref_intersections to global_intersections */
-        for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
-          const int offset_2d = i_coord * 2;
-          const int offset_3d = i_coord * 3;
-          t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_intersection + offset_2d,
-                                           glob_intersection + offset_3d);
-        }
+        t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_intersection, num_coords,
+                                         glob_intersection);
 
         for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
           const int offset_2d = i_coord * 2;
@@ -591,7 +584,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
   T8_ASSERT (active_tree_class == T8_ECLASS_HEX);
 
   /* Compute coordinates via trilinear interpolation */
-  t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, out_coords);
+  t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, num_coords, out_coords);
 
   const t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
   const int num_edges = t8_eclass_num_edges[active_tree_class];

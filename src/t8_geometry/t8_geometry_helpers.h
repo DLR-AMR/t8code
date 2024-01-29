@@ -41,7 +41,7 @@ T8_EXTERN_C_BEGIN ();
  */
 void
 t8_geom_compute_linear_geometry (t8_eclass_t tree_class, const double *tree_vertices, const double *ref_coords,
-                                 double *out_coords);
+                                 const size_t num_coords, double *out_coords);
 
 /** Compute the linear, axis-aligned geometry of a tree at a given reference coordinate.
  *  This function is faster than \ref t8_geom_compute_linear_geometry, but only works
@@ -49,6 +49,7 @@ t8_geom_compute_linear_geometry (t8_eclass_t tree_class, const double *tree_vert
  * \param [in]    tree_class     The eclass of the tree.
  * \param [in]    tree_vertices  Array with the tree vertex coordinates.
  * \param [in]    ref_coords     The reference coordinates of the point.
+ * \param [in]    num_coords     Number of points to evaluate.
  * \param [out]   out_coords     The output coordinates.
  */
 void

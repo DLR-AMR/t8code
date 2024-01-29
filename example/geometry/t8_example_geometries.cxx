@@ -170,19 +170,16 @@ struct t8_geometry_moebius: public t8_geometry_with_vertices
     double t;
     double phi;
 
+    /* Compute the linear coordinates (in [0,1]^2) of the reference vertex and store in out_coords. */
+    /* No idea why, but indent insert a lot of newlines here */
+    t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, num_coords, out_coords);
+
     for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
       const int offset_3d = i_coord * 3;
-      const int offset_2d = i_coord * 2;
-      /* Compute the linear coordinates (in [0,1]^2) of the reference vertex and store in out_coords. */
-      /* No idea why, but indent insert a lot of newlines here */
-      t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords + offset_2d,
-                                       out_coords + offset_3d);
-
       /* At first, we map x from [0,1] to [-.5,.5]
       * and y to [0, 2*PI] */
       t = out_coords[offset_3d] - .5;
       phi = out_coords[offset_3d + 1] * 2 * M_PI;
-
       /* We now apply the parametrization for the moebius strip. */
       out_coords[offset_3d] = (1 - t * sin (phi / 2)) * cos (phi);
       out_coords[offset_3d + 1] = (1 - t * sin (phi / 2)) * sin (phi);
@@ -305,13 +302,11 @@ struct t8_geometry_circle: public t8_geometry_with_vertices
 
     /* Compute the linear coordinates (in [0,1]^2) of the reference vertex and store in out_coords. */
 
+    /* No idea why, but indent insert a lot of newlines here */
+    t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, num_coords, out_coords);
+
     for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
       const int offset_3d = i_coord * 3;
-      const int offset_2d = i_coord * 2;
-      /* No idea why, but indent insert a lot of newlines here */
-      t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords + offset_2d,
-                                       out_coords + offset_3d);
-
       /* We now remap the coords to match the square [-1,1]^2 */
       x = out_coords[offset_3d] * 2 - 1;
       y = out_coords[offset_3d + 1] * 2 - 1;
