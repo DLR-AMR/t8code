@@ -97,7 +97,8 @@ T8_EXTERN_C_BEGIN ();
  * | Att00_descr | Att01_descr | ... Att0 A_0_descr| Att10_descr | ... | AttrT A_T | Att0_data | Att2_data | ... AttN_data|
  *                TODO: maybe insert padding here ||
  * Where Attij_descr is a descriptor of the j-th attribute data of tree i storing
- * - an offset to Attk_data starting from Attij_descr, where k is the index in the data
+ * - an offset to Attk_data starting from Attij_descr, where k is the index in the dataarray.
+ *    The actual data is put there in the order of the attribute descriptors, but this is not necessitated by the layout.
  * - package id of the attribute (int)
  * - key of the attribute (int)
  * The data type is t8_attribute_info_struct_t
