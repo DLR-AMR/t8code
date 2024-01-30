@@ -472,17 +472,6 @@ struct t8_default_scheme_tet_c: public t8_default_scheme_common_c
   virtual int
   t8_element_root_len (const t8_element_t *elem) const;
 
-  /** Compute the integer coordinates of a given element vertex. The default scheme implements the Morton type SFCs. 
-   * In these SFCs the elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and L the maximum 
-   * refinement level. All element vertices have integer coordinates in this cube.
-   *   \param [in] elem    The element to be considered.
-   *   \param [in] vertex  The id of the vertex whose coordinates shall be computed.
-   *   \param [out] coords An array of at least as many integers as the element's dimension
-   *                      whose entries will be filled with the coordinates of \a vertex.
-   */
-  virtual void
-  t8_element_vertex_integer_coords (const t8_element_t *elem, const int vertex, int coords[]) const;
-
   /** The tetrahedron schemes uses the general function to return the type of a tetrahedron.
    *  \param [in] elem An valid element
    *  \param [in] indata Is ignored. Can be NULL.

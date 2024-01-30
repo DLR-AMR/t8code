@@ -549,21 +549,19 @@ t8_default_scheme_hex_c::t8_element_root_len (const t8_element_t *elem) const
   return P8EST_ROOT_LEN;
 }
 
-void
-t8_default_scheme_hex_c::t8_element_vertex_integer_coords (const t8_element_t *elem, int vertex, int coords[]) const
+static void
+t8_dhex_vertex_integer_coords (const p8est_quadrant_t *elem, int vertex, int coords[])
 {
-  const p8est_quadrant_t *q1 = (const p8est_quadrant_t *) elem;
   int len;
 
-  T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= vertex && vertex < 8);
   /* Get the length of the quadrant */
-  len = P8EST_QUADRANT_LEN (q1->level);
+  len = P8EST_QUADRANT_LEN (elem->level);
   /* Compute the x, y and z coordinates of the vertex depending on the
    * vertex number */
-  coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len;
-  coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
-  coords[2] = q1->z + (vertex & 4 ? 1 : 0) * len;
+  coords[0] = elem->x + (vertex & 1 ? 1 : 0) * len;
+  coords[1] = elem->y + (vertex & 2 ? 1 : 0) * len;
+  coords[2] = elem->z + (vertex & 4 ? 1 : 0) * len;
 }
 
 void
@@ -574,7 +572,7 @@ t8_default_scheme_hex_c::t8_element_vertex_reference_coords (const t8_element_t 
   T8_ASSERT (0 <= vertex && vertex < 8);
 
   int coords_int[3];
-  t8_element_vertex_integer_coords (elem, vertex, coords_int);
+  t8_dhex_vertex_integer_coords ((const p8est_quadrant_t *) elem, vertex, coords_int);
 
   /* We divide the integer coordinates by the root length of the hex
    * to obtain the reference coordinates. */

@@ -249,13 +249,6 @@ t8_default_scheme_vertex_c::t8_element_root_len (const t8_element_t *elem) const
   return T8_DVERTEX_ROOT_LEN;
 }
 
-void
-t8_default_scheme_vertex_c::t8_element_vertex_integer_coords (const t8_element_t *elem, int vertex, int coords[]) const
-{
-  T8_ASSERT (t8_element_is_valid (elem));
-  t8_dvertex_vertex_integer_coords ((const t8_dvertex_t *) elem, vertex, coords);
-}
-
 /** Compute the coordinates of a given element vertex inside a reference tree
    *  that is embedded into [0,1]^d (d = dimension).
    *   \param [in] elem    The element.
