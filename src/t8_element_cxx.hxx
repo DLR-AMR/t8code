@@ -592,16 +592,6 @@ struct t8_eclass_scheme
   t8_element_successor (const t8_element_t *t, t8_element_t *s, int level) const
     = 0;
 
-  /* TODO: This function should be removed, since root length is not a general concept that exists for all possible elements. */
-  /** Compute the root length of a given element, that is the length of
-   * its level 0 ancestor.
-   * \param [in] elem     The element whose root length should be computed.
-   * \return              The root length of \a elem
-   */
-  virtual int
-  t8_element_root_len (const t8_element_t *elem) const
-    = 0;
-
   /** Compute the coordinates of a given element vertex inside a reference tree
    *  that is embedded into [0,1]^d (d = dimension).
    *   \param [in] t      The element to be considered.

@@ -66,9 +66,9 @@ T8_EXTERN_C_BEGIN ();
  *
  * Tree faces:
  *
- * The data of Tree faces looks for each tree:
+ * For each tree the data of the tree faces (where F is the number of faces of the tree) looks like this:
  *
- * | Treeid1 Treeid2  ... | ttf1 ttf2 ... | padding |
+ * | Treeid1 Treeid2  ... TreeidF | ttf1 ttf2 ... ttfN | padding |
  *
  * Where padding is a number of unused bytes that makes the whole block a multiple
  * of 4 Bytes.
@@ -80,7 +80,7 @@ T8_EXTERN_C_BEGIN ();
  *
  * Ghost faces:
  *
- * | Treeid1 Treeid2 ... | ttf1 ttf2 ... | padding |
+ * | Treeid1 Treeid2 ... TreeidF | ttf1 ttf2 ... ttfF | padding |
  *
  * Where padding is a number of unused bytes that makes the whole block a multiple
  * of sizeof (void*) Bytes.
@@ -90,14 +90,15 @@ T8_EXTERN_C_BEGIN ();
  * class of the tree.
  * Tree attributes:
  *
- * The data of Tree attributes looks like:
+ * The data of Tree attributes looks like, where N is the total number of attributes:
+ * The Attributes do not necessarily need to be sorted in a particular way, as they are
+ * accessed by offsets in the Att_descr.
  *
- * TODO: This description seems incomplete. Why is it not Attij_data?
- *
- * | Att00_descr | Att01_descr | ... | Att10_descr | ... | Attrend_descr | Att1_data | Att2_data | ... |
+ * | Att00_descr | Att01_descr | ... Att0 A_0_descr| Att10_descr | ... | AttrT A_T | Att0_data | Att2_data | ... AttN_data|
  *                TODO: maybe insert padding here ||
  * Where Attij_descr is a descriptor of the j-th attribute data of tree i storing
- * - an offset to Atti_data starting from Atti0_descr
+ * - an offset to Attk_data starting from Attij_descr, where k is the index in the dataarray.
+ *    The actual data is put there in the order of the attribute descriptors, but this is not necessitated by the layout.
  * - package id of the attribute (int)
  * - key of the attribute (int)
  * The data type is t8_attribute_info_struct_t
@@ -179,7 +180,7 @@ t8_cmesh_trees_init (t8_cmesh_trees_t *ptrees, int num_procs, t8_locidx_t num_tr
  * \return                    The part number \a proc of \a trees.
  */
 t8_part_tree_t
-t8_cmesh_trees_get_part (t8_cmesh_trees_t trees, int proc);
+t8_cmesh_trees_get_part (const t8_cmesh_trees_t trees, const int proc);
 
 /* !!! This does only allocate memory for the trees and ghosts
  *     not yet for the face data and the attributes. See below !!!
@@ -407,8 +408,8 @@ t8_cmesh_trees_init_attributes (t8_cmesh_trees_t trees, t8_locidx_t ltree_id, si
  *                    does not exist.
  */
 void *
-t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_locidx_t ltree_id, int package_id, int key, size_t *size,
-                              int is_ghost);
+t8_cmesh_trees_get_attribute (const t8_cmesh_trees_t trees, const t8_locidx_t ltree_id, const int package_id,
+                              const int key, size_t *size, int is_ghost);
 
 /** Return the total size of all attributes stored at a specified tree.
  * \param [in]        tree  A tree structure.
@@ -441,7 +442,7 @@ t8_cmesh_trees_add_ghost_attribute (t8_cmesh_trees_t trees, int proc, t8_stash_a
  * \return            The number of parts in \a trees.
  */
 size_t
-t8_cmesh_trees_get_numproc (t8_cmesh_trees_t trees);
+t8_cmesh_trees_get_numproc (const t8_cmesh_trees_t trees);
 
 /** Compute the tree-to-face information given a face and orientation value
  *  of a face connection.

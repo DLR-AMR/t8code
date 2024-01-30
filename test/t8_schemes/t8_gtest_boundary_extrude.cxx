@@ -24,29 +24,35 @@
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
-#include <test/t8_gtest_macros.hxx>
 #include "t8_gtest_dfs_base.hxx"
+#include <test/t8_gtest_macros.hxx>
 
-class class_test_equal: public TestDFS {
+class class_test_boundary_extrude: public TestDFS {
+  /* For elements that are on the face of the root element, check that creating the boundary element
+   * and extruding it results in the original element
+    */
   virtual void
   check_element ()
   {
-    const int num_children = ts->t8_element_num_children (element);
-    for (int ichild1 = 0; ichild1 < num_children; ichild1++) {
-      ts->t8_element_child (element, ichild1, child1);
-      /* the child must be different than its parent */
-      EXPECT_FALSE (ts->t8_element_equal (element, child1));
-      for (int ichild2 = 0; ichild2 < num_children; ichild2++) {
-        ts->t8_element_child (element, ichild2, child2);
-        /* the child must be different than its parent */
-        EXPECT_FALSE (ts->t8_element_equal (element, child2));
-        const int equal = ts->t8_element_equal (child1, child2);
-        /* The children must be equal if and only if their indices are equal. */
-        EXPECT_EQ (equal, ichild1 == ichild2);
-        /* t8_element_equal should compute the same as t8_element_compare, 
-         * when we only check if compare has 0 as result. */
-        const int compare_equal = !ts->t8_element_compare (child1, child2);
-        EXPECT_EQ (equal, compare_equal);
+    const int num_faces = ts->t8_element_num_faces (element);
+    for (int iface = 0; iface < num_faces; iface++) {
+      /* Iterate over all faces that are also root faces and determine the face element */
+      if (ts->t8_element_is_root_boundary (element, iface)) {
+        /* Get face scheme */
+        const int tree_face = ts->t8_element_tree_face (element, iface);
+        const t8_eclass_t face_eclass = (t8_eclass_t) t8_eclass_face_types[eclass][tree_face];
+        const t8_eclass_scheme_c *face_ts = scheme->eclass_schemes[face_eclass];
+
+        t8_element_t *boundary;
+        face_ts->t8_element_new (1, &boundary);
+
+        ts->t8_element_boundary_face (element, iface, boundary, face_ts);
+
+        ts->t8_element_extrude_face (boundary, face_ts, check, tree_face);
+
+        EXPECT_ELEM_EQ (ts, element, check);
+
+        face_ts->t8_element_destroy (1, &boundary);
       }
     }
   }
@@ -57,24 +63,21 @@ class class_test_equal: public TestDFS {
   {
     dfs_test_setup ();
     /* Get element and initialize it */
-    ts->t8_element_new (1, &child1);
-    ts->t8_element_new (1, &child2);
+    ts->t8_element_new (1, &check);
   }
   void
   TearDown () override
   {
     /* Destroy element */
-    ts->t8_element_destroy (1, &child1);
-    ts->t8_element_destroy (1, &child2);
+    ts->t8_element_destroy (1, &check);
 
     /* Destroy DFS test */
     dfs_test_teardown ();
   }
-  t8_element_t *child1;
-  t8_element_t *child2;
+  t8_element_t *check;
 };
 
-TEST_P (class_test_equal, test_equal_dfs)
+TEST_P (class_test_boundary_extrude, test_boundary_extrude_dfs)
 {
 #ifdef T8_ENABLE_LESS_TESTS
   const int maxlvl = 4;
@@ -84,4 +87,4 @@ TEST_P (class_test_equal, test_equal_dfs)
   check_recursive_dfs_to_max_lvl (maxlvl);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_equal, AllEclasses);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_boundary_extrude, AllEclasses);

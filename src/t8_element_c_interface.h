@@ -549,15 +549,6 @@ t8_element_last_descendant (const t8_eclass_scheme_c *ts, const t8_element_t *el
 void
 t8_element_successor (const t8_eclass_scheme_c *ts, const t8_element_t *elem1, t8_element_t *elem2, int level);
 
-/** Compute the root length of a given element, that is the length of
- * its level 0 ancestor.
- * \param [in] ts       Implementation of a class scheme.
- * \param [in] elem     The element whose root length should be computed.
- * \return              The root length of \a elem
- */
-int
-t8_element_root_len (const t8_eclass_scheme_c *ts, const t8_element_t *elem);
-
 /** Compute the coordinates of a given element vertex inside a reference tree
  *  that is embedded into [0,1]^d (d = dimension).
  * \param [in] ts       Implementation of a class scheme.

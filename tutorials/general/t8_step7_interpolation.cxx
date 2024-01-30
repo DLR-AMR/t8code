@@ -26,7 +26,6 @@
  * Implementation of the t8_forest_replace callback, t8_forest_adapt callback
  */
 
-
 #include <iostream>
 #include <t8.h>
 #include <t8_eclass.h>

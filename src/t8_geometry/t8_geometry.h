@@ -31,6 +31,24 @@
 #include <t8.h>
 #include <t8_refcount.h>
 
+/** This enumeration contains all possible geometries. */
+typedef enum t8_geometry_type {
+  /** The zero geometry maps all points to zero. */
+  T8_GEOMETRY_TYPE_ZERO = 0,
+  /** The linear geometry uses linear interpolations to interpolate between the tree vertices. */
+  T8_GEOMETRY_TYPE_LINEAR,
+  /** The linear, axis aligned geometry uses only 2 vertices, since it is axis aligned. */
+  T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED,
+  /** The analytic geometry uses a user-defined analytic function to map into the physical domain. */
+  T8_GEOMETRY_TYPE_ANALYTIC,
+  /** The OCC geometry uses OCC CAD shapes to map trees exactly to the underlying CAD model. */
+  T8_GEOMETRY_TYPE_OCC,
+  /** This is no geometry type but can be used as the number of geometry types. */
+  T8_GEOMETRY_TYPE_COUNT,
+  /** This is no geometry type but is used for every geometry, where no type is defined */
+  T8_GEOMETRY_TYPE_UNDEFINED
+} t8_geometry_type_t;
+
 /** This typedef holds virtual functions for a particular geometry.
  * We need it so that we can use t8_geometry_c pointers in .c files
  * without them seeing the actual C++ code (and then not compiling)
@@ -129,6 +147,16 @@ const t8_geometry_c *
 t8_geom_handler_get_unique_geometry (const t8_geometry_handler_t *geom_handler);
 
 /**
+ * Deactivate the current active tree. Can be used to reload data, after it has been moved, for example by the
+ * partition-algorithm
+ * 
+ * \param[in,out] geom_handler The geometry handler, where the tree has to be deactivated.
+ * \note \a geom_handler must be committed before calling this function.
+ */
+void
+t8_geom_handler_deactivate_tree (t8_geometry_handler_t *geom_handler);
+
+/**
  * Given a geometry's name find that geometry in the geometry handler
  * and return it.
  * \param [in] geom_handler A committed geometry handler.
@@ -145,6 +173,9 @@ t8_geometry_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_c
 void
 t8_geometry_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
                       double *jacobian);
+
+t8_geometry_type_t
+t8_geometry_get_type (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 
 T8_EXTERN_C_END ();
 
