@@ -17,7 +17,7 @@ t8code_googletest_programs = \
   test/t8_schemes/t8_gtest_nca \
   test/t8_schemes/t8_gtest_pyra_connectivity \
   test/t8_schemes/t8_gtest_face_neigh \
-  test/t8_geometry/t8_gtest_geometry_occ \
+  test/t8_geometry/t8_geometry_implementations/t8_gtest_geometry_occ \
   test/t8_gtest_eclass \
   test/t8_gtest_vec \
   test/t8_gtest_mat \
@@ -89,7 +89,7 @@ test_t8_schemes_t8_gtest_face_neigh_SOURCES = \
 
 test_t8_geometry_t8_gtest_geometry_occ_SOURCES = \
   test/t8_gtest_main.cxx \
-  test/t8_geometry/t8_gtest_geometry_occ.cxx
+  test/t8_geometry/t8_geometry_implementations/t8_gtest_geometry_occ.cxx
 
 test_t8_gtest_eclass_SOURCES = \
   test/t8_gtest_main.cxx \
