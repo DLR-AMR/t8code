@@ -116,9 +116,6 @@ typedef uint64_t t8_linearidx_t;
 /** Define precisions for computations */
 #define T8_PRECISION_EPS SC_EPS
 
-/** Cube squared. */
-#define T8_SQRT3 1.7320508075688772
-
 /** Access multidimensional data on one-dimensional C arrays. */
 #define T8_1D_TO_1D(nx, i) (i)
 #define T8_2D_TO_1D(nx, ny, i, j) ((i) * (ny) + (j))
@@ -267,7 +264,7 @@ t8_init (int log_threshold);
  * \return           A void * pointing to entry \a it in \a array.
  */
 void *
-t8_sc_array_index_locidx (sc_array_t *array, t8_locidx_t it);
+t8_sc_array_index_locidx (const sc_array_t *array, const t8_locidx_t it);
 
 /* call this at the end of a header file to match T8_EXTERN_C_BEGIN (). */
 T8_EXTERN_C_END ();

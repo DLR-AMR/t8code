@@ -54,6 +54,14 @@ t8_dvertex_copy (const t8_dvertex_t *v, t8_dvertex_t *dest);
 int
 t8_dvertex_compare (const t8_dvertex_t *l1, const t8_dvertex_t *l2);
 
+/** Check if two elements are equal.
+* \param [in] elem1  The first element.
+* \param [in] elem2  The second element.
+* \return            1 if the elements are equal, 0 if they are not equal
+*/
+int
+t8_dvertex_equal (const t8_dvertex_t *elem1, const t8_dvertex_t *elem2);
+
 /** Compute the parent of a vertex.
  * \param [in]  l   The input vertex.
  * \param [in,out] parent Existing vertex whose data will be filled with the parent

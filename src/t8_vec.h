@@ -29,8 +29,6 @@
 
 #include <t8.h>
 
-T8_EXTERN_C_BEGIN ();
-
 /** Vector norm.
  * \param [in] vec  A 3D vector.
  * \return          The norm of \a vec.
@@ -46,17 +44,17 @@ t8_vec_norm (const double vec[3])
   return sqrt (norm);
 }
 
-/** Normalize the given vector.
+/** Normalize a vector.
  * \param [in,out] vec  A 3D vector.
  */
 static inline void
 t8_vec_normalize (double vec[3])
 {
-  const double norm = t8_vec_norm (vec);
+  const double inv_norm = 1.0 / t8_vec_norm (vec);
 
-  vec[0] = vec[0] / norm;
-  vec[1] = vec[1] / norm;
-  vec[2] = vec[2] / norm;
+  for (int i = 0; i < 3; i++) {
+    vec[i] *= inv_norm;
+  }
 }
 
 /** Euclidean distance of X and Y.
@@ -186,6 +184,20 @@ t8_vec_diff (const double vec_x[3], const double vec_y[3], double diff[3])
   }
 }
 
+/**
+ * Check the equality of two vectors elementwise 
+ * 
+ * \param[in] vec_x 
+ * \param[in] vec_y 
+ * \param[in] eps 
+ * \return true, if the vectors are equal up to \a eps 
+ */
+static inline int
+t8_vec_eq (const double vec_x[3], const double vec_y[3], const double eps)
+{
+  return fabs (vec_x[0] - vec_y[0]) < eps && fabs (vec_x[1] - vec_y[1]) < eps && fabs (vec_x[2] - vec_y[2]) < eps;
+}
+
 /** Compute the normal of a triangle given by its three vertices.
  * \param [in]  p1  A 3D vector.
  * \param [in]  p2  A 3D vector.
@@ -208,7 +220,5 @@ t8_vec_tri_normal (const double p1[3], const double p2[3], const double p3[3], d
 
   t8_vec_cross (a, b, normal);
 }
-
-T8_EXTERN_C_END ();
 
 #endif /* !T8_VEC_H! */

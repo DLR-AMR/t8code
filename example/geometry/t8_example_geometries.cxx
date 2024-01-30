@@ -76,7 +76,8 @@ typedef enum {
  * 
  * This geometry does not provide a jacobian.
  */
-class t8_geometry_sincos: public t8_geometry {
+struct t8_geometry_sincos: public t8_geometry
+{
  public:
   /* Basic constructor that sets the dimension and the name. */
   t8_geometry_sincos (): t8_geometry (2, "t8_sincos_geometry")
@@ -125,6 +126,16 @@ class t8_geometry_sincos: public t8_geometry {
   {
     /* Do nothing */
   }
+
+  /**
+   * Get the type of this geometry.
+   * \return The type.
+   */
+  t8_geometry_type_t
+  t8_geom_get_type () const
+  {
+    return T8_GEOMETRY_TYPE_UNDEFINED;
+  }
 };
 
 /** This geometry maps the unit square \f$ [0,1]^2 \f$ to the moebius strip.
@@ -133,7 +144,8 @@ class t8_geometry_sincos: public t8_geometry {
  * It inherits from the w_vertices geometry since we use the tree's vertex coordinates.
  * This geometry does not provide a jacobian.
  */
-class t8_geometry_moebius: public t8_geometry_with_vertices {
+struct t8_geometry_moebius: public t8_geometry_with_vertices
+{
  public:
   /* Basic constructor that sets the dimension and the name. */
   t8_geometry_moebius (): t8_geometry_with_vertices (2, "t8_moebius_geometry")
@@ -180,6 +192,16 @@ class t8_geometry_moebius: public t8_geometry_with_vertices {
     SC_ABORT_NOT_REACHED ();
   }
 
+  /**
+   * Get the type of this geometry.
+   * \return The type.
+   */
+  t8_geometry_type_t
+  t8_geom_get_type () const
+  {
+    return T8_GEOMETRY_TYPE_UNDEFINED;
+  }
+
   /* Load tree data is inherited from vertices geometry. */
 };
 
@@ -188,7 +210,8 @@ class t8_geometry_moebius: public t8_geometry_with_vertices {
  * 
  * This geometry does not provide a jacobian.
  */
-class t8_geometry_cylinder: public t8_geometry {
+struct t8_geometry_cylinder: public t8_geometry
+{
  public:
   /* Basic constructor that sets the dimension and the name. */
   t8_geometry_cylinder (): t8_geometry (2, "t8_cylinder_geometry")
@@ -229,6 +252,16 @@ class t8_geometry_cylinder: public t8_geometry {
   {
     /* Do nothing */
   }
+
+  /**
+   * Get the type of this geometry.
+   * \return The type.
+   */
+  t8_geometry_type_t
+  t8_geom_get_type () const
+  {
+    return T8_GEOMETRY_TYPE_UNDEFINED;
+  }
 };
 
 /**
@@ -239,7 +272,8 @@ class t8_geometry_cylinder: public t8_geometry {
  * 
  * This geometry does not provide a jacobian.
  */
-class t8_geometry_circle: public t8_geometry_with_vertices {
+struct t8_geometry_circle: public t8_geometry_with_vertices
+{
  public:
   /* Basic constructor that sets the dimension and the name. */
   t8_geometry_circle (): t8_geometry_with_vertices (2, "t8_circle_geometry")
@@ -286,6 +320,16 @@ class t8_geometry_circle: public t8_geometry_with_vertices {
     SC_ABORT_NOT_REACHED ();
   }
 
+  /**
+   * Get the type of this geometry.
+   * \return The type.
+   */
+  t8_geometry_type_t
+  t8_geom_get_type () const
+  {
+    return T8_GEOMETRY_TYPE_UNDEFINED;
+  }
+
   /* Load tree data is inherited from vertices geometry. */
 };
 
@@ -299,7 +343,8 @@ class t8_geometry_circle: public t8_geometry_with_vertices {
  * The geometry can only be used with single tree cmeshes (unit square).
  */
 
-class t8_geometry_moving: public t8_geometry {
+struct t8_geometry_moving: public t8_geometry
+{
  public:
   /* Basic constructor that sets the dimension the name and the time pointer. */
   t8_geometry_moving (const double *time): t8_geometry (2, "t8_moving_geometry"), ptime (time)
@@ -357,6 +402,16 @@ class t8_geometry_moving: public t8_geometry {
     /* Do nothing */
   }
 
+  /**
+   * Get the type of this geometry.
+   * \return The type.
+   */
+  t8_geometry_type_t
+  t8_geom_get_type () const
+  {
+    return T8_GEOMETRY_TYPE_UNDEFINED;
+  }
+
  protected:
   const double *ptime; /* Time pointer to outside time variable */
 };
@@ -365,7 +420,8 @@ class t8_geometry_moving: public t8_geometry {
  * in z direction.
  * Can be used with 1 tree unit cube cmesh only.
  */
-class t8_geometry_cube_zdistorted: public t8_geometry {
+struct t8_geometry_cube_zdistorted: public t8_geometry
+{
  public:
   /* Basic constructor that sets the dimension and the name. */
   t8_geometry_cube_zdistorted (): t8_geometry (3, "t8_cube_zdistorted_geometry")
@@ -404,6 +460,16 @@ class t8_geometry_cube_zdistorted: public t8_geometry {
   t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
   {
     /* Do nothing */
+  }
+
+  /**
+   * Get the type of this geometry.
+   * \return The type.
+   */
+  t8_geometry_type_t
+  t8_geom_get_type () const
+  {
+    return T8_GEOMETRY_TYPE_UNDEFINED;
   }
 };
 

@@ -48,7 +48,8 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_
   t8_gloidx_t neighbor_tree;
   t8_eclass_t neigh_class;
   t8_eclass_scheme_c *neigh_scheme;
-  t8_element_t *element = elements[0], **half_neighbors;
+  const t8_element_t *element = elements[0];
+  t8_element_t **half_neighbors;
 
   /* We only need to check an element, if its level is smaller then the maximum
    * level in the forest minus 2.
@@ -103,7 +104,6 @@ t8_forest_compute_max_element_level (t8_forest_t forest)
 {
   t8_locidx_t ielement, elem_in_tree;
   t8_locidx_t itree, num_trees;
-  t8_element_t *elem;
   t8_eclass_scheme_c *scheme;
   int local_max_level = 0, elem_level;
 
@@ -114,7 +114,7 @@ t8_forest_compute_max_element_level (t8_forest_t forest)
     scheme = t8_forest_get_eclass_scheme (forest, t8_forest_get_tree_class (forest, itree));
     for (ielement = 0; ielement < elem_in_tree; ielement++) {
       /* Get the element and compute its level */
-      elem = t8_forest_get_element_in_tree (forest, itree, ielement);
+      const t8_element_t *elem = t8_forest_get_element_in_tree (forest, itree, ielement);
       elem_level = scheme->t8_element_level (elem);
       local_max_level = SC_MAX (local_max_level, elem_level);
     }
@@ -316,7 +316,6 @@ t8_forest_is_balanced (t8_forest_t forest)
   t8_forest_t forest_from;
   t8_locidx_t num_trees, num_elements;
   t8_locidx_t itree, ielem;
-  t8_element_t *element;
   t8_eclass_scheme_c *ts;
   void *data_temp;
   int dummy_int;
@@ -339,10 +338,10 @@ t8_forest_is_balanced (t8_forest_t forest)
     ts = t8_forest_get_eclass_scheme (forest, t8_forest_get_tree_class (forest, itree));
     /* Iterate over all elements of this tree */
     for (ielem = 0; ielem < num_elements; ielem++) {
-      element = t8_forest_get_element_in_tree (forest, itree, ielem);
+      const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielem);
       /* Test if this element would need to be refined in the balance step.
        * If so, the forest is not balanced locally. */
-      if (t8_forest_balance_adapt (forest, forest, itree, ielem, ts, 0, 1, &element)) {
+      if (t8_forest_balance_adapt (forest, forest, itree, ielem, ts, 0, 1, (t8_element_t **) (&element))) {
         forest->set_from = forest_from;
         forest->t8code_data = data_temp;
         return 0;
