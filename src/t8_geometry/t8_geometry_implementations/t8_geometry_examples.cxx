@@ -36,7 +36,7 @@ t8_geometry_squared_disk::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreei
   double s[3]; /* Radial vector for the corrected coordinates. */
   double p[3]; /* Vector on the plane resp. quad. */
 
-  /* Center square. */
+  /* Center quads. */
   if (gtreeid % 3 == 0) {
     for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
       size_t offset = 3 * i_coord;
@@ -51,14 +51,16 @@ t8_geometry_squared_disk::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreei
     return;
   }
 
-  const double center_ref[3] = { 0.5, 0.5, 0.0 };
-  t8_geom_linear_interpolation (center_ref, active_tree_vertices, 3, 2, n);
+  /* Normal vector along one of the straight edges of the quad. */
+  n[0] = active_tree_vertices[0 + 0];
+  n[1] = active_tree_vertices[0 + 1];
+  n[2] = active_tree_vertices[0 + 2];
   t8_vec_normalize(n);
 
   /* Radial vector parallel to one of the tilted edges of the quad. */
-  r[0] = active_tree_vertices[0];
-  r[1] = active_tree_vertices[1];
-  r[2] = 0.0;
+  r[0] = active_tree_vertices[9 + 0];
+  r[1] = active_tree_vertices[9 + 1];
+  r[2] = active_tree_vertices[9 + 2];
   t8_vec_normalize(r);
 
   for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
@@ -77,10 +79,7 @@ t8_geometry_squared_disk::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreei
 
       /* Compute and normalize vector `s`. */
       t8_geom_linear_interpolation (corr_ref_coords, active_tree_vertices, 3, 2, s);
-
-      const double norm = sqrt (s[0] * s[0] + s[1] * s[1]);
-      s[0] = s[0] / norm;
-      s[1] = s[1] / norm;
+      t8_vec_normalize(s);
     }
 
     t8_geom_linear_interpolation (ref_coords + offset, active_tree_vertices, 3, 2, p);

@@ -2739,6 +2739,10 @@ t8_cmesh_new_squared_disk (const double radius, sc_MPI_Comm comm)
   const int ntrees = 4*3; /* Number of cmesh elements resp. trees. */
   const int nverts = 4; /* Number of vertices per cmesh element. */
 
+  /* Fine tuning parameter to expand the center squares a bit for more equal
+   * element sizes. */
+  const double s = 1.2;
+
   /* Arrays for the face connectivity computations via vertices. */
   double all_verts[ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM];
   t8_eclass_t all_eclasses[ntrees];
@@ -2752,9 +2756,10 @@ t8_cmesh_new_squared_disk (const double radius, sc_MPI_Comm comm)
     all_eclasses[itree] = T8_ECLASS_QUAD;
   }
 
-  const double vertices_mid[4][3] = { { 0.0, 0.0, 0.0 }, { xi, 0.0, 0.0 }, { 0.0, yi, 0.0 }, { xi, yi, 0.0 } };
-  const double vertices_top[4][3] = { { 0.0, yi, 0.0 }, { xi, yi, 0.0 }, { 0.0, yo, 0.0 }, { xo, yo, 0.0 } };
-  const double vertices_bot[4][3] = { { xi, 0.0, 0.0 }, { xi, yi, 0.0 }, { xo, 0.0, 0.0 }, { xo, yo, 0.0 } };
+  /* Vertices of upper right quarter of the disk. */
+  const double vertices_mid[4][3] = { { 0.0, 0.0, 0.0 }, { s*xi, 0.0, 0.0 }, { 0.0, s*yi, 0.0 }, { xi, yi, 0.0 } };
+  const double vertices_top[4][3] = { { 0.0, s*yi, 0.0 }, { xi, yi, 0.0 }, { 0.0, yo, 0.0 }, { xo, yo, 0.0 } };
+  const double vertices_bot[4][3] = { { s*xi, 0.0, 0.0 }, { xi, yi, 0.0 }, { xo, 0.0, 0.0 }, { xo, yo, 0.0 } };
 
   int itree = 0;
   for (int iturn = 0; iturn < 4; iturn++) {
