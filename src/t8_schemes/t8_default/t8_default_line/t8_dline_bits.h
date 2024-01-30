@@ -55,6 +55,14 @@ t8_dline_copy (const t8_dline_t *l, t8_dline_t *dest);
 int
 t8_dline_compare (const t8_dline_t *l1, const t8_dline_t *l2);
 
+/** Check if two elements are equal.
+* \param [in] elem1  The first element.
+* \param [in] elem2  The second element.
+* \return            1 if the elements are equal, 0 if they are not equal
+*/
+int
+t8_dline_equal (const t8_dline_t *elem1, const t8_dline_t *elem2);
+
 /** Compute the parent of a line.
  * \param [in]  l   The input line.
  * \param [in,out] parent Existing line whose data will be filled with the parent
@@ -280,12 +288,6 @@ t8_dline_linear_id (const t8_dline_t *elem, int level);
  */
 int
 t8_dline_is_valid (const t8_dline_t *l);
-
-/** Print a line
- * \param [in] l  line to be initialized 
- */
-void
-t8_dline_debug_print (const t8_dline_t *l);
 
 /** Set default values for a line, such that it passes \ref t8_dline_is_valid.
  * \param [in] l  line to be initialized

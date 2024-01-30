@@ -106,6 +106,16 @@ t8_dtri_copy (const t8_dtri_t *t, t8_dtri_t *dest)
 }
 
 int
+t8_dtri_equal (const t8_dtri_t *elem1, const t8_dtri_t *elem2)
+{
+  return (elem1->level == elem2->level && elem1->type == elem2->type && elem1->x == elem2->x && elem1->y == elem2->y
+#ifdef T8_DTRI_TO_DTET
+          && elem1->z == elem2->z
+#endif
+  );
+}
+
+int
 t8_dtri_compare (const t8_dtri_t *t1, const t8_dtri_t *t2)
 {
   int maxlvl;
@@ -201,7 +211,6 @@ t8_dtri_ancestor (const t8_dtri_t *t, int level, t8_dtri_t *ancestor)
     ancestor->type = t->type;
   }
 
-  ancestor->n = t->n;
 #else
   /* The sign of each diff reduces the number of possible types
  * for the ancestor. At the end only one possible type is left,
@@ -1489,8 +1498,6 @@ t8_dtri_init_linear_id (t8_dtri_t *t, t8_linearidx_t id, int level)
   t->y = 0;
 #ifdef T8_DTRI_TO_DTET
   t->z = 0;
-#else
-  t->n = 0;
 #endif
   type = 0; /* This is the type of the root triangle */
   for (i = 1; i <= level; i++) {
@@ -1519,8 +1526,6 @@ t8_dtri_init_root (t8_dtri_t *t)
   t->y = 0;
 #ifdef T8_DTRI_TO_DTET
   t->z = 0;
-#else
-  t->n = 0;
 #endif
 }
 
@@ -1688,24 +1693,11 @@ t8_dtri_is_valid (const t8_dtri_t *t)
   /* for tets the eclass is set. */
   is_valid = is_valid && t->eclass_int8 == T8_ECLASS_TET;
 #endif
-#else
-  /* n is 0 (we currently do not use n) */
-  is_valid = is_valid && t->n == 0;
 #endif
   /* Its type is in the valid range */
   is_valid = is_valid && 0 <= t->type && t->type < T8_DTRI_NUM_TYPES;
 
   return is_valid;
-}
-
-void
-t8_dtri_debug_print (const t8_dtri_t *t)
-{
-#ifdef T8_DTRI_TO_DTET
-  t8_debugf ("x: %i, y: %i, z: %i, type: %i, level: %i\n", t->x, t->y, t->z, t->type, t->level);
-#else
-  t8_debugf ("x: %i, y: %i, type: %i, level: %i\n", t->x, t->y, t->type, t->level);
-#endif /* T8_DTRI_TO_DTET */
 }
 
 void

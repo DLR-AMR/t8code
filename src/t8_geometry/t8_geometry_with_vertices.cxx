@@ -34,7 +34,13 @@ t8_geometry_with_vertices::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t
   /* Set active id and eclass */
   t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
   active_tree = gtreeid;
-  active_tree_class = t8_cmesh_get_tree_class (cmesh, ltreeid);
+  const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
+  if (0 <= ltreeid && ltreeid < num_local_trees) {
+    active_tree_class = t8_cmesh_get_tree_class (cmesh, ltreeid);
+  }
+  else {
+    active_tree_class = t8_cmesh_get_ghost_class (cmesh, ltreeid - num_local_trees);
+  }
   /* Load this trees vertices. */
   active_tree_vertices = t8_cmesh_get_tree_vertices (cmesh, ltreeid);
 

@@ -65,33 +65,13 @@ t8_forest_init (t8_forest_t *pforest)
 int
 t8_forest_is_initialized (t8_forest_t forest)
 {
-  if (!(forest != NULL && t8_refcount_is_active (&forest->rc) && !forest->committed)) {
-    return 0;
-  }
-
-#ifdef T8_ENABLE_DEBUG
-  /* TODO: check conditions that must always hold after init and before commit */
-  if (0) {
-    return 0;
-  }
-#endif
-
-  return 1;
+  return forest != NULL && t8_refcount_is_active (&forest->rc) && !forest->committed;
 }
 
 int
 t8_forest_is_committed (const t8_forest_t forest)
 {
-  if (!(forest != NULL && t8_refcount_is_active (&forest->rc) && forest->committed)) {
-    return 0;
-  }
-#ifdef T8_ENABLE_DEBUG
-  /* TODO: check more conditions that must always hold after commit */
-  if (0) {
-    return 0;
-  }
-#endif
-  return 1;
+  return forest != NULL && t8_refcount_is_active (&forest->rc) && forest->committed;
 }
 
 static void
@@ -957,7 +937,7 @@ t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id, t8_locidx_t 
   return NULL;
 }
 
-t8_element_t *
+const t8_element_t *
 t8_forest_get_element_in_tree (t8_forest_t forest, t8_locidx_t ltreeid, t8_locidx_t leid_in_tree)
 {
   t8_tree_t tree;
