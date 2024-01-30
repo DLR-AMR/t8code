@@ -25,8 +25,8 @@
 #include <t8_vec.h>
 
 void
-t8_geometry_squared_disk::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                            const size_t num_coords, double *out_coords) const
+t8_geometry_quadrangulated_disk::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
+                                                   const size_t num_coords, double *out_coords) const
 {
   if (num_coords != 1)
     SC_ABORT ("Error: Batch computation of geometry not yet supported.");
@@ -47,7 +47,7 @@ t8_geometry_squared_disk::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreei
       out_coords[offset + 1] = p[1];
       out_coords[offset + 2] = 0.0;
     }
-    
+
     return;
   }
 
@@ -55,13 +55,13 @@ t8_geometry_squared_disk::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreei
   n[0] = active_tree_vertices[0 + 0];
   n[1] = active_tree_vertices[0 + 1];
   n[2] = active_tree_vertices[0 + 2];
-  t8_vec_normalize(n);
+  t8_vec_normalize (n);
 
   /* Radial vector parallel to one of the tilted edges of the quad. */
   r[0] = active_tree_vertices[9 + 0];
   r[1] = active_tree_vertices[9 + 1];
   r[2] = active_tree_vertices[9 + 2];
-  t8_vec_normalize(r);
+  t8_vec_normalize (r);
 
   for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
     size_t offset = 3 * i_coord;
@@ -73,13 +73,13 @@ t8_geometry_squared_disk::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreei
       double corr_ref_coords[3];
 
       /* Correction in order to rectify elements near the corners. */
-      corr_ref_coords[0] = tan (0.25*M_PI * x_ref);
+      corr_ref_coords[0] = tan (0.25 * M_PI * x_ref);
       corr_ref_coords[1] = y_ref;
       corr_ref_coords[2] = 0.0;
 
       /* Compute and normalize vector `s`. */
       t8_geom_linear_interpolation (corr_ref_coords, active_tree_vertices, 3, 2, s);
-      t8_vec_normalize(s);
+      t8_vec_normalize (s);
     }
 
     t8_geom_linear_interpolation (ref_coords + offset, active_tree_vertices, 3, 2, p);
@@ -432,9 +432,9 @@ t8_geometry_destroy (t8_geometry_c **geom)
 
 /* Satisfy the C interface from t8_geometry_linear.h. */
 t8_geometry_c *
-t8_geometry_squared_disk_new ()
+t8_geometry_quadrangulated_disk_new ()
 {
-  t8_geometry_squared_disk *geom = new t8_geometry_squared_disk ();
+  t8_geometry_quadrangulated_disk *geom = new t8_geometry_quadrangulated_disk ();
   return (t8_geometry_c *) geom;
 }
 

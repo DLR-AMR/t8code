@@ -104,13 +104,13 @@ main (int argc, char **argv)
    */
 
   {
-    const char *prefix_cmesh = "t8_squared_disk_cmesh";
-    const char *prefix_forest = "t8_squared_disk_forest";
+    const char *prefix_cmesh = "t8_quadrangulated_disk_cmesh";
+    const char *prefix_forest = "t8_quadrangulated_disk_forest";
 
     const int uniform_level = 5;
     const double radius = 1.0;
 
-    t8_cmesh_t cmesh = t8_cmesh_new_squared_disk (radius, comm);
+    t8_cmesh_t cmesh = t8_cmesh_new_quadrangulated_disk (radius, comm);
 
     t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), uniform_level, 0, comm);
 

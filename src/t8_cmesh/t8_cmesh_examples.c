@@ -2721,7 +2721,7 @@ t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees, const int set_attributes, cons
 }
 
 t8_cmesh_t
-t8_cmesh_new_squared_disk (const double radius, sc_MPI_Comm comm)
+t8_cmesh_new_quadrangulated_disk (const double radius, sc_MPI_Comm comm)
 {
   /* Initialization of the mesh */
   t8_cmesh_t cmesh;
@@ -2736,8 +2736,8 @@ t8_cmesh_new_squared_disk (const double radius, sc_MPI_Comm comm)
   const double xo = ro / M_SQRT2;
   const double yo = ro / M_SQRT2;
 
-  const int ntrees = 4*3; /* Number of cmesh elements resp. trees. */
-  const int nverts = 4; /* Number of vertices per cmesh element. */
+  const int ntrees = 4 * 3; /* Number of cmesh elements resp. trees. */
+  const int nverts = 4;     /* Number of vertices per cmesh element. */
 
   /* Fine tuning parameter to expand the center squares a bit for more equal
    * element sizes. */
@@ -2747,7 +2747,7 @@ t8_cmesh_new_squared_disk (const double radius, sc_MPI_Comm comm)
   double all_verts[ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM];
   t8_eclass_t all_eclasses[ntrees];
 
-  t8_geometry_c *geometry = t8_geometry_squared_disk_new ();
+  t8_geometry_c *geometry = t8_geometry_quadrangulated_disk_new ();
   t8_cmesh_register_geometry (cmesh, geometry);
 
   /* Defitition of the tree class. */
@@ -2757,9 +2757,9 @@ t8_cmesh_new_squared_disk (const double radius, sc_MPI_Comm comm)
   }
 
   /* Vertices of upper right quarter of the disk. */
-  const double vertices_mid[4][3] = { { 0.0, 0.0, 0.0 }, { s*xi, 0.0, 0.0 }, { 0.0, s*yi, 0.0 }, { xi, yi, 0.0 } };
-  const double vertices_top[4][3] = { { 0.0, s*yi, 0.0 }, { xi, yi, 0.0 }, { 0.0, yo, 0.0 }, { xo, yo, 0.0 } };
-  const double vertices_bot[4][3] = { { s*xi, 0.0, 0.0 }, { xi, yi, 0.0 }, { xo, 0.0, 0.0 }, { xo, yo, 0.0 } };
+  const double vertices_mid[4][3] = { { 0.0, 0.0, 0.0 }, { s * xi, 0.0, 0.0 }, { 0.0, s * yi, 0.0 }, { xi, yi, 0.0 } };
+  const double vertices_top[4][3] = { { 0.0, s * yi, 0.0 }, { xi, yi, 0.0 }, { 0.0, yo, 0.0 }, { xo, yo, 0.0 } };
+  const double vertices_bot[4][3] = { { s * xi, 0.0, 0.0 }, { xi, yi, 0.0 }, { xo, 0.0, 0.0 }, { xo, yo, 0.0 } };
 
   int itree = 0;
   for (int iturn = 0; iturn < 4; iturn++) {
@@ -2782,9 +2782,12 @@ t8_cmesh_new_squared_disk (const double radius, sc_MPI_Comm comm)
 
     for (int ivert = 0; ivert < nverts; ivert++) {
       for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
-        all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree+0, ivert, icoord)] = rot_vertices_mid[ivert][icoord];
-        all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree+1, ivert, icoord)] = rot_vertices_top[ivert][icoord];
-        all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree+2, ivert, icoord)] = rot_vertices_bot[ivert][icoord];
+        all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree + 0, ivert, icoord)]
+          = rot_vertices_mid[ivert][icoord];
+        all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree + 1, ivert, icoord)]
+          = rot_vertices_top[ivert][icoord];
+        all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree + 2, ivert, icoord)]
+          = rot_vertices_bot[ivert][icoord];
       }
     }
 
