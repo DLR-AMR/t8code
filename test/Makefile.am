@@ -10,7 +10,8 @@ t8code_googletest_installed_headers = \
 t8code_googletest_internal_headers = \
   thirdparty/googletest-mpi/gtest/gtest.h \
   test/t8_gtest_macros.hxx \
-  test/t8_schemes/t8_gtest_dfs_base.hxx
+  test/t8_schemes/t8_gtest_dfs_base.hxx \
+  test/t8_geometry/t8_gtest_geometry_macros.hxx
 
 t8code_googletest_programs = \
   test/t8_gtest_cmesh_bcast \
