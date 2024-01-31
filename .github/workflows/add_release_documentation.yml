@@ -131,6 +131,7 @@ jobs:
         rm xx01
         cd ../doc
         echo '<meta http-equiv="refresh" content="0; URL=$GITHUB_REF_NAME/index.html" />' > latest.html
+        ./generate_redirections.sh $GITHUB_REF_NAME
     - name: Create Pull Request at DLR-AMR/t8code-website
       if: ${{ env.MINOR_RELEASE == 'true' }}
       uses: peter-evans/create-pull-request@v5
