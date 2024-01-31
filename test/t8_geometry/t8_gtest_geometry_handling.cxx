@@ -35,10 +35,7 @@
 /* In this file we collect tests for t8code's cmesh geometry module.
  * These tests are
  *  - geometry.geometry_linear:  Check that linear geometry has correct name and dimension.
- *  - geometry.geometry_zero:    Check that zero geometry has correct name and dimension. 
- *  - geometry.cmesh_geometry_linear: For each dimension create a cmesh with linear geometry.
- *                                   We then create random points and check whether their geometry
- *                                   is computed correctly.
+ *  - geometry.geometry_zero:    Check that zero geometry has correct name and dimension.
  *  - test_geometry.cmesh_geometry: 
  *  - test_geometry.cmesh_geometry_unique: Check that we can access the geometry via the tree id if
  *                                   we only use one geometry and did not specify tree ids for it.
