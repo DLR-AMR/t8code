@@ -26,6 +26,8 @@
 #include <t8_vtk.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx>
+#include <t8_cmesh/t8_cmesh_examples.h>
+#include <test/t8_gtest_macros.hxx>
 
 #if T8_WITH_OCC
 #include <GeomAPI_PointsToBSpline.hxx>
@@ -360,6 +362,86 @@ TEST (t8_gtest_geometry_occ, jacobian)
   t8_geometry_jacobian (cmesh, 0, ref_coords, 1, jacobian);
   for (int i = 0; i < 9; ++i) {
     EXPECT_FLOAT_EQ (jacobian[i], jacobian_expect[i]);
+  }
+  t8_cmesh_destroy (&cmesh);
+}
+#endif /* T8_WITH_OCC */
+
+#if T8_WITH_OCC
+/* The test basically checks if the mapping does not shift points which lie directly on
+ * a triangle face linked against a linear surface. The mapping functions of geometry_occ
+ * should behave just like geometry_linear in that case.
+ */
+TEST (t8_gtest_geometry_occ, tri_linear_surface)
+{
+  t8_cmesh_t cmesh;
+  /* create plane surface to link against */
+  Handle_Geom_Surface occ_surface;
+  TColgp_Array2OfPnt point_array (1, 2, 1, 2);
+  TopoDS_Shape shape;
+
+  /*  x--> u-parameter
+   *  |
+   *  v v-parameter
+   *
+   *     point_array  1               2
+   *
+   *         1        -----------------
+   *                  |               |
+   *                  |               |
+   *                  | plane surface |
+   *                  |               |
+   *                  |               |
+   *         2        -----------------
+   */
+
+  point_array (1, 1) = gp_Pnt (0.0, 0.0, 0.0);
+  point_array (2, 1) = gp_Pnt (0.0, 1.0, 0.0);
+
+  point_array (1, 2) = gp_Pnt (1.0, 0.0, 0.0);
+  point_array (2, 2) = gp_Pnt (1.0, 1.0, 0.0);
+
+  occ_surface = GeomAPI_PointsToBSplineSurface (point_array).Surface ();
+  shape = BRepBuilderAPI_MakeFace (occ_surface, 1e-6).Face ();
+
+  t8_geometry_occ *geometry_occ = new t8_geometry_occ (2, shape, "occ surface dim=2");
+
+  /* The arrays prescribe the linkage of the element. The face of the triangle is linked and all edges are not */
+  int faces[1] = { 1 };
+  int edges[6] = { 0, 0, 0, 0, 0, 0 };
+
+  /* Vertices of the triangle element */
+  double vertices[9] = { 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0 };
+
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
+  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 3);
+
+  /* Parameters of the element in u0, v0, u1, v1... in order of the element vertices */
+  double parameters[6] = { 0, 1, 1, 1, 1, 0 };
+
+  /* Passing of the attributes to the element */
+  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces, 1 * sizeof (int), 0);
+  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges, 6 * sizeof (int), 0);
+  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY, parameters,
+                          6 * sizeof (double), 0);
+
+  /* Register the geometry */
+  t8_cmesh_register_geometry (cmesh, geometry_occ);
+  /* Commit the cmesh */
+  t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
+
+  double test_ref_coords[18]
+    = { 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.5, 0.0, 1.0, 1.0, 0.0, 0.5, 0.5, 0.0 };
+  double out_coords[3];
+
+  /* out_coords should be equal to the input ref_coords */
+  for (size_t i_coord = 0; i_coord < 6; ++i_coord) {
+    t8_geometry_evaluate (cmesh, 0, test_ref_coords + i_coord * 3, 1, out_coords);
+
+    EXPECT_DOUBLE_EQ (test_ref_coords[0 + i_coord * 3], out_coords[0]);
+    EXPECT_DOUBLE_EQ (test_ref_coords[1 + i_coord * 3], out_coords[1]);
+    EXPECT_DOUBLE_EQ (test_ref_coords[2 + i_coord * 3], out_coords[2]);
   }
   t8_cmesh_destroy (&cmesh);
 }
