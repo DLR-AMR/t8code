@@ -31,6 +31,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #define T8_GTEST_MACROS_HXX
 
 #define AllEclasses testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT)
+#define AllEclasses2D testing::Range (T8_ECLASS_QUAD, T8_ECLASS_HEX)
 #define AllCmeshs testing::Range (0, t8_get_number_of_all_testcases ())
 
 #endif /* T8_GTEST_MACROS_HXX */
