@@ -96,7 +96,7 @@
  * |_*|_*|
  * 
  *  The search continues with the children of the upper left element.
- *  Those are all leafs in the forest and hence the search will stop after
+ *  Those are all leaves in the forest and hence the search will stop after
  *  executing the query callback.
  *  
  *  Afterwards the search will continue simarly in the second tree.
