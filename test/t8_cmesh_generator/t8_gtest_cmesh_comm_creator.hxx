@@ -28,6 +28,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include "test/t8_cmesh_generator/t8_gtest_cmesh_creator_base.hxx"
 
 T8_EXTERN_C_BEGIN ();
+#if 0
 /* A function creating a cmesh getting a communicator */
 typedef t8_cmesh_t (*t8_cmesh_w_comm) (sc_MPI_Comm comm);
 
@@ -101,7 +102,7 @@ class all_cmeshes_with_comm: public cmesh_creator {
     }
   }
 };
-
+#endif
 T8_EXTERN_C_END ();
 
 #endif /* T8_GTEST_CMESH_COMM_CREATOR_HXX */

@@ -24,138 +24,126 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #define T8_GTEST_CMESH_CREATOR_BASE_HXX
 
 #include <t8_cmesh.h>
+#include <tuple>
+#include <functional>
+#include <iterator>
+#include <vector>
+
+class cart_prod_base {
+ public:
+  virtual bool
+  next ()
+    = 0;
+
+  virtual t8_cmesh_t
+  gen_cmesh ()
+    = 0;
+
+  virtual void
+  set_to_first ()
+    = 0;
+
+  virtual void
+  set_to_end ()
+    = 0;
+
+  virtual bool
+  operator< (const cart_prod_base& other)
+    = 0;
+
+  size_t index = 0;
+};
+
+template <typename Args>
+auto
+vector_to_iter_pair (std::vector<Args> vec)
+{
+  return std::make_pair (vec.begin (), vec.end ());
+}
+
+template <typename T, typename B>
+bool
+increment (const B& begins, std::pair<T, T>& r)
+{
+  ++r.first;
+  if (r.first == r.second)
+    return true;
+  return false;
+}
+template <typename T, typename... TT, typename B>
+bool
+increment (const B& begins, std::pair<T, T>& r, std::pair<TT, TT>&... rr)
+{
+  ++r.first;
+  if (r.first == r.second) {
+    r.first = std::get<std::tuple_size<B>::value - sizeof...(rr) - 1> (begins);
+    return increment (begins, rr...);
+  }
+  return false;
+}
+
+template <typename OutputIterator, typename... Iter>
+void
+cartesian_product (OutputIterator out, std::pair<Iter, Iter>... ranges)
+{
+  const auto begins = std::make_tuple (ranges.first...);
+  while (increment (begins, ranges...)) {
+    out = { *ranges.first... };
+  }
+}
 
 /**
  * A base class for cmesh_creators. 
  * 
  */
-class cmesh_creator {
+template <class... Iter>
+class cmesh_args_cart_prod: cart_prod_base {
  public:
-  /**
-   *  Construct a new cmesh generator object
-   *  Is set to the first creator, using sc_MPI_COMM_WORLD
-   */
-  cmesh_creator (): current_creator (0), comm (sc_MPI_COMM_WORLD), cmesh (NULL) {};
-
-  /**
-   * Construct a new cmesh generator object, with a creator and comm specified
-   * 
-   * \param[in] creator The creator to use
-   * \param[in] comm The communicator to use
-   */
-  cmesh_creator (int creator, sc_MPI_Comm comm): current_creator (creator), comm (comm), cmesh (NULL) {};
-
-  /**
-   *  Copy-constructor of a new cmesh generator object
-   * 
-   * \param other[in] The cmesh_creator to copy
-   */
-  cmesh_creator (const cmesh_creator &other)
-    : current_creator (other.current_creator), num_trees (other.num_trees), comm (other.comm)
+  cmesh_args_cart_prod (std::pair<Iter, Iter>... ranges,
+                        std::function<t8_cmesh_t (typename Iter::value_type...)> cmesh_function)
+    : cmesh_example (cmesh_function)
   {
-    if (cmesh != NULL) {
-      t8_cmesh_ref (other.cmesh);
-      cmesh = other.cmesh;
+    cartesian_product (std::back_inserter (cart_prod), ranges...);
+  }
+
+  t8_cmesh_t
+  gen_cmesh ()
+  {
+    return std::apply (cmesh_example, cart_prod[index]);
+  }
+
+  virtual void
+  set_to_first ()
+  {
+    index = 0;
+  }
+
+  virtual void
+  set_to_end ()
+  {
+    index = cart_prod.size ();
+  }
+
+  virtual bool
+  next ()
+  {
+    ++index;
+    if (index >= cart_prod.size ()) {
+      return false;
     }
     else {
-      cmesh = NULL;
-    }
-  };
-
-  /**
-   * Compare two cmesh_creator
-   * 
-   * \param[in] other the cmesh_creator to compare with
-   * \return true if both cmesh_creators are equal
-   * \return false if the cmesh_creators differ
-   */
-  virtual bool
-  operator< (const cmesh_creator &other)
-    = 0;
-
-  /**
-   * Function to increase to cmesh_creator to the next creator function
-   * 
-   * \param step A cmesh_creator describing by how much to increase 
-   */
-  virtual void
-  addition (const std::shared_ptr<cmesh_creator> step)
-    = 0;
-
-  /**
-   * Create the cmesh. Initially no cmesh is created. Calling this function will create the cmesh
-   */
-  virtual void
-  create_cmesh ()
-    = 0;
-
-  /**
-   * Set the creator to the first creator function (the function that creates a cmesh) with
-   * the first set of parameters. 
-   */
-  virtual void
-  set_first ()
-    = 0;
-
-  /**
-   * Set the creator to the last creator function (the function that creates a cmesh) with
-   * the last set of parameters. 
-   */
-  virtual void
-  set_last ()
-    = 0;
-
-  /**
-   * Check if the current set of parameters is the last set of parameters to use. 
-   * 
-   * \return true if the current setup is the last
-   * \return false ow
-   */
-  virtual bool
-  is_at_last ()
-    = 0;
-
-  /**
-   * Get the cmesh object, if it has been created
-   * 
-   * \return the cmesh, if it has been created, NULL if not. 
-   */
-  t8_cmesh_t
-  get_cmesh ()
-  {
-    if (cmesh != NULL) {
-      t8_cmesh_ref (cmesh);
-      return cmesh;
-    }
-    return NULL;
-  }
-
-  /**
-   * Dereference the current cmesh. Will be deleted if the last reference is unset. 
-   * 
-   */
-  void
-  unref_cmesh ()
-  {
-    if (cmesh != NULL) {
-      t8_cmesh_unref (&cmesh);
+      return true;
     }
   }
 
-  /**
-   * Destroy the cmesh generator object
-   * 
-   */
-  virtual ~cmesh_creator () {};
+  virtual bool
+  operator< (const cart_prod_base& other)
+  {
+    return index < other.index;
+  }
 
-  /* Defines the current creator function */
-  int current_creator = 0;
-  /* If needed, the number of trees to create by the creator function*/
-  int num_trees = 1;
-  /* The communicator to use. */
-  sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
-  /* The cmesh. */
-  t8_cmesh_t cmesh = NULL;
+  std::function<t8_cmesh_t (typename Iter::value_type...)> cmesh_example;
+  std::vector<std::tuple<typename Iter::value_type...>> cart_prod;
 };
 
 #endif /* T8_GTEST_CMESH_CREATOR_BASE_HXX */

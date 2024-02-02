@@ -20,85 +20,40 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#ifndef T8_GTEST_CMESH_GENERATOR_HXX
-#define T8_GTEST_CMESH_GENERATOR_HXX
+#ifndef T8_GTEST_cmesh_sum_cart_prod_HXX
+#define T8_GTEST_cmesh_sum_cart_prod_HXX
 
 #include "test/t8_cmesh_generator/t8_gtest_cmesh_creator_base.hxx"
-#include "test/t8_cmesh_generator/t8_gtest_cmesh_comm_creator.hxx"
-#include "test/t8_cmesh_generator/t8_gtest_cmesh_num_elem_creator.hxx"
 
 T8_EXTERN_C_BEGIN ();
 
-typedef enum cmesh_types {
-  CMESH_ZERO = 0,
-
-  CMESH_WITH_COMM = CMESH_ZERO,
-  CMESH_WITH_NUM_TREES = 1,
-
-  CMESH_NUM_TYPES = 2
-} cmesh_types_t;
-
 /**
- * A class that can create all cmeshes from all cmesh_generators
+ * A class that can create all cmeshes from all cmesh_sum_cart_prods
  * 
  */
-class cmesh_generator {
+class cmesh_sum_cart_prod {
  public:
   /**
    * Construct a new cmesh generator cxx object
    * 
    */
-  cmesh_generator (): current_generator (CMESH_ZERO)
-  {
-    generators[CMESH_WITH_COMM] = std::shared_ptr<all_cmeshes_with_comm> (new all_cmeshes_with_comm ());
-    generators[CMESH_WITH_NUM_TREES] = std::shared_ptr<all_cmeshes_with_num_trees> (new all_cmeshes_with_num_trees ());
-  }
+  cmesh_sum_cart_prod () {};
 
-  /**
-   * Construct a new cmesh generator cxx object given a specific generator
-   * 
-   * \param[in] generator which cmesh_generator to use, has to be smaller than CMESH_NUM_TYPES
-   */
-  cmesh_generator (int generator): cmesh_generator ()
+  cmesh_sum_cart_prod (std::vector<cart_prod_base *> cmesh_cart_prods): current_generator (0)
   {
-    T8_ASSERT (generator < (int) CMESH_NUM_TYPES);
-    current_generator = generator;
+    for (size_t icreator = 0; icreator < cmesh_cart_prods.size (); icreator++) {
+      cmesh_prod.push_back (cmesh_cart_prods[icreator]);
+    }
   }
 
   /**
    * Copy-constructor
    * 
-   * \param other[in] cmesh_generator to copy from
+   * \param other[in] cmesh_sum_cart_prod to copy from
    */
-  cmesh_generator (const cmesh_generator &other): current_generator (other.current_generator)
+  cmesh_sum_cart_prod (const cmesh_sum_cart_prod &other)
+    : current_generator (other.current_generator), cmesh_prod (other.cmesh_prod)
   {
-    T8_ASSERT (other.generators != NULL);
-    for (int igen = CMESH_ZERO; igen < CMESH_NUM_TYPES; igen++) {
-      T8_ASSERT (other.generators[igen] != NULL);
-    }
-
-    for (int igen = CMESH_ZERO; igen < CMESH_NUM_TYPES; igen++) {
-      generators[igen] = other.generators[igen];
-    }
-  }
-
-  /**
-   * Call the creator of the current generator
-   */
-  void
-  create_cmesh ()
-  {
-    generators[current_generator]->create_cmesh ();
-  }
-
-  /**
-   * Unref the cmesh of the current generator
-   * 
-   */
-  void
-  unref_cmesh ()
-  {
-    generators[current_generator]->unref_cmesh ();
   }
 
   /**
@@ -109,22 +64,22 @@ class cmesh_generator {
   t8_cmesh_t
   get_cmesh ()
   {
-    return generators[current_generator]->get_cmesh ();
+    return cmesh_prod[current_generator]->gen_cmesh ();
   }
 
   /**
-   * Compare two cmesh_generator. If the current_generator is equal, the generators are compared. 
+   * Compare two cmesh_sum_cart_prod. If the current_generator is equal, the generators are compared. 
    * If not, the object with the smaller current_generator is considered smaller. 
    * 
-   * \param[in] other the cmesh_generator to compare with.
+   * \param[in] other the cmesh_sum_cart_prod to compare with.
    * \return true if both are equal
    * \return false ow
    */
   bool
-  operator< (const cmesh_generator &other)
+  operator< (const cmesh_sum_cart_prod &other)
   {
     if (current_generator == other.current_generator) {
-      return generators[current_generator] < other.generators[current_generator];
+      return cmesh_prod[current_generator]->index < other.cmesh_prod[current_generator]->index;
     }
     else {
       return current_generator < other.current_generator;
@@ -134,50 +89,55 @@ class cmesh_generator {
   /**
    * + operator to be able to use ::testing:Range from the GoogleTestSuite. 
    * 
-   * \param[in] step cmesh_generator describing by how far to step forward
-   * \return cmesh_generator 
+   * \param[in] step cmesh_sum_cart_prod describing by how far to step forward
+   * \return cmesh_sum_cart_prod 
    */
-  cmesh_generator
-  operator+ (const cmesh_generator &step)
+  cmesh_sum_cart_prod
+  operator+ (const cmesh_sum_cart_prod &step)
   {
-    cmesh_generator tmp (*this);
-    if (generators[current_generator]->is_at_last ()) {
+    cmesh_sum_cart_prod tmp (*this);
+    if (!tmp.cmesh_prod[tmp.current_generator]->next ()) {
       tmp.current_generator++;
-      tmp.generators[current_generator]->set_first ();
+      tmp.cmesh_prod[tmp.current_generator]->set_to_first ();
     }
-    else {
-      tmp.generators[current_generator]->addition (step.generators[current_generator]);
-    }
-    return cmesh_generator (tmp);
+    return tmp;
   }
 
-  /**
-   * Set the object to the last creator of the last generator
-   * 
-   */
-  cmesh_generator
-  get_last ()
+  cmesh_sum_cart_prod
+  begin ()
   {
-    cmesh_generator tmp;
-    tmp.current_generator = CMESH_NUM_TYPES - 1;
-    tmp.generators[current_generator]->set_last ();
+    cmesh_sum_cart_prod tmp (*this);
+    tmp.current_generator = 0;
+    tmp.cmesh_prod[tmp.current_generator]->set_to_first ();
     return tmp;
+  }
+
+  cmesh_sum_cart_prod
+  end ()
+  {
+    cmesh_sum_cart_prod tmp (*this);
+    tmp.current_generator = cmesh_prod.size () - 1;
+    tmp.cmesh_prod[tmp.current_generator]->set_to_end ();
+    return tmp;
+  }
+
+  cmesh_sum_cart_prod
+  step ()
+  {
+    return cmesh_sum_cart_prod (*this);
   }
 
   /**
    * Destroy the cmesh generator cxx object
    * 
    */
-  ~cmesh_generator ()
+  ~cmesh_sum_cart_prod ()
   {
   }
 
-  /* The generator that is active. */
-  int current_generator;
-  /* Holds all generators. 
-   * TODO: only use a single shared_ptr to a cmesh_generator and update */
-  std::shared_ptr<cmesh_creator> generators[CMESH_NUM_TYPES];
+  int current_generator = 0;
+  std::vector<cart_prod_base *> cmesh_prod;
 };
 
 T8_EXTERN_C_END ();
-#endif /* T8_GTEST_CMESH_GENERATOR_HXX */
+#endif /* T8_GTEST_cmesh_sum_cart_prod_HXX */

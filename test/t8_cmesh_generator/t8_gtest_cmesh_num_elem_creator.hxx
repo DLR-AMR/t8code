@@ -26,89 +26,24 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <vector>
+#include <algorithm>
 #include "test/t8_cmesh_generator/t8_gtest_cmesh_creator_base.hxx"
 
 T8_EXTERN_C_BEGIN ();
 
-#define MAX_NUM_TREES 5
+#define tree_vector std::vector<int> (10)
 
-/* A function creating a cmesh getting a communicator and a number of elements to create */
-typedef t8_cmesh_t (*t8_cmesh_with_num_trees) (sc_MPI_Comm comm, int num_trees);
-
-/* List of all functions that have a num_trees-parameter*/
-const std::vector<t8_cmesh_with_num_trees> cmeshes_with_num_trees
-  = { t8_cmesh_new_long_brick_pyramid, t8_cmesh_new_prism_cake, t8_cmesh_new_pyramid_cake };
-
-/**
- * A class that creates all cmeshes using a number of trees and a communicator
- */
-class all_cmeshes_with_num_trees: public cmesh_creator {
- public:
-  /* overloading the < operator for gtest-ranges */
-  bool
-  operator< (const cmesh_creator &other)
-  {
-    if (current_creator == other.current_creator) {
-      return num_trees < other.num_trees;
-    }
-    else {
-      return current_creator < other.current_creator;
-    }
+#define comms \
+  std::vector<sc_MPI_Comm> \
+  { \
+    sc_MPI_COMM_SELF, SC3_MPI_COMM_WORLD \
   }
 
-  /* The next cmesh is the cmesh with on more element until max_num_trees is reached,
-     * then we go to the next constructor. */
-  void
-  addition (const std::shared_ptr<cmesh_creator> step)
-  {
-    if (num_trees + step->num_trees > MAX_NUM_TREES) {
-      num_trees = 1;
-      current_creator++;
-      T8_ASSERT ((unsigned long int) current_creator < cmeshes_with_num_trees.size ());
-    }
-    else {
-      num_trees += 1;
-    }
-    if (current_creator > 0 && num_trees <= 2) {
-      num_trees = 3;
-    }
-  }
+std::iota (tree_vector.begin (), tree_vector.end (), 2);
 
-  /* To save memory, the cmesh is not created by default */
-  void
-  create_cmesh ()
-  {
-    cmesh = cmeshes_with_num_trees[current_creator](comm, num_trees);
-  }
-
-  void
-  set_first ()
-  {
-    current_creator = 0;
-    num_trees = 1;
-  }
-
-  void
-  set_last ()
-  {
-    current_creator = cmeshes_with_num_trees.size () - 1;
-    num_trees = MAX_NUM_TREES;
-  }
-
-  bool
-  is_at_last ()
-  {
-    return (long unsigned int) current_creator == cmeshes_with_num_trees.size () - 1 && num_trees == MAX_NUM_TREES;
-  }
-  /* Destructor */
-  ~all_cmeshes_with_num_trees ()
-  {
-    /* unref the cmesh only if it has been created */
-    if (cmesh != NULL) {
-      t8_cmesh_unref (&cmesh);
-    }
-  }
-};
+cmesh_creator<int, sc_MPI_Comm> num_elem_example (t8_cmesh_new_prism_cake,
+                                                  std::make_pair (tree_vector.begin (), tree_vector.end (),
+                                                                  std::make_pair (comms.begin (), comms.end ())));
 
 T8_EXTERN_C_END ();
 
