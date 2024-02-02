@@ -34,7 +34,7 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_element.h>
 
-t8_cmesh_t
+static t8_cmesh_t
 t8_geometry_testing_tree_from_class (const t8_eclass_t eclass)
 {
   t8_cmesh_t cmesh;
