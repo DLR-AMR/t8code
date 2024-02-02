@@ -148,7 +148,6 @@ t8_cmesh_init (t8_cmesh_t *pcmesh)
   t8_refcount_init (&cmesh->rc);
 
   /* sensible (hard error) defaults */
-  cmesh->set_refine_level = 0; /*< sensible default TODO document */
   cmesh->set_partition_level = -1;
   cmesh->dimension = -1; /*< ok; force user to select dimension */
   cmesh->mpirank = -1;
@@ -267,17 +266,6 @@ t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, int element_level, t8_scheme_c
       cmesh->tree_offsets = NULL;
     }
   }
-}
-
-void
-t8_cmesh_set_refine (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *scheme)
-{
-  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
-  T8_ASSERT (level >= 0);
-  T8_ASSERT (scheme != NULL);
-
-  cmesh->set_refine_level = level;
-  cmesh->set_refine_scheme = scheme;
 }
 
 t8_gloidx_t
@@ -772,7 +760,6 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
     cmesh_out->face_knowledge = meta_info.cmesh.face_knowledge;
     cmesh_out->set_partition = meta_info.cmesh.set_partition;
     cmesh_out->set_partition_level = meta_info.cmesh.set_partition_level;
-    cmesh_out->set_refine_level = meta_info.cmesh.set_refine_level;
     cmesh_out->num_trees = meta_info.cmesh.num_trees;
     cmesh_out->num_local_trees = cmesh_out->num_trees;
     cmesh_out->first_tree = 0;
@@ -1211,11 +1198,6 @@ t8_cmesh_reset (t8_cmesh_t *pcmesh)
   }
   if (cmesh->profile != NULL) {
     T8_FREE (cmesh->profile);
-  }
-
-  /* unref the refine scheme (if set) */
-  if (cmesh->set_refine_scheme != NULL) {
-    t8_scheme_cxx_unref (&cmesh->set_refine_scheme);
   }
 
   /* unref the partition scheme (if set) */

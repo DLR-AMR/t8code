@@ -111,7 +111,7 @@ class class_descendant: public TestDFS {
 TEST_P (class_descendant, t8_check_face_desc)
 {
 
-#ifdef T8_ENABLE_DEBUG
+#ifdef T8_ENABLE_LESS_TESTS
   const int maxlvl = 3;
 #else
   const int maxlvl = 5;
