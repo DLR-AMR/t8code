@@ -27,6 +27,10 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include "test/t8_cmesh_generator/t8_gtest_cmesh_cartestian_product.hxx"
 #include "test/t8_cmesh_generator/t8_gtest_cmesh_sum_of_sets.hxx"
+#include <t8_cmesh/t8_cmesh_geometry.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
+#include <t8_geometry/t8_geometry_base.h>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -51,27 +55,7 @@ cart_prod_base *new_prism_cake
     std::make_pair (my_comms.begin (), my_comms.end ()), std::make_pair (num_prisms.begin (), num_prisms.end ()),
     prism_cake, "t8_cmesh_new_prism_cake");
 
-std::vector<t8_eclass_t> eclasses_hyp_pad = { T8_ECLASS_QUAD, T8_ECLASS_HEX };
-std::vector<t8_gloidx_t> polygon_x = { 1, 2, 3, 4, 5 };
-std::vector<t8_gloidx_t> polygon_y = { 1, 2, 3, 4, 5 };
-std::vector<t8_gloidx_t> polygon_z = { 1, 2, 3, 4, 5 };
-
-double boundaries[24] = { 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1 };
-std::vector<double *> coords = { boundaries };
-
-std::function<t8_cmesh_t (t8_eclass_t, sc_MPI_Comm, double *, t8_locidx_t, t8_locidx_t, t8_locidx_t)>
-  cmesh_new_hypercube_pad = t8_cmesh_new_hypercube_pad;
-
-cart_prod_base *new_hypercube_pad
-  = (cart_prod_base *) new cmesh_args_cart_prod<decltype (eclasses_hyp_pad.begin ()), decltype (my_comms.begin ()),
-                                                decltype (coords.begin ()), decltype (polygon_x.begin ()),
-                                                decltype (polygon_y.begin ()), decltype (polygon_z.begin ())> (
-    std::make_pair (eclasses_hyp_pad.begin (), eclasses_hyp_pad.end ()),
-    std::make_pair (my_comms.begin (), my_comms.end ()), std::make_pair (coords.begin (), coords.end ()),
-    std::make_pair (polygon_x.begin (), polygon_x.end ()), std::make_pair (polygon_y.begin (), polygon_y.end ()),
-    std::make_pair (polygon_z.begin (), polygon_z.end ()), cmesh_new_hypercube_pad, "t8_cmesh_new_hypercube_pad");
-
-std::vector<cart_prod_base *> cart_prod_vec = { new_form_class_prod, new_prism_cake, new_hypercube_pad };
+std::vector<cart_prod_base *> cart_prod_vec = { new_form_class_prod, new_prism_cake };
 
 cmesh_sum_cart_prod cmesh_sums (cart_prod_vec);
 cmesh_sum_cart_prod cbegin = cmesh_sums.begin ();
