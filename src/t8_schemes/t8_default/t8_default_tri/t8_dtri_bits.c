@@ -211,7 +211,6 @@ t8_dtri_ancestor (const t8_dtri_t *t, int level, t8_dtri_t *ancestor)
     ancestor->type = t->type;
   }
 
-  ancestor->n = t->n;
 #else
   /* The sign of each diff reduces the number of possible types
  * for the ancestor. At the end only one possible type is left,
@@ -1500,8 +1499,6 @@ t8_dtri_init_linear_id (t8_dtri_t *t, t8_linearidx_t id, int level)
   t->y = 0;
 #ifdef T8_DTRI_TO_DTET
   t->z = 0;
-#else
-  t->n = 0;
 #endif
   type = 0; /* This is the type of the root triangle */
   for (i = 1; i <= level; i++) {
@@ -1530,8 +1527,6 @@ t8_dtri_init_root (t8_dtri_t *t)
   t->y = 0;
 #ifdef T8_DTRI_TO_DTET
   t->z = 0;
-#else
-  t->n = 0;
 #endif
 }
 
@@ -1699,9 +1694,6 @@ t8_dtri_is_valid (const t8_dtri_t *t)
   /* for tets the eclass is set. */
   is_valid = is_valid && t->eclass_int8 == T8_ECLASS_TET;
 #endif
-#else
-  /* n is 0 (we currently do not use n) */
-  is_valid = is_valid && t->n == 0;
 #endif
   /* Its type is in the valid range */
   is_valid = is_valid && 0 <= t->type && t->type < T8_DTRI_NUM_TYPES;

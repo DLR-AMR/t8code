@@ -84,7 +84,7 @@ t8_cmesh_check_trees_per_eclass (t8_cmesh_t cmesh)
 #endif
 
 int
-t8_cmesh_is_committed (t8_cmesh_t cmesh)
+t8_cmesh_is_committed (const t8_cmesh_t cmesh)
 {
   static int is_checking = 0;
 
@@ -148,7 +148,6 @@ t8_cmesh_init (t8_cmesh_t *pcmesh)
   t8_refcount_init (&cmesh->rc);
 
   /* sensible (hard error) defaults */
-  cmesh->set_refine_level = 0; /*< sensible default TODO document */
   cmesh->set_partition_level = -1;
   cmesh->dimension = -1; /*< ok; force user to select dimension */
   cmesh->mpirank = -1;
@@ -269,17 +268,6 @@ t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, int element_level, t8_scheme_c
   }
 }
 
-void
-t8_cmesh_set_refine (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *scheme)
-{
-  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
-  T8_ASSERT (level >= 0);
-  T8_ASSERT (scheme != NULL);
-
-  cmesh->set_refine_level = level;
-  cmesh->set_refine_scheme = scheme;
-}
-
 t8_gloidx_t
 t8_cmesh_get_first_treeid (t8_cmesh_t cmesh)
 {
@@ -390,16 +378,14 @@ t8_cmesh_get_tree_vertices (t8_cmesh_t cmesh, t8_locidx_t ltreeid)
 }
 
 void *
-t8_cmesh_get_attribute (t8_cmesh_t cmesh, int package_id, int key, t8_locidx_t ltree_id)
+t8_cmesh_get_attribute (const t8_cmesh_t cmesh, const int package_id, const int key, const t8_locidx_t ltree_id)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, ltree_id) || t8_cmesh_treeid_is_ghost (cmesh, ltree_id));
   const int is_ghost = t8_cmesh_treeid_is_ghost (cmesh, ltree_id);
 
-  if (is_ghost) {
-    ltree_id = t8_cmesh_ltreeid_to_ghostid (cmesh, ltree_id);
-  }
-  return t8_cmesh_trees_get_attribute (cmesh->trees, ltree_id, package_id, key, NULL, is_ghost);
+  return t8_cmesh_trees_get_attribute (
+    cmesh->trees, is_ghost ? t8_cmesh_ltreeid_to_ghostid (cmesh, ltree_id) : ltree_id, package_id, key, NULL, is_ghost);
 }
 
 /* Return the attribute pointer of a tree for a gloidx_t array.
@@ -419,8 +405,8 @@ t8_cmesh_get_attribute (t8_cmesh_t cmesh, int package_id, int key, t8_locidx_t l
  * \see t8_cmesh_set_attribute_gloidx_array
  */
 t8_gloidx_t *
-t8_cmesh_get_attribute_gloidx_array (t8_cmesh_t cmesh, int package_id, int key, t8_locidx_t ltree_id,
-                                     const size_t data_count)
+t8_cmesh_get_attribute_gloidx_array (const t8_cmesh_t cmesh, const int package_id, const int key,
+                                     const t8_locidx_t ltree_id, const size_t data_count)
 {
   T8_ASSERT (0 <= data_count);
   return (t8_gloidx_t *) t8_cmesh_get_attribute (cmesh, package_id, key, ltree_id);
@@ -774,7 +760,6 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
     cmesh_out->face_knowledge = meta_info.cmesh.face_knowledge;
     cmesh_out->set_partition = meta_info.cmesh.set_partition;
     cmesh_out->set_partition_level = meta_info.cmesh.set_partition_level;
-    cmesh_out->set_refine_level = meta_info.cmesh.set_refine_level;
     cmesh_out->num_trees = meta_info.cmesh.num_trees;
     cmesh_out->num_local_trees = cmesh_out->num_trees;
     cmesh_out->first_tree = 0;
@@ -1213,11 +1198,6 @@ t8_cmesh_reset (t8_cmesh_t *pcmesh)
   }
   if (cmesh->profile != NULL) {
     T8_FREE (cmesh->profile);
-  }
-
-  /* unref the refine scheme (if set) */
-  if (cmesh->set_refine_scheme != NULL) {
-    t8_scheme_cxx_unref (&cmesh->set_refine_scheme);
   }
 
   /* unref the partition scheme (if set) */
