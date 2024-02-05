@@ -23,7 +23,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #ifndef T8_GTEST_cmesh_sum_cart_prod_HXX
 #define T8_GTEST_cmesh_sum_cart_prod_HXX
 
-#include "test/t8_cmesh_generator/t8_gtest_cmesh_creator_base.hxx"
+#include "test/t8_cmesh_generator/t8_gtest_cmesh_cartestian_product.hxx"
 
 T8_EXTERN_C_BEGIN ();
 
