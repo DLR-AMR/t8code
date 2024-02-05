@@ -55,14 +55,12 @@ t8_cmesh_get_num_vertices (t8_cmesh_t cmesh, int count_ghosts)
   return num_vertices;
 }
 
-/* TODO: implement for scale < 1 */
 static int
-t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix, double scale, int write_ghosts)
+t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix, int write_ghosts)
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   T8_ASSERT (fileprefix != NULL);
-  T8_ASSERT (scale == 1.); /* scale = 1 not implemented yet */
 
   if (cmesh->mpirank == 0) {
     /* Write the pvtu header file. */
@@ -333,8 +331,7 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix, double sc
 }
 
 int
-t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix, double scale)
+t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix)
 {
-  T8_ASSERT (scale == 1.0);
-  return t8_cmesh_vtk_write_file_ext (cmesh, fileprefix, 1.0, 1);
+  return t8_cmesh_vtk_write_file_ext (cmesh, fileprefix, 1);
 }
