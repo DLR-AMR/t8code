@@ -63,7 +63,7 @@ class t8_default_scheme_common_c: public t8_eclass_scheme_c {
    * children.
    */
   virtual t8_gloidx_t
-  t8_element_count_leafs (const t8_element_t *t, int level) const;
+  t8_element_count_leaves (const t8_element_t *t, int level) const;
 
   /** Compute the number of siblings of an element. That is the number of 
    * Children of its parent.
@@ -76,11 +76,11 @@ class t8_default_scheme_common_c: public t8_eclass_scheme_c {
 
   /** Count how many leaf descendants of a given uniform level the root element will produce.
    * \param [in] level A refinement level.
-   * \return The value of \ref t8_element_count_leafs if the input element
+   * \return The value of \ref t8_element_count_leaves if the input element
    *      is the root (level 0) element.
    */
   virtual t8_gloidx_t
-  t8_element_count_leafs_from_root (int level) const;
+  t8_element_count_leaves_from_root (int level) const;
 
   /** The common implementation of the general function for the default scheme
    * has no effect. This function literally does nothing.

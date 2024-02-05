@@ -92,7 +92,7 @@ t8_test_fiterate (t8_forest_t forest)
       = t8_forest_get_element_in_tree (forest, itree, t8_forest_get_tree_num_elements (forest, itree) - 1);
     ts->t8_element_new (1, &nca);
     ts->t8_element_nca (first_el, last_el, nca);
-    leaf_elements = t8_forest_tree_get_leafs (forest, itree);
+    leaf_elements = t8_forest_tree_get_leaves (forest, itree);
 
     for (iface = 0; iface < ts->t8_element_num_faces (nca); iface++) {
       udata.count = 0;
