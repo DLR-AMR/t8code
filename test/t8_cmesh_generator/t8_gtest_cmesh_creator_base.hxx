@@ -35,6 +35,14 @@ class cart_prod_base {
   next ()
     = 0;
 
+  virtual void
+  copy (const cart_prod_base* other)
+    = 0;
+
+  virtual cart_prod_base*
+  create ()
+    = 0;
+
   virtual t8_cmesh_t
   gen_cmesh ()
     = 0;
@@ -66,8 +74,9 @@ bool
 increment (const B& begins, std::pair<T, T>& r)
 {
   ++r.first;
-  if (r.first == r.second)
+  if (r.first == r.second) {
     return true;
+  }
   return false;
 }
 template <typename T, typename... TT, typename B>
@@ -79,6 +88,7 @@ increment (const B& begins, std::pair<T, T>& r, std::pair<TT, TT>&... rr)
     r.first = std::get<std::tuple_size<B>::value - sizeof...(rr) - 1> (begins);
     return increment (begins, rr...);
   }
+
   return false;
 }
 
@@ -87,7 +97,7 @@ void
 cartesian_product (OutputIterator out, std::pair<Iter, Iter>... ranges)
 {
   const auto begins = std::make_tuple (ranges.first...);
-  while (increment (begins, ranges...)) {
+  while (!increment (begins, ranges...)) {
     out = { *ranges.first... };
   }
 }
@@ -99,6 +109,8 @@ cartesian_product (OutputIterator out, std::pair<Iter, Iter>... ranges)
 template <class... Iter>
 class cmesh_args_cart_prod: cart_prod_base {
  public:
+  cmesh_args_cart_prod () {};
+
   cmesh_args_cart_prod (std::pair<Iter, Iter>... ranges,
                         std::function<t8_cmesh_t (typename Iter::value_type...)> cmesh_function)
     : cmesh_example (cmesh_function)
@@ -106,7 +118,23 @@ class cmesh_args_cart_prod: cart_prod_base {
     cartesian_product (std::back_inserter (cart_prod), ranges...);
   }
 
-  t8_cmesh_t
+  virtual void
+  copy (const cart_prod_base* other)
+  {
+    const cmesh_args_cart_prod<Iter...>* tmp = (cmesh_args_cart_prod<Iter...>*) other;
+    T8_ASSERT (tmp != NULL);
+    index = tmp->index;
+    cmesh_example = tmp->cmesh_example;
+    cart_prod = tmp->cart_prod;
+  }
+
+  virtual cart_prod_base*
+  create ()
+  {
+    return (cart_prod_base*) new cmesh_args_cart_prod<Iter...> ();
+  }
+
+  virtual t8_cmesh_t
   gen_cmesh ()
   {
     return std::apply (cmesh_example, cart_prod[index]);

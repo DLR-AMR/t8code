@@ -51,9 +51,13 @@ class cmesh_sum_cart_prod {
    * 
    * \param other[in] cmesh_sum_cart_prod to copy from
    */
-  cmesh_sum_cart_prod (const cmesh_sum_cart_prod &other)
-    : current_generator (other.current_generator), cmesh_prod (other.cmesh_prod)
+  cmesh_sum_cart_prod (const cmesh_sum_cart_prod &other): current_generator (other.current_generator)
   {
+    for (size_t icreator = 0; icreator < other.cmesh_prod.size (); icreator++) {
+      cart_prod_base *copy_cart = other.cmesh_prod[icreator]->create ();
+      copy_cart->copy (other.cmesh_prod[icreator]);
+      cmesh_prod.push_back (copy_cart);
+    }
   }
 
   /**
@@ -96,7 +100,8 @@ class cmesh_sum_cart_prod {
   operator+ (const cmesh_sum_cart_prod &step)
   {
     cmesh_sum_cart_prod tmp (*this);
-    if (!tmp.cmesh_prod[tmp.current_generator]->next ()) {
+    if (!tmp.cmesh_prod[tmp.current_generator]->next ()
+        && (long unsigned int) tmp.current_generator < tmp.cmesh_prod.size () - 1) {
       tmp.current_generator++;
       tmp.cmesh_prod[tmp.current_generator]->set_to_first ();
     }
@@ -106,15 +111,18 @@ class cmesh_sum_cart_prod {
   cmesh_sum_cart_prod
   begin ()
   {
+
     cmesh_sum_cart_prod tmp (*this);
     tmp.current_generator = 0;
     tmp.cmesh_prod[tmp.current_generator]->set_to_first ();
+
     return tmp;
   }
 
   cmesh_sum_cart_prod
   end ()
   {
+
     cmesh_sum_cart_prod tmp (*this);
     tmp.current_generator = cmesh_prod.size () - 1;
     tmp.cmesh_prod[tmp.current_generator]->set_to_end ();
@@ -124,6 +132,7 @@ class cmesh_sum_cart_prod {
   cmesh_sum_cart_prod
   step ()
   {
+
     return cmesh_sum_cart_prod (*this);
   }
 
