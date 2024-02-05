@@ -103,9 +103,6 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix, double sc
     }
     fprintf (vtufile, "<?xml version=\"1.0\"?>\n");
     fprintf (vtufile, "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\"");
-#if defined T8_VTK_BINARY && defined T8_VTK_COMPRESSION
-    fprintf (vtufile, " compressor=\"vtkZLibDataCompressor\"");
-#endif
 #ifdef SC_IS_BIGENDIAN
     fprintf (vtufile, " byte_order=\"BigEndian\">\n");
 #else
@@ -122,7 +119,6 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix, double sc
              " NumberOfComponents=\"3\" format=\"%s\">\n",
              T8_VTK_FLOAT_NAME, T8_VTK_FORMAT_STRING);
 
-#ifdef T8_VTK_ASCII
     for (tree = t8_cmesh_get_first_tree (cmesh); tree != NULL; tree = t8_cmesh_get_next_tree (cmesh, tree)) {
       /*  TODO: Use new geometry here. Need cmesh_get_reference coords function. */
       vertices = t8_cmesh_get_tree_vertices (cmesh, tree->treeid);
@@ -135,8 +131,8 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix, double sc
         fprintf (vtufile, "     %24.16e %24.16e %24.16e\n", x, y, z);
 #else
         fprintf (vtufile, "          %16.8e %16.8e %16.8e\n", x, y, z);
-#endif
       }
+#endif
     } /* end tree loop */
     if (write_ghosts) {
 
@@ -163,9 +159,6 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix, double sc
         }
       } /* end ghost loop */
     }
-#else
-    SC_ABORT ("Binary vtk file not implemented\n");
-#endif /* T8_VTK_ASCII */
     fprintf (vtufile, "        </DataArray>\n");
     fprintf (vtufile, "      </Points>\n");
     fprintf (vtufile, "      <Cells>\n");
@@ -175,7 +168,6 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix, double sc
              "        <DataArray type=\"%s\" Name=\"connectivity\""
              " format=\"%s\">\n",
              T8_VTK_LOCIDX, T8_VTK_FORMAT_STRING);
-#ifdef T8_VTK_ASCII
     for (tree = t8_cmesh_get_first_tree (cmesh), count_vertices = 0; tree != NULL;
          tree = t8_cmesh_get_next_tree (cmesh, tree)) {
       fprintf (vtufile, "         ");
@@ -195,9 +187,6 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix, double sc
         fprintf (vtufile, "\n");
       }
     }
-#else
-    SC_ABORT ("Binary vtk file not implemented\n");
-#endif /* T8_VTK_ASCII */
     fprintf (vtufile, "        </DataArray>\n");
 
     /* write offset data */
@@ -205,7 +194,6 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix, double sc
              "        <DataArray type=\"%s\" Name=\"offsets\""
              " format=\"%s\">\n",
              T8_VTK_LOCIDX, T8_VTK_FORMAT_STRING);
-#ifdef T8_VTK_ASCII
     fprintf (vtufile, "         ");
     for (tree = t8_cmesh_get_first_tree (cmesh), sk = 1, offset = 0; tree != NULL;
          tree = t8_cmesh_get_next_tree (cmesh, tree), ++sk) {
@@ -225,16 +213,12 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix, double sc
       }
     }
     fprintf (vtufile, "\n");
-#else
-    SC_ABORT ("Binary vtk file not implemented\n");
-#endif /* T8_VTK_ASCII */
     fprintf (vtufile, "        </DataArray>\n");
     /* write type data */
     fprintf (vtufile,
              "        <DataArray type=\"UInt8\" Name=\"types\""
              " format=\"%s\">\n",
              T8_VTK_FORMAT_STRING);
-#ifdef T8_VTK_ASCII
     fprintf (vtufile, "         ");
     for (tree = t8_cmesh_get_first_tree (cmesh), sk = 1; tree != NULL;
          tree = t8_cmesh_get_next_tree (cmesh, tree), ++sk) {
@@ -252,9 +236,6 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix, double sc
       }
     }
     fprintf (vtufile, "\n");
-#else
-    SC_ABORT ("Binary vtk file not implemented\n");
-#endif /* T8_VTK_ASCII */
     fprintf (vtufile, "        </DataArray>\n");
     fprintf (vtufile, "      </Cells>\n");
     /* write treeif data */
@@ -263,7 +244,6 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix, double sc
              "        <DataArray type=\"%s\" Name=\"treeid\""
              " format=\"%s\">\n",
              T8_VTK_GLOIDX, T8_VTK_FORMAT_STRING);
-#ifdef T8_VTK_ASCII
     fprintf (vtufile, "         ");
     for (tree = t8_cmesh_get_first_tree (cmesh), sk = 1, offset = 0; tree != NULL;
          tree = t8_cmesh_get_next_tree (cmesh, tree), ++sk) {
@@ -292,16 +272,12 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix, double sc
       }
     }
     fprintf (vtufile, "\n");
-#else
-    SC_ABORT ("Binary vtk file not implemented\n");
-#endif /* T8_VTK_ASCII */
     fprintf (vtufile, "        </DataArray>\n");
     /* write mpirank data */
     fprintf (vtufile,
              "        <DataArray type=\"%s\" Name=\"mpirank\""
              " format=\"%s\">\n",
              "Int32", T8_VTK_FORMAT_STRING);
-#ifdef T8_VTK_ASCII
     fprintf (vtufile, "         ");
     for (tree = t8_cmesh_get_first_tree (cmesh), sk = 1, offset = 0; tree != NULL;
          tree = t8_cmesh_get_next_tree (cmesh, tree), ++sk) {
@@ -318,9 +294,6 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix, double sc
       }
     }
     fprintf (vtufile, "\n");
-#else
-    SC_ABORT ("Binary vtk file not implemented\n");
-#endif /* T8_VTK_ASCII */
     fprintf (vtufile, "        </DataArray>\n");
     fprintf (vtufile, "      </CellData>\n");
     /* write type data */
