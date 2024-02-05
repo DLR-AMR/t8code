@@ -87,7 +87,7 @@ test/t8_geometry/t8_test_geometry
 test/t8_geometry/t8_test_point_inside
 test/t8_gtest_main
 test/t8_schemes/t8_test_descendant
-test/t8_schemes/t8_test_element_count_leafs
+test/t8_schemes/t8_test_element_count_leaves
 test/t8_schemes/t8_test_find_parent
 test/t8_schemes/t8_test_init_linear_id
 test/t8_schemes/t8_test_pyra_face_descendant

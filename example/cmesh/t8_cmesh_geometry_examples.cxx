@@ -188,8 +188,10 @@ main (int argc, char **argv)
     const char *prefix_forest = "t8_cubed_spherical_shell_forest";
 
     const int uniform_level = 1;
+
     const double inner_radius = 42.0;
     const double shell_thickness = 5.0;
+
     const int num_levels = 3;
     const int num_layers = 2;
 
