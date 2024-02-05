@@ -88,7 +88,7 @@ libt8_installed_headers_default_pyramid =
 libt8_internal_headers = \
   src/t8_cmesh/t8_cmesh_stash.h src/t8_cmesh/t8_cmesh_trees.h \
   src/t8_cmesh/t8_cmesh_types.h src/t8_cmesh/t8_cmesh_partition.h \
-  src/t8_cmesh/t8_cmesh_refine.h src/t8_cmesh/t8_cmesh_copy.h \
+  src/t8_cmesh/t8_cmesh_copy.h \
   src/t8_cmesh/t8_cmesh_offset.h \
   src/t8_vtk/t8_vtk_polydata.hxx \
   src/t8_vtk/t8_vtk_unstructured.hxx \
@@ -111,7 +111,7 @@ libt8_compiled_sources = \
   src/t8_cmesh/t8_cmesh_save.c \
   src/t8_cmesh/t8_cmesh_netcdf.c \
   src/t8_cmesh/t8_cmesh_trees.c src/t8_cmesh/t8_cmesh_commit.c \
-  src/t8_cmesh/t8_cmesh_partition.c src/t8_cmesh/t8_cmesh_refine.cxx \
+  src/t8_cmesh/t8_cmesh_partition.c\
   src/t8_cmesh/t8_cmesh_copy.c src/t8_data/t8_shmem.c \
   src/t8_cmesh/t8_cmesh_geometry.cxx \
   src/t8_cmesh/t8_cmesh_examples.c \

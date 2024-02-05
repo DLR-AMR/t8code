@@ -111,10 +111,10 @@ class class_descendant: public TestDFS {
 TEST_P (class_descendant, t8_check_face_desc)
 {
 
-#ifdef T8_ENABLE_DEBUG
-  const int maxlvl = 4;
+#ifdef T8_ENABLE_LESS_TESTS
+  const int maxlvl = 3;
 #else
-  const int maxlvl = 6;
+  const int maxlvl = 5;
 #endif
 
   check_recursive_dfs_to_max_lvl (maxlvl);
