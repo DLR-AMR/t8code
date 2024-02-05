@@ -168,7 +168,8 @@ main (int argc, char **argv)
     const char *prefix_forest = "t8_cubed_spherical_shell_forest";
 
     const int uniform_level = 1;
-    constexpr double inner_radius = std::sqrt (3);
+    /* Since sqrt is not covered by constexpr, this is not a constexpr. */
+    const double inner_radius = sqrt (3.);
     const double shell_thickness = 0.2;
     const int num_levels = 3;
     const int num_layers = 2;
