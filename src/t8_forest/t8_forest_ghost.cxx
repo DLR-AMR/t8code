@@ -506,7 +506,7 @@ typedef struct
 
 static int
 t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                 const int is_leaf, const t8_element_array_t *leafs, const t8_locidx_t tree_leaf_index,
+                                 const int is_leaf, const t8_element_array_t *leaves, const t8_locidx_t tree_leaf_index,
                                  void *query, sc_array_t *query_indices, int *query_matches,
                                  const size_t num_active_queries)
 {
@@ -596,7 +596,7 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const 
       new_bounds[iface * 2] = lower;
       new_bounds[iface * 2 + 1] = upper;
       if (lower == upper && lower == forest->mpirank) {
-        /* All neighbor leafs at this face are owned by the current rank */
+        /* All neighbor leaves at this face are owned by the current rank */
         faces_totally_owned = faces_totally_owned && 1;
       }
       else {
@@ -625,7 +625,7 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const 
      * We do not continue the search */
 #ifdef T8_ENABLE_DEBUG
     if (tree_leaf_index < 0) {
-      data->left_out += t8_element_array_get_count (leafs);
+      data->left_out += t8_element_array_get_count (leaves);
     }
 #endif
     return 0;
