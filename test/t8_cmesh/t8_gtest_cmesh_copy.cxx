@@ -31,7 +31,7 @@
 
 /* Test if a cmesh is committed properly and perform the face consistency check. */
 
-class cmesh_copy_equality: public testing::TestWithParam<cmesh_sum_cart_prod> {
+class cmesh_copy_equality: public testing::TestWithParam<cmesh_sum_of_sets> {
  protected:
   void
   SetUp () override
@@ -54,7 +54,7 @@ class cmesh_copy_equality: public testing::TestWithParam<cmesh_sum_cart_prod> {
 
   t8_cmesh_t cmesh_original;
   t8_cmesh_t cmesh_copy;
-  cmesh_sum_cart_prod cmesh_gen;
+  cmesh_sum_of_sets cmesh_gen;
 };
 
 /* Test wheater the original cmaeh and its copy are committed and face consistent. Test will fail, if one of these is false. */
@@ -74,11 +74,10 @@ TEST_P (cmesh_copy_equality, check_equality_of_copied_cmesh_with_original)
 }
 
 /* Test all cmeshes over all different inputs we get through their id */
-INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_copy, cmesh_copy_equality,
-                          ::testing::Range (cmesh_list::cbegin, cmesh_list::cend, cmesh_list::cstep),
+INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_copy, cmesh_copy_equality, AllCmeshsParam,
                           [] (const testing::TestParamInfo<cmesh_copy_equality::ParamType> &info) {
                             std::string name;
-                            cmesh_sum_cart_prod tmp = (cmesh_sum_cart_prod) info.param;
+                            cmesh_sum_of_sets tmp = (cmesh_sum_of_sets) info.param;
                             tmp.print_info (name);
                             return name;
                           });

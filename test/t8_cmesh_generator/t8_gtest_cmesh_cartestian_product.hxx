@@ -30,36 +30,79 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <vector>
 #include <string>
 
-class cart_prod_base {
+/**
+ * A base class to create the cartesian product of parameters that can be passed to 
+ * a function that creates a cmesh.
+ * 
+ */
+class parameter_cartesian_product {
  public:
+  /** Increase the index counter to get the next tuple of parameters*/
   virtual bool
   next ()
     = 0;
 
+  /**
+   * Copy \a other to \a this. Necessary, because the copy constructor depends
+   * on the tuples 
+   * 
+   * \param[in] other another set of parameters
+   */
   virtual void
-  copy (const cart_prod_base* other)
+  copy (const parameter_cartesian_product* other)
     = 0;
-
-  virtual cart_prod_base*
+  /**
+   * Create a new object that can hold tuples of parameters of the same type as 
+   * \a this. 
+   * 
+   * \return parameter_cartesian_product* 
+   */
+  virtual parameter_cartesian_product*
   create ()
     = 0;
 
+  /**
+   * Generate a cmesh according to a function
+   * 
+   * \return t8_cmesh_t 
+   */
   virtual t8_cmesh_t
   gen_cmesh ()
     = 0;
 
+  /**
+   * Set the index to the first parameter-tuple. 
+   * 
+   */
   virtual void
   set_to_first ()
     = 0;
 
+  /**
+   * Set the index to the last parameter-tuple. 
+   * 
+   */
   virtual void
   set_to_end ()
     = 0;
 
+  /**
+   * Compare two objects regarding the current index. 
+   * 
+   * \param other 
+   * \return true
+   * \return false 
+   */
   virtual bool
-  operator< (const cart_prod_base& other)
+  operator< (const parameter_cartesian_product& other)
     = 0;
 
+  /**
+   * A function that describes how Parameters should be printed. 
+   * Needed for pretty GoogleTest-output
+   * 
+   * \param[out] out 
+   */
   virtual void
   name_and_current_params_to_string (std::string& out)
     = 0;
@@ -68,6 +111,13 @@ class cart_prod_base {
   std::string name = "";
 };
 
+/**
+ * A helper functions that creates a pair of begin and end iterators from a vector.  
+ * 
+ * \tparam Args The type of elements in the vector
+ * \param[in] vec A vector
+ * \return A pair of begin and end of the vector. 
+ */
 template <typename Args>
 auto
 vector_to_iter_pair (std::vector<Args> vec)
@@ -75,9 +125,19 @@ vector_to_iter_pair (std::vector<Args> vec)
   return std::make_pair (vec.begin (), vec.end ());
 }
 
-template <typename T, typename B>
+/**
+ * A helper function to recursively create the next tuple of parameters in a cartesion product way
+ * 
+ * @tparam Args 
+ * @tparam B 
+ * \param begins A tuple of begin-iterators
+ * \param r A pair of iterators, used to create the next parameter in a tuple. 
+ * \return true 
+ * \return false 
+ */
+template <typename Args, typename B>
 bool
-increment (const B& begins, std::pair<T, T>& r)
+increment (const B& begins, std::pair<Args, Args>& r)
 {
   ++r.first;
   if (r.first == r.second) {
@@ -85,6 +145,19 @@ increment (const B& begins, std::pair<T, T>& r)
   }
   return false;
 }
+
+/**
+ * A helper function to recursively create the next tuple of parameters in a cartesion product way
+ * 
+ * @tparam T 
+ * @tparam TT 
+ * @tparam B 
+ * \param begins A tuple of begin-iterators
+ * \param r A pair of iterators, where first will be increased
+ * \param rr Remaining iterators to create the tuple. 
+ * \return true 
+ * \return false 
+ */
 template <typename T, typename... TT, typename B>
 bool
 increment (const B& begins, std::pair<T, T>& r, std::pair<TT, TT>&... rr)
@@ -98,6 +171,15 @@ increment (const B& begins, std::pair<T, T>& r, std::pair<TT, TT>&... rr)
   return false;
 }
 
+/**
+ * Fill a vector with tuples, based on pairs of iterators. The iterators are used
+ * to create the tuples according to the cartesian product. 
+ * 
+ * @tparam OutputIterator 
+ * @tparam Iter 
+ * \param out An OutputIterator that will be filled
+ * \param ranges Pairs of ranges 
+ */
 template <typename OutputIterator, typename... Iter>
 void
 cartesian_product (OutputIterator out, std::pair<Iter, Iter>... ranges)
@@ -109,17 +191,19 @@ cartesian_product (OutputIterator out, std::pair<Iter, Iter>... ranges)
 }
 
 /**
- * A base class for cmesh_creators. 
+ * Variadic template class that holds tuples of parameters and enables us to create the cartesian
+ * product of parameter combinations. 
  * 
+ * @tparam Iter 
  */
 template <class... Iter>
-class cmesh_args_cart_prod: cart_prod_base {
+class cmesh_parameter_combinations: parameter_cartesian_product {
  public:
-  cmesh_args_cart_prod () {};
+  cmesh_parameter_combinations () {};
 
-  cmesh_args_cart_prod (std::pair<Iter, Iter>... ranges,
-                        std::function<t8_cmesh_t (typename Iter::value_type...)> cmesh_function,
-                        std::string example_name)
+  cmesh_parameter_combinations (std::pair<Iter, Iter>... ranges,
+                                std::function<t8_cmesh_t (typename Iter::value_type...)> cmesh_function,
+                                std::string example_name)
     : cmesh_example (cmesh_function)
   {
     cartesian_product (std::back_inserter (cart_prod), ranges...);
@@ -127,9 +211,9 @@ class cmesh_args_cart_prod: cart_prod_base {
   }
 
   virtual void
-  copy (const cart_prod_base* other)
+  copy (const parameter_cartesian_product* other)
   {
-    const cmesh_args_cart_prod<Iter...>* tmp = (cmesh_args_cart_prod<Iter...>*) other;
+    const cmesh_parameter_combinations<Iter...>* tmp = (cmesh_parameter_combinations<Iter...>*) other;
     T8_ASSERT (tmp != NULL);
     index = tmp->index;
     cmesh_example = tmp->cmesh_example;
@@ -137,10 +221,10 @@ class cmesh_args_cart_prod: cart_prod_base {
     name = other->name;
   }
 
-  virtual cart_prod_base*
+  virtual parameter_cartesian_product*
   create ()
   {
-    return (cart_prod_base*) new cmesh_args_cart_prod<Iter...> ();
+    return (parameter_cartesian_product*) new cmesh_parameter_combinations<Iter...> ();
   }
 
   virtual t8_cmesh_t
@@ -174,7 +258,7 @@ class cmesh_args_cart_prod: cart_prod_base {
   }
 
   virtual bool
-  operator< (const cart_prod_base& other)
+  operator< (const parameter_cartesian_product& other)
   {
     return index < other.index;
   }

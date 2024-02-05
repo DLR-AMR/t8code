@@ -40,28 +40,30 @@ std::vector<sc_MPI_Comm> my_comms = { sc_MPI_COMM_WORLD };
 std::vector<t8_eclass_t> eclasses = { T8_ECLASS_ZERO, T8_ECLASS_LINE, T8_ECLASS_TRIANGLE };
 
 std::function<t8_cmesh_t (t8_eclass_t, sc_MPI_Comm)> new_from_class_wrapper = t8_cmesh_new_from_class;
-
-//cmesh_args_cart_prod<t8_eclass_t, sc_MPI_Comm> cmesh_new_from_class( eclasses, my_comms,
-//                                      new_from_class_wrapper);
-cart_prod_base *new_form_class_prod
-  = (cart_prod_base *) new cmesh_args_cart_prod<decltype (eclasses.begin ()), decltype (my_comms.begin ())> (
+parameter_cartesian_product *new_form_class_prod
+  = (parameter_cartesian_product *) new cmesh_parameter_combinations<decltype (eclasses.begin ()),
+                                                                     decltype (my_comms.begin ())> (
     std::make_pair (eclasses.begin (), eclasses.end ()), std::make_pair (my_comms.begin (), my_comms.end ()),
-    new_from_class_wrapper, "t8_new_from_class");
+    new_from_class_wrapper, "t8_cmesh_new_from_class");
 
-std::vector<int> num_prisms = { 3, 4, 5, 6, 7, 8, 9, 10 };
+std::vector<int> num_prisms = { 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 };
 std::function<t8_cmesh_t (sc_MPI_Comm, int)> prism_cake = t8_cmesh_new_prism_cake;
-cart_prod_base *new_prism_cake
-  = (cart_prod_base *) new cmesh_args_cart_prod<decltype (my_comms.begin ()), decltype (num_prisms.begin ())> (
+parameter_cartesian_product *new_prism_cake
+  = (parameter_cartesian_product *) new cmesh_parameter_combinations<decltype (my_comms.begin ()),
+                                                                     decltype (num_prisms.begin ())> (
     std::make_pair (my_comms.begin (), my_comms.end ()), std::make_pair (num_prisms.begin (), num_prisms.end ()),
     prism_cake, "t8_cmesh_new_prism_cake");
 
-std::vector<cart_prod_base *> cart_prod_vec = { new_form_class_prod, new_prism_cake };
+std::vector<parameter_cartesian_product *> cart_prod_vec = { new_form_class_prod, new_prism_cake };
 
-cmesh_sum_cart_prod cmesh_sums (cart_prod_vec);
-cmesh_sum_cart_prod cbegin = cmesh_sums.begin ();
-cmesh_sum_cart_prod cend = cmesh_sums.end ();
-cmesh_sum_cart_prod cstep = cmesh_sums.step ();
+cmesh_sum_of_sets cmesh_sums (cart_prod_vec);
+cmesh_sum_of_sets cbegin = cmesh_sums.begin ();
+cmesh_sum_of_sets cend = cmesh_sums.end ();
+cmesh_sum_of_sets cstep = cmesh_sums.step ();
 }  // namespace cmesh_list
+
+#define AllCmeshsParam ::testing::Range (cmesh_list::cbegin, cmesh_list::cend, cmesh_list::cstep)
+
 T8_EXTERN_C_END ();
 
 #endif /* T8_GTEST_CMESH_COMM_CREATOR_HXX */
