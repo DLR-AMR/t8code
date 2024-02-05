@@ -33,11 +33,16 @@
  * We test whether the new and original cmesh are equal.
  */
 
-class t8_cmesh_copy: public testing::TestWithParam<int> {
+/* Note: This test currently fails on many cmeshes and is thus deavtivated.
+ * See: https://github.com/DLR-AMR/t8code/issues/920*/
+* /
+
+  class t8_cmesh_copy: public testing::TestWithParam<int> {
  protected:
   void
   SetUp () override
   {
+    /* Skip test since cmesh copy is not yet working. See https://github.com/DLR-AMR/t8code/issues/920 */
     GTEST_SKIP ();
     cmesh_id = GetParam ();
 
@@ -50,6 +55,7 @@ class t8_cmesh_copy: public testing::TestWithParam<int> {
   void
   TearDown () override
   {
+    /* Skip test since cmesh copy is not yet working. See https://github.com/DLR-AMR/t8code/issues/920 */
     GTEST_SKIP ();
     /* Unref both cmeshes */
     t8_cmesh_unref (&cmesh);
