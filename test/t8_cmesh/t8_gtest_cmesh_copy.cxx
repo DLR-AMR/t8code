@@ -86,18 +86,14 @@ std::function<t8_cmesh_t (t8_eclass_t, sc_MPI_Comm)> new_from_class_wrapper = t8
 cart_prod_base *new_form_class_prod
   = (cart_prod_base *) new cmesh_args_cart_prod<decltype (eclasses.begin ()), decltype (my_comms.begin ())> (
     std::make_pair (eclasses.begin (), eclasses.end ()), std::make_pair (my_comms.begin (), my_comms.end ()),
-    new_from_class_wrapper);
+    new_from_class_wrapper, "t8_new_from_class");
 
 std::vector<int> num_prisms = { 3, 4, 5, 6, 7, 8, 9, 10 };
 std::function<t8_cmesh_t (sc_MPI_Comm, int)> prism_cake = t8_cmesh_new_prism_cake;
 cart_prod_base *new_prism_cake
   = (cart_prod_base *) new cmesh_args_cart_prod<decltype (my_comms.begin ()), decltype (num_prisms.begin ())> (
     std::make_pair (my_comms.begin (), my_comms.end ()), std::make_pair (num_prisms.begin (), num_prisms.end ()),
-    prism_cake);
-
-//t8_cmesh_t
-//t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass, sc_MPI_Comm comm, const double *boundary, t8_locidx_t polygons_x,
-//                            t8_locidx_t polygons_y, t8_locidx_t polygons_z)
+    prism_cake, "t8_cmesh_new_prism_cake");
 
 std::vector<t8_eclass_t> eclasses_hyp_pad = { T8_ECLASS_QUAD, T8_ECLASS_HEX };
 std::vector<t8_gloidx_t> polygon_x = { 1, 2, 3, 4, 5 };
@@ -117,7 +113,7 @@ cart_prod_base *new_hypercube_pad
     std::make_pair (eclasses_hyp_pad.begin (), eclasses_hyp_pad.end ()),
     std::make_pair (my_comms.begin (), my_comms.end ()), std::make_pair (coords.begin (), coords.end ()),
     std::make_pair (polygon_x.begin (), polygon_x.end ()), std::make_pair (polygon_y.begin (), polygon_y.end ()),
-    std::make_pair (polygon_z.begin (), polygon_z.end ()), cmesh_new_hypercube_pad);
+    std::make_pair (polygon_z.begin (), polygon_z.end ()), cmesh_new_hypercube_pad, "t8_cmesh_new_hypercube_pad");
 
 std::vector<cart_prod_base *> cart_prod_vec = { new_form_class_prod, new_prism_cake, new_hypercube_pad };
 
@@ -129,4 +125,10 @@ cmesh_sum_cart_prod cstep = cmesh_sums.step ();
 
 /* Test all cmeshes over all different inputs we get through their id */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_copy, cmesh_copy_equality,
-                          ::testing::Range (cmesh_list::cbegin, cmesh_list::cend, cmesh_list::cstep));
+                          ::testing::Range (cmesh_list::cbegin, cmesh_list::cend, cmesh_list::cstep),
+                          [] (const testing::TestParamInfo<cmesh_copy_equality::ParamType> &info) {
+                            std::string name;
+                            cmesh_sum_cart_prod tmp = (cmesh_sum_cart_prod) info.param;
+                            tmp.print_info (name);
+                            return name;
+                          });

@@ -136,6 +136,12 @@ class cmesh_sum_cart_prod {
     return cmesh_sum_cart_prod (*this);
   }
 
+  void
+  print_info (std::string &out)
+  {
+    cmesh_prod[current_generator]->name_and_current_params_to_string (out);
+  }
+
   /**
    * Destroy the cmesh generator cxx object
    * 

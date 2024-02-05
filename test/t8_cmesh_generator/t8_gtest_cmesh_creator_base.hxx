@@ -28,6 +28,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <functional>
 #include <iterator>
 #include <vector>
+#include <string>
 
 class cart_prod_base {
  public:
@@ -59,7 +60,12 @@ class cart_prod_base {
   operator< (const cart_prod_base& other)
     = 0;
 
+  virtual void
+  name_and_current_params_to_string (std::string& out)
+    = 0;
+
   size_t index = 0;
+  std::string name = "";
 };
 
 template <typename Args>
@@ -112,10 +118,12 @@ class cmesh_args_cart_prod: cart_prod_base {
   cmesh_args_cart_prod () {};
 
   cmesh_args_cart_prod (std::pair<Iter, Iter>... ranges,
-                        std::function<t8_cmesh_t (typename Iter::value_type...)> cmesh_function)
+                        std::function<t8_cmesh_t (typename Iter::value_type...)> cmesh_function,
+                        std::string example_name)
     : cmesh_example (cmesh_function)
   {
     cartesian_product (std::back_inserter (cart_prod), ranges...);
+    name = example_name;
   }
 
   virtual void
@@ -126,6 +134,7 @@ class cmesh_args_cart_prod: cart_prod_base {
     index = tmp->index;
     cmesh_example = tmp->cmesh_example;
     cart_prod = tmp->cart_prod;
+    name = other->name;
   }
 
   virtual cart_prod_base*
@@ -168,6 +177,14 @@ class cmesh_args_cart_prod: cart_prod_base {
   operator< (const cart_prod_base& other)
   {
     return index < other.index;
+  }
+
+  virtual void
+  name_and_current_params_to_string (std::string& out)
+  {
+    std::stringstream ss;
+    ss << name << index;
+    out = ss.str ();
   }
 
   std::function<t8_cmesh_t (typename Iter::value_type...)> cmesh_example;
