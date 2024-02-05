@@ -1,6 +1,6 @@
 add_library( T8 )
 target_include_directories( T8 PUBLIC ${CMAKE_CURRENT_LIST_DIR} )
-target_link_libraries( T8 PUBLIC P4EST::P4EST SC::SC )
+target_link_libraries( T8 PUBLIC P4EST::P4EST SC::SC $<$<BOOL:${T8CODE_ENABLE_MPI}>:MPI::MPI_C> )
 target_sources( T8 PRIVATE 
     t8.c 
     t8_eclass.c 
@@ -93,3 +93,8 @@ target_compile_definitions( T8 PUBLIC T8_PACKAGE_STRING="t8 1.6.1.???" )
 target_compile_definitions( T8 PUBLIC T8_VERSION="1.6.1.???" )
 target_compile_definitions( T8 PUBLIC T8_VERSION_MAJOR=1 )
 target_compile_definitions( T8 PUBLIC T8_VERSION_MINOR=6 )
+
+if ( T8CODE_ENABLE_MPI )
+    target_compile_definitions( T8 PUBLIC T8_ENABLE_MPI )
+    target_compile_definitions( T8 PUBLIC T8_ENABLE_MPIIO )
+endif()
