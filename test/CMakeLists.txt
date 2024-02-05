@@ -1,7 +1,7 @@
 add_library( gtest ${CMAKE_CURRENT_LIST_DIR}/../thirdparty/googletest-mpi/gtest/gtest-all.cc )
 target_include_directories( gtest PUBLIC ${CMAKE_CURRENT_LIST_DIR}/../thirdparty/googletest-mpi ${CMAKE_CURRENT_LIST_DIR}/.. )
 
-function(add_t8_test TEST_NAME TEST_SOURCES)
+function( add_t8_test TEST_NAME TEST_SOURCES )
     add_executable( ${TEST_NAME} ${TEST_SOURCES} )
     target_link_libraries( ${TEST_NAME} PRIVATE T8 gtest )
     if( T8CODE_ENABLE_MPI )
