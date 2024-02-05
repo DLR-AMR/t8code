@@ -131,8 +131,8 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix, double sc
         fprintf (vtufile, "     %24.16e %24.16e %24.16e\n", x, y, z);
 #else
         fprintf (vtufile, "          %16.8e %16.8e %16.8e\n", x, y, z);
-      }
 #endif
+      }
       } /* end tree loop */
       if (write_ghosts) {
 
