@@ -430,7 +430,7 @@ TEST_P (class_2d_element_linear_occ_surface, t8_check_2d_element_linear_occ_surf
 {
   /* Saving the corner vertices for the given element class */
   const int num_vertices = t8_eclass_num_vertices[eclass];
-  double vertices[3 * num_vertices];
+  double *vertices = T8_ALLOC (double, 3 * num_vertices);
   for (int i_vertex = 0; i_vertex < num_vertices; ++i_vertex) {
     for (int dim = 0; dim < 3; ++dim) {
       vertices[i_vertex * 3 + dim] = t8_element_corner_ref_coords[eclass][i_vertex][dim];
@@ -473,6 +473,7 @@ TEST_P (class_2d_element_linear_occ_surface, t8_check_2d_element_linear_occ_surf
     EXPECT_NEAR (test_ref_coords[1 + i_coord * 3], out_coords[1], T8_PRECISION_EPS);
     EXPECT_NEAR (test_ref_coords[2 + i_coord * 3], out_coords[2], T8_PRECISION_EPS);
   }
+  T8_FREE (vertices);
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_check_2d_element_linear_occ_surface, class_2d_element_linear_occ_surface,
