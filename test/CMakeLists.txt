@@ -9,10 +9,6 @@ function( add_t8_test )
 
     add_executable( ${ADD_T8_TEST_NAME} ${ADD_T8_TEST_SOURCES} )
     target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest )
-    if( T8CODE_ENABLE_MPI )
-        target_compile_definitions( ${ADD_T8_TEST_NAME} PRIVATE T8_ENABLE_MPI )
-        target_compile_definitions( ${ADD_T8_TEST_NAME} PRIVATE T8_ENABLE_MPIIO )
-    endif()
     add_test( NAME ${ADD_T8_TEST_NAME} COMMAND ./${ADD_T8_TEST_NAME} )
 endfunction()
 

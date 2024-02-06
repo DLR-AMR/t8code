@@ -93,6 +93,7 @@ target_compile_definitions( T8 PUBLIC T8_PACKAGE_STRING="t8 1.6.1.???" )
 target_compile_definitions( T8 PUBLIC T8_VERSION="1.6.1.???" )
 target_compile_definitions( T8 PUBLIC T8_VERSION_MAJOR=1 )
 target_compile_definitions( T8 PUBLIC T8_VERSION_MINOR=6 )
+target_compile_definitions( T8 PUBLIC T8_VERSION_POINT=1.??? )
 
 if ( T8CODE_ENABLE_MPI )
     target_compile_definitions( T8 PUBLIC T8_ENABLE_MPI )
