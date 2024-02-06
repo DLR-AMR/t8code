@@ -61,7 +61,7 @@ add_t8_test( t8_gtest_pyra_connectivity t8_gtest_main.cxx t8_schemes/t8_gtest_py
 add_t8_test( t8_gtest_face_neigh t8_gtest_main.cxx t8_schemes/t8_gtest_face_neigh.cxx )
 add_t8_test( t8_gtest_init_linear_id t8_gtest_main.cxx t8_schemes/t8_gtest_init_linear_id.cxx )
 add_t8_test( t8_gtest_ancestor t8_gtest_main.cxx t8_schemes/t8_gtest_ancestor.cxx )
-add_t8_test( t8_gtest_element_count_leafs t8_gtest_main.cxx t8_schemes/t8_gtest_element_count_leafs.cxx )
+add_t8_test( t8_gtest_element_count_leaves t8_gtest_main.cxx t8_schemes/t8_gtest_element_count_leaves.cxx )
 add_t8_test( t8_gtest_element_ref_coords t8_gtest_main.cxx t8_schemes/t8_gtest_element_ref_coords.cxx )
 add_t8_test( t8_gtest_descendant t8_gtest_main.cxx t8_schemes/t8_gtest_descendant.cxx )
 add_t8_test( t8_gtest_find_parent t8_gtest_main.cxx t8_schemes/t8_gtest_find_parent.cxx )

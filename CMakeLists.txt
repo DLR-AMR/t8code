@@ -34,3 +34,5 @@ endif()
 if ( T8CODE_BUILD_TUTORIALS )
     add_subdirectory( tutorials )
 endif()
+
+install( TARGETS T8 DESTINATION ${CMAKE_INSTALL_PREFIX}/lib )
