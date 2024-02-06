@@ -159,12 +159,12 @@ t8_geometry_occ::t8_geom_evaluate_occ_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
   double scaling_factor;
   double scaled_displacement;
   /* Allocate storage for later usage. Storage depents on size of the batch. */
-  double ref_intersection[2 * num_coords];
-  double glob_intersection[3 * num_coords];
-  double interpolated_curve_parameter[num_coords];
-  double converted_edge_surface_parameters[2 * num_coords];
-  double interpolated_edge_surface_parameters[2 * num_coords];
-  double interpolated_surface_parameters[2 * num_coords];
+  double *ref_intersection = T8_ALLOC (double, 2 * num_coords);
+  double *glob_intersection = T8_ALLOC (double, 3 * num_coords);
+  double interpolated_curve_parameter;
+  double *converted_edge_surface_parameters = T8_ALLOC (double, 2 * num_coords);
+  double *interpolated_edge_surface_parameters = T8_ALLOC (double, 2 * num_coords);
+  double *interpolated_surface_parameters = T8_ALLOC (double, 2 * num_coords);
 
   /*
    * Reference Space    |      Global Space
@@ -233,11 +233,11 @@ t8_geometry_occ::t8_geom_evaluate_occ_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
           /* If the current edge is edge 0, we use the y coordinate of the ref intersection.
            * For all other edges we can use the x coordinate. */
           t8_geom_linear_interpolation (&ref_intersection[(i_edge == 0) + offset_2d], edge_parameters, 1, 1,
-                                        interpolated_curve_parameter + i_coord);
+                                        &interpolated_curve_parameter);
           /* Convert the interpolated edge parameter of each reference point to surface parameters */
-          t8_geometry_occ::t8_geom_edge_parameter_to_face_parameters (
-            edges[i_edge], *faces, num_face_nodes, interpolated_curve_parameter[i_coord], face_parameters,
-            converted_edge_surface_parameters + offset_2d);
+          t8_geometry_occ::t8_geom_edge_parameter_to_face_parameters (edges[i_edge], *faces, num_face_nodes,
+                                                                      interpolated_curve_parameter, face_parameters,
+                                                                      converted_edge_surface_parameters + offset_2d);
         }
 
         double edge_surface_parameters[4];
@@ -308,7 +308,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
           if (edges[i_edge] > 0) {
             /* Interpolate between the curve parameters of the current edge with the ref_intersection of each reference point */
             t8_geom_linear_interpolation (&ref_intersection[(i_edge == 0) + offset_2d], parameters, 1, 1,
-                                          interpolated_curve_parameter + i_coord);
+                                          &interpolated_curve_parameter);
             /* Retrieve curve */
             T8_ASSERT (edges[i_edge] <= occ_shape_edge_map.Size ());
             curve = BRep_Tool::Curve (TopoDS::Edge (occ_shape_edge_map.FindKey (edges[i_edge])), first, last);
@@ -316,7 +316,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
             T8_ASSERT (!curve.IsNull ());
 
             /* Calculate point on curve with interpolated parameters. */
-            curve->D0 (interpolated_curve_parameter[i_coord], pnt);
+            curve->D0 (interpolated_curve_parameter, pnt);
           }
           else {
             /* Interpolate between the surface parameters of the current edge with the ref_intersection of each reference point */
@@ -347,6 +347,11 @@ t8_geometry_occ::t8_geom_evaluate_occ_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
       }
     }
   }
+  T8_FREE (ref_intersection);
+  T8_FREE (glob_intersection);
+  T8_FREE (converted_edge_surface_parameters);
+  T8_FREE (interpolated_edge_surface_parameters);
+  T8_FREE (interpolated_surface_parameters);
 }
 
 void
@@ -492,8 +497,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
         const int edge_orthogonal_direction = (i_edge >> 1);
         const int edge_direction = 1 - edge_orthogonal_direction;
         double temp_edge_vertices[2 * 3];
-        double temp_parameters[2 * num_coords];
-        double temp_coords[3 * num_coords];
+        double temp_parameters[2];
+        double temp_coords[3];
 
         /* Save the edge vertices temporarily. */
         t8_geom_get_face_vertices (active_tree_class, active_tree_vertices, i_edge, 3, temp_edge_vertices);
@@ -518,17 +523,16 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
             const int offset_2d = coord * 2;
             /* Linear interpolation between edge vertices */
             t8_geom_linear_interpolation (&ref_coords[edge_direction + offset_2d], temp_edge_vertices, 3, 1,
-                                          temp_coords + offset_3d);
+                                          temp_coords);
 
             /* Linear interpolation between parameters */
-            t8_geom_linear_interpolation (&ref_coords[edge_direction + offset_2d], parameters, 1, 1,
-                                          temp_parameters + offset_2d);
+            t8_geom_linear_interpolation (&ref_coords[edge_direction + offset_2d], parameters, 1, 1, temp_parameters);
             /* Calculate point on curve with interpolated parameters. */
-            curve->D0 (temp_parameters[offset_2d], pnt);
+            curve->D0 (temp_parameters[0], pnt);
 
             /* Calculate scaling factor for edge */
             for (int dim = 0; dim < 3; ++dim) {
-              const double displacement = pnt.Coord (dim + 1) - temp_coords[dim + offset_3d];
+              const double displacement = pnt.Coord (dim + 1) - temp_coords[dim];
 
               if (i_edge % 2 == 0) {
                 out_coords[dim + offset_3d] += displacement * (1 - ref_coords[edge_orthogonal_direction + offset_2d]);
@@ -552,17 +556,16 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
             const int offset_2d = coord * 2;
             /* Linear interpolation between edge vertices */
             t8_geom_linear_interpolation (&ref_coords[edge_direction + offset_2d], temp_edge_vertices, 3, 1,
-                                          temp_coords + offset_3d);
+                                          temp_coords);
 
             /* Linear interpolation between parameters */
-            t8_geom_linear_interpolation (&ref_coords[edge_direction + offset_2d], parameters, 2, 1,
-                                          temp_parameters + offset_2d);
+            t8_geom_linear_interpolation (&ref_coords[edge_direction + offset_2d], parameters, 2, 1, temp_parameters);
             /* Calculate point on sirface with interpolated parameters. */
             surface->D0 (temp_parameters[0 + offset_2d], temp_parameters[1 + offset_2d], pnt);
 
             /* Calculate scaling factor for edge */
             for (int dim = 0; dim < 3; ++dim) {
-              const double displacement = pnt.Coord (dim + 1) - temp_coords[dim + offset_3d];
+              const double displacement = pnt.Coord (dim + 1) - temp_coords[dim];
 
               if (i_edge % 2 == 0) {
                 out_coords[dim + offset_3d] += displacement * (1 - ref_coords[edge_orthogonal_direction + offset_2d]);
@@ -590,7 +593,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
   const t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
   const int num_edges = t8_eclass_num_edges[active_tree_class];
   const int num_faces = t8_eclass_num_faces[active_tree_class];
-  double interpolated_coords[3 * num_coords], interpolated_curve_param, interpolated_surface_params[2], cur_delta[3];
+  double *interpolated_coords = T8_ALLOC (double, 3 * num_coords);
+  double interpolated_curve_param, interpolated_surface_params[2], cur_delta[3];
   gp_Pnt pnt;
   double interpolation_coeffs[2], temp_face_vertices[T8_ECLASS_MAX_CORNERS_2D * 3], temp_edge_vertices[2 * 3];
   Handle_Geom_Curve curve;
@@ -902,6 +906,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
       }
     }
   }
+  T8_FREE (interpolated_coords);
 }
 
 int
