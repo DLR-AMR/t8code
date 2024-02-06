@@ -1,37 +1,23 @@
-add_executable( t8_step0 ${CMAKE_CURRENT_LIST_DIR}/general/t8_step0_helloworld.cxx )
-target_link_libraries( t8_step0 PRIVATE T8 )
+function( add_t8_tutorial )
+    set( options "" )
+    set( oneValueArgs "NAME" )  
+    set( multiValueArgs "SOURCES" )
+    cmake_parse_arguments( ADD_T8_TUTORIAL "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
-add_executable( t8_step1 ${CMAKE_CURRENT_LIST_DIR}/general/t8_step1_coarsemesh.cxx )
-target_link_libraries( t8_step1 PRIVATE T8 )
+    add_executable( ${ADD_T8_TUTORIAL_NAME} ${ADD_T8_TUTORIAL_SOURCES} )
+    target_link_libraries( ${ADD_T8_TUTORIAL_NAME} PRIVATE T8 SC::SC )
+    target_include_directories( ${ADD_T8_TUTORIAL_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. )
+    if( T8CODE_ENABLE_MPI )
+        target_compile_definitions( ${ADD_T8_TUTORIAL_NAME} PRIVATE T8_ENABLE_MPI )
+        target_compile_definitions( ${ADD_T8_TUTORIAL_NAME} PRIVATE T8_ENABLE_MPIIO )
+    endif()
+endfunction()
 
-add_executable( t8_step2 ${CMAKE_CURRENT_LIST_DIR}/general/t8_step2_uniform_forest.cxx )
-target_link_libraries( t8_step2 PRIVATE T8 )
-
-add_executable( t8_step3 ${CMAKE_CURRENT_LIST_DIR}/general/t8_step3_adapt_forest.cxx
-                         ${CMAKE_CURRENT_LIST_DIR}/general/t8_step3_main.cxx )
-target_include_directories( t8_step3 PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. )
-target_link_libraries( t8_step3 PRIVATE T8 )
-
-add_executable( t8_step4 ${CMAKE_CURRENT_LIST_DIR}/general/t8_step3_adapt_forest.cxx
-                         ${CMAKE_CURRENT_LIST_DIR}/general/t8_step4_partition_balance_ghost.cxx
-                         ${CMAKE_CURRENT_LIST_DIR}/general/t8_step4_main.cxx )
-target_include_directories( t8_step4 PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. )
-target_link_libraries( t8_step4 PRIVATE T8 )
-
-add_executable( t8_step5 ${CMAKE_CURRENT_LIST_DIR}/general/t8_step3_adapt_forest.cxx
-                        #  ${CMAKE_CURRENT_LIST_DIR}/general/t8_step5_element_data_c_interface.c
-                         ${CMAKE_CURRENT_LIST_DIR}/general/t8_step5_element_data.cxx
-                         ${CMAKE_CURRENT_LIST_DIR}/general/t8_step5_main.cxx )
-target_include_directories( t8_step5 PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. )
-target_link_libraries( t8_step5 PRIVATE T8 )
-
-add_executable( t8_step6 ${CMAKE_CURRENT_LIST_DIR}/general/t8_step3_adapt_forest.cxx
-                         ${CMAKE_CURRENT_LIST_DIR}/general/t8_step6_stencil.cxx
-                         ${CMAKE_CURRENT_LIST_DIR}/general/t8_step6_main.cxx )
-target_include_directories( t8_step6 PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. )
-target_link_libraries( t8_step6 PRIVATE T8 )
-
-add_executable( t8_step7 ${CMAKE_CURRENT_LIST_DIR}/general/t8_step7_interpolation.cxx
-                         ${CMAKE_CURRENT_LIST_DIR}/general/t8_step7_main.cxx )
-target_include_directories( t8_step7 PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. )
-target_link_libraries( t8_step7 PRIVATE T8 )
+add_t8_tutorial( NAME t8_step0_helloworld                SOURCES general/t8_step0_helloworld.cxx )
+add_t8_tutorial( NAME t8_step1_coarsemesh                SOURCES general/t8_step1_coarsemesh.cxx )
+add_t8_tutorial( NAME t8_step2_uniform_forest            SOURCES general/t8_step2_uniform_forest.cxx )
+add_t8_tutorial( NAME t8_step3_adapt_forest              SOURCES general/t8_step3_main.cxx general/t8_step3_adapt_forest.cxx )
+add_t8_tutorial( NAME t8_step4_partition_balance_ghost   SOURCES general/t8_step4_main.cxx general/t8_step3_adapt_forest.cxx general/t8_step4_partition_balance_ghost.cxx )
+add_t8_tutorial( NAME t8_step5_element_data              SOURCES general/t8_step5_main.cxx general/t8_step3_adapt_forest.cxx general/t8_step5_element_data.cxx )
+add_t8_tutorial( NAME t8_step6_stencil                   SOURCES general/t8_step6_main.cxx general/t8_step3_adapt_forest.cxx general/t8_step6_stencil.cxx )
+add_t8_tutorial( NAME t8_step7_interpolation             SOURCES general/t8_step7_main.cxx general/t8_step7_interpolation.cxx )
