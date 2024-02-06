@@ -2869,7 +2869,7 @@ t8_cmesh_new_triangulated_spherical_surface_octahedron (const double radius, sc_
 }
 
 t8_cmesh_t
-t8_cmesh_new_triangulated_spherical_surface_icasohedron (const double radius, sc_MPI_Comm comm)
+t8_cmesh_new_triangulated_spherical_surface_icosahedron (const double radius, sc_MPI_Comm comm)
 {
   /* Initialization of the mesh */
   t8_cmesh_t cmesh;
@@ -2879,8 +2879,8 @@ t8_cmesh_new_triangulated_spherical_surface_icasohedron (const double radius, sc
 
   t8_cmesh_register_geometry (cmesh, geometry); /* Use linear geometry */
 
-  const int ntrees = 20; /* Number of cmesh elements resp. trees. */
-  const int nverts = 3;  /* Number of cmesh element vertices. */
+  const int ntrees = 20; /* Number of cmesh elements resp. trees, i.e. number of triangles in an icosahedron. */
+  const int nverts = 3;  /* Number of cmesh element vertices,. */
 
   /* Arrays for the face connectivity computations via vertices. */
   double all_verts[ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM];
@@ -2898,7 +2898,7 @@ t8_cmesh_new_triangulated_spherical_surface_icasohedron (const double radius, sc
   double vertices_bot[3 * 3];
 
   {
-    /* Prepare initial triangle on top top of the icosahedron. */
+    /* Prepare initial triangle on the top of the icosahedron. */
     double rot_mat[3][3];
 
     vertices_top[0] = 0.0;
@@ -3180,7 +3180,7 @@ t8_cmesh_new_prismed_spherical_shell_icosahedron (const double inner_radius, con
                                                   const int num_levels, const int num_layers, sc_MPI_Comm comm)
 {
   return t8_cmesh_new_spherical_shell (T8_ECLASS_PRISM, t8_geometry_prismed_spherical_shell_new (),
-                                       t8_cmesh_new_triangulated_spherical_surface_icasohedron, inner_radius,
+                                       t8_cmesh_new_triangulated_spherical_surface_icosahedron, inner_radius,
                                        shell_thickness, num_levels, num_layers, comm);
 }
 

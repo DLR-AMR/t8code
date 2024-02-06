@@ -144,13 +144,13 @@ main (int argc, char **argv)
   }
 
   {
-    const char *prefix_cmesh = "t8_triangulated_spherical_surface_icasohedron_cmesh";
-    const char *prefix_forest = "t8_triangulated_spherical_surface_icasohedron_forest";
+    const char *prefix_cmesh = "t8_triangulated_spherical_surface_icosahedron_cmesh";
+    const char *prefix_forest = "t8_triangulated_spherical_surface_icosahedron_forest";
 
     const int uniform_level = 5;
-    const double radius = 1.0;
+    const double radius = 42.0;
 
-    t8_cmesh_t cmesh = t8_cmesh_new_triangulated_spherical_surface_icasohedron (radius, comm);
+    t8_cmesh_t cmesh = t8_cmesh_new_triangulated_spherical_surface_icosahedron (radius, comm);
 
     t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), uniform_level, 0, comm);
 

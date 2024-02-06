@@ -198,6 +198,17 @@ t8_vec_eq (const double vec_x[3], const double vec_y[3], const double eps)
   return fabs (vec_x[0] - vec_y[0]) < eps && fabs (vec_x[1] - vec_y[1]) < eps && fabs (vec_x[2] - vec_y[2]) < eps;
 }
 
+/** Rescale a vector to a new length.
+ * \param [in,out] vec  A 3D vector.
+ * \param [in]  new_length  New length of the vector.
+ */
+static inline void
+t8_vec_rescale (double vec[3], const double new_length)
+{
+  t8_vec_normalize (vec);
+  t8_vec_ax (vec, new_length);
+}
+
 /** Compute the normal of a triangle given by its three vertices.
  * \param [in]  p1  A 3D vector.
  * \param [in]  p2  A 3D vector.

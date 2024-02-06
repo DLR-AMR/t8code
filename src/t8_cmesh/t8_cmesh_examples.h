@@ -329,13 +329,13 @@ t8_cmesh_new_squared_disk (const double radius, sc_MPI_Comm comm);
 t8_cmesh_t
 t8_cmesh_new_triangulated_spherical_surface_octahedron (const double radius, sc_MPI_Comm comm);
 
-/** Construct a triangulated spherical surface of given radius: icasohedron version.
+/** Construct a triangulated spherical surface of given radius: icosahedron version.
  * \param [in] radius        Radius of the sphere.
  * \param [in] comm          The MPI communicator used to commit the cmesh
  * \return                   A cmesh representing the spherical surface.
  */
 t8_cmesh_t
-t8_cmesh_new_triangulated_spherical_surface_icasohedron (const double radius, sc_MPI_Comm comm);
+t8_cmesh_new_triangulated_spherical_surface_icosahedron (const double radius, sc_MPI_Comm comm);
 
 /** Construct a quadrangulated spherical surface of given radius.
  * \param [in] radius        Radius of the sphere.
@@ -357,7 +357,7 @@ t8_cmesh_t
 t8_cmesh_new_prismed_spherical_shell_octahedron (const double inner_radius, const double shell_thickness,
                                                  const int num_levels, const int num_layers, sc_MPI_Comm comm);
 
-/** Construct a spherical shell discretized by prisms of given inner radius and thickness: icasohedron version.
+/** Construct a spherical shell discretized by prisms of given inner radius and thickness: icosahedron version.
  * \param [in] inner_radius       Radius of the inner side of the shell.
  * \param [in] shell_thickness    Thickness of the shell.
  * \param [in] num_levels         Refinement level per patch in longitudinal and latitudinal direction.
