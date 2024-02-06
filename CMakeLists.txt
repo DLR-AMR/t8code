@@ -28,6 +28,11 @@ add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/sc )
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/p4est )
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/src )
 
+install( TARGETS t8 DESTINATION ${CMAKE_INSTALL_PREFIX}/lib )
+
+add_library( T8 INTERFACE IMPORTED GLOBAL )
+target_link_libraries( T8 INTERFACE t8 )
+
 if ( T8CODE_BUILD_TESTS )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/test )
 endif()
@@ -39,5 +44,3 @@ endif()
 if ( T8CODE_BUILD_EXAMPLES )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/example )
 endif()
-
-install( TARGETS T8 DESTINATION ${CMAKE_INSTALL_PREFIX}/lib )
