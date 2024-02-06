@@ -1,7 +1,37 @@
-add_library( t8 )
-target_include_directories( t8 PUBLIC ${CMAKE_CURRENT_LIST_DIR} )
-target_link_libraries( t8 PUBLIC P4EST::P4EST SC::SC $<$<BOOL:${T8CODE_ENABLE_MPI}>:MPI::MPI_C> )
-target_sources( t8 PRIVATE 
+if ( ${T8CODE_ENABLE_DYNAMIC_LINKAGE} )
+    add_library( T8 SHARED )
+    set_target_properties( T8 PROPERTIES POSITION_INDEPENDENT_CODE ON )
+else()
+    add_library( T8 STATIC )
+endif()
+
+set_target_properties( T8 PROPERTIES OUTPUT_NAME t8 )
+
+target_compile_definitions( T8 PUBLIC T8_CMAKE_BUILD )
+target_compile_definitions( T8 PUBLIC T8_CC="${CMAKE_C_COMPILER}" )
+target_compile_definitions( T8 PUBLIC T8_CFLAGS="${CMAKE_C_FLAGS}" )
+target_compile_definitions( T8 PUBLIC T8_CPP="${CMAKE_CXX_COMPILER}" )
+target_compile_definitions( T8 PUBLIC T8_CPPFLAGS="${CMAKE_CXX_FLAGS}" )
+target_compile_definitions( T8 PUBLIC T8_LDFLAGS="${CMAKE_SHARED_LINKER_FLAGS}" )
+target_compile_definitions( T8 PUBLIC T8_LIBS="???" )
+
+# There has to be an elegant solution to embed the version and commit here...
+target_compile_definitions( T8 PUBLIC T8_PACKAGE_STRING="t8 1.6.1.???" )
+target_compile_definitions( T8 PUBLIC T8_VERSION="1.6.1.???" )
+target_compile_definitions( T8 PUBLIC T8_VERSION_MAJOR=1 )
+target_compile_definitions( T8 PUBLIC T8_VERSION_MINOR=6 )
+target_compile_definitions( T8 PUBLIC T8_VERSION_POINT=1.??? )
+
+target_include_directories( T8 PUBLIC ${CMAKE_CURRENT_LIST_DIR} )
+target_link_libraries( T8 PUBLIC P4EST::P4EST SC::SC )
+
+if ( T8CODE_ENABLE_MPI )
+    target_compile_definitions( T8 PUBLIC T8_ENABLE_MPI )
+    target_compile_definitions( T8 PUBLIC T8_ENABLE_MPIIO )
+    target_link_libraries( T8 PUBLIC MPI::MPI_C )
+endif()
+
+target_sources( T8 PRIVATE 
     t8.c 
     t8_eclass.c 
     t8_mesh.c 
@@ -80,22 +110,3 @@ target_sources( t8 PRIVATE
     t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.c
     t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_connectivity.c
 )
-
-target_compile_definitions( t8 PUBLIC T8_CMAKE_BUILD )
-target_compile_definitions( t8 PUBLIC T8_CC="${CMAKE_C_COMPILER}" )
-target_compile_definitions( t8 PUBLIC T8_CFLAGS="${CMAKE_C_FLAGS}" )
-target_compile_definitions( t8 PUBLIC T8_CPP="${CMAKE_CXX_COMPILER}" )
-target_compile_definitions( t8 PUBLIC T8_CPPFLAGS="${CMAKE_CXX_FLAGS}" )
-target_compile_definitions( t8 PUBLIC T8_LDFLAGS="${CMAKE_SHARED_LINKER_FLAGS}" )
-target_compile_definitions( t8 PUBLIC T8_LIBS="???" )
-
-target_compile_definitions( t8 PUBLIC T8_PACKAGE_STRING="t8 1.6.1.???" )
-target_compile_definitions( t8 PUBLIC T8_VERSION="1.6.1.???" )
-target_compile_definitions( t8 PUBLIC T8_VERSION_MAJOR=1 )
-target_compile_definitions( t8 PUBLIC T8_VERSION_MINOR=6 )
-target_compile_definitions( t8 PUBLIC T8_VERSION_POINT=1.??? )
-
-if ( T8CODE_ENABLE_MPI )
-    target_compile_definitions( t8 PUBLIC T8_ENABLE_MPI )
-    target_compile_definitions( t8 PUBLIC T8_ENABLE_MPIIO )
-endif()
