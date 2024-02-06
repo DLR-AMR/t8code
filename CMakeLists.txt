@@ -5,6 +5,7 @@ include( CTest )
 option( T8CODE_ENABLE_MPI "" ON )
 option( T8CODE_BUILD_TESTS "" ON )
 option( T8CODE_BUILD_TUTORIALS "" ON )
+option( T8CODE_BUILD_EXAMPLES "" ON )
 
 if( NOT CMAKE_CXX_STANDARD )
     set( CMAKE_CXX_STANDARD 17 )
@@ -20,19 +21,23 @@ if( T8CODE_ENABLE_MPI )
         message( FATAL_ERROR "MPIEXEC is missing, MPI will not work properly" )
     endif()
     set( SC_ENABLE_MPI ON )
-    set( mpi ON )
+    set( mpi ON ) # This is very dirty, we should consider fixing this in the p4est repo
 endif()
 
-add_subdirectory( sc )
-add_subdirectory( p4est )
-add_subdirectory( src )
+add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/sc )
+add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/p4est )
+add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/src )
 
 if ( T8CODE_BUILD_TESTS )
-    add_subdirectory( test )
+    add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/test )
 endif()
 
 if ( T8CODE_BUILD_TUTORIALS )
-    add_subdirectory( tutorials )
+    add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/tutorials )
+endif()
+
+if ( T8CODE_BUILD_EXAMPLES )
+    add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/example )
 endif()
 
 install( TARGETS T8 DESTINATION ${CMAKE_INSTALL_PREFIX}/lib )
